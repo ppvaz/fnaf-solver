@@ -774,6 +774,12 @@
       "lifecycle": "supported"
     },
     {
+      "id": "tools/winner-phase-census.mjs",
+      "invocation": "tools/winner-phase-census.mjs --night N [--count K] [--window MS] [--jobs J] [--out FILE]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
       "id": "tools/test-winner-census.mjs",
       "invocation": "tools/test-winner-census.mjs",
       "kind": "check",

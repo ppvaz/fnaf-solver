@@ -147,6 +147,24 @@ identifies the seed during the night (65,536 -> 1), then plays that seed's plan.
   - Twins are proven but did not replay the night, because frame phase enters
     the random stream
     ([twins](../docs/evidence/night6-twin-nights-proven-20260918.json)).
+  - **In the model, the phase decides a Night 7 night, not the seed.** Each of
+    the four committed Night 7 bindings was run at every frame phase within
+    ±1 s of its declared epoch, over 1000 held-out seeds
+    ([phase census](../docs/evidence/fnaf2-night7-phase-census-20260925.json),
+    held by `test-winner-census.mjs`).
+    - 481 of the 484 cells are all-win or all-loss.
+    - At no phase does choosing among the bindings with the seed known beat the
+      best single binding.
+    - Within this family, then, the belief that pays is over the frame phase,
+      and identifying the seed adds nothing.
+    - k2 and k3 differ at one frame (2566 ms), outside the effective interval
+      [2410, 2445] ms that both of them win whole. So the model does not
+      separate their cohorts.
+    - All nine losses in those two cohorts were read from the recordings as
+      Withered Foxy ([k2](../docs/evidence/night7-cohort-k2-result-20260914.json):
+      7, k3: 2). These are visual reads, not instrument facts. It is the same
+      death the k2 anchor register records just past the band's late edge, at
+      2516.71 ms.
 - **Absorbs** Plans 08, 10, 13, 14, 19, 20 and 23.
 - **Needs** the seed-provenance axis below.
 

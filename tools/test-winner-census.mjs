@@ -11,6 +11,11 @@
 //
 // A committed winner the record does not cover is reported as
 // UNCENSUSED_WINNERS, not failed: a new binding is unmeasured, not wrong.
+//
+// The phase census (winner-phase-census.mjs) is held the same way: its
+// bindings and seed block as censused, and every band edge, the declared
+// phase and each partial cell's first listed loss replaying as recorded --
+// the cells an engine change would move first.
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -20,6 +25,7 @@ import { stableHash } from '@fnaf2-1020/core/contracts';
 import { RNG_MODULUS } from '@fnaf2-1020/core/mechanics';
 import { STRATEGY_REGISTRY, validateWinner } from './device/bundle.mjs';
 import { CENSUS_KIND, committedWinners, designBlock } from './winner-census.mjs';
+import { PHASE_KIND, heldOutSeeds, nightBindings, phaseWins } from './winner-phase-census.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const EVIDENCE = join(ROOT, 'docs/evidence');
@@ -86,7 +92,37 @@ for (const row of record.bindings) {
   }
 }
 
+const phaseName = readdirSync(EVIDENCE).filter((name) => /^fnaf2-night\d-phase-census-\d{8}\.json$/.test(name)).sort().pop();
+assert.ok(phaseName, 'no docs/evidence/fnaf2-night<N>-phase-census-YYYYMMDD.json is committed');
+let phaseReplays = 0;
+{
+  const phase = JSON.parse(readFileSync(join(EVIDENCE, phaseName), 'utf8'));
+  assert.equal(phase.kind, PHASE_KIND);
+  const night = Number(phaseName.match(/night(\d)/)[1]);
+  const seeds = heldOutSeeds(phase.method.seeds.n);
+  assert.equal(sha256(JSON.stringify(seeds)), phase.method.seeds.sha256, `${phaseName}: the held-out seed block no longer rebuilds`);
+  const frames = (phase.method.phases.frames - 1) / 2;
+  const bindings = nightBindings(night);
+  for (const row of phase.bindings) {
+    const binding = bindings.find((b) => b.path === row.binding);
+    assert.ok(binding, `${phaseName} names ${row.binding}, which no longer plays night ${night}`);
+    assert.equal(binding.winnerSha256, row.winnerSha256, `${row.binding} changed since ${phaseName}; re-run winner-phase-census.mjs`);
+    assert.equal(binding.planSha256, row.planSha256, `${row.binding} emits a different plan than ${phaseName} scored`);
+    const probes = new Set([0]);
+    for (let i = 1; i < row.map.length; i += 1)
+      if (row.map[i] !== row.map[i - 1]) { probes.add(i - frames); probes.add(i - 1 - frames); }
+    for (const f of probes) {
+      const cell = row.map[f + frames];
+      const seed = cell === '+' ? row.partial.find((p) => p.frame === f).losses[0][0] : seeds[(f + frames) % seeds.length];
+      const { won } = phaseWins(binding, night, seed, f);
+      phaseReplays += 1;
+      assert.equal(won, cell === '#', `${row.binding} frame ${f} seed ${seed} ${won ? 'wins' : 'loses'}; ${phaseName} records '${cell}'`);
+    }
+  }
+}
+
 const censused = new Set(record.bindings.map((row) => row.binding));
 const uncensused = committedWinners().filter((path) => !censused.has(path));
 console.log(`winner census ${recordName}: ${record.bindings.length} night-bindings still match the tree ` +
-  `(${replays} replays); UNCENSUSED_WINNERS ${uncensused.length}${uncensused.length ? `: ${uncensused.join(', ')}` : ''}`);
+  `(${replays} replays), ${phaseName} still maps the phases (${phaseReplays} replays); ` +
+  `UNCENSUSED_WINNERS ${uncensused.length}${uncensused.length ? `: ${uncensused.join(', ')}` : ''}`);

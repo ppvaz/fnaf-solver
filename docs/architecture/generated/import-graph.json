@@ -2666,6 +2666,7 @@
       "imports": [
         "./device/bundle.mjs",
         "./winner-census.mjs",
+        "./winner-phase-census.mjs",
         "@fnaf2-1020/core/contracts",
         "@fnaf2-1020/core/mechanics",
         "node:assert/strict",
@@ -2754,6 +2755,21 @@
         "@fnaf2-1020/core/mechanics",
         "@fnaf2-1020/research/seeds",
         "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "tools/winner-phase-census.mjs",
+      "imports": [
+        "./device/bundle.mjs",
+        "./device/fact-register.mjs",
+        "./device/minus-toys-plan.mjs",
+        "./winner-census.mjs",
+        "@fnaf2-1020/core/mechanics",
         "node:crypto",
         "node:fs",
         "node:os",
