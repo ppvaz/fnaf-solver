@@ -3,7 +3,7 @@
 // frames, its search order along Springtrap's source edges, and the
 // occupancy score's two jobs: static alone stays low, a figure does not.
 import { readFileSync } from 'node:fs';
-import { parseArgs, searchOrder, NEXT, VENT_OF } from './fnaf3-run.mjs';
+import { parseArgs, searchOrder, NEXT, VENT_OF, SystemsClock, chooseReboot } from './fnaf3-run.mjs';
 import { FEED, PICTURE_MASK, Reader, boxSamples, medianLuma, occupancy, decodePng, sampleBlocks, boxLuma, stateScore, IMAGE_GEOMETRY, CAMERA_FRAMES } from './fnaf3-detectors.mjs';
 import { pngFromRegion } from './native-regions.mjs';
 
@@ -50,6 +50,18 @@ const GREY = (102 << 16) | (102 << 8) | 102;
     ok(`a green CAM ${n} label reads as camera ${n}`, reader.selected(g) === n);
   }
   for (let n = 1; n <= 15; n += 1) ok(`CAM ${n}'s label is sampled at least 3 times`, reader.labels[n].length >= 3);
+  // The ventilation blackout darkens everything to a tenth (n2d 210-231 s).
+  const dim = (px) => (Math.round(((px >> 16) & 255) / 10) << 16) | (Math.round(((px >> 8) & 255) / 10) << 8) | Math.round((px & 255) / 10);
+  const dark = frameOf({ feed: dim(0x202020) });
+  for (let m = 1; m <= 15; m += 1) for (const i of reader.labels[m]) dark.regions.feed.pixels[i] = dim(GREY);
+  for (const i of reader.labels[10]) dark.regions.feed.pixels[i] = dim(GREEN);
+  ok('in the dark, the one green label still names the camera', reader.selected(dark) === 10);
+  const office = frameOf({ feed: (60 << 16) | (68 << 8) | (26) });
+  ok('a green-tinted office tinting every label box is no monitor', reader.selected(office) === null);
+  // n2d read the line in the dark at 211.9 s with the frame's brightest sample at 149.
+  const dimRed = frameOf();
+  for (let c = 10; c < 40; c += 1) dimRed.regions.errors.pixels[((296 - 200) / 8) * 80 + c] = (44 << 16) | (10 << 8) | 10;
+  ok('a darkened ventilation line is still read', [...reader.errorLines(dimRed)].join() === 'VENT');
   const shared = new Set();
   let overlap = false;
   for (let n = 1; n <= 10; n += 1) for (const i of reader.labels[n]) { if (shared.has(i)) overlap = true; shared.add(i); }
@@ -144,6 +156,35 @@ ok('cams 8, 6, 4 and 3 lead into no vent', [8, 6, 4, 3].every((n) => NEXT[n].eve
     && Object.values(CAMERA_FRAMES).every((f) => f.A.length && f.C.length));
   ok('the alternate pairs frame for frame with the empty room where both animate',
     Object.values(CAMERA_FRAMES).every((f) => !f.B || f.B.length === f.A.length || f.B.length === 1));
+}
+
+// --- the systems' counters and the reboot choice (g425/g426/g430, g783/g784, g301) ---
+{
+  const n2 = new SystemsClock(2);
+  ok('Night 2 video lasts 60 s of monitor time', n2.cameraLeftS() === 60);
+  const n6 = new SystemsClock(7);
+  ok('Nightmare video lasts 24 s of monitor time', n6.cameraLeftS() === 24);
+  ok('and audio two lures', n6.luresLeft() === 2);
+  n6.addMonitorMs(13500);
+  ok('12 s of monitor time is one camera hit', n6.camHits === 1 && n6.av5 === 1);
+  ok('and leaves 11 s of sight', n6.cameraLeftS() === 11);
+  n6.rebooted('VIDEO');
+  ok('a camera reboot clears the hits but not the 12 s counter', n6.camHits === 0 && n6.av5 === 1 && n6.cameraLeftS() === 23);
+  n6.rebooted('ALL');
+  ok('reboot all clears the counter too', n6.av5 === 0 && n6.cameraLeftS() === 24);
+  const set = (...w) => new Set(w);
+  ok('two broken systems take reboot all', chooseReboot(set('AUDIO', 'VIDEO'), new SystemsClock(2)) === 'ALL');
+  const fresh = new SystemsClock(2);
+  ok('a lone video error with a fresh counter takes the camera reboot', chooseReboot(set('VIDEO'), fresh) === 'VIDEO');
+  const late = new SystemsClock(2); late.addMonitorMs(8000);
+  ok('a lone video error with 8 s on the counter takes reboot all', chooseReboot(set('VIDEO'), late) === 'ALL');
+  const lured = new SystemsClock(7); lured.lured();
+  ok('a lone video error one lure from breaking audio takes reboot all', chooseReboot(set('VIDEO'), lured) === 'ALL');
+  ok('a lone audio error with sight to spare takes the audio reboot', chooseReboot(set('AUDIO'), new SystemsClock(2)) === 'AUDIO');
+  const dim = new SystemsClock(7); dim.addMonitorMs(14000);
+  ok('a lone audio error with the camera about to fail takes reboot all', chooseReboot(set('AUDIO'), dim) === 'ALL');
+  ok('ventilation weighs the same way', chooseReboot(set('VENT'), dim) === 'ALL' && chooseReboot(set('VENT'), new SystemsClock(2)) === 'VENT');
+  ok('nothing broken, nothing rebooted', chooseReboot(set(), new SystemsClock(2)) === null);
 }
 
 if (failures.length) {

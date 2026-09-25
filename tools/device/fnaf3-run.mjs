@@ -144,6 +144,56 @@ async function collect(eyes, ms, read) {
   return out;
 }
 
+/**
+ * What the loop knows of the three systems' counters without seeing them
+ * (fnaf3 event sheet): the camera loses AI points each 12 s of monitor time
+ * (`camera text` AV5, g783/g784) and a camera reboot zeroes the loss but not
+ * AV5, which only reboot all does (g428, g430); each lure costs AI audio
+ * points (g301/g308); every system errors at -10 (g380-g382).
+ */
+export class SystemsClock {
+  constructor(ai) { this.ai = Math.max(1, ai); this.upMs = 0; this.av5 = 0; this.camHits = 0; this.lures = 0; }
+  /** Account monitor-up time; the game's 1 s tick counts it whole seconds at a time. */
+  addMonitorMs(ms) {
+    this.upMs += ms;
+    while (this.upMs >= 1000) {
+      this.upMs -= 1000;
+      this.av5 += 1;
+      if (this.av5 >= 12) { this.av5 = 0; this.camHits += 1; }
+    }
+  }
+  /** Seconds of monitor time before video fails, from a camera counter at `hits`. */
+  cameraLeftS(hits = this.camHits, av5 = this.av5) {
+    const need = Math.ceil(10 / this.ai) - hits;
+    return need <= 0 ? 0 : (12 - av5) + 12 * (need - 1);
+  }
+  luresLeft() { return Math.max(0, Math.ceil((10 - this.ai * this.lures) / this.ai)); }
+  lured() { this.lures += 1; }
+  rebooted(which) {
+    if (which === 'VIDEO' || which === 'ALL') this.camHits = 0;
+    if (which === 'ALL') { this.av5 = 0; this.upMs = 0; }
+    if (which === 'AUDIO' || which === 'ALL') this.lures = 0;
+  }
+}
+
+/**
+ * Which reboot, for the systems the menu says are broken. A single reboot is
+ * 5-10 s (g425, 1 s ticks) and reboot all 10-20 s (g426, 2 s ticks), and exit
+ * waits for either, so two single reboots in one visit cost what reboot all
+ * does -- which also restores the third system and zeroes the camera's 12 s
+ * counter. With one broken system, reboot all's extra ~6.7 s is worth it when
+ * it buys that much: 7+ s of sight the camera counter already holds, an audio
+ * counter one lure from breaking, or a camera that would send the loop back
+ * within 15 s of monitor time anyway (a trip is ~5 s plus its reboot).
+ */
+export function chooseReboot(words, clock) {
+  if (words.size >= 2) return 'ALL';
+  if (words.has('VIDEO')) return clock.av5 >= 7 || clock.luresLeft() <= 1 ? 'ALL' : 'VIDEO';
+  const other = words.has('VENT') ? 'VENT' : words.has('AUDIO') ? 'AUDIO' : null;
+  if (!other) return null;
+  return clock.cameraLeftS() < 15 ? 'ALL' : other;
+}
+
 const REBOOT_ROW = { VENT: 'rebootVent', VIDEO: 'rebootCamera', AUDIO: 'rebootAudio', ALL: 'rebootAll' };
 
 /**
@@ -155,14 +205,19 @@ const REBOOT_ROW = { VENT: 'rebootVent', VIDEO: 'rebootCamera', AUDIO: 'rebootAu
  * is pressed each second until the menu closes, and the office is given
  * 500 ms before the monitor goes back up (cal2).
  */
-async function serviceSystems({ act, c, eyes, reader, onMenu = async () => {} }) {
+async function serviceSystems({ act, c, eyes, reader, clock = null, force = [], onMenu = async () => {} }) {
   const pt = (k) => ({ x: c[k].x, y: c[k].y });
   const lines = await collect(eyes, 700, (f) => (reader.selected(f) !== null ? reader.errorLines(f) : []));
+  for (const w of force) lines.add(w);
   if (lines.size === 0) return null;
-  if (lines.size === 1 && lines.has('AUDIO')) return { lines: [...lines], rebooted: null, why: 'audio only: no lure to lose' };
   const t0 = performance.now();
-  await act.press('monitor', pt('monitor'));
-  await eyes.until((fr) => reader.selected(fr) === null, t0, 1500);
+  // The tab is a toggle: press it only with the monitor up (a scare has
+  // usually dropped it already, g665 `drop it`).
+  const shown = eyes.now();
+  if (shown && reader.selected(shown) !== null) {
+    await act.press('monitor', pt('monitor'));
+    await eyes.until((fr) => reader.selected(fr) === null, t0, 1500);
+  }
   await act.hold('panLeft', pt('panLeft'), c.panLeft.holdMs);
   await sleep(120);
   let at = performance.now();
@@ -173,9 +228,13 @@ async function serviceSystems({ act, c, eyes, reader, onMenu = async () => {} })
     return { lines: [...lines], rebooted: null, why: 'no menu', awayMs: performance.now() - t0 };
   }
   const words = await collect(eyes, 900, (f) => (reader.menuOpen(f) ? reader.menuErrors(f) : []));
-  await onMenu(words);
-  const which = words.has('VENT') && words.has('VIDEO') ? 'ALL'
-    : words.has('VENT') ? 'VENT' : words.has('VIDEO') ? 'VIDEO' : null;
+  for (const w of force) words.add(w);
+  // Audio is serviced too: the lure is the only way back off attack stage 1
+  // (g320), and n2b left it broken all night. chooseReboot weighs a single
+  // reboot against reboot all.
+  const which = clock ? chooseReboot(words, clock)
+    : words.size >= 2 ? 'ALL' : words.has('VENT') ? 'VENT' : words.has('VIDEO') ? 'VIDEO' : words.has('AUDIO') ? 'AUDIO' : null;
+  await onMenu(words, which);
   const rebootAt = performance.now();
   if (which) {
     await act.press(REBOOT_ROW[which], pt(REBOOT_ROW[which]));
@@ -319,7 +378,7 @@ export function searchOrder(from) {
   return order;
 }
 
-const F3_LINE = /^LESSON [0-9a-f]{32} f3 (origin \d{1,19}|night [1-6] (NORMAL|AGGRESSIVE)|step [A-Z_]+|look (\d{1,2}|OFF)|seen (\d{1,2}|NONE)|sealed (1[1-5]|NONE)|lure \d{1,2}|sys (AUDIO|CAMERA|VENT) (OK|ERROR|REBOOT)|clear)$/;
+const F3_LINE = /^LESSON [0-9a-f]{32} f3 (origin \d{1,19}|night [1-6] (NORMAL|AGGRESSIVE)|step [A-Z_]+|look (\d{1,2}|OFF)|seen (\d{1,2}|NONE)|sealed (1[1-5]|NONE)|lure \d{1,2}|sight \d{1,3}|lures \d{1,2}|sys (AUDIO|CAMERA|VENT) (OK|ERROR|REBOOT)|clear)$/;
 function teachFeed(port, record) {
   const channel = port.openLesson({ timeoutMs: 800, lessonLine: F3_LINE });
   const token = port.endpoint.token;
@@ -339,10 +398,12 @@ function teachFeed(port, record) {
     sealed: (v) => say(`sealed ${v ?? 'NONE'}`, 'sealed'),
     lure: (n) => say(`lure ${n}`),
     sys: (which, state) => say(`sys ${which} ${state}`, `sys${which}`),
+    sight: (sec) => say(`sight ${Math.max(0, Math.min(999, Math.round(sec)))}`, 'sight'),
+    lures: (n) => say(`lures ${Math.max(0, Math.min(99, n))}`, 'lures'),
     clear: async () => { say('clear'); await chain; channel.close(); },
   };
 }
-const QUIET = { origin() {}, night() {}, step() {}, look() {}, seen() {}, sealed() {}, lure() {}, sys() {}, async clear() {} };
+const QUIET = { origin() {}, night() {}, step() {}, look() {}, seen() {}, sealed() {}, lure() {}, sys() {}, sight() {}, lures() {}, async clear() {} };
 
 /**
  * The tracking loop. The monitor stays up. While he is seen, the loop stays
@@ -358,7 +419,30 @@ async function loopNight({ act, c, record, eyes, reader, det, epochHostMs, stopA
   const camKey = (n) => `cam${String(n).padStart(2, '0')}`;
   const nightMs = () => performance.now() - epochHostMs;
   const log = (m, f = {}) => record.event('policy', { atNightMs: Math.round(nightMs()), m, ...f });
-  const stats = { looks: 0, sightings: 0, seals: 0, sealFails: 0, reboots: 0, lost: 0, recoveries: 0 };
+  const stats = { looks: 0, sightings: 0, seals: 0, sealFails: 0, reboots: 0, lost: 0, recoveries: 0, lures: 0 };
+  const ai = night <= 1 ? 0 : night <= 5 ? night : 7;
+  const clock = new SystemsClock(ai);
+  let clockAt = performance.now();
+  let flashSeq = -1;
+  let scareAt = null;
+  const clockTimer = setInterval(() => {
+    const now = performance.now();
+    const f = eyes.now();
+    if (f && reader.selected(f) !== null) clock.addMonitorMs(now - clockAt);
+    // Every phantom's scare ends in the white flash (g686/g687/g744/g745),
+    // which breaks ventilation and sets the blackout past the chain's
+    // threshold (g704): the screen darkens and he advances every frame
+    // until ventilation is rebooted (n2d 209.5 s, dead at 231 s).
+    if (f && f.seq !== flashSeq) {
+      flashSeq = f.seq;
+      let sum = 0; const px = f.regions.feed.pixels;
+      for (let i = 0; i < px.length; i += 7) sum += (px[i] >> 8) & 255;
+      if (sum / Math.ceil(px.length / 7) > 200) scareAt = now;
+    }
+    clockAt = now;
+    teach.sight(clock.cameraLeftS());
+    teach.lures(clock.luresLeft());
+  }, 200);
   let look = null;            // the camera on screen, as its green label says
   let seen = null;            // { cam, atMs } where he was last seen
   let sealed = null;          // the vent whose bar last read red
@@ -429,24 +513,33 @@ async function loopNight({ act, c, record, eyes, reader, det, epochHostMs, stopA
     if (feeds.length < Math.min(3, frames)) return null;
     stats.looks += 1;
     if (!pairs) return { ...occupancy(medianLuma(feeds), det.templates[n]), v: 1 };
-    let C = 0; let B = 0; let nB = 0;
+    let C = 0; let B = 0; let nB = 0; let P = 0; let nP = 0;
     for (const feed of feeds) {
       const r = stateScore(pairs[n], boxLuma(feed));
       C += r.C ?? 0;
       if (r.B !== null) { B += r.B; nB += 1; }
+      if (r.P !== null) { P += r.P; nP += 1; }
     }
-    return { C: C / feeds.length, B: nB ? B / nB : null, v: 2 };
+    return { C: C / feeds.length, B: nB ? B / nB : null, P: nP ? P / nP : null, v: 2 };
   };
   const occupied = (n, s) => {
     if (s.v === 1) return s.over > cut(n);
     const cam = det.cams[n];
-    return s.C > cam.cut || (cam.cutB !== null && s.B !== null && s.B > cam.cutB);
+    const him = s.C > cam.cut || (cam.cutB !== null && s.B !== null && s.B > cam.cutB);
+    // A phantom's picture that fits better than his is a phantom, not him.
+    if (him && s.P !== null && s.P > 2 && s.P > Math.max(s.C, s.B ?? -Infinity)) { s.phantom = true; return false; }
+    return him;
   };
   const here = async (n) => {
     if (!await view(n)) return null;
     const s = await score(n);
     if (!s) return null;
     const occ = occupied(n, s);
+    if (s.phantom) {
+      stats.phantoms = (stats.phantoms ?? 0) + 1;
+      teach.step('PHANTOM');
+      await log(`a phantom on ${n}, not him: looking away`, { C: s.C, B: s.B, P: s.P });
+    }
     if (occ) {
       stats.sightings += 1;
       seen = { cam: n, atMs: nightMs() };
@@ -460,11 +553,15 @@ async function loopNight({ act, c, record, eyes, reader, det, epochHostMs, stopA
     // The vent map, without a single press on v first: a lone press just
     // before the double tap could pair with its first tap.
     if (!await ventMap()) { stats.sealFails += 1; return false; }
+    // A double tap right after the map toggles lost its first tap (n2a 16.9 s).
+    await sleep(250);
     const at = performance.now();
     await act.double(camKey(v), pt(camKey(v)), SEAL_GAP_MS);
     look = v; teach.look(v);
-    // 50-100 frames of charge (g572), plus the press itself.
-    const f = await eyes.until((fr) => reader.sealed(fr) === v, at, 2600);
+    // The mobile seal charges 100 + Random(100) frames (g635; PC's button is
+    // 50 + Random(50), g572), up to 3.3 s: waiting 2.6 s gave up on charges
+    // still running, and the retry's double tap restarted them (n2b 49-58 s).
+    const f = await eyes.until((fr) => reader.sealed(fr) === v, at, 4000);
     if (!f) { stats.sealFails += 1; await log(`seal ${v}: bar never read red`); return false; }
     sealed = v; stats.seals += 1; teach.sealed(v);
     await log(`sealed ${v}`, { ms: Math.round(f.imageHostMs - at) });
@@ -474,28 +571,77 @@ async function loopNight({ act, c, record, eyes, reader, det, epochHostMs, stopA
   /** True when the loop left the monitor to reboot something (its picture of him is stale). */
   const service = async () => {
     const f = eyes.now();
-    if (!f || reader.selected(f) === null) return false;
-    const lines = reader.errorLines(f);
-    // An audio line alone costs nothing here: this loop plays no lure. Only a
-    // video or ventilation line is worth the 700 ms read that decides a trip.
-    if (lines.size === 0 || (lines.size === 1 && lines.has('AUDIO'))) return false;
-    const r = await serviceSystems({ act, c, eyes, reader, onMenu: async (words) => {
+    let force = [];
+    if (scareAt !== null) {
+      // Let the scare's frozen state pass (g890-g894 clear it) before the menu.
+      await log('a white flash: a phantom scare broke ventilation; rebooting it');
+      teach.step('PHANTOM');
+      scareAt = null;
+      await sleep(1200);
+      force = ['VENT'];
+    } else {
+      if (!f || reader.selected(f) === null) return false;
+      if (reader.errorLines(f).size === 0) return false;
+    }
+    const r = await serviceSystems({ act, c, eyes, reader, clock, force, onMenu: async (words, which) => {
       for (const w of words) teach.sys(TEACH_SYS[w], 'ERROR');
       teach.look(null);
-      teach.step(words.has('VENT') && words.has('VIDEO') ? 'REBOOT_ALL' : words.has('VENT') ? 'REBOOT_VENT'
-        : words.has('VIDEO') ? 'REBOOT_CAMERA' : 'REBOOT_AUDIO');
-      for (const w of words) if (w !== 'AUDIO') teach.sys(TEACH_SYS[w], 'REBOOT');
+      teach.step({ ALL: 'REBOOT_ALL', VENT: 'REBOOT_VENT', VIDEO: 'REBOOT_CAMERA', AUDIO: 'REBOOT_AUDIO' }[which] ?? 'SWEEP');
+      for (const w of which === 'ALL' ? ['AUDIO', 'VIDEO', 'VENT'] : which ? [which] : []) teach.sys(TEACH_SYS[w], 'REBOOT');
     } });
     if (!r || !r.rebooted) return false;
+    if (r.ok) clock.rebooted(r.rebooted);
     look = current();
     if (look !== null) teach.look(look);
     if (r.rebooted) stats.reboots += 1;
     await log(`systems: lines ${r.lines.join('+')}, menu ${(r.words ?? []).join('+') || '-'}, rebooted ${r.rebooted ?? 'nothing'}: ${r.why}`,
       { rebootMs: Math.round(r.rebootMs ?? 0), awayMs: Math.round(r.awayMs ?? 0) });
-    if (r.ok && r.rebooted) for (const w of (r.words ?? [])) if (w !== 'AUDIO') teach.sys(TEACH_SYS[w], 'OK');
+    if (r.ok) for (const w of r.rebooted === 'ALL' ? ['AUDIO', 'VIDEO', 'VENT'] : [r.rebooted]) teach.sys(TEACH_SYS[w], 'OK');
     return true;
   };
-  const over = () => { const f = eyes.now(); return !!f && reader.title(f) >= 0.2; };
+  // The title after a death carries static that dims the logo to 0.06-0.15
+  // (n2c 158-175 s) against the office's 0.00: a second of it is the title.
+  let titleSince = null;
+  const over = () => {
+    const f = eyes.now();
+    if (!f) return false;
+    const t = reader.title(f);
+    if (t >= 0.2) return true;
+    if (t >= 0.05 && reader.selected(f) === null && !reader.menuOpen(f)) {
+      titleSince ??= performance.now();
+      return performance.now() - titleSince > 1000;
+    }
+    titleSince = null;
+    return false;
+  };
+
+  /**
+   * Play audio on camera n: it pulls him onto n from any camera the lure
+   * table pairs with it (g319-g341; cam 02 also from attack stage 1, cam 01
+   * from stage 4) after Random(100) frames, and resets his move counter
+   * (g343-g352). It needs the camera map, Play Audio ready (not dashes) and
+   * no audio error, and costs AI audio points (g301).
+   */
+  const lureAt = async (n, why) => {
+    if (!await view(n)) return false;
+    await sleep(150);
+    const f = eyes.now();
+    if (!f || reader.errorLines(f).has('AUDIO') || !reader.playReady(f)) {
+      await log(`no lure at ${n} (${why}): audio ${f && reader.errorLines(f).has('AUDIO') ? 'broken' : 'not ready'}`);
+      return false;
+    }
+    teach.step('LURE');
+    await act.press('playAudio', pt('playAudio'));
+    clock.lured(); stats.lures += 1; teach.lure(n);
+    await log(`lure at ${n}: ${why}`, { luresLeft: clock.luresLeft() });
+    return true;
+  };
+  // Cameras whose lost occupant may be on attack stage 1, where only a lure on
+  // cam 02 reaches him (g320): cam 02 itself (pic random 0), cam 03 (g251),
+  // vent 13 or 15 unsealed.
+  const NEAR_OFFICE = new Set([1, 2, 3, 4, 13, 15]);
+  // Where to lure him from each office-side camera: one step further out.
+  const HERD = { 2: 5, 3: 2, 4: 2, 5: 6 };
 
   if (!await monitorUp()) await monitorUp();
   let lostSinceMs = null;
@@ -505,6 +651,7 @@ async function loopNight({ act, c, record, eyes, reader, det, epochHostMs, stopA
       // The monitor is down and we did not put it down: a scare, or the night is over.
       await sleep(400);
       if (over()) break;
+      if (scareAt !== null) { await service(); continue; }
       if (current() === null) {
         if (nightMs() > (night <= 1 ? 235000 : 355000)) { await log('monitor gone at the end of the night'); break; }
         stats.recoveries += 1;
@@ -516,18 +663,40 @@ async function loopNight({ act, c, record, eyes, reader, det, epochHostMs, stopA
       teach.step('WATCH');
       const r = await here(seen.cam);
       if (r && r.occ) {
+        // The office side feeds attack stage 1 (cam 02's and cam 03's exits)
+        // and vents 13 and 15: a lure one camera further out pulls him off it
+        // and resets his move counter (the lure table, g319-g341).
+        const target = HERD[seen.cam];
+        if (target && clock.luresLeft() >= 1 && await lureAt(target, `herding him off cam ${seen.cam}`)) {
+          await sleep(1800);
+          seen = { cam: target, atMs: seen.atMs };
+          continue;
+        }
+        // Cam 02 and cam 05 show him plainly with `pic random` 0 and as their
+        // alternate with 1, and the same coin picks his action-4 exit
+        // (g242/g243, g246/g247): plainly there, his exit is attack stage 1
+        // or cam 04, not the vent, and a seal buys nothing.
+        const plain = r.v === 2 && (seen.cam === 2 || seen.cam === 5) && r.C > det.cams[seen.cam].cut;
         const v = VENT_OF[seen.cam];
-        if (v && sealed !== v) {
+        if (v && sealed !== v && !plain) {
           await log(`he is at ${seen.cam} beside vent ${v}: sealing it`, { C: r.C ?? r.over, B: r.B ?? null });
           await seal(v);
         }
         continue;
       }
       if (!r) continue;
+      // One weak look is not a departure (n2d: cam 9 read left, found, left,
+      // found within 4 s): a second look must miss too.
+      const again = await here(seen.cam);
+      if (again && again.occ) continue;
       await log(`he left ${seen.cam}`, { C: r.C ?? r.over, B: r.B ?? null });
       lostSinceMs = nightMs();
       const v = VENT_OF[seen.cam];
-      if (v && sealed !== v) await seal(v);
+      if (v && sealed !== v && seen.cam !== 2) await seal(v);
+      if (NEAR_OFFICE.has(seen.cam) && await lureAt(2, `lost at ${seen.cam}: attack stage 1 is one step away`)) {
+        await sleep(1800);
+        seen = { cam: 2, atMs: seen.atMs };
+      }
     }
     // Look for him, nearest ring first; a sighting ends the search.
     teach.step('SWEEP');
@@ -547,9 +716,11 @@ async function loopNight({ act, c, record, eyes, reader, det, epochHostMs, stopA
     if (!found) {
       stats.lost += 1;
       await log('not found in a full search');
+      if (seen && NEAR_OFFICE.has(seen.cam)) await lureAt(2, 'not found and last seen near the office');
       if (seen && nightMs() - seen.atMs > 15000) seen = null;
     }
   }
+  clearInterval(clockTimer);
   await log('loop ended', stats);
   return stats;
 }

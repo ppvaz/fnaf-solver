@@ -8,7 +8,7 @@
   "view": {
     "pan": "The office is 2000 px wide in a 1024 window and a night starts panned fully left. A hold at the right edge pans right and saturates at 968 px in 1025 ms (5/5; 1000 ms 2/5, Plan 26); holds here are 1100 ms, 75 ms over the floor. The monitor tab exists only in the right view and the maintenance tab only in the left one.",
     "monitor": "The camera monitor is a toggle on one tab: pressed once it rises over the office (the camera map with Play Audio and Map Toggle), pressed again it drops. Map Toggle swaps the camera map (CAM 01-10, Play Audio) for the vent map (CAM 11-15, a seal bar beside each); the selected label turns green.",
-    "seal": "On the vent map a press selects a vent camera and a second press on the selected label arms the seal; the charge lasts 50-100 frames and is cancelled if the map toggles or the monitor drops (g572, g582-g585). The seal bar beside the vent turns red when it commits."
+    "seal": "On the vent map two touch-starts on a vent label within ~30 frames arm its seal (g632 adds 30 per touch, g635 fires above 30); a second press seconds later does nothing. The mobile charge lasts 100 + Random(100) frames (g635) and is cancelled if the map toggles or the monitor drops (g584, g585). The seal bar beside the vent turns red when it commits."
   },
   "controlMap": {
     "loadGame":   { "x": 480,  "y": 641,  "anchor": "screen", "frame": "title", "effect": "LOAD GAME: the office within 4 s (f3-ex1 0002)" },

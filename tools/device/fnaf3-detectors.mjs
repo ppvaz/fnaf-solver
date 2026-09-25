@@ -43,8 +43,10 @@ export const rgb = (px) => [(px >> 16) & 255, (px >> 8) & 255, px & 255];
 const luma = (px) => 0.299 * ((px >> 16) & 255) + 0.587 * ((px >> 8) & 255) + 0.114 * (px & 255);
 // A selected CAM label is (153,173,61) on this build; an unselected one is grey or dark.
 export const isLabelGreen = ([r, g, b]) => g >= 130 && g - b >= 60 && r >= 90 && r <= g + 10;
-// The monitor's error lines are red text (~220,50,50).
-export const isErrorRed = ([r, g, b]) => r >= 150 && g <= 100 && b <= 100 && r - g >= 90;
+// The same green in the dark: its proportions (r/g 0.88, b/g 0.35) at any brightness.
+export const isDimLabelGreen = ([r, g, b]) => g >= 12 && b <= 0.55 * g && r >= 0.7 * g && r <= 1.05 * g;
+// The monitor's error lines are red text (~220,50,50), or its proportions in the dark.
+export const isErrorRed = ([r, g, b]) => (r >= 150 && g <= 100 && b <= 100 && r - g >= 90) || (r >= 35 && r >= 2.5 * g && r >= 2.5 * b);
 // The menu's "error" is white text in a dark red glow (60-150, 0-45, 0; cal1 0022).
 export const isMenuRed = ([r, g, b]) => r >= 60 && r - g >= 50 && b <= 40;
 // A seal bar is green (66,106,82) open and red (112,65,80) sealed.
@@ -81,19 +83,30 @@ export class Reader {
       this.labels[n] = boxSamples(FEED, controls[k].x, controls[k].y, 56, 18);
     }
     this.menuText = boxSamples(FEED, 815, 730, 335, 260);
+    this.playButton = boxSamples(FEED, 1246, 814, 130, 45);
     this.menuRows = { AUDIO: boxSamples(FEED, 1330, 500, 130, 22), VIDEO: boxSamples(FEED, 1330, 604, 130, 22),
       VENT: boxSamples(FEED, 1330, 708, 130, 22) };
   }
-  /** Which camera label is green (1-15), or null: the monitor is up on that camera. */
+  /**
+   * Which camera label is green (1-15), or null: the monitor is up on that
+   * camera. A failing ventilation darkens the whole screen for seconds
+   * (n2d 210-231 s, mean light 1-20), which hides the label's brightness but
+   * not its hue: in the dark, the one label box whose samples keep the
+   * selected green's proportions, while no other box does, is the selection
+   * (the green-tinted office would light many boxes at once).
+   */
   selected(frame) {
     const px = frame.regions.feed.pixels;
     let best = null; let bestN = 0;
+    const dim = [];
     for (const [n, idx] of Object.entries(this.labels)) {
-      let g = 0;
-      for (const i of idx) if (isLabelGreen(rgb(px[i]))) g += 1;
+      let g = 0; let d = 0;
+      for (const i of idx) { const c = rgb(px[i]); if (isLabelGreen(c)) g += 1; if (isDimLabelGreen(c)) d += 1; }
       if (g > bestN) { bestN = g; best = Number(n); }
+      if (d >= 3) dim.push(Number(n)); else if (d >= 2) dim.push(-1);
     }
-    return bestN >= 3 ? best : null;
+    if (bestN >= 3) return best;
+    return dim.length === 1 && dim[0] > 0 ? dim[0] : null;
   }
   /** The maintenance menu's green text rows: 18 samples while it is open, 0 over the office (cal1). */
   menuOpen(frame) {
@@ -101,7 +114,7 @@ export class Reader {
     let g = 0;
     for (const i of this.menuText) {
       const [r, gg, b] = rgb(px[i]);
-      if (gg >= 120 && gg - r >= 50 && gg - b >= 50) g += 1;
+      if ((gg >= 120 && gg - r >= 50 && gg - b >= 50) || (gg >= 30 && gg >= 1.8 * r && gg >= 1.8 * b)) g += 1;
     }
     return this.selected(frame) === null && g >= 10;
   }
@@ -136,6 +149,17 @@ export class Reader {
       if (n >= 3) out.add(name);
     }
     return out;
+  }
+  /**
+   * Play Audio ready: its two words are ~15 white samples on the camera map
+   * and the dashes that replace them while `play counter` refills (g301 wants
+   * it at 7) are 0-2 (cal3).
+   */
+  playReady(frame) {
+    const px = frame.regions.feed.pixels;
+    let w = 0;
+    for (const i of this.playButton) { const [r, g, b] = rgb(px[i]); if (r > 200 && g > 200 && b > 200) w += 1; }
+    return w >= 8;
   }
   errorRed(frame) {
     let n = 0;
@@ -212,13 +236,18 @@ export function occupancy(m, template) {
 // and an alternate (B) that `pic random` 1 shows him as and a ventilation
 // hallucination shows any camera as (AV7 = Random(3), g469). The numbers are
 // the animations' image handles (OBJANIM OI 125), frame for frame: a lit and a
-// dark frame of the same room alternate, and A, B and C cycle together.
+// dark frame of the same room alternate, and A, B and C cycle together. P is
+// a phantom's picture over that camera (shadow Freddy g172/g210, Mangle g195,
+// the cupcakes g193/g194, Chica g184, the Puppet g204): its scare drops the
+// monitor and breaks a system, and it is not him (cal n2c 148.5 s: Mangle on
+// cam 04 read as his alternate, +3..+8 against his picture's -20).
 export const CAMERA_FRAMES = Object.freeze({
-  1: { A: [106], B: [295], C: [295] }, 2: { A: [97, 103], B: [146, 147], C: [132, 133] },
-  3: { A: [104], B: [134], C: [121] }, 4: { A: [105], B: [135], C: [122] },
+  1: { A: [106], B: [295], C: [295] }, 2: { A: [97, 103], B: [146, 147], C: [132, 133], P: [319, 321] },
+  3: { A: [104], B: [134], C: [121] }, 4: { A: [105], B: [135], C: [122], P: [38, 229, 303] },
   5: { A: [109, 110], B: [148, 149], C: [119, 120] }, 6: { A: [98, 99], B: [141, 142], C: [117, 118] },
-  7: { A: [100, 101, 102], B: [187, 188, 189], C: [124, 125, 126] }, 8: { A: [112, 113, 114], B: [136, 137, 138], C: [127, 128, 129] },
-  9: { A: [115], B: [139], C: [130] }, 10: { A: [116], B: [140], C: [131] },
+  7: { A: [100, 101, 102], B: [187, 188, 189], C: [124, 125, 126], P: [387, 388, 389] },
+  8: { A: [112, 113, 114], B: [136, 137, 138], C: [127, 128, 129], P: [297, 298, 300] },
+  9: { A: [115], B: [139], C: [130] }, 10: { A: [116], B: [140], C: [131], P: [304] },
   11: { A: [623], C: [829] }, 12: { A: [624], C: [831] }, 13: { A: [628], C: [835] }, 14: { A: [824], C: [841] }, 15: { A: [818], C: [832] },
 });
 // The picture on screen: image pixel (u, v) lands at native (x0 + u*sx, y0 + v*sy),
@@ -320,14 +349,14 @@ export function stateScore(pairs, obs) {
   for (let k = 0; k < obs.length; k += 1) all.push(k);
   let best = null;
   for (const p of pairs) { const d = meanAbs(obs, p.A, all); if (!best || d < best.d) best = { d, p }; }
-  const out = { B: null, C: null };
-  for (const s of ['B', 'C']) {
-    const T = best.p[s];
-    if (!T) continue;
+  const out = { B: null, C: null, P: null };
+  const against = (T) => {
     const diff = [];
     for (const k of all) if (!Number.isNaN(T[k]) && !Number.isNaN(best.p.A[k]) && Math.abs(T[k] - best.p.A[k]) > 8) diff.push(k);
-    if (diff.length >= 3) out[s] = meanAbs(obs, best.p.A, diff) - meanAbs(obs, T, diff);
-  }
+    return diff.length >= 3 ? meanAbs(obs, best.p.A, diff) - meanAbs(obs, T, diff) : null;
+  };
+  for (const s of ['B', 'C']) if (best.p[s]) out[s] = against(best.p[s]);
+  for (const T of best.p.P ?? []) { const v = against(T); if (v !== null && (out.P === null || v > out.P)) out.P = v; }
   return out;
 }
 
@@ -335,9 +364,8 @@ export function stateScore(pairs, obs) {
 export function loadPairs(det) {
   const out = {};
   for (const [cam, v] of Object.entries(det.cams)) {
-    out[cam] = v.pairs.map((p) => ({ A: Float32Array.from(p.A, (x) => (x === null ? NaN : x)),
-      B: p.B ? Float32Array.from(p.B, (x) => (x === null ? NaN : x)) : null,
-      C: Float32Array.from(p.C, (x) => (x === null ? NaN : x)) }));
+    const arr = (t) => Float32Array.from(t, (x) => (x === null ? NaN : x));
+    out[cam] = v.pairs.map((p) => ({ A: arr(p.A), B: p.B ? arr(p.B) : null, C: arr(p.C), P: (p.P ?? []).map(arr) }));
   }
   return out;
 }
@@ -461,8 +489,9 @@ async function buildImages({ images, out, runs, margin = 8 }) {
   const cams = {};
   for (const [cam, st] of Object.entries(CAMERA_FRAMES)) {
     const img = (h) => sampleBlocks(decodePng(readFileSync(join(images, `${h}.png`))));
+    const P = (st.P ?? []).map(img);
     cams[cam] = { pairs: st.A.map((a, i) => ({ A: img(a), B: st.B ? img(st.B[Math.min(i, st.B.length - 1)]) : null,
-      C: img(st.C[Math.min(i, st.C.length - 1)]) })) };
+      C: img(st.C[Math.min(i, st.C.length - 1)]), P })) };
   }
   const controls = JSON.parse(readFileSync(new URL('./models/controls-fnaf3-moto-g56-v204.json', import.meta.url), 'utf8')).controlMap;
   const reader = new Reader(controls);
@@ -496,7 +525,8 @@ async function buildImages({ images, out, runs, margin = 8 }) {
     // and 8 (656, 1796 and 4 image px): there he is invisible, and no cut is set.
     const bs = (nullsB[cam] ?? []).sort((a, b) => a - b);
     v.cutB = bs.length && ![5, 6, 8].includes(Number(cam)) ? +(bs[Math.floor(bs.length / 2)] + margin).toFixed(2) : null;
-    v.pairs = v.pairs.map((p) => Object.fromEntries(Object.entries(p).map(([k, t]) => [k, t ? Array.from(t, (x) => (Number.isNaN(x) ? null : +x.toFixed(1))) : null])));
+    const arr = (t) => Array.from(t, (x) => (Number.isNaN(x) ? null : +x.toFixed(1)));
+    v.pairs = v.pairs.map((p) => ({ A: arr(p.A), B: p.B ? arr(p.B) : null, C: arr(p.C), P: p.P.map(arr) }));
   }
   const file = { schema: 'fnaf3-detectors-v2', geometry: IMAGE_GEOMETRY, block: BLOCK, frames: CAMERA_FRAMES, margin,
     source: { images: 'CTFAK image export (game content, outside the repository)', runs: runs.map((r) => r.split('/').pop()) }, cams };
