@@ -149,10 +149,10 @@ export async function forkBlocks({ script, args, start, count, jobs }) {
   }));
 }
 
-export function gitState() {
+export function gitState(enginePaths = ['packages/core', 'tools/device']) {
   const git = (...args) => execFileSync('git', ['-C', ROOT, ...args], { encoding: 'utf8' }).trim();
   return { commit: git('rev-parse', 'HEAD'),
-    dirtyEnginePaths: git('status', '--porcelain', '--', 'packages/core', 'tools/device').split('\n').filter(Boolean) };
+    dirtyEnginePaths: git('status', '--porcelain', '--', ...enginePaths).split('\n').filter(Boolean) };
 }
 
 /** The evidence record: per binding, per block, per night. */

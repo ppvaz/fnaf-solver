@@ -29,8 +29,11 @@
 //
 //   node tools/fnaf1-device-lane.mjs --seeds 3000 [--start 3000] [--lane typical|worst]
 //        [--policy flick4b] [--opt.key value ...]
+//   node tools/fnaf1-device-lane.mjs --population [--jobs 7] [--out FILE]   # grid420, every seed, three lanes
 
-import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { Fnaf1Sim, DOOR_OPEN, DOOR_SHUT, MS_PER_FRAME } from '../packages/core/src/mechanics/games/sim-fnaf1.js';
 
@@ -648,6 +651,127 @@ export function* grid420(ctx) {
 
 export const DEVICE_POLICIES = { flick4b, grid420 };
 
+// --- the population ------------------------------------------------------
+//
+// The route's lane figures (1000/1000 typical, 947/1000 worst) are seeds
+// 0-999. `Fnaf1Sim` seeds the shared 16-bit `Rng`, so 65,536 seeds are every
+// 4/20 night the model can deal; `--population` scores grid420 over all of
+// them in three lanes. `typical` and `starved` draw one lateness sample per
+// seed from the lane's own stream (laneRng), so over those lanes this is a
+// census of nights, each with one draw of the phone's costs; `worst` takes
+// every band's maximum and has no draw.
+export const POPULATION_KIND = 'fnaf1-device-lane-population-v1';
+export const POPULATION_LANES = Object.freeze(['typical', 'worst', 'starved']);
+export const WINNER_PATH = `${HERE}device/fnaf1-custom-night7-420-grid420-winner.json`;
+const RNG_SEEDS = 0x10000;
+// A lane that loses most nights (starved does) is described by its causes;
+// its first losses are listed so a gate can replay them, and the whole list
+// is kept as a count and a hash.
+export const MAX_LISTED_LOSSES = 1000;
+const LANE_FILE = 'tools/fnaf1-device-lane.mjs';
+const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
+
+/**
+ * Where the lane file last hashed to `pinned` in history, and the commits that
+ * changed it since. The winner pins whole files, so this names the drift by
+ * commit rather than by guessing which change mattered.
+ */
+function pinHistory(pinned) {
+  const git = (...args) => execFileSync('git', ['-C', `${HERE}..`, ...args], { encoding: 'utf8' });
+  const since = [];
+  for (const commit of git('log', '--format=%h', '--', LANE_FILE).split('\n').filter(Boolean)) {
+    if (sha256(git('show', `${commit}:${LANE_FILE}`)) === pinned) return { matchedAt: commit, changedSince: since };
+    since.push(commit);
+  }
+  return { matchedAt: null, changedSince: since };
+}
+
+/** Losses over [start, end) for each lane: [seed, outcome, frames]. */
+export function populationBlock(lanes, start, end) {
+  const timing = loadTiming();
+  return lanes.map((lane) => {
+    const losses = [];
+    for (let seed = start; seed < end; seed += 1) {
+      const r = runDeviceNight({ night: 7, seed, custom: FOUR_TWENTY, timing, lane, policy: grid420 });
+      if (r.outcome !== '6AM') losses.push([seed, r.outcome, r.frames]);
+    }
+    return { lane, n: end - start, losses };
+  });
+}
+
+export function populationRecord({ rows, start, count, design, git, date, command }) {
+  const inDesign = new Set(design.seeds);
+  const designIn = design.seeds.filter((seed) => seed >= start && seed < start + count).length;
+  const exhaustive = start === 0 && count === RNG_SEEDS;
+  const winner = JSON.parse(readFileSync(WINNER_PATH, 'utf8'));
+  const laneSha256 = sha256(readFileSync(fileURLToPath(import.meta.url)));
+  const pinned = winner.sources[LANE_FILE];
+  const history = pinHistory(pinned);
+  const dirty = git.dirtyEnginePaths.some((line) => line.endsWith(LANE_FILE));
+  const lanes = rows.map(({ lane, n, losses }) => {
+    const designLosses = losses.filter(([seed]) => inDesign.has(seed)).length;
+    const deaths = {};
+    for (const [, outcome] of losses) deaths[outcome] = (deaths[outcome] ?? 0) + 1;
+    return { lane, wins: n - losses.length, n,
+      design: { wins: designIn - designLosses, n: designIn },
+      heldOut: { wins: (n - designIn) - (losses.length - designLosses), n: n - designIn },
+      deaths, losses: losses.slice(0, MAX_LISTED_LOSSES), lossesListed: Math.min(losses.length, MAX_LISTED_LOSSES),
+      lossesSha256: sha256(JSON.stringify(losses)) };
+  });
+  const rate = (l) => `${l.lane} ${l.wins}/${l.n}` + (l.wins === l.n ? '' : ` (${(100 * l.wins / l.n).toFixed(3)}%)`);
+  return {
+    schema: 'evidence-record-v1', kind: POPULATION_KIND,
+    id: `fnaf1-420-device-lane-population-${date.replace(/-/g, '')}`, claimLevel: 'MODEL_ONLY', date,
+    question: 'What is FNaF 1 4/20 worth under grid420 on the phone\'s measured costs over every night the model ' +
+      'can deal -- not seeds 0-999 -- and does the route the tree runs today match the one that won?',
+    answer: `${lanes.map(rate).join('; ')}.` +
+      (pinned === laneSha256 ? '' : ` ${winner.id} pins ${LANE_FILE} as it stood at ${history.matchedAt ?? 'no commit'};` +
+        ` ${history.changedSince.length} commit(s) changed it since (${history.changedSince.join(', ')})` +
+        `${dirty ? ', and it is modified in the working tree' : ''}, so this is the census of the file a re-run ` +
+        'executes today, not of the file that won.'),
+    whyItIsModelOnly: 'No device run. The lane drives the simulator through the costs in ' +
+      'fnaf1-device-timing-moto-g56-v207.json, which states each one\'s claim level; it prices no detector error.',
+    method: {
+      tool: 'tools/fnaf1-device-lane.mjs --population', command, git,
+      population: { start, count, exhaustive,
+        why: 'Fnaf1Sim seeds Rng, which keeps seed & 0xffff (packages/core/src/mechanics/rng.js); ' +
+          'typical and starved draw one lateness sample per seed from laneRng(seed * 7919 + 17)' },
+      policy: 'grid420 with its defaults, night 7 at 20/20/20/20',
+      lanes: { typical: 'each cost drawn from its band', worst: 'every band at its maximum',
+        starved: 'band maximum x (1 + 3u): a capture at a third of its rate, the screenrecord case' },
+      laneSha256, timingSha256: sha256(readFileSync(TIMING_PATH)),
+      winner: { path: 'tools/device/fnaf1-custom-night7-420-grid420-winner.json', pinnedLaneSha256: pinned,
+        fileMatchesWinner: pinned === laneSha256, ...history },
+      designBlock: { ...design.components, distinct: design.seeds.length, inCensus: designIn,
+        sha256: sha256(JSON.stringify(design.seeds)) },
+      heldOutBlock: { definition: 'every censused seed not in the design block', n: count - designIn },
+    },
+    lanes,
+  };
+}
+
+async function population(argv) {
+  const flag = (name, dflt) => { const i = argv.indexOf(`--${name}`); return i < 0 ? dflt : argv[i + 1]; };
+  const jobs = Number(flag('jobs', '1'));
+  const start = Number(flag('start', '0'));
+  const count = Number(flag('count', String(RNG_SEEDS)));
+  if (!Number.isInteger(jobs) || jobs < 1) throw new Error('--jobs must be a positive integer');
+  if (!Number.isInteger(start) || !Number.isInteger(count) || start < 0 || count < 1 || start + count > RNG_SEEDS)
+    throw new Error(`--start/--count must lie inside 0..${RNG_SEEDS - 1}`);
+  const { designBlock, forkBlocks, gitState } = await import('./winner-census.mjs');
+  const started = Date.now();
+  const rows = await forkBlocks({ script: fileURLToPath(import.meta.url), args: POPULATION_LANES, start, count, jobs });
+  const record = populationRecord({ rows, start, count, design: designBlock(),
+    git: gitState(['packages/core', 'tools/device', LANE_FILE]),
+    date: flag('date', new Date().toISOString().slice(0, 10)),
+    command: `node tools/fnaf1-device-lane.mjs --population --start ${start} --count ${count} --jobs ${jobs}` });
+  record.method.wallSeconds = Math.round((Date.now() - started) / 1000);
+  const text = `${JSON.stringify(record, null, 2)}\n`;
+  const out = flag('out', null);
+  if (out) writeFileSync(out, text); else process.stdout.write(text);
+  console.error(`fnaf1 4/20 grid420 population: ${record.answer}`);
+}
+
 export function census({ seeds = 3000, start = 0, night = 7, custom = FOUR_TWENTY, lane = 'typical',
                          policy = 'flick4b', options = {}, timing = loadTiming() } = {}) {
   const make = DEVICE_POLICIES[policy];
@@ -668,7 +792,12 @@ export function census({ seeds = 3000, start = 0, night = 7, custom = FOUR_TWENT
            refusedMean: refused.reduce((a, b) => a + b, 0) / refused.length };
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (process.argv[1] === fileURLToPath(import.meta.url) && process.argv[2] === '--child') {
+  const [, , , a, b, ...lanes] = process.argv;
+  process.send(populationBlock(lanes, Number(a), Number(b)));
+} else if (process.argv[1] === fileURLToPath(import.meta.url) && process.argv.includes('--population')) {
+  population(process.argv.slice(2)).catch((error) => { console.error(error.message); process.exitCode = 1; });
+} else if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const args = { seeds: 3000, start: 0, lane: 'typical', policy: 'flick4b', night: 7, options: {} };
   const argv = process.argv.slice(2);
   for (let i = 0; i < argv.length; i += 1) {

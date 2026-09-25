@@ -2055,6 +2055,9 @@
       "file": "tools/fnaf1-device-lane.mjs",
       "imports": [
         "../packages/core/src/mechanics/games/sim-fnaf1.js",
+        "./winner-census.mjs",
+        "node:child_process",
+        "node:crypto",
         "node:fs",
         "node:url"
       ]
@@ -2607,7 +2610,10 @@
       "file": "tools/test-fnaf1-device-lane.mjs",
       "imports": [
         "../packages/core/src/mechanics/games/sim-fnaf1.js",
-        "./fnaf1-device-lane.mjs"
+        "./fnaf1-device-lane.mjs",
+        "./winner-census.mjs",
+        "node:crypto",
+        "node:fs"
       ]
     },
     {

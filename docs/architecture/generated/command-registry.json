@@ -757,7 +757,7 @@
     },
     {
       "id": "tools/fnaf1-device-lane.mjs",
-      "invocation": "tools/fnaf1-device-lane.mjs [--seeds N] [--start S] [--lane typical\\|worst\\|best] [--policy grid420\\|flick4b] [--opt.key value]",
+      "invocation": "tools/fnaf1-device-lane.mjs [--seeds N] [--start S] [--lane typical\\|worst\\|best\\|starved] [--policy grid420\\|flick4b] [--opt.key value] [--population [--jobs J] [--out FILE]]",
       "kind": "report",
       "lifecycle": "supported"
     },

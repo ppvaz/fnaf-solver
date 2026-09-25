@@ -173,6 +173,16 @@ and the solver MCP with its claim envelope (Plan 28).
 - **Stands:**
   - **FNaF 1:** 4/20 reached 6 AM on 2 of 4 nights on the phone
     ([first 6 AM](../docs/evidence/fnaf1-420-first-6am-20260925.json)).
+    `grid420` in the model's device lane, over all 65,536 seeds, scores:
+    - typical: 65,536/65,536;
+    - worst: 97.90%, 1369 of 1374 losses to Chica;
+    - starved (the screenrecord case): 0.
+
+    The two recorded nights died on the phone, which fits
+    ([lane population](../docs/evidence/fnaf1-420-device-lane-population-20260925.json)).
+    The committed winner pins the lane file as of `3aaf02c`, the 420-a win.
+    `e6de745` has changed the route since, so a re-run from the tree does not
+    execute the file that won.
   - **FNaF 3:** 65,536/65,536 in the model on all six nights, and Night 1 on the
     phone.
   - **FNaF 4:** model only ([four games](../docs/research/FOUR-GAME-NIGHTS.md)).

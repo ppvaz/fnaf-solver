@@ -10,13 +10,21 @@
 //   2. the moving-door rule: neither death nor turn-back at AV0 1 or 4;
 //   3. the lane itself: a policy that taps a control off its pan is an error,
 //      and the roll-grid policy clears a small slice while a control policy
-//      that never flicks loses to Foxy.
+//      that never flicks loses to Foxy;
+//   4. the population record (`--population`, minutes on seven cores, not
+//      re-run here) still describes the tree: its timing model and design
+//      block hash as recorded, the listed losses replay to the same outcome
+//      and frame, and a fixed held-out sample replays as recorded.
 //
 //   node tools/test-fnaf1-device-lane.mjs
 
+import { createHash } from 'node:crypto';
+import { readFileSync, readdirSync } from 'node:fs';
 import { Fnaf1Sim, DOOR_OPEN, DOOR_SHUT, DOOR_CLOSING, DOOR_OPENING, INPUT }
   from '../packages/core/src/mechanics/games/sim-fnaf1.js';
-import { runDeviceNight, loadTiming, grid420, FOUR_TWENTY } from './fnaf1-device-lane.mjs';
+import { runDeviceNight, loadTiming, grid420, FOUR_TWENTY, TIMING_PATH, POPULATION_KIND, POPULATION_LANES }
+  from './fnaf1-device-lane.mjs';
+import { designBlock } from './winner-census.mjs';
 
 const failures = [];
 let checks = 0;
@@ -124,9 +132,53 @@ const timing = loadTiming();
   eq('grid420 clears a 25-seed slice in both lanes (3000-seed figures are in the lane doc)', wins, 50);
 }
 
+// --- 4. the population record ---------------------------------------------------
+let population = '';
+{
+  const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
+  const dir = new URL('../docs/evidence/', import.meta.url);
+  const name = readdirSync(dir).filter((n) => /^fnaf1-420-device-lane-population-\d{8}\.json$/.test(n)).sort().pop();
+  ok('a fnaf1-420-device-lane-population record is committed', Boolean(name));
+  if (name) {
+    const record = JSON.parse(readFileSync(new URL(name, dir), 'utf8'));
+    eq(`${name} kind`, record.kind, POPULATION_KIND);
+    eq(`${name} lanes`, record.lanes.map((l) => l.lane), [...POPULATION_LANES]);
+    ok(`${name}: the timing model changed since; re-run --population`,
+      record.method.timingSha256 === sha256(readFileSync(TIMING_PATH)));
+    const design = designBlock();
+    ok(`${name}: the design block no longer rebuilds`, record.method.designBlock.sha256 === sha256(JSON.stringify(design.seeds)));
+    const inDesign = new Set(design.seeds);
+    const { start, count } = record.method.population;
+    let replays = 0;
+    for (const row of record.lanes) {
+      ok(`${name} ${row.lane}: counts add up`, row.design.n + row.heldOut.n === row.n
+        && row.design.wins + row.heldOut.wins === row.wins
+        && row.losses.length === row.lossesListed && row.lossesListed <= row.n - row.wins);
+      for (const [seed, outcome, frames] of row.losses.slice(0, 15)) {
+        const r = runDeviceNight({ seed, timing, lane: row.lane, policy: grid420 });
+        replays += 1;
+        eq(`${name} ${row.lane} seed ${seed} replays as recorded`, [r.outcome, r.frames], [outcome, frames]);
+      }
+      // Only a lane whose every loss is listed can say which held-out seeds won.
+      if (row.lossesListed === row.n - row.wins) {
+        const lost = new Set(row.losses.map(([seed]) => seed));
+        let taken = 0;
+        for (let k = 0; taken < 3 && k < count; k += 1) {
+          const seed = start + ((k * 40503 + row.lane.length * 977) % count);
+          if (inDesign.has(seed)) continue;
+          taken += 1; replays += 1;
+          const won = runDeviceNight({ seed, timing, lane: row.lane, policy: grid420 }).outcome === '6AM';
+          eq(`${name} ${row.lane} held-out seed ${seed} replays as recorded`, won, !lost.has(seed));
+        }
+      }
+    }
+    population = `; ${name} still describes the tree (${replays} replays)`;
+  }
+}
+
 if (failures.length) {
   console.error(`fnaf1 device lane: ${failures.length} of ${checks} checks failed`);
   for (const f of failures) console.error(`  - ${f}`);
   process.exit(1);
 }
-console.log(`fnaf1 device lane: all ${checks} checks passed`);
+console.log(`fnaf1 device lane: all ${checks} checks passed${population}`);
