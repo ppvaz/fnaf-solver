@@ -120,22 +120,30 @@ export class Reader {
   }
   /**
    * Which systems the monitor's blinking red lines name, by the row a line
-   * sits on: VIDEO at native y 240-270 (cal2: a camera error its ventilation
-   * reboots never cleared), VENT at 276-316 (f3-ex1: "ventilation error").
-   * A line on any other row is AUDIO until a menu read says otherwise.
+   * sits on. Every line read on nine runs sat in one of three bands, AUDIO at
+   * native y 200-208, VIDEO at 248-256 and VENT at 288-304, each 524-1076 px
+   * wide; a row outside the bands is the picture, not a line (cam 10's EXIT
+   * sign read as a line at y 360-408 sent n2e to an empty menu every 6.5 s
+   * from 282 s). In the blackout a line fades to r 37 while it blinks (n2d
+   * 213-221 s) with 24-30 red samples a row, where dim reddish static reaches
+   * 11: a row with a lit sample (r >= 90) needs 3, a dim one 12.
    */
   errorLines(frame) {
     const px = frame.regions.errors.pixels;
     const rows = new Map();
     for (let i = 0; i < px.length; i += 1) {
-      if (!isErrorRed(rgb(px[i]))) continue;
+      const c = rgb(px[i]);
+      if (!isErrorRed(c)) continue;
       const y = 200 + 8 * Math.floor(i / 80);
-      rows.set(y, (rows.get(y) ?? 0) + 1);
+      const row = rows.get(y) ?? { n: 0, lit: false };
+      row.n += 1; row.lit ||= c[0] >= 90;
+      rows.set(y, row);
     }
     const out = new Set();
-    for (const [y, n] of rows) {
-      if (n < 3) continue;
-      out.add(y >= 240 && y <= 270 ? 'VIDEO' : y >= 276 && y <= 316 ? 'VENT' : 'AUDIO');
+    for (const [y, { n, lit }] of rows) {
+      if (n < (lit ? 3 : 12)) continue;
+      const band = y >= 200 && y <= 232 ? 'AUDIO' : y >= 240 && y <= 270 ? 'VIDEO' : y >= 276 && y <= 316 ? 'VENT' : null;
+      if (band) out.add(band);
     }
     return out;
   }

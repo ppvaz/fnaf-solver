@@ -73,6 +73,15 @@ const GREY = (102 << 16) | (102 << 8) | 102;
   ok('a red line at y 248 is the video error', [...reader.errorLines(lineAt(248))].join() === 'VIDEO');
   ok('a red line at y 296 is the ventilation error', [...reader.errorLines(lineAt(296))].join() === 'VENT');
   ok('no red, no error', reader.errorLines(frameOf()).size === 0);
+  ok('a red line at y 200 is the audio error', [...reader.errorLines(lineAt(200))].join() === 'AUDIO');
+  // n2e 282 s: cam 10's EXIT sign, dark red at y 360-408 x 980-1132, read as an audio line.
+  const exitSign = frameOf();
+  for (let y = 360; y <= 408; y += 8) for (let x = 980; x <= 1132; x += 8) exitSign.regions.errors.pixels[((y - 200) / 8) * 80 + (x - 500) / 8] = (45 << 16) | (18 << 8) | 18;
+  ok('red below the three lines is the picture, not an error', reader.errorLines(exitSign).size === 0);
+  // calibration cam 1: up to 11 dim reddish samples on a band row.
+  const staticRow = frameOf();
+  for (let c = 10; c < 21; c += 1) staticRow.regions.errors.pixels[((208 - 200) / 8) * 80 + c] = (40 << 16) | (4 << 8) | 4;
+  ok('eleven dim red samples on a line row are static', reader.errorLines(staticRow).size === 0);
   ok('the title logo reads bright', reader.title(frameOf({ title: 0xe0f0a0 })) >= 0.2);
   ok('a dark office is not the title', reader.title(frameOf()) < 0.05);
   const bars = frameOf({ bar11: (66 << 16) | (106 << 8) | 82, bar12: (66 << 16) | (106 << 8) | 82, bar13: (66 << 16) | (106 << 8) | 82,
