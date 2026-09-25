@@ -100,6 +100,8 @@ mkdir -p "$CLASSES_DIR" "$DEX_DIR"
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/TeachPanel.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/Fnaf1Lesson.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/Fnaf1PanelView.java" \
+    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/Fnaf3Lesson.java" \
+    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/Fnaf3PanelView.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/Fnaf4Lesson.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/Fnaf4PanelView.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/TeachPanelView.java" \

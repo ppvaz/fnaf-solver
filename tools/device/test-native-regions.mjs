@@ -79,6 +79,7 @@ const read = (regions) => ({ regions: { cam_label: fill(N, 0), ...regions } });
   const { readFileSync } = await import('node:fs');
   for (const [game, lesson, regions] of [
     ['FNaF 1', 'Fnaf1Lesson.java', 'regions-fnaf1-moto-g56-v207.json'],
+    ['FNaF 3', 'Fnaf3Lesson.java', 'regions-fnaf3-moto-g56-v204.json'],
     ['FNaF 4', 'Fnaf4Lesson.java', 'regions-fnaf4-moto-g56-v204.json'],
   ]) {
     const java = readFileSync(new URL(`../../android/companion/src/com/ppvaz/fnafcompanion/${lesson}`, import.meta.url), 'utf8');

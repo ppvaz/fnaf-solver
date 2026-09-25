@@ -303,6 +303,49 @@ public final class OverlayController {
         removePanel(current);
     }
 
+    // The FNaF 3 teach panel: its own lesson and window, the same contract as
+    // FNaF 1's and FNaF 4's (origin attaches, clear detaches). Debug builds only.
+    private volatile Fnaf3Lesson f3Lesson = new Fnaf3Lesson();
+    private volatile Fnaf3PanelView f3View;
+
+    /** {@code LESSON <token> f3 <origin|night|step|look|seen|sealed|lure|sys|clear|status> ...}. */
+    public String f3Command(String[] field, int from) {
+        if ((context.getApplicationInfo().flags
+                & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) == 0) {
+            return "ERROR teach-release-build";
+        }
+        if (field.length <= from) return "ERROR f3-usage";
+        String verb = field[from];
+        if ("clear".equals(verb)) {
+            mainHandler.post(this::detachF3);
+            f3Lesson = new Fnaf3Lesson();
+            return "OK f3=OFF";
+        }
+        if ("status".equals(verb)) {
+            return "OK f3=" + (f3View != null ? "ATTACHED" : "NONE")
+                    + " originNs=" + f3Lesson.originNs() + " step=" + f3Lesson.step();
+        }
+        if (!permissionGranted()) return "ERROR teach-permission";
+        f3Lesson.apply(field, from, System.nanoTime());
+        if ("origin".equals(verb)) mainHandler.post(this::attachF3);
+        return "OK f3=" + verb;
+    }
+
+    private void attachF3() {
+        if (f3View != null || windowManager == null) return;
+        Fnaf3PanelView panel = new Fnaf3PanelView(context, f3Lesson);
+        if (addPanel(panel, Fnaf3Lesson.LEFT, Fnaf3Lesson.TOP, Fnaf3Lesson.RIGHT, Fnaf3Lesson.BOTTOM,
+                "FNaF 3 teach panel")) {
+            f3View = panel;
+        }
+    }
+
+    private void detachF3() {
+        Fnaf3PanelView current = f3View;
+        f3View = null;
+        removePanel(current);
+    }
+
     /**
      * Attach a teach panel window at a native content rectangle, refusing any
      * display transform that would scale, rotate or shift it: its clearance
