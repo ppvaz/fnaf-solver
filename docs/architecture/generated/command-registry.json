@@ -40,7 +40,7 @@
     },
     {
       "id": "test:unit",
-      "command": "node tools/architecture-test.js && node tools/validate-references.js && node tools/device/test-grade-run-coverage.mjs && node tools/policyequivalencetest.mjs && node tools/device/test-seam-slack.mjs && node tools/device/test-control-anchor.mjs && node tools/device/test-schedule-economy.mjs && node tools/device/test-anchor-aim-band.mjs && node tools/device/test-seedpin.mjs && node tools/test-evidence-campaign.mjs && node tools/test-evidence-pack.mjs && node tools/test-evidence-cohort.mjs && node tools/test-winner-census.mjs && node tools/test-night.mjs && node tools/device/test-night7-presets.mjs && node tools/device/test-fact-register.mjs && node tools/device/test-winners-rebuild.mjs && node tools/device/test-event-clocks.mjs && python3 tools/dump/test-instances.py && python3 tools/dump/test-nightmap.py && node tools/test-night-models.mjs && node tools/device/test-fnaf1-menu-probe.mjs && python3 tools/device/test-fnaf1-menus.py && node tools/device/test-fnaf1-night-run.mjs && python3 tools/device/test-fnaf1-door-light.py && python3 tools/cue/test-bt-audio-collector.py && python3 tools/device/test-fnaf1-teach-overlay.py && python3 tools/device/test-sensor.py && node tools/test-fnaf1-census.mjs && node tools/test-fnaf1-device-lane.mjs && node tools/device/test-native-regions.mjs && node tools/test-fnaf3-census.mjs && node tools/test-fnaf4-census.mjs && npm run test:chronicle && node tools/test.mjs --gates",
+      "command": "node tools/architecture-test.js && node tools/validate-references.js && node tools/device/test-grade-run-coverage.mjs && node tools/policyequivalencetest.mjs && node tools/device/test-seam-slack.mjs && node tools/device/test-control-anchor.mjs && node tools/device/test-schedule-economy.mjs && node tools/device/test-anchor-aim-band.mjs && node tools/device/test-seedpin.mjs && node tools/test-evidence-campaign.mjs && node tools/test-evidence-pack.mjs && node tools/test-evidence-cohort.mjs && node tools/test-winner-census.mjs && node tools/test-night.mjs && node tools/device/test-night7-presets.mjs && node tools/device/test-fact-register.mjs && node tools/device/test-winners-rebuild.mjs && node tools/device/test-event-clocks.mjs && python3 tools/dump/test-instances.py && python3 tools/dump/test-nightmap.py && node tools/test-night-models.mjs && node tools/device/test-fnaf1-menu-probe.mjs && python3 tools/device/test-fnaf1-menus.py && node tools/device/test-fnaf1-night-run.mjs && python3 tools/device/test-fnaf1-door-light.py && python3 tools/cue/test-bt-audio-collector.py && python3 tools/device/test-fnaf1-teach-overlay.py && python3 tools/device/test-sensor.py && node tools/test-fnaf1-census.mjs && node tools/test-fnaf1-device-lane.mjs && node tools/device/test-native-regions.mjs && node tools/device/test-fnaf3-run.mjs && node tools/test-fnaf3-census.mjs && node tools/test-fnaf4-census.mjs && npm run test:chronicle && node tools/test.mjs --gates",
       "lifecycle": "supported"
     },
     {
@@ -1791,6 +1791,30 @@
       "id": "tools/device/night-kit.mjs",
       "invocation": "tools/device/night-kit.mjs",
       "kind": "module",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "tools/device/fnaf3-run.sh",
+      "invocation": "tools/device/fnaf3-run.sh --dry-run \\| --live --confirm-live --mode calibrate\\|loop [--detectors FILE --night N] [--teach] [--video] [--label NAME]",
+      "kind": "**device action**",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "tools/device/fnaf3-run.mjs",
+      "invocation": "tools/device/fnaf3-run.mjs",
+      "kind": "module",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "tools/device/fnaf3-detectors.mjs",
+      "invocation": "tools/device/fnaf3-detectors.mjs build --run RUN --out FILE [--pngs DIR]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "tools/device/test-fnaf3-run.mjs",
+      "invocation": "tools/device/test-fnaf3-run.mjs",
+      "kind": "check",
       "lifecycle": "supported"
     },
     {

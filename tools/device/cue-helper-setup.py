@@ -27,7 +27,8 @@ TARGET_PACKAGE = "com.scottgames.fnaf2"
 # The other targets the Companion serves. The helper has a screen identity
 # only for FNaF 2; for these the setup ends when the game is launched, and the
 # caller's own title gate (a SNAP read by its title model) says where it is.
-OTHER_TARGETS = {"fnaf1": "com.scottgames.fivenightsatfreddys", "fnaf4": "com.scottgames.fnaf4"}
+OTHER_TARGETS = {"fnaf1": "com.scottgames.fivenightsatfreddys", "fnaf3": "com.scottgames.fnaf3",
+                 "fnaf4": "com.scottgames.fnaf4"}
 OVERLAY_SUPPRESSION_PERMISSION = "android.permission.HIDE_NON_SYSTEM_OVERLAY_WINDOWS"
 UI_REMOTE = "/sdcard/cue-helper-setup-ui.xml"
 UI_ALLOWED = {

@@ -1,0 +1,42 @@
+{
+  "schema": "control-map-v1",
+  "id": "controls-fnaf3-moto-g56-v204",
+  "claimLevel": "DEVICE_MEASURED (placement: each point was pressed on the handset and the next native SNAP showed the named effect, sessions f3-ex1/f3-ex2 on 2026-09-25); timings are not claimed here beyond the pan floor Plan 26 measured",
+  "recordedAt": "2026-09-25",
+  "target": { "game": "FNaF 3", "package": "com.scottgames.fnaf3", "version": "2.0.4 (versionCode 18)" },
+  "device": { "serial": "ZF525F5BH5", "model": "moto g56 5G", "displayGeometry": "1080x2400" },
+  "view": {
+    "pan": "The office is 2000 px wide in a 1024 window and a night starts panned fully left. A hold at the right edge pans right and saturates at 968 px in 1025 ms (5/5; 1000 ms 2/5, Plan 26); holds here are 1100 ms, 75 ms over the floor. The monitor tab exists only in the right view and the maintenance tab only in the left one.",
+    "monitor": "The camera monitor is a toggle on one tab: pressed once it rises over the office (the camera map with Play Audio and Map Toggle), pressed again it drops. Map Toggle swaps the camera map (CAM 01-10, Play Audio) for the vent map (CAM 11-15, a seal bar beside each); the selected label turns green.",
+    "seal": "On the vent map a press selects a vent camera and a second press on the selected label arms the seal; the charge lasts 50-100 frames and is cancelled if the map toggles or the monitor drops (g572, g582-g585). The seal bar beside the vent turns red when it commits."
+  },
+  "controlMap": {
+    "loadGame":   { "x": 480,  "y": 641,  "anchor": "screen", "frame": "title", "effect": "LOAD GAME: the office within 4 s (f3-ex1 0002)" },
+    "panRight":   { "x": 2200, "y": 540,  "anchor": "screen", "frame": "office", "holdMs": 1100, "effect": "office panned right, the monitor tab in view (f3-ex1 0006)" },
+    "panLeft":    { "x": 200,  "y": 540,  "anchor": "screen", "frame": "office", "holdMs": 1100, "effect": "office panned left, the maintenance tab in view (f3-ex1 0023)" },
+    "monitor":    { "x": 2212, "y": 327,  "anchor": "world", "measuredAtPan": "right", "frame": "office", "effect": "monitor up (f3-ex1 0009) and down again (f3-ex1 0019)" },
+    "maintenance":{ "x": 996,  "y": 1020, "anchor": "world", "measuredAtPan": "left", "frame": "office", "effect": "the system restart menu (f3-ex1 0024)" },
+    "rebootAudio":  { "x": 816, "y": 500, "anchor": "screen", "frame": "maintenance", "effect": "audio devices row" },
+    "rebootCamera": { "x": 816, "y": 604, "anchor": "screen", "frame": "maintenance", "effect": "camera system row" },
+    "rebootVent":   { "x": 780, "y": 708, "anchor": "screen", "frame": "maintenance", "effect": "ventilation row (f3-ex1 0026)" },
+    "rebootAll":    { "x": 738, "y": 866, "anchor": "screen", "frame": "maintenance", "effect": "reboot all row" },
+    "exitMaint":    { "x": 594, "y": 970, "anchor": "screen", "frame": "maintenance", "effect": "exit row" },
+    "playAudio":  { "x": 1246, "y": 814, "anchor": "screen", "frame": "camera map", "effect": "Play Audio at the selected camera" },
+    "mapToggle":  { "x": 1248, "y": 926, "anchor": "screen", "frame": "monitor", "effect": "camera map <-> vent map (f3-ex2 0015)" },
+    "cam01": { "x": 1566, "y": 950, "anchor": "screen", "frame": "camera map" },
+    "cam02": { "x": 2071, "y": 912, "anchor": "screen", "frame": "camera map" },
+    "cam03": { "x": 2261, "y": 852, "anchor": "screen", "frame": "camera map" },
+    "cam04": { "x": 2261, "y": 761, "anchor": "screen", "frame": "camera map" },
+    "cam05": { "x": 1876, "y": 782, "anchor": "screen", "frame": "camera map" },
+    "cam06": { "x": 1550, "y": 794, "anchor": "screen", "frame": "camera map" },
+    "cam07": { "x": 1550, "y": 701, "anchor": "screen", "frame": "camera map" },
+    "cam08": { "x": 1796, "y": 670, "anchor": "screen", "frame": "camera map", "effect": "selected (f3-ex1 0016)" },
+    "cam09": { "x": 1952, "y": 610, "anchor": "screen", "frame": "camera map", "effect": "selected (f3-ex1 0014)" },
+    "cam10": { "x": 2206, "y": 660, "anchor": "screen", "frame": "camera map", "effect": "selected (f3-ex1 0012)" },
+    "cam11": { "x": 1560, "y": 571, "anchor": "screen", "frame": "vent map", "sealBar": [1500, 654] },
+    "cam12": { "x": 1704, "y": 737, "anchor": "screen", "frame": "vent map", "sealBar": [1567, 755] },
+    "cam13": { "x": 1903, "y": 821, "anchor": "screen", "frame": "vent map", "sealBar": [1783, 839] },
+    "cam14": { "x": 2104, "y": 708, "anchor": "screen", "frame": "vent map", "sealBar": [2224, 798] },
+    "cam15": { "x": 2160, "y": 906, "anchor": "screen", "frame": "vent map", "sealBar": [2040, 938] }
+  }
+}

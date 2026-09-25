@@ -1,0 +1,20 @@
+{
+  "schema": "native-regions-v1",
+  "id": "regions-fnaf3-moto-g56-v204",
+  "claimLevel": "PLACEMENT from native frames of sessions f3-ex1/f3-ex2 (2026-09-25, ~/fnaf-apks/explore); no detector threshold is claimed here",
+  "target": { "package": "com.scottgames.fnaf3", "build": "2.0.4 (18)", "device": "ZF525F5BH5", "geometry": [2400, 1080] },
+  "why": "Raw native pixels only (NativeRegions.java). The feed is the monitor's picture (a camera, the vent map, or the office and the maintenance menu when the monitor is down); the HUD is the night and the hour; the error lines are the red system warnings the monitor prints at its top left; the title gate is the vertical FNAF3 logo (title-fnaf3 title_gate); the five seal bars turn red when a vent's seal commits. 8175 samples of the helper's 8192.",
+  "sets": {
+    "night": {
+      "feed":   { "x": 400,  "y": 130, "width": 1920, "height": 900, "step": 20, "reads": "view and occupant: which camera, whether Springtrap or a phantom is in it" },
+      "hud":    { "x": 2140, "y": 8,   "width": 220,  "height": 92,  "step": 4,  "reads": "night N and the hour" },
+      "errors": { "x": 500,  "y": 200, "width": 640,  "height": 216, "step": 8,  "reads": "the red system error lines over the feed" },
+      "title":  { "x": 250,  "y": 85,  "width": 56,   "height": 313, "step": 8,  "reads": "the FNAF3 logo: the title screen, where a death or the minigame ends" },
+      "bar11":  { "x": 1470, "y": 650, "width": 60,   "height": 8,   "step": 4,  "reads": "vent 11 seal bar" },
+      "bar12":  { "x": 1537, "y": 751, "width": 60,   "height": 8,   "step": 4,  "reads": "vent 12 seal bar" },
+      "bar13":  { "x": 1753, "y": 835, "width": 60,   "height": 8,   "step": 4,  "reads": "vent 13 seal bar" },
+      "bar14":  { "x": 2194, "y": 794, "width": 60,   "height": 8,   "step": 4,  "reads": "vent 14 seal bar" },
+      "bar15":  { "x": 2010, "y": 934, "width": 60,   "height": 8,   "step": 4,  "reads": "vent 15 seal bar" }
+    }
+  }
+}

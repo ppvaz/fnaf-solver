@@ -1347,6 +1347,33 @@
       ]
     },
     {
+      "file": "tools/device/fnaf3-detectors.mjs",
+      "imports": [
+        "./native-regions.mjs",
+        "node:fs",
+        "node:path",
+        "node:url",
+        "node:zlib"
+      ]
+    },
+    {
+      "file": "tools/device/fnaf3-run.mjs",
+      "imports": [
+        "../../apps/device/src/physical-ports.js",
+        "../../packages/adapters/src/transports/hid.js",
+        "./fnaf3-detectors.mjs",
+        "./native-regions.mjs",
+        "./night-kit.mjs",
+        "node:child_process",
+        "node:crypto",
+        "node:fs/promises",
+        "node:os",
+        "node:path",
+        "node:perf_hooks",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/device/fnaf4-run.mjs",
       "imports": [
         "../../apps/device/src/physical-ports.js",
@@ -1717,6 +1744,15 @@
         "node:fs",
         "node:path",
         "node:url"
+      ]
+    },
+    {
+      "file": "tools/device/test-fnaf3-run.mjs",
+      "imports": [
+        "./fnaf3-detectors.mjs",
+        "./fnaf3-run.mjs",
+        "./native-regions.mjs",
+        "node:fs"
       ]
     },
     {
