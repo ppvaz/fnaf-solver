@@ -2610,7 +2610,8 @@
       "imports": [
         "../packages/core/src/mechanics/games/fnaf3.js",
         "../packages/core/src/mechanics/games/policy-fnaf3.js",
-        "../packages/core/src/mechanics/games/sim-fnaf3.js"
+        "../packages/core/src/mechanics/games/sim-fnaf3.js",
+        "./device/fnaf3-run.mjs"
       ]
     },
     {

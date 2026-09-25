@@ -1,0 +1,116 @@
+{
+  "schema": "evidence-record-v1",
+  "id": "fnaf3-graph-correction-tracking-census-20260925",
+  "claimLevel": "MODEL_ONLY",
+  "date": "2026-09-25",
+  "target": {
+    "game": "FNaF 3",
+    "package": "com.scottgames.fnaf3",
+    "version": "2.0.4+18"
+  },
+  "question": "Does the FNaF 3 simulator move Springtrap along the edges the event sheet gives, and does a loop at the phone's own pace -- the one tools/device/fnaf3-run.mjs plays -- hold the story nights and Nightmare in the model?",
+  "correction": {
+    "what": "sim-fnaf3.js GRAPH against packages/core/src/mechanics/games/graphs/fnaf3.json (the 73 extracted edges).",
+    "defects": [
+      "cam 10's `action selected > 1 AND < 4 -> cam 09` (g227) was carried as action 1, which never reaches an edge because action 1 is the stay (g225). Cam 10 therefore had no exit but vent 14.",
+      "g239, g249 and g251 are `action selected > 2` edges (cam 06 -> cam 05, cam 04 -> cam 03, cam 03 -> attack stage 1); the table read them as second action-2 edges and dropped them.",
+      "attack stage 2 -> 3 on `action selected > 2` (g253) and cam 01 -> attack stage 4 on `action selected > 2` while a screen is viewed (g258) were missing."
+    ],
+    "consequence": "Under aggression (the whole first hour and from 4 AM, g904) the old graph let one seal on vent 14 hold him in a 10 <-> 14 bounce all night. Re-censused on the corrected graph, the published line's result barely moves: it was winning by speed, not by the missing edges."
+  },
+  "policies": {
+    "community-line": "policy-fnaf3.js communityLine: shows a camera every 12 frames (0.2 s), seals the vent beside his last sighting at once, reboots ventilation from the HUD meter. Not actuatable: a look on the phone costs about 1 s.",
+    "tracking-loop": "policy-fnaf3.js trackingLoop, the device loop at the device's pace: a look costs 45 frames, a vent seal 18 frames before the arming press plus the game's 50-100 frame charge, a ventilation reboot 280 frames of office before its timer runs. It stays on his camera, seals the vent beside him on arrival, seals the vent beside the camera he left and searches ring by ring along his edges. Its search order is pinned equal to fnaf3-run.mjs's by tools/test-fnaf3-census.mjs."
+  },
+  "family": "fixed-pace belief policies over the corrected graph, no audio lures (the lure is not modelled), no phantoms (not modelled)",
+  "blocks": {
+    "a": "seeds 0-2999",
+    "heldOut": "seeds 3000-5999"
+  },
+  "results": {
+    "tracking-loop": {
+      "a": {
+        "1": 3000,
+        "2": 2985,
+        "3": 2997,
+        "4": 2994,
+        "5": 2993,
+        "6": 2977,
+        "6-aggressive": 2606
+      },
+      "heldOut": {
+        "1": 3000,
+        "2": 2992,
+        "3": 2998,
+        "4": 2994,
+        "5": 2986,
+        "6": 2974,
+        "6-aggressive": 2611
+      },
+      "losses6": {
+        "a": {
+          "springtrap-vent": 17,
+          "springtrap-office": 6
+        },
+        "heldOut": {
+          "springtrap-vent": 21,
+          "springtrap-office": 5
+        }
+      },
+      "losses6Aggressive": {
+        "a": {
+          "springtrap-office": 227,
+          "springtrap-vent": 167
+        },
+        "heldOut": {
+          "springtrap-office": 203,
+          "springtrap-vent": 186
+        }
+      }
+    },
+    "community-line": {
+      "a": {
+        "1": 3000,
+        "2": 3000,
+        "3": 3000,
+        "4": 3000,
+        "5": 3000,
+        "6": 3000,
+        "6-aggressive": 2996
+      },
+      "heldOut": {
+        "1": 3000,
+        "2": 3000,
+        "3": 3000,
+        "4": 3000,
+        "5": 3000,
+        "6": 3000,
+        "6-aggressive": 2994
+      }
+    }
+  },
+  "reproduce": [
+    "node tools/census.mjs --game fnaf3 --policy tracking-loop --seeds 3000 --start 0",
+    "node tools/census.mjs --game fnaf3 --policy tracking-loop --seeds 3000 --start 3000",
+    "node tools/census.mjs --game fnaf3 --policy tracking-loop --night 6 --hyper --seeds 3000 --start 0",
+    "node tools/census.mjs --game fnaf3 --policy community-line --seeds 3000 --start 3000"
+  ],
+  "findings": [
+    "At the phone's pace the tracking loop holds Nightmare on 99.2% of seeds in both blocks; its losses are vents (a move into 14 or 15 while the loop looked elsewhere) and the office chain.",
+    "Aggressive Nightmare (`hyper on?`, g222) costs it 13 points: he moves every ~4.1 s against a ~0.75 s look, and the two blocks agree (86.9% and 87.0%).",
+    "The published line's 3000/3000 is a property of looking five times a second, which no player and no phone does; it is not evidence about any actuatable route."
+  ],
+  "notMeasured": [
+    "Phantoms: their scares break systems and raise aggression; the model has none, so these are ceilings of the family, not predictions for the phone.",
+    "The audio lure's effect (edges g343-g352 are keyed on a flag whose adjacency test is not traced).",
+    "Whether the phone's look really costs 45 frames: cal1 measured 205-256 ms from press to label and a 400 ms static burst after every switch, and 12 region frames/s with the monitor up."
+  ],
+  "rung": "None. MODEL_ONLY; plans/26 and ROADMAP S6 name the device lane as the promotion path.",
+  "plan": "plans/ROADMAP.md S6",
+  "knownModelDefects": [
+    "The camera drain is not modelled: every 1000 ms with the monitor up `camera text` AV5 gains 1 (g783), and at 12 the camera loses AI points (g784); the video error comes at -10 (g381). So video fails after 60 s of monitor time on Night 2 and after 24 s on Nightmare (AI 7), and each camera reboot is a trip away from the monitor. The phone met it at 72-75 s on Night 2 (cal2, cal3), as the rule predicts with the monitor raised ~12 s in. This is the largest gap between this model and a playable Nightmare.",
+    "The office drain counts seconds, not frames: `ventilation text` AV6 gains 1 every 1000 ms off the monitor (g906) and is zeroed on it (g907), so g908 drains ventilation only after 10 s in the office. sim-fnaf3.js counts frames and drains after 10 of them.",
+    "Each Play Audio subtracts AI from the audio counter (g301/g308): two lures break audio on Nightmare. The lure itself (g317-g352) pulls him from an adjacent camera onto the lured one after a Random(100) delay, resets his move counter, and is the only way back out of the attack chain (cam 02 from attack stage 1, cam 01 from stage 4); none of it is modelled."
+  ],
+  "source": "An Android event dump regenerated 2026-09-25 from the handset's own APK (CTFAK, tools/dump/regen-dump.sh, outside the repository) and read with tools/dump/readdump.py --xor 29."
+}

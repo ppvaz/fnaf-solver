@@ -303,6 +303,16 @@ Controls: **office camping** loses every night after the first (the office
 drains ventilation and raises aggression off one counter, g908/g909), and
 **doing nothing** loses Night 2 onward but is only a coin flip on Night 1.
 
+**Corrected 2026-09-25: the graph was wrong, and the line wins by speed.** The
+simulator's table had cam 10's exit to cam 09 (g227) on action 1, which is the
+stay, and dropped three `> 2` edges (g239, g249, g251) and two attack-chain
+edges (g253, g258), so under aggression one seal on vent 14 held him in a
+10 <-> 14 bounce all night. On the corrected graph the line still clears every
+normal night 3000/3000 in two blocks, because it shows a camera every 0.2 s. At
+the phone's pace (a look ~0.75 s, a seal ~2 s) the device loop holds Nightmare
+on 2977 and 2974 of 3000, and Aggressive Nightmare on 2606 and 2611
+([record](../evidence/fnaf3-graph-correction-tracking-census-20260925.json)).
+
 Two source facts do the work, and neither is in any public account:
 
 - **The attack chain advances on the ventilation blackout**, not on a move

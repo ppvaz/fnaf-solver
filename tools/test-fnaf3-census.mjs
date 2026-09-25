@@ -12,8 +12,10 @@
 //   node tools/test-fnaf3-census.mjs
 
 import { Fnaf3Sim } from '../packages/core/src/mechanics/games/sim-fnaf3.js';
-import { communityLine, doNothing, officeCamp, VENT_FROM }
+import { communityLine, doNothing, officeCamp, trackingLoop, searchOrder, VENT_FROM }
   from '../packages/core/src/mechanics/games/policy-fnaf3.js';
+import { GRAPH } from '../packages/core/src/mechanics/games/sim-fnaf3.js';
+import { searchOrder as deviceSearchOrder } from './device/fnaf3-run.mjs';
 import { CLOCK, VENTILATION, SPRINGTRAP } from '../packages/core/src/mechanics/games/fnaf3.js';
 
 const failures = [];
@@ -146,6 +148,35 @@ eq('cam 05 feeds vent 13', VENT_FROM[5], 13);
   sim.step();
   eq('closing the vent map cancels a charging seal', sim.sealCharge, 0);
   eq('and commits nothing', sim.sealedVent, 0);
+}
+
+// --- the source edges (graphs/fnaf3.json), which an earlier table misread ------------
+eq('cam 10 leaves for cam 09 on actions 2 and 3 (g227)', [GRAPH.cam10[2], GRAPH.cam10[3]], ['cam09', 'cam09']);
+eq('and for vent 14 on action 4 (g228)', GRAPH.cam10[4], 'vent14');
+eq('cam 06 on actions above 2 goes to cam 05 (g239)', [GRAPH.cam06[3], GRAPH.cam06[4]], ['cam05', 'cam05']);
+eq('cam 04 on actions above 2 goes to cam 03 (g249)', [GRAPH.cam04[3], GRAPH.cam04[4]], ['cam03', 'cam03']);
+eq('cam 03 on actions above 2 goes to attack stage 1 (g251)', [GRAPH.cam03[3], GRAPH.cam03[4]], ['attack1', 'attack1']);
+{
+  const sim = new Fnaf3Sim({ night: 6, seed: 1 });
+  sim.where = 'attack2'; sim.act(3);
+  eq('attack stage 2 advances on an action above 2 (g253)', sim.where, 'attack3');
+  sim.where = 'cam01'; sim.viewing = 2; sim.act(4);
+  eq('cam 01 advances to stage 4 while a screen is viewed (g258)', sim.where, 'attack4');
+  sim.where = 'attack1'; sim.act(4);
+  eq('attack stage 1 waits for the blackout (g486)', sim.where, 'attack1');
+}
+
+// --- the device loop at the device's pace -------------------------------------------
+for (let from = 0; from <= 15; from += 1) {
+  if (from > 0 && from < 1) continue;
+  eq(`the model's search order from ${from || 'nowhere'} is the device loop's`,
+    searchOrder(from || null), deviceSearchOrder(from || null));
+}
+{
+  const r = run(6, () => trackingLoop(), 200);
+  ok(`the tracking loop at device pace holds Nightmare (${r.wins}/200)`, r.wins >= 190);
+  const slow = run(6, () => trackingLoop({ lookFrames: 150 }), 200);
+  ok(`and a loop three times slower does not (${slow.wins}/200)`, slow.wins < r.wins);
 }
 
 if (failures.length) {

@@ -62,7 +62,7 @@ async function censusFnaf2({ night, policy, seeds, start }) {
 
 function parseArgs(argv) {
   const args = { game: 'fnaf1', policy: null, seeds: 3000, night: null,
-                 start: 0, all: false, json: false, options: {}, custom: null };
+                 start: 0, all: false, json: false, options: {}, custom: null, hyper: false };
   for (let i = 0; i < argv.length; i += 1) {
     const flag = argv[i];
     if (flag === '--game') args.game = argv[++i];
@@ -71,6 +71,8 @@ function parseArgs(argv) {
     else if (flag === '--start') args.start = Number(argv[++i]);
     else if (flag === '--night') args.night = Number(argv[++i]);
     else if (flag === '--all') args.all = true;
+    // FNaF 3's Aggressive cheat (`hyper on?`, g222): the move counter gains 2 a second.
+    else if (flag === '--hyper') args.hyper = true;
     else if (flag === '--json') args.json = true;
     // `--custom 20` is 4/20: every dial at 20 on Night 7. `--custom
     // 20,20,20,20` sets freddy, bonnie, chica, foxy individually.
@@ -86,9 +88,10 @@ function parseArgs(argv) {
   return args;
 }
 
-export function census({ game, night, policy, seeds, start = 0, options = {}, custom = null }) {
+export function census({ game, night, policy, seeds, start = 0, options = {}, custom = null, hyper = false }) {
   if (!Number.isInteger(start) || start < 0) throw new Error('--start must be a non-negative integer');
   if (game === 'fnaf2') return censusFnaf2({ night, policy, seeds, start });
+  if (hyper && game !== 'fnaf3') throw new Error('--hyper is FNaF 3\'s Aggressive cheat');
   const entry = SIMS[game];
   if (!entry) throw new Error(`no simulator for ${game}`);
   const makePolicy = entry.policies[policy];
@@ -99,14 +102,14 @@ export function census({ game, night, policy, seeds, start = 0, options = {}, cu
   let wins = 0;
   let survivedMs = 0;
   for (let seed = start; seed < start + seeds; seed += 1) {
-    const sim = new entry.Sim({ night, seed, custom });
+    const sim = new entry.Sim({ night, seed, custom, hyper });
     const result = sim.run(makePolicy(options));
     if (result.outcome === '6AM') wins += 1;
     causes.set(result.outcome, (causes.get(result.outcome) ?? 0) + 1);
     survivedMs += result.frames * (1000 / 60);
   }
   return {
-    game, night, policy, seeds, start, wins, custom,
+    game, night, policy, seeds, start, wins, custom, ...(hyper ? { hyper } : {}),
     rate: wins / seeds,
     meanSurvivedS: survivedMs / seeds / 1000,
     causes: Object.fromEntries([...causes.entries()].sort((a, b) => b[1] - a[1])),
@@ -115,7 +118,7 @@ export function census({ game, night, policy, seeds, start = 0, options = {}, cu
 
 function report(row) {
   const pct = (row.rate * 100).toFixed(2).padStart(6);
-  const dials = row.custom ? ` [${Object.values(row.custom).join('/')}]` : '';
+  const dials = row.custom ? ` [${Object.values(row.custom).join('/')}]` : row.hyper ? ' [aggressive]' : '';
   const mean = Number.isFinite(row.meanSurvivedS)
     ? `  mean ${row.meanSurvivedS.toFixed(0).padStart(3)}s` : '';
   const line = `${row.game} night ${row.night}${dials} ${row.policy.padEnd(16)} ` +
@@ -144,7 +147,7 @@ async function main() {
   for (const policy of policies) {
     for (const night of nights) {
       rows.push(await census({ game: args.game, night, policy, seeds: args.seeds,
-                               start: args.start, options: args.options, custom: args.custom }));
+                               start: args.start, options: args.options, custom: args.custom, hyper: args.hyper }));
     }
   }
   if (args.json) { console.log(JSON.stringify(rows, null, 2)); return; }

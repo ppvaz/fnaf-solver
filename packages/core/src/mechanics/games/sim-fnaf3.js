@@ -27,25 +27,26 @@ import { applyRows } from './night-model.js';
 export const FPS = 60;
 export const MS_PER_FRAME = 1000 / FPS;
 
-// Springtrap's location graph [SOURCED: his 73 movement edges]. Keyed by where
-// he is, then by `action selected`. `null` means the branch has no edge from
-// that room, which is a stay.
+// Springtrap's location graph [SOURCED: his 73 movement edges,
+// packages/core/src/mechanics/games/graphs/fnaf3.json]. Keyed by where he is,
+// then by `action selected`. A branch with no edge is a stay.
+//
+// Corrected 2026-09-25. An earlier table read three `action selected > 2`
+// edges (g239, g249, g251) as second action-2 edges, and cam 10's
+// `> 1 AND < 4` edge (g227) as action 1 -- which action 1 never reaches,
+// being the stay (g225). So cam 10 had no exit but vent 14: under aggression
+// one seal on 14 held him in a 10 <-> 14 bounce all night.
 const GRAPH = {
-  cam10: { 1: 'cam09', 4: 'vent14' },
-  cam09: { 2: 'cam10', 3: 'cam08', 4: 'vent11' },
-  cam08: { 2: 'cam09', 3: 'cam07', 4: 'cam05' },
-  cam07: { 2: 'cam08', 3: 'cam06', 4: 'vent12' },
-  cam06: { 2: 'cam07' },                      // g238/g239 both on action 2
-  cam05: { 2: 'cam06', 3: 'cam02', 4: 'picRandom:cam04:vent13' },
-  cam02: { 2: 'cam05', 3: 'cam04', 4: 'picRandom:attack1:vent15' },
-  cam04: { 2: 'cam02' },                      // g248/g249 both on action 2
-  cam03: { 2: 'cam04' },                      // g250/g251 both on action 2
+  cam10: { 2: 'cam09', 3: 'cam09', 4: 'vent14' },                     // g227, g228
+  cam09: { 2: 'cam10', 3: 'cam08', 4: 'vent11' },                     // g229-g231
+  cam08: { 2: 'cam09', 3: 'cam07', 4: 'cam05' },                      // g232-g234
+  cam07: { 2: 'cam08', 3: 'cam06', 4: 'vent12' },                     // g235-g237
+  cam06: { 2: 'cam07', 3: 'cam05', 4: 'cam05' },                      // g238, g239
+  cam05: { 2: 'cam06', 3: 'cam02', 4: 'picRandom:cam04:vent13' },     // g240-g243
+  cam02: { 2: 'cam05', 3: 'cam04', 4: 'picRandom:attack1:vent15' },   // g244-g247
+  cam04: { 2: 'cam02', 3: 'cam03', 4: 'cam03' },                      // g248, g249
+  cam03: { 2: 'cam04', 3: 'attack1', 4: 'attack1' },                  // g250, g251
 };
-
-// g239, g249 and g251 give a second action-2 edge out of cam06, cam04 and
-// cam03. The sheet's order decides, and the later group wins where both match,
-// so the alternate destinations are kept for the record but the first is used.
-const SECOND_EDGE = { cam06: 'cam05', cam04: 'cam03', cam03: 'attack1' };
 
 // The vents [SOURCED: g604-g613]. Each is entered on action 4 from one camera
 // and resolved on `action selected > 1`: a sealed vent sends him back to the
@@ -264,9 +265,15 @@ export class Fnaf3Sim {
       return;
     }
 
-    // The attack chain. Stages 1 and 2 advance only on the blackout; stage 3
-    // and 4 have action paths as well [g254, g255, g260, g294].
-    if (this.where === 'attack1' || this.where === 'attack2') { this.totalTurns = 0; return; }
+    // The attack chain. Stage 1 advances only on the blackout (g486); stage 2
+    // also on `action selected > 2` (g253); stages 3 and 4 and cam 01 have
+    // action paths while a screen is viewed [g254, g255, g257, g258, g260, g294].
+    if (this.where === 'attack1') { this.totalTurns = 0; return; }
+    if (this.where === 'attack2') {
+      if (action > 2) this.where = 'attack3';                                 // g253
+      this.totalTurns = 0;
+      return;
+    }
     if (this.where === 'attack3') {
       if (action === 2 && this.viewingScreen) this.where = 'cam01';           // g254
       else if (action > 2 && this.viewingScreen) this.where = 'attack4';      // g255
@@ -281,6 +288,7 @@ export class Fnaf3Sim {
     }
     if (this.where === 'cam01') {
       if (action === 2 && this.viewingScreen) this.where = 'attack3';         // g257
+      else if (action > 2 && this.viewingScreen) this.where = 'attack4';      // g258
       this.totalTurns = 0;
       return;
     }
@@ -318,4 +326,4 @@ export class Fnaf3Sim {
   }
 }
 
-export { GRAPH, VENT_EXIT, VENT_NUMBER, SECOND_EDGE, PHANTOMS, VENTS };
+export { GRAPH, VENT_EXIT, VENT_NUMBER, PHANTOMS, VENTS };
