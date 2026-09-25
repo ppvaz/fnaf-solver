@@ -34,7 +34,7 @@
       "sharedResources": [
         "device-transport"
       ],
-      "subprocesses": false,
+      "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",
         "runs": 0,
