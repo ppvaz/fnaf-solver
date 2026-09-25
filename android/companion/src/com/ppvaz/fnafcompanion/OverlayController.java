@@ -16,6 +16,7 @@ import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.Surface;
+import android.view.View;
 import android.view.WindowManager;
 
 import java.io.File;
@@ -246,61 +247,17 @@ public final class OverlayController {
 
     private void attachF1() {
         if (f1View != null || windowManager == null) return;
-        OverlayGeometry.Transform transform = currentTransform();
-        OverlayGeometry.PixelRect rect = transform.display.resolve(new NormalizedRect(
-                Fnaf1Lesson.LEFT / (float) PixelWatch.NATIVE_WIDTH,
-                Fnaf1Lesson.TOP / (float) PixelWatch.NATIVE_HEIGHT,
-                Fnaf1Lesson.RIGHT / (float) PixelWatch.NATIVE_WIDTH,
-                Fnaf1Lesson.BOTTOM / (float) PixelWatch.NATIVE_HEIGHT));
-        int left = Math.round(rect.left);
-        int top = Math.round(rect.top);
-        int width = Math.round(rect.width());
-        int height = Math.round(rect.height());
-        // The clearance is proved in native content pixels: refuse anything
-        // that would scale, rotate or shift the rectangle over a region.
-        if (transform.display.rotation != OverlayGeometry.Rotation.ROTATION_0
-                || left != Fnaf1Lesson.LEFT || top != Fnaf1Lesson.TOP
-                || width != Fnaf1Lesson.WIDTH || height != Fnaf1Lesson.HEIGHT) {
-            Log.w("FnafCueHelper", "f1 teach panel refused: display rect " + rect);
-            return;
-        }
         Fnaf1PanelView panel = new Fnaf1PanelView(context, f1Lesson);
-        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                width, height,
-                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                        | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
-                        | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
-                PixelFormat.OPAQUE);
-        params.gravity = Gravity.TOP | Gravity.START;
-        params.x = left;
-        params.y = top;
-        if (Build.VERSION.SDK_INT >= 30) params.setFitInsetsTypes(0);
-        if (Build.VERSION.SDK_INT >= 28) {
-            params.layoutInDisplayCutoutMode =
-                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS;
-        }
-        params.alpha = maximumObscuringOpacity();
-        params.packageName = context.getPackageName();
-        params.setTitle("FNaF Companion FNaF 1 teach panel");
-        try {
-            windowManager.addView(panel, params);
+        if (addPanel(panel, Fnaf1Lesson.LEFT, Fnaf1Lesson.TOP, Fnaf1Lesson.RIGHT, Fnaf1Lesson.BOTTOM,
+                "FNaF 1 teach panel")) {
             f1View = panel;
-        } catch (RuntimeException error) {
-            Log.e("FnafCueHelper", "f1 teach panel attach failed", error);
         }
     }
 
     private void detachF1() {
         Fnaf1PanelView current = f1View;
         f1View = null;
-        if (current != null && windowManager != null) {
-            try {
-                windowManager.removeViewImmediate(current);
-            } catch (RuntimeException ignored) {
-                // Idempotent teardown.
-            }
-        }
+        removePanel(current);
     }
 
     // The FNaF 4 teach panel: its own lesson and window, the same contract as
@@ -333,25 +290,41 @@ public final class OverlayController {
 
     private void attachF4() {
         if (f4View != null || windowManager == null) return;
+        Fnaf4PanelView panel = new Fnaf4PanelView(context, f4Lesson);
+        if (addPanel(panel, Fnaf4Lesson.LEFT, Fnaf4Lesson.TOP, Fnaf4Lesson.RIGHT, Fnaf4Lesson.BOTTOM,
+                "FNaF 4 teach panel")) {
+            f4View = panel;
+        }
+    }
+
+    private void detachF4() {
+        Fnaf4PanelView current = f4View;
+        f4View = null;
+        removePanel(current);
+    }
+
+    /**
+     * Attach a teach panel window at a native content rectangle, refusing any
+     * display transform that would scale, rotate or shift it: its clearance
+     * from the native regions is proved in native pixels.
+     */
+    private boolean addPanel(View panel, int nativeLeft, int nativeTop, int nativeRight, int nativeBottom, String name) {
         OverlayGeometry.Transform transform = currentTransform();
         OverlayGeometry.PixelRect rect = transform.display.resolve(new NormalizedRect(
-                Fnaf4Lesson.LEFT / (float) PixelWatch.NATIVE_WIDTH,
-                Fnaf4Lesson.TOP / (float) PixelWatch.NATIVE_HEIGHT,
-                Fnaf4Lesson.RIGHT / (float) PixelWatch.NATIVE_WIDTH,
-                Fnaf4Lesson.BOTTOM / (float) PixelWatch.NATIVE_HEIGHT));
+                nativeLeft / (float) PixelWatch.NATIVE_WIDTH,
+                nativeTop / (float) PixelWatch.NATIVE_HEIGHT,
+                nativeRight / (float) PixelWatch.NATIVE_WIDTH,
+                nativeBottom / (float) PixelWatch.NATIVE_HEIGHT));
         int left = Math.round(rect.left);
         int top = Math.round(rect.top);
         int width = Math.round(rect.width());
         int height = Math.round(rect.height());
-        // The clearance is proved in native content pixels: refuse anything
-        // that would scale, rotate or shift the rectangle over a region.
         if (transform.display.rotation != OverlayGeometry.Rotation.ROTATION_0
-                || left != Fnaf4Lesson.LEFT || top != Fnaf4Lesson.TOP
-                || width != Fnaf4Lesson.WIDTH || height != Fnaf4Lesson.HEIGHT) {
-            Log.w("FnafCueHelper", "f4 teach panel refused: display rect " + rect);
-            return;
+                || left != nativeLeft || top != nativeTop
+                || width != nativeRight - nativeLeft || height != nativeBottom - nativeTop) {
+            Log.w("FnafCueHelper", name + " refused: display rect " + rect);
+            return false;
         }
-        Fnaf4PanelView panel = new Fnaf4PanelView(context, f4Lesson);
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                 width, height,
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
@@ -369,24 +342,23 @@ public final class OverlayController {
         }
         params.alpha = maximumObscuringOpacity();
         params.packageName = context.getPackageName();
-        params.setTitle("FNaF Companion FNaF 4 teach panel");
+        params.setTitle("FNaF Companion " + name);
         try {
             windowManager.addView(panel, params);
-            f4View = panel;
+            return true;
         } catch (RuntimeException error) {
-            Log.e("FnafCueHelper", "f4 teach panel attach failed", error);
+            Log.e("FnafCueHelper", name + " attach failed", error);
+            return false;
         }
     }
 
-    private void detachF4() {
-        Fnaf4PanelView current = f4View;
-        f4View = null;
-        if (current != null && windowManager != null) {
-            try {
-                windowManager.removeViewImmediate(current);
-            } catch (RuntimeException ignored) {
-                // Idempotent teardown.
-            }
+    /** Idempotent teardown of a panel window. */
+    private void removePanel(View panel) {
+        if (panel == null || windowManager == null) return;
+        try {
+            windowManager.removeViewImmediate(panel);
+        } catch (RuntimeException ignored) {
+            // Idempotent teardown.
         }
     }
 
