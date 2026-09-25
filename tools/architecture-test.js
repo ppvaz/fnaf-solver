@@ -149,13 +149,14 @@ for (const path of operational) {
   assert.doesNotMatch(source, /\bSEARCH_KNOBS(?:\s*\.\s*[A-Za-z_$][\w$]*|\s*\[[^\]]+\])\s*=/, `${path} mutates a process-global search knob`);
 }
 // The HID transport presses the phone. Only the device runners compose it:
-// the FNaF 2 campaign ports, the three FNaF 1 runners, the FNaF 4 night runner
-// and the one-step explorer, each behind its own lease and --confirm-live. A
+// the FNaF 2 campaign ports, the three FNaF 1 runners, the FNaF 3 and FNaF 4
+// night runners and the one-step explorer, each behind its own lease and
+// --confirm-live. A
 // new composer is a new way onto the phone and has to be named here in the
 // diff that adds it.
 const physicalActuatorOwners = new Set(['apps/device/src/modern-campaign-ports.js',
   'tools/device/fnaf1-night-run.mjs', 'tools/device/fnaf1-custom-run.mjs', 'tools/device/fnaf1-menu-probe.mjs',
-  'tools/device/fnaf4-run.mjs', 'tools/device/explore-step.mjs']
+  'tools/device/fnaf3-run.mjs', 'tools/device/fnaf4-run.mjs', 'tools/device/explore-step.mjs']
   .map(path => join(ROOT, path)));
 for (const path of [...await files(join(ROOT, 'apps')), ...await files(join(ROOT, 'tools'))]
   .filter(path => !/(?:^|\/)test[^/]*\.(?:js|mjs|ts)$/.test(path) &&
