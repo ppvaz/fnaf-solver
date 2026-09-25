@@ -26,6 +26,7 @@
 //   node tools/device/night7-presets.mjs --gate --preset=foxy-foxy --runs=200
 //   node tools/device/night7-presets.mjs --bands           # price every cited band
 //   node tools/device/night7-presets.mjs --population --jobs 7 --out FILE   # all 65,536 seeds, exact lane
+//   node tools/device/night7-presets.mjs --plane bb,foxy --bases 0,20 --count 100 --jobs 7 --out FILE
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -36,6 +37,8 @@ import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor }
 import { KNOBS0, build, schedule } from './minus-toys-plan.mjs';
 import { DeviceActuator } from './actuator.mjs';
 import { designBlock, forkBlocks, gitState } from '../winner-census.mjs';
+import { heldOutSeeds } from '../winner-phase-census.mjs';
+import { STRATEGY_REGISTRY, validateWinner } from './bundle.mjs';
 
 const MENU_MODEL = new URL('./models/custom-night-moto-g56-v207.json', import.meta.url);
 
@@ -259,6 +262,121 @@ async function population(argv) {
       (p.wins === p.n ? '' : `  | ${Object.entries(p.deaths).map(([c, k]) => `${c} ${k}`).join(', ')}`));
 }
 
+// --- a dial plane ---------------------------------------------------------
+//
+// The presets are ten points of 21^10. 10/20 (every dial at 20) being won
+// covers the rest only if the game is monotone in its dials, and Balloon Boy
+// and Golden Freddy, who interact with other dials, make that a hypothesis
+// (plans/ROADMAP.md, boundaries). `--plane bb,foxy` scores every (a, b) in
+// 0..20 x 0..20 with the other dials at each `--bases` value -- 0 and 20 are
+// the two faces of the cube -- for the preset schedule at epoch 0 and for the
+// committed Night 7 binding k3 at its anchor, over held-out seeds. The engine
+// clamps dials on apply (Foxy 17, Golden Freddy 10, the rest 15), so the cells
+// above a cap repeat the capped one.
+export const PLANE_KIND = 'night7-dial-plane-v1';
+const K3_WINNER = new URL('./campaign-night7-k3-winner.json', import.meta.url);
+
+export function planeSchedules() {
+  const k3 = validateWinner(JSON.parse(readFileSync(K3_WINNER, 'utf8')));
+  return [
+    { id: 'preset', knobs: PRESET_KNOBS, epochMs: 0 },
+    { id: 'k3', knobs: STRATEGY_REGISTRY[k3.strategy].emit(k3, 7).knobs, epochMs: k3.anchorEpochMs,
+      winnerSha256: sha256(readFileSync(K3_WINNER)) },
+  ];
+}
+
+export function planeVector(a, b, base, x, y) {
+  return { id: `${a}${x}-${b}${y}@${base}`, dials: { ...Object.fromEntries(C.AI_DIALS.map(d => [d, base])), [a]: x, [b]: y } };
+}
+
+export function planeWins(schedule, vector, seed) {
+  const { sim, splitAt } = runNight({ preset: vector, seed, knobs: schedule.knobs, epochMs: schedule.epochMs });
+  return { won: sim.won && splitAt >= 0, reason: sim.won ? 'unarmed' : (sim.death?.reason ?? 'alive'), frame: sim.frame };
+}
+
+function planeBlock(a, b, bases, count, from, to) {
+  const seeds = heldOutSeeds(count).slice(from, to);
+  const rows = [];
+  for (const base of bases) for (const schedule of planeSchedules())
+    for (let x = 0; x <= 20; x++) for (let y = 0; y <= 20; y++) {
+      const vector = planeVector(a, b, base, x, y);
+      const losses = [];
+      for (const seed of seeds) {
+        const r = planeWins(schedule, vector, seed);
+        if (!r.won) losses.push([seed, r.reason, r.frame]);
+      }
+      rows.push({ base, schedule: schedule.id, x, y, n: seeds.length, losses });
+    }
+  return rows;
+}
+
+export function planeRecord({ rows, a, b, bases, count, git, date, command }) {
+  const schedules = planeSchedules();
+  const grids = [];
+  for (const base of bases) for (const schedule of schedules) {
+    const cells = rows.filter(r => r.base === base && r.schedule === schedule.id);
+    const at = (x, y) => cells.find(r => r.x === x && r.y === y);
+    const map = Array.from({ length: 21 }, (_, x) => Array.from({ length: 21 }, (_, y) => {
+      const r = at(x, y);
+      return r.losses.length === 0 ? '#' : r.losses.length === r.n ? '.' : '+';
+    }).join(''));
+    const lost = cells.filter(r => r.losses.length > 0)
+      .map(r => ({ [a]: r.x, [b]: r.y, lost: r.losses.length, losses: r.losses.slice(0, 50) }));
+    grids.push({ base, schedule: schedule.id, map, cellsWon: cells.length - lost.length, cells: cells.length, lost });
+  }
+  const whole = grids.every(g => g.lost.length === 0);
+  const answer = whole
+    ? `Every one of the 441 (${a}, ${b}) cells is won on all ${count} held-out seeds by both schedules, with the ` +
+      `other dials at ${bases.join(' and at ')}: this plane has no frontier in the exact lane, and nothing in it ` +
+      'breaks monotonicity.'
+    : grids.map(g => `${g.schedule} at base ${g.base}: ${g.cellsWon}/${g.cells} cells won` +
+        (g.lost.length ? ` (lost: ${g.lost.map(c => `${a}${c[a]}/${b}${c[b]} on ${c.lost} seeds`).join(', ')})` : '')).join('; ') + '.';
+  return {
+    schema: 'evidence-record-v1', kind: PLANE_KIND, id: `night7-dial-plane-${a}-${b}-${date.replace(/-/g, '')}`,
+    claimLevel: 'MODEL_ONLY', date,
+    question: `Is there a (${a}, ${b}) Custom Night vector, with every other dial at ${bases.join(' or ')}, that the ` +
+      'preset schedule or the committed Night 7 binding k3 loses -- a frontier, and a break in monotonicity?',
+    answer,
+    whyItIsModelOnly: 'No device run; exact lane only. The corner vectors this names are what S3 asks the phone to run.',
+    method: {
+      tool: 'tools/device/night7-presets.mjs --plane', command, git,
+      seeds: { definition: `the first ${count} seeds outside the design block (winner-phase-census.mjs heldOutSeeds)`,
+        n: count, sha256: sha256(JSON.stringify(heldOutSeeds(count))) },
+      schedules: schedules.map(({ id, epochMs, winnerSha256 }) => ({ id, epochMs,
+        ...(id === 'preset' ? { knobsSha256: sha256(JSON.stringify(PRESET_KNOBS)) } : { winnerSha256 }) })),
+      plane: { a, b, values: '0..20 each', bases, map: `map[${a}][${b}]: # every seed won, . every seed lost, + some` },
+      caps: 'dials clamp on apply (g829/g830/g856-863): Foxy 17, Golden Freddy 10, every other 15',
+      win: 'sim.won AND splitAt >= 0',
+    },
+    grids,
+  };
+}
+
+async function plane(argv) {
+  const flag = (name, dflt) => { const i = argv.indexOf(`--${name}`); return i < 0 ? dflt : argv[i + 1]; };
+  const [a, b] = flag('plane', 'bb,foxy').split(',');
+  const bases = flag('bases', '0,20').split(',').map(Number);
+  const count = Number(flag('count', '100'));
+  const jobs = Number(flag('jobs', '1'));
+  for (const d of [a, b]) if (!C.AI_DIALS.includes(d)) throw new Error(`--plane names an unknown dial: ${d}`);
+  if (a === b) throw new Error('--plane needs two different dials');
+  if (!bases.every(v => Number.isInteger(v) && v >= 0 && v <= 20)) throw new Error('--bases are dial values 0..20');
+  if (!Number.isInteger(count) || count < 1 || !Number.isInteger(jobs) || jobs < 1)
+    throw new Error('--count and --jobs must be positive integers');
+  const started = Date.now();
+  const rows = await forkBlocks({ script: fileURLToPath(import.meta.url), args: [a, b, bases.join(','), String(count)],
+    start: 0, count, jobs, childFlag: '--plane-child' });
+  const record = planeRecord({ rows, a, b, bases, count, git: gitState(),
+    date: flag('date', new Date().toISOString().slice(0, 10)),
+    command: `node tools/device/night7-presets.mjs --plane ${a},${b} --bases ${bases.join(',')} --count ${count} --jobs ${jobs}` });
+  record.method.wallSeconds = Math.round((Date.now() - started) / 1000);
+  const text = `${JSON.stringify(record, null, 2)}\n`;
+  const out = flag('out', null);
+  if (out) writeFileSync(out, text); else process.stdout.write(text);
+  for (const g of record.grids) console.error(`  ${g.schedule.padEnd(7)} base ${String(g.base).padStart(2)}  ${g.cellsWon}/${g.cells} cells won`);
+  console.error(`dial plane: ${record.answer}`);
+}
+
 const why = (reasons) => [...reasons.entries()]
   .sort((a, b) => b[1] - a[1]).map(([r, n]) => `${r} ${n}`).join(', ');
 
@@ -330,7 +448,12 @@ function epochs(presets, runs, bandName) {
   }
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href && process.argv[2] === '--child') {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href && process.argv[2] === '--plane-child') {
+  const [, , , from, to, a, b, bases, count] = process.argv;
+  process.send(planeBlock(a, b, bases.split(',').map(Number), Number(count), Number(from), Number(to)));
+} else if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href && process.argv.includes('--plane')) {
+  plane(process.argv.slice(2)).catch((error) => { console.error(error.message); process.exitCode = 1; });
+} else if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href && process.argv[2] === '--child') {
   const [, , , a, b, ...ids] = process.argv;
   process.send(populationBlock(ids, Number(a), Number(b)));
 } else if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href &&

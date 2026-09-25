@@ -1,6 +1,6 @@
 // Gate for the Custom Night preset scorer. No phone required.
 //
-// Four things here can go wrong silently, and the first three have each cost a session
+// Five things here can go wrong silently, and the first three have each cost a session
 // elsewhere in this repository:
 //
 //  1. The presets could drift from the file the phone's dial driver reads.
@@ -24,12 +24,18 @@
 //     takes a quarter of an hour on seven cores, so this does not re-run it;
 //     it checks that nothing the record depends on has moved, and replays
 //     every loss it lists and a fixed held-out sample.
+//
+//  5. A dial-plane record (`--plane`) could stop describing the tree: its seed
+//     block, the preset knobs and the k3 winner must be the ones censused, and
+//     each grid's corners and centre, and every lost cell's first listed loss,
+//     must replay as recorded.
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import * as C from '@fnaf2-1020/core/mechanics';
 import { KNOBS0 } from './minus-toys-plan.mjs';
 import { loadPresets, cohort, runNight, PRESET_KNOBS, MEASURED_SPREAD_MS, HALL_PLATEAU_MS, BANDS,
-  POPULATION_KIND } from './night7-presets.mjs';
+  POPULATION_KIND, PLANE_KIND, planeSchedules, planeVector, planeWins } from './night7-presets.mjs';
+import { heldOutSeeds } from '../winner-phase-census.mjs';
 import { designBlock } from '../winner-census.mjs';
 
 const check = (ok, message) => { if (!ok) throw new Error(message); };
@@ -151,5 +157,50 @@ let populationLine;
   populationLine = `${name} still describes the tree (${replays} replays)`;
 }
 
+// --- 5. every dial-plane record still describes the tree ---------------------
+let planeLine = '';
+{
+  const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
+  const dir = new URL('../../docs/evidence/', import.meta.url);
+  const names = readdirSync(dir).filter(n => /^night7-dial-plane-[a-z]+-[a-z]+-\d{8}\.json$/.test(n)).sort();
+  const schedules = planeSchedules();
+  let replays = 0;
+  for (const name of names) {
+    const record = JSON.parse(readFileSync(new URL(name, dir), 'utf8'));
+    check(record.kind === PLANE_KIND, `${name} is not a ${PLANE_KIND}`);
+    const seeds = heldOutSeeds(record.method.seeds.n);
+    check(record.method.seeds.sha256 === sha256(JSON.stringify(seeds)), `${name}: the held-out seed block no longer rebuilds`);
+    for (const recorded of record.method.schedules) {
+      const now = schedules.find(s => s.id === recorded.id);
+      check(now, `${name} names a schedule ${recorded.id} the scorer no longer has`);
+      if (recorded.knobsSha256) check(recorded.knobsSha256 === sha256(JSON.stringify(PRESET_KNOBS)), `PRESET_KNOBS changed since ${name}`);
+      if (recorded.winnerSha256) check(recorded.winnerSha256 === now.winnerSha256, `the k3 winner changed since ${name}`);
+    }
+    const { a, b } = record.method.plane;
+    for (const grid of record.grids) {
+      const schedule = schedules.find(s => s.id === grid.schedule);
+      const probes = [[0, 0], [0, 20], [20, 0], [20, 20], [10, 10]];
+      for (const [x, y] of probes) {
+        const cell = grid.map[x][y];
+        const listed = grid.lost.find(c => c[a] === x && c[b] === y);
+        check(cell === '#' || listed?.losses?.length,
+          `${name} ${grid.schedule}@${grid.base} ${a}${x}/${b}${y} is recorded '${cell}' with no listed loss`);
+        const seed = cell === '#' ? seeds[(x * 21 + y) % seeds.length] : listed.losses[0][0];
+        const { won } = planeWins(schedule, planeVector(a, b, grid.base, x, y), seed);
+        replays++;
+        check(won === (cell === '#'), `${name} ${grid.schedule}@${grid.base} ${a}${x}/${b}${y} seed ${seed}: recorded '${cell}', replays ${won ? 'won' : 'lost'}`);
+      }
+      for (const lost of grid.lost) {
+        const [seed, reason, frame] = lost.losses[0];
+        const r = planeWins(schedule, planeVector(a, b, grid.base, lost[a], lost[b]), seed);
+        replays++;
+        check(!r.won && r.reason === reason && r.frame === frame, `${name} ${grid.schedule}@${grid.base} ${a}${lost[a]}/${b}${lost[b]} seed ${seed} no longer dies as recorded`);
+      }
+    }
+  }
+  check(names.length > 0, 'no docs/evidence/night7-dial-plane-*.json is committed');
+  planeLine = `; ${names.length} dial plane(s) still replay as recorded (${replays} replays)`;
+}
+
 console.log('night7-presets: presets match the menu model, the device lane bites, ' +
-  `the hall pulse clears both floors by more than 33 ms, and ${populationLine}`);
+  `the hall pulse clears both floors by more than 33 ms, and ${populationLine}${planeLine}`);

@@ -125,7 +125,19 @@ Details:
     ([preset sweep](../docs/evidence/night7-preset-sweep-20260917.json)), whose
     3000 uint32 seeds are 2932 distinct nights.
   - No lateness lane has a population census.
-  - Frontier files exist under `docs/evidence/invent/`.
+  - **No dial frontier in the Balloon Boy × Foxy or Balloon Boy × Golden
+    Freddy plane (exact lane).** In each plane, every one of the 441 cells, with
+    the other dials at 0 and at 20, is won on all 300 held-out seeds by the
+    preset schedule and by k3 ([bb × foxy](../docs/evidence/night7-dial-plane-bb-foxy-20260925.json),
+    [bb × golden](../docs/evidence/night7-dial-plane-bb-golden-20260925.json),
+    held by `test-night7-presets.mjs`).
+    - Nothing in those planes breaks the monotonicity that the 10/20 win
+      relies on.
+    - This supersedes the Plan 05 invention frontiers under
+      `docs/evidence/invent/`, which put BB 20 + Foxy 20 at 0.25% on
+      2026-09-02.
+    - The natural corners to run on the phone are BB 20 + Foxy 20 and BB 20 +
+      Golden Freddy 20, each with every other dial at 0.
 - **Absorbs** Plans 05, 11 and 21, and Plan 25 horizon 1.
 - **Needs S2:** a ceiling computed on a model that misses encounters is a
   ceiling of the model.

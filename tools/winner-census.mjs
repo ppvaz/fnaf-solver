@@ -119,9 +119,9 @@ function censusBlock(paths, start, end) {
   });
 }
 
-function runChild(script, args, start, end) {
+function runChild(script, args, start, end, childFlag) {
   return new Promise((resolveChild, reject) => {
-    const child = fork(script, ['--child', String(start), String(end), ...args],
+    const child = fork(script, [childFlag, String(start), String(end), ...args],
       { stdio: ['ignore', 'inherit', 'inherit', 'ipc'], serialization: 'advanced' });
     let result = null;
     child.on('message', (message) => { result = message; });
@@ -133,15 +133,16 @@ function runChild(script, args, start, end) {
 
 /**
  * Split [start, start + count) into `jobs` contiguous blocks, each run as
- * `node <script> --child a b ...args`, which sends back one row per subject
- * ({n, losses, ...}) in a fixed order. Rows are merged in that order; the
- * other fields are taken from the first block.
+ * `node <script> <childFlag> a b ...args` (`--child` unless the script runs
+ * two kinds of block), which sends back one row per subject ({n, losses,
+ * ...}) in a fixed order. Rows are merged in that order; the other fields are
+ * taken from the first block.
  */
-export async function forkBlocks({ script, args, start, count, jobs }) {
+export async function forkBlocks({ script, args, start, count, jobs, childFlag = '--child' }) {
   const size = Math.ceil(count / jobs);
   const blocks = [];
   for (let a = start; a < start + count; a += size) blocks.push([a, Math.min(a + size, start + count)]);
-  const parts = await Promise.all(blocks.map(([a, b]) => runChild(script, args, a, b)));
+  const parts = await Promise.all(blocks.map(([a, b]) => runChild(script, args, a, b, childFlag)));
   return parts[0].map((row, i) => ({
     ...row,
     n: parts.reduce((sum, part) => sum + part[i].n, 0),
