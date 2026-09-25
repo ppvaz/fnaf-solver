@@ -77,6 +77,15 @@ class Every {
   }
 }
 
+// The lure table [SOURCED: g319-g341]: played on camera X, a lure pulls him
+// onto X from any of these places. Only cam 02's reaches attack stage 1 and
+// only cam 01's reaches stage 4.
+export const LURE_FROM = {
+  cam01: ['attack4'], cam02: ['attack1', 'cam03', 'cam04', 'cam05'], cam03: ['cam02', 'cam04'],
+  cam04: ['cam02', 'cam03'], cam05: ['cam02', 'cam06', 'cam07', 'cam08'], cam06: ['cam05', 'cam07'],
+  cam07: ['cam06', 'cam08'], cam08: ['cam07', 'cam05', 'cam09'], cam09: ['cam08', 'cam10'], cam10: ['cam09'],
+};
+
 export class Fnaf3Sim {
   /**
    * @param {object} [options]
@@ -88,7 +97,7 @@ export class Fnaf3Sim {
    *   the time to every move test. AI itself caps at 7 (g654), so this is the
    *   only knob above Nightmare and the hardest the game goes.
    */
-  constructor({ night = 1, seed = 0, fastNights = false, hyper = false } = {}) {
+  constructor({ night = 1, seed = 0, fastNights = false, hyper = false, cameraDrain = true } = {}) {
     this.night = night;
     this.rng = new Rng(seed);
     this.fastNights = fastNights;
@@ -127,6 +136,12 @@ export class Fnaf3Sim {
     this.sealTarget = 0;
     this.rebooting = 0;
     this.rebootCursor = 0;
+    this.camera = 0;                            // `camera text` AV0
+    this.cameraAv5 = 0;
+    this.audio = 0;                             // `audio text` AV0
+    this.playCounter = 7;                       // g299 refills it to 7
+    this.lurePending = null;                    // { to, frames } g342-g352
+    this.cameraDrain = cameraDrain;
 
     // Player state, driven by the policy.
     this.viewing = 0;          // 0/1 office, >=2 a camera
@@ -141,6 +156,9 @@ export class Fnaf3Sim {
       ventIdle: new Every(VENTILATION.drains.inactivity.everyMs),
       picRandom: new Every(10000),              // g459
       reboot: new Every(1000),                  // g425
+      rebootAll: new Every(2000),               // g426
+      camera: new Every(1000),                  // g783
+      play: new Every(1500),                    // g299
     };
     const byAi = VENTILATION.drains.byAi.everyMsByAi[this.ai];
     if (byAi) this.timers.ventByAi = new Every(byAi);
@@ -156,6 +174,9 @@ export class Fnaf3Sim {
 
   /** `viewing a screen` [SOURCED: g289-g291]. */
   get viewingScreen() { return this.viewing >= 2; }
+
+  /** Video error: the feed shows no room (g381's floor, the shared -10 threshold). */
+  get videoError() { return this.camera <= -10; }
 
   /** Whether the player is watching the room Springtrap is in (`you in = mon in`). */
   watchingHim() {
@@ -176,6 +197,27 @@ export class Fnaf3Sim {
     if (this.sealCharge > 0) return false;
     this.sealTarget = vent;
     this.sealCharge = SYSTEMS.seal.chargeMin + this.rng.int(0, SYSTEMS.seal.chargeBound - 1);
+    return true;
+  }
+
+  /**
+   * Play Audio on camera `cam` (1-10) [SOURCED: g301, g317/g318, g319-g352]:
+   * it needs the camera map, audio above -10 and a full play counter; costs
+   * AI audio points; the lure object rolls Random(7), a 1 failing and a 0
+   * rolling again; if he stands where the lure table pairs with `cam`, he is
+   * pulled there after Random(100) frames and his move counter resets.
+   * Returns whether the audio played.
+   */
+  lure(cam) {
+    if (!this.viewingScreen || this.ventMap || this.audio <= -10 || this.playCounter !== 7) return false;
+    this.playCounter = 0;
+    this.audio = Math.max(-10, this.audio - this.ai);
+    let roll = 0;
+    while (roll === 0) roll = this.rng.int(0, 6);
+    const key = `cam${String(cam).padStart(2, '0')}`;
+    if (roll >= 2 && (LURE_FROM[key] ?? []).includes(this.where)) {
+      this.lurePending = { to: key, frames: this.rng.int(0, 99) };
+    }
     return true;
   }
 
@@ -201,9 +243,11 @@ export class Fnaf3Sim {
 
     // --- office inactivity [g908/g909]: standing in the office costs
     // ventilation on every night but the first, and raises aggression.
+    // AV6 counts seconds off the monitor (g906 every 1000 ms, zeroed on it
+    // by g907), so the drain starts after 10 s in the office, not 10 frames.
     if (!this.viewingScreen) this.inactivity += 1; else this.inactivity = 0;
     if (this.inactivity > 10 * FPS) this.aggressive = 1;             // g909
-    if (this.inactivity > 10 && this.night !== 1 && this.timers.ventIdle.tick(ms)) {
+    if (this.inactivity > 10 * FPS && this.night !== 1 && this.timers.ventIdle.tick(ms)) {
       this.vent -= VENTILATION.drains.inactivity.amount;
     }
     // --- the AI-indexed drain [g448-g452], absent above AI 6
@@ -220,11 +264,32 @@ export class Fnaf3Sim {
     if (this.ventDwell > VENTILATION.blackoutRampAt(this.ai)) this.blackout += 1;  // g473
     else if (this.blackout > 0) this.blackout -= 1;                    // g477
 
-    // --- reboots [g425/g429]
-    if (this.rebooting > 0 && this.timers.reboot.tick(ms)) {
+    // --- the camera [g783/g784, g381]: each 1000 ms with a screen up adds
+    // one to `camera text` AV5, and at 12 the camera loses AI points; at -10
+    // it errors and the feed shows no room. It drains with this.cameraDrain
+    // (default on), so the earlier censuses can be reproduced without it.
+    if (this.cameraDrain && this.timers.camera.tick(ms) && this.viewingScreen) {
+      this.cameraAv5 += 1;
+      if (this.cameraAv5 >= 12) { this.camera = Math.max(-10, this.camera - this.ai); this.cameraAv5 = 0; }
+    }
+
+    // --- the lure's clock and its delayed pull [g299, g342-g352]
+    if (this.playCounter < 7 && this.timers.play.tick(ms)) this.playCounter += 1;
+    if (this.lurePending && --this.lurePending.frames <= 0) {
+      this.where = this.lurePending.to;
+      this.moveCounter = 0;
+      this.lurePending = null;
+    }
+
+    // --- reboots [g425/g426, g428-g430]: a single system in 1000 ms ticks,
+    // reboot all (4) in 2000 ms ticks; the menu stays until it ends.
+    if (this.rebooting > 0 && (this.rebooting === 4 ? this.timers.rebootAll : this.timers.reboot).tick(ms)) {
       this.rebootCursor += 1 + this.rng.int(0, 1);
       if (this.rebootCursor >= 10) {
-        if (this.rebooting === 3) { this.vent = 0; this.ventDwell = 0; }
+        if (this.rebooting === 3 || this.rebooting === 4) { this.vent = 0; this.ventDwell = 0; }
+        if (this.rebooting === 2 || this.rebooting === 4) this.camera = 0;
+        if (this.rebooting === 1 || this.rebooting === 4) this.audio = 0;
+        if (this.rebooting === 4) this.cameraAv5 = 0;
         this.rebooting = 0; this.rebootCursor = 0;
       }
     }

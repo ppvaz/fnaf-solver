@@ -132,6 +132,21 @@ const placeOf = (where) => {
 };
 
 /**
+ * fnaf3-run.mjs chooseReboot over the simulator's own counters: two broken
+ * systems, or a camera counter already 7 s along, take reboot all.
+ */
+function chooseSimReboot(broken, sim) {
+  if (broken.size >= 2) return 'ALL';
+  if (broken.has('VIDEO')) return sim.cameraAv5 >= 7 ? 'ALL' : 'VIDEO';
+  const other = broken.has('VENT') ? 'VENT' : broken.has('AUDIO') ? 'AUDIO' : null;
+  if (other) {
+    const need = Math.ceil((10 + sim.camera) / Math.max(1, sim.ai));
+    return need <= 1 && 12 - sim.cameraAv5 < 15 ? 'ALL' : other;
+  }
+  return null;
+}
+
+/**
  * The device loop, at the device's pace: every look at a camera costs
  * `lookFrames` (a press, the label turning, a settle and five frames scored),
  * a vent seal `selectFrames` before the arming press plus the game's own
@@ -145,7 +160,12 @@ const placeOf = (where) => {
  * prints once ventilation is at -10.
  */
 export function trackingLoop({ lookFrames = 45, selectFrames = 18, sealWaitFrames = 150,
-                               rebootAwayFrames = 280 } = {}) {
+                               rebootAwayFrames = 280, toMenuFrames = 210, fromMenuFrames = 145,
+                               economy = false, lures = false, herd = true, lostLure = true } = {}) {
+  // fnaf3-run.mjs HERD: from each office-side camera, the camera one step out
+  // whose lure pulls him there (g319-g341); cam 02 also pulls from stage 1.
+  const HERD = { 2: 5, 3: 2, 4: 2, 5: 6 };
+  const NEAR_OFFICE = new Set([1, 2, 3, 4, 13, 15]);
   let seen = null;           // the place he was last seen
   let sealed = 0;            // the vent whose seal committed
   let task = null;           // { kind, n, until }
@@ -165,16 +185,44 @@ export function trackingLoop({ lookFrames = 45, selectFrames = 18, sealWaitFrame
 
   return (sim) => {
     if (sim.over) return;
+    if (economy) {
+      // The device's trip, as fnaf3-run.mjs serviceSystems makes it: ~3.5 s
+      // to the menu, the reboot chooseReboot picks, held until it ends (exit
+      // is refused while one runs), ~2.4 s back to the monitor.
+      if (task?.kind === 'menu') {
+        sim.viewing = 0; sim.ventMap = false;
+        if (sim.frame < task.until) return;
+        if (!task.armed) {
+          const broken = new Set();
+          if (sim.videoError) broken.add('VIDEO');
+          if (sim.vent <= -10) broken.add('VENT');
+          if (lures && sim.audio <= -10) broken.add('AUDIO');
+          const which = chooseSimReboot(broken, sim);
+          sim.rebooting = { AUDIO: 1, VIDEO: 2, VENT: 3, ALL: 4 }[which] ?? 0; sim.rebootCursor = 0;
+          task.armed = true;
+          return;
+        }
+        if (sim.rebooting > 0) return;
+        start(sim, 'back', 0, fromMenuFrames);
+        return;
+      }
+      if (task?.kind === 'back') { sim.viewing = 0; if (sim.frame < task.until) return; task = null; }
+      if ((sim.videoError || sim.vent <= -10 || (lures && sim.audio <= -10)) && sim.rebooting === 0) {
+        sim.viewing = 0; sim.ventMap = false;
+        start(sim, 'menu', 0, toMenuFrames);
+        return;
+      }
+    }
     // The error line: ventilation at -10 (g382's floor, the same threshold
     // every system errors at). A reboot is asked for once per 11 s.
-    if (task?.kind !== 'reboot' && sim.vent <= -10 && sim.rebooting === 0 && sim.frame - rebootFrame > 660) {
+    if (!economy && task?.kind !== 'reboot' && sim.vent <= -10 && sim.rebooting === 0 && sim.frame - rebootFrame > 660) {
       sim.viewing = 0; sim.ventMap = false;
       start(sim, 'reboot', 0, rebootAwayFrames);
       return;
     }
     if (task && task.kind === 'seal') {
       if (!task.armed && sim.frame >= task.until - sealWaitFrames) task.armed = sim.armSeal(task.n);
-      if (placeOf(sim.where) === task.n) seen = task.n;
+      if (placeOf(sim.where) === task.n && !sim.videoError) seen = task.n;
       if (sim.sealedVent === task.n || sim.frame >= task.until) {
         if (sim.sealedVent === task.n) sealed = task.n;
         task = null;
@@ -187,8 +235,11 @@ export function trackingLoop({ lookFrames = 45, selectFrames = 18, sealWaitFrame
     } else if (task?.kind === 'look') {
       const n = task.n;
       task = null;
-      if (placeOf(sim.where) === n) {
+      if (placeOf(sim.where) === n && !sim.videoError) {
         seen = n; search = [];
+        if (lures && herd && HERD[n] && sim.audio - sim.ai > -10 && !sim.ventMap && sim.lure(HERD[n])) {
+          return lookAt(sim, HERD[n]);
+        }
         const v = { 10: 14, 9: 11, 7: 12, 5: 13, 2: 15 }[n];
         if (n >= 11 && sealed !== n) return sealVent(sim, n);
         if (v && sealed !== v) return sealVent(sim, v);
@@ -197,6 +248,7 @@ export function trackingLoop({ lookFrames = 45, selectFrames = 18, sealWaitFrame
       if (n === seen && search.length === 0) {
         // He left: the vent beside the camera he left first, then the rings.
         search = searchOrder(seen);
+        if (lures && lostLure && NEAR_OFFICE.has(seen) && !sim.ventMap) sim.lure(2);
         const v = { 10: 14, 9: 11, 7: 12, 5: 13, 2: 15 }[seen];
         if (v && sealed !== v) return sealVent(sim, v);
       }

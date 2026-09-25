@@ -1,0 +1,36 @@
+{
+  "schema": "evidence-record-v1",
+  "id": "fnaf3-camera-economy-census-20260925",
+  "claimLevel": "MODEL_ONLY",
+  "date": "2026-09-25",
+  "target": { "game": "FNaF 3", "package": "com.scottgames.fnaf3", "version": "2.0.4+18" },
+  "question": "With the camera drain that the phone met on every Night 2 in the model, how often does the device loop -- which answers each broken system with the reboot fnaf3-run.mjs chooseReboot picks, held in the menu until it ends -- still reach 6 AM?",
+  "modelChanges": [
+    "sim-fnaf3.js drains the camera: each 1000 ms with a screen up adds one to `camera text` AV5 and at 12 the camera loses AI points (g783/g784); at -10 the feed shows no room (g381). A camera reboot restores it (g428); reboot all also zeroes AV5 (g430) and ticks every 2000 ms (g426).",
+    "The office drain now counts seconds (g906-g908): ventilation drains only after 10 s off the monitor, where the table had 10 frames.",
+    "The lure (g299, g301, g317-g352): 10.5 s of play-counter cooldown, AI audio points per play, Random(7) with a 1 failing, and the lure table's adjacency; the policy's lure knobs are off by default because, at 400 seeds, neither herding (Nightmare 267/400) nor a lure on cam 02 when he is lost near the office (261/400) moved the result off the no-lure 265/400."
+  ],
+  "policy": "policy-fnaf3.js trackingLoop({ economy: true }): the device-paced tracking loop; a video or ventilation error sends it ~3.5 s to the menu, it reboots what chooseSimReboot picks (two broken systems or a camera counter 7 s along take reboot all), stays until the reboot ends, and takes ~2.4 s back; a look during a video error sees nothing.",
+  "family": "fixed-pace belief tracking over the corrected graph with the camera economy; no lures, no phantoms (their scares, the white flash and its blackout are not modelled)",
+  "blocks": { "a": "seeds 0-2999", "heldOut": "seeds 3000-5999" },
+  "results": {
+    "night2": { "a": 2732, "heldOut": 2732, "lossesA": { "springtrap-office": 160, "springtrap-vent": 108 }, "lossesHeldOut": { "springtrap-office": 149, "springtrap-vent": 119 } },
+    "nightmare": { "a": 2062, "heldOut": 2083,
+      "lossesA": { "springtrap-office": 486, "springtrap-vent": 337, "springtrap-blackout": 115 },
+      "lossesHeldOut": { "springtrap-office": 481, "springtrap-vent": 316, "springtrap-blackout": 120 } }
+  },
+  "reproduce": [
+    "node tools/census.mjs --game fnaf3 --policy tracking-loop --night 2 --seeds 3000 --start 0 --opt.economy 1",
+    "node tools/census.mjs --game fnaf3 --policy tracking-loop --night 6 --seeds 3000 --start 3000 --opt.economy 1"
+  ],
+  "findings": [
+    "The camera drain is the largest single cost the earlier census did not see: the same loop that held Nightmare on 99.2% without it holds 69% with it, because every 24 s of looking buys a trip of ~12-16 s away from the monitor.",
+    "Night 2 at 91% is the model's ceiling for this loop family with its camera economy, before phantoms; the phone's Night 2 losses so far (n2a-n2d) were each traced to something this model now has or that the loop now answers (the seal charge, audio, phantoms, the white flash)."
+  ],
+  "notMeasured": [
+    "Phantoms and their white flash (g686/g687/g744/g745 -> g704: ventilation to -10 and the blackout past the chain threshold).",
+    "Whether the phone's looks, seals and trips cost what the policy's knobs say beyond the n2a-n2d event logs they were read from."
+  ],
+  "rung": "None. MODEL_ONLY.",
+  "plan": "plans/ROADMAP.md S6"
+}

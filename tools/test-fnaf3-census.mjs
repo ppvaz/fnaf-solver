@@ -26,12 +26,12 @@ const eq = (what, a, b) => {
   if (JSON.stringify(a) !== JSON.stringify(b)) failures.push(`${what}: expected ${JSON.stringify(b)}, got ${JSON.stringify(a)}`);
 };
 
-function run(night, makePolicy, seeds) {
+function run(night, makePolicy, seeds, simOptions = {}) {
   const causes = new Map();
   let wins = 0;
   let frames = 0;
   for (let seed = 0; seed < seeds; seed += 1) {
-    const sim = new Fnaf3Sim({ night, seed });
+    const sim = new Fnaf3Sim({ night, seed, ...simOptions });
     const r = sim.run(makePolicy());
     if (r.outcome === '6AM') wins += 1;
     causes.set(r.outcome, (causes.get(r.outcome) ?? 0) + 1);
@@ -173,10 +173,29 @@ for (let from = 0; from <= 15; from += 1) {
     searchOrder(from || null), deviceSearchOrder(from || null));
 }
 {
-  const r = run(6, () => trackingLoop(), 200);
-  ok(`the tracking loop at device pace holds Nightmare (${r.wins}/200)`, r.wins >= 190);
-  const slow = run(6, () => trackingLoop({ lookFrames: 150 }), 200);
+  // Without the camera drain: the 2026-09-25 census record's conditions.
+  const r = run(6, () => trackingLoop(), 200, { cameraDrain: false });
+  ok(`the tracking loop at device pace holds Nightmare without the camera drain (${r.wins}/200)`, r.wins >= 190);
+  const slow = run(6, () => trackingLoop({ lookFrames: 150 }), 200, { cameraDrain: false });
   ok(`and a loop three times slower does not (${slow.wins}/200)`, slow.wins < r.wins);
+  // With it (g783/g784), video fails after 24 s of looking on Nightmare.
+  const blind = run(6, () => trackingLoop(), 200);
+  const econ = run(6, () => trackingLoop({ economy: true }), 200);
+  ok(`the camera drain costs a loop that never reboots it (${blind.wins}/200)`, blind.wins < r.wins);
+  ok(`and a loop that reboots it wins back most of that (${econ.wins}/200)`, econ.wins > blind.wins && econ.wins >= 100);
+}
+{
+  const sim = new Fnaf3Sim({ night: 6, seed: 5 });
+  sim.viewing = 2;
+  for (let f = 0; f < 60 * 25; f += 1) sim.step();
+  ok(`24 s of looking breaks the camera on Nightmare (camera ${sim.camera})`, sim.videoError);
+  sim.rebooting = 2; sim.rebootCursor = 0;
+  for (let f = 0; f < 60 * 11 && sim.rebooting; f += 1) sim.step();
+  ok('a camera reboot restores it within 10 s', !sim.videoError && sim.rebooting === 0);
+  const idle = new Fnaf3Sim({ night: 2, seed: 5 });
+  idle.viewing = 0;
+  for (let f = 0; f < 60 * 9; f += 1) idle.step();
+  ok(`9 s in the office drains no ventilation (g906-g908: seconds, not frames; vent ${idle.vent})`, idle.vent === 0);
 }
 
 if (failures.length) {
