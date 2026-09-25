@@ -214,7 +214,12 @@ public final class Fnaf3PanelView extends View {
     /** Audio, camera, ventilation, as the maintenance panel lists them. */
     private void systems(Canvas canvas, float x, float y) {
         String[] names = { "AUDIO", "CAMERA", "VENT" };
-        String[] need = { "no lure without it", "no sighting without it", "the one that lets him in" };
+        int sight = lesson.sightS();
+        int lures = lesson.luresLeft();
+        String[] need = {
+            lures >= 0 ? String.format(Locale.ROOT, "%d lure%s left", lures, lures == 1 ? "" : "s") : "no lure without it",
+            sight >= 0 ? String.format(Locale.ROOT, "fails in %d s of looking", sight) : "no sighting without it",
+            "the one that lets him in" };
         for (Fnaf3Lesson.System3 which : Fnaf3Lesson.System3.values()) {
             int i = which.ordinal();
             float ry = y + i * 34;

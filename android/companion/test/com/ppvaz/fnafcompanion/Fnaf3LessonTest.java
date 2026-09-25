@@ -67,6 +67,12 @@ public final class Fnaf3LessonTest {
         check("systems", lesson.sys(Fnaf3Lesson.System3.VENT) == Fnaf3Lesson.Sys.ERROR
                 && lesson.sys(Fnaf3Lesson.System3.AUDIO) == Fnaf3Lesson.Sys.REBOOT
                 && lesson.sys(Fnaf3Lesson.System3.CAMERA) == Fnaf3Lesson.Sys.OK);
+        check("no sight budget before the host says", lesson.sightS() == -1 && lesson.luresLeft() == -1);
+        apply(lesson, 0, "sight", "24");
+        apply(lesson, 0, "lures", "2");
+        check("the sight budget and the lures left", lesson.sightS() == 24 && lesson.luresLeft() == 2);
+        check("a sight budget is a number", refuses(lesson, "sight", "-1"));
+        check("lures are a number", refuses(lesson, "lures", "many"));
         check("a bad system is refused", refuses(lesson, "sys", "POWER", "OK"));
         check("a bad state is refused", refuses(lesson, "sys", "VENT", "BROKEN"));
         check("an unknown verb is refused", refuses(lesson, "say", "anything"));

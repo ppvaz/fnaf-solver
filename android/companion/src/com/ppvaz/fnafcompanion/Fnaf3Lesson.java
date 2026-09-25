@@ -55,9 +55,9 @@ public final class Fnaf3Lesson {
         REBOOT_CAMERA("Rebooting the cameras",
                 "Without cameras you cannot see where he is."),
         REBOOT_ALL("Rebooting everything",
-                "Slower than one system: 10-20 s against 5-10 s."),
-        PHANTOM("A phantom: looking away",
-                "Looking at a phantom sets it off, and its scare breaks a system.");
+                "Two down, or one about to follow: one 10-20 s reboot beats a second trip."),
+        PHANTOM("A phantom, not him: looking away",
+                "Its scare drops the monitor and breaks a system.");
 
         public final String title;
         public final String why;
@@ -111,12 +111,14 @@ public final class Fnaf3Lesson {
     private int lure = 0;
     private long lureNs = -1;
     private final Sys[] sys = { Sys.OK, Sys.OK, Sys.OK };
+    private int sightS = -1;
+    private int luresLeft = -1;
 
     /**
      * Apply one {@code f3} command: {@code origin <ns>}, {@code night <1..6> <NORMAL|AGGRESSIVE>},
      * {@code step <STEP>}, {@code look <1..15|OFF>}, {@code seen <1..15|NONE>},
-     * {@code sealed <11..15|NONE>}, {@code lure <1..10>},
-     * {@code sys <AUDIO|CAMERA|VENT> <OK|ERROR|REBOOT>}. Anything else is refused
+     * {@code sealed <11..15|NONE>}, {@code lure <1..10>}, {@code sight <0..999>},
+     * {@code lures <0..99>}, {@code sys <AUDIO|CAMERA|VENT> <OK|ERROR|REBOOT>}. Anything else is refused
      * whole. {@code nowNs} stamps a step, a sighting and a lure.
      */
     public synchronized void apply(String[] field, int from, long nowNs) {
@@ -160,6 +162,14 @@ public final class Fnaf3Lesson {
                 lure = camera(field, from, 1, 10, null, "f3-lure-usage");
                 lureNs = nowNs;
                 return;
+            case "sight":
+                // Seconds of monitor time before video fails (camera text AV5, g783/g784).
+                sightS = number(field, from, 0, 999, "f3-sight-usage");
+                return;
+            case "lures":
+                // Lures audio has left before it breaks (g301: AI points each).
+                luresLeft = number(field, from, 0, 99, "f3-lures-usage");
+                return;
             case "sys":
                 if (field.length != from + 3) throw new IllegalArgumentException("f3-sys-usage");
                 sys[System3.valueOf(field[from + 1]).ordinal()] = Sys.valueOf(field[from + 2]);
@@ -167,6 +177,13 @@ public final class Fnaf3Lesson {
             default:
                 throw new IllegalArgumentException("f3-usage");
         }
+    }
+
+    private static int number(String[] field, int from, int lo, int hi, String usage) {
+        if (field.length != from + 2 || !field[from + 1].matches("[0-9]{1,3}")) throw new IllegalArgumentException(usage);
+        int n = Integer.parseInt(field[from + 1]);
+        if (n < lo || n > hi) throw new IllegalArgumentException(usage);
+        return n;
     }
 
     private static int camera(String[] field, int from, int lo, int hi, String none, String usage) {
@@ -188,6 +205,10 @@ public final class Fnaf3Lesson {
     public synchronized int sealed() { return sealed; }
     public synchronized int lure() { return lure; }
     public synchronized Sys sys(System3 which) { return sys[which.ordinal()]; }
+    /** Seconds of monitor time before video fails, or -1 before the host says. */
+    public synchronized int sightS() { return sightS; }
+    /** Lures audio has left, or -1 before the host says. */
+    public synchronized int luresLeft() { return luresLeft; }
 
     /** Milliseconds since he was last seen, or -1. */
     public synchronized long seenAgoMs(long nowNs) {
