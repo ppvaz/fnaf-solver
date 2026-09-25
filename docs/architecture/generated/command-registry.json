@@ -1776,6 +1776,12 @@
       "lifecycle": "supported"
     },
     {
+      "id": "tools/device/night-kit.mjs",
+      "invocation": "tools/device/night-kit.mjs",
+      "kind": "module",
+      "lifecycle": "supported"
+    },
+    {
       "id": "tools/device/explore-step.mjs",
       "invocation": "tools/device/explore-step.mjs --session NAME snap\\|tap X Y\\|double X Y\\|hold X Y [SNAP_AT_MS]\\|launch PKG/ACT\\|stop PKG [--confirm-live]",
       "kind": "device action",

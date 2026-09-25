@@ -23,9 +23,6 @@
  */
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { createWriteStream, existsSync } from 'node:fs';
-import { spawn, execFileSync } from 'node:child_process';
-import { createGzip } from 'node:zlib';
 import { homedir, tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -36,6 +33,7 @@ import { HidWireTransport } from '../../packages/adapters/src/transports/hid.js'
 import { ProbeRecord, ensureTitle, titleRead, titleConsensus, settleCustomNight, setDials, restartToTitle,
   DIALS, PACKAGE, BUILD, LEAVE_WAIT_MS } from './fnaf1-menu-probe.mjs';
 import { loadRegionSet, registerSet } from './native-regions.mjs';
+import { RegionRecorder, startVideo } from './night-kit.mjs';
 import { loadDetectors, makeClassifier } from './fnaf1-detectors.mjs';
 import { grid420 } from '../fnaf1-device-lane.mjs';
 
@@ -104,41 +102,6 @@ class HelperFrameBridge {
   preflight(options) { return this.adbBridge.preflight(options); }
 }
 
-/** Every distinct native-region frame, gzipped NDJSON, stamped on the host clock. */
-class RegionRecorder {
-  constructor(channel, path) {
-    this.channel = channel; this.path = path; this.running = false; this.frames = 0; this.errors = 0;
-    this.gzip = createGzip(); this.gzip.pipe(createWriteStream(path));
-    this.last = -1; this.latest = null;
-  }
-  start() {
-    this.running = true;
-    this.loop = (async () => {
-      while (this.running) {
-        try {
-          const r = await this.channel.read();
-          if (r.seq < 0 || r.seq === this.last) continue;
-          this.last = r.seq;
-          this.latest = r;
-          const regions = Object.fromEntries(Object.entries(r.regions).map(([k, v]) =>
-            [k, Buffer.from(new Uint8Array(v.pixels.buffer)).toString('base64')]));
-          this.gzip.write(`${JSON.stringify({ seq: r.seq, imageHostMs: r.imageHostMs, sentAt: r.sentAt,
-            receivedAt: r.receivedAt, regions })}\n`);
-          this.frames += 1;
-        } catch {
-          this.errors += 1;
-          await sleep(20);
-        }
-      }
-    })();
-  }
-  async stop() {
-    this.running = false;
-    await this.loop;
-    await new Promise(r => this.gzip.end(r));
-  }
-}
-
 async function press(hid, record, control, point, detail = {}) {
   const at = performance.now();
   await record.event('input.requested', { control, point, durationMs: CONTACT_MS, hostMs: at, ...detail });
@@ -153,55 +116,6 @@ async function hold(hid, record, control, point, durationMs) {
   await hid.send({ command: { action: { kind: 'hold', durationMs } }, point });
   record.document.inputsSent += 1;
   await record.event('input.released', { control, hostMs: performance.now() });
-}
-
-/**
- * A demonstration video of the night: screenrecord segments chained on the
- * phone (its own limit is 180 s), started at Ready, stopped after the night,
- * pulled and joined with ffmpeg. Local only (~/fnaf-apks/fnaf1-videos): game
- * frames never enter the repository. Nothing reads it during the night.
- */
-function startVideo(serial, id) {
-  const segments = [];
-  let stopped = false;
-  let current = null;
-  // One adb shell per segment, chained on the host: the chain can be stopped
-  // without killing an adb client, which would cut the running screenrecord
-  // off before it writes its moov atom (420-c lost its segment that way).
-  const next = () => {
-    if (stopped || segments.length >= 6) return;
-    const path = `/sdcard/Movies/${id}-${segments.length + 1}.mp4`;
-    segments.push(path);
-    // Light on purpose: any screenrecord halves the helper's distinct frames
-    // (75 -> 37 of 150 reads, measured 2026-09-25), and a full-size one
-    // starved 420-c into a death. Half size and 2 Mbps is enough to watch.
-    current = spawn('adb', ['-s', serial, 'shell', 'screenrecord', '--time-limit', '170',
-      '--size', '1200x540', '--bit-rate', '2000000', path], { stdio: 'ignore' });
-    current.once('exit', () => { current = null; next(); });
-  };
-  next();
-  return {
-    async stop(outDir) {
-      stopped = true;
-      try { execFileSync('adb', ['-s', serial, 'shell', 'pkill', '-INT', 'screenrecord'], { timeout: 10000 }); } catch { /* none running */ }
-      for (let i = 0; i < 40 && current; i += 1) await sleep(250);
-      const pulled = [];
-      for (const remote of segments) {
-        const local = join(outDir, remote.split('/').pop());
-        try {
-          execFileSync('adb', ['-s', serial, 'pull', remote, local], { timeout: 120000, stdio: 'ignore' });
-          if (existsSync(local)) pulled.push(local);
-          execFileSync('adb', ['-s', serial, 'shell', 'rm', '-f', remote], { timeout: 10000 });
-        } catch { /* a segment that never started */ }
-      }
-      if (pulled.length === 0) return null;
-      const list = join(outDir, `${id}-segments.txt`);
-      await writeFile(list, pulled.map((p) => `file '${p}'`).join('\n'));
-      const out = join(outDir, `${id}.mp4`);
-      execFileSync('ffmpeg', ['-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', list, '-c', 'copy', out], { timeout: 300000 });
-      return out;
-    },
-  };
 }
 
 /** The 0/0/0/0 choreography: every route control, open-loop, timestamped. */

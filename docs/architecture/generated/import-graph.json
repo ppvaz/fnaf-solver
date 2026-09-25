@@ -1297,15 +1297,13 @@
         "./fnaf1-detectors.mjs",
         "./fnaf1-menu-probe.mjs",
         "./native-regions.mjs",
-        "node:child_process",
+        "./night-kit.mjs",
         "node:crypto",
-        "node:fs",
         "node:fs/promises",
         "node:os",
         "node:path",
         "node:perf_hooks",
-        "node:url",
-        "node:zlib"
+        "node:url"
       ]
     },
     {
@@ -1354,16 +1352,15 @@
         "../../apps/device/src/physical-ports.js",
         "../../packages/adapters/src/transports/hid.js",
         "./native-regions.mjs",
+        "./night-kit.mjs",
         "node:child_process",
         "node:crypto",
-        "node:fs",
         "node:fs/promises",
         "node:os",
         "node:path",
         "node:perf_hooks",
         "node:readline",
-        "node:url",
-        "node:zlib"
+        "node:url"
       ]
     },
     {
@@ -1465,6 +1462,18 @@
         "../../apps/device/src/physical-ports.js",
         "node:fs",
         "node:path",
+        "node:zlib"
+      ]
+    },
+    {
+      "file": "tools/device/night-kit.mjs",
+      "imports": [
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:fs/promises",
+        "node:path",
+        "node:perf_hooks",
         "node:zlib"
       ]
     },

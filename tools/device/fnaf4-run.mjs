@@ -16,11 +16,9 @@
  * The night is then abandoned by a force-stop (the save stays at Night 1).
  */
 import { createHash } from 'node:crypto';
-import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
-import { createWriteStream } from 'node:fs';
+import { mkdir, readFile } from 'node:fs/promises';
 import { spawn, execFileSync } from 'node:child_process';
 import { createInterface } from 'node:readline';
-import { createGzip } from 'node:zlib';
 import { homedir, tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -28,6 +26,7 @@ import { performance } from 'node:perf_hooks';
 import { AdbCueHelperPort, AdbHidProcess } from '../../apps/device/src/physical-ports.js';
 import { HidWireTransport } from '../../packages/adapters/src/transports/hid.js';
 import { loadRegionSet, registerSet } from './native-regions.mjs';
+import { Actor, RegionRecorder, RunRecord, startVideo } from './night-kit.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../..');
@@ -88,74 +87,6 @@ export function parseArgs(argv) {
   return o;
 }
 
-class RunRecord {
-  constructor({ id, outdir, captureDir, options, bindings }) {
-    this.outdir = outdir; this.captureDir = captureDir;
-    this.eventsPath = join(outdir, 'events.jsonl');
-    this.document = {
-      schema: 'fnaf4-run-v1', id, startedAt: new Date().toISOString(),
-      claimLevel: 'DEVICE_MEASURED helper native frames and regions, A2DP audio; no detector or route is promoted by this record',
-      target: { package: PACKAGE }, options, bindings,
-      capture: { sensor: 'cue-helper-mediaprojection-2400x1080 + a2dp-bluealsa', directory: captureDir, frames: [] },
-      inputsSent: 0, status: 'STARTING',
-    };
-  }
-  async event(type, fields = {}) {
-    const row = { atWallMs: Date.now(), atMonotonicMs: Math.round(performance.now()), type, ...fields };
-    await appendFile(this.eventsPath, `${JSON.stringify(row)}\n`);
-    return row;
-  }
-  async capture(name, png) {
-    const filename = `${String(this.document.capture.frames.length).padStart(4, '0')}-${name}.png`;
-    const path = join(this.captureDir, filename);
-    await writeFile(path, png);
-    const frame = { name, path, sha256: sha256(png), atWallMs: Date.now() };
-    this.document.capture.frames.push(frame);
-    await this.event('capture', frame);
-    return path;
-  }
-  async save(status) {
-    this.document.status = status;
-    this.document.updatedAt = new Date().toISOString();
-    await writeFile(join(this.outdir, 'run.json'), `${JSON.stringify(this.document, null, 2)}\n`);
-  }
-}
-
-/** Every distinct native-region frame, gzipped NDJSON, stamped on the host clock. */
-class RegionRecorder {
-  constructor(channel, path) {
-    this.channel = channel; this.running = false; this.frames = 0; this.errors = 0;
-    this.gzip = createGzip(); this.gzip.pipe(createWriteStream(path));
-    this.last = -1; this.latest = null;
-  }
-  start() {
-    this.running = true;
-    this.loop = (async () => {
-      while (this.running) {
-        try {
-          const r = await this.channel.read();
-          if (r.seq < 0 || r.seq === this.last) continue;
-          this.last = r.seq;
-          this.latest = r;
-          const regions = Object.fromEntries(Object.entries(r.regions).map(([k, v]) =>
-            [k, Buffer.from(new Uint8Array(v.pixels.buffer)).toString('base64')]));
-          this.gzip.write(`${JSON.stringify({ seq: r.seq, imageHostMs: r.imageHostMs, imageWallMs: wallOf(r.imageHostMs),
-            receivedAt: r.receivedAt, regions })}\n`);
-          this.frames += 1;
-        } catch {
-          this.errors += 1;
-          await sleep(20);
-        }
-      }
-    })();
-  }
-  async stop() {
-    this.running = false;
-    await this.loop;
-    await new Promise(r => this.gzip.end(r));
-  }
-}
-
 /**
  * The live audio detector as a child: its JSON lines are kept in order with
  * their host wall times (cue onsets, and the breathing level every 100 ms).
@@ -180,97 +111,9 @@ function startCues(captureDir) {
   };
 }
 
-/**
- * A demonstration video of the night: screenrecord segments chained on the
- * host (the phone's own limit is 180 s), light on purpose -- any screenrecord
- * halves the helper's distinct frames (75 -> 37 of 150 reads, 2026-09-25).
- * Local only (~/fnaf-apks/fnaf4-videos): game frames never enter the repository.
- */
-function startVideo(serial, id) {
-  const segments = [];
-  let stopped = false;
-  let current = null;
-  const next = () => {
-    if (stopped || segments.length >= 6) return;
-    const path = `/sdcard/Movies/${id}-${segments.length + 1}.mp4`;
-    segments.push(path);
-    current = spawn('adb', ['-s', serial, 'shell', 'screenrecord', '--time-limit', '170',
-      '--size', '1200x540', '--bit-rate', '2000000', path], { stdio: 'ignore' });
-    current.once('exit', () => { current = null; next(); });
-  };
-  next();
-  return {
-    async stop(outDir) {
-      stopped = true;
-      try { execFileSync('adb', ['-s', serial, 'shell', 'pkill', '-INT', 'screenrecord'], { timeout: 10000 }); } catch { /* none running */ }
-      for (let i = 0; i < 40 && current; i += 1) await sleep(250);
-      const pulled = [];
-      for (const remote of segments) {
-        const local = join(outDir, remote.split('/').pop());
-        try {
-          execFileSync('adb', ['-s', serial, 'pull', remote, local], { timeout: 120000, stdio: 'ignore' });
-          pulled.push(local);
-          execFileSync('adb', ['-s', serial, 'shell', 'rm', '-f', remote], { timeout: 10000 });
-        } catch { /* a segment that never started */ }
-      }
-      if (pulled.length === 0) return null;
-      const list = join(outDir, `${id}-segments.txt`);
-      await writeFile(list, pulled.map((p) => `file '${p}'`).join('\n'));
-      const out = join(outDir, `${id}.mp4`);
-      execFileSync('ffmpeg', ['-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', list, '-c', 'copy', out], { timeout: 300000 });
-      return out;
-    },
-  };
-}
-
 function controlsOf(model) {
   const c = model.controlMap;
   return Object.fromEntries(Object.entries(c).map(([k, v]) => [k, { x: v.x, y: v.y, holdMs: v.holdMs, gapMs: v.gapMs }]));
-}
-
-class Actor {
-  constructor(hid, record) { this.hid = hid; this.record = record; }
-  async press(control, point, detail = {}) {
-    await this.record.event('input.requested', { control, point, kind: 'press', durationMs: CONTACT_MS, hostMs: performance.now(), ...detail });
-    await this.hid.send({ command: { action: { kind: 'press', durationMs: CONTACT_MS } }, point });
-    this.record.document.inputsSent += 1;
-    await this.record.event('input.released', { control, hostMs: performance.now() });
-  }
-  async double(control, point, gapMs) {
-    await this.record.event('input.requested', { control, point, kind: 'double', gapMs, hostMs: performance.now() });
-    await this.hid.send({ command: { action: { kind: 'press', durationMs: CONTACT_MS } }, point });
-    const between = performance.now();
-    await sleep(gapMs);
-    await this.hid.send({ command: { action: { kind: 'press', durationMs: CONTACT_MS } }, point });
-    this.record.document.inputsSent += 2;
-    await this.record.event('input.released', { control, firstReleasedHostMs: between, hostMs: performance.now() });
-  }
-  /**
-   * Hold a control for up to `maxMs`, in 1000 ms reports back to back, and
-   * let go early once `stop()` says so. The release between two reports is
-   * one host write (well under a 16.7 ms game frame), so the game keeps
-   * seeing the control held.
-   */
-  async holdWhile(control, point, maxMs, stop) {
-    const start = performance.now();
-    await this.record.event('input.requested', { control, point, kind: 'hold-while', maxMs, hostMs: start });
-    let why = 'max';
-    while (performance.now() - start < maxMs) {
-      const left = maxMs - (performance.now() - start);
-      await this.hid.send({ command: { action: { kind: 'hold', durationMs: Math.max(50, Math.min(1000, Math.round(left))) } }, point });
-      this.record.document.inputsSent += 1;
-      const s = stop();
-      if (s) { why = s; break; }
-    }
-    await this.record.event('input.released', { control, hostMs: performance.now(), why });
-    return { heldMs: performance.now() - start, why };
-  }
-  async hold(control, point, durationMs) {
-    await this.record.event('input.requested', { control, point, kind: 'hold', durationMs, hostMs: performance.now() });
-    await this.hid.send({ command: { action: { kind: 'hold', durationMs } }, point });
-    this.record.document.inputsSent += 1;
-    await this.record.event('input.released', { control, hostMs: performance.now() });
-  }
 }
 
 /**
@@ -1025,7 +868,9 @@ async function main(argv) {
   const outdir = join(ROOT, 'artifacts', 'runs', id);
   const captureDir = join(homedir(), 'fnaf-apks', 'fnaf4-device-runs', id);
   await Promise.all([mkdir(outdir, { recursive: true }), mkdir(captureDir, { recursive: true })]);
-  const record = new RunRecord({ id, outdir, captureDir, options, bindings });
+  const record = new RunRecord({ schema: 'fnaf4-run-v1', pkg: PACKAGE, id, outdir, captureDir, options, bindings,
+    claimLevel: 'DEVICE_MEASURED helper native frames and regions, A2DP audio; no detector or route is promoted by this record',
+    sensor: 'cue-helper-mediaprojection-2400x1080 + a2dp-bluealsa' });
   await record.save('PREFLIGHT');
 
   const port = new AdbCueHelperPort({ serial });
@@ -1047,7 +892,7 @@ async function main(argv) {
     hidProcess = new AdbHidProcess({ serial });
     const hid = new HidWireTransport({ write: l => hidProcess.write(l), ready: () => hidProcess.ready(), contactMs: CONTACT_MS });
     await hid.start();
-    const act = new Actor(hid, record);
+    const act = new Actor(hid, record, CONTACT_MS);
 
     cues = startCues(captureDir);
     for (let i = 0; i < 50 && !cues.started(); i += 1) await sleep(100);
