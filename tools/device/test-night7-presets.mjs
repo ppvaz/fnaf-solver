@@ -1,6 +1,6 @@
 // Gate for the Custom Night preset scorer. No phone required.
 //
-// Three things here can go wrong silently, and each one has cost a session
+// Four things here can go wrong silently, and the first three have each cost a session
 // elsewhere in this repository:
 //
 //  1. The presets could drift from the file the phone's dial driver reads.
@@ -19,9 +19,18 @@
 //     register's, 2026-09-11 item 7: a constant is only anchored if it stands
 //     clear of its floor by a NAMED margin, and the margin is re-derived here
 //     from the engine's own animation constant rather than restated.
+//
+//  4. The population record could stop describing the tree. `--population`
+//     takes a quarter of an hour on seven cores, so this does not re-run it;
+//     it checks that nothing the record depends on has moved, and replays
+//     every loss it lists and a fixed held-out sample.
+import { createHash } from 'node:crypto';
+import { readFileSync, readdirSync } from 'node:fs';
 import * as C from '@fnaf2-1020/core/mechanics';
 import { KNOBS0 } from './minus-toys-plan.mjs';
-import { loadPresets, cohort, PRESET_KNOBS, MEASURED_SPREAD_MS, HALL_PLATEAU_MS, BANDS } from './night7-presets.mjs';
+import { loadPresets, cohort, runNight, PRESET_KNOBS, MEASURED_SPREAD_MS, HALL_PLATEAU_MS, BANDS,
+  POPULATION_KIND } from './night7-presets.mjs';
+import { designBlock } from '../winner-census.mjs';
 
 const check = (ok, message) => { if (!ok) throw new Error(message); };
 
@@ -95,5 +104,52 @@ const check = (ok, message) => { if (!ok) throw new Error(message); };
     `the hall pulse at ${k.hallOffsetMs} overruns the monitor raise at ${k.raiseMs}`);
 }
 
+// --- 4. the population record still describes the tree ---------------------
+let populationLine;
+{
+  const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
+  const dir = new URL('../../docs/evidence/', import.meta.url);
+  const name = readdirSync(dir).filter(n => /^night7-preset-population-\d{8}\.json$/.test(n)).sort().pop();
+  check(name, 'no docs/evidence/night7-preset-population-YYYYMMDD.json is committed');
+  const record = JSON.parse(readFileSync(new URL(name, dir), 'utf8'));
+  check(record.kind === POPULATION_KIND, `${name} is not a ${POPULATION_KIND}`);
+  check(record.method.knobsSha256 === sha256(JSON.stringify(PRESET_KNOBS)),
+    `PRESET_KNOBS changed since ${name}; re-run night7-presets.mjs --population`);
+  check(record.method.presetSource.sha256 ===
+      sha256(readFileSync(new URL('./models/custom-night-moto-g56-v207.json', import.meta.url))),
+    `the menu model changed since ${name}; re-run night7-presets.mjs --population`);
+  const design = designBlock();
+  check(record.method.designBlock.sha256 === sha256(JSON.stringify(design.seeds)),
+    `the design block no longer rebuilds to the one ${name} split on`);
+  const presets = loadPresets();
+  check(record.presets.length === presets.length && presets.every(p => record.presets.some(r => r.id === p.id)),
+    `${name} does not cover the ten presets of the menu model`);
+  const inDesign = new Set(design.seeds);
+  const { start, count } = record.method.population;
+  let replays = 0;
+  for (const row of record.presets) {
+    const preset = presets.find(p => p.id === row.id);
+    check(row.wins + row.losses.length === row.n && row.design.n + row.heldOut.n === row.n,
+      `${row.id}: the record's counts do not add up`);
+    for (const [seed, reason, frame] of row.losses.slice(0, 20)) {
+      const { sim, splitAt } = runNight({ preset, seed, knobs: PRESET_KNOBS });
+      replays++;
+      const now = sim.won && splitAt >= 0 ? 'win' : sim.won ? 'unarmed' : (sim.death?.reason ?? 'alive');
+      check(now === reason && sim.frame === frame, `${row.id} seed ${seed}: recorded ${reason}@${frame}, now ${now}@${sim.frame}`);
+    }
+    const lost = new Set(row.losses.map(([seed]) => seed));
+    let taken = 0;
+    for (let k = 0; taken < 3 && k < count; k++) {
+      const seed = start + ((k * 40503 + row.id.length * 977) % count);
+      if (inDesign.has(seed)) continue;
+      taken++; replays++;
+      const r = runNight({ preset, seed, knobs: PRESET_KNOBS });
+      check((r.sim.won && r.splitAt >= 0) === !lost.has(seed),
+        `${row.id} held-out seed ${seed} replays otherwise than ${name} records`);
+    }
+  }
+  populationLine = `${name} still describes the tree (${replays} replays)`;
+}
+
 console.log('night7-presets: presets match the menu model, the device lane bites, ' +
-  'and the hall pulse clears both floors by more than 33 ms');
+  `the hall pulse clears both floors by more than 33 ms, and ${populationLine}`);

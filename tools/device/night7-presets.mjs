@@ -25,14 +25,17 @@
 //   node tools/device/night7-presets.mjs --gate            # all ten, 3000 seeds, both lanes
 //   node tools/device/night7-presets.mjs --gate --preset=foxy-foxy --runs=200
 //   node tools/device/night7-presets.mjs --bands           # price every cited band
-import { readFileSync } from 'node:fs';
-import { pathToFileURL } from 'node:url';
+//   node tools/device/night7-presets.mjs --population --jobs 7 --out FILE   # all 65,536 seeds, exact lane
+import { createHash } from 'node:crypto';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as C from '@fnaf2-1020/core/mechanics';
 import { Sim } from '@fnaf2-1020/core/mechanics';
 import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor }
   from '@fnaf2-1020/research/seeds';
 import { KNOBS0, build, schedule } from './minus-toys-plan.mjs';
 import { DeviceActuator } from './actuator.mjs';
+import { designBlock, forkBlocks, gitState } from '../winner-census.mjs';
 
 const MENU_MODEL = new URL('./models/custom-night-moto-g56-v207.json', import.meta.url);
 
@@ -169,6 +172,93 @@ export function cohort({ preset, runs, worst = false, knobs = PRESET_KNOBS, band
   };
 }
 
+// --- the population ------------------------------------------------------
+//
+// `cohort()` scores the golden cohort, which draws uint32 seeds and so deals
+// 2932 distinct nights of the 65,536 the 16-bit RNG can (winner-census.mjs).
+// `--population` scores all of them for every preset in the exact lane -- the
+// model's answer about the ROUTE, which is what a P_max is a statement of --
+// with the win condition `cohort()` uses: 6 AM and the split armed.
+export const POPULATION_KIND = 'night7-preset-population-v1';
+const sha256 = (text) => createHash('sha256').update(text).digest('hex');
+
+/** Losses over [start, end) for each named preset: [seed, reason, frame]. */
+export function populationBlock(ids, start, end) {
+  return loadPresets().filter(p => ids.includes(p.id)).map(preset => {
+    const losses = [];
+    for (let seed = start; seed < end; seed++) {
+      const { sim, splitAt } = runNight({ preset, seed, knobs: PRESET_KNOBS });
+      if (!(sim.won && splitAt >= 0))
+        losses.push([seed, sim.won ? 'unarmed' : (sim.death?.reason ?? 'alive'), sim.frame]);
+    }
+    return { id: preset.id, n: end - start, losses };
+  });
+}
+
+export function populationRecord({ rows, start, count, git, date, command }) {
+  const design = designBlock();
+  const inDesign = new Set(design.seeds);
+  const designIn = design.seeds.filter(seed => seed >= start && seed < start + count).length;
+  const exhaustive = start === 0 && count === C.RNG_MODULUS;
+  const presets = rows.map(({ id, n, losses }) => {
+    const designLosses = losses.filter(([seed]) => inDesign.has(seed)).length;
+    const deaths = {};
+    for (const [, reason] of losses) deaths[reason] = (deaths[reason] ?? 0) + 1;
+    return { id, wins: n - losses.length, n,
+      design: { wins: designIn - designLosses, n: designIn },
+      heldOut: { wins: (n - designIn) - (losses.length - designLosses), n: n - designIn },
+      deaths, losses, pMaxExactLane: exhaustive && losses.length === 0 ? 1 : null };
+  });
+  const answer = presets.map(p => `${p.id} ${p.wins}/${p.n}`).join('; ') +
+    (exhaustive && presets.every(p => p.pMaxExactLane === 1)
+      ? '. Every preset is won on every night the model can deal, so P_max = 1 for each in the exact lane.' : '.');
+  return {
+    schema: 'evidence-record-v1', kind: POPULATION_KIND,
+    id: `night7-preset-population-${date.replace(/-/g, '')}`, claimLevel: 'MODEL_ONLY', date,
+    question: 'Does the Minus Toys preset schedule clear each of the ten Custom Night presets on every night the ' +
+      'model can deal -- not the golden cohort, which is 2932 distinct nights -- and what is P_max per preset?',
+    answer,
+    whyItIsModelOnly: 'No device run, and only the exact lane: every press on its scheduled frame at epoch 0. ' +
+      'The device lanes and the epoch scan stay on the golden cohort (night7-preset-sweep-20260917).',
+    method: {
+      tool: 'tools/device/night7-presets.mjs --population', command, git,
+      population: { start, count, exhaustive,
+        why: 'Rng keeps seed & 0xffff (packages/core/src/mechanics/rng.js), so seeds 0..65535 are every night the model can deal' },
+      lane: 'exact, normal RNG: runNight({preset, seed, knobs: PRESET_KNOBS}) at epoch 0; a win is sim.won AND splitAt >= 0',
+      family: 'one schedule, PRESET_KNOBS (KNOBS0 with hallOffsetMs 9613); each figure is a lower bound scoped to it',
+      knobs: PRESET_KNOBS, knobsSha256: sha256(JSON.stringify(PRESET_KNOBS)),
+      presetSource: { path: 'tools/device/models/custom-night-moto-g56-v207.json', sha256: sha256(readFileSync(MENU_MODEL)) },
+      designBlock: { ...design.components, distinct: design.seeds.length, inCensus: designIn,
+        sha256: sha256(JSON.stringify(design.seeds)) },
+      heldOutBlock: { definition: 'every censused seed not in the design block', n: count - designIn },
+    },
+    presets,
+  };
+}
+
+async function population(argv) {
+  const flag = (name, dflt) => { const i = argv.indexOf(`--${name}`); return i < 0 ? dflt : argv[i + 1]; };
+  const jobs = Number(flag('jobs', '1'));
+  const start = Number(flag('start', '0'));
+  const count = Number(flag('count', String(C.RNG_MODULUS)));
+  if (!Number.isInteger(jobs) || jobs < 1) throw new Error('--jobs must be a positive integer');
+  if (!Number.isInteger(start) || !Number.isInteger(count) || start < 0 || count < 1 || start + count > C.RNG_MODULUS)
+    throw new Error(`--start/--count must lie inside 0..${C.RNG_MODULUS - 1}`);
+  const ids = loadPresets().map(p => p.id);
+  const started = Date.now();
+  const rows = await forkBlocks({ script: fileURLToPath(import.meta.url), args: ids, start, count, jobs });
+  const record = populationRecord({ rows, start, count, git: gitState(),
+    date: flag('date', new Date().toISOString().slice(0, 10)),
+    command: `node tools/device/night7-presets.mjs --population --start ${start} --count ${count} --jobs ${jobs}` });
+  record.method.wallSeconds = Math.round((Date.now() - started) / 1000);
+  const text = `${JSON.stringify(record, null, 2)}\n`;
+  const out = flag('out', null);
+  if (out) writeFileSync(out, text); else process.stdout.write(text);
+  for (const p of record.presets)
+    console.error(`  ${p.id.padEnd(20)} ${String(p.wins).padStart(6)}/${p.n}  held-out ${p.heldOut.wins}/${p.heldOut.n}` +
+      (p.wins === p.n ? '' : `  | ${Object.entries(p.deaths).map(([c, k]) => `${c} ${k}`).join(', ')}`));
+}
+
 const why = (reasons) => [...reasons.entries()]
   .sort((a, b) => b[1] - a[1]).map(([r, n]) => `${r} ${n}`).join(', ');
 
@@ -240,7 +330,13 @@ function epochs(presets, runs, bandName) {
   }
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href && process.argv[2] === '--child') {
+  const [, , , a, b, ...ids] = process.argv;
+  process.send(populationBlock(ids, Number(a), Number(b)));
+} else if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href &&
+           process.argv.includes('--population')) {
+  population(process.argv.slice(2)).catch((error) => { console.error(error.message); process.exitCode = 1; });
+} else if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const arg = (name, dflt) => {
     const v = process.argv.find(a => a.startsWith(`--${name}=`));
     return v === undefined ? dflt : v.slice(name.length + 3);

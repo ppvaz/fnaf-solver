@@ -1,0 +1,264 @@
+{
+  "schema": "evidence-record-v1",
+  "kind": "night7-preset-population-v1",
+  "id": "night7-preset-population-20260925",
+  "claimLevel": "MODEL_ONLY",
+  "date": "2026-09-25",
+  "question": "Does the Minus Toys preset schedule clear each of the ten Custom Night presets on every night the model can deal -- not the golden cohort, which is 2932 distinct nights -- and what is P_max per preset?",
+  "answer": "default-4-20 65536/65536; new-and-shiny 65536/65536; double-trouble 65536/65536; night-of-misfits 65536/65536; foxy-foxy 65536/65536; ladies-night 65536/65536; freddys-circus 65536/65536; cupcake-challenge 65536/65536; fazbear-fever 65536/65536; golden-freddy 65536/65536. Every preset is won on every night the model can deal, so P_max = 1 for each in the exact lane.",
+  "whyItIsModelOnly": "No device run, and only the exact lane: every press on its scheduled frame at epoch 0. The device lanes and the epoch scan stay on the golden cohort (night7-preset-sweep-20260917).",
+  "method": {
+    "tool": "tools/device/night7-presets.mjs --population",
+    "command": "node tools/device/night7-presets.mjs --population --start 0 --count 65536 --jobs 7",
+    "git": {
+      "commit": "434fc32b1195fd8d9f024325604e059e6a07f703",
+      "dirtyEnginePaths": [
+        "M tools/device/README.md",
+        " M tools/device/night7-presets.mjs",
+        " M tools/device/test-night7-presets.mjs"
+      ]
+    },
+    "population": {
+      "start": 0,
+      "count": 65536,
+      "exhaustive": true,
+      "why": "Rng keeps seed & 0xffff (packages/core/src/mechanics/rng.js), so seeds 0..65535 are every night the model can deal"
+    },
+    "lane": "exact, normal RNG: runNight({preset, seed, knobs: PRESET_KNOBS}) at epoch 0; a win is sim.won AND splitAt >= 0",
+    "family": "one schedule, PRESET_KNOBS (KNOBS0 with hallOffsetMs 9613); each figure is a lower bound scoped to it",
+    "knobs": {
+      "openArm": true,
+      "openViewMs": 0,
+      "openLastViewedMs": 300,
+      "openArmMs": 833,
+      "armingGapMs": 50,
+      "openRaiseGapMs": 733,
+      "openStunLeadMs": 300,
+      "openStunHoldMs": 100,
+      "openWindLeadMs": 467,
+      "openWindMs": 1750,
+      "openCamdropLeadMs": 200,
+      "openMaskLeadMs": 182,
+      "loopPeriodMs": 10000,
+      "maskOffMs": 9200,
+      "maskOnMs": 4449,
+      "hallOffsetMs": 9613,
+      "hallMs": 33,
+      "loopContactMs": 200,
+      "raiseMs": 10100,
+      "stunRefreshMs": 10400,
+      "stunRefreshHoldMs": 100,
+      "windLeadMs": 10570,
+      "windMs": 3230,
+      "camdropMs": 13850,
+      "camdropLeadMs": 150,
+      "camdropMonitorMs": 200,
+      "camdropTailMs": 67,
+      "contactMs": 33,
+      "preventiveVentLight": true,
+      "reactiveBB": false,
+      "minimal": false,
+      "minArmAtMs": 115000,
+      "minPeriodMs": 5000,
+      "minLoopStartMs": 140000,
+      "minStopAtMs": 360000,
+      "minObserveUntilMs": 420000,
+      "observeUntilMs": 420000,
+      "minFlashAtMs": 150,
+      "minFlashHoldMs": 100,
+      "minWindAtMs": 300,
+      "minWindHoldMs": 4400,
+      "minProofCam09AtMs": 359700
+    },
+    "knobsSha256": "bf7b16a8c72b0b4c3e092fdbe43aef285d30e5ab44fba939de8afb20924bf12a",
+    "presetSource": {
+      "path": "tools/device/models/custom-night-moto-g56-v207.json",
+      "sha256": "d6826e18c2ef770b91fda65dfd7b52e7200748b12ca46f7899d9354b2030b389"
+    },
+    "designBlock": {
+      "counting": {
+        "definition": "0..3000",
+        "distinct": 3001
+      },
+      "golden": {
+        "definition": "randomSeedCohort({count: 3000, salt: 0x9e3779b9}) mod 2^16",
+        "members": 3000,
+        "distinct": 2932
+      },
+      "sweepStride": {
+        "definition": "(i * 2246822519) >>> 0 mod 2^16, i < 3000",
+        "distinct": 3000
+      },
+      "distinct": 8566,
+      "inCensus": 8566,
+      "sha256": "e5b0d649dbba8aef14c7276aba037d6ad749a29b61ff5be6ef4b01986b016437"
+    },
+    "heldOutBlock": {
+      "definition": "every censused seed not in the design block",
+      "n": 56970
+    },
+    "wallSeconds": 956
+  },
+  "presets": [
+    {
+      "id": "default-4-20",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "pMaxExactLane": 1
+    },
+    {
+      "id": "new-and-shiny",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "pMaxExactLane": 1
+    },
+    {
+      "id": "double-trouble",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "pMaxExactLane": 1
+    },
+    {
+      "id": "night-of-misfits",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "pMaxExactLane": 1
+    },
+    {
+      "id": "foxy-foxy",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "pMaxExactLane": 1
+    },
+    {
+      "id": "ladies-night",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "pMaxExactLane": 1
+    },
+    {
+      "id": "freddys-circus",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "pMaxExactLane": 1
+    },
+    {
+      "id": "cupcake-challenge",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "pMaxExactLane": 1
+    },
+    {
+      "id": "fazbear-fever",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "pMaxExactLane": 1
+    },
+    {
+      "id": "golden-freddy",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "pMaxExactLane": 1
+    }
+  ]
+}

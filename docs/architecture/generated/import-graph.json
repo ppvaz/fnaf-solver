@@ -1507,10 +1507,12 @@
     {
       "file": "tools/device/night7-presets.mjs",
       "imports": [
+        "../winner-census.mjs",
         "./actuator.mjs",
         "./minus-toys-plan.mjs",
         "@fnaf2-1020/core/mechanics",
         "@fnaf2-1020/research/seeds",
+        "node:crypto",
         "node:fs",
         "node:url"
       ]
@@ -1864,9 +1866,12 @@
     {
       "file": "tools/device/test-night7-presets.mjs",
       "imports": [
+        "../winner-census.mjs",
         "./minus-toys-plan.mjs",
         "./night7-presets.mjs",
-        "@fnaf2-1020/core/mechanics"
+        "@fnaf2-1020/core/mechanics",
+        "node:crypto",
+        "node:fs"
       ]
     },
     {

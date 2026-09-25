@@ -119,31 +119,37 @@ function censusBlock(paths, start, end) {
   });
 }
 
-function runChild(paths, start, end) {
+function runChild(script, args, start, end) {
   return new Promise((resolveChild, reject) => {
-    const child = fork(fileURLToPath(import.meta.url), ['--child', String(start), String(end), ...paths],
+    const child = fork(script, ['--child', String(start), String(end), ...args],
       { stdio: ['ignore', 'inherit', 'inherit', 'ipc'], serialization: 'advanced' });
     let result = null;
     child.on('message', (message) => { result = message; });
     child.on('error', reject);
     child.on('exit', (code) => (code === 0 && result ? resolveChild(result)
-      : reject(new Error(`winner-census: block ${start}..${end} exited ${code}`))));
+      : reject(new Error(`${script}: block ${start}..${end} exited ${code}`))));
   });
 }
 
-async function censusParallel(paths, start, count, jobs) {
+/**
+ * Split [start, start + count) into `jobs` contiguous blocks, each run as
+ * `node <script> --child a b ...args`, which sends back one row per subject
+ * ({n, losses, ...}) in a fixed order. Rows are merged in that order; the
+ * other fields are taken from the first block.
+ */
+export async function forkBlocks({ script, args, start, count, jobs }) {
   const size = Math.ceil(count / jobs);
   const blocks = [];
   for (let a = start; a < start + count; a += size) blocks.push([a, Math.min(a + size, start + count)]);
-  const parts = await Promise.all(blocks.map(([a, b]) => runChild(paths, a, b)));
+  const parts = await Promise.all(blocks.map(([a, b]) => runChild(script, args, a, b)));
   return parts[0].map((row, i) => ({
-    path: row.path, night: row.night, planSha256: row.planSha256,
+    ...row,
     n: parts.reduce((sum, part) => sum + part[i].n, 0),
     losses: parts.flatMap((part) => part[i].losses).sort((x, y) => x[0] - y[0]),
   }));
 }
 
-function gitState() {
+export function gitState() {
   const git = (...args) => execFileSync('git', ['-C', ROOT, ...args], { encoding: 'utf8' }).trim();
   return { commit: git('rev-parse', 'HEAD'),
     dirtyEnginePaths: git('status', '--porcelain', '--', 'packages/core', 'tools/device').split('\n').filter(Boolean) };
@@ -260,7 +266,8 @@ async function main(argv) {
     }
   } finally { rmSync(scratch, { recursive: true, force: true }); }
   const started = Date.now();
-  const rows = await censusParallel(paths, args.start, args.count, args.jobs);
+  const rows = await forkBlocks({ script: fileURLToPath(import.meta.url), args: paths,
+    start: args.start, count: args.count, jobs: args.jobs });
   const command = `node tools/winner-census.mjs${args.winners.map((w) => ` --winner ${w}`).join('')}` +
     ` --start ${args.start} --count ${args.count} --jobs ${args.jobs}`;
   const record = buildRecord({ rows, start: args.start, count: args.count, design: designBlock(),

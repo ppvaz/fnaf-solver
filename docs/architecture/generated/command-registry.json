@@ -1387,7 +1387,7 @@
     },
     {
       "id": "tools/device/night7-presets.mjs",
-      "invocation": "tools/device/night7-presets.mjs [--gate] [--epochs] [--bands] [--preset=id] [--runs=N] [--band=name]",
+      "invocation": "tools/device/night7-presets.mjs [--gate] [--epochs] [--bands] [--preset=id] [--runs=N] [--band=name] [--population [--jobs J] [--out FILE]]",
       "kind": "generator/check",
       "lifecycle": "supported"
     },
