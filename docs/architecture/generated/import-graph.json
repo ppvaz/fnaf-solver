@@ -2614,6 +2614,20 @@
       ]
     },
     {
+      "file": "tools/test-winner-census.mjs",
+      "imports": [
+        "./device/bundle.mjs",
+        "./winner-census.mjs",
+        "@fnaf2-1020/core/contracts",
+        "@fnaf2-1020/core/mechanics",
+        "node:assert/strict",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/test.mjs",
       "imports": [
         "./chrome.mjs",
@@ -2682,6 +2696,20 @@
         "@fnaf2-1020/core/control",
         "@fnaf2-1020/core/mechanics",
         "@fnaf2-1020/core/sensing",
+        "node:url"
+      ]
+    },
+    {
+      "file": "tools/winner-census.mjs",
+      "imports": [
+        "./device/bundle.mjs",
+        "@fnaf2-1020/core/mechanics",
+        "@fnaf2-1020/research/seeds",
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:os",
+        "node:path",
         "node:url"
       ]
     }

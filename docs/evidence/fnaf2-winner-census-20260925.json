@@ -1,0 +1,847 @@
+{
+  "schema": "evidence-record-v1",
+  "kind": "fnaf2-winner-census-v1",
+  "id": "fnaf2-winner-census-20260925",
+  "claimLevel": "MODEL_ONLY",
+  "date": "2026-09-25",
+  "question": "What does every committed FNaF 2 winner-v1 binding score over every night the model can deal, replayed exactly as its bundle gate replays it, and what lower bound does that put on P_max for each story night?",
+  "answer": "Night 1: 65536/65536 (P_max = 1 in the exact lane) by campaign-night1-minimal; Night 2: 65536/65536 (P_max = 1 in the exact lane) by campaign-toys-nights1-2; Night 3: 65536/65536 (P_max = 1 in the exact lane) by campaign-toys-nights3-4; Night 4: 65536/65536 (P_max = 1 in the exact lane) by campaign-toys-nights3-4; Night 5: 65536/65536 (P_max = 1 in the exact lane) by campaign-night5-contact-final-20260912; Night 6: 65536/65536 (P_max = 1 in the exact lane) by campaign-night6-b; Night 7: 65536/65536 (P_max = 1 in the exact lane) by campaign-night7-i",
+  "consequence": "Every story night has a committed binding that wins every night the model can deal in the exact lane, so P_max = 1 there, and a policy search in this lane has nothing left to find. The phone falls short with bindings this lane scores perfect: campaign-night7-k2 65536/65536 here, 3/10 on the phone (docs/evidence/night7-cohort-k2-computed-20260925.json); campaign-night7-k3 65536/65536 here, 8/10 on the phone (docs/evidence/night7-cohort-k3-computed-20260925.json). That gap is not the seed: it is how the schedule is delivered (the frame phase the phone re-rolls, press lateness and loss) and the model's encounter fidelity (S2), none of which this lane prices.",
+  "whyItIsModelOnly": "No device run. Every figure is the simulator replaying the binding's emitted schedule on its scheduled frames; actuator lateness, the mask seam and the frame phase the phone re-rolls are not in this lane.",
+  "method": {
+    "tool": "tools/winner-census.mjs",
+    "command": "node tools/winner-census.mjs --start 0 --count 65536 --jobs 7",
+    "git": {
+      "commit": "d375e6f301d0c59d2610eb752cc7719586071b9b",
+      "dirtyEnginePaths": []
+    },
+    "population": {
+      "start": 0,
+      "count": 65536,
+      "exhaustive": true,
+      "why": "Rng keeps seed & 0xffff (packages/core/src/mechanics/rng.js), so seeds 0..65535 are every night the model can deal"
+    },
+    "lane": "exact: STRATEGY_REGISTRY[strategy].emit(winner, night).replay(seed), at anchorEpochMs + phaseOffsetMs -- the replay gate.replayHash certifies; each binding recompiled with compileBundle first",
+    "family": "the committed winner-v1 bindings for each night; the per-night figure is a lower bound scoped to them, not to all policies",
+    "designBlock": {
+      "counting": {
+        "definition": "0..3000",
+        "distinct": 3001
+      },
+      "golden": {
+        "definition": "randomSeedCohort({count: 3000, salt: 0x9e3779b9}) mod 2^16",
+        "members": 3000,
+        "distinct": 2932
+      },
+      "sweepStride": {
+        "definition": "(i * 2246822519) >>> 0 mod 2^16, i < 3000",
+        "distinct": 3000
+      },
+      "distinct": 8566,
+      "inCensus": 8566,
+      "sha256": "e5b0d649dbba8aef14c7276aba037d6ad749a29b61ff5be6ef4b01986b016437"
+    },
+    "heldOutBlock": {
+      "definition": "every censused seed not in the design block",
+      "n": 56970
+    },
+    "wallSeconds": 3431
+  },
+  "bindings": [
+    {
+      "binding": "tools/device/campaign-night1-minimal-winner.json",
+      "night": 1,
+      "strategy": "minus-toys",
+      "anchorEpochMs": null,
+      "phaseOffsetMs": null,
+      "winnerSha256": "efc64897bc2e6fe8e4be8955ee7b76cccbc0ed2cf298c41c4ab468f76dba8c48",
+      "winnerHash": "fnv1a-537a1bbf",
+      "planSha256": "577ec5312d408bed7c29b789de3858fe550620a79256764d91fad9fa8221430a",
+      "gateSeeds": 8,
+      "gateReplayHash": null,
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "lossesSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "phone": []
+    },
+    {
+      "binding": "tools/device/campaign-night1-minus7-n1-first-winner.json",
+      "night": 1,
+      "strategy": "minus7",
+      "anchorEpochMs": null,
+      "phaseOffsetMs": null,
+      "winnerSha256": "ac4cbbb25f73bae0e5a09772b5ccb226e01a8a46a831b9ed9b5c37849dd2a11a",
+      "winnerHash": "fnv1a-2e6a42e3",
+      "planSha256": "425b0701831a9763d29ef238d1cd8c5ad197d1650ef9a29dcce9903e9604afe3",
+      "gateSeeds": 3000,
+      "gateReplayHash": "fnv1a-154b7abd",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "lossesSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "phone": []
+    },
+    {
+      "binding": "tools/device/campaign-night1-minus7-winner.json",
+      "night": 1,
+      "strategy": "minus7",
+      "anchorEpochMs": null,
+      "phaseOffsetMs": null,
+      "winnerSha256": "23d017e9241dddd5fb50564d7a4718484bc7ede410eb7dd2e9bbbb8802dafa8d",
+      "winnerHash": "fnv1a-58e73bd5",
+      "planSha256": "425b0701831a9763d29ef238d1cd8c5ad197d1650ef9a29dcce9903e9604afe3",
+      "gateSeeds": 3000,
+      "gateReplayHash": null,
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "lossesSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "phone": []
+    },
+    {
+      "binding": "tools/device/campaign-night5-contact-final-20260912-winner.json",
+      "night": 5,
+      "strategy": "minus-toys",
+      "anchorEpochMs": null,
+      "phaseOffsetMs": null,
+      "winnerSha256": "9441622efda32b0834d1221628415d3ef933e0126830bfcb198d71ac29937d7c",
+      "winnerHash": "fnv1a-f430f190",
+      "planSha256": "f8328d75355cb3f6d4a27007026ed83ae729221dd1b6454776d3ea5c59693436",
+      "gateSeeds": 3000,
+      "gateReplayHash": "fnv1a-afa3aafd",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "lossesSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "phone": []
+    },
+    {
+      "binding": "tools/device/campaign-night5-contact-final-winner.json",
+      "night": 5,
+      "strategy": "minus-toys",
+      "anchorEpochMs": null,
+      "phaseOffsetMs": null,
+      "winnerSha256": "255a0d78dcbc62343c8706f1d716ae839c7d995344c54996ab1fd4d953ecdd5e",
+      "winnerHash": "fnv1a-f430f190",
+      "planSha256": "f8328d75355cb3f6d4a27007026ed83ae729221dd1b6454776d3ea5c59693436",
+      "gateSeeds": 3000,
+      "gateReplayHash": "fnv1a-afa3aafd",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "lossesSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "phone": []
+    },
+    {
+      "binding": "tools/device/campaign-night5-hallfix-winner.json",
+      "night": 5,
+      "strategy": "minus-toys",
+      "anchorEpochMs": null,
+      "phaseOffsetMs": null,
+      "winnerSha256": "1634a184f56e65be109c886bb7d9440ac9f4f715adee7e43b37df0a671a2ce0d",
+      "winnerHash": "fnv1a-148bab0b",
+      "planSha256": "e2f8dafb471486260c668bba6f357c071512a05202b3fa6791622841b20388b0",
+      "gateSeeds": 8,
+      "gateReplayHash": "fnv1a-68744f84",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "lossesSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "phone": []
+    },
+    {
+      "binding": "tools/device/campaign-night5-mask5plus-winner.json",
+      "night": 5,
+      "strategy": "minus-toys",
+      "anchorEpochMs": null,
+      "phaseOffsetMs": null,
+      "winnerSha256": "637e1f2d4a3844816ea4467dd7fa384358865b29e9267405541c2063b479a8f5",
+      "winnerHash": "fnv1a-4a7ea155",
+      "planSha256": "411b503092e37bb7db1eca65ea27c91f1ee6c283d328e9a9970fefc85e6f78fd",
+      "gateSeeds": 8,
+      "gateReplayHash": "fnv1a-c08db392",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "lossesSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "phone": []
+    },
+    {
+      "binding": "tools/device/campaign-night5-noflash-winner.json",
+      "night": 5,
+      "strategy": "minus-toys",
+      "anchorEpochMs": null,
+      "phaseOffsetMs": null,
+      "winnerSha256": "4f318495b8da385760aadea90fcacc7f1eaa3d4c636b9ba75c1f7e1295b76ac8",
+      "winnerHash": "fnv1a-1a0e32b7",
+      "planSha256": "dbd8751ce76ad651aec71b8aa09ccc567f697a3da40583f7ccd793da37d48412",
+      "gateSeeds": 8,
+      "gateReplayHash": "fnv1a-3142aab3",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "lossesSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "phone": []
+    },
+    {
+      "binding": "tools/device/campaign-night5-toys-n5-winner.json",
+      "night": 5,
+      "strategy": "minus-toys",
+      "anchorEpochMs": null,
+      "phaseOffsetMs": null,
+      "winnerSha256": "b1654fcd16551381f92c90b5a250dc8d9ed625223c412f65a933ac17306c3862",
+      "winnerHash": "fnv1a-9ca64157",
+      "planSha256": "44a70a945abd812ed7e32c81bb7e828ef8e738de23c14f04ef128fc2e99fdf86",
+      "gateSeeds": 3000,
+      "gateReplayHash": "fnv1a-afa3aafd",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "lossesSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "phone": []
+    },
+    {
+      "binding": "tools/device/campaign-night6-b-winner.json",
+      "night": 6,
+      "strategy": "minus-toys",
+      "anchorEpochMs": 5253,
+      "phaseOffsetMs": null,
+      "winnerSha256": "d0ae423aeb2688b65ad3f57266ddd7d81c8d6fdfe0c8d41c730d19b26c1c263a",
+      "winnerHash": "fnv1a-3c7ba773",
+      "planSha256": "971ea4968a1bdccc5ecf8b98bbf71cbb37a63500a02f1d4ea3119fea25b22b3f",
+      "gateSeeds": 8,
+      "gateReplayHash": "fnv1a-3403ea16",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "lossesSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "phone": []
+    },
+    {
+      "binding": "tools/device/campaign-night6-c-winner.json",
+      "night": 6,
+      "strategy": "minus-toys",
+      "anchorEpochMs": 5170,
+      "phaseOffsetMs": null,
+      "winnerSha256": "6be6ea922ead7e402b972bcd77a947614d0ecb95a8872a54e0b40e378c011ea0",
+      "winnerHash": "fnv1a-cf41e97e",
+      "planSha256": "971ea4968a1bdccc5ecf8b98bbf71cbb37a63500a02f1d4ea3119fea25b22b3f",
+      "gateSeeds": 8,
+      "gateReplayHash": "fnv1a-31cc3217",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "lossesSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "phone": []
+    },
+    {
+      "binding": "tools/device/campaign-night6-d-winner.json",
+      "night": 6,
+      "strategy": "minus-toys",
+      "anchorEpochMs": 5300,
+      "phaseOffsetMs": null,
+      "winnerSha256": "3c80739f4c9bbdc871530822ad5ac156625de5f33ea5e74ad67b13223edff8ab",
+      "winnerHash": "fnv1a-e3a68491",
+      "planSha256": "971ea4968a1bdccc5ecf8b98bbf71cbb37a63500a02f1d4ea3119fea25b22b3f",
+      "gateSeeds": 8,
+      "gateReplayHash": "fnv1a-46f115de",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "lossesSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "phone": []
+    },
+    {
+      "binding": "tools/device/campaign-night6-e-winner.json",
+      "night": 6,
+      "strategy": "minus-toys",
+      "anchorEpochMs": 4850,
+      "phaseOffsetMs": null,
+      "winnerSha256": "b0619a3fd71576881481249b849fe2fde4949e6f3265b811e09de64081998f66",
+      "winnerHash": "fnv1a-ad6993c7",
+      "planSha256": "e5243839ca3d195d1eaf7a8931092a434ddaf759ae875b25cd47791bd7205b8e",
+      "gateSeeds": 8,
+      "gateReplayHash": "fnv1a-9cd69de2",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "lossesSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "phone": []
+    },
+    {
+      "binding": "tools/device/campaign-night6-f-winner.json",
+      "night": 6,
+      "strategy": "minus-toys",
+      "anchorEpochMs": 4850,
+      "phaseOffsetMs": null,
+      "winnerSha256": "ffea908c51e5213c5f463152b0718b534f4321c782017d6c832c88d56fbc3684",
+      "winnerHash": "fnv1a-b6c36d77",
+      "planSha256": "4ea2dc949d3d2bec7ede6740edf6b02793be16f411c1f269e7965b94c9f70198",
+      "gateSeeds": 8,
+      "gateReplayHash": "fnv1a-c651e2ff",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "lossesSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "phone": []
+    },
+    {
+      "binding": "tools/device/campaign-night6-g-winner.json",
+      "night": 6,
+      "strategy": "minus-toys",
+      "anchorEpochMs": 4850,
+      "phaseOffsetMs": null,
+      "winnerSha256": "61ff3d0845ca3c26b12855b1113d9b4118b60e43b59e5b41d7ecff209a0e9a4c",
+      "winnerHash": "fnv1a-1b43db92",
+      "planSha256": "4ac705c7f875a4a88d612c9ac0e571c99fe0a106df165c2fa2721064100ddc89",
+      "gateSeeds": 8,
+      "gateReplayHash": "fnv1a-c651e2ff",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "lossesSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "phone": []
+    },
+    {
+      "binding": "tools/device/campaign-night6-h-registered-winner.json",
+      "night": 6,
+      "strategy": "minus-toys",
+      "anchorEpochMs": 4850,
+      "phaseOffsetMs": null,
+      "winnerSha256": "fb8f0dffa24385cfbd8ac1d8179a804015fe199dfc78ce602a7ab097eaef4ef8",
+      "winnerHash": "fnv1a-3d5b2167",
+      "planSha256": "24309871c40ace16260cf2bddf970435dc3ccc791f09ac015f386d2057452f30",
+      "gateSeeds": 8,
+      "gateReplayHash": "fnv1a-c651e2ff",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "lossesSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "phone": []
+    },
+    {
+      "binding": "tools/device/campaign-night6-h-winner.json",
+      "night": 6,
+      "strategy": "minus-toys",
+      "anchorEpochMs": 4850,
+      "phaseOffsetMs": null,
+      "winnerSha256": "b466b7a81b71e08845e475258463ec13cfd583a5c6f2b090395ca64d3def645c",
+      "winnerHash": "fnv1a-3d5b2167",
+      "planSha256": "24309871c40ace16260cf2bddf970435dc3ccc791f09ac015f386d2057452f30",
+      "gateSeeds": 8,
+      "gateReplayHash": "fnv1a-c651e2ff",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "lossesSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "phone": []
+    },
+    {
+      "binding": "tools/device/campaign-night6-h2-winner.json",
+      "night": 6,
+      "strategy": "minus-toys",
+      "anchorEpochMs": 4850,
+      "phaseOffsetMs": null,
+      "winnerSha256": "59686dbb2182c7545ab27efae79390c48ebfab2961e30cb1e966e32e0a34a5f0",
+      "winnerHash": "fnv1a-c27182da",
+      "planSha256": "103bb20143c616716c3a184c02e89bdbfd49b81d55ca8485082434f8d083d696",
+      "gateSeeds": 8,
+      "gateReplayHash": "fnv1a-c651e2ff",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "lossesSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "phone": []
+    },
+    {
+      "binding": "tools/device/campaign-night6-winner.json",
+      "night": 6,
+      "strategy": "minus-toys",
+      "anchorEpochMs": null,
+      "phaseOffsetMs": null,
+      "winnerSha256": "dbfe73ad4db16f1678fca2a2cc15dd9b2f1659cf1e2f853fe60a8525a9263d4b",
+      "winnerHash": "fnv1a-59908edd",
+      "planSha256": "df05f5167a7ded7e6aeef0e4f71f2c451de88e6dbce35035764dace81250dd1b",
+      "gateSeeds": 8,
+      "gateReplayHash": null,
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "lossesSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "phone": []
+    },
+    {
+      "binding": "tools/device/campaign-night7-i-winner.json",
+      "night": 7,
+      "strategy": "minus-toys",
+      "anchorEpochMs": 2500,
+      "phaseOffsetMs": null,
+      "winnerSha256": "eb9c0c306f86d2ce15af30ae408dc1d1c95b3d9a249f05ca4ec2a08e622bd47d",
+      "winnerHash": "fnv1a-651ed623",
+      "planSha256": "64a7fa204cee57d20f37fdafbdc9f34edf0bbeb33c6456b8eadb7f66b452639e",
+      "gateSeeds": 8,
+      "gateReplayHash": "fnv1a-a576ef9e",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "lossesSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "phone": []
+    },
+    {
+      "binding": "tools/device/campaign-night7-j-winner.json",
+      "night": 7,
+      "strategy": "minus-toys",
+      "anchorEpochMs": 2450,
+      "phaseOffsetMs": null,
+      "winnerSha256": "7cadf889042d6a41e93ddef54b370de11d2654a38d163112b730590acae63423",
+      "winnerHash": "fnv1a-f337717a",
+      "planSha256": "d8503c7e5d803fe9ba9804b88cc6ee2ea061a33078e064762f23afd5efaa2827",
+      "gateSeeds": 8,
+      "gateReplayHash": "fnv1a-6cd85ae3",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "lossesSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "phone": []
+    },
+    {
+      "binding": "tools/device/campaign-night7-k2-winner.json",
+      "night": 7,
+      "strategy": "minus-toys",
+      "anchorEpochMs": 2433,
+      "phaseOffsetMs": null,
+      "winnerSha256": "6d7af32fd7377156c6a33c2f64f6be6ca5eb0d35e6b1702e9e5a9d1d5079e64f",
+      "winnerHash": "fnv1a-7e4bf3e8",
+      "planSha256": "ac68e343b0d5f00a9a08032b0d638331ae252ebace71310f0ea941c83024d082",
+      "gateSeeds": 8,
+      "gateReplayHash": "fnv1a-1c9c6847",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "lossesSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "phone": [
+        {
+          "record": "docs/evidence/night7-cohort-k2-computed-20260925.json",
+          "wins": 3,
+          "counted": 10,
+          "size": 10,
+          "status": "INCOMPLETE"
+        }
+      ]
+    },
+    {
+      "binding": "tools/device/campaign-night7-k3-winner.json",
+      "night": 7,
+      "strategy": "minus-toys",
+      "anchorEpochMs": 2433,
+      "phaseOffsetMs": null,
+      "winnerSha256": "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78",
+      "winnerHash": "fnv1a-5c8dcb5f",
+      "planSha256": "66b0abb4f65d65584d102e8c2a443e622df8f69ea9d4ac42c20e0aaa77867aff",
+      "gateSeeds": 8,
+      "gateReplayHash": "fnv1a-1c9c6847",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "lossesSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "phone": [
+        {
+          "record": "docs/evidence/night7-cohort-k3-computed-20260925.json",
+          "wins": 8,
+          "counted": 10,
+          "size": 10,
+          "status": "INCOMPLETE"
+        }
+      ]
+    },
+    {
+      "binding": "tools/device/campaign-toys-night5-winner.json",
+      "night": 5,
+      "strategy": "minus-toys",
+      "anchorEpochMs": null,
+      "phaseOffsetMs": null,
+      "winnerSha256": "e98b0dc23e2b1571127addcc626db19e5f4775f8ec0ab326137d14ef64c11de8",
+      "winnerHash": "fnv1a-959f7cb5",
+      "planSha256": "f8328d75355cb3f6d4a27007026ed83ae729221dd1b6454776d3ea5c59693436",
+      "gateSeeds": 3000,
+      "gateReplayHash": null,
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "lossesSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "phone": []
+    },
+    {
+      "binding": "tools/device/campaign-toys-nights1-2-winner.json",
+      "night": 1,
+      "strategy": "minus-toys",
+      "anchorEpochMs": null,
+      "phaseOffsetMs": null,
+      "winnerSha256": "7e67e7085fd563cd441a3e99d33be1dc11b4d9690e117e2559ab6b205fe6cb83",
+      "winnerHash": "fnv1a-e75e1b68",
+      "planSha256": "5101e12868bec26bc229df2a27f4fa77d75b995f18981dabb70df52099c2a8d4",
+      "gateSeeds": 3000,
+      "gateReplayHash": null,
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "lossesSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "phone": []
+    },
+    {
+      "binding": "tools/device/campaign-toys-nights1-2-winner.json",
+      "night": 2,
+      "strategy": "minus-toys",
+      "anchorEpochMs": null,
+      "phaseOffsetMs": null,
+      "winnerSha256": "7e67e7085fd563cd441a3e99d33be1dc11b4d9690e117e2559ab6b205fe6cb83",
+      "winnerHash": "fnv1a-e75e1b68",
+      "planSha256": "ca67e2cdf2e5baa42b87ad387594589bc16d6683507860e00ce852ab1c1a18bb",
+      "gateSeeds": 3000,
+      "gateReplayHash": null,
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "lossesSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "phone": []
+    },
+    {
+      "binding": "tools/device/campaign-toys-nights3-4-winner.json",
+      "night": 3,
+      "strategy": "minus-toys",
+      "anchorEpochMs": null,
+      "phaseOffsetMs": null,
+      "winnerSha256": "425826ae44d77e77137b6ba24a1e371cbc4ee9729ec21cdd40ed339dd7a7ec7b",
+      "winnerHash": "fnv1a-ce4aa3d8",
+      "planSha256": "09cf8bddd9acf1bdd4657e73d7cb089e64b4c8fe8a7daf4dddad01afaa35ae1a",
+      "gateSeeds": 3000,
+      "gateReplayHash": "fnv1a-488cf8ce",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "lossesSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "phone": []
+    },
+    {
+      "binding": "tools/device/campaign-toys-nights3-4-winner.json",
+      "night": 4,
+      "strategy": "minus-toys",
+      "anchorEpochMs": null,
+      "phaseOffsetMs": null,
+      "winnerSha256": "425826ae44d77e77137b6ba24a1e371cbc4ee9729ec21cdd40ed339dd7a7ec7b",
+      "winnerHash": "fnv1a-ce4aa3d8",
+      "planSha256": "700e1a9336b783da77cc9a5c4bf2f80afef044776bf7ef23190661cd30f63011",
+      "gateSeeds": 3000,
+      "gateReplayHash": "fnv1a-488cf8ce",
+      "wins": 65536,
+      "n": 65536,
+      "design": {
+        "wins": 8566,
+        "n": 8566
+      },
+      "heldOut": {
+        "wins": 56970,
+        "n": 56970
+      },
+      "deaths": {},
+      "losses": [],
+      "lossesSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "phone": []
+    }
+  ],
+  "nights": {
+    "1": {
+      "binding": "tools/device/campaign-night1-minimal-winner.json",
+      "wins": 65536,
+      "n": 65536,
+      "lowerBound": 1,
+      "pMaxExactLane": 1
+    },
+    "2": {
+      "binding": "tools/device/campaign-toys-nights1-2-winner.json",
+      "wins": 65536,
+      "n": 65536,
+      "lowerBound": 1,
+      "pMaxExactLane": 1
+    },
+    "3": {
+      "binding": "tools/device/campaign-toys-nights3-4-winner.json",
+      "wins": 65536,
+      "n": 65536,
+      "lowerBound": 1,
+      "pMaxExactLane": 1
+    },
+    "4": {
+      "binding": "tools/device/campaign-toys-nights3-4-winner.json",
+      "wins": 65536,
+      "n": 65536,
+      "lowerBound": 1,
+      "pMaxExactLane": 1
+    },
+    "5": {
+      "binding": "tools/device/campaign-night5-contact-final-20260912-winner.json",
+      "wins": 65536,
+      "n": 65536,
+      "lowerBound": 1,
+      "pMaxExactLane": 1
+    },
+    "6": {
+      "binding": "tools/device/campaign-night6-b-winner.json",
+      "wins": 65536,
+      "n": 65536,
+      "lowerBound": 1,
+      "pMaxExactLane": 1
+    },
+    "7": {
+      "binding": "tools/device/campaign-night7-i-winner.json",
+      "wins": 65536,
+      "n": 65536,
+      "lowerBound": 1,
+      "pMaxExactLane": 1
+    }
+  }
+}

@@ -108,8 +108,18 @@ Details:
 - **Stands:**
   - Exhaustive censuses are routine, but over *fixed schedules*, not over
     policies.
+  - **Story Nights 1-7 (Night 7 = 10/20): `P_max = 1` in the model's exact
+    lane.** All 26 committed `winner-v1` bindings, replayed as their gates
+    replay them, win all 65,536 seeds, and the 56,970-seed held-out block
+    matches ([winner census](../docs/evidence/fnaf2-winner-census-20260925.json),
+    held by `test-winner-census.mjs`). k3 (8/10) and k2 (3/10) on the phone
+    use bindings that score perfect here, so their gap to 1 lies in delivery
+    and in S2, not in the seed.
   - All ten presets clear 3000/3000 in four lanes for Minus Toys
-    ([preset sweep](../docs/evidence/night7-preset-sweep-20260917.json)).
+    ([preset sweep](../docs/evidence/night7-preset-sweep-20260917.json)). That
+    cohort draws uint32 seeds, so it is 2932 distinct nights. The nine presets
+    other than 10/20 have no population census yet.
+  - No lateness lane has a population census.
   - Frontier files exist under `docs/evidence/invent/`.
 - **Absorbs** Plans 05, 11 and 21, and Plan 25 horizon 1.
 - **Needs S2:** a ceiling computed on a model that misses encounters is a
