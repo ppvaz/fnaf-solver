@@ -3,7 +3,7 @@
 // frames, its search order along Springtrap's source edges, and the
 // occupancy score's two jobs: static alone stays low, a figure does not.
 import { readFileSync } from 'node:fs';
-import { parseArgs, searchOrder, NEXT, VENT_OF, SystemsClock, chooseReboot, teachFeed } from './fnaf3-run.mjs';
+import { parseArgs, searchOrder, NEXT, VENT_OF, SystemsClock, chooseReboot, teachFeed, raiseMonitor } from './fnaf3-run.mjs';
 import { FEED, PICTURE_MASK, Reader, boxSamples, medianLuma, occupancy, decodePng, sampleBlocks, boxLuma, stateScore, IMAGE_GEOMETRY, CAMERA_FRAMES } from './fnaf3-detectors.mjs';
 import { pngFromRegion } from './native-regions.mjs';
 
@@ -205,6 +205,23 @@ ok('cams 8, 6, 4 and 3 lead into no vent', [8, 6, 4, 3].every((n) => NEXT[n].eve
   teach.origin(5); teach.night(3, false);
   await teach.clear();
   ok('a night starts from a fresh lesson', sent.join('|') === 'clear|origin 5|night 3 NORMAL|clear');
+}
+
+{
+  // n3b 227.5 s: the menu stayed open behind a misread close; the monitor tab does nothing until Exit.
+  const presses = [];
+  let menu = true; let label = null;
+  const act = {
+    press: async (k) => { presses.push(k); if (k === 'exitMaint') menu = false; if (k === 'monitor' && !menu) label = 10; },
+    hold: async (k) => { presses.push(k); },
+  };
+  const eyes = { until: async (test) => (label !== null && test({ label }) ? { label, imageHostMs: 0 } : null), now: () => ({ label }) };
+  const fake = { selected: (f) => f.label ?? null, title: () => 0 };
+  const r = await raiseMonitor({ act, c: controls, eyes, reader: fake });
+  ok('a raise closes a menu left open before it pans', r !== null && presses.slice(0, 3).join() === 'exitMaint,panRight,monitor');
+  presses.length = 0; label = 4;
+  await raiseMonitor({ act, c: controls, eyes, reader: fake });
+  ok('a raised monitor is left alone', presses.length === 0);
 }
 
 if (failures.length) {

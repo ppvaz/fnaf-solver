@@ -20,7 +20,7 @@
     "rebootCamera": { "x": 816, "y": 604, "anchor": "screen", "frame": "maintenance", "effect": "camera system row" },
     "rebootVent":   { "x": 780, "y": 708, "anchor": "screen", "frame": "maintenance", "effect": "ventilation row (f3-ex1 0026)" },
     "rebootAll":    { "x": 738, "y": 866, "anchor": "screen", "frame": "maintenance", "effect": "reboot all row" },
-    "exitMaint":    { "x": 594, "y": 970, "anchor": "screen", "frame": "maintenance", "effect": "exit row" },
+    "exitMaint":    { "x": 594, "y": 970, "anchor": "screen", "frame": "maintenance", "effect": "exit row; pressed in the office with the menu closed it changes nothing in the left view (f3-ex7 0006, 0008) and pans the right view a little left (f3-ex7 0012)" },
     "playAudio":  { "x": 1246, "y": 814, "anchor": "screen", "frame": "camera map", "effect": "Play Audio at the selected camera" },
     "mapToggle":  { "x": 1248, "y": 926, "anchor": "screen", "frame": "monitor", "effect": "camera map <-> vent map (f3-ex2 0015)" },
     "cam01": { "x": 1566, "y": 950, "anchor": "screen", "frame": "camera map" },

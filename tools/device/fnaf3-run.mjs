@@ -111,13 +111,20 @@ function controlsOf(model) {
  * missed, 15.4 s landed) and just after the maintenance menu closes (cal2: a
  * pan 300 ms after the close left the tab out of view; 4 s later it landed).
  */
-async function raiseMonitor({ act, c, eyes, reader }, tries = 3) {
+export async function raiseMonitor({ act, c, eyes, reader }, tries = 3) {
   const pt = (k) => ({ x: c[k].x, y: c[k].y });
   // Its tab is a toggle: pressed with the monitor up, it drops it (cal2's
   // recoveries flipped a raised monitor down after one unread label).
   const up = await eyes.until((fr) => reader.selected(fr) !== null, performance.now() - 400, 500);
   if (up) return { frame: up, tries: 0, ms: 0 };
   for (let i = 0; i < tries; i += 1) {
+    // The menu may still be open: Exit is refused while a reboot runs, and the
+    // blackout hides the menu for 2-3 s of every pulse, so a read of it closed
+    // proves nothing (n3b 227.5 s: one Exit, a black frame read as closed, and
+    // two minutes of raises behind the open menu). Exit first; with the menu
+    // closed it is harmless (controls: exitMaint), and the pan follows.
+    await act.press('exitMaint', pt('exitMaint'));
+    await sleep(150);
     await act.hold('panRight', pt('panRight'), c.panRight.holdMs);
     await sleep(150);
     const at = performance.now();
