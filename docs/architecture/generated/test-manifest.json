@@ -1129,9 +1129,10 @@
       "determinismSignals": [],
       "fixedSleeps": [
         "time.sleep(0.02",
+        "sleep(0.01",
+        "time.sleep(max(0.0, start + (i + 1",
         "time.sleep(0.01",
-        "time.sleep(0.01",
-        "time.sleep(0.12"
+        "time.sleep(0.02"
       ],
       "sharedResources": [],
       "subprocesses": false,

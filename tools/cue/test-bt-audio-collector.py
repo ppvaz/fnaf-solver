@@ -29,14 +29,20 @@ def wait_for(path: Path, predicate, timeout: float = 3.0) -> dict:
 
 with tempfile.TemporaryDirectory(prefix="bt-audio-collector-") as directory:
     root = Path(directory)
+    # The fake delivers in real time, as the phone does: each 10 ms chunk is
+    # paced to an absolute deadline. A bare sleep(0.01) per chunk let every
+    # sleep's overshoot accumulate -- ~2.4 ms a chunk on a loaded Mac, a 496 ms
+    # span for 400 ms of audio -- so the test measured the host's timer, not
+    # the collector's bounds.
     fake = root / "bluealsa-cli"
     fake.write_text(
         "#!" + sys.executable + "\n"
         "import os, sys, time\n"
         "assert sys.argv[1] == 'open'\n"
-        "for _ in range(40):\n"
+        "start = time.monotonic()\n"
+        "for i in range(40):\n"
         "  os.write(1, b'\\0' * 1764)\n"
-        "  time.sleep(0.01)\n"
+        "  time.sleep(max(0.0, start + (i + 1) * 0.01 - time.monotonic()))\n"
     )
     fake.chmod(0o755)
     raw, state, err = root / "capture.raw", root / "capture.stream.json", root / "capture.err"
@@ -71,7 +77,15 @@ with tempfile.TemporaryDirectory(prefix="bt-audio-collector-") as directory:
         "--format", "S16_LE", "--rate", "44100", "--channels", "2", "--bluealsa-cli", str(endless),
     ])
     wait_for(state2, lambda row: row.get("status") == "RUNNING")
-    time.sleep(0.12)
+    # Signal only once PCM has reached the raw file (the collector flushes
+    # every block). A fixed 0.12 s raced the fake source's own interpreter
+    # start on a loaded host, and a stop before any PCM is -- correctly --
+    # NO_PCM with exit 3, which is not the path this checks.
+    until = time.monotonic() + 5.0
+    while not (raw2.exists() and raw2.stat().st_size > 0):
+        if time.monotonic() > until:
+            raise AssertionError("no PCM reached the raw file within 5 s")
+        time.sleep(0.02)
     interrupted.send_signal(signal.SIGINT)
     if interrupted.wait(timeout=5) != 0:
         raise AssertionError("SIGINT collector did not terminate cleanly")
