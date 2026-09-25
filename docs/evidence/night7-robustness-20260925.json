@@ -1,0 +1,1330 @@
+{
+  "schema": "evidence-record-v1",
+  "kind": "night7-robustness-v1",
+  "id": "night7-robustness-20260925",
+  "claimLevel": "MODEL_ONLY",
+  "date": "2026-09-25",
+  "question": "Among the preset schedule and the committed Night 7 bindings, which keeps the widest timing margin at 10/20 -- against the phase the schedule is delivered at, and against per-press lateness?",
+  "answer": "preset: lateness to 100 ms, phase margin 33.33/100 ms, human +-60 257/500; i: lateness to 0 ms, phase margin none (delivered interval not fully won), human +-60 0/500; j: lateness to 50 ms, phase margin 50.33/48 ms, human +-60 1/500; k2: lateness to 50 ms, phase margin 43.67/54.67 ms, human +-60 1/500; k3: lateness to 50 ms, phase margin 43.67/54.67 ms, human +-60 1/500. Widest lateness tolerance: preset; widest phase margin: j.",
+  "whyItIsModelOnly": "No device run. The lateness axis is actuator.mjs's independent per-press draw, not the phone's measured displacement shape; the phase axis moves the whole schedule by whole frames. A comparison between routes.",
+  "method": {
+    "tool": "tools/device/night7-robustness.mjs",
+    "command": "node tools/device/night7-robustness.mjs --count 500 --jobs 7",
+    "git": {
+      "commit": "e3cd4da11c54c8e49f96063e97e71ce804dede4e",
+      "dirtyEnginePaths": [
+        "M tools/device/README.md",
+        " M tools/device/test-night7-presets.mjs",
+        "?? tools/device/night7-robustness.mjs"
+      ]
+    },
+    "seeds": {
+      "definition": "the first 500 seeds outside the design block (winner-phase-census.mjs heldOutSeeds)",
+      "n": 500,
+      "sha256": "88fda972a1870be99fa71bd8a68fb890a91aedfd6dd7049716fd837165049ea9"
+    },
+    "night": "10/20 (golden-freddy: every dial at 20, clamped)",
+    "phase": {
+      "frames": 61,
+      "stepMs": 16.666666666666668,
+      "relativeTo": "each schedule's declared epoch; map index i is frame i - window"
+    },
+    "lateness": {
+      "ms": [
+        0,
+        10,
+        20,
+        30,
+        40,
+        50,
+        60,
+        70,
+        80,
+        90,
+        100,
+        120,
+        150
+      ],
+      "lane": "DeviceActuator lateMinMs 0, lateMaxMs L: per-press, queue serialized, mask seam modelled"
+    },
+    "human": "+-60 ms per press: epoch - 60 ms and lateness [0, 120]",
+    "win": "sim.won AND splitAt >= 0",
+    "wallSeconds": 116
+  },
+  "schedules": [
+    {
+      "id": "preset",
+      "binding": null,
+      "declaredEpochMs": 0,
+      "knobsSha256": "bf7b16a8c72b0b4c3e092fdbe43aef285d30e5ab44fba939de8afb20924bf12a",
+      "deliveredMs": [
+        0,
+        0
+      ],
+      "deliveredFrom": "declared epoch (no anchor)",
+      "anchorRefuted": null,
+      "phase": {
+        "map": "........................#...#########...#########............",
+        "band": {
+          "fromMs": -33.33,
+          "toMs": 100,
+          "earlyMarginMs": 33.33,
+          "lateMarginMs": 100,
+          "reachesWindowEdge": false
+        }
+      },
+      "lateness": {
+        "wins": {
+          "0": 500,
+          "10": 500,
+          "20": 500,
+          "30": 500,
+          "40": 500,
+          "50": 500,
+          "60": 500,
+          "70": 500,
+          "80": 500,
+          "90": 500,
+          "100": 500,
+          "120": 362,
+          "150": 84
+        },
+        "maxAllWinMs": 100,
+        "firstLoss": {
+          "lateMs": 120,
+          "losses": [
+            [
+              3006,
+              "inside-office",
+              8397
+            ],
+            [
+              3018,
+              "puppet",
+              2020
+            ],
+            [
+              3019,
+              "inside-office",
+              8394
+            ],
+            [
+              3023,
+              "inside-office",
+              17398
+            ],
+            [
+              3029,
+              "inside-office",
+              2398
+            ],
+            [
+              3031,
+              "puppet",
+              2020
+            ],
+            [
+              3033,
+              "puppet",
+              2200
+            ],
+            [
+              3034,
+              "inside-office",
+              2997
+            ],
+            [
+              3036,
+              "puppet",
+              2260
+            ],
+            [
+              3037,
+              "inside-office",
+              9596
+            ],
+            [
+              3040,
+              "inside-office",
+              14994
+            ],
+            [
+              3044,
+              "inside-office",
+              13198
+            ],
+            [
+              3056,
+              "puppet",
+              2500
+            ],
+            [
+              3059,
+              "inside-office",
+              17398
+            ],
+            [
+              3070,
+              "inside-office",
+              3596
+            ],
+            [
+              3073,
+              "inside-office",
+              4797
+            ],
+            [
+              3077,
+              "puppet",
+              3760
+            ],
+            [
+              3079,
+              "inside-office",
+              5995
+            ],
+            [
+              3091,
+              "inside-office",
+              22795
+            ],
+            [
+              3095,
+              "puppet",
+              1960
+            ]
+          ]
+        }
+      },
+      "human": {
+        "pmMs": 60,
+        "wins": 257,
+        "n": 500,
+        "losses": [
+          [
+            3007,
+            "puppet",
+            1780
+          ],
+          [
+            3011,
+            "puppet",
+            2560
+          ],
+          [
+            3015,
+            "puppet",
+            2380
+          ],
+          [
+            3016,
+            "puppet",
+            2200
+          ],
+          [
+            3018,
+            "puppet",
+            1720
+          ],
+          [
+            3021,
+            "puppet",
+            2260
+          ],
+          [
+            3022,
+            "puppet",
+            1720
+          ],
+          [
+            3023,
+            "inside-office",
+            17380
+          ],
+          [
+            3025,
+            "puppet",
+            2020
+          ],
+          [
+            3029,
+            "inside-office",
+            2394
+          ],
+          [
+            3030,
+            "puppet",
+            2020
+          ],
+          [
+            3032,
+            "inside-office",
+            2079
+          ],
+          [
+            3033,
+            "inside-office",
+            17380
+          ],
+          [
+            3034,
+            "inside-office",
+            2993
+          ],
+          [
+            3036,
+            "puppet",
+            2200
+          ],
+          [
+            3037,
+            "puppet",
+            2020
+          ],
+          [
+            3038,
+            "puppet",
+            2140
+          ],
+          [
+            3040,
+            "inside-office",
+            14990
+          ],
+          [
+            3041,
+            "puppet",
+            1780
+          ],
+          [
+            3044,
+            "puppet",
+            1660
+          ]
+        ]
+      }
+    },
+    {
+      "id": "i",
+      "binding": "tools/device/campaign-night7-i-winner.json",
+      "declaredEpochMs": 2500,
+      "winnerSha256": "eb9c0c306f86d2ce15af30ae408dc1d1c95b3d9a249f05ca4ec2a08e622bd47d",
+      "winnerHash": "fnv1a-651ed623",
+      "deliveredMs": [
+        2487,
+        2522
+      ],
+      "deliveredFrom": "ANCHOR_AIMS effective interval",
+      "anchorRefuted": "docs/evidence/night7-anchoredi6-20260913.md",
+      "phase": {
+        "map": "..........................#####...######+++..................",
+        "band": null
+      },
+      "lateness": {
+        "wins": {
+          "0": 500,
+          "10": 400,
+          "20": 208,
+          "30": 140,
+          "40": 103,
+          "50": 82,
+          "60": 61,
+          "70": 58,
+          "80": 29,
+          "90": 16,
+          "100": 7,
+          "120": 0,
+          "150": 0
+        },
+        "maxAllWinMs": 0,
+        "firstLoss": {
+          "lateMs": 10,
+          "losses": [
+            [
+              3002,
+              "inside-office",
+              2068
+            ],
+            [
+              3018,
+              "puppet",
+              1900
+            ],
+            [
+              3022,
+              "puppet",
+              2200
+            ],
+            [
+              3024,
+              "puppet",
+              1480
+            ],
+            [
+              3031,
+              "puppet",
+              1780
+            ],
+            [
+              3033,
+              "inside-office",
+              2068
+            ],
+            [
+              3036,
+              "puppet",
+              2140
+            ],
+            [
+              3042,
+              "puppet",
+              1600
+            ],
+            [
+              3051,
+              "puppet",
+              2680
+            ],
+            [
+              3056,
+              "puppet",
+              2560
+            ],
+            [
+              3060,
+              "inside-office",
+              2668
+            ],
+            [
+              3069,
+              "puppet",
+              1780
+            ],
+            [
+              3077,
+              "inside-office",
+              2068
+            ],
+            [
+              3083,
+              "puppet",
+              1540
+            ],
+            [
+              3086,
+              "puppet",
+              1780
+            ],
+            [
+              3088,
+              "puppet",
+              1840
+            ],
+            [
+              3095,
+              "inside-office",
+              2068
+            ],
+            [
+              3097,
+              "puppet",
+              2380
+            ],
+            [
+              3106,
+              "inside-office",
+              2068
+            ],
+            [
+              3115,
+              "inside-office",
+              2668
+            ]
+          ]
+        }
+      },
+      "human": {
+        "pmMs": 60,
+        "wins": 0,
+        "n": 500,
+        "losses": [
+          [
+            3001,
+            "inside-office",
+            6865
+          ],
+          [
+            3002,
+            "inside-office",
+            2066
+          ],
+          [
+            3003,
+            "puppet",
+            1900
+          ],
+          [
+            3004,
+            "inside-office",
+            3866
+          ],
+          [
+            3005,
+            "inside-office",
+            6866
+          ],
+          [
+            3006,
+            "puppet",
+            2020
+          ],
+          [
+            3007,
+            "inside-office",
+            12268
+          ],
+          [
+            3008,
+            "inside-office",
+            8069
+          ],
+          [
+            3009,
+            "inside-office",
+            6271
+          ],
+          [
+            3010,
+            "puppet",
+            1900
+          ],
+          [
+            3011,
+            "inside-office",
+            6270
+          ],
+          [
+            3012,
+            "inside-office",
+            3867
+          ],
+          [
+            3014,
+            "inside-office",
+            3866
+          ],
+          [
+            3015,
+            "inside-office",
+            3268
+          ],
+          [
+            3016,
+            "inside-office",
+            3264
+          ],
+          [
+            3017,
+            "inside-office",
+            9866
+          ],
+          [
+            3018,
+            "puppet",
+            1780
+          ],
+          [
+            3019,
+            "inside-office",
+            2070
+          ],
+          [
+            3020,
+            "inside-office",
+            11065
+          ],
+          [
+            3021,
+            "inside-office",
+            10469
+          ]
+        ]
+      }
+    },
+    {
+      "id": "j",
+      "binding": "tools/device/campaign-night7-j-winner.json",
+      "declaredEpochMs": 2450,
+      "winnerSha256": "7cadf889042d6a41e93ddef54b370de11d2654a38d163112b730590acae63423",
+      "winnerHash": "fnv1a-f337717a",
+      "deliveredMs": [
+        2417,
+        2452
+      ],
+      "deliveredFrom": "ANCHOR_AIMS effective interval",
+      "anchorRefuted": "docs/evidence/night7-first-6am-k2-20260914.json",
+      "phase": {
+        "map": ".................#####...#########...........................",
+        "band": {
+          "fromMs": 2366.67,
+          "toMs": 2500,
+          "earlyMarginMs": 50.33,
+          "lateMarginMs": 48,
+          "reachesWindowEdge": false
+        }
+      },
+      "lateness": {
+        "wins": {
+          "0": 500,
+          "10": 500,
+          "20": 500,
+          "30": 500,
+          "40": 500,
+          "50": 500,
+          "60": 335,
+          "70": 59,
+          "80": 16,
+          "90": 0,
+          "100": 0,
+          "120": 0,
+          "150": 0
+        },
+        "maxAllWinMs": 50,
+        "firstLoss": {
+          "lateMs": 60,
+          "losses": [
+            [
+              3004,
+              "foxy",
+              22800
+            ],
+            [
+              3007,
+              "inside-office",
+              14066
+            ],
+            [
+              3008,
+              "foxy",
+              1800
+            ],
+            [
+              3010,
+              "inside-office",
+              20668
+            ],
+            [
+              3011,
+              "inside-office",
+              8066
+            ],
+            [
+              3015,
+              "foxy",
+              1800
+            ],
+            [
+              3018,
+              "puppet",
+              1780
+            ],
+            [
+              3019,
+              "foxy",
+              9000
+            ],
+            [
+              3020,
+              "foxy",
+              5400
+            ],
+            [
+              3021,
+              "inside-office",
+              21868
+            ],
+            [
+              3028,
+              "foxy",
+              25200
+            ],
+            [
+              3030,
+              "inside-office",
+              6266
+            ],
+            [
+              3033,
+              "inside-office",
+              23668
+            ],
+            [
+              3036,
+              "puppet",
+              2680
+            ],
+            [
+              3040,
+              "inside-office",
+              3266
+            ],
+            [
+              3041,
+              "inside-office",
+              18865
+            ],
+            [
+              3044,
+              "foxy",
+              21600
+            ],
+            [
+              3045,
+              "inside-office",
+              9268
+            ],
+            [
+              3058,
+              "inside-office",
+              19467
+            ],
+            [
+              3060,
+              "inside-office",
+              19468
+            ]
+          ]
+        }
+      },
+      "human": {
+        "pmMs": 60,
+        "wins": 1,
+        "n": 500,
+        "losses": [
+          [
+            3001,
+            "inside-office",
+            6268
+          ],
+          [
+            3002,
+            "inside-office",
+            3864
+          ],
+          [
+            3003,
+            "inside-office",
+            4464
+          ],
+          [
+            3004,
+            "inside-office",
+            5067
+          ],
+          [
+            3005,
+            "inside-office",
+            6863
+          ],
+          [
+            3006,
+            "inside-office",
+            10465
+          ],
+          [
+            3007,
+            "inside-office",
+            12866
+          ],
+          [
+            3008,
+            "inside-office",
+            8666
+          ],
+          [
+            3009,
+            "inside-office",
+            6865
+          ],
+          [
+            3010,
+            "inside-office",
+            9265
+          ],
+          [
+            3011,
+            "inside-office",
+            6267
+          ],
+          [
+            3012,
+            "inside-office",
+            4462
+          ],
+          [
+            3014,
+            "inside-office",
+            3863
+          ],
+          [
+            3015,
+            "inside-office",
+            3265
+          ],
+          [
+            3016,
+            "inside-office",
+            4468
+          ],
+          [
+            3017,
+            "inside-office",
+            9863
+          ],
+          [
+            3018,
+            "inside-office",
+            18265
+          ],
+          [
+            3019,
+            "inside-office",
+            6863
+          ],
+          [
+            3020,
+            "inside-office",
+            11665
+          ],
+          [
+            3021,
+            "inside-office",
+            10466
+          ]
+        ]
+      }
+    },
+    {
+      "id": "k2",
+      "binding": "tools/device/campaign-night7-k2-winner.json",
+      "declaredEpochMs": 2433,
+      "winnerSha256": "6d7af32fd7377156c6a33c2f64f6be6ca5eb0d35e6b1702e9e5a9d1d5079e64f",
+      "winnerHash": "fnv1a-7e4bf3e8",
+      "deliveredMs": [
+        2410,
+        2445
+      ],
+      "deliveredFrom": "ANCHOR_AIMS effective interval",
+      "anchorRefuted": null,
+      "phase": {
+        "map": ".................######...#########..........................",
+        "band": {
+          "fromMs": 2366.33,
+          "toMs": 2499.67,
+          "earlyMarginMs": 43.67,
+          "lateMarginMs": 54.67,
+          "reachesWindowEdge": false
+        }
+      },
+      "lateness": {
+        "wins": {
+          "0": 500,
+          "10": 500,
+          "20": 500,
+          "30": 500,
+          "40": 500,
+          "50": 500,
+          "60": 414,
+          "70": 236,
+          "80": 44,
+          "90": 8,
+          "100": 3,
+          "120": 0,
+          "150": 0
+        },
+        "maxAllWinMs": 50,
+        "firstLoss": {
+          "lateMs": 60,
+          "losses": [
+            [
+              3007,
+              "inside-office",
+              14065
+            ],
+            [
+              3010,
+              "inside-office",
+              20667
+            ],
+            [
+              3011,
+              "inside-office",
+              8065
+            ],
+            [
+              3021,
+              "inside-office",
+              21867
+            ],
+            [
+              3030,
+              "inside-office",
+              6866
+            ],
+            [
+              3033,
+              "inside-office",
+              23667
+            ],
+            [
+              3036,
+              "inside-office",
+              10464
+            ],
+            [
+              3040,
+              "inside-office",
+              3265
+            ],
+            [
+              3041,
+              "inside-office",
+              20065
+            ],
+            [
+              3045,
+              "inside-office",
+              11665
+            ],
+            [
+              3058,
+              "inside-office",
+              18866
+            ],
+            [
+              3060,
+              "inside-office",
+              18265
+            ],
+            [
+              3073,
+              "inside-office",
+              4464
+            ],
+            [
+              3077,
+              "inside-office",
+              18265
+            ],
+            [
+              3078,
+              "inside-office",
+              3867
+            ],
+            [
+              3079,
+              "inside-office",
+              20064
+            ],
+            [
+              3122,
+              "inside-office",
+              12866
+            ],
+            [
+              3127,
+              "inside-office",
+              12266
+            ],
+            [
+              3128,
+              "inside-office",
+              16465
+            ],
+            [
+              3129,
+              "inside-office",
+              7465
+            ]
+          ]
+        }
+      },
+      "human": {
+        "pmMs": 60,
+        "wins": 1,
+        "n": 500,
+        "losses": [
+          [
+            3001,
+            "inside-office",
+            6861
+          ],
+          [
+            3002,
+            "inside-office",
+            3863
+          ],
+          [
+            3003,
+            "inside-office",
+            4463
+          ],
+          [
+            3004,
+            "inside-office",
+            3862
+          ],
+          [
+            3005,
+            "inside-office",
+            6862
+          ],
+          [
+            3006,
+            "inside-office",
+            10464
+          ],
+          [
+            3007,
+            "inside-office",
+            14061
+          ],
+          [
+            3008,
+            "inside-office",
+            8065
+          ],
+          [
+            3009,
+            "inside-office",
+            6864
+          ],
+          [
+            3010,
+            "inside-office",
+            9264
+          ],
+          [
+            3011,
+            "inside-office",
+            6865
+          ],
+          [
+            3012,
+            "inside-office",
+            4461
+          ],
+          [
+            3014,
+            "inside-office",
+            3862
+          ],
+          [
+            3015,
+            "inside-office",
+            4463
+          ],
+          [
+            3016,
+            "inside-office",
+            4467
+          ],
+          [
+            3017,
+            "inside-office",
+            9862
+          ],
+          [
+            3018,
+            "inside-office",
+            18264
+          ],
+          [
+            3019,
+            "inside-office",
+            6862
+          ],
+          [
+            3020,
+            "inside-office",
+            11061
+          ],
+          [
+            3021,
+            "inside-office",
+            10465
+          ]
+        ]
+      }
+    },
+    {
+      "id": "k3",
+      "binding": "tools/device/campaign-night7-k3-winner.json",
+      "declaredEpochMs": 2433,
+      "winnerSha256": "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78",
+      "winnerHash": "fnv1a-5c8dcb5f",
+      "deliveredMs": [
+        2410,
+        2445
+      ],
+      "deliveredFrom": "ANCHOR_AIMS effective interval",
+      "anchorRefuted": null,
+      "phase": {
+        "map": ".................######...#########...#......................",
+        "band": {
+          "fromMs": 2366.33,
+          "toMs": 2499.67,
+          "earlyMarginMs": 43.67,
+          "lateMarginMs": 54.67,
+          "reachesWindowEdge": false
+        }
+      },
+      "lateness": {
+        "wins": {
+          "0": 500,
+          "10": 500,
+          "20": 500,
+          "30": 500,
+          "40": 500,
+          "50": 500,
+          "60": 416,
+          "70": 235,
+          "80": 76,
+          "90": 27,
+          "100": 10,
+          "120": 0,
+          "150": 0
+        },
+        "maxAllWinMs": 50,
+        "firstLoss": {
+          "lateMs": 60,
+          "losses": [
+            [
+              3007,
+              "inside-office",
+              14666
+            ],
+            [
+              3010,
+              "inside-office",
+              21266
+            ],
+            [
+              3011,
+              "inside-office",
+              8065
+            ],
+            [
+              3021,
+              "inside-office",
+              21867
+            ],
+            [
+              3030,
+              "inside-office",
+              6265
+            ],
+            [
+              3033,
+              "inside-office",
+              23667
+            ],
+            [
+              3036,
+              "inside-office",
+              10464
+            ],
+            [
+              3040,
+              "inside-office",
+              3265
+            ],
+            [
+              3041,
+              "inside-office",
+              18864
+            ],
+            [
+              3045,
+              "inside-office",
+              11665
+            ],
+            [
+              3058,
+              "inside-office",
+              18866
+            ],
+            [
+              3060,
+              "inside-office",
+              18265
+            ],
+            [
+              3073,
+              "inside-office",
+              4464
+            ],
+            [
+              3077,
+              "inside-office",
+              18265
+            ],
+            [
+              3078,
+              "inside-office",
+              3867
+            ],
+            [
+              3079,
+              "inside-office",
+              20666
+            ],
+            [
+              3122,
+              "inside-office",
+              12866
+            ],
+            [
+              3127,
+              "inside-office",
+              12266
+            ],
+            [
+              3128,
+              "inside-office",
+              16465
+            ],
+            [
+              3129,
+              "inside-office",
+              7465
+            ]
+          ]
+        }
+      },
+      "human": {
+        "pmMs": 60,
+        "wins": 1,
+        "n": 500,
+        "losses": [
+          [
+            3001,
+            "inside-office",
+            6861
+          ],
+          [
+            3002,
+            "inside-office",
+            3863
+          ],
+          [
+            3003,
+            "inside-office",
+            4463
+          ],
+          [
+            3004,
+            "inside-office",
+            3862
+          ],
+          [
+            3005,
+            "inside-office",
+            6862
+          ],
+          [
+            3006,
+            "inside-office",
+            10464
+          ],
+          [
+            3007,
+            "inside-office",
+            14061
+          ],
+          [
+            3008,
+            "inside-office",
+            8065
+          ],
+          [
+            3009,
+            "inside-office",
+            6864
+          ],
+          [
+            3010,
+            "inside-office",
+            9264
+          ],
+          [
+            3011,
+            "inside-office",
+            6865
+          ],
+          [
+            3012,
+            "inside-office",
+            4461
+          ],
+          [
+            3014,
+            "inside-office",
+            3862
+          ],
+          [
+            3015,
+            "inside-office",
+            4463
+          ],
+          [
+            3016,
+            "inside-office",
+            4467
+          ],
+          [
+            3017,
+            "inside-office",
+            9862
+          ],
+          [
+            3018,
+            "inside-office",
+            18264
+          ],
+          [
+            3019,
+            "inside-office",
+            6862
+          ],
+          [
+            3020,
+            "inside-office",
+            11061
+          ],
+          [
+            3021,
+            "inside-office",
+            10465
+          ]
+        ]
+      }
+    }
+  ],
+  "ranking": {
+    "lateness": [
+      "preset",
+      "j",
+      "k2",
+      "k3",
+      "i"
+    ],
+    "phaseMargin": [
+      "j",
+      "k2",
+      "k3",
+      "preset",
+      "i"
+    ]
+  }
+}

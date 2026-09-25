@@ -192,6 +192,19 @@ identifies the seed during the night (65,536 -> 1), then plays that seed's plan.
   - the certification runs;
   - trainer code that a gate exercises;
   - the human attempt's record, made under a predeclared protocol with consent.
+- **Stands:**
+  - **At 10/20 in the model, the preset schedule (`PRESET_KNOBS`, epoch 0)
+    keeps the widest per-press timing margin of the Night 7 candidates**
+    ([robustness](../docs/evidence/night7-robustness-20260925.json), 500
+    held-out seeds, held by `test-night7-presets.mjs`).
+    - Every seed survives per-press lateness up to 100 ms.
+    - The human gate's ±60 ms leaves it 257 of 500.
+    - The committed bindings j, k2 and k3, the routes the phone runs, survive
+      lateness only to 50 ms, and ±60 ms on 1 of 500.
+    - Their phase bands are all about 133 ms wide.
+    - The preset schedule has never run on the phone.
+    - The lateness is `actuator.mjs`'s independent per-press draw, so this is a
+      comparison between routes, not a cohort prediction.
 - **Absorbs** Plans 02, 03, 04 and 24, and Plan 25 horizon 4.
 
 ### S6: The method on four games, and the interface

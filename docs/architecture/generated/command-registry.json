@@ -1356,6 +1356,12 @@
       "lifecycle": "supported"
     },
     {
+      "id": "tools/device/night7-robustness.mjs",
+      "invocation": "tools/device/night7-robustness.mjs [--count K] [--jobs J] [--out FILE]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
       "id": "tools/device/test-night7-presets.mjs",
       "invocation": "tools/device/test-night7-presets.mjs",
       "kind": "check",

@@ -1,6 +1,6 @@
 // Gate for the Custom Night preset scorer. No phone required.
 //
-// Five things here can go wrong silently, and the first three have each cost a session
+// Six things here can go wrong silently, and the first three have each cost a session
 // elsewhere in this repository:
 //
 //  1. The presets could drift from the file the phone's dial driver reads.
@@ -29,6 +29,11 @@
 //     block, the preset knobs and the k3 winner must be the ones censused, and
 //     each grid's corners and centre, and every lost cell's first listed loss,
 //     must replay as recorded.
+//
+//  6. The robustness record (night7-robustness.mjs) could stop describing the
+//     tree: its seed block and schedules as censused, and each schedule's
+//     tolerated lateness, first lateness loss, phase band edges and first
+//     human-jitter loss replaying as recorded.
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import * as C from '@fnaf2-1020/core/mechanics';
@@ -36,6 +41,7 @@ import { KNOBS0 } from './minus-toys-plan.mjs';
 import { loadPresets, cohort, runNight, PRESET_KNOBS, MEASURED_SPREAD_MS, HALL_PLATEAU_MS, BANDS,
   POPULATION_KIND, PLANE_KIND, planeSchedules, planeVector, planeWins } from './night7-presets.mjs';
 import { heldOutSeeds } from '../winner-phase-census.mjs';
+import { ROBUSTNESS_KIND, PHASE_FRAMES, HUMAN_MS, schedules as robustSchedules, robustWins } from './night7-robustness.mjs';
 import { designBlock } from '../winner-census.mjs';
 
 const check = (ok, message) => { if (!ok) throw new Error(message); };
@@ -202,5 +208,48 @@ let planeLine = '';
   planeLine = `; ${names.length} dial plane(s) still replay as recorded (${replays} replays)`;
 }
 
+// --- 6. the robustness record still describes the tree ------------------------
+let robustLine = '';
+{
+  const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
+  const dir = new URL('../../docs/evidence/', import.meta.url);
+  const name = readdirSync(dir).filter(n => /^night7-robustness-\d{8}\.json$/.test(n)).sort().pop();
+  check(name, 'no docs/evidence/night7-robustness-YYYYMMDD.json is committed');
+  const record = JSON.parse(readFileSync(new URL(name, dir), 'utf8'));
+  check(record.kind === ROBUSTNESS_KIND, `${name} is not a ${ROBUSTNESS_KIND}`);
+  const seeds = heldOutSeeds(record.method.seeds.n);
+  check(record.method.seeds.sha256 === sha256(JSON.stringify(seeds)), `${name}: the held-out seed block no longer rebuilds`);
+  const now = robustSchedules();
+  check(now.length === record.schedules.length, `${name} covers ${record.schedules.length} schedules, the tree has ${now.length}`);
+  let replays = 0;
+  const lostAs = (schedule, opts, [seed, reason, frame], what) => {
+    const r = robustWins(schedule, seed, opts);
+    replays++;
+    check(!r.won && r.reason === reason && r.frame === frame, `${name} ${schedule.id} ${what} seed ${seed} no longer dies as recorded`);
+  };
+  for (const rec of record.schedules) {
+    const schedule = now.find(x => x.id === rec.id);
+    check(schedule, `${name} names ${rec.id}, which the tree no longer has`);
+    if (rec.knobsSha256) check(rec.knobsSha256 === schedule.knobsSha256, `PRESET_KNOBS changed since ${name}`);
+    if (rec.winnerSha256) check(rec.winnerSha256 === schedule.winnerSha256, `${rec.binding} changed since ${name}`);
+    const L = rec.lateness.maxAllWinMs;
+    if (L !== null) for (const seed of seeds.slice(0, 2)) {
+      replays++;
+      check(robustWins(schedule, seed, { lateMs: L }).won, `${name} ${rec.id} seed ${seed} no longer survives ${L} ms lateness`);
+    }
+    if (rec.lateness.firstLoss) lostAs(schedule, { lateMs: rec.lateness.firstLoss.lateMs }, rec.lateness.firstLoss.losses[0], `${rec.lateness.firstLoss.lateMs} ms lateness`);
+    if (rec.human.losses.length) lostAs(schedule, { earlyMs: HUMAN_MS, lateMs: 2 * HUMAN_MS }, rec.human.losses[0], `+-${HUMAN_MS} ms`);
+    const map = rec.phase.map;
+    for (let i = 0; i < map.length; i++) {
+      if (i > 0 && map[i] === map[i - 1] && i < map.length - 1 && map[i] === map[i + 1]) continue;
+      if (map[i] === '+') continue;
+      const r = robustWins(schedule, seeds[i % seeds.length], { frame: i - PHASE_FRAMES });
+      replays++;
+      check(r.won === (map[i] === '#'), `${name} ${rec.id} frame ${i - PHASE_FRAMES}: recorded '${map[i]}', replays ${r.won ? 'won' : 'lost'}`);
+    }
+  }
+  robustLine = `; ${name} still describes the tree (${replays} replays)`;
+}
+
 console.log('night7-presets: presets match the menu model, the device lane bites, ' +
-  `the hall pulse clears both floors by more than 33 ms, and ${populationLine}${planeLine}`);
+  `the hall pulse clears both floors by more than 33 ms, and ${populationLine}${planeLine}${robustLine}`);

@@ -1520,6 +1520,22 @@
       ]
     },
     {
+      "file": "tools/device/night7-robustness.mjs",
+      "imports": [
+        "../winner-census.mjs",
+        "../winner-phase-census.mjs",
+        "./bundle.mjs",
+        "./fact-register.mjs",
+        "./night7-presets.mjs",
+        "@fnaf2-1020/core/mechanics",
+        "node:crypto",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/device/phase-reconstruct.mjs",
       "imports": [
         "@fnaf2-1020/adapters/night-onset",
@@ -1872,6 +1888,7 @@
         "../winner-phase-census.mjs",
         "./minus-toys-plan.mjs",
         "./night7-presets.mjs",
+        "./night7-robustness.mjs",
         "@fnaf2-1020/core/mechanics",
         "node:crypto",
         "node:fs"
