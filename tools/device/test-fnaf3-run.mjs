@@ -3,7 +3,7 @@
 // frames, its search order along Springtrap's source edges, and the
 // occupancy score's two jobs: static alone stays low, a figure does not.
 import { readFileSync } from 'node:fs';
-import { parseArgs, searchOrder, NEXT, VENT_OF, SystemsClock, chooseReboot } from './fnaf3-run.mjs';
+import { parseArgs, searchOrder, NEXT, VENT_OF, SystemsClock, chooseReboot, teachFeed } from './fnaf3-run.mjs';
 import { FEED, PICTURE_MASK, Reader, boxSamples, medianLuma, occupancy, decodePng, sampleBlocks, boxLuma, stateScore, IMAGE_GEOMETRY, CAMERA_FRAMES } from './fnaf3-detectors.mjs';
 import { pngFromRegion } from './native-regions.mjs';
 
@@ -194,6 +194,17 @@ ok('cams 8, 6, 4 and 3 lead into no vent', [8, 6, 4, 3].every((n) => NEXT[n].eve
   ok('a lone audio error with the camera about to fail takes reboot all', chooseReboot(set('AUDIO'), dim) === 'ALL');
   ok('ventilation weighs the same way', chooseReboot(set('VENT'), dim) === 'ALL' && chooseReboot(set('VENT'), new SystemsClock(2)) === 'VENT');
   ok('nothing broken, nothing rebooted', chooseReboot(set(), new SystemsClock(2)) === null);
+}
+
+{
+  const sent = [];
+  const port = { endpoint: { token: '0'.repeat(32) }, openLesson: ({ lessonLine }) => ({
+    send: async (line) => { if (!lessonLine.test(line)) throw new Error('outside the grammar'); sent.push(line.split(' ').slice(3).join(' ')); return 'OK'; },
+    close() {} }) };
+  const teach = teachFeed(port, { event: async () => {} });
+  teach.origin(5); teach.night(3, false);
+  await teach.clear();
+  ok('a night starts from a fresh lesson', sent.join('|') === 'clear|origin 5|night 3 NORMAL|clear');
 }
 
 if (failures.length) {

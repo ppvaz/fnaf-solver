@@ -379,7 +379,7 @@ export function searchOrder(from) {
 }
 
 const F3_LINE = /^LESSON [0-9a-f]{32} f3 (origin \d{1,19}|night [1-6] (NORMAL|AGGRESSIVE)|step [A-Z_]+|look (\d{1,2}|OFF)|seen (\d{1,2}|NONE)|sealed (1[1-5]|NONE)|lure \d{1,2}|sight \d{1,3}|lures \d{1,2}|sys (AUDIO|CAMERA|VENT) (OK|ERROR|REBOOT)|clear)$/;
-function teachFeed(port, record) {
+export function teachFeed(port, record) {
   const channel = port.openLesson({ timeoutMs: 800, lessonLine: F3_LINE });
   const token = port.endpoint.token;
   let chain = Promise.resolve();
@@ -389,6 +389,10 @@ function teachFeed(port, record) {
     chain = chain.then(() => channel.send(`LESSON ${token} f3 ${words}`))
       .catch((e) => record.event('teach-error', { words, message: e.message }).catch(() => {}));
   };
+  // A runner that dies before its own clear leaves its lesson on the panel,
+  // and the next origin would reattach it (n2e's last sighting showed on the
+  // title): each night starts from a fresh one.
+  say('clear');
   return {
     origin: (ns) => say(`origin ${ns}`),
     night: (n, aggressive) => say(`night ${n} ${aggressive ? 'AGGRESSIVE' : 'NORMAL'}`),
