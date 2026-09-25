@@ -96,6 +96,9 @@ export class Fnaf3Sim {
    *   advances `move counter` by 2 a second instead of g221's 1, which halves
    *   the time to every move test. AI itself caps at 7 (g654), so this is the
    *   only knob above Nightmare and the hardest the game goes.
+   * @param {boolean} [options.cameraDrain] the camera losing AI points while a
+   *   screen is up (g783/g784, g381); on by default, off to reproduce the
+   *   censuses recorded before it was modelled.
    */
   constructor({ night = 1, seed = 0, fastNights = false, hyper = false, cameraDrain = true } = {}) {
     this.night = night;
