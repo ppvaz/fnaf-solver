@@ -28,6 +28,12 @@
  */
 import { latchedNightOnsetMs } from '@fnaf2-1020/adapters/night-onset';
 
+// The earliest a release may follow the latched onset is a latch hold plus a
+// lead, and only with authorizeOnLatch; otherwise it waits for the classifier.
+// Exported so a model scorer can say whether a band is deliverable at all.
+export const DEFAULT_LATCH_HOLD_MS = 500;
+export const DEFAULT_MIN_LEAD_MS = 80;
+
 const defaultSleep = milliseconds => new Promise(resolve => setTimeout(resolve, Math.max(0, milliseconds)));
 
 /**
@@ -64,8 +70,8 @@ export function phoneWallOnset(onsetDeviceMs, fields) {
 export async function anchorNightRelease({ clock, authorization, release, onEvent = () => {}, aimMs, maxK, notBeforeHostMs,
   now = () => performance.now(), wallNow = () => Date.now(), sleep = defaultSleep,
   latchPollMs = 100, latchWaitMs = 35000, latchGraceAfterAuthorizationMs = 1500,
-  minLeadMs = 80, maxUncertaintyMs = 15, periodMs = 1000, strict = false,
-  authorizeOnLatch = false, latchHoldMs = 500 }) {
+  minLeadMs = DEFAULT_MIN_LEAD_MS, maxUncertaintyMs = 15, periodMs = 1000, strict = false,
+  authorizeOnLatch = false, latchHoldMs = DEFAULT_LATCH_HOLD_MS }) {
   if (typeof clock?.read !== 'function' || typeof clock?.probe !== 'function')
     throw new TypeError('night anchor needs a clock with read and probe');
   if (typeof authorization?.isAuthorized !== 'function' || typeof authorization?.whenAuthorized !== 'function')

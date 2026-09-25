@@ -18,7 +18,13 @@
 //             actuator.mjs (queue serialized, mask seam modelled), for L in
 //             LATENESS_MS; the largest L up to which every seed still wins;
 //   human     the human gate's +-60 ms per press: the epoch 60 ms early and
-//             lateness drawn from [0, 120], the same spread.
+//             lateness drawn from [0, 120], the same spread;
+//   reach     every epoch in 0..10 s at frame steps over the first SPAN_SEEDS
+//             seeds, and whether any fully won band lies at or after the
+//             earliest epoch the anchor can deliver: a latch hold plus a lead
+//             after the latched onset (night-anchor.js, with authorizeOnLatch)
+//             plus the register's onset bias and least input latency. A route
+//             whose bands all lie earlier cannot be run anchored as it stands.
 //
 //   node tools/device/night7-robustness.mjs --count 300 --jobs 7 --out FILE
 //
@@ -36,6 +42,7 @@ import { compileBundle } from './bundle.mjs';
 import { ANCHOR_AIMS } from './fact-register.mjs';
 import { runNight, loadPresets, PRESET_KNOBS } from './night7-presets.mjs';
 import { forkBlocks, gitState } from '../winner-census.mjs';
+import { DEFAULT_LATCH_HOLD_MS, DEFAULT_MIN_LEAD_MS } from '../../apps/device/src/night-anchor.js';
 import { heldOutSeeds, nightBindings } from '../winner-phase-census.mjs';
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '../..');
@@ -43,6 +50,8 @@ export const ROBUSTNESS_KIND = 'night7-robustness-v1';
 export const LATENESS_MS = Object.freeze([0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 120, 150]);
 export const HUMAN_MS = 60;
 export const PHASE_FRAMES = 30;
+export const SPAN_FRAMES = 600;
+export const SPAN_SEEDS = 16;
 const STEP_MS = 1000 / FPS;
 const sha256 = (text) => createHash('sha256').update(text).digest('hex');
 const tag = (path) => path.replace(/^tools\/device\/campaign-night7-|-winner\.json$/g, '');
@@ -58,9 +67,15 @@ export function schedules() {
 
 const tenTwenty = () => loadPresets().find((p) => p.id === 'golden-freddy');
 
-/** One night: does `schedule` win `seed` with its epoch moved and presses late by up to `lateMs`? */
-export function robustWins(schedule, seed, { frame = 0, lateMs = 0, earlyMs = 0, preset = tenTwenty() } = {}) {
-  const r = runNight({ preset, seed, knobs: schedule.knobs, epochMs: schedule.epochMs + frame * STEP_MS - earlyMs,
+/** The earliest epoch the anchored release can deliver on Night 7, from the anchor's own defaults and the register. */
+export function earliestDeliveredMs() {
+  const night7 = Object.values(ANCHOR_AIMS).filter((a) => a.night === 7);
+  return DEFAULT_LATCH_HOLD_MS + DEFAULT_MIN_LEAD_MS + Math.min(...night7.map((a) => (a.onsetBiasMs ?? 0) + a.latencyMs.min));
+}
+
+/** One night: does `schedule` win `seed` with its epoch moved (or set) and presses late by up to `lateMs`? */
+export function robustWins(schedule, seed, { frame = 0, lateMs = 0, earlyMs = 0, epochMs = null, preset = tenTwenty() } = {}) {
+  const r = runNight({ preset, seed, knobs: schedule.knobs, epochMs: (epochMs ?? schedule.epochMs + frame * STEP_MS) - earlyMs,
     band: lateMs > 0 ? [0, lateMs] : null });
   return { won: r.sim.won && r.splitAt >= 0, reason: r.sim.won ? 'unarmed' : (r.sim.death?.reason ?? 'alive'), frame: r.sim.frame };
 }
@@ -81,6 +96,17 @@ function block(count, from, to) {
     for (let f = -PHASE_FRAMES; f <= PHASE_FRAMES; f += 1) push(`${s.id}|phase|${f}`, (seed) => robustWins(s, seed, { frame: f, preset }));
     for (const L of LATENESS_MS) push(`${s.id}|late|${L}`, (seed) => robustWins(s, seed, { lateMs: L, preset }));
     push(`${s.id}|human|${HUMAN_MS}`, (seed) => robustWins(s, seed, { earlyMs: HUMAN_MS, lateMs: 2 * HUMAN_MS, preset }));
+    // The span uses only the first SPAN_SEEDS seeds; every block still emits
+    // its rows (n may be 0) so the merged rows line up.
+    const spanSeeds = seeds.filter((_, i) => from + i < SPAN_SEEDS);
+    for (let f = 0; f < SPAN_FRAMES; f += 1) {
+      const losses = [];
+      for (const seed of spanSeeds) {
+        const r = robustWins(s, seed, { epochMs: f * STEP_MS, preset });
+        if (!r.won) losses.push([seed, r.reason, r.frame]);
+      }
+      rows.push({ subject: `${s.id}|span|${f}`, n: spanSeeds.length, losses });
+    }
   }
   return rows;
 }
@@ -114,6 +140,20 @@ export function buildRobustnessRecord({ rows, count, winnerHashes, git, date, co
     for (const L of LATENESS_MS) { if (lateness[L] === count) maxLateMs = L; else break; }
     const firstLoss = LATENESS_MS.find((L) => lateness[L] < count);
     const human = row('human', HUMAN_MS);
+    const earliest = earliestDeliveredMs();
+    const spanCells = [];
+    for (let f = 0; f < SPAN_FRAMES; f += 1) {
+      const r = row('span', f);
+      spanCells.push(r.losses.length === 0 ? '#' : r.losses.length === r.n ? '.' : '+');
+    }
+    const spanFull = spanCells.map((c) => c === '#');
+    const spanBands = [];
+    for (let f = 0, open = null; f <= SPAN_FRAMES; f += 1) {
+      const full = f < SPAN_FRAMES && spanFull[f];
+      if (full && open === null) open = f;
+      if (!full && open !== null) { spanBands.push([+(open * STEP_MS).toFixed(2), +((f - 1) * STEP_MS).toFixed(2)]); open = null; }
+    }
+    const deliverableBands = spanBands.filter(([, to]) => to >= earliest);
     return {
       id: s.id, binding: s.path ?? null, declaredEpochMs: s.epochMs,
       ...(s.path ? { winnerSha256: s.winnerSha256, winnerHash: winnerHashes[s.path] } : { knobsSha256: s.knobsSha256 }),
@@ -123,6 +163,8 @@ export function buildRobustnessRecord({ rows, count, winnerHashes, git, date, co
       lateness: { wins: lateness, maxAllWinMs: maxLateMs,
         firstLoss: firstLoss === undefined ? null : { lateMs: firstLoss, losses: row('late', firstLoss).losses.slice(0, 20) } },
       human: { pmMs: HUMAN_MS, wins: wins(human), n: human.n, losses: human.losses.slice(0, 20) },
+      reach: { seeds: SPAN_SEEDS, map: spanCells.join(''), bandsMs: spanBands,
+        earliestDeliveredMs: earliest, deliverableBands, deliverable: deliverableBands.length > 0 },
     };
   });
   const minPhase = (s) => (s.phase.band ? Math.min(s.phase.band.earlyMarginMs, s.phase.band.lateMarginMs) : -Infinity);
@@ -131,7 +173,9 @@ export function buildRobustnessRecord({ rows, count, winnerHashes, git, date, co
   const answer = out.map((s) => `${s.id}: lateness to ${s.lateness.maxAllWinMs ?? 'none'} ms, ` +
     `phase margin ${s.phase.band ? `${s.phase.band.earlyMarginMs}/${s.phase.band.lateMarginMs} ms` : 'none (delivered interval not fully won)'}, ` +
     `human +-${HUMAN_MS} ${s.human.wins}/${s.human.n}`).join('; ') +
-    `. Widest lateness tolerance: ${byLate[0].id}; widest phase margin: ${byPhase[0].id}.`;
+    `. Widest lateness tolerance: ${byLate[0].id}; widest phase margin: ${byPhase[0].id}. ` +
+    `Won bands the anchor can deliver (epoch >= ${out[0].reach.earliestDeliveredMs} ms): ` +
+    out.map((s) => `${s.id} ${s.reach.deliverable ? s.reach.deliverableBands.map(([a, b]) => `${a}-${b}`).join(', ') : 'none'}`).join('; ') + '.';
   return {
     schema: 'evidence-record-v1', kind: ROBUSTNESS_KIND, id: `night7-robustness-${date.replace(/-/g, '')}`,
     claimLevel: 'MODEL_ONLY', date,
@@ -148,6 +192,8 @@ export function buildRobustnessRecord({ rows, count, winnerHashes, git, date, co
       phase: { frames: 2 * PHASE_FRAMES + 1, stepMs: STEP_MS, relativeTo: 'each schedule\'s declared epoch; map index i is frame i - window' },
       lateness: { ms: LATENESS_MS, lane: 'DeviceActuator lateMinMs 0, lateMaxMs L: per-press, queue serialized, mask seam modelled' },
       human: `+-${HUMAN_MS} ms per press: epoch - ${HUMAN_MS} ms and lateness [0, ${2 * HUMAN_MS}]`,
+      reach: { epochs: `0..${SPAN_FRAMES - 1} frames (0-10 s)`, seeds: `the first ${SPAN_SEEDS} of the seed block`,
+        earliest: `DEFAULT_LATCH_HOLD_MS ${DEFAULT_LATCH_HOLD_MS} + DEFAULT_MIN_LEAD_MS ${DEFAULT_MIN_LEAD_MS} (night-anchor.js, authorizeOnLatch) + the Night 7 register's least onset bias + input latency` },
       win: 'sim.won AND splitAt >= 0',
     },
     schedules: out,

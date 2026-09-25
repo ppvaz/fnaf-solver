@@ -1522,6 +1522,7 @@
     {
       "file": "tools/device/night7-robustness.mjs",
       "imports": [
+        "../../apps/device/src/night-anchor.js",
         "../winner-census.mjs",
         "../winner-phase-census.mjs",
         "./bundle.mjs",

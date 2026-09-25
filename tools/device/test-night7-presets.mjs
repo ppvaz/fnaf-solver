@@ -32,8 +32,9 @@
 //
 //  6. The robustness record (night7-robustness.mjs) could stop describing the
 //     tree: its seed block and schedules as censused, and each schedule's
-//     tolerated lateness, first lateness loss, phase band edges and first
-//     human-jitter loss replaying as recorded.
+//     tolerated lateness, first lateness loss, phase band edges, first
+//     human-jitter loss and 0-10 s reach-map edges replaying as recorded,
+//     against the earliest epoch the anchor can deliver today.
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import * as C from '@fnaf2-1020/core/mechanics';
@@ -41,7 +42,8 @@ import { KNOBS0 } from './minus-toys-plan.mjs';
 import { loadPresets, cohort, runNight, PRESET_KNOBS, MEASURED_SPREAD_MS, HALL_PLATEAU_MS, BANDS,
   POPULATION_KIND, PLANE_KIND, planeSchedules, planeVector, planeWins } from './night7-presets.mjs';
 import { heldOutSeeds } from '../winner-phase-census.mjs';
-import { ROBUSTNESS_KIND, PHASE_FRAMES, HUMAN_MS, schedules as robustSchedules, robustWins } from './night7-robustness.mjs';
+import { ROBUSTNESS_KIND, PHASE_FRAMES, HUMAN_MS, schedules as robustSchedules, robustWins, earliestDeliveredMs }
+  from './night7-robustness.mjs';
 import { designBlock } from '../winner-census.mjs';
 
 const check = (ok, message) => { if (!ok) throw new Error(message); };
@@ -246,6 +248,16 @@ let robustLine = '';
       const r = robustWins(schedule, seeds[i % seeds.length], { frame: i - PHASE_FRAMES });
       replays++;
       check(r.won === (map[i] === '#'), `${name} ${rec.id} frame ${i - PHASE_FRAMES}: recorded '${map[i]}', replays ${r.won ? 'won' : 'lost'}`);
+    }
+    check(rec.reach.earliestDeliveredMs === earliestDeliveredMs(),
+      `the earliest epoch the anchor can deliver moved (${earliestDeliveredMs()} ms, ${name} says ${rec.reach.earliestDeliveredMs}); re-run night7-robustness.mjs`);
+    const reach = rec.reach.map;
+    for (let i = 0; i < reach.length; i++) {
+      if (i > 0 && reach[i] === reach[i - 1] && i < reach.length - 1 && reach[i] === reach[i + 1]) continue;
+      if (reach[i] === '+') continue;
+      const r = robustWins(schedule, seeds[i % rec.reach.seeds], { epochMs: i * 1000 / 60 });
+      replays++;
+      check(r.won === (reach[i] === '#'), `${name} ${rec.id} epoch frame ${i}: recorded '${reach[i]}', replays ${r.won ? 'won' : 'lost'}`);
     }
   }
   robustLine = `; ${name} still describes the tree (${replays} replays)`;

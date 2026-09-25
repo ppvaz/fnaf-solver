@@ -202,7 +202,14 @@ identifies the seed during the night (65,536 -> 1), then plays that seed's plan.
     - The committed bindings j, k2 and k3, the routes the phone runs, survive
       lateness only to 50 ms, and ±60 ms on 1 of 500.
     - Their phase bands are all about 133 ms wide.
-    - The preset schedule has never run on the phone.
+    - The preset schedule has never run on the phone, and **as it stands it
+      cannot be run anchored**. Its only won bands in 0-10 s are 0-100 ms and
+      167-300 ms, earlier than any epoch the anchor can deliver (557 ms:
+      `night-anchor.js`'s latch hold and lead, plus the register's onset bias
+      and least latency). The committed bindings' bands, at 2.2-2.6 s, can
+      be delivered. Using its lateness tolerance would need its schedule
+      re-timed so a band lands at a deliverable epoch. Whether a re-timed
+      copy keeps that tolerance is the open question.
     - The lateness is `actuator.mjs`'s independent per-press draw, so this is a
       comparison between routes, not a cohort prediction.
 - **Absorbs** Plans 02, 03, 04 and 24, and Plan 25 horizon 4.
