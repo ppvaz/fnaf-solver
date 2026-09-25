@@ -63,7 +63,11 @@ esac
 # shellcheck source=tools/device/select-adb.sh
 . "$HERE/select-adb.sh"
 
-now_ms() { date +%s%3N; }
+# Not `date +%s%3N`: that is a GNU extension, and BSD date on the macOS host
+# prints a literal "N", so the deadline arithmetic failed and --after-night
+# aborted on its second poll whenever the title was not read on the first
+# (menu.sh records the same pitfall).
+now_ms() { python3 -c 'import time; print(int(time.time() * 1000))'; }
 
 stop_game() {
   adb shell am force-stop "$PACKAGE" >/dev/null 2>&1 ||
