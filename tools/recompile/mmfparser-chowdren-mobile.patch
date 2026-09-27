@@ -4343,3 +4343,56 @@ index 0000000..2674d93
 +
 +def get_object():
 +    return Kyso
+diff --git a/Chowdren/base/font.cpp b/Chowdren/base/font.cpp
+index da4f5ab..2c997c9 100644
+--- a/Chowdren/base/font.cpp
++++ b/Chowdren/base/font.cpp
+@@ -470,12 +470,14 @@ FTTextureFont::FTTextureFont(FileStream & stream)
+     int tex_size = 1024;
+ 
+     // Texture width required for numGlyphs glyphs. Will probably not be
+-    // large enough, but we try to fit as many glyphs in one line as possible
+-    textureWidth = ClampSize(glyphWidth * numGlyphs + padding * 2,
++    // large enough, but we try to fit as many glyphs in one line as possible.
++    // A slot is a glyph plus its padding: the packer advances by both.
++    int slotWidth = glyphWidth + padding;
++    textureWidth = ClampSize(slotWidth * numGlyphs + padding * 2,
+                              tex_size);
+ 
+     // Number of lines required for that many glyphs in a line
+-    int tmp = (textureWidth - (padding * 2)) / glyphWidth;
++    int tmp = (textureWidth - (padding * 2)) / slotWidth;
+     tmp = tmp > 0 ? tmp : 1;
+     tmp = (numGlyphs + (tmp - 1)) / tmp; // round division up
+ 
+@@ -488,20 +490,24 @@ FTTextureFont::FTTextureFont(FileStream & stream)
+     xOffset = yOffset = padding;
+ 
+     for (int i = 0; i < numGlyphs; i++) {
+-        FTGlyph * glyph = new FTGlyph(stream, data, xOffset, yOffset,
+-                                      textureWidth, textureHeight);
+-        glyphList->Add(glyph, glyph->charcode);
+-
+-        if (xOffset > (textureWidth - glyphWidth)) {
++        // Wrap before the glyph, not after: FTGlyph writes its bitmap at
++        // xOffset as it is read, so a glyph placed past the right edge spilled
++        // into the next row and got texture coordinates past 1.0. With the
++        // Roboto bank's bold 43 face that glyph was 'n', drawn as a block.
++        if (xOffset > int(textureWidth) - slotWidth) {
+             xOffset = padding;
+             yOffset += glyphHeight;
+ 
+-            if (yOffset > (textureHeight - glyphHeight)) {
++            if (yOffset > int(textureHeight) - glyphHeight) {
+                 std::cout << "Cannot fit glyphs in texture!" << std::endl;
+                 break;
+             }
+         }
+ 
++        FTGlyph * glyph = new FTGlyph(stream, data, xOffset, yOffset,
++                                      textureWidth, textureHeight);
++        glyphList->Add(glyph, glyph->charcode);
++
+         xOffset += int(glyph->BBox().Upper().X() -
+                        glyph->BBox().Lower().X() + padding + 0.5);
+     }

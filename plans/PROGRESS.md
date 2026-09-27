@@ -1971,3 +1971,43 @@ Open:
 - The per-cycle ledger against a phone recording, which S2b's closing condition
   needs. No k2 or k3 video exists on this machine.
 - A harness counter watch, so a record can name the rebuild's attacker itself.
+
+**2026-09-27 (evening): the Toy view draws follow the sheet; the replays hold far longer; S1's custody rule decided.**
+
+- **S2b, MODEL_ONLY, rebuilt-runtime fidelity.** The model now has
+  `sourcedPromotedViewDraws` (default off; `promoted-view-draws.test.js`).
+  - What it does: g366/g368/g419 draw only for a promoted Toy move
+    (value 0 == 2), and the fade counter is written at promotion, not at the
+    roll.
+  - It joins `sourced-rebuild-model-options.json`. The no-input ladder is
+    unchanged.
+  - The winner-schedule replays' persistent split moves:
+    - Night 1 `minimal`: 10200 -> 25200, the night's last update
+      (`recompile-replay-782c69f21dade0c2`).
+    - Night 5 `contact-final`: 617 -> 9862
+      (`recompile-replay-02bb9f3924f43fad`).
+    - Night 7 `k3`: 613 -> 12280 (`recompile-replay-674c7e462267e520`).
+  - The earlier mismatches that rejoin are mostly the one-update drop slip (an
+    agent is on it). No default changed.
+- **Rebuild fixes from Pedro's play.**
+  - The font atlas packer wrote one glyph per row past the atlas edge; bold n
+    was drawn as a filled square. Fixed in `font.cpp` (binary `22610def`,
+    deployed to `play/`).
+  - Checked against the phone, no change needed: the monitor chevron always
+    points down, and the first camera is CAM 09 on Nights 1-6 and CAM 07 on
+    Night 7.
+- **S1, decided by Pedro:** recovered packs cannot carry an attestation. The
+  two original-directory wins (`n5-armblock`, `n6h2-01`) are the only
+  candidates; S1 closes on his attestation of either.
+- **S3, decided by Pedro:** the old corner cohort stays INCOMPLETE, and a fresh
+  BB 20 + Foxy 20 cohort is predeclared on the current tree (device agent
+  running).
+
+Open:
+- The Night 5 and Night 7 persistent splits at 9862 and 12280.
+- The drop and mask-off slip (agent).
+- The harness counter watch and the Night 5 killer (agent).
+- The census on the current set (agent; its record pins
+  `sourced-rebuild-model-options-20260927b.json`).
+- The fresh corner cohort (device agent).
+- Pedro's attestation.

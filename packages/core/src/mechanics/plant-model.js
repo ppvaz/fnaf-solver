@@ -233,6 +233,14 @@ export class Sim {
       // and g378's return onto CAM 03 draws when it lands in the window. Foxy and Balloon Boy keep their
       // rules. (docs/evidence/footstep-cam-markers-adjudication-20260927.json)
       sourcedFootstepValue2: false,
+      // g366/g368/g419 draw Random(100) each update a Toy's value 0 == 2 (its move promoted), `your view`
+      // overlaps it and `viewing` > 0. A passed roll only sets value 0 = 1; g344-g358 promote it once
+      // value 1 (B) is 0 and its route gates open, and g344-g360 write the fade counter C = 10 there, not
+      // at the roll. Off: the view draws key on a pending roll, which also covers a roll held at
+      // value 0 == 1 by the stun or a Show Stage gate, and the fade is marked at the roll. The schedule
+      // replays split on exactly this on all three nights (tools/recompile/README.md, "Winner schedules
+      // replayed"): Toy Bonnie held on Night 1, Toy Freddy on Night 5, all three on Night 7.
+      sourcedPromotedViewDraws: false,
       // Mangle's mask leaves (dump g400: the 10%/s roll under the mask; g401: five mask ticks) place her at
       // CAM 7 (marker 62), three hops from the vent, not at the route start the unit table's repelIdx 0 gives.
       // Every other unit's repelIdx matches its dump endpoint (g538-g555, g213, g437, g439/g440, g292/g294).
@@ -551,6 +559,8 @@ export class Sim {
       throw new Error('sourcedFootstepDraws draws in the sheet-ordered pass: it requires sourcedSheetOrder');
     if (this.opts.sourcedFootstepValue2 && !this.opts.sourcedFootstepDraws)
       throw new Error('sourcedFootstepValue2 changes when the footstep cue draws: it requires sourcedFootstepDraws');
+    if (this.opts.sourcedPromotedViewDraws && !this.opts.sourcedViewDraws)
+      throw new Error('sourcedPromotedViewDraws changes which view draws fire: it requires sourcedViewDraws');
     if (this.opts.sourcedSheetOrder && !this.opts.sourcedSecondPass)
       throw new Error('sourcedSheetOrder orders the per-second pass: it requires sourcedSecondPass');
     if (this.opts.sourcedUnconditionalDraws && C.FPS !== 60)
@@ -933,7 +943,8 @@ export class Sim {
     };
     if (up) for (const id of ['toybonnie', 'toychica', 'toyfreddy']) {                       // g366, g368, g419
       const u = this.units.find(x => x.id === id);
-      if ((all || part === toyGroup[id]) && u?.pending && nodeOf(id) === this.cam) this.rng.int(0, 99, 0);
+      const armed = u?.pending && (!this.opts.sourcedPromotedViewDraws || u.promoted);   // value 0 == 2
+      if ((all || part === toyGroup[id]) && armed && nodeOf(id) === this.cam) this.rng.int(0, 99, 0);
     }
     if (up && (all || part === 'fades')) for (const id of ['withfreddy', 'withbonnie', 'withchica', 'foxy', 'toyfreddy',
                               'toybonnie', 'toychica', 'mangle', 'bb']) {                      // g468-g476
@@ -1228,10 +1239,13 @@ export class Sim {
    * @param {boolean} roll
    */
   footstepPromote(u, roll) {
-    if (!this.opts.sourcedFootstepValue2) return;
+    const value2 = this.opts.sourcedFootstepValue2, viewed = this.opts.sourcedPromotedViewDraws;
+    if (!value2 && !viewed) return;
     if (roll) u.promoted = false;
     if (u.promoted || !this.footstepPromotable(u, this.frame)) return;
-    u.value2 = 10; u.promoted = true;
+    if (value2) u.value2 = 10;
+    u.promoted = true;
+    if (viewed) this.fadeUntil[u.id] = this.frame + 8;                        // g344-g360: C = 10 at promotion
   }
 
   /** your-view overlaps the Puppet: his route camera when out, CAM 11 in the box. */
@@ -1904,7 +1918,7 @@ export class Sim {
       this.footstepPromote(u, true);                                           // g344-g358: value 2 = 10
       const step = this.sourcedRouteStep(u, this.frame);
       if (step === 'discard' || step === 'returned') { u.promoted = false; return; }
-      if (this.opts.sourcedViewDraws) this.fadeUntil[u.id] = this.frame + 8;
+      if (this.opts.sourcedViewDraws && !this.opts.sourcedPromotedViewDraws) this.fadeUntil[u.id] = this.frame + 8;
       if (this.cam8CancelAt[id] === this.frame) return;                        // g380/g385 zeroed value 0 (sourcedCam8Cancel)
       if (step !== 'hold' && this.canAdvance(u, this.frame)) this.advance(u);
       else u.pending = true;
@@ -2180,6 +2194,7 @@ export class Sim {
     // A move needs value 0 == 2, so one the model makes without a recorded promotion is promoted on this
     // loop; a move promoted loops ago keeps its drained value 2. The move sets value 0 = 0.
     if (this.opts.sourcedFootstepValue2 && !u.promoted) u.value2 = 10;
+    if (this.opts.sourcedPromotedViewDraws && !u.promoted) this.fadeUntil[u.id] = this.frame + 8;   // promoted on this loop
     u.promoted = false;
     const node = u.path[u.idx];
     if (this.opts.sourcedFootstepDraws && !this.opts.sourcedFootstepValue2 && this.footstepNodes().has(node))
@@ -2242,7 +2257,8 @@ export class Sim {
           const step = this.sourcedRouteStep(u, this.frame);
           if (step === 'discard' || step === 'returned') { u.promoted = false; /* A = 0: the roll is spent */ }
           else {
-            if (this.opts.sourcedViewDraws) this.fadeUntil[u.id] = this.frame + 8;   // g344-g358: A = 2, C = 10
+            if (this.opts.sourcedViewDraws && !this.opts.sourcedPromotedViewDraws)
+              this.fadeUntil[u.id] = this.frame + 8;                               // g344-g358: A = 2, C = 10
             if (step !== 'hold' && this.canAdvance(u, this.frame)) this.advance(u);
             else u.pending = true;
           }

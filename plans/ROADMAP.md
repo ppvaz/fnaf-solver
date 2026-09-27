@@ -61,6 +61,13 @@ fifteen days because it was written down instead of read.
     slots ([k3](../docs/evidence/night7-cohort-k3-computed-20260925.json),
     [k2](../docs/evidence/night7-cohort-k2-computed-20260925.json)).
   - **0 promotion edges.**
+  - **Decided by Pedro, 2026-09-27:** a pack recovered from a night-run log (it
+    has lost `request.json` and fails `manifestComplete`) cannot carry an
+    attestation. Only the two original-directory wins are eligible:
+    `night5-n5-armblock-20260920T004056Z` (pack sha256 `4c9ea13a...`) and
+    `night6-n6h2-01-20260920T024030Z` (`20c626f9...`). Each passes every check
+    but the attestation, and S1 closes on Pedro's `plan12-attestation.json`
+    for either one.
   - `UNTRACKED_WINNER_DEBT` 1 of 1 (Night 6 `a` no longer rebuilds).
   - No k2 or k3 video exists on this machine, by name or by content hash.
   - Read with `npm run evidence -- list` and `npm run evidence -- promote <run>`.

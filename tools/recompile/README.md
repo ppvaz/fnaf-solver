@@ -824,3 +824,42 @@ Open:
 - The per-cycle ledger against the phone's recording, which S2b needs. It needs
   k2's or k3's phone runs; no k2 or k3 video exists on this machine.
 - A counter watch in the harness, so a record can carry the rebuild's attacker.
+
+**The Toy view draws, sourced (2026-09-27, later).** `sourcedPromotedViewDraws`
+(default off; `packages/core/test/promoted-view-draws.test.js`) keys g366/g368/g419
+on the promoted state, value 0 == 2. It uses the existing g344-g358 promotion
+test, independent of the footstep option, and writes the fade counter
+(g344-g360, C = 10) at promotion, not at the roll. A move made without a
+recorded promotion is promoted on its own loop.
+
+`sourced-rebuild-model-options.json` now carries it. Every no-input night's
+comparison is unchanged, because the option acts only while the monitor is up.
+Re-scored on the same rebuild traces (`*-replay-promoted-20260927.json`):
+
+| binding | persistent split before | after | matched before it | rejoining one-update runs |
+|---|---|---|---|---|
+| Night 1 `minimal` | tick 10200 | tick 25200, the night's last update | 24,897 | 5 |
+| Night 5 `contact-final` | tick 617 | tick 9862 | 7,188 | 21 |
+| Night 7 `k3` | tick 613 | tick 12280 | 1,010 | 25 |
+
+The rejoining runs are mostly the drop and mask-off slip above. The new
+persistent splits (Night 5 at 9862, Night 7 at 12280) are the next differences
+to read. All three records stay DIVERGENT.
+
+**Font atlas.** Pedro saw lowercase n drawn as a filled square in the bold
+preset names ("New and Shiny", "Cupcake Challenge", "Golden Freddy"). The bank's
+glyph is sound. Chowdren's `FTTextureFont` checked for the end of a row after
+writing a glyph, so one glyph per row could be written past the atlas's right
+edge. It spilled into the next row and got texture coordinates past 1.0. In the
+Roboto bold 43 face that glyph is n. The packer now wraps before placing a glyph,
+and sizes the atlas with the padding counted (`font.cpp`, in the patch). Binary
+`22610def` (same assets) draws the names correctly.
+
+**Checked against the phone, no change needed.**
+- The monitor button's chevrons point down in every state, as on the phone's
+  office frame. `flip panel button` is one static image (289), and the events
+  only move and hide it.
+- The first raise opens CAM 09 on Nights 1-6 and CAM 07 on Night 7 (sheet
+  g2-g4, g486-g487; the model's `initialCamera`). The rebuild's Night 7 raises
+  open Main Hall. The phone frames that show CAM 11 come after the executor has
+  tapped it to wind the box.

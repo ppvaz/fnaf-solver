@@ -27,5 +27,6 @@
   "sourcedHourTable": true,
   "sourcedParkedMarker": true,
   "sourcedCustomDialOrder": true,
-  "sourcedCam8Cancel": true
+  "sourcedCam8Cancel": true,
+  "sourcedPromotedViewDraws": true
 }
