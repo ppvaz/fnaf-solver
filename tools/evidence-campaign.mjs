@@ -10,8 +10,15 @@ import { validateCampaignResult } from '../apps/device/src/campaign.js';
 
 export const CAMPAIGN_RESULT_SCHEMA = 'device-campaign-result-v1';
 
+// cli.js retains this envelope when a campaign throws before returning its
+// validated result. Preserve the negative and its original error; it supplies
+// no measured terminal and can never satisfy promotion.
+const isCampaignError = wrapper => wrapper?.status === 'ERROR'
+  && ['live', 'dry-run'].includes(wrapper.mode) && wrapper.result === undefined
+  && typeof wrapper.error === 'string' && wrapper.error.trim().length > 0;
+
 /** @param {any} wrapper parsed result.json */
-export const isCampaignResult = wrapper => wrapper?.result?.schema === CAMPAIGN_RESULT_SCHEMA;
+export const isCampaignResult = wrapper => wrapper?.result?.schema === CAMPAIGN_RESULT_SCHEMA || isCampaignError(wrapper);
 
 /**
  * One index row for a campaign directory. A live campaign is DEVICE_MEASURED: its attempts are
@@ -20,6 +27,10 @@ export const isCampaignResult = wrapper => wrapper?.result?.schema === CAMPAIGN_
  * @param {any} wrapper parsed result.json
  */
 export function campaignEntry(id, wrapper) {
+  if (isCampaignError(wrapper)) return {
+    id, kind: 'device-campaign', outcome: 'ERROR', claimLevel: 'UNKNOWN',
+    nights: [], attempts: [], error: wrapper.error,
+  };
   const result = validateCampaignResult(wrapper.result);
   const attempts = result.attempts.map(a => ({
     attempt: a.attempt ?? null, night: a.night ?? null, status: a.status ?? null,

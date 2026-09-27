@@ -8,17 +8,17 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CAMPAIGN_RESULT_SCHEMA } from './evidence-campaign.mjs';
 import { buildPack, resolvePackTargets, writePack } from './evidence-pack.mjs';
-import { COHORT_RESULT_SCHEMA, computeCohort, labelPrefix } from './evidence-cohort.mjs';
+import { COHORT_RESULT_SCHEMA, CORNER_COHORT_RESULT_SCHEMA, computeCohort, labelPrefix } from './evidence-cohort.mjs';
 
 const root = mkdtempSync(join(tmpdir(), 'evidence-cohort-test-'));
 const packs = join(root, 'docs/evidence/runs');
 const put = (path, content) => { mkdirSync(join(root, path, '..'), { recursive: true }); writeFileSync(join(root, path), content); };
 let serial = 0;
 const night = 7;
-function run(label, { outcome, reached = true, video = null, timeline = null, lostResult = false, winnerHash = 'fnv1a-bound' }) {
+function run(label, { outcome, reached = true, video = null, timeline = null, lostResult = false, winnerHash = 'fnv1a-bound', dials = null, observedDials = dials }) {
   serial += 1;
   const campaign = `campaign-2026-09-18T0${serial}-00-00.000Z`;
-  const stamp = `20260918T0${serial}0000Z`;
+  const stamp = `20260918T03${String(serial).padStart(2, '0')}00Z`;
   const id = `night${night}-${label}-${stamp}`;
   const win = outcome === 'sixam';
   put(`artifacts/runs/${id}/run-report.json`, JSON.stringify({ night: { reached } }));
@@ -41,8 +41,12 @@ function run(label, { outcome, reached = true, video = null, timeline = null, lo
     completedNights: win ? [night] : [], events: [],
     attempts: [{ attempt: 1, mode: 'live', night, status: win ? 'WIN' : 'DEATH', proofHash: win ? 'fnv1a-proof' : null,
       terminal: { night, outcome } }] } }));
-  put(`artifacts/${campaign}/events.jsonl`, '{"type":"evidence.started"}\n');
-  put(`artifacts/${campaign}/request.json`, '{}');
+  put(`artifacts/${campaign}/events.jsonl`, [
+    { type: 'evidence.started' },
+    ...(observedDials ? [{ type: 'observation', label: JSON.stringify({ status: 'PASS', dials: observedDials }) }] : []),
+    ...(reached ? [{ type: 'observation', label: 'state=night' }] : []),
+  ].map(e => JSON.stringify(e)).join('\n') + '\n');
+  put(`artifacts/${campaign}/request.json`, JSON.stringify(dials ? { spec: { nights: [{ night, dials }] } } : {}));
   put(`artifacts/runs/${id}/verdict.txt`, `run          ${id}\nbundle       artifacts/b\ncampaign dir ${root}/artifacts/${campaign}\n`);
   if (video) put(`artifacts/runs/${id}/grade.log`, `--- run timeline ---\n  TERMINAL: ${video}\n`);
   const built = buildPack({ root, campaignDir: join(root, 'artifacts', campaign),
@@ -93,6 +97,48 @@ try {
   assert.equal(lostSlot.executor, 'RESULT_LOST');
   assert.equal(six.slots[5].status, 'UNKNOWN', 'an abort with no terminal and an unknown video is not promoted to a death');
   assert.equal(lostSlot.abort, 'device: lifecycle left night state (static)', 'the executor\'s own abort reason is reported beside it');
+
+  // Two dial corners have two rNN slots EACH, not four slots under either prefix.
+  const corners = { schema: 'cohort-predeclaration-v1', night, size: 4,
+    binding: { winnerHash: 'fnv1a-bound' }, corners: [
+      { id: 'bbfoxy', dials: { bb: 20, foxy: 20 }, labels: 'corner-bbfoxy-r01, corner-bbfoxy-r02' },
+      { id: 'bbgolden', dials: { bb: 20, golden: 20 }, labels: 'corner-bbgolden-r01, corner-bbgolden-r02' },
+    ] };
+  run('corner-bbfoxy-r01', { outcome: 'death', reached: false });
+  run('corner-bbfoxy-r01', { outcome: 'death', video: 'death -- terminal-static at 44.0 s', dials: corners.corners[0].dials });
+  run('corner-bbfoxy-r02', { outcome: 'sixam', timeline: { outcome: 'clear', evidence: 'sixam', at_s: 455 }, dials: corners.corners[0].dials });
+  run('corner-bbgolden-r01', { outcome: 'sixam' });
+  const partial = computeCohort(corners, packs, { source: 'corners.json' });
+  assert.equal(partial.schema, CORNER_COHORT_RESULT_SCHEMA);
+  assert.equal(partial.winRate, '1/3');
+  assert.equal(partial.missing, 1);
+  assert.equal(partial.ungraded, 1);
+  assert.equal(partial.status, 'INCOMPLETE');
+  assert.deepEqual(partial.corners.map(c => c.result.slots.map(s => s.status)), [['DEATH', 'WIN'], ['UNGRADED', 'MISSING']]);
+  assert.deepEqual(partial.corners[0].result.slots[0].runs.map(r => r.role), ['excluded', 'counted']);
+  assert.deepEqual(partial.corners[0].dials, { bb: 20, foxy: 20 });
+  assert.equal(partial.evidenceId, computeCohort(corners, packs, { source: 'corners.json' }).evidenceId);
+  assert.equal(partial.unverifiedDials.length, 1, 'a label alone does not verify the dial vector');
+  run('corner-bbgolden-r01b', { outcome: 'sixam', video: 'clear -- sixam at 456 s', dials: corners.corners[1].dials });
+  run('corner-bbgolden-r02', { outcome: 'sixam', video: 'clear -- sixam at 455 s', dials: corners.corners[1].dials });
+  const complete = computeCohort(corners, packs, { source: 'corners.json' });
+  assert.equal(complete.status, 'COMPLETE');
+  assert.equal(complete.winRate, '3/4');
+  assert.deepEqual(complete.unverifiedDials, []);
+  assert.notEqual(complete.evidenceId, partial.evidenceId, 'the evidence ID changes with the retained result');
+  assert.throws(() => computeCohort({ ...corners, size: 5 }, packs), /add up/);
+  assert.throws(() => computeCohort({ ...corners, corners: [corners.corners[0], corners.corners[0]] }, packs), /unique/);
+  assert.throws(() => computeCohort(corners, packs, { prefix: 'corner-bbfoxy' }), /prefix override/);
+  assert.throws(() => computeCohort({ ...corners, corners: [{ ...corners.corners[0], labels: 'corner-bbfoxy-r01 .. r02' }] }, packs), /add up/);
+  run('corner-bbgolden-r02b', { outcome: 'sixam', video: 'clear', dials: corners.corners[1].dials, observedDials: corners.corners[0].dials });
+  const mismatch = computeCohort(corners, packs);
+  assert.equal(mismatch.status, 'INCOMPLETE', 'a wrong dial readback cannot complete a corner cohort');
+  assert.equal(mismatch.unverifiedDials.length, 1);
+  run('corner-bbgolden-r02c', { outcome: 'sixam', video: 'clear', dials: corners.corners[1].dials, winnerHash: 'fnv1a-other' });
+  const wrongWinner = computeCohort(corners, packs);
+  assert.deepEqual(wrongWinner.unverifiedDials, []);
+  assert.equal(wrongWinner.wrongBinding.length, 1);
+  assert.equal(wrongWinner.status, 'INCOMPLETE', 'matching dials do not excuse a different winner binding');
 } finally {
   rmSync(root, { recursive: true, force: true });
 }

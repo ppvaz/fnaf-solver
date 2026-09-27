@@ -223,6 +223,23 @@ try {
   assert.equal(packEntry(threw, threwLoaded).outcome, 'RESULT_LOST', 'the index reads a result-lost pack without inventing one');
   assert.equal(packPromotionChecks(threwLoaded, winners).terminalPass, false);
 
+  // Unlike the recovered run above, this campaign still has the CLI's ERROR
+  // result.json. Keep it byte-for-byte through the normal pack path.
+  const errorCampaign = 'campaign-2026-09-27T07-23-27.810Z';
+  const errorWrapper = { status: 'ERROR', mode: 'live', error: 'device: lifecycle left night state (static)' };
+  put(`artifacts/${errorCampaign}/result.json`, JSON.stringify(errorWrapper));
+  put(`artifacts/${errorCampaign}/request.json`, '{}');
+  put(`artifacts/${errorCampaign}/events.jsonl`, '{"type":"campaign.abort.restart","reason":"device: lifecycle left night state (static)"}\n');
+  const errorBuilt = buildPack({ root, home, ...resolvePackTargets(root, errorCampaign)[0] });
+  assert.equal(errorBuilt.pack.outcome, 'ERROR');
+  assert.equal(errorBuilt.pack.claimLevel, 'UNKNOWN');
+  const errorPack = join(root, 'docs/evidence/runs', errorCampaign);
+  writePack(errorPack, errorBuilt);
+  const errorLoaded = readPack(errorPack);
+  assert.deepEqual(errorLoaded.wrapper, errorWrapper);
+  assert.equal(packEntry(errorCampaign, errorLoaded).error, errorWrapper.error);
+  assert.equal(packPromotionChecks(errorLoaded, winners).terminalPass, false);
+
   // The check a recovered pack cites: a campaign still on disk, recovered from its own log.
   put(`artifacts/runs/${label}/campaign.log`, [
     readFileSync(join(root, 'artifacts', campaign, 'events.jsonl'), 'utf8').trimEnd()

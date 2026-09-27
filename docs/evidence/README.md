@@ -76,6 +76,9 @@ does not copy — the video, observer and death frames, raw logcat,
 can be matched later wherever it is kept. The packer refuses a long numeric
 array, a long hex or base64 run, or a NUL byte instead of publishing it.
 `night-run.sh` packs every campaign it ran; commit the directory it names.
+When the campaign retained an `ERROR` envelope instead of a validated result,
+the pack preserves that error with an `UNKNOWN` claim ceiling. It supplies no
+terminal result and cannot pass promotion; a video grade remains independent.
 
 `list`, `show` and `promote` read packs on any checkout. For a pack, `promote`
 adds a fifth check, `winnerCommitted`: the bundle's `winnerHash` must match a
@@ -107,6 +110,11 @@ A cohort's result is computed from its packs rather than copied into a record:
 `npm run evidence -- cohort docs/evidence/<cohort>-predeclaration-<date>.json`
 applies the predeclared rule (executor sixam AND video clear) slot by slot and
 reports excluded, superseded, ungraded and missing runs.
+For a declaration with `corners`, each corner explicitly lists its consecutive
+`rNN` labels. The result reports each corner and their total, verifies its
+requested and observed dial vector from the packed request and menu readback,
+and derives an evidence ID from the result. Missing dial evidence remains
+unverified and prevents a complete result.
 
 The architecture generator also emits
 `docs/architecture/generated/reverse-links.json`. It is a navigational index

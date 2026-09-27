@@ -32,6 +32,17 @@ assert.deepEqual(campaignPromotionChecks(wrapper(), FILES),
 assert.equal(campaignPromotionChecks(wrapper({ plan12Gate: { status: 'PASS' } }), FILES).plan12Attestation, true);
 assert.equal(campaignPromotionChecks(wrapper(), ['result.json']).manifestComplete, false, 'the events and request must be retained');
 
+const error = { status: 'ERROR', mode: 'live', error: 'device: lifecycle left night state (static)' };
+assert.equal(isCampaignResult(error), true, 'the CLI\'s retained exception is campaign evidence');
+assert.deepEqual(campaignEntry('failed', error), { id: 'failed', kind: 'device-campaign', outcome: 'ERROR',
+  claimLevel: 'UNKNOWN', nights: [], attempts: [], error: error.error });
+assert.deepEqual(campaignPromotionChecks(error, FILES),
+  { offlineEvidence: false, terminalPass: false, manifestComplete: true, plan12Attestation: false },
+  'custody of an exception does not supply a device terminal');
+assert.equal(isCampaignResult({ ...error, error: '' }), false);
+assert.equal(isCampaignResult({ ...error, mode: 'arbitrary' }), false);
+assert.equal(isCampaignResult({ ...error, result: { schema: 'unrecognized' } }), false, 'an error flag cannot hide a malformed result');
+
 assert.throws(() => campaignEntry('bad', { mode: 'live', result: { schema: CAMPAIGN_RESULT_SCHEMA, version: 2 } }), /schema\/version/,
   'a malformed campaign result is refused, not guessed');
 console.log('evidence campaign: live wins are DEVICE_MEASURED, deaths and dry runs are not wins, the gate refuses only on a missing attestation');

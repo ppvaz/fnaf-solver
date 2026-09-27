@@ -1,0 +1,287 @@
+{
+  "schema": "corner-cohort-result-v1",
+  "claimLevel": "DEVICE_MEASURED",
+  "predeclaration": "docs/evidence/night7-corners-predeclaration-20260927.json",
+  "night": 7,
+  "binding": "fnv1a-5c8dcb5f",
+  "rule": "WIN = executor terminal sixam AND video terminal clear (the predeclared rule)",
+  "size": 4,
+  "counted": 4,
+  "wins": 3,
+  "deaths": 0,
+  "ungraded": 0,
+  "disputed": 0,
+  "unknown": 1,
+  "missing": 0,
+  "winRate": "3/4",
+  "wrongBinding": [],
+  "unverifiedDials": [],
+  "status": "INCOMPLETE",
+  "corners": [
+    {
+      "id": "bbfoxy",
+      "dials": {
+        "withfreddy": 0,
+        "withbonnie": 0,
+        "withchica": 0,
+        "foxy": 20,
+        "toyfreddy": 0,
+        "toybonnie": 0,
+        "toychica": 0,
+        "mangle": 0,
+        "bb": 20,
+        "golden": 0
+      },
+      "result": {
+        "schema": "cohort-result-v2",
+        "predeclaration": "docs/evidence/night7-corners-predeclaration-20260927.json",
+        "night": 7,
+        "binding": "fnv1a-5c8dcb5f",
+        "size": 2,
+        "prefix": "corner-bbfoxy",
+        "rule": "WIN = executor terminal sixam AND video terminal clear (the predeclared rule)",
+        "counted": 2,
+        "wins": 1,
+        "deaths": 0,
+        "ungraded": 0,
+        "disputed": 0,
+        "unknown": 1,
+        "missing": 0,
+        "winRate": "1/2",
+        "wrongBinding": [],
+        "status": "INCOMPLETE",
+        "slots": [
+          {
+            "slot": "r01",
+            "status": "UNKNOWN",
+            "runs": [
+              {
+                "run": "night7-corner-bbfoxy-r01-20260927T052325Z",
+                "packSha256": "c88cb86d3cc818b3301f777db87f26437525afef7d2d29b31f00ca796e52ecb4",
+                "reached": false,
+                "executor": "HOLD",
+                "video": null,
+                "videoDetail": null,
+                "abort": null,
+                "bindingMatches": true,
+                "status": "EXCLUDED",
+                "role": "excluded"
+              },
+              {
+                "run": "night7-corner-bbfoxy-r01-20260927T072310Z",
+                "packSha256": "b28183b6583e5f90ef7e7ea2e3e8430e26d29f3530cb0948873e16b112091ecd",
+                "reached": true,
+                "executor": "ERROR",
+                "video": "unknown",
+                "videoDetail": "nothing terminal was captured; the recording may stop before the end of the night",
+                "abort": "device: lifecycle left night state (static)",
+                "bindingMatches": true,
+                "status": "UNKNOWN",
+                "role": "counted",
+                "dialVerification": {
+                  "requested": {
+                    "withfreddy": 0,
+                    "withbonnie": 0,
+                    "withchica": 0,
+                    "toyfreddy": 0,
+                    "toybonnie": 0,
+                    "toychica": 0,
+                    "mangle": 0,
+                    "bb": 20,
+                    "foxy": 20,
+                    "golden": 0
+                  },
+                  "observed": {
+                    "withfreddy": 0,
+                    "withbonnie": 0,
+                    "withchica": 0,
+                    "foxy": 20,
+                    "toyfreddy": 0,
+                    "toybonnie": 0,
+                    "toychica": 0,
+                    "mangle": 0,
+                    "bb": 20,
+                    "golden": 0
+                  },
+                  "matches": true
+                }
+              }
+            ]
+          },
+          {
+            "slot": "r02",
+            "status": "WIN",
+            "runs": [
+              {
+                "run": "night7-corner-bbfoxy-r02-20260927T073711Z",
+                "packSha256": "5ffefef93763223f04380438ea4a364ffc974828e02e771d092b22f173579666",
+                "reached": true,
+                "executor": "WIN",
+                "video": "clear",
+                "videoDetail": "sixam at 457 s",
+                "abort": null,
+                "bindingMatches": true,
+                "status": "WIN",
+                "role": "counted",
+                "dialVerification": {
+                  "requested": {
+                    "withfreddy": 0,
+                    "withbonnie": 0,
+                    "withchica": 0,
+                    "toyfreddy": 0,
+                    "toybonnie": 0,
+                    "toychica": 0,
+                    "mangle": 0,
+                    "bb": 20,
+                    "foxy": 20,
+                    "golden": 0
+                  },
+                  "observed": {
+                    "withfreddy": 0,
+                    "withbonnie": 0,
+                    "withchica": 0,
+                    "foxy": 20,
+                    "toyfreddy": 0,
+                    "toybonnie": 0,
+                    "toychica": 0,
+                    "mangle": 0,
+                    "bb": 20,
+                    "golden": 0
+                  },
+                  "matches": true
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "bbgolden",
+      "dials": {
+        "withfreddy": 0,
+        "withbonnie": 0,
+        "withchica": 0,
+        "foxy": 0,
+        "toyfreddy": 0,
+        "toybonnie": 0,
+        "toychica": 0,
+        "mangle": 0,
+        "bb": 20,
+        "golden": 20
+      },
+      "result": {
+        "schema": "cohort-result-v2",
+        "predeclaration": "docs/evidence/night7-corners-predeclaration-20260927.json",
+        "night": 7,
+        "binding": "fnv1a-5c8dcb5f",
+        "size": 2,
+        "prefix": "corner-bbgolden",
+        "rule": "WIN = executor terminal sixam AND video terminal clear (the predeclared rule)",
+        "counted": 2,
+        "wins": 2,
+        "deaths": 0,
+        "ungraded": 0,
+        "disputed": 0,
+        "unknown": 0,
+        "missing": 0,
+        "winRate": "2/2",
+        "wrongBinding": [],
+        "status": "COMPLETE",
+        "slots": [
+          {
+            "slot": "r01",
+            "status": "WIN",
+            "runs": [
+              {
+                "run": "night7-corner-bbgolden-r01-20260927T072630Z",
+                "packSha256": "c7659d9d8f18cea9cf8bdd5c37fbeab1c744faec79143f880509a0e4b29ebc5d",
+                "reached": true,
+                "executor": "WIN",
+                "video": "clear",
+                "videoDetail": "sixam at 456 s",
+                "abort": null,
+                "bindingMatches": true,
+                "status": "WIN",
+                "role": "counted",
+                "dialVerification": {
+                  "requested": {
+                    "withfreddy": 0,
+                    "withbonnie": 0,
+                    "withchica": 0,
+                    "toyfreddy": 0,
+                    "toybonnie": 0,
+                    "toychica": 0,
+                    "mangle": 0,
+                    "bb": 20,
+                    "golden": 20,
+                    "foxy": 0
+                  },
+                  "observed": {
+                    "withfreddy": 0,
+                    "withbonnie": 0,
+                    "withchica": 0,
+                    "foxy": 0,
+                    "toyfreddy": 0,
+                    "toybonnie": 0,
+                    "toychica": 0,
+                    "mangle": 0,
+                    "bb": 20,
+                    "golden": 20
+                  },
+                  "matches": true
+                }
+              }
+            ]
+          },
+          {
+            "slot": "r02",
+            "status": "WIN",
+            "runs": [
+              {
+                "run": "night7-corner-bbgolden-r02-20260927T074756Z",
+                "packSha256": "b7338c450b33f14acfd98477bc7376d976b988a71e40af880df946254b7a1d50",
+                "reached": true,
+                "executor": "WIN",
+                "video": "clear",
+                "videoDetail": "sixam at 459.5 s",
+                "abort": null,
+                "bindingMatches": true,
+                "status": "WIN",
+                "role": "counted",
+                "dialVerification": {
+                  "requested": {
+                    "withfreddy": 0,
+                    "withbonnie": 0,
+                    "withchica": 0,
+                    "toyfreddy": 0,
+                    "toybonnie": 0,
+                    "toychica": 0,
+                    "mangle": 0,
+                    "bb": 20,
+                    "golden": 20,
+                    "foxy": 0
+                  },
+                  "observed": {
+                    "withfreddy": 0,
+                    "withbonnie": 0,
+                    "withchica": 0,
+                    "foxy": 0,
+                    "toyfreddy": 0,
+                    "toybonnie": 0,
+                    "toychica": 0,
+                    "mangle": 0,
+                    "bb": 20,
+                    "golden": 20
+                  },
+                  "matches": true
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "evidenceId": "cohort-fnv1a-7e0b375f"
+}

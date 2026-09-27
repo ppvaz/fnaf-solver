@@ -1,0 +1,116 @@
+{
+  "video": "captures/night7-corner-bbfoxy-r01-20260927T072310Z.mp4",
+  "fps": 2.0,
+  "frames": 164,
+  "segments": [
+    {
+      "phase": "other",
+      "from_s": 0.0,
+      "to_s": 5.0,
+      "seconds": 5.0
+    },
+    {
+      "phase": "camera",
+      "from_s": 5.0,
+      "to_s": 9.0,
+      "seconds": 4.0
+    },
+    {
+      "phase": "other",
+      "from_s": 9.0,
+      "to_s": 11.5,
+      "seconds": 2.5
+    },
+    {
+      "phase": "camera",
+      "from_s": 11.5,
+      "to_s": 14.0,
+      "seconds": 2.5
+    },
+    {
+      "phase": "other",
+      "from_s": 14.0,
+      "to_s": 30.0,
+      "seconds": 16.0
+    },
+    {
+      "phase": "camera",
+      "from_s": 30.0,
+      "to_s": 32.0,
+      "seconds": 2.0
+    },
+    {
+      "phase": "intro",
+      "from_s": 32.0,
+      "to_s": 34.5,
+      "seconds": 2.5
+    },
+    {
+      "phase": "dark",
+      "from_s": 34.5,
+      "to_s": 36.5,
+      "seconds": 2.0
+    },
+    {
+      "phase": "office",
+      "from_s": 36.5,
+      "to_s": 42.0,
+      "seconds": 5.5
+    },
+    {
+      "phase": "mask",
+      "from_s": 42.0,
+      "to_s": 47.0,
+      "seconds": 5.0
+    },
+    {
+      "phase": "camera",
+      "from_s": 47.0,
+      "to_s": 51.0,
+      "seconds": 4.0
+    },
+    {
+      "phase": "mask",
+      "from_s": 51.0,
+      "to_s": 57.0,
+      "seconds": 6.0
+    },
+    {
+      "phase": "other",
+      "from_s": 57.0,
+      "to_s": 64.5,
+      "seconds": 7.5
+    },
+    {
+      "phase": "unknown",
+      "from_s": 64.5,
+      "to_s": 67.5,
+      "seconds": 3.0
+    },
+    {
+      "phase": "other",
+      "from_s": 67.5,
+      "to_s": 71.5,
+      "seconds": 4.0
+    },
+    {
+      "phase": "camera",
+      "from_s": 71.5,
+      "to_s": 75.5,
+      "seconds": 4.0
+    },
+    {
+      "phase": "other",
+      "from_s": 75.5,
+      "to_s": 82.0,
+      "seconds": 6.5
+    }
+  ],
+  "terminal": {
+    "outcome": "unknown",
+    "evidence": null,
+    "at_s": null,
+    "positive": false,
+    "note": "nothing terminal was captured; the recording may stop before the end of the night"
+  }
+}

@@ -21,9 +21,11 @@
 // it -- this does not promote an abort to a death on the rule's behalf.
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { stableHash } from '@fnaf2-1020/core/contracts';
 import { packEntry, readPack } from './evidence-pack.mjs';
 
 export const COHORT_RESULT_SCHEMA = 'cohort-result-v2';
+export const CORNER_COHORT_RESULT_SCHEMA = 'corner-cohort-result-v1';
 
 /** The label prefix a predeclaration's runs carry: `night7-k3-cohort` from `night7-k3-cohort-r01 .. r10`. */
 export function labelPrefix(predeclaration) {
@@ -76,8 +78,13 @@ function slotStatus(entry, video) {
  * @param {string} packsDir directory holding docs/evidence/runs/<run>/
  * @param {{prefix?: string, source?: string}} [options]
  */
-export function computeCohort(predeclaration, packsDir, { prefix = labelPrefix(predeclaration), source = null } = {}) {
+export function computeCohort(predeclaration, packsDir, { prefix, source = null } = {}) {
   if (predeclaration?.schema !== 'cohort-predeclaration-v1') throw new Error('not a cohort-predeclaration-v1');
+  if (Array.isArray(predeclaration.corners)) {
+    if (prefix !== undefined) throw new Error('a corner cohort uses each corner\'s declared labels, not a prefix override');
+    return computeCorners(predeclaration, packsDir, source);
+  }
+  prefix ??= labelPrefix(predeclaration);
   const size = predeclaration.size;
   if (!Number.isInteger(size) || size < 1) throw new Error('the predeclaration has no cohort size');
   const night = predeclaration.night;
@@ -122,4 +129,64 @@ export function computeCohort(predeclaration, packsDir, { prefix = labelPrefix(p
     status: tally('MISSING') || tally('UNGRADED') || tally('UNKNOWN') || tally('DISPUTED') ? 'INCOMPLETE' : 'COMPLETE',
     slots,
   };
+}
+
+/** Read each explicitly labelled corner as its own cohort; never infer extra slots from the total size. */
+function computeCorners(predeclaration, packsDir, source) {
+  const ids = new Set();
+  const prefixes = new Set();
+  const { corners: declared, ...shared } = predeclaration;
+  if (!declared.length) throw new Error('the predeclaration names no corners');
+  const corners = declared.map(corner => {
+    if (!corner.id || ids.has(corner.id)) throw new Error('corner ids must be present and unique');
+    ids.add(corner.id);
+    const labels = [...String(corner.labels ?? '').matchAll(/([A-Za-z0-9_-]+)-r(\d{2})\b/g)];
+    const prefix = labels[0]?.[1];
+    if (!prefix || labels.some((label, i) => label[1] !== prefix || Number(label[2]) !== i + 1))
+      throw new Error(`corner ${corner.id} must explicitly name consecutive rNN labels starting at r01`);
+    if (prefixes.has(prefix)) throw new Error('corners must use distinct label prefixes');
+    prefixes.add(prefix);
+    const result = computeCohort({ ...shared, size: labels.length }, packsDir, { prefix, source });
+    for (const slot of result.slots) for (const run of slot.runs) {
+      if (run.role !== 'counted') continue;
+      const dir = join(packsDir, run.run);
+      const requestPath = join(dir, 'request.json');
+      const request = existsSync(requestPath) ? JSON.parse(readFileSync(requestPath, 'utf8')) : null;
+      const requested = request?.spec?.nights?.find(n => n.night === predeclaration.night)?.dials ?? null;
+      let observed = null;
+      const eventsPath = join(dir, 'events.jsonl');
+      for (const line of existsSync(eventsPath) ? readFileSync(eventsPath, 'utf8').trim().split('\n') : []) {
+        if (!line) continue;
+        const event = JSON.parse(line);
+        if (event.type !== 'observation') continue;
+        if (event.label === 'state=night') break;
+        try {
+          const readback = JSON.parse(event.label);
+          if (readback?.status === 'PASS' && readback.dials) observed = readback.dials;
+        } catch { /* Non-JSON lifecycle labels carry no dial readback. */ }
+      }
+      run.dialVerification = { requested, observed,
+        matches: requested !== null && observed !== null
+          && stableHash(requested) === stableHash(corner.dials) && stableHash(observed) === stableHash(corner.dials) };
+    }
+    return { id: corner.id, dials: corner.dials, result };
+  });
+  const sum = key => corners.reduce((total, corner) => total + corner.result[key], 0);
+  if (sum('size') !== predeclaration.size) throw new Error('corner labels do not add up to the declared cohort size');
+  const unverifiedDials = corners.flatMap(corner => corner.result.slots.flatMap(slot => slot.runs
+    .filter(run => run.role === 'counted' && !run.dialVerification.matches).map(run => run.run)));
+  const result = {
+    schema: CORNER_COHORT_RESULT_SCHEMA, claimLevel: 'DEVICE_MEASURED', predeclaration: source,
+    night: predeclaration.night, binding: predeclaration.binding?.winnerHash ?? null,
+    rule: corners[0].result.rule, size: sum('size'), counted: sum('counted'), wins: sum('wins'),
+    deaths: sum('deaths'), ungraded: sum('ungraded'), disputed: sum('disputed'),
+    unknown: sum('unknown'), missing: sum('missing'),
+    winRate: `${sum('wins')}/${sum('counted')}`,
+    wrongBinding: corners.flatMap(corner => corner.result.wrongBinding),
+    unverifiedDials,
+    status: corners.every(corner => corner.result.status === 'COMPLETE' && !corner.result.wrongBinding.length)
+      && !unverifiedDials.length ? 'COMPLETE' : 'INCOMPLETE',
+    corners,
+  };
+  return { ...result, evidenceId: `cohort-${stableHash(result)}` };
 }

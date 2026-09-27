@@ -1,0 +1,5 @@
+{
+  "status": "ERROR",
+  "mode": "live",
+  "error": "device: lifecycle left night state (static)"
+}
