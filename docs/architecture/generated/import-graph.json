@@ -2200,6 +2200,19 @@
       ]
     },
     {
+      "file": "tools/fnaf1-population-checkpoints.mjs",
+      "imports": [
+        "./device/fnaf1-winner.mjs",
+        "./fnaf1-device-lane.mjs",
+        "./winner-census.mjs",
+        "node:crypto",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/generate-catalog.js",
       "imports": [
         "node:child_process",
@@ -2779,6 +2792,17 @@
         "./winner-census.mjs",
         "node:crypto",
         "node:fs"
+      ]
+    },
+    {
+      "file": "tools/test-fnaf1-population-checkpoints.mjs",
+      "imports": [
+        "./fnaf1-population-checkpoints.mjs",
+        "node:assert/strict",
+        "node:crypto",
+        "node:fs",
+        "node:os",
+        "node:path"
       ]
     },
     {
