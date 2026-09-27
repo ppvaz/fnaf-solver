@@ -21,8 +21,17 @@
 //                   at the measured rate (actuator.mjs SEAM_BANDS);
 //        merge      HYPOTHESIS, not a measurement: a new contact on a slot
 //                   that was released less than one Fusion poll (33 ms)
-//                   earlier can reach the game as a move, not a touch, and
-//                   the press is then lost with probability 1 - gap/poll;
+//                   earlier can reach the game as a drag of the old touch,
+//                   not a new one. A control read by a TRIGGER (a camera's
+//                   ObjectClicked, the monitor's new-touch cameraHitbox, and
+//                   conservatively the mask) then misses the press, with
+//                   probability 1 - gap/poll; a control read as a held
+//                   "touch over object" (the flashlight, the vent lights,
+//                   the music box) is satisfied by the dragged touch. The
+//                   first version lost every merged press, and so scored
+//                   toys-n34 0/40 on Night 4 -- which the phone won with it
+//                   (night4-n4-bbfix-20260920T002911Z), its 41 merges per
+//                   night all being the camdrop light 20 ms after the wind;
 //        late       each press lands late by a draw from a band (ms).
 //
 //   node tools/device/device-lane.mjs --bundle DIR --night N [--seeds 300] [--epoch MS]
@@ -112,6 +121,9 @@ export function hidTimeline(request) {
   return { events, schedule };
 }
 
+/** Controls the game detects by a trigger (a new touch or a click), which a dragged touch does not fire. */
+export const TRIGGERED = (action) => action === 'monitor' || action === 'mask' || /^cam:\d+$/.test(action ?? '');
+
 /** Sim action for a profile control, or null for one the simulator does not model (mute). */
 export const simAction = (control) => (/^cam:\d+$/.test(control) ? control : SIM_ACTION[control] ?? null);
 
@@ -135,7 +147,7 @@ export function playLane({ events, seed, night, epochMs = 0, customNight = undef
     const action = simAction(e.control);
     if (e.down) {
       const gap = e.t - lastUp[e.slot];
-      if (merge && gap < FUSION_POLL_MS && rng.next() < 1 - gap / FUSION_POLL_MS) { lostDowns.add(i); merged += 1; continue; }
+      if (merge && gap < FUSION_POLL_MS && TRIGGERED(action) && rng.next() < 1 - gap / FUSION_POLL_MS) { lostDowns.add(i); merged += 1; continue; }
       if (action) queue.push([frame(e.t + epochMs), 'press', action, i]);
     } else {
       lastUp[e.slot] = e.t;
