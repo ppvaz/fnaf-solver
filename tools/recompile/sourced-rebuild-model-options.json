@@ -38,5 +38,6 @@
   "sourcedBlackoutClockEnd": true,
   "sourcedBDrainOrder": true,
   "sourcedRoutePass": true,
-  "sourcedOfficeRolls": true
+  "sourcedOfficeRolls": true,
+  "sourcedAnimationCount": true
 }

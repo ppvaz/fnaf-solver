@@ -1348,3 +1348,27 @@ Balloon Boy roll at 122 draws g702, and so does his arrival there within value
 | Night 1 `minimal` | none -> none | `night1-minimal-replay-officerolls-20260927.json`, `recompile-replay-c914f2521526998d` |
 | Night 5 `contact-final` | 9301 -> **9338** | `night5-contact-final-replay-officerolls-20260927.json`, `recompile-replay-60fe848d7cda62e1` |
 | Night 7 `k3` | 3563 -> 3563 | `night7-k3-replay-officerolls-20260927.json`, `recompile-replay-6851a5ade5a612a7` |
+
+**The animation count (`sourcedAnimationCount`,
+`packages/core/test/animation-count.test.js`).** Night 7 tick 3563: W. Freddy
+was promoted a loop early. The watch shows g378's return, and its value 1 =
+1500, on 2063 in the rebuild, where the model returned him on 2062. g378 needs
+`mask` == 2. The model's mask reached fully on one update before the sheet's g9,
+which is the `1>2 +1` the mask ledger showed on every cycle. Night 5's
+one-update slips every second at 9338 are the same thing: the gated g400/g907
+countdowns start on the first loop the mask reads 2. The open item from the
+drop-flag section (the monitor's fully up, fully down and the mask's fully on,
+all +1) now has a rule that reads it. A latch at the top of the sheet (g1, g6,
+g9, g10) fires on the Nth loop after its Active's show loop, and the model spent
+constant - 1 updates moving. Under the option the raise, the drop and the mask
+going on take one update more (12, 22 and 12, as g1, g6 and g9 count them).
+`MASK_ANIM_OFF` already gave g10's 14. Every monitor and mask ledger change now
+pairs at +0 on all three nights, except Night 5's first raise on office tick 0,
+which the rebuild still takes one update late. The no-input ladder re-scores
+unchanged.
+
+| binding | first mismatch before -> after | record |
+|---|---|---|
+| Night 1 `minimal` | none -> none (monitor ledger now +0 on all 8 changes) | `night1-minimal-replay-animcount-20260927.json`, `recompile-replay-75637b5727458cd0` |
+| Night 5 `contact-final` | 9338 -> **11936** | `night5-contact-final-replay-animcount-20260927.json`, `recompile-replay-02161639fdd24f46` |
+| Night 7 `k3` | 3563 -> **6534** | `night7-k3-replay-animcount-20260927.json`, `recompile-replay-cd7291a573920040` |

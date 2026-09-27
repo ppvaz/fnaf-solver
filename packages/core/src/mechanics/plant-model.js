@@ -100,6 +100,16 @@ export class Sim {
       // g619 refuses a mask-off while in danger. A tap carries no release in the Sim queue, so the
       // touch is read on its press update only, where the sheet re-reads a finger still down.
       sourcedDropFlagOrder: false,
+      // The monitor and mask animations counted as the sheet counts them. A latch at the top of the sheet (g1 fully up,
+      // g6 fully down, g9 mask fully on, g10 fully off) reads its Active's counter (g1015-g1022, at the bottom), which is
+      // 1 at the end of the loop the Active is shown and grows by 1 per loop, so a latch at >= N fires at the top of the
+      // Nth loop after the show loop. The model decrements its animation counter in the tick that starts it, so a
+      // constant spends constant - 1 updates moving: MASK_ANIM_OFF (15) gives g10's 14, but MONITOR_ANIM_UP (12),
+      // MONITOR_ANIM_DOWN (22) and MASK_ANIM_ON (12) finish one update before g1's 12, g6's 22 and g9's 12 (the replay
+      // ledgers' `1>2 +1` and `3>0 +1` on every cycle). A rule reading `mask` == 2 then fires a loop early: g378 returned
+      // W. Freddy a loop early on Night 7 k3 (tick 2063 in the rebuilt runtime), and his value 1 = 1500 expired a loop
+      // early at 3563. On: the three take one update more.
+      sourcedAnimationCount: false,
       // Foxy as the dump's literal A/B chain (requires sourcedDropLightOrder):
       //   g337  every 5 s, no location/pin/state condition: the Random(5) draw
       //         is spent every time; success writes A=1 and D=0
@@ -1007,7 +1017,7 @@ export class Sim {
   setMask(on) {
     if (this.maskOn === on) return;
     this.maskOn = on;
-    this.maskAnim = on ? C.MASK_ANIM_ON : C.MASK_ANIM_OFF;
+    this.maskAnim = on ? C.MASK_ANIM_ON + (this.opts.sourcedAnimationCount ? 1 : 0) : C.MASK_ANIM_OFF;   // g9 >= 12, g10 >= 14
     if (on) {
       // g776 dismisses him only once `mask` = 2 -- after the put-on animation
       // (see the maskAnim completion in tick()), not at the press.
@@ -1027,7 +1037,7 @@ export class Sim {
     if (!up && (this.monitor === MON_DOWN || this.monitor === MON_LOWERING)) return;
     if (up) {
       if (this.gf.present) { this.kill('golden-freddy', 'Raised the monitor with Golden Freddy in the office'); return; }
-      this.monitor = MON_RAISING; this.monAnim = C.MONITOR_ANIM_UP;
+      this.monitor = MON_RAISING; this.monAnim = C.MONITOR_ANIM_UP + (this.opts.sourcedAnimationCount ? 1 : 0);   // g1 >= 12
       // Mangle's marker-122 flag is set while the monitor-raise object is
       // visible (group 402), then consumed when that object disappears.
       for (const u of this.units) {
@@ -1035,7 +1045,7 @@ export class Sim {
       }
       this.camsUpSince = this.frame; // the source counter runs from the tap
     } else {
-      this.monitor = MON_LOWERING; this.monAnim = C.MONITOR_ANIM_DOWN;
+      this.monitor = MON_LOWERING; this.monAnim = C.MONITOR_ANIM_DOWN + (this.opts.sourcedAnimationCount ? 1 : 0);   // g6 >= 22
       if (this.opts.sourcedMonitorDownDraw) this.monDown.pendingDrop = true;   // e211 shows the sprite
       // g262 clears the displayed feed immediately but leaves the marker and
       // sampled last-viewed camera untouched.

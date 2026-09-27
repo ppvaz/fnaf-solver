@@ -2283,6 +2283,10 @@ Open:
   when g292/g294 send him out. Night 5 9301 -> 9338 (`recompile-replay-60fe848d7cda62e1`); Night 1 still matches
   every update (`recompile-replay-c914f2521526998d`); Night 7 stays 3563 (`recompile-replay-6851a5ade5a612a7`).
 
+- `sourcedAnimationCount` (`animation-count.test.js`, in the rebuild set): the raise, the drop and the mask going on
+  take 12, 22 and 12 updates, as g1, g6 and g9 count them. Every monitor and mask ledger change now pairs at +0
+  (bar Night 5's tick-0 raise). Night 5 9338 -> 11936 (`recompile-replay-02161639fdd24f46`), Night 7 3563 -> 6534
+  (`recompile-replay-cd7291a573920040`); Night 1 still every update (`recompile-replay-75637b5727458cd0`).
+
 Open:
-- Night 5 9338: one-update slips every second under the mask (the mask reaches value 2 a loop later in the rebuild).
-- Night 7 3563: W. Freddy's g378 return a loop early (the mask reaches value 2 a loop later in the rebuild).
+- Night 5 11936 and Night 7 6534: a mask-tick sendback five loops early (g907 is a gated Every in the sheet).
