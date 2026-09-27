@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { AdbDeviceBridge, parseAdbDevices } from '../src/adb-bridge.js';
 import { restartCueHelperCapture } from '../src/cue-helper-capture.js';
 import { AdbCueHelperPort, parseCueHelperEndpoint } from '../src/physical-ports.js';
@@ -12,6 +15,38 @@ assert.deepEqual(parseCueHelperEndpoint('I/FnafCueHelper: control=DEGRADED port=
 });
 assert.throws(() => parseCueHelperEndpoint('control=READY port=1 token=short'), /endpoint has no bounded/);
 assert.throws(() => new AdbCueHelperPort({ serial: 'usb-1' }).request('SHELL anything'), /outside the authenticated/);
+
+const scratch = mkdtempSync(join(tmpdir(), 'helper-discovery-'));
+try {
+  const adb = join(scratch, 'adb.cjs');
+  writeFileSync(adb, `#!/usr/bin/env node
+const {execFileSync} = require('node:child_process');
+const {readFileSync} = require('node:fs');
+const {dirname} = require('node:path');
+const args = process.argv.slice(2);
+if (args.includes('pidof')) { console.log('1234'); }
+else if (args.includes('sh')) {
+  process.stdout.write(execFileSync('sh', ['-s', '--', args.at(-1)], {
+    input: readFileSync(0), env: {...process.env, PATH: dirname(__filename) + ':' + process.env.PATH},
+  }));
+} else { process.exitCode = 2; }
+`, { mode: 0o755 });
+  writeFileSync(join(scratch, 'logcat'), `#!/usr/bin/env node
+const args = process.argv.slice(2);
+  const rows = [
+    'I/FnafCueHelper: control=DEGRADED port=49707 token=0123456789abcdef0123456789abcdef',
+    ...Array(20000).fill('I/FnafCueHelper: captured native frame; repeated capture diagnostics fill the log buffer'),
+    ...Array(20000).fill('I/FnafCueHelper: control=READY port=49707 token=0123456789abcdef0123456789abcdef'),
+    'I/FnafCueHelper: control=READY port=49708 token=fedcba9876543210fedcba9876543210',
+  ];
+  const at = args.indexOf('-e');
+  const filter = at < 0 ? null : new RegExp(args[at + 1]);
+  console.log(rows.filter(row => !filter || filter.test(row)).join('\\n'));
+`, { mode: 0o755 });
+  assert.deepEqual(new AdbCueHelperPort({ serial: 'usb-1', adb }).discover(), {
+    port: 49708, token: 'fedcba9876543210fedcba9876543210',
+  }, 'capture diagnostics exceeding 1 MB do not hide the latest helper endpoint');
+} finally { rmSync(scratch, { recursive: true, force: true }); }
 
 const noAdb = new AdbDeviceBridge({ run: async () => ({ ok: false, code: 'ENOENT', stdout: '', stderr: 'adb missing' }) });
 assert.deepEqual(await noAdb.preflight({ targetBuild: 'com.scottgames.fnaf2:2.0.7+26' }), {

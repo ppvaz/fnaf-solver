@@ -5,7 +5,7 @@
 // phone its owner was using. This runs the dry path against a fake adb that
 // records every call, and refuses any call that is not a read.
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -36,6 +36,41 @@ try {
   assert.deepEqual(writes, [], `a dry run called adb beyond reads:\n  ${writes.join('\n  ')}`);
   assert.doesNotMatch(r.stdout, /returning the phone to an observed title/, 'the dry run reset the phone');
   console.log(`night-run dry: the phone is not actuated (${calls.length} read-only adb call(s))`);
+
+  // Exercise the actual EXIT handler with device-free stage doubles. A
+  // repeated signal during reset must not cut off the observed-title or
+  // evidence stages (the 2026-09-27 twin-loop interruption regression).
+  const source = readFileSync(join(ROOT, 'tools/device/night-run.sh'), 'utf8');
+  const handler = source.match(/on_exit\(\) \{[\s\S]*?\n\}\ntrap on_exit EXIT/)?.[0];
+  assert.ok(handler, 'the runner EXIT handler is present');
+  const cleanup = spawn('bash', ['-c', `
+say() { :; }
+stop_frame_trace() { :; }
+stop_input_trace() { :; }
+stop_recording() { :; }
+reset_device() { echo cleanup-start; sleep 0.2; echo title-observed; }
+analyze() { echo evidence-retained; }
+RUNID=fixture OUTDIR=fixture
+${handler}
+exit 7
+`], { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] });
+  let cleanupOutput = '';
+  let signalled = false;
+  cleanup.stdout.on('data', chunk => {
+    cleanupOutput += chunk;
+    if (!signalled && cleanupOutput.includes('cleanup-start')) {
+      signalled = true;
+      cleanup.kill('SIGTERM'); cleanup.kill('SIGINT');
+    }
+  });
+  const exitCode = await new Promise((resolve, reject) => {
+    cleanup.once('error', reject);
+    cleanup.once('close', (code, signal) => resolve({ code, signal }));
+  });
+  assert.deepEqual(exitCode, { code: 7, signal: null }, 'cleanup keeps the original result through repeated signals');
+  assert.equal(signalled, true);
+  assert.match(cleanupOutput, /title-observed[\s\S]*evidence-retained/);
+  console.log('night-run cleanup: repeated interrupts cannot truncate physical cleanup or retained evidence');
 } finally {
   for (const d of ours()) rmSync(join(runsDir, d), { recursive: true, force: true });
   rmSync(tmp, { recursive: true, force: true });

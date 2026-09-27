@@ -18,7 +18,7 @@ def main() -> int:
     serial = sys.argv[1]
     command = sys.argv[3:]
     try:
-        with DeviceLock(serial):
+        with DeviceLock(serial) as lease:
             # `subprocess.run()` lets SIGINT/SIGTERM kill this lease holder
             # before its child can write its own terminal evidence. A bounded
             # game runner handles those signals by releasing HID, finalizing
@@ -35,7 +35,9 @@ def main() -> int:
                 signal.SIGTERM: signal.signal(signal.SIGTERM, relay),
             }
             try:
-                child = subprocess.Popen(command)
+                child = subprocess.Popen(command, env={
+                    **os.environ, "CUE_HELPER_LEASE_OWNER_PID": str(lease.owner_pid),
+                })
                 return child.wait()
             finally:
                 for signum, previous in original.items():

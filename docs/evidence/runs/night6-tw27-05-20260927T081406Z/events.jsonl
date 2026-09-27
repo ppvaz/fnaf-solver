@@ -1,0 +1,13 @@
+{"at":"2026-09-27T08:14:25.047Z","type":"evidence.started","evidenceDirectory":"artifacts/campaign-2026-09-27T08-14-25.045Z"}
+{"at":"2026-09-27T08:14:25.049Z","type":"arm.mode","mode":"observe-once"}
+{"at":"2026-09-27T08:14:27.380Z","type":"observation","label":"items=continue,customNight,newGame,sixthNight","frame":{"file":"00001-title-observe.py.png","sha256":"77bc2d046282b4b00caad37529fe2f09f2af85cb777375c6066fdcc5728d3c9a","bytes":1760243}}
+{"at":"2026-09-27T08:14:35.372Z","type":"menu.start-planned","residueMs":19924,"targetPhoneWallMs":1790496886228,"waitMs":11128.85986328125,"uncertaintyMs":3.513562499998443}
+{"at":"2026-09-27T08:14:46.609Z","type":"menu.start","tapHostMs":37094.412523,"tapPhoneWallMs":1790496886228.3535,"tapPhoneWallLow16":19924,"plannedPhoneWallMs":1790496886228,"lateMs":0.014275718749559019,"uncertaintyMs":2.400914500001818}
+{"at":"2026-09-27T08:14:49.456Z","type":"observation","label":"state=intro","frame":{"file":"00003-lifecycle-observe.py.png","sha256":"b8cb0dd82b7d4dea3a196fa6046c9614f1dc01323177703765cda5442bd67569","bytes":26004}}
+{"at":"2026-09-27T08:14:49.456Z","type":"menu.press-settled","press":1,"state":"intro"}
+{"at":1790496889639,"type":"hid.execute-entered"}
+{"at":1790496889640,"type":"hid.handoff-reused","source":"menu","readyDelayMs":0}
+{"at":"2026-09-27T08:14:49.640Z","type":"hid.schedule-start","startedAt":1790496889640,"actionCount":298,"phaseOffsetMs":0}
+{"at":"2026-09-27T08:14:52.362Z","type":"origin.anchor","status":"scheduled","aimMs":4870,"maxK":0,"onsetHostMs":42339.852259516716,"plannedAfterOnsetMs":616.2199054832818,"candidates":[{"k":0,"releaseHostMs":47209.852259516716}],"authorizedAtHostMs":null,"hostClock":"performance-now-ms","wallMinusHostMs":1790496849405.693,"reads":2,"failures":1,"onsetDeviceMs":134371218.409658,"offsetMs":-134328878.5573985,"uncertaintyMs":4.640896500000963,"rttMs":9.281793000001926,"phoneWallMinusMonoMs":1790362520253.2332,"onsetPhoneWallMs":1790496891471.6428,"onsetPhoneWallLow16":25167}
+{"at":"2026-09-27T08:14:52.799Z","type":"observation","label":"unknown=dark-frame-no-text","frame":{"file":"00004-lifecycle-observe.py.png","sha256":"a1e887b38138cb0447aa5e01698771ada8c07e626481d0d420601ae754396049","bytes":18113}}
+{"at":"2026-09-27T08:14:52.966Z","type":"campaign.abort.restart","reason":"campaign interrupted by SIGINT"}

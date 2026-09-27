@@ -243,6 +243,32 @@ try {
   assert.equal(packEntry(errorCampaign, errorLoaded).error, errorWrapper.error);
   assert.equal(packPromotionChecks(errorLoaded, winners).terminalPass, false);
 
+  // A signalled campaign still has its native text and frames, but never
+  // wrote a terminal result or the runner's final verdict. Do not lose the
+  // native request/observations by pretending this is log-only recovery.
+  const interrupted = 'campaign-interrupted';
+  const interruptedRun = 'night6-interrupted';
+  const startRow = JSON.stringify({ at: '2026-09-27T08:14:25Z', type: 'evidence.started', evidenceDirectory: `${root}/artifacts/${interrupted}` });
+  put(`artifacts/${interrupted}/events.jsonl`, startRow + '\n');
+  put(`artifacts/${interrupted}/request.json`, '{}');
+  put(`artifacts/${interrupted}/observations.jsonl`, '{"label":"state=intro"}\n');
+  put(`artifacts/${interrupted}/00001.png`, frame);
+  put(`artifacts/runs/${interruptedRun}/campaign.log`, 'not JSON\n' + startRow + '\n');
+  const interruptedTarget = resolvePackTargets(root, interrupted)[0];
+  assert.equal(interruptedTarget.packId, interruptedRun, 'the run identity survives without a final verdict');
+  const interruptedBuilt = buildPack({ root, home, ...interruptedTarget });
+  assert.equal(interruptedBuilt.pack.custody.kind, 'incomplete-campaign');
+  assert.deepEqual(interruptedBuilt.pack.custody.lost, ['result.json']);
+  assert.ok(interruptedBuilt.texts.has('request.json') && interruptedBuilt.texts.has('observations.jsonl'));
+  assert.ok(interruptedBuilt.pack.withheld.some(f => f.name === '00001.png' && f.sha256 === sha256(frame)));
+  const interruptedDir = join(root, 'docs/evidence/runs', interruptedRun);
+  writePack(interruptedDir, interruptedBuilt);
+  const interruptedLoaded = readPack(interruptedDir);
+  assert.equal(interruptedLoaded.wrapper, null);
+  assert.equal(packEntry(interruptedRun, interruptedLoaded).claimLevel, 'UNKNOWN');
+  assert.equal(packPromotionChecks(interruptedLoaded, winners).terminalPass, false);
+  assert.equal(packPromotionChecks(interruptedLoaded, winners).manifestComplete, false);
+
   // The check a recovered pack cites: a campaign still on disk, recovered from its own log.
   put(`artifacts/runs/${label}/campaign.log`, [
     readFileSync(join(root, 'artifacts', campaign, 'events.jsonl'), 'utf8').trimEnd()

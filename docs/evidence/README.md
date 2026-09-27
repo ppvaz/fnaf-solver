@@ -79,6 +79,10 @@ array, a long hex or base64 run, or a NUL byte instead of publishing it.
 When the campaign retained an `ERROR` envelope instead of a validated result,
 the pack preserves that error with an `UNKNOWN` claim ceiling. It supplies no
 terminal result and cannot pass promotion; a video grade remains independent.
+If a signal prevented `result.json` from being written, an `incomplete-campaign`
+pack retains the original request, events, observations and frame hashes. Only
+the result is missing; this is not log-only recovery. It remains `RESULT_LOST`
+at the `UNKNOWN` ceiling and cannot satisfy the terminal or manifest checks.
 
 `list`, `show` and `promote` read packs on any checkout. For a pack, `promote`
 adds a fifth check, `winnerCommitted`: the bundle's `winnerHash` must match a

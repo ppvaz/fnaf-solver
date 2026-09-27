@@ -1,6 +1,6 @@
 # Plan progress
 
-**Updated:** 2026-09-25.
+**Updated:** 2026-09-27.
 
 **How to read this file.** It is a log, append-ordered from 2026-09-09: **the
 newest work is at the bottom**, so read the last entry first. Everything before
@@ -1621,3 +1621,104 @@ bed waits for both doors cleared within (20 - night - 4) s and the closet is kep
 panel's order, clocks (now on the level origin) and hold text were corrected after Pedro called
 them dishonest; its readings still carry no age. Evidence ID: `fnaf4-nights-1-3-20260925` (runs
 n4e-n4k added). Open: Night 4, then 5-7 and Night 8; a model device lane for Night 8's phase route.
+
+**2026-09-27: the phone was reinstalled; Night 1 minimal won, the device lane exists, and three
+defects the model hid are fixed.** The Play Store reinstalled FNaF 2 at 01:34 (first-install time),
+so the save was back at Night 1 and Custom Night locked: the S3 corner nights (predeclared,
+`night7-corners-predeclaration-20260927.json`) were refused at the menu, and the story ladder
+(`artifacts/forensics/story-ladder-20260927/ladder.sh`, `--machine-only`, bundles re-emitted from
+committed winners) climbs again first. Pedro watched the phone and called the first Night 1 route
+what it was.
+
+- **Minus 7 on Night 1 was blind and never executed.** `night1-ladder-n1a` graded 96 of 269
+  presses MISSING (clear-3's monitor raise 45/45, its mask-off 23/45); the 2026-09-19 Night 1 "win"
+  of the same plan graded 54/55 and 48/55 -- it survived an easy night without executing. Two
+  causes: the executor sent a read's mask press in the same instant as the vent release
+  (`hid-schedule.js` measured `maskGapMs` from the read's start; fixed, `hid-read-gap.test.js`), and
+  the simulator toggled the mask mid-animation (g270 needs mask 0, g615 mask 2; fixed,
+  `mask-animation-input.test.js`). `3d5c5f7`.
+- **Night 1 minimal won** (`night1-ladder-n1e-20260927T055611Z`, 6 AM), the route written for
+  Night 1: idle, arm the double-camera split at 115 s, then one CAM 09 flash and a wind per 5 s.
+  Its arm missed in observe-once (n1c, played on blind) and three times blocking (n1d); the arm's
+  monitor drop came 17 ms after the CAM 09 release on the same HID contact, which the game can read
+  as a drag. The monitor toggle is Multiple Touch (any contact), cameras are ObjectClicked (the
+  first contact), so a monitor press inside one poll of a release now goes out on contact 1
+  (`d9d995f`, `hid-second-contact.test.js`); n1e's blocking arm verified on its second attempt.
+  `evidence promote` passes 4 of 5 checks (manifest complete: the original campaign directory);
+  the attestation is Pedro's, bound to pack sha256 `3b295af3...617b4`.
+- **The ladder, first try per binding:** Night 2 (toys-nights1-2, seed 1855), Night 3 and Night 4
+  (toys-nights3-4, seeds 61643 and 63212) each reached 6 AM on the first attempt. Night 5 on
+  toys-n5 died twice (n5a Balloon Boy, n5b Mangle -- Pedro's read); Pedro named the cause at once:
+  "not making the more masking less winding trade". toys-n5 holds the mask 4551 ms fully on, the
+  zero-margin window of 2026-09-20; mask5plus takes 200 ms out of the wind and adds 560 ms of mask
+  (5111 ms fully on), and over a one-second phase scan the model wins it at 25 of 30 phases against
+  toys-n5's 14. mask5plus reached 6 AM on its first try (n5c, seed 3406) and the title offered the
+  6th Night. Every win passes 4 of 5 promote checks; the five attestations are Pedro's.
+- **The device lane** (`tools/device/device-lane.mjs`, `d9d995f`, `b1120ef`): the executor's own
+  HID schedule decoded back into contacts and played on the simulator through the measured device
+  constraints, with one stated hypothesis (a trigger-read press starting within one poll of a
+  release on the same contact is lost with probability 1 - gap/poll). It scored Night 1 minimal
+  11/20 before the contact change and 40/40 after, and agrees with every 2026-09-19/20 ladder win
+  (Nights 2-6, 40/40). Its first form lost every merged press and scored toys-n34 0/40 on Night 4,
+  which the phone won: refuted, and narrowed to trigger-read controls.
+- **S5: the robustness field** (`night7-robustness-field-20260927`, `d2ceefc`): with the phone's
+  mask floor in the actuator, every Night 7 route's worst event is the opening arm's CAM 09 tap (50
+  ms late margin); the camdrop->mask seam is [383, 550] ms with the mask at 450; lateness all-win is
+  70 ms for the preset (the 2026-09-25 record's 100 had no floor) and 50 for j/k2/k3; independent
+  +-J jitter holds to 30 ms at best; the human gate's +-60 leaves the preset 8 of 500. The preset
+  re-timed to a deliverable epoch (633 ms) keeps its margins.
+- **S2b: the recompile reaches the office** (`c091055`, `9db9aed`): mobile trigger
+  emission and frame-scoped scripted navigation now reach the office and retain 18,000 updates
+  without gameplay input. The default model first differs in RNG draws at tick 6; declared
+  source-option diagnostics differ at initialization. A repeat reproduces all 19,937 updates'
+  RNG projection, but raw globals differ in 48 rows. MODEL_ONLY, not trace equivalence:
+  `recompile-draw-402926497eae496e` and `recompile-draw-435f7ea2f830ebf2`
+  (`tools/recompile/results/`). The patch applies from its pinned external base and 13 parser
+  fixtures plus the comparator pass. Extracted content and raw generated code stay external.
+- **S1 custody:** 79 more night runs packed (162 campaign packs in the clock gate), two clocks
+  declared (`6e170f7`). **S7:** a subagent's `tools/test-mistake-register.mjs` makes register items
+  5, 12 and 13 executable (`12bba15`). **Tooling:** `night-run.sh --dry-run` no longer touches the
+  phone (`302f79e`; it had put FNaF 2 in front of an app in use).
+
+**2026-09-27 (continued in Codex from the actual Claude session): retained corners and refused
+pinned twins.**
+
+- **S1:** Night 6 `h` also reached 6 AM on its first ladder attempt
+  (`night6-ladder-n6a-20260927T071107Z`, `207d1ca`), unlocking Custom Night. No agent
+  attestation was written. The fresh wins' promotion edge still requires Pedro's exact-pack
+  attestation; merit and custody are distinct.
+- **S3, DEVICE_MEASURED:** all four predeclared corner slots now have retained packs. The
+  generated result `cohort-fnv1a-7e0b375f`
+  ([record](../docs/evidence/night7-corners-result-20260927.json)) reads BB+Golden 2/2 wins
+  and BB+Foxy 1 win plus 1 UNKNOWN. All counted runs' requested and observed dials agree.
+  The failed BB+Foxy run visibly shows Foxy's jumpscare in the retained video, but the
+  automated terminal grade is UNKNOWN after the reset; that visual attribution is not
+  substituted for the predeclared rule. The record is INCOMPLETE, not a promoted 3/4 cohort.
+  The original ERROR envelope is preserved rather than fabricated into a terminal.
+- **S2a:** the bounded twin acquisition stopped after five attempts, with no verified twin.
+  Runs `night6-tw27-01-20260927T080849Z` through
+  `night6-tw27-05-20260927T081406Z` retain native campaign files, frame-trace/media hashes
+  and generated `office-seed-bracket-v1` diagnostics. A repeated clock pin made the
+  bracket run backwards (the old reader printed negative candidate counts). Even increasing
+  pinned endpoints cannot exclude a clock reset between logs. The reader now refuses both
+  observed reversals and a declared `--clock-pinned` input as UNKNOWN, with no seed
+  candidates. The five interrupted campaigns keep their real requests/observations; only
+  their unwritten `result.json` is missing. No terminal or exact seed is inferred.
+- **Device safety/instruments:** helper endpoint discovery is bounded on the phone before
+  crossing adb, so a large helper log cannot overflow the host's capture buffer. The serial
+  lease remains held by the ancestor while nested capture setup borrows it; unrelated
+  agents cannot borrow by copying its PID. Repeated interrupts no longer truncate physical
+  cleanup. The last attempt's interrupted cleanup was checked afterwards with a native
+  projection frame: title items were positively read. Airplane mode, DND and stay-awake
+  settings returned to their measured starting values.
+- **S3/S6, MODEL_ONLY:** the retained Foxy×Golden plane is 441/441 cells in each of four
+  grids over 300 held-out seeds (`night7-dial-plane-foxy-golden-20260927`), a finite
+  family-scoped result, not global monotonicity. FNaF 1's committed 4/20 winner now replays
+  from its pinned source and rejects live use from a drifted tree. Its separate current-tree
+  census covers all 65,536 seeds: typical 65,536/65,536, worst 62,052/65,536, worst held-out
+  53,953/56,970, starved 0
+  (`fnaf1-420-device-lane-population-20260927`). This is not the pinned winner's census.
+
+Open: S1 human promotion; S2 encounter-level and complete recompile equivalence; the remaining
+S3 policy/corner coverage and pinned FNaF 1 winner census; S4 reliability at a justified ceiling.
+The pinned seed protocol is refuted as an exact seed measurement, not a completed same-phase twin.

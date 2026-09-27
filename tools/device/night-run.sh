@@ -516,6 +516,10 @@ analyze() {
 
 on_exit() {
   local code=$?
+  # An outer lease wrapper can relay a second interrupt while this EXIT
+  # handler is already resetting the phone. Do not interrupt the bounded
+  # physical cleanup; restore normal signal handling before host analysis.
+  trap '' INT TERM HUP
   set +e
   stop_frame_trace
   stop_input_trace
@@ -526,6 +530,7 @@ on_exit() {
   # idle for the whole 12-39 min pipeline and the next attempt could not start
   # until the grading of this one had finished.
   reset_device
+  trap - INT TERM HUP
   say "phone released -- the next attempt may start; analysis continues host-side"
   analyze
   say "run $RUNID finished with exit code $code"

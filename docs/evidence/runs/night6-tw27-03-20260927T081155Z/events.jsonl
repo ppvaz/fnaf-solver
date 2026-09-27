@@ -1,0 +1,12 @@
+{"at":"2026-09-27T08:12:15.263Z","type":"evidence.started","evidenceDirectory":"artifacts/campaign-2026-09-27T08-12-15.258Z"}
+{"at":"2026-09-27T08:12:15.265Z","type":"arm.mode","mode":"observe-once"}
+{"at":"2026-09-27T08:12:18.138Z","type":"observation","label":"items=continue,customNight,newGame,sixthNight","frame":{"file":"00001-title-observe.py.png","sha256":"44ce4b786c025e6bb477e32e9223845f541413bf22fbd16990a3cd8386297b6d","bytes":2101213}}
+{"at":"2026-09-27T08:12:26.258Z","type":"menu.start-planned","residueMs":19924,"targetPhoneWallMs":1790496755156,"waitMs":9168.23486328125,"uncertaintyMs":3.276364499999545}
+{"at":"2026-09-27T08:12:35.544Z","type":"menu.start","tapHostMs":36588.722151,"tapPhoneWallMs":1790496755158.1895,"tapPhoneWallLow16":19926,"plannedPhoneWallMs":1790496755156,"lateMs":2.651225718749629,"uncertaintyMs":2.5829354999987117}
+{"at":"2026-09-27T08:12:38.464Z","type":"observation","label":"state=intro","frame":{"file":"00003-lifecycle-observe.py.png","sha256":"b8cb0dd82b7d4dea3a196fa6046c9614f1dc01323177703765cda5442bd67569","bytes":26004}}
+{"at":"2026-09-27T08:12:38.464Z","type":"menu.press-settled","press":1,"state":"intro"}
+{"at":1790496758711,"type":"hid.execute-entered"}
+{"at":1790496758712,"type":"hid.handoff-reused","source":"menu","readyDelayMs":0}
+{"at":"2026-09-27T08:12:38.712Z","type":"hid.schedule-start","startedAt":1790496758712,"actionCount":298,"phaseOffsetMs":0}
+{"at":"2026-09-27T08:12:41.636Z","type":"origin.anchor","status":"scheduled","aimMs":4870,"maxK":0,"onsetHostMs":41772.56815700233,"plannedAfterOnsetMs":1024.0338629976686,"candidates":[{"k":0,"releaseHostMs":46642.56815700233}],"authorizedAtHostMs":null,"hostClock":"performance-now-ms","wallMinusHostMs":1790496718839.1777,"reads":1,"failures":2,"onsetDeviceMs":134240087.896191,"offsetMs":-134198315.328034,"uncertaintyMs":4.361155999999028,"rttMs":8.722311999998055,"phoneWallMinusMonoMs":1790362520255.5679,"onsetPhoneWallMs":1790496760343.464,"onsetPhoneWallLow16":25111}
+{"at":"2026-09-27T08:12:41.867Z","type":"campaign.abort.restart","reason":"campaign interrupted by SIGINT"}

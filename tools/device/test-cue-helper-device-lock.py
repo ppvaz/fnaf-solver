@@ -36,6 +36,10 @@ with tempfile.TemporaryDirectory(prefix="cue-helper-device-lock-") as directory:
             [sys.executable, str(HERE / "device-lock-exec.py"), "one-device", "--",
              sys.executable, "-c",
              "import signal, sys; "
+             f"sys.path.insert(0, {str(HERE)!r}); "
+             "from cue_helper_device_lock import DeviceLock; "
+             "lease = DeviceLock('one-device'); "
+             "lease.__enter__(); lease.__exit__(); "
              "signal.signal(signal.SIGTERM, lambda signum, frame: "
              "(print('child-signal=SIGTERM', flush=True), sys.exit(0))[1]); "
              "print('child-lease-acquired', flush=True); signal.pause()"],
@@ -49,6 +53,21 @@ with tempfile.TemporaryDirectory(prefix="cue-helper-device-lock-") as directory:
                     raise AssertionError("independent agent acquired the same device lease")
             except MODULE.DeviceBusy:
                 pass
+            # Copying the owner's PID does not let an unrelated process join
+            # it. Nor can the descendant's close have released the real lock.
+            previous_owner = os.environ.get("CUE_HELPER_LEASE_OWNER_PID")
+            os.environ["CUE_HELPER_LEASE_OWNER_PID"] = str(child.pid)
+            try:
+                try:
+                    with MODULE.DeviceLock("one-device"):
+                        raise AssertionError("an unrelated process forged inherited ownership")
+                except MODULE.DeviceBusy:
+                    pass
+            finally:
+                if previous_owner is None:
+                    os.environ.pop("CUE_HELPER_LEASE_OWNER_PID", None)
+                else:
+                    os.environ["CUE_HELPER_LEASE_OWNER_PID"] = previous_owner
         finally:
             child.terminate()
             assert child.stdout is not None
@@ -68,4 +87,4 @@ with tempfile.TemporaryDirectory(prefix="cue-helper-device-lock-") as directory:
         else:
             os.environ["CUE_HELPER_LOCK_DIR"] = previous
 
-print("cue-helper per-device lease contention and kernel-release passed")
+print("cue-helper lease: descendants can borrow, unrelated owners cannot, parent lock survives child exit, kernel-release passed")

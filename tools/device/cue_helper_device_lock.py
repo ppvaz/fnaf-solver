@@ -25,6 +25,35 @@ def lock_path(serial: str) -> Path:
     return Path(os.environ.get("CUE_HELPER_LOCK_DIR", str(DEFAULT_LOCK_DIR))) / f"device-{digest}.lock"
 
 
+def inherited_owner(serial: str, text: str) -> int | None:
+    """Borrow only an explicit lease held by a still-running ancestor.
+
+    The wrapper keeps the kernel lock while child tools (notably capture
+    setup) use it. An environment value alone cannot authorize another agent.
+    """
+    try:
+        owner = json.loads(text)
+        if not isinstance(owner, dict):
+            return None
+        expected = int(os.environ.get("CUE_HELPER_LEASE_OWNER_PID", "0"))
+        if (expected <= 1 or owner.get("pid") != expected
+                or owner.get("serial") != serial or owner.get("host") != socket.gethostname()):
+            return None
+        pid = os.getppid()
+        seen = set()
+        while pid > 1 and pid not in seen:
+            if pid == expected:
+                return expected
+            seen.add(pid)
+            # comm can contain spaces and parentheses; fields after its final
+            # ')' begin with state, then PPID.
+            stat = Path(f"/proc/{pid}/stat").read_text(encoding="utf-8")
+            pid = int(stat.rsplit(")", 1)[1].split()[1])
+    except (OSError, ValueError, TypeError):
+        pass
+    return None
+
+
 class DeviceLock:
     """One non-blocking, process-safe lease; the kernel releases it on exit."""
 
@@ -34,6 +63,7 @@ class DeviceLock:
         self.serial = serial
         self.path = lock_path(serial)
         self.handle = None
+        self.owner_pid = os.getpid()
 
     def __enter__(self):
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -45,6 +75,10 @@ class DeviceLock:
             owner = self.handle.read().strip()
             self.handle.close()
             self.handle = None
+            inherited = inherited_owner(self.serial, owner)
+            if inherited is not None:
+                self.owner_pid = inherited
+                return self
             detail = f" owner={owner}" if owner else ""
             raise DeviceBusy(f"device {self.serial} is already leased{detail}") from error
         self.handle.seek(0)

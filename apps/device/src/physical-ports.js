@@ -49,6 +49,12 @@ case "$1" in GET|GRID|FRAME|WATCH|READ) ;; *) exit 64 ;; esac
 printf '%s\\n' "$*" | toybox nc -w 2 127.0.0.1 "$port"
 `;
 
+// Keep log volume on the device. Capture diagnostics repeat control=READY,
+// so filtering alone still overflows a bounded host buffer after a night.
+const HELPER_DISCOVERY_SCRIPT = `
+logcat -d --pid="$1" -e 'control=(READY|DEGRADED)' -v brief -s FnafCueHelper:I '*:S' | tail -n 32
+`;
+
 /**
  * One timed GET over a host-local forwarded port. The helper stamps
  * `snapshotNs` with System.nanoTime() while answering, so that instant lies
@@ -140,7 +146,11 @@ export class AdbCueHelperPort {
   discover() {
     const pid = runSync(this.adb, ['-s', this.serial, 'shell', 'pidof', HELPER_PACKAGE]).trim().split(/\s+/)[0];
     if (!/^\d+$/.test(pid)) endpointError('helper process is not running');
-    const log = runSync(this.adb, ['-s', this.serial, 'logcat', '-d', `--pid=${pid}`, '-v', 'brief', '-s', 'FnafCueHelper:I', '*:S']);
+    // A night fills this tag with capture diagnostics. Filter on the phone so
+    // discovery still fits its bounded buffer after a long-running capture,
+    // while retaining the latest endpoint rather than the first announcement.
+    const log = runSync(this.adb, ['-s', this.serial, 'shell', 'sh', '-s', '--', pid],
+      { input: HELPER_DISCOVERY_SCRIPT });
     this.endpoint = parseCueHelperEndpoint(log);
     return { ...this.endpoint };
   }

@@ -251,7 +251,20 @@ export function findRunDir(root, campaign) {
   if (!existsSync(runs)) return null;
   for (const label of readdirSync(runs).sort()) {
     const verdict = join(runs, label, 'verdict.txt');
-    if (!existsSync(verdict)) continue;
+    if (!existsSync(verdict)) {
+      const log = join(runs, label, 'campaign.log');
+      if (!existsSync(log)) continue;
+      const starts = readFileSync(log, 'utf8').split('\n').flatMap(line => {
+        try {
+          const row = JSON.parse(line);
+          return row?.type === 'evidence.started' && typeof row.evidenceDirectory === 'string'
+            ? [basename(row.evidenceDirectory)] : [];
+        } catch { return []; }
+      });
+      const attempt = starts.indexOf(campaign);
+      if (attempt >= 0) return { runDir: join(runs, label), attempt: attempt + 1 };
+      continue;
+    }
     const text = readFileSync(verdict, 'utf8');
     const numbered = text.match(new RegExp(`^--- attempt (\\d+) of \\d+: \\S*/${campaign.replace(/\./g, '\\.')}\\s`, 'm'));
     if (numbered) return { runDir: join(runs, label), attempt: Number(numbered[1]) };
@@ -271,7 +284,7 @@ export function findRunDir(root, campaign) {
 export function resolvePackTargets(root, id) {
   if (!/^[\w.-]+$/.test(id)) throw new Error('a safe RUN_ID is required');
   const direct = join(root, 'artifacts', id);
-  if (existsSync(join(direct, 'result.json'))) {
+  if (existsSync(join(direct, 'result.json')) || incompleteCampaign(direct)) {
     const run = findRunDir(root, id);
     const label = run ? basename(run.runDir) : null;
     return [{ campaignDir: direct, runDir: run?.runDir ?? null,
@@ -290,13 +303,21 @@ export function resolvePackTargets(root, id) {
   return attempts.map(([attempt, path]) => {
     const campaignDir = join(root, 'artifacts', basename(path));
     const packId = attempt > 1 ? `${id}-attempt${attempt}` : id;
-    if (existsSync(join(campaignDir, 'result.json'))) return { campaignDir, runDir, packId };
+    if (existsSync(join(campaignDir, 'result.json')) || incompleteCampaign(campaignDir)) return { campaignDir, runDir, packId };
     // Gone entirely, not merely incomplete: then the night-run log is the custody left.
     const log = join(runDir, 'campaign.log');
     if (!existsSync(campaignDir) && existsSync(log) && recoverFromRunLog(readFileSync(log, 'utf8'), path))
       return { campaignDir: path, runDir, packId, recoverFromLog: true };
     throw new Error(`${id}: campaign ${basename(path)} is not on this machine; pack it where it was played`);
   });
+}
+
+// A signal can end the CLI before it writes result.json. Keep its native
+// request/events/observations rather than pretending they were lost with a
+// deleted campaign, or inventing a terminal. Both identity files are required.
+function incompleteCampaign(dir) {
+  return !existsSync(join(dir, 'result.json'))
+    && existsSync(join(dir, 'events.jsonl')) && existsSync(join(dir, 'request.json'));
 }
 
 /**
@@ -348,7 +369,8 @@ export function buildPack({ root, home = '', campaignDir, runDir = null, packId,
     if (!recovered) throw new Error(`${basename(runDir)}/campaign.log never started ${basename(campaignDir)}`);
     recovered.logSha256 = sha256(log);
   }
-  const wrapper = !recovered ? readJson(join(campaignDir, 'result.json'))
+  const incomplete = !recovered && incompleteCampaign(campaignDir);
+  const wrapper = !recovered ? (incomplete ? null : readJson(join(campaignDir, 'result.json')))
     : recovered.result === null ? null : JSON.parse(recovered.result);
   if (wrapper !== null && !isCampaignResult(wrapper)) throw new Error(`${basename(campaignDir)} is not a device campaign`);
   // A result the CLI never printed is not reconstructed: the pack says it is lost.
@@ -427,6 +449,10 @@ export function buildPack({ root, home = '', campaignDir, runDir = null, packId,
       recovered: sources.map(([name]) => name).sort(),
       lost: ['observations.jsonl', 'observer frames', 'request.json', ...(wrapper ? [] : ['result.json'])].sort(),
       validation: RECOVERY_RECORD,
+    } } : {}),
+    ...(incomplete ? { custody: {
+      kind: 'incomplete-campaign', retained: sources.map(([name]) => name).sort(),
+      lost: ['result.json'], reason: 'Native campaign files survive, but no result.json exists; no terminal is inferred.',
     } } : {}),
     ...(timeline ? { graded: { 'run/timeline.json': scrubPaths(timeline, { root, home }).text } } : {}),
   };

@@ -179,6 +179,10 @@ The campaign reader and packer also preserve the CLI's retained `ERROR`
 envelope when no validated result was returned. That row has an `UNKNOWN`
 claim ceiling, no terminal, and cannot promote. Their tests cover this distinct
 case as well as malformed results and the older `RESULT_LOST` recovery case.
+An interrupted native campaign with its request and events but no result packs
+as `incomplete-campaign`: those original files and frame hashes are retained,
+only `result.json` is missing, and no terminal is inferred. A missing runner
+verdict does not lose the run identity carried by its `evidence.started` log.
 
 | Tool | Kind | Purpose and interface |
 |---|---|---|

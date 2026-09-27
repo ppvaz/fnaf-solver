@@ -14,6 +14,18 @@ device:campaign`; `npm run device:campaign` without `--live` is the phone-free
 dry run. The legacy shell route was archived on 2026-09-25
 (`docs/ARCHIVED-ROUTES.md`).
 
+Seed-pin caveat (2026-09-27): wall-clock resets can occur between the seed
+bracket's log calls, including when its endpoints appear to increase. Read a
+pinned run with `office-seed-bracket.py --clock-pinned`; it reports `UNKNOWN`
+and no candidates. A visible backwards step is refused even without that flag.
+The five `night6-tw27` attempts retained this failure, not a verified twin.
+
+`device-lock-exec.py` holds the exclusive lease through child cleanup. A nested
+capture tool may borrow it only when its declared owner matches the live
+ancestor and serial in the kernel-locked file; an unrelated agent cannot join
+by copying the environment value. `night-run.sh` ignores repeated interrupts
+during physical cleanup and restores signal handling before host analysis.
+
 | Tool | Kind | Purpose and interface |
 |---|---|---|
 | `npm run device:emit -- --winner winner.json --out artifacts/run-001` | compiler/check | Converts a `winner-v1` into an immutable `device-bundle-v1`: `manifest.json`, one `night-N.plan` per requested night, the resolved `profile.json`, and hashed transport-neutral `artifact.json` semantic blocks. It validates interpreter syntax, controls, contacts/timings, policy/night/profile identity, content hashes, and a bounded exact-engine replay before returning `READY`; the strategy registry contains `minus-toys`, `minus3`, and `minus7`. |

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The office frame's RNG seed bracket, from the game's own log.
 
-  tools/device/office-seed-bracket.py LOGCAT [--onset-ms MS] [--json OUT]
+  tools/device/office-seed-bracket.py LOGCAT [--onset-ms MS] [--clock-pinned] [--json OUT]
 
 LOGCAT is `adb logcat -v epoch -s MMFRuntime:V` captured live around a run
 (the phone's 256 KiB log ring rolls over in about a minute, so it must be
@@ -35,6 +35,12 @@ Prints one JSON object: fromMs, toMs, candidates, low16 [first, last], and
 with --onset-ms the bracket's distance before the helper's night onset
 (beforeOnsetMs [min, max]); exits 1 with a reason when the office load or its
 pair is not in the log.
+
+This interval requires a monotonic wall clock through the seed read. A visible
+backwards step is refused. With --clock-pinned, even increasing endpoints are
+UNKNOWN: a set-time loop can reset between log calls without exposing that
+reset in their timestamps. Neither one nor two endpoint candidates proves a
+pinned seed. The diagnostic JSON retains no candidate seed.
 """
 import argparse, json, sys
 
@@ -52,6 +58,13 @@ def epoch_ms(line):
     return int(round(float(line.split()[0]) * 1000))
 
 
+def checked_interval(lines, start, end):
+    stamps = [epoch_ms(line) for line in lines[start:end + 1]]
+    if any(after < before for before, after in zip(stamps, stamps[1:])):
+        return 'UNKNOWN: wall clock moved backwards across the seed bracket'
+    return stamps[0], stamps[-1]
+
+
 def bracket(lines, legacy_pair=False):
     """(from_ms, to_ms) of the office frame's seed, or a refusal string."""
     loads = [i for i, l in enumerate(lines) if OFFICE_LOAD in l]
@@ -65,19 +78,21 @@ def bracket(lines, legacy_pair=False):
     if called is None:
         return '"Starting new frame" without a following "startTheFrame() called"'
     if legacy_pair:
-        return epoch_ms(lines[start]), epoch_ms(lines[called])
+        return checked_interval(lines, start, called)
     close = next((k for k in range(start + 1, called + 1)
                   if any(t in lines[k] for t in POST)), None)
     if close is None:
         # nothing inside initRunLoop was logged before the next frame start: fall back to the pair
-        return epoch_ms(lines[start]), epoch_ms(lines[called])
+        return checked_interval(lines, start, called)
     opens = [k for k in range(start, close) if any(t in lines[k] for t in PRE)]
-    return epoch_ms(lines[opens[-1]]), epoch_ms(lines[close])
+    return checked_interval(lines, opens[-1], close)
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('logcat'); ap.add_argument('--onset-ms', type=float); ap.add_argument('--json')
+    ap.add_argument('--clock-pinned', action='store_true',
+                    help='retain UNKNOWN instead of inferring a seed from a clock changed during the read')
     ap.add_argument('--legacy-pair', action='store_true',
                     help='the pre-2026-09-16 bracket: "Starting new frame" to the next "startTheFrame() called"')
     a = ap.parse_args()
@@ -86,8 +101,17 @@ def main():
     except OSError as e:
         print(f'cannot read {a.logcat}: {e}', file=sys.stderr); return 1
     got = bracket(lines, a.legacy_pair)
-    if isinstance(got, str):
-        print(got, file=sys.stderr); return 1
+    if isinstance(got, str) or a.clock_pinned:
+        reason = got if isinstance(got, str) else 'UNKNOWN: pinned wall-clock endpoints cannot bound the seed read'
+        out = {'schema': 'office-seed-bracket-v1', 'status': 'UNKNOWN',
+               'seedProvenance': 'pinned' if a.clock_pinned else 'unverified',
+               'candidates': None, 'low16': None, 'reason': reason}
+        text = json.dumps(out)
+        print(text)
+        print(reason, file=sys.stderr)
+        if a.json:
+            open(a.json, 'w').write(text + '\n')
+        return 1
     lo, hi = got
     out = {'schema': 'office-seed-bracket-v1', 'fromMs': lo, 'toMs': hi, 'candidates': hi - lo + 1,
            'low16': [lo & 0xffff, hi & 0xffff],

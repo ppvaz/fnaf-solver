@@ -1,0 +1,3 @@
+{"at":1790496738132,"script":"title-observe.py","label":"items=continue,customNight,newGame,sixthNight","code":0,"stderr":"","frame":{"file":"00001-title-observe.py.png","sha256":"44ce4b786c025e6bb477e32e9223845f541413bf22fbd16990a3cd8386297b6d","bytes":2101213}}
+{"at":1790496746025,"script":"title-observe.py","label":"items=continue,customNight,newGame,sixthNight","code":0,"stderr":"","frame":{"file":"00002-title-observe.py.png","sha256":"069ca9acb46366f4c2af97ba8e27077b5a5f8c399f695b444913d70db58bc066","bytes":2056797}}
+{"at":1790496758457,"script":"lifecycle-observe.py","label":"state=intro","code":0,"stderr":"","frame":{"file":"00003-lifecycle-observe.py.png","sha256":"b8cb0dd82b7d4dea3a196fa6046c9614f1dc01323177703765cda5442bd67569","bytes":26004}}

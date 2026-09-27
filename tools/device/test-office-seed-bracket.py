@@ -50,6 +50,10 @@ SOURCED = """         1789598221.184 1 1 I MMFRuntime: loading frame #:4
 """.splitlines()
 check(osb.bracket(SOURCED) == (1789598222512, 1789598222513), f'sourced bracket: {osb.bracket(SOURCED)}')
 check(osb.bracket(SOURCED, legacy_pair=True) == (1789598222512, 1789598222527), 'legacy pair still available')
+backwards = [line.replace('222.513', '222.507') for line in SOURCED]
+check('backwards' in osb.bracket(backwards), 'a reversed bracket is UNKNOWN, never a negative candidate count')
+check('backwards' in osb.bracket(backwards, legacy_pair=True),
+      'increasing outer endpoints do not excuse an internal backwards step')
 # f_InitLoop's line closes it too, and a viewport block that is absent leaves "Starting new frame" as the opener.
 NOVIEWPORT = [l for l in SOURCED if 'viewport' not in l and 'renderer limits' not in l
               and 'Created extension' not in l]
@@ -74,6 +78,16 @@ with tempfile.TemporaryDirectory() as d:
     check(j.get('candidates') == 14 and j.get('low16') == [47592, 47605], f'cli bracket: {j}')
     check('legacy' not in j.get('rule', ''), f'cli names its rule: {j.get("rule")}')
     check(j.get('beforeOnsetMs') == [69.0, 82.0], f'before onset: {j.get("beforeOnsetMs")}')
+    out = subprocess.run([sys.executable, str(HERE / 'office-seed-bracket.py'), p, '--clock-pinned', '--json', os.path.join(d, 'unknown.json')],
+                         capture_output=True, text=True)
+    j = json.loads(out.stdout or '{}')
+    check(out.returncode == 1 and j.get('status') == 'UNKNOWN' and j.get('seedProvenance') == 'pinned',
+          'a known pin is refused even with increasing endpoints')
+    check(j.get('candidates') is None and j.get('low16') is None, 'UNKNOWN supplies no seed candidates')
+    check(json.loads(pathlib.Path(d, 'unknown.json').read_text()) == j, 'the retained diagnostic matches stdout')
+    pathlib.Path(p).write_text('\n'.join(backwards))
+    out = subprocess.run([sys.executable, str(HERE / 'office-seed-bracket.py'), p], capture_output=True, text=True)
+    check(out.returncode == 1 and json.loads(out.stdout)['status'] == 'UNKNOWN', 'a detected reversal emits a refused diagnostic')
     out = subprocess.run([sys.executable, str(HERE / 'office-seed-bracket.py'), os.path.join(d, 'missing.logcat')], capture_output=True, text=True)
     check(out.returncode == 1, 'a missing log exits 1')
 

@@ -1,0 +1,236 @@
+{
+  "schema": "run-pack-v1",
+  "version": 1,
+  "id": "night6-tw27-05-20260927T081406Z",
+  "campaign": "campaign-2026-09-27T08-14-25.045Z",
+  "run": "night6-tw27-05-20260927T081406Z",
+  "outcome": "RESULT_LOST",
+  "claimLevel": "UNKNOWN",
+  "nights": null,
+  "bundle": null,
+  "files": [
+    {
+      "name": "events.jsonl",
+      "sha256": "5ed98c652a1df7b7983fface4ba0a58c7a4751bd5f7fb7d26ee5017bdeb48261",
+      "bytes": 2345,
+      "source": {
+        "sha256": "79a7f2593d8933d23c11e765d6d1c38c2e26982c135535bdd70507842eb9ddf3",
+        "bytes": 2078
+      },
+      "redactions": {
+        "paths": 1,
+        "pixelArrays": 0,
+        "frameRefs": 3
+      }
+    },
+    {
+      "name": "observations.jsonl",
+      "sha256": "f934357e48547dbe08ab5f17f36bc8118fb047ee838220975f2beb65c1bccf22",
+      "bytes": 1266,
+      "source": {
+        "sha256": "d61adb7a5747e93ae356933566c667664ad09478d37a4e3ac529199de944e1a6",
+        "bytes": 767
+      },
+      "redactions": {
+        "paths": 0,
+        "pixelArrays": 0,
+        "frameRefs": 5
+      }
+    },
+    {
+      "name": "request.json",
+      "sha256": "88d03070f1f80304622e683b8db7ecaa7a3a8ef2adf9ce4e44fece70376a87cb",
+      "bytes": 19032,
+      "source": {
+        "sha256": "429c74cfb09806cdba802416916db27cabc4f3c649be7374de806e1dcb7cf1d4",
+        "bytes": 19064
+      },
+      "redactions": {
+        "paths": 1,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    },
+    {
+      "name": "run/campaign.exit",
+      "sha256": "e00c314b8aa453abdd159f2559751098f91f2b296709f450db5fa5ee45731f88",
+      "bytes": 16,
+      "source": {
+        "sha256": "e00c314b8aa453abdd159f2559751098f91f2b296709f450db5fa5ee45731f88",
+        "bytes": 16
+      },
+      "redactions": {
+        "paths": 0,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    },
+    {
+      "name": "run/office-seed-bracket.json",
+      "sha256": "8e1729c9616fe774477bcc246803f116f7fbf2519dae5a03d061a4d2b272bb85",
+      "bytes": 194,
+      "source": {
+        "sha256": "8e1729c9616fe774477bcc246803f116f7fbf2519dae5a03d061a4d2b272bb85",
+        "bytes": 194
+      },
+      "redactions": {
+        "paths": 0,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    },
+    {
+      "name": "run/post-run-title.txt",
+      "sha256": "41a451b2031bdfc79e8d670831e4badae1b9d46f58980f363323b7002fc6ef49",
+      "bytes": 46,
+      "source": {
+        "sha256": "41a451b2031bdfc79e8d670831e4badae1b9d46f58980f363323b7002fc6ef49",
+        "bytes": 46
+      },
+      "redactions": {
+        "paths": 0,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    },
+    {
+      "name": "run/run-report.json",
+      "sha256": "a5fc2b4e7d251bab648b90de9a18ecc91cf09997a75558a3e7462d800a9a0d88",
+      "bytes": 1207,
+      "source": {
+        "sha256": "a5fc2b4e7d251bab648b90de9a18ecc91cf09997a75558a3e7462d800a9a0d88",
+        "bytes": 1207
+      },
+      "redactions": {
+        "paths": 0,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    },
+    {
+      "name": "run/video.sha256",
+      "sha256": "ed8302d5dba0a68ee0b14072d28208de924326b0322a09fb28ad51cdeb1d1917",
+      "bytes": 111,
+      "source": {
+        "sha256": "ed8302d5dba0a68ee0b14072d28208de924326b0322a09fb28ad51cdeb1d1917",
+        "bytes": 111
+      },
+      "redactions": {
+        "paths": 0,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    }
+  ],
+  "withheld": [
+    {
+      "name": "00001-title-observe.py.png",
+      "sha256": "77bc2d046282b4b00caad37529fe2f09f2af85cb777375c6066fdcc5728d3c9a",
+      "bytes": 1760243,
+      "kind": "frame"
+    },
+    {
+      "name": "00002-title-observe.py.png",
+      "sha256": "665788915ba3fd43d73b59f2dd876b7d876a2f67733a3552ae58fd7864fb7f6a",
+      "bytes": 1971229,
+      "kind": "frame"
+    },
+    {
+      "name": "00003-lifecycle-observe.py.png",
+      "sha256": "b8cb0dd82b7d4dea3a196fa6046c9614f1dc01323177703765cda5442bd67569",
+      "bytes": 26004,
+      "kind": "frame"
+    },
+    {
+      "name": "00004-lifecycle-observe.py.png",
+      "sha256": "a1e887b38138cb0447aa5e01698771ada8c07e626481d0d420601ae754396049",
+      "bytes": 18113,
+      "kind": "frame"
+    },
+    {
+      "name": "00005-lifecycle-observe.py.png",
+      "sha256": "a1e97294957a9926ff8dd3bbe12c999cc056862ab6b30b211caf4e722a0e26ff",
+      "bytes": 18148,
+      "kind": "frame"
+    },
+    {
+      "name": "night6-tw27-05-20260927T081406Z.mp4",
+      "sha256": "f872f5836610e3d5a854d530d86c8785298bcbe774fb1b4fe90ab1cc5c2b6071",
+      "bytes": 52136979,
+      "kind": "video"
+    },
+    {
+      "name": "run/campaign.log",
+      "sha256": "31c6f027d8684b8f56664b7626460c24d79d3da0788e2af12e2fce26582b3d42",
+      "bytes": 6962,
+      "kind": "other"
+    },
+    {
+      "name": "run/frame-clock.tsv",
+      "sha256": "f283440bc64def7b22e2f39e7243e8d21416d58270dde357aadcdeabd4d86c61",
+      "bytes": 1824118,
+      "kind": "other"
+    },
+    {
+      "name": "run/frame-trace.file",
+      "sha256": "4ac436f35d71318493d6dea62177824f9e6bd7554e371f9a7c09a3fa6283242b",
+      "bytes": 52,
+      "kind": "other"
+    },
+    {
+      "name": "run/frame-trace.state",
+      "sha256": "fca909a659de0cd997f77f4664430d397c1f87c148898e588fd84ed179db3c11",
+      "bytes": 7,
+      "kind": "other"
+    },
+    {
+      "name": "run/input-events.txt",
+      "sha256": "4ebd00c65a4d815516ced498ec2f6e34abe08077ec0b004d9473d800a024c4b4",
+      "bytes": 1828,
+      "kind": "other"
+    },
+    {
+      "name": "run/mmfruntime.logcat",
+      "sha256": "b94e36b44e483ff23d12a8165db66e17121147692949ff9053484fa15f2aff2f",
+      "bytes": 26598,
+      "kind": "log"
+    },
+    {
+      "name": "run/post-run-title.png",
+      "sha256": "0ff79340db81c88997d85984e230165440e93b38547cdb8c445edf01e740a3eb",
+      "bytes": 1868553,
+      "kind": "frame"
+    },
+    {
+      "name": "run/seed-pin.out",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "kind": "other"
+    },
+    {
+      "name": "run/twin-acquisition.log",
+      "sha256": "84104bd13beebc4d1fa990779453f03d6b7e6de7a2fa91dd619bae2129adc36d",
+      "bytes": 3537,
+      "kind": "other"
+    },
+    {
+      "name": "run/twin-acquisition.sh",
+      "sha256": "546231094916e7e9c37028ee82b2a3f20710850b4c547baaa86d3dde64a3d62f",
+      "bytes": 9548,
+      "kind": "other"
+    }
+  ],
+  "packer": "tools/evidence-pack.mjs",
+  "custody": {
+    "kind": "incomplete-campaign",
+    "retained": [
+      "events.jsonl",
+      "observations.jsonl",
+      "request.json"
+    ],
+    "lost": [
+      "result.json"
+    ],
+    "reason": "Native campaign files survive, but no result.json exists; no terminal is inferred."
+  }
+}
