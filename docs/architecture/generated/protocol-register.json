@@ -14,12 +14,6 @@
       "validator": "encodeFactMessage"
     },
     {
-      "id": "pcm-udp-v1",
-      "owner": "firmware",
-      "kind": "wire",
-      "validator": "28-byte header"
-    },
-    {
       "id": "hid-executor-v1",
       "owner": "apps/device",
       "kind": "wire",

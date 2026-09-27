@@ -66,7 +66,6 @@ const contractEvidence = {
   'claim-evidence-v1': ['tools/evidence.js'],
   'cue-helper-control-v1': ['tools/cue/test-cue.py'],
   'fact-message-v1': ['packages/core/test/fixtures/fact-message-v1.jsonl'],
-  'pcm-udp-v1': ['tools/cue/test-audio-authority.py'],
   'hid-executor-v1': ['packages/adapters/test/conformance.test.js', 'apps/device/test/adb-device-local-executor.test.js'],
   'device-executor-v1': ['apps/device/test/adb-device-local-executor.test.js'],
   'device-campaign-v1': ['apps/device/test/campaign.test.js', 'apps/device/test/campaign-runner.test.js'],
@@ -289,13 +288,6 @@ const legacyPaths = [
     replacement: 'experiment spec/runner with an explicit historical actuator model',
     removalGate: 'Historical sweeps have structured, replayable experiment artifacts',
     notes: 'Retired swipe-era schedule report; it is not a selectable device route.',
-  },
-  {
-    id: 'device.cue-model-provisioner', path: 'tools/device/provision-cue-model.sh', category: 'device',
-    lifecycle: 'legacy', owner: '@fnaf2-1020/adapters',
-    replacement: 'cue-helper/screen detector profile with content-addressed model binding',
-    removalGate: 'No supported APK build loads the provisioned file and all holdouts are retained',
-    notes: 'Historical APK model installer; current visual-only helper does not consume it.',
   },
   {
     id: 'research.minus-toys-alias', path: 'tools/minustoystest.mjs', category: 'research-alias',

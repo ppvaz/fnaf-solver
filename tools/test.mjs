@@ -247,7 +247,6 @@ const ENGINE = [
   // fact contract regardless of its receiver. The ESP32 receiver and its
   // firmware are archived (docs/ARCHIVED-ROUTES.md); BlueALSA is the one left.
   ['audio authority', ['cue/test-audio-authority.py']],
-  ['provision-cue-model', ['device/test-provision-cue-model.sh']],
   // The campaign can request any story night, so every story night must build,
   // replay and receive a verdict priced against ITS OWN AI table. Nights 1 and
   // 3 used to crash the builder on one shared message that covered two
@@ -385,7 +384,6 @@ const ENGINE = [
   ['cue shadow window builder', ['cue/test-build-shadow-windows.py']],
   ['cue model promotion', ['cue/test-export-model.py']],
   ['latency experiment', ['cue/test-latency-experiment.py']],
-  ['audio fact bridge', ['cue/test-bridge-audio-authority.py']],
 ];
 
 // These checks establish robustness margins and campaign-wide survival floors,

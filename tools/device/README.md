@@ -65,7 +65,6 @@ during physical cleanup and restores signal handling before host analysis.
 | `tools/device/test-cue-helper-mcp.mjs` | check | Stdio MCP regression for initialize, tool catalog, queue persistence, and absent-device HOLD. |
 | `tools/device/collect-cue-audio.sh [rounds] [seconds] [label]` | **device action** | Cold-starts short 6th Nights, mutes the opening call, and waits while Balloon Boy takes his route, with the helper logging audio throughout. Sends no other input; surviving is not the point. Writes a session-boundary TSV so a holdout can split by session rather than by adjacent windows. |
 | `tools/device/test-query-cue-helper.sh` | check | Mock-ADB regression for helper PID/token discovery, focus gating, transport selection, and snapshot parsing. Serves a real local socket for the forward transport; does not touch a real device. |
-| `tools/device/provision-cue-model.sh MODEL [HOLDOUT_REPORT] [--replace]` | legacy device action | Legacy Android model provisioner retained for historical APK builds. The current visual-only APK does not load this file; use the validated model directly with `tools/cue/audio-authority.py --model MODEL` on the external receiver. Its host-side holdout checks remain covered by `tools/device/test-provision-cue-model.sh`. |
 | `tools/device/coords.sh` | sourced config | Moto g56 5G, 2400x1080 landscape touch coordinates used by the trial scripts. Source it; do not execute it. Recalibrate before using another layout/device. |
 | `tools/device/screenstate.py` | classifier | Reads an ADB PNG on stdin and prints `night`, `gameover`, or `other`. `--adb-fast [timeout]` transfers only sampled raw scanlines for watchdog polling. Requires Pillow in PNG mode. |
 | `tools/device/clocktrace.mjs VIDEO` | analyzer | Measures the first office HUD and 1 AM transitions in a 1280x576 trial recording. `--expect-ms=70000 --tolerance-ms=N` turns the sourced 70-second hour edge into an assertion for device-epoch trials. |
@@ -261,7 +260,6 @@ The detector these consume is in [`../cue/README.md`](../cue/README.md).
 |---|---|---|
 | `tools/device/bb-cue-state.mjs` | module | Source-correct Balloon Boy cue interpreter for canonical Minus 7: keeps every route position still possible after silent moves and missed cue components, and attributes a bang to BB only while all seven stalls and the Puppet box rule one out. Callers act on the returned directive, never on a raw detection. |
 | `tools/device/test-bb-cue-state.mjs` | check | Pins `bb-cue-state.mjs`: the possible-set narrows on each attributable cue, widens on a silent movement opportunity, and never attributes a bang another character could have made. Runs in `tools/test.mjs --engine`. |
-| `tools/device/test-provision-cue-model.sh` | check | Mock-ADB regression for `provision-cue-model.sh`'s heldout gate. Proves the same fixture installs a passing-but-wrong model clean with only the `model_sha256` reconstruction check removed — the gap that check closes. No phone, no adb. |
 
 ## Test fixtures and mocks
 

@@ -896,13 +896,7 @@
     {
       "id": "tools/cue/latency-experiment.py",
       "invocation": "tools/cue/latency-experiment.py preflight|run|analyze",
-      "kind": "external-device action/report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/cue/bridge-audio-authority.py",
-      "invocation": "tools/cue/bridge-audio-authority.py --socket PATH",
-      "kind": "external-device action",
+      "kind": "report (`run` retired)",
       "lifecycle": "supported"
     },
     {
@@ -914,12 +908,6 @@
     {
       "id": "tools/cue/test-audio-authority.py",
       "invocation": "tools/cue/test-audio-authority.py",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/cue/test-bridge-audio-authority.py",
-      "invocation": "tools/cue/test-bridge-audio-authority.py",
       "kind": "check",
       "lifecycle": "supported"
     },
@@ -1246,12 +1234,6 @@
       "invocation": "tools/device/test-query-cue-helper.sh",
       "kind": "check",
       "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/provision-cue-model.sh",
-      "invocation": "tools/device/provision-cue-model.sh MODEL [HOLDOUT_REPORT] [--replace]",
-      "kind": "legacy device action",
-      "lifecycle": "legacy"
     },
     {
       "id": "tools/device/coords.sh",
@@ -2252,12 +2234,6 @@
     {
       "id": "tools/device/test-bb-cue-state.mjs",
       "invocation": "tools/device/test-bb-cue-state.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-provision-cue-model.sh",
-      "invocation": "tools/device/test-provision-cue-model.sh",
       "kind": "check",
       "lifecycle": "supported"
     },

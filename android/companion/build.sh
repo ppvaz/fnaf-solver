@@ -74,9 +74,6 @@ mkdir -p "$CLASSES_DIR" "$DEX_DIR"
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/AccessibilityProbeActivity.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/AccessibilityGameProbeReceiver.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/AccessibilityProbeService.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/AudioAnalyzer.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/PhaseClock.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/CueDetector.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/PixelWatch.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/NativeRegions.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/PanAnchor.java" \
@@ -107,7 +104,6 @@ mkdir -p "$CLASSES_DIR" "$DEX_DIR"
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/TeachPanelView.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/OverlayView.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/OverlayController.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/CaptureFileProvider.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/CaptureService.java"
 
 "$JAR" --create --file "$BUILD_DIR/classes.jar" -C "$CLASSES_DIR" .

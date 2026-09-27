@@ -13,22 +13,12 @@ import android.graphics.PixelFormat;
 import android.hardware.HardwareBuffer;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
-import android.media.AudioAttributes;
-import android.media.AudioDeviceInfo;
-import android.media.AudioFormat;
-import android.media.AudioManager;
-import android.media.AudioTrack;
 import android.media.Image;
 import android.media.ImageReader;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.net.LocalServerSocket;
 import android.net.LocalSocket;
-import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkCapabilities;
-import android.net.NetworkRequest;
-import android.net.wifi.WifiNetworkSpecifier;
 import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -44,11 +34,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.RandomAccessFile;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -56,36 +43,19 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
-import java.nio.channels.DatagramChannel;
 import java.nio.charset.StandardCharsets;
-import java.net.StandardProtocolFamily;
 import java.security.SecureRandom;
 import java.util.Locale;
 import java.util.Arrays;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.TimeUnit;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 
 public final class CaptureService extends Service {
     public static final String ACTION_START =
             "com.fnaf2.cuehelper.action.START";
     public static final String ACTION_QUERY_STATUS =
             "com.fnaf2.cuehelper.action.QUERY_STATUS";
-    public static final String ACTION_START_AUDIO_RECORD =
-            "com.fnaf2.cuehelper.action.START_AUDIO_RECORD";
-    public static final String ACTION_STOP_AUDIO_RECORD =
-            "com.fnaf2.cuehelper.action.STOP_AUDIO_RECORD";
-    public static final String ACTION_START_AUDIO_MONITOR =
-            "com.fnaf2.cuehelper.action.START_AUDIO_MONITOR";
-    public static final String ACTION_STOP_AUDIO_MONITOR =
-            "com.fnaf2.cuehelper.action.STOP_AUDIO_MONITOR";
-    public static final String ACTION_CONNECT_AUDIO_WIFI =
-            "com.fnaf2.cuehelper.action.CONNECT_AUDIO_WIFI";
-    public static final String ACTION_RELOAD_AUDIO_MODEL =
-            "com.fnaf2.cuehelper.action.RELOAD_AUDIO_MODEL";
     public static final String ACTION_OVERLAY_ENABLE =
             "com.fnaf2.cuehelper.action.OVERLAY_ENABLE";
     public static final String ACTION_OVERLAY_DISABLE =
@@ -123,38 +93,10 @@ public final class CaptureService extends Service {
     private static final long MAX_VISUAL_FRAME_AGE_US = 250_000L;
     private static final long VISUAL_REPORT_INTERVAL_NS = 1_000_000_000L;
     private static final int CONTROL_PORT = 49_707;
-    private static final int AUDIO_FACT_PORT = 49_708;
-    private static final int AUDIO_FACT_UDP_PORT = 49_709;
-    private static final int AUDIO_PCM_UDP_PORT = 49_710;
-    private static final int AUDIO_REGISTRATION_UDP_PORT = 49_711;
-    private static final String AUDIO_WIFI_SSID = "FNAF2-AUDIO";
-    private static final String AUDIO_WIFI_PASSWORD = "fnaf2-audio";
-    private static final byte[] AUDIO_REGISTRATION_MAGIC =
-            "F2PCM-REGISTER-v1".getBytes(StandardCharsets.US_ASCII);
-    private static final int PCM_PACKET_MAGIC = 0x46325043;
-    private static final int PCM_PACKET_VERSION = 1;
-    private static final int PCM_HEADER_BYTES = 28;
-    private static final int PCM_MAX_PACKET_BYTES = 1_400;
-    private static final int PCM_MAX_PAYLOAD_BYTES = 1_200;
-    private static final int PCM_CHANNELS = 2;
-    private static final int PCM_SAMPLE_FORMAT_S16LE = 1;
-    // Four packets is a short startup jitter buffer. The queue is deliberately
-    // bounded so a stalled speaker cannot turn UDP jitter into unbounded heap
-    // growth or make the monitor replay seconds behind the game.
-    private static final int MONITOR_QUEUE_LENGTH = 32;
-    private static final int MONITOR_START_PACKETS = 4;
-    // A2DP source volume is already baked into the PCM decoded by the ESP32,
-    // then Android applies the phone speaker's volume curve a second time.
-    // Restore useful monitor loudness while saturating instead of wrapping.
-    private static final int MONITOR_PCM_GAIN = 4;
     private static final String CONTROL_SOCKET_PREFIX =
             "com.fnaf2.cuehelper.control";
     private static final int CONTROL_LINE_LIMIT = 256;
-    private static final int AUDIO_FACT_LINE_LIMIT = 1_024;
-    private static final long AUDIO_FACT_STALE_MS = 3_000L;
     private static final int CONTROL_READ_TIMEOUT_MS = 1_000;
-    private static final String AUDIO_AUTHORITY = "audio-authority";
-    private static final String AUDIO_MODEL_FILE = "cue-model-v1.txt";
     // Keep enough rows for a complete ten-minute night at 60 Hz. At native
     // 2400x1080 the retained 20x9 grid plus the calibrated control values is
     // about 27 MB, which is materially cheaper than retaining image buffers.
@@ -180,26 +122,12 @@ public final class CaptureService extends Service {
     private ImageReader imageReader;
     private HandlerThread visualThread;
     private ServerSocket controlServer;
-    private ServerSocket audioFactServer;
-    private DatagramSocket audioFactUdpServer;
-    private DatagramSocket audioPcmUdpServer;
     private LocalServerSocket localControlServer;
     private Thread controlThread;
-    private Thread audioFactThread;
-    private Thread audioFactUdpThread;
-    private Thread audioPcmUdpThread;
     private Thread localControlThread;
     private volatile boolean controlRunning;
-    private volatile boolean audioFactRunning;
-    private volatile boolean audioFactUdpRunning;
-    private volatile boolean audioPcmUdpRunning;
     private volatile boolean tcpControlUp;
     private volatile boolean localControlUp;
-    private volatile Socket audioFactClient;
-    private final Object audioWifiLock = new Object();
-    private ConnectivityManager audioWifiManager;
-    private ConnectivityManager.NetworkCallback audioWifiCallback;
-    private Network audioWifiNetwork;
     private String controlToken;
     private String controlSocketName;
 
@@ -217,27 +145,8 @@ public final class CaptureService extends Service {
     // turn a letterboxed or hidden capture into a confident pixel reading.
     private volatile int capturedContentVisibility = -1;
     private volatile String lastVisual = "visual=UNAVAILABLE";
-    private volatile String lastAudio = esp32AudioStatus();
-    private volatile long lastAudioFactElapsedNs;
-    private volatile String lastAudioCue = "audioCue=UNKNOWN reason=esp32-cue-not-seen";
-    private volatile long lastAudioCueElapsedNs;
-    private volatile String audioAuthorityName = AUDIO_AUTHORITY;
-    private volatile String audioProfileName = "unknown";
     private volatile String lastControl = "control=UNAVAILABLE";
-    private final Object audioRecordingLock = new Object();
-    private PcmRecording audioRecording;
-    private volatile String lastAudioRecording = "audioRecord=OFF";
-    private final AudioAnalyzer audioAnalyzer = new AudioAnalyzer(this::onPhoneAudioCue);
     private OverlayController overlayController;
-    private volatile String lastPhoneAudio = "audioAnalyzer=UNAVAILABLE reason=model-missing";
-    private volatile String lastPhoneAudioCue =
-            "phoneCue=UNKNOWN reason=phone-analyzer-no-event";
-    private volatile long lastPhoneAudioStatusNs;
-    private final Object audioMonitorLock = new Object();
-    private AudioMonitorSession audioMonitorSession;
-    private Thread audioMonitorThread;
-    private volatile boolean audioMonitorRequested;
-    private volatile String lastAudioMonitor = "audioMonitor=OFF reason=not-started";
 
     private long snapshotVisualSequence;
     private long snapshotVisualTimestampNs;
@@ -448,238 +357,6 @@ public final class CaptureService extends Service {
         }
     }
 
-    /**
-     * Development-only WAV sink for the authoritative PCM datagrams. The ESP
-     * remains the audio observer; this class only persists the exact payload
-     * it already sent to the APK, together with loss/timestamp accounting.
-     */
-    private static final class PcmRecording {
-        private final File wavFile;
-        private final RandomAccessFile output;
-        private int sampleRateHz;
-        private final int channels = PCM_CHANNELS;
-        private final int bitsPerSample = 16;
-        private long dataBytes;
-        private long nonzeroBytes;
-        private long packets;
-        private long invalidPackets;
-        private long lostPackets;
-        private long outOfOrderPackets;
-        private long lastSequence;
-        private boolean haveSequence;
-        private long firstCaptureUs = -1L;
-        private long firstPacketElapsedNs = -1L;
-        private long rateChanges;
-
-        PcmRecording(File wavFile) throws IOException {
-            this.wavFile = wavFile;
-            this.output = new RandomAccessFile(wavFile, "rw");
-            this.output.setLength(0L);
-            writeHeader(44_100, 0L);
-        }
-
-        void accept(byte[] packet, int payloadOffset, int payloadLength,
-                int packetRateHz, long sequence, long captureUs,
-                long receivedElapsedNs) throws IOException {
-            if (haveSequence) {
-                long distance = (sequence - lastSequence) & 0xffff_ffffL;
-                if (distance == 0L || distance > 0x8000_0000L) {
-                    outOfOrderPackets++;
-                    return;
-                }
-                if (distance > 1L) {
-                    lostPackets += distance - 1L;
-                }
-            } else {
-                haveSequence = true;
-                firstCaptureUs = captureUs;
-                firstPacketElapsedNs = receivedElapsedNs;
-            }
-            lastSequence = sequence;
-
-            if (sampleRateHz == 0) {
-                sampleRateHz = packetRateHz;
-                writeHeader(sampleRateHz, dataBytes);
-            } else if (sampleRateHz != packetRateHz) {
-                /* A single WAV cannot silently change its sample clock. */
-                rateChanges++;
-                invalidPackets++;
-                return;
-            }
-
-            output.seek(44L + dataBytes);
-            output.write(packet, payloadOffset, payloadLength);
-            dataBytes += payloadLength;
-            for (int index = payloadOffset; index < payloadOffset + payloadLength;
-                    index++) {
-                if (packet[index] != 0) nonzeroBytes++;
-            }
-            packets++;
-        }
-
-        void close() throws IOException {
-            writeHeader(sampleRateHz == 0 ? 44_100 : sampleRateHz, dataBytes);
-            output.close();
-            writeMetadata();
-        }
-
-        void rejectPacket() {
-            invalidPackets++;
-        }
-
-        String status() {
-            return "audioRecord=ON file=" + wavFile.getName()
-                    + " packets=" + packets + " bytes=" + dataBytes;
-        }
-
-        private void writeHeader(int rateHz, long payloadBytes) throws IOException {
-            output.seek(0L);
-            output.writeBytes("RIFF");
-            writeLittle32(36L + payloadBytes);
-            output.writeBytes("WAVE");
-            output.writeBytes("fmt ");
-            writeLittle32(16L);
-            writeLittle16(1);
-            writeLittle16(channels);
-            writeLittle32(rateHz);
-            writeLittle32((long) rateHz * channels * bitsPerSample / 8L);
-            writeLittle16(channels * bitsPerSample / 8);
-            writeLittle16(bitsPerSample);
-            output.writeBytes("data");
-            writeLittle32(payloadBytes);
-            output.seek(44L + payloadBytes);
-        }
-
-        private void writeLittle16(int value) throws IOException {
-            output.write(value & 0xff);
-            output.write((value >>> 8) & 0xff);
-        }
-
-        private void writeLittle32(long value) throws IOException {
-            output.write((int) value & 0xff);
-            output.write((int) (value >>> 8) & 0xff);
-            output.write((int) (value >>> 16) & 0xff);
-            output.write((int) (value >>> 24) & 0xff);
-        }
-
-        private void writeMetadata() throws IOException {
-            JSONObject metadata = new JSONObject();
-            try {
-                metadata.put("schema", "fnaf2-android-esp32-capture-v1");
-                metadata.put("transport", "esp32-udp-pcm-v1");
-                metadata.put("raw", wavFile.getAbsolutePath());
-                metadata.put("sample_format", "s16le");
-                metadata.put("rate", sampleRateHz == 0 ? 44_100 : sampleRateHz);
-                metadata.put("channels", channels);
-                metadata.put("bytes_per_frame", channels * bitsPerSample / 8);
-                metadata.put("frames", dataBytes / (channels * bitsPerSample / 8));
-                metadata.put("bytes", dataBytes);
-                metadata.put("nonzero_fraction",
-                        nonzeroBytes / (double) Math.max(1L, dataBytes));
-                metadata.put("packets", packets);
-                metadata.put("invalid_packets", invalidPackets);
-                metadata.put("lost_packets", lostPackets);
-                metadata.put("out_of_order_packets", outOfOrderPackets);
-                metadata.put("rate_changes", rateChanges);
-                metadata.put("first_capture_us", firstCaptureUs);
-                metadata.put("first_packet_elapsed_ns", firstPacketElapsedNs);
-                metadata.put("status", dataBytes == 0L ? "error" : "complete");
-            } catch (JSONException error) {
-                throw new IOException("metadata construction failed", error);
-            }
-            File metadataFile = new File(wavFile.getAbsolutePath() + ".json");
-            try (FileOutputStream stream = new FileOutputStream(metadataFile)) {
-                stream.write((metadata.toString() + "\n")
-                        .getBytes(StandardCharsets.UTF_8));
-            }
-        }
-    }
-
-    /** One immutable PCM datagram copied out of the UDP receive buffer. */
-    private static final class PcmPlaybackChunk {
-        final byte[] payload;
-        final int sampleRateHz;
-        final long sequence;
-
-        PcmPlaybackChunk(byte[] payload, int sampleRateHz, long sequence) {
-            this.payload = payload;
-            this.sampleRateHz = sampleRateHz;
-            this.sequence = sequence;
-        }
-    }
-
-    /**
-     * Phone-side duplicate fed by the authoritative ESP32 PCM datagrams.
-     * There is intentionally no AudioPlaybackCapture/AudioRecord path here:
-     * the ESP32 has already received the complete A2DP mix.
-     */
-    private static final class AudioMonitorSession {
-        final AudioTrack playback;
-        final int sampleRateHz;
-        final boolean speakerPreferred;
-        final ArrayBlockingQueue<PcmPlaybackChunk> queue =
-                new ArrayBlockingQueue<>(MONITOR_QUEUE_LENGTH);
-        volatile boolean running = true;
-        volatile String failure;
-        volatile String lastRoute = "unknown";
-        long renderedBytes;
-        long frames;
-        long packets;
-        long lostPackets;
-        long droppedPackets;
-        long lastSequence = -1L;
-        private boolean closed;
-
-        AudioMonitorSession(AudioTrack playback, int sampleRateHz,
-                boolean speakerPreferred) {
-            this.playback = playback;
-            this.sampleRateHz = sampleRateHz;
-            this.speakerPreferred = speakerPreferred;
-        }
-
-        synchronized boolean enqueue(byte[] packet, int offset, int length,
-                int sampleRateHz, long sequence) {
-            if (closed || !running || this.sampleRateHz != sampleRateHz) {
-                droppedPackets++;
-                return false;
-            }
-            if (lastSequence >= 0L) {
-                long delta = (sequence - lastSequence) & 0xffffffffL;
-                if (delta == 0L || delta >= 0x80000000L) {
-                    droppedPackets++;
-                    return false;
-                }
-                if (delta > 1L) {
-                    lostPackets += delta - 1L;
-                }
-            }
-            lastSequence = sequence;
-            byte[] copy = new byte[length];
-            System.arraycopy(packet, offset, copy, 0, length);
-            if (!queue.offer(new PcmPlaybackChunk(copy, sampleRateHz, sequence))) {
-                droppedPackets++;
-                return false;
-            }
-            packets++;
-            return true;
-        }
-
-        synchronized void close() {
-            if (closed) {
-                return;
-            }
-            closed = true;
-            running = false;
-            queue.clear();
-            try {
-                playback.stop();
-            } catch (IllegalStateException ignored) {
-                // It may not have started yet, or the worker already stopped it.
-            }
-            playback.release();
-        }
-    }
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -689,39 +366,8 @@ public final class CaptureService extends Service {
                 NOTIFICATION_CHANNEL,
                 "Companion capture",
                 NotificationManager.IMPORTANCE_LOW);
-        channel.setDescription("Active on-device visual capture with external audio authority");
+        channel.setDescription("Active on-device native frame capture");
         getSystemService(NotificationManager.class).createNotificationChannel(channel);
-        loadAudioAnalyzerModel();
-    }
-
-    private void loadAudioAnalyzerModel() {
-        File modelFile = new File(getFilesDir(), AUDIO_MODEL_FILE);
-        if (!modelFile.isFile()) {
-            audioAnalyzer.clearModel();
-            lastPhoneAudio = audioAnalyzer.status();
-            return;
-        }
-        try {
-            audioAnalyzer.setModel(AudioAnalyzer.readModel(modelFile));
-            lastPhoneAudio = audioAnalyzer.status();
-            Log.i(TAG, "loaded phone audio model " + modelFile.getAbsolutePath());
-        } catch (Throwable error) {
-            audioAnalyzer.clearModel();
-            lastPhoneAudio = "audioAnalyzer=ERROR reason=" + reasonFor(error);
-            Log.e(TAG, "phone audio model rejected", error);
-        }
-    }
-
-    private void onPhoneAudioCue(AudioAnalyzer.CueEvent event) {
-        if (!freshNightVisualContext()) {
-            lastPhoneAudioCue = "phoneCue=UNKNOWN reason=visual-context-not-night";
-            return;
-        }
-        lastPhoneAudioCue = String.format(Locale.US,
-                "phoneCue=SHADOW id=%d confidence=%.4f margin=%.4f onsetNs=%d seq=%d",
-                event.cueId, event.score, event.margin, event.onsetNs,
-                event.sourceSequence);
-        publishCombinedStatus("RUNNING");
     }
 
     @Override
@@ -763,43 +409,6 @@ public final class CaptureService extends Service {
         }
 
         if (ACTION_QUERY_STATUS.equals(action)) {
-            publishCombinedStatus(projection == null ? "UNAVAILABLE" : "RUNNING");
-            return START_NOT_STICKY;
-        }
-
-        if (ACTION_CONNECT_AUDIO_WIFI.equals(action)) {
-            requestAudioWifi();
-            return START_NOT_STICKY;
-        }
-
-        if (ACTION_START_AUDIO_RECORD.equals(action)) {
-            if (projection == null || !audioPcmUdpRunning) {
-                publishStatus("UNAVAILABLE: ESP32 PCM listener is not running");
-            } else {
-                startAudioRecording();
-            }
-            return START_NOT_STICKY;
-        }
-
-        if (ACTION_STOP_AUDIO_RECORD.equals(action)) {
-            stopAudioRecording();
-            publishCombinedStatus(projection == null ? "UNAVAILABLE" : "RUNNING");
-            return START_NOT_STICKY;
-        }
-
-        if (ACTION_START_AUDIO_MONITOR.equals(action)) {
-            startAudioMonitor();
-            return START_NOT_STICKY;
-        }
-
-        if (ACTION_STOP_AUDIO_MONITOR.equals(action)) {
-            stopAudioMonitor();
-            publishCombinedStatus(projection == null ? "UNAVAILABLE" : "RUNNING");
-            return START_NOT_STICKY;
-        }
-
-        if (ACTION_RELOAD_AUDIO_MODEL.equals(action)) {
-            loadAudioAnalyzerModel();
             publishCombinedStatus(projection == null ? "UNAVAILABLE" : "RUNNING");
             return START_NOT_STICKY;
         }
@@ -876,20 +485,7 @@ public final class CaptureService extends Service {
             overlayController.onCaptureStarted(captureWidth, captureHeight);
             lastOverlaySnapshotNs = 0L;
             startVisualCapture(generation);
-            audioAnalyzer.resetSession();
-            lastPhoneAudio = audioAnalyzer.status();
-            lastPhoneAudioStatusNs = 0L;
-            lastPhoneAudioCue = "phoneCue=UNKNOWN reason=phone-analyzer-no-event";
-            lastAudio = esp32AudioStatus();
-            lastAudioFactElapsedNs = 0L;
-            lastAudioCue = "audioCue=UNKNOWN reason=esp32-cue-not-seen";
-            lastAudioCueElapsedNs = 0L;
-            audioAuthorityName = AUDIO_AUTHORITY;
-            audioProfileName = "unknown";
             startControlServer(generation);
-            startAudioFactServer(generation);
-            startAudioFactUdpServer(generation);
-            startAudioPcmUdpServer(generation);
             publishControlStatus();
             publishCombinedStatus("RUNNING");
         } catch (Throwable error) {
@@ -908,8 +504,8 @@ public final class CaptureService extends Service {
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         Notification notification = new Notification.Builder(this, NOTIFICATION_CHANNEL)
                 .setSmallIcon(android.R.drawable.ic_menu_view)
-                .setContentTitle("FNaF 2 Companion active")
-                .setContentText("20x9 visual probe; audio supplied externally")
+                .setContentTitle("FNaF Companion capture")
+                .setContentText("Native frames for registered regions")
                 .setContentIntent(contentIntent)
                 .setOngoing(true)
                 .build();
@@ -918,130 +514,6 @@ public final class CaptureService extends Service {
                     ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION);
         } else {
             startForeground(NOTIFICATION_ID, notification);
-        }
-    }
-
-    /**
-     * Ask Android for the ESP32 as a local-only network. A normal saved Wi-Fi
-     * connection is eligible to be dropped when it has no Internet, which is
-     * exactly the failure mode of the bench AP. The network request is kept
-     * for the service lifetime. Only fresh ESP32 registration sockets are
-     * bound to it: binding the whole process would unnecessarily move other
-     * traffic to a network that deliberately has no Internet.
-     */
-    private void requestAudioWifi() {
-        if (Build.VERSION.SDK_INT < 29) {
-            publishStatus("UNAVAILABLE: managed ESP32 Wi-Fi needs Android 10+");
-            return;
-        }
-        ConnectivityManager manager = getSystemService(ConnectivityManager.class);
-        if (manager == null) {
-            publishStatus("UNAVAILABLE: ConnectivityManager unavailable");
-            return;
-        }
-
-        synchronized (audioWifiLock) {
-            if (audioWifiCallback != null) {
-                NetworkCapabilities existing = audioWifiNetwork == null ? null
-                        : manager.getNetworkCapabilities(audioWifiNetwork);
-                if (existing != null && existing.hasTransport(
-                        NetworkCapabilities.TRANSPORT_WIFI)) {
-                    publishStatus("ESP32 Wi-Fi already available");
-                    return;
-                }
-                // A powered-off/reset AP can leave a stale Network object
-                // behind briefly. A button retry must replace that request,
-                // not keep retrying an invalid netId forever.
-                try {
-                    manager.unregisterNetworkCallback(audioWifiCallback);
-                } catch (IllegalArgumentException ignored) {
-                    // It may already have been retired by ConnectivityService.
-                }
-                audioWifiCallback = null;
-                audioWifiManager = null;
-                audioWifiNetwork = null;
-            }
-            WifiNetworkSpecifier.Builder specifierBuilder =
-                    new WifiNetworkSpecifier.Builder()
-                            .setSsid(AUDIO_WIFI_SSID)
-                            .setWpa2Passphrase(AUDIO_WIFI_PASSWORD);
-            if (Build.VERSION.SDK_INT >= 34) {
-                specifierBuilder.setPreferredChannelsFrequenciesMhz(
-                        new int[]{2_412});
-            }
-            WifiNetworkSpecifier specifier = specifierBuilder.build();
-            NetworkRequest request = new NetworkRequest.Builder()
-                    .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
-                    .removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                    .setNetworkSpecifier(specifier)
-                    .build();
-            ConnectivityManager.NetworkCallback callback =
-                    new ConnectivityManager.NetworkCallback() {
-                        @Override
-                        public void onAvailable(Network network) {
-                            synchronized (audioWifiLock) {
-                                audioWifiNetwork = network;
-                            }
-                            publishStatus("ESP32 Wi-Fi connected; registering PCM endpoint");
-                            Log.i(TAG, "managed ESP32 Wi-Fi available");
-                        }
-
-                        @Override
-                        public void onLost(Network network) {
-                            synchronized (audioWifiLock) {
-                                if (audioWifiNetwork != network) {
-                                    return;
-                                }
-                                audioWifiNetwork = null;
-                            }
-                            publishStatus("ESP32 Wi-Fi lost; tap Connect ESP32 Wi-Fi to retry");
-                            Log.w(TAG, "managed ESP32 Wi-Fi lost; waiting for retry");
-                        }
-
-                        @Override
-                        public void onUnavailable() {
-                            synchronized (audioWifiLock) {
-                                audioWifiCallback = null;
-                                audioWifiManager = null;
-                                audioWifiNetwork = null;
-                            }
-                            publishStatus("ESP32 Wi-Fi unavailable; tap to retry");
-                            Log.w(TAG, "managed ESP32 Wi-Fi unavailable");
-                        }
-                    };
-            audioWifiManager = manager;
-            audioWifiCallback = callback;
-            try {
-                manager.requestNetwork(request, callback);
-            } catch (SecurityException | IllegalArgumentException error) {
-                audioWifiCallback = null;
-                audioWifiManager = null;
-                publishStatus("UNAVAILABLE: ESP32 Wi-Fi request failed"
-                        + " reason=" + error.getClass().getSimpleName());
-                Log.e(TAG, "could not request managed ESP32 Wi-Fi", error);
-            }
-        }
-    }
-
-    private void releaseAudioWifi() {
-        ConnectivityManager manager;
-        ConnectivityManager.NetworkCallback callback;
-        synchronized (audioWifiLock) {
-            manager = audioWifiManager;
-            callback = audioWifiCallback;
-            audioWifiManager = null;
-            audioWifiCallback = null;
-            audioWifiNetwork = null;
-        }
-        if (manager == null) {
-            return;
-        }
-        if (callback != null) {
-            try {
-                manager.unregisterNetworkCallback(callback);
-            } catch (IllegalArgumentException ignored) {
-                // The request may already have been torn down by the system.
-            }
         }
     }
 
@@ -1637,46 +1109,6 @@ public final class CaptureService extends Service {
                 + " entries=" + watchSpec.size();
     }
 
-    private static String esp32AudioStatus() {
-        return "audio=ESP32 authority=esp32-audio-consumer"
-                + " state=UNKNOWN reason=esp32-not-connected";
-    }
-
-    private String currentAudioStatus() {
-        long receivedNs = lastAudioFactElapsedNs;
-        if (receivedNs == 0L) {
-            return lastAudio + " " + currentAudioCueStatus() + " " + lastAudioRecording
-                    + " " + lastAudioMonitor + " " + lastPhoneAudio + " "
-                    + lastPhoneAudioCue;
-        }
-        long ageMs = Math.max(0L,
-                (SystemClock.elapsedRealtimeNanos() - receivedNs) / 1_000_000L);
-        if (ageMs > AUDIO_FACT_STALE_MS) {
-            return "audio=" + ("esp32-audio-consumer".equals(audioAuthorityName)
-                    ? "ESP32" : "EXTERNAL") + " authority=" + audioAuthorityName
-                    + " state=UNKNOWN reason=external-authority-stale ageMs=" + ageMs
-                    + " profile=" + audioProfileName + " " + currentAudioCueStatus()
-                    + " " + lastAudioRecording + " " + lastAudioMonitor + " "
-                    + lastPhoneAudio + " " + lastPhoneAudioCue;
-        }
-        return lastAudio + " ageMs=" + ageMs + " " + currentAudioCueStatus()
-                + " " + lastAudioRecording + " " + lastAudioMonitor + " "
-                + lastPhoneAudio + " " + lastPhoneAudioCue;
-    }
-
-    private String currentAudioCueStatus() {
-        long receivedNs = lastAudioCueElapsedNs;
-        if (receivedNs == 0L) {
-            return lastAudioCue;
-        }
-        long ageMs = Math.max(0L,
-                (SystemClock.elapsedRealtimeNanos() - receivedNs) / 1_000_000L);
-        if (ageMs > AUDIO_FACT_STALE_MS) {
-            return "audioCue=UNKNOWN reason=esp32-cue-stale ageMs=" + ageMs;
-        }
-        return lastAudioCue + " ageMs=" + ageMs;
-    }
-
     /** Return one bounded, authenticated-read response for the active watch. */
     private String currentWatch() {
         if (!watchActive) {
@@ -1786,782 +1218,6 @@ public final class CaptureService extends Service {
         localControlThread.start();
     }
 
-    private void startAudioFactServer(long generation) throws IOException {
-        ServerSocket server = new ServerSocket();
-        server.setReuseAddress(true);
-        // The host bridge reaches this endpoint through an explicitly-created
-        // adb forward. It is loopback-only and exists only for this capture
-        // session; the session token authenticates the forwarded client.
-        server.bind(new InetSocketAddress(
-                InetAddress.getByAddress(new byte[] {127, 0, 0, 1}), AUDIO_FACT_PORT), 1);
-        audioFactServer = server;
-        audioFactRunning = true;
-        audioFactThread = new Thread(
-                () -> audioFactLoop(generation, server), "cue-audio-facts");
-        audioFactThread.start();
-    }
-
-    private void startAudioFactUdpServer(long generation) throws IOException {
-        DatagramSocket server = openIpv4DatagramSocket();
-        server.setReuseAddress(true);
-        // The ESP32 bench consumer sends one bounded health fact per UDP
-        // datagram on its private Wi-Fi AP. This listener is intentionally
-        // shadow-only: it accepts no cue-* facts and cannot receive actions.
-        // The ESP32 AP publishes IPv4 UDP datagrams. Bind the IPv4 wildcard
-        // explicitly; an unspecified bind on API 36 may create an IPv6-only
-        // socket, which silently misses the ESP32's IPv4 broadcast.
-        server.bind(new InetSocketAddress(
-                InetAddress.getByAddress(new byte[] {0, 0, 0, 0}),
-                AUDIO_FACT_UDP_PORT));
-        server.setSoTimeout(1_000);
-        audioFactUdpServer = server;
-        audioFactUdpRunning = true;
-        audioFactUdpThread = new Thread(
-                () -> audioFactUdpLoop(generation, server), "cue-audio-facts-wifi");
-        audioFactUdpThread.start();
-    }
-
-    private void audioFactUdpLoop(long generation, DatagramSocket server) {
-        Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
-        byte[] buffer = new byte[AUDIO_FACT_LINE_LIMIT];
-        while (audioFactUdpRunning && sessionActive(generation)) {
-            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-            try {
-                server.receive(packet);
-                String line = new String(packet.getData(), packet.getOffset(),
-                        packet.getLength(), StandardCharsets.US_ASCII).trim();
-                if (!line.isEmpty()
-                        && !acceptAudioFact(line, true)
-                        && !acceptEspCueEvent(line, true)) {
-                    Log.w(TAG, "rejected Wi-Fi audio fact from "
-                            + packet.getAddress().getHostAddress());
-                }
-            } catch (SocketTimeoutException ignored) {
-                // Re-check the session generation and shutdown flag.
-            } catch (SocketException error) {
-                if (audioFactUdpRunning && sessionActive(generation)) {
-                    Log.e(TAG, "Wi-Fi audio fact socket failed", error);
-                    audioFactUdpRunning = false;
-                }
-                break;
-            } catch (Throwable error) {
-                if (audioFactUdpRunning && sessionActive(generation)) {
-                    Log.w(TAG, "Wi-Fi audio fact failed", error);
-                }
-            }
-        }
-    }
-
-    private void startAudioPcmUdpServer(long generation) throws IOException {
-        DatagramSocket server = openIpv4DatagramSocket();
-        server.setReuseAddress(true);
-        // The phone is the optional development recorder. The ESP32 broadcasts
-        // validated PCM on the local bench AP; no ADB/USB path is involved.
-        // Keep the PCM listener on IPv4 for the same reason as the fact
-        // listener above: the ESP32 sends to the IPv4 AP broadcast address.
-        server.bind(new InetSocketAddress(
-                InetAddress.getByAddress(new byte[] {0, 0, 0, 0}),
-                AUDIO_PCM_UDP_PORT));
-        server.setReceiveBufferSize(1 << 20);
-        server.setSoTimeout(1_000);
-        audioPcmUdpServer = server;
-        audioPcmUdpRunning = true;
-        audioPcmUdpThread = new Thread(
-                () -> audioPcmUdpLoop(generation, server), "cue-audio-pcm-wifi");
-        audioPcmUdpThread.start();
-    }
-
-    private static DatagramSocket openIpv4DatagramSocket() throws IOException {
-        // DatagramSocket's unspecified constructor may select an IPv6-only
-        // socket on API 36 even when its later bind address is IPv4. The ESP32
-        // publishes IPv4 UDP, including its AP broadcast, so select INET at
-        // socket creation time.
-        return DatagramChannel.open(StandardProtocolFamily.INET).socket();
-    }
-
-    private void audioPcmUdpLoop(long generation, DatagramSocket server) {
-        // This loop is the real-time ingress for both the analyzer and the
-        // phone monitor. Background priority lets Android preempt it long
-        // enough for the kernel UDP receive buffer to overflow under load.
-        Process.setThreadPriority(Process.THREAD_PRIORITY_AUDIO);
-        byte[] buffer = new byte[PCM_MAX_PACKET_BYTES];
-        long lastRegistrationNs = 0L;
-        while (audioPcmUdpRunning && sessionActive(generation)) {
-            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-            try {
-                long nowNs = System.nanoTime();
-                if (lastRegistrationNs == 0L
-                        || nowNs - lastRegistrationNs >= 2_000_000_000L) {
-                    sendAudioRegistration();
-                    lastRegistrationNs = nowNs;
-                }
-                server.receive(packet);
-                acceptPcmPacket(packet.getData(), packet.getOffset(), packet.getLength());
-            } catch (SocketTimeoutException ignored) {
-                // Re-check generation and shutdown state.
-            } catch (SocketException error) {
-                if (audioPcmUdpRunning && sessionActive(generation)) {
-                    Log.e(TAG, "Wi-Fi PCM socket failed", error);
-                    audioPcmUdpRunning = false;
-                }
-                break;
-            } catch (Throwable error) {
-                if (audioPcmUdpRunning && sessionActive(generation)) {
-                    Log.w(TAG, "Wi-Fi PCM packet failed", error);
-                }
-            }
-        }
-    }
-
-    private void sendAudioRegistration() {
-        Network network;
-        synchronized (audioWifiLock) {
-            network = audioWifiNetwork;
-        }
-        if (network == null) {
-            return;
-        }
-        // A socket cannot be moved to another Android Network after it has
-        // already sent data. Use a fresh route-selected socket for this tiny
-        // registration datagram; the ESP replies to the fixed listener ports.
-        try (DatagramSocket registrationSocket = openIpv4DatagramSocket()) {
-            network.bindSocket(registrationSocket);
-            DatagramPacket registration = new DatagramPacket(
-                    AUDIO_REGISTRATION_MAGIC, AUDIO_REGISTRATION_MAGIC.length,
-                    InetAddress.getByAddress(new byte[] {(byte) 192, (byte) 168,
-                            4, 1}), AUDIO_REGISTRATION_UDP_PORT);
-            registrationSocket.send(registration);
-        } catch (IOException error) {
-            Log.w(TAG, "could not register phone UDP endpoint", error);
-        }
-    }
-
-    private void acceptPcmPacket(byte[] packet, int offset, int length) {
-        if (packet == null || offset < 0 || length < PCM_HEADER_BYTES
-                || length > PCM_MAX_PACKET_BYTES) {
-            rejectPcmPacket();
-            return;
-        }
-        ByteBuffer header = ByteBuffer.wrap(packet, offset, PCM_HEADER_BYTES)
-                .order(java.nio.ByteOrder.LITTLE_ENDIAN);
-        int magic = header.getInt();
-        int version = Byte.toUnsignedInt(header.get());
-        int channels = Byte.toUnsignedInt(header.get());
-        int format = Byte.toUnsignedInt(header.get());
-        header.get(); // reserved
-        int sampleRateHz = header.getInt();
-        long sequence = Integer.toUnsignedLong(header.getInt());
-        long captureUs = header.getLong();
-        int payloadBytes = Short.toUnsignedInt(header.getShort());
-        header.getShort(); // reserved2
-        if (magic != PCM_PACKET_MAGIC || version != PCM_PACKET_VERSION
-                || channels != PCM_CHANNELS || format != PCM_SAMPLE_FORMAT_S16LE
-                || (sampleRateHz != 16_000 && sampleRateHz != 32_000
-                && sampleRateHz != 44_100 && sampleRateHz != 48_000)
-                || payloadBytes <= 0 || payloadBytes > PCM_MAX_PAYLOAD_BYTES
-                || payloadBytes % (PCM_CHANNELS * 2) != 0
-                || payloadBytes != length - PCM_HEADER_BYTES) {
-            rejectPcmPacket();
-            return;
-        }
-        audioAnalyzer.setAudioContextAllowed(freshNightVisualContext());
-        audioAnalyzer.accept(packet, offset + PCM_HEADER_BYTES, payloadBytes,
-                sampleRateHz, sequence, captureUs);
-        long analyzerNowNs = System.nanoTime();
-        if (analyzerNowNs - lastPhoneAudioStatusNs >= 500_000_000L
-                || lastPhoneAudioStatusNs == 0L) {
-            lastPhoneAudio = audioAnalyzer.status();
-            lastPhoneAudioStatusNs = analyzerNowNs;
-        }
-        enqueueMonitorPcm(packet, offset + PCM_HEADER_BYTES, payloadBytes,
-                sampleRateHz, sequence);
-        synchronized (audioRecordingLock) {
-            if (audioRecording == null) {
-                return;
-            }
-            try {
-                audioRecording.accept(packet, offset + PCM_HEADER_BYTES, payloadBytes,
-                        sampleRateHz, sequence, captureUs,
-                        SystemClock.elapsedRealtimeNanos());
-                lastAudioRecording = audioRecording.status();
-            } catch (IOException error) {
-                Log.e(TAG, "ESP32 PCM recording failed", error);
-                stopAudioRecordingLocked();
-            }
-        }
-    }
-
-    private boolean freshNightVisualContext() {
-        long timestampNs;
-        int identity;
-        synchronized (snapshotLock) {
-            timestampNs = snapshotVisualTimestampNs;
-            identity = snapshotScreenIdentity;
-        }
-        if (identity != ScreenIdentity.FNAF2_NIGHT || timestampNs <= 0L) {
-            return false;
-        }
-        long ageNs = System.nanoTime() - timestampNs;
-        return ageNs >= 0L && ageNs <= MAX_VISUAL_FRAME_AGE_US * 1_000L
-                && capturedContentInvalidReason() == null;
-    }
-
-    private void rejectPcmPacket() {
-        synchronized (audioRecordingLock) {
-            if (audioRecording != null) {
-                audioRecording.rejectPacket();
-            }
-        }
-    }
-
-    private void startAudioRecording() {
-        synchronized (audioRecordingLock) {
-            if (audioRecording != null) {
-                lastAudioRecording = audioRecording.status();
-                publishCombinedStatus("RUNNING");
-                return;
-            }
-            File directory = new File(getFilesDir(), "audio-captures");
-            if ((!directory.exists() && !directory.mkdirs()) || !directory.isDirectory()) {
-                lastAudioRecording = "audioRecord=ERROR reason=storage-unavailable";
-                publishCombinedStatus("RUNNING");
-                return;
-            }
-            String name = "esp32-audio-" + System.currentTimeMillis() + ".wav";
-            File file = new File(directory, name);
-            try {
-                audioRecording = new PcmRecording(file);
-                lastAudioRecording = audioRecording.status();
-            } catch (IOException error) {
-                lastAudioRecording = "audioRecord=ERROR reason=file-open-failed";
-                Log.e(TAG, "could not start ESP32 PCM recording", error);
-            }
-        }
-        publishCombinedStatus("RUNNING");
-    }
-
-    private void stopAudioRecording() {
-        synchronized (audioRecordingLock) {
-            stopAudioRecordingLocked();
-        }
-        publishCombinedStatus(projection == null ? "UNAVAILABLE" : "RUNNING");
-    }
-
-    private void stopAudioRecordingLocked() {
-        if (audioRecording == null) {
-            lastAudioRecording = "audioRecord=OFF";
-            return;
-        }
-        PcmRecording recording = audioRecording;
-        audioRecording = null;
-        try {
-            recording.close();
-            lastAudioRecording = "audioRecord=READY file=" + recording.wavFile.getName()
-                    + " packets=" + recording.packets + " bytes=" + recording.dataBytes;
-        } catch (IOException error) {
-            lastAudioRecording = "audioRecord=ERROR reason=finalize-failed";
-            Log.e(TAG, "could not finalize ESP32 PCM recording", error);
-        }
-    }
-
-    private void startAudioMonitor() {
-        if (projection == null || !audioPcmUdpRunning) {
-            lastAudioMonitor = "audioMonitor=ERROR source=esp32-pcm "
-                    + "reason=pcm-listener-not-running";
-            publishCombinedStatus("UNAVAILABLE");
-            return;
-        }
-        synchronized (audioMonitorLock) {
-            audioMonitorRequested = true;
-            if (audioMonitorSession != null) {
-                lastAudioMonitor = audioMonitorStatus(audioMonitorSession);
-                publishCombinedStatus("RUNNING");
-                return;
-            }
-        }
-
-        // The sample rate is part of each ESP32 packet, so the AudioTrack is
-        // created lazily when the first valid PCM datagram arrives.
-        lastAudioMonitor = "audioMonitor=STARTING source=esp32-pcm "
-                + "reason=waiting-for-esp32-pcm";
-        publishCombinedStatus("RUNNING");
-    }
-
-    private AudioMonitorSession createAudioMonitor(int sampleRateHz) {
-        AudioTrack playback = null;
-        try {
-            AudioFormat playbackFormat = new AudioFormat.Builder()
-                    .setSampleRate(sampleRateHz)
-                    .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-                    .setChannelMask(AudioFormat.CHANNEL_OUT_STEREO)
-                    .build();
-            AudioAttributes playbackAttributes = new AudioAttributes.Builder()
-                    // Media strategy remains globally routed to A2DP on many
-                    // phones even when setPreferredDevice(speaker) succeeds.
-                    // Alarm strategy has an independent speaker route, so the
-                    // returned PCM can be heard without feeding it back into
-                    // the ESP32 and creating an A2DP loop.
-                    .setUsage(AudioAttributes.USAGE_ALARM)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build();
-            int minPlaybackBytes = AudioTrack.getMinBufferSize(
-                    sampleRateHz,
-                    AudioFormat.CHANNEL_OUT_STEREO,
-                    AudioFormat.ENCODING_PCM_16BIT);
-            if (minPlaybackBytes <= 0) {
-                throw new IllegalStateException("invalid-audio-track-buffer="
-                        + minPlaybackBytes);
-            }
-            playback = new AudioTrack.Builder()
-                    .setAudioAttributes(playbackAttributes)
-                    .setAudioFormat(playbackFormat)
-                    .setBufferSizeInBytes(Math.max(minPlaybackBytes,
-                            PCM_MAX_PAYLOAD_BYTES * MONITOR_QUEUE_LENGTH))
-                    .setTransferMode(AudioTrack.MODE_STREAM)
-                    .build();
-            if (playback.getState() != AudioTrack.STATE_INITIALIZED) {
-                throw new IllegalStateException("audio-track-not-initialized");
-            }
-            // Keep the monitor at unity application gain.  The system still
-            // applies the selected device's media volume independently.
-            playback.setVolume(1.0f);
-
-            AudioDeviceInfo speaker = findBuiltInSpeaker();
-            if (speaker == null) {
-                throw new IllegalStateException("built-in-speaker-not-found");
-            }
-            boolean speakerPreferred = playback.setPreferredDevice(speaker);
-            if (!speakerPreferred) {
-                throw new IllegalStateException("built-in-speaker-route-rejected");
-            }
-            return new AudioMonitorSession(playback, sampleRateHz, speakerPreferred);
-        } catch (Throwable error) {
-            if (playback != null) {
-                playback.release();
-            }
-            lastAudioMonitor = "audioMonitor=ERROR source=esp32-pcm reason="
-                    + reasonFor(error);
-            Log.e(TAG, "could not create ESP32 PCM phone monitor", error);
-            return null;
-        }
-    }
-
-    private void enqueueMonitorPcm(byte[] packet, int offset, int length,
-            int sampleRateHz, long sequence) {
-        if (!audioMonitorRequested) {
-            return;
-        }
-        AudioMonitorSession session;
-        synchronized (audioMonitorLock) {
-            session = audioMonitorSession;
-            if (session != null && session.sampleRateHz != sampleRateHz) {
-                session.droppedPackets++;
-                audioMonitorRequested = false;
-                lastAudioMonitor = "audioMonitor=ERROR source=esp32-pcm reason="
-                        + "sample-rate-changed expected=" + session.sampleRateHz
-                        + " actual=" + sampleRateHz;
-                publishCombinedStatus("RUNNING");
-                return;
-            }
-            if (session == null) {
-                session = createAudioMonitor(sampleRateHz);
-                if (session == null) {
-                    audioMonitorRequested = false;
-                    publishCombinedStatus("RUNNING");
-                    return;
-                }
-                audioMonitorSession = session;
-                AudioMonitorSession startedSession = session;
-                Thread worker = new Thread(
-                        () -> runAudioMonitor(startedSession), "cue-audio-monitor");
-                audioMonitorThread = worker;
-                worker.start();
-            }
-        }
-        session.enqueue(packet, offset, length, sampleRateHz, sequence);
-        lastAudioMonitor = audioMonitorStatus(session);
-    }
-
-    private void runAudioMonitor(AudioMonitorSession session) {
-        Process.setThreadPriority(Process.THREAD_PRIORITY_AUDIO);
-        long lastReportNs = 0L;
-        try {
-            while (session.running && session.queue.size() < MONITOR_START_PACKETS) {
-                PcmPlaybackChunk first = session.queue.poll(100, TimeUnit.MILLISECONDS);
-                if (first != null) {
-                    session.queue.offer(first);
-                }
-            }
-            if (!session.running) {
-                return;
-            }
-            session.playback.play();
-            session.lastRoute = routedDeviceLabel(session.playback);
-            if (!"builtin-speaker".equals(session.lastRoute)) {
-                throw new IllegalStateException("unsafe-audio-route=" + session.lastRoute);
-            }
-            long lastRouteCheckNs = System.nanoTime();
-            while (session.running) {
-                long routeNowNs = System.nanoTime();
-                if (routeNowNs - lastRouteCheckNs >= 250_000_000L) {
-                    session.lastRoute = routedDeviceLabel(session.playback);
-                    if (!"builtin-speaker".equals(session.lastRoute)) {
-                        throw new IllegalStateException("unsafe-audio-route="
-                                + session.lastRoute);
-                    }
-                    lastRouteCheckNs = routeNowNs;
-                }
-                PcmPlaybackChunk chunk = session.queue.poll(100, TimeUnit.MILLISECONDS);
-                if (chunk == null) {
-                    continue;
-                }
-                int offset = 0;
-                while (offset < chunk.payload.length && session.running) {
-                    if (offset == 0) {
-                        applyMonitorGain(chunk.payload);
-                    }
-                    int written = session.playback.write(chunk.payload, offset,
-                            chunk.payload.length - offset, AudioTrack.WRITE_BLOCKING);
-                    if (written <= 0) {
-                        throw new IllegalStateException("audio-track-write=" + written);
-                    }
-                    offset += written;
-                    session.renderedBytes += written;
-                }
-                session.frames += chunk.payload.length / (PCM_CHANNELS * 2);
-                long nowNs = System.nanoTime();
-                if (nowNs - lastReportNs >= 500_000_000L) {
-                    lastAudioMonitor = audioMonitorStatus(session);
-                    publishCombinedStatus("RUNNING");
-                    lastReportNs = nowNs;
-                }
-            }
-        } catch (Throwable error) {
-            if (session.running) {
-                session.failure = reasonFor(error);
-                Log.e(TAG, "ESP32 PCM phone monitor stopped", error);
-            }
-        } finally {
-            if (session.failure != null) {
-                audioMonitorRequested = false;
-            }
-            session.close();
-            synchronized (audioMonitorLock) {
-                if (audioMonitorSession == session) {
-                    audioMonitorSession = null;
-                }
-                if (audioMonitorThread == Thread.currentThread()) {
-                    audioMonitorThread = null;
-                }
-            }
-            if (session.failure == null) {
-                lastAudioMonitor = "audioMonitor=OFF source=esp32-pcm frames="
-                        + session.frames
-                        + " route=" + session.lastRoute;
-            } else {
-                lastAudioMonitor = "audioMonitor=ERROR source=esp32-pcm reason="
-                        + session.failure + " frames=" + session.frames;
-            }
-            publishCombinedStatus(projection == null ? "UNAVAILABLE" : "RUNNING");
-        }
-    }
-
-    private static void applyMonitorGain(byte[] pcm) {
-        for (int index = 0; index + 1 < pcm.length; index += 2) {
-            int sample = (pcm[index] & 0xff) | (pcm[index + 1] << 8);
-            int amplified = sample * MONITOR_PCM_GAIN;
-            if (amplified > Short.MAX_VALUE) amplified = Short.MAX_VALUE;
-            if (amplified < Short.MIN_VALUE) amplified = Short.MIN_VALUE;
-            pcm[index] = (byte)amplified;
-            pcm[index + 1] = (byte)(amplified >>> 8);
-        }
-    }
-
-    private void stopAudioMonitor() {
-        AudioMonitorSession session;
-        Thread worker;
-        synchronized (audioMonitorLock) {
-            audioMonitorRequested = false;
-            session = audioMonitorSession;
-            worker = audioMonitorThread;
-            audioMonitorSession = null;
-            audioMonitorThread = null;
-        }
-        if (session == null) {
-            lastAudioMonitor = "audioMonitor=OFF source=esp32-pcm";
-            return;
-        }
-        session.failure = null;
-        session.close();
-        if (worker != null && worker != Thread.currentThread()) {
-            joinWorker(worker);
-        }
-        lastAudioMonitor = "audioMonitor=OFF source=esp32-pcm frames=" + session.frames
-                + " route=" + session.lastRoute;
-    }
-
-    private AudioDeviceInfo findBuiltInSpeaker() {
-        AudioManager manager = getSystemService(AudioManager.class);
-        if (manager == null) {
-            return null;
-        }
-        for (AudioDeviceInfo device : manager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)) {
-            if (device.getType() == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER) {
-                return device;
-            }
-        }
-        return null;
-    }
-
-    private static String routedDeviceLabel(AudioTrack track) {
-        if (track == null) {
-            return "unknown";
-        }
-        try {
-            AudioDeviceInfo device = track.getRoutedDevice();
-            return device == null ? "unknown" : audioDeviceTypeLabel(device.getType());
-        } catch (RuntimeException error) {
-            return "unknown";
-        }
-    }
-
-    private static String audioDeviceTypeLabel(int type) {
-        switch (type) {
-            case AudioDeviceInfo.TYPE_BUILTIN_SPEAKER:
-                return "builtin-speaker";
-            case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP:
-                return "bluetooth-a2dp";
-            case AudioDeviceInfo.TYPE_WIRED_HEADPHONES:
-                return "wired-headphones";
-            case AudioDeviceInfo.TYPE_WIRED_HEADSET:
-                return "wired-headset";
-            default:
-                return "type-" + type;
-        }
-    }
-
-    private String audioMonitorStatus(AudioMonitorSession session) {
-        session.lastRoute = routedDeviceLabel(session.playback);
-        return String.format(Locale.US,
-                "audioMonitor=ON source=esp32-pcm route=%s preferredSpeaker=%d "
-                        + "rate=%d gain=%dx queued=%d frames=%d packets=%d lost=%d dropped=%d",
-                session.lastRoute, session.speakerPreferred ? 1 : 0,
-                session.sampleRateHz, MONITOR_PCM_GAIN, session.queue.size(), session.frames,
-                session.packets, session.lostPackets, session.droppedPackets);
-    }
-
-    private static String reasonFor(Throwable error) {
-        String message = error.getMessage();
-        if (message == null || message.isEmpty()) {
-            return error.getClass().getSimpleName();
-        }
-        return message.replace(' ', '-').replace('\n', '-');
-    }
-
-    private void audioFactLoop(long generation, ServerSocket server) {
-        Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
-        while (audioFactRunning && sessionActive(generation)) {
-            try {
-                Socket accepted = server.accept();
-                audioFactClient = accepted;
-                try (Socket client = accepted) {
-                    serveAudioFactClient(client.getInputStream(), client.getOutputStream());
-                } catch (IOException error) {
-                    if (audioFactRunning && sessionActive(generation)) {
-                        Log.w(TAG, "audio fact client failed", error);
-                    }
-                } finally {
-                    audioFactClient = null;
-                }
-            } catch (SocketException error) {
-                if (audioFactRunning && sessionActive(generation)) {
-                    Log.e(TAG, "audio fact socket failed", error);
-                    audioFactRunning = false;
-                }
-                break;
-            } catch (Throwable error) {
-                if (audioFactRunning && sessionActive(generation)) {
-                    Log.w(TAG, "audio fact request failed", error);
-                }
-            }
-        }
-    }
-
-    private void serveAudioFactClient(InputStream input, OutputStream output)
-            throws IOException {
-        String authentication = readBoundedAudioFactLine(input);
-        if (!("AUTH " + controlToken).equals(authentication)) {
-            writeAudioFactResponse(output, "ERROR unauthorized");
-            return;
-        }
-        writeAudioFactResponse(output, "OK audio-link=READY");
-        while (audioFactRunning && sessionActive(sessionGeneration)) {
-            String line = readBoundedAudioFactLine(input);
-            if (line == null) {
-                return;
-            }
-            if (line.isEmpty()) {
-                continue;
-            }
-            if (!acceptAudioFact(line, false)) {
-                writeAudioFactResponse(output, "ERROR invalid-fact");
-                return;
-            }
-        }
-    }
-
-    private void writeAudioFactResponse(OutputStream output, String response)
-            throws IOException {
-        output.write((response + "\n").getBytes(StandardCharsets.US_ASCII));
-        output.flush();
-    }
-
-    private String readBoundedAudioFactLine(InputStream input) throws IOException {
-        byte[] bytes = new byte[AUDIO_FACT_LINE_LIMIT];
-        int length = 0;
-        while (length < bytes.length) {
-            int value = input.read();
-            if (value == -1) {
-                return length == 0 ? null : new String(bytes, 0, length,
-                        StandardCharsets.US_ASCII);
-            }
-            if (value == '\n') {
-                return new String(bytes, 0, length, StandardCharsets.US_ASCII);
-            }
-            if (value == '\r') {
-                continue;
-            }
-            if (value < 0x20 || value > 0x7e) {
-                return null;
-            }
-            bytes[length++] = (byte) value;
-        }
-        return null;
-    }
-
-    private boolean acceptAudioFact(String line, boolean wifiShadow) {
-        try {
-            JSONObject fact = new JSONObject(line);
-            if (!"fact-message-v1".equals(fact.optString("schema"))) {
-                return false;
-            }
-            String state = fact.optString("state");
-            if (!"OBSERVED".equals(state) && !"UNKNOWN".equals(state)) {
-                return false;
-            }
-            String type = statusToken(fact.optString("type"), "unknown");
-            String source = statusToken(fact.optString("source"), AUDIO_AUTHORITY);
-            String profile = statusToken(fact.optString("calibrationProfile"), "unknown");
-            if (wifiShadow && (!"esp32-audio-consumer".equals(source)
-                    || !("audio-route".equals(type)
-                    || "audio-rms".equals(type)
-                    || "audio-peak".equals(type)))) {
-                return false;
-            }
-            double confidence = fact.optDouble("confidence", -1.0);
-            if ("unknown".equals(type) || confidence < 0.0
-                    || confidence > 1.0 || !Double.isFinite(confidence)) {
-                return false;
-            }
-            if ("OBSERVED".equals(state) && !fact.has("value")) {
-                return false;
-            }
-            StringBuilder status = new StringBuilder(192);
-            status.append("audio=EXTERNAL authority=").append(source)
-                    .append(" state=").append(state)
-                    .append(" type=").append(type)
-                    .append(" confidence=").append(String.format(Locale.US, "%.3f", confidence))
-                    .append(" profile=").append(profile);
-            if ("UNKNOWN".equals(state)) {
-                String reason = statusToken(fact.optString("reason"), "invalid-fact");
-                status.append(" reason=").append(reason);
-            }
-            audioAuthorityName = source;
-            audioProfileName = profile;
-            lastAudio = status.toString();
-            lastAudioFactElapsedNs = SystemClock.elapsedRealtimeNanos();
-            publishCombinedStatus("RUNNING");
-            return true;
-        } catch (JSONException | RuntimeException error) {
-            Log.w(TAG, "rejected external audio fact", error);
-            return false;
-        }
-    }
-
-    /**
-     * Accept the ESP32's numeric cue stream directly. The audio receiver owns
-     * DSP and timestamps; the APK owns the later visual/context decision. No
-     * semantic role name is allowed on this wire path.
-     */
-    private boolean acceptEspCueEvent(String line, boolean wifiShadow) {
-        try {
-            JSONObject event = new JSONObject(line);
-            String schema = event.optString("schema");
-            if (!"esp32-cue-detection-v1".equals(schema)
-                    && !"esp32-phase-clock-v1".equals(schema)) {
-                return false;
-            }
-            if (wifiShadow && !"esp32-audio-consumer".equals(
-                    event.optString("source"))) {
-                return false;
-            }
-            int cueId = event.getInt("cueId");
-            if (cueId < 0 || cueId > 65535) {
-                return false;
-            }
-            double confidence = event.getDouble("confidence");
-            long captureUs = event.getLong("t_capture_us");
-            int sampleRateHz = event.getInt("sampleRateHz");
-            if (!Double.isFinite(confidence) || confidence < 0.0
-                    || confidence > 1.0 || captureUs < 0 || sampleRateHz <= 0) {
-                return false;
-            }
-
-            StringBuilder status = new StringBuilder(192);
-            status.append("audioCue=OBSERVED cueId=").append(cueId)
-                    .append(" confidence=")
-                    .append(String.format(Locale.US, "%.3f", confidence))
-                    .append(" tCaptureUs=").append(captureUs)
-                    .append(" sampleRateHz=").append(sampleRateHz);
-            if ("esp32-phase-clock-v1".equals(schema)) {
-                String state = event.optString("state", "UNKNOWN");
-                if (!"UNLOCKED".equals(state) && !"ACQUIRING".equals(state)
-                        && !"LOCKED".equals(state)) {
-                    return false;
-                }
-                status.append(" phaseState=").append(state)
-                        .append(" tickIndex=").append(event.optLong("tickIndex", 0))
-                        .append(" periodMs=").append(event.optLong("periodMs", 0))
-                        .append(" phaseModuloMs=")
-                        .append(event.optLong("phaseModuloMs", 0))
-                        .append(" uncertaintyMs=")
-                        .append(event.optLong("uncertaintyMs", 0));
-            }
-            lastAudioCue = status.toString();
-            lastAudioCueElapsedNs = SystemClock.elapsedRealtimeNanos();
-            publishCombinedStatus("RUNNING");
-            return true;
-        } catch (JSONException | RuntimeException error) {
-            Log.w(TAG, "rejected ESP32 cue event", error);
-            return false;
-        }
-    }
-
-    private static String statusToken(String value, String fallback) {
-        if (value == null || value.isEmpty() || value.length() > 96) {
-            return fallback;
-        }
-        StringBuilder token = new StringBuilder(value.length());
-        for (int i = 0; i < value.length(); i++) {
-            char character = value.charAt(i);
-            if (character < 0x21 || character > 0x7e || character == '=') {
-                return fallback;
-            }
-            token.append(character);
-        }
-        return token.toString();
-    }
-
     private LocalServerSocket openLocalControlServer(String socketName) throws IOException {
         IOException lastError = null;
         for (int attempt = 0; attempt < 10; attempt++) {
@@ -2583,11 +1239,6 @@ public final class CaptureService extends Service {
                 : tcpControlUp || localControlUp ? "DEGRADED" : "UNAVAILABLE";
         lastControl = "control=" + state
                 + " port=" + (tcpControlUp ? String.valueOf(CONTROL_PORT) : "none")
-                + " audioPort=" + (audioFactRunning ? String.valueOf(AUDIO_FACT_PORT) : "none")
-                + " audioUdpPort=" + (audioFactUdpRunning
-                        ? String.valueOf(AUDIO_FACT_UDP_PORT) : "none")
-                + " pcmUdpPort=" + (audioPcmUdpRunning
-                        ? String.valueOf(AUDIO_PCM_UDP_PORT) : "none")
                 + " socket=" + (localControlUp ? controlSocketName : "none")
                 + " token=" + (controlToken == null ? "none" : controlToken)
                 + " " + watchStatus();
@@ -2927,13 +1578,6 @@ public final class CaptureService extends Service {
                         ? "overlay=UNAVAILABLE" : overlayController.status());
             case "LESSON":
                 return dispatchLesson(field);
-            case "CAL":
-            case "LOG":
-            case "REC":
-            case "MODEL":
-            case "ARM":
-            case "RESULT":
-                return "ERROR audio-authority-external";
             default:
                 return "ERROR unknown-verb";
         }
@@ -3186,7 +1830,7 @@ public final class CaptureService extends Service {
         return "snapshotNs=" + nowNs + " wallMs=" + nowWallMs + " visualCaptureNs=" + visualTimestampNs
                 + " nightOnsetImageNs=" + nightOnsetLatch.onsetNs()
                 + " " + visual + panAnchor + " " + screenDetail + " "
-                + currentAudioStatus() + " " + watchStatus() + frame;
+                + watchStatus() + frame;
     }
 
     private static String cameraHighlightsValue(CameraSelectionDetector.Result camera) {
@@ -3223,13 +1867,13 @@ public final class CaptureService extends Service {
     }
 
     private void publishCombinedStatus(String lifecycle) {
-        publishStatus(lifecycle + "\n" + lastVisual + "\n" + currentAudioStatus()
+        publishStatus(lifecycle + "\n" + lastVisual
                 + "\n" + currentBatteryStatus() + "\n" + lastControl + "\n"
                 + (overlayController == null ? "overlay=UNAVAILABLE"
                         : overlayController.status()));
     }
 
-    /** Publish the UI-derived flashlight meter independently from audio state. */
+    /** Publish the UI-derived flashlight meter. */
     private String currentBatteryStatus() {
         BatteryLifeDetector.Result battery;
         int identity;
@@ -3280,11 +1924,6 @@ public final class CaptureService extends Service {
             overlayController.onCaptureStopped();
         }
 
-        stopAudioMonitor();
-        releaseAudioWifi();
-        synchronized (audioRecordingLock) {
-            stopAudioRecordingLocked();
-        }
         if (frameTrace != null) {
             // Preserve an in-flight diagnostic trace across an app abort or
             // projection teardown. The frame file is still written on the
@@ -3294,9 +1933,6 @@ public final class CaptureService extends Service {
         }
 
         controlRunning = false;
-        audioFactRunning = false;
-        audioFactUdpRunning = false;
-        audioPcmUdpRunning = false;
         ServerSocket server = controlServer;
         controlServer = null;
         if (server != null) {
@@ -3315,48 +1951,14 @@ public final class CaptureService extends Service {
                 // Closing an already-failed local server is still stopped.
             }
         }
-        ServerSocket audioServer = audioFactServer;
-        audioFactServer = null;
-        if (audioServer != null) {
-            try {
-                audioServer.close();
-            } catch (IOException ignored) {
-                // Closing an already-failed audio fact server is still stopped.
-            }
-        }
-        Socket audioClient = audioFactClient;
-        audioFactClient = null;
-        if (audioClient != null) {
-            try {
-                audioClient.close();
-            } catch (IOException ignored) {
-                // Closing an already-failed audio fact client is still stopped.
-            }
-        }
-        DatagramSocket audioUdpServer = audioFactUdpServer;
-        audioFactUdpServer = null;
-        if (audioUdpServer != null) {
-            audioUdpServer.close();
-        }
-        DatagramSocket audioPcmServer = audioPcmUdpServer;
-        audioPcmUdpServer = null;
-        if (audioPcmServer != null) {
-            audioPcmServer.close();
-        }
-        for (Thread worker : new Thread[] {controlThread, audioFactThread,
-                audioFactUdpThread, audioPcmUdpThread,
-                localControlThread}) {
+        for (Thread worker : new Thread[] {controlThread, localControlThread}) {
             if (worker != null && worker != Thread.currentThread()) {
                 worker.interrupt();
             }
         }
         joinWorker(controlThread);
-        joinWorker(audioFactThread);
         joinWorker(localControlThread);
         controlThread = null;
-        audioFactThread = null;
-        audioFactUdpThread = null;
-        audioPcmUdpThread = null;
         localControlThread = null;
         tcpControlUp = false;
         localControlUp = false;
@@ -3414,10 +2016,6 @@ public final class CaptureService extends Service {
         lastOverlaySnapshotNs = 0L;
 
         lastVisual = "visual=UNAVAILABLE(" + reason + ")";
-        lastAudio = esp32AudioStatus();
-        lastAudioFactElapsedNs = 0L;
-        audioAuthorityName = AUDIO_AUTHORITY;
-        audioProfileName = "unknown";
         lastControl = "control=UNAVAILABLE(" + reason + ")";
         publishCombinedStatus("UNAVAILABLE");
         stopForeground(STOP_FOREGROUND_REMOVE);

@@ -474,12 +474,6 @@
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
-      "id": "contract.pcm-udp-v1",
-      "kind": "CONTRACT",
-      "path": "tools/cue/test-audio-authority.py",
-      "relation": "CONFORMANCE_FIXTURE"
-    },
-    {
       "id": "contract.plant-model-v1",
       "kind": "CONTRACT",
       "path": "packages/core/src/mechanics/plant.js",

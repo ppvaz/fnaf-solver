@@ -112,7 +112,6 @@ const EXCLUDED = new Map([
   ['title-observe.py', 'live title observer, mock-gated by test-menu.sh -- it classifies a menu, not a run'],
   ['fnaf1-title-observe.sh', 'FNaF 1-only title-observer wrapper: it removes the FNaF 2 default model and passes FNaF 1\'s model explicitly; test-sensor.py proves an inherited FNaF 2 model cannot be used'],
   ['query-cue-helper.sh', 'live helper, mock-gated by test-query-cue-helper.sh'],
-  ['provision-cue-model.sh', 'installs a generated model into the helper\'s private storage on a phone; a provisioner, not a grader -- it has no run to read'],
   ['soak-cue-helper.sh', 'live helper, mock-gated by test-soak-cue-helper.sh'],
   ['select-adb.sh', 'transport helper, gated by test-select-adb.sh'],
 
@@ -149,7 +148,6 @@ const EXCLUDED = new Map([
 // tools/cue/detect.py, and this check did not look at it.
 const SIBLING_EXCLUDED = new Map([
   ['audio-authority.py', 'live rendered-audio authority and run input, not a grader; gated by test-audio-authority.py'],
-  ['bridge-audio-authority.py', 'live transport bridge into Cue Helper, not a run artifact grader; gated by test-bridge-audio-authority.py'],
   ['collect-facts.py', 'fact sidecar producer for the external audio authority (latency-experiment.py); it produces facts rather than grading a run'],
   ['latency-experiment.py', 'paired calibration experiment harness that creates evidence rather than grading a night; gated by test-latency-experiment.py'],
   ['detect.py', 'the bang detector scan-night.sh drives'],

@@ -38,9 +38,6 @@ JAVA="$JDK_ROOT/bin/java"
 # --release, not -source/-target: the latter compiles against the running JDK's
 # system modules and warns that the result may not run on 17.
 "$JAVAC" -encoding UTF-8 --release 17 -d "$TEST_TMP" \
-  "$HERE/src/com/ppvaz/fnafcompanion/CueDetector.java" \
-  "$HERE/src/com/ppvaz/fnafcompanion/AudioAnalyzer.java" \
-  "$HERE/src/com/ppvaz/fnafcompanion/PhaseClock.java" \
   "$HERE/src/com/ppvaz/fnafcompanion/PixelWatch.java" \
   "$HERE/src/com/ppvaz/fnafcompanion/PanAnchor.java" \
   "$HERE/src/com/ppvaz/fnafcompanion/ScreenIdentity.java" \
@@ -65,9 +62,6 @@ JAVA="$JDK_ROOT/bin/java"
   "$HERE/src/com/ppvaz/fnafcompanion/Fnaf1Lesson.java" \
   "$HERE/src/com/ppvaz/fnafcompanion/Fnaf3Lesson.java" \
   "$HERE/src/com/ppvaz/fnafcompanion/Fnaf4Lesson.java" \
-  "$HERE/test/com/ppvaz/fnafcompanion/CueDetectorTest.java" \
-  "$HERE/test/com/ppvaz/fnafcompanion/AudioAnalyzerTest.java" \
-  "$HERE/test/com/ppvaz/fnafcompanion/PhaseClockTest.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/PixelWatchTest.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/PanAnchorTest.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/BatteryLifeDetectorTest.java" \
@@ -83,13 +77,10 @@ JAVA="$JDK_ROOT/bin/java"
   "$HERE/test/com/ppvaz/fnafcompanion/Fnaf1LessonTest.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/Fnaf3LessonTest.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/Fnaf4LessonTest.java"
-"$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.CueDetectorTest
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.NativeRegionsTest
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.Fnaf1LessonTest
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.Fnaf3LessonTest
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.Fnaf4LessonTest
-"$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.AudioAnalyzerTest
-$JAVA -cp "$TEST_TMP" com.ppvaz.fnafcompanion.PhaseClockTest
 $JAVA -cp "$TEST_TMP" com.ppvaz.fnafcompanion.PixelWatchTest
 # Compiled above since 2026-09-01 and never executed until 2026-09-27: a test
 # that is only compiled asserts nothing (tools/test-mistake-register.mjs).
