@@ -279,6 +279,24 @@
       ]
     },
     {
+      "file": "apps/device/test/hid-read-gap.test.js",
+      "imports": [
+        "../src/hid-schedule.js",
+        "@fnaf2-1020/core/contracts",
+        "node:assert/strict",
+        "node:fs/promises"
+      ]
+    },
+    {
+      "file": "apps/device/test/hid-second-contact.test.js",
+      "imports": [
+        "../src/hid-schedule.js",
+        "@fnaf2-1020/core/contracts",
+        "node:assert/strict",
+        "node:fs/promises"
+      ]
+    },
+    {
       "file": "apps/device/test/modern-campaign-terminal.test.js",
       "imports": [
         "../src/modern-campaign-ports.js",
@@ -787,6 +805,13 @@
       ]
     },
     {
+      "file": "packages/core/test/mask-animation-input.test.js",
+      "imports": [
+        "../src/mechanics/index.js",
+        "node:assert/strict"
+      ]
+    },
+    {
       "file": "packages/core/test/monitor-down-draw.test.js",
       "imports": [
         "../src/mechanics/plant-model.js",
@@ -1243,6 +1268,21 @@
       ]
     },
     {
+      "file": "tools/device/device-lane.mjs",
+      "imports": [
+        "../../apps/device/src/artifact-executor.js",
+        "../../apps/device/src/hid-schedule.js",
+        "./actuator.mjs",
+        "./artifact-commands.mjs",
+        "@fnaf2-1020/core/contracts",
+        "@fnaf2-1020/core/control",
+        "@fnaf2-1020/core/mechanics",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/device/emit.mjs",
       "imports": [
         "./bundle.mjs",
@@ -1514,6 +1554,23 @@
         "./minus-toys-plan.mjs",
         "@fnaf2-1020/core/mechanics",
         "@fnaf2-1020/research/seeds",
+        "node:crypto",
+        "node:fs",
+        "node:url"
+      ]
+    },
+    {
+      "file": "tools/device/night7-robustness-field.mjs",
+      "imports": [
+        "../winner-census.mjs",
+        "../winner-phase-census.mjs",
+        "./actuator.mjs",
+        "./artifact-commands.mjs",
+        "./minus-toys-plan.mjs",
+        "./night7-presets.mjs",
+        "@fnaf2-1020/core/control",
+        "@fnaf2-1020/core/mechanics",
+        "node:child_process",
         "node:crypto",
         "node:fs",
         "node:url"
@@ -1883,12 +1940,25 @@
       ]
     },
     {
+      "file": "tools/device/test-night-run-dry.mjs",
+      "imports": [
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/device/test-night7-presets.mjs",
       "imports": [
         "../winner-census.mjs",
         "../winner-phase-census.mjs",
+        "./actuator.mjs",
         "./minus-toys-plan.mjs",
         "./night7-presets.mjs",
+        "./night7-robustness-field.mjs",
         "./night7-robustness.mjs",
         "@fnaf2-1020/core/mechanics",
         "node:crypto",
@@ -2506,6 +2576,13 @@
         "@fnaf2-1020/core/mechanics",
         "@fnaf2-1020/core/sensing",
         "node:url"
+      ]
+    },
+    {
+      "file": "tools/recompile/model-draw-trace.mjs",
+      "imports": [
+        "@fnaf2-1020/core/mechanics",
+        "node:fs"
       ]
     },
     {

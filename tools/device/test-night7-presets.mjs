@@ -35,6 +35,13 @@
 //     tolerated lateness, first lateness loss, phase band edges, first
 //     human-jitter loss and 0-10 s reach-map edges replaying as recorded,
 //     against the earliest epoch the anchor can deliver today.
+//
+//  7. The robustness field (night7-robustness-field.mjs) could stop describing
+//     the tree, or stop carrying the phone's mask floor. The actuator must drop
+//     a mask-ON press inside the floor after a lowering press and keep one past
+//     it; each schedule's worst event and camdrop->mask seam must replay at
+//     their window edges, the phase map at its transitions, and the jitter and
+//     lateness lanes at their last all-win value and first recorded loss.
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import * as C from '@fnaf2-1020/core/mechanics';
@@ -45,6 +52,9 @@ import { heldOutSeeds } from '../winner-phase-census.mjs';
 import { ROBUSTNESS_KIND, PHASE_FRAMES, HUMAN_MS, schedules as robustSchedules, robustWins, earliestDeliveredMs }
   from './night7-robustness.mjs';
 import { designBlock } from '../winner-census.mjs';
+import { FIELD_KIND, FIELD_FRAMES, MASK_FLOOR_MS, fieldSchedules, fieldEvents, playField }
+  from './night7-robustness-field.mjs';
+import { DeviceActuator } from './actuator.mjs';
 
 const check = (ok, message) => { if (!ok) throw new Error(message); };
 
@@ -263,5 +273,78 @@ let robustLine = '';
   robustLine = `; ${name} still describes the tree (${replays} replays)`;
 }
 
+// --- 7. the robustness field still describes the tree -------------------------
+let fieldLine = '';
+{
+  // The floor itself: lower the monitor, then press the mask one frame inside
+  // the floor and one frame past it.
+  const floorFrames = Math.round(MASK_FLOOR_MS / 1000 * C.FPS);
+  const probe = (gapFrames) => {
+    const sim = new C.Sim({ night: 7, seed: 1, customNight: loadPresets().find(p => p.id === 'golden-freddy').dials });
+    const act = new DeviceActuator(sim, { seed: 1, lateMinMs: 0, lateMaxMs: 0, maskFloorMs: MASK_FLOOR_MS });
+    const at = { 1: 'monitor', 40: 'monitor', [40 + gapFrames]: 'mask' };
+    for (let f = 0; f <= 40 + gapFrames + 2; f++) { if (at[f]) act.press(at[f]); act.deliver(); sim.tick(); }
+    return { drops: act.maskFloorDrops, masked: sim.maskOn };
+  };
+  const inside = probe(floorFrames - 1), past = probe(floorFrames);
+  check(inside.drops === 1 && !inside.masked, `a mask press ${floorFrames - 1} frames after a lowering press was not dropped by the ${MASK_FLOOR_MS} ms floor`);
+  check(past.drops === 0 && past.masked, `a mask press ${floorFrames} frames after a lowering press was dropped (floor ${MASK_FLOOR_MS} ms)`);
+
+  const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
+  const dir = new URL('../../docs/evidence/', import.meta.url);
+  const name = readdirSync(dir).filter(n => /^night7-robustness-field-\d{8}\.json$/.test(n)).sort().pop();
+  check(name, 'no docs/evidence/night7-robustness-field-YYYYMMDD.json is committed');
+  const record = JSON.parse(readFileSync(new URL(name, dir), 'utf8'));
+  check(record.kind === FIELD_KIND, `${name} is not a ${FIELD_KIND}`);
+  check(record.method.maskFloorMs === MASK_FLOOR_MS, `${name} used a ${record.method.maskFloorMs} ms mask floor, the tree has ${MASK_FLOOR_MS}`);
+  const fieldSeeds = heldOutSeeds(record.method.seeds.field.n);
+  const laneSeeds = heldOutSeeds(record.method.seeds.lanes.n);
+  check(record.method.seeds.field.sha256 === sha256(JSON.stringify(fieldSeeds)), `${name}: the field seed block no longer rebuilds`);
+  check(record.method.seeds.lanes.sha256 === sha256(JSON.stringify(laneSeeds)), `${name}: the lane seed block no longer rebuilds`);
+  const preset = loadPresets().find(p => p.id === 'golden-freddy');
+  const step = 1000 / C.FPS;
+  let replays = 0;
+  for (const rec of record.schedules) {
+    const s = fieldSchedules().find(x => x.id === rec.id);
+    check(s, `${name} names ${rec.id}, which the tree no longer has`);
+    if (rec.knobsSha256) check(rec.knobsSha256 === sha256(JSON.stringify(s.knobs)), `${rec.id}'s knobs changed since ${name}`);
+    if (rec.winnerSha256) check(rec.winnerSha256 === s.winnerSha256, `${rec.binding} changed since ${name}`);
+    const events = fieldEvents(s.knobs, s.epochMs);
+    // A '#' cell must win on every field seed and a '.' cell lose on its first;
+    // replay the cells on each side of every transition of the axes that matter.
+    const cell = (axis, d, expect) => {
+      const seeds = expect === '#' ? fieldSeeds : fieldSeeds.slice(0, 1);
+      const won = seeds.every(seed => { replays++; return playField({ seed, events, shifts: { [axis]: d * step }, preset }).won; });
+      check(won === (expect === '#'), `${name} ${rec.id} ${axis} ${d >= 0 ? '+' : ''}${d}f: recorded '${expect}', replays ${won ? 'all won' : 'a loss'}`);
+    };
+    const edges = (axis) => {
+      const map = rec.field[axis].map;
+      for (let i = 1; i < map.length; i++) {
+        if (map[i] === map[i - 1]) continue;
+        for (const j of [i - 1, i]) if (map[j] === '#' || map[j] === '.') cell(axis, j - FIELD_FRAMES, map[j]);
+      }
+    };
+    edges('ALL');
+    if (rec.worst) edges(rec.worst.event);
+    const seamAxis = Object.keys(rec.field).find(t => /^loop#\d+:mask$/.test(t) && rec.field[t].atMs > (rec.field[Object.keys(rec.field).find(u => /camdrop\/monitor$/.test(u) && u.startsWith('loop'))]?.atMs ?? Infinity));
+    if (seamAxis && rec.camdropMaskSeam) edges(seamAxis);
+    for (const [lane, key, opts] of [['jitter', 'jitter', (J) => ({ shifts: { ALL: -J }, band: J > 0 ? [0, 2 * J] : null })],
+      ['lateness', 'late', (L) => ({ band: L > 0 ? [0, L] : null })]]) {
+      const data = rec[lane];
+      if (data.maxAllWinMs !== null) for (const seed of laneSeeds.slice(0, 2)) {
+        replays++;
+        check(playField({ seed, events, preset, ...opts(data.maxAllWinMs) }).won, `${name} ${rec.id} seed ${seed} no longer survives ${lane} ${data.maxAllWinMs} ms`);
+      }
+      if (data.firstLoss) {
+        const [seed, reason, frame] = data.firstLoss.losses[0];
+        const r = playField({ seed, events, preset, ...opts(data.firstLoss.at) });
+        replays++;
+        check(!r.won && r.reason === reason && r.frame === frame, `${name} ${rec.id} ${lane} ${data.firstLoss.at} ms seed ${seed} no longer dies as recorded`);
+      }
+    }
+  }
+  fieldLine = `; ${name} still describes the tree with the ${MASK_FLOOR_MS} ms mask floor (${replays} replays)`;
+}
+
 console.log('night7-presets: presets match the menu model, the device lane bites, ' +
-  `the hall pulse clears both floors by more than 33 ms, and ${populationLine}${planeLine}${robustLine}`);
+  `the hall pulse clears both floors by more than 33 ms, and ${populationLine}${planeLine}${robustLine}${fieldLine}`);

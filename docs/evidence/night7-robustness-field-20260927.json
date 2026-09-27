@@ -1,0 +1,2588 @@
+{
+  "schema": "evidence-record-v1",
+  "kind": "night7-robustness-field-v1",
+  "id": "night7-robustness-field-20260927",
+  "claimLevel": "MODEL_ONLY",
+  "date": "2026-09-27",
+  "question": "For each press and release of each Night 7 (10/20) route, how far can it move on its own before a held-out seed loses, with the phone's mask floor applied -- and which event, and which seam, bounds the route?",
+  "answer": "preset: worst event open#2:cam9 (33.33/50 ms), camdrop->mask seam 383.33-550 ms at 450, +-J all-win to 30 ms (+-60: 8/500), lateness to 70 ms; preset-retimed: worst event open#2:cam9 (66.67/50 ms), camdrop->mask seam 383.33-550 ms at 450, +-J all-win to 30 ms (+-60: 16/500), lateness to 70 ms; i: worst event open#3:monitor (50/0 ms), camdrop->mask seam 383.33-550 ms at 450, +-J all-win to 10 ms (+-60: 0/500), lateness to 0 ms; j: worst event open#2:cam9 (83.33/50 ms), camdrop->mask seam 383.33-550 ms at 450, +-J all-win to 20 ms (+-60: 0/500), lateness to 50 ms; k2: worst event open#2:cam9 (66.67/50 ms), camdrop->mask seam 383.33-550 ms at 450, +-J all-win to 20 ms (+-60: 0/500), lateness to 50 ms; k3: worst event open#2:cam9 (66.67/50 ms), camdrop->mask seam 383.33-550 ms at 450, +-J all-win to 20 ms (+-60: 0/500), lateness to 50 ms.",
+  "whyItIsModelOnly": "No device run. The mask floor is a phone measurement applied to the simulator; the field moves one event class at a time, and the jitter and lateness lanes are actuator.mjs's independent draws.",
+  "method": {
+    "tool": "tools/device/night7-robustness-field.mjs",
+    "command": "node tools/device/night7-robustness-field.mjs --count 100 --lane-count 500 --jobs 8",
+    "git": {
+      "commit": "0399d0ebb6e69995a192282106a62b42456e520a",
+      "dirtyEnginePaths": [
+        "M tools/device/actuator.mjs",
+        " M tools/device/test-night7-presets.mjs",
+        "?? tools/device/night7-robustness-field.mjs"
+      ]
+    },
+    "seeds": {
+      "field": {
+        "definition": "the first 100 held-out seeds (winner-phase-census.mjs heldOutSeeds)",
+        "n": 100,
+        "sha256": "b24637e0a150b16573be4537701e064b5b85339ea129e35bb625d4f1304ee27b"
+      },
+      "lanes": {
+        "definition": "the first 500 held-out seeds",
+        "n": 500,
+        "sha256": "88fda972a1870be99fa71bd8a68fb890a91aedfd6dd7049716fd837165049ea9"
+      }
+    },
+    "night": "10/20 (golden-freddy: every dial at 20, clamped)",
+    "field": {
+      "frames": 41,
+      "stepMs": 16.666666666666668,
+      "eventClass": "one opening row, or one loop row in every cycle; ALL is the whole schedule",
+      "map": "index i is offset i - FIELD_FRAMES frames; '#' every seed wins, '+' some, '.' none, 'x' an /end moved before its press (not a hold)"
+    },
+    "maskFloorMs": 382.5,
+    "maskFloorSource": "artifact-commands.mjs SEAM_FLOORS.maskButtonFullyVisibleAfterMonitorDownMs (native frame trace: absent through 322 ms, faint ~337 ms, fully visible ~382.5 ms). The conservative end: the first frame a touch registers lies in (322, 382.5] and is not measured.",
+    "jitter": "each press +-J: epoch - J and lateness [0, 2J] (actuator.mjs, per press, queue serialized, mask floor on) for J in 0, 10, 20, 30, 40, 50, 60",
+    "lateness": "each press late by [0, L] for L in 0, 30, 50, 60, 70, 80, 90, 100",
+    "retime": {
+      "epochMs": 633.33,
+      "loopKnobs": [
+        "maskOffMs",
+        "maskOnMs",
+        "hallOffsetMs",
+        "raiseMs",
+        "stunRefreshMs",
+        "windLeadMs",
+        "camdropMs"
+      ],
+      "openWindMs": "PRESET_KNOBS.openWindMs - epoch"
+    },
+    "win": "sim.won AND splitAt >= 0",
+    "wallSeconds": 2433
+  },
+  "schedules": [
+    {
+      "id": "preset",
+      "binding": null,
+      "declaredEpochMs": 0,
+      "knobsSha256": "bf7b16a8c72b0b4c3e092fdbe43aef285d30e5ab44fba939de8afb20924bf12a",
+      "field": {
+        "ALL": {
+          "atMs": 0,
+          "map": "..............#...#########...#########..",
+          "window": {
+            "earlyMs": 33.33,
+            "lateMs": 100,
+            "capped": false
+          }
+        },
+        "open#0:monitor": {
+          "atMs": 0,
+          "map": "###########################..............",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 100,
+            "capped": true
+          }
+        },
+        "open#1:cam11": {
+          "atMs": 300,
+          "map": "..............###########################",
+          "window": {
+            "earlyMs": 100,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#2:cam9": {
+          "atMs": 833,
+          "map": "..................######.................",
+          "window": {
+            "earlyMs": 33.33,
+            "lateMs": 50,
+            "capped": false
+          }
+        },
+        "open#3:monitor": {
+          "atMs": 883,
+          "map": ".................##########..............",
+          "window": {
+            "earlyMs": 50,
+            "lateMs": 100,
+            "capped": false
+          }
+        },
+        "open#4:monitor": {
+          "atMs": 1616,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#5:cameraFeedLight": {
+          "atMs": 1916,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#5:cameraFeedLight/end": {
+          "atMs": 2016,
+          "map": "xxxxxxxxxxxxxx###########################",
+          "window": {
+            "earlyMs": 100,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#6:wind": {
+          "atMs": 2083,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#6:wind/end": {
+          "atMs": 3833,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#7:camdrop": {
+          "atMs": 3833,
+          "map": "+++######################................",
+          "window": {
+            "earlyMs": 283.33,
+            "lateMs": 66.67,
+            "capped": false
+          }
+        },
+        "open#7:camdrop/monitor": {
+          "atMs": 4033,
+          "map": "+++++++++################................",
+          "window": {
+            "earlyMs": 183.33,
+            "lateMs": 66.67,
+            "capped": false
+          }
+        },
+        "open#7:camdrop/end": {
+          "atMs": 4300,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#8:mask": {
+          "atMs": 4482,
+          "map": "................#########################",
+          "window": {
+            "earlyMs": 66.67,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#0:mask": {
+          "atMs": 9200,
+          "map": "........#######################..........",
+          "window": {
+            "earlyMs": 200,
+            "lateMs": 166.67,
+            "capped": false
+          }
+        },
+        "loop#1:hall": {
+          "atMs": 9613,
+          "map": "..........###############################",
+          "window": {
+            "earlyMs": 166.67,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#1:hall/end": {
+          "atMs": 9646,
+          "map": "xxxxxxxxxxxxxxxxxx.######################",
+          "window": {
+            "earlyMs": 16.67,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#2:monitor": {
+          "atMs": 10100,
+          "map": "...##############################........",
+          "window": {
+            "earlyMs": 283.33,
+            "lateMs": 200,
+            "capped": false
+          }
+        },
+        "loop#3:cameraFeedLight": {
+          "atMs": 10400,
+          "map": "........############################.....",
+          "window": {
+            "earlyMs": 200,
+            "lateMs": 250,
+            "capped": false
+          }
+        },
+        "loop#3:cameraFeedLight/end": {
+          "atMs": 10500,
+          "map": "xxxxxxxxxxxxxx.##########################",
+          "window": {
+            "earlyMs": 83.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#4:wind": {
+          "atMs": 10570,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#4:wind/end": {
+          "atMs": 13800,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#5:camdrop": {
+          "atMs": 13850,
+          "map": "..............###########................",
+          "window": {
+            "earlyMs": 100,
+            "lateMs": 66.67,
+            "capped": false
+          }
+        },
+        "loop#5:camdrop/monitor": {
+          "atMs": 14000,
+          "map": "..............###########................",
+          "window": {
+            "earlyMs": 100,
+            "lateMs": 66.67,
+            "capped": false
+          }
+        },
+        "loop#5:camdrop/end": {
+          "atMs": 14267,
+          "map": ".....####################################",
+          "window": {
+            "earlyMs": 250,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#6:mask": {
+          "atMs": 14449,
+          "map": "................###########..............",
+          "window": {
+            "earlyMs": 66.67,
+            "lateMs": 100,
+            "capped": false
+          }
+        }
+      },
+      "worst": {
+        "event": "open#2:cam9",
+        "window": {
+          "earlyMs": 33.33,
+          "lateMs": 50,
+          "capped": false
+        },
+        "marginMs": 33.33
+      },
+      "shortestHold": {
+        "event": "loop#1:hall/end",
+        "window": {
+          "earlyMs": 16.67,
+          "lateMs": 333.33,
+          "capped": true
+        }
+      },
+      "camdropMaskSeam": {
+        "gapMs": 450,
+        "fromMs": 383.33,
+        "toMs": 550
+      },
+      "jitter": {
+        "wins": {
+          "0": 500,
+          "10": 500,
+          "20": 500,
+          "30": 500,
+          "40": 350,
+          "50": 78,
+          "60": 8
+        },
+        "n": 500,
+        "maxAllWinMs": 30,
+        "firstLoss": {
+          "at": 40,
+          "losses": [
+            [
+              3003,
+              "inside-office",
+              15220
+            ],
+            [
+              3009,
+              "inside-office",
+              18220
+            ],
+            [
+              3011,
+              "inside-office",
+              12760
+            ],
+            [
+              3015,
+              "inside-office",
+              15700
+            ],
+            [
+              3017,
+              "inside-office",
+              18640
+            ],
+            [
+              3020,
+              "foxy",
+              6000
+            ],
+            [
+              3021,
+              "inside-office",
+              3100
+            ],
+            [
+              3022,
+              "inside-office",
+              9307
+            ],
+            [
+              3025,
+              "foxy",
+              14400
+            ],
+            [
+              3028,
+              "foxy",
+              1200
+            ],
+            [
+              3032,
+              "inside-office",
+              15640
+            ],
+            [
+              3036,
+              "inside-office",
+              11440
+            ]
+          ]
+        }
+      },
+      "lateness": {
+        "wins": {
+          "0": 500,
+          "30": 500,
+          "50": 500,
+          "60": 500,
+          "70": 500,
+          "80": 355,
+          "90": 232,
+          "100": 100
+        },
+        "n": 500,
+        "maxAllWinMs": 70,
+        "firstLoss": {
+          "at": 80,
+          "losses": [
+            [
+              3003,
+              "inside-office",
+              15100
+            ],
+            [
+              3009,
+              "inside-office",
+              18040
+            ],
+            [
+              3011,
+              "inside-office",
+              12700
+            ],
+            [
+              3015,
+              "inside-office",
+              15640
+            ],
+            [
+              3017,
+              "inside-office",
+              18640
+            ],
+            [
+              3020,
+              "foxy",
+              6000
+            ],
+            [
+              3021,
+              "inside-office",
+              3220
+            ],
+            [
+              3022,
+              "inside-office",
+              9309
+            ],
+            [
+              3025,
+              "foxy",
+              14400
+            ],
+            [
+              3028,
+              "foxy",
+              1200
+            ],
+            [
+              3032,
+              "inside-office",
+              15700
+            ],
+            [
+              3036,
+              "inside-office",
+              11500
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "preset-retimed",
+      "binding": null,
+      "declaredEpochMs": 633.33,
+      "knobsSha256": "97f7ac6e22abe623dbbfdbfdabfb1841245bd6456e3420279ae56f90679d48d5",
+      "field": {
+        "ALL": {
+          "atMs": 633.33,
+          "map": "........#####...#########...#########...#",
+          "window": {
+            "earlyMs": 66.67,
+            "lateMs": 66.67,
+            "capped": false
+          }
+        },
+        "open#0:monitor": {
+          "atMs": 633.33,
+          "map": "###########################..............",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 100,
+            "capped": true
+          }
+        },
+        "open#1:cam11": {
+          "atMs": 933.33,
+          "map": "..............###########################",
+          "window": {
+            "earlyMs": 100,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#2:cam9": {
+          "atMs": 1466.33,
+          "map": "................########.................",
+          "window": {
+            "earlyMs": 66.67,
+            "lateMs": 50,
+            "capped": false
+          }
+        },
+        "open#3:monitor": {
+          "atMs": 1516.33,
+          "map": ".................########................",
+          "window": {
+            "earlyMs": 50,
+            "lateMs": 66.67,
+            "capped": false
+          }
+        },
+        "open#4:monitor": {
+          "atMs": 2249.33,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#5:cameraFeedLight": {
+          "atMs": 2549.33,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#5:cameraFeedLight/end": {
+          "atMs": 2649.33,
+          "map": "xxxxxxxxxxxxxx###########################",
+          "window": {
+            "earlyMs": 100,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#6:wind": {
+          "atMs": 2716.33,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#6:wind/end": {
+          "atMs": 3833,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#7:camdrop": {
+          "atMs": 3833,
+          "map": "+++######################................",
+          "window": {
+            "earlyMs": 283.33,
+            "lateMs": 66.67,
+            "capped": false
+          }
+        },
+        "open#7:camdrop/monitor": {
+          "atMs": 4033,
+          "map": "+++++++++################................",
+          "window": {
+            "earlyMs": 183.33,
+            "lateMs": 66.67,
+            "capped": false
+          }
+        },
+        "open#7:camdrop/end": {
+          "atMs": 4300,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#8:mask": {
+          "atMs": 4482,
+          "map": "................#########################",
+          "window": {
+            "earlyMs": 66.67,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#0:mask": {
+          "atMs": 9200,
+          "map": "........#######################..........",
+          "window": {
+            "earlyMs": 200,
+            "lateMs": 166.67,
+            "capped": false
+          }
+        },
+        "loop#1:hall": {
+          "atMs": 9613,
+          "map": "..........###############################",
+          "window": {
+            "earlyMs": 166.67,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#1:hall/end": {
+          "atMs": 9646,
+          "map": "xxxxxxxxxxxxxxxxxx.######################",
+          "window": {
+            "earlyMs": 16.67,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#2:monitor": {
+          "atMs": 10100,
+          "map": "...##############################........",
+          "window": {
+            "earlyMs": 283.33,
+            "lateMs": 200,
+            "capped": false
+          }
+        },
+        "loop#3:cameraFeedLight": {
+          "atMs": 10400,
+          "map": "........############################.....",
+          "window": {
+            "earlyMs": 200,
+            "lateMs": 250,
+            "capped": false
+          }
+        },
+        "loop#3:cameraFeedLight/end": {
+          "atMs": 10500,
+          "map": "xxxxxxxxxxxxxx.##########################",
+          "window": {
+            "earlyMs": 83.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#4:wind": {
+          "atMs": 10570,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#4:wind/end": {
+          "atMs": 13800,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#5:camdrop": {
+          "atMs": 13850,
+          "map": "..............###########................",
+          "window": {
+            "earlyMs": 100,
+            "lateMs": 66.67,
+            "capped": false
+          }
+        },
+        "loop#5:camdrop/monitor": {
+          "atMs": 14000,
+          "map": "..............###########................",
+          "window": {
+            "earlyMs": 100,
+            "lateMs": 66.67,
+            "capped": false
+          }
+        },
+        "loop#5:camdrop/end": {
+          "atMs": 14267,
+          "map": ".....####################################",
+          "window": {
+            "earlyMs": 250,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#6:mask": {
+          "atMs": 14449,
+          "map": "................###########..............",
+          "window": {
+            "earlyMs": 66.67,
+            "lateMs": 100,
+            "capped": false
+          }
+        }
+      },
+      "worst": {
+        "event": "open#2:cam9",
+        "window": {
+          "earlyMs": 66.67,
+          "lateMs": 50,
+          "capped": false
+        },
+        "marginMs": 50
+      },
+      "shortestHold": {
+        "event": "loop#1:hall/end",
+        "window": {
+          "earlyMs": 16.67,
+          "lateMs": 333.33,
+          "capped": true
+        }
+      },
+      "camdropMaskSeam": {
+        "gapMs": 450,
+        "fromMs": 383.33,
+        "toMs": 550
+      },
+      "jitter": {
+        "wins": {
+          "0": 500,
+          "10": 500,
+          "20": 500,
+          "30": 500,
+          "40": 354,
+          "50": 101,
+          "60": 16
+        },
+        "n": 500,
+        "maxAllWinMs": 30,
+        "firstLoss": {
+          "at": 40,
+          "losses": [
+            [
+              3003,
+              "inside-office",
+              15220
+            ],
+            [
+              3009,
+              "inside-office",
+              18220
+            ],
+            [
+              3011,
+              "inside-office",
+              12760
+            ],
+            [
+              3015,
+              "inside-office",
+              15700
+            ],
+            [
+              3017,
+              "inside-office",
+              18640
+            ],
+            [
+              3020,
+              "foxy",
+              6000
+            ],
+            [
+              3021,
+              "inside-office",
+              3100
+            ],
+            [
+              3022,
+              "inside-office",
+              9307
+            ],
+            [
+              3025,
+              "foxy",
+              14400
+            ],
+            [
+              3028,
+              "foxy",
+              1200
+            ],
+            [
+              3032,
+              "inside-office",
+              15640
+            ],
+            [
+              3036,
+              "inside-office",
+              11440
+            ]
+          ]
+        }
+      },
+      "lateness": {
+        "wins": {
+          "0": 500,
+          "30": 500,
+          "50": 500,
+          "60": 500,
+          "70": 500,
+          "80": 329,
+          "90": 191,
+          "100": 74
+        },
+        "n": 500,
+        "maxAllWinMs": 70,
+        "firstLoss": {
+          "at": 80,
+          "losses": [
+            [
+              3003,
+              "inside-office",
+              15100
+            ],
+            [
+              3009,
+              "inside-office",
+              18040
+            ],
+            [
+              3011,
+              "inside-office",
+              12700
+            ],
+            [
+              3015,
+              "inside-office",
+              15640
+            ],
+            [
+              3017,
+              "inside-office",
+              18640
+            ],
+            [
+              3018,
+              "puppet",
+              2020
+            ],
+            [
+              3020,
+              "foxy",
+              6000
+            ],
+            [
+              3021,
+              "inside-office",
+              3220
+            ],
+            [
+              3022,
+              "inside-office",
+              9309
+            ],
+            [
+              3025,
+              "foxy",
+              14400
+            ],
+            [
+              3028,
+              "foxy",
+              1200
+            ],
+            [
+              3032,
+              "inside-office",
+              15700
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "i",
+      "binding": "tools/device/campaign-night7-i-winner.json",
+      "declaredEpochMs": 2500,
+      "winnerSha256": "eb9c0c306f86d2ce15af30ae408dc1d1c95b3d9a249f05ca4ec2a08e622bd47d",
+      "field": {
+        "ALL": {
+          "atMs": 2500,
+          "map": "................#####...######+++........",
+          "window": {
+            "earlyMs": 66.67,
+            "lateMs": 0,
+            "capped": false
+          }
+        },
+        "open#0:monitor": {
+          "atMs": 2500,
+          "map": "###########################..............",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 100,
+            "capped": true
+          }
+        },
+        "open#1:cam11": {
+          "atMs": 2800,
+          "map": "..............###########################",
+          "window": {
+            "earlyMs": 100,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#2:cam9": {
+          "atMs": 3333,
+          "map": "............############.................",
+          "window": {
+            "earlyMs": 133.33,
+            "lateMs": 50,
+            "capped": false
+          }
+        },
+        "open#3:monitor": {
+          "atMs": 3383,
+          "map": ".................####....................",
+          "window": {
+            "earlyMs": 50,
+            "lateMs": 0,
+            "capped": false
+          }
+        },
+        "open#4:monitor": {
+          "atMs": 4116,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#5:cameraFeedLight": {
+          "atMs": 4416,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#5:cameraFeedLight/end": {
+          "atMs": 4516,
+          "map": "xxxxxxxxxxxxxx###########################",
+          "window": {
+            "earlyMs": 100,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#6:wind": {
+          "atMs": 4583,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#6:wind/end": {
+          "atMs": 4633,
+          "map": "xxxxxxxxxxxxxxxxx########################",
+          "window": {
+            "earlyMs": 50,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#7:camdrop": {
+          "atMs": 4633,
+          "map": "##############################+++........",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 150,
+            "capped": true
+          }
+        },
+        "open#7:camdrop/monitor": {
+          "atMs": 4833,
+          "map": "##############################+++........",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 150,
+            "capped": true
+          }
+        },
+        "open#7:camdrop/end": {
+          "atMs": 5233,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#8:mask": {
+          "atMs": 5415,
+          "map": "........#################################",
+          "window": {
+            "earlyMs": 200,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#0:mask": {
+          "atMs": 9060,
+          "map": "................#########################",
+          "window": {
+            "earlyMs": 66.67,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#1:hall": {
+          "atMs": 9760,
+          "map": "#################################........",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 200,
+            "capped": true
+          }
+        },
+        "loop#1:hall/end": {
+          "atMs": 9793,
+          "map": "xxxxxxxxxxxxxxxxxx.######################",
+          "window": {
+            "earlyMs": 16.67,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#2:monitor": {
+          "atMs": 10100,
+          "map": "...############################..........",
+          "window": {
+            "earlyMs": 283.33,
+            "lateMs": 166.67,
+            "capped": false
+          }
+        },
+        "loop#3:cameraFeedLight": {
+          "atMs": 10400,
+          "map": "........################.................",
+          "window": {
+            "earlyMs": 200,
+            "lateMs": 50,
+            "capped": false
+          }
+        },
+        "loop#3:cameraFeedLight/end": {
+          "atMs": 10500,
+          "map": "xxxxxxxxxxxxxx.##########################",
+          "window": {
+            "earlyMs": 83.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#4:wind": {
+          "atMs": 10570,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#4:wind/end": {
+          "atMs": 13600,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#5:camdrop": {
+          "atMs": 13650,
+          "map": ".................########................",
+          "window": {
+            "earlyMs": 50,
+            "lateMs": 66.67,
+            "capped": false
+          }
+        },
+        "loop#5:camdrop/monitor": {
+          "atMs": 13800,
+          "map": ".................########................",
+          "window": {
+            "earlyMs": 50,
+            "lateMs": 66.67,
+            "capped": false
+          }
+        },
+        "loop#5:camdrop/end": {
+          "atMs": 14200,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#6:mask": {
+          "atMs": 14249,
+          "map": "................###########..............",
+          "window": {
+            "earlyMs": 66.67,
+            "lateMs": 100,
+            "capped": false
+          }
+        }
+      },
+      "worst": {
+        "event": "open#3:monitor",
+        "window": {
+          "earlyMs": 50,
+          "lateMs": 0,
+          "capped": false
+        },
+        "marginMs": 0
+      },
+      "shortestHold": {
+        "event": "loop#1:hall/end",
+        "window": {
+          "earlyMs": 16.67,
+          "lateMs": 333.33,
+          "capped": true
+        }
+      },
+      "camdropMaskSeam": {
+        "gapMs": 450,
+        "fromMs": 383.33,
+        "toMs": 550
+      },
+      "jitter": {
+        "wins": {
+          "0": 500,
+          "10": 500,
+          "20": 302,
+          "30": 279,
+          "40": 33,
+          "50": 0,
+          "60": 0
+        },
+        "n": 500,
+        "maxAllWinMs": 10,
+        "firstLoss": {
+          "at": 20,
+          "losses": [
+            [
+              3002,
+              "inside-office",
+              2068
+            ],
+            [
+              3003,
+              "puppet",
+              2380
+            ],
+            [
+              3006,
+              "puppet",
+              2020
+            ],
+            [
+              3010,
+              "puppet",
+              1900
+            ],
+            [
+              3018,
+              "puppet",
+              1900
+            ],
+            [
+              3019,
+              "puppet",
+              1780
+            ],
+            [
+              3022,
+              "puppet",
+              2200
+            ],
+            [
+              3023,
+              "puppet",
+              1720
+            ],
+            [
+              3024,
+              "puppet",
+              1480
+            ],
+            [
+              3025,
+              "puppet",
+              2800
+            ],
+            [
+              3028,
+              "puppet",
+              1960
+            ],
+            [
+              3031,
+              "puppet",
+              1780
+            ]
+          ]
+        }
+      },
+      "lateness": {
+        "wins": {
+          "0": 500,
+          "30": 140,
+          "50": 82,
+          "60": 61,
+          "70": 58,
+          "80": 21,
+          "90": 8,
+          "100": 1
+        },
+        "n": 500,
+        "maxAllWinMs": 0,
+        "firstLoss": {
+          "at": 30,
+          "losses": [
+            [
+              3002,
+              "inside-office",
+              2069
+            ],
+            [
+              3003,
+              "puppet",
+              2380
+            ],
+            [
+              3004,
+              "inside-office",
+              2669
+            ],
+            [
+              3006,
+              "puppet",
+              2020
+            ],
+            [
+              3007,
+              "puppet",
+              1600
+            ],
+            [
+              3010,
+              "puppet",
+              1900
+            ],
+            [
+              3011,
+              "puppet",
+              2200
+            ],
+            [
+              3014,
+              "puppet",
+              1900
+            ],
+            [
+              3015,
+              "puppet",
+              1600
+            ],
+            [
+              3016,
+              "puppet",
+              2560
+            ],
+            [
+              3017,
+              "puppet",
+              1720
+            ],
+            [
+              3018,
+              "puppet",
+              1900
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "j",
+      "binding": "tools/device/campaign-night7-j-winner.json",
+      "declaredEpochMs": 2450,
+      "winnerSha256": "7cadf889042d6a41e93ddef54b370de11d2654a38d163112b730590acae63423",
+      "field": {
+        "ALL": {
+          "atMs": 2450,
+          "map": ".......#####...#########.................",
+          "window": {
+            "earlyMs": 83.33,
+            "lateMs": 50,
+            "capped": false
+          }
+        },
+        "open#0:monitor": {
+          "atMs": 2450,
+          "map": "###########################..............",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 100,
+            "capped": true
+          }
+        },
+        "open#1:cam11": {
+          "atMs": 2750,
+          "map": "..............###########################",
+          "window": {
+            "earlyMs": 100,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#2:cam9": {
+          "atMs": 3283,
+          "map": "...............#########.................",
+          "window": {
+            "earlyMs": 83.33,
+            "lateMs": 50,
+            "capped": false
+          }
+        },
+        "open#3:monitor": {
+          "atMs": 3333,
+          "map": ".................#######.................",
+          "window": {
+            "earlyMs": 50,
+            "lateMs": 50,
+            "capped": false
+          }
+        },
+        "open#4:monitor": {
+          "atMs": 4066,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#5:cameraFeedLight": {
+          "atMs": 4366,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#5:cameraFeedLight/end": {
+          "atMs": 4466,
+          "map": "xxxxxxxxxxxxxx###########################",
+          "window": {
+            "earlyMs": 100,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#6:wind": {
+          "atMs": 4533,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#6:wind/end": {
+          "atMs": 4583,
+          "map": "xxxxxxxxxxxxxxxxx########################",
+          "window": {
+            "earlyMs": 50,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#7:camdrop": {
+          "atMs": 4583,
+          "map": "#################################........",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 200,
+            "capped": true
+          }
+        },
+        "open#7:camdrop/monitor": {
+          "atMs": 4783,
+          "map": "#################################........",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 200,
+            "capped": true
+          }
+        },
+        "open#7:camdrop/end": {
+          "atMs": 5183,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#8:mask": {
+          "atMs": 5365,
+          "map": "........#################################",
+          "window": {
+            "earlyMs": 200,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#0:mask": {
+          "atMs": 9210,
+          "map": ".......##################################",
+          "window": {
+            "earlyMs": 216.67,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#1:hall": {
+          "atMs": 9910,
+          "map": "########################.................",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 50,
+            "capped": true
+          }
+        },
+        "loop#1:hall/end": {
+          "atMs": 9943,
+          "map": "xxxxxxxxxxxxxxxxxx.######################",
+          "window": {
+            "earlyMs": 16.67,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#2:monitor": {
+          "atMs": 10050,
+          "map": "......#########################..........",
+          "window": {
+            "earlyMs": 233.33,
+            "lateMs": 166.67,
+            "capped": false
+          }
+        },
+        "loop#3:cameraFeedLight": {
+          "atMs": 10350,
+          "map": "........################.................",
+          "window": {
+            "earlyMs": 200,
+            "lateMs": 50,
+            "capped": false
+          }
+        },
+        "loop#3:cameraFeedLight/end": {
+          "atMs": 10450,
+          "map": "xxxxxxxxxxxxxx.##########################",
+          "window": {
+            "earlyMs": 83.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#4:wind": {
+          "atMs": 10520,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#4:wind/end": {
+          "atMs": 13550,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#5:camdrop": {
+          "atMs": 13600,
+          "map": ".................########................",
+          "window": {
+            "earlyMs": 50,
+            "lateMs": 66.67,
+            "capped": false
+          }
+        },
+        "loop#5:camdrop/monitor": {
+          "atMs": 13750,
+          "map": ".................########................",
+          "window": {
+            "earlyMs": 50,
+            "lateMs": 66.67,
+            "capped": false
+          }
+        },
+        "loop#5:camdrop/end": {
+          "atMs": 14150,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#6:mask": {
+          "atMs": 14199,
+          "map": "................###########..............",
+          "window": {
+            "earlyMs": 66.67,
+            "lateMs": 100,
+            "capped": false
+          }
+        }
+      },
+      "worst": {
+        "event": "open#2:cam9",
+        "window": {
+          "earlyMs": 83.33,
+          "lateMs": 50,
+          "capped": false
+        },
+        "marginMs": 50
+      },
+      "shortestHold": {
+        "event": "loop#1:hall/end",
+        "window": {
+          "earlyMs": 16.67,
+          "lateMs": 333.33,
+          "capped": true
+        }
+      },
+      "camdropMaskSeam": {
+        "gapMs": 450,
+        "fromMs": 383.33,
+        "toMs": 550
+      },
+      "jitter": {
+        "wins": {
+          "0": 500,
+          "10": 500,
+          "20": 500,
+          "30": 415,
+          "40": 69,
+          "50": 1,
+          "60": 0
+        },
+        "n": 500,
+        "maxAllWinMs": 20,
+        "firstLoss": {
+          "at": 30,
+          "losses": [
+            [
+              3007,
+              "inside-office",
+              16466
+            ],
+            [
+              3010,
+              "inside-office",
+              20666
+            ],
+            [
+              3011,
+              "inside-office",
+              7465
+            ],
+            [
+              3021,
+              "inside-office",
+              21866
+            ],
+            [
+              3030,
+              "inside-office",
+              6264
+            ],
+            [
+              3033,
+              "inside-office",
+              23666
+            ],
+            [
+              3036,
+              "inside-office",
+              10463
+            ],
+            [
+              3040,
+              "inside-office",
+              5065
+            ],
+            [
+              3041,
+              "inside-office",
+              18863
+            ],
+            [
+              3045,
+              "inside-office",
+              9266
+            ],
+            [
+              3058,
+              "inside-office",
+              18865
+            ],
+            [
+              3060,
+              "inside-office",
+              18264
+            ]
+          ]
+        }
+      },
+      "lateness": {
+        "wins": {
+          "0": 500,
+          "30": 500,
+          "50": 500,
+          "60": 335,
+          "70": 59,
+          "80": 15,
+          "90": 0,
+          "100": 0
+        },
+        "n": 500,
+        "maxAllWinMs": 50,
+        "firstLoss": {
+          "at": 60,
+          "losses": [
+            [
+              3004,
+              "foxy",
+              22800
+            ],
+            [
+              3007,
+              "inside-office",
+              14066
+            ],
+            [
+              3008,
+              "foxy",
+              1800
+            ],
+            [
+              3010,
+              "inside-office",
+              20668
+            ],
+            [
+              3011,
+              "inside-office",
+              8066
+            ],
+            [
+              3015,
+              "foxy",
+              1800
+            ],
+            [
+              3018,
+              "puppet",
+              1780
+            ],
+            [
+              3019,
+              "foxy",
+              9000
+            ],
+            [
+              3020,
+              "foxy",
+              5400
+            ],
+            [
+              3021,
+              "inside-office",
+              21868
+            ],
+            [
+              3028,
+              "foxy",
+              25200
+            ],
+            [
+              3030,
+              "inside-office",
+              6266
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "k2",
+      "binding": "tools/device/campaign-night7-k2-winner.json",
+      "declaredEpochMs": 2433,
+      "winnerSha256": "6d7af32fd7377156c6a33c2f64f6be6ca5eb0d35e6b1702e9e5a9d1d5079e64f",
+      "field": {
+        "ALL": {
+          "atMs": 2433,
+          "map": ".......######...#########................",
+          "window": {
+            "earlyMs": 66.67,
+            "lateMs": 66.67,
+            "capped": false
+          }
+        },
+        "open#0:monitor": {
+          "atMs": 2433,
+          "map": "###########################..............",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 100,
+            "capped": true
+          }
+        },
+        "open#1:cam11": {
+          "atMs": 2733,
+          "map": "..............###########################",
+          "window": {
+            "earlyMs": 100,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#2:cam9": {
+          "atMs": 3266,
+          "map": "................########.................",
+          "window": {
+            "earlyMs": 66.67,
+            "lateMs": 50,
+            "capped": false
+          }
+        },
+        "open#3:monitor": {
+          "atMs": 3316,
+          "map": ".................########................",
+          "window": {
+            "earlyMs": 50,
+            "lateMs": 66.67,
+            "capped": false
+          }
+        },
+        "open#4:monitor": {
+          "atMs": 4049,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#5:cameraFeedLight": {
+          "atMs": 4349,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#5:cameraFeedLight/end": {
+          "atMs": 4449,
+          "map": "xxxxxxxxxxxxxx###########################",
+          "window": {
+            "earlyMs": 100,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#6:wind": {
+          "atMs": 4516,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#6:wind/end": {
+          "atMs": 4566,
+          "map": "xxxxxxxxxxxxxxxxx########################",
+          "window": {
+            "earlyMs": 50,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#7:camdrop": {
+          "atMs": 4566,
+          "map": "#################################........",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 200,
+            "capped": true
+          }
+        },
+        "open#7:camdrop/monitor": {
+          "atMs": 4766,
+          "map": "#################################........",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 200,
+            "capped": true
+          }
+        },
+        "open#7:camdrop/end": {
+          "atMs": 5166,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#8:mask": {
+          "atMs": 5348,
+          "map": "........#################################",
+          "window": {
+            "earlyMs": 200,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#0:mask": {
+          "atMs": 9433,
+          "map": "##################################.......",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 216.67,
+            "capped": true
+          }
+        },
+        "loop#1:hall": {
+          "atMs": 9893,
+          "map": ".......##################................",
+          "window": {
+            "earlyMs": 216.67,
+            "lateMs": 66.67,
+            "capped": false
+          }
+        },
+        "loop#1:hall/end": {
+          "atMs": 9926,
+          "map": "xxxxxxxxxxxxxxxxxx.######################",
+          "window": {
+            "earlyMs": 16.67,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#2:monitor": {
+          "atMs": 10033,
+          "map": ".......########################..........",
+          "window": {
+            "earlyMs": 216.67,
+            "lateMs": 166.67,
+            "capped": false
+          }
+        },
+        "loop#3:cameraFeedLight": {
+          "atMs": 10333,
+          "map": "........################.................",
+          "window": {
+            "earlyMs": 200,
+            "lateMs": 50,
+            "capped": false
+          }
+        },
+        "loop#3:cameraFeedLight/end": {
+          "atMs": 10433,
+          "map": "xxxxxxxxxxxxxx.##########################",
+          "window": {
+            "earlyMs": 83.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#4:wind": {
+          "atMs": 10503,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#4:wind/end": {
+          "atMs": 13533,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#5:camdrop": {
+          "atMs": 13583,
+          "map": ".................########................",
+          "window": {
+            "earlyMs": 50,
+            "lateMs": 66.67,
+            "capped": false
+          }
+        },
+        "loop#5:camdrop/monitor": {
+          "atMs": 13733,
+          "map": ".................########................",
+          "window": {
+            "earlyMs": 50,
+            "lateMs": 66.67,
+            "capped": false
+          }
+        },
+        "loop#5:camdrop/end": {
+          "atMs": 14133,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#6:mask": {
+          "atMs": 14182,
+          "map": "................###########..............",
+          "window": {
+            "earlyMs": 66.67,
+            "lateMs": 100,
+            "capped": false
+          }
+        }
+      },
+      "worst": {
+        "event": "open#2:cam9",
+        "window": {
+          "earlyMs": 66.67,
+          "lateMs": 50,
+          "capped": false
+        },
+        "marginMs": 50
+      },
+      "shortestHold": {
+        "event": "loop#1:hall/end",
+        "window": {
+          "earlyMs": 16.67,
+          "lateMs": 333.33,
+          "capped": true
+        }
+      },
+      "camdropMaskSeam": {
+        "gapMs": 450,
+        "fromMs": 383.33,
+        "toMs": 550
+      },
+      "jitter": {
+        "wins": {
+          "0": 500,
+          "10": 500,
+          "20": 500,
+          "30": 415,
+          "40": 71,
+          "50": 1,
+          "60": 0
+        },
+        "n": 500,
+        "maxAllWinMs": 20,
+        "firstLoss": {
+          "at": 30,
+          "losses": [
+            [
+              3007,
+              "inside-office",
+              16465
+            ],
+            [
+              3010,
+              "inside-office",
+              20665
+            ],
+            [
+              3011,
+              "inside-office",
+              7464
+            ],
+            [
+              3021,
+              "inside-office",
+              21865
+            ],
+            [
+              3030,
+              "inside-office",
+              6263
+            ],
+            [
+              3033,
+              "inside-office",
+              23665
+            ],
+            [
+              3036,
+              "inside-office",
+              10462
+            ],
+            [
+              3040,
+              "inside-office",
+              5064
+            ],
+            [
+              3041,
+              "inside-office",
+              18862
+            ],
+            [
+              3045,
+              "inside-office",
+              9265
+            ],
+            [
+              3058,
+              "inside-office",
+              18864
+            ],
+            [
+              3060,
+              "inside-office",
+              18263
+            ]
+          ]
+        }
+      },
+      "lateness": {
+        "wins": {
+          "0": 500,
+          "30": 500,
+          "50": 500,
+          "60": 414,
+          "70": 236,
+          "80": 31,
+          "90": 3,
+          "100": 0
+        },
+        "n": 500,
+        "maxAllWinMs": 50,
+        "firstLoss": {
+          "at": 60,
+          "losses": [
+            [
+              3007,
+              "inside-office",
+              14065
+            ],
+            [
+              3010,
+              "inside-office",
+              20667
+            ],
+            [
+              3011,
+              "inside-office",
+              8065
+            ],
+            [
+              3021,
+              "inside-office",
+              21867
+            ],
+            [
+              3030,
+              "inside-office",
+              6866
+            ],
+            [
+              3033,
+              "inside-office",
+              23667
+            ],
+            [
+              3036,
+              "inside-office",
+              10464
+            ],
+            [
+              3040,
+              "inside-office",
+              3265
+            ],
+            [
+              3041,
+              "inside-office",
+              20065
+            ],
+            [
+              3045,
+              "inside-office",
+              11665
+            ],
+            [
+              3058,
+              "inside-office",
+              18866
+            ],
+            [
+              3060,
+              "inside-office",
+              18265
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "k3",
+      "binding": "tools/device/campaign-night7-k3-winner.json",
+      "declaredEpochMs": 2433,
+      "winnerSha256": "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78",
+      "field": {
+        "ALL": {
+          "atMs": 2433,
+          "map": ".......######...#########...#............",
+          "window": {
+            "earlyMs": 66.67,
+            "lateMs": 66.67,
+            "capped": false
+          }
+        },
+        "open#0:monitor": {
+          "atMs": 2433,
+          "map": "###########################..............",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 100,
+            "capped": true
+          }
+        },
+        "open#1:cam11": {
+          "atMs": 2733,
+          "map": "..............###########################",
+          "window": {
+            "earlyMs": 100,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#2:cam9": {
+          "atMs": 3266,
+          "map": "................########.................",
+          "window": {
+            "earlyMs": 66.67,
+            "lateMs": 50,
+            "capped": false
+          }
+        },
+        "open#3:monitor": {
+          "atMs": 3316,
+          "map": ".................########................",
+          "window": {
+            "earlyMs": 50,
+            "lateMs": 66.67,
+            "capped": false
+          }
+        },
+        "open#4:monitor": {
+          "atMs": 4049,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#5:cameraFeedLight": {
+          "atMs": 4349,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#5:cameraFeedLight/end": {
+          "atMs": 4449,
+          "map": "xxxxxxxxxxxxxx###########################",
+          "window": {
+            "earlyMs": 100,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#6:wind": {
+          "atMs": 4516,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#6:wind/end": {
+          "atMs": 4566,
+          "map": "xxxxxxxxxxxxxxxxx########################",
+          "window": {
+            "earlyMs": 50,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#7:camdrop": {
+          "atMs": 4566,
+          "map": "#################################........",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 200,
+            "capped": true
+          }
+        },
+        "open#7:camdrop/monitor": {
+          "atMs": 4766,
+          "map": "#################################........",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 200,
+            "capped": true
+          }
+        },
+        "open#7:camdrop/end": {
+          "atMs": 5166,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "open#8:mask": {
+          "atMs": 5348,
+          "map": "........#################################",
+          "window": {
+            "earlyMs": 200,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#0:mask": {
+          "atMs": 9433,
+          "map": "##############################...........",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 150,
+            "capped": true
+          }
+        },
+        "loop#1:hall": {
+          "atMs": 9833,
+          "map": "...........##################............",
+          "window": {
+            "earlyMs": 150,
+            "lateMs": 133.33,
+            "capped": false
+          }
+        },
+        "loop#1:hall/end": {
+          "atMs": 9866,
+          "map": "xxxxxxxxxxxxxxxxxx.######################",
+          "window": {
+            "earlyMs": 16.67,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#2:monitor": {
+          "atMs": 10033,
+          "map": ".......########################..........",
+          "window": {
+            "earlyMs": 216.67,
+            "lateMs": 166.67,
+            "capped": false
+          }
+        },
+        "loop#3:cameraFeedLight": {
+          "atMs": 10333,
+          "map": "........################.................",
+          "window": {
+            "earlyMs": 200,
+            "lateMs": 50,
+            "capped": false
+          }
+        },
+        "loop#3:cameraFeedLight/end": {
+          "atMs": 10433,
+          "map": "xxxxxxxxxxxxxx.##########################",
+          "window": {
+            "earlyMs": 83.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#4:wind": {
+          "atMs": 10503,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#4:wind/end": {
+          "atMs": 13533,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#5:camdrop": {
+          "atMs": 13583,
+          "map": ".................########................",
+          "window": {
+            "earlyMs": 50,
+            "lateMs": 66.67,
+            "capped": false
+          }
+        },
+        "loop#5:camdrop/monitor": {
+          "atMs": 13733,
+          "map": ".................########................",
+          "window": {
+            "earlyMs": 50,
+            "lateMs": 66.67,
+            "capped": false
+          }
+        },
+        "loop#5:camdrop/end": {
+          "atMs": 14133,
+          "map": "#########################################",
+          "window": {
+            "earlyMs": 333.33,
+            "lateMs": 333.33,
+            "capped": true
+          }
+        },
+        "loop#6:mask": {
+          "atMs": 14182,
+          "map": "................###########..............",
+          "window": {
+            "earlyMs": 66.67,
+            "lateMs": 100,
+            "capped": false
+          }
+        }
+      },
+      "worst": {
+        "event": "open#2:cam9",
+        "window": {
+          "earlyMs": 66.67,
+          "lateMs": 50,
+          "capped": false
+        },
+        "marginMs": 50
+      },
+      "shortestHold": {
+        "event": "loop#1:hall/end",
+        "window": {
+          "earlyMs": 16.67,
+          "lateMs": 333.33,
+          "capped": true
+        }
+      },
+      "camdropMaskSeam": {
+        "gapMs": 450,
+        "fromMs": 383.33,
+        "toMs": 550
+      },
+      "jitter": {
+        "wins": {
+          "0": 500,
+          "10": 500,
+          "20": 500,
+          "30": 415,
+          "40": 71,
+          "50": 1,
+          "60": 0
+        },
+        "n": 500,
+        "maxAllWinMs": 20,
+        "firstLoss": {
+          "at": 30,
+          "losses": [
+            [
+              3007,
+              "inside-office",
+              16465
+            ],
+            [
+              3010,
+              "inside-office",
+              20665
+            ],
+            [
+              3011,
+              "inside-office",
+              7464
+            ],
+            [
+              3021,
+              "inside-office",
+              21865
+            ],
+            [
+              3030,
+              "inside-office",
+              6263
+            ],
+            [
+              3033,
+              "inside-office",
+              23665
+            ],
+            [
+              3036,
+              "inside-office",
+              10462
+            ],
+            [
+              3040,
+              "inside-office",
+              5064
+            ],
+            [
+              3041,
+              "inside-office",
+              18862
+            ],
+            [
+              3045,
+              "inside-office",
+              9265
+            ],
+            [
+              3058,
+              "inside-office",
+              18864
+            ],
+            [
+              3060,
+              "inside-office",
+              18263
+            ]
+          ]
+        }
+      },
+      "lateness": {
+        "wins": {
+          "0": 500,
+          "30": 500,
+          "50": 500,
+          "60": 416,
+          "70": 235,
+          "80": 57,
+          "90": 14,
+          "100": 0
+        },
+        "n": 500,
+        "maxAllWinMs": 50,
+        "firstLoss": {
+          "at": 60,
+          "losses": [
+            [
+              3007,
+              "inside-office",
+              14666
+            ],
+            [
+              3010,
+              "inside-office",
+              21266
+            ],
+            [
+              3011,
+              "inside-office",
+              8065
+            ],
+            [
+              3021,
+              "inside-office",
+              21867
+            ],
+            [
+              3030,
+              "inside-office",
+              6265
+            ],
+            [
+              3033,
+              "inside-office",
+              23667
+            ],
+            [
+              3036,
+              "inside-office",
+              10464
+            ],
+            [
+              3040,
+              "inside-office",
+              3265
+            ],
+            [
+              3041,
+              "inside-office",
+              18864
+            ],
+            [
+              3045,
+              "inside-office",
+              11665
+            ],
+            [
+              3058,
+              "inside-office",
+              18866
+            ],
+            [
+              3060,
+              "inside-office",
+              18265
+            ]
+          ]
+        }
+      }
+    }
+  ]
+}

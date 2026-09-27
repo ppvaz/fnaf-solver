@@ -151,14 +151,31 @@ export class DeviceActuator {
   // everything and a `lateWhen` figure is a diagnostic, not a phone result.
   // The queue still serializes: an on-time press behind a late one is still
   // pushed, because that is what the coprocess pipe does.
+  //
+  // `maskFloorMs` is the phone's mask button, which the simulator does not
+  // draw: after a lowering monitor press the button is absent through 322 ms
+  // and fully visible only at ~382.5 ms (native frame trace; artifact-commands
+  // SEAM_FLOORS.maskButtonFullyVisibleAfterMonitorDownMs). The simulator takes
+  // a mask press any time the monitor is not up or raising, so a jittered mask
+  // press that lands inside the lowering animation is kept by the model and
+  // lost by the phone. With the floor set, a mask-ON press landing less than
+  // maskFloorMs after the last lowering press is dropped and counted. Plans
+  // clear the floor by the seam-slack margin, so it only bites when presses
+  // move against each other. Null (the default) keeps every figure published
+  // before it existed.
   constructor(sim, { seed = 1, worst = false, lateMinMs = LAUNCH_LATE_MIN_MS,
                      lateMaxMs = LAUNCH_LATE_MAX_MS, perPress = true,
-                     closedLoop = null, lateWhen = null } = {}) {
+                     closedLoop = null, lateWhen = null, maskFloorMs = null } = {}) {
     if (!(lateMinMs >= 0) || !(lateMaxMs >= lateMinMs))
       throw new Error('lateness band must satisfy 0 <= min <= max');
     if (lateWhen !== null && typeof lateWhen !== 'function')
       throw new Error('lateWhen must be a predicate on the action name');
+    if (maskFloorMs !== null && !(maskFloorMs >= 0))
+      throw new Error('maskFloorMs must be null or a non-negative number of ms');
     this.lateWhen = lateWhen;
+    this.maskFloorFrames = maskFloorMs === null ? null : f(maskFloorMs);
+    this.monitorDownAt = -Infinity; // landing frame of the last lowering monitor press
+    this.maskFloorDrops = 0;
     this.sim = sim;
     // Its own stream, never sim.rng: a lateness draw must not move the game's
     // rolls, or no run is comparable to its unwrapped twin (model/reactive-pilot.mjs keeps
@@ -234,6 +251,10 @@ export class DeviceActuator {
       if (kind === 'release') { this.sim.release(act); continue; }
       this.sent++;
       if (act === 'monitor' && this.seamDropped(now)) { this.seamDrops++; continue; }
+      if (act === 'mask' && !this.sim.maskOn && this.maskFloorFrames !== null &&
+          now - this.monitorDownAt < this.maskFloorFrames) { this.maskFloorDrops++; continue; }
+      if (act === 'monitor' && (this.sim.monitor === 'up' || this.sim.monitor === 'raising'))
+        this.monitorDownAt = now;
       // A mask press landing with the mask on is the mask-OFF press; the seam
       // it opens runs from this landing, not from the schedule's intent.
       if (act === 'mask' && this.sim.maskOn) this.maskOffAt = now;
