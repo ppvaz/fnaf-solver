@@ -272,7 +272,11 @@ async function population(argv) {
 // the two faces of the cube -- for the preset schedule at epoch 0 and for the
 // committed Night 7 binding k3 at its anchor, over held-out seeds. The engine
 // clamps dials on apply (Foxy 17, Golden Freddy 10, the rest 15), so the cells
-// above a cap repeat the capped one.
+// above a cap repeat the capped one: `Sim.applyAiHour` stores min(dial, cap)
+// and nothing else reads the dial, so those cells are the same nights, and
+// each is scored once, at the cap, and copied. A 15 x 15 plane is 256
+// distinct cells of 441. Check 5 of `test-night7-presets.mjs` replays the
+// (20, 20) corner through the raw vector, which holds the copy to the engine.
 export const PLANE_KIND = 'night7-dial-plane-v1';
 const K3_WINNER = new URL('./campaign-night7-k3-winner.json', import.meta.url);
 
@@ -297,16 +301,22 @@ export function planeWins(schedule, vector, seed) {
 function planeBlock(a, b, bases, count, from, to) {
   const seeds = heldOutSeeds(count).slice(from, to);
   const rows = [];
-  for (const base of bases) for (const schedule of planeSchedules())
+  for (const base of bases) for (const schedule of planeSchedules()) {
+    const scored = new Map();
     for (let x = 0; x <= 20; x++) for (let y = 0; y <= 20; y++) {
-      const vector = planeVector(a, b, base, x, y);
-      const losses = [];
-      for (const seed of seeds) {
-        const r = planeWins(schedule, vector, seed);
-        if (!r.won) losses.push([seed, r.reason, r.frame]);
+      const key = `${Math.min(x, C.aiCap(a))},${Math.min(y, C.aiCap(b))}`;
+      if (!scored.has(key)) {
+        const vector = planeVector(a, b, base, x, y);
+        const losses = [];
+        for (const seed of seeds) {
+          const r = planeWins(schedule, vector, seed);
+          if (!r.won) losses.push([seed, r.reason, r.frame]);
+        }
+        scored.set(key, losses);
       }
-      rows.push({ base, schedule: schedule.id, x, y, n: seeds.length, losses });
+      rows.push({ base, schedule: schedule.id, x, y, n: seeds.length, losses: scored.get(key) });
     }
+  }
   return rows;
 }
 
@@ -345,7 +355,8 @@ export function planeRecord({ rows, a, b, bases, count, git, date, command }) {
       schedules: schedules.map(({ id, epochMs, winnerSha256 }) => ({ id, epochMs,
         ...(id === 'preset' ? { knobsSha256: sha256(JSON.stringify(PRESET_KNOBS)) } : { winnerSha256 }) })),
       plane: { a, b, values: '0..20 each', bases, map: `map[${a}][${b}]: # every seed won, . every seed lost, + some` },
-      caps: 'dials clamp on apply (g829/g830/g856-863): Foxy 17, Golden Freddy 10, every other 15',
+      caps: 'dials clamp on apply (g829/g830/g856-863): Foxy 17, Golden Freddy 10, every other 15; a cell above ' +
+        'a cap is the capped cell\'s night, scored once at the cap and copied',
       win: 'sim.won AND splitAt >= 0',
     },
     grids,
