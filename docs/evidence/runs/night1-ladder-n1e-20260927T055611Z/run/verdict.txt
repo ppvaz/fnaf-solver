@@ -1,0 +1,18 @@
+run          night1-ladder-n1e-20260927T055611Z
+bundle       artifacts/ladder-20260927/n1min
+campaign dir artifacts/campaign-2026-09-27T05-56-25.482Z
+campaign exit 0
+--- attempt 1 of 1: artifacts/campaign-2026-09-27T05-56-25.482Z ---
+--- modern campaign bundle (executor-owned facts) ---
+  night reached               yes
+  arm mode                    blocking
+  arm                         VERIFIED on attempt 2 (1 retry, 4 samples)
+  arm verified at             124046 ms
+  parked prefix (plan)        UNKNOWN
+  PHASE LAG (suffix shift)    UNKNOWN
+  cycle gates                 0 (0 agreed, 0 corrected, 0 aborted)
+  gate lag                    UNKNOWN
+  delivered offset            UNKNOWN
+  corrections landed          0 confirmed, 0 unconfirmed, 0 unread, 0 never read back
+  press acceptance            5 graded -- 4 UNKNOWN, 1 PASS
+  stop reason                 actuator-stopped
