@@ -30,6 +30,8 @@ directory (`/private/tmp/fnaf2-recompile.*` on the dev machine).
 | `fixtures/night7-before.ini`, `fixtures/night7-{dials0,dials20,preset}.{input,json}` | A save with `beatgame=1` and `beat6=1` (Custom Night's g26/g50 gates), the title tap, portrait taps on the customize frame and Ready; each `.json` is the dial vector for `--custom-night`. |
 | `sourced-origin-model-options.json` | The same sourced flags plus the frame-time hook at 60 fps (`frameMs` 50/3, `frameValue5` 1) and `sourcedEveryOrigin`: every countdown loads on the loop it is first reached. `model-draw-trace.mjs` turns the two hook constants into per-frame functions. Diagnostic; defaults unchanged. |
 | `make-android-fonts.py` | Writes Chowdren's font bank from Roboto TTFs held outside the repository at the font bank's pixel sizes (13-43, bold 43): the face Android substitutes for the game's Consolas and Tahoma, drawn at `|lfHeight|` px. Output `Chowdren/fonts/AndroidSans.dat`, next to the converter; no font data is committed. |
+| `native-frame.py` | Scales harness snaps (1024 x 768) to the phone's 2400 x 1080 MediaProjection frame as Display Mode FULL does, with bilinear filtering as the phone's frames show, and prints per-rectangle distances to a phone frame. Frames stay outside the repository. |
+| `game-config.py` | Chowdren `--config` for the other build-296 mobile CCNs (FNaF 1, 3, 4): the FNaF 2 config's overrides with extension identity resolved by item name (`Multiple Touch`, `Layer object`, `*.KYSO`, `Ini`...), since each game numbers its extension object types differently. |
 | `run-harness.sh` | Container wrapper with GL readiness checking and a process deadline that escalates to kill. Run from the external gamesrc directory. |
 | `test-mobile-parser.py`, `test-compare-draw-trace.mjs` | Synthetic parser and result-classification regressions; FIXTURE only. |
 | `test-child-events.py`, `fixtures/child-events.cpp` | Emit and compile synthetic nested events with the patched converter; exercise parent gating, nested/sibling selections, and one-shot timer dispatch. FIXTURE only; Python2.7 and a C++ compiler required. |
@@ -624,3 +626,61 @@ Scope: one seed, no gameplay input, draws and LCG state only,
 non-uniform Custom Night dials (the converter's `param68` loops); the pending-path
 cancel; Custom Night after an earlier night in the same session; whether the
 CAM 09 parking holds on the phone (seed-exact before the first raise).
+
+## The office encounter and the jumpscares (2026-09-27, night)
+
+Pedro played Night 7 on the rebuild: no jumpscare drew, and the office never
+darkened when an animatronic came in. Three fixes, each read from the source,
+all in the patch:
+
+- **Jumpscares (`Extensions.CRunKyso`).** The ten jumpscares (Withered
+  Freddy .. Golden Freddy; the attack marker's animations 12-21 are image-368
+  timing carriers) are Kyso flipbooks: extension data swidth, sheight, mode,
+  flags, play_speed and (version 2) BackToFrame, then the image handles. They
+  start with no image (mode 0, flags 0) and FNaF 2 drives them with LoadCustom,
+  Play and PlayLoop. The converter had no writer, so the object drew nothing and
+  its actions compiled to nothing. `writers/extensions/Kyso.py` and
+  `base/objects/kyso.*` transcribe `handleRunObject`/`Animation`: the counter
+  gains play_speed per loop and a frame advances each time it passes 100. FNaF 4
+  uses the same extension.
+- **Mixed Custom Night dials.** Build 296 packs an alterable test into
+  `OnObjectLoop` (parameter 11, then 68). A loop body is a triggered group, whose
+  first condition is dropped from the code, and the packed test went with it.
+  `write_loop_variable_test` emits it against the loop's current instance, so
+  g130-g139 copy each portrait's dial to its own counter. Non-uniform dial
+  vectors are valid from here on. The dial fixtures above tap the frozen
+  binary's stair-stepped grid; on this layout the portraits sit on a 5 x 2 grid
+  at x = 128 + 192 k, y = 112 or 384.
+- **The blackout overlay.** `blackout` draws image 368, 16 x 16 solid black, in
+  graphic mode 4 with transparent colour (0, 0, 0). `CImage.getFormat` loads
+  format 4 as `Bitmap.Config.RGB_565`, which has no alpha. The phone draws it
+  opaque, and the office goes dark. The decoder left RGB565 records without
+  alpha, so the colour key made every black pixel transparent, and the overlay's
+  g520/g521 flicker toggled an invisible image. RGB565 records are now opaque.
+  Android builds its collision masks in native code (`CMask.allocNative`), so
+  whether they honour the key is not visible in the dex. The Night 1 office rows
+  are the check. **Not yet run:** this change is in the patch, but its
+  conversion was stopped at session end during image recompression, so neither
+  the darkened office nor the Night 1 rows have been seen on it. That conversion
+  also left `input/gamesrc/Assets.dat` empty, and `play/` reads it through a
+  symlink; a reconversion and build restore both.
+
+Confirmed in the harness on binary `036076d3` (Kyso and the loop test; no
+opaque RGB565), with a scripted monitor raise every 8 s on the Withered trio:
+Withered Chica enters on tick 1530 (seed 91). The blackout counters run (v0
+from 1501; 60 hidden and 119 shown ticks while 20 < v0 < 200), but the office
+stays lit: that is what led to the image 368 fix. The Foxy, Puppet and Withered
+Chica jumpscares draw, and Pedro saw Bonnie's. Night 1's office rows were last
+checked identical on `e2e7cf5c` (the text alignment build). They have not been
+checked on `036076d3`. Once the sequence ends, the
+animatronic leaves for the got-you box, and the kill waits for the next monitor
+raise (g458-g461, g469). That is the sheet's rule, not a defect.
+
+`MMFPARSER_ANDROID_MISSING_SOUND=silence` (opt-in) substitutes a 10 ms silent
+WAV for an Android sound missing from `res/raw`. The other games are parked for
+now:
+- FNaF 4 parses with `game-config.py`. Its first conversion was stopped at 4%
+  of image compression, to free memory for FNaF 2's build.
+- FNaF 1 and 3 need more than the silent substitute: their sound banks run out
+  of bytes before the declared count, and part of their audio sits in
+  `assets/` under obfuscated names. That layout is not decoded yet.

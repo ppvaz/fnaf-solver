@@ -1840,3 +1840,56 @@ phone cohorts. No option default changed.
 Open: a device reading of 25-29 (wired or on-phone capture, with a same-run
 positive control); the default marker set; Mangle's g358 and the hall-light edges'
 latch in the model; `in office` under `hear footsteps` for bottom-hotspot sprites.
+
+**2026-09-27 (night): the rebuild plays through a Night 7 encounter; the census names the set it scored.**
+
+- **S2b, rebuilt-runtime fidelity, no device run.** Pedro played the rebuild,
+  and each report was fixed from the dex or CCN, in
+  `tools/recompile/mmfparser-chowdren-mobile.patch`
+  ([README](../tools/recompile/README.md), "A playable rebuild" and "The office
+  encounter and the jumpscares"):
+  - Fusion's integer division (`FusionDiv`) fixes the Custom Night grid.
+  - Android's DT_BOTTOM and multi-line alignment fix the menu texts.
+  - A `CRunKyso` flipbook writer makes the ten jumpscares draw.
+  - The `OnObjectLoop` packed test copies each Custom Night dial to its own
+    counter, so mixed dials are valid.
+  - RGB565 images are made opaque (`Bitmap.Config.RGB_565`). The blackout
+    overlay (image 368, solid black, colour-keyed to nothing) should then darken
+    the office. This change is in the patch but not built: its conversion was
+    stopped at session end, and that stop left the shared `Assets.dat` empty
+    (`play/` needs a reconversion).
+  - Checks:
+    - Night 1's no-input office rows were identical through the alignment build
+      (`e2e7cf5c`), but have not been checked on the Kyso and loop binary
+      (`036076d3`).
+    - On that binary the harness shows the Foxy, Puppet and Withered Chica
+      jumpscares, and a seed-91 encounter whose blackout counters run while the
+      office stays lit. Pedro confirmed Bonnie's jumpscare.
+  - The vanish-then-kill-on-monitor after an unmasked encounter is the sheet's
+    got-you stage (g458-g461, g469), not a defect.
+- **Merged:** the four exact-lane dial planes (no frontier), the
+  rebuild-options census (partial), the footstep adjudication, and Nights 6-7 on
+  the frozen binary.
+- **Census pinned.** `rebuild-options-census-20260927` was scored before the
+  Nights 6-7 options joined `sourced-rebuild-model-options.json`. It now names
+  the file it scored: `sourced-rebuild-model-options-20260927a.json`, byte for
+  byte, sha `79681f0f`. `--options` selects the file. A census of the current
+  set is a new record.
+- **Corpus frames.** `tools/recompile/native-frame.py` scales harness snaps to
+  the phone's 2400 x 1080 FULL stretch with bilinear filtering, as a native
+  title frame shows, and prints per-rectangle distances to a phone frame. No
+  window is needed, so a 1920 x 1080 monitor never limits it.
+- **Other games parked.** `tools/recompile/game-config.py` resolves extensions
+  by item name, and FNaF 4 parses with it. FNaF 1 and 3 have an undecoded
+  sound-bank layout. No conversion was kept for any of the three.
+
+Open:
+- Reconvert and build the opaque RGB565 patch. Check the darkened office on
+  seed 91 and the Night 1 rows, and redeploy `play/` with a pinned
+  `Assets.dat`.
+- Replay Nights 2-7 on the current binary. FusionDiv changes divisions such as
+  g467's `Random(500) / night`, and only Night 1 has been rechecked.
+- The dial fixtures still tap the frozen grid.
+- Android's collision masks for RGB565 (native code).
+- The native-frame comparison against phone frames of matched states.
+- The census of the current set.

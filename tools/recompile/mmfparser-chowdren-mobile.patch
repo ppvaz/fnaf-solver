@@ -459,7 +459,7 @@ index ed74b78..f9d064d 100644
  
  inline void to_lower(std::string & str)
 diff --git a/Chowdren/chowdren/converter.py b/Chowdren/chowdren/converter.py
-index d8edac8..d89e576 100644
+index d8edac8..b81f8be 100644
 --- a/Chowdren/chowdren/converter.py
 +++ b/Chowdren/chowdren/converter.py
 @@ -22,7 +22,8 @@ import string
@@ -698,7 +698,46 @@ index d8edac8..d89e576 100644
      def get_container_check(self, container):
          groups = []
          for item in container.tree:
-@@ -2602,26 +2696,36 @@ class Converter(object):
+@@ -2508,6 +2602,30 @@ class Converter(object):
+         return self.write_events(name, writer, groups, True, pre_calls,
+                                  post_calls)
+ 
++    def write_loop_variable_test(self, writer, condition):
++        # Build 296 packs an alterable test into OnObjectLoop (parameter 11,
++        # the loop, then 68, PARAM_MULTIPLEVAR): the body runs only for a loop
++        # instance whose packed test holds. The trigger condition is dropped
++        # from a triggered group's code, and its test with it, so FNaF 2's
++        # Custom Night copied every dial into all ten AI counters (g130-g139
++        # test the looped portrait's value 0 against 0..9).
++        data = condition.data
++        if data.getName() != 'OnObjectLoop' or len(data.items) < 2:
++            return
++        loader = data.items[1].loader
++        if loader.__class__.__name__ != 'ParameterVariables':
++            return
++        obj = condition.get_object()
++        if obj[0] is None:
++            obj = (data.objectInfo, data.objectType)
++        args = ['%su' % (loader.flagMasks & 0xFFFFFFFF),
++                '%su' % (loader.flagValues & 0xFFFFFFFF),
++                str(len(loader.variables))]
++        for var in loader.variables:
++            args += [str(var.index), str(var.operator), repr(float(var.value))]
++        writer.putln('if (!(%s->alterables->test_multivar(%s))) %s' % (
++            self.get_object(obj), ', '.join(args), self.event_break))
++
+     def get_event_code(self, group, triggered=False):
+         group.set_groups(self, self.current_groups)
+         self.is_triggered = triggered
+@@ -2541,6 +2659,7 @@ class Converter(object):
+ 
+         conditions = group.conditions
+         if triggered:
++            self.write_loop_variable_test(writer, conditions[0])
+             conditions = conditions[1:]
+ 
+         if conditions or has_container_check:
+@@ -2602,26 +2721,36 @@ class Converter(object):
  
                  for write_condition in write_conditions:
                      negated = not write_condition.is_negated()
@@ -750,7 +789,7 @@ index d8edac8..d89e576 100644
                      if negated:
                          writer.put(')')
                      if has_multiple:
-@@ -2655,6 +2759,8 @@ class Converter(object):
+@@ -2655,6 +2784,8 @@ class Converter(object):
                  or_lists.add(list_name)
  
              for list_name in or_lists:
@@ -759,7 +798,7 @@ index d8edac8..d89e576 100644
                  if is_logical:
                      writer.putlnc('%s.clear_selection();', list_name)
                  else:
-@@ -2673,7 +2779,8 @@ class Converter(object):
+@@ -2673,7 +2804,8 @@ class Converter(object):
                  check = '%s' % (' || '.join(or_bools))
                  writer.putlnc('if (%s) {', check)
                  writer.indent()
@@ -769,7 +808,7 @@ index d8edac8..d89e576 100644
                  writer.end_brace()
  
              # writer.start_brace()
-@@ -2689,15 +2796,28 @@ class Converter(object):
+@@ -2689,15 +2821,28 @@ class Converter(object):
              if action_writer.custom:
                  action_writer.write(writer)
                  continue
@@ -799,7 +838,7 @@ index d8edac8..d89e576 100644
              if object_info is not None:
                  if obj in self.has_single_selection:
                      has_single = True
-@@ -2705,9 +2825,20 @@ class Converter(object):
+@@ -2705,9 +2850,20 @@ class Converter(object):
                      has_multiple = True
                  elif not self.is_valid_object(obj):
                      object_info = None
@@ -820,7 +859,7 @@ index d8edac8..d89e576 100644
              object_name = None
              write_actions = [action_writer]
              if has_single:
-@@ -2721,6 +2852,9 @@ class Converter(object):
+@@ -2721,6 +2877,9 @@ class Converter(object):
                          break
                      if next_action.custom:
                          break
@@ -830,7 +869,7 @@ index d8edac8..d89e576 100644
                      if next_action.iterate_objects is False:
                          break
                      action_index += 1
-@@ -2734,6 +2868,19 @@ class Converter(object):
+@@ -2734,6 +2893,19 @@ class Converter(object):
                  self.set_iterator(obj, list_name)
                  object_name = '*it'
              elif object_info is not None:
@@ -850,7 +889,7 @@ index d8edac8..d89e576 100644
                  writer.putindent()
                  writer.put('%s->' % self.get_object(obj))
              elif action_writer.static:
-@@ -2805,7 +2952,8 @@ class Converter(object):
+@@ -2805,7 +2977,8 @@ class Converter(object):
                  continue
              list_name = self.get_object_list(obj, True)
              group.or_selected[obj] = list_name
@@ -860,7 +899,7 @@ index d8edac8..d89e576 100644
  
          writer.putlnc('if (%s) {', group.or_temp_result)
          writer.indent()
-@@ -2817,7 +2965,8 @@ class Converter(object):
+@@ -2817,7 +2990,8 @@ class Converter(object):
          for obj, list_name in self.has_selection.iteritems():
              if obj in has_qualifier:
                  continue
@@ -870,7 +909,7 @@ index d8edac8..d89e576 100644
  
          writer.end_brace()
  
-@@ -2965,6 +3114,14 @@ class Converter(object):
+@@ -2965,6 +3139,14 @@ class Converter(object):
                  return self.intern_string(loader.value)
              elif parameter_name in ('TwoShorts'):
                  return to_c('%r, %r', loader.value1, loader.value2)
@@ -885,7 +924,7 @@ index d8edac8..d89e576 100644
              else:
                  raise NotImplementedError('parameter: %s' % parameter_name)
          self.start_clauses += out.count('(')
-@@ -2978,16 +3135,25 @@ class Converter(object):
+@@ -2978,16 +3160,25 @@ class Converter(object):
  
              if remove != 1:
                  print out
@@ -916,7 +955,7 @@ index d8edac8..d89e576 100644
  
              filtered = out[end+1:]
              out = out[:end+1]
-@@ -3068,7 +3234,8 @@ class Converter(object):
+@@ -3068,7 +3259,8 @@ class Converter(object):
              clear_lists = (list_name,)
  
          for obj_list in clear_lists:
@@ -926,7 +965,7 @@ index d8edac8..d89e576 100644
  
          for obj in objs:
              if obj == object_info:
-@@ -3149,6 +3316,18 @@ class Converter(object):
+@@ -3149,6 +3341,18 @@ class Converter(object):
                  if default_instance:
                      args.append(default_instance)
  
@@ -945,7 +984,7 @@ index d8edac8..d89e576 100644
              if is_qual:
                  getter_name = 'get_qualifier'
              else:
-@@ -3160,6 +3339,25 @@ class Converter(object):
+@@ -3160,6 +3364,25 @@ class Converter(object):
      def get_default_instance(self, object_type):
          return self.get_object_impl(object_type).default_instance
  
@@ -971,7 +1010,7 @@ index d8edac8..d89e576 100644
      def get_object_list(self, obj, allow_single=False):
          if self.has_single(obj) and not allow_single:
              print 'single exception:', self.get_single(obj)
-@@ -3170,11 +3368,23 @@ class Converter(object):
+@@ -3170,11 +3393,23 @@ class Converter(object):
          if is_qual:
              return type_id
          obj = self.filter_object_type(obj)
@@ -997,7 +1036,7 @@ index d8edac8..d89e576 100644
  
      def filter_object_type(self, obj):
          if is_qualifier(obj[0]):
-@@ -3285,9 +3495,12 @@ class Converter(object):
+@@ -3285,9 +3520,12 @@ class Converter(object):
                  return get_method_name('_'.join(full_name))
          ret = item.getName()
          if ret is None:
@@ -1013,7 +1052,7 @@ index d8edac8..d89e576 100644
          return ret
  
      def get_action_writer(self, item, as_klass = False):
-@@ -3329,6 +3542,24 @@ class Converter(object):
+@@ -3329,6 +3567,24 @@ class Converter(object):
              klass = getattr(writer_module, ace_type)[key]
          except (KeyError, AttributeError):
              klass = default_writers[ace_type]
@@ -2210,7 +2249,7 @@ index dc38547..046dd8b 100644
 +    'MovementTimerBase', 'FramePassword', 'LayerEffects', 'FrameEffects',
 +    'FrameHandle']
 diff --git a/mmfparser/data/chunkloaders/imagebank.pyx b/mmfparser/data/chunkloaders/imagebank.pyx
-index 7459cb4..8ba3f3e 100644
+index 7459cb4..e7de756 100644
 --- a/mmfparser/data/chunkloaders/imagebank.pyx
 +++ b/mmfparser/data/chunkloaders/imagebank.pyx
 @@ -208,6 +208,49 @@ cdef inline tuple read_rgb(char * data, int width, int height, BasePoint pointCl
@@ -2263,7 +2302,7 @@ index 7459cb4..8ba3f3e 100644
  cdef inline int get_padding(int width, BasePoint pointClass, int bytes = 2):
      cdef int pad
      pad = bytes - ((width * pointClass.size) % bytes)
-@@ -364,8 +407,77 @@ cdef class ImageItem(DataLoader):
+@@ -364,8 +407,82 @@ cdef class ImageItem(DataLoader):
          self.flags = IMAGE_FLAGS.copy()
  
      cpdef read(self, ByteReader reader):
@@ -2322,7 +2361,12 @@ index 7459cb4..8ba3f3e 100644
 +                    elif two_byte:
 +                        self.image = read_android_rgb565(raw, self.width,
 +                            self.height)
-+                        self.alpha = None
++                        # CImage.getFormat gives format 4 Bitmap.Config.RGB_565,
++                        # which has no alpha: the phone draws these opaque.
++                        # Leaving alpha unset applied the (0, 0, 0) colour key,
++                        # so FNaF 2's blackout overlay (image 368, solid black)
++                        # drew as nothing and the office never went dark.
++                        self.alpha = '\xff' * (self.width * self.height)
 +                    elif len(raw) == self.width * self.height * 4:
 +                        self.image = raw
 +                        self.alpha = raw[3::4]
@@ -2342,7 +2386,7 @@ index 7459cb4..8ba3f3e 100644
          self.reader = reader
          self.pos = reader.tell()
          if load_now:
-@@ -377,7 +489,6 @@ cdef class ImageItem(DataLoader):
+@@ -377,7 +494,6 @@ cdef class ImageItem(DataLoader):
              raise NotImplementedError('not supported')
  
          cdef bint debug = self.settings.get('debug', False)
@@ -2350,7 +2394,7 @@ index 7459cb4..8ba3f3e 100644
          if debug:
              reader.skipBytes(8)
              size = reader.readInt(True)
-@@ -569,10 +680,18 @@ cdef class ImageBank(DataLoader):
+@@ -569,10 +685,18 @@ cdef class ImageBank(DataLoader):
                  for item in bank.items:
                      self.itemDict[item.handle] = item
                  return
@@ -2657,7 +2701,7 @@ index 9e3e3ba..482976a 100644
  
  def getName(id):
 diff --git a/mmfparser/data/chunkloaders/soundbank.py b/mmfparser/data/chunkloaders/soundbank.py
-index 6a95889..1f97781 100644
+index 6a95889..cc14980 100644
 --- a/mmfparser/data/chunkloaders/soundbank.py
 +++ b/mmfparser/data/chunkloaders/soundbank.py
 @@ -15,6 +15,8 @@
@@ -2669,7 +2713,7 @@ index 6a95889..1f97781 100644
  import zlib
  
  from mmfparser.loader import DataLoader
-@@ -153,6 +155,35 @@ class OldSound(BaseSound):
+@@ -153,6 +155,50 @@ class OldSound(BaseSound):
          reader.write(self.name + '\x00')
          reader.writeReader(data)
  
@@ -2698,14 +2742,29 @@ index 6a95889..1f97781 100644
 +            raise RuntimeError('Android sound resources require MMFPARSER_ANDROID_RAW_DIR')
 +        pattern = os.path.join(raw_dir, 's%04d.*' % self.settings['android_sound_index'])
 +        matches = glob.glob(pattern)
++        if not matches and os.environ.get('MMFPARSER_ANDROID_MISSING_SOUND') == 'silence':
++            # Some APKs keep part of the bank outside res/raw (FNaF 1: assets/
++            # under obfuscated names). Opt-in: a 10 ms silent WAV keeps an
++            # initial rebuild going; every substitution is printed.
++            print 'android sound %d (%s) missing -> silence' % (
++                self.settings['android_sound_index'], self.name)
++            self.data = _silent_wav()
++            return
 +        if len(matches) != 1:
 +            raise RuntimeError('expected one Android sound resource for %s' % pattern)
 +        self.data = open(matches[0], 'rb').read()
 +
++def _silent_wav(rate=22050, samples=220):
++    import struct
++    body = '\x00\x00' * samples
++    return ('RIFF' + struct.pack('<I', 36 + len(body)) + 'WAVE' +
++            'fmt ' + struct.pack('<IHHIIHH', 16, 1, 1, rate, rate * 2, 2, 16) +
++            'data' + struct.pack('<I', len(body)) + body)
++
  class SoundBank(DataLoader):
      items = None
  
-@@ -161,6 +192,16 @@ class SoundBank(DataLoader):
+@@ -161,6 +207,16 @@ class SoundBank(DataLoader):
  
      def read(self, reader):
          # reader.openEditor()
@@ -2722,7 +2781,7 @@ index 6a95889..1f97781 100644
          debug = self.settings.get('debug', False)
          java = self.settings.get('java', False)
          flash = self.settings.get('flash', False)
-@@ -202,4 +243,4 @@ class SoundBank(DataLoader):
+@@ -202,4 +258,4 @@ class SoundBank(DataLoader):
          for item in self.items:
              item.write(reader)
  
@@ -3913,3 +3972,374 @@ index 8d84459..5a31b3d 100644
  template <class T>
  inline MathHelperValue<T> operator/(T lhs, MathHelper rhs)
  {
+diff --git a/Chowdren/base/objects/kyso.cpp b/Chowdren/base/objects/kyso.cpp
+new file mode 100644
+index 0000000..2db2aa2
+--- /dev/null
++++ b/Chowdren/base/objects/kyso.cpp
+@@ -0,0 +1,228 @@
++#include "objects/kyso.h"
++#include "collision.h"
++#include "common.h"
++#include "manager.h"
++
++// Extensions.CRunKyso (classes.dex), transcribed. The object shows image
++// `image` (rcImage) at its position minus the image hotspot, and nothing until
++// an image is chosen; the flags decide whether the first frame is shown at
++// creation (bit 5), when loading completes (bit 4), and whether it plays (bit
++// 0) or repeats (bit 1) from the start.
++
++KysoObject::KysoObject(int x, int y, int type_id)
++: FrameObject(x, y, type_id), images(NULL), anim_qty(0), image(NULL),
++  mode(0), load_frame(0), load_n_custom(1), loop_count(0), anim_counter(0),
++  anim_in_frame(0), anim_frame(0), anim_repeat(1), back_to_frame(0),
++  play_speed(100), anim_loop(false), playing(false), show_first_frame(false)
++{
++    collision = new InstanceBox(this);
++}
++
++KysoObject::~KysoObject()
++{
++    delete collision;
++}
++
++void KysoObject::init_kyso(Image ** images, int count, int mode, int flags,
++                           int play_speed, int back_to_frame)
++{
++    this->images = images;
++    anim_qty = count;
++    this->mode = mode;
++    this->play_speed = play_speed;
++    this->back_to_frame = back_to_frame;
++    anim_loop = (flags & 2) != 0;
++    playing = (flags & 1) != 0;
++    show_first_frame = (flags & 16) != 0;
++    bool first_frame_created = (flags & 32) != 0;
++    if (mode == 1)
++        load_all();
++    else if (mode == 3 || mode == 4 || mode == 5)
++        loop_count = manager.frame->loop_count;
++    if (mode != 1 && first_frame_created && anim_qty > 0) {
++        show(images[0]);
++        load_frame++;
++    }
++}
++
++void KysoObject::show(Image * img)
++{
++    image = img;
++    if (img == NULL)
++        return;
++    width = img->width;
++    height = img->height;
++    collision->update_aabb();
++}
++
++void KysoObject::load_all()
++{
++    load_frame = anim_qty;
++    if (show_first_frame && anim_qty > 0)
++        show(images[0]);
++}
++
++// handleRunObject: the loading modes only decide when "all loaded" fires and
++// when a first frame appears (every image is resident here), then Animation.
++void KysoObject::update()
++{
++    if (load_frame >= 0 && load_frame < anim_qty) {
++        int since = int(manager.frame->loop_count - loop_count);
++        switch (mode) {
++            case 1:
++                load_frame = anim_qty;
++                break;
++            case 3:
++                load_frame++;
++                load_n_custom = 1;
++                break;
++            case 4:
++                if (since % 2 == 0)
++                    load_frame++;
++                load_n_custom = 2;
++                break;
++            case 5:
++                if (since % 3 == 0)
++                    load_frame++;
++                load_n_custom = 3;
++                break;
++            case 6:
++                if (load_n_custom > 0 && since % load_n_custom == 0)
++                    load_frame++;
++                break;
++            case 9:
++                if (!playing && images[load_frame] != image &&
++                    load_n_custom > 0 && since % load_n_custom == 0)
++                    load_frame++;
++                break;
++        }
++        if (load_frame == anim_qty && show_first_frame)
++            show(images[0]);
++    }
++    if (anim_loop)
++        anim_repeat = 2;
++    if (!playing || anim_repeat <= 0)
++        return;
++    if (load_frame < anim_qty)
++        mode = 9;
++    if (animate() && anim_repeat == 0 && !anim_loop)
++        playing = false;
++}
++
++// Animation: the counter gains play_speed per loop and a frame advances each
++// time it passes 100. Past the last frame the flipbook returns to
++// back_to_frame - 1 (or 0); when the repeat count runs out it rests on the
++// last frame and reports the end.
++bool KysoObject::animate()
++{
++    int counter = anim_counter + play_speed;
++    int frame = anim_in_frame;
++    while (counter > 100) {
++        counter -= 100;
++        frame++;
++        if (frame < anim_qty)
++            continue;
++        frame = back_to_frame > 0 ? back_to_frame - 1 : 0;
++        if (anim_repeat == 0)
++            continue;
++        anim_repeat--;
++        if (anim_repeat != 0)
++            continue;
++        anim_frame = anim_qty - 1;
++        if (images[anim_frame] != image)
++            show(images[anim_frame]);
++        anim_counter = counter;
++        if (!anim_loop)
++            anim_in_frame = frame;
++        return true;
++    }
++    if (frame < 0)
++        frame = 0;
++    anim_counter = counter;
++    if (images[frame] != image)
++        show(images[frame]);
++    anim_in_frame = frame;
++    anim_frame = frame;
++    return false;
++}
++
++void KysoObject::draw()
++{
++    if (image == NULL)
++        return;
++    draw_image(image, x, y, blend_color);
++}
++
++void KysoObject::load_mode(int value)
++{
++    mode = value;
++    if (mode > 5)
++        mode = 5;
++    if (mode < 0)
++        mode = 0;
++    if (mode == 1) {
++        load_all();
++        return;
++    }
++    if (mode == 3 || mode == 4 || mode == 5)
++        loop_count = manager.frame->loop_count;
++}
++
++void KysoObject::load_custom(int value)
++{
++    load_n_custom = value;
++    if (value <= 0)
++        return;
++    mode = 6;
++    loop_count = manager.frame->loop_count;
++}
++
++void KysoObject::play()
++{
++    anim_repeat = 1;
++    anim_counter = 0;
++    anim_in_frame = 0;
++    playing = true;
++}
++
++void KysoObject::play_loop(int count)
++{
++    anim_repeat = count;
++    if (count == 0)
++        anim_loop = true;
++    anim_counter = 0;
++    anim_in_frame = 0;
++    playing = true;
++}
++
++void KysoObject::reset()
++{
++    anim_repeat = 0;
++    anim_counter = 0;
++    anim_in_frame = 0;
++    anim_frame = 0;
++    if (anim_qty > 0)
++        show(images[0]);
++    playing = false;
++    anim_loop = false;
++}
++
++void KysoObject::set_speed(int value)
++{
++    play_speed = std::max(0, std::min(100, value));
++}
++
++void KysoObject::set_back_to_frame(int value)
++{
++    back_to_frame = std::max(0, std::min(anim_qty - 1, value));
++}
++
++bool KysoObject::is_playing()
++{
++    return playing;
++}
++
++bool KysoObject::is_anim(int value)
++{
++    return anim_frame == value;
++}
+diff --git a/Chowdren/base/objects/kyso.h b/Chowdren/base/objects/kyso.h
+new file mode 100644
+index 0000000..9aec913
+--- /dev/null
++++ b/Chowdren/base/objects/kyso.h
+@@ -0,0 +1,54 @@
++#ifndef CHOWDREN_KYSO_H
++#define CHOWDREN_KYSO_H
++
++#include "frameobject.h"
++#include "image.h"
++
++// Extensions.CRunKyso of the build-296 Android runtime: a flipbook of image
++// handles advanced by play_speed percent per loop. FNaF 2 draws its
++// jumpscares with it (LoadCustom, Play, PlayLoop).
++class KysoObject : public FrameObject
++{
++public:
++    FRAMEOBJECT_HEAD(KysoObject)
++
++    Image ** images;
++    int anim_qty;
++    Image * image;
++    int mode;
++    int load_frame;
++    int load_n_custom;
++    unsigned int loop_count;
++    int anim_counter;
++    int anim_in_frame;
++    int anim_frame;
++    int anim_repeat;
++    int back_to_frame;
++    int play_speed;
++    bool anim_loop;
++    bool playing;
++    bool show_first_frame;
++
++    KysoObject(int x, int y, int type_id);
++    ~KysoObject();
++    void init_kyso(Image ** images, int count, int mode, int flags,
++                   int play_speed, int back_to_frame);
++    void update();
++    void draw();
++    void load_mode(int value);
++    void load_custom(int value);
++    void play();
++    void play_loop(int count);
++    void reset();
++    void set_speed(int value);
++    void set_back_to_frame(int value);
++    bool is_playing();
++    bool is_anim(int value);
++
++private:
++    bool animate();
++    void load_all();
++    void show(Image * img);
++};
++
++#endif // CHOWDREN_KYSO_H
+diff --git a/Chowdren/chowdren/writers/extensions/Kyso.py b/Chowdren/chowdren/writers/extensions/Kyso.py
+new file mode 100644
+index 0000000..2674d93
+--- /dev/null
++++ b/Chowdren/chowdren/writers/extensions/Kyso.py
+@@ -0,0 +1,71 @@
++from chowdren.writers.objects import ObjectWriter
++
++from chowdren.writers.events import (ActionMethodWriter,
++    ConditionMethodWriter, ExpressionMethodWriter, make_table)
++
++# Extensions.CRunKyso (build-296 Android runtime): a flipbook of image handles.
++# createRunObject reads swidth, sheight (short), mode, flags (int), 4 skipped
++# bytes, play_speed (int), then for version 2 BackToFrame and one unused short,
++# then AnimQty and AnimQty image handles (short).
++
++class Kyso(ObjectWriter):
++    class_name = 'KysoObject'
++    filename = 'kyso'
++    update = True
++
++    def initialize(self):
++        data = self.get_data()
++        self.width = data.readShort()
++        self.height = data.readShort()
++        self.mode = data.readInt()
++        self.flags = data.readInt()
++        data.skipBytes(4)
++        self.play_speed = data.readInt()
++        self.back_to_frame = 0
++        if self.common.extensionVersion == 2:
++            self.back_to_frame = data.readShort()
++            data.readShort()
++        count = data.readShort()
++        self.images = [data.readShort() for _ in xrange(count)]
++
++    def write_init(self, writer):
++        writer.putlnc('width = %s;', self.width)
++        writer.putlnc('height = %s;', self.height)
++        if self.images:
++            writer.putlnc('static Image * static_images[%s];',
++                          len(self.images))
++            for index, image in enumerate(self.images):
++                writer.putlnc('static_images[%s] = %s;', index,
++                              self.converter.get_image(image))
++            images = 'static_images'
++        else:
++            images = 'NULL'
++        writer.putlnc('init_kyso(%s, %s, %s, %s, %s, %s);', images,
++                      len(self.images), self.mode, self.flags,
++                      self.play_speed, self.back_to_frame)
++
++    def get_images(self):
++        return self.images
++
++actions = make_table(ActionMethodWriter, {
++    0 : 'load_mode',
++    1 : 'play',
++    2 : 'play_loop',
++    3 : 'reset',
++    4 : 'set_speed',
++    5 : 'load_custom',
++    10 : 'set_back_to_frame'
++})
++
++conditions = make_table(ConditionMethodWriter, {
++    3 : 'is_anim',
++    4 : 'is_playing'
++})
++
++expressions = make_table(ExpressionMethodWriter, {
++    1 : '.anim_qty',
++    2 : '.anim_frame'
++})
++
++def get_object():
++    return Kyso

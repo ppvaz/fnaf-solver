@@ -29,6 +29,8 @@ EXTENSION_NAMES = {
     33: 'kcini',           # Android Extensions/CRunkcini is Clickteam's INI, same ACE table; binds to
                            # the Ini objects once build 296's XOR-28 handles are unscrambled
     46: 'MultipleTouch',   # harness writer (base/harness.*): scripted touches
+    35: 'Kyso',            # Android Extensions/CRunKyso: the jumpscare flipbooks
+                           # (writers/extensions/Kyso.py, base/objects/kyso.*)
     40: 'AndroidObject',   # no-op stub
     43: 'AndroidPlus',     # no-op stub
     42: 'iOSPlus',         # no-op stub
