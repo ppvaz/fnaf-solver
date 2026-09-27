@@ -1,9 +1,11 @@
 import * as C from './config.js';
 import { Rng } from './rng.js';
 
-/** route nodes whose entry plays a footstep sound. The marker box is overlapped from cams 01/2/3/4 too,
- * but full-06's audio has no footstep sound (25-29) on any Withered hop onto them (100+ predicted), so the
- * trigger is the hall stages, as for `hall movement` (docs/evidence/night7-k3-frametrace-nights-20260915.json). */
+/** route nodes whose entry plays a footstep sound, by default the hall stages only. 8a7288b narrowed the set
+ * to these because full-06's audio had no footstep sound (25-29) on a Withered hop onto cams 01-4
+ * (docs/evidence/night7-k3-frametrace-nights-20260915.json); that negative is not evidence, since its
+ * detector cannot hear samples 25-29 in that capture (docs/evidence/footstep-cam-markers-adjudication-20260927.json).
+ * footstepCamMarkers adds the CAM 01-04 markers the CCN's geometry puts under `hear footsteps`. */
 const FOOTSTEP_NODES = /** @type {Set<string | number>} */ (new Set(['blindA', 'blindB']));
 // sourcedHourTable: Golden Freddy's `(Random(N) + 1) / N` in the first-loop hour row (g677, g679, g681).
 const SOURCED_HOUR0_GOLDEN = /** @type {Record<number, number>} */ ({ 3: 1000, 4: 100, 5: 100 });
@@ -214,8 +216,23 @@ export class Sim {
       // markers, and CSpriteGen.spriteCol_TestSprite_All tests hidden sprites (SF_RAMBO, no hidden
       // check). The rebuilt runtime draws there (Toy Bonnie onto CAM 03). 8a7288b narrowed the set to
       // the hall stages because full-06's audio had no footstep sample on a Withered CAM 01-04 hop;
-      // that disagreement is open, so this stays off.
+      // that reading is not evidence: the detector found none of samples 25-29 in that capture, not
+      // even on the hall-stage entries 8a7288b kept, and recovers 0 of 60 footsteps injected on the
+      // roll phase at the capture's own channel gain (docs/evidence/footstep-cam-markers-adjudication-20260927.json).
+      // Off by default until a comparison adopts it.
       footstepCamMarkers: false,
+      // Research knob under sourcedFootstepDraws: the cue as g695-g703 test it for the route units (the
+      // Withereds, the Toys and Mangle), in place of one draw per hop. Each carries value 2: 10 when its
+      // move is promoted (g344-g358: the roll has passed, value 1 is 0, the your-view marker is off its
+      // room, Mangle's monitor-down promotion needs the hall light off (g358), before Night 7 the CAM 08/09
+      // holds), set again on every passed roll while the move still waits (the roll puts value 0 back to
+      // 1), and drained by global 5 per loop (g458-g466). The cue fires on the first loop of value 2 > 0
+      // AND on a `hear footsteps` marker ("only one action when event loops"). So a hop within nine loops
+      // of its promotion draws; a hop delayed past value 2 (g378's return when the mask comes on later,
+      // a light-held edge) is silent; a unit promoted while it stands on a marker draws where it stands;
+      // and g378's return onto CAM 03 draws when it lands in the window. Foxy and Balloon Boy keep their
+      // rules. (docs/evidence/footstep-cam-markers-adjudication-20260927.json)
+      sourcedFootstepValue2: false,
       // Mangle's mask leaves (dump g400: the 10%/s roll under the mask; g401: five mask ticks) place her at
       // CAM 7 (marker 62), three hops from the vent, not at the route start the unit table's repelIdx 0 gives.
       // Every other unit's repelIdx matches its dump endpoint (g538-g555, g213, g437, g439/g440, g292/g294).
@@ -467,6 +484,9 @@ export class Sim {
       insideArmed: false, insideDangerAt: -1, committedAt: -1, done: false,
       hallColumn: false,   // overlapping `hall movement` last frame (sourcedHallEntry)
       footstep: false,     // a roll hop onto a `hear footsteps` marker, drawn at g695-g703 (sourcedFootstepDraws)
+      value2: 0,           // value 2: 10 at promotion, drained by global 5 per loop (sourcedFootstepValue2)
+      promoted: false,     // value 0 == 2: the move is promoted and waits for its own conditions
+      footstepOn: false,   // g695-g703's condition on the previous loop (only one action when event loops)
     }));
     // sourced `chicalookatyou` lock: one mutex-flagged attacker engages at a time
     this.engagedToy = null;
@@ -492,6 +512,8 @@ export class Sim {
       throw new Error('sourcedVentCamDraws draws in the sheet-ordered pass: it requires sourcedSheetOrder');
     if (this.opts.sourcedFootstepDraws && !this.opts.sourcedSheetOrder)
       throw new Error('sourcedFootstepDraws draws in the sheet-ordered pass: it requires sourcedSheetOrder');
+    if (this.opts.sourcedFootstepValue2 && !this.opts.sourcedFootstepDraws)
+      throw new Error('sourcedFootstepValue2 changes when the footstep cue draws: it requires sourcedFootstepDraws');
     if (this.opts.sourcedSheetOrder && !this.opts.sourcedSecondPass)
       throw new Error('sourcedSheetOrder orders the per-second pass: it requires sourcedSecondPass');
     if (this.opts.sourcedUnconditionalDraws && C.FPS !== 60)
@@ -1118,6 +1140,15 @@ export class Sim {
 
   /** g695-g703: one draw per pending footstep cue, in sheet order (sourcedFootstepDraws). */
   footstepDraws() {
+    if (this.opts.sourcedFootstepValue2) {
+      const g5 = this.opts.frameValue5 ? this.opts.frameValue5(this.frame) : 1;
+      for (const u of this.units) {
+        if (u.value2 > 0) u.value2 = Math.max(0, u.value2 - g5);                             // g458-g466
+        const on = u.value2 > 0 && !u.done && !u.atOpening && !u.inside && this.footstepNodes().has(u.path[u.idx]);
+        u.footstep = on && !u.footstepOn;                                                    // g695-g703, NotAlways
+        u.footstepOn = on;
+      }
+    }
     for (const id of ['withfreddy', 'withbonnie', 'withchica', 'foxy', 'toyfreddy', 'toybonnie', 'toychica', 'bb', 'mangle']) {
       const holder = id === 'foxy' ? this.foxy : id === 'bb' ? this.bb : this.units.find(x => x.id === id);
       if (!holder || !holder.footstep) continue;
@@ -1126,6 +1157,42 @@ export class Sim {
       // g704-g708 play samples 25-29 from value 5; g709-g711 play 30-32 from value 12: the draw is audible
       this.emit('footstep', { who: id, value, sample: id === 'mangle' ? 29 + value : 24 + value });
     }
+  }
+
+  /**
+   * g344-g358's promotion test for a route unit whose roll has passed (sourcedFootstepValue2): the packed
+   * FlagOn (value 0 == 1, value 1 == 0), the your-view marker off its room, Mangle's g358 hall light, and
+   * before Night 7 the CAM 08/09 conditions sourcedRouteStep holds or discards on.
+   * @param {any} u
+   * @param {number} f
+   */
+  footstepPromotable(u, f) {
+    if (f < u.stunUntil) return false;
+    if (this.opts.selectedCameraGate && C.SELECTED_CAMERA_GATED.has(u.id) && u.path[u.idx] === this.cam &&
+        (C.WITHEREDS.has(u.id) || this.camsUp)) return false;
+    if (u.id === 'mangle' && !this.camsUp && this.lightStallOn) return false;
+    if (this.opts.sourcedRouteForks && this.opts.night !== 7) {
+      const onCam = (/** @type {string} */ id, /** @type {number} */ cam) =>
+        this.units.some(o => o.id === id && !o.done && !o.atOpening && o.path[o.idx] === cam);
+      if (u.id === 'withfreddy' && (onCam('withchica', 8) || onCam('withbonnie', 8))) return false;   // g344
+      if (u.id === 'withchica' && onCam('withbonnie', 8)) return false;                               // g347
+      if (u.id === 'toyfreddy' && onCam('toychica', 9)) return false;                                  // g350/g352
+      if (u.id === 'toychica' && onCam('toybonnie', 9)) return false;                                  // g354/g356
+    }
+    return true;
+  }
+
+  /**
+   * Value 2 = 10 when the unit's move is promoted (sourcedFootstepValue2). A passed roll puts value 0 back
+   * to 1, so it promotes again (value 2 = 10) a move that was already waiting.
+   * @param {any} u
+   * @param {boolean} roll
+   */
+  footstepPromote(u, roll) {
+    if (!this.opts.sourcedFootstepValue2) return;
+    if (roll) u.promoted = false;
+    if (u.promoted || !this.footstepPromotable(u, this.frame)) return;
+    u.value2 = 10; u.promoted = true;
   }
 
   /** your-view overlaps the Puppet: his route camera when out, CAM 11 in the box. */
@@ -1716,7 +1783,7 @@ export class Sim {
   }
 
   unitLeave(u, opts = {}) {
-    u.atOpening = false; u.inside = false;
+    u.atOpening = false; u.inside = false; u.promoted = false;               // g538-g555: value 0 = 0
     u.idx = opts.idx ?? (this.opts.sourcedMangleReturn && u.id === 'mangle' ? u.path.findIndex(n => n === 7) : u.repelIdx) ?? 0;   // g400/g401: CAM 7
     // Repels write the unit's B: the movement pipeline requires B = 0, so the
     // cooldown is the same counter as the flash stun (and Toy Bonnie's
@@ -1795,8 +1862,9 @@ export class Sim {
       const hit = this.rng.chance(C.MO_CHANCE(this.ai[id]), true);
       const u = this.units.find(x => x.id === id);
       if (!hit || !this.opts.stalledEnabled || !u || u.done || u.atOpening) return;
+      this.footstepPromote(u, true);                                           // g344-g358: value 2 = 10
       const step = this.sourcedRouteStep(u, this.frame);
-      if (step === 'discard' || step === 'returned') return;
+      if (step === 'discard' || step === 'returned') { u.promoted = false; return; }
       if (this.opts.sourcedViewDraws) this.fadeUntil[u.id] = this.frame + 8;
       if (step !== 'hold' && this.canAdvance(u, this.frame)) this.advance(u);
       else u.pending = true;
@@ -1975,8 +2043,9 @@ export class Sim {
         continue;
       }
       if (u.pending) {
+        this.footstepPromote(u, false);                                        // a held roll promoted late
         const step = this.sourcedRouteStep(u, f);
-        if (step === 'discard' || step === 'returned') u.pending = false;
+        if (step === 'discard' || step === 'returned') { u.pending = false; u.promoted = false; }
         else if (step !== 'hold' && this.canAdvance(u, f)) { u.pending = false; this.advance(u); }
       }
       // The three Withereds and Toy Freddy -- the four `streak` openers --
@@ -2061,8 +2130,13 @@ export class Sim {
     if (this.opts.sourcedEventDraws && u.id === 'withchica' && u.path[u.idx] === 2 && u.path[u.idx + 1] === 6)
       this.rng.int(0, 3, 0);                                               // e324
     u.idx++;
+    // A move needs value 0 == 2, so one the model makes without a recorded promotion is promoted on this
+    // loop; a move promoted loops ago keeps its drained value 2. The move sets value 0 = 0.
+    if (this.opts.sourcedFootstepValue2 && !u.promoted) u.value2 = 10;
+    u.promoted = false;
     const node = u.path[u.idx];
-    if (this.opts.sourcedFootstepDraws && this.footstepNodes().has(node)) u.footstep = true;   // g695-g703, next pass
+    if (this.opts.sourcedFootstepDraws && !this.opts.sourcedFootstepValue2 && this.footstepNodes().has(node))
+      u.footstep = true;                                                       // g695-g703, next pass
     if (node === 'office' || node === 'ventL' || node === 'ventR') {
       u.atOpening = true; u.openingSince = this.frame; u.openingTicks = 0;
       // Toy Bonnie's opening timer IS his B counter (group 428 writes
@@ -2117,8 +2191,9 @@ export class Sim {
           // Stun is only one of the reasons that transition may be closed:
           // monitor polarity, the office-light stall and the one-toy mutex are
           // equally load-bearing. Keep the move pending until every gate opens.
+          this.footstepPromote(u, true);                                       // g344-g358: value 2 = 10
           const step = this.sourcedRouteStep(u, this.frame);
-          if (step === 'discard' || step === 'returned') { /* A = 0: the roll is spent */ }
+          if (step === 'discard' || step === 'returned') { u.promoted = false; /* A = 0: the roll is spent */ }
           else {
             if (this.opts.sourcedViewDraws) this.fadeUntil[u.id] = this.frame + 8;   // g344-g358: A = 2, C = 10
             if (step !== 'hold' && this.canAdvance(u, this.frame)) this.advance(u);

@@ -1808,3 +1808,35 @@ Held by `tools/test-rebuild-options-census.mjs` (`test:unit`).
 Open: finish the census (`--checkpoint` resumes only with an unchanged
 generator, so re-run the 19 from scratch), then read Night 6/7 against the
 phone cohorts. No option default changed.
+
+**2026-09-27 (footstep adjudication): CAM 01-04 footsteps are sourced; full-06's audio could not hear them.**
+
+- **S2, MODEL_ONLY** (`footstep-adjudication-04f3089e1a8b9d21`,
+  [`footstep-cam-markers-adjudication-20260927.json`](../docs/evidence/footstep-cam-markers-adjudication-20260927.json)).
+  `8a7288b` narrowed the footstep cue (g695-g703) to the hall stages because
+  full-06's A2DP audio held no sample 25-29. That detector read none of 25-29 in
+  the whole run, not even the hall-stage footsteps the narrowed model keeps
+  (about 16 audible per night in the model's reconstruction), and it finds 0 of
+  60 footsteps injected on the roll phase at the capture's own channel-15 gain
+  (1 of 69 between rolls), against 16 of 60 of Mangle's sample 30 at the same
+  gain and slots: at that gain the footsteps sit 24-31 dB under the capture's
+  median frame level. The negative is not evidence (register item 12); the CCN
+  geometry, the sheet, the dex and the rebuild stand. Verdict: `footstepCamMarkers`
+  SOURCED; the phone's own reading of 25-29 UNKNOWN.
+- Value 2's ten loops do not reconcile them: Withered Chica 8->4 and 4->2 and
+  Freddy 7->3 have no move condition and land in their promotion loop (value 2
+  >= 6 at the test); Bonnie's hall stage 1 -> CAM 01 is held by the g848-g854
+  value-1 pin before promotion. Only g378's mask return lands with value 2 spent
+  (18 of 466 Withered CAM hops over 14 bracket seeds of a model reconstruction of
+  full-06). The dex adds that the vent bang (sample 17) plays uninterruptible on
+  the footsteps' channel 15 and drops any footstep inside its 3.19 s (120 of
+  those 466 hops).
+- `sourcedFootstepValue2` (default off, `packages/core/test/footstep-value2.test.js`):
+  value 2 at promotion, drained by global 5, the cue on the rising edge on a
+  marker. With it, seed 24850's no-input Nights 1-5 keep every committed rebuild
+  comparison identical (not discriminating there). `footstepCamMarkers` stays
+  default off until a comparison adopts it.
+
+Open: a device reading of 25-29 (wired or on-phone capture, with a same-run
+positive control); the default marker set; Mangle's g358 and the hall-light edges'
+latch in the model; `in office` under `hear footsteps` for bottom-hotspot sprites.

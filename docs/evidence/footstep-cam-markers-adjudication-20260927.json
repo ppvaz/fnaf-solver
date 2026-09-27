@@ -1,0 +1,1499 @@
+{
+ "schema": "evidence-record-v1",
+ "id": "footstep-cam-markers-adjudication-20260927",
+ "date": "2026-09-27",
+ "step": "ROADMAP S2 (encounter-level fidelity): the footstep cue draws, dump g695-g703",
+ "claimLevel": "MODEL_ONLY",
+ "claimNote": "No device claim. The rule is sourced from the CCN, the event dump and classes.dex; full-06 (DEVICE_MEASURED capture, 2026-09-15) is re-read on the host only to measure what its detector can hear. Nothing here promotes anything.",
+ "question": "Do Withered hops onto CAM 01-04 draw the footstep cue (g695-g703), as the CCN geometry and the rebuilt runtime say, or only hall-stage hops, as 8a7288b inferred from full-06's audio? Can value 2's ten-loop window reconcile them, and could the audio method hear samples 25-29 at all?",
+ "verdict": {
+  "footstepCamMarkers": "SOURCED",
+  "deviceObservationOfSamples25to29": "UNKNOWN",
+  "reading": "CAM 01-04 hops draw. The sheet, the CCN geometry and the dex agree, and the rebuilt runtime draws on Toy Bonnie's CAM 03 hop. Value 2 does not reconcile the audio: Withered Chica's 8->4 and 4->2 and Withered Freddy's 7->3 have no move condition and land in their promotion loop (value 2 >= 6 at the test), and Withered Bonnie's hall stage 1 -> CAM 01 waits behind the value-1 pin before promotion, not after it; only g378's return (hall stage 2 -> CAM 03) can land after value 2 is spent. The audio negative is not evidence (register item 12): in full-06 the detector read none of samples 25-29 in the whole run, not even the hall-stage footsteps 8a7288b kept, and it recovers 0 of 60 footsteps injected on the roll phase at the capture's own channel-15 gain while recovering 16 of 60 of Mangle's sample 30 at the same gain and positions. At the capture's fitted gains the footsteps' loudest 0.4 s sits 24-31 dB below its median frame level, 14-18 dB below the quietest classes it did read (samples 7 and 30).",
+  "retraction": "8a7288b's inference (the trigger is narrower than the marker box, \"most likely the hall stages only\") and the field seedLockAttempt.audibleDrawsFull06.timeAxis.footstepSounds25to29 of docs/evidence/night7-k3-frametrace-nights-20260915.json are superseded as evidence by this record. The records stay as they are; the model default stays the hall stages until a comparison adopts footstepCamMarkers."
+ },
+ "priorRecords": {
+  "narrowing": {
+   "commit": "8a7288b",
+   "evidence": "docs/evidence/night7-k3-frametrace-nights-20260915.json",
+   "fields": [
+    "seedLockAttempt.audibleDrawsFull06.timeAxis.footstepSounds25to29",
+    "seedLockAttempt.footstepTriggerHallStages"
+   ]
+  },
+  "perHopSixMarkers": {
+   "commit": "fcbbd45"
+  },
+  "camMarkersRestoredOff": {
+   "commit": "9ace6cc",
+   "readme": "tools/recompile/README.md, \"The whole office visit (later still)\""
+  },
+  "rebuildCam03Draw": {
+   "record": "tools/recompile/results/night1-multivar-origin-20260927.json",
+   "evidenceId": "recompile-draw-0149431085444dda",
+   "what": "first divergence at office tick 9600: Toy Bonnie's hop onto CAM 03, where the rebuild draws a footstep and the hall-stage model does not"
+  }
+ },
+ "sheet": {
+  "source": "the event dump of the Office frame, 03-04-Office.txt, dumped from the APK's CCN (external; never committed)",
+  "promotion": "g344-g359: on the packed FlagOn (value 0 == 1 and value 1 == 0) and, per character, NOT your view overlapping it (and before Night 7 the CAM 08/09 conditions of g344/g347/g350/g352/g354/g356), value 0 = 2 and value 2 = 10. Rolls g333-g343 write value 0 = 1 with no condition on value 0, so a passed roll re-promotes a move that is still waiting.",
+  "witheredMovesOntoCam01to04": [
+   {
+    "edge": "Withered Chica CAM 08 -> CAM 04",
+    "group": "g385",
+    "moveConditions": "none beyond value 0 == 2 and the position",
+    "canLandAfterPromotion": false
+   },
+   {
+    "edge": "Withered Chica CAM 04 -> CAM 02",
+    "group": "g386",
+    "moveConditions": "none",
+    "canLandAfterPromotion": false
+   },
+   {
+    "edge": "Withered Freddy CAM 07 -> CAM 03",
+    "group": "g375",
+    "moveConditions": "none",
+    "canLandAfterPromotion": false
+   },
+   {
+    "edge": "Withered Bonnie hall stage 1 -> CAM 01",
+    "group": "g382",
+    "moveConditions": "viewing hall light == 0",
+    "canLandAfterPromotion": false,
+    "why": "g489 sets the latch and g848-g854 pin a hall-stage occupant's value 1 to 40 in the same loop, so the latch blocks the next promotion (packed FlagOn needs value 1 == 0) instead of delaying a promoted move"
+   },
+   {
+    "edge": "Withered Freddy hall stage 2 -> CAM 03 (mask return)",
+    "group": "g378",
+    "moveConditions": "mask value 0 == 2 and viewing hall light == 0; writes value 1 = 5000 - 500 x night",
+    "canLandAfterPromotion": true,
+    "why": "promoted with the mask not yet fully on, he waits on hall stage 2 (g379 needs viewing > 0) and returns when the mask completes; after nine loops value 2 is spent"
+   }
+  ],
+  "drain": "g458-g466: value 2 = max(0, value 2 - 1 x global 5); global 5 = min(4, elapsed ms / 16.667) (g1236).",
+  "draws": "g695-g703, after the moves and the drain: value 2 > 0 AND overlapping `hear footsteps` (object 149) AND only-one-action-when-event-loops -> cam 01 value 5 = Random(5) + 1 (g695-g702: Withered Freddy, Bonnie, Chica, Foxy, Toy Freddy, Bonnie, Chica, Balloon Boy) or value 12 = Random(3) + 1 (g703, Mangle). Draws in one loop overwrite one value, so at most one footstep sound per loop.",
+  "window": "value 2 = 10 - global 5 (>= 6) at the promotion loop's own test; at 60 fps a hop k loops after its promotion draws iff k <= 8. A unit promoted while it stands on a marker draws where it stands; a passed roll on a waiting unit that stands on a marker draws again.",
+  "sound": "g704-g708 play samples 25-29 on channel 15 (not uninterruptible); g709-g711 play Mangle's 30-32 on channel 19. g685-g690 (a unit first standing on CAM 05: Toy Chica, Withered Bonnie; on CAM 06: Toy Bonnie, Withered Chica, Mangle, the Puppet) select g691-g694, which play sample 17, the vent bang, on channel 15 with the Uninterruptible flag, earlier in the same loop. g60 sets channels 15 and 19 to volume 50."
+ },
+ "dex": {
+  "source": "classes.dex of the FNaF 2 base.apk (external), dexdump -d",
+  "playChannel": "Actions.ACT_PLAYCHANNEL.execute -> CSoundPlayer.play(handle, 1, channel - 1, the new sample's PSOUNDFLAG_UNINTERRUPTABLE, -1, 0, 0)",
+  "play": "CSoundPlayer.play calls channels[ch].stop(newSampleIsUninterruptible) and returns without playing when it returns false",
+  "stop": "CSoundChannel.stop(force): returns false when the current sound has bUninterruptible and force is false (no isPlaying test); otherwise stops, releases and clears the channel",
+  "release": "the channel is cleared when the sound ends: SoundPool path CSound$1 (posted after length x loops / rate + 10 ms) -> CSound.tick -> CSoundPlayer.removeChannel -> stop(true); MediaPlayer path OnMediaSoundCompletion -> CSound.removeSound -> removeChannel",
+  "consequence": "a footstep (25-29) whose loop falls inside a vent bang's 3.19 s on channel 15, including a bang started earlier in the same loop, is dropped: drawn, never heard"
+ },
+ "geometry": "tools/recompile/README.md (9ace6cc): `hear footsteps` is an opaque 264 x 151 image; every character is an opaque 24 x 24 fine-collision sprite (Toy and Withered hotspots paired); CSpriteGen.spriteCol_TestSprite_All tests hidden sprites. CAM 01, 02, 03, 04 and hall stages 1 and 2 overlap it.",
+ "detector": {
+  "instrument": "tools/cue/detect.py --scan --subtract (threshold 0.45, prominence 0.05, confirm corr >= 0.35, 25-frame template cores), references by Fusion sample handle",
+  "capture": {
+   "file": "night7-night7-k3-full-06-20260915T225056Z.bt.wav (A2DP via BlueALSA, S16_LE 44.1 kHz stereo; never committed)",
+   "seconds": 481.8
+  },
+  "positiveReadsInTheRun": {
+   "source": "artifacts/forensics/k3-frametrace-nights-20260915/audio-full-06.scan",
+   "confirmed": 57,
+   "bySample": {
+    "7": 11,
+    "13": 4,
+    "17": 32,
+    "30": 5,
+    "31": 2,
+    "32": 3
+   },
+   "samples25to29": 0
+  },
+  "portValidation": {
+   "tool": "detect_np.py (numpy port of the scan path, same constants)",
+   "rowsReproduced": "57 of 57",
+   "sameRowsAndValues": true,
+   "rowsOrderedDifferently": 2,
+   "note": "two rows share one onset (412.41 s, sample 17) and sort in the other order"
+  },
+  "captureGain": {
+   "method": "least-squares amplitude of each detected reference's 0.4 s core at its best-correlating lag near the detected onset",
+   "bySample": {
+    "7": {
+     "n": 11,
+     "medianGain": 0.156,
+     "iqr": [
+      0.1516,
+      0.1597
+     ],
+     "medianCoreNcc": 0.4
+    },
+    "13": {
+     "n": 4,
+     "medianGain": 0.1994,
+     "iqr": [
+      0.139,
+      0.2697
+     ],
+     "medianCoreNcc": 0.363
+    },
+    "17": {
+     "n": 32,
+     "medianGain": 0.1168,
+     "iqr": [
+      0.087,
+      0.1475
+     ],
+     "medianCoreNcc": 0.461
+    },
+    "30": {
+     "n": 5,
+     "medianGain": 0.1661,
+     "iqr": [
+      0.1511,
+      0.1923
+     ],
+     "medianCoreNcc": 0.426
+    },
+    "31": {
+     "n": 2,
+     "medianGain": 0.1282,
+     "iqr": [
+      0.1254,
+      0.131
+     ],
+     "medianCoreNcc": 0.436
+    },
+    "32": {
+     "n": 3,
+     "medianGain": 0.178,
+     "iqr": [
+      0.1774,
+      0.1857
+     ],
+     "medianCoreNcc": 0.516
+    }
+   }
+  },
+  "levels": {
+   "note": "loudest 0.4 s of each reference at the fitted gains, mean frame level (the detector's frame_levels), minus the capture's median frame level, dB",
+   "captureMedianFrameLevelDb": -31.64,
+   "captureP10FrameLevelDb": -36.86,
+   "byReference": {
+    "7": {
+     "bangMedian": -13.3,
+     "channel50Median": -10.8,
+     "mangleMax": -9.7
+    },
+    "13": {
+     "bangMedian": -6.9,
+     "channel50Median": -4.4,
+     "mangleMax": -3.2
+    },
+    "17": {
+     "bangMedian": -10.2,
+     "channel50Median": -7.6,
+     "mangleMax": -6.5
+    },
+    "25": {
+     "bangMedian": -31.2,
+     "channel50Median": -28.6,
+     "mangleMax": -27.5
+    },
+    "26": {
+     "bangMedian": -29.8,
+     "channel50Median": -27.3,
+     "mangleMax": -26.2
+    },
+    "27": {
+     "bangMedian": -30.2,
+     "channel50Median": -27.7,
+     "mangleMax": -26.5
+    },
+    "28": {
+     "bangMedian": -28.9,
+     "channel50Median": -26.4,
+     "mangleMax": -25.3
+    },
+    "29": {
+     "bangMedian": -27.8,
+     "channel50Median": -25.3,
+     "mangleMax": -24.1
+    },
+    "30": {
+     "bangMedian": -13.3,
+     "channel50Median": -10.8,
+     "mangleMax": -9.7
+    },
+    "31": {
+     "bangMedian": -11.1,
+     "channel50Median": -8.6,
+     "mangleMax": -7.4
+    },
+    "32": {
+     "bangMedian": -10.8,
+     "channel50Median": -8.3,
+     "mangleMax": -7.2
+    }
+   }
+  },
+  "injectionRecall": {
+   "method": "the game's own samples added to the capture (mono downmix at 44.1 kHz) at every 5 s slot with no detected sound within 1.5 s, alternate slots per run so injections never overlap, on the roll phase (x.10 s, the bangs' phase) and mid-slot (x.60 s); detected = any confirmed 25-29 onset within 0.5 s",
+   "fullNight": [
+    {
+     "set": "midSlot",
+     "gain": "bangMedian",
+     "detected": 1,
+     "injected": 69
+    },
+    {
+     "set": "midSlot",
+     "gain": "channel50Median",
+     "detected": 1,
+     "injected": 69
+    },
+    {
+     "set": "midSlot",
+     "gain": "channel50Median control sample 30",
+     "detected": 18,
+     "injected": 69
+    },
+    {
+     "set": "midSlot",
+     "gain": "mangleMax",
+     "detected": 1,
+     "injected": 69
+    },
+    {
+     "set": "onGrid",
+     "gain": "bangMedian",
+     "detected": 0,
+     "injected": 60
+    },
+    {
+     "set": "onGrid",
+     "gain": "channel50Median",
+     "detected": 0,
+     "injected": 60
+    },
+    {
+     "set": "onGrid",
+     "gain": "channel50Median control sample 30",
+     "detected": 16,
+     "injected": 60
+    },
+    {
+     "set": "onGrid",
+     "gain": "mangleMax",
+     "detected": 0,
+     "injected": 60
+    }
+   ],
+   "gainSweepOneParity": [
+    {
+     "set": "onGrid",
+     "offsetDb": 0,
+     "control": null,
+     "gain": 0.156,
+     "injected": 30,
+     "detected": 0
+    },
+    {
+     "set": "onGrid",
+     "offsetDb": 6,
+     "control": null,
+     "gain": 0.3113,
+     "injected": 30,
+     "detected": 0
+    },
+    {
+     "set": "onGrid",
+     "offsetDb": 12,
+     "control": null,
+     "gain": 0.621,
+     "injected": 30,
+     "detected": 2
+    },
+    {
+     "set": "onGrid",
+     "offsetDb": 18,
+     "control": null,
+     "gain": 1.2392,
+     "injected": 30,
+     "detected": 5
+    },
+    {
+     "set": "onGrid",
+     "offsetDb": 24,
+     "control": null,
+     "gain": 2.4724,
+     "injected": 30,
+     "detected": 8
+    },
+    {
+     "set": "onGrid",
+     "offsetDb": 30,
+     "control": null,
+     "gain": 4.9332,
+     "injected": 30,
+     "detected": 1
+    },
+    {
+     "set": "onGrid",
+     "offsetDb": null,
+     "control": "sample 30 (Mangle) at base gain",
+     "gain": 0.156,
+     "injected": 30,
+     "detected": 4
+    },
+    {
+     "set": "midSlot",
+     "offsetDb": 0,
+     "control": null,
+     "gain": 0.156,
+     "injected": 35,
+     "detected": 1
+    },
+    {
+     "set": "midSlot",
+     "offsetDb": 6,
+     "control": null,
+     "gain": 0.3113,
+     "injected": 35,
+     "detected": 1
+    },
+    {
+     "set": "midSlot",
+     "offsetDb": 12,
+     "control": null,
+     "gain": 0.621,
+     "injected": 35,
+     "detected": 4
+    },
+    {
+     "set": "midSlot",
+     "offsetDb": 18,
+     "control": null,
+     "gain": 1.2392,
+     "injected": 35,
+     "detected": 11
+    },
+    {
+     "set": "midSlot",
+     "offsetDb": 24,
+     "control": null,
+     "gain": 2.4724,
+     "injected": 35,
+     "detected": 15
+    },
+    {
+     "set": "midSlot",
+     "offsetDb": 30,
+     "control": null,
+     "gain": 4.9332,
+     "injected": 35,
+     "detected": 11
+    },
+    {
+     "set": "midSlot",
+     "offsetDb": null,
+     "control": "sample 30 (Mangle) at base gain",
+     "gain": 0.156,
+     "injected": 35,
+     "detected": 7
+    }
+   ]
+  },
+  "whatZeroMeans": {
+   "audiblePer420sNight": {
+    "perHopCamMarkers": 47.3,
+    "value2CamMarkers": 48.3,
+    "hallStagesOnly": 16.3,
+    "note": "loops with a 25-29 cue and channel 15 free of a playing vent bang, model reconstruction below, 14 bracket seeds scaled to 420 s"
+   },
+   "recallPosterior": "Beta(1, 61) on the roll-phase recall (uniform prior, 0 of 60)",
+   "probabilityOfNoDetection": {
+    "perHopCamMarkers": 0.565,
+    "value2CamMarkers": 0.56,
+    "hallStagesOnly": 0.792
+   },
+   "bayesFactorHallOnlyOverCamMarkers": 1.4,
+   "reading": "observing no 25-29 moves the odds between the two marker sets by less than a factor of two; under either set the expected count of detections is below one"
+  },
+  "mangleSideObservation": {
+   "detected30to32": 10,
+   "sample30RecallOnGrid": "16 of 60",
+   "impliedMangleCueSounds": 38,
+   "modelMangleCuesPer420s": {
+    "perHopCamMarkers": 26.2,
+    "value2CamMarkers": 20.8,
+    "hallStagesOnly": 6.6
+   },
+   "reading": "the one g695-g703 branch this capture can hear (g703, channel 19, not blocked by the bang) sounded more often than the hall-stage-only model can produce. Suggestive, not scored: the model's Mangle timeline already differs from the phone's (seedLockAttempt.mangleSoundMatch)."
+  }
+ },
+ "modelReconstruction": {
+  "claimLevel": "MODEL_ONLY",
+  "what": "full-06 as the model plays it: the committed k3 winner, the trace-fixed epoch, the phone's own frame intervals. The model does not track full-06 (no seed lock; under observed presses it dies), so rows are model hops, not the phone's.",
+  "winner": "tools/device/campaign-night7-k3-winner.json",
+  "epochMs": 2564,
+  "firstOfficeFrame": 198,
+  "clock": "per-frame trace (ft2-full-06)",
+  "options": "sourcedDropLightOrder, sourcedFoxyChain, sourcedUnconditionalDraws, sourcedEventDraws, sourcedBlackoutDraws, sourcedViewDraws, sourcedRollDraws, sourcedMonitorDownDraw, sourcedSecondPass, sourcedPuppetGlitchDraws, sourcedRouteForks, sourcedSheetOrder, sourcedLastViewPause, sourcedHallEntry, sourcedFootstepDraws, sourcedRandomImageDraw, sourcedVentCamDraws, frameMs/frameValue5 from the trace; footstepCamMarkers on for the rows",
+  "promotion": "a unit's promotion frame is the first frame, from its passed roll on, at which value 1 is 0 and the your-view marker is off its room; a hop in the roll pass is promoted on that frame",
+  "brackets": {
+   "seeds": [
+    47592,
+    47593,
+    47594,
+    47595,
+    47596,
+    47597,
+    47598,
+    47599,
+    47600,
+    47601,
+    47602,
+    47603,
+    47604,
+    47605
+   ],
+   "modelSeconds": 4120,
+   "witheredCamHops": 466,
+   "byEdge": {
+    "withchica 8->4": 14,
+    "withfreddy 7->3": 127,
+    "withbonnie blindA->1": 119,
+    "withchica 4->2": 140,
+    "withfreddy blindB->3 (g378)": 66
+   },
+   "inPromotionLoop": 448,
+   "value2PositiveAtTest": 448,
+   "delayedPastValue2": 18,
+   "delayedByEdge": {
+    "withfreddy blindB->3 (g378)": 18
+   },
+   "channel15HeldByVentBang": 120,
+   "hallStageEntries": 262,
+   "hallStageEntriesDelayedPastValue2": 7,
+   "perSeed": [
+    {
+     "seed": 47592,
+     "modelEndS": 290,
+     "witheredCamHops": 33,
+     "witheredCamHopsDelayedPastValue2": 4,
+     "witheredCamHopsChannel15Held": 3,
+     "perHopRule": {
+      "cues25to29": 59,
+      "cueLoops": 49,
+      "cueLoopsChannel15Free": 36,
+      "mangleCues30to32": 14
+     },
+     "value2Rule": {
+      "cues25to29": 40,
+      "cueLoops": 33,
+      "cueLoopsChannel15Free": 25,
+      "mangleCues30to32": 8,
+      "modelEndS": 180
+     },
+     "hallStagesOnly": {
+      "cues25to29": 16,
+      "cueLoops": 15,
+      "cueLoopsChannel15Free": 11,
+      "mangleCues30to32": 5,
+      "modelEndS": 310
+     }
+    },
+    {
+     "seed": 47593,
+     "modelEndS": 330,
+     "witheredCamHops": 36,
+     "witheredCamHopsDelayedPastValue2": 2,
+     "witheredCamHopsChannel15Held": 11,
+     "perHopRule": {
+      "cues25to29": 65,
+      "cueLoops": 50,
+      "cueLoopsChannel15Free": 34,
+      "mangleCues30to32": 16
+     },
+     "value2Rule": {
+      "cues25to29": 70,
+      "cueLoops": 46,
+      "cueLoopsChannel15Free": 34,
+      "mangleCues30to32": 20,
+      "modelEndS": 310
+     },
+     "hallStagesOnly": {
+      "cues25to29": 25,
+      "cueLoops": 23,
+      "cueLoopsChannel15Free": 18,
+      "mangleCues30to32": 6,
+      "modelEndS": 420
+     }
+    },
+    {
+     "seed": 47594,
+     "modelEndS": 310,
+     "witheredCamHops": 35,
+     "witheredCamHopsDelayedPastValue2": 1,
+     "witheredCamHopsChannel15Held": 8,
+     "perHopRule": {
+      "cues25to29": 61,
+      "cueLoops": 47,
+      "cueLoopsChannel15Free": 33,
+      "mangleCues30to32": 26
+     },
+     "value2Rule": {
+      "cues25to29": 64,
+      "cueLoops": 49,
+      "cueLoopsChannel15Free": 36,
+      "mangleCues30to32": 16,
+      "modelEndS": 300
+     },
+     "hallStagesOnly": {
+      "cues25to29": 10,
+      "cueLoops": 9,
+      "cueLoopsChannel15Free": 8,
+      "mangleCues30to32": 3,
+      "modelEndS": 180
+     }
+    },
+    {
+     "seed": 47595,
+     "modelEndS": 180,
+     "witheredCamHops": 21,
+     "witheredCamHopsDelayedPastValue2": 1,
+     "witheredCamHopsChannel15Held": 5,
+     "perHopRule": {
+      "cues25to29": 37,
+      "cueLoops": 30,
+      "cueLoopsChannel15Free": 23,
+      "mangleCues30to32": 10
+     },
+     "value2Rule": {
+      "cues25to29": 65,
+      "cueLoops": 49,
+      "cueLoopsChannel15Free": 34,
+      "mangleCues30to32": 16,
+      "modelEndS": 300
+     },
+     "hallStagesOnly": {
+      "cues25to29": 17,
+      "cueLoops": 17,
+      "cueLoopsChannel15Free": 15,
+      "mangleCues30to32": 3,
+      "modelEndS": 310
+     }
+    },
+    {
+     "seed": 47596,
+     "modelEndS": 300,
+     "witheredCamHops": 33,
+     "witheredCamHopsDelayedPastValue2": 3,
+     "witheredCamHopsChannel15Held": 7,
+     "perHopRule": {
+      "cues25to29": 55,
+      "cueLoops": 43,
+      "cueLoopsChannel15Free": 36,
+      "mangleCues30to32": 20
+     },
+     "value2Rule": {
+      "cues25to29": 96,
+      "cueLoops": 76,
+      "cueLoopsChannel15Free": 51,
+      "mangleCues30to32": 22,
+      "modelEndS": 420
+     },
+     "hallStagesOnly": {
+      "cues25to29": 9,
+      "cueLoops": 9,
+      "cueLoopsChannel15Free": 5,
+      "mangleCues30to32": 3,
+      "modelEndS": 180
+     }
+    },
+    {
+     "seed": 47597,
+     "modelEndS": 300,
+     "witheredCamHops": 32,
+     "witheredCamHopsDelayedPastValue2": 1,
+     "witheredCamHopsChannel15Held": 8,
+     "perHopRule": {
+      "cues25to29": 59,
+      "cueLoops": 48,
+      "cueLoopsChannel15Free": 36,
+      "mangleCues30to32": 22
+     },
+     "value2Rule": {
+      "cues25to29": 63,
+      "cueLoops": 45,
+      "cueLoopsChannel15Free": 31,
+      "mangleCues30to32": 12,
+      "modelEndS": 290
+     },
+     "hallStagesOnly": {
+      "cues25to29": 17,
+      "cueLoops": 17,
+      "cueLoopsChannel15Free": 13,
+      "mangleCues30to32": 5,
+      "modelEndS": 290
+     }
+    },
+    {
+     "seed": 47598,
+     "modelEndS": 330,
+     "witheredCamHops": 40,
+     "witheredCamHopsDelayedPastValue2": 1,
+     "witheredCamHopsChannel15Held": 14,
+     "perHopRule": {
+      "cues25to29": 69,
+      "cueLoops": 47,
+      "cueLoopsChannel15Free": 33,
+      "mangleCues30to32": 18
+     },
+     "value2Rule": {
+      "cues25to29": 61,
+      "cueLoops": 43,
+      "cueLoopsChannel15Free": 29,
+      "mangleCues30to32": 8,
+      "modelEndS": 290
+     },
+     "hallStagesOnly": {
+      "cues25to29": 16,
+      "cueLoops": 16,
+      "cueLoopsChannel15Free": 12,
+      "mangleCues30to32": 4,
+      "modelEndS": 290
+     }
+    },
+    {
+     "seed": 47599,
+     "modelEndS": 290,
+     "witheredCamHops": 30,
+     "witheredCamHopsDelayedPastValue2": 4,
+     "witheredCamHopsChannel15Held": 8,
+     "perHopRule": {
+      "cues25to29": 54,
+      "cueLoops": 44,
+      "cueLoopsChannel15Free": 31,
+      "mangleCues30to32": 18
+     },
+     "value2Rule": {
+      "cues25to29": 69,
+      "cueLoops": 57,
+      "cueLoopsChannel15Free": 39,
+      "mangleCues30to32": 10,
+      "modelEndS": 300
+     },
+     "hallStagesOnly": {
+      "cues25to29": 15,
+      "cueLoops": 14,
+      "cueLoopsChannel15Free": 11,
+      "mangleCues30to32": 5,
+      "modelEndS": 310
+     }
+    },
+    {
+     "seed": 47600,
+     "modelEndS": 290,
+     "witheredCamHops": 35,
+     "witheredCamHopsDelayedPastValue2": 0,
+     "witheredCamHopsChannel15Held": 12,
+     "perHopRule": {
+      "cues25to29": 61,
+      "cueLoops": 44,
+      "cueLoopsChannel15Free": 29,
+      "mangleCues30to32": 17
+     },
+     "value2Rule": {
+      "cues25to29": 40,
+      "cueLoops": 30,
+      "cueLoopsChannel15Free": 25,
+      "mangleCues30to32": 16,
+      "modelEndS": 180
+     },
+     "hallStagesOnly": {
+      "cues25to29": 19,
+      "cueLoops": 16,
+      "cueLoopsChannel15Free": 13,
+      "mangleCues30to32": 5,
+      "modelEndS": 310
+     }
+    },
+    {
+     "seed": 47601,
+     "modelEndS": 310,
+     "witheredCamHops": 36,
+     "witheredCamHopsDelayedPastValue2": 0,
+     "witheredCamHopsChannel15Held": 8,
+     "perHopRule": {
+      "cues25to29": 62,
+      "cueLoops": 45,
+      "cueLoopsChannel15Free": 32,
+      "mangleCues30to32": 20
+     },
+     "value2Rule": {
+      "cues25to29": 66,
+      "cueLoops": 48,
+      "cueLoopsChannel15Free": 30,
+      "mangleCues30to32": 14,
+      "modelEndS": 300
+     },
+     "hallStagesOnly": {
+      "cues25to29": 16,
+      "cueLoops": 15,
+      "cueLoopsChannel15Free": 9,
+      "mangleCues30to32": 5,
+      "modelEndS": 310
+     }
+    },
+    {
+     "seed": 47602,
+     "modelEndS": 300,
+     "witheredCamHops": 34,
+     "witheredCamHopsDelayedPastValue2": 0,
+     "witheredCamHopsChannel15Held": 9,
+     "perHopRule": {
+      "cues25to29": 58,
+      "cueLoops": 47,
+      "cueLoopsChannel15Free": 33,
+      "mangleCues30to32": 24
+     },
+     "value2Rule": {
+      "cues25to29": 38,
+      "cueLoops": 31,
+      "cueLoopsChannel15Free": 21,
+      "mangleCues30to32": 10,
+      "modelEndS": 180
+     },
+     "hallStagesOnly": {
+      "cues25to29": 19,
+      "cueLoops": 19,
+      "cueLoopsChannel15Free": 9,
+      "mangleCues30to32": 5,
+      "modelEndS": 310
+     }
+    },
+    {
+     "seed": 47603,
+     "modelEndS": 180,
+     "witheredCamHops": 23,
+     "witheredCamHopsDelayedPastValue2": 0,
+     "witheredCamHopsChannel15Held": 6,
+     "perHopRule": {
+      "cues25to29": 39,
+      "cueLoops": 26,
+      "cueLoopsChannel15Free": 19,
+      "mangleCues30to32": 10
+     },
+     "value2Rule": {
+      "cues25to29": 68,
+      "cueLoops": 50,
+      "cueLoopsChannel15Free": 38,
+      "mangleCues30to32": 16,
+      "modelEndS": 310
+     },
+     "hallStagesOnly": {
+      "cues25to29": 18,
+      "cueLoops": 17,
+      "cueLoopsChannel15Free": 11,
+      "mangleCues30to32": 6,
+      "modelEndS": 290
+     }
+    },
+    {
+     "seed": 47604,
+     "modelEndS": 290,
+     "witheredCamHops": 35,
+     "witheredCamHopsDelayedPastValue2": 0,
+     "witheredCamHopsChannel15Held": 13,
+     "perHopRule": {
+      "cues25to29": 59,
+      "cueLoops": 46,
+      "cueLoopsChannel15Free": 34,
+      "mangleCues30to32": 14
+     },
+     "value2Rule": {
+      "cues25to29": 38,
+      "cueLoops": 27,
+      "cueLoopsChannel15Free": 20,
+      "mangleCues30to32": 6,
+      "modelEndS": 180
+     },
+     "hallStagesOnly": {
+      "cues25to29": 24,
+      "cueLoops": 23,
+      "cueLoopsChannel15Free": 18,
+      "mangleCues30to32": 7,
+      "modelEndS": 420
+     }
+    },
+    {
+     "seed": 47605,
+     "modelEndS": 420,
+     "witheredCamHops": 43,
+     "witheredCamHopsDelayedPastValue2": 1,
+     "witheredCamHopsChannel15Held": 8,
+     "perHopRule": {
+      "cues25to29": 79,
+      "cueLoops": 67,
+      "cueLoopsChannel15Free": 55,
+      "mangleCues30to32": 28
+     },
+     "value2Rule": {
+      "cues25to29": 66,
+      "cueLoops": 54,
+      "cueLoopsChannel15Free": 29,
+      "mangleCues30to32": 16,
+      "modelEndS": 300
+     },
+     "hallStagesOnly": {
+      "cues25to29": 16,
+      "cueLoops": 14,
+      "cueLoopsChannel15Free": 11,
+      "mangleCues30to32": 4,
+      "modelEndS": 290
+     }
+    }
+   ]
+  },
+  "seed47598Rows": [
+   {
+    "t": 5,
+    "who": "withchica",
+    "from": 8,
+    "to": 4,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 9.14,
+    "channel15Held": false
+   },
+   {
+    "t": 10,
+    "who": "withfreddy",
+    "from": 7,
+    "to": 3,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 8.94,
+    "channel15Held": false
+   },
+   {
+    "t": 10,
+    "who": "withchica",
+    "from": 4,
+    "to": 2,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 8.94,
+    "channel15Held": false
+   },
+   {
+    "t": 20,
+    "who": "withfreddy",
+    "from": 7,
+    "to": 3,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 9.1,
+    "channel15Held": false
+   },
+   {
+    "t": 21.69,
+    "who": "withbonnie",
+    "from": "blindA",
+    "to": 1,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 8.91,
+    "channel15Held": false
+   },
+   {
+    "t": 34.7,
+    "who": "withfreddy",
+    "from": "blindB",
+    "to": 3,
+    "via": "g378 return",
+    "loopsAfterPromotion": 177,
+    "value2AtTest": 0,
+    "channel15Held": false
+   },
+   {
+    "t": 40.02,
+    "who": "withchica",
+    "from": 4,
+    "to": 2,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 9.01,
+    "channel15Held": false
+   },
+   {
+    "t": 55.01,
+    "who": "withbonnie",
+    "from": "blindA",
+    "to": 1,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 8.73,
+    "channel15Held": true
+   },
+   {
+    "t": 60,
+    "who": "withchica",
+    "from": 4,
+    "to": 2,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 8.91,
+    "channel15Held": true
+   },
+   {
+    "t": 65,
+    "who": "withfreddy",
+    "from": 7,
+    "to": 3,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 9,
+    "channel15Held": false
+   },
+   {
+    "t": 85.02,
+    "who": "withfreddy",
+    "from": "blindB",
+    "to": 3,
+    "via": "g378 return",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 8.96,
+    "channel15Held": false
+   },
+   {
+    "t": 90.02,
+    "who": "withchica",
+    "from": 4,
+    "to": 2,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 8.96,
+    "channel15Held": false
+   },
+   {
+    "t": 90.67,
+    "who": "withbonnie",
+    "from": "blindA",
+    "to": 1,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 9.06,
+    "channel15Held": false
+   },
+   {
+    "t": 115.01,
+    "who": "withfreddy",
+    "from": 7,
+    "to": 3,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 8.98,
+    "channel15Held": false
+   },
+   {
+    "t": 120.01,
+    "who": "withchica",
+    "from": 4,
+    "to": 2,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 8.85,
+    "channel15Held": false
+   },
+   {
+    "t": 130.01,
+    "who": "withfreddy",
+    "from": 7,
+    "to": 3,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 9.02,
+    "channel15Held": true
+   },
+   {
+    "t": 130.65,
+    "who": "withbonnie",
+    "from": "blindA",
+    "to": 1,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 9.06,
+    "channel15Held": true
+   },
+   {
+    "t": 140.01,
+    "who": "withfreddy",
+    "from": 7,
+    "to": 3,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 8.96,
+    "channel15Held": false
+   },
+   {
+    "t": 150.01,
+    "who": "withfreddy",
+    "from": 7,
+    "to": 3,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 8.98,
+    "channel15Held": true
+   },
+   {
+    "t": 155.01,
+    "who": "withbonnie",
+    "from": "blindA",
+    "to": 1,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 8.95,
+    "channel15Held": false
+   },
+   {
+    "t": 160.01,
+    "who": "withfreddy",
+    "from": 7,
+    "to": 3,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 8.93,
+    "channel15Held": true
+   },
+   {
+    "t": 160.01,
+    "who": "withchica",
+    "from": 4,
+    "to": 2,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 8.93,
+    "channel15Held": true
+   },
+   {
+    "t": 185.01,
+    "who": "withbonnie",
+    "from": "blindA",
+    "to": 1,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 9.03,
+    "channel15Held": false
+   },
+   {
+    "t": 190,
+    "who": "withfreddy",
+    "from": 7,
+    "to": 3,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 8.87,
+    "channel15Held": true
+   },
+   {
+    "t": 190,
+    "who": "withchica",
+    "from": 4,
+    "to": 2,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 8.87,
+    "channel15Held": true
+   },
+   {
+    "t": 204.99,
+    "who": "withfreddy",
+    "from": "blindB",
+    "to": 3,
+    "via": "g378 return",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 8.93,
+    "channel15Held": false
+   },
+   {
+    "t": 214.99,
+    "who": "withbonnie",
+    "from": "blindA",
+    "to": 1,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 8.8,
+    "channel15Held": true
+   },
+   {
+    "t": 219.99,
+    "who": "withchica",
+    "from": 4,
+    "to": 2,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 9.17,
+    "channel15Held": false
+   },
+   {
+    "t": 234.99,
+    "who": "withfreddy",
+    "from": "blindB",
+    "to": 3,
+    "via": "g378 return",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 8.85,
+    "channel15Held": true
+   },
+   {
+    "t": 239.99,
+    "who": "withchica",
+    "from": 4,
+    "to": 2,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 8.88,
+    "channel15Held": false
+   },
+   {
+    "t": 254.99,
+    "who": "withbonnie",
+    "from": "blindA",
+    "to": 1,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 8.98,
+    "channel15Held": true
+   },
+   {
+    "t": 265,
+    "who": "withchica",
+    "from": 4,
+    "to": 2,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 9.06,
+    "channel15Held": false
+   },
+   {
+    "t": 269.99,
+    "who": "withfreddy",
+    "from": 7,
+    "to": 3,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 9,
+    "channel15Held": true
+   },
+   {
+    "t": 279.99,
+    "who": "withfreddy",
+    "from": 7,
+    "to": 3,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 8.99,
+    "channel15Held": false
+   },
+   {
+    "t": 284.99,
+    "who": "withbonnie",
+    "from": "blindA",
+    "to": 1,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 9.01,
+    "channel15Held": false
+   },
+   {
+    "t": 289.98,
+    "who": "withchica",
+    "from": 4,
+    "to": 2,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 9.24,
+    "channel15Held": true
+   },
+   {
+    "t": 309.98,
+    "who": "withfreddy",
+    "from": 7,
+    "to": 3,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 8.99,
+    "channel15Held": false
+   },
+   {
+    "t": 314.99,
+    "who": "withbonnie",
+    "from": "blindA",
+    "to": 1,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 9.04,
+    "channel15Held": false
+   },
+   {
+    "t": 319.99,
+    "who": "withfreddy",
+    "from": 7,
+    "to": 3,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 9.15,
+    "channel15Held": false
+   },
+   {
+    "t": 319.99,
+    "who": "withchica",
+    "from": 4,
+    "to": 2,
+    "via": "advance",
+    "loopsAfterPromotion": 0,
+    "value2AtTest": 9.15,
+    "channel15Held": false
+   }
+  ]
+ },
+ "modelChange": {
+  "option": "sourcedFootstepValue2 (default off; requires sourcedFootstepDraws)",
+  "test": "packages/core/test/footstep-value2.test.js",
+  "rule": "route units carry value 2 (10 at promotion, again on each passed roll while the move waits, drained by global 5); the cue fires on the first loop of value 2 > 0 on a marker. Hops 9+ loops after promotion are silent; standing promotions draw; g378's return onto CAM 03 draws inside the window. Foxy and Balloon Boy keep their rules.",
+  "rebuildCheck": {
+   "what": "tools/recompile/sourced-rebuild-model-options.json plus sourcedFootstepValue2 against the committed seed-24850 no-input traces",
+   "nights": [
+    {
+     "night": 1,
+     "evidenceId": "recompile-draw-a726ef9b4dee4c54",
+     "status": "INCOMPLETE",
+     "committedEvidenceId": "recompile-draw-6f4c9e6980581dac",
+     "committedStatus": "INCOMPLETE",
+     "firstMismatchTickOffset1": null,
+     "committedFirstMismatchTickOffset1": null,
+     "terminal": {
+      "frame": 16602,
+      "draws": 7623,
+      "state": 7703
+     },
+     "committedTerminal": {
+      "frame": 16602,
+      "draws": 7623,
+      "state": 7703
+     },
+     "identical": true
+    },
+    {
+     "night": 2,
+     "evidenceId": "recompile-draw-c1927387de2061c9",
+     "status": "MATCHED_TO_TERMINAL_LOOP",
+     "committedEvidenceId": "recompile-draw-d0d0ae6c8be38569",
+     "committedStatus": "MATCHED_TO_TERMINAL_LOOP",
+     "firstMismatchTickOffset1": 5851,
+     "committedFirstMismatchTickOffset1": 5851,
+     "terminal": {
+      "frame": 5862,
+      "draws": 2699,
+      "state": 45159
+     },
+     "committedTerminal": {
+      "frame": 5862,
+      "draws": 2699,
+      "state": 45159
+     },
+     "identical": true
+    },
+    {
+     "night": 3,
+     "evidenceId": "recompile-draw-1c7930695f9af96d",
+     "status": "MATCHED_TO_TERMINAL_LOOP",
+     "committedEvidenceId": "recompile-draw-56abcd7985927d53",
+     "committedStatus": "MATCHED_TO_TERMINAL_LOOP",
+     "firstMismatchTickOffset1": 3000,
+     "committedFirstMismatchTickOffset1": 3000,
+     "terminal": {
+      "frame": 3001,
+      "draws": 1373,
+      "state": 36111
+     },
+     "committedTerminal": {
+      "frame": 3001,
+      "draws": 1373,
+      "state": 36111
+     },
+     "identical": true
+    },
+    {
+     "night": 4,
+     "evidenceId": "recompile-draw-ce70487fa27896ae",
+     "status": "MATCHED_TO_TERMINAL_LOOP",
+     "committedEvidenceId": "recompile-draw-799f433f5372f153",
+     "committedStatus": "MATCHED_TO_TERMINAL_LOOP",
+     "firstMismatchTickOffset1": 2400,
+     "committedFirstMismatchTickOffset1": 2400,
+     "terminal": {
+      "frame": 2401,
+      "draws": 1105,
+      "state": 10783
+     },
+     "committedTerminal": {
+      "frame": 2401,
+      "draws": 1105,
+      "state": 10783
+     },
+     "identical": true
+    },
+    {
+     "night": 5,
+     "evidenceId": "recompile-draw-b7c9196f70e81c85",
+     "status": "INCOMPLETE",
+     "committedEvidenceId": "recompile-draw-2a2928ec319ecc0b",
+     "committedStatus": "INCOMPLETE",
+     "firstMismatchTickOffset1": null,
+     "committedFirstMismatchTickOffset1": null,
+     "terminal": {
+      "frame": 2562,
+      "draws": 1183,
+      "state": 26359
+     },
+     "committedTerminal": {
+      "frame": 2562,
+      "draws": 1183,
+      "state": 26359
+     },
+     "identical": true
+    }
+   ],
+   "reading": "identical to the committed records on Nights 1-5; not discriminating, since without input no hop waits after its promotion and no unit is promoted standing on a marker"
+  },
+  "footstepCamMarkers": "supported (SOURCED); stays default off here: a default is changed by a comparison that adopts it, not by this record",
+  "channel15": "the uninterruptible bang is an audibility fact for any audio observable of these cues, not a draw; no model change"
+ },
+ "open": [
+  "A device reading of samples 25-29: a capture where footsteps stand above the floor (wired or on-phone, not A2DP with the route's own sounds), with a positive control in the same run, e.g. a Withered Chica 4->2 hop in a loop without a vent bang.",
+  "The model default (hall stages) until a comparison adopts footstepCamMarkers, and whether sourcedFootstepValue2 joins the sourced option sets.",
+  "Promotion in the model is approximated: Mangle's g358 (monitor-down promotion needs the hall light off) is read from lightStallOn, and the Withered hall-light edges use lightStallOn where the sheet reads viewing hall light (hallLatch).",
+  "g380/g385 reset Withered Freddy's (and Chica's) value 0 when Bonnie or Chica leaves CAM 08; the model does not, which can only matter before Night 7.",
+  "`in office` (122) overlaps `hear footsteps` for the bottom/centre-hotspot sprites according to docs/android/ANDROID-SOURCE-STATUS.md (Withered Bonnie among them, whose g384 lands there); neither marker set includes it, and it is not resolved here."
+ ],
+ "limits": [
+  "One capture, one night, one route (k3); the injection recall is this capture's, at this route's moments.",
+  "Recall counts a detection within 0.5 s of an injection, any of 25-29; exact-sample hits are fewer.",
+  "The reconstruction is the model's night, not the phone's; its counts set an expectation, they do not observe anything."
+ ],
+ "sources": [
+  {
+   "what": "event dump 03-04-Office.txt",
+   "sha256": "026ee3861642abb24a0961d590d8e3d708c9417ec143b92aacb73d6c0415b23b"
+  },
+  {
+   "what": "base.apk",
+   "sha256": "351550b0e9c30c2b5cb01510ffd3f496376fe0b4d8fb70cb015b44647fda0373"
+  },
+  {
+   "what": "full-06 capture (wav)",
+   "sha256": "e0fe3d356af71228ae23286114d4a03c5bf677ab7a80964de1e0c5cb5a6b0183"
+  },
+  {
+   "what": "full-06 scan",
+   "sha256": "f1666f69e55282ece446ae9e22891089b4d9e9f09c6c11dc2c928d50046cb750"
+  },
+  {
+   "what": "full-06 frame trace",
+   "sha256": "3fe9587c06708a991e5a2c983ebc1feaf9be89cda9c7c787999a2ac6052dd261"
+  },
+  {
+   "what": "reference s0017.wav",
+   "sha256": "f22edf9382547c2e12c37b365cda9198d5cad8ef7c778d511ce61c6c3e720365"
+  },
+  {
+   "what": "reference s0025.wav",
+   "sha256": "63460df8684672cfdfac1a13d72686fad38eddc180ff56fafd294a45693ed6ec"
+  },
+  {
+   "what": "reference s0026.wav",
+   "sha256": "38f4c826658f14d8f64e83ee42a0efad481928d3be16081c02cd460ad93933fe"
+  },
+  {
+   "what": "reference s0027.wav",
+   "sha256": "a887175eace056d72611341049424a85668b5b12a524974d2adfd8884d1b6e81"
+  },
+  {
+   "what": "reference s0028.wav",
+   "sha256": "c59ff29253a5137b4d88324ecefefd7cb800a31d851839e258f8df2593bbe9ff"
+  },
+  {
+   "what": "reference s0029.wav",
+   "sha256": "c773ea1fdc3482e8f7067a5800dc6fa9018dcafff25d3526377be51fab236978"
+  },
+  {
+   "what": "reference s0030.wav",
+   "sha256": "68d6b7d22fffdd2334cbc681b93bf9154cb80501f90ab53258ab1e0b54063162"
+  },
+  {
+   "what": "reference s0031.wav",
+   "sha256": "05edc43044d1baadc7a786a9b4aab7c1517a8708904620e4292531d6589372ef"
+  },
+  {
+   "what": "reference s0032.wav",
+   "sha256": "0a8ff8380c912c48c4a1dfaf2ae152bed6dfda955071d0ca0cfbb91d83c29d2b"
+  },
+  {
+   "what": "k3 winner",
+   "sha256": "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78"
+  },
+  {
+   "what": "detect.py",
+   "sha256": "14dd4a6d933c352938591a38dce0630e8e39338400aed9d9e49801c5b6320b76"
+  },
+  {
+   "what": "plant-model.js (the model measured)",
+   "sha256": "781cf0b90d1cc5b8b513d09ef08b93bfdb66f7b5890cb89b9e813abea3499e80"
+  },
+  {
+   "what": "footstep-value2.test.js",
+   "sha256": "88cd096e8320d1ff02065264048483937334e5ba053bcf83e21944e0649317b6"
+  },
+  {
+   "what": "forensics value2-options.json",
+   "sha256": "91673ee21beff381538df4d1d7828cca4bb5a2d5183a8ac491b43052c31428d8"
+  },
+  {
+   "what": "forensics detect_np.py",
+   "sha256": "ff19a0e384338d99144702d6d268f21326a4ca45125289e67741dbc42108d2b7"
+  },
+  {
+   "what": "forensics corefit.py",
+   "sha256": "0003318830e05d609a7b38a4dea480b31018caacb76238414301db9a44edf734"
+  },
+  {
+   "what": "forensics levels.py",
+   "sha256": "1ef5b904433d2f493fb8546693a69701272a76041e56385277c94bcaa4af328c"
+  },
+  {
+   "what": "forensics inject.py",
+   "sha256": "589751368b10fbb7720984c3c010bc64c938ca550b4d6b6bc1318ad798871347"
+  },
+  {
+   "what": "forensics inject2.py",
+   "sha256": "9714a8312c85cb2527d82c45b3dcbe28d4cbb87cd174a42fa47769da826883cf"
+  },
+  {
+   "what": "forensics recon.mjs",
+   "sha256": "fa560839c08e8fe83f37165bce2db704c51bf525e487cc8df1c7256dd9701cac"
+  },
+  {
+   "what": "forensics build-record.mjs",
+   "sha256": "220f3f97e132ccb565a603c6857c42a62eb81d463ca4518e69cc9d1b3b54aad3"
+  }
+ ],
+ "retained": "fnaf-apks/footstep-adjudication-20260927 on the analysis machine (outside the repository, beside the capture and the dump): the scripts above and their JSON outputs; media and dump text are never committed",
+ "reproduce": [
+  "python3 detect_np.py WAV --refs CUE_REFS --json validate-all.json > validate-all.txt   # must reproduce audio-full-06.scan",
+  "python3 corefit.py > corefit.json; python3 levels.py > levels.json",
+  "python3 inject.py 0.156 > inject.json; python3 inject2.py > inject2.json",
+  "node recon.mjs 2564 198 47592 ... 47605 > recon-window.json; node recon.mjs 2564 198 47598 > recon-47598.json",
+  "node tools/recompile/compare-draw-trace.mjs --trace TRACE --night N --seed 24850 --frame 3 --frames 30000 --model-options value2-options.json --out nN-value2.json",
+  "node build-record.mjs DIR docs/evidence/footstep-cam-markers-adjudication-20260927.json"
+ ],
+ "evidenceId": "footstep-adjudication-04f3089e1a8b9d21"
+}

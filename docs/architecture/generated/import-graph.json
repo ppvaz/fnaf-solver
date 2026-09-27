@@ -798,6 +798,13 @@
       ]
     },
     {
+      "file": "packages/core/test/footstep-value2.test.js",
+      "imports": [
+        "../src/mechanics/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
       "file": "packages/core/test/foxy-chain.test.js",
       "imports": [
         "../src/mechanics/plant-model.js",

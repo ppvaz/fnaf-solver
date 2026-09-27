@@ -388,7 +388,14 @@ default-off option (`packages/core/test/rebuild-order.test.js`):
   24 x 24 fine-collision sprite (hotspots paired Toy/Withered), and
   `CSpriteGen.spriteCol_TestSprite_All` tests hidden sprites (`SF_RAMBO`, no
   hidden check). This restores `fcbbd45`'s set, against full-06's audio
-  reading (`8a7288b`); that disagreement stays open, so the knob is off.
+  reading (`8a7288b`). That reading was adjudicated later the same day
+  ([`footstep-cam-markers-adjudication-20260927.json`](../../docs/evidence/footstep-cam-markers-adjudication-20260927.json)):
+  its detector never read samples 25-29 in that capture, not even on the hall
+  stages, and finds 0 of 60 footsteps injected on the roll phase at the
+  capture's own channel-15 gain, so the set is sourced; value 2's window does
+  not reconcile them, since Withered Chica's and Freddy's CAM 02/03/04 hops land
+  in their promotion loop. The knob stays off until a comparison adopts it;
+  `sourcedFootstepValue2` (default off) applies value 2's window and edge.
 - `sourcedBoxCountdown`: g653-g660 drain through a gated Every 50 ms after the
   packed test (value 1 == 0, value 0 > 0), so the box empties 3000 loops after
   the first 2 AM reach, in whole units; a wind sets value 1 to 10 and g661
