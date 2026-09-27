@@ -21,13 +21,15 @@ const optionsFile = flag('model-options', null);
 
 // A model option is a sourced* boolean, or a constant for the frame-time hook
 // (frameMs, frameValue5): JSON cannot carry the hook's per-frame functions.
+// The model's named research knobs are booleans too.
 const HOOK_CONSTANTS = ['frameMs', 'frameValue5'];
-const validOption = ([key, value]) => (/^sourced[A-Z]/.test(key) && typeof value === 'boolean') ||
+const RESEARCH_KNOBS = ['footstepFoxy', 'footstepCamMarkers'];
+const validOption = ([key, value]) => ((/^sourced[A-Z]/.test(key) || RESEARCH_KNOBS.includes(key)) && typeof value === 'boolean') ||
   (HOOK_CONSTANTS.includes(key) && Number.isFinite(value) && value > 0);
 
 export function drawTrace({ night, seed, frames, rows = [], customNight = undefined, modelOptions = {} }) {
   if (!modelOptions || Array.isArray(modelOptions) || typeof modelOptions !== 'object' || !Object.entries(modelOptions).every(validOption)) {
-    throw new Error('model options must be sourced* boolean flags or positive frameMs/frameValue5 constants');
+    throw new Error('model options must be sourced* or research-knob booleans, or positive frameMs/frameValue5 constants');
   }
   const simOptions = Object.fromEntries(Object.entries(modelOptions)
     .map(([key, value]) => [key, HOOK_CONSTANTS.includes(key) ? () => value : value]));

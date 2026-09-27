@@ -5,6 +5,10 @@ import { Rng } from './rng.js';
  * but full-06's audio has no footstep sound (25-29) on any Withered hop onto them (100+ predicted), so the
  * trigger is the hall stages, as for `hall movement` (docs/evidence/night7-k3-frametrace-nights-20260915.json). */
 const FOOTSTEP_NODES = /** @type {Set<string | number>} */ (new Set(['blindA', 'blindB']));
+// sourcedHourTable: Golden Freddy's `(Random(N) + 1) / N` in the first-loop hour row (g677, g679, g681).
+const SOURCED_HOUR0_GOLDEN = /** @type {Record<number, number>} */ ({ 3: 1000, 4: 100, 5: 100 });
+// footstepCamMarkers: the markers the CCN's own geometry puts under `hear footsteps`.
+const FOOTSTEP_CAM_NODES = /** @type {Set<string | number>} */ (new Set([1, 2, 3, 4, 'blindA', 'blindB']));
 const MON_DOWN = 'down', MON_RAISING = 'raising', MON_UP = 'up', MON_LOWERING = 'lowering';
 
 export class Sim {
@@ -204,11 +208,45 @@ export class Sim {
       // Research knob under sourcedFootstepDraws: Foxy's hall-stage entry draw (g698 via g389), the least
       // sourced part of the trigger. Off leaves the other eight characters' draws in place.
       footstepFoxy: true,
+      // Research knob under sourcedFootstepDraws: also draw on hops onto CAM 01, 02, 03 and 04. The
+      // CCN puts them under `hear footsteps` (149): its 264 x 151 image is opaque at every pixel, every
+      // character is an opaque 24 x 24 fine-collision sprite whose hotspot lands inside it on those
+      // markers, and CSpriteGen.spriteCol_TestSprite_All tests hidden sprites (SF_RAMBO, no hidden
+      // check). The rebuilt runtime draws there (Toy Bonnie onto CAM 03). 8a7288b narrowed the set to
+      // the hall stages because full-06's audio had no footstep sample on a Withered CAM 01-04 hop;
+      // that disagreement is open, so this stays off.
+      footstepCamMarkers: false,
       // Mangle's mask leaves (dump g400: the 10%/s roll under the mask; g401: five mask ticks) place her at
       // CAM 7 (marker 62), three hops from the vent, not at the route start the unit table's repelIdx 0 gives.
       // Every other unit's repelIdx matches its dump endpoint (g538-g555, g213, g437, g439/g440, g292/g294).
       // On full-06 the phone's Mangle returned 5-10 s faster than the model on every approach.
       sourcedMangleReturn: false,
+      // The music box drain as the sheet writes it (g652-g661). g653-g660: the packed test (music
+      // button value 1 == 0 and value 0 > 0), the night (and for night 1 not 12 AM or 1 AM), then a
+      // gated Every 50 ms that subtracts 2-6 units of 2000. The countdown loads on its first reach,
+      // counts only on loops it is reached and keeps its remainder while winding or empty; the model
+      // drained 1/N of the box every frame from the hour frame on, which empties one loop early. Each
+      // wind loop sets value 1 to 10 (g638/g643) and g661 drains it by Global(5) per loop after the
+      // drain has run, so the drain resumes ten loops after a wind. Runs in the late pass, after the
+      // hour update (g627-g630). Requires sourcedSheetOrder.
+      sourcedBoxCountdown: false,
+      // The Puppet's hop order: g496 arms a hop (sockpuppet value 0 = 2) and g403-g411, earlier in the
+      // sheet, carry it out, so a hop lands on the loop after its roll. Under the sheet-ordered pass the
+      // model armed in the early pass and moved in tickPuppet the same frame, one loop early; the
+      // rebuilt runtime moves on the next loop (office tick 15841 after the tick-15840 roll), and g623's
+      // gated Every 1000 loads on arrival, so the early hop moved its Random(10) by a loop. On: the
+      // armed hop runs at the g403-g411 position of the next early pass. Requires sourcedSheetOrder.
+      sourcedPuppetMoveOrder: false,
+      // The hour table where the sheet runs it (g673-g684, story nights). Each row is `night == N`
+      // [+ `time of the night == H`] + NotAlways, so hour 0's rows fire on the first loop, in the
+      // always pass: after g822's StartOfFrame draw and before g811's. The model applied hour 0 in
+      // its constructor, before any frame, so a row's Golden Freddy roll landed ahead of g822. The
+      // dump also rolls Golden Freddy's AI on the first loop of nights 3 (g677, (Random(1000)+1)/1000),
+      // 4 (g679) and 5 (g681, both (Random(100)+1)/100), which the model's table lacks; the rebuilt
+      // runtime spends that draw on office tick 0 of nights 4 and 5. Under the frame-time hook a later
+      // hour's rows follow its clock (g627-g630) ahead of g685-g703, as in the sheet. Night 7 keeps
+      // the constructor. Requires sourcedSheetOrder.
+      sourcedHourTable: false,
       // The vent-camera sound selectors (dump g685-g690, generated e610-e615):
       // one Random(4) into cam01 value 21 the first loop a unit stands on CAM 05
       // (Toy Chica g685, Withered Bonnie g686) or CAM 06 (Toy Bonnie g687,
@@ -349,6 +387,7 @@ export class Sim {
     // --- resources
     this.power = C.powerFrames(this.opts.night);
     this.box = 1;
+    this.boxHold = 0;   // music button value 1: 10 on a wind loop, -Global(5) per loop (sourcedBoxCountdown)
 
     // --- AI levels (g673-684 and the caps). Every roll below reads this map
     // rather than a 10/20 constant, because nights below 7 change level by the
@@ -356,7 +395,7 @@ export class Sim {
     // from 5 to 9 at 2 AM. Starting from zero is g673, which clears every
     // counter on any night but Custom -- and Custom writes every dial anyway.
     this.ai = Object.fromEntries(C.AI_IDS.map(id => [id, 0]));
-    this.applyAiHour(0);
+    if (!(this.opts.sourcedHourTable && this.opts.night !== 7)) this.applyAiHour(0);   // else g673-g684 on frame 1
 
     // --- Foxy
     this.foxy = { loc: 'parts', hallColumn: false, footstep: false, acceptedAt: -100, D: 0, exposure: 0, gotYou: false, pinUntil: -1, A: 0, B: 0,
@@ -443,6 +482,12 @@ export class Sim {
       throw new Error('the frame-time hook times Foxy through g824/g825/g864: it requires sourcedFoxyChain');
     if (this.opts.sourcedEveryOrigin && !(this.opts.frameMs || this.opts.frameValue5))
       throw new Error('sourcedEveryOrigin moves the countdowns, and only the frame-time hook runs every cadence as one: it requires frameMs or frameValue5');
+    if (this.opts.sourcedHourTable && !this.opts.sourcedSheetOrder)
+      throw new Error('sourcedHourTable applies the table in the sheet-ordered pass: it requires sourcedSheetOrder');
+    if (this.opts.sourcedPuppetMoveOrder && !this.opts.sourcedSheetOrder)
+      throw new Error('sourcedPuppetMoveOrder moves the Puppet in the sheet-ordered pass: it requires sourcedSheetOrder');
+    if (this.opts.sourcedBoxCountdown && !this.opts.sourcedSheetOrder)
+      throw new Error('sourcedBoxCountdown drains in the sheet-ordered pass: it requires sourcedSheetOrder');
     if (this.opts.sourcedVentCamDraws && !this.opts.sourcedSheetOrder)
       throw new Error('sourcedVentCamDraws draws in the sheet-ordered pass: it requires sourcedSheetOrder');
     if (this.opts.sourcedFootstepDraws && !this.opts.sourcedSheetOrder)
@@ -488,6 +533,9 @@ export class Sim {
         this.ai[id] = Math.min(value, C.aiCap(id));
       }
     }
+    // g677/g679/g681: Golden Freddy's first-loop roll on nights 3-5 (sourcedHourTable)
+    const golden = this.opts.sourcedHourTable && hour === 0 ? SOURCED_HOUR0_GOLDEN[this.opts.night] : undefined;
+    if (golden) this.ai.golden = Math.min(this.rollAi(golden), C.aiCap('golden'));
   }
 
   // `(Random(N) + 1) / N` under integer division: one only on the top draw.
@@ -905,6 +953,10 @@ export class Sim {
     { const u = unit('mangle');
       if (at122(u) && mask2 && every('400', 1000) && one(10)) { this.rng.int(0, 3, 0); this.unitLeave(u); }       // g400
       if (at122(u) && u.maskExposureTicks >= 5 && mask2) { this.rng.int(0, 3, 0); this.unitLeave(u); } }          // g401
+    if (this.opts.sourcedPuppetMoveOrder && this.puppet.pending && !this.puppet.atOpening && !this.puppet.inside) {
+      this.puppet.pending = false;                                                     // g403-g411
+      this.advancePuppet();
+    }
     if (views) this.drawViewed(f, 'g419');
     { const u = unit('toybonnie');
       const overlays = this.units.some(x => (x.id === 'toybonnie' || x.id === 'toychica') && x.officeCue);
@@ -953,13 +1005,22 @@ export class Sim {
       this.dropEverything = true;
       this.emit('puppet-attack', { at: 123 });
     }
-    if (sheet && !this.hooked && f % C.HOUR_FRAMES === 0) this.applyAiHour(f / C.HOUR_FRAMES);          // g673-g684
+    const hourTable = this.opts.sourcedHourTable && this.opts.night !== 7;
+    if (hourTable) {                                                                     // g627-g630, then g673-g684
+      let rows = f === 1 ? 0 : -1;
+      if (this.hooked) {
+        if (this.passEvery(this.hookTimers.g627, 1000)) this.am++;
+        if (this.am >= 70) { this.am = 0; this.hour++; rows = this.hour; }
+      } else if (f % C.HOUR_FRAMES === 0) rows = f / C.HOUR_FRAMES;
+      if (rows >= 0) this.applyAiHour(rows);
+    } else if (sheet && !this.hooked && f % C.HOUR_FRAMES === 0) this.applyAiHour(f / C.HOUR_FRAMES);   // g673-g684
     if (sheet && this.opts.sourcedVentCamDraws) this.ventCamDraws();                      // g685-g690
     if (sheet && this.opts.sourcedFootstepDraws) this.footstepDraws();                    // g695-g703
-    if (this.hooked) {                                                                   // g627, g629/g630, g673-g684
+    if (this.hooked && !hourTable) {                                                     // g627, g629/g630, g673-g684
       if (this.passEvery(this.hookTimers.g627, 1000)) this.am++;
       if (this.am >= 70) { this.am = 0; this.hour++; this.applyAiHour(this.hour); }
     }
+    if (this.opts.sourcedBoxCountdown) this.drainBoxCountdown();                         // g652-g661
     { const u = unit('mangle');
       if (u && u.inside && this.viewing > 0 && every('730', 1000) && one(20)) u.insideArmed = true;             // g730
       for (const [g, cue] of /** @type {[string, boolean][]} */ ([['739', true], ['740', true], ['741', true], ['742', false], ['743', false]]))
@@ -1039,6 +1100,21 @@ export class Sim {
       if (this.randomImageArmed) { this.randomImageArmed = false; this.rng.int(0, 999, 0); }
     } else this.randomImageArmed = true;
   }
+
+  /** g653-g661: the music box drain as a gated Every 50 ms, then the wind hold's drain (sourcedBoxCountdown). */
+  drainBoxCountdown() {
+    if (!this.opts.boxEnabled) return;
+    const units = Math.round(this.box * C.BOX_UNITS);
+    const hour = this.hooked ? this.hour : Math.floor(this.frame / C.HOUR_FRAMES);
+    if (this.boxHold === 0 && units > 0 && C.boxDrainsAtHour(this.opts.night, hour) &&
+        this.gatedPass('box', C.BOX_DRAIN_TICK_MS))
+      this.box = Math.max(0, units - (C.BOX_DRAIN_PER_TICK[this.opts.night] ?? C.BOX_DRAIN_PER_TICK[7])) / C.BOX_UNITS;
+    if (this.boxHold > 0)                                                                  // g661
+      this.boxHold = Math.max(0, this.boxHold - (this.opts.frameValue5 ? this.opts.frameValue5(this.frame) : 1));
+  }
+
+  /** The markers whose hop sets a footstep cue (footstepCamMarkers adds CAM 01-04). */
+  footstepNodes() { return this.opts.footstepCamMarkers ? FOOTSTEP_CAM_NODES : FOOTSTEP_NODES; }
 
   /** g695-g703: one draw per pending footstep cue, in sheet order (sourcedFootstepDraws). */
   footstepDraws() {
@@ -1681,7 +1757,7 @@ export class Sim {
   // the "laugh" a player counts. Reaching CAM 05 is the vent-camera cue.
   bbHop() {
     this.bb.stage++;
-    if (this.opts.sourcedFootstepDraws && FOOTSTEP_NODES.has([10, 7, 3, 1, 5][this.bb.stage])) this.bb.footstep = true;
+    if (this.opts.sourcedFootstepDraws && this.footstepNodes().has([10, 7, 3, 1, 5][this.bb.stage])) this.bb.footstep = true;
     let vocal = null;   // which of his three vocals the cue selects (g608 -> 21 "hi", g609 -> 24 laugh, g610 -> 23 "hello")
     if (this.opts.sourcedEventDraws && this.bb.stage >= 2) {            // e351/e352/e353
       let cue = this.rng.int(0, 3, 0) + 1;                                // cam01 value 6
@@ -1986,7 +2062,7 @@ export class Sim {
       this.rng.int(0, 3, 0);                                               // e324
     u.idx++;
     const node = u.path[u.idx];
-    if (this.opts.sourcedFootstepDraws && FOOTSTEP_NODES.has(node)) u.footstep = true;   // g695-g703, next pass
+    if (this.opts.sourcedFootstepDraws && this.footstepNodes().has(node)) u.footstep = true;   // g695-g703, next pass
     if (node === 'office' || node === 'ventL' || node === 'ventR') {
       u.atOpening = true; u.openingSince = this.frame; u.openingTicks = 0;
       // Toy Bonnie's opening timer IS his B counter (group 428 writes
@@ -2090,6 +2166,9 @@ export class Sim {
       // was slower than the game at the bottom of the box -- the only place
       // the difference can cost a night.
       this.box = Math.min(1, Math.max(this.box, C.BOX_SNAP) + 1 / C.BOX_WIND_FRAMES);
+      this.boxHold = 10;                                                                     // g638/g643
+    } else if (this.opts.sourcedBoxCountdown) {
+      // drained in the late pass (drainBoxCountdown)
     } else if (C.boxDrainsAtHour(this.opts.night, Math.floor(this.frame / C.HOUR_FRAMES))) {
       // Per-night rate, sourced at g653-660, and g653's hour gate: night 1's
       // box does not drain during 12 AM or 1 AM. This used to apply the night
@@ -2113,7 +2192,7 @@ export class Sim {
       return;
     }
 
-    if (p.pending && !p.atOpening && !p.inside) {
+    if (p.pending && !p.atOpening && !p.inside && !this.opts.sourcedPuppetMoveOrder) {
       p.pending = false;
       this.advancePuppet();
     }

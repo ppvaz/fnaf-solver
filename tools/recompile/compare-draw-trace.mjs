@@ -53,9 +53,20 @@ export function compareTrace(text, { night, seed, frame, frames, modelOptions = 
     return { modelFrameOffset: offset, compared, firstMismatch };
   });
   const alignment = alignments[1];
+  // The loop that ends a night: the model's kill returns before the rest of its frame, and the
+  // rebuild's last update of a visit it LEFT (a later frame visit exists) is the jump loop. A
+  // first mismatch there, with every earlier update matched, is MATCHED_TO_TERMINAL_LOOP; a
+  // harness stop at the tick limit is not a terminal loop.
+  const targetIndex = visits.findIndex((v) => v.frame === frame);
+  const leftFrame = targetIndex >= 0 && targetIndex < visits.length - 1;
+  const lastTick = rows.length ? rows[rows.length - 1].tick : -1;
+  const deathFrame = model.death ? model.out[model.out.length - 1].frame : null;
+  const mismatch = alignment.firstMismatch;
+  const terminalLoop = !!mismatch && ((leftFrame && mismatch.tick === lastTick) ||
+    (deathFrame !== null && mismatch.modelFrame === deathFrame));
   const status = !rows.length ? 'TARGET_NOT_REACHED'
     : targetVisits.length !== 1 || targetVisits[0].seed !== (seed & 65535) ? 'INVALID_COMPARISON'
-      : alignment.firstMismatch ? 'DIVERGENT'
+      : mismatch ? (terminalLoop ? 'MATCHED_TO_TERMINAL_LOOP' : 'DIVERGENT')
         : alignment.compared < Math.min(frames, model.out.length - 1) ? 'INCOMPLETE' : 'MATCHED_PREFIX';
   const result = {
     schema: 'recompile-draw-comparison-v1', claimLevel: 'MODEL_ONLY', fidelity: 'rebuilt-runtime', status,

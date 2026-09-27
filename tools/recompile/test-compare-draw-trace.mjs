@@ -30,6 +30,14 @@ assert.equal(compareTrace(header + rows + header + rows, settings).status, 'INVA
 const divergent = compareTrace(header + rows.replace(/^3 0 \d+ \d+/, '3 0 2 0'), settings);
 assert.equal(divergent.status, 'DIVERGENT');
 assert.equal(divergent.alignments[1].firstMismatch.tick, 0);
+// A mismatch on the last update of a visit the rebuild left is the terminal loop; the same
+// mismatch where the harness merely stopped is a divergence.
+const lastRow = rows.trimEnd().split('\n').length - 1;
+const endMismatch = rows.replace(new RegExp(`^3 ${lastRow} \\d+ \\d+`, 'm'), `3 ${lastRow} 999 1`);
+const left = compareTrace(header + endMismatch + '# frame 4 seeded 24850\n4 0 0 1\n', settings);
+assert.equal(left.status, 'MATCHED_TO_TERMINAL_LOOP');
+assert.equal(left.alignments[1].firstMismatch.tick, lastRow);
+assert.equal(compareTrace(header + endMismatch, settings).status, 'DIVERGENT');
 assert.throws(() => compareTrace(header + rows.trimEnd(), settings), /truncated/);
 assert.throws(() => compareTrace(header + '3 1 0 24850\n', settings), /interleaved/);
-console.log('PASS recompile comparison: exact prefix, mismatch, absent/short target, wrong seed, repeated visit and truncated trace (FIXTURE)');
+console.log('PASS recompile comparison: exact prefix, mismatch, terminal loop, absent/short target, wrong seed, repeated visit and truncated trace (FIXTURE)');

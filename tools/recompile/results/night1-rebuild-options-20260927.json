@@ -1,0 +1,151 @@
+{
+  "schema": "recompile-draw-comparison-v1",
+  "claimLevel": "MODEL_ONLY",
+  "fidelity": "rebuilt-runtime",
+  "status": "INCOMPLETE",
+  "question": "Does the rebuilt no-input night consume the same Random stream per event update as the simulator?",
+  "scope": {
+    "night": 1,
+    "seed": 24850,
+    "targetFrame": 3,
+    "requestedModelFrames": 30000,
+    "modelOptions": {
+      "sourcedRouteForks": true,
+      "sourcedHallEntry": true,
+      "sourcedDropLightOrder": true,
+      "sourcedFoxyChain": true,
+      "sourcedUnconditionalDraws": true,
+      "sourcedEventDraws": true,
+      "sourcedBlackoutDraws": true,
+      "sourcedViewDraws": true,
+      "sourcedRollDraws": true,
+      "sourcedMonitorDownDraw": true,
+      "sourcedSecondPass": true,
+      "sourcedPuppetGlitchDraws": true,
+      "sourcedFootstepDraws": true,
+      "sourcedMangleReturn": true,
+      "sourcedVentCamDraws": true,
+      "sourcedRandomImageDraw": true,
+      "sourcedMonitorRaiseGate": true,
+      "sourcedSheetOrder": true,
+      "sourcedLastViewPause": true,
+      "frameMs": 16.666666666666668,
+      "frameValue5": 1,
+      "sourcedEveryOrigin": true,
+      "footstepCamMarkers": true,
+      "sourcedBoxCountdown": true,
+      "sourcedPuppetMoveOrder": true,
+      "sourcedHourTable": true
+    },
+    "input": "navigation only; no gameplay actions"
+  },
+  "runtime": {
+    "visits": [
+      {
+        "frame": 0,
+        "seed": 24850,
+        "updates": 180
+      },
+      {
+        "frame": 1,
+        "seed": 24850,
+        "updates": 256
+      },
+      {
+        "frame": 8,
+        "seed": 24850,
+        "updates": 659
+      },
+      {
+        "frame": 2,
+        "seed": 24850,
+        "updates": 848
+      },
+      {
+        "frame": 7,
+        "seed": 24850,
+        "updates": 6
+      },
+      {
+        "frame": 3,
+        "seed": 24850,
+        "updates": 16592
+      },
+      {
+        "frame": 4,
+        "seed": 24850,
+        "updates": 300
+      },
+      {
+        "frame": 6,
+        "seed": 24850,
+        "updates": 600
+      },
+      {
+        "frame": 1,
+        "seed": 24850,
+        "updates": 10559
+      }
+    ],
+    "targetUpdates": 16592,
+    "namedTouches": 1,
+    "stop": "total ticks 30000 frame 1 tick 10559",
+    "traceSha256": "1165a0acf1e4a33deda302e133a8318f7dbf9bb9235faa8eb2a0aaadd04d77d1",
+    "drawTraceSha256": "ccab78dfa3aa56082dfbd947dd5b650f5729e19861aa22bf9d61d4a6865f2010"
+  },
+  "model": {
+    "traceSha256": "2714684699f05861e6746df167e462cd7592084231ea22f014c6a8b96cfe042e",
+    "terminal": {
+      "frame": 16602,
+      "draws": 7623,
+      "state": 7703
+    },
+    "death": {
+      "reason": "puppet",
+      "detail": "The Puppet completed the sourced 40-frame marker-123 attack",
+      "frame": 16602,
+      "t": 276.7
+    },
+    "won": false
+  },
+  "alignment": "Harness tick 0 is after its first event update, compared to model frame 1. Offset 0 is also retained to expose an initialization boundary discrepancy.",
+  "alignments": [
+    {
+      "modelFrameOffset": 0,
+      "compared": 16592,
+      "firstMismatch": {
+        "tick": 0,
+        "modelFrame": 0,
+        "rebuilt": {
+          "draws": 2,
+          "state": 30314
+        },
+        "model": {
+          "draws": 0,
+          "state": 24850
+        }
+      }
+    },
+    {
+      "modelFrameOffset": 1,
+      "compared": 16592,
+      "firstMismatch": null
+    }
+  ],
+  "limitations": [
+    "Host reimplementation; no device claim or promotion.",
+    "Matching draws is necessary but insufficient for event/state equivalence.",
+    "Touch triggers are polled once per update; Android immediate event ordering remains unverified.",
+    "Both traces must describe the same night, seed and input; the operator must retain input/save provenance."
+  ],
+  "provenance": {
+    "toolSha256": "44e507d753ade2da13825a3400aa75c38bb20edaf7540fd410b40561895d5302",
+    "modelTraceToolSha256": "68e7a211a47ae8f0bc2ec0719d05b77f1e56bee01c17a6a447e1e4e529ac320a",
+    "patchSha256": "0f5c2a25b878df2152925e1f7a890a0e92791cf1171321764cd35fa019b05c62",
+    "configSha256": "066acc66c9d19a65d891434769b9e5619a74a5ae560eec0a33c860ff14943cbb",
+    "binarySha256": "fe1cb39dcc4173e2d951903b60f97e47bc4553f21f29e53eb2cc119ec91042b6",
+    "inputSha256": "927f07b7ff64054893034c1cb32555c30a73b3c5463872f0af36e7f6833ff819",
+    "saveSha256": "0f37873becee49c3c53624e7820edf20bae3f907fe4cd0bd8c5f01923f2d84a0"
+  },
+  "evidenceId": "recompile-draw-6f4c9e6980581dac"
+}

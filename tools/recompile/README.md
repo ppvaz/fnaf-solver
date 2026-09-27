@@ -23,6 +23,8 @@ directory (`/private/tmp/fnaf2-recompile.*` on the dev machine).
 | `model-draw-trace.mjs` | The simulator's `Random(N)` draws frame by frame (draws so far, LCG state), in the shape the harness traces: two runs of one night and seed that spend the same draws every frame read the same stream, and the first frame where the counts part is where to look. MODEL_ONLY. |
 | `compare-draw-trace.mjs` | Reads an external harness trace and emits a hash-bound, content-free comparison result. `MATCHED_PREFIX` never means full event/state equivalence. |
 | `sourced-model-options.json` | Explicit diagnostic variant enabling the model's existing sourced flags. It does not change core defaults or establish fidelity. |
+| `sourced-rebuild-model-options.json` | The origin set plus `sourcedFootstepDraws`, `footstepCamMarkers`, `sourcedBoxCountdown`, `sourcedPuppetMoveOrder` and `sourcedHourTable`: the options under which the model matches the rebuilt no-input Nights 1-5 up to each night's terminal loop. Diagnostic; defaults unchanged. |
+| `fixtures/night{2,3,4,5}-before.ini`, `fixtures/continue.input` | Saves holding only `level=N` (Continue loads `max(1, min(5, level))`) and the Continue tap, through its 16 x 16 touch zone at [64,528,80,544]. No game assets. |
 | `sourced-origin-model-options.json` | The same sourced flags plus the frame-time hook at 60 fps (`frameMs` 50/3, `frameValue5` 1) and `sourcedEveryOrigin`: every countdown loads on the loop it is first reached. `model-draw-trace.mjs` turns the two hook constants into per-frame functions. Diagnostic; defaults unchanged. |
 | `run-harness.sh` | Container wrapper with GL readiness checking and a process deadline that escalates to kill. Run from the external gamesrc directory. |
 | `test-mobile-parser.py`, `test-compare-draw-trace.mjs` | Synthetic parser and result-classification regressions; FIXTURE only. |
@@ -375,6 +377,71 @@ own image box against `hear footsteps`; the rebuild gives every character a
 The phone outranks the rebuild: next, read the character sprites' image sizes
 and hotspots from the CCN image bank, then decide per character. No
 equivalence claim; MODEL_ONLY with `rebuilt-runtime` fidelity throughout.
+
+**The whole office visit (later still).** Three more one-loop and geometry
+differences, each read from the source before it was encoded, each a
+default-off option (`packages/core/test/rebuild-order.test.js`):
+
+- `footstepCamMarkers`: the CCN puts CAM 01-04 under `hear footsteps` -- its
+  264 x 151 image is opaque at every pixel, every character is an opaque
+  24 x 24 fine-collision sprite (hotspots paired Toy/Withered), and
+  `CSpriteGen.spriteCol_TestSprite_All` tests hidden sprites (`SF_RAMBO`, no
+  hidden check). This restores `fcbbd45`'s set, against full-06's audio
+  reading (`8a7288b`); that disagreement stays open, so the knob is off.
+- `sourcedBoxCountdown`: g653-g660 drain through a gated Every 50 ms after the
+  packed test (value 1 == 0, value 0 > 0), so the box empties 3000 loops after
+  the first 2 AM reach, in whole units; a wind sets value 1 to 10 and g661
+  drains it after the drain, so draining resumes ten loops after a wind. The
+  rebuild spent g494/g495 a loop after the model.
+- `sourcedPuppetMoveOrder`: g496 arms the Puppet's hop and g403-g411, earlier
+  in the sheet, carry it out on the next loop; the model moved him the same
+  frame. The rebuild's dump shows value 0 = 2 into tick 15841 and the Puppet in
+  the office into tick 15842; g623's gated Every 1000 loads on arrival.
+
+With all of them (`sourced-rebuild-model-options.json`), the model spends the
+same draws with the same LCG state as the rebuilt runtime on **every one of the
+16,592 office updates** of seed 24850's no-input Night 1, to the Puppet's
+attack (`night1-rebuild-options-20260927.json`,
+`recompile-draw-9ae2e0e8dbffdefb`). The comparator says INCOMPLETE because the
+rebuild leaves the office 30 updates after g574 starts the attack (the
+jumpscare, then the static frame) while the model counts its kill 40 frames
+after it (`INSIDE_ATTACK_FRAMES`, which config.js says was cited to a different
+mechanic): no rebuilt update is unmatched. Scope: one seed, one night, no
+gameplay input, draws and LCG state only, `rebuilt-runtime` fidelity; not a
+phone claim and not a default change.
+
+**Nights 1-5 (still later).** `sourcedHourTable` runs hour 0's rows on the
+first loop at g673-g684 (after g822, before g811) and adds the Golden Freddy
+roll the dump makes there on nights 3 (g677, Random(1000)), 4 (g679) and 5
+(g681, Random(100)); the rebuild spent it on office tick 0 of nights 4 and 5.
+With it, seed 24850's no-input nights, reached through Continue from `level=N`
+saves, match on every office update before the loop that ends the night:
+
+| night | rebuilt office updates | result | evidence |
+|---|---|---|---|
+| 1 | 16,592 | every update matched; the model's kill (+40) outlasts the rebuild's exit (+30) | `night1-rebuild-options-20260927.json` |
+| 2 | 5,852 | matched to the jump loop (tick 5851) | `night2-rebuild-options-20260927.json` |
+| 3 | 3,023 | matched to the model's Foxy kill frame (tick 3000) | `night3-rebuild-options-20260927.json` |
+| 4 | 2,423 | matched to the model's Foxy kill frame (tick 2400) | `night4-rebuild-options-20260927.json` |
+| 5 | 2,552 | every update matched | `night5-rebuild-options-20260927.json` |
+
+`MATCHED_TO_TERMINAL_LOOP` is the comparator's name for a first mismatch that
+falls on the model's death frame (the model's kill returns before the rest of
+its frame) or on the last update of a visit the rebuild left (the jump to the
+static frame); a harness stop at the tick limit never qualifies
+(`test-compare-draw-trace.mjs`). What the loop that ends a night draws in the
+runtime is not modelled. One Night 3 run was killed by the harness deadline at
+office tick 353 while four runs shared the Docker VM; the same replay alone ran
+to completion. Scope as above: one seed, no gameplay input, draws and LCG
+state only. Nights 6 and 7 need their own navigation (`beatgame`, the
+Custom Night dials).
+
+**Title touch zones.** The mobile port's buttons are `olivier_btnTouchzone`
+Actives: in the rebuild only New Game's zone is sized to its button (400 x 64);
+the others stay 16 x 16 at the button's left end, and each zone exists nine
+times. The port sizes and places them in object loops; the 20
+`OnObjectLoop (..., param68)` conditions carry the packed variable test the
+converter still reduces to its first value. That is the next converter fix.
 
 **Play mode.** `CHOWDREN_PLAY=1` without the harness mirrors the real left
 mouse button into Multiple Touch slot 0 (the platform has already delivered it
