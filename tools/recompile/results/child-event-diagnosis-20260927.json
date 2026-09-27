@@ -1,0 +1,484 @@
+{
+  "schema": "recompile-child-diagnosis-v1",
+  "claimLevel": "MODEL_ONLY",
+  "fidelity": "rebuilt-runtime",
+  "status": "SOURCE_SUPPORTED_CORRECTION",
+  "question": "What source event path causes the first measured RNG disagreement?",
+  "originalComparisonCommit": "9db9aed",
+  "childOnlyCheckpoint": "2bf1c66",
+  "before": {
+    "rng": {
+      "draws": [
+        {
+          "generatedEvent": 735,
+          "range": 100,
+          "loop": 0,
+          "draws": 0,
+          "state": 24850
+        },
+        {
+          "generatedEvent": 53,
+          "range": 50,
+          "loop": 6,
+          "draws": 2,
+          "state": 30314
+        },
+        {
+          "generatedEvent": 157,
+          "range": 31,
+          "loop": 6,
+          "draws": 3,
+          "state": 10695
+        }
+      ],
+      "imageChecks": [
+        {
+          "loop": 0,
+          "viewing": 1,
+          "guard": 0
+        },
+        {
+          "loop": 1,
+          "viewing": 1,
+          "guard": 0
+        }
+      ]
+    },
+    "viewing": {
+      "initial": 0,
+      "writes": [
+        {
+          "loop": 0,
+          "value": 9
+        },
+        {
+          "loop": 0,
+          "value": 1
+        },
+        {
+          "loop": 1,
+          "value": 9
+        },
+        {
+          "loop": 1,
+          "value": 1
+        }
+      ]
+    }
+  },
+  "diagnosis": {
+    "defaultTick6": "Generated events53_3 and157_3 each fire Every100ms and draw ranges50 and31. Default model disables these cosmetic draws; do not tune defaults.",
+    "sourcedInitialization": "Generated event724_3 Random1000 is gated by viewing==0. Independently scheduled child functions event_func_244 and event_func_275 change viewing0→9→1 without their parent gates, suppressing that draw. Start-of-frame event735_3 Random100 still executes.",
+    "probePositions": "event735 logged before its draw; event53/event157 logged immediately after their draw (optimized line breakpoints). IMAGE logs at event724 entry. Values are not all pre-draw counts.",
+    "childEncoding": {
+      "parentFlag": "0x40",
+      "childFlag": "0x8000",
+      "parentSystemAction": 43,
+      "endSystemCondition": -42,
+      "restoreSystemCondition": -43,
+      "objectScopeParameter": 69
+    },
+    "sourceMethods": [
+      "ACT_EXECUTECHILDEVENTS.execute",
+      "CEventProgram.executeChildEvents",
+      "CND_STARTCHILDEVENT.eva2",
+      "CEventProgram.evt_SaveSelectedObjects",
+      "CEventProgram.evt_RestoreSelectedObjects"
+    ],
+    "selectionRule": "After successful parent actions, copy the enclosing snapshot and replace explicitly selected types. Each child restores only its parameter69 types. Do not re-evaluate parent predicates or share child filtering with siblings.",
+    "exposedNavigationBoundary": {
+      "frame": 1,
+      "scheduleSourceGroup": 78,
+      "delayMs": 200,
+      "onTimerSourceGroup": 79,
+      "childSourceGroups": [
+        80,
+        81,
+        82,
+        83,
+        84,
+        85
+      ],
+      "explanation": "The old flattened title transition bypassed an unsupported timer parent. Correct child gating exposed it; the child-only4000-update control remained in title."
+    },
+    "timerSourceMethods": [
+      "ACT_EVENTAFTER.execute",
+      "CND_ONEVENT.eva1",
+      "CEventProgram.handle_TimerEvents",
+      "CRun.f_GameLoop"
+    ],
+    "timerRule": "Append integer-millisecond deadline rhTimer+delay; dispatch due one-shots in insertion order before ordinary rows, including callbacks appended during dispatch; ASCII names compare case-insensitively.",
+    "nextTest": "The sourced variant now first differs at office tick5/modelFrame6, when the model spends the Every100ms draws one update before the rebuilt runtime. Check the sourced model first-evaluation clock against CND_EVERY2; do not change production defaults to fit this trace."
+  },
+  "childCensus": {
+    "frames": [
+      {
+        "frame": 0,
+        "unclosedDepth": 0,
+        "parentLists": 8,
+        "childRows": 28,
+        "listEnds": 8
+      },
+      {
+        "frame": 1,
+        "unclosedDepth": 0,
+        "parentLists": 7,
+        "childRows": 18,
+        "listEnds": 7
+      },
+      {
+        "frame": 2,
+        "unclosedDepth": 0,
+        "parentLists": 1,
+        "childRows": 2,
+        "listEnds": 1
+      },
+      {
+        "frame": 3,
+        "unclosedDepth": 0,
+        "parentLists": 33,
+        "childRows": 71,
+        "listEnds": 33
+      },
+      {
+        "frame": 4,
+        "unclosedDepth": 0,
+        "parentLists": 1,
+        "childRows": 2,
+        "listEnds": 1
+      },
+      {
+        "frame": 5,
+        "unclosedDepth": 0,
+        "parentLists": 2,
+        "childRows": 7,
+        "listEnds": 2
+      },
+      {
+        "frame": 6,
+        "unclosedDepth": 0,
+        "parentLists": 2,
+        "childRows": 4,
+        "listEnds": 2
+      },
+      {
+        "frame": 7,
+        "unclosedDepth": 0,
+        "parentLists": 1,
+        "childRows": 2,
+        "listEnds": 1
+      },
+      {
+        "frame": 8,
+        "unclosedDepth": 0,
+        "parentLists": 10,
+        "childRows": 19,
+        "listEnds": 10
+      },
+      {
+        "frame": 9,
+        "unclosedDepth": 0,
+        "parentLists": 10,
+        "childRows": 19,
+        "listEnds": 10
+      },
+      {
+        "frame": 10,
+        "unclosedDepth": 0,
+        "parentLists": 10,
+        "childRows": 19,
+        "listEnds": 10
+      },
+      {
+        "frame": 11,
+        "unclosedDepth": 0,
+        "parentLists": 10,
+        "childRows": 19,
+        "listEnds": 10
+      },
+      {
+        "frame": 12,
+        "unclosedDepth": 0,
+        "parentLists": 8,
+        "childRows": 11,
+        "listEnds": 8
+      },
+      {
+        "frame": 13,
+        "unclosedDepth": 0,
+        "parentLists": 2,
+        "childRows": 4,
+        "listEnds": 2
+      },
+      {
+        "frame": 14,
+        "unclosedDepth": 0,
+        "parentLists": 10,
+        "childRows": 19,
+        "listEnds": 10
+      },
+      {
+        "frame": 15,
+        "unclosedDepth": 0,
+        "parentLists": 1,
+        "childRows": 2,
+        "listEnds": 1
+      },
+      {
+        "frame": 16,
+        "unclosedDepth": 0,
+        "parentLists": 1,
+        "childRows": 2,
+        "listEnds": 1
+      },
+      {
+        "frame": 17,
+        "unclosedDepth": 0,
+        "parentLists": 1,
+        "childRows": 2,
+        "listEnds": 1
+      },
+      {
+        "frame": 18,
+        "unclosedDepth": 0,
+        "parentLists": 1,
+        "childRows": 2,
+        "listEnds": 1
+      },
+      {
+        "frame": 19,
+        "unclosedDepth": 0,
+        "parentLists": 12,
+        "childRows": 24,
+        "listEnds": 12
+      },
+      {
+        "frame": 20,
+        "unclosedDepth": 0,
+        "parentLists": 1,
+        "childRows": 2,
+        "listEnds": 1
+      },
+      {
+        "frame": 21,
+        "unclosedDepth": 0,
+        "parentLists": 1,
+        "childRows": 2,
+        "listEnds": 1
+      },
+      {
+        "frame": 22,
+        "unclosedDepth": 0,
+        "parentLists": 10,
+        "childRows": 19,
+        "listEnds": 10
+      },
+      {
+        "frame": 23,
+        "unclosedDepth": 0,
+        "parentLists": 12,
+        "childRows": 24,
+        "listEnds": 12
+      },
+      {
+        "frame": 24,
+        "unclosedDepth": 0,
+        "parentLists": 12,
+        "childRows": 24,
+        "listEnds": 12
+      },
+      {
+        "frame": 25,
+        "unclosedDepth": 0,
+        "parentLists": 4,
+        "childRows": 8,
+        "listEnds": 4
+      },
+      {
+        "frame": 26,
+        "unclosedDepth": 0,
+        "parentLists": 1,
+        "childRows": 2,
+        "listEnds": 1
+      },
+      {
+        "frame": 27,
+        "unclosedDepth": 0,
+        "parentLists": 11,
+        "childRows": 35,
+        "listEnds": 11
+      },
+      {
+        "frame": 28,
+        "unclosedDepth": 0,
+        "parentLists": 6,
+        "childRows": 9,
+        "listEnds": 6
+      }
+    ],
+    "unsupportedTriggeredChildren": 0
+  },
+  "childOnlyNegative": {
+    "evidenceId": "recompile-draw-bd31edf1fb722abf",
+    "status": "TARGET_NOT_REACHED",
+    "sha256": "c203c6a84bcd2ff23c2f56aaf2917103ae05f66356f4a7963790edc00180b599",
+    "targetUpdates": 0,
+    "alignments": [
+      {
+        "modelFrameOffset": 0,
+        "compared": 0,
+        "firstMismatch": null
+      },
+      {
+        "modelFrameOffset": 1,
+        "compared": 0,
+        "firstMismatch": null
+      }
+    ]
+  },
+  "after": {
+    "default": {
+      "evidenceId": "recompile-draw-0a3c84110b09f2bf",
+      "status": "DIVERGENT",
+      "sha256": "83ff41c0b1df089c31a6543406f9717508684a8e3110d80e4905692d93f21aab",
+      "targetUpdates": 64,
+      "alignments": [
+        {
+          "modelFrameOffset": 0,
+          "compared": 64,
+          "firstMismatch": {
+            "tick": 0,
+            "modelFrame": 0,
+            "rebuilt": {
+              "draws": 2,
+              "state": 30314
+            },
+            "model": {
+              "draws": 1,
+              "state": 63455
+            }
+          }
+        },
+        {
+          "modelFrameOffset": 1,
+          "compared": 64,
+          "firstMismatch": {
+            "tick": 0,
+            "modelFrame": 1,
+            "rebuilt": {
+              "draws": 2,
+              "state": 30314
+            },
+            "model": {
+              "draws": 1,
+              "state": 63455
+            }
+          }
+        }
+      ]
+    },
+    "sourced": {
+      "evidenceId": "recompile-draw-ffeb7b48d8144073",
+      "status": "DIVERGENT",
+      "sha256": "bd668141d1465bdb22d3c0afd3b60290372318e08a35fdf22540324717f36758",
+      "targetUpdates": 64,
+      "alignments": [
+        {
+          "modelFrameOffset": 0,
+          "compared": 64,
+          "firstMismatch": {
+            "tick": 0,
+            "modelFrame": 0,
+            "rebuilt": {
+              "draws": 2,
+              "state": 30314
+            },
+            "model": {
+              "draws": 0,
+              "state": 24850
+            }
+          }
+        },
+        {
+          "modelFrameOffset": 1,
+          "compared": 64,
+          "firstMismatch": {
+            "tick": 5,
+            "modelFrame": 6,
+            "rebuilt": {
+              "draws": 2,
+              "state": 30314
+            },
+            "model": {
+              "draws": 4,
+              "state": 45890
+            }
+          }
+        }
+      ]
+    },
+    "viewing": {
+      "initial": 0,
+      "writes": [],
+      "final": {
+        "value": 0,
+        "loop": 63
+      },
+      "imageChecks": [
+        {
+          "loop": 0,
+          "viewing": 0,
+          "guard": 0
+        },
+        {
+          "loop": 1,
+          "viewing": 0,
+          "guard": 2
+        }
+      ]
+    }
+  },
+  "provenance": {
+    "externalFiles": {
+      "input/application.ccn": "835655e698142299eda5bd6a5ac2c899bf2199f2a6ad51d7779589f2bb4c0b23",
+      "dex/classes.dex": "ca5c98a4d6ceefc3e0efe542695762263b87e73ca7e3956e3c688177d4c0d8a3",
+      "runs/first-rng-v3-gdb.log": "0de36ebdfed9156697ab78b34dd42e7b47c547e1dbdba715b75bf4726cd0a594",
+      "runs/viewing-write-v2-gdb.log": "787ac72c04fac327441f627fe1cb04d980ff180fe30ad61ff9865b9495749729",
+      "runs/child-shapes.log": "e36312e13b7fca56f11a45a05c28cf06d1faf330b63ac57628ea4b2061f04ab3",
+      "runs/child-runtime-dex.log": "3f64e063404bee07d415fc42412024bb9e9e77a4efd367eaff4fe1a03f08ce9b",
+      "runs/title-timer-boundary.log": "f8bb05afa1a61bd8359a90c7682010a18af74d713a59e6ac7ff5737ab6c56503",
+      "runs/timer-runtime-dex.log": "e03704f00efa6ab6540fd3eda9ac57e21ef0b8176489a5f380846eeedb6dbd91",
+      "runs/runloop-timer-dex.log": "b41a1a27261be375de09fc469a34343470dad86e12f1c2e5ec4ca78dbbd59d00",
+      "convert-child-resume.log": "927a8ffa4f458a17858c82394661f4a383ac3303838814f10118496a9aa373ea",
+      "build-child-resume.log": "80bdc762d4e33e3969f3e270f5a706e246e499ab2cc940d13895933fc967c952",
+      "convert-child-timer-v2.log": "610e9bf14595186b5602380d9178fbafa550a0eff0acfed4a61331cc0699ffa4",
+      "build-child-timer-v2.log": "89717c43ff25f0a2be57e71955774c01ebb347b9a02258a53e14cf2fff2a25ce",
+      "runs/child-office-64.trace": "6e82ac441d66026b7304615bb014aabc22e334e77e54d88ed23fdb9d61492dad",
+      "runs/child-office-64.log": "59731032418d77628eb3d528a038fef9dc11f6d6d60b0993ae225ddef5a324bc",
+      "runs/child-timer-office-64.trace": "1e2245dbed3b6eed12c104211402d001cbbff72a78e7a9af7cb2f94937eb4c44",
+      "runs/child-timer-office-64.log": "6bc71cf8071305e7e0ce2788f0e97d728513143771938e00c23e3561a78b5bfd",
+      "runs/child-timer-viewing-gdb.log": "4e3e86e08a124e8529aa01fbea2d8020a849577b463833142f8dd53287c79d1b",
+      "runs/child-timer-viewing.trace": "42648d92b92f5a324b21ef285696abbd83fd8364407dde15a04084c6765faf4a",
+      "runs/child-contract-test.log": "a3f8d57667ea89c6c673bfd18090d663b4c83a0d8b4e405ea469f1fd6790d01e"
+    },
+    "patchSha256": "a7babcc574ecbb7db7290e3bbc5091645d52a381a9ed7b432031127f7c5f5d4d",
+    "fixtureSha256": "e595301925fef6cf1b881308c378d85018a7d8b261efa6cf570a6546a6c07558",
+    "navigationFixtureSha256": "927f07b7ff64054893034c1cb32555c30a73b3c5463872f0af36e7f6833ff819",
+    "saveFixtureSha256": "0f37873becee49c3c53624e7820edf20bae3f907fe4cd0bd8c5f01923f2d84a0",
+    "probes": {
+      "child-before-rng.gdb": "75b9617dafefe896cf5e714516b6009c6f7f99e1d55d72565d9395800b5a26f2",
+      "child-before-viewing.gdb": "2ad6fb4f8f068f38344b930f0f2bca99ea5c03011602e83d2858a91f26ac44a6",
+      "child-timer-viewing.gdb": "7f2e6c6ff1065fe34bf89c53aaf5489d0b8936cc90f6a821b25550435db8b8b4"
+    },
+    "testSha256": "6b6a8846f1dbee9d671d260858253460bb5e9fc855f7c5e7523f1c3f05baafa8",
+    "toolSha256": "b04db0a98d92993f0729df8f35c8e914d6280dd6a28acdf0884a5418caa48216"
+  },
+  "limitations": [
+    "Host reconstruction and synthetic fixtures, not device evidence or full equivalence.",
+    "Old18k divergent records are preserved; their apparent navigation success bypassed unsupported parents.",
+    "Child-triggered rows, static child scopes, repeat timers and dynamic/non-ASCII timer names are not established by this correction.",
+    "Deleted-object selection override, qualifier/foreach semantics, immediate touch dispatch, unsupported extensions and whole-state equivalence remain open.",
+    "The timer uses the rebuilt frame clock; this does not establish Android wall-clock timing equivalence."
+  ],
+  "evidenceId": "recompile-child-325040982abf3323"
+}

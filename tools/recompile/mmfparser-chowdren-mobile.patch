@@ -35,17 +35,39 @@ index 313b2f7..a719b12 100644
          if (index == 0) {
              it.select_single();
 diff --git a/Chowdren/base/frame.h b/Chowdren/base/frame.h
-index 18d207b..166b9e4 100644
+index 18d207b..daea4fd 100644
 --- a/Chowdren/base/frame.h
 +++ b/Chowdren/base/frame.h
-@@ -209,6 +209,7 @@ public:
+@@ -13,6 +13,7 @@
+ #include "color.h"
+ #include "instancemap.h"
+ #include "bitarray.h"
++#include "timer_events.h"
+ 
+ #ifdef CHOWDREN_PASTE_CACHE
+ #include "fbo.h"
+@@ -189,6 +190,7 @@ public:
+     double frame_time;
+     int timer_base;
+     float timer_mul;
++    TimerEvents timer_events;
+ 
+ #ifdef CHOWDREN_USE_BACKMAGIC
+     FlatObjectList back_instances[MAX_BACK_ID];
+@@ -209,8 +211,13 @@ public:
      FrameObject * add_object(FrameObject * object, Layer * layer);
      void add_background_object(FrameObject * object, int layer_index);
      void set_object_layer(FrameObject * object, int new_layer);
 +    int get_frame() const { return index; }
      int get_loop_index(const std::string & name);
      void set_timer(double value);
++    long long event_timer_ms() const
++    { return (long long)(frame_time * 1000.0 + 0.0000001); }
++    void schedule_event(int delay, int callback)
++    { timer_events.schedule(event_timer_ms(), delay, callback); }
      void set_lives(int lives);
+     void set_score(int score);
+     void set_display_center(int x = -1, int y = -1);
 diff --git a/Chowdren/base/frameobject.h b/Chowdren/base/frameobject.h
 index 950da8d..eb20377 100644
 --- a/Chowdren/base/frameobject.h
@@ -1114,7 +1136,7 @@ index 1943544..af89498 100644
              print 'meth:', self.method
              raise e
 diff --git a/Chowdren/chowdren/writers/events/system.py b/Chowdren/chowdren/writers/events/system.py
-index 48623cf..b30b5e2 100644
+index 48623cf..313f9b9 100644
 --- a/Chowdren/chowdren/writers/events/system.py
 +++ b/Chowdren/chowdren/writers/events/system.py
 @@ -2,7 +2,8 @@ from mmfparser.data.chunkloaders.objectinfo import SEMITRANSPARENT_EFFECT
@@ -1127,7 +1149,38 @@ index 48623cf..b30b5e2 100644
  from chowdren.common import (get_method_name, to_c, make_color,
                               parse_direction, get_flag_direction,
                               TEMPORARY_GROUP_ID, is_qualifier)
-@@ -292,8 +293,7 @@ class SystemObject(ObjectWriter):
+@@ -41,10 +42,30 @@ class SystemObject(ObjectWriter):
+         self.foreach_names = {}
+ 
+     def write_frame(self, writer):
++        self.prepare_timers()
+         self.write_group_activated(writer)
+         self.write_loops(writer)
+         self.write_foreach(writer)
+         self.write_collisions(writer)
++        self.write_timers(writer)
++
++    def prepare_timers(self):
++        converter = self.converter
++        by_name = self.timer_groups = defaultdict(list)
++        for group in converter.generated_groups.pop('OnTimerEvent', []):
++            name = static_timer_name(converter, group.conditions[0].data.items[0])
++            by_name[name].append(group)
++        self.timer_event_ids = dict((name, next(converter.event_callback_ids))
++                                   for name in sorted(by_name))
++
++    def write_timers(self, writer):
++        converter = self.converter
++        by_name = self.timer_groups
++        for name in sorted(by_name):
++            callback = self.timer_event_ids[name]
++            method = 'timer_event_%s' % callback
++            method = converter.write_generated(method, writer, by_name[name])
++            converter.event_callbacks[callback] = method
+ 
+     def write_start(self, writer):
+         for name in self.loops.keys():
+@@ -292,8 +313,7 @@ class SystemObject(ObjectWriter):
          loop_objects = {}
          for loop in self.get_conditions('OnObjectLoop'):
              parameter = loop.conditions[0].data.items[0]
@@ -1137,7 +1190,7 @@ index 48623cf..b30b5e2 100644
              loop_objects[name] = loop.conditions[0].get_object()
              loops[name].append(loop)
  
-@@ -320,8 +320,7 @@ class SystemObject(ObjectWriter):
+@@ -320,8 +340,7 @@ class SystemObject(ObjectWriter):
  
          for loop_group in self.get_conditions('OnLoop'):
              parameter = loop_group.conditions[0].data.items[0]
@@ -1147,7 +1200,7 @@ index 48623cf..b30b5e2 100644
              if name is None:
                  # try and get config to give us a loop name
                  name = self.converter.config.get_loop_name(parameter)
-@@ -490,6 +489,18 @@ class IsOverlapping(CollisionCondition):
+@@ -490,6 +509,18 @@ class IsOverlapping(CollisionCondition):
          other_info = (data.items[0].loader.objectInfo,
                        data.items[0].loader.objectType)
          converter = self.converter
@@ -1166,7 +1219,7 @@ index 48623cf..b30b5e2 100644
          selected_name = converter.create_list(object_info, writer)
          if negated:
              other_selected = converter.get_object_list(other_info,
-@@ -548,6 +559,52 @@ class Always(ConditionWriter):
+@@ -548,6 +579,68 @@ class Always(ConditionWriter):
      def write(self, writer):
          pass
  
@@ -1216,10 +1269,26 @@ index 48623cf..b30b5e2 100644
 +            converter.set_list(obj, name)
 +            self.group.force_multiple.add(obj)
 +
++def static_timer_name(converter, parameter):
++    value = converter.convert_static_expression(parameter.loader.items)
++    if value is None or any(ord(char) > 127 for char in value):
++        raise NotImplementedError('dynamic/non-ASCII timer event name')
++    return value.lower()
++
++class ScheduleEvent(ActionWriter):
++    custom = True
++
++    def write(self, writer):
++        name = static_timer_name(self.converter, self.parameters[1])
++        callback = self.converter.system_object.timer_event_ids.get(name)
++        if callback is None:
++            return # No OnTimerEvent listener: the queued event has no effects.
++        writer.putlnc('schedule_event(int(%s), %s);', self.convert_index(0), callback)
++
  class MouseClicked(ConditionWriter):
      is_always = True
      pre_event = True
-@@ -659,15 +716,23 @@ class TimerEvery(ConditionWriter):
+@@ -659,15 +752,23 @@ class TimerEvery(ConditionWriter):
      custom = True
  
      def write(self, writer):
@@ -1248,7 +1317,7 @@ index 48623cf..b30b5e2 100644
  
  class AnimationFinished(ConditionWriter):
      is_always = True
-@@ -751,8 +816,7 @@ class OnceCondition(ConditionWriter):
+@@ -751,8 +852,7 @@ class OnceCondition(ConditionWriter):
  
  class GroupActivated(ConditionWriter):
      def write(self, writer):
@@ -1258,7 +1327,7 @@ index 48623cf..b30b5e2 100644
          writer.put(self.converter.get_container_check(container))
  
  class PickRandom(ConditionWriter):
-@@ -1120,8 +1184,14 @@ class CreateBase(ActionWriter):
+@@ -1120,8 +1220,14 @@ class CreateBase(ActionWriter):
  
          if object_info != parent_info and (not has_selection and
                                             not select_single):
@@ -1275,7 +1344,7 @@ index 48623cf..b30b5e2 100644
  
          writer.putlnc('// select single: %s %s %s', select_single,
                        multi, has_selection)
-@@ -1191,6 +1261,11 @@ class CreateBase(ActionWriter):
+@@ -1191,6 +1297,11 @@ class CreateBase(ActionWriter):
                  writer.indent()
                  writer.putlnc('%s = new_obj;', single_name)
                  writer.dedent()
@@ -1287,7 +1356,7 @@ index 48623cf..b30b5e2 100644
              else:
                  writer.putlnc('%s.add_back();', list_name)
              if is_shoot:
-@@ -1425,9 +1500,7 @@ class Foreach(ActionWriter):
+@@ -1425,9 +1536,7 @@ class Foreach(ActionWriter):
      custom = True
  
      def get_name(self):
@@ -1298,7 +1367,7 @@ index 48623cf..b30b5e2 100644
  
      def write(self, writer):
          self.reorder = self.converter.config.reorder_foreach()
-@@ -1461,14 +1534,26 @@ class Foreach(ActionWriter):
+@@ -1461,14 +1570,26 @@ class Foreach(ActionWriter):
              writer.putlnc('%s();', func_call)
          writer.end_brace()
  
@@ -1327,7 +1396,7 @@ index 48623cf..b30b5e2 100644
          if name is not None:
              return name
          return self.converter.config.get_dynamic_loop_call_name(parameter)
-@@ -1558,8 +1643,11 @@ class StartLoop(ActionWriter):
+@@ -1558,8 +1679,11 @@ class StartLoop(ActionWriter):
                  times = exp.loader.value
                  if times == -1:
                      comparison = 'true'
@@ -1341,7 +1410,7 @@ index 48623cf..b30b5e2 100644
          if times is None:
              times = self.convert_index(1)
          is_infinite = comparison is not None
-@@ -1622,15 +1710,13 @@ class DeactivateGroup(ActionWriter):
+@@ -1622,15 +1746,13 @@ class DeactivateGroup(ActionWriter):
  
      def get_deactivated_container(self):
          if self.deactivated_container is None:
@@ -1359,7 +1428,7 @@ index 48623cf..b30b5e2 100644
          if name is None:
              name = self.converter.convert_parameter(parameter)
              print 'Could not convert stop loop name for', name
-@@ -1640,8 +1726,7 @@ class StopLoop(ActionWriter):
+@@ -1640,8 +1762,7 @@ class StopLoop(ActionWriter):
  
  class SetLoopIndex(ActionWriter):
      def write(self, writer):
@@ -1369,7 +1438,7 @@ index 48623cf..b30b5e2 100644
          index_name = get_loop_index_name(name)
          value = self.convert_index(1)
          writer.putln('%s = %s;' % (index_name, value))
-@@ -1650,8 +1735,7 @@ class ActivateGroup(ActionWriter):
+@@ -1650,8 +1771,7 @@ class ActivateGroup(ActionWriter):
      custom = True
  
      def write(self, writer):
@@ -1379,7 +1448,7 @@ index 48623cf..b30b5e2 100644
          writer.putlnc('if (!%s) {', container.code_name)
          writer.indent()
          writer.putlnc('%s = true;', container.code_name)
-@@ -1970,9 +2054,13 @@ class GetLoopIndex(ExpressionWriter):
+@@ -1970,9 +2090,13 @@ class GetLoopIndex(ExpressionWriter):
              size = 2
              next_exp = items[converter.item_index + 1]
              if next_exp.getName() != 'String':
@@ -1396,7 +1465,7 @@ index 48623cf..b30b5e2 100644
              else:
                  name = next_exp.loader.value
          converter.item_index += size
-@@ -2055,6 +2143,7 @@ actions = make_table(ActionMethodWriter, {
+@@ -2055,6 +2179,7 @@ actions = make_table(ActionMethodWriter, {
      'CreateObject' : CreateObject,
      'Shoot' : ShootObject,
      'StartLoop' : StartLoop,
@@ -1404,7 +1473,7 @@ index 48623cf..b30b5e2 100644
      'Foreach' : Foreach,
      'StopLoop' : StopLoop,
      'SwapPosition' : SwapPosition,
-@@ -2072,6 +2161,7 @@ actions = make_table(ActionMethodWriter, {
+@@ -2072,6 +2197,7 @@ actions = make_table(ActionMethodWriter, {
      'SetMinimumValue' : 'set_min',
      'SetGlobalString' : 'global_strings->set',
      'SetGlobalValue' : 'global_values->set',
@@ -1412,10 +1481,19 @@ index 48623cf..b30b5e2 100644
      'AddGlobalValue' : 'global_values->add',
      'AddGlobalValueInt' : 'global_values->add',
      'SubtractGlobalValue' : 'global_values->sub',
-@@ -2225,6 +2315,12 @@ conditions = make_table(ConditionMethodWriter, {
+@@ -2160,6 +2286,7 @@ actions = make_table(ActionMethodWriter, {
+     'PauseApplication' : 'pause',
+     'SetRandomSeed' : 'set_random_seed',
+     'SetTimer' : 'set_timer((%s) / 1000.0)',
++    'ScheduleEvent' : ScheduleEvent,
+     'SetLoopIndex' : SetLoopIndex,
+     'IgnoreControls' : IgnoreControls,
+     'RestoreControls' : RestoreControls,
+@@ -2225,6 +2352,13 @@ conditions = make_table(ConditionMethodWriter, {
      'WhileMousePressed' : 'is_mouse_pressed',
      'MouseOnObject' : MouseOnObject,
      'Always' : Always,
++    'OnTimerEvent' : Always,
 +    # build 296: the game gates dev-only branches on RunningAs. The recompiled
 +    # binary is always the application, so treat it as true. A rare
 +    # RunningAs <other-mode> branch would wrongly activate -- fidelity caveat.
@@ -1425,7 +1503,7 @@ index 48623cf..b30b5e2 100644
      'MouseClicked' : MouseClicked,
      'ObjectClicked' : ObjectClicked,
      'PlayerKeyDown' : PlayerKeyDown,
-@@ -2271,7 +2367,7 @@ conditions = make_table(ConditionMethodWriter, {
+@@ -2271,7 +2405,7 @@ conditions = make_table(ConditionMethodWriter, {
      'NearWindowBorder' : 'is_near_border',
      'AnimationFinished' : AnimationFinished,
      'StartOfFrame' : '.loop_count <= 1',
@@ -1434,7 +1512,7 @@ index 48623cf..b30b5e2 100644
      'NumberOfLives' :  make_comparison('manager.lives'),
      'PlayerDied' : PlayerDied,
      'AnyKeyPressed' : AnyKeyPressed,
-@@ -2290,6 +2386,7 @@ conditions = make_table(ConditionMethodWriter, {
+@@ -2290,6 +2424,7 @@ conditions = make_table(ConditionMethodWriter, {
  })
  
  expressions = make_table(ExpressionMethodWriter, {
@@ -2405,10 +2483,26 @@ index 6a95889..1f97781 100644
 \ No newline at end of file
 +__all__ = ['SoundBank']
 diff --git a/Chowdren/base/common.cpp b/Chowdren/base/common.cpp
-index b620427..0fd3c8c 100644
+index b620427..e2d2eb7 100644
 --- a/Chowdren/base/common.cpp
 +++ b/Chowdren/base/common.cpp
-@@ -1727,6 +1727,21 @@ bool FrameObject::mouse_over()
+@@ -1310,6 +1310,7 @@ bool Frame::update()
+         PROFILE_END();
+     }
+ 
++    timer_events.dispatch(event_timer_ms(), this);
+     PROFILE_BEGIN(handle_events);
+     data->handle_events();
+     update_display_center();
+@@ -1489,6 +1490,7 @@ void Frame::reset()
+     off_x = new_off_x = 0;
+     off_y = new_off_y = 0;
+     frame_time = 0.0;
++    timer_events.clear();
+ 
+ #ifdef CHOWDREN_USE_BACKMAGIC
+     for (unsigned int i = 0; i < MAX_BACK_ID; ++i) {
+@@ -1727,6 +1729,21 @@ bool FrameObject::mouse_over()
      return collide(&col1, collision);
  }
  
@@ -3228,4 +3322,41 @@ index 0000000..0caa5f5
 +    if stack:
 +        raise ValueError('unclosed child lists: %r' % stack)
 +    return roots, children
+diff --git a/Chowdren/base/timer_events.h b/Chowdren/base/timer_events.h
+new file mode 100644
+index 0000000..fa2858e
+--- /dev/null
++++ b/Chowdren/base/timer_events.h
+@@ -0,0 +1,31 @@
++#ifndef CHOWDREN_TIMER_EVENTS_H
++#define CHOWDREN_TIMER_EVENTS_H
++#include <list>
++
++// ACT_EVENTAFTER: append a one-shot at rhTimer + delay (integer milliseconds).
++// handle_TimerEvents walks insertion order, including newly appended entries,
++// before the ordinary event list. Repeat timers are not implemented here.
++class TimerEvents
++{
++    struct Entry {
++        long long deadline;
++        int callback;
++        Entry(long long when, int id) : deadline(when), callback(id) {}
++    };
++    std::list<Entry> entries;
++public:
++    void clear() { entries.clear(); }
++    void schedule(long long now, int delay, int callback)
++    { entries.push_back(Entry(now + delay, callback)); }
++
++    template <class Owner> void dispatch(long long now, Owner * owner)
++    {
++        std::list<Entry>::iterator it = entries.begin();
++        while (it != entries.end()) {
++            if (now < it->deadline) { ++it; continue; }
++            owner->event_callback(it->callback);
++            it = entries.erase(it);
++        }
++    }
++};
++#endif
  

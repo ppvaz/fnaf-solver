@@ -1,0 +1,6 @@
+# Host-only coordinates measured from touch-state-244.log: Yes touch zone
+# is [64,608,80,624] although the visual button is [64,584,152,648].
+1 200 downobj 0 btnNewGame.Active
+1 203 up 0
+1 240 down 0 72 616
+1 243 up 0

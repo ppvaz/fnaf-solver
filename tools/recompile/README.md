@@ -25,6 +25,10 @@ directory (`/private/tmp/fnaf2-recompile.*` on the dev machine).
 | `sourced-model-options.json` | Explicit diagnostic variant enabling the model's existing sourced flags. It does not change core defaults or establish fidelity. |
 | `run-harness.sh` | Container wrapper with GL readiness checking and a process deadline that escalates to kill. Run from the external gamesrc directory. |
 | `test-mobile-parser.py`, `test-compare-draw-trace.mjs` | Synthetic parser and result-classification regressions; FIXTURE only. |
+| `test-child-events.py`, `fixtures/child-events.cpp` | Emit and compile synthetic nested events with the patched converter; exercise parent gating, nested/sibling selections, and one-shot timer dispatch. FIXTURE only; Python2.7 and a C++ compiler required. |
+| `diagnose-child-events.mjs`, `test-child-diagnosis.mjs` | Content-free, hash-bound reader for the retained debugger and child-census measurements. |
+| `probes/*.gdb`, `run-debug-probe.sh` | Checkpoint-bound debugger probes, used inside the bounded harness wrapper. Generated function IDs are not portable between patch checkpoints. |
+| `fixtures/night1-newgame.input`, `fixtures/night1-before.ini` | Exact host-only navigation and initial save used by the retained runs, matching their provenance hashes. No game assets. |
 
 ## Environment
 
@@ -260,3 +264,66 @@ the regenerated desktop target linked, and comparison fixtures passed. S2b
 still needs encounter/state equivalence and resolution of the initialization,
 extension, and object-selection gaps. All results remain MODEL_ONLY with
 `rebuilt-runtime` fidelity; none is a phone result or promotion edge.
+
+## Child events and the first divergence (2026-09-27 continuation)
+
+The earlier 18,000-office-update runs are preserved as negatives, **not evidence
+of faithful navigation**. Debugger watchpoints showed `viewing` start at 0 and
+change to 9 then 1 during the first update, without the required parent gates.
+That suppressed the `viewing == 0` Random(1000) draw and caused the sourced
+variant's initialization mismatch. The old default tick-6 mismatch separately
+comes from the two cosmetic Every(100 ms) draws that defaults disable.
+
+The APK runtime's child-list path establishes action 43, flags 0x40/0x8000,
+end condition -42, and selection-restoring condition -43/parameter 69. The patch
+now partitions nested lists, invokes children after successful parent actions,
+and keeps nested snapshots so one child's filtering cannot narrow its sibling.
+It does not re-evaluate parent conditions. The synthetic fixture compiles real
+converter-emitted event bodies and runs the actual snapshot stack; malformed
+boundaries and unsupported triggered children are rejected.
+
+That correction exposed an unsupported title timer: source group 78 schedules
+an event after 200 ms; group 79's OnTimerEvent owns transition children 80–85.
+The child-only checkpoint `2bf1c66` retains a 4,000-update title stop as
+`night1-child-timer-blocked-20260927.json` (`TARGET_NOT_REACHED`). Its preceding
+parent `9db9aed` reproduces the earlier flattened implementation.
+
+The current patch implements source-defined one-shot timer dispatch before
+ordinary events. Rebuilding and replaying the same input/save now reaches the
+office in 1,949 navigation updates, including 12 more title updates for 200 ms,
+then stops after 64 office updates (2,013 total). Watchpoints show `viewing == 0`
+at loops 0 and 63, no intervening writes, and the random-image guard firing only
+once. The generated results retain the new boundary:
+
+- `night1-child-timer-default-20260927.json`: divergent at tick 0 (rebuilt 2 draws,
+  default 1). Production defaults are unchanged.
+- `night1-child-timer-sourced-20260927.json`: initialization now matches; the
+  first 5 office updates match the declared sourced model with offset 1. The next
+  mismatch is tick 5/model frame 6: rebuilt 2 draws/state 30314 versus model 4/state 45890.
+  The rebuilt Every(100 ms) draws occur at tick 6. No whole-night equivalence.
+- `child-event-diagnosis-20260927.json`: generated debugger/census/source-hash
+  record, with the child-only navigation negative, both new comparisons, and
+  the next timer-phase test. Raw owned data remain external.
+
+Run the new fixtures with the patched external toolchain:
+
+```sh
+PYTHONPATH=<anaconda>:<anaconda>/Chowdren <python2.7> tools/recompile/test-child-events.py
+node tools/recompile/test-child-diagnosis.mjs
+```
+
+For the short replay, copy `fixtures/night1-before.ini` to `freddy2` in an
+isolated external directory containing an `Assets.dat` symlink. Use the existing
+harness recipe with seed 24850, `fixtures/night1-newgame.input`, stop-frame 3,
+max-ticks 64, and max-total-ticks 4000. For debugger reproduction, use
+`CHOWDREN_BINARY=/recompile/run-debug-probe.sh`, set `CHOWDREN_DEBUG_BINARY` to
+the rebuilt executable and `CHOWDREN_GDB_SCRIPT` to a matching `probes/*.gdb`.
+The `child-before-*` scripts target `9db9aed`; `child-timer-viewing.gdb` targets
+the current patch. Stop the old RNG probe after 8 office updates and the old
+viewing probe after 2; all probes still have the unconditional harness deadline.
+Generated function IDs require the same source hash/config and patch checkpoint.
+
+The correction does not establish repeat timers, dynamic/non-ASCII timer names,
+deleted-object selection override, qualifier/foreach semantics, immediate touch
+dispatch, unsupported extensions, or full-state equivalence. Next: verify the
+sourced model's Every first-evaluation clock, without tuning production defaults.
