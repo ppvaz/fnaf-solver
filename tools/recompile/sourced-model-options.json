@@ -1,0 +1,21 @@
+{
+  "sourcedRouteForks": true,
+  "sourcedHallEntry": true,
+  "sourcedDropLightOrder": true,
+  "sourcedFoxyChain": true,
+  "sourcedUnconditionalDraws": true,
+  "sourcedEventDraws": true,
+  "sourcedBlackoutDraws": true,
+  "sourcedViewDraws": true,
+  "sourcedRollDraws": true,
+  "sourcedMonitorDownDraw": true,
+  "sourcedSecondPass": true,
+  "sourcedPuppetGlitchDraws": true,
+  "sourcedFootstepDraws": true,
+  "sourcedMangleReturn": true,
+  "sourcedVentCamDraws": true,
+  "sourcedRandomImageDraw": true,
+  "sourcedMonitorRaiseGate": true,
+  "sourcedSheetOrder": true,
+  "sourcedLastViewPause": true
+}

@@ -118,10 +118,10 @@ index 950da8d..cfca4ab 100644
  inline int FrameObject::get_x()
 diff --git a/Chowdren/base/harness.h b/Chowdren/base/harness.h
 new file mode 100644
-index 0000000..dcf6ce4
+index 0000000..1b94521
 --- /dev/null
 +++ b/Chowdren/base/harness.h
-@@ -0,0 +1,87 @@
+@@ -0,0 +1,90 @@
 +#ifndef CHOWDREN_HARNESS_H
 +#define CHOWDREN_HARNESS_H
 +
@@ -144,7 +144,10 @@ index 0000000..dcf6ce4
 +//   - writes one line per event update to CHOWDREN_TRACE: frame index, tick,
 +//     Random draws so far this frame load, graine, and the global values,
 +//   - skips drawing when CHOWDREN_NO_DRAW=1, and exits after CHOWDREN_MAX_TICKS
-+//     event updates of the frame index in CHOWDREN_STOP_FRAME.
++//     event updates of the frame index in CHOWDREN_STOP_FRAME; always exits
++//     after CHOWDREN_MAX_TOTAL_TICKS updates across all frames (default 60000).
++// Input rows fire once on the first matching frame visit reaching their tick;
++// frame indices need not increase during navigation.
 +
 +#include <vector>
 +
@@ -389,7 +392,7 @@ index ed74b78..f9d064d 100644
  
  inline void to_lower(std::string & str)
 diff --git a/Chowdren/chowdren/converter.py b/Chowdren/chowdren/converter.py
-index d8edac8..136491a 100644
+index d8edac8..f6a4a38 100644
 --- a/Chowdren/chowdren/converter.py
 +++ b/Chowdren/chowdren/converter.py
 @@ -22,7 +22,8 @@ import string
@@ -444,7 +447,22 @@ index d8edac8..136491a 100644
              obj = (frameitem.handle, frameitem.objectType)
              all_startup_infos.add(obj)
              try:
-@@ -1359,6 +1375,9 @@ class Converter(object):
+@@ -1299,6 +1315,14 @@ class Converter(object):
+             elif object_writer.has_autodestruct():
+                 self.multiple_instances.add(obj)
+ 
++        # This frame's startup objects, known before ANY of its events are
++        # written: fastloop and generated groups below are emitted before the
++        # assignment further down, and read the previous frame's set -- frame
++        # 0's loops saw an empty one and lost every action (its Fade out flag
++        # never set, so the game never left 01-Initialize).
++        self.frame_startup_handles = set(
++            frameitem.handle for _, frameitem in startup_instances)
++
+         events = frame.events
+ 
+         self.qualifier_names = {}
+@@ -1359,6 +1383,9 @@ class Converter(object):
                      current_container.add_child(new_container)
                  current_container = new_container
                  containers[group_loader.offset] = current_container
@@ -454,7 +472,7 @@ index d8edac8..136491a 100644
                  always_groups.append(ContainerMark(current_container, name))
                  continue
              elif name == 'GroupEnd':
-@@ -1426,8 +1445,11 @@ class Converter(object):
+@@ -1426,8 +1453,11 @@ class Converter(object):
                          self.multiple_instances.add(create_info)
                  elif action_name in ('DeactivateGroup',
                                       'ActivateGroup'):
@@ -468,7 +486,7 @@ index d8edac8..136491a 100644
  
              always_group_index = None
              generated_group_index = None
-@@ -1610,9 +1632,13 @@ class Converter(object):
+@@ -1610,9 +1640,13 @@ class Converter(object):
  
          # set up qualifiers
          for name, instances in qualifier_setup.iteritems():
@@ -483,7 +501,7 @@ index d8edac8..136491a 100644
              start_writer.putlnc('%s.set(%s, &%s_instances[0]);', name,
                                  len(instances), name)
  
-@@ -1620,6 +1646,16 @@ class Converter(object):
+@@ -1620,6 +1654,16 @@ class Converter(object):
              startup_instances)
          self.startup_instances = startup_instances
  
@@ -500,7 +518,7 @@ index d8edac8..136491a 100644
          for instance, frameitem in startup_instances:
              obj = (frameitem.handle, frameitem.objectType)
              object_writer = self.get_object_writer(obj)
-@@ -2178,6 +2214,8 @@ class Converter(object):
+@@ -2178,6 +2222,8 @@ class Converter(object):
              return 'SavedIterator'
          if is_qualifier(obj[0]):
              return 'QualifierIterator'
@@ -509,7 +527,7 @@ index d8edac8..136491a 100644
          return 'ObjectIterator'
  
      @contextlib.contextmanager
-@@ -2217,6 +2255,13 @@ class Converter(object):
+@@ -2217,6 +2263,13 @@ class Converter(object):
              return
          
          list_name = self.get_object_list(object_info)
@@ -523,7 +541,7 @@ index d8edac8..136491a 100644
          is_qual = is_qualifier(object_info[0])
          if is_qual:
              writer.putlnc('for (int i = 0; i < %s.count; i++)', list_name)
-@@ -2280,6 +2325,14 @@ class Converter(object):
+@@ -2280,6 +2333,14 @@ class Converter(object):
              writer.putln('if (!%s) goto %s;' % (
                  item.code_name, item.end_label))
  
@@ -538,7 +556,7 @@ index d8edac8..136491a 100644
      def get_container_check(self, container):
          groups = []
          for item in container.tree:
-@@ -2602,26 +2655,36 @@ class Converter(object):
+@@ -2602,26 +2663,36 @@ class Converter(object):
  
                  for write_condition in write_conditions:
                      negated = not write_condition.is_negated()
@@ -590,7 +608,7 @@ index d8edac8..136491a 100644
                      if negated:
                          writer.put(')')
                      if has_multiple:
-@@ -2655,6 +2718,8 @@ class Converter(object):
+@@ -2655,6 +2726,8 @@ class Converter(object):
                  or_lists.add(list_name)
  
              for list_name in or_lists:
@@ -599,7 +617,7 @@ index d8edac8..136491a 100644
                  if is_logical:
                      writer.putlnc('%s.clear_selection();', list_name)
                  else:
-@@ -2673,7 +2738,8 @@ class Converter(object):
+@@ -2673,7 +2746,8 @@ class Converter(object):
                  check = '%s' % (' || '.join(or_bools))
                  writer.putlnc('if (%s) {', check)
                  writer.indent()
@@ -609,7 +627,7 @@ index d8edac8..136491a 100644
                  writer.end_brace()
  
              # writer.start_brace()
-@@ -2689,15 +2755,28 @@ class Converter(object):
+@@ -2689,15 +2763,28 @@ class Converter(object):
              if action_writer.custom:
                  action_writer.write(writer)
                  continue
@@ -639,7 +657,7 @@ index d8edac8..136491a 100644
              if object_info is not None:
                  if obj in self.has_single_selection:
                      has_single = True
-@@ -2705,9 +2784,20 @@ class Converter(object):
+@@ -2705,9 +2792,20 @@ class Converter(object):
                      has_multiple = True
                  elif not self.is_valid_object(obj):
                      object_info = None
@@ -660,7 +678,7 @@ index d8edac8..136491a 100644
              object_name = None
              write_actions = [action_writer]
              if has_single:
-@@ -2721,6 +2811,9 @@ class Converter(object):
+@@ -2721,6 +2819,9 @@ class Converter(object):
                          break
                      if next_action.custom:
                          break
@@ -670,7 +688,7 @@ index d8edac8..136491a 100644
                      if next_action.iterate_objects is False:
                          break
                      action_index += 1
-@@ -2734,6 +2827,19 @@ class Converter(object):
+@@ -2734,6 +2835,19 @@ class Converter(object):
                  self.set_iterator(obj, list_name)
                  object_name = '*it'
              elif object_info is not None:
@@ -690,7 +708,7 @@ index d8edac8..136491a 100644
                  writer.putindent()
                  writer.put('%s->' % self.get_object(obj))
              elif action_writer.static:
-@@ -2805,7 +2911,8 @@ class Converter(object):
+@@ -2805,7 +2919,8 @@ class Converter(object):
                  continue
              list_name = self.get_object_list(obj, True)
              group.or_selected[obj] = list_name
@@ -700,7 +718,7 @@ index d8edac8..136491a 100644
  
          writer.putlnc('if (%s) {', group.or_temp_result)
          writer.indent()
-@@ -2817,7 +2924,8 @@ class Converter(object):
+@@ -2817,7 +2932,8 @@ class Converter(object):
          for obj, list_name in self.has_selection.iteritems():
              if obj in has_qualifier:
                  continue
@@ -710,7 +728,7 @@ index d8edac8..136491a 100644
  
          writer.end_brace()
  
-@@ -2965,6 +3073,14 @@ class Converter(object):
+@@ -2965,6 +3081,14 @@ class Converter(object):
                  return self.intern_string(loader.value)
              elif parameter_name in ('TwoShorts'):
                  return to_c('%r, %r', loader.value1, loader.value2)
@@ -725,7 +743,7 @@ index d8edac8..136491a 100644
              else:
                  raise NotImplementedError('parameter: %s' % parameter_name)
          self.start_clauses += out.count('(')
-@@ -2978,16 +3094,25 @@ class Converter(object):
+@@ -2978,16 +3102,25 @@ class Converter(object):
  
              if remove != 1:
                  print out
@@ -756,7 +774,7 @@ index d8edac8..136491a 100644
  
              filtered = out[end+1:]
              out = out[:end+1]
-@@ -3068,7 +3193,8 @@ class Converter(object):
+@@ -3068,7 +3201,8 @@ class Converter(object):
              clear_lists = (list_name,)
  
          for obj_list in clear_lists:
@@ -766,7 +784,7 @@ index d8edac8..136491a 100644
  
          for obj in objs:
              if obj == object_info:
-@@ -3149,6 +3275,18 @@ class Converter(object):
+@@ -3149,6 +3283,18 @@ class Converter(object):
                  if default_instance:
                      args.append(default_instance)
  
@@ -785,7 +803,7 @@ index d8edac8..136491a 100644
              if is_qual:
                  getter_name = 'get_qualifier'
              else:
-@@ -3160,6 +3298,25 @@ class Converter(object):
+@@ -3160,6 +3306,25 @@ class Converter(object):
      def get_default_instance(self, object_type):
          return self.get_object_impl(object_type).default_instance
  
@@ -811,7 +829,7 @@ index d8edac8..136491a 100644
      def get_object_list(self, obj, allow_single=False):
          if self.has_single(obj) and not allow_single:
              print 'single exception:', self.get_single(obj)
-@@ -3170,11 +3327,23 @@ class Converter(object):
+@@ -3170,11 +3335,23 @@ class Converter(object):
          if is_qual:
              return type_id
          obj = self.filter_object_type(obj)
@@ -837,7 +855,7 @@ index d8edac8..136491a 100644
  
      def filter_object_type(self, obj):
          if is_qualifier(obj[0]):
-@@ -3285,9 +3454,12 @@ class Converter(object):
+@@ -3285,9 +3462,12 @@ class Converter(object):
                  return get_method_name('_'.join(full_name))
          ret = item.getName()
          if ret is None:
@@ -853,7 +871,7 @@ index d8edac8..136491a 100644
          return ret
  
      def get_action_writer(self, item, as_klass = False):
-@@ -3329,6 +3501,24 @@ class Converter(object):
+@@ -3329,6 +3509,24 @@ class Converter(object):
              klass = getattr(writer_module, ace_type)[key]
          except (KeyError, AttributeError):
              klass = default_writers[ace_type]
@@ -1258,10 +1276,10 @@ index 48623cf..10cca94 100644
      'ToNumber' : 'string_to_number',
 diff --git a/Chowdren/chowdren/writers/extensions/MultipleTouch.py b/Chowdren/chowdren/writers/extensions/MultipleTouch.py
 new file mode 100644
-index 0000000..c1972ac
+index 0000000..59b4217
 --- /dev/null
 +++ b/Chowdren/chowdren/writers/extensions/MultipleTouch.py
-@@ -0,0 +1,116 @@
+@@ -0,0 +1,121 @@
 +# Multiple Touch (Android runtime: Extensions/CRunMultipleTouch). The ACE
 +# numbers are the runtime's own switch cases, read from classes.dex:
 +#   conditions  0 new touch(id)   1 end touch(id)   2 any new touch
@@ -1297,12 +1315,16 @@ index 0000000..c1972ac
 +
 +class NewTouchOnObject(ConditionWriter):
 +    """6: the new touch of this update is over each selected instance."""
++    # The harness holds this trigger for one event update. Without forcing
++    # polling, Chowdren parks the row in an unimplemented generated group.
++    is_always = True
++    prefix = '(harness_touch.new_touch && '
 +    def get_object(self):
 +        data = self.parameters[0].loader
 +        return data.objectInfo, data.objectType
 +
 +    def write(self, writer):
-+        writer.put('(harness_touch.new_touch && touch_over(harness_touch.last_new_touch))')
++        writer.put('touch_over(harness_touch.last_new_touch))')
 +
 +
 +class NeverCondition(ConditionWriter):
@@ -1325,6 +1347,7 @@ index 0000000..c1972ac
 +    (a static writer would prefix the placeholder class, FrameObject::)."""
 +    class FreeCondition(ConditionWriter):
 +        has_object = False
++        is_always = True
 +
 +        def write(self, writer):
 +            if '%s' in fmt:
@@ -1691,7 +1714,7 @@ index 7966f0f..feb83de 100644
          old = self.settings.get('old', False)
          if debug:
 diff --git a/mmfparser/data/chunkloaders/frame.py b/mmfparser/data/chunkloaders/frame.py
-index dc38547..4377722 100644
+index dc38547..73486b8 100644
 --- a/mmfparser/data/chunkloaders/frame.py
 +++ b/mmfparser/data/chunkloaders/frame.py
 @@ -73,6 +73,17 @@ class MovementTimerBase(DataLoader):
@@ -1712,20 +1735,23 @@ index dc38547..4377722 100644
  class Frame(DataLoader):
      name = None
  
-@@ -317,6 +328,12 @@ class ObjectInstance(DataLoader):
+@@ -317,6 +328,15 @@ class ObjectInstance(DataLoader):
          self.parentType = reader.readShort()
          self.parentHandle = reader.readShort() # object info
          self.layer = reader.readShort()
-+        # Build 296: instance object-info references carry the same XOR 28 as
-+        # the object headers (objectinfo.pyx ObjectHeader.read).
++        # Build 296: the runtime's layout loader reads a placed instance's
++        # object handle as readAShort() ^ 48 (Frame/CLO.load in the APK's dex),
++        # which is the post-XOR handle events and the item table use (the item
++        # header is ^ 28, objectinfo.pyx). docs/android/ANDROID-SOURCE-STATUS.md
++        # 2026-09-15 has the dex reading and the Office join it fixed.
 +        if self.settings.get('build', 0) >= 290 and not self.settings.get('compat', False):
-+            self.objectInfo ^= 28
++            self.objectInfo ^= 48
 +            if self.parentType == 2:
-+                self.parentHandle ^= 28
++                self.parentHandle ^= 48
          reader.skipBytes(2)
  
      def write(self, reader):
-@@ -408,4 +425,5 @@ class FramePassword(StringChunk):
+@@ -408,4 +428,5 @@ class FramePassword(StringChunk):
  
  __all__ = ['FrameHandles', 'FrameName', 'Frame', 'FrameHeader',
      'VirtualSize', 'ObjectInstances', 'Layers', 'FramePalette',
@@ -2452,10 +2478,10 @@ index 30eb23e..50c4cb3 100644
          platform_sleep(t);
 diff --git a/Chowdren/base/harness.cpp b/Chowdren/base/harness.cpp
 new file mode 100644
-index 0000000..4f5c7fe
+index 0000000..b92eaae
 --- /dev/null
 +++ b/Chowdren/base/harness.cpp
-@@ -0,0 +1,291 @@
+@@ -0,0 +1,304 @@
 +// Deterministic research harness for the build-296 recompile. See harness.h.
 +// Compiled once, included from run.cpp next to crashdump.cpp.
 +
@@ -2472,14 +2498,13 @@ index 0000000..4f5c7fe
 +
 +namespace {
 +
-+struct InputRow { int frame_index, tick, op, pointer; float x, y; std::string object; };
++struct InputRow { int frame_index, tick, op, pointer; float x, y; std::string object; bool consumed; };
 +enum { OP_DOWN = 0, OP_MOVE = 1, OP_UP = 2, OP_DOWN_OBJECT = 3 };
 +
 +bool h_active = false, h_no_draw = false;
 +int h_seed = -1, h_seed_frame = -1, h_stop_frame = -1, h_max_ticks = -1, h_dump_frame = -1, h_dump_tick = -1;
-+int h_tick = 0, h_frame_index = -1;
++int h_tick = 0, h_frame_index = -1, h_total_ticks = 0, h_max_total_ticks = 60000;
 +std::vector<InputRow> h_inputs;
-+size_t h_next_input = 0;
 +FILE * h_trace = NULL;
 +// Android pointer id -> slot index, for up/move rows.
 +std::vector<int> h_pointer_slot;
@@ -2501,7 +2526,7 @@ index 0000000..4f5c7fe
 +    while (fgets(line, sizeof line, f)) {
 +        if (line[0] == '#' || line[0] == '\n')
 +            continue;
-+        InputRow r; char op[16]; r.x = r.y = 0.0f; int used = 0;
++        InputRow r; char op[16]; r.x = r.y = 0.0f; r.consumed = false; int used = 0;
 +        int n = sscanf(line, "%d %d %15s %d %n", &r.frame_index, &r.tick, op, &r.pointer, &used);
 +        if (n < 4) { fprintf(stderr, "harness: bad input line: %s", line); exit(3); }
 +        if (!strcmp(op, "downobj")) {
@@ -2619,6 +2644,11 @@ index 0000000..4f5c7fe
 +    h_seed_frame = env_int("CHOWDREN_SEED_FRAME", -1);
 +    h_stop_frame = env_int("CHOWDREN_STOP_FRAME", -1);
 +    h_max_ticks = env_int("CHOWDREN_MAX_TICKS", -1);
++    h_max_total_ticks = env_int("CHOWDREN_MAX_TOTAL_TICKS", 60000);
++    if (h_max_total_ticks <= 0) {
++        fprintf(stderr, "harness: CHOWDREN_MAX_TOTAL_TICKS must be positive\n");
++        exit(3);
++    }
 +    h_dump_frame = env_int("CHOWDREN_DUMP_FRAME", -1);
 +    h_dump_tick = env_int("CHOWDREN_DUMP_TICK", 1);
 +    const char * input = getenv("CHOWDREN_INPUT");
@@ -2656,8 +2686,13 @@ index 0000000..4f5c7fe
 +        for (LayerInstances::iterator it = layer.instances.begin(); it != layer.instances.end(); ++it) {
 +            FrameObject & obj = *it;
 +            int * b = obj.collision ? obj.collision->aabb : NULL;
-+            fprintf(stderr, "harness: instance frame %d layer %d '%s' box %d %d %d %d\n", frame_index, int(li),
++            fprintf(stderr, "harness: instance frame %d layer %d '%s' box %d %d %d %d", frame_index, int(li),
 +                    obj.get_name().c_str(), b ? b[0] : -1, b ? b[1] : -1, b ? b[2] : -1, b ? b[3] : -1);
++            if (obj.alterables)
++                fprintf(stderr, " values %g %g %g flag0 %d", double(obj.alterables->values.get(0)),
++                        double(obj.alterables->values.get(1)), double(obj.alterables->values.get(2)),
++                        int(obj.alterables->flags.is_on(0)));
++            fputc('\n', stderr);
 +        }
 +    }
 +}
@@ -2674,14 +2709,12 @@ index 0000000..4f5c7fe
 +        manager.mouse_x = int(m.touches[0].x);
 +        manager.mouse_y = int(m.touches[0].y);
 +    }
-+    while (h_next_input < h_inputs.size()) {
-+        InputRow & r = h_inputs[h_next_input];
-+        if (r.frame_index != frame_index || r.tick > h_tick) {
-+            if (r.frame_index == frame_index || r.frame_index > frame_index) break;
-+            h_next_input++;   // a row for a frame already left: skipped, and said so
-+            fprintf(stderr, "harness: skipped input row for frame %d tick %d\n", r.frame_index, r.tick);
-+            continue;
-+        }
++    // Frame indices are identities, not a timeline: startup can visit a
++    // high-numbered options frame before returning to the title. Each row
++    // fires once on its first matching frame visit that reaches its tick.
++    for (size_t i = 0; i < h_inputs.size(); i++) {
++        InputRow & r = h_inputs[i];
++        if (r.consumed || r.frame_index != frame_index || r.tick > h_tick) continue;
 +        if (r.op == OP_DOWN_OBJECT) {
 +            float x, y;
 +            if (!object_center(r.object, &x, &y)) {
@@ -2694,7 +2727,7 @@ index 0000000..4f5c7fe
 +        } else if (r.op == OP_DOWN) new_touch(r.pointer, r.x, r.y);
 +        else if (r.op == OP_MOVE) move_touch(r.pointer, r.x, r.y);
 +        else end_touch(r.pointer);
-+        h_next_input++;
++        r.consumed = true;
 +    }
 +}
 +
@@ -2708,8 +2741,14 @@ index 0000000..4f5c7fe
 +        fputc('\n', h_trace);
 +    }
 +    h_tick++;
++    h_total_ticks++;
 +    if (h_stop_frame >= 0 && frame_index == h_stop_frame && h_max_ticks >= 0 && h_tick >= h_max_ticks) {
-+        if (h_trace) fflush(h_trace);
++        if (h_trace) { fprintf(h_trace, "# stop target frame %d ticks %d total %d\n", frame_index, h_tick, h_total_ticks); fflush(h_trace); }
++        return false;
++    }
++    if (h_total_ticks >= h_max_total_ticks) {
++        fprintf(stderr, "harness: total tick limit %d reached at frame %d tick %d\n", h_total_ticks, frame_index, h_tick);
++        if (h_trace) { fprintf(h_trace, "# stop total ticks %d frame %d tick %d\n", h_total_ticks, frame_index, h_tick); fflush(h_trace); }
 +        return false;
 +    }
 +    return true;
@@ -2893,3 +2932,27 @@ index fd70fdf..9404852 100644
  
  #ifdef CHOWDREN_USER_PROFILER
      ss << (platform_get_time() - draw_time) << " ";
+diff --git a/mmfparser/data/chunkloaders/expressions/loaders.pyx b/mmfparser/data/chunkloaders/expressions/loaders.pyx
+index 74a72d6..a7c5b52 100644
+--- a/mmfparser/data/chunkloaders/expressions/loaders.pyx
++++ b/mmfparser/data/chunkloaders/expressions/loaders.pyx
+@@ -48,6 +48,19 @@ cdef class Double(DataLoader):
+         float floatValue
+ 
+     cpdef read(self, ByteReader reader):
++        # Build 296 stores a Double token as signed 64-bit fixed point, value =
++        # L / 2^32: the Android runtime's CFile.readADouble assembles eight
++        # little-endian bytes into a long and divides it (as a number) by 65536
++        # twice. Read as IEEE bits, 4.25 became 9.0184821116e-314 and every
++        # constant in the sheet with it.
++        cdef unsigned int low
++        cdef int high
++        if self.settings.get('build', 0) >= 290 and not self.settings.get('compat', False):
++            low = reader.readInt(True)
++            high = reader.readInt()
++            self.value = high + low / 4294967296.0
++            self.floatValue = self.value
++            return
+         self.value = reader.readDouble()
+         self.floatValue = reader.readFloat()
+ 

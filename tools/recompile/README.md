@@ -21,6 +21,10 @@ directory (`/private/tmp/fnaf2-recompile.*` on the dev machine).
 | `probe-unknown-params.py` | Dumps every event parameter whose code is past `parameterLoaders`, with the ACE it attaches to and its raw bytes. Requires the `Parameter.read` capture patch. |
 | `probe-onloop.py` | Prints every `OnLoop` condition and its parameter loader — the probe that showed mobile loops are numeric `Short` indices, not name expressions. |
 | `model-draw-trace.mjs` | The simulator's `Random(N)` draws frame by frame (draws so far, LCG state), in the shape the harness traces: two runs of one night and seed that spend the same draws every frame read the same stream, and the first frame where the counts part is where to look. MODEL_ONLY. |
+| `compare-draw-trace.mjs` | Reads an external harness trace and emits a hash-bound, content-free comparison result. `MATCHED_PREFIX` never means full event/state equivalence. |
+| `sourced-model-options.json` | Explicit diagnostic variant enabling the model's existing sourced flags. It does not change core defaults or establish fidelity. |
+| `run-harness.sh` | Container wrapper with GL readiness checking and a process deadline that escalates to kill. Run from the external gamesrc directory. |
+| `test-mobile-parser.py`, `test-compare-draw-trace.mjs` | Synthetic parser and result-classification regressions; FIXTURE only. |
 
 ## Environment
 
@@ -180,26 +184,79 @@ What this slice added, all in the patch:
   evaluation loads the countdown and is false; later ones subtract the frame's
   timer delta (1/3 ms units, 50 per 1/60 s frame under the harness) and fire at
   <= 0. Chowdren's float accumulation fired one evaluation early.
-- **Build-296 object handles are stored XOR 28.** Every event names an object
-  by the handle CTFAK's dump shows (btnNewGame 15, btnContinue 16, btn6thNight
-  23, btnCustomNight 27, btnUnlocks 37); the parser read the item headers and
-  instance references as 19, 12, 11, 7 and 57 -- each exactly XOR 28 -- so
-  every event bound to the wrong object (the title's New Game click tested the
-  `night number` counter, INI reads called `get_value_int` on Actives and
-  segfaulted). `ObjectHeader.read` and the frame instance loader now
-  unscramble for build >= 290, and the title's click binds `btnnewgameactive_15`.
+- **Build-296 object handles are scrambled twice, as the APK's runtime reads
+  them** (`docs/android/ANDROID-SOURCE-STATUS.md`, from the dex): the item
+  header is `handle ^ 28` (`COI.loadHeader`) and a placed instance's object is
+  `readAShort() ^ 48` (`CLO.load`), both landing on the handle every event names
+  (the one CTFAK's dump shows). The parser read both raw and joined them raw, so
+  most instances were created as the wrong object and every event bound to the
+  wrong one (btnNewGame 15 read as 19; the title's New Game click tested the
+  `night number` counter; INI reads segfaulted on Actives). `ObjectHeader.read`
+  now applies ^ 28 and the frame instance loader ^ 48 for build >= 290: actions
+  the converter skipped as "on a frame-absent object" fell from 1,645 to 111,
+  instances with no item definition from 4 to 0, the title now places
+  `whereToGo.Active`, and INI (33) binds to the Ini objects, so it runs as
+  `kcini` again.
 
-Reached: boot, frame 0 -> 02-title, the title's events on the right objects,
-a scripted `downobj 0 btnNewGame.Active` landing on the button. **Next
-boundary:** New Game does not leave the title. Its event sets
-`whereToGo.Active` value 0 = 1 (and `night number` = 1), but the converter
-creates `whereToGo.Active` and `night number` only in 05-static's init, never
-on 02-title, so the action is skipped as a "frame-absent object" and nothing
-reads the transition. Either the title's instance list is attributed to the
-wrong frame or these are global objects whose carry-over Chowdren does not
-model; the dump's title sheet references `whereToGo` 46 times, so on the phone
-it exists there. INI (33) stays the inert stub in `fnaf2-config.py` until
-re-tested now that handles are unscrambled -- its mis-binding was the same
-XOR. Then: reach 04-Office, and compare a no-input Night 1 at seed 24850 with
-`model-draw-trace.mjs` (the model dies to the Puppet at frame 17680 after 1215
-draws).
+The continuation also moved startup-handle discovery before fastloop and
+generated-event emission (frame-absent action omissions then fell to zero),
+decoded Android Double tokens as signed fixed 32.32 instead of IEEE bits,
+and emitted Multiple Touch trigger predicates ahead of ordinary event rows.
+The latter uses Chowdren's existing generated-group ordering; equivalence to
+Android's immediate event dispatch remains unverified.
+
+**Reached 04-Office through title input, 2026-09-27.** Seed 24850 traversed
+frames `0 -> 1 -> 8 -> 2 -> 7 -> 3`, then ran 18,000 office updates without
+gameplay input and exited normally. Mobile New Game needs a Yes confirmation.
+An independent run from the retained pre-run save reproduced the complete
+frame/tick/draw-count/RNG-state projection across all 19,937 updates. The raw
+global-value traces differed in 48 office rows, so this is RNG repeatability,
+not full-state determinism; both hashes remain in the results.
+The rebuilt Yes hit region was only 16 pixels wide despite its wider visual
+button; a second input at the measured hit region advanced. Qualifier/foreach
+creation and selection remain a fidelity gap (the generated loop creates
+duplicate hit regions and scales only one). Input and raw instance dumps stay
+in the external experiment directory.
+
+The generated records under [`results/`](results/) retain the negative:
+
+- `night1-default-20260927.json`: first draw-stream mismatch at office tick 6,
+  rebuilt 3 draws/state 10695 versus model 1/state 63455. The default model
+  disables cosmetic RNG draws, so this is an expected boundary.
+- `night1-sourced-20260927.json`: the explicitly declared sourced variant
+  diverges at initialization: rebuilt tick 0 has 1 draw, model frame 0 has 0
+  and frame 1 has 2. Neither the default nor the variant is trace-equivalent.
+
+The model trace now counts constructor draws; its previous 1,215-draw Night 1
+terminal omitted one initialization draw. The default model still dies to the
+Puppet at frame 17,680, now correctly counted as 1,216 draws. Fixing the
+instrument does not change model behavior.
+
+The harness now has an unconditional `CHOWDREN_MAX_TOTAL_TICKS` limit (default
+60,000). Input rows fire on the first matching frame visit reaching their tick;
+frame indices are identities and can decrease during navigation. Six inherited
+runs had outlived their host `timeout` because it did not kill container
+children and their target-frame stop never fired. They were stopped by exact
+container identity; the latest external logs were retained. Use unique output
+paths and the wrapper's `CHOWDREN_TIMEOUT_SECONDS` deadline (default 120 s).
+
+Comparison and fixture commands:
+
+```sh
+PYTHONPATH=<patched-anaconda> <python2.7> tools/recompile/test-mobile-parser.py
+node tools/recompile/test-compare-draw-trace.mjs
+node tools/recompile/compare-draw-trace.mjs --trace <external-trace> \
+  --night 1 --seed 24850 --frame 3 --frames 18000 --input <external-input> \
+  --binary <external-binary> --save <external-pre-run-save> --out <result.json>
+# Add --repeat-trace <external-repeat> to check RNG-projection repeatability.
+# Repeat with --model-options tools/recompile/sourced-model-options.json
+```
+
+The result preserves both tick-to-model offsets 0 and 1, source/input hashes,
+navigation update counts, and the first mismatch. Raw global values, game
+source and assets are omitted. The patch was applied successfully to a fresh
+archive of the pinned upstream revision; parser fixtures passed 13 checks,
+the regenerated desktop target linked, and comparison fixtures passed. S2b
+still needs encounter/state equivalence and resolution of the initialization,
+extension, and object-selection gaps. All results remain MODEL_ONLY with
+`rebuilt-runtime` fidelity; none is a phone result or promotion edge.

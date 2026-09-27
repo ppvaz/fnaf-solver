@@ -26,8 +26,9 @@ EXTENSION_BASE = 32
 # sanitized version of their editor name and get the generic stub.
 EXTENSION_NAMES = {
     47: 'Layer',           # "Layer object" -> Chowdren's native Layer writer
+    33: 'kcini',           # Android Extensions/CRunkcini is Clickteam's INI, same ACE table; binds to
+                           # the Ini objects once build 296's XOR-28 handles are unscrambled
     46: 'MultipleTouch',   # harness writer (base/harness.*): scripted touches
-    33: 'kcini',           # Android Extensions/CRunkcini is Clickteam's INI, same ACE table
     40: 'AndroidObject',   # no-op stub
     43: 'AndroidPlus',     # no-op stub
     42: 'iOSPlus',         # no-op stub
