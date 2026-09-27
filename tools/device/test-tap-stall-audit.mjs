@@ -4,7 +4,6 @@
 // a 60 ms capture gap covers the 33 ms monitor raise at +20100, the monitor
 // never goes up, the camdrop's tap at +24000 raises it instead, and the mask
 // tap at +24449 arrives with the mask button absent and lowers the monitor.
-import { readFileSync } from 'node:fs';
 import { audit, clockBracket, expandContacts, exposure, formatReport, formatTransitions, hallCells, hallLumaOf, parseInputEvents, parseStrokeTrace, touchEdges, HALL_ROI, SCHEMA } from './tap-stall-audit.mjs';
 
 const check = (condition, message) => { if (!condition) throw new Error(message); };
@@ -174,14 +173,13 @@ check(report.summary.hall.lit === 1 && report.summary.hall.dark === 1 && report.
   check(bareReport.contacts.find(row => row.id === 'toys-2' && row.atMs === 9500).status === 'UNREADABLE',
     'no grid_hex means an unreadable hall, never a dark one');
 }
-// The ROI constants match PixelWatch.java, the one place they are defined.
+// The hall rectangle is the envelope the phone's watchlist carried until
+// 2026-09-27 (1650,300 450x400 on the 2400x1080 frame); tap-stall-audit.mjs
+// is now its only home, and it reads the grid cells of retained traces.
 {
-  const java = readFileSync(new URL('../../android/companion/src/com/ppvaz/fnafcompanion/PixelWatch.java', import.meta.url), 'utf8');
-  const constant = name => Number(java.match(new RegExp(`${name}\\s*=\\s*(\\d+)`))[1]);
-  check(constant('NATIVE_WIDTH') === HALL_ROI.nativeWidth && constant('NATIVE_HEIGHT') === HALL_ROI.nativeHeight &&
-    constant('FOXY_HALL_X') === HALL_ROI.x && constant('FOXY_HALL_Y') === HALL_ROI.y &&
-    constant('FOXY_HALL_WIDTH') === HALL_ROI.width && constant('FOXY_HALL_HEIGHT') === HALL_ROI.height,
-    'HALL_ROI matches PixelWatch.java');
+  check(HALL_ROI.nativeWidth === 2400 && HALL_ROI.nativeHeight === 1080 &&
+    HALL_ROI.x === 1650 && HALL_ROI.y === 300 && HALL_ROI.width === 450 && HALL_ROI.height === 400,
+    'HALL_ROI keeps the retired watchlist envelope');
   check(hallCells().length === 20 && hallLumaOf(gridHex(true)) === 255 && hallLumaOf(gridHex(false)) === 0 && hallLumaOf('') === null,
     'the hall covers 20 cells (cols 13-17, rows 2-5) and its luma reads the grid');
 }

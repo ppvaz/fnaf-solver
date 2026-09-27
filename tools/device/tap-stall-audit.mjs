@@ -77,14 +77,15 @@ export const ACTUATION_LATENCY_BOUNDS_MS = Object.freeze([30, 110]);
 export const ANCHOR_CONTACT_MAX_MS = 50;
 
 /**
- * The hall ROI, from android/companion/src/com/ppvaz/fnafcompanion/PixelWatch.java
- * (NATIVE_WIDTH/HEIGHT, FOXY_HALL_X/Y/WIDTH/HEIGHT). test-tap-stall-audit.mjs
- * reads the Java file and refuses a drift. The frame-trace v3 schema carries
- * no foxy_hall reducer, only the 20x9 grid_hex, so the hall is read from the
- * grid cells that rectangle covers -- and ONLY on frames whose strokes read
- * office: hall-flash-metric.mjs was retracted on 2026-09-12 for scoring the
- * camera-monitor screen, which is what reading this rectangle without that
- * gate does.
+ * The hall ROI: the provisional Foxy hall envelope the Companion's watchlist
+ * used to carry (PixelWatch FOXY_HALL_X/Y/WIDTH/HEIGHT until 2026-09-27, when
+ * the phone stopped reading it -- it had no live reader). This audit reads
+ * retained fnaf2-frame-trace-v3 files, which carry no foxy_hall reducer, only
+ * the 20x9 grid_hex -- the old-evidence use CLAUDE.md keeps -- so the hall is
+ * read from the grid cells that rectangle covers, and ONLY on frames whose
+ * strokes read office: hall-flash-metric.mjs was retracted on 2026-09-12 for
+ * scoring the camera-monitor screen, which is what reading this rectangle
+ * without that gate does. This constant is now the rectangle's only home.
  */
 export const HALL_ROI = Object.freeze({ nativeWidth: 2400, nativeHeight: 1080,
   x: 1650, y: 300, width: 450, height: 400, gridCols: 20, gridRows: 9 });
