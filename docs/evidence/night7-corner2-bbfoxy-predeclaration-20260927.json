@@ -1,0 +1,63 @@
+{
+ "schema": "cohort-predeclaration-v1",
+ "declaredAt": "2026-09-27T19:22:00Z",
+ "declaredBy": "Pedro's decision of 2026-09-27, relayed by the session coordinator, answering the three options for the first corner cohort's UNKNOWN slot: option 3 -- leave cohort-fnv1a-7e0b375f INCOMPLETE exactly as it stands and predeclare a new BB 20 + Foxy 20 corner cohort on the current tree, then run it on the phone. Written by Claude before any device command of this cohort.",
+ "step": "ROADMAP S3: the dial frontier's corners run on the phone (the BB x Foxy far corner, again, on the tree that holds a death's static open)",
+ "night": 7,
+ "supersedes": "nothing. docs/evidence/night7-corners-predeclaration-20260927.json and its result docs/evidence/night7-corners-result-20260927.json (cohort-fnv1a-7e0b375f, INCOMPLETE: BB+Golden 2/2, BB+Foxy 1 win + 1 UNKNOWN in night7-corner-bbfoxy-r01-20260927T072310Z) stay as they are; no run, pack or result of that cohort is edited, re-graded or re-labelled, and none of its runs counts here. The two cohorts are reported side by side, never pooled.",
+ "why": "the first cohort's BB+Foxy r01 reached the night and ended on the post-jumpscare static 4477 ms after its first static read, before any Game Over (a harness fault under that cohort's no-tuning rule, not an 'invalid' run, so it could not be re-run in its slot). ccdaa4d then held a death's static open for STATIC_TERMINAL_WAIT_MS = 8724 ms (static-terminal-window-fb44824c48fdc471). This cohort measures the same corner with the same binding on the tree that carries that change.",
+ "corners": [
+  {
+   "id": "bbfoxy",
+   "dials": {
+    "withfreddy": 0,
+    "withbonnie": 0,
+    "withchica": 0,
+    "foxy": 20,
+    "toyfreddy": 0,
+    "toybonnie": 0,
+    "toychica": 0,
+    "mangle": 0,
+    "bb": 20,
+    "golden": 0
+   },
+   "why": "the Balloon Boy x Foxy plane's far corner with every other dial at 0 (docs/evidence/night7-dial-plane-bb-foxy-20260925.json, k3 grid, base 0); the same vector as the first cohort's bbfoxy corner",
+   "labels": "corner2-bbfoxy-r01, corner2-bbfoxy-r02"
+  }
+ ],
+ "configuration": {
+  "dialSetting": "the campaign's measured dial driver sets the vector and reads it back (tools/device/models/custom-night-calibration-v1.json, sha256 7a6963bad9835299ceeb8053113002640ba29a92f95912eff3b7ea4b9894ef60); the engine caps apply as on any Custom Night",
+  "puppet": "15, as on every Custom Night"
+ },
+ "binding": {
+  "name": "k3",
+  "bundle": "artifacts/night7-corner2-k3-bundle (in the worktree the runs use), emitted on this tree with npm run device:emit -- --winner tools/device/campaign-night7-k3-winner.json; every file is byte-identical to the first cohort's artifacts/night7-anchored-k3-20260927 (manifest sha256 93458adeb2c202893673add65992346dd54be62e078f9ce84c4e71634b257d55 in both), and the campaign's own dry run over it printed 'campaign READY (dry-run): Night 7 custom'",
+  "winnerHash": "fnv1a-5c8dcb5f",
+  "trackedAs": "tools/device/campaign-night7-k3-winner.json",
+  "planSha256": "66b0abb4f65d65584d102e8c2a443e622df8f69ea9d4ac42c20e0aaa77867aff",
+  "replayHash": "fnv1a-1c9c6847",
+  "engineSourceSha256": "ac3d868ea6ee76a3825d23054123e8cb3c93a30ebad894a29b3a76b32ddcdb0c",
+  "profile": {
+   "id": "hid-mediaprojection",
+   "sha256": "59a71a13e9c7e2004897821ca1e6d7c664272818bb6fca4b28cdea6557c77dea"
+  },
+  "qualification": "artifacts/night7-anchored-k3/qualification-test.json in the main checkout (sha256 e2a66400fb7f8c289cfb258a33a1bdeadeb62a9073e99f1682b3809867bee150), the file the first corner cohort ran with; its own scope names the all-20 vector, as it did for the first cohort",
+  "anchor": "aim 2433 ms, period 5000, maxK 0, from the fact register entry for fnv1a-5c8dcb5f (read on this tree: --anchor-aim 2433, --anchor-max-k 0, --anchor-period-ms 5000)"
+ },
+ "command": "tools/device/night-run.sh --label corner2-bbfoxy-rNN --bundle artifacts/night7-corner2-k3-bundle --night 7 --qualification /home/pedro/Projects/fnaf2-1020/artifacts/night7-anchored-k3/qualification-test.json --calibration tools/device/models/custom-night-calibration-v1.json --dials '{\"withfreddy\":0,\"withbonnie\":0,\"withchica\":0,\"toyfreddy\":0,\"toybonnie\":0,\"toychica\":0,\"mangle\":0,\"bb\":20,\"foxy\":20,\"golden\":0}' --no-trace --no-grade --serial ZF525F5BH5",
+ "runner": "artifacts/forensics/night7-corner2-bbfoxy-20260927/corners.sh in the worktree (sha256 feef1e11f9319ce53240a47f4d0c319340dd5ed1d8a220ba34df9dfee8f8125d), the first corner runner's controls (airplane mode, do-not-disturb and USB stay-on for the runs, restored after; the game log streamed for the office seed), run under tools/device/device-lock-exec.py with CUE_HELPER_LOCK_DIR set to the main checkout's captures/cue-helper/locks so the serial lease is the one every other session and the Cue Helper MCP take. Each night-run is bounded at 1800 s (SIGINT, whose EXIT trap releases the HID and returns the phone to an observed title). It stops the cohort on a missing title after any run, on two consecutive device faults (an excluded run, or a run that hit the bound), and on a counted night that ends with no executor terminal.",
+ "grading": "after each run, python3 tools/device/run-timeline.py captures/<run>.mp4 --json writes artifacts/runs/<run>/timeline.json (defaults: 2 fps, 1.5 s dwell), and npm run evidence -- pack <run> --replace re-packs the run with it, as the first corner cohort's packs were; the result is npm run evidence -- cohort on this file",
+ "size": 2,
+ "order": "corner2-bbfoxy r01, corner2-bbfoxy r02",
+ "rules": {
+  "counted": "a run counts once the campaign observes state=night; its outcome is the executor terminal (sixam or gameover) cross-checked by the video terminal grade",
+  "win": "executor terminal sixam and video TERMINAL clear",
+  "death": "gameover; cause taken from the per-cycle ledger and the video, survival time from the video",
+  "excluded": "a run refused or aborted before state=night is not counted and is re-run in its slot as rNNb; the reason is reported. Two consecutive device faults stop the cohort (the session's standing rule), so a slot gets at most rNN and rNNb",
+  "invalid": "a counted run whose night was interrupted by something outside the game (a notification, the operator touching the phone, a USB drop) is reported as invalid with the evidence, and re-run in its slot",
+  "noTuning": "no knob, anchor, bundle or harness change inside the cohort; a harness fault stops the cohort rather than being patched mid-way. A counted night that ends with no executor terminal is such a fault: it is reported UNKNOWN as it stands, never re-graded from the video by hand, and never re-run in its slot"
+ },
+ "prior": "MODEL_ONLY, exact lane: k3 wins this corner on all 300 held-out seeds of the BB x Foxy plane record at its declared epoch. DEVICE_MEASURED, first corner cohort: on this vector one 6 AM (night7-corner-bbfoxy-r02-20260927T073711Z, sixam at 457 s) and one UNKNOWN whose first static read came 19837 ms after the schedule's release and whose retained video shows Foxy's jumpscare (plans/PROGRESS.md, 2026-09-27; night7-corner-bbfoxy-r01-20260927T072310Z). No rate is predicted; a death here is the first live test of the 8724 ms static window.",
+ "report": "per slot: the grade, the dial readback, the released aim and lateness, the office seed where the log brackets it, the run directory and pack; for a death, the static and Game Over read times from the pack and whether Game Over fell inside the 8724 ms window; the exact commit",
+ "commit": "the commit that adds this file, whose parent is c0544c68838b2246b821097f060c9b368931753e (ccdaa4d, the static terminal window, is an ancestor); runs use the tree at that commit, and the runner prints the commit and the count of dirty tracked files at its start"
+}
