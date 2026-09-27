@@ -458,8 +458,11 @@ Foxy's 5010 ms rolls, which holds Foxy and Freddy with certainty; the left light
 is read once after each of Bonnie's 4970 ms rolls he could have arrived on, the
 right after each of Chica's; a door is shut just ahead of the roll that will
 turn its occupant back and opened after it, once the light through the shut
-door shows him gone. Device lane, measured timings: **1000/1000 typical** (seeds
-0-999), 947/1000 in the all-maxima worst lane.
+door shows him gone. Device lane, measured timings, the winner's pinned
+`grid420` with the option its runner passed, over all 65,536 seeds:
+**65,536/65,536 typical**, 62,052/65,536 (94.684%) in the all-maxima worst lane,
+none in the starved (screenrecord) lane
+([`fnaf1-420-winner-route-population-20260927`](../evidence/fnaf1-420-winner-route-population-20260927.json)).
 
 On the phone it **reached 6 AM on the first 4/20 attempt** and the title gained
 its third star ([`fnaf1-420-first-6am-20260925`](../evidence/fnaf1-420-first-6am-20260925.json);

@@ -1847,9 +1847,12 @@
     {
       "file": "tools/device/test-fnaf1-winner.mjs",
       "imports": [
+        "../fnaf1-device-lane.mjs",
         "../night.mjs",
+        "../winner-census.mjs",
         "./fnaf1-custom-run.mjs",
         "./fnaf1-winner.mjs",
+        "node:child_process",
         "node:fs",
         "node:module",
         "node:os",

@@ -64,6 +64,7 @@
     "builtFrom": "fnaf1-custom-calibrate-empty-cal0-20260925T022808813Z"
   },
   "model": "MODEL_ONLY device lane at the measured timings, before the run: 1000/1000 typical (seeds 0-999, power at 6 AM min 24), 947/1000 in the all-maxima worst lane. One device night is one device night: no cohort, no reliability claim.",
+  "census": "fnaf1-420-winner-route-population-20260927",
   "sourcesAtCommit": "3aaf02cd0baf2b18d53d8d47af2fc45f39279f6e",
   "sourcesNote": "The hashes are the files as they ran on 2026-09-25 and as committed in 3aaf02c. Later route changes (confirm-then-retouch doors, bounded monitor waits, stale-frame refusal) are new code on top of this binding, not this binding.",
   "replay": {

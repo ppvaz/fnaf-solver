@@ -29,6 +29,9 @@
  * exact command a live replay would execute, and removes the tree. It never
  * runs adb. What it cannot check without the phone -- the installed Companion
  * APK against the winner's `helperApk` -- is reported UNKNOWN, not assumed.
+ * A live replay runs only the committed winner file (`winnerCustody`), never
+ * an untracked or locally edited one, and only with the winner's detectors
+ * file byte for byte; both are refused before any tree is written.
  */
 import { execFileSync, spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -273,6 +276,17 @@ export function detectorsCheck(winner, home = homedir()) {
   return { status: actual === pinned ? 'MATCH' : 'DIFFERS', file: winner.detectors.file, pinned, actual };
 }
 
+/**
+ * Whether the winner file is the committed one: a live replay runs only a
+ * winner whose `command` and pins are what the repository holds, never a
+ * local edit of them.
+ */
+export function winnerCustody(path, root = ROOT) {
+  try { git(root, ['ls-files', '--error-unmatch', '--', path]); } catch { return 'UNTRACKED'; }
+  try { git(root, ['diff', '--quiet', 'HEAD', '--', path]); } catch { return 'MODIFIED'; }
+  return 'COMMITTED';
+}
+
 const runDirs = (root) => {
   const dir = join(root, 'artifacts', 'runs');
   return new Set(existsSync(dir) ? readdirSync(dir) : []);
@@ -300,14 +314,21 @@ async function main(argv) {
   const winner = loadWinner(winnerPath);
   const serial = process.env.FNAF_SERIAL ?? winner.target?.device;
   const detectors = detectorsCheck(winner);
+  const custody = winnerCustody(winnerPath);
   const drift = routeDrift(winner);
+  if (o.live && custody !== 'COMMITTED')
+    fail(`${winnerPath} is ${custody}: a live replay runs only the committed winner, never a local edit of it`);
+  if (o.live && detectors.status !== 'MATCH' && detectors.status !== 'NONE')
+    fail(`the detectors file is ${detectors.status} (${detectors.file}); the winner ran with sha256 ${detectors.pinned}. ` +
+      `Rebuild it: ${(winner.detectors.rebuild ?? []).join(' && ')}`);
   const scratch = mkdtempSync(join(tmpdir(), 'fnaf1-winner-'));
   const tree = join(scratch, 'tree');
   try {
     const built = materialize(winner, tree, { outputs: o.live ? ROOT : null });
     const plan = replayInvocation(winner, { tree, serial, label: o.label });
     const summary = {
-      winner: winnerPath, id: winner.id, commit: built.commit, tree: built.tree,
+      winner: winnerPath, id: winner.id, winnerCustody: custody,
+      checkout: git(ROOT, ['rev-parse', 'HEAD']).toString('utf8').trim(), commit: built.commit, tree: built.tree,
       filesMatchingCommit: built.files, pinnedFilesMatching: Object.keys(built.sources).length,
       treeDriftSinceWin: drift.map(({ path }) => path),
       detectors, helperApk: { pinned: winner.helperApk?.sha256 ?? null, installed: 'UNKNOWN(not-checked: needs the phone)' },
@@ -317,9 +338,6 @@ async function main(argv) {
       console.log(JSON.stringify({ status: 'DRY_RUN', ...summary, executes }, null, 2));
       return 0;
     }
-    if (detectors.status !== 'MATCH' && detectors.status !== 'NONE')
-      fail(`the detectors file is ${detectors.status} (${detectors.file}); the winner ran with sha256 ${detectors.pinned}. ` +
-        `Rebuild it: ${(winner.detectors.rebuild ?? []).join(' && ')}`);
     console.error(`fnaf1-winner: ${winner.id} at ${built.commit.slice(0, 12)}: all ${built.files} files match the commit, ` +
       `all ${summary.pinnedFilesMatching} pinned files match the winner; running the pinned runner under the ${serial} lease`);
     const before = runDirs(ROOT);

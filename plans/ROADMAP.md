@@ -231,16 +231,23 @@ and the solver MCP with its claim envelope (Plan 28).
 - **Stands:**
   - **FNaF 1:** 4/20 reached 6 AM on 2 of 4 nights on the phone
     ([first 6 AM](../docs/evidence/fnaf1-420-first-6am-20260925.json)).
-    `grid420` in the model's device lane, over all 65,536 seeds, scores:
+    The route that won -- `grid420` as its pinned commit `3aaf02c` holds it,
+    with the option its runner passed (`chicaByCamera: false`) -- scores in
+    the model's device lane, over all 65,536 seeds
+    ([`fnaf1-420-winner-route-population-20260927`](../docs/evidence/fnaf1-420-winner-route-population-20260927.json)):
     - typical: 65,536/65,536;
-    - worst: 97.90%, 1369 of 1374 losses to Chica;
+    - worst: 62,052/65,536 (94.684%; held out 53,953/56,970); the 3,484
+      losses are Chica 1,905, blackout Bonnie 727, blackout Chica 461, Foxy 391;
     - starved (the screenrecord case): 0.
 
-    The two recorded nights died on the phone, which fits
-    ([lane population](../docs/evidence/fnaf1-420-device-lane-population-20260925.json)).
-    The committed winner pins the lane file as of `3aaf02c`, the 420-a win.
-    `e6de745` has changed the route since, so a re-run from the tree does not
-    execute the file that won.
+    The two recorded nights died on the phone, which fits. The 97.90% worst
+    lane quoted before was `grid420` with the model's default
+    `chicaByCamera: true` from a modified tree
+    ([2026-09-25 census](../docs/evidence/fnaf1-420-device-lane-population-20260925.json)),
+    not the route the phone ran. The committed winner names this census, and
+    `test-fnaf1-winner.mjs` replays it with the pinned policy. `e6de745` has
+    changed the route since, so the tree's runner refuses the winner's night
+    and `npm run night -- fnaf1-winner` re-runs the pinned commit.
   - **FNaF 3:** 65,536/65,536 in the model on all six nights, and Night 1 on the
     phone.
   - **FNaF 4:** model only ([four games](../docs/research/FOUR-GAME-NIGHTS.md)).
