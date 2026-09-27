@@ -181,10 +181,10 @@ index 950da8d..eb20377 100644
  inline int FrameObject::get_x()
 diff --git a/Chowdren/base/harness.h b/Chowdren/base/harness.h
 new file mode 100644
-index 0000000..e206cce
+index 0000000..cbe437c
 --- /dev/null
 +++ b/Chowdren/base/harness.h
-@@ -0,0 +1,94 @@
+@@ -0,0 +1,95 @@
 +#ifndef CHOWDREN_HARNESS_H
 +#define CHOWDREN_HARNESS_H
 +
@@ -250,6 +250,7 @@ index 0000000..e206cce
 +bool harness_active();
 +bool harness_fixed_step();
 +bool harness_skip_draw();
++bool harness_realtime();
 +void harness_init();
 +void harness_seed_frame(int index);
 +void harness_before_events(int frame_index);
@@ -2831,7 +2832,7 @@ index b620427..e2d2eb7 100644
  {
      if (flags & INACTIVE || other->flags & INACTIVE)
 diff --git a/Chowdren/base/desktop/platform.cpp b/Chowdren/base/desktop/platform.cpp
-index 0a7095c..a1dcb43 100644
+index 0a7095c..fb7becb 100644
 --- a/Chowdren/base/desktop/platform.cpp
 +++ b/Chowdren/base/desktop/platform.cpp
 @@ -204,6 +204,96 @@ static void set_resources_dir()
@@ -2931,8 +2932,20 @@ index 0a7095c..a1dcb43 100644
  #ifndef NDEBUG
  static void sdl_log(void *userdata, int category, SDL_LogPriority priority,
                      const char * message)
-@@ -215,6 +305,9 @@ static void sdl_log(void *userdata, int category, SDL_LogPriority priority,
+@@ -213,8 +303,21 @@ static void sdl_log(void *userdata, int category, SDL_LogPriority priority,
+ }
+ #endif
  
++bool platform_phone_view()
++{
++    static int value = -1;
++    if (value < 0) {
++        const char * v = getenv("CHOWDREN_PHONE_VIEW");
++        value = (v != NULL && atoi(v) != 0) ? 1 : 0;
++    }
++    return value == 1;
++}
++
  void platform_init()
  {
 +#ifdef CHOWDREN_IS_ANDROID
@@ -2941,7 +2954,7 @@ index 0a7095c..a1dcb43 100644
      unsigned int flags = SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER |
                           SDL_INIT_HAPTIC | SDL_INIT_NOPARACHUTE;
      if (SDL_Init(flags) < 0) {
-@@ -224,7 +317,7 @@ void platform_init()
+@@ -224,7 +327,7 @@ void platform_init()
      }
      SDL_EventState(SDL_MOUSEMOTION, SDL_DISABLE);
      // SDL_EventState(SDL_WINDOWEVENT, SDL_DISABLE);
@@ -2950,7 +2963,7 @@ index 0a7095c..a1dcb43 100644
      set_resources_dir();
  #endif
      start_time = SDL_GetPerformanceCounter();
-@@ -615,9 +708,14 @@ void platform_create_display(bool fullscreen)
+@@ -615,9 +718,14 @@ void platform_create_display(bool fullscreen)
  {
      is_fullscreen = fullscreen;
  
@@ -2965,7 +2978,22 @@ index 0a7095c..a1dcb43 100644
  
  #ifndef CHOWDREN_USE_D3D
      flags |= SDL_WINDOW_OPENGL;
-@@ -842,6 +940,18 @@ void platform_create_display(bool fullscreen)
+@@ -652,6 +760,14 @@ void platform_create_display(bool fullscreen)
+     start_height *= CHOWDREN_DEFAULT_SCALE;
+ #endif
+ 
++#ifndef CHOWDREN_IS_ANDROID
++    // CHOWDREN_PHONE_VIEW=1: show the game as the phone does (Display Mode FULL
++    // into its 2400x1080 frame), at half size so it fits a 1920x1080 monitor.
++    if (platform_phone_view()) {
++        start_width = 1200;
++        start_height = 540;
++    }
++#endif
+     global_window = SDL_CreateWindow(NAME,
+                                      SDL_WINDOWPOS_CENTERED,
+                                      SDL_WINDOWPOS_CENTERED,
+@@ -842,6 +958,18 @@ void platform_create_display(bool fullscreen)
          platform_hide_mouse();
  
      screen_fbo.init(WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -2984,10 +3012,12 @@ index 0a7095c..a1dcb43 100644
  }
  
  void platform_set_vsync(bool value)
-@@ -957,6 +1067,13 @@ void platform_swap_buffers()
+@@ -957,6 +1085,15 @@ void platform_swap_buffers()
      int use_scale_type = scale_type;
      if (!is_fullscreen)
          use_scale_type = BEST_FIT;
++    if (platform_phone_view())
++        use_scale_type = EXACT_FIT;   // the phone's FULL stretch (CHOWDREN_PHONE_VIEW)
 +#ifdef CHOWDREN_IS_ANDROID
 +    // The APK runs Display Mode FULL: the 1024x768 frame is stretched to fill
 +    // the screen (x2.34375, x1.40625 on the g56), and the phone magnifies it
@@ -3035,7 +3065,7 @@ index 2a988b7..9064f7f 100644
  // BaseFile
  
 diff --git a/Chowdren/base/fpslimit.cpp b/Chowdren/base/fpslimit.cpp
-index 30eb23e..50c4cb3 100644
+index 30eb23e..fbd2156 100644
 --- a/Chowdren/base/fpslimit.cpp
 +++ b/Chowdren/base/fpslimit.cpp
 @@ -1,6 +1,7 @@
@@ -3046,12 +3076,20 @@ index 30eb23e..50c4cb3 100644
  #include <algorithm>
  
  FPSLimiter::FPSLimiter()
-@@ -28,9 +29,15 @@ void FPSLimiter::start()
+@@ -28,9 +29,23 @@ void FPSLimiter::start()
  
  void FPSLimiter::finish()
  {
 +    if (harness_fixed_step()) {
-+        // Exactly one frame per update, no sleep: the harness replays frames, not time.
++        // Exactly one frame per update: the harness replays frames, not time.
++        // CHOWDREN_REALTIME only paces those same steps at real time for a viewer.
++        if (harness_realtime()) {
++            double now = platform_get_time();
++            double t = next_update - now;
++            if (t > 0.0)
++                platform_sleep(t);
++            next_update = std::max(now, next_update) + 1.0 / framerate;
++        }
 +        dt = 1.0 / framerate;
 +        current_framerate = framerate;
 +        return;
@@ -3065,10 +3103,10 @@ index 30eb23e..50c4cb3 100644
          platform_sleep(t);
 diff --git a/Chowdren/base/harness.cpp b/Chowdren/base/harness.cpp
 new file mode 100644
-index 0000000..176de1c
+index 0000000..9f89834
 --- /dev/null
 +++ b/Chowdren/base/harness.cpp
-@@ -0,0 +1,455 @@
+@@ -0,0 +1,459 @@
 +// Deterministic research harness for the build-296 recompile. See harness.h.
 +// Compiled once, included from run.cpp next to crashdump.cpp.
 +
@@ -3089,6 +3127,8 @@ index 0000000..176de1c
 +enum { OP_DOWN = 0, OP_MOVE = 1, OP_UP = 2, OP_DOWN_OBJECT = 3 };
 +
 +bool h_active = false, h_no_draw = false;
++// CHOWDREN_REALTIME=1: keep the fixed 60 Hz steps but pace them at real time, so a person can watch a replay.
++bool h_realtime = false;
 +// CHOWDREN_PLAY=1 without the harness: the real left mouse button is touch 0.
 +bool h_play = false, h_play_down = false;
 +std::vector<std::pair<int, int> > h_snaps;   // (frame index, update) to write after drawing
@@ -3220,6 +3260,7 @@ index 0000000..176de1c
 +bool harness_active() { return h_active; }
 +bool harness_fixed_step() { return h_active; }
 +bool harness_skip_draw() { return h_no_draw; }
++bool harness_realtime() { return h_realtime; }
 +
 +void harness_init()
 +{
@@ -3240,6 +3281,7 @@ index 0000000..176de1c
 +        return;
 +    }
 +    h_no_draw = env_int("CHOWDREN_NO_DRAW", 0) != 0;
++    h_realtime = env_int("CHOWDREN_REALTIME", 0) != 0;
 +    h_seed = env_int("CHOWDREN_SEED", -1);
 +    h_seed_frame = env_int("CHOWDREN_SEED_FRAME", -1);
 +    h_stop_frame = env_int("CHOWDREN_STOP_FRAME", -1);
@@ -4484,18 +4526,31 @@ index da4f5ab..2c997c9 100644
                         glyph->BBox().Lower().X() + padding + 0.5);
      }
 diff --git a/Chowdren/base/desktop/fbo.cpp b/Chowdren/base/desktop/fbo.cpp
-index 3c946f2..915380f 100644
+index 3c946f2..d1a33f6 100644
 --- a/Chowdren/base/desktop/fbo.cpp
 +++ b/Chowdren/base/desktop/fbo.cpp
-@@ -83,7 +83,7 @@ void Framebuffer::init(int w, int h)
+@@ -1,3 +1,4 @@
++#include "platform.h"
+ #include "fbo.h"
+ #include "chowconfig.h"
+ 
+@@ -83,9 +84,15 @@ void Framebuffer::init(int w, int h)
      set_tex(tex);
      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE,
                   NULL);
 -#ifdef CHOWDREN_POINT_FILTER
 +#if defined(CHOWDREN_POINT_FILTER) && !defined(CHOWDREN_IS_ANDROID)
++    if (platform_phone_view()) {
++        // the phone magnifies with bilinear filtering (CHOWDREN_PHONE_VIEW)
++        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
++        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
++    } else {
      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
++    }
  #else
+     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 diff --git a/Chowdren/base/android/glesshader.cpp b/Chowdren/base/android/glesshader.cpp
 new file mode 100644
 index 0000000..8f91c0c
@@ -4564,3 +4619,17 @@ index 0000000..8f91c0c
 +#define commit_parameters(x)
 +
 +#include "shadercommon.cpp"
+diff --git a/Chowdren/base/platform.h b/Chowdren/base/platform.h
+index 9805e02..7e2f948 100644
+--- a/Chowdren/base/platform.h
++++ b/Chowdren/base/platform.h
+@@ -30,6 +30,9 @@ int translate_vk_to_key(int vk);
+ int translate_key_to_vk(int key);
+ int translate_string_to_key(const std::string & name);
+ bool platform_has_focus();
++// CHOWDREN_PHONE_VIEW=1: the desktop window shows the game as the phone does
++// (1200x540, FULL stretch, bilinear).
++bool platform_phone_view();
+ void platform_set_focus(bool v);
+ void platform_show_mouse();
+ void platform_get_mouse_pos(int * x, int * y);

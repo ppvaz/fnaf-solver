@@ -2134,3 +2134,23 @@ Open:
 - The census, the corner cohort and the APK install (agents).
 - The per-cycle ledger against a phone recording.
 - Pedro's attestation.
+
+**2026-09-27 (night): two more sheet orders sourced; Pedro watches k3 play the rebuild.**
+
+- **S2b, MODEL_ONLY.** The rebuild set gains two options:
+  - `sourcedFootstepValue2`, adjudicated earlier: the cue on the first loop of
+    value 2 > 0 on a marker.
+  - `sourcedRollsBeforeMoves`, new (`rolls-before-moves.test.js`): g333-g343
+    roll everyone before any promotion or move. The model's in-pass move draw
+    (e324) had shifted Mangle's roll at tick 1200.
+  - The no-input ladder is unchanged.
+  - Replays: Night 1 `minimal` holds to its last update
+    (`recompile-replay-4cfda145f25dff96`); Night 5 `contact-final` first
+    differs at 7460 (`recompile-replay-40772852939a798d`); Night 7 `k3` at 1800
+    (`recompile-replay-4d3f13fef20ac45d`).
+- **Watching.** `CHOWDREN_REALTIME=1` (in the patch) paces the harness in real
+  time. Pedro watched k3's Night 7 10/20 schedule play in the rebuild.
+
+Open:
+- Night 7's difference at 1800 and Night 5's at 7460.
+- The census, the corner cohort and the APK install (agents).

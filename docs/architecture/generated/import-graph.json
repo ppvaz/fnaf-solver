@@ -922,6 +922,13 @@
       ]
     },
     {
+      "file": "packages/core/test/rolls-before-moves.test.js",
+      "imports": [
+        "../src/mechanics/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
       "file": "packages/core/test/route-forks.test.js",
       "imports": [
         "../src/mechanics/plant-model.js",

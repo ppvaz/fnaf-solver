@@ -262,6 +262,11 @@ export class Sim {
       // hooked clock clears the model's latch (lightLogicalUntil) at the top of the tick, before the 5 s rolls
       // and moves, which moves such a unit one loop early (Night 7 k3's first replay mismatch, tick 600).
       sourcedHallLatchOrder: false,
+      // g333-g343 roll every character before any promotion (g344-g358) or move (g380 on) runs, so a move's
+      // own draw (e324: W. Chica CAM 02 -> 06, Random(4)) lands after the Paper Pals roll. Off: each passed roll
+      // is promoted and moved at once, and that draw shifts every later roll of the same loop onto another
+      // value (Night 7 k3 at tick 1200: Mangle's roll failed in the model and passed in the rebuild).
+      sourcedRollsBeforeMoves: false,
       // Mangle's mask leaves (dump g400: the 10%/s roll under the mask; g401: five mask ticks) place her at
       // CAM 7 (marker 62), three hops from the vent, not at the route start the unit table's repelIdx 0 gives.
       // Every other unit's repelIdx matches its dump endpoint (g538-g555, g213, g437, g439/g440, g292/g294).
@@ -1965,10 +1970,19 @@ export class Sim {
   /** g333-g343 in sheet order under sourcedRollDraws: every roll draws; state gates only the outcome. */
   rollAllFiveSecond() {
     /** @param {string} id */
+    // sourcedRollsBeforeMoves: g333-g343 roll everyone first; the promotions (g344-g358) and the moves (g380 on)
+    // come after the last roll, so a move's own draws (e324) cannot shift a later character's roll.
+    /** @type {any[] | null} */
+    const deferred = this.opts.sourcedRollsBeforeMoves ? [] : null;
+    /** @param {string} id */
     const rollUnit = id => {                                                   // g333-g335, g338-g341
       const hit = this.rng.chance(C.MO_CHANCE(this.ai[id]), true);
       const u = this.units.find(x => x.id === id);
       if (!hit || !this.opts.stalledEnabled || !u || u.done || u.atOpening) return;
+      if (deferred) deferred.push(id); else settleRoll(u, id);
+    };
+    /** @param {any} u @param {string} id */
+    const settleRoll = (u, id) => {
       this.footstepPromote(u, true);                                           // g344-g358: value 2 = 10
       const step = this.sourcedRouteStep(u, this.frame);
       if (step === 'discard' || step === 'returned') { u.promoted = false; return; }
@@ -2016,6 +2030,10 @@ export class Sim {
       }
     }
     this.rng.int(0, 19, 0);                                                    // g343 Paper Pals
+    if (deferred) for (const id of deferred) {                                 // g344-g358, then the moves
+      const u = this.units.find(x => x.id === id);
+      if (u && !u.done && !u.atOpening) settleRoll(u, id);
+    }
   }
 
   rollDecidePath() {

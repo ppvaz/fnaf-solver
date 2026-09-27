@@ -895,6 +895,40 @@ in the rebuild set now; the no-input ladder is unchanged.
 | Night 5 `contact-final` | 7200 (was 1800) | 17675 | 7,204 | 5 |
 | Night 7 `k3` | 900 (was 600) | 20791 (was 3845) | 923 | 12 |
 
+**Footstep value 2, and rolls before moves.** Two more differences, found the
+same way (model draws and events against the rebuild's per-update draws, then
+Counter and object watches):
+
+- **Tick 900 (Night 7):** the rebuild draws Withered Freddy's footstep on the
+  loop he is promoted, while he still stands on CAM 03, a `hear footsteps`
+  marker. That is the adjudicated `sourcedFootstepValue2` rule: the cue fires on
+  the first loop of value 2 > 0 on a marker. The rebuild set now carries it.
+- **Tick 1200 (Night 7):** Mangle's roll passed in the rebuild and failed in the
+  model on the same LCG state. Both hold her AI at 15: the sheet clamps it, and
+  `cust_mangle AI` keeps the dial's 20. The model moved Withered Chica CAM 02 to
+  CAM 06 inside the roll pass, spending her e324 `Random(4)` between Chica's
+  roll and Golden Freddy's. Every later roll of that loop then read another
+  value. The per-update counts and states were still equal, so only the
+  downstream effect showed.
+
+  The sheet rolls everyone (g333-g343) before any promotion (g344-g358) or move
+  (g380 on). `sourcedRollsBeforeMoves` (default off,
+  `rolls-before-moves.test.js`) runs the promotions and moves after g343.
+
+Both are in the rebuild set, and every no-input night is unchanged
+(`*-replay-rolls-20260927.json`):
+
+| binding | first mismatch | persistent split | matched before it | runs |
+|---|---|---|---|---|
+| Night 1 `minimal` | 21714 | 25200, the last update | 24,899 | 3 |
+| Night 5 `contact-final` | 7460 | 23233 | 11,427 | 28 |
+| Night 7 `k3` | 1800 | 20086 | 2,598 | 15 |
+
+**Watching a replay.** `CHOWDREN_REALTIME=1` paces the harness's fixed 60 Hz
+steps at real time, so a person can watch a winner's schedule play in a window.
+The updates, draws and trace are unchanged. The first such run was k3's Night 7
+at 10/20, shown to Pedro from `pinned/41b3f426-7163d628`.
+
 **Font atlas.** Pedro saw lowercase n drawn as a filled square in the bold
 preset names ("New and Shiny", "Cupcake Challenge", "Golden Freddy"). The bank's
 glyph is sound. Chowdren's `FTTextureFont` checked for the end of a row after

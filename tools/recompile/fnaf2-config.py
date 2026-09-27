@@ -62,6 +62,14 @@ def init(converter):
     converter.add_define('CHOWDREN_POINT_FILTER')
     converter.add_define('CHOWDREN_QUICK_SCALE')
 
+    # The mobile CCN's AppName carries Android's string-resource escape
+    # ("Freddy\\'s"); aapt consumes it for the launcher label ("Five Nights at
+    # Freddy's 2", aapt2 dump badging of the retail APK), so the window title and
+    # CMake's APP_NAME take it unescaped.
+    for game in converter.games:
+        if game.name and "\\'" in game.name:
+            game.name = game.name.replace("\\'", "'")
+
     for game in converter.games:
         exts = game.extensions
         if exts is None or exts.items:
