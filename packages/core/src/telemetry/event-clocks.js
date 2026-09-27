@@ -68,6 +68,9 @@ const BY_LEAF = Object.freeze({
   afterOnsetMs: C.DURATION, residueMs: C.DURATION, waitMs: C.DURATION,
   leadMs: C.DURATION, // the anchor's lead between latch and release (night-anchor.js, 2026-09-12 releases)
   heldMs: C.DURATION, // how long a run of static reads had withheld its exit vote (lifecycle.static-hold.expired)
+  // host wall-clock differences between two lifecycle reads' returns (lifecycle.actuation-halted,
+  // lifecycle.observe-gap) and the observer-interval bound they are held to
+  gapMs: C.DURATION, boundMs: C.DURATION,
   ageUs: C.DURATION_US, frameAgeUs: C.DURATION_US,
   // differences between two clocks
   offsetMs: C.OFFSET, phoneWallMinusMonoMs: C.OFFSET, wallMinusHostMs: C.OFFSET,

@@ -315,6 +315,19 @@
       ]
     },
     {
+      "file": "apps/device/test/post-night-halt.test.js",
+      "imports": [
+        "../src/adb-device-local-executor.js",
+        "../src/hid-schedule.js",
+        "@fnaf2-1020/core/contracts",
+        "node:assert/strict",
+        "node:fs",
+        "node:fs/promises",
+        "node:os",
+        "node:path"
+      ]
+    },
+    {
       "file": "apps/device/test/static-terminal-window.test.js",
       "imports": [
         "../src/adb-device-local-executor.js",
@@ -1745,6 +1758,15 @@
       ]
     },
     {
+      "file": "tools/device/post-night-static.mjs",
+      "imports": [
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/device/recipe.mjs",
       "imports": [
         "../model/hid-device-pilot.mjs",
@@ -2098,6 +2120,17 @@
         "./policy-ir.mjs",
         "@fnaf2-1020/core/control",
         "node:crypto"
+      ]
+    },
+    {
+      "file": "tools/device/test-post-night-static.mjs",
+      "imports": [
+        "./post-night-static.mjs",
+        "node:assert/strict",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
       ]
     },
     {

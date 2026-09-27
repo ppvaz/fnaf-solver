@@ -339,6 +339,43 @@
       }
     },
     {
+      "id": "apps/device/test/post-night-halt.test.js",
+      "lane": "test:contracts",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": false,
+      "determinismSignals": [
+        "Date.now",
+        "Date.now",
+        "Date.now",
+        "Date.now",
+        "Date.now",
+        "Date.now",
+        "Date.now"
+      ],
+      "fixedSleeps": [
+        "setTimeout(resolve, ms",
+        "sleep(10",
+        "sleep(40",
+        "sleep(50",
+        "sleep(30",
+        "sleep(10",
+        "sleep(5",
+        "setTimeout(("
+      ],
+      "sharedResources": [
+        "device-transport"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "apps/device/test/static-terminal-window.test.js",
       "lane": "test:contracts",
       "owner": "legacy migration",
@@ -1862,7 +1899,9 @@
       "deterministic": true,
       "determinismSignals": [],
       "fixedSleeps": [],
-      "sharedResources": [],
+      "sharedResources": [
+        "device-transport"
+      ],
       "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",
@@ -2582,6 +2621,26 @@
       "determinismSignals": [],
       "fixedSleeps": [],
       "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "tools/device/test-post-night-static.mjs",
+      "lane": "test:contracts",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "local-http-port"
+      ],
       "subprocesses": false,
       "measurement": {
         "status": "NOT_MEASURED",

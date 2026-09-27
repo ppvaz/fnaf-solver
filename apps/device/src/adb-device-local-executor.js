@@ -46,14 +46,57 @@ const EXIT_CONFIRM_SAMPLES = 3;
 // at most 2418 ms. After a night is observed, a static read therefore withholds
 // its exit vote until the measured maximum plus one observer interval has
 // passed since the first static of its run. Game Over or 6 AM inside the window
-// ends the night as usual; after it, static votes as before. The schedule keeps
-// running through the wait: a static can also be a misread inside a live night
-// (night5-perfetto1 read static, then 6 AM). These numbers decide behaviour, so
+// ends the night as usual. These numbers decide behaviour, so
 // apps/device/test/static-terminal-window.test.js reads the record and fails if
 // either drifts from it (CLAUDE.md register items 7 and 9).
 export const STATIC_TERMINAL_MAX_MS = 6306;
 export const OBSERVER_INTERVAL_BOUND_MS = 2418;
 export const STATIC_TERMINAL_WAIT_MS = STATIC_TERMINAL_MAX_MS + OBSERVER_INTERVAL_BOUND_MS;
+// The first static read after a night HALTS ACTUATION; observation goes on.
+//
+// Until 2026-09-27 the schedule kept pressing through that window, and on the
+// phone it pressed through the post-death screens: in
+// night7-corner2-bbfoxy-r02-20260927T193022Z its presses skipped the ~1 s Game
+// Over and entered Custom Night from the title, and in
+// night7-n7-420-minimal-m3-p1b-20260927T195732Z they opened the in-app store
+// from the title (k3's left vent light lies on the title's New Game). So once a
+// night has been observed, the first `static` read stops the schedule -- no
+// further line reaches the HID, and the shared process is closed, which is what
+// kills its already-buffered stream -- while the lifecycle observer keeps
+// reading. The run then ends on a Game Over or 6 AM read (COMPLETED with that
+// terminal), a title read or three exit votes (as before), the window's expiry
+// measured from that first static (a static exit, as before), or the existing
+// deadlines and external stops. The halt is latched: a later `night` read
+// neither resumes the schedule nor restarts the window, because p1b read
+// `state=night` once from inside its death minigame, 123.7 s after its static.
+//
+// Why the FIRST static and not a confirmed one, measured over the committed
+// packs (docs/evidence/post-night-static-halt-20260927.json, evidence
+// post-night-static-halt-1f27592aee56cc26; tools/device/post-night-static.mjs):
+// 81 static episodes follow a night in 184 packs, and in none of them was the
+// office read twice in a row again: 33 end at Game Over, 45 at the old
+// three-static abort and its relaunch, 2 at the title, 1 at 6 AM. In the 27
+// packs that keep every read (3523 night reads), all 26 post-night static reads
+// lie in those episodes, while `newspaper` was misread inside a live night 60
+// times -- the classifier does produce positive misreads mid-night, which is
+// why other screens still need three votes, but it never read static there.
+// The one episode that ended at 6 AM, night5-perfetto1, read it 5763 ms after
+// its static -- inside the window the observer now keeps -- and its stream sat
+// parked at a gate until 2920 ms after the static, so a halt there would have
+// withheld one release and the 571 ms of presses before the old abort stopped
+// them anyway. A confirmation read could not have protected r02: its next read
+// came 8393 ms after its static, and its frames show the presses had passed
+// Game Over into the Custom Night dial screen within about 6 s of the static's
+// onset. apps/device/test/post-night-halt.test.js holds these numbers to the
+// record.
+//
+// The window assumes one observer interval of at most OBSERVER_INTERVAL_BOUND_MS
+// between reads. That is not what the observer delivers: r02's reads around its
+// static were 11776 and 8393 ms apart, and 721 of 3795 read-to-read gaps inside
+// live nights exceed it (max 4488 ms). So after the halt every gap over the
+// bound is evented (`lifecycle.observe-gap`); the observer's speed is not
+// changed here.
+export const POST_NIGHT_STATIC_HALT = 'post-night-static';
 // Screens that end a scheduled night on their FIRST positive read once a night
 // has been observed. These are not animations a healthy run passes through,
 // and two of them put menu controls under the schedule's own tap coordinates.
@@ -210,7 +253,7 @@ export class AdbDeviceLocalArtifactExecutor {
   constructor(options = {}) {
     const { serial, adb = 'adb', readyDelayMs = DEFAULT_READY_DELAY_MS,
       observe = null, observeArm = null, observeControlState = null,
-      sharedHid = null, pollMs = 1000, onEvent = () => {}, onOutput = () => {}, timing = {},
+      sharedHid = null, closeSharedHid = null, pollMs = 1000, onEvent = () => {}, onOutput = () => {}, timing = {},
       nightReleaseOwner = 'observer' } = options;
     if (typeof serial !== 'string' || serial.length === 0) throw new TypeError('device-local executor requires an ADB serial');
     if (observe !== null && typeof observe !== 'function') throw new TypeError('device-local executor observe must be a function');
@@ -219,6 +262,8 @@ export class AdbDeviceLocalArtifactExecutor {
       throw new TypeError('device-local executor observeControlState must be a function');
     if (sharedHid !== null && typeof sharedHid !== 'function')
       throw new TypeError('device-local executor sharedHid must be a function');
+    if (closeSharedHid !== null && typeof closeSharedHid !== 'function')
+      throw new TypeError('device-local executor closeSharedHid must be a function');
     if (!['observer', 'port'].includes(nightReleaseOwner))
       throw new TypeError('device-local executor nightReleaseOwner must be observer or port');
     if (!Number.isInteger(pollMs) || pollMs < 250 || pollMs > 10000)
@@ -234,6 +279,7 @@ export class AdbDeviceLocalArtifactExecutor {
       gateBudgetMaxMs: timing.gateBudgetMaxMs ?? GATE_BUDGET_MAX_MS,
       gateBudgetReserveMs: timing.gateBudgetReserveMs ?? GATE_BUDGET_RESERVE_MS,
       staticTerminalWaitMs: timing.staticTerminalWaitMs ?? STATIC_TERMINAL_WAIT_MS,
+      observerGapBoundMs: timing.observerGapBoundMs ?? OBSERVER_INTERVAL_BOUND_MS,
     };
     for (const [name, value] of Object.entries(timingValues)) {
       if (!Number.isInteger(value) || value < 0)
@@ -247,10 +293,16 @@ export class AdbDeviceLocalArtifactExecutor {
     this.gateRetryGapMs = timingValues.gateRetryGapMs;
     this.maskSettleMs = timingValues.maskSettleMs;
     this.staticTerminalWaitMs = timingValues.staticTerminalWaitMs;
+    this.observerGapBoundMs = timingValues.observerGapBoundMs;
     this.gateTiming = { minSlackMs: timingValues.gateMinSlackMs,
       budgetMinMs: timingValues.gateBudgetMinMs, budgetMaxMs: timingValues.gateBudgetMaxMs,
       budgetReserveMs: timingValues.gateBudgetReserveMs };
     this.sharedHid = sharedHid;
+    // The shared process's OWNER closes it when actuation halts: writing to it
+    // only appends, and the phone's /system/bin/hid plays what is already
+    // buffered, so closing is what stops those presses. Without an owner hook
+    // the process's own close() is used, if it has one.
+    this.closeSharedHid = closeSharedHid;
     // `observer`: the first authoritative office frame releases the shared
     // schedule (the 1 Hz classifier draws the night's epoch). `port`: that
     // frame only authorizes the night, and the composition calls
@@ -345,12 +397,21 @@ export class AdbDeviceLocalArtifactExecutor {
     let resolveSharedProcess = null;
     let sharedStopped = false;
     let sharedFeedTail = Promise.resolve();
-    /** @type {(lines: readonly string[], options?: {onFirstWrite?: (at: number) => void}) => Promise<void>} */
-    const feedShared = (lines, { onFirstWrite } = {}) => {
+    // Set once, by the first static read after a night (POST_NIGHT_STATIC_HALT).
+    // From then on no schedule, gate, correction or arm line reaches the HID,
+    // and only the lifecycle observer (or an external stop) ends the run.
+    /** @type {{ at: number, reason: string } | null} */
+    let actuationHalt = null;
+    let actuationStop = Promise.resolve();
+    /** @type {(lines: readonly string[], options?: {onFirstWrite?: (at: number) => void, afterHalt?: boolean}) => Promise<void>} */
+    const feedShared = (lines, { onFirstWrite, afterHalt = false } = {}) => {
       if (!sharedMode) return Promise.resolve();
       const task = sharedFeedTail.then(async () => {
         let first = true;
         for (const value of lines) {
+          // Checked per line: a segment being written when the halt lands
+          // stops at the next line, not at the end of the segment.
+          if (actuationHalt && !afterHalt) return;
           await sharedHid.write(value);
           if (first) {
             first = false;
@@ -377,20 +438,74 @@ export class AdbDeviceLocalArtifactExecutor {
       : { type: 'hid.shell-spawned', at: Date.now(), readyDelayMs: schedule.readyDelayMs });
     this.child = sharedMode ? sharedHid : process.child;
     const processIdentity = this.child;
+    // Declared here so a stop can end a halted run's observation (see below).
+    let stopObserver = false;
     this.stopProcess = async () => {
       this.unblockNightRelease();
+      // Once actuation has halted, the schedule's end no longer ends the run:
+      // the observer does. Any stop that arrives after the halt -- the
+      // observer's own end, an external abort or releaseAll, the shared
+      // completion deadline -- therefore also ends that observation.
+      if (actuationHalt) stopObserver = true;
       if (sharedMode) {
         if (sharedStopped) return;
         sharedStopped = true;
-        try { await feedShared([SHARED_HID_RELEASE]); }
+        // The halt already wrote the release and closed the stream.
+        try { if (!actuationHalt) await feedShared([SHARED_HID_RELEASE]); }
         finally { resolveSharedProcess?.({ code: 0, shared: true }); }
         return;
       }
+      // The halt already signalled the gate and killed the shell.
+      if (actuationHalt) return;
       try {
         if (armControl) await touchRemote(this.adb, this.serial, armControl.fail);
       } finally {
         process.child.kill('SIGTERM');
       }
+    };
+    /**
+     * Stop every press and keep observing (POST_NIGHT_STATIC_HALT). Idempotent;
+     * the stop runs beside the observer so the next lifecycle read is not held
+     * behind an adb round trip, and teardown awaits it.
+     * @param {string} reason
+     * @param {number} at host wall clock of the read that decided the halt
+     * @param {Record<string, unknown>} [detail]
+     */
+    const haltActuation = (reason, at, detail = {}) => {
+      if (actuationHalt) return;
+      actuationHalt = { at, reason };
+      // A port-owned release that has not fired yet must start nothing.
+      this.nightReleaseAction = null;
+      this.onEvent({ type: 'lifecycle.actuation-halted', at, reason, shared: sharedMode, ...detail });
+      actuationStop = (async () => {
+        let method = 'none';
+        let error = null;
+        try {
+          if (sharedMode) {
+            if (!sharedStopped) {
+              method = 'release';
+              await feedShared([SHARED_HID_RELEASE], { afterHalt: true });
+            }
+            const close = this.closeSharedHid ??
+              (typeof sharedHid.close === 'function' ? () => sharedHid.close() : null);
+            if (close) {
+              await close();
+              method = 'hid-closed';
+            }
+          } else {
+            method = 'shell-killed';
+            try {
+              if (armControl) await touchRemote(this.adb, this.serial, armControl.fail);
+            } finally {
+              process.child.kill('SIGTERM');
+            }
+          }
+        } catch (caught) {
+          error = String(caught instanceof Error ? caught.message : caught).slice(0, 240);
+        }
+        this.onEvent({ type: 'lifecycle.actuation-stopped', at: Date.now(), reason, method,
+          ...(error === null ? {} : { error }) });
+      })();
     };
     let processDone = false;
     const observedProcessPromise = processPromise.then(value => {
@@ -439,18 +554,12 @@ export class AdbDeviceLocalArtifactExecutor {
     let handoffDelayMs = null;
     let handoffFailure = null;
     let nonNightSamples = 0;
-    // When the current run of static reads began (host clock, stamped when the
-    // classification returned -- the edge the measured record's rows carry).
-    /** @type {number | null} */
-    let staticRunStartedAt = null;
-    let staticHoldExpired = false;
     const buildArmResult = () => armVerification ? {
       status: armObserveOnce ? armObservationStatus : 'PASS',
       cameras: armVerification.cameras, viewing: armVerification.viewing,
       observation: armObservation,
       ...(armObserveOnce ? { mode: 'observe-once' } : {}),
     } : undefined;
-    let stopObserver = false;
     let observer = Promise.resolve();
     let armObserver = Promise.resolve();
     const effectObservers = [];
@@ -485,7 +594,7 @@ export class AdbDeviceLocalArtifactExecutor {
         ...(source ? { source } : {}) });
     };
     const startSharedSchedule = requestedAt => {
-      if (!sharedMode || sharedReleaseInFlight || stopObserver ||
+      if (!sharedMode || sharedReleaseInFlight || stopObserver || actuationHalt ||
           this.child !== processIdentity || !this.running)
         return sharedReleaseTask ?? Promise.resolve();
       sharedReleaseInFlight = true;
@@ -510,6 +619,9 @@ export class AdbDeviceLocalArtifactExecutor {
               }
             },
           });
+          // A halt that lands while the body is being written stops it; that
+          // is the halt working, not a failed handoff.
+          if (actuationHalt) return;
           if (firstWriteAt === null) throw new Error('night handoff wrote no HID action');
           // `firstWriteAt` is assigned inside the onFirstWrite callback, so the
           // null check above does not narrow it for later uses. Snapshot it.
@@ -565,7 +677,11 @@ export class AdbDeviceLocalArtifactExecutor {
       // its timing: a failed/late state acknowledgement is evidence of a
       // desync, not a command to retry or compensate mid-night.
       let controlReadTail = Promise.resolve();
-      const controlStillRunning = () => !stopObserver && this.child === processIdentity && this.running;
+      // Control reads, gates, corrections and arm retries all belong to the
+      // schedule, so a halt ends them with it; the lifecycle observer is not
+      // one of them.
+      const controlStillRunning = () => !stopObserver && !actuationHalt &&
+        this.child === processIdentity && this.running;
       const waitUntil = async deadline => {
         while (controlStillRunning()) {
           const remainingMs = deadline - Date.now();
@@ -647,6 +763,7 @@ export class AdbDeviceLocalArtifactExecutor {
         })().catch(() => {
           // A diagnostic observer must never become a second actuator failure
           // mode. The absent result is visible from expected/sample events.
+          if (actuationHalt) return;
           this.onEvent({ type: 'control.effect.observer-error', phase,
             ...(attempt === null ? {} : { attempt }) });
         });
@@ -708,6 +825,8 @@ export class AdbDeviceLocalArtifactExecutor {
                 sample.gridLuma >= MASK_OFF_GRID_LUMA_FLOOR) break;
             }
             if (!sample) break;
+            // A halt during the reads: no correction, no release, no abort.
+            if (actuationHalt) break;
             // The helper's fixed button chevrons decide this, not the 20x9 grid.
             //
             // Each state hides one button and keeps the other, so the pair is a
@@ -876,6 +995,9 @@ export class AdbDeviceLocalArtifactExecutor {
             lagMs += Math.max(0, Date.now() - releaseAt);
           }
         })().catch(async () => {
+          // After a halt the stream is already stopped and the observer owns
+          // the end of the run; a gate that fails then must not end it early.
+          if (actuationHalt) return;
           // A parked stream never resumes on its own. An observer that dies
           // silently would hang the night at a gate, so it fails the run
           // instead and lets the shell unwind through its own trap.
@@ -905,15 +1027,18 @@ export class AdbDeviceLocalArtifactExecutor {
           this.onEvent({ type: 'arm.unresolved', mode: 'observe-once', reason: 'arm-window-unavailable' });
           return;
         }
-        while (!stopObserver && this.child === processIdentity && this.running && nightAnchoredAt === null)
+        while (controlStillRunning() && nightAnchoredAt === null)
           await new Promise(resolve => setTimeout(resolve, this.pollMs));
-        if (stopObserver || this.child !== processIdentity || !this.running || nightAnchoredAt === null)
+        if (!controlStillRunning() || nightAnchoredAt === null)
           return;
         const checkAt = (nightReleasedAt ?? nightAnchoredAt) + armReadyAtMs + this.armSettleMs;
         if (!await waitUntil(checkAt)) return;
         let sample = null;
         try { sample = await this.observeArm(); }
         catch { /* an unavailable frame remains unresolved */ }
+        // A halt while the camera was being read: the arm stays unresolved and
+        // a mismatch may no longer stop a run the observer now owns.
+        if (actuationHalt) return;
         const elapsedMs = Date.now() - startedAt;
         this.onEvent({ type: 'arm.sample', mode: 'observe-once', elapsedMs, attempt: 1, sample });
         lastArmObservation = sample;
@@ -974,9 +1099,9 @@ export class AdbDeviceLocalArtifactExecutor {
           this.onEvent({ type: 'arm.retry', attempt: armAttempt,
             elapsedMs: Date.now() - startedAt, reason });
         };
-        while (!stopObserver && !armVerified && this.child === processIdentity && this.running) {
+        while (!armVerified && controlStillRunning()) {
           await new Promise(resolve => setTimeout(resolve, this.pollMs));
-          if (stopObserver || this.child !== processIdentity || !this.running) break;
+          if (!controlStillRunning()) break;
           if (nextCheckAt === Infinity) {
             if (nightAnchoredAt === null) continue;
             nextCheckAt = (nightReleasedAt ?? nightAnchoredAt) + gate.armReadyAtMs + this.armSettleMs;
@@ -986,6 +1111,8 @@ export class AdbDeviceLocalArtifactExecutor {
           let sample = null;
           try { sample = await this.observeArm(); }
           catch { /* an unavailable frame remains UNKNOWN */ }
+          // No arm release, retry or failure stop after a halt.
+          if (actuationHalt) break;
           const elapsedMs = Date.now() - startedAt;
           this.onEvent({ type: 'arm.sample', elapsedMs, attempt: armAttempt, sample });
           lastArmObservation = sample;
@@ -1000,7 +1127,7 @@ export class AdbDeviceLocalArtifactExecutor {
             if (confirmations >= ARM_CONFIRM_SAMPLES) {
               const sameHighlights = key === JSON.stringify([...armVerification.cameras].sort());
               if (sameHighlights) {
-                  if (stopObserver) break;
+                  if (stopObserver || actuationHalt) break;
                   let armGoAt = null;
                   if (armControl) {
                     armGoAt = Date.now();
@@ -1099,14 +1226,62 @@ export class AdbDeviceLocalArtifactExecutor {
           }
         })().catch(() => {})
         : Promise.resolve();
+      // When the previous lifecycle read returned (host wall clock, like the
+      // measured record's rows), for the post-night gap events.
+      /** @type {number | null} */
+      let previousReadAt = null;
+      // A halted run's observation ends once its window, measured from the
+      // static read that halted it, has run out: a read that was in flight at
+      // the expiry is still taken first, so a Game Over it returns is the
+      // terminal. The exit is the static exit the campaign already knows.
+      /** @param {number} observedAt */
+      const endAtHaltWindow = async observedAt => {
+        if (!actuationHalt) return false;
+        const heldMs = observedAt - actuationHalt.at;
+        if (heldMs < this.staticTerminalWaitMs) return false;
+        this.onEvent({ type: 'lifecycle.static-hold.expired', at: observedAt,
+          heldMs, waitMs: this.staticTerminalWaitMs });
+        observedExitState = 'static';
+        stopObserver = true;
+        await this.stopProcess();
+        return true;
+      };
       observer = this.observe ? (async () => {
         while (!stopObserver && this.child === processIdentity && this.running) {
           await new Promise(resolve => setTimeout(resolve, this.pollMs));
           if (stopObserver || this.child !== processIdentity || !this.running) break;
           const observeStartedAt = Date.now();
+          /** @type {any} */
+          let state = null;
+          let unreadable = false;
+          try { state = this.observe ? await this.observe() : null; }
+          catch { unreadable = true; }
+          const observedAt = Date.now();
+          const gapMs = previousReadAt === null ? null : observedAt - previousReadAt;
+          previousReadAt = observedAt;
+          // The window assumes reads at most one observer interval apart. From
+          // the read that halts actuation on, a longer gap is evented: r02's
+          // reads around its static were 11776 and 8393 ms apart.
+          if (gapMs !== null && gapMs > this.observerGapBoundMs &&
+              (actuationHalt || (nightObserved && state === 'static')))
+            this.onEvent({ type: 'lifecycle.observe-gap', at: observedAt, gapMs,
+              boundMs: this.observerGapBoundMs, state: unreadable ? null : state });
+          if (unreadable) {
+            // An unreadable frame does NOT reset the evidence.
+            //
+            // It used to. The 2026-09-12 origin run read `state=title`
+            // alternating with `unknown=no-signature-matched` for over a
+            // minute while the schedule kept pressing into the title screen:
+            // every UNKNOWN zeroed the counter, so three CONSECUTIVE non-night
+            // samples never accumulated and the run could not end itself. An
+            // unreadable frame is an absence of evidence, so it withholds a
+            // vote rather than destroying the votes already cast. It does not
+            // hold a halted run open past its window either.
+            try { if (await endAtHaltWindow(observedAt)) break; }
+            catch { /* the stop's own failure is teardown's to report */ }
+            continue;
+          }
           try {
-            const state = this.observe ? await this.observe() : null;
-            const observedAt = Date.now();
             // A lifecycle observer that positively names any other screen has
             // proved that the scheduled night is gone once a night frame has
             // been seen. Classifiers are frame-based and can produce one bad
@@ -1194,8 +1369,9 @@ export class AdbDeviceLocalArtifactExecutor {
               }
               nightObserved = true;
               nonNightSamples = 0;
-              staticRunStartedAt = null;
-              staticHoldExpired = false;
+              // After a halt a night read resumes nothing and does not restart
+              // the window: p1b read `state=night` once from inside its death
+              // minigame, 123.7 s after its first static.
             } else if (!state) {
               // An UNKNOWN classification withholds a vote; see the catch below.
             } else if (!nightObserved) {
@@ -1226,30 +1402,19 @@ export class AdbDeviceLocalArtifactExecutor {
               await this.stopProcess();
               break;
             }
-            // After a night, a static read inside STATIC_TERMINAL_WAIT_MS of
-            // the first static of its run withholds its exit vote: it neither
-            // counts nor erases the votes already cast, like an UNKNOWN read.
-            // An UNKNOWN read does not end the run; any other positive screen
-            // does, and votes as before.
-            let staticWithheld = false;
-            if (nightObserved && state === 'static') {
-              if (staticRunStartedAt === null) {
-                staticRunStartedAt = observedAt;
-                this.onEvent({ type: 'lifecycle.static-hold', at: observedAt,
-                  waitMs: this.staticTerminalWaitMs });
-              }
-              const heldMs = observedAt - staticRunStartedAt;
-              if (heldMs < this.staticTerminalWaitMs) {
-                staticWithheld = true;
-              } else if (!staticHoldExpired) {
-                staticHoldExpired = true;
-                this.onEvent({ type: 'lifecycle.static-hold.expired', at: observedAt,
-                  heldMs, waitMs: this.staticTerminalWaitMs });
-              }
-            } else if (state && state !== 'night') {
-              staticRunStartedAt = null;
-              staticHoldExpired = false;
+            // POST_NIGHT_STATIC_HALT. After a night, the first static read
+            // stops every press and opens the STATIC_TERMINAL_WAIT_MS window;
+            // the observer keeps reading. Static reads withhold their exit vote
+            // (they neither count nor erase the votes already cast, like an
+            // UNKNOWN read) until the window's expiry ends the run below. Any
+            // other positive screen votes as before.
+            if (nightObserved && state === 'static' && !actuationHalt) {
+              this.onEvent({ type: 'lifecycle.static-hold', at: observedAt,
+                waitMs: this.staticTerminalWaitMs });
+              haltActuation(POST_NIGHT_STATIC_HALT, observedAt, { state,
+                waitMs: this.staticTerminalWaitMs, ...(gapMs === null ? {} : { gapMs }) });
             }
+            const staticWithheld = actuationHalt !== null && state === 'static';
             const startupTransition = !nightObserved &&
               (state === 'intro' || state === 'newspaper') && Date.now() < startupDeadline;
             if (startupTransition) {
@@ -1265,21 +1430,27 @@ export class AdbDeviceLocalArtifactExecutor {
                 break;
               }
             }
+            if (await endAtHaltWindow(observedAt)) break;
           } catch {
-            // An unreadable frame does NOT reset the evidence.
-            //
-            // It used to. The 2026-09-12 origin run read `state=title`
-            // alternating with `unknown=no-signature-matched` for over a
-            // minute while the schedule kept pressing into the title screen:
-            // every UNKNOWN zeroed the counter, so three CONSECUTIVE non-night
-            // samples never accumulated and the run could not end itself. An
-            // unreadable frame is an absence of evidence, so it withholds a
-            // vote rather than destroying the votes already cast.
+            // A stop that fails while ending the run leaves the decision
+            // already recorded above; teardown still releases the stream.
           }
         }
       })() : Promise.resolve();
-      await processPromise;
+      try {
+        await processPromise;
+      } catch (error) {
+        // The halt kills a device-local shell on purpose: that exit is the
+        // halt, not a transport failure.
+        if (!actuationHalt) throw error;
+      }
+      // After a halt the schedule's end is not the run's end: the observer
+      // still reads until a terminal, a title or three exit votes, the
+      // window's expiry, or a stop (external, or the shared completion
+      // deadline) -- whichever comes first.
+      if (actuationHalt) await observer;
       stopObserver = true;
+      await actuationStop;
       await nativeAnchor;
       if (handoffFailure) throw handoffFailure;
       if (observedExitState)
@@ -1313,7 +1484,7 @@ export class AdbDeviceLocalArtifactExecutor {
       if (completionTimer !== null) clearTimeout(completionTimer);
       this.nightReleaseAction = null;
       this.unblockNightRelease();
-      await Promise.all([observer, armObserver, ...effectObservers, ...verifyTasks]);
+      await Promise.all([observer, armObserver, actuationStop, ...effectObservers, ...verifyTasks]);
       const anr = await readAnrEvents(this.adb, this.serial);
       if (anr !== null) this.onEvent({ type: 'device.anr', count: anr.length, lines: anr });
       this.child = null; this.running = false;

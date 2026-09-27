@@ -2241,3 +2241,60 @@ Open:
 - The FNaF 2 third star: no record in this repository names which Custom Night mode awards it.
 - The 4/20 Minus 3 winner: Pedro's choice between a recorded seam-slack exemption and a
   re-derived hold, then its own phone run.
+
+**2026-09-27 (late evening): after a night, the first static stops the presses and the observer keeps reading (S4 device safety, host-side, no phone).**
+
+- **The defect** (previous entry): inside `STATIC_TERMINAL_WAIT_MS` the schedule kept pressing,
+  and after two Night 7 deaths it pressed through the post-death screens (r02 into Custom Night,
+  p1b into the store).
+- **The rule, from the packs** (`tools/device/post-night-static.mjs`,
+  [record](../docs/evidence/post-night-static-halt-20260927.json),
+  `post-night-static-halt-1f27592aee56cc26`, DEVICE_MEASURED over committed reads):
+  - 81 static episodes follow a night in 184 packs. In none was the office read twice in a row
+    after the static: 33 end at Game Over, 45 at the old three-static abort and relaunch, 2 at the
+    title, 1 at 6 AM.
+  - The 6 AM one, `night5-perfetto1`, read it 5763 ms after its static, inside the 8724 ms window.
+    Its stream was parked at a gate until 2920 ms after the static, so a halt there withholds one
+    release and 571 ms of presses before the old abort stopped them anyway. The counterfactual is
+    not measured.
+  - In the 27 packs that keep every read (3523 night reads): all 26 post-night static reads lie in
+    those episodes. `newspaper` was misread inside a live night 60 times; static never was.
+  - p1b's only night read after its static (123.7 s later) came from inside its death minigame.
+  - No confirmation read: r02's next read came 8393 ms after its static, after its frames already
+    show the Custom Night dial screen.
+  - So `POST_NIGHT_STATIC_HALT` halts on the FIRST static read after a night, and the halt is
+    latched.
+- **The executor** (`apps/device/src/adb-device-local-executor.js`):
+  - The halt writes no further schedule, gate, correction or arm line.
+  - Shared mode writes the release report, then the owner closes the process
+    (`closeSharedHid`, wired to `closeMenuHid` in `modern-campaign-ports.js`); closing is what kills
+    the buffered stream. Device-local mode kills the shell.
+  - The observer keeps reading until Game Over or 6 AM (COMPLETED with that terminal), a title or
+    three exit votes, the window's expiry from that static (the usual static exit, now without
+    three post-window votes), or the existing deadlines and stops.
+  - Events `lifecycle.actuation-halted`, `lifecycle.actuation-stopped`, `lifecycle.observe-gap`;
+    `gapMs`/`boundMs` are declared in `event-clocks.js`.
+- **The observer-interval bound is violated in practice.** r02's reads around its static were
+  11776 and 8393 ms apart, and 721 of 3795 in-night read gaps exceed 2418 ms (max 4488). After a
+  halt every gap over the bound is now evented; the observer is not sped up.
+- **Tests.**
+  - `apps/device/test/post-night-halt.test.js` (`test:contracts`) holds the executor comment's
+    numbers to the record. It shows, on a 19-gate shared night, that nothing but the release is
+    written after the halt and the owner closes the HID once, and that the Game Over read after it
+    is the terminal. The same night with no static writes every segment and never halts. It also
+    covers the shell kill; r02's shape (static exit at the window, gap events only from the halting
+    read on); p1b's shape (a night read resumes nothing and does not restart the window); newspaper
+    and pre-night statics not halting; and a port release after the halt writing nothing.
+  - `tools/device/test-post-night-static.mjs` (`test:unit`) reproduces the record and refuses a
+    newer pack in which a night went on after a post-night static.
+  - `static-terminal-window.test.js` cases 3-5 now assert the latched halt.
+  - With the halt call disabled, `post-night-halt.test.js` goes red.
+
+Open:
+- The rule's first phone night: whether the halted observer reads a death's Game Over. r02-like
+  reads 8-12 s apart can still miss it; the window then ends as a static exit.
+- A death never read as static (a minigame read as unknown from its start) still presses. The
+  death minigames and the Custom Night dial screen are not recognised after a night.
+- The observer interval itself (721 of 3795 in-night gaps over the bound).
+- A third BB+Foxy cohort: the fail-safe it waited on is in the tree, but its phone behaviour is not
+  measured yet. Also open: the 4/20 Minus 3 decision and Pedro's attestation.
