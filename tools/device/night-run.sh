@@ -661,8 +661,11 @@ fi
 [ "$TEACH" = 1 ] && CAMPAIGN+=(--teach-overlay)
 if [ "$DRY" = 1 ]; then
   printf 'DRY RUN, the phone is not actuated:\n  %s\n' "${CAMPAIGN[*]} ${EXTRA[*]:-}"
-  VIDEO=0
-  ANALYZED=1
+  # Nothing was started on the phone, so nothing is stopped or reset either.
+  # The EXIT trap force-stops the game, relaunches it and screencaps its title;
+  # until 2026-09-27 a dry run still ran it and put FNaF 2 in front of an app
+  # the phone's owner was using (test-night-run-dry.mjs).
+  trap - EXIT
   exit 0
 fi
 CAMPAIGN+=(--live --confirm-live)
