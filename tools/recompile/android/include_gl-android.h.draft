@@ -1,0 +1,28 @@
+/* Draft Android/GLES1 branch for base/include_gl.h — verified to let the engine
+ * core + renderplatform + platform + fbo + all generated FNaF 2 TUs syntax-check
+ * for arm64-v8a (2026-08-28 spike). Not yet wired into include_gl.h.
+ *
+ * Real integration: add `#elif defined(CHOWDREN_IS_ANDROID)` alongside the
+ * existing `#ifdef CHOWDREN_IS_DESKTOP`, and guard glslshader.h out of the build
+ * (FNaF 2 compiles no shaders) rather than typedef'ing its ARB types.
+ */
+#include <GLES/gl.h>
+#include <GLES/glext.h>
+
+/* ES 1.1 spells these OES; the desktop branch does the same trick with __gl*EXT */
+#define glBlendFuncSeparate        glBlendFuncSeparateOES
+#define glBlendEquation            glBlendEquationOES
+#define glBlendEquationSeparate    glBlendEquationSeparateOES
+
+#define glGenFramebuffers          glGenFramebuffersOES
+#define glDeleteFramebuffers       glDeleteFramebuffersOES
+#define glBindFramebuffer          glBindFramebufferOES
+#define glFramebufferTexture2D     glFramebufferTexture2DOES
+#define glCheckFramebufferStatus   glCheckFramebufferStatusOES
+#define GL_FRAMEBUFFER             GL_FRAMEBUFFER_OES
+#define GL_COLOR_ATTACHMENT0       GL_COLOR_ATTACHMENT0_OES
+#define GL_FRAMEBUFFER_COMPLETE    GL_FRAMEBUFFER_COMPLETE_OES
+
+#ifndef GL_CLAMP_TO_EDGE
+#define GL_CLAMP_TO_EDGE           0x812F
+#endif

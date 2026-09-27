@@ -209,9 +209,10 @@ The dump readers these are checked against are in [`dump/README.md`](dump/README
 
 ## Archived toolchains
 
-The in-engine recompile toolchain (Plan 17), the ESP32 audio bridge and its
-host tools, and the Plan 05 invention engine (`tools/invent/`) left the tree on
-2026-09-24. [`docs/ARCHIVED-ROUTES.md`](../docs/ARCHIVED-ROUTES.md) names the
+The ESP32 audio bridge and its host tools, and the Plan 05 invention engine
+(`tools/invent/`) left the tree on 2026-09-24. The in-engine recompile
+toolchain left with them and came back on 2026-09-27 for ROADMAP S2b:
+[`tools/recompile/README.md`](recompile/README.md) indexes it. [`docs/ARCHIVED-ROUTES.md`](../docs/ARCHIVED-ROUTES.md) names the
 tag that holds them and how to restore one.
 
 ## Generated files and dependencies

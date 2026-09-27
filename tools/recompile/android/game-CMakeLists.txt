@@ -1,0 +1,112 @@
+# Chowdren FNaF 2 -> Android arm64 shared library (libmain.so).
+# Self-contained: does not use chowdren/base/CMakeLists.txt (desktop-tangled).
+
+cmake_minimum_required(VERSION 3.13)
+project(main CXX C)
+
+set(HERE   ${CMAKE_CURRENT_SOURCE_DIR})
+set(BASE   ${HERE}/chowdren/base)
+set(GAME   ${HERE}/gamesrc)
+
+# ---- SDL2 (defines SDL2, SDL2main targets; builds libSDL2.so) ----
+add_subdirectory(${HERE}/SDL SDL2)
+
+# ---- bundled ogg + vorbis (C source, built inline as on desktop) ----
+file(GLOB OGG_C    ${BASE}/staticlibs/libogg/src/*.c)
+file(GLOB VORBIS_C ${BASE}/staticlibs/libvorbis/lib/*.c)
+add_library(oggvorbis STATIC ${OGG_C} ${VORBIS_C})
+target_include_directories(oggvorbis PUBLIC
+    ${BASE}/include/staticlibs
+    ${BASE}/staticlibs/libvorbis/lib)
+target_compile_options(oggvorbis PRIVATE -w)
+
+# ---- Chowdren base (the non-cross SRCS list from base/CMakeLists.txt, with
+#      the desktop platform/glslshader/fbo swapped for the Android backend) ----
+set(BASE_SRCS
+    ${BASE}/render.cpp
+    ${BASE}/run.cpp
+    ${BASE}/keyconv.cpp
+    ${BASE}/image.cpp
+    ${BASE}/desktop/platform.cpp
+    ${BASE}/assetfile.cpp
+    ${BASE}/pools.cpp
+    ${BASE}/font.cpp
+    ${BASE}/movement.cpp
+    ${BASE}/common.cpp
+    ${BASE}/media.cpp
+    ${BASE}/fpslimit.cpp
+    ${BASE}/broadphase.cpp
+    ${BASE}/profiler.cpp
+    ${BASE}/stringcommon.cpp
+    ${BASE}/android/glesshader.cpp
+    ${BASE}/desktop/fbo.cpp
+)
+
+# ---- generated game: take the exact FRAMESRCS/EVENTSRCS/OBJECTSRCS lists from
+#      the converter's own gamesrc/CMakeLists.txt (a regen can change the counts,
+#      and stale events_28/29.cpp from an earlier run must not be compiled) ----
+file(READ ${GAME}/CMakeLists.txt _GS)
+foreach(_var FRAMESRCS EVENTSRCS OBJECTSRCS)
+    string(REGEX MATCH "set\\(${_var}([^)]*)\\)" _m "${_GS}")
+    string(REGEX MATCHALL "[A-Za-z0-9_]+\\.cpp" _files "${CMAKE_MATCH_1}")
+    set(${_var} "")
+    foreach(_f ${_files})
+        list(APPEND ${_var} ${GAME}/${_f})
+    endforeach()
+endforeach()
+set(FRAME_SRCS ${FRAMESRCS})
+set(EVENT_SRCS ${EVENTSRCS})
+set(OBJ_SRCS   ${OBJECTSRCS})
+set(GAME_SRCS ${GAME}/fonts.cpp ${GAME}/lists.cpp)
+list(LENGTH EVENT_SRCS _ne)
+list(LENGTH FRAME_SRCS _nf)
+list(LENGTH OBJ_SRCS _no)
+message(STATUS "chowdren game srcs: ${_ne} events, ${_nf} frames, ${_no} objects")
+
+set(EXT_SRCS
+    ${BASE}/objects/active.cpp
+    ${BASE}/objects/backdrop.cpp
+    ${BASE}/objects/counter.cpp
+    ${BASE}/objects/layerext.cpp
+    ${BASE}/objects/perspective.cpp
+    ${BASE}/objects/quickbackdrop.cpp
+    ${BASE}/objects/stringparser.cpp
+    ${BASE}/objects/text.cpp
+)
+
+add_library(main SHARED
+    ${BASE_SRCS} ${FRAME_SRCS} ${EVENT_SRCS} ${OBJ_SRCS} ${GAME_SRCS} ${EXT_SRCS})
+
+target_compile_definitions(main PRIVATE
+    CHOWDREN_IS_ANDROID
+    CHOWDREN_USE_GLES1
+    GL_GLEXT_PROTOTYPES          # declare glBlendFuncSeparateOES / *OES FBO
+    BOOST_ALL_NO_LIB
+    BOOST_NO_EXCEPTIONS
+    BOOST_EXCEPTION_DISABLE
+    # the bundled boost (~1.4x) uses std::unary_function, removed in C++17
+    _LIBCPP_ENABLE_CXX17_REMOVED_UNARY_BINARY_FUNCTION
+    _LIBCPP_ENABLE_CXX17_REMOVED_FEATURES)
+
+target_compile_options(main PRIVATE
+    -std=gnu++14                  # 'register' (keyconv/packfiles), std::unary_function (boost)
+    -Wno-deprecated-declarations -Wno-deprecated-register -Wno-register
+    -Wno-writable-strings -Wno-write-strings)
+
+target_include_directories(main PRIVATE
+    ${GAME}                       # chowconfig.h first
+    ${BASE}
+    ${BASE}/include
+    ${BASE}/include/staticlibs
+    ${BASE}/include/desktop        # AL/*.h only
+    ${BASE}/desktop                # renderplatform.h, fbo.h, audio.h, stdiofile.cpp
+    ${BASE}/staticlibs/libvorbis/lib
+    ${HERE}/SDL/include
+    ${HERE}/openal/include
+    ${HERE}/openal/include/AL)      # audio.h does bare #include <al.h>
+
+target_link_libraries(main
+    SDL2
+    oggvorbis
+    ${HERE}/openal/build-android/libopenal.a
+    GLESv1_CM EGL OpenSLES log android)
