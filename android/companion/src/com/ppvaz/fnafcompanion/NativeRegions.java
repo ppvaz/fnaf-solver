@@ -19,7 +19,7 @@ import java.util.Locale;
  * stays cheap; every returned value is still one unblended native pixel.
  * Registration is bounded so a read always fits one control-socket line.</p>
  *
- * <p>No Android dependency: {@link PixelWatch.Frame} is the only input, so the
+ * <p>No Android dependency: {@link NativeFrame} is the only input, so the
  * whole contract is exercised on the host by {@code NativeRegionsTest}.</p>
  */
 public final class NativeRegions {
@@ -114,7 +114,7 @@ public final class NativeRegions {
      * false, and publishes nothing, if any sample fell outside the frame --
      * a partial set would be read as a real one.
      */
-    public boolean capture(PixelWatch.Frame frame, long sequence, long imageNs, long nowNs) {
+    public boolean capture(NativeFrame frame, long sequence, long imageNs, long nowNs) {
         Region[] regions = active;
         if (regions.length == 0) return true;
         if (frame.width() != frameWidth || frame.height() != frameHeight) return false;
@@ -124,7 +124,7 @@ public final class NativeRegions {
                 int py = region.y + row * region.step;
                 for (int col = 0; col < region.cols; col++) {
                     int rgb = frame.rgb(region.x + col * region.step, py);
-                    if (rgb == PixelWatch.UNKNOWN) return false;
+                    if (rgb == NativeFrame.UNKNOWN) return false;
                     region.back[out++] = rgb;
                 }
             }

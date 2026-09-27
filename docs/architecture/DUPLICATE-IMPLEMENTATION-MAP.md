@@ -127,14 +127,11 @@ remedy is one shared frame-source argument helper.
 The on-device Java helper and the host tools implement the same two numeric
 models, aligned by comment only.
 
-- **Pixel watch spec.** `android/companion/src/com/ppvaz/fnafcompanion/PixelWatch.java`
-  (469 lines) owns `defaultSpec()`. `tools/device/watch-calibrate.py:42` says
-  "Keep this list mechanically aligned with `PixelWatch.defaultSpec()`" and
-  `tools/device/camera-calibrate.py:49` repeats the instruction against both
-  the Java spec *and* `watch-calibrate.ENTRIES`. `monitor-calibrate.py:23`
-  carries the same kind of note about grid replication. Each side has its own
-  tests (`PixelWatchTest.java`, `test-watch-calibrate.py`); no check compares
-  the two specs.
+- **Pixel watch spec.** Narrowed 2026-09-27: `PixelWatch.defaultSpec()` is
+  now only the twelve FNaF 2 camera-button pixels, and `watch-calibrate.py`
+  (the luma-entry calibrator) was removed with the luma entries.
+  `tools/device/camera-calibrate.py` still carries its own copy of the twelve
+  coordinates, and `test-camera-calibrate.py` holds it to the camera rule.
 - **Phase clock.** Resolved 2026-09-27: the APK's `PhaseClock.java` left with
   the Companion's audio path, so `packages/core/src/timing/phase-clock.js`
   (tested by `tools/phaseclocktest.mjs`) is the only implementation.

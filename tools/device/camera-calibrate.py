@@ -5,8 +5,8 @@ Each camera's map button renders yellow at a fixed position on the monitor
 map while it is selected -- bright (~194) in the normal view, dimmed (~96)
 while the music-box wind control is held -- and cool grey (~-19..-9) when
 unselected.  This tool measures the yellowness of the twelve watch pixels
-(mechanically aligned with ``PixelWatch.defaultSpec`` and
-``watch-calibrate.ENTRIES``) over labelled captures -- one label per camera --
+(mechanically aligned with ``PixelWatch.defaultSpec``, the twelve
+camera-button pixels the FNaF 2 watch serves) over labelled captures -- one label per camera --
 and emits the versioned ``camera-rule-v1`` artifact that
 ``packages/adapters/src/camera-rule.js`` consumes.
 
@@ -54,7 +54,7 @@ SCHEMA = "camera-rule-v1"
 SENSOR_ID = "cue-helper-watch-native-2400x1080"
 PROFILE_ID = "moto-g56-v207-landscape"
 
-# Mechanically aligned with PixelWatch.defaultSpec() / watch-calibrate.ENTRIES:
+# Mechanically aligned with PixelWatch.defaultSpec() (the FNaF 2 camera watch):
 # the monitor map's camera buttons, measured 2026-09-01 on g56 captures.
 BUTTON_PIXELS = (
     ("cam01_button", 1412, 784),

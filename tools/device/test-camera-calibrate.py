@@ -2,7 +2,7 @@
 """Phone-free fixtures for camera-calibrate.py.
 
 The button pixels are set from the test's own copy of the measured map
-coordinates (aligned with watch-calibrate.ENTRIES): if the tool's coordinates
+coordinates (aligned with PixelWatch.defaultSpec()): if the tool's coordinates
 drift, the hand-placed yellows stop being found and the exact-fit checks
 fail.  The fitted artifact is round-tripped through the production JS
 validator and detector, including the multiple-highlight case.
@@ -19,7 +19,7 @@ from PIL import Image
 HERE = pathlib.Path(__file__).resolve().parent
 TOOL = HERE / "camera-calibrate.py"
 WIDTH, HEIGHT = 2400, 1080
-# The measured button centres, aligned with watch-calibrate.ENTRIES.
+# The measured button centres, aligned with PixelWatch.defaultSpec().
 BUTTONS = (
     ("cam01_button", 1412, 784), ("cam02_button", 1720, 784),
     ("cam03_button", 1411, 690), ("cam04_button", 1728, 690),

@@ -1,7 +1,18 @@
 package com.ppvaz.fnafcompanion;
 
 /**
- * Fail-closed identity check for the screen being sampled by the helper.
+ * LEGACY (FNaF 2 retail 2.0.7 on the moto g56): the fail-closed screen
+ * identity the FNaF 2 night lane still reads from {@code FRAME}/{@code GET}.
+ *
+ * <p>It is a grid-fitted rule -- discontinued as a starting point by
+ * CLAUDE.md -- kept only because the FNaF 2 onset latch, the executor's native
+ * night anchor and the grid-fitted monitor/mask rules consume its label. It
+ * runs only while the Companion's target is FNaF 2 ({@link Fnaf2Legacy}); any
+ * other target reads {@code screen=UNKNOWN}, never a FNaF 2 label. Game
+ * identity for setup comes from each game's own title regions on the host
+ * ({@code tools/device/game-screen.py}).</p>
+ *
+ * <p>Original notes follow.</p>
  *
  * <p>The capture grid is intentionally tiny and point-sampled. This classifier
  * therefore uses stable UI colour anchors rather than pretending that the grid
@@ -39,8 +50,6 @@ public final class ScreenIdentity {
     private static final int COLOR_TOLERANCE = 12;
     private static final int LANDSCAPE_THRESHOLD = 14;
     private static final int PORTRAIT_THRESHOLD = 8;
-    /** Native bottom-control luma that is above the observed menu baseline. */
-    private static final int NATIVE_CONTROL_NIGHT_FLOOR = 20;
     private static final int LIFECYCLE_BRIGHT_MIN = 150;
     private static final int LIFECYCLE_DARK_MEAN_MAX = 5;
     private static final double GAME_OVER_RED_FACE_MIN = .05d;
@@ -81,7 +90,7 @@ public final class ScreenIdentity {
      * failed to identify a recognized game state. They are display labels, not
      * alive/dead or cue-authorizing facts.</p>
      */
-    public static int classify(PixelWatch.Frame frame, int[] grid) {
+    public static int classify(NativeFrame frame, int[] grid) {
         int gridIdentity = classify(grid);
         if (gridIdentity == CUE_HELPER || gridIdentity == FNAF2_MENU
                 || gridIdentity == FNAF2_NIGHT || !nativeFrame(frame)) {
@@ -96,46 +105,6 @@ public final class ScreenIdentity {
     public static boolean isRecognizedGameScreen(int identity) {
         return identity == FNAF2_NIGHT || identity == FNAF2_MENU
                 || identity == FNAF2_INTRO || identity == FNAF2_GAME_OVER;
-    }
-
-    /** A bounded diagnostic score, useful for logs and offline calibration. */
-    public static int score(int[] grid) {
-        if (grid == null || grid.length != GRID_WIDTH * GRID_HEIGHT) {
-            return 0;
-        }
-        return Math.max(Math.max(landscapeScore(grid), portraitScore(grid)),
-                Math.max(nightScore(grid), menuScore(grid)));
-    }
-
-    /**
-     * Rescue a dark Night frame that the coarse identity grid cannot classify.
-     * This only promotes UNKNOWN: a positive menu/helper identity still wins.
-     * The values are observation-only native watch channels, not a qualified
-     * gameplay fact.
-     */
-    public static int refineWithNativeControls(int identity,
-            int maskButtonMeanLuma, int monitorButtonMeanLuma) {
-        if (identity != UNKNOWN) return identity;
-        return maskButtonMeanLuma >= NATIVE_CONTROL_NIGHT_FLOOR
-                || monitorButtonMeanLuma >= NATIVE_CONTROL_NIGHT_FLOOR
-                ? FNAF2_NIGHT : UNKNOWN;
-    }
-
-    /**
-     * Verdict-free per-branch scores, so a host can see WHY a frame classified
-     * and calibrate against the same numbers the device used. On 2026-09-05
-     * this service reported FNAF2_NIGHT on 24 consecutive live grids while the
-     * operator was looking at the menu, and {@link #score} could not say which
-     * branch won because it only reports the maximum.
-     */
-    public static String describe(int[] grid) {
-        if (grid == null || grid.length != GRID_WIDTH * GRID_HEIGHT) {
-            return "screenNight=0 screenMenu=0 screenLandscape=0 screenPortrait=0";
-        }
-        return "screenNight=" + nightScore(grid)
-                + " screenMenu=" + menuScore(grid)
-                + " screenLandscape=" + landscapeScore(grid)
-                + " screenPortrait=" + portraitScore(grid);
     }
 
     public static String label(int state) {
@@ -156,13 +125,13 @@ public final class ScreenIdentity {
     }
 
     /** The screen identity itself remains grid-first and fail-closed. */
-    private static boolean nativeFrame(PixelWatch.Frame frame) {
+    private static boolean nativeFrame(NativeFrame frame) {
         return frame != null && frame.width() == PixelWatch.NATIVE_WIDTH
                 && frame.height() == PixelWatch.NATIVE_HEIGHT;
     }
 
     /** Port of the measured full-frame Game Over signature. */
-    private static boolean gameOverScore(PixelWatch.Frame frame) {
+    private static boolean gameOverScore(NativeFrame frame) {
         double redFace = fraction(frame, 650, 450, 1750, 920,
                 32, 32, true);
         double brightText = fraction(frame, 900, 950, 1450, 1040,
@@ -172,7 +141,7 @@ public final class ScreenIdentity {
     }
 
     /** Port of the measured generic intro-card conjunction. */
-    private static boolean introCardScore(PixelWatch.Frame frame) {
+    private static boolean introCardScore(NativeFrame frame) {
         if (meanLuma(frame, 0, 0, PixelWatch.NATIVE_WIDTH,
                 PixelWatch.NATIVE_HEIGHT, 8) >= LIFECYCLE_DARK_MEAN_MAX) {
             return false;
@@ -199,7 +168,7 @@ public final class ScreenIdentity {
                 <= INTRO_ROUGHNESS_MAX;
     }
 
-    private static double fraction(PixelWatch.Frame frame, int x0, int y0,
+    private static double fraction(NativeFrame frame, int x0, int y0,
             int x1, int y1, int sampleWidth, int sampleHeight,
             boolean redFace) {
         int matches = 0;
@@ -227,7 +196,7 @@ public final class ScreenIdentity {
         return start + ((2 * index + 1) * (end - start)) / (2 * sampleCount);
     }
 
-    private static int meanLuma(PixelWatch.Frame frame, int x0, int y0,
+    private static int meanLuma(NativeFrame frame, int x0, int y0,
             int x1, int y1, int step) {
         long total = 0L;
         int count = 0;
@@ -240,7 +209,7 @@ public final class ScreenIdentity {
         return count == 0 ? 0 : (int) (total / count);
     }
 
-    private static double brightColumnFraction(PixelWatch.Frame frame,
+    private static double brightColumnFraction(NativeFrame frame,
             int x0, int y0, int x1, int y1, int xStep, int yStep) {
         int columns = 0;
         int litColumns = 0;
@@ -259,7 +228,7 @@ public final class ScreenIdentity {
         return litColumns / (double) Math.max(1, columns);
     }
 
-    private static double saturatedFraction(PixelWatch.Frame frame,
+    private static double saturatedFraction(NativeFrame frame,
             int x0, int y0, int x1, int y1, int step) {
         int saturated = 0;
         int count = 0;
@@ -278,7 +247,7 @@ public final class ScreenIdentity {
         return saturated / (double) Math.max(1, count);
     }
 
-    private static double roughness(PixelWatch.Frame frame, int x0, int y0,
+    private static double roughness(NativeFrame frame, int x0, int y0,
             int x1, int y1, int step) {
         long total = 0L;
         int count = 0;

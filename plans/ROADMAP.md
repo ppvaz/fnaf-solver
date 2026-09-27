@@ -350,6 +350,14 @@ and `DEVICE_MEASURED` still do not promote one another.
 | The 2026-09-02 roadmap | `plans/ROADMAP.md` | Had declared itself superseded on 2026-09-17 | **Archived.** |
 | Fixture service path and the `device:dry-run` CI lane | CI, `CLAUDE.md` | Played no nights | Retired the same day in `6d78c7e`. CI now runs the campaign dry run over a committed winner. |
 
+## Gates changed on 2026-09-27 (Companion rework)
+
+| Gate | Where | Why it had to change | Now |
+|---|---|---|---|
+| Plan 23 overlay self-capture qualification (`OverlayCaptureGate`, sidecar, probe, `validate-`/`provision-overlay-qualification`, `overlay-qualification-observe.sh`) | Companion, `tools/device/` | It gated a full-screen sensor/debug HUD that drew the discontinued watchlist ROIs and never qualified, so every status line read `gate=UNQUALIFIED` even while a teach panel ran correctly | **Retired** with that HUD. The teach panels are gated by geometry: each is a window of exactly its lesson's rectangle, proved clear of every reader by host tests and, at runtime, of every registered region. |
+| APK audio authority checks (`test-bridge-audio-authority.py`, `test-provision-cue-model.sh`, the `pcm-udp-v1` contract) | `tools/cue/`, `tools/device/`, core contracts | They tested the APK's ESP32/fact-port audio path, whose firmware was archived on 2026-09-24 | **Retired** with the path; the host A2DP path (`bt-audio-link.sh`, `fnaf4-cues.py`) is the audio route. |
+| `test-watch-calibrate.py` and the luma watch entries | `tools/device/` | Calibrated luma reducers that CLAUDE.md discontinues and nothing live read | **Retired.** The twelve camera-button pixels that the arm check reads remain, quarantined in `Fnaf2Legacy`. |
+
 **Kept, because they serve the path:**
 
 - the hook's mechanics, `PEDRO-OK` as human-only, and no hook bypass;

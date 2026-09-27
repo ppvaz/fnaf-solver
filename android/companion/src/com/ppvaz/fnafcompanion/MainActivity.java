@@ -74,8 +74,8 @@ public final class MainActivity extends Activity {
             "Each session uses user-approved MediaProjection screen capture "
                     + "at the display's native resolution. Audio is not an app operation: "
                     + "the host records the phone's A2DP mix. "
-                    + "The optional HUD is one non-interactive overlay window; it stays "
-                    + "disabled beside sensing until its self-capture qualification exists. "
+                    + "Teach panels are non-interactive overlay windows placed clear of "
+                    + "every region the helper reads. "
                     + "Stop and restart for a fresh session, then open the game.";
 
     private MediaProjectionManager projectionManager;
@@ -90,14 +90,10 @@ public final class MainActivity extends Activity {
     private Spinner presetSpinner;
     private Button captureButton;
     private Button overlayButton;
-    private Button overlayModeButton;
-    private Button overlayProbeButton;
     private TextView overlayStatusView;
     private Typeface hudTypeface;
     private boolean captureRunning;
     private boolean receiverRegistered;
-    private boolean overlayEnabled;
-    private boolean overlayProbeActive;
     private boolean overlayEnableAfterSettings;
     private boolean diagnosticsVisible;
     private volatile String lastScreen = "UNKNOWN";
@@ -110,7 +106,6 @@ public final class MainActivity extends Activity {
     private RunnerCatalog.Route selectedRoute;
     private RunnerCatalog.Preset selectedPreset;
     private int selectedTab;
-    private OverlaySnapshot.Mode overlayMode = OverlaySnapshot.Mode.SENSOR_DEBUG;
 
     private final BroadcastReceiver statusReceiver = new BroadcastReceiver() {
         @Override
@@ -159,11 +154,6 @@ public final class MainActivity extends Activity {
             // Keep the helper usable if a stripped/custom build omits the optional asset.
             hudTypeface = Typeface.DEFAULT;
         }
-        overlayEnabled = getSharedPreferences(OverlayController.PREFS, MODE_PRIVATE)
-                .getBoolean(OverlayController.PREF_ENABLED, false);
-        overlayMode = "run".equals(getSharedPreferences(OverlayController.PREFS, MODE_PRIVATE)
-                .getString(OverlayController.PREF_MODE, "debug"))
-                ? OverlaySnapshot.Mode.DECISION_RUN : OverlaySnapshot.Mode.SENSOR_DEBUG;
         try {
             runnerCatalog = RunnerCatalog.load(getAssets());
         } catch (IOException error) {
@@ -204,10 +194,10 @@ public final class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         refreshRunnerReadiness();
-        if (overlayEnableAfterSettings && Settings.canDrawOverlays(this)) {
+        if (overlayEnableAfterSettings) {
             overlayEnableAfterSettings = false;
-            overlayEnabled = true;
-            sendOverlayAction(CaptureService.ACTION_OVERLAY_ENABLE);
+            refreshOverlayControls("overlay=" + (Settings.canDrawOverlays(this)
+                    ? "READY" : "DISABLED(permission)"));
         }
     }
 
@@ -477,23 +467,11 @@ public final class MainActivity extends Activity {
         overlayStatusView.setText(Settings.canDrawOverlays(this)
                 ? "overlay=READY" : "overlay=DISABLED(permission)");
         content.addView(overlayStatusView, matchWrap());
-        overlayButton = themedButton("Enable overlay", COLOR_CHICA,
+        overlayButton = themedButton("Overlay permission", COLOR_CHICA,
                 COLOR_CHICA_PRESSED, COLOR_CHICA_STROKE,
                 Color.rgb(35, 24, 5));
         overlayButton.setOnClickListener(view -> toggleOverlay());
         content.addView(overlayButton, matchWrap());
-        overlayModeButton = themedButton("Overlay mode: SENSOR / DEBUG",
-                COLOR_BONNIE, COLOR_BONNIE_PRESSED, COLOR_BONNIE_STROKE, COLOR_TEXT);
-        overlayModeButton.setOnClickListener(view -> toggleOverlayMode());
-        content.addView(overlayModeButton, matchWrap());
-        if ((getApplicationInfo().flags
-                & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
-            overlayProbeButton = themedButton("Start qualification probe",
-                    COLOR_FOXY_MANGLE, COLOR_FOXY_MANGLE_PRESSED,
-                    COLOR_FOXY_MANGLE_STROKE, COLOR_TEXT);
-            overlayProbeButton.setOnClickListener(view -> toggleQualificationProbe());
-            content.addView(overlayProbeButton, matchWrap());
-        }
         content.addView(sectionLabel("DIAGNOSTICS"), matchWrap());
         diagnosticToggleButton = themedButton(
                 diagnosticsVisible ? "Hide diagnostics" : "Show diagnostics",
@@ -718,71 +696,18 @@ public final class MainActivity extends Activity {
                 overlayStatusView.setText(line);
             }
             if (overlayButton != null) {
-                overlayButton.setText(overlayEnabled ? "Disable overlay" : "Enable overlay");
-            }
-            if (overlayModeButton != null) {
-                overlayModeButton.setText(overlayMode == OverlaySnapshot.Mode.SENSOR_DEBUG
-                        ? "Overlay mode: SENSOR / DEBUG"
-                        : "Overlay mode: DECISION / RUN");
-            }
-            overlayProbeActive = line.startsWith("overlay=PROBE");
-            if (overlayProbeButton != null) {
-                overlayProbeButton.setText(overlayProbeActive
-                        ? "Stop qualification probe" : "Start qualification probe");
+                overlayButton.setText("Overlay permission");
             }
             return;
         }
     }
 
+    /** Teach panels need "display over other apps"; open its settings page. */
     private void toggleOverlay() {
-        if (!Settings.canDrawOverlays(this)) {
-            overlayEnableAfterSettings = true;
-            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
-            intent.setData(Uri.parse("package:" + getPackageName()));
-            startActivity(intent);
-            Toast.makeText(this, "Allow display over other apps, then return here",
-                    Toast.LENGTH_LONG).show();
-            return;
-        }
-        overlayEnabled = !overlayEnabled;
-        sendOverlayAction(overlayEnabled
-                ? CaptureService.ACTION_OVERLAY_ENABLE
-                : CaptureService.ACTION_OVERLAY_DISABLE);
-        refreshOverlayControls("overlay=" + (overlayEnabled ? "READY" : "DISABLED(user)"));
-    }
-
-    private void toggleOverlayMode() {
-        if (overlayProbeActive) {
-            Toast.makeText(this, "Qualification probe is sensor/debug only",
-                    Toast.LENGTH_LONG).show();
-            return;
-        }
-        overlayMode = overlayMode == OverlaySnapshot.Mode.SENSOR_DEBUG
-                ? OverlaySnapshot.Mode.DECISION_RUN : OverlaySnapshot.Mode.SENSOR_DEBUG;
-        Intent intent = new Intent(this, CaptureService.class)
-                .setAction(CaptureService.ACTION_OVERLAY_MODE)
-                .putExtra(CaptureService.EXTRA_OVERLAY_MODE,
-                        overlayMode == OverlaySnapshot.Mode.DECISION_RUN ? "run" : "debug");
-        startService(intent);
-        refreshOverlayControls("overlay=" + (overlayEnabled ? "READY" : "DISABLED(user)"));
-    }
-
-    private void toggleQualificationProbe() {
-        if (!captureRunning) {
-            Toast.makeText(this, "Start video capture before probing the HUD",
-                    Toast.LENGTH_LONG).show();
-            return;
-        }
-        overlayProbeActive = !overlayProbeActive;
-        sendOverlayAction(overlayProbeActive
-                ? CaptureService.ACTION_OVERLAY_PROBE_START
-                : CaptureService.ACTION_OVERLAY_PROBE_STOP);
-        refreshOverlayControls("overlay="
-                + (overlayProbeActive ? "PROBE" : "DISABLED(self-capture-unqualified)"));
-    }
-
-    private void sendOverlayAction(String action) {
-        startService(new Intent(this, CaptureService.class).setAction(action));
+        overlayEnableAfterSettings = true;
+        Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+        intent.setData(Uri.parse("package:" + getPackageName()));
+        startActivity(intent);
     }
 
     private TextView statusTextView() {

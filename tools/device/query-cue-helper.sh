@@ -1,15 +1,17 @@
 #!/bin/bash
 # Talk to the cue helper's authenticated snapshot socket.
 #
-#   query-cue-helper.sh [loopback|forward]        one snapshot (default loopback)
-#   query-cue-helper.sh overlay                   authenticated HUD status/counters
-#   query-cue-helper.sh latency [count]           time device-local snapshot and grid reads
-#   query-cue-helper.sh watch SECONDS [out]       log the visual snapshot over time
-#   query-cue-helper.sh grid [out.png]            render the whole 20x9 sensor
-#   query-cue-helper.sh watchlist status|load HASH inspect/load native watchlist
-#   query-cue-helper.sh read                      read the active native watchlist
+#   query-cue-helper.sh [loopback|forward]        one FNaF 2 snapshot (default loopback)
+#   query-cue-helper.sh overlay                   authenticated teach-panel status
+#   query-cue-helper.sh latency [count]           time device-local snapshot reads
+#   query-cue-helper.sh watchlist status|load HASH inspect/load the FNaF 2 camera watch
+#   query-cue-helper.sh read                      read the active camera watch
 #   query-cue-helper.sh trace start LABEL|stop|status
 #                                                    pull a device-local frame trace
+#
+# snapshot, watchlist, read and trace are the FNaF 2 legacy readers
+# (android/companion Fnaf2Legacy.java). The 20x9 `grid` render and the luma
+# `watch` log were retired with the discontinued sensors on 2026-09-27.
 #
 # Transports:
 #   loopback  device-side nc to 127.0.0.1:PORT. The exchange happens entirely
@@ -34,8 +36,10 @@ case "${1:-}" in
   record) VERB=record; shift ;;
   latency) VERB=latency; shift ;;
   log) VERB=log; shift ;;
-  grid) VERB=grid; shift ;;
-  watch) VERB=watch; shift ;;
+  grid|watch)
+    echo "$1 is retired: the 20x9 grid and the luma watch are discontinued sensors (Companion 0.2.0); read native regions with tools/device/native-regions.mjs" >&2
+    exit 2
+    ;;
   watchlist) VERB=watchlist; shift ;;
   read) VERB=read; shift ;;
   trace) VERB=trace; shift ;;
@@ -44,7 +48,7 @@ case "${1:-}" in
   arm) VERB=arm; shift ;;
   result) VERB=result; shift ;;
   '') ;;
-  *) echo "usage: query-cue-helper.sh [loopback|forward|overlay|grid|watch|watchlist|read|trace]" >&2; exit 2 ;;
+  *) echo "usage: query-cue-helper.sh [loopback|forward|overlay|latency|watchlist|read|trace]" >&2; exit 2 ;;
 esac
 case "$VERB" in
   record|log|model|arm|result)
@@ -56,10 +60,6 @@ case "$TRANSPORT" in
   loopback|forward) ;;
   *) echo "unknown transport: $TRANSPORT (use loopback or forward)" >&2; exit 2 ;;
 esac
-
-if [ "$VERB" = grid ]; then
-  GRID_OUT="${1:-cue-grid.png}"
-fi
 
 if [ "$VERB" = latency ]; then
   COUNT="${1:-50}"
@@ -85,16 +85,6 @@ if [ "$VERB" = watchlist ]; then
       ;;
     *) echo "watchlist takes status or load HASH" >&2; exit 2 ;;
   esac
-fi
-
-if [ "$VERB" = watch ]; then
-  WATCH_SECONDS="${1:?watch needs a duration in seconds}"
-  case "$WATCH_SECONDS" in *[!0-9]*) echo "seconds must be whole" >&2; exit 2 ;; esac
-  WATCH_OUT="${2:-}"
-  if [ "$TRANSPORT" != loopback ]; then
-    echo "watch polls the device-local path; use the loopback transport" >&2
-    exit 2
-  fi
 fi
 
 if [ "$VERB" = log ]; then
@@ -166,7 +156,7 @@ esac
 # starting a recording is not a reading, and requiring focus there strands a
 # capture whenever a run ends with the game no longer in front.
 case "$VERB" in
-  snapshot|record|watch|watchlist|read|grid|trace|arm|result)
+  snapshot|record|watchlist|read|trace|arm|result)
     needs_focus=1
     if [ "$VERB" = trace ] && [ "$TRACE_ACTION" != start ]; then
       needs_focus=0 # teardown/status may follow a focus change
@@ -322,47 +312,6 @@ if [ "$VERB" = snapshot ]; then
   exit 0
 fi
 
-if [ "$VERB" = grid ]; then
-  # What the helper actually sees, as a picture.
-  #
-  # It renders a 20x9 virtual display every frame and was reporting one pixel of
-  # it (3,6) plus one block mean. Nothing downstream could therefore tell a
-  # Withered Freddy jumpscare from a dark office -- during one the snapshot read
-  # luma 0-37 and a neutral grey triple, because that single pixel sits
-  # somewhere dark. GRID returns all 180 cells; this draws them.
-  line="$(exchange "GRID $token")"
-  case "$line" in
-    OK\ grid=*) ;;
-    *) echo "$line" >&2; exit 1 ;;
-  esac
-  printf '%s\n' "$line" | python3 -c '
-import sys, re
-line = sys.stdin.read().strip()
-m = re.match(r"OK grid=(\d+)x(\d+) seq=(\d+) ([0-9a-f]+)", line)
-if not m:
-    print("unparseable grid response", file=sys.stderr); raise SystemExit(1)
-w, h, seq, body = int(m.group(1)), int(m.group(2)), m.group(3), m.group(4)
-cells = [int(body[i:i+6], 16) for i in range(0, w*h*6, 6)]
-print(f"grid {w}x{h} seq={seq}")
-for y in range(h):
-    row = ""
-    for x in range(w):
-        v = cells[y*w + x]
-        lum = ((v>>16 & 255)*77 + (v>>8 & 255)*150 + (v & 255)*29) >> 8
-        row += " .:-=+*#%@"[min(9, lum*10//256)]
-    print("   " + row)
-try:
-    from PIL import Image
-except ImportError:
-    print("(install Pillow for the PNG)", file=sys.stderr); raise SystemExit(0)
-im = Image.new("RGB", (w, h))
-im.putdata([((v>>16)&255, (v>>8)&255, v&255) for v in cells])
-im.resize((w*40, h*40), Image.NEAREST).save(sys.argv[1])
-print(f"wrote {sys.argv[1]}")
-' "$GRID_OUT"
-  exit 0
-fi
-
 if [ "$VERB" = watchlist ]; then
   if [ "$WATCH_ACTION" = status ]; then
     response="$(exchange "WATCH $token status")"
@@ -475,14 +424,6 @@ done
 i=0
 while [ "$i" -lt "$count" ]; do
   start=$(date +%s%N)
-  printf 'GRID %s\n' "$token" | toybox nc -w 2 127.0.0.1 "$port" >/dev/null 2>&1
-  end=$(date +%s%N)
-  echo "grid $(( (end - start) / 1000 ))"
-  i=$((i + 1))
-done
-i=0
-while [ "$i" -lt "$count" ]; do
-  start=$(date +%s%N)
   end=$(date +%s%N)
   echo "base $(( (end - start) / 1000 ))"
   i=$((i + 1))
@@ -492,7 +433,7 @@ REMOTE
   printf '%s\n' "$samples" | python3 -c '
 import sys
 
-groups = {"read": [], "grid": [], "base": []}
+groups = {"read": [], "base": []}
 for line in sys.stdin:
     parts = line.split()
     if len(parts) == 2 and parts[0] in groups:
@@ -508,8 +449,7 @@ def pct(values, q):
     index = min(len(ordered) - 1, int(round(q * (len(ordered) - 1))))
     return ordered[index]
 
-for name, label in (("read", "snapshot read"), ("grid", "grid read"),
-                    ("base", "shell baseline")):
+for name, label in (("read", "snapshot read"), ("base", "shell baseline")):
     values = groups[name]
     if not values:
         print("%-14s no samples" % label)
@@ -522,49 +462,6 @@ if groups["read"] and groups["base"]:
     net = pct(groups["read"], 0.50) - pct(groups["base"], 0.50)
     print("socket cost at p50: %.2f ms" % (net / 1000.0))
 '
-  exit 0
-fi
-
-if [ "$VERB" = watch ]; then
-  # Ground truth for a cue has to come from somewhere other than the cue
-  # detector. Every snapshot carries snapshotNs from the same monotonic clock
-  # the audio log is anchored to, so a bright->black transition on the lit left
-  # opening timestamps a real g417 arrival independently of any audio.
-  # Polling inside one device shell keeps it near the 49 ms read cost.
-  # The legacy GET luma is a whole-screen anchor and can miss a local BB
-  # arrival. An experimental native-watch path is opt-in so existing traces
-  # remain compatible: REACTIVE=observe loads the authenticated native
-  # watchlist in trial.sh, and CUE_HELPER_WATCH_READ=1 records bb_left_luma
-  # instead of the legacy whole-screen luma. A watcher may start before the
-  # trial has loaded the watchlist, so READ errors are transient unknowns.
-  WATCH_READ_NATIVE="${CUE_HELPER_WATCH_READ:-0}"
-  case "$WATCH_READ_NATIVE" in
-    0|1) ;;
-    *) echo "CUE_HELPER_WATCH_READ must be 0 or 1" >&2; exit 2 ;;
-  esac
-  deadline=$(( $(date +%s) + WATCH_SECONDS ))
-  {
-    printf 'snapshot_ns	seq	luma	state	source
-'
-    while [ "$(date +%s)" -lt "$deadline" ]; do
-      if [ "$WATCH_READ_NATIVE" -eq 1 ]; then
-        if line="$(exchange "READ $token" 2>/dev/null)"; then :; else line=""; fi
-        ns="$(printf '%s' "$line" | sed -n 's/.*snapshotNs=\([0-9]*\).*/\1/p')"
-        seq="$(printf '%s' "$line" | sed -n 's/.*seq=\([0-9]*\).*/\1/p')"
-        luma="$(printf '%s' "$line" | sed -n 's/.*bb_left_luma=\([0-9-]*\).*/\1/p')"
-        state="$(printf '%s' "$line" | sed -n 's/.*read=\([A-Z]*\).*/\1/p')"
-        [ -n "$ns" ] && printf '%s\t%s\t%s\t%s\tbb_left_luma\n' "$ns" "${seq:-}" "${luma:-}" "${state:-UNKNOWN}"
-      else
-        line="$(exchange "GET $token")"
-        ns="$(printf '%s' "$line" | sed -n 's/.*snapshotNs=\([0-9]*\).*/\1/p')"
-        seq="$(printf '%s' "$line" | sed -n 's/.*seq=\([0-9]*\).*/\1/p')"
-        luma="$(printf '%s' "$line" | sed -n 's/.*luma=\([0-9-]*\).*/\1/p')"
-        state="$(printf '%s' "$line" | sed -n 's/.*visual=\([A-Z]*\).*/\1/p')"
-        [ -n "$ns" ] && printf '%s\t%s\t%s\t%s\tlegacy_luma\n' "$ns" "${seq:-}" "${luma:-}" "${state:-}"
-      fi
-    done
-  } | { if [ -n "$WATCH_OUT" ]; then tee "$WATCH_OUT"; else cat; fi; }
-  [ -n "$WATCH_OUT" ] && echo "wrote $WATCH_OUT" >&2
   exit 0
 fi
 

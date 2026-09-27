@@ -34,17 +34,15 @@ const oldTiming = cue.visualAcquisition({ snapshotNs: '5000000000', ageUs: '1000
 assert.equal(oldTiming.at, 4990);
 assert.equal(oldTiming.uncertaintyMs, 0.001);
 
-// FRAME: snapshot fields and the sensor from ONE device read. The helper emits
-// the 180 cells as a single concatenated hex run, no separators -- `parseCueGrid`
-// once demanded space-separated tokens, a shape only our own fixture produced,
-// and so threw on every real grid read. Both forms are accepted; the 180-cell
-// length decides.
+// FRAME (FNaF 2 legacy): snapshot fields and the grid from ONE device read. The
+// helper emits the 180 cells as a single concatenated hex run, no separators;
+// the 180-cell length decides.
 const runCells = Array.from({ length: 180 }, (_, index) => (index << 8) | 0x11);
 const runBody = runCells.map(cell => cell.toString(16).padStart(6, '0')).join('');
 const framed = new CueHelperControlTransport({ token: '0123456789abcdef0123456789abcdef',
   request: request => request.startsWith('FRAME ')
     ? `OK snapshotNs=3 seq=42 ageUs=17 screen=FNAF2_NIGHT grid=20x9 cells=${runBody}`
-    : request.startsWith('GRID ') ? `OK grid=20x9 seq=42 ${runBody}` : 'ERROR unsupported' });
+    : 'ERROR unsupported' });
 const oneRead = framed.frame();
 assert.equal(oneRead.cells.length, 180);
 assert.deepEqual([...oneRead.cells], runCells);
@@ -52,8 +50,10 @@ assert.deepEqual([...oneRead.cells], runCells);
 // construction, so grid-seq-mismatch cannot arise from the transport.
 assert.equal(oneRead.seq, oneRead.gridSeq);
 assert.equal(oneRead.screen, 'FNAF2_NIGHT');
-// The concatenated run parses identically through the GRID path.
-assert.deepEqual([...framed.grid().cells], runCells);
+// The retired GRID verb, the camera-selection and battery facts left the
+// transport with the device fields they read (Companion 0.2.0).
+for (const retired of ['grid', 'cameraMeasurement', 'cameraHighlightsMeasurement', 'batteryMeasurement'])
+  assert.equal(typeof framed[retired], 'undefined', `${retired} is retired`);
 for (const bad of [
   'OK snapshotNs=3 seq=42 grid=20x9 cells=deadbeef',
   'OK snapshotNs=3 seq=42 cells=' + runBody,
@@ -62,49 +62,4 @@ for (const bad of [
 assert.throws(() => cue.visualAcquisition({ snapshotNs: '1', ageUs: '1', seq: '1' }), /invalid/);
 assert.throws(() => cue.visualAcquisition({ snapshotNs: '5000000000',
   visualCaptureNs: '4990000000', ageUs: '1', seq: '12' }), /disagrees/);
-assert.deepEqual(cue.cameraMeasurement({ ageUs: '17', monitorUp: 'true',
-  cameraSelected: 'cam:5', cameraReason: 'single-camera-highlight' }),
-  { signal: 'cameraSelected', state: 'OBSERVED', value: 'cam:5', confidence: 1 });
-assert.deepEqual(cue.cameraMeasurement({ ageUs: '17', monitorUp: 'false',
-  cameraSelected: 'cam:5' }),
-  { signal: 'cameraSelected', state: 'UNKNOWN', reason: 'monitor-not-up' });
-assert.deepEqual(cue.cameraMeasurement({ ageUs: '17', monitorUp: 'true',
-  cameraSelected: 'UNKNOWN', cameraReason: 'multiple-camera-highlight' }),
-  { signal: 'cameraSelected', state: 'UNKNOWN', reason: 'multiple-camera-highlight' });
-assert.deepEqual(cue.cameraMeasurement({ ageUs: '17', monitorUp: 'true',
-  cameraSelected: 'cam:13' }),
-  { signal: 'cameraSelected', state: 'UNKNOWN', reason: 'sensor-mismatch' });
-assert.deepEqual(cue.cameraMeasurement({ ageUs: '900000', monitorUp: 'true',
-  cameraSelected: 'cam:5' }),
-  { signal: 'cameraSelected', state: 'UNKNOWN', reason: 'read-stale' });
-assert.deepEqual(cue.cameraMeasurement({ ageUs: '17', monitorUp: 'true',
-  cameraSelected: 'UNKNOWN', cameraReason: 'untrusted-free-text' }),
-  { signal: 'cameraSelected', state: 'UNKNOWN', reason: 'read-unavailable' });
-assert.deepEqual(cue.cameraHighlightsMeasurement({ ageUs: '17', monitorUp: 'true',
-  cameraHighlights: 'cam:9,cam:11', cameraReason: 'multiple-camera-highlight' }),
-  { signal: 'cameraHighlights', state: 'OBSERVED', value: ['cam:9', 'cam:11'], confidence: 1 });
-assert.deepEqual(cue.cameraHighlightsMeasurement({ ageUs: '17', monitorUp: 'true',
-  cameraSelected: 'cam:5', cameraReason: 'single-camera-highlight' }),
-  { signal: 'cameraHighlights', state: 'OBSERVED', value: ['cam:5'], confidence: 1 });
-assert.deepEqual(cue.cameraHighlightsMeasurement({ ageUs: '17', monitorUp: 'false',
-  cameraHighlights: 'cam:9,cam:11' }),
-  { signal: 'cameraHighlights', state: 'UNKNOWN', reason: 'monitor-not-up' });
-assert.deepEqual(cue.cameraHighlightsMeasurement({ ageUs: '17', monitorUp: 'true',
-  cameraHighlights: 'cam:9,cam:9' }),
-  { signal: 'cameraHighlights', state: 'UNKNOWN', reason: 'sensor-mismatch' });
-assert.deepEqual(cue.batteryMeasurement({ ageUs: '17', screen: 'FNAF2_NIGHT',
-  batteryPercent: '75', batteryReason: 'bars-observed' }),
-  { signal: 'batteryPercent', state: 'OBSERVED', value: 75, confidence: 1 });
-assert.deepEqual(cue.batteryMeasurement({ ageUs: '17', screen: 'FNAF2_MENU',
-  batteryPercent: '100' }),
-  { signal: 'batteryPercent', state: 'UNKNOWN', reason: 'screen-identity' });
-assert.deepEqual(cue.batteryMeasurement({ ageUs: '17', screen: 'FNAF2_NIGHT',
-  batteryPercent: 'UNKNOWN', batteryReason: 'mask-on' }),
-  { signal: 'batteryPercent', state: 'UNKNOWN', reason: 'mask-on' });
-assert.deepEqual(cue.batteryMeasurement({ ageUs: '17', screen: 'FNAF2_NIGHT',
-  batteryPercent: 'UNKNOWN', batteryReason: 'untrusted-free-text' }),
-  { signal: 'batteryPercent', state: 'UNKNOWN', reason: 'read-unavailable' });
-assert.deepEqual(cue.batteryMeasurement({ ageUs: '17', screen: 'FNAF2_NIGHT',
-  batteryPercent: '110' }),
-  { signal: 'batteryPercent', state: 'UNKNOWN', reason: 'sensor-mismatch' });
 console.log('adapter contracts: HID wire, Cue Helper transport, clock and detection rules pass');

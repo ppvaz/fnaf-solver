@@ -175,21 +175,14 @@
       "id": "contract.cue-helper-control-v1",
       "kind": "CONTRACT",
       "path": "packages/adapters/src/transports/cue-helper.js",
-      "line": 38,
+      "line": 31,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.cue-helper-control-v1",
       "kind": "CONTRACT",
       "path": "packages/adapters/src/transports/cue-helper.js",
-      "line": 68,
-      "relation": "REFERENCES"
-    },
-    {
-      "id": "contract.cue-helper-control-v1",
-      "kind": "CONTRACT",
-      "path": "packages/adapters/src/transports/cue-helper.js",
-      "line": 85,
+      "line": 48,
       "relation": "REFERENCES"
     },
     {

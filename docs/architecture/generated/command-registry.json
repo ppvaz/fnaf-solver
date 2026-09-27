@@ -45,7 +45,7 @@
     },
     {
       "id": "test:contracts",
-      "command": "node packages/core/test/contracts.test.js && node packages/core/test/cycle-library.test.js && node packages/core/test/cycle-planner.test.js && node packages/core/test/cycle-controller.test.js && node packages/core/test/night-policy.test.js && node packages/core/test/route-forks.test.js && node packages/core/test/drop-light-order.test.js && node packages/core/test/foxy-chain.test.js && node packages/core/test/unconditional-draws.test.js && node packages/core/test/event-draws.test.js && node packages/core/test/blackout-draws.test.js && node packages/core/test/view-draws.test.js && node packages/core/test/roll-draws.test.js && node packages/core/test/monitor-down-draw.test.js && node packages/core/test/second-pass.test.js && node packages/core/test/puppet-glitch-draws.test.js && node packages/core/test/sheet-order.test.js && node packages/core/test/frame-time-hook.test.js && node packages/core/test/last-view-pause.test.js && node packages/core/test/footstep-draws.test.js && node packages/core/test/vent-cam-draws.test.js && node packages/core/test/random-image-draw.test.js && node packages/core/test/monitor-raise-gate.test.js && node packages/core/test/mangle-return.test.js && node packages/core/test/gated-every.test.js && node packages/core/test/every-origin.test.js && node packages/core/test/rebuild-order.test.js && node packages/core/test/footstep-value2.test.js &&node packages/core/test/mask-animation-input.test.js && node packages/adapters/test/control-exclusion.test.js && node packages/adapters/test/conformance.test.js && node packages/adapters/test/monitor-rule.test.js && node packages/adapters/test/camera-rule.test.js && node packages/adapters/test/night-onset.test.js && node apps/device/test/cli.test.js && node apps/device/test/campaign.test.js && node apps/device/test/campaign-runner.test.js && node apps/device/test/campaign-infrastructure.test.js && node apps/device/test/campaign-composition.test.js && node apps/device/test/modern-campaign-terminal.test.js && node apps/device/test/campaign-signal.test.js && node apps/device/test/adb-bridge.test.js && node apps/device/test/adb-device-local-executor.test.js && node apps/device/test/static-terminal-window.test.js && node apps/device/test/hid-read-gap.test.js && node apps/device/test/hid-second-contact.test.js && node apps/device/test/night-anchor.test.js && node apps/device/test/cycle-lesson.test.js && node apps/device/test/timed-start.test.js && node packages/research/test/experiment.test.js && node packages/research/test/legacy-equivalence.test.js && node tools/device/test-bundle.mjs && node tools/device/test-phase-reconstruct.mjs && node tools/device/test-tap-stall-audit.mjs && python3 tools/device/test-framesource.py && python3 tools/device/test-decode-once.py && python3 tools/device/test-grade-night.py && python3 tools/device/test-cycle-ledger.py && python3 tools/device/test-office-seed-bracket.py && node tools/device/test-minus3-frame-light.mjs && node tools/device/test-artifact-animation-gates.mjs && node tools/vaulttest.mjs && node tools/factlinktest.mjs && node tools/benchtracetest.mjs && node tools/exercisetest.mjs && node tools/activitygatetest.mjs && node tools/microtrainertest.mjs && node tools/renderertest.mjs && node tools/arcadelabtest.mjs && node tools/phaseclocktest.mjs && node tools/observationlanguagetest.mjs && python3 tools/contract-vectors.py && python3 tools/device/test-cue-helper-setup.py && python3 tools/device/test-cue-helper-device-lock.py && python3 tools/device/test-cue-helper-queue.py && node tools/device/test-cue-helper-mcp.mjs && python3 tools/device/test-overlay-qualification.py && python3 tools/device/test-teach-panel-clearance.py && python3 tools/device/test-death-cause.py && tools/device/test-overlay-qualification-observe.sh && tools/device/test-game-teardown.sh && tools/cue/test-bt-audio-link.sh && android/companion/test.sh && npm run test:device:calibration",
+      "command": "node packages/core/test/contracts.test.js && node packages/core/test/cycle-library.test.js && node packages/core/test/cycle-planner.test.js && node packages/core/test/cycle-controller.test.js && node packages/core/test/night-policy.test.js && node packages/core/test/route-forks.test.js && node packages/core/test/drop-light-order.test.js && node packages/core/test/foxy-chain.test.js && node packages/core/test/unconditional-draws.test.js && node packages/core/test/event-draws.test.js && node packages/core/test/blackout-draws.test.js && node packages/core/test/view-draws.test.js && node packages/core/test/roll-draws.test.js && node packages/core/test/monitor-down-draw.test.js && node packages/core/test/second-pass.test.js && node packages/core/test/puppet-glitch-draws.test.js && node packages/core/test/sheet-order.test.js && node packages/core/test/frame-time-hook.test.js && node packages/core/test/last-view-pause.test.js && node packages/core/test/footstep-draws.test.js && node packages/core/test/vent-cam-draws.test.js && node packages/core/test/random-image-draw.test.js && node packages/core/test/monitor-raise-gate.test.js && node packages/core/test/mangle-return.test.js && node packages/core/test/gated-every.test.js && node packages/core/test/every-origin.test.js && node packages/core/test/rebuild-order.test.js && node packages/core/test/footstep-value2.test.js &&node packages/core/test/mask-animation-input.test.js && node packages/adapters/test/control-exclusion.test.js && node packages/adapters/test/conformance.test.js && node packages/adapters/test/monitor-rule.test.js && node packages/adapters/test/camera-rule.test.js && node packages/adapters/test/night-onset.test.js && node apps/device/test/cli.test.js && node apps/device/test/campaign.test.js && node apps/device/test/campaign-runner.test.js && node apps/device/test/campaign-infrastructure.test.js && node apps/device/test/campaign-composition.test.js && node apps/device/test/modern-campaign-terminal.test.js && node apps/device/test/campaign-signal.test.js && node apps/device/test/adb-bridge.test.js && node apps/device/test/adb-device-local-executor.test.js && node apps/device/test/static-terminal-window.test.js && node apps/device/test/hid-read-gap.test.js && node apps/device/test/hid-second-contact.test.js && node apps/device/test/night-anchor.test.js && node apps/device/test/cycle-lesson.test.js && node apps/device/test/timed-start.test.js && node packages/research/test/experiment.test.js && node packages/research/test/legacy-equivalence.test.js && node tools/device/test-bundle.mjs && node tools/device/test-phase-reconstruct.mjs && node tools/device/test-tap-stall-audit.mjs && python3 tools/device/test-framesource.py && python3 tools/device/test-decode-once.py && python3 tools/device/test-grade-night.py && python3 tools/device/test-cycle-ledger.py && python3 tools/device/test-office-seed-bracket.py && node tools/device/test-minus3-frame-light.mjs && node tools/device/test-artifact-animation-gates.mjs && node tools/vaulttest.mjs && node tools/factlinktest.mjs && node tools/benchtracetest.mjs && node tools/exercisetest.mjs && node tools/activitygatetest.mjs && node tools/microtrainertest.mjs && node tools/renderertest.mjs && node tools/arcadelabtest.mjs && node tools/phaseclocktest.mjs && node tools/observationlanguagetest.mjs && python3 tools/contract-vectors.py && python3 tools/device/test-cue-helper-setup.py && python3 tools/device/test-cue-helper-device-lock.py && python3 tools/device/test-cue-helper-queue.py && node tools/device/test-cue-helper-mcp.mjs && python3 tools/device/test-teach-panel-clearance.py && python3 tools/device/test-death-cause.py && tools/device/test-game-teardown.sh && tools/cue/test-bt-audio-link.sh && android/companion/test.sh && npm run test:device:calibration",
       "lifecycle": "supported"
     },
     {
@@ -1153,7 +1153,7 @@
     },
     {
       "id": "tools/device/query-cue-helper.sh",
-      "invocation": "tools/device/query-cue-helper.sh [loopback\\|forward\\|overlay\\|watch\\|watchlist\\|read\\|grid\\|latency]",
+      "invocation": "tools/device/query-cue-helper.sh [loopback\\|forward\\|overlay\\|watchlist\\|read\\|trace\\|latency]",
       "kind": "device check/report",
       "lifecycle": "supported"
     },
@@ -1340,18 +1340,6 @@
     {
       "id": "tools/device/test-policy-interpreter.mjs",
       "invocation": "tools/device/test-policy-interpreter.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/watch-calibrate.py",
-      "invocation": "tools/device/watch-calibrate.py",
-      "kind": "module/check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-watch-calibrate.py",
-      "invocation": "tools/device/test-watch-calibrate.py",
       "kind": "check",
       "lifecycle": "supported"
     },
@@ -1716,38 +1704,8 @@
       "lifecycle": "supported"
     },
     {
-      "id": "tools/device/validate-overlay-qualification.py",
-      "invocation": "tools/device/validate-overlay-qualification.py",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-overlay-qualification.py",
-      "invocation": "tools/device/test-overlay-qualification.py",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/provision-overlay-qualification.sh",
-      "invocation": "tools/device/provision-overlay-qualification.sh RECORD.json [--profile PROFILE] [--replace]",
-      "kind": "device action",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/overlay-qualification-observe.sh",
-      "invocation": "tools/device/overlay-qualification-observe.sh [SAMPLES] [INTERVAL] [OUT.tsv]",
-      "kind": "device action",
-      "lifecycle": "supported"
-    },
-    {
       "id": "tools/device/test-teach-panel-clearance.py",
       "invocation": "tools/device/test-teach-panel-clearance.py",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-overlay-qualification-observe.sh",
-      "invocation": "tools/device/test-overlay-qualification-observe.sh",
       "kind": "check",
       "lifecycle": "supported"
     },

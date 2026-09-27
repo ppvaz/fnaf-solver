@@ -44,69 +44,24 @@ claim. Its pixel rule must be recalibrated against frames from the exact target
 device before it may control an action. The APK is measurement plumbing, not a
 promoted controller.
 
-The APK now contains a permission-gated, read-only overlay shell. **Enable
-overlay** opens the explicit `SYSTEM_ALERT_WINDOW` settings flow; the service
-owns exactly one `TYPE_APPLICATION_OVERLAY` window with
-`FLAG_NOT_FOCUSABLE | FLAG_NOT_TOUCHABLE`, a conservative alpha below
-`InputManager.getMaximumObscuringOpacityForTouch()`, and independent
-`DISABLED`, `READY`, `VISIBLE`, `HIDDEN`, and `ERROR` status. The sensor/debug
-and decision/run renderers consume immutable snapshots derived from the same
-normalized regions as `PixelWatch`; run mode has no cue until a qualified
-belief/arbiter producer supplies one.
+The only overlay windows are the per-game teach panels (below). The
+full-screen sensor/debug HUD, its decision/run renderer and its self-capture
+qualification gate -- which never qualified, so every status line read
+`overlay=DISABLED(self-capture-unqualified) gate=UNQUALIFIED` -- left on
+2026-09-27 together with the watchlist ROIs it drew. A panel's clearance from
+what the helper reads is proved by geometry, never by opacity: Android
+composites an untrusted overlay at no more than 0.8 alpha.
 
-The self-observation gate is deliberately **unqualified by default**. No
-overlay is attached beside authoritative sensing until retained HUD-off/HUD-on
-evidence proves that capture excludes the overlay, the protected regions have a
-guard band, or capture is phase-separated. A raw transparent paint choice is
-not evidence. The gate and host regressions are in
-[`OverlayCaptureGate.java`](src/com/ppvaz/fnafcompanion/OverlayCaptureGate.java),
-and the complete platform/self-capture qualification remains specified in
-[`plans/23-cue-helper-overlay-hud.md`](../../plans/23-cue-helper-overlay-hud.md).
-The device execution matrix and retained evidence schema are in
-[`OVERLAY-QUALIFICATION.md`](../../docs/device/OVERLAY-QUALIFICATION.md).
-
-Debug builds also expose an explicit **Start qualification probe** button. It
-temporarily permits only the sensor/debug renderer so the observer can measure
-HUD-on capture feedback; it reports `overlay=PROBE`, never accepts decision
-cues, never changes the qualification sidecar, and is not a supported run HUD.
-
-The debug HUD is screen-aware and intentionally quiet. Its status badge says
-`MENU`, `INTRO`, or `GAME OVER` on those positively identified lifecycle
-screens; those screens render no game-element boxes. On a recognized night the
-compact badge reports `MONITOR UP`, `MONITOR DOWN`, or `MONITOR ?`. Office
-regions are shown only while the monitor is down; the camera feed/map areas are
-shown only while it is up, and the one calibrated yellow map button is marked
-`CAM NN ACTIVE`. Camera selection is never retained or displayed while the
-monitor is down. Normal regions use thicker double-keyline frames without
-per-box age/latency text; state changes ease in over a short transition and the
-active camera has a restrained pulse. Labels use the bundled CC0 `HUD FONT`
-asset from `assets/fonts/hud-font.otf`.
-
-The same native watchlist reads the four bright interior compartments of the
-stock top-left `flashlight` meter. The debug badge and authenticated snapshot
-report this as `battery=OBSERVED percent=... bars=.../4`; missing, foreign, or
-non-night reads are `battery=UNKNOWN`. Short UNKNOWN projection gaps retain the
-last usable night snapshot for 350 ms, so ROI frames and the battery badge do
-not blink, while a confirmed menu/helper identity clears them immediately.
-
-The renderer also accepts a profile-bound `game-hud-map-v1` collision map. Each
-calibrated game HUD zone is an exclusion for overlay frames and labels, and
-labels additionally avoid one another. The default map is empty until a zone
-has retained calibration evidence, so this does not invent coverage for HUD
-areas that have not been measured yet.
-
-The visual status also carries a fail-closed screen identity gate. It reports
-`screen=CUE_HELPER` only when the 20x9 sensor matches the stable helper layout
-calibrated from the retained portrait and landscape frames. A native full-frame
-check adds the generic intro-card and Game Over labels; it does not read the
-night ordinal. A valid frame that does not match the helper or a supported
-FNaF 2 lifecycle screen is `screen=UNKNOWN`; it is not promoted to Android
-settings or any other semantic screen. This prevents a capture of the helper
-UI itself from being interpreted as game content. While the HUD is enabled, the
-controller attaches only for a positively identified FNaF 2 screen and keeps
-game-element annotations/cues restricted to `FNAF2_NIGHT`; an app switch
-therefore fails closed as `UNAVAILABLE(target-not-game) state=HIDDEN`, and a
-later valid game frame may reattach it.
+FNaF 2's remaining on-device readers -- the 20x9 lattice and its grid-fitted
+screen identity, the night-onset latch, the two control strokes, the twelve
+camera-button pixels and the frozen `fnaf2-frame-trace-v3` -- are quarantined in
+[`Fnaf2Legacy.java`](src/com/ppvaz/fnafcompanion/Fnaf2Legacy.java), with the
+list of live consumers that keep each one. Luma reducers, the single-pixel
+sample, the CAM 05 block, grid statistics (`grey`, `gridLuma`), the pan anchor,
+the flashlight-meter bars, the Balloon Boy and Foxy hall channels, and the
+on-device camera-selection and battery facts had no live reader and were
+removed. The remaining readers are to be converted to REGION rules on the host
+after recalibration (CLAUDE.md), not extended.
 
 ## Build and install
 
@@ -161,12 +116,11 @@ no sensor data.
 
 | Request | Response | Notes |
 |---|---|---|
-| `GET <token>` | `OK <snapshot>` | Current monotonic visual snapshot; never an image. The visual line carries the whole-grid statistics `grey` (near-grey cell count) and `gridLuma` (grid mean luma) — verdict-free features a calibrated consumer may fit rules against. |
-| `GRID <token>` | `OK grid=20x9 ...` | Full visual sensor grid (180 point samples, row-major). |
-| `FRAME <token>` | `OK ...snapshot... grid=20x9 cells=<180x6 hex>` | The snapshot fields AND the sensor from ONE locked read, so both describe the same frame and share one `seq`. GET followed by GRID cannot: they are two round trips against a 60 fps capture, and on the moto g56 their sequences agreed 0 times in 12, always 1-2 frames apart, so any detector needing freshness AND cells refused every observation. Use this verb for live detection. |
-| `WATCH <token> status\|<hash>` | `OK watch=...` | Inspect or activate the native visual watchlist (25 entries: 4 existing anchors + 4 flashlight-meter bars + 12 measured monitor-map camera buttons + 3 provisional Foxy hall channels + 2 paired bottom-control ROIs). |
-| `READ <token>` | `OK read=...` | Read the active visual watchlist: every entry's value (or UNKNOWN) with its own sequence and age stamp. The response also carries the observation-only bulb anchor (`pan_anchor_x`, `pan_anchor_y`, sampled component area/margin, confidence, and refusal reason). |
-| `OVERLAY <token>` | `OK overlay=...` | Read-only HUD lifecycle, qualification gate, and bounded update/draw/drop/latency counters for retained device evidence. The line ends with `teach=<state>` for the teach panel. |
+| `GET <token>` | `OK <snapshot>` | FNaF 2 legacy snapshot (`Fnaf2Legacy.snapshotLine`): freshness, the grid-fitted `screen`, the stroke-derived `monitorUp`, both control stroke scores, the latched `nightOnsetImageNs` and the phone's `wallMs`; never an image. |
+| `FRAME <token>` | `OK ...snapshot... grid=20x9 cells=<180x6 hex>` (FNaF 2 legacy) | The snapshot fields AND the sensor from ONE locked read, so both describe the same frame and share one `seq`. GET followed by GRID cannot: they are two round trips against a 60 fps capture, and on the moto g56 their sequences agreed 0 times in 12, always 1-2 frames apart, so any detector needing freshness AND cells refused every observation. Use this verb for live detection. |
+| `WATCH <token> status\|<hash>` | `OK watch=...` | Inspect or activate the FNaF 2 camera watch: the twelve measured monitor-map camera-button pixels. |
+| `READ <token>` | `OK read=...` | Read the camera watch: every button's yellowness (or UNKNOWN) with the frame's sequence and age stamp. |
+| `OVERLAY <token>` | `OK overlay=...` | Overlay permission and each teach panel's state. |
 | `LESSON <token> begin\|row\|commit\|origin\|clear\|status ...` | `OK ...` or `ERROR <reason>` | The teach panel's lesson (debug builds): the host uploads the schedule it is about to run, then names its origin against this service's own latched onset. It writes only the panel's lesson; see "Teach panel" below. |
 
 The socket still has no input or actuator operation: `LESSON` changes what the
@@ -185,26 +139,14 @@ The two visual channels are:
 ```sh
 tools/device/query-cue-helper.sh                    # loopback snapshot
 tools/device/query-cue-helper.sh forward            # forwarded snapshot
-tools/device/query-cue-helper.sh grid               # render the visual grid
 tools/device/query-cue-helper.sh watchlist status
-tools/device/query-cue-helper.sh overlay             # HUD status and timing counters
-tools/device/validate-overlay-qualification.py RECORD.json
-tools/device/provision-overlay-qualification.sh RECORD.json --replace
-tools/device/overlay-qualification-observe.sh 60 1 captures/cue-helper/overlay-on.tsv
+tools/device/query-cue-helper.sh overlay             # teach-panel status
 ```
 
 The Java namespace, APK id, and source tree use `com.ppvaz.fnafcompanion`.
 The abstract-socket and `com.fnaf2.cuehelper.action.*` wire identifiers remain
 stable for `cue-helper-control-v1` host compatibility; they are protocol names,
 not the public app name.
-
-Provisioning accepts only a structurally valid, reviewed record and writes an
-atomic private sidecar; it does not grant overlay permission or make the HUD
-qualified. Restart the capture session after provisioning so the service reloads
-the sidecar. Run the observer separately with
-`CUE_HELPER_OVERLAY_PHASE=off` for the paired baseline, or `probe` while the
-debug-only qualification probe is active. The sampler retains native watchlist
-values on every row; these are evidence inputs, not an automatic qualification.
 
 Projection stop tears down the visual display and both control workers, so a
 new consent session can start in the same app process. The service remains
@@ -236,9 +178,9 @@ still read) and removed at once on any other positive screen. It never paints a
 pixel a reader samples: `TeachPanelTest.java` drives every native reader over a
 recording frame and `tools/device/test-teach-panel-clearance.py` checks the host
 night authority, the lifecycle boxes, the video grader's bands, and the control
-points. Two helper readers cannot avoid any panel -- the `screen_grey_cells`
-lattice and the native lifecycle labels -- and are withheld (UNKNOWN, grid-only
-identity) for every frame captured while the panel may be on screen. A teach
+points. One helper reader cannot avoid any panel -- the native lifecycle labels
+-- and is withheld (grid-only identity) for every frame captured while the
+panel may be on screen. A teach
 run's video carries the panel, so it is graded with
 `run-timeline.py --exclude-rect 10,310,590,410`, not `grade-run.sh`.
 

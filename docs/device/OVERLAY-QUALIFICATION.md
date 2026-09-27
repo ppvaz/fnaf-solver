@@ -1,5 +1,16 @@
 # Cue Helper overlay qualification
 
+> **Retired 2026-09-27 (Companion 0.2.0).** The full-screen sensor/debug HUD
+> this protocol qualified was removed with the watchlist ROIs it drew, and with
+> it `OverlayCaptureGate`, the qualification sidecar, the probe, and the three
+> tools below (`validate-overlay-qualification.py`,
+> `provision-overlay-qualification.sh`, `overlay-qualification-observe.sh`).
+> The HUD never qualified. The Companion's only overlays are the per-game teach
+> panels, each a window of exactly its lesson's rectangle whose clearance from
+> every region the helper reads is proved by geometry (host tests and a runtime
+> check), never by opacity -- Android composites an untrusted overlay at no
+> more than 0.8 alpha. This page is kept as the record of what was specified.
+
 This is the device-side evidence protocol for Plan 23. It is intentionally
 separate from the host contract tests: a passing geometry test cannot prove
 Android compositor behavior or touch delivery.

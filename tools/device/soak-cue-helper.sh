@@ -46,7 +46,7 @@ case "$initial_pid" in
     ;;
 esac
 
-printf 'sample\telapsed_s\tepoch_s\tpid\tpss_kb\trss_kb\tthreads\tthermal_status\tstatus_age_s\tvisual_seq\tvisual_age_us\tcontent_width\tcontent_height\tvisible\tgame_focused\taudio_authority\n' \
+printf 'sample\telapsed_s\tepoch_s\tpid\tpss_kb\trss_kb\tthreads\tthermal_status\tstatus_age_s\tvisual_seq\tvisual_age_us\tcontent_width\tcontent_height\tvisible\tgame_focused\tscreen\n' \
   > "$OUTPUT"
 
 started=$SECONDS
@@ -100,7 +100,7 @@ while [ "$i" -le "$SAMPLES" ]; do
     failed=1
   fi
 
-  status="$(adb logcat -d --pid="$pid" -v epoch -s FnafCueHelper:I '*:S' 2>/dev/null | tr -d '\r' | awk '/visual=(OBSERVED|UNKNOWN).*audio=EXTERNAL/ { line=$0 } END { print line }')"
+  status="$(adb logcat -d --pid="$pid" -v epoch -s FnafCueHelper:I '*:S' 2>/dev/null | tr -d '\r' | awk '/visual=(OBSERVED|UNKNOWN) seq=/ { line=$0 } END { print line }')"
   status_epoch="$(printf '%s\n' "$status" | awk '{ value=$1; sub(/\..*/, "", value); print value }')"
   status_age=-1
   case "$status_epoch" in
@@ -112,10 +112,10 @@ while [ "$i" -le "$SAMPLES" ]; do
   content_width="$(printf '%s\n' "$status" | sed -n 's/.*content=\([0-9][0-9]*\)x[0-9][0-9]*.*/\1/p')"
   content_height="$(printf '%s\n' "$status" | sed -n 's/.*content=[0-9][0-9]*x\([0-9][0-9]*\).*/\1/p')"
   visible="$(printf '%s\n' "$status" | sed -n 's/.*visible=\([-0-9][0-9]*\).*/\1/p')"
-  audio_authority="$(printf '%s\n' "$status" | sed -n 's/.*audio=EXTERNAL authority=\([^ ]*\).*/\1/p')"
+  screen="$(printf '%s\n' "$status" | sed -n 's/.*visual=[A-Z]* seq=[0-9]* .* screen=\([A-Z0-9_]*\).*/\1/p')"
 
-  if [ -z "$visual" ] || [ -z "$audio_authority" ]; then
-    echo "sample $i: no fail-closed visual status with external audio declaration found" >&2
+  if [ -z "$visual" ]; then
+    echo "sample $i: no observed visual status found" >&2
     failed=1
   fi
   if [ "$status_age" -lt -2 ] || [ "$status_age" -gt 5 ]; then
@@ -127,6 +127,7 @@ while [ "$i" -le "$SAMPLES" ]; do
   content_width="${content_width:--1}"
   content_height="${content_height:--1}"
   visible="${visible:--1}"
+  screen="${screen:-UNKNOWN}"
 
   if [ "$i" -gt 1 ]; then
     if [ "$visual" -le "$previous_visual" ]; then
@@ -139,10 +140,10 @@ while [ "$i" -le "$SAMPLES" ]; do
   printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
     "$i" "$elapsed" "$epoch" "$pid" "$pss" "$rss" "$threads" "$thermal" \
     "$status_age" "$visual" "$visual_age" "$content_width" "$content_height" "$visible" \
-    "$game_focused" "$audio_authority" >> "$OUTPUT"
+    "$game_focused" "$screen" >> "$OUTPUT"
 
-  printf 'sample %d/%d elapsed=%ss pid=%s pss=%sKiB rss=%sKiB visual=%s audio=%s thermal=%s\n' \
-    "$i" "$SAMPLES" "$elapsed" "$pid" "$pss" "$rss" "$visual" "$audio_authority" "$thermal"
+  printf 'sample %d/%d elapsed=%ss pid=%s pss=%sKiB rss=%sKiB visual=%s screen=%s thermal=%s\n' \
+    "$i" "$SAMPLES" "$elapsed" "$pid" "$pss" "$rss" "$visual" "$screen" "$thermal"
   if [ "$i" -lt "$SAMPLES" ]; then
     sleep "$INTERVAL_SECONDS"
   fi

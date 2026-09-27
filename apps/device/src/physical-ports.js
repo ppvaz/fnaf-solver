@@ -45,7 +45,7 @@ function runSync(adb, args, { timeout = 5000, input, encoding = 'utf8', maxBuffe
 const HELPER_QUERY_SCRIPT = `
 port="$1"
 shift
-case "$1" in GET|GRID|FRAME|WATCH|READ) ;; *) exit 64 ;; esac
+case "$1" in GET|FRAME|WATCH|READ) ;; *) exit 64 ;; esac
 printf '%s\\n' "$*" | toybox nc -w 2 127.0.0.1 "$port"
 `;
 
@@ -157,10 +157,9 @@ export class AdbCueHelperPort {
 
   /** Synchronous by design: CueHelperControlTransport is a bounded request/response codec. */
   request(line) {
-    // FRAME is GET and GRID from one locked read on the device. GET+GRID are
-    // two round trips whose sequences never agree (measured 0/12 on the moto
-    // g56), so a detector needing freshness AND cells can only use FRAME.
-    if (typeof line !== 'string' || !/^(?:GET|GRID|FRAME|WATCH|READ) [0-9a-f]{32}(?: status| [0-9a-f]{64})?$/.test(line))
+    // FNaF 2 legacy reads (Fnaf2Legacy.java). FRAME is the snapshot and its
+    // grid from one locked read; the separate GRID verb is retired.
+    if (typeof line !== 'string' || !/^(?:GET|FRAME|WATCH|READ) [0-9a-f]{32}(?: status| [0-9a-f]{64})?$/.test(line))
       throw new TypeError('Cue Helper request is outside the authenticated read vocabulary');
     const endpoint = this.endpoint ?? this.discover();
     const args = ['-s', this.serial, 'shell', 'sh', '-s', '--', String(endpoint.port), ...line.split(/\s+/)];
