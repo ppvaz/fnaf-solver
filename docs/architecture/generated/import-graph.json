@@ -791,6 +791,13 @@
       ]
     },
     {
+      "file": "packages/core/test/gated-every.test.js",
+      "imports": [
+        "../src/mechanics/index.js",
+        "node:assert/strict"
+      ]
+    },
+    {
       "file": "packages/core/test/last-view-pause.test.js",
       "imports": [
         "../src/mechanics/plant-model.js",
@@ -2090,6 +2097,16 @@
       ]
     },
     {
+      "file": "tools/encounter-replay.mjs",
+      "imports": [
+        "../packages/core/src/control/vocabulary.js",
+        "../packages/core/src/mechanics/plant-model.js",
+        "node:crypto",
+        "node:fs",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/estimatortest.mjs",
       "imports": [
         "@fnaf2-1020/core/estimation"
@@ -2383,6 +2400,15 @@
         "@fnaf2-1020/research",
         "@fnaf2-1020/research/seeds",
         "node:url"
+      ]
+    },
+    {
+      "file": "tools/model-encounter-fidelity.mjs",
+      "imports": [
+        "./encounter-replay.mjs",
+        "node:crypto",
+        "node:fs",
+        "node:path"
       ]
     },
     {
@@ -2691,6 +2717,18 @@
         "node:fs",
         "node:path",
         "node:url"
+      ]
+    },
+    {
+      "file": "tools/test-encounter-fidelity.mjs",
+      "imports": [
+        "./device/bundle.mjs",
+        "./encounter-replay.mjs",
+        "./winner-census.mjs",
+        "@fnaf2-1020/core/mechanics",
+        "node:assert/strict",
+        "node:crypto",
+        "node:fs"
       ]
     },
     {

@@ -263,6 +263,31 @@ export class Sim {
       // frames a camera is displayed and its phase follows the accumulated camera-up time,
       // not frame 0. Off keeps the model's global f % 12 sample (dump g263).
       sourcedLastViewPause: false,
+      // The gated one-second countdowns (dump g907, g904, g786/g785, g824,
+      // g825, g722, g570). Each is an `Every` placed AFTER other conditions,
+      // and CND_EVERY2 only loads and counts down on frames it is reached
+      // (Fusion stops at the first false condition), so its fires are spaced
+      // in time spent with those conditions true, carrying the remainder
+      // between stretches -- not on the global one-second grid the model
+      // otherwise uses for them:
+      //   g907  mask == 2, then Every 1000 -> Toy Chica, Mangle and Balloon
+      //         Boy value 12 += 1 (g293 zeroes it entering mask == 2; g294,
+      //         g401, g440 send the vent occupant back at >= 5). A fully-on
+      //         window of 4551 ms therefore gets 4 or 5 ticks by the carried
+      //         remainder at ANY phase, not 5 at every lucky phase. (Kept
+      //         from the model: value 12 counts only while the unit is at
+      //         122; the dump counts from the stretch start, which differs
+      //         only for Toy Chica, whose g435 entry can land mid-stretch.)
+      //   g904  Toy Chica at marker 122, then Every 1000 -> value 8 += 1
+      //   g786  viewing > 0, then Every 1000 -> the cams-up streak (old freddy
+      //         value 25) += 1; g785 zeroes it once viewing is 0; g542-g545
+      //         read it (>= 20 - 2 * night, viewing > 0) for the streak entry
+      //   g824  in danger == 0, then Every 1000 -> Foxy's D += 1
+      //   g825  in danger 0, mask 2, nobody at 122, then Every 1000 -> D += 1
+      //   g722  Toy Bonnie at marker 123, viewing > 0, then Every 10000
+      //   g570  hallway Golden Freddy at 123, being attacked by 0, Every 1000
+      // Default off: switching it on moves replays and the census.
+      sourcedGatedEvery: false,
       frameMs: /** @type {null | ((frame: number) => number)} */ (null),
       frameValue5: /** @type {null | ((frame: number) => number)} */ (null),
     }, opts);
@@ -368,6 +393,10 @@ export class Sim {
     // this loop's shared cadence events under the hook (1000 / 500 / 200 / 10000 ms)
     this.secTick = false; this.halfTick = false; this.sampleTick = false; this.tenTick = false;
     this.lastViewTimer = { v: 0, init: false };   // g263 under sourcedLastViewPause
+    /** @type {Record<string, {v: number, init: boolean}>} the gated countdowns (sourcedGatedEvery) */
+    this.gatedEvery = {};
+    this.maskTick = false;     // g907 fired this frame (sourcedGatedEvery)
+    this.streakTicks = 0;      // old freddy value 25, the cams-up streak (sourcedGatedEvery)
     this.am = 0;
     this.hour = 0;
     this.blackoutClock = 0;
@@ -961,6 +990,15 @@ export class Sim {
     return true;
   }
 
+  /** One reach of a gated group's own CND_EVERY2 countdown (sourcedGatedEvery). @param {string} key @param {number} ms */
+  gatedPass(key, ms) { return this.passEvery(this.gatedEvery[key] ??= { v: 0, init: false }, ms); }
+
+  /** g785/g786: the cams-up streak counts gated one-second fires while viewing > 0 (sourcedGatedEvery). */
+  tickStreak() {
+    if (this.viewing > 0) { if (this.gatedPass('g786', 1000)) this.streakTicks++; }
+    else this.streakTicks = 0;
+  }
+
   /** g685-g690: Random(4) the first loop a unit stands on CAM 05/06, re-armed when it leaves (sourcedVentCamDraws). */
   ventCamDraws() {
     /** @type {[string, number][]} */
@@ -1182,6 +1220,7 @@ export class Sim {
       this.bb.maskTicks = 0;   // g293 names Balloon Boy alongside the two toys
     }
 
+    if (this.opts.sourcedGatedEvery) this.maskTick = this.maskFullyOn && this.gatedPass('g907', 1000);   // g907
     // g263 is the only writer of `last viewed`: a global 200 ms sample of the
     // live feed. It runs only while a camera is displayed.
     if (this.viewing > 0 && (this.opts.sourcedLastViewPause ? this.passEvery(this.lastViewTimer, 200)
@@ -1270,6 +1309,7 @@ export class Sim {
     if (this.opts.sourcedPuppetGlitchDraws && !this.opts.sourcedSheetOrder) this.puppetGlitchLate();   // g774
     if (this.opts.sourcedMonitorDownDraw) this.monitorDownLate();                // e720-e722, e871-e872
     if (this.opts.sourcedRandomImageDraw) this.randomImageDraw();                 // g811
+    if (this.opts.sourcedGatedEvery) this.tickStreak();                            // g785/g786
 
     if (this.hooked ? this.hour >= 6 : f >= this.opts.durationFrames) { this.won = true; this.emit('win'); }
   }
@@ -1403,7 +1443,8 @@ export class Sim {
       if (this.gf.attackAt >= 0) {
         if (f >= this.gf.attackAt)
           this.kill('golden-freddy-hall', 'Hall Golden Freddy completed the marker-123 attack');
-      } else if (this.hooked ? this.secTick : f % C.FPS === 0) {           // g570
+      } else if (this.opts.sourcedGatedEvery ? !this.attackExecuting && this.gatedPass('g570', 1000)
+                 : this.hooked ? this.secTick : f % C.FPS === 0) {           // g570
         this.gf.attackAt = f + C.INSIDE_ATTACK_FRAMES;
         this.dropEverything = true;
         this.emit('gf-hall-attack');
@@ -1479,9 +1520,14 @@ export class Sim {
     }
     const atHall = fx.loc === 'hall' && !fx.gotYou;
     if (atHall && this.hallLatch) { fx.D = 0; fx.exposure++; }               // g745
-    if (second && !danger) fx.D++;                                           // g824
     const someoneInOpening = this.bb.inOpening || this.units.some(u => u.atOpening);
-    if (second && !danger && this.maskFullyOn && !someoneInOpening) fx.D++;  // g825
+    if (this.opts.sourcedGatedEvery) {
+      if (!danger && this.gatedPass('g824', 1000)) fx.D++;                                            // g824
+      if (!danger && this.maskFullyOn && !someoneInOpening && this.gatedPass('g825', 1000)) fx.D++;   // g825
+    } else {
+      if (second && !danger) fx.D++;                                           // g824
+      if (second && !danger && this.maskFullyOn && !someoneInOpening) fx.D++;  // g825
+    }
     if (fx.exposure > C.foxyExposureFrames(this.opts.night) && !this.hallLit && // g846
         !this.hallLatch && fx.B === 0) {
       fx.loc = 'parts'; fx.gotYou = false; fx.A = 0; fx.D = 0; fx.exposure = 0;
@@ -1556,7 +1602,8 @@ export class Sim {
     // entry into the fully-on state (see setMask/maskAnim). The old cumulative
     // MASK_LEAVE_FRAMES path let separate flicks add up, which the source
     // does not do for any of the three.
-    if (this.bb.inOpening && this.maskFullyOn && (this.hooked ? this.secTick : this.frame % C.FPS === 0)) {   // g907
+    if (this.bb.inOpening && this.maskFullyOn &&
+        (this.opts.sourcedGatedEvery ? this.maskTick : this.hooked ? this.secTick : this.frame % C.FPS === 0)) {   // g907
       this.bb.maskTicks++;
       if (this.opts.sourcedSecondPass) return;   // g292/g294 decide in secondPass
       if (this.opts.sourcedEventDraws) {
@@ -1815,7 +1862,8 @@ export class Sim {
           // In addition to the shared monitor-lowering trigger, Toy Bonnie at
           // marker 123 raises danger every ten seconds spent cameras-up
           // (group 722).
-          if (this.camsUp && (this.hooked ? this.tenTick : f % (C.FPS * 10) === 0))   // g722
+          if (this.opts.sourcedGatedEvery ? this.viewing > 0 && this.gatedPass('g722', 10000)
+              : this.camsUp && (this.hooked ? this.tenTick : f % (C.FPS * 10) === 0))   // g722
             this.commitAttack(u, 'Toy Bonnie remained inside with cameras up');
         } else if (u.openingRule === 'streak' && this.maskFullyOn && f % C.FPS === 0 && !this.opts.sourcedSecondPass) {
           // Groups 556-559 precede the 10% return groups 747-750. Preserve
@@ -1857,7 +1905,7 @@ export class Sim {
       // fully on they get a 10% leave roll per one-second event and are forced
       // out after five continuous mask ticks (groups 292-294, 400-401, 907).
       if ((u.id === 'toychica' || u.id === 'mangle') && u.atOpening &&
-          this.maskFullyOn && (this.hooked ? this.secTick : f % C.FPS === 0)) {   // g907
+          this.maskFullyOn && (this.opts.sourcedGatedEvery ? this.maskTick : this.hooked ? this.secTick : f % C.FPS === 0)) {   // g907
         u.maskExposureTicks++;
         if (this.opts.sourcedSecondPass) { /* g400/g401/g439/g440 decide in secondPass */ }
         else if (this.opts.sourcedEventDraws) {
@@ -1869,20 +1917,25 @@ export class Sim {
           continue;
         }
       }
-      // g903 zeroes Toy Chica's v8 on arrival; g904 increments it on every
-      // global one-second event at marker 122. g905 needs v8 > 5 and cameras
-      // up, so this is six scheduler ticks, not a fixed five-second delay.
-      if (u.id === 'toychica' && u.atOpening && (this.hooked ? this.secTick : f % C.FPS === 0))   // g904
+      // g903 zeroes Toy Chica's v8 on arrival; g904 increments it on a
+      // one-second event at marker 122 (the global grid by default; under
+      // sourcedGatedEvery its own countdown, which runs only while she is
+      // there). g905 needs v8 > 5 and cameras up, so this is six ticks, not a
+      // fixed five-second delay.
+      if (u.id === 'toychica' && u.atOpening &&
+          (this.opts.sourcedGatedEvery ? this.gatedPass('g904', 1000) : this.hooked ? this.secTick : f % C.FPS === 0))   // g904
         u.openingTicks++;
-      const streakKill = u.atOpening && u.openingRule === 'streak' && this.camsUpSince >= 0 &&
-        f - this.camsUpSince >= C.entryStreakFrames(this.opts.night);
+      const streakKill = u.atOpening && u.openingRule === 'streak' && (this.opts.sourcedGatedEvery
+        ? this.viewing > 0 && this.streakTicks >= 20 - 2 * this.opts.night          // g542-g545 read g786's value 25
+        : this.camsUpSince >= 0 && f - this.camsUpSince >= C.entryStreakFrames(this.opts.night));
       const armedKill = u.atOpening && u.openingRule === 'mask' && this.camsUp &&
         (u.id === 'toybonnie'
           ? f >= u.stunUntil
           : u.openingTicks >= C.TOY_CHICA_OPENING_TICKS);
       if (streakKill || armedKill) {
         const why = streakKill
-          ? `cams stayed up ${((f - this.camsUpSince) / C.FPS).toFixed(1)}s with someone at the opening`
+          ? (this.opts.sourcedGatedEvery ? `the cams-up streak reached ${this.streakTicks} with someone at the opening`
+             : `cams stayed up ${((f - this.camsUpSince) / C.FPS).toFixed(1)}s with someone at the opening`)
           : 'their sourced opening timer armed before the next cams-up trip';
         if (streakKill && this.opts.sourcedEventDraws) this.rng.int(0, C.REPEL_COOLDOWN_ROLL - 1, 0);   // e479-e482
         this.unitEnterInside(u, why);

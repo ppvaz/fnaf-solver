@@ -30,7 +30,7 @@ import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'n
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { RNG_MODULUS } from '@fnaf2-1020/core/mechanics';
+import { RNG_MODULUS, Sim } from '@fnaf2-1020/core/mechanics';
 import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort } from '@fnaf2-1020/research/seeds';
 import { STRATEGY_REGISTRY, WINNER_SCHEMA, compileBundle, validateWinner } from './device/bundle.mjs';
 
@@ -49,6 +49,28 @@ const SWEEP_STRIDE = 2246822519;
 const TUNING_COUNT = 3000;
 
 const sha256 = (text) => createHash('sha256').update(text).digest('hex');
+
+// `--sim-opt NAME` censuses the same lane with a default-off simulator option
+// switched on. The emitters build their own Sim, so the option is set on each
+// replay's first tick; only options read at tick time (never in the
+// constructor) are exact that way, so the list is closed. A census run with one
+// is a comparison against the default census, never the default census: its
+// record id carries the option names.
+export const TICK_TIME_SIM_OPTS = new Set(['sourcedGatedEvery']);
+export function applySimOpts(names) {
+  if (!names.length) return;
+  for (const name of names)
+    if (!TICK_TIME_SIM_OPTS.has(name)) throw new Error(`winner-census: --sim-opt ${name} is not a tick-time option`);
+  const extra = Object.fromEntries(names.map((name) => [name, true]));
+  const tick = Sim.prototype.tick;
+  if (tick.simOptsApplied) throw new Error('winner-census: simulator options already applied');
+  const patched = function () {
+    if (!this.censusSimOpts) { Object.assign(this.opts, extra); this.censusSimOpts = true; }
+    return tick.call(this);
+  };
+  patched.simOptsApplied = true;
+  Sim.prototype.tick = patched;
+}
 
 /** The committed winner-v1 files, repository-relative and sorted. */
 export function committedWinners() {
@@ -231,7 +253,7 @@ export function buildRecord({ rows, start, count, design, git, date, command, wi
 }
 
 function parseArgs(argv) {
-  const args = { winners: [], jobs: 1, start: 0, count: RNG_MODULUS, out: null, date: new Date().toISOString().slice(0, 10) };
+  const args = { winners: [], jobs: 1, start: 0, count: RNG_MODULUS, out: null, date: new Date().toISOString().slice(0, 10), simOpts: [] };
   for (let i = 0; i < argv.length; i += 1) {
     const flag = argv[i];
     if (flag === '--winner') args.winners.push(argv[++i]);
@@ -240,6 +262,7 @@ function parseArgs(argv) {
     else if (flag === '--count') args.count = Number(argv[++i]);
     else if (flag === '--out') args.out = argv[++i];
     else if (flag === '--date') args.date = argv[++i];
+    else if (flag === '--sim-opt') args.simOpts.push(argv[++i]);
     else throw new Error(`winner-census: unknown flag ${flag}`);
   }
   if (!Number.isInteger(args.jobs) || args.jobs < 1) throw new Error('winner-census: --jobs must be a positive integer');
@@ -251,11 +274,16 @@ function parseArgs(argv) {
 
 async function main(argv) {
   if (argv[0] === '--child') {
-    const [, a, b, ...paths] = argv;
-    process.send(censusBlock(paths, Number(a), Number(b)));
+    const [, a, b, ...rest] = argv;
+    applySimOpts(rest.filter((x) => x.startsWith('--sim-opt=')).map((x) => x.slice('--sim-opt='.length)));
+    process.send(censusBlock(rest.filter((x) => !x.startsWith('--sim-opt=')), Number(a), Number(b)));
     return;
   }
   const args = parseArgs(argv);
+  // Only the forked blocks replay with the options: each binding is first recompiled here, on the default
+  // model, because compileBundle checks the gate's replay hash.
+  for (const name of args.simOpts)
+    if (!TICK_TIME_SIM_OPTS.has(name)) throw new Error(`winner-census: --sim-opt ${name} is not a tick-time option`);
   const paths = args.winners.length ? args.winners.map((path) => relative(ROOT, resolve(process.cwd(), path)))
     : committedWinners();
   const scratch = mkdtempSync(join(tmpdir(), 'winner-census-'));
@@ -267,13 +295,18 @@ async function main(argv) {
     }
   } finally { rmSync(scratch, { recursive: true, force: true }); }
   const started = Date.now();
-  const rows = await forkBlocks({ script: fileURLToPath(import.meta.url), args: paths,
+  const rows = await forkBlocks({ script: fileURLToPath(import.meta.url), args: [...args.simOpts.map((o) => `--sim-opt=${o}`), ...paths],
     start: args.start, count: args.count, jobs: args.jobs });
   const command = `node tools/winner-census.mjs${args.winners.map((w) => ` --winner ${w}`).join('')}` +
-    ` --start ${args.start} --count ${args.count} --jobs ${args.jobs}`;
+    ` --start ${args.start} --count ${args.count} --jobs ${args.jobs}` + args.simOpts.map((o) => ` --sim-opt ${o}`).join('');
   const record = buildRecord({ rows, start: args.start, count: args.count, design: designBlock(),
     git: gitState(), date: args.date, command, winnerHashes, cohorts: phoneCohorts() });
   record.method.wallSeconds = Math.round((Date.now() - started) / 1000);
+  if (args.simOpts.length) {
+    record.id += `-${args.simOpts.join('-')}`;
+    record.method.simOpts = args.simOpts;
+    record.method.lane += `; with ${args.simOpts.join(', ')} switched on at each replay's first tick (a comparison, not the default census)`;
+  }
   const text = `${JSON.stringify(record, null, 2)}\n`;
   if (args.out) writeFileSync(args.out, text); else process.stdout.write(text);
   for (const row of record.bindings) {

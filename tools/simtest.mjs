@@ -204,6 +204,9 @@ import { Coach } from '@fnaf2-1020/trainer';
     if (n === 0) mangleMask.tick();
   }
   mangleMask.press('mask');
+  // A new hold starts only after the take-off finishes: mask animation
+  // presses are dropped by the sourced input rule (3d5c5f7).
+  while (mangleMask.maskAnim > 0) mangleMask.tick();
   mangleMask.press('mask');
   while (mangleMask.maskAnim > 0) mangleMask.tick();
   if (maskedMg.maskExposureTicks !== 0)
@@ -381,14 +384,16 @@ import { Coach } from '@fnaf2-1020/trainer';
 // Keep the cycle's input offsets tied to the sourced animation lengths.  A
 // touch is queued at a frame boundary, before that frame's animation tick;
 // the extra three frames are an intentional small execution margin.
-const maskOffReady = 27 + C.MASK_ANIM_OFF + 3;
+const maskOnTap = 18;
+const maskOffTap = maskOnTap + C.MASK_ANIM_ON + 3;
+const maskOffReady = maskOffTap + C.MASK_ANIM_OFF + 3;
 const monitorUpTap = maskOffReady + 3;
 const firstCamera = monitorUpTap + C.MONITOR_ANIM_UP + 3;
 
 const CYCLE = [
   [0,  'tap',  'monitor'],   // cams down
-  [18, 'tap',  'mask'],      // mask on  (clears Golden Freddy)
-  [27, 'tap',  'mask'],      // mask off
+  [maskOnTap,  'tap', 'mask'], // mask on (clears Golden Freddy)
+  [maskOffTap, 'tap', 'mask'], // mask off, after put-on animation and margin
   // The mask-off animation owns the touch surface for MASK_ANIM_OFF frames;
   // the old +30/+36 inputs were silently dropped.  Leave a small sourced
   // animation margin before the hall flash and the monitor raise.
@@ -429,18 +434,22 @@ export function run(opts = {}) {
   return { sim, minBox, maxD };
 }
 
-// The published cycle drops the cameras with the flashlight held and flashes
-// the hall before masking. Since 2026-09-13 the model reads g778 every frame:
-// a Golden Freddy created while the cameras were up (g336) is killed into by
-// that held light the instant `viewing` reaches 0. Two Night 6 phone deaths
-// (night6-anchored2/3) measured exactly that. The coverage diagnostic below
-// is about the Toy stuns, so it runs with Golden Freddy off; the control run
-// here keeps the finding visible: the canonical cycle, as published, dies to
-// him at this seed once he can spawn.
+// The historical held-light camdrop negative (night6-anchored2/3) is g778:
+// Golden Freddy present when viewing reaches 0 meets the held hall light.
+// Test that condition directly, including the released-light negative control.
+// The legal mask timings above change the diagnostic cycle's RNG/phase, so a
+// particular seed's death is no longer a stable control for this source rule.
+// No device winner schedule is changed by these fixture timings.
 {
-  const control = run({ record: false }).sim;
-  if (control.won || control.death?.reason !== 'golden-freddy')
-    throw new Error(`canonical cycle with Golden Freddy enabled was expected to die to him (g778 through the held camdrop light); got ${control.won ? 'a win' : control.death?.reason}`);
+  for (const held of [false, true]) {
+    const control = new Sim({ seed: 12345, bbEnabled: false, foxyEnabled: false,
+      boxEnabled: false, powerEnabled: false, record: false });
+    control.monitor = 'up'; control.viewing = 11; control.gf.present = true;
+    control.lightHeld = held;
+    control.setMonitor(false); control.tick();
+    if (held ? control.death?.reason !== 'golden-freddy' : !control.alive)
+      throw new Error(`g778 camdrop control failed with light ${held ? 'held' : 'released'}`);
+  }
 }
 const r = run({ record: true, gfEnabled: false });   // this single diagnostic run reads sim.rec
 const s = r.sim;
