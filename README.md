@@ -43,8 +43,11 @@ profile `hid-mediaprojection`.
 | 7 (**10/20**) | 2026-09-14 | [`night7-first-6am-k2`](docs/evidence/night7-first-6am-k2-20260914.json) — `golden-freddy`, all ten dials 20 |
 
 Read those numbers precisely. Each run is retained at `DEVICE_MEASURED` for its
-own terminal, and **no Plan 12 promotion edge has been recorded for any of
-them**, so nothing above is a promoted claim. Night 7's reliability is two
+own terminal. Since 2026-09-27, 47 executor-proven 6 AMs across Nights 1–7 carry
+a Plan 12 promotion edge in [`graph.json`](docs/evidence/graph.json), each
+attested by an agent under Pedro's delegation after re-deriving every other
+check from its run pack (`npm run evidence -- promotions`). A promoted night is
+one clear, not a reliability claim. Night 7's reliability is two
 predeclared ten-run cohorts: binding k2 at [**3 wins, 7 deaths**](docs/evidence/night7-cohort-k2-result-20260914.json)
 on 2026-09-14, and binding k3 at [**8 wins, 2 deaths**](docs/evidence/night7-cohort-k3-result-20260918.json)
 on 2026-09-18, both k3 losses to Foxy on the first office frame after a mask-off press.

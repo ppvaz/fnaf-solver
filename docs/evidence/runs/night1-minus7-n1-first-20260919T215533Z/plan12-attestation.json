@@ -1,0 +1,138 @@
+{
+  "schema": "plan12-attestation-v2",
+  "status": "PASS",
+  "evidenceId": "night1-minus7-n1-first-20260919T215533Z",
+  "packSha256": "7cba9811d5e4e93849524a796112fd56fb69589853d91abd21370b6226e873b2",
+  "attestedBy": {
+    "kind": "agent",
+    "delegation": "pedro-2026-09-27",
+    "note": "Claude agent (Opus 5.5), worktree agent-a92b61f0b615f761c, S1 first-promotion session 2026-09-27"
+  },
+  "date": "2026-09-27",
+  "tool": "npm run evidence -- attest",
+  "authority": "plans/12-end-to-end-evidence-campaign.md",
+  "claim": {
+    "id": "claim.fnaf2.night1.device-6am",
+    "night": 1,
+    "mode": "story",
+    "label": "FNaF 2 Night 1 reaches 6 AM on the phone (executor-proven)"
+  },
+  "custody": {
+    "kind": "recovered-from-run-log",
+    "lost": [
+      "observations.jsonl",
+      "observer frames",
+      "request.json"
+    ]
+  },
+  "verified": [
+    {
+      "check": "offlineEvidence",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "result.json",
+          "sha256": "ccd8e30ad2c6d3c90f5dbb41778c6c167f2d236a488eadbecb1199c523cdfe40"
+        }
+      ],
+      "detail": {
+        "mode": "live",
+        "claimLevel": "DEVICE_MEASURED"
+      }
+    },
+    {
+      "check": "terminalPass",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "result.json",
+          "sha256": "ccd8e30ad2c6d3c90f5dbb41778c6c167f2d236a488eadbecb1199c523cdfe40"
+        },
+        {
+          "name": "events.jsonl",
+          "sha256": "5580ae01fde2060a0b53fba1a2f008b793d54dfc10a9417bd516e0ce33bb47ed"
+        }
+      ],
+      "detail": {
+        "night": 1,
+        "attempt": 1,
+        "proofHash": "fnv1a-8eed47dd",
+        "terminalEventAt": "2026-09-19T22:03:05.986Z",
+        "videoGrade": "none packed (the executor terminal stands alone)"
+      }
+    },
+    {
+      "check": "manifestComplete",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "result.json",
+          "sha256": "ccd8e30ad2c6d3c90f5dbb41778c6c167f2d236a488eadbecb1199c523cdfe40"
+        },
+        {
+          "name": "events.jsonl",
+          "sha256": "5580ae01fde2060a0b53fba1a2f008b793d54dfc10a9417bd516e0ce33bb47ed"
+        },
+        {
+          "name": "run/campaign.log",
+          "sha256": "114690ff112422bd42f29bca4895fefc067101164662efa3691f48a0640da322"
+        },
+        {
+          "name": "docs/evidence/custody-recovery-20260925.json",
+          "sha256": "d9c4db2a78efc606f785cd6db7e2fff517ac2421926fc401e525ce91248ab519"
+        }
+      ],
+      "detail": {
+        "custody": "recovered-from-run-log",
+        "lost": [
+          "observations.jsonl",
+          "observer frames",
+          "request.json"
+        ],
+        "recovered": [
+          "events.jsonl",
+          "result.json"
+        ],
+        "recoveryCheck": {
+          "campaigns": 9,
+          "eventsIdentical": 9,
+          "resultsPrinted": 7,
+          "resultsIdentical": 7,
+          "resultsNotPrinted": [
+            "campaign-2026-09-20T01-39-16.104Z (ERROR)",
+            "campaign-2026-09-20T01-02-31.713Z (ERROR)"
+          ]
+        }
+      }
+    },
+    {
+      "check": "winnerCommitted",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "tools/device/campaign-night1-minus7-n1-first-winner.json",
+          "sha256": "ac4cbbb25f73bae0e5a09772b5ccb226e01a8a46a831b9ed9b5c37849dd2a11a"
+        }
+      ],
+      "detail": {
+        "winnerHash": "fnv1a-2e6a42e3",
+        "bundle": "artifacts/minus7-night1",
+        "winner": "tools/device/campaign-night1-minus7-n1-first-winner.json"
+      }
+    },
+    {
+      "check": "claimIdentity",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "events.jsonl",
+          "sha256": "5580ae01fde2060a0b53fba1a2f008b793d54dfc10a9417bd516e0ce33bb47ed"
+        }
+      ],
+      "detail": {
+        "night": 1,
+        "mode": "story"
+      }
+    }
+  ]
+}

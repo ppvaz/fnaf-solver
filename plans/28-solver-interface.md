@@ -248,7 +248,7 @@ confident wrong answer. Prose has not stopped the fourteenth. The interface must
 | A directional constant reused in reverse | mistake 10 | no |
 | An instrument proposed before `capabilities` | mistake 8 | no |
 | `UNKNOWN` consumed as a number | the charter | no |
-| A promotion requested by a non-human | Plan 12 | yes, `promote` refuses |
+| A promotion requested by a caller of the interface | Plan 12 | yes, `promote` refuses without an attestation bound to the pack; since 2026-09-27 the project's own agents may write one, only through `evidence -- attest` |
 
 Those refusals are the accumulated cost of every wasted night, and they are the
 part that genuinely transfers to a stranger. Four of the seven do not exist yet.
@@ -287,8 +287,12 @@ and Plan 25 horizon 2 already operate under.
 **Letting a caller promote.** The moment `proof.promote` succeeds without a
 human, every label in every envelope becomes worthless — and the labels are the
 product. Generators propose edges; humans approve support, refutation,
-supersession, retraction and promotion, exactly as
-[the evidence policy](../docs/evidence/README.md) already states.
+supersession and retraction, as
+[the evidence policy](../docs/evidence/README.md) states. On 2026-09-27 Pedro
+delegated the Plan 12 attestation to the project's own agents, through
+`npm run evidence -- attest`, which re-derives every other check from the pack.
+That delegation is his to this repository's agents, not to the interface's
+callers: `proof.promote` still only proposes.
 
 ## Sequence
 

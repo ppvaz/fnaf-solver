@@ -29,7 +29,10 @@ retained research spec through the shared deterministic evaluator and compares
 the result hash. `promote` invokes the Plan 12 gate and returns a structured
 refusal until external device evidence and a passing terminal result exist.
 Generators may propose graph edges; humans approve support, refutation,
-supersession, retraction, and promotion edges.
+supersession and retraction edges. A promotion edge is written only by
+`promote`, over a run pack whose Plan 12 attestation binds it; since
+2026-09-27 that attestation may be an agent's, under Pedro's delegation and
+only through `attest` (below).
 
 The [2026-09-05 calibration clock audit](calibration-clock-audit-20260905.json)
 is a generated `calibration-stability-v2` REFUSED result, not a device-session
@@ -88,15 +91,62 @@ at the `UNKNOWN` ceiling and cannot satisfy the terminal or manifest checks.
 adds a fifth check, `winnerCommitted`: the bundle's `winnerHash` must match a
 committed `tools/device/*-winner.json`, as filed or as `compileBundle`
 normalises it, or the night cannot be re-run from the tree;
-`test-winners-rebuild.mjs` keeps every committed winner compiling. The attestation is a person's file beside the pack,
-`plan12-attestation.json`:
+`test-winners-rebuild.mjs` keeps every committed winner compiling.
 
-```json
-{ "schema": "plan12-attestation-v1", "status": "PASS", "packSha256": "<from promote>", "attestedBy": "...", "at": "..." }
+**Recovered custody (Pedro, 2026-09-27: "Accept fully").** A pack recovered
+from its night-run log passes `manifestComplete` like one whose directory
+survived, when its `result.json` and `events.jsonl` came back, the
+`campaign.log` it cites is listed under `withheld` by the same sha256, the
+recovery check it cites ([custody recovery](custody-recovery-20260925.json))
+is byte-identical, and `custody.lost` is present. What it lost
+(`request.json`, `observations.jsonl`, the observer frames) stays named in the
+pack, in the attestation, in the promotion edge and in every `list` and `show`.
+
+**The attestation** is `plan12-attestation.json` beside the pack. Since Pedro's
+decision of 2026-09-27 ("i give agents full permission, this is bullshit
+bureaucracy that is impeding progress") an agent may write one; a person still
+may. Either way it is written by one command, which re-derives every other check
+from the pack itself and refuses to write on any failure:
+
+```sh
+npm run evidence -- attest night6-n6h2-01-20260920T024030Z --by agent --note "session or agent that ran it"
+npm run evidence -- attest night6-n6h2-01-20260920T024030Z --by human --name "Pedro Vaz"
+npm run evidence -- promote night6-n6h2-01-20260920T024030Z
+npm run evidence -- promotions          # every pack, per night, with an evidence ID
 ```
 
+`attest` re-reads the pack's files against their recorded sha256; the live,
+`DEVICE_MEASURED` result; the executor's 6 AM (a `WIN` attempt with the `sixam`
+terminal and its proof hash, a positive terminal verification, the save proof
+`validateSaveProof` requires for that night, the `campaign.terminal.from-executor`
+row in `events.jsonl`, and no packed video grade that reads anything but clear);
+custody as above; the committed winner; and the claim the night supports
+(`claimIdentity`: a story night by number, a Custom Night by the dial vector its
+own menu readback observed before the night began, and only if that matches the
+packed request when there is one). It writes `plan12-attestation-v2`:
+
+```json
+{ "schema": "plan12-attestation-v2", "status": "PASS", "evidenceId": "<pack>", "packSha256": "<pack digest>",
+  "attestedBy": { "kind": "agent", "delegation": "pedro-2026-09-27", "note": "<session or agent>" },
+  "date": "YYYY-MM-DD", "claim": { "id": "claim.fnaf2.night6.device-6am", "...": "..." },
+  "custody": { "kind": "original | recovered-from-run-log", "lost": [] },
+  "verified": [{ "check": "terminalPass", "pass": true, "inputs": [{ "name": "result.json", "sha256": "..." }], "detail": {} }] }
+```
+
+A person's is the same with `"attestedBy": { "kind": "human", "name": "..." }`.
+The gate accepts a v2 attestation only with `status` PASS, the pack's exact
+sha256, an author (an agent needs the delegation and a note), and every other
+check listed as verified; a v1 file (`"attestedBy": "<a person>"`) is still read.
 It binds one exact pack: re-packing a run that changed, or editing any packed
-file, changes the sha256 and voids it. Agents never write it.
+file, changes the sha256 and voids it. An attestation cannot carry a pack that
+fails another check: `promote` re-checks all of them.
+
+`promote` records an accepted pack in [`graph.json`](graph.json) as a
+`PROMOTED_BY` edge from the claim to `run.<pack>`, naming the attestation file,
+who attested, the date, the custody and what it lost; a refused pack writes
+nothing. `promotions` reports stale edges rather than hiding them. The
+delegation covers attestations only: `PEDRO-OK` stays human-only and no agent
+bypasses a hook.
 
 A FNaF 1 runner's night packs the same way (`npm run evidence -- pack
 fnaf1-...`): its `probe.json` and `events.jsonl`, whose captures are already

@@ -10,8 +10,11 @@ import { replayModelResult } from '@fnaf2-1020/research';
 import { BUNDLE_SCHEMA, validateBundle } from './device/bundle.mjs';
 import { isCampaignResult, campaignEntry, campaignPromotionChecks } from './evidence-campaign.mjs';
 import { PACKS_DIR, resolvePackTargets, buildPack, buildFnaf1Pack, writePack, readPack, packPromotionChecks,
-  trackedWinners, packEntry, recoveryCheck } from './evidence-pack.mjs';
+  trackedWinners, packEntry, recoveryCheck, attestationStatus, packCustody } from './evidence-pack.mjs';
+import { GRAPH_FILE, attestPack, derivePromotion, formatGraph, promotionEdgeFor, promotionSummary, readGraph,
+  recordPromotion } from './evidence-promotion.mjs';
 import { computeCohort } from './evidence-cohort.mjs';
+import { writeFileSync } from 'node:fs';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));
 const ARTIFACTS = join(ROOT, 'artifacts');
@@ -20,8 +23,30 @@ const SESSION_RESULT_SCHEMAS = new Set(['device-run-result-v1', 'experiment-resu
 const CLAIM_LEVELS = new Set(['MODEL_ONLY', 'FIXTURE', 'DEVICE_MEASURED']);
 const help = () => console.log('Usage: npm run evidence -- <list|show|diff|replay|why|promote> [RUN_ID]\n'
   + '       npm run evidence -- pack <CAMPAIGN_ID|NIGHT_RUN_LABEL> [--replace] [--timeline GRADED_TIMELINE.json]\n'
+  + '       npm run evidence -- attest <PACK_ID> --by agent --note "SESSION OR AGENT" [--replace]\n'
+  + '       npm run evidence -- attest <PACK_ID> --by human --name "NAME" [--replace]\n'
+  + '                  (re-derives every other check from the pack, refuses on any failure, writes plan12-attestation.json)\n'
+  + '       npm run evidence -- promotions      (every pack against the gate and the graph, per night)\n'
   + '       npm run evidence -- recovery-check    (does run/campaign.log reproduce the campaigns still on disk?)\n'
   + '       npm run evidence -- cohort <PREDECLARATION.json> [--prefix LABEL_PREFIX]');
+
+/** The value after a flag, or null. */
+const flag = name => {
+  const at = process.argv.indexOf(name);
+  if (at < 0) return null;
+  const value = process.argv[at + 1];
+  if (value === undefined || value.startsWith('--')) throw new Error(`${name} needs a value`);
+  return value;
+};
+
+/** Who attested a pack and whether the attestation binds it: printed by list, show and promote. */
+const attestationView = packed => {
+  if (!packed.attestation) return { attestedBy: null, valid: false, reason: 'no attestation' };
+  const status = attestationStatus(packed.attestation, packed.digest);
+  return { attestedBy: status.by, author: packed.attestation.attestedBy ?? null,
+    date: packed.attestation.date ?? packed.attestation.at ?? null, schema: packed.attestation.schema,
+    valid: status.valid, reason: status.reason };
+};
 
 async function readVerifiedArtifact(base, ref) {
   const artifact = validateArtifactRef(ref);
@@ -171,10 +196,15 @@ async function list() {
   }
   let packs = [];
   try { packs = await readdir(PACKS, { withFileTypes: true }); } catch { /* no packs committed yet */ }
+  const graph = readGraph(ROOT);
   for (const pack of packs.filter(item => item.isDirectory()).sort((a, b) => a.name.localeCompare(b.name))) {
     try {
       const { packed, entry } = loadPack(pack.name);
-      runs.push({ ...entry, source: 'pack', campaign: packed.pack.campaign, packSha256: packed.digest });
+      const view = attestationView(packed);
+      const edge = promotionEdgeFor(graph, pack.name);
+      runs.push({ ...entry, source: 'pack', campaign: packed.pack.campaign, packSha256: packed.digest,
+        custody: packCustody(packed.pack), attestedBy: view.attestedBy, attestation: packed.attestation ? (view.valid ? 'VALID' : `INVALID: ${view.reason}`) : null,
+        promoted: Boolean(edge && edge.packSha256 === packed.digest) ? edge.from : null });
     } catch (error) {
       runs.push({ id: pack.name, kind: 'run-pack', outcome: 'INVALID_PACK', reason: error.message });
     }
@@ -223,11 +253,34 @@ async function main([operation = 'help', first, second]) {
     return console.log(JSON.stringify(computeCohort(predeclaration, PACKS, {
       source: first, ...(prefixAt > 0 ? { prefix: process.argv[prefixAt + 1] } : {}) }), null, 2));
   }
+  if (operation === 'attest') {
+    const by = flag('--by');
+    const derivedFor = trackedWinners(ROOT);
+    const outcome = attestPack(ROOT, first, derivedFor, { by, note: flag('--note') ?? undefined, name: flag('--name') ?? undefined,
+      date: new Date().toISOString().slice(0, 10) }, { replace: process.argv.includes('--replace') });
+    const { derived } = outcome;
+    console.log(JSON.stringify({ schema: 'plan12-attest-result-v1', evidenceId: first, status: outcome.status,
+      packSha256: derived.digest, custody: derived.custody, claim: derived.claim,
+      attestedBy: outcome.attestation?.attestedBy ?? null,
+      file: outcome.attestation ? `${PACKS_DIR}/${first}/plan12-attestation.json` : null,
+      verified: derived.verified.map(item => ({ check: item.check, pass: item.pass, ...(item.pass ? {} : { failed: item.detail.failed }) })),
+      ...(outcome.failed.length ? { refused: outcome.failed } : {}) }, null, 2));
+    if (outcome.status === 'REFUSED') process.exitCode = 1;
+    return;
+  }
+  if (operation === 'promotions') return console.log(JSON.stringify(promotionSummary(ROOT, trackedWinners(ROOT)), null, 2));
   if (operation === 'show') {
     const loaded = await loadAny(first);
-    if (loaded.kind === 'device-campaign')
-      return console.log(JSON.stringify({ kind: loaded.kind, ...loaded.entry, mode: loaded.wrapper.mode,
-        status: loaded.wrapper.status, files: loaded.files }, null, 2));
+    if (loaded.kind === 'device-campaign') {
+      const packView = loaded.packed ? (() => {
+        const edge = promotionEdgeFor(readGraph(ROOT), first);
+        return { source: 'pack', packSha256: loaded.packed.digest, custody: loaded.packed.pack.custody ?? { kind: 'original', lost: [] },
+          attestation: attestationView(loaded.packed),
+          promotion: edge && edge.packSha256 === loaded.packed.digest ? edge : edge ? { stale: true, edge } : null };
+      })() : {};
+      return console.log(JSON.stringify({ kind: loaded.kind, ...loaded.entry, mode: loaded.wrapper?.mode ?? null,
+        status: loaded.wrapper?.status ?? null, files: loaded.files, ...packView }, null, 2));
+    }
     return console.log(JSON.stringify(loaded, null, 2));
   }
   if (operation === 'diff') {
@@ -263,21 +316,46 @@ async function main([operation = 'help', first, second]) {
       return console.log(JSON.stringify({ schema: 'plan12-promotion-gate-v1', evidenceId: first, kind: 'fnaf1-run',
         source: 'pack', packSha256: loaded.packed.digest, accepted: false, status: 'REFUSED',
         reason: 'Plan 12 gates the FNaF 2 campaign; no promotion gate reads FNaF 1 runs yet' }, null, 2));
+    if (loaded.kind === 'device-campaign' && loaded.packed) {
+      // A pack: the five checks, then the claim the night supports, re-derived from the pack.
+      // An accepted pack is recorded as a PROMOTED_BY edge in the evidence graph, naming who
+      // attested and the pack's custody; a refused pack writes nothing.
+      const winners = trackedWinners(ROOT);
+      const checks = packPromotionChecks(loaded.packed, winners);
+      const derived = derivePromotion(ROOT, first, winners);
+      const identity = derived.verified.find(item => item.check === 'claimIdentity');
+      const allChecks = { ...checks, claimIdentity: identity.pass };
+      const accepted = Object.values(allChecks).every(Boolean);
+      let recorded = null;
+      if (accepted) {
+        const result = recordPromotion(readGraph(ROOT), { id: first, claim: derived.claim, digest: loaded.packed.digest,
+          attestation: loaded.packed.attestation, custody: derived.custody, nights: loaded.entry.nights });
+        if (result.status !== 'ALREADY_RECORDED') writeFileSync(join(ROOT, GRAPH_FILE), formatGraph(result.graph));
+        recorded = { graph: GRAPH_FILE, status: result.status, edge: result.edge };
+      }
+      const view = attestationView(loaded.packed);
+      return console.log(JSON.stringify({
+        schema: 'plan12-promotion-gate-v1', evidenceId: first, kind: 'device-campaign', source: 'pack',
+        packSha256: loaded.packed.digest, nights: loaded.entry.nights, outcome: loaded.entry.outcome,
+        custody: loaded.packed.pack.custody ?? { kind: 'original', lost: [] },
+        attestation: view, claim: derived.claim,
+        authority: 'plans/12-end-to-end-evidence-campaign.md', accepted, checks: allChecks,
+        status: accepted ? 'PROMOTED' : 'REFUSED', ...(recorded ? { recorded } : {}),
+        reason: accepted ? null
+          : `Plan 12 requires a live executor-proven 6 AM, complete custody, a committed winner, a nameable claim, and an attestation bound to pack sha256 ${loaded.packed.digest}`
+            + (view.reason && !checks.plan12Attestation ? ` (attestation: ${view.reason})` : ''),
+      }, null, 2));
+    }
     if (loaded.kind === 'device-campaign') {
-      const checks = loaded.packed
-        ? packPromotionChecks(loaded.packed, trackedWinners(ROOT))
-        : campaignPromotionChecks(loaded.wrapper, loaded.files);
+      const checks = campaignPromotionChecks(loaded.wrapper, loaded.files);
       const accepted = Object.values(checks).every(Boolean);
       return console.log(JSON.stringify({
-        schema: 'plan12-promotion-gate-v1', evidenceId: first, kind: 'device-campaign',
-        source: loaded.packed ? 'pack' : 'artifacts', ...(loaded.packed ? { packSha256: loaded.packed.digest } : {}),
+        schema: 'plan12-promotion-gate-v1', evidenceId: first, kind: 'device-campaign', source: 'artifacts',
         nights: loaded.entry.nights, outcome: loaded.entry.outcome,
-        ...(loaded.packed?.pack.custody ? { custody: loaded.packed.pack.custody } : {}),
         authority: 'plans/12-end-to-end-evidence-campaign.md', accepted, checks,
         status: accepted ? 'READY_FOR_REVIEW' : 'REFUSED',
-        reason: accepted ? null : loaded.packed
-          ? `Plan 12 requires a passing terminal, a committed winner, and a person's attestation bound to pack sha256 ${loaded.packed.digest}`
-          : 'Plan 12 requires external evidence, a passing terminal result, and an explicit gate attestation',
+        reason: accepted ? null
+          : 'Plan 12 requires external evidence, a passing terminal result, and an attestation; pack the run (npm run evidence -- pack) and attest the pack',
       }, null, 2));
     }
     if (loaded.kind === 'device-bundle') {

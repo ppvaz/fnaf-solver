@@ -138,5 +138,8 @@ is not opened. **None of these replaces reading it.**
 Standing directive (Pedro, 2026-09-06; target moved 2026-09-17):
 **laser-focus on 6 AM successes on-device.** Every story night and Custom Night
 10/20 have reached 6 AM. The current target is **Night 7 reliability and
-promotion** — see `CLAUDE.md`, which also records why promotion is blocked on
-bundle custody rather than on merit.
+promotion** — see `CLAUDE.md`, whose S1 paragraph records what is promoted
+(first Plan 12 edges on 2026-09-27) and Pedro's two decisions of that day:
+recovered packs are accepted fully, and agents may write Plan 12 attestations
+through `npm run evidence -- attest`. That delegation covers attestations only;
+`PEDRO-OK` stays human-only and no hook is bypassed.

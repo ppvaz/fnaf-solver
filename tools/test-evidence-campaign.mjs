@@ -28,7 +28,7 @@ assert.notEqual(campaignEntry('c4', wrapper({ attempts: [attempt({ proofHash: nu
 
 assert.deepEqual(campaignPromotionChecks(wrapper(), FILES),
   { offlineEvidence: true, terminalPass: true, manifestComplete: true, plan12Attestation: false },
-  'a live win passes everything but the attestation, which only a person records');
+  'a live win passes everything but the attestation, which is written over its pack, never inferred');
 assert.equal(campaignPromotionChecks(wrapper({ plan12Gate: { status: 'PASS' } }), FILES).plan12Attestation, true);
 assert.equal(campaignPromotionChecks(wrapper(), ['result.json']).manifestComplete, false, 'the events and request must be retained');
 
@@ -45,4 +45,4 @@ assert.equal(isCampaignResult({ ...error, result: { schema: 'unrecognized' } }),
 
 assert.throws(() => campaignEntry('bad', { mode: 'live', result: { schema: CAMPAIGN_RESULT_SCHEMA, version: 2 } }), /schema\/version/,
   'a malformed campaign result is refused, not guessed');
-console.log('evidence campaign: live wins are DEVICE_MEASURED, deaths and dry runs are not wins, the gate refuses only on a missing attestation');
+console.log('evidence campaign: live wins are DEVICE_MEASURED, deaths and dry runs are not wins, the gate refuses a campaign directory only on a missing attestation');

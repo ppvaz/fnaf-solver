@@ -17,7 +17,9 @@
 // is added to PIXEL_KEYS in the diff that decides it.
 //
 // Packing is deterministic -- no timestamps, sorted entries -- so re-packing an unchanged run is
-// a no-op and the pack's sha256 can carry a human's Plan 12 attestation.
+// a no-op and the pack's sha256 can carry a Plan 12 attestation: a person's, or since 2026-09-27
+// an agent's under Pedro's delegation (tools/evidence-promotion.mjs writes it after re-deriving
+// every other check from the pack).
 //
 // A campaign directory that is gone can still be packed from its night-run log, and the pack
 // says so. night-run.sh tees the campaign CLI's stdout and stderr into run/campaign.log; the CLI
@@ -27,7 +29,9 @@
 // the campaigns that still have both (RECOVERY_RECORD): every events.jsonl and every printed
 // result.json comes back byte-identical. What the log never carried stays lost and is named as
 // lost: request.json, observations.jsonl, the observer frames, and the result of a campaign
-// that threw, which the CLI writes but does not print.
+// that threw, which the CLI writes but does not print. Pedro, 2026-09-27: Plan 12 accepts a
+// recovered pack fully, the same as one whose directory survived, so its manifest is complete
+// when its result and events came back; `custody.lost` stays in the pack and in every reading.
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -37,13 +41,20 @@ import { isCampaignResult, campaignEntry, campaignPromotionChecks } from './evid
 import { compileBundle } from './device/bundle.mjs';
 
 export const RUN_PACK_SCHEMA = 'run-pack-v1';
-export const ATTESTATION_SCHEMA = 'plan12-attestation-v1';
+/** v2 names its author and lists what was verified; v1 (a person's name, nothing listed) is still read. */
+export const ATTESTATION_SCHEMA = 'plan12-attestation-v2';
+export const ATTESTATION_SCHEMA_V1 = 'plan12-attestation-v1';
 export const ATTESTATION_FILE = 'plan12-attestation.json';
+/** Pedro, 2026-09-27: agents may write Plan 12 attestations. Nothing else is delegated. */
+export const AGENT_DELEGATION = 'pedro-2026-09-27';
+/** The checks a v2 attestation must list as verified: every promotion check but itself. */
+export const ATTESTED_CHECKS = Object.freeze(['offlineEvidence', 'terminalPass', 'manifestComplete', 'winnerCommitted']);
 export const PACKS_DIR = 'docs/evidence/runs';
 export const RECOVERY_RECORD = 'docs/evidence/custody-recovery-20260925.json';
 
 // What the campaign itself writes; the gate's manifestComplete needs the first three.
 const CAMPAIGN_TEXT = ['result.json', 'events.jsonl', 'request.json', 'observations.jsonl'];
+const CAMPAIGN_MANIFEST = CAMPAIGN_TEXT.slice(0, 3);
 // night-run.sh's derived facts. campaign.log is left out on purpose: it echoes events.jsonl,
 // pixel arrays included.
 const RUN_TEXT = new RegExp('^(verdict\\.txt|post-run-title\\.txt|video\\.sha256|campaign\\.exit|teardown\\.txt|'
@@ -485,7 +496,7 @@ export function writePack(dir, { pack, texts }, { replace = false } = {}) {
 
 /**
  * Read and verify a pack: every file must match its recorded sha256 and size and still be
- * frame-free. The attestation, if a person has written one, is returned alongside.
+ * frame-free. The attestation, if one has been written, is returned alongside, unjudged.
  * @param {string} dir
  */
 export function readPack(dir) {
@@ -543,6 +554,74 @@ export function trackedWinners(root) {
 }
 
 /**
+ * Is the pack's custody complete enough to promote? A pack whose campaign directory survived
+ * needs the campaign's result, events and request. A pack recovered from its night-run log
+ * (Pedro, 2026-09-27: accepted fully) needs its result and events recovered, the log it cites
+ * named among the withheld files by the same sha256, the recovery check it cites, and an
+ * explicit `lost` list, which stays visible; request.json is on that list. An incomplete
+ * campaign never wrote its result and is not complete.
+ * @param {any} pack pack.json
+ * @param {string[]} files packed file names
+ */
+export function packManifestComplete(pack, files) {
+  const has = name => files.includes(name);
+  const custody = pack.custody;
+  if (!custody) return CAMPAIGN_MANIFEST.every(has);
+  if (custody.kind !== 'recovered-from-run-log') return false;
+  const source = (pack.withheld ?? []).find(item => item.name === custody.source);
+  return has('result.json') && has('events.jsonl')
+    && Array.isArray(custody.lost) && !custody.lost.includes('result.json') && !custody.lost.includes('events.jsonl')
+    && custody.validation === RECOVERY_RECORD
+    && typeof custody.sourceSha256 === 'string' && /^[0-9a-f]{64}$/.test(custody.sourceSha256)
+    && source?.sha256 === custody.sourceSha256;
+}
+
+/** The custody a reading must show: how the pack's text reached the repository, and what is lost. */
+export const packCustody = pack => ({ kind: pack.custody?.kind ?? 'original', lost: pack.custody?.lost ?? [] });
+
+const named = value => typeof value === 'string' && value.trim().length > 0;
+
+/** Who attested, in one line, whatever the attestation's validity. @param {any} attestation */
+export function attestedBy(attestation) {
+  const by = attestation?.attestedBy;
+  if (attestation?.schema === ATTESTATION_SCHEMA_V1) return named(by) ? `human:${by}` : null;
+  if (by?.kind === 'agent') return `agent:${by.delegation ?? 'no-delegation'}`;
+  if (by?.kind === 'human') return `human:${by.name ?? 'unnamed'}`;
+  return null;
+}
+
+/**
+ * Does this attestation bind this pack? Schema v2: status PASS, the pack's exact sha256, an
+ * author -- a person by name, or an agent under Pedro's 2026-09-27 delegation with a note naming
+ * the session -- and every other promotion check listed as verified. Schema v1 (a person's
+ * name, as the policy defined it until 2026-09-27) is still read.
+ * @param {any} attestation parsed plan12-attestation.json, or null
+ * @param {string} digest packDigest of the pack it sits beside
+ * @returns {{valid: boolean, reason: string | null, by: string | null}}
+ */
+export function attestationStatus(attestation, digest) {
+  const by = attestedBy(attestation);
+  const refuse = reason => ({ valid: false, reason, by });
+  if (!attestation) return refuse('no attestation');
+  if (![ATTESTATION_SCHEMA, ATTESTATION_SCHEMA_V1].includes(attestation.schema)) return refuse(`unknown schema ${attestation.schema}`);
+  if (attestation.status !== 'PASS') return refuse(`status ${attestation.status}, not PASS`);
+  if (attestation.packSha256 !== digest) return refuse(`binds pack sha256 ${attestation.packSha256}, not this pack's ${digest}`);
+  if (attestation.schema === ATTESTATION_SCHEMA_V1)
+    return named(attestation.attestedBy) ? { valid: true, reason: null, by } : refuse('a v1 attestation names no person');
+  const author = attestation.attestedBy;
+  if (author?.kind === 'agent') {
+    if (author.delegation !== AGENT_DELEGATION) return refuse(`an agent attests only under delegation ${AGENT_DELEGATION}`);
+    if (!named(author.note)) return refuse('an agent attestation must name its session or agent in a note');
+  } else if (author?.kind === 'human') {
+    if (!named(author.name)) return refuse('a human attestation must name the person');
+  } else return refuse('attestedBy names neither a person nor an agent under delegation');
+  if (!Array.isArray(attestation.verified)) return refuse('lists nothing as verified');
+  const missing = ATTESTED_CHECKS.filter(check => !attestation.verified.some(item => item?.check === check && item.pass === true));
+  if (missing.length) return refuse(`does not list ${missing.join(', ')} as verified`);
+  return { valid: true, reason: null, by };
+}
+
+/**
  * The campaign gate's four checks for a pack, with the attestation read from the pack's own
  * attestation file and bound to its digest, plus one more: the winner the bundle was compiled
  * from is committed, so the night can be re-run from a clean checkout.
@@ -553,8 +632,8 @@ export function packPromotionChecks({ pack, digest, wrapper, files, attestation 
   return {
     ...(wrapper ? campaignPromotionChecks(wrapper, files)
       : { offlineEvidence: false, terminalPass: false, manifestComplete: false, plan12Attestation: false }),
-    plan12Attestation: attestation?.schema === ATTESTATION_SCHEMA && attestation.status === 'PASS'
-      && attestation.packSha256 === digest,
+    manifestComplete: wrapper !== null && packManifestComplete(pack, files),
+    plan12Attestation: attestationStatus(attestation, digest).valid,
     winnerCommitted: Boolean(pack.bundle?.winnerHash && winners.has(pack.bundle.winnerHash)),
   };
 }

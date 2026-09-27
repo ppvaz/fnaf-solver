@@ -1,0 +1,526 @@
+{
+  "schema": "plan12-promotion-summary-v1",
+  "tool": "npm run evidence -- promotions",
+  "authority": "plans/12-end-to-end-evidence-campaign.md",
+  "packs": "docs/evidence/runs",
+  "graph": "docs/evidence/graph.json",
+  "rule": "promoted = every packPromotionChecks check passes (offlineEvidence, terminalPass, manifestComplete, plan12Attestation, winnerCommitted) and a PROMOTED_BY edge binds the same pack sha256",
+  "nights": {
+    "1": {
+      "packs": 5,
+      "executorWins": 2,
+      "attested": 2,
+      "promoted": 2,
+      "refused": {
+        "offlineEvidence,terminalPass,manifestComplete,plan12Attestation": 3
+      }
+    },
+    "2": {
+      "packs": 2,
+      "executorWins": 2,
+      "attested": 2,
+      "promoted": 2,
+      "refused": {}
+    },
+    "3": {
+      "packs": 7,
+      "executorWins": 2,
+      "attested": 2,
+      "promoted": 2,
+      "refused": {
+        "terminalPass,plan12Attestation": 1,
+        "offlineEvidence,terminalPass,manifestComplete,plan12Attestation": 2,
+        "offlineEvidence,terminalPass,manifestComplete,plan12Attestation,winnerCommitted": 2
+      }
+    },
+    "4": {
+      "packs": 2,
+      "executorWins": 2,
+      "attested": 2,
+      "promoted": 2,
+      "refused": {}
+    },
+    "5": {
+      "packs": 35,
+      "executorWins": 7,
+      "attested": 7,
+      "promoted": 7,
+      "refused": {
+        "offlineEvidence,terminalPass,manifestComplete,plan12Attestation": 7,
+        "terminalPass,plan12Attestation": 7,
+        "offlineEvidence,terminalPass,manifestComplete,plan12Attestation,winnerCommitted": 12,
+        "terminalPass,plan12Attestation,winnerCommitted": 2
+      }
+    },
+    "6": {
+      "packs": 61,
+      "executorWins": 8,
+      "attested": 8,
+      "promoted": 8,
+      "refused": {
+        "offlineEvidence,terminalPass,manifestComplete,plan12Attestation,winnerCommitted": 3,
+        "terminalPass,plan12Attestation,winnerCommitted": 4,
+        "offlineEvidence,terminalPass,manifestComplete,plan12Attestation": 35,
+        "terminalPass,plan12Attestation": 11
+      }
+    },
+    "7": {
+      "packs": 67,
+      "executorWins": 25,
+      "attested": 24,
+      "promoted": 24,
+      "refused": {
+        "offlineEvidence,terminalPass,manifestComplete,plan12Attestation": 28,
+        "terminalPass,plan12Attestation": 6,
+        "offlineEvidence,terminalPass,plan12Attestation": 1,
+        "offlineEvidence,terminalPass,manifestComplete,plan12Attestation,winnerCommitted": 6,
+        "terminalPass,plan12Attestation,winnerCommitted": 1,
+        "plan12Attestation,winnerCommitted": 1
+      }
+    },
+    "fnaf1": {
+      "packs": 1,
+      "executorWins": 0,
+      "attested": 0,
+      "promoted": 0,
+      "refused": {
+        "fnaf1-run (no FNaF 1 gate)": 1
+      }
+    }
+  },
+  "totals": {
+    "packs": 180,
+    "executorWins": 48,
+    "attested": 47,
+    "promoted": 47
+  },
+  "claims": [
+    {
+      "claim": "claim.fnaf2.night1.device-6am",
+      "runs": 2
+    },
+    {
+      "claim": "claim.fnaf2.night2.device-6am",
+      "runs": 2
+    },
+    {
+      "claim": "claim.fnaf2.night3.device-6am",
+      "runs": 2
+    },
+    {
+      "claim": "claim.fnaf2.night4.device-6am",
+      "runs": 2
+    },
+    {
+      "claim": "claim.fnaf2.night5.device-6am",
+      "runs": 7
+    },
+    {
+      "claim": "claim.fnaf2.night6.device-6am",
+      "runs": 8
+    },
+    {
+      "claim": "claim.fnaf2.night7.10-20.device-6am",
+      "runs": 21
+    },
+    {
+      "claim": "claim.fnaf2.night7.bb20-golden20.device-6am",
+      "runs": 2
+    },
+    {
+      "claim": "claim.fnaf2.night7.foxy20-bb20.device-6am",
+      "runs": 1
+    }
+  ],
+  "promoted": [
+    {
+      "id": "night1-ladder-n1e-20260927T055611Z",
+      "night": "1",
+      "claim": "claim.fnaf2.night1.device-6am",
+      "custody": "original",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "3b295af36ca286a09ca13d913c967f367a7be2be5100b76749f6f2cf333617b4"
+    },
+    {
+      "id": "night1-minus7-n1-first-20260919T215533Z",
+      "night": "1",
+      "claim": "claim.fnaf2.night1.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "7cba9811d5e4e93849524a796112fd56fb69589853d91abd21370b6226e873b2"
+    },
+    {
+      "id": "night2-ladder-n2a-20260927T060809Z",
+      "night": "2",
+      "claim": "claim.fnaf2.night2.device-6am",
+      "custody": "original",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "9bb916d70a61de4e92d92ad8d73fdf9e3299988c903586d1d30de4b7ae552d16"
+    },
+    {
+      "id": "night2-toys-n2-ladder-20260919T223654Z",
+      "night": "2",
+      "claim": "claim.fnaf2.night2.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "037153437278191f0989563320b53aa63dd312e74aac3a9a5853a6f19a7c1386"
+    },
+    {
+      "id": "night3-ladder-n3a-20260927T062001Z",
+      "night": "3",
+      "claim": "claim.fnaf2.night3.device-6am",
+      "custody": "original",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "c79852401217dbd512d62ef11d243d8b2dda8f9eb3c85a3577d15245e8d451ec"
+    },
+    {
+      "id": "night3-n3-bbfix-run-20260920T001903Z",
+      "night": "3",
+      "claim": "claim.fnaf2.night3.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "4ddb8f85bcf959d1d3be2b2050caff5a2363d8a75c12e90702b12dfe0e2d4dcd"
+    },
+    {
+      "id": "night4-ladder-n4a-20260927T063208Z",
+      "night": "4",
+      "claim": "claim.fnaf2.night4.device-6am",
+      "custody": "original",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "e2cb0c0c3f40cbd30499a65cf4b4f7c518d46499e2e043e7d02085e002cc99ea"
+    },
+    {
+      "id": "night4-n4-bbfix-20260920T002911Z",
+      "night": "4",
+      "claim": "claim.fnaf2.night4.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "4e09666a471b2bd0de8a52a4a4db582fd2e291f8b0d04363a8f6c43ed1336723"
+    },
+    {
+      "id": "night5-anchor2-20260912T204002Z",
+      "night": "5",
+      "claim": "claim.fnaf2.night5.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "a31e0d6944fe8138df9600f5c9286e9a20cceb1e37182a6473ddbfde162ba3f8"
+    },
+    {
+      "id": "night5-hallfix-20260912T230319Z",
+      "night": "5",
+      "claim": "claim.fnaf2.night5.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "7d32b373585f519a3ec33e94768ac48363088e74349c3e7de09dc051983206a6"
+    },
+    {
+      "id": "night5-ladder-n5c-20260927T065942Z",
+      "night": "5",
+      "claim": "claim.fnaf2.night5.device-6am",
+      "custody": "original",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "bb178aa5c6dec33831b5b20ff6c5ffa5bd76ccb1732c1765ada71307859ef0cc"
+    },
+    {
+      "id": "night5-mask5plus-aim172-20260912T220100Z",
+      "night": "5",
+      "claim": "claim.fnaf2.night5.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "55e4627b7d89852f5e244226b29c3a5ab3833e48bd5da30ff28f25ca232cfa54"
+    },
+    {
+      "id": "night5-n5-armblock-20260920T004056Z",
+      "night": "5",
+      "claim": "claim.fnaf2.night5.device-6am",
+      "custody": "original",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "4c9ea13aa5f0501111e03cfca7445cba5644ebe449f38168a1869e4f6a667ee0"
+    },
+    {
+      "id": "night5-n5-carry-aim172-20260918T012153Z",
+      "night": "5",
+      "claim": "claim.fnaf2.night5.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "ee2d8a49931bb46173770cd4503e8ab4bcda05a4d22d05a18107aab5a0ba9da4"
+    },
+    {
+      "id": "night5-noflash-20260913T003456Z",
+      "night": "5",
+      "claim": "claim.fnaf2.night5.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "3560555766572f75df4b952edebe64c04370873f301db22090cc096b1d4ec27a"
+    },
+    {
+      "id": "night6-anchoredh1-20260913T180208Z",
+      "night": "6",
+      "claim": "claim.fnaf2.night6.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "9a3bc25acf99bc407e62b3ae27fe3125faaed7157a98b83eb51f4c71be81afbf"
+    },
+    {
+      "id": "night6-c2-01-20260917T021417Z",
+      "night": "6",
+      "claim": "claim.fnaf2.night6.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "a0f14475c070b2ade81eef2f46e987219f592642a434a6449f203392acd9b4a8"
+    },
+    {
+      "id": "night6-ladder-n6a-20260927T071107Z",
+      "night": "6",
+      "claim": "claim.fnaf2.night6.device-6am",
+      "custody": "original",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "46a9667855b80f5f98ac5fc125a6aa50252718b29b1d857a1f80ffd5d4cd55bf"
+    },
+    {
+      "id": "night6-n6h2-01-20260920T024030Z",
+      "night": "6",
+      "claim": "claim.fnaf2.night6.device-6am",
+      "custody": "original",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "20c626f9112063089fbd335ebe42af97bd31ce0973f814e277013956def6fdcc"
+    },
+    {
+      "id": "night6-p-02-20260917T023518Z",
+      "night": "6",
+      "claim": "claim.fnaf2.night6.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "cf0ed1b3d9acf0ba8eab7212fdecdbcda5ea92b8fd8562273b63ecdf94d92f0d"
+    },
+    {
+      "id": "night6-p-06-20260917T025208Z",
+      "night": "6",
+      "claim": "claim.fnaf2.night6.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "2f5ac678f2e6970aedb47544a7b8e683ea8700fc75997f08fa641ed77955f38b"
+    },
+    {
+      "id": "night6-seedlock-h-20260916T223633Z",
+      "night": "6",
+      "claim": "claim.fnaf2.night6.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "76c5d35b76a891294b8e47725c2e2afde79856fea60a744c029d0af6190482a8"
+    },
+    {
+      "id": "night6-tw-04-20260918T014915Z",
+      "night": "6",
+      "claim": "claim.fnaf2.night6.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "2624858f3910851abf1aef26b59eb39d0c1ac12bc140e7a70fc5450a1c509edf"
+    },
+    {
+      "id": "night7-corner-bbfoxy-r02-20260927T073711Z",
+      "night": "7",
+      "claim": "claim.fnaf2.night7.foxy20-bb20.device-6am",
+      "custody": "original",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "5ffefef93763223f04380438ea4a364ffc974828e02e771d092b22f173579666"
+    },
+    {
+      "id": "night7-corner-bbgolden-r01-20260927T072630Z",
+      "night": "7",
+      "claim": "claim.fnaf2.night7.bb20-golden20.device-6am",
+      "custody": "original",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "c7659d9d8f18cea9cf8bdd5c37fbeab1c744faec79143f880509a0e4b29ebc5d"
+    },
+    {
+      "id": "night7-corner-bbgolden-r02-20260927T074756Z",
+      "night": "7",
+      "claim": "claim.fnaf2.night7.bb20-golden20.device-6am",
+      "custody": "original",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "b7338c450b33f14acfd98477bc7376d976b988a71e40af880df946254b7a1d50"
+    },
+    {
+      "id": "night7-k2-aim2433-maskoff7000-20260914T004106Z",
+      "night": "7",
+      "claim": "claim.fnaf2.night7.10-20.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "4e71398ffa8a7c854f6fffd94c98b2e4481c7f4fa3dd07fa620e8a630155159e"
+    },
+    {
+      "id": "night7-night7-k2-cohort-r01b-20260914T220233Z",
+      "night": "7",
+      "claim": "claim.fnaf2.night7.10-20.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "e350e23b36057de08e1ad40f6a46a268d2627fedf27554d9655b73fe24f97e47"
+    },
+    {
+      "id": "night7-night7-k2-cohort-r03-20260914T223207Z",
+      "night": "7",
+      "claim": "claim.fnaf2.night7.10-20.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "a9403cfa155743a6bf50fb10ec1c876904d23a7f16ef7879b15d765515bc03a4"
+    },
+    {
+      "id": "night7-night7-k2-cohort-r05-20260914T225440Z",
+      "night": "7",
+      "claim": "claim.fnaf2.night7.10-20.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "6ebaeed50cdc6a70f5b9c9ae860960b0cf955f0873de839f375e3baecc89fba1"
+    },
+    {
+      "id": "night7-night7-k3-cohort-r01-20260918T030258Z",
+      "night": "7",
+      "claim": "claim.fnaf2.night7.10-20.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "594ac90370fc6113d784cf01df3e25cc6eb30a20884065cd2fbe742dcc2723ad"
+    },
+    {
+      "id": "night7-night7-k3-cohort-r02-20260918T031201Z",
+      "night": "7",
+      "claim": "claim.fnaf2.night7.10-20.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "c83dabeb847c916c0f4973b88fa9c30d1f3f602b98cad71997c94c5575df7da6"
+    },
+    {
+      "id": "night7-night7-k3-cohort-r05-20260918T032827Z",
+      "night": "7",
+      "claim": "claim.fnaf2.night7.10-20.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "925713ab1c570b4e5c3162eb9d6bd35447d71af947cb3f083e1be5c60b60f217"
+    },
+    {
+      "id": "night7-night7-k3-cohort-r06-20260918T033730Z",
+      "night": "7",
+      "claim": "claim.fnaf2.night7.10-20.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "38e6903ee50c176a7d2526c7d063c49aa6a4174a6757ca8739ec11ac8326df86"
+    },
+    {
+      "id": "night7-night7-k3-cohort-r07-20260918T034636Z",
+      "night": "7",
+      "claim": "claim.fnaf2.night7.10-20.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "07ec9d587425d9e79acfd4b97f900a31aea8514fcb4c19a248e70f0b87e5ed9a"
+    },
+    {
+      "id": "night7-night7-k3-cohort-r08-20260918T035537Z",
+      "night": "7",
+      "claim": "claim.fnaf2.night7.10-20.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "1ccfaa167381159cf9ec6b4c5172ac9f68fccb2f6a4388d020682043dfbeaf1b"
+    },
+    {
+      "id": "night7-night7-k3-cohort-r09-20260918T040438Z",
+      "night": "7",
+      "claim": "claim.fnaf2.night7.10-20.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "39dd85c82e61739a64f73008378b2c60991598d1862547c7bb2e0ca021ee7d01"
+    },
+    {
+      "id": "night7-night7-k3-cohort-r10-20260918T041340Z",
+      "night": "7",
+      "claim": "claim.fnaf2.night7.10-20.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "a5d6c2de5c8f66f33cd51dd3ffb87741d77ae1e893dfbc1d65e9e2140d8556b7"
+    },
+    {
+      "id": "night7-night7-k3-full-02-20260915T033615Z",
+      "night": "7",
+      "claim": "claim.fnaf2.night7.10-20.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "58b2402a65b262e8402ff61a4dc18fc1b9c9a1fadad528e03f25b2811b1aad1b"
+    },
+    {
+      "id": "night7-night7-k3-full-06-20260915T225056Z",
+      "night": "7",
+      "claim": "claim.fnaf2.night7.10-20.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "9a9f8c100bddfbe150e83c05672205ba1b1931757ae18b3f50a9995acec17e90"
+    },
+    {
+      "id": "night7-night7-k3-seedlog-full-01-20260915T032213Z",
+      "night": "7",
+      "claim": "claim.fnaf2.night7.10-20.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "3c0b52d1708b6740bb8c72b77c777183ace8757251ab00feac1d8fd798e17163"
+    },
+    {
+      "id": "night7-night7-k3-teach-01-20260918T042710Z",
+      "night": "7",
+      "claim": "claim.fnaf2.night7.10-20.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "309a8aba1cf0ac0d20b100c0123600ade36bd653dfcd942bee0fd99760ea9a24"
+    },
+    {
+      "id": "night7-night7-k3-teach-02-20260918T043627Z",
+      "night": "7",
+      "claim": "claim.fnaf2.night7.10-20.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "0633b56ff267c2da23c546f211a408a420af8f5462ac6b11ed947b0d46c59f15"
+    },
+    {
+      "id": "night7-night7-k3-twin-a2-20260915T022337Z",
+      "night": "7",
+      "claim": "claim.fnaf2.night7.10-20.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "4b3e77ca54a847daf23c5186a132fec5221579eb838737685bfd1fa33dc7f568"
+    },
+    {
+      "id": "night7-night7-k3-twin-b-20260915T023828Z",
+      "night": "7",
+      "claim": "claim.fnaf2.night7.10-20.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "4885aea63f1785271a16b8f2d26f4101d57eab01caab150243b7849d1fe701a9"
+    },
+    {
+      "id": "night7-night7-k3-twin-c-20260915T025403Z",
+      "night": "7",
+      "claim": "claim.fnaf2.night7.10-20.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "ec9a3e17cb6112394735d5ff2e2030a5f445359c174fd88788d4ac264f30d865"
+    },
+    {
+      "id": "night7-night7-k3-wallclock-r1-20260915T002238Z",
+      "night": "7",
+      "claim": "claim.fnaf2.night7.10-20.device-6am",
+      "custody": "recovered-from-run-log",
+      "attestedBy": "agent:pedro-2026-09-27",
+      "packSha256": "f3e2516bb99308c6380f9e477a62f86f3573358df1518e2ba0d2f13ab3fcdd80"
+    }
+  ],
+  "refusedWins": [
+    {
+      "id": "night7-n7-420-minimal-m3-20260914T020543Z",
+      "night": "7",
+      "failing": [
+        "plan12Attestation",
+        "winnerCommitted"
+      ],
+      "custody": "recovered-from-run-log"
+    }
+  ],
+  "staleEdges": [],
+  "evidenceId": "plan12-promotions-fnv1a-baa38db1"
+}

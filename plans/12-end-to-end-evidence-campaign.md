@@ -1,6 +1,6 @@
 # End-to-end stock-device evidence campaign
 
-**Status: proposed 2026-08-26; rungs reached but not promoted, 2026-09-17.**
+**Status: proposed 2026-08-26; rungs reached but not promoted, 2026-09-17; first promotion edges, 2026-09-27.**
 This is the promotion plan, not a strategy plan. It defines what must be
 captured before the project can claim an operational controller, a full Night 6
 clear, or a 10/20 attempt. It does not authorize a device run by itself.
@@ -8,11 +8,14 @@ clear, or a 10/20 attempt. It does not authorize a device run by itself.
 **Where the ladder actually stands.** Levels 4 and 5 were reached for Night 6 on
 2026-09-13 and level 7's clear on 2026-09-14 (10/20, `golden-freddy`), with a
 predeclared ten-run Night 7 cohort at **3 wins, 7 deaths**. Level 6 was never
-run for Night 6. **No promotion edge has been recorded in
-[`docs/evidence/graph.json`](../docs/evidence/graph.json) for any of them**, so
-every one of those results is a retained `DEVICE_MEASURED` run and none is a
-promoted claim. Reaching a rung and promoting it are separate acts, and this
-plan owns the second one.
+run for Night 6. Until 2026-09-27 no promotion edge had been recorded for any
+of them. Since then, [`docs/evidence/graph.json`](../docs/evidence/graph.json)
+holds 47 `PROMOTED_BY` edges: one for each executor-proven 6 AM on Nights 1-7
+whose winner is committed, 24 of them Night 7 (21 at 10/20). Each is a promoted
+single clear. None is a reliability or controller claim; Gate G's list below
+still governs those. Reaching a rung and promoting it are separate acts, and
+this plan owns the second one
+([promotions](../docs/evidence/plan12-promotions-20260927.json)).
 
 **The Night 7 table below is route-scoped.** Its 12/100 row measures
 `recipe.devicePlan` (Minus 7) and nothing else. Minus Toys clears Night 7
@@ -30,7 +33,7 @@ controller extracted from the now-archived legacy runner. So:
 - **Promoting a run already won** needs what `npm run evidence -- promote`
   checks: a committed run pack, a passing terminal, its winner committed
   (`test-winners-rebuild.mjs` keeps every committed winner compiling), and a
-  person's `plan12-attestation.json` bound to the pack's sha256. Gates C, D and G's "begin with shadow and bounded branches again"
+  `plan12-attestation.json` bound to the pack's sha256. Gates C, D and G's "begin with shadow and bounded branches again"
   are not prerequisites for it.
 - **Gates C and D** remain the entry gates for a *new* closed-loop controller
   (ROADMAP S4), which has to earn live control branch by branch.
@@ -44,6 +47,24 @@ controller extracted from the now-archived legacy runner. So:
   `seedpin` is labelled `pinned` — a clairvoyant result — and is never merged
   into a cohort of natural-clock nights; one identified by the controller
   during the night is `identified`.
+
+**Decisions, Pedro, 2026-09-27** ([`ROADMAP.md`](ROADMAP.md) gate table;
+[evidence policy](../docs/evidence/README.md)):
+
+- **Recovered packs: "Accept fully".** A pack recovered from its night-run log,
+  which lost `request.json`, passes `manifestComplete` like one whose directory
+  survived. What it lost stays named in the pack, the attestation, the edge and
+  every reading.
+- **Attestation: "i give agents full permission, this is bullshit bureaucracy
+  that is impeding progress".** An agent may write `plan12-attestation.json`,
+  under delegation `pedro-2026-09-27`, only through `npm run evidence -- attest`,
+  which re-derives the other checks from the pack and refuses on any failure.
+  The attestation (`plan12-attestation-v2`) names its author and lists what was
+  verified, with the sha256 of each input. The delegation covers attestations
+  only: `PEDRO-OK` stays human-only, and no agent bypasses a hook.
+- **A promotion is never silent.** `promote` records a `PROMOTED_BY` edge in
+  [`graph.json`](../docs/evidence/graph.json) that names who attested and the
+  pack's custody; `list` and `show` print both.
 
 ## Goal
 

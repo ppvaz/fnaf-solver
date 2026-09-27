@@ -1,0 +1,138 @@
+{
+  "schema": "plan12-attestation-v2",
+  "status": "PASS",
+  "evidenceId": "night4-n4-bbfix-20260920T002911Z",
+  "packSha256": "4e09666a471b2bd0de8a52a4a4db582fd2e291f8b0d04363a8f6c43ed1336723",
+  "attestedBy": {
+    "kind": "agent",
+    "delegation": "pedro-2026-09-27",
+    "note": "Claude agent (Opus 5.5), worktree agent-a92b61f0b615f761c, S1 first-promotion session 2026-09-27"
+  },
+  "date": "2026-09-27",
+  "tool": "npm run evidence -- attest",
+  "authority": "plans/12-end-to-end-evidence-campaign.md",
+  "claim": {
+    "id": "claim.fnaf2.night4.device-6am",
+    "night": 4,
+    "mode": "story",
+    "label": "FNaF 2 Night 4 reaches 6 AM on the phone (executor-proven)"
+  },
+  "custody": {
+    "kind": "recovered-from-run-log",
+    "lost": [
+      "observations.jsonl",
+      "observer frames",
+      "request.json"
+    ]
+  },
+  "verified": [
+    {
+      "check": "offlineEvidence",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "result.json",
+          "sha256": "8cfaa43978fdc44efbc83de8e445f910019408fe92b114406158ba4b29859f72"
+        }
+      ],
+      "detail": {
+        "mode": "live",
+        "claimLevel": "DEVICE_MEASURED"
+      }
+    },
+    {
+      "check": "terminalPass",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "result.json",
+          "sha256": "8cfaa43978fdc44efbc83de8e445f910019408fe92b114406158ba4b29859f72"
+        },
+        {
+          "name": "events.jsonl",
+          "sha256": "5077d99f549a9ba4ad7c6f7c665b086862400f141818bfb1326dbfb9a647bf79"
+        }
+      ],
+      "detail": {
+        "night": 4,
+        "attempt": 1,
+        "proofHash": "fnv1a-a8276e08",
+        "terminalEventAt": "2026-09-20T00:36:39.855Z",
+        "videoGrade": "none packed (the executor terminal stands alone)"
+      }
+    },
+    {
+      "check": "manifestComplete",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "result.json",
+          "sha256": "8cfaa43978fdc44efbc83de8e445f910019408fe92b114406158ba4b29859f72"
+        },
+        {
+          "name": "events.jsonl",
+          "sha256": "5077d99f549a9ba4ad7c6f7c665b086862400f141818bfb1326dbfb9a647bf79"
+        },
+        {
+          "name": "run/campaign.log",
+          "sha256": "5dd29b0e0e09f68c412a472ae227c313a40b1b9dd1b3ecb6be0dc11bb7b8be35"
+        },
+        {
+          "name": "docs/evidence/custody-recovery-20260925.json",
+          "sha256": "d9c4db2a78efc606f785cd6db7e2fff517ac2421926fc401e525ce91248ab519"
+        }
+      ],
+      "detail": {
+        "custody": "recovered-from-run-log",
+        "lost": [
+          "observations.jsonl",
+          "observer frames",
+          "request.json"
+        ],
+        "recovered": [
+          "events.jsonl",
+          "result.json"
+        ],
+        "recoveryCheck": {
+          "campaigns": 9,
+          "eventsIdentical": 9,
+          "resultsPrinted": 7,
+          "resultsIdentical": 7,
+          "resultsNotPrinted": [
+            "campaign-2026-09-20T01-39-16.104Z (ERROR)",
+            "campaign-2026-09-20T01-02-31.713Z (ERROR)"
+          ]
+        }
+      }
+    },
+    {
+      "check": "winnerCommitted",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "tools/device/campaign-toys-nights3-4-winner.json",
+          "sha256": "425826ae44d77e77137b6ba24a1e371cbc4ee9729ec21cdd40ed339dd7a7ec7b"
+        }
+      ],
+      "detail": {
+        "winnerHash": "fnv1a-ce4aa3d8",
+        "bundle": "artifacts/toys-n34",
+        "winner": "tools/device/campaign-toys-nights3-4-winner.json"
+      }
+    },
+    {
+      "check": "claimIdentity",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "events.jsonl",
+          "sha256": "5077d99f549a9ba4ad7c6f7c665b086862400f141818bfb1326dbfb9a647bf79"
+        }
+      ],
+      "detail": {
+        "night": 4,
+        "mode": "story"
+      }
+    }
+  ]
+}

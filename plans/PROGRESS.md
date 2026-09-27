@@ -1893,3 +1893,85 @@ Open:
 - Android's collision masks for RGB565 (native code).
 - The native-frame comparison against phone frames of matched states.
 - The census of the current set.
+
+## 2026-09-27 — S1: the first Plan 12 promotion edges (47 executor-proven 6 AMs)
+
+**Pedro's decisions (2026-09-27, in session).** Recovered packs: "Accept fully".
+Plan 12 attestation: "i give agents full permission, this is bullshit
+bureaucracy that is impeding progress". The delegation covers writing Plan 12
+attestations only. `PEDRO-OK`, `--no-verify` and `commit -n` stay as they were.
+It is recorded in the [ROADMAP gate table](ROADMAP.md), in
+[Plan 12](12-end-to-end-evidence-campaign.md), in the
+[evidence policy](../docs/evidence/README.md) and in `CLAUDE.md`.
+
+- **Custody.** `packManifestComplete` (`tools/evidence-pack.mjs`) passes a pack
+  recovered from its night-run log when four things hold: its result and events
+  came back, its `campaign.log` is withheld under the sha256 its custody cites,
+  the recovery check it cites is byte-identical, and `lost` is listed. The
+  `lost` list is never dropped: it appears in the pack, the attestation, the
+  edge, `list` and `show`.
+- **Attestation.** `npm run evidence -- attest <pack> --by agent --note ...`
+  (`tools/evidence-promotion.mjs`) re-derives the other checks from the pack
+  and refuses to write if any fails. The checks:
+  - its files against their hashes;
+  - a live `DEVICE_MEASURED` result;
+  - the executor's 6 AM: the `sixam` terminal and proof hash, a positive
+    verification, `validateSaveProof`, the `campaign.terminal.from-executor`
+    row, and no packed video grade other than clear;
+  - custody;
+  - the committed winner;
+  - `claimIdentity`: a Custom Night is named by its own menu readback.
+
+  It writes `plan12-attestation-v2`: the author
+  (`{kind: 'agent', delegation: 'pedro-2026-09-27', note}` or a person), the
+  pack sha256, and every check with the sha256 of its inputs. v1 is still read.
+- **Promotion.** For an accepted pack, `promote` records a `PROMOTED_BY` edge
+  from the claim to `run.<pack>` in
+  [`graph.json`](../docs/evidence/graph.json). The edge names the attestation,
+  the author, the date, the custody and what was lost. A refused pack writes
+  nothing. `promotions` counts each night and reports stale edges.
+  `tools/test-evidence-promotion.mjs` (`test:unit`) covers four cases: an agent
+  attestation is accepted; a mismatched digest is refused; an attestation over
+  a pack that fails another check is refused; a recovered pack passes custody
+  and still shows its loss.
+- **Run over all 180 packs** by the CLI, one pack at a time (`attest`, then
+  `promote` on each attested pack). The result is
+  `plan12-promotions-fnv1a-baa38db1`
+  ([record](../docs/evidence/plan12-promotions-20260927.json)):
+
+  | Night | packs | executor wins | attested | promoted | refused, by failing checks |
+  |---|---|---|---|---|---|
+  | 1 | 5 | 2 | 2 | 2 | 3 lost results (offlineEvidence, terminalPass, manifestComplete) |
+  | 2 | 2 | 2 | 2 | 2 | 0 |
+  | 3 | 7 | 2 | 2 | 2 | 4 lost results (2 also winnerCommitted), 1 HOLD (terminalPass) |
+  | 4 | 2 | 2 | 2 | 2 | 0 |
+  | 5 | 35 | 7 | 7 | 7 | 19 lost results (12 also winnerCommitted), 9 deaths (terminalPass; 2 also winnerCommitted) |
+  | 6 | 61 | 8 | 8 | 8 | 38 lost or incomplete results (3 also winnerCommitted), 15 deaths (terminalPass; 4 also winnerCommitted) |
+  | 7 | 67 | 25 | 24 | 24 | 34 lost results (6 also winnerCommitted), 6 deaths and 1 HOLD (terminalPass; 1 also winnerCommitted), 1 ERROR envelope (offlineEvidence, terminalPass), 1 win (winnerCommitted, claimIdentity) |
+  | FNaF 1 | 1 | — | 0 | 0 | 1 (no Plan 12 gate reads FNaF 1 runs) |
+  | **total** | **180** | **48** | **47** | **47** | **133** |
+
+  Every refused FNaF 2 pack but that one win also fails `claimIdentity`: it has
+  no winning attempt to name.
+
+  Night 7's 24 are 21 at 10/20 (k2 4, k3 17), 1 at BB+Foxy 20 and 2 at
+  BB+Golden 20. 36 of the 47 are recovered custody. The one refused win is
+  `night7-n7-420-minimal-m3` (4/20 Minus 3). Its winner `fnv1a-15124c58` is not
+  committed, because `test-seam-slack.mjs` holds it back for a 0 ms margin, and
+  its pack has no dial readback, so `claimIdentity` fails too. The video-only
+  6 AMs fail `terminalPass` and were not attested: `night5-anchor4` is an
+  executor DEATH and `night5-perfetto1` is RESULT_LOST. Every other refusal is
+  a death, a HOLD, an ERROR, a lost result or the FNaF 1 run.
+
+Open:
+- S1's second clause. Two committed MODEL_ONLY winners have no pack naming
+  their hash, and it is not established that either ran on the phone:
+  `campaign-night1-minus7-winner.json` and `campaign-toys-night5-winner.json`.
+- `UNTRACKED_WINNER_DEBT` is 1 of 1 (Night 6 `a`).
+- No k2 or k3 video exists on this machine.
+- A promotion is one clear. Night 7 reliability is S4, and Gate G still
+  governs it.
+- The ROADMAP rows for Plans 27 and 28 were waiting on "S1's first promotion
+  edge", and that trigger is now met. Plan 27 also needs a confirmed quiet
+  window.
+- Clean-HEAD `npm run push-gate` was not run in this session.

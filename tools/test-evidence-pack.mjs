@@ -9,8 +9,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { stableHash } from '@fnaf2-1020/core/contracts';
 import { CAMPAIGN_RESULT_SCHEMA } from './evidence-campaign.mjs';
-import { ATTESTATION_FILE, ATTESTATION_SCHEMA, buildFnaf1Pack, buildPack, packDigest, packEntry, packPromotionChecks, readPack,
-  recoverFromRunLog, recoveryCheck, refuseFrames, resolvePackTargets, trackedWinners, writePack } from './evidence-pack.mjs';
+import { ATTESTATION_FILE, ATTESTATION_SCHEMA, ATTESTATION_SCHEMA_V1, buildFnaf1Pack, buildPack, packCustody, packDigest, packEntry,
+  packPromotionChecks, readPack, recoverFromRunLog, recoveryCheck, refuseFrames, resolvePackTargets, trackedWinners,
+  writePack } from './evidence-pack.mjs';
 
 const sha256 = data => createHash('sha256').update(data).digest('hex');
 const root = mkdtempSync(join(tmpdir(), 'evidence-pack-test-'));
@@ -104,13 +105,17 @@ try {
   const winners = trackedWinners(root);
   assert.deepEqual(packPromotionChecks(loaded, winners), { offlineEvidence: true, terminalPass: true,
     manifestComplete: true, plan12Attestation: false, winnerCommitted: true },
-  'a packed live win passes everything but the attestation, which only a person records');
+  'a packed live win passes everything but the attestation, which is never inferred from the others');
+  // A v1 attestation (a person's name, the schema until 2026-09-27) is still read; v2, which an
+  // agent may write under Pedro's delegation, is pinned in test-evidence-promotion.mjs.
+  assert.equal(ATTESTATION_SCHEMA, 'plan12-attestation-v2');
   const attest = packSha256 => writeFileSync(join(dir, ATTESTATION_FILE),
-    JSON.stringify({ schema: ATTESTATION_SCHEMA, status: 'PASS', packSha256, attestedBy: 'test' }));
+    JSON.stringify({ schema: ATTESTATION_SCHEMA_V1, status: 'PASS', packSha256, attestedBy: 'test' }));
   attest(loaded.digest);
   assert.equal(packPromotionChecks(readPack(dir), winners).plan12Attestation, true);
   attest('0'.repeat(64));
   assert.equal(packPromotionChecks(readPack(dir), winners).plan12Attestation, false, 'an attestation binds one exact pack');
+  rmSync(join(dir, ATTESTATION_FILE));
   assert.equal(packPromotionChecks(loaded, new Map()).winnerCommitted, false, 'an uncommitted winner cannot be re-run elsewhere');
   // A bundle records the winner as compiled, which compileBundle normalises: the committed
   // Night 6 winner's file hashes to fnv1a-de095950 and compiles to fnv1a-59908edd. A pack from
@@ -200,9 +205,13 @@ try {
   assert.equal(rebuilt.pack.outcome, 'WIN');
   const recoveredDir = join(root, 'docs/evidence/runs', lostRun);
   writePack(recoveredDir, rebuilt);
-  assert.deepEqual(packPromotionChecks(readPack(recoveredDir), winners), { offlineEvidence: true, terminalPass: true,
-    manifestComplete: false, plan12Attestation: false, winnerCommitted: true },
-  'a recovered win is refused on its lost request.json, not waved through');
+  const recoveredLoaded = readPack(recoveredDir);
+  assert.deepEqual(packPromotionChecks(recoveredLoaded, winners), { offlineEvidence: true, terminalPass: true,
+    manifestComplete: true, plan12Attestation: false, winnerCommitted: true },
+  'Pedro, 2026-09-27: a recovered win is accepted fully, so its manifest is complete');
+  assert.deepEqual(packCustody(recoveredLoaded.pack), { kind: 'recovered-from-run-log',
+    lost: ['observations.jsonl', 'observer frames', 'request.json'] }, 'and it still names what it lost');
+  assert.ok(!recoveredLoaded.files.includes('request.json'), 'nothing lost is reconstructed');
   put('artifacts/forensics/wrong-timeline.json', JSON.stringify({ video: 'captures/another-run.mp4', terminal: { outcome: 'clear' } }));
   assert.throws(() => buildPack({ root, home, ...recoveredTarget, timeline: join(root, 'artifacts/forensics/wrong-timeline.json') }),
     /not this run's/, 'a grade of another recording is refused');
@@ -292,4 +301,4 @@ try {
 } finally {
   rmSync(root, { recursive: true, force: true });
 }
-console.log('evidence pack: text crosses, frames and pixel grids stay behind by hash, paths are portable, tampering and unknown pixel fields are refused, the gate reads the pack, and a lost campaign recovered from its run log says what is lost');
+console.log('evidence pack: text crosses, frames and pixel grids stay behind by hash, paths are portable, tampering and unknown pixel fields are refused, the gate reads the pack, and a lost campaign recovered from its run log passes custody while saying what is lost');
