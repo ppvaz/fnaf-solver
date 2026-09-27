@@ -2241,3 +2241,15 @@ Open:
 - The FNaF 2 third star: no record in this repository names which Custom Night mode awards it.
 - The 4/20 Minus 3 winner: Pedro's choice between a recorded seam-slack exemption and a
   re-derived hold, then its own phone run.
+
+**2026-09-27 (late night): the replay splits, one at a time (S2b, MODEL_ONLY).**
+
+- `sourcedPromotedMoves` (`promoted-moves.test.js`, in the rebuild set): a route move needs value 0 == 2,
+  and g344-g358 gate only the promotion. g358 holds Mangle's promotion on the hall latch on every hop; the
+  model held only her latch-gated hops. Night 7 k3's first mismatch moves 1800 -> 2044
+  (`recompile-replay-8439e5f8d6741573`); Night 1 stays 21714 (`recompile-replay-9676af3da04d2e69`) and
+  Night 5 7460 (`recompile-replay-abc975f06323ea4f`).
+
+Open:
+- Night 7 2044 and Night 5 7460: the blackout flicker's first g517 draw lands on clock 20 in the rebuild.
+- Night 1 21714: Toy Bonnie promoted a loop early after a flash.

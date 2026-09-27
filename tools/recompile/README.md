@@ -1157,3 +1157,37 @@ Open:
   g576-g586, which the dump marks NoGood.
 - The A = 1 / A = 2 view-draw option (above), then replay Night 5 again to see
   whether the model meets the same Foxy.
+
+## The replay splits, one at a time (2026-09-27, S2b, continued)
+
+Each difference below was read the same way: the model's draws for the update
+(call sites), the rebuild's per-update draws, then a harness watch of the
+object or Counter involved. The watches ran on `pinned/592c05e5-7163d628` from
+the retained inputs and saves (`agent-splits/` outside the repository). Their
+office draw projections equal the retained `036076d3` traces', so the records
+below still score the retained traces and read the watched Counters through
+`--counter-trace`.
+
+**Promotion gates the move (`sourcedPromotedMoves`,
+`packages/core/test/promoted-moves.test.js`).** Night 7 k3, tick 1800: the model
+moved Mangle CAM 02 -> CAM 01 (g397) on her roll loop and drew her g703 footstep
+there, and the rebuild did both a loop later. The watch (`new foxy` values 0-2,
+Counters `decide path`, `viewing`, `viewing hall light`) shows value 0 = 1 at
+the end of 1800 with the hall latch set, and the move at 1801 after g488 cleared
+it. g358 promotes Mangle with `viewing` = 0 only while `viewing hall light` = 0,
+on every hop. The model had that latch only on her CAM 07 and hall-stage hops,
+through `canAdvance`. Under the option a move needs value 0 == 2, and the
+promotion test (g344-g358) gates only the promotion. The moves (g374-g435) test
+their own conditions (the latch, the final hops' `viewing`, `in danger` and
+`office occupied`), never value 1 or the marker. So a promoted unit that is
+flashed while its move waits on the latch still moves, as the sheet does.
+
+| binding | first mismatch before -> after | record |
+|---|---|---|
+| Night 1 `minimal` | 21714 -> 21714 | `night1-minimal-replay-promotedmoves-20260927.json`, `recompile-replay-9676af3da04d2e69` |
+| Night 5 `contact-final` | 7460 -> 7460 | `night5-contact-final-replay-promotedmoves-20260927.json`, `recompile-replay-abc975f06323ea4f` |
+| Night 7 `k3` | 1800 -> **2044** | `night7-k3-replay-promotedmoves-20260927.json`, `recompile-replay-8439e5f8d6741573` |
+
+The option is in `sourced-rebuild-model-options.json`. The dated snapshots are
+unchanged. Scope: one seed, three bindings, host rebuild only, MODEL_ONLY with
+`rebuilt-runtime` fidelity. No phone claim, no promotion, no default changed.

@@ -885,6 +885,13 @@
       ]
     },
     {
+      "file": "packages/core/test/promoted-moves.test.js",
+      "imports": [
+        "../src/mechanics/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
       "file": "packages/core/test/promoted-view-draws.test.js",
       "imports": [
         "../src/mechanics/plant-model.js",

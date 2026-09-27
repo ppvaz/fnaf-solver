@@ -267,6 +267,17 @@ export class Sim {
       // is promoted and moved at once, and that draw shifts every later roll of the same loop onto another
       // value (Night 7 k3 at tick 1200: Mangle's roll failed in the model and passed in the rebuild).
       sourcedRollsBeforeMoves: false,
+      // A route move needs its unit promoted (value 0 == 2), and the promotion test gates only the promotion.
+      // g344-g358 promote a passed roll (value 0 == 1, value 1 == 0) under their own conditions: the your-view
+      // marker off a Withered's room (g344-g348), and for Mangle g357 (viewing > 0, marker off her) or g358
+      // (viewing == 0 AND `viewing hall light` == 0) on every hop, not only the latch-gated ones. The moves
+      // (g374-g435) then test value 0 == 2 and their own conditions (the latch on g376/g377/g381/g382/g394/
+      // g395/g399/g421/g422/g431/g432, the final hops' viewing, in danger and office occupied), never value 1
+      // or the marker. Off: canAdvance re-tests the stun and the marker at the move and has no g358 gate
+      // outside Mangle's latch-gated hops, so a Mangle roll passed on a latched loop moved at once where the
+      // sheet promotes her on the loop after g488 clears the latch (Night 7 k3 replay, tick 1800: Mangle
+      // CAM 02 -> CAM 01 and her g703 footstep draw one update early).
+      sourcedPromotedMoves: false,
       // Mangle's mask leaves (dump g400: the 10%/s roll under the mask; g401: five mask ticks) place her at
       // CAM 7 (marker 62), three hops from the vent, not at the route start the unit table's repelIdx 0 gives.
       // Every other unit's repelIdx matches its dump endpoint (g538-g555, g213, g437, g439/g440, g292/g294).
@@ -1278,7 +1289,7 @@ export class Sim {
    */
   footstepPromote(u, roll) {
     const value2 = this.opts.sourcedFootstepValue2, viewed = this.opts.sourcedPromotedViewDraws;
-    if (!value2 && !viewed) return;
+    if (!value2 && !viewed && !this.opts.sourcedPromotedMoves) return;
     if (roll) u.promoted = false;
     if (u.promoted || !this.footstepPromotable(u, this.frame)) return;
     if (value2) u.value2 = 10;
@@ -2060,7 +2071,8 @@ export class Sim {
     }
     if (u.id === 'withfreddy' && u.path[u.idx] === 3 && this.decidePath !== 1 && this.decidePath !== 2)
       return 'hold';
-    if (u.id === 'withfreddy' && u.path[u.idx] === 'blindB' && f >= u.stunUntil &&
+    if (u.id === 'withfreddy' && u.path[u.idx] === 'blindB' &&
+        (this.opts.sourcedPromotedMoves ? u.promoted : f >= u.stunUntil) &&
         this.maskFullyOn && !this.lightStallOn) {                                                       // g378
       u.idx = u.path.indexOf(3);
       u.stunUntil = f + (5000 - this.opts.night * 500);
@@ -2072,7 +2084,9 @@ export class Sim {
   }
 
   canAdvance(u, f) {
-    if (f < u.stunUntil) return false;
+    // sourcedPromotedMoves: the move groups test value 0 == 2; the stun and the marker were the promotion's.
+    if (this.opts.sourcedPromotedMoves) { if (!u.promoted) return false; }
+    else if (f < u.stunUntil) return false;
     // Android Office groups 344-348 and 357 (post-XOR decode): the
     // selected-camera marker holds a Withered's pending roll while it
     // overlaps their room, with NO monitor condition — and lowering the
@@ -2081,7 +2095,7 @@ export class Sim {
     // hold persists monitor-down. Mangle's marker gate (357) applies only
     // while the monitor is up; her monitor-down block is the office hall
     // light (358), modeled by the lightStall path below.
-    if (this.opts.selectedCameraGate &&
+    if (!this.opts.sourcedPromotedMoves && this.opts.selectedCameraGate &&
         C.SELECTED_CAMERA_GATED.has(u.id) && u.path[u.idx] === this.cam &&
         (C.WITHEREDS.has(u.id) || this.camsUp))
       return false;

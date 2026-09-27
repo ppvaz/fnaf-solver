@@ -32,5 +32,6 @@
   "sourcedDropFlagOrder": true,
   "sourcedHallLatchOrder": true,
   "sourcedFootstepValue2": true,
-  "sourcedRollsBeforeMoves": true
+  "sourcedRollsBeforeMoves": true,
+  "sourcedPromotedMoves": true
 }
