@@ -2292,5 +2292,11 @@ Open:
   the mask is fully on. Night 5 11936 -> 21300 (`recompile-replay-bb08f40d5ddd8d0a`), Night 7 6534 -> 6600
   (`recompile-replay-860bf7e1c7e8fe74`); Night 1 still every update (`recompile-replay-0d67c9c7749f308b`).
 
+- `sourcedBBMoves` (`bb-moves.test.js`, in the rebuild set): Balloon Boy hops in the route pass (g413-g418, after
+  the Paper Pals roll and the other moves), and g611 redraws a cue of 4 after g556-g559. Night 7 6600 -> 20449
+  (`recompile-replay-f81579a9b8242381`), Night 5 21300 -> 22241 (`recompile-replay-e5080f57737dfeb7`); Night 1 still
+  every update (`recompile-replay-dd514fe28889efe0`).
+
 Open:
-- Night 7 6600: Balloon Boy's hop cue drawn inside the roll pass, before the Paper Pals roll (g414 comes after g343).
+- Night 7 20449: Withered Foxy's g846 retreat a loop early in the rebuild (g745 adds value 5 to his exposure).
+- Night 5 22241: Toy Bonnie's g366 view draw on the loop he leaves CAM 09 (g366 sits before the moves).

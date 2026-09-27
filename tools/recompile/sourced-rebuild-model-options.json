@@ -40,5 +40,6 @@
   "sourcedRoutePass": true,
   "sourcedOfficeRolls": true,
   "sourcedAnimationCount": true,
-  "sourcedGatedEvery": true
+  "sourcedGatedEvery": true,
+  "sourcedBBMoves": true
 }

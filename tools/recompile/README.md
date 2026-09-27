@@ -1389,3 +1389,24 @@ unchanged. The no-input ladder re-scores unchanged.
 | Night 1 `minimal` | none -> none | `night1-minimal-replay-gatedevery-20260927.json`, `recompile-replay-0d67c9c7749f308b` |
 | Night 5 `contact-final` | 11936 -> **21300** | `night5-contact-final-replay-gatedevery-20260927.json`, `recompile-replay-bb08f40d5ddd8d0a` |
 | Night 7 `k3` | 6534 -> **6600** | `night7-k3-replay-gatedevery-20260927.json`, `recompile-replay-860bf7e1c7e8fe74` |
+
+**Balloon Boy's hops in the move pass (`sourcedBBMoves`,
+`packages/core/test/bb-moves.test.js`).** Night 7 tick 6600: on a roll loop
+where Balloon Boy hopped CAM 07 -> CAM 03, the rebuild drew once more. Instance
+dumps before and after 6600 show the hop (value 2 = 9 on CAM 03) and the three
+Withereds promoted on the same loop. g342 rolls him with the others and g359
+promotes him at once. But his moves are g413-g418: after the other units' moves
+and after the Paper Pals roll (g343). g414-g416 draw his cue there, and g611,
+after g556-g559, redraws a cue of 4. The model hopped him, and redrew, inside
+the roll pass, so his cue took the LCG value before the Paper Pals roll, and
+every draw after it shifted consumer. Under the option (requires
+`sourcedRoutePass`) the roll marks the hop, the route pass makes it after the
+other units' moves, and the redraw waits for g611's place. A cue of 4 then
+emits its `laugh` without a vocal: the redraw that picks it comes later. The
+no-input ladder re-scores unchanged.
+
+| binding | first mismatch before -> after | record |
+|---|---|---|
+| Night 1 `minimal` | none -> none | `night1-minimal-replay-bbmoves-20260927.json`, `recompile-replay-dd514fe28889efe0` |
+| Night 5 `contact-final` | 21300 -> **22241** | `night5-contact-final-replay-bbmoves-20260927.json`, `recompile-replay-e5080f57737dfeb7` |
+| Night 7 `k3` | 6600 -> **20449** | `night7-k3-replay-bbmoves-20260927.json`, `recompile-replay-f81579a9b8242381` |

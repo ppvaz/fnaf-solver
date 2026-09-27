@@ -335,6 +335,14 @@ export class Sim {
       // On: after the rolls, every waiting unit's promotion is tested (and the g352/g356 discards applied), then the
       // promoted ones move in unit order, with g378's return among the moves.
       sourcedRoutePass: false,
+      // Balloon Boy's hops where the sheet makes them (requires sourcedRoutePass). g342 rolls him with the others and
+      // g359 promotes him at once, but his moves are g413-g418, after the other units' moves (g374-g412) and after the
+      // Paper Pals roll (g343); g414-g416 draw his cue (cam 01 value 6 = Random(4) + 1, and g416 also value 21), and g611,
+      // far later (after g556-g559), redraws a cue of 4 as Random(3) + 1. The model hopped him inside the roll pass and
+      // redrew at once, so his cue took the LCG value before the Paper Pals roll, and a 4 changed the loop's count at
+      // the wrong place (Night 7 k3 tick 6600 in the rebuilt runtime). On: the roll marks the hop, the route pass makes
+      // it after the other moves, and the redraw waits for g611's place.
+      sourcedBBMoves: false,
       // Mangle's mask leaves (dump g400: the 10%/s roll under the mask; g401: five mask ticks) place her at
       // CAM 7 (marker 62), three hops from the vent, not at the route start the unit table's repelIdx 0 gives.
       // Every other unit's repelIdx matches its dump endpoint (g538-g555, g213, g437, g439/g440, g292/g294).
@@ -510,6 +518,8 @@ export class Sim {
       throw new Error('sourcedFoxyChain reads the hall latch: it requires sourcedDropLightOrder');
     if (this.opts.sourcedRoutePass && !(this.opts.sourcedPromotedMoves && this.opts.sourcedRollsBeforeMoves))
       throw new Error('sourcedRoutePass splits promotion from move: it requires sourcedPromotedMoves and sourcedRollsBeforeMoves');
+    if (this.opts.sourcedBBMoves && !this.opts.sourcedRoutePass)
+      throw new Error('sourcedBBMoves hops Balloon Boy in the route pass: it requires sourcedRoutePass');
     if (this.opts.sourcedDropFlagOrder && !this.opts.sourcedDropLightOrder)
       throw new Error('sourcedDropFlagOrder moves the drop flag: it requires sourcedDropLightOrder');
 
@@ -586,7 +596,8 @@ export class Sim {
     // --- Balloon Boy
     this.bb = { stage: 0, footstep: false, pending: false, inOpening: false, openingAtCamsUp: -1,
                 maskTicks: 0, inside: false,
-                promotedAt: -100, armed: false };   // g359's last promotion; value 0 still 2 at 122 (sourcedOfficeRolls)
+                promotedAt: -100, armed: false,     // g359's last promotion; value 0 still 2 at 122 (sourcedOfficeRolls)
+                hopDue: false, cueRedraw: false };  // g413-g418 due in the route pass; g611 due (sourcedBBMoves)   // g359's last promotion; value 0 still 2 at 122 (sourcedOfficeRolls)
     // Mangle's s0020 static is raised in two proximity contexts: while she is
     // on CAM 11 (the winding/Prize Corner camera) and at the office/right-vent
     // edge. They use the same sample but are separate policy facts; only the
@@ -1210,6 +1221,7 @@ export class Sim {
       if (u && u.inside && !danger2() && mask2 && every('556' + id, 1000) && one(2))
         this.commitAttack(u, 'inside-office mask attack roll');
     }
+    if (this.bb.cueRedraw) { this.bb.cueRedraw = false; this.rng.int(0, 2, 0); }        // g611: a cue of 4 redrawn (sourcedBBMoves)
     if (p.atOpening && every('623', 1000) && one(10)) {                                  // g623
       p.atOpening = false; p.inside = true; p.loc = 'inside';
       p.attackAt = f + C.INSIDE_ATTACK_FRAMES;
@@ -2052,7 +2064,8 @@ export class Sim {
     if (this.opts.sourcedEventDraws && this.bb.stage >= 2) {            // e351/e352/e353
       let cue = this.rng.int(0, 3, 0) + 1;                                // cam01 value 6
       if (this.bb.stage === C.BB_STAGES - 1) this.rng.int(0, 3, 0);       // e353 also writes value 21
-      if (cue === 4) cue = this.rng.int(0, 2, 0) + 1;                     // e548 redraws a 4
+      if (cue === 4 && this.opts.sourcedBBMoves) { this.bb.cueRedraw = true; cue = 0; }   // g611 redraws it later in the loop
+      else if (cue === 4) cue = this.rng.int(0, 2, 0) + 1;                     // e548 redraws a 4
       vocal = [null, 21, 24, 23][cue];
     }
     if (this.bb.stage > C.BB_SILENT_HOPS)
@@ -2139,7 +2152,10 @@ export class Sim {
         this.bb.promotedAt = this.frame;
         if (this.bb.inOpening) { this.bb.footstep = true; this.bb.armed = true; }    // g702 at 122; value 0 stays 2
       }
-      if (hit && this.opts.bbEnabled && !this.bb.inOpening) {
+      if (hit && this.opts.bbEnabled && !this.bb.inOpening && this.opts.sourcedBBMoves) {
+        if (this.opts.sourcedViewDraws) this.fadeUntil.bb = this.frame + 8;
+        this.bb.hopDue = true;                                                   // g359: value 0 = 2; g413-g418 in routePass
+      } else if (hit && this.opts.bbEnabled && !this.bb.inOpening) {
         if (this.opts.sourcedViewDraws) this.fadeUntil.bb = this.frame + 8;
         if (this.bb.stage === C.BB_STAGES - 1) {
           if (this.monitor === MON_UP) this.bbEnterOpening();
@@ -2163,9 +2179,9 @@ export class Sim {
 
   /** g344-g360 test every waiting roll's promotion, then g374-g435 move the promoted units (sourcedRoutePass). @param {number} f */
   routePass(f) {
-    if (!this.opts.stalledEnabled) return;
-    if (this.opts.sourcedOfficeRolls) for (const u of this.units) this.officePromote(u);   // g344-g360 at 122
-    const waiting = (/** @type {any} */ u) => u.pending && !u.done && !u.atOpening && !u.inside && u.committedAt < 0;
+    const stalled = this.opts.stalledEnabled;
+    if (stalled && this.opts.sourcedOfficeRolls) for (const u of this.units) this.officePromote(u);   // g344-g360 at 122
+    const waiting = (/** @type {any} */ u) => stalled && u.pending && !u.done && !u.atOpening && !u.inside && u.committedAt < 0;
     for (const u of this.units) {
       if (!waiting(u)) continue;
       this.footstepPromote(u, false);
@@ -2176,6 +2192,13 @@ export class Sim {
       const step = this.sourcedRouteStep(u, f, 'move');
       if (step === 'returned') { u.pending = false; u.promoted = false; }
       else if (step !== 'hold' && this.canAdvance(u, f)) { u.pending = false; this.advance(u); }
+    }
+    if (this.opts.sourcedBBMoves && this.bb.hopDue) {                                   // g413-g418
+      this.bb.hopDue = false;
+      if (this.bb.stage === C.BB_STAGES - 1) {
+        if (this.monitor === MON_UP) this.bbEnterOpening();
+        else this.bb.pending = true;
+      } else this.bbHop();
     }
   }
 
