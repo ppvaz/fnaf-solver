@@ -47,10 +47,18 @@ index 18d207b..166b9e4 100644
      void set_timer(double value);
      void set_lives(int lives);
 diff --git a/Chowdren/base/frameobject.h b/Chowdren/base/frameobject.h
-index 950da8d..cfca4ab 100644
+index 950da8d..eb20377 100644
 --- a/Chowdren/base/frameobject.h
 +++ b/Chowdren/base/frameobject.h
-@@ -369,6 +369,7 @@ public:
+@@ -16,6 +16,7 @@
+ #include "pool.h"
+ #include "stringcommon.h"
+ #include "shaderparam.h"
++#include "child_events.h"
+ 
+ class InstanceCollision;
+ class Shader;
+@@ -369,6 +370,7 @@ public:
      virtual void set_direction(int value, bool set_movement = true);
      virtual int get_direction();
      bool mouse_over();
@@ -58,7 +66,40 @@ index 950da8d..cfca4ab 100644
      bool overlaps(FrameObject * other);
      void set_layer(int layer);
      void set_shader(int effect);
-@@ -683,6 +684,45 @@ public:
+@@ -622,6 +624,32 @@ public:
+     void restore_selection();
+     void clear_saved_selection();
+     void copy(FlatObjectList & other);
++
++    void save_child_selection(ChildEventSelection & selections)
++    {
++        ChildEventSelection::Objects selected;
++        unsigned int index = items[0].next;
++        while (index != LAST_SELECTED) {
++            FrameObject * obj = items[index].obj;
++            if (!(obj->flags & DESTROYING)) selected.push_back(obj);
++            index = items[index].next;
++        }
++        selections.save(this, selected);
++    }
++
++    void restore_child_selection(const ChildEventSelection & selections)
++    {
++        const ChildEventSelection::Objects * selected = selections.get(this);
++        if (!selected) { clear_selection(); return; }
++        unsigned int last = 0;
++        for (unsigned int i = 0; i < selected->size(); ++i) {
++            FrameObject * obj = (*selected)[i];
++            if (obj->flags & DESTROYING) continue;
++            items[last].next = obj->index;
++            last = obj->index;
++        }
++        items[last].next = LAST_SELECTED;
++    }
+ };
+ 
+ class ObjectIterator
+@@ -683,6 +711,45 @@ public:
      }
  };
  
@@ -104,7 +145,7 @@ index 950da8d..cfca4ab 100644
  inline FrameObject * ObjectList::get_wrapped_selection(int index)
  {
      if (!has_selection()) {
-@@ -1025,6 +1065,11 @@ inline void ObjectList::restore_selection()
+@@ -1025,6 +1092,11 @@ inline void ObjectList::restore_selection()
  
  void setup_default_instance(FrameObject * obj);
  
@@ -392,7 +433,7 @@ index ed74b78..f9d064d 100644
  
  inline void to_lower(std::string & str)
 diff --git a/Chowdren/chowdren/converter.py b/Chowdren/chowdren/converter.py
-index d8edac8..f6a4a38 100644
+index d8edac8..d89e576 100644
 --- a/Chowdren/chowdren/converter.py
 +++ b/Chowdren/chowdren/converter.py
 @@ -22,7 +22,8 @@ import string
@@ -405,7 +446,15 @@ index d8edac8..f6a4a38 100644
  from chowdren.writers.events import system as system_writers
  from chowdren.writers.events.system import SystemObject
  from chowdren.writers.objects.system import system_objects
-@@ -1107,7 +1108,7 @@ class Converter(object):
+@@ -50,6 +51,7 @@ import cPickle
+ import multiprocessing
+ from chowdren.local import write_locals
+ from chowdren import transition
++from chowdren.child_events import partition_child_events
+ 
+ WRITE_SOUNDS = True
+ PROFILE = False
+@@ -1107,7 +1109,7 @@ class Converter(object):
              if not game.images:
                  continue
              for image in game.images.itemDict.itervalues():
@@ -414,7 +463,7 @@ index d8edac8..f6a4a38 100644
                      image.height), image.getImageData())
  
                  handle = (image.handle, game_index)
-@@ -1251,7 +1252,14 @@ class Converter(object):
+@@ -1251,7 +1253,14 @@ class Converter(object):
          self.container_ids = Counter()
          frame_file = FrameDataWriter(frame_index+1, self)
          frame_class_name = self.frame_class = frame_file.class_name
@@ -430,7 +479,7 @@ index d8edac8..f6a4a38 100644
          self.current_frame = frame
          self.current_frame_index = frame_index
          self.config.init_frame(frame)
-@@ -1268,7 +1276,15 @@ class Converter(object):
+@@ -1268,7 +1277,15 @@ class Converter(object):
          object_writers.append(self.system_object)
  
          for instance in getattr(frame.instances, 'items', ()):
@@ -447,7 +496,7 @@ index d8edac8..f6a4a38 100644
              obj = (frameitem.handle, frameitem.objectType)
              all_startup_infos.add(obj)
              try:
-@@ -1299,6 +1315,14 @@ class Converter(object):
+@@ -1299,6 +1316,14 @@ class Converter(object):
              elif object_writer.has_autodestruct():
                  self.multiple_instances.add(obj)
  
@@ -462,7 +511,31 @@ index d8edac8..f6a4a38 100644
          events = frame.events
  
          self.qualifier_names = {}
-@@ -1359,6 +1383,9 @@ class Converter(object):
+@@ -1345,10 +1370,22 @@ class Converter(object):
+         changed_containers = set()
+ 
+         event_items = events.items
++        if self.build >= 296:
++            child_roots, child_lists = partition_child_events(event_items)
++        else:
++            child_roots, child_lists = range(len(event_items)), {}
++        child_indexes = set(i for values in child_lists.values() for i in values)
++        converted_child_groups = defaultdict(list)
++        child_methods = dict((i, 'child_events_%s_%s' % (frame_index, i))
++                             for i in child_lists)
++        if child_lists:
++            event_file.add_member('ChildEventSelection child_event_selection')
+ 
+         group_index = 1
+-        for group in event_items:
++        for source_index, group in enumerate(event_items):
+             first_condition = group.conditions[0]
++            if first_condition.objectType == -1 and first_condition.num == -42:
++                continue
+             name = self.get_condition_name(first_condition)
+             if name == 'NewGroup':
+                 group_loader = first_condition.items[0].loader
+@@ -1359,6 +1396,9 @@ class Converter(object):
                      current_container.add_child(new_container)
                  current_container = new_container
                  containers[group_loader.offset] = current_container
@@ -472,7 +545,16 @@ index d8edac8..f6a4a38 100644
                  always_groups.append(ContainerMark(current_container, name))
                  continue
              elif name == 'GroupEnd':
-@@ -1426,8 +1453,11 @@ class Converter(object):
+@@ -1403,6 +1443,8 @@ class Converter(object):
+             for action in group.actions:
+                 action_writer = self.get_action_writer(action)
+                 action_writer.container = current_container
++                if action.objectType == -1 and action.num == 43:
++                    action_writer.child_method = child_methods[source_index]
+                 actions.append(action_writer)
+ 
+                 action_name = self.get_action_name(action)
+@@ -1426,8 +1468,11 @@ class Converter(object):
                          self.multiple_instances.add(create_info)
                  elif action_name in ('DeactivateGroup',
                                       'ActivateGroup'):
@@ -486,7 +568,21 @@ index d8edac8..f6a4a38 100644
  
              always_group_index = None
              generated_group_index = None
-@@ -1610,9 +1640,13 @@ class Converter(object):
+@@ -1466,7 +1511,12 @@ class Converter(object):
+                 new_group.post_event = first_writer.post_event
+                 new_group.precedence = first_writer.precedence
+ 
+-                if is_always or force_always:
++                if source_index in child_indexes:
++                    converted_child_groups[source_index].append(new_group)
++                    for cond in new_group.conditions:
++                        name = self.get_condition_name(cond.data)
++                        always_groups_dict[name].append(new_group)
++                elif is_always or force_always:
+                     new_always_groups.append(new_group)
+                     new_group.local_id = len(always_groups_dict[name])+1
+ 
+@@ -1610,9 +1660,13 @@ class Converter(object):
  
          # set up qualifiers
          for name, instances in qualifier_setup.iteritems():
@@ -501,7 +597,7 @@ index d8edac8..f6a4a38 100644
              start_writer.putlnc('%s.set(%s, &%s_instances[0]);', name,
                                  len(instances), name)
  
-@@ -1620,6 +1654,16 @@ class Converter(object):
+@@ -1620,6 +1674,16 @@ class Converter(object):
              startup_instances)
          self.startup_instances = startup_instances
  
@@ -518,7 +614,27 @@ index d8edac8..f6a4a38 100644
          for instance, frameitem in startup_instances:
              obj = (frameitem.handle, frameitem.objectType)
              object_writer = self.get_object_writer(obj)
-@@ -2178,6 +2222,8 @@ class Converter(object):
+@@ -1674,6 +1738,19 @@ class Converter(object):
+             frame_file.end_brace()
+         frame_file.end_brace()
+ 
++        # Child rows are reached only after the parent's actions succeed. Keep
++        # separate functions so every sibling starts a fresh selection context.
++        for source_index in sorted(child_lists):
++            groups = []
++            for child_index in child_lists[source_index]:
++                groups.extend(converted_child_groups[child_index])
++            name = child_methods[source_index]
++            actual = self.write_events(name, event_file, groups)
++            if actual != name:
++                event_file.putmeth('void %s' % name)
++                event_file.putlnc('%s();', actual)
++                event_file.end_brace()
++
+         # write 'always' event subfunctions
+         group_index = 0
+         call_groups = []
+@@ -2178,6 +2255,8 @@ class Converter(object):
              return 'SavedIterator'
          if is_qualifier(obj[0]):
              return 'QualifierIterator'
@@ -527,7 +643,7 @@ index d8edac8..f6a4a38 100644
          return 'ObjectIterator'
  
      @contextlib.contextmanager
-@@ -2217,6 +2263,13 @@ class Converter(object):
+@@ -2217,6 +2296,13 @@ class Converter(object):
              return
          
          list_name = self.get_object_list(object_info)
@@ -541,7 +657,7 @@ index d8edac8..f6a4a38 100644
          is_qual = is_qualifier(object_info[0])
          if is_qual:
              writer.putlnc('for (int i = 0; i < %s.count; i++)', list_name)
-@@ -2280,6 +2333,14 @@ class Converter(object):
+@@ -2280,6 +2366,14 @@ class Converter(object):
              writer.putln('if (!%s) goto %s;' % (
                  item.code_name, item.end_label))
  
@@ -556,7 +672,7 @@ index d8edac8..f6a4a38 100644
      def get_container_check(self, container):
          groups = []
          for item in container.tree:
-@@ -2602,26 +2663,36 @@ class Converter(object):
+@@ -2602,26 +2696,36 @@ class Converter(object):
  
                  for write_condition in write_conditions:
                      negated = not write_condition.is_negated()
@@ -608,7 +724,7 @@ index d8edac8..f6a4a38 100644
                      if negated:
                          writer.put(')')
                      if has_multiple:
-@@ -2655,6 +2726,8 @@ class Converter(object):
+@@ -2655,6 +2759,8 @@ class Converter(object):
                  or_lists.add(list_name)
  
              for list_name in or_lists:
@@ -617,7 +733,7 @@ index d8edac8..f6a4a38 100644
                  if is_logical:
                      writer.putlnc('%s.clear_selection();', list_name)
                  else:
-@@ -2673,7 +2746,8 @@ class Converter(object):
+@@ -2673,7 +2779,8 @@ class Converter(object):
                  check = '%s' % (' || '.join(or_bools))
                  writer.putlnc('if (%s) {', check)
                  writer.indent()
@@ -627,7 +743,7 @@ index d8edac8..f6a4a38 100644
                  writer.end_brace()
  
              # writer.start_brace()
-@@ -2689,15 +2763,28 @@ class Converter(object):
+@@ -2689,15 +2796,28 @@ class Converter(object):
              if action_writer.custom:
                  action_writer.write(writer)
                  continue
@@ -657,7 +773,7 @@ index d8edac8..f6a4a38 100644
              if object_info is not None:
                  if obj in self.has_single_selection:
                      has_single = True
-@@ -2705,9 +2792,20 @@ class Converter(object):
+@@ -2705,9 +2825,20 @@ class Converter(object):
                      has_multiple = True
                  elif not self.is_valid_object(obj):
                      object_info = None
@@ -678,7 +794,7 @@ index d8edac8..f6a4a38 100644
              object_name = None
              write_actions = [action_writer]
              if has_single:
-@@ -2721,6 +2819,9 @@ class Converter(object):
+@@ -2721,6 +2852,9 @@ class Converter(object):
                          break
                      if next_action.custom:
                          break
@@ -688,7 +804,7 @@ index d8edac8..f6a4a38 100644
                      if next_action.iterate_objects is False:
                          break
                      action_index += 1
-@@ -2734,6 +2835,19 @@ class Converter(object):
+@@ -2734,6 +2868,19 @@ class Converter(object):
                  self.set_iterator(obj, list_name)
                  object_name = '*it'
              elif object_info is not None:
@@ -708,7 +824,7 @@ index d8edac8..f6a4a38 100644
                  writer.putindent()
                  writer.put('%s->' % self.get_object(obj))
              elif action_writer.static:
-@@ -2805,7 +2919,8 @@ class Converter(object):
+@@ -2805,7 +2952,8 @@ class Converter(object):
                  continue
              list_name = self.get_object_list(obj, True)
              group.or_selected[obj] = list_name
@@ -718,7 +834,7 @@ index d8edac8..f6a4a38 100644
  
          writer.putlnc('if (%s) {', group.or_temp_result)
          writer.indent()
-@@ -2817,7 +2932,8 @@ class Converter(object):
+@@ -2817,7 +2965,8 @@ class Converter(object):
          for obj, list_name in self.has_selection.iteritems():
              if obj in has_qualifier:
                  continue
@@ -728,7 +844,7 @@ index d8edac8..f6a4a38 100644
  
          writer.end_brace()
  
-@@ -2965,6 +3081,14 @@ class Converter(object):
+@@ -2965,6 +3114,14 @@ class Converter(object):
                  return self.intern_string(loader.value)
              elif parameter_name in ('TwoShorts'):
                  return to_c('%r, %r', loader.value1, loader.value2)
@@ -743,7 +859,7 @@ index d8edac8..f6a4a38 100644
              else:
                  raise NotImplementedError('parameter: %s' % parameter_name)
          self.start_clauses += out.count('(')
-@@ -2978,16 +3102,25 @@ class Converter(object):
+@@ -2978,16 +3135,25 @@ class Converter(object):
  
              if remove != 1:
                  print out
@@ -774,7 +890,7 @@ index d8edac8..f6a4a38 100644
  
              filtered = out[end+1:]
              out = out[:end+1]
-@@ -3068,7 +3201,8 @@ class Converter(object):
+@@ -3068,7 +3234,8 @@ class Converter(object):
              clear_lists = (list_name,)
  
          for obj_list in clear_lists:
@@ -784,7 +900,7 @@ index d8edac8..f6a4a38 100644
  
          for obj in objs:
              if obj == object_info:
-@@ -3149,6 +3283,18 @@ class Converter(object):
+@@ -3149,6 +3316,18 @@ class Converter(object):
                  if default_instance:
                      args.append(default_instance)
  
@@ -803,7 +919,7 @@ index d8edac8..f6a4a38 100644
              if is_qual:
                  getter_name = 'get_qualifier'
              else:
-@@ -3160,6 +3306,25 @@ class Converter(object):
+@@ -3160,6 +3339,25 @@ class Converter(object):
      def get_default_instance(self, object_type):
          return self.get_object_impl(object_type).default_instance
  
@@ -829,7 +945,7 @@ index d8edac8..f6a4a38 100644
      def get_object_list(self, obj, allow_single=False):
          if self.has_single(obj) and not allow_single:
              print 'single exception:', self.get_single(obj)
-@@ -3170,11 +3335,23 @@ class Converter(object):
+@@ -3170,11 +3368,23 @@ class Converter(object):
          if is_qual:
              return type_id
          obj = self.filter_object_type(obj)
@@ -855,7 +971,7 @@ index d8edac8..f6a4a38 100644
  
      def filter_object_type(self, obj):
          if is_qualifier(obj[0]):
-@@ -3285,9 +3462,12 @@ class Converter(object):
+@@ -3285,9 +3495,12 @@ class Converter(object):
                  return get_method_name('_'.join(full_name))
          ret = item.getName()
          if ret is None:
@@ -871,7 +987,7 @@ index d8edac8..f6a4a38 100644
          return ret
  
      def get_action_writer(self, item, as_klass = False):
-@@ -3329,6 +3509,24 @@ class Converter(object):
+@@ -3329,6 +3542,24 @@ class Converter(object):
              klass = getattr(writer_module, ace_type)[key]
          except (KeyError, AttributeError):
              klass = default_writers[ace_type]
@@ -998,7 +1114,7 @@ index 1943544..af89498 100644
              print 'meth:', self.method
              raise e
 diff --git a/Chowdren/chowdren/writers/events/system.py b/Chowdren/chowdren/writers/events/system.py
-index 48623cf..10cca94 100644
+index 48623cf..b30b5e2 100644
 --- a/Chowdren/chowdren/writers/events/system.py
 +++ b/Chowdren/chowdren/writers/events/system.py
 @@ -2,7 +2,8 @@ from mmfparser.data.chunkloaders.objectinfo import SEMITRANSPARENT_EFFECT
@@ -1050,7 +1166,60 @@ index 48623cf..10cca94 100644
          selected_name = converter.create_list(object_info, writer)
          if negated:
              other_selected = converter.get_object_list(other_info,
-@@ -659,15 +670,23 @@ class TimerEvery(ConditionWriter):
+@@ -548,6 +559,52 @@ class Always(ConditionWriter):
+     def write(self, writer):
+         pass
+ 
++def child_scope_objects(ace):
++    infos = ace.data.items[0].loader.objectInfos
++    if len(infos) % 2:
++        raise ValueError('odd child object-scope list')
++    # The second word is an Android runtime OI-list index (rewritten on load),
++    # not the object's type. The first is the unswizzled object-info handle.
++    for handle in infos[::2]:
++        obj = ace.converter.filter_object_type((handle, None))
++        for concrete in ace.converter.resolve_qualifier(obj):
++            yield concrete
++
++class ChildEvents(EmptyAction):
++    custom = True
++
++    def write_post(self, writer):
++        converter = self.converter
++        writer.start_brace()
++        writer.putln('ChildEventScope child_scope(child_event_selection);')
++        for obj in child_scope_objects(self):
++            name = converter.get_object_list(obj)
++            if converter.is_static_backdrop_list(name):
++                raise NotImplementedError('static child selection')
++            single = converter.get_single(obj)
++            if single is not None:
++                writer.putlnc('%s.select_single(%s);', name, single)
++            elif obj not in converter.has_selection:
++                if converter.has_multiple_instances(obj):
++                    # Unselected types inherit any enclosing snapshot.
++                    continue
++                writer.putlnc('%s.clear_selection();', name)
++            writer.putlnc('%s.save_child_selection(child_event_selection);', name)
++        writer.putlnc('%s();', self.child_method)
++        writer.end_brace()
++
++class ChildEventsCondition(Always):
++    def write(self, writer):
++        converter = self.converter
++        for obj in child_scope_objects(self):
++            name = converter.get_object_list(obj)
++            if converter.is_static_backdrop_list(name):
++                raise NotImplementedError('static child selection')
++            writer.putlnc('%s.restore_child_selection(child_event_selection);', name)
++            converter.has_single_selection.pop(obj, None)
++            converter.set_list(obj, name)
++            self.group.force_multiple.add(obj)
++
+ class MouseClicked(ConditionWriter):
+     is_always = True
+     pre_event = True
+@@ -659,15 +716,23 @@ class TimerEvery(ConditionWriter):
      custom = True
  
      def write(self, writer):
@@ -1079,7 +1248,7 @@ index 48623cf..10cca94 100644
  
  class AnimationFinished(ConditionWriter):
      is_always = True
-@@ -751,8 +770,7 @@ class OnceCondition(ConditionWriter):
+@@ -751,8 +816,7 @@ class OnceCondition(ConditionWriter):
  
  class GroupActivated(ConditionWriter):
      def write(self, writer):
@@ -1089,7 +1258,7 @@ index 48623cf..10cca94 100644
          writer.put(self.converter.get_container_check(container))
  
  class PickRandom(ConditionWriter):
-@@ -1120,8 +1138,14 @@ class CreateBase(ActionWriter):
+@@ -1120,8 +1184,14 @@ class CreateBase(ActionWriter):
  
          if object_info != parent_info and (not has_selection and
                                             not select_single):
@@ -1106,7 +1275,7 @@ index 48623cf..10cca94 100644
  
          writer.putlnc('// select single: %s %s %s', select_single,
                        multi, has_selection)
-@@ -1191,6 +1215,11 @@ class CreateBase(ActionWriter):
+@@ -1191,6 +1261,11 @@ class CreateBase(ActionWriter):
                  writer.indent()
                  writer.putlnc('%s = new_obj;', single_name)
                  writer.dedent()
@@ -1118,7 +1287,7 @@ index 48623cf..10cca94 100644
              else:
                  writer.putlnc('%s.add_back();', list_name)
              if is_shoot:
-@@ -1425,9 +1454,7 @@ class Foreach(ActionWriter):
+@@ -1425,9 +1500,7 @@ class Foreach(ActionWriter):
      custom = True
  
      def get_name(self):
@@ -1129,7 +1298,7 @@ index 48623cf..10cca94 100644
  
      def write(self, writer):
          self.reorder = self.converter.config.reorder_foreach()
-@@ -1461,14 +1488,26 @@ class Foreach(ActionWriter):
+@@ -1461,14 +1534,26 @@ class Foreach(ActionWriter):
              writer.putlnc('%s();', func_call)
          writer.end_brace()
  
@@ -1158,7 +1327,7 @@ index 48623cf..10cca94 100644
          if name is not None:
              return name
          return self.converter.config.get_dynamic_loop_call_name(parameter)
-@@ -1558,8 +1597,11 @@ class StartLoop(ActionWriter):
+@@ -1558,8 +1643,11 @@ class StartLoop(ActionWriter):
                  times = exp.loader.value
                  if times == -1:
                      comparison = 'true'
@@ -1172,7 +1341,7 @@ index 48623cf..10cca94 100644
          if times is None:
              times = self.convert_index(1)
          is_infinite = comparison is not None
-@@ -1622,15 +1664,13 @@ class DeactivateGroup(ActionWriter):
+@@ -1622,15 +1710,13 @@ class DeactivateGroup(ActionWriter):
  
      def get_deactivated_container(self):
          if self.deactivated_container is None:
@@ -1190,7 +1359,7 @@ index 48623cf..10cca94 100644
          if name is None:
              name = self.converter.convert_parameter(parameter)
              print 'Could not convert stop loop name for', name
-@@ -1640,8 +1680,7 @@ class StopLoop(ActionWriter):
+@@ -1640,8 +1726,7 @@ class StopLoop(ActionWriter):
  
  class SetLoopIndex(ActionWriter):
      def write(self, writer):
@@ -1200,7 +1369,7 @@ index 48623cf..10cca94 100644
          index_name = get_loop_index_name(name)
          value = self.convert_index(1)
          writer.putln('%s = %s;' % (index_name, value))
-@@ -1650,8 +1689,7 @@ class ActivateGroup(ActionWriter):
+@@ -1650,8 +1735,7 @@ class ActivateGroup(ActionWriter):
      custom = True
  
      def write(self, writer):
@@ -1210,7 +1379,7 @@ index 48623cf..10cca94 100644
          writer.putlnc('if (!%s) {', container.code_name)
          writer.indent()
          writer.putlnc('%s = true;', container.code_name)
-@@ -1970,9 +2008,13 @@ class GetLoopIndex(ExpressionWriter):
+@@ -1970,9 +2054,13 @@ class GetLoopIndex(ExpressionWriter):
              size = 2
              next_exp = items[converter.item_index + 1]
              if next_exp.getName() != 'String':
@@ -1227,15 +1396,15 @@ index 48623cf..10cca94 100644
              else:
                  name = next_exp.loader.value
          converter.item_index += size
-@@ -2055,6 +2097,7 @@ actions = make_table(ActionMethodWriter, {
+@@ -2055,6 +2143,7 @@ actions = make_table(ActionMethodWriter, {
      'CreateObject' : CreateObject,
      'Shoot' : ShootObject,
      'StartLoop' : StartLoop,
-+    'ChildEvents' : EmptyAction, # build 296 structural marker; object-scope list dropped
++    'ChildEvents' : ChildEvents,
      'Foreach' : Foreach,
      'StopLoop' : StopLoop,
      'SwapPosition' : SwapPosition,
-@@ -2072,6 +2115,7 @@ actions = make_table(ActionMethodWriter, {
+@@ -2072,6 +2161,7 @@ actions = make_table(ActionMethodWriter, {
      'SetMinimumValue' : 'set_min',
      'SetGlobalString' : 'global_strings->set',
      'SetGlobalValue' : 'global_values->set',
@@ -1243,7 +1412,7 @@ index 48623cf..10cca94 100644
      'AddGlobalValue' : 'global_values->add',
      'AddGlobalValueInt' : 'global_values->add',
      'SubtractGlobalValue' : 'global_values->sub',
-@@ -2225,6 +2269,13 @@ conditions = make_table(ConditionMethodWriter, {
+@@ -2225,6 +2315,12 @@ conditions = make_table(ConditionMethodWriter, {
      'WhileMousePressed' : 'is_mouse_pressed',
      'MouseOnObject' : MouseOnObject,
      'Always' : Always,
@@ -1251,13 +1420,12 @@ index 48623cf..10cca94 100644
 +    # binary is always the application, so treat it as true. A rare
 +    # RunningAs <other-mode> branch would wrongly activate -- fidelity caveat.
 +    'RunningAs' : Always,
-+    # build 296 structural condition markers -- no runtime effect.
-+    'GroupStart' : Always,
-+    'ChildEventsCondition' : Always,
++    # EndChildEvents is removed by the nested-list partitioner.
++    'ChildEventsCondition' : ChildEventsCondition,
      'MouseClicked' : MouseClicked,
      'ObjectClicked' : ObjectClicked,
      'PlayerKeyDown' : PlayerKeyDown,
-@@ -2271,7 +2322,7 @@ conditions = make_table(ConditionMethodWriter, {
+@@ -2271,7 +2367,7 @@ conditions = make_table(ConditionMethodWriter, {
      'NearWindowBorder' : 'is_near_border',
      'AnimationFinished' : AnimationFinished,
      'StartOfFrame' : '.loop_count <= 1',
@@ -1266,7 +1434,7 @@ index 48623cf..10cca94 100644
      'NumberOfLives' :  make_comparison('manager.lives'),
      'PlayerDied' : PlayerDied,
      'AnyKeyPressed' : AnyKeyPressed,
-@@ -2290,6 +2341,7 @@ conditions = make_table(ConditionMethodWriter, {
+@@ -2290,6 +2386,7 @@ conditions = make_table(ConditionMethodWriter, {
  })
  
  expressions = make_table(ExpressionMethodWriter, {
@@ -1561,7 +1729,7 @@ index d9bfdf7..46bebc0 100644
      -7 : {
          0 : 'SetScore',
 diff --git a/mmfparser/data/chunkloaders/conditions/names.py b/mmfparser/data/chunkloaders/conditions/names.py
-index 9f11e27..a18461e 100644
+index 9f11e27..5164281 100644
 --- a/mmfparser/data/chunkloaders/conditions/names.py
 +++ b/mmfparser/data/chunkloaders/conditions/names.py
 @@ -151,7 +151,10 @@ systemDict = {
@@ -1571,11 +1739,16 @@ index 9f11e27..a18461e 100644
 -        -40 : 'RunningAs'
 +        -40 : 'RunningAs',
 +        # Fusion 2.5+ / build 296 structural markers (see IN-ENGINE-PILOT-RECOMPILE):
-+        -42 : 'GroupStart',            # parameterless, sole condition of a group
++        -42 : 'EndChildEvents',        # closes the innermost child list
 +        -43 : 'ChildEventsCondition'   # carries a CHILDEVENT (object-scope) param
      }
  }
  
+@@ -200,4 +203,3 @@ extensionDict = {
+     -42 : 'CompareAlterableValue',
+     -43 : 'CompareAlterableValue'
+ }
+-
 diff --git a/mmfparser/data/chunkloaders/events.pyx b/mmfparser/data/chunkloaders/events.pyx
 index 1613f17..0d27e63 100644
 --- a/mmfparser/data/chunkloaders/events.pyx
@@ -2955,4 +3128,104 @@ index 74a72d6..a7c5b52 100644
 +            return
          self.value = reader.readDouble()
          self.floatValue = reader.readFloat()
+ 
+diff --git a/Chowdren/base/child_events.h b/Chowdren/base/child_events.h
+new file mode 100644
+index 0000000..4133df4
+--- /dev/null
++++ b/Chowdren/base/child_events.h
+@@ -0,0 +1,50 @@
++#ifndef CHOWDREN_CHILD_EVENTS_H
++#define CHOWDREN_CHILD_EVENTS_H
++
++#include <map>
++#include <vector>
++class ObjectList;
++class FrameObject;
++
++// Each nested child invocation inherits the enclosing snapshot, then replaces
++// only selections explicitly captured by its parent. Siblings read the same
++// snapshot; a child's filtering must not narrow the next sibling.
++class ChildEventSelection
++{
++public:
++    typedef std::vector<FrameObject *> Objects;
++    typedef std::map<ObjectList *, Objects> Snapshot;
++    std::vector<Snapshot> stack;
++
++    void push()
++    {
++        Snapshot inherited;
++        if (!stack.empty()) inherited = stack.back();
++        stack.push_back(inherited);
++    }
++    void pop() { stack.pop_back(); }
++    void save(ObjectList * list, const Objects & objects)
++    {
++        stack.back()[list] = objects;
++    }
++    const Objects * get(ObjectList * list) const
++    {
++        if (stack.empty()) return NULL;
++        Snapshot::const_iterator it = stack.back().find(list);
++        return it == stack.back().end() ? NULL : &it->second;
++    }
++};
++
++class ChildEventScope
++{
++    ChildEventSelection & selections;
++public:
++    ChildEventScope(ChildEventSelection & value) : selections(value)
++    { selections.push(); }
++    ~ChildEventScope() { selections.pop(); }
++private:
++    ChildEventScope(const ChildEventScope &);
++    ChildEventScope & operator=(const ChildEventScope &);
++};
++
++#endif
+diff --git a/Chowdren/chowdren/child_events.py b/Chowdren/chowdren/child_events.py
+new file mode 100644
+index 0000000..0caa5f5
+--- /dev/null
++++ b/Chowdren/chowdren/child_events.py
+@@ -0,0 +1,37 @@
++"""Build-296 child lists, not editor event-group containers.
++
++The Android runtime opens a list on flag 0x40/action43 and closes it on
++system condition -42. Flag0x8000 selects the current nested list. Only
++polled children are supported here; reject other shapes rather than flatten.
++"""
++
++
++def partition_child_events(items):
++    roots, children, stack = [], {}, []
++    for index, group in enumerate(items):
++        first = group.conditions[0]
++        is_end = first.objectType == -1 and first.num == -42
++        if is_end:
++            if not stack:
++                raise ValueError('orphan child-list end at %s' % index)
++            stack.pop()
++            continue
++        flags = group.flags.getFlags()
++        if bool(flags & 0x8000) != bool(stack):
++            raise ValueError('child nesting flag mismatch at %s' % index)
++        if stack:
++            if not first.flags['Always']:
++                raise NotImplementedError('triggered child at %s' % index)
++            children[stack[-1]].append(index)
++        else:
++            roots.append(index)
++        actions = [a for a in group.actions
++                   if a.objectType == -1 and a.num == 43]
++        if bool(flags & 0x40) != bool(actions) or len(actions) > 1:
++            raise ValueError('child action/flag mismatch at %s' % index)
++        if actions:
++            children[index] = []
++            stack.append(index)
++    if stack:
++        raise ValueError('unclosed child lists: %r' % stack)
++    return roots, children
  
