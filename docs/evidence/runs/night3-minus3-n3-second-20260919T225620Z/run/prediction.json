@@ -1,0 +1,28 @@
+{
+  "generatedAt": "2026-09-19T22:29:21.049Z",
+  "generatedBy": "tools/device/death-prediction.mjs",
+  "killers": [
+    {
+      "count": 26,
+      "killer": "inside-office",
+      "share": 0.008666666666666666,
+      "tSeconds": {
+        "max": 414.81666666666666,
+        "min": 234.81666666666666,
+        "p10": 274.81666666666666,
+        "p50": 354.81666666666666,
+        "p90": 404.81666666666666
+      }
+    }
+  ],
+  "night": 3,
+  "phaseBlind": true,
+  "phasesMs": [
+    0
+  ],
+  "replays": 3000,
+  "schema": "death-prediction-v1",
+  "strategy": "minus3",
+  "winRate": 0.9913333333333333,
+  "wins": 2974
+}

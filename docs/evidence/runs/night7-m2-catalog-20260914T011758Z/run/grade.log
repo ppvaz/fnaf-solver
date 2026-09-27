@@ -1,0 +1,133 @@
+==============================================================
+run: night7-m2-catalog-20260914T011758Z
+==============================================================
+capture: night7-m2-catalog-20260914T011758Z.mp4
+hid trace: MISSING (run with HID_TRACE_RUN=1)
+input trace: none (run atrace-input.sh around the command)
+SurfaceFlinger latency: none (set SF_LAYER for capture)
+cue trace: none (run with CUE_HELPER=1)
+legacy night PCM: none (receiver owns live audio)
+audio facts: none (run with external authority socket)
+session manifest: none (unmanifested run)
+campaign bundle: artifacts/campaign-2026-09-14T01-18-15.291Z
+frame trace: none (run query-cue-helper.sh trace start/stop around the run)
+capture rate: 44 fps (ffprobe 207630000/4746071)
+  using measured 44 fps for timing-sensitive graders (nominal 60)
+
+--- session manifest (v1 provenance contract) ---
+  no night7-m2-catalog-20260914T011758Z-session.json: this run is unmanifested, so nothing below can
+  name its game build, model hashes, clock alignment or win evidence.
+  Nothing was validated.
+  Run under tools/device/trial.sh, which emits one.
+
+--- input dispatch / frame landing (Perfetto) ---
+  no input trace kept for night7-m2-catalog-20260914T011758Z; rendered video cannot establish dispatch.
+
+--- clock transitions (HUD first frame, 1 AM) ---
+clocktrace: office HUD was not found
+
+[ 1/13   7%] --- video instruments over one shared decode (survival, cameras, light, keyframes, box, intervals, timeline) ---
+           ... video instruments over one shared decode (survival, cameras, light, keyframes, box, intervals, timeline) still running (20s)
+--- survival (the only number that is a run length) ---
+tools/device/../../captures/night7-m2-catalog-20260914T011758Z.mp4: the HUD is never present -- no night ran at all
+[decode-once] survival (the only number that is a run length): exit 1, 13s, FAILED (exit 1)
+--- camera selections ---
+tools/device/../../captures/night7-m2-catalog-20260914T011758Z.mp4: selected-camera trace at 44 fps
+  cam 04    4.25s ->   4.30s  (0.05s)
+summary: 0 complete 10-04-07-11 sweeps, 0 incomplete sweep starts
+[decode-once] camera selections: exit 0, 13s, ok
+--- camera light actually flashing ---
+tools/device/../../captures/night7-m2-catalog-20260914T011758Z.mp4: signature sweepcheck-signature.json  (sweep lit iff >=2/3 cams)
+summary: 0/0 sweeps lit (>=2 of 3 cameras)
+NO GRADABLE SWEEP: no sweep window was found in this run, so this instrument says nothing about whether the light fired.
+[decode-once] camera light actually flashing: exit 3, 25s, a result about the run, not an instrument failure
+--- keyframes (what the run contained) ---
+tools/device/../../captures/night7-m2-catalog-20260914T011758Z.mp4: 105 frames at 2.0 fps, 12 kept
+  timestamps: 0.0s 4.0s 14.0s 15.0s 19.0s 22.5s 25.5s 28.5s 29.5s 36.5s 39.5s 50.5s
+  sheet: tools/device/../../captures/night7-m2-catalog-20260914T011758Z-keyframes.png
+[decode-once] keyframes (what the run contained): exit 0, 25s, ok
+--- music box ---
+tools/device/../../captures/night7-m2-catalog-20260914T011758Z.mp4: 52.75s sampled at 12 fps
+  no CAM 11 music-box gauge detected
+[decode-once] music box: exit 0, 13s, ok
+--- office / mask / camera intervals ---
+tools/device/../../captures/night7-m2-catalog-20260914T011758Z.mp4: 52.75s sampled at 12 fps
+  camera   0.25s ->   4.00s  (3.75s)
+  camera  14.67s ->  19.33s  (4.67s)
+  camera  19.92s ->  26.42s  (6.50s)
+  camera  36.75s ->  37.33s  (0.58s)
+  camera  38.00s ->  39.58s  (1.58s)
+  camera  50.17s ->  52.75s  (2.58s)
+summary: 6 camera intervals, 0 visible hall flashes, 0 latched-mask intervals
+note: visible hall flashes are only a rendering lower bound; the sourced movement blackout can hide logically accepted Foxy flashes
+[decode-once] office / mask / camera intervals: exit 0, 13s, ok
+--- run timeline and terminal outcome ---
+tools/device/../../captures/night7-m2-catalog-20260914T011758Z.mp4: 105 frames at 2.0 fps, 640x288
+      0.0s ->     0.5s  (   0.5s)  camera
+      0.5s ->     5.0s  (   4.5s)  other
+      5.0s ->     9.5s  (   4.5s)  camera
+      9.5s ->    11.5s  (   2.0s)  unknown
+     11.5s ->    14.5s  (   3.0s)  camera
+     14.5s ->    29.5s  (  15.0s)  other
+     29.5s ->    34.0s  (   4.5s)  camera
+     34.0s ->    36.5s  (   2.5s)  unknown
+     36.5s ->    40.5s  (   4.0s)  other
+     40.5s ->    45.0s  (   4.5s)  camera
+     45.0s ->    47.5s  (   2.5s)  unknown
+     47.5s ->    50.0s  (   2.5s)  camera
+     50.0s ->    52.5s  (   2.5s)  other
+
+  TERMINAL: unknown
+  nothing terminal was captured; the recording may stop before the end of the night
+[decode-once] run timeline and terminal outcome: exit 0, 25s, ok
+[decode-once] 2 shared decode(s) for 7 instruments: 7 branches in 10.5s (exit 0), 3 branches in 10.1s (exit 0)
+  ^ FAILED (resource-limited or diagnostic error)
+[ 1/13   7%] video instruments over one shared decode (survival, cameras, light, keyframes, box, intervals, timeline) took 25s (pipeline 32s)
+
+[ 2/13  15%] --- campaign bundle (executor-owned facts) ---
+--- modern campaign bundle (executor-owned facts) ---
+  night reached               NO -- the run never entered a night
+  arm mode                    observe-once
+  arm                         UNKNOWN on attempt 1 (0 retries, 0 samples)
+  arm verified at             UNKNOWN
+  parked prefix (plan)        UNKNOWN
+  PHASE LAG (suffix shift)    none -- observe-once never parks the stream
+  cycle gates                 0 (0 agreed, 0 corrected, 0 aborted)
+  gate lag                    UNKNOWN
+  delivered offset            UNKNOWN
+  corrections landed          0 confirmed, 0 unconfirmed, 0 unread, 0 never read back
+  press acceptance            no transition was graded
+  stop reason                 campaign-abort (campaign bundle: armMode requires an arm-verified plan)
+[ 2/13  15%] campaign bundle (executor-owned facts) took 0s (pipeline 32s)
+
+[ 3/13  23%] --- delivered phase vs the model band ---
+file://tools/device/phase-reconstruct.mjs:32
+const fail = message => { throw new Error(`phase reconstruction: ${message}`); };
+                                ^
+
+Error: phase reconstruction: bundle has no hid.schedule-start
+    at fail (file://tools/device/phase-reconstruct.mjs:32:33)
+    at reconstruct (file://tools/device/phase-reconstruct.mjs:151:15)
+    at file://tools/device/phase-reconstruct.mjs:371:18
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.23.2
+  ^ FAILED (resource-limited or diagnostic error)
+[ 3/13  23%] delivered phase vs the model band took 0s (pipeline 32s)
+
+--- native-frame state coverage for the actuation ---
+  no frame trace for night7-m2-catalog-20260914T011758Z: frame-level state coverage and input/frame
+  alignment are UNKNOWN. Nothing was measured.
+
+--- elegance (inputs sent vs needed) ---
+  no driver log for night7-m2-catalog-20260914T011758Z; nothing to count. Runs before 2026-08-26 have none.
+
+--- Balloon Boy's vent bang ---
+  no raw audio kept for night7-m2-catalog-20260914T011758Z; scan-night requires a receiver PCM capture.
+  external authority facts are also absent; run with CUE_AUDIO=1 AUDIO_AUTHORITY_SOCKET=PATH.
+
+==============================================================
+VERDICT: at least one instrument FAILED for night7-m2-catalog-20260914T011758Z -- read above
+==============================================================

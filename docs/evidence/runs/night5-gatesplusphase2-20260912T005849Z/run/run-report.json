@@ -1,0 +1,62 @@
+{
+  "schema": "device-run-report-v1",
+  "night": {
+    "startedAt": 1789174761279,
+    "releasedAt": 1789174761280,
+    "reached": true
+  },
+  "arm": {
+    "mode": "observe-once",
+    "attempts": 1,
+    "retries": 0,
+    "samples": 1,
+    "verifiedAtMs": null,
+    "armReadyAtMs": null,
+    "phaseLagMs": null,
+    "status": "UNRESOLVED"
+  },
+  "cycles": {
+    "gates": 0,
+    "agreed": 0,
+    "corrected": 0,
+    "aborts": 0,
+    "gateLagMinMs": null,
+    "gateLagMaxMs": null,
+    "deliveredFirstMs": null,
+    "deliveredLastMs": null,
+    "correctedAtMs": []
+  },
+  "effects": {
+    "total": 3,
+    "tally": {
+      "UNKNOWN": 3
+    },
+    "systematicMisses": []
+  },
+  "stop": {
+    "reason": "arm-unresolved",
+    "detail": "read-unavailable",
+    "restarts": 1,
+    "interrupted": false
+  },
+  "counts": {
+    "evidence.started": 1,
+    "arm.mode": 1,
+    "observation": 9,
+    "hid.execute-entered": 1,
+    "hid.handoff-reused": 1,
+    "hid.schedule-start": 1,
+    "hid.night-go": 1,
+    "hid.handoff": 1,
+    "control.effect.phase": 1,
+    "control.effect.expected": 3,
+    "hid.night-go-released": 1,
+    "control.effect.sample": 14,
+    "control.effect.result": 3,
+    "arm.sample": 1,
+    "arm.unresolved": 1,
+    "device.anr": 1,
+    "campaign.abort.restart": 1,
+    "campaign.abort.restarted": 1
+  }
+}

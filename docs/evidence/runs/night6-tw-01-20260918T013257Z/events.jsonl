@@ -1,0 +1,16 @@
+{"at":"2026-09-18T01:33:10.151Z","type":"evidence.started","evidenceDirectory":"artifacts/campaign-2026-09-18T01-33-10.150Z"}
+{"at":"2026-09-18T01:33:10.151Z","type":"arm.mode","mode":"observe-once"}
+{"at":"2026-09-18T01:33:12.003Z","type":"observation","label":"items=continue,customNight,newGame,sixthNight","frame":"00001-title-observe.py.png"}
+{"at":"2026-09-18T01:33:20.941Z","type":"observation","label":"state=title","frame":"00003-lifecycle-observe.py.png"}
+{"at":"2026-09-18T01:33:21.127Z","type":"menu.start-planned","residueMs":20000,"targetPhoneWallMs":1789695249952,"waitMs":48816.8310546875,"uncertaintyMs":2.988949500000672}
+{"at":"2026-09-18T01:34:10.074Z","type":"menu.start","tapHostMs":70219.295703,"tapPhoneWallMs":1789695249983.7039,"tapPhoneWallLow16":20031,"plannedPhoneWallMs":1789695249952,"lateMs":31.273397312499583,"uncertaintyMs":3.3863314999980503}
+{"at":"2026-09-18T01:34:11.692Z","type":"observation","label":"state=static","frame":"00004-lifecycle-observe.py.png"}
+{"at":"2026-09-18T01:34:13.394Z","type":"observation","label":"state=title","frame":"00005-lifecycle-observe.py.png"}
+{"at":"2026-09-18T01:34:32.216Z","type":"observation","label":"unknown=office-hud-without-night (bars 0.040)","frame":"00016-lifecycle-observe.py.png"}
+{"at":"2026-09-18T01:34:33.936Z","type":"observation","label":"state=title","frame":"00017-lifecycle-observe.py.png"}
+{"at":"2026-09-18T01:34:41.545Z","type":"campaign.abort.restart","reason":"night selection was not observed before the 30000ms deadline (last=title)"}
+{"at":"2026-09-18T01:34:42.855Z","type":"observation","label":"unknown=no-signature-matched","frame":"00022-lifecycle-observe.py.png"}
+{"at":"2026-09-18T01:34:43.989Z","type":"observation","label":"state=intro","frame":"00023-lifecycle-observe.py.png"}
+{"at":"2026-09-18T01:34:45.840Z","type":"observation","label":"unknown=dark-frame-no-text","frame":"00025-lifecycle-observe.py.png"}
+{"at":"2026-09-18T01:34:47.525Z","type":"observation","label":"state=title","frame":"00026-lifecycle-observe.py.png"}
+{"at":"2026-09-18T01:35:01.335Z","type":"campaign.abort.restarted","state":"title","launcher":"com.scottgames.fnaf2/.Main","cueHelperPort":49707}

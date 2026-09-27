@@ -1,0 +1,9 @@
+{"at":"2026-09-18T01:42:31.639Z","type":"evidence.started","evidenceDirectory":"artifacts/campaign-2026-09-18T01-42-31.638Z"}
+{"at":"2026-09-18T01:42:31.639Z","type":"arm.mode","mode":"observe-once"}
+{"at":"2026-09-18T01:42:33.615Z","type":"observation","label":"items=continue,customNight,newGame,sixthNight","frame":"00001-title-observe.py.png"}
+{"at":"2026-09-18T01:42:42.079Z","type":"campaign.abort.restart","reason":"timed sixthNight start refused: cue-helper clock probe timed out"}
+{"at":"2026-09-18T01:42:42.997Z","type":"observation","label":"unknown=no-signature-matched","frame":"00003-lifecycle-observe.py.png"}
+{"at":"2026-09-18T01:42:43.846Z","type":"observation","label":"unknown=dark-frame-no-text","frame":"00004-lifecycle-observe.py.png"}
+{"at":"2026-09-18T01:42:44.994Z","type":"observation","label":"state=intro","frame":"00005-lifecycle-observe.py.png"}
+{"at":"2026-09-18T01:42:47.948Z","type":"observation","label":"state=title","frame":"00007-lifecycle-observe.py.png"}
+{"at":"2026-09-18T01:43:01.331Z","type":"campaign.abort.restarted","state":"title","launcher":"com.scottgames.fnaf2/.Main","cueHelperPort":49707}

@@ -1,0 +1,15 @@
+{"at":"2026-09-18T02:19:27.824Z","type":"evidence.started","evidenceDirectory":"artifacts/campaign-2026-09-18T02-19-27.817Z"}
+{"at":"2026-09-18T02:19:27.825Z","type":"arm.mode","mode":"observe-once"}
+{"at":"2026-09-18T02:19:30.068Z","type":"observation","label":"items=continue,customNight,newGame,sixthNight","frame":"00001-title-observe.py.png"}
+{"at":"2026-09-18T02:19:37.630Z","type":"menu.start-planned","residueMs":20080,"targetPhoneWallMs":1789698002544,"waitMs":24913.48583984375,"uncertaintyMs":3.106499999999869}
+{"at":"2026-09-18T02:20:02.646Z","type":"menu.start","tapHostMs":47521.751133,"tapPhoneWallMs":1789698002545.15,"tapPhoneWallLow16":20081,"plannedPhoneWallMs":1789698002544,"lateMs":1.9293671562481904,"uncertaintyMs":3.1537315000023227}
+{"at":"2026-09-18T02:20:04.720Z","type":"observation","label":"state=title","frame":"00003-lifecycle-observe.py.png"}
+{"at":"2026-09-18T02:20:04.720Z","type":"menu.press-settled","press":1,"state":"title"}
+{"at":"2026-09-18T02:20:04.906Z","type":"menu.start-planned","residueMs":20080,"targetPhoneWallMs":1789698068080,"waitMs":63173.558349609375,"uncertaintyMs":3.67965600000025}
+{"at":"2026-09-18T02:21:08.225Z","type":"menu.start","tapHostMs":113101.624337,"tapPhoneWallMs":1789698068126.257,"tapPhoneWallLow16":20126,"plannedPhoneWallMs":1789698068080,"lateMs":45.48491039061628,"uncertaintyMs":2.968244499999855}
+{"at":"2026-09-18T02:21:10.862Z","type":"observation","label":"state=intro","frame":"00005-lifecycle-observe.py.png"}
+{"at":1789698070932,"type":"hid.execute-entered"}
+{"at":1789698070932,"type":"hid.handoff-reused","source":"menu","readyDelayMs":0}
+{"at":"2026-09-18T02:21:10.932Z","type":"hid.schedule-start","startedAt":1789698070932,"actionCount":298,"phaseOffsetMs":0}
+{"at":"2026-09-18T02:21:12.722Z","type":"observation","label":"unknown=dark-frame-no-text","frame":"00006-lifecycle-observe.py.png"}
+{"at":"2026-09-18T02:21:13.805Z","type":"origin.anchor","status":"scheduled","aimMs":4870,"maxK":0,"onsetHostMs":118170.20255863667,"plannedAfterOnsetMs":612.1379763633304,"candidates":[{"k":0,"releaseHostMs":123040.20255863667}],"authorizedAtHostMs":null,"hostClock":"performance-now-ms","wallMinusHostMs":1789697955022.5825,"reads":4,"failures":0,"onsetDeviceMs":981737796.840473,"offsetMs":-981619626.6379144,"uncertaintyMs":3.124464499996975,"rttMs":6.24892899999395,"phoneWallMinusMonoMs":1788716335396.138,"onsetPhoneWallMs":1789698073192.9785,"onsetPhoneWallLow16":25192}

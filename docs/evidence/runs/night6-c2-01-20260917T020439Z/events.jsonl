@@ -1,0 +1,20 @@
+{"at":"2026-09-17T02:04:52.311Z","type":"evidence.started","evidenceDirectory":"artifacts/campaign-2026-09-17T02-04-52.305Z"}
+{"at":"2026-09-17T02:04:52.312Z","type":"arm.mode","mode":"observe-once"}
+{"at":"2026-09-17T02:04:54.371Z","type":"observation","label":"items=continue,customNight,newGame,sixthNight","frame":"00001-title-observe.py.png"}
+{"at":"2026-09-17T02:05:02.050Z","type":"menu.start-planned","residueMs":20000,"targetPhoneWallMs":1789610708512,"waitMs":7834.49853515625,"uncertaintyMs":4.560043999999834}
+{"at":"2026-09-17T02:05:09.983Z","type":"menu.start","tapHostMs":28334.207072,"tapPhoneWallMs":1789610708511.6387,"tapPhoneWallLow16":19999,"plannedPhoneWallMs":1789610708512,"lateMs":0.013811843749863328,"uncertaintyMs":3.185053000001062}
+{"at":"2026-09-17T02:05:11.459Z","type":"observation","label":"state=title","frame":"00003-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:05:16.298Z","type":"observation","label":"state=night","frame":"00006-lifecycle-observe.py.png"}
+{"at":1789610716420,"type":"hid.execute-entered"}
+{"at":1789610716420,"type":"hid.handoff-reused","source":"menu","readyDelayMs":0}
+{"at":"2026-09-17T02:05:16.420Z","type":"hid.schedule-start","startedAt":1789610716420,"actionCount":298,"phaseOffsetMs":0}
+{"at":"2026-09-17T02:05:19.500Z","type":"observation","label":"state=title","frame":"00007-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:05:27.138Z","type":"device.anr","count":0,"lines":[]}
+{"at":"2026-09-17T02:05:46.621Z","type":"campaign.abort.restart","reason":"night start was not observed before the 30000ms deadline (last=title)"}
+{"at":"2026-09-17T02:05:48.127Z","type":"observation","label":"unknown=no-signature-matched","frame":"00024-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:05:49.249Z","type":"observation","label":"state=intro","frame":"00025-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:05:51.203Z","type":"observation","label":"unknown=dark-frame-no-text","frame":"00027-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:05:53.069Z","type":"observation","label":"state=title","frame":"00028-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:05:57.673Z","type":"origin.anchor","status":"unavailable","reason":"onset-not-latched","aimMs":4870,"maxK":0,"latchedOnsetDeviceMs":null,"latchedOffsetMs":null,"reads":189,"failures":111,"lastError":"cue-helper clock is closed"}
+{"at":"2026-09-17T02:05:57.673Z","type":"origin.anchor","status":"refused","reason":"onset-not-latched","strict":true}
+{"at":"2026-09-17T02:06:06.598Z","type":"campaign.abort.restarted","state":"title","launcher":"com.scottgames.fnaf2/.Main","cueHelperPort":49707}

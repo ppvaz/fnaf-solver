@@ -1,0 +1,18 @@
+run          night5-anchor1-20260912T202654Z
+bundle       artifacts/night5-contact-final
+campaign dir artifacts/campaign-2026-09-12T20-27-06.326Z
+campaign exit 1
+--- attempt 1 of 1: artifacts/campaign-2026-09-12T20-27-06.326Z ---
+--- modern campaign bundle (executor-owned facts) ---
+  night reached               yes
+  arm mode                    observe-once
+  arm                         VERIFIED on attempt 1 (0 retries, 1 samples)
+  arm verified at             8300 ms
+  parked prefix (plan)        UNKNOWN
+  PHASE LAG (suffix shift)    none -- observe-once never parks the stream
+  cycle gates                 25 (24 agreed, 0 corrected, 1 aborted)
+  gate lag                    UNKNOWN
+  delivered offset            UNKNOWN
+  corrections landed          0 confirmed, 0 unconfirmed, 0 unread, 0 never read back
+  press acceptance            3 graded -- 1 UNKNOWN, 1 PASS, 1 UNSTABLE
+  stop reason                 gate-abort (ambiguous-threshold)

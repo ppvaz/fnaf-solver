@@ -1,0 +1,18 @@
+run          night6-p-05-20260917T024956Z
+bundle       artifacts/night6-cohort-h/bundle
+campaign dir artifacts/campaign-2026-09-17T02-50-11.446Z
+campaign exit 2
+--- attempt 1 of 1: artifacts/campaign-2026-09-17T02-50-11.446Z ---
+--- modern campaign bundle (executor-owned facts) ---
+  night reached               NO -- the run never entered a night
+  arm mode                    observe-once
+  arm                         UNKNOWN on attempt 1 (0 retries, 0 samples)
+  arm verified at             UNKNOWN
+  parked prefix (plan)        UNKNOWN
+  PHASE LAG (suffix shift)    none -- observe-once never parks the stream
+  cycle gates                 0 (0 agreed, 0 corrected, 0 aborted)
+  gate lag                    UNKNOWN
+  delivered offset            UNKNOWN
+  corrections landed          0 confirmed, 0 unconfirmed, 0 unread, 0 never read back
+  press acceptance            no transition was graded
+  stop reason                 campaign-abort (night selection was not observed before the 30000ms deadline (last=unknown))

@@ -1,0 +1,46 @@
+{
+  "status": "HOLD",
+  "mode": "live",
+  "result": {
+    "schema": "device-campaign-result-v1",
+    "version": 1,
+    "specHash": "fnv1a-e46e71ae",
+    "state": "HOLD",
+    "targetIndex": 0,
+    "completedNights": [],
+    "attempts": [],
+    "events": [
+      {
+        "schema": "campaign-event-v1",
+        "type": "campaign.state",
+        "state": "PREFLIGHT",
+        "at": 13044.267224,
+        "data": {
+          "previous": "IDLE"
+        }
+      },
+      {
+        "schema": "campaign-event-v1",
+        "type": "campaign.state",
+        "state": "MENU",
+        "at": 13530.345797,
+        "data": {
+          "previous": "PREFLIGHT",
+          "device": "ZF525F5BH5"
+        }
+      },
+      {
+        "schema": "campaign-event-v1",
+        "type": "campaign.state",
+        "state": "HOLD",
+        "at": 15017.41731,
+        "data": {
+          "previous": "MENU",
+          "reason": "menu-observation-not-confirmed",
+          "target": "customNight",
+          "expected": "customNight"
+        }
+      }
+    ]
+  }
+}

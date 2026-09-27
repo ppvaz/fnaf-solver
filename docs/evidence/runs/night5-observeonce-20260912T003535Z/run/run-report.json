@@ -1,0 +1,55 @@
+{
+  "schema": "device-run-report-v1",
+  "night": {
+    "startedAt": 1789173366445,
+    "releasedAt": 1789173366446,
+    "reached": true
+  },
+  "arm": {
+    "mode": "observe-once",
+    "attempts": 1,
+    "retries": 0,
+    "samples": 1,
+    "verifiedAtMs": 6890,
+    "armReadyAtMs": null,
+    "phaseLagMs": null,
+    "status": "VERIFIED"
+  },
+  "cycles": {
+    "gates": 0,
+    "agreed": 0,
+    "corrected": 0,
+    "aborts": 0,
+    "gateLagMinMs": null,
+    "gateLagMaxMs": null,
+    "deliveredFirstMs": null,
+    "deliveredLastMs": null,
+    "correctedAtMs": []
+  },
+  "stop": {
+    "reason": "device-anr",
+    "detail": "",
+    "restarts": 2
+  },
+  "counts": {
+    "evidence.started": 1,
+    "arm.mode": 1,
+    "observation": 12,
+    "hid.execute-entered": 1,
+    "hid.handoff-reused": 1,
+    "hid.schedule-start": 1,
+    "hid.night-go": 1,
+    "hid.handoff": 1,
+    "control.effect.phase": 1,
+    "control.effect.expected": 26,
+    "hid.night-go-released": 1,
+    "control.effect.sample": 133,
+    "control.effect.result": 25,
+    "arm.sample": 1,
+    "arm.verified": 1,
+    "device.anr": 1,
+    "campaign.abort.restart": 2,
+    "campaign.abort.restart-failed": 1,
+    "campaign.abort.restarted": 1
+  }
+}

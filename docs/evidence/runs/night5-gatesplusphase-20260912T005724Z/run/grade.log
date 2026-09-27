@@ -1,0 +1,126 @@
+==============================================================
+run: night5-gatesplusphase-20260912T005724Z
+==============================================================
+capture: night5-gatesplusphase-20260912T005724Z.mp4
+hid trace: MISSING (run with HID_TRACE_RUN=1)
+input trace: none (run atrace-input.sh around the command)
+SurfaceFlinger latency: none (set SF_LAYER for capture)
+cue trace: none (run with CUE_HELPER=1)
+legacy night PCM: none (receiver owns live audio)
+audio facts: none (run with external authority socket)
+session manifest: none (unmanifested run)
+campaign bundle: artifacts/campaign-2026-09-12T00-57-59.902Z
+frame trace: none (run query-cue-helper.sh trace start/stop around the run)
+capture rate: 37 fps (ffprobe 7396875/201134)
+  using measured 37 fps for timing-sensitive graders (nominal 60)
+
+--- session manifest (v1 provenance contract) ---
+  no night5-gatesplusphase-20260912T005724Z-session.json: this run is unmanifested, so nothing below can
+  name its game build, model hashes, clock alignment or win evidence.
+  Nothing was validated.
+  Run under tools/device/trial.sh, which emits one.
+
+--- survival (the only number that is a run length) ---
+tools/device/../../captures/night5-gatesplusphase-20260912T005724Z.mp4: the HUD is never present -- no night ran at all
+  ^ FAILED (resource-limited or diagnostic error)
+
+--- input dispatch / frame landing (Perfetto) ---
+  no input trace kept for night5-gatesplusphase-20260912T005724Z; rendered video cannot establish dispatch.
+
+--- clock transitions (HUD first frame, 1 AM) ---
+clocktrace: office HUD was not found
+
+--- camera selections ---
+tools/device/../../captures/night5-gatesplusphase-20260912T005724Z.mp4: selected-camera trace at 37 fps
+  cam 07    3.22s ->   3.27s  (0.05s)
+  cam 10    8.81s ->   9.46s  (0.65s)
+  cam 10   21.22s ->  22.65s  (1.43s)
+  cam 10   24.19s ->  25.51s  (1.32s)
+summary: 0 complete 10-04-07-11 sweeps, 1 incomplete sweep starts
+
+--- camera light actually flashing ---
+tools/device/../../captures/night5-gatesplusphase-20260912T005724Z.mp4: signature sweepcheck-signature.json  (sweep lit iff >=2/3 cams)
+summary: 0/0 sweeps lit (>=2 of 3 cameras)
+
+--- keyframes (what the run contained) ---
+tools/device/../../captures/night5-gatesplusphase-20260912T005724Z.mp4: 72 frames at 2.0 fps, 12 kept
+  timestamps: 0.0s 0.5s 1.0s 2.0s 3.0s 8.0s 8.5s 10.0s 20.5s 21.5s 23.5s 24.0s
+  sheet: tools/device/../../captures/night5-gatesplusphase-20260912T005724Z-keyframes.png
+
+--- music box ---
+tools/device/../../captures/night5-gatesplusphase-20260912T005724Z.mp4: 35.75s sampled at 12 fps
+  cam11   8.83s ->   9.50s    0.0% ->   0.0%  (range   0.0-  0.0%)
+  cam11  21.25s ->  22.67s    0.0% ->   0.0%  (range   0.0-  0.0%)
+  cam11  24.17s ->  25.58s    0.0% ->   0.0%  (range   0.0-  0.0%)
+
+--- office / mask / camera intervals ---
+tools/device/../../captures/night5-gatesplusphase-20260912T005724Z.mp4: 35.75s sampled at 12 fps
+  camera   0.33s ->   2.67s  (2.33s)
+  camera   8.83s ->   9.42s  (0.58s)
+  camera  21.25s ->  22.58s  (1.33s)
+  camera  24.17s ->  25.58s  (1.42s)
+  camera  28.00s ->  34.00s  (6.00s)
+  camera  34.58s ->  35.42s  (0.83s)
+summary: 6 camera intervals, 0 visible hall flashes, 0 latched-mask intervals
+note: visible hall flashes are only a rendering lower bound; the sourced movement blackout can hide logically accepted Foxy flashes
+
+--- run timeline and terminal outcome ---
+tools/device/../../captures/night5-gatesplusphase-20260912T005724Z.mp4: 72 frames at 2.0 fps, 640x288
+      0.0s ->     4.0s  (   4.0s)  other
+      4.0s ->     9.5s  (   5.5s)  camera
+      9.5s ->    21.0s  (  11.5s)  other
+     21.0s ->    25.5s  (   4.5s)  camera
+     25.5s ->    36.0s  (  10.5s)  other
+
+  TERMINAL: unknown
+  nothing terminal was captured; the recording may stop before the end of the night
+
+--- campaign bundle (executor-owned facts) ---
+--- modern campaign bundle (executor-owned facts) ---
+  night reached               NO -- the run never entered a night
+  arm mode                    observe-once
+  arm                         UNKNOWN on attempt 1 (0 retries, 0 samples)
+  arm verified at             UNKNOWN
+  parked prefix (plan)        UNKNOWN
+  PHASE LAG (suffix shift)    none -- observe-once never parks the stream
+  cycle gates                 0 (0 agreed, 0 corrected, 0 aborted)
+  gate lag                    UNKNOWN
+  delivered offset            UNKNOWN
+  press acceptance            no transition was graded
+  stop reason                 UNKNOWN
+
+--- delivered phase vs the model band ---
+node:fs:440
+    return binding.readFileUtf8(path, stringToFlags(options.flag));
+                   ^
+
+Error: ENOENT: no such file or directory, open 'artifacts/campaign-2026-09-12T00-57-59.902Z/observations.jsonl'
+    at readFileSync (node:fs:440:20)
+    at readJsonl (file://tools/device/phase-reconstruct.mjs:28:27)
+    at file://tools/device/phase-reconstruct.mjs:217:24
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'artifacts/campaign-2026-09-12T00-57-59.902Z/observations.jsonl'
+}
+
+Node.js v22.23.2
+  ^ FAILED (resource-limited or diagnostic error)
+
+--- native-frame state coverage for the actuation ---
+  no frame trace for night5-gatesplusphase-20260912T005724Z: frame-level state coverage and input/frame
+  alignment are UNKNOWN. Nothing was measured.
+
+--- elegance (inputs sent vs needed) ---
+  no driver log for night5-gatesplusphase-20260912T005724Z; nothing to count. Runs before 2026-08-26 have none.
+
+--- Balloon Boy's vent bang ---
+  no raw audio kept for night5-gatesplusphase-20260912T005724Z; scan-night requires a receiver PCM capture.
+  external authority facts are also absent; run with CUE_AUDIO=1 AUDIO_AUTHORITY_SOCKET=PATH.
+
+==============================================================
+VERDICT: at least one instrument FAILED for night5-gatesplusphase-20260912T005724Z -- read above
+==============================================================

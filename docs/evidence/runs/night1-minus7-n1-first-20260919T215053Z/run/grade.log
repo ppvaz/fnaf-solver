@@ -1,0 +1,118 @@
+==============================================================
+run: night1-minus7-n1-first-20260919T215053Z
+==============================================================
+capture: night1-minus7-n1-first-20260919T215053Z.mp4
+hid trace: MISSING (run with HID_TRACE_RUN=1)
+input trace: none (run atrace-input.sh around the command)
+SurfaceFlinger latency: none (set SF_LAYER for capture)
+cue trace: none (run with CUE_HELPER=1)
+legacy night PCM: none (receiver owns live audio)
+audio facts: none (run with external authority socket)
+session manifest: none (unmanifested run)
+campaign bundle: artifacts/campaign-2026-09-19T21-50-56.614Z
+frame trace: none (run query-cue-helper.sh trace start/stop around the run)
+capture rate: 60 fps (ffprobe 5610000/93689)
+
+--- session manifest (v1 provenance contract) ---
+  no night1-minus7-n1-first-20260919T215053Z-session.json: this run is unmanifested, so nothing below can
+  name its game build, model hashes, clock alignment or win evidence.
+  Nothing was validated.
+  Run under tools/device/trial.sh, which emits one.
+
+--- input dispatch / frame landing (Perfetto) ---
+  no input trace kept for night1-minus7-n1-first-20260919T215053Z; rendered video cannot establish dispatch.
+
+--- clock transitions (HUD first frame, 1 AM) ---
+clocktrace: office HUD was not found
+
+[ 1/13   7%] --- video instruments over one shared decode (survival, cameras, light, keyframes, box, intervals, timeline) ---
+--- survival (the only number that is a run length) ---
+tools/device/../../captures/night1-minus7-n1-first-20260919T215053Z.mp4: the HUD is never present -- no night ran at all
+[decode-once] survival (the only number that is a run length): exit 1, 3s, FAILED (exit 1)
+--- camera selections ---
+tools/device/../../captures/night1-minus7-n1-first-20260919T215053Z.mp4: selected-camera trace at 60 fps
+  no stable target-camera highlights detected
+[decode-once] camera selections: exit 0, 3s, ok
+--- camera light actually flashing ---
+tools/device/../../captures/night1-minus7-n1-first-20260919T215053Z.mp4: signature sweepcheck-signature.json  (sweep lit iff >=2/3 cams)
+summary: 0/0 sweeps lit (>=2 of 3 cameras)
+NO GRADABLE SWEEP: no sweep window was found in this run, so this instrument says nothing about whether the light fired.
+[decode-once] camera light actually flashing: exit 3, 7s, a result about the run, not an instrument failure
+--- keyframes (what the run contained) ---
+tools/device/../../captures/night1-minus7-n1-first-20260919T215053Z.mp4: 6 frames at 2.0 fps, 6 kept
+  timestamps: 0.0s 0.5s 1.0s 1.5s 2.0s 2.5s
+  sheet: tools/device/../../captures/night1-minus7-n1-first-20260919T215053Z-keyframes.png
+[decode-once] keyframes (what the run contained): exit 0, 7s, ok
+--- music box ---
+tools/device/../../captures/night1-minus7-n1-first-20260919T215053Z.mp4: 3.08s sampled at 12 fps
+  no CAM 11 music-box gauge detected
+[decode-once] music box: exit 0, 3s, ok
+--- office / mask / camera intervals ---
+tools/device/../../captures/night1-minus7-n1-first-20260919T215053Z.mp4: 3.08s sampled at 12 fps
+  camera   0.08s ->   3.08s  (3.00s)
+summary: 1 camera intervals, 0 visible hall flashes, 0 latched-mask intervals
+note: visible hall flashes are only a rendering lower bound; the sourced movement blackout can hide logically accepted Foxy flashes
+[decode-once] office / mask / camera intervals: exit 0, 3s, ok
+--- run timeline and terminal outcome ---
+tools/device/../../captures/night1-minus7-n1-first-20260919T215053Z.mp4: 6 frames at 2.0 fps, 640x288
+      0.0s ->     3.0s  (   3.0s)  other
+
+  TERMINAL: unknown
+  nothing terminal was captured; the recording may stop before the end of the night
+[decode-once] run timeline and terminal outcome: exit 0, 7s, ok
+[decode-once] 2 shared decode(s) for 7 instruments: 7 branches in 1.0s (exit 0), 3 branches in 1.0s (exit 0)
+  ^ FAILED (resource-limited or diagnostic error)
+[ 1/13   7%] video instruments over one shared decode (survival, cameras, light, keyframes, box, intervals, timeline) took 7s (pipeline 8s)
+
+[ 2/13  15%] --- campaign bundle (executor-owned facts) ---
+--- modern campaign bundle (executor-owned facts) ---
+  night reached               NO -- the run never entered a night
+  arm mode                    blocking
+  arm                         UNKNOWN on attempt 1 (0 retries, 0 samples)
+  arm verified at             UNKNOWN
+  parked prefix (plan)        UNKNOWN
+  PHASE LAG (suffix shift)    UNKNOWN
+  cycle gates                 0 (0 agreed, 0 corrected, 0 aborted)
+  gate lag                    UNKNOWN
+  delivered offset            UNKNOWN
+  corrections landed          0 confirmed, 0 unconfirmed, 0 unread, 0 never read back
+  press acceptance            no transition was graded
+  stop reason                 UNKNOWN
+[ 2/13  15%] campaign bundle (executor-owned facts) took 0s (pipeline 8s)
+
+[ 3/13  23%] --- delivered phase vs the model band ---
+node:fs:440
+    return binding.readFileUtf8(path, stringToFlags(options.flag));
+                   ^
+
+Error: ENOENT: no such file or directory, open 'artifacts/campaign-2026-09-19T21-50-56.614Z/observations.jsonl'
+    at readFileSync (node:fs:440:20)
+    at readJsonl (file://tools/device/phase-reconstruct.mjs:29:27)
+    at file://tools/device/phase-reconstruct.mjs:409:24
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'artifacts/campaign-2026-09-19T21-50-56.614Z/observations.jsonl'
+}
+
+Node.js v22.23.2
+  ^ FAILED (resource-limited or diagnostic error)
+[ 3/13  23%] delivered phase vs the model band took 0s (pipeline 8s)
+
+--- native-frame state coverage for the actuation ---
+  no frame trace for night1-minus7-n1-first-20260919T215053Z: frame-level state coverage and input/frame
+  alignment are UNKNOWN. Nothing was measured.
+
+--- elegance (inputs sent vs needed) ---
+  no driver log for night1-minus7-n1-first-20260919T215053Z; nothing to count. Runs before 2026-08-26 have none.
+
+--- Balloon Boy's vent bang ---
+  no raw audio kept for night1-minus7-n1-first-20260919T215053Z; scan-night requires a receiver PCM capture.
+  external authority facts are also absent; run with CUE_AUDIO=1 AUDIO_AUTHORITY_SOCKET=PATH.
+
+==============================================================
+VERDICT: at least one instrument FAILED for night1-minus7-n1-first-20260919T215053Z -- read above
+==============================================================

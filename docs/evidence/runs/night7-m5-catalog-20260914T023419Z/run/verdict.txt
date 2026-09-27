@@ -1,0 +1,18 @@
+run          night7-m5-catalog-20260914T023419Z
+bundle       artifacts/night7-minus7-catalog
+campaign dir artifacts/campaign-2026-09-14T02-34-36.481Z
+campaign exit 2
+--- attempt 1 of 1: artifacts/campaign-2026-09-14T02-34-36.481Z ---
+--- modern campaign bundle (executor-owned facts) ---
+  night reached               NO -- the run never entered a night
+  arm mode                    none
+  arm                         UNKNOWN on attempt 1 (0 retries, 0 samples)
+  arm verified at             UNKNOWN
+  parked prefix (plan)        UNKNOWN
+  PHASE LAG (suffix shift)    UNKNOWN
+  cycle gates                 0 (0 agreed, 0 corrected, 0 aborted)
+  gate lag                    UNKNOWN
+  delivered offset            UNKNOWN
+  corrections landed          0 confirmed, 0 unconfirmed, 0 unread, 0 never read back
+  press acceptance            no transition was graded
+  stop reason                 campaign-abort (adb device-local executor: action clear-1 overlaps the previous HID macro)

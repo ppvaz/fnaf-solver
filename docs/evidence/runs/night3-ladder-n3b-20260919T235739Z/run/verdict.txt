@@ -1,0 +1,18 @@
+run          night3-ladder-n3b-20260919T235739Z
+bundle       artifacts/toys-n34
+campaign dir artifacts/campaign-2026-09-19T23-57-54.417Z
+campaign exit 2
+--- attempt 1 of 1: artifacts/campaign-2026-09-19T23-57-54.417Z ---
+--- modern campaign bundle (executor-owned facts) ---
+  night reached               yes
+  arm mode                    observe-once
+  arm                         VERIFIED on attempt 1 (0 retries, 1 samples)
+  arm verified at             7743 ms
+  parked prefix (plan)        UNKNOWN
+  PHASE LAG (suffix shift)    none -- observe-once never parks the stream
+  cycle gates                 37 (37 agreed, 0 corrected, 0 aborted)
+  gate lag                    UNKNOWN
+  delivered offset            UNKNOWN
+  corrections landed          0 confirmed, 0 unconfirmed, 0 unread, 0 never read back
+  press acceptance            3 graded -- 2 UNKNOWN, 1 PASS
+  stop reason                 campaign-abort (device: lifecycle left night state (static))

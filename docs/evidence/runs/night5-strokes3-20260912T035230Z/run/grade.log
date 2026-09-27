@@ -1,0 +1,1107 @@
+==============================================================
+run: night5-strokes3-20260912T035230Z
+==============================================================
+capture: night5-strokes3-20260912T035230Z.mp4
+hid trace: MISSING (run with HID_TRACE_RUN=1)
+input trace: none (run atrace-input.sh around the command)
+SurfaceFlinger latency: none (set SF_LAYER for capture)
+cue trace: none (run with CUE_HELPER=1)
+legacy night PCM: none (receiver owns live audio)
+audio facts: none (run with external authority socket)
+session manifest: none (unmanifested run)
+campaign bundle: artifacts/campaign-2026-09-12T03-52-45.878Z
+frame trace: none (run query-cue-helper.sh trace start/stop around the run)
+capture rate: 55 fps (ffprobe 1066680000/19565801)
+  using measured 55 fps for timing-sensitive graders (nominal 60)
+
+--- session manifest (v1 provenance contract) ---
+  no night5-strokes3-20260912T035230Z-session.json: this run is unmanifested, so nothing below can
+  name its game build, model hashes, clock alignment or win evidence.
+  Nothing was validated.
+  Run under tools/device/trial.sh, which emits one.
+
+[ 1/19   5%] --- survival (the only number that is a run length) ---
+           ... survival (the only number that is a run length) still running (20s)
+tools/device/../../captures/night5-strokes3-20260912T035230Z.mp4: 870 frames at 4.0 fps
+  night HUD appears at 31.8s
+  1 HUD-absent stretches contain no death static -- the monitor is up; longest 25.8s at 191.8s
+  1 of them go fully dark and the HUD returns after -- longest 25.8s at 191.8s. A dark camera, a raised mask and a death minigame are not separated here: UNKNOWN(dark is ambiguous)
+  HUD last seen at 191.5s of 217.5s recorded
+  ALIVE for at least 160.0s -- nothing in this recording shows the run ending, so this is a lower bound
+[ 1/19   5%] survival (the only number that is a run length) took 37s (pipeline 37s)
+
+--- input dispatch / frame landing (Perfetto) ---
+  no input trace kept for night5-strokes3-20260912T035230Z; rendered video cannot establish dispatch.
+
+--- clock transitions (HUD first frame, 1 AM) ---
+HUD first=31800ms; 1 AM=104473ms; delta=72673ms; resolution=18ms
+
+[ 2/19  10%] --- camera selections ---
+           ... camera selections still running (20s)
+           ... camera selections still running (40s)
+tools/device/../../captures/night5-strokes3-20260912T035230Z.mp4: selected-camera trace at 55 fps
+  cam 11   35.47s ->  35.93s  (0.45s)
+  cam 11   36.98s ->  39.11s  (2.13s)
+  cam 11   45.45s ->  49.04s  (3.58s)
+  cam 11   55.42s ->  59.49s  (4.07s)
+  cam 11   69.33s ->  69.53s  (0.20s)
+  cam 11   75.42s ->  79.07s  (3.65s)
+  cam 11   85.44s ->  89.05s  (3.62s)
+  cam 11   95.45s ->  99.05s  (3.60s)
+  cam 11  105.44s -> 109.07s  (3.64s)
+  cam 11  115.44s -> 119.07s  (3.64s)
+  cam 11  125.47s -> 129.09s  (3.62s)
+  cam 11  135.42s -> 139.05s  (3.64s)
+  cam 11  145.45s -> 149.07s  (3.62s)
+  cam 11  155.44s -> 159.04s  (3.60s)
+  cam 11  165.44s -> 169.05s  (3.62s)
+  cam 11  175.44s -> 179.05s  (3.62s)
+  cam 11  185.47s -> 189.07s  (3.60s)
+  cam 04  197.78s -> 197.84s  (0.05s)
+  cam 07  197.84s -> 197.91s  (0.07s)
+summary: 0 complete 10-04-07-11 sweeps, 0 incomplete sweep starts
+[ 2/19  10%] camera selections took 45s (pipeline 125s)
+
+[ 3/19  15%] --- camera light actually flashing ---
+           ... camera light actually flashing still running (20s)
+           ... camera light actually flashing still running (40s)
+           ... camera light actually flashing still running (60s)
+           ... camera light actually flashing still running (80s)
+           ... camera light actually flashing still running (100s)
+           ... camera light actually flashing still running (120s)
+tools/device/../../captures/night5-strokes3-20260912T035230Z.mp4: signature sweepcheck-signature.json  (sweep lit iff >=2/3 cams)
+  sweep  1: cam10=dark  cam04=dark  cam07=dark   -> DARK
+summary: 0/1 sweeps lit (>=2 of 3 cameras)
+  ^ FAILED (resource-limited or diagnostic error)
+[ 3/19  15%] camera light actually flashing took 129s (pipeline 254s)
+
+[ 4/19  21%] --- keyframes (what the run contained) ---
+           ... keyframes (what the run contained) still running (20s)
+           ... keyframes (what the run contained) still running (40s)
+           ... keyframes (what the run contained) still running (60s)
+tools/device/../../captures/night5-strokes3-20260912T035230Z.mp4: 435 frames at 2.0 fps, 12 kept
+  timestamps: 0.0s 2.0s 21.5s 35.0s 54.5s 76.0s 128.0s 139.0s 145.0s 159.5s 192.0s 197.5s
+  sheet: tools/device/../../captures/night5-strokes3-20260912T035230Z-keyframes.png
+[ 4/19  21%] keyframes (what the run contained) took 65s (pipeline 319s)
+
+[ 5/19  26%] --- music box ---
+           ... music box still running (20s)
+tools/device/../../captures/night5-strokes3-20260912T035230Z.mp4: 217.42s sampled at 12 fps
+  cam11  37.17s ->  39.00s   75.6% ->  91.5%  (range  75.6- 91.5%)
+  cam11  45.58s ->  48.83s   72.3% -> 100.0%  (range  72.3-100.0%)
+  cam11  55.58s ->  58.83s   72.3% -> 100.0%  (range  72.3-100.0%)
+  cam11  75.58s ->  78.92s   10.2% ->  67.8%  (range  10.2- 67.8%)
+  cam11  85.58s ->  88.83s   24.8% ->  78.1%  (range  24.8- 78.1%)
+  cam11  95.58s ->  98.92s   42.3% ->  91.2%  (range  42.3- 91.2%)
+  cam11 105.58s -> 108.92s   67.8% -> 100.0%  (range  67.8-100.0%)
+  cam11 115.67s -> 118.92s   72.3% -> 100.0%  (range  72.3-100.0%)
+  cam11 125.58s -> 128.92s   72.3% -> 100.0%  (range  72.3-100.0%)
+  cam11 135.58s -> 138.83s   72.3% -> 100.0%  (range  72.3-100.0%)
+  cam11 145.58s -> 148.92s   72.3% -> 100.0%  (range  72.3-100.0%)
+  cam11 155.58s -> 158.83s   72.3% -> 100.0%  (range  72.3-100.0%)
+  cam11 165.58s -> 168.83s   72.3% -> 100.0%  (range  72.3-100.0%)
+  cam11 175.58s -> 178.83s   72.3% -> 100.0%  (range  72.3-100.0%)
+  cam11 185.58s -> 188.83s   72.3% -> 100.0%  (range  72.3-100.0%)
+  cam11 197.67s -> 197.75s    0.0% ->   0.0%  (range   0.0-  0.0%)
+[ 5/19  26%] music box took 35s (pipeline 354s)
+
+[ 6/19  31%] --- office / mask / camera intervals ---
+           ... office / mask / camera intervals still running (20s)
+tools/device/../../captures/night5-strokes3-20260912T035230Z.mp4: 217.42s sampled at 12 fps
+  camera   0.25s ->   0.58s  (0.33s)
+  camera   1.17s ->   2.42s  (1.25s)
+  camera  14.08s ->  17.58s  (3.50s)
+  camera  18.17s ->  19.75s  (1.58s)
+  camera  21.58s ->  23.58s  (2.00s)
+  camera  24.25s ->  27.17s  (2.92s)
+  office  31.83s ->  35.00s  (3.17s)
+  camera  35.25s ->  36.08s  (0.83s)
+  office  36.33s ->  36.67s  (0.33s)
+  camera  36.92s ->  39.08s  (2.17s)
+  mask    39.67s ->  44.33s  (4.67s)  <-- latched mask
+  office  44.58s ->  45.25s  (0.67s)
+  camera  45.33s ->  49.00s  (3.67s)
+  office  49.25s ->  49.50s  (0.25s)
+  mask    49.58s ->  54.25s  (4.67s)  <-- latched mask
+  office  54.42s ->  55.17s  (0.75s)
+  camera  55.33s ->  59.50s  (4.17s)
+  office  59.67s ->  60.42s  (0.75s)
+  mask    60.58s ->  64.33s  (3.75s)  <-- latched mask
+  office  64.58s ->  65.42s  (0.83s)
+  office  65.50s ->  68.92s  (3.42s)
+  hall    68.92s ->  69.17s  (0.25s)
+  camera  69.25s ->  69.50s  (0.25s)
+  office  69.67s ->  70.42s  (0.75s)
+  mask    70.58s ->  74.33s  (3.75s)  <-- latched mask
+  office  74.58s ->  75.25s  (0.67s)
+  camera  75.33s ->  79.08s  (3.75s)
+  mask    79.58s ->  84.33s  (4.75s)  <-- latched mask
+  office  84.58s ->  85.25s  (0.67s)
+  camera  85.33s ->  89.08s  (3.75s)
+  mask    89.58s ->  94.33s  (4.75s)  <-- latched mask
+  office  94.58s ->  95.08s  (0.50s)
+  camera  95.33s ->  99.08s  (3.75s)
+  mask    99.58s -> 104.33s  (4.75s)  <-- latched mask
+  office 104.58s -> 105.17s  (0.58s)
+  camera 105.33s -> 109.08s  (3.75s)
+  mask   109.67s -> 114.33s  (4.67s)  <-- latched mask
+  office 114.58s -> 115.17s  (0.58s)
+  camera 115.33s -> 119.08s  (3.75s)
+  mask   119.42s -> 125.00s  (5.58s)  <-- latched mask
+  camera 125.33s -> 129.08s  (3.75s)
+  mask   129.67s -> 134.33s  (4.67s)  <-- latched mask
+  office 134.42s -> 135.25s  (0.83s)
+  camera 135.33s -> 139.50s  (4.17s)
+  mask   139.50s -> 144.92s  (5.42s)  <-- latched mask
+  camera 145.33s -> 149.08s  (3.75s)
+  mask   149.58s -> 154.33s  (4.75s)  <-- latched mask
+  office 154.42s -> 155.17s  (0.75s)
+  camera 155.33s -> 159.00s  (3.67s)
+  mask   159.58s -> 164.33s  (4.75s)  <-- latched mask
+  office 164.42s -> 165.17s  (0.75s)
+  camera 165.33s -> 169.08s  (3.75s)
+  mask   169.58s -> 174.25s  (4.67s)  <-- latched mask
+  office 174.58s -> 175.17s  (0.58s)
+  camera 175.33s -> 179.08s  (3.75s)
+  mask   179.58s -> 184.33s  (4.75s)  <-- latched mask
+  camera 185.33s -> 189.08s  (3.75s)
+  mask   189.67s -> 191.83s  (2.17s)  <-- latched mask
+  camera 192.08s -> 196.92s  (4.83s)
+  camera 201.50s -> 201.83s  (0.33s)
+  camera 202.42s -> 203.08s  (0.67s)
+  camera 203.67s -> 204.50s  (0.83s)
+  camera 215.00s -> 216.75s  (1.75s)
+summary: 28 camera intervals, 1 visible hall flashes, 16 latched-mask intervals
+note: visible hall flashes are only a rendering lower bound; the sourced movement blackout can hide logically accepted Foxy flashes
+[ 6/19  31%] office / mask / camera intervals took 33s (pipeline 387s)
+
+[ 7/19  36%] --- run timeline and terminal outcome ---
+           ... run timeline and terminal outcome still running (20s)
+           ... run timeline and terminal outcome still running (40s)
+           ... run timeline and terminal outcome still running (60s)
+tools/device/../../captures/night5-strokes3-20260912T035230Z.mp4: 435 frames at 2.0 fps, 640x288
+      0.0s ->     4.0s  (   4.0s)  other
+      4.0s ->     8.5s  (   4.5s)  camera
+      8.5s ->    11.0s  (   2.5s)  dark
+     11.0s ->    13.5s  (   2.5s)  camera
+     13.5s ->    27.0s  (  13.5s)  other
+     27.0s ->    29.5s  (   2.5s)  intro
+     29.5s ->    32.0s  (   2.5s)  dark
+     32.0s ->    37.0s  (   5.0s)  office
+     37.0s ->    39.5s  (   2.5s)  camera
+     39.5s ->    45.5s  (   6.0s)  mask
+     45.5s ->    49.5s  (   4.0s)  camera
+     49.5s ->    55.5s  (   6.0s)  mask
+     55.5s ->    60.5s  (   5.0s)  camera
+     60.5s ->    64.5s  (   4.0s)  mask
+     64.5s ->    70.5s  (   6.0s)  office
+     70.5s ->    75.5s  (   5.0s)  mask
+     75.5s ->    79.5s  (   4.0s)  camera
+     79.5s ->    85.5s  (   6.0s)  mask
+     85.5s ->    89.5s  (   4.0s)  camera
+     89.5s ->    95.5s  (   6.0s)  mask
+     95.5s ->    99.5s  (   4.0s)  camera
+     99.5s ->   105.5s  (   6.0s)  mask
+    105.5s ->   109.5s  (   4.0s)  camera
+    109.5s ->   115.5s  (   6.0s)  mask
+    115.5s ->   119.5s  (   4.0s)  camera
+    119.5s ->   125.5s  (   6.0s)  mask
+    125.5s ->   129.5s  (   4.0s)  camera
+    129.5s ->   135.5s  (   6.0s)  mask
+    135.5s ->   140.0s  (   4.5s)  camera
+    140.0s ->   145.5s  (   5.5s)  mask
+    145.5s ->   149.5s  (   4.0s)  camera
+    149.5s ->   155.5s  (   6.0s)  mask
+    155.5s ->   159.0s  (   3.5s)  camera
+    159.0s ->   161.0s  (   2.0s)  office
+    161.0s ->   165.5s  (   4.5s)  mask
+    165.5s ->   169.5s  (   4.0s)  camera
+    169.5s ->   175.5s  (   6.0s)  mask
+    175.5s ->   179.5s  (   4.0s)  camera
+    179.5s ->   185.5s  (   6.0s)  mask
+    185.5s ->   189.5s  (   4.0s)  camera
+    189.5s ->   192.5s  (   3.0s)  mask
+    192.5s ->   198.5s  (   6.0s)  other
+    198.5s ->   201.5s  (   3.0s)  unknown
+    201.5s ->   205.0s  (   3.5s)  other
+    205.0s ->   209.5s  (   4.5s)  camera
+    209.5s ->   212.0s  (   2.5s)  dark
+    212.0s ->   214.5s  (   2.5s)  camera
+    214.5s ->   217.5s  (   3.0s)  other
+
+  TERMINAL: unknown
+  nothing terminal was captured; the recording may stop before the end of the night
+
+  VISUAL CAUSE CANDIDATES (shadow-only)
+    39.58s  withered-bonnie (1 sample(s))
+    44.33s  withered-bonnie (1 sample(s))
+    49.50s  withered-bonnie (1 sample(s))
+    60.42s  withered-bonnie (1 sample(s))
+    64.33s  withered-bonnie (1 sample(s))
+    70.42s  withered-bonnie (1 sample(s))
+    74.33s  withered-bonnie (1 sample(s))
+    79.50s  withered-bonnie (1 sample(s))
+    84.33s  withered-bonnie (1 sample(s))
+    89.50s  withered-bonnie (1 sample(s))
+    94.33s  withered-bonnie (1 sample(s))
+    99.50s  withered-bonnie (1 sample(s))
+    104.33s  withered-bonnie (1 sample(s))
+    114.33s  withered-bonnie (1 sample(s))
+    134.33s  withered-bonnie (1 sample(s))
+    134.50s  withered-bonnie (1 sample(s))
+    149.50s  withered-bonnie (1 sample(s))
+    154.33s  withered-bonnie (1 sample(s))
+    154.50s  withered-bonnie (1 sample(s))
+    164.33s  withered-bonnie (1 sample(s))
+    169.50s  withered-bonnie (1 sample(s))
+    179.50s  withered-bonnie (1 sample(s))
+    184.33s  withered-bonnie (1 sample(s))
+    191.92s  withered-bonnie (1 sample(s))
+[ 7/19  36%] run timeline and terminal outcome took 79s (pipeline 466s)
+
+[ 8/19  42%] --- campaign bundle (executor-owned facts) ---
+--- modern campaign bundle (executor-owned facts) ---
+  night reached               yes
+  arm mode                    observe-once
+  arm                         VERIFIED on attempt 1 (0 retries, 1 samples)
+  arm verified at             8056 ms
+  parked prefix (plan)        UNKNOWN
+  PHASE LAG (suffix shift)    none -- observe-once never parks the stream
+  cycle gates                 16 (14 agreed, 2 corrected, 0 aborted)
+  gate lag                    UNKNOWN
+  delivered offset            UNKNOWN
+  corrections at              25200 ms, 35200 ms
+  press acceptance            3 graded -- 2 UNKNOWN, 1 PASS
+  stop reason                 campaign-abort (device: lifecycle left night state (static))
+[ 8/19  42%] campaign bundle (executor-owned facts) took 0s (pipeline 466s)
+
+[ 9/19  47%] --- delivered phase vs the model band ---
+           ... delivered phase vs the model band still running (20s)
+{
+  "schema": "device-phase-reconstruction-v1",
+  "origin": {
+    "kind": "lifecycle-classification",
+    "nightGoAt": 1789185185773,
+    "releasedAt": 1789185185774,
+    "errorVersusFirstNightFrameMs": "UNKNOWN",
+    "bracketedByMs": 2792,
+    "priorSampleLabel": "unknown=dark-frame-no-text",
+    "observationCadenceMs": {
+      "min": 801,
+      "p50": 1106,
+      "max": 13753
+    }
+  },
+  "plannedPhaseOffsetMs": 0,
+  "actionCount": 298,
+  "arm": null,
+  "cycles": [
+    {
+      "gateAtMs": 5200,
+      "nextActionId": "toys-1",
+      "status": "AGREED",
+      "believedMaskOn": true,
+      "observedMaskOn": true,
+      "maskEvidence": "button-stroke:mask-on",
+      "readCount": 1,
+      "gateLagMs": null,
+      "deliveredOffsetMs": null
+    },
+    {
+      "gateAtMs": 15200,
+      "nextActionId": "toys-1",
+      "status": "AGREED",
+      "believedMaskOn": true,
+      "observedMaskOn": true,
+      "maskEvidence": "button-stroke:mask-on",
+      "readCount": 1,
+      "gateLagMs": null,
+      "deliveredOffsetMs": null
+    },
+    {
+      "gateAtMs": 25200,
+      "nextActionId": "toys-1",
+      "status": "CORRECTED",
+      "believedMaskOn": true,
+      "observedMaskOn": false,
+      "maskEvidence": "button-stroke:office",
+      "readCount": 1,
+      "gateLagMs": null,
+      "deliveredOffsetMs": null
+    },
+    {
+      "gateAtMs": 35200,
+      "nextActionId": "toys-1",
+      "status": "CORRECTED",
+      "believedMaskOn": true,
+      "observedMaskOn": false,
+      "maskEvidence": "button-stroke:office",
+      "readCount": 1,
+      "gateLagMs": null,
+      "deliveredOffsetMs": null
+    },
+    {
+      "gateAtMs": 45200,
+      "nextActionId": "toys-1",
+      "status": "AGREED",
+      "believedMaskOn": true,
+      "observedMaskOn": true,
+      "maskEvidence": "button-stroke:mask-on",
+      "readCount": 1,
+      "gateLagMs": null,
+      "deliveredOffsetMs": null
+    },
+    {
+      "gateAtMs": 55200,
+      "nextActionId": "toys-1",
+      "status": "AGREED",
+      "believedMaskOn": true,
+      "observedMaskOn": true,
+      "maskEvidence": "button-stroke:mask-on",
+      "readCount": 1,
+      "gateLagMs": null,
+      "deliveredOffsetMs": null
+    },
+    {
+      "gateAtMs": 65200,
+      "nextActionId": "toys-1",
+      "status": "AGREED",
+      "believedMaskOn": true,
+      "observedMaskOn": true,
+      "maskEvidence": "button-stroke:mask-on",
+      "readCount": 1,
+      "gateLagMs": null,
+      "deliveredOffsetMs": null
+    },
+    {
+      "gateAtMs": 75200,
+      "nextActionId": "toys-1",
+      "status": "AGREED",
+      "believedMaskOn": true,
+      "observedMaskOn": true,
+      "maskEvidence": "button-stroke:mask-on",
+      "readCount": 1,
+      "gateLagMs": null,
+      "deliveredOffsetMs": null
+    },
+    {
+      "gateAtMs": 85200,
+      "nextActionId": "toys-1",
+      "status": "AGREED",
+      "believedMaskOn": true,
+      "observedMaskOn": true,
+      "maskEvidence": "button-stroke:mask-on",
+      "readCount": 1,
+      "gateLagMs": null,
+      "deliveredOffsetMs": null
+    },
+    {
+      "gateAtMs": 95200,
+      "nextActionId": "toys-1",
+      "status": "AGREED",
+      "believedMaskOn": true,
+      "observedMaskOn": true,
+      "maskEvidence": "button-stroke:mask-on",
+      "readCount": 1,
+      "gateLagMs": null,
+      "deliveredOffsetMs": null
+    },
+    {
+      "gateAtMs": 105200,
+      "nextActionId": "toys-1",
+      "status": "AGREED",
+      "believedMaskOn": true,
+      "observedMaskOn": true,
+      "maskEvidence": "button-stroke:mask-on",
+      "readCount": 1,
+      "gateLagMs": null,
+      "deliveredOffsetMs": null
+    },
+    {
+      "gateAtMs": 115200,
+      "nextActionId": "toys-1",
+      "status": "AGREED",
+      "believedMaskOn": true,
+      "observedMaskOn": true,
+      "maskEvidence": "button-stroke:mask-on",
+      "readCount": 1,
+      "gateLagMs": null,
+      "deliveredOffsetMs": null
+    },
+    {
+      "gateAtMs": 125200,
+      "nextActionId": "toys-1",
+      "status": "AGREED",
+      "believedMaskOn": true,
+      "observedMaskOn": true,
+      "maskEvidence": "button-stroke:mask-on",
+      "readCount": 1,
+      "gateLagMs": null,
+      "deliveredOffsetMs": null
+    },
+    {
+      "gateAtMs": 135200,
+      "nextActionId": "toys-1",
+      "status": "AGREED",
+      "believedMaskOn": true,
+      "observedMaskOn": true,
+      "maskEvidence": "button-stroke:mask-on",
+      "readCount": 1,
+      "gateLagMs": null,
+      "deliveredOffsetMs": null
+    },
+    {
+      "gateAtMs": 145200,
+      "nextActionId": "toys-1",
+      "status": "AGREED",
+      "believedMaskOn": true,
+      "observedMaskOn": true,
+      "maskEvidence": "button-stroke:mask-on",
+      "readCount": 1,
+      "gateLagMs": null,
+      "deliveredOffsetMs": null
+    },
+    {
+      "gateAtMs": 155200,
+      "nextActionId": "toys-1",
+      "status": "AGREED",
+      "believedMaskOn": true,
+      "observedMaskOn": true,
+      "maskEvidence": "button-stroke:mask-on",
+      "readCount": 1,
+      "gateLagMs": null,
+      "deliveredOffsetMs": null
+    }
+  ],
+  "deliveredOffsetMs": null,
+  "terminal": {
+    "lastNightAt": 1789185343028,
+    "terminalAt": 1789185344778,
+    "terminalLabel": "state=static",
+    "bracketMs": 1750,
+    "attribution": "UNKNOWN"
+  },
+  "run": "artifacts/campaign-2026-09-12T03-52-45.878Z",
+  "model": {
+    "night": 5,
+    "seeds": 100,
+    "ventMaskTicks": 5,
+    "rows": [
+      {
+        "epochMs": 0,
+        "maskTicks": 5,
+        "wins": 100,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {}
+      },
+      {
+        "epochMs": 16.67,
+        "maskTicks": 5,
+        "wins": 100,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {}
+      },
+      {
+        "epochMs": 33.33,
+        "maskTicks": 5,
+        "wins": 100,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {}
+      },
+      {
+        "epochMs": 50,
+        "maskTicks": 5,
+        "wins": 100,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {}
+      },
+      {
+        "epochMs": 66.67,
+        "maskTicks": 5,
+        "wins": 100,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {}
+      },
+      {
+        "epochMs": 83.33,
+        "maskTicks": 5,
+        "wins": 100,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {}
+      },
+      {
+        "epochMs": 100,
+        "maskTicks": 5,
+        "wins": 100,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {}
+      },
+      {
+        "epochMs": 116.67,
+        "maskTicks": 5,
+        "wins": 0,
+        "armed": 0,
+        "seeds": 100,
+        "deaths": {
+          "puppet": 100
+        }
+      },
+      {
+        "epochMs": 133.33,
+        "maskTicks": 5,
+        "wins": 0,
+        "armed": 0,
+        "seeds": 100,
+        "deaths": {
+          "puppet": 100
+        }
+      },
+      {
+        "epochMs": 150,
+        "maskTicks": 5,
+        "wins": 0,
+        "armed": 0,
+        "seeds": 100,
+        "deaths": {
+          "puppet": 100
+        }
+      },
+      {
+        "epochMs": 166.67,
+        "maskTicks": 5,
+        "wins": 100,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {}
+      },
+      {
+        "epochMs": 183.33,
+        "maskTicks": 5,
+        "wins": 100,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {}
+      },
+      {
+        "epochMs": 200,
+        "maskTicks": 5,
+        "wins": 100,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {}
+      },
+      {
+        "epochMs": 216.67,
+        "maskTicks": 5,
+        "wins": 100,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {}
+      },
+      {
+        "epochMs": 233.33,
+        "maskTicks": 5,
+        "wins": 100,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {}
+      },
+      {
+        "epochMs": 250,
+        "maskTicks": 5,
+        "wins": 100,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {}
+      },
+      {
+        "epochMs": 266.67,
+        "maskTicks": 5,
+        "wins": 100,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {}
+      },
+      {
+        "epochMs": 283.33,
+        "maskTicks": 5,
+        "wins": 100,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {}
+      },
+      {
+        "epochMs": 300,
+        "maskTicks": 5,
+        "wins": 100,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {}
+      },
+      {
+        "epochMs": 316.67,
+        "maskTicks": 5,
+        "wins": 0,
+        "armed": 0,
+        "seeds": 100,
+        "deaths": {
+          "puppet": 100
+        }
+      },
+      {
+        "epochMs": 333.33,
+        "maskTicks": 5,
+        "wins": 0,
+        "armed": 0,
+        "seeds": 100,
+        "deaths": {
+          "puppet": 100
+        }
+      },
+      {
+        "epochMs": 350,
+        "maskTicks": 5,
+        "wins": 0,
+        "armed": 0,
+        "seeds": 100,
+        "deaths": {
+          "puppet": 100
+        }
+      },
+      {
+        "epochMs": 366.67,
+        "maskTicks": 4,
+        "wins": 0,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {
+          "inside-office": 23,
+          "foxy": 77
+        }
+      },
+      {
+        "epochMs": 383.33,
+        "maskTicks": 4,
+        "wins": 0,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {
+          "inside-office": 23,
+          "foxy": 77
+        }
+      },
+      {
+        "epochMs": 400,
+        "maskTicks": 4,
+        "wins": 0,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {
+          "inside-office": 24,
+          "foxy": 76
+        }
+      },
+      {
+        "epochMs": 416.67,
+        "maskTicks": 4,
+        "wins": 0,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {
+          "inside-office": 24,
+          "foxy": 76
+        }
+      },
+      {
+        "epochMs": 433.33,
+        "maskTicks": 4,
+        "wins": 0,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {
+          "inside-office": 24,
+          "foxy": 76
+        }
+      },
+      {
+        "epochMs": 450,
+        "maskTicks": 4,
+        "wins": 0,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {
+          "inside-office": 24,
+          "foxy": 76
+        }
+      },
+      {
+        "epochMs": 466.67,
+        "maskTicks": 4,
+        "wins": 0,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {
+          "inside-office": 35,
+          "foxy": 65
+        }
+      },
+      {
+        "epochMs": 483.33,
+        "maskTicks": 4,
+        "wins": 0,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {
+          "foxy": 68,
+          "inside-office": 32
+        }
+      },
+      {
+        "epochMs": 500,
+        "maskTicks": 4,
+        "wins": 0,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {
+          "foxy": 68,
+          "inside-office": 32
+        }
+      },
+      {
+        "epochMs": 516.67,
+        "maskTicks": 4,
+        "wins": 0,
+        "armed": 0,
+        "seeds": 100,
+        "deaths": {
+          "puppet": 100
+        }
+      },
+      {
+        "epochMs": 533.33,
+        "maskTicks": 4,
+        "wins": 0,
+        "armed": 0,
+        "seeds": 100,
+        "deaths": {
+          "puppet": 100
+        }
+      },
+      {
+        "epochMs": 550,
+        "maskTicks": 4,
+        "wins": 0,
+        "armed": 0,
+        "seeds": 100,
+        "deaths": {
+          "puppet": 100
+        }
+      },
+      {
+        "epochMs": 566.67,
+        "maskTicks": 4,
+        "wins": 0,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {
+          "foxy": 68,
+          "inside-office": 32
+        }
+      },
+      {
+        "epochMs": 583.33,
+        "maskTicks": 4,
+        "wins": 0,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {
+          "foxy": 68,
+          "inside-office": 32
+        }
+      },
+      {
+        "epochMs": 600,
+        "maskTicks": 4,
+        "wins": 0,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {
+          "foxy": 68,
+          "inside-office": 32
+        }
+      },
+      {
+        "epochMs": 616.67,
+        "maskTicks": 4,
+        "wins": 0,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {
+          "foxy": 68,
+          "inside-office": 32
+        }
+      },
+      {
+        "epochMs": 633.33,
+        "maskTicks": 4,
+        "wins": 0,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {
+          "foxy": 68,
+          "inside-office": 32
+        }
+      },
+      {
+        "epochMs": 650,
+        "maskTicks": 4,
+        "wins": 0,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {
+          "foxy": 68,
+          "inside-office": 32
+        }
+      },
+      {
+        "epochMs": 666.67,
+        "maskTicks": 4,
+        "wins": 0,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {
+          "foxy": 68,
+          "inside-office": 32
+        }
+      },
+      {
+        "epochMs": 683.33,
+        "maskTicks": 4,
+        "wins": 0,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {
+          "foxy": 68,
+          "inside-office": 32
+        }
+      },
+      {
+        "epochMs": 700,
+        "maskTicks": 4,
+        "wins": 0,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {
+          "foxy": 68,
+          "inside-office": 32
+        }
+      },
+      {
+        "epochMs": 716.67,
+        "maskTicks": 4,
+        "wins": 0,
+        "armed": 0,
+        "seeds": 100,
+        "deaths": {
+          "puppet": 100
+        }
+      },
+      {
+        "epochMs": 733.33,
+        "maskTicks": 4,
+        "wins": 0,
+        "armed": 0,
+        "seeds": 100,
+        "deaths": {
+          "puppet": 100
+        }
+      },
+      {
+        "epochMs": 750,
+        "maskTicks": 4,
+        "wins": 0,
+        "armed": 0,
+        "seeds": 100,
+        "deaths": {
+          "puppet": 100
+        }
+      },
+      {
+        "epochMs": 766.67,
+        "maskTicks": 4,
+        "wins": 0,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {
+          "foxy": 70,
+          "inside-office": 30
+        }
+      },
+      {
+        "epochMs": 783.33,
+        "maskTicks": 4,
+        "wins": 0,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {
+          "foxy": 70,
+          "inside-office": 30
+        }
+      },
+      {
+        "epochMs": 800,
+        "maskTicks": 5,
+        "wins": 100,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {}
+      },
+      {
+        "epochMs": 816.67,
+        "maskTicks": 5,
+        "wins": 100,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {}
+      },
+      {
+        "epochMs": 833.33,
+        "maskTicks": 5,
+        "wins": 100,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {}
+      },
+      {
+        "epochMs": 850,
+        "maskTicks": 5,
+        "wins": 100,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {}
+      },
+      {
+        "epochMs": 866.67,
+        "maskTicks": 5,
+        "wins": 100,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {}
+      },
+      {
+        "epochMs": 883.33,
+        "maskTicks": 5,
+        "wins": 100,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {}
+      },
+      {
+        "epochMs": 900,
+        "maskTicks": 5,
+        "wins": 100,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {}
+      },
+      {
+        "epochMs": 916.67,
+        "maskTicks": 5,
+        "wins": 0,
+        "armed": 0,
+        "seeds": 100,
+        "deaths": {
+          "puppet": 100
+        }
+      },
+      {
+        "epochMs": 933.33,
+        "maskTicks": 5,
+        "wins": 0,
+        "armed": 0,
+        "seeds": 100,
+        "deaths": {
+          "puppet": 100
+        }
+      },
+      {
+        "epochMs": 950,
+        "maskTicks": 5,
+        "wins": 0,
+        "armed": 0,
+        "seeds": 100,
+        "deaths": {
+          "puppet": 100
+        }
+      },
+      {
+        "epochMs": 966.67,
+        "maskTicks": 5,
+        "wins": 100,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {}
+      },
+      {
+        "epochMs": 983.33,
+        "maskTicks": 5,
+        "wins": 100,
+        "armed": 100,
+        "seeds": 100,
+        "deaths": {}
+      }
+    ],
+    "lossBands": [
+      {
+        "fromMs": 116.67,
+        "maskTicks": 5,
+        "toMs": 166.67
+      },
+      {
+        "fromMs": 316.67,
+        "maskTicks": 5,
+        "toMs": 800
+      },
+      {
+        "fromMs": 916.67,
+        "maskTicks": 5,
+        "toMs": 966.67
+      }
+    ],
+    "uncontrolledPhase": {
+      "night": 5,
+      "runs": 3000,
+      "wins": 1233,
+      "armed": 2248,
+      "deaths": {
+        "foxy": 698,
+        "puppet": 752,
+        "inside-office": 317
+      },
+      "note": "epoch drawn uniformly over one game second; the gate scores epoch 0 only"
+    }
+  }
+}
+[ 9/19  47%] delivered phase vs the model band took 36s (pipeline 502s)
+
+--- native-frame state coverage for the actuation ---
+  no frame trace for night5-strokes3-20260912T035230Z: frame-level state coverage and input/frame
+  alignment are UNKNOWN. Nothing was measured.
+
+--- elegance (inputs sent vs needed) ---
+  no driver log for night5-strokes3-20260912T035230Z; nothing to count. Runs before 2026-08-26 have none.
+
+--- Balloon Boy's vent bang ---
+  no raw audio kept for night5-strokes3-20260912T035230Z; scan-night requires a receiver PCM capture.
+  external authority facts are also absent; run with CUE_AUDIO=1 AUDIO_AUTHORITY_SOCKET=PATH.
+
+==============================================================
+VERDICT: at least one instrument FAILED for night5-strokes3-20260912T035230Z -- read above
+==============================================================

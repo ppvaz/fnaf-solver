@@ -1,0 +1,14 @@
+run          night5-observeonce-20260912T003535Z
+bundle       artifacts/night5-head
+campaign dir artifacts/campaign-2026-09-12T00-35-49.814Z
+campaign exit 130
+--- modern campaign bundle (executor-owned facts) ---
+  night reached               yes
+  arm                         VERIFIED on attempt 1 (0 retries, 1 samples)
+  arm verified at             6890 ms
+  parked prefix (plan)        UNKNOWN
+  PHASE LAG (suffix shift)    UNKNOWN
+  cycle gates                 0 (0 agreed, 0 corrected, 0 aborted)
+  gate lag                    UNKNOWN
+  delivered offset            UNKNOWN
+  stop reason                 device-anr

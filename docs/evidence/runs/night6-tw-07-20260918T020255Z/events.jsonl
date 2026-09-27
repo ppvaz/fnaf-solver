@@ -1,0 +1,12 @@
+{"at":"2026-09-18T02:03:10.184Z","type":"evidence.started","evidenceDirectory":"artifacts/campaign-2026-09-18T02-03-10.182Z"}
+{"at":"2026-09-18T02:03:10.184Z","type":"arm.mode","mode":"observe-once"}
+{"at":"2026-09-18T02:03:12.187Z","type":"observation","label":"items=continue,customNight,newGame,sixthNight","frame":"00001-title-observe.py.png"}
+{"at":"2026-09-18T02:03:19.876Z","type":"menu.start-planned","residueMs":20000,"targetPhoneWallMs":1789697019424,"waitMs":19536.290283203125,"uncertaintyMs":4.357497499999226}
+{"at":"2026-09-18T02:03:39.509Z","type":"menu.start","tapHostMs":42099.354796,"tapPhoneWallMs":1789697019423.5715,"tapPhoneWallLow16":19999,"plannedPhoneWallMs":1789697019424,"lateMs":0.767909796879394,"uncertaintyMs":2.5829494999998133}
+{"at":"2026-09-18T02:03:40.862Z","type":"observation","label":"state=intro","frame":"00003-lifecycle-observe.py.png"}
+{"at":"2026-09-18T02:03:40.862Z","type":"menu.press-settled","press":1,"state":"intro"}
+{"at":1789697020921,"type":"hid.execute-entered"}
+{"at":1789697020921,"type":"hid.handoff-reused","source":"menu","readyDelayMs":0}
+{"at":"2026-09-18T02:03:40.921Z","type":"hid.schedule-start","startedAt":1789697020921,"actionCount":298,"phaseOffsetMs":0}
+{"at":"2026-09-18T02:03:42.971Z","type":"observation","label":"unknown=dark-frame-no-text","frame":"00006-lifecycle-observe.py.png"}
+{"at":"2026-09-18T02:03:44.910Z","type":"origin.anchor","status":"scheduled","aimMs":4870,"maxK":0,"onsetHostMs":47048.907368421555,"plannedAfterOnsetMs":547.874721578446,"candidates":[{"k":0,"releaseHostMs":51918.907368421555}],"authorizedAtHostMs":null,"hostClock":"performance-now-ms","wallMinusHostMs":1789696977313.1624,"reads":11,"failures":0,"onsetDeviceMs":980688969.015494,"offsetMs":-980641920.1081256,"uncertaintyMs":2.8834994999997434,"rttMs":5.766998999999487,"phoneWallMinusMonoMs":1788716335404.2537,"onsetPhoneWallMs":1789697024373.269,"onsetPhoneWallLow16":24949}

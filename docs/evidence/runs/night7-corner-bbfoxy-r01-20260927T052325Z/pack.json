@@ -1,0 +1,219 @@
+{
+  "schema": "run-pack-v1",
+  "version": 1,
+  "id": "night7-corner-bbfoxy-r01-20260927T052325Z",
+  "campaign": "campaign-2026-09-27T05-23-40.410Z",
+  "run": "night7-corner-bbfoxy-r01-20260927T052325Z",
+  "outcome": "HOLD",
+  "claimLevel": "DEVICE_MEASURED",
+  "nights": [],
+  "bundle": {
+    "path": "artifacts/night7-anchored-k3-20260927",
+    "winnerHash": "fnv1a-5c8dcb5f"
+  },
+  "files": [
+    {
+      "name": "events.jsonl",
+      "sha256": "3d69a63d694e3a7114458c2288147ac09707193cef1d4ce0ebd2fc62406d3395",
+      "bytes": 426,
+      "source": {
+        "sha256": "9c6e08430596dff2b0af6ed8c2ac39b8ff58d02ebe76ea4f7b02703ab118a9af",
+        "bytes": 357
+      },
+      "redactions": {
+        "paths": 1,
+        "pixelArrays": 0,
+        "frameRefs": 1
+      }
+    },
+    {
+      "name": "observations.jsonl",
+      "sha256": "b52a744f82893503b8899cfd00a19d773eb8f745dad525e71a1c024e87f8ccc6",
+      "bytes": 241,
+      "source": {
+        "sha256": "035401bfe00415298d13be59bea3c9e810206e63beff2dd5f8e216b2ed449958",
+        "bytes": 140
+      },
+      "redactions": {
+        "paths": 0,
+        "pixelArrays": 0,
+        "frameRefs": 1
+      }
+    },
+    {
+      "name": "request.json",
+      "sha256": "64c3b0ee8ccd91ff6e8eb8c7d1c66ce12bf0fec36b2340cd5b606b1fde003a1c",
+      "bytes": 19749,
+      "source": {
+        "sha256": "e980e510c28bef90f9b826a778c1202feeeb6f145143b56c8d82c273f7b7bbd0",
+        "bytes": 19781
+      },
+      "redactions": {
+        "paths": 1,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    },
+    {
+      "name": "result.json",
+      "sha256": "86bf7e3adadc4427a3e8ac1caeb9112229735bedaf5389cc6308e16209f0587f",
+      "bytes": 1034,
+      "source": {
+        "sha256": "86bf7e3adadc4427a3e8ac1caeb9112229735bedaf5389cc6308e16209f0587f",
+        "bytes": 1034
+      },
+      "redactions": {
+        "paths": 0,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    },
+    {
+      "name": "run/anchor-aim.err",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "source": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "redactions": {
+        "paths": 0,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    },
+    {
+      "name": "run/anchor-max-k.err",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "source": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "redactions": {
+        "paths": 0,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    },
+    {
+      "name": "run/anchor-period.err",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "source": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "redactions": {
+        "paths": 0,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    },
+    {
+      "name": "run/campaign.exit",
+      "sha256": "e00c314b8aa453abdd159f2559751098f91f2b296709f450db5fa5ee45731f88",
+      "bytes": 16,
+      "source": {
+        "sha256": "e00c314b8aa453abdd159f2559751098f91f2b296709f450db5fa5ee45731f88",
+        "bytes": 16
+      },
+      "redactions": {
+        "paths": 0,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    },
+    {
+      "name": "run/phase.log",
+      "sha256": "c8ddf82c30f6cebcae26b74848f769f8613ea009166747ea07163d6bbb771220",
+      "bytes": 668,
+      "source": {
+        "sha256": "0d7eb4ce1bb4ed7e22706ead59fd943a74739af90777ffc26451af59f6274c17",
+        "bytes": 796
+      },
+      "redactions": {
+        "paths": 4,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    },
+    {
+      "name": "run/post-run-title.txt",
+      "sha256": "f1ec8a6cbd84599f581a8647ef2be2b7ed72fe9b4066e9b91811a1d83ea3524e",
+      "bytes": 32,
+      "source": {
+        "sha256": "f1ec8a6cbd84599f581a8647ef2be2b7ed72fe9b4066e9b91811a1d83ea3524e",
+        "bytes": 32
+      },
+      "redactions": {
+        "paths": 0,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    },
+    {
+      "name": "run/run-report.json",
+      "sha256": "e4a3d6b050c1661d956dc122412b9478708c6c5cbd29635f186ec441b0f19c57",
+      "bytes": 967,
+      "source": {
+        "sha256": "e4a3d6b050c1661d956dc122412b9478708c6c5cbd29635f186ec441b0f19c57",
+        "bytes": 967
+      },
+      "redactions": {
+        "paths": 0,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    },
+    {
+      "name": "run/verdict.txt",
+      "sha256": "bdd1104a88590ba405db53e1c93669963bb7ecac08b92132a59ac911417c4ac4",
+      "bytes": 956,
+      "source": {
+        "sha256": "a5dcb52dd4cd193505d75a8560bf71413bb770ad6da9e3cb0100779b452d71aa",
+        "bytes": 1020
+      },
+      "redactions": {
+        "paths": 2,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    },
+    {
+      "name": "run/video.sha256",
+      "sha256": "4e0a051305800c402dfd4d0d7e0367c5473f736b52f78129e1b3119d151f8c06",
+      "bytes": 121,
+      "source": {
+        "sha256": "4e0a051305800c402dfd4d0d7e0367c5473f736b52f78129e1b3119d151f8c06",
+        "bytes": 121
+      },
+      "redactions": {
+        "paths": 0,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    }
+  ],
+  "withheld": [
+    {
+      "name": "00001-title-observe.py.png",
+      "sha256": "c7733e29b918fa1ac9f7fdf20fb3fe448c3a29883ed3253df85c5db18902d4f1",
+      "bytes": 2159062,
+      "kind": "frame"
+    },
+    {
+      "name": "night7-corner-bbfoxy-r01-20260927T052325Z.mp4",
+      "sha256": "a022b03bc6908ab8165e8410f2afeb44d6b6f18b78e4002dcf7fc4c1270c59c3",
+      "bytes": 14896564,
+      "kind": "video"
+    },
+    {
+      "name": "run/campaign.log",
+      "sha256": "96f79c45fa211b29d504c93844d6d894fc60b025b9e3fb07643644412478182b",
+      "bytes": 7175,
+      "kind": "other"
+    }
+  ],
+  "packer": "tools/evidence-pack.mjs"
+}

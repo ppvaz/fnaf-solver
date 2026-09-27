@@ -1,0 +1,51 @@
+{
+  "schema": "device-run-report-v1",
+  "night": {
+    "startedAt": null,
+    "releasedAt": null,
+    "reached": false
+  },
+  "arm": {
+    "mode": "observe-once",
+    "attempts": 1,
+    "retries": 0,
+    "samples": 0,
+    "verifiedAtMs": null,
+    "armReadyAtMs": null,
+    "phaseLagMs": null,
+    "status": "UNKNOWN",
+    "unresolvedReason": null
+  },
+  "cycles": {
+    "gates": 0,
+    "agreed": 0,
+    "corrected": 0,
+    "aborts": 0,
+    "gateLagMinMs": null,
+    "gateLagMaxMs": null,
+    "deliveredFirstMs": null,
+    "deliveredLastMs": null,
+    "correctedAtMs": [],
+    "correctionOutcomes": {
+      "confirmed": 0,
+      "unconfirmed": 0,
+      "unread": 0,
+      "notRead": 0
+    }
+  },
+  "effects": {
+    "total": 0,
+    "tally": {},
+    "systematicMisses": []
+  },
+  "stop": {
+    "reason": "UNKNOWN",
+    "detail": "",
+    "restarts": 0,
+    "interrupted": false
+  },
+  "counts": {
+    "evidence.started": 1,
+    "arm.mode": 1
+  }
+}

@@ -1,0 +1,24 @@
+{"at":"2026-09-12T01:01:20.336Z","type":"evidence.started","evidenceDirectory":"artifacts/campaign-2026-09-12T01-01-20.334Z"}
+{"at":"2026-09-12T01:01:20.336Z","type":"arm.mode","mode":"observe-once"}
+{"at":"2026-09-12T01:01:22.367Z","type":"observation","label":"items=continue,newGame","frame":"00001-title-observe.py.png"}
+{"at":"2026-09-12T01:01:31.821Z","type":"observation","label":"state=title","frame":"00003-lifecycle-observe.py.png"}
+{"at":"2026-09-12T01:01:34.756Z","type":"observation","label":"state=intro","frame":"00005-lifecycle-observe.py.png"}
+{"at":1789174894876,"type":"hid.execute-entered"}
+{"at":1789174894876,"type":"hid.handoff-reused","source":"menu","readyDelayMs":0}
+{"at":"2026-09-12T01:01:34.876Z","type":"hid.schedule-start","startedAt":1789174894876,"actionCount":298,"phaseOffsetMs":0}
+{"at":"2026-09-12T01:01:36.403Z","type":"observation","label":"unknown=dark-frame-no-text","frame":"00006-lifecycle-observe.py.png"}
+{"at":"2026-09-12T01:01:39.451Z","type":"observation","label":"state=night","frame":"00009-lifecycle-observe.py.png"}
+{"at":"2026-09-12T01:01:39.452Z","type":"origin.refined","authorityAtMs":1789174897139,"authorityBracketFromMs":null,"nativeAtMs":1789174897009,"nativeSamples":16,"accepted":false,"shrunkByMs":0}
+{"at":1789174897139,"type":"hid.night-go","source":"lifecycle"}
+{"at":"2026-09-12T01:01:39.452Z","type":"hid.handoff","requestedAt":1789174899452,"firstWriteAt":1789174899452,"delayMs":0,"budgetMs":100}
+{"at":"2026-09-12T01:01:39.453Z","type":"control.effect.phase","phase":"prefix","originAt":1789174899452,"originUncertaintyMs":50,"attempt":1,"transitionCount":3}
+{"at":"2026-09-12T01:01:39.453Z","type":"control.effect.expected","phase":"prefix","actionId":"opening-1","cycle":"opening","signal":"monitorUp","target":true,"contactAt":1789174899452,"windowEndAt":1789174900335,"sampleBudget":6,"originAt":1789174899452,"originUncertaintyMs":50,"attempt":1}
+{"at":"2026-09-12T01:01:39.703Z","type":"control.effect.sample","phase":"prefix","actionId":"opening-1","cycle":"opening","signal":"monitorUp","target":true,"sampleIndex":1,"readStartedAt":1789174899453,"readFinishedAt":1789174899703,"sinceContactLowerMs":1,"sinceContactUpperMs":251,"sample":{"sequence":"261","ageUs":"297021","screen":"UNKNOWN","monitorUp":null,"monitorReason":"monitor-state-unavailable","maskOn":false,"maskReason":null,"maskSource":"mask-rule","gridLuma":31,"panelSequence":"262","maskEvidence":"diagnostic-provisional:night-1-corpus,animation-unproven,blackout-unproven","visualCaptureAt":682520878.416604,"visualCaptureUncertaintyMs":0},"attempt":1}
+{"at":"2026-09-12T01:01:39.704Z","type":"control.effect.result","phase":"prefix","actionId":"opening-1","cycle":"opening","signal":"monitorUp","target":true,"contactAt":1789174899452,"windowEndAt":1789174900335,"resultAt":1789174899704,"status":"UNKNOWN","reason":"monitor-state-unavailable","latency":null,"sampleCount":1,"evidence":"calibrated","samples":[{"sequence":"261","ageUs":"297021","screen":"UNKNOWN","monitorUp":null,"monitorReason":"monitor-state-unavailable","maskOn":false,"maskReason":null,"maskSource":"mask-rule","gridLuma":31,"panelSequence":"262","maskEvidence":"diagnostic-provisional:night-1-corpus,animation-unproven,blackout-unproven","visualCaptureAt":682520878.416604,"visualCaptureUncertaintyMs":0,"readStartedAt":1789174899453,"readFinishedAt":1789174899703,"sinceContactLowerMs":1,"sinceContactUpperMs":251}],"attempt":1}
+{"at":"2026-09-12T01:01:40.165Z","type":"device.anr","count":0,"lines":[]}
+{"at":"2026-09-12T01:01:40.167Z","type":"campaign.abort.restart","reason":"startGateLedger is not defined"}
+{"at":"2026-09-12T01:01:41.675Z","type":"observation","label":"unknown=no-signature-matched","frame":"00010-lifecycle-observe.py.png"}
+{"at":"2026-09-12T01:01:42.817Z","type":"observation","label":"state=intro","frame":"00011-lifecycle-observe.py.png"}
+{"at":"2026-09-12T01:01:44.774Z","type":"observation","label":"unknown=dark-frame-no-text","frame":"00013-lifecycle-observe.py.png"}
+{"at":"2026-09-12T01:01:46.742Z","type":"observation","label":"state=title","frame":"00014-lifecycle-observe.py.png"}
+{"at":"2026-09-12T01:02:00.771Z","type":"campaign.abort.restarted","state":"title","launcher":"com.scottgames.fnaf2/.Main","cueHelperPort":49707}

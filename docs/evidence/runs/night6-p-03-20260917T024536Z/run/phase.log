@@ -1,0 +1,13 @@
+file://tools/device/phase-reconstruct.mjs:32
+const fail = message => { throw new Error(`phase reconstruction: ${message}`); };
+                                ^
+
+Error: phase reconstruction: bundle has no hid.schedule-start
+    at fail (file://tools/device/phase-reconstruct.mjs:32:33)
+    at reconstruct (file://tools/device/phase-reconstruct.mjs:151:15)
+    at file://tools/device/phase-reconstruct.mjs:371:18
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.23.2

@@ -1,0 +1,18 @@
+run          night5-contact200a-20260912T055732Z
+bundle       artifacts/night5-contact200
+campaign dir artifacts/campaign-2026-09-12T06-04-51.224Z
+campaign exit 2
+--- modern campaign bundle (executor-owned facts) ---
+  night reached               yes
+  arm mode                    observe-once
+  arm                         VERIFIED on attempt 1 (0 retries, 1 samples)
+  arm verified at             7542 ms
+  parked prefix (plan)        UNKNOWN
+  PHASE LAG (suffix shift)    none -- observe-once never parks the stream
+  cycle gates                 19 (16 agreed, 3 corrected, 0 aborted)
+  gate lag                    UNKNOWN
+  delivered offset            UNKNOWN
+  corrections at              15200 ms, 145200 ms, 165200 ms
+  corrections landed          3 confirmed, 0 unconfirmed, 0 unread, 0 never read back
+  press acceptance            3 graded -- 1 PASS, 1 UNKNOWN, 1 UNSTABLE
+  stop reason                 campaign-abort (device: lifecycle left night state (static))

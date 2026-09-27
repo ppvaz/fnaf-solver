@@ -1,0 +1,18 @@
+run          night7-night7-k3-full-04-20260915T051327Z
+bundle       artifacts/night7-anchored-k3/bundle
+campaign dir artifacts/campaign-2026-09-15T05-13-43.241Z
+campaign exit 1
+--- attempt 1 of 1: artifacts/campaign-2026-09-15T05-13-43.241Z ---
+--- modern campaign bundle (executor-owned facts) ---
+  night reached               yes
+  arm mode                    observe-once
+  arm                         UNRESOLVED (non-fatal) on attempt 1 (0 retries, 1 samples)
+  arm verified at             UNKNOWN
+  parked prefix (plan)        UNKNOWN
+  PHASE LAG (suffix shift)    none -- observe-once never parks the stream
+  cycle gates                 11 (10 agreed, 0 corrected, 1 aborted)
+  gate lag                    UNKNOWN
+  delivered offset            UNKNOWN
+  corrections landed          0 confirmed, 0 unconfirmed, 0 unread, 0 never read back
+  press acceptance            3 graded -- 2 UNKNOWN, 1 PASS
+  stop reason                 gate-abort (mask-state-unavailable)

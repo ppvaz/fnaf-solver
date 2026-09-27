@@ -1,0 +1,3 @@
+{"at":"2026-09-27T05:23:40.411Z","type":"evidence.started","evidenceDirectory":"artifacts/campaign-2026-09-27T05-23-40.410Z"}
+{"at":"2026-09-27T05:23:40.412Z","type":"arm.mode","mode":"observe-once"}
+{"at":"2026-09-27T05:23:42.476Z","type":"observation","label":"items=continue,newGame","frame":{"file":"00001-title-observe.py.png","sha256":"c7733e29b918fa1ac9f7fdf20fb3fe448c3a29883ed3253df85c5db18902d4f1","bytes":2159062}}

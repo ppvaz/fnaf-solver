@@ -1,0 +1,19 @@
+run          night3-minus3-n3-first-20260919T224721Z
+bundle       artifacts/minus3-night3
+campaign dir artifacts/campaign-2026-09-19T22-47-37.169Z
+campaign exit 2
+--- attempt 1 of 1: artifacts/campaign-2026-09-19T22-47-37.169Z ---
+--- modern campaign bundle (executor-owned facts) ---
+  night reached               yes
+  arm mode                    observe-once
+  arm                         VERIFIED on attempt 1 (0 retries, 1 samples)
+  arm verified at             6855 ms
+  parked prefix (plan)        UNKNOWN
+  PHASE LAG (suffix shift)    none -- observe-once never parks the stream
+  cycle gates                 20 (18 agreed, 2 corrected, 0 aborted)
+  gate lag                    UNKNOWN
+  delivered offset            UNKNOWN
+  corrections at              115400 ms, 145400 ms
+  corrections landed          0 confirmed, 0 unconfirmed, 0 unread, 2 never read back
+  press acceptance            2 graded -- 2 UNKNOWN
+  stop reason                 campaign-abort (device: lifecycle left night state (static))

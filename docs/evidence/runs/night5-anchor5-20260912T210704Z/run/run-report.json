@@ -1,0 +1,75 @@
+{
+  "schema": "device-run-report-v1",
+  "night": {
+    "startedAt": 1789247257227,
+    "releasedAt": 1789247257231,
+    "reached": true
+  },
+  "arm": {
+    "mode": "observe-once",
+    "attempts": 1,
+    "retries": 0,
+    "samples": 1,
+    "verifiedAtMs": 7070,
+    "armReadyAtMs": null,
+    "phaseLagMs": null,
+    "status": "VERIFIED",
+    "unresolvedReason": null
+  },
+  "cycles": {
+    "gates": 28,
+    "agreed": 27,
+    "corrected": 0,
+    "aborts": 1,
+    "gateLagMinMs": null,
+    "gateLagMaxMs": null,
+    "deliveredFirstMs": null,
+    "deliveredLastMs": null,
+    "correctedAtMs": [],
+    "correctionOutcomes": {
+      "confirmed": 0,
+      "unconfirmed": 0,
+      "unread": 0,
+      "notRead": 0
+    }
+  },
+  "effects": {
+    "total": 3,
+    "tally": {
+      "UNKNOWN": 1,
+      "PASS": 1,
+      "UNSTABLE": 1
+    },
+    "systematicMisses": []
+  },
+  "stop": {
+    "reason": "gate-abort",
+    "detail": "ambiguous-threshold",
+    "restarts": 0,
+    "interrupted": false
+  },
+  "counts": {
+    "evidence.started": 1,
+    "arm.mode": 1,
+    "observation": 29,
+    "hid.execute-entered": 1,
+    "hid.handoff-reused": 1,
+    "hid.schedule-start": 1,
+    "origin.anchor": 3,
+    "origin.refined": 1,
+    "hid.night-authorized": 1,
+    "hid.night-go": 1,
+    "hid.handoff": 1,
+    "control.effect.phase": 1,
+    "control.effect.expected": 3,
+    "hid.night-go-released": 1,
+    "control.effect.sample": 15,
+    "control.effect.result": 3,
+    "arm.sample": 1,
+    "arm.verified": 1,
+    "control.gate": 28,
+    "control.gate.abort": 1,
+    "device.anr": 1,
+    "campaign.terminal.actuator-stopped": 1
+  }
+}

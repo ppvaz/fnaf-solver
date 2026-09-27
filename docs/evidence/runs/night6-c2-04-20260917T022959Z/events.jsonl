@@ -1,0 +1,12 @@
+{"at":"2026-09-17T02:30:13.216Z","type":"evidence.started","evidenceDirectory":"artifacts/campaign-2026-09-17T02-30-13.215Z"}
+{"at":"2026-09-17T02:30:13.217Z","type":"arm.mode","mode":"observe-once"}
+{"at":"2026-09-17T02:30:15.198Z","type":"observation","label":"items=continue,customNight,newGame,sixthNight","frame":"00001-title-observe.py.png"}
+{"at":"2026-09-17T02:30:24.308Z","type":"observation","label":"state=title","frame":"00003-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:30:24.516Z","type":"menu.start-planned","residueMs":20000,"targetPhoneWallMs":1789612281376,"waitMs":58235.4111328125,"uncertaintyMs":4.3327045000005455}
+{"at":"2026-09-17T02:31:22.919Z","type":"menu.start","tapHostMs":80613.491371,"tapPhoneWallMs":1789612281415.028,"tapPhoneWallLow16":20039,"plannedPhoneWallMs":1789612281376,"lateMs":41.63958618749166,"uncertaintyMs":4.377429499996651}
+{"at":"2026-09-17T02:31:23.940Z","type":"observation","label":"unknown=sensor-geometry:1080x2400 is not screencap-2400x1080's 2400x1080","frame":"00004-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:31:53.367Z","type":"campaign.abort.restart","reason":"night selection was not observed before the 30000ms deadline (last=unknown)"}
+{"at":"2026-09-17T02:31:56.209Z","type":"observation","label":"state=intro","frame":"00036-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:31:58.067Z","type":"observation","label":"unknown=dark-frame-no-text","frame":"00038-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:31:59.574Z","type":"observation","label":"state=title","frame":"00039-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:32:13.920Z","type":"campaign.abort.restarted","state":"title","launcher":"com.scottgames.fnaf2/.Main","cueHelperPort":49707}

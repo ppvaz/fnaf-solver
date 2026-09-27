@@ -1,0 +1,19 @@
+run          night7-night7-k3-seedlog-01-20260915T031307Z
+bundle       artifacts/night7-anchored-k3/bundle
+campaign dir artifacts/campaign-2026-09-15T03-13-20.440Z
+campaign exit 130
+--- attempt 1 of 1: artifacts/campaign-2026-09-15T03-13-20.440Z ---
+--- modern campaign bundle (executor-owned facts) ---
+  night reached               yes
+  arm mode                    observe-once
+  arm                         UNRESOLVED (non-fatal) on attempt 1 (0 retries, 1 samples)
+  arm verified at             UNKNOWN
+  parked prefix (plan)        UNKNOWN
+  PHASE LAG (suffix shift)    none -- observe-once never parks the stream
+  cycle gates                 0 (0 agreed, 0 corrected, 0 aborted)
+  gate lag                    UNKNOWN
+  delivered offset            UNKNOWN
+  corrections landed          0 confirmed, 0 unconfirmed, 0 unread, 0 never read back
+  press acceptance            3 graded -- 2 UNKNOWN, 1 PASS
+  stop reason                 arm-unresolved (no-definitive-camera-frame)
+video        NONE RETAINED

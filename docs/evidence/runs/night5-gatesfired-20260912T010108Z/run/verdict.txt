@@ -1,0 +1,16 @@
+run          night5-gatesfired-20260912T010108Z
+bundle       artifacts/night5-head
+campaign dir artifacts/campaign-2026-09-12T01-01-20.334Z
+campaign exit 2
+--- modern campaign bundle (executor-owned facts) ---
+  night reached               yes
+  arm mode                    observe-once
+  arm                         UNKNOWN on attempt 1 (0 retries, 0 samples)
+  arm verified at             UNKNOWN
+  parked prefix (plan)        UNKNOWN
+  PHASE LAG (suffix shift)    none -- observe-once never parks the stream
+  cycle gates                 0 (0 agreed, 0 corrected, 0 aborted)
+  gate lag                    UNKNOWN
+  delivered offset            UNKNOWN
+  press acceptance            1 graded -- 1 UNKNOWN
+  stop reason                 campaign-abort (startGateLedger is not defined)

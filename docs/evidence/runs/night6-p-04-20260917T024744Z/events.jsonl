@@ -1,0 +1,14 @@
+{"at":"2026-09-17T02:48:00.313Z","type":"evidence.started","evidenceDirectory":"artifacts/campaign-2026-09-17T02-48-00.312Z"}
+{"at":"2026-09-17T02:48:00.313Z","type":"arm.mode","mode":"observe-once"}
+{"at":"2026-09-17T02:48:02.264Z","type":"observation","label":"items=continue,customNight,newGame,sixthNight","frame":"00001-title-observe.py.png"}
+{"at":"2026-09-17T02:48:11.320Z","type":"observation","label":"state=title","frame":"00003-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:48:11.652Z","type":"menu.start-planned","residueMs":20000,"targetPhoneWallMs":1789613329952,"waitMs":39683.58251953125,"uncertaintyMs":4.1220460000004095}
+{"at":"2026-09-17T02:48:51.466Z","type":"menu.start","tapHostMs":64169.794459,"tapPhoneWallMs":1789613334901.6763,"tapPhoneWallLow16":24949,"plannedPhoneWallMs":1789613329952,"lateMs":0.9072924687498016,"uncertaintyMs":3.62233699999706}
+{"at":"2026-09-17T02:49:05.651Z","type":"observation","label":"unknown=office-hud-without-night (bars 0.042)","frame":"00011-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:49:07.382Z","type":"observation","label":"state=title","frame":"00012-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:49:22.824Z","type":"campaign.abort.restart","reason":"night selection was not observed before the 30000ms deadline (last=title)"}
+{"at":"2026-09-17T02:49:24.542Z","type":"observation","label":"unknown=sensor-geometry:1080x2400 is not screencap-2400x1080's 2400x1080","frame":"00022-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:49:25.643Z","type":"observation","label":"state=intro","frame":"00023-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:49:27.548Z","type":"observation","label":"unknown=dark-frame-no-text","frame":"00025-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:49:29.238Z","type":"observation","label":"state=title","frame":"00026-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:49:40.630Z","type":"campaign.abort.restarted","state":"title","launcher":"com.scottgames.fnaf2/.Main","cueHelperPort":49707}

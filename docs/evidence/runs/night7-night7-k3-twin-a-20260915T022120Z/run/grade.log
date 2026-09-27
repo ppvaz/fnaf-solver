@@ -1,0 +1,125 @@
+==============================================================
+run: night7-night7-k3-twin-a-20260915T022120Z
+==============================================================
+capture: night7-night7-k3-twin-a-20260915T022120Z.mp4
+hid trace: MISSING (run with HID_TRACE_RUN=1)
+input trace: none (run atrace-input.sh around the command)
+SurfaceFlinger latency: none (set SF_LAYER for capture)
+cue trace: none (run with CUE_HELPER=1)
+legacy night PCM: none (receiver owns live audio)
+audio facts: none (run with external authority socket)
+session manifest: none (unmanifested run)
+campaign bundle: artifacts/campaign-2026-09-15T02-21-35.318Z
+frame trace: none (run query-cue-helper.sh trace start/stop around the run)
+capture rate: 18 fps (ffprobe 13800/787)
+  using measured 18 fps for timing-sensitive graders (nominal 60)
+
+--- session manifest (v1 provenance contract) ---
+  no night7-night7-k3-twin-a-20260915T022120Z-session.json: this run is unmanifested, so nothing below can
+  name its game build, model hashes, clock alignment or win evidence.
+  Nothing was validated.
+  Run under tools/device/trial.sh, which emits one.
+
+--- input dispatch / frame landing (Perfetto) ---
+  no input trace kept for night7-night7-k3-twin-a-20260915T022120Z; rendered video cannot establish dispatch.
+
+--- clock transitions (HUD first frame, 1 AM) ---
+clocktrace: office HUD was not found
+
+[ 1/13   7%] --- video instruments over one shared decode (survival, cameras, light, keyframes, box, intervals, timeline) ---
+--- survival (the only number that is a run length) ---
+tools/device/../../captures/night7-night7-k3-twin-a-20260915T022120Z.mp4: the HUD is never present -- no night ran at all
+[decode-once] survival (the only number that is a run length): exit 1, 4s, FAILED (exit 1)
+--- camera selections ---
+tools/device/../../captures/night7-night7-k3-twin-a-20260915T022120Z.mp4: selected-camera trace at 18 fps
+  cam 04    4.00s ->   8.39s  (4.39s)
+  cam 04   10.89s ->  13.39s  (2.50s)
+summary: 0 complete 10-04-07-11 sweeps, 0 incomplete sweep starts
+[decode-once] camera selections: exit 0, 4s, ok
+--- camera light actually flashing ---
+tools/device/../../captures/night7-night7-k3-twin-a-20260915T022120Z.mp4: signature sweepcheck-signature.json  (sweep lit iff >=2/3 cams)
+summary: 0/0 sweeps lit (>=2 of 3 cameras)
+NO GRADABLE SWEEP: no sweep window was found in this run, so this instrument says nothing about whether the light fired.
+[decode-once] camera light actually flashing: exit 3, 7s, a result about the run, not an instrument failure
+--- keyframes (what the run contained) ---
+tools/device/../../captures/night7-night7-k3-twin-a-20260915T022120Z.mp4: 29 frames at 2.0 fps, 12 kept
+  timestamps: 0.0s 3.0s 3.5s 4.0s 4.5s 5.5s 8.0s 8.5s 10.5s 13.0s 13.5s 14.0s
+  sheet: tools/device/../../captures/night7-night7-k3-twin-a-20260915T022120Z-keyframes.png
+[decode-once] keyframes (what the run contained): exit 0, 7s, ok
+--- music box ---
+tools/device/../../captures/night7-night7-k3-twin-a-20260915T022120Z.mp4: 14.42s sampled at 12 fps
+  cam11   4.00s ->   8.42s    2.4% ->   2.4%  (range   2.4-  2.4%)
+  cam11  10.92s ->  13.42s    2.4% ->   2.4%  (range   2.4-  2.4%)
+[decode-once] music box: exit 0, 4s, ok
+--- office / mask / camera intervals ---
+tools/device/../../captures/night7-night7-k3-twin-a-20260915T022120Z.mp4: 14.42s sampled at 12 fps
+  camera  13.58s ->  14.42s  (0.83s)
+summary: 1 camera intervals, 0 visible hall flashes, 0 latched-mask intervals
+note: visible hall flashes are only a rendering lower bound; the sourced movement blackout can hide logically accepted Foxy flashes
+[decode-once] office / mask / camera intervals: exit 0, 4s, ok
+--- run timeline and terminal outcome ---
+tools/device/../../captures/night7-night7-k3-twin-a-20260915T022120Z.mp4: 29 frames at 2.0 fps, 640x288
+      0.0s ->     4.0s  (   4.0s)  dark
+      4.0s ->     8.5s  (   4.5s)  camera
+      8.5s ->    11.0s  (   2.5s)  other
+     11.0s ->    14.5s  (   3.5s)  camera
+
+  TERMINAL: unknown
+  nothing terminal was captured; the recording may stop before the end of the night
+[decode-once] run timeline and terminal outcome: exit 0, 7s, ok
+[decode-once] 2 shared decode(s) for 7 instruments: 7 branches in 1.3s (exit 0), 3 branches in 1.0s (exit 0)
+  ^ FAILED (resource-limited or diagnostic error)
+[ 1/13   7%] video instruments over one shared decode (survival, cameras, light, keyframes, box, intervals, timeline) took 7s (pipeline 8s)
+
+[ 2/13  15%] --- campaign bundle (executor-owned facts) ---
+--- modern campaign bundle (executor-owned facts) ---
+  night reached               NO -- the run never entered a night
+  arm mode                    observe-once
+  arm                         UNKNOWN on attempt 1 (0 retries, 0 samples)
+  arm verified at             UNKNOWN
+  parked prefix (plan)        UNKNOWN
+  PHASE LAG (suffix shift)    none -- observe-once never parks the stream
+  cycle gates                 0 (0 agreed, 0 corrected, 0 aborted)
+  gate lag                    UNKNOWN
+  delivered offset            UNKNOWN
+  corrections landed          0 confirmed, 0 unconfirmed, 0 unread, 0 never read back
+  press acceptance            no transition was graded
+  stop reason                 UNKNOWN
+[ 2/13  15%] campaign bundle (executor-owned facts) took 0s (pipeline 8s)
+
+[ 3/13  23%] --- delivered phase vs the model band ---
+node:fs:440
+    return binding.readFileUtf8(path, stringToFlags(options.flag));
+                   ^
+
+Error: ENOENT: no such file or directory, open 'artifacts/campaign-2026-09-15T02-21-35.318Z/observations.jsonl'
+    at readFileSync (node:fs:440:20)
+    at readJsonl (file://tools/device/phase-reconstruct.mjs:29:27)
+    at file://tools/device/phase-reconstruct.mjs:368:24
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'artifacts/campaign-2026-09-15T02-21-35.318Z/observations.jsonl'
+}
+
+Node.js v22.23.2
+  ^ FAILED (resource-limited or diagnostic error)
+[ 3/13  23%] delivered phase vs the model band took 0s (pipeline 8s)
+
+--- native-frame state coverage for the actuation ---
+  no frame trace for night7-night7-k3-twin-a-20260915T022120Z: frame-level state coverage and input/frame
+  alignment are UNKNOWN. Nothing was measured.
+
+--- elegance (inputs sent vs needed) ---
+  no driver log for night7-night7-k3-twin-a-20260915T022120Z; nothing to count. Runs before 2026-08-26 have none.
+
+--- Balloon Boy's vent bang ---
+  no raw audio kept for night7-night7-k3-twin-a-20260915T022120Z; scan-night requires a receiver PCM capture.
+  external authority facts are also absent; run with CUE_AUDIO=1 AUDIO_AUTHORITY_SOCKET=PATH.
+
+==============================================================
+VERDICT: at least one instrument FAILED for night7-night7-k3-twin-a-20260915T022120Z -- read above
+==============================================================

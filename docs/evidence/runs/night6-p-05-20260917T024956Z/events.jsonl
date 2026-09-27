@@ -1,0 +1,25 @@
+{"at":"2026-09-17T02:50:11.447Z","type":"evidence.started","evidenceDirectory":"artifacts/campaign-2026-09-17T02-50-11.446Z"}
+{"at":"2026-09-17T02:50:11.448Z","type":"arm.mode","mode":"observe-once"}
+{"at":"2026-09-17T02:50:13.310Z","type":"observation","label":"items=continue,customNight,newGame,sixthNight","frame":"00001-title-observe.py.png"}
+{"at":"2026-09-17T02:50:22.202Z","type":"observation","label":"state=title","frame":"00003-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:50:22.540Z","type":"menu.start-planned","residueMs":20000,"targetPhoneWallMs":1789613461024,"waitMs":38485.0009765625,"uncertaintyMs":3.2929690000000846}
+{"at":"2026-09-17T02:51:01.144Z","type":"menu.start","tapHostMs":62709.333654,"tapPhoneWallMs":1789613461039.5283,"tapPhoneWallLow16":20015,"plannedPhoneWallMs":1789613461024,"lateMs":15.674757437504013,"uncertaintyMs":3.091859000000113}
+{"at":"2026-09-17T02:51:01.739Z","type":"observation","label":"unknown=no-signature-matched","frame":"00004-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:51:04.370Z","type":"observation","label":"unknown=office-hud-without-night (bars 0.170)","frame":"00007-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:51:07.289Z","type":"observation","label":"unknown=office-hud-without-night (bars 0.171)","frame":"00010-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:51:08.355Z","type":"observation","label":"unknown=office-hud-without-night (bars 0.170)","frame":"00011-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:51:09.130Z","type":"observation","label":"unknown=office-hud-without-night (bars 0.171)","frame":"00012-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:51:10.262Z","type":"observation","label":"unknown=office-hud-without-night (bars 0.170)","frame":"00013-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:51:11.038Z","type":"observation","label":"unknown=office-hud-without-night (bars 0.171)","frame":"00014-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:51:12.991Z","type":"observation","label":"unknown=office-hud-without-night (bars 0.170)","frame":"00016-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:51:13.895Z","type":"observation","label":"unknown=office-hud-without-night (bars 0.171)","frame":"00017-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:51:22.764Z","type":"observation","label":"unknown=office-hud-without-night (bars 0.170)","frame":"00027-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:51:23.592Z","type":"observation","label":"unknown=office-hud-without-night (bars 0.171)","frame":"00028-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:51:25.480Z","type":"observation","label":"unknown=office-hud-without-night (bars 0.170)","frame":"00030-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:51:26.293Z","type":"observation","label":"unknown=office-hud-without-night (bars 0.171)","frame":"00031-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:51:31.540Z","type":"campaign.abort.restart","reason":"night selection was not observed before the 30000ms deadline (last=unknown)"}
+{"at":"2026-09-17T02:51:33.129Z","type":"observation","label":"unknown=sensor-geometry:1080x2400 is not screencap-2400x1080's 2400x1080","frame":"00038-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:51:34.277Z","type":"observation","label":"state=intro","frame":"00039-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:51:36.211Z","type":"observation","label":"unknown=dark-frame-no-text","frame":"00041-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:51:37.797Z","type":"observation","label":"state=title","frame":"00042-lifecycle-observe.py.png"}
+{"at":"2026-09-17T02:51:53.414Z","type":"campaign.abort.restarted","state":"title","launcher":"com.scottgames.fnaf2/.Main","cueHelperPort":49707}

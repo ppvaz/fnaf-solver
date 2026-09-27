@@ -1,0 +1,1 @@
+audio-route=READY transport=bluealsa pcm=/org/bluealsa/hci0/dev_10_2B_1C_DA_18_2C/a2dpsnk/source mac=10:2B:1C:DA:18:2C

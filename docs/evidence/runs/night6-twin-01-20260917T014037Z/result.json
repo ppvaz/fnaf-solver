@@ -1,0 +1,97 @@
+{
+  "status": "ABORTED",
+  "mode": "live",
+  "result": {
+    "schema": "device-campaign-result-v1",
+    "version": 1,
+    "specHash": "fnv1a-d9bb672b",
+    "state": "ABORTED",
+    "targetIndex": 0,
+    "completedNights": [],
+    "attempts": [
+      {
+        "night": 6,
+        "mode": "story",
+        "attempt": 1,
+        "status": "DEATH",
+        "terminal": {
+          "night": 6,
+          "outcome": "death",
+          "sixAm": false
+        }
+      }
+    ],
+    "events": [
+      {
+        "schema": "campaign-event-v1",
+        "type": "campaign.state",
+        "state": "PREFLIGHT",
+        "at": 13182.049654,
+        "data": {
+          "previous": "IDLE"
+        }
+      },
+      {
+        "schema": "campaign-event-v1",
+        "type": "campaign.state",
+        "state": "MENU",
+        "at": 13641.508576,
+        "data": {
+          "previous": "PREFLIGHT",
+          "device": "ZF525F5BH5"
+        }
+      },
+      {
+        "schema": "campaign-event-v1",
+        "type": "campaign.state",
+        "state": "INTRO_VERIFY",
+        "at": 31337.630835,
+        "data": {
+          "previous": "MENU",
+          "target": "sixthNight"
+        }
+      },
+      {
+        "schema": "campaign-event-v1",
+        "type": "campaign.state",
+        "state": "ACTIVE",
+        "at": 37956.953897,
+        "data": {
+          "previous": "INTRO_VERIFY",
+          "night": 6
+        }
+      },
+      {
+        "schema": "campaign-event-v1",
+        "type": "campaign.attempt",
+        "state": "ACTIVE",
+        "at": 37957.163292,
+        "data": {
+          "night": 6,
+          "attempt": 1
+        }
+      },
+      {
+        "schema": "campaign-event-v1",
+        "type": "campaign.state",
+        "state": "RETRY_VERIFY",
+        "at": 150065.109952,
+        "data": {
+          "previous": "ACTIVE",
+          "reason": "attempt-ended-with-death",
+          "night": 6
+        }
+      },
+      {
+        "schema": "campaign-event-v1",
+        "type": "campaign.state",
+        "state": "ABORTED",
+        "at": 162413.012812,
+        "data": {
+          "previous": "RETRY_VERIFY",
+          "reason": "attempt-budget-exhausted"
+        }
+      }
+    ]
+  }
+}

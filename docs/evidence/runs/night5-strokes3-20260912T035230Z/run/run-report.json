@@ -1,0 +1,68 @@
+{
+  "schema": "device-run-report-v1",
+  "night": {
+    "startedAt": 1789185185773,
+    "releasedAt": 1789185185774,
+    "reached": true
+  },
+  "arm": {
+    "mode": "observe-once",
+    "attempts": 1,
+    "retries": 0,
+    "samples": 1,
+    "verifiedAtMs": 8056,
+    "armReadyAtMs": null,
+    "phaseLagMs": null,
+    "status": "VERIFIED",
+    "unresolvedReason": null
+  },
+  "cycles": {
+    "gates": 16,
+    "agreed": 14,
+    "corrected": 2,
+    "aborts": 0,
+    "gateLagMinMs": null,
+    "gateLagMaxMs": null,
+    "deliveredFirstMs": null,
+    "deliveredLastMs": null,
+    "correctedAtMs": [
+      25200,
+      35200
+    ]
+  },
+  "effects": {
+    "total": 3,
+    "tally": {
+      "UNKNOWN": 2,
+      "PASS": 1
+    },
+    "systematicMisses": []
+  },
+  "stop": {
+    "reason": "campaign-abort",
+    "detail": "device: lifecycle left night state (static)",
+    "restarts": 1,
+    "interrupted": false
+  },
+  "counts": {
+    "evidence.started": 1,
+    "arm.mode": 1,
+    "observation": 17,
+    "hid.execute-entered": 1,
+    "hid.handoff-reused": 1,
+    "hid.schedule-start": 1,
+    "hid.night-go": 1,
+    "hid.handoff": 1,
+    "control.effect.phase": 1,
+    "control.effect.expected": 3,
+    "hid.night-go-released": 1,
+    "control.effect.sample": 13,
+    "control.effect.result": 3,
+    "arm.sample": 1,
+    "arm.verified": 1,
+    "control.gate": 16,
+    "device.anr": 1,
+    "campaign.abort.restart": 1,
+    "campaign.abort.restarted": 1
+  }
+}

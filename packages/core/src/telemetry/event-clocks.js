@@ -49,6 +49,7 @@ const BY_LEAF = Object.freeze({
   // phone monotonic clock: the helper's capture and onset stamps
   visualCaptureAt: C.DEVICE_MONOTONIC, onsetDeviceMs: C.DEVICE_MONOTONIC,
   latchedOnsetDeviceMs: C.DEVICE_MONOTONIC, // the onset the latch last read (night-anchor.js)
+  staleOnsetDeviceMs: C.DEVICE_MONOTONIC, // an onset the latch read and refused as predating the intro (night-anchor.js)
   // phone wall clock: onsetDeviceMs + (wallMs - snapshotNs / 1e6), night-anchor.js
   onsetPhoneWallMs: C.PHONE_WALL,
   // the timed start (timed-start.js, modern-campaign-ports.js): the planned and the actual tap,
@@ -65,6 +66,7 @@ const BY_LEAF = Object.freeze({
   releasedAimMs: C.DURATION, periodMs: C.DURATION, lagMs: C.DURATION, phaseLagMs: C.DURATION,
   gateLagMs: C.DURATION, armReadyAtMs: C.DURATION, settleMs: C.DURATION, durationMs: C.DURATION, shrunkByMs: C.DURATION,
   afterOnsetMs: C.DURATION, residueMs: C.DURATION, waitMs: C.DURATION,
+  leadMs: C.DURATION, // the anchor's lead between latch and release (night-anchor.js, 2026-09-12 releases)
   ageUs: C.DURATION_US, frameAgeUs: C.DURATION_US,
   // differences between two clocks
   offsetMs: C.OFFSET, phoneWallMinusMonoMs: C.OFFSET, wallMinusHostMs: C.OFFSET,

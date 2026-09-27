@@ -1,0 +1,11 @@
+{"at":"2026-09-19T21:53:40.405Z","type":"evidence.started","evidenceDirectory":"artifacts/campaign-2026-09-19T21-53-40.404Z"}
+{"at":"2026-09-19T21:53:40.406Z","type":"arm.mode","mode":"blocking"}
+{"at":"2026-09-19T21:53:42.432Z","type":"observation","label":"items=continue,newGame","frame":"00001-title-observe.py.png"}
+{"at":"2026-09-19T21:53:51.430Z","type":"observation","label":"state=title","frame":"00003-lifecycle-observe.py.png"}
+{"at":"2026-09-19T21:53:52.508Z","type":"observation","label":"state=intro","frame":"00004-lifecycle-observe.py.png"}
+{"at":"2026-09-19T21:53:52.510Z","type":"campaign.abort.restart","reason":"campaign bundle: armMode requires an arm-verified plan"}
+{"at":"2026-09-19T21:53:53.896Z","type":"observation","label":"unknown=no-signature-matched","frame":"00005-lifecycle-observe.py.png"}
+{"at":"2026-09-19T21:53:55.106Z","type":"observation","label":"state=intro","frame":"00006-lifecycle-observe.py.png"}
+{"at":"2026-09-19T21:53:57.628Z","type":"observation","label":"state=night","frame":"00008-lifecycle-observe.py.png"}
+{"at":"2026-09-19T21:54:08.664Z","type":"observation","label":"state=title","frame":"00009-lifecycle-observe.py.png"}
+{"at":"2026-09-19T21:54:21.401Z","type":"campaign.abort.restarted","state":"title","launcher":"com.scottgames.fnaf2/.Main","cueHelperPort":49707}

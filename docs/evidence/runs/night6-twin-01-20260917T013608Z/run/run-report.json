@@ -1,0 +1,63 @@
+{
+  "schema": "device-run-report-v1",
+  "night": {
+    "startedAt": null,
+    "releasedAt": null,
+    "reached": false
+  },
+  "arm": {
+    "mode": "observe-once",
+    "attempts": 1,
+    "retries": 0,
+    "samples": 0,
+    "verifiedAtMs": null,
+    "armReadyAtMs": null,
+    "phaseLagMs": null,
+    "status": "UNKNOWN",
+    "unresolvedReason": null
+  },
+  "cycles": {
+    "gates": 0,
+    "agreed": 0,
+    "corrected": 0,
+    "aborts": 0,
+    "gateLagMinMs": null,
+    "gateLagMaxMs": null,
+    "deliveredFirstMs": null,
+    "deliveredLastMs": null,
+    "correctedAtMs": [],
+    "correctionOutcomes": {
+      "confirmed": 0,
+      "unconfirmed": 0,
+      "unread": 0,
+      "notRead": 0
+    }
+  },
+  "effects": {
+    "total": 0,
+    "tally": {},
+    "systematicMisses": []
+  },
+  "stop": {
+    "reason": "campaign-abort",
+    "detail": "anchored release refused (onset-predates-intro); strict anchor does not release unanchored",
+    "restarts": 1,
+    "interrupted": false
+  },
+  "counts": {
+    "evidence.started": 1,
+    "arm.mode": 1,
+    "observation": 9,
+    "menu.start-planned": 1,
+    "menu.start": 1,
+    "hid.execute-entered": 1,
+    "hid.handoff-reused": 1,
+    "hid.schedule-start": 1,
+    "origin.refined": 1,
+    "hid.night-authorized": 1,
+    "origin.anchor": 2,
+    "campaign.abort.restart": 1,
+    "device.anr": 1,
+    "campaign.abort.restarted": 1
+  }
+}

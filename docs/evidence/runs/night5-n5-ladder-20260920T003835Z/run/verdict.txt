@@ -1,0 +1,19 @@
+run          night5-n5-ladder-20260920T003835Z
+bundle       artifacts/toys-n5
+campaign dir artifacts/campaign-2026-09-20T00-38-50.137Z
+campaign exit 2
+--- attempt 1 of 1: artifacts/campaign-2026-09-20T00-38-50.137Z ---
+--- modern campaign bundle (executor-owned facts) ---
+  night reached               yes
+  arm mode                    observe-once
+  arm                         UNRESOLVED (non-fatal) on attempt 1 (0 retries, 1 samples)
+  arm verified at             UNKNOWN
+  parked prefix (plan)        UNKNOWN
+  PHASE LAG (suffix shift)    none -- observe-once never parks the stream
+  cycle gates                 5 (4 agreed, 1 corrected, 0 aborted)
+  gate lag                    UNKNOWN
+  delivered offset            UNKNOWN
+  corrections at              5200 ms
+  corrections landed          0 confirmed, 0 unconfirmed, 0 unread, 1 never read back
+  press acceptance            3 graded -- 1 MISSING, 1 UNSTABLE, 1 UNKNOWN
+  stop reason                 campaign-abort (device: lifecycle left night state (static))

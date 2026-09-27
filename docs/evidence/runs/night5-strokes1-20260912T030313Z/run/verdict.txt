@@ -1,0 +1,17 @@
+run          night5-strokes1-20260912T030313Z
+bundle       artifacts/night5-moved
+campaign dir artifacts/campaign-2026-09-12T03-03-29.849Z
+campaign exit 2
+--- modern campaign bundle (executor-owned facts) ---
+  night reached               yes
+  arm mode                    observe-once
+  arm                         VERIFIED on attempt 1 (0 retries, 1 samples)
+  arm verified at             7788 ms
+  parked prefix (plan)        UNKNOWN
+  PHASE LAG (suffix shift)    none -- observe-once never parks the stream
+  cycle gates                 17 (15 agreed, 2 corrected, 0 aborted)
+  gate lag                    UNKNOWN
+  delivered offset            UNKNOWN
+  corrections at              95200 ms, 125200 ms
+  press acceptance            3 graded -- 3 UNKNOWN
+  stop reason                 campaign-abort (night terminal was not observed before the 120000ms deadline (last=title))
