@@ -93,6 +93,13 @@ const fail = message => { failed += 1; process.stdout.write(`  FAIL ${message}\n
     fail(`MONITOR_MASK_READY_MS is ${floor} ms but the measurement is ${measured} ms. ` +
       'A floor must be the physical fact; the margin above it is this gate\'s job, and ' +
       'embedding one here double-counts it against every plan.');
+  // The other direction was unchecked until 2026-09-27: a floor BELOW the
+  // measurement admits a press before the button is visible, and reports the
+  // difference as slack a plan does not have -- item 7's zero margin, hidden.
+  if (floor < Math.ceil(measured))
+    fail(`MONITOR_MASK_READY_MS is ${floor} ms, below the ${measured} ms measurement: ` +
+      'the compiler would accept a mask press before the button is fully visible, and ' +
+      'every slack this gate reports would overstate the true margin by the difference.');
 }
 
 // --- 2. every shipped plan must clear every floor by the allowance ----------

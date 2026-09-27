@@ -7,6 +7,7 @@
 //   node tools/test.mjs --browser   # Chrome checks only (minutes)
 //   node tools/test.mjs --reports   # also print the diagnostic tools
 //   node tools/test.mjs --parallel  # run the browser checks at once (see below)
+//   node tools/test.mjs --gates --list  # print what those flags select; run nothing
 //
 // Two kinds of tool live in tools/, and the split matters: CHECKS assert and
 // exit non-zero, so a runner can give a verdict on them. REPORTS print numbers
@@ -25,7 +26,7 @@
 // the group from about 280 s to about 200 s.
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import { chromeBinary, chromeAvailable } from './chrome.mjs';
 
 const TOOLS = dirname(fileURLToPath(import.meta.url));
@@ -606,9 +607,29 @@ for (const name of BACKLOG.keys())
   if (!ENGINE.some(([entry]) => entry === name))
     throw new Error(`BACKLOG names ${name}, which is not an engine check`);
 
+let engine = extended ? ENGINE : ENGINE.filter(([name]) => !EXTENDED_ENGINE.has(name));
+if (gates) engine = engine.filter(([name]) => !BACKLOG.has(name));
+
+// `--list` prints every registered entry, one JSON object per line, with
+// whether THESE flags would run it, and runs nothing. test-mistake-register.mjs
+// reads it instead of re-deriving the --gates filter from this file's text.
+if (process.argv.includes('--list')) {
+  const selected = new Set([
+    ...(only !== 'browser' ? engine : []),
+    ...(only !== 'engine' ? BROWSER : []),
+    ...(process.argv.includes('--reports') ? REPORTS : []),
+  ]);
+  for (const [group, entries] of [['engine', ENGINE], ['browser', BROWSER], ['reports', REPORTS]])
+    for (const entry of entries)
+      console.log(JSON.stringify({
+        name: entry[0], group, path: relative(ROOT, join(TOOLS, entry[1][0])),
+        args: entry[1].slice(1), selected: selected.has(entry),
+        backlog: BACKLOG.get(entry[0]) ?? null, extended: EXTENDED_ENGINE.has(entry[0]),
+      }));
+  process.exit(0);
+}
+
 if (only !== 'browser') {
-  let engine = extended ? ENGINE : ENGINE.filter(([name]) => !EXTENDED_ENGINE.has(name));
-  if (gates) engine = engine.filter(([name]) => !BACKLOG.has(name));
   console.log(gates ? `engine gates (${BACKLOG.size} backlog checks left out)`
     : extended ? 'engine checks (including extended model sweeps)' : 'engine checks');
   failed += await runGroup(engine, true, { progress: !gates, concurrent: true });

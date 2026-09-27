@@ -2733,6 +2733,16 @@
       ]
     },
     {
+      "file": "tools/test-mistake-register.mjs",
+      "imports": [
+        "./device/run-report.mjs",
+        "node:child_process",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/test-night-models.mjs",
       "imports": [
         "../packages/core/src/mechanics/config.js",

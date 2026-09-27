@@ -91,6 +91,9 @@ JAVA="$JDK_ROOT/bin/java"
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.AudioAnalyzerTest
 $JAVA -cp "$TEST_TMP" com.ppvaz.fnafcompanion.PhaseClockTest
 $JAVA -cp "$TEST_TMP" com.ppvaz.fnafcompanion.PixelWatchTest
+# Compiled above since 2026-09-01 and never executed until 2026-09-27: a test
+# that is only compiled asserts nothing (tools/test-mistake-register.mjs).
+"$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.BatteryLifeDetectorTest
 $JAVA -cp "$TEST_TMP" com.ppvaz.fnafcompanion.PanAnchorTest
 $JAVA -cp "$TEST_TMP" com.ppvaz.fnafcompanion.ScreenIdentityTest
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.NightOnsetLatchTest
