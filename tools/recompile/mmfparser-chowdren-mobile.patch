@@ -2831,7 +2831,7 @@ index b620427..e2d2eb7 100644
  {
      if (flags & INACTIVE || other->flags & INACTIVE)
 diff --git a/Chowdren/base/desktop/platform.cpp b/Chowdren/base/desktop/platform.cpp
-index 0a7095c..964d9c4 100644
+index 0a7095c..a1dcb43 100644
 --- a/Chowdren/base/desktop/platform.cpp
 +++ b/Chowdren/base/desktop/platform.cpp
 @@ -204,6 +204,96 @@ static void set_resources_dir()
@@ -2984,6 +2984,20 @@ index 0a7095c..964d9c4 100644
  }
  
  void platform_set_vsync(bool value)
+@@ -957,6 +1067,13 @@ void platform_swap_buffers()
+     int use_scale_type = scale_type;
+     if (!is_fullscreen)
+         use_scale_type = BEST_FIT;
++#ifdef CHOWDREN_IS_ANDROID
++    // The APK runs Display Mode FULL: the 1024x768 frame is stretched to fill
++    // the screen (x2.34375, x1.40625 on the g56), and the phone magnifies it
++    // with bilinear filtering (tools/recompile/native-frame.py); the screen
++    // FBO is linear on this target (fbo.cpp).
++    use_scale_type = EXACT_FIT;
++#endif
+ 
+     if (resize && use_scale_type == EXACT_FIT) {
+         draw_x_size = window_width;
 diff --git a/Chowdren/base/desktop/renderplatform.cpp b/Chowdren/base/desktop/renderplatform.cpp
 index 813223a..be26898 100644
 --- a/Chowdren/base/desktop/renderplatform.cpp
@@ -3051,10 +3065,10 @@ index 30eb23e..50c4cb3 100644
          platform_sleep(t);
 diff --git a/Chowdren/base/harness.cpp b/Chowdren/base/harness.cpp
 new file mode 100644
-index 0000000..c358591
+index 0000000..7fd69b2
 --- /dev/null
 +++ b/Chowdren/base/harness.cpp
-@@ -0,0 +1,397 @@
+@@ -0,0 +1,403 @@
 +// Deterministic research harness for the build-296 recompile. See harness.h.
 +// Compiled once, included from run.cpp next to crashdump.cpp.
 +
@@ -3215,7 +3229,13 @@ index 0000000..c358591
 +    m.new_touch = m.end_touch = m.moved_touch = false;
 +    h_active = env_int("CHOWDREN_HARNESS", 0) != 0;
 +    if (!h_active) {
++#ifdef CHOWDREN_IS_ANDROID
++        // The on-device build is played by a person: touch drives touch 0 through
++        // SDL's touch-to-mouse events, as the desktop play mode does with a mouse.
++        h_play = true;
++#else
 +        h_play = env_int("CHOWDREN_PLAY", 0) != 0;
++#endif
 +        if (h_play) fprintf(stderr, "harness: play mode, the left mouse button is touch 0\n");
 +        return;
 +    }
@@ -4396,3 +4416,84 @@ index da4f5ab..2c997c9 100644
          xOffset += int(glyph->BBox().Upper().X() -
                         glyph->BBox().Lower().X() + padding + 0.5);
      }
+diff --git a/Chowdren/base/desktop/fbo.cpp b/Chowdren/base/desktop/fbo.cpp
+index 3c946f2..915380f 100644
+--- a/Chowdren/base/desktop/fbo.cpp
++++ b/Chowdren/base/desktop/fbo.cpp
+@@ -83,7 +83,7 @@ void Framebuffer::init(int w, int h)
+     set_tex(tex);
+     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                  NULL);
+-#ifdef CHOWDREN_POINT_FILTER
++#if defined(CHOWDREN_POINT_FILTER) && !defined(CHOWDREN_IS_ANDROID)
+     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+ #else
+diff --git a/Chowdren/base/android/glesshader.cpp b/Chowdren/base/android/glesshader.cpp
+new file mode 100644
+index 0000000..8f91c0c
+--- /dev/null
++++ b/Chowdren/base/android/glesshader.cpp
+@@ -0,0 +1,62 @@
++// GL ES 1.1 stand-in for desktop/glslshader.cpp.
++//
++// FNaF 2's generated project compiles no shaders (glslshader.cpp is excluded on
++// this target), and the Chowdren Render:: layer draws through fixed-function
++// client arrays which ES 1.1 provides natively.  So every BaseShader entry
++// point here is a no-op — the fixed pipeline does modulate texturing by
++// default — and the only part of shadercommon.cpp that still matters is the
++// blend-func / blend-equation switching, which is GL-version-agnostic once the
++// *OES entry points are remapped in include_gl.h.
++//
++// Consequence: the ink-effect shaders (blur, monochrome, tint, ...) render as
++// plain textures.  The base game — sprites, backdrops, text, additive/subtract
++// blends — renders correctly.
++
++#include "include_gl.h"
++#include "glslshader.h"
++#include "shadercommon.h"
++#include "frameobject.h"
++#include "fileio.h"
++#include "render.h"
++
++BaseShader * BaseShader::current = NULL;
++
++BaseShader::BaseShader(unsigned int id, int flags,
++                       const char * texture_parameter)
++: initialized(false), id(id), flags(flags),
++  texture_parameter(texture_parameter)
++{
++}
++
++void BaseShader::initialize() {}
++void BaseShader::initialize_parameters() {}
++int BaseShader::get_uniform(const char *) { return -1; }
++void BaseShader::begin(FrameObject *, int, int) { BaseShader::current = this; }
++void BaseShader::set_int(FrameObject *, int, int) {}
++void BaseShader::set_float(FrameObject *, int, int) {}
++void BaseShader::set_vec4(FrameObject *, int, int) {}
++void BaseShader::set_image(FrameObject *, int) {}
++GLhandleARB BaseShader::attach_source(FSFile &, GLenum) { return 0; }
++
++void set_scale_uniform(float, float, float, float) {}
++
++// blend function / equation constants + setters, matching the GL branch of
++// desktop/glslshader.cpp (the *OES names come from include_gl.h)
++#define EQ_REVERSE_SUBTRACT GL_FUNC_REVERSE_SUBTRACT
++#define EQ_ADD GL_FUNC_ADD
++
++#define FUNC_DST_COLOR GL_DST_COLOR
++#define FUNC_ONE GL_ONE
++#define FUNC_SRC_ALPHA GL_SRC_ALPHA
++#define FUNC_ONE_MINUS_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
++#define FUNC_ZERO GL_ZERO
++#define FUNC_SRC_COLOR GL_SRC_COLOR
++
++#define set_blend_func_eq(a, b, c, d, e, f) \
++    glBlendFuncSeparate(a, b, c, d); \
++    glBlendEquationSeparate(e, f)
++#define set_blend_func(a, b, c, d) glBlendFuncSeparate(a, b, c, d)
++
++#define commit_parameters(x)
++
++#include "shadercommon.cpp"

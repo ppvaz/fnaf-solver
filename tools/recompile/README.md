@@ -847,6 +847,21 @@ The rejoining runs are mostly the drop and mask-off slip above. The new
 persistent splits (Night 5 at 9862, Night 7 at 12280) are the next differences
 to read. All three records stay DIVERGENT.
 
+**Both input options together** (`sourcedPromotedViewDraws` and
+`sourcedDropFlagOrder` in `sourced-rebuild-model-options.json`;
+`*-replay-combined-20260927.json`):
+
+| binding | first mismatch | persistent split | matched before it | runs |
+|---|---|---|---|---|
+| Night 1 `minimal` | 21714 | 25200, the last update | 24,899 | 3 |
+| Night 5 `contact-final` | 1800 | 17675 | 7,201 | 8 |
+| Night 7 `k3` | 600 | 3845 | 915 | 7 |
+
+Night 7's first mismatch is the footstep draw one update early at tick 600,
+which the drop-slip work also left open. After it, the streams no longer rejoin
+the way they did with the drop slip in place. That draw is the next Night 7
+target.
+
 **Font atlas.** Pedro saw lowercase n drawn as a filled square in the bold
 preset names ("New and Shiny", "Cupcake Challenge", "Golden Freddy"). The bank's
 glyph is sound. Chowdren's `FTTextureFont` checked for the end of a row after

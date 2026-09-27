@@ -1,0 +1,385 @@
+{
+  "schema": "recompile-schedule-replay-v1",
+  "claimLevel": "MODEL_ONLY",
+  "fidelity": "rebuilt-runtime",
+  "status": "DIVERGENT",
+  "question": "Replaying one winner schedule into the rebuilt runtime and into the model: do the outcome and the per-update Random stream agree, and where do they first differ?",
+  "scope": {
+    "night": 7,
+    "seed": 24850,
+    "targetFrame": 3,
+    "requestedModelFrames": 30000,
+    "modelOptions": {
+      "sourcedRouteForks": true,
+      "sourcedHallEntry": true,
+      "sourcedDropLightOrder": true,
+      "sourcedFoxyChain": true,
+      "sourcedUnconditionalDraws": true,
+      "sourcedEventDraws": true,
+      "sourcedBlackoutDraws": true,
+      "sourcedViewDraws": true,
+      "sourcedRollDraws": true,
+      "sourcedMonitorDownDraw": true,
+      "sourcedSecondPass": true,
+      "sourcedPuppetGlitchDraws": true,
+      "sourcedFootstepDraws": true,
+      "sourcedMangleReturn": true,
+      "sourcedVentCamDraws": true,
+      "sourcedRandomImageDraw": true,
+      "sourcedMonitorRaiseGate": true,
+      "sourcedSheetOrder": true,
+      "sourcedLastViewPause": true,
+      "frameMs": 16.666666666666668,
+      "frameValue5": 1,
+      "sourcedEveryOrigin": true,
+      "footstepCamMarkers": true,
+      "sourcedBoxCountdown": true,
+      "sourcedPuppetMoveOrder": true,
+      "sourcedHourTable": true,
+      "sourcedParkedMarker": true,
+      "sourcedCustomDialOrder": true,
+      "sourcedCam8Cancel": true,
+      "sourcedPromotedViewDraws": true,
+      "sourcedDropFlagOrder": true
+    },
+    "customNight": {
+      "withfreddy": 20,
+      "withbonnie": 20,
+      "withchica": 20,
+      "foxy": 20,
+      "toyfreddy": 20,
+      "toybonnie": 20,
+      "toychica": 20,
+      "mangle": 20,
+      "bb": 20,
+      "golden": 20
+    },
+    "input": "navigation plus a replayed gameplay schedule"
+  },
+  "runtime": {
+    "visits": [
+      {
+        "frame": 0,
+        "seed": 24850,
+        "updates": 180
+      },
+      {
+        "frame": 1,
+        "seed": 24850,
+        "updates": 216
+      },
+      {
+        "frame": 12,
+        "seed": 24850,
+        "updates": 216
+      },
+      {
+        "frame": 2,
+        "seed": 24850,
+        "updates": 189
+      },
+      {
+        "frame": 7,
+        "seed": 24850,
+        "updates": 6
+      },
+      {
+        "frame": 3,
+        "seed": 24850,
+        "updates": 25201
+      },
+      {
+        "frame": 5,
+        "seed": 24850,
+        "updates": 30
+      }
+    ],
+    "targetUpdates": 25201,
+    "namedTouches": 1,
+    "stop": "target frame 5 ticks 30 total 26038",
+    "traceSha256": "8ed97e00b1e3428477e3590750814f501546694da10e7ac76fd2006525b20172",
+    "drawTraceSha256": "dea0232e311f3c62c3454ec855fff1c4ae27aea35319272ea0427b2cbd5e73d2"
+  },
+  "model": {
+    "traceSha256": "5e4220ecb6c600a1084a2cff45058e47126075e851896696c00522b59c7df994",
+    "terminal": {
+      "frame": 25201,
+      "draws": 16915,
+      "state": 33543
+    },
+    "death": null,
+    "won": true
+  },
+  "alignment": "Harness tick 0 is after its first event update, compared to model frame 1. Offset 0 is also retained to expose an initialization boundary discrepancy.",
+  "alignments": [
+    {
+      "modelFrameOffset": 0,
+      "compared": 25201,
+      "firstMismatch": {
+        "tick": 0,
+        "modelFrame": 0,
+        "rebuilt": {
+          "draws": 2,
+          "state": 30314
+        },
+        "model": {
+          "draws": 0,
+          "state": 24850
+        }
+      }
+    },
+    {
+      "modelFrameOffset": 1,
+      "compared": 25201,
+      "firstMismatch": {
+        "tick": 600,
+        "modelFrame": 601,
+        "rebuilt": {
+          "draws": 291,
+          "state": 49223
+        },
+        "model": {
+          "draws": 292,
+          "state": 18626
+        }
+      }
+    }
+  ],
+  "limitations": [
+    "Host reimplementation; no device claim or promotion.",
+    "Matching draws is necessary but insufficient for event/state equivalence.",
+    "Touch triggers are polled once per update; Android immediate event ordering remains unverified.",
+    "Both traces must describe the same night, seed and input; the operator must retain input/save provenance.",
+    "One schedule quantized to 60 Hz frames; the phone's actuation latency, contact loss and frame stalls are not in either replay.",
+    "The harness raises one new-touch trigger per update; same-tick edges are listed in schedule.sameTickEdges.",
+    "Window points are the device profile's control points through the FULL stretch; the office pan is not modelled."
+  ],
+  "schedule": {
+    "strategy": "minus-toys",
+    "night": 7,
+    "epochMs": 2433,
+    "periodMs": 10000,
+    "loopStartMs": 0,
+    "untilMs": 420000,
+    "planSha256": "66b0abb4f65d65584d102e8c2a443e622df8f69ea9d4ac42c20e0aaa77867aff",
+    "contacts": 346,
+    "simQueueRows": 517,
+    "simQueueSha256": "ee65d39092a384587bc0db1369c704f2bb96108770d66e9d238ad0298d492053",
+    "officeRows": 692,
+    "officeRowsSha256": "adbff935b3d9b86c771b408bb992239b34c211e24bc4f3d8b05353c288f9421f",
+    "lastOfficeRowTick": 25463,
+    "windowPoints": {
+      "cam11": [
+        951,
+        464
+      ],
+      "cam9": [
+        915,
+        390
+      ],
+      "cameraFeedLight": [
+        384,
+        384
+      ],
+      "hallLight": [
+        512,
+        384
+      ],
+      "mask": [
+        256,
+        708
+      ],
+      "monitor": [
+        759,
+        708
+      ],
+      "wind": [
+        213,
+        631
+      ]
+    },
+    "sameTickEdges": [
+      {
+        "tick": 274,
+        "edges": [
+          "up wind",
+          "down cameraFeedLight"
+        ]
+      }
+    ],
+    "quantization": "ms -> Math.round(ms * 60 / 1000) model frames; office tick = queue frame; down at press, up at release"
+  },
+  "outcome": {
+    "rebuilt": {
+      "result": "6am",
+      "nextFrame": 5,
+      "officeUpdates": 25201,
+      "seconds": 420.017,
+      "reason": null,
+      "reasonSource": null
+    },
+    "model": {
+      "result": "6am",
+      "reason": null,
+      "frame": 25201,
+      "seconds": 420.017
+    },
+    "sameResult": true,
+    "officeUpdatesMinusModelFrames": 0
+  },
+  "gateReplay": {
+    "agrees": true,
+    "replay": {
+      "won": true,
+      "death": null,
+      "frame": 25201,
+      "state": 33543
+    },
+    "traced": {
+      "won": true,
+      "death": null,
+      "frame": 25201,
+      "state": 33543
+    },
+    "note": "the gate replay carries no dial vector; the comparison model does"
+  },
+  "drawRuns": {
+    "compared": 25201,
+    "mismatchedUpdates": 24286,
+    "runs": [
+      {
+        "start": 600,
+        "length": 1,
+        "rejoined": true
+      },
+      {
+        "start": 900,
+        "length": 39,
+        "rejoined": true
+      },
+      {
+        "start": 940,
+        "length": 260,
+        "rejoined": true
+      },
+      {
+        "start": 1201,
+        "length": 599,
+        "rejoined": true
+      },
+      {
+        "start": 1801,
+        "length": 1800,
+        "rejoined": true
+      },
+      {
+        "start": 3613,
+        "length": 231,
+        "rejoined": true
+      },
+      {
+        "start": 3845,
+        "length": 21356,
+        "rejoined": false
+      }
+    ],
+    "listed": 7,
+    "total": 7,
+    "firstPersistent": {
+      "start": 3845,
+      "length": 21356,
+      "rejoined": false
+    },
+    "matchedBeforeFirstPersistent": 915,
+    "scope": "offset 1; a run that rejoined is a stretch of updates after which the rebuilt and model draw counts and LCG state are equal again"
+  },
+  "ledgers": [
+    {
+      "name": "monitor",
+      "watch": "flip panel button:0",
+      "states": "0 down, 1 raising, 2 up, 3 lowering",
+      "compared": 25201,
+      "mismatches": 86,
+      "firstMismatch": {
+        "tick": 157,
+        "rebuilt": 1,
+        "model": 2
+      },
+      "changes": {
+        "rebuilt": 172,
+        "model": 172,
+        "paired": 172,
+        "offsets": {
+          "0>1 +0": 43,
+          "1>2 +1": 43,
+          "2>3 +0": 43,
+          "3>0 +1": 43
+        },
+        "firstUnpaired": null
+      },
+      "trace": "main"
+    },
+    {
+      "name": "mask",
+      "watch": "mask:0",
+      "states": "0 off, 1 putting on, 2 on, 3 taking off",
+      "compared": 25201,
+      "mismatches": 42,
+      "firstMismatch": {
+        "tick": 332,
+        "rebuilt": 1,
+        "model": 2
+      },
+      "changes": {
+        "rebuilt": 168,
+        "model": 168,
+        "paired": 168,
+        "offsets": {
+          "0>1 +0": 42,
+          "1>2 +1": 42,
+          "2>3 +0": 42,
+          "3>0 +0": 42
+        },
+        "firstUnpaired": null
+      },
+      "trace": {
+        "traceSha256": "fb482132070dabaa055638acc6c0b7f1145978467533ffc87ba1c4ce78d19769",
+        "officeDrawProjectionMatches": true
+      }
+    }
+  ],
+  "repeatability": {
+    "traceSha256": "7b4b580e15af972a3026cfce8ceac51c21ee79cc511dcf8c6f521f41c65c0962",
+    "drawTraceSha256": "dea0232e311f3c62c3454ec855fff1c4ae27aea35319272ea0427b2cbd5e73d2",
+    "drawTraceMatches": true,
+    "wholeTraceMatches": false,
+    "scope": "Ordered frame/tick/draw-count/RNG-state projection. Other global values are not covered by draw repeatability."
+  },
+  "provenance": {
+    "winner": "tools/device/campaign-night7-k3-winner.json",
+    "winnerSha256": "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78",
+    "profile": "apps/device/profiles/hid-mediaprojection.json",
+    "profileSha256": "f7c3eb948ffd041f52c5d515978686690eba90856b9d9ec5d8dd161b2e4b1c42",
+    "navigation": "tools/recompile/fixtures/night7-dials20-5x2.input",
+    "navigationSha256": "37144300ab0d7b396e5b50fd9f1b0779733bb8a2fac5fb96c7fef7dcafc6a150",
+    "modelOptions": "tools/recompile/sourced-rebuild-model-options.json",
+    "modelOptionsSha256": "4eee284f101143e92a53bfa4b879c1ba6cc6fe10d88a0df5dfcb33026a294d84",
+    "customNight": "tools/recompile/fixtures/night7-dials20.json",
+    "customNightSha256": "eef47cae2405141567ee15ae3216662c8d5c78edbd6fb8c2d1ce8cc1a5ee588c",
+    "toolSha256": "3cbde9cc36f0e8ba758dd45ed31b77d52598fa8bde71b875c1533f94fe6bf087",
+    "compareToolSha256": "52968f9ee45321c3f38bc30b5a40018649053bfe968782e45b0be9680451a27d",
+    "scheduleToolSha256": "608cd84e5aeb5a7afc28884c015cb8ff859a885bc07684b899517d63af821c55",
+    "modelTraceToolSha256": "f65b3b46bdde56e8f5c0d1ec44501eb79725ed3e9f4a71b3e9554bba0cd87f4c",
+    "modelSourceSha256": {
+      "packages/core/src/mechanics/plant-model.js": "5a6cc97a284a2e6f79535b14c83014d4ef9daf9f2bbae1e2e585354984c22ca9",
+      "packages/core/src/mechanics/config.js": "3da601d1233454b7386ebab415c827fe87117ed2b9b031e51168c338f89f6f70",
+      "packages/core/src/mechanics/rng.js": "1a2b615eda3a152aea548054c873c8da83a96b06b6ac65fc0a74e4997a3e651e"
+    },
+    "patchSha256": "f66390d49b1e296f657fb02b2824fa21c910a2736f3572fd45e1cb53e7d99b04",
+    "configSha256": "10baa929548d74f0e9d67cdf830161e108da2f8ff3b85456f765ebd78fd27749",
+    "inputSha256": "21eedb5824846d4d6b896be0a24fc99b8e35e92c026fc365c6c5c8ae5917c438",
+    "binarySha256": "036076d3f40ee8568011e1b1f5b11a1958e42f38f8449359c8ed7cc85aca1c7e",
+    "saveSha256": "c0f497ff64b6f757f943965a48d2795419fb934ddf54eb5f3dee000439484844"
+  },
+  "evidenceId": "recompile-replay-1ddfcac3918af3da"
+}

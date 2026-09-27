@@ -100,3 +100,42 @@ Gradle project scaffold at `fnaf2-android:/root/game` (symlinks `SDL` →
 → `/opt/openal-soft`; `Assets.dat` copied to `/root/game-assets/`). `app/jni/
 CMakeLists.txt` is committed here as `game-CMakeLists.txt`.
 `cd /root/game && ./gradlew assembleDebug`.
+
+## 2026-09-27: rebuilt on the Linux host, as an APK Pedro plays
+
+Pedro asked to play the recompiled game on the phone as its own APK. That is a
+personal research build: installed only on his g56, never distributed, and his
+explicit exception to CLAUDE.md's "no separate APKs; everything on the phone is
+the Companion" rule. The Companion stays the only study tool on the phone.
+
+The August route used a Docker image on the Mac. This one runs on the Linux host
+with no Gradle and no container:
+- NDK r26d (`android-ndk-r26d-linux.zip`, SHA-1 `fcdad75a...` as published),
+  CMake 3.28.6, build-tools 36 and platform 36, under
+  `~/.local/toolchains`.
+- SDL2 2.30.9 (shared) and openal-soft 1.23.1 (static, OpenSL ES backend),
+  cross-built for arm64, minSdk 24.
+- `libmain.so` from `game-CMakeLists.txt`. The CMake file now reads the
+  extension objects from the generated `EXTSRCS` (Kyso, INI), and links a
+  prebuilt SDL2 and openal given as `SDL2_PREBUILT` / `OPENAL_LIB`.
+- `build-apk.sh` compiles SDL's Java classes (javac, d8), links the manifest
+  with aapt2, stores `Assets.dat` uncompressed, adds the two libraries, then
+  zipaligns and signs with a local debug key. It refuses to write inside the
+  repository, because the APK carries game art.
+
+Runtime changes, in the patch, all under `CHOWDREN_IS_ANDROID`:
+- **Play mode** is on (touch 0 through SDL's touch-to-mouse events).
+- **Display:** the screen is stretched to fill (`EXACT_FIT`, the phone's
+  Display Mode FULL), and the screen FBO filters linearly, as the phone's
+  frames show (`../native-frame.py`).
+- **Shaders:** `base/android/glesshader.cpp` is back in the patch. It was lost
+  when the route was archived and restored.
+
+Limits of this GL ES 1.1 target: no shaders. The office panorama (PANORAMA,
+`perspective.frag`) draws flat, and ink effects draw as plain textures.
+Multi-touch is not wired: one finger drives touch 0.
+
+Built 2026-09-27 from binary-equivalent sources (the patch at `f86ff123`):
+`libmain.so` 33 MB (32 event files, 29 frames, 10 extension objects),
+`libSDL2.so` 6.2 MB, APK 131 MB (package `org.fnaf2rebuild.play`), with the
+pinned assets `7163d628`.

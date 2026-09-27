@@ -8,8 +8,17 @@ set(HERE   ${CMAKE_CURRENT_SOURCE_DIR})
 set(BASE   ${HERE}/chowdren/base)
 set(GAME   ${HERE}/gamesrc)
 
-# ---- SDL2 (defines SDL2, SDL2main targets; builds libSDL2.so) ----
-add_subdirectory(${HERE}/SDL SDL2)
+# ---- SDL2: a prebuilt libSDL2.so when SDL2_PREBUILT names its build directory
+#      (build-apk.sh builds it once), else built here from ${HERE}/SDL ----
+if (SDL2_PREBUILT)
+    add_library(SDL2 SHARED IMPORTED)
+    set_target_properties(SDL2 PROPERTIES IMPORTED_LOCATION ${SDL2_PREBUILT}/libSDL2.so)
+else()
+    add_subdirectory(${HERE}/SDL SDL2)
+endif()
+if (NOT OPENAL_LIB)
+    set(OPENAL_LIB ${HERE}/openal/build-android/libopenal.a)
+endif()
 
 # ---- bundled ogg + vorbis (C source, built inline as on desktop) ----
 file(GLOB OGG_C    ${BASE}/staticlibs/libogg/src/*.c)
@@ -63,16 +72,16 @@ list(LENGTH FRAME_SRCS _nf)
 list(LENGTH OBJ_SRCS _no)
 message(STATUS "chowdren game srcs: ${_ne} events, ${_nf} frames, ${_no} objects")
 
-set(EXT_SRCS
-    ${BASE}/objects/active.cpp
-    ${BASE}/objects/backdrop.cpp
-    ${BASE}/objects/counter.cpp
-    ${BASE}/objects/layerext.cpp
-    ${BASE}/objects/perspective.cpp
-    ${BASE}/objects/quickbackdrop.cpp
-    ${BASE}/objects/stringparser.cpp
-    ${BASE}/objects/text.cpp
-)
+# The extension objects the converter wrote this game against (EXTSRCS, e.g.
+# kyso.cpp and ini.cpp), read like the other lists and rebased onto ${BASE}.
+string(REGEX MATCH "set\\(EXTSRCS([^)]*)\\)" _m "${_GS}")
+string(REGEX MATCHALL "objects/[A-Za-z0-9_]+\\.cpp" _exts "${CMAKE_MATCH_1}")
+set(EXT_SRCS "")
+foreach(_f ${_exts})
+    list(APPEND EXT_SRCS ${BASE}/${_f})
+endforeach()
+list(LENGTH EXT_SRCS _nx)
+message(STATUS "chowdren extension objects: ${_nx}")
 
 add_library(main SHARED
     ${BASE_SRCS} ${FRAME_SRCS} ${EVENT_SRCS} ${OBJ_SRCS} ${GAME_SRCS} ${EXT_SRCS})
@@ -108,5 +117,5 @@ target_include_directories(main PRIVATE
 target_link_libraries(main
     SDL2
     oggvorbis
-    ${HERE}/openal/build-android/libopenal.a
+    ${OPENAL_LIB}
     GLESv1_CM EGL OpenSLES log android)
