@@ -805,7 +805,7 @@
     },
     {
       "id": "tools/rebuild-options-census.mjs",
-      "invocation": "tools/rebuild-options-census.mjs [--jobs J] [--count N] [--out FILE] [--date YYYY-MM-DD] [--checkpoint DIR] [--assemble DIR]",
+      "invocation": "tools/rebuild-options-census.mjs [--jobs J] [--count N] [--out FILE] [--date YYYY-MM-DD] [--suffix LETTER] [--checkpoint DIR] [--assemble DIR] [--options FILE]",
       "kind": "report",
       "lifecycle": "supported"
     },

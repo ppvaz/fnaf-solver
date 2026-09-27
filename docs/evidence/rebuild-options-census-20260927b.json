@@ -1,0 +1,5037 @@
+{
+  "schema": "evidence-record-v1",
+  "kind": "fnaf2-rebuild-options-census-v1",
+  "id": "rebuild-options-census-20260927b",
+  "claimLevel": "MODEL_ONLY",
+  "date": "2026-09-27",
+  "question": "For each committed FNaF 2 story-night winner (Nights 1-6), the Night 7 binding k3 and the Night 7 preset schedule, what win rate does the model predict with its default options, and with the options under which it matches the rebuilt Android runtime on no-input Nights 1-5 (with and without the disputed footstepCamMarkers), on the same design and held-out seeds? Which bindings move outside sampling noise?",
+  "answer": "26 subjects (22 distinct replays), 3000 design + 3000 held-out seeds each. Default model: every scored subject wins every seed of both blocks. rebuild: 0 MOVED, 0 ONE_BLOCK, 0 WITHIN_NOISE, 26 IDENTICAL. rebuild-no-cam-markers: 0 MOVED, 0 ONE_BLOCK, 0 WITHIN_NOISE, 26 IDENTICAL. footstepCamMarkers alone (rebuild against rebuild-no-cam-markers): 0 MOVED, 0 ONE_BLOCK, 0 WITHIN_NOISE, 26 IDENTICAL.",
+  "coverage": {
+    "scored": 26,
+    "subjects": 26,
+    "notRun": []
+  },
+  "flagged": [],
+  "tally": {
+    "rebuild": {
+      "IDENTICAL": ["campaign-night1-minimal@1","campaign-night1-minus7-n1-first@1","campaign-night1-minus7@1","campaign-night5-contact-final-20260912@5","campaign-night5-contact-final@5","campaign-night5-hallfix@5","campaign-night5-mask5plus@5","campaign-night5-noflash@5","campaign-night5-toys-n5@5","campaign-night6-b@6","campaign-night6-c@6","campaign-night6-d@6","campaign-night6-e@6","campaign-night6-f@6","campaign-night6-g@6","campaign-night6-h-registered@6","campaign-night6-h@6","campaign-night6-h2@6","campaign-night6@6","campaign-night7-k3@7","campaign-toys-night5@5","campaign-toys-nights1-2@1","campaign-toys-nights1-2@2","campaign-toys-nights3-4@3","campaign-toys-nights3-4@4","night7-preset-golden-freddy@7"],
+      "WITHIN_NOISE": [],
+      "ONE_BLOCK": [],
+      "MOVED": []
+    },
+    "rebuild-no-cam-markers": {
+      "IDENTICAL": ["campaign-night1-minimal@1","campaign-night1-minus7-n1-first@1","campaign-night1-minus7@1","campaign-night5-contact-final-20260912@5","campaign-night5-contact-final@5","campaign-night5-hallfix@5","campaign-night5-mask5plus@5","campaign-night5-noflash@5","campaign-night5-toys-n5@5","campaign-night6-b@6","campaign-night6-c@6","campaign-night6-d@6","campaign-night6-e@6","campaign-night6-f@6","campaign-night6-g@6","campaign-night6-h-registered@6","campaign-night6-h@6","campaign-night6-h2@6","campaign-night6@6","campaign-night7-k3@7","campaign-toys-night5@5","campaign-toys-nights1-2@1","campaign-toys-nights1-2@2","campaign-toys-nights3-4@3","campaign-toys-nights3-4@4","night7-preset-golden-freddy@7"],
+      "WITHIN_NOISE": [],
+      "ONE_BLOCK": [],
+      "MOVED": []
+    },
+    "footstepCamMarkers (rebuild vs rebuild-no-cam-markers)": {
+      "IDENTICAL": ["campaign-night1-minimal@1","campaign-night1-minus7-n1-first@1","campaign-night1-minus7@1","campaign-night5-contact-final-20260912@5","campaign-night5-contact-final@5","campaign-night5-hallfix@5","campaign-night5-mask5plus@5","campaign-night5-noflash@5","campaign-night5-toys-n5@5","campaign-night6-b@6","campaign-night6-c@6","campaign-night6-d@6","campaign-night6-e@6","campaign-night6-f@6","campaign-night6-g@6","campaign-night6-h-registered@6","campaign-night6-h@6","campaign-night6-h2@6","campaign-night6@6","campaign-night7-k3@7","campaign-toys-night5@5","campaign-toys-nights1-2@1","campaign-toys-nights1-2@2","campaign-toys-nights3-4@3","campaign-toys-nights3-4@4","night7-preset-golden-freddy@7"],
+      "WITHIN_NOISE": [],
+      "ONE_BLOCK": [],
+      "MOVED": []
+    }
+  },
+  "whyItIsModelOnly": "No device run and no option default changed. Every figure is the simulator replaying the plan the phone is sent, on its scheduled frames, under two option sets; the rebuild match it leans on is one seed per night with no gameplay input (draws and LCG state only, rebuilt-runtime fidelity).",
+  "method": {
+    "tool": "tools/rebuild-options-census.mjs",
+    "command": "node tools/rebuild-options-census.mjs --jobs 2 --count 3000 --date 2026-09-27 --suffix b",
+    "git": {
+      "commit": "de14d553b17b0f51011c431019e5f03b2d163087",
+      "dirtyEnginePaths": []
+    },
+    "wallSeconds": 11208,
+    "generatorSha256": "ba492cebdb72b84b450e1c138d31b1d0113d3aa7a22e3ea2ba0064b41108da75",
+    "optionsFile": {
+      "path": "tools/recompile/sourced-rebuild-model-options-20260927b.json",
+      "sha256": "cc41410e5d592335976a3019fd49ecee16e27c811aae39f6fe11eaeb297b37a1"
+    },
+    "optionSets": [
+      {
+        "id": "default",
+        "modelOptions": {}
+      },
+      {
+        "id": "rebuild",
+        "modelOptions": {
+          "sourcedRouteForks": true,
+          "sourcedHallEntry": true,
+          "sourcedDropLightOrder": true,
+          "sourcedFoxyChain": true,
+          "sourcedUnconditionalDraws": true,
+          "sourcedEventDraws": true,
+          "sourcedBlackoutDraws": true,
+          "sourcedViewDraws": true,
+          "sourcedRollDraws": true,
+          "sourcedMonitorDownDraw": true,
+          "sourcedSecondPass": true,
+          "sourcedPuppetGlitchDraws": true,
+          "sourcedFootstepDraws": true,
+          "sourcedMangleReturn": true,
+          "sourcedVentCamDraws": true,
+          "sourcedRandomImageDraw": true,
+          "sourcedMonitorRaiseGate": true,
+          "sourcedSheetOrder": true,
+          "sourcedLastViewPause": true,
+          "frameMs": 16.666666666666668,
+          "frameValue5": 1,
+          "sourcedEveryOrigin": true,
+          "footstepCamMarkers": true,
+          "sourcedBoxCountdown": true,
+          "sourcedPuppetMoveOrder": true,
+          "sourcedHourTable": true,
+          "sourcedParkedMarker": true,
+          "sourcedCustomDialOrder": true,
+          "sourcedCam8Cancel": true
+        }
+      },
+      {
+        "id": "rebuild-no-cam-markers",
+        "modelOptions": {
+          "sourcedRouteForks": true,
+          "sourcedHallEntry": true,
+          "sourcedDropLightOrder": true,
+          "sourcedFoxyChain": true,
+          "sourcedUnconditionalDraws": true,
+          "sourcedEventDraws": true,
+          "sourcedBlackoutDraws": true,
+          "sourcedViewDraws": true,
+          "sourcedRollDraws": true,
+          "sourcedMonitorDownDraw": true,
+          "sourcedSecondPass": true,
+          "sourcedPuppetGlitchDraws": true,
+          "sourcedFootstepDraws": true,
+          "sourcedMangleReturn": true,
+          "sourcedVentCamDraws": true,
+          "sourcedRandomImageDraw": true,
+          "sourcedMonitorRaiseGate": true,
+          "sourcedSheetOrder": true,
+          "sourcedLastViewPause": true,
+          "frameMs": 16.666666666666668,
+          "frameValue5": 1,
+          "sourcedEveryOrigin": true,
+          "footstepCamMarkers": false,
+          "sourcedBoxCountdown": true,
+          "sourcedPuppetMoveOrder": true,
+          "sourcedHourTable": true,
+          "sourcedParkedMarker": true,
+          "sourcedCustomDialOrder": true,
+          "sourcedCam8Cancel": true
+        }
+      }
+    ],
+    "injection": "a setter on Sim.prototype.opts merges the set into the constructor's own opts object while a replay runs, so options read in the constructor are exact; each replay asserts its Sim carries the set; frameMs and frameValue5 become constant per-frame functions (model-draw-trace.mjs simOptionsFrom)",
+    "policyFamily": "the committed winner-v1 bindings as emitted (minus-toys and minus7 schedules), each at its own anchorEpochMs + phaseOffsetMs, and the Night 7 preset schedule (PRESET_KNOBS, golden-freddy, epoch 0); no schedule is searched or selected here",
+    "lane": "exact: STRATEGY_REGISTRY[strategy].emit(winner, night).replay(seed), each binding first recompiled by compileBundle on the default model; the preset through night7-presets.mjs runNight",
+    "designBlock": {
+      "definition": "seeds 1..3000, inside winner-census.mjs designBlock() (the winners' gate seeds 1..8 or 1..3000 and the tuning cohorts)",
+      "n": 3000,
+      "sha256": "f432ed95ca0715ad4784814959c19a39660bde678c23d0a5f004221e2e2bfee7"
+    },
+    "heldOutBlock": {
+      "definition": "the first 3000 seeds outside winner-census.mjs designBlock() (winner-phase-census.mjs heldOutSeeds)",
+      "n": 3000,
+      "sha256": "13b2915ed9d2f80c9ab86a8778e11cffc068c8a51b9cf80d1aebfb2f109861d0"
+    },
+    "noise": "paired per seed against the default set (vsDefault), and rebuild-no-cam-markers also against rebuild (vsRebuild, footstepCamMarkers's own effect): exact two-sided McNemar on the seeds only one set wins; MOVED = p < 0.05 in both blocks in the same direction, ONE_BLOCK = in one block only, WITHIN_NOISE = neither, IDENTICAL = no seed differs. Wilson 95% intervals per rate.",
+    "listings": "loss and discordant-seed lists hold the first 20 [seed, reason, frame] rows; count and sha256 cover the full list"
+  },
+  "bindings": [
+    {
+      "subject": "campaign-night1-minimal@1",
+      "binding": "tools/device/campaign-night1-minimal-winner.json",
+      "night": 1,
+      "strategy": "minus-toys",
+      "epochMs": 0,
+      "winnerSha256": "efc64897bc2e6fe8e4be8955ee7b76cccbc0ed2cf298c41c4ab468f76dba8c48",
+      "winnerHash": "fnv1a-537a1bbf",
+      "planSha256": "577ec5312d408bed7c29b789de3858fe550620a79256764d91fad9fa8221430a",
+      "phone": [],
+      "replayKey": "c11a29dd6826f5e1fff91b62bdf4dfd6737f68cade46ab2af7fe3529b5e05cd7",
+      "status": "SCORED"
+    },
+    {
+      "subject": "campaign-night1-minus7-n1-first@1",
+      "binding": "tools/device/campaign-night1-minus7-n1-first-winner.json",
+      "night": 1,
+      "strategy": "minus7",
+      "epochMs": 0,
+      "winnerSha256": "ac4cbbb25f73bae0e5a09772b5ccb226e01a8a46a831b9ed9b5c37849dd2a11a",
+      "winnerHash": "fnv1a-2e6a42e3",
+      "planSha256": "425b0701831a9763d29ef238d1cd8c5ad197d1650ef9a29dcce9903e9604afe3",
+      "phone": [],
+      "replayKey": "4ff65af01ebe0dde0b601b0610591a6d1faf37e9158eea427540e69bca3c3877",
+      "status": "SCORED"
+    },
+    {
+      "subject": "campaign-night1-minus7@1",
+      "binding": "tools/device/campaign-night1-minus7-winner.json",
+      "night": 1,
+      "strategy": "minus7",
+      "epochMs": 0,
+      "winnerSha256": "23d017e9241dddd5fb50564d7a4718484bc7ede410eb7dd2e9bbbb8802dafa8d",
+      "winnerHash": "fnv1a-58e73bd5",
+      "planSha256": "425b0701831a9763d29ef238d1cd8c5ad197d1650ef9a29dcce9903e9604afe3",
+      "phone": [],
+      "replayKey": "4ff65af01ebe0dde0b601b0610591a6d1faf37e9158eea427540e69bca3c3877",
+      "status": "SCORED"
+    },
+    {
+      "subject": "campaign-night5-contact-final-20260912@5",
+      "binding": "tools/device/campaign-night5-contact-final-20260912-winner.json",
+      "night": 5,
+      "strategy": "minus-toys",
+      "epochMs": 0,
+      "winnerSha256": "9441622efda32b0834d1221628415d3ef933e0126830bfcb198d71ac29937d7c",
+      "winnerHash": "fnv1a-f430f190",
+      "planSha256": "f8328d75355cb3f6d4a27007026ed83ae729221dd1b6454776d3ea5c59693436",
+      "phone": [],
+      "replayKey": "8ded2f659c3dab4221b41d61a79aa1ce6787e2d5b28d0fbefd3515eca24b1e52",
+      "status": "SCORED"
+    },
+    {
+      "subject": "campaign-night5-contact-final@5",
+      "binding": "tools/device/campaign-night5-contact-final-winner.json",
+      "night": 5,
+      "strategy": "minus-toys",
+      "epochMs": 0,
+      "winnerSha256": "255a0d78dcbc62343c8706f1d716ae839c7d995344c54996ab1fd4d953ecdd5e",
+      "winnerHash": "fnv1a-f430f190",
+      "planSha256": "f8328d75355cb3f6d4a27007026ed83ae729221dd1b6454776d3ea5c59693436",
+      "phone": [],
+      "replayKey": "8ded2f659c3dab4221b41d61a79aa1ce6787e2d5b28d0fbefd3515eca24b1e52",
+      "status": "SCORED"
+    },
+    {
+      "subject": "campaign-night5-hallfix@5",
+      "binding": "tools/device/campaign-night5-hallfix-winner.json",
+      "night": 5,
+      "strategy": "minus-toys",
+      "epochMs": 0,
+      "winnerSha256": "1634a184f56e65be109c886bb7d9440ac9f4f715adee7e43b37df0a671a2ce0d",
+      "winnerHash": "fnv1a-148bab0b",
+      "planSha256": "e2f8dafb471486260c668bba6f357c071512a05202b3fa6791622841b20388b0",
+      "phone": [],
+      "replayKey": "5f58a1a92b9b81bc6961b7484d66ab4ba1eee5c1f57a813456b3b18be41fea76",
+      "status": "SCORED"
+    },
+    {
+      "subject": "campaign-night5-mask5plus@5",
+      "binding": "tools/device/campaign-night5-mask5plus-winner.json",
+      "night": 5,
+      "strategy": "minus-toys",
+      "epochMs": 0,
+      "winnerSha256": "637e1f2d4a3844816ea4467dd7fa384358865b29e9267405541c2063b479a8f5",
+      "winnerHash": "fnv1a-4a7ea155",
+      "planSha256": "411b503092e37bb7db1eca65ea27c91f1ee6c283d328e9a9970fefc85e6f78fd",
+      "phone": [],
+      "replayKey": "5a929dde96db3a858aa54eb21cdf6f56683f4d6f136a42cf818aedafd909e74a",
+      "status": "SCORED"
+    },
+    {
+      "subject": "campaign-night5-noflash@5",
+      "binding": "tools/device/campaign-night5-noflash-winner.json",
+      "night": 5,
+      "strategy": "minus-toys",
+      "epochMs": 0,
+      "winnerSha256": "4f318495b8da385760aadea90fcacc7f1eaa3d4c636b9ba75c1f7e1295b76ac8",
+      "winnerHash": "fnv1a-1a0e32b7",
+      "planSha256": "dbd8751ce76ad651aec71b8aa09ccc567f697a3da40583f7ccd793da37d48412",
+      "phone": [],
+      "replayKey": "a3966df9fa05304b6a7c2b815e1a1f1b1ec3e7e86e9e0a8e3d3677a86455f7a2",
+      "status": "SCORED"
+    },
+    {
+      "subject": "campaign-night5-toys-n5@5",
+      "binding": "tools/device/campaign-night5-toys-n5-winner.json",
+      "night": 5,
+      "strategy": "minus-toys",
+      "epochMs": 0,
+      "winnerSha256": "b1654fcd16551381f92c90b5a250dc8d9ed625223c412f65a933ac17306c3862",
+      "winnerHash": "fnv1a-9ca64157",
+      "planSha256": "44a70a945abd812ed7e32c81bb7e828ef8e738de23c14f04ef128fc2e99fdf86",
+      "phone": [],
+      "replayKey": "8fcd3be44c5659b7543106455e448cf99af78061fa625b693b53e67cbdf53153",
+      "status": "SCORED"
+    },
+    {
+      "subject": "campaign-night6-b@6",
+      "binding": "tools/device/campaign-night6-b-winner.json",
+      "night": 6,
+      "strategy": "minus-toys",
+      "epochMs": 5253,
+      "winnerSha256": "d0ae423aeb2688b65ad3f57266ddd7d81c8d6fdfe0c8d41c730d19b26c1c263a",
+      "winnerHash": "fnv1a-3c7ba773",
+      "planSha256": "971ea4968a1bdccc5ecf8b98bbf71cbb37a63500a02f1d4ea3119fea25b22b3f",
+      "phone": [],
+      "replayKey": "b9742a0089e2b6f8be6d9b8f9fdcb10b78bc13688a521a7f7a5b054ec1531d7d",
+      "status": "SCORED"
+    },
+    {
+      "subject": "campaign-night6-c@6",
+      "binding": "tools/device/campaign-night6-c-winner.json",
+      "night": 6,
+      "strategy": "minus-toys",
+      "epochMs": 5170,
+      "winnerSha256": "6be6ea922ead7e402b972bcd77a947614d0ecb95a8872a54e0b40e378c011ea0",
+      "winnerHash": "fnv1a-cf41e97e",
+      "planSha256": "971ea4968a1bdccc5ecf8b98bbf71cbb37a63500a02f1d4ea3119fea25b22b3f",
+      "phone": [],
+      "replayKey": "2915b4dbcc69b0360ac0e828f7186f7bd936844c61dc484ddd8de05687277ff2",
+      "status": "SCORED"
+    },
+    {
+      "subject": "campaign-night6-d@6",
+      "binding": "tools/device/campaign-night6-d-winner.json",
+      "night": 6,
+      "strategy": "minus-toys",
+      "epochMs": 5300,
+      "winnerSha256": "3c80739f4c9bbdc871530822ad5ac156625de5f33ea5e74ad67b13223edff8ab",
+      "winnerHash": "fnv1a-e3a68491",
+      "planSha256": "971ea4968a1bdccc5ecf8b98bbf71cbb37a63500a02f1d4ea3119fea25b22b3f",
+      "phone": [],
+      "replayKey": "1166cd8a9799d0fb282c6df515601a1be06a94252378af45ffbb116dc681a947",
+      "status": "SCORED"
+    },
+    {
+      "subject": "campaign-night6-e@6",
+      "binding": "tools/device/campaign-night6-e-winner.json",
+      "night": 6,
+      "strategy": "minus-toys",
+      "epochMs": 4850,
+      "winnerSha256": "b0619a3fd71576881481249b849fe2fde4949e6f3265b811e09de64081998f66",
+      "winnerHash": "fnv1a-ad6993c7",
+      "planSha256": "e5243839ca3d195d1eaf7a8931092a434ddaf759ae875b25cd47791bd7205b8e",
+      "phone": [],
+      "replayKey": "145d6ac51fc4582421a013818269709364c23fd77027f69b1a53bcb694ac4b12",
+      "status": "SCORED"
+    },
+    {
+      "subject": "campaign-night6-f@6",
+      "binding": "tools/device/campaign-night6-f-winner.json",
+      "night": 6,
+      "strategy": "minus-toys",
+      "epochMs": 4850,
+      "winnerSha256": "ffea908c51e5213c5f463152b0718b534f4321c782017d6c832c88d56fbc3684",
+      "winnerHash": "fnv1a-b6c36d77",
+      "planSha256": "4ea2dc949d3d2bec7ede6740edf6b02793be16f411c1f269e7965b94c9f70198",
+      "phone": [],
+      "replayKey": "949811500b94457849c0e999207e9d6ff3b84d7b0e30dc8f919846fe2cb0694a",
+      "status": "SCORED"
+    },
+    {
+      "subject": "campaign-night6-g@6",
+      "binding": "tools/device/campaign-night6-g-winner.json",
+      "night": 6,
+      "strategy": "minus-toys",
+      "epochMs": 4850,
+      "winnerSha256": "61ff3d0845ca3c26b12855b1113d9b4118b60e43b59e5b41d7ecff209a0e9a4c",
+      "winnerHash": "fnv1a-1b43db92",
+      "planSha256": "4ac705c7f875a4a88d612c9ac0e571c99fe0a106df165c2fa2721064100ddc89",
+      "phone": [],
+      "replayKey": "61fcbe24fe7b2e7c035c92cd2b42a31a2f53091aab3d0a2edb9d3bf7bcb25992",
+      "status": "SCORED"
+    },
+    {
+      "subject": "campaign-night6-h-registered@6",
+      "binding": "tools/device/campaign-night6-h-registered-winner.json",
+      "night": 6,
+      "strategy": "minus-toys",
+      "epochMs": 4850,
+      "winnerSha256": "fb8f0dffa24385cfbd8ac1d8179a804015fe199dfc78ce602a7ab097eaef4ef8",
+      "winnerHash": "fnv1a-3d5b2167",
+      "planSha256": "24309871c40ace16260cf2bddf970435dc3ccc791f09ac015f386d2057452f30",
+      "phone": [],
+      "replayKey": "c35711ef125460e467d6cb895b9660e02331c1f6eb355658f2f0306720cea834",
+      "status": "SCORED"
+    },
+    {
+      "subject": "campaign-night6-h@6",
+      "binding": "tools/device/campaign-night6-h-winner.json",
+      "night": 6,
+      "strategy": "minus-toys",
+      "epochMs": 4850,
+      "winnerSha256": "b466b7a81b71e08845e475258463ec13cfd583a5c6f2b090395ca64d3def645c",
+      "winnerHash": "fnv1a-3d5b2167",
+      "planSha256": "24309871c40ace16260cf2bddf970435dc3ccc791f09ac015f386d2057452f30",
+      "phone": [],
+      "replayKey": "c35711ef125460e467d6cb895b9660e02331c1f6eb355658f2f0306720cea834",
+      "status": "SCORED"
+    },
+    {
+      "subject": "campaign-night6-h2@6",
+      "binding": "tools/device/campaign-night6-h2-winner.json",
+      "night": 6,
+      "strategy": "minus-toys",
+      "epochMs": 4850,
+      "winnerSha256": "59686dbb2182c7545ab27efae79390c48ebfab2961e30cb1e966e32e0a34a5f0",
+      "winnerHash": "fnv1a-c27182da",
+      "planSha256": "103bb20143c616716c3a184c02e89bdbfd49b81d55ca8485082434f8d083d696",
+      "phone": [],
+      "replayKey": "bc0337ed757e049041273cba051550cf3382780cdf567b3d1831b952069d5a7f",
+      "status": "SCORED"
+    },
+    {
+      "subject": "campaign-night6@6",
+      "binding": "tools/device/campaign-night6-winner.json",
+      "night": 6,
+      "strategy": "minus-toys",
+      "epochMs": 0,
+      "winnerSha256": "dbfe73ad4db16f1678fca2a2cc15dd9b2f1659cf1e2f853fe60a8525a9263d4b",
+      "winnerHash": "fnv1a-59908edd",
+      "planSha256": "df05f5167a7ded7e6aeef0e4f71f2c451de88e6dbce35035764dace81250dd1b",
+      "phone": [],
+      "replayKey": "56d30bb6a30a35313080c2a3fe1bb6bd2588e73ee74e6260ef18150880f34720",
+      "status": "SCORED"
+    },
+    {
+      "subject": "campaign-night7-k3@7",
+      "binding": "tools/device/campaign-night7-k3-winner.json",
+      "night": 7,
+      "strategy": "minus-toys",
+      "epochMs": 2433,
+      "winnerSha256": "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78",
+      "winnerHash": "fnv1a-5c8dcb5f",
+      "planSha256": "66b0abb4f65d65584d102e8c2a443e622df8f69ea9d4ac42c20e0aaa77867aff",
+      "phone": [
+        {
+          "record": "docs/evidence/night7-cohort-k3-computed-20260925.json",
+          "wins": 8,
+          "counted": 10,
+          "size": 10,
+          "status": "INCOMPLETE"
+        }
+      ],
+      "replayKey": "765fc05a94eae58b9c2dd399c60a289120b6fca80aeb87d66365b44544a4abe1",
+      "status": "SCORED"
+    },
+    {
+      "subject": "campaign-toys-night5@5",
+      "binding": "tools/device/campaign-toys-night5-winner.json",
+      "night": 5,
+      "strategy": "minus-toys",
+      "epochMs": 0,
+      "winnerSha256": "e98b0dc23e2b1571127addcc626db19e5f4775f8ec0ab326137d14ef64c11de8",
+      "winnerHash": "fnv1a-959f7cb5",
+      "planSha256": "f8328d75355cb3f6d4a27007026ed83ae729221dd1b6454776d3ea5c59693436",
+      "phone": [],
+      "replayKey": "8ded2f659c3dab4221b41d61a79aa1ce6787e2d5b28d0fbefd3515eca24b1e52",
+      "status": "SCORED"
+    },
+    {
+      "subject": "campaign-toys-nights1-2@1",
+      "binding": "tools/device/campaign-toys-nights1-2-winner.json",
+      "night": 1,
+      "strategy": "minus-toys",
+      "epochMs": 0,
+      "winnerSha256": "7e67e7085fd563cd441a3e99d33be1dc11b4d9690e117e2559ab6b205fe6cb83",
+      "winnerHash": "fnv1a-e75e1b68",
+      "planSha256": "5101e12868bec26bc229df2a27f4fa77d75b995f18981dabb70df52099c2a8d4",
+      "phone": [],
+      "replayKey": "fc30b835d2b35f78b659786a5750417f0c0c6a90aee942e143ecb0d77e14444e",
+      "status": "SCORED"
+    },
+    {
+      "subject": "campaign-toys-nights1-2@2",
+      "binding": "tools/device/campaign-toys-nights1-2-winner.json",
+      "night": 2,
+      "strategy": "minus-toys",
+      "epochMs": 0,
+      "winnerSha256": "7e67e7085fd563cd441a3e99d33be1dc11b4d9690e117e2559ab6b205fe6cb83",
+      "winnerHash": "fnv1a-e75e1b68",
+      "planSha256": "ca67e2cdf2e5baa42b87ad387594589bc16d6683507860e00ce852ab1c1a18bb",
+      "phone": [],
+      "replayKey": "9ab9dbfe6987bff9201951603a6c5996ee2c180d00342b3aaf53d8851ae028c7",
+      "status": "SCORED"
+    },
+    {
+      "subject": "campaign-toys-nights3-4@3",
+      "binding": "tools/device/campaign-toys-nights3-4-winner.json",
+      "night": 3,
+      "strategy": "minus-toys",
+      "epochMs": 0,
+      "winnerSha256": "425826ae44d77e77137b6ba24a1e371cbc4ee9729ec21cdd40ed339dd7a7ec7b",
+      "winnerHash": "fnv1a-ce4aa3d8",
+      "planSha256": "09cf8bddd9acf1bdd4657e73d7cb089e64b4c8fe8a7daf4dddad01afaa35ae1a",
+      "phone": [],
+      "replayKey": "e6aaa825df4813d3046a2a8e9782cfe9c0acb5248d13878b1423fad07cb2de55",
+      "status": "SCORED"
+    },
+    {
+      "subject": "campaign-toys-nights3-4@4",
+      "binding": "tools/device/campaign-toys-nights3-4-winner.json",
+      "night": 4,
+      "strategy": "minus-toys",
+      "epochMs": 0,
+      "winnerSha256": "425826ae44d77e77137b6ba24a1e371cbc4ee9729ec21cdd40ed339dd7a7ec7b",
+      "winnerHash": "fnv1a-ce4aa3d8",
+      "planSha256": "700e1a9336b783da77cc9a5c4bf2f80afef044776bf7ef23190661cd30f63011",
+      "phone": [],
+      "replayKey": "04156ea366178b4be657d5f0250c92bcc795d7ac7696c1f9414dbf7576ec209d",
+      "status": "SCORED"
+    },
+    {
+      "subject": "night7-preset-golden-freddy@7",
+      "binding": null,
+      "night": 7,
+      "strategy": "minus-toys",
+      "epochMs": 0,
+      "schedule": "night7-presets.mjs PRESET_KNOBS",
+      "knobsSha256": "bf7b16a8c72b0b4c3e092fdbe43aef285d30e5ab44fba939de8afb20924bf12a",
+      "preset": "golden-freddy",
+      "dials": {
+        "withfreddy": 20,
+        "withbonnie": 20,
+        "withchica": 20,
+        "foxy": 20,
+        "toyfreddy": 20,
+        "toybonnie": 20,
+        "toychica": 20,
+        "mangle": 20,
+        "bb": 20,
+        "golden": 20
+      },
+      "win": "sim.won AND splitAt >= 0",
+      "replayKey": "64b8f1bf81ddb8daa7b80ae685b1457b9b5080e6cd07577480134baf711ad84b",
+      "status": "SCORED"
+    }
+  ],
+  "rows": [
+    {
+      "subject": "campaign-night1-minimal@1",
+      "binding": "tools/device/campaign-night1-minimal-winner.json",
+      "night": 1,
+      "set": "default",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      }
+    },
+    {
+      "subject": "campaign-night1-minimal@1",
+      "binding": "tools/device/campaign-night1-minimal-winner.json",
+      "night": 1,
+      "set": "rebuild",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night1-minimal@1",
+      "binding": "tools/device/campaign-night1-minimal-winner.json",
+      "night": 1,
+      "set": "rebuild-no-cam-markers",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      },
+      "vsRebuild": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night1-minus7-n1-first@1",
+      "binding": "tools/device/campaign-night1-minus7-n1-first-winner.json",
+      "night": 1,
+      "set": "default",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      }
+    },
+    {
+      "subject": "campaign-night1-minus7-n1-first@1",
+      "binding": "tools/device/campaign-night1-minus7-n1-first-winner.json",
+      "night": 1,
+      "set": "rebuild",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night1-minus7-n1-first@1",
+      "binding": "tools/device/campaign-night1-minus7-n1-first-winner.json",
+      "night": 1,
+      "set": "rebuild-no-cam-markers",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      },
+      "vsRebuild": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night1-minus7@1",
+      "binding": "tools/device/campaign-night1-minus7-winner.json",
+      "night": 1,
+      "set": "default",
+      "status": "SCORED",
+      "sharesReplayWith": "campaign-night1-minus7-n1-first@1",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      }
+    },
+    {
+      "subject": "campaign-night1-minus7@1",
+      "binding": "tools/device/campaign-night1-minus7-winner.json",
+      "night": 1,
+      "set": "rebuild",
+      "status": "SCORED",
+      "sharesReplayWith": "campaign-night1-minus7-n1-first@1",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night1-minus7@1",
+      "binding": "tools/device/campaign-night1-minus7-winner.json",
+      "night": 1,
+      "set": "rebuild-no-cam-markers",
+      "status": "SCORED",
+      "sharesReplayWith": "campaign-night1-minus7-n1-first@1",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      },
+      "vsRebuild": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night5-contact-final-20260912@5",
+      "binding": "tools/device/campaign-night5-contact-final-20260912-winner.json",
+      "night": 5,
+      "set": "default",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      }
+    },
+    {
+      "subject": "campaign-night5-contact-final-20260912@5",
+      "binding": "tools/device/campaign-night5-contact-final-20260912-winner.json",
+      "night": 5,
+      "set": "rebuild",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night5-contact-final-20260912@5",
+      "binding": "tools/device/campaign-night5-contact-final-20260912-winner.json",
+      "night": 5,
+      "set": "rebuild-no-cam-markers",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      },
+      "vsRebuild": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night5-contact-final@5",
+      "binding": "tools/device/campaign-night5-contact-final-winner.json",
+      "night": 5,
+      "set": "default",
+      "status": "SCORED",
+      "sharesReplayWith": "campaign-night5-contact-final-20260912@5",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      }
+    },
+    {
+      "subject": "campaign-night5-contact-final@5",
+      "binding": "tools/device/campaign-night5-contact-final-winner.json",
+      "night": 5,
+      "set": "rebuild",
+      "status": "SCORED",
+      "sharesReplayWith": "campaign-night5-contact-final-20260912@5",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night5-contact-final@5",
+      "binding": "tools/device/campaign-night5-contact-final-winner.json",
+      "night": 5,
+      "set": "rebuild-no-cam-markers",
+      "status": "SCORED",
+      "sharesReplayWith": "campaign-night5-contact-final-20260912@5",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      },
+      "vsRebuild": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night5-hallfix@5",
+      "binding": "tools/device/campaign-night5-hallfix-winner.json",
+      "night": 5,
+      "set": "default",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      }
+    },
+    {
+      "subject": "campaign-night5-hallfix@5",
+      "binding": "tools/device/campaign-night5-hallfix-winner.json",
+      "night": 5,
+      "set": "rebuild",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night5-hallfix@5",
+      "binding": "tools/device/campaign-night5-hallfix-winner.json",
+      "night": 5,
+      "set": "rebuild-no-cam-markers",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      },
+      "vsRebuild": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night5-mask5plus@5",
+      "binding": "tools/device/campaign-night5-mask5plus-winner.json",
+      "night": 5,
+      "set": "default",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      }
+    },
+    {
+      "subject": "campaign-night5-mask5plus@5",
+      "binding": "tools/device/campaign-night5-mask5plus-winner.json",
+      "night": 5,
+      "set": "rebuild",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night5-mask5plus@5",
+      "binding": "tools/device/campaign-night5-mask5plus-winner.json",
+      "night": 5,
+      "set": "rebuild-no-cam-markers",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      },
+      "vsRebuild": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night5-noflash@5",
+      "binding": "tools/device/campaign-night5-noflash-winner.json",
+      "night": 5,
+      "set": "default",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      }
+    },
+    {
+      "subject": "campaign-night5-noflash@5",
+      "binding": "tools/device/campaign-night5-noflash-winner.json",
+      "night": 5,
+      "set": "rebuild",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night5-noflash@5",
+      "binding": "tools/device/campaign-night5-noflash-winner.json",
+      "night": 5,
+      "set": "rebuild-no-cam-markers",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      },
+      "vsRebuild": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night5-toys-n5@5",
+      "binding": "tools/device/campaign-night5-toys-n5-winner.json",
+      "night": 5,
+      "set": "default",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      }
+    },
+    {
+      "subject": "campaign-night5-toys-n5@5",
+      "binding": "tools/device/campaign-night5-toys-n5-winner.json",
+      "night": 5,
+      "set": "rebuild",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night5-toys-n5@5",
+      "binding": "tools/device/campaign-night5-toys-n5-winner.json",
+      "night": 5,
+      "set": "rebuild-no-cam-markers",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      },
+      "vsRebuild": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night6-b@6",
+      "binding": "tools/device/campaign-night6-b-winner.json",
+      "night": 6,
+      "set": "default",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      }
+    },
+    {
+      "subject": "campaign-night6-b@6",
+      "binding": "tools/device/campaign-night6-b-winner.json",
+      "night": 6,
+      "set": "rebuild",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night6-b@6",
+      "binding": "tools/device/campaign-night6-b-winner.json",
+      "night": 6,
+      "set": "rebuild-no-cam-markers",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      },
+      "vsRebuild": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night6-c@6",
+      "binding": "tools/device/campaign-night6-c-winner.json",
+      "night": 6,
+      "set": "default",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      }
+    },
+    {
+      "subject": "campaign-night6-c@6",
+      "binding": "tools/device/campaign-night6-c-winner.json",
+      "night": 6,
+      "set": "rebuild",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night6-c@6",
+      "binding": "tools/device/campaign-night6-c-winner.json",
+      "night": 6,
+      "set": "rebuild-no-cam-markers",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      },
+      "vsRebuild": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night6-d@6",
+      "binding": "tools/device/campaign-night6-d-winner.json",
+      "night": 6,
+      "set": "default",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      }
+    },
+    {
+      "subject": "campaign-night6-d@6",
+      "binding": "tools/device/campaign-night6-d-winner.json",
+      "night": 6,
+      "set": "rebuild",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night6-d@6",
+      "binding": "tools/device/campaign-night6-d-winner.json",
+      "night": 6,
+      "set": "rebuild-no-cam-markers",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      },
+      "vsRebuild": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night6-e@6",
+      "binding": "tools/device/campaign-night6-e-winner.json",
+      "night": 6,
+      "set": "default",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      }
+    },
+    {
+      "subject": "campaign-night6-e@6",
+      "binding": "tools/device/campaign-night6-e-winner.json",
+      "night": 6,
+      "set": "rebuild",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night6-e@6",
+      "binding": "tools/device/campaign-night6-e-winner.json",
+      "night": 6,
+      "set": "rebuild-no-cam-markers",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      },
+      "vsRebuild": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night6-f@6",
+      "binding": "tools/device/campaign-night6-f-winner.json",
+      "night": 6,
+      "set": "default",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      }
+    },
+    {
+      "subject": "campaign-night6-f@6",
+      "binding": "tools/device/campaign-night6-f-winner.json",
+      "night": 6,
+      "set": "rebuild",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night6-f@6",
+      "binding": "tools/device/campaign-night6-f-winner.json",
+      "night": 6,
+      "set": "rebuild-no-cam-markers",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      },
+      "vsRebuild": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night6-g@6",
+      "binding": "tools/device/campaign-night6-g-winner.json",
+      "night": 6,
+      "set": "default",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      }
+    },
+    {
+      "subject": "campaign-night6-g@6",
+      "binding": "tools/device/campaign-night6-g-winner.json",
+      "night": 6,
+      "set": "rebuild",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night6-g@6",
+      "binding": "tools/device/campaign-night6-g-winner.json",
+      "night": 6,
+      "set": "rebuild-no-cam-markers",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      },
+      "vsRebuild": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night6-h-registered@6",
+      "binding": "tools/device/campaign-night6-h-registered-winner.json",
+      "night": 6,
+      "set": "default",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      }
+    },
+    {
+      "subject": "campaign-night6-h-registered@6",
+      "binding": "tools/device/campaign-night6-h-registered-winner.json",
+      "night": 6,
+      "set": "rebuild",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night6-h-registered@6",
+      "binding": "tools/device/campaign-night6-h-registered-winner.json",
+      "night": 6,
+      "set": "rebuild-no-cam-markers",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      },
+      "vsRebuild": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night6-h@6",
+      "binding": "tools/device/campaign-night6-h-winner.json",
+      "night": 6,
+      "set": "default",
+      "status": "SCORED",
+      "sharesReplayWith": "campaign-night6-h-registered@6",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      }
+    },
+    {
+      "subject": "campaign-night6-h@6",
+      "binding": "tools/device/campaign-night6-h-winner.json",
+      "night": 6,
+      "set": "rebuild",
+      "status": "SCORED",
+      "sharesReplayWith": "campaign-night6-h-registered@6",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night6-h@6",
+      "binding": "tools/device/campaign-night6-h-winner.json",
+      "night": 6,
+      "set": "rebuild-no-cam-markers",
+      "status": "SCORED",
+      "sharesReplayWith": "campaign-night6-h-registered@6",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      },
+      "vsRebuild": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night6-h2@6",
+      "binding": "tools/device/campaign-night6-h2-winner.json",
+      "night": 6,
+      "set": "default",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      }
+    },
+    {
+      "subject": "campaign-night6-h2@6",
+      "binding": "tools/device/campaign-night6-h2-winner.json",
+      "night": 6,
+      "set": "rebuild",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night6-h2@6",
+      "binding": "tools/device/campaign-night6-h2-winner.json",
+      "night": 6,
+      "set": "rebuild-no-cam-markers",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      },
+      "vsRebuild": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night6@6",
+      "binding": "tools/device/campaign-night6-winner.json",
+      "night": 6,
+      "set": "default",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      }
+    },
+    {
+      "subject": "campaign-night6@6",
+      "binding": "tools/device/campaign-night6-winner.json",
+      "night": 6,
+      "set": "rebuild",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night6@6",
+      "binding": "tools/device/campaign-night6-winner.json",
+      "night": 6,
+      "set": "rebuild-no-cam-markers",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      },
+      "vsRebuild": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night7-k3@7",
+      "binding": "tools/device/campaign-night7-k3-winner.json",
+      "night": 7,
+      "set": "default",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      }
+    },
+    {
+      "subject": "campaign-night7-k3@7",
+      "binding": "tools/device/campaign-night7-k3-winner.json",
+      "night": 7,
+      "set": "rebuild",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-night7-k3@7",
+      "binding": "tools/device/campaign-night7-k3-winner.json",
+      "night": 7,
+      "set": "rebuild-no-cam-markers",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      },
+      "vsRebuild": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-toys-night5@5",
+      "binding": "tools/device/campaign-toys-night5-winner.json",
+      "night": 5,
+      "set": "default",
+      "status": "SCORED",
+      "sharesReplayWith": "campaign-night5-contact-final-20260912@5",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      }
+    },
+    {
+      "subject": "campaign-toys-night5@5",
+      "binding": "tools/device/campaign-toys-night5-winner.json",
+      "night": 5,
+      "set": "rebuild",
+      "status": "SCORED",
+      "sharesReplayWith": "campaign-night5-contact-final-20260912@5",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-toys-night5@5",
+      "binding": "tools/device/campaign-toys-night5-winner.json",
+      "night": 5,
+      "set": "rebuild-no-cam-markers",
+      "status": "SCORED",
+      "sharesReplayWith": "campaign-night5-contact-final-20260912@5",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      },
+      "vsRebuild": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-toys-nights1-2@1",
+      "binding": "tools/device/campaign-toys-nights1-2-winner.json",
+      "night": 1,
+      "set": "default",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      }
+    },
+    {
+      "subject": "campaign-toys-nights1-2@1",
+      "binding": "tools/device/campaign-toys-nights1-2-winner.json",
+      "night": 1,
+      "set": "rebuild",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-toys-nights1-2@1",
+      "binding": "tools/device/campaign-toys-nights1-2-winner.json",
+      "night": 1,
+      "set": "rebuild-no-cam-markers",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      },
+      "vsRebuild": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-toys-nights1-2@2",
+      "binding": "tools/device/campaign-toys-nights1-2-winner.json",
+      "night": 2,
+      "set": "default",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      }
+    },
+    {
+      "subject": "campaign-toys-nights1-2@2",
+      "binding": "tools/device/campaign-toys-nights1-2-winner.json",
+      "night": 2,
+      "set": "rebuild",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-toys-nights1-2@2",
+      "binding": "tools/device/campaign-toys-nights1-2-winner.json",
+      "night": 2,
+      "set": "rebuild-no-cam-markers",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      },
+      "vsRebuild": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-toys-nights3-4@3",
+      "binding": "tools/device/campaign-toys-nights3-4-winner.json",
+      "night": 3,
+      "set": "default",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      }
+    },
+    {
+      "subject": "campaign-toys-nights3-4@3",
+      "binding": "tools/device/campaign-toys-nights3-4-winner.json",
+      "night": 3,
+      "set": "rebuild",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-toys-nights3-4@3",
+      "binding": "tools/device/campaign-toys-nights3-4-winner.json",
+      "night": 3,
+      "set": "rebuild-no-cam-markers",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      },
+      "vsRebuild": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-toys-nights3-4@4",
+      "binding": "tools/device/campaign-toys-nights3-4-winner.json",
+      "night": 4,
+      "set": "default",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      }
+    },
+    {
+      "subject": "campaign-toys-nights3-4@4",
+      "binding": "tools/device/campaign-toys-nights3-4-winner.json",
+      "night": 4,
+      "set": "rebuild",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "campaign-toys-nights3-4@4",
+      "binding": "tools/device/campaign-toys-nights3-4-winner.json",
+      "night": 4,
+      "set": "rebuild-no-cam-markers",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      },
+      "vsRebuild": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "night7-preset-golden-freddy@7",
+      "binding": null,
+      "night": 7,
+      "set": "default",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      }
+    },
+    {
+      "subject": "night7-preset-golden-freddy@7",
+      "binding": null,
+      "night": 7,
+      "set": "rebuild",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    },
+    {
+      "subject": "night7-preset-golden-freddy@7",
+      "binding": null,
+      "night": 7,
+      "set": "rebuild-no-cam-markers",
+      "status": "SCORED",
+      "design": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "heldOut": {
+        "wins": 3000,
+        "n": 3000,
+        "rate": 1,
+        "wilson95": [0.998721,1],
+        "deaths": {},
+        "losses": {
+          "count": 0,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "list": []
+        }
+      },
+      "vsDefault": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      },
+      "vsRebuild": {
+        "verdict": "IDENTICAL",
+        "design": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        },
+        "heldOut": {
+          "deltaWins": 0,
+          "defaultOnlyWins": 0,
+          "optionOnlyWins": 0,
+          "pExact": 1,
+          "lostOnlyUnderSet": {
+            "list": []
+          },
+          "wonOnlyUnderSet": {
+            "list": []
+          }
+        }
+      }
+    }
+  ]
+}

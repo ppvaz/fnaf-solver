@@ -12,8 +12,10 @@
 // model's disagreement with the rebuild matters for the phone.
 //
 //   node tools/rebuild-options-census.mjs --jobs 3 --count 3000 --out docs/evidence/rebuild-options-census-YYYYMMDD.json
-//        [--date YYYY-MM-DD] [--checkpoint DIR] [--assemble DIR] [--options FILE]
+//        [--date YYYY-MM-DD] [--suffix LETTER] [--checkpoint DIR] [--assemble DIR] [--options FILE]
 //
+// `--suffix b` names a second record on the same date rebuild-options-census-YYYYMMDDb (as the dated option
+// snapshots are named), so an earlier record that day is kept beside it rather than overwritten.
 // `--checkpoint DIR` saves each forked block's rows after every subject, so a
 // block killed partway resumes after its last saved subject when the same
 // command is run again (hours on a shared machine; the record is unchanged).
@@ -292,7 +294,7 @@ function paired(seeds, defaultLosses, setLosses) {
 }
 
 // --- the record ----------------------------------------------------------
-export function buildRecord({ merged, count, all, winnerHashes, cohorts, git, date, command, wallSeconds, run = null }) {
+export function buildRecord({ merged, count, all, winnerHashes, cohorts, git, date, command, wallSeconds, run = null, suffix = '' }) {
   const { design, heldOut } = seedBlocks(count);
   const sets = optionSets();
   const byKey = new Map(merged.map((row) => [`${row.key} ${row.set}`, row.losses]));
@@ -387,7 +389,7 @@ export function buildRecord({ merged, count, all, winnerHashes, cohorts, git, da
     errors ? `${errors} row-block death tallies include replay errors (see deaths).` : '',
   ].filter(Boolean).join(' ');
   return {
-    schema: 'evidence-record-v1', kind: KIND, id: `rebuild-options-census-${date.replace(/-/g, '')}`,
+    schema: 'evidence-record-v1', kind: KIND, id: `rebuild-options-census-${date.replace(/-/g, '')}${suffix}`,
     claimLevel: 'MODEL_ONLY', date,
     question: 'For each committed FNaF 2 story-night winner (Nights 1-6), the Night 7 binding k3 and the Night 7 preset ' +
       'schedule, what win rate does the model predict with its default options, and with the options under which it ' +
@@ -467,13 +469,14 @@ export function formatRecord(value, indent = '') {
 }
 
 function parseArgs(argv) {
-  const args = { jobs: 1, count: 3000, out: null, checkpoint: null, date: new Date().toISOString().slice(0, 10) };
+  const args = { jobs: 1, count: 3000, out: null, checkpoint: null, suffix: '', date: new Date().toISOString().slice(0, 10) };
   for (let i = 0; i < argv.length; i += 1) {
     const flag = argv[i];
     if (flag === '--jobs') args.jobs = Number(argv[++i]);
     else if (flag === '--count') args.count = Number(argv[++i]);
     else if (flag === '--out') args.out = argv[++i];
     else if (flag === '--date') args.date = argv[++i];
+    else if (flag === '--suffix') args.suffix = argv[++i];
     else if (flag === '--checkpoint') args.checkpoint = argv[++i];
     else if (flag === '--assemble') args.assemble = argv[++i];
     else if (flag === '--options') process.env.REBUILD_OPTIONS_FILE = argv[++i];
@@ -482,6 +485,7 @@ function parseArgs(argv) {
   if (!Number.isInteger(args.jobs) || args.jobs < 1) throw new Error('--jobs must be a positive integer');
   if (!Number.isInteger(args.count) || args.count < 1 || args.count > 3000) throw new Error('--count must be 1..3000');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(args.date)) throw new Error('--date must be YYYY-MM-DD');
+  if (!/^[a-z]?$/.test(args.suffix)) throw new Error('--suffix must be one lower-case letter');
   return args;
 }
 
@@ -502,7 +506,8 @@ async function main(argv) {
     }
   } finally { rmSync(scratch, { recursive: true, force: true }); }
   const started = Date.now();
-  const command = `node tools/rebuild-options-census.mjs --jobs ${args.jobs} --count ${args.count} --date ${args.date}`;
+  const command = `node tools/rebuild-options-census.mjs --jobs ${args.jobs} --count ${args.count} --date ${args.date}` +
+    (args.suffix ? ` --suffix ${args.suffix}` : '');
   let merged;
   let run = null;
   if (args.assemble) {
@@ -521,7 +526,7 @@ async function main(argv) {
   const record = buildRecord({ merged, count: args.count, all, winnerHashes, cohorts: phoneCohorts(),
     git: gitState(['packages/core', 'tools/device', 'tools/recompile']), date: args.date,
     command: args.assemble ? `${command} --checkpoint DIR` : command,
-    wallSeconds: args.assemble ? null : Math.round((Date.now() - started) / 1000), run });
+    wallSeconds: args.assemble ? null : Math.round((Date.now() - started) / 1000), run, suffix: args.suffix });
   const text = `${formatRecord(record)}\n`;
   if (args.out) writeFileSync(args.out, text); else process.stdout.write(text);
   for (const row of record.rows) {
