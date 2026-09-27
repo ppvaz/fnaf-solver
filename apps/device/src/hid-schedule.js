@@ -179,14 +179,43 @@ function actionsOf(block) {
     atMs: block.scheduleAtMs + action.atMs - block.atMs }));
 }
 
+// One Fusion event-loop poll. A contact that starts on the slot another
+// contact left less than this long ago can reach the game as a drag of the
+// first touch rather than a new one; the arm's CAM 09 tap and the monitor
+// drop 17 ms after its release did exactly that (minus-toys-plan.mjs
+// armingGapMs: "collapse to 0 (drag, not two taps)"), and Night 1 minimal
+// missed its double-camera arm on every attempt on 2026-09-27
+// (night1-ladder-n1c/n1d). The monitor toggle is read through Multiple Touch
+// (cameraHitbox, ExtCondition -87/-88/-82 in 04-Office), which answers any
+// contact, so such a monitor press goes out on the second contact instead.
+// Camera buttons are ObjectClicked -- the mouse, the first contact only -- and
+// never move.
+export const SECOND_CONTACT_UNDER_MS = 33;
+
+function addSecondContact(events, request, control, duration) {
+  const target = controlPoint(request, control);
+  if (!Number.isInteger(duration) || duration < 1 || duration > 30000)
+    fail(`${control} duration is outside 1..30000 ms`);
+  addReport(events, [{ flags: 0, point: target }, { flags: 7, point: target }]);
+  addDelay(events, duration);
+  addReport(events, [{ flags: 0, point: target }, { flags: 4, point: target }]);
+}
+
 function compileActionEvents(request, actions, { originAtMs = 0 } = {}) {
   const events = [];
   let cursor = originAtMs;
+  let released = -Infinity;
   for (const { action, atMs } of actions) {
     if (!Number.isFinite(atMs) || atMs < cursor)
       fail(`action ${action.id} overlaps the previous HID macro`);
     addDelay(events, atMs - cursor);
-    cursor = atMs + addAction(events, request, action);
+    const single = ['ensure', 'tap', 'press'].includes(action.kind) && action.control === V.monitor;
+    if (single && atMs - released < SECOND_CONTACT_UNDER_MS) {
+      const duration = action.durationMs ?? 33;
+      addSecondContact(events, request, action.control, duration);
+      cursor = atMs + duration;
+    } else cursor = atMs + addAction(events, request, action);
+    released = cursor;
   }
   return { events, cursor };
 }
