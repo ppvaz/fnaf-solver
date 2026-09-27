@@ -2288,5 +2288,9 @@ Open:
   (bar Night 5's tick-0 raise). Night 5 9338 -> 11936 (`recompile-replay-02161639fdd24f46`), Night 7 3563 -> 6534
   (`recompile-replay-cd7291a573920040`); Night 1 still every update (`recompile-replay-75637b5727458cd0`).
 
+- `sourcedGatedEvery` (existing, `gated-every.test.js`) joins the rebuild set: g907's mask ticks count only while
+  the mask is fully on. Night 5 11936 -> 21300 (`recompile-replay-bb08f40d5ddd8d0a`), Night 7 6534 -> 6600
+  (`recompile-replay-860bf7e1c7e8fe74`); Night 1 still every update (`recompile-replay-0d67c9c7749f308b`).
+
 Open:
-- Night 5 11936 and Night 7 6534: a mask-tick sendback five loops early (g907 is a gated Every in the sheet).
+- Night 7 6600: Balloon Boy's hop cue drawn inside the roll pass, before the Paper Pals roll (g414 comes after g343).

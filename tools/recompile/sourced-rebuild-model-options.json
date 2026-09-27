@@ -39,5 +39,6 @@
   "sourcedBDrainOrder": true,
   "sourcedRoutePass": true,
   "sourcedOfficeRolls": true,
-  "sourcedAnimationCount": true
+  "sourcedAnimationCount": true,
+  "sourcedGatedEvery": true
 }

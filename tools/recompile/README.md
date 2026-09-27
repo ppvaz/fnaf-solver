@@ -1372,3 +1372,20 @@ unchanged.
 | Night 1 `minimal` | none -> none (monitor ledger now +0 on all 8 changes) | `night1-minimal-replay-animcount-20260927.json`, `recompile-replay-75637b5727458cd0` |
 | Night 5 `contact-final` | 9338 -> **11936** | `night5-contact-final-replay-animcount-20260927.json`, `recompile-replay-02161639fdd24f46` |
 | Night 7 `k3` | 3563 -> **6534** | `night7-k3-replay-animcount-20260927.json`, `recompile-replay-cd7291a573920040` |
+
+**The gated one-second countdowns join the set (`sourcedGatedEvery`, existing,
+`gated-every.test.js`).** Night 7 tick 6534 and Night 5 tick 11936: a mask-tick
+sendback came five or six loops earlier in the rebuild. On Night 7 it was
+Balloon Boy's g294, the draw at 6534 and his leave in the `balloon boy` watch.
+On Night 5 it was Mangle's g401. g907 is `mask` == 2 then `Every 1000`, and
+CND_EVERY2 counts only on loops it is reached. So the fifth tick comes five
+seconds of fully-on mask after the countdown loaded, not on the fifth global
+second. The model already had this as `sourcedGatedEvery`, with g904, g786/g785,
+g824, g825, g722 and g570, but the rebuild set had never carried it. It is added
+unchanged. The no-input ladder re-scores unchanged.
+
+| binding | first mismatch before -> after | record |
+|---|---|---|
+| Night 1 `minimal` | none -> none | `night1-minimal-replay-gatedevery-20260927.json`, `recompile-replay-0d67c9c7749f308b` |
+| Night 5 `contact-final` | 11936 -> **21300** | `night5-contact-final-replay-gatedevery-20260927.json`, `recompile-replay-bb08f40d5ddd8d0a` |
+| Night 7 `k3` | 6534 -> **6600** | `night7-k3-replay-gatedevery-20260927.json`, `recompile-replay-860bf7e1c7e8fe74` |
