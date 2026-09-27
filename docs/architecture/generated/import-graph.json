@@ -727,6 +727,13 @@
       ]
     },
     {
+      "file": "packages/core/test/blackout-clock-end.test.js",
+      "imports": [
+        "../src/mechanics/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
       "file": "packages/core/test/blackout-draws.test.js",
       "imports": [
         "../src/mechanics/plant-model.js",

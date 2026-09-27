@@ -34,5 +34,6 @@
   "sourcedRollsBeforeMoves": true,
   "sourcedPromotedMoves": true,
   "sourcedValue5": true,
-  "sourcedOfficeFootsteps": true
+  "sourcedOfficeFootsteps": true,
+  "sourcedBlackoutClockEnd": true
 }

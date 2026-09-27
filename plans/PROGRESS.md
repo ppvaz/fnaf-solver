@@ -2262,6 +2262,11 @@ Open:
   loses its persistent split (`recompile-replay-77da9b5228c837fc`); Night 5 stays 7740
   (`recompile-replay-3999b92f7f3e9d55`).
 
+- `sourcedBlackoutClockEnd` (`blackout-clock-end.test.js`, in the rebuild set): g537 resolves an encounter on the
+  loop g514's clock reaches 300, the encounter's 300th loop. Night 5 7740 -> 7811
+  (`recompile-replay-3eb3e4691cd3ce0f`), Night 7 2324 -> 3562 (`recompile-replay-e9390ac2828cd9ac`), Night 1
+  stays 21714 (`recompile-replay-08f5e9dc54e9e100`). The no-input ladder re-scores unchanged.
+
 Open:
-- Night 1 21714: Toy Bonnie promoted a loop early after a flash.
-- Night 5 7740 and Night 7 2324: the encounter resolves one update earlier in the rebuild.
+- Night 1 21714 and Night 5 7811: a unit promoted a loop early after its value 1 drains.
+- Night 7 3562: W. Freddy's g378 return a loop early (the mask reaches value 2 a loop later in the rebuild).

@@ -155,6 +155,13 @@ export class Sim {
       // start; a dropped frame on the phone advances the clock by 2 and removes
       // a draw.
       sourcedBlackoutDraws: false,
+      // The office encounter ends on g514's clock (requires sourcedBlackoutDraws and frameMs). g537 (blackout value 0
+      // >= 300, NotAlways) sets `check and move`, and g538-g555 resolve the encounter on that loop. g514 adds global
+      // value 5 to the clock from the loop `in danger` rises, that loop included, so the clock reaches 300 on the
+      // encounter's 300th loop: 299 frames after the model's start frame, not 300 (C.BLACKOUT_FRAMES). The rebuilt
+      // runtime resolves one update before the model on every encounter (Night 5 contact-final tick 7740: the
+      // g539 Random(500) repel draw; Night 7 k3 tick 2324). Off: the encounter resolves 300 frames after its start.
+      sourcedBlackoutClockEnd: false,
       // Camera-view draws (dump g344-g360, g458-g477, g366/g368/g419, g498):
       //   an accepted move writes the unit's fade counter C = 10 (g344-g360,
       //   Foxy g349); g458-g467 then take one per frame before g468-g476 draw
@@ -629,6 +636,8 @@ export class Sim {
       throw new Error('sourcedFootstepValue2 changes when the footstep cue draws: it requires sourcedFootstepDraws');
     if (this.opts.sourcedHallLatchOrder && !this.opts.frameMs)
       throw new Error('sourcedHallLatchOrder moves the hooked one-second latch reset: it requires frameMs');
+    if (this.opts.sourcedBlackoutClockEnd && !(this.opts.sourcedBlackoutDraws && this.opts.frameMs))
+      throw new Error('sourcedBlackoutClockEnd reads the g514 clock: it requires sourcedBlackoutDraws and frameMs');
     if (this.opts.sourcedValue5 && !this.opts.frameMs)
       throw new Error('sourcedValue5 derives global value 5 from the timer delta: it requires frameMs');
     if (this.opts.sourcedValue5 && this.opts.frameValue5)
@@ -1577,7 +1586,7 @@ export class Sim {
         this.blackout.masked = true;
       // Fuse expiry arms the attack, but groups 538-555 do not resolve it
       // until the 300-frame office sequence ends.
-      if (f >= this.blackout.until) {
+      if (this.opts.sourcedBlackoutClockEnd ? this.blackoutClock >= C.BLACKOUT_FRAMES : f >= this.blackout.until) {   // g537
         const ended = this.blackout;
         this.blackout = { active: false, until: 0, by: null, unitId: null, masked: false, deadline: 0 };
         if (ended.unitId) {

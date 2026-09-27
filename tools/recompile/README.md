@@ -1249,3 +1249,22 @@ persistent split, and only two runs that rejoin, 21714 and 23400.
 | Night 1 `minimal` | 21714 -> 21714 (no persistent split) | `night1-minimal-replay-officefootsteps-20260927.json`, `recompile-replay-77da9b5228c837fc` |
 | Night 5 `contact-final` | 7740 -> 7740 | `night5-contact-final-replay-officefootsteps-20260927.json`, `recompile-replay-3999b92f7f3e9d55` |
 | Night 7 `k3` | 2100 -> **2324** | `night7-k3-replay-officefootsteps-20260927.json`, `recompile-replay-ad22e514332da620` |
+
+**The encounter ends on the clock (`sourcedBlackoutClockEnd`,
+`packages/core/test/blackout-clock-end.test.js`).** Night 5 tick 7740: the
+rebuild drew the g539 `Random(500)/night` repel one update before the model, and
+every Night 7 encounter ended the same way (tick 2324, a one-update slip). The
+watched clock reads 300 at the end of 2324, with `in danger` back to 0 on that
+update. g537 (value 0 >= 300, NotAlways) sets `check and move`, and g538-g555
+resolve on the same loop. g514 adds global value 5 from the loop `in danger`
+rises, that loop included, so the clock reaches 300 on the encounter's 300th
+loop. That is 299 frames after the model's start frame, where the model
+resolved 300 frames after it. Under the option the resolution reads the g514
+clock that `sourcedBlackoutDraws` keeps. It requires that option and `frameMs`.
+The no-input ladder re-scores unchanged.
+
+| binding | first mismatch before -> after | record |
+|---|---|---|
+| Night 1 `minimal` | 21714 -> 21714 | `night1-minimal-replay-blackoutend-20260927.json`, `recompile-replay-08f5e9dc54e9e100` |
+| Night 5 `contact-final` | 7740 -> **7811** | `night5-contact-final-replay-blackoutend-20260927.json`, `recompile-replay-3eb3e4691cd3ce0f` |
+| Night 7 `k3` | 2324 -> **3562** | `night7-k3-replay-blackoutend-20260927.json`, `recompile-replay-e9390ac2828cd9ac` |
