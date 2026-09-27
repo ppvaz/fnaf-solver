@@ -1136,7 +1136,7 @@ index 1943544..af89498 100644
              print 'meth:', self.method
              raise e
 diff --git a/Chowdren/chowdren/writers/events/system.py b/Chowdren/chowdren/writers/events/system.py
-index 48623cf..313f9b9 100644
+index 48623cf..b0ca352 100644
 --- a/Chowdren/chowdren/writers/events/system.py
 +++ b/Chowdren/chowdren/writers/events/system.py
 @@ -2,7 +2,8 @@ from mmfparser.data.chunkloaders.objectinfo import SEMITRANSPARENT_EFFECT
@@ -1327,7 +1327,36 @@ index 48623cf..313f9b9 100644
          writer.put(self.converter.get_container_check(container))
  
  class PickRandom(ConditionWriter):
-@@ -1120,8 +1220,14 @@ class CreateBase(ActionWriter):
+@@ -924,6 +1024,28 @@ class PickFlagOn(PickAlterableCondition):
+         writer.end_brace()
+ 
+ 
++class FlagOnCondition(ConditionMethodWriter):
++    # Build 296 can pack a flag and alterable-value test into FlagOn's one
++    # parameter (code 68, PARAM_MULTIPLEVAR); CND_EXTFLAGSET.eva2 then filters
++    # the selection with PARAM_MULTIPLEVAR.evaluateNoGlobal. Emitting the first
++    # compared value as a flag index (the old ParameterVariables fallback)
++    # tested flag 1 where the sheet tests value 0 == 1, so no FNaF 2 Toy ever
++    # left the show stage.
++    method = 'alterables->flags.is_on'
++
++    def write(self, writer):
++        loader = self.parameters[0].loader
++        if loader.__class__.__name__ != 'ParameterVariables':
++            ConditionMethodWriter.write(self, writer)
++            return
++        args = ['%su' % (loader.flagMasks & 0xFFFFFFFF),
++                '%su' % (loader.flagValues & 0xFFFFFFFF),
++                str(len(loader.variables))]
++        for var in loader.variables:
++            args += [str(var.index), str(var.operator), repr(float(var.value))]
++        writer.put('alterables->test_multivar(%s)' % ', '.join(args))
++
++
+ class PickFromFixed(PickCondition):
+     def write_pick(self, writer, objs):
+         writer.start_brace()
+@@ -1120,8 +1242,14 @@ class CreateBase(ActionWriter):
  
          if object_info != parent_info and (not has_selection and
                                             not select_single):
@@ -1344,7 +1373,7 @@ index 48623cf..313f9b9 100644
  
          writer.putlnc('// select single: %s %s %s', select_single,
                        multi, has_selection)
-@@ -1191,6 +1297,11 @@ class CreateBase(ActionWriter):
+@@ -1191,6 +1319,11 @@ class CreateBase(ActionWriter):
                  writer.indent()
                  writer.putlnc('%s = new_obj;', single_name)
                  writer.dedent()
@@ -1356,7 +1385,7 @@ index 48623cf..313f9b9 100644
              else:
                  writer.putlnc('%s.add_back();', list_name)
              if is_shoot:
-@@ -1425,9 +1536,7 @@ class Foreach(ActionWriter):
+@@ -1425,9 +1558,7 @@ class Foreach(ActionWriter):
      custom = True
  
      def get_name(self):
@@ -1367,7 +1396,7 @@ index 48623cf..313f9b9 100644
  
      def write(self, writer):
          self.reorder = self.converter.config.reorder_foreach()
-@@ -1461,14 +1570,26 @@ class Foreach(ActionWriter):
+@@ -1461,14 +1592,26 @@ class Foreach(ActionWriter):
              writer.putlnc('%s();', func_call)
          writer.end_brace()
  
@@ -1396,7 +1425,7 @@ index 48623cf..313f9b9 100644
          if name is not None:
              return name
          return self.converter.config.get_dynamic_loop_call_name(parameter)
-@@ -1558,8 +1679,11 @@ class StartLoop(ActionWriter):
+@@ -1558,8 +1701,11 @@ class StartLoop(ActionWriter):
                  times = exp.loader.value
                  if times == -1:
                      comparison = 'true'
@@ -1410,7 +1439,7 @@ index 48623cf..313f9b9 100644
          if times is None:
              times = self.convert_index(1)
          is_infinite = comparison is not None
-@@ -1622,15 +1746,13 @@ class DeactivateGroup(ActionWriter):
+@@ -1622,15 +1768,13 @@ class DeactivateGroup(ActionWriter):
  
      def get_deactivated_container(self):
          if self.deactivated_container is None:
@@ -1428,7 +1457,7 @@ index 48623cf..313f9b9 100644
          if name is None:
              name = self.converter.convert_parameter(parameter)
              print 'Could not convert stop loop name for', name
-@@ -1640,8 +1762,7 @@ class StopLoop(ActionWriter):
+@@ -1640,8 +1784,7 @@ class StopLoop(ActionWriter):
  
  class SetLoopIndex(ActionWriter):
      def write(self, writer):
@@ -1438,7 +1467,7 @@ index 48623cf..313f9b9 100644
          index_name = get_loop_index_name(name)
          value = self.convert_index(1)
          writer.putln('%s = %s;' % (index_name, value))
-@@ -1650,8 +1771,7 @@ class ActivateGroup(ActionWriter):
+@@ -1650,8 +1793,7 @@ class ActivateGroup(ActionWriter):
      custom = True
  
      def write(self, writer):
@@ -1448,7 +1477,7 @@ index 48623cf..313f9b9 100644
          writer.putlnc('if (!%s) {', container.code_name)
          writer.indent()
          writer.putlnc('%s = true;', container.code_name)
-@@ -1970,9 +2090,13 @@ class GetLoopIndex(ExpressionWriter):
+@@ -1970,9 +2112,13 @@ class GetLoopIndex(ExpressionWriter):
              size = 2
              next_exp = items[converter.item_index + 1]
              if next_exp.getName() != 'String':
@@ -1465,7 +1494,7 @@ index 48623cf..313f9b9 100644
              else:
                  name = next_exp.loader.value
          converter.item_index += size
-@@ -2055,6 +2179,7 @@ actions = make_table(ActionMethodWriter, {
+@@ -2055,6 +2201,7 @@ actions = make_table(ActionMethodWriter, {
      'CreateObject' : CreateObject,
      'Shoot' : ShootObject,
      'StartLoop' : StartLoop,
@@ -1473,7 +1502,7 @@ index 48623cf..313f9b9 100644
      'Foreach' : Foreach,
      'StopLoop' : StopLoop,
      'SwapPosition' : SwapPosition,
-@@ -2072,6 +2197,7 @@ actions = make_table(ActionMethodWriter, {
+@@ -2072,6 +2219,7 @@ actions = make_table(ActionMethodWriter, {
      'SetMinimumValue' : 'set_min',
      'SetGlobalString' : 'global_strings->set',
      'SetGlobalValue' : 'global_values->set',
@@ -1481,7 +1510,7 @@ index 48623cf..313f9b9 100644
      'AddGlobalValue' : 'global_values->add',
      'AddGlobalValueInt' : 'global_values->add',
      'SubtractGlobalValue' : 'global_values->sub',
-@@ -2160,6 +2286,7 @@ actions = make_table(ActionMethodWriter, {
+@@ -2160,6 +2308,7 @@ actions = make_table(ActionMethodWriter, {
      'PauseApplication' : 'pause',
      'SetRandomSeed' : 'set_random_seed',
      'SetTimer' : 'set_timer((%s) / 1000.0)',
@@ -1489,7 +1518,7 @@ index 48623cf..313f9b9 100644
      'SetLoopIndex' : SetLoopIndex,
      'IgnoreControls' : IgnoreControls,
      'RestoreControls' : RestoreControls,
-@@ -2225,6 +2352,13 @@ conditions = make_table(ConditionMethodWriter, {
+@@ -2225,6 +2374,13 @@ conditions = make_table(ConditionMethodWriter, {
      'WhileMousePressed' : 'is_mouse_pressed',
      'MouseOnObject' : MouseOnObject,
      'Always' : Always,
@@ -1503,7 +1532,13 @@ index 48623cf..313f9b9 100644
      'MouseClicked' : MouseClicked,
      'ObjectClicked' : ObjectClicked,
      'PlayerKeyDown' : PlayerKeyDown,
-@@ -2271,7 +2405,7 @@ conditions = make_table(ConditionMethodWriter, {
+@@ -2266,12 +2422,12 @@ conditions = make_table(ConditionMethodWriter, {
+     'PathFinished' : PathFinished,
+     'NodeReached' : NodeReached,
+     'CompareSpeed' : make_comparison('get_movement()->get_speed()'),
+-    'FlagOn' : 'alterables->flags.is_on',
++    'FlagOn' : FlagOnCondition,
+     'FlagOff' : 'alterables->flags.is_off',
      'NearWindowBorder' : 'is_near_border',
      'AnimationFinished' : AnimationFinished,
      'StartOfFrame' : '.loop_count <= 1',
@@ -1512,7 +1547,7 @@ index 48623cf..313f9b9 100644
      'NumberOfLives' :  make_comparison('manager.lives'),
      'PlayerDied' : PlayerDied,
      'AnyKeyPressed' : AnyKeyPressed,
-@@ -2290,6 +2424,7 @@ conditions = make_table(ConditionMethodWriter, {
+@@ -2290,6 +2446,7 @@ conditions = make_table(ConditionMethodWriter, {
  })
  
  expressions = make_table(ExpressionMethodWriter, {
@@ -2244,7 +2279,7 @@ index 85649ce..06bce1c 100644
 \ No newline at end of file
 +    'AnimationDirection', 'Animation', 'AnimationHeader', 'ObjectCommon']
 diff --git a/mmfparser/data/chunkloaders/parameters/loaders.py b/mmfparser/data/chunkloaders/parameters/loaders.py
-index 2a53e31..cf31ff0 100644
+index 2a53e31..577e849 100644
 --- a/mmfparser/data/chunkloaders/parameters/loaders.py
 +++ b/mmfparser/data/chunkloaders/parameters/loaders.py
 @@ -348,9 +348,21 @@ class Group(ParameterCommon):
@@ -2290,7 +2325,7 @@ index 2a53e31..cf31ff0 100644
  
      def write(self, reader):
          reader.writeInt(self.savedPointer)
-@@ -489,6 +508,86 @@ class Bug(ParameterCommon):
+@@ -489,6 +508,93 @@ class Bug(ParameterCommon):
      def write(self, reader):
          pass
  
@@ -2311,7 +2346,14 @@ index 2a53e31..cf31ff0 100644
 +        self.index = reader.readInt()
 +        self.operator = reader.readInt()
 +        if self.settings.get('isDouble', False):
-+            self.value = reader.readDouble()
++            if self.settings.get('build', 0) >= 290 and not self.settings.get('compat', False):
++                # CFile.readADouble on build 296: signed 64-bit fixed point,
++                # L / 2^32 (as the expression Double token).
++                low = reader.readInt(True)
++                high = reader.readInt()
++                self.value = high + low / 4294967296.0
++            else:
++                self.value = reader.readDouble()
 +        else:
 +            self.value = reader.readInt()
 +            reader.skipBytes(4)
@@ -2377,7 +2419,7 @@ index 2a53e31..cf31ff0 100644
  parameterLoaders = [
      None,
      Object,
-@@ -556,5 +655,11 @@ parameterLoaders = [
+@@ -556,5 +662,11 @@ parameterLoaders = [
      Filename,
      String,
      CharacterEncoding,
@@ -2745,10 +2787,10 @@ index 30eb23e..50c4cb3 100644
          platform_sleep(t);
 diff --git a/Chowdren/base/harness.cpp b/Chowdren/base/harness.cpp
 new file mode 100644
-index 0000000..b92eaae
+index 0000000..4042f2f
 --- /dev/null
 +++ b/Chowdren/base/harness.cpp
-@@ -0,0 +1,304 @@
+@@ -0,0 +1,324 @@
 +// Deterministic research harness for the build-296 recompile. See harness.h.
 +// Compiled once, included from run.cpp next to crashdump.cpp.
 +
@@ -2769,6 +2811,8 @@ index 0000000..b92eaae
 +enum { OP_DOWN = 0, OP_MOVE = 1, OP_UP = 2, OP_DOWN_OBJECT = 3 };
 +
 +bool h_active = false, h_no_draw = false;
++// CHOWDREN_PLAY=1 without the harness: the real left mouse button is touch 0.
++bool h_play = false, h_play_down = false;
 +int h_seed = -1, h_seed_frame = -1, h_stop_frame = -1, h_max_ticks = -1, h_dump_frame = -1, h_dump_tick = -1;
 +int h_tick = 0, h_frame_index = -1, h_total_ticks = 0, h_max_total_ticks = 60000;
 +std::vector<InputRow> h_inputs;
@@ -2816,7 +2860,7 @@ index 0000000..b92eaae
 +    fclose(f);
 +}
 +
-+void new_touch(int pointer, float x, float y)
++void new_touch(int pointer, float x, float y, bool drive_mouse = true)
 +{
 +    HarnessMultiTouch & m = harness_touch;
 +    int slot = -1;
@@ -2833,13 +2877,13 @@ index 0000000..b92eaae
 +    if (pointer >= int(h_pointer_slot.size())) h_pointer_slot.resize(pointer + 1, -1);
 +    h_pointer_slot[pointer] = slot;
 +    // The first touch is the mouse on Android.
-+    if (slot == 0) {
++    if (slot == 0 && drive_mouse) {
 +        manager.mouse_x = int(x); manager.mouse_y = int(y);
 +        manager.on_mouse(SDL_BUTTON_LEFT, true);
 +    }
 +}
 +
-+void end_touch(int pointer)
++void end_touch(int pointer, bool drive_mouse = true)
 +{
 +    HarnessMultiTouch & m = harness_touch;
 +    if (pointer >= int(h_pointer_slot.size()) || h_pointer_slot[pointer] < 0) return;
@@ -2849,10 +2893,10 @@ index 0000000..b92eaae
 +    m.last_end_touch = m.last_touch = slot;
 +    m.touch_count--;
 +    m.end_touch = true;
-+    if (slot == 0) manager.on_mouse(SDL_BUTTON_LEFT, false);
++    if (slot == 0 && drive_mouse) manager.on_mouse(SDL_BUTTON_LEFT, false);
 +}
 +
-+void move_touch(int pointer, float x, float y)
++void move_touch(int pointer, float x, float y, bool drive_mouse = true)
 +{
 +    HarnessMultiTouch & m = harness_touch;
 +    if (pointer >= int(h_pointer_slot.size()) || h_pointer_slot[pointer] < 0) return;
@@ -2861,7 +2905,7 @@ index 0000000..b92eaae
 +    t.x = t.drag_x = x; t.y = t.drag_y = y;
 +    m.last_touch = slot;
 +    m.moved_touch = true;
-+    if (slot == 0) { manager.mouse_x = int(x); manager.mouse_y = int(y); }
++    if (slot == 0 && drive_mouse) { manager.mouse_x = int(x); manager.mouse_y = int(y); }
 +}
 +
 +// Window point at the centre of the first live instance named `name`: the
@@ -2905,7 +2949,11 @@ index 0000000..b92eaae
 +    m.last_touch = m.last_new_touch = m.last_end_touch = m.last_new_touch_id = -1;
 +    m.new_touch = m.end_touch = m.moved_touch = false;
 +    h_active = env_int("CHOWDREN_HARNESS", 0) != 0;
-+    if (!h_active) return;
++    if (!h_active) {
++        h_play = env_int("CHOWDREN_PLAY", 0) != 0;
++        if (h_play) fprintf(stderr, "harness: play mode, the left mouse button is touch 0\n");
++        return;
++    }
 +    h_no_draw = env_int("CHOWDREN_NO_DRAW", 0) != 0;
 +    h_seed = env_int("CHOWDREN_SEED", -1);
 +    h_seed_frame = env_int("CHOWDREN_SEED_FRAME", -1);
@@ -2966,7 +3014,21 @@ index 0000000..b92eaae
 +
 +void harness_before_events(int frame_index)
 +{
-+    if (!h_active) return;
++    if (!h_active) {
++        if (!h_play) return;
++        // The platform has already delivered the real click to the mouse;
++        // mirror it into Multiple Touch slot 0 without re-sending it.
++        HarnessMultiTouch & m = harness_touch;
++        m.new_touch = m.end_touch = m.moved_touch = false;
++        bool down = manager.mouse.is_pressed(SDL_BUTTON_LEFT);
++        float x = float(manager.mouse_x), y = float(manager.mouse_y);
++        if (down && !h_play_down) new_touch(0, x, y, false);
++        else if (!down && h_play_down) end_touch(0, false);
++        else if (down && !m.touches.empty() && !m.touches[0].free &&
++                 (m.touches[0].x != x || m.touches[0].y != y)) move_touch(0, x, y, false);
++        h_play_down = down;
++        return;
++    }
 +    if (frame_index == h_dump_frame && h_tick == h_dump_tick) dump_instances(frame_index);
 +    HarnessMultiTouch & m = harness_touch;
 +    m.new_touch = m.end_touch = m.moved_touch = false;
@@ -3360,3 +3422,47 @@ index 0000000..fa2858e
 +};
 +#endif
  
+diff --git a/Chowdren/base/alterables.h b/Chowdren/base/alterables.h
+index f72912c..b99cf8b 100644
+--- a/Chowdren/base/alterables.h
++++ b/Chowdren/base/alterables.h
+@@ -158,6 +158,39 @@ public:
+         flags.set(other.flags);
+     }
+ 
++    // Build 296 packs a flag and value test into FlagOn's parameter (code 68,
++    // PARAM_MULTIPLEVAR). CND_EXTFLAGSET.eva2 keeps an instance when
++    // (flags & mask) == flag_values and every packed alterable comparison
++    // holds (PARAM_MULTIPLEVAR.evaluateNoGlobal, which never reads a global);
++    // the ops are CRun.compareTo's: 0 ==, 1 !=, 2 <=, 3 <, 4 >=, 5 >.
++    static bool compare_multivar(double a, int op, double b)
++    {
++        switch (op) {
++            case 0: return a == b;
++            case 1: return a != b;
++            case 2: return a <= b;
++            case 3: return a < b;
++            case 4: return a >= b;
++            case 5: return a > b;
++        }
++        return false;
++    }
++
++    bool test_multivar(unsigned int mask, unsigned int flag_values, int count,
++                       int i0 = 0, int o0 = 0, double v0 = 0.0,
++                       int i1 = 0, int o1 = 0, double v1 = 0.0,
++                       int i2 = 0, int o2 = 0, double v2 = 0.0,
++                       int i3 = 0, int o3 = 0, double v3 = 0.0)
++    {
++        if (mask != 0 && (flags.flags & mask) != flag_values)
++            return false;
++        if (count > 0 && !compare_multivar(values.get(i0), o0, v0)) return false;
++        if (count > 1 && !compare_multivar(values.get(i1), o1, v1)) return false;
++        if (count > 2 && !compare_multivar(values.get(i2), o2, v2)) return false;
++        if (count > 3 && !compare_multivar(values.get(i3), o3, v3)) return false;
++        return true;
++    }
++
+     static Alterables * create();
+     static void destroy(Alterables * ptr);
+ };

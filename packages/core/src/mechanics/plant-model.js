@@ -288,6 +288,20 @@ export class Sim {
       //   g570  hallway Golden Freddy at 123, being attacked by 0, Every 1000
       // Default off: switching it on moves replays and the census.
       sourcedGatedEvery: false,
+      // The countdowns' origin, from classes.dex (2026-09-27): CRun.initRunLoop
+      // runs no events; the first f_GameLoop runs the StartOfFrame list once
+      // (CEventProgram.compute_TimerEvents, then zeroes its pointer) and then
+      // the first always pass, where every CND_EVERY2 is first reached and
+      // loads (eva2 offsets 7..46, returns false). So the g822 draw and every
+      // countdown's load share one loop, and Every 100 ms first fires on the
+      // seventh. The model spends g822 on frame 1 but counts its countdowns as
+      // loaded on a frame 0 it never plays (32e3cf6), one loop early; the
+      // rebuilt runtime (tools/recompile) fires g58/g192 on its seventh update,
+      // model frame 7, where the model fires them on frame 6. On: a countdown
+      // first reached on frame 1 loads there, like any later first reach.
+      // Requires the frame-time hook, whose countdowns replace the f % N
+      // cadences (identical to them at 50/3 ms, frame-time-hook.test.js).
+      sourcedEveryOrigin: false,
       frameMs: /** @type {null | ((frame: number) => number)} */ (null),
       frameValue5: /** @type {null | ((frame: number) => number)} */ (null),
     }, opts);
@@ -427,6 +441,8 @@ export class Sim {
       throw new Error('the frame-time hook drives the sheet-ordered countdowns: it requires sourcedSheetOrder');
     if ((this.opts.frameMs || this.opts.frameValue5) && this.opts.foxyEnabled && !this.opts.sourcedFoxyChain)
       throw new Error('the frame-time hook times Foxy through g824/g825/g864: it requires sourcedFoxyChain');
+    if (this.opts.sourcedEveryOrigin && !(this.opts.frameMs || this.opts.frameValue5))
+      throw new Error('sourcedEveryOrigin moves the countdowns, and only the frame-time hook runs every cadence as one: it requires frameMs or frameValue5');
     if (this.opts.sourcedVentCamDraws && !this.opts.sourcedSheetOrder)
       throw new Error('sourcedVentCamDraws draws in the sheet-ordered pass: it requires sourcedSheetOrder');
     if (this.opts.sourcedFootstepDraws && !this.opts.sourcedSheetOrder)
@@ -817,7 +833,7 @@ export class Sim {
       if (f <= (this.fadeUntil[id] ?? -1) && nodeOf(id) === this.cam) this.rng.int(0, 99, 0);
     }
     if (!all && part !== 'g498') return;
-    this.puppetStaticTimer -= this.frameUnits;                                                           // g498
+    if (!(this.opts.sourcedEveryOrigin && this.frame === 1)) this.puppetStaticTimer -= this.frameUnits;   // g498
     if (this.puppetStaticTimer <= 0) {
       this.puppetStaticTimer += 600;
       const p = /** @type {any} */ (this.puppet);
@@ -982,7 +998,7 @@ export class Sim {
   passEvery(t, ms) {
     if (!t.init) {
       t.init = true; t.v = ms * 3;
-      if (this.frame !== 1) return false;
+      if (this.frame !== 1 || this.opts.sourcedEveryOrigin) return false;
     }
     t.v -= this.frameUnits;
     if (t.v > 0) return false;
@@ -1319,7 +1335,9 @@ export class Sim {
    * The separate g822 StartOfFrame draw runs once, before the first loop.
    */
   drawUnconditional() {
+    const loading = this.opts.sourcedEveryOrigin && this.frame === 1;
     for (const t of this.unconditionalTimers) {
+      if (loading) continue;
       t.counter -= this.frameUnits;
       if (t.counter <= 0) { t.counter += t.delayUnits; this.rng.next(); this.unconditionalDraws++; }
     }

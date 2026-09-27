@@ -19,10 +19,18 @@ const frames = Number(flag('frames', '600'));
 const inputs = flag('inputs', null);
 const optionsFile = flag('model-options', null);
 
+// A model option is a sourced* boolean, or a constant for the frame-time hook
+// (frameMs, frameValue5): JSON cannot carry the hook's per-frame functions.
+const HOOK_CONSTANTS = ['frameMs', 'frameValue5'];
+const validOption = ([key, value]) => (/^sourced[A-Z]/.test(key) && typeof value === 'boolean') ||
+  (HOOK_CONSTANTS.includes(key) && Number.isFinite(value) && value > 0);
+
 export function drawTrace({ night, seed, frames, rows = [], customNight = undefined, modelOptions = {} }) {
-  if (!modelOptions || Array.isArray(modelOptions) || typeof modelOptions !== 'object' || Object.entries(modelOptions).some(([key, value]) => !/^sourced[A-Z]/.test(key) || typeof value !== 'boolean')) {
-    throw new Error('model options must be sourced* boolean flags');
+  if (!modelOptions || Array.isArray(modelOptions) || typeof modelOptions !== 'object' || !Object.entries(modelOptions).every(validOption)) {
+    throw new Error('model options must be sourced* boolean flags or positive frameMs/frameValue5 constants');
   }
+  const simOptions = Object.fromEntries(Object.entries(modelOptions)
+    .map(([key, value]) => [key, HOOK_CONSTANTS.includes(key) ? () => value : value]));
   let draws = 0;
   // Sim's constructor spends draws too (for example Foxy's initial readyAt).
   // Instrument its synchronous construction, restoring the shared prototype
@@ -31,7 +39,7 @@ export function drawTrace({ night, seed, frames, rows = [], customNight = undefi
   let sim;
   try {
     Rng.prototype.next = function () { draws += 1; return originalNext.call(this); };
-    sim = new Sim({ ...modelOptions, night, seed, ...(customNight ? { customNight } : {}) });
+    sim = new Sim({ ...simOptions, night, seed, ...(customNight ? { customNight } : {}) });
   } finally {
     Rng.prototype.next = originalNext;
   }

@@ -23,6 +23,7 @@ directory (`/private/tmp/fnaf2-recompile.*` on the dev machine).
 | `model-draw-trace.mjs` | The simulator's `Random(N)` draws frame by frame (draws so far, LCG state), in the shape the harness traces: two runs of one night and seed that spend the same draws every frame read the same stream, and the first frame where the counts part is where to look. MODEL_ONLY. |
 | `compare-draw-trace.mjs` | Reads an external harness trace and emits a hash-bound, content-free comparison result. `MATCHED_PREFIX` never means full event/state equivalence. |
 | `sourced-model-options.json` | Explicit diagnostic variant enabling the model's existing sourced flags. It does not change core defaults or establish fidelity. |
+| `sourced-origin-model-options.json` | The same sourced flags plus the frame-time hook at 60 fps (`frameMs` 50/3, `frameValue5` 1) and `sourcedEveryOrigin`: every countdown loads on the loop it is first reached. `model-draw-trace.mjs` turns the two hook constants into per-frame functions. Diagnostic; defaults unchanged. |
 | `run-harness.sh` | Container wrapper with GL readiness checking and a process deadline that escalates to kill. Run from the external gamesrc directory. |
 | `test-mobile-parser.py`, `test-compare-draw-trace.mjs` | Synthetic parser and result-classification regressions; FIXTURE only. |
 | `test-child-events.py`, `fixtures/child-events.cpp` | Emit and compile synthetic nested events with the patched converter; exercise parent gating, nested/sibling selections, and one-shot timer dispatch. FIXTURE only; Python2.7 and a C++ compiler required. |
@@ -327,3 +328,58 @@ The correction does not establish repeat timers, dynamic/non-ASCII timer names,
 deleted-object selection override, qualifier/foreach semantics, immediate touch
 dispatch, unsupported extensions, or full-state equivalence. Next: verify the
 sourced model's Every first-evaluation clock, without tuning production defaults.
+
+## The countdown origin and the packed flag test (2026-09-27, later)
+
+**Countdown origin (model side).** `classes.dex` settles the first `Every`
+evaluation: `CRun.initRunLoop` runs no events; the first `f_GameLoop` runs the
+StartOfFrame list once (`CEventProgram.compute_TimerEvents`, which then zeroes
+the list pointer) and then the first always pass, where every `CND_EVERY2` is
+first reached and loads (`eva2` 7..46, returns false). So g822's draw and every
+ungated countdown's load share one loop, and Every 100 ms first fires on the
+seventh. The model's frame-origin rule (`32e3cf6`) counted its countdowns as
+loaded on a frame 0 it never plays, one loop early; it was chosen to match the
+model's own `f % N` timers, not measured. `sourcedEveryOrigin` (default off,
+requires the frame-time hook) loads a frame-1 reach on frame 1
+(`packages/core/test/every-origin.test.js`). On the retained child-timer
+binary (`3d680796`) it moves the first divergence from office tick 5 to tick
+11100 (`night1-flagfallback-origin-20260927.json`, `recompile-draw-f1cd6c2a6a970199`).
+
+**Packed flag test (rebuild side).** Tick 11100 is a footstep draw the model
+spends for Toy Chica's hop onto hall stage 1, which the rebuild never made:
+in the rebuild neither Toy ever left CAM 09, though the roll set `new chica`
+value 0 to 1. Build 296 packs the 5 s promotion test (value 0 == 1 and value 1
+== 0) into `FlagOn`'s one parameter, code 68 (`PARAM_MULTIPLEVAR`);
+`CND_EXTFLAGSET.eva2` then filters the selection with
+`PARAM_MULTIPLEVAR.evaluateNoGlobal`: `(flags & flagMasks) == flagValues` and
+each packed alterable comparison by `CRun.compareTo` (0 ==, 1 !=, 2 <=, 3 <,
+4 >=, 5 >; `CValue.greater` is `>=`). The converter emitted the first compared
+value as a flag index, so group 354 tested flag 1. The patch now writes
+`alterables->test_multivar(...)` for every such `FlagOn` (75 generated sites;
+none of the 178 dumped uses is negated) and reads a packed double as build 296's
+32.32 fixed point. The 20 `OnObjectLoop (..., param68)` uses are not converted
+yet. The rebuilt night now plays through: 16,592 office updates, the static,
+game over and the title.
+
+On the rebuilt binary (`fe1cb39d`, patch `0f5c2a25`) with the origin, the first
+office divergence is tick 9600 (`night1-multivar-origin-20260927.json`,
+`recompile-draw-0149431085444dda`); without it, still tick 5
+(`night1-multivar-sourced-20260927.json`, `recompile-draw-3e01dae547254838`).
+Tick 9600 is Toy Bonnie's hop onto CAM 03, where the rebuild draws a footstep
+and the model does not. The model narrowed footsteps to the hall stages
+(`8a7288b`) because full-06's audio had no footstep sample on any Withered hop
+onto CAM 01-04, while the sheet's groups 695-703 are identical for every
+character and 704-708 play a sample on every draw. The overlap is each sprite's
+own image box against `hear footsteps`; the rebuild gives every character a
+24 x 24 box, and whether those boxes are the APK's images is not established.
+The phone outranks the rebuild: next, read the character sprites' image sizes
+and hotspots from the CCN image bank, then decide per character. No
+equivalence claim; MODEL_ONLY with `rebuilt-runtime` fidelity throughout.
+
+**Play mode.** `CHOWDREN_PLAY=1` without the harness mirrors the real left
+mouse button into Multiple Touch slot 0 (the platform has already delivered it
+to the mouse), so the monitor, lights, vents and mask answer a person. Off, and
+under the harness, nothing changes. Known rendering gaps a player sees: text
+objects sized and anchored differently, some colours (ink effects), an
+unhidden sprite on the title, and the New Game confirmation's 16 x 16 touch
+zone at the left of its 88 x 64 image.
