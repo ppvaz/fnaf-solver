@@ -6,6 +6,14 @@
  *
  *   tools/device/fnaf1-custom-run.sh --dry-run
  *   tools/device/fnaf1-custom-run.sh --live --confirm-live --dials 0,0,0,0 --mode calibrate-empty [--label NAME]
+ *   tools/device/fnaf1-custom-run.sh --live --confirm-live --dials F,B,C,X --mode grid420 --detectors FILE
+ *        [--winner FILE | --route tree] [--label NAME]
+ *
+ * A grid420 night that a committed FNaF 1 winner names runs from this tree
+ * only while the tree holds the winner's pinned route byte for byte
+ * (routeStatus below); a drifted tree is refused unless `--route tree` says
+ * the night runs the tree's route as a new one. The winner itself is re-run
+ * from its pinned commit by fnaf1-winner.mjs.
  *
  * The menu path is the probe's measured one (fnaf1-menu-probe.mjs): three
  * identical confident title reads, the Custom Night row, the settled screen,
@@ -22,9 +30,10 @@
  * margins are built from. The night is left by a title-gated force-stop.
  */
 import { createHash } from 'node:crypto';
+import { existsSync, readFileSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { homedir, tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { performance } from 'node:perf_hooks';
 import { AdbDeviceBridge } from '../../apps/device/src/adb-bridge.js';
@@ -35,7 +44,8 @@ import { ProbeRecord, ensureTitle, titleRead, titleConsensus, settleCustomNight,
 import { loadRegionSet, registerSet } from './native-regions.mjs';
 import { RegionRecorder, startVideo } from './night-kit.mjs';
 import { loadDetectors, makeClassifier } from './fnaf1-detectors.mjs';
-import { grid420 } from '../fnaf1-device-lane.mjs';
+import { listWinners, routeDrift } from './fnaf1-winner.mjs';
+import { grid420, PHONE_OPTIONS } from '../fnaf1-device-lane.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../..');
@@ -56,7 +66,9 @@ function fail(message) { throw new Error(`fnaf1-custom-run: ${message}`); }
 
 export function parseArgs(argv) {
   const o = { live: false, confirmLive: false, dryRun: false, dials: null, mode: null, label: null,
-    detectors: null, stopAfterMs: NIGHT_MS + 3000, originOffsetMs: -97, chicaByCamera: false, teach: false, video: false };
+    detectors: null, stopAfterMs: NIGHT_MS + 3000, originOffsetMs: -97, chicaByCamera: PHONE_OPTIONS.chicaByCamera,
+    teach: false, video: false,
+    winner: null, route: null };
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i];
     if (a === '--live') o.live = true;
@@ -73,8 +85,13 @@ export function parseArgs(argv) {
     else if (a === '--teach') o.teach = true;
     else if (a === '--video') o.video = true;
     else if (a === '--stop-after-ms') o.stopAfterMs = Number(argv[++i]);
-    else fail(`unknown argument ${a}`);
+    else if (a === '--winner') o.winner = argv[++i];
+    else if (a === '--route') {
+      o.route = argv[++i];
+      if (o.route !== 'tree') fail('--route takes only "tree": this run executes the tree\'s route, knowingly');
+    } else fail(`unknown argument ${a}`);
   }
+  if (o.winner !== null && o.route !== null) fail('--winner and --route tree are exclusive');
   if (o.label !== null && !/^[a-z0-9][a-z0-9-]{0,40}$/.test(o.label)) fail('--label is lowercase letters, digits, hyphens');
   if (o.dryRun) return o;
   if (!o.live || !o.confirmLive) fail('live actuation needs --live and --confirm-live');
@@ -84,6 +101,53 @@ export function parseArgs(argv) {
     fail('calibrate-empty is open-loop and is only safe at 0/0/0/0');
   if (o.mode === 'grid420' && !o.detectors) fail('grid420 needs --detectors (a fnaf1-detectors-v1 file)');
   return o;
+}
+
+/** What a grid420 night executes from this tree when no committed winner names its night. */
+const ROUTE_FILES = Object.freeze(['tools/fnaf1-device-lane.mjs', 'tools/device/fnaf1-custom-run.mjs',
+  'tools/device/fnaf1-detectors.mjs', 'tools/device/models/fnaf1-device-timing-moto-g56-v207.json',
+  'tools/device/models/regions-fnaf1-moto-g56-v207.json', 'tools/device/models/controls-fnaf1-moto-g56-v207.json',
+  'tools/device/models/custom-night-fnaf1-moto-g56-v207.json']);
+
+/**
+ * Which route a grid420 night executes from this tree, and whether it is a
+ * committed winner's. A night whose mode and dials a committed FNaF 1 winner
+ * names runs from the tree only while the tree holds that winner's pinned
+ * files byte for byte. Otherwise it is refused, and the refusal names both
+ * ways on: the replay that runs the pinned route (fnaf1-winner.mjs), and
+ * `--route tree`, which runs the tree's route as the new route it is.
+ * `--winner FILE` asks for one winner by name and is refused the same way,
+ * without the second way. The files are hashed as they stand; the result goes
+ * into the run record, so every grid420 night names the route it ran.
+ */
+export function routeStatus(options, { root = ROOT, winners = listWinners(root) } = {}) {
+  if (options.mode !== 'grid420') return null;
+  const hash = (path) => { const file = join(root, path); return existsSync(file) ? sha256(readFileSync(file)) : null; };
+  const dialsOf = (dials) => (dials ? DIALS.map((d) => dials[d]).join('/') : 'no dials');
+  const sameNight = (winner) => winner.resolvedOptions?.policy === options.mode
+    && dialsOf(winner.night?.dials) === dialsOf(options.dials);
+  const named = options.winner ? winners.find(({ path }) => path === relative(root, resolve(options.winner))) : null;
+  const match = named ?? winners.find(({ winner }) => sameNight(winner)) ?? null;
+  const files = Object.fromEntries((match ? Object.keys(match.winner.sources) : ROUTE_FILES).map((p) => [p, hash(p)]));
+  const status = { files, winner: null, route: options.route, refusal: null };
+  if (options.winner && !named) {
+    status.refusal = `--winner ${options.winner} is not a committed fnaf1-route-winner-v1 under tools/device`;
+    return status;
+  }
+  if (!match) return status;
+  const { path, winner } = match;
+  const differs = routeDrift(winner, root).map((d) => d.path);
+  status.winner = { path, id: winner.id, commit: winner.sourcesAtCommit, matches: differs.length === 0, differs };
+  if (named && !sameNight(winner)) {
+    status.refusal = `--winner ${path} won ${dialsOf(winner.night?.dials)} ${winner.resolvedOptions?.policy}; ` +
+      `this night is ${dialsOf(options.dials)} ${options.mode}`;
+  } else if (differs.length && (named || options.route !== 'tree')) {
+    status.refusal = `${winner.id} won this night at ${String(winner.sourcesAtCommit).slice(0, 12)}, and the tree no longer ` +
+      `runs its route (${differs.join(', ')} differ from its pins). Re-run the winner itself with: npm run night -- ` +
+      `fnaf1-winner --winner ${path} --live --confirm-live --label NAME` +
+      (named ? '' : '. To run the tree\'s route as the new route it is, add --route tree.');
+  }
+  return status;
 }
 
 /** The probe's bridge shape, backed by the helper's projection instead of screencap. */
@@ -293,7 +357,11 @@ async function main(argv) {
   const bindings = Object.fromEntries(await Promise.all([
     ['controls', CONTROLS_PATH], ['regions', REGIONS_PATH], ['title', TITLE_MODEL_PATH], ['customNight', CUSTOM_NIGHT_MODEL_PATH],
   ].map(async ([k, p]) => [k, { path: p.slice(ROOT.length + 1), sha256: sha256(await readFile(p)) }])));
-  if (options.dryRun) { console.log(JSON.stringify({ status: 'DRY_RUN', modes: MODES, bindings }, null, 2)); return; }
+  const route = routeStatus(options);
+  if (options.dryRun) { console.log(JSON.stringify({ status: 'DRY_RUN', modes: MODES, bindings, route }, null, 2)); return; }
+  if (route?.refusal) fail(route.refusal);
+  if (route?.winner && !route.winner.matches)
+    console.error(`fnaf1-custom-run: running the tree's route, not ${route.winner.id}'s (${route.winner.differs.join(', ')} differ)`);
   if (process.env.FNAF1_LEASE_HELD !== '1') fail('run through fnaf1-custom-run.sh so the serial lease is held');
   const serial = process.env.FNAF_SERIAL ?? DEFAULT_SERIAL;
 
@@ -304,6 +372,7 @@ async function main(argv) {
   const record = new ProbeRecord({ id, outdir, captureDir, options, bindings });
   record.document.schema = 'fnaf1-custom-run-v1';
   record.document.claimLevel = 'DEVICE_MEASURED helper native frames and regions; no detector or route is promoted by this record';
+  record.document.route = route;
   record.document.capture.sensor = 'cue-helper-mediaprojection-2400x1080';
   await record.save('PREFLIGHT');
 
@@ -370,7 +439,7 @@ async function main(argv) {
         } catch (e) { await record.event('teach-error', { message: e.message }); teach = null; }
       }
       record.document.teach = options.teach;
-      const ended = await runPolicy({ policy: grid420, options: { chicaByCamera: options.chicaByCamera }, hid, record,
+      const ended = await runPolicy({ policy: grid420, options: { ...PHONE_OPTIONS, chicaByCamera: options.chicaByCamera }, hid, record,
         controls, recorder, classify, epochHostMs, stopAfterMs: options.stopAfterMs, teach });
       if (teach) await teach.clear();
       record.document.night.ended = ended;

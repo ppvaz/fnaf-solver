@@ -71,6 +71,7 @@ const EXCLUDED = new Map([
   ['native-frame.mjs', 'Cue Helper SNAP puller: one native frame as a PNG for title/menu readers and calibration; an observation path, not a post-run grader'],
   ['fnaf1-custom-run.sh', 'lease wrapper for the FNaF 1 Custom Night runner; a live route/calibration executor, not a post-run grader'],
   ['fnaf1-custom-run.mjs', 'FNaF 1 Custom Night runner (calibrate-empty, grid420) behind fnaf1-custom-run.sh; an executor, gated by test-native-regions.mjs'],
+  ['fnaf1-winner.mjs', 'the replay of a committed FNaF 1 route winner: it materializes the pinned commit and runs that commit\'s fnaf1-custom-run.sh under the lease; an executor that produces a run, not a grader of one, gated by test-fnaf1-winner.mjs'],
   ['fnaf1-detectors.mjs', 'builds FNaF 1 empty-scene templates from a calibration run and classifies REGION reads for the runner; gated by test-native-regions.mjs'],
   ['fnaf4-run.sh', 'lease wrapper for the FNaF 4 night runner; a live route/calibration executor, not a post-run grader'],
   ['fnaf4-run.mjs', 'FNaF 4 night runner (calibrate, loop) behind fnaf4-run.sh; an executor, its teach panel clearance gated by test-native-regions.mjs'],

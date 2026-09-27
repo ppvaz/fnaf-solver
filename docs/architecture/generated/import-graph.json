@@ -1336,9 +1336,11 @@
         "../fnaf1-device-lane.mjs",
         "./fnaf1-detectors.mjs",
         "./fnaf1-menu-probe.mjs",
+        "./fnaf1-winner.mjs",
         "./native-regions.mjs",
         "./night-kit.mjs",
         "node:crypto",
+        "node:fs",
         "node:fs/promises",
         "node:os",
         "node:path",
@@ -1383,6 +1385,17 @@
         "node:os",
         "node:path",
         "node:perf_hooks",
+        "node:url"
+      ]
+    },
+    {
+      "file": "tools/device/fnaf1-winner.mjs",
+      "imports": [
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:os",
+        "node:path",
         "node:url"
       ]
     },
@@ -1825,6 +1838,19 @@
       ]
     },
     {
+      "file": "tools/device/test-fnaf1-winner.mjs",
+      "imports": [
+        "../night.mjs",
+        "./fnaf1-custom-run.mjs",
+        "./fnaf1-winner.mjs",
+        "node:fs",
+        "node:module",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/device/test-fnaf3-run.mjs",
       "imports": [
         "./fnaf3-detectors.mjs",
@@ -2146,10 +2172,13 @@
       "file": "tools/fnaf1-device-lane.mjs",
       "imports": [
         "../packages/core/src/mechanics/games/sim-fnaf1.js",
+        "./device/fnaf1-winner.mjs",
         "./winner-census.mjs",
         "node:child_process",
         "node:crypto",
         "node:fs",
+        "node:os",
+        "node:path",
         "node:url"
       ]
     },

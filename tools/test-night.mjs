@@ -42,6 +42,10 @@ try {
   const dry = await runNight('fnaf1-custom', ['--dry-run'], { root, pack });
   assert.deepEqual(dry.packed, [], 'a dry run leaves no run directory and packs nothing');
 
+  assert.equal(GAMES['fnaf1-winner'].runner, 'tools/device/fnaf1-winner.mjs',
+    'a committed FNaF 1 winner is re-run from its pinned commit, not by the tree\'s runner');
+  assert.ok(GAMES['fnaf1-winner'].packs.test('fnaf1-custom-grid420-replay-20260927T000000Z'), 'and its run is packed');
+
   await assert.rejects(runNight('fnaf9', [], { root, pack }), /unknown game/);
 } finally {
   rmSync(root, { recursive: true, force: true });

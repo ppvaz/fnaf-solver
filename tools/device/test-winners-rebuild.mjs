@@ -29,7 +29,7 @@ const scratch = mkdtempSync(join(tmpdir(), 'winners-rebuild-'));
 try {
   for (const name of readdirSync(HERE).filter(file => file.endsWith('-winner.json')).sort()) {
     const winner = JSON.parse(readFileSync(join(HERE, name), 'utf8'));
-    if (winner.schema !== 'winner-v1') continue; // FNaF 1 routes carry their own schema
+    if (winner.schema !== 'winner-v1') continue; // FNaF 1 routes carry their own schema: test-fnaf1-winner.mjs
     try {
       const built = compileBundle(winner, join(scratch, name));
       const profile = JSON.parse(readFileSync(join(ROOT, 'apps/device/profiles', `${built.profile.id}.json`), 'utf8'));

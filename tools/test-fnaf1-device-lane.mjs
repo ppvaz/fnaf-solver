@@ -149,13 +149,16 @@ let population = '';
     ok(`${name}: the design block no longer rebuilds`, record.method.designBlock.sha256 === sha256(JSON.stringify(design.seeds)));
     const inDesign = new Set(design.seeds);
     const { start, count } = record.method.population;
+    // The options it censused grid420 with; a record from before they were
+    // recorded ran grid420's in-model defaults.
+    const replayOptions = record.method.options ?? {};
     let replays = 0;
     for (const row of record.lanes) {
       ok(`${name} ${row.lane}: counts add up`, row.design.n + row.heldOut.n === row.n
         && row.design.wins + row.heldOut.wins === row.wins
         && row.losses.length === row.lossesListed && row.lossesListed <= row.n - row.wins);
       for (const [seed, outcome, frames] of row.losses.slice(0, 15)) {
-        const r = runDeviceNight({ seed, timing, lane: row.lane, policy: grid420 });
+        const r = runDeviceNight({ seed, timing, lane: row.lane, policy: grid420, options: { ...replayOptions } });
         replays += 1;
         eq(`${name} ${row.lane} seed ${seed} replays as recorded`, [r.outcome, r.frames], [outcome, frames]);
       }
@@ -167,7 +170,7 @@ let population = '';
           const seed = start + ((k * 40503 + row.lane.length * 977) % count);
           if (inDesign.has(seed)) continue;
           taken += 1; replays += 1;
-          const won = runDeviceNight({ seed, timing, lane: row.lane, policy: grid420 }).outcome === '6AM';
+          const won = runDeviceNight({ seed, timing, lane: row.lane, policy: grid420, options: { ...replayOptions } }).outcome === '6AM';
           eq(`${name} ${row.lane} held-out seed ${seed} replays as recorded`, won, !lost.has(seed));
         }
       }

@@ -4,6 +4,7 @@
 //   npm run night -- fnaf2 --label NAME [night-run.sh options]
 //   npm run night -- fnaf1 --night N [fnaf1-night-run.sh options]
 //   npm run night -- fnaf1-custom --mode M [fnaf1-custom-run.sh options]
+//   npm run night -- fnaf1-winner --winner FILE [--live --confirm-live --label NAME]
 //
 // Each game keeps its own runner -- they differ in what they drive, and each
 // already takes the serial lease and refuses a live run without its confirm
@@ -24,6 +25,8 @@ export const GAMES = Object.freeze({
   fnaf2: { runner: 'tools/device/night-run.sh', packs: null },
   fnaf1: { runner: 'tools/device/fnaf1-night-run.sh', packs: /^fnaf1-night\d+-/ },
   'fnaf1-custom': { runner: 'tools/device/fnaf1-custom-run.sh', packs: /^fnaf1-custom-/ },
+  // A committed FNaF 1 winner, re-run from its pinned commit (fnaf1-winner.mjs).
+  'fnaf1-winner': { runner: 'tools/device/fnaf1-winner.mjs', packs: /^fnaf1-custom-/ },
 });
 
 const runDirs = root => {

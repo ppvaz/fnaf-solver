@@ -302,8 +302,9 @@ export function resolvePackTargets(root, id) {
 /**
  * A FNaF 1 runner's night (tools/device/fnaf1-*-run.mjs): its `probe.json` or `run.json` record
  * and its `events.jsonl`, whose captures already live outside the repository and are cited
- * there by sha256. There is no campaign result, so the outcome is the runner's own
- * `night-ended` event and record status; the Plan 12 gate does not read these packs.
+ * there by sha256, and the `replay.json` fnaf1-winner.mjs leaves beside a winner's replay.
+ * There is no campaign result, so the outcome is the runner's own `night-ended` event and
+ * record status; the Plan 12 gate does not read these packs.
  * @param {{root: string, home?: string, fnaf1RunDir: string, packId: string}} options
  */
 export function buildFnaf1Pack({ root, home = '', fnaf1RunDir, packId }) {
@@ -313,7 +314,7 @@ export function buildFnaf1Pack({ root, home = '', fnaf1RunDir, packId }) {
   for (const name of readdirSync(fnaf1RunDir).sort()) {
     const file = join(fnaf1RunDir, name);
     if (!statSync(file).isFile()) continue;
-    if (['probe.json', 'run.json', 'events.jsonl'].includes(name) || /\.(txt|err)$/.test(name)) {
+    if (['probe.json', 'run.json', 'events.jsonl', 'replay.json'].includes(name) || /\.(txt|err)$/.test(name)) {
       const { entry, text } = packText(name, readFileSync(file), { root, home });
       files.push(entry);
       texts.set(name, text);

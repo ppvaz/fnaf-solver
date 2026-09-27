@@ -136,13 +136,16 @@ try {
     { type: 'night-ended', ended: 'STOP_AFTER', atNightMs: 538014 },
   ].map(line => JSON.stringify(line)).join('\n') + '\n');
   put(`artifacts/runs/${fnaf1}/0000-frame.png`, Buffer.from([0x89, 0x50]));
+  put(`artifacts/runs/${fnaf1}/replay.json`, JSON.stringify({ schema: 'fnaf1-winner-replay-v1',
+    commit: '3aaf02cd0baf2b18d53d8d47af2fc45f39279f6e' }));
   const [fnaf1Target] = resolvePackTargets(root, fnaf1);
   assert.ok(fnaf1Target.fnaf1RunDir, 'a FNaF 1 run directory resolves as its own kind');
   const fnaf1Built = buildFnaf1Pack({ root, home, ...fnaf1Target });
   assert.equal(fnaf1Built.pack.kind, 'fnaf1-run');
   assert.deepEqual(fnaf1Built.pack.outcome, { ended: 'STOP_AFTER', atNightMs: 538014 });
   assert.equal(fnaf1Built.pack.claimLevel, 'DEVICE_MEASURED');
-  assert.deepEqual(fnaf1Built.pack.files.map(file => file.name), ['events.jsonl', 'probe.json']);
+  assert.deepEqual(fnaf1Built.pack.files.map(file => file.name), ['events.jsonl', 'probe.json', 'replay.json'],
+    'a winner replay\'s replay.json (the pinned commit it ran) is packed as text');
   assert.deepEqual(fnaf1Built.pack.withheld.map(item => item.name), ['0000-frame.png']);
   assert.ok(fnaf1Built.texts.get('events.jsonl').includes('~/fnaf-apks/'), 'machine paths are portable here too');
   const fnaf1Dir = join(root, 'docs/evidence/runs', fnaf1);

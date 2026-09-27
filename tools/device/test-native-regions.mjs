@@ -103,6 +103,10 @@ throws('1/9/8/7 is refused', () => parseArgs(['--live', '--confirm-live', '--dia
 throws('grid420 needs detectors', () => parseArgs(['--live', '--confirm-live', '--dials', '20,20,20,20', '--mode', 'grid420']));
 ok('the winning invocation parses', parseArgs(['--live', '--confirm-live', '--dials', '20,20,20,20', '--mode', 'grid420',
   '--detectors', 'x']).stopAfterMs === 538000);
+throws('--route takes only tree', () => parseArgs(['--live', '--confirm-live', '--dials', '20,20,20,20', '--mode', 'grid420',
+  '--detectors', 'x', '--route', 'winner']));
+throws('--winner and --route tree are exclusive', () => parseArgs(['--live', '--confirm-live', '--dials', '20,20,20,20',
+  '--mode', 'grid420', '--detectors', 'x', '--winner', 'w.json', '--route', 'tree']));
 
 if (failures.length) {
   console.error(`native regions: ${failures.length} of ${checks} checks failed`);
