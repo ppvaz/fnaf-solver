@@ -1,0 +1,176 @@
+{
+  "video": "captures/night7-n7-420-minimal-m3-p1b-20260927T195732Z.mp4",
+  "fps": 2.0,
+  "frames": 520,
+  "segments": [
+    {
+      "phase": "other",
+      "from_s": 0.0,
+      "to_s": 3.5,
+      "seconds": 3.5
+    },
+    {
+      "phase": "camera",
+      "from_s": 3.5,
+      "to_s": 8.5,
+      "seconds": 5.0
+    },
+    {
+      "phase": "unknown",
+      "from_s": 8.5,
+      "to_s": 11.0,
+      "seconds": 2.5
+    },
+    {
+      "phase": "camera",
+      "from_s": 11.0,
+      "to_s": 13.5,
+      "seconds": 2.5
+    },
+    {
+      "phase": "other",
+      "from_s": 13.5,
+      "to_s": 30.0,
+      "seconds": 16.5
+    },
+    {
+      "phase": "intro",
+      "from_s": 30.0,
+      "to_s": 32.5,
+      "seconds": 2.5
+    },
+    {
+      "phase": "dark",
+      "from_s": 32.5,
+      "to_s": 34.5,
+      "seconds": 2.0
+    },
+    {
+      "phase": "office",
+      "from_s": 34.5,
+      "to_s": 38.5,
+      "seconds": 4.0
+    },
+    {
+      "phase": "camera",
+      "from_s": 38.5,
+      "to_s": 40.5,
+      "seconds": 2.0
+    },
+    {
+      "phase": "office",
+      "from_s": 40.5,
+      "to_s": 47.0,
+      "seconds": 6.5
+    },
+    {
+      "phase": "camera",
+      "from_s": 47.0,
+      "to_s": 50.5,
+      "seconds": 3.5
+    },
+    {
+      "phase": "office",
+      "from_s": 50.5,
+      "to_s": 57.0,
+      "seconds": 6.5
+    },
+    {
+      "phase": "camera",
+      "from_s": 57.0,
+      "to_s": 60.5,
+      "seconds": 3.5
+    },
+    {
+      "phase": "office",
+      "from_s": 60.5,
+      "to_s": 67.0,
+      "seconds": 6.5
+    },
+    {
+      "phase": "camera",
+      "from_s": 67.0,
+      "to_s": 70.5,
+      "seconds": 3.5
+    },
+    {
+      "phase": "office",
+      "from_s": 70.5,
+      "to_s": 77.0,
+      "seconds": 6.5
+    },
+    {
+      "phase": "camera",
+      "from_s": 77.0,
+      "to_s": 80.5,
+      "seconds": 3.5
+    },
+    {
+      "phase": "office",
+      "from_s": 80.5,
+      "to_s": 87.0,
+      "seconds": 6.5
+    },
+    {
+      "phase": "camera",
+      "from_s": 87.0,
+      "to_s": 97.0,
+      "seconds": 10.0
+    },
+    {
+      "phase": "office",
+      "from_s": 97.0,
+      "to_s": 101.0,
+      "seconds": 4.0
+    },
+    {
+      "phase": "other",
+      "from_s": 101.0,
+      "to_s": 241.0,
+      "seconds": 140.0
+    },
+    {
+      "phase": "unknown",
+      "from_s": 241.0,
+      "to_s": 244.0,
+      "seconds": 3.0
+    },
+    {
+      "phase": "other",
+      "from_s": 244.0,
+      "to_s": 248.0,
+      "seconds": 4.0
+    },
+    {
+      "phase": "camera",
+      "from_s": 248.0,
+      "to_s": 252.0,
+      "seconds": 4.0
+    },
+    {
+      "phase": "dark",
+      "from_s": 252.0,
+      "to_s": 254.5,
+      "seconds": 2.5
+    },
+    {
+      "phase": "camera",
+      "from_s": 254.5,
+      "to_s": 257.0,
+      "seconds": 2.5
+    },
+    {
+      "phase": "other",
+      "from_s": 257.0,
+      "to_s": 260.0,
+      "seconds": 3.0
+    }
+  ],
+  "terminal": {
+    "outcome": "death",
+    "evidence": "terminal-static",
+    "at_s": 100.5,
+    "positive": true,
+    "note": "the recording ends in sustained static the HUD never returns from"
+  }
+}

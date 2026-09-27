@@ -1,0 +1,149 @@
+{
+  "schema": "corner-cohort-result-v1",
+  "claimLevel": "DEVICE_MEASURED",
+  "predeclaration": "docs/evidence/night7-corner2-bbfoxy-predeclaration-20260927.json",
+  "night": 7,
+  "binding": "fnv1a-5c8dcb5f",
+  "rule": "WIN = executor terminal sixam AND video terminal clear (the predeclared rule)",
+  "size": 2,
+  "counted": 2,
+  "wins": 0,
+  "deaths": 1,
+  "ungraded": 0,
+  "disputed": 0,
+  "unknown": 1,
+  "missing": 0,
+  "winRate": "0/2",
+  "wrongBinding": [],
+  "unverifiedDials": [],
+  "status": "INCOMPLETE",
+  "corners": [
+    {
+      "id": "bbfoxy",
+      "dials": {
+        "withfreddy": 0,
+        "withbonnie": 0,
+        "withchica": 0,
+        "foxy": 20,
+        "toyfreddy": 0,
+        "toybonnie": 0,
+        "toychica": 0,
+        "mangle": 0,
+        "bb": 20,
+        "golden": 0
+      },
+      "result": {
+        "schema": "cohort-result-v2",
+        "predeclaration": "docs/evidence/night7-corner2-bbfoxy-predeclaration-20260927.json",
+        "night": 7,
+        "binding": "fnv1a-5c8dcb5f",
+        "size": 2,
+        "prefix": "corner2-bbfoxy",
+        "rule": "WIN = executor terminal sixam AND video terminal clear (the predeclared rule)",
+        "counted": 2,
+        "wins": 0,
+        "deaths": 1,
+        "ungraded": 0,
+        "disputed": 0,
+        "unknown": 1,
+        "missing": 0,
+        "winRate": "0/2",
+        "wrongBinding": [],
+        "status": "INCOMPLETE",
+        "slots": [
+          {
+            "slot": "r01",
+            "status": "DEATH",
+            "runs": [
+              {
+                "run": "night7-corner2-bbfoxy-r01-20260927T192307Z",
+                "packSha256": "4aa7ef8b55da0b8ebf248272fda1dd89200afebb3f9ed973fd4d4106cc1c0b4d",
+                "reached": true,
+                "executor": "DEATH",
+                "video": "unknown",
+                "videoDetail": "nothing terminal was captured; the recording may stop before the end of the night",
+                "abort": null,
+                "bindingMatches": true,
+                "status": "DEATH",
+                "role": "counted",
+                "dialVerification": {
+                  "requested": {
+                    "withfreddy": 0,
+                    "withbonnie": 0,
+                    "withchica": 0,
+                    "toyfreddy": 0,
+                    "toybonnie": 0,
+                    "toychica": 0,
+                    "mangle": 0,
+                    "bb": 20,
+                    "foxy": 20,
+                    "golden": 0
+                  },
+                  "observed": {
+                    "withfreddy": 0,
+                    "withbonnie": 0,
+                    "withchica": 0,
+                    "foxy": 20,
+                    "toyfreddy": 0,
+                    "toybonnie": 0,
+                    "toychica": 0,
+                    "mangle": 0,
+                    "bb": 20,
+                    "golden": 0
+                  },
+                  "matches": true
+                }
+              }
+            ]
+          },
+          {
+            "slot": "r02",
+            "status": "UNKNOWN",
+            "runs": [
+              {
+                "run": "night7-corner2-bbfoxy-r02-20260927T193022Z",
+                "packSha256": "7bb655936ae9e7876c35d70ecbcd592b616ef927f27881330d117aee632c8bc5",
+                "reached": true,
+                "executor": "ERROR",
+                "video": "unknown",
+                "videoDetail": "nothing terminal was captured; the recording may stop before the end of the night",
+                "abort": "night terminal was not observed before the 120000ms deadline (last=unknown)",
+                "bindingMatches": true,
+                "status": "UNKNOWN",
+                "role": "counted",
+                "dialVerification": {
+                  "requested": {
+                    "withfreddy": 0,
+                    "withbonnie": 0,
+                    "withchica": 0,
+                    "toyfreddy": 0,
+                    "toybonnie": 0,
+                    "toychica": 0,
+                    "mangle": 0,
+                    "bb": 20,
+                    "foxy": 20,
+                    "golden": 0
+                  },
+                  "observed": {
+                    "withfreddy": 0,
+                    "withbonnie": 0,
+                    "withchica": 0,
+                    "foxy": 20,
+                    "toyfreddy": 0,
+                    "toybonnie": 0,
+                    "toychica": 0,
+                    "mangle": 0,
+                    "bb": 20,
+                    "golden": 0
+                  },
+                  "matches": true
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "evidenceId": "cohort-fnv1a-31a733dc"
+}

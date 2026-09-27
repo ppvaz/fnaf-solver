@@ -1,0 +1,1033 @@
+{
+  "schema": "run-pack-v1",
+  "version": 1,
+  "id": "night7-corner2-bbfoxy-r02-20260927T193022Z",
+  "campaign": "campaign-2026-09-27T19-30-35.284Z",
+  "run": "night7-corner2-bbfoxy-r02-20260927T193022Z",
+  "outcome": "ERROR",
+  "claimLevel": "UNKNOWN",
+  "nights": [],
+  "bundle": {
+    "path": "artifacts/night7-corner2-k3-bundle",
+    "winnerHash": "fnv1a-5c8dcb5f"
+  },
+  "files": [
+    {
+      "name": "events.jsonl",
+      "sha256": "cec6c9583a688345ed154160e138b3529d47abac224ed5460d48a8611cb9af00",
+      "bytes": 47240,
+      "source": {
+        "sha256": "9edf468f625217219cf3c375ba971716c17852cd4295e1137778b1960f15fd4c",
+        "bytes": 56685
+      },
+      "redactions": {
+        "paths": 1,
+        "pixelArrays": 16,
+        "frameRefs": 34
+      }
+    },
+    {
+      "name": "observations.jsonl",
+      "sha256": "7205bbc0df50a42d96e6ba3e3175bc7c4762ea7e1fbbec80650b4cf5be95a735",
+      "bytes": 40656,
+      "source": {
+        "sha256": "a25c2e4e27964b67a204ef1fb6cbc19a5de046e9130417c1cae6da0bedd0369d",
+        "bytes": 27436
+      },
+      "redactions": {
+        "paths": 0,
+        "pixelArrays": 0,
+        "frameRefs": 132
+      }
+    },
+    {
+      "name": "request.json",
+      "sha256": "f5582b87fdf7752044efacb284c4f6ce2c830aa0dd46b33c1e09d1ac6eed7f6b",
+      "bytes": 19746,
+      "source": {
+        "sha256": "4c6046f9a17a569bc3c6fa60e36df20c01b988fa0a7602a6902e46e663f6ed6c",
+        "bytes": 19820
+      },
+      "redactions": {
+        "paths": 1,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    },
+    {
+      "name": "result.json",
+      "sha256": "82f3a92cceec55d8939c246129ea8f3891f320d29b0a55d691732feab5c75675",
+      "bytes": 131,
+      "source": {
+        "sha256": "82f3a92cceec55d8939c246129ea8f3891f320d29b0a55d691732feab5c75675",
+        "bytes": 131
+      },
+      "redactions": {
+        "paths": 0,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    },
+    {
+      "name": "run/anchor-aim.err",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "source": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "redactions": {
+        "paths": 0,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    },
+    {
+      "name": "run/anchor-max-k.err",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "source": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "redactions": {
+        "paths": 0,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    },
+    {
+      "name": "run/anchor-period.err",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "source": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "redactions": {
+        "paths": 0,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    },
+    {
+      "name": "run/campaign.exit",
+      "sha256": "8fd79ff1a65b7a94b38d3a5dcfa3006fb83e8b2d2566534683b1e3c0bf2f3bb1",
+      "bytes": 16,
+      "source": {
+        "sha256": "8fd79ff1a65b7a94b38d3a5dcfa3006fb83e8b2d2566534683b1e3c0bf2f3bb1",
+        "bytes": 16
+      },
+      "redactions": {
+        "paths": 0,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    },
+    {
+      "name": "run/phase.json",
+      "sha256": "74f15b6d043a1d7348b8d67beedd8a584959e3d0bb49791f349532df91ffbabf",
+      "bytes": 16493,
+      "source": {
+        "sha256": "ae07f7e9b2268eaff53af7fcaed03c9c95dd4254d813bb65deb97935b024b605",
+        "bytes": 16567
+      },
+      "redactions": {
+        "paths": 1,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    },
+    {
+      "name": "run/phase.log",
+      "sha256": "76998726f0d87e7d2bb62a79be015fbd8c74b8aa2bc29c300b83f8ec62c63290",
+      "bytes": 69,
+      "source": {
+        "sha256": "76998726f0d87e7d2bb62a79be015fbd8c74b8aa2bc29c300b83f8ec62c63290",
+        "bytes": 69
+      },
+      "redactions": {
+        "paths": 0,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    },
+    {
+      "name": "run/post-run-title.txt",
+      "sha256": "9900ea9ddb44f81f8e371da75452c22318a4af0849a20e2447d79fac7fe0ec23",
+      "bytes": 55,
+      "source": {
+        "sha256": "9900ea9ddb44f81f8e371da75452c22318a4af0849a20e2447d79fac7fe0ec23",
+        "bytes": 55
+      },
+      "redactions": {
+        "paths": 0,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    },
+    {
+      "name": "run/run-report.json",
+      "sha256": "13c94397218f2e0246938887e9216ab37041f341b5135bf622caef24be810b6f",
+      "bytes": 1653,
+      "source": {
+        "sha256": "13c94397218f2e0246938887e9216ab37041f341b5135bf622caef24be810b6f",
+        "bytes": 1653
+      },
+      "redactions": {
+        "paths": 0,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    },
+    {
+      "name": "run/timeline.json",
+      "sha256": "4e5b4c8f76bb525318ba43041a9cf01e60b22114992128b38dd1ef2b30ec8425",
+      "bytes": 4477,
+      "source": {
+        "sha256": "4e5b4c8f76bb525318ba43041a9cf01e60b22114992128b38dd1ef2b30ec8425",
+        "bytes": 4477
+      },
+      "redactions": {
+        "paths": 0,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    },
+    {
+      "name": "run/verdict.txt",
+      "sha256": "3c7aeea343ef3ad1b798161c0982124cb2cce24335ab99e8d3ab87c086e65d96",
+      "bytes": 972,
+      "source": {
+        "sha256": "5d484a906861ff89305d01f4ac25dc1f5db9d89694e02db23bee8c35821e656a",
+        "bytes": 1120
+      },
+      "redactions": {
+        "paths": 2,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    },
+    {
+      "name": "run/video.sha256",
+      "sha256": "a639c7513ebf084d065357d10c42ccdf05ea9bbf927bf11b609c1868be7b0801",
+      "bytes": 122,
+      "source": {
+        "sha256": "a639c7513ebf084d065357d10c42ccdf05ea9bbf927bf11b609c1868be7b0801",
+        "bytes": 122
+      },
+      "redactions": {
+        "paths": 0,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    }
+  ],
+  "withheld": [
+    {
+      "name": "00001-title-observe.py.png",
+      "sha256": "620bcd45607ce138bd17fbc8159272aa01ff6479ef3d5784dd277809f9b7b952",
+      "bytes": 2071523,
+      "kind": "frame"
+    },
+    {
+      "name": "00002-title-observe.py.png",
+      "sha256": "05e08f076fbc0c04356f43389b787d3994f4c5b92b6ce999cba40f3c534acac6",
+      "bytes": 1776314,
+      "kind": "frame"
+    },
+    {
+      "name": "00003-lifecycle-observe.py.png",
+      "sha256": "3fbb42f440a121af061d27f8c60577fc58e4ef81c83bdf3fae5ff92b4971ffe9",
+      "bytes": 1996425,
+      "kind": "frame"
+    },
+    {
+      "name": "00004-custom-night-readback.py.png",
+      "sha256": "1f95323270b3276e28f5acbae9c1fefa5842c8f9918157705e7db046b66d7d39",
+      "bytes": 1961822,
+      "kind": "frame"
+    },
+    {
+      "name": "00005-custom-night-readback.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00006-custom-night-readback.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00007-lifecycle-observe.py.png",
+      "sha256": "57d4f3c0f7b8b43b0382738e2e018b8d41f812161911f37f387eb54201c55d48",
+      "bytes": 22759,
+      "kind": "frame"
+    },
+    {
+      "name": "00008-lifecycle-observe.py.png",
+      "sha256": "211b34add0a1fadc0a97f5105547bdab7c8efea87e9f75333f09779dc0fa0b4d",
+      "bytes": 26188,
+      "kind": "frame"
+    },
+    {
+      "name": "00009-lifecycle-observe.py.png",
+      "sha256": "a6d7455eefc4ec8b2ac1a1e34acee5e1d7899007f8e22fe9443927d95822522d",
+      "bytes": 1677856,
+      "kind": "frame"
+    },
+    {
+      "name": "00010-lifecycle-observe.py.png",
+      "sha256": "61f5669bd356805432c357250620d9cee74cd0b93ea30738b6175771d43bf660",
+      "bytes": 2017618,
+      "kind": "frame"
+    },
+    {
+      "name": "00011-lifecycle-observe.py.png",
+      "sha256": "262aaa9fb7421c8cbae1dfd80a0eb265af1633ff70d7c869d6c034d0d880caa8",
+      "bytes": 3239004,
+      "kind": "frame"
+    },
+    {
+      "name": "00012-lifecycle-observe.py.png",
+      "sha256": "a5c64fae67312bff569b9cecdc53e59ca97cb426514db35a8d0bf80d11eb7784",
+      "bytes": 317047,
+      "kind": "frame"
+    },
+    {
+      "name": "00013-lifecycle-observe.py.png",
+      "sha256": "c57dcb1bd0168e5d02797285afdb3fc0bf7a195cf8dc4231f314169e3650cb1d",
+      "bytes": 824301,
+      "kind": "frame"
+    },
+    {
+      "name": "00014-lifecycle-observe.py.png",
+      "sha256": "230ef3e11202c5350a248dc5b6b10866ea0fa49dcd840f755d6273ccb76b390e",
+      "bytes": 360812,
+      "kind": "frame"
+    },
+    {
+      "name": "00015-lifecycle-observe.py.png",
+      "sha256": "50e8f0fe89a19196f74010d30c413a1c1060955e66eea30188d0554a82c95769",
+      "bytes": 3256040,
+      "kind": "frame"
+    },
+    {
+      "name": "00016-lifecycle-observe.py.png",
+      "sha256": "664d1ddf8e782ba1ed24be9f042249da1d1e213edc9f83782b1c53936e5a12b0",
+      "bytes": 345054,
+      "kind": "frame"
+    },
+    {
+      "name": "00017-lifecycle-observe.py.png",
+      "sha256": "f23629481b98de74a0987d6a0e7895a3d1ca4c4315a1fb411260e4f92072e4be",
+      "bytes": 1169046,
+      "kind": "frame"
+    },
+    {
+      "name": "00018-lifecycle-observe.py.png",
+      "sha256": "c7ec809aa1e47135e22acad51e49960f650498900c441adaffd5440aabb241ac",
+      "bytes": 2562338,
+      "kind": "frame"
+    },
+    {
+      "name": "00019-lifecycle-observe.py.png",
+      "sha256": "0ca89375613b070e5c54d44948b221735d4e9d86dfd777526e106c1642ed5617",
+      "bytes": 1225812,
+      "kind": "frame"
+    },
+    {
+      "name": "00020-lifecycle-observe.py.png",
+      "sha256": "126a121dccd6834d4d5848b47560a52441cbe3cc00eaf2e26f0d49bbe5cc2ef3",
+      "bytes": 336829,
+      "kind": "frame"
+    },
+    {
+      "name": "00021-lifecycle-observe.py.png",
+      "sha256": "2653eeead020fa4a2af41de101beb80de5c38efaaa26392c7b5507309cb7d29e",
+      "bytes": 454785,
+      "kind": "frame"
+    },
+    {
+      "name": "00022-lifecycle-observe.py.png",
+      "sha256": "06e932cb3406328278841e43c9fd58d8aa2602a0887f4cec1099200df1b433c7",
+      "bytes": 2223297,
+      "kind": "frame"
+    },
+    {
+      "name": "00023-lifecycle-observe.py.png",
+      "sha256": "a301dbecb50825de1e818acee2370ec3baa4fe16343ffc008b2d0484b6c185e0",
+      "bytes": 2369449,
+      "kind": "frame"
+    },
+    {
+      "name": "00024-lifecycle-observe.py.png",
+      "sha256": "5214796ec978e655a7c655c4b26e2600d979662bf3c62b9b525dc4fa049ed13c",
+      "bytes": 454744,
+      "kind": "frame"
+    },
+    {
+      "name": "00025-lifecycle-observe.py.png",
+      "sha256": "4abd50965a433fbd6bfd12de3ae2761cecfe0fa9cc8ef1e7c748a0552bf741b4",
+      "bytes": 380087,
+      "kind": "frame"
+    },
+    {
+      "name": "00026-lifecycle-observe.py.png",
+      "sha256": "244687fc836d5146439757ede33a7b3b867988d7b09816fd2e5013db24d29c8c",
+      "bytes": 877134,
+      "kind": "frame"
+    },
+    {
+      "name": "00027-lifecycle-observe.py.png",
+      "sha256": "a5693d85387fe5e6ed82aaba52c306317bbd49378a445aca8c7ab70d7cc87195",
+      "bytes": 2185175,
+      "kind": "frame"
+    },
+    {
+      "name": "00028-lifecycle-observe.py.png",
+      "sha256": "5fefc1147b77fde7c7967de9521032c85c8de690103798e1327f5412c0e33996",
+      "bytes": 2243182,
+      "kind": "frame"
+    },
+    {
+      "name": "00029-lifecycle-observe.py.png",
+      "sha256": "f0dd37d3d6158c662b683ff06c3a9560b30a2688a5090961a2cd2a000589d1ac",
+      "bytes": 1253595,
+      "kind": "frame"
+    },
+    {
+      "name": "00030-lifecycle-observe.py.png",
+      "sha256": "677204cb9771718178ffdd051fe03db1a20dbcd2ca6900027e5ed22afa7419a5",
+      "bytes": 353830,
+      "kind": "frame"
+    },
+    {
+      "name": "00031-lifecycle-observe.py.png",
+      "sha256": "f0dd37d3d6158c662b683ff06c3a9560b30a2688a5090961a2cd2a000589d1ac",
+      "bytes": 1253595,
+      "kind": "frame"
+    },
+    {
+      "name": "00032-lifecycle-observe.py.png",
+      "sha256": "94c1e8d433b861136f964ce1e453d2b42679ec7e7f33aa2221765b0f4f37b29d",
+      "bytes": 351171,
+      "kind": "frame"
+    },
+    {
+      "name": "00033-lifecycle-observe.py.png",
+      "sha256": "d957cb9a7d074d13b480e44e5180e206058614c135cb8af6c46121b71e36fc08",
+      "bytes": 2949934,
+      "kind": "frame"
+    },
+    {
+      "name": "00034-lifecycle-observe.py.png",
+      "sha256": "298ce4c45273f6d08fd612425a7f8f16eb979b3e921e11507015c1829dd19e16",
+      "bytes": 378567,
+      "kind": "frame"
+    },
+    {
+      "name": "00035-lifecycle-observe.py.png",
+      "sha256": "7c2ba2d3ff653627b48a2443b7f83bcae8eba65cc19bed2687f7caf2f499850d",
+      "bytes": 3158703,
+      "kind": "frame"
+    },
+    {
+      "name": "00036-lifecycle-observe.py.png",
+      "sha256": "2d517f1749c9211bc18257793a854a2c6d25a4e39387a483530d2b7184714392",
+      "bytes": 2132686,
+      "kind": "frame"
+    },
+    {
+      "name": "00037-lifecycle-observe.py.png",
+      "sha256": "1aae43577aba663f6475520608b58f7deeda679a0b5cb3106adc5d61ad7af52e",
+      "bytes": 1437645,
+      "kind": "frame"
+    },
+    {
+      "name": "00038-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00039-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00040-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00041-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00042-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00043-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00044-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00045-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00046-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00047-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00048-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00049-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00050-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00051-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00052-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00053-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00054-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00055-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00056-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00057-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00058-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00059-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00060-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00061-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00062-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00063-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00064-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00065-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00066-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00067-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00068-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00069-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00070-lifecycle-observe.py.png",
+      "sha256": "e14857c2d034691f32deb2d21f9423134fd8e5aff567181259c9c8b938446f66",
+      "bytes": 716293,
+      "kind": "frame"
+    },
+    {
+      "name": "00071-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00072-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00073-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00074-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00075-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00076-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00077-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00078-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00079-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00080-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00081-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00082-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00083-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00084-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00085-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00086-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00087-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00088-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00089-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00090-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00091-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00092-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00093-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00094-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00095-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00096-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00097-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00098-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00099-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00100-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00101-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00102-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00103-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00104-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00105-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00106-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00107-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00108-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00109-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00110-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00111-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00112-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00113-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00114-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00115-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00116-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00117-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00118-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00119-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00120-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00121-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00122-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00123-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00124-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00125-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00126-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00127-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00128-lifecycle-observe.py.png",
+      "sha256": "47918e76c42eeb12c9b3ce94f6d1310132f774bb73fac4ab830dbadf35ecf86b",
+      "bytes": 834366,
+      "kind": "frame"
+    },
+    {
+      "name": "00129-lifecycle-observe.py.png",
+      "sha256": "407fa40a9cc983302aef8991a023b2f53246d78c82c21ae62fd6327e0e0c2e89",
+      "bytes": 173106,
+      "kind": "frame"
+    },
+    {
+      "name": "00130-lifecycle-observe.py.png",
+      "sha256": "929cdecb45bdb6b24cf85507e031e97bab52e6e645f8ce83c588705c5c0fc9f1",
+      "bytes": 58292,
+      "kind": "frame"
+    },
+    {
+      "name": "00131-lifecycle-observe.py.png",
+      "sha256": "7fb6c51cccf8e169c4fce56bbe10d64c9aa679b8e24ffdd0c4c9f8eb545eb4df",
+      "bytes": 2040153,
+      "kind": "frame"
+    },
+    {
+      "name": "00132-lifecycle-observe.py.png",
+      "sha256": "61f7d21dd12062ef13ef41da16196e4c59cf29f3c27987512da1ac60adee9bbf",
+      "bytes": 2062267,
+      "kind": "frame"
+    },
+    {
+      "name": "night7-corner2-bbfoxy-r02-20260927T193022Z.mp4",
+      "sha256": "76aa94510f88334f148f62bee3381abfeb3420ed8b36cdf494909352aeda140f",
+      "bytes": 227564264,
+      "kind": "video"
+    },
+    {
+      "name": "run/campaign.log",
+      "sha256": "09889145c83b47f8dbe52fb75f186778a4379ac07fcf85a2a59c3199cfef22e6",
+      "bytes": 62551,
+      "kind": "other"
+    }
+  ],
+  "packer": "tools/evidence-pack.mjs"
+}

@@ -2154,3 +2154,90 @@ Open:
 Open:
 - Night 7's difference at 1800 and Night 5's at 7460.
 - The census, the corner cohort and the APK install (agents).
+
+**2026-09-27 (evening): the second BB+Foxy corner cohort and a 4/20 Minus 3 replay; after a
+Night 7 death the executor pressed through the post-death screens.**
+
+- **S3, DEVICE_MEASURED: Pedro chose option 3.** `cohort-fnv1a-7e0b375f` stays INCOMPLETE
+  exactly as it stands. A new BB 20 + Foxy 20 cohort was predeclared on this tree in
+  `night7-corner2-bbfoxy-predeclaration-20260927.json`:
+  - committed in `03204fe`, parent `c0544c6`;
+  - two slots, both run from `03204fe` with no tracked edits;
+  - binding k3 `fnv1a-5c8dcb5f`, from a bundle byte-identical to the first cohort's;
+  - the first cohort's rules, plus one: a counted night that ends with no executor terminal is
+    reported UNKNOWN, and is never re-graded by hand or re-run.
+
+  The result is `cohort-fnv1a-31a733dc`
+  ([record](../docs/evidence/night7-corner2-bbfoxy-result-20260927.json)): **INCOMPLETE**, with
+  0 wins, 1 death and 1 UNKNOWN. Both dial readbacks match.
+  - **r01, `night7-corner2-bbfoxy-r01-20260927T192307Z` (pack `4aa7ef8b…`): DEATH.**
+    - Died at Night 7 4 AM, 300.7 s after the night-go.
+    - The anchor released 0.22 ms late at 2433.2 ms. The office seed is 44142 (2 candidates).
+    - **The static window held on a live death.** The hold opened at the first static read,
+      19:28:42.039Z. Static was read again at 19:28:43.692 and 19:28:45.353. Game Over was read
+      at 19:28:47.017Z, 4978 ms after the first static and inside the 8724 ms window.
+    - The executor took `gameover` and closed the HID. Game Over stayed on screen for about 8 s,
+      then the game returned to the title.
+  - **r02, `night7-corner2-bbfoxy-r02-20260927T193022Z` (pack `7bb65593…`): UNKNOWN.**
+    - The static hold opened at 19:33:13.352Z, 135.1 s after the night-go.
+    - The observer's reads around it were 11.8 s and 8.4 s apart (19:33:01.576 night,
+      19:33:13.352 static, 19:33:21.745 unknown). The window record assumes at most 2418 ms.
+    - The frames show static at 164-168 s and Game Over at 168.5-169 s only. The title follows at
+      169.5 s with the cursor on Custom Night, and the dial screen at 170 s.
+    - The schedule keeps running inside the hold, and its presses skipped Game Over. k3's mask
+      point (600,995) lies on the title's `customNight` (400,985).
+    - Every later read was `unknown=no-signature-matched`. The gate aborted (ambiguous-threshold)
+      at 19:33:25.416, and the campaign's 120 s deadline restarted the game at 19:35:27.830.
+    - The Game Over seen in the frames is not substituted for the rule.
+    - At about 223 s the dial screen switched to the 20/20/20/20 preset, about 44 s after the gate
+      abort. The executor feeds one gate's segment at a time and no input capture ran, so the
+      source of that press is UNKNOWN.
+  - `run-timeline.py` graded both recordings `unknown`: it did not recognise r01's 8 s Night 7
+    Game Over.
+- **Pedro's request, DEVICE_MEASURED:** "play the 20/20/20/20 preset with the targeted minus 3
+  variation (promote it)", "the minus 3 variation with dropped unnecessary inputs".
+  - The binding is `fnv1a-15124c58` (`night7-420-first-6am-minimal3-20260914.json`). It was
+    re-emitted from `artifacts/night7-420-minus3/bundle/winner.json`. The plan is byte-identical
+    (`ff39cca5…`) and the replay is `fnv1a-f1b23729`.
+  - No anchor is registered for it. It ran observe-once on the 4/20 dials.
+  - **p1 (pack `f5ab4037…`): refused before the night** with `cue-helper endpoint: no READY or
+    DEGRADED endpoint`; the phone had been in other use. `cue_setup` restored the helper.
+  - **p1b, `night7-n7-420-minimal-m3-p1b-20260927T195732Z` (pack `b280d074…`): died at 12 AM.**
+    - The readback passed and the arm verified at 9079 ms. The video grade is `death`
+      (terminal-static at 100.5 s).
+    - Static was read at 19:59:18.488 (the hold opened, 70.8 s after the night-go) and at
+      19:59:20.268.
+    - About 2 min of the 8-bit death minigame followed. The observer read it as
+      `unknown=office-hud-without-night` (once as `state=night`), and neither label votes the
+      night out.
+    - The executor kept pressing until a `state=title` read at 20:01:32.899Z. Its presses left
+      the minigame and opened Unlocks (the in-app store) from the title. Airplane mode showed
+      "Network unavailable". Then they went back to the title.
+    - The pack stays ERROR/UNKNOWN. There is no 4/20 win, so nothing was promoted. The winner stays
+      uncommitted: `test-seam-slack.mjs` still refuses its +2050 ms hold, and Plan 12 promotion
+      needs Pedro's attestation.
+- **Device-safety defect, on two nights in a row.** After a Night 7 death the executor can keep
+  pressing when it does not recognise the post-death screens:
+  - a brief Game Over that falls between slow reads (r02);
+  - a death minigame read as unknown (p1b).
+
+  Its presses then move through the menus: they skip Game Over, enter Custom Night and open the
+  store. In `title-moto-g56-v207.json`, k3's left vent light (350,615) lies on New Game (400,640);
+  neither night pressed it. Device work stopped after p1b. No harness code changed.
+- **Research APK (the lead session's step; Pedro's recorded exception).**
+  - `org.fnaf2rebuild.play` (sha256 `91781261…`) was installed with `adb install -r`: Success, an
+    incremental install.
+  - `freddy2` (225 B, `99f751d3…`) was copied into its `files/` with run-as.
+  - It was not launched.
+- The phone was left at the FNaF 2 title (`items=continue,customNight,newGame,sixthNight`, two
+  stars). The Cue Helper queue's four PENDING jobs were not run. The 2026-09-20 one reinstalls the
+  helper, and `cue_setup` did the corners' menu check directly.
+
+Open:
+- The Night 7 post-death fail-safe: stop the schedule at the first static, or at any non-night
+  read after the night, instead of pressing through the hold. Recognise the death minigames and
+  the Custom Night dial screen after a night. Bound the observer interval the window assumes.
+- A third BB+Foxy cohort, after that fail-safe. Both corner cohorts stay INCOMPLETE.
+- The FNaF 2 third star: no record in this repository names which Custom Night mode awards it.
+- The 4/20 Minus 3 winner: Pedro's choice between a recorded seam-slack exemption and a
+  re-derived hold, then its own phone run.

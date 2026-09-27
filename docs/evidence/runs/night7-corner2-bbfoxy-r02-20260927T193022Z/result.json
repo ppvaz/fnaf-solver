@@ -1,0 +1,5 @@
+{
+  "status": "ERROR",
+  "mode": "live",
+  "error": "night terminal was not observed before the 120000ms deadline (last=unknown)"
+}
