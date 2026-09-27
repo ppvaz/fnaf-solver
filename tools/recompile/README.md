@@ -48,6 +48,9 @@ directory (`/private/tmp/fnaf2-recompile.*` on the dev machine).
 
 | `compare-schedule-replay.mjs` | The replay comparison: binds the harness input to the winner's regenerated rows, drives the model with the same Sim queue under `--model-options`, and records both outcomes (6 AM or death, time), the first draw mismatch, every mismatch run, a gate-replay cross-check, and per-update monitor/mask ledgers from `# watch` lines. A death's reason is the rebuild's own when the trace carries `# counter` lines watching `being attacked by` (`ATTACKERS`: its value -> the character, from the office sheet's g556-574/g722/g731), else the model's only when the stream matched to the terminal loop, else UNKNOWN. `--counter-trace` reads the counters from another run of the same replay; `--baseline RECORD` records whether an earlier record of the same replay has the same draw projection. `recompile-schedule-replay-v1`, MODEL_ONLY. |
 | `test-schedule-replay.mjs` | FIXTURE for both: stretch points, one expansion, pointers and same-tick edges, the Night 1 minimal binding, prefix/slip/split/death outcomes, the attacker read from `# counter` lines, ledger pairing, input binding. In `npm run test:unit`. |
+| `phone-encounter-replay.mjs` | Phone nights with an established seed, replayed into the rebuild on the phone's own clock and compared window by window (S2b). `emit` writes a night's harness input (its binding at the measured release, checked action for action against the retained press file), `frametimes.txt` (`CHOWDREN_FRAME_TIMES`) and the watches; `compare` scores every configured replay against the retained phone reads and terminals, runs the model on the same inputs and clock, and writes `recompile-phone-encounters-v1`; `check` re-derives a result's arithmetic. Press rules `landed` (send plus the night's measured landing latency; primary), `sched`, `cum`; clocks catch-up, raw and constant 60 Hz. MODEL_ONLY; phone reads are reused DEVICE_MEASURED observations. |
+| `phone-encounter-nights.json` | The nights, their seeds' records, bindings, release origins, hashed private inputs (press files, frame traces), phone windows and terminals, and the replay variants. No frames, recordings or game data. |
+| `test-phone-encounter-replay.mjs` | FIXTURE for the clock, press rules, landing latency, occupant, window codes and scoring, then `results/phone-encounters-20260927.json` re-derived from its rows and checked against the evidence record, the config and the encounter record's model strings. In `npm run test:unit`. |
 
 ## Environment
 
@@ -1159,3 +1162,84 @@ Open:
   g576-g586, which the dump marks NoGood.
 - The A = 1 / A = 2 view-draw option (above), then replay Night 5 again to see
   whether the model meets the same Foxy.
+
+## Phone nights on the phone's own clock (2026-09-27, S2b)
+
+Every rebuild comparison before this one was against the model. This one takes
+the four phone nights whose office seed the clock established (tw-12 and
+twin-01 on Night 6 at 24850, k3's full-04 at 34043 and full-06 at 47593 on
+Night 7 at 10/20), replays each into the rebuild at that seed, and scores it
+window by window against the phone's retained eyehole reads and terminals.
+`phone-encounters-20260927.json`, **`recompile-phone-encounters-e18a527d01bcdb54`**,
+and [`rebuild-phone-encounters-20260927.json`](../../docs/evidence/rebuild-phone-encounters-20260927.json).
+
+**Two harness switches** (binary `7ab9a755`, `pinned/7ab9a755-7163d628/`, same
+assets; `8eb41219` plus these):
+
+- `CHOWDREN_FRAME_TIMES=<file>` and `CHOWDREN_FRAME_TIMES_FRAME=<index>`: one timer
+  delta in ms per line, line k for update k of the first visit to that frame.
+  That update's `manager.dt` (so the frame timer and global value 5) and
+  `timer_units` (CND_EVERY2's round(ms * 3)) come from the line. Every other
+  update keeps the fixed 1/60 s step. The trace gets `# frametimes N updates of frame F`.
+- `CHOWDREN_WATCH_OVERLAP=<zone>:<name>,...`: one `# overlap <frame> <tick>` line per
+  update, with 1/0 for each named object's first live instance overlapping the
+  zone's (`FrameObject::overlaps`, the test IsOverlapping compiles to), or `-` when
+  either is absent. Presence alone names the Toy overlays (`Active 19`, `chicalookatyou`).
+
+With neither switch set, the binary replays grid-screen `n6-h` with the old
+binary's frame/tick/draw/state projection over all 25,822 updates. The object
+watch leaves the draw projection unchanged. The patch's `harness.h`,
+`harness.cpp` and `run.cpp` sections were regenerated in place in the committed
+file order (`git diff --no-index` against a pristine `9b00bb4` archive;
+`frame.h` regenerates byte for byte). They carry the lead session's uncommitted
+harness edits too: `CHOWDREN_DRAW_FROM`, `CHOWDREN_DRAW_GO`, `CHOWDREN_REALTIME`
+only while drawing, and the drawn-time stop line. The whole patch, applied
+with GNU patch to a fresh `9b00bb4` archive, reproduces every scoped file of the tree.
+
+```sh
+node tools/recompile/phone-encounter-replay.mjs emit --night full-06 --variant landed \
+  --out-dir <runs>/full-06-landed --inputs-root <main checkout>   # run.input, frametimes.txt, env, save-before.ini
+# in the fnaf2-chowdren:buster container, cwd = the run dir: run-harness.sh with CHOWDREN_BINARY = the pinned
+# binary, CHOWDREN_HARNESS=1 CHOWDREN_NO_DRAW=1 CHOWDREN_INPUT=run.input CHOWDREN_TRACE=trace and the env lines
+node tools/recompile/phone-encounter-replay.mjs compare --runs <runs> --inputs-root <main checkout> \
+  --out tools/recompile/results/phone-encounters-20260927.json
+```
+
+**Where the presses land.** The press files hold sends, not landings. On the
+phone's own frames, the first frame whose monitor region changes after a raise
+comes 64.7 / 74.8 / 81.6 ms (full-04 / tw-12 / full-06 medians) after the send.
+`landed` (primary) puts a press on the pass that drew the first frame at or
+after send + that median. The send's own frame (`sched`) is 3-5 updates earlier.
+The model encounter records' rule (`cum`) lands within one update of `landed`.
+
+| night | phone | rebuild (landed) | first disagreeing window | rebuild's end |
+|---|---|---|---|---|
+| tw-12 | 12 windows read, first occupant Chica at 12; aborted | agree 9/12 | 9: phone empty, rebuild Bonnie | death (Foxy) 350.4 s; phone UNKNOWN |
+| twin-01 (60 Hz, no trace) | 9 windows read, all empty; death by 112.3 s | agree 8/9 | 10: phone empty, rebuild Bonnie | death (Foxy) 140.4 s, 28 s late |
+| full-04 | 10 read; death by 104.0 s | agree 3/4, 6 unplayed | 3: unlabelled occupant vs Bonnie (4: phone Chica, rebuild dead) | death (Bonnie) 36.8 s |
+| full-06 | 42 read, 27 occupied; 6 AM | agree 14/38, 4 unplayed | 6: phone empty, rebuild Bonnie | death (Bonnie) 377.8 s |
+
+All four are DIVERGENT. At every first disagreeing window, the rebuild's
+occupant was at `in office` 3.93-3.97 s before the mask went on, so none is a
+window boundary. full-06's window 6 holds Bonnie in all five replays (`landed`,
+`sched`, `cum`, `raw`, `const60`), and the model shares the occupant at every
+first disagreement. So the gap lies upstream of both host programs: the replayed
+input or the Android runtime's clock. The retained evidence does not separate them.
+
+**Held-tap drops.** g618 reads a touch still down over the drop button once the
+flip is fully up. The k3 route holds its monitor contact 200 ms against a
+12-update raise: zero margin at 60 Hz, and 13 updates in some cycles of the
+phone clock. Every Withered attack in these replays follows such a drop 6-9 s
+earlier: full-04 at 30.3 s (`landed`) and 90.3 s (`cum`, dying 7 s before the
+phone's own stamp), full-06 at 370.3 s. The model's queue has no tap releases
+and cannot show it. Each variant's `heldTapDrops` lists them.
+
+Open:
+- Per-press landings, where the retained trace shows them (raises, drops, mask),
+  in place of one median. Then see whether full-06's window 6 empties.
+- The same-phase frame-traced twin (S2a), with each press's landing frame read
+  on the phone.
+- The k3 route's 200 ms monitor hold against the 12-update raise: a
+  test-seam-slack candidate for S4. It is not a promotion.
+- Rebuild-vs-model draw splits on the phone clock: first mismatches at updates
+  166-2400 on the primary replays, earlier than on the 60 Hz ones.

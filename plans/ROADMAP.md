@@ -120,6 +120,14 @@ Details:
     at the first raise over a stunned Toy (the model's view draws read A = 1 as
     A = 2), at ticks 10200, 617 and 613. MODEL_ONLY and DIVERGENT
     ([k3 replay](../tools/recompile/results/night7-k3-replay-20260927.json)).
+  - Against the phone, the rebuild diverges on all four clock-seeded nights.
+    Each was replayed on its own frame clock, with presses on their measured
+    landing frames. The first disagreements come at windows 9, 10, 3 and 6. Each
+    occupant arrived about 4 s before mask-on in every press and clock variant,
+    and the model shares it, so the gap sits upstream of both programs.
+    MODEL_ONLY
+    ([rebuild vs phone](../docs/evidence/rebuild-phone-encounters-20260927.json),
+    `recompile-phone-encounters-e18a527d01bcdb54`).
 - **Absorbs** Plan 17 (route 5), Plan 25 horizon 2, and the model parts of
   Plans 15 and 19.
 

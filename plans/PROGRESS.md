@@ -2298,3 +2298,32 @@ Open:
 - The observer interval itself (721 of 3795 in-night gaps over the bound).
 - A third BB+Foxy cohort: the fail-safe it waited on is in the tree, but its phone behaviour is not
   measured yet. Also open: the 4/20 Minus 3 decision and Pedro's attestation.
+
+**2026-09-27 (evening): the rebuild against the phone, window by window (S2b, MODEL_ONLY;
+`recompile-phone-encounters-e18a527d01bcdb54`).**
+
+- **What ran.** The four phone nights with a one-candidate office seed: tw-12 and twin-01
+  (Night 6, 24850) and k3's full-04 (34043) and full-06 (47593) on Night 7 at 10/20.
+  - Each ran in the rebuild at that seed, on its own frame trace's clock.
+  - Each press sits on the frame it landed in, 64.7-81.6 ms after its send by the night's own
+    monitor raises.
+  - The binary is `7ab9a755`, with the new `CHOWDREN_FRAME_TIMES` and `CHOWDREN_WATCH_OVERLAP`
+    switches. The patch was regenerated with the lead's uncommitted harness edits.
+  - The tool is `phone-encounter-replay.mjs` and the gate is `test-phone-encounter-replay.mjs`
+    (test:unit). The record is
+    [rebuild vs phone](../docs/evidence/rebuild-phone-encounters-20260927.json).
+- **DIVERGENT on all four.**
+  - First disagreeing windows: tw-12 9, twin-01 10, full-04 3 (an unlabelled phone occupant;
+    the rebuild is dead before window 4), full-06 6.
+  - Each occupant was at `in office` about 4 s before mask-on.
+  - Each difference survives every press rule and clock tried, and the model shares it.
+  - So the gap is upstream of both programs, in the replayed input or the runtime clock; the
+    evidence does not separate the two.
+- **Held-tap drops.** k3's 200 ms monitor hold against the 12-update raise lets g618 drop the
+  cameras it just raised. Every Withered attack in these replays follows one. full-06 reaches
+  6 AM, like the phone, under three of five press rules.
+
+Open:
+- Per-press landings from the retained traces in place of one median.
+- The same-phase twin (S2a).
+- The k3 monitor hold's zero margin, for S4.

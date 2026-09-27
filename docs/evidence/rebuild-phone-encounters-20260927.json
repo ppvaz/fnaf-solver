@@ -1,0 +1,103 @@
+{
+ "schema": "evidence-record-v1",
+ "id": "rebuild-phone-encounters-20260927",
+ "claimLevel": "MODEL_ONLY: a REBUILD_VS_DEVICE comparison on the host. The rebuilt runtime and the model are host programs; every phone window and terminal below is a reused DEVICE_MEASURED observation from the record each night names, not a new measurement. The rebuild never stands in for a device claim, and nothing is promoted.",
+ "date": "2026-09-27",
+ "step": "ROADMAP S2b (S2: fidelity at the level of encounters)",
+ "question": "On the four phone nights whose office seed is established by the clock, replayed into the rebuilt runtime at that seed on the phone's own frame clock with presses on the frames they landed in: does each mask window hold the same occupant as on the phone, and does the night end the same way?",
+ "verdict": "DIVERGENT on all four nights. S2 stays OPEN. First disagreeing windows: tw-12 window 9, twin-01 window 10, full-04 window 3 (the phone's occupant there is unlabelled, so the first named difference is window 4, which the rebuild never reached), full-06 window 6. At each of them the rebuild's occupant reached `in office` 3.9-4.0 s before the mask went on. So none of them is a boundary between windows: on the phone that character had not come that cycle. None of them depends on the press rule or the clock. full-06 window 6 holds Withered Bonnie in all five rebuild replays: presses on the frame of the send, about 60 ms later, 82 ms later, one update per captured frame, and a constant 60 Hz clock. At tw-12 the first host encounter falls on window 6 or 9 depending on the rule, never the phone's 12. The model on the same inputs shares the difference: Chica or Bonnie in full-06 window 6 and twin-01 window 10, and an early encounter on tw-12. So this is not a rebuild-vs-model rule gap. What lies upstream of both is the replayed input (one median landing per night; the phone's per-press landings and any lost contacts are not replayed) and the Android runtime's clock (display frames stand in for its loops). The retained evidence does not separate the two. Outcomes are phase-sensitive, and one mechanism is named. Every Withered attack in these replays follows a held-tap drop 6-9 s earlier: the k3 route's 200 ms monitor hold spans 13 updates of the phone clock against a 12-update raise, and g618 reads the still-held finger over the drop button as a drop. Under the primary rule that kills full-04 at 36.3 s (the phone lived to about 104 s) and full-06 at 377.3 s (the phone won). Under the model encounter records' rule it kills full-04 at 96.3 s, 7 s before the phone's own static. full-06 reaches 6 AM, like the phone, under three of five rules.",
+ "result": {
+  "path": "tools/recompile/results/phone-encounters-20260927.json",
+  "evidenceId": "recompile-phone-encounters-e18a527d01bcdb54",
+  "status": "DIVERGENT",
+  "sha256": "7cea083dcf87de999e2a1fc3d8c91abcf3126a90bcf4871aaeb611b9cd1f10dc",
+  "tool": "tools/recompile/phone-encounter-replay.mjs",
+  "config": "tools/recompile/phone-encounter-nights.json (sha256 26b89b453e2b483610c118c264d1eb0dbb5d06758ab53db283807ffc25d666d0)",
+  "gate": "tools/recompile/test-phone-encounter-replay.mjs, in npm run test:unit: fixtures for the clock, press rules, landing latency, window codes, occupant and scoring, then this result's scores, verdicts, first disagreements and id re-derived from its rows without the binary or any private input"
+ },
+ "method": {
+  "nights": "The four nights with a one-candidate office seed: tw-12 (Night 6, 24850, clock-pinned; frame-traced; aborted by the operator after 11 cycle gates), twin-01 (Night 6, 24850, unpinned; no frame trace; death), full-04 (Night 7 10/20, 34043; frame-traced; death), full-06 (Night 7 10/20, 47593; frame-traced; 6 AM). Seeds: docs/evidence/night6-twin-nights-proven-20260918.json and night6-h-seedlock-census-20260916.json (reDerived).",
+  "schedule": "Each night's committed binding (campaign-night6-h, campaign-night7-k3) at the night's measured release (originMs after the seed) reproduces its retained press file action for action (517/517 on every night) before anything runs.",
+  "clock": "Office update timer deltas from the night's own frame trace (image_ns from the first office frame): update 0 is one 60 Hz frame, each captured interval becomes 1-3 updates under Fusion's catch-up (the rule the model's encounter replays use). The rebuild spends them through the new harness switch CHOWDREN_FRAME_TIMES (manager.dt, so the frame timer and global value 5, and CND_EVERY2's round(ms * 3) units); the model gets the same numbers through its frame-time hook (model-draw-trace.mjs measuredClock). twin-01 has no trace and runs at a constant 60 Hz on both sides.",
+  "presses": "Primary rule `landed`: the phone frame a press landed in. The landing latency is measured per night from the trace's own frames: over every monitor raise sent from the office view, send -> the first captured frame whose monitor region changes by 20 or more (the flip starts on the update that reads the touch, g257). Medians: tw-12 74.8 ms (12 raises, p10 53.9, p90 77.4), full-04 64.7 ms (6; 38.6-79.3), full-06 81.6 ms (17; 52.3-99.8). A press goes on the first update of the pass that drew the first frame at or after send + median. The send's own frame (`sched`) put presses 3-5 updates before the frame where the phone showed them, so it is kept only as a sensitivity replay, with `cum` (the model records' rule, about 60 ms after the send), `raw` (one update per captured frame) and `const60`.",
+  "windows": "Window k is the k-th schedule mask-on press, as the phone's readers index them; its code is the first occupant in its first 1500 ms of the update clock. Rebuild: while `in danger` > 0, the first of old bonnie/chica/freddy/new freddy overlapping `in office` (the test g445-g447 and g538-g541 make), read through the new harness switch CHOWDREN_WATCH_OVERLAP; Toy Bonnie's or Toy Chica's overlay object when present; '*' otherwise. Model: blackout.unitId, as tools/encounter-replay.mjs. A phone-read window a side never played is a disagreement.",
+  "outcome": "The rebuild's end is its office exit (to 05-static or 06-next day) and its killer the rebuild's own `being attacked by`; phone terminals are the executor's lifecycle stamps on the seed clock (host wall less the run's host-minus-phone skew, less the seed stamp; a poll, so an upper bound). A death agrees within one 10 s cycle."
+ },
+ "harness": {
+  "binary": "7ab9a755efa80383467a53f1914a7c23232341f39e6abda68b491a41a79c1737 (pinned/7ab9a755-7163d628 outside the repository; assets 7163d628), 8eb41219 plus CHOWDREN_FRAME_TIMES/CHOWDREN_FRAME_TIMES_FRAME and CHOWDREN_WATCH_OVERLAP",
+  "regression": "With neither switch set the new binary replays grid-screen n6-h (Night 6 h, seed 24850) with the old binary's frame/tick/draw/state projection over all 25,822 updates; the watches leave the draw projection unchanged (full-06 with and without an object watch).",
+  "patch": "tools/recompile/mmfparser-chowdren-mobile.patch sha256 01ec20de18435f22ab29f0b929e9474648d6542cc37dc783f656a21bb04b28bc: the harness.h, harness.cpp and run.cpp sections regenerated in place in the committed file order (git diff --no-index against a pristine 9b00bb4 archive; frame.h regenerates byte for byte), and they carry the lead session's uncommitted harness edits (CHOWDREN_DRAW_FROM, CHOWDREN_DRAW_GO, CHOWDREN_REALTIME only while drawing, the drawn-time stop line). Applied with GNU patch to a fresh 9b00bb4 archive, it reproduces every scoped file of the tree."
+ },
+ "nights": [
+  {
+   "name": "tw-12",
+   "run": "night6-tw-12-20260918T022134Z",
+   "night": 6,
+   "seed": 24850,
+   "verdict": "DIVERGENT",
+   "primaryVariant": "landed",
+   "rebuiltVsPhone": { "agree": 9, "compared": 12, "hits": 0, "occupied": 1 },
+   "firstDisagreement": { "window": 9, "phone": ".", "side": "B" },
+   "atIt": "window 9 at 99.2 s: the phone read it empty (its first occupant is Withered Chica in window 12); the rebuild has Withered Bonnie, at `in office` 3.93 s before mask-on. Rebuild at window 9 by rule: landed B, sched B, raw B, cum '.', const60 '.' (cum and const60 already put Bonnie in window 6). Model on the same inputs: C in four of five; the encounter record's model string has C there too.",
+   "outcome": "The phone night was aborted by the operator (no terminal). The rebuild dies to Withered Foxy at 350.4 s under the primary rule, and at 6 AM under raw and const60.",
+   "cause": "The host sides bring the first encounter 3-6 windows before the phone. Which window depends on the press rule (input phase), but no rule gives the phone's quiet first eleven. UNKNOWN beyond that."
+  },
+  {
+   "name": "twin-01",
+   "run": "night6-twin-01-20260917T014037Z",
+   "night": 6,
+   "seed": 24850,
+   "verdict": "DIVERGENT",
+   "primaryVariant": "const60",
+   "rebuiltVsPhone": { "agree": 8, "compared": 9, "hits": 0, "occupied": 0 },
+   "firstDisagreement": { "window": 10, "phone": ".", "side": "B" },
+   "atIt": "window 10 at 109.3 s (constant 60 Hz; the night has no frame trace): the phone read it empty; the rebuild and the model both have Withered Bonnie, at `in office` 3.95 s before mask-on in the rebuild.",
+   "outcome": "The phone died (static observed 112.3 s after the seed; Balloon Boy was seen in the office before it; killer not read). The rebuild dies to Withered Foxy at 140.4 s, 28.1 s later: outcome DIFFERS.",
+   "cause": "UNKNOWN: without a trace the clock is assumed, and the phone's windows 11 and 12 are excluded because the reader's video grid and the executor's death stamp disagree by about 18 s (tools/recompile/phone-encounter-nights.json, twin-01 clockConflict)."
+  },
+  {
+   "name": "full-04",
+   "run": "night7-night7-k3-full-04-20260915T051327Z",
+   "night": 7,
+   "seed": 34043,
+   "verdict": "DIVERGENT",
+   "primaryVariant": "landed",
+   "rebuiltVsPhone": { "agree": 3, "compared": 4, "hits": 0, "occupied": 5 },
+   "firstDisagreement": { "window": 3, "phone": "*", "side": "B" },
+   "atIt": "window 3 at 34.3 s: the phone reads an occupant it could not label (hue 231, sat 0.52); every replay that reached it has Withered Bonnie (occupancy agrees, the character cannot be compared). The first named difference is window 4 (phone Withered Chica), which the primary rebuild never reached.",
+   "outcome": "The phone died (static observed 104.0 s after the seed; killer not identified). Primary rebuild: a held-tap drop at 30.3 s (a 200 ms monitor hold spanning updates 1809-1822, the raise complete on 1821) drops the cameras while Withered Bonnie arrives; `in danger` rises, got-you stage 2, and she attacks at 36.3 s (exit 36.8 s): 67 s early. Under the cum rule the same drop comes at 90.3 s and Withered Chica kills at 96.3 s (exit 97.0 s), 7 s before the phone's stamp, with windows 4-7 agreeing (C . C B).",
+   "cause": "The outcome is a one-update race between the route's 200 ms monitor release and the 12-update raise; which side of it the phone was on in each cycle is not observable in the retained evidence. The window-3 character is UNKNOWN on the phone."
+  },
+  {
+   "name": "full-06",
+   "run": "night7-night7-k3-full-06-20260915T225056Z",
+   "night": 7,
+   "seed": 47593,
+   "verdict": "DIVERGENT",
+   "primaryVariant": "landed",
+   "rebuiltVsPhone": { "agree": 14, "compared": 38, "hits": 7, "occupied": 27 },
+   "firstDisagreement": { "window": 6, "phone": ".", "side": "B" },
+   "atIt": "window 6 at 64.3 s: the phone read it empty (Withered Bonnie comes in window 7); every rebuild replay has Withered Bonnie there, at `in office` 3.93 s before mask-on, and windows 0-5 (...BC.) agree in all five. Model: B under sched, cum and const60, C under landed.",
+   "outcome": "The phone won (6 AM stamped 422.7 s after the seed). Primary rebuild: held-tap drop at 370.3 s, Withered Bonnie attacks at 377.3 s. Under sched, cum and const60 the rebuild reaches 6 AM (420.0 s) with 27 of 42 windows occupied, the phone's count, placed out of phase from window 6.",
+   "cause": "Not a window boundary and not the press rule or the clock as varied here: every replay shares window 6, and so does the model. The difference lies upstream of both: in the replayed input or the runtime clock, UNKNOWN which."
+  }
+ ],
+ "findings": {
+  "notBoundaries": "Every first-disagreeing occupant in the rebuild reached `in office` 3.93-3.97 s before mask-on, on the cycle's first five-second roll while the cameras were up on CAM 11, and `in danger` rose about 0.43 s before mask-on when they came down (tools/recompile/results/phone-encounters-20260927.json rows, rebuiltArrivalMs).",
+  "sharedWithTheModel": "On identical inputs and clock the model agrees with the rebuild at the first disagreeing windows of full-06 (3 of 4 rules), twin-01 and full-04 (every rule that reached window 3). The phone-clock replays also expose rebuild-vs-model draw splits the 60 Hz replays did not reach (first mismatch at update 166-2400, persistent splits at 1834-9897 on the primary replays). Those are model work, not the phone gap.",
+  "heldTapDrop": "The sheet's g618 reads a touch still down over the drop button once `flip panel button` is fully up. The k3 route holds its monitor contact 200 ms, and the raise takes 12 updates: a zero-margin seam at 60 Hz, which the phone clock stretches to 13 updates in some cycles. Every Withered attack in these replays follows such a drop (full-04 landed 30.3 s, full-04 cum 90.3 s, full-06 landed and raw 370.3 s). The model's queue carries no release for a tap and cannot show it (tools/recompile/README.md, the drop button's flag order).",
+  "landing": "The phone's own frames put a press 65-82 ms (median by night) after its send. The send's frame is 3-5 updates early; the encounter records' cum rule (about 60 ms) is within about one update of the measured landing."
+ },
+ "limits": [
+  "Host replays only; no new phone run, measurement or promotion. The rebuilt runtime is not the Android runtime: loops, the catch-up rule and the integer-ms timer are inferred from display frames.",
+  "One landing latency per night (a median over its monitor raises), not per press; per-press jitter (p10-p90 spread 24-48 ms) and any lost or refused contact on the phone are not replayed.",
+  "Phone windows are right-eyehole reads (B/C/F, '.' empty): they cannot see Balloon Boy, Mangle or the vent Toys, and full-04 window 3's occupant is unlabelled.",
+  "twin-01 has no frame trace; its windows 11-12 are excluded over an unresolved 18 s conflict between the video reader's grid and the executor's death stamp.",
+  "The harness raises one new-touch trigger per update (one same-tick edge set per replay)."
+ ],
+ "next": "Separate the two upstream causes on one night. First, replay full-06 with per-press landings wherever the retained trace shows them (monitor raises and drops, mask), not one median, and see whether window 6 empties. Second, run the same-phase frame-traced twin S2a asks for, with the Companion reading each press's landing frame. Route consequence for S4 (not a promotion): the k3 route's 200 ms monitor hold has zero margin against the 12-update raise (g618); a shorter hold is the obvious candidate for test-seam-slack.mjs.",
+ "retained": {
+  "runs": "~/fnaf-apks/fnaf2-recompile-20260927/agent-phoneclock/<night>-<variant>/ (run.input, frametimes.txt, env, trace, run.log) and diag-full-06-landed-bonnie/ (an object-watch copy with the same draw projection), outside the repository",
+  "privateInputs": "artifacts/forensics/frametrace-night6-20260918/ and k3-frametrace-nights-20260915/, captures/frame-traces/ (named by sha256 in the config)"
+ }
+}

@@ -27,7 +27,8 @@ export function checkCustomNight(night, customNight) {
 
 // `schedule` (a Sim queue, `[frame, press|release, action]`) drives the model with a replayed schedule;
 // the harness trace must then come from the same schedule (compare-schedule-replay.mjs binds the two).
-export function compareTrace(text, { night, seed, frame, frames, modelOptions = {}, customNight = null, schedule = [], observe = null }) {
+export function compareTrace(text, { night, seed, frame, frames, modelOptions = {}, customNight = null, schedule = [], observe = null,
+  frameTimes = null }) {
   checkCustomNight(night, customNight);
   if (!text.endsWith('\n')) throw new Error('trace is truncated: missing final newline');
   const visits = [];
@@ -54,7 +55,7 @@ export function compareTrace(text, { night, seed, frame, frames, modelOptions = 
     }
   }
   const model = drawTrace({ night, seed, frames, modelOptions, ...(customNight ? { customNight } : {}),
-    ...(schedule.length ? { rows: schedule } : {}), ...(observe ? { observe } : {}) });
+    ...(schedule.length ? { rows: schedule } : {}), ...(observe ? { observe } : {}), ...(frameTimes ? { frameTimes } : {}) });
   const targetVisits = visits.filter((v) => v.frame === frame);
   const alignments = [0, 1].map((offset) => {
     let compared = 0;
