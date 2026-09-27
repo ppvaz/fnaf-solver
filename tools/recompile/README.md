@@ -1323,3 +1323,28 @@ no-input ladder re-scores unchanged.
 | Night 1 `minimal` | 23400 -> **none** (25,201 of 25,201 updates) | `night1-minimal-replay-routepass-20260927.json`, `recompile-replay-90088f0d8d8c0393` |
 | Night 5 `contact-final` | 9301 -> 9301 | `night5-contact-final-replay-routepass-20260927.json`, `recompile-replay-9080e85986eb1920` |
 | Night 7 `k3` | 3563 -> 3563 | `night7-k3-replay-routepass-20260927.json`, `recompile-replay-698e031d9d9abd4c` |
+
+**The rolls at the office opening, as the sheet keeps them (`sourcedOfficeRolls`,
+`packages/core/test/office-rolls.test.js`).** Night 5 tick 9301: one more
+rebuild draw a loop after a roll. Instance dumps before and after update 9301
+show Mangle on `in office` go from value 0 = 1 to 2 with value 2 = 9. Her roll
+passed on 9300, a one-second loop on which g358 still read the hall latch set.
+g488 cleared the latch later that loop, and she was promoted, and drew g703, on
+9301. The sheet keeps value 0 = 1 and re-tests the promotion every loop. The
+model's first office option tried it only on the roll loop. Night 7 showed the
+same for Balloon Boy. Dumps at 4500 and 4501 put him on `in office` with value
+0 going 0 -> 2 and value 2 = 9: g359 promotes him unconditionally, and g702 draws
+his footstep there. His value 0 then stays 2, because no move group leaves 122
+and g292/g294 do not clear it. So on the loop g294 sent him to CAM 10 (4703),
+g413, later in the sheet, took him on to CAM 07. The watched `balloon boy` x
+reads CAM 07 from 4703. Under the option (requires `sourcedOfficeFootsteps` and
+`sourcedRoutePass`), a roll at 122 waits for its promotion in the route pass. A
+Balloon Boy roll at 122 draws g702, and so does his arrival there within value
+2's window. A leave that finds his promotion still standing hops him on to CAM
+07. The no-input ladder re-scores unchanged.
+
+| binding | first mismatch before -> after | record |
+|---|---|---|
+| Night 1 `minimal` | none -> none | `night1-minimal-replay-officerolls-20260927.json`, `recompile-replay-c914f2521526998d` |
+| Night 5 `contact-final` | 9301 -> **9338** | `night5-contact-final-replay-officerolls-20260927.json`, `recompile-replay-60fe848d7cda62e1` |
+| Night 7 `k3` | 3563 -> 3563 | `night7-k3-replay-officerolls-20260927.json`, `recompile-replay-6851a5ade5a612a7` |

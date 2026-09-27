@@ -2278,6 +2278,11 @@ Open:
   25,201 office updates (MATCHED_PREFIX, `recompile-replay-90088f0d8d8c0393`); Night 5 stays 9301
   (`recompile-replay-9080e85986eb1920`), Night 7 3563 (`recompile-replay-698e031d9d9abd4c`).
 
+- `sourcedOfficeRolls` (`office-rolls.test.js`, in the rebuild set): a roll at 122 waits for its promotion (Mangle's
+  g358 on the latch), Balloon Boy is rolled and drawn (g702) there, and his standing promotion hops him on to CAM 07
+  when g292/g294 send him out. Night 5 9301 -> 9338 (`recompile-replay-60fe848d7cda62e1`); Night 1 still matches
+  every update (`recompile-replay-c914f2521526998d`); Night 7 stays 3563 (`recompile-replay-6851a5ade5a612a7`).
+
 Open:
-- Night 5 9301: a roll at 122 held on the latch is not retried on later loops.
+- Night 5 9338: one-update slips every second under the mask (the mask reaches value 2 a loop later in the rebuild).
 - Night 7 3563: W. Freddy's g378 return a loop early (the mask reaches value 2 a loop later in the rebuild).

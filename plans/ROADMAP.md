@@ -118,10 +118,10 @@ Details:
     `recompile-replay-232b3f74c48dc27a`).
     Every monitor and mask contact lands in both. Under the rebuild option set
     Night 1's draw stream matches on all 25,201 office updates (MATCHED_PREFIX,
-    `recompile-replay-90088f0d8d8c0393`), and the streams first differ at 9301 on
+    `recompile-replay-c914f2521526998d`), and the streams first differ at 9338 on
     Night 5 and 3563 on Night 7. MODEL_ONLY
-    ([k3 replay](../tools/recompile/results/night7-k3-replay-routepass-20260927.json),
-    `recompile-replay-698e031d9d9abd4c`).
+    ([k3 replay](../tools/recompile/results/night7-k3-replay-officerolls-20260927.json),
+    `recompile-replay-6851a5ade5a612a7`).
 - **Absorbs** Plan 17 (route 5), Plan 25 horizon 2, and the model parts of
   Plans 15 and 19.
 

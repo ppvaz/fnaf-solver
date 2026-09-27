@@ -268,6 +268,14 @@ export class Sim {
       // draws too. Off: a unit at the opening is not rolled into a promotion and 122 is not a footstep marker
       // (Night 7 k3 tick 2100: W. Bonnie, at 122 in her encounter, promoted and drew before Mangle's g703).
       sourcedOfficeFootsteps: false,
+      // The rolls at the office opening as the sheet keeps them (requires sourcedOfficeFootsteps and sourcedRoutePass).
+      // A passed roll at 122 leaves value 0 = 1 until g344-g360 promote it, re-tested every loop: Mangle's g358 holds
+      // on the hall latch, so a roll on a latched loop is promoted, and draws g703, on the loop after g488 clears it
+      // (Night 5 contact-final tick 9301 in the rebuilt runtime). Balloon Boy is rolled at 122 too: g359 promotes him
+      // unconditionally and g702 draws his footstep there, as it does when he arrives within value 2's window. His
+      // value 0 then stays 2, since no move group leaves 122 and g292/g294 do not clear it, so the loop g292/g294
+      // send him to CAM 10, g413 (later in the sheet) moves him on to CAM 07 (Night 7 k3 tick 4703).
+      sourcedOfficeRolls: false,
       // g366/g368/g419 draw Random(100) each update a Toy's value 0 == 2 (its move promoted), `your view`
       // overlaps it and `viewing` > 0. A passed roll only sets value 0 = 1; g344-g358 promote it once
       // value 1 (B) is 0 and its route gates open, and g344-g360 write the fade counter C = 10 there, not
@@ -567,7 +575,8 @@ export class Sim {
 
     // --- Balloon Boy
     this.bb = { stage: 0, footstep: false, pending: false, inOpening: false, openingAtCamsUp: -1,
-                maskTicks: 0, inside: false };
+                maskTicks: 0, inside: false,
+                promotedAt: -100, armed: false };   // g359's last promotion; value 0 still 2 at 122 (sourcedOfficeRolls)
     // Mangle's s0020 static is raised in two proximity contexts: while she is
     // on CAM 11 (the winding/Prize Corner camera) and at the office/right-vent
     // edge. They use the same sample but are separate policy facts; only the
@@ -624,6 +633,7 @@ export class Sim {
       value2: 0,           // value 2: 10 at promotion, drained by global 5 per loop (sourcedFootstepValue2)
       promoted: false,     // value 0 == 2: the move is promoted and waits for its own conditions
       footstepOn: false,   // g695-g703's condition on the previous loop (only one action when event loops)
+      officeRoll: false,   // value 0 == 1 at 122, waiting for its promotion (sourcedOfficeRolls)
     }));
     // sourced `chicalookatyou` lock: one mutex-flagged attacker engages at a time
     this.engagedToy = null;
@@ -653,6 +663,8 @@ export class Sim {
       throw new Error('sourcedFootstepDraws draws in the sheet-ordered pass: it requires sourcedSheetOrder');
     if (this.opts.sourcedOfficeFootsteps && !(this.opts.sourcedFootstepValue2 && this.opts.sourcedRollDraws))
       throw new Error('sourcedOfficeFootsteps promotes rolls at 122 into value 2: it requires sourcedFootstepValue2 and sourcedRollDraws');
+    if (this.opts.sourcedOfficeRolls && !(this.opts.sourcedOfficeFootsteps && this.opts.sourcedRoutePass))
+      throw new Error('sourcedOfficeRolls retries the promotions at 122 in the route pass: it requires sourcedOfficeFootsteps and sourcedRoutePass');
     if (this.opts.sourcedFootstepValue2 && !this.opts.sourcedFootstepDraws)
       throw new Error('sourcedFootstepValue2 changes when the footstep cue draws: it requires sourcedFootstepDraws');
     if (this.opts.sourcedHallLatchOrder && !this.opts.frameMs)
@@ -1434,7 +1446,7 @@ export class Sim {
   }
 
   unitEnterInside(u, why) {
-    u.atOpening = false;
+    u.atOpening = false; u.officeRoll = false;
     u.inside = true;
     u.officeCue = false;
     u.raiseSeen = false;
@@ -1979,11 +1991,12 @@ export class Sim {
   bbLeave() {
     this.bb.inOpening = false; this.bb.stage = 0; this.bb.pending = false;
     this.bb.maskTicks = 0;
+    if (this.opts.sourcedOfficeRolls && this.bb.armed) { this.bb.armed = false; this.bbHop(); }   // g413, later in the loop
     this.emit('vent-bang', { who: 'bb', leaving: true, sample: C.THUD_SAMPLE });
   }
 
   unitLeave(u, opts = {}) {
-    u.atOpening = false; u.inside = false; u.promoted = false;               // g538-g555: value 0 = 0
+    u.atOpening = false; u.inside = false; u.promoted = false; u.officeRoll = false;               // g538-g555: value 0 = 0
     u.idx = opts.idx ?? (this.opts.sourcedMangleReturn && u.id === 'mangle' ? u.path.findIndex(n => n === 7) : u.repelIdx) ?? 0;   // g400/g401: CAM 7
     // Repels write the unit's B: the movement pipeline requires B = 0, so the
     // cooldown is the same counter as the flash stun (and Toy Bonnie's
@@ -2042,6 +2055,7 @@ export class Sim {
 
   bbEnterOpening() {
     if (this.opts.sourcedEventDraws) this.rng.int(0, 3, 0);              // e354
+    if (this.opts.sourcedOfficeRolls && this.frame - (this.bb.promotedAt ?? -100) <= 8) this.bb.footstep = true;   // g702 on arrival
     this.bb.stage = C.BB_STAGES; this.bb.inOpening = true;
     this.bb.openingAtCamsUp = this.camsUpCount;
     // g417 plays only the movement sample every hop shares -- no laugh here,
@@ -2067,7 +2081,7 @@ export class Sim {
       const hit = this.rng.chance(C.MO_CHANCE(this.ai[id]), true);
       const u = this.units.find(x => x.id === id);
       if (hit && this.opts.sourcedOfficeFootsteps && this.opts.stalledEnabled && u && !u.done && u.atOpening && !u.inside) {
-        if (deferred) deferred.push(id); else this.footstepPromote(u, true);   // value 0 = 1 at 122: promoted, no move
+        if (deferred) deferred.push(id); else this.officeRoll(u);              // value 0 = 1 at 122: promoted, no move
         return;
       }
       if (!hit || !this.opts.stalledEnabled || !u || u.done || u.atOpening) return;
@@ -2111,6 +2125,10 @@ export class Sim {
     rollUnit('toyfreddy'); rollUnit('toybonnie'); rollUnit('toychica'); rollUnit('mangle');
     {                                                                          // g342 Balloon Boy
       const hit = this.rng.chance(C.MO_CHANCE(this.ai.bb), true);
+      if (hit && this.opts.bbEnabled && this.opts.sourcedOfficeRolls) {                // g359: value 0 = 2, value 2 = 10
+        this.bb.promotedAt = this.frame;
+        if (this.bb.inOpening) { this.bb.footstep = true; this.bb.armed = true; }    // g702 at 122; value 0 stays 2
+      }
       if (hit && this.opts.bbEnabled && !this.bb.inOpening) {
         if (this.opts.sourcedViewDraws) this.fadeUntil.bb = this.frame + 8;
         if (this.bb.stage === C.BB_STAGES - 1) {
@@ -2124,7 +2142,7 @@ export class Sim {
     this.rng.int(0, 19, 0);                                                    // g343 Paper Pals
     if (deferred) for (const id of deferred) {                                 // g344-g358, then the moves
       const u = this.units.find(x => x.id === id);
-      if (u && !u.done && u.atOpening && !u.inside && this.opts.sourcedOfficeFootsteps) this.footstepPromote(u, true);
+      if (u && !u.done && u.atOpening && !u.inside && this.opts.sourcedOfficeFootsteps) this.officeRoll(u);
       else if (u && !u.done && !u.atOpening && this.opts.sourcedRoutePass) {             // value 0 = 1: routePass promotes and moves
         u.pending = true; u.promoted = false;
         if (this.opts.sourcedViewDraws && !this.opts.sourcedPromotedViewDraws) this.fadeUntil[u.id] = this.frame + 8;
@@ -2136,6 +2154,7 @@ export class Sim {
   /** g344-g360 test every waiting roll's promotion, then g374-g435 move the promoted units (sourcedRoutePass). @param {number} f */
   routePass(f) {
     if (!this.opts.stalledEnabled) return;
+    if (this.opts.sourcedOfficeRolls) for (const u of this.units) this.officePromote(u);   // g344-g360 at 122
     const waiting = (/** @type {any} */ u) => u.pending && !u.done && !u.atOpening && !u.inside && u.committedAt < 0;
     for (const u of this.units) {
       if (!waiting(u)) continue;
@@ -2148,6 +2167,21 @@ export class Sim {
       if (step === 'returned') { u.pending = false; u.promoted = false; }
       else if (step !== 'hold' && this.canAdvance(u, f)) { u.pending = false; this.advance(u); }
     }
+  }
+
+  /** A passed roll at 122: value 0 = 1, promoted now or, under sourcedOfficeRolls, on a later loop. @param {any} u */
+  officeRoll(u) {
+    if (!this.opts.sourcedOfficeRolls) { this.footstepPromote(u, true); return; }
+    u.promoted = false;
+    u.officeRoll = true;
+    this.officePromote(u);
+  }
+
+  /** g344-g360 at 122: promote a waiting roll where the unit stands (sourcedOfficeRolls). @param {any} u */
+  officePromote(u) {
+    if (!u.officeRoll || !u.atOpening || u.inside || u.done) return;
+    this.footstepPromote(u, false);
+    if (u.promoted) u.officeRoll = false;
   }
 
   rollDecidePath() {
