@@ -136,6 +136,7 @@ const EXCLUDED = new Map([
   ['cue-helper-setup.sh', 'thin one-serial wrapper; all UI work and every gate belong to cue-helper-setup.py'],
   ['cue-helper-queue.sh', 'thin wrapper that deliberately does NOT select a device, so enqueue/list work while the phone is absent; the queue gate is test-cue-helper-queue.py'],
   ['cue-helper-mcp.mjs', 'bounded MCP entry point over the queue, gated by test-cue-helper-mcp.mjs'],
+  ['overnight-window.py', 'the scheduled window that RUNS the queue on the owner\'s phone and restores its settings; it grades no run (a job\'s own runner does), and test-overnight-window.py gates its restore, refusal, deadline and lease contract'],
 
   // The three below have NO gate. They are excused here so the check can be
   // green about the other 216 scripts, and they are recorded as open gaps in

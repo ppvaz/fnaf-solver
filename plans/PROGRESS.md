@@ -2399,3 +2399,75 @@ Open:
 - Per-press landings from the retained traces in place of one median.
 - The same-phase twin (S2a).
 - The k3 monitor hold's zero margin, for S4.
+
+## 2026-09-27 — Overnight windows: the queue runs on Pedro's phone at night (S7, FIXTURE, no device run)
+
+**Decision (Pedro, 2026-09-27).** The phone stops being the bottleneck through
+overnight windows. His own phone runs queued jobs overnight on the charger with
+stay-awake on, only inside a scheduled window. It is his personal phone, so
+everything a run changes is restored when the window ends.
+
+- **Built:** `tools/device/overnight-window.py`, the host runner
+  ([device safety](../docs/operations/DEVICE-SAFETY.md), "Overnight windows").
+  - The default window is 01:30-07:00 local, set by `--start`/`--end` or
+    `FNAF_WINDOW_START`/`FNAF_WINDOW_END`. It can be armed up to 4 h early.
+  - Without `--live --confirm-live` it is a dry run that makes no adb call.
+  - A live window takes the serial lease, then restores what a killed window
+    left behind.
+  - It refuses LEASE_BUSY, OUTSIDE_WINDOW, DEVICE_ABSENT, CAPABILITY, LOCKED,
+    IN_USE and POWER, changing nothing. LOCKED is a bounded wait with a queue
+    note. IN_USE is a call, or a foreground app other than the launcher, the
+    Companion or a target game. POWER is unplugged, under 50 %, or 45 C or more.
+  - It records six settings, writes the record to disk, and sets
+    stay-awake-while-charging.
+  - It runs the queue one job per call, repeating the checks between jobs,
+    under a deadline on both clocks.
+  - However it ends, it stops the queue child (SIGINT, SIGTERM, SIGKILL), puts
+    a stopped job back to PENDING, and leaves the screen as it found it. It then
+    restores the four settings whose write is their control path, reads them
+    back, and releases the lease.
+  - Airplane mode and DND are only witnessed: a raw write desynchronises their
+    services, and it would re-enter a DND schedule that ended at 07:00.
+  - `preflight` is read-only. `units` renders a systemd `--user` service and
+    timer, and installs nothing.
+- **Queue:** `run --max-jobs N`, `JOB_TIMEOUT_S`, `note_pending` and
+  `release_running`. The vocabulary is unchanged: setup, menu-check and
+  night-check.
+- **Found by the fixture before the phone could:**
+  - A second Ctrl-C to the process group killed the runner's own `adb` read in
+    the middle of the restore, leaving a setting UNREACHABLE. Every subprocess
+    now runs in its own session.
+  - A monotonic-only deadline would not see a host suspend. It is now checked
+    on the wall clock too.
+- **Gate:** `tools/device/test-overnight-window.py` in `npm run test:unit`, 858
+  checks against a fake `adb` that logs every call. It covers the normal end,
+  an abort, a job failure through the real queue and setup (the setup borrows
+  the window's lease), the hard deadline, the five refusals, preflight,
+  recovery, the lease, and the command vocabulary. The label is FIXTURE; it
+  makes no device claim.
+- **No gate loosened.** The queue's vocabulary is closed as before. Plan 12's
+  non-goal is running unattended *beyond* the device and lifecycle safeguards;
+  the window adds safeguards and removes none.
+- **No device contact.** Another agent held the phone's lease. Nothing was
+  enqueued and no timer was installed. No evidence record was generated; the
+  gate's pass line is the record.
+
+Open:
+- On the phone, once the lease is free, check the reads with `preflight --json`
+  before any live window:
+  - `mCurrentFocus` tokens, and the HOME resolution (a chooser reads as no
+    launcher);
+  - `mCallState` in `telephony.registry`, and the `dumpsys battery` fields;
+  - the keyguard patterns;
+  - the six settings' values.
+  Then run one short daytime live window (`--start`/`--end` 15 min apart) over
+  a single `menu-check`, and read the restore rows back.
+- The queue has no night job, so a window runs only setup and screen checks.
+  A night job that names a committed winner's bundle is Pedro's decision.
+- `night-run.sh` takes no serial lease.
+- The lease directory and the queue file are per checkout. A worktree agent
+  does not see the main checkout's lease or queue, which the units run.
+- A VoIP call (WhatsApp) is invisible to `telephony.registry`. Only the
+  foreground check catches it, and only while its UI is in front.
+- A projection-consent dialog left open reads IN_USE (systemui). That ends the
+  window, which is the safe side.
