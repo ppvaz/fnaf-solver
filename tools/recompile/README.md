@@ -929,6 +929,31 @@ steps at real time, so a person can watch a winner's schedule play in a window.
 The updates, draws and trace are unchanged. The first such run was k3's Night 7
 at 10/20, shown to Pedro from `pinned/41b3f426-7163d628`.
 
+**Rendering replays off-screen, and the winner screen.** Four more harness
+switches (in the patch):
+- `CHOWDREN_RAWVIDEO=<path>` streams every `CHOWDREN_RAWVIDEO_EVERY`-th
+  drawn frame (default 2, so 30 fps) as raw 1024 x 768 RGB, rows bottom-up, to a
+  FIFO an encoder reads. It reads the screen FBO before the window blit, like
+  the snapshots, so nothing else on the desktop can appear.
+- `CHOWDREN_WINDOW=WxH+X+Y` makes a borderless window at an exact place;
+  64 x 48 is enough when rendering.
+- Under the harness vsync is off: a vsynced swap blocked whenever the
+  compositor stopped presenting a covered window, and froze a watched replay.
+- GNOME on Wayland gives `x11grab` an empty root window. Screen capture there
+  goes through `org.gnome.Shell.Screencast` (one held D-Bus connection) and can
+  catch whatever covers the area, so rendered footage uses `CHOWDREN_RAWVIDEO`.
+
+Measured on the host with the agents loading it: headless 17x real time,
+drawing with readback 3.4x, drawing with a live 640 x 288 encode 2.7x; three
+renders at once about 0.5x each.
+
+`winner-screen-rebuild-20260927.json`
+(`recompile-winner-screen-aa95339c9f198cfb`) replays twelve committed winner
+bindings' own schedules into the rebuild at seed 24850. 11 reach 6 AM (Nights
+1-7, including k2, k3 and j on Night 7 at 10/20). `toys-n5` dies after 23,423
+office updates, like `contact-final`. One seed; this is the rebuild, not the
+phone.
+
 **Font atlas.** Pedro saw lowercase n drawn as a filled square in the bold
 preset names ("New and Shiny", "Cupcake Challenge", "Golden Freddy"). The bank's
 glyph is sound. Chowdren's `FTTextureFont` checked for the end of a row after

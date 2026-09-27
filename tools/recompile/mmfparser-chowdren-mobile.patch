@@ -2832,10 +2832,16 @@ index b620427..e2d2eb7 100644
  {
      if (flags & INACTIVE || other->flags & INACTIVE)
 diff --git a/Chowdren/base/desktop/platform.cpp b/Chowdren/base/desktop/platform.cpp
-index 0a7095c..fb7becb 100644
+index 0a7095c..dbfb36d 100644
 --- a/Chowdren/base/desktop/platform.cpp
 +++ b/Chowdren/base/desktop/platform.cpp
-@@ -204,6 +204,96 @@ static void set_resources_dir()
+@@ -1,4 +1,5 @@
+ #ifdef _WIN32
++#include "harness.h"
+ #include <windows.h>
+ #include <io.h>
+ #include <fcntl.h>
+@@ -204,6 +205,96 @@ static void set_resources_dir()
  }
  #endif
  
@@ -2932,7 +2938,7 @@ index 0a7095c..fb7becb 100644
  #ifndef NDEBUG
  static void sdl_log(void *userdata, int category, SDL_LogPriority priority,
                      const char * message)
-@@ -213,8 +303,21 @@ static void sdl_log(void *userdata, int category, SDL_LogPriority priority,
+@@ -213,8 +304,21 @@ static void sdl_log(void *userdata, int category, SDL_LogPriority priority,
  }
  #endif
  
@@ -2954,7 +2960,7 @@ index 0a7095c..fb7becb 100644
      unsigned int flags = SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER |
                           SDL_INIT_HAPTIC | SDL_INIT_NOPARACHUTE;
      if (SDL_Init(flags) < 0) {
-@@ -224,7 +327,7 @@ void platform_init()
+@@ -224,7 +328,7 @@ void platform_init()
      }
      SDL_EventState(SDL_MOUSEMOTION, SDL_DISABLE);
      // SDL_EventState(SDL_WINDOWEVENT, SDL_DISABLE);
@@ -2963,7 +2969,7 @@ index 0a7095c..fb7becb 100644
      set_resources_dir();
  #endif
      start_time = SDL_GetPerformanceCounter();
-@@ -615,9 +718,14 @@ void platform_create_display(bool fullscreen)
+@@ -615,9 +719,14 @@ void platform_create_display(bool fullscreen)
  {
      is_fullscreen = fullscreen;
  
@@ -2978,10 +2984,14 @@ index 0a7095c..fb7becb 100644
  
  #ifndef CHOWDREN_USE_D3D
      flags |= SDL_WINDOW_OPENGL;
-@@ -652,6 +760,14 @@ void platform_create_display(bool fullscreen)
+@@ -652,9 +761,27 @@ void platform_create_display(bool fullscreen)
      start_height *= CHOWDREN_DEFAULT_SCALE;
  #endif
  
+-    global_window = SDL_CreateWindow(NAME,
+-                                     SDL_WINDOWPOS_CENTERED,
+-                                     SDL_WINDOWPOS_CENTERED,
++    int start_x = SDL_WINDOWPOS_CENTERED, start_y = SDL_WINDOWPOS_CENTERED;
 +#ifndef CHOWDREN_IS_ANDROID
 +    // CHOWDREN_PHONE_VIEW=1: show the game as the phone does (Display Mode FULL
 +    // into its 2400x1080 frame), at half size so it fits a 1920x1080 monitor.
@@ -2989,11 +2999,23 @@ index 0a7095c..fb7becb 100644
 +        start_width = 1200;
 +        start_height = 540;
 +    }
++    // CHOWDREN_WINDOW=WxH+X+Y: a borderless window at an exact place, so two
++    // replays can be stacked and recorded side by side.
++    const char * geometry = getenv("CHOWDREN_WINDOW");
++    int gw, gh, gx, gy;
++    if (geometry != NULL && sscanf(geometry, "%dx%d+%d+%d", &gw, &gh, &gx, &gy) == 4) {
++        start_width = gw;
++        start_height = gh;
++        start_x = gx;
++        start_y = gy;
++        flags |= SDL_WINDOW_BORDERLESS;
++    }
 +#endif
-     global_window = SDL_CreateWindow(NAME,
-                                      SDL_WINDOWPOS_CENTERED,
-                                      SDL_WINDOWPOS_CENTERED,
-@@ -842,6 +958,18 @@ void platform_create_display(bool fullscreen)
++    global_window = SDL_CreateWindow(NAME, start_x, start_y,
+                                      start_width, start_height,
+                                      flags);
+     global_window_id = SDL_GetWindowID(global_window);
+@@ -842,12 +969,30 @@ void platform_create_display(bool fullscreen)
          platform_hide_mouse();
  
      screen_fbo.init(WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -3012,7 +3034,19 @@ index 0a7095c..fb7becb 100644
  }
  
  void platform_set_vsync(bool value)
-@@ -957,6 +1085,15 @@ void platform_swap_buffers()
+ {
+     if (global_window == NULL)
+         return;
++    // Under the harness the loop is paced by its own clock (fixed steps, and
++    // CHOWDREN_REALTIME's sleep). A vsynced swap blocks while the compositor
++    // stops presenting a hidden window, which froze a watched replay whenever
++    // its window was covered.
++    if (harness_fixed_step())
++        value = false;
+ 
+     int vsync;
+     if (value)
+@@ -957,6 +1102,15 @@ void platform_swap_buffers()
      int use_scale_type = scale_type;
      if (!is_fullscreen)
          use_scale_type = BEST_FIT;
@@ -3103,10 +3137,10 @@ index 30eb23e..fbd2156 100644
          platform_sleep(t);
 diff --git a/Chowdren/base/harness.cpp b/Chowdren/base/harness.cpp
 new file mode 100644
-index 0000000..9f89834
+index 0000000..5cabeb3
 --- /dev/null
 +++ b/Chowdren/base/harness.cpp
-@@ -0,0 +1,459 @@
+@@ -0,0 +1,487 @@
 +// Deterministic research harness for the build-296 recompile. See harness.h.
 +// Compiled once, included from run.cpp next to crashdump.cpp.
 +
@@ -3129,6 +3163,13 @@ index 0000000..9f89834
 +bool h_active = false, h_no_draw = false;
 +// CHOWDREN_REALTIME=1: keep the fixed 60 Hz steps but pace them at real time, so a person can watch a replay.
 +bool h_realtime = false;
++// CHOWDREN_RAWVIDEO=<path>: after every CHOWDREN_RAWVIDEO_EVERY-th draw (default 2, so 30 fps of the
++// 60 Hz updates) write the game's own WINDOW_WIDTH x WINDOW_HEIGHT frame buffer as raw RGB, rows bottom-up,
++// to <path> (a FIFO an encoder reads). It reads the screen FBO before the window blit, like the snapshots,
++// so nothing else on the desktop can appear in it and the window can be tiny.
++static FILE * h_raw = NULL;
++static int h_raw_every = 2;
++static long h_raw_draws = 0;
 +// CHOWDREN_PLAY=1 without the harness: the real left mouse button is touch 0.
 +bool h_play = false, h_play_down = false;
 +std::vector<std::pair<int, int> > h_snaps;   // (frame index, update) to write after drawing
@@ -3282,6 +3323,16 @@ index 0000000..9f89834
 +    }
 +    h_no_draw = env_int("CHOWDREN_NO_DRAW", 0) != 0;
 +    h_realtime = env_int("CHOWDREN_REALTIME", 0) != 0;
++    {
++        const char * rv = getenv("CHOWDREN_RAWVIDEO");
++        if (rv && *rv) {
++            h_raw = fopen(rv, "wb");
++            h_raw_every = env_int("CHOWDREN_RAWVIDEO_EVERY", 2);
++            if (h_raw_every < 1) h_raw_every = 1;
++            fprintf(stderr, "harness: raw video %dx%d every %d draws -> %s%s\n", WINDOW_WIDTH, WINDOW_HEIGHT,
++                    h_raw_every, rv, h_raw ? "" : " (open failed)");
++        }
++    }
 +    h_seed = env_int("CHOWDREN_SEED", -1);
 +    h_seed_frame = env_int("CHOWDREN_SEED_FRAME", -1);
 +    h_stop_frame = env_int("CHOWDREN_STOP_FRAME", -1);
@@ -3514,6 +3565,17 @@ index 0000000..9f89834
 +
 +void harness_after_draw(int width, int height)
 +{
++    if (h_active && h_raw != NULL && (h_raw_draws++ % h_raw_every) == 0) {
++        static std::vector<unsigned char> raw;
++        raw.resize(size_t(WINDOW_WIDTH) * WINDOW_HEIGHT * 3);
++        glPixelStorei(0x0D05, 1);                                          // GL_PACK_ALIGNMENT
++        glReadPixels(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0x1907, 0x1401, &raw[0]);   // GL_RGB, GL_UNSIGNED_BYTE
++        if (fwrite(&raw[0], 1, raw.size(), h_raw) != raw.size()) {
++            fprintf(stderr, "harness: raw video write failed; stopping the stream\n");
++            fclose(h_raw);
++            h_raw = NULL;
++        }
++    }
 +    if (!h_active || h_snaps.empty() || width <= 0 || height <= 0) return;
 +    // h_tick already counts the update just drawn.
 +    std::pair<int, int> here(h_frame_index, h_tick - 1);

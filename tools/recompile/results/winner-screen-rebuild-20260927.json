@@ -1,0 +1,138 @@
+{
+ "schema": "recompile-winner-screen-v1",
+ "claimLevel": "MODEL_ONLY",
+ "fidelity": "rebuilt-runtime",
+ "question": "Replayed into the rebuilt runtime at seed 24850 with its own tap schedule (schedule-to-input.mjs), does each committed winner binding reach 6 AM?",
+ "scope": {
+  "seed": 24850,
+  "binarySha256": "592c05e5c49586b0fee21034776ea146ac08e9e25eb0dc95ef5a89d097a7edb4",
+  "patchSha256": "db49a87748e1f0e14ed6edd5a7b759979803b8e20abec51894146672498b4f79",
+  "navigation": "night1-newgame (1), continue (2-5), night6 (6), night7-dials20-5x2 all ten dials 20 (7)",
+  "harness": "host run, CHOWDREN_NO_DRAW, CHOWDREN_STOP_FRAME=5 (06-next day)"
+ },
+ "rows": [
+  {
+   "binding": "tools/device/campaign-night1-minimal-winner.json",
+   "bindingSha256": "efc64897bc2e6fe8e4be8955ee7b76cccbc0ed2cf298c41c4ab468f76dba8c48",
+   "night": 1,
+   "inputSha256": "8ce010564a3d37bd96938f985a08f5387be4e318f34ff117bae4c7920efe5a0b",
+   "saveSha256": "2a878d54a3c35e21ee5cc69776aee2bbbcc99286b93a9e90945d2c3d68ae4b2a",
+   "outcome": "6AM",
+   "officeUpdates": 25201,
+   "traceProjectionSha256": "6e31b302dfab776308948232eb2d5aeb12f31593980ce03e1d59167aada3f9f9"
+  },
+  {
+   "binding": "tools/device/campaign-toys-nights1-2-winner.json",
+   "bindingSha256": "7e67e7085fd563cd441a3e99d33be1dc11b4d9690e117e2559ab6b205fe6cb83",
+   "night": 2,
+   "inputSha256": "1fefd814ae33d79ad5afeb85c35c9ae8eafe655c224bd94d72faa7f89658d0c1",
+   "saveSha256": "1b44b6e0ee2dcb7bf8ae681ffc5298118a01006d4bb6a9e6f835ef37265bf7b8",
+   "outcome": "6AM",
+   "officeUpdates": 25201,
+   "traceProjectionSha256": "6445def5b0c6176e15b9a026d302e9b807bf293dcb634296f880aeccfaafffcb"
+  },
+  {
+   "binding": "tools/device/campaign-toys-nights3-4-winner.json",
+   "bindingSha256": "425826ae44d77e77137b6ba24a1e371cbc4ee9729ec21cdd40ed339dd7a7ec7b",
+   "night": 3,
+   "inputSha256": "607365f540b4f03f411b5949a5ea812172c3d74b4dd440b3bd2e31a7053237c8",
+   "saveSha256": "eec1d15b7111a946473f10bd5fad18c5fdb01c508b269ffdbcd2441fa6304276",
+   "outcome": "6AM",
+   "officeUpdates": 25201,
+   "traceProjectionSha256": "1cc0e786271e263d5b0bd366f5865cdf6436f0f94ec531b6229e5c0d08764ea3"
+  },
+  {
+   "binding": "tools/device/campaign-toys-nights3-4-winner.json",
+   "bindingSha256": "425826ae44d77e77137b6ba24a1e371cbc4ee9729ec21cdd40ed339dd7a7ec7b",
+   "night": 4,
+   "inputSha256": "dd72c7312f34e2f06f18eacbf308615e1243aa802541b4ccc8cd1590df43a395",
+   "saveSha256": "43937f86b1fc561db27bbfaed23dd6f9bab30482789ede349ca9f0f66aac8414",
+   "outcome": "6AM",
+   "officeUpdates": 25201,
+   "traceProjectionSha256": "b755151f1ea431ae73e6870b5cda3168273a3ba481651e0b73d061ea9bc7f762"
+  },
+  {
+   "binding": "tools/device/campaign-night5-hallfix-winner.json",
+   "bindingSha256": "1634a184f56e65be109c886bb7d9440ac9f4f715adee7e43b37df0a671a2ce0d",
+   "night": 5,
+   "inputSha256": "25cc420ad04f7ffb0bff5235ec44fe60b5e58fa90c53b8876284fbbaa17a24a8",
+   "saveSha256": "866bccd5cee788cec4899a0786214c372340ead9b44eacf9af47ffa21696038c",
+   "outcome": "6AM",
+   "officeUpdates": 25201,
+   "traceProjectionSha256": "71b313c6e5b99639cf02426c7551b67c15574e2de3276f978cc0ace6771c722f"
+  },
+  {
+   "binding": "tools/device/campaign-toys-night5-winner.json",
+   "bindingSha256": "e98b0dc23e2b1571127addcc626db19e5f4775f8ec0ab326137d14ef64c11de8",
+   "night": 5,
+   "inputSha256": "09a6ecc5c115e17796fae5f9f59ca946e1339e5025f03d39a53f63aa20e0158b",
+   "saveSha256": "480b20c3058ec14b809f9c0d8c31b39dcc3ace31b5a1ae24e911757a28eb1c87",
+   "outcome": "DEATH",
+   "officeUpdates": 23423,
+   "traceProjectionSha256": "2b46b3c9bf136598852477247d0a091b1cffe60219a919c869040fd6b685e3cc"
+  },
+  {
+   "binding": "tools/device/campaign-night5-noflash-winner.json",
+   "bindingSha256": "4f318495b8da385760aadea90fcacc7f1eaa3d4c636b9ba75c1f7e1295b76ac8",
+   "night": 5,
+   "inputSha256": "e51ed0fb32437321068d31d856fbc54b5a4cb79b005887291d004d165d0136aa",
+   "saveSha256": "866bccd5cee788cec4899a0786214c372340ead9b44eacf9af47ffa21696038c",
+   "outcome": "6AM",
+   "officeUpdates": 25201,
+   "traceProjectionSha256": "ee433d6bfe7e70df9fb33ffe420907ba6c280a08488a653eed655876309f31a7"
+  },
+  {
+   "binding": "tools/device/campaign-night6-h2-winner.json",
+   "bindingSha256": "59686dbb2182c7545ab27efae79390c48ebfab2961e30cb1e966e32e0a34a5f0",
+   "night": 6,
+   "inputSha256": "916889ebfc42f6f0ba50354ca4be4f21b9a2abbcff15fd822b97d5649ff3d8bb",
+   "saveSha256": "033a537f770f9ccb95bfcace2e56680b0f1819add7d84cd3b661f3af7f6596dd",
+   "outcome": "6AM",
+   "officeUpdates": 25201,
+   "traceProjectionSha256": "c93e248919244d6855da8f60c4da88457d848fb23a8922ef7823bb58f964bf4c"
+  },
+  {
+   "binding": "tools/device/campaign-night6-h-winner.json",
+   "bindingSha256": "b466b7a81b71e08845e475258463ec13cfd583a5c6f2b090395ca64d3def645c",
+   "night": 6,
+   "inputSha256": "2402cde08d7ff1b2309a3eb2ca354443f6b30cf60c4d48f2c105091f6895d09d",
+   "saveSha256": "033a537f770f9ccb95bfcace2e56680b0f1819add7d84cd3b661f3af7f6596dd",
+   "outcome": "6AM",
+   "officeUpdates": 25201,
+   "traceProjectionSha256": "3a26e809f5495c00b47ee87bad260f775e1dcdc25fdb64e9268ac12ddf18749c"
+  },
+  {
+   "binding": "tools/device/campaign-night7-k2-winner.json",
+   "bindingSha256": "6d7af32fd7377156c6a33c2f64f6be6ca5eb0d35e6b1702e9e5a9d1d5079e64f",
+   "night": 7,
+   "inputSha256": "251ff60f902973a7582230c815fc2b715d0a6160b0afb0669cfb7c8d41bc4177",
+   "saveSha256": "550ae304fba7024d338cc3dfb4b1d6d2ec6e2758ad6d3454e8eee6e8dfac0fa9",
+   "outcome": "6AM",
+   "officeUpdates": 25201,
+   "traceProjectionSha256": "886e10b6cb3c44e42c548663430904fe78473da575d72a0e46efde3b2273db87"
+  },
+  {
+   "binding": "tools/device/campaign-night7-j-winner.json",
+   "bindingSha256": "7cadf889042d6a41e93ddef54b370de11d2654a38d163112b730590acae63423",
+   "night": 7,
+   "inputSha256": "776c374fd02bf61b6fd52c22cf39d5b34d8b3bf42ac289892b5ac42bc76c3db1",
+   "saveSha256": "550ae304fba7024d338cc3dfb4b1d6d2ec6e2758ad6d3454e8eee6e8dfac0fa9",
+   "outcome": "6AM",
+   "officeUpdates": 25201,
+   "traceProjectionSha256": "0eb22023b43d37c67e174f62b2941c9d8cef614c2c60768f6fddd67b69ce0bd2"
+  },
+  {
+   "binding": "tools/device/campaign-night7-k3-winner.json",
+   "bindingSha256": "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78",
+   "night": 7,
+   "inputSha256": "21eedb5824846d4d6b896be0a24fc99b8e35e92c026fc365c6c5c8ae5917c438",
+   "saveSha256": "550ae304fba7024d338cc3dfb4b1d6d2ec6e2758ad6d3454e8eee6e8dfac0fa9",
+   "outcome": "6AM",
+   "officeUpdates": 25201,
+   "traceProjectionSha256": "97e662c38517948fb4757ca4314ced39a370c16cf546ccc74911e7611c88c418"
+  }
+ ],
+ "answer": "11 of 12 reach 6 AM; campaign-toys-night5-winner.json die",
+ "limitations": "One seed per binding; the rebuild is not the phone; a death here is the rebuilt runtime at this seed, not a phone refutation. The model and the rebuild still differ in draw streams after the first mismatch on these nights (tools/recompile/README.md).",
+ "evidenceId": "recompile-winner-screen-aa95339c9f198cfb"
+}
