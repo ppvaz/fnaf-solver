@@ -1,0 +1,379 @@
+{
+  "schema": "recompile-title-touchzones-v1",
+  "claimLevel": "MODEL_ONLY",
+  "fidelity": "rebuilt-runtime",
+  "question": "Where are the mobile title buttons touchable in the rebuilt runtime, before and after the foreach key fix?",
+  "source": "dump groups 58-61 (frame 01-02 title): StartOfFrame + global 8 == 1 -> Foreach qualifier(80); OnObjectLoop -> CreateObject olivier_btnTouchzone at the button, SetXScale(400/16), SetYScale(4); overlapping btnOptions/btnUnlocks -> SetXScale(320/16)",
+  "defect": "OnObjectLoop has no writer, the default one reports object (None, 2), so write_foreach keyed the loop instance by (None, 2) while CreateObject looked up its qualifier parent (32848, 2): every iteration created a zone at every button and scaled only the first",
+  "probe": "CHOWDREN_DUMP_FRAME=1, CHOWDREN_DUMP_TICK=200, harness seed 24850, level=2 save; boxes are window pixels of the 1024 x 768 frame",
+  "before": {
+    "binarySha256": "fe1cb39dcc4173e2d951903b60f97e47bc4553f21f29e53eb2cc119ec91042b6",
+    "dumpSha256": "a8bdd99500f23866d8f81f1814fe482805884e22a452f54fd0a82b4f70a8d2f6",
+    "zones": [
+      {
+        "object": "btn6thNight.Active",
+        "layer": 1,
+        "box": [
+          64,
+          584,
+          316,
+          648
+        ],
+        "instances": 1
+      },
+      {
+        "object": "btnContinue.Active",
+        "layer": 1,
+        "box": [
+          64,
+          504,
+          286,
+          568
+        ],
+        "instances": 1
+      },
+      {
+        "object": "btnCustomNight.Active",
+        "layer": 1,
+        "box": [
+          64,
+          664,
+          403,
+          728
+        ],
+        "instances": 1
+      },
+      {
+        "object": "btnNewGame.Active",
+        "layer": 1,
+        "box": [
+          64,
+          424,
+          286,
+          488
+        ],
+        "instances": 1
+      },
+      {
+        "object": "btnNo.Active",
+        "layer": 2,
+        "box": [
+          64,
+          504,
+          120,
+          568
+        ],
+        "instances": 1
+      },
+      {
+        "object": "btnOptions.Active",
+        "layer": 1,
+        "box": [
+          767,
+          584,
+          960,
+          648
+        ],
+        "instances": 1
+      },
+      {
+        "object": "btnUnlocks.Active",
+        "layer": 1,
+        "box": [
+          767,
+          664,
+          960,
+          728
+        ],
+        "instances": 1
+      },
+      {
+        "object": "btnYes.Active",
+        "layer": 2,
+        "box": [
+          64,
+          584,
+          152,
+          648
+        ],
+        "instances": 1
+      },
+      {
+        "object": "olivier_btnTouchzone.Active",
+        "layer": 1,
+        "box": [
+          64,
+          424,
+          464,
+          488
+        ],
+        "instances": 8
+      },
+      {
+        "object": "olivier_btnTouchzone.Active",
+        "layer": 1,
+        "box": [
+          64,
+          528,
+          80,
+          544
+        ],
+        "instances": 8
+      },
+      {
+        "object": "olivier_btnTouchzone.Active",
+        "layer": 1,
+        "box": [
+          64,
+          608,
+          80,
+          624
+        ],
+        "instances": 8
+      },
+      {
+        "object": "olivier_btnTouchzone.Active",
+        "layer": 1,
+        "box": [
+          64,
+          688,
+          80,
+          704
+        ],
+        "instances": 8
+      },
+      {
+        "object": "olivier_btnTouchzone.Active",
+        "layer": 1,
+        "box": [
+          960,
+          608,
+          976,
+          624
+        ],
+        "instances": 8
+      },
+      {
+        "object": "olivier_btnTouchzone.Active",
+        "layer": 1,
+        "box": [
+          960,
+          688,
+          976,
+          704
+        ],
+        "instances": 8
+      },
+      {
+        "object": "olivier_btnTouchzone.Active",
+        "layer": 2,
+        "box": [
+          64,
+          528,
+          80,
+          544
+        ],
+        "instances": 8
+      },
+      {
+        "object": "olivier_btnTouchzone.Active",
+        "layer": 2,
+        "box": [
+          64,
+          608,
+          80,
+          624
+        ],
+        "instances": 8
+      }
+    ]
+  },
+  "after": {
+    "binarySha256": "391ac22424020ad6e96b1463ee6c34ea1f2ecccd613e1ed46e0e25b4035fadcc",
+    "dumpSha256": "2613c957fa9b573527498f0e4ee6914f14a22ffb7e7ec854e65febd025b35c33",
+    "zones": [
+      {
+        "object": "btn6thNight.Active",
+        "layer": 1,
+        "box": [
+          64,
+          584,
+          316,
+          648
+        ],
+        "instances": 1
+      },
+      {
+        "object": "btnContinue.Active",
+        "layer": 1,
+        "box": [
+          64,
+          504,
+          286,
+          568
+        ],
+        "instances": 1
+      },
+      {
+        "object": "btnCustomNight.Active",
+        "layer": 1,
+        "box": [
+          64,
+          664,
+          403,
+          728
+        ],
+        "instances": 1
+      },
+      {
+        "object": "btnNewGame.Active",
+        "layer": 1,
+        "box": [
+          64,
+          424,
+          286,
+          488
+        ],
+        "instances": 1
+      },
+      {
+        "object": "btnNo.Active",
+        "layer": 2,
+        "box": [
+          64,
+          504,
+          120,
+          568
+        ],
+        "instances": 1
+      },
+      {
+        "object": "btnOptions.Active",
+        "layer": 1,
+        "box": [
+          767,
+          584,
+          960,
+          648
+        ],
+        "instances": 1
+      },
+      {
+        "object": "btnUnlocks.Active",
+        "layer": 1,
+        "box": [
+          767,
+          664,
+          960,
+          728
+        ],
+        "instances": 1
+      },
+      {
+        "object": "btnYes.Active",
+        "layer": 2,
+        "box": [
+          64,
+          584,
+          152,
+          648
+        ],
+        "instances": 1
+      },
+      {
+        "object": "olivier_btnTouchzone.Active",
+        "layer": 1,
+        "box": [
+          64,
+          424,
+          464,
+          488
+        ],
+        "instances": 1
+      },
+      {
+        "object": "olivier_btnTouchzone.Active",
+        "layer": 1,
+        "box": [
+          64,
+          504,
+          464,
+          568
+        ],
+        "instances": 1
+      },
+      {
+        "object": "olivier_btnTouchzone.Active",
+        "layer": 1,
+        "box": [
+          64,
+          584,
+          464,
+          648
+        ],
+        "instances": 1
+      },
+      {
+        "object": "olivier_btnTouchzone.Active",
+        "layer": 1,
+        "box": [
+          64,
+          664,
+          464,
+          728
+        ],
+        "instances": 1
+      },
+      {
+        "object": "olivier_btnTouchzone.Active",
+        "layer": 1,
+        "box": [
+          640,
+          584,
+          960,
+          648
+        ],
+        "instances": 1
+      },
+      {
+        "object": "olivier_btnTouchzone.Active",
+        "layer": 1,
+        "box": [
+          640,
+          664,
+          960,
+          728
+        ],
+        "instances": 1
+      },
+      {
+        "object": "olivier_btnTouchzone.Active",
+        "layer": 2,
+        "box": [
+          64,
+          504,
+          464,
+          568
+        ],
+        "instances": 1
+      },
+      {
+        "object": "olivier_btnTouchzone.Active",
+        "layer": 2,
+        "box": [
+          64,
+          584,
+          464,
+          648
+        ],
+        "instances": 1
+      }
+    ]
+  },
+  "unchanged": "the Night 1 harness replay on the fixed binary has the committed record night1-rebuild-options-20260927.json draw projection byte for byte (the zones draw no Random)",
+  "limitations": [
+    "Rebuilt runtime only; no phone touch was measured.",
+    "Groups 60/61 carry an undecoded parameter 69 before their overlap test; the right-hand 320 px zones match the dump's actions, not a measured phone zone."
+  ],
+  "evidenceId": "recompile-zones-b941764a3c383d40"
+}

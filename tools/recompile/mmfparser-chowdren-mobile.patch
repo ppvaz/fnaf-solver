@@ -181,10 +181,10 @@ index 950da8d..eb20377 100644
  inline int FrameObject::get_x()
 diff --git a/Chowdren/base/harness.h b/Chowdren/base/harness.h
 new file mode 100644
-index 0000000..1b94521
+index 0000000..e206cce
 --- /dev/null
 +++ b/Chowdren/base/harness.h
-@@ -0,0 +1,90 @@
+@@ -0,0 +1,94 @@
 +#ifndef CHOWDREN_HARNESS_H
 +#define CHOWDREN_HARNESS_H
 +
@@ -206,6 +206,7 @@ index 0000000..1b94521
 +//     pixels (the game's 1024x768 window, before scroll),
 +//   - writes one line per event update to CHOWDREN_TRACE: frame index, tick,
 +//     Random draws so far this frame load, graine, and the global values,
++//   - writes CHOWDREN_SNAP frames (see harness_after_draw),
 +//   - skips drawing when CHOWDREN_NO_DRAW=1, and exits after CHOWDREN_MAX_TICKS
 +//     event updates of the frame index in CHOWDREN_STOP_FRAME; always exits
 +//     after CHOWDREN_MAX_TOTAL_TICKS updates across all frames (default 60000).
@@ -253,6 +254,9 @@ index 0000000..1b94521
 +void harness_seed_frame(int index);
 +void harness_before_events(int frame_index);
 +bool harness_after_events(int frame_index);
++// CHOWDREN_SNAP=frame:tick[,frame:tick...]: after drawing the state that follows
++// that update, write the window as a binary PPM to CHOWDREN_SNAP_DIR (default .).
++void harness_after_draw(int width, int height);
 +
 +// Multiple Touch ACEs (condition/expression numbers as the Android runtime's
 +// CRunMultipleTouch.condition / .expression switch them).
@@ -1035,7 +1039,7 @@ index d8edac8..d89e576 100644
              return klass
          else:
 diff --git a/Chowdren/chowdren/writers/events/__init__.py b/Chowdren/chowdren/writers/events/__init__.py
-index 1943544..af89498 100644
+index 1943544..ab10e20 100644
 --- a/Chowdren/chowdren/writers/events/__init__.py
 +++ b/Chowdren/chowdren/writers/events/__init__.py
 @@ -2,6 +2,8 @@ from chowdren.writers import BaseWriter
@@ -1114,20 +1118,22 @@ index 1943544..af89498 100644
      meth = writer.method
  
      if meth.count('%s'):
-@@ -178,9 +204,19 @@ def get_method_out(writer):
+@@ -178,9 +204,21 @@ def get_method_out(writer):
      return out
  
  class ActionMethodWriter(ActionWriter):
 +    def should_skip(self):
-+        self.method_out = get_method_out(self)
-+        return 'unsupported expression' in self.method_out
++        # Decide only. write() converts again inside the object iteration,
++        # where an expression naming the iterated object resolves to the
++        # current instance, as Fusion evaluates it; a text cached here
++        # resolved it to the first selected one (group 1181's cameraHitbox
++        # SetXScale(110 / GetWidth) scaled one hitbox and left eleven 16 x 16).
++        return 'unsupported expression' in get_method_out(self)
 +
      def write(self, writer):
          try:
 -            writer.put(get_method_out(self) + ';')
-+            out = getattr(self, 'method_out', None)
-+            if out is None:
-+                out = get_method_out(self)
++            out = get_method_out(self)
 +            if 'unsupported expression' in out:
 +                print 'action omitted for unsupported expression:', self.data.getName()
 +                return
@@ -1136,7 +1142,7 @@ index 1943544..af89498 100644
              print 'meth:', self.method
              raise e
 diff --git a/Chowdren/chowdren/writers/events/system.py b/Chowdren/chowdren/writers/events/system.py
-index 48623cf..b0ca352 100644
+index 48623cf..925367d 100644
 --- a/Chowdren/chowdren/writers/events/system.py
 +++ b/Chowdren/chowdren/writers/events/system.py
 @@ -2,7 +2,8 @@ from mmfparser.data.chunkloaders.objectinfo import SEMITRANSPARENT_EFFECT
@@ -1180,17 +1186,29 @@ index 48623cf..b0ca352 100644
  
      def write_start(self, writer):
          for name in self.loops.keys():
-@@ -292,8 +313,7 @@ class SystemObject(ObjectWriter):
+@@ -292,9 +313,18 @@ class SystemObject(ObjectWriter):
          loop_objects = {}
          for loop in self.get_conditions('OnObjectLoop'):
              parameter = loop.conditions[0].data.items[0]
 -            items = parameter.loader.items
 -            name = self.converter.convert_static_expression(items)
+-            loop_objects[name] = loop.conditions[0].get_object()
 +            name = static_loop_name(self.converter, parameter)
-             loop_objects[name] = loop.conditions[0].get_object()
++            obj = loop.conditions[0].get_object()
++            if obj[0] is None:
++                # OnObjectLoop has no writer of its own, and the default one
++                # reports no object: key the loop by the condition's own
++                # (objectInfo, objectType) -- for a qualifier 0x8000 | id,
++                # as CreateObject's parent and every action in the body name
++                # it -- or the body never sees the current instance and
++                # walks the whole list on every iteration.
++                data = loop.conditions[0].data
++                obj = (data.objectInfo, data.objectType)
++            loop_objects[name] = obj
              loops[name].append(loop)
  
-@@ -320,8 +340,7 @@ class SystemObject(ObjectWriter):
+         self.foreach_names = {}
+@@ -320,8 +350,7 @@ class SystemObject(ObjectWriter):
  
          for loop_group in self.get_conditions('OnLoop'):
              parameter = loop_group.conditions[0].data.items[0]
@@ -1200,7 +1218,7 @@ index 48623cf..b0ca352 100644
              if name is None:
                  # try and get config to give us a loop name
                  name = self.converter.config.get_loop_name(parameter)
-@@ -490,6 +509,18 @@ class IsOverlapping(CollisionCondition):
+@@ -490,6 +519,18 @@ class IsOverlapping(CollisionCondition):
          other_info = (data.items[0].loader.objectInfo,
                        data.items[0].loader.objectType)
          converter = self.converter
@@ -1219,7 +1237,7 @@ index 48623cf..b0ca352 100644
          selected_name = converter.create_list(object_info, writer)
          if negated:
              other_selected = converter.get_object_list(other_info,
-@@ -548,6 +579,68 @@ class Always(ConditionWriter):
+@@ -548,6 +589,68 @@ class Always(ConditionWriter):
      def write(self, writer):
          pass
  
@@ -1288,7 +1306,7 @@ index 48623cf..b0ca352 100644
  class MouseClicked(ConditionWriter):
      is_always = True
      pre_event = True
-@@ -659,15 +752,23 @@ class TimerEvery(ConditionWriter):
+@@ -659,15 +762,23 @@ class TimerEvery(ConditionWriter):
      custom = True
  
      def write(self, writer):
@@ -1317,7 +1335,7 @@ index 48623cf..b0ca352 100644
  
  class AnimationFinished(ConditionWriter):
      is_always = True
-@@ -751,8 +852,7 @@ class OnceCondition(ConditionWriter):
+@@ -751,8 +862,7 @@ class OnceCondition(ConditionWriter):
  
  class GroupActivated(ConditionWriter):
      def write(self, writer):
@@ -1327,10 +1345,24 @@ index 48623cf..b0ca352 100644
          writer.put(self.converter.get_container_check(container))
  
  class PickRandom(ConditionWriter):
-@@ -924,6 +1024,28 @@ class PickFlagOn(PickAlterableCondition):
+@@ -924,6 +1034,42 @@ class PickFlagOn(PickAlterableCondition):
          writer.end_brace()
  
  
++class RunningAs(ConditionWriter):
++    # CND_RUNNINGAS.eva2 (classes.dex): parameter 67 is a short platform code
++    # and the condition holds when it is 3, the Android runtime this rebuild
++    # stands in for. Mapped to Always, every platform branch ran (Initialize,
++    # title, Unlocks, Options use codes 0, 3 and 4): the title printed the
++    # last-written branch's "v 2.0.6" where Android prints "v 2.0.7".
++    has_object = False
++    prefix = '('
++
++    def write(self, writer):
++        value = self.parameters[0].loader.value
++        writer.put('%s)' % ('true' if value == 3 else 'false'))
++
++
 +class FlagOnCondition(ConditionMethodWriter):
 +    # Build 296 can pack a flag and alterable-value test into FlagOn's one
 +    # parameter (code 68, PARAM_MULTIPLEVAR); CND_EXTFLAGSET.eva2 then filters
@@ -1356,7 +1388,7 @@ index 48623cf..b0ca352 100644
  class PickFromFixed(PickCondition):
      def write_pick(self, writer, objs):
          writer.start_brace()
-@@ -1120,8 +1242,14 @@ class CreateBase(ActionWriter):
+@@ -1120,8 +1266,14 @@ class CreateBase(ActionWriter):
  
          if object_info != parent_info and (not has_selection and
                                             not select_single):
@@ -1373,7 +1405,7 @@ index 48623cf..b0ca352 100644
  
          writer.putlnc('// select single: %s %s %s', select_single,
                        multi, has_selection)
-@@ -1191,6 +1319,11 @@ class CreateBase(ActionWriter):
+@@ -1191,6 +1343,11 @@ class CreateBase(ActionWriter):
                  writer.indent()
                  writer.putlnc('%s = new_obj;', single_name)
                  writer.dedent()
@@ -1385,7 +1417,7 @@ index 48623cf..b0ca352 100644
              else:
                  writer.putlnc('%s.add_back();', list_name)
              if is_shoot:
-@@ -1425,9 +1558,7 @@ class Foreach(ActionWriter):
+@@ -1425,9 +1582,7 @@ class Foreach(ActionWriter):
      custom = True
  
      def get_name(self):
@@ -1396,7 +1428,7 @@ index 48623cf..b0ca352 100644
  
      def write(self, writer):
          self.reorder = self.converter.config.reorder_foreach()
-@@ -1461,14 +1592,26 @@ class Foreach(ActionWriter):
+@@ -1461,14 +1616,26 @@ class Foreach(ActionWriter):
              writer.putlnc('%s();', func_call)
          writer.end_brace()
  
@@ -1425,7 +1457,7 @@ index 48623cf..b0ca352 100644
          if name is not None:
              return name
          return self.converter.config.get_dynamic_loop_call_name(parameter)
-@@ -1558,8 +1701,11 @@ class StartLoop(ActionWriter):
+@@ -1558,8 +1725,11 @@ class StartLoop(ActionWriter):
                  times = exp.loader.value
                  if times == -1:
                      comparison = 'true'
@@ -1439,7 +1471,7 @@ index 48623cf..b0ca352 100644
          if times is None:
              times = self.convert_index(1)
          is_infinite = comparison is not None
-@@ -1622,15 +1768,13 @@ class DeactivateGroup(ActionWriter):
+@@ -1622,15 +1792,13 @@ class DeactivateGroup(ActionWriter):
  
      def get_deactivated_container(self):
          if self.deactivated_container is None:
@@ -1457,7 +1489,7 @@ index 48623cf..b0ca352 100644
          if name is None:
              name = self.converter.convert_parameter(parameter)
              print 'Could not convert stop loop name for', name
-@@ -1640,8 +1784,7 @@ class StopLoop(ActionWriter):
+@@ -1640,8 +1808,7 @@ class StopLoop(ActionWriter):
  
  class SetLoopIndex(ActionWriter):
      def write(self, writer):
@@ -1467,7 +1499,7 @@ index 48623cf..b0ca352 100644
          index_name = get_loop_index_name(name)
          value = self.convert_index(1)
          writer.putln('%s = %s;' % (index_name, value))
-@@ -1650,8 +1793,7 @@ class ActivateGroup(ActionWriter):
+@@ -1650,8 +1817,7 @@ class ActivateGroup(ActionWriter):
      custom = True
  
      def write(self, writer):
@@ -1477,7 +1509,7 @@ index 48623cf..b0ca352 100644
          writer.putlnc('if (!%s) {', container.code_name)
          writer.indent()
          writer.putlnc('%s = true;', container.code_name)
-@@ -1970,9 +2112,13 @@ class GetLoopIndex(ExpressionWriter):
+@@ -1970,9 +2136,13 @@ class GetLoopIndex(ExpressionWriter):
              size = 2
              next_exp = items[converter.item_index + 1]
              if next_exp.getName() != 'String':
@@ -1494,7 +1526,7 @@ index 48623cf..b0ca352 100644
              else:
                  name = next_exp.loader.value
          converter.item_index += size
-@@ -2055,6 +2201,7 @@ actions = make_table(ActionMethodWriter, {
+@@ -2055,6 +2225,7 @@ actions = make_table(ActionMethodWriter, {
      'CreateObject' : CreateObject,
      'Shoot' : ShootObject,
      'StartLoop' : StartLoop,
@@ -1502,15 +1534,19 @@ index 48623cf..b0ca352 100644
      'Foreach' : Foreach,
      'StopLoop' : StopLoop,
      'SwapPosition' : SwapPosition,
-@@ -2072,6 +2219,7 @@ actions = make_table(ActionMethodWriter, {
+@@ -2072,6 +2243,11 @@ actions = make_table(ActionMethodWriter, {
      'SetMinimumValue' : 'set_min',
      'SetGlobalString' : 'global_strings->set',
      'SetGlobalValue' : 'global_values->set',
 +    'SetGlobalValueDouble' : 'global_values->set', # build 296; values are doubles
++    # build 296: 106 uses, all compiled to nothing while this entry was absent;
++    # the office's touch-pan gate resets global 10 with it, so panning never
++    # engaged. The int form stores the truncated value.
++    'SetGlobalValueInt' : 'global_values->set({0}, (int)({1}))',
      'AddGlobalValue' : 'global_values->add',
      'AddGlobalValueInt' : 'global_values->add',
      'SubtractGlobalValue' : 'global_values->sub',
-@@ -2160,6 +2308,7 @@ actions = make_table(ActionMethodWriter, {
+@@ -2160,6 +2336,7 @@ actions = make_table(ActionMethodWriter, {
      'PauseApplication' : 'pause',
      'SetRandomSeed' : 'set_random_seed',
      'SetTimer' : 'set_timer((%s) / 1000.0)',
@@ -1518,21 +1554,18 @@ index 48623cf..b0ca352 100644
      'SetLoopIndex' : SetLoopIndex,
      'IgnoreControls' : IgnoreControls,
      'RestoreControls' : RestoreControls,
-@@ -2225,6 +2374,13 @@ conditions = make_table(ConditionMethodWriter, {
+@@ -2225,6 +2402,10 @@ conditions = make_table(ConditionMethodWriter, {
      'WhileMousePressed' : 'is_mouse_pressed',
      'MouseOnObject' : MouseOnObject,
      'Always' : Always,
 +    'OnTimerEvent' : Always,
-+    # build 296: the game gates dev-only branches on RunningAs. The recompiled
-+    # binary is always the application, so treat it as true. A rare
-+    # RunningAs <other-mode> branch would wrongly activate -- fidelity caveat.
-+    'RunningAs' : Always,
++    'RunningAs' : RunningAs,
 +    # EndChildEvents is removed by the nested-list partitioner.
 +    'ChildEventsCondition' : ChildEventsCondition,
      'MouseClicked' : MouseClicked,
      'ObjectClicked' : ObjectClicked,
      'PlayerKeyDown' : PlayerKeyDown,
-@@ -2266,12 +2422,12 @@ conditions = make_table(ConditionMethodWriter, {
+@@ -2266,12 +2447,12 @@ conditions = make_table(ConditionMethodWriter, {
      'PathFinished' : PathFinished,
      'NodeReached' : NodeReached,
      'CompareSpeed' : make_comparison('get_movement()->get_speed()'),
@@ -1547,7 +1580,7 @@ index 48623cf..b0ca352 100644
      'NumberOfLives' :  make_comparison('manager.lives'),
      'PlayerDied' : PlayerDied,
      'AnyKeyPressed' : AnyKeyPressed,
-@@ -2290,6 +2446,7 @@ conditions = make_table(ConditionMethodWriter, {
+@@ -2290,6 +2471,7 @@ conditions = make_table(ConditionMethodWriter, {
  })
  
  expressions = make_table(ExpressionMethodWriter, {
@@ -1557,10 +1590,10 @@ index 48623cf..b0ca352 100644
      'ToNumber' : 'string_to_number',
 diff --git a/Chowdren/chowdren/writers/extensions/MultipleTouch.py b/Chowdren/chowdren/writers/extensions/MultipleTouch.py
 new file mode 100644
-index 0000000..59b4217
+index 0000000..784af36
 --- /dev/null
 +++ b/Chowdren/chowdren/writers/extensions/MultipleTouch.py
-@@ -0,0 +1,121 @@
+@@ -0,0 +1,171 @@
 +# Multiple Touch (Android runtime: Extensions/CRunMultipleTouch). The ACE
 +# numbers are the runtime's own switch cases, read from classes.dex:
 +#   conditions  0 new touch(id)   1 end touch(id)   2 any new touch
@@ -1584,28 +1617,78 @@ index 0000000..59b4217
 +    use_alterables = True
 +
 +
++def write_touch_over(writer, cond, touch, obj, guard=None):
++    """Touch-on-object as the Android runtime evaluates an extension
++    condition: one boolean for the object list, which NOT inverts
++    (CCnd.negaTRUE / negaFALSE). Positive keeps the instances under the touch;
++    negated holds only when the touch is over none of them and leaves the
++    selection alone. Chowdren's default per-instance NOT made group 36's
++    `NOT touch(MT6) on cameraHitbox` true whenever any of the twelve hitboxes
++    was untouched, so the camera touch was wiped the loop after it began and
++    no camera button ever switched."""
++    converter = cond.converter
++    negated = cond.data.otherFlags['Not']
++    end = converter.event_break
++    if negated:
++        selected = converter.get_object_list(obj)
++    else:
++        selected = converter.create_list(obj, writer)
++    iter_type = converter.get_iter_type(obj)
++    test = '((FrameObject*)*it)->touch_over(%s)' % touch
++    if guard and not negated:
++        writer.putlnc('if (!(%s)) %s', guard, end)
++    writer.putlnc('{')
++    writer.indent()
++    writer.putlnc('bool touch_hit = false;')
++    writer.putlnc('for (%s it(%s); !it.end(); ++it) {', iter_type, selected)
++    writer.indent()
++    if negated:
++        writer.putlnc('if (%s) { touch_hit = true; break; }', test)
++    else:
++        writer.putlnc('if (!(%s)) { it.deselect(); continue; }', test)
++        writer.putlnc('touch_hit = true;')
++    writer.dedent()
++    writer.putlnc('}')
++    if negated and guard:
++        writer.putlnc('if ((%s) && touch_hit) %s', guard, end)
++    elif negated:
++        writer.putlnc('if (touch_hit) %s', end)
++    else:
++        writer.putlnc('if (!touch_hit) %s', end)
++    writer.dedent()
++    writer.putlnc('}')
++
++
 +class TouchOnObject(ConditionWriter):
-+    """7: touch(id) is over each selected instance of the object parameter."""
-+    def get_object(self):
-+        data = self.parameters[1].loader
-+        return data.objectInfo, data.objectType
++    """7: touch(id) is over the object parameter's instances."""
++    has_object = False
++    custom = True
 +
 +    def write(self, writer):
-+        writer.put('touch_over(%s)' % self.convert_index(0))
++        data = self.parameters[1].loader
++        write_touch_over(writer, self, self.convert_index(0),
++                         (data.objectInfo, data.objectType))
++
++    def is_negated(self):
++        return False
 +
 +
 +class NewTouchOnObject(ConditionWriter):
-+    """6: the new touch of this update is over each selected instance."""
++    """6: the new touch of this update is over the object's instances."""
 +    # The harness holds this trigger for one event update. Without forcing
 +    # polling, Chowdren parks the row in an unimplemented generated group.
 +    is_always = True
-+    prefix = '(harness_touch.new_touch && '
-+    def get_object(self):
-+        data = self.parameters[0].loader
-+        return data.objectInfo, data.objectType
++    has_object = False
++    custom = True
 +
 +    def write(self, writer):
-+        writer.put('touch_over(harness_touch.last_new_touch))')
++        data = self.parameters[0].loader
++        write_touch_over(writer, self, 'harness_touch.last_new_touch',
++                         (data.objectInfo, data.objectType),
++                         guard='harness_touch.new_touch')
++
++    def is_negated(self):
++        return False
 +
 +
 +class NeverCondition(ConditionWriter):
@@ -1740,7 +1823,7 @@ index 351012a..eaf351c 100644
  
          is_global = self.is_global()
 diff --git a/Chowdren/chowdren/writers/objects/system.py b/Chowdren/chowdren/writers/objects/system.py
-index 24a61c1..75a3ccd 100644
+index 24a61c1..77d4e3e 100644
 --- a/Chowdren/chowdren/writers/objects/system.py
 +++ b/Chowdren/chowdren/writers/objects/system.py
 @@ -219,7 +219,7 @@ class Backdrop(ObjectWriter):
@@ -1760,7 +1843,19 @@ index 24a61c1..75a3ccd 100644
  
      def initialize(self):
          pass
-@@ -403,6 +404,12 @@ class RTFText(ObjectWriter):
+@@ -356,7 +357,10 @@ class Text(ObjectWriter):
+         if not flags:
+             flags = '0'
+ 
+-        writer.putlnc('font = get_font(%s, %s);', font_info.getSize(),
++        # The Android runtime draws at TextPaint.setTextSize(|lfHeight|) pixels
++        # (CFont.load negates a negative height); getSize() is the Windows
++        # point size (x 72/96), which picked a smaller packed font.
++        writer.putlnc('font = get_font(%s, %s);', abs(font_info.height),
+                       flags)
+ 
+         paragraph = text.items[0]
+@@ -403,6 +407,12 @@ class RTFText(ObjectWriter):
  class Counter(ObjectWriter):
      class_name = 'Counter'
      filename = 'counter'
@@ -1773,7 +1868,7 @@ index 24a61c1..75a3ccd 100644
  
      def write_init(self, writer):
          common = self.common
-@@ -610,4 +617,4 @@ system_objects = {
+@@ -610,4 +620,4 @@ system_objects = {
      RTF : RTFText,
      LIVES : Lives,
      SUBAPPLICATION : SubApplication,
@@ -2000,7 +2095,7 @@ index 7966f0f..feb83de 100644
          old = self.settings.get('old', False)
          if debug:
 diff --git a/mmfparser/data/chunkloaders/frame.py b/mmfparser/data/chunkloaders/frame.py
-index dc38547..73486b8 100644
+index dc38547..046dd8b 100644
 --- a/mmfparser/data/chunkloaders/frame.py
 +++ b/mmfparser/data/chunkloaders/frame.py
 @@ -73,6 +73,17 @@ class MovementTimerBase(DataLoader):
@@ -2021,7 +2116,25 @@ index dc38547..73486b8 100644
  class Frame(DataLoader):
      name = None
  
-@@ -317,6 +328,15 @@ class ObjectInstance(DataLoader):
+@@ -248,8 +259,15 @@ class Layer(DataLoader):
+     def read(self, reader):
+         value = reader.readInt(True)
+         self.flags.setFlags(value)
+-        self.xCoefficient = reader.readFloat()
+-        self.yCoefficient = reader.readFloat()
++        if self.settings.get('build', 0) >= 290 and not self.settings.get('compat', False):
++            # Build 296: CFile.readAFloat is a little-endian int32 / 65536
++            # (16.16 fixed point). Read as IEEE bits, a coefficient of 1.0
++            # became 9.18e-41, so the office layers never scrolled.
++            self.xCoefficient = reader.readInt() / 65536.0
++            self.yCoefficient = reader.readInt() / 65536.0
++        else:
++            self.xCoefficient = reader.readFloat()
++            self.yCoefficient = reader.readFloat()
+         self.numberOfBackgrounds = reader.readInt()
+         self.backgroundIndex = reader.readInt()
+         self.name = self.readString(reader)
+@@ -317,6 +335,15 @@ class ObjectInstance(DataLoader):
          self.parentType = reader.readShort()
          self.parentHandle = reader.readShort() # object info
          self.layer = reader.readShort()
@@ -2037,7 +2150,7 @@ index dc38547..73486b8 100644
          reader.skipBytes(2)
  
      def write(self, reader):
-@@ -408,4 +428,5 @@ class FramePassword(StringChunk):
+@@ -408,4 +435,5 @@ class FramePassword(StringChunk):
  
  __all__ = ['FrameHandles', 'FrameName', 'Frame', 'FrameHeader',
      'VirtualSize', 'ObjectInstances', 'Layers', 'FramePalette',
@@ -2045,10 +2158,10 @@ index dc38547..73486b8 100644
 +    'MovementTimerBase', 'FramePassword', 'LayerEffects', 'FrameEffects',
 +    'FrameHandle']
 diff --git a/mmfparser/data/chunkloaders/imagebank.pyx b/mmfparser/data/chunkloaders/imagebank.pyx
-index 7459cb4..b27facb 100644
+index 7459cb4..8ba3f3e 100644
 --- a/mmfparser/data/chunkloaders/imagebank.pyx
 +++ b/mmfparser/data/chunkloaders/imagebank.pyx
-@@ -208,6 +208,21 @@ cdef inline tuple read_rgb(char * data, int width, int height, BasePoint pointCl
+@@ -208,6 +208,49 @@ cdef inline tuple read_rgb(char * data, int width, int height, BasePoint pointCl
          n += pad * pointClass.size
      return points, n
  
@@ -2067,10 +2180,38 @@ index 7459cb4..b27facb 100644
 +            i += 1
 +    return buf[:width * height * 4]
 +
++cdef inline object read_android_16(char * data, int width, int height, int layout):
++    # Two-byte Android pixels, rows padded to 4 bytes; RGBA bytes out.
++    # layout 1: RGBA4444, layout 2: RGBA5551 (little-endian shorts).
++    cdef char * buf
++    cdef unsigned int * c_array
++    points = allocate_memory(width * height * 4, &buf)
++    c_array = <unsigned int *>buf
++    cdef int x, y, stride = (width * 2 + 3) & ~3
++    cdef int i = 0
++    cdef unsigned int v, r, g, b, a
++    for y in range(height):
++        for x in range(width):
++            v = (<unsigned char>data[y * stride + x * 2] |
++                 <unsigned char>data[y * stride + x * 2 + 1] << 8)
++            if layout == 1:
++                r = ((v >> 12) & 15) * 17
++                g = ((v >> 8) & 15) * 17
++                b = ((v >> 4) & 15) * 17
++                a = (v & 15) * 17
++            else:
++                r = ((v >> 11) & 31) << 3
++                g = ((v >> 6) & 31) << 3
++                b = ((v >> 1) & 31) << 3
++                a = (v & 1) * 255
++            c_array[i] = r | g << 8 | b << 16 | a << 24
++            i += 1
++    return buf[:width * height * 4]
++
  cdef inline int get_padding(int width, BasePoint pointClass, int bytes = 2):
      cdef int pad
      pad = bytes - ((width * pointClass.size) % bytes)
-@@ -364,8 +379,65 @@ cdef class ImageItem(DataLoader):
+@@ -364,8 +407,77 @@ cdef class ImageItem(DataLoader):
          self.flags = IMAGE_FLAGS.copy()
  
      cpdef read(self, ByteReader reader):
@@ -2086,7 +2227,14 @@ index 7459cb4..b27facb 100644
 +            # (observed values 0-5) that is not part of the handle. Left
 +            # unmasked it scatters ~350 images into 0x1xxxx..0x5xxxx and every
 +            # object referencing them falls through to get_missing_image.
-+            self.handle = reader.readInt() & 0xFFFF
++            header = reader.readInt()
++            self.handle = header & 0xFFFF
++            # The upper 16 bits are the pixel format, not a counter: 0 RGBA8888,
++            # 1 RGBA4444, 2 RGBA5551, 4 RGB565, 5 JPEG (measured on this CCN:
++            # 435 / 215 / 2 / 97 / 33 records, each decoded and checked by eye;
++            # 3 does not occur). Sizing by bytes per pixel read every 4444 and
++            # 5551 sprite as RGB565: blue Chica, blue-green static.
++            android_format = (header >> 16) & 0xFFFF
 +            for streamOffset in (22, 24):
 +                reader.seek(start + streamOffset)
 +                if reader.read(2) not in ('\x78\xda', '\xff\xd8'):
@@ -2114,7 +2262,12 @@ index 7459cb4..b27facb 100644
 +                    return
 +                if data[:2] == '\x78\xda':
 +                    raw = zlib.decompress(data)
-+                    if len(raw) == self.height * ((self.width * 2 + 3) & ~3):
++                    two_byte = len(raw) == self.height * ((self.width * 2 + 3) & ~3)
++                    if two_byte and android_format in (1, 2):
++                        self.image = read_android_16(raw, self.width,
++                            self.height, android_format)
++                        self.alpha = self.image[3::4]
++                    elif two_byte:
 +                        self.image = read_android_rgb565(raw, self.width,
 +                            self.height)
 +                        self.alpha = None
@@ -2137,7 +2290,7 @@ index 7459cb4..b27facb 100644
          self.reader = reader
          self.pos = reader.tell()
          if load_now:
-@@ -377,7 +449,6 @@ cdef class ImageItem(DataLoader):
+@@ -377,7 +489,6 @@ cdef class ImageItem(DataLoader):
              raise NotImplementedError('not supported')
  
          cdef bint debug = self.settings.get('debug', False)
@@ -2145,7 +2298,7 @@ index 7459cb4..b27facb 100644
          if debug:
              reader.skipBytes(8)
              size = reader.readInt(True)
-@@ -569,10 +640,18 @@ cdef class ImageBank(DataLoader):
+@@ -569,10 +680,18 @@ cdef class ImageBank(DataLoader):
                  for item in bank.items:
                      self.itemDict[item.handle] = item
                  return
@@ -2787,10 +2940,10 @@ index 30eb23e..50c4cb3 100644
          platform_sleep(t);
 diff --git a/Chowdren/base/harness.cpp b/Chowdren/base/harness.cpp
 new file mode 100644
-index 0000000..4042f2f
+index 0000000..c358591
 --- /dev/null
 +++ b/Chowdren/base/harness.cpp
-@@ -0,0 +1,324 @@
+@@ -0,0 +1,397 @@
 +// Deterministic research harness for the build-296 recompile. See harness.h.
 +// Compiled once, included from run.cpp next to crashdump.cpp.
 +
@@ -2813,6 +2966,7 @@ index 0000000..4042f2f
 +bool h_active = false, h_no_draw = false;
 +// CHOWDREN_PLAY=1 without the harness: the real left mouse button is touch 0.
 +bool h_play = false, h_play_down = false;
++std::vector<std::pair<int, int> > h_snaps;   // (frame index, update) to write after drawing
 +int h_seed = -1, h_seed_frame = -1, h_stop_frame = -1, h_max_ticks = -1, h_dump_frame = -1, h_dump_tick = -1;
 +int h_tick = 0, h_frame_index = -1, h_total_ticks = 0, h_max_total_ticks = 60000;
 +std::vector<InputRow> h_inputs;
@@ -2964,6 +3118,13 @@ index 0000000..4042f2f
 +        fprintf(stderr, "harness: CHOWDREN_MAX_TOTAL_TICKS must be positive\n");
 +        exit(3);
 +    }
++    const char * snaps = getenv("CHOWDREN_SNAP");
++    for (const char * s = snaps; s && *s; ) {
++        int f = -1, t = -1;
++        if (sscanf(s, "%d:%d", &f, &t) == 2) h_snaps.push_back(std::make_pair(f, t));
++        s = strchr(s, ',');
++        if (s) s++;
++    }
 +    h_dump_frame = env_int("CHOWDREN_DUMP_FRAME", -1);
 +    h_dump_tick = env_int("CHOWDREN_DUMP_TICK", 1);
 +    const char * input = getenv("CHOWDREN_INPUT");
@@ -3003,10 +3164,11 @@ index 0000000..4042f2f
 +            int * b = obj.collision ? obj.collision->aabb : NULL;
 +            fprintf(stderr, "harness: instance frame %d layer %d '%s' box %d %d %d %d", frame_index, int(li),
 +                    obj.get_name().c_str(), b ? b[0] : -1, b ? b[1] : -1, b ? b[2] : -1, b ? b[3] : -1);
-+            if (obj.alterables)
-+                fprintf(stderr, " values %g %g %g flag0 %d", double(obj.alterables->values.get(0)),
-+                        double(obj.alterables->values.get(1)), double(obj.alterables->values.get(2)),
-+                        int(obj.alterables->flags.is_on(0)));
++            if (obj.alterables) {
++                fprintf(stderr, " values");
++                for (int v = 0; v < 10; v++) fprintf(stderr, " %g", double(obj.alterables->values.get(v)));
++                fprintf(stderr, " flag0 %d", int(obj.alterables->flags.is_on(0)));
++            }
 +            fputc('\n', stderr);
 +        }
 +    }
@@ -3060,9 +3222,48 @@ index 0000000..4042f2f
 +    }
 +}
 +
++// CHOWDREN_WATCH=name:i,j,...: after each update, one '# watch' trace line with
++// the first live instance's x and the listed alterable values.
++static void watch_line(int frame_index)
++{
++    static bool parsed = false;
++    static std::string name;
++    static std::vector<int> idx;
++    if (!parsed) {
++        parsed = true;
++        const char * w = getenv("CHOWDREN_WATCH");
++        if (w && *w) {
++            std::string spec(w);
++            size_t colon = spec.rfind(':');
++            name = spec.substr(0, colon);
++            for (const char * c = spec.c_str() + colon + 1; c && *c; ) {
++                idx.push_back(atoi(c));
++                c = strchr(c, ',');
++                if (c) c++;
++            }
++        }
++    }
++    if (name.empty() || !h_trace) return;
++    Frame * f = manager.frame;
++    for (size_t li = 0; li < f->layers.size(); li++) {
++        Layer & layer = f->layers[li];
++        for (LayerInstances::iterator it = layer.instances.begin(); it != layer.instances.end(); ++it) {
++            FrameObject & obj = *it;
++            if (obj.get_name() != name) continue;
++            fprintf(h_trace, "# watch %d %d off %d %d new %d x %d", frame_index, h_tick, f->off_x, f->off_y,
++                    f->new_off_x, obj.get_x());
++            for (size_t i = 0; i < idx.size(); i++)
++                fprintf(h_trace, " v%d %g", idx[i], obj.alterables ? double(obj.alterables->values.get(idx[i])) : 0.0);
++            fputc('\n', h_trace);
++            return;
++        }
++    }
++}
++
 +bool harness_after_events(int frame_index)
 +{
 +    if (!h_active) return true;
++    watch_line(frame_index);
 +    if (h_trace) {
 +        fprintf(h_trace, "%d %d %u %u", frame_index, h_tick, fusion_draws, fusion_graine);
 +        GlobalValues * g = manager.values;
@@ -3081,6 +3282,31 @@ index 0000000..4042f2f
 +        return false;
 +    }
 +    return true;
++}
++
++extern "C" void glReadPixels(int, int, int, int, unsigned int, unsigned int, void *);
++extern "C" void glPixelStorei(unsigned int, int);
++
++void harness_after_draw(int width, int height)
++{
++    if (!h_active || h_snaps.empty() || width <= 0 || height <= 0) return;
++    // h_tick already counts the update just drawn.
++    std::pair<int, int> here(h_frame_index, h_tick - 1);
++    bool wanted = false;
++    for (size_t i = 0; i < h_snaps.size(); i++) if (h_snaps[i] == here) wanted = true;
++    if (!wanted) return;
++    std::vector<unsigned char> px(size_t(width) * height * 3);
++    glPixelStorei(0x0D05, 1);                                  // GL_PACK_ALIGNMENT
++    glReadPixels(0, 0, width, height, 0x1907, 0x1401, &px[0]); // GL_RGB, GL_UNSIGNED_BYTE
++    const char * dir = getenv("CHOWDREN_SNAP_DIR");
++    char path[512];
++    snprintf(path, sizeof(path), "%s/frame%d-tick%d.ppm", dir && *dir ? dir : ".", here.first, here.second);
++    FILE * f = fopen(path, "wb");
++    if (!f) { fprintf(stderr, "harness: cannot write %s\n", path); return; }
++    fprintf(f, "P6\n%d %d\n255\n", width, height);
++    for (int y = height - 1; y >= 0; y--) fwrite(&px[size_t(y) * width * 3], 1, size_t(width) * 3, f);
++    fclose(f);
++    fprintf(stderr, "harness: wrote %s\n", path);
 +}
 +
 +// --- Multiple Touch ACEs --------------------------------------------------
@@ -3199,7 +3425,7 @@ index 228e3c8..480a5b8 100644
 +static DefaultText default_text;
 +FrameObject * default_text_instance = &default_text;
 diff --git a/Chowdren/base/run.cpp b/Chowdren/base/run.cpp
-index fd70fdf..9404852 100644
+index fd70fdf..4656d78 100644
 --- a/Chowdren/base/run.cpp
 +++ b/Chowdren/base/run.cpp
 @@ -25,9 +25,12 @@ GameManager manager;
@@ -3243,7 +3469,15 @@ index fd70fdf..9404852 100644
      if (ret)
          return 1;
      return 0;
-@@ -422,6 +430,7 @@ void GameManager::set_frame(int index)
+@@ -373,6 +381,7 @@ void GameManager::draw()
+     }
+ #endif
+ 
++    harness_after_draw(window_width, window_height);
+     PROFILE_BEGIN(platform_swap_buffers);
+     platform_swap_buffers();
+     PROFILE_END();
+@@ -422,6 +431,7 @@ void GameManager::set_frame(int index)
      user_log.write(&logline[0], logline.size());
  #endif
  
@@ -3251,7 +3485,7 @@ index fd70fdf..9404852 100644
      frame->set_index(index);
  
      std::cout << "Frame set" << std::endl;
-@@ -731,7 +740,8 @@ bool GameManager::update()
+@@ -731,7 +741,8 @@ bool GameManager::update()
  
      double draw_time = platform_get_time();
  
@@ -3421,7 +3655,6 @@ index 0000000..fa2858e
 +    }
 +};
 +#endif
- 
 diff --git a/Chowdren/base/alterables.h b/Chowdren/base/alterables.h
 index f72912c..b99cf8b 100644
 --- a/Chowdren/base/alterables.h
@@ -3466,3 +3699,54 @@ index f72912c..b99cf8b 100644
      static Alterables * create();
      static void destroy(Alterables * ptr);
  };
+diff --git a/Chowdren/base/shaders/perspective.frag b/Chowdren/base/shaders/perspective.frag
+index fe3332a..abb7011 100644
+--- a/Chowdren/base/shaders/perspective.frag
++++ b/Chowdren/base/shaders/perspective.frag
+@@ -21,6 +21,27 @@ uniform int sine_waves;
+ 
+ void main()
+ {
++    // PANORAMA, as the Android runtime draws it (res/raw/panorama_ext_frag.fsh;
++    // CRunPerspective.displayRunObject sets fB = ZoomValue / image height):
++    // each column samples a band of height fC = 1 + sin(u * 3.1415) * fB - fB
++    // around the centre, so the edges are stretched and the centre is not.
++    // FNaF 2's office uses it (effect 0, zoom 200); the sine code below ran
++    // for every effect and swirled the office.
++    if (effect == PANORAMA) {
++        vec2 P = texture_coordinate;
++        if (direction == HORIZONTAL) {
++            float fB = float(zoom) * texture_size.y;
++            float fC = 1.0 + sin(P.x * 3.1415) * fB - fB;
++            P.y = P.y * fC + (1.0 - fC) / 2.0;
++        } else {
++            float fB = float(zoom) * texture_size.x;
++            float fC = 1.0 + sin(P.y * 3.1415) * fB - fB;
++            P.x = P.x * fC + (1.0 - fC) / 2.0;
++        }
++        gl_FragColor = texture2D(texture, P);
++        return;
++    }
++
+     // For some weird reason, the wave number calculation always uses the
+     // image height, no matter what the orientation is
+     float wave_increment = (float(sine_waves) * 360.0) / (texture_size.x /
+diff --git a/mmfparser/data/chunkloaders/globals.py b/mmfparser/data/chunkloaders/globals.py
+index a7d345b..cb168a4 100644
+--- a/mmfparser/data/chunkloaders/globals.py
++++ b/mmfparser/data/chunkloaders/globals.py
+@@ -41,7 +41,13 @@ class GlobalValues(DataLoader):
+             tempList.append(reader.readReader(4))
+         for glob in tempList:
+             globalType = reader.readByte(True)
+-            if globalType == FLOAT:
++            if self.settings.get('build', 0) >= 290 and not self.settings.get('compat', False):
++                # Build 296: CRunApp.loadGlobalValues keeps the raw int32 and
++                # initGlobal makes every global CValue(int) from it; the type
++                # byte is read and never used, so a float-typed initial value
++                # starts as its raw bits on Android.
++                newGlobal = glob.readInt()
++            elif globalType == FLOAT:
+                 newGlobal = glob.readFloat()
+             elif globalType == INT:
+                 newGlobal = glob.readInt()

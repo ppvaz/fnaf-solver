@@ -84,10 +84,22 @@ def init(converter):
 
 
 # --- missing images --------------------------------------------------------
+def get_fonts(converter):
+    # AndroidSans.dat (tools/recompile/make-android-fonts.py): Roboto at the
+    # font bank's pixel sizes, the face Android substitutes for Consolas and
+    # Tahoma. SmallFonts, Chowdren's default, drew every text tiny.
+    return ['AndroidSans']
+
+
 def get_missing_image(converter, image):
     # Build 296's object direction frames carry placeholder handle (0, 0) for
-    # slots the mobile runtime never draws. Substitute the first real image so
-    # codegen proceeds; same approach as configs/fp.py. This is a fidelity
-    # compromise to be revisited before any boot comparison.
-    print 'fnaf2-config: missing image %s -> first image' % repr(image)
+    # slots the mobile runtime never draws. Draw nothing there: substitute a
+    # fully transparent image from the bank. The first real image, the old
+    # substitute, is a minigame sprite, and it showed on invisible objects
+    # (whereToGo on the title, the office's parked Pause controls).
+    for handle, color in sorted(converter.solid_images.items()):
+        if len(color) == 4 and color[3] == 0 and handle in converter.image_indexes:
+            print 'fnaf2-config: missing image %s -> transparent %s' % (repr(image), repr(handle))
+            return converter.image_indexes[handle]
+    print 'fnaf2-config: missing image %s -> first image (no transparent image)' % repr(image)
     return converter.image_indexes.itervalues().next()

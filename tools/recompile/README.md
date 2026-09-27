@@ -26,6 +26,7 @@ directory (`/private/tmp/fnaf2-recompile.*` on the dev machine).
 | `sourced-rebuild-model-options.json` | The origin set plus `sourcedFootstepDraws`, `footstepCamMarkers`, `sourcedBoxCountdown`, `sourcedPuppetMoveOrder` and `sourcedHourTable`: the options under which the model matches the rebuilt no-input Nights 1-5 up to each night's terminal loop. Diagnostic; defaults unchanged. |
 | `fixtures/night{2,3,4,5}-before.ini`, `fixtures/continue.input` | Saves holding only `level=N` (Continue loads `max(1, min(5, level))`) and the Continue tap, through its 16 x 16 touch zone at [64,528,80,544]. No game assets. |
 | `sourced-origin-model-options.json` | The same sourced flags plus the frame-time hook at 60 fps (`frameMs` 50/3, `frameValue5` 1) and `sourcedEveryOrigin`: every countdown loads on the loop it is first reached. `model-draw-trace.mjs` turns the two hook constants into per-frame functions. Diagnostic; defaults unchanged. |
+| `make-android-fonts.py` | Writes Chowdren's font bank from Roboto TTFs held outside the repository at the font bank's pixel sizes (13-43, bold 43): the face Android substitutes for the game's Consolas and Tahoma, drawn at `|lfHeight|` px. Output `Chowdren/fonts/AndroidSans.dat`, next to the converter; no font data is committed. |
 | `run-harness.sh` | Container wrapper with GL readiness checking and a process deadline that escalates to kill. Run from the external gamesrc directory. |
 | `test-mobile-parser.py`, `test-compare-draw-trace.mjs` | Synthetic parser and result-classification regressions; FIXTURE only. |
 | `test-child-events.py`, `fixtures/child-events.cpp` | Emit and compile synthetic nested events with the patched converter; exercise parent gating, nested/sibling selections, and one-shot timer dispatch. FIXTURE only; Python2.7 and a C++ compiler required. |
@@ -436,12 +437,23 @@ to completion. Scope as above: one seed, no gameplay input, draws and LCG
 state only. Nights 6 and 7 need their own navigation (`beatgame`, the
 Custom Night dials).
 
-**Title touch zones.** The mobile port's buttons are `olivier_btnTouchzone`
-Actives: in the rebuild only New Game's zone is sized to its button (400 x 64);
-the others stay 16 x 16 at the button's left end, and each zone exists nine
-times. The port sizes and places them in object loops; the 20
-`OnObjectLoop (..., param68)` conditions carry the packed variable test the
-converter still reduces to its first value. That is the next converter fix.
+**Title touch zones.** The mobile port's buttons are touched through
+`olivier_btnTouchzone` Actives built at StartOfFrame (dump groups 58-61:
+Foreach over qualifier 80; OnObjectLoop creates a zone at the button,
+SetXScale(400/16), SetYScale(4); Options and Unlocks narrow to 320).
+`OnObjectLoop` has no writer, and the default one reports object `(None, 2)`,
+so `write_foreach` keyed the loop instance by `(None, 2)` while `CreateObject`
+looked up its qualifier parent `(32848, 2)`: every iteration made a zone at
+every button and scaled only the first -- 64 zones, most 16 x 16 at a button's
+left end (the tiny Yes and Continue targets). The patch keys the loop by the
+condition's own `(objectInfo, objectType)`: 8 zones, one per button, 400 x 64
+and 320 x 64 (`title-touchzones-20260927.json`,
+`recompile-zones-b941764a3c383d40`). The Night 1 replay on the fixed binary has
+the committed record's draw projection byte for byte. The committed input
+fixtures still tap the left-end points, which lie inside the full zones.
+Groups 60/61 carry an undecoded parameter 69 before their overlap test, and
+the 20 `OnObjectLoop (..., param68)` loops in the Custom Night customize frame
+still reduce their packed test to its first value.
 
 **Play mode.** `CHOWDREN_PLAY=1` without the harness mirrors the real left
 mouse button into Multiple Touch slot 0 (the platform has already delivered it
@@ -450,3 +462,52 @@ under the harness, nothing changes. Known rendering gaps a player sees: text
 objects sized and anchored differently, some colours (ink effects), an
 unhidden sprite on the title, and the New Game confirmation's 16 x 16 touch
 zone at the left of its 88 x 64 image.
+
+## A playable rebuild (2026-09-27, evening)
+
+Pedro played the rebuild and reported what a player sees; each report led to a
+source-read fix, in the patch unless noted. Frames were captured with the new
+`CHOWDREN_SNAP=frame:tick,...` (the drawn window as a PPM, written outside the
+repository) and state with `CHOWDREN_WATCH=name:i,j` (one `# watch` trace line
+per update: the frame's scroll, the object's x and alterables); instance dumps
+now list ten alterable values. `CHOWDREN_PLAY=1` still mirrors the mouse into
+touch 0 outside the harness.
+
+- Office and camera feeds swirled: Chowdren's Perspective shader applied its
+  sine-offset code to every effect. FNaF 2 uses PANORAMA (effect 0); the shader
+  now draws it as the APK's `res/raw/panorama_ext_frag.fsh` does, with
+  `fB = ZoomValue / height` from `CRunPerspective.displayRunObject`.
+- Blue static, blue sprites: the high 16 bits of each Android image record are
+  the pixel format (0 RGBA8888, 1 RGBA4444, 2 RGBA5551, 4 RGB565, 5 JPEG: 435 /
+  215 / 2 / 97 / 33 records), not a counter; the loader read every 2-byte record
+  as RGB565.
+- A minigame sprite on the title and in the office: placeholder frames (handle
+  0) were given the bank's first image; they get a fully transparent one
+  (`fnaf2-config.py`).
+- Tiny, misplaced text: every text was drawn with the one packed bitmap font at
+  a Windows point size. The APK ships no fonts, so Android falls back to Roboto
+  at `TextPaint.setTextSize(|lfHeight|)`; the text writer now asks for
+  `|lfHeight|` and `get_fonts()` packs `AndroidSans` (`make-android-fonts.py`).
+- "v 2.0.6" on the title: `RunningAs` was compiled as Always, so every
+  platform branch ran (Initialize, title, Unlocks, Options). `CND_RUNNINGAS`
+  reads parameter 67 as a short and holds for 3, Android.
+- Touch zones and camera hitboxes: the foreach body ignored its instance
+  (`OnObjectLoop` keyed `(None, 2)`), and action expressions naming the
+  iterated object were converted outside the iteration (`should_skip` cached
+  the text), so `SetXScale(110 / GetWidth)` read the first hitbox.
+- Camera buttons: `NOT touch on object` was negated per instance; an extension
+  condition returns one boolean that NOT inverts, so group 36 wiped the camera
+  touch on the loop after it began.
+- Office panning and camera auto-pan: `SetGlobalValueInt` (106 uses) had no
+  writer and compiled to nothing, so the pan gate's reset of global 10 never
+  happened; and layer scroll coefficients are `CFile.readAFloat`, a
+  little-endian int32 / 65536, read as IEEE floats (1.0 became 9.2e-41), so no
+  layer scrolled. Initial global values are made as `CRunApp.initGlobal` makes
+  them: `CValue(int)` from the raw word, the type byte unused.
+
+On the final binary the no-input Night 1 office rows (frame, tick, draws, LCG
+state) are byte-identical to `night1-rebuild-options-20260927.json`'s trace; the
+title-to-office navigation is 659 updates shorter. Rendering fidelity is judged
+by eye against phone captures that stay on the local machine; no frame enters
+the repository. Still open: `OnObjectLoop (..., param68)` on Custom Night, the
+nested foreach the converter reports, and Android's exact line metrics.
