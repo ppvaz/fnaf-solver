@@ -508,6 +508,13 @@ export class Sim {
       // contact-final tick 7460 in the rebuilt runtime). Replaces frameValue5, which it refuses beside it.
       // Off: value 5 is frameValue5(frame), or 1.
       sourcedValue5: false,
+      // The exposure accumulators add global value 5 (requires sourcedValue5). g745 adds `1 * Global(5)` to Withered
+      // Foxy's value 9 each loop the hall latch is lit on him, and g846 retreats him once it is > 100 * night; g779 adds
+      // it to hallway Golden Freddy's value 0, and g780 moves him in once it is > 100. With value 5 a hair above 1, the
+      // Nth loop already passes > N: on Night 7 (night 7, 700) Foxy's retreat, and its B = 500 + Random(500) draw,
+      // came on the 700th lit loop in the rebuilt runtime (k3 tick 20449), where the model's integer count needed the
+      // 701st. Off: both count 1 per loop.
+      sourcedExposureValue5: false,
       frameMs: /** @type {null | ((frame: number) => number)} */ (null),
       frameValue5: /** @type {null | ((frame: number) => number)} */ (null),
     }, opts);
@@ -694,6 +701,8 @@ export class Sim {
       throw new Error('sourcedBlackoutClockEnd reads the g514 clock: it requires sourcedBlackoutDraws and frameMs');
     if (this.opts.sourcedValue5 && !this.opts.frameMs)
       throw new Error('sourcedValue5 derives global value 5 from the timer delta: it requires frameMs');
+    if (this.opts.sourcedExposureValue5 && !this.opts.sourcedValue5)
+      throw new Error('sourcedExposureValue5 adds the sheet\'s value 5: it requires sourcedValue5');
     if (this.opts.sourcedValue5 && this.opts.frameValue5)
       throw new Error('sourcedValue5 derives global value 5 from frameMs: give it or frameValue5, not both');
     if (this.opts.sourcedPromotedViewDraws && !this.opts.sourcedViewDraws)
@@ -1866,7 +1875,7 @@ export class Sim {
     // above). Source writes the 300 once per entry into hall stage 1/2 (C -7);
     // this refreshes it every transit frame, so it can only over-block.
     if (this.hallLightOn && !hallOccupied) {
-      if (++this.gf.hallExposure > C.GF_HALL_KILL_FRAMES) {
+      if ((this.gf.hallExposure += this.opts.sourcedExposureValue5 ? this.value5(f) : 1) > C.GF_HALL_KILL_FRAMES) {   // g779, g780
         this.gf.inHall = false;
         this.gf.hallInside = true;
         this.emit('gf-hall-inside');
@@ -1914,7 +1923,7 @@ export class Sim {
       return;
     }
     const atHall = fx.loc === 'hall' && !fx.gotYou;
-    if (atHall && this.hallLatch) { fx.D = 0; fx.exposure++; }               // g745
+    if (atHall && this.hallLatch) { fx.D = 0; fx.exposure += this.opts.sourcedExposureValue5 ? this.value5(f) : 1; }               // g745
     const someoneInOpening = this.bb.inOpening || this.units.some(u => u.atOpening);
     if (this.opts.sourcedGatedEvery) {
       if (!danger && this.gatedPass('g824', 1000)) fx.D++;                                            // g824

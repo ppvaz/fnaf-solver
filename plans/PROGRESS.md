@@ -2297,6 +2297,10 @@ Open:
   (`recompile-replay-f81579a9b8242381`), Night 5 21300 -> 22241 (`recompile-replay-e5080f57737dfeb7`); Night 1 still
   every update (`recompile-replay-dd514fe28889efe0`).
 
+- `sourcedExposureValue5` (`exposure-value5.test.js`, in the rebuild set): g745 and g779 add value 5, so g846's
+  `> 700` and g780's `> 100` pass on the Nth loop. Night 7 `k3` now matches every one of its 25,201 office updates,
+  with every monitor and mask ledger change at +0 (MATCHED_PREFIX, `recompile-replay-53fe6fd991029473`); Night 1
+  likewise (`recompile-replay-9afa326eef818737`); Night 5 stays 22241 (`recompile-replay-8f538b5f4e59ac8a`).
+
 Open:
-- Night 7 20449: Withered Foxy's g846 retreat a loop early in the rebuild (g745 adds value 5 to his exposure).
 - Night 5 22241: Toy Bonnie's g366 view draw on the loop he leaves CAM 09 (g366 sits before the moves).

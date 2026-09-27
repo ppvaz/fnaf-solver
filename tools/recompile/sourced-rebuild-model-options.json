@@ -41,5 +41,6 @@
   "sourcedOfficeRolls": true,
   "sourcedAnimationCount": true,
   "sourcedGatedEvery": true,
-  "sourcedBBMoves": true
+  "sourcedBBMoves": true,
+  "sourcedExposureValue5": true
 }

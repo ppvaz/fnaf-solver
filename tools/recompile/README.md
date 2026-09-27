@@ -1410,3 +1410,26 @@ no-input ladder re-scores unchanged.
 | Night 1 `minimal` | none -> none | `night1-minimal-replay-bbmoves-20260927.json`, `recompile-replay-dd514fe28889efe0` |
 | Night 5 `contact-final` | 21300 -> **22241** | `night5-contact-final-replay-bbmoves-20260927.json`, `recompile-replay-e5080f57737dfeb7` |
 | Night 7 `k3` | 6600 -> **20449** | `night7-k3-replay-bbmoves-20260927.json`, `recompile-replay-f81579a9b8242381` |
+
+**Foxy's and Golden Freddy's exposure add value 5 (`sourcedExposureValue5`,
+`packages/core/test/exposure-value5.test.js`).** Night 7 tick 20449: Withered
+Foxy's g846 retreat, and its `500 + Random(500)` draw, came a loop earlier in
+the rebuild. Instance dumps before and after 20449 show his value 9 at 700 and
+value 1 at 0.999997, then value 1 = 817 on CAM 08. The `old foxy` watch shows
+the pin (value 1 = 50) last written on 20399. g846 needs value 9 > 100 *
+`night`, which is 700 on Custom Night. g745 adds `1 * Global(5)` per lit loop,
+so with value 5 a hair above 1 the 700th loop already passes. The model counted
+exposure in whole loops and needed the 701st. g779/g780 (hallway Golden
+Freddy's value 0 > 100) have the same form. Under the option (requires
+`sourcedValue5`) both add value 5. The no-input ladder re-scores unchanged.
+
+The Night 7 `k3` replay now matches the rebuild's draw count and LCG state on
+every one of its 25,201 office updates, and every monitor (172) and mask (168)
+ledger change pairs at +0. Both reach 6 AM. The status is `MATCHED_PREFIX`: a
+stream match, not an event or state equivalence.
+
+| binding | first mismatch before -> after | record |
+|---|---|---|
+| Night 1 `minimal` | none -> none | `night1-minimal-replay-exposure-20260927.json`, `recompile-replay-9afa326eef818737` |
+| Night 5 `contact-final` | 22241 -> 22241 | `night5-contact-final-replay-exposure-20260927.json`, `recompile-replay-8f538b5f4e59ac8a` |
+| Night 7 `k3` | 20449 -> **none** (25,201 of 25,201 updates) | `night7-k3-replay-exposure-20260927.json`, `recompile-replay-53fe6fd991029473` |
