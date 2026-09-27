@@ -49,9 +49,10 @@ export function campaignEntry(id, wrapper) {
 
 /**
  * The Plan 12 gate's four checks for a campaign directory, the same four the CLI applies to
- * sessions and device bundles. The attestation is never inferred: a human records it (the
- * evidence policy reserves promotion edges to people), so a campaign without one is refused
- * with every other check reported.
+ * sessions and device bundles. The attestation is never inferred from the other checks: it is
+ * written over a committed run pack (`npm run evidence -- attest`, by a person or, since Pedro's
+ * 2026-09-27 delegation, an agent that re-derived every other check), so a campaign directory
+ * without one is refused with every other check reported.
  * @param {any} wrapper parsed result.json
  * @param {string[]} files names present in the campaign directory
  */

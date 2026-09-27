@@ -1,0 +1,157 @@
+{
+  "schema": "plan12-attestation-v2",
+  "status": "PASS",
+  "evidenceId": "night7-corner-bbfoxy-r02-20260927T073711Z",
+  "packSha256": "5ffefef93763223f04380438ea4a364ffc974828e02e771d092b22f173579666",
+  "attestedBy": {
+    "kind": "agent",
+    "delegation": "pedro-2026-09-27",
+    "note": "Claude agent (Opus 5.5), worktree agent-a92b61f0b615f761c, S1 first-promotion session 2026-09-27"
+  },
+  "date": "2026-09-27",
+  "tool": "npm run evidence -- attest",
+  "authority": "plans/12-end-to-end-evidence-campaign.md",
+  "claim": {
+    "id": "claim.fnaf2.night7.foxy20-bb20.device-6am",
+    "night": 7,
+    "mode": "custom",
+    "dials": {
+      "withfreddy": 0,
+      "withbonnie": 0,
+      "withchica": 0,
+      "foxy": 20,
+      "toyfreddy": 0,
+      "toybonnie": 0,
+      "toychica": 0,
+      "mangle": 0,
+      "bb": 20,
+      "golden": 0
+    },
+    "label": "FNaF 2 Custom Night foxy 20, bb 20 (others 0) reaches 6 AM on the phone (executor-proven)"
+  },
+  "custody": {
+    "kind": "original",
+    "lost": []
+  },
+  "verified": [
+    {
+      "check": "offlineEvidence",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "result.json",
+          "sha256": "32789f9e84ff497f70a37de55bd5da85af08cc75c7400ca17a6423653185f893"
+        }
+      ],
+      "detail": {
+        "mode": "live",
+        "claimLevel": "DEVICE_MEASURED"
+      }
+    },
+    {
+      "check": "terminalPass",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "result.json",
+          "sha256": "32789f9e84ff497f70a37de55bd5da85af08cc75c7400ca17a6423653185f893"
+        },
+        {
+          "name": "events.jsonl",
+          "sha256": "d3241107cef1d2ddca16f19515b3ef3c1eef405f7e12c528f1bc4021778e905d"
+        },
+        {
+          "name": "run/timeline.json",
+          "sha256": "1a165d6d796d3e418c3a898c7447c905492ae0c1515b79d9965f3fe4d68b6967"
+        }
+      ],
+      "detail": {
+        "night": 7,
+        "attempt": 1,
+        "proofHash": "fnv1a-481a0718",
+        "terminalEventAt": "2026-09-27T07:44:51.840Z",
+        "videoGrade": "clear"
+      }
+    },
+    {
+      "check": "manifestComplete",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "result.json",
+          "sha256": "32789f9e84ff497f70a37de55bd5da85af08cc75c7400ca17a6423653185f893"
+        },
+        {
+          "name": "events.jsonl",
+          "sha256": "d3241107cef1d2ddca16f19515b3ef3c1eef405f7e12c528f1bc4021778e905d"
+        },
+        {
+          "name": "request.json",
+          "sha256": "64c3b0ee8ccd91ff6e8eb8c7d1c66ce12bf0fec36b2340cd5b606b1fde003a1c"
+        }
+      ],
+      "detail": {
+        "custody": "original",
+        "lost": []
+      }
+    },
+    {
+      "check": "winnerCommitted",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "tools/device/campaign-night7-k3-winner.json",
+          "sha256": "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78"
+        }
+      ],
+      "detail": {
+        "winnerHash": "fnv1a-5c8dcb5f",
+        "bundle": "artifacts/night7-anchored-k3-20260927",
+        "winner": "tools/device/campaign-night7-k3-winner.json"
+      }
+    },
+    {
+      "check": "claimIdentity",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "events.jsonl",
+          "sha256": "d3241107cef1d2ddca16f19515b3ef3c1eef405f7e12c528f1bc4021778e905d"
+        },
+        {
+          "name": "request.json",
+          "sha256": "64c3b0ee8ccd91ff6e8eb8c7d1c66ce12bf0fec36b2340cd5b606b1fde003a1c"
+        }
+      ],
+      "detail": {
+        "night": 7,
+        "mode": "custom",
+        "observedDials": {
+          "withfreddy": 0,
+          "withbonnie": 0,
+          "withchica": 0,
+          "foxy": 20,
+          "toyfreddy": 0,
+          "toybonnie": 0,
+          "toychica": 0,
+          "mangle": 0,
+          "bb": 20,
+          "golden": 0
+        },
+        "requestedDials": {
+          "withfreddy": 0,
+          "withbonnie": 0,
+          "withchica": 0,
+          "toyfreddy": 0,
+          "toybonnie": 0,
+          "toychica": 0,
+          "mangle": 0,
+          "bb": 20,
+          "foxy": 20,
+          "golden": 0
+        },
+        "requested": "request.json"
+      }
+    }
+  ]
+}

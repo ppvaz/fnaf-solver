@@ -1,0 +1,157 @@
+{
+  "schema": "plan12-attestation-v2",
+  "status": "PASS",
+  "evidenceId": "night7-corner-bbgolden-r01-20260927T072630Z",
+  "packSha256": "c7659d9d8f18cea9cf8bdd5c37fbeab1c744faec79143f880509a0e4b29ebc5d",
+  "attestedBy": {
+    "kind": "agent",
+    "delegation": "pedro-2026-09-27",
+    "note": "Claude agent (Opus 5.5), worktree agent-a92b61f0b615f761c, S1 first-promotion session 2026-09-27"
+  },
+  "date": "2026-09-27",
+  "tool": "npm run evidence -- attest",
+  "authority": "plans/12-end-to-end-evidence-campaign.md",
+  "claim": {
+    "id": "claim.fnaf2.night7.bb20-golden20.device-6am",
+    "night": 7,
+    "mode": "custom",
+    "dials": {
+      "withfreddy": 0,
+      "withbonnie": 0,
+      "withchica": 0,
+      "foxy": 0,
+      "toyfreddy": 0,
+      "toybonnie": 0,
+      "toychica": 0,
+      "mangle": 0,
+      "bb": 20,
+      "golden": 20
+    },
+    "label": "FNaF 2 Custom Night bb 20, golden 20 (others 0) reaches 6 AM on the phone (executor-proven)"
+  },
+  "custody": {
+    "kind": "original",
+    "lost": []
+  },
+  "verified": [
+    {
+      "check": "offlineEvidence",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "result.json",
+          "sha256": "3db73576eb95f5ed0ac37ab4cbae5432609b1b4180b1c9987813fe9eee4e78ed"
+        }
+      ],
+      "detail": {
+        "mode": "live",
+        "claimLevel": "DEVICE_MEASURED"
+      }
+    },
+    {
+      "check": "terminalPass",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "result.json",
+          "sha256": "3db73576eb95f5ed0ac37ab4cbae5432609b1b4180b1c9987813fe9eee4e78ed"
+        },
+        {
+          "name": "events.jsonl",
+          "sha256": "35d95eb9a25a4a62d75e9fb351483dab8f3abd120cb2e83acecefa3543f207b4"
+        },
+        {
+          "name": "run/timeline.json",
+          "sha256": "aaad3811ad3ccc4892e2b3d7262d9ed7073167403c476bac9ea7e24800a4aa6f"
+        }
+      ],
+      "detail": {
+        "night": 7,
+        "attempt": 1,
+        "proofHash": "fnv1a-1724c866",
+        "terminalEventAt": "2026-09-27T07:34:09.713Z",
+        "videoGrade": "clear"
+      }
+    },
+    {
+      "check": "manifestComplete",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "result.json",
+          "sha256": "3db73576eb95f5ed0ac37ab4cbae5432609b1b4180b1c9987813fe9eee4e78ed"
+        },
+        {
+          "name": "events.jsonl",
+          "sha256": "35d95eb9a25a4a62d75e9fb351483dab8f3abd120cb2e83acecefa3543f207b4"
+        },
+        {
+          "name": "request.json",
+          "sha256": "c082f0c32c28223b0903d805a5fc421433be1585010ec259c7bbf131ad343eaa"
+        }
+      ],
+      "detail": {
+        "custody": "original",
+        "lost": []
+      }
+    },
+    {
+      "check": "winnerCommitted",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "tools/device/campaign-night7-k3-winner.json",
+          "sha256": "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78"
+        }
+      ],
+      "detail": {
+        "winnerHash": "fnv1a-5c8dcb5f",
+        "bundle": "artifacts/night7-anchored-k3-20260927",
+        "winner": "tools/device/campaign-night7-k3-winner.json"
+      }
+    },
+    {
+      "check": "claimIdentity",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "events.jsonl",
+          "sha256": "35d95eb9a25a4a62d75e9fb351483dab8f3abd120cb2e83acecefa3543f207b4"
+        },
+        {
+          "name": "request.json",
+          "sha256": "c082f0c32c28223b0903d805a5fc421433be1585010ec259c7bbf131ad343eaa"
+        }
+      ],
+      "detail": {
+        "night": 7,
+        "mode": "custom",
+        "observedDials": {
+          "withfreddy": 0,
+          "withbonnie": 0,
+          "withchica": 0,
+          "foxy": 0,
+          "toyfreddy": 0,
+          "toybonnie": 0,
+          "toychica": 0,
+          "mangle": 0,
+          "bb": 20,
+          "golden": 20
+        },
+        "requestedDials": {
+          "withfreddy": 0,
+          "withbonnie": 0,
+          "withchica": 0,
+          "toyfreddy": 0,
+          "toybonnie": 0,
+          "toychica": 0,
+          "mangle": 0,
+          "bb": 20,
+          "golden": 20,
+          "foxy": 0
+        },
+        "requested": "request.json"
+      }
+    }
+  ]
+}

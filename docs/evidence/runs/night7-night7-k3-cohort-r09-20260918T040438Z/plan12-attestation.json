@@ -1,0 +1,168 @@
+{
+  "schema": "plan12-attestation-v2",
+  "status": "PASS",
+  "evidenceId": "night7-night7-k3-cohort-r09-20260918T040438Z",
+  "packSha256": "39dd85c82e61739a64f73008378b2c60991598d1862547c7bb2e0ca021ee7d01",
+  "attestedBy": {
+    "kind": "agent",
+    "delegation": "pedro-2026-09-27",
+    "note": "Claude agent (Opus 5.5), worktree agent-a92b61f0b615f761c, S1 first-promotion session 2026-09-27"
+  },
+  "date": "2026-09-27",
+  "tool": "npm run evidence -- attest",
+  "authority": "plans/12-end-to-end-evidence-campaign.md",
+  "claim": {
+    "id": "claim.fnaf2.night7.10-20.device-6am",
+    "night": 7,
+    "mode": "custom",
+    "dials": {
+      "withfreddy": 20,
+      "withbonnie": 20,
+      "withchica": 20,
+      "foxy": 20,
+      "toyfreddy": 20,
+      "toybonnie": 20,
+      "toychica": 20,
+      "mangle": 20,
+      "bb": 20,
+      "golden": 20
+    },
+    "label": "FNaF 2 Custom Night 10/20 (all ten at 20) reaches 6 AM on the phone (executor-proven)"
+  },
+  "custody": {
+    "kind": "recovered-from-run-log",
+    "lost": [
+      "observations.jsonl",
+      "observer frames",
+      "request.json"
+    ]
+  },
+  "verified": [
+    {
+      "check": "offlineEvidence",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "result.json",
+          "sha256": "8fbfb0b708b0f1efe477c47af20e7ff41ee8c07db3e89e26ccd456b5e5ff3702"
+        }
+      ],
+      "detail": {
+        "mode": "live",
+        "claimLevel": "DEVICE_MEASURED"
+      }
+    },
+    {
+      "check": "terminalPass",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "result.json",
+          "sha256": "8fbfb0b708b0f1efe477c47af20e7ff41ee8c07db3e89e26ccd456b5e5ff3702"
+        },
+        {
+          "name": "events.jsonl",
+          "sha256": "c323764fdb5430b226db18b8efb1b621a00f893ee7797b658e3792db73e95714"
+        },
+        {
+          "name": "run/timeline.json",
+          "sha256": "db13b17e98dc5b16f8a3a62858585bf3d229a3f0c03f8f8f585e17543998b57d"
+        }
+      ],
+      "detail": {
+        "night": 7,
+        "attempt": 1,
+        "proofHash": "fnv1a-a0d52e72",
+        "terminalEventAt": "2026-09-18T04:12:15.882Z",
+        "videoGrade": "clear"
+      }
+    },
+    {
+      "check": "manifestComplete",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "result.json",
+          "sha256": "8fbfb0b708b0f1efe477c47af20e7ff41ee8c07db3e89e26ccd456b5e5ff3702"
+        },
+        {
+          "name": "events.jsonl",
+          "sha256": "c323764fdb5430b226db18b8efb1b621a00f893ee7797b658e3792db73e95714"
+        },
+        {
+          "name": "run/campaign.log",
+          "sha256": "cb51f95509f83b3abaafa02c12d71b0995e94012268150e9851453e9c14b28d1"
+        },
+        {
+          "name": "docs/evidence/custody-recovery-20260925.json",
+          "sha256": "d9c4db2a78efc606f785cd6db7e2fff517ac2421926fc401e525ce91248ab519"
+        }
+      ],
+      "detail": {
+        "custody": "recovered-from-run-log",
+        "lost": [
+          "observations.jsonl",
+          "observer frames",
+          "request.json"
+        ],
+        "recovered": [
+          "events.jsonl",
+          "result.json"
+        ],
+        "recoveryCheck": {
+          "campaigns": 9,
+          "eventsIdentical": 9,
+          "resultsPrinted": 7,
+          "resultsIdentical": 7,
+          "resultsNotPrinted": [
+            "campaign-2026-09-20T01-39-16.104Z (ERROR)",
+            "campaign-2026-09-20T01-02-31.713Z (ERROR)"
+          ]
+        }
+      }
+    },
+    {
+      "check": "winnerCommitted",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "tools/device/campaign-night7-k3-winner.json",
+          "sha256": "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78"
+        }
+      ],
+      "detail": {
+        "winnerHash": "fnv1a-5c8dcb5f",
+        "bundle": "artifacts/night7-anchored-k3/bundle",
+        "winner": "tools/device/campaign-night7-k3-winner.json"
+      }
+    },
+    {
+      "check": "claimIdentity",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "events.jsonl",
+          "sha256": "c323764fdb5430b226db18b8efb1b621a00f893ee7797b658e3792db73e95714"
+        }
+      ],
+      "detail": {
+        "night": 7,
+        "mode": "custom",
+        "observedDials": {
+          "withfreddy": 20,
+          "withbonnie": 20,
+          "withchica": 20,
+          "foxy": 20,
+          "toyfreddy": 20,
+          "toybonnie": 20,
+          "toychica": 20,
+          "mangle": 20,
+          "bb": 20,
+          "golden": 20
+        },
+        "requestedDials": null,
+        "requested": "UNKNOWN (request.json not in the pack)"
+      }
+    }
+  ]
+}

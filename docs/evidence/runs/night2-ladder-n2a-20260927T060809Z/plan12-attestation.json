@@ -1,0 +1,116 @@
+{
+  "schema": "plan12-attestation-v2",
+  "status": "PASS",
+  "evidenceId": "night2-ladder-n2a-20260927T060809Z",
+  "packSha256": "9bb916d70a61de4e92d92ad8d73fdf9e3299988c903586d1d30de4b7ae552d16",
+  "attestedBy": {
+    "kind": "agent",
+    "delegation": "pedro-2026-09-27",
+    "note": "Claude agent (Opus 5.5), worktree agent-a92b61f0b615f761c, S1 first-promotion session 2026-09-27"
+  },
+  "date": "2026-09-27",
+  "tool": "npm run evidence -- attest",
+  "authority": "plans/12-end-to-end-evidence-campaign.md",
+  "claim": {
+    "id": "claim.fnaf2.night2.device-6am",
+    "night": 2,
+    "mode": "story",
+    "label": "FNaF 2 Night 2 reaches 6 AM on the phone (executor-proven)"
+  },
+  "custody": {
+    "kind": "original",
+    "lost": []
+  },
+  "verified": [
+    {
+      "check": "offlineEvidence",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "result.json",
+          "sha256": "ed16ad597d37a176c7bdde1ac40ffeb19dcfc328272e06b109a688b34b9dcb1e"
+        }
+      ],
+      "detail": {
+        "mode": "live",
+        "claimLevel": "DEVICE_MEASURED"
+      }
+    },
+    {
+      "check": "terminalPass",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "result.json",
+          "sha256": "ed16ad597d37a176c7bdde1ac40ffeb19dcfc328272e06b109a688b34b9dcb1e"
+        },
+        {
+          "name": "events.jsonl",
+          "sha256": "a3d9858d0ee33782c26acfea5e72fa60dc99d5e350b6d05cb922f44073ffe2c3"
+        }
+      ],
+      "detail": {
+        "night": 2,
+        "attempt": 1,
+        "proofHash": "fnv1a-5ec627c0",
+        "terminalEventAt": "2026-09-27T06:15:41.666Z",
+        "videoGrade": "none packed (the executor terminal stands alone)"
+      }
+    },
+    {
+      "check": "manifestComplete",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "result.json",
+          "sha256": "ed16ad597d37a176c7bdde1ac40ffeb19dcfc328272e06b109a688b34b9dcb1e"
+        },
+        {
+          "name": "events.jsonl",
+          "sha256": "a3d9858d0ee33782c26acfea5e72fa60dc99d5e350b6d05cb922f44073ffe2c3"
+        },
+        {
+          "name": "request.json",
+          "sha256": "6932bb5e69b454e8a96ec32e0ec06a307b62ff1d70244b72181ecef95b83517c"
+        }
+      ],
+      "detail": {
+        "custody": "original",
+        "lost": []
+      }
+    },
+    {
+      "check": "winnerCommitted",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "tools/device/campaign-toys-nights1-2-winner.json",
+          "sha256": "7e67e7085fd563cd441a3e99d33be1dc11b4d9690e117e2559ab6b205fe6cb83"
+        }
+      ],
+      "detail": {
+        "winnerHash": "fnv1a-e75e1b68",
+        "bundle": "artifacts/ladder-20260927/n12",
+        "winner": "tools/device/campaign-toys-nights1-2-winner.json"
+      }
+    },
+    {
+      "check": "claimIdentity",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "events.jsonl",
+          "sha256": "a3d9858d0ee33782c26acfea5e72fa60dc99d5e350b6d05cb922f44073ffe2c3"
+        },
+        {
+          "name": "request.json",
+          "sha256": "6932bb5e69b454e8a96ec32e0ec06a307b62ff1d70244b72181ecef95b83517c"
+        }
+      ],
+      "detail": {
+        "night": 2,
+        "mode": "story"
+      }
+    }
+  ]
+}

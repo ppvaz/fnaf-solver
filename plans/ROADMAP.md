@@ -46,31 +46,39 @@ fifteen days because it was written down instead of read.
 
 - **Closes when** `docs/evidence/graph.json` holds a promotion edge for a packed
   win, and every committed winner's run is packed.
-- **Artifact:** Pedro's `plan12-attestation.json` over a run pack (human-only,
-  and agents never write one), and his decision on whether a pack recovered
-  from its night-run log, which has lost `request.json`, can carry one.
-- **Stands** (updated later on 2026-09-25):
-  - 83 run packs under `docs/evidence/runs/`, 39 of them wins. Two wins with
-    their original directories pass every check except the attestation. The
-    other 37 were recovered from `campaign.log` and fail `manifestComplete`.
-    The recovery is byte-identical where it can be checked
+- **Artifact:** a `plan12-attestation.json` over a run pack and the
+  `PROMOTED_BY` edge `promote` records for it. Since Pedro's two decisions of
+  2026-09-27 (gate table below), an agent may write the attestation, only
+  through `npm run evidence -- attest`, and a pack recovered from its night-run
+  log is accepted fully while it still names what it lost.
+- **Stands** (2026-09-27):
+  - **47 promotion edges** in `docs/evidence/graph.json`, one per
+    executor-proven 6 AM whose winner is committed: Nights 1-4 two each,
+    Night 5 seven, Night 6 eight, Night 7 24 (21 at 10/20, one at BB+Foxy 20,
+    two at BB+Golden 20). 36 are recovered custody. All were attested by an
+    agent under delegation `pedro-2026-09-27`
+    ([promotions](../docs/evidence/plan12-promotions-20260927.json)).
+  - 180 run packs under `docs/evidence/runs/`, 48 of them executor wins. The
+    refused win is `night7-n7-420-minimal-m3`: the Night 7 4/20 Minus 3 winner
+    is held back by `test-seam-slack.mjs`, and its pack holds no dial readback.
+    The video-only 6 AMs `night5-anchor4` and `night5-perfetto1` fail
+    `terminalPass` and are not promoted.
+  - The recovery is byte-identical where it can be checked
     ([custody recovery](../docs/evidence/custody-recovery-20260925.json)).
-  - Night 5 `contact-final`, Night 6 `h` and Night 7 `k2` are packed from this
-    machine; no peer machine is needed for them.
   - k3 8/10 and k2 3/10, computed from packs, reproduce the hand records' winning
     slots ([k3](../docs/evidence/night7-cohort-k3-computed-20260925.json),
-    [k2](../docs/evidence/night7-cohort-k2-computed-20260925.json)).
-  - **0 promotion edges.**
-  - **Decided by Pedro, 2026-09-27:** a pack recovered from a night-run log (it
-    has lost `request.json` and fails `manifestComplete`) cannot carry an
-    attestation. Only the two original-directory wins are eligible:
-    `night5-n5-armblock-20260920T004056Z` (pack sha256 `4c9ea13a...`) and
-    `night6-n6h2-01-20260920T024030Z` (`20c626f9...`). Each passes every check
-    but the attestation, and S1 closes on Pedro's `plan12-attestation.json`
-    for either one.
-  - `UNTRACKED_WINNER_DEBT` 1 of 1 (Night 6 `a` no longer rebuilds).
+    [k2](../docs/evidence/night7-cohort-k2-computed-20260925.json)). A
+    promotion is one clear, not a reliability claim.
+  - **Open:** two committed MODEL_ONLY winners
+    (`campaign-night1-minus7-winner.json`, `campaign-toys-night5-winner.json`)
+    have no pack naming their hash. `UNTRACKED_WINNER_DEBT` is 1 of 1 (Night 6
+    `a` no longer rebuilds).
+  - **Superseded the same day:** at 16:30 on 2026-09-27 Pedro had chosen
+    "originals only" (a recovered pack cannot carry an attestation; `97b8fd2`).
+    Later that day he chose "Accept fully" and delegated attestation to agents
+    (gate table below); the later decision is the one in force.
   - No k2 or k3 video exists on this machine, by name or by content hash.
-  - Read with `npm run evidence -- list` and `npm run evidence -- promote <run>`.
+  - Read with `npm run evidence -- promotions`, `list`, and `promote <run>`.
 - **Absorbs** Plans 09 and 12.
 
 ### S2: Fidelity at the level of encounters
@@ -365,7 +373,9 @@ host-side records land in `docs/evidence/`, which it already accepts. A host
 result never stands in for a device claim, and the labels `MODEL_ONLY`, `FIXTURE`
 and `DEVICE_MEASURED` still do not promote one another.
 
-## Gates changed on 2026-09-25
+## Gates changed
+
+Rows are from 2026-09-25 unless they carry another date.
 
 | Gate | Where | Why it had to change | Now |
 |---|---|---|---|
@@ -382,6 +392,8 @@ and `DEVICE_MEASURED` still do not promote one another.
 | `PROGRESS.md` dashboard and counting rule | `PROGRESS.md` | Measured completion of written plans (31%), not progress. Stale since 2026-09-04, and its "next gate" column named archived commands. | **Archived** to [`archive/PROGRESS-dashboard-2026-09-04.md`](archive/PROGRESS-dashboard-2026-09-04.md). The steps above replace it. |
 | The 2026-09-02 roadmap | `plans/ROADMAP.md` | Had declared itself superseded on 2026-09-17 | **Archived.** |
 | Fixture service path and the `device:dry-run` CI lane | CI, `CLAUDE.md` | Played no nights | Retired the same day in `6d78c7e`. CI now runs the campaign dry run over a committed winner. |
+| "Agents never write `plan12-attestation.json`"; the attestation was "a person's file" | `CLAUDE.md` S1, `docs/evidence/README.md`, Plan 12, this file's S1 artifact, `tools/evidence-campaign.mjs` | **2026-09-27, Pedro:** "i give agents full permission, this is bullshit bureaucracy that is impeding progress". It held every executor-proven 6 AM one check short of promotion. | **Loosened.** An agent may write the attestation under delegation `pedro-2026-09-27`, and only through `npm run evidence -- attest`, which re-derives every other check from the pack and refuses to write on any failure. `plan12-attestation-v2` names its author (`attestedBy: {kind: 'agent', delegation, note}`, or a person by name), binds the pack sha256, and lists each check verified with the sha256 of its inputs. `promote` records a `PROMOTED_BY` edge in `docs/evidence/graph.json` naming the author and the custody, and `list`/`show` print both. The delegation covers attestations only: `PEDRO-OK` stays human-only and no agent bypasses a hook. |
+| `manifestComplete` requires `request.json`, so a pack recovered from its night-run log could not be promoted; recorded as "Pedro's decision" | `packPromotionChecks` (`tools/evidence-pack.mjs`), `CLAUDE.md` S1, this file's S1 | **2026-09-27, Pedro**, on recovered packs: "Accept fully". | **Loosened.** A recovered pack's manifest is complete when its result and events came back, the log it cites is withheld under the same sha256, the recovery check it cites is byte-identical, and its `lost` list is present (`packManifestComplete`). The `lost` list stays in the pack, the attestation, the edge and every reading. |
 
 **Kept, because they serve the path:**
 

@@ -84,32 +84,43 @@ The 2026-09-06 standing directive ("laser-focus on 6 AM successes on-device;
 nothing outranks the next graded run bundle") is replaced by the path. Its
 target survives in it: promotion of what is won is S1 and comes first, Night 7
 reliability is S4. Nights 1-7 have all reached 6 AM on the phone; the best
-Night 7 cohort is k3's 8 of 10, and no result has a promotion edge yet.
+Night 7 cohort is k3's 8 of 10, and since 2026-09-27, 47 won nights carry a
+Plan 12 promotion edge (S1 below).
 
-**S1 — promotion waits on an attestation and a custody decision (measured
-2026-09-25).** `npm run evidence -- pack <run>` commits a live night's text
-evidence to `docs/evidence/runs/<run>/` with every frame and recording named by
-sha256 only, and `night-run.sh` packs each campaign it runs: commit the
-directory. `list`, `show` and `promote` read packs on any checkout. Campaign
-directories that are gone are recovered from the night-run's `campaign.log`,
-which captured the CLI's event rows and printed result byte for byte (9 of 9 and
-7 of 7 on the campaigns that still have both,
-`docs/evidence/custody-recovery-20260925.json`); such a pack names its custody
-and what is lost. 83 packs are committed: all 39 executor-proven 6 AMs whose
-evidence survives on this machine (Nights 1-7), every k2 and k3 cohort slot
-(computed from packs with `npm run evidence -- cohort`: 3/10 and 8/10, the hand
-records' winning slots), the registered bindings' runs, and two nights whose
-video shows 6 AM and whose executor did not (`night5-anchor4`,
-`night5-perfetto1`). Two packed wins kept their original directories
-(`night5-n5-armblock-20260920T004056Z`, `night6-n6h2-01-20260920T024030Z`) and
-pass four of the five checks, waiting only for Pedro's `plan12-attestation.json`
-(agents never write one). The recovered wins also fail `manifestComplete`,
-because `request.json` was never logged: whether Plan 12 accepts a recovered
-pack is Pedro's decision. No k2 or k3 video exists on this machine by name or by
-content hash. 26 `winner-v1` bindings are committed and rebuild
-(`test-winners-rebuild.mjs`); `UNTRACKED_WINNER_DEBT` is 1 of 1, Night 6 `a`,
-whose winner was found but no longer rebuilds. The Night 7 4/20 Minus 3 winner
-is held back because `test-seam-slack.mjs` refuses its 0 ms margin.
+**S1 — the first promotion edges (2026-09-27).** `npm run evidence -- pack
+<run>` commits a live night's text evidence to `docs/evidence/runs/<run>/` with
+every frame and recording named by sha256 only, and `night-run.sh` packs each
+campaign it runs: commit the directory. `list`, `show`, `promote` and
+`promotions` read packs on any checkout. Campaign directories that are gone are
+recovered from the night-run's `campaign.log`, which captured the CLI's event
+rows and printed result byte for byte (9 of 9 and 7 of 7 on the campaigns that
+still have both, `docs/evidence/custody-recovery-20260925.json`); such a pack
+names its custody and what is lost. **Pedro's decisions, 2026-09-27:** a
+recovered pack is accepted fully ("Accept fully"): it passes `manifestComplete`
+and still names what it lost. And agents may write `plan12-attestation.json`
+("i give agents full permission, this is bullshit bureaucracy that is impeding
+progress"), but only through `npm run evidence -- attest <run> --by agent --note
+"<session>"`, which re-derives every other check from the pack, refuses on any
+failure, and writes `plan12-attestation-v2` naming its author and each check
+verified with its inputs' sha256. The delegation covers attestations only;
+`PEDRO-OK` and the hook rules above stand. `promote` then records a
+`PROMOTED_BY` edge in `docs/evidence/graph.json` naming who attested and the
+custody. **Promoted:** 47 of the 48 executor-proven 6 AMs among the 180 packs
+(`plan12-promotions-fnv1a-baa38db1`, `docs/evidence/plan12-promotions-20260927.json`):
+Nights 1-4 two each, Night 5 seven, Night 6 eight, and Night 7 24: 21 at 10/20,
+one at BB+Foxy 20, two at BB+Golden 20. 36 of them are recovered custody. All
+were attested by an agent under the delegation. Refused: the Night 7 4/20 Minus
+3 win `night7-n7-420-minimal-m3`, because its winner is held back
+(`test-seam-slack.mjs` refuses its 0 ms margin) and its pack holds no dial
+readback. Every death, lost result and FNaF 1 run is refused too, and the
+video-only 6 AMs `night5-anchor4` and `night5-perfetto1` fail `terminalPass`.
+A promotion is one clear, not a reliability claim. Open for S1: two committed
+MODEL_ONLY winners (`campaign-night1-minus7-winner.json`,
+`campaign-toys-night5-winner.json`) have no pack naming their hash. No k2 or k3
+video exists on this machine by name or by content hash. The 26 committed
+`winner-v1` bindings rebuild (`test-winners-rebuild.mjs`).
+`UNTRACKED_WINNER_DEBT` is 1 of 1: Night 6 `a`, whose winner was found but no
+longer rebuilds.
 
 ## Sensors and on-device code (Pedro, 2026-09-24/25 — start here, not with the old sensors)
 

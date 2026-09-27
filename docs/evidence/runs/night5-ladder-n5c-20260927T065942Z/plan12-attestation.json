@@ -1,0 +1,116 @@
+{
+  "schema": "plan12-attestation-v2",
+  "status": "PASS",
+  "evidenceId": "night5-ladder-n5c-20260927T065942Z",
+  "packSha256": "bb178aa5c6dec33831b5b20ff6c5ffa5bd76ccb1732c1765ada71307859ef0cc",
+  "attestedBy": {
+    "kind": "agent",
+    "delegation": "pedro-2026-09-27",
+    "note": "Claude agent (Opus 5.5), worktree agent-a92b61f0b615f761c, S1 first-promotion session 2026-09-27"
+  },
+  "date": "2026-09-27",
+  "tool": "npm run evidence -- attest",
+  "authority": "plans/12-end-to-end-evidence-campaign.md",
+  "claim": {
+    "id": "claim.fnaf2.night5.device-6am",
+    "night": 5,
+    "mode": "story",
+    "label": "FNaF 2 Night 5 reaches 6 AM on the phone (executor-proven)"
+  },
+  "custody": {
+    "kind": "original",
+    "lost": []
+  },
+  "verified": [
+    {
+      "check": "offlineEvidence",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "result.json",
+          "sha256": "991b2630d941a94643f1272f25c2e457e8b004d5eee61f9529e9b6b848d18e4b"
+        }
+      ],
+      "detail": {
+        "mode": "live",
+        "claimLevel": "DEVICE_MEASURED"
+      }
+    },
+    {
+      "check": "terminalPass",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "result.json",
+          "sha256": "991b2630d941a94643f1272f25c2e457e8b004d5eee61f9529e9b6b848d18e4b"
+        },
+        {
+          "name": "events.jsonl",
+          "sha256": "677f51fc8d97b1133213b0931fabf9989259b168a079b1d990322cab81b300f9"
+        }
+      ],
+      "detail": {
+        "night": 5,
+        "attempt": 1,
+        "proofHash": "fnv1a-e017f7c9",
+        "terminalEventAt": "2026-09-27T07:07:16.432Z",
+        "videoGrade": "none packed (the executor terminal stands alone)"
+      }
+    },
+    {
+      "check": "manifestComplete",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "result.json",
+          "sha256": "991b2630d941a94643f1272f25c2e457e8b004d5eee61f9529e9b6b848d18e4b"
+        },
+        {
+          "name": "events.jsonl",
+          "sha256": "677f51fc8d97b1133213b0931fabf9989259b168a079b1d990322cab81b300f9"
+        },
+        {
+          "name": "request.json",
+          "sha256": "325dd7cdf910066aa9e57abc4c0523509c90f7dc99281a3d28173f8deb6eb0f2"
+        }
+      ],
+      "detail": {
+        "custody": "original",
+        "lost": []
+      }
+    },
+    {
+      "check": "winnerCommitted",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "tools/device/campaign-night5-mask5plus-winner.json",
+          "sha256": "637e1f2d4a3844816ea4467dd7fa384358865b29e9267405541c2063b479a8f5"
+        }
+      ],
+      "detail": {
+        "winnerHash": "fnv1a-4a7ea155",
+        "bundle": "artifacts/ladder-20260927/n5m",
+        "winner": "tools/device/campaign-night5-mask5plus-winner.json"
+      }
+    },
+    {
+      "check": "claimIdentity",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "events.jsonl",
+          "sha256": "677f51fc8d97b1133213b0931fabf9989259b168a079b1d990322cab81b300f9"
+        },
+        {
+          "name": "request.json",
+          "sha256": "325dd7cdf910066aa9e57abc4c0523509c90f7dc99281a3d28173f8deb6eb0f2"
+        }
+      ],
+      "detail": {
+        "night": 5,
+        "mode": "story"
+      }
+    }
+  ]
+}

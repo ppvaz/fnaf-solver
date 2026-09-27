@@ -2340,14 +2340,29 @@
       ]
     },
     {
+      "file": "tools/evidence-promotion.mjs",
+      "imports": [
+        "../apps/device/src/campaign-proof.js",
+        "./evidence-campaign.mjs",
+        "./evidence-pack.mjs",
+        "@fnaf2-1020/core/contracts",
+        "@fnaf2-1020/core/mechanics",
+        "node:crypto",
+        "node:fs",
+        "node:path"
+      ]
+    },
+    {
       "file": "tools/evidence.js",
       "imports": [
         "./device/bundle.mjs",
         "./evidence-campaign.mjs",
         "./evidence-cohort.mjs",
         "./evidence-pack.mjs",
+        "./evidence-promotion.mjs",
         "@fnaf2-1020/core/contracts",
         "@fnaf2-1020/research",
+        "node:fs",
         "node:fs/promises",
         "node:os",
         "node:path",
@@ -3090,6 +3105,20 @@
       "imports": [
         "./evidence-campaign.mjs",
         "./evidence-pack.mjs",
+        "@fnaf2-1020/core/contracts",
+        "node:assert/strict",
+        "node:crypto",
+        "node:fs",
+        "node:os",
+        "node:path"
+      ]
+    },
+    {
+      "file": "tools/test-evidence-promotion.mjs",
+      "imports": [
+        "./evidence-campaign.mjs",
+        "./evidence-pack.mjs",
+        "./evidence-promotion.mjs",
         "@fnaf2-1020/core/contracts",
         "node:assert/strict",
         "node:crypto",
