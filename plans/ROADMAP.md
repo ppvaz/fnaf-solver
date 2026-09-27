@@ -116,12 +116,14 @@ Details:
     `being attacked by` = 4 from office update 23400
     ([record](../tools/recompile/results/night5-contact-final-replay-e616c431.json),
     `recompile-replay-232b3f74c48dc27a`).
-    Every monitor and mask contact lands in both. Under the rebuild option set
-    The draw streams of Night 1 and Night 7 match on all 25,201 office updates
-    (MATCHED_PREFIX, `recompile-replay-9afa326eef818737`,
-    `recompile-replay-53fe6fd991029473`), and Night 5's first differs at 22241.
-    MODEL_ONLY
-    ([k3 replay](../tools/recompile/results/night7-k3-replay-exposure-20260927.json)).
+    Every monitor and mask contact lands in both. Under the rebuild option set the
+    draw streams of Night 1 and Night 7 match on all 25,201 office updates
+    (MATCHED_PREFIX, `recompile-replay-afb6a9d36d6a2ba6`,
+    `recompile-replay-1435024cd7ce7fb0`), and Night 5's matches to its terminal
+    loop, the model dying to Withered Foxy on update 23400, where the rebuild
+    writes `being attacked by` = 4 (`recompile-replay-7e8f8aeb1b5c78fb`).
+    MODEL_ONLY, not equivalence
+    ([k3 replay](../tools/recompile/results/night7-k3-replay-routeviews-20260927.json)).
 - **Absorbs** Plan 17 (route 5), Plan 25 horizon 2, and the model parts of
   Plans 15 and 19.
 

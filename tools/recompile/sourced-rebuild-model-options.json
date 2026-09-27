@@ -42,5 +42,6 @@
   "sourcedAnimationCount": true,
   "sourcedGatedEvery": true,
   "sourcedBBMoves": true,
-  "sourcedExposureValue5": true
+  "sourcedExposureValue5": true,
+  "sourcedRouteViewDraws": true
 }

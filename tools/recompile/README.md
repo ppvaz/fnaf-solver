@@ -1433,3 +1433,38 @@ stream match, not an event or state equivalence.
 | Night 1 `minimal` | none -> none | `night1-minimal-replay-exposure-20260927.json`, `recompile-replay-9afa326eef818737` |
 | Night 5 `contact-final` | 22241 -> 22241 | `night5-contact-final-replay-exposure-20260927.json`, `recompile-replay-8f538b5f4e59ac8a` |
 | Night 7 `k3` | 20449 -> **none** (25,201 of 25,201 updates) | `night7-k3-replay-exposure-20260927.json`, `recompile-replay-53fe6fd991029473` |
+
+**The Toy view draws inside the move pass (`sourcedRouteViewDraws`,
+`packages/core/test/route-view-draws.test.js`).** Night 5 tick 22241: one more
+rebuild draw on the loop Toy Bonnie was promoted and moved off CAM 09. Instance
+dumps before and after 22241 show him leave CAM 09 for CAM 03 while `your view`,
+on CAM 09, takes value 1 = 134: g366's `50 + Random(100)`. g366 and g368 sit
+among the value 1 drains g361-g371, between the promotions and the moves, and
+g419 sits after Balloon Boy's moves and before Toy Freddy's (g420-g423). So a Toy
+promoted and moved off the viewed camera on one loop still draws where it
+stood. The model drew all three in the per-second pass, after every move. Under
+the option (requires `sourcedRoutePass` and `sourcedPromotedViewDraws`) they run
+inside the route pass, whose moves then follow the sheet: the Withereds, Mangle,
+Balloon Boy, g419, then Toy Freddy, Toy Bonnie and Toy Chica. The no-input
+ladder re-scores unchanged.
+
+Night 5 `contact-final` is now `MATCHED_TO_TERMINAL_LOOP`. Every update matches
+up to the model's kill: Withered Foxy on office update 23400, the update on
+which the rebuild writes `being attacked by` = 4 (the retained counter-watch run
+on `e616c431`, same draw projection, read through `--counter-trace`). The
+rebuild then plays its 23-update attack animation. The model kills on the
+write, as the counter-watch section above describes. Nights 1 and 7 still match
+every update.
+
+| binding | first mismatch before -> after | record |
+|---|---|---|
+| Night 1 `minimal` | none -> none | `night1-minimal-replay-routeviews-20260927.json`, `recompile-replay-afb6a9d36d6a2ba6` |
+| Night 5 `contact-final` | 22241 -> **23400, the terminal loop** (both die to Withered Foxy) | `night5-contact-final-replay-routeviews-20260927.json`, `recompile-replay-7e8f8aeb1b5c78fb` |
+| Night 7 `k3` | none -> none | `night7-k3-replay-routeviews-20260927.json`, `recompile-replay-1435024cd7ce7fb0` |
+
+Scope for this whole section: one seed (24850), three committed bindings, the
+retained host rebuild traces, MODEL_ONLY with `rebuilt-runtime` fidelity. A
+matched draw stream is necessary for, not proof of, event and state
+equivalence. No phone claim, no promotion, no default changed. The dated
+option snapshots (`-20260927a`, `-20260927b`) are unchanged; a census of the
+current set would be a new record.

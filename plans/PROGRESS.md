@@ -2302,5 +2302,15 @@ Open:
   with every monitor and mask ledger change at +0 (MATCHED_PREFIX, `recompile-replay-53fe6fd991029473`); Night 1
   likewise (`recompile-replay-9afa326eef818737`); Night 5 stays 22241 (`recompile-replay-8f538b5f4e59ac8a`).
 
+- `sourcedRouteViewDraws` (`route-view-draws.test.js`, in the rebuild set): g366/g368 run between the promotions and
+  the moves, g419 before Toy Freddy's moves, and the moves follow the sheet's order. Night 5 `contact-final` now
+  matches to its terminal loop: the model dies to Withered Foxy on office update 23400, the update the rebuild
+  writes `being attacked by` = 4 (MATCHED_TO_TERMINAL_LOOP, `recompile-replay-7e8f8aeb1b5c78fb`). Nights 1 and 7
+  still match every update (`recompile-replay-afb6a9d36d6a2ba6`, `recompile-replay-1435024cd7ce7fb0`).
+
 Open:
-- Night 5 22241: Toy Bonnie's g366 view draw on the loop he leaves CAM 09 (g366 sits before the moves).
+- The three replays are stream matches, not event or state equivalence; one seed, three bindings, host only.
+- Night 5's first raise on office tick 0, which the rebuild takes one update late (the only ledger change off +0).
+- The rebuild's Foxy attack ends on its animation (23 updates after the write); the model kills on the write.
+- Nothing here is checked against the phone; the per-cycle ledger against a k2/k3 recording still needs a video.
+- A census under the new rebuild set (the 2026-09-27a/b snapshots score the older sets).

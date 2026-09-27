@@ -13,6 +13,8 @@ const SOURCED_HOUR0_GOLDEN = /** @type {Record<number, number>} */ ({ 3: 1000, 4
 const FOOTSTEP_CAM_NODES = /** @type {Set<string | number>} */ (new Set([1, 2, 3, 4, 'blindA', 'blindB']));
 // sourcedOfficeFootsteps: the route units whose sprite on `in office` (122) overlaps `hear footsteps`.
 const OFFICE_FOOTSTEP_IDS = new Set(['withbonnie', 'toybonnie', 'mangle']);
+// sourcedRouteViewDraws: the move groups' sheet order (g374-g435), with Balloon Boy's (g413-g418) and g419 in place.
+const ROUTE_MOVE_ORDER = ['withfreddy', 'withbonnie', 'withchica', 'mangle', 'bb', 'g419', 'toyfreddy', 'toybonnie', 'toychica'];
 const MON_DOWN = 'down', MON_RAISING = 'raising', MON_UP = 'up', MON_LOWERING = 'lowering';
 // sourcedValue5: g1236's divisor, the Double token decoded as 32.32 fixed as the Android runtime reads it.
 const VALUE5_DIVISOR = 71582788266 / 2 ** 32;
@@ -343,6 +345,15 @@ export class Sim {
       // the wrong place (Night 7 k3 tick 6600 in the rebuilt runtime). On: the roll marks the hop, the route pass makes
       // it after the other moves, and the redraw waits for g611's place.
       sourcedBBMoves: false,
+      // The Toy view draws and the moves in sheet order (requires sourcedRoutePass and sourcedPromotedViewDraws). g366
+      // and g368 (Toy Bonnie's and Toy Chica's Random(100) while value 0 == 2 under your view with a camera up) sit
+      // between the promotions and the moves, among the value 1 drains g361-g371; g419 (Toy Freddy's) sits after
+      // Balloon Boy's moves g413-g418 and before Toy Freddy's own g420-g423. So a Toy promoted and moved off the viewed
+      // camera on one loop still draws there (Night 5 contact-final tick 22241 in the rebuilt runtime: Toy Bonnie
+      // leaves CAM 09 with your view on it). The model drew them in the per-second pass, after every move. On: they
+      // run inside the route pass, whose moves then follow the sheet: the Withereds (g374-g388), Mangle (g391-g399),
+      // Balloon Boy (g413-g418), g419, then Toy Freddy, Toy Bonnie and Toy Chica (g420-g435).
+      sourcedRouteViewDraws: false,
       // Mangle's mask leaves (dump g400: the 10%/s roll under the mask; g401: five mask ticks) place her at
       // CAM 7 (marker 62), three hops from the vent, not at the route start the unit table's repelIdx 0 gives.
       // Every other unit's repelIdx matches its dump endpoint (g538-g555, g213, g437, g439/g440, g292/g294).
@@ -525,6 +536,8 @@ export class Sim {
       throw new Error('sourcedFoxyChain reads the hall latch: it requires sourcedDropLightOrder');
     if (this.opts.sourcedRoutePass && !(this.opts.sourcedPromotedMoves && this.opts.sourcedRollsBeforeMoves))
       throw new Error('sourcedRoutePass splits promotion from move: it requires sourcedPromotedMoves and sourcedRollsBeforeMoves');
+    if (this.opts.sourcedRouteViewDraws && !(this.opts.sourcedRoutePass && this.opts.sourcedPromotedViewDraws))
+      throw new Error('sourcedRouteViewDraws draws inside the route pass: it requires sourcedRoutePass and sourcedPromotedViewDraws');
     if (this.opts.sourcedBBMoves && !this.opts.sourcedRoutePass)
       throw new Error('sourcedBBMoves hops Balloon Boy in the route pass: it requires sourcedRoutePass');
     if (this.opts.sourcedDropFlagOrder && !this.opts.sourcedDropLightOrder)
@@ -1180,7 +1193,7 @@ export class Sim {
       } }
     if (this.bb.inOpening && mask2 && every('292', 1000) && one(10)) { this.rng.int(0, 3, 0); this.bbLeave(); }   // g292
     if (this.bb.inOpening && this.bb.maskTicks >= C.VENT_MASK_TICKS && mask2) { this.rng.int(0, 3, 0); this.bbLeave(); }   // g294
-    if (views) { this.drawViewed(f, 'g366'); this.drawViewed(f, 'g368'); }
+    if (views && !this.opts.sourcedRouteViewDraws) { this.drawViewed(f, 'g366'); this.drawViewed(f, 'g368'); }
     { const u = unit('mangle');
       if (at122(u) && mask2 && every('400', 1000) && one(10)) { this.rng.int(0, 3, 0); this.unitLeave(u); }       // g400
       if (at122(u) && u.maskExposureTicks >= 5 && mask2) { this.rng.int(0, 3, 0); this.unitLeave(u); } }          // g401
@@ -1188,7 +1201,7 @@ export class Sim {
       this.puppet.pending = false;                                                     // g403-g411
       this.advancePuppet();
     }
-    if (views) this.drawViewed(f, 'g419');
+    if (views && !this.opts.sourcedRouteViewDraws) this.drawViewed(f, 'g419');
     { const u = unit('toybonnie');
       const overlays = this.units.some(x => (x.id === 'toybonnie' || x.id === 'toychica') && x.officeCue);
       if (at122(u) && mask2 && !this.blackout.active && !overlays && every('436', 500) && one(2))
@@ -2196,18 +2209,26 @@ export class Sim {
       this.footstepPromote(u, false);
       if (this.sourcedRouteStep(u, f, 'promote') === 'discard') { u.pending = false; u.promoted = false; }
     }
-    for (const u of this.units) {
-      if (!waiting(u)) continue;
+    const views = this.opts.sourcedRouteViewDraws && this.opts.sourcedViewDraws;
+    if (views) { this.drawViewed(f, 'g366'); this.drawViewed(f, 'g368'); }             // among g361-g371, before the moves
+    const order = views ? ROUTE_MOVE_ORDER : [...this.units.map(u => u.id), 'bb'];
+    for (const id of order) {
+      if (id === 'g419') { if (views) this.drawViewed(f, 'g419'); continue; }
+      if (id === 'bb') {
+        if (this.opts.sourcedBBMoves && this.bb.hopDue) {                               // g413-g418
+          this.bb.hopDue = false;
+          if (this.bb.stage === C.BB_STAGES - 1) {
+            if (this.monitor === MON_UP) this.bbEnterOpening();
+            else this.bb.pending = true;
+          } else this.bbHop();
+        }
+        continue;
+      }
+      const u = /** @type {any} */ (this.units.find(x => x.id === id));
+      if (!u || !waiting(u)) continue;
       const step = this.sourcedRouteStep(u, f, 'move');
       if (step === 'returned') { u.pending = false; u.promoted = false; }
       else if (step !== 'hold' && this.canAdvance(u, f)) { u.pending = false; this.advance(u); }
-    }
-    if (this.opts.sourcedBBMoves && this.bb.hopDue) {                                   // g413-g418
-      this.bb.hopDue = false;
-      if (this.bb.stage === C.BB_STAGES - 1) {
-        if (this.monitor === MON_UP) this.bbEnterOpening();
-        else this.bb.pending = true;
-      } else this.bbHop();
     }
   }
 
