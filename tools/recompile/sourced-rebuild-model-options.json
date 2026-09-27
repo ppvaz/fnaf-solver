@@ -29,5 +29,6 @@
   "sourcedCustomDialOrder": true,
   "sourcedCam8Cancel": true,
   "sourcedPromotedViewDraws": true,
-  "sourcedDropFlagOrder": true
+  "sourcedDropFlagOrder": true,
+  "sourcedHallLatchOrder": true
 }

@@ -730,6 +730,24 @@
       }
     },
     {
+      "id": "packages/core/test/hall-latch-order.test.js",
+      "lane": "test:unit",
+      "owner": "@fnaf2-1020/core",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "packages/core/test/last-view-pause.test.js",
       "lane": "test:unit",
       "owner": "@fnaf2-1020/core",

@@ -873,6 +873,28 @@ which the drop-slip work also left open. After it, the streams no longer rejoin
 the way they did with the drop slip in place. That draw is the next Night 7
 target.
 
+**The hall-light latch order.** Night 7's first mismatch (tick 600) was one
+footstep draw spent a loop apart. In the rebuild, Withered Bonnie is promoted on
+the roll's loop (value 0 = 2, value 2 = 9) but reaches hall stage 1 a loop later.
+The counter watch shows `viewing hall light` at 1 from the light press at 590
+through tick 599, and 0 at the end of 600.
+
+g381 (CAM 07 to hall stage 1) needs that latch at 0. g488 (Every 1000 ms)
+clears it and g489 re-sets it while lit, both after the moves g380-g383. So a
+move on the boundary loop still sees 1. The model's hooked clock cleared its
+latch at the top of the tick, before the rolls and moves.
+
+`sourcedHallLatchOrder` (default off, `hall-latch-order.test.js`) defers the
+reset, and the re-assert while a light is held, to just after the moves. It is
+in the rebuild set now; the no-input ladder is unchanged.
+`*-replay-latch-20260927.json`:
+
+| binding | first mismatch | persistent split | matched before it | runs |
+|---|---|---|---|---|
+| Night 1 `minimal` | 21714 | 25200, the last update | 24,899 | 3 |
+| Night 5 `contact-final` | 7200 (was 1800) | 17675 | 7,204 | 5 |
+| Night 7 `k3` | 900 (was 600) | 20791 (was 3845) | 923 | 12 |
+
 **Font atlas.** Pedro saw lowercase n drawn as a filled square in the bold
 preset names ("New and Shiny", "Cupcake Challenge", "Golden Freddy"). The bank's
 glyph is sound. Chowdren's `FTTextureFont` checked for the end of a row after

@@ -2104,3 +2104,33 @@ Open:
   never meets this Foxy because the streams split at 617.
 - The per-cycle ledger against a phone recording (no k2/k3 video on this
   machine).
+
+**2026-09-27 (evening, later): the replays hold to most of a night.**
+
+- **S2b, MODEL_ONLY, rebuilt-runtime fidelity.**
+  - `sourcedDropFlagOrder` (merged from its agent) and a new
+    `sourcedHallLatchOrder` join `sourcedPromotedViewDraws` in the rebuild set.
+    The latch option clears g488 and re-asserts g489 after the route moves
+    g380-g383, as the sheet orders them. Each is default off and tested, and
+    the no-input ladder is unchanged.
+  - The three winner schedules now match the rebuild update for update much
+    further:
+
+    | binding | first mismatch | persistent split | evidence |
+    |---|---|---|---|
+    | Night 1 `minimal` | 21714 | 25200, its last update | `recompile-replay-98245eaf62371617` |
+    | Night 5 `contact-final` | 7200 | 17675 | `recompile-replay-e8ef12a81ecae325` |
+    | Night 7 `k3` | 900 | 20791 | `recompile-replay-c70889660e5d8cad` |
+
+  - The rebuild now names Night 5's killer itself: Withered Foxy via g571, from
+    the harness's new Counter watch (`recompile-replay-232b3f74c48dc27a`).
+    After the split the model plays a different night and wins.
+- **The recompile as an APK:** built on this host, 131 MB, for Pedro's phone
+  only. It installs once the device agent releases the phone.
+
+Open:
+- Night 7's next difference at 900 and Night 5's at 7200.
+- Foxy's attack exit (about 22 updates) against the model.
+- The census, the corner cohort and the APK install (agents).
+- The per-cycle ledger against a phone recording.
+- Pedro's attestation.

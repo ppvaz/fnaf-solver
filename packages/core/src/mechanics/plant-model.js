@@ -256,6 +256,12 @@ export class Sim {
       // replays split on exactly this on all three nights (tools/recompile/README.md, "Winner schedules
       // replayed"): Toy Bonnie held on Night 1, Toy Freddy on Night 5, all three on Night 7.
       sourcedPromotedViewDraws: false,
+      // `viewing hall light` is cleared by g488 (Every 1000 ms) and set again by g489 while the light is lit,
+      // both AFTER the route moves g380-g383 that test it (g381: W. Bonnie CAM 07 -> hall stage 1 needs it 0).
+      // So a move whose second-boundary clears the latch waits one loop: it sees the latch still set. Off: the
+      // hooked clock clears the model's latch (lightLogicalUntil) at the top of the tick, before the 5 s rolls
+      // and moves, which moves such a unit one loop early (Night 7 k3's first replay mismatch, tick 600).
+      sourcedHallLatchOrder: false,
       // Mangle's mask leaves (dump g400: the 10%/s roll under the mask; g401: five mask ticks) place her at
       // CAM 7 (marker 62), three hops from the vent, not at the route start the unit table's repelIdx 0 gives.
       // Every other unit's repelIdx matches its dump endpoint (g538-g555, g213, g437, g439/g440, g292/g294).
@@ -455,6 +461,7 @@ export class Sim {
     this.maskAnim = 0;
     this.lightHeld = false;
     this.lightLogicalUntil = -1;
+    this.hallLatchResetDue = false;   // g488's one-second reset, deferred past the moves (sourcedHallLatchOrder)
     this.winding = false;
     this.ventLightL = false;
     this.ventLightR = false;
@@ -578,6 +585,8 @@ export class Sim {
       throw new Error('sourcedFootstepDraws draws in the sheet-ordered pass: it requires sourcedSheetOrder');
     if (this.opts.sourcedFootstepValue2 && !this.opts.sourcedFootstepDraws)
       throw new Error('sourcedFootstepValue2 changes when the footstep cue draws: it requires sourcedFootstepDraws');
+    if (this.opts.sourcedHallLatchOrder && !this.opts.frameMs)
+      throw new Error('sourcedHallLatchOrder moves the hooked one-second latch reset: it requires frameMs');
     if (this.opts.sourcedPromotedViewDraws && !this.opts.sourcedViewDraws)
       throw new Error('sourcedPromotedViewDraws changes which view draws fire: it requires sourcedViewDraws');
     if (this.opts.sourcedSheetOrder && !this.opts.sourcedSecondPass)
@@ -1424,7 +1433,8 @@ export class Sim {
       this.halfTick = this.passEvery(t.half, 500);
       this.sampleTick = this.passEvery(t.sample, 200);
       this.tenTick = this.passEvery(t.ten, 10000);
-      if (this.secTick) this.lightLogicalUntil = -1;   // the new bonnie reset on the global one-second event
+      if (this.secTick && !this.opts.sourcedHallLatchOrder) this.lightLogicalUntil = -1;   // the one-second reset
+      this.hallLatchResetDue = this.secTick && this.opts.sourcedHallLatchOrder;           // g488, after the moves
     }
     if (this.opts.sourcedFoxyChain) this.updateLitCounter();   // events 74-83 (g84-g94) before the drop; g488/g489 run in tickFoxyChain
     else if (this.opts.sourcedDropLightOrder) this.updateHallLatch(f);
@@ -1547,6 +1557,10 @@ export class Sim {
     this.tickFoxy(f);
     this.tickMask();
     this.tickUnits(f);
+    if (this.hallLatchResetDue) {                                                     // g488, then g489
+      this.lightLogicalUntil = -1;
+      if (this.anyOfficeLightHeld && !this.camsUp) this.lightLogicalUntil = Number.MAX_SAFE_INTEGER;
+    }
     this.syncMangleStatic();
     this.tickBox();
     if (this.opts.sourcedDropFlagOrder) this.readDropTouch();  // g618/g619 (g556-g559 precede them but write nothing they read)
