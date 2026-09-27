@@ -179,7 +179,10 @@
         "../src/adb-bridge.js",
         "../src/cue-helper-capture.js",
         "../src/physical-ports.js",
-        "node:assert/strict"
+        "node:assert/strict",
+        "node:fs",
+        "node:os",
+        "node:path"
       ]
     },
     {
@@ -309,6 +312,19 @@
       "imports": [
         "../src/night-anchor.js",
         "node:assert/strict"
+      ]
+    },
+    {
+      "file": "apps/device/test/static-terminal-window.test.js",
+      "imports": [
+        "../src/adb-device-local-executor.js",
+        "../src/hid-schedule.js",
+        "@fnaf2-1020/core/contracts",
+        "node:assert/strict",
+        "node:fs",
+        "node:fs/promises",
+        "node:os",
+        "node:path"
       ]
     },
     {
@@ -768,6 +784,13 @@
       ]
     },
     {
+      "file": "packages/core/test/every-origin.test.js",
+      "imports": [
+        "../src/mechanics/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
       "file": "packages/core/test/footstep-draws.test.js",
       "imports": [
         "../src/mechanics/plant-model.js",
@@ -849,6 +872,14 @@
     {
       "file": "packages/core/test/random-image-draw.test.js",
       "imports": [
+        "../src/mechanics/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/core/test/rebuild-order.test.js",
+      "imports": [
+        "../src/mechanics/config.js",
         "../src/mechanics/plant-model.js",
         "node:assert/strict"
       ]
@@ -1694,6 +1725,15 @@
       ]
     },
     {
+      "file": "tools/device/static-terminal-window.mjs",
+      "imports": [
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/device/strategy-night-matrix.mjs",
       "imports": [
         "./artifact-commands.mjs",
@@ -2071,6 +2111,17 @@
       ]
     },
     {
+      "file": "tools/device/test-static-terminal-window.mjs",
+      "imports": [
+        "./static-terminal-window.mjs",
+        "node:assert/strict",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/device/test-tap-stall-audit.mjs",
       "imports": [
         "./tap-stall-audit.mjs",
@@ -2125,6 +2176,7 @@
       "file": "tools/evidence-cohort.mjs",
       "imports": [
         "./evidence-pack.mjs",
+        "@fnaf2-1020/core/contracts",
         "node:fs",
         "node:path"
       ]
@@ -2653,10 +2705,44 @@
       ]
     },
     {
+      "file": "tools/recompile/compare-draw-trace.mjs",
+      "imports": [
+        "./model-draw-trace.mjs",
+        "node:crypto",
+        "node:fs",
+        "node:url"
+      ]
+    },
+    {
+      "file": "tools/recompile/diagnose-child-events.mjs",
+      "imports": [
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/recompile/model-draw-trace.mjs",
       "imports": [
         "@fnaf2-1020/core/mechanics",
         "node:fs"
+      ]
+    },
+    {
+      "file": "tools/recompile/test-child-diagnosis.mjs",
+      "imports": [
+        "./diagnose-child-events.mjs",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "tools/recompile/test-compare-draw-trace.mjs",
+      "imports": [
+        "./compare-draw-trace.mjs",
+        "./model-draw-trace.mjs",
+        "@fnaf2-1020/core/mechanics",
+        "node:assert/strict"
       ]
     },
     {

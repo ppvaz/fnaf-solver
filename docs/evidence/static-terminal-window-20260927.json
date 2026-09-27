@@ -1,0 +1,602 @@
+{
+  "schema": "static-terminal-window-v1",
+  "id": "static-terminal-window-20260927",
+  "date": "2026-09-27",
+  "claimLevel": "DEVICE_MEASURED",
+  "scope": "Host-clock timing of lifecycle observation rows in committed run packs. It grades no run, promotes nothing, and changes no pack's outcome.",
+  "question": "After the first static read that follows a night, how long until the lifecycle observer reads the terminal screen, and how long did the old three-read static exit take?",
+  "method": {
+    "tool": "tools/device/static-terminal-window.mjs",
+    "command": "node tools/device/static-terminal-window.mjs --write",
+    "source": "docs/evidence/runs/*/events.jsonl: observation rows (written on label change, host clock, after the classifier returned) and campaign.abort.restart rows; observations.jsonl, where retained, for direct read gaps",
+    "episode": "starts at the first state=static observation after a state=night observation; an UNKNOWN read does not end it; it ends at state=gameover or state=sixam (terminal), state=night (night-resumed), state=title, or a campaign.abort.restart row",
+    "terminalAfterAbort": "after a static abort, a state=gameover or state=sixam row before the relaunch (state=intro or state=title, or campaign.abort.restarted) is the dying game's own terminal read",
+    "observerIntervalBound": "ceil(max(abort - first static) / (3 - 1)): the abort row follows the third consecutive static read, so it bounds the mean of the two intervals between them"
+  },
+  "packs": {
+    "scanned": 180,
+    "withStaticEpisode": 77
+  },
+  "staticToGameover": {
+    "packs": 32,
+    "n": 32,
+    "minMs": 1964,
+    "maxMs": 6306
+  },
+  "staticToSixam": {
+    "packs": 0,
+    "n": 0,
+    "minMs": null,
+    "maxMs": null
+  },
+  "staticAbort": {
+    "packs": 45,
+    "n": 45,
+    "minMs": 3119,
+    "maxMs": 4835,
+    "exitConfirmSamples": 3,
+    "observerIntervalBoundMs": 2418,
+    "terminalAfterAbort": [
+      {
+        "run": "night5-perfetto1-20260912T014752Z",
+        "state": "sixam",
+        "delayMs": 5763,
+        "abortMs": 3491
+      }
+    ]
+  },
+  "observerIntervalDirect": {
+    "packs": 8,
+    "n": 26,
+    "minMs": 1428,
+    "maxMs": 2294
+  },
+  "window": {
+    "measuredMaxMs": 6306,
+    "measuredMaxIs": "the latest terminal read after a first static, over terminal episodes and terminal reads after a static abort",
+    "marginMs": 2418,
+    "marginName": "one observer interval (staticAbort.observerIntervalBoundMs)",
+    "waitMs": 8724,
+    "executorConstant": "STATIC_TERMINAL_WAIT_MS, apps/device/src/adb-device-local-executor.js"
+  },
+  "runs": {
+    "staticToTerminal": [
+      {
+        "run": "night5-anchor1-20260912T202654Z",
+        "state": "gameover",
+        "delayMs": 4409
+      },
+      {
+        "run": "night5-anchor4-20260912T205913Z",
+        "state": "gameover",
+        "delayMs": 4475
+      },
+      {
+        "run": "night5-anchor5-20260912T210704Z",
+        "state": "gameover",
+        "delayMs": 2866
+      },
+      {
+        "run": "night5-final2-20260912T070853Z",
+        "state": "gameover",
+        "delayMs": 4508
+      },
+      {
+        "run": "night5-gatefix1-20260912T053231Z",
+        "state": "gameover",
+        "delayMs": 3191
+      },
+      {
+        "run": "night5-ladder-n5a-20260927T064344Z",
+        "state": "gameover",
+        "delayMs": 1964
+      },
+      {
+        "run": "night5-ladder-n5b-20260927T064920Z",
+        "state": "gameover",
+        "delayMs": 3865
+      },
+      {
+        "run": "night5-originfix-20260912T004957Z",
+        "state": "gameover",
+        "delayMs": 4182
+      },
+      {
+        "run": "night5-rep4-20260912T194156Z",
+        "state": "gameover",
+        "delayMs": 3390
+      },
+      {
+        "run": "night5-strokes1-20260912T030313Z",
+        "state": "gameover",
+        "delayMs": 3059
+      },
+      {
+        "run": "night5-strokes2-20260912T032538Z",
+        "state": "gameover",
+        "delayMs": 3260
+      },
+      {
+        "run": "night6-anchored2-20260913T015520Z",
+        "state": "gameover",
+        "delayMs": 4504
+      },
+      {
+        "run": "night6-anchored3-20260913T020127Z",
+        "state": "gameover",
+        "delayMs": 4551
+      },
+      {
+        "run": "night6-anchoredd2-20260913T024735Z",
+        "state": "gameover",
+        "delayMs": 4371
+      },
+      {
+        "run": "night6-c2-02-20260917T022345Z",
+        "state": "gameover",
+        "delayMs": 3338
+      },
+      {
+        "run": "night6-foxytest-20260912T223944Z",
+        "state": "gameover",
+        "delayMs": 6001
+      },
+      {
+        "run": "night6-ft-01-20260918T010857Z",
+        "state": "gameover",
+        "delayMs": 5784
+      },
+      {
+        "run": "night6-n6-aim0-derived-20260920T012539Z",
+        "state": "gameover",
+        "delayMs": 4672
+      },
+      {
+        "run": "night6-n6-aim255-periodfix-20260920T014459Z",
+        "state": "gameover",
+        "delayMs": 3173
+      },
+      {
+        "run": "night6-n6-bbfix-20260920T010859Z",
+        "state": "gameover",
+        "delayMs": 3155
+      },
+      {
+        "run": "night6-n6h-m1-20260920T021433Z",
+        "state": "gameover",
+        "delayMs": 4626
+      },
+      {
+        "run": "night6-n6h-m2-20260920T022809Z",
+        "state": "gameover",
+        "delayMs": 4691
+      },
+      {
+        "run": "night6-tw-03-20260918T014314Z",
+        "state": "gameover",
+        "delayMs": 4401
+      },
+      {
+        "run": "night6-twin-01-20260917T014037Z",
+        "state": "gameover",
+        "delayMs": 4879
+      },
+      {
+        "run": "night6-twin-02-20260917T014520Z",
+        "state": "gameover",
+        "delayMs": 4527
+      },
+      {
+        "run": "night6-twin-03-20260917T015248Z",
+        "state": "gameover",
+        "delayMs": 4897
+      },
+      {
+        "run": "night7-anchoredj4-aim2315-sbc-20260913T220914Z",
+        "state": "gameover",
+        "delayMs": 4515
+      },
+      {
+        "run": "night7-n7-420-minimal-m1-20260914T014511Z",
+        "state": "gameover",
+        "delayMs": 4460
+      },
+      {
+        "run": "night7-night7-anchoredj9-aim2315-tf-20260913T233252Z",
+        "state": "gameover",
+        "delayMs": 6306
+      },
+      {
+        "run": "night7-night7-k2-cohort-r06-20260914T231510Z",
+        "state": "gameover",
+        "delayMs": 3096
+      },
+      {
+        "run": "night7-night7-k2-cohort-r08-20260914T233902Z",
+        "state": "gameover",
+        "delayMs": 3568
+      },
+      {
+        "run": "night7-night7-k3-full-04-20260915T051327Z",
+        "state": "gameover",
+        "delayMs": 3132
+      }
+    ],
+    "staticAbort": [
+      {
+        "run": "night3-ladder-n3b-20260919T235739Z",
+        "abortMs": 3374
+      },
+      {
+        "run": "night3-minus3-n3-first-20260919T224721Z",
+        "abortMs": 3509
+      },
+      {
+        "run": "night3-minus3-n3-second-20260919T225620Z",
+        "abortMs": 3346
+      },
+      {
+        "run": "night3-toys-n3-ladder-20260919T231745Z",
+        "abortMs": 3233
+      },
+      {
+        "run": "night5-aim940-20260912T213034Z",
+        "abortMs": 3119
+      },
+      {
+        "run": "night5-anchor3-20260912T205313Z",
+        "abortMs": 3333
+      },
+      {
+        "run": "night5-contact200a-20260912T055732Z",
+        "abortMs": 3541
+      },
+      {
+        "run": "night5-gatesfired2-20260912T010304Z",
+        "abortMs": 3496
+      },
+      {
+        "run": "night5-gatesplusphase2-20260912T005849Z",
+        "abortMs": 3439
+      },
+      {
+        "run": "night5-n5-ladder-20260920T003835Z",
+        "abortMs": 3403
+      },
+      {
+        "run": "night5-observeonce-20260912T003535Z",
+        "abortMs": 4835
+      },
+      {
+        "run": "night5-perfetto1-20260912T014752Z",
+        "abortMs": 3491,
+        "terminalAfterAbort": {
+          "state": "sixam",
+          "delayMs": 5763
+        }
+      },
+      {
+        "run": "night5-rep1-20260912T191911Z",
+        "abortMs": 3163
+      },
+      {
+        "run": "night5-rep2-20260912T193308Z",
+        "abortMs": 3157
+      },
+      {
+        "run": "night5-rep3-20260912T193715Z",
+        "abortMs": 3296
+      },
+      {
+        "run": "night5-repeat1-20260912T012533Z",
+        "abortMs": 3451
+      },
+      {
+        "run": "night5-seamfix1-20260912T022008Z",
+        "abortMs": 3530
+      },
+      {
+        "run": "night5-strokes3-20260912T035230Z",
+        "abortMs": 3428
+      },
+      {
+        "run": "night6-anchoredb1-20260913T022819Z",
+        "abortMs": 3348
+      },
+      {
+        "run": "night6-anchoredc1-20260913T023830Z",
+        "abortMs": 3194
+      },
+      {
+        "run": "night6-anchorede2-20260913T170041Z",
+        "abortMs": 3216
+      },
+      {
+        "run": "night6-anchoredf3-20260913T173905Z",
+        "abortMs": 3316
+      },
+      {
+        "run": "night6-anchoredg1-20260913T174958Z",
+        "abortMs": 3237
+      },
+      {
+        "run": "night6-c2-02-20260917T020621Z",
+        "abortMs": 3303
+      },
+      {
+        "run": "night6-foxyfix-20260912T231146Z",
+        "abortMs": 3626
+      },
+      {
+        "run": "night7-anchoredi6-20260913T190115Z",
+        "abortMs": 3408
+      },
+      {
+        "run": "night7-anchoredj2-20260913T211811Z",
+        "abortMs": 3438
+      },
+      {
+        "run": "night7-anchoredj3-sbc-20260913T220156Z",
+        "abortMs": 3445
+      },
+      {
+        "run": "night7-anchoredj5-aim2315-20260913T222306Z",
+        "abortMs": 3334
+      },
+      {
+        "run": "night7-anchoredj6-aim2315-20260913T222602Z",
+        "abortMs": 3319
+      },
+      {
+        "run": "night7-anchoredj7-aim2315-20260913T223235Z",
+        "abortMs": 3890
+      },
+      {
+        "run": "night7-anchoredj8-aim2315-20260913T224249Z",
+        "abortMs": 3365
+      },
+      {
+        "run": "night7-corner-bbfoxy-r01-20260927T072310Z",
+        "abortMs": 4477
+      },
+      {
+        "run": "night7-j10-aim2315-tf-20260913T234142Z",
+        "abortMs": 3390
+      },
+      {
+        "run": "night7-j11-aim2515-tf-20260913T235640Z",
+        "abortMs": 3254
+      },
+      {
+        "run": "night7-j12-aim2433-census3000-20260914T001145Z",
+        "abortMs": 3296
+      },
+      {
+        "run": "night7-k1-aim2433-maskoff7200-20260914T003625Z",
+        "abortMs": 3341
+      },
+      {
+        "run": "night7-n7-420-minimal-m2-20260914T015236Z",
+        "abortMs": 3441
+      },
+      {
+        "run": "night7-night7-k2-cohort-r02-20260914T221655Z",
+        "abortMs": 3478
+      },
+      {
+        "run": "night7-night7-k2-cohort-r04-20260914T224934Z",
+        "abortMs": 3292
+      },
+      {
+        "run": "night7-night7-k2-cohort-r07b-20260914T232905Z",
+        "abortMs": 3335
+      },
+      {
+        "run": "night7-night7-k2-cohort-r09-20260914T234919Z",
+        "abortMs": 3244
+      },
+      {
+        "run": "night7-night7-k2-cohort-r10-20260914T235238Z",
+        "abortMs": 3278
+      },
+      {
+        "run": "night7-night7-k3-cohort-r03-20260918T032107Z",
+        "abortMs": 3374
+      },
+      {
+        "run": "night7-night7-k3-full-07d-20260916T031042Z",
+        "abortMs": 3231
+      }
+    ],
+    "other": [],
+    "scanned": [
+      "fnaf1-custom-grid420-420-a-20260925T024452598Z",
+      "night1-ladder-n1e-20260927T055611Z",
+      "night1-minus7-n1-first-20260919T215053Z",
+      "night1-minus7-n1-first-20260919T215202Z",
+      "night1-minus7-n1-first-20260919T215327Z",
+      "night1-minus7-n1-first-20260919T215533Z",
+      "night2-ladder-n2a-20260927T060809Z",
+      "night2-toys-n2-ladder-20260919T223654Z",
+      "night3-ladder-n3-bbfix-20260920T001307Z",
+      "night3-ladder-n3a-20260927T062001Z",
+      "night3-ladder-n3b-20260919T235739Z",
+      "night3-minus3-n3-first-20260919T224721Z",
+      "night3-minus3-n3-second-20260919T225620Z",
+      "night3-n3-bbfix-run-20260920T001903Z",
+      "night3-toys-n3-ladder-20260919T231745Z",
+      "night4-ladder-n4a-20260927T063208Z",
+      "night4-n4-bbfix-20260920T002911Z",
+      "night5-aim940-20260912T213034Z",
+      "night5-anchor1-20260912T202654Z",
+      "night5-anchor2-20260912T204002Z",
+      "night5-anchor3-20260912T205313Z",
+      "night5-anchor4-20260912T205913Z",
+      "night5-anchor5-20260912T210704Z",
+      "night5-contact200a-20260912T055732Z",
+      "night5-final1-20260912T070556Z",
+      "night5-final2-20260912T070853Z",
+      "night5-gatefix1-20260912T053231Z",
+      "night5-gatesfired-20260912T010108Z",
+      "night5-gatesfired2-20260912T010304Z",
+      "night5-gatesplusphase-20260912T005724Z",
+      "night5-gatesplusphase2-20260912T005849Z",
+      "night5-hallfix-20260912T230319Z",
+      "night5-ladder-n5a-20260927T064344Z",
+      "night5-ladder-n5b-20260927T064920Z",
+      "night5-ladder-n5c-20260927T065942Z",
+      "night5-mask5plus-aim172-20260912T220100Z",
+      "night5-n5-armblock-20260920T004056Z",
+      "night5-n5-carry-aim172-20260918T012153Z",
+      "night5-n5-ladder-20260920T003835Z",
+      "night5-noflash-20260913T003456Z",
+      "night5-observeonce-20260912T003535Z",
+      "night5-originfix-20260912T004957Z",
+      "night5-perfetto1-20260912T014752Z",
+      "night5-rep1-20260912T191911Z",
+      "night5-rep2-20260912T193308Z",
+      "night5-rep3-20260912T193715Z",
+      "night5-rep4-20260912T194156Z",
+      "night5-repeat1-20260912T012533Z",
+      "night5-seamfix1-20260912T022008Z",
+      "night5-strokes1-20260912T030313Z",
+      "night5-strokes2-20260912T032538Z",
+      "night5-strokes3-20260912T035230Z",
+      "night6-anchored1-20260913T015302Z",
+      "night6-anchored2-20260913T015520Z",
+      "night6-anchored3-20260913T020127Z",
+      "night6-anchoredb1-20260913T022819Z",
+      "night6-anchoredc1-20260913T023830Z",
+      "night6-anchoredd1-20260913T024519Z",
+      "night6-anchoredd2-20260913T024735Z",
+      "night6-anchorede2-20260913T170041Z",
+      "night6-anchoredf1-20260913T173421Z",
+      "night6-anchoredf3-20260913T173905Z",
+      "night6-anchoredg1-20260913T174958Z",
+      "night6-anchoredh1-20260913T180208Z",
+      "night6-c2-01-20260917T020219Z",
+      "night6-c2-01-20260917T020439Z",
+      "night6-c2-01-20260917T021242Z",
+      "night6-c2-01-20260917T021417Z",
+      "night6-c2-02-20260917T020621Z",
+      "night6-c2-02-20260917T021312Z",
+      "night6-c2-02-20260917T022345Z",
+      "night6-c2-03-20260917T021340Z",
+      "night6-c2-03-20260917T022932Z",
+      "night6-c2-04-20260917T022959Z",
+      "night6-foxyfix-20260912T231146Z",
+      "night6-foxytest-20260912T223944Z",
+      "night6-ft-01-20260918T010857Z",
+      "night6-ladder-n6a-20260927T071107Z",
+      "night6-n6-aim0-derived-20260920T012539Z",
+      "night6-n6-aim255-periodfix-20260920T014459Z",
+      "night6-n6-bbfix-20260920T010859Z",
+      "night6-n6h-m1-20260920T021433Z",
+      "night6-n6h-m2-20260920T022809Z",
+      "night6-n6h2-01-20260920T024030Z",
+      "night6-p-01-20260917T023445Z",
+      "night6-p-02-20260917T023518Z",
+      "night6-p-03-20260917T024536Z",
+      "night6-p-04-20260917T024744Z",
+      "night6-p-05-20260917T024956Z",
+      "night6-p-06-20260917T025208Z",
+      "night6-seedlock-h-20260916T223633Z",
+      "night6-tw-01-20260918T013257Z",
+      "night6-tw-02-20260918T014216Z",
+      "night6-tw-03-20260918T014314Z",
+      "night6-tw-04-20260918T014915Z",
+      "night6-tw-05-20260918T015957Z",
+      "night6-tw-06-20260918T020151Z",
+      "night6-tw-07-20260918T020255Z",
+      "night6-tw-08-20260918T020400Z",
+      "night6-tw-09-20260918T020506Z",
+      "night6-tw-10-20260918T020611Z",
+      "night6-tw-11-20260918T021912Z",
+      "night6-tw-12-20260918T022134Z",
+      "night6-tw27-01-20260927T080849Z",
+      "night6-tw27-02-20260927T081054Z",
+      "night6-tw27-03-20260927T081155Z",
+      "night6-tw27-04-20260927T081301Z",
+      "night6-tw27-05-20260927T081406Z",
+      "night6-twin-01-20260917T012927Z",
+      "night6-twin-01-20260917T013608Z",
+      "night6-twin-01-20260917T014037Z",
+      "night6-twin-02-20260917T014520Z",
+      "night6-twin-03-20260917T015248Z",
+      "night7-anchoredi2-20260913T184345Z",
+      "night7-anchoredi3-20260913T185056Z",
+      "night7-anchoredi4-20260913T185422Z",
+      "night7-anchoredi5-20260913T185745Z",
+      "night7-anchoredi6-20260913T190115Z",
+      "night7-anchoredj1-20260913T211521Z",
+      "night7-anchoredj2-20260913T211811Z",
+      "night7-anchoredj3-sbc-20260913T220156Z",
+      "night7-anchoredj4-aim2315-sbc-20260913T220914Z",
+      "night7-anchoredj5-aim2315-20260913T222306Z",
+      "night7-anchoredj6-aim2315-20260913T222602Z",
+      "night7-anchoredj7-aim2315-20260913T223235Z",
+      "night7-anchoredj8-aim2315-20260913T224249Z",
+      "night7-corner-bbfoxy-r01-20260927T052325Z",
+      "night7-corner-bbfoxy-r01-20260927T072310Z",
+      "night7-corner-bbfoxy-r02-20260927T073711Z",
+      "night7-corner-bbgolden-r01-20260927T072630Z",
+      "night7-corner-bbgolden-r02-20260927T074756Z",
+      "night7-j10-aim2315-tf-20260913T234142Z",
+      "night7-j11-aim2515-tf-20260913T235640Z",
+      "night7-j12-aim2433-census3000-20260914T000859Z",
+      "night7-j12-aim2433-census3000-20260914T001145Z",
+      "night7-k1-aim2433-maskoff7200-20260914T003625Z",
+      "night7-k2-aim2433-maskoff7000-20260914T004106Z",
+      "night7-m2-catalog-20260914T011758Z",
+      "night7-m3-catalog-20260914T012211Z",
+      "night7-m4-catalog-20260914T023021Z",
+      "night7-m5-catalog-20260914T023419Z",
+      "night7-n7-420-minimal-m1-20260914T014511Z",
+      "night7-n7-420-minimal-m2-20260914T015236Z",
+      "night7-n7-420-minimal-m3-20260914T020543Z",
+      "night7-night7-anchoredj9-aim2315-tf-20260913T233252Z",
+      "night7-night7-k2-cohort-r01b-20260914T220233Z",
+      "night7-night7-k2-cohort-r02-20260914T221655Z",
+      "night7-night7-k2-cohort-r03-20260914T223207Z",
+      "night7-night7-k2-cohort-r04-20260914T224934Z",
+      "night7-night7-k2-cohort-r05-20260914T225440Z",
+      "night7-night7-k2-cohort-r06-20260914T231510Z",
+      "night7-night7-k2-cohort-r07-20260914T232510Z",
+      "night7-night7-k2-cohort-r07b-20260914T232905Z",
+      "night7-night7-k2-cohort-r08-20260914T233902Z",
+      "night7-night7-k2-cohort-r09-20260914T234919Z",
+      "night7-night7-k2-cohort-r10-20260914T235238Z",
+      "night7-night7-k3-cohort-r01-20260918T030258Z",
+      "night7-night7-k3-cohort-r02-20260918T031201Z",
+      "night7-night7-k3-cohort-r03-20260918T032107Z",
+      "night7-night7-k3-cohort-r04-20260918T032314Z",
+      "night7-night7-k3-cohort-r05-20260918T032827Z",
+      "night7-night7-k3-cohort-r06-20260918T033730Z",
+      "night7-night7-k3-cohort-r07-20260918T034636Z",
+      "night7-night7-k3-cohort-r08-20260918T035537Z",
+      "night7-night7-k3-cohort-r09-20260918T040438Z",
+      "night7-night7-k3-cohort-r10-20260918T041340Z",
+      "night7-night7-k3-full-02-20260915T033615Z",
+      "night7-night7-k3-full-03-20260915T050517Z",
+      "night7-night7-k3-full-04-20260915T051327Z",
+      "night7-night7-k3-full-06-20260915T225056Z",
+      "night7-night7-k3-full-07d-20260916T031042Z",
+      "night7-night7-k3-seedlog-01-20260915T031307Z",
+      "night7-night7-k3-seedlog-full-01-20260915T032213Z",
+      "night7-night7-k3-teach-01-20260918T042710Z",
+      "night7-night7-k3-teach-02-20260918T043627Z",
+      "night7-night7-k3-twin-a-20260915T022120Z",
+      "night7-night7-k3-twin-a2-20260915T022337Z",
+      "night7-night7-k3-twin-b-20260915T023828Z",
+      "night7-night7-k3-twin-c-20260915T025403Z",
+      "night7-night7-k3-wallclock-r1-20260915T002238Z"
+    ]
+  },
+  "limits": [
+    "Observation rows are written on label change, so a static episode is timed from the first static read to the first terminal read; the game drew static before the first static read and drew the terminal screen before it was read, by up to one observer interval each.",
+    "The observer-interval bound is a mean over two intervals, not a maximum of one; observerIntervalDirect measures single gaps where observations.jsonl was retained.",
+    "Every measured pack ran the old rule (three static reads end the night), so no pack shows a static longer than its abort; a death whose static outlasts waitMs is not in this sample.",
+    "A static read is also a possible misread inside a live night (night5-perfetto1 read static and then 6 AM): this window governs when the executor ends a night on static, never whether actuation continues during it."
+  ],
+  "evidenceId": "static-terminal-window-fb44824c48fdc471"
+}

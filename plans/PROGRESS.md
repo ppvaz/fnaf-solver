@@ -1757,3 +1757,32 @@ instrumentation, Every phase diagnosis and full equivalence; unfinished S3/S6
 censuses; integrated clean-HEAD `npm run push-gate`. The prior root unit run's
 sole failure was the now-repaired policy baseline; that older run is not a
 green result for the final integrated tree.
+
+**2026-09-27: a death's static no longer ends the night before its Game Over.**
+
+- **S3/S1, DEVICE_MEASURED timing, no device run:** the executor ended a night on
+  three consecutive non-night reads, and the post-jumpscare static counted, so
+  `night7-corner-bbfoxy-r01-20260927T072310Z` ended 4477 ms after its first
+  static and became UNKNOWN. `static-terminal-window-fb44824c48fdc471`
+  ([record](../docs/evidence/static-terminal-window-20260927.json),
+  `tools/device/static-terminal-window.mjs`) measures the committed packs: 32
+  read Game Over 1964-6306 ms after the first static read; 45 aborted on static
+  3119-4835 ms after it (one observer interval is therefore at most 2418 ms; the
+  26 directly measured gaps top out at 2294 ms); `night5-perfetto1` read 6 AM
+  5763 ms after it, following its abort. After a night, a static read now
+  withholds its exit vote for `STATIC_TERMINAL_WAIT_MS` = 6306 + 2418 = 8724 ms
+  from the first static of its run. The schedule keeps running, Game Over or 6 AM
+  inside the window ends the night normally, and later statics vote as before.
+  `apps/device/test/static-terminal-window.test.js` holds the constant to the
+  record, and `tools/device/test-static-terminal-window.mjs` reproduces the record
+  from its packs.
+- The r01 slot's grade does not change: its pack records the static abort and
+  the relaunch, and no terminal read. The corner record stays INCOMPLETE. In r01
+  a gate also lost the mask read on the static screen 156 ms before the abort.
+  Under the new rule, that stop ends the attempt COMPLETED with no terminal (a
+  test shows this). The terminal then goes to the campaign's own 120 s wait for
+  Game Over or 6 AM. No phone run has exercised the window yet.
+
+Open: a live death under the new window (the first corner or cohort death will
+show it). The margin is the mean of two intervals, not a per-read maximum. A
+static that outlasts 8724 ms is not in this sample.

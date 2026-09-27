@@ -67,6 +67,7 @@ const BY_LEAF = Object.freeze({
   gateLagMs: C.DURATION, armReadyAtMs: C.DURATION, settleMs: C.DURATION, durationMs: C.DURATION, shrunkByMs: C.DURATION,
   afterOnsetMs: C.DURATION, residueMs: C.DURATION, waitMs: C.DURATION,
   leadMs: C.DURATION, // the anchor's lead between latch and release (night-anchor.js, 2026-09-12 releases)
+  heldMs: C.DURATION, // how long a run of static reads had withheld its exit vote (lifecycle.static-hold.expired)
   ageUs: C.DURATION_US, frameAgeUs: C.DURATION_US,
   // differences between two clocks
   offsetMs: C.OFFSET, phoneWallMinusMonoMs: C.OFFSET, wallMinusHostMs: C.OFFSET,

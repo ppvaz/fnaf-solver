@@ -34,6 +34,26 @@ const ARM_CONFIRM_SAMPLES = 2;
 const ARM_OBSERVATION_WINDOW_MS = 3000;
 const STARTUP_GRACE_MS = 30000;
 const EXIT_CONFIRM_SAMPLES = 3;
+// A death's static starts its terminal; it does not end the night. With static
+// counted toward EXIT_CONFIRM_SAMPLES, a death could end before its Game Over
+// was read: night7-corner-bbfoxy-r01-20260927T072310Z became UNKNOWN that way
+// while its video shows the jumpscare. Measured over the committed run packs
+// (docs/evidence/static-terminal-window-20260927.json, evidence
+// static-terminal-window-fb44824c48fdc471; tools/device/static-terminal-window.mjs):
+// 32 packs read Game Over 1964-6306 ms after the first static read of a night,
+// one read 6 AM 5763 ms after it, and 45 packs instead ended on the third
+// static read 3119-4835 ms after the first -- two observer intervals, so one is
+// at most 2418 ms. After a night is observed, a static read therefore withholds
+// its exit vote until the measured maximum plus one observer interval has
+// passed since the first static of its run. Game Over or 6 AM inside the window
+// ends the night as usual; after it, static votes as before. The schedule keeps
+// running through the wait: a static can also be a misread inside a live night
+// (night5-perfetto1 read static, then 6 AM). These numbers decide behaviour, so
+// apps/device/test/static-terminal-window.test.js reads the record and fails if
+// either drifts from it (CLAUDE.md register items 7 and 9).
+export const STATIC_TERMINAL_MAX_MS = 6306;
+export const OBSERVER_INTERVAL_BOUND_MS = 2418;
+export const STATIC_TERMINAL_WAIT_MS = STATIC_TERMINAL_MAX_MS + OBSERVER_INTERVAL_BOUND_MS;
 // Screens that end a scheduled night on their FIRST positive read once a night
 // has been observed. These are not animations a healthy run passes through,
 // and two of them put menu controls under the schedule's own tap coordinates.
@@ -213,6 +233,7 @@ export class AdbDeviceLocalArtifactExecutor {
       gateBudgetMinMs: timing.gateBudgetMinMs ?? GATE_BUDGET_MIN_MS,
       gateBudgetMaxMs: timing.gateBudgetMaxMs ?? GATE_BUDGET_MAX_MS,
       gateBudgetReserveMs: timing.gateBudgetReserveMs ?? GATE_BUDGET_RESERVE_MS,
+      staticTerminalWaitMs: timing.staticTerminalWaitMs ?? STATIC_TERMINAL_WAIT_MS,
     };
     for (const [name, value] of Object.entries(timingValues)) {
       if (!Number.isInteger(value) || value < 0)
@@ -225,6 +246,7 @@ export class AdbDeviceLocalArtifactExecutor {
     this.armObservationWindowMs = timingValues.armObservationWindowMs;
     this.gateRetryGapMs = timingValues.gateRetryGapMs;
     this.maskSettleMs = timingValues.maskSettleMs;
+    this.staticTerminalWaitMs = timingValues.staticTerminalWaitMs;
     this.gateTiming = { minSlackMs: timingValues.gateMinSlackMs,
       budgetMinMs: timingValues.gateBudgetMinMs, budgetMaxMs: timingValues.gateBudgetMaxMs,
       budgetReserveMs: timingValues.gateBudgetReserveMs };
@@ -417,6 +439,11 @@ export class AdbDeviceLocalArtifactExecutor {
     let handoffDelayMs = null;
     let handoffFailure = null;
     let nonNightSamples = 0;
+    // When the current run of static reads began (host clock, stamped when the
+    // classification returned -- the edge the measured record's rows carry).
+    /** @type {number | null} */
+    let staticRunStartedAt = null;
+    let staticHoldExpired = false;
     const buildArmResult = () => armVerification ? {
       status: armObserveOnce ? armObservationStatus : 'PASS',
       cameras: armVerification.cameras, viewing: armVerification.viewing,
@@ -1079,6 +1106,7 @@ export class AdbDeviceLocalArtifactExecutor {
           const observeStartedAt = Date.now();
           try {
             const state = this.observe ? await this.observe() : null;
+            const observedAt = Date.now();
             // A lifecycle observer that positively names any other screen has
             // proved that the scheduled night is gone once a night frame has
             // been seen. Classifiers are frame-based and can produce one bad
@@ -1166,6 +1194,8 @@ export class AdbDeviceLocalArtifactExecutor {
               }
               nightObserved = true;
               nonNightSamples = 0;
+              staticRunStartedAt = null;
+              staticHoldExpired = false;
             } else if (!state) {
               // An UNKNOWN classification withholds a vote; see the catch below.
             } else if (!nightObserved) {
@@ -1196,10 +1226,36 @@ export class AdbDeviceLocalArtifactExecutor {
               await this.stopProcess();
               break;
             }
+            // After a night, a static read inside STATIC_TERMINAL_WAIT_MS of
+            // the first static of its run withholds its exit vote: it neither
+            // counts nor erases the votes already cast, like an UNKNOWN read.
+            // An UNKNOWN read does not end the run; any other positive screen
+            // does, and votes as before.
+            let staticWithheld = false;
+            if (nightObserved && state === 'static') {
+              if (staticRunStartedAt === null) {
+                staticRunStartedAt = observedAt;
+                this.onEvent({ type: 'lifecycle.static-hold', at: observedAt,
+                  waitMs: this.staticTerminalWaitMs });
+              }
+              const heldMs = observedAt - staticRunStartedAt;
+              if (heldMs < this.staticTerminalWaitMs) {
+                staticWithheld = true;
+              } else if (!staticHoldExpired) {
+                staticHoldExpired = true;
+                this.onEvent({ type: 'lifecycle.static-hold.expired', at: observedAt,
+                  heldMs, waitMs: this.staticTerminalWaitMs });
+              }
+            } else if (state && state !== 'night') {
+              staticRunStartedAt = null;
+              staticHoldExpired = false;
+            }
             const startupTransition = !nightObserved &&
               (state === 'intro' || state === 'newspaper') && Date.now() < startupDeadline;
             if (startupTransition) {
               nonNightSamples = 0;
+            } else if (staticWithheld) {
+              // Withheld: the death's terminal screen is still expected.
             } else if (state && state !== 'night') {
               nonNightSamples += 1;
               if (nonNightSamples >= EXIT_CONFIRM_SAMPLES) {
