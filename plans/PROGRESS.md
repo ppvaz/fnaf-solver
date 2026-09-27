@@ -2064,5 +2064,43 @@ Open:
 - Night 5's tick-0 raise, one update late in the rebuild.
 - The Puppet's forcedown: g574 -> g612 -> g624 lands it one update after the
   model's g623 flag.
+
+**2026-09-27 (late night, continued): the rebuild names its own attacker (S2b, MODEL_ONLY).**
+
+- **Harness.** `CHOWDREN_WATCH_COUNTER=name,...` adds a `# counter <frame>
+  <tick> <value>...` trace line per update, reading each named Counter's first
+  live instance (`-` where the frame has none). `Counter`'s constructor records
+  its type id, so the watch reads only real Counters: RTTI is off. Existing
+  output formats are unchanged. Pinned binary `e616c431`
+  (`pinned/e616c431-7163d628/`) is the lead session's `22610def` (font atlas
+  fix) plus the watch. The patch is regenerated in its committed order with
+  `base/font.cpp` appended: 57 files, `b95c854f`. It passes `git apply --check`
+  on a pristine `9b00bb4` archive, and applied there it reproduces the tree.
+- **Tool.** `compare-schedule-replay.mjs` reads the `# counter` lines. It names
+  a death by the rebuild's own `being attacked by` value, through the office
+  sheet's write table (`ATTACKERS`: g556-574, g722, g731; Balloon Boy never
+  writes it). It records the update the value was set on, with the watched
+  counters before and at that update. `--baseline RECORD` records whether an
+  earlier record of the same replay has the same draw projection. FIXTURE
+  coverage is in `test-schedule-replay.mjs` (`npm run test:unit`).
+- **Night 5 `contact-final`** (`night5-contact-final-replay-e616c431.json`,
+  `recompile-replay-232b3f74c48dc27a`): the rebuild's killer is **Withered
+  Foxy**, `being attacked by` = 4 from office update 23400. `viewing`,
+  `viewing hall light` and `in danger` were 0 there, which of Foxy's writers
+  fits only g571, the 10 s check with the monitor down. The watch does not
+  perturb the run. Its draw projection `a3bbb988` equals the 036076d3
+  record's (`recompile-replay-7d1bffe0e1ed98b5`) and the repeat's, and the
+  alignments, gate replay and both ledgers are unchanged.
+- **Also measured.** The rebuild left the office 23 updates after the write.
+  An `attack animation:0` watch counted to 22 with global 5 = 1, so the exit
+  was an animation-finished group (g589-g595), not g588's 40-count. The model
+  kills Foxy at the 10 s check with no delay, so a Foxy terminal loop aligns on
+  the write, not the exit.
+
+Open:
+- Whether the phone's Foxy attack ends on the animation (about 22 updates) or
+  the 40-count. The dump marks g576-g586 NoGood.
+- The A = 1 / A = 2 view-draw option, then replay Night 5 again: the model
+  never meets this Foxy because the streams split at 617.
 - The per-cycle ledger against a phone recording (no k2/k3 video on this
   machine).

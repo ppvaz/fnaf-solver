@@ -44,6 +44,9 @@ directory (`/private/tmp/fnaf2-recompile.*` on the dev machine).
 | `compare-schedule-replay.mjs` | The replay comparison: binds the harness input to the winner's regenerated rows, drives the model with the same Sim queue under `--model-options`, and records both outcomes (6 AM or death, time; the rebuild's death reason is UNKNOWN unless the stream matched to the terminal loop), the first draw mismatch, every mismatch run, a gate-replay cross-check, and per-update monitor/mask ledgers from `# watch` lines. Provenance names the model files measured (`modelSourceSha256`). `recompile-schedule-replay-v1`, MODEL_ONLY. |
 | `test-schedule-replay.mjs` | FIXTURE for both: stretch points, one expansion, pointers and same-tick edges, the Night 1 minimal binding, prefix/slip/split/death outcomes, ledger pairing, input binding. In `npm run test:unit`. |
 
+| `compare-schedule-replay.mjs` | The replay comparison: binds the harness input to the winner's regenerated rows, drives the model with the same Sim queue under `--model-options`, and records both outcomes (6 AM or death, time), the first draw mismatch, every mismatch run, a gate-replay cross-check, and per-update monitor/mask ledgers from `# watch` lines. A death's reason is the rebuild's own when the trace carries `# counter` lines watching `being attacked by` (`ATTACKERS`: its value -> the character, from the office sheet's g556-574/g722/g731), else the model's only when the stream matched to the terminal loop, else UNKNOWN. `--counter-trace` reads the counters from another run of the same replay; `--baseline RECORD` records whether an earlier record of the same replay has the same draw projection. `recompile-schedule-replay-v1`, MODEL_ONLY. |
+| `test-schedule-replay.mjs` | FIXTURE for both: stretch points, one expansion, pointers and same-tick edges, the Night 1 minimal binding, prefix/slip/split/death outcomes, the attacker read from `# counter` lines, ledger pairing, input binding. In `npm run test:unit`. |
+
 ## Environment
 
 Pinned base: **`fnmwolf/Anaconda` at `9b00bb4227cc3ddd6f7baefe06120368bd7226e9`**
@@ -168,6 +171,13 @@ LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe ALSOFT_DRIVERS=null \
 Regenerate this patch after landing more (keeps `Chowdren/base` runtime `.cpp`,
 drops the Cython-generated `mmfparser/**/*.cpp`):
 `cd <anaconda> && git diff -- '*.py' '*.pyx' '*.pxd' '*.h' 'Chowdren/base' ':(exclude)build/*' > tools/recompile/mmfparser-chowdren-mobile.patch`
+That command writes git's own file order. Since `de14d55` the committed patch
+keeps its file order instead: regenerate only the sections of files that
+changed, in place (`git diff`, or `git diff --no-index` from a pristine archive
+of `9b00bb4` to the tree file, with the `a/` and `b/` headers set to the repo
+path), and append files new to the patch at the end. Unchanged sections then
+regenerate byte for byte. Verify with `git apply --check` against a pristine
+`9b00bb4` archive, and by applying it there and comparing the tree.
 
 ## State (2026-09-27): restored, deterministic harness, handles unscrambled
 
@@ -804,11 +814,12 @@ outcome match, not a trace match. What differs, and where:
   Its last monitor change is the model's 161st, a raise at tick 23406 that the
   rebuild never made, 17 updates before it left the office.
 - **The Night 5 death.** The streams split at 617, so after that the two sides
-  play different random nights. The record's rebuilt reason is UNKNOWN: the
-  harness cannot watch a Counter, and `being attacked by` is one. Snaps of the
-  drawn replay, kept outside the repository, show Balloon Boy standing in the
-  office at tick 23380 and Withered Foxy's jumpscare at 23410. That drawn run
-  has the headless run's office draw projection exactly.
+  play different random nights. This record's rebuilt reason is UNKNOWN: the
+  harness could not watch a Counter, and `being attacked by` is one. Snaps of
+  the drawn replay, kept outside the repository, show Balloon Boy standing in
+  the office at tick 23380 and Withered Foxy's jumpscare at 23410. That drawn
+  run has the headless run's office draw projection exactly. The rebuild now
+  names the attacker itself: Withered Foxy (next section).
 
 Same-tick edges: each night has one update where a release and a press
 coincide (Night 1: wind up, CAM 09 down at 21582; Nights 5 and 7: wind up,
@@ -984,3 +995,84 @@ Scope: one seed, three bindings, host rebuild only, MODEL_ONLY with
   again after g612, and g262 performs it on U+2. The model raises the flag at
   g623 and performs it on U+1, one update early. No replay here reaches it.
 - Night 7's footstep draw at 600.
+
+- ~~A counter watch in the harness, so a record can carry the rebuild's
+  attacker.~~ Done, next section.
+
+## The rebuild names its attacker (2026-09-27, S2b)
+
+The harness gained a Counter watch, and the Night 5 replay now says who killed
+it in the rebuild: **Withered Foxy**.
+
+`CHOWDREN_WATCH_COUNTER=name,name,...` writes `# counters <spec>` once, then
+after every event update `# counter <frame> <tick> <value>...`: the value of
+each named Counter's first live instance, in the order named, or `-` where the
+frame has none. Names may contain spaces, not commas. RTTI is off in the build,
+so a name alone cannot say that an instance is a Counter. `Counter`'s
+constructor records its object type id (`objects/counter.cpp`), and the watch
+reads only instances of a recorded type. Nothing else reads the record. The
+existing `# watch` and trace-row formats are unchanged, and runs without the
+variable write the same trace as before. Values print with `%.17g`.
+
+Binary `e616c431` (`pinned/e616c431-7163d628/`, the same `Assets.dat`) is
+`22610def`, the lead session's font atlas fix, plus the watch. Only
+`counter.cpp` and `run.cpp` (which includes `harness.cpp`) were recompiled. The
+patch (57 files, `b95c854f`) keeps the committed file order. It appends
+`base/font.cpp` for that fix, applies to a pristine `9b00bb4` archive
+(`git apply --check` and GNU `patch`), and reproduces the tree. Only the
+untracked `base/android/`, the generated `AndroidSans.dat` and the Cython
+`.cpp` differ, as before. Its unchanged sections regenerate byte for byte.
+
+```sh
+# the Night 5 recipe above, on binary e616c431, plus
+CHOWDREN_WATCH_COUNTER='being attacked by,in danger,got you stage,viewing,viewing hall light'
+node tools/recompile/compare-schedule-replay.mjs ... (as above) \
+  --baseline tools/recompile/results/night5-contact-final-replay-20260927.json \
+  --out tools/recompile/results/night5-contact-final-replay-e616c431.json
+```
+
+The value table (`ATTACKERS` in `compare-schedule-replay.mjs`) is the office
+sheet's writes of `being attacked by`: 1 Withered Freddy (g556/g560/g564),
+2 Withered Bonnie (g557/g561/g565), 3 Withered Chica (g558/g562/g566),
+4 Withered Foxy (g571-g573), 5 Toy Bonnie (g568, g722), 6 Toy Chica (g569),
+7 Toy Freddy (g559/g563/g567), 8 Mangle (g731), 9 Puppet (g574), 12 Golden
+Freddy (g570). Balloon Boy never writes it. The office's only jumps to
+05-static (g588-g595) end the attack animation that g575-g587 show, force and
+count while the counter is above 0.
+
+Night 5 `contact-final`, `night5-contact-final-replay-e616c431.json`,
+**`recompile-replay-232b3f74c48dc27a`**:
+
+- **The watch changes nothing.** The office draw projection is `a3bbb988`,
+  the same as `recompile-replay-7d1bffe0e1ed98b5` on `036076d3` (`baseline`),
+  and the same again in the repeat, the mask-watch run and a fourth run. The
+  alignments, mismatch runs, gate replay, model trace, and both ledgers (monitor
+  160/160, mask 156/156, same offsets) equal the earlier record's. The counter
+  series is identical in all four runs.
+- **The attacker.** `being attacked by` is 0 through office update 23399 and 4
+  from update 23400 to the last, 23422: **Withered Foxy** (`old foxy`). At the
+  end of updates 23399 and 23400, `viewing`, `viewing hall light` and
+  `in danger` all read 0. Of Foxy's three writers, that fits only g571, the
+  Every 10 s check with the monitor down. g572 needs `viewing` > 0 and g573
+  needs `viewing hall light` = 1. Balloon Boy was in the office (the earlier
+  snaps), and he clears the hall light.
+- **The exit is not the 40-update count.** The rebuild left the office 23
+  updates after the write (390.0 s at the write, 390.4 s at the exit). A
+  fourth run watching `attack animation:0` (trace sha256 `0f0ad9b1`, same draw
+  projection) counts value 0 from 1 to 22, with global 5 = 1 on every update.
+  So g588 (`>= 40`) did not end it. One of g589-g595, an attack animation
+  finishing, did (g579 forces animation 15 for value 4, and g589 exits on it).
+  The model kills Foxy on the 10 s check itself, with no animation, so its
+  death frame lines up with the write, not with the rebuild's exit. A
+  terminal-loop comparison of a Foxy death has to use the write.
+- The model still wins this schedule. The streams split at 617, so the model
+  never reaches this Foxy.
+
+Scope: one seed, one binding, host rebuild, MODEL_ONLY with `rebuilt-runtime`
+fidelity. No phone claim, no promotion, no default changed.
+Open:
+- Whether the phone's Foxy attack also ends on the animation (about 22 updates)
+  rather than the 40-count. That needs the phone's frames or a dump reading of
+  g576-g586, which the dump marks NoGood.
+- The A = 1 / A = 2 view-draw option (above), then replay Night 5 again to see
+  whether the model meets the same Foxy.

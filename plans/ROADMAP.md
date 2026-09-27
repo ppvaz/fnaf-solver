@@ -112,6 +112,10 @@ Details:
   - Winner schedules now replay into the rebuild and the model together
     (2026-09-27, seed 24850). Night 1 `minimal` and Night 7 `k3` reach 6 AM in
     both. Night 5 `contact-final` dies in the rebuild and wins in the model.
+    The rebuild names its killer through a harness Counter watch: Withered Foxy,
+    `being attacked by` = 4 from office update 23400
+    ([record](../tools/recompile/results/night5-contact-final-replay-e616c431.json),
+    `recompile-replay-232b3f74c48dc27a`).
     Every monitor and mask contact lands in both. The draw streams split for good
     at the first raise over a stunned Toy (the model's view draws read A = 1 as
     A = 2), at ticks 10200, 617 and 613. MODEL_ONLY and DIVERGENT

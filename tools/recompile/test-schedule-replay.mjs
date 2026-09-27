@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { schedule } from '../device/minus-toys-plan.mjs';
-import { LEDGERS, compareScheduleReplay, mismatchRuns, transitions, watchSeries } from './compare-schedule-replay.mjs';
+import { ATTACKERS, LEDGERS, compareScheduleReplay, counterSeries, mismatchRuns, rebuiltAttacker, transitions, watchSeries } from './compare-schedule-replay.mjs';
 import { drawTrace } from './model-draw-trace.mjs';
 import { controlPoints, expandRows, frameOf, harnessInput, harnessRows, winnerSchedule } from './schedule-to-input.mjs';
 
@@ -69,10 +69,11 @@ assert.equal(input.office.rows.length, 192);
 const modelOptions = json('tools/recompile/sourced-rebuild-model-options.json');
 const model = drawTrace({ night: 1, seed: 24850, frames: 30000, rows: sched.queue, modelOptions, observe: LEDGERS.monitor.model });
 assert.ok(model.won);
-const traceOf = (out, { from = 0, to = out.length - 1, draws = (r) => r.draws, next = 5, watch = model.observed } = {}) => {
-  let text = '# frame tick draws graine values...\n# frame 3 seeded 24850\n';
+const traceOf = (out, { from = 0, to = out.length - 1, draws = (r) => r.draws, next = 5, watch = model.observed, counters = null } = {}) => {
+  let text = `# frame tick draws graine values...\n${counters ? `# counters ${counters.names.join(',')}\n` : ''}# frame 3 seeded 24850\n`;
   for (let t = from; t + 1 <= to; t += 1) {
     text += `# watch 3 ${t} off 0 0 new 0 x 757 v0 ${watch[t + 1]}\n`;
+    if (counters) text += `# counter 3 ${t} ${counters.at(t).map((v) => (v === null ? '-' : v)).join(' ')}\n`;
     text += `3 ${t} ${draws(out[t + 1], t)} ${out[t + 1].state}\n`;
   }
   return `${text}# frame ${next} seeded 24850\n${next} 0 0 1\n`;
@@ -108,13 +109,55 @@ assert.deepEqual([slip.drawRuns.firstPersistent.start, slip.drawRuns.matchedBefo
 const died = compareScheduleReplay({ ...args, ledgers: [], text: traceOf(model.out, { to: 9001, next: 4 }) });
 assert.deepEqual([died.outcome.rebuilt.result, died.outcome.rebuilt.reason, died.outcome.sameResult], ['death', 'UNKNOWN', false]);
 assert.equal(died.status, 'INCOMPLETE');
+// With the harness counter watch, the rebuild names its own attacker: `being attacked by` on its last office update.
+const watched = ['being attacked by', 'in danger', 'viewing'];
+const foxyAt = (t) => [t >= 8980 ? 4 : 0, 0, t % 600 < 300 ? 1 : 0];
+const named = compareScheduleReplay({ ...args, ledgers: [], text: traceOf(model.out, { to: 9001, next: 4, counters: { names: watched, at: foxyAt } }) });
+assert.deepEqual([named.outcome.rebuilt.result, named.outcome.rebuilt.reason], ['death', 'Withered Foxy']);
+assert.match(named.outcome.rebuilt.reasonSource, /own `being attacked by` \(CHOWDREN_WATCH_COUNTER\) = 4/);
+assert.deepEqual([named.outcome.rebuilt.attacker.setAtTick, named.outcome.rebuilt.attacker.updatesHeld, named.outcome.rebuilt.attacker.lastTick], [8980, 21, 9000]);
+assert.deepEqual(named.outcome.rebuilt.attacker.before, { 'being attacked by': 0, 'in danger': 0, viewing: 0 });
+assert.deepEqual(named.counters.changes, { 'being attacked by': 1, 'in danger': 0, viewing: 30 }, 'ticks 0..9000 flip viewing every 300');
+assert.equal(named.counters.officeUpdates, 9001);
+assert.equal(named.counters.trace, 'main');
+// The same counters read from another run of the replay, and a run with another draw stream refused.
+const plain = traceOf(model.out, { to: 9001, next: 4 });
+const fromOther = compareScheduleReplay({ ...args, ledgers: [], text: plain,
+  counters: { text: traceOf(model.out, { to: 9001, next: 4, counters: { names: watched, at: foxyAt } }) } });
+assert.equal(fromOther.outcome.rebuilt.reason, 'Withered Foxy');
+assert.equal(fromOther.counters.trace.officeDrawProjectionMatches, true);
+assert.throws(() => compareScheduleReplay({ ...args, ledgers: [], text: plain, counters: { text: traceOf(model.out,
+  { to: 9001, next: 4, counters: { names: watched, at: foxyAt }, draws: (r, t) => (t === 5 ? r.draws + 1 : r.draws) }) } }), /counter trace is not a run of the same replay/);
+assert.equal(compareScheduleReplay({ ...args, ledgers: [], counters: false,
+  text: traceOf(model.out, { to: 9001, next: 4, counters: { names: watched, at: foxyAt } }) }).outcome.rebuilt.reason, 'UNKNOWN', 'counters: false reads none');
+// A death whose counter reads 0 (or a value the sheet never writes) stays UNKNOWN, and says what it read.
+const unnamed = compareScheduleReplay({ ...args, ledgers: [], text: traceOf(model.out, { to: 9001, next: 4, counters: { names: watched, at: () => [0, 0, 0] } }) });
+assert.equal(unnamed.outcome.rebuilt.reason, 'UNKNOWN');
+assert.match(unnamed.outcome.rebuilt.reasonSource, /read 0 on its last office update, which names no attacker/);
+// A 6 AM carries no attacker even with the watch on.
+assert.equal(compareScheduleReplay({ ...args, ledgers: [], text: traceOf(model.out, { counters: { names: watched, at: () => [0, 0, 0] } }) }).outcome.rebuilt.attacker, undefined);
 assert.throws(() => compareScheduleReplay({ ...args, text: traceOf(model.out), inputText: navigation }), /not the navigation plus/);
 assert.throws(() => compareScheduleReplay({ ...args, text: traceOf(model.out), ledgers: [{ name: 'vents' }] }), /--ledger/);
 
 // --- helpers ---
 assert.deepEqual(transitions([[-1, 0], [0, 0], [1, 1], [5, 2]]), [{ tick: 1, from: 0, to: 1 }, { tick: 5, from: 1, to: 2 }]);
 assert.deepEqual(watchSeries('# watch 3 4 off 0 0 new 0 x 1 v0 2 v1 7\n# watch 12 4 off 0 0 new 0 x 1 v0 9\n', 3), new Map([[4, 2]]));
+assert.deepEqual(counterSeries('# counters being attacked by,in danger\n# frame 3 seeded 1\n# counter 3 0 0 0\n# counter 3 1 4 -\n' +
+  '# frame 4 seeded 1\n# counter 4 0 7 7\n# frame 3 seeded 1\n# counter 3 0 9 9\n', 3),
+{ names: ['being attacked by', 'in danger'], series: new Map([[0, [0, 0]], [1, [4, null]]]) }, 'the first office visit only; - is an absent Counter');
+assert.equal(counterSeries('# frame 3 seeded 1\n3 0 0 1\n', 3), null, 'no watch, no series');
+assert.throws(() => counterSeries('# frame 3 seeded 1\n# counter 3 0 1\n', 3), /without its # counters header/);
+assert.throws(() => counterSeries('# counters a,b\n# frame 3 seeded 1\n# counter 3 0 1\n', 3), /one value per watched counter/);
+const series = { names: ['being attacked by', 'viewing'], series: new Map([[0, [0, 1]], [1, [0, 0]], [2, [9, 0]], [3, [9, 0]]]) };
+assert.deepEqual((({ value, name, object, setAtTick, updatesHeld }) => [value, name, object, setAtTick, updatesHeld])(rebuiltAttacker(series, 3)),
+  [9, 'The Puppet', 'sockpuppet', 2, 2]);
+assert.equal(rebuiltAttacker({ names: ['viewing'], series: new Map([[0, [1]]]) }, 0), null, 'a watch without the counter');
+assert.throws(() => rebuiltAttacker(series, 7), /no office update 7/);
+// The sheet's `being attacked by` writes (03-04-Office g556-574, g722, g731): ten attackers, never Balloon Boy.
+assert.deepEqual(Object.keys(ATTACKERS).map(Number), [1, 2, 3, 4, 5, 6, 7, 8, 9, 12]);
+assert.ok(Object.values(ATTACKERS).every((a) => a.setBy.length && a.setBy.every((g) => /^g\d+$/.test(g))));
+assert.ok(!Object.values(ATTACKERS).some((a) => /balloon/i.test(a.name)));
 assert.deepEqual(mismatchRuns([{ tick: 0, draws: 1, state: 2 }, { tick: 1, draws: 9, state: 2 }],
   [{}, { draws: 1, state: 2 }, { draws: 1, state: 2 }]).runs, [{ start: 1, length: 1, rejoined: false }]);
 console.log('PASS schedule replay: FULL-stretch points, one expansion for harness and model, pointers and same-tick edges, ' +
-  'the Night 1 minimal binding, prefix/slip/split/death outcomes, ledger pairing and input binding (FIXTURE)');
+  'the Night 1 minimal binding, prefix/slip/split/death outcomes, the attacker from the counter watch, ledger pairing and input binding (FIXTURE)');

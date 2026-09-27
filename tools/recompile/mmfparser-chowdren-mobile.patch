@@ -3065,10 +3065,10 @@ index 30eb23e..50c4cb3 100644
          platform_sleep(t);
 diff --git a/Chowdren/base/harness.cpp b/Chowdren/base/harness.cpp
 new file mode 100644
-index 0000000..7fd69b2
+index 0000000..176de1c
 --- /dev/null
 +++ b/Chowdren/base/harness.cpp
-@@ -0,0 +1,403 @@
+@@ -0,0 +1,455 @@
 +// Deterministic research harness for the build-296 recompile. See harness.h.
 +// Compiled once, included from run.cpp next to crashdump.cpp.
 +
@@ -3391,10 +3391,62 @@ index 0000000..7fd69b2
 +    }
 +}
 +
++// The object type ids built as a Counter. Counter's constructor notes each one
++// (objects/counter.cpp), the default counter during static initialisation, so
++// this is a zero-initialised array rather than a container. RTTI is off, and a
++// name alone does not say that an instance is a Counter.
++static unsigned char h_counter_types[65536];
++
++void harness_note_counter_type(int type_id)
++{
++    if (type_id >= 0 && type_id < int(sizeof h_counter_types)) h_counter_types[type_id] = 1;
++}
++
++// CHOWDREN_WATCH_COUNTER=name,name,...: after each update, one '# counter' trace
++// line, `# counter <frame> <tick>` and then, in the order named, the value of
++// each named Counter's first live instance, or '-' when this frame has none.
++// Names may hold spaces, not commas; the spec is written once as '# counters'.
++static void counter_line(int frame_index)
++{
++    static bool parsed = false;
++    static std::vector<std::string> names;
++    if (!parsed) {
++        parsed = true;
++        const char * w = getenv("CHOWDREN_WATCH_COUNTER");
++        for (const char * c = w; c && *c; ) {
++            const char * end = strchr(c, ',');
++            names.push_back(end ? std::string(c, end - c) : std::string(c));
++            c = end ? end + 1 : NULL;
++        }
++        if (!names.empty() && h_trace) fprintf(h_trace, "# counters %s\n", w);
++    }
++    if (names.empty() || !h_trace) return;
++    fprintf(h_trace, "# counter %d %d", frame_index, h_tick);
++    Frame * f = manager.frame;
++    for (size_t n = 0; n < names.size(); n++) {
++        Counter * found = NULL;
++        for (size_t li = 0; li < f->layers.size() && found == NULL; li++) {
++            Layer & layer = f->layers[li];
++            for (LayerInstances::iterator it = layer.instances.begin(); it != layer.instances.end(); ++it) {
++                FrameObject & obj = *it;
++                if (obj.flags & DESTROYING) continue;
++                if (obj.id < 0 || obj.id >= int(sizeof h_counter_types) || !h_counter_types[obj.id]) continue;
++                if (obj.get_name() != names[n]) continue;
++                found = (Counter *)&obj;
++                break;
++            }
++        }
++        if (found) fprintf(h_trace, " %.17g", found->value);
++        else fputs(" -", h_trace);
++    }
++    fputc('\n', h_trace);
++}
++
 +bool harness_after_events(int frame_index)
 +{
 +    if (!h_active) return true;
 +    watch_line(frame_index);
++    counter_line(frame_index);
 +    if (h_trace) {
 +        fprintf(h_trace, "%d %d %u %u", frame_index, h_tick, fusion_draws, fusion_graine);
 +        GlobalValues * g = manager.values;
@@ -3506,10 +3558,25 @@ index 72cc910..5799d90 100644
  FrameObject * default_active_instance = &default_active;
 +FrameObject * default_instance = &default_active;
 diff --git a/Chowdren/base/objects/counter.cpp b/Chowdren/base/objects/counter.cpp
-index a27e49c..492d459 100644
+index a27e49c..c91f786 100644
 --- a/Chowdren/base/objects/counter.cpp
 +++ b/Chowdren/base/objects/counter.cpp
-@@ -181,3 +181,21 @@ void Counter::draw()
+@@ -5,9 +5,14 @@
+ 
+ // Counter
+ 
++// harness.cpp: lets CHOWDREN_WATCH_COUNTER tell a Counter from another object
++// of the same name. It records the type id only; nothing reads it in a game.
++void harness_note_counter_type(int type_id);
++
+ Counter::Counter(int x, int y, int type_id)
+ : FrameObject(x, y, type_id), flash_interval(0.0f), zero_pad(0)
+ {
++    harness_note_counter_type(type_id);
+ }
+ 
+ Counter::~Counter()
+@@ -181,3 +186,21 @@ void Counter::draw()
          image->draw(x + image->hotspot_x, y + image->hotspot_y, blend_color);
      }
  }
