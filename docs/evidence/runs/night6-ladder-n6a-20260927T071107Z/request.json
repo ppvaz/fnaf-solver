@@ -1,0 +1,563 @@
+{
+  "spec": {
+    "schema": "device-campaign-v1",
+    "version": 1,
+    "target": {
+      "package": "com.scottgames.fnaf2",
+      "build": "com.scottgames.fnaf2:2.0.7+26"
+    },
+    "profile": "hid-mediaprojection",
+    "nights": [
+      {
+        "night": 6,
+        "mode": "story",
+        "menuTarget": "sixthNight",
+        "timing": {
+          "idleUntilMs": 0,
+          "loopStartMs": 0,
+          "observeUntilMs": 420000,
+          "periodMs": 10000,
+          "stopAtMs": 420000
+        }
+      }
+    ],
+    "retry": {
+      "maxAttempts": 1
+    },
+    "proof": {
+      "requireSixAm": true,
+      "requireSaveOrMenu": true
+    }
+  },
+  "bundle": {
+    "schema": "device-campaign-bundle-v1",
+    "version": 1,
+    "specHash": "fnv1a-d9bb672b",
+    "plans": [
+      {
+        "night": 6,
+        "timing": {
+          "idleUntilMs": 0,
+          "loopStartMs": 0,
+          "observeUntilMs": 420000,
+          "periodMs": 10000,
+          "stopAtMs": 420000
+        },
+        "cycles": {
+          "opening": {
+            "blocks": [
+              {
+                "actions": [
+                  {
+                    "atMs": 0,
+                    "control": "monitor",
+                    "cycle": "opening",
+                    "durationMs": 33,
+                    "id": "opening-1",
+                    "kind": "ensure",
+                    "schema": "artifact-action-v1",
+                    "targetMonitorUp": true
+                  }
+                ],
+                "atMs": 0,
+                "cycle": "opening",
+                "id": "opening-block-1",
+                "schema": "artifact-action-block-v1"
+              },
+              {
+                "actions": [
+                  {
+                    "atMs": 300,
+                    "control": "cam:11",
+                    "cycle": "opening",
+                    "durationMs": 33,
+                    "id": "opening-2",
+                    "kind": "tap",
+                    "requiresMonitorUp": true,
+                    "schema": "artifact-action-v1"
+                  }
+                ],
+                "atMs": 300,
+                "cycle": "opening",
+                "id": "opening-block-2",
+                "schema": "artifact-action-block-v1"
+              },
+              {
+                "actions": [
+                  {
+                    "atMs": 833,
+                    "control": "cam:9",
+                    "cycle": "opening",
+                    "durationMs": 33,
+                    "id": "opening-3",
+                    "kind": "tap",
+                    "requiresMonitorUp": true,
+                    "schema": "artifact-action-v1"
+                  }
+                ],
+                "atMs": 833,
+                "cycle": "opening",
+                "id": "opening-block-3",
+                "schema": "artifact-action-block-v1"
+              },
+              {
+                "actions": [
+                  {
+                    "atMs": 883,
+                    "control": "monitor",
+                    "cycle": "opening",
+                    "durationMs": 33,
+                    "id": "opening-4",
+                    "kind": "ensure",
+                    "schema": "artifact-action-v1",
+                    "targetMonitorUp": false
+                  }
+                ],
+                "atMs": 883,
+                "cycle": "opening",
+                "id": "opening-block-4",
+                "schema": "artifact-action-block-v1"
+              },
+              {
+                "actions": [
+                  {
+                    "atMs": 1616,
+                    "control": "monitor",
+                    "cycle": "opening",
+                    "durationMs": 33,
+                    "id": "opening-5",
+                    "kind": "ensure",
+                    "schema": "artifact-action-v1",
+                    "targetMonitorUp": true
+                  }
+                ],
+                "atMs": 1616,
+                "cycle": "opening",
+                "id": "opening-block-5",
+                "schema": "artifact-action-block-v1"
+              },
+              {
+                "actions": [
+                  {
+                    "atMs": 1916,
+                    "control": "cameraFeedLight",
+                    "cycle": "opening",
+                    "durationMs": 100,
+                    "id": "opening-6",
+                    "kind": "hold",
+                    "requiresMonitorUp": true,
+                    "schema": "artifact-action-v1"
+                  }
+                ],
+                "atMs": 1916,
+                "cycle": "opening",
+                "id": "opening-block-6",
+                "schema": "artifact-action-block-v1"
+              },
+              {
+                "actions": [
+                  {
+                    "atMs": 2083,
+                    "control": "wind",
+                    "cycle": "opening",
+                    "durationMs": 1750,
+                    "id": "opening-7",
+                    "kind": "hold",
+                    "requiresMonitorUp": true,
+                    "schema": "artifact-action-v1"
+                  }
+                ],
+                "atMs": 2083,
+                "cycle": "opening",
+                "id": "opening-block-7",
+                "schema": "artifact-action-block-v1"
+              },
+              {
+                "actions": [
+                  {
+                    "atMs": 3833,
+                    "compound": "camdrop",
+                    "control": "cameraFeedLight",
+                    "cycle": "opening",
+                    "durationMs": 200,
+                    "id": "opening-8",
+                    "kind": "compound",
+                    "leadMs": 200,
+                    "requiresMonitorUp": true,
+                    "schema": "artifact-action-v1",
+                    "tailMs": 200,
+                    "targetMonitorUp": false
+                  }
+                ],
+                "atMs": 3833,
+                "cycle": "opening",
+                "id": "opening-block-8",
+                "schema": "artifact-action-block-v1"
+              },
+              {
+                "actions": [
+                  {
+                    "atMs": 4615,
+                    "control": "mask",
+                    "cycle": "opening",
+                    "durationMs": 33,
+                    "id": "opening-9",
+                    "kind": "press",
+                    "requiresMonitorUp": false,
+                    "schema": "artifact-action-v1",
+                    "targetMaskOn": true
+                  }
+                ],
+                "atMs": 4615,
+                "cycle": "opening",
+                "id": "opening-block-9",
+                "schema": "artifact-action-block-v1"
+              }
+            ],
+            "cycle": "opening",
+            "final": {
+              "camera": null,
+              "maskOn": true,
+              "monitorUp": false
+            },
+            "initial": {
+              "maskOn": false,
+              "monitorUp": false
+            }
+          },
+          "toys": {
+            "blocks": [
+              {
+                "actions": [
+                  {
+                    "atMs": 9560,
+                    "control": "mask",
+                    "cycle": "toys",
+                    "durationMs": 200,
+                    "id": "toys-1",
+                    "kind": "press",
+                    "requiresMonitorUp": false,
+                    "schema": "artifact-action-v1",
+                    "targetMaskOn": false
+                  }
+                ],
+                "atMs": 9560,
+                "cycle": "toys",
+                "id": "toys-block-1",
+                "schema": "artifact-action-block-v1"
+              },
+              {
+                "actions": [
+                  {
+                    "atMs": 9960,
+                    "control": "hallLight",
+                    "cycle": "toys",
+                    "durationMs": 33,
+                    "id": "toys-2",
+                    "kind": "hold",
+                    "requiresMonitorUp": false,
+                    "schema": "artifact-action-v1"
+                  }
+                ],
+                "atMs": 9960,
+                "cycle": "toys",
+                "id": "toys-block-2",
+                "schema": "artifact-action-block-v1"
+              },
+              {
+                "actions": [
+                  {
+                    "atMs": 10100,
+                    "control": "monitor",
+                    "cycle": "toys",
+                    "durationMs": 200,
+                    "id": "toys-3",
+                    "kind": "ensure",
+                    "schema": "artifact-action-v1",
+                    "targetMonitorUp": true
+                  }
+                ],
+                "atMs": 10100,
+                "cycle": "toys",
+                "id": "toys-block-3",
+                "schema": "artifact-action-block-v1"
+              },
+              {
+                "actions": [
+                  {
+                    "atMs": 10400,
+                    "control": "cameraFeedLight",
+                    "cycle": "toys",
+                    "durationMs": 100,
+                    "id": "toys-4",
+                    "kind": "hold",
+                    "requiresMonitorUp": true,
+                    "schema": "artifact-action-v1"
+                  }
+                ],
+                "atMs": 10400,
+                "cycle": "toys",
+                "id": "toys-block-4",
+                "schema": "artifact-action-block-v1"
+              },
+              {
+                "actions": [
+                  {
+                    "atMs": 10570,
+                    "control": "wind",
+                    "cycle": "toys",
+                    "durationMs": 3030,
+                    "id": "toys-5",
+                    "kind": "hold",
+                    "requiresMonitorUp": true,
+                    "schema": "artifact-action-v1"
+                  }
+                ],
+                "atMs": 10570,
+                "cycle": "toys",
+                "id": "toys-block-5",
+                "schema": "artifact-action-block-v1"
+              },
+              {
+                "actions": [
+                  {
+                    "atMs": 13650,
+                    "compound": "camdrop",
+                    "control": "cameraFeedLight",
+                    "cycle": "toys",
+                    "durationMs": 200,
+                    "id": "toys-6",
+                    "kind": "compound",
+                    "leadMs": 150,
+                    "requiresMonitorUp": true,
+                    "schema": "artifact-action-v1",
+                    "tailMs": 200,
+                    "targetMonitorUp": false
+                  }
+                ],
+                "atMs": 13650,
+                "cycle": "toys",
+                "id": "toys-block-6",
+                "schema": "artifact-action-block-v1"
+              },
+              {
+                "actions": [
+                  {
+                    "atMs": 14249,
+                    "control": "mask",
+                    "cycle": "toys",
+                    "durationMs": 200,
+                    "id": "toys-7",
+                    "kind": "press",
+                    "requiresMonitorUp": false,
+                    "schema": "artifact-action-v1",
+                    "targetMaskOn": true
+                  }
+                ],
+                "atMs": 14249,
+                "cycle": "toys",
+                "id": "toys-block-7",
+                "schema": "artifact-action-block-v1"
+              }
+            ],
+            "cycle": "toys",
+            "final": {
+              "camera": null,
+              "maskOn": true,
+              "monitorUp": false
+            },
+            "initial": {
+              "camera": null,
+              "maskOn": true,
+              "monitorUp": false
+            }
+          }
+        },
+        "armVerification": {
+          "cameras": [
+            "cam:9",
+            "cam:11"
+          ],
+          "untilMs": 2033,
+          "viewing": "cam:11"
+        },
+        "sha256": "0a7fdfec3f16f6a313055cfb733589396d87a6789f4e499211dea5e1f8e8536e"
+      }
+    ],
+    "bundleHash": "fnv1a-59bf4565",
+    "artifact": {
+      "winnerHash": "fnv1a-c27182da",
+      "engineHash": "minus-toys-engine-current-v1",
+      "profileHash": "59a71a13e9c7e2004897821ca1e6d7c664272818bb6fca4b28cdea6557c77dea"
+    },
+    "planTexts": {
+      "6": "#policy minus-toys\n#night 6\n#period 10000\n#loop-start 0\n#stop-at 420000\n#observe-until 420000\n#arm-verify 1\n#arm-verify-cameras cam:9,cam:11\n#arm-verify-viewing cam:11\n#arm-verify-until 2033\n#cycle opening 7000\n0 tap monitor 33\n300 tap cam11 33\n833 tap cam9 33\n883 tap monitor 33\n1616 tap monitor 33\n1916 hold cameraFeedLight 100\n2083 hold wind 1750\n3833 camdrop 200 200 200\n4615 tap mask 33\n#cycle toys 10000\n9560 tap mask 200\n9960 hall 33\n10100 tap monitor 200\n10400 hold cameraFeedLight 100\n10570 hold wind 3030\n13650 camdrop 150 200 200\n14249 tap mask 200\n"
+    },
+    "planHashes": {
+      "6": "103bb20143c616716c3a184c02e89bdbfd49b81d55ca8485082434f8d083d696"
+    },
+    "machine": {
+      "claimLevel": "MODEL_ONLY",
+      "pilotOffsetMs": 10,
+      "deviceSpacingMs": null,
+      "contactMs": null,
+      "tapContactMs": null
+    },
+    "bundleDirectory": "artifacts/ladder-20260927/n6"
+  },
+  "profile": {
+    "schema": "device-profile-v1",
+    "id": "hid-mediaprojection",
+    "name": "Moto g56 HID + MediaProjection 100 ms qualification candidate",
+    "lifecycle": "qualification-candidate",
+    "targetBuild": "com.scottgames.fnaf2:2.0.7+26",
+    "clock": "device-monotonic-ms",
+    "actuator": "hid-multi",
+    "visualSensor": "mediaprojection",
+    "visualDetector": "cue-helper-detector",
+    "geometry": "moto-g56-landscape-2400x1080-v1",
+    "calibrations": {
+      "geometry": "moto-g56-fnaf2-default-controls-v2",
+      "actuator-timing": "hid-100ms-candidate-unqualified-v1",
+      "visual": "mediaprojection-v1",
+      "detector": "mediaprojection-v1",
+      "monitorRule": "d4b2f7bfd1918d38eef04fb22a6d27754ad9d8a2ee23ac714f88286d5b6b30cd"
+    },
+    "controlMap": {
+      "mask": {
+        "x": 600,
+        "y": 995
+      },
+      "monitor": {
+        "x": 1780,
+        "y": 995
+      },
+      "cameraFeedLight": {
+        "x": 900,
+        "y": 540
+      },
+      "hallLight": {
+        "x": 1200,
+        "y": 540
+      },
+      "wind": {
+        "x": 500,
+        "y": 888
+      },
+      "leftVentLight": {
+        "x": 350,
+        "y": 615
+      },
+      "rightVentLight": {
+        "x": 2050,
+        "y": 615
+      },
+      "cam:4": {
+        "x": 1728,
+        "y": 690
+      },
+      "cam:7": {
+        "x": 1776,
+        "y": 606
+      },
+      "cam:8": {
+        "x": 1412,
+        "y": 590
+      },
+      "cam:9": {
+        "x": 2144,
+        "y": 548
+      },
+      "cam:10": {
+        "x": 1984,
+        "y": 716
+      },
+      "cam:11": {
+        "x": 2228,
+        "y": 652
+      },
+      "mute": {
+        "x": 545,
+        "y": 78
+      }
+    },
+    "limits": {
+      "maxActions": 64,
+      "maxDurationMs": 15000,
+      "dryRunOnly": false,
+      "qualification": "qualification-hid-mediaprojection-20260906"
+    },
+    "viewScroll": {
+      "schema": "view-scroll-v1",
+      "source": "application.ccn 04-Office. Frame header chunk 13108 (world/window). Layers chunk 13121 read as 16.16 FIXED POINT -- a float read returns 0.000 for every layer and looks like a real answer. Instances chunk 13112: 4-byte count then 20-byte records handle/oi/x/y/parentType/parentHandle/layer/unknown, instance OI is raw ^48 then ^28 for build 26. Several hitboxes are REPOSITIONED at StartOfFrame, so a placed coordinate can lie: grep the frame for SetPosition.",
+      "recordedAt": "2026-09-19",
+      "worldWidth": 1600,
+      "worldHeight": 768,
+      "windowWidth": 1024,
+      "windowHeight": 768,
+      "maxPanPx": 576,
+      "centerDisplayFollows": "04-Office drives CenterDisplayX from an OBJECT selected by `viewing`: `camera follow 2` at viewing=0 (office), `camera follow` on some cameras, hard 0 on viewing 1-4, 5 and 6. The pan is the display centre tracking a marker, not a player-dragged offset, so that marker's x is the state variable.",
+      "panDependent": {
+        "hallLight": true,
+        "leftVentLight": true,
+        "rightVentLight": true,
+        "cameraFeedLight": true,
+        "mask": false,
+        "monitor": "UNKNOWN"
+      },
+      "note": "xCoef 1.00 (layer 0) means the control scrolls 1:1 with the view, so a FIXED screen coordinate for it is only valid at a known pan offset. The light hitboxes are layer 0; the flip mask button is layer 4 at xCoef 0.00 and does not move. monitorFrame is layer 3 at xCoef 1.00 -- but that is the FRAME, and the object list does not name the monitor toggle's own hitbox, so `monitor` is UNKNOWN(not-traced) rather than assumed to scroll with it. This is why a panned office loses light presses while mask presses still land -- the asymmetry measured on Night 3, 2026-09-19. NOTHING in the executor models pan state, so every entry marked true has a coordinate valid only at pan 0.",
+      "panObservation": "UNKNOWN(not-implemented): the Cue Helper reports pan_anchor_state but read UNKNOWN (pan_anchor_reason=bulb-not-found) throughout the 2026-09-19 runs.",
+      "worldObjects": {
+        "left light": {
+          "worldX": 147,
+          "worldY": 429,
+          "layer": 0,
+          "xCoef": 1,
+          "note": "lightLeftHitbox is SetPosition-attached to this at StartOfFrame"
+        },
+        "right light": {
+          "worldX": 1444,
+          "worldY": 427,
+          "layer": 0,
+          "xCoef": 1,
+          "note": "lightRightHitbox is SetPosition-attached to this at StartOfFrame"
+        },
+        "camera follow 2": {
+          "worldX": 500,
+          "layer": 0,
+          "xCoef": 1,
+          "note": "the office display centre tracks this object (viewing=0)"
+        },
+        "cameraHitbox": {
+          "worldX": 1026,
+          "worldY": 852,
+          "layer": 3,
+          "xCoef": 1
+        },
+        "hudFlashlightHitbox": {
+          "worldX": 76,
+          "worldY": 844,
+          "layer": 3,
+          "xCoef": 1
+        },
+        "musicButtonHitbox": {
+          "layer": 3,
+          "xCoef": 1,
+          "note": "SetPosition to an ABSOLUTE (233,610) OR (233,595) chosen by a global value -- two valid positions 15 px apart, so a profile can be calibrated against the wrong one"
+        }
+      },
+      "pinnedLayer4": [
+        "flip mask button",
+        "drop button",
+        "red button",
+        "white button",
+        "muteButtonHitbox"
+      ],
+      "ventLightSeparationPx": 1297,
+      "ventLightNote": "The two vent lights are 1297 px apart in world space inside a 1024 px window, on a layer that scrolls 1:1 across 576 px of pan. They therefore CANNOT both be correct at any single fixed screen coordinate -- the profile maps leftVentLight and rightVentLight to fixed points regardless."
+    }
+  },
+  "execution": {
+    "armMode": "observe-once"
+  }
+}
