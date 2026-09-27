@@ -1925,3 +1925,49 @@ Open:
 - The title's background (static, face flicker) against the phone at a
   matched RNG state.
 - Android's collision masks for RGB565 (native code).
+
+**2026-09-27 (late night): a winner's schedule replayed into the rebuild and into the model (S2b, MODEL_ONLY).**
+
+- **Tools.** `tools/recompile/schedule-to-input.mjs` turns a committed binding's
+  gate schedule into harness rows, from one expansion that also yields the Sim
+  queue (refused unless that queue equals `schedule()`). It quantizes to 60 Hz
+  on the office frame and uses the profile's control points through the FULL
+  stretch. `tools/recompile/compare-schedule-replay.mjs` binds the input to the
+  winner and replays the same queue in the model under the rebuild options. It
+  records both outcomes, the first draw mismatch and every mismatch run, a
+  gate-replay cross-check, and monitor/mask ledgers from `# watch` lines.
+  FIXTURE: `test-schedule-replay.mjs`, in `npm run test:unit`. The harness
+  needed no new op: holds are `down ... up`.
+- **Runs** on the pinned binary `036076d3`, seed 24850. Each night was run twice,
+  with equal office draw projections:
+  - Night 1 `minimal`: 6 AM in both at 25,201. Equal on 10,199 of the first
+    10,200 updates (`recompile-replay-f0625216de3bf868`).
+  - Night 5 `contact-final`: the rebuild dies after 23,423 updates, Foxy with
+    Balloon Boy inside (local snaps). The model wins. Equal on 615 of the first
+    617 (`recompile-replay-7d1bffe0e1ed98b5`).
+  - Night 7 `k3`, all ten dials at 20 (dumped before Ready): 6 AM in both.
+    Equal on 606 of the first 613 (`recompile-replay-80f41ded17461661`).
+  - Every monitor and mask contact takes effect in both, with fixed offsets on
+    every cycle: 8/8, 160/160 and 172/172 monitor changes; 156/156 and 168/168
+    mask changes.
+- **Where they differ.**
+  - The split, on all three nights: g366/g368/g419 draw only for a Toy at
+    A == 2. The model draws for `pending`, which includes a roll held at A = 1
+    by the stun (B > 0) or the Show Stage gate. It also marks the fade C at the
+    roll.
+  - One-update slips that rejoin: a monitor drop or mask removal lands one
+    update later in the rebuild. g614/g618 raise `drop everything` after g262
+    in the sheet, and the model performs it in the press's own tick.
+  - Night 7 only: g781's Every 1000 runs one update late in the model from tick
+    374. Its cause is not established.
+- **Records.** `tools/recompile/results/night{1-minimal,5-contact-final,7-k3}-replay-20260927.json`
+  ([README](../tools/recompile/README.md), "Winner schedules replayed"). No
+  default changed, no phone claim.
+
+Open:
+- A default-off sourced option for the A = 1 / A = 2 split and the C write, then
+  replay again to the next difference.
+- The drop and mask-off timing in the model's press path.
+- The per-cycle ledger against a phone recording, which S2b's closing condition
+  needs. No k2 or k3 video exists on this machine.
+- A harness counter watch, so a record can name the rebuild's attacker itself.

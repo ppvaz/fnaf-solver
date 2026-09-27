@@ -36,7 +36,11 @@ export function simOptionsFrom(modelOptions) {
     .map(([key, value]) => [key, HOOK_CONSTANTS.includes(key) ? () => value : value]));
 }
 
-export function drawTrace({ night, seed, frames, rows = [], customNight = undefined, modelOptions = {} }) {
+/**
+ * `rows` are `[frame, press|release, action]` applied before the tick from `frame` (as a gate replay
+ * applies its queue); `observe(sim)`, if given, is read at frame 0 and after every tick into `observed`.
+ */
+export function drawTrace({ night, seed, frames, rows = [], customNight = undefined, modelOptions = {}, observe = null }) {
   const simOptions = simOptionsFrom(modelOptions);
   let draws = 0;
   // Sim's constructor spends draws too (for example Foxy's initial readyAt).
@@ -53,13 +57,15 @@ export function drawTrace({ night, seed, frames, rows = [], customNight = undefi
   const next = sim.rng.next.bind(sim.rng);
   sim.rng.next = () => { draws += 1; return next(); };
   const out = [{ frame: 0, draws, state: sim.rng.state }];
+  const observed = observe ? [observe(sim)] : null;
   let i = 0;
   while (sim.frame < frames && sim.alive && !sim.won) {
     while (i < rows.length && rows[i][0] <= sim.frame) { const [, op, action] = rows[i++]; sim[op](action); }
     sim.tick();
     out.push({ frame: sim.frame, draws, state: sim.rng.state });
+    if (observed) observed.push(observe(sim));
   }
-  return { out, death: sim.death ?? null, won: !!sim.won };
+  return { out, death: sim.death ?? null, won: !!sim.won, ...(observed ? { observed } : {}) };
 }
 
 if (process.argv[1] && process.argv[1].endsWith('model-draw-trace.mjs')) {

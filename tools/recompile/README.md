@@ -38,6 +38,10 @@ directory (`/private/tmp/fnaf2-recompile.*` on the dev machine).
 | `diagnose-child-events.mjs`, `test-child-diagnosis.mjs` | Content-free, hash-bound reader for the retained debugger and child-census measurements. |
 | `probes/*.gdb`, `run-debug-probe.sh` | Checkpoint-bound debugger probes, used inside the bounded harness wrapper. Generated function IDs are not portable between patch checkpoints. |
 | `fixtures/night1-newgame.input`, `fixtures/night1-before.ini` | Exact host-only navigation and initial save used by the retained runs, matching their provenance hashes. No game assets. |
+| `fixtures/night7-dials20-5x2.input` | The all-20 Custom Night navigation on the corrected 5 x 2 portrait grid (binary `036076d3` on): portraits 4-9 toggled, then Ready. A dump before Ready reads all ten dials at 20. |
+| `schedule-to-input.mjs` | A committed winner binding's own tap schedule as harness input: the rows its gate replays, expanded once into harness contacts and the Sim queue (refused unless the queue equals `minus-toys-plan.mjs` `schedule()`), quantized to 60 Hz frames, on the office frame at tick = queue frame. Points are the device profile's control points through the FULL stretch. Lists same-tick edges. minus-toys only. |
+| `compare-schedule-replay.mjs` | The replay comparison: binds the harness input to the winner's regenerated rows, drives the model with the same Sim queue under `--model-options`, and records both outcomes (6 AM or death, time; the rebuild's death reason is UNKNOWN unless the stream matched to the terminal loop), the first draw mismatch, every mismatch run, a gate-replay cross-check, and per-update monitor/mask ledgers from `# watch` lines. `recompile-schedule-replay-v1`, MODEL_ONLY. |
+| `test-schedule-replay.mjs` | FIXTURE for both: stretch points, one expansion, pointers and same-tick edges, the Night 1 minimal binding, prefix/slip/split/death outcomes, ledger pairing, input binding. In `npm run test:unit`. |
 
 ## Environment
 
@@ -713,3 +717,110 @@ now:
 - FNaF 1 and 3 need more than the silent substitute: their sound banks run out
   of bytes before the declared count, and part of their audio sits in
   `assets/` under obfuscated names. That layout is not decoded yet.
+
+## Winner schedules replayed (2026-09-27, S2b)
+
+Every earlier rebuild comparison ran without gameplay input. This one replays a
+committed winner's own tap schedule into the pinned binary `036076d3` (patch
+`7767945f`, the committed patch) and the same Sim queue into the model under
+`sourced-rebuild-model-options.json`, seed 24850.
+
+```sh
+node tools/recompile/schedule-to-input.mjs --winner tools/device/campaign-night5-contact-final-winner.json \
+  --night 5 --navigation tools/recompile/fixtures/continue.input --out <run>/run.input
+# harness recipe above, plus CHOWDREN_STOP_FRAME=5 CHOWDREN_MAX_TICKS=30 (stop on 06-next day) and
+# CHOWDREN_WATCH='flip panel button:0' (a second run with CHOWDREN_WATCH=mask:0 for the mask ledger)
+node tools/recompile/compare-schedule-replay.mjs --trace <run>/trace --repeat-trace <run2>/trace \
+  --input <run>/run.input --navigation tools/recompile/fixtures/continue.input \
+  --winner tools/device/campaign-night5-contact-final-winner.json --night 5 --seed 24850 \
+  --model-options tools/recompile/sourced-rebuild-model-options.json \
+  --ledger monitor --ledger mask=<mask run>/trace --save ... --binary ... --out <result.json>
+```
+
+The schedule is the gate's: `build(knobs)` rows at the winner's epoch (k3:
+2433 ms), each millisecond rounded to a 60 Hz frame. The model applies a press
+queued at frame F before its tick F -> F+1, which is harness office update F.
+A tap or hold is `down` at its press frame and `up` at its release. A camdrop
+holds the camera-feed light and taps the monitor as a second pointer, as the
+HID schedule sends it. The window points are the profile's control points
+(`hid-mediaprojection`, 2400 x 1080) scaled by 1024/2400 and 768/1080. They
+land inside the pinned binary's hitboxes, as its office instance dump shows:
+white, red and drop buttons, the two flashlight hitboxes, the music-box and
+camera hitboxes. Each run is repeated. The office draw projections are equal
+in both runs, and equal again in the mask-watch run. The whole traces differ
+only in global value 10, an object address, as on the frozen binary. On all
+three nights the comparison model ends on the gate replay's frame, outcome and
+LCG state.
+
+| binding | rebuilt | model | draw stream | ledgers | evidence |
+|---|---|---|---|---|---|
+| Night 1 `minimal` | 6 AM, 25,201 office updates | 6 AM, frame 25,201 | equal on 10,199 of the 10,200 updates before tick 10200, then split | monitor 8/8 changes paired | `night1-minimal-replay-20260927.json`, `recompile-replay-f0625216de3bf868` |
+| Night 5 `contact-final` | **death** after 23,423 (390.4 s) | 6 AM, frame 25,201 | equal on 615 of 617, split at tick 617 | monitor 160/160, mask 156/156 | `night5-contact-final-replay-20260927.json`, `recompile-replay-7d1bffe0e1ed98b5` |
+| Night 7 `k3`, all dials 20 | 6 AM, 25,201 | 6 AM, frame 25,201 | equal on 606 of 613, split at tick 613 | monitor 172/172, mask 168/168 | `night7-k3-replay-20260927.json`, `recompile-replay-80f41ded17461661` |
+
+All three are DIVERGENT: no replay is equivalent, and a 6 AM in both is an
+outcome match, not a trace match. What differs, and where:
+
+- **The split: view draws for a Toy held at A = 1** (tick 10200 on Night 1, 617
+  on Night 5, 613 on Night 7). g366, g368 and g419 draw `Random(100)` each update
+  that Toy Bonnie, Toy Chica or Toy Freddy has `A == 2`, `your view` overlaps
+  it, and `viewing > 0` (generated events 294_3/296_3 and their g419 twin). A
+  passed roll sets A = 1. g350-g356 promote it to 2 only once B = 0 (the
+  camera-feed flash sets B = 400), Toy Freddy only once Toy Chica is off CAM 09,
+  and Toy Chica only once Toy Bonnie is. The model's `drawViewed` keys on
+  `u.pending`, which is true for a roll held at A = 1 as well. So with the
+  monitor up and the marker on CAM 09, it draws once per update per held Toy,
+  and the rebuild does not. The held Toys are Toy Bonnie on Night 1, Toy Freddy
+  on Night 5, and all three on Night 7, each stunned: the model's `stunUntil`
+  agrees with the rebuild's B, for example Toy Freddy at tick 600 with B = 42 and
+  `stunUntil` 642. Harness watches show A = 1 in the rebuild (Night 1, Toy
+  Bonnie from tick 10200; Night 5, Toy Freddy from 600). On Night 1 the model
+  also spends a g468-g476 fade draw for 8 updates: it marks C = 10 at the roll,
+  where the sheet writes C only at the promotion, and the watched C stays 0.
+  No-input nights never raise the monitor, so they never reached these groups.
+  The fix belongs in the model, as a default-off option keyed to the sheet's
+  A == 2 and its C write. None is made here, and no default changed.
+- **One-update slips that rejoin, at every monitor drop** (Night 1 tick 6953;
+  Night 5 53, 242; Night 7 199, 286). The drop button's groups (g614/g618,
+  generated events 540_3/541_3) set `drop everything`, and they run after the
+  forcedown (g262, event 204_3) in the sheet. So a drop touched on update F
+  lowers the monitor on F+1. The model sets the flag at the press, and
+  `tickForcedown` performs it in that same tick. The drop's two draws land one
+  update early in the model, and the streams are equal again on the next
+  update. Mask removal goes through the same flag (541_3, then g274 as event
+  210_3), and the mask ledger shows it: `2>3 +1` on every cycle.
+- **Night 7 only: g781 one update late in the model** (374, 434, 494, 554,
+  then a footstep draw split at 600). This follows the drop slip at 286, but
+  the cause is not established.
+- **Ledger offsets.** Every monitor and mask contact takes effect in both, with
+  the same offsets on every cycle. Rebuilt minus model: raise start +0, fully
+  up +1, drop start +1, fully down +2; mask on +0, fully on +1, off +1, fully
+  off +1. The model's state machines finish the raise, the lowering and the
+  mask-on one update sooner than `flip panel button` / `mask` value 0 does.
+  Whether any rule reads that difference is not established. The draws stayed
+  equal through all of them before the split. On Night 5 the first raise falls
+  on office tick 0 (epoch 0), and the rebuild takes it one update late.
+  Its last monitor change is the model's 161st, a raise at tick 23406 that the
+  rebuild never made, 17 updates before it left the office.
+- **The Night 5 death.** The streams split at 617, so after that the two sides
+  play different random nights. The record's rebuilt reason is UNKNOWN: the
+  harness cannot watch a Counter, and `being attacked by` is one. Snaps of the
+  drawn replay, kept outside the repository, show Balloon Boy standing in the
+  office at tick 23380 and Withered Foxy's jumpscare at 23410. That drawn run
+  has the headless run's office draw projection exactly.
+
+Same-tick edges: each night has one update where a release and a press
+coincide (Night 1: wind up, CAM 09 down at 21582; Nights 5 and 7: wind up,
+camdrop light down, at 230 and 274). The harness raises one new-touch trigger
+per update, and whether those presses landed is not read separately.
+
+Scope: one seed, three bindings, host rebuild only, MODEL_ONLY with
+`rebuilt-runtime` fidelity. No phone claim, no promotion, no default changed.
+Open:
+- A sourced option for the A = 1 / A = 2 split in the view draws (g366/g368/g419,
+  and the fades g468-g476, which the model also marks at the roll). Then
+  replay again to the next difference.
+- The drop and mask-off slip in the model's press timing.
+- The per-cycle ledger against the phone's recording, which S2b needs. It needs
+  k2's or k3's phone runs; no k2 or k3 video exists on this machine.
+- A counter watch in the harness, so a record can carry the rebuild's attacker.

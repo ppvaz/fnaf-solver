@@ -25,7 +25,9 @@ export function checkCustomNight(night, customNight) {
   }
 }
 
-export function compareTrace(text, { night, seed, frame, frames, modelOptions = {}, customNight = null }) {
+// `schedule` (a Sim queue, `[frame, press|release, action]`) drives the model with a replayed schedule;
+// the harness trace must then come from the same schedule (compare-schedule-replay.mjs binds the two).
+export function compareTrace(text, { night, seed, frame, frames, modelOptions = {}, customNight = null, schedule = [], observe = null }) {
   checkCustomNight(night, customNight);
   if (!text.endsWith('\n')) throw new Error('trace is truncated: missing final newline');
   const visits = [];
@@ -51,7 +53,8 @@ export function compareTrace(text, { night, seed, frame, frames, modelOptions = 
       if (index === frame) rows.push({ tick, draws, state });
     }
   }
-  const model = drawTrace({ night, seed, frames, modelOptions, ...(customNight ? { customNight } : {}) });
+  const model = drawTrace({ night, seed, frames, modelOptions, ...(customNight ? { customNight } : {}),
+    ...(schedule.length ? { rows: schedule } : {}), ...(observe ? { observe } : {}) });
   const targetVisits = visits.filter((v) => v.frame === frame);
   const alignments = [0, 1].map((offset) => {
     let compared = 0;
@@ -68,14 +71,14 @@ export function compareTrace(text, { night, seed, frame, frames, modelOptions = 
     return { modelFrameOffset: offset, compared, firstMismatch };
   });
   const alignment = alignments[1];
-  // The loop that ends a night: the model's kill returns before the rest of its frame, and the
-  // rebuild's last update of a visit it LEFT (a later frame visit exists) is the jump loop. A
-  // first mismatch there, with every earlier update matched, is MATCHED_TO_TERMINAL_LOOP; a
+  // The loop that ends a night: the model's kill (or 6 AM) returns before the rest of its frame,
+  // and the rebuild's last update of a visit it LEFT (a later frame visit exists) is the jump loop.
+  // A first mismatch there, with every earlier update matched, is MATCHED_TO_TERMINAL_LOOP; a
   // harness stop at the tick limit is not a terminal loop.
   const targetIndex = visits.findIndex((v) => v.frame === frame);
   const leftFrame = targetIndex >= 0 && targetIndex < visits.length - 1;
   const lastTick = rows.length ? rows[rows.length - 1].tick : -1;
-  const deathFrame = model.death ? model.out[model.out.length - 1].frame : null;
+  const deathFrame = model.death || model.won ? model.out[model.out.length - 1].frame : null;
   const mismatch = alignment.firstMismatch;
   const terminalLoop = !!mismatch && ((leftFrame && mismatch.tick === lastTick) ||
     (deathFrame !== null && mismatch.modelFrame === deathFrame));
@@ -85,11 +88,14 @@ export function compareTrace(text, { night, seed, frame, frames, modelOptions = 
         : alignment.compared < Math.min(frames, model.out.length - 1) ? 'INCOMPLETE' : 'MATCHED_PREFIX';
   const result = {
     schema: 'recompile-draw-comparison-v1', claimLevel: 'MODEL_ONLY', fidelity: 'rebuilt-runtime', status,
-    question: 'Does the rebuilt no-input night consume the same Random stream per event update as the simulator?',
+    question: schedule.length
+      ? 'Driven by one replayed schedule, does the rebuilt night consume the same Random stream per event update as the simulator?'
+      : 'Does the rebuilt no-input night consume the same Random stream per event update as the simulator?',
     scope: { night, seed, targetFrame: frame, requestedModelFrames: frames, modelOptions, ...(customNight ? { customNight } : {}),
-      input: 'navigation only; no gameplay actions' },
+      input: schedule.length ? 'navigation plus a replayed gameplay schedule' : 'navigation only; no gameplay actions' },
     runtime: { visits, targetUpdates: rows.length, namedTouches: touches, stop, traceSha256: hash(text), drawTraceSha256: hash(`${projection.join('\n')}\n`) },
-    model: { traceSha256: hash(JSON.stringify(model)), terminal: model.out.at(-1), death: model.death, won: model.won },
+    model: { traceSha256: hash(JSON.stringify({ out: model.out, death: model.death, won: model.won })),
+      terminal: model.out.at(-1), death: model.death, won: model.won },
     alignment: 'Harness tick 0 is after its first event update, compared to model frame 1. Offset 0 is also retained to expose an initialization boundary discrepancy.',
     alignments,
     limitations: ['Host reimplementation; no device claim or promotion.',
@@ -97,6 +103,8 @@ export function compareTrace(text, { night, seed, frame, frames, modelOptions = 
       'Touch triggers are polled once per update; Android immediate event ordering remains unverified.',
       'Both traces must describe the same night, seed and input; the operator must retain input/save provenance.'],
   };
+  // The traces themselves, for a caller that reads past the first mismatch; never serialized.
+  Object.defineProperty(result, 'traces', { value: { rows, model }, enumerable: false });
   return result;
 }
 

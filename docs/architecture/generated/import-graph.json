@@ -2738,6 +2738,19 @@
       ]
     },
     {
+      "file": "tools/recompile/compare-schedule-replay.mjs",
+      "imports": [
+        "../rebuild-options-census.mjs",
+        "./compare-draw-trace.mjs",
+        "./model-draw-trace.mjs",
+        "./schedule-to-input.mjs",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/recompile/diagnose-child-events.mjs",
       "imports": [
         "node:crypto",
@@ -2754,6 +2767,18 @@
       ]
     },
     {
+      "file": "tools/recompile/schedule-to-input.mjs",
+      "imports": [
+        "../device/bundle.mjs",
+        "../device/minus-toys-plan.mjs",
+        "@fnaf2-1020/core/control",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/recompile/test-child-diagnosis.mjs",
       "imports": [
         "./diagnose-child-events.mjs",
@@ -2767,6 +2792,19 @@
         "./model-draw-trace.mjs",
         "@fnaf2-1020/core/mechanics",
         "node:assert/strict"
+      ]
+    },
+    {
+      "file": "tools/recompile/test-schedule-replay.mjs",
+      "imports": [
+        "../device/minus-toys-plan.mjs",
+        "./compare-schedule-replay.mjs",
+        "./model-draw-trace.mjs",
+        "./schedule-to-input.mjs",
+        "node:assert/strict",
+        "node:fs",
+        "node:path",
+        "node:url"
       ]
     },
     {
