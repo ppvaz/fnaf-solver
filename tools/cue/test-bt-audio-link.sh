@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Phone-free check of bt-audio-link.sh's one piece of logic: the uiautomator
-# node -> tap point parser. The fixture is cut from the Moto g56's Bluetooth
+# Phone-free check of bt-audio-link.sh's two parsers: the uiautomator
+# node -> tap point parser, and the focused window's package. The fixture is cut from the Moto g56's Bluetooth
 # settings dump of 2026-09-15 (portrait 1080x2400), with the host entry under
 # "Media devices" and look-alike text around it.
 set -euo pipefail
@@ -23,4 +23,15 @@ check "an absent name fails" "$(printf '%s' "$fixture" | "$LINK" --tap-point oth
 check "a section header is matched only by its own text" "$(printf '%s' "$fixture" | "$LINK" --tap-point 'Media devices')" "323 580"
 check "--tap-point without a name refuses" "$("$LINK" --tap-point < /dev/null 2>/dev/null || echo refused)" "refused"
 
-[ "$fail" = 0 ] && echo "bt-audio-link: tap-point parser pass" || exit 1
+# The tap waits for Settings to hold focus. A backgrounded game still lists its
+# windows in the dump (2026-09-27: every tap was refused once the game had been
+# opened, with the launcher in front), so only mCurrentFocus may decide.
+dump_settings='  mCurrentFocus=Window{ab12 u0 com.android.settings/com.android.settings.SubSettings}
+  Window #3 Window{cd34 u0 com.scottgames.fnaf4/com.scottgames.fnaf4.Main}'
+dump_game='  Window #1 Window{ab12 u0 com.android.settings/com.android.settings.SubSettings}
+  mCurrentFocus=Window{cd34 u0 com.scottgames.fnaf4/com.scottgames.fnaf4.Main}'
+check "focus: Settings in front, the game in the background" "$(printf '%s' "$dump_settings" | "$LINK" --focus-package)" "com.android.settings"
+check "focus: the game in front" "$(printf '%s' "$dump_game" | "$LINK" --focus-package)" "com.scottgames.fnaf4"
+check "focus: no focused window reads as nothing" "$(printf '  mCurrentFocus=null\n' | "$LINK" --focus-package)" ""
+
+[ "$fail" = 0 ] && echo "bt-audio-link: tap-point and focus parsers pass" || exit 1

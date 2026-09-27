@@ -5,6 +5,7 @@
 #   tools/cue/bt-audio-link.sh --ensure [--game-package PACKAGE] [bt-mac]     # exit 0 only when capture-bt-audio.sh --check says READY
 #   tools/cue/bt-audio-link.sh --status [--game-package PACKAGE] [bt-mac]
 #   tools/cue/bt-audio-link.sh --tap-point NAME < ui.xml   # the parser alone: "X Y" for a uiautomator node
+#   tools/cue/bt-audio-link.sh --focus-package < dumpsys-window.txt   # the focused window's package, or nothing
 #
 # After a host reboot on 2026-09-15 the bond was intact on both sides and the
 # link was down. `bluetoothctl connect` fails with le-connection-abort-by-local:
@@ -25,7 +26,8 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 DEFAULT_MAC=10:2B:1C:DA:18:2C
 A2DP_SOURCE_UUID=0000110a-0000-1000-8000-00805f9b34fb
 DEFAULT_GAME=com.scottgames.fnaf2
-MODE="${1:?usage: bt-audio-link.sh --ensure|--status [--game-package PACKAGE] [bt-mac] | --tap-point NAME < ui.xml}"
+SETTINGS_PACKAGE=com.android.settings
+MODE="${1:?usage: bt-audio-link.sh --ensure|--status [--game-package PACKAGE] [bt-mac] | --tap-point NAME < ui.xml | --focus-package < dumpsys-window.txt}"
 shift || true
 
 # "X Y" of the centre of the first uiautomator node whose text is exactly NAME.
@@ -42,6 +44,18 @@ for m in re.finditer(r"<node\b[^>]*?\btext=\"([^\"]*)\"[^>]*?\bbounds=\"\[(\d+),
 sys.exit(1)
 ' "$name"
 }
+
+# The package of the focused window in a `dumpsys window` on stdin, or nothing
+# (mCurrentFocus=null while a window changes). Only the focused window counts:
+# a backgrounded game keeps windows listed in the dump, so matching its name
+# anywhere refused every tap once the game had been opened (2026-09-27, with
+# the launcher in front).
+focus_package() { sed -n 's/.*mCurrentFocus=Window{[^ ]* [^ ]* \([^ /}]*\).*/\1/p' | head -1; }
+
+if [ "$MODE" = --focus-package ]; then
+  focus_package
+  exit 0
+fi
 
 if [ "$MODE" = --tap-point ]; then
   tap_point "${1:?--tap-point needs the device NAME}"
@@ -83,7 +97,30 @@ if [ "$(adb shell settings get global bluetooth_on 2>/dev/null | tr -d '\r')" !=
   timeout 30 adb shell cmd bluetooth_manager wait-for-state:STATE_ON >/dev/null 2>&1 || true
 fi
 
-# Host side: the A2DP Source profile by name, not a bare connect.
+# Host side, part 1: this host's own adapter powered. On 2026-09-27 GNOME had
+# Bluetooth switched off (org.gnome.SettingsDaemon.Rfkill BluetoothAirplaneMode
+# true, both rfkill entries soft-blocked), and every ConnectProfile failed as if
+# the phone had refused. GNOME's own switch is the one to flip; a hard block is
+# a physical switch and is only reported.
+host_powered() { bluetoothctl show 2>/dev/null | grep -q 'Powered: yes'; }
+if ! host_powered; then
+  rfk=(--session --dest org.gnome.SettingsDaemon.Rfkill --object-path /org/gnome/SettingsDaemon/Rfkill)
+  if gdbus call "${rfk[@]}" --method org.freedesktop.DBus.Properties.Get org.gnome.SettingsDaemon.Rfkill \
+      BluetoothAirplaneMode 2>/dev/null | grep -q true; then
+    echo "bt-link: this host's Bluetooth is switched off in GNOME; switching it on" >&2
+    gdbus call "${rfk[@]}" --method org.freedesktop.DBus.Properties.Set org.gnome.SettingsDaemon.Rfkill \
+      BluetoothAirplaneMode '<false>' >/dev/null 2>&1 || true
+    sleep 2
+  fi
+  bluetoothctl power on >/dev/null 2>&1 || true
+  sleep 1
+  if ! host_powered; then
+    echo "audio-route=UNKNOWN reason=host-adapter-powered-off (rfkill: $(cat /sys/class/rfkill/rfkill*/soft 2>/dev/null | tr '\n' ' ')soft; hard block is a physical switch)"
+    exit 1
+  fi
+fi
+
+# Host side, part 2: the A2DP Source profile by name, not a bare connect.
 # BT_LINK_SKIP_HOST=1 skips it, to exercise the phone-side path on purpose.
 if ! pcm_up && [ "${BT_LINK_SKIP_HOST:-0}" != 1 ]; then
   echo "bt-link: host ConnectProfile A2DP source -> $MAC" >&2
@@ -95,7 +132,7 @@ fi
 if ! pcm_up; then
   host_name="$(bluetoothctl show 2>/dev/null | sed -n 's/^\s*Alias: //p' | head -1)"
   [ -n "$host_name" ] || { echo "bt-link: this host has no Bluetooth alias" >&2; exit 1; }
-  front="$(adb shell dumpsys window 2>/dev/null | sed -n 's/.*mCurrentFocus=Window{[^ ]* [^ ]* \([^ /}]*\).*/\1/p' | head -1)"
+  front="$(adb shell dumpsys window 2>/dev/null | focus_package)"
   echo "bt-link: phone-side tap on '$host_name' in Bluetooth settings (front app: ${front:-none})" >&2
   adb shell am start -a android.settings.BLUETOOTH_SETTINGS >/dev/null 2>&1
   sleep 4
@@ -112,9 +149,11 @@ if ! pcm_up; then
   done
   adb shell rm -f /sdcard/fnaf-bt-ui.xml >/dev/null 2>&1 || true
   if [ -n "$point" ]; then
-    # Only ever with Settings in front: refuse if the game took focus meanwhile.
-    if adb shell dumpsys window 2>/dev/null | grep -Fq "$GAME"; then
-      echo "bt-link: the game is in front; not tapping" >&2
+    # Only ever with Settings in front: refuse if anything else (the game, or
+    # nothing) holds focus at the moment of the tap.
+    now="$(adb shell dumpsys window 2>/dev/null | focus_package)"
+    if [ "$now" != "$SETTINGS_PACKAGE" ]; then
+      echo "bt-link: ${now:-no window} is in front, not $SETTINGS_PACKAGE; not tapping" >&2
     else
       # shellcheck disable=SC2086
       adb shell input tap $point >/dev/null 2>&1
