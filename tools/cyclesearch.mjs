@@ -36,8 +36,8 @@ const sweep = (optsList) => pool().map(BBTEST, 'summarize', optsList);
 // DEFAULT_CYCLE exactly (asserted below).
 export const KNOBS0 = {
   maskDelay: 15, // monitor down -> mask on (covers the monitor animation)
-  maskHold: 9,   // mask on -> mask off
-  hallDelay: 16, // mask off -> hall flash on (>= MASK_ANIM_OFF, see MIN)
+  maskHold: C.MASK_ANIM_ON, // mask on -> first legal mask-off tap
+  hallDelay: C.MASK_ANIM_OFF + 1, // take-off plus the existing one-frame margin
   hallHold: 2,   // hall flash duration
   upDelay: 4,    // hall flash off -> monitor up
   camDelay: 19,  // monitor up -> first camera tap (covers the animation)
@@ -52,7 +52,9 @@ const ORDER0 = [10, 4, 7];
 // hallDelay's floor is sourced, not chosen: `mask` reaches 0 only when the
 // mmaskOff animation ends (g10/g11), and `lit?` needs `mask` = 0 (g75), so a
 // hall flash any earlier produces no light and no Foxy reset (g489 -> g745).
-const MIN = { maskDelay: 15, maskHold: 1, hallDelay: C.MASK_ANIM_OFF, hallHold: 1,
+// Likewise, the put-on animation rejects a premature mask-off tap (g267/g270,
+// the sourced input gate). Search may not shrink this below MASK_ANIM_ON.
+export const MIN = { maskDelay: 15, maskHold: C.MASK_ANIM_ON, hallDelay: C.MASK_ANIM_OFF, hallHold: 1,
               upDelay: 1, camDelay: 15, flashDelay: 1, flashHold: 1, camGap: 1,
               homeDelay: 1, windDelay: 1 };
 
@@ -86,8 +88,8 @@ export function genCycle(k, order = ORDER0) {
 
 const SEED = (i) => (i * 2246822519) >>> 0;
 
-// Set once from --profile; null keeps the original uniform model so a plain
-// run reproduces the published numbers.
+// Set once from --profile; null keeps the original uniform error mechanism.
+// Historical curves are for their old table/engine, not the corrected default.
 let PROFILE = null;
 
 async function survivors(cycle, jitter, n) {

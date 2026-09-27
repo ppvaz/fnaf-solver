@@ -2597,11 +2597,14 @@
     {
       "file": "tools/policytest.mjs",
       "imports": [
+        "./cyclesearch.mjs",
         "./model/reactive-pilot.mjs",
         "./policy.mjs",
         "./policybaselines.mjs",
         "./stat.mjs",
         "@fnaf2-1020/core/mechanics",
+        "node:crypto",
+        "node:fs",
         "node:url"
       ]
     },

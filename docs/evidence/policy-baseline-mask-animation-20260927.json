@@ -1,0 +1,616 @@
+{
+  "schema": "evidence-record-v1",
+  "id": "policy-baseline-mask-animation-20260927",
+  "date": "2026-09-27",
+  "claimLevel": "MODEL_ONLY",
+  "status": "PASS",
+  "question": "Does waiting for the sourced put-on animation repair the inherited Minus 7 policy baseline without weakening its Night 1 sanity assertion?",
+  "method": {
+    "tool": "tools/policytest.mjs",
+    "command": "node tools/policytest.mjs --assert --record docs/evidence/policy-baseline-mask-animation-20260927.json",
+    "seedBlock": {
+      "definition": "(i * 2246822519) >>> 0, i = 0..24; RNG consumes seed & 0xffff",
+      "n": 25,
+      "design": 25,
+      "heldOut": 0
+    },
+    "sourceHashes": [
+      {
+        "file": "tools/model/reactive-pilot.mjs",
+        "sha256": "1457a39140d91236ad53d31d84adb30a8afcdf308b8c3bc3c338166ff653ab09"
+      },
+      {
+        "file": "tools/cyclesearch.mjs",
+        "sha256": "acd8b484d465c2d78733e9b34d58d98c8be558c86bbba3c200057b16c797c1e6"
+      },
+      {
+        "file": "tools/policytest.mjs",
+        "sha256": "e37dc13a842def0ec0b1ee64c4ec0c4ef19d40a774c1eedb51400e355db60ecb"
+      },
+      {
+        "file": "tools/policy.mjs",
+        "sha256": "bb21d5ef73a0c120550adbd3b5b353f480227820a21e7c2509ce5855d53749b0"
+      },
+      {
+        "file": "tools/policybaselines.mjs",
+        "sha256": "8436d82e0b544cea5e7bb4e43c9989838467664dc49e124023a80834b4a55b08"
+      },
+      {
+        "file": "packages/core/src/mechanics/plant-model.js",
+        "sha256": "b702a7f986bb28a73377adfac8a6a1a976d53b1bf5ff3a5196f1b97f0799940a"
+      },
+      {
+        "file": "packages/core/src/mechanics/config.js",
+        "sha256": "3da601d1233454b7386ebab415c827fe87117ed2b9b031e51168c338f89f6f70"
+      },
+      {
+        "file": "packages/core/src/mechanics/rng.js",
+        "sha256": "1a2b615eda3a152aea548054c873c8da83a96b06b6ac65fc0a74e4997a3e651e"
+      }
+    ],
+    "replay": "Same current engine, Night 1, zero jitter and identical 25 design seeds. Only the cycle table differs; mask-off and every following row move three frames later."
+  },
+  "sourceRule": {
+    "maskAnimationInputCommit": "3d5c5f7",
+    "maskPutOnFrames": 12,
+    "maskTakeOffFrames": 15,
+    "source": "config.js sprite lengths/speeds and the mask-animation input gate; g267/g270, g10/g11 and g75",
+    "maskOff": "15 + MASK_ANIM_ON",
+    "hallOn": "maskOff + MASK_ANIM_OFF + 1"
+  },
+  "before": {
+    "cycle": [
+      [
+        0,
+        "tap",
+        "monitor"
+      ],
+      [
+        15,
+        "tap",
+        "mask"
+      ],
+      [
+        24,
+        "tap",
+        "mask"
+      ],
+      [
+        40,
+        "down",
+        "light"
+      ],
+      [
+        42,
+        "up",
+        "light"
+      ],
+      [
+        46,
+        "tap",
+        "monitor"
+      ],
+      [
+        65,
+        "tap",
+        "cam:10"
+      ],
+      [
+        67,
+        "down",
+        "light"
+      ],
+      [
+        69,
+        "up",
+        "light"
+      ],
+      [
+        77,
+        "tap",
+        "cam:4"
+      ],
+      [
+        79,
+        "down",
+        "light"
+      ],
+      [
+        81,
+        "up",
+        "light"
+      ],
+      [
+        89,
+        "tap",
+        "cam:7"
+      ],
+      [
+        91,
+        "down",
+        "light"
+      ],
+      [
+        93,
+        "up",
+        "light"
+      ],
+      [
+        100,
+        "tap",
+        "cam:11"
+      ],
+      [
+        103,
+        "down",
+        "wind"
+      ]
+    ],
+    "inputControl": {
+      "maskStates": [
+        true,
+        true
+      ],
+      "hallLit": false
+    },
+    "wins": 7,
+    "n": 25
+  },
+  "after": {
+    "cycle": [
+      [
+        0,
+        "tap",
+        "monitor"
+      ],
+      [
+        15,
+        "tap",
+        "mask"
+      ],
+      [
+        27,
+        "tap",
+        "mask"
+      ],
+      [
+        43,
+        "down",
+        "light"
+      ],
+      [
+        45,
+        "up",
+        "light"
+      ],
+      [
+        49,
+        "tap",
+        "monitor"
+      ],
+      [
+        68,
+        "tap",
+        "cam:10"
+      ],
+      [
+        70,
+        "down",
+        "light"
+      ],
+      [
+        72,
+        "up",
+        "light"
+      ],
+      [
+        80,
+        "tap",
+        "cam:4"
+      ],
+      [
+        82,
+        "down",
+        "light"
+      ],
+      [
+        84,
+        "up",
+        "light"
+      ],
+      [
+        92,
+        "tap",
+        "cam:7"
+      ],
+      [
+        94,
+        "down",
+        "light"
+      ],
+      [
+        96,
+        "up",
+        "light"
+      ],
+      [
+        103,
+        "tap",
+        "cam:11"
+      ],
+      [
+        106,
+        "down",
+        "wind"
+      ]
+    ],
+    "inputControl": {
+      "maskStates": [
+        true,
+        false
+      ],
+      "hallLit": true
+    },
+    "wins": 25,
+    "n": 25
+  },
+  "rows": [
+    {
+      "seed": 0,
+      "rngSeed16": 0,
+      "before": {
+        "won": false,
+        "frame": 20560,
+        "death": "inside-office"
+      },
+      "after": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      }
+    },
+    {
+      "seed": 2246822519,
+      "rngSeed16": 51831,
+      "before": {
+        "won": false,
+        "frame": 18160,
+        "death": "inside-office"
+      },
+      "after": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      }
+    },
+    {
+      "seed": 198677742,
+      "rngSeed16": 38126,
+      "before": {
+        "won": false,
+        "frame": 19706,
+        "death": "inside-office"
+      },
+      "after": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      }
+    },
+    {
+      "seed": 2445500261,
+      "rngSeed16": 24421,
+      "before": {
+        "won": false,
+        "frame": 23906,
+        "death": "inside-office"
+      },
+      "after": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      }
+    },
+    {
+      "seed": 397355484,
+      "rngSeed16": 10716,
+      "before": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      },
+      "after": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      }
+    },
+    {
+      "seed": 2644178003,
+      "rngSeed16": 62547,
+      "before": {
+        "won": false,
+        "frame": 20560,
+        "death": "inside-office"
+      },
+      "after": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      }
+    },
+    {
+      "seed": 596033226,
+      "rngSeed16": 48842,
+      "before": {
+        "won": false,
+        "frame": 18040,
+        "death": "inside-office"
+      },
+      "after": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      }
+    },
+    {
+      "seed": 2842855745,
+      "rngSeed16": 35137,
+      "before": {
+        "won": false,
+        "frame": 25106,
+        "death": "inside-office"
+      },
+      "after": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      }
+    },
+    {
+      "seed": 794710968,
+      "rngSeed16": 21432,
+      "before": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      },
+      "after": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      }
+    },
+    {
+      "seed": 3041533487,
+      "rngSeed16": 7727,
+      "before": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      },
+      "after": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      }
+    },
+    {
+      "seed": 993388710,
+      "rngSeed16": 59558,
+      "before": {
+        "won": false,
+        "frame": 23906,
+        "death": "inside-office"
+      },
+      "after": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      }
+    },
+    {
+      "seed": 3240211229,
+      "rngSeed16": 45853,
+      "before": {
+        "won": false,
+        "frame": 19106,
+        "death": "inside-office"
+      },
+      "after": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      }
+    },
+    {
+      "seed": 1192066452,
+      "rngSeed16": 32148,
+      "before": {
+        "won": false,
+        "frame": 20306,
+        "death": "inside-office"
+      },
+      "after": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      }
+    },
+    {
+      "seed": 3438888971,
+      "rngSeed16": 18443,
+      "before": {
+        "won": false,
+        "frame": 21506,
+        "death": "inside-office"
+      },
+      "after": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      }
+    },
+    {
+      "seed": 1390744194,
+      "rngSeed16": 4738,
+      "before": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      },
+      "after": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      }
+    },
+    {
+      "seed": 3637566713,
+      "rngSeed16": 56569,
+      "before": {
+        "won": false,
+        "frame": 18160,
+        "death": "inside-office"
+      },
+      "after": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      }
+    },
+    {
+      "seed": 1589421936,
+      "rngSeed16": 42864,
+      "before": {
+        "won": false,
+        "frame": 17306,
+        "death": "inside-office"
+      },
+      "after": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      }
+    },
+    {
+      "seed": 3836244455,
+      "rngSeed16": 29159,
+      "before": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      },
+      "after": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      }
+    },
+    {
+      "seed": 1788099678,
+      "rngSeed16": 15454,
+      "before": {
+        "won": false,
+        "frame": 25106,
+        "death": "inside-office"
+      },
+      "after": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      }
+    },
+    {
+      "seed": 4034922197,
+      "rngSeed16": 1749,
+      "before": {
+        "won": false,
+        "frame": 19106,
+        "death": "inside-office"
+      },
+      "after": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      }
+    },
+    {
+      "seed": 1986777420,
+      "rngSeed16": 53580,
+      "before": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      },
+      "after": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      }
+    },
+    {
+      "seed": 4233599939,
+      "rngSeed16": 39875,
+      "before": {
+        "won": false,
+        "frame": 22360,
+        "death": "inside-office"
+      },
+      "after": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      }
+    },
+    {
+      "seed": 2185455162,
+      "rngSeed16": 26170,
+      "before": {
+        "won": false,
+        "frame": 22106,
+        "death": "inside-office"
+      },
+      "after": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      }
+    },
+    {
+      "seed": 137310385,
+      "rngSeed16": 12465,
+      "before": {
+        "won": false,
+        "frame": 18506,
+        "death": "inside-office"
+      },
+      "after": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      }
+    },
+    {
+      "seed": 2384132904,
+      "rngSeed16": 64296,
+      "before": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      },
+      "after": {
+        "won": true,
+        "frame": 25200,
+        "death": null
+      }
+    }
+  ],
+  "problems": [],
+  "limits": [
+    "This is a 25-design-seed regression diagnostic, not a population or held-out reliability estimate.",
+    "Historical jitter curves describe their old baseline/engine and no longer describe DEFAULT_CYCLE. No jitter curve was re-measured here.",
+    "The source-driven input controls and the existing Night 1 >=22/25 assertion are both enforced; the assertion was not relaxed.",
+    "No device winner, phone run, human-route timing recommendation or promotion changes."
+  ]
+}

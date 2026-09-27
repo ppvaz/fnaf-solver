@@ -17,13 +17,32 @@ import { formatRate } from '../stat.mjs';
 // resets Foxy through `lit?` (g489 -> g745), so a flash inside those 15 frames
 // resets nothing. The old table flashed 3 frames after the mask-off tap and
 // therefore never lit at all. Re-derived by `cyclesearch`, not by hand.
-export const DEFAULT_CYCLE = [
+// Retain the pre-2026-09-27 table as a negative control. Its second mask tap
+// lands inside the 12-frame put-on animation and is correctly ignored since
+// 3d5c5f7. Historical jitter curves describe that table/engine, not the fixed
+// baseline below; they must not be carried forward as current measurements.
+export const LEGACY_ANIMATION_INVALID_CYCLE = [
   [0, 'tap', 'monitor'], [15, 'tap', 'mask'], [24, 'tap', 'mask'],
   [40, 'down', 'light'], [42, 'up', 'light'], [46, 'tap', 'monitor'],
   [65, 'tap', 'cam:10'], [67, 'down', 'light'], [69, 'up', 'light'],
   [77, 'tap', 'cam:4'], [79, 'down', 'light'], [81, 'up', 'light'],
   [89, 'tap', 'cam:7'], [91, 'down', 'light'], [93, 'up', 'light'],
   [100, 'tap', 'cam:11'], [103, 'down', 'wind'],
+];
+
+// A mask-off tap first becomes legal after MASK_ANIM_ON ticks. Keep the
+// existing one-frame hall margin after take-off and all downstream gaps.
+// This is a host policy baseline, not a change to a committed device winner.
+const maskOn = 15;
+const maskOff = maskOn + C.MASK_ANIM_ON;
+const hallOn = maskOff + C.MASK_ANIM_OFF + 1;
+export const DEFAULT_CYCLE = [
+  [0, 'tap', 'monitor'], [maskOn, 'tap', 'mask'], [maskOff, 'tap', 'mask'],
+  [hallOn, 'down', 'light'], [hallOn + 2, 'up', 'light'], [hallOn + 6, 'tap', 'monitor'],
+  [hallOn + 25, 'tap', 'cam:10'], [hallOn + 27, 'down', 'light'], [hallOn + 29, 'up', 'light'],
+  [hallOn + 37, 'tap', 'cam:4'], [hallOn + 39, 'down', 'light'], [hallOn + 41, 'up', 'light'],
+  [hallOn + 49, 'tap', 'cam:7'], [hallOn + 51, 'down', 'light'], [hallOn + 53, 'up', 'light'],
+  [hallOn + 60, 'tap', 'cam:11'], [hallOn + 63, 'down', 'wind'],
 ];
 
 const A = (f) => { // next frame landing on a :X2 / :X7 second boundary
@@ -228,7 +247,8 @@ export class Bot {
 // error models -- or two cycles with different row counts -- cannot be compared
 // on identical luck. The profile and step-shift paths therefore run their own
 // generator. The legacy uniform path deliberately keeps drawing from sim.rng:
-// every published jitter curve was produced that way and must stay reproducible.
+// historical curves used that mechanism, but the corrected DEFAULT_CYCLE is
+// different. Reproducing those curves also needs their archived table/engine.
 const JITTER_SALT = 0x9e3779b9;
 
 export function run(opts = {}) {
