@@ -1,0 +1,23 @@
+# night7-dials20.input on the corrected layout (FusionDiv, patch from 4151d2a on):
+# the portraits sit on a 5 x 2 grid, centres x = 128 + 192 k, y = 112 (p0-p4)
+# or 384 (p5-p9). The frozen binary's stair-stepped taps stay in night7-dials20.input.
+# title: tap Custom Night through the centre of its button (touch zone [64,664,464,728])
+1 200 downobj 0 btnCustomNight.Active
+1 203 up 0
+# customize (frame 12): the default preset holds Withered Freddy, Bonnie, Chica
+# and Foxy at 20; portraits 4-9 toggle 0 -> 20.
+12 60 down 0 896 112
+12 63 up 0
+12 80 down 0 128 384
+12 83 up 0
+12 100 down 0 320 384
+12 103 up 0
+12 120 down 0 512 384
+12 123 up 0
+12 140 down 0 704 384
+12 143 up 0
+12 160 down 0 896 384
+12 163 up 0
+# Ready: a point of its touch zone [704,584,960,648] below every portrait
+12 200 down 0 808 616
+12 203 up 0

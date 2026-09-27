@@ -27,7 +27,7 @@ directory (`/private/tmp/fnaf2-recompile.*` on the dev machine).
 | `sourced-rebuild-model-options-20260927a.json` | The rebuild set as it stood before the Nights 6-7 options (`sourcedParkedMarker`, `sourcedCustomDialOrder`, `sourcedCam8Cancel`), byte for byte: the file `rebuild-options-census-20260927` scored (`tools/rebuild-options-census.mjs --options`). A snapshot, never edited; a census of the current set is a new record. |
 | `fixtures/night{2,3,4,5}-before.ini`, `fixtures/continue.input` | Saves holding only `level=N` (Continue loads `max(1, min(5, level))`) and the Continue tap, through its 16 x 16 touch zone at [64,528,80,544]. No game assets. |
 | `fixtures/night6-before.ini`, `fixtures/night6.input` | A save with `beatgame=1` (the title's g1 shows 6th Night from it) and the tap on 6th Night's centre (its touch zone is [64,584,464,648] on the frozen binary). |
-| `fixtures/night7-before.ini`, `fixtures/night7-{dials0,dials20,preset}.{input,json}` | A save with `beatgame=1` and `beat6=1` (Custom Night's g26/g50 gates), the title tap, portrait taps on the customize frame and Ready; each `.json` is the dial vector for `--custom-night`. |
+| `fixtures/night7-before.ini`, `fixtures/night7-{dials0,dials20,preset}.{input,json}`, `fixtures/night7-{dials0,dials20}-5x2.input` | A save with `beatgame=1` and `beat6=1` (Custom Night's g26/g50 gates), the title tap, portrait taps on the customize frame and Ready; each `.json` is the dial vector for `--custom-night`. The `-5x2` inputs tap the same dials on the corrected 5 x 2 grid (binaries from `4151d2a` on); the originals tap the frozen binary's stair-stepped grid. |
 | `sourced-origin-model-options.json` | The same sourced flags plus the frame-time hook at 60 fps (`frameMs` 50/3, `frameValue5` 1) and `sourcedEveryOrigin`: every countdown loads on the loop it is first reached. `model-draw-trace.mjs` turns the two hook constants into per-frame functions. Diagnostic; defaults unchanged. |
 | `make-android-fonts.py` | Writes Chowdren's font bank from Roboto TTFs held outside the repository at the font bank's pixel sizes (13-43, bold 43): the face Android substitutes for the game's Consolas and Tahoma, drawn at `|lfHeight|` px. Output `Chowdren/fonts/AndroidSans.dat`, next to the converter; no font data is committed. |
 | `native-frame.py` | Scales harness snaps (1024 x 768) to the phone's 2400 x 1080 MediaProjection frame as Display Mode FULL does, with bilinear filtering as the phone's frames show, and prints per-rectangle distances to a phone frame. Frames stay outside the repository. |
@@ -659,22 +659,51 @@ all in the patch:
   g520/g521 flicker toggled an invisible image. RGB565 records are now opaque.
   Android builds its collision masks in native code (`CMask.allocNative`), so
   whether they honour the key is not visible in the dex. The Night 1 office rows
-  are the check. **Not yet run:** this change is in the patch, but its
-  conversion was stopped at session end during image recompression, so neither
-  the darkened office nor the Night 1 rows have been seen on it. That conversion
-  also left `input/gamesrc/Assets.dat` empty, and `play/` reads it through a
-  symlink; a reconversion and build restore both.
+  are the check. The change touches only `Assets.dat`: the reconversion
+  regenerated identical sources, and the build compiled nothing.
 
 Confirmed in the harness on binary `036076d3` (Kyso and the loop test; no
 opaque RGB565), with a scripted monitor raise every 8 s on the Withered trio:
 Withered Chica enters on tick 1530 (seed 91). The blackout counters run (v0
 from 1501; 60 hidden and 119 shown ticks while 20 < v0 < 200), but the office
 stays lit: that is what led to the image 368 fix. The Foxy, Puppet and Withered
-Chica jumpscares draw, and Pedro saw Bonnie's. Night 1's office rows were last
-checked identical on `e2e7cf5c` (the text alignment build). They have not been
-checked on `036076d3`. Once the sequence ends, the
+Chica jumpscares draw, and Pedro saw Bonnie's. Once the sequence ends, the
 animatronic leaves for the got-you box, and the kill waits for the next monitor
 raise (g458-g461, g469). That is the sheet's rule, not a defect.
+
+**Pinned, and the whole ladder replayed (2026-09-27, afternoon).** The opaque
+build is binary `036076d3` with assets `7163d628`, copied to
+`pinned/036076d3-7163d628/` outside the repository. A later conversion can
+truncate `input/gamesrc/Assets.dat` (the stopped one did); the pinned copy is
+safe from that. `play/` and the replays read it.
+
+On seed 91's encounter the office now goes dark. Tick 1533 (v1 = 28) is black;
+the ticks around it with v1 < 25 show Withered Chica; from v0 >= 100 the room is
+mostly or fully black; and at tick 1900 it fades back with Chica gone.
+
+Every no-input night replayed on the pinned pair (`*-rebuild-036076d3.json`)
+matches its committed record: same alignments, same model, same office length.
+Nights 1-7 are therefore unchanged by FusionDiv, Kyso, the loop test and opaque
+RGB565. Night 1's draw projection differs only in the shorter navigation before
+the office.
+
+The dial fixtures moved to the 5 x 2 grid (`night7-dials{0,20}-5x2.input`); the
+frozen-grid originals stay with their records. The one change is the default
+preset: before the loop test it was DIVERGENT at tick 61 against its own dials.
+It now matches them to the model's Foxy kill frame (tick 1200,
+`recompile-draw-38990fb11a7d970f`). That is the first non-uniform Custom Night
+on which the rebuild and the model agree.
+
+**Native frames against the phone.** Scaled to 2400 x 1080
+(`native-frame.py`), the rebuild's title (save `night6-before.ini`, ticks 120,
+200 and 250) lands its five menu labels on the phone's MediaProjection title
+frame with glyph-mask IoU 0.948-0.999 (`native-frame-title-t{120,200,250}-20260927.json`).
+Where the random background agrees, the mean difference is 0.9/255 ("New Game",
+tick 120) and 1.2/255 ("Continue"). The larger means come from the title's
+random static bands passing behind a label. So the FULL stretch with bilinear
+filtering reproduces the phone's glyphs. The background (static, face flicker)
+has not been compared frame for frame: it needs a matched RNG state, not one
+frame.
 
 `MMFPARSER_ANDROID_MISSING_SOUND=silence` (opt-in) substitutes a 10 ms silent
 WAV for an Android sound missing from `res/raw`. The other games are parked for

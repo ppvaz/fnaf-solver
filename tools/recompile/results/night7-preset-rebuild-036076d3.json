@@ -1,0 +1,177 @@
+{
+  "schema": "recompile-draw-comparison-v1",
+  "claimLevel": "MODEL_ONLY",
+  "fidelity": "rebuilt-runtime",
+  "status": "MATCHED_TO_TERMINAL_LOOP",
+  "question": "Does the rebuilt no-input night consume the same Random stream per event update as the simulator?",
+  "scope": {
+    "night": 7,
+    "seed": 24850,
+    "targetFrame": 3,
+    "requestedModelFrames": 30000,
+    "modelOptions": {
+      "sourcedRouteForks": true,
+      "sourcedHallEntry": true,
+      "sourcedDropLightOrder": true,
+      "sourcedFoxyChain": true,
+      "sourcedUnconditionalDraws": true,
+      "sourcedEventDraws": true,
+      "sourcedBlackoutDraws": true,
+      "sourcedViewDraws": true,
+      "sourcedRollDraws": true,
+      "sourcedMonitorDownDraw": true,
+      "sourcedSecondPass": true,
+      "sourcedPuppetGlitchDraws": true,
+      "sourcedFootstepDraws": true,
+      "sourcedMangleReturn": true,
+      "sourcedVentCamDraws": true,
+      "sourcedRandomImageDraw": true,
+      "sourcedMonitorRaiseGate": true,
+      "sourcedSheetOrder": true,
+      "sourcedLastViewPause": true,
+      "frameMs": 16.666666666666668,
+      "frameValue5": 1,
+      "sourcedEveryOrigin": true,
+      "footstepCamMarkers": true,
+      "sourcedBoxCountdown": true,
+      "sourcedPuppetMoveOrder": true,
+      "sourcedHourTable": true,
+      "sourcedParkedMarker": true,
+      "sourcedCustomDialOrder": true,
+      "sourcedCam8Cancel": true
+    },
+    "customNight": {
+      "withfreddy": 20,
+      "withbonnie": 20,
+      "withchica": 20,
+      "foxy": 20,
+      "toyfreddy": 0,
+      "toybonnie": 0,
+      "toychica": 0,
+      "mangle": 0,
+      "bb": 0,
+      "golden": 0
+    },
+    "input": "navigation only; no gameplay actions"
+  },
+  "runtime": {
+    "visits": [
+      {
+        "frame": 0,
+        "seed": 24850,
+        "updates": 180
+      },
+      {
+        "frame": 1,
+        "seed": 24850,
+        "updates": 216
+      },
+      {
+        "frame": 12,
+        "seed": 24850,
+        "updates": 176
+      },
+      {
+        "frame": 2,
+        "seed": 24850,
+        "updates": 189
+      },
+      {
+        "frame": 7,
+        "seed": 24850,
+        "updates": 6
+      },
+      {
+        "frame": 3,
+        "seed": 24850,
+        "updates": 1223
+      },
+      {
+        "frame": 4,
+        "seed": 24850,
+        "updates": 300
+      },
+      {
+        "frame": 6,
+        "seed": 24850,
+        "updates": 600
+      },
+      {
+        "frame": 1,
+        "seed": 24850,
+        "updates": 27110
+      }
+    ],
+    "targetUpdates": 1223,
+    "namedTouches": 1,
+    "stop": "total ticks 30000 frame 1 tick 27110",
+    "traceSha256": "000525b2c2fff15c2b219007308c71af68077098fb7999e98141a993a2bab2c7",
+    "drawTraceSha256": "ba0225f1c15b18b00c28530059168d560c6b90b38f3263eeb71ac801d1da6674"
+  },
+  "model": {
+    "traceSha256": "48a66692587ad5f0bd685a0192ff013e0b1b2f03d630e5999e75688fa7101161",
+    "terminal": {
+      "frame": 1201,
+      "draws": 552,
+      "state": 21746
+    },
+    "death": {
+      "reason": "foxy",
+      "detail": "Foxy had locked on and no blackout covered the 10s interval",
+      "frame": 1201,
+      "t": 20.016666666666666
+    },
+    "won": false
+  },
+  "alignment": "Harness tick 0 is after its first event update, compared to model frame 1. Offset 0 is also retained to expose an initialization boundary discrepancy.",
+  "alignments": [
+    {
+      "modelFrameOffset": 0,
+      "compared": 1202,
+      "firstMismatch": {
+        "tick": 0,
+        "modelFrame": 0,
+        "rebuilt": {
+          "draws": 2,
+          "state": 30314
+        },
+        "model": {
+          "draws": 0,
+          "state": 24850
+        }
+      }
+    },
+    {
+      "modelFrameOffset": 1,
+      "compared": 1201,
+      "firstMismatch": {
+        "tick": 1200,
+        "modelFrame": 1201,
+        "rebuilt": {
+          "draws": 558,
+          "state": 62842
+        },
+        "model": {
+          "draws": 552,
+          "state": 21746
+        }
+      }
+    }
+  ],
+  "limitations": [
+    "Host reimplementation; no device claim or promotion.",
+    "Matching draws is necessary but insufficient for event/state equivalence.",
+    "Touch triggers are polled once per update; Android immediate event ordering remains unverified.",
+    "Both traces must describe the same night, seed and input; the operator must retain input/save provenance."
+  ],
+  "provenance": {
+    "toolSha256": "319fa0154e9f5a7ef1a12c5a7d9fb1a52e19d8a4e24bf73db8227a02cf66ac21",
+    "modelTraceToolSha256": "dd9b6dfaacb4c52b6c10dc0b0b884537401155a660383aae2a5f1110d9b2046c",
+    "patchSha256": "7767945f8d569b2969988071e3f31375f721343a68a659a33df6ec4bc968fef8",
+    "configSha256": "10baa929548d74f0e9d67cdf830161e108da2f8ff3b85456f765ebd78fd27749",
+    "binarySha256": "036076d3f40ee8568011e1b1f5b11a1958e42f38f8449359c8ed7cc85aca1c7e",
+    "inputSha256": "102fdbd2ffba206c54d0dd6813a66b90e44fd4fbe9ff66e326c6145a48d39685",
+    "saveSha256": "c0f497ff64b6f757f943965a48d2795419fb934ddf54eb5f3dee000439484844"
+  },
+  "evidenceId": "recompile-draw-38990fb11a7d970f"
+}

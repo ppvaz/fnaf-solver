@@ -1893,3 +1893,35 @@ Open:
 - Android's collision masks for RGB565 (native code).
 - The native-frame comparison against phone frames of matched states.
 - The census of the current set.
+
+**2026-09-27 (afternoon): the opaque build is pinned; the no-input ladder holds; native frames match the phone's glyphs.**
+
+- **S2b, rebuilt-runtime fidelity, MODEL_ONLY, no device run.**
+  - The opaque RGB565 change touched only `Assets.dat` (identical sources, 0
+    objects compiled).
+  - Binary `036076d3` and assets `7163d628` are pinned outside the repository,
+    and `play/` reads them.
+  - On seed 91's Withered Chica encounter the office now goes dark and flickers
+    on the overlay's v1, then fades back with Chica gone.
+- **The ladder.** Nights 1-7 were replayed with no input on the pinned pair
+  (`tools/recompile/results/*-rebuild-036076d3.json`). Each matches its
+  committed record: same alignments, same model, same office length. The
+  exception is the Night 7 default preset. Before the loop test it was DIVERGENT
+  at tick 61 against its own dials; it now matches them to the model's Foxy kill
+  frame (`recompile-draw-38990fb11a7d970f`). That is the first non-uniform Custom
+  Night where the rebuild and the model agree. The dial fixtures now have 5 x 2
+  grid versions (`night7-dials{0,20}-5x2.input`).
+- **Native frames.** `tools/recompile/native-frame.py` scales the rebuild's
+  title to 2400 x 1080. Against the phone's MediaProjection title frame, its
+  five menu labels overlap at glyph-mask IoU 0.948-0.999, and differ by
+  0.9/255 and 1.2/255 on average where the random background agrees
+  (`native-frame-title-t{120,200,250}-20260927.json`). The frames stay local;
+  the records carry their hashes.
+
+Open:
+- Scheduled play in the rebuild against the model (S2b's closing path: a
+  winner's taps into the harness; agent running).
+- The census on the current option set (agent running).
+- The title's background (static, face flicker) against the phone at a
+  matched RNG state.
+- Android's collision masks for RGB565 (native code).

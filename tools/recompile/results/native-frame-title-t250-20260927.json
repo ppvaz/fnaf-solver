@@ -1,0 +1,78 @@
+{
+ "schema": "fnaf2-native-frame-compare-v1",
+ "claimLevel": "MODEL_ONLY",
+ "fidelity": "rebuilt-runtime",
+ "note": "rebuild: pinned binary 036076d3 + assets 7163d628, save fixtures/night6-before.ini (Continue Night 5, 6th Night), seed 24850, harness no input, title frame 1 tick 250, CHOWDREN_SNAP then native-frame.py scale. Phone: the title-observe frame of campaign 2026-09-20T01-45-14.223Z (MediaProjection 2400x1080, local only). The title's static and face flicker are random per frame, so meanAbs includes background; brightIoU is the glyph geometry.",
+ "rebuildFrameSha256": "a4c21e4c4d82a0b256f4ca6103daa0ca60e408ce8d36207e35ed3dbd77916692",
+ "phoneFrameSha256": "4ea89758122e5aed59afe694395e688cdb9d90596254061d9c56468b31255aaf",
+ "size": [
+  2400,
+  1080
+ ],
+ "brightLuma": 200,
+ "rects": {
+  "newgame": [
+   140,
+   615,
+   690,
+   680
+  ],
+  "continue": [
+   140,
+   725,
+   690,
+   790
+  ],
+  "sixth": [
+   140,
+   840,
+   760,
+   905
+  ],
+  "options": [
+   1790,
+   840,
+   2260,
+   905
+  ],
+  "unlocks": [
+   1790,
+   950,
+   2260,
+   1015
+  ]
+ },
+ "stats": {
+  "newgame": {
+   "meanAbs": 35.375,
+   "maxAbsSum": 324,
+   "pixels": 35750,
+   "brightIoU": 0.9655
+  },
+  "continue": {
+   "meanAbs": 17.069,
+   "maxAbsSum": 714,
+   "pixels": 35750,
+   "brightIoU": 0.9798
+  },
+  "sixth": {
+   "meanAbs": 33.695,
+   "maxAbsSum": 417,
+   "pixels": 40300,
+   "brightIoU": 0.9606
+  },
+  "options": {
+   "meanAbs": 36.388,
+   "maxAbsSum": 386,
+   "pixels": 30550,
+   "brightIoU": 0.9483
+  },
+  "unlocks": {
+   "meanAbs": 31.062,
+   "maxAbsSum": 304,
+   "pixels": 30550,
+   "brightIoU": 0.9786
+  }
+ },
+ "toolSha256": "591271bdf84938ec243951cff3e43a5f871962c9ab7f8d96bcc3c437034539ec"
+}

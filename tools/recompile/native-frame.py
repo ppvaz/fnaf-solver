@@ -40,19 +40,36 @@ def scale(path, size=NATIVE):
     return im.resize(size, Image.BILINEAR)
 
 
+BRIGHT = 200  # luma (PIL 'L', ITU-R 601-2) above which a pixel counts as glyph
+
+
 def rect_stats(a, b, box):
     ca, cb = a.crop(box), b.crop(box)
     pa, pb = ca.load(), cb.load()
+    la, lb = ca.convert('L').load(), cb.convert('L').load()
     w, h = ca.size
     total = 0
     worst = 0
+    both = either = 0
     for y in range(h):
         for x in range(w):
             d = sum(abs(pa[x, y][k] - pb[x, y][k]) for k in range(3))
             total += d
             worst = max(worst, d)
+            ba, bb = la[x, y] > BRIGHT, lb[x, y] > BRIGHT
+            both += ba and bb
+            either += ba or bb
     n = w * h * 3
-    return {'meanAbs': round(total / n, 3), 'maxAbsSum': worst, 'pixels': w * h}
+    # meanAbs includes whatever lies behind a label (the title's static is random per frame);
+    # brightIoU compares only the glyph masks, so it measures geometry and filtering.
+    return {'meanAbs': round(total / n, 3), 'maxAbsSum': worst, 'pixels': w * h,
+            'brightIoU': round(both / either, 4) if either else None}
+
+
+def sha256(path):
+    import hashlib
+    with open(path, 'rb') as fp:
+        return hashlib.sha256(fp.read()).hexdigest()
 
 
 def parse_rect(text):
@@ -73,6 +90,8 @@ def main():
     c.add_argument('rebuild')
     c.add_argument('phone')
     c.add_argument('--rect', action='append', default=[])
+    c.add_argument('--out', help='write a content-free record: frame hashes, rectangles, numbers')
+    c.add_argument('--note', default='')
     args = ap.parse_args()
     if args.cmd == 'scale':
         os.makedirs(args.out, exist_ok=True)
@@ -86,8 +105,26 @@ def main():
     if a.size != NATIVE or b.size != NATIVE:
         raise SystemExit('compare wants two %dx%d frames, got %s and %s' % (NATIVE + (a.size, b.size)))
     rects = [parse_rect(r) for r in args.rect] or [('frame', (0, 0) + NATIVE)]
-    json.dump({name: rect_stats(a, b, box) for name, box in rects}, sys.stdout, indent=1)
+    stats = {name: rect_stats(a, b, box) for name, box in rects}
+    json.dump(stats, sys.stdout, indent=1)
     print()
+    if args.out:
+        record = {
+            'schema': 'fnaf2-native-frame-compare-v1',
+            'claimLevel': 'MODEL_ONLY',
+            'fidelity': 'rebuilt-runtime',
+            'note': args.note,
+            'rebuildFrameSha256': sha256(args.rebuild),
+            'phoneFrameSha256': sha256(args.phone),
+            'size': list(NATIVE),
+            'brightLuma': BRIGHT,
+            'rects': {name: list(box) for name, box in rects},
+            'stats': stats,
+            'toolSha256': sha256(os.path.abspath(__file__)),
+        }
+        with open(args.out, 'w') as fp:
+            json.dump(record, fp, indent=1)
+            fp.write('\n')
 
 
 if __name__ == '__main__':
