@@ -20,11 +20,12 @@ directory (`/private/tmp/fnaf2-recompile.*` on the dev machine).
 | `fnaf2-config.py` | Chowdren `--config`: `get_missing_image` for placeholder image handle `(0,0)`, and an `init()` hook that synthesizes `game.extensions` entries from the frame items (`Layer` → native writer; `Multiple Touch` / `Android object` / `AndroidPlus` / `iOS Plus Object` → generic `ObjectWriter` stub). |
 | `probe-unknown-params.py` | Dumps every event parameter whose code is past `parameterLoaders`, with the ACE it attaches to and its raw bytes. Requires the `Parameter.read` capture patch. |
 | `probe-onloop.py` | Prints every `OnLoop` condition and its parameter loader — the probe that showed mobile loops are numeric `Short` indices, not name expressions. |
-| `model-draw-trace.mjs` | The simulator's `Random(N)` draws frame by frame (draws so far, LCG state), in the shape the harness traces: two runs of one night and seed that spend the same draws every frame read the same stream, and the first frame where the counts part is where to look. MODEL_ONLY. |
+| `model-draw-trace.mjs` | The simulator's `Random(N)` draws frame by frame (draws so far, LCG state), in the shape the harness traces: two runs of one night and seed that spend the same draws every frame read the same stream, and the first frame where the counts part is where to look. Refuses a `@fnaf2-1020/core` resolved outside its own checkout (a worktree without `npm ci` loads the parent's model). MODEL_ONLY. |
 | `compare-draw-trace.mjs` | Reads an external harness trace and emits a hash-bound, content-free comparison result. `MATCHED_PREFIX` never means full event/state equivalence. `--custom-night FILE` names the ten Custom Night dials (night 7 only; every dial required) and records them in the scope. |
 | `sourced-model-options.json` | Explicit diagnostic variant enabling the model's existing sourced flags. It does not change core defaults or establish fidelity. |
 | `sourced-rebuild-model-options.json` | The origin set plus `sourcedFootstepDraws`, `footstepCamMarkers`, `sourcedBoxCountdown`, `sourcedPuppetMoveOrder`, `sourcedHourTable`, and for Custom Night `sourcedParkedMarker`, `sourcedCustomDialOrder` and `sourcedCam8Cancel`: the options under which the model matches the rebuilt no-input Nights 1-6 and the uniform Custom Nights up to each night's terminal loop. Diagnostic; defaults unchanged. |
 | `sourced-rebuild-model-options-20260927a.json` | The rebuild set as it stood before the Nights 6-7 options (`sourcedParkedMarker`, `sourcedCustomDialOrder`, `sourcedCam8Cancel`), byte for byte: the file `rebuild-options-census-20260927` scored (`tools/rebuild-options-census.mjs --options`). A snapshot, never edited; a census of the current set is a new record. |
+| `sourced-rebuild-dropflag-model-options.json` | `sourced-rebuild-model-options.json` plus `sourcedDropFlagOrder` (the drop button's flag at g618/g619, after g262/g274/g612). The set the 2026-09-27 drop-flag replays ran under; the main set is unchanged. |
 | `fixtures/night{2,3,4,5}-before.ini`, `fixtures/continue.input` | Saves holding only `level=N` (Continue loads `max(1, min(5, level))`) and the Continue tap, through its 16 x 16 touch zone at [64,528,80,544]. No game assets. |
 | `fixtures/night6-before.ini`, `fixtures/night6.input` | A save with `beatgame=1` (the title's g1 shows 6th Night from it) and the tap on 6th Night's centre (its touch zone is [64,584,464,648] on the frozen binary). |
 | `fixtures/night7-before.ini`, `fixtures/night7-{dials0,dials20,preset}.{input,json}`, `fixtures/night7-{dials0,dials20}-5x2.input` | A save with `beatgame=1` and `beat6=1` (Custom Night's g26/g50 gates), the title tap, portrait taps on the customize frame and Ready; each `.json` is the dial vector for `--custom-night`. The `-5x2` inputs tap the same dials on the corrected 5 x 2 grid (binaries from `4151d2a` on); the originals tap the frozen binary's stair-stepped grid. |
@@ -40,7 +41,7 @@ directory (`/private/tmp/fnaf2-recompile.*` on the dev machine).
 | `fixtures/night1-newgame.input`, `fixtures/night1-before.ini` | Exact host-only navigation and initial save used by the retained runs, matching their provenance hashes. No game assets. |
 | `fixtures/night7-dials20-5x2.input` | The all-20 Custom Night navigation on the corrected 5 x 2 portrait grid (binary `036076d3` on): portraits 4-9 toggled, then Ready. A dump before Ready reads all ten dials at 20. |
 | `schedule-to-input.mjs` | A committed winner binding's own tap schedule as harness input: the rows its gate replays, expanded once into harness contacts and the Sim queue (refused unless the queue equals `minus-toys-plan.mjs` `schedule()`), quantized to 60 Hz frames, on the office frame at tick = queue frame. Points are the device profile's control points through the FULL stretch. Lists same-tick edges. minus-toys only. |
-| `compare-schedule-replay.mjs` | The replay comparison: binds the harness input to the winner's regenerated rows, drives the model with the same Sim queue under `--model-options`, and records both outcomes (6 AM or death, time; the rebuild's death reason is UNKNOWN unless the stream matched to the terminal loop), the first draw mismatch, every mismatch run, a gate-replay cross-check, and per-update monitor/mask ledgers from `# watch` lines. `recompile-schedule-replay-v1`, MODEL_ONLY. |
+| `compare-schedule-replay.mjs` | The replay comparison: binds the harness input to the winner's regenerated rows, drives the model with the same Sim queue under `--model-options`, and records both outcomes (6 AM or death, time; the rebuild's death reason is UNKNOWN unless the stream matched to the terminal loop), the first draw mismatch, every mismatch run, a gate-replay cross-check, and per-update monitor/mask ledgers from `# watch` lines. Provenance names the model files measured (`modelSourceSha256`). `recompile-schedule-replay-v1`, MODEL_ONLY. |
 | `test-schedule-replay.mjs` | FIXTURE for both: stretch points, one expansion, pointers and same-tick edges, the Night 1 minimal binding, prefix/slip/split/death outcomes, ledger pairing, input binding. In `npm run test:unit`. |
 
 ## Environment
@@ -863,3 +864,108 @@ and sizes the atlas with the padding counted (`font.cpp`, in the patch). Binary
   g2-g4, g486-g487; the model's `initialCamera`). The rebuild's Night 7 raises
   open Main Hall. The phone frames that show CAM 11 come after the executor has
   tapped it to wind the box.
+
+## The drop button's flag order (2026-09-27, S2b)
+
+This closes the second open item above: the one-update drop and mask-off slip.
+From the Office frame's event dump (`03-04-Office.txt`) and the pinned binary's
+generated source:
+
+- `drop everything` (counter 141) is read by g262 (event 204_3: `flip panel
+  button` v0 2 -> 3, `mmonitorDown` shown, v1 = 1, `viewing` = 0) and g274
+  (210_3: `mask` 2 -> 3, `mmaskOff` shown, v1 = 1), and cleared by g612 (539_3).
+  It is written by g574, g614/g615, g618/g619, g624 and g718-g721.
+- g618 (542_3): touch 5 over the drop button, `flip panel button` v0 == 2 and
+  v1 == 0, `mask` == 0. g619 (543_3): touch 5 over the drop button, `mask` ==
+  2, v1 == 0, `viewing` == 0, `in danger` == 0. Both sit in group 33, the touch
+  folder, which g0 (1_3) activates when global value 8 == 1. Their mouse twins
+  g614/g615 (540_3/541_3) sit in group 32, which is `Closed+Inactive` and which
+  nothing activates. The section above named g614 and events 540_3/541_3. The
+  groups that run are g618 and g619, events 542_3/543_3, with the same
+  conditions.
+- The drop button spans 0-1024 x 678-768 in the pinned binary's office instance
+  dump, under the white (512-1024) and red (0-512) buttons. So the profile's
+  monitor point (759, 708) and mask point (256, 708) both touch it, and a
+  mask-off touch is g619's.
+
+So a drop or mask-off touched on update F raises the flag after that update's
+g262, g274 and g612 have run, and it is performed on F+1.
+`sourcedDropFlagOrder` (default off; requires `sourcedDropLightOrder`) puts the
+model there. A drop or mask-off press records a touch. g618/g619 read it on the
+same update, after the blackout resolution and `tickBox`. The next tick's
+`tickForcedown` then performs it. g619 refuses a mask-off while in danger (the
+model's `blackout.active`) and flags the refused contact. v1 is not modelled.
+For a one-shot tap, g618 and g619 read it as 0. The Sim queue carries no release
+for a tap, so the model reads a touch only on its press update. The sheet
+re-reads a finger that is still down. Contract:
+`packages/core/test/drop-flag-order.test.js` (`test:contracts`), including
+"off leaves the default unchanged".
+
+The ledger offsets, derived from the dump for a touch read on update F. A
+latch (g1, g6, g9, g10) sits at the top of the sheet. Its counter (g1015-g1022)
+sits at the bottom, is 1 at the end of the loop its Active is shown, and grows
+by 1 per loop.
+
+| change | rebuilt (sheet) | model before | rebuilt minus model | cause | with the option |
+|---|---|---|---|---|---|
+| raise start | g257 on F | F | +0 | - | +0 |
+| fully up | g1 (`>= 12`) on F+12 | F+11 | +1 | animation count | +1 |
+| drop start | g618 on F, g262 on F+1 | F | +1 | flag order | +0 |
+| fully down | g6 (`>= 22`) + g7 on F+23 | F+21 | +2 | flag order + animation count | +1 |
+| mask on | g270 on F | F | +0 | - | +0 |
+| fully on | g9 (`>= 12`) on F+12 | F+11 | +1 | animation count | +1 |
+| mask off | g619 on F, g274 on F+1 | F | +1 | flag order | +0 |
+| fully off | g10 (`>= 14`) + g11 on F+15 | F+14 | +1 | flag order | +0 |
+
+The flag order explains drop start, mask off, fully off, and one of fully
+down's two. The other +1s have a second cause. The model decrements an
+animation's counter in the tick that starts it, so a constant N spends N - 1
+updates in the moving state, while the sheet's latch fires N updates after the
+show loop. `MASK_ANIM_OFF` = 15 therefore gives the sheet's 14 updates.
+`MONITOR_ANIM_UP`, `MONITOR_ANIM_DOWN` and `MASK_ANIM_ON` (12, 22, 12) give one
+update fewer than the sheet. This reverses `docs/android/ANDROID-GROUP-MAP.md`
+cluster 3's verdict: counted in updates, the mask-off constant is the one that
+agrees. Not encoded here. The draws never read the difference before the
+splits.
+
+The three replays, re-run over the same retained traces (`agent-schedule/`
+`n1-minimal`, `n5-contact-final`, `n7-k3` with their `-r2` repeats and `-mask`
+runs; trace hashes equal to the first records'). They use the recipe above with
+`--model-options tools/recompile/sourced-rebuild-dropflag-model-options.json`.
+A record now also names the model files it measured (`modelSourceSha256`).
+`model-draw-trace.mjs` refuses a `@fnaf2-1020/core` that resolves outside its
+own checkout: a worktree without `npm ci` loads the parent checkout's model, and
+the first Night 1 run here measured the parent's unchanged model without saying
+so.
+
+| binding | first difference before -> after | matched before the persistent split | ledgers (rebuilt minus model) | evidence |
+|---|---|---|---|---|
+| Night 1 `minimal` | 6953 (drop slip) -> **10200**, the split | 10199 -> 10200, every update before it | monitor 8/8: raise +0, up +1, drop **+0**, down **+1**; 4 of 8 mismatched updates left | `night1-minimal-dropflag-replay-20260927.json`, `recompile-replay-89fce522a0465e58` |
+| Night 5 `contact-final` | 53 (drop slip), 242 -> **617**, the split | 615 -> 617, every update before it | monitor 160/160 (drop **+0** x40, down **+1** x40; the tick-0 raise still +1/+2); mask 156/156 (off **+0**, fully off **+0**); mismatched updates 179 -> 99 and 117 -> 39 | `night5-contact-final-dropflag-replay-20260927.json`, `recompile-replay-0d63768eb9663543` |
+| Night 7 `k3`, all dials 20 | 199 (drop slip), 286, 374, 434, 494, 554, 600 -> **600** | 606 -> 612 | monitor 172/172 (drop **+0**, down **+1**); mask 168/168 (off **+0**, fully off **+0**); mismatched updates 172 -> 86 and 126 -> 42 | `night7-k3-dropflag-replay-20260927.json`, `recompile-replay-191e76adc14cf1d7` |
+
+Every per-drop slip is gone. So are Night 7's g781 slips at 374-554: they
+followed the drop at 286 and leave with it. The outcomes do not change: Night 1
+and Night 7 reach 6 AM on both sides, and on Night 5 the rebuild dies after
+23,423 updates while the model reaches 6 AM. The gate replays agree under the
+same options. What remains before each split:
+
+- **Night 7, update 600.** The model spends one of its g695-g703 footstep draws
+  on update 600, and the rebuild spends it on 601. The streams are equal again
+  at 601. This is not the drop path, and the cause is not established.
+- **The splits themselves** (10200, 617, 613): the Toy view draws at A = 1,
+  the first open item above.
+
+Scope: one seed, three bindings, host rebuild only, MODEL_ONLY with
+`rebuilt-runtime` fidelity. No phone claim, no promotion, no default changed.
+`sourced-rebuild-model-options.json` is unchanged. Open:
+- The animation count (fully up, fully down, fully on +1), as its own option
+  keyed to g1/g6/g9/g10 and g1015-g1022, if a rule turns out to read it.
+- Night 5's first raise, on office tick 0, which the rebuild takes one update
+  late.
+- The Puppet's forcedown. g623 moves him onto the got-you box on update U. g574
+  (earlier in the sheet) sees it on U+1 and writes the flag, and g612 clears it
+  on that same update. g624 (`being attacked by` > 0, NotAlways) raises it
+  again after g612, and g262 performs it on U+2. The model raises the flag at
+  g623 and performs it on U+1, one update early. No replay here reaches it.
+- Night 7's footstep draw at 600.

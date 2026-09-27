@@ -768,6 +768,14 @@
       ]
     },
     {
+      "file": "packages/core/test/drop-flag-order.test.js",
+      "imports": [
+        "../src/mechanics/config.js",
+        "../src/mechanics/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
       "file": "packages/core/test/drop-light-order.test.js",
       "imports": [
         "../src/mechanics/plant-model.js",
@@ -867,6 +875,13 @@
       "imports": [
         "@fnaf2-1020/core/control",
         "@fnaf2-1020/core/mechanics"
+      ]
+    },
+    {
+      "file": "packages/core/test/promoted-view-draws.test.js",
+      "imports": [
+        "../src/mechanics/plant-model.js",
+        "node:assert/strict"
       ]
     },
     {
@@ -2763,7 +2778,9 @@
       "file": "tools/recompile/model-draw-trace.mjs",
       "imports": [
         "@fnaf2-1020/core/mechanics",
-        "node:fs"
+        "node:fs",
+        "node:path",
+        "node:url"
       ]
     },
     {

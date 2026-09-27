@@ -30,7 +30,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { compareTrace } from './compare-draw-trace.mjs';
-import { simOptionsFrom } from './model-draw-trace.mjs';
+import { MODEL_SOURCES, simOptionsFrom } from './model-draw-trace.mjs';
 import { DEFAULT_PROFILE, controlPoints, harnessInput, winnerSchedule } from './schedule-to-input.mjs';
 import { withModelOptions } from '../rebuild-options-census.mjs';
 
@@ -243,6 +243,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     compareToolSha256: fileHash(new URL('./compare-draw-trace.mjs', import.meta.url)),
     scheduleToolSha256: fileHash(new URL('./schedule-to-input.mjs', import.meta.url)),
     modelTraceToolSha256: fileHash(new URL('./model-draw-trace.mjs', import.meta.url)),
+    modelSourceSha256: Object.fromEntries(MODEL_SOURCES.map((path) => [rel(path), fileHash(path)])),
     patchSha256: fileHash(new URL('./mmfparser-chowdren-mobile.patch', import.meta.url)),
     configSha256: fileHash(new URL('./fnaf2-config.py', import.meta.url)),
     inputSha256: fileHash(args.input),

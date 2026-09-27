@@ -2011,3 +2011,58 @@ Open:
   `sourced-rebuild-model-options-20260927b.json`).
 - The fresh corner cohort (device agent).
 - Pedro's attestation.
+
+**2026-09-27 (night): the drop button's flag order, from the dump (S2b, MODEL_ONLY).**
+
+- **The order.** `drop everything` is performed at g262 (monitor) and g274
+  (mask) and cleared at g612. Only after those does the drop button set it:
+  g618 (monitor fully up, mask off) and g619 (mask fully on, viewing 0, in
+  danger 0). These are events 542_3/543_3 in the touch folder, group 33, which
+  g0 activates on Android. The mouse twins g614/g615 (540_3/541_3) sit in
+  group 32, which nothing activates; the replay record named them by mistake.
+  The drop button covers the whole bottom strip, so a mask-off touch is g619's.
+  A drop or mask-off touched on update F therefore lands on F+1.
+- **The option.** `sourcedDropFlagOrder` is default-off and requires
+  `sourcedDropLightOrder`. g618/g619 read the touch at their sheet position,
+  the next tick performs it, and g619 refuses a mask-off in danger.
+  `packages/core/test/drop-flag-order.test.js` is in `test:contracts`, with
+  "off leaves the default unchanged". `sourced-rebuild-dropflag-model-options.json`
+  is the rebuild set plus this option. The main set is unchanged.
+- **The ledger offsets, derived from the dump.** The flag order explains drop
+  start +1, mask off +1, fully off +1, and one of fully down's +2. Fully up,
+  fully on and the rest of fully down (+1 each) have a second cause. The model
+  counts an animation down from the tick that starts it, so N spends N - 1
+  updates moving, while the sheet's latches g1/g6/g9/g10 fire N updates after
+  the show loop. `MASK_ANIM_OFF` = 15 is therefore the constant that agrees;
+  the group map's cluster 3 verdict had it the other way round. The animation
+  count is not encoded.
+- **Replays re-run** over the same retained traces:
+  - Every per-drop slip is gone, and so are Night 7's g781 slips (374-554),
+    which followed the drop at 286.
+  - Night 1: first difference 6953 -> 10200, the split
+    (`recompile-replay-89fce522a0465e58`).
+  - Night 5: 53 -> 617, the split (`recompile-replay-0d63768eb9663543`).
+  - Night 7: 199 -> 600. That is one footstep draw (g695-g703), which the model
+    spends on 600 and the rebuild on 601, before the split at 613
+    (`recompile-replay-191e76adc14cf1d7`).
+  - The ledgers now read drop +0 and mask off/fully off +0, with fully up,
+    fully down and fully on +1.
+  - The outcomes and the gate-replay agreement are unchanged.
+- **Tool.** `model-draw-trace.mjs` refuses a `@fnaf2-1020/core` that resolves
+  outside its checkout. A worktree without `npm ci` had loaded the parent's
+  model, unchanged, and written a normal-looking record. Replay records now
+  carry `modelSourceSha256`.
+- **Records.** `tools/recompile/results/night{1-minimal,5-contact-final,7-k3}-dropflag-replay-20260927.json`
+  ([README](../tools/recompile/README.md), "The drop button's flag order"). No
+  default changed, no phone claim.
+
+Open:
+- The A = 1 / A = 2 view-draw split (another session's `sourcedPromotedViewDraws`),
+  then replay to the next difference.
+- Night 7's footstep draw at 600.
+- The animation count, as its own option, if a rule reads it.
+- Night 5's tick-0 raise, one update late in the rebuild.
+- The Puppet's forcedown: g574 -> g612 -> g624 lands it one update after the
+  model's g623 flag.
+- The per-cycle ledger against a phone recording (no k2/k3 video on this
+  machine).

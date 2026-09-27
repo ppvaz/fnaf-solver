@@ -81,6 +81,21 @@ export class Sim {
       // So an encounter that starts at a camdrop never lets the hall light
       // latch, and D is not reset. Off by default until the censuses compare.
       sourcedDropLightOrder: false,
+      // Where the drop button writes `drop everything` (requires sourcedDropLightOrder). The sheet
+      // performs the flag at g262 (monitor v0 2 -> 3, viewing 0) and g274 (mask 2 -> 3), clears it at
+      // g612, and only then sets it from a touch: g618 (monitor v0 == 2, v1 == 0, mask == 0) and g619
+      // (mask == 2, v1 == 0, viewing == 0, in danger == 0), in the touch folder (group 33, which g0
+      // activates on Android; the mouse twins g614/g615 sit in group 32, never activated). The drop
+      // button spans the bottom strip under both bars (0-1024 x 678-768 in the pinned rebuild), so
+      // a mask-off touch is g619's. So a drop or mask-off touched on update F is performed on F+1.
+      // The model raised the flag at the press and tickForcedown spent it on F, one update early:
+      // generated events 204_3/210_3/539_3/542_3/543_3 in the rebuilt runtime, whose monitor and
+      // mask ledgers show `2>3 +1` on every cycle (tools/recompile, 2026-09-27). On: the press
+      // records a touch, g618/g619 read it at their sheet position on that update (after the
+      // blackout resolution and tickBox, before g623), and the next tick's forcedown performs it;
+      // g619 refuses a mask-off while in danger. A tap carries no release in the Sim queue, so the
+      // touch is read on its press update only, where the sheet re-reads a finger still down.
+      sourcedDropFlagOrder: false,
       // Foxy as the dump's literal A/B chain (requires sourcedDropLightOrder):
       //   g337  every 5 s, no location/pin/state condition: the Random(5) draw
       //         is spent every time; success writes A=1 and D=0
@@ -403,6 +418,8 @@ export class Sim {
       throw new Error('customNight requires night: 7 (Custom Night is night 7 in the menus)');
     if (this.opts.sourcedFoxyChain && !this.opts.sourcedDropLightOrder)
       throw new Error('sourcedFoxyChain reads the hall latch: it requires sourcedDropLightOrder');
+    if (this.opts.sourcedDropFlagOrder && !this.opts.sourcedDropLightOrder)
+      throw new Error('sourcedDropFlagOrder moves the drop flag: it requires sourcedDropLightOrder');
 
     this.rng = new Rng(this.opts.seed, this.opts.worst);
     this.frame = 0;
@@ -518,6 +535,8 @@ export class Sim {
     // g574; executed on the monitor by g262 and on the mask by g274, then
     // cleared by g612.
     this.dropEverything = false;
+    // the update a drop-button touch landed on (frame before its tick), read there by g618/g619 (sourcedDropFlagOrder)
+    if (this.opts.sourcedDropFlagOrder) this.dropTouch = -1;
 
     // --- the seven
     this.units = C.STALLED.map(u => ({
@@ -771,6 +790,9 @@ export class Sim {
     // window the one action g533 says ends it. No withered that reached the
     // office was survivable in this simulator until that was split apart.
     if (action === 'mask' && !this.maskOn && this.attackExecuting) return;
+    // sourcedDropFlagOrder: with the mask on, the touch lands on the drop button; g619 reads it at
+    // its sheet position (mask == 2 by then, even if g9 finished the put-on at this update's top).
+    if (action === 'mask' && this.maskOn && this.opts.sourcedDropFlagOrder) { this.dropTouch = this.frame; return; }
     // The mask answers only at rest. g270 puts it on from `mask` == 0 and g615
     // takes it off from `mask` == 2; states 1 and 3 are the put-on and
     // take-off animations (g9 moves 1 -> 2 after 12 frames), and no group
@@ -795,7 +817,9 @@ export class Sim {
       if (lower && this.opts.sourcedDropLightOrder) {
         // g614/g618: the drop button only raises the flag, and only from a
         // fully-up monitor with the mask off; g262 performs it next frame.
-        if (this.monitor === MON_UP && this.maskFullyOff) this.dropEverything = true;
+        // sourcedDropFlagOrder: g618 reads the touch at its sheet position (readDropTouch).
+        if (this.opts.sourcedDropFlagOrder) this.dropTouch = this.frame;
+        else if (this.monitor === MON_UP && this.maskFullyOff) this.dropEverything = true;
         return;
       }
       this.setMonitor(!lower);
@@ -1367,6 +1391,21 @@ export class Sim {
     this.emit('forcedown');
   }
 
+  // sourcedDropFlagOrder: g618/g619 read this update's drop-button touch after g262/g274 and g612,
+  // so the flag they raise is performed by the next tick's tickForcedown. A touch from an update
+  // whose tick returned early (a non-lethal kill) is dropped. (v1, the flip lock g262, g270 and
+  // g274 set, is not modelled: it is 0 here for a tap that is not still held from them.)
+  readDropTouch() {
+    const touched = this.dropTouch === this.frame - 1;
+    this.dropTouch = -1;
+    if (!touched) return;
+    if (this.monitor === MON_UP && this.maskFullyOff) this.dropEverything = true;                         // g618
+    else if (this.maskFullyOn && this.viewing === 0) {                                                    // g619
+      if (this.blackout.active) this.flag('invalid-input', 'g619: mask-off refused in danger');
+      else this.dropEverything = true;
+    }
+  }
+
   // ------------------------------------------------------------------- tick
   tick() {
     if (!this.alive || this.won) return;
@@ -1510,6 +1549,7 @@ export class Sim {
     this.tickUnits(f);
     this.syncMangleStatic();
     this.tickBox();
+    if (this.opts.sourcedDropFlagOrder) this.readDropTouch();  // g618/g619 (g556-g559 precede them but write nothing they read)
     if (this.opts.sourcedSheetOrder) this.secondPassLate(f);   // g556..g781 in sheet order
     else if (this.opts.sourcedSecondPass) this.secondPass(f);   // g213..g781 per-second groups
     if (this.opts.record) this.record();
