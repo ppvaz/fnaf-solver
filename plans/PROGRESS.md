@@ -2256,6 +2256,12 @@ Open:
   2044 -> 2100 (`recompile-replay-1a13eb91f66cea4e`), Night 1 stays 21714
   (`recompile-replay-222cf9f47ef9cf69`). The no-input ladder re-scores unchanged.
 
+- `sourcedOfficeFootsteps` (`office-footsteps.test.js`, in the rebuild set): a passed roll at 122 promotes the unit
+  where it stands, and W. Bonnie, Toy Bonnie and Mangle, whose sprites on `in office` overlap `hear footsteps`,
+  draw g696/g700/g703 there. Night 7 2100 -> 2324 (`recompile-replay-ad22e514332da620`); Night 1 keeps 21714 but
+  loses its persistent split (`recompile-replay-77da9b5228c837fc`); Night 5 stays 7740
+  (`recompile-replay-3999b92f7f3e9d55`).
+
 Open:
 - Night 1 21714: Toy Bonnie promoted a loop early after a flash.
-- Night 7 2100: one more draw in the rebuild between g517 and g744 on a roll loop.
+- Night 5 7740 and Night 7 2324: the encounter resolves one update earlier in the rebuild.

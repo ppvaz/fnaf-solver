@@ -33,5 +33,6 @@
   "sourcedFootstepValue2": true,
   "sourcedRollsBeforeMoves": true,
   "sourcedPromotedMoves": true,
-  "sourcedValue5": true
+  "sourcedValue5": true,
+  "sourcedOfficeFootsteps": true
 }

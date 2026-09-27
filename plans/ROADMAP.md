@@ -118,9 +118,9 @@ Details:
     `recompile-replay-232b3f74c48dc27a`).
     Every monitor and mask contact lands in both. Under the rebuild option set
     the draw streams now first differ at office update 21714 on Night 1, 7740 on
-    Night 5 and 2100 on Night 7. MODEL_ONLY and DIVERGENT
-    ([k3 replay](../tools/recompile/results/night7-k3-replay-value5-20260927.json),
-    `recompile-replay-1a13eb91f66cea4e`).
+    Night 5 and 2324 on Night 7. MODEL_ONLY and DIVERGENT
+    ([k3 replay](../tools/recompile/results/night7-k3-replay-officefootsteps-20260927.json),
+    `recompile-replay-ad22e514332da620`).
 - **Absorbs** Plan 17 (route 5), Plan 25 horizon 2, and the model parts of
   Plans 15 and 19.
 

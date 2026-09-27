@@ -1221,3 +1221,31 @@ status, compared updates and first mismatch on all nine nights.
 | Night 1 `minimal` | 21714 -> 21714 | `night1-minimal-replay-value5-20260927.json`, `recompile-replay-222cf9f47ef9cf69` |
 | Night 5 `contact-final` | 7460 -> **7740** | `night5-contact-final-replay-value5-20260927.json`, `recompile-replay-215d53586e6cecef` |
 | Night 7 `k3` | 2044 -> **2100** | `night7-k3-replay-value5-20260927.json`, `recompile-replay-1a13eb91f66cea4e` |
+
+**Footsteps at the office opening (`sourcedOfficeFootsteps`,
+`packages/core/test/office-footsteps.test.js`).** Night 7 tick 2100: one more
+draw in the rebuild on a roll loop. The watched blackout flicker's `Random(50)`
+and `decide path` place it: the flicker took the same LCG draw on both sides,
+and `decide path` (g744) took the draw after the model's. So the extra draw sits
+between g517 and g744. Instance dumps before and after update 2100
+(`CHOWDREN_DUMP_FRAME/TICK`) show Withered Bonnie, standing on `in office` in
+her encounter, go from value 0 = 0 to 2 with value 2 = 9. Her roll passed, g346
+promoted her, and g696 drew her footstep ahead of Mangle's g703. `in office`
+(668, 612) lies inside `hear footsteps` (x 538-802, y 458-609) for the
+bottom/centre-hotspot sprites: W. Bonnie, Toy Bonnie and Mangle among the route
+units (`docs/android/ANDROID-SOURCE-STATUS.md`). The dump puts W. Bonnie's box at
+656,589-680,613. The model rolled no unit at the opening into a promotion, and
+kept 122 off the footstep markers.
+
+Under the option a passed roll at 122 promotes the unit where it stands (no
+move group leaves 122), and those three draw their footstep there. So does an
+arrival at 122 while value 2 is above 0. The option requires
+`sourcedFootstepValue2` and `sourcedRollDraws`. The no-input ladder re-scores
+unchanged. Night 1's last split (tick 25200) goes too: Night 1 now has no
+persistent split, and only two runs that rejoin, 21714 and 23400.
+
+| binding | first mismatch before -> after | record |
+|---|---|---|
+| Night 1 `minimal` | 21714 -> 21714 (no persistent split) | `night1-minimal-replay-officefootsteps-20260927.json`, `recompile-replay-77da9b5228c837fc` |
+| Night 5 `contact-final` | 7740 -> 7740 | `night5-contact-final-replay-officefootsteps-20260927.json`, `recompile-replay-3999b92f7f3e9d55` |
+| Night 7 `k3` | 2100 -> **2324** | `night7-k3-replay-officefootsteps-20260927.json`, `recompile-replay-ad22e514332da620` |

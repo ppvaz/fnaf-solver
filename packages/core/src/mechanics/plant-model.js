@@ -11,6 +11,8 @@ const FOOTSTEP_NODES = /** @type {Set<string | number>} */ (new Set(['blindA', '
 const SOURCED_HOUR0_GOLDEN = /** @type {Record<number, number>} */ ({ 3: 1000, 4: 100, 5: 100 });
 // footstepCamMarkers: the markers the CCN's own geometry puts under `hear footsteps`.
 const FOOTSTEP_CAM_NODES = /** @type {Set<string | number>} */ (new Set([1, 2, 3, 4, 'blindA', 'blindB']));
+// sourcedOfficeFootsteps: the route units whose sprite on `in office` (122) overlaps `hear footsteps`.
+const OFFICE_FOOTSTEP_IDS = new Set(['withbonnie', 'toybonnie', 'mangle']);
 const MON_DOWN = 'down', MON_RAISING = 'raising', MON_UP = 'up', MON_LOWERING = 'lowering';
 // sourcedValue5: g1236's divisor, the Double token decoded as 32.32 fixed as the Android runtime reads it.
 const VALUE5_DIVISOR = 71582788266 / 2 ** 32;
@@ -250,6 +252,15 @@ export class Sim {
       // and g378's return onto CAM 03 draws when it lands in the window. Foxy and Balloon Boy keep their
       // rules. (docs/evidence/footstep-cam-markers-adjudication-20260927.json)
       sourcedFootstepValue2: false,
+      // Footsteps at the office opening (requires sourcedFootstepValue2 and sourcedRollDraws). `in office` (122,
+      // at (668, 612)) overlaps `hear footsteps` (x 538-802, y 458-609) for the bottom/centre-hotspot sprites:
+      // Withered Bonnie, Toy Bonnie and Mangle among the route units (docs/android/ANDROID-SOURCE-STATUS.md; the
+      // rebuilt runtime's instance dump puts W. Bonnie's box at 656,589-680,613 there). g333-g343 roll a unit
+      // wherever it stands, so a passed roll at 122 sets value 0 = 1, g346/g353/g357/g358 promote it (value 2 =
+      // 10), and g696/g700/g703 draw its footstep where it stands; an arrival at 122 inside value 2's window
+      // draws too. Off: a unit at the opening is not rolled into a promotion and 122 is not a footstep marker
+      // (Night 7 k3 tick 2100: W. Bonnie, at 122 in her encounter, promoted and drew before Mangle's g703).
+      sourcedOfficeFootsteps: false,
       // g366/g368/g419 draw Random(100) each update a Toy's value 0 == 2 (its move promoted), `your view`
       // overlaps it and `viewing` > 0. A passed roll only sets value 0 = 1; g344-g358 promote it once
       // value 1 (B) is 0 and its route gates open, and g344-g360 write the fade counter C = 10 there, not
@@ -612,6 +623,8 @@ export class Sim {
       throw new Error('sourcedVentCamDraws draws in the sheet-ordered pass: it requires sourcedSheetOrder');
     if (this.opts.sourcedFootstepDraws && !this.opts.sourcedSheetOrder)
       throw new Error('sourcedFootstepDraws draws in the sheet-ordered pass: it requires sourcedSheetOrder');
+    if (this.opts.sourcedOfficeFootsteps && !(this.opts.sourcedFootstepValue2 && this.opts.sourcedRollDraws))
+      throw new Error('sourcedOfficeFootsteps promotes rolls at 122 into value 2: it requires sourcedFootstepValue2 and sourcedRollDraws');
     if (this.opts.sourcedFootstepValue2 && !this.opts.sourcedFootstepDraws)
       throw new Error('sourcedFootstepValue2 changes when the footstep cue draws: it requires sourcedFootstepDraws');
     if (this.opts.sourcedHallLatchOrder && !this.opts.frameMs)
@@ -1270,7 +1283,8 @@ export class Sim {
       const g5 = this.value5(this.frame);
       for (const u of this.units) {
         if (u.value2 > 0) u.value2 = Math.max(0, u.value2 - g5);                             // g458-g466
-        const on = u.value2 > 0 && !u.done && !u.atOpening && !u.inside && this.footstepNodes().has(u.path[u.idx]);
+        const office = this.opts.sourcedOfficeFootsteps && u.atOpening && OFFICE_FOOTSTEP_IDS.has(u.id);   // 122
+        const on = u.value2 > 0 && !u.done && !u.inside && (office || (!u.atOpening && this.footstepNodes().has(u.path[u.idx])));
         u.footstep = on && !u.footstepOn;                                                    // g695-g703, NotAlways
         u.footstepOn = on;
       }
@@ -2016,6 +2030,10 @@ export class Sim {
     const rollUnit = id => {                                                   // g333-g335, g338-g341
       const hit = this.rng.chance(C.MO_CHANCE(this.ai[id]), true);
       const u = this.units.find(x => x.id === id);
+      if (hit && this.opts.sourcedOfficeFootsteps && this.opts.stalledEnabled && u && !u.done && u.atOpening && !u.inside) {
+        if (deferred) deferred.push(id); else this.footstepPromote(u, true);   // value 0 = 1 at 122: promoted, no move
+        return;
+      }
       if (!hit || !this.opts.stalledEnabled || !u || u.done || u.atOpening) return;
       if (deferred) deferred.push(id); else settleRoll(u, id);
     };
@@ -2070,7 +2088,8 @@ export class Sim {
     this.rng.int(0, 19, 0);                                                    // g343 Paper Pals
     if (deferred) for (const id of deferred) {                                 // g344-g358, then the moves
       const u = this.units.find(x => x.id === id);
-      if (u && !u.done && !u.atOpening) settleRoll(u, id);
+      if (u && !u.done && u.atOpening && !u.inside && this.opts.sourcedOfficeFootsteps) this.footstepPromote(u, true);
+      else if (u && !u.done && !u.atOpening) settleRoll(u, id);
     }
   }
 
