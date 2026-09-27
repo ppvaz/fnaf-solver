@@ -2462,6 +2462,31 @@
       }
     },
     {
+      "id": "tools/device/test-overnight-window.py",
+      "lane": "test:contracts",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [
+        "time.sleep(600",
+        "time.sleep(600",
+        "time.sleep(0.05",
+        "time.sleep(0.3"
+      ],
+      "sharedResources": [
+        "device-transport"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "tools/device/test-phase-reconstruct.mjs",
       "lane": "test:contracts",
       "owner": "legacy migration",

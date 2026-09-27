@@ -141,4 +141,41 @@ with module.QueueRunnerLock(Path(sys.argv[2])):
         else:
             os.environ["CUE_HELPER_QUEUE_FILE"] = previous_queue
 
-print("cue-helper queue persistence, closed vocabulary, and absent-device hold passed")
+    # The overnight window drains one job per call (--max-jobs 1), notes the
+    # jobs it leaves PENDING, and returns a job it had to kill to PENDING.
+    done_script = Path(directory) / "done-setup.sh"
+    done_script.write_text("#!/bin/sh\necho 'SETUP PASS fixture'\nexit 0\n", encoding="utf-8")
+    done_script.chmod(0o755)
+    first = MODULE.make_job("menu-check", "menu", False, False)
+    second = MODULE.make_job("menu-check", "menu", False, False)
+    previous_queue = os.environ.get("CUE_HELPER_QUEUE_FILE")
+    previous = (MODULE.HELPER_SETUP, MODULE.select_device, MODULE.device_ready)
+    os.environ["CUE_HELPER_QUEUE_FILE"] = str(queue)
+    MODULE.HELPER_SETUP = done_script
+    MODULE.select_device = lambda: ("fixture-device", None)
+    MODULE.device_ready = lambda serial: (True, None)
+    try:
+        queue.write_text(json.dumps([first, second]) + "\n", encoding="utf-8")
+        assert MODULE.run_queue(0.0, 0.1, 1) == 0
+        states = [job["state"] for job in json.loads(queue.read_text(encoding="utf-8"))]
+        assert states == ["DONE", "PENDING"], states
+        noted = MODULE.note_pending({"windowId": "window-fixture", "outcome": "LOCKED"})
+        jobs = json.loads(queue.read_text(encoding="utf-8"))
+        assert noted == [second["id"]] and "windowNote" not in jobs[0]
+        assert jobs[1]["windowNote"] == {"windowId": "window-fixture", "outcome": "LOCKED"}
+        jobs[1]["state"] = "RUNNING"
+        queue.write_text(json.dumps(jobs) + "\n", encoding="utf-8")
+        with MODULE.QueueRunnerLock(queue):
+            assert MODULE.release_running("window deadline") == [], "released a live runner's job"
+        assert MODULE.release_running("window deadline") == [second["id"]]
+        jobs = json.loads(queue.read_text(encoding="utf-8"))
+        assert jobs[1]["state"] == "PENDING" and jobs[1]["lastHold"] == "window deadline"
+    finally:
+        MODULE.HELPER_SETUP, MODULE.select_device, MODULE.device_ready = previous
+        if previous_queue is None:
+            os.environ.pop("CUE_HELPER_QUEUE_FILE", None)
+        else:
+            os.environ["CUE_HELPER_QUEUE_FILE"] = previous_queue
+
+print("cue-helper queue persistence, closed vocabulary, absent-device hold, one-job runs, "
+      "window notes and killed-job release passed")

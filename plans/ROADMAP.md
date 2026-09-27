@@ -259,7 +259,10 @@ A planner ranks the disagreements between phone, model and (after S2b) the
 recompile. For each, it picks the run whose outcome refutes one of two
 explanations. It emits only bundles and queued Cue Helper jobs, and never
 arbitrary shell. The mistake registers become executable gates, and the lab
-never promotes.
+never promotes. Its phone time is the overnight window (Pedro, 2026-09-27):
+`tools/device/overnight-window.py` runs the queue on his own phone from 01:30
+to 07:00 and restores every setting it changed. The queue still holds only
+setup and screen checks, so a night job is its next vocabulary.
 
 - **Artifact:** a morning report that refutes a mechanism nobody had queued,
   with the run bundles that did it.

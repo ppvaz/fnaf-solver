@@ -25,6 +25,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_QUEUE = ROOT / "captures/cue-helper/queued-jobs.json"
 HELPER_SETUP = ROOT / "tools/device/cue-helper-setup.sh"
+# One job's hard ceiling. The overnight window (overnight-window.py) starts a
+# job only when this much time remains before its own deadline.
+JOB_TIMEOUT_S = 360.0
 DEVICE_REASONS = {
     "absent": "device-unavailable",
     "locked": "device-locked",
@@ -314,6 +317,50 @@ def finish(job_id: str, state: str, output: str = "") -> None:
         write_jobs(path, jobs)
 
 
+def note_pending(note: dict) -> list[str]:
+    """Attach a window's note to every job it left PENDING.
+
+    The overnight window ends LOCKED, IN_USE or at its deadline with jobs still
+    queued; `list` then says which window saw them and why it stopped.
+    """
+    path = queue_path()
+    with QueueFile(path):
+        jobs = read_jobs(path)
+        noted = []
+        for job in jobs:
+            if job.get("state") == "PENDING":
+                job["windowNote"] = dict(note)
+                noted.append(str(job.get("id")))
+        if noted:
+            write_jobs(path, jobs)
+    return noted
+
+
+def release_running(reason: str) -> list[str]:
+    """Return RUNNING jobs to PENDING after their runner was stopped.
+
+    Only while no runner owns the queue: a live runner's RUNNING job is its
+    own. `claim_next` does the same on the next run; this names the reason.
+    """
+    try:
+        with QueueRunnerLock(queue_path()):
+            path = queue_path()
+            with QueueFile(path):
+                jobs = read_jobs(path)
+                released = []
+                for job in jobs:
+                    if job.get("state") == "RUNNING":
+                        job["state"] = "PENDING"
+                        job.pop("startedAt", None)
+                        job["lastHold"] = reason[-2000:]
+                        released.append(str(job.get("id")))
+                if released:
+                    write_jobs(path, jobs)
+                return released
+    except QueueRunnerBusy:
+        return []
+
+
 def execute(job: dict, serial: str) -> bool | str:
     env = os.environ.copy()
     env["ANDROID_SERIAL"] = serial
@@ -322,7 +369,7 @@ def execute(job: dict, serial: str) -> bool | str:
     try:
         result = subprocess.run(command, cwd=ROOT, env=env, check=False,
                                 text=True, stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT, timeout=360.0)
+                                stderr=subprocess.STDOUT, timeout=JOB_TIMEOUT_S)
     except subprocess.TimeoutExpired as error:
         output = (error.stdout or "") if isinstance(error.stdout, str) else ""
         finish(job["id"], "FAILED", f"timeout\n{output}")
@@ -346,7 +393,8 @@ def execute(job: dict, serial: str) -> bool | str:
     return False
 
 
-def run_queue_once(deadline: float | None, interval: float) -> int:
+def run_queue_once(deadline: float | None, interval: float, max_jobs: int = 0) -> int:
+    done = 0
     while True:
         serial, reason = select_device()
         if serial is None:
@@ -377,14 +425,20 @@ def run_queue_once(deadline: float | None, interval: float) -> int:
             continue
         if not outcome:
             return 1
+        done += 1
+        if max_jobs and done >= max_jobs:
+            # The overnight window runs one job per call so that it can check
+            # the phone (lock, use, battery) between jobs.
+            print(f"QUEUE PAUSED done={done}")
+            return 0
 
 
-def run_queue(wait_seconds: float, interval: float) -> int:
+def run_queue(wait_seconds: float, interval: float, max_jobs: int = 0) -> int:
     deadline = time.monotonic() + wait_seconds if wait_seconds else None
     while True:
         try:
             with QueueRunnerLock(queue_path()):
-                return run_queue_once(deadline, interval)
+                return run_queue_once(deadline, interval, max_jobs)
         except QueueRunnerBusy:
             if deadline is None or time.monotonic() >= deadline:
                 print("QUEUE HOLD reason=queue-runner-busy")
@@ -410,6 +464,8 @@ def main() -> int:
                      help="wait for a ready device for this many seconds")
     run.add_argument("--interval", type=float, default=5.0,
                      help="poll interval while waiting")
+    run.add_argument("--max-jobs", type=int, default=0,
+                     help="stop after this many DONE jobs (0: drain the queue)")
     args = parser.parse_args()
     try:
         if args.command == "enqueue":
@@ -425,7 +481,9 @@ def main() -> int:
             return 0
         if args.wait < 0 or args.wait > 86400 or args.interval <= 0 or args.interval > 300:
             raise QueueError("wait must be 0..86400 and interval must be 0..300")
-        return run_queue(args.wait, args.interval)
+        if args.max_jobs < 0 or args.max_jobs > 1000:
+            raise QueueError("max-jobs must be 0..1000")
+        return run_queue(args.wait, args.interval, args.max_jobs)
     except QueueError as error:
         print(f"QUEUE ERROR {error}", file=sys.stderr)
         return 2
