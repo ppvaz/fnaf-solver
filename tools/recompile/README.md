@@ -505,6 +505,20 @@ touch 0 outside the harness.
   layer scrolled. Initial global values are made as `CRunApp.initGlobal` makes
   them: `CValue(int)` from the raw word, the type byte unused.
 
+- Custom Night grid stair-stepped, Unlocks labels on top of "Locked": Fusion
+  divides two integers as integers (`CValue.div`) and Chowdren stores every
+  alterable as a double, so `value0 / 5` came out fractional and each portrait
+  column dropped 54 px. `/` now compiles to `FusionDiv` (`mathhelper.h`), which
+  divides integral values as integers, divides by 0 to 0, and stays a float
+  division when either side is a double; a left operand with a double literal
+  keeps the float path at conversion time (134 integer sites, 101 float).
+- Level numbers under the portraits, two-line labels left-aligned:
+  `CTextSurface.manualDrawText` translates the StaticLayout so that its bottom
+  sits on the box bottom for DT_BOTTOM (its descent correction
+  `min(ceil(descent/2 - 1), 0)` is 0 at every bank size); Chowdren added a
+  line height instead of `height - lineHeight`, and a layout made for a
+  multi-line text never received the paragraph alignment.
+
 On the final binary the no-input Night 1 office rows (frame, tick, draws, LCG
 state) are byte-identical to `night1-rebuild-options-20260927.json`'s trace; the
 title-to-office navigation is 659 updates shorter. Rendering fidelity is judged

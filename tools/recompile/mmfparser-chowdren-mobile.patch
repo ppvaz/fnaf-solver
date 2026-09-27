@@ -1142,7 +1142,7 @@ index 1943544..ab10e20 100644
              print 'meth:', self.method
              raise e
 diff --git a/Chowdren/chowdren/writers/events/system.py b/Chowdren/chowdren/writers/events/system.py
-index 48623cf..925367d 100644
+index 48623cf..ba17a78 100644
 --- a/Chowdren/chowdren/writers/events/system.py
 +++ b/Chowdren/chowdren/writers/events/system.py
 @@ -2,7 +2,8 @@ from mmfparser.data.chunkloaders.objectinfo import SEMITRANSPARENT_EFFECT
@@ -1509,7 +1509,59 @@ index 48623cf..925367d 100644
          writer.putlnc('if (!%s) {', container.code_name)
          writer.indent()
          writer.putlnc('%s = true;', container.code_name)
-@@ -1970,9 +2136,13 @@ class GetLoopIndex(ExpressionWriter):
+@@ -1872,13 +2038,49 @@ class MinusExpression(ConstantExpression):
+ class MultiplyExpression(ConstantExpression):
+     value = '*'
+ 
++import re as _re
++_DOUBLE_LITERAL = _re.compile(r'(?<![\w.])\d+\.\d+')
++
++
++def left_operand(text):
++    """The C++ text of the operand that ends `text`: back to the enclosing
++    '(' or the last top-level + - * / % , (skipping '->')."""
++    depth = 0
++    i = len(text) - 1
++    while i >= 0:
++        c = text[i]
++        if c == ')':
++            depth += 1
++        elif c == '(':
++            if depth == 0:
++                break
++            depth -= 1
++        elif depth == 0:
++            if c == '>' and i > 0 and text[i - 1] == '-':
++                i -= 2
++                continue
++            if c in '+-*/%,':
++                break
++        i -= 1
++    return text[i + 1:]
++
++
+ class DivideExpression(ConstantExpression):
+     value = '/'
+ 
+     def get_string(self):
+-        if self.converter.config.use_safe_division():
++        if not self.converter.config.use_safe_division():
++            return self.value
++        # Fusion divides two int values as integers. The rebuild stores every
++        # alterable, counter and global value as a double, so value0 / 5 went
++        # fractional and the Custom Night portraits stair-stepped down by
++        # 0.2 * 272 px a column. A left operand with no double literal takes
++        # FusionDiv: integer division when the divisor is an int and the value
++        # integral. Double[200.0] / Long[16] stays 12.5.
++        left = left_operand(getattr(self.converter, 'last_out', '') or '')
++        if _DOUBLE_LITERAL.search(left):
+             return '/MathHelper()/'
+-        return self.value
++        return '/FusionDiv()/'
+ 
+ class ModulusExpression(ConstantExpression):
+     value = '%'
+@@ -1970,9 +2172,13 @@ class GetLoopIndex(ExpressionWriter):
              size = 2
              next_exp = items[converter.item_index + 1]
              if next_exp.getName() != 'String':
@@ -1526,7 +1578,7 @@ index 48623cf..925367d 100644
              else:
                  name = next_exp.loader.value
          converter.item_index += size
-@@ -2055,6 +2225,7 @@ actions = make_table(ActionMethodWriter, {
+@@ -2055,6 +2261,7 @@ actions = make_table(ActionMethodWriter, {
      'CreateObject' : CreateObject,
      'Shoot' : ShootObject,
      'StartLoop' : StartLoop,
@@ -1534,7 +1586,7 @@ index 48623cf..925367d 100644
      'Foreach' : Foreach,
      'StopLoop' : StopLoop,
      'SwapPosition' : SwapPosition,
-@@ -2072,6 +2243,11 @@ actions = make_table(ActionMethodWriter, {
+@@ -2072,6 +2279,11 @@ actions = make_table(ActionMethodWriter, {
      'SetMinimumValue' : 'set_min',
      'SetGlobalString' : 'global_strings->set',
      'SetGlobalValue' : 'global_values->set',
@@ -1546,7 +1598,7 @@ index 48623cf..925367d 100644
      'AddGlobalValue' : 'global_values->add',
      'AddGlobalValueInt' : 'global_values->add',
      'SubtractGlobalValue' : 'global_values->sub',
-@@ -2160,6 +2336,7 @@ actions = make_table(ActionMethodWriter, {
+@@ -2160,6 +2372,7 @@ actions = make_table(ActionMethodWriter, {
      'PauseApplication' : 'pause',
      'SetRandomSeed' : 'set_random_seed',
      'SetTimer' : 'set_timer((%s) / 1000.0)',
@@ -1554,7 +1606,7 @@ index 48623cf..925367d 100644
      'SetLoopIndex' : SetLoopIndex,
      'IgnoreControls' : IgnoreControls,
      'RestoreControls' : RestoreControls,
-@@ -2225,6 +2402,10 @@ conditions = make_table(ConditionMethodWriter, {
+@@ -2225,6 +2438,10 @@ conditions = make_table(ConditionMethodWriter, {
      'WhileMousePressed' : 'is_mouse_pressed',
      'MouseOnObject' : MouseOnObject,
      'Always' : Always,
@@ -1565,7 +1617,7 @@ index 48623cf..925367d 100644
      'MouseClicked' : MouseClicked,
      'ObjectClicked' : ObjectClicked,
      'PlayerKeyDown' : PlayerKeyDown,
-@@ -2266,12 +2447,12 @@ conditions = make_table(ConditionMethodWriter, {
+@@ -2266,12 +2483,12 @@ conditions = make_table(ConditionMethodWriter, {
      'PathFinished' : PathFinished,
      'NodeReached' : NodeReached,
      'CompareSpeed' : make_comparison('get_movement()->get_speed()'),
@@ -1580,7 +1632,7 @@ index 48623cf..925367d 100644
      'NumberOfLives' :  make_comparison('manager.lives'),
      'PlayerDied' : PlayerDied,
      'AnyKeyPressed' : AnyKeyPressed,
-@@ -2290,6 +2471,7 @@ conditions = make_table(ConditionMethodWriter, {
+@@ -2290,6 +2507,7 @@ conditions = make_table(ConditionMethodWriter, {
  })
  
  expressions = make_table(ExpressionMethodWriter, {
@@ -3401,10 +3453,54 @@ index a27e49c..492d459 100644
 +static DefaultCounter default_counter;
 +FrameObject * default_counter_instance = &default_counter;
 diff --git a/Chowdren/base/objects/text.cpp b/Chowdren/base/objects/text.cpp
-index 228e3c8..480a5b8 100644
+index 228e3c8..e891508 100644
 --- a/Chowdren/base/objects/text.cpp
 +++ b/Chowdren/base/objects/text.cpp
-@@ -246,3 +246,19 @@ void FontInfo::set_scale(FrameObject * obj, float scale)
+@@ -61,10 +61,14 @@ void Text::draw()
+     if (layout != NULL) {
+         int lines = layout->get_lines(draw_text.c_str(), -1);
+         double box_h = lines * font->LineHeight();
++        // Android's CTextSurface.manualDrawText puts the StaticLayout's
++        // bottom on the box bottom for DT_BOTTOM (translate(left, bottom -
++        // layoutHeight)); its descent correction min(ceil(descent/2-1), 0)
++        // is 0 at every size the bank uses.
+         if (alignment & ALIGN_VCENTER) {
+             off_y += (height - box_h) * 0.5;
+         } else if (alignment & ALIGN_BOTTOM) {
+-            off_y += box_h;
++            off_y += height - box_h;
+         }
+         int off_yy = int(off_y);
+         layout->Render(draw_text.c_str(), -1, FTPoint(x, off_yy));
+@@ -72,7 +76,7 @@ void Text::draw()
+         if (alignment & ALIGN_VCENTER) {
+             off_y += height * 0.5 - font->LineHeight() * 0.5;
+         } else if (alignment & ALIGN_BOTTOM) {
+-            off_y += font->LineHeight();
++            off_y += height - font->LineHeight();
+         }
+ 
+         FTBBox box = font->BBox(draw_text.c_str(), -1, FTPoint());
+@@ -180,6 +184,10 @@ void Text::update_draw_text()
+     layout = new FTSimpleLayout;
+     layout->SetFont(font);
+     layout->SetLineLength(width);
++    // A multi-line text keeps its paragraph alignment (StaticLayout's
++    // Alignment from CServices.textAlignment); without this every wrapped
++    // or two-line label was drawn left-aligned.
++    layout->SetAlignment((TextAlignment)alignment);
+ }
+ 
+ void Text::set_width(int w)
+@@ -191,6 +199,7 @@ void Text::set_width(int w)
+         layout->SetFont(font);
+     }
+     layout->SetLineLength(w);
++    layout->SetAlignment((TextAlignment)alignment);
+ }
+ 
+ void Text::set_scale(float scale)
+@@ -246,3 +255,19 @@ void FontInfo::set_scale(FrameObject * obj, float scale)
  
  
  std::string FontInfo::vertical_tab("\x0B");
@@ -3750,3 +3846,70 @@ index a7d345b..cb168a4 100644
                  newGlobal = glob.readFloat()
              elif globalType == INT:
                  newGlobal = glob.readInt()
+diff --git a/Chowdren/base/mathhelper.h b/Chowdren/base/mathhelper.h
+index 8d84459..5a31b3d 100644
+--- a/Chowdren/base/mathhelper.h
++++ b/Chowdren/base/mathhelper.h
+@@ -1,6 +1,8 @@
+ #ifndef CHOWDREN_MATHHELPER_H
+ #define CHOWDREN_MATHHELPER_H
+ 
++#include <cmath>
++
+ #include <boost/type_traits/common_type.hpp>
+ #include "dynnum.h"
+ 
+@@ -44,6 +46,53 @@ public:
+ 
+ // safe divide
+ 
++// Fusion's division of int values: the converter emits `/FusionDiv()/` when
++// the left operand carries no double literal. The rebuild stores alterable,
++// counter and global values as doubles; an integral one divided by an int
++// divides as integers, truncating as Java does. A double divisor divides as
++// doubles. Division by zero gives 0, as MathHelper's does.
++struct FusionDiv {};
++
++template <class T>
++struct FusionDivValue
++{
++    T value;
++    FusionDivValue(T value) : value(value) {}
++};
++
++template <class T>
++inline FusionDivValue<T> operator/(T lhs, FusionDiv rhs)
++{
++    return FusionDivValue<T>(lhs);
++}
++
++template <class T>
++inline double operator/(FusionDivValue<T> lhs, int rhs)
++{
++    if (rhs == 0)
++        return 0;
++    double v = (double)lhs.value;
++    if (v == floor(v) && v > -2147483648.0 && v < 2147483648.0)
++        return (double)((int)v / rhs);
++    return v / rhs;
++}
++
++template <class T>
++inline double operator/(FusionDivValue<T> lhs, double rhs)
++{
++    if (rhs == 0.0)
++        return 0;
++    return (double)lhs.value / rhs;
++}
++
++template <class T>
++inline double operator/(FusionDivValue<T> lhs, float rhs)
++{
++    if (rhs == 0.0f)
++        return 0;
++    return (double)lhs.value / rhs;
++}
++
+ template <class T>
+ inline MathHelperValue<T> operator/(T lhs, MathHelper rhs)
+ {
