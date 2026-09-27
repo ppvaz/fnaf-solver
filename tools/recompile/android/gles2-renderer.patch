@@ -1,0 +1,407 @@
+diff --git a/Chowdren/base/CMakeLists.txt b/Chowdren/base/CMakeLists.txt
+index 2d013a2..606eb3a 100644
+--- a/Chowdren/base/CMakeLists.txt
++++ b/Chowdren/base/CMakeLists.txt
+@@ -38,6 +38,10 @@ if (CMAKE_CROSSCOMPILING)
+     set(USE_D3D OFF)
+ elseif (EMSCRIPTEN)
+     set(USE_GLES2 ON)
++elseif (APP_PLATFORM STREQUAL "generic" AND USE_GLES2)
++    # -DUSE_GLES2=ON: the desktop build on a GL ES 2.0 context, which is the
++    # Android GLES2 renderer run on the host (Mesa's libGLESv2)
++    set(USE_GL OFF)
+ elseif (APP_PLATFORM STREQUAL "generic")
+     set(USE_GL ON)
+ elseif (APP_PLATFORM STREQUAL "d3d")
+diff --git a/Chowdren/base/desktop/glslshader.cpp b/Chowdren/base/desktop/glslshader.cpp
+index c0d2406..1d62996 100644
+--- a/Chowdren/base/desktop/glslshader.cpp
++++ b/Chowdren/base/desktop/glslshader.cpp
+@@ -83,6 +83,12 @@ void BaseShader::initialize()
+         std::cout << "Linker failure: " << info_log << std::endl;
+         delete[] info_log;
+     }
++#ifdef CHOWDREN_USE_GLES2
++    // one line per shader actually used, for logcat: a shader that fails to
++    // compile on the phone's GPU draws nothing, so name it
++    std::cout << "GLES2 shader " << id << ": "
++              << (status == GL_FALSE ? "LINK FAILED" : "linked") << std::endl;
++#endif
+ 
+     glDetachObject(program, vert_shader);
+     glDetachObject(program, frag_shader);
+@@ -121,9 +127,19 @@ GLhandleARB BaseShader::attach_source(FSFile & fp, GLenum type)
+     GLchar * data = new GLchar[size];
+     stream.read(data, size);
+ 
++#ifdef CHOWDREN_USE_GLES2
++    // the packed source is desktop GLSL 1.20; compile it as GLSL ES 1.00
++    std::string es_source = gles2_translate_shader(data, size,
++                                                   type == GL_VERTEX_SHADER);
++    delete[] data;
++    const GLchar * es_data = es_source.c_str();
++    GLint len = (GLint)es_source.size();
++    glShaderSource(shader, 1, &es_data, &len);
++#else
+     GLint len = size;
+     glShaderSource(shader, 1, (const GLchar**)&data, &len);
+     delete[] data;
++#endif
+     glCompileShader(shader);
+ 
+     GLint status;
+diff --git a/Chowdren/base/desktop/platform.cpp b/Chowdren/base/desktop/platform.cpp
+index dbfb36d..1c1e544 100644
+--- a/Chowdren/base/desktop/platform.cpp
++++ b/Chowdren/base/desktop/platform.cpp
+@@ -970,7 +970,7 @@ void platform_create_display(bool fullscreen)
+ 
+     screen_fbo.init(WINDOW_WIDTH, WINDOW_HEIGHT);
+ 
+-#ifdef CHOWDREN_IS_ANDROID
++#if defined(CHOWDREN_IS_ANDROID) || defined(CHOWDREN_USE_GLES2)
+     {
+         GLenum fbs;
+         screen_fbo.bind();
+@@ -979,6 +979,15 @@ void platform_create_display(bool fullscreen)
+         std::cout << "GL: " << (const char*)glGetString(GL_VERSION)
+                   << "  screen_fbo status=0x" << std::hex << fbs
+                   << " err=0x" << glGetError() << std::dec << std::endl;
++#ifdef CHOWDREN_USE_GLES2
++        GLint high[2] = {0, 0}, precision = 0;
++        glGetShaderPrecisionFormat(GL_FRAGMENT_SHADER, GL_HIGH_FLOAT,
++                                   high, &precision);
++        std::cout << "GLSL: "
++                  << (const char*)glGetString(GL_SHADING_LANGUAGE_VERSION)
++                  << "  fragment highp float precision=" << precision
++                  << std::endl;
++#endif
+     }
+ #endif
+ }
+diff --git a/Chowdren/base/desktop/renderplatform.cpp b/Chowdren/base/desktop/renderplatform.cpp
+index be26898..fc508bb 100644
+--- a/Chowdren/base/desktop/renderplatform.cpp
++++ b/Chowdren/base/desktop/renderplatform.cpp
+@@ -70,6 +70,30 @@ void set_gl_state()
+     glEnable(GL_BLEND);
+     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
+ 
++#ifdef CHOWDREN_USE_GLES2
++    // GL ES 2.0: the same client-memory arrays as the desktop path, fed as
++    // generic vertex attributes at the indices glslshader.cpp binds
++    // (shadercommon.h); gles2shader.h maps the shaders' gl_Vertex, gl_Color,
++    // gl_MultiTexCoord0/1 onto them. No buffer object: pointers are client
++    // memory, as glVertexPointer's are on desktop.
++    glDisable(GL_DEPTH_TEST);
++    glDisable(GL_CULL_FACE);
++    glActiveTexture(GL_TEXTURE0);
++    glBindBuffer(GL_ARRAY_BUFFER, 0);
++    glVertexAttribPointer(POSITION_ATTRIB_IDX, 2, GL_FLOAT, GL_FALSE, 0,
++                          (void*)&render_data.positions[0]);
++    glEnableVertexAttribArray(POSITION_ATTRIB_IDX);
++    glVertexAttribPointer(COLOR_ATTRIB_IDX, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0,
++                          (void*)&render_data.colors[0]);
++    glEnableVertexAttribArray(COLOR_ATTRIB_IDX);
++    glVertexAttribPointer(TEXCOORD1_ATTRIB_IDX, 2, GL_FLOAT, GL_FALSE, 0,
++                          (void*)&render_data.texcoord1[0]);
++    glEnableVertexAttribArray(TEXCOORD1_ATTRIB_IDX);
++    glVertexAttribPointer(TEXCOORD2_ATTRIB_IDX, 2, GL_FLOAT, GL_FALSE, 0,
++                          (void*)&render_texcoords2[0]);
++    glEnableVertexAttribArray(TEXCOORD2_ATTRIB_IDX);
++#else // CHOWDREN_USE_GLES2
++
+ #ifdef CHOWDREN_IS_ANDROID
+     // GL ES 1.1 fixed-function: the desktop build relies on texture_shader to
+     // sample, but the Android glesshader stand-in is a no-op, so the fixed
+@@ -99,6 +123,7 @@ void set_gl_state()
+     glTexCoordPointer(2, GL_FLOAT, 0, (void*)&render_texcoords2[0]);
+ 
+     glClientActiveTexture(GL_TEXTURE0);
++#endif // CHOWDREN_USE_GLES2
+ }
+ 
+ #endif
+diff --git a/Chowdren/base/desktop/renderplatform.h b/Chowdren/base/desktop/renderplatform.h
+index fd0af95..38d61d3 100644
+--- a/Chowdren/base/desktop/renderplatform.h
++++ b/Chowdren/base/desktop/renderplatform.h
+@@ -569,8 +569,24 @@ inline Texture Render::copy_rect(int x1, int y1, int x2, int y2)
+ 
+     int y = WINDOW_HEIGHT - y2;
+     set_tex(render_data.back_tex);
++#ifdef CHOWDREN_USE_GLES2
++    // GL ES 2.0 copies from the bound framebuffer (the RGBA8 screen FBO) into
++    // an RGB texture, a format ES allows from an RGBA source (ES 2.0 table
++    // 3.9), so the copy samples with alpha 1 as on desktop. The storage is
++    // specified only when the rectangle's size changes: re-specifying it
++    // every frame orphans the texture on tiled GPUs. glCopyTexSubImage2D
++    // overwrites the whole rectangle, so the contents are the same.
++    static int back_width = -1, back_height = -1;
++    if (width != back_width || height != back_height) {
++        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height,
++                     0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
++        back_width = width;
++        back_height = height;
++    }
++#else
+     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height,
+                  0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
++#endif
+     glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, x1, y, width, height);
+     return render_data.back_tex;
+ }
+diff --git a/Chowdren/base/gles2shader.h b/Chowdren/base/gles2shader.h
+new file mode 100644
+index 0000000..9796f12
+--- /dev/null
++++ b/Chowdren/base/gles2shader.h
+@@ -0,0 +1,158 @@
++#ifndef CHOWDREN_GLES2SHADER_H
++#define CHOWDREN_GLES2SHADER_H
++
++// GL ES 2.0 support for the desktop shader layer (desktop/glslshader.cpp).
++// Included from include_gl.h after <GLES2/gl2.h> when CHOWDREN_USE_GLES2.
++//
++// ES 2.0 has the shader-object API in core under other names; glslshader.cpp
++// keeps the ARB spellings the desktop GL 2.1 build uses, remapped here. The
++// shader sources are the desktop GLSL 1.20 files (base/shaders, packed into
++// Assets.dat by the converter), rewritten at load time as GLSL ES 1.00 by
++// gles2_translate_shader() below.
++
++#include <ctype.h>
++#include <string.h>
++#include <string>
++#include "shadercommon.h"
++
++typedef GLuint GLhandleARB;
++typedef char GLcharARB;
++
++#define GL_VERTEX_SHADER_ARB GL_VERTEX_SHADER
++#define GL_FRAGMENT_SHADER_ARB GL_FRAGMENT_SHADER
++#define GL_OBJECT_COMPILE_STATUS_ARB GL_COMPILE_STATUS
++#define GL_OBJECT_LINK_STATUS_ARB GL_LINK_STATUS
++#define GL_OBJECT_INFO_LOG_LENGTH_ARB GL_INFO_LOG_LENGTH
++
++#define glCreateProgramObject glCreateProgram
++#define glCreateShaderObject glCreateShader
++#define glUseProgramObject glUseProgram
++#define glAttachObject glAttachShader
++#define glDetachObject glDetachShader
++
++// Program and shader names share one namespace in ES 2.0, so the ARB
++// object-generic queries dispatch on the kind of object.
++inline void chowdren_gles2_get_object_param(GLuint obj, GLenum pname,
++                                            GLint * value)
++{
++    if (glIsProgram(obj))
++        glGetProgramiv(obj, pname, value);
++    else
++        glGetShaderiv(obj, pname, value);
++}
++
++inline void chowdren_gles2_get_info_log(GLuint obj, GLsizei size,
++                                        GLsizei * length, GLchar * log)
++{
++    if (glIsProgram(obj))
++        glGetProgramInfoLog(obj, size, length, log);
++    else
++        glGetShaderInfoLog(obj, size, length, log);
++}
++
++#define glGetObjectParameteriv chowdren_gles2_get_object_param
++#define glGetInfoLog chowdren_gles2_get_info_log
++
++// The name of the varying that carries the vertex colour (gl_FrontColor in a
++// GLSL 1.20 vertex shader, gl_Color in its fragment shader).
++#define GLES2_COLOR_VARYING "chowdren_color"
++
++inline bool gles2_is_ident(char c)
++{
++    return isalnum((unsigned char)c) || c == '_';
++}
++
++// Rewrite a desktop GLSL 1.20 shader as GLSL ES 1.00:
++// - the #version line is dropped and "#version 100" leads a prologue;
++// - the fixed-function inputs become the attributes the renderer feeds
++//   (shadercommon.h *_ATTRIB_NAME, bound to *_ATTRIB_IDX before linking):
++//   gl_Vertex, gl_Color, gl_MultiTexCoord0 and gl_MultiTexCoord1;
++// - gl_FrontColor (vertex) and gl_Color (fragment) become one varying;
++// - the fragment stage gets a default float precision, highp where the GPU
++//   has it (GL_FRAGMENT_PRECISION_HIGH), as the desktop computes in fp32.
++// Identifiers are replaced whole-word only. Nothing else in the body
++// changes: the shaders are written to be valid in both dialects.
++inline std::string gles2_translate_shader(const char * src, size_t len,
++                                          bool vertex)
++{
++    static const char * const vert_map[][2] = {
++        {"gl_Vertex", POSITION_ATTRIB_NAME},
++        {"gl_Color", COLOR_ATTRIB_NAME},
++        {"gl_MultiTexCoord0", TEXCOORD1_ATTRIB_NAME},
++        {"gl_MultiTexCoord1", TEXCOORD2_ATTRIB_NAME},
++        {"gl_FrontColor", GLES2_COLOR_VARYING},
++        {NULL, NULL}
++    };
++    static const char * const frag_map[][2] = {
++        {"gl_Color", GLES2_COLOR_VARYING},
++        {NULL, NULL}
++    };
++    const char * const (*map)[2] = vertex ? vert_map : frag_map;
++
++    std::string out;
++    out.reserve(len + 512);
++    out += "#version 100\n";
++    if (vertex) {
++        out += "attribute vec4 " POSITION_ATTRIB_NAME ";\n"
++               "attribute vec4 " COLOR_ATTRIB_NAME ";\n"
++               "attribute vec4 " TEXCOORD1_ATTRIB_NAME ";\n"
++               "attribute vec4 " TEXCOORD2_ATTRIB_NAME ";\n";
++    } else {
++        out += "#ifdef GL_FRAGMENT_PRECISION_HIGH\n"
++               "precision highp float;\n"
++               "#else\n"
++               "precision mediump float;\n"
++               "#endif\n";
++    }
++    out += "varying vec4 " GLES2_COLOR_VARYING ";\n";
++    // keep the body's line numbers readable in compiler logs
++    out += "#line 1\n";
++
++    size_t i = 0;
++    bool line_start = true;
++    while (i < len) {
++        char c = src[i];
++        if (line_start) {
++            // drop a "#version ..." line (leading blanks allowed)
++            size_t j = i;
++            while (j < len && (src[j] == ' ' || src[j] == '\t'))
++                j++;
++            if (j + 8 <= len && strncmp(src + j, "#version", 8) == 0) {
++                while (j < len && src[j] != '\n')
++                    j++;
++                // keep the newline so that line numbers still match
++                i = j;
++                line_start = false;
++                continue;
++            }
++        }
++        line_start = false;
++        if (c == '\n') {
++            out += c;
++            i++;
++            line_start = true;
++            continue;
++        }
++        if (c == 'g' && (i == 0 || !gles2_is_ident(src[i - 1]))) {
++            size_t j = i;
++            while (j < len && gles2_is_ident(src[j]))
++                j++;
++            std::string word(src + i, j - i);
++            const char * repl = NULL;
++            for (int k = 0; map[k][0] != NULL; k++) {
++                if (word == map[k][0]) {
++                    repl = map[k][1];
++                    break;
++                }
++            }
++            out += repl != NULL ? std::string(repl) : word;
++            i = j;
++            continue;
++        }
++        out += c;
++        i++;
++    }
++    return out;
++}
++
++#endif // CHOWDREN_GLES2SHADER_H
+diff --git a/Chowdren/base/harness.cpp b/Chowdren/base/harness.cpp
+index c2ff091..8f2ad89 100644
+--- a/Chowdren/base/harness.cpp
++++ b/Chowdren/base/harness.cpp
+@@ -572,13 +572,35 @@ bool harness_after_events(int frame_index)
+ extern "C" void glReadPixels(int, int, int, int, unsigned int, unsigned int, void *);
+ extern "C" void glPixelStorei(unsigned int, int);
+ 
++#ifdef CHOWDREN_USE_GLES2
++// GL ES 2.0 guarantees only RGBA / UNSIGNED_BYTE readback: read that and
++// keep the RGB bytes, the same pixels the desktop's GL_RGB read returns.
++static void harness_read_rgb(int width, int height, unsigned char * out)
++{
++    static std::vector<unsigned char> rgba;
++    size_t n = size_t(width) * height;
++    rgba.resize(n * 4);
++    glPixelStorei(0x0D05, 4);                                           // GL_PACK_ALIGNMENT
++    glReadPixels(0, 0, width, height, 0x1908, 0x1401, &rgba[0]);        // GL_RGBA, GL_UNSIGNED_BYTE
++    for (size_t i = 0; i < n; i++) {
++        out[i * 3] = rgba[i * 4];
++        out[i * 3 + 1] = rgba[i * 4 + 1];
++        out[i * 3 + 2] = rgba[i * 4 + 2];
++    }
++}
++#endif
++
+ void harness_after_draw(int width, int height)
+ {
+     if (h_active && h_raw != NULL && (h_raw_draws++ % h_raw_every) == 0) {
+         static std::vector<unsigned char> raw;
+         raw.resize(size_t(WINDOW_WIDTH) * WINDOW_HEIGHT * 3);
++#ifdef CHOWDREN_USE_GLES2
++        harness_read_rgb(WINDOW_WIDTH, WINDOW_HEIGHT, &raw[0]);
++#else
+         glPixelStorei(0x0D05, 1);                                          // GL_PACK_ALIGNMENT
+         glReadPixels(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0x1907, 0x1401, &raw[0]);   // GL_RGB, GL_UNSIGNED_BYTE
++#endif
+         if (fwrite(&raw[0], 1, raw.size(), h_raw) != raw.size()) {
+             fprintf(stderr, "harness: raw video write failed; stopping the stream\n");
+             fclose(h_raw);
+@@ -592,8 +614,12 @@ void harness_after_draw(int width, int height)
+     for (size_t i = 0; i < h_snaps.size(); i++) if (h_snaps[i] == here) wanted = true;
+     if (!wanted) return;
+     std::vector<unsigned char> px(size_t(width) * height * 3);
++#ifdef CHOWDREN_USE_GLES2
++    harness_read_rgb(width, height, &px[0]);
++#else
+     glPixelStorei(0x0D05, 1);                                  // GL_PACK_ALIGNMENT
+     glReadPixels(0, 0, width, height, 0x1907, 0x1401, &px[0]); // GL_RGB, GL_UNSIGNED_BYTE
++#endif
+     const char * dir = getenv("CHOWDREN_SNAP_DIR");
+     char path[512];
+     snprintf(path, sizeof(path), "%s/frame%d-tick%d.ppm", dir && *dir ? dir : ".", here.first, here.second);
+diff --git a/Chowdren/base/include_gl.h b/Chowdren/base/include_gl.h
+index b31e648..aae5210 100644
+--- a/Chowdren/base/include_gl.h
++++ b/Chowdren/base/include_gl.h
+@@ -1,7 +1,18 @@
+ #ifndef INCLUDE_GL_H
+ #define INCLUDE_GL_H
+ 
+-#if defined(CHOWDREN_IS_ANDROID)
++#if defined(CHOWDREN_IS_ANDROID) && defined(CHOWDREN_USE_GLES2)
++
++// Android, GL ES 2.0 via the NDK: the desktop shader pipeline (glslshader.cpp,
++// base/shaders/*) with vertex attributes instead of client arrays. Everything
++// the renderer calls is core ES 2.0 (programs, FBOs, separate blending).
++#include <GLES2/gl2.h>
++#include <GLES2/gl2ext.h>
++#include "gles2shader.h"
++
++#undef TRANSPARENT
++
++#elif defined(CHOWDREN_IS_ANDROID)
+ 
+ // Android: GL ES 1.1 via the NDK. The Chowdren Render:: layer is fixed-function
+ // client arrays (glVertexPointer / glColorPointer / glTexCoordPointer /
+@@ -126,7 +137,11 @@ extern PFNGLGETUNIFORMLOCATIONARBPROC __glGetUniformLocationARB;
+ #include <SDL_opengles.h>
+ 
+ #elif CHOWDREN_USE_GLES2
+-#include <SDL_opengles2.h>
++// A desktop build on a GL ES 2.0 context (Mesa's libGLESv2): the Android
++// GLES2 renderer, run on the host so it can be compared with the GL path.
++#include <GLES2/gl2.h>
++#include <GLES2/gl2ext.h>
++#include "gles2shader.h"
+ 
+ #endif // CHOWDREN_USE_GL
+ 

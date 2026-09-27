@@ -29,8 +29,24 @@ target_include_directories(oggvorbis PUBLIC
     ${BASE}/staticlibs/libvorbis/lib)
 target_compile_options(oggvorbis PRIVATE -w)
 
+# ---- GL ES version: 2.0 by default (the desktop shader pipeline,
+#      desktop/glslshader.cpp, with base/shaders rewritten as GLSL ES 1.00 at
+#      load time; gles2shader.h), or 1.1 with -DCHOWDREN_GLES1=ON (fixed
+#      function, no shaders: android/glesshader.cpp) ----
+option(CHOWDREN_GLES1 "Build the GL ES 1.1 fixed-function target (no shaders)" OFF)
+if (CHOWDREN_GLES1)
+    set(GLES_DEF CHOWDREN_USE_GLES1)
+    set(GLES_LIB GLESv1_CM)
+    set(SHADER_SRC ${BASE}/android/glesshader.cpp)
+else()
+    set(GLES_DEF CHOWDREN_USE_GLES2)
+    set(GLES_LIB GLESv2)
+    set(SHADER_SRC ${BASE}/desktop/glslshader.cpp)
+endif()
+message(STATUS "chowdren GL: ${GLES_DEF} (${GLES_LIB})")
+
 # ---- Chowdren base (the non-cross SRCS list from base/CMakeLists.txt, with
-#      the desktop platform/glslshader/fbo swapped for the Android backend) ----
+#      the desktop platform/fbo and the shader layer chosen above) ----
 set(BASE_SRCS
     ${BASE}/render.cpp
     ${BASE}/run.cpp
@@ -47,7 +63,7 @@ set(BASE_SRCS
     ${BASE}/broadphase.cpp
     ${BASE}/profiler.cpp
     ${BASE}/stringcommon.cpp
-    ${BASE}/android/glesshader.cpp
+    ${SHADER_SRC}
     ${BASE}/desktop/fbo.cpp
 )
 
@@ -88,8 +104,8 @@ add_library(main SHARED
 
 target_compile_definitions(main PRIVATE
     CHOWDREN_IS_ANDROID
-    CHOWDREN_USE_GLES1
-    GL_GLEXT_PROTOTYPES          # declare glBlendFuncSeparateOES / *OES FBO
+    ${GLES_DEF}
+    GL_GLEXT_PROTOTYPES          # GLES1: declare glBlendFuncSeparateOES / *OES FBO
     BOOST_ALL_NO_LIB
     BOOST_NO_EXCEPTIONS
     BOOST_EXCEPTION_DISABLE
@@ -118,4 +134,4 @@ target_link_libraries(main
     SDL2
     oggvorbis
     ${OPENAL_LIB}
-    GLESv1_CM EGL OpenSLES log android)
+    ${GLES_LIB} EGL OpenSLES log android)

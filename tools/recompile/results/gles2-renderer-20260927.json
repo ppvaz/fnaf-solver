@@ -1,0 +1,555 @@
+{
+ "schema": "recompile-gles2-renderer-v1",
+ "claimLevel": "MODEL_ONLY",
+ "fidelity": "rebuilt-runtime",
+ "status": "HOST_VERIFIED_PHONE_UNCHECKED",
+ "question": "Does the rebuild draw on GL ES 2.0 what its desktop GL build draws, shaders included (the office and camera Perspective pass in PANORAMA mode first), while the desktop build stays unchanged?",
+ "sources": {
+  "anacondaBase": "9b00bb4227cc3ddd6f7baefe06120368bd7226e9",
+  "runtimeSnapshot": {
+   "what": "the working tree of fnaf2-recompile-20260927/anaconda (the audio agent's runtime) at 2026-09-27T19:33-03:00, as `git diff HEAD` excluding .pyc/.so/.o",
+   "diffSha256": "ee8a333b71ec47b52fc46640592b1173003769192e89b055fefcb205049459a3"
+  },
+  "patch": {
+   "path": "tools/recompile/android/gles2-renderer.patch",
+   "sha256": "ecee3613fb8f4a6afdf6b73944d6662607c8e5e93c27293ec6981f8b2a8885cb",
+   "appliesTo": [
+    "9b00bb4 + tools/recompile/mmfparser-chowdren-mobile.patch (the committed patch, Chowdren/base)",
+    "the runtime snapshot above"
+   ],
+   "committedMobilePatchSha256": "01ec20de18435f22ab29f0b929e9474648d6542cc37dc783f656a21bb04b28bc"
+  },
+  "gles2ShaderHeaderSha256": "53dccf33a8846bd5a6443e299969e3bb6a1027465fe7f973e6926eeecbd7c968",
+  "checkerSha256": "7b7d66ec70bd9fa02b06747b59e59f87cf590bff0c9f31de221f6659dbc459a8",
+  "gameCMakeListsSha256": "73513fc235fe0f809d8aadb986a23101b00437969e90989940c2d3d3260be922",
+  "assetsSha256": "d9cc45ffa293fc0e93a4cce22f0c1f0fe47330628885c4c521d97d556f5eaaaa",
+  "generatedSource": "input/gamesrc as converted 2026-09-27T19:33-03:00 (32 event files, 29 frames), copied before building"
+ },
+ "shaderCheck": {
+  "what": "every base/shaders pair through gles2_translate_shader(), compiled and linked on a headless GL ES 2.0 context; the Perspective PANORAMA branch drawn over a generated 1024x768 texture at zoom 200 (the office object) against fC = 1 + sin(u*3.1415)*fB - fB, fB = zoom/768",
+  "mesa18": {
+   "context": {
+    "egl": "EGL_PLATFORM_SURFACELESS_MESA, surfaceless context",
+    "renderer": "llvmpipe (LLVM 7.0, 256 bits)",
+    "version": "OpenGL ES 3.0 Mesa 18.3.6",
+    "glsl": "OpenGL ES GLSL ES 3.00"
+   },
+   "shaderPairs": 37,
+   "linked": 37,
+   "nonEmptyLogs": [],
+   "panorama": {
+    "width": 1024,
+    "height": 768,
+    "zoom": 200,
+    "fB": 0.260417,
+    "framebufferStatus": "0x8cd5",
+    "glError": "0x0",
+    "pixels": 786432,
+    "rowExact": 786413,
+    "rowOffByOne": 19,
+    "rowWorse": 0,
+    "maxRowError": 1,
+    "columnWrong": 0,
+    "centreColumnRowsAtEdge": [
+     0,
+     767
+    ],
+    "edgeColumnRowsAtEdge": [
+     100,
+     667
+    ]
+   },
+   "panoramaPass": true,
+   "pass": true
+  },
+  "mesa25": {
+   "context": {
+    "egl": "EGL_PLATFORM_SURFACELESS_MESA, surfaceless context",
+    "renderer": "llvmpipe (LLVM 19.1.7, 256 bits)",
+    "version": "OpenGL ES 3.2 Mesa 25.0.7-2+deb13u1",
+    "glsl": "OpenGL ES GLSL ES 3.20"
+   },
+   "shaderPairs": 37,
+   "linked": 37,
+   "nonEmptyLogs": [],
+   "panorama": {
+    "width": 1024,
+    "height": 768,
+    "zoom": 200,
+    "fB": 0.260417,
+    "framebufferStatus": "0x8cd5",
+    "glError": "0x0",
+    "pixels": 786432,
+    "rowExact": 786412,
+    "rowOffByOne": 20,
+    "rowWorse": 0,
+    "maxRowError": 1,
+    "columnWrong": 0,
+    "centreColumnRowsAtEdge": [
+     0,
+     767
+    ],
+    "edgeColumnRowsAtEdge": [
+     100,
+     667
+    ]
+   },
+   "panoramaPass": true,
+   "pass": true
+  }
+ },
+ "gles2VsGl": {
+  "what": "the same sources built twice (CHOWDREN_USE_GL and CHOWDREN_USE_GLES2), same Assets.dat, Night 2 save, Continue tap, one monitor raise at office tick 300, seed 24850, harness snapshots of the screen FBO; llvmpipe in the buster container",
+  "desktopGlSha256": "9a5add3e4335a8a003b71dd24945ca6d4d3ce69f511d927c3f46f9714b8cf354",
+  "desktopGles2Sha256": "cc854b01387f75a1db8e084d53e4cb81774dc9f30f21a635c13de5741ecf982b",
+  "gles2Context": [
+   "GL: OpenGL ES 3.0 Mesa 18.3.6  screen_fbo status=0x8cd5 err=0x0",
+   "GLSL: OpenGL ES GLSL ES 3.00  fragment highp float precision=23"
+  ],
+  "inputSha256": "3b441b0c292efa3a0b83f7864b9f1443bdf4de6ff9b3d04d5b73a1fa8d0db6e2",
+  "saveSha256": "f80736d6ab563bfd597fdecf0e51a3c693f045f012d4f665bd06a2484ee96e6b",
+  "shadersLinked": [
+   "GLES2 shader 15: linked",
+   "GLES2 shader 36: linked",
+   "GLES2 shader 7: linked"
+  ],
+  "snaps": [
+   {
+    "frame": 3,
+    "tick": 120,
+    "view": "office",
+    "glSnapSha256": "4bf8a86f2a369ab54ea9669905fbeb1778620e36ca7f871f975c904fb461e308",
+    "gles2SnapSha256": "4bf8a86f2a369ab54ea9669905fbeb1778620e36ca7f871f975c904fb461e308",
+    "game1024x768": {
+     "frame": {
+      "pixels": 786432,
+      "meanAbs": 0,
+      "maxAbs": 0,
+      "differingPixels": 0
+     },
+     "leftEdge128": {
+      "pixels": 98304,
+      "meanAbs": 0,
+      "maxAbs": 0,
+      "differingPixels": 0
+     },
+     "rightEdge128": {
+      "pixels": 98304,
+      "meanAbs": 0,
+      "maxAbs": 0,
+      "differingPixels": 0
+     },
+     "centre256": {
+      "pixels": 196608,
+      "meanAbs": 0,
+      "maxAbs": 0,
+      "differingPixels": 0
+     }
+    },
+    "native2400x1080": {
+     "meanAbs": 0,
+     "maxAbsSum": 0,
+     "pixels": 2592000,
+     "brightIoU": 1
+    }
+   },
+   {
+    "frame": 3,
+    "tick": 250,
+    "view": "office",
+    "glSnapSha256": "308ded01682c92c038bdc9e129cda9a7cb926447b73273a5e93964b8f8806d6b",
+    "gles2SnapSha256": "308ded01682c92c038bdc9e129cda9a7cb926447b73273a5e93964b8f8806d6b",
+    "game1024x768": {
+     "frame": {
+      "pixels": 786432,
+      "meanAbs": 0,
+      "maxAbs": 0,
+      "differingPixels": 0
+     },
+     "leftEdge128": {
+      "pixels": 98304,
+      "meanAbs": 0,
+      "maxAbs": 0,
+      "differingPixels": 0
+     },
+     "rightEdge128": {
+      "pixels": 98304,
+      "meanAbs": 0,
+      "maxAbs": 0,
+      "differingPixels": 0
+     },
+     "centre256": {
+      "pixels": 196608,
+      "meanAbs": 0,
+      "maxAbs": 0,
+      "differingPixels": 0
+     }
+    },
+    "native2400x1080": {
+     "meanAbs": 0,
+     "maxAbsSum": 0,
+     "pixels": 2592000,
+     "brightIoU": 1
+    }
+   },
+   {
+    "frame": 3,
+    "tick": 400,
+    "view": "camera (monitor raised at 300)",
+    "glSnapSha256": "88f0f65e2e5fb08cf64fb651d0cf8b8e14ee9a89de85cff71245ca142a19bb73",
+    "gles2SnapSha256": "88f0f65e2e5fb08cf64fb651d0cf8b8e14ee9a89de85cff71245ca142a19bb73",
+    "game1024x768": {
+     "frame": {
+      "pixels": 786432,
+      "meanAbs": 0,
+      "maxAbs": 0,
+      "differingPixels": 0
+     },
+     "leftEdge128": {
+      "pixels": 98304,
+      "meanAbs": 0,
+      "maxAbs": 0,
+      "differingPixels": 0
+     },
+     "rightEdge128": {
+      "pixels": 98304,
+      "meanAbs": 0,
+      "maxAbs": 0,
+      "differingPixels": 0
+     },
+     "centre256": {
+      "pixels": 196608,
+      "meanAbs": 0,
+      "maxAbs": 0,
+      "differingPixels": 0
+     }
+    },
+    "native2400x1080": {
+     "meanAbs": 0,
+     "maxAbsSum": 0,
+     "pixels": 2592000,
+     "brightIoU": 1
+    }
+   },
+   {
+    "frame": 3,
+    "tick": 470,
+    "view": "camera (monitor raised at 300)",
+    "glSnapSha256": "b52930b69a52498337c0970fa2efff23c5ee686344f9f573d4db9621c4463f4a",
+    "gles2SnapSha256": "b52930b69a52498337c0970fa2efff23c5ee686344f9f573d4db9621c4463f4a",
+    "game1024x768": {
+     "frame": {
+      "pixels": 786432,
+      "meanAbs": 0,
+      "maxAbs": 0,
+      "differingPixels": 0
+     },
+     "leftEdge128": {
+      "pixels": 98304,
+      "meanAbs": 0,
+      "maxAbs": 0,
+      "differingPixels": 0
+     },
+     "rightEdge128": {
+      "pixels": 98304,
+      "meanAbs": 0,
+      "maxAbs": 0,
+      "differingPixels": 0
+     },
+     "centre256": {
+      "pixels": 196608,
+      "meanAbs": 0,
+      "maxAbs": 0,
+      "differingPixels": 0
+     }
+    },
+    "native2400x1080": {
+     "meanAbs": 0,
+     "maxAbsSum": 0,
+     "pixels": 2592000,
+     "brightIoU": 1
+    }
+   }
+  ],
+  "drawTraceSha256": {
+   "gl": "6a96f116a1f7b2935895d3aaa92c337df1de829771f026cfe5fc1d87b5dc0624",
+   "gles2": "6a96f116a1f7b2935895d3aaa92c337df1de829771f026cfe5fc1d87b5dc0624"
+  },
+  "nativeTool": {
+   "path": "tools/recompile/native-frame.py",
+   "sha256": "591271bdf84938ec243951cff3e43a5f871962c9ab7f8d96bcc3c437034539ec"
+  }
+ },
+ "desktopUnchanged": {
+  "preprocessed": {
+   "what": "desktop GL translation units preprocessed (g++ 8.3 -E -P, CHOWDREN_USE_GL) against the patched tree and the snapshot base",
+   "identical": 13,
+   "of": 13,
+   "units": [
+    "run.cpp",
+    "render.cpp",
+    "common.cpp",
+    "font.cpp",
+    "image.cpp",
+    "desktop/platform.cpp",
+    "desktop/glslshader.cpp",
+    "desktop/fbo.cpp",
+    "objects/perspective.cpp",
+    "objects/text.cpp",
+    "events_1.cpp",
+    "frame4_1.cpp",
+    "objects1.cpp"
+   ]
+  },
+  "androidGles1Preprocessed": {
+   "what": "the Android ES 1.1 target (-DCHOWDREN_GLES1=ON) GL-touching units preprocessed (NDK clang 17 -E -P, CHOWDREN_USE_GLES1) against the patched tree and the snapshot base",
+   "identical": 8,
+   "of": 8,
+   "units": [
+    "run.cpp",
+    "render.cpp",
+    "common.cpp",
+    "font.cpp",
+    "desktop/platform.cpp",
+    "android/glesshader.cpp",
+    "desktop/fbo.cpp",
+    "objects/perspective.cpp"
+   ]
+  },
+  "night2": {
+   "what": "no-input Night 2 (fixtures/night2-before.ini, fixtures/continue.input, seed 24850, 30000 updates) on the reference binary (built by the audio agent from the snapshot runtime and the same generated source) twice, the patched desktop GL build and the patched desktop GLES2 build",
+   "referenceSha256": "d2ff2afb9a9142aad1e03d00da178301bd015aea86001f0c203734d548425c6d",
+   "runs": {
+    "ref-a": {
+     "traceSha256": "d2320241ec6abea815e045ebe634cf0ff0bf59b2e514693ce903edb6902e1af2",
+     "drawTraceSha256": "685af985d26b71d4407a000fad74c6a0a3771cbfb0c98dc3273d606db17d6664",
+     "rows": 30000,
+     "visits": [
+      {
+       "frame": 0,
+       "updates": 180
+      },
+      {
+       "frame": 1,
+       "updates": 216
+      },
+      {
+       "frame": 2,
+       "updates": 189
+      },
+      {
+       "frame": 7,
+       "updates": 6
+      },
+      {
+       "frame": 3,
+       "updates": 5852
+      },
+      {
+       "frame": 4,
+       "updates": 300
+      },
+      {
+       "frame": 6,
+       "updates": 600
+      },
+      {
+       "frame": 1,
+       "updates": 22657
+      }
+     ],
+     "stop": "total ticks 30000 frame 1 tick 22657",
+     "gles2Shaders": []
+    },
+    "ref-b": {
+     "traceSha256": "ac4cecf9ec0e3051d02c39828e18b51e9d61957dff17a5da97bfbf4cd78689e2",
+     "drawTraceSha256": "685af985d26b71d4407a000fad74c6a0a3771cbfb0c98dc3273d606db17d6664",
+     "rows": 30000,
+     "visits": [
+      {
+       "frame": 0,
+       "updates": 180
+      },
+      {
+       "frame": 1,
+       "updates": 216
+      },
+      {
+       "frame": 2,
+       "updates": 189
+      },
+      {
+       "frame": 7,
+       "updates": 6
+      },
+      {
+       "frame": 3,
+       "updates": 5852
+      },
+      {
+       "frame": 4,
+       "updates": 300
+      },
+      {
+       "frame": 6,
+       "updates": 600
+      },
+      {
+       "frame": 1,
+       "updates": 22657
+      }
+     ],
+     "stop": "total ticks 30000 frame 1 tick 22657",
+     "gles2Shaders": []
+    },
+    "gl": {
+     "traceSha256": "166f32b92dc6100b7f1ef2492ff4e783c92adf646ed2435704cc7af699cd020a",
+     "drawTraceSha256": "685af985d26b71d4407a000fad74c6a0a3771cbfb0c98dc3273d606db17d6664",
+     "rows": 30000,
+     "visits": [
+      {
+       "frame": 0,
+       "updates": 180
+      },
+      {
+       "frame": 1,
+       "updates": 216
+      },
+      {
+       "frame": 2,
+       "updates": 189
+      },
+      {
+       "frame": 7,
+       "updates": 6
+      },
+      {
+       "frame": 3,
+       "updates": 5852
+      },
+      {
+       "frame": 4,
+       "updates": 300
+      },
+      {
+       "frame": 6,
+       "updates": 600
+      },
+      {
+       "frame": 1,
+       "updates": 22657
+      }
+     ],
+     "stop": "total ticks 30000 frame 1 tick 22657",
+     "gles2Shaders": []
+    },
+    "es2": {
+     "traceSha256": "c11cecd52ba0c838075b08fbb0c70a2cdc493eb29452f049c61c5027078289b8",
+     "drawTraceSha256": "685af985d26b71d4407a000fad74c6a0a3771cbfb0c98dc3273d606db17d6664",
+     "rows": 30000,
+     "visits": [
+      {
+       "frame": 0,
+       "updates": 180
+      },
+      {
+       "frame": 1,
+       "updates": 216
+      },
+      {
+       "frame": 2,
+       "updates": 189
+      },
+      {
+       "frame": 7,
+       "updates": 6
+      },
+      {
+       "frame": 3,
+       "updates": 5852
+      },
+      {
+       "frame": 4,
+       "updates": 300
+      },
+      {
+       "frame": 6,
+       "updates": 600
+      },
+      {
+       "frame": 1,
+       "updates": 22657
+      }
+     ],
+     "stop": "total ticks 30000 frame 1 tick 22657",
+     "gles2Shaders": [
+      "GLES2 shader 15: linked",
+      "GLES2 shader 36: linked",
+      "GLES2 shader 7: linked"
+     ]
+    }
+   },
+   "againstReferenceRunA": {
+    "ref-b": {
+     "rows": [
+      30000,
+      30000
+     ],
+     "rowsDiffering": 29409,
+     "differingColumns": {
+      "14": 29409
+     }
+    },
+    "gl": {
+     "rows": [
+      30000,
+      30000
+     ],
+     "rowsDiffering": 29409,
+     "differingColumns": {
+      "14": 29409
+     }
+    },
+    "es2": {
+     "rows": [
+      30000,
+      30000
+     ],
+     "rowsDiffering": 29409,
+     "differingColumns": {
+      "14": 29409
+     }
+    }
+   },
+   "columns": "0 frame, 1 tick, 2 draws, 3 graine (LCG state), 4.. global values; column 14 (global value 10) differs between two runs of the same reference binary, so it is run-to-run state, not a build difference",
+   "committedRecord": {
+    "path": "tools/recompile/results/night2-rebuild-036076d3.json",
+    "traceSha256": "37d545b71a8e05bd52ee080c0b504ed8cb1862b6b1125ea27f52160a02adbd60",
+    "drawTraceSha256": "685af985d26b71d4407a000fad74c6a0a3771cbfb0c98dc3273d606db17d6664"
+   }
+  }
+ },
+ "android": {
+  "libmainSha256": "3a38e268e9d4e0eed62bad0658378394d4d71b205f2c0c78d80fc6da690e6c9c",
+  "build": "game-CMakeLists.txt (CHOWDREN_USE_GLES2, GLESv2), NDK r26d clang 17, arm64-v8a, android-24, prebuilt SDL2 2.30.9 and openal-soft 1.23.1",
+  "apk": {
+   "where": "outside the repository (~/fnaf-apks/fnaf2-recompile-20260927/gles2-work/apk/fnaf2-rebuild-gles2.apk)",
+   "sha256": "67458f6966b83d4e8a7aac4c7a2e41b86f5f354ba27afc259ab873522d0f8508",
+   "package": "org.fnaf2rebuild.play",
+   "glEsVersion": "0x00020000",
+   "theme": "windowLayoutInDisplayCutoutMode shortEdges on API 28+ (the audio agent's build-apk.sh, not yet committed, plus this branch's glEsVersion hunk)",
+   "signerCertSha256": "7937d80393199cdf730268788dab4b3ee42543cec3941e0f36a3d46c14d71a8c",
+   "installed": false
+  }
+ },
+ "phoneChecks": [
+  "logcat (tag Chowdren): \"GL: OpenGL ES ...\" with screen_fbo status 0x8cd5, \"GLSL: ...\" and fragment highp precision > 0",
+  "logcat: \"GLES2 shader 15: linked\", \"GLES2 shader 36: linked\", \"GLES2 shader 7: linked\"; any \"LINK FAILED\" or \"Compile error\" names a shader the PowerVR compiler refuses",
+  "the office is neither black nor flat: its left and right edges are stretched vertically (the edge column shows source rows 100-667 of 768 over the full height; the centre column is unscaled)",
+  "a camera feed draws warped the same way, with text and the map on top",
+  "frame rate stays at 60 (one 1024x768 copy and one extra full-screen pass per frame)",
+  "the window fills the cutout edge (2400 x 1080, not 2285 x 1080)"
+ ],
+ "limitations": "Host llvmpipe only; the phone GPU (PowerVR) has not compiled these shaders. Equality with the desktop GL build is not equality with the retail APK: PANORAMA follows panorama_ext_frag.fsh by source, and no phone frame has been compared since the change. The ES 1.1 target (-DCHOWDREN_GLES1=ON) still skips the Perspective pass.",
+ "evidenceId": "recompile-gles2-renderer-cd3b609ddfc79791"
+}

@@ -139,3 +139,93 @@ Built 2026-09-27 from binary-equivalent sources (the patch at `f86ff123`):
 `libmain.so` 33 MB (32 event files, 29 frames, 10 extension objects),
 `libSDL2.so` 6.2 MB, APK 131 MB (package `org.fnaf2rebuild.play`), with the
 pinned assets `7163d628`.
+
+## 2026-09-27 (evening): the GL ES 2.0 renderer
+
+The ES 1.1 target has no shaders. Its Perspective pass copied the screen and
+redrew it opaque, which painted the office and cameras black on the phone, so
+it was skipped and they drew flat. The desktop build draws them through
+`perspective.frag`, whose PANORAMA branch matches the retail runtime's
+`panorama_ext_frag.fsh`. The Android build now runs that same shader pipeline on
+GL ES 2.0.
+
+[`gles2-renderer.patch`](gles2-renderer.patch) (Chowdren/base only, `git apply`
+in the anaconda tree after `../mmfparser-chowdren-mobile.patch`; every change is
+under `CHOWDREN_USE_GLES2`):
+- `include_gl.h` includes `<GLES2/gl2.h>` for Android and for a desktop GLES2
+  build, and `base/gles2shader.h`. That header maps the ARB shader-object
+  names `desktop/glslshader.cpp` uses onto ES 2.0 core. Its
+  `gles2_translate_shader()` rewrites each packed GLSL 1.20 shader (from
+  `Assets.dat`, unchanged) as GLSL ES 1.00. It drops `#version`, puts
+  `#version 100` first, feeds `gl_Vertex`, `gl_Color` and
+  `gl_MultiTexCoord0/1` from the `in_pos`, `in_blend_color` and
+  `in_tex_coord1/2` attributes (`shadercommon.h`, bound before linking), and
+  carries `gl_FrontColor`/`gl_Color` in one varying. The fragment stage gets
+  `precision highp float` where `GL_FRAGMENT_PRECISION_HIGH` is defined.
+- `desktop/glslshader.cpp` compiles the translated source, and logs
+  `GLES2 shader <id>: linked` (or `LINK FAILED`) once per shader it uses.
+- `desktop/renderplatform.cpp` feeds the same client arrays as vertex
+  attributes instead of `glVertexPointer` and the other fixed-function arrays.
+- `Render::copy_rect` copies from the RGBA8 screen FBO into an RGB texture.
+  ES 2.0 allows that (table 3.9), and the copy samples with alpha 1 as on the
+  desktop. The storage is specified only when the rectangle's size changes.
+- `harness.cpp` reads snapshots back as RGBA, the one readback ES 2.0
+  guarantees. `desktop/platform.cpp` logs the GL and GLSL versions and the
+  fragment stage's highp precision.
+- `base/CMakeLists.txt`: `-DUSE_GLES2=ON` builds the desktop game on a GL ES 2.0
+  context (Mesa's `libGLESv2`), the Android renderer run on the host.
+
+`game-CMakeLists.txt` builds GLES2 by default (`CHOWDREN_USE_GLES2`,
+`desktop/glslshader.cpp`, `GLESv2`); `-DCHOWDREN_GLES1=ON` keeps the ES 1.1
+target. `build-apk.sh` declares `glEsVersion` 2.0 when `libmain.so` links
+`libGLESv2.so`. The desktop GL build is untouched. Its translation units
+preprocess to the same text with and without the patch (13 of 13 checked,
+including generated event, frame and object files).
+
+Host checks, no phone ([`../results/gles2-renderer-20260927.json`](../results/gles2-renderer-20260927.json),
+`recompile-gles2-renderer-cd3b609ddfc79791`, MODEL_ONLY):
+- [`gles2-shader-check.cpp`](gles2-shader-check.cpp) compiles and links all 37
+  shader pairs as GLSL ES 1.00 on Mesa 18.3.6 (the buster container) and Mesa
+  25.0.7 (the host), both llvmpipe, with empty logs. It then draws the
+  Perspective PANORAMA branch over a generated 1024 x 768 texture at zoom 200.
+  786,412 and 786,413 of 786,432 pixels take the row the retail formula gives;
+  the rest are one row off at texel edges. No column moves. The edge column
+  spans rows 100-667 and the centre column 0-767.
+- The same sources built as desktop GL and as desktop GLES2 (`-DUSE_GLES2=ON`,
+  an `OpenGL ES 3.0 Mesa 18.3.6` context) draw the Night 2 office at ticks 120
+  and 250, and a camera feed at ticks 400 and 470, identically: 0 of 786,432
+  pixels differ. Scaled to the phone's 2400 x 1080 by `../native-frame.py`, the
+  meanAbs is 0 and the brightIoU 1.0. The GLES2 run links shaders 15 (texture),
+  36 (perspective) and 7 (font).
+- The no-input Night 2 replay (`../fixtures/night2-before.ini`,
+  `../fixtures/continue.input`, seed 24850, 30,000 updates) was run on four
+  binaries: the reference built from the same runtime and generated source
+  without the patch (twice), the patched desktop GL build, and the patched
+  GLES2 build. All four give the draw projection
+  `685af985...`, the one `../results/night2-rebuild-036076d3.json` records for
+  the pinned binary. Against the first reference run, each other run differs
+  only in trace column 14 (global value 10), in 29,409 rows. The second run of
+  the reference binary differs in the same place, so that column is run-to-run
+  state and not the patch. A whole GLES2 night links only shaders 15, 36 and 7.
+  The runtime's other effects are `LAYERCOLOR` and `SURFACESUBTRACT` (the
+  texture shader with ES 2.0 core blending), `PIXELOUTLINE` (shader 22, or 8
+  on text) and `SUBPX` (34). They compile and link, but no replay here reaches
+  them.
+- The ES 1.1 target (`-DCHOWDREN_GLES1=ON`) preprocesses to the same text with
+  and without the patch (8 of 8 units, NDK clang).
+
+The APK (`libmain.so` `3a38e268`, `Assets.dat` `d9cc45ff`, package
+`org.fnaf2rebuild.play`, `glEsVersion` 2.0) is signed with the first APK's
+debug key (certificate `7937d803...`), so it installs over an APK signed with
+that key and keeps the save. It is held outside the repository and is not
+installed. On the phone, check:
+- logcat (`Chowdren`): `GL: OpenGL ES ...` with `screen_fbo status=0x8cd5`;
+  `GLSL: ...` with a fragment highp precision above 0; and
+  `GLES2 shader 15/36/7: linked`. A `LINK FAILED` or `Compile error` line
+  names a shader the PowerVR compiler refused.
+- The office is neither black nor flat. Its left and right edges are stretched
+  vertically, and the centre column is not. A camera feed is warped the same
+  way, with the map and text drawn on top.
+- The frame rate holds at 60. The pass adds one 1024 x 768 copy and one
+  full-screen draw per frame.
+- The window fills the cutout edge.

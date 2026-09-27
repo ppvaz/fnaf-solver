@@ -68,6 +68,12 @@ cat > "$WORK/AndroidManifest.xml" <<'EOF'
 </manifest>
 EOF
 
+# A GL ES 2.0 libmain.so (game-CMakeLists.txt's default since the GLES2
+# renderer) declares ES 2.0; a -DCHOWDREN_GLES1=ON build keeps ES 1.1.
+if grep -q -a 'libGLESv2\.so' "$LIBS/libmain.so"; then
+    sed -i 's/android:glEsVersion="0x00010001"/android:glEsVersion="0x00020000"/' "$WORK/AndroidManifest.xml"
+fi
+
 # SDL's Java side (SDLActivity loads libSDL2.so and libmain.so).
 "$JAVA_HOME/bin/javac" --release 11 -nowarn -cp "$ANDROID_JAR" -d "$WORK/classes" \
     "$SDL"/android-project/app/src/main/java/org/libsdl/app/*.java
