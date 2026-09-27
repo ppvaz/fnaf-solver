@@ -1,0 +1,76 @@
+{
+ "schema": "cohort-predeclaration-v1",
+ "declaredAt": "2026-09-27T05:25:00Z",
+ "declaredBy": "Pedro set the session goal on 2026-09-27 ('See all plans / roadmaps / implementation plans through to completion') and gave the phone ('take control of the phone i dont care'); written by Claude before the first corner night, for ROADMAP S3's 'corner vectors run on the phone'",
+ "step": "ROADMAP S3: the dial frontier's corners run on the phone",
+ "night": 7,
+ "corners": [
+  {
+   "id": "bbfoxy",
+   "dials": {
+    "withfreddy": 0,
+    "withbonnie": 0,
+    "withchica": 0,
+    "foxy": 20,
+    "toyfreddy": 0,
+    "toybonnie": 0,
+    "toychica": 0,
+    "mangle": 0,
+    "bb": 20,
+    "golden": 0
+   },
+   "why": "the Balloon Boy x Foxy plane's far corner with every other dial at 0 (docs/evidence/night7-dial-plane-bb-foxy-20260925.json, k3 grid, base 0)",
+   "labels": "corner-bbfoxy-r01, corner-bbfoxy-r02"
+  },
+  {
+   "id": "bbgolden",
+   "dials": {
+    "withfreddy": 0,
+    "withbonnie": 0,
+    "withchica": 0,
+    "foxy": 0,
+    "toyfreddy": 0,
+    "toybonnie": 0,
+    "toychica": 0,
+    "mangle": 0,
+    "bb": 20,
+    "golden": 20
+   },
+   "why": "the Balloon Boy x Golden Freddy plane's far corner with every other dial at 0 (docs/evidence/night7-dial-plane-bb-golden-20260925.json, k3 grid, base 0)",
+   "labels": "corner-bbgolden-r01, corner-bbgolden-r02"
+  }
+ ],
+ "configuration": {
+  "dialSetting": "the campaign's measured dial driver sets each vector and reads it back (tools/device/models/custom-night-calibration-v1.json); the engine caps apply as on any Custom Night",
+  "puppet": "15, as on every Custom Night"
+ },
+ "binding": {
+  "name": "k3",
+  "bundle": "artifacts/night7-anchored-k3/bundle",
+  "winnerHash": "fnv1a-5c8dcb5f",
+  "trackedAs": "tools/device/campaign-night7-k3-winner.json",
+  "planSha256": "66b0abb4f65d65584d102e8c2a443e622df8f69ea9d4ac42c20e0aaa77867aff",
+  "replayHash": "fnv1a-1c9c6847",
+  "engineSourceSha256": "beeb5d5a6152b7bca60bb5102dff0c9615567532fde0e4979f0701018c913ebe",
+  "profile": {
+   "id": "hid-mediaprojection",
+   "sha256": "c929d673a056b4d7ef1839bccc4666986e2a1991b39232c0869046b0d68ae6e0"
+  },
+  "anchor": "aim 2433 ms, period 5000, maxK 0, from the fact register entry for fnv1a-5c8dcb5f"
+ },
+ "command": "tools/device/night-run.sh --label night7-corner-<id>-rNN --bundle artifacts/night7-anchored-k3/bundle --night 7 --qualification artifacts/night7-anchored-k3/qualification-test.json --calibration tools/device/models/custom-night-calibration-v1.json --dials '<corner dials JSON>' --no-trace --no-grade",
+ "runner": "artifacts/forensics/night7-corners-20260927/corners.sh (the k3 cohort runner's controls: airplane mode, do-not-disturb and USB stay-on for the runs and restored after; the game log streamed for the office seed; a run whose title is not confirmed afterwards stops the set)",
+ "size": 4,
+ "order": "bbfoxy r01, bbgolden r01, bbfoxy r02, bbgolden r02",
+ "rules": {
+  "counted": "a run counts once the campaign observes state=night; its outcome is the executor terminal (sixam or gameover) cross-checked by the video terminal grade",
+  "win": "executor terminal sixam and video TERMINAL clear",
+  "death": "gameover; cause taken from the per-cycle ledger and the video, survival time from the video",
+  "excluded": "a run refused or aborted before state=night is not counted and is re-run in its slot as rNNb, rNNc; the reason is reported",
+  "invalid": "a counted run whose night was interrupted by something outside the game (a notification, the operator touching the phone, a USB drop) is reported as invalid with the evidence, and re-run in its slot",
+  "noTuning": "no knob, anchor, bundle or harness change inside the cohort; a harness fault stops the cohort rather than being patched mid-way"
+ },
+ "prior": "MODEL_ONLY, exact lane: k3 wins both corners on all 300 held-out seeds of each plane record at its declared epoch. The model has killed k3 nights the phone won (the k3 predeclaration's prior), so no rate is predicted from it; with seven dials at 0 these vectors are far easier than 10/20, and a loss would be the finding.",
+ "report": "per corner: wins, deaths by cause, excluded and invalid runs with reasons, the dial readback, the released aim and lateness, the office seed where the log brackets it, run directory and pack per run, and the exact commit",
+ "commit": "the commit that adds this file; runs use the tree at that commit (uncommitted edits at run time are listed in the result)"
+}
