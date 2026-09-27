@@ -19,7 +19,6 @@
   "sourcedSheetOrder": true,
   "sourcedLastViewPause": true,
   "frameMs": 16.666666666666668,
-  "frameValue5": 1,
   "sourcedEveryOrigin": true,
   "footstepCamMarkers": true,
   "sourcedBoxCountdown": true,
@@ -33,5 +32,6 @@
   "sourcedHallLatchOrder": true,
   "sourcedFootstepValue2": true,
   "sourcedRollsBeforeMoves": true,
-  "sourcedPromotedMoves": true
+  "sourcedPromotedMoves": true,
+  "sourcedValue5": true
 }

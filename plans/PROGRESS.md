@@ -2250,6 +2250,12 @@ Open:
   (`recompile-replay-8439e5f8d6741573`); Night 1 stays 21714 (`recompile-replay-9676af3da04d2e69`) and
   Night 5 7460 (`recompile-replay-abc975f06323ea4f`).
 
+- `sourcedValue5` (`value5.test.js`, in the rebuild set in place of `frameValue5` 1): global value 5 is g1236's
+  Min(4, previous loop's timer delta / 16.666666666511446), a hair above 1 at 60 Hz, so g517's `> 20` passes
+  on the 20th loop of an encounter. Night 5 7460 -> 7740 (`recompile-replay-215d53586e6cecef`), Night 7
+  2044 -> 2100 (`recompile-replay-1a13eb91f66cea4e`), Night 1 stays 21714
+  (`recompile-replay-222cf9f47ef9cf69`). The no-input ladder re-scores unchanged.
+
 Open:
-- Night 7 2044 and Night 5 7460: the blackout flicker's first g517 draw lands on clock 20 in the rebuild.
 - Night 1 21714: Toy Bonnie promoted a loop early after a flash.
+- Night 7 2100: one more draw in the rebuild between g517 and g744 on a roll loop.

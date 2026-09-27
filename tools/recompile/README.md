@@ -1191,3 +1191,33 @@ flashed while its move waits on the latch still moves, as the sheet does.
 The option is in `sourced-rebuild-model-options.json`. The dated snapshots are
 unchanged. Scope: one seed, three bindings, host rebuild only, MODEL_ONLY with
 `rebuilt-runtime` fidelity. No phone claim, no promotion, no default changed.
+
+**Global value 5 from the timer (`sourcedValue5`, `packages/core/test/value5.test.js`).**
+Night 7 tick 2044 and Night 5 tick 7460: the blackout flicker's first g517 draw
+came one update earlier in the rebuild. A watch of `blackout` values 0-1 and the
+`in danger` Counter shows the encounter start at 2025 (clock 1 at its end), and
+the first `Random(50)` on 2044, with the clock at 20. g517 tests value 0 > 20
+(`test_multivar` op 5), and g514 adds global value 5 per loop. g1236, the
+office's last group (Always), sets value 5 to `Min(4, (TimerValue - global 0) /
+D)` and then global 0 to TimerValue. The Android runtime reads D's Double token
+as 32.32 fixed: 71582788266 / 2^32 = 16.666666666511446. The CTFAK dump prints
+the IEEE reading, 16.66666603088379. Both are below 50/3, so at a steady 60 Hz
+step value 5 is a hair above 1 and the clock passes 20 on the 20th loop. In the
+rebuild, Toy Bonnie's watched value 1 on Night 1 drains by about 1 + 5e-8 per
+loop (400 set, 0.999979 after 399 drains), which fits a float32(1/60) s step over
+the 32.32 divisor. The model's rebuild set said `frameValue5` 1.
+
+Under the option, value 5 on loop f is g1236's `Min(4, frameMs(f - 1) / D)`: the
+previous loop's delta, as the sheet reads it. It replaces `frameValue5` and
+refuses it alongside. In the rebuild set, `frameValue5` gives way to it. Only
+strict comparisons at an integer can tell a hair above 1 from 1: here, g517's
+`> 20`. The drains that clamp at 0 (value 1, value 2, `hall movement`, the
+music button's hold) count the same loops either way. The no-input ladder
+(`*-rebuild-036076d3.json`, the retained traces) re-scores unchanged: the same
+status, compared updates and first mismatch on all nine nights.
+
+| binding | first mismatch before -> after | record |
+|---|---|---|
+| Night 1 `minimal` | 21714 -> 21714 | `night1-minimal-replay-value5-20260927.json`, `recompile-replay-222cf9f47ef9cf69` |
+| Night 5 `contact-final` | 7460 -> **7740** | `night5-contact-final-replay-value5-20260927.json`, `recompile-replay-215d53586e6cecef` |
+| Night 7 `k3` | 2044 -> **2100** | `night7-k3-replay-value5-20260927.json`, `recompile-replay-1a13eb91f66cea4e` |

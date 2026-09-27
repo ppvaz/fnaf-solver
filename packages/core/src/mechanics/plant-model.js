@@ -12,6 +12,8 @@ const SOURCED_HOUR0_GOLDEN = /** @type {Record<number, number>} */ ({ 3: 1000, 4
 // footstepCamMarkers: the markers the CCN's own geometry puts under `hear footsteps`.
 const FOOTSTEP_CAM_NODES = /** @type {Set<string | number>} */ (new Set([1, 2, 3, 4, 'blindA', 'blindB']));
 const MON_DOWN = 'down', MON_RAISING = 'raising', MON_UP = 'up', MON_LOWERING = 'lowering';
+// sourcedValue5: g1236's divisor, the Double token decoded as 32.32 fixed as the Android runtime reads it.
+const VALUE5_DIVISOR = 71582788266 / 2 ** 32;
 
 export class Sim {
   constructor(opts = {}) {
@@ -432,6 +434,17 @@ export class Sim {
       // Requires the frame-time hook, whose countdowns replace the f % N
       // cadences (identical to them at 50/3 ms, frame-time-hook.test.js).
       sourcedEveryOrigin: false,
+      // Global value 5 as the sheet writes it (requires frameMs). g1236, the office's last group (Always),
+      // sets value 5 = Min(4, (TimerValue - global 0) / D) and then global 0 = TimerValue, so every loop reads
+      // the PREVIOUS loop's timer delta over D. The Android runtime decodes D's Double token as 32.32 fixed:
+      // 71582788266 / 2^32 = 16.666666666511446 ms (the rebuilt runtime's generated source; the CTFAK dump
+      // prints the IEEE reading 16.66666603088379). Both lie below 50/3, so at an exact 60 Hz step value 5 is
+      // a hair above 1, not 1, and an accumulator compared strictly against an integer crosses it a loop
+      // sooner: g514 adds value 5 to the blackout clock, g517 draws while it is > 20, and so the flicker's
+      // first draw lands on the 20th loop of `in danger`, not the 21st (Night 7 k3 tick 2044, Night 5
+      // contact-final tick 7460 in the rebuilt runtime). Replaces frameValue5, which it refuses beside it.
+      // Off: value 5 is frameValue5(frame), or 1.
+      sourcedValue5: false,
       frameMs: /** @type {null | ((frame: number) => number)} */ (null),
       frameValue5: /** @type {null | ((frame: number) => number)} */ (null),
     }, opts);
@@ -603,6 +616,10 @@ export class Sim {
       throw new Error('sourcedFootstepValue2 changes when the footstep cue draws: it requires sourcedFootstepDraws');
     if (this.opts.sourcedHallLatchOrder && !this.opts.frameMs)
       throw new Error('sourcedHallLatchOrder moves the hooked one-second latch reset: it requires frameMs');
+    if (this.opts.sourcedValue5 && !this.opts.frameMs)
+      throw new Error('sourcedValue5 derives global value 5 from the timer delta: it requires frameMs');
+    if (this.opts.sourcedValue5 && this.opts.frameValue5)
+      throw new Error('sourcedValue5 derives global value 5 from frameMs: give it or frameValue5, not both');
     if (this.opts.sourcedPromotedViewDraws && !this.opts.sourcedViewDraws)
       throw new Error('sourcedPromotedViewDraws changes which view draws fire: it requires sourcedViewDraws');
     if (this.opts.sourcedSheetOrder && !this.opts.sourcedSecondPass)
@@ -649,6 +666,16 @@ export class Sim {
     // g677/g679/g681: Golden Freddy's first-loop roll on nights 3-5 (sourcedHourTable)
     const golden = this.opts.sourcedHourTable && hour === 0 ? SOURCED_HOUR0_GOLDEN[this.opts.night] : undefined;
     if (golden) this.ai.golden = Math.min(this.rollAi(golden), C.aiCap('golden'));
+  }
+
+  /**
+   * Global value 5 on loop `f`: g1236's Min(4, previous loop's timer delta / VALUE5_DIVISOR) under
+   * sourcedValue5 (frame 0 stands for the loop before the office's first), else frameValue5(f), else 1.
+   * @param {number} f
+   */
+  value5(f) {
+    if (this.opts.sourcedValue5) return Math.min(4, /** @type {(frame: number) => number} */ (this.opts.frameMs)(f - 1) / VALUE5_DIVISOR);
+    return this.opts.frameValue5 ? this.opts.frameValue5(f) : 1;
   }
 
   // `(Random(N) + 1) / N` under integer division: one only on the top draw.
@@ -1231,7 +1258,7 @@ export class Sim {
         this.gatedPass('box', C.BOX_DRAIN_TICK_MS))
       this.box = Math.max(0, units - (C.BOX_DRAIN_PER_TICK[this.opts.night] ?? C.BOX_DRAIN_PER_TICK[7])) / C.BOX_UNITS;
     if (this.boxHold > 0)                                                                  // g661
-      this.boxHold = Math.max(0, this.boxHold - (this.opts.frameValue5 ? this.opts.frameValue5(this.frame) : 1));
+      this.boxHold = Math.max(0, this.boxHold - this.value5(this.frame));
   }
 
   /** The markers whose hop sets a footstep cue (footstepCamMarkers adds CAM 01-04). */
@@ -1240,7 +1267,7 @@ export class Sim {
   /** g695-g703: one draw per pending footstep cue, in sheet order (sourcedFootstepDraws). */
   footstepDraws() {
     if (this.opts.sourcedFootstepValue2) {
-      const g5 = this.opts.frameValue5 ? this.opts.frameValue5(this.frame) : 1;
+      const g5 = this.value5(this.frame);
       for (const u of this.units) {
         if (u.value2 > 0) u.value2 = Math.max(0, u.value2 - g5);                             // g458-g466
         const on = u.value2 > 0 && !u.done && !u.atOpening && !u.inside && this.footstepNodes().has(u.path[u.idx]);
@@ -1336,7 +1363,7 @@ export class Sim {
     if (!this.opts.sourcedBlackoutDraws || !this.blackout.active) return;
     let clock = f - this.blackoutStartFrame + 1;
     if (this.hooked) {                                                                   // g514: += global value 5
-      const v5 = this.opts.frameValue5 ? this.opts.frameValue5(f) : 1;
+      const v5 = this.value5(f);
       this.blackoutClock += v5 * (f - this.blackoutClockFrame);
       this.blackoutClockFrame = f;
       clock = this.blackoutClock;
@@ -1779,7 +1806,7 @@ export class Sim {
     // and global value 5 is the frame-delta term the same sheet drains `hall movement` with
     // (g881), so a long frame drains this pin by more than one. Read 2026-09-17; the model had
     // been subtracting exactly 1 per frame, which is right only at 60 fps.
-    if (fx.B > 0) fx.B = Math.max(0, fx.B - (this.opts.frameValue5 ? this.opts.frameValue5(this.frame) : 1));   // g364
+    if (fx.B > 0) fx.B = Math.max(0, fx.B - this.value5(this.frame));   // g364
     if (fx.A !== 2 || this.hallLatch) return;       // the latch g489 left on the previous frame
     if (fx.loc === 'parts') {                        // g389
       fx.A = 0; fx.loc = 'hall'; fx.D = 0;
