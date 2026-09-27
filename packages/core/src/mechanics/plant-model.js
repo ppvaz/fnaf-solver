@@ -264,6 +264,36 @@ export class Sim {
       // hour's rows follow its clock (g627-g630) ahead of g685-g703, as in the sheet. Night 7 keeps
       // the constructor. Requires sourcedSheetOrder.
       sourcedHourTable: false,
+      // Where the frame start parks `your view` on Custom Night. g486 (`night <> 7` -> CAM 09) and g487
+      // (`night == 7` -> CAM 10) run in the StartOfFrame list before g632 copies `night number` into
+      // `night`, and `night` is a frame-local counter (no global flag in the CCN) whose initial value
+      // is 0: g486 parks the marker on CAM 09 on every night, and g487 never fires. The rebuilt runtime
+      // parks it inside CAM 09's box on Custom Night, and spends no g498 draw when the Puppet reaches
+      // CAM 10. The model parked night 7 on CAM 10 (`parkedCamera`). g4's first raise (night 7 by
+      // then) still opens CAM 07.
+      sourcedParkedMarker: false,
+      // Where Custom Night's dials reach the AI counters. g787 (`night == 7` + NotAlways) copies the ten
+      // `cust_*` dials on the first loop, after g781, and g821 sets the Puppet's 15 after it. The AI
+      // counters are global objects (initial 0, kept between office visits; only the office writes
+      // them), so until g787 the first loop reads their value from before the night: 0 on a fresh
+      // launch, which this option assumes. g781 is the one office group that tests an AI counter
+      // (`Golden Freddy AI > 0`) ahead of its Every, so its 1000 ms countdown first loads on the second
+      // loop; the model applied the row in its constructor and loaded it on the first. The rebuilt
+      // runtime's first Golden Freddy hall roll at 20/20 is a loop after the model's. On: night 7's row
+      // applies at the end of the late pass on frame 1. Requires sourcedSheetOrder.
+      sourcedCustomDialOrder: false,
+      // The Withereds' CAM 08 departures cancel the others' moves. g380 (W. Bonnie CAM 08 -> CAM 07) also
+      // writes `old freddy` and `old chica` value 0 = 0, and g385 (W. Chica CAM 08 -> CAM 04) writes `old
+      // freddy` value 0 = 0, wherever those two stand. Value 0 is 1 for an accepted roll and 2 for an armed
+      // hop, and the hops run after every roll and arming (g333-g348, then g374-g388: Freddy, Bonnie, Chica),
+      // so a Bonnie departure discards Chica's roll of the same loop even after it armed (C = 10 is
+      // written), and any pending or gated Freddy or Chica hop. Story nights mostly avoid the case (g344
+      // and g347 hold Freddy and Chica while the others stand on CAM 08); Custom Night (g345, g348) does
+      // not: at 20/20 the rebuilt runtime armed W. Bonnie and W. Chica on one loop and kept Chica on
+      // CAM 08. On: a departure clears the others' pending hops and discards their rolls later in the same
+      // model frame. Not covered: a Bonnie departure from the pending path (tickUnits) after Chica's
+      // five-second hop in the same frame, which needs the marker to leave CAM 08 on a roll frame.
+      sourcedCam8Cancel: false,
       // The vent-camera sound selectors (dump g685-g690, generated e610-e615):
       // one Random(4) into cam01 value 21 the first loop a unit stands on CAM 05
       // (Toy Chica g685, Withered Bonnie g686) or CAM 06 (Toy Bonnie g687,
@@ -385,11 +415,14 @@ export class Sim {
     // (picture, winding, flash immunity). Camera touches write both. A raise
     // restores only `viewing` from the sampled `lastViewed`, which is how the
     // double-camera glitch makes them disagree.
-    this.cam = C.parkedCamera(this.opts.night);
+    // sourcedParkedMarker: g486/g487 read `night` at its initial 0, before g632 sets it.
+    this.cam = C.parkedCamera(this.opts.sourcedParkedMarker ? 0 : this.opts.night);
     this.viewing = 0;
     this.lastViewed = 0;
     /** g685-g690 "only one action" flags per unit (sourcedVentCamDraws) */
     this.ventCamDrawn = {};
+    /** @type {Record<string, number>} the frame g380/g385 last zeroed a Withered's value 0 (sourcedCam8Cancel) */
+    this.cam8CancelAt = {};
     /** g811 "only one action" flag: armed until the draw, re-armed while viewing > 0 (sourcedRandomImageDraw) */
     this.randomImageArmed = true;
     this.hasViewedCamera = false;
@@ -412,7 +445,9 @@ export class Sim {
     // from 5 to 9 at 2 AM. Starting from zero is g673, which clears every
     // counter on any night but Custom -- and Custom writes every dial anyway.
     this.ai = Object.fromEntries(C.AI_IDS.map(id => [id, 0]));
-    if (!(this.opts.sourcedHourTable && this.opts.night !== 7)) this.applyAiHour(0);   // else g673-g684 on frame 1
+    // else g673-g684 (story nights) or g787/g821 (Custom Night) on frame 1
+    if (!(this.opts.sourcedHourTable && this.opts.night !== 7) &&
+        !(this.opts.sourcedCustomDialOrder && this.opts.night === 7)) this.applyAiHour(0);
 
     // --- Foxy
     this.foxy = { loc: 'parts', hallColumn: false, footstep: false, acceptedAt: -100, D: 0, exposure: 0, gotYou: false, pinUntil: -1, A: 0, B: 0,
@@ -504,6 +539,8 @@ export class Sim {
       throw new Error('sourcedEveryOrigin moves the countdowns, and only the frame-time hook runs every cadence as one: it requires frameMs or frameValue5');
     if (this.opts.sourcedHourTable && !this.opts.sourcedSheetOrder)
       throw new Error('sourcedHourTable applies the table in the sheet-ordered pass: it requires sourcedSheetOrder');
+    if (this.opts.sourcedCustomDialOrder && !this.opts.sourcedSheetOrder)
+      throw new Error('sourcedCustomDialOrder applies the dials in the sheet-ordered pass: it requires sourcedSheetOrder');
     if (this.opts.sourcedPuppetMoveOrder && !this.opts.sourcedSheetOrder)
       throw new Error('sourcedPuppetMoveOrder moves the Puppet in the sheet-ordered pass: it requires sourcedSheetOrder');
     if (this.opts.sourcedBoxCountdown && !this.opts.sourcedSheetOrder)
@@ -1066,6 +1103,8 @@ export class Sim {
           if (there) this.emit('gf-hall');
         }
       } }
+    // g787 copies the Custom Night dials and g821 sets the Puppet, once, after g781 (sourcedCustomDialOrder)
+    if (f === 1 && this.opts.sourcedCustomDialOrder && this.opts.night === 7) this.applyAiHour(0);
   }
 
   /**
@@ -1866,6 +1905,7 @@ export class Sim {
       const step = this.sourcedRouteStep(u, this.frame);
       if (step === 'discard' || step === 'returned') { u.promoted = false; return; }
       if (this.opts.sourcedViewDraws) this.fadeUntil[u.id] = this.frame + 8;
+      if (this.cam8CancelAt[id] === this.frame) return;                        // g380/g385 zeroed value 0 (sourcedCam8Cancel)
       if (step !== 'hold' && this.canAdvance(u, this.frame)) this.advance(u);
       else u.pending = true;
     };
@@ -2129,6 +2169,13 @@ export class Sim {
     }
     if (this.opts.sourcedEventDraws && u.id === 'withchica' && u.path[u.idx] === 2 && u.path[u.idx + 1] === 6)
       this.rng.int(0, 3, 0);                                               // e324
+    if (this.opts.sourcedCam8Cancel && u.path[u.idx] === 8 && (u.id === 'withbonnie' || u.id === 'withchica')) {
+      for (const id of u.id === 'withbonnie' ? ['withfreddy', 'withchica'] : ['withfreddy']) {   // g380, g385
+        const o = this.units.find(x => x.id === id);
+        if (o) o.pending = false;
+        this.cam8CancelAt[id] = this.frame;
+      }
+    }
     u.idx++;
     // A move needs value 0 == 2, so one the model makes without a recorded promotion is promoted on this
     // loop; a move promoted loops ago keeps its drained value 2. The move sets value 0 = 0.

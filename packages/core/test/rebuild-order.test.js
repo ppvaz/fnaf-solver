@@ -2,7 +2,9 @@
 // its own default-off option: footstepCamMarkers (CAM 01-04 under `hear footsteps`),
 // sourcedBoxCountdown (g653-g661: the drain as a gated Every 50 ms, and the wind hold), and
 // sourcedPuppetMoveOrder (g403-g411 carry out g496's armed hop on the next loop), and sourcedHourTable
-// (g673-g684 on the first loop, with nights 3-5's Golden Freddy roll).
+// (g673-g684 on the first loop, with nights 3-5's Golden Freddy roll); and on Custom Night
+// sourcedParkedMarker (g486 parks `your view` on CAM 09), sourcedCustomDialOrder (g787 after g781) and
+// sourcedCam8Cancel (g380/g385 zero the other Withereds' value 0).
 import assert from 'node:assert/strict';
 import { Sim } from '../src/mechanics/plant-model.js';
 import * as C from '../src/mechanics/config.js';
@@ -118,10 +120,91 @@ assert.throws(() => new Sim({ night: 4, sourcedHourTable: true }), /requires sou
   assert.ok(!firstFrame(6, {}).log.slice(0, 2).includes('int 0,9'), 'off: night 6 rolled it in the constructor');
 }
 
+// Custom Night (tools/recompile, nights 7 at dials 0 and 20).
+const DIALS = v => Object.fromEntries(C.AI_DIALS.map(id => [id, v]));
+
+// sourcedParkedMarker: g486/g487 read the frame-local `night` (CCN initial 0) before g632 copies
+// `night number` into it, so g486 parks `your view` on CAM 09 on Custom Night too; g4's first raise,
+// with `night` = 7 by then, still opens CAM 07; and g498 draws only while the marker is on the Puppet.
+{
+  assert.equal(new Sim({ night: 7 }).cam, 10, 'off: the Custom Night marker starts on CAM 10');
+  assert.equal(new Sim({ night: 7, sourcedParkedMarker: true }).cam, 9, 'on: CAM 09, as g486 leaves it');
+  assert.equal(new Sim({ night: 5, sourcedParkedMarker: true }).cam, 9, 'story nights: CAM 09 either way');
+  const raised = new Sim({ ...BASE, sourcedParkedMarker: true });
+  raised.press('monitor'); raised.release('monitor');
+  for (let i = 0; i < 40 && raised.monitor !== 'up'; i += 1) raised.tick();
+  assert.equal(raised.monitor, 'up');
+  assert.deepEqual([raised.cam, raised.viewing], [7, 7], 'g4: the first raise opens CAM 07');
+  const g498 = knob => {
+    const s = new Sim({ ...BASE, sourcedViewDraws: true, sourcedParkedMarker: knob });
+    Object.assign(s.puppet, { out: true, loc: 10 });
+    let n = 0; const int = s.rng.int.bind(s.rng);
+    s.rng.int = (a, b, w) => { if (a === 0 && b === 99) n += 1; return int(a, b, w); };
+    for (let f = 1; f <= 60; f += 1) s.drawViewed(f, 'g498');
+    return n;
+  };
+  assert.equal(g498(false), 5, 'off: the marker on CAM 10 overlaps the Puppet, Random(100) every 200 ms');
+  assert.equal(g498(true), 0, 'on: the marker on CAM 09 does not');
+}
+
+// sourcedCustomDialOrder: g787 copies the dials on the first loop after g781, which tests `Golden
+// Freddy AI > 0` ahead of its Every; the global counter reads 0 until then (a fresh launch), so the
+// hall roll's 1000 ms countdown loads a loop later.
+assert.throws(() => new Sim({ night: 7, sourcedCustomDialOrder: true }), /requires sourcedSheetOrder/);
+{
+  const QUIET7 = { night: 7, seed: 9, lethal: false, stalledEnabled: false, bbEnabled: false, foxyEnabled: false,
+                   boxEnabled: false, customNight: DIALS(20), ...SOURCED, ...HOOK60, sourcedEveryOrigin: true };
+  const off = new Sim(QUIET7);
+  const on = new Sim({ ...QUIET7, sourcedCustomDialOrder: true });
+  assert.equal(off.ai.golden, 10, 'off: the constructor applies the dials (capped by g830)');
+  assert.deepEqual([on.ai.golden, on.ai.puppet], [0, 0], 'on: nothing before the first loop');
+  on.tick();
+  assert.deepEqual([on.ai.golden, on.ai.puppet, on.ai.foxy], [10, C.PUPPET_AI, 17], 'on: g787, g821 and the caps on frame 1');
+  const firstHallRoll = s => {
+    let first = -1; const int = s.rng.int.bind(s.rng);
+    s.rng.int = (a, b, w) => { if (first < 0 && a === 0 && b === C.GF_HALL_ROLL - 1) first = s.frame; return int(a, b, w); };
+    while (first < 0 && s.frame < 200) s.tick();
+    return first;
+  };
+  const offAt = firstHallRoll(new Sim(QUIET7));
+  const onAt = firstHallRoll(new Sim({ ...QUIET7, sourcedCustomDialOrder: true }));
+  assert.ok(offAt > 0, 'g781 rolls within the first seconds');
+  assert.equal(onAt - offAt, 1, 'on: the first g781 roll is one loop later');
+  const story = new Sim({ night: 6, seed: 9, ...SOURCED, sourcedHourTable: true, sourcedCustomDialOrder: true });
+  story.tick();
+  assert.equal(story.ai.withfreddy, 5, 'story nights keep the hour table');
+}
+
+// sourcedCam8Cancel: g380 (W. Bonnie off CAM 08) zeroes W. Freddy's and W. Chica's value 0, g385
+// (W. Chica off CAM 08) zeroes W. Freddy's. At 20/20 on one five-second loop: Freddy hops first
+// (g374), then Bonnie's hop cancels Chica's armed hop.
+{
+  const at = knob => {
+    const s = new Sim({ night: 7, seed: 1, lethal: false, sourcedRouteForks: true, sourcedCam8Cancel: knob });
+    s.rng.chance = () => true; s.rng.int = a => a;
+    s.frame = 300;
+    s.rollAllFiveSecond();
+    const u = id => /** @type {any} */ (s.units.find(x => x.id === id));
+    return ['withfreddy', 'withbonnie', 'withchica'].map(id => [u(id).path[u(id).idx], u(id).pending]);
+  };
+  assert.deepEqual(at(false), [[7, false], [7, false], [4, false]], 'off: all three leave CAM 08 together');
+  assert.deepEqual(at(true), [[7, false], [7, false], [8, false]], 'on: Chica stays, her roll spent');
+  // Story nights: Chica's roll waits (g347) while Bonnie stands on CAM 08, and his departure discards it.
+  const held = knob => {
+    const s = new Sim({ night: 3, seed: 1, lethal: false, sourcedRouteForks: true, sourcedCam8Cancel: knob });
+    const u = id => /** @type {any} */ (s.units.find(x => x.id === id));
+    u('withchica').pending = true;
+    s.advance(u('withbonnie'));
+    return u('withchica').pending;
+  };
+  assert.equal(held(false), true, 'off: the held roll survives and hops later');
+  assert.equal(held(true), false, 'on: g380 zeroed it');
+}
+
 // Off, all three leave the default unchanged.
 {
   const run = opts => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   assert.equal(run({}), run({ footstepCamMarkers: false }), 'footstep knob off equals the default');
 }
 
-console.log('rebuild order: CAM 01-04 footsteps, the gated box drain and wind hold, the next-loop Puppet hop, the first-loop hour table; off unchanged');
+console.log('rebuild order: CAM 01-04 footsteps, the gated box drain and wind hold, the next-loop Puppet hop, the first-loop hour table, the CAM 09 parked marker, g787 after g781, the CAM 08 cancels; off unchanged');

@@ -1,0 +1,8 @@
+# title: tap Custom Night through the centre of its button (touch zone [64,664,464,728])
+1 200 downobj 0 btnCustomNight.Active
+1 203 up 0
+# customize (frame 12): keep the default preset (Withered Freddy, Bonnie, Chica
+# and Foxy at 20, the rest 0) and tap Ready at a point of its touch zone
+# [704,584,960,648] outside every portrait and dial hit zone.
+12 160 down 0 808 616
+12 163 up 0

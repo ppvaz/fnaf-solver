@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { compareTrace } from './compare-draw-trace.mjs';
 import { drawTrace } from './model-draw-trace.mjs';
-import { Rng } from '@fnaf2-1020/core/mechanics';
+import { AI_DIALS, Rng } from '@fnaf2-1020/core/mechanics';
 
 const settings = { night: 1, seed: 24850, frame: 3, frames: 20 };
 const originalNext = Rng.prototype.next;
@@ -40,4 +40,21 @@ assert.equal(left.alignments[1].firstMismatch.tick, lastRow);
 assert.equal(compareTrace(header + endMismatch, settings).status, 'DIVERGENT');
 assert.throws(() => compareTrace(header + rows.trimEnd(), settings), /truncated/);
 assert.throws(() => compareTrace(header + '3 1 0 24850\n', settings), /interleaved/);
-console.log('PASS recompile comparison: exact prefix, mismatch, terminal loop, absent/short target, wrong seed, repeated visit and truncated trace (FIXTURE)');
+// A Custom Night names all ten dials, on night 7 only, and the model plays that vector.
+const zero = Object.fromEntries(AI_DIALS.map((id) => [id, 0]));
+assert.throws(() => compareTrace(header + rows, { ...settings, customNight: zero }), /requires night 7/);
+const { golden, ...nine } = zero;
+assert.throws(() => compareTrace(header + rows, { ...settings, night: 7, customNight: nine }), /each of/);
+assert.throws(() => compareTrace(header + rows, { ...settings, night: 7, customNight: { ...zero, foxy: 21 } }), /0-20/);
+// Over 3000 frames the all-zero dials end on the Puppet (frame 1540) and the 10/20 table on Foxy (1200).
+const custom = { ...settings, night: 7, frames: 3000, customNight: zero };
+const customModel = drawTrace(custom);
+const customRows = customModel.out.slice(1).map((row, tick) => `3 ${tick} ${row.draws} ${row.state}\n`).join('');
+const customResult = compareTrace(header + customRows, custom);
+assert.equal(customResult.status, 'MATCHED_PREFIX');
+assert.deepEqual(customResult.scope.customNight, zero);
+assert.equal(customResult.model.death.reason, 'puppet');
+assert.equal(compareTrace(header + customRows, { ...custom, customNight: null }).model.death.reason, 'foxy',
+  'the dials reach the model: the 10/20 table plays a different night');
+assert.equal(compareTrace(header + rows, settings).scope.customNight, undefined, 'story nights carry no dial vector');
+console.log('PASS recompile comparison: exact prefix, mismatch, terminal loop, absent/short target, wrong seed, repeated visit, truncated trace and Custom Night dials (FIXTURE)');

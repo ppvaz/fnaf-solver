@@ -24,5 +24,8 @@
   "footstepCamMarkers": true,
   "sourcedBoxCountdown": true,
   "sourcedPuppetMoveOrder": true,
-  "sourcedHourTable": true
+  "sourcedHourTable": true,
+  "sourcedParkedMarker": true,
+  "sourcedCustomDialOrder": true,
+  "sourcedCam8Cancel": true
 }

@@ -1,0 +1,24 @@
+# title: tap Custom Night through the centre of its button (touch zone [64,664,464,728])
+1 200 downobj 0 btnCustomNight.Active
+1 203 up 0
+# customize (frame 12): the default preset holds Withered Freddy, Bonnie, Chica
+# and Foxy at 20; a portrait tap toggles its dial 0 <-> 20 (groups 23-26).
+# Portraits 4-9 on the frozen binary's layout: p4 (896,329) p5 (128,384)
+# p6 (320,438) p7 (512,492) p8 (704,547); p9 at (896,560), above Ready's
+# touch zone, which covers p9's centre.
+12 60 down 0 896 329
+12 63 up 0
+12 80 down 0 128 384
+12 83 up 0
+12 100 down 0 320 438
+12 103 up 0
+12 120 down 0 512 492
+12 123 up 0
+12 140 down 0 704 547
+12 143 up 0
+12 160 down 0 896 560
+12 163 up 0
+# Ready: a point of its touch zone [704,584,960,648] outside every portrait and
+# dial hit zone (the button's own centre lies inside portrait 9 on this layout).
+12 200 down 0 808 616
+12 203 up 0

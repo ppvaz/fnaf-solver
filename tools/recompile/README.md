@@ -21,10 +21,12 @@ directory (`/private/tmp/fnaf2-recompile.*` on the dev machine).
 | `probe-unknown-params.py` | Dumps every event parameter whose code is past `parameterLoaders`, with the ACE it attaches to and its raw bytes. Requires the `Parameter.read` capture patch. |
 | `probe-onloop.py` | Prints every `OnLoop` condition and its parameter loader — the probe that showed mobile loops are numeric `Short` indices, not name expressions. |
 | `model-draw-trace.mjs` | The simulator's `Random(N)` draws frame by frame (draws so far, LCG state), in the shape the harness traces: two runs of one night and seed that spend the same draws every frame read the same stream, and the first frame where the counts part is where to look. MODEL_ONLY. |
-| `compare-draw-trace.mjs` | Reads an external harness trace and emits a hash-bound, content-free comparison result. `MATCHED_PREFIX` never means full event/state equivalence. |
+| `compare-draw-trace.mjs` | Reads an external harness trace and emits a hash-bound, content-free comparison result. `MATCHED_PREFIX` never means full event/state equivalence. `--custom-night FILE` names the ten Custom Night dials (night 7 only; every dial required) and records them in the scope. |
 | `sourced-model-options.json` | Explicit diagnostic variant enabling the model's existing sourced flags. It does not change core defaults or establish fidelity. |
-| `sourced-rebuild-model-options.json` | The origin set plus `sourcedFootstepDraws`, `footstepCamMarkers`, `sourcedBoxCountdown`, `sourcedPuppetMoveOrder` and `sourcedHourTable`: the options under which the model matches the rebuilt no-input Nights 1-5 up to each night's terminal loop. Diagnostic; defaults unchanged. |
+| `sourced-rebuild-model-options.json` | The origin set plus `sourcedFootstepDraws`, `footstepCamMarkers`, `sourcedBoxCountdown`, `sourcedPuppetMoveOrder`, `sourcedHourTable`, and for Custom Night `sourcedParkedMarker`, `sourcedCustomDialOrder` and `sourcedCam8Cancel`: the options under which the model matches the rebuilt no-input Nights 1-6 and the uniform Custom Nights up to each night's terminal loop. Diagnostic; defaults unchanged. |
 | `fixtures/night{2,3,4,5}-before.ini`, `fixtures/continue.input` | Saves holding only `level=N` (Continue loads `max(1, min(5, level))`) and the Continue tap, through its 16 x 16 touch zone at [64,528,80,544]. No game assets. |
+| `fixtures/night6-before.ini`, `fixtures/night6.input` | A save with `beatgame=1` (the title's g1 shows 6th Night from it) and the tap on 6th Night's centre (its touch zone is [64,584,464,648] on the frozen binary). |
+| `fixtures/night7-before.ini`, `fixtures/night7-{dials0,dials20,preset}.{input,json}` | A save with `beatgame=1` and `beat6=1` (Custom Night's g26/g50 gates), the title tap, portrait taps on the customize frame and Ready; each `.json` is the dial vector for `--custom-night`. |
 | `sourced-origin-model-options.json` | The same sourced flags plus the frame-time hook at 60 fps (`frameMs` 50/3, `frameValue5` 1) and `sourcedEveryOrigin`: every countdown loads on the loop it is first reached. `model-draw-trace.mjs` turns the two hook constants into per-frame functions. Diagnostic; defaults unchanged. |
 | `make-android-fonts.py` | Writes Chowdren's font bank from Roboto TTFs held outside the repository at the font bank's pixel sizes (13-43, bold 43): the face Android substitutes for the game's Consolas and Tahoma, drawn at `|lfHeight|` px. Output `Chowdren/fonts/AndroidSans.dat`, next to the converter; no font data is committed. |
 | `run-harness.sh` | Container wrapper with GL readiness checking and a process deadline that escalates to kill. Run from the external gamesrc directory. |
@@ -432,6 +434,10 @@ saves, match on every office update before the loop that ends the night:
 | 3 | 3,023 | matched to the model's Foxy kill frame (tick 3000) | `night3-rebuild-options-20260927.json` |
 | 4 | 2,423 | matched to the model's Foxy kill frame (tick 2400) | `night4-rebuild-options-20260927.json` |
 | 5 | 2,552 | every update matched | `night5-rebuild-options-20260927.json` |
+| 6 | 1,772 | every update matched; the model's Puppet kill (+40) outlasts the rebuild's exit (+30) | `night6-rebuild-options-20260927.json` |
+| 7, all dials 0 | 3,023 | matched to the model's Foxy kill frame (tick 3000) | `night7-dials0-rebuild-options-20260927.json` |
+| 7, all dials 20 | 1,223 | matched to the model's Foxy kill frame (tick 1200) | `night7-dials20-rebuild-options-20260927.json` |
+| 7, default preset (negative) | 1,223 | DIVERGENT at tick 61 against the preset's own dials; matched to the Foxy kill frame against all 20: the rebuild's Ready copy, not the model | `night7-preset-rebuild-options-20260927.json`, `night7-preset-as-dials20-rebuild-options-20260927.json` |
 
 `MATCHED_TO_TERMINAL_LOOP` is the comparator's name for a first mismatch that
 falls on the model's death frame (the model's kill returns before the rest of
@@ -441,8 +447,8 @@ static frame); a harness stop at the tick limit never qualifies
 runtime is not modelled. One Night 3 run was killed by the harness deadline at
 office tick 353 while four runs shared the Docker VM; the same replay alone ran
 to completion. Scope as above: one seed, no gameplay input, draws and LCG
-state only. Nights 6 and 7 need their own navigation (`beatgame`, the
-Custom Night dials).
+state only. Nights 6 and 7 (rows 6 and 7 above) are in "Nights 6 and 7 on the
+frozen binary" below: they ran on a later binary, with three more options.
 
 **Title touch zones.** The mobile port's buttons are touched through
 `olivier_btnTouchzone` Actives built at StartOfFrame (dump groups 58-61:
@@ -532,3 +538,88 @@ title-to-office navigation is 659 updates shorter. Rendering fidelity is judged
 by eye against phone captures that stay on the local machine; no frame enters
 the repository. Still open: `OnObjectLoop (..., param68)` on Custom Night, the
 nested foreach the converter reports, and Android's exact line metrics.
+
+## Nights 6 and 7 on the frozen binary (2026-09-27, later still)
+
+These ran on `frozen-db070b6a` (the binary's sha256 starts `db070b6a`), built by
+a parallel session from a converter state after this tree's patch `0f5c2a25`
+(foreach instance keying, per-instance action expressions). That state is not
+committed, so the records' `patchSha256` names this tree's patch, not the
+binary's; `binarySha256` identifies the binary.
+
+**Regression.** Nights 1-5, replayed on it with the committed fixtures,
+reproduce each committed record's `drawTraceSha256`, alignments and model trace
+exactly. The raw traces differ only in global value 10, a `FixedValue` (an
+object address as a double). It also differs between two runs of this one
+binary.
+
+**Night 6.** The title's g1 loads `beatgame` into 6th Night's value 0; the tap
+(g49) sets `whereToGo` 3 and `night number` 6, and the 200 ms timer jumps to
+the what-day frame. The model's night-6 table already rolls g683's Golden
+Freddy `Random(10)` at 12 AM, so no new option: every one of 1,772 office
+updates matches (`recompile-draw-6db9bfab7146cf42`). The same trace against the
+night-5 model diverges at tick 900, so the comparison tells the nights apart.
+
+**Custom Night navigation.** The Custom Night tap (g50) needs `beat6`, jumps to
+the customize frame (12), and the office reads the ten global `cust_*` counters
+at g787. The customize frame builds ten dials in fastloop 2 and fills them from
+the preset string; the default preset holds Withered Freddy, Bonnie, Chica and
+Foxy at 20. A portrait tap toggles its dial between 0 and 20 (g23-g26), and
+Ready (g62) runs the dial copy (Foreach loop 0: g130-g139) and schedules the
+jump. The rebuild lays the dials out with float division (`value 0 / 5` is
+integer division in Fusion), so the rows staircase and portrait 9 covers Ready's
+centre; the inputs tap at measured points outside every other zone. Harness
+dumps just before Ready read all ten dials at 0 and at 20.
+
+**Three mechanisms**, each read from the dump and the CCN before encoding. Each
+is a default-off option, tested in `packages/core/test/rebuild-order.test.js`.
+With all three on, Nights 1-6 give byte-identical model traces.
+
+- `sourcedParkedMarker` (first divergence at 0 dials: tick 1212, a g498
+  Puppet-static draw at CAM 10). g486 (`night <> 7` -> CAM 09) and g487
+  (`night == 7` -> CAM 10) run in the StartOfFrame list *before* g632 copies
+  `night number` into `night`. `night` is frame-local (no global flag in the
+  CCN) with initial value 0, so g486 parks `your view` on CAM 09 every night.
+  The rebuild's dump puts it inside CAM 09's box on Custom Night. The model's
+  `parkedCamera(7) = 10` (and `tools/sourcetest.mjs`'s g486-487 check) did not
+  account for g632's order. It matters before the first raise (g4 still opens
+  CAM 07): the g498 draws and the flash target.
+- `sourcedCustomDialOrder` (at 20: tick 60, g781's first Golden Freddy hall
+  roll a loop late). g787 copies the dials on the first loop, after g781, which
+  is the one office group that tests an AI counter (`Golden Freddy AI > 0`)
+  ahead of its `Every`. The AI counters are global objects with initial value 0
+  that keep their value between office visits (only the office writes them), so
+  on a fresh launch g781 fails on loop 1 and its countdown loads on loop 2. A
+  session that played a night first carries that night's last AI levels into
+  this loop instead; the option models the fresh launch.
+- `sourcedCam8Cancel` (at 20: tick 300, Withered Chica's CAM 04 footstep draw).
+  g380 (Withered Bonnie's hop off CAM 08) also writes `old freddy` and
+  `old chica` value 0 = 0, and g385 (Chica's hop off CAM 08) writes Freddy's.
+  The hops run after every roll and arming, so on Custom Night, where g345/g348
+  drop the story nights' wait-for-CAM-08 gates, Bonnie's departure cancels a
+  Chica armed on the same loop: the rebuild's dump shows her armed (C = 9) and
+  still on CAM 08. Not modelled: a Bonnie departure from the pending path after
+  Chica's five-second hop in the same frame (it needs the marker to leave
+  CAM 08 on a roll frame).
+
+With them, all-0 dials match to the model's Foxy kill at tick 3000
+(`recompile-draw-e732e419e6910c59`) and all-20 dials to the Foxy kill at tick
+1200 (`recompile-draw-b3de3d3499343af9`); the rebuild leaves the office 22
+updates later, as on Nights 3 and 4.
+
+**Negative: the rebuild's Ready copy.** The default preset's run diverges from
+its own dials at tick 61 (g781 rolls, so Golden Freddy's AI is not 0;
+`recompile-draw-b8f99ee631502b90`) and matches the all-20 model to its terminal
+loop (`recompile-draw-af6a896d4227c3dc`). The generated events 89_12-98_12
+(g130-g139) copy `foreach_instance_loop_0`'s value 1 without their packed
+`param68` test, so every copy runs for every dial and each counter keeps the
+last dial visited. This is the unconverted `OnObjectLoop (..., param68)` named
+under "Title touch zones". Until it is converted, only uniform dial vectors
+(all 0, all 20) are valid on this binary; the sheet, and the phone, copy each
+dial to its own counter.
+
+Scope: one seed, no gameplay input, draws and LCG state only,
+`rebuilt-runtime` fidelity. Not a phone claim, and no default changed. Open:
+non-uniform Custom Night dials (the converter's `param68` loops); the pending-path
+cancel; Custom Night after an earlier night in the same session; whether the
+CAM 09 parking holds on the phone (seed-exact before the first raise).

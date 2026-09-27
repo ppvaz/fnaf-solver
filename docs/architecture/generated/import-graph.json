@@ -2731,6 +2731,7 @@
       "file": "tools/recompile/compare-draw-trace.mjs",
       "imports": [
         "./model-draw-trace.mjs",
+        "@fnaf2-1020/core/mechanics",
         "node:crypto",
         "node:fs",
         "node:url"

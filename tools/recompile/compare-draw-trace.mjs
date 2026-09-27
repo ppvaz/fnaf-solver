@@ -2,16 +2,31 @@
 // Content-free summary of an external harness trace versus the no-input model.
 // node tools/recompile/compare-draw-trace.mjs --trace FILE --night 1 --seed 24850
 //   --frame 3 --frames 18000 --out FILE [--binary FILE] [--input FILE] [--save FILE] [--model-options FILE] [--repeat-trace FILE]
+//   [--custom-night FILE]   a JSON map of the ten Custom Night dials (AI_DIALS) the rebuild's customize frame set; night 7 only
 // Raw game values, names, source and assets never enter the output.
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { drawTrace } from './model-draw-trace.mjs';
+import { AI_DIALS } from '@fnaf2-1020/core/mechanics';
 
 const hash = (value) => createHash('sha256').update(value).digest('hex');
 const fileHash = (path) => hash(readFileSync(path));
 
-export function compareTrace(text, { night, seed, frame, frames, modelOptions = {} }) {
+// A Custom Night is night 7 with the ten dials the customize frame copied into `cust_*` (office g787).
+// Every dial must be named: an omitted one would silently stay 0 in the model.
+export function checkCustomNight(night, customNight) {
+  if (customNight == null) return;
+  if (night !== 7) throw new Error('a Custom Night dial vector requires night 7');
+  const keys = Object.keys(customNight);
+  if (keys.length !== AI_DIALS.length || !AI_DIALS.every((id) => keys.includes(id)) ||
+    !Object.values(customNight).every((v) => Number.isInteger(v) && v >= 0 && v <= 20)) {
+    throw new Error(`a Custom Night must set each of ${AI_DIALS.join(', ')} to an integer 0-20`);
+  }
+}
+
+export function compareTrace(text, { night, seed, frame, frames, modelOptions = {}, customNight = null }) {
+  checkCustomNight(night, customNight);
   if (!text.endsWith('\n')) throw new Error('trace is truncated: missing final newline');
   const visits = [];
   const rows = [];
@@ -36,7 +51,7 @@ export function compareTrace(text, { night, seed, frame, frames, modelOptions = 
       if (index === frame) rows.push({ tick, draws, state });
     }
   }
-  const model = drawTrace({ night, seed, frames, modelOptions });
+  const model = drawTrace({ night, seed, frames, modelOptions, ...(customNight ? { customNight } : {}) });
   const targetVisits = visits.filter((v) => v.frame === frame);
   const alignments = [0, 1].map((offset) => {
     let compared = 0;
@@ -71,7 +86,8 @@ export function compareTrace(text, { night, seed, frame, frames, modelOptions = 
   const result = {
     schema: 'recompile-draw-comparison-v1', claimLevel: 'MODEL_ONLY', fidelity: 'rebuilt-runtime', status,
     question: 'Does the rebuilt no-input night consume the same Random stream per event update as the simulator?',
-    scope: { night, seed, targetFrame: frame, requestedModelFrames: frames, modelOptions, input: 'navigation only; no gameplay actions' },
+    scope: { night, seed, targetFrame: frame, requestedModelFrames: frames, modelOptions, ...(customNight ? { customNight } : {}),
+      input: 'navigation only; no gameplay actions' },
     runtime: { visits, targetUpdates: rows.length, namedTouches: touches, stop, traceSha256: hash(text), drawTraceSha256: hash(`${projection.join('\n')}\n`) },
     model: { traceSha256: hash(JSON.stringify(model)), terminal: model.out.at(-1), death: model.death, won: model.won },
     alignment: 'Harness tick 0 is after its first event update, compared to model frame 1. Offset 0 is also retained to expose an initialization boundary discrepancy.',
@@ -87,13 +103,14 @@ export function compareTrace(text, { night, seed, frame, frames, modelOptions = 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const args = {};
   for (let i = 2; i < process.argv.length; i += 2) {
-    if (!['--trace', '--night', '--seed', '--frame', '--frames', '--out', '--binary', '--input', '--save', '--model-options', '--repeat-trace'].includes(process.argv[i]) || !process.argv[i + 1]) throw new Error('see usage at top of file');
+    if (!['--trace', '--night', '--seed', '--frame', '--frames', '--out', '--binary', '--input', '--save', '--model-options', '--repeat-trace', '--custom-night'].includes(process.argv[i]) || !process.argv[i + 1]) throw new Error('see usage at top of file');
     args[process.argv[i].slice(2)] = process.argv[i + 1];
   }
   if (!args.trace || !args.out) throw new Error('--trace and --out are required');
   const settings = { night: Number(args.night ?? 1), seed: Number(args.seed ?? 24850), frame: Number(args.frame ?? 3), frames: Number(args.frames ?? 18000) };
   if (Object.values(settings).some((v) => !Number.isInteger(v) || v < 0) || settings.frames === 0) throw new Error('invalid numeric argument');
   settings.modelOptions = args['model-options'] ? JSON.parse(readFileSync(args['model-options'], 'utf8')) : {};
+  if (args['custom-night']) settings.customNight = JSON.parse(readFileSync(args['custom-night'], 'utf8'));
   if (args.input && readFileSync(args.input, 'utf8').split('\n').some((line) => line.trim() && !line.trim().startsWith('#') && Number(line.trim().split(/\s+/)[0]) === settings.frame)) {
     throw new Error('this comparison accepts navigation-only input; gameplay input needs a corresponding model replay');
   }
