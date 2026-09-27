@@ -12,7 +12,7 @@
 // model's disagreement with the rebuild matters for the phone.
 //
 //   node tools/rebuild-options-census.mjs --jobs 3 --count 3000 --out docs/evidence/rebuild-options-census-YYYYMMDD.json
-//        [--date YYYY-MM-DD] [--checkpoint DIR] [--assemble DIR]
+//        [--date YYYY-MM-DD] [--checkpoint DIR] [--assemble DIR] [--options FILE]
 //
 // `--checkpoint DIR` saves each forked block's rows after every subject, so a
 // block killed partway resumes after its last saved subject when the same
@@ -30,7 +30,8 @@
 // model. Bindings whose replay is identical (same strategy, night, knobs,
 // plan and epoch) are scored once and the row says whose replay it shares.
 //
-// Option sets: `default` (no options), `rebuild` (the file as committed) and
+// Option sets: `default` (no options), `rebuild` (the options file: the current
+// rebuild set, or a dated snapshot given with `--options`, which the record names) and
 // `rebuild-no-cam-markers` (the file with `footstepCamMarkers` off: the CCN's
 // geometry puts CAM 01-04 under `hear footsteps`, full-06's audio does not, and
 // that disagreement is open).
@@ -78,10 +79,19 @@ export const MAX_LISTED = 20;
 
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 
+/**
+ * The options file a run scores: `--options FILE` (a repository path), carried to the forked blocks in
+ * REBUILD_OPTIONS_FILE, else the current rebuild set. A record names the file it scored, so a later
+ * change to the current set does not silently re-label an old record's figures.
+ */
+export function optionsFile() {
+  return process.env.REBUILD_OPTIONS_FILE || OPTIONS_FILE;
+}
+
 /** The three option sets, as model-options JSON (not yet Sim options). */
-export function optionSets() {
-  const file = JSON.parse(readFileSync(join(ROOT, OPTIONS_FILE), 'utf8'));
-  if (file[DISPUTED_OPTION] !== true) throw new Error(`${OPTIONS_FILE} no longer switches ${DISPUTED_OPTION} on`);
+export function optionSets(path = optionsFile()) {
+  const file = JSON.parse(readFileSync(join(ROOT, path), 'utf8'));
+  if (file[DISPUTED_OPTION] !== true) throw new Error(`${path} no longer switches ${DISPUTED_OPTION} on`);
   return [
     { id: 'default', modelOptions: {} },
     { id: 'rebuild', modelOptions: file },
@@ -390,7 +400,7 @@ export function buildRecord({ merged, count, all, winnerHashes, cohorts, git, da
     method: {
       tool: 'tools/rebuild-options-census.mjs', command, git, wallSeconds, ...(run ? { run } : {}),
       generatorSha256: sha256(readFileSync(fileURLToPath(import.meta.url))),
-      optionsFile: { path: OPTIONS_FILE, sha256: sha256(readFileSync(join(ROOT, OPTIONS_FILE))) },
+      optionsFile: { path: optionsFile(), sha256: sha256(readFileSync(join(ROOT, optionsFile()))) },
       optionSets: sets.map(({ id, modelOptions }) => ({ id, modelOptions })),
       injection: 'a setter on Sim.prototype.opts merges the set into the constructor\'s own opts object while a replay ' +
         'runs, so options read in the constructor are exact; each replay asserts its Sim carries the set; frameMs and ' +
@@ -466,6 +476,7 @@ function parseArgs(argv) {
     else if (flag === '--date') args.date = argv[++i];
     else if (flag === '--checkpoint') args.checkpoint = argv[++i];
     else if (flag === '--assemble') args.assemble = argv[++i];
+    else if (flag === '--options') process.env.REBUILD_OPTIONS_FILE = argv[++i];
     else throw new Error(`rebuild-options-census: unknown flag ${flag}`);
   }
   if (!Number.isInteger(args.jobs) || args.jobs < 1) throw new Error('--jobs must be a positive integer');

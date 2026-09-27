@@ -63,7 +63,7 @@
     },
     "generatorSha256": "0056392d288d53c4a743c8e6b356d4299773fc7a248e8696d2821f1e18e67e1f",
     "optionsFile": {
-      "path": "tools/recompile/sourced-rebuild-model-options.json",
+      "path": "tools/recompile/sourced-rebuild-model-options-20260927a.json",
       "sha256": "79681f0f5a56e8ca71eaea097b90d33774a8c5dff1f18878a8efe056f5d9ca9d"
     },
     "optionSets": [

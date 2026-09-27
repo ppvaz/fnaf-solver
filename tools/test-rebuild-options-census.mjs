@@ -60,9 +60,14 @@ assert.equal(record.kind, KIND);
 assert.equal(record.claimLevel, 'MODEL_ONLY');
 assert.equal(record.id, name.replace(/\.json$/, ''));
 
-assert.equal(sha256(readFileSync(join(ROOT, OPTIONS_FILE))), record.method.optionsFile.sha256,
-  `${OPTIONS_FILE} changed since ${name}; re-run tools/rebuild-options-census.mjs`);
-const sets = optionSets();
+// The record names the options file it scored; that file must still hash as scored. When it is not the
+// current rebuild set, the record is about the named snapshot, and a re-run with the current set is a new record.
+const scoredOptions = record.method.optionsFile.path;
+assert.ok(scoredOptions === OPTIONS_FILE || /^tools\/recompile\/sourced-rebuild-model-options-\d{8}[a-z]?\.json$/.test(scoredOptions),
+  `${name} names ${scoredOptions}, neither the rebuild set nor a dated snapshot of it`);
+assert.equal(sha256(readFileSync(join(ROOT, scoredOptions))), record.method.optionsFile.sha256,
+  `${scoredOptions} changed since ${name}; re-run tools/rebuild-options-census.mjs --options ${scoredOptions}`);
+const sets = optionSets(scoredOptions);
 assert.deepEqual(sets.map(({ id, modelOptions }) => ({ id, modelOptions })), record.method.optionSets);
 const count = record.method.designBlock.n;
 const { design, heldOut } = seedBlocks(count);
