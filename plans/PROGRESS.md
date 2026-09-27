@@ -2273,8 +2273,11 @@ Open:
   (`recompile-replay-87c2801dcefa85ef`), Night 7 3562 -> 3563 (`recompile-replay-e875497e32c149d6`). The no-input
   ladder re-scores unchanged.
 
+- `sourcedRoutePass` (`route-pass.test.js`, in the rebuild set): after the rolls, every waiting promotion is tested
+  (g344-g360) before any unit moves (g374-g435). Night 1 `minimal` now matches the rebuild's draw stream on all
+  25,201 office updates (MATCHED_PREFIX, `recompile-replay-90088f0d8d8c0393`); Night 5 stays 9301
+  (`recompile-replay-9080e85986eb1920`), Night 7 3563 (`recompile-replay-698e031d9d9abd4c`).
+
 Open:
-- Night 1 23400: the pending promotions and moves interleave per unit (a Toy Chica g356 discard read after Toy Bonnie
-  had moved).
 - Night 5 9301: a roll at 122 held on the latch is not retried on later loops.
 - Night 7 3563: W. Freddy's g378 return a loop early (the mask reaches value 2 a loop later in the rebuild).

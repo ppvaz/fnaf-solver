@@ -308,6 +308,15 @@ export class Sim {
       // sheet promotes her on the loop after g488 clears the latch (Night 7 k3 replay, tick 1800: Mangle
       // CAM 02 -> CAM 01 and her g703 footstep draw one update early).
       sourcedPromotedMoves: false,
+      // The promotions and the moves as two passes, where the sheet runs them (requires sourcedPromotedMoves and
+      // sourcedRollsBeforeMoves). Every loop, g344-g360 test the promotion of every waiting roll, and only then do
+      // g374-g435 move the promoted units, right after the rolls (g333-g343) and before g436 on. The model settled a
+      // roll inside the roll pass and a waiting unit in tickUnits (after the g436-g518 draws), unit by unit, so one
+      // unit's move could land before another's promotion test read it: on Night 1 minimal (tick 21715 in the rebuilt
+      // runtime) Toy Chica's g356 discard reads Toy Bonnie still on CAM 09, where the model had already moved him.
+      // On: after the rolls, every waiting unit's promotion is tested (and the g352/g356 discards applied), then the
+      // promoted ones move in unit order, with g378's return among the moves.
+      sourcedRoutePass: false,
       // Mangle's mask leaves (dump g400: the 10%/s roll under the mask; g401: five mask ticks) place her at
       // CAM 7 (marker 62), three hops from the vent, not at the route start the unit table's repelIdx 0 gives.
       // Every other unit's repelIdx matches its dump endpoint (g538-g555, g213, g437, g439/g440, g292/g294).
@@ -481,6 +490,8 @@ export class Sim {
       throw new Error('customNight requires night: 7 (Custom Night is night 7 in the menus)');
     if (this.opts.sourcedFoxyChain && !this.opts.sourcedDropLightOrder)
       throw new Error('sourcedFoxyChain reads the hall latch: it requires sourcedDropLightOrder');
+    if (this.opts.sourcedRoutePass && !(this.opts.sourcedPromotedMoves && this.opts.sourcedRollsBeforeMoves))
+      throw new Error('sourcedRoutePass splits promotion from move: it requires sourcedPromotedMoves and sourcedRollsBeforeMoves');
     if (this.opts.sourcedDropFlagOrder && !this.opts.sourcedDropLightOrder)
       throw new Error('sourcedDropFlagOrder moves the drop flag: it requires sourcedDropLightOrder');
 
@@ -1567,6 +1578,7 @@ export class Sim {
     if (this.opts.sourcedUnconditionalDraws) this.drawUnconditional();   // g58/g59/g192
     // --- 5-second interval: Foxy's kill check runs before anything else
     if (this.hooked ? this.passEvery(this.hookTimers.five, 5000) : f % C.MO_FRAMES === 0) this.onFiveSecond();
+    if (this.opts.sourcedRoutePass) this.routePass(f);             // g344-g360, then g374-g435
     if (this.opts.sourcedFoxyChain) this.foxyChainTransitions();   // g349/g364/g389/g390
 
     // --- 10-second interval: g718-721 slam everything down while one of the
@@ -2113,7 +2125,28 @@ export class Sim {
     if (deferred) for (const id of deferred) {                                 // g344-g358, then the moves
       const u = this.units.find(x => x.id === id);
       if (u && !u.done && u.atOpening && !u.inside && this.opts.sourcedOfficeFootsteps) this.footstepPromote(u, true);
+      else if (u && !u.done && !u.atOpening && this.opts.sourcedRoutePass) {             // value 0 = 1: routePass promotes and moves
+        u.pending = true; u.promoted = false;
+        if (this.opts.sourcedViewDraws && !this.opts.sourcedPromotedViewDraws) this.fadeUntil[u.id] = this.frame + 8;
+      }
       else if (u && !u.done && !u.atOpening) settleRoll(u, id);
+    }
+  }
+
+  /** g344-g360 test every waiting roll's promotion, then g374-g435 move the promoted units (sourcedRoutePass). @param {number} f */
+  routePass(f) {
+    if (!this.opts.stalledEnabled) return;
+    const waiting = (/** @type {any} */ u) => u.pending && !u.done && !u.atOpening && !u.inside && u.committedAt < 0;
+    for (const u of this.units) {
+      if (!waiting(u)) continue;
+      this.footstepPromote(u, false);
+      if (this.sourcedRouteStep(u, f, 'promote') === 'discard') { u.pending = false; u.promoted = false; }
+    }
+    for (const u of this.units) {
+      if (!waiting(u)) continue;
+      const step = this.sourcedRouteStep(u, f, 'move');
+      if (step === 'returned') { u.pending = false; u.promoted = false; }
+      else if (step !== 'hold' && this.canAdvance(u, f)) { u.pending = false; this.advance(u); }
     }
   }
 
@@ -2130,16 +2163,17 @@ export class Sim {
    * @param {any} u
    * @param {number} f
    */
-  sourcedRouteStep(u, f) {
+  sourcedRouteStep(u, f, phase = null) {
     if (!this.opts.sourcedRouteForks) return null;
     const onCam = (id, cam) => this.units.some(o => o.id === id && !o.done && !o.atOpening && o.path[o.idx] === cam);
-    if (this.opts.night !== 7) {
+    if (this.opts.night !== 7 && phase !== 'move') {                                                   // promotion rules
       if (u.id === 'withfreddy' && (onCam('withchica', 8) || onCam('withbonnie', 8))) return 'hold';   // g344
       if (u.id === 'withchica' && onCam('withbonnie', 8)) return 'hold';                               // g347
       const flagOn = this.opts.sourcedBDrainOrder ? f > u.stunUntil : f >= u.stunUntil;               // value 1 == 0
       if (u.id === 'toyfreddy' && flagOn && onCam('toychica', 9)) return 'discard';                    // g352
       if (u.id === 'toychica' && flagOn && onCam('toybonnie', 9)) return 'discard';                    // g356
     }
+    if (phase === 'promote') return null;                                                               // move rules below
     if (u.id === 'withfreddy' && u.path[u.idx] === 3 && this.decidePath !== 1 && this.decidePath !== 2)
       return 'hold';
     if (u.id === 'withfreddy' && u.path[u.idx] === 'blindB' &&
@@ -2253,7 +2287,7 @@ export class Sim {
         }
         continue;
       }
-      if (u.pending) {
+      if (u.pending && !this.opts.sourcedRoutePass) {
         this.footstepPromote(u, false);                                        // a held roll promoted late
         const step = this.sourcedRouteStep(u, f);
         if (step === 'discard' || step === 'returned') { u.pending = false; u.promoted = false; }

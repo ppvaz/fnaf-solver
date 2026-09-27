@@ -965,6 +965,13 @@
       ]
     },
     {
+      "file": "packages/core/test/route-pass.test.js",
+      "imports": [
+        "../src/mechanics/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
       "file": "packages/core/test/second-pass.test.js",
       "imports": [
         "../src/mechanics/plant-model.js",

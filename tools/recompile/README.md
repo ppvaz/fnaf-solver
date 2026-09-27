@@ -1297,3 +1297,29 @@ earlier match holds. The no-input ladder re-scores unchanged.
 | Night 1 `minimal` | 21714 -> **23400** | `night1-minimal-replay-bdrain-20260927.json`, `recompile-replay-2a5a12e1b5e6fb94` |
 | Night 5 `contact-final` | 7811 -> **9301** | `night5-contact-final-replay-bdrain-20260927.json`, `recompile-replay-87c2801dcefa85ef` |
 | Night 7 `k3` | 3562 -> **3563** | `night7-k3-replay-bdrain-20260927.json`, `recompile-replay-e875497e32c149d6` |
+
+**Promotions, then moves (`sourcedRoutePass`,
+`packages/core/test/route-pass.test.js`).** Night 1 tick 23400: the model moved
+Toy Chica into the hall a hop ahead of the rebuild. The watch (`new chica`
+values 0-2) shows her accepted roll discarded at 21715 (value 0 back to 0).
+That is g356, which reads Toy Bonnie still on CAM 09 on the loop he moves off
+it. The sheet tests every promotion (g344-g360) before any move (g374-g435), right
+after the rolls. The model settled a roll inside the roll pass, and a waiting
+unit in `tickUnits`, one unit at a time. So Toy Bonnie had already moved when
+Toy Chica's discard was read, and her roll went on to move her. Under the
+option (requires `sourcedPromotedMoves` and `sourcedRollsBeforeMoves`), every
+loop right after the rolls, each waiting unit's promotion is tested, the
+g352/g356 discards applied, and then the promoted units move, with g378's
+return among the moves.
+
+The Night 1 `minimal` replay now matches the rebuild's draw count and LCG
+state on every one of its 25,201 office updates. Both reach 6 AM. The status is
+`MATCHED_PREFIX`: a stream match, not an event or state equivalence. The
+monitor ledger still differs on 4 updates, the animation count below. The
+no-input ladder re-scores unchanged.
+
+| binding | first mismatch before -> after | record |
+|---|---|---|
+| Night 1 `minimal` | 23400 -> **none** (25,201 of 25,201 updates) | `night1-minimal-replay-routepass-20260927.json`, `recompile-replay-90088f0d8d8c0393` |
+| Night 5 `contact-final` | 9301 -> 9301 | `night5-contact-final-replay-routepass-20260927.json`, `recompile-replay-9080e85986eb1920` |
+| Night 7 `k3` | 3563 -> 3563 | `night7-k3-replay-routepass-20260927.json`, `recompile-replay-698e031d9d9abd4c` |
