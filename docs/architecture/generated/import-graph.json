@@ -315,6 +315,19 @@
       ]
     },
     {
+      "file": "apps/device/test/post-night-halt.test.js",
+      "imports": [
+        "../src/adb-device-local-executor.js",
+        "../src/hid-schedule.js",
+        "@fnaf2-1020/core/contracts",
+        "node:assert/strict",
+        "node:fs",
+        "node:fs/promises",
+        "node:os",
+        "node:path"
+      ]
+    },
+    {
       "file": "apps/device/test/static-terminal-window.test.js",
       "imports": [
         "../src/adb-device-local-executor.js",
@@ -1822,6 +1835,15 @@
       ]
     },
     {
+      "file": "tools/device/post-night-static.mjs",
+      "imports": [
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/device/recipe.mjs",
       "imports": [
         "../model/hid-device-pilot.mjs",
@@ -2175,6 +2197,17 @@
         "./policy-ir.mjs",
         "@fnaf2-1020/core/control",
         "node:crypto"
+      ]
+    },
+    {
+      "file": "tools/device/test-post-night-static.mjs",
+      "imports": [
+        "./post-night-static.mjs",
+        "node:assert/strict",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
       ]
     },
     {
@@ -2875,6 +2908,23 @@
       ]
     },
     {
+      "file": "tools/recompile/phone-encounter-replay.mjs",
+      "imports": [
+        "../device/bundle.mjs",
+        "../device/minus-toys-plan.mjs",
+        "../encounter-replay.mjs",
+        "./compare-draw-trace.mjs",
+        "./compare-schedule-replay.mjs",
+        "./model-draw-trace.mjs",
+        "./schedule-to-input.mjs",
+        "@fnaf2-1020/core/control",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/recompile/schedule-to-input.mjs",
       "imports": [
         "../device/bundle.mjs",
@@ -2900,6 +2950,16 @@
         "./model-draw-trace.mjs",
         "@fnaf2-1020/core/mechanics",
         "node:assert/strict"
+      ]
+    },
+    {
+      "file": "tools/recompile/test-phone-encounter-replay.mjs",
+      "imports": [
+        "./model-draw-trace.mjs",
+        "./phone-encounter-replay.mjs",
+        "node:assert/strict",
+        "node:crypto",
+        "node:fs"
       ]
     },
     {

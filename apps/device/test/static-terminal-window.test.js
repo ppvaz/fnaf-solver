@@ -121,19 +121,24 @@ try {
     assert.equal(result.terminal, 'sixam', 'a 6 AM read inside the window must end the night as a 6 AM');
   }
 
-  // 3. The office coming back ends the run of statics; a later static opens a
-  // new hold rather than inheriting the old one's clock.
+  // 3. Since 2026-09-27 the first static after a night halts actuation, and
+  // the halt is latched (post-night-halt.test.js): a night read between
+  // statics resumes nothing and does not restart the window -- p1b read
+  // `state=night` once from inside its death minigame. One hold, one halt.
   {
     const events = [];
     const observer = scripted(['night', 'static', 'static', 'night', 'static', 'static', 'static', 'gameover']);
     const result = await executorFor(observer, events).execute(request);
     assert.equal(result.terminal, 'gameover');
-    assert.equal(events.filter(event => event.type === 'lifecycle.static-hold').length, 2,
-      'a night read between statics must start a fresh hold');
+    assert.equal(events.filter(event => event.type === 'lifecycle.static-hold').length, 1,
+      'a night read after the halt must not open a second hold');
+    assert.equal(events.filter(event => event.type === 'lifecycle.actuation-halted').length, 1,
+      'the first static halts actuation once');
   }
 
-  // 4. Static that outlasts the window still ends the night, but only after
-  // the window, and then on the usual three consecutive votes.
+  // 4. Static that outlasts the window still ends the night, and only after
+  // the window: with actuation halted, the first read past the window ends it
+  // (it no longer waits for three post-window votes -- nothing is pressing).
   {
     const events = [];
     const waitMs = 120;
@@ -143,17 +148,17 @@ try {
       'a static that persists past the window must still end the night');
     const statics = observer.reads.filter(read => read.state === 'static');
     const firstStaticAt = statics[0].at;
-    const voting = statics.filter(read => read.at - firstStaticAt >= waitMs);
+    const pastWindow = statics.filter(read => read.at - firstStaticAt >= waitMs);
     assert.ok(statics.length > 3, 'static reads inside the window must not have ended the night');
-    assert.equal(voting.length, 3, 'past the window, exactly three consecutive static reads end the night');
+    assert.ok(pastWindow.length <= 1, 'the first read past the window ends the night');
     const expired = events.find(event => event.type === 'lifecycle.static-hold.expired');
     assert.ok(expired && expired.heldMs >= waitMs, 'the expiry must be recorded with how long the hold lasted');
   }
 
-  // 5. The HID keeps running through the wait: nothing releases it on static.
-  // A stop from elsewhere inside the window (in r01 a gate lost the mask read
-  // on the static screen) now hands the terminal to the campaign's own read
-  // instead of ending the attempt as "lifecycle left night state (static)".
+  // 5. The first static releases the HID (the halt); a stop from elsewhere
+  // inside the window (in r01 a gate lost the mask read on the static screen)
+  // still hands the terminal to the campaign's own read instead of ending the
+  // attempt as "lifecycle left night state (static)", and writes nothing more.
   {
     const events = [];
     const writes = [];
@@ -177,10 +182,10 @@ try {
     const result = await executor.execute(request);
     assert.equal(result.status, 'COMPLETED', 'a stop inside the static window must not become a lifecycle ERROR');
     assert.equal(result.terminal, undefined, 'the executor publishes no terminal it did not read');
-    assert.ok(stoppedAfter > 0, 'the schedule must have been written before the statics');
-    assert.ok(!writes.slice(0, stoppedAfter).includes(SHARED_HID_RELEASE),
-      'no static read inside the window may release the HID');
-    assert.ok(writes.slice(stoppedAfter).includes(SHARED_HID_RELEASE), 'the external stop releases it');
+    assert.ok(stoppedAfter > 1, 'the schedule must have been written before the statics');
+    assert.equal(writes.indexOf(SHARED_HID_RELEASE), stoppedAfter - 1,
+      'the first static read releases the HID, and nothing is written after that release');
+    assert.equal(writes.slice(stoppedAfter).length, 0, 'the external stop after the halt writes nothing more');
   }
 } finally {
   rmSync(fakeRoot, { recursive: true, force: true });

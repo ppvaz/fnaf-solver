@@ -124,6 +124,14 @@ Details:
     writes `being attacked by` = 4 (`recompile-replay-7e8f8aeb1b5c78fb`).
     MODEL_ONLY, not equivalence
     ([k3 replay](../tools/recompile/results/night7-k3-replay-routeviews-20260927.json)).
+  - Against the phone, the rebuild diverges on all four clock-seeded nights.
+    Each was replayed on its own frame clock, with presses on their measured
+    landing frames. The first disagreements come at windows 9, 10, 3 and 6. Each
+    occupant arrived about 4 s before mask-on in every press and clock variant,
+    and the model shares it, so the gap sits upstream of both programs.
+    MODEL_ONLY
+    ([rebuild vs phone](../docs/evidence/rebuild-phone-encounters-20260927.json),
+    `recompile-phone-encounters-e18a527d01bcdb54`).
 - **Absorbs** Plan 17 (route 5), Plan 25 horizon 2, and the model parts of
   Plans 15 and 19.
 

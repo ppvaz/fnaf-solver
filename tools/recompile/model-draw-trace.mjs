@@ -48,11 +48,33 @@ export function simOptionsFrom(modelOptions) {
 }
 
 /**
+ * A measured clock for the frame-time hook: `frameTimes[f - 1]` is frame f's timer delta in ms (the
+ * harness's office update f - 1 under CHOWDREN_FRAME_TIMES), 50/3 past the list; global value 5 is the
+ * sheet's min(4, delta / (1000 / 60)). Requires the options to carry the hook already (frameMs).
+ * @param {number[]} frameTimes
+ */
+export function measuredClock(frameTimes) {
+  if (!Array.isArray(frameTimes) || !frameTimes.length || !frameTimes.every((ms) => Number.isFinite(ms) && ms > 0))
+    throw new Error('frameTimes must be a non-empty list of positive ms');
+  const frameMs = (/** @type {number} */ f) => frameTimes[f - 1] ?? 1000 / 60;
+  return { frameMs, frameValue5: (/** @type {number} */ f) => Math.min(4, frameMs(f) / (1000 / 60)) };
+}
+
+/**
  * `rows` are `[frame, press|release, action]` applied before the tick from `frame` (as a gate replay
  * applies its queue); `observe(sim)`, if given, is read at frame 0 and after every tick into `observed`.
+ * `frameTimes` (optional) replaces the hook constants with a measured per-frame clock (measuredClock).
  */
-export function drawTrace({ night, seed, frames, rows = [], customNight = undefined, modelOptions = {}, observe = null }) {
+export function drawTrace({ night, seed, frames, rows = [], customNight = undefined, modelOptions = {}, observe = null,
+  frameTimes = null }) {
   const simOptions = simOptionsFrom(modelOptions);
+  if (frameTimes) {
+    if (!modelOptions.frameMs) throw new Error('a measured clock replaces the frame-time hook: the options must carry frameMs');
+    const clock = measuredClock(frameTimes);
+    // sourcedValue5 derives global value 5 from frameMs as g1236 writes it (the previous loop's delta over its
+    // 32.32 divisor), and refuses a frameValue5 beside it: the measured clock then supplies frameMs alone.
+    Object.assign(simOptions, modelOptions.sourcedValue5 ? { frameMs: clock.frameMs } : clock);
+  }
   let draws = 0;
   // Sim's constructor spends draws too (for example Foxy's initial readyAt).
   // Instrument its synchronous construction, restoring the shared prototype

@@ -181,10 +181,10 @@ index 950da8d..eb20377 100644
  inline int FrameObject::get_x()
 diff --git a/Chowdren/base/harness.h b/Chowdren/base/harness.h
 new file mode 100644
-index 0000000..cbe437c
+index 0000000..eb4a6fa
 --- /dev/null
 +++ b/Chowdren/base/harness.h
-@@ -0,0 +1,95 @@
+@@ -0,0 +1,106 @@
 +#ifndef CHOWDREN_HARNESS_H
 +#define CHOWDREN_HARNESS_H
 +
@@ -207,6 +207,9 @@ index 0000000..cbe437c
 +//   - writes one line per event update to CHOWDREN_TRACE: frame index, tick,
 +//     Random draws so far this frame load, graine, and the global values,
 +//   - writes CHOWDREN_SNAP frames (see harness_after_draw),
++//   - optionally replaces the fixed step of one frame visit with measured
++//     per-update times (CHOWDREN_FRAME_TIMES, below) and traces overlaps
++//     (CHOWDREN_WATCH_OVERLAP, harness.cpp),
 +//   - skips drawing when CHOWDREN_NO_DRAW=1, and exits after CHOWDREN_MAX_TICKS
 +//     event updates of the frame index in CHOWDREN_STOP_FRAME; always exits
 +//     after CHOWDREN_MAX_TOTAL_TICKS updates across all frames (default 60000).
@@ -251,6 +254,14 @@ index 0000000..cbe437c
 +bool harness_fixed_step();
 +bool harness_skip_draw();
 +bool harness_realtime();
++// CHOWDREN_FRAME_TIMES=<file>: one timer delta in ms per line ('#' comments),
++// line k for update k of the first visit to frame CHOWDREN_FRAME_TIMES_FRAME.
++// That update's manager.dt (so the frame timer, global value 5's source) and
++// timer_units (CND_EVERY2's delta, round(ms * 3)) come from the line; every
++// other update, and updates past the list, keep the fixed 1/60 s step. A
++// replay then runs on a measured clock (the phone's frame trace) instead.
++// Returns false when no line applies to the update about to run.
++bool harness_frame_ms(double * ms);
 +void harness_init();
 +void harness_seed_frame(int index);
 +void harness_before_events(int frame_index);
@@ -3137,18 +3148,20 @@ index 30eb23e..fbd2156 100644
          platform_sleep(t);
 diff --git a/Chowdren/base/harness.cpp b/Chowdren/base/harness.cpp
 new file mode 100644
-index 0000000..5cabeb3
+index 0000000..61e277e
 --- /dev/null
 +++ b/Chowdren/base/harness.cpp
-@@ -0,0 +1,487 @@
+@@ -0,0 +1,632 @@
 +// Deterministic research harness for the build-296 recompile. See harness.h.
 +// Compiled once, included from run.cpp next to crashdump.cpp.
 +
 +#include "harness.h"
++#include "platform.h"
 +#include <stdio.h>
 +#include <stdlib.h>
 +#include <string.h>
 +#include <math.h>
++#include <time.h>
 +#include <string>
 +
 +unsigned int fusion_graine = 0;
@@ -3300,8 +3313,78 @@ index 0000000..5cabeb3
 +
 +bool harness_active() { return h_active; }
 +bool harness_fixed_step() { return h_active; }
-+bool harness_skip_draw() { return h_no_draw; }
-+bool harness_realtime() { return h_realtime; }
++
++// CHOWDREN_FRAME_TIMES / CHOWDREN_FRAME_TIMES_FRAME (harness.h): measured per-update
++// timer deltas in ms for the first visit to one frame index.
++static std::vector<double> h_frame_times;
++static int h_frame_times_frame = -1, h_frame_times_visits = 0;
++
++static void load_frame_times(const char * path)
++{
++    h_frame_times_frame = env_int("CHOWDREN_FRAME_TIMES_FRAME", -1);
++    if (h_frame_times_frame < 0) {
++        fprintf(stderr, "harness: CHOWDREN_FRAME_TIMES needs CHOWDREN_FRAME_TIMES_FRAME\n");
++        exit(3);
++    }
++    FILE * f = fopen(path, "r");
++    if (f == NULL) {
++        fprintf(stderr, "harness: cannot open CHOWDREN_FRAME_TIMES %s\n", path);
++        exit(3);
++    }
++    char line[128];
++    while (fgets(line, sizeof line, f)) {
++        if (line[0] == '#' || line[0] == '\n')
++            continue;
++        double ms;
++        if (sscanf(line, "%lf", &ms) != 1 || !(ms > 0.0) || ms > 60000.0) {
++            fprintf(stderr, "harness: bad frame time line: %s", line);
++            exit(3);
++        }
++        h_frame_times.push_back(ms);
++    }
++    fclose(f);
++    if (h_frame_times.empty()) {
++        fprintf(stderr, "harness: CHOWDREN_FRAME_TIMES %s holds no times\n", path);
++        exit(3);
++    }
++}
++
++bool harness_frame_ms(double * ms)
++{
++    if (!h_active || h_frame_times.empty() || h_frame_index != h_frame_times_frame || h_frame_times_visits != 1)
++        return false;
++    if (h_tick < 0 || h_tick >= int(h_frame_times.size()))
++        return false;
++    *ms = h_frame_times[h_tick];
++    return true;
++}
++// CHOWDREN_DRAW_FROM=<frame>:<tick>: draw nothing (as CHOWDREN_NO_DRAW) until that frame reaches that tick, then
++// draw every update. A clip from the middle of a night runs at headless speed up to its first frame.
++static int h_draw_from_frame = -1, h_draw_from_tick = 0;
++static bool h_drawing = true;
++static double h_draw_wall = -1.0;
++static double wall_now() { struct timespec t; clock_gettime(CLOCK_REALTIME, &t); return t.tv_sec + t.tv_nsec * 1e-9; }
++bool harness_skip_draw()
++{
++    if (h_no_draw) return true;
++    if (!h_drawing && h_frame_index == h_draw_from_frame && h_tick >= h_draw_from_tick) {
++        // CHOWDREN_DRAW_GO=<path>: hold here until <path> exists, so several instances start drawing together.
++        const char * go = getenv("CHOWDREN_DRAW_GO");
++        if (go && *go) {
++            fprintf(stderr, "harness: ready at frame %d tick %d\n", h_frame_index, h_tick);
++            fflush(stderr);
++            FILE * f;
++            while ((f = fopen(go, "rb")) == NULL) platform_sleep(0.002);
++            fclose(f);
++        }
++        h_drawing = true;
++        h_draw_wall = wall_now();
++        fprintf(stderr, "harness: drawing from frame %d tick %d wall %.3f\n", h_frame_index, h_tick, h_draw_wall);
++        fflush(stderr);
++    }
++    return !h_drawing;
++}
++bool harness_realtime() { return h_realtime && h_drawing; }
 +
 +void harness_init()
 +{
@@ -3323,6 +3406,10 @@ index 0000000..5cabeb3
 +    }
 +    h_no_draw = env_int("CHOWDREN_NO_DRAW", 0) != 0;
 +    h_realtime = env_int("CHOWDREN_REALTIME", 0) != 0;
++    {
++        const char * df = getenv("CHOWDREN_DRAW_FROM");
++        if (df && *df && sscanf(df, "%d:%d", &h_draw_from_frame, &h_draw_from_tick) == 2) h_drawing = false;
++    }
 +    {
 +        const char * rv = getenv("CHOWDREN_RAWVIDEO");
 +        if (rv && *rv) {
@@ -3353,12 +3440,19 @@ index 0000000..5cabeb3
 +    h_dump_tick = env_int("CHOWDREN_DUMP_TICK", 1);
 +    const char * input = getenv("CHOWDREN_INPUT");
 +    if (input && *input) load_inputs(input);
++    const char * times = getenv("CHOWDREN_FRAME_TIMES");
++    if (times && *times) load_frame_times(times);
 +    const char * trace = getenv("CHOWDREN_TRACE");
 +    if (trace && *trace) {
 +        h_trace = fopen(trace, "w");
 +        if (h_trace == NULL) { fprintf(stderr, "harness: cannot open CHOWDREN_TRACE %s\n", trace); exit(3); }
 +        fprintf(h_trace, "# frame tick draws graine values...\n");
++        if (!h_frame_times.empty())
++            fprintf(h_trace, "# frametimes %d updates of frame %d\n", int(h_frame_times.size()), h_frame_times_frame);
 +    }
++    if (!h_frame_times.empty())
++        fprintf(stderr, "harness: %d measured update times for the first visit to frame %d\n",
++                int(h_frame_times.size()), h_frame_times_frame);
 +    fprintf(stderr, "harness: on (seed %d frame %d, %d inputs, stop frame %d after %d ticks)\n",
 +            h_seed, h_seed_frame, int(h_inputs.size()), h_stop_frame, h_max_ticks);
 +}
@@ -3373,6 +3467,7 @@ index 0000000..5cabeb3
 +    fusion_draws = 0;
 +    h_frame_index = index;
 +    h_tick = 0;
++    if (index == h_frame_times_frame) h_frame_times_visits++;
 +    if (h_trace) fprintf(h_trace, "# frame %d seeded %u\n", index, seed);
 +}
 +
@@ -3535,11 +3630,69 @@ index 0000000..5cabeb3
 +    fputc('\n', h_trace);
 +}
 +
++// The first live instance named `name` in the current frame, or NULL.
++static FrameObject * first_named(const std::string & name)
++{
++    Frame * f = manager.frame;
++    for (size_t li = 0; li < f->layers.size(); li++) {
++        Layer & layer = f->layers[li];
++        for (LayerInstances::iterator it = layer.instances.begin(); it != layer.instances.end(); ++it) {
++            FrameObject & obj = *it;
++            if (obj.flags & DESTROYING) continue;
++            if (obj.get_name() == name) return &obj;
++        }
++    }
++    return NULL;
++}
++
++// CHOWDREN_WATCH_OVERLAP=<zone>:<name>,<name>,...: after each update, one
++// '# overlap <frame> <tick>' trace line and then, in the order named, 1 when
++// that object's first live instance overlaps the zone object's first live
++// instance, 0 when it does not, '-' when either is absent from the frame or has
++// no collision. The test is FrameObject::overlaps, the one IsOverlapping
++// compiles to. Names may hold spaces, not commas or colons; the spec is written
++// once as '# overlaps'. Nothing else reads the result.
++static void overlap_line(int frame_index)
++{
++    static bool parsed = false;
++    static std::string zone;
++    static std::vector<std::string> names;
++    if (!parsed) {
++        parsed = true;
++        const char * w = getenv("CHOWDREN_WATCH_OVERLAP");
++        if (w && *w) {
++            std::string spec(w);
++            size_t colon = spec.find(':');
++            if (colon == std::string::npos) {
++                fprintf(stderr, "harness: CHOWDREN_WATCH_OVERLAP is <zone>:<name>,...\n");
++                exit(3);
++            }
++            zone = spec.substr(0, colon);
++            for (const char * c = spec.c_str() + colon + 1; c && *c; ) {
++                const char * end = strchr(c, ',');
++                names.push_back(end ? std::string(c, end - c) : std::string(c));
++                c = end ? end + 1 : NULL;
++            }
++            if (h_trace) fprintf(h_trace, "# overlaps %s\n", w);
++        }
++    }
++    if (names.empty() || !h_trace) return;
++    fprintf(h_trace, "# overlap %d %d", frame_index, h_tick);
++    FrameObject * z = first_named(zone);
++    for (size_t n = 0; n < names.size(); n++) {
++        FrameObject * o = first_named(names[n]);
++        if (z == NULL || o == NULL || z->collision == NULL || o->collision == NULL) fputs(" -", h_trace);
++        else fputs(o->overlaps(z) ? " 1" : " 0", h_trace);
++    }
++    fputc('\n', h_trace);
++}
++
 +bool harness_after_events(int frame_index)
 +{
 +    if (!h_active) return true;
 +    watch_line(frame_index);
 +    counter_line(frame_index);
++    overlap_line(frame_index);
 +    if (h_trace) {
 +        fprintf(h_trace, "%d %d %u %u", frame_index, h_tick, fusion_draws, fusion_graine);
 +        GlobalValues * g = manager.values;
@@ -3550,6 +3703,9 @@ index 0000000..5cabeb3
 +    h_total_ticks++;
 +    if (h_stop_frame >= 0 && frame_index == h_stop_frame && h_max_ticks >= 0 && h_tick >= h_max_ticks) {
 +        if (h_trace) { fprintf(h_trace, "# stop target frame %d ticks %d total %d\n", frame_index, h_tick, h_total_ticks); fflush(h_trace); }
++        if (h_draw_wall >= 0.0)
++            fprintf(stderr, "harness: stopped at frame %d tick %d wall %.3f, drawn for %.3f s\n", frame_index, h_tick,
++                    wall_now(), wall_now() - h_draw_wall);
 +        return false;
 +    }
 +    if (h_total_ticks >= h_max_total_ticks) {
@@ -3771,7 +3927,7 @@ index 228e3c8..e891508 100644
 +static DefaultText default_text;
 +FrameObject * default_text_instance = &default_text;
 diff --git a/Chowdren/base/run.cpp b/Chowdren/base/run.cpp
-index fd70fdf..4656d78 100644
+index fd70fdf..d5dad9f 100644
 --- a/Chowdren/base/run.cpp
 +++ b/Chowdren/base/run.cpp
 @@ -25,9 +25,12 @@ GameManager manager;
@@ -3796,15 +3952,21 @@ index fd70fdf..4656d78 100644
      platform_init();
      media.init();
      set_window(false);
-@@ -235,6 +239,7 @@ int GameManager::update_frame()
+@@ -234,6 +238,13 @@ int GameManager::update_frame()
+         set_frame(frame->next_frame);
      }
  
++    double measured_ms;
++    if (harness_frame_ms(&measured_ms)) {
++        // CHOWDREN_FRAME_TIMES: this update's measured timer delta (harness.h).
++        dt = measured_ms / 1000.0;
++        timer_units = int(measured_ms * 3.0 + 0.5);
++    } else
++        timer_units = harness_fixed_step() ? 50 : int(dt * 3000.0 + 0.5);
      this->dt = float(dt);
-+    timer_units = harness_fixed_step() ? 50 : int(dt * 3000.0 + 0.5);
  
  #ifdef CHOWDREN_IS_DEMO
-     global_time += dt;
-@@ -260,7 +265,10 @@ int GameManager::update_frame()
+@@ -260,7 +271,10 @@ int GameManager::update_frame()
              show_build_timer = 3.0;
      }
  #endif
@@ -3815,7 +3977,7 @@ index fd70fdf..4656d78 100644
      if (ret)
          return 1;
      return 0;
-@@ -373,6 +381,7 @@ void GameManager::draw()
+@@ -373,6 +387,7 @@ void GameManager::draw()
      }
  #endif
  
@@ -3823,7 +3985,7 @@ index fd70fdf..4656d78 100644
      PROFILE_BEGIN(platform_swap_buffers);
      platform_swap_buffers();
      PROFILE_END();
-@@ -422,6 +431,7 @@ void GameManager::set_frame(int index)
+@@ -422,6 +437,7 @@ void GameManager::set_frame(int index)
      user_log.write(&logline[0], logline.size());
  #endif
  
@@ -3831,7 +3993,7 @@ index fd70fdf..4656d78 100644
      frame->set_index(index);
  
      std::cout << "Frame set" << std::endl;
-@@ -731,7 +741,8 @@ bool GameManager::update()
+@@ -731,7 +747,8 @@ bool GameManager::update()
  
      double draw_time = platform_get_time();
  

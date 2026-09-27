@@ -27,6 +27,15 @@ assert.equal(clockOfField('onsetPhoneWallMs'), C.PHONE_WALL);
 assert.equal(clockOfField('gateAtMs'), C.PLAN);
 assert.equal(clockOfField('offsetMs'), C.OFFSET);
 assert.equal(clockOfField('status'), null);
+// The post-night halt's rows (adb-device-local-executor.js): the halt, the stop, and a gap over the bound.
+for (const event of [
+  { type: 'lifecycle.actuation-halted', at: 1790537593352, reason: 'post-night-static', state: 'static', waitMs: 8724, gapMs: 11776 },
+  { type: 'lifecycle.actuation-stopped', at: 1790537593410, reason: 'post-night-static', method: 'hid-closed' },
+  { type: 'lifecycle.observe-gap', at: 1790537601745, gapMs: 8393, boundMs: 2418, state: null },
+]) for (const stamp of eventTimestamps(event)) {
+  assert.notEqual(stamp.clock, 'UNKNOWN', `${event.type}.${stamp.path} must declare its clock`);
+  assert.ok(plausibleForClock(stamp.clock, stamp.value), `${event.type}.${stamp.path} must be plausible for ${stamp.clock}`);
+}
 const anchor = { at: '2026-09-20T01:45:30.000Z', type: 'origin.anchor', onsetHostMs: 24986.1, onsetDeviceMs: 1050505904.2,
   onsetPhoneWallMs: 1789868728804.5, offsetMs: -1050478327.3, lateMs: 0.4, firedWallMs: 1789868734066, status: 'fired' };
 const stamps = Object.fromEntries(eventTimestamps(anchor).map(stamp => [stamp.path, stamp.clock]));

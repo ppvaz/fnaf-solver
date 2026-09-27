@@ -2314,3 +2314,88 @@ Open:
 - The rebuild's Foxy attack ends on its animation (23 updates after the write); the model kills on the write.
 - Nothing here is checked against the phone; the per-cycle ledger against a k2/k3 recording still needs a video.
 - A census under the new rebuild set (the 2026-09-27a/b snapshots score the older sets).
+**2026-09-27 (late evening): after a night, the first static stops the presses and the observer keeps reading (S4 device safety, host-side, no phone).**
+
+- **The defect** (previous entry): inside `STATIC_TERMINAL_WAIT_MS` the schedule kept pressing,
+  and after two Night 7 deaths it pressed through the post-death screens (r02 into Custom Night,
+  p1b into the store).
+- **The rule, from the packs** (`tools/device/post-night-static.mjs`,
+  [record](../docs/evidence/post-night-static-halt-20260927.json),
+  `post-night-static-halt-1f27592aee56cc26`, DEVICE_MEASURED over committed reads):
+  - 81 static episodes follow a night in 184 packs. In none was the office read twice in a row
+    after the static: 33 end at Game Over, 45 at the old three-static abort and relaunch, 2 at the
+    title, 1 at 6 AM.
+  - The 6 AM one, `night5-perfetto1`, read it 5763 ms after its static, inside the 8724 ms window.
+    Its stream was parked at a gate until 2920 ms after the static, so a halt there withholds one
+    release and 571 ms of presses before the old abort stopped them anyway. The counterfactual is
+    not measured.
+  - In the 27 packs that keep every read (3523 night reads): all 26 post-night static reads lie in
+    those episodes. `newspaper` was misread inside a live night 60 times; static never was.
+  - p1b's only night read after its static (123.7 s later) came from inside its death minigame.
+  - No confirmation read: r02's next read came 8393 ms after its static, after its frames already
+    show the Custom Night dial screen.
+  - So `POST_NIGHT_STATIC_HALT` halts on the FIRST static read after a night, and the halt is
+    latched.
+- **The executor** (`apps/device/src/adb-device-local-executor.js`):
+  - The halt writes no further schedule, gate, correction or arm line.
+  - Shared mode writes the release report, then the owner closes the process
+    (`closeSharedHid`, wired to `closeMenuHid` in `modern-campaign-ports.js`); closing is what kills
+    the buffered stream. Device-local mode kills the shell.
+  - The observer keeps reading until Game Over or 6 AM (COMPLETED with that terminal), a title or
+    three exit votes, the window's expiry from that static (the usual static exit, now without
+    three post-window votes), or the existing deadlines and stops.
+  - Events `lifecycle.actuation-halted`, `lifecycle.actuation-stopped`, `lifecycle.observe-gap`;
+    `gapMs`/`boundMs` are declared in `event-clocks.js`.
+- **The observer-interval bound is violated in practice.** r02's reads around its static were
+  11776 and 8393 ms apart, and 721 of 3795 in-night read gaps exceed 2418 ms (max 4488). After a
+  halt every gap over the bound is now evented; the observer is not sped up.
+- **Tests.**
+  - `apps/device/test/post-night-halt.test.js` (`test:contracts`) holds the executor comment's
+    numbers to the record. It shows, on a 19-gate shared night, that nothing but the release is
+    written after the halt and the owner closes the HID once, and that the Game Over read after it
+    is the terminal. The same night with no static writes every segment and never halts. It also
+    covers the shell kill; r02's shape (static exit at the window, gap events only from the halting
+    read on); p1b's shape (a night read resumes nothing and does not restart the window); newspaper
+    and pre-night statics not halting; and a port release after the halt writing nothing.
+  - `tools/device/test-post-night-static.mjs` (`test:unit`) reproduces the record and refuses a
+    newer pack in which a night went on after a post-night static.
+  - `static-terminal-window.test.js` cases 3-5 now assert the latched halt.
+  - With the halt call disabled, `post-night-halt.test.js` goes red.
+
+Open:
+- The rule's first phone night: whether the halted observer reads a death's Game Over. r02-like
+  reads 8-12 s apart can still miss it; the window then ends as a static exit.
+- A death never read as static (a minigame read as unknown from its start) still presses. The
+  death minigames and the Custom Night dial screen are not recognised after a night.
+- The observer interval itself (721 of 3795 in-night gaps over the bound).
+- A third BB+Foxy cohort: the fail-safe it waited on is in the tree, but its phone behaviour is not
+  measured yet. Also open: the 4/20 Minus 3 decision and Pedro's attestation.
+
+**2026-09-27 (evening): the rebuild against the phone, window by window (S2b, MODEL_ONLY;
+`recompile-phone-encounters-e18a527d01bcdb54`).**
+
+- **What ran.** The four phone nights with a one-candidate office seed: tw-12 and twin-01
+  (Night 6, 24850) and k3's full-04 (34043) and full-06 (47593) on Night 7 at 10/20.
+  - Each ran in the rebuild at that seed, on its own frame trace's clock.
+  - Each press sits on the frame it landed in, 64.7-81.6 ms after its send by the night's own
+    monitor raises.
+  - The binary is `7ab9a755`, with the new `CHOWDREN_FRAME_TIMES` and `CHOWDREN_WATCH_OVERLAP`
+    switches. The patch was regenerated with the lead's uncommitted harness edits.
+  - The tool is `phone-encounter-replay.mjs` and the gate is `test-phone-encounter-replay.mjs`
+    (test:unit). The record is
+    [rebuild vs phone](../docs/evidence/rebuild-phone-encounters-20260927.json).
+- **DIVERGENT on all four.**
+  - First disagreeing windows: tw-12 9, twin-01 10, full-04 3 (an unlabelled phone occupant;
+    the rebuild is dead before window 4), full-06 6.
+  - Each occupant was at `in office` about 4 s before mask-on.
+  - Each difference survives every press rule and clock tried, and the model shares it.
+  - So the gap is upstream of both programs, in the replayed input or the runtime clock; the
+    evidence does not separate the two.
+- **Held-tap drops.** k3's 200 ms monitor hold against the 12-update raise lets g618 drop the
+  cameras it just raised. Every Withered attack in these replays follows one. full-06 reaches
+  6 AM, like the phone, under three of five press rules.
+
+Open:
+- Per-press landings from the retained traces in place of one median.
+- The same-phase twin (S2a).
+- The k3 monitor hold's zero margin, for S4.

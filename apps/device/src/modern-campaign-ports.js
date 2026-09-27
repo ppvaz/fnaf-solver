@@ -529,6 +529,11 @@ export async function createCampaignPorts(options = {}) {
       // activates. Reuse that process through the intro so the night never
       // pays a second /system/bin/hid registration delay.
       sharedHid: () => menuHid?.process ?? null,
+      // When a post-night static halts actuation, the executor asks the
+      // owner of the shared process to close it: that, not the release
+      // report, is what kills the already-buffered stream, and closing through
+      // the owner lets the next menu step open a fresh process.
+      closeSharedHid: () => closeMenuHid(),
       nightReleaseOwner: nightAnchorAimMs === null ? 'observer' : 'port',
       pollMs: 250, onEvent,
       onOutput: output => onEvent({ type: 'hid.stderr', output }) });
