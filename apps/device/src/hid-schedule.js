@@ -120,9 +120,17 @@ function addAction(events, request, action) {
     return duration;
   }
   if (action.kind === 'observe-left') {
+    // The mask press comes `maskGapMs` AFTER the vent light is released: the
+    // compiler (artifact-commands.mjs) places it at at + duration + gap and
+    // refuses a gap under one Fusion poll, because a release and a press on
+    // the same contact in the same instant can reach the game as a move, not a
+    // new touch. Until 2026-09-27 this measured the gap from the read's start
+    // (max(0, gap - duration) = 0 for every authored read), so the phone got
+    // the mask press with no gap at all and lost it on about half the cycles
+    // (night1-ladder-n1a-20260927T053211Z, clear-3 maskOn->false missing 23 of
+    // 45), inverting the mask parity for the rest of the night.
     addSingle(events, request, action.control, duration);
-    const maskGap = action.maskGapMs ?? 0;
-    const released = Math.max(0, maskGap - duration);
+    const released = action.maskGapMs ?? 0;
     addDelay(events, released);
     addSingle(events, request, V.mask, 33);
     return duration + released + 33;
@@ -220,7 +228,7 @@ function maskPressAtMs(action, atMs) {
   // An observe-left macro holds the vent button first, then presses mask. The
   // target belongs to that latter contact, not the start of the visual read.
   if (action.kind === 'observe-left')
-    return atMs + Math.max(action.durationMs ?? 33, action.maskGapMs ?? 0);
+    return atMs + (action.durationMs ?? 33) + (action.maskGapMs ?? 0);
   return atMs;
 }
 

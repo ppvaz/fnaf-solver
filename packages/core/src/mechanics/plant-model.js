@@ -609,6 +609,15 @@ export class Sim {
     // window the one action g533 says ends it. No withered that reached the
     // office was survivable in this simulator until that was split apart.
     if (action === 'mask' && !this.maskOn && this.attackExecuting) return;
+    // The mask answers only at rest. g270 puts it on from `mask` == 0 and g615
+    // takes it off from `mask` == 2; states 1 and 3 are the put-on and
+    // take-off animations (g9 moves 1 -> 2 after 12 frames), and no group
+    // accepts a touch there. The simulator used to toggle mid-animation, so it
+    // scored minus7's Night 1 clear cycle -- mask on inside its read, off 133
+    // ms later in the maskraise -- as a winner while the phone dropped that
+    // press on 48 of 55 cycles (night1-minus7-n1-first-20260919T215533Z) and
+    // 23 of 45 (night1-ladder-n1a-20260927T053211Z, 2026-09-27).
+    if (action === 'mask' && this.maskAnim > 0) return;
     if (action === 'light') {
       this.lightHeld = true;
       this.onLightPress();
