@@ -1268,3 +1268,32 @@ The no-input ladder re-scores unchanged.
 | Night 1 `minimal` | 21714 -> 21714 | `night1-minimal-replay-blackoutend-20260927.json`, `recompile-replay-08f5e9dc54e9e100` |
 | Night 5 `contact-final` | 7740 -> **7811** | `night5-contact-final-replay-blackoutend-20260927.json`, `recompile-replay-3eb3e4691cd3ce0f` |
 | Night 7 `k3` | 2324 -> **3562** | `night7-k3-replay-blackoutend-20260927.json`, `recompile-replay-e9390ac2828cd9ac` |
+
+**Value 1 is read before it drains (`sourcedBDrainOrder`,
+`packages/core/test/b-drain-order.test.js`).** Night 1 tick 21714: the model
+promoted Toy Bonnie, moved him to CAM 03 and drew his footstep a loop before
+the rebuild. The watch (`new bonnie` values 0-2) shows value 1 at 400 through
+the camera flash's last loop (21314), 0.999979 at the end of 21713, 0 at the end
+of 21714, and the promotion and move on 21715. g344-g360 test value 1 == 0 (the
+packed FlagOn) before g361-g371 drain it. Every writer of value 1 sits after
+the drain: g378, g427/g428, the flashes g450-g457, the repels g538-g555 and
+g747-g750, and the hall pins g848-g854. So value 1 = N written on loop L lets
+the promotion pass on L + N + 1. The model's `stunUntil` is L + N, and it
+promoted once f reached it. Under the option the promotion reads (and the
+g352/g356 discards) block through f == `stunUntil`. Readers after the drain
+(g546, Toy Bonnie's opening timer) are unchanged.
+
+A second order had hidden the first: the hall pin. g848-g854 write value 1 = 40
+after g488 has cleared the latch and g489 has re-set it. The model pinned in
+`tickLight`, before the deferred reset of `sourcedHallLatchOrder`. So it pinned
+once more on the reset loop, and the early read cancelled that. W. Freddy's
+promotion on Night 7 (tick 1840 in the rebuild) matched only through that pair.
+Under the option the pin runs after the deferred reset. On its own, the read
+moved W. Bonnie's Night 7 promotion (tick 940) a loop late. With both, every
+earlier match holds. The no-input ladder re-scores unchanged.
+
+| binding | first mismatch before -> after | record |
+|---|---|---|
+| Night 1 `minimal` | 21714 -> **23400** | `night1-minimal-replay-bdrain-20260927.json`, `recompile-replay-2a5a12e1b5e6fb94` |
+| Night 5 `contact-final` | 7811 -> **9301** | `night5-contact-final-replay-bdrain-20260927.json`, `recompile-replay-87c2801dcefa85ef` |
+| Night 7 `k3` | 3562 -> **3563** | `night7-k3-replay-bdrain-20260927.json`, `recompile-replay-e875497e32c149d6` |

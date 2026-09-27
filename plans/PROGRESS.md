@@ -2267,6 +2267,14 @@ Open:
   (`recompile-replay-3eb3e4691cd3ce0f`), Night 7 2324 -> 3562 (`recompile-replay-e9390ac2828cd9ac`), Night 1
   stays 21714 (`recompile-replay-08f5e9dc54e9e100`). The no-input ladder re-scores unchanged.
 
+- `sourcedBDrainOrder` (`b-drain-order.test.js`, in the rebuild set): g344-g360 read value 1 before g361-g371 drain
+  it, so a unit promotes on the loop after its B reaches 0; the hall pin (g848-g854) follows the deferred g488/g489.
+  Night 1 21714 -> 23400 (`recompile-replay-2a5a12e1b5e6fb94`), Night 5 7811 -> 9301
+  (`recompile-replay-87c2801dcefa85ef`), Night 7 3562 -> 3563 (`recompile-replay-e875497e32c149d6`). The no-input
+  ladder re-scores unchanged.
+
 Open:
-- Night 1 21714 and Night 5 7811: a unit promoted a loop early after its value 1 drains.
-- Night 7 3562: W. Freddy's g378 return a loop early (the mask reaches value 2 a loop later in the rebuild).
+- Night 1 23400: the pending promotions and moves interleave per unit (a Toy Chica g356 discard read after Toy Bonnie
+  had moved).
+- Night 5 9301: a roll at 122 held on the latch is not retried on later loops.
+- Night 7 3563: W. Freddy's g378 return a loop early (the mask reaches value 2 a loop later in the rebuild).

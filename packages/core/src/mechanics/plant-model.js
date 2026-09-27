@@ -282,6 +282,16 @@ export class Sim {
       // hooked clock clears the model's latch (lightLogicalUntil) at the top of the tick, before the 5 s rolls
       // and moves, which moves such a unit one loop early (Night 7 k3's first replay mismatch, tick 600).
       sourcedHallLatchOrder: false,
+      // Value 1 (B, the stun and pin countdown) as the sheet orders it. g344-g360 read it for a promotion (the packed
+      // FlagOn needs value 1 == 0) BEFORE g361-g371 drain it by global value 5, and every writer sits after the drain
+      // (g378, g427/g428, the flashes g450-g457, the repels g538-g555 and g747-g750, the hall pins g848-g854). So B = N
+      // written on loop L reaches 0 at the end of L+N, and the promotion first passes on L+N+1: the model's stunUntil
+      // (L+N) blocks through f == stunUntil, not only f < stunUntil (Night 1 minimal tick 21714: Toy Bonnie promoted
+      // and drew his CAM 03 footstep a loop early after the camera flash). Readers after the drain (g546, Toy Bonnie's
+      // opening timer) keep f >= stunUntil. And the hall pin (g848-g854) is written after g488 clears the latch and
+      // g489 re-sets it, so under sourcedHallLatchOrder it runs after that deferred reset, where tickLight wrote it
+      // before (one loop more of pin on the reset loop, which the old read had cancelled).
+      sourcedBDrainOrder: false,
       // g333-g343 roll every character before any promotion (g344-g358) or move (g380 on) runs, so a move's
       // own draw (e324: W. Chica CAM 02 -> 06, Random(4)) lands after the Paper Pals roll. Off: each passed roll
       // is promoted and moved at once, and that draw shifts every later roll of the same loop onto another
@@ -1316,7 +1326,7 @@ export class Sim {
    * @param {number} f
    */
   footstepPromotable(u, f) {
-    if (f < u.stunUntil) return false;
+    if (this.opts.sourcedBDrainOrder ? f <= u.stunUntil : f < u.stunUntil) return false;   // g344-g360 read B before g361-g371
     if (this.opts.selectedCameraGate && C.SELECTED_CAMERA_GATED.has(u.id) && u.path[u.idx] === this.cam &&
         (C.WITHEREDS.has(u.id) || this.camsUp)) return false;
     if (u.id === 'mangle' && !this.camsUp && this.lightStallOn) return false;
@@ -1627,6 +1637,7 @@ export class Sim {
       this.lightLogicalUntil = -1;
       if (this.anyOfficeLightHeld && !this.camsUp) this.lightLogicalUntil = Number.MAX_SAFE_INTEGER;
     }
+    if (this.opts.sourcedBDrainOrder && this.opts.sourcedHallLatchOrder) this.hallLightPin();   // g848-g854, after g488/g489
     this.syncMangleStatic();
     this.tickBox();
     if (this.opts.sourcedDropFlagOrder) this.readDropTouch();  // g618/g619 (g556-g559 precede them but write nothing they read)
@@ -1699,13 +1710,7 @@ export class Sim {
     // one-second office-light latch remains set, hall occupants have B pinned
     // to 40. Movement therefore stays blocked for 40 more frames after the
     // latch finally clears. W. Chica and Toy Bonnie have no such group.
-    if (this.lightStallOn) {
-      for (const u of this.units) {
-        if (!u.done && C.HALL_LIGHT_PIN_IDS.has(u.id) &&
-            (u.path[u.idx] === 'blindA' || u.path[u.idx] === 'blindB'))
-          u.stunUntil = Math.max(u.stunUntil, this.frame + C.HALL_LIGHT_PIN_FRAMES);
-      }
-    }
+    if (!(this.opts.sourcedBDrainOrder && this.opts.sourcedHallLatchOrder)) this.hallLightPin();
     // Legacy diagnostic model only: a 400-frame timer refreshed by looking
     // at a Withered. The sourced look effect is the marker hold in
     // canAdvance, which releases the moment the marker leaves; this knob
@@ -1715,6 +1720,16 @@ export class Sim {
         if (C.WITHEREDS.has(u.id) && u.path[u.idx] === this.cam)
           u.stunUntil = this.frame + this.opts.passiveWitheredLookStunFrames;
       }
+    }
+  }
+
+  /** g848-g854: the hall occupants' value 1 pinned to 40 while the hall-light latch is set. */
+  hallLightPin() {
+    if (!this.lightStallOn) return;
+    for (const u of this.units) {
+      if (!u.done && C.HALL_LIGHT_PIN_IDS.has(u.id) &&
+          (u.path[u.idx] === 'blindA' || u.path[u.idx] === 'blindB'))
+        u.stunUntil = Math.max(u.stunUntil, this.frame + C.HALL_LIGHT_PIN_FRAMES);
     }
   }
 
@@ -2121,8 +2136,9 @@ export class Sim {
     if (this.opts.night !== 7) {
       if (u.id === 'withfreddy' && (onCam('withchica', 8) || onCam('withbonnie', 8))) return 'hold';   // g344
       if (u.id === 'withchica' && onCam('withbonnie', 8)) return 'hold';                               // g347
-      if (u.id === 'toyfreddy' && f >= u.stunUntil && onCam('toychica', 9)) return 'discard';          // g352
-      if (u.id === 'toychica' && f >= u.stunUntil && onCam('toybonnie', 9)) return 'discard';          // g356
+      const flagOn = this.opts.sourcedBDrainOrder ? f > u.stunUntil : f >= u.stunUntil;               // value 1 == 0
+      if (u.id === 'toyfreddy' && flagOn && onCam('toychica', 9)) return 'discard';                    // g352
+      if (u.id === 'toychica' && flagOn && onCam('toybonnie', 9)) return 'discard';                    // g356
     }
     if (u.id === 'withfreddy' && u.path[u.idx] === 3 && this.decidePath !== 1 && this.decidePath !== 2)
       return 'hold';
@@ -2141,7 +2157,7 @@ export class Sim {
   canAdvance(u, f) {
     // sourcedPromotedMoves: the move groups test value 0 == 2; the stun and the marker were the promotion's.
     if (this.opts.sourcedPromotedMoves) { if (!u.promoted) return false; }
-    else if (f < u.stunUntil) return false;
+    else if (this.opts.sourcedBDrainOrder ? f <= u.stunUntil : f < u.stunUntil) return false;
     // Android Office groups 344-348 and 357 (post-XOR decode): the
     // selected-camera marker holds a Withered's pending roll while it
     // overlaps their room, with NO monitor condition — and lowering the

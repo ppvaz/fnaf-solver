@@ -35,5 +35,6 @@
   "sourcedPromotedMoves": true,
   "sourcedValue5": true,
   "sourcedOfficeFootsteps": true,
-  "sourcedBlackoutClockEnd": true
+  "sourcedBlackoutClockEnd": true,
+  "sourcedBDrainOrder": true
 }
