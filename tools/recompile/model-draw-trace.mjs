@@ -27,12 +27,17 @@ const RESEARCH_KNOBS = ['footstepFoxy', 'footstepCamMarkers'];
 const validOption = ([key, value]) => ((/^sourced[A-Z]/.test(key) || RESEARCH_KNOBS.includes(key)) && typeof value === 'boolean') ||
   (HOOK_CONSTANTS.includes(key) && Number.isFinite(value) && value > 0);
 
-export function drawTrace({ night, seed, frames, rows = [], customNight = undefined, modelOptions = {} }) {
+/** A model-options JSON object as Sim options: each hook constant becomes its per-frame function. */
+export function simOptionsFrom(modelOptions) {
   if (!modelOptions || Array.isArray(modelOptions) || typeof modelOptions !== 'object' || !Object.entries(modelOptions).every(validOption)) {
     throw new Error('model options must be sourced* or research-knob booleans, or positive frameMs/frameValue5 constants');
   }
-  const simOptions = Object.fromEntries(Object.entries(modelOptions)
+  return Object.fromEntries(Object.entries(modelOptions)
     .map(([key, value]) => [key, HOOK_CONSTANTS.includes(key) ? () => value : value]));
+}
+
+export function drawTrace({ night, seed, frames, rows = [], customNight = undefined, modelOptions = {} }) {
+  const simOptions = simOptionsFrom(modelOptions);
   let draws = 0;
   // Sim's constructor spends draws too (for example Foxy's initial readyAt).
   // Instrument its synchronous construction, restoring the shared prototype

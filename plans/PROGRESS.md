@@ -1786,3 +1786,25 @@ green result for the final integrated tree.
 Open: a live death under the new window (the first corner or cohort death will
 show it). The margin is the mean of two intervals, not a per-read maximum. A
 static that outlasts 8724 ms is not in this sample.
+
+## 2026-09-27 — rebuild-matched options against the committed winners (S3, MODEL_ONLY, partial)
+
+`tools/rebuild-options-census.mjs` scores each story-night winner (Nights 1-6),
+k3 and the Night 7 preset schedule under `default`, `rebuild`
+(`tools/recompile/sourced-rebuild-model-options.json`) and
+`rebuild-no-cam-markers`, on design seeds 1..3000 and the first 3000 held-out
+seeds, paired seed by seed (exact McNemar; MOVED = p < 0.05 in both blocks).
+The options reach Sim's constructor through a scoped setter, and every replay
+checks its Sim carries the set. The run was stopped at session end after 4 of
+22 distinct replays (about 10 minutes per replay per worker under the shared
+machine's load, so about 4 hours for the whole run), so
+`rebuild-options-census-20260927` is **PARTIAL**: 7 of 26 subjects scored
+(Night 1 minimal and both minus7 bindings, Night 5 contact-final x3 and
+hallfix). Each wins all 3000 + 3000 seeds under all three sets: 7 IDENTICAL,
+none MOVED, and `footstepCamMarkers` alone changes nothing. The other 19,
+including all of Night 6, k3 and the preset, are NOT_RUN with no figures.
+Held by `tools/test-rebuild-options-census.mjs` (`test:unit`).
+
+Open: finish the census (`--checkpoint` resumes only with an unchanged
+generator, so re-run the 19 from scratch), then read Night 6/7 against the
+phone cohorts. No option default changed.
