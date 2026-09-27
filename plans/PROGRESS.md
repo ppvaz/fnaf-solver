@@ -1722,3 +1722,38 @@ pinned twins.**
 Open: S1 human promotion; S2 encounter-level and complete recompile equivalence; the remaining
 S3 policy/corner coverage and pinned FNaF 1 winner census; S4 reliability at a justified ceiling.
 The pinned seed protocol is refuted as an exact seed measurement, not a completed same-phase twin.
+
+**2026-09-27 (handover checkpoint): source fixes, with the fidelity gap retained.**
+
+- **S2b, MODEL_ONLY:** the earlier 18,000-update office run used flattened child
+  events and is retained as a negative, not faithful execution. Correct parent
+  gating first exposed a missing title timer (`recompile-draw-bd31edf1fb722abf`,
+  TARGET_NOT_REACHED after 4,000 updates). Source-derived one-shot timer dispatch
+  then reached 64 office updates through frames 0→1→8→2→7→3. Initialization now
+  matches the sourced model (2 draws, state 30314); the first remaining mismatch
+  is harness tick 5 / model frame 6 (2 versus 4 draws), an Every first-evaluation
+  phase boundary to investigate. `recompile-draw-ffeb7b48d8144073` and
+  `recompile-child-325040982abf3323` bind the comparison and diagnosis. Nested
+  selection/timer fixtures, parser fixtures, patch replay and diagnosis-reader
+  tests pass; none establishes full event/state or device equivalence.
+- **S2, MODEL_ONLY:** `model-encounter-fidelity-20260927` retains the encounter
+  gap, the default-off reached-event countdown variant, and its 3,000-design-seed
+  census (zero held-out). Missing post-death windows are UNKNOWN, not false
+  empty-window agreements. Night 7 phone wins still die in the model.
+- **Policy baseline, MODEL_ONLY:** `policy-baseline-mask-animation-20260927`
+  repairs a mask-off tap inside the source's put-on animation. Night 1 moves
+  from 7/25 to 25/25 on identical design seeds, zero held-out; the old schedule
+  remains a negative control and the original >=22/25 assertion is unchanged.
+  Historical jitter curves do not describe the repaired baseline. No device
+  winner changed.
+- **S3/S6:** Foxy×Mangle also retains 441/441 cells in each of four grids over
+  300 held-out seeds (`night7-dial-plane-foxy-mangle-20260927`). The pinned FNaF 1
+  winner census now saves validated 1,024-seed blocks and resumes only against
+  matching source/options/ranges. Its full population and the remaining dial
+  planes are still in progress; no partial output is a completed census.
+
+Open at this checkpoint: S1 human attestation/custody decisions; S2 valid twin
+instrumentation, Every phase diagnosis and full equivalence; unfinished S3/S6
+censuses; integrated clean-HEAD `npm run push-gate`. The prior root unit run's
+sole failure was the now-repaired policy baseline; that older run is not a
+green result for the final integrated tree.

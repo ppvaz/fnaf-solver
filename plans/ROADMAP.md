@@ -70,9 +70,11 @@ fifteen days because it was written down instead of read.
 
 Two routes lead to one answer, and they run side by side.
 
-- **S2a, on the phone.** A same-phase twin: the pinned 24850 night replayed at
-  today's anchor phase, both nights frame-traced. This is the next physical
-  test.
+- **S2a, on the phone.** A same-phase twin at a verified seed and anchor phase,
+  both nights frame-traced. The 2026-09-27 repeated clock-pin protocol did not
+  establish seed 24850: five interrupted attempts are retained, and pinned or
+  backwards clock brackets now fail closed as UNKNOWN. Establish a valid seed
+  measurement before another twin attempt; the target is unchanged.
 - **S2b, on the host.** The clean-room recompile (Plan 17 route 5, Plan 25
   horizon 2) runs until it plays a night. Its trace is then compared with the
   simulator and with the phone.
@@ -92,8 +94,14 @@ Details:
   - Its nights run about half again as busy, with Withered Chica and Withered
     Freddy in excess.
   - On Night 7 it kills nights the phone wins.
-  - The recompile boots to the title screen with placeholder sprites
-    ([recompile notes](../docs/in-engine/IN-ENGINE-PILOT-RECOMPILE.md)).
+  - The recompile reaches the office through corrected nested-child and timer
+    dispatch (2026-09-27, 64 office updates). Initialization matches the sourced
+    model, but RNG first differs at harness tick 5 / model frame 6. This is
+    MODEL_ONLY and DIVERGENT, not equivalence
+    ([comparison](../tools/recompile/results/night1-child-timer-sourced-20260927.json)).
+  - The updated encounter record still leaves the gap open, including model
+    deaths on phone-winning Night 7 runs
+    ([encounters](../docs/evidence/model-encounter-fidelity-20260927.json)).
 - **Absorbs** Plan 17 (route 5), Plan 25 horizon 2, and the model parts of
   Plans 15 and 19.
 
