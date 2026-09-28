@@ -181,10 +181,10 @@ index 950da8d..eb20377 100644
  inline int FrameObject::get_x()
 diff --git a/Chowdren/base/harness.h b/Chowdren/base/harness.h
 new file mode 100644
-index 0000000..eb4a6fa
+index 0000000..2c07c96
 --- /dev/null
 +++ b/Chowdren/base/harness.h
-@@ -0,0 +1,106 @@
+@@ -0,0 +1,112 @@
 +#ifndef CHOWDREN_HARNESS_H
 +#define CHOWDREN_HARNESS_H
 +
@@ -262,6 +262,12 @@ index 0000000..eb4a6fa
 +// replay then runs on a measured clock (the phone's frame trace) instead.
 +// Returns false when no line applies to the update about to run.
 +bool harness_frame_ms(double * ms);
++// The clock a channel's playing state and position follow under the harness
++// (media.cpp): seconds, the sum of every update's delta so far, so a sound
++// ends after its decoded length of game time however fast the steps run.
++double harness_audio_time();
++int harness_frame_index();
++int harness_tick();
 +void harness_init();
 +void harness_seed_frame(int index);
 +void harness_before_events(int frame_index);
@@ -471,7 +477,7 @@ index ed74b78..f9d064d 100644
  
  inline void to_lower(std::string & str)
 diff --git a/Chowdren/chowdren/converter.py b/Chowdren/chowdren/converter.py
-index d8edac8..b81f8be 100644
+index d8edac8..de9af93 100644
 --- a/Chowdren/chowdren/converter.py
 +++ b/Chowdren/chowdren/converter.py
 @@ -22,7 +22,8 @@ import string
@@ -492,7 +498,65 @@ index d8edac8..b81f8be 100644
  
  WRITE_SOUNDS = True
  PROFILE = False
-@@ -1107,7 +1109,7 @@ class Converter(object):
+@@ -534,6 +536,30 @@ class FrameDataWriter(MultiFileWriter):
+         self.putln('#include "events.h"')
+         self.putlnc('#include "%s.h"', self.get_filename())
+ 
++def mp3_to_wav(data, name):
++    # ffmpeg on the conversion host: 16-bit PCM WAV at the source's rate and
++    # channel count. No MP3 decoder is bundled with the runtime.
++    import subprocess
++    import tempfile
++    src = tempfile.NamedTemporaryFile(suffix='.mp3', delete=False)
++    dst = src.name[:-4] + '.wav'
++    try:
++        src.write(str(data))
++        src.close()
++        # A seekable output, so the RIFF and data sizes are written.
++        ret = subprocess.call(['ffmpeg', '-v', 'error', '-nostdin', '-y', '-i',
++                               src.name, '-map_metadata', '-1', '-f', 'wav',
++                               '-acodec', 'pcm_s16le', '-bitexact', dst])
++        out = open(dst, 'rb').read() if ret == 0 and os.path.exists(dst) else ''
++        if out[:4] != 'RIFF':
++            raise RuntimeError('ffmpeg could not decode MP3 sound %r' % name)
++    finally:
++        os.unlink(src.name)
++        if os.path.exists(dst):
++            os.unlink(dst)
++    print 'sound %r: MP3 decoded to WAV (%d bytes)' % (name, len(out))
++    return out
++
+ def fix_sound(data, extension):
+     data = str(data)
+     if extension != 'wav':
+@@ -1101,13 +1127,33 @@ class Converter(object):
+         self.image_indexes = {}
+         image_hashes = {}
+         new_entries = []
+-        maxrects_images = []
+         image_index = 0
++
++        # Compression runs while the images are read: each new image goes to
++        # the compressors as soon as it is decoded and is not kept (an image's
++        # pixels decode once; getImageData unloads them). Holding every decoded
++        # image until compression started was the conversion's memory peak.
++        # CHOWDREN_IMAGE_WORKERS sets the compressor count (default 8, as
++        # before), and the queue is bounded so that pending images do not pile
++        # up as pickled copies in this process.
++        from chowdren.imageworker import worker
++        worker_count = max(1, int(os.environ.get('CHOWDREN_IMAGE_WORKERS', '8')))
++        in_queue = multiprocessing.Queue(2 * worker_count)
++        workers = []
++        for _ in xrange(worker_count):
++            p = multiprocessing.Process(target=worker, args=(in_queue,))
++            p.start()
++            workers.append(p)
++
++        def get_image_path(image_hash):
++            image_hash = image_hash.encode('hex')
++            return self.get_filename('image_cache', '%s.dat' % image_hash)
++
+         for game_index, game in enumerate(self.games):
              if not game.images:
                  continue
              for image in game.images.itemDict.itervalues():
@@ -501,7 +565,89 @@ index d8edac8..b81f8be 100644
                      image.height), image.getImageData())
  
                  handle = (image.handle, game_index)
-@@ -1251,7 +1253,14 @@ class Converter(object):
+@@ -1134,7 +1180,10 @@ class Converter(object):
+                 image_hashes[image_hash] = image_index
+ 
+                 new_entries.append((image, image_hash))
+-                maxrects_images.append(pil_image)
++                cache_path = get_image_path(image_hash)
++                if not os.path.isfile(cache_path):
++                    in_queue.put((pil_image.tobytes(), image_index,
++                                  image_index, cache_path))
+ 
+                 image_index += 1
+ 
+@@ -1144,32 +1193,6 @@ class Converter(object):
+         # for file_index, rects in enumerate(maxrects):
+         #     rects.get().save('./testmaxrects/atlas%s.png' % file_index)
+ 
+-        from chowdren.imageworker import worker
+-        in_queue = multiprocessing.Queue()
+-        worker_count = 8
+-        workers = []
+-        for _ in xrange(worker_count):
+-            p = multiprocessing.Process(target=worker, args=(in_queue,))
+-            p.start()
+-            workers.append(p)
+-
+-        def get_image_path(image_hash):
+-            image_hash = image_hash.encode('hex')
+-            return self.get_filename('image_cache', '%s.dat' % image_hash)
+-
+-        for i, (image, image_hash) in enumerate(new_entries):
+-            cache_path = get_image_path(image_hash)
+-            if not os.path.isfile(cache_path):
+-                pil_image = maxrects_images[i]
+-                p = (i * 100) / len(new_entries)
+-                in_queue.put((pil_image.tobytes(), i, p, cache_path))
+-            #     temp = open(cache_path, 'rb').read()
+-            # else:
+-            #     p = (i * 100) / len(new_entries)
+-            #     print 'Caching image', image.handle, '(%s%%)' % p
+-            #     temp = self.platform.get_image(maxrects_images[i])
+-            #     open(cache_path, 'wb').write(temp)
+-
+         for i in xrange(worker_count):
+             in_queue.put(None)
+ 
+@@ -1191,18 +1214,31 @@ class Converter(object):
+         for game in self.games:
+             if not game.sounds:
+                 continue
++            mobile = game.productBuild >= 290
+             for sound in game.sounds.items:
+-                if sound.name in sound_set:
+-                    continue
+-                sound_set.add(sound.name)
++                name = sound.name
++                if name in sound_set:
++                    if not mobile:
++                        continue
++                    # A mobile Sample names its sound by handle; keep every
++                    # record even when two share a name.
++                    name = '%s %d' % (name, sound.handle)
++                sound_set.add(name)
+                 sound_type = sound.getType()
+                 extension = {'OGG' : 'ogg', 'WAV' : 'wav', 'MOD' : 'mp3'}[
+                     sound_type]
+-                filename = '%s.%s' % (sound.name, extension)
++                filename = '%s.%s' % (name, extension)
+                 data = fix_sound(sound.data, extension)
++                if extension == 'mp3':
++                    # The runtime decodes WAV and Ogg Vorbis only; an MP3
++                    # (FNaF 2's handle 14, the menu music) became a NATIVE
++                    # asset the decoder rejected. Decode it here instead.
++                    data = mp3_to_wav(data, name)
++                    filename = '%s.wav' % name
+                 filename, data = self.platform.get_sound(filename, data)
+                 new_extension = os.path.splitext(filename)[1].lower()[1:]
+-                self.assets.add_sound(sound.name, new_extension, data)
++                self.assets.add_sound(name, new_extension, data,
++                    handle=sound.handle if mobile else None)
+ 
+         # files
+         for game in self.games:
+@@ -1251,7 +1287,14 @@ class Converter(object):
          self.container_ids = Counter()
          frame_file = FrameDataWriter(frame_index+1, self)
          frame_class_name = self.frame_class = frame_file.class_name
@@ -517,7 +663,7 @@ index d8edac8..b81f8be 100644
          self.current_frame = frame
          self.current_frame_index = frame_index
          self.config.init_frame(frame)
-@@ -1268,7 +1277,15 @@ class Converter(object):
+@@ -1268,7 +1311,15 @@ class Converter(object):
          object_writers.append(self.system_object)
  
          for instance in getattr(frame.instances, 'items', ()):
@@ -534,7 +680,7 @@ index d8edac8..b81f8be 100644
              obj = (frameitem.handle, frameitem.objectType)
              all_startup_infos.add(obj)
              try:
-@@ -1299,6 +1316,14 @@ class Converter(object):
+@@ -1299,6 +1350,14 @@ class Converter(object):
              elif object_writer.has_autodestruct():
                  self.multiple_instances.add(obj)
  
@@ -549,7 +695,7 @@ index d8edac8..b81f8be 100644
          events = frame.events
  
          self.qualifier_names = {}
-@@ -1345,10 +1370,22 @@ class Converter(object):
+@@ -1345,10 +1404,22 @@ class Converter(object):
          changed_containers = set()
  
          event_items = events.items
@@ -573,7 +719,7 @@ index d8edac8..b81f8be 100644
              name = self.get_condition_name(first_condition)
              if name == 'NewGroup':
                  group_loader = first_condition.items[0].loader
-@@ -1359,6 +1396,9 @@ class Converter(object):
+@@ -1359,6 +1430,9 @@ class Converter(object):
                      current_container.add_child(new_container)
                  current_container = new_container
                  containers[group_loader.offset] = current_container
@@ -583,7 +729,7 @@ index d8edac8..b81f8be 100644
                  always_groups.append(ContainerMark(current_container, name))
                  continue
              elif name == 'GroupEnd':
-@@ -1403,6 +1443,8 @@ class Converter(object):
+@@ -1403,6 +1477,8 @@ class Converter(object):
              for action in group.actions:
                  action_writer = self.get_action_writer(action)
                  action_writer.container = current_container
@@ -592,7 +738,7 @@ index d8edac8..b81f8be 100644
                  actions.append(action_writer)
  
                  action_name = self.get_action_name(action)
-@@ -1426,8 +1468,11 @@ class Converter(object):
+@@ -1426,8 +1502,11 @@ class Converter(object):
                          self.multiple_instances.add(create_info)
                  elif action_name in ('DeactivateGroup',
                                       'ActivateGroup'):
@@ -606,7 +752,7 @@ index d8edac8..b81f8be 100644
  
              always_group_index = None
              generated_group_index = None
-@@ -1466,7 +1511,12 @@ class Converter(object):
+@@ -1466,7 +1545,12 @@ class Converter(object):
                  new_group.post_event = first_writer.post_event
                  new_group.precedence = first_writer.precedence
  
@@ -620,7 +766,7 @@ index d8edac8..b81f8be 100644
                      new_always_groups.append(new_group)
                      new_group.local_id = len(always_groups_dict[name])+1
  
-@@ -1610,9 +1660,13 @@ class Converter(object):
+@@ -1610,9 +1694,13 @@ class Converter(object):
  
          # set up qualifiers
          for name, instances in qualifier_setup.iteritems():
@@ -635,7 +781,7 @@ index d8edac8..b81f8be 100644
              start_writer.putlnc('%s.set(%s, &%s_instances[0]);', name,
                                  len(instances), name)
  
-@@ -1620,6 +1674,16 @@ class Converter(object):
+@@ -1620,6 +1708,16 @@ class Converter(object):
              startup_instances)
          self.startup_instances = startup_instances
  
@@ -652,7 +798,7 @@ index d8edac8..b81f8be 100644
          for instance, frameitem in startup_instances:
              obj = (frameitem.handle, frameitem.objectType)
              object_writer = self.get_object_writer(obj)
-@@ -1674,6 +1738,19 @@ class Converter(object):
+@@ -1674,6 +1772,19 @@ class Converter(object):
              frame_file.end_brace()
          frame_file.end_brace()
  
@@ -672,7 +818,7 @@ index d8edac8..b81f8be 100644
          # write 'always' event subfunctions
          group_index = 0
          call_groups = []
-@@ -2178,6 +2255,8 @@ class Converter(object):
+@@ -2178,6 +2289,8 @@ class Converter(object):
              return 'SavedIterator'
          if is_qualifier(obj[0]):
              return 'QualifierIterator'
@@ -681,7 +827,7 @@ index d8edac8..b81f8be 100644
          return 'ObjectIterator'
  
      @contextlib.contextmanager
-@@ -2217,6 +2296,13 @@ class Converter(object):
+@@ -2217,6 +2330,13 @@ class Converter(object):
              return
          
          list_name = self.get_object_list(object_info)
@@ -695,7 +841,7 @@ index d8edac8..b81f8be 100644
          is_qual = is_qualifier(object_info[0])
          if is_qual:
              writer.putlnc('for (int i = 0; i < %s.count; i++)', list_name)
-@@ -2280,6 +2366,14 @@ class Converter(object):
+@@ -2280,6 +2400,14 @@ class Converter(object):
              writer.putln('if (!%s) goto %s;' % (
                  item.code_name, item.end_label))
  
@@ -710,7 +856,7 @@ index d8edac8..b81f8be 100644
      def get_container_check(self, container):
          groups = []
          for item in container.tree:
-@@ -2508,6 +2602,30 @@ class Converter(object):
+@@ -2508,6 +2636,30 @@ class Converter(object):
          return self.write_events(name, writer, groups, True, pre_calls,
                                   post_calls)
  
@@ -741,7 +887,7 @@ index d8edac8..b81f8be 100644
      def get_event_code(self, group, triggered=False):
          group.set_groups(self, self.current_groups)
          self.is_triggered = triggered
-@@ -2541,6 +2659,7 @@ class Converter(object):
+@@ -2541,6 +2693,7 @@ class Converter(object):
  
          conditions = group.conditions
          if triggered:
@@ -749,7 +895,7 @@ index d8edac8..b81f8be 100644
              conditions = conditions[1:]
  
          if conditions or has_container_check:
-@@ -2602,26 +2721,36 @@ class Converter(object):
+@@ -2602,26 +2755,36 @@ class Converter(object):
  
                  for write_condition in write_conditions:
                      negated = not write_condition.is_negated()
@@ -801,7 +947,7 @@ index d8edac8..b81f8be 100644
                      if negated:
                          writer.put(')')
                      if has_multiple:
-@@ -2655,6 +2784,8 @@ class Converter(object):
+@@ -2655,6 +2818,8 @@ class Converter(object):
                  or_lists.add(list_name)
  
              for list_name in or_lists:
@@ -810,7 +956,7 @@ index d8edac8..b81f8be 100644
                  if is_logical:
                      writer.putlnc('%s.clear_selection();', list_name)
                  else:
-@@ -2673,7 +2804,8 @@ class Converter(object):
+@@ -2673,7 +2838,8 @@ class Converter(object):
                  check = '%s' % (' || '.join(or_bools))
                  writer.putlnc('if (%s) {', check)
                  writer.indent()
@@ -820,7 +966,7 @@ index d8edac8..b81f8be 100644
                  writer.end_brace()
  
              # writer.start_brace()
-@@ -2689,15 +2821,28 @@ class Converter(object):
+@@ -2689,15 +2855,28 @@ class Converter(object):
              if action_writer.custom:
                  action_writer.write(writer)
                  continue
@@ -850,7 +996,7 @@ index d8edac8..b81f8be 100644
              if object_info is not None:
                  if obj in self.has_single_selection:
                      has_single = True
-@@ -2705,9 +2850,20 @@ class Converter(object):
+@@ -2705,9 +2884,20 @@ class Converter(object):
                      has_multiple = True
                  elif not self.is_valid_object(obj):
                      object_info = None
@@ -871,7 +1017,7 @@ index d8edac8..b81f8be 100644
              object_name = None
              write_actions = [action_writer]
              if has_single:
-@@ -2721,6 +2877,9 @@ class Converter(object):
+@@ -2721,6 +2911,9 @@ class Converter(object):
                          break
                      if next_action.custom:
                          break
@@ -881,7 +1027,7 @@ index d8edac8..b81f8be 100644
                      if next_action.iterate_objects is False:
                          break
                      action_index += 1
-@@ -2734,6 +2893,19 @@ class Converter(object):
+@@ -2734,6 +2927,19 @@ class Converter(object):
                  self.set_iterator(obj, list_name)
                  object_name = '*it'
              elif object_info is not None:
@@ -901,7 +1047,7 @@ index d8edac8..b81f8be 100644
                  writer.putindent()
                  writer.put('%s->' % self.get_object(obj))
              elif action_writer.static:
-@@ -2805,7 +2977,8 @@ class Converter(object):
+@@ -2805,7 +3011,8 @@ class Converter(object):
                  continue
              list_name = self.get_object_list(obj, True)
              group.or_selected[obj] = list_name
@@ -911,7 +1057,7 @@ index d8edac8..b81f8be 100644
  
          writer.putlnc('if (%s) {', group.or_temp_result)
          writer.indent()
-@@ -2817,7 +2990,8 @@ class Converter(object):
+@@ -2817,7 +3024,8 @@ class Converter(object):
          for obj, list_name in self.has_selection.iteritems():
              if obj in has_qualifier:
                  continue
@@ -921,7 +1067,26 @@ index d8edac8..b81f8be 100644
  
          writer.end_brace()
  
-@@ -2965,6 +3139,14 @@ class Converter(object):
+@@ -2893,6 +3101,18 @@ class Converter(object):
+             if parameter_name == 'Object':
+                 return self.get_object((loader.objectInfo, loader.objectType))
+             elif parameter_name == 'Sample':
++                if self.build >= 290:
++                    # Build-296 mobile: the parameter's name is not the bank
++                    # record's, and the runtime plays the handle
++                    # (PARAM_SAMPLE.load: sndHandle, then sndFlags).
++                    sound_id = self.assets.get_sound_id_by_handle(
++                        loader.handle, loader.name)
++                    if (sound_id != 'INVALID_ASSET_ID' and
++                            loader.flags['Uninterruptible']):
++                        # CSoundChannel.stop(false) keeps an uninterruptible
++                        # sample playing; media.cpp reads the flag off the id.
++                        return '(%s | SOUND_UNINTERRUPTIBLE)' % sound_id
++                    return sound_id
+                 return self.assets.get_sound_id(loader.name)
+             elif parameter_name in ('Position', 'Shoot', 'Create'):
+                 if parameter_name != 'Position':
+@@ -2965,6 +3185,14 @@ class Converter(object):
                  return self.intern_string(loader.value)
              elif parameter_name in ('TwoShorts'):
                  return to_c('%r, %r', loader.value1, loader.value2)
@@ -936,7 +1101,7 @@ index d8edac8..b81f8be 100644
              else:
                  raise NotImplementedError('parameter: %s' % parameter_name)
          self.start_clauses += out.count('(')
-@@ -2978,16 +3160,25 @@ class Converter(object):
+@@ -2978,16 +3206,25 @@ class Converter(object):
  
              if remove != 1:
                  print out
@@ -967,7 +1132,7 @@ index d8edac8..b81f8be 100644
  
              filtered = out[end+1:]
              out = out[:end+1]
-@@ -3068,7 +3259,8 @@ class Converter(object):
+@@ -3068,7 +3305,8 @@ class Converter(object):
              clear_lists = (list_name,)
  
          for obj_list in clear_lists:
@@ -977,7 +1142,7 @@ index d8edac8..b81f8be 100644
  
          for obj in objs:
              if obj == object_info:
-@@ -3149,6 +3341,18 @@ class Converter(object):
+@@ -3149,6 +3387,18 @@ class Converter(object):
                  if default_instance:
                      args.append(default_instance)
  
@@ -996,7 +1161,7 @@ index d8edac8..b81f8be 100644
              if is_qual:
                  getter_name = 'get_qualifier'
              else:
-@@ -3160,6 +3364,25 @@ class Converter(object):
+@@ -3160,6 +3410,25 @@ class Converter(object):
      def get_default_instance(self, object_type):
          return self.get_object_impl(object_type).default_instance
  
@@ -1022,7 +1187,7 @@ index d8edac8..b81f8be 100644
      def get_object_list(self, obj, allow_single=False):
          if self.has_single(obj) and not allow_single:
              print 'single exception:', self.get_single(obj)
-@@ -3170,11 +3393,23 @@ class Converter(object):
+@@ -3170,11 +3439,23 @@ class Converter(object):
          if is_qual:
              return type_id
          obj = self.filter_object_type(obj)
@@ -1048,7 +1213,7 @@ index d8edac8..b81f8be 100644
  
      def filter_object_type(self, obj):
          if is_qualifier(obj[0]):
-@@ -3285,9 +3520,12 @@ class Converter(object):
+@@ -3285,9 +3566,12 @@ class Converter(object):
                  return get_method_name('_'.join(full_name))
          ret = item.getName()
          if ret is None:
@@ -1064,7 +1229,7 @@ index d8edac8..b81f8be 100644
          return ret
  
      def get_action_writer(self, item, as_klass = False):
-@@ -3329,6 +3567,24 @@ class Converter(object):
+@@ -3329,6 +3613,24 @@ class Converter(object):
              klass = getattr(writer_module, ace_type)[key]
          except (KeyError, AttributeError):
              klass = default_writers[ace_type]
@@ -1193,7 +1358,7 @@ index 1943544..ab10e20 100644
              print 'meth:', self.method
              raise e
 diff --git a/Chowdren/chowdren/writers/events/system.py b/Chowdren/chowdren/writers/events/system.py
-index 48623cf..ba17a78 100644
+index 48623cf..1c5b9bb 100644
 --- a/Chowdren/chowdren/writers/events/system.py
 +++ b/Chowdren/chowdren/writers/events/system.py
 @@ -2,7 +2,8 @@ from mmfparser.data.chunkloaders.objectinfo import SEMITRANSPARENT_EFFECT
@@ -1288,7 +1453,7 @@ index 48623cf..ba17a78 100644
          selected_name = converter.create_list(object_info, writer)
          if negated:
              other_selected = converter.get_object_list(other_info,
-@@ -548,6 +589,68 @@ class Always(ConditionWriter):
+@@ -548,6 +589,71 @@ class Always(ConditionWriter):
      def write(self, writer):
          pass
  
@@ -1313,7 +1478,10 @@ index 48623cf..ba17a78 100644
 +        for obj in child_scope_objects(self):
 +            name = converter.get_object_list(obj)
 +            if converter.is_static_backdrop_list(name):
-+                raise NotImplementedError('static child selection')
++                # A static backdrop has no per-instance selection to carry
++                # into the children: they see every instance (FNaF 1).
++                print 'child scope: static backdrop %s selection not carried' % name
++                continue
 +            single = converter.get_single(obj)
 +            if single is not None:
 +                writer.putlnc('%s.select_single(%s);', name, single)
@@ -1332,7 +1500,7 @@ index 48623cf..ba17a78 100644
 +        for obj in child_scope_objects(self):
 +            name = converter.get_object_list(obj)
 +            if converter.is_static_backdrop_list(name):
-+                raise NotImplementedError('static child selection')
++                continue
 +            writer.putlnc('%s.restore_child_selection(child_event_selection);', name)
 +            converter.has_single_selection.pop(obj, None)
 +            converter.set_list(obj, name)
@@ -1357,7 +1525,7 @@ index 48623cf..ba17a78 100644
  class MouseClicked(ConditionWriter):
      is_always = True
      pre_event = True
-@@ -659,15 +762,23 @@ class TimerEvery(ConditionWriter):
+@@ -659,15 +765,23 @@ class TimerEvery(ConditionWriter):
      custom = True
  
      def write(self, writer):
@@ -1386,7 +1554,7 @@ index 48623cf..ba17a78 100644
  
  class AnimationFinished(ConditionWriter):
      is_always = True
-@@ -751,8 +862,7 @@ class OnceCondition(ConditionWriter):
+@@ -751,8 +865,7 @@ class OnceCondition(ConditionWriter):
  
  class GroupActivated(ConditionWriter):
      def write(self, writer):
@@ -1396,7 +1564,7 @@ index 48623cf..ba17a78 100644
          writer.put(self.converter.get_container_check(container))
  
  class PickRandom(ConditionWriter):
-@@ -924,6 +1034,42 @@ class PickFlagOn(PickAlterableCondition):
+@@ -924,6 +1037,42 @@ class PickFlagOn(PickAlterableCondition):
          writer.end_brace()
  
  
@@ -1439,7 +1607,7 @@ index 48623cf..ba17a78 100644
  class PickFromFixed(PickCondition):
      def write_pick(self, writer, objs):
          writer.start_brace()
-@@ -1120,8 +1266,14 @@ class CreateBase(ActionWriter):
+@@ -1120,8 +1269,14 @@ class CreateBase(ActionWriter):
  
          if object_info != parent_info and (not has_selection and
                                             not select_single):
@@ -1456,7 +1624,7 @@ index 48623cf..ba17a78 100644
  
          writer.putlnc('// select single: %s %s %s', select_single,
                        multi, has_selection)
-@@ -1191,6 +1343,11 @@ class CreateBase(ActionWriter):
+@@ -1191,6 +1346,11 @@ class CreateBase(ActionWriter):
                  writer.indent()
                  writer.putlnc('%s = new_obj;', single_name)
                  writer.dedent()
@@ -1468,7 +1636,7 @@ index 48623cf..ba17a78 100644
              else:
                  writer.putlnc('%s.add_back();', list_name)
              if is_shoot:
-@@ -1425,9 +1582,7 @@ class Foreach(ActionWriter):
+@@ -1425,9 +1585,7 @@ class Foreach(ActionWriter):
      custom = True
  
      def get_name(self):
@@ -1479,7 +1647,7 @@ index 48623cf..ba17a78 100644
  
      def write(self, writer):
          self.reorder = self.converter.config.reorder_foreach()
-@@ -1461,14 +1616,26 @@ class Foreach(ActionWriter):
+@@ -1461,14 +1619,26 @@ class Foreach(ActionWriter):
              writer.putlnc('%s();', func_call)
          writer.end_brace()
  
@@ -1508,7 +1676,7 @@ index 48623cf..ba17a78 100644
          if name is not None:
              return name
          return self.converter.config.get_dynamic_loop_call_name(parameter)
-@@ -1558,8 +1725,11 @@ class StartLoop(ActionWriter):
+@@ -1558,8 +1728,11 @@ class StartLoop(ActionWriter):
                  times = exp.loader.value
                  if times == -1:
                      comparison = 'true'
@@ -1522,7 +1690,7 @@ index 48623cf..ba17a78 100644
          if times is None:
              times = self.convert_index(1)
          is_infinite = comparison is not None
-@@ -1622,15 +1792,13 @@ class DeactivateGroup(ActionWriter):
+@@ -1622,15 +1795,13 @@ class DeactivateGroup(ActionWriter):
  
      def get_deactivated_container(self):
          if self.deactivated_container is None:
@@ -1540,7 +1708,7 @@ index 48623cf..ba17a78 100644
          if name is None:
              name = self.converter.convert_parameter(parameter)
              print 'Could not convert stop loop name for', name
-@@ -1640,8 +1808,7 @@ class StopLoop(ActionWriter):
+@@ -1640,8 +1811,7 @@ class StopLoop(ActionWriter):
  
  class SetLoopIndex(ActionWriter):
      def write(self, writer):
@@ -1550,7 +1718,7 @@ index 48623cf..ba17a78 100644
          index_name = get_loop_index_name(name)
          value = self.convert_index(1)
          writer.putln('%s = %s;' % (index_name, value))
-@@ -1650,8 +1817,7 @@ class ActivateGroup(ActionWriter):
+@@ -1650,8 +1820,7 @@ class ActivateGroup(ActionWriter):
      custom = True
  
      def write(self, writer):
@@ -1560,7 +1728,7 @@ index 48623cf..ba17a78 100644
          writer.putlnc('if (!%s) {', container.code_name)
          writer.indent()
          writer.putlnc('%s = true;', container.code_name)
-@@ -1872,13 +2038,49 @@ class MinusExpression(ConstantExpression):
+@@ -1872,13 +2041,49 @@ class MinusExpression(ConstantExpression):
  class MultiplyExpression(ConstantExpression):
      value = '*'
  
@@ -1612,7 +1780,7 @@ index 48623cf..ba17a78 100644
  
  class ModulusExpression(ConstantExpression):
      value = '%'
-@@ -1970,9 +2172,13 @@ class GetLoopIndex(ExpressionWriter):
+@@ -1970,9 +2175,13 @@ class GetLoopIndex(ExpressionWriter):
              size = 2
              next_exp = items[converter.item_index + 1]
              if next_exp.getName() != 'String':
@@ -1629,7 +1797,7 @@ index 48623cf..ba17a78 100644
              else:
                  name = next_exp.loader.value
          converter.item_index += size
-@@ -2055,6 +2261,7 @@ actions = make_table(ActionMethodWriter, {
+@@ -2055,6 +2264,7 @@ actions = make_table(ActionMethodWriter, {
      'CreateObject' : CreateObject,
      'Shoot' : ShootObject,
      'StartLoop' : StartLoop,
@@ -1637,7 +1805,7 @@ index 48623cf..ba17a78 100644
      'Foreach' : Foreach,
      'StopLoop' : StopLoop,
      'SwapPosition' : SwapPosition,
-@@ -2072,6 +2279,11 @@ actions = make_table(ActionMethodWriter, {
+@@ -2072,6 +2282,11 @@ actions = make_table(ActionMethodWriter, {
      'SetMinimumValue' : 'set_min',
      'SetGlobalString' : 'global_strings->set',
      'SetGlobalValue' : 'global_values->set',
@@ -1649,7 +1817,7 @@ index 48623cf..ba17a78 100644
      'AddGlobalValue' : 'global_values->add',
      'AddGlobalValueInt' : 'global_values->add',
      'SubtractGlobalValue' : 'global_values->sub',
-@@ -2160,6 +2372,7 @@ actions = make_table(ActionMethodWriter, {
+@@ -2160,6 +2375,7 @@ actions = make_table(ActionMethodWriter, {
      'PauseApplication' : 'pause',
      'SetRandomSeed' : 'set_random_seed',
      'SetTimer' : 'set_timer((%s) / 1000.0)',
@@ -1657,7 +1825,7 @@ index 48623cf..ba17a78 100644
      'SetLoopIndex' : SetLoopIndex,
      'IgnoreControls' : IgnoreControls,
      'RestoreControls' : RestoreControls,
-@@ -2225,6 +2438,10 @@ conditions = make_table(ConditionMethodWriter, {
+@@ -2225,6 +2441,10 @@ conditions = make_table(ConditionMethodWriter, {
      'WhileMousePressed' : 'is_mouse_pressed',
      'MouseOnObject' : MouseOnObject,
      'Always' : Always,
@@ -1668,7 +1836,7 @@ index 48623cf..ba17a78 100644
      'MouseClicked' : MouseClicked,
      'ObjectClicked' : ObjectClicked,
      'PlayerKeyDown' : PlayerKeyDown,
-@@ -2266,12 +2483,12 @@ conditions = make_table(ConditionMethodWriter, {
+@@ -2266,12 +2486,12 @@ conditions = make_table(ConditionMethodWriter, {
      'PathFinished' : PathFinished,
      'NodeReached' : NodeReached,
      'CompareSpeed' : make_comparison('get_movement()->get_speed()'),
@@ -1683,7 +1851,7 @@ index 48623cf..ba17a78 100644
      'NumberOfLives' :  make_comparison('manager.lives'),
      'PlayerDied' : PlayerDied,
      'AnyKeyPressed' : AnyKeyPressed,
-@@ -2290,6 +2507,7 @@ conditions = make_table(ConditionMethodWriter, {
+@@ -2290,6 +2510,7 @@ conditions = make_table(ConditionMethodWriter, {
  })
  
  expressions = make_table(ExpressionMethodWriter, {
@@ -2198,10 +2366,23 @@ index 7966f0f..feb83de 100644
          old = self.settings.get('old', False)
          if debug:
 diff --git a/mmfparser/data/chunkloaders/frame.py b/mmfparser/data/chunkloaders/frame.py
-index dc38547..046dd8b 100644
+index dc38547..137cb2a 100644
 --- a/mmfparser/data/chunkloaders/frame.py
 +++ b/mmfparser/data/chunkloaders/frame.py
-@@ -73,6 +73,17 @@ class MovementTimerBase(DataLoader):
+@@ -24,6 +24,12 @@ from mmfparser.data.chunkloaders.transition import FadeIn, FadeOut
+ from mmfparser.data import chunk
+ from mmfparser.loader import DataLoader
+ 
++import os
++# A placed instance's object handle XOR is per game: Frame/CLO.load in each
++# APK's dex reads readAShort() ^ 48 (FNaF 2), ^ 50 (FNaF 3), ^ 62 (FNaF 4) and
++# no XOR (FNaF 1). MMFPARSER_LO_XOR names it; unset keeps FNaF 2's 48.
++LO_XOR = int(os.environ.get('MMFPARSER_LO_XOR', '48'))
++
+ class LayerEffects(DataLoader):
+     def read(self, reader):
+         reader.seek(0, 2)
+@@ -73,6 +79,17 @@ class MovementTimerBase(DataLoader):
      def write(self, reader):
          reader.writeInt(self.value)
  
@@ -2219,7 +2400,7 @@ index dc38547..046dd8b 100644
  class Frame(DataLoader):
      name = None
  
-@@ -248,8 +259,15 @@ class Layer(DataLoader):
+@@ -248,8 +265,15 @@ class Layer(DataLoader):
      def read(self, reader):
          value = reader.readInt(True)
          self.flags.setFlags(value)
@@ -2237,7 +2418,7 @@ index dc38547..046dd8b 100644
          self.numberOfBackgrounds = reader.readInt()
          self.backgroundIndex = reader.readInt()
          self.name = self.readString(reader)
-@@ -317,6 +335,15 @@ class ObjectInstance(DataLoader):
+@@ -317,6 +341,15 @@ class ObjectInstance(DataLoader):
          self.parentType = reader.readShort()
          self.parentHandle = reader.readShort() # object info
          self.layer = reader.readShort()
@@ -2247,13 +2428,13 @@ index dc38547..046dd8b 100644
 +        # header is ^ 28, objectinfo.pyx). docs/android/ANDROID-SOURCE-STATUS.md
 +        # 2026-09-15 has the dex reading and the Office join it fixed.
 +        if self.settings.get('build', 0) >= 290 and not self.settings.get('compat', False):
-+            self.objectInfo ^= 48
++            self.objectInfo ^= LO_XOR
 +            if self.parentType == 2:
-+                self.parentHandle ^= 48
++                self.parentHandle ^= LO_XOR
          reader.skipBytes(2)
  
      def write(self, reader):
-@@ -408,4 +435,5 @@ class FramePassword(StringChunk):
+@@ -408,4 +441,5 @@ class FramePassword(StringChunk):
  
  __all__ = ['FrameHandles', 'FrameName', 'Frame', 'FrameHeader',
      'VirtualSize', 'ObjectInstances', 'Layers', 'FramePalette',
@@ -2474,10 +2655,23 @@ index 80d294a..613310f 100644
          debug = self.settings.get('debug', False)
          
 diff --git a/mmfparser/data/chunkloaders/objectinfo.pyx b/mmfparser/data/chunkloaders/objectinfo.pyx
-index b9dc58f..0934670 100644
+index b9dc58f..76800ed 100644
 --- a/mmfparser/data/chunkloaders/objectinfo.pyx
 +++ b/mmfparser/data/chunkloaders/objectinfo.pyx
-@@ -141,6 +141,12 @@ class ObjectHeader(DataLoader, _ObjectTypeMixin):
+@@ -22,6 +22,12 @@ from mmfparser.loader cimport DataLoader
+ from mmfparser.data.chunkloaders.common import _ObjectTypeMixin
+ from mmfparser import byteflag
+ 
++import os
++# The item-header handle XOR is per game: OI/COI.loadHeader in each APK's dex
++# reads readAShort() ^ 28 (FNaF 2), ^ 29 (FNaF 3, FNaF 4), and no XOR (FNaF 1).
++# MMFPARSER_OI_XOR names it for the CCN being read; unset keeps FNaF 2's 28.
++OI_XOR = int(os.environ.get('MMFPARSER_OI_XOR', '28'))
++
+ EXTENSION_BASE = 32
+ 
+ objectTypes = {
+@@ -141,6 +147,12 @@ class ObjectHeader(DataLoader, _ObjectTypeMixin):
  
      def read(self, ByteReader reader):
          self.handle = reader.readShort()
@@ -2486,7 +2680,7 @@ index b9dc58f..0934670 100644
 +        # 57 and 37). Unscramble so items, instances and events agree -- the
 +        # numbering CTFAK's dump uses.
 +        if self.settings.get('build', 0) >= 290 and not self.settings.get('compat', False):
-+            self.handle ^= 28
++            self.handle ^= OI_XOR
          self.objectType = reader.readShort()
          self.flags.setFlags(reader.readShort(True))
          reserved = reader.readShort() # no longer used
@@ -2713,7 +2907,7 @@ index 9e3e3ba..482976a 100644
  
  def getName(id):
 diff --git a/mmfparser/data/chunkloaders/soundbank.py b/mmfparser/data/chunkloaders/soundbank.py
-index 6a95889..cc14980 100644
+index 6a95889..3798630 100644
 --- a/mmfparser/data/chunkloaders/soundbank.py
 +++ b/mmfparser/data/chunkloaders/soundbank.py
 @@ -15,6 +15,8 @@
@@ -2725,7 +2919,7 @@ index 6a95889..cc14980 100644
  import zlib
  
  from mmfparser.loader import DataLoader
-@@ -153,6 +155,50 @@ class OldSound(BaseSound):
+@@ -153,6 +155,63 @@ class OldSound(BaseSound):
          reader.write(self.name + '\x00')
          reader.writeReader(data)
  
@@ -2736,14 +2930,23 @@ index 6a95889..cc14980 100644
 +    sampleRate = None
 +    name = None
 +    data = None
++    missing = False
++    resource = None
 +
 +    def read(self, reader):
++        # Banks/CSoundBank.preLoad (build 296 dex): handle, flags, length,
++        # frequency, and the name only when flags & 0x100. A record without
++        # that bit has no name field; reading one anyway ran FNaF 1's and 3's
++        # banks out of bytes before the declared count.
 +        self.handle = reader.readShort(True)
 +        self.flags = reader.readShort(True)
-+        self.checksum = reader.readInt()
++        self.checksum = reader.readInt()   # handleToLength
 +        self.sampleRate = reader.readInt()
-+        nameLength = reader.readShort(True)
-+        self.name = reader.read(nameLength * 2).decode('utf-16le').rstrip('\x00').encode('utf-8')
++        if self.flags & 0x100:
++            nameLength = reader.readShort(True)
++            self.name = reader.read(nameLength * 2).decode('utf-16le').rstrip('\x00').encode('utf-8')
++        else:
++            self.name = 'sound %d' % self.handle
 +        raw_dir = self.settings.get('android_raw_dir')
 +        if raw_dir is None:
 +            raw_dir = os.environ.get('MMFPARSER_ANDROID_RAW_DIR')
@@ -2752,19 +2955,23 @@ index 6a95889..cc14980 100644
 +                self.data = ''
 +                return
 +            raise RuntimeError('Android sound resources require MMFPARSER_ANDROID_RAW_DIR')
-+        pattern = os.path.join(raw_dir, 's%04d.*' % self.settings['android_sound_index'])
++        # The runtime opens res/raw/s%04d by the record's HANDLE
++        # (SoundPoolSounds.load, MediaSound.setSoundSettings), not by its
++        # position in the bank: in FNaF 2 54 of 67 records differ.
++        pattern = os.path.join(raw_dir, 's%04d.*' % self.handle)
 +        matches = glob.glob(pattern)
 +        if not matches and os.environ.get('MMFPARSER_ANDROID_MISSING_SOUND') == 'silence':
-+            # Some APKs keep part of the bank outside res/raw (FNaF 1: assets/
-+            # under obfuscated names). Opt-in: a 10 ms silent WAV keeps an
-+            # initial rebuild going; every substitution is printed.
-+            print 'android sound %d (%s) missing -> silence' % (
-+                self.settings['android_sound_index'], self.name)
++            # Opt-in: a 10 ms silent WAV keeps a rebuild going when a handle has
++            # no res/raw file; every substitution is printed.
++            print 'android sound handle %d (%s) missing -> silence' % (
++                self.handle, self.name)
 +            self.data = _silent_wav()
++            self.missing = True
 +            return
 +        if len(matches) != 1:
 +            raise RuntimeError('expected one Android sound resource for %s' % pattern)
 +        self.data = open(matches[0], 'rb').read()
++        self.resource = os.path.basename(matches[0])
 +
 +def _silent_wav(rate=22050, samples=220):
 +    import struct
@@ -2776,13 +2983,15 @@ index 6a95889..cc14980 100644
  class SoundBank(DataLoader):
      items = None
  
-@@ -161,6 +207,16 @@ class SoundBank(DataLoader):
+@@ -161,6 +220,18 @@ class SoundBank(DataLoader):
  
      def read(self, reader):
          # reader.openEditor()
 +        if self.settings['build'] >= 290:
++            # CSoundBank.preLoad: the handle space (nHandlesReel), then the
++            # number of records that follow.
++            self.handleCount = reader.readShort(True)
 +            numberOfItems = reader.readShort(True)
-+            reader.readShort(True) # total references
 +            self.items = []
 +            for index in xrange(numberOfItems):
 +                self.items.append(self.new(AndroidSound, reader,
@@ -2793,7 +3002,7 @@ index 6a95889..cc14980 100644
          debug = self.settings.get('debug', False)
          java = self.settings.get('java', False)
          flash = self.settings.get('flash', False)
-@@ -202,4 +258,4 @@ class SoundBank(DataLoader):
+@@ -202,4 +273,4 @@ class SoundBank(DataLoader):
          for item in self.items:
              item.write(reader)
  
@@ -2843,7 +3052,7 @@ index b620427..e2d2eb7 100644
  {
      if (flags & INACTIVE || other->flags & INACTIVE)
 diff --git a/Chowdren/base/desktop/platform.cpp b/Chowdren/base/desktop/platform.cpp
-index 0a7095c..dbfb36d 100644
+index 0a7095c..0d2b05b 100644
 --- a/Chowdren/base/desktop/platform.cpp
 +++ b/Chowdren/base/desktop/platform.cpp
 @@ -1,4 +1,5 @@
@@ -2852,7 +3061,15 @@ index 0a7095c..dbfb36d 100644
  #include <windows.h>
  #include <io.h>
  #include <fcntl.h>
-@@ -204,6 +205,96 @@ static void set_resources_dir()
+@@ -20,6 +21,7 @@
+ #include <boost/cstdint.hpp>
+ #include "path.h"
+ #include "render.h"
++#include "media.h"
+ 
+ enum ScaleType
+ {
+@@ -204,6 +206,174 @@ static void set_resources_dir()
  }
  #endif
  
@@ -2860,6 +3077,11 @@ index 0a7095c..dbfb36d 100644
 +#include <SDL_system.h>
 +#include <sys/stat.h>
 +#include <unistd.h>
++#include <string.h>
++#include <string>
++#include <jni.h>
++#include <android/asset_manager.h>
++#include <android/asset_manager_jni.h>
 +#include <android/log.h>
 +#include <pthread.h>
 +
@@ -2899,10 +3121,50 @@ index 0a7095c..dbfb36d 100644
 +}
 +
 +// Chowdren opens "./Assets.dat" with fopen (stdiofile.cpp), which cannot see a
-+// file packed inside the APK. Copy it out of assets/ (via SDL_RWops ->
-+// AAssetManager) to internal storage once, then chdir there so every later
-+// fopen resolves. image_cache/ is not shipped in the APK — the runtime rebuilds
-+// what it needs from Assets.dat.
++// file packed inside the APK. Copy it out of assets/ to internal storage, then
++// chdir there so every later fopen resolves. image_cache/ is not shipped in the
++// APK; the runtime rebuilds what it needs from Assets.dat.
++//
++// The APK's copy is read through AAssetManager, not SDL_RWFromFile: on Android
++// SDL opens a relative path from internal storage first, so it measured the
++// extracted copy against itself and never extracted an updated APK's
++// Assets.dat. The phone then ran new code over the first install's sound table
++// (menu blips played the jumpscare, 2026-09-27). The copy is now keyed by a
++// stamp -- the installed APK's size and mtime and the asset's length -- and is
++// replaced whole (written to Assets.dat.part, then renamed) when that changes.
++static AAssetManager * apk_asset_manager(std::string * apk_path)
++{
++    JNIEnv * env = (JNIEnv *)SDL_AndroidGetJNIEnv();
++    jobject activity = (jobject)SDL_AndroidGetActivity();
++    if (env == NULL || activity == NULL)
++        return NULL;
++    jclass cls = env->GetObjectClass(activity);
++    jmethodID get_assets = env->GetMethodID(cls, "getAssets",
++        "()Landroid/content/res/AssetManager;");
++    jmethodID get_path = env->GetMethodID(cls, "getPackageCodePath",
++        "()Ljava/lang/String;");
++    jobject assets = env->CallObjectMethod(activity, get_assets);
++    jstring path = (jstring)env->CallObjectMethod(activity, get_path);
++    if (path != NULL) {
++        const char * chars = env->GetStringUTFChars(path, NULL);
++        *apk_path = chars;
++        env->ReleaseStringUTFChars(path, chars);
++        env->DeleteLocalRef(path);
++    }
++    // a global reference keeps the manager valid for the process
++    static jobject global_assets = NULL;
++    AAssetManager * mgr = NULL;
++    if (assets != NULL) {
++        if (global_assets == NULL)
++            global_assets = env->NewGlobalRef(assets);
++        mgr = AAssetManager_fromJava(env, global_assets);
++        env->DeleteLocalRef(assets);
++    }
++    env->DeleteLocalRef(cls);
++    env->DeleteLocalRef(activity);
++    return mgr;
++}
++
 +static void set_resources_dir()
 +{
 +    const char * base = SDL_AndroidGetInternalStoragePath();
@@ -2915,41 +3177,74 @@ index 0a7095c..dbfb36d 100644
 +        return;
 +    }
 +
-+    const char * name = "Assets.dat";
-+    SDL_RWops * src = SDL_RWFromFile(name, "rb");
-+    if (src == NULL) {
-+        std::cout << "Assets.dat not found in APK: " << SDL_GetError()
-+                  << std::endl;
++    std::string apk_path;
++    AAssetManager * mgr = apk_asset_manager(&apk_path);
++    if (mgr == NULL) {
++        std::cout << "No AAssetManager for the APK's assets" << std::endl;
 +        return;
 +    }
-+    Sint64 want = SDL_RWsize(src);
-+
++    AAsset * src = AAssetManager_open(mgr, "Assets.dat", AASSET_MODE_STREAMING);
++    if (src == NULL) {
++        std::cout << "Assets.dat not found in APK" << std::endl;
++        return;
++    }
++    long long want = (long long)AAsset_getLength64(src);
++    long long apk_size = -1, apk_mtime = -1;
++    struct stat apk;
++    if (!apk_path.empty() && stat(apk_path.c_str(), &apk) == 0) {
++        apk_size = (long long)apk.st_size;
++        apk_mtime = (long long)apk.st_mtime;
++    }
++    char stamp[128];
++    snprintf(stamp, sizeof(stamp), "%lld %lld %lld", apk_size, apk_mtime, want);
++    char old[128] = "";
++    FILE * sf = fopen("Assets.dat.stamp", "r");
++    if (sf != NULL) {
++        if (fgets(old, sizeof(old), sf) == NULL)
++            old[0] = 0;
++        fclose(sf);
++    }
 +    struct stat st;
-+    if (stat(name, &st) == 0 && (Sint64)st.st_size == want) {
-+        SDL_RWclose(src);
-+        return; // already extracted
++    if (strcmp(old, stamp) == 0 && stat("Assets.dat", &st) == 0 &&
++        (long long)st.st_size == want) {
++        AAsset_close(src);
++        std::cout << "Assets.dat is current (stamp " << stamp << ")" << std::endl;
++        return;
 +    }
 +
-+    std::cout << "Extracting Assets.dat (" << want << " bytes)" << std::endl;
-+    FILE * dst = fopen(name, "wb");
++    std::cout << "Extracting Assets.dat (" << want << " bytes; stamp '" << stamp
++              << "', was '" << old << "')" << std::endl;
++    FILE * dst = fopen("Assets.dat.part", "wb");
 +    if (dst == NULL) {
-+        std::cout << "Could not open Assets.dat for writing" << std::endl;
-+        SDL_RWclose(src);
++        std::cout << "Could not open Assets.dat.part for writing" << std::endl;
++        AAsset_close(src);
 +        return;
 +    }
 +    char buf[1 << 16];
-+    size_t n;
-+    while ((n = SDL_RWread(src, buf, 1, sizeof(buf))) > 0)
-+        fwrite(buf, 1, n, dst);
++    long long written = 0;
++    int n;
++    while ((n = AAsset_read(src, buf, sizeof(buf))) > 0)
++        written += (long long)fwrite(buf, 1, n, dst);
 +    fclose(dst);
-+    SDL_RWclose(src);
++    AAsset_close(src);
++    if (written != want || rename("Assets.dat.part", "Assets.dat") != 0) {
++        std::cout << "Assets.dat extraction failed (" << written << " of " << want
++                  << " bytes)" << std::endl;
++        remove("Assets.dat.part");
++        return;
++    }
++    sf = fopen("Assets.dat.stamp", "w");
++    if (sf != NULL) {
++        fputs(stamp, sf);
++        fclose(sf);
++    }
 +}
 +#endif
 +
  #ifndef NDEBUG
  static void sdl_log(void *userdata, int category, SDL_LogPriority priority,
                      const char * message)
-@@ -213,8 +304,21 @@ static void sdl_log(void *userdata, int category, SDL_LogPriority priority,
+@@ -213,8 +383,36 @@ static void sdl_log(void *userdata, int category, SDL_LogPriority priority,
  }
  #endif
  
@@ -2963,6 +3258,21 @@ index 0a7095c..dbfb36d 100644
 +    return value == 1;
 +}
 +
++// The whole mix pauses while the app is in the background, as the retail
++// runtime's sound player does, and resumes in the foreground. SDL posts these
++// app events from the Android UI thread and, blocking on pause, pumps no
++// events until the app resumes, so they are caught by a watch, not the queue.
++// Leaving the rebuild at its title in the background kept its music playing
++// over other apps (2026-09-27).
++static int SDLCALL app_event_watch(void * userdata, SDL_Event * e)
++{
++    if (e->type == SDL_APP_WILLENTERBACKGROUND)
++        media.set_device_paused(true);
++    else if (e->type == SDL_APP_DIDENTERFOREGROUND)
++        media.set_device_paused(false);
++    return 1;
++}
++
  void platform_init()
  {
 +#ifdef CHOWDREN_IS_ANDROID
@@ -2971,16 +3281,18 @@ index 0a7095c..dbfb36d 100644
      unsigned int flags = SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER |
                           SDL_INIT_HAPTIC | SDL_INIT_NOPARACHUTE;
      if (SDL_Init(flags) < 0) {
-@@ -224,7 +328,7 @@ void platform_init()
+@@ -223,8 +421,9 @@ void platform_init()
+         return;
      }
      SDL_EventState(SDL_MOUSEMOTION, SDL_DISABLE);
++    SDL_AddEventWatch(app_event_watch, NULL);
      // SDL_EventState(SDL_WINDOWEVENT, SDL_DISABLE);
 -#ifdef __APPLE__
 +#if defined(__APPLE__) || defined(CHOWDREN_IS_ANDROID)
      set_resources_dir();
  #endif
      start_time = SDL_GetPerformanceCounter();
-@@ -615,9 +719,14 @@ void platform_create_display(bool fullscreen)
+@@ -615,9 +814,14 @@ void platform_create_display(bool fullscreen)
  {
      is_fullscreen = fullscreen;
  
@@ -2995,7 +3307,7 @@ index 0a7095c..dbfb36d 100644
  
  #ifndef CHOWDREN_USE_D3D
      flags |= SDL_WINDOW_OPENGL;
-@@ -652,9 +761,27 @@ void platform_create_display(bool fullscreen)
+@@ -652,9 +856,27 @@ void platform_create_display(bool fullscreen)
      start_height *= CHOWDREN_DEFAULT_SCALE;
  #endif
  
@@ -3026,7 +3338,7 @@ index 0a7095c..dbfb36d 100644
                                       start_width, start_height,
                                       flags);
      global_window_id = SDL_GetWindowID(global_window);
-@@ -842,12 +969,30 @@ void platform_create_display(bool fullscreen)
+@@ -842,12 +1064,30 @@ void platform_create_display(bool fullscreen)
          platform_hide_mouse();
  
      screen_fbo.init(WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -3057,7 +3369,7 @@ index 0a7095c..dbfb36d 100644
  
      int vsync;
      if (value)
-@@ -957,6 +1102,15 @@ void platform_swap_buffers()
+@@ -957,6 +1197,15 @@ void platform_swap_buffers()
      int use_scale_type = scale_type;
      if (!is_fullscreen)
          use_scale_type = BEST_FIT;
@@ -3148,15 +3460,16 @@ index 30eb23e..fbd2156 100644
          platform_sleep(t);
 diff --git a/Chowdren/base/harness.cpp b/Chowdren/base/harness.cpp
 new file mode 100644
-index 0000000..61e277e
+index 0000000..8aae049
 --- /dev/null
 +++ b/Chowdren/base/harness.cpp
-@@ -0,0 +1,632 @@
+@@ -0,0 +1,670 @@
 +// Deterministic research harness for the build-296 recompile. See harness.h.
 +// Compiled once, included from run.cpp next to crashdump.cpp.
 +
 +#include "harness.h"
 +#include "platform.h"
++#include <SDL.h>
 +#include <stdio.h>
 +#include <stdlib.h>
 +#include <string.h>
@@ -3313,6 +3626,12 @@ index 0000000..61e277e
 +
 +bool harness_active() { return h_active; }
 +bool harness_fixed_step() { return h_active; }
++
++// The harness audio clock (harness.h): the sum of the update deltas so far.
++static double h_audio_time = 0.0;
++double harness_audio_time() { return h_audio_time; }
++int harness_frame_index() { return h_frame_index; }
++int harness_tick() { return h_tick; }
 +
 +// CHOWDREN_FRAME_TIMES / CHOWDREN_FRAME_TIMES_FRAME (harness.h): measured per-update
 +// timer deltas in ms for the first visit to one frame index.
@@ -3493,8 +3812,39 @@ index 0000000..61e277e
 +    }
 +}
 +
++// CHOWDREN_BACKGROUND=<frame>:<tick>:<updates>: at that update push
++// SDL_APP_WILLENTERBACKGROUND and <updates> later SDL_APP_DIDENTERFOREGROUND,
++// as Android does when the app leaves and returns (platform.cpp's watch pauses
++// and resumes the audio device). A host check of the background pause.
++static void harness_background(int frame_index)
++{
++    static bool parsed = false;
++    static int frame = -1, tick = -1, updates = 0;
++    if (!parsed) {
++        parsed = true;
++        const char * b = getenv("CHOWDREN_BACKGROUND");
++        if (b && *b && sscanf(b, "%d:%d:%d", &frame, &tick, &updates) != 3)
++            frame = -1;
++    }
++    if (frame < 0 || frame_index != frame)
++        return;
++    SDL_Event e;
++    memset(&e, 0, sizeof(e));
++    if (h_tick == tick)
++        e.type = SDL_APP_WILLENTERBACKGROUND;
++    else if (h_tick == tick + updates)
++        e.type = SDL_APP_DIDENTERFOREGROUND;
++    else
++        return;
++    SDL_PushEvent(&e);
++    if (h_trace) fprintf(h_trace, "# app %s %d %d\n", e.type == SDL_APP_WILLENTERBACKGROUND ?
++                         "background" : "foreground", frame_index, h_tick);
++}
++
 +void harness_before_events(int frame_index)
 +{
++    if (h_active) h_audio_time += manager.dt;
++    if (h_active) harness_background(frame_index);
 +    if (!h_active) {
 +        if (!h_play) return;
 +        // The platform has already delivered the real click to the mouse;
@@ -3785,10 +4135,10 @@ index 0000000..61e277e
 +MT_FIELD(mt_drag_y, t->drag_y - t->start_y)
 +#undef MT_FIELD
 diff --git a/Chowdren/base/media.cpp b/Chowdren/base/media.cpp
-index 77baf6b..86709f1 100644
+index 77baf6b..58e8f32 100644
 --- a/Chowdren/base/media.cpp
 +++ b/Chowdren/base/media.cpp
-@@ -1,5 +1,5 @@
+@@ -1,16 +1,79 @@
 -#ifdef CHOWDREN_IS_DESKTOP
 -#include "desktop/audio.h"
 +#if defined(CHOWDREN_IS_DESKTOP) || defined(CHOWDREN_IS_ANDROID)
@@ -3796,18 +4146,449 @@ index 77baf6b..86709f1 100644
  #else
  #include "audio.h"
  #endif
-@@ -293,6 +293,11 @@ void Media::play(const std::string & in, int channel, int loop)
+ 
+ #include "math.h"
+ #include <algorithm>
++#include <stdio.h>
++#include <stdarg.h>
++#include <stdlib.h>
++#include <time.h>
++#ifdef CHOWDREN_IS_ANDROID
++#include <sys/system_properties.h>
++#endif
+ #include "fileio.h"
+ #include "path.h"
+ #include "media.h"
+ #include "datastream.h"
+ 
++// harness.cpp (compiled into run.cpp's unit)
++bool harness_active();
++double harness_audio_time();
++int harness_frame_index();
++int harness_tick();
++
++static FILE * audio_trace_fp = NULL;
++static double audio_wall_origin = -1.0;
++// CHOWDREN_MUTE_SAMPLES=1: play_id plays nothing, as every build before the
++// Sample handles resolved (all mobile Play Sample actions were
++// INVALID_ASSET_ID), to compare traces against those binaries.
++static bool mute_samples = false;
++// CHOWDREN_AUDIO_SOLO=<sound id>: every other sound plays at gain 0, so a
++// wave-backend capture holds that one sound as the events played it
++// (tools/recompile/play-correlation.py). Channel state is unchanged.
++static int solo_sound = -1;
++
++static inline double channel_gain(unsigned int id, double volume)
++{
++    if (solo_sound >= 0 && id != (unsigned int)solo_sound)
++        return 0.0;
++    return volume / 100.0;
++}
++
++// Seconds since the audio device opened: the mixer's own time origin, so a
++// trace line lines up with a wave-backend capture of the mix.
++static double audio_wall()
++{
++    struct timespec t;
++    clock_gettime(CLOCK_MONOTONIC, &t);
++    double now = t.tv_sec + t.tv_nsec * 1e-9;
++    if (audio_wall_origin < 0.0)
++        audio_wall_origin = now;
++    return now - audio_wall_origin;
++}
++
++void audio_trace(const char * fmt, ...)
++{
++    if (audio_trace_fp == NULL)
++        return;
++    fprintf(audio_trace_fp, "%d %d %.4f ", harness_frame_index(),
++            harness_tick(), audio_wall());
++    va_list ap;
++    va_start(ap, fmt);
++    vfprintf(audio_trace_fp, fmt, ap);
++    va_end(ap);
++    fputc('\n', audio_trace_fp);
++    fflush(audio_trace_fp);
++}
++
++// The harness clock a channel's state follows (media.h).
++static inline bool use_harness_clock()
++{
++    return harness_active();
++}
++
+ inline double clamp_sound(double val)
+ {
+     return std::max(0.0, std::min(val, 100.0));
+@@ -55,7 +118,13 @@ public:
+ 
+     void load(ChowdrenAudio::SoundBase ** source)
+     {
+-        *source = new ChowdrenAudio::SoundStream(filename, type, size);
++        ChowdrenAudio::SoundStream * s =
++            new ChowdrenAudio::SoundStream(filename, type, size);
++        if (s->file == NULL) {
++            delete s;
++            s = NULL;
++        }
++        *source = s;
+     }
+ };
+ 
+@@ -74,7 +143,14 @@ public:
+ 
+     void load(ChowdrenAudio::SoundBase ** source)
+     {
+-        *source = new ChowdrenAudio::SoundStream(offset, type, size);
++        ChowdrenAudio::SoundStream * s =
++            new ChowdrenAudio::SoundStream(offset, type, size);
++        if (s->file == NULL) {
++            // no decoder for this data: nothing to play (was a NULL deref)
++            delete s;
++            s = NULL;
++        }
++        *source = s;
+     }
+ };
+ 
+@@ -89,10 +165,18 @@ public:
+     {
+         // load immediately
+         buffer = new ChowdrenAudio::Sample(fp, type, size);
++        if (!buffer->valid) {
++            delete buffer;
++            buffer = NULL;
++        }
+     }
+ 
+     void load(ChowdrenAudio::SoundBase ** source)
+     {
++        if (buffer == NULL) {
++            *source = NULL;
++            return;
++        }
+         *source = new ChowdrenAudio::Sound(*buffer);
+     }
+ 
+@@ -105,7 +189,9 @@ public:
+ // Channel
+ 
+ Channel::Channel()
+-: locked(false), volume(100), frequency(0), pan(0), sound(NULL)
++: locked(false), volume(100), frequency(0), pan(0), sound(NULL),
++  h_start(0.0), h_length(0.0), h_paused_at(0.0), h_passes(1),
++  h_playing(false), h_paused(false), uninterruptible(false)
+ {
+ 
+ }
+@@ -127,10 +213,25 @@ void Channel::play(SoundData * data, int loop)
+     if (loop > 1)
+         std::cout << "Invalid number of loops (" << loop << ")" << std::endl;
+     sound->play();
++    h_start = harness_audio_time();
++    h_length = sound->get_duration();
++    h_passes = loop;
++    h_playing = true;
++    h_paused = false;
++}
++
++// Seconds into the sound on the harness clock.
++static double harness_elapsed(const Channel & c)
++{
++    return (c.h_paused ? c.h_paused_at : harness_audio_time()) - c.h_start;
+ }
+ 
+ void Channel::resume()
+ {
++    if (use_harness_clock() && h_playing && h_paused) {
++        h_start += harness_audio_time() - h_paused_at;
++        h_paused = false;
++    }
+     if (is_invalid())
+         return;
+     if (sound->get_status() != ChowdrenAudio::SoundBase::Paused)
+@@ -140,6 +241,10 @@ void Channel::resume()
+ 
+ void Channel::pause()
+ {
++    if (use_harness_clock() && h_playing && !h_paused && !is_stopped()) {
++        h_paused_at = harness_audio_time();
++        h_paused = true;
++    }
+     if (is_invalid())
+         return;
+     if (sound->get_status() != ChowdrenAudio::SoundBase::Playing)
+@@ -149,6 +254,9 @@ void Channel::pause()
+ 
+ void Channel::stop()
+ {
++    h_playing = false;
++    h_paused = false;
++    uninterruptible = false;
+     if (sound == NULL)
+         return;
+     sound->destroy();
+@@ -157,10 +265,13 @@ void Channel::stop()
+ 
+ void Channel::set_volume(double value)
+ {
++    double old = volume;
+     volume = clamp_sound(value);
++    if (volume != old)
++        audio_trace("vol %d %g", int(this - media.channels), volume);
+     if (is_invalid())
+         return;
+-    sound->set_volume(volume / 100.0);
++    sound->set_volume(channel_gain(id, volume));
+ }
+ 
+ void Channel::set_frequency(double value)
+@@ -182,6 +293,8 @@ double Channel::get_frequency()
+ 
+ void Channel::set_position(double value)
+ {
++    if (use_harness_clock() && h_playing)
++        h_start = (h_paused ? h_paused_at : harness_audio_time()) - value / 1000.0;
+     if (is_invalid())
+         return;
+     sound->set_playing_offset(value / 1000.0);
+@@ -189,6 +302,14 @@ void Channel::set_position(double value)
+ 
+ double Channel::get_position()
+ {
++    if (use_harness_clock()) {
++        if (!h_playing || sound == NULL || is_stopped())
++            return 0.0;
++        double t = harness_elapsed(*this);
++        if (h_length > 0.0)
++            t = fmod(std::max(0.0, t), h_length);
++        return t * 1000.0;
++    }
+     if (is_invalid())
+         return 0.0;
+     return sound->get_playing_offset() * 1000.0;
+@@ -203,6 +324,8 @@ double Channel::get_duration()
+ 
+ void Channel::set_pan(double value)
+ {
++    if (value != pan)
++        audio_trace("pan %d %g", int(this - media.channels), value);
+     pan = value;
+     if (is_invalid())
+         return;
+@@ -219,8 +342,30 @@ bool Channel::is_invalid()
+     return sound == NULL || sound->closed;
+ }
+ 
++bool Channel::holds_uninterruptible()
++{
++    return uninterruptible && !is_stopped();
++}
++
++// The flag bit off a sample id (media.h); INVALID_ASSET_ID stays as it is.
++static inline unsigned int sound_index(unsigned int id)
++{
++    if (id == INVALID_ASSET_ID)
++        return id;
++    return id & ~SOUND_UNINTERRUPTIBLE;
++}
++
+ bool Channel::is_stopped()
+ {
++    if (use_harness_clock()) {
++        // The harness clock decides: a pass is the decoded length, loop 0 is
++        // endless, and a paused sound is not stopped.
++        if (!h_playing || sound == NULL)
++            return true;
++        if (h_paused || h_passes == 0)
++            return false;
++        return harness_elapsed(*this) >= h_length * std::max(1, h_passes);
++    }
+     if (is_invalid())
+         return true;
+     return sound->get_status() == ChowdrenAudio::SoundBase::Stopped;
+@@ -230,7 +375,35 @@ bool Channel::is_stopped()
+ 
+ void Media::init()
+ {
++    const char * trace = getenv("CHOWDREN_AUDIO_TRACE");
++    if (trace && *trace) {
++        audio_trace_fp = fopen(trace, "w");
++        if (audio_trace_fp == NULL)
++            std::cout << "Cannot open CHOWDREN_AUDIO_TRACE " << trace << std::endl;
++    }
++    const char * mute = getenv("CHOWDREN_MUTE_SAMPLES");
++    mute_samples = mute && *mute && atoi(mute) != 0;
++    const char * solo = getenv("CHOWDREN_AUDIO_SOLO");
++    if (solo && *solo)
++        solo_sound = atoi(solo);
++#ifdef CHOWDREN_IS_ANDROID
++    // debug.rebuild.audio_trace=1: the audio trace to stdout, which the
++    // Android build mirrors to logcat, so a phone run shows which sound each
++    // event played (adb shell setprop debug.rebuild.audio_trace 1).
++    {
++        char value[PROP_VALUE_MAX] = "";
++        __system_property_get("debug.rebuild.audio_trace", value);
++        if (strcmp(value, "1") == 0 && audio_trace_fp == NULL)
++            audio_trace_fp = stdout;
++    }
++#endif
++
+     ChowdrenAudio::open_audio();
++    audio_wall();   // the trace's time origin: the device just opened
++    if (audio_trace_fp)
++        fprintf(audio_trace_fp, "# audio-trace v1: frame tick wall_s event...; "
++                "%d sounds, harness clock %d, muted %d\n", SOUND_COUNT,
++                int(harness_active()), int(mute_samples));
+ 
+     AssetFile fp;
+     fp.open();
+@@ -238,6 +411,53 @@ void Media::init()
+         fp.set_item(i, AssetFile::SOUND_DATA);
+         add_cache(i, fp);
+     }
++
++    const char * audition_ms = getenv("CHOWDREN_AUDIO_AUDITION");
++    if (audition_ms && *audition_ms) {
++        audition(atoi(audition_ms));
++        stop();
++        if (audio_trace_fp)
++            fclose(audio_trace_fp);
++        exit(0);
++    }
++}
++
++void Media::set_device_paused(bool paused)
++{
++    bool done = ChowdrenAudio::set_device_paused(paused);
++    audio_trace("device %s%s", paused ? "paused" : "resumed", done ? "" : " (not supported)");
++}
++
++// Every sound in turn on channel 1 at full volume, for up to max_ms of real
++// time (its whole length when shorter), 150 ms apart, so a wave-backend
++// capture of the mix holds one sound per window. Each window is traced.
++void Media::audition(int max_ms)
++{
++    if (max_ms <= 0)
++        max_ms = 1000;
++    for (int i = 0; i < SOUND_COUNT; i++) {
++        if (sounds[i] == NULL) {
++            audio_trace("audition %d absent", i);
++            continue;
++        }
++        Channel & c = channels[0];
++        c.volume = 100;
++        c.pan = 0;
++        c.frequency = 0;
++        c.play(sounds[i], 1);
++        if (c.sound == NULL) {
++            audio_trace("audition %d undecodable", i);
++            continue;
++        }
++        double length = c.sound->get_duration();
++        double hold = std::min(length, max_ms / 1000.0);
++        audio_trace("audition %d start length_ms %.1f hold_ms %.1f rate %d",
++                    i, length * 1000.0, hold * 1000.0, c.sound->get_sample_rate());
++        platform_sleep(hold);
++        audio_trace("audition %d end status %d", i, int(c.sound->get_status()));
++        c.stop();
++        platform_sleep(0.15);
++    }
+ }
+ 
+ void Media::stop()
+@@ -251,7 +471,7 @@ void Media::stop()
+     ChowdrenAudio::close_audio();
+ }
+ 
+-void Media::play(SoundData * data, int channel, int loop)
++void Media::play(SoundData * data, int channel, int loop, bool uninterruptible)
+ {
+     if (channel == -1) {
+         Channel * channelp;
+@@ -261,9 +481,11 @@ void Media::play(SoundData * data, int channel, int loop)
+                 break;
+         }
+         if (channel == 32) {
++            // CSoundPlayer.play: the first unlocked channel whose sample
++            // stops, which an uninterruptible one does not
+             for (channel = 0; channel < 32; channel++) {
+                 channelp = &channels[channel];
+-                if (!channelp->locked)
++                if (!channelp->locked && !channelp->holds_uninterruptible())
+                     break;
+ 
+             }
+@@ -274,8 +496,20 @@ void Media::play(SoundData * data, int channel, int loop)
+         channelp->volume = 100;
+         channelp->frequency = 0;
+         channelp->pan = 0;
++    } else if (is_channel_valid(channel) && !uninterruptible &&
++               channels[channel].holds_uninterruptible()) {
++        // CSoundChannel.stop(false) returns false: the new sample is not played
++        audio_trace("refused %u %d %d uninterruptible %u", data->id, channel, loop,
++                    channels[channel].id);
++        return;
+     }
+     channels[channel].play(data, loop);
++    Channel & c = channels[channel];
++    c.uninterruptible = uninterruptible;
++    audio_trace("play %u %d %d %.1f %d%s", data->id, channel, loop,
++                c.sound ? c.sound->get_duration() * 1000.0 : -1.0,
++                c.sound ? int(c.sound->get_status()) : -1,
++                uninterruptible ? " U" : "");
+ }
+ 
+ void Media::play(const std::string & in, int channel, int loop)
+@@ -293,7 +527,22 @@ void Media::play(const std::string & in, int channel, int loop)
  
  void Media::play_id(unsigned int id, int channel, int loop)
  {
+-    play(sounds[id], channel, loop);
++    bool uninterruptible = id != INVALID_ASSET_ID && (id & SOUND_UNINTERRUPTIBLE) != 0;
++    id = sound_index(id);
 +    // A mobile Play Sample action whose sound reference did not resolve during
 +    // conversion carries INVALID_ASSET_ID; treat it as a missing sample
 +    // (silence) rather than indexing sounds[] out of bounds.
 +    if (id == INVALID_ASSET_ID)
 +        return;
-     play(sounds[id], channel, loop);
++    if (mute_samples) {
++        audio_trace("muted %u %d %d", id, channel, loop);
++        return;
++    }
++    if (id >= SOUND_COUNT || sounds[id] == NULL) {
++        audio_trace("absent %u %d %d", id, channel, loop);
++        return;
++    }
++    play(sounds[id], channel, loop, uninterruptible);
  }
  
+ void Media::lock(unsigned int channel)
+@@ -335,6 +584,8 @@ void Media::stop_channel(unsigned int channel)
+ {
+     if (!is_channel_valid(channel))
+         return;
++    if (channels[channel].sound != NULL)
++        audio_trace("stop %d", int(channel));
+     channels[channel].stop();
+ }
+ 
+@@ -356,6 +607,7 @@ Channel * Media::get_sample(unsigned int id)
+ {
+     if (id == INVALID_ASSET_ID)
+         return NULL;
++    id = sound_index(id);
+     for (int i = 0; i < 32; i++) {
+         if (channels[i].id != id)
+             continue;
+@@ -500,6 +752,7 @@ bool Media::is_channel_playing(unsigned int channel)
+ 
+ bool Media::is_sample_playing(unsigned int id)
+ {
++    id = sound_index(id);
+     for (int i = 0; i < 32; i++) {
+         if (channels[i].is_stopped())
+             continue;
 diff --git a/Chowdren/base/objects/active.cpp b/Chowdren/base/objects/active.cpp
 index 72cc910..5799d90 100644
 --- a/Chowdren/base/objects/active.cpp
@@ -4857,3 +5638,344 @@ index 9805e02..7e2f948 100644
  void platform_set_focus(bool v);
  void platform_show_mouse();
  void platform_get_mouse_pos(int * x, int * y);
+diff --git a/Chowdren/base/android/audio_route.h b/Chowdren/base/android/audio_route.h
+new file mode 100644
+index 0000000..6b1e70a
+--- /dev/null
++++ b/Chowdren/base/android/audio_route.h
+@@ -0,0 +1,64 @@
++#ifndef CHOWDREN_ANDROID_AUDIO_ROUTE_H
++#define CHOWDREN_ANDROID_AUDIO_ROUTE_H
++
++// The rebuild's audio route on Android (personal research builds). openal-soft
++// plays the whole mix through one OpenSL ES player; its performance mode picks
++// the output. OpenSL ES's default can give a FAST track, the path retail
++// SoundPool effects take on the Moto g56, which the platform's
++// AudioPlaybackCapture does not mix (docs/device/ANDROID-AUDIO-CAPTURE.md).
++// Two system properties, read once when audio opens, choose the mode without a
++// rebuild (adb shell setprop <name> <value>, then restart the app):
++//
++//   debug.rebuild.audio_capture   1, on or true: power-saving, a deep-buffer
++//                                  track that AudioPlaybackCapture can mix.
++//                                  Unset, empty or anything else: OFF.
++//   debug.rebuild.audio_perf      none, latency, latency-effects or
++//                                  power-saving: that mode, whatever the switch
++//                                  says. Any other value is ignored.
++//
++// OFF (both unset) requests nothing, so the retail-like default routing holds.
++// The chosen mode reaches openal-soft's OpenSL backend as
++// ALSOFT_OPENSL_PERFORMANCE_MODE (tools/recompile/android/
++// openal-soft-1.23.1-opensl-performance-mode.patch), which logs the mode it
++// requested and the mode OpenSL granted under the tag "openal".
++
++#include <string.h>
++
++// NULL means "request nothing" (OpenSL ES's default).
++inline const char * rebuild_audio_perf_mode(const char * capture, const char * perf)
++{
++    static const char * const modes[] = {"none", "latency", "latency-effects", "power-saving"};
++    if (perf != NULL && *perf) {
++        for (unsigned i = 0; i < sizeof(modes) / sizeof(modes[0]); i++)
++            if (strcmp(perf, modes[i]) == 0)
++                return modes[i];
++    }
++    if (capture != NULL && (strcmp(capture, "1") == 0 || strcmp(capture, "on") == 0 ||
++                            strcmp(capture, "true") == 0))
++        return "power-saving";
++    return NULL;
++}
++
++#ifdef __ANDROID__
++#include <stdlib.h>
++#include <sys/system_properties.h>
++#include <android/log.h>
++
++inline void apply_rebuild_audio_route()
++{
++    char capture[PROP_VALUE_MAX] = "";
++    char perf[PROP_VALUE_MAX] = "";
++    __system_property_get("debug.rebuild.audio_capture", capture);
++    __system_property_get("debug.rebuild.audio_perf", perf);
++    const char * mode = rebuild_audio_perf_mode(capture, perf);
++    if (mode != NULL)
++        setenv("ALSOFT_OPENSL_PERFORMANCE_MODE", mode, 1);
++    else
++        unsetenv("ALSOFT_OPENSL_PERFORMANCE_MODE");
++    __android_log_print(ANDROID_LOG_INFO, "chowdren",
++        "audio route: debug.rebuild.audio_capture='%s' debug.rebuild.audio_perf='%s' -> "
++        "OpenSL performance mode %s", capture, perf, mode != NULL ? mode : "default (not set)");
++}
++#endif
++
++#endif // CHOWDREN_ANDROID_AUDIO_ROUTE_H
+diff --git a/Chowdren/base/desktop/audio.h b/Chowdren/base/desktop/audio.h
+index bafadb4..6a3496c 100644
+--- a/Chowdren/base/desktop/audio.h
++++ b/Chowdren/base/desktop/audio.h
+@@ -20,6 +20,9 @@
+ #include <math.h>
+ #include "../types.h"
+ #include "../audiodecoders.h"
++#ifdef CHOWDREN_IS_ANDROID
++#include "../android/audio_route.h"
++#endif
+ 
+ #define BUFFER_COUNT 3
+ 
+@@ -125,6 +128,23 @@ void close_audio()
+     global_device.close();
+ }
+ 
++// ALC_SOFT_pause_device: stop and restart mixing and output for the whole
++// device; the sources keep their state. Returns false when unavailable.
++typedef void (ALC_APIENTRY*PFN_ALC_DEVICE_PAUSE)(ALCdevice *);
++
++bool set_device_paused(bool paused)
++{
++    ALCdevice * device = global_device.device;
++    if (device == NULL || !alcIsExtensionPresent(device, "ALC_SOFT_pause_device"))
++        return false;
++    PFN_ALC_DEVICE_PAUSE fn = (PFN_ALC_DEVICE_PAUSE)alcGetProcAddress(device,
++        paused ? "alcDevicePauseSOFT" : "alcDeviceResumeSOFT");
++    if (fn == NULL)
++        return false;
++    fn(device);
++    return true;
++}
++
+ ALenum get_format(unsigned int channels)
+ {
+     switch (channels)
+@@ -261,6 +281,7 @@ public:
+     unsigned int sample_rate;
+     unsigned int channels;
+     SoundList sounds;
++    bool valid;   // false when no decoder accepted the data
+ 
+     Sample(FSFile & fp, Media::AudioType type, size_t size);
+     ~Sample();
+@@ -537,6 +558,11 @@ public:
+     {
+         file = decoder;
+         playing = loop = stopping = fill_now = false;
++        if (file == NULL) {
++            // undecodable data: the caller deletes this stream unplayed
++            closed = true;
++            return;
++        }
+         format = get_format(file->channels);
+ 
+         for (int i = 0; i < BUFFER_COUNT; ++i)
+@@ -549,6 +575,8 @@ public:
+ 
+     ~SoundStream()
+     {
++        if (file == NULL)
++            return;
+         stop();
+ 
+         LOCK_STREAM;
+@@ -819,6 +847,11 @@ void AudioDevice::open()
+     device = NULL;
+     context = NULL;
+ 
++#ifdef CHOWDREN_IS_ANDROID
++    // debug.rebuild.audio_capture / audio_perf -> the OpenSL performance mode
++    // (android/audio_route.h); read before openal-soft creates its player.
++    apply_rebuild_audio_route();
++#endif
+     device = alcOpenDevice(NULL);
+     if (!device) {
+         std::cout << "Device open failed" << std::endl;
+@@ -957,6 +990,12 @@ public:
+ Sample::Sample(FSFile & fp, Media::AudioType type, size_t size)
+ {
+     SoundDecoder * file = create_decoder(fp, type, size);
++    valid = file != NULL;
++    if (!valid) {
++        channels = 0;
++        sample_rate = 0;
++        return;
++    }
+     channels = file->channels;
+     sample_rate = file->sample_rate;
+     buffer.init(*file, file->get_samples());
+@@ -965,6 +1004,8 @@ Sample::Sample(FSFile & fp, Media::AudioType type, size_t size)
+ 
+ Sample::~Sample()
+ {
++    if (!valid)
++        return;
+     SoundList::const_iterator it;
+     for (it = sounds.begin(); it != sounds.end(); ++it)
+         (*it)->reset_buffer();
+diff --git a/Chowdren/base/media.h b/Chowdren/base/media.h
+index 324ac0a..bf8d818 100644
+--- a/Chowdren/base/media.h
++++ b/Chowdren/base/media.h
+@@ -7,6 +7,13 @@ void set_sounds_path(const std::string & path);
+ 
+ class SoundData;
+ 
++// A mobile Play Sample whose parameter carries the Uninterruptible flag passes
++// its sound id with this bit set (converter.py). As in the Android runtime's
++// CSoundPlayer.play and CSoundChannel.stop(false), a later sample played on the
++// same channel is refused while an uninterruptible one still plays, unless the
++// later one is uninterruptible too; a free-channel play skips such channels.
++#define SOUND_UNINTERRUPTIBLE 0x40000000u
++
+ namespace ChowdrenAudio
+ {
+     class SoundBase;
+@@ -19,6 +26,16 @@ public:
+     bool locked;
+     ChowdrenAudio::SoundBase * sound;
+     double volume, frequency, pan;
++    // Under the harness a channel's playing state and position follow the
++    // harness clock (harness_audio_time(), the sum of update deltas) rather
++    // than the mixer's wall clock, so fast-stepped runs stay deterministic:
++    // start on that clock, one pass's length, passes (0 = endless), and
++    // where a pause froze it. The mixer still plays the sound.
++    double h_start, h_length, h_paused_at;
++    int h_passes;
++    bool h_playing, h_paused;
++    bool uninterruptible;   // the sample now on this channel (SOUND_UNINTERRUPTIBLE)
++    bool holds_uninterruptible();
+ 
+     Channel();
+     void play(SoundData * data, int loop);
+@@ -52,7 +69,8 @@ public:
+ 
+     void init();
+     void stop();
+-    void play(SoundData * data, int channel = -1, int loop = 1);
++    void play(SoundData * data, int channel = -1, int loop = 1,
++              bool uninterruptible = false);
+     void play(const std::string & filename, int channel = -1, int loop = 1);
+     void play_id(unsigned int id, int channel = -1, int loop = 1);
+     void lock(unsigned int channel);
+@@ -89,8 +107,17 @@ public:
+     void add_data(unsigned int id, FSFile & fp, size_t size, AudioType type);
+     double get_main_volume();
+     void set_main_volume(double volume);
++    // CHOWDREN_AUDIO_AUDITION=<ms>: play every sound once through the mixer,
++    // one at a time, then exit (see media.cpp).
++    void audition(int max_ms);
++    // Pause or resume the whole output device (ALC_SOFT_pause_device), for
++    // the app going to the background and back (platform.cpp).
++    void set_device_paused(bool paused);
+ };
+ 
++// CHOWDREN_AUDIO_TRACE=<path>: one line per play/stop/volume/pan call.
++void audio_trace(const char * fmt, ...);
++
+ extern Media media;
+ 
+ #endif // CHOWDREN_MEDIA_H
+diff --git a/Chowdren/base/objects/perspective.cpp b/Chowdren/base/objects/perspective.cpp
+index 867ebd2..d36b43a 100644
+--- a/Chowdren/base/objects/perspective.cpp
++++ b/Chowdren/base/objects/perspective.cpp
+@@ -25,6 +25,12 @@ void PerspectiveObject::set_width(int width)
+ 
+ void PerspectiveObject::draw()
+ {
++#ifdef CHOWDREN_USE_GLES1
++    // GL ES 1.1 has no shader for this pass: the copy was redrawn opaque and
++    // painted black over every layer below it (the office and cameras on the
++    // phone). Skipping it draws them flat, as the effect-free path does.
++    return;
++#endif
+     int box[4];
+     get_screen_aabb(box);
+     Texture t = Render::copy_rect(box[0], box[1], box[2], box[3]);
+diff --git a/Chowdren/chowdren/assets.py b/Chowdren/chowdren/assets.py
+index e41bc93..d4695c5 100644
+--- a/Chowdren/chowdren/assets.py
++++ b/Chowdren/chowdren/assets.py
+@@ -81,6 +81,10 @@ class Assets(object):
+         self.shader_names = set()
+ 
+         self.sound_ids = {}
++        # Fusion sample handle -> sound id. A build-296 mobile Sample
++        # parameter's name is not the bank's name; its handle is what the
++        # runtime plays (CSoundPlayer.play by handle).
++        self.sound_handles = {}
+         self.file_ids = {}
+ 
+         self.path = self.converter.get_filename('Assets.dat')
+@@ -133,9 +137,11 @@ class Assets(object):
+ 
+     def write_cache(self, cache):
+         cache['sound_ids'] = self.sound_ids
++        cache['sound_handles'] = self.sound_handles
+ 
+     def load_cache(self, cache):
+         self.sound_ids = cache['sound_ids']
++        self.sound_handles = cache.get('sound_handles', {})
+ 
+     def write_preload(self, images):
+         self.fp.seek(self.use_count_offset)
+@@ -194,7 +200,7 @@ class Assets(object):
+         self.header.putdefine(shader_id, index)
+         self.shaders.append(data)
+ 
+-    def add_sound(self, name, ext=None, data=None):
++    def add_sound(self, name, ext=None, data=None, handle=None):
+         if ext is None:
+             audio_type = NONE_TYPE
+         else:
+@@ -203,6 +209,8 @@ class Assets(object):
+         index = len(self.sounds)
+         sound_id = get_asset_name('SOUND', name, index)
+         self.sound_ids[name.lower()] = sound_id
++        if handle is not None:
++            self.sound_handles[handle] = sound_id
+         self.header.putdefine(sound_id, index)
+ 
+         writer = ByteReader()
+@@ -219,6 +227,11 @@ class Assets(object):
+     def get_sound_id(self, name):
+         return self.sound_ids.get(name.lower(), 'INVALID_ASSET_ID')
+ 
++    def get_sound_id_by_handle(self, handle, name):
++        if handle in self.sound_handles:
++            return self.sound_handles[handle]
++        return self.get_sound_id(name)
++
+     def add_image(self, width, height, hot_x, hot_y, act_x, act_y, data):
+         writer = ByteReader()
+         writer.writeShort(width, True)
+diff --git a/Chowdren/chowdren/imageworker.py b/Chowdren/chowdren/imageworker.py
+index a17e040..75dbc52 100644
+--- a/Chowdren/chowdren/imageworker.py
++++ b/Chowdren/chowdren/imageworker.py
+@@ -1,5 +1,13 @@
++import os
++import zlib
+ from mmfparser import zopfli
+ 
++# CHOWDREN_IMAGE_COMPRESS=zlib: zlib level 9 in place of zopfli. Both write a
++# zlib stream the runtime inflates the same way (stbi_zlib_decode_buffer);
++# zopfli's is smaller and takes minutes per large image, zlib's a fraction of a
++# second. The cache file is keyed by the image, not the compressor.
++USE_ZLIB = os.environ.get('CHOWDREN_IMAGE_COMPRESS') == 'zlib'
++
+ def worker(in_queue):
+     while True:
+         obj = in_queue.get()
+@@ -7,5 +15,12 @@ def worker(in_queue):
+             return
+         data, index, p, cache_path = obj
+         print 'Compressing %s (%s)' % (index, p)
+-        data = zopfli.compress(data)
+-        open(cache_path, 'wb').write(data)
++        if USE_ZLIB:
++            data = zlib.compress(data, 9)
++        else:
++            data = zopfli.compress(data)
++        # Written whole, then renamed: a killed conversion leaves no truncated
++        # cache file for the next run to take as compressed.
++        temp_path = cache_path + '.part'
++        open(temp_path, 'wb').write(data)
++        os.rename(temp_path, cache_path)

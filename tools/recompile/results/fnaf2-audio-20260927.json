@@ -1,0 +1,2120 @@
+{
+ "schema": "recompile-audio-v1",
+ "game": "fnaf2",
+ "claimLevel": "MODEL_ONLY",
+ "fidelity": "rebuilt-runtime",
+ "question": "Does every sound the converted game declares reach the rebuilt runtime's mixer, and do the game's own events play them?",
+ "scope": {
+  "auditionBinary": "0d972ae6",
+  "runBinary": "d2ff2afb"
+ },
+ "sourceHashes": {
+  "probe": "e6cd7e242c508226661bdabb5d98ac07fc94813d90229261ec1aa926c2991139",
+  "assetsHeader": "136afec02ba8c6d134ae0bc636e1885e8f4af8b9acabd9b5e7626bdbeb04df22",
+  "audition": [
+   "5ca46a7622adf43efe3944eebcefdeb0c3bd3369369de5ab3bbc7615d45deefc",
+   "57f55855f23a5b9dc270bf3d5ffd7ae16616d72ed804368fd95ade2960e8b0c7"
+  ],
+  "runs": {
+   "title": [
+    "3e48752f23b143648c9bbaadc9f7e0860cada0a249d671d52cfbcd5133c543a7",
+    "a19e41234d1fc5312d8f72a7c2354e29341c60ff6c139b5c25ddee11b95d04a7"
+   ]
+  },
+  "baselines": {
+   "before": "d965c9a71fce25a7f60393327317d1984e6d44c5ae2123a16523d01e5b594522"
+  }
+ },
+ "thresholds": {
+  "peakFloor": 16,
+  "rmsFloor": 2.0,
+  "auditionTailS": 0.1,
+  "playWindowS": 1.0,
+  "units": "16-bit sample values"
+ },
+ "probe": {
+  "build": 296,
+  "handleCount": 67,
+  "records": 67,
+  "sampleParameters": 161,
+  "rawFiles": 67,
+  "rawWithoutRecord": [],
+  "frameErrors": 4
+ },
+ "static": {
+  "invalidPlaySites": 0,
+  "definedSounds": 68
+ },
+ "runs": {
+  "title": {
+   "traceEvents": {
+    "vol": 16,
+    "play": 16,
+    "stop": 14
+   },
+   "plays": 16,
+   "distinctSounds": 14,
+   "mix": {
+    "seconds": 95.504,
+    "rate": 44100,
+    "channels": 2,
+    "rms": 2013.79,
+    "peak": 13723,
+    "nonSilent": true,
+    "blocks100ms": 955,
+    "nonSilentBlocks100ms": 852
+   }
+  }
+ },
+ "baselines": {
+  "before": {
+   "seconds": 84.335,
+   "rate": 44100,
+   "channels": 2,
+   "rms": 0.5,
+   "peak": 1,
+   "nonSilent": false,
+   "blocks100ms": 843,
+   "nonSilentBlocks100ms": 0
+  }
+ },
+ "rows": [
+  {
+   "assetId": 0,
+   "define": "SOUND_IN_THE_DEPTHS_C_0",
+   "bankIndex": 0,
+   "handle": 1,
+   "name": "In_The_Depths_C",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0001.ogg",
+   "format": "ogg",
+   "bytes": 1148218,
+   "events": [],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 143397.1,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 2551.32,
+    "peak": 6879,
+    "nonSilent": true
+   },
+   "runs": {
+    "title": {
+     "plays": 1,
+     "channels": [
+      0
+     ],
+     "loops": [
+      0
+     ],
+     "first": {
+      "frame": 3,
+      "tick": 0,
+      "wallS": 32.048
+     },
+     "windowPeakMax": 1621,
+     "nonSilentWindows": 1
+    }
+   }
+  },
+  {
+   "assetId": 1,
+   "define": "SOUND_COMPUTER_DIGITAL_L2076605_1",
+   "bankIndex": 1,
+   "handle": 2,
+   "name": "COMPUTER_DIGITAL_L2076605",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0002.wav",
+   "format": "wav",
+   "bytes": 53388,
+   "events": [
+    "60_3"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 604.8,
+    "holdMs": 604.8,
+    "rate": 44100,
+    "rms": 741.26,
+    "peak": 5755,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 2,
+   "define": "SOUND_BUZZLIGHT_2",
+   "bankIndex": 2,
+   "handle": 0,
+   "name": "buzzlight",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0000.wav",
+   "format": "wav",
+   "bytes": 863688,
+   "events": [],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 9791.9,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 471.46,
+    "peak": 1545,
+    "nonSilent": true
+   },
+   "runs": {
+    "title": {
+     "plays": 1,
+     "channels": [
+      1
+     ],
+     "loops": [
+      0
+     ],
+     "first": {
+      "frame": 3,
+      "tick": 29,
+      "wallS": 33.173
+     },
+     "windowPeakMax": 2745,
+     "nonSilentWindows": 1
+    }
+   }
+  },
+  {
+   "assetId": 3,
+   "define": "SOUND_CMPTR_LOW_TECH_STAT_3",
+   "bankIndex": 3,
+   "handle": 3,
+   "name": "CMPTR_Low_Tech_Stat",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0003.ogg",
+   "format": "ogg",
+   "bytes": 103529,
+   "events": [],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 12503.9,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 236.9,
+    "peak": 1541,
+    "nonSilent": true
+   },
+   "runs": {
+    "title": {
+     "plays": 1,
+     "channels": [
+      2
+     ],
+     "loops": [
+      0
+     ],
+     "first": {
+      "frame": 3,
+      "tick": 59,
+      "wallS": 34.687
+     },
+     "windowPeakMax": 3196,
+     "nonSilentWindows": 1
+    }
+   }
+  },
+  {
+   "assetId": 4,
+   "define": "SOUND_FANSOUND_4",
+   "bankIndex": 4,
+   "handle": 4,
+   "name": "fansound",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0004.wav",
+   "format": "wav",
+   "bytes": 996592,
+   "events": [],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 11298.7,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 640.93,
+    "peak": 2752,
+    "nonSilent": true
+   },
+   "runs": {
+    "title": {
+     "plays": 1,
+     "channels": [
+      5
+     ],
+     "loops": [
+      0
+     ],
+     "first": {
+      "frame": 3,
+      "tick": 0,
+      "wallS": 32.05
+     },
+     "windowPeakMax": 1621,
+     "nonSilentWindows": 1
+    }
+   }
+  },
+  {
+   "assetId": 5,
+   "define": "SOUND_STEREO_CASSETTE_90097704_5",
+   "bankIndex": 5,
+   "handle": 5,
+   "name": "STEREO_CASSETTE__90097704",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0005.wav",
+   "format": "wav",
+   "bytes": 41876,
+   "events": [
+    "201_3",
+    "202_3"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 474.3,
+    "holdMs": 474.3,
+    "rate": 44100,
+    "rms": 1236.11,
+    "peak": 17239,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 6,
+   "define": "SOUND_STEREO_CASSETTE_90097701_6",
+   "bankIndex": 6,
+   "handle": 6,
+   "name": "STEREO_CASSETTE__90097701",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0006.wav",
+   "format": "wav",
+   "bytes": 34924,
+   "events": [
+    "204_3"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 395.5,
+    "holdMs": 395.5,
+    "rate": 44100,
+    "rms": 962.23,
+    "peak": 9617,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 7,
+   "define": "SOUND_FENCING_43_GEN_HDF10954_7",
+   "bankIndex": 7,
+   "handle": 7,
+   "name": "FENCING_43_GEN-HDF10954",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0007.wav",
+   "format": "wav",
+   "bytes": 114296,
+   "events": [
+    "208_3",
+    "209_3"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 1295.4,
+    "holdMs": 1295.4,
+    "rate": 44100,
+    "rms": 1123.94,
+    "peak": 19158,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 8,
+   "define": "SOUND_FENCING_42_GEN_HDF10953_8",
+   "bankIndex": 8,
+   "handle": 8,
+   "name": "FENCING_42_GEN-HDF10953",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0008.wav",
+   "format": "wav",
+   "bytes": 179404,
+   "events": [
+    "210_3"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 2033.6,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 1271.56,
+    "peak": 18375,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 9,
+   "define": "SOUND_DEEPBREATHS_9",
+   "bankIndex": 9,
+   "handle": 9,
+   "name": "deepbreaths",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0009.ogg",
+   "format": "ogg",
+   "bytes": 197847,
+   "events": [],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 20929.7,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 1311.03,
+    "peak": 12611,
+    "nonSilent": true
+   },
+   "runs": {
+    "title": {
+     "plays": 1,
+     "channels": [
+      7
+     ],
+     "loops": [
+      0
+     ],
+     "first": {
+      "frame": 3,
+      "tick": 59,
+      "wallS": 34.687
+     },
+     "windowPeakMax": 3196,
+     "nonSilentWindows": 1
+    }
+   }
+  },
+  {
+   "assetId": 10,
+   "define": "SOUND_STARE_10",
+   "bankIndex": 10,
+   "handle": 10,
+   "name": "stare",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0010.ogg",
+   "format": "ogg",
+   "bytes": 1231762,
+   "events": [],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 73816.2,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 1968.35,
+    "peak": 9902,
+    "nonSilent": true
+   },
+   "runs": {
+    "title": {
+     "plays": 1,
+     "channels": [
+      8
+     ],
+     "loops": [
+      0
+     ],
+     "first": {
+      "frame": 3,
+      "tick": 119,
+      "wallS": 36.791
+     },
+     "windowPeakMax": 2536,
+     "nonSilentWindows": 1
+    }
+   }
+  },
+  {
+   "assetId": 11,
+   "define": "SOUND_STATIC2_11",
+   "bankIndex": 11,
+   "handle": 11,
+   "name": "static2",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0011.ogg",
+   "format": "ogg",
+   "bytes": 611287,
+   "events": [
+    "5_1"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 33641.0,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 2551.84,
+    "peak": 19486,
+    "nonSilent": true
+   },
+   "runs": {
+    "title": {
+     "plays": 1,
+     "channels": [
+      0
+     ],
+     "loops": [
+      1
+     ],
+     "first": {
+      "frame": 1,
+      "tick": 0,
+      "wallS": 3.84
+     },
+     "windowPeakMax": 9691,
+     "nonSilentWindows": 1
+    }
+   }
+  },
+  {
+   "assetId": 12,
+   "define": "SOUND_BLIP3_12",
+   "bankIndex": 12,
+   "handle": 13,
+   "name": "blip3",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0013.wav",
+   "format": "wav",
+   "bytes": 17892,
+   "events": [
+    "39_12",
+    "39_1",
+    "9_1",
+    "10_1",
+    "11_1",
+    "12_1",
+    "13_1",
+    "14_1",
+    "15_1",
+    "16_1",
+    "17_1",
+    "28_1",
+    "2_2",
+    "12_27",
+    "17_28"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 202.4,
+    "holdMs": 202.4,
+    "rate": 44100,
+    "rms": 1196.25,
+    "peak": 7269,
+    "nonSilent": true
+   },
+   "runs": {
+    "title": {
+     "plays": 3,
+     "channels": [
+      2,
+      0
+     ],
+     "loops": [
+      1
+     ],
+     "first": {
+      "frame": 1,
+      "tick": 200,
+      "wallS": 8.77
+     },
+     "windowPeakMax": 8790,
+     "nonSilentWindows": 3
+    }
+   }
+  },
+  {
+   "assetId": 13,
+   "define": "SOUND_FNAF_2_MAIN_MENUV2_13",
+   "bankIndex": 13,
+   "handle": 14,
+   "name": "FNAF 2 - Main Menuv2",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0014.mp3",
+   "format": "mp3",
+   "bytes": 1317952,
+   "events": [],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 54857.1,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 3056.4,
+    "peak": 12595,
+    "nonSilent": true
+   },
+   "runs": {
+    "title": {
+     "plays": 1,
+     "channels": [
+      1
+     ],
+     "loops": [
+      0
+     ],
+     "first": {
+      "frame": 1,
+      "tick": 0,
+      "wallS": 3.841
+     },
+     "windowPeakMax": 9691,
+     "nonSilentWindows": 1
+    }
+   }
+  },
+  {
+   "assetId": 14,
+   "define": "SOUND_XSCREAM2_14",
+   "bankIndex": 14,
+   "handle": 12,
+   "name": "Xscream2",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0012.wav",
+   "format": "wav",
+   "bytes": 285028,
+   "events": [
+    "62_23",
+    "53_24",
+    "45_25"
+   ],
+   "sampleQueries": [
+    "67_23",
+    "68_23",
+    "74_24"
+   ],
+   "audition": {
+    "lengthMs": 1615.6,
+    "holdMs": 1615.6,
+    "rate": 44100,
+    "rms": 12404.36,
+    "peak": 32766,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 15,
+   "define": "SOUND_MUSIC_BOX_MELODY_PLAYFUL_15",
+   "bankIndex": 15,
+   "handle": 15,
+   "name": "Music_Box_Melody_Playful",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0015.ogg",
+   "format": "ogg",
+   "bytes": 170341,
+   "events": [],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 15362.5,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 510.78,
+    "peak": 5756,
+    "nonSilent": true
+   },
+   "runs": {
+    "title": {
+     "plays": 1,
+     "channels": [
+      12
+     ],
+     "loops": [
+      0
+     ],
+     "first": {
+      "frame": 3,
+      "tick": 89,
+      "wallS": 35.667
+     },
+     "windowPeakMax": 3209,
+     "nonSilentWindows": 1
+    }
+   }
+  },
+  {
+   "assetId": 16,
+   "define": "SOUND_ERROR_16",
+   "bankIndex": 16,
+   "handle": 16,
+   "name": "error",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0016.wav",
+   "format": "wav",
+   "bytes": 29740,
+   "events": [
+    "656_3",
+    "55_27",
+    "56_27",
+    "57_27",
+    "72_27",
+    "73_27",
+    "90_27",
+    "92_27",
+    "93_27",
+    "94_27",
+    "119_27",
+    "121_27",
+    "122_27",
+    "136_27",
+    "138_27",
+    "139_27",
+    "140_27",
+    "244_3",
+    "66_3",
+    "73_3",
+    "237_3",
+    "239_3"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 336.7,
+    "holdMs": 336.7,
+    "rate": 44100,
+    "rms": 1587.42,
+    "peak": 18196,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 17,
+   "define": "SOUND_ECHO1_17",
+   "bankIndex": 17,
+   "handle": 21,
+   "name": "echo1",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0021.wav",
+   "format": "wav",
+   "bytes": 166780,
+   "events": [
+    "534_3",
+    "535_3"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 945.2,
+    "holdMs": 945.2,
+    "rate": 44100,
+    "rms": 3023.7,
+    "peak": 23333,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 18,
+   "define": "SOUND_ECHO3B_18",
+   "bankIndex": 18,
+   "handle": 23,
+   "name": "echo3b",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0023.wav",
+   "format": "wav",
+   "bytes": 239796,
+   "events": [
+    "537_3"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 1359.1,
+    "holdMs": 1359.1,
+    "rate": 44100,
+    "rms": 3039.28,
+    "peak": 22101,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 19,
+   "define": "SOUND_ECHO4B_19",
+   "bankIndex": 19,
+   "handle": 24,
+   "name": "echo4b",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0024.wav",
+   "format": "wav",
+   "bytes": 232820,
+   "events": [
+    "536_3",
+    "657_3",
+    "716_3"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 1319.6,
+    "holdMs": 1319.6,
+    "rate": 44100,
+    "rms": 3428.26,
+    "peak": 32517,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 20,
+   "define": "SOUND_CROWD_SMALL_CHIL_EC049202_20",
+   "bankIndex": 20,
+   "handle": 18,
+   "name": "CROWD_SMALL_CHIL_EC049202",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0018.wav",
+   "format": "wav",
+   "bytes": 298424,
+   "events": [
+    "3_5"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 3383.0,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 4172.72,
+    "peak": 19191,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 21,
+   "define": "SOUND_CLOCKS_CHIMES_CL_02480702_21",
+   "bankIndex": 21,
+   "handle": 19,
+   "name": "Clocks_Chimes_Cl_02480702",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0019.ogg",
+   "format": "ogg",
+   "bytes": 150661,
+   "events": [
+    "1_5"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 16136.6,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 497.59,
+    "peak": 2451,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 22,
+   "define": "SOUND_VENTWALK1_22",
+   "bankIndex": 22,
+   "handle": 17,
+   "name": "ventwalk1",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0017.wav",
+   "format": "wav",
+   "bytes": 281788,
+   "events": [],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 3194.4,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 2587.48,
+    "peak": 18182,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 23,
+   "define": "SOUND_WALK1_23",
+   "bankIndex": 23,
+   "handle": 25,
+   "name": "walk1",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0025.wav",
+   "format": "wav",
+   "bytes": 255240,
+   "events": [
+    "618_3"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 2893.4,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 220.44,
+    "peak": 4482,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 24,
+   "define": "SOUND_WALK2_24",
+   "bankIndex": 24,
+   "handle": 26,
+   "name": "walk2",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0026.wav",
+   "format": "wav",
+   "bytes": 215352,
+   "events": [
+    "619_3"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 2441.1,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 312.35,
+    "peak": 4589,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 25,
+   "define": "SOUND_WALK3_25",
+   "bankIndex": 25,
+   "handle": 27,
+   "name": "walk3",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0027.wav",
+   "format": "wav",
+   "bytes": 215042,
+   "events": [
+    "620_3"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 2437.6,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 290.65,
+    "peak": 4879,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 26,
+   "define": "SOUND_WALK4_26",
+   "bankIndex": 26,
+   "handle": 28,
+   "name": "walk4",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0028.wav",
+   "format": "wav",
+   "bytes": 201184,
+   "events": [
+    "621_3"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 2280.5,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 428.3,
+    "peak": 6900,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 27,
+   "define": "SOUND_WALK5_27",
+   "bankIndex": 27,
+   "handle": 29,
+   "name": "walk5",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0029.wav",
+   "format": "wav",
+   "bytes": 248404,
+   "events": [
+    "622_3"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 2815.9,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 407.87,
+    "peak": 5355,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 28,
+   "define": "SOUND_METALWALK2_28",
+   "bankIndex": 28,
+   "handle": 30,
+   "name": "metalwalk2",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0030.wav",
+   "format": "wav",
+   "bytes": 196168,
+   "events": [
+    "623_3"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 2223.6,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 1424.88,
+    "peak": 19519,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 29,
+   "define": "SOUND_METALWALK1_29",
+   "bankIndex": 29,
+   "handle": 31,
+   "name": "metalwalk1",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0031.wav",
+   "format": "wav",
+   "bytes": 332194,
+   "events": [
+    "624_3"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 3765.9,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 1480.79,
+    "peak": 19516,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 30,
+   "define": "SOUND_METALWALK3_30",
+   "bankIndex": 30,
+   "handle": 32,
+   "name": "metalwalk3",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0032.wav",
+   "format": "wav",
+   "bytes": 415730,
+   "events": [
+    "625_3"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 4713.0,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 1397.45,
+    "peak": 19517,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 31,
+   "define": "SOUND_WINDUP2_31",
+   "bankIndex": 31,
+   "handle": 33,
+   "name": "windup2",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0033.wav",
+   "format": "wav",
+   "bytes": 25070,
+   "events": [
+    "557_3",
+    "562_3"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 283.7,
+    "holdMs": 283.7,
+    "rate": 44100,
+    "rms": 452.13,
+    "peak": 2317,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 32,
+   "define": "SOUND_ELEC_GARBLE_32",
+   "bankIndex": 32,
+   "handle": 20,
+   "name": "elec garble",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0020.ogg",
+   "format": "ogg",
+   "bytes": 153653,
+   "events": [],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 31378.0,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 2379.08,
+    "peak": 7624,
+    "nonSilent": true
+   },
+   "runs": {
+    "title": {
+     "plays": 1,
+     "channels": [
+      15
+     ],
+     "loops": [
+      0
+     ],
+     "first": {
+      "frame": 3,
+      "tick": 89,
+      "wallS": 35.667
+     },
+     "windowPeakMax": 3209,
+     "nonSilentWindows": 1
+    }
+   }
+  },
+  {
+   "assetId": 33,
+   "define": "SOUND_CALL_1B_33",
+   "bankIndex": 33,
+   "handle": 35,
+   "name": "call 1b",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0035.ogg",
+   "format": "ogg",
+   "bytes": 817732,
+   "events": [],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 187971.9,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 1222.54,
+    "peak": 6715,
+    "nonSilent": true
+   },
+   "runs": {
+    "title": {
+     "plays": 1,
+     "channels": [
+      20
+     ],
+     "loops": [
+      1
+     ],
+     "first": {
+      "frame": 3,
+      "tick": 119,
+      "wallS": 36.796
+     },
+     "windowPeakMax": 2536,
+     "nonSilentWindows": 1
+    }
+   }
+  },
+  {
+   "assetId": 34,
+   "define": "SOUND_CALL_2B_34",
+   "bankIndex": 34,
+   "handle": 36,
+   "name": "call 2b",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0036.ogg",
+   "format": "ogg",
+   "bytes": 498801,
+   "events": [],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 114563.9,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 1222.59,
+    "peak": 6715,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 35,
+   "define": "SOUND_CALL_3B_35",
+   "bankIndex": 35,
+   "handle": 37,
+   "name": "call 3b",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0037.ogg",
+   "format": "ogg",
+   "bytes": 370216,
+   "events": [],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 85202.9,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 1222.62,
+    "peak": 6714,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 36,
+   "define": "SOUND_CALL_4B_36",
+   "bankIndex": 36,
+   "handle": 38,
+   "name": "call 4b",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0038.ogg",
+   "format": "ogg",
+   "bytes": 278056,
+   "events": [],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 63855.9,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 1222.57,
+    "peak": 6714,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 37,
+   "define": "SOUND_CALL_5B_37",
+   "bankIndex": 37,
+   "handle": 39,
+   "name": "call 5b",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0039.ogg",
+   "format": "ogg",
+   "bytes": 224562,
+   "events": [],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 52191.9,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 1222.57,
+    "peak": 6714,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 38,
+   "define": "SOUND_CALL_6B_38",
+   "bankIndex": 38,
+   "handle": 40,
+   "name": "call 6b",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0040.ogg",
+   "format": "ogg",
+   "bytes": 229624,
+   "events": [],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 52980.0,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 1222.57,
+    "peak": 6715,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 39,
+   "define": "SOUND_MUSICBOX2_39",
+   "bankIndex": 39,
+   "handle": 41,
+   "name": "musicbox2",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0041.ogg",
+   "format": "ogg",
+   "bytes": 384516,
+   "events": [],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 24718.6,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 5050.63,
+    "peak": 22420,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 40,
+   "define": "SOUND_METALRUN_40",
+   "bankIndex": 40,
+   "handle": 34,
+   "name": "metalrun",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0034.wav",
+   "format": "wav",
+   "bytes": 97968,
+   "events": [],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 1110.2,
+    "holdMs": 1110.2,
+    "rate": 44100,
+    "rms": 1908.54,
+    "peak": 17993,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 41,
+   "define": "SOUND_PARTYFAVORRASPYPART_AC01_3_41",
+   "bankIndex": 41,
+   "handle": 42,
+   "name": "PartyFavorraspyPart_AC01__3",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0042.wav",
+   "format": "wav",
+   "bytes": 38956,
+   "events": [],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 441.2,
+    "holdMs": 441.2,
+    "rate": 44100,
+    "rms": 3542.8,
+    "peak": 16578,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 42,
+   "define": "SOUND_JACKINTHEBOX_42",
+   "bankIndex": 42,
+   "handle": 43,
+   "name": "jackinthebox",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0043.wav",
+   "format": "wav",
+   "bytes": 265228,
+   "events": [],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 3006.6,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 329.18,
+    "peak": 1668,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 43,
+   "define": "SOUND_COIN_43",
+   "bankIndex": 43,
+   "handle": 44,
+   "name": "coin",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0044.wav",
+   "format": "wav",
+   "bytes": 3960,
+   "events": [
+    "19_12",
+    "41_12",
+    "11_12",
+    "12_12",
+    "16_12",
+    "24_12",
+    "25_12"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 44.4,
+    "holdMs": 44.4,
+    "rate": 44100,
+    "rms": 1510.35,
+    "peak": 6843,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 44,
+   "define": "SOUND_SCARY_SPACE_B_44",
+   "bankIndex": 44,
+   "handle": 45,
+   "name": "Scary_Space_B",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0045.ogg",
+   "format": "ogg",
+   "bytes": 463512,
+   "events": [
+    "26_13"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 64017.4,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 2052.75,
+    "peak": 6543,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 45,
+   "define": "SOUND_AMBIENCE2_45",
+   "bankIndex": 45,
+   "handle": 46,
+   "name": "ambience2",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0046.ogg",
+   "format": "ogg",
+   "bytes": 424257,
+   "events": [
+    "26_13"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 47461.6,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 1331.99,
+    "peak": 15551,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 46,
+   "define": "SOUND_MACHINETURN2_46",
+   "bankIndex": 46,
+   "handle": 48,
+   "name": "machineturn2",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0048.wav",
+   "format": "wav",
+   "bytes": 633736,
+   "events": [
+    "27_13"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 7184.7,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 1154.77,
+    "peak": 3904,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 47,
+   "define": "SOUND_ROBOT_47",
+   "bankIndex": 47,
+   "handle": 49,
+   "name": "Robot",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0049.wav",
+   "format": "wav",
+   "bytes": 353324,
+   "events": [
+    "30_13"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 4005.4,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 3080.4,
+    "peak": 17136,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 48,
+   "define": "SOUND_STATICEND2_48",
+   "bankIndex": 48,
+   "handle": 51,
+   "name": "staticend2",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0051.wav",
+   "format": "wav",
+   "bytes": 429972,
+   "events": [
+    "31_13",
+    "2_20",
+    "51_23",
+    "41_24",
+    "41_25"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 4874.5,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 4012.06,
+    "peak": 19518,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 49,
+   "define": "SOUND_POPSTATIC_49",
+   "bankIndex": 49,
+   "handle": 52,
+   "name": "popstatic",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0052.wav",
+   "format": "wav",
+   "bytes": 878532,
+   "events": [
+    "1_16",
+    "58_3"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 9960.2,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 1062.85,
+    "peak": 12482,
+    "nonSilent": true
+   },
+   "runs": {
+    "title": {
+     "plays": 1,
+     "channels": [
+      29
+     ],
+     "loops": [
+      0
+     ],
+     "first": {
+      "frame": 3,
+      "tick": 149,
+      "wallS": 38.274
+     },
+     "windowPeakMax": 6053,
+     "nonSilentWindows": 1
+    }
+   }
+  },
+  {
+   "assetId": 50,
+   "define": "SOUND_S2_50",
+   "bankIndex": 50,
+   "handle": 47,
+   "name": "S2",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0047.wav",
+   "format": "wav",
+   "bytes": 129160,
+   "events": [
+    "2_19",
+    "52_23"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 1463.9,
+    "holdMs": 1463.9,
+    "rate": 44100,
+    "rms": 3158.31,
+    "peak": 19489,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 51,
+   "define": "SOUND_A2_51",
+   "bankIndex": 51,
+   "handle": 50,
+   "name": "A2",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0050.wav",
+   "format": "wav",
+   "bytes": 129160,
+   "events": [
+    "3_19",
+    "53_23"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 1463.9,
+    "holdMs": 1463.9,
+    "rate": 44100,
+    "rms": 3606.86,
+    "peak": 19519,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 52,
+   "define": "SOUND_V2_52",
+   "bankIndex": 52,
+   "handle": 53,
+   "name": "V2",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0053.wav",
+   "format": "wav",
+   "bytes": 110032,
+   "events": [
+    "4_19",
+    "54_23"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 1247.0,
+    "holdMs": 1247.0,
+    "rate": 44100,
+    "rms": 2961.92,
+    "peak": 19519,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 53,
+   "define": "SOUND_E2_53",
+   "bankIndex": 53,
+   "handle": 54,
+   "name": "E2",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0054.wav",
+   "format": "wav",
+   "bytes": 129160,
+   "events": [
+    "5_19",
+    "8_19",
+    "55_23",
+    "43_24",
+    "48_24"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 1463.9,
+    "holdMs": 1463.9,
+    "rate": 44100,
+    "rms": 3032.29,
+    "peak": 19519,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 54,
+   "define": "SOUND_T2_54",
+   "bankIndex": 54,
+   "handle": 55,
+   "name": "T2",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0055.wav",
+   "format": "wav",
+   "bytes": 129160,
+   "events": [
+    "6_19",
+    "46_24"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 1463.9,
+    "holdMs": 1463.9,
+    "rate": 44100,
+    "rms": 2943.02,
+    "peak": 19519,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 55,
+   "define": "SOUND_H2_55",
+   "bankIndex": 55,
+   "handle": 56,
+   "name": "H2",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0056.wav",
+   "format": "wav",
+   "bytes": 129160,
+   "events": [
+    "7_19",
+    "56_23",
+    "42_24",
+    "47_24"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 1463.9,
+    "holdMs": 1463.9,
+    "rate": 44100,
+    "rms": 2739.77,
+    "peak": 19519,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 56,
+   "define": "SOUND_M2_56",
+   "bankIndex": 56,
+   "handle": 57,
+   "name": "M2",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0057.wav",
+   "format": "wav",
+   "bytes": 129160,
+   "events": [
+    "9_19",
+    "58_23",
+    "49_24"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 1463.9,
+    "holdMs": 1463.9,
+    "rate": 44100,
+    "rms": 3845.96,
+    "peak": 19303,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 57,
+   "define": "SOUND_COMPUTERINTERIORLONG_EVL02_14_57",
+   "bankIndex": 57,
+   "handle": 58,
+   "name": "ComputerInteriorLong_EVL02_14",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0058.ogg",
+   "format": "ogg",
+   "bytes": 383449,
+   "events": [
+    "59_19"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 33866.3,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 778.1,
+    "peak": 11720,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 58,
+   "define": "SOUND_WITH_S2_58",
+   "bankIndex": 58,
+   "handle": 60,
+   "name": "With_S2",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0060.ogg",
+   "format": "ogg",
+   "bytes": 76322,
+   "events": [
+    "59_3"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 6062.2,
+    "holdMs": 2000.0,
+    "rate": 44100,
+    "rms": 6727.87,
+    "peak": 22915,
+    "nonSilent": true
+   },
+   "runs": {
+    "title": {
+     "plays": 1,
+     "channels": [
+      30
+     ],
+     "loops": [
+      0
+     ],
+     "first": {
+      "frame": 3,
+      "tick": 179,
+      "wallS": 39.687
+     },
+     "windowPeakMax": 5163,
+     "nonSilentWindows": 1
+    }
+   }
+  },
+  {
+   "assetId": 59,
+   "define": "SOUND_I2_59",
+   "bankIndex": 59,
+   "handle": 22,
+   "name": "I2",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0022.wav",
+   "format": "wav",
+   "bytes": 129158,
+   "events": [
+    "57_23"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 1463.9,
+    "holdMs": 1463.9,
+    "rate": 44100,
+    "rms": 4846.47,
+    "peak": 19519,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 60,
+   "define": "SOUND_L2_60",
+   "bankIndex": 60,
+   "handle": 59,
+   "name": "L2",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0059.wav",
+   "format": "wav",
+   "bytes": 127320,
+   "events": [
+    "44_24"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 1443.0,
+    "holdMs": 1443.0,
+    "rate": 44100,
+    "rms": 4895.33,
+    "peak": 19519,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 61,
+   "define": "SOUND_P2_61",
+   "bankIndex": 61,
+   "handle": 61,
+   "name": "P2",
+   "named": true,
+   "flags": 288,
+   "rate": 44100,
+   "resource": "s0061.wav",
+   "format": "wav",
+   "bytes": 125524,
+   "events": [
+    "45_24"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 1422.7,
+    "holdMs": 1422.7,
+    "rate": 44100,
+    "rms": 2342.48,
+    "peak": 19518,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 62,
+   "define": "SOUND_CAKE2_62",
+   "bankIndex": 62,
+   "handle": 63,
+   "name": "cake2",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0063.wav",
+   "format": "wav",
+   "bytes": 31876,
+   "events": [
+    "36_23",
+    "67_24",
+    "68_24",
+    "69_24",
+    "70_24"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 360.9,
+    "holdMs": 360.9,
+    "rate": 44100,
+    "rms": 3973.96,
+    "peak": 9810,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 63,
+   "define": "SOUND_EFFECT3_63",
+   "bankIndex": 63,
+   "handle": 64,
+   "name": "effect3",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0064.wav",
+   "format": "wav",
+   "bytes": 47282,
+   "events": [
+    "56_24",
+    "57_24",
+    "58_24",
+    "59_24"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 535.6,
+    "holdMs": 535.6,
+    "rate": 44100,
+    "rms": 3976.8,
+    "peak": 8054,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 64,
+   "define": "SOUND_POP_64",
+   "bankIndex": 64,
+   "handle": 65,
+   "name": "pop",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0065.wav",
+   "format": "wav",
+   "bytes": 9148,
+   "events": [
+    "71_25"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 103.2,
+    "holdMs": 103.2,
+    "rate": 44100,
+    "rms": 7136.14,
+    "peak": 19065,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 65,
+   "define": "SOUND_XSCREAM3_65",
+   "bankIndex": 65,
+   "handle": 62,
+   "name": "Xscream3",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0062.wav",
+   "format": "wav",
+   "bytes": 285028,
+   "events": [],
+   "sampleQueries": [
+    "827_3"
+   ],
+   "audition": {
+    "lengthMs": 1615.6,
+    "holdMs": 1615.6,
+    "rate": 44100,
+    "rms": 20488.09,
+    "peak": 32767,
+    "nonSilent": true
+   },
+   "runs": {}
+  },
+  {
+   "assetId": 66,
+   "define": "SOUND_CASHREG2_66",
+   "bankIndex": 66,
+   "handle": 66,
+   "name": "CASHREG2",
+   "named": true,
+   "flags": 256,
+   "rate": 44100,
+   "resource": "s0066.wav",
+   "format": "wav",
+   "bytes": 49404,
+   "events": [
+    "91_27",
+    "120_27"
+   ],
+   "sampleQueries": [],
+   "audition": {
+    "lengthMs": 559.6,
+    "holdMs": 559.6,
+    "rate": 44100,
+    "rms": 1326.92,
+    "peak": 9493,
+    "nonSilent": true
+   },
+   "runs": {}
+  }
+ ],
+ "answer": {
+  "declared": 67,
+  "resolvedFiles": 67,
+  "missingFiles": 0,
+  "transcodedMp3": 1,
+  "handleNotIndex": 54,
+  "playSites": 121,
+  "soundsWithPlaySites": 46,
+  "auditionNonSilent": 67,
+  "auditionMeasured": 67,
+  "run:title:soundsPlayed": 14,
+  "run:title:plays": 16
+ },
+ "limitations": [
+  "Host mixer measurements over retained builds; Android native audio capture remains UNKNOWN and later background-pause capture is malformed, so its WAV is excluded."
+ ],
+ "evidenceId": "recompile-audio-36820f08affce640"
+}

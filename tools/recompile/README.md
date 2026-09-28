@@ -36,9 +36,18 @@ directory (`/private/tmp/fnaf2-recompile.*` on the dev machine).
 | `native-frame.py` | Scales harness snaps (1024 x 768) to the phone's 2400 x 1080 MediaProjection frame as Display Mode FULL does, with bilinear filtering as the phone's frames show, and prints per-rectangle distances to a phone frame. Frames stay outside the repository. |
 | `game-config.py` | Chowdren `--config` for the other build-296 mobile CCNs (FNaF 1, 3, 4): the FNaF 2 config's overrides with extension identity resolved by item name (`Multiple Touch`, `Layer object`, `*.KYSO`, `Ini`...), since each game numbers its extension object types differently. |
 | `run-harness.sh` | Container wrapper with GL readiness checking and a process deadline that escalates to kill. Run from the external gamesrc directory. |
-| `android/build-apk.sh`, `android/game-CMakeLists.txt` | Device action (host side, no phone): packages the host-built `libmain.so` + `libSDL2.so` and the pinned `Assets.dat` into a debug-signed APK (package `org.fnaf2rebuild.play`) with javac, d8, aapt2, zipalign and apksigner, no Gradle. `--libs DIR --sdl DIR --sdl-lib DIR --assets FILE --out FILE`; refuses an `--out` inside the repository, because the APK carries game art. A personal research build for Pedro's own phone, never distributed (his 2026-09-27 exception to "no separate APKs"). |
 | `android/gles2-renderer.patch` | Content-free runtime patch (Chowdren/base only), applied after `mmfparser-chowdren-mobile.patch`: the GL ES 2.0 renderer. The desktop shader layer (`desktop/glslshader.cpp`) on ES 2.0, the packed GLSL 1.20 shaders rewritten at load time as GLSL ES 1.00 (`base/gles2shader.h`), vertex attributes in place of client arrays, and `copy_rect` from the RGBA8 screen FBO; `-DUSE_GLES2=ON` builds the desktop game on a GLES2 context for host checks. The desktop GL build is unchanged (every change is under `CHOWDREN_USE_GLES2`). `git apply` in the anaconda tree; see `android/README.md`. With it, `android/game-CMakeLists.txt` builds GLES2 by default (`-DCHOWDREN_GLES1=ON` keeps the fixed-function 1.1 target) and `android/build-apk.sh` declares ES 2.0 when `libmain.so` links `libGLESv2.so`. |
 | `android/gles2-shader-check.cpp` | Check (host, no phone, no game content): compiles and links every `base/shaders` pair through `gles2shader.h` on a headless Mesa GL ES 2.0 context (EGL surfaceless), and renders the Perspective shader's PANORAMA branch over a generated texture against the Android runtime's formula. `gles2-shader-check SHADER_DIR [--dump DIR] > result.json`; exit 0 only if all link and PANORAMA matches. Build line in its header. |
+| `android/build-apk.sh`, `android/game-CMakeLists.txt` | Device action (host side, no phone): packages the host-built `libmain.so` + `libSDL2.so` and the pinned `Assets.dat` into a debug-signed APK with javac, d8, aapt2, zipalign and apksigner, no Gradle. `--libs DIR --sdl DIR --sdl-lib DIR --assets FILE --out FILE [--package org.fnaf<N>rebuild.play] [--label TEXT]` (default package `org.fnaf2rebuild.play`). The activity theme lays the window into the display cutout (`windowLayoutInDisplayCutoutMode=shortEdges`, API 28+). `REBUILD_KEYSTORE` names the debug key; reuse the installed build's key to keep the save. Refuses an `--out` inside the repository, because the APK carries game art. A personal research build for Pedro's own phone, never distributed (his 2026-09-27 exception to "no separate APKs"). |
+| `android/build-lib.sh` | Device action (host side, no phone): cross-builds one converted game's `libmain.so` for arm64-v8a with the NDK and `game-CMakeLists.txt`. `--gamesrc DIR --chowdren DIR --sdl-src DIR --sdl-lib DIR --openal-src DIR --openal-lib FILE --work DIR [--jobs N]` (niced, `-j2` by default). It refuses a work directory inside the repository. The build fails unless the static openal-soft is linked (`alcOpenDevice` defined) and its OpenSL ES backend imports `slCreateEngine` from `libOpenSLES.so`. |
+| `probe-sounds.py` | Report (Python 2.7 + the patched mmfparser): a mobile CCN's sound bank as `CSoundBank.preLoad` reads it (the handle space, then the records; a name only when flags & 0x100). It prints each record's res/raw file by the runtime's rule (`s%04d` by **handle**) and every Sample parameter's handle, as one `recompile-sound-probe-v1` JSON object. `probe-sounds.py <anaconda> <application.ccn> [<res/raw dir>]`. Names, handles and sizes only. |
+| `audio-report.py` | Report: `record` joins the probe, the generated `assets.h` and play sites, an audition run (`CHOWDREN_AUDIO_AUDITION`) and bounded game runs (`CHOWDREN_AUDIO_TRACE` plus openal-soft's wave backend) into a `recompile-audio-v1` record. Each sound gets its file, format, event ids, audition RMS/peak and play counts. `check` re-derives the totals and the evidenceId. No audio is written. |
+| `game-builds.py` | Report: `record` adds or replaces one game's row in a `recompile-game-builds-v1` record. The row holds conversion, host binary, a bounded no-input harness boot (frames visited, exit code, GL errors, sample plays), APK hash and package, and its audio record's evidenceId, all derived from the step outputs. `check` re-derives statuses and the evidenceId and resolves each audio record under `results/`. |
+| `regen-patch.py` | Check/report: regenerates `mmfparser-chowdren-mobile.patch` in the committed file order. Each section is `git diff HEAD -- <path>` in the anaconda tree; `--add` appends new paths (`git add -N` when untracked). It then verifies the patch against a pristine `git archive 9b00bb4` (`--pristine`): it applies, and the patched copy equals the tree file for file. `--check-only` verifies the committed patch. |
+| `sound-map.py` | Report/check: `record` writes a game's `recompile-sound-map-v1` table. For each bank record it gives the handle, bank index, name, declared length and rate, and its `res/raw` file by the retail rule (`s%04d` by **handle**) with that file's sha256, duration, rate and channels. It adds the converted asset and its play sites, audition correlations against the handle's file and the bank index's file, and phone-measured anchors. `check` re-derives the file names, the declared-length agreement, asset ids, anchors, summary and evidenceId without any audio. In `npm run test:unit` via `test-audio-records.py`. |
+| `play-correlation.py` | Report: which sample the rebuilt mixer played for one sound id. The mix is a wave-backend capture made with `CHOWDREN_AUDIO_SOLO=<id>`. Each `play` line's window is scored by normalized cross-correlation against reference files (`--ref NAME=FILE`), over +-lag, with controls 1 s earlier. `--trace --mix --asset --ref ... [--lag-ms] [--window-ms]`. Scores only. |
+| `android/af-tracks.py` | Report: which AudioFlinger output thread (name, `AUDIO_OUTPUT_FLAG_*`, standby) carries a pid's tracks (fast or normal, rate), from a saved `dumpsys media.audio_flinger`. `af-tracks.py DUMPSYS.txt PID`. The capture switch's evidence. |
+| `test-audio-records.py` | FIXTURE for both records on a synthetic mix, trace, probe and build steps (thresholds, totals, refusals), then a recheck of every committed `recompile-audio-v1` and `recompile-game-builds-v1` result. In `npm run test:unit`. |
 | `test-mobile-parser.py`, `test-compare-draw-trace.mjs` | Synthetic parser and result-classification regressions; FIXTURE only. |
 | `test-child-events.py`, `fixtures/child-events.cpp` | Emit and compile synthetic nested events with the patched converter; exercise parent gating, nested/sibling selections, and one-shot timer dispatch. FIXTURE only; Python2.7 and a C++ compiler required. |
 | `diagnose-child-events.mjs`, `test-child-diagnosis.mjs` | Content-free, hash-bound reader for the retained debugger and child-census measurements. |
@@ -736,6 +745,10 @@ now:
 - FNaF 1 and 3 need more than the silent substitute: their sound banks run out
   of bytes before the declared count, and part of their audio sits in
   `assets/` under obfuscated names. That layout is not decoded yet.
+  **Retracted 2026-09-27** (§"Sound", below). The bank's first count is the
+  handle space, not the record count; that was the misread. The 34 `assets/`
+  files are the same in all four APKs, FNaF 2's included, and are not sounds.
+  Every record of all four banks has its `res/raw` file.
 
 ## Winner schedules replayed (2026-09-27, S2b)
 
@@ -1556,3 +1569,31 @@ Open:
   test-seam-slack candidate for S4. It is not a promotion.
 - Rebuild-vs-model draw splits on the phone clock: first mismatches at updates
   166-2400 on the primary replays, earlier than on the 60 Hz ones.
+
+
+## Sound (2026-09-27, recovered wrap-up)
+
+The mobile sound bank declares the handle space before its records, and the
+retail file lookup uses the record's handle (`s%04d`), rather than its bank
+index. The converter now resolves that file, transcodes MP3 to PCM WAV, and
+retains the uninterruptible channel rule. The runtime follows harness game
+time when reading sound completion, and can trace or audition its own mixer.
+The content-free mobile patch reproduces 66 changed source files from pristine
+`9b00bb4`; generated game code and media stay outside this repository.
+
+[Sound mapping](results/fnaf2-sound-map-20260927.json) retains three reproduced
+anchors. [FNaF 2 audio](results/fnaf2-audio-20260927.json), generated ID
+`recompile-audio-36820f08affce640`, measures all 67 sounds non-silent in the
+host mixer. [FNaF 1 audio](results/fnaf1-audio-20260927.json),
+`recompile-audio-a3950c66deefc9de`, measures 52 of 53 non-silent; one remains
+below the measurement floor. These are MODEL_ONLY rebuilt-runtime results.
+They retain the input hashes and are rechecked by `test-audio-records.py`.
+
+[Per-game builds](results/game-builds-20260927.json),
+`recompile-game-builds-995dfaa99a76042a`, retains the actual partial outcome:
+FNaF 1 converts, links and boots to its title; FNaF 2 also has a retained Android
+APK; FNaF 3 conversion stops at `shader.get_name` with `KeyError: 1`; FNaF 4
+converts and links, with boot and APK still unmeasured. Host and Android
+revisions differ and are individually hashed. Native Companion audio capture,
+background-pause correctness (its retained wave capture was malformed), and
+all-game APK completion remain open. No new device action was made at wrap-up.

@@ -2696,3 +2696,21 @@ comparison on the rebuild, setup integration of the game-screen reader, and
 replacement of the quarantined FNaF 2 grid/legacy readers by native REGION
 rules. Setup currently reports no helper identity for non-FNaF 2 targets.
 The clear and Night 7 reliability claims remain unchanged.
+
+## 2026-09-27 — Recover the recompile audio/build work (S2/S6, MODEL_ONLY)
+
+The interrupted Claude work now has generated result records:
+`recompile-audio-36820f08affce640` (FNaF 2: 67/67 non-silent host auditions),
+`recompile-audio-a3950c66deefc9de` (FNaF 1: 52/53),
+`recompile-sound-map-e63c823f9f0a84e7` (three reproduced sound anchors), and
+[recompile-game-builds-995dfaa99a76042a](../tools/recompile/results/game-builds-20260927.json).
+The build record separates the FNaF 1 and 2 host boots, FNaF 2 APK, FNaF 3
+conversion failure, and FNaF 4 host link without a measured boot or APK.
+The recovered mobile patch applies to pristine `9b00bb4` and reproduces its
+66 named changed files. Mixer records retain source hashes, and their fixture
+gate covers missing auditions as UNKNOWN. Typecheck and audio fixture/record
+checks passed; the final integrated clean-checkout push gate remains required.
+
+Open: FNaF 3 shader conversion, FNaF 1/3/4 APKs, FNaF 4 boot and sound audition,
+the quiet FNaF 1 audition, native Companion capture and a valid background-pause
+measurement. These host measurements do not close device fidelity or reliability.

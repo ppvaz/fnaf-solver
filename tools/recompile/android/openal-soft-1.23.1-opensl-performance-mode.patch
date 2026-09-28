@@ -1,0 +1,70 @@
+--- a/alc/backends/opensl.cpp
++++ b/alc/backends/opensl.cpp
+@@ -44,6 +44,7 @@
+ #include <SLES/OpenSLES.h>
+ #include <SLES/OpenSLES_Android.h>
+ #include <SLES/OpenSLES_AndroidConfiguration.h>
++#include <android/log.h>
+ 
+ 
+ namespace {
+@@ -514,6 +515,7 @@
+             ids.data(), reqs.data());
+         PrintErr(result, "engine->CreateAudioPlayer");
+     }
++    SLAndroidConfigurationItf perfConfig{nullptr};
+     if(SL_RESULT_SUCCESS == result)
+     {
+         /* Set the stream type to "media" (games, music, etc), if possible. */
+@@ -526,6 +528,35 @@
+             result = VCALL(config,SetConfiguration)(SL_ANDROID_KEY_STREAM_TYPE, &streamType,
+                 sizeof(streamType));
+             PrintErr(result, "config->SetConfiguration");
++
++            /* ALSOFT_OPENSL_PERFORMANCE_MODE (none, latency, latency-effects,
++             * power-saving): the player's performance mode, set before Realize
++             * (API 25+). Unset keeps OpenSL ES's default, under which a player
++             * can get a FAST track that AudioPlaybackCapture does not see. The
++             * request and the mode granted are logged under the tag "openal".
++             */
++            perfConfig = config;
++            const char *mode{getenv("ALSOFT_OPENSL_PERFORMANCE_MODE")};
++            if(mode && *mode)
++            {
++                SLuint32 perf{SL_ANDROID_PERFORMANCE_LATENCY};
++                bool known{true};
++                if(strcmp(mode, "none") == 0) perf = SL_ANDROID_PERFORMANCE_NONE;
++                else if(strcmp(mode, "latency") == 0) perf = SL_ANDROID_PERFORMANCE_LATENCY;
++                else if(strcmp(mode, "latency-effects") == 0) perf = SL_ANDROID_PERFORMANCE_LATENCY_EFFECTS;
++                else if(strcmp(mode, "power-saving") == 0) perf = SL_ANDROID_PERFORMANCE_POWER_SAVING;
++                else known = false;
++                SLresult presult{SL_RESULT_PARAMETER_INVALID};
++                if(known)
++                    presult = VCALL(config,SetConfiguration)(SL_ANDROID_KEY_PERFORMANCE_MODE, &perf,
++                        sizeof(perf));
++                __android_log_print(ANDROID_LOG_INFO, "openal",
++                    "OpenSL performance mode requested: %s (%u), %s", mode, perf,
++                    known ? res_str(presult) : "unknown name, default kept");
++            }
++            else
++                __android_log_print(ANDROID_LOG_INFO, "openal",
++                    "OpenSL performance mode requested: default (ALSOFT_OPENSL_PERFORMANCE_MODE unset)");
+         }
+ 
+         /* Clear any error since this was optional. */
+@@ -536,6 +567,15 @@
+         result = VCALL(mBufferQueueObj,Realize)(SL_BOOLEAN_FALSE);
+         PrintErr(result, "bufferQueue->Realize");
+     }
++    if(SL_RESULT_SUCCESS == result && perfConfig)
++    {
++        SLuint32 granted{0xffffffffu};
++        SLuint32 size{sizeof(granted)};
++        SLresult gresult{VCALL(perfConfig,GetConfiguration)(SL_ANDROID_KEY_PERFORMANCE_MODE, &size,
++            &granted)};
++        __android_log_print(ANDROID_LOG_INFO, "openal", "OpenSL performance mode granted: %u, %s",
++            granted, res_str(gresult));
++    }
+     if(SL_RESULT_SUCCESS == result)
+     {
+         const uint num_updates{mDevice->BufferSize / mDevice->UpdateSize};

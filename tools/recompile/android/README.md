@@ -229,3 +229,73 @@ installed. On the phone, check:
 - The frame rate holds at 60. The pass adds one 1024 x 768 copy and one
   full-screen draw per frame.
 - The window fills the cutout edge.
+## 2026-09-27 (later): sound, a stale Assets.dat, the cutout, the capture switch
+
+**Wrong sounds on the phone were a stale `Assets.dat`.** After the sound fix
+(`../README.md` §"Sound"), Pedro heard the jumpscare on menu blips, the
+metal-vent crawl on the music-box wind and the 6 AM music on the poster honk.
+`run-as org.fnaf2rebuild.play` showed `files/Assets.dat` at 119,915,861 bytes
+(sha256 `7163d628`). That was the first install's copy, whose sound table follows
+the old bank-index order, and it now sat under code that plays by handle.
+`set_resources_dir()` measured the APK's copy with `SDL_RWFromFile("Assets.dat")`.
+On Android SDL opens a relative path from internal storage first, so it compared
+the extracted file with itself and never extracted again. The runtime
+(`desktop/platform.cpp`, in the patch) now reads `assets/Assets.dat` through
+`AAssetManager`. It keys the extracted copy by `Assets.dat.stamp` (the installed
+APK's size and mtime, and the asset's length) and replaces the copy whole
+(`.part`, then rename). On the phone, APK `755fde09`:
+- the first launch logged `Extracting Assets.dat (123436353 bytes; stamp '134599332 1790553971 123436353', was '')`;
+- `files/Assets.dat` became `d9cc45ff`;
+- the save (`files/freddy2`, `b1e568d3`) was unchanged before and after.
+
+With `debug.rebuild.audio_trace=1` the phone's play lines equal the host's.
+The Options press plays asset 12 (blip3, `s0013`). The poster nose plays asset
+41 (`s0042`, flagged uninterruptible) on channel 14. The office starts the same
+loops.
+
+**The cutout.** The g56 kept the window out of its 115 px camera cutout (window
+2285x1080 at [115,0]). `build-apk.sh`'s theme sets
+`windowLayoutInDisplayCutoutMode=shortEdges` (API 28+, `values-v28`). The
+office then draws full-width from x = 0.
+
+**The dark office (ES 1.1).** The Perspective object copied the framebuffer and
+redrew it opaque with no shader, which painted everything under it black. Under
+`CHOWDREN_USE_GLES1`, `PerspectiveObject::draw()` now returns at once. The
+default build is now ES 2.0 (`gles2-renderer.patch`, applied to the snapshot of
+`Chowdren/base` after the mobile patch). On the phone it logs
+`GL: OpenGL ES 3.2 build 25.1`, and GLES2 shaders 15, 7 and 36 link with no
+LINK FAILED or compile error. The office screenshot shows the curved panorama.
+
+**The capture switch** (default OFF). openal-soft plays the whole mix through
+one OpenSL ES player. `openal-soft-1.23.1-opensl-performance-mode.patch` (for
+the 1.23.1 tarball, sha256 `796f4b89`) sets that player's
+`SL_ANDROID_KEY_PERFORMANCE_MODE` from `ALSOFT_OPENSL_PERFORMANCE_MODE` before
+Realize, and logs the requested and granted modes under the tag `openal`.
+The runtime (`base/android/audio_route.h`) sets the variable from two system
+properties, read when audio opens:
+
+```sh
+adb shell setprop debug.rebuild.audio_capture 1    # power-saving (deep buffer); 0 or unset: OFF
+adb shell setprop debug.rebuild.audio_perf none    # or latency | latency-effects | power-saving (wins)
+adb shell am force-stop org.fnaf2rebuild.play      # then relaunch; the properties are read at start
+```
+
+`dumpsys media.audio_flinger`, parsed with `af-tracks.py`, on the g56:
+- **OFF:** the rebuild's track is fast track F1 on `AudioOut_1D`
+  (`AUDIO_OUTPUT_FLAG_FAST`), as retail SoundPool cues are; openal logs the
+  default mode (granted 2).
+- **ON:** a normal track on `AudioOut_15` (`AUDIO_OUTPUT_FLAG_DEEP_BUFFER`),
+  with `requested: power-saving (3), Success` and `granted: 3`.
+- Whether a Companion `AudioPlaybackCapture` then records discrete cues is
+  UNKNOWN (not run).
+
+**Background.** Leaving the rebuild at its title in the background kept its
+music playing over other apps. `platform.cpp` now pauses the whole OpenAL
+device (`ALC_SOFT_pause_device`) on `SDL_APP_WILLENTERBACKGROUND` and resumes it
+on `SDL_APP_DIDENTERFOREGROUND`. The events are caught by an event watch,
+because SDL blocks the event pump while paused. On the host,
+`CHOWDREN_BACKGROUND=<frame>:<tick>:<updates>` pushes the two events.
+
+**Every game.** `build-lib.sh` cross-builds any converted game's `libmain.so`
+(`--gles1` for the ES 1.1 target). `build-apk.sh --package org.fnaf<N>rebuild.play
+--label ...` packages it, so the four games install side by side.
