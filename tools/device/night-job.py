@@ -71,6 +71,7 @@ RUNNER_STOP_GRACE_S = 120.0
 RUNNER_TERM_GRACE_S = 20.0
 SERIAL = re.compile(r"^[A-Za-z0-9._:-]{1,96}$")
 SHA = re.compile(r"^[0-9a-f]{64}$")
+HELD_SIGNALS = frozenset({signal.SIGINT, signal.SIGTERM, signal.SIGHUP})
 
 
 job_root = night_jobs.job_root
@@ -329,7 +330,17 @@ class NightJob:
             if "SIGTERM" in self.signals:
                 after = {"status": "SKIPPED", "reason": "SIGTERM: the window recovers the title"}
             else:
-                after = self.ensure_title(game, "after")
+                # Held while the title is recovered: a helper spawned now cannot
+                # be killed by a signal to this group between fork and setsid()
+                # (overnight-window.py measured it). What arrives is recorded.
+                blocked = signal.pthread_sigmask(signal.SIG_BLOCK, HELD_SIGNALS)
+                try:
+                    after = self.ensure_title(game, "after")
+                    held = sorted(sig.name for sig in signal.sigpending() & HELD_SIGNALS)
+                    if held:
+                        after["signalsHeld"] = held
+                finally:
+                    signal.pthread_sigmask(signal.SIG_SETMASK, blocked)
             self.record["titleAfter"] = after
             self.event("title-after", status=after["status"], items=",".join(after.get("items", [])),
                        relaunched=after.get("relaunched", False))
@@ -421,37 +432,36 @@ def main(argv: list[str] | None = None) -> int:
         print("NIGHT-JOB ERROR ANDROID_SERIAL names no device", file=sys.stderr)
         return 2
     job = NightJob(serial, args.job_id if args.command == "run" else f"title-{int(time.time())}")
-    previous = {signum: signal.signal(signum, job.on_signal)
-                for signum in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP)}
+    for signum in HELD_SIGNALS:
+        signal.signal(signum, job.on_signal)
     try:
-        try:
-            job.lease = DeviceLock(serial).__enter__()
-        except DeviceBusy as error:
-            print(f"SETUP HOLD reason=device-busy serial={serial} detail={error}", flush=True)
-            return 75
-        try:
-            if args.command == "title":
-                read = job.ensure_title(args.game, "after") if args.recover else \
-                    job.read_title(args.game, {}, own_session=True)
-                job.record.update({"game": args.game, "title": read})
-                job.save()
-                print(f"TITLE {read['status']} " + json.dumps({k: v for k, v in read.items() if k != 'steps'},
-                                                              sort_keys=True), flush=True)
-                return 0 if read["status"] == "OBSERVED" else 1
-            code = job.run(args)
-        finally:
-            job.lease.__exit__(None, None, None)
-            job.lease = None
-        job.record["finishedAt"] = now_text()
-        job.record["exit"] = code
-        job.save()
-        print("NIGHT-JOB RESULT " + json.dumps({key: job.record.get(key) for key in
-                                                ("jobId", "game", "night", "outcome", "reason", "runId")},
-                                               sort_keys=True), flush=True)
-        return code
+        job.lease = DeviceLock(serial).__enter__()
+    except DeviceBusy as error:
+        print(f"SETUP HOLD reason=device-busy serial={serial} detail={error}", flush=True)
+        return 75
+    try:
+        if args.command == "title":
+            read = job.ensure_title(args.game, "after") if args.recover else \
+                job.read_title(args.game, {}, own_session=True)
+            job.record.update({"game": args.game, "title": read})
+            job.save()
+            print(f"TITLE {read['status']} " + json.dumps({k: v for k, v in read.items() if k != 'steps'},
+                                                          sort_keys=True), flush=True)
+            return 0 if read["status"] == "OBSERVED" else 1
+        code = job.run(args)
     finally:
-        for signum, handler in previous.items():
-            signal.signal(signum, handler)
+        job.lease.__exit__(None, None, None)
+        job.lease = None
+    # The result is decided: held from here to exit, so an interrupt during the
+    # interpreter's own exit cannot replace this code with a SIGINT death.
+    signal.pthread_sigmask(signal.SIG_BLOCK, HELD_SIGNALS)
+    job.record["finishedAt"] = now_text()
+    job.record["exit"] = code
+    job.save()
+    print("NIGHT-JOB RESULT " + json.dumps({key: job.record.get(key) for key in
+                                            ("jobId", "game", "night", "outcome", "reason", "runId")},
+                                           sort_keys=True), flush=True)
+    return code
 
 
 if __name__ == "__main__":

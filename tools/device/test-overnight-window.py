@@ -73,6 +73,9 @@ if step == "drift":  # a job that opens the game, starts capture and moves a set
 if step == "use-phone":  # the owner picks the phone up during a job
     fixture("focus", "com.whatsapp/com.whatsapp.HomeActivity")
     step = "done"
+if step == "faults":  # after this job, the next reads and a write die as signal-killed children
+    fixture("faults", {"settings get": 2, "settings put": 1})
+    step = "done"
 if step == "done":
     print("DONE id=fake-%d\nQUEUE PAUSED done=1" % n)
     sys.exit(0)
@@ -101,6 +104,7 @@ FAST = {
     "STOP_GRACE_S": 1.0, "TERM_GRACE_S": 1.0, "KILL_GRACE_S": 1.0,
     "RESTORE_BUDGET_S": 1.5, "NIGHT_RECOVERY_S": 1.0, "PACK_TIMEOUT_S": 5.0,
     "RESTORE_RETRY_S": 0.0, "RESTORE_RETRY_POLL_S": 0.1,
+    "RESTORE_CALL_BUDGET_S": 10.0, "RESTORE_CALL_POLL_S": 0.05,
     "LOCK_POLL_S": 0.2, "ARM_POLL_S": 0.1,
 }
 PRIOR = {
@@ -128,7 +132,8 @@ def clock(offset_s: float) -> str:
 
 
 class Case:
-    def __init__(self, base: Path, name: str, lock_dir: Path, **state):
+    def __init__(self, base: Path, name: str, lock_dir: Path, adb_delay_s: float = 0.0, **state):
+        self.adb_delay_s = adb_delay_s   # FAKE_ADB_DELAY_S: every adb call as slow as a loaded host's
         self.dir = base / name
         self.dir.mkdir()
         self.bin = self.dir / "bin"
@@ -160,8 +165,12 @@ class Case:
                     "FAKE_QUEUE_SCRIPT": str(self.steps), "CUE_HELPER_QUEUE_FILE": str(self.queue_file),
                     "CUE_HELPER_LOCK_DIR": str(self.lock_dir), "FNAF_WINDOW_DIR": str(self.window_dir),
                     "CUE_HELPER_STATE_DIR": str(self.state_dir), "FNAF_NIGHT_JOB_DIR": str(self.dir / "night-jobs"),
-                    "FAKE_PHONE_STATE": str(self.state_path)})
+                    "FAKE_PHONE_STATE": str(self.state_path), "FAKE_ADB_DELAY_S": str(self.adb_delay_s)})
         return env
+
+    def cleanup_reads(self) -> list[dict]:
+        """Setting reads by the window that ran with SIGINT blocked: the cleanup's."""
+        return [row for row in self.calls() if row["args"][1:3] == ["settings", "get"] and row.get("sigintBlocked")]
 
     def jobs(self, count: int, steps: list[str] | None = None) -> None:
         jobs = [QUEUE.make_job("menu-check", "menu", False, False) for _ in range(count)]
@@ -502,31 +511,89 @@ def main() -> int:
               bool(closed) and datetime.fromisoformat(closed) <= datetime.fromisoformat(record["window"]["end"]),
               (closed, record.get("window", {}).get("end")))
 
-        # --- ABORTED: SIGINT to the runner's process group mid-job, then again
-        # during the cleanup; the second must not cut the restore short.
-        abort = case("abort")
+        def wait_for(predicate, what: str, limit: float = 60.0) -> bool:
+            until = time.monotonic() + limit
+            while time.monotonic() < until:
+                if predicate():
+                    return True
+                time.sleep(0.02)
+            check(f"waited for {what}", False, "timed out")
+            return False
+
+        def child_started(case_: Case):
+            return lambda: bool(case_.events_file()) and '"child.start"' in case_.events_file().read_text()
+
+        # --- ABORTED: SIGINT to the runner's process group mid-job, then a second
+        # one placed INSIDE the restore, not after a guessed delay: every adb call
+        # takes 0.2 s (a loaded host), and it is sent once the cleanup's first
+        # setting read has started. It must be held, not cut the restore short.
+        abort = case("abort", adb_delay_s=0.2)
         abort.jobs(1, ["hang"])
         process = abort.start()
-        deadline = time.monotonic() + 60
-        while time.monotonic() < deadline:
-            events = abort.events_file()
-            if events and '"child.start"' in events.read_text():
-                break
-            time.sleep(0.05)
+        wait_for(child_started(abort), "abort: the job to start")
         os.killpg(process.pid, signal.SIGINT)
-        time.sleep(0.3)
+        wait_for(lambda: bool(abort.cleanup_reads()), "abort: the restore's first read")
         try:
             os.killpg(process.pid, signal.SIGINT)
         except ProcessLookupError:
             pass
-        output, _ = process.communicate(timeout=60)
+        output, _ = process.communicate(timeout=120)
         record = abort.record()
         check("abort: exit 130 ABORTED", process.returncode == 130 and record.get("outcome") == "ABORTED",
               (process.returncode, record.get("outcome"), output[-1500:]))
-        check("abort: both interrupts were received", len(record.get("signals", [])) >= 2, record.get("signals"))
+        check("abort: both interrupts were received, the second held during the cleanup",
+              record.get("signals") == ["SIGINT", "SIGINT"] and record.get("signalsHeldDuringCleanup") == ["SIGINT"],
+              (record.get("signals"), record.get("signalsHeldDuringCleanup")))
         check("abort: the child was stopped with SIGINT first",
               (record.get("jobs") or [{}])[-1].get("signals", [])[:1] == ["SIGINT"], record.get("jobs"))
+        check("abort: nothing in the cleanup raised",
+              not [e for e in record.get("events", []) if e["type"] == "cleanup.error"], record.get("events"))
         restored_to_prior(abort, "abort", record)
+
+        # --- the restore retries a call that dies: after the job, the next two
+        # setting reads and one write exit as a signal-killed child does (-2).
+        faults = case("restore-faults")
+        faults.jobs(1, ["faults"])
+        result = faults.run()
+        record = faults.record()
+        rows = {row["setting"]: row for row in record.get("settings", {}).get("restore", {}).get("settings", [])}
+        stay = rows.get("global/stay_on_while_plugged_in", {})
+        check("restore-faults: the window completes, verified", result.returncode == 0
+              and record.get("outcome") == "COMPLETE", (result.returncode, result.stdout[-1500:]))
+        check("restore-faults: stay-awake's killed reads and write were asked again, then read back",
+              stay.get("calls") == ["get:-2", "get:-2", "get:0", "put:-2", "get:0", "put:0", "get:0"]
+              and stay.get("action") == "restored" and stay.get("after") == "0", stay)
+        restored_to_prior(faults, "restore-faults", record)
+
+        # --- a barrage: SIGINT to the window's group every 2 ms from the job's
+        # start until the window exits. No child the cleanup spawns may die of it.
+        barrage = case("restore-barrage", adb_delay_s=0.05)
+        barrage.jobs(1, ["hang"])
+        process = barrage.start()
+        wait_for(child_started(barrage), "restore-barrage: the job to start")
+        sent = 0
+        until = time.monotonic() + 120
+        while process.poll() is None and time.monotonic() < until:
+            try:
+                os.killpg(process.pid, signal.SIGINT)
+                sent += 1
+            except ProcessLookupError:
+                break
+            time.sleep(0.002)
+        output, _ = process.communicate(timeout=60)
+        record = barrage.record()
+        killed = [row["calls"] for row in record.get("settings", {}).get("restore", {}).get("settings", [])
+                  if any(call.split(":")[1].startswith("-") for call in row.get("calls", []))]
+        check("restore-barrage: the window ends ABORTED", process.returncode == 130
+              and record.get("outcome") == "ABORTED", (process.returncode, output[-1500:]))
+        check(f"restore-barrage: none of the restore's calls died under {sent} SIGINTs", killed == [], killed)
+        check("restore-barrage: every cleanup read ran with SIGINT blocked",
+              bool(barrage.cleanup_reads()) and all(
+                  row.get("sigintBlocked") for row in barrage.calls()
+                  if row["args"][1:3] == ["settings", "put"] and row["args"][-1] != "7"), barrage.calls()[-8:])
+        check("restore-barrage: nothing in the cleanup raised",
+              not [e for e in record.get("events", []) if e["type"] == "cleanup.error"], record.get("events"))
+        restored_to_prior(barrage, "restore-barrage", record)
 
         # --- recovery: a killed window left stay-awake on; restore puts it back,
         # deleting a setting the window found unset.
@@ -567,6 +634,26 @@ def main() -> int:
         for failure in failures:
             print(f"  - {failure}", file=sys.stderr)
         return 1
+    if "--record" in sys.argv:
+        import hashlib
+        destination = Path(sys.argv[sys.argv.index("--record") + 1])
+        body = {
+            "schema": "overnight-window-fixture-v1", "claimLevel": "FIXTURE", "status": "PASS",
+            "checksPassed": passed,
+            "sources": {name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest() for name in (
+                "tools/device/overnight-window.py", "tools/device/night-job.py",
+                "tools/device/test-overnight-window.py", "tools/device/testdata/fake_phone.py")},
+            "coverage": ["normal-end", "double-interrupt-during-restore", "signal-barrage",
+                         "killed-adb-retries", "job-failure", "hard-deadline", "refusals",
+                         "killed-window-recovery", "lease-release", "closed-adb-vocabulary"],
+            "open": ["Real-phone settings restoration and title recovery are unmeasured."],
+            "reproducer": "python3 tools/device/test-overnight-window.py --record " + str(destination),
+        }
+        body["evidenceId"] = "overnight-window-fixture-" + hashlib.sha256(
+            json.dumps(body, sort_keys=True, separators=(",", ":")).encode()).hexdigest()[:16]
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(json.dumps(body, indent=2) + "\n", encoding="utf-8")
+        print(body["evidenceId"] + ": FIXTURE PASS; wrote " + str(destination))
     print(f"overnight window: {passed} checks -- settings recorded, restored and read back on a normal end, "
           "an abort, a job failure and the hard deadline; LOCKED, IN_USE, POWER, LEASE_BUSY and "
           "OUTSIDE_WINDOW change nothing; a killed window is recovered; the lease is always released")

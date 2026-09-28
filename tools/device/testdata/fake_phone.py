@@ -73,9 +73,31 @@ class Phone:
         self.lock.close()
 
 
-def log(actor: str, args: list[str], known: bool = True, serial: str | None = None) -> None:
+def sigint_blocked() -> bool | None:
+    """Was this process started with SIGINT blocked (inherited from its parent)?"""
+    try:
+        for line in Path("/proc/self/status").read_text().splitlines():
+            if line.startswith("SigBlk:"):
+                return bool(int(line.split()[1], 16) & (1 << (signal.SIGINT - 1)))
+    except OSError:
+        pass
+    return None
+
+
+def log(actor: str, args: list[str], known: bool = True, serial: str | None = None, **extra) -> None:
     with open(os.environ["FAKE_PHONE_STATE"] + ".log", "a") as handle:
-        handle.write(json.dumps({"actor": actor, "serial": serial, "args": args, "known": known}) + "\n")
+        handle.write(json.dumps({"actor": actor, "serial": serial, "args": args, "known": known,
+                                 "sigintBlocked": sigint_blocked(), "at": time.time(), **extra}) + "\n")
+
+
+def die_like_a_killed_child() -> None:
+    """Exit exactly as a child a group SIGINT reached before its setsid():
+    killed by SIGINT (the parent sees -2), even if SIGINT is blocked here."""
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+    signal.pthread_sigmask(signal.SIG_UNBLOCK, {signal.SIGINT})
+    os.kill(os.getpid(), signal.SIGINT)
+    time.sleep(5)
+    os._exit(1)
 
 
 def focus_package(state: dict) -> str:
@@ -83,11 +105,27 @@ def focus_package(state: dict) -> str:
 
 
 def adb(argv: list[str]) -> int:
+    """FAKE_ADB_DELAY_S slows every call, as a loaded host does. The state's
+    `faults` ({"settings get": N, ...}) makes the next N calls of that kind die
+    as a signal-killed child does, before they touch the phone."""
     args = list(argv)
     serial = os.environ.get("ANDROID_SERIAL")
     if args[:1] == ["-s"]:
         serial, args = args[1], args[2:]
+    time.sleep(float(os.environ.get("FAKE_ADB_DELAY_S", "0")))
     out, code, known = "", 0, True
+    actor = os.environ.get("FAKE_ADB_ACTOR", "runner")
+    with Phone() as state:
+        faults = state.setdefault("faults", {})
+        kind = " ".join(args[1:3]) if args[:1] == ["shell"] else ""
+        if faults.get(kind, 0) > 0:
+            faults[kind] -= 1
+            killed = True
+        else:
+            killed = False
+    if killed:
+        log(actor, args, True, serial, killed=True)
+        die_like_a_killed_child()
     with Phone() as state:
         command = " ".join(args[1:]) if args[:1] == ["shell"] else None
         game = state["game"]
@@ -154,7 +192,7 @@ def adb(argv: list[str]) -> int:
         else:
             known, code = False, 1
     # "runner" is the process under test; a scripted stand-in names itself.
-    log(os.environ.get("FAKE_ADB_ACTOR", "runner"), args, known, serial)
+    log(actor, args, known, serial)
     print(out)
     return code
 

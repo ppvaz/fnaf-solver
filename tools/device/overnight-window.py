@@ -139,6 +139,13 @@ RESTORE_BUDGET_S = 120.0          # reserved before the window end for leave + r
 PACK_TIMEOUT_S = 300.0            # one morning `evidence pack` (host only, after the lease)
 RESTORE_RETRY_S = 1800.0          # a phone unreachable at restore is retried this long
 RESTORE_RETRY_POLL_S = 30.0
+# One setting's read, write and read-back, each retried until it answers.
+# Six settings at most: 6 x 15 s stays inside RESTORE_BUDGET_S.
+RESTORE_CALL_BUDGET_S = 15.0
+RESTORE_CALL_POLL_S = 0.5
+# Held while the window cleans up: a child spawned then cannot be killed by a
+# signal to this process group in the gap between its fork and its setsid().
+CLEANUP_SIGNALS = frozenset({signal.SIGINT, signal.SIGTERM, signal.SIGHUP})
 LOCK_POLL_S = 15.0
 ARM_POLL_S = 1.0
 MAX_HOLDS = 3                     # consecutive queue holds before the window ends HELD
@@ -318,18 +325,29 @@ def window_for(now: datetime, config: dict) -> tuple[datetime, datetime] | None:
 
 # --- the phone, read ----------------------------------------------------------
 
+ADB_TIMED_OUT = 124
+ADB_NOT_STARTED = 127
+
+
 def adb(serial: str, *args: str, timeout: float | None = None) -> tuple[int, str]:
+    """One bounded adb call: (exit, output). A negative exit is the signal
+    that killed the child (-2 = SIGINT); 124 a timeout; 127 not started."""
     command = [os.environ.get("ADB_BIN", "adb"), "-s", serial, *args]
     try:
-        # Its own session: an interrupt aimed at the runner's process group (a
-        # second Ctrl-C during the restore) must not kill the read or write
-        # the restore is waiting on. The runner alone decides what stops.
+        # Its own session, so a signal to this runner's process group cannot
+        # reach the call once it has started. That leaves the gap between fork
+        # and setsid(): a group signal landing there kills the child before it
+        # runs (measured 2026-09-27, 1721 of 13960 spawns under a SIGINT
+        # barrage at load 10). The cleanup closes that gap by holding the
+        # signals while it spawns (Window.finish), and the restore retries.
         result = subprocess.run(command, cwd=ROOT, check=False, text=True,
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                 timeout=ADB_TIMEOUT_S if timeout is None else timeout,
                                 start_new_session=True)
-    except (OSError, subprocess.TimeoutExpired) as error:
-        return 1, str(error)
+    except subprocess.TimeoutExpired as error:
+        return ADB_TIMED_OUT, str(error)
+    except OSError as error:
+        return ADB_NOT_STARTED, str(error)
     output = result.stdout if result.returncode == 0 else result.stdout + result.stderr
     return result.returncode, output.replace("\r", "")
 
@@ -416,24 +434,39 @@ def read_projection(serial: str) -> bool | None:
     return COMPANION in output and "TYPE_SCREEN_CAPTURE" in output
 
 
-def get_setting(serial: str, name: str) -> str | None:
+UNPARSEABLE = 65   # the call exited 0 but printed no setting value
+
+
+def read_setting(serial: str, name: str, timeout: float | None = None) -> tuple[str | None, int]:
+    """(value, exit): the value is None unless the read answered with one."""
     namespace, key = name.split("/", 1)
-    code, output = adb(serial, "shell", "settings", "get", namespace, key)
+    code, output = adb(serial, "shell", "settings", "get", namespace, key, timeout=timeout)
     value = output.strip()
-    if code != 0 or not SETTING_VALUE.fullmatch(value):
-        return None
-    return value
+    if code != 0:
+        return None, code
+    if not SETTING_VALUE.fullmatch(value):
+        return None, UNPARSEABLE
+    return value, 0
 
 
-def put_setting(serial: str, name: str, value: str) -> bool:
+def get_setting(serial: str, name: str) -> str | None:
+    return read_setting(serial, name)[0]
+
+
+def write_setting(serial: str, name: str, value: str, timeout: float | None = None) -> int:
+    """The write's exit code. Only a restored setting, only a number or null."""
     if name not in RESTORED_SETTINGS or not SETTING_VALUE.fullmatch(value):
         raise ValueError(f"the window never writes {name}={value!r}")
     namespace, key = name.split("/", 1)
     if value == "null":
-        code, _ = adb(serial, "shell", "settings", "delete", namespace, key)
+        code, _ = adb(serial, "shell", "settings", "delete", namespace, key, timeout=timeout)
     else:
-        code, _ = adb(serial, "shell", "settings", "put", namespace, key, value)
-    return code == 0
+        code, _ = adb(serial, "shell", "settings", "put", namespace, key, value, timeout=timeout)
+    return code
+
+
+def put_setting(serial: str, name: str, value: str) -> bool:
+    return write_setting(serial, name, value) == 0
 
 
 def classify_foreground(tokens: list[str], launcher: str | None) -> tuple[str, list[str]]:
@@ -499,39 +532,75 @@ def assess_phone(serial: str, config: dict, launcher: str | None, lock_wait_s: f
     return None
 
 
+def restore_one(serial: str, name: str, want: str, write: bool) -> dict:
+    """One setting back to `want`, read back -- every call retried until it
+    answers, within RESTORE_CALL_BUDGET_S. A read that dies (a killed child, a
+    timeout on a loaded host) is asked again, never taken for the answer.
+
+    `write` False only witnesses: the setting is read, never written.
+    Every call's exit code is kept in `calls`, in order."""
+    until = mono() + RESTORE_CALL_BUDGET_S
+    calls: list[str] = []
+    before = None
+    last = None
+
+    def pause() -> bool:
+        """Wait one poll before asking again; False once the budget is spent."""
+        if mono() >= until:
+            return False
+        time.sleep(max(0.0, min(RESTORE_CALL_POLL_S, until - mono())))
+        return True
+
+    while True:
+        remaining = until - mono()
+        if remaining <= 0:
+            break
+        value, code = read_setting(serial, name, timeout=min(ADB_TIMEOUT_S, remaining))
+        calls.append(f"get:{code}")
+        if value is None:
+            if pause():
+                continue
+            break
+        last = value
+        if before is None:
+            before = value
+        # A write that was killed may still have landed: any attempt counts.
+        attempted = any(call.startswith("put:") for call in calls)
+        if value == want:
+            return {"setting": name, "prior": want, "before": before, "after": value,
+                    "action": "restored" if attempted else "unchanged", "calls": calls}
+        if not write:
+            return {"setting": name, "prior": want, "after": value,
+                    "action": "DRIFT-REPORTED-NOT-WRITTEN", "calls": calls}
+        if attempted and not pause():
+            break
+        remaining = until - mono()
+        if remaining <= 0:
+            break
+        calls.append(f"put:{write_setting(serial, name, want, timeout=min(ADB_TIMEOUT_S, remaining))}")
+        # ...and read it back at once.
+    row = {"setting": name, "prior": want, "after": last, "calls": calls}
+    if last is None:
+        row["action"] = "UNREACHABLE"
+    else:
+        row.update({"before": before, "action": "FAILED"})
+    return row
+
+
 def restore_settings(serial: str, prior: dict[str, str], retry_s: float | None = None,
                      event=lambda *a, **k: None) -> dict:
     """Put every restored setting back to its recorded value and read it back."""
     deadline = mono() + (RESTORE_RETRY_S if retry_s is None else retry_s)
     while True:
-        results, verified, reachable = [], True, True
-        for name in RESTORED_SETTINGS:
+        results = []
+        for name in (*RESTORED_SETTINGS, *WITNESSED_SETTINGS):
             want = prior.get(name)
-            if want is None:
-                continue
-            before = get_setting(serial, name)
-            if before is None:
-                reachable = verified = False
-                results.append({"setting": name, "prior": want, "action": "UNREACHABLE"})
-                continue
-            if before == want:
-                results.append({"setting": name, "prior": want, "before": before,
-                                "after": before, "action": "unchanged"})
-                continue
-            put_setting(serial, name, want)
-            after = get_setting(serial, name)
-            ok = after == want
-            verified = verified and ok
-            results.append({"setting": name, "prior": want, "before": before, "after": after,
-                            "action": "restored" if ok else "FAILED"})
-        for name in WITNESSED_SETTINGS:
-            want = prior.get(name)
-            if want is None:
-                continue
-            current = get_setting(serial, name)
-            results.append({"setting": name, "prior": want, "after": current,
-                            "action": "unchanged" if current == want else
-                            ("UNREACHABLE" if current is None else "DRIFT-REPORTED-NOT-WRITTEN")})
+            if want is not None:
+                results.append(restore_one(serial, name, want, write=name in RESTORED_SETTINGS))
+        restored = [row for row in results if row["setting"] in RESTORED_SETTINGS]
+        verified = all(row["action"] in ("restored", "unchanged") for row in restored)
+        # Only a setting the window writes is worth waiting for the phone over.
+        reachable = all(row["action"] != "UNREACHABLE" for row in restored)
         if reachable or mono() >= deadline:
             return {"verified": verified, "settings": results}
         event("restore.retry", reason="device-unreachable")
@@ -575,6 +644,8 @@ class Window:
         self.child: subprocess.Popen | None = None
         self.child_signals: list[str] = []
         self.signals: list[str] = []
+        self.signal_rows: list[dict] = []
+        self.held: list[str] = []
         self.cleaning = False
         self.applied = False
         self.prior: dict[str, str] = {}
@@ -610,15 +681,19 @@ class Window:
         return bool(self.signals)
 
     def on_signal(self, signum: int, _frame: object) -> None:
-        # Never raises: cleanup must not be cut short by a second interrupt.
-        name = signal.Signals(signum).name
-        self.signals.append(name)
-        try:
-            self.events_file.write(json.dumps({"at": iso(now_local()), "type": "signal",
-                                               "signal": name, "duringCleanup": self.cleaning}) + "\n")
-            self.events_file.flush()
-        except (OSError, ValueError):
-            pass
+        # Never raises and does no I/O. Until 2026-09-27 it wrote the event
+        # itself, and a signal landing while the main thread was writing the
+        # same events file raised "reentrant call inside BufferedWriter" out of
+        # that write -- aborting the restore it interrupted. Its rows are
+        # written from here by the main thread (write_signal_events).
+        self.signals.append(signal.Signals(signum).name)
+        self.signal_rows.append({"at": iso(now_local()), "signal": signal.Signals(signum).name,
+                                 "duringCleanup": self.cleaning})
+
+    def write_signal_events(self) -> None:
+        while self.signal_rows:
+            row = self.signal_rows.pop(0)
+            self.event("signal", **{key: value for key, value in row.items() if key != "at"}, receivedAt=row["at"])
 
     def sleep(self, seconds: float) -> bool:
         """Sleep in short steps; False as soon as a signal arrives."""
@@ -700,6 +775,10 @@ class Window:
                                                         output, re.M)],
                         "outputTail": output[-2000:]})
         hold = re.search(r"QUEUE HOLD reason=([a-z0-9-]+)", output)
+        if stopped is None and self.aborted:
+            # The window's own interrupt can reach the queue child before its
+            # setsid() and end it at once: that is this window's abort too.
+            stopped = "aborted"
         if stopped:
             attempt["kind"] = stopped
         elif code == 0 and "QUEUE EMPTY" in output:
@@ -737,8 +816,8 @@ class Window:
 
     # -- the body
     def run(self) -> int:
-        previous = {signum: signal.signal(signum, self.on_signal)
-                    for signum in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP)}
+        for signum in CLEANUP_SIGNALS:
+            signal.signal(signum, self.on_signal)
         try:
             try:
                 self.body()
@@ -747,10 +826,18 @@ class Window:
             if self.outcome is None:
                 self.end("ERROR", "the window ended without an outcome")
         finally:
+            # From here until the process exits, SIGINT/SIGTERM/SIGHUP are held:
+            # every child the cleanup spawns inherits the block, so a signal to
+            # this process group cannot kill it between fork and setsid(), and
+            # no handler runs in the middle of a restore. finish() records what
+            # arrived meanwhile (sigpending). They stay held after it, too: the
+            # result is written by then, and an interrupt during the
+            # interpreter's own exit (which restores the default handlers)
+            # would otherwise turn exit 130 into a SIGINT death (-2). What is
+            # still pending is dropped with the process. SIGKILL still works.
             self.cleaning = True
+            signal.pthread_sigmask(signal.SIG_BLOCK, CLEANUP_SIGNALS)
             self.finish()
-            for signum, handler in previous.items():
-                signal.signal(signum, handler)
         return self.record["exitCode"]
 
     def body(self) -> None:
@@ -879,6 +966,8 @@ class Window:
 
     # -- the end: always runs
     def finish(self) -> None:
+        """Runs with CLEANUP_SIGNALS held (Window.run)."""
+        self.write_signal_events()
         steps = (self.finish_child, self.finish_queue, self.finish_nights, self.finish_leave,
                  self.finish_restore, self.finish_lease, self.finish_morning)
         for step in steps:
@@ -886,8 +975,14 @@ class Window:
                 step()
             except Exception as error:  # every later step still runs
                 self.event("cleanup.error", step=step.__name__, detail=repr(error))
+        self.write_signal_events()
+        # A standard signal is pending at most once however often it was sent.
+        self.held = sorted(sig.name for sig in signal.sigpending() & CLEANUP_SIGNALS)
+        if self.held:
+            self.event("signal.held", signals=",".join(self.held))
         self.record["window"]["closedAt"] = iso(now_local())
-        self.record["signals"] = self.signals
+        self.record["signals"] = [*self.signals, *self.held]
+        self.record["signalsHeldDuringCleanup"] = self.held
         restore = self.record.get("settings", {}).get("restore")
         code = EXIT.get(self.outcome or "ERROR", 1)
         if (restore is not None and not restore["verified"]) or pending_path(self.serial).exists():

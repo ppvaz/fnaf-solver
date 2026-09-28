@@ -2657,3 +2657,25 @@ Open:
 Open: a Night 5 win with this stereo branch; a live measurement of its new floor
 and detector cost; Fredbear occupancy and closet eject latency; room-period and
 walk-flag ambiguities listed in the result. No new device run was made for wrap-up.
+## 2026-09-27 — S7 abort cleanup survives repeated interrupts (FIXTURE)
+
+The overnight restore flake was a process-spawn signal race, with a second
+independent failure from a signal handler writing the event stream reentrantly.
+Cleanup now holds SIGINT, SIGTERM and SIGHUP through process exit; children
+inherit that mask before entering their own sessions. The handler records rows
+without I/O. Night-job title recovery holds the same signals while it runs.
+
+Setting reads and writes retain their exit codes, retry within a 15 s budget
+per setting, and cap each subprocess at the remaining budget. Failed readback
+stays unverified after the bound; a signal-killed child is never a setting value.
+
+Generated result: [overnight-window-abort-cleanup-20260927.json](../docs/evidence/overnight-window-abort-cleanup-20260927.json),
+`overnight-window-fixture-7bcd984842170cb1`, FIXTURE PASS. The fake phone
+injects killed reads/writes, delays restore reads so the second interrupt lands
+in cleanup, and receives a repeated process-group SIGINT barrage. All 1066
+checks pass, including restoration readback and lease release. The night-job
+fixture also passes 73 checks, including post-abort observed title recovery.
+
+Open: restoration and title recovery on the physical phone remain unmeasured.
+No live run, queue change or timer installation occurred. This advances S7's
+gated abort path and leaves its device acceptance open.
