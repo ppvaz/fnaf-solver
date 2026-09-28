@@ -35,7 +35,7 @@ jobs:
           python-version: '3.12'
       - name: Fixture rendering and video dependencies
         run: |
-          python3 -m pip install --disable-pip-version-check 'pillow==12.3.0'
+          python3 -m pip install --disable-pip-version-check 'pillow==12.3.0' 'numpy==2.2.4' 'scipy==1.15.3'
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends ffmpeg
       - name: Install the pinned workspace toolchain
