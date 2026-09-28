@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import os
 import subprocess
 import sys
@@ -87,4 +88,41 @@ with tempfile.TemporaryDirectory(prefix="cue-helper-device-lock-") as directory:
         else:
             os.environ["CUE_HELPER_LOCK_DIR"] = previous
 
-print("cue-helper lease: descendants can borrow, unrelated owners cannot, parent lock survives child exit, kernel-release passed")
+# One lease per phone for the whole host: a worktree resolves the main
+# checkout's state directory, so it contends with the main checkout's
+# overnight window instead of taking a private lock file (until 2026-09-27
+# each checkout had its own captures/cue-helper/locks). The FNaF 1 replay's
+# JavaScript mirror must agree.
+with tempfile.TemporaryDirectory(prefix="cue-helper-worktree-") as directory:
+    main = Path(directory) / "main"
+    worktree = Path(directory) / "elsewhere" / "wt"
+    gitdir = main / ".git" / "worktrees" / "wt"
+    gitdir.mkdir(parents=True)
+    worktree.mkdir(parents=True)
+    (gitdir / "commondir").write_text("../..\n", encoding="utf-8")
+    (worktree / ".git").write_text(f"gitdir: {gitdir}\n", encoding="utf-8")
+    assert MODULE.main_checkout(worktree) == main.resolve(), MODULE.main_checkout(worktree)
+    assert MODULE.main_checkout(main) == main
+    plain = Path(directory) / "not-a-checkout"
+    plain.mkdir()
+    assert MODULE.main_checkout(plain) == plain
+    mirror = subprocess.run(
+        ["node", "--input-type=module", "-e",
+         f"import {{ mainCheckout }} from {json.dumps((HERE / 'fnaf1-winner.mjs').as_uri())};"
+         "process.stdout.write(mainCheckout(process.argv[1]));", str(worktree)],
+        check=True, text=True, stdout=subprocess.PIPE)
+    assert mirror.stdout == str(main.resolve()), mirror.stdout
+    previous = {key: os.environ.get(key) for key in ("CUE_HELPER_LOCK_DIR", "CUE_HELPER_STATE_DIR")}
+    os.environ.pop("CUE_HELPER_LOCK_DIR", None)
+    os.environ["CUE_HELPER_STATE_DIR"] = str(main / "captures/cue-helper")
+    try:
+        assert MODULE.lock_path("one-device").parent == main / "captures/cue-helper/locks"
+    finally:
+        for key, value in previous.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
+
+print("cue-helper lease: descendants can borrow, unrelated owners cannot, parent lock survives child exit, "
+      "kernel-release, and one host-wide lease for every worktree passed")

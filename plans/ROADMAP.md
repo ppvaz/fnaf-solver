@@ -299,8 +299,10 @@ explanations. It emits only bundles and queued Cue Helper jobs, and never
 arbitrary shell. The mistake registers become executable gates, and the lab
 never promotes. Its phone time is the overnight window (Pedro, 2026-09-27):
 `tools/device/overnight-window.py` runs the queue on his own phone from 01:30
-to 07:00 and restores every setting it changed. The queue still holds only
-setup and screen checks, so a night job is its next vocabulary.
+to 07:00 and restores every setting it changed. Since his "Yes, play nights"
+the same day, a queued `night` job plays one night of a committed winner
+there (`tools/device/night-job.py`). The title is observed before each night
+and after it, and each night's pack is written in the morning.
 
 - **Artifact:** a morning report that refutes a mechanism nobody had queued,
   with the run bundles that did it.
@@ -394,6 +396,7 @@ Rows are from 2026-09-25 unless they carry another date.
 | Fixture service path and the `device:dry-run` CI lane | CI, `CLAUDE.md` | Played no nights | Retired the same day in `6d78c7e`. CI now runs the campaign dry run over a committed winner. |
 | "Agents never write `plan12-attestation.json`"; the attestation was "a person's file" | `CLAUDE.md` S1, `docs/evidence/README.md`, Plan 12, this file's S1 artifact, `tools/evidence-campaign.mjs` | **2026-09-27, Pedro:** "i give agents full permission, this is bullshit bureaucracy that is impeding progress". It held every executor-proven 6 AM one check short of promotion. | **Loosened.** An agent may write the attestation under delegation `pedro-2026-09-27`, and only through `npm run evidence -- attest`, which re-derives every other check from the pack and refuses to write on any failure. `plan12-attestation-v2` names its author (`attestedBy: {kind: 'agent', delegation, note}`, or a person by name), binds the pack sha256, and lists each check verified with the sha256 of its inputs. `promote` records a `PROMOTED_BY` edge in `docs/evidence/graph.json` naming the author and the custody, and `list`/`show` print both. The delegation covers attestations only: `PEDRO-OK` stays human-only and no agent bypasses a hook. |
 | `manifestComplete` requires `request.json`, so a pack recovered from its night-run log could not be promoted; recorded as "Pedro's decision" | `packPromotionChecks` (`tools/evidence-pack.mjs`), `CLAUDE.md` S1, this file's S1 | **2026-09-27, Pedro**, on recovered packs: "Accept fully". | **Loosened.** A recovered pack's manifest is complete when its result and events came back, the log it cites is withheld under the same sha256, the recovery check it cites is byte-identical, and its `lost` list is present (`packManifestComplete`). The `lost` list stays in the pack, the attestation, the edge and every reading. |
+| The Cue Helper queue "cannot hold ... game-control actions" (setup and screen checks only) | `tools/device/cue-helper-queue.py`, the MCP `cue.queue.enqueue` | Pedro, 2026-09-27, asked whether overnight windows may play full nights unattended on his phone: "Yes, play nights". S7's phone time needs the queue to hold a night. | **Loosened, 2026-09-27**, by one word: `night`, one night of a *committed* winner file, run by the runner its schema fixes. It still takes no shell text, coordinates or timing. Only the overnight window claims one (`run --nights`), never `cue.queue.run`. It refuses unless the observed title offers that night, and fits inside the window's deadline. `night-run.sh` now takes the serial lease, and the lease and queue are host-wide. |
 
 **Kept, because they serve the path:**
 

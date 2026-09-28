@@ -25,6 +25,7 @@ set -Eeuo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"
 cd "$ROOT"
+ORIGINAL_ARGS=("$@")
 
 LABEL=""
 BUNDLE="artifacts/night5-moved"
@@ -88,6 +89,21 @@ say() { printf '\n=== %s\n' "$1"; }
 
 [ -n "$LABEL" ] || die "--label is required (it names the artifacts)"
 [ "${SAVE_CURSOR:-}" != "" ] || SAVE_CURSOR="$NIGHT"
+
+# ---- the serial lease --------------------------------------------------------
+# Every other live runner (fnaf1-*, fnaf3-run.sh, fnaf4-run.sh) re-executes
+# itself under device-lock-exec.py; until 2026-09-27 this one took no lease at
+# all, so a FNaF 2 night could start on a phone another agent was driving. A
+# live run takes the lease here, before its first adb call, and keeps it
+# through the EXIT trap's reset (device-lock-exec.py relays the interrupt and
+# waits). A caller that already holds the lease -- the queue's night job inside
+# an overnight window -- passes FNAF_LEASE_HELD=1, the marker fnaf4-run.sh takes
+# as FNAF4_LEASE_HELD. A dry run touches no phone and takes no lease.
+if [ "$DRY" = 0 ] && [ "${FNAF_LEASE_HELD:-}" != 1 ]; then
+  case "$SERIAL" in ''|*[!A-Za-z0-9._:-]*) die "--serial is invalid: $SERIAL" ;; esac
+  exec python3 "$HERE/device-lock-exec.py" "$SERIAL" -- \
+    env FNAF_LEASE_HELD=1 bash "$HERE/night-run.sh" "${ORIGINAL_ARGS[@]}"
+fi
 
 # ---- fail-fast: inputs and tools exist before the phone is touched ----------
 TITLE_MODEL_PATH="tools/device/models/title-moto-g56-v207.json"

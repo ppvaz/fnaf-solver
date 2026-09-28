@@ -27,12 +27,20 @@ const TOOL_DEFINITIONS = Object.freeze([
   },
   {
     name: 'cue.queue.enqueue',
-    description: 'Persist one safe setup or screen-check job. It works while the phone is absent or locked and performs no game input.',
+    description: 'Persist one safe setup or screen-check job, or one night job: a single night of a COMMITTED '
+      + 'tools/device/*-winner.json, played only inside Pedro\'s overnight window (never by cue.queue.run), after '
+      + 'the title is observed to offer that night. Enqueuing works while the phone is absent or locked and sends no input.',
     inputSchema: { type: 'object', additionalProperties: false, required: ['kind'], properties: {
-      kind: { type: 'string', enum: ['setup', 'menu-check', 'night-check'] },
+      kind: { type: 'string', enum: ['setup', 'menu-check', 'night-check', 'night'] },
       screen: { type: 'string', enum: ['menu', 'night'] },
       install: { type: 'boolean', description: 'For setup only: install the checked-in helper APK.' },
       probe: { type: 'boolean', description: 'For setup only: start the debug-only sensor probe.' },
+      game: { type: 'string', enum: ['fnaf2', 'fnaf1', 'fnaf4'], description: 'For night only: the winner\'s game.' },
+      winner: { type: 'string', pattern: '^tools/device/[a-z0-9][a-z0-9.-]{0,80}-winner\\.json$',
+        description: 'For night only: the committed winner file.' },
+      night: { type: 'integer', minimum: 1, maximum: 8, description: 'For night only: the one night (7 = Custom Night).' },
+      label: { type: 'string', pattern: '^[a-z0-9][a-z0-9-]{0,24}$', description: 'For night only: the run label.' },
+      audio: { type: 'boolean', description: 'For a FNaF 2 night only: retain the phone\'s A2DP mix.' },
       idempotencyKey: { type: 'string', minLength: 1, maxLength: 128, description: 'Optional stable key: retries return the existing job.' },
     }},
     annotations: SAFE,
@@ -45,7 +53,7 @@ const TOOL_DEFINITIONS = Object.freeze([
   },
   {
     name: 'cue.queue.run',
-    description: 'Run pending safe jobs only when exactly one ADB device is awake and unlocked. Otherwise returns HOLD and leaves jobs pending; it never auto-unlocks or taps the game.',
+    description: 'Run pending setup and screen-check jobs only when exactly one ADB device is awake and unlocked. Otherwise returns HOLD and leaves jobs pending; it never auto-unlocks or taps the game, and never plays a night job (those wait for the overnight window).',
     inputSchema: { type: 'object', additionalProperties: false, properties: {
       waitSeconds: { type: 'number', minimum: 0, maximum: 86400, default: 0, description: 'Keep polling for a ready phone for this many seconds.' },
       intervalSeconds: { type: 'number', minimum: 0.1, maximum: 300, default: 5 },

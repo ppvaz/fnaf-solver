@@ -57,9 +57,30 @@ try {
   assert.equal(keyedAgain.status, 'EXISTING');
   assert.equal(keyedAgain.job.id, keyed.job.id);
 
+  // A night job: one night of a committed winner, validated and bound by hash.
+  send({ jsonrpc: '2.0', id: 51, method: 'tools/call', params: {
+    name: 'cue.queue.enqueue', arguments: {
+      kind: 'night', game: 'fnaf2', winner: 'tools/device/campaign-night7-k3-winner.json', night: 7,
+    },
+  } });
+  const night = JSON.parse((await next()).result.content[0].text);
+  assert.equal(night.status, 'QUEUED');
+  assert.equal(night.job.kind, 'night');
+  assert.match(night.job.planSha256, /^[0-9a-f]{64}$/);
+  assert.ok(night.job.budgetS > 425, 'the budget spans the emitted plan\'s night');
+  for (const [id, args, why] of [
+    [52, { kind: 'night', game: 'fnaf2', winner: 'tools/device/campaign-night7-k3-winner.json', night: 5 }, 'not the winner\'s night'],
+    [53, { kind: 'night', game: 'fnaf2', winner: '/etc/passwd', night: 7 }, 'not a winner path'],
+    [54, { kind: 'menu-check', winner: 'tools/device/campaign-night7-k3-winner.json' }, 'a night field on a check'],
+  ]) {
+    send({ jsonrpc: '2.0', id, method: 'tools/call', params: { name: 'cue.queue.enqueue', arguments: args } });
+    const refused = await next();
+    assert.equal(refused.result.isError, true, `a night job with ${why} was queued`);
+  }
+
   send({ jsonrpc: '2.0', id: 6, method: 'tools/call', params: { name: 'cue.queue.list', arguments: {} } });
   const listedJobs = JSON.parse((await next()).result.content[0].text);
-  assert.equal(listedJobs.jobs.length, 2);
+  assert.equal(listedJobs.jobs.length, 3);
   assert.equal(listedJobs.jobs[0].state, 'PENDING');
 
   send({ jsonrpc: '2.0', id: 7, method: 'tools/call', params: {

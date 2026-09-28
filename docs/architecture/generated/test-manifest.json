@@ -2659,6 +2659,32 @@
       }
     },
     {
+      "id": "tools/device/test-night-job.py",
+      "lane": "test:contracts",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [
+        "time.sleep(0.1",
+        "time.sleep(0.5",
+        "time.sleep(0.1",
+        "time.sleep(0.5"
+      ],
+      "sharedResources": [
+        "device-transport",
+        "local-http-port"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "tools/device/test-night-matrix.mjs",
       "lane": "test:contracts",
       "owner": "legacy migration",
@@ -2684,7 +2710,9 @@
       "timeoutSource": "tools/test.mjs per-test watchdog",
       "deterministic": true,
       "determinismSignals": [],
-      "fixedSleeps": [],
+      "fixedSleeps": [
+        "time.sleep(120"
+      ],
       "sharedResources": [
         "device-transport"
       ],

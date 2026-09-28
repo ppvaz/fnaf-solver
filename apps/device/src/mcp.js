@@ -53,9 +53,41 @@ function cueSetupCommand(options) {
   return command;
 }
 
+const NIGHT_GAMES = Object.freeze(['fnaf2', 'fnaf1', 'fnaf4']);
+const WINNER_PATH = /^tools\/device\/[a-z0-9][a-z0-9.-]{0,80}-winner\.json$/;
+const NIGHT_LABEL = /^[a-z0-9][a-z0-9-]{0,24}$/;
+
+/**
+ * A night job (Pedro, 2026-09-27: "Yes, play nights"): one night of a committed
+ * winner file, nothing else. The queue re-validates it (custody, schema, the
+ * winner's own night, a fresh emit) and claims it only inside an overnight
+ * window; cue.queue.run never plays one.
+ */
+function cueNightArgs(args) {
+  for (const name of ['screen', 'install', 'probe'])
+    if (args[name] !== undefined) return error('INVALID_ARGUMENT', `a night job takes no ${name}`);
+  if (!NIGHT_GAMES.includes(args.game)) return error('INVALID_ARGUMENT', `game must be one of ${NIGHT_GAMES.join(', ')}`);
+  if (typeof args.winner !== 'string' || !WINNER_PATH.test(args.winner))
+    return error('INVALID_ARGUMENT', 'winner must name a tools/device/*-winner.json file');
+  if (!Number.isInteger(args.night) || args.night < 1 || args.night > 8)
+    return error('INVALID_ARGUMENT', 'night must be an integer 1..8');
+  if (args.label !== undefined && (typeof args.label !== 'string' || !NIGHT_LABEL.test(args.label)))
+    return error('INVALID_ARGUMENT', 'label is 1-25 lowercase letters, digits and hyphens');
+  const invalid = booleanArg(args, 'audio'); if (invalid) return invalid;
+  if (args.idempotencyKey !== undefined
+      && (typeof args.idempotencyKey !== 'string' || args.idempotencyKey.length < 1
+        || args.idempotencyKey.length > 128))
+    return error('INVALID_ARGUMENT', 'idempotencyKey must be 1..128 characters');
+  return { kind: 'night', game: args.game, winner: args.winner, night: args.night, label: args.label,
+    audio: args.audio === true, idempotencyKey: args.idempotencyKey };
+}
+
 function cueQueueEnqueueArgs(args) {
+  if (args.kind === 'night') return cueNightArgs(args);
   if (!['setup', 'menu-check', 'night-check'].includes(args.kind))
-    return error('INVALID_ARGUMENT', 'kind must be setup, menu-check, or night-check');
+    return error('INVALID_ARGUMENT', 'kind must be setup, menu-check, night-check, or night');
+  for (const name of ['game', 'winner', 'night', 'label', 'audio'])
+    if (args[name] !== undefined) return error('INVALID_ARGUMENT', `${name} belongs to a night job`);
   for (const name of ['install', 'probe']) {
     const invalid = booleanArg(args, name); if (invalid) return invalid;
   }
@@ -76,6 +108,14 @@ function cueQueueEnqueueArgs(args) {
 
 function cueQueueCommand(options) {
   const command = ['enqueue', options.kind];
+  if (options.kind === 'night') {
+    command.push('--game', options.game, '--winner', options.winner, '--night', String(options.night));
+    if (options.label) command.push('--label', options.label);
+    if (options.audio) command.push('--audio');
+    if (options.idempotencyKey) command.push('--idempotency-key', options.idempotencyKey);
+    command.push('--json');
+    return command;
+  }
   if (options.screen) command.push('--screen', options.screen);
   if (options.install) command.push('--install');
   if (options.probe) command.push('--probe');

@@ -98,3 +98,65 @@ restored at the end, however the window ends.
 
   The units run the main checkout. The host must be awake at the window start:
   the timer does not wake it, and a start it missed is not made up later.
+
+### Night jobs (Pedro, 2026-09-27: "Yes, play nights")
+
+Asked whether overnight windows may play full nights unattended on his phone,
+Pedro answered "Yes, play nights". A night job is the queue's one
+game-playing word:
+
+```sh
+tools/device/cue-helper-queue.sh enqueue night --game fnaf2 \
+  --winner tools/device/campaign-night7-k3-winner.json --night 7 [--label k3a] [--audio]
+```
+
+- **What it can name.** It names one night of a committed winner file, and
+  nothing else. The runner is fixed by the winner's schema:
+  - `night-run.sh` for FNaF 2, with the bundle emitted fresh;
+  - `fnaf1-winner.mjs` for a FNaF 1 route winner;
+  - `fnaf4-run.sh --mode loop` for FNaF 4.
+
+  The job is checked when it is queued and again when it starts, and it
+  refuses at start if any of these moved since it was queued:
+  - the winner is the committed file, byte for byte;
+  - the night is the winner's own;
+  - for FNaF 2, the freshly emitted plan hashes as it did.
+
+  The job's budget is the sum of every step's bound plus the night's own
+  length, taken from the plan's `#observe-until` or the route winner's
+  `stopAfterMs`. A window starts a night only if that budget fits before its
+  stop instant.
+- **Only the window plays nights.** Its queue child alone passes `--nights`.
+  `cue.queue.run` from an agent drains setups and checks, and reports the nights
+  it left waiting.
+- **The title is observed, never assumed.** Before the night, the Cue Helper
+  SNAPs a native frame and `title-observe.py` reads it with the game's model.
+  The job refuses unless the title offers the declared night:
+  - Custom Night for 7;
+  - 6th Night for 6;
+  - the digit under Continue for 1-5.
+
+  Two cases cannot be read yet, so they refuse (`TITLE_UNREADABLE` or
+  `TITLE_MISMATCH`) and never press anything: FNaF 4 has no title model, and
+  the FNaF 2 title model has no Continue digit reader.
+- **Every safeguard of a hand-run night still applies.**
+  - The runner runs under the window's lease, with its lease-held marker.
+  - It is in the queue's process group, so the window's stop reaches it.
+  - The executor's post-night static halt (669447b) is in force: a job refuses
+    on a checkout without it.
+  - Audio is linked (`bt-audio-link.sh --ensure`) where the runner reads it.
+- **After any end or abort (mistake register 6).** The job observes the title
+  again. If it does not read, it force-stops the game, relaunches it and
+  observes again. A night killed before it could do that is recovered by the
+  window itself (`night-job.py title --recover`). A night that is interrupted
+  or killed ends FAILED, and it is never replayed.
+- **Results.** A night played to 6 AM or to a death is a job DONE. Its record
+  is in `artifacts/night-jobs/<job>/job.json`, with the binding's hashes and
+  the title reads. In the morning, after the lease, the window packs each run
+  (`npm run evidence -- pack <run>`, if `night-run.sh` did not already) or names
+  the FNaF 4 run record. It then appends one line per window to
+  `artifacts/overnight-windows/summary.log`.
+- **One lease, one queue, for every checkout.** A live `night-run.sh` now takes
+  the serial lease itself, or trusts `FNAF_LEASE_HELD=1` from a holder. The
+  lease files, the queue and the pending restore live under the main checkout's
+  `captures/cue-helper/`, and every worktree resolves the same path there.
