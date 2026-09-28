@@ -717,6 +717,11 @@ if [ "$BT_AUDIO" = 1 ]; then
     die "bt-audio link not READY: $(tail -1 "$OUTDIR/bt-audio-link.txt")"
   fi
   printf 'bt-audio link %s\n' "$(tail -1 "$OUTDIR/bt-audio-link.txt")"
+  # The mix is the whole phone's: another app's started player masks the game
+  # (FNaF 4 n5c, 2026-09-27: a background app's title music, a deaf night).
+  if ! node "$HERE/audio-players.mjs" --serial "$SERIAL" --target com.scottgames.fnaf2 >"$OUTDIR/audio-players.json" 2>&1; then
+    die "audio preflight refused: $(cat "$OUTDIR/audio-players.json")"
+  fi
   if bt_pid="$("$HERE/../cue/capture-bt-audio.sh" --start "$BT_AUDIO_BASE" 2>"$OUTDIR/bt-audio.err")"; then
     printf 'bt-audio capturing (pid %s) -> %s.bt.raw\n' "$bt_pid" "$BT_AUDIO_BASE"
   else

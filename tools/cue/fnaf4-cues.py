@@ -50,8 +50,16 @@ HOP_S = 0.1
 # family is used for: Chica walking up to the right door while the loop
 # listened matched the step family at 0.36-0.41 and nothing else warned of her
 # (n4e, 80.3-81.7 s); she arrived before she breathed and the flash met her.
+# Fredbear's families (fb-left, fb-right, laugh) take their window and their
+# publishing floor from the hearing model (--hearing): they are published low
+# and accepted by the runner only on the level's own grid (fnaf4-fredbear.mjs).
 FAMILY_THRESHOLD = {"step": 0.33}
+FAMILY_WIN_S: dict = {}
+FAMILY_MAX_HOPS: dict = {}
+FAMILY_STEREO: set = set()
 WIN_S = 0.6
+HEARING = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "device", "models",
+                       "hearing-fnaf4-fredbear-moto-g56-v204.json")
 BREATH_WIN_S = 1.0
 # (family, handle, meaning). A family is what a caller acts on; each handle in
 # it is its own template unless its waveform IS another handle's (a 0.4 s chunk
@@ -82,12 +90,57 @@ TEMPLATES = [
 ]
 
 
-def load_ref(refs: str, handle: int) -> np.ndarray:
+def load_hearing(path: str) -> dict:
+    """{family: (windowS, emitNcc, maxHops)} from a fnaf4-fredbear-hearing-v1 file;
+    refuses a family or handle set this detector has no templates for."""
+    with open(path) as f:
+        model = json.load(f)
+    if model.get("schema") != "fnaf4-fredbear-hearing-v1":
+        raise ValueError(f"{path}: not a fnaf4-fredbear-hearing-v1 file")
+    out = {}
+    for family, spec in model["families"].items():
+        handles = sorted(h for fam, h, _ in TEMPLATES if fam == family)
+        if not handles:
+            raise ValueError(f"{path}: family {family} has no template here")
+        if handles != sorted(spec["handles"]):
+            raise ValueError(f"{path}: {family} handles {spec['handles']} != templates {handles}")
+        win_s, emit, hops = float(spec["windowS"]), float(spec["emitNcc"]), int(spec["maxHops"])
+        channels = spec.get("channels", "mono")
+        if not (0.2 <= win_s <= BREATH_WIN_S and 0.0 < emit < 1.0 and 1 <= hops <= 20) or channels not in ("mono", "stereo"):
+            raise ValueError(f"{path}: {family} window {win_s} s, floor {emit}, hops {hops} or channels {channels} out of range")
+        out[family] = (win_s, emit, hops, channels)
+    return out
+
+
+def apply_hearing(path: str) -> None:
+    for family, (win_s, emit, hops, channels) in load_hearing(path).items():
+        FAMILY_WIN_S[family] = win_s
+        FAMILY_THRESHOLD[family] = emit
+        FAMILY_MAX_HOPS[family] = hops
+        if channels == "stereo":
+            FAMILY_STEREO.add(family)
+        else:
+            FAMILY_STEREO.discard(family)
+
+
+def _ref_path(refs: str, handle: int) -> str:
     base = os.path.join(refs, f"s{handle:04d}")
-    path = base + ".wav" if os.path.exists(base + ".wav") else base + ".ogg"
-    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", path, "-f", "f32le", "-ac", "1",
+    return base + ".wav" if os.path.exists(base + ".wav") else base + ".ogg"
+
+
+def load_ref(refs: str, handle: int) -> np.ndarray:
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", _ref_path(refs, handle), "-f", "f32le", "-ac", "1",
                           "-ar", str(SR), "-"], check=True, capture_output=True).stdout
     return np.frombuffer(raw, np.float32).astype(np.float64)
+
+
+def load_ref_stereo(refs: str, handle: int) -> tuple:
+    """The sample's own two channels at SR (s0025/s0026 are stereo recordings,
+    left/right correlation 0.41/0.16: a mono downmix throws half the match away)."""
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", _ref_path(refs, handle), "-f", "f32le", "-ac", "2",
+                          "-ar", str(SR), "-"], check=True, capture_output=True).stdout
+    a = np.frombuffer(raw, np.float32).astype(np.float64).reshape(-1, 2)
+    return a[:, 0].copy(), a[:, 1].copy()
 
 
 class Template:
@@ -114,16 +167,56 @@ class Template:
         return float(xc[k]), k
 
 
+class StereoTemplate:
+    """One sample matched channel against channel: the NCC of the stacked
+    (left, right) window against the stacked reference at every lag. On n5b and
+    n5d's grid instants their landings score 0.24-0.40 and their silent
+    instants stay <= 0.137 (docs/evidence/fnaf4-night5-n5b-20260927.json)."""
+
+    def __init__(self, name: str, ref_l: np.ndarray, ref_r: np.ndarray, win: int):
+        self.name = name
+        self.len = len(ref_l)
+        self.win = win
+        pad = max(0, win - len(ref_l) + 1)
+        self.rl = np.concatenate([ref_l, np.zeros(pad)])
+        self.rr = np.concatenate([ref_r, np.zeros(pad)])
+        c2 = np.concatenate([[0.0], np.cumsum(self.rl * self.rl + self.rr * self.rr)])
+        self.er = np.sqrt(np.maximum(c2[win:] - c2[:-win], 0)) + 1e-9
+        self.silent = self.er < 1e-4 * self.er.max()
+
+    def match(self, wl: np.ndarray, wr: np.ndarray) -> tuple[float, int]:
+        wl = wl - wl.mean()
+        wr = wr - wr.mean()
+        ew = np.sqrt((wl * wl).sum() + (wr * wr).sum()) + 1e-9
+        xc = (fftconvolve(self.rl, wl[::-1], mode="valid") + fftconvolve(self.rr, wr[::-1], mode="valid")) / (self.er * ew)
+        xc[self.silent] = 0
+        k = int(np.argmax(xc))
+        return float(xc[k]), k
+
+
 class Detector:
-    def __init__(self, refs: str, threshold: float, emit):
+    def __init__(self, refs: str, threshold: float, emit, families=None, breath: bool = True):
+        """families: the template families to match (None: all). breath: match
+        the breathing loop every hop. A Fredbear-only night needs neither
+        Foxy's, Bonnie's and Chica's families nor the breathing, and all of
+        them cost the hop budget (109 ms of a 100 ms hop on a loaded host,
+        2026-09-27; breathing alone 33 ms)."""
         self.threshold = threshold
         self.emit = emit
         self.templates = []
         self.refs = {}
+        self.match_breath = breath
         for family, handle, _ in TEMPLATES:
+            if families is not None and family not in families:
+                continue
             ref = load_ref(refs, handle)
             self.refs[f"{family}#{handle}"] = ref
-            self.templates.append(Template(f"{family}#{handle}", ref))
+            win = int(FAMILY_WIN_S.get(family, WIN_S) * SR)
+            if family in FAMILY_STEREO:
+                ref_l, ref_r = load_ref_stereo(refs, handle)
+                self.templates.append(StereoTemplate(f"{family}#{handle}", ref_l, ref_r, win))
+            else:
+                self.templates.append(Template(f"{family}#{handle}", ref, win=win))
         self.breath = Template("breath", load_ref(refs, 22), circular=True, win=int(BREATH_WIN_S * SR))
         self.buf = np.zeros(0)
         self.buf_l = np.zeros(0)        # the two channels, aligned with buf: the game pans some
@@ -170,19 +263,22 @@ class Detector:
         while self.done <= end_abs:
             e = self.done - self.buf_start
             for t in self.templates:
-                w = self.buf[e - t.win:e]
-                v, k = t.match(w)
+                if isinstance(t, StereoTemplate):
+                    v, k = t.match(self.buf_l[e - t.win:e], self.buf_r[e - t.win:e])
+                else:
+                    v, k = t.match(self.buf[e - t.win:e])
                 # window [e-win, e) aligns with reference [k, k+win): onset at e-win-k
                 onset = self.done - t.win - k
                 self._peak(t.name, v, onset, sample_ms)
-            v, k = self.breath.match(self.buf[e - self.breath.win:e])
-            # loopStartMs: when, on the host clock, the loop would have started
-            # for this lag (mod its length) -- comparable with the game's own
-            # loop start, which is fixed 1 s into the level (g4).
-            self.emit({"cue": "breath", "ncc": round(v, 4), "lag": k,
-                       "phase": round(((k - (self.done - self.breath.win)) % self.breath.len) / SR, 3),
-                       "loopStartMs": sample_ms(self.done - self.breath.win - k),
-                       "atMs": sample_ms(self.done)})
+            if self.match_breath:
+                v, k = self.breath.match(self.buf[e - self.breath.win:e])
+                # loopStartMs: when, on the host clock, the loop would have started
+                # for this lag (mod its length) -- comparable with the game's own
+                # loop start, which is fixed 1 s into the level (g4).
+                self.emit({"cue": "breath", "ncc": round(v, 4), "lag": k,
+                           "phase": round(((k - (self.done - self.breath.win)) % self.breath.len) / SR, 3),
+                           "loopStartMs": sample_ms(self.done - self.breath.win - k),
+                           "atMs": sample_ms(self.done)})
             self.done += self.hop
         # Keep 4 s: an onset is published a few hops after it, and its pan is
         # read from the first 0.4 s of the sample in the retained channels.
@@ -196,24 +292,32 @@ class Detector:
 
     def _peak(self, name, v, onset, sample_ms):
         # One line per detected onset: keep the best NCC among hops whose onset
-        # estimates agree within 60 ms, and publish it once it stops improving.
+        # estimates agree within 60 ms, and publish it once it stops improving --
+        # or, for a family with a hop cap (Fredbear's, from the hearing model),
+        # after that many hops at most: a 6.3 s laugh would otherwise publish
+        # 6.6 s late, and a return after 10 s with him in the room kills (g558).
+        # A capped onset that keeps matching is published again (same onset).
+        family = name.partition("#")[0]
         st = self.recent.get(name)
-        if v >= FAMILY_THRESHOLD.get(name.partition("#")[0], self.threshold):
+        if v >= FAMILY_THRESHOLD.get(family, self.threshold):
             if st and abs(onset - st[1]) <= int(0.06 * SR):
                 if v > st[0]:
                     st[0], st[1] = v, onset
                 st[2] = 0
+                st[3] += 1
+                if st[3] >= FAMILY_MAX_HOPS.get(family, 1 << 30):
+                    self._flush(name, sample_ms)
                 return
             if st:
                 self._flush(name, sample_ms)
-            self.recent[name] = [v, onset, 0]
+            self.recent[name] = [v, onset, 0, 1]
         elif st:
             st[2] += 1
             if st[2] >= 3:
                 self._flush(name, sample_ms)
 
     def _flush(self, name, sample_ms):
-        v, onset, _ = self.recent.pop(name)
+        v, onset, _, _ = self.recent.pop(name)
         family, _, handle = name.partition("#")
         # Pan: -1 hard left .. +1 hard right, as the share of the MATCHED
         # sample in each channel (each channel projected on the reference over
@@ -254,7 +358,7 @@ def to_channels_sr(block: np.ndarray, rate: int):
 def run_wav(args, emit) -> None:
     from scipy.io import wavfile
     rate, x = wavfile.read(args.wav)
-    det = Detector(args.refs, args.threshold, emit)
+    det = Detector(args.refs, args.threshold, emit, families=args.families, breath=not args.no_breath)
     emit(det.envelope())
     mono, left, right = to_channels_sr(x, rate)
     step = int(0.5 * SR)
@@ -276,7 +380,7 @@ def run_live(args, emit) -> int:
     stop = {"flag": False}
     for sig in (signal.SIGINT, signal.SIGTERM):
         signal.signal(sig, lambda *_: stop.__setitem__("flag", True))
-    det = Detector(args.refs, args.threshold, emit)
+    det = Detector(args.refs, args.threshold, emit, families=args.families, breath=not args.no_breath)
     frame_bytes = 2 * channels
     received = 0                                   # frames at the PCM rate
     origin = None                                  # wall ms of frame 0 (lower envelope)
@@ -322,7 +426,16 @@ def main() -> int:
     ap.add_argument("--start-wall-ms", type=float, default=0.0, help="--wav: wall ms of its first sample")
     ap.add_argument("--raw", help="--live: also keep the raw PCM here (outside the repo)")
     ap.add_argument("--quiet-breath", action="store_true", help="print breath levels only above 0.3")
+    ap.add_argument("--hearing", default=HEARING,
+                    help="fnaf4-fredbear-hearing-v1: window and publishing floor of Fredbear's families")
+    ap.add_argument("--families", type=lambda s: set(s.split(",")), default=None,
+                    help="comma list of template families to match (default: all)")
+    ap.add_argument("--no-breath", action="store_true", help="do not match the breathing loop (no breath lines)")
     args = ap.parse_args()
+    known = {family for family, _, _ in TEMPLATES}
+    if args.families is not None and not args.families <= known:
+        ap.error(f"unknown families: {sorted(args.families - known)}")
+    apply_hearing(args.hearing)
     sink = open(args.events, "a") if args.events else None
 
     def emit(e):

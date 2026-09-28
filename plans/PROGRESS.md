@@ -2632,3 +2632,28 @@ Open:
   - `night-run.sh` under the borrowed lease.
 - Packing happens both in `night-run.sh` and in the morning. The morning packs
   only a run that has none yet.
+
+## 2026-09-27 — Fredbear hearing: retain the second Night 5 attempt and stereo replay (S6)
+
+- **DEVICE_MEASURED:** the retained run `fnaf4-loop-n5d-teach-20260928T002104916Z`
+  heard eight landings live, held five doors without a sampled open lapse, and
+  walked home after all four backs that waited for the open door view. It died
+  at 79.9 s after the live mono detector missed the right landing at level 51 s
+  (0.209 below its 0.23 floor). The contaminated-audio run n5c remains a negative.
+- **Host replay over device recordings:** the stereo matcher accepts all nine
+  n5d landings, including the missed one. The 0.19 acceptance floor clears the
+  retained n5b/n5d silent grid maximum (0.137) and weakest landing (0.239) by
+  more than the test's 0.04 margin. Night 5 matches only Fredbear, laughs and
+  our own running; it omits breathing and other characters to fit the hop budget.
+- Structured result: [fnaf4-night5-n5b-20260927](../docs/evidence/fnaf4-night5-n5b-20260927.json),
+  including generated run ID `fnaf4-loop-n5d-teach-20260928T002104916Z`, source
+  hashes and derived hearing-model hashes. No media is promoted by the replay.
+- Wrap-up checks: `npm ci`, cue detector **19/19**, Fredbear **122/122**, and
+  campaign dry-run over the committed k3 binding (**MODEL_ONLY**, replay
+  `fnv1a-1c9c6847`) passed. Claude's directly read transcript also reports
+  typecheck, unit, contracts, docs, catalog and chronicle exit 0 before takeover.
+  The integrated commit still needs its clean-checkout push gate.
+
+Open: a Night 5 win with this stereo branch; a live measurement of its new floor
+and detector cost; Fredbear occupancy and closet eject latency; room-period and
+walk-flag ambiguities listed in the result. No new device run was made for wrap-up.

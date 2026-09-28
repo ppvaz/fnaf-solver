@@ -77,6 +77,17 @@ public final class Fnaf4LessonTest {
                 && Fnaf4Lesson.rollMs(Fnaf4Lesson.Fred.NIGHTMARE_MAX) == 2000);
         check("fredbear steps are stations", Fnaf4Lesson.station(Fnaf4Lesson.Step.FB_HOLD_RIGHT) == Fnaf4Lesson.Station.RIGHT
                 && Fnaf4Lesson.isHold(Fnaf4Lesson.Step.FB_CLOSET));
+        // Unheard is said as unheard: a guess is its own step, never a landing.
+        lesson.apply(new String[] {"step", "FB_GUESS_LEFT"}, 0);
+        check("a guess is not a landing", lesson.step() == Fnaf4Lesson.Step.FB_GUESS_LEFT
+                && !lesson.step().title.contains("landed") && lesson.step().title.contains("guess"));
+        check("a guess holds at its door", Fnaf4Lesson.station(Fnaf4Lesson.Step.FB_GUESS_RIGHT) == Fnaf4Lesson.Station.RIGHT
+                && Fnaf4Lesson.isHold(Fnaf4Lesson.Step.FB_GUESS_LEFT));
+        lesson.apply(new String[] {"step", "FB_LISTEN"}, 0);
+        check("listening for the first move walks nowhere", Fnaf4Lesson.station(Fnaf4Lesson.Step.FB_LISTEN) == Fnaf4Lesson.Station.WALK
+                && !Fnaf4Lesson.isHold(Fnaf4Lesson.Step.FB_LISTEN));
+        lesson.apply(new String[] {"fb", "at", "UNKNOWN"}, 0, 13_000_000_000L);
+        check("his place can be unknown again", lesson.fredAt() == Fnaf4Lesson.FredAt.UNKNOWN);
         lesson.apply(new String[] {"cover", "40"}, 0);
         lesson.apply(new String[] {"bedlit"}, 0, 20_000_000_000L);
         check("cover and bed due", lesson.cover() == 40 && lesson.bedDueInMs(30_000_000_000L) == 25_000

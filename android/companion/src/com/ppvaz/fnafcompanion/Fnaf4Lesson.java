@@ -75,7 +75,15 @@ public final class Fnaf4Lesson {
         FB_CLOSET("Then holding the closet shut",
                 "A shut closet pushes him out on a 3 s tick."),
         FB_MOVE("Moving before stillness gets me",
-                "Standing still 25 s lets him strike from anywhere.");
+                "Standing still 25 s lets him strike from anywhere."),
+        /* Nothing of his heard yet: said as such, never as a landing (n5b's
+           panel read "He landed left" over a blind default all night). */
+        FB_LISTEN("Listening for his first move",
+                "He starts in the middle; every change of side is a sound."),
+        FB_GUESS_LEFT("Not heard: guessing the left door",
+                "No landing heard, so this door is a guess, not a fact."),
+        FB_GUESS_RIGHT("Not heard: guessing the right door",
+                "No landing heard, so this door is a guess, not a fact.");
 
         public final String title;
         public final String why;
@@ -322,8 +330,10 @@ public final class Fnaf4Lesson {
     /** The station a step is taken at. */
     public static Station station(Step step) {
         switch (step) {
-            case LISTEN_LEFT: case HOLD_LEFT: case FLASH_LEFT: case FB_HOLD_LEFT: case STEPS_LEFT: return Station.LEFT;
-            case LISTEN_RIGHT: case HOLD_RIGHT: case FLASH_RIGHT: case FB_HOLD_RIGHT: case STEPS_RIGHT: return Station.RIGHT;
+            case LISTEN_LEFT: case HOLD_LEFT: case FLASH_LEFT: case FB_HOLD_LEFT: case FB_GUESS_LEFT: case STEPS_LEFT:
+                return Station.LEFT;
+            case LISTEN_RIGHT: case HOLD_RIGHT: case FLASH_RIGHT: case FB_HOLD_RIGHT: case FB_GUESS_RIGHT: case STEPS_RIGHT:
+                return Station.RIGHT;
             case BED: case FB_BED: return Station.BED;
             case CLOSET: case CLOSET_HOLD: case FB_CLOSET: return Station.CLOSET;
             default: return Station.WALK;
@@ -334,6 +344,7 @@ public final class Fnaf4Lesson {
     public static boolean isHold(Step step) {
         return step == Step.HOLD_LEFT || step == Step.HOLD_RIGHT || step == Step.CLOSET_HOLD
                 || step == Step.FB_HOLD_LEFT || step == Step.FB_HOLD_RIGHT || step == Step.FB_CLOSET
+                || step == Step.FB_GUESS_LEFT || step == Step.FB_GUESS_RIGHT
                 || step == Step.STEPS_LEFT || step == Step.STEPS_RIGHT;
     }
     public synchronized Door door(boolean leftSide) { return leftSide ? left : right; }

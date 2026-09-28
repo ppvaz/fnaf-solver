@@ -1366,6 +1366,14 @@
       ]
     },
     {
+      "file": "tools/device/audio-players.mjs",
+      "imports": [
+        "node:child_process",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/device/bundle.mjs",
       "imports": [
         "./artifact-commands.mjs",
@@ -1591,10 +1599,30 @@
       ]
     },
     {
+      "file": "tools/device/fnaf4-fredbear.mjs",
+      "imports": [
+        "node:fs"
+      ]
+    },
+    {
+      "file": "tools/device/fnaf4-hearing-evidence.mjs",
+      "imports": [
+        "./fnaf4-fredbear.mjs",
+        "node:crypto",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url",
+        "node:zlib"
+      ]
+    },
+    {
       "file": "tools/device/fnaf4-run.mjs",
       "imports": [
         "../../apps/device/src/physical-ports.js",
         "../../packages/adapters/src/transports/hid.js",
+        "./audio-players.mjs",
+        "./fnaf4-fredbear.mjs",
         "./native-regions.mjs",
         "./night-kit.mjs",
         "node:child_process",
@@ -1916,6 +1944,12 @@
       ]
     },
     {
+      "file": "tools/device/test-audio-players.mjs",
+      "imports": [
+        "./audio-players.mjs"
+      ]
+    },
+    {
       "file": "tools/device/test-bb-cue-state.mjs",
       "imports": [
         "./bb-cue-state.mjs",
@@ -2041,6 +2075,17 @@
         "./fnaf3-detectors.mjs",
         "./fnaf3-run.mjs",
         "./native-regions.mjs",
+        "node:fs"
+      ]
+    },
+    {
+      "file": "tools/device/test-fnaf4-fredbear.mjs",
+      "imports": [
+        "../../packages/adapters/src/transports/hid.js",
+        "./fnaf4-fredbear.mjs",
+        "./fnaf4-run.mjs",
+        "./night-kit.mjs",
+        "node:crypto",
         "node:fs"
       ]
     },
@@ -3273,6 +3318,7 @@
     {
       "file": "tools/validate-references.js",
       "imports": [
+        "node:fs",
         "node:fs/promises",
         "node:path",
         "node:url"
