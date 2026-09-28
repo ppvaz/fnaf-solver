@@ -188,6 +188,18 @@ Details:
     eligibility and encounter start in the rebuild against the model around
     the earlier draw split; the same-phase phone twin remains the physical
     separator. S2 stays open.
+  - **The phone's own frames and audio locate the first divergent state at
+    40.0 s, not at window 6.** The hall flash ends 3-5 updates before the
+    replayed hall contact in every flashed cycle (monitor -2..+1, mask 0..-1);
+    the eyehole confirms B, C, empty, empty in windows 3-6; the A2DP capture,
+    aligned on the mask sound, has Balloon Boy hopping at 40.0, 45.1 and 50.0 s
+    and at the office at 60.38 s, where the rebuild's audio trace and the model
+    hold him through the 40 and 45 s rolls and bring him at 70.3 s. What holds
+    the rebuild's Balloon Boy after his leave is UNKNOWN; hall-contact shifts
+    inside the measured bracket never empty window 6
+    ([record](../docs/evidence/full06-input-registration-20260928.json),
+    `s2-input-registration-638d6ba349b9e1d2`). DEVICE_MEASURED reads against
+    MODEL_ONLY replays.
 - **Absorbs** Plan 17 (route 5), Plan 25 horizon 2, and the model parts of
   Plans 15 and 19.
 

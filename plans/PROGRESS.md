@@ -2798,3 +2798,31 @@ and phone route state remain unresolved. The scan varies only mask/monitor
 brackets: wind/camera-light contacts retain the baseline mapping, and each
 release shifts with its press instead of receiving an independent bound. No
 device run or promotion. S2 stays OPEN.
+
+## 2026-09-28 — Do the replayed contacts register when the phone's did, and where does the state first diverge (S2b)
+
+The phone's own frames and audio, read per cycle against the full-06 landed
+replay (`s2-input-registration-638d6ba349b9e1d2`,
+[record](../docs/evidence/full06-input-registration-20260928.json)). The
+hall flash is over 3-5 updates before the replayed hall contact releases in
+every flashed cycle; monitor raises land within -2..+1 updates and mask presses
+within 0..-1, as the landed rule assumed. The right-eyehole cells confirm
+Withered Bonnie in window 3, Withered Chica in window 4 and nobody in 5 and 6.
+Aligned on the mask put-on sound (-0.246 s over nine windows), the A2DP capture
+has Balloon Boy hopping at 40.0, 45.1 and 50.0 s, entering the left vent camera
+at 55.0 s and arriving at the office at 60.38 s; the rebuild's audio trace
+(build 66d6e2f6, the retained replay's draws exactly) and the model both hold
+him at CAM 10 through the 40.0 and 45.0 s rolls after his 37.5 s leave and
+bring him at 70.3 s. The dump's g342 sets his value 0 on every 5 s roll at AI
+20 and g413 moves him on value 0 = 2 with no light or mask condition, yet the
+rebuild's watch shows value 0 = 0 through both rolls: what held him is UNKNOWN
+and is the first host-vs-phone state difference located, 24 s before window 6.
+Moving every hall contact 2-5 updates earlier (the phone's flash frames) changes
+Mangle's and Balloon Boy's later hops but never empties window 6. No new phone
+run, nothing promoted. S2 stays OPEN.
+
+Next: in the rebuild, trace Balloon Boy's alterable values through 37-50 s and
+name the group that holds value 0 at 0 after his leave; then test whether an
+input inside the measured brackets releases him at 40.0 s and whether Withered
+Bonnie's entry moves to window 7 as the phone read. The same-phase twin with
+per-press landing reads and a continuous capture remains the physical separator.

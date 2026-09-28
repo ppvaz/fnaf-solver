@@ -1,0 +1,303 @@
+{
+ "schema": "evidence-record-v1",
+ "id": "s2-input-registration-638d6ba349b9e1d2",
+ "date": "2026-09-28",
+ "step": "ROADMAP S2b (full-06: input registration and the first divergent game state)",
+ "claimLevel": "DEVICE_MEASURED phone frames and A2DP audio read by arithmetic rules, against MODEL_ONLY rebuild replays and the dump; no new phone run, nothing promoted",
+ "question": "Do the replayed contacts of the full-06 landed replay act on the updates the phone's own frames show them acting on, and where does the phone's game state first diverge from the rebuild's before the empty window 6?",
+ "verdict": "No, and at the 40.0 s roll tick. The phone's hall flash is over 3-5 updates before the replayed hall contact releases, in every flashed cycle; monitor raises land within -2..+1 updates and the mask presses within 0..-1, as the landed rule assumed. The phone's right eyehole confirms Withered Bonnie in window 3, Withered Chica in window 4 and nobody in windows 5 and 6. Aligned on the mask put-on sound (offset -0.246 s), the phone's audio has Balloon Boy hopping at 40.0, 45.1 and 50.0 s (his vocals), entering the left vent camera at 55.0 s and arriving at the office at 60.38 s (vent bangs), while the rebuild and the model both hold him at CAM 10 through the 40.0 and 45.0 s rolls after his 37.5 s leave and bring him to the office at 70.3 s. The rebuild's Balloon Boy shows value 0 = 0 through both rolls although the dump's g342 sets it to 1 on every 5 s roll at AI 20 and g413 moves him on value 0 = 2 with no light or mask condition; what held him is UNKNOWN and is the first host-vs-phone state difference located. Moving every hall contact 2-5 updates earlier (the phone's own flash frames) changes Mangle's and Balloon Boy's later hops but never empties window 6, so the hall light alone is not the cause. S2 stays OPEN.",
+ "measurements": {
+  "inputRegistration": {
+   "source": "tools/recompile/results/phone-input-ledger-full-06-20260928.json",
+   "phoneMinusRebuildUpdates": {
+    "hallFlashOn": {
+     "1": -1,
+     "3": -2,
+     "4": -2,
+     "6": -1
+    },
+    "hallFlashOff": {
+     "1": -3,
+     "3": -5,
+     "4": -5,
+     "6": -4
+    },
+    "monitorUp": {
+     "0": -11,
+     "1": -2,
+     "2": 1,
+     "3": -1,
+     "4": -2,
+     "5": -1,
+     "6": 0
+    },
+    "maskOn": {
+     "0": 1,
+     "1": 11,
+     "2": 11,
+     "3": 11,
+     "4": 12,
+     "5": 12,
+     "6": 10
+    },
+    "monitorDown": {
+     "0": 21,
+     "1": 22,
+     "2": 23,
+     "3": 21,
+     "4": 22,
+     "5": 21,
+     "6": 21
+    }
+   },
+   "reading": "hallFlashOff -3..-5 in cycles 1, 3, 4 and 6 (no flash frame found in cycles 0, 2, 5: the bump is at the 3-luma threshold); monitorUp -2..+1 except cycle 0 (-11, the opening raise); maskOn +10..+12 and monitorDown +21..+23 are the put-on and flip-down animations reaching the display, not registration"
+  },
+  "eyehole": {
+   "0": {
+    "phone": null,
+    "rebuild": null
+   },
+   "1": {
+    "phone": null,
+    "rebuild": null
+   },
+   "2": {
+    "phone": null,
+    "rebuild": null
+   },
+   "3": {
+    "phone": "B",
+    "rebuild": "B"
+   },
+   "4": {
+    "phone": "C",
+    "rebuild": "C"
+   },
+   "5": {
+    "phone": null,
+    "rebuild": null
+   },
+   "6": {
+    "phone": null,
+    "rebuild": "B"
+   }
+  },
+  "audioAlignment": {
+   "audioMinusGameS": -0.246,
+   "anchorOnsets": 9,
+   "cue": "s0007 mask put-on, rebuild play times from its audio trace"
+  },
+  "phoneCues": {
+   "bangsGameS_ncc>=0.5": [
+    50.04,
+    55.01,
+    60.38,
+    75.04,
+    90.0,
+    95.0,
+    107.44,
+    118.48,
+    125.01,
+    140.37
+   ],
+   "bangsGameS_ncc<0.5": [
+    47.69,
+    52.66,
+    58.01,
+    66.16,
+    68.51,
+    86.13,
+    92.64,
+    100.35,
+    102.66,
+    105.08,
+    116.13,
+    122.65,
+    132.68,
+    135.03,
+    146.71
+   ],
+   "balloonBoyVocalsGameS": {
+    "s0021": [],
+    "s0023": [
+     [
+      45.08,
+      0.408
+     ],
+     [
+      50.04,
+      0.358
+     ]
+    ],
+    "s0024": [
+     [
+      40.04,
+      0.332
+     ]
+    ]
+   },
+   "note": "no bang or vocal detected before 40 s although the rebuild plays bangs at 20.0, 25.0, 30.3 and 37.5 s: the capture's content before 40 s is UNKNOWN, not silent (near-silent stretches only at 27.0-27.4 and 27.8-28.2 s)"
+  },
+  "rebuildCues": {
+   "source": "tools/recompile/results/rebuild-audio-full-06-landed-20260928.json",
+   "bangsGameS": [
+    20.01,
+    25.0,
+    30.33,
+    37.48,
+    45.02,
+    50.02,
+    55.01,
+    59.32,
+    65.02,
+    70.03,
+    70.32,
+    79.2,
+    80.02,
+    85.02,
+    89.15,
+    100.01,
+    110.01,
+    110.34,
+    115.02,
+    115.74,
+    120.0,
+    128.92,
+    145.0
+   ],
+   "balloonBoy": {
+    "source": "CHOWDREN_WATCH=balloon boy:0,1,2 position changes on the same replay",
+    "hopsGameS": [
+     10.0,
+     15.01,
+     25.0,
+     30.33
+    ],
+    "leaveGameS": 37.48,
+    "hopsAfterLeaveGameS": [
+     50.02,
+     55.01,
+     65.02
+    ],
+    "officeArrivalGameS": 70.32,
+    "note": "value 0 stayed 0 through the 40.0 s and 45.0 s rolls after the leave; value 1 (B) stayed 0 throughout"
+   },
+   "witheredBonnie": {
+    "hopsGameS": [
+     5.02,
+     10.02,
+     15.68,
+     20.01,
+     30.33
+    ],
+    "leaveGameS": 38.78,
+    "hopsAfterLeaveGameS": [
+     40.03,
+     45.02,
+     50.02
+    ],
+    "officeArrivalGameS": 60.34
+   }
+  },
+  "dump": {
+   "g342": "Every 5000 ms AND Random(20) < Balloon Boy AI -> balloon boy value 0 = 1",
+   "g359": "packed condition on balloon boy -> value 0 = 2, value 2 = 10",
+   "g413-g416": "value 0 = 2 AND overlapping cam 10/7/3/01 -> next camera, value 0 = 0; no light, mask or monitor condition",
+   "g417": "value 0 = 2 AND overlapping cam 5 AND viewing > 0 AND monitor-up sprite invisible -> in office",
+   "g292": "at in office AND mask = 2 AND Every 1000 ms AND Random(10) = 1 -> cam 10",
+   "g294": "value 12 >= 5 AND at in office AND mask = 2 -> cam 10"
+  },
+  "hallShiftSensitivity": {
+   "source": "tools/recompile/results/hall-shift-sensitivity-full-06-20260928.json",
+   "variants": {
+    "v-hallLight_down_0_up_0": {
+     "shifts": {
+      "hallLight": {
+       "down": 0,
+       "up": 0
+      }
+     },
+     "rebuiltWindows": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.B?????",
+     "agreeOverCompared": "14/38",
+     "window6": "B"
+    },
+    "v-hallLight_down_-2_up_-5": {
+     "shifts": {
+      "hallLight": {
+       "down": -2,
+       "up": -5
+      }
+     },
+     "rebuiltWindows": "...BC.C.BCFBC.BC.BC.BC.BC.BC.BC.CBC..B?????",
+     "agreeOverCompared": "17/38",
+     "window6": "C"
+    },
+    "v-hallLight_down_-5_up_-5": {
+     "shifts": {
+      "hallLight": {
+       "down": -5,
+       "up": -5
+      }
+     },
+     "rebuiltWindows": "...BC.BC.BC..BC..CBF.CB..BC.BC..BCFBC.B????",
+     "agreeOverCompared": "14/39",
+     "window6": "B"
+    },
+    "v-hallLight_down_-3_up_-3": {
+     "shifts": {
+      "hallLight": {
+       "down": -3,
+       "up": -3
+      }
+     },
+     "rebuiltWindows": "...BC.BC.BC.BC.BC.CB.CBFCBC.BC.B.CB.CB?????",
+     "agreeOverCompared": "9/38",
+     "window6": "B"
+    },
+    "v-hallLight_down_-2_up_-2": {
+     "shifts": {
+      "hallLight": {
+       "down": -2,
+       "up": -2
+      }
+     },
+     "rebuiltWindows": "...BC.C.BCFBC.BC.BC.BC.BC.BC.BC.CBC..B?????",
+     "agreeOverCompared": "17/38",
+     "window6": "C"
+    }
+   }
+  }
+ },
+ "results": [
+  {
+   "path": "tools/recompile/results/phone-input-ledger-full-06-20260928.json",
+   "sha256": "51bb1d132c8f2e868145d54ae15982b2b3efdefd4ce4fd3b45fb515188d199df"
+  },
+  {
+   "path": "tools/recompile/results/phone-audio-cues-full-06-20260928.json",
+   "sha256": "df94274975c2718c31fdc9dc82c70b83c62579b4d2460b967859539eb2768448"
+  },
+  {
+   "path": "tools/recompile/results/rebuild-audio-full-06-landed-20260928.json",
+   "sha256": "e3f4e6482ced8d3025533829b592c43a10e520c60b0a7fe98d31f6499618bf59"
+  },
+  {
+   "path": "tools/recompile/results/hall-shift-sensitivity-full-06-20260928.json",
+   "sha256": "4e84b7f034969201a6444212f1c9b3b3289d86c698b34f70bb9c61d6e5e9a22f"
+  }
+ ],
+ "tools": [
+  "tools/recompile/phone-input-ledger.py",
+  "tools/recompile/phone-audio-cues.py",
+  "tools/recompile/phone-encounter-replay.mjs (emit) with per-control update shifts; CHOWDREN_AUDIO_TRACE and CHOWDREN_WATCH=<object>:0,1,2 on the pinned 66d6e2f6-d9cc45ff build"
+ ],
+ "gate": "tools/recompile/test-phone-input-ledger.py in npm run test:unit: the classifiers on synthetic cells, then every difference, alignment and hash in this record re-derived from the retained rows; no private trace, capture or binary needed",
+ "limits": [
+  "The phone's update index of a frame is the retained reconstruction (first night frame = update 0, catch-up rule), and a displayed frame lags the update that drew it by an unmeasured 1-2 frames; differences of that size are not registration differences.",
+  "A matched sound is a sound in the Bluetooth mix within 0.3 s, aligned by the mask sound's median; it does not prove which event played it. Balloon Boy's three vocals and the vent bang are shared by several events (rebuild-audio record, semantics).",
+  "The capture's time axis is BROKEN (6.5 s missing over 488 s); the alignment is local to 34-134 s where nine mask sounds agree to within the spread reported.",
+  "The rebuild's Balloon Boy hold at 40.0/45.0 s is read from its alterable values; the group that held value 0 at 0 was not identified in this session.",
+  "Hall-shift variants move every hall contact alike; they are sensitivities on the landed replay, not a search."
+ ],
+ "next": "Identify in the rebuild which event holds Balloon Boy's value 0 at 0 through the 40.0 and 45.0 s rolls after his 37.5 s leave (trace his alterable values 0-12 and the groups writing them), then test whether a phone-consistent input inside the measured brackets releases him at 40.0 s and whether Withered Bonnie's window-6 entry then moves to window 7 as the phone read. The same-phase phone twin with per-press landing reads and a continuous audio capture remains the physical separator."
+}

@@ -1,0 +1,359 @@
+{
+ "schema": "phone-audio-cues-v1",
+ "claimLevel": "DEVICE_MEASURED audio, arithmetic alignment",
+ "capture": {
+  "path": "/home/pedro/fnaf-apks/bt-audio-captures/night7-night7-k3-full-06-20260915T225056Z.bt.wav",
+  "sha256": "e0fe3d356af71228ae23286114d4a03c5bf677ab7a80964de1e0c5cb5a6b0183",
+  "rate": 44100,
+  "fromS": 0.0,
+  "toS": 150.0
+ },
+ "rule": {
+  "coreS": 0.4,
+  "minGapS": 0.25,
+  "threshold": 0.3,
+  "silenceFloor": 30.0,
+  "anchorToleranceS": 1.0
+ },
+ "offset": {
+  "audioMinusGameS": -0.246,
+  "pairs": [
+   {
+    "audioS": 35.18,
+    "gameS": 34.27,
+    "diffS": 0.91
+   },
+   {
+    "audioS": 44.008,
+    "gameS": 44.27,
+    "diffS": -0.262
+   },
+   {
+    "audioS": 54.024,
+    "gameS": 54.27,
+    "diffS": -0.246
+   },
+   {
+    "audioS": 64.01,
+    "gameS": 64.27,
+    "diffS": -0.26
+   },
+   {
+    "audioS": 74.017,
+    "gameS": 74.27,
+    "diffS": -0.253
+   },
+   {
+    "audioS": 94.04,
+    "gameS": 94.28,
+    "diffS": -0.24
+   },
+   {
+    "audioS": 104.015,
+    "gameS": 104.27,
+    "diffS": -0.255
+   },
+   {
+    "audioS": 124.038,
+    "gameS": 124.28,
+    "diffS": -0.242
+   },
+   {
+    "audioS": 134.034,
+    "gameS": 134.27,
+    "diffS": -0.236
+   }
+  ],
+  "spreadS": 1.172,
+  "cue": "s0007"
+ },
+ "cues": {
+  "s0017": {
+   "coreS": 0.4,
+   "coreOffsetS": 2.48,
+   "onsets": [
+    {
+     "audioS": 47.442,
+     "ncc": 0.383,
+     "gameS": 47.69
+    },
+    {
+     "audioS": 49.798,
+     "ncc": 0.622,
+     "gameS": 50.04
+    },
+    {
+     "audioS": 52.41,
+     "ncc": 0.388,
+     "gameS": 52.66
+    },
+    {
+     "audioS": 54.766,
+     "ncc": 0.69,
+     "gameS": 55.01
+    },
+    {
+     "audioS": 57.765,
+     "ncc": 0.369,
+     "gameS": 58.01
+    },
+    {
+     "audioS": 60.13,
+     "ncc": 0.632,
+     "gameS": 60.38
+    },
+    {
+     "audioS": 65.91,
+     "ncc": 0.391,
+     "gameS": 66.16
+    },
+    {
+     "audioS": 68.267,
+     "ncc": 0.447,
+     "gameS": 68.51
+    },
+    {
+     "audioS": 74.789,
+     "ncc": 0.61,
+     "gameS": 75.04
+    },
+    {
+     "audioS": 85.883,
+     "ncc": 0.42,
+     "gameS": 86.13
+    },
+    {
+     "audioS": 89.753,
+     "ncc": 0.627,
+     "gameS": 90.0
+    },
+    {
+     "audioS": 92.394,
+     "ncc": 0.324,
+     "gameS": 92.64
+    },
+    {
+     "audioS": 94.751,
+     "ncc": 0.655,
+     "gameS": 95.0
+    },
+    {
+     "audioS": 100.104,
+     "ncc": 0.486,
+     "gameS": 100.35
+    },
+    {
+     "audioS": 102.411,
+     "ncc": 0.381,
+     "gameS": 102.66
+    },
+    {
+     "audioS": 104.839,
+     "ncc": 0.413,
+     "gameS": 105.08
+    },
+    {
+     "audioS": 107.195,
+     "ncc": 0.603,
+     "gameS": 107.44
+    },
+    {
+     "audioS": 115.881,
+     "ncc": 0.336,
+     "gameS": 116.13
+    },
+    {
+     "audioS": 118.238,
+     "ncc": 0.547,
+     "gameS": 118.48
+    },
+    {
+     "audioS": 122.403,
+     "ncc": 0.342,
+     "gameS": 122.65
+    },
+    {
+     "audioS": 124.76,
+     "ncc": 0.647,
+     "gameS": 125.01
+    },
+    {
+     "audioS": 132.43,
+     "ncc": 0.408,
+     "gameS": 132.68
+    },
+    {
+     "audioS": 134.786,
+     "ncc": 0.407,
+     "gameS": 135.03
+    },
+    {
+     "audioS": 140.12,
+     "ncc": 0.64,
+     "gameS": 140.37
+    },
+    {
+     "audioS": 146.459,
+     "ncc": 0.421,
+     "gameS": 146.71
+    }
+   ]
+  },
+  "s0021": {
+   "coreS": 0.4,
+   "coreOffsetS": 0.05,
+   "onsets": []
+  },
+  "s0023": {
+   "coreS": 0.4,
+   "coreOffsetS": 0.247,
+   "onsets": [
+    {
+     "audioS": 44.831,
+     "ncc": 0.408,
+     "gameS": 45.08
+    },
+    {
+     "audioS": 49.798,
+     "ncc": 0.358,
+     "gameS": 50.04
+    }
+   ]
+  },
+  "s0024": {
+   "coreS": 0.4,
+   "coreOffsetS": 0.17,
+   "onsets": [
+    {
+     "audioS": 39.792,
+     "ncc": 0.332,
+     "gameS": 40.04
+    }
+   ]
+  },
+  "s0032": {
+   "coreS": 0.4,
+   "coreOffsetS": 1.646,
+   "onsets": [
+    {
+     "audioS": 7.631,
+     "ncc": 0.316,
+     "gameS": 7.88
+    },
+    {
+     "audioS": 54.817,
+     "ncc": 0.418,
+     "gameS": 55.06
+    },
+    {
+     "audioS": 60.455,
+     "ncc": 0.567,
+     "gameS": 60.7
+    },
+    {
+     "audioS": 89.783,
+     "ncc": 0.355,
+     "gameS": 90.03
+    }
+   ]
+  },
+  "s0005": {
+   "coreS": 0.4,
+   "coreOffsetS": 0.066,
+   "onsets": [
+    {
+     "audioS": 32.325,
+     "ncc": 0.42,
+     "gameS": 32.57
+    },
+    {
+     "audioS": 33.9,
+     "ncc": 0.508,
+     "gameS": 34.15
+    },
+    {
+     "audioS": 39.914,
+     "ncc": 0.302,
+     "gameS": 40.16
+    }
+   ]
+  },
+  "s0006": {
+   "coreS": 0.395,
+   "coreOffsetS": 0.0,
+   "onsets": [
+    {
+     "audioS": 33.168,
+     "ncc": 0.315,
+     "gameS": 33.41
+    },
+    {
+     "audioS": 34.591,
+     "ncc": 0.479,
+     "gameS": 34.84
+    },
+    {
+     "audioS": 53.608,
+     "ncc": 0.338,
+     "gameS": 53.85
+    },
+    {
+     "audioS": 83.596,
+     "ncc": 0.327,
+     "gameS": 83.84
+    }
+   ]
+  },
+  "s0007": {
+   "coreS": 0.4,
+   "coreOffsetS": 0.211,
+   "onsets": [
+    {
+     "audioS": 35.18,
+     "ncc": 0.496,
+     "gameS": 35.43
+    },
+    {
+     "audioS": 44.008,
+     "ncc": 0.389,
+     "gameS": 44.25
+    },
+    {
+     "audioS": 54.024,
+     "ncc": 0.34,
+     "gameS": 54.27
+    },
+    {
+     "audioS": 64.01,
+     "ncc": 0.332,
+     "gameS": 64.26
+    },
+    {
+     "audioS": 74.017,
+     "ncc": 0.361,
+     "gameS": 74.26
+    },
+    {
+     "audioS": 94.04,
+     "ncc": 0.382,
+     "gameS": 94.29
+    },
+    {
+     "audioS": 104.015,
+     "ncc": 0.343,
+     "gameS": 104.26
+    },
+    {
+     "audioS": 124.038,
+     "ncc": 0.402,
+     "gameS": 124.28
+    },
+    {
+     "audioS": 134.034,
+     "ncc": 0.349,
+     "gameS": 134.28
+    }
+   ]
+  }
+ }
+}

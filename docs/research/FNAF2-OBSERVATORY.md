@@ -144,6 +144,18 @@ the model, around the earlier draw split. The same-phase phone twin with a
 valid seed and per-press landing reads remains the physical separator; S2
 stays open.
 
+**Fifth experiment retained (2026-09-28 UTC):**
+[input registration and first divergent state](../evidence/full06-input-registration-20260928.json),
+`s2-input-registration-638d6ba349b9e1d2`. The phone's frames put the hall
+flash 3-5 updates before the replayed hall release in every flashed cycle
+(monitor raises -2..+1, mask presses 0..-1), and its eyehole cells confirm the
+window reads. Its audio, aligned on the mask sound, has Balloon Boy one hop
+ahead of both host programs from the 40.0 s roll and at the office at 60.38 s;
+the rebuild holds him at CAM 10 through the 40 and 45 s rolls after his leave
+for a reason not yet named. The first divergent state is therefore 24 s before
+window 6 and belongs to Balloon Boy's chain; hall-contact shifts alone do not
+empty window 6. S2 stays open.
+
 ## Contributions beyond FNaF
 
 The broader candidate contributions are a benchmark for agents earning causal

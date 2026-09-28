@@ -1,0 +1,551 @@
+{
+ "schema": "phone-input-ledger-v1",
+ "claimLevel": "DEVICE_MEASURED frames against a MODEL_ONLY replay",
+ "inputs": {
+  "frameTrace": {
+   "path": "artifacts/forensics/k3-frametrace-nights-20260915/ft2-full-06-875229878053244.tsv",
+   "sha256": "3fe9587c06708a991e5a2c983ebc1feaf9be89cda9c7c787999a2ac6052dd261",
+   "first": 201
+  },
+  "rebuildTrace": {
+   "path": "/home/pedro/fnaf-apks/fnaf2-recompile-20260927/agent-phoneclock/full-06-landed/trace",
+   "sha256": "bcc10235bd3bfddb03697f93b3a80019e4530ed9f6868e19870d49bcce814145"
+  }
+ },
+ "rule": {
+  "signatureThresholds": {
+   "visibleMin": 100,
+   "absentMax": 40
+  },
+  "flashLumaStep": 3,
+  "eyeholeCells": "rows 3-5, columns 11-18",
+  "periodMs": 10000,
+  "maskWindowMs": 4270,
+  "displayLagNote": "a frame lags the update that drew it by an unmeasured 1-2 frames"
+ },
+ "cycles": [
+  {
+   "cycle": 0,
+   "window": 0,
+   "events": {
+    "hallFlashOn": {
+     "phone": null,
+     "rebuild": {
+      "update": 292,
+      "ms": 4882.6
+     },
+     "phoneMinusRebuildUpdates": null
+    },
+    "hallFlashOff": {
+     "phone": null,
+     "rebuild": {
+      "update": 360,
+      "ms": 5999.9
+     },
+     "phoneMinusRebuildUpdates": null
+    },
+    "monitorUp": {
+     "phone": {
+      "row": 353,
+      "update": 154,
+      "ms": 2549.5
+     },
+     "rebuild": {
+      "update": 165,
+      "ms": 2730.7
+     },
+     "phoneMinusRebuildUpdates": -11
+    },
+    "monitorDown": {
+     "phone": {
+      "row": 423,
+      "update": 227,
+      "ms": 3785.3
+     },
+     "rebuild": {
+      "update": 206,
+      "ms": 3434.2
+     },
+     "phoneMinusRebuildUpdates": 21
+    },
+    "maskOn": {
+     "phone": {
+      "row": 522,
+      "update": 326,
+      "ms": 5450.0
+     },
+     "rebuild": {
+      "update": 325,
+      "ms": 5433.7
+     },
+     "phoneMinusRebuildUpdates": 1
+    },
+    "maskOff": {
+     "phone": null,
+     "rebuild": null,
+     "phoneMinusRebuildUpdates": null
+    }
+   },
+   "occupant": {
+    "phone": null,
+    "rebuild": null
+   }
+  },
+  {
+   "cycle": 1,
+   "window": 1,
+   "events": {
+    "hallFlashOn": {
+     "phone": {
+      "row": 788,
+      "update": 595,
+      "ms": 9916.4
+     },
+     "rebuild": {
+      "update": 596,
+      "ms": 9933.0
+     },
+     "phoneMinusRebuildUpdates": -1
+    },
+    "hallFlashOff": {
+     "phone": {
+      "row": 790,
+      "update": 597,
+      "ms": 9952.0
+     },
+     "rebuild": {
+      "update": 600,
+      "ms": 10003.0
+     },
+     "phoneMinusRebuildUpdates": -3
+    },
+    "monitorUp": {
+     "phone": {
+      "row": 809,
+      "update": 619,
+      "ms": 10302.3
+     },
+     "rebuild": {
+      "update": 621,
+      "ms": 10336.5
+     },
+     "phoneMinusRebuildUpdates": -2
+    },
+    "monitorDown": {
+     "phone": {
+      "row": 1039,
+      "update": 855,
+      "ms": 14200.2
+     },
+     "rebuild": {
+      "update": 833,
+      "ms": 13842.9
+     },
+     "phoneMinusRebuildUpdates": 22
+    },
+    "maskOn": {
+     "phone": {
+      "row": 1054,
+      "update": 870,
+      "ms": 14451.9
+     },
+     "rebuild": {
+      "update": 859,
+      "ms": 14267.3
+     },
+     "phoneMinusRebuildUpdates": 11
+    },
+    "maskOff": {
+     "phone": null,
+     "rebuild": null,
+     "phoneMinusRebuildUpdates": null
+    }
+   },
+   "occupant": {
+    "phone": null,
+    "rebuild": null
+   }
+  },
+  {
+   "cycle": 2,
+   "window": 2,
+   "events": {
+    "hallFlashOn": {
+     "phone": null,
+     "rebuild": {
+      "update": 1199,
+      "ms": 19924.2
+     },
+     "phoneMinusRebuildUpdates": null
+    },
+    "hallFlashOff": {
+     "phone": null,
+     "rebuild": {
+      "update": 1204,
+      "ms": 20008.1
+     },
+     "phoneMinusRebuildUpdates": null
+    },
+    "monitorUp": {
+     "phone": {
+      "row": 1405,
+      "update": 1225,
+      "ms": 20352.4
+     },
+     "rebuild": {
+      "update": 1224,
+      "ms": 20333.7
+     },
+     "phoneMinusRebuildUpdates": 1
+    },
+    "monitorDown": {
+     "phone": {
+      "row": 1628,
+      "update": 1455,
+      "ms": 24188.4
+     },
+     "rebuild": {
+      "update": 1432,
+      "ms": 23836.4
+     },
+     "phoneMinusRebuildUpdates": 23
+    },
+    "maskOn": {
+     "phone": {
+      "row": 1644,
+      "update": 1471,
+      "ms": 24448.5
+     },
+     "rebuild": {
+      "update": 1460,
+      "ms": 24265.4
+     },
+     "phoneMinusRebuildUpdates": 11
+    },
+    "maskOff": {
+     "phone": null,
+     "rebuild": null,
+     "phoneMinusRebuildUpdates": null
+    }
+   },
+   "occupant": {
+    "phone": null,
+    "rebuild": null
+   }
+  },
+  {
+   "cycle": 3,
+   "window": 3,
+   "events": {
+    "hallFlashOn": {
+     "phone": {
+      "row": 1964,
+      "update": 1797,
+      "ms": 29885.2
+     },
+     "rebuild": {
+      "update": 1799,
+      "ms": 29916.6
+     },
+     "phoneMinusRebuildUpdates": -2
+    },
+    "hallFlashOff": {
+     "phone": {
+      "row": 1966,
+      "update": 1799,
+      "ms": 29919.7
+     },
+     "rebuild": {
+      "update": 1804,
+      "ms": 30001.4
+     },
+     "phoneMinusRebuildUpdates": -5
+    },
+    "monitorUp": {
+     "phone": {
+      "row": 1990,
+      "update": 1823,
+      "ms": 30316.8
+     },
+     "rebuild": {
+      "update": 1824,
+      "ms": 30333.5
+     },
+     "phoneMinusRebuildUpdates": -1
+    },
+    "monitorDown": {
+     "phone": {
+      "row": 2211,
+      "update": 2051,
+      "ms": 34169.3
+     },
+     "rebuild": {
+      "update": 2030,
+      "ms": 33841.9
+     },
+     "phoneMinusRebuildUpdates": 21
+    },
+    "maskOn": {
+     "phone": {
+      "row": 2228,
+      "update": 2068,
+      "ms": 34454.3
+     },
+     "rebuild": {
+      "update": 2057,
+      "ms": 34270.2
+     },
+     "phoneMinusRebuildUpdates": 11
+    },
+    "maskOff": {
+     "phone": null,
+     "rebuild": null,
+     "phoneMinusRebuildUpdates": null
+    }
+   },
+   "occupant": {
+    "phone": {
+     "row": 2230,
+     "update": 2070,
+     "ms": 34484.6,
+     "letter": "B"
+    },
+    "rebuild": {
+     "update": 2030,
+     "ms": 33841.9,
+     "letter": "B"
+    }
+   }
+  },
+  {
+   "cycle": 4,
+   "window": 4,
+   "events": {
+    "hallFlashOn": {
+     "phone": {
+      "row": 2549,
+      "update": 2393,
+      "ms": 39894.3
+     },
+     "rebuild": {
+      "update": 2395,
+      "ms": 39911.0
+     },
+     "phoneMinusRebuildUpdates": -2
+    },
+    "hallFlashOff": {
+     "phone": {
+      "row": 2551,
+      "update": 2396,
+      "ms": 39943.3
+     },
+     "rebuild": {
+      "update": 2401,
+      "ms": 40017.1
+     },
+     "phoneMinusRebuildUpdates": -5
+    },
+    "monitorUp": {
+     "phone": {
+      "row": 2572,
+      "update": 2419,
+      "ms": 40301.4
+     },
+     "rebuild": {
+      "update": 2421,
+      "ms": 40335.4
+     },
+     "phoneMinusRebuildUpdates": -2
+    },
+    "monitorDown": {
+     "phone": {
+      "row": 2800,
+      "update": 2656,
+      "ms": 44202.2
+     },
+     "rebuild": {
+      "update": 2634,
+      "ms": 43835.0
+     },
+     "phoneMinusRebuildUpdates": 22
+    },
+    "maskOn": {
+     "phone": {
+      "row": 2816,
+      "update": 2672,
+      "ms": 44467.2
+     },
+     "rebuild": {
+      "update": 2660,
+      "ms": 44266.8
+     },
+     "phoneMinusRebuildUpdates": 12
+    },
+    "maskOff": {
+     "phone": null,
+     "rebuild": null,
+     "phoneMinusRebuildUpdates": null
+    }
+   },
+   "occupant": {
+    "phone": {
+     "row": 2817,
+     "update": 2673,
+     "ms": 44484.0,
+     "letter": "C"
+    },
+    "rebuild": {
+     "update": 2634,
+     "ms": 43835.0,
+     "letter": "C"
+    }
+   }
+  },
+  {
+   "cycle": 5,
+   "window": 5,
+   "events": {
+    "hallFlashOn": {
+     "phone": null,
+     "rebuild": {
+      "update": 3001,
+      "ms": 49917.3
+     },
+     "phoneMinusRebuildUpdates": null
+    },
+    "hallFlashOff": {
+     "phone": null,
+     "rebuild": {
+      "update": 3007,
+      "ms": 50016.5
+     },
+     "phoneMinusRebuildUpdates": null
+    },
+    "monitorUp": {
+     "phone": {
+      "row": 3161,
+      "update": 3024,
+      "ms": 50311.5
+     },
+     "rebuild": {
+      "update": 3025,
+      "ms": 50328.1
+     },
+     "phoneMinusRebuildUpdates": -1
+    },
+    "monitorDown": {
+     "phone": {
+      "row": 3391,
+      "update": 3258,
+      "ms": 54202.0
+     },
+     "rebuild": {
+      "update": 3237,
+      "ms": 53849.0
+     },
+     "phoneMinusRebuildUpdates": 21
+    },
+    "maskOn": {
+     "phone": {
+      "row": 3407,
+      "update": 3274,
+      "ms": 54467.9
+     },
+     "rebuild": {
+      "update": 3262,
+      "ms": 54266.5
+     },
+     "phoneMinusRebuildUpdates": 12
+    },
+    "maskOff": {
+     "phone": null,
+     "rebuild": null,
+     "phoneMinusRebuildUpdates": null
+    }
+   },
+   "occupant": {
+    "phone": null,
+    "rebuild": null
+   }
+  },
+  {
+   "cycle": 6,
+   "window": 6,
+   "events": {
+    "hallFlashOn": {
+     "phone": {
+      "row": 3727,
+      "update": 3603,
+      "ms": 59905.2
+     },
+     "rebuild": {
+      "update": 3604,
+      "ms": 59921.9
+     },
+     "phoneMinusRebuildUpdates": -1
+    },
+    "hallFlashOff": {
+     "phone": {
+      "row": 3729,
+      "update": 3605,
+      "ms": 59943.0
+     },
+     "rebuild": {
+      "update": 3609,
+      "ms": 60009.1
+     },
+     "phoneMinusRebuildUpdates": -4
+    },
+    "monitorUp": {
+     "phone": {
+      "row": 3753,
+      "update": 3629,
+      "ms": 60337.2
+     },
+     "rebuild": {
+      "update": 3629,
+      "ms": 60337.3
+     },
+     "phoneMinusRebuildUpdates": 0
+    },
+    "monitorDown": {
+     "phone": {
+      "row": 3973,
+      "update": 3860,
+      "ms": 64177.3
+     },
+     "rebuild": {
+      "update": 3839,
+      "ms": 63837.0
+     },
+     "phoneMinusRebuildUpdates": 21
+    },
+    "maskOn": {
+     "phone": {
+      "row": 3989,
+      "update": 3876,
+      "ms": 64436.2
+     },
+     "rebuild": {
+      "update": 3866,
+      "ms": 64267.6
+     },
+     "phoneMinusRebuildUpdates": 10
+    },
+    "maskOff": {
+     "phone": null,
+     "rebuild": null,
+     "phoneMinusRebuildUpdates": null
+    }
+   },
+   "occupant": {
+    "phone": null,
+    "rebuild": {
+     "update": 3839,
+     "ms": 63837.0,
+     "letter": "B"
+    }
+   }
+  }
+ ]
+}

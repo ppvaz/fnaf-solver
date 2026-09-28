@@ -1,0 +1,909 @@
+{
+ "schema": "rebuild-audio-plays-v1",
+ "claimLevel": "MODEL_ONLY",
+ "night": "full-06",
+ "variant": "landed",
+ "binary": {
+  "pinned": "66d6e2f6-d9cc45ff",
+  "note": "the audio-trace build; its trace agrees with the retained 7ab9a755 full-06 landed replay on every draw count, RNG state, counter, overlap and watch line (filtered diff 0 lines)"
+ },
+ "traceSha256": "ab1bf20759437a4cd05b3191f69807674bd77cfb2ca8b485b6b30b157707d70f",
+ "audioTraceSha256": "dd72b6adcb88b92c9d72e7e5cddf316a7ce5043029b8277f08667b8ec28638c6",
+ "inputSha256": "cac3d1e7055825725e5a0859532d48e9945ef9d7bd6cf90ce957bf2acc010cc9",
+ "frameTimesSha256": "383d25c80bb3648e9199589ebce7b6782a510eacee4409df3c90e940869541cf",
+ "retainedTraceFilteredDiffLines": 0,
+ "semantics": "asset 22 = handle 17 VENTWALK (the vent bang: Withereds and Balloon Boy entering a vent camera, Balloon Boy arriving at or leaving the office, Mangle entering CAM 06 or leaving the office, per the per-object position watches); 17/18/19 = handles 21/23/24 (Balloon Boy vocals at his hops); 7/8 = handles 7/8 (mask put on / taken off); 5/6 = handles 5/6 (monitor up / down); 29/30 = handles 31/32 (Mangle metal walks)",
+ "plays": [
+  {
+   "tick": 152,
+   "gameS": 2.53,
+   "assetId": 5,
+   "handle": 5,
+   "define": "SOUND_STEREO_CASSETTE_90097704_5"
+  },
+  {
+   "tick": 206,
+   "gameS": 3.43,
+   "assetId": 6,
+   "handle": 6,
+   "define": "SOUND_STEREO_CASSETTE_90097701_6"
+  },
+  {
+   "tick": 248,
+   "gameS": 4.13,
+   "assetId": 5,
+   "handle": 5,
+   "define": "SOUND_STEREO_CASSETTE_90097704_5"
+  },
+  {
+   "tick": 292,
+   "gameS": 4.88,
+   "assetId": 6,
+   "handle": 6,
+   "define": "SOUND_STEREO_CASSETTE_90097701_6"
+  },
+  {
+   "tick": 325,
+   "gameS": 5.43,
+   "assetId": 7,
+   "handle": 7,
+   "define": "SOUND_FENCING_43_GEN_HDF10954_7"
+  },
+  {
+   "tick": 573,
+   "gameS": 9.55,
+   "assetId": 8,
+   "handle": 8,
+   "define": "SOUND_FENCING_42_GEN_HDF10953_8"
+  },
+  {
+   "tick": 600,
+   "gameS": 10.0,
+   "assetId": 27,
+   "handle": 29,
+   "define": "SOUND_WALK5_27"
+  },
+  {
+   "tick": 601,
+   "gameS": 10.02,
+   "assetId": 25,
+   "handle": 27,
+   "define": "SOUND_WALK3_25"
+  },
+  {
+   "tick": 608,
+   "gameS": 10.13,
+   "assetId": 5,
+   "handle": 5,
+   "define": "SOUND_STEREO_CASSETTE_90097704_5"
+  },
+  {
+   "tick": 833,
+   "gameS": 13.84,
+   "assetId": 6,
+   "handle": 6,
+   "define": "SOUND_STEREO_CASSETTE_90097701_6"
+  },
+  {
+   "tick": 859,
+   "gameS": 14.27,
+   "assetId": 7,
+   "handle": 7,
+   "define": "SOUND_FENCING_43_GEN_HDF10954_7"
+  },
+  {
+   "tick": 904,
+   "gameS": 15.01,
+   "assetId": 25,
+   "handle": 27,
+   "define": "SOUND_WALK3_25"
+  },
+  {
+   "tick": 905,
+   "gameS": 15.03,
+   "assetId": 17,
+   "handle": 21,
+   "define": "SOUND_ECHO1_17"
+  },
+  {
+   "tick": 944,
+   "gameS": 15.68,
+   "assetId": 26,
+   "handle": 28,
+   "define": "SOUND_WALK4_26"
+  },
+  {
+   "tick": 1176,
+   "gameS": 19.55,
+   "assetId": 8,
+   "handle": 8,
+   "define": "SOUND_FENCING_42_GEN_HDF10953_8"
+  },
+  {
+   "tick": 1204,
+   "gameS": 20.01,
+   "assetId": 18,
+   "handle": 23,
+   "define": "SOUND_ECHO3B_18"
+  },
+  {
+   "tick": 1204,
+   "gameS": 20.01,
+   "assetId": 22,
+   "handle": 17,
+   "define": "SOUND_VENTWALK1_22"
+  },
+  {
+   "tick": 1211,
+   "gameS": 20.12,
+   "assetId": 5,
+   "handle": 5,
+   "define": "SOUND_STEREO_CASSETTE_90097704_5"
+  },
+  {
+   "tick": 1432,
+   "gameS": 23.84,
+   "assetId": 6,
+   "handle": 6,
+   "define": "SOUND_STEREO_CASSETTE_90097701_6"
+  },
+  {
+   "tick": 1460,
+   "gameS": 24.27,
+   "assetId": 7,
+   "handle": 7,
+   "define": "SOUND_FENCING_43_GEN_HDF10954_7"
+  },
+  {
+   "tick": 1504,
+   "gameS": 25.0,
+   "assetId": 22,
+   "handle": 17,
+   "define": "SOUND_VENTWALK1_22"
+  },
+  {
+   "tick": 1505,
+   "gameS": 25.02,
+   "assetId": 19,
+   "handle": 24,
+   "define": "SOUND_ECHO4B_19"
+  },
+  {
+   "tick": 1505,
+   "gameS": 25.02,
+   "assetId": 29,
+   "handle": 31,
+   "define": "SOUND_METALWALK1_29"
+  },
+  {
+   "tick": 1776,
+   "gameS": 29.54,
+   "assetId": 8,
+   "handle": 8,
+   "define": "SOUND_FENCING_42_GEN_HDF10953_8"
+  },
+  {
+   "tick": 1811,
+   "gameS": 30.13,
+   "assetId": 5,
+   "handle": 5,
+   "define": "SOUND_STEREO_CASSETTE_90097704_5"
+  },
+  {
+   "tick": 1824,
+   "gameS": 30.33,
+   "assetId": 17,
+   "handle": 21,
+   "define": "SOUND_ECHO1_17"
+  },
+  {
+   "tick": 1824,
+   "gameS": 30.33,
+   "assetId": 22,
+   "handle": 17,
+   "define": "SOUND_VENTWALK1_22"
+  },
+  {
+   "tick": 1844,
+   "gameS": 30.67,
+   "assetId": 30,
+   "handle": 32,
+   "define": "SOUND_METALWALK3_30"
+  },
+  {
+   "tick": 2030,
+   "gameS": 33.84,
+   "assetId": 6,
+   "handle": 6,
+   "define": "SOUND_STEREO_CASSETTE_90097701_6"
+  },
+  {
+   "tick": 2057,
+   "gameS": 34.27,
+   "assetId": 7,
+   "handle": 7,
+   "define": "SOUND_FENCING_43_GEN_HDF10954_7"
+  },
+  {
+   "tick": 2102,
+   "gameS": 35.02,
+   "assetId": 23,
+   "handle": 25,
+   "define": "SOUND_WALK1_23"
+  },
+  {
+   "tick": 2250,
+   "gameS": 37.48,
+   "assetId": 22,
+   "handle": 17,
+   "define": "SOUND_VENTWALK1_22"
+  },
+  {
+   "tick": 2372,
+   "gameS": 39.54,
+   "assetId": 8,
+   "handle": 8,
+   "define": "SOUND_FENCING_42_GEN_HDF10953_8"
+  },
+  {
+   "tick": 2408,
+   "gameS": 40.13,
+   "assetId": 5,
+   "handle": 5,
+   "define": "SOUND_STEREO_CASSETTE_90097704_5"
+  },
+  {
+   "tick": 2634,
+   "gameS": 43.83,
+   "assetId": 6,
+   "handle": 6,
+   "define": "SOUND_STEREO_CASSETTE_90097701_6"
+  },
+  {
+   "tick": 2660,
+   "gameS": 44.27,
+   "assetId": 7,
+   "handle": 7,
+   "define": "SOUND_FENCING_43_GEN_HDF10954_7"
+  },
+  {
+   "tick": 2705,
+   "gameS": 45.02,
+   "assetId": 22,
+   "handle": 17,
+   "define": "SOUND_VENTWALK1_22"
+  },
+  {
+   "tick": 2978,
+   "gameS": 49.54,
+   "assetId": 8,
+   "handle": 8,
+   "define": "SOUND_FENCING_42_GEN_HDF10953_8"
+  },
+  {
+   "tick": 3007,
+   "gameS": 50.02,
+   "assetId": 22,
+   "handle": 17,
+   "define": "SOUND_VENTWALK1_22"
+  },
+  {
+   "tick": 3013,
+   "gameS": 50.12,
+   "assetId": 5,
+   "handle": 5,
+   "define": "SOUND_STEREO_CASSETTE_90097704_5"
+  },
+  {
+   "tick": 3237,
+   "gameS": 53.85,
+   "assetId": 6,
+   "handle": 6,
+   "define": "SOUND_STEREO_CASSETTE_90097701_6"
+  },
+  {
+   "tick": 3262,
+   "gameS": 54.27,
+   "assetId": 7,
+   "handle": 7,
+   "define": "SOUND_FENCING_43_GEN_HDF10954_7"
+  },
+  {
+   "tick": 3306,
+   "gameS": 55.01,
+   "assetId": 19,
+   "handle": 24,
+   "define": "SOUND_ECHO4B_19"
+  },
+  {
+   "tick": 3306,
+   "gameS": 55.01,
+   "assetId": 22,
+   "handle": 17,
+   "define": "SOUND_VENTWALK1_22"
+  },
+  {
+   "tick": 3568,
+   "gameS": 59.32,
+   "assetId": 22,
+   "handle": 17,
+   "define": "SOUND_VENTWALK1_22"
+  },
+  {
+   "tick": 3582,
+   "gameS": 59.55,
+   "assetId": 8,
+   "handle": 8,
+   "define": "SOUND_FENCING_42_GEN_HDF10953_8"
+  },
+  {
+   "tick": 3609,
+   "gameS": 60.01,
+   "assetId": 17,
+   "handle": 21,
+   "define": "SOUND_ECHO1_17"
+  },
+  {
+   "tick": 3610,
+   "gameS": 60.03,
+   "assetId": 29,
+   "handle": 31,
+   "define": "SOUND_METALWALK1_29"
+  },
+  {
+   "tick": 3617,
+   "gameS": 60.13,
+   "assetId": 5,
+   "handle": 5,
+   "define": "SOUND_STEREO_CASSETTE_90097704_5"
+  },
+  {
+   "tick": 3839,
+   "gameS": 63.84,
+   "assetId": 6,
+   "handle": 6,
+   "define": "SOUND_STEREO_CASSETTE_90097701_6"
+  },
+  {
+   "tick": 3866,
+   "gameS": 64.27,
+   "assetId": 7,
+   "handle": 7,
+   "define": "SOUND_FENCING_43_GEN_HDF10954_7"
+  },
+  {
+   "tick": 3911,
+   "gameS": 65.02,
+   "assetId": 18,
+   "handle": 23,
+   "define": "SOUND_ECHO3B_18"
+  },
+  {
+   "tick": 3911,
+   "gameS": 65.02,
+   "assetId": 22,
+   "handle": 17,
+   "define": "SOUND_VENTWALK1_22"
+  },
+  {
+   "tick": 3911,
+   "gameS": 65.02,
+   "assetId": 29,
+   "handle": 31,
+   "define": "SOUND_METALWALK1_29"
+  },
+  {
+   "tick": 4182,
+   "gameS": 69.54,
+   "assetId": 8,
+   "handle": 8,
+   "define": "SOUND_FENCING_42_GEN_HDF10953_8"
+  },
+  {
+   "tick": 4212,
+   "gameS": 70.03,
+   "assetId": 22,
+   "handle": 17,
+   "define": "SOUND_VENTWALK1_22"
+  },
+  {
+   "tick": 4217,
+   "gameS": 70.12,
+   "assetId": 5,
+   "handle": 5,
+   "define": "SOUND_STEREO_CASSETTE_90097704_5"
+  },
+  {
+   "tick": 4229,
+   "gameS": 70.32,
+   "assetId": 17,
+   "handle": 21,
+   "define": "SOUND_ECHO1_17"
+  },
+  {
+   "tick": 4229,
+   "gameS": 70.32,
+   "assetId": 22,
+   "handle": 17,
+   "define": "SOUND_VENTWALK1_22"
+  },
+  {
+   "tick": 4441,
+   "gameS": 73.84,
+   "assetId": 6,
+   "handle": 6,
+   "define": "SOUND_STEREO_CASSETTE_90097701_6"
+  },
+  {
+   "tick": 4467,
+   "gameS": 74.27,
+   "assetId": 7,
+   "handle": 7,
+   "define": "SOUND_FENCING_43_GEN_HDF10954_7"
+  },
+  {
+   "tick": 4511,
+   "gameS": 75.0,
+   "assetId": 23,
+   "handle": 25,
+   "define": "SOUND_WALK1_23"
+  },
+  {
+   "tick": 4763,
+   "gameS": 79.2,
+   "assetId": 22,
+   "handle": 17,
+   "define": "SOUND_VENTWALK1_22"
+  },
+  {
+   "tick": 4783,
+   "gameS": 79.53,
+   "assetId": 8,
+   "handle": 8,
+   "define": "SOUND_FENCING_42_GEN_HDF10953_8"
+  },
+  {
+   "tick": 4812,
+   "gameS": 80.02,
+   "assetId": 17,
+   "handle": 21,
+   "define": "SOUND_ECHO1_17"
+  },
+  {
+   "tick": 4812,
+   "gameS": 80.02,
+   "assetId": 22,
+   "handle": 17,
+   "define": "SOUND_VENTWALK1_22"
+  },
+  {
+   "tick": 4818,
+   "gameS": 80.13,
+   "assetId": 5,
+   "handle": 5,
+   "define": "SOUND_STEREO_CASSETTE_90097704_5"
+  },
+  {
+   "tick": 5043,
+   "gameS": 83.84,
+   "assetId": 6,
+   "handle": 6,
+   "define": "SOUND_STEREO_CASSETTE_90097701_6"
+  },
+  {
+   "tick": 5069,
+   "gameS": 84.27,
+   "assetId": 7,
+   "handle": 7,
+   "define": "SOUND_FENCING_43_GEN_HDF10954_7"
+  },
+  {
+   "tick": 5114,
+   "gameS": 85.02,
+   "assetId": 22,
+   "handle": 17,
+   "define": "SOUND_VENTWALK1_22"
+  },
+  {
+   "tick": 5115,
+   "gameS": 85.03,
+   "assetId": 29,
+   "handle": 31,
+   "define": "SOUND_METALWALK1_29"
+  },
+  {
+   "tick": 5360,
+   "gameS": 89.15,
+   "assetId": 22,
+   "handle": 17,
+   "define": "SOUND_VENTWALK1_22"
+  },
+  {
+   "tick": 5383,
+   "gameS": 89.54,
+   "assetId": 8,
+   "handle": 8,
+   "define": "SOUND_FENCING_42_GEN_HDF10953_8"
+  },
+  {
+   "tick": 5412,
+   "gameS": 90.02,
+   "assetId": 17,
+   "handle": 21,
+   "define": "SOUND_ECHO1_17"
+  },
+  {
+   "tick": 5419,
+   "gameS": 90.12,
+   "assetId": 5,
+   "handle": 5,
+   "define": "SOUND_STEREO_CASSETTE_90097704_5"
+  },
+  {
+   "tick": 5643,
+   "gameS": 93.84,
+   "assetId": 6,
+   "handle": 6,
+   "define": "SOUND_STEREO_CASSETTE_90097701_6"
+  },
+  {
+   "tick": 5669,
+   "gameS": 94.28,
+   "assetId": 7,
+   "handle": 7,
+   "define": "SOUND_FENCING_43_GEN_HDF10954_7"
+  },
+  {
+   "tick": 5713,
+   "gameS": 95.0,
+   "assetId": 25,
+   "handle": 27,
+   "define": "SOUND_WALK3_25"
+  },
+  {
+   "tick": 5987,
+   "gameS": 99.54,
+   "assetId": 8,
+   "handle": 8,
+   "define": "SOUND_FENCING_42_GEN_HDF10953_8"
+  },
+  {
+   "tick": 6015,
+   "gameS": 100.01,
+   "assetId": 18,
+   "handle": 23,
+   "define": "SOUND_ECHO3B_18"
+  },
+  {
+   "tick": 6015,
+   "gameS": 100.01,
+   "assetId": 22,
+   "handle": 17,
+   "define": "SOUND_VENTWALK1_22"
+  },
+  {
+   "tick": 6021,
+   "gameS": 100.12,
+   "assetId": 5,
+   "handle": 5,
+   "define": "SOUND_STEREO_CASSETTE_90097704_5"
+  },
+  {
+   "tick": 6244,
+   "gameS": 103.84,
+   "assetId": 6,
+   "handle": 6,
+   "define": "SOUND_STEREO_CASSETTE_90097701_6"
+  },
+  {
+   "tick": 6269,
+   "gameS": 104.27,
+   "assetId": 7,
+   "handle": 7,
+   "define": "SOUND_FENCING_43_GEN_HDF10954_7"
+  },
+  {
+   "tick": 6313,
+   "gameS": 105.0,
+   "assetId": 27,
+   "handle": 29,
+   "define": "SOUND_WALK5_27"
+  },
+  {
+   "tick": 6587,
+   "gameS": 109.55,
+   "assetId": 8,
+   "handle": 8,
+   "define": "SOUND_FENCING_42_GEN_HDF10953_8"
+  },
+  {
+   "tick": 6614,
+   "gameS": 110.01,
+   "assetId": 22,
+   "handle": 17,
+   "define": "SOUND_VENTWALK1_22"
+  },
+  {
+   "tick": 6621,
+   "gameS": 110.12,
+   "assetId": 5,
+   "handle": 5,
+   "define": "SOUND_STEREO_CASSETTE_90097704_5"
+  },
+  {
+   "tick": 6634,
+   "gameS": 110.34,
+   "assetId": 17,
+   "handle": 21,
+   "define": "SOUND_ECHO1_17"
+  },
+  {
+   "tick": 6634,
+   "gameS": 110.34,
+   "assetId": 22,
+   "handle": 17,
+   "define": "SOUND_VENTWALK1_22"
+  },
+  {
+   "tick": 6654,
+   "gameS": 110.67,
+   "assetId": 29,
+   "handle": 31,
+   "define": "SOUND_METALWALK1_29"
+  },
+  {
+   "tick": 6844,
+   "gameS": 113.83,
+   "assetId": 6,
+   "handle": 6,
+   "define": "SOUND_STEREO_CASSETTE_90097701_6"
+  },
+  {
+   "tick": 6870,
+   "gameS": 114.27,
+   "assetId": 7,
+   "handle": 7,
+   "define": "SOUND_FENCING_43_GEN_HDF10954_7"
+  },
+  {
+   "tick": 6914,
+   "gameS": 115.0,
+   "assetId": 27,
+   "handle": 29,
+   "define": "SOUND_WALK5_27"
+  },
+  {
+   "tick": 6915,
+   "gameS": 115.02,
+   "assetId": 22,
+   "handle": 17,
+   "define": "SOUND_VENTWALK1_22"
+  },
+  {
+   "tick": 6958,
+   "gameS": 115.74,
+   "assetId": 22,
+   "handle": 17,
+   "define": "SOUND_VENTWALK1_22"
+  },
+  {
+   "tick": 7186,
+   "gameS": 119.54,
+   "assetId": 8,
+   "handle": 8,
+   "define": "SOUND_FENCING_42_GEN_HDF10953_8"
+  },
+  {
+   "tick": 7214,
+   "gameS": 120.0,
+   "assetId": 22,
+   "handle": 17,
+   "define": "SOUND_VENTWALK1_22"
+  },
+  {
+   "tick": 7221,
+   "gameS": 120.12,
+   "assetId": 5,
+   "handle": 5,
+   "define": "SOUND_STEREO_CASSETTE_90097704_5"
+  },
+  {
+   "tick": 7444,
+   "gameS": 123.85,
+   "assetId": 6,
+   "handle": 6,
+   "define": "SOUND_STEREO_CASSETTE_90097701_6"
+  },
+  {
+   "tick": 7469,
+   "gameS": 124.28,
+   "assetId": 7,
+   "handle": 7,
+   "define": "SOUND_FENCING_43_GEN_HDF10954_7"
+  },
+  {
+   "tick": 7514,
+   "gameS": 125.0,
+   "assetId": 30,
+   "handle": 32,
+   "define": "SOUND_METALWALK3_30"
+  },
+  {
+   "tick": 7752,
+   "gameS": 128.92,
+   "assetId": 22,
+   "handle": 17,
+   "define": "SOUND_VENTWALK1_22"
+  },
+  {
+   "tick": 7789,
+   "gameS": 129.54,
+   "assetId": 8,
+   "handle": 8,
+   "define": "SOUND_FENCING_42_GEN_HDF10953_8"
+  },
+  {
+   "tick": 7817,
+   "gameS": 130.0,
+   "assetId": 19,
+   "handle": 24,
+   "define": "SOUND_ECHO4B_19"
+  },
+  {
+   "tick": 7818,
+   "gameS": 130.02,
+   "assetId": 29,
+   "handle": 31,
+   "define": "SOUND_METALWALK1_29"
+  },
+  {
+   "tick": 7824,
+   "gameS": 130.12,
+   "assetId": 5,
+   "handle": 5,
+   "define": "SOUND_STEREO_CASSETTE_90097704_5"
+  },
+  {
+   "tick": 8050,
+   "gameS": 133.84,
+   "assetId": 6,
+   "handle": 6,
+   "define": "SOUND_STEREO_CASSETTE_90097701_6"
+  },
+  {
+   "tick": 8077,
+   "gameS": 134.27,
+   "assetId": 7,
+   "handle": 7,
+   "define": "SOUND_FENCING_43_GEN_HDF10954_7"
+  },
+  {
+   "tick": 8121,
+   "gameS": 135.0,
+   "assetId": 30,
+   "handle": 32,
+   "define": "SOUND_METALWALK3_30"
+  },
+  {
+   "tick": 8393,
+   "gameS": 139.54,
+   "assetId": 8,
+   "handle": 8,
+   "define": "SOUND_FENCING_42_GEN_HDF10953_8"
+  },
+  {
+   "tick": 8421,
+   "gameS": 140.01,
+   "assetId": 17,
+   "handle": 21,
+   "define": "SOUND_ECHO1_17"
+  },
+  {
+   "tick": 8422,
+   "gameS": 140.03,
+   "assetId": 25,
+   "handle": 27,
+   "define": "SOUND_WALK3_25"
+  },
+  {
+   "tick": 8428,
+   "gameS": 140.13,
+   "assetId": 5,
+   "handle": 5,
+   "define": "SOUND_STEREO_CASSETTE_90097704_5"
+  },
+  {
+   "tick": 8651,
+   "gameS": 143.84,
+   "assetId": 6,
+   "handle": 6,
+   "define": "SOUND_STEREO_CASSETTE_90097701_6"
+  },
+  {
+   "tick": 8677,
+   "gameS": 144.27,
+   "assetId": 7,
+   "handle": 7,
+   "define": "SOUND_FENCING_43_GEN_HDF10954_7"
+  },
+  {
+   "tick": 8721,
+   "gameS": 145.0,
+   "assetId": 17,
+   "handle": 21,
+   "define": "SOUND_ECHO1_17"
+  },
+  {
+   "tick": 8721,
+   "gameS": 145.0,
+   "assetId": 22,
+   "handle": 17,
+   "define": "SOUND_VENTWALK1_22"
+  },
+  {
+   "tick": 8995,
+   "gameS": 149.55,
+   "assetId": 8,
+   "handle": 8,
+   "define": "SOUND_FENCING_42_GEN_HDF10953_8"
+  }
+ ],
+ "bangsGameS": [
+  20.01,
+  25.0,
+  30.33,
+  37.48,
+  45.02,
+  50.02,
+  55.01,
+  59.32,
+  65.02,
+  70.03,
+  70.32,
+  79.2,
+  80.02,
+  85.02,
+  89.15,
+  100.01,
+  110.01,
+  110.34,
+  115.02,
+  115.74,
+  120.0,
+  128.92,
+  145.0
+ ],
+ "balloonBoy": {
+  "source": "CHOWDREN_WATCH=balloon boy:0,1,2 position changes on the same replay",
+  "hopsGameS": [
+   10.0,
+   15.01,
+   25.0,
+   30.33
+  ],
+  "leaveGameS": 37.48,
+  "hopsAfterLeaveGameS": [
+   50.02,
+   55.01,
+   65.02
+  ],
+  "officeArrivalGameS": 70.32,
+  "note": "value 0 stayed 0 through the 40.0 s and 45.0 s rolls after the leave; value 1 (B) stayed 0 throughout"
+ },
+ "witheredBonnie": {
+  "hopsGameS": [
+   5.02,
+   10.02,
+   15.68,
+   20.01,
+   30.33
+  ],
+  "leaveGameS": 38.78,
+  "hopsAfterLeaveGameS": [
+   40.03,
+   45.02,
+   50.02
+  ],
+  "officeArrivalGameS": 60.34
+ }
+}

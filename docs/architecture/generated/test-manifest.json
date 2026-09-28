@@ -4008,6 +4008,24 @@
       }
     },
     {
+      "id": "tools/recompile/test-phone-input-ledger.py",
+      "lane": "test:unit",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "tools/recompile/test-schedule-replay.mjs",
       "lane": "test:unit",
       "owner": "legacy migration",
