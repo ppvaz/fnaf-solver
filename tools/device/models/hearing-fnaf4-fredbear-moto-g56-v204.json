@@ -1,0 +1,51 @@
+{
+  "schema": "fnaf4-fredbear-hearing-v1",
+  "id": "hearing-fnaf4-fredbear-moto-g56-v204",
+  "claimLevel": "DEVICE_MEASURED on one Night 5 run (fnaf4-loop-n5b-teach-20260927T230102385Z) and the retained Nights 1-4 recordings as silence; every floor sits between a measured event and measured silence at the same grid instants. No route is promoted by this file.",
+  "evidence": "docs/evidence/fnaf4-night5-n5b-20260927.json",
+  "why": "Fredbear's side sounds (h26 landing LEFT, h25 landing RIGHT: follow AV11/AV17 = 3, g239/g242, channel 8 at 45 %, g497) reach the A2DP mix about 5 dB under the room's own ambience, so a 0.6 s matched filter peaks at 0.32-0.42 against a 0.55 default and they were never published on n5b. Every one of them can only start on the level's 3000 ms grid (the roll g286, the repels g502/g503, the closet ejects g522/g523) and every laugh on its 10000 ms grid (the fakes g530, the room teleports g639/g640 on the 30000 ms one), so the detector publishes low candidates and the runner accepts only those whose onset sits on the grid.",
+  "families": {
+    "fb-left": { "handles": [26], "windowS": 1.0, "emitNcc": 0.15, "maxHops": 5, "means": "landed in the living room's LEFT side (AV11 = 3)" },
+    "fb-right": { "handles": [25], "windowS": 1.0, "emitNcc": 0.15, "maxHops": 5, "means": "landed in the living room's RIGHT side (AV17 = 3)" },
+    "laugh": { "handles": [27, 28, 36, 37, 38], "windowS": 1.0, "emitNcc": 0.2, "maxHops": 5, "means": "one of the five laughs (AV11 = 1..5, g531-g535)" }
+  },
+  "hopS": 0.1,
+  "sideGrid": {
+    "periodMs": { "shadow0": 3000, "shadow1": 2000 },
+    "sources": "g286 (shadow 0) / g287 (shadow >= 1) rolls; g502/g503 door repels and g522/g523 closet ejects are Every 3000 too",
+    "onsetOffsetMs": -50,
+    "halfWidthMs": 150,
+    "minNcc": 0.23,
+    "sideRatio": 1.5,
+    "decideAfterMs": 2000
+  },
+  "laughGrid": {
+    "periodMs": 10000,
+    "roomPeriodMs": { "shadow0": 30000, "shadow1": 20000 },
+    "sources": "g530 fakes every 10000 ms; g639/g640 (g641/g642 under shadow) teleport to the closet or the bed on the room period, each with a laugh",
+    "onsetOffsetMs": -50,
+    "halfWidthMs": 150,
+    "minNcc": 0.3,
+    "decideAfterMs": 2000
+  },
+  "quietWalk": {
+    "why": "Our own carpet run (h4, s0004, 1477 ms) is the loudest thing in the mix (NCC 0.60-0.85): n5b's walks covered the grid instants at 32.4 s and 35.4 s. A walk is issued so that its run sound starts after the first windowClearMs of the tick's window and ends before the next tick's window opens. Onsets after the issue: backs from a door or the closet 433-597 ms, door and closet double taps 551-701 ms (the record's runOnsets rows, Nights 1-5).",
+    "runOnsetAfterIssueMs": { "press": [433, 597], "double": [551, 701] },
+    "runLengthMs": 1477,
+    "windowClearMs": 800
+  },
+  "door": {
+    "openAfterReleaseMs": [360, 390],
+    "releaseAfterOnsetMs": 50,
+    "why": "n5b: a back pressed 1 ms after letting go of the door was dropped 2 times of 2 (the door still reopening); the first frame that reads the door open comes 361-384 ms after the release (frames every ~100 ms). A tick's sound onset trails the game's tick by the A2DP lag (112-244 ms, cal0), so a release 50 ms after the onset leaves the door shut on the tick."
+  },
+  "fredcheck": {
+    "roomDwellS": 10,
+    "why": "g97/g99/g104/g374 set fredcheck at the end of every walk home (door, closet, bed); g558 kills when Fredbear AV6 >= 10, i.e. after 10 s on the bed or in the closet."
+  },
+  "idle": {
+    "stillS": 25,
+    "holdCapS": 18,
+    "why": "g566/g564: 25 s without a carpet run (g567) arms the black flash on any Fredbear night; a door hold is not a run."
+  }
+}

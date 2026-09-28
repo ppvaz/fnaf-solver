@@ -1591,10 +1591,29 @@
       ]
     },
     {
+      "file": "tools/device/fnaf4-fredbear.mjs",
+      "imports": [
+        "node:fs"
+      ]
+    },
+    {
+      "file": "tools/device/fnaf4-hearing-evidence.mjs",
+      "imports": [
+        "./fnaf4-fredbear.mjs",
+        "node:crypto",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url",
+        "node:zlib"
+      ]
+    },
+    {
       "file": "tools/device/fnaf4-run.mjs",
       "imports": [
         "../../apps/device/src/physical-ports.js",
         "../../packages/adapters/src/transports/hid.js",
+        "./fnaf4-fredbear.mjs",
         "./native-regions.mjs",
         "./night-kit.mjs",
         "node:child_process",
@@ -2041,6 +2060,15 @@
         "./fnaf3-detectors.mjs",
         "./fnaf3-run.mjs",
         "./native-regions.mjs",
+        "node:fs"
+      ]
+    },
+    {
+      "file": "tools/device/test-fnaf4-fredbear.mjs",
+      "imports": [
+        "../../packages/adapters/src/transports/hid.js",
+        "./fnaf4-fredbear.mjs",
+        "./night-kit.mjs",
         "node:fs"
       ]
     },

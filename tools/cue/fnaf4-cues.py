@@ -50,8 +50,15 @@ HOP_S = 0.1
 # family is used for: Chica walking up to the right door while the loop
 # listened matched the step family at 0.36-0.41 and nothing else warned of her
 # (n4e, 80.3-81.7 s); she arrived before she breathed and the flash met her.
+# Fredbear's families (fb-left, fb-right, laugh) take their window and their
+# publishing floor from the hearing model (--hearing): they are published low
+# and accepted by the runner only on the level's own grid (fnaf4-fredbear.mjs).
 FAMILY_THRESHOLD = {"step": 0.33}
+FAMILY_WIN_S: dict = {}
+FAMILY_MAX_HOPS: dict = {}
 WIN_S = 0.6
+HEARING = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "device", "models",
+                       "hearing-fnaf4-fredbear-moto-g56-v204.json")
 BREATH_WIN_S = 1.0
 # (family, handle, meaning). A family is what a caller acts on; each handle in
 # it is its own template unless its waveform IS another handle's (a 0.4 s chunk
@@ -80,6 +87,34 @@ TEMPLATES = [
     ("h3", 3, "follow AV6=1"), ("h11", 11, "follow AV6=2"), ("h12", 12, "follow AV6=3"),
     ("h40", 40, "follow AV20=1"), ("h41", 41, "follow AV20=2"), ("h46", 46, "follow AV20=3"),
 ]
+
+
+def load_hearing(path: str) -> dict:
+    """{family: (windowS, emitNcc, maxHops)} from a fnaf4-fredbear-hearing-v1 file;
+    refuses a family or handle set this detector has no templates for."""
+    with open(path) as f:
+        model = json.load(f)
+    if model.get("schema") != "fnaf4-fredbear-hearing-v1":
+        raise ValueError(f"{path}: not a fnaf4-fredbear-hearing-v1 file")
+    out = {}
+    for family, spec in model["families"].items():
+        handles = sorted(h for fam, h, _ in TEMPLATES if fam == family)
+        if not handles:
+            raise ValueError(f"{path}: family {family} has no template here")
+        if handles != sorted(spec["handles"]):
+            raise ValueError(f"{path}: {family} handles {spec['handles']} != templates {handles}")
+        win_s, emit, hops = float(spec["windowS"]), float(spec["emitNcc"]), int(spec["maxHops"])
+        if not (0.2 <= win_s <= BREATH_WIN_S and 0.0 < emit < 1.0 and 1 <= hops <= 20):
+            raise ValueError(f"{path}: {family} window {win_s} s, floor {emit} or hops {hops} out of range")
+        out[family] = (win_s, emit, hops)
+    return out
+
+
+def apply_hearing(path: str) -> None:
+    for family, (win_s, emit, hops) in load_hearing(path).items():
+        FAMILY_WIN_S[family] = win_s
+        FAMILY_THRESHOLD[family] = emit
+        FAMILY_MAX_HOPS[family] = hops
 
 
 def load_ref(refs: str, handle: int) -> np.ndarray:
@@ -123,7 +158,8 @@ class Detector:
         for family, handle, _ in TEMPLATES:
             ref = load_ref(refs, handle)
             self.refs[f"{family}#{handle}"] = ref
-            self.templates.append(Template(f"{family}#{handle}", ref))
+            self.templates.append(Template(f"{family}#{handle}", ref,
+                                           win=int(FAMILY_WIN_S.get(family, WIN_S) * SR)))
         self.breath = Template("breath", load_ref(refs, 22), circular=True, win=int(BREATH_WIN_S * SR))
         self.buf = np.zeros(0)
         self.buf_l = np.zeros(0)        # the two channels, aligned with buf: the game pans some
@@ -196,24 +232,32 @@ class Detector:
 
     def _peak(self, name, v, onset, sample_ms):
         # One line per detected onset: keep the best NCC among hops whose onset
-        # estimates agree within 60 ms, and publish it once it stops improving.
+        # estimates agree within 60 ms, and publish it once it stops improving --
+        # or, for a family with a hop cap (Fredbear's, from the hearing model),
+        # after that many hops at most: a 6.3 s laugh would otherwise publish
+        # 6.6 s late, and a return after 10 s with him in the room kills (g558).
+        # A capped onset that keeps matching is published again (same onset).
+        family = name.partition("#")[0]
         st = self.recent.get(name)
-        if v >= FAMILY_THRESHOLD.get(name.partition("#")[0], self.threshold):
+        if v >= FAMILY_THRESHOLD.get(family, self.threshold):
             if st and abs(onset - st[1]) <= int(0.06 * SR):
                 if v > st[0]:
                     st[0], st[1] = v, onset
                 st[2] = 0
+                st[3] += 1
+                if st[3] >= FAMILY_MAX_HOPS.get(family, 1 << 30):
+                    self._flush(name, sample_ms)
                 return
             if st:
                 self._flush(name, sample_ms)
-            self.recent[name] = [v, onset, 0]
+            self.recent[name] = [v, onset, 0, 1]
         elif st:
             st[2] += 1
             if st[2] >= 3:
                 self._flush(name, sample_ms)
 
     def _flush(self, name, sample_ms):
-        v, onset, _ = self.recent.pop(name)
+        v, onset, _, _ = self.recent.pop(name)
         family, _, handle = name.partition("#")
         # Pan: -1 hard left .. +1 hard right, as the share of the MATCHED
         # sample in each channel (each channel projected on the reference over
@@ -322,7 +366,10 @@ def main() -> int:
     ap.add_argument("--start-wall-ms", type=float, default=0.0, help="--wav: wall ms of its first sample")
     ap.add_argument("--raw", help="--live: also keep the raw PCM here (outside the repo)")
     ap.add_argument("--quiet-breath", action="store_true", help="print breath levels only above 0.3")
+    ap.add_argument("--hearing", default=HEARING,
+                    help="fnaf4-fredbear-hearing-v1: window and publishing floor of Fredbear's families")
     args = ap.parse_args()
+    apply_hearing(args.hearing)
     sink = open(args.events, "a") if args.events else None
 
     def emit(e):

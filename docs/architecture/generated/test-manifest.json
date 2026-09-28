@@ -1718,6 +1718,24 @@
       }
     },
     {
+      "id": "tools/cue/test-fnaf4-cues.py",
+      "lane": "test:unit",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "tools/cue/test-latency-experiment.py",
       "lane": "test:unit",
       "owner": "legacy migration",
@@ -2245,6 +2263,30 @@
       "fixedSleeps": [],
       "sharedResources": [],
       "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "tools/device/test-fnaf4-fredbear.mjs",
+      "lane": "test:contracts",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": false,
+      "determinismSignals": [
+        "Date.now",
+        "Date.now",
+        "Date.now"
+      ],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "device-transport"
+      ],
+      "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",
         "runs": 0,

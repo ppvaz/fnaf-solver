@@ -46,9 +46,29 @@ export class RunRecord {
   }
 }
 
+/**
+ * A sleep port for HidWireTransport whose pending sleeps can be cut short: a
+ * hold is then ONE contact from its DOWN to an UP written when the caller
+ * decides, not a chain of reports with a release between each.
+ */
+export function interruptibleSleep() {
+  const pending = new Set();
+  return {
+    sleep: (ms) => new Promise((resolve) => {
+      const done = () => { clearTimeout(timer); pending.delete(done); resolve(); };
+      const timer = setTimeout(done, ms);
+      pending.add(done);
+    }),
+    interrupt: () => { for (const done of [...pending]) done(); },
+  };
+}
+
 /** HID contacts, each one an event row on the host clock. */
 export class Actor {
-  constructor(hid, record, contactMs) { this.hid = hid; this.record = record; this.contactMs = contactMs; }
+  /** `interrupt` cuts the transport's pending sleep (interruptibleSleep): holdWhile needs it. */
+  constructor(hid, record, contactMs, { interrupt = null } = {}) {
+    this.hid = hid; this.record = record; this.contactMs = contactMs; this.interrupt = interrupt;
+  }
   async press(control, point, detail = {}) {
     await this.record.event('input.requested', { control, point, kind: 'press', durationMs: this.contactMs, hostMs: performance.now(), ...detail });
     await this.hid.send({ command: { action: { kind: 'press', durationMs: this.contactMs } }, point });
@@ -65,22 +85,29 @@ export class Actor {
     await this.record.event('input.released', { control, firstReleasedHostMs: between, hostMs: performance.now() });
   }
   /**
-   * Hold a control for up to `maxMs`, in 1000 ms reports back to back, and
-   * let go early once `stop()` says so. The release between two reports is
-   * one host write (well under a 16.7 ms game frame), so the game keeps
-   * seeing the control held.
+   * Hold a control for up to `maxMs` as ONE contact, polling `stop()` every
+   * `pollMs`, and let go as soon as it returns a reason. The earlier version
+   * chained 1000 ms reports with a release between each, on the belief that
+   * one host write is under a game frame; on n5b the held door read open for
+   * 0.44-0.50 s three times in 17 s of holding (native frames, evidence
+   * fnaf4-night5-n5b-20260927), so a repel tick could find it open.
    */
-  async holdWhile(control, point, maxMs, stop) {
+  async holdWhile(control, point, maxMs, stop, { pollMs = 30 } = {}) {
+    if (typeof this.interrupt !== 'function') throw new Error('holdWhile needs the transport\'s interruptible sleep');
     const start = performance.now();
     await this.record.event('input.requested', { control, point, kind: 'hold-while', maxMs, hostMs: start });
     let why = 'max';
-    while (performance.now() - start < maxMs) {
-      const left = maxMs - (performance.now() - start);
-      await this.hid.send({ command: { action: { kind: 'hold', durationMs: Math.max(50, Math.min(1000, Math.round(left))) } }, point });
-      this.record.document.inputsSent += 1;
+    let done = false;
+    const contact = this.hid.send({ command: { action: { kind: 'hold', durationMs: Math.round(maxMs) } }, point })
+      .finally(() => { done = true; });
+    this.record.document.inputsSent += 1;
+    while (!done) {
+      await sleep(pollMs);
+      if (done) break;
       const s = stop();
-      if (s) { why = s; break; }
+      if (s) { why = s; this.interrupt(); break; }
     }
+    await contact;
     await this.record.event('input.released', { control, hostMs: performance.now(), why });
     return { heldMs: performance.now() - start, why };
   }
