@@ -57,8 +57,8 @@ mkdir -p "$CLASSES_DIR" "$DEX_DIR"
     --auto-add-overlay \
     --min-sdk-version 29 \
     --target-sdk-version 36 \
-    --version-code 15 \
-    --version-name 0.1.14 \
+    --version-code 16 \
+    --version-name 0.2.0 \
     -o "$BUILD_DIR/base-unsigned.apk"
 
 "$JAVAC" \
@@ -74,28 +74,17 @@ mkdir -p "$CLASSES_DIR" "$DEX_DIR"
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/AccessibilityProbeActivity.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/AccessibilityGameProbeReceiver.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/AccessibilityProbeService.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/AudioAnalyzer.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/PhaseClock.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/CueDetector.java" \
+    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/NativeFrame.java" \
+    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/Targets.java" \
+    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/CompanionStatus.java" \
+    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/AudioProbeAnalysis.java" \
+    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/AudioProbe.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/PixelWatch.java" \
+    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/Fnaf2Legacy.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/NativeRegions.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/PanAnchor.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/ScreenIdentity.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/NightOnsetLatch.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/ScreenStats.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/NormalizedRect.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/RoiSpec.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/OverlayGeometry.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/OverlayCollisionDetector.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/OverlayRegionFilter.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/OverlaySnapshot.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/BatteryLifeDetector.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/MonitorStateDetector.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/CameraSelectionDetector.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/OverlayCaptureGate.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/OverlayMetrics.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/OverlayCueArbiter.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/OverlaySnapshotRetention.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/CycleLesson.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/TeachPanel.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/Fnaf1Lesson.java" \
@@ -105,9 +94,7 @@ mkdir -p "$CLASSES_DIR" "$DEX_DIR"
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/Fnaf4Lesson.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/Fnaf4PanelView.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/TeachPanelView.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/OverlayView.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/OverlayController.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/CaptureFileProvider.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/CaptureService.java"
 
 "$JAR" --create --file "$BUILD_DIR/classes.jar" -C "$CLASSES_DIR" .

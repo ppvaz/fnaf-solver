@@ -6,9 +6,7 @@ is the temporary A2DP endpoint and authoritative PCM consumer.  This command own
 parts of a run so that a session is not reconstructed from shell history:
 
   tools/cue/latency-experiment.py preflight --connect
-  tools/cue/latency-experiment.py run --seconds 300 \
-    --authority-model /private/tmp/fnaf2-cue-model.txt --shadow-cue bang \
-    --refs /private/tmp/fnaf2-cue-refs
+  tools/cue/latency-experiment.py run ...        # retired with Companion 0.2.0
   tools/cue/latency-experiment.py analyze /path/to/session
 
 ``run`` requires FNaF 2 to be focused and the Cue Helper to be running.  It
@@ -45,7 +43,6 @@ HERE = pathlib.Path(__file__).resolve().parent
 REPO = HERE.parents[1]
 QUERY = REPO / "tools/device/query-cue-helper.sh"
 AUTHORITY = HERE / "audio-authority.py"
-BRIDGE = HERE / "bridge-audio-authority.py"
 COLLECT_FACTS = HERE / "collect-facts.py"
 DEFAULT_MAC = "10:2B:1C:DA:18:2C"
 DEFAULT_REFS = pathlib.Path("/private/tmp/fnaf2-cue-refs")
@@ -845,170 +842,18 @@ def create_run_dir(out_dir: pathlib.Path, name: str) -> pathlib.Path:
 
 
 def run_experiment(args: argparse.Namespace) -> int:
-    checks = preflight(args.mac, args.connect)
-    run_dir = create_run_dir(pathlib.Path(args.outdir).expanduser(), args.name)
-    # Linux limits AF_UNIX socket paths to roughly 108 bytes. Session names
-    # and the external output root are intentionally descriptive, so keep
-    # only this ephemeral transport endpoint short; all evidence stays in the
-    # session directory.
-    authority_socket = (pathlib.Path(args.authority_socket)
-                        if args.authority_socket
-                        else pathlib.Path("/tmp/fnaf2-audio-%d.sock" % os.getpid()))
-    manifest = {
-        "schema": "fnaf2-latency-experiment-v1",
-        "state": "running",
-        "run_dir": str(run_dir),
-        "name": args.name,
-        "seconds_requested": args.seconds,
-        "mac": args.mac,
-        "event_handle": args.handle,
-        "refs": str(pathlib.Path(args.refs).expanduser()),
-        "detector": {"threshold": args.threshold, "prominence": args.prominence,
-                      "confirm": args.confirm,
-                      "match_window_ms": args.match_window_ms,
-                      "blackout_window_ms": args.blackout_window_ms},
-        "authority": {
-            "managed": True,
-            "socket": str(authority_socket),
-            "profile": args.authority_profile,
-            "model": args.authority_model,
-            "shadow_cues": args.shadow_cues,
-            "cue": args.authority_cue,
-        },
-        "visual": {
-            "source": ("native-watch:bb_left_luma"
-                       if os.environ.get("CUE_HELPER_WATCH_READ") == "1"
-                       else "legacy-get:luma"),
-            "log": "visual.tsv",
-        },
-        "preflight": checks,
-        "host_monotonic_start_ns": mono_ns(),
-    }
-    (run_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    """Retired with Companion 0.2.0 (2026-09-27).
 
-    handles: list[object] = []
-    authority = None
-    bridge = None
-    collector = None
-    visual = None
-    monitor_was_running = False
-    audio_result: dict = {}
-    clock_start = None
-    clock_end = None
-    visual_log = run_dir / "visual.tsv"
-    return_code = 1
-    try:
-        clock_start = sync_clock()
-        (run_dir / "clock-start.json").write_text(
-            json.dumps(clock_start, indent=2) + "\n")
-
-        # BlueALSA exposes this PCM exclusively. The managed authority is the
-        # only reader; its raw file and the live fact stream come from one
-        # observation, so the offline and bridged evidence share a clock.
-        monitor_was_running = stop_monitor(args.mac)
-        authority_command = [sys.executable, str(AUTHORITY),
-                             "--socket", str(authority_socket),
-                             "--mac", args.mac,
-                             "--profile", args.authority_profile,
-                             "--quiet",
-                             "--raw-output", str(run_dir / "audio.raw")]
-        if args.authority_model:
-            authority_command.extend(["--model", args.authority_model])
-        for cue in args.shadow_cues:
-            authority_command.extend(["--shadow-cue", cue])
-        authority = logged_process(authority_command,
-                                   run_dir / "authority.log", handles)
-        wait_for_path(authority_socket, authority)
-        wait_for_path(run_dir / "audio.raw", authority)
-
-        collector = logged_process(
-            [sys.executable, str(COLLECT_FACTS),
-             "--socket", str(authority_socket),
-             "--output", str(run_dir / "audio-facts.jsonl")],
-            run_dir / "facts.log", handles)
-        bridge = logged_process(
-            [sys.executable, str(BRIDGE), "--socket", str(authority_socket)],
-            run_dir / "bridge.log", handles)
-
-        visual_start = mono_ns()
-        with (run_dir / "visual.stderr.log").open("x") as errors:
-            visual = subprocess.Popen(
-                [str(QUERY), "watch", str(math.ceil(args.seconds)), str(visual_log)],
-                stdout=subprocess.DEVNULL, stderr=errors, start_new_session=True)
-        manifest.update({"visual_process_start_ns": visual_start,
-                         "state": "capturing"})
-        (run_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
-        print("CAPTURING %ss" % args.seconds)
-        print("Produza o evento no FNaF 2 mantendo o jogo em foco; Ctrl-C aborta com segurança.")
-
-        deadline = mono_ns() + int(args.seconds * 1e9)
-        while mono_ns() < deadline:
-            if authority.poll() is not None:
-                fail("audio authority exited during capture; see authority.log")
-            time.sleep(0.25)
-
-        try:
-            visual.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            stop_process(visual)
-        try:
-            clock_end = sync_clock()
-            (run_dir / "clock-end.json").write_text(
-                json.dumps(clock_end, indent=2) + "\n")
-        except RuntimeError as error:
-            manifest["clock_end_error"] = str(error)
-
-        stop_process(visual)
-        stop_process(authority)
-        stop_process(collector)
-        stop_process(bridge)
-        audio_result = authority_capture_result(run_dir)
-        (run_dir / "audio.json").write_text(
-            json.dumps(audio_result, indent=2) + "\n")
-        dump_helper_log(run_dir / "helper.logcat")
-        analysis = analyse_session(
-            run_dir, pathlib.Path(args.refs).expanduser(), args.handle,
-            args.threshold, args.prominence, args.confirm,
-            merge_clocks(clock_start, clock_end),
-            args.match_window_ms, args.blackout_window_ms,
-            args.authority_cue,
-        )
-        manifest.update({"state": "complete" if audio_result.get("status") == "complete"
-                         else "incomplete", "audio": audio_result,
-                         "visual_exit": visual.returncode if visual else None,
-                         "analysis": analysis, "host_monotonic_end_ns": mono_ns()})
-        (run_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
-        print("SESSION %s" % run_dir)
-        print("AUDIO %s" % audio_result.get("status", "missing"))
-        print("VISUAL exit=%s snapshots=%s" % (
-            visual.returncode if visual else "missing",
-            analysis.get("visual", {}).get("snapshots", 0)))
-        print("PAIRS %d" % len(analysis.get("pairs", [])))
-        print("LIVE_FACT_PAIRS %d" % len(analysis.get("live_fact_pairs", [])))
-        return_code = 0 if audio_result.get("status") == "complete" else 1
-    except KeyboardInterrupt:
-        manifest.update({"state": "aborted", "reason": "keyboard-interrupt"})
-        return_code = 130
-    except Exception as error:
-        manifest.update({"state": "aborted", "reason": str(error)})
-        return_code = 1
-        print("latency-experiment: %s" % error, file=sys.stderr)
-    finally:
-        stop_process(visual)
-        stop_process(authority)
-        stop_process(collector)
-        stop_process(bridge)
-        restore_monitor(args.mac, monitor_was_running)
-        for handle in handles:
-            handle.close()
-        if not audio_result and (run_dir / "audio.raw.meta.json").is_file():
-            audio_result = authority_capture_result(run_dir)
-        if audio_result:
-            (run_dir / "audio.json").write_text(
-                json.dumps(audio_result, indent=2) + "\n")
-        manifest["host_monotonic_end_ns"] = mono_ns()
-        (run_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
-    return return_code
+    The live run fed the APK's authenticated audio-fact port through
+    ``bridge-audio-authority.py`` and logged the ``GET`` single-pixel luma
+    through ``query-cue-helper.sh watch``. The Companion no longer accepts
+    audio facts (its audio path was the ESP32 bench receiver, now removed) and
+    the luma reducers are discontinued sensors, so a new session cannot be
+    captured this way. ``analyze`` still reads every retained session.
+    """
+    print("latency-experiment: run is retired: the Companion (0.2.0) has no audio-fact "
+          "port and no GET luma; reanalyse retained sessions with `analyze`", file=sys.stderr)
+    return 2
 
 
 def command_preflight(args: argparse.Namespace) -> int:

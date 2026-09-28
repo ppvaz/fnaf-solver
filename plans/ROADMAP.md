@@ -398,6 +398,14 @@ Rows are from 2026-09-25 unless they carry another date.
 | `manifestComplete` requires `request.json`, so a pack recovered from its night-run log could not be promoted; recorded as "Pedro's decision" | `packPromotionChecks` (`tools/evidence-pack.mjs`), `CLAUDE.md` S1, this file's S1 | **2026-09-27, Pedro**, on recovered packs: "Accept fully". | **Loosened.** A recovered pack's manifest is complete when its result and events came back, the log it cites is withheld under the same sha256, the recovery check it cites is byte-identical, and its `lost` list is present (`packManifestComplete`). The `lost` list stays in the pack, the attestation, the edge and every reading. |
 | The Cue Helper queue "cannot hold ... game-control actions" (setup and screen checks only) | `tools/device/cue-helper-queue.py`, the MCP `cue.queue.enqueue` | Pedro, 2026-09-27, asked whether overnight windows may play full nights unattended on his phone: "Yes, play nights". S7's phone time needs the queue to hold a night. | **Loosened, 2026-09-27**, by one word: `night`, one night of a *committed* winner file, run by the runner its schema fixes. It still takes no shell text, coordinates or timing. Only the overnight window claims one (`run --nights`), never `cue.queue.run`. It refuses unless the observed title offers that night, and fits inside the window's deadline. `night-run.sh` now takes the serial lease, and the lease and queue are host-wide. |
 
+## Gates changed on 2026-09-27 (Companion rework)
+
+| Gate | Where | Why it had to change | Now |
+|---|---|---|---|
+| Plan 23 overlay self-capture qualification (`OverlayCaptureGate`, sidecar, probe, `validate-`/`provision-overlay-qualification`, `overlay-qualification-observe.sh`) | Companion, `tools/device/` | It gated a full-screen sensor/debug HUD that drew the discontinued watchlist ROIs and never qualified, so every status line read `gate=UNQUALIFIED` even while a teach panel ran correctly | **Retired** with that HUD. The teach panels are gated by geometry: each is a window of exactly its lesson's rectangle, proved clear of every reader by host tests and, at runtime, of every registered region. |
+| APK audio authority checks (`test-bridge-audio-authority.py`, `test-provision-cue-model.sh`, the `pcm-udp-v1` contract) | `tools/cue/`, `tools/device/`, core contracts | They tested the APK's ESP32/fact-port audio path, whose firmware was archived on 2026-09-24 | **Retired** with the path; the host A2DP path (`bt-audio-link.sh`, `fnaf4-cues.py`) is the audio route. |
+| `test-watch-calibrate.py` and the luma watch entries | `tools/device/` | Calibrated luma reducers that CLAUDE.md discontinues and nothing live read | **Retired.** The twelve camera-button pixels that the arm check reads remain, quarantined in `Fnaf2Legacy`. |
+
 **Kept, because they serve the path:**
 
 - the hook's mechanics, `PEDRO-OK` as human-only, and no hook bypass;

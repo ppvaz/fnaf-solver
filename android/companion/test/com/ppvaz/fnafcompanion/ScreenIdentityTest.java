@@ -4,7 +4,7 @@ package com.ppvaz.fnafcompanion;
 public final class ScreenIdentityTest {
     private static int failures;
 
-    private static final class ArrayFrame implements PixelWatch.Frame {
+    private static final class ArrayFrame implements NativeFrame {
         private final int[] pixels = new int[PixelWatch.NATIVE_WIDTH
                 * PixelWatch.NATIVE_HEIGHT];
 
@@ -209,31 +209,15 @@ public final class ScreenIdentityTest {
                         ScreenIdentity.FNAF2_INTRO)
                         && ScreenIdentity.isRecognizedGameScreen(
                         ScreenIdentity.FNAF2_GAME_OVER));
-        check("native control rescues a dark unknown night frame",
-                ScreenIdentity.refineWithNativeControls(ScreenIdentity.UNKNOWN, 34, 0)
-                        == ScreenIdentity.FNAF2_NIGHT
-                        && ScreenIdentity.refineWithNativeControls(ScreenIdentity.UNKNOWN, 0, 47)
-                        == ScreenIdentity.FNAF2_NIGHT);
-        check("native control rescue does not promote menu or low menu baseline",
-                ScreenIdentity.refineWithNativeControls(ScreenIdentity.FNAF2_MENU, 34, 0)
-                        == ScreenIdentity.FNAF2_MENU
-                        && ScreenIdentity.refineWithNativeControls(ScreenIdentity.UNKNOWN, 12, 12)
-                        == ScreenIdentity.UNKNOWN);
-
         // A real menu must never classify as a night: that verdict is the
         // host's positive gate for admitting calibration trials.
         int[][] captured = { capturedMenu0(), capturedMenu1(), capturedMenu2() };
         for (int index = 0; index < captured.length; index++) {
-            check("captured live menu " + index + " is not a night ("
-                            + ScreenIdentity.describe(captured[index]) + ")",
+            check("captured live menu " + index + " is not a night",
                     ScreenIdentity.classify(captured[index]) != ScreenIdentity.FNAF2_NIGHT);
             check("captured live menu " + index + " classifies as the menu",
                     ScreenIdentity.classify(captured[index]) == ScreenIdentity.FNAF2_MENU);
         }
-        check("describe reports every branch",
-                ScreenIdentity.describe(capturedMenu0()).startsWith("screenNight=")
-                        && ScreenIdentity.describe(capturedMenu0()).contains("screenMenu="));
-
         // The FNaF title is deliberately grey/white and must not be inferred
         // as the helper merely because it is a dark 20x9 frame.
         check("foreign grey frame is unknown",

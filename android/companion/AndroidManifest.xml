@@ -3,34 +3,29 @@
     package="com.ppvaz.fnafcompanion">
     <uses-sdk android:minSdkVersion="29" android:targetSdkVersion="36" />
 
-    <!-- Required by the loopback control server and the optional ESP32 Wi-Fi listener. -->
+    <!-- Required by the loopback control server (127.0.0.1 only). -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
-    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
-    <uses-permission
-        android:name="android.permission.NEARBY_WIFI_DEVICES"
-        android:usesPermissionFlags="neverForLocation" />
-    <uses-permission
-        android:name="android.permission.ACCESS_FINE_LOCATION"
-        android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <!-- Explicitly enabled by the user for the read-only HUD window. -->
+    <!-- AUDIO probe only: AudioPlaybackCapture of the projection, reduced on the
+         phone to derived numbers (AudioProbe.java); no audio is stored or sent. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Explicitly enabled by the user for the teach panels (non-interactive overlay windows). -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <!-- Used only to observe the configured A2DP receiver on Android 12+. -->
-    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-    <uses-permission
-        android:name="android.permission.BLUETOOTH"
-        android:maxSdkVersion="30" />
-    <uses-permission
-        android:name="android.permission.BLUETOOTH_ADMIN"
-        android:maxSdkVersion="30" />
 
+    <!-- Every target the Companion may name (Targets.java,
+         tools/device/models/companion-targets-v1.json), so it can read their
+         installed build and launch intent. -->
     <queries>
+        <package android:name="com.scottgames.fivenightsatfreddys" />
         <package android:name="com.scottgames.fnaf2" />
+        <package android:name="com.scottgames.fnaf3" />
+        <package android:name="com.scottgames.fnaf4" />
+        <package android:name="org.fnaf1rebuild.play" />
+        <package android:name="org.fnaf2rebuild.play" />
+        <package android:name="org.fnaf3rebuild.play" />
+        <package android:name="org.fnaf4rebuild.play" />
         <package android:name="com.termux" />
     </queries>
 
@@ -83,10 +78,5 @@
                 android:resource="@xml/accessibility_probe_service" />
         </service>
 
-        <provider
-            android:name="com.ppvaz.fnafcompanion.CaptureFileProvider"
-            android:authorities="com.ppvaz.fnafcompanion.files"
-            android:exported="false"
-            android:grantUriPermissions="true" />
     </application>
 </manifest>

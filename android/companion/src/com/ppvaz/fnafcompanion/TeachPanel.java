@@ -6,9 +6,9 @@ package com.ppvaz.fnafcompanion;
  * <p>The panel is its own window, exactly this rectangle, so WindowManager
  * clips every pixel it draws to it. The rectangle is the largest strip on the
  * left of the office that no reader of the frame samples: it sits between the
- * helper's 20x9 grid rows at y = 300 and y = 420 and left of the CAM 05 block
- * (x >= 600), and clear of the host night predicate's rows, the lifecycle
- * boxes, and the video grader's clock band (y >= 432) and mask bar. Those
+ * FNaF 2 legacy grid rows at y = 300 and y = 420, and clear of the host night
+ * predicate's rows, the lifecycle boxes, and the video grader's clock band
+ * (y >= 432) and mask bar. Those
  * claims are tests, not comments: TeachPanelTest drives every helper reader
  * over a recording frame, and tools/device/test-teach-panel-clearance.py
  * checks the host readers. The rectangle itself is declared once, in
@@ -36,12 +36,6 @@ public final class TeachPanel {
     public static final int HEIGHT = BOTTOM - TOP;
     /** Minimum distance from the panel to any sampled pixel. */
     public static final int GUARD_PX = 10;
-    /**
-     * The one watch entry whose lattice (every 120 px from the origin) cannot
-     * avoid any panel: the service reports it UNKNOWN while the panel may be
-     * on screen. It is a coarse diagnostic with no live consumer.
-     */
-    public static final String WITHHELD_WATCH_ENTRY = "screen_grey_cells";
     /**
      * Frames captured this long after the panel detached may still show it:
      * a margin over the removal's few compositor frames.

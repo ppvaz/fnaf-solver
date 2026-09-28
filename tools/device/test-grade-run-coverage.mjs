@@ -21,6 +21,8 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 // Not instruments, and why. An entry here is a decision, not a formality:
 // deleting one is how a script gets promoted into grade-run.sh.
 const EXCLUDED = new Map([
+  ['audio-probe.mjs', 'bounded live playback-capture qualification probe, not a grader of a completed night; test-audio-probe.mjs gates arguments and derived-only replies'],
+  ['game-screen.py', 'native title identity reader used before setup, not a completed-night grader; calibration retained in companion-game-screen-20260927.json'],
   ['office-seed-bracket.py', 'the office frame seed bracket from a live MMFRuntime logcat; consumed by the seed-lock scorer, not by a run grade yet -- it joins grade-run.sh once runs retain mmfruntime.logcat'],
   ['grade-run.sh', 'the pipeline itself'],
   ['game-teardown.sh', 'a lifecycle action that runs AFTER a night and before there is anything to grade: it stops a target game only once title-observe.py has confirmed the title, so the post-night sequence finishes and the save is banked. It sends one force-stop and reads no run artifact; gated by test-game-teardown.sh'],
@@ -70,7 +72,6 @@ const EXCLUDED = new Map([
   ['policy-equivalence.mjs', 'IR/device/mock-phone equivalence compiler, gated by tools/policyequivalencetest.mjs; it audits artifacts rather than grading a device run'],
   ['policy-search.mjs', 'explicit-dimension structural search library, gated by tools/policysearchtest.mjs; it emits a campaign report rather than grading a live run'],
   ['policy-artifact.mjs', 'compiled policy artifact builder/verifier, gated by tools/policyartifacttest.mjs; it creates execution provenance rather than grading a device run'],
-  ['watch-calibrate.py', 'native PixelWatch spec builder, gated by test-watch-calibrate.py; calibration frames are inputs, not a night-run artifact'],
   ['native-regions.mjs', 'Cue Helper native-region reader: registers rectangles, measures read latency and records calibration corpora; a live observation path and corpus tool, not a post-run grader'],
   ['native-frame.mjs', 'Cue Helper SNAP puller: one native frame as a PNG for title/menu readers and calibration; an observation path, not a post-run grader'],
   ['fnaf1-custom-run.sh', 'lease wrapper for the FNaF 1 Custom Night runner; a live route/calibration executor, not a post-run grader'],
@@ -107,16 +108,12 @@ const EXCLUDED = new Map([
   ['hid-sweep-probe.mjs', 'device probe'],
   ['session-manifest.py', 'the manifest producer -- grade-run.sh consumes its output through validate-session.py; gated by test-session-manifest.sh'],
   ['session.sh', 'sourced helper that threads one session id through the producers, gated by test-session-manifest.sh'],
-  ['validate-overlay-qualification.py', 'validates retained Plan 23 overlay evidence; it gates a qualification record rather than grading a night, gated by test-overlay-qualification.py'],
-  ['overlay-qualification-observe.sh', 'retains paired Plan 23 HUD/off visual latency, draw cadence, resource, and lifecycle telemetry; gated by test-overlay-qualification-observe.sh'],
-  ['provision-overlay-qualification.sh', 'installs a reviewed Plan 23 sidecar into app-private storage; a provisioner, not a run grader, and it must never invent device qualification'],
   ['collect-cue-audio.sh', 'capture helper'],
   ['coords.sh', 'coordinate helper'],
   ['menu.sh', 'the title/menu selector runners source, mock-gated by test-menu.sh'],
   ['title-observe.py', 'live title observer, mock-gated by test-menu.sh -- it classifies a menu, not a run'],
   ['fnaf1-title-observe.sh', 'FNaF 1-only title-observer wrapper: it removes the FNaF 2 default model and passes FNaF 1\'s model explicitly; test-sensor.py proves an inherited FNaF 2 model cannot be used'],
   ['query-cue-helper.sh', 'live helper, mock-gated by test-query-cue-helper.sh'],
-  ['provision-cue-model.sh', 'installs a generated model into the helper\'s private storage on a phone; a provisioner, not a grader -- it has no run to read'],
   ['soak-cue-helper.sh', 'live helper, mock-gated by test-soak-cue-helper.sh'],
   ['select-adb.sh', 'transport helper, gated by test-select-adb.sh'],
 
@@ -156,7 +153,6 @@ const EXCLUDED = new Map([
 // tools/cue/detect.py, and this check did not look at it.
 const SIBLING_EXCLUDED = new Map([
   ['audio-authority.py', 'live rendered-audio authority and run input, not a grader; gated by test-audio-authority.py'],
-  ['bridge-audio-authority.py', 'live transport bridge into Cue Helper, not a run artifact grader; gated by test-bridge-audio-authority.py'],
   ['collect-facts.py', 'fact sidecar producer for the external audio authority (latency-experiment.py); it produces facts rather than grading a run'],
   ['latency-experiment.py', 'paired calibration experiment harness that creates evidence rather than grading a night; gated by test-latency-experiment.py'],
   ['detect.py', 'the bang detector scan-night.sh drives'],

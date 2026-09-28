@@ -347,6 +347,27 @@
       ]
     },
     {
+      "contractId": "companion-status-v1",
+      "id": "companion-status-v1",
+      "version": 1,
+      "owner": "android/companion",
+      "kind": "wire",
+      "purpose": "Stable companion-status-v1 boundary for android/companion; its validator is parseCompanionStatus.",
+      "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
+      "clockDomains": [
+        "declared-by-payload-or-profile"
+      ],
+      "units": "Values carry explicit units or are documented by the owning validator.",
+      "unknownBehavior": "Invalid or unavailable data is rejected or represented as an explicit UNKNOWN state; it is never silently promoted.",
+      "errorBehavior": "Reject malformed, incompatible, uncalibrated, or out-of-budget values at the boundary.",
+      "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
+      "runtimeValidation": "parseCompanionStatus",
+      "conformanceFixtures": [
+        "packages/adapters/test/companion-status.test.js",
+        "android/companion/test/com/ppvaz/fnafcompanion/CompanionStatusTest.java"
+      ]
+    },
+    {
       "contractId": "cue-helper-control-v1",
       "id": "cue-helper-control-v1",
       "version": 1,
@@ -384,26 +405,6 @@
       "runtimeValidation": "encodeFactMessage",
       "conformanceFixtures": [
         "packages/core/test/fixtures/fact-message-v1.jsonl"
-      ]
-    },
-    {
-      "contractId": "pcm-udp-v1",
-      "id": "pcm-udp-v1",
-      "version": 1,
-      "owner": "firmware",
-      "kind": "wire",
-      "purpose": "Stable pcm-udp-v1 boundary for firmware; its validator is 28-byte header.",
-      "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
-      "clockDomains": [
-        "declared-by-payload-or-profile"
-      ],
-      "units": "Values carry explicit units or are documented by the owning validator.",
-      "unknownBehavior": "Invalid or unavailable data is rejected or represented as an explicit UNKNOWN state; it is never silently promoted.",
-      "errorBehavior": "Reject malformed, incompatible, uncalibrated, or out-of-budget values at the boundary.",
-      "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
-      "runtimeValidation": "28-byte header",
-      "conformanceFixtures": [
-        "tools/cue/test-audio-authority.py"
       ]
     },
     {

@@ -1,40 +1,41 @@
 package com.ppvaz.fnafcompanion;
 
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
 
 /**
- * A small, immutable native-resolution visual watchlist.
+ * LEGACY (FNaF 2 retail 2.0.7 on the moto g56): the fixed native pixels the
+ * FNaF 2 night lane still reads on the phone.
  *
- * <p>The helper owns a full-resolution projection so a watch can read native
- * coordinates without shipping a frame to the host.  This class deliberately
- * has no Android dependency: its reducers and canonical spec are tested on the
- * host, while {@link ByteBufferFrame} is the only bridge needed by the
- * capture service.</p>
+ * <p>What is left here is what a live consumer reads, and nothing else:</p>
+ * <ul>
+ * <li>the twelve monitor-map camera-button pixels, served by {@code WATCH} /
+ *     {@code READ} to the camera rule behind the arm check
+ *     ({@code models/camera-rule-moto-g56-v207.json});</li>
+ * <li>the two bottom-control chevron strokes, published on every FNaF 2
+ *     {@code FRAME} and read by {@code packages/adapters/src/button-strokes.js};</li>
+ * <li>the 20x9 lattice the FNaF 2 screen identity and the grid-fitted monitor
+ *     and mask rules still read, and the two control block means the frozen
+ *     {@code fnaf2-frame-trace-v3} columns carry.</li>
+ * </ul>
+ *
+ * <p>The luma, redness, grey-cell, battery-bar, CAM 05, Balloon Boy and Foxy
+ * hall entries left on 2026-09-27: they had no live reader, and CLAUDE.md
+ * discontinues luma reducers and the grid as a starting point. Each of the
+ * readers above is to be converted to a REGION rule on the host after
+ * recalibration (camera pixels and strokes are exact functions of native
+ * pixels a REGION read returns unchanged); until then they stay here, run only
+ * while the target is FNaF 2 ({@link Fnaf2Legacy}).</p>
  */
 public final class PixelWatch {
-    public static final int UNKNOWN = Integer.MIN_VALUE;
-    public static final int NATIVE_WIDTH = 2400;
-    public static final int NATIVE_HEIGHT = 1080;
+    public static final int UNKNOWN = NativeFrame.UNKNOWN;
+    public static final int NATIVE_WIDTH = NativeFrame.WIDTH;
+    public static final int NATIVE_HEIGHT = NativeFrame.HEIGHT;
     public static final int GRID_WIDTH = 20;
     public static final int GRID_HEIGHT = 9;
     public static final int MAX_ENTRIES = 32;
-    /** Four visible interior bars in the stock top-left flashlight meter. */
-    public static final int BATTERY_BAR_COUNT = 4;
-    /** Calibrated display footprint of one fixed monitor-map camera button. */
-    public static final int CAMERA_BUTTON_OVERLAY_WIDTH = 120;
-    public static final int CAMERA_BUTTON_OVERLAY_HEIGHT = 40;
-    /** Provisional Foxy core envelope, measured from native labelled frames. */
-    public static final int FOXY_HALL_X = 1650;
-    public static final int FOXY_HALL_Y = 300;
-    public static final int FOXY_HALL_WIDTH = 450;
-    public static final int FOXY_HALL_HEIGHT = 400;
-    public static final int FOXY_HALL_STEP = 8;
-    /** Redness floor used by the provisional Foxy red-cell channel. */
-    public static final int FOXY_HALL_REDNESS_FLOOR = 15;
     private static final int[] CAMERA_BUTTON_X = new int[] {
             1412, 1720, 1411, 1728, 1424, 1696,
             1776, 1412, 2144, 1984, 2228, 2188
@@ -43,13 +44,6 @@ public final class PixelWatch {
             784, 784, 690, 690, 916, 916,
             606, 590, 548, 716, 652, 784
     };
-    // Native coordinates measured from the exact 2400x1080 FNaF 2 HUD. Each
-    // ROI stays inside one bright meter compartment and avoids its border or
-    // separator so static/noise cannot turn a frame edge into a bar.
-    private static final int[] BATTERY_BAR_X = new int[] {132, 172, 212, 252};
-    private static final int BATTERY_BAR_Y = 70;
-    private static final int BATTERY_BAR_WIDTH = 28;
-    private static final int BATTERY_BAR_HEIGHT = 32;
     /** Native bounds of the persistent lower-left mask control. */
     public static final int MASK_BUTTON_X = 260;
     public static final int MASK_BUTTON_Y = 1004;
@@ -62,7 +56,7 @@ public final class PixelWatch {
     public static final int MONITOR_BUTTON_HEIGHT = 36;
     /** Both lower controls share the same native top edge. */
     public static final int CONTROL_BUTTON_Y = MASK_BUTTON_Y;
-    /** Sparse native sampling keeps the control watches cheaper than a frame. */
+    /** Sampling step of the trace's frozen control block means. */
     public static final int CONTROL_BUTTON_STEP = 16;
     /** Fixed native chevron geometry inside the lower-left mask control. */
     public static final int MASK_STROKE_X_START = 90;
@@ -85,13 +79,6 @@ public final class PixelWatch {
     /** Settled-state bands measured by the native-stroke gate. */
     public static final int CONTROL_STROKE_VISIBLE_MIN = 100;
     public static final int CONTROL_STROKE_ABSENT_MAX = 40;
-    // The CAM 05 feed region, as a block of the 20x9 grid. The screen model's
-    // ROI is (600,180)-(1120,500) of 2400x1080, and at 120 px per cell that
-    // is x 5..9, y 1..4 (inclusive cells).
-    public static final int CAM05_CELL_X0 = 5;
-    public static final int CAM05_CELL_X1 = 9;
-    public static final int CAM05_CELL_Y0 = 1;
-    public static final int CAM05_CELL_Y1 = 4;
 
     /**
      * The native x the capture service samples for grid column {@code gx}: the
@@ -107,18 +94,13 @@ public final class PixelWatch {
         return Math.min(height - 1, (int) (((long) gy * 2 + 1) * height / (GRID_HEIGHT * 2L)));
     }
 
-    /** Native x of grid column boundary {@code logical}, clamped to the frame. */
-    public static int gridEdgeX(int logical, int width) {
-        return Math.min(width - 1, (int) ((long) logical * width / GRID_WIDTH));
-    }
-
-    /** Native y of grid row boundary {@code logical}, clamped to the frame. */
-    public static int gridEdgeY(int logical, int height) {
-        return Math.min(height - 1, (int) ((long) logical * height / GRID_HEIGHT));
-    }
-
-    /** Mean luma over a half-open native rectangle with a sampling step, or -1. */
-    public static int blockLuma(Frame frame, int x0, int y0, int x1, int y1, int step) {
+    /**
+     * Mean luma over a half-open native rectangle with a sampling step, or -1.
+     * Kept only for the frozen {@code fnaf2-frame-trace-v3} columns
+     * ({@code mask_luma}, {@code monitor_luma}), which
+     * {@code tools/device/actuation-frame-metric.py} still requires.
+     */
+    public static int blockLuma(NativeFrame frame, int x0, int y0, int x1, int y1, int step) {
         if (step < 1) return -1;
         long total = 0;
         int count = 0;
@@ -128,28 +110,19 @@ public final class PixelWatch {
                 if (rgb == UNKNOWN) {
                     return -1;
                 }
-                int r = (rgb >> 16) & 0xff;
-                int g = (rgb >> 8) & 0xff;
-                int b = rgb & 0xff;
-                total += (77 * r + 150 * g + 29 * b) >> 8;
+                total += luma(rgb);
                 count++;
             }
         }
         return count == 0 ? -1 : (int) (total / count);
     }
 
-    /** CaptureService's CAM 05 block mean over the capture frame. */
-    public static int cam05BlockLuma(Frame frame) {
-        int width = frame.width();
-        int height = frame.height();
-        return blockLuma(frame,
-                gridEdgeX(CAM05_CELL_X0, width), gridEdgeY(CAM05_CELL_Y0, height),
-                gridEdgeX(CAM05_CELL_X1 + 1, width), gridEdgeY(CAM05_CELL_Y1 + 1, height), 1);
-    }
-
-    public enum Kind { PIXEL, ROI }
-    public enum Reducer {
-        LUMA, YELLOWNESS, MEAN_LUMA, MEAN_REDNESS, GREY_CELLS, RED_CELLS
+    /** Integer Rec. 601 luma of one packed pixel, as every legacy column uses it. */
+    public static int luma(int rgb) {
+        int r = (rgb >> 16) & 0xff;
+        int g = (rgb >> 8) & 0xff;
+        int b = rgb & 0xff;
+        return (77 * r + 150 * g + 29 * b) >> 8;
     }
 
     /** Settled UI surface states inferred from the paired bottom controls. */
@@ -160,57 +133,28 @@ public final class PixelWatch {
         OFFICE_UNMASKED
     }
 
-    /** One bounded pixel or ROI query. Coordinates are native display pixels. */
+    /** One fixed native pixel, reduced to its yellowness min(r, g) - b. */
     public static final class Entry {
         public final String name;
-        public final Kind kind;
         public final int x;
         public final int y;
-        public final int width;
-        public final int height;
-        public final Reducer reducer;
-        public final int step;
-        public final int greySpread;
 
-        public Entry(String name, Kind kind, int x, int y, int width, int height,
-                Reducer reducer, int step, int greySpread) {
+        public Entry(String name, int x, int y) {
             if (name == null || name.length() == 0 || name.length() > 31
                     || !name.matches("[A-Za-z0-9_-]+")) {
                 throw new IllegalArgumentException("invalid watch entry name");
             }
-            if (kind == null || reducer == null || width < 1 || height < 1
-                    || x < 0 || y < 0 || step < 1 || greySpread < 0
-                    || greySpread > 255) {
+            if (x < 0 || y < 0) {
                 throw new IllegalArgumentException("invalid watch entry bounds");
             }
-            if (kind == Kind.PIXEL && (width != 1 || height != 1)) {
-                throw new IllegalArgumentException("pixel watch must be 1x1");
-            }
-            if (kind == Kind.ROI && (reducer == Reducer.LUMA
-                    || reducer == Reducer.YELLOWNESS)) {
-                throw new IllegalArgumentException("ROI needs an aggregate reducer");
-            }
-            if (kind == Kind.PIXEL && (reducer == Reducer.MEAN_LUMA
-                    || reducer == Reducer.MEAN_REDNESS
-                    || reducer == Reducer.GREY_CELLS
-                    || reducer == Reducer.RED_CELLS)) {
-                throw new IllegalArgumentException("pixel needs a pixel reducer");
-            }
             this.name = name;
-            this.kind = kind;
             this.x = x;
             this.y = y;
-            this.width = width;
-            this.height = height;
-            this.reducer = reducer;
-            this.step = step;
-            this.greySpread = greySpread;
         }
 
+        /** The pixel-watch-v1 canonical row: a 1x1 YELLOWNESS pixel. */
         String canonical() {
-            return String.format(Locale.US, "%s|%s|%d|%d|%d|%d|%s|%d|%d",
-                    name, kind.name(), x, y, width, height, reducer.name(),
-                    step, greySpread);
+            return String.format(Locale.US, "%s|PIXEL|%d|%d|1|1|YELLOWNESS|1|0", name, x, y);
         }
     }
 
@@ -250,11 +194,6 @@ public final class PixelWatch {
             return sha256;
         }
 
-        public boolean hasName(String name) {
-            for (Entry entry : entries) if (entry.name.equals(name)) return true;
-            return false;
-        }
-
         public int indexOfName(String name) {
             if (name == null) return -1;
             for (int index = 0; index < entries.length; index++) {
@@ -270,285 +209,64 @@ public final class PixelWatch {
         return String.format(Locale.US, "cam%02d_button", cameraNumber);
     }
 
-    /**
-     * Verify that an entry is the shared profile-bound camera point. This is
-     * deliberately owned by PixelWatch so the detector cannot drift from the
-     * capture/UI geometry by maintaining a second coordinate table.
-     */
+    /** Whether an entry is the shared profile-bound point of one camera button. */
     public static boolean isCanonicalCameraButton(Entry entry, int cameraNumber) {
         if (entry == null || cameraNumber < 1
                 || cameraNumber > CAMERA_BUTTON_X.length) return false;
         int index = cameraNumber - 1;
         return cameraButtonName(cameraNumber).equals(entry.name)
-                && entry.kind == Kind.PIXEL
-                && entry.reducer == Reducer.YELLOWNESS
                 && entry.x == CAMERA_BUTTON_X[index]
                 && entry.y == CAMERA_BUTTON_Y[index];
-    }
-
-    public static String batteryBarName(int barNumber) {
-        if (barNumber < 1 || barNumber > BATTERY_BAR_COUNT) return null;
-        return "battery_bar_" + barNumber;
-    }
-
-    public static boolean isCanonicalBatteryBar(Entry entry, int barNumber) {
-        if (entry == null || barNumber < 1 || barNumber > BATTERY_BAR_COUNT) return false;
-        int index = barNumber - 1;
-        return batteryBarName(barNumber).equals(entry.name)
-                && entry.kind == Kind.ROI
-                && entry.reducer == Reducer.MEAN_LUMA
-                && entry.x == BATTERY_BAR_X[index]
-                && entry.y == BATTERY_BAR_Y
-                && entry.width == BATTERY_BAR_WIDTH
-                && entry.height == BATTERY_BAR_HEIGHT
-                && entry.step == 4;
-    }
-
-    /** Return whether an entry is one of the four flashlight-meter ROIs. */
-    public static boolean isBatteryBar(Entry entry) {
-        for (int number = 1; number <= BATTERY_BAR_COUNT; number++) {
-            if (isCanonicalBatteryBar(entry, number)) return true;
-        }
-        return false;
-    }
-
-    public static boolean isCanonicalFoxyHall(Entry entry, String channel) {
-        if (entry == null || channel == null) return false;
-        Reducer reducer;
-        if ("luma".equals(channel)) reducer = Reducer.MEAN_LUMA;
-        else if ("redness".equals(channel)) reducer = Reducer.MEAN_REDNESS;
-        else if ("red_cells".equals(channel)) reducer = Reducer.RED_CELLS;
-        else return false;
-        String name = "red_cells".equals(channel)
-                ? "foxy_hall_red_cells" : "foxy_hall_mean_" + channel;
-        return entry.name.equals(name)
-                && entry.kind == Kind.ROI && entry.reducer == reducer
-                && entry.x == FOXY_HALL_X && entry.y == FOXY_HALL_Y
-                && entry.width == FOXY_HALL_WIDTH && entry.height == FOXY_HALL_HEIGHT
-                && entry.step == FOXY_HALL_STEP
-                && (!"red_cells".equals(channel)
-                    || entry.greySpread == FOXY_HALL_REDNESS_FLOOR);
-    }
-
-    public static boolean isCanonicalMaskButton(Entry entry) {
-        return entry != null && "mask_button_mean_luma".equals(entry.name)
-                && entry.kind == Kind.ROI && entry.reducer == Reducer.MEAN_LUMA
-                && entry.x == MASK_BUTTON_X && entry.y == MASK_BUTTON_Y
-                && entry.width == MASK_BUTTON_WIDTH && entry.height == MASK_BUTTON_HEIGHT
-                && entry.step == CONTROL_BUTTON_STEP;
-    }
-
-    public static boolean isCanonicalMonitorButton(Entry entry) {
-        return entry != null && "monitor_button_mean_luma".equals(entry.name)
-                && entry.kind == Kind.ROI && entry.reducer == Reducer.MEAN_LUMA
-                && entry.x == MONITOR_BUTTON_X && entry.y == MONITOR_BUTTON_Y
-                && entry.width == MONITOR_BUTTON_WIDTH && entry.height == MONITOR_BUTTON_HEIGHT
-                && entry.step == CONTROL_BUTTON_STEP;
-    }
-
-    /** A reusable source view over an RGBA/RGB byte buffer. */
-    public static final class ByteBufferFrame implements Frame {
-        private ByteBuffer buffer;
-        private int width;
-        private int height;
-        private int rowStride;
-        private int pixelStride;
-
-        public void set(ByteBuffer buffer, int width, int height,
-                int rowStride, int pixelStride) {
-            this.buffer = buffer;
-            this.width = width;
-            this.height = height;
-            this.rowStride = rowStride;
-            this.pixelStride = pixelStride;
-        }
-
-        @Override public int width() { return width; }
-        @Override public int height() { return height; }
-
-        @Override public int rgb(int x, int y) {
-            if (buffer == null || x < 0 || y < 0 || x >= width || y >= height) {
-                return UNKNOWN;
-            }
-            int offset = y * rowStride + x * pixelStride;
-            if (offset < 0 || offset + 2 >= buffer.limit()) return UNKNOWN;
-            return ((buffer.get(offset) & 0xff) << 16)
-                    | ((buffer.get(offset + 1) & 0xff) << 8)
-                    | (buffer.get(offset + 2) & 0xff);
-        }
-    }
-
-    /** Small source interface so reducer behavior is host-testable. */
-    public interface Frame {
-        int width();
-        int height();
-        int rgb(int x, int y);
     }
 
     private PixelWatch() {}
 
     /**
-     * The shared watchlist. The BB anchor is the sourced
-     * (451,730) observation; the CAM 05 ROI, coarse whole-screen grey count,
-     * and flashlight-meter bars are existing helper observations expressed in
-     * native coordinates.
-     *
-     * <p>The twelve {@code camNN_button} pixels are the monitor map's camera
-     * buttons, measured on 2026-09-01 labelled captures of the moto g56
-     * (2400x1080): the selected button renders yellow
-     * ({@code yellowness = min(r,g) - b} near 194) at a fixed position on the
-     * map layout drawing, which stays fixed while camera feeds pan. One pixel
-     * per button centre is deterministic because the button is ~120x40 px of
-     * fixed UI at native resolution. Coordinates are the measured button
-     * centres; a camera-rule consumer reads them through {@code READ}.</p>
-     *
-     * <p>The three {@code foxy_hall_*} entries are deliberately provisional:
-     * they provide the native-resolution hall envelope needed to collect and
-     * calibrate Foxy/empty frames, but no live controller may treat any raw
-     * value as a qualified Foxy fact until a separated holdout artifact exists.</p>
-     *
-     * <p>The paired bottom-control ROIs are observation-only collection
-     * channels. The left mask control is present both in the office and while
-     * the mask is held; the right open-monitor control is present in the
-     * office and absent while the mask is held. The display annotations cover
-     * the inner chevrons rather than the full lower bars, leaving a clear
-     * center gap. A downstream calibration may therefore use the pair, but a
-     * raw value is not itself a qualified mask fact.</p>
+     * The twelve monitor-map camera buttons, measured on 2026-09-01 labelled
+     * captures of the moto g56 (2400x1080): the selected button renders
+     * yellow (yellowness near 194) at a fixed position on the map layout
+     * drawing, which stays fixed while camera feeds pan. One pixel per button
+     * centre; the camera rule reads them through {@code READ}.
      */
     public static Spec defaultSpec() {
-        return new Spec(new Entry[] {
-                new Entry("bb_left_luma", Kind.PIXEL, 451, 730, 1, 1,
-                        Reducer.LUMA, 1, 0),
-                new Entry("bb_left_yellowness", Kind.PIXEL, 451, 730, 1, 1,
-                        Reducer.YELLOWNESS, 1, 0),
-                new Entry("cam05_mean_luma", Kind.ROI, 600, 180, 520, 320,
-                        Reducer.MEAN_LUMA, 4, 0),
-                new Entry("screen_grey_cells", Kind.ROI, 0, 0,
-                        NATIVE_WIDTH, NATIVE_HEIGHT, Reducer.GREY_CELLS, 120, 25),
-                new Entry(batteryBarName(1), Kind.ROI, BATTERY_BAR_X[0],
-                        BATTERY_BAR_Y, BATTERY_BAR_WIDTH, BATTERY_BAR_HEIGHT,
-                        Reducer.MEAN_LUMA, 4, 0),
-                new Entry(batteryBarName(2), Kind.ROI, BATTERY_BAR_X[1],
-                        BATTERY_BAR_Y, BATTERY_BAR_WIDTH, BATTERY_BAR_HEIGHT,
-                        Reducer.MEAN_LUMA, 4, 0),
-                new Entry(batteryBarName(3), Kind.ROI, BATTERY_BAR_X[2],
-                        BATTERY_BAR_Y, BATTERY_BAR_WIDTH, BATTERY_BAR_HEIGHT,
-                        Reducer.MEAN_LUMA, 4, 0),
-                new Entry(batteryBarName(4), Kind.ROI, BATTERY_BAR_X[3],
-                        BATTERY_BAR_Y, BATTERY_BAR_WIDTH, BATTERY_BAR_HEIGHT,
-                        Reducer.MEAN_LUMA, 4, 0),
-                new Entry(cameraButtonName(1), Kind.PIXEL, CAMERA_BUTTON_X[0], CAMERA_BUTTON_Y[0], 1, 1,
-                        Reducer.YELLOWNESS, 1, 0),
-                new Entry(cameraButtonName(2), Kind.PIXEL, CAMERA_BUTTON_X[1], CAMERA_BUTTON_Y[1], 1, 1,
-                        Reducer.YELLOWNESS, 1, 0),
-                new Entry(cameraButtonName(3), Kind.PIXEL, CAMERA_BUTTON_X[2], CAMERA_BUTTON_Y[2], 1, 1,
-                        Reducer.YELLOWNESS, 1, 0),
-                new Entry(cameraButtonName(4), Kind.PIXEL, CAMERA_BUTTON_X[3], CAMERA_BUTTON_Y[3], 1, 1,
-                        Reducer.YELLOWNESS, 1, 0),
-                new Entry(cameraButtonName(5), Kind.PIXEL, CAMERA_BUTTON_X[4], CAMERA_BUTTON_Y[4], 1, 1,
-                        Reducer.YELLOWNESS, 1, 0),
-                new Entry(cameraButtonName(6), Kind.PIXEL, CAMERA_BUTTON_X[5], CAMERA_BUTTON_Y[5], 1, 1,
-                        Reducer.YELLOWNESS, 1, 0),
-                new Entry(cameraButtonName(7), Kind.PIXEL, CAMERA_BUTTON_X[6], CAMERA_BUTTON_Y[6], 1, 1,
-                        Reducer.YELLOWNESS, 1, 0),
-                new Entry(cameraButtonName(8), Kind.PIXEL, CAMERA_BUTTON_X[7], CAMERA_BUTTON_Y[7], 1, 1,
-                        Reducer.YELLOWNESS, 1, 0),
-                new Entry(cameraButtonName(9), Kind.PIXEL, CAMERA_BUTTON_X[8], CAMERA_BUTTON_Y[8], 1, 1,
-                        Reducer.YELLOWNESS, 1, 0),
-                new Entry(cameraButtonName(10), Kind.PIXEL, CAMERA_BUTTON_X[9], CAMERA_BUTTON_Y[9], 1, 1,
-                        Reducer.YELLOWNESS, 1, 0),
-                new Entry(cameraButtonName(11), Kind.PIXEL, CAMERA_BUTTON_X[10], CAMERA_BUTTON_Y[10], 1, 1,
-                        Reducer.YELLOWNESS, 1, 0),
-                new Entry(cameraButtonName(12), Kind.PIXEL, CAMERA_BUTTON_X[11], CAMERA_BUTTON_Y[11], 1, 1,
-                        Reducer.YELLOWNESS, 1, 0),
-                new Entry("foxy_hall_mean_luma", Kind.ROI,
-                        FOXY_HALL_X, FOXY_HALL_Y, FOXY_HALL_WIDTH, FOXY_HALL_HEIGHT,
-                        Reducer.MEAN_LUMA, FOXY_HALL_STEP, 0),
-                new Entry("foxy_hall_mean_redness", Kind.ROI,
-                        FOXY_HALL_X, FOXY_HALL_Y, FOXY_HALL_WIDTH, FOXY_HALL_HEIGHT,
-                        Reducer.MEAN_REDNESS, FOXY_HALL_STEP, 0),
-                new Entry("foxy_hall_red_cells", Kind.ROI,
-                        FOXY_HALL_X, FOXY_HALL_Y, FOXY_HALL_WIDTH, FOXY_HALL_HEIGHT,
-                        Reducer.RED_CELLS, FOXY_HALL_STEP, FOXY_HALL_REDNESS_FLOOR),
-                new Entry("mask_button_mean_luma", Kind.ROI,
-                        MASK_BUTTON_X, MASK_BUTTON_Y, MASK_BUTTON_WIDTH, MASK_BUTTON_HEIGHT,
-                        Reducer.MEAN_LUMA, CONTROL_BUTTON_STEP, 0),
-                new Entry("monitor_button_mean_luma", Kind.ROI,
-                        MONITOR_BUTTON_X, MONITOR_BUTTON_Y, MONITOR_BUTTON_WIDTH, MONITOR_BUTTON_HEIGHT,
-                        Reducer.MEAN_LUMA, CONTROL_BUTTON_STEP, 0)
-        });
+        Entry[] entries = new Entry[CAMERA_BUTTON_X.length];
+        for (int index = 0; index < entries.length; index++) {
+            entries[index] = new Entry(cameraButtonName(index + 1),
+                    CAMERA_BUTTON_X[index], CAMERA_BUTTON_Y[index]);
+        }
+        return new Spec(entries);
     }
 
     /** Fill {@code output} with one value per entry without allocating. */
-    public static int readInto(Spec spec, Frame frame, int[] output) {
-        return readInto(spec, frame, output, false);
-    }
-
-    /**
-     * Fill {@code output} with one value per entry, optionally excluding the
-     * flashlight-meter ROIs. The safe default excludes those pixels because
-     * the mask covers them; callers must pass {@code true} only after the same
-     * frame has independently established the unmasked office state. Excluded
-     * entries are written as UNKNOWN and their pixels are never sampled.
-     */
-    public static int readInto(Spec spec, Frame frame, int[] output,
-            boolean readBattery) {
+    public static int readInto(Spec spec, NativeFrame frame, int[] output) {
         if (spec == null || frame == null || output == null
                 || output.length < spec.size()) return -1;
         for (int i = 0; i < spec.size(); i++) {
-            Entry entry = spec.entry(i);
-            output[i] = !readBattery && isBatteryBar(entry)
-                    ? UNKNOWN : read(entry, frame);
+            output[i] = read(spec.entry(i), frame);
         }
         return spec.size();
     }
 
-    public static int read(Entry entry, Frame frame) {
+    /** Yellowness min(r, g) - b of the entry's pixel, or {@link #UNKNOWN}. */
+    public static int read(Entry entry, NativeFrame frame) {
         if (entry == null || frame == null || entry.x >= frame.width()
-                || entry.y >= frame.height()
-                || entry.x + entry.width > frame.width()
-                || entry.y + entry.height > frame.height()) {
+                || entry.y >= frame.height()) {
             return UNKNOWN;
         }
-        if (entry.kind == Kind.PIXEL) {
-            return reducePixel(entry.reducer, frame.rgb(entry.x, entry.y));
-        }
-        long total = 0;
-        int count = 0;
-        int counted = 0;
-        for (int y = entry.y; y < entry.y + entry.height; y += entry.step) {
-            for (int x = entry.x; x < entry.x + entry.width; x += entry.step) {
-                int rgb = frame.rgb(x, y);
-                if (rgb == UNKNOWN) return UNKNOWN;
-                if (entry.reducer == Reducer.GREY_CELLS) {
-                    int r = (rgb >> 16) & 0xff;
-                    int g = (rgb >> 8) & 0xff;
-                    int b = rgb & 0xff;
-                    int max = Math.max(r, Math.max(g, b));
-                    int min = Math.min(r, Math.min(g, b));
-                    if (max - min < entry.greySpread) counted++;
-                } else if (entry.reducer == Reducer.RED_CELLS) {
-                    int r = (rgb >> 16) & 0xff;
-                    int g = (rgb >> 8) & 0xff;
-                    int b = rgb & 0xff;
-                    if (r - Math.max(g, b) >= entry.greySpread) counted++;
-                } else {
-                    total += reduceAggregate(entry.reducer, rgb);
-                }
-                count++;
-            }
-        }
-        if (count == 0) return UNKNOWN;
-        return entry.reducer == Reducer.GREY_CELLS || entry.reducer == Reducer.RED_CELLS
-                ? counted : (int) (total / count);
+        int rgb = frame.rgb(entry.x, entry.y);
+        if (rgb == UNKNOWN) return UNKNOWN;
+        int r = (rgb >> 16) & 0xff;
+        int g = (rgb >> 8) & 0xff;
+        int b = rgb & 0xff;
+        return Math.min(r, g) - b;
     }
 
     /**
      * Count the fixed downward-chevron columns in one native lower control.
      *
      * <p>The controls are translucent, so their filled rectangle and whole-ROI
-     * mean luma move with the office background. This watch samples only the
-     * two known chevron strokes and requires local max-channel contrast against
+     * mean luma move with the office background. This samples only the two
+     * known chevron strokes and requires local max-channel contrast against
      * the pixels immediately above and below each stroke. It therefore accepts
      * the neutral-white monitor chevron and the pink-tinted mask chevron by
      * their fixed geometry, without treating either color or ROI brightness as
@@ -556,7 +274,7 @@ public final class PixelWatch {
      * no stroke columns were observed, and UNKNOWN means the native frame was
      * unavailable or incomplete.</p>
      */
-    public static int controlDownStrokeScore(Frame frame, boolean maskControl) {
+    public static int controlDownStrokeScore(NativeFrame frame, boolean maskControl) {
         return controlDownStrokeScore(frame, maskControl,
                 CONTROL_STROKE_SAMPLE_STEP, false);
     }
@@ -570,12 +288,12 @@ public final class PixelWatch {
      * the native ImageReader callback below the display-frame budget without
      * changing the live authority or its thresholds.</p>
      */
-    public static int controlDownStrokeScoreFast(Frame frame, boolean maskControl) {
+    public static int controlDownStrokeScoreFast(NativeFrame frame, boolean maskControl) {
         return controlDownStrokeScore(frame, maskControl,
                 CONTROL_STROKE_TRACE_SAMPLE_STEP, true);
     }
 
-    private static int controlDownStrokeScore(Frame frame, boolean maskControl,
+    private static int controlDownStrokeScore(NativeFrame frame, boolean maskControl,
             int sampleStep, boolean normalize) {
         if (frame == null || frame.width() != NATIVE_WIDTH
                 || frame.height() != NATIVE_HEIGHT) return UNKNOWN;
@@ -636,7 +354,7 @@ public final class PixelWatch {
         return ControlState.UNKNOWN;
     }
 
-    private static int strokeColumnHit(Frame frame, int x, int centerY) {
+    private static int strokeColumnHit(NativeFrame frame, int x, int centerY) {
         int lineMax = 0;
         for (int y = centerY - CONTROL_STROKE_RADIUS;
                 y <= centerY + CONTROL_STROKE_RADIUS; y++) {
@@ -662,7 +380,7 @@ public final class PixelWatch {
         return lineMax - baseline >= CONTROL_STROKE_CONTRAST ? 1 : 0;
     }
 
-    private static int fastStrokeColumnHit(Frame frame, int x, int centerY) {
+    private static int fastStrokeColumnHit(NativeFrame frame, int x, int centerY) {
         int lineMax = 0;
         for (int y = centerY - 1; y <= centerY + 1; y++) {
             int rgb = frame.rgb(x, y);
@@ -681,32 +399,6 @@ public final class PixelWatch {
         int green = (rgb >> 8) & 0xff;
         int blue = rgb & 0xff;
         return Math.max(red, Math.max(green, blue));
-    }
-
-    private static int reducePixel(Reducer reducer, int rgb) {
-        if (rgb == UNKNOWN) return UNKNOWN;
-        int r = (rgb >> 16) & 0xff;
-        int g = (rgb >> 8) & 0xff;
-        int b = rgb & 0xff;
-        switch (reducer) {
-            case LUMA:
-                return (77 * r + 150 * g + 29 * b) >> 8;
-            case YELLOWNESS:
-                return Math.min(r, g) - b;
-            default:
-                return UNKNOWN;
-        }
-    }
-
-    private static int reduceAggregate(Reducer reducer, int rgb) {
-        if (rgb == UNKNOWN) return UNKNOWN;
-        if (reducer == Reducer.MEAN_REDNESS) {
-            int red = (rgb >> 16) & 0xff;
-            int green = (rgb >> 8) & 0xff;
-            int blue = rgb & 0xff;
-            return red - Math.max(green, blue);
-        }
-        return reducePixel(Reducer.LUMA, rgb);
     }
 
     private static String sha256(String text) {

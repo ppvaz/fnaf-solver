@@ -10,14 +10,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Phone-free proof that the teach panel sits outside what the helper reads.
+ * Phone-free proof that the FNaF 2 teach panel sits outside what the helper
+ * reads.
  *
- * <p>Every native reader the capture service runs per frame is driven over a
- * frame that records each pixel it is asked for. A reader either stays at
- * least GUARD_PX away from the panel, or it is one of the two the service
- * withholds while the panel may be on screen -- and the test also proves
- * those two DO reach the panel, so the withheld list cannot silently go
- * stale in either direction.</p>
+ * <p>Every native reader the FNaF 2 legacy module runs per frame is driven
+ * over a frame that records each pixel it is asked for. A reader either stays
+ * at least GUARD_PX away from the panel, or it is the one the service
+ * withholds while the panel may be on screen (the native lifecycle labels) --
+ * and the test also proves that one DOES reach the panel, so the withheld list
+ * cannot silently go stale in either direction.</p>
  */
 public final class TeachPanelTest {
     private static int failures;
@@ -32,7 +33,7 @@ public final class TeachPanelTest {
     }
 
     /** Answers with a synthetic image and remembers every pixel read. */
-    static final class RecordingFrame implements PixelWatch.Frame {
+    static final class RecordingFrame implements NativeFrame {
         final BitSet read = new BitSet(W * H);
         private final IntBinaryOperator image;
 
@@ -135,13 +136,12 @@ public final class TeachPanelTest {
                 }
             }
         });
-        clear("CAM 05 block", PixelWatch::cam05BlockLuma);
-        clear("mask control block", frame -> PixelWatch.blockLuma(frame,
+        clear("mask control block (trace column)", frame -> PixelWatch.blockLuma(frame,
                 PixelWatch.MASK_BUTTON_X, PixelWatch.MASK_BUTTON_Y,
                 PixelWatch.MASK_BUTTON_X + PixelWatch.MASK_BUTTON_WIDTH,
                 PixelWatch.MASK_BUTTON_Y + PixelWatch.MASK_BUTTON_HEIGHT,
                 PixelWatch.CONTROL_BUTTON_STEP));
-        clear("monitor control block", frame -> PixelWatch.blockLuma(frame,
+        clear("monitor control block (trace column)", frame -> PixelWatch.blockLuma(frame,
                 PixelWatch.MONITOR_BUTTON_X, PixelWatch.MONITOR_BUTTON_Y,
                 PixelWatch.MONITOR_BUTTON_X + PixelWatch.MONITOR_BUTTON_WIDTH,
                 PixelWatch.MONITOR_BUTTON_Y + PixelWatch.MONITOR_BUTTON_HEIGHT,
@@ -152,21 +152,26 @@ public final class TeachPanelTest {
             PixelWatch.controlDownStrokeScoreFast(frame, true);
             PixelWatch.controlDownStrokeScoreFast(frame, false);
         });
-        clear("pan anchor", frame -> PanAnchor.measure(frame, new PanAnchor.Workspace(),
-                new PanAnchor.Result()));
 
         PixelWatch.Spec spec = PixelWatch.defaultSpec();
-        int greyIndex = spec.indexOfName(TeachPanel.WITHHELD_WATCH_ENTRY);
-        check("the withheld watch entry exists", greyIndex >= 0);
         for (int i = 0; i < spec.size(); i++) {
             PixelWatch.Entry entry = spec.entry(i);
-            Reader read = frame -> PixelWatch.read(entry, frame);
-            if (i == greyIndex) {
-                withheld("watch " + entry.name, read);
-            } else {
-                clear("watch " + entry.name, read);
-            }
+            clear("watch " + entry.name, frame -> PixelWatch.read(entry, frame));
         }
+
+        // The legacy module as the service runs it: every reader of the full
+        // pass while the panel may show (lifecycle withheld), and of the
+        // trace pass, clears the panel; with the panel hidden, the full pass
+        // does reach it -- through the lifecycle labels, which is why they
+        // are withheld.
+        Fnaf2Legacy legacy = new Fnaf2Legacy(3);
+        check("the legacy watch loads", legacy.watchCommand(legacy.watchSpec().sha256(), true)
+                .startsWith("OK watch=ACTIVE"));
+        clear("Fnaf2Legacy full pass while the panel may show",
+                frame -> legacy.onFrame(frame, 1L, 1L, 1L, true, false));
+        clear("Fnaf2Legacy trace pass", frame -> legacy.onTraceFrame(frame, 1L, 1L, 1L));
+        withheld("Fnaf2Legacy full pass with the panel hidden",
+                frame -> legacy.onFrame(frame, 1L, 1L, 1L, false, false));
 
         // Identity is grid-first. On a frame the grid already calls a night --
         // the only frames the panel is drawn over -- the native frame is never

@@ -127,19 +127,14 @@ remedy is one shared frame-source argument helper.
 The on-device Java helper and the host tools implement the same two numeric
 models, aligned by comment only.
 
-- **Pixel watch spec.** `android/companion/src/com/ppvaz/fnafcompanion/PixelWatch.java`
-  (469 lines) owns `defaultSpec()`. `tools/device/watch-calibrate.py:42` says
-  "Keep this list mechanically aligned with `PixelWatch.defaultSpec()`" and
-  `tools/device/camera-calibrate.py:49` repeats the instruction against both
-  the Java spec *and* `watch-calibrate.ENTRIES`. `monitor-calibrate.py:23`
-  carries the same kind of note about grid replication. Each side has its own
-  tests (`PixelWatchTest.java`, `test-watch-calibrate.py`); no check compares
-  the two specs.
-- **Phase clock.** `android/companion/src/com/ppvaz/fnafcompanion/PhaseClock.java`
-  (141 lines) and `packages/core/src/timing/phase-clock.js` (328 lines) both
-  fit onsets of the 2 Hz winding tick to a 500 ms index and report a residual.
-  Tested independently by `PhaseClockTest.java` and `tools/phaseclocktest.mjs`;
-  no shared vectors.
+- **Pixel watch spec.** Narrowed 2026-09-27: `PixelWatch.defaultSpec()` is
+  now only the twelve FNaF 2 camera-button pixels, and `watch-calibrate.py`
+  (the luma-entry calibrator) was removed with the luma entries.
+  `tools/device/camera-calibrate.py` still carries its own copy of the twelve
+  coordinates, and `test-camera-calibrate.py` holds it to the camera rule.
+- **Phase clock.** Resolved 2026-09-27: the APK's `PhaseClock.java` left with
+  the Companion's audio path, so `packages/core/src/timing/phase-clock.js`
+  (tested by `tools/phaseclocktest.mjs`) is the only implementation.
 
 Cleanup decision: these are the two strongest candidates for the shared-JSONL
 vector pattern already used by `tools/contract-vectors.py` (§20).
@@ -393,8 +388,8 @@ against phone on one clock.
 
 Three "authority" implementations for one job — decide that a cue happened —
 one per transport: `tools/cue/audio-authority.py` (552),
-`bridge-audio-authority.py` (362), `esp32-audio-authority.py` (345); plus the
-phone-side `AudioAnalyzer.java` (365). The feature/decision chain behind them
+`bridge-audio-authority.py` (362, removed 2026-09-27), `esp32-audio-authority.py` (345, archived); plus the
+phone-side `AudioAnalyzer.java` (365, removed 2026-09-27 with the Companion's audio path). The feature/decision chain behind them
 is itself staged across `features.py` (190), `detect.py` (348),
 `correlate.py` (177), `evaluate.py` (250) and `evaluate-shadow.py` (237) —
 the last pair being a live/shadow split worth confirming is still wanted.

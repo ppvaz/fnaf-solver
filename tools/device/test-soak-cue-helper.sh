@@ -17,15 +17,13 @@ PATH="$MOCK_BIN:$PATH" "$HERE/soak-cue-helper.sh" 1 1 "$REPORT" >/dev/null
 header="$(sed -n '1p' "$REPORT")"
 row="$(sed -n '2p' "$REPORT")"
 case "$header" in
-  *$'pss_kb\trss_kb\tthreads\tthermal_status\tstatus_age_s\tvisual_seq'*) ;;
+  *$'pss_kb\trss_kb\tthreads\tthermal\tframes\tframe_age_ms\tfps\tcontent_width\tcontent_height\tvisible\ttarget_focused\ttarget') ;;
   *) echo "missing report columns: $header" >&2; exit 1 ;;
 esac
-# status_age_s is the soak's epoch minus the mock logcat's `date +%s` stamp,
-# which is taken later: a second boundary between the two reads gives -1.
-# push-gate met exactly that on 2026-09-25; the soak itself accepts -2..5.
+# Every value comes from the Companion's versioned status (companion-status-v1)
+# except memory and threads, which come from the platform.
 case "$row" in
-  *$'7007\t51200\t64000\t7\t0\t0\t120\t1500\t2400\t1080\t1\t1\taudio-authority') ;;
-  *$'7007\t51200\t64000\t7\t0\t-1\t120\t1500\t2400\t1080\t1\t1\taudio-authority') ;;
+  *$'7007\t51200\t64000\t7\tNONE\t18234\t12\t59.8\t2400\t1080\t1\t1\tcom.scottgames.fnaf2') ;;
   *) echo "unexpected parsed row: $row" >&2; exit 1 ;;
 esac
 

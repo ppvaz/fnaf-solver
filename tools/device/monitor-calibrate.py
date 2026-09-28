@@ -20,14 +20,15 @@ required; optional ``anim`` frames are classified with the fitted rule and
 the reads are retained as evidence; optional ``blackout`` frames must sit
 below the darkness guard floor.
 
-The grid replication below must stay mechanically aligned with
-CaptureService.onImageAvailable: cell (gx, gy) samples the native pixel
+The grid replication below must stay mechanically aligned with the FNaF 2
+legacy readers (Fnaf2Legacy.sampleGrid, PixelWatch.gridSampleX/Y): cell
+(gx, gy) samples the native pixel
     x = ((2*gx + 1) * width) // (2 * VISUAL_WIDTH)
     y = ((2*gy + 1) * height) // (2 * VISUAL_HEIGHT)
-with VISUAL_WIDTH x VISUAL_HEIGHT = 20x9, and ScreenStats treats a cell as
-near-grey below a 25-channel-spread.  The host vectors in
-android/companion/test/com/ppvaz/fnafcompanion/ScreenStatsTest.java pin the same
-constants from the Java side.
+with VISUAL_WIDTH x VISUAL_HEIGHT = 20x9. The near-grey cell count
+(25-channel spread) was a helper field until 2026-09-27 (ScreenStats, removed
+with the discontinued grid statistics); this tool keeps its own copy for
+fitting over retained frames.
 
     monitor-calibrate.py --output monitor-rule.json \
         down=captures/office up=captures/monitor mask=captures/mask

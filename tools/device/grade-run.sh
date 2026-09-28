@@ -400,7 +400,8 @@ if [ -n "$FRAME_TRACE" ]; then
   fi
   # Foxy is repelled by the hallway light, and grade-run's own video counter is
   # a rendering lower bound that read 4% where the plan records a 1-in-3 drop.
-  # This reads the region PixelWatch.java defines and exits 3 on a dark hall.
+  # This reads the hall rectangle tap-stall-audit.mjs keeps (the phone's
+  # watchlist carried it until 2026-09-27) and exits 3 on a dark hall.
   if [ -f "$INPUT_TRACE" ]; then
     step "input dispatch aligned to presented frames" \
       python3 "$HERE/input-frame-align.py" "$INPUT_TRACE" "$FRAME_TRACE"

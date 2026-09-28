@@ -119,6 +119,32 @@
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
+      "id": "contract.companion-status-v1",
+      "kind": "CONTRACT",
+      "path": "android/companion/test/com/ppvaz/fnafcompanion/CompanionStatusTest.java",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.companion-status-v1",
+      "kind": "CONTRACT",
+      "path": "packages/adapters/src/transports/companion-status.js",
+      "line": 13,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.companion-status-v1",
+      "kind": "CONTRACT",
+      "path": "packages/adapters/test/companion-status.test.js",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.companion-status-v1",
+      "kind": "CONTRACT",
+      "path": "packages/adapters/test/companion-status.test.js",
+      "line": 6,
+      "relation": "REFERENCES"
+    },
+    {
       "id": "contract.control-exclusion-v1",
       "kind": "CONTRACT",
       "path": "packages/adapters/src/control-exclusion.js",
@@ -175,21 +201,14 @@
       "id": "contract.cue-helper-control-v1",
       "kind": "CONTRACT",
       "path": "packages/adapters/src/transports/cue-helper.js",
-      "line": 38,
+      "line": 31,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.cue-helper-control-v1",
       "kind": "CONTRACT",
       "path": "packages/adapters/src/transports/cue-helper.js",
-      "line": 68,
-      "relation": "REFERENCES"
-    },
-    {
-      "id": "contract.cue-helper-control-v1",
-      "kind": "CONTRACT",
-      "path": "packages/adapters/src/transports/cue-helper.js",
-      "line": 85,
+      "line": 48,
       "relation": "REFERENCES"
     },
     {
@@ -471,12 +490,6 @@
       "id": "contract.monitor-rule-v1",
       "kind": "CONTRACT",
       "path": "tools/device/test-monitor-calibrate.py",
-      "relation": "CONFORMANCE_FIXTURE"
-    },
-    {
-      "id": "contract.pcm-udp-v1",
-      "kind": "CONTRACT",
-      "path": "tools/cue/test-audio-authority.py",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {

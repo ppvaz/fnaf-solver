@@ -1,0 +1,76 @@
+{
+  "schema": "title-model-v1",
+  "build": "com.scottgames.fnaf4 v2.0.4 versionCode 11",
+  "device": "Moto g56 5G, 2400x1080 landscape",
+  "captured": "2026-09-19..2026-09-27 (retained frames, measured 2026-09-27)",
+  "frames": 91,
+  "evidence": "docs/evidence/companion-game-screen-20260927.json",
+  "band": [
+    520,
+    52
+  ],
+  "bright_min": 150,
+  "pixel": {
+    "kind": "red",
+    "red_min": 50,
+    "other_max": 20
+  },
+  "pixel_note": "FNaF 4's title is red on red: in the NEW GAME, CONTINUE and OPTIONS bands of two measured title frames (explore f4-opts 0025, f4-title 0008) the lit pixels read R 54-132 with G and B exactly 0, and no pixel passes the white-text threshold (min channel > 150) the FNaF 1-3 models use. `pixel` makes a lit pixel red >= 50 with green and blue <= 20 for the item bands and the menu gate; the title and foreign gates carry their own. `bright_min` is required by the schema and unused here.",
+  "present_min": 0.12,
+  "absent_max": 0.03,
+  "items": {
+    "newGame": [
+      1205,
+      533
+    ],
+    "continue": [
+      1230,
+      645
+    ]
+  },
+  "measurement_note": "Item bands are 520x52 around NEW GAME (text spans native x 944-1470, y 510-560) and CONTINUE (x 950-1510 with the night digit, y 620-670; the control map's CONTINUE press is (1230,645)). Over the 91 title frames with the menu up: newGame 0.2627 (p05) to 0.3936, continue 0.2432 (p05) to 0.3506; a band 135 px under CONTINUE reads 0.0000 on every title frame. present_min 0.12 stands a factor of two below the p05 of either row; absent_max 0.03 over the zero control.",
+  "title_gate": {
+    "box": [
+      500,
+      200,
+      1900,
+      420
+    ],
+    "pixel": {
+      "kind": "red",
+      "red_min": 60,
+      "other_max": 30
+    },
+    "min": 0.6,
+    "max_absent": 0.4,
+    "note": "the red sky and the house skyline. 0.7373-0.7559 on all 91 title frames; 0.0000-0.0029 on the 13 Options frames, 0.0000-0.0117 on the 5 sound-cue warning frames, at most 0.2393 on in-night frames. Other games: at most 0.5000 over 1795 FNaF 2 non-title frames (two red-stripe glitch frames, 0.4688 and 0.5000, which fall in the undecided band) and 0.0107 over every FNaF 1 and FNaF 3 frame. A frame washed fully red (a jumpscare or death flash) reads 1.0000 here, and the foreign gate refuses it."
+  },
+  "foreign_gate": {
+    "box": [
+      0,
+      640,
+      240,
+      1080
+    ],
+    "pixel": {
+      "kind": "red",
+      "red_min": 40,
+      "other_max": 30
+    },
+    "min": 0.1,
+    "max_absent": 0.02,
+    "note": "the black tree silhouette at the lower left, which the title never lights: 0.0000 on all 91 title frames. Here the gate refuses whole-screen red washes rather than another game's title -- the two fully red FNaF 4 frames retained (after-night flashes) read sky 1.0000 and this box 1.0000, and title-observe reports them `foreign-title`, which reads as 'not this title'."
+  },
+  "menu_gate": {
+    "box": [
+      995,
+      955,
+      1410,
+      1005
+    ],
+    "min": 0.15,
+    "max_absent": 0.05,
+    "note": "the OPTIONS row. 0.3193 (p05) to 0.4209 with the menu up; 0.0000 on the one retained title frame whose menu had not yet drawn (fnaf4-loop-n3a-teach 0001). The Options screen's EXIT (0.0996-0.1592) and the sound-cue warning's EXIT (0.0820-0.1436) sit in the same place, which is why this gate is read only after the sky gate says the title is up."
+  },
+  "not_measured": "The New Game confirmation dialog has never been captured on FNaF 4. Until it is, this model must not gate a NEW GAME tap; it identifies the title and gates CONTINUE only."
+}

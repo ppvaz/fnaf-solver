@@ -9,25 +9,15 @@ import pathlib
 import socket
 import sys
 
-# Field-for-field with the device's `CaptureService.currentSnapshot()`, and with
-# the loopback mock in mock-adb-cue-helper.sh. Both transports must answer the
-# same shape or a consumer that works over one silently fails over the other.
-#
-# This lagged the device twice: `cam05_mean_luma=` when the 20x9 frame started carrying the
-# CAM 05 block. Consumers parse this with a greedy sed whose groups are positional
-# -- the trial's visual parser wants `.*luma=...*cam05_mean_luma=...*ageUs=...` -- so a
-# missing field does not degrade the parse, it kills the match outright.
-SNAPSHOT = (
-    "OK snapshotNs=9000 visual=OBSERVED seq=121 rgba=1,2,3 luma=2 cam05_mean_luma=37 "
-    "grey=142 gridLuma=24 "
-    "ageUs=1200 content=2400x1080 visible=1 "
-    "screen=FNAF2_NIGHT screenScore=100 detectorLatencyMs=1 "
-    "monitorUp=true monitorReason=anchors-up "
-    "cameraSelected=cam:5 cameraHighlights=cam:5 cameraReason=single-camera-highlight "
-    "batteryPercent=75 batteryReason=bars-observed "
-    "audio=EXTERNAL authority=audio-authority state=UNKNOWN "
-    "reason=external-authority-not-connected"
-)
+# Field-for-field with the device (Fnaf2Legacy.snapshotLine/readLine,
+# OverlayController.status) and with the loopback mock in
+# mock-adb-cue-helper.sh. Both transports must answer the same shape or a
+# consumer that works over one silently fails over the other.
+SNAPSHOT = "OK snapshotNs=9000 wallMs=1700000000000 visualCaptureNs=7800 nightOnsetImageNs=-1 visual=OBSERVED visualReason=none seq=121 ageUs=1200 content=2400x1080 visible=1 screen=FNAF2_NIGHT monitorUp=true monitorReason=native-stroke-monitor-up mask_button_downstroke=0 monitor_button_downstroke=140 watch=OFF spec=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa entries=12"
+READ = "OK read=OBSERVED spec=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa seq=122 snapshotNs=10000 ageUs=1200 cam01_button=0 cam02_button=0 cam03_button=0 cam04_button=0 cam05_button=194 cam06_button=0 cam07_button=0 cam08_button=0 cam09_button=0 cam10_button=0 cam11_button=0 cam12_button=0"
+OVERLAY = "OK overlay=READY teach=OFF f1=NONE f3=NONE f4=NONE"
+STATUS = "OK schema=companion-status-v1 app=0.2.0 code=16 session=3 capture=ON captureReason=none content=2400x1080 visible=1 frames=18234 frameAgeMs=12 fps=59.8 target=com.scottgames.fnaf2 game=fnaf2 targetBuild=26:2.0.7 legacy=fnaf2 regions=0 regionSamples=0 regionFrames=0 lesson=NONE lessonState=OFF panel=NONE clearance=UNCHECKED overlayPermission=GRANTED lease=NONE battery=64 charging=1 thermal=NONE foreground=OTHER audioProbe=OFF snapshotNs=9000 wallMs=1700000000000"
+SPEC = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 
 
 def answer(request):
@@ -36,35 +26,16 @@ def answer(request):
         return "ERROR unknown-verb"
     if field[0] == "GET":
         return SNAPSHOT
-    if field[0] == "GRID":
-        cells = "".join(
-            "ffffff" if i == 123 else f"10{i % 256:02x}{(i * 7) % 256:02x}"
-            for i in range(180))
-        return "OK grid=20x9 seq=121 " + cells
     if field[0] == "WATCH" and len(field) == 3:
         if field[2] == "status":
-            return "OK watch=OFF spec=" + "a" * 64 + " entries=23"
-        return "OK watch=ACTIVE spec=" + "a" * 64 + " entries=23"
+            return "OK watch=OFF spec=" + SPEC + " entries=12"
+        return "OK watch=ACTIVE spec=" + SPEC + " entries=12"
     if field[0] == "READ" and len(field) == 2:
-        return ("OK read=OBSERVED spec=" + "a" * 64 +
-                " seq=122 snapshotNs=10000 ageUs=1200 "
-                "bb_left_luma=194 bb_left_yellowness=-111 "
-                "battery_bar_1=194 battery_bar_2=194 "
-                "battery_bar_3=80 battery_bar_4=20 "
-                "cam05_mean_luma=37 screen_grey_cells=142 "
-                "foxy_hall_mean_luma=37 foxy_hall_mean_redness=0 "
-                "foxy_hall_red_cells=0 "
-                "pan_anchor_state=OBSERVED pan_anchor_x=1162 pan_anchor_y=116 "
-                "pan_anchor_area=836 pan_anchor_margin=624 "
-                "pan_anchor_confidence=746 pan_anchor_reason=component-margin")
+        return READ
     if field[0] == "OVERLAY" and len(field) == 2:
-        return ("OK overlay=UNQUALIFIED(self-capture-unqualified) "
-                "gate=UNQUALIFIED(self-capture-unqualified) updates=0 draws=0 "
-                "dropped=0 cadenceSamples=0 "
-                "updateToDrawMs=p50:0.00,p95:0.00,p99:0.00 "
-                "drawIntervalMs=p50:0.00,p95:0.00,p99:0.00")
-    if field[0] in {"CAL", "LOG", "REC", "MODEL", "ARM", "RESULT"}:
-        return "ERROR audio-authority-external"
+        return OVERLAY
+    if field[0] == "STATUS" and len(field) == 2:
+        return STATUS
     return "ERROR unknown-verb"
 
 

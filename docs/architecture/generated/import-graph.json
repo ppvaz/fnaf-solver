@@ -167,6 +167,7 @@
     {
       "file": "apps/device/src/physical-ports.js",
       "imports": [
+        "@fnaf2-1020/adapters/transports/companion-status",
         "@fnaf2-1020/adapters/transports/cue-helper",
         "node:child_process",
         "node:fs",
@@ -465,6 +466,7 @@
         "./control-anchor.js",
         "./control-exclusion.js",
         "./monitor-rule.js",
+        "./transports/companion-status.js",
         "./transports/cue-helper.js",
         "./transports/hid.js"
       ]
@@ -480,6 +482,14 @@
       "imports": [
         "../src/camera-rule.js",
         "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/adapters/test/companion-status.test.js",
+      "imports": [
+        "../src/transports/companion-status.js",
+        "node:assert/strict",
+        "node:fs"
       ]
     },
     {
@@ -1374,6 +1384,13 @@
       ]
     },
     {
+      "file": "tools/device/audio-probe.mjs",
+      "imports": [
+        "../../apps/device/src/physical-ports.js",
+        "node:fs"
+      ]
+    },
+    {
       "file": "tools/device/bundle.mjs",
       "imports": [
         "./artifact-commands.mjs",
@@ -1950,6 +1967,13 @@
       ]
     },
     {
+      "file": "tools/device/test-audio-probe.mjs",
+      "imports": [
+        "./audio-probe.mjs",
+        "node:assert/strict"
+      ]
+    },
+    {
       "file": "tools/device/test-bb-cue-state.mjs",
       "imports": [
         "./bb-cue-state.mjs",
@@ -2315,8 +2339,7 @@
     {
       "file": "tools/device/test-tap-stall-audit.mjs",
       "imports": [
-        "./tap-stall-audit.mjs",
-        "node:fs"
+        "./tap-stall-audit.mjs"
       ]
     },
     {

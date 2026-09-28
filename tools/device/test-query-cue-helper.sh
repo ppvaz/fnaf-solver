@@ -26,38 +26,39 @@ export MOCK_FORWARD_PORT
 CUE_HELPER_ENDPOINT_STASH="$TEMP_DIR/endpoint-stash"
 export CUE_HELPER_ENDPOINT_STASH
 
-# The native-resolution watchlist is authenticated separately from the legacy
-# GET/GRID path. Status does not activate it; a 64-hex spec hash does.
+# The FNaF 2 camera watch is authenticated separately from GET. Status does
+# not activate it; a 64-hex spec hash does.
 for transport in loopback forward; do
   status="$(CUE_HELPER_TRANSPORT="$transport" PATH="$TEMP_DIR/bin:$PATH" \
     "$HERE/query-cue-helper.sh" watchlist status)"
   case "$status" in
-    *"watch=OFF"*"entries=23"*) ;;
+    *"watch=OFF"*"entries=12"*) ;;
     *) echo "unexpected $transport watch status: $status" >&2; exit 1 ;;
   esac
   loaded="$(CUE_HELPER_TRANSPORT="$transport" PATH="$TEMP_DIR/bin:$PATH" \
     "$HERE/query-cue-helper.sh" watchlist load \
     aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa)"
   case "$loaded" in
-    *"watch=ACTIVE"*"entries=23"*) ;;
+    *"watch=ACTIVE"*"entries=12"*) ;;
     *) echo "unexpected $transport watch load: $loaded" >&2; exit 1 ;;
   esac
   reading="$(CUE_HELPER_TRANSPORT="$transport" PATH="$TEMP_DIR/bin:$PATH" \
     "$HERE/query-cue-helper.sh" read)"
   case "$reading" in
-    *"OK read=OBSERVED"*"bb_left_luma=194"*"battery_bar_4=20"*"screen_grey_cells=142"*) ;;
+    *"pan_anchor"*|*"bb_left_luma"*|*"battery_bar"*|*"screen_grey_cells"*)
+      echo "$transport watch read still carries a retired entry: $reading" >&2; exit 1 ;;
+    *"OK read=OBSERVED"*"cam05_button=194"*"cam12_button=0"*) ;;
     *) echo "unexpected $transport watch read: $reading" >&2; exit 1 ;;
   esac
 done
 
-# The HUD status is a separate authenticated read. It must remain usable
-# when the game is not focused so a lifecycle/target-hidden transition can be
-# retained instead of being lost behind the visual focus guard.
+# The teach-panel status is a separate authenticated read. It must remain
+# usable when the game is not focused.
 for transport in loopback forward; do
   overlay_status="$(CUE_HELPER_TRANSPORT="$transport" PATH="$TEMP_DIR/bin:$PATH" \
     "$HERE/query-cue-helper.sh" overlay)"
   case "$overlay_status" in
-    *"overlay=UNQUALIFIED(self-capture-unqualified)"*"updates=0"*) ;;
+    *"overlay=READY teach=OFF"*) ;;
     *) echo "unexpected $transport overlay status: $overlay_status" >&2; exit 1 ;;
   esac
 done
@@ -73,45 +74,21 @@ for verb in record log model arm result; do
   fi
 done
 
-# Both transports must answer the device's visual field set, not a subset.
-#
-# Corrected 2026-08-26. This matched on substrings that passed whether or not
-# the snapshot carried `cam05_mean_luma=`, and both mocks were missing fields the device
-# sends -- so the mocks answered a shape no runner could parse and this check
-# went green anyway. `trial.sh` reads the line
-# with `s/.*luma=\(...\).*cam05_mean_luma=\(...\).*ageUs=\(...\)/.../p`; against the
-# old loopback mock that sed did not match AT ALL, and an unmatched sed prints
-# nothing rather than failing, so the runner's cue trace was silently empty.
-#
-# So assert the parse the runner actually performs, on both transports, rather
-# than a substring that survives a missing field.
+# Both transports must answer the device's FNaF 2 field set, and neither may
+# carry a field retired on 2026-09-27 (luma reducers, grid statistics, the pan
+# anchor, battery and camera-selection facts, the audio stack).
 for transport in loopback forward; do
   response="$(PATH="$TEMP_DIR/bin:$PATH" "$HERE/query-cue-helper.sh" "$transport")"
   case "$response" in
-    'OK '*"visual=OBSERVED seq=121"*"cameraHighlights=cam:5"*"audio=EXTERNAL authority=audio-authority"*) ;;
+    'OK '*"visual=OBSERVED visualReason=none seq=121 ageUs=1200"*"screen=FNAF2_NIGHT monitorUp=true"*"mask_button_downstroke=0 monitor_button_downstroke=140"*) ;;
     *) echo "unexpected $transport response: $response" >&2; exit 1 ;;
   esac
-  # The runner's own extraction, verbatim in shape. It must yield three fields.
-  parsed="$(printf '%s\n' "$response" |
-    sed -n 's/.*luma=\([0-9]*\).*cam05_mean_luma=\([0-9]*\).*ageUs=\([0-9]*\).*/luma=\1 cam05_mean_luma=\2 age=\3us/p')"
-  case "$parsed" in
-    'luma='*' cam05_mean_luma='*' age='*'us') ;;
-    *) echo "$transport snapshot does not parse the way trial.sh reads it;" \
-            "the mock has drifted from the device's field set: $response" >&2
-       exit 1 ;;
-  esac
-  # cam05_mean_luma must not be the same number as luma, or a transposed capture group
-  # would read as correct.
-  case "$parsed" in
-    'luma=2 cam05_mean_luma=2 '*) echo "$transport: cam05_mean_luma must differ from luma so a swapped group shows" >&2; exit 1 ;;
-  esac
-  # grey= is the whole-frame near-grey cell count the device started sending.
-  # It sits between cam05_mean_luma= and ageUs=, so the parse asserted above also guards
-  # the regression an inserted field would cause.
-  case "$response" in
-    *" grey="[0-9-]*" "*) ;;
-    *) echo "$transport snapshot is missing grey=, which the device appends" >&2; exit 1 ;;
-  esac
+  for retired in rgba= ' luma=' cam05_mean_luma= ' grey=' gridLuma= screenScore= detectorLatencyMs= \
+                 cameraSelected= cameraHighlights= batteryPercent= mean_luma= pan_anchor audio=; do
+    case "$response" in
+      *"$retired"*) echo "$transport snapshot still carries retired $retired: $response" >&2; exit 1 ;;
+    esac
+  done
 done
 
 if PATH="$TEMP_DIR/bin:$PATH" "$HERE/query-cue-helper.sh" carrier-pigeon 2>/dev/null; then
@@ -119,41 +96,18 @@ if PATH="$TEMP_DIR/bin:$PATH" "$HERE/query-cue-helper.sh" carrier-pigeon 2>/dev/
   exit 1
 fi
 
-# grid: both transports. The verb once called exchange before it existed and
-# died on the unbound token under set -u, so this guards that it parses and
-# renders at all. Cell (3,6) is the mock's one bright cell; every other cell is
-# dark, so its glyph must differ from its row's.
-for transport in loopback forward; do
-  rendered="$(CUE_HELPER_TRANSPORT="$transport" PATH="$TEMP_DIR/bin:$PATH" \
-    "$HERE/query-cue-helper.sh" grid "$TEMP_DIR/grid-$transport.png" 2>/dev/null)"
-  case "$rendered" in
-    *"grid 20x9 seq=121"*) ;;
-    *) echo "unexpected $transport grid render: $rendered" >&2; exit 1 ;;
-  esac
-  bright_row="$(printf '%s\n' "$rendered" | sed -n '8p')"
-  case "$bright_row" in
-    *@*) ;;
-    *) echo "$transport grid render lost the bright sampled cell: $bright_row" >&2; exit 1 ;;
-  esac
+# The retired verbs refuse before touching adb.
+for verb in grid watch; do
+  if PATH="$TEMP_DIR/bin:$PATH" "$HERE/query-cue-helper.sh" "$verb" 1 >/dev/null 2>&1; then
+    echo "$verb is retired and must refuse" >&2
+    exit 1
+  fi
 done
-
-# The latency experiment can opt into the native watch source.  This must
-# preserve the same first three data columns consumed by latency-experiment.py
-# while proving that the luma came from the authenticated BB anchor.
-native_watch="$TEMP_DIR/native.tsv"
-CUE_HELPER_WATCH_READ=1 PATH="$TEMP_DIR/bin:$PATH" \
-  "$HERE/query-cue-helper.sh" watch 1 "$native_watch" >/dev/null
-head -n 1 "$native_watch" | grep -Fq $'snapshot_ns\tseq\tluma\tstate\tsource' || {
-  echo "native watch lost its source column" >&2; exit 1;
-}
-tail -n +2 "$native_watch" | grep -Eq $'^[0-9]+\t[0-9]+\t194\tOBSERVED\tbb_left_luma$' || {
-  echo "native watch did not record bb_left_luma" >&2; exit 1;
-}
 
 # latency: the mock answers the device-side sample loop with fixed values, so
 # this covers the reporter -- all three groups must survive to the summary.
 summary="$(PATH="$TEMP_DIR/bin:$PATH" "$HERE/query-cue-helper.sh" latency 5)"
-for label in "snapshot read" "grid read" "shell baseline"; do
+for label in "snapshot read" "shell baseline"; do
   case "$summary" in
     *"$label"*"n=5"*) ;;
     *) echo "latency summary lost the $label group: $summary" >&2; exit 1 ;;
@@ -200,5 +154,36 @@ MOCK_LOGCAT_ROTATED=1 MOCK_UNAUTHORIZED=1 PATH="$TEMP_DIR/bin:$PATH" \
   "$HERE/query-cue-helper.sh" watchlist status >/dev/null 2>"$rotated_err" || true
 grep -q 'stashed cue helper endpoint is stale' "$rotated_err" || {
   echo "a rejected stashed token must be reported as stale: $(cat "$rotated_err")" >&2; exit 1; }
+
+# The versioned status is game-agnostic: no focus guard, both transports.
+for transport in loopback forward; do
+  status_line="$(CUE_HELPER_TRANSPORT="$transport" PATH="$TEMP_DIR/bin:$PATH" \
+    "$HERE/query-cue-helper.sh" status)"
+  case "$status_line" in
+    'OK schema=companion-status-v1 app=0.2.0 code=16 session=3 capture=ON '*"target=com.scottgames.fnaf2 game=fnaf2"*) ;;
+    *) echo "unexpected $transport status: $status_line" >&2; exit 1 ;;
+  esac
+done
+named="$(PATH="$TEMP_DIR/bin:$PATH" "$HERE/query-cue-helper.sh" target com.scottgames.fnaf4)"
+case "$named" in 'OK target=com.scottgames.fnaf4 game=fnaf4 legacy=OFF') ;; *) echo "target naming failed: $named" >&2; exit 1 ;; esac
+leased="$(PATH="$TEMP_DIR/bin:$PATH" "$HERE/query-cue-helper.sh" lease fnaf4-run:n5a)"
+case "$leased" in 'OK lease=fnaf4-run:n5a') ;; *) echo "lease labelling failed: $leased" >&2; exit 1 ;; esac
+if PATH="$TEMP_DIR/bin:$PATH" "$HERE/query-cue-helper.sh" lease 'bad label' >/dev/null 2>&1; then
+  echo "a lease label with a space must refuse" >&2; exit 1
+fi
+
+# The handshake file is the endpoint source when it names the running pid,
+# even with no logcat announcement left; a file from another pid is ignored.
+rm -f "$CUE_HELPER_ENDPOINT_STASH"
+from_file="$(MOCK_ENDPOINT_FILE=1 MOCK_LOGCAT_ROTATED=1 PATH="$TEMP_DIR/bin:$PATH" \
+  "$HERE/query-cue-helper.sh" status 2>"$rotated_err")" || {
+  echo "the endpoint file must stand in for a rotated logcat line: $(cat "$rotated_err")" >&2; exit 1; }
+case "$from_file" in 'OK schema=companion-status-v1 '*) ;; *) echo "endpoint-file status: $from_file" >&2; exit 1 ;; esac
+if grep -q 'stashed' "$rotated_err"; then echo "the endpoint file must win over the stash" >&2; exit 1; fi
+rm -f "$CUE_HELPER_ENDPOINT_STASH"
+if MOCK_ENDPOINT_FILE=1 MOCK_ENDPOINT_PID=4242 MOCK_LOGCAT_ROTATED=1 PATH="$TEMP_DIR/bin:$PATH" \
+    "$HERE/query-cue-helper.sh" status >/dev/null 2>&1; then
+  echo "an endpoint file from another pid must not be used" >&2; exit 1
+fi
 
 echo "cue-helper query tests passed"

@@ -12,7 +12,7 @@ public final class NativeRegionsTest {
     }
 
     /** A frame whose pixel encodes its own coordinates, so a copy can be audited. */
-    private static final class Frame implements PixelWatch.Frame {
+    private static final class Frame implements NativeFrame {
         private final int width;
         private final int height;
         Frame(int width, int height) { this.width = width; this.height = height; }

@@ -123,16 +123,6 @@
       "notes": "Retired swipe-era schedule report; it is not a selectable device route."
     },
     {
-      "id": "device.cue-model-provisioner",
-      "path": "tools/device/provision-cue-model.sh",
-      "category": "device",
-      "lifecycle": "legacy",
-      "owner": "@fnaf2-1020/adapters",
-      "replacement": "cue-helper/screen detector profile with content-addressed model binding",
-      "removalGate": "No supported APK build loads the provisioned file and all holdouts are retained",
-      "notes": "Historical APK model installer; current visual-only helper does not consume it."
-    },
-    {
       "id": "research.minus-toys-alias",
       "path": "tools/minustoystest.mjs",
       "category": "research-alias",

@@ -1,13 +1,7 @@
 package com.ppvaz.fnafcompanion;
 
-import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.bluetooth.BluetoothA2dp;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothManager;
-import android.bluetooth.BluetoothProfile;
 import android.content.BroadcastReceiver;
 import android.content.ActivityNotFoundException;
 import android.content.ClipData;
@@ -21,12 +15,6 @@ import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.StateListDrawable;
-import android.net.ConnectivityManager;
-import android.net.DhcpInfo;
-import android.net.Network;
-import android.net.NetworkCapabilities;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
 import android.media.projection.MediaProjectionManager;
 import android.media.projection.MediaProjectionConfig;
 import android.net.Uri;
@@ -59,18 +47,10 @@ import android.widget.Toast;
 
 public final class MainActivity extends Activity {
     private static final int REQUEST_MEDIA_PROJECTION = 1002;
-    private static final int REQUEST_BLUETOOTH_CONNECT = 1003;
-    private static final int REQUEST_NEARBY_WIFI = 1004;
-    private static final int REQUEST_AUDIO_MODEL = 1005;
-    private static final String GAME_PACKAGE = "com.scottgames.fnaf2";
     private static final String TERMUX_PACKAGE = "com.termux";
     private static final String TERMUX_STORE_URI = "market://details?id=com.termux";
     private static final String TERMUX_STORE_URL =
             "https://play.google.com/store/apps/details?id=com.termux";
-    // Bench ESP32 A2DP receiver flashed from firmware/esp32-audio-consumer.
-    private static final String AUDIO_RECEIVER_NAME = "FNAF2 Audio Consumer";
-    private static final String WIFI_AP_SSID = "FNAF2-AUDIO";
-    private static final String WIFI_AP_PASSWORD = "fnaf2-audio";
     private static final int COLOR_BACKGROUND = Color.rgb(18, 10, 11);
     private static final int COLOR_PANEL = Color.rgb(31, 16, 18);
     private static final int COLOR_PANEL_BORDER = Color.rgb(119, 45, 39);
@@ -91,16 +71,13 @@ public final class MainActivity extends Activity {
     private static final int COLOR_FOXY_MANGLE_STROKE = Color.rgb(238, 154, 174);
     private static final String SESSION_DETAILS =
             "Each session uses user-approved MediaProjection screen capture "
-                    + "with a persistent 20x9 stream. Audio is optional and comes from "
-                    + "the external audio authority, using a transport-specific receiver. The phone "
-                    + "optional phone monitor reproduces PCM returned by the ESP32. "
-                    + "The optional HUD is one non-interactive overlay window; it stays "
-                    + "disabled beside sensing until its self-capture qualification exists. "
+                    + "at the display's native resolution. Audio is not an app operation: "
+                    + "the host records the phone's A2DP mix. "
+                    + "Teach panels are non-interactive overlay windows placed clear of "
+                    + "every region the helper reads. "
                     + "Stop and restart for a fresh session, then open the game.";
 
     private MediaProjectionManager projectionManager;
-    private BluetoothAdapter bluetoothAdapter;
-    private BluetoothA2dp a2dpProxy;
     private TextView statusView;
     private TextView diagnosticView;
     private TextView runnerStatusView;
@@ -110,36 +87,13 @@ public final class MainActivity extends Activity {
     private Button stopNightButton;
     private Spinner routeSpinner;
     private Spinner presetSpinner;
-    private TextView audioAnalysisView;
-    private TextView audioStatusView;
-    private ScrollView landscapeStatusScroll;
-    private Button bluetoothButton;
     private Button captureButton;
-    private Button audioMonitorButton;
-    private Button audioRecordButton;
-    private Button shareAudioButton;
     private Button overlayButton;
-    private Button overlayModeButton;
-    private Button overlayProbeButton;
     private TextView overlayStatusView;
     private Typeface hudTypeface;
     private boolean captureRunning;
-    private boolean audioMonitoring;
-    private boolean audioRecording;
     private boolean receiverRegistered;
-    private boolean bluetoothReceiverRegistered;
-    private boolean profileProxyRequested;
-    private boolean bluetoothPermissionRequested;
-    private boolean openBluetoothSettingsAfterPermission;
-    private boolean nearbyWifiPermissionRequested;
-    private boolean connectEspWifiAfterPermission;
-    private boolean bluetoothConnected;
-    private boolean firmwareAudioReceiverConnected;
-    private boolean wifiEspConnected;
-    private boolean overlayEnabled;
-    private boolean overlayProbeActive;
     private boolean overlayEnableAfterSettings;
-    private boolean audioSetupRequested;
     private boolean diagnosticsVisible;
     private volatile String lastScreen = "UNKNOWN";
     private volatile boolean nightRunnerRunning;
@@ -151,9 +105,6 @@ public final class MainActivity extends Activity {
     private RunnerCatalog.Route selectedRoute;
     private RunnerCatalog.Preset selectedPreset;
     private int selectedTab;
-    private OverlaySnapshot.Mode overlayMode = OverlaySnapshot.Mode.SENSOR_DEBUG;
-    private String audioStatusText = "AUDIO A2DP: checking receiver...\nreceiver = "
-            + AUDIO_RECEIVER_NAME + " (discover by name)";
 
     private final BroadcastReceiver statusReceiver = new BroadcastReceiver() {
         @Override
@@ -174,9 +125,6 @@ public final class MainActivity extends Activity {
                 if (diagnosticView != null) {
                     diagnosticView.setText(status);
                 }
-                if (audioAnalysisView != null) {
-                    audioAnalysisView.setText(extractAudioStatus(status));
-                }
                 refreshOverlayControls(status);
                 if (status.startsWith("RUNNING") || status.startsWith("STARTING")) {
                     setCaptureRunning(true);
@@ -184,55 +132,9 @@ public final class MainActivity extends Activity {
                     setCaptureRunning(false);
                 }
                 refreshRunnerReadiness();
-                if (status.contains("audioRecord=ON")) {
-                    setAudioRecording(true);
-                } else if (status.contains("audioRecord=READY")
-                        || status.contains("audioRecord=OFF")) {
-                    setAudioRecording(false);
-                }
-                if (status.contains("audioMonitor=ON")
-                        || status.contains("audioMonitor=STARTING")) {
-                    setAudioMonitoring(true);
-                } else if (status.contains("audioMonitor=OFF")
-                        || status.contains("audioMonitor=ERROR")) {
-                    setAudioMonitoring(false);
-                }
             }
         }
     };
-
-    private final BroadcastReceiver bluetoothReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED.equals(action)
-                    || BluetoothA2dp.ACTION_PLAYING_STATE_CHANGED.equals(action)) {
-                refreshAudioStatus();
-            }
-        }
-    };
-
-    private final BluetoothProfile.ServiceListener profileListener =
-            new BluetoothProfile.ServiceListener() {
-                @Override
-                public void onServiceConnected(int profile, BluetoothProfile proxy) {
-                    if (profile != BluetoothProfile.A2DP) {
-                        return;
-                    }
-                    a2dpProxy = (BluetoothA2dp) proxy;
-                    refreshAudioStatus();
-                }
-
-                @Override
-                public void onServiceDisconnected(int profile) {
-                    if (profile != BluetoothProfile.A2DP) {
-                        return;
-                    }
-                    a2dpProxy = null;
-                    profileProxyRequested = false;
-                    refreshAudioStatus();
-                }
-            };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -245,21 +147,12 @@ public final class MainActivity extends Activity {
             getWindow().setDecorFitsSystemWindows(false);
         }
         projectionManager = getSystemService(MediaProjectionManager.class);
-        BluetoothManager bluetoothManager = getSystemService(BluetoothManager.class);
-        if (bluetoothManager != null) {
-            bluetoothAdapter = bluetoothManager.getAdapter();
-        }
         try {
             hudTypeface = Typeface.createFromAsset(getAssets(), "fonts/hud-font.otf");
         } catch (RuntimeException error) {
             // Keep the helper usable if a stripped/custom build omits the optional asset.
             hudTypeface = Typeface.DEFAULT;
         }
-        overlayEnabled = getSharedPreferences(OverlayController.PREFS, MODE_PRIVATE)
-                .getBoolean(OverlayController.PREF_ENABLED, false);
-        overlayMode = "run".equals(getSharedPreferences(OverlayController.PREFS, MODE_PRIVATE)
-                .getString(OverlayController.PREF_MODE, "debug"))
-                ? OverlaySnapshot.Mode.DECISION_RUN : OverlaySnapshot.Mode.SENSOR_DEBUG;
         try {
             runnerCatalog = RunnerCatalog.load(getAssets());
         } catch (IOException error) {
@@ -267,9 +160,9 @@ public final class MainActivity extends Activity {
                     "Runner catalog unavailable: " + error.getMessage());
         }
         setContentView(buildUi());
+        applyTargetExtra(getIntent());
         refreshOverlayControls("overlay=" + (Settings.canDrawOverlays(this)
                 ? "READY" : "DISABLED(permission)"));
-        refreshSetupGuide();
     }
 
     @Override
@@ -290,22 +183,6 @@ public final class MainActivity extends Activity {
         }
         receiverRegistered = true;
 
-        IntentFilter bluetoothFilter = new IntentFilter();
-        bluetoothFilter.addAction(BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED);
-        bluetoothFilter.addAction(BluetoothA2dp.ACTION_PLAYING_STATE_CHANGED);
-        if (Build.VERSION.SDK_INT >= 33) {
-            registerReceiver(bluetoothReceiver, bluetoothFilter, Context.RECEIVER_NOT_EXPORTED);
-        } else {
-            registerReceiver(bluetoothReceiver, bluetoothFilter);
-        }
-        bluetoothReceiverRegistered = true;
-        if (audioSetupRequested) {
-            ensureBluetoothReady();
-        } else {
-            // Video capture has no audio dependency. Do not request the
-            // optional Bluetooth permission merely because the Activity opened.
-            refreshAudioStatus();
-        }
         // Configuration changes recreate this Activity. Ask the service for
         // its current combined state so portrait and landscape do not wait for
         // the next sensor heartbeat to redraw the signal feed.
@@ -316,17 +193,12 @@ public final class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        CaptureService.companionForeground = true;
         refreshRunnerReadiness();
-        if (audioSetupRequested) {
-            ensureBluetoothReady();
-        } else {
-            refreshAudioStatus();
-        }
-        refreshSetupGuide();
-        if (overlayEnableAfterSettings && Settings.canDrawOverlays(this)) {
+        if (overlayEnableAfterSettings) {
             overlayEnableAfterSettings = false;
-            overlayEnabled = true;
-            sendOverlayAction(CaptureService.ACTION_OVERLAY_ENABLE);
+            refreshOverlayControls("overlay=" + (Settings.canDrawOverlays(this)
+                    ? "READY" : "DISABLED(permission)"));
         }
     }
 
@@ -342,21 +214,43 @@ public final class MainActivity extends Activity {
     }
 
     @Override
+    protected void onPause() {
+        CaptureService.companionForeground = false;
+        super.onPause();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        applyTargetExtra(intent);
+    }
+
+    /**
+     * The host's setup names the target in the launch intent
+     * ({@code --es target <package|game>}); forward it to the service, which
+     * validates it against {@link Targets} and persists it.
+     */
+    private void applyTargetExtra(Intent intent) {
+        String named = intent == null ? null : intent.getStringExtra(CaptureService.EXTRA_TARGET);
+        if (named == null) return;
+        startService(new Intent(this, CaptureService.class)
+                .setAction(CaptureService.ACTION_SET_TARGET)
+                .putExtra(CaptureService.EXTRA_TARGET, named));
+    }
+
+    /** The named target, or null when none is named. */
+    private Targets.Target currentTarget() {
+        return Targets.byPackage(getSharedPreferences(CaptureService.PREFS, MODE_PRIVATE)
+                .getString(CaptureService.PREF_TARGET, null));
+    }
+
+    @Override
     protected void onStop() {
         if (receiverRegistered) {
             unregisterReceiver(statusReceiver);
             receiverRegistered = false;
         }
-        if (bluetoothReceiverRegistered) {
-            unregisterReceiver(bluetoothReceiver);
-            bluetoothReceiverRegistered = false;
-        }
-        if (a2dpProxy != null && hasBluetoothConnectPermission()
-                && bluetoothAdapter != null) {
-            bluetoothAdapter.closeProfileProxy(BluetoothProfile.A2DP, a2dpProxy);
-        }
-        a2dpProxy = null;
-        profileProxyRequested = false;
         super.onStop();
     }
 
@@ -388,8 +282,8 @@ public final class MainActivity extends Activity {
                 LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f);
         pagesParams.setMargins(0, dp(8), 0, 0);
 
-        Button[] tabs = new Button[3];
-        String[] labels = {"HOME", "AUDIO", "SETTINGS"};
+        Button[] tabs = new Button[2];
+        String[] labels = {"HOME", "SETTINGS"};
         LinearLayout tabBar = new LinearLayout(this);
         tabBar.setOrientation(LinearLayout.HORIZONTAL);
         tabBar.setGravity(Gravity.CENTER);
@@ -408,7 +302,6 @@ public final class MainActivity extends Activity {
         root.addView(tabBar, matchWrap());
 
         pages.addView(sessionPage(), pageParams());
-        pages.addView(audioPage(), pageParams());
         pages.addView(configPage(), pageParams());
         root.addView(pages, pagesParams);
         selectTab(pages, tabs, Math.min(selectedTab, tabs.length - 1));
@@ -601,50 +494,17 @@ public final class MainActivity extends Activity {
         }
     }
 
-    private ScrollView audioPage() {
-        LinearLayout content = pageContent("OPTIONAL AUDIO");
-        content.addView(bodyText("Video capture works without audio. "
-                + "Connect the receiver only to monitor or record PCM."), matchWrap());
-        audioStatusView = audioStatusView();
-        content.addView(audioStatusView, matchWrap());
-        content.addView(bluetoothButton(), matchWrap());
-        content.addView(sectionLabel("MONITORING"), matchWrap());
-        content.addView(audioMonitorButton(), matchWrap());
-        content.addView(audioRecordButton(), matchWrap());
-        content.addView(shareAudioButton(), matchWrap());
-        content.addView(sectionLabel("AUDIO MODEL"), matchWrap());
-        Button importModel = themedButton("Import audio model", COLOR_BONNIE,
-                COLOR_BONNIE_PRESSED, COLOR_BONNIE_STROKE, COLOR_TEXT);
-        importModel.setOnClickListener(view -> importAudioModel());
-        content.addView(importModel, matchWrap());
-        audioAnalysisView = statusTextView();
-        content.addView(audioAnalysisView, matchWrap());
-        return scrollPage(content);
-    }
-
     private ScrollView configPage() {
         LinearLayout content = pageContent("OVERLAY");
         overlayStatusView = statusTextView();
         overlayStatusView.setText(Settings.canDrawOverlays(this)
                 ? "overlay=READY" : "overlay=DISABLED(permission)");
         content.addView(overlayStatusView, matchWrap());
-        overlayButton = themedButton("Enable overlay", COLOR_CHICA,
+        overlayButton = themedButton("Overlay permission", COLOR_CHICA,
                 COLOR_CHICA_PRESSED, COLOR_CHICA_STROKE,
                 Color.rgb(35, 24, 5));
         overlayButton.setOnClickListener(view -> toggleOverlay());
         content.addView(overlayButton, matchWrap());
-        overlayModeButton = themedButton("Overlay mode: SENSOR / DEBUG",
-                COLOR_BONNIE, COLOR_BONNIE_PRESSED, COLOR_BONNIE_STROKE, COLOR_TEXT);
-        overlayModeButton.setOnClickListener(view -> toggleOverlayMode());
-        content.addView(overlayModeButton, matchWrap());
-        if ((getApplicationInfo().flags
-                & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
-            overlayProbeButton = themedButton("Start qualification probe",
-                    COLOR_FOXY_MANGLE, COLOR_FOXY_MANGLE_PRESSED,
-                    COLOR_FOXY_MANGLE_STROKE, COLOR_TEXT);
-            overlayProbeButton.setOnClickListener(view -> toggleQualificationProbe());
-            content.addView(overlayProbeButton, matchWrap());
-        }
         content.addView(sectionLabel("DIAGNOSTICS"), matchWrap());
         diagnosticToggleButton = themedButton(
                 diagnosticsVisible ? "Hide diagnostics" : "Show diagnostics",
@@ -869,83 +729,18 @@ public final class MainActivity extends Activity {
                 overlayStatusView.setText(line);
             }
             if (overlayButton != null) {
-                overlayButton.setText(overlayEnabled ? "Disable overlay" : "Enable overlay");
-            }
-            if (overlayModeButton != null) {
-                overlayModeButton.setText(overlayMode == OverlaySnapshot.Mode.SENSOR_DEBUG
-                        ? "Overlay mode: SENSOR / DEBUG"
-                        : "Overlay mode: DECISION / RUN");
-            }
-            overlayProbeActive = line.startsWith("overlay=PROBE");
-            if (overlayProbeButton != null) {
-                overlayProbeButton.setText(overlayProbeActive
-                        ? "Stop qualification probe" : "Start qualification probe");
+                overlayButton.setText("Overlay permission");
             }
             return;
         }
     }
 
+    /** Teach panels need "display over other apps"; open its settings page. */
     private void toggleOverlay() {
-        if (!Settings.canDrawOverlays(this)) {
-            overlayEnableAfterSettings = true;
-            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
-            intent.setData(Uri.parse("package:" + getPackageName()));
-            startActivity(intent);
-            Toast.makeText(this, "Allow display over other apps, then return here",
-                    Toast.LENGTH_LONG).show();
-            return;
-        }
-        overlayEnabled = !overlayEnabled;
-        sendOverlayAction(overlayEnabled
-                ? CaptureService.ACTION_OVERLAY_ENABLE
-                : CaptureService.ACTION_OVERLAY_DISABLE);
-        refreshOverlayControls("overlay=" + (overlayEnabled ? "READY" : "DISABLED(user)"));
-    }
-
-    private void toggleOverlayMode() {
-        if (overlayProbeActive) {
-            Toast.makeText(this, "Qualification probe is sensor/debug only",
-                    Toast.LENGTH_LONG).show();
-            return;
-        }
-        overlayMode = overlayMode == OverlaySnapshot.Mode.SENSOR_DEBUG
-                ? OverlaySnapshot.Mode.DECISION_RUN : OverlaySnapshot.Mode.SENSOR_DEBUG;
-        Intent intent = new Intent(this, CaptureService.class)
-                .setAction(CaptureService.ACTION_OVERLAY_MODE)
-                .putExtra(CaptureService.EXTRA_OVERLAY_MODE,
-                        overlayMode == OverlaySnapshot.Mode.DECISION_RUN ? "run" : "debug");
-        startService(intent);
-        refreshOverlayControls("overlay=" + (overlayEnabled ? "READY" : "DISABLED(user)"));
-    }
-
-    private void toggleQualificationProbe() {
-        if (!captureRunning) {
-            Toast.makeText(this, "Start video capture before probing the HUD",
-                    Toast.LENGTH_LONG).show();
-            return;
-        }
-        overlayProbeActive = !overlayProbeActive;
-        sendOverlayAction(overlayProbeActive
-                ? CaptureService.ACTION_OVERLAY_PROBE_START
-                : CaptureService.ACTION_OVERLAY_PROBE_STOP);
-        refreshOverlayControls("overlay="
-                + (overlayProbeActive ? "PROBE" : "DISABLED(self-capture-unqualified)"));
-    }
-
-    private void sendOverlayAction(String action) {
-        startService(new Intent(this, CaptureService.class).setAction(action));
-    }
-
-    private String extractAudioStatus(String status) {
-        if (status == null) {
-            return "audio service status unavailable";
-        }
-        for (String line : status.split("\\n")) {
-            if (line.startsWith("audio=")) {
-                return line;
-            }
-        }
-        return "audio service status unavailable";
+        overlayEnableAfterSettings = true;
+        Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+        intent.setData(Uri.parse("package:" + getPackageName()));
+        startActivity(intent);
     }
 
     private TextView statusTextView() {
@@ -968,78 +763,6 @@ public final class MainActivity extends Activity {
         view.setTextColor(COLOR_MUTED);
         view.setPadding(dp(8), dp(8), dp(8), dp(8));
         return view;
-    }
-
-    private void addLandscapeContent(LinearLayout root) {
-        LinearLayout body = new LinearLayout(this);
-        body.setOrientation(LinearLayout.HORIZONTAL);
-        body.setGravity(Gravity.CENTER_VERTICAL);
-        body.setBaselineAligned(false);
-        body.setPadding(0, dp(4), 0, dp(4));
-        LinearLayout.LayoutParams bodyParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        bodyParams.setMargins(0, dp(4), 0, dp(4));
-        root.addView(body, bodyParams);
-
-        LinearLayout signalCard = new LinearLayout(this);
-        signalCard.setOrientation(LinearLayout.VERTICAL);
-        signalCard.setGravity(Gravity.TOP);
-        signalCard.setPadding(dp(18), dp(14), dp(18), dp(14));
-        signalCard.setBackground(panelBackground());
-        LinearLayout.LayoutParams signalParams = new LinearLayout.LayoutParams(
-                0, LinearLayout.LayoutParams.MATCH_PARENT, 1.25f);
-        signalParams.setMargins(0, 0, dp(8), 0);
-        body.addView(signalCard, signalParams);
-
-        signalCard.addView(signalHeader(), columnChild());
-
-        statusView = new TextView(this);
-        statusView.setText("UNAVAILABLE: capture has not started");
-        statusView.setTextIsSelectable(true);
-        statusView.setTextSize(14);
-        statusView.setTextColor(COLOR_TEXT);
-        statusView.setTypeface(Typeface.MONOSPACE);
-        statusView.setIncludeFontPadding(false);
-        statusView.setGravity(Gravity.TOP);
-        statusView.setPadding(dp(10), dp(7), dp(10), dp(7));
-        statusView.setBackground(panelBackground());
-
-        // The capture status can expand to several lines while running. Keep
-        // that verbose stream in a bounded, scrollable area so it cannot push
-        // the audio receiver state out of the signal feed.
-        landscapeStatusScroll = new ScrollView(this);
-        landscapeStatusScroll.setFillViewport(false);
-        landscapeStatusScroll.setVerticalScrollBarEnabled(true);
-        landscapeStatusScroll.addView(statusView, new ScrollView.LayoutParams(
-                ScrollView.LayoutParams.MATCH_PARENT,
-                ScrollView.LayoutParams.WRAP_CONTENT));
-        LinearLayout.LayoutParams statusScrollParams = statusScrollLayoutParams(captureRunning);
-        signalCard.addView(landscapeStatusScroll, statusScrollParams);
-
-        audioStatusView = audioStatusView();
-        // The landscape signal column has less vertical room. Keep the
-        // complete three-line receiver state inside its card instead of
-        // allowing the last line to be clipped at the navigation inset.
-        audioStatusView.setTextSize(11);
-        audioStatusView.setIncludeFontPadding(false);
-        audioStatusView.setPadding(dp(10), dp(6), dp(10), dp(6));
-        signalCard.addView(audioStatusView, columnChild());
-
-        LinearLayout controlCard = new LinearLayout(this);
-        controlCard.setOrientation(LinearLayout.VERTICAL);
-        controlCard.setGravity(Gravity.CENTER_VERTICAL);
-        controlCard.setPadding(dp(18), dp(14), dp(18), dp(14));
-        controlCard.setBackground(panelBackground());
-        LinearLayout.LayoutParams controlParams = new LinearLayout.LayoutParams(
-                0, LinearLayout.LayoutParams.MATCH_PARENT, 0.85f);
-        controlParams.setMargins(dp(8), 0, 0, 0);
-        body.addView(controlCard, controlParams);
-
-        TextView controlLabel = sectionLabel("CONTROLS");
-        controlCard.addView(controlLabel, columnChild());
-        controlCard.addView(bluetoothButton(), matchWrap());
-        addControlButtons(controlCard);
     }
 
     private TextView sectionLabel(String label) {
@@ -1123,80 +846,6 @@ public final class MainActivity extends Activity {
         dialog.show();
     }
 
-    private LinearLayout signalHeader() {
-        LinearLayout header = new LinearLayout(this);
-        header.setOrientation(LinearLayout.HORIZONTAL);
-        header.setGravity(Gravity.CENTER_VERTICAL);
-
-        TextView dot = new TextView(this);
-        dot.setText("\u25CF");
-        dot.setTextSize(22);
-        dot.setTextColor(Color.rgb(224, 34, 38));
-        dot.setGravity(Gravity.CENTER);
-        dot.setIncludeFontPadding(false);
-        dot.setContentDescription("Signal feed indicator");
-        dot.setPadding(0, 0, dp(6), 0);
-        header.addView(dot, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT));
-
-        TextView label = sectionLabel("SIGNAL FEED");
-        label.setGravity(Gravity.CENTER_VERTICAL | Gravity.LEFT);
-        LinearLayout.LayoutParams labelParams = new LinearLayout.LayoutParams(
-                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
-        header.addView(label, labelParams);
-        return header;
-    }
-
-    private LinearLayout.LayoutParams columnChild() {
-        return new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-    }
-
-    private void addControlButtons(LinearLayout controlCard) {
-        controlCard.addView(captureButton(), matchWrap());
-        controlCard.addView(audioMonitorButton(), matchWrap());
-        controlCard.addView(audioRecordButton(), matchWrap());
-        controlCard.addView(shareAudioButton(), matchWrap());
-
-        Button openGame = themedButton(
-                "Open " + targetGameName(), COLOR_CHICA, COLOR_CHICA_PRESSED,
-                COLOR_CHICA_STROKE, Color.rgb(35, 24, 5));
-        openGame.setOnClickListener(view -> openGame());
-        controlCard.addView(openGame, matchWrap());
-
-        controlCard.addView(settingsRow(), matchWrap());
-    }
-
-    private TextView audioStatusView() {
-        TextView view = new TextView(this);
-        view.setText(audioStatusText);
-        view.setTextIsSelectable(true);
-        view.setTextSize(14);
-        view.setTextColor(COLOR_TEXT);
-        view.setTypeface(Typeface.MONOSPACE);
-        view.setGravity(Gravity.CENTER_VERTICAL);
-        view.setPadding(dp(12), dp(10), dp(12), dp(10));
-        view.setBackground(panelBackground());
-        return view;
-    }
-
-    private Button bluetoothButton() {
-        bluetoothButton = themedButton(
-                "Connect audio receiver", COLOR_BONNIE, COLOR_BONNIE_PRESSED,
-                COLOR_BONNIE_STROKE, COLOR_TEXT);
-        bluetoothButton.setOnClickListener(view -> {
-            audioSetupRequested = true;
-            if (firmwareAudioReceiverConnected && !isEspWifiConnected()) {
-                connectEspWifi();
-            } else {
-                openBluetoothSettings();
-            }
-        });
-        return bluetoothButton;
-    }
-
     private Button captureButton() {
         captureButton = themedButton(
                 captureRunning ? "Stop video capture" : "Start video capture",
@@ -1214,166 +863,11 @@ public final class MainActivity extends Activity {
         return openGame;
     }
 
-    private Button audioMonitorButton() {
-        audioMonitorButton = themedButton(
-                audioMonitoring ? "Stop ESP32 PCM monitor" : "Monitor ESP32 PCM on phone",
-                COLOR_BONNIE, COLOR_BONNIE_PRESSED,
-                COLOR_BONNIE_STROKE, COLOR_TEXT);
-        audioMonitorButton.setOnClickListener(view -> toggleAudioMonitor());
-        return audioMonitorButton;
-    }
-
-    private Button audioRecordButton() {
-        audioRecordButton = themedButton(
-                audioRecording ? "Stop ESP audio recording" : "Record ESP audio (dev)",
-                COLOR_FOXY_MANGLE, COLOR_FOXY_MANGLE_PRESSED,
-                COLOR_FOXY_MANGLE_STROKE, COLOR_TEXT);
-        audioRecordButton.setOnClickListener(view -> toggleAudioRecording());
-        return audioRecordButton;
-    }
-
-    private Button shareAudioButton() {
-        shareAudioButton = themedButton(
-                "Share last audio", COLOR_TEXT, Color.rgb(226, 204, 193),
-                COLOR_FOXY_MANGLE_STROKE, Color.BLACK);
-        shareAudioButton.setOnClickListener(view -> shareLastAudio());
-        return shareAudioButton;
-    }
-
     private void setCaptureRunning(boolean running) {
         captureRunning = running;
         if (captureButton != null) {
             captureButton.setText(running ? "Stop video capture" : "Start video capture");
         }
-        if (landscapeStatusScroll != null) {
-            landscapeStatusScroll.setLayoutParams(statusScrollLayoutParams(running));
-        }
-    }
-
-    private void setAudioMonitoring(boolean monitoring) {
-        audioMonitoring = monitoring;
-        if (audioMonitorButton != null) {
-            audioMonitorButton.setText(monitoring
-                    ? "Stop ESP32 PCM monitor" : "Monitor ESP32 PCM on phone");
-        }
-    }
-
-    private void toggleAudioMonitor() {
-        if (!captureRunning) {
-            Toast.makeText(this, "Start video capture first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (audioMonitoring) {
-            startService(new Intent(this, CaptureService.class)
-                    .setAction(CaptureService.ACTION_STOP_AUDIO_MONITOR));
-            return;
-        }
-        startPhoneAudioMonitor();
-    }
-
-    private void startPhoneAudioMonitor() {
-        startService(new Intent(this, CaptureService.class)
-                .setAction(CaptureService.ACTION_START_AUDIO_MONITOR));
-    }
-
-    private void importAudioModel() {
-        Intent open = new Intent(Intent.ACTION_OPEN_DOCUMENT)
-                .setType("text/plain")
-                .addCategory(Intent.CATEGORY_OPENABLE);
-        startActivityForResult(open, REQUEST_AUDIO_MODEL);
-    }
-
-    private void installAudioModel(android.net.Uri uri) throws IOException {
-        if (uri == null) {
-            throw new IOException("model-uri-missing");
-        }
-        File temporary = File.createTempFile("cue-model-", ".tmp", getFilesDir());
-        try {
-            try (InputStream input = getContentResolver().openInputStream(uri);
-                    FileOutputStream output = new FileOutputStream(temporary)) {
-                if (input == null) {
-                    throw new IOException("model-open-failed");
-                }
-                byte[] buffer = new byte[8192];
-                int total = 0;
-                int read;
-                while ((read = input.read(buffer)) != -1) {
-                    total += read;
-                    if (total > 1_000_000) {
-                        throw new IOException("model-too-large");
-                    }
-                    output.write(buffer, 0, read);
-                }
-            }
-            AudioAnalyzer.readModel(temporary);
-            File target = new File(getFilesDir(), "cue-model-v1.txt");
-            File backup = new File(getFilesDir(), "cue-model-v1.txt.bak");
-            if (backup.exists() && !backup.delete()) {
-                throw new IOException("model-backup-remove-failed");
-            }
-            boolean movedOld = target.exists() && target.renameTo(backup);
-            if (!temporary.renameTo(target)) {
-                if (movedOld) {
-                    backup.renameTo(target);
-                }
-                throw new IOException("model-install-failed");
-            }
-            if (movedOld) {
-                backup.delete();
-            }
-        } finally {
-            if (temporary.exists()) {
-                temporary.delete();
-            }
-        }
-    }
-
-    private void setAudioRecording(boolean recording) {
-        audioRecording = recording;
-        if (audioRecordButton != null) {
-            audioRecordButton.setText(recording
-                    ? "Stop ESP audio recording" : "Record ESP audio (dev)");
-        }
-    }
-
-    private void toggleAudioRecording() {
-        if (!captureRunning) {
-            Toast.makeText(this, "Start video capture first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        Intent intent = new Intent(this, CaptureService.class).setAction(
-                audioRecording ? CaptureService.ACTION_STOP_AUDIO_RECORD
-                        : CaptureService.ACTION_START_AUDIO_RECORD);
-        startService(intent);
-        setAudioRecording(!audioRecording);
-    }
-
-    private void shareLastAudio() {
-        File directory = new File(getFilesDir(), "audio-captures");
-        File[] files = directory.listFiles((dir, name) -> name.endsWith(".wav"));
-        if (files == null || files.length == 0) {
-            Toast.makeText(this, "No ESP32 audio recording yet", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        Arrays.sort(files, (left, right) -> Long.compare(
-                right.lastModified(), left.lastModified()));
-        File file = files[0];
-        Uri uri = Uri.parse("content://" + getPackageName() + ".files/audio-captures/"
-                + Uri.encode(file.getName()));
-        Intent send = new Intent(Intent.ACTION_SEND)
-                .setType("audio/wav")
-                .putExtra(Intent.EXTRA_STREAM, uri)
-                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        startActivity(Intent.createChooser(send, "Share ESP32 audio"));
-    }
-
-    private LinearLayout.LayoutParams statusScrollLayoutParams(boolean expanded) {
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                expanded ? 0 : LinearLayout.LayoutParams.WRAP_CONTENT,
-                expanded ? 1f : 0f);
-        params.setMargins(0, dp(4), 0, dp(4));
-        return params;
     }
 
     private void toggleCapture() {
@@ -1385,8 +879,6 @@ public final class MainActivity extends Activity {
                 .setAction(CaptureService.ACTION_STOP);
         startService(intent);
         setCaptureRunning(false);
-        setAudioMonitoring(false);
-        setAudioRecording(false);
     }
 
     private Button themedButton(String label, int fill, int pressedFill,
@@ -1438,381 +930,9 @@ public final class MainActivity extends Activity {
         startActivityForResult(request, REQUEST_MEDIA_PROJECTION);
     }
 
-    private boolean hasBluetoothConnectPermission() {
-        return Build.VERSION.SDK_INT < 31
-                || checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)
-                == PackageManager.PERMISSION_GRANTED;
-    }
-
-    private void ensureBluetoothReady() {
-        if (!hasBluetoothConnectPermission()) {
-            if (!bluetoothPermissionRequested) {
-                bluetoothPermissionRequested = true;
-                requestPermissions(
-                        new String[]{Manifest.permission.BLUETOOTH_CONNECT},
-                        REQUEST_BLUETOOTH_CONNECT);
-            }
-            refreshAudioStatus();
-            return;
-        }
-        if (bluetoothAdapter == null) {
-            refreshAudioStatus();
-            return;
-        }
-        if (a2dpProxy == null && !profileProxyRequested) {
-            profileProxyRequested = bluetoothAdapter.getProfileProxy(
-                    this, profileListener, BluetoothProfile.A2DP);
-        }
-        refreshAudioStatus();
-    }
-
-    private void refreshAudioStatus() {
-        if (audioStatusView == null) {
-            return;
-        }
-        if (!hasBluetoothConnectPermission()) {
-            setAudioReceiverState(false, false);
-            setAudioDisplayText(
-                    "AUDIO A2DP: permission required\n"
-                            + "tap Connect audio receiver to authorize BLUETOOTH_CONNECT");
-            return;
-        }
-        if (bluetoothAdapter == null) {
-            setAudioReceiverState(false, false);
-            setAudioDisplayText("AUDIO A2DP: unavailable\nBluetooth adapter not found");
-            return;
-        }
-        if (!bluetoothAdapter.isEnabled()) {
-            setAudioReceiverState(false, false);
-            setAudioDisplayText("AUDIO A2DP: Bluetooth off\n"
-                    + "enable Bluetooth, then connect " + AUDIO_RECEIVER_NAME);
-            return;
-        }
-        if (a2dpProxy == null) {
-            setAudioReceiverState(false, false);
-            setAudioDisplayText("AUDIO A2DP: checking receiver...\nreceiver = "
-                    + AUDIO_RECEIVER_NAME + " (discover by name)");
-            return;
-        }
-        try {
-            BluetoothDevice receiver = findConnectedAudioReceiver();
-            if (receiver != null) {
-                boolean firmwareReceiver = AUDIO_RECEIVER_NAME.equals(receiver.getName());
-                boolean playing = a2dpProxy.isA2dpPlaying(receiver);
-                setAudioReceiverState(true, firmwareReceiver);
-                setAudioStatus(
-                        "AUDIO A2DP: " + (playing ? "STREAMING" : "CONNECTED"),
-                        "receiver = " + bluetoothDeviceName(receiver),
-                        "address = " + receiver.getAddress());
-                return;
-            }
-
-            BluetoothDevice firmwareReceiver = findFirmwareAudioReceiver();
-            if (firmwareReceiver != null) {
-                int state = a2dpProxy.getConnectionState(firmwareReceiver);
-                setAudioReceiverState(false, false);
-                setAudioStatus(
-                        "AUDIO A2DP: " + bluetoothStateName(state),
-                        "receiver = " + AUDIO_RECEIVER_NAME,
-                        "address = " + firmwareReceiver.getAddress());
-                return;
-            }
-
-            setAudioReceiverState(false, false);
-            setAudioStatus(
-                    "AUDIO A2DP: DISCONNECTED",
-                    "receiver = " + AUDIO_RECEIVER_NAME,
-                    "pair/connect the device with this name");
-        } catch (SecurityException exception) {
-            setAudioReceiverState(false, false);
-            setAudioDisplayText("AUDIO A2DP: BLUETOOTH_CONNECT permission required");
-        }
-    }
-
-    private BluetoothDevice findConnectedAudioReceiver() {
-        if (a2dpProxy == null) {
-            return null;
-        }
-        for (BluetoothDevice device : a2dpProxy.getConnectedDevices()) {
-            return device;
-        }
-        return null;
-    }
-
-    private BluetoothDevice findFirmwareAudioReceiver() {
-        if (a2dpProxy != null) {
-            for (BluetoothDevice device : a2dpProxy.getConnectedDevices()) {
-                if (AUDIO_RECEIVER_NAME.equals(device.getName())) {
-                    return device;
-                }
-            }
-        }
-        if (bluetoothAdapter != null) {
-            for (BluetoothDevice device : bluetoothAdapter.getBondedDevices()) {
-                if (AUDIO_RECEIVER_NAME.equals(device.getName())) {
-                    return device;
-                }
-            }
-        }
-        return null;
-    }
-
-    private String bluetoothDeviceName(BluetoothDevice device) {
-        String name = device.getName();
-        return name == null ? "unknown A2DP receiver" : name;
-    }
-
-    private void setAudioStatus(String headline, String receiverLine, String extraLine) {
-        String text = headline + "\n" + receiverLine;
-        if (extraLine != null) {
-            text += getResources().getConfiguration().orientation
-                    == Configuration.ORIENTATION_LANDSCAPE
-                    ? " | " + extraLine : "\n" + extraLine;
-        }
-        setAudioDisplayText(text);
-    }
-
-    private void setAudioDisplayText(String text) {
-        audioStatusText = text;
-        refreshSetupGuide();
-    }
-
-    private void setAudioReceiverState(boolean connected, boolean firmwareReceiver) {
-        bluetoothConnected = connected;
-        firmwareAudioReceiverConnected = connected && firmwareReceiver;
-        updateAudioButton();
-        refreshSetupGuide();
-    }
-
-    private void updateAudioButton() {
-        if (bluetoothButton == null) {
-            return;
-        }
-        if (firmwareAudioReceiverConnected && !isEspWifiConnected()) {
-            bluetoothButton.setText("Connect ESP32 Wi-Fi");
-        } else if (bluetoothConnected) {
-            bluetoothButton.setText("Disconnect audio receiver");
-        } else {
-            bluetoothButton.setText("Connect audio receiver");
-        }
-    }
-
-    private void refreshSetupGuide() {
-        if (audioStatusView == null) {
-            return;
-        }
-
-        wifiEspConnected = firmwareAudioReceiverConnected && isEspWifiConnected();
-        String wifiLine;
-        if (wifiEspConnected) {
-            wifiLine = "Wi-Fi: CONNECTED to " + WIFI_AP_SSID;
-        } else if (firmwareAudioReceiverConnected && hasWifiTransport()) {
-            String ssid = connectedWifiSsid();
-            wifiLine = "Wi-Fi: " + (ssid == null ? "connected; verify " : ssid
-                    + "; select ") + WIFI_AP_SSID
-                    + " (password: " + WIFI_AP_PASSWORD + ")";
-        } else if (firmwareAudioReceiverConnected) {
-            wifiLine = "Wi-Fi: connect " + WIFI_AP_SSID
-                    + " (password: " + WIFI_AP_PASSWORD + ") for optional audio";
-        } else {
-            wifiLine = "Wi-Fi: optional audio path; not required for video capture";
-        }
-        String nextStep;
-        if (!bluetoothConnected) {
-            nextStep = "Audio optional: tap Start video capture";
-        } else if (firmwareAudioReceiverConnected && !wifiEspConnected) {
-            nextStep = "Audio optional: start video capture, or tap the audio button for Wi-Fi";
-        } else {
-            nextStep = "SETUP READY: tap Start video capture (audio optional)";
-        }
-        audioStatusView.setText(audioStatusText + "\n" + wifiLine + "\n" + nextStep);
-        updateAudioButton();
-    }
-
-    private boolean isEspWifiConnected() {
-        String ssid = connectedWifiSsid();
-        if (ssid != null) {
-            return WIFI_AP_SSID.equals(ssid);
-        }
-        // Android may hide the SSID from apps without location permission.
-        // The ESP32 soft AP uses the stable default gateway 192.168.4.1, so
-        // use that local-only signal as a permission-free fallback.
-        try {
-            WifiManager wifiManager = getSystemService(WifiManager.class);
-            DhcpInfo dhcp = wifiManager == null ? null : wifiManager.getDhcpInfo();
-            return dhcp != null && isEspApAddress(dhcp.gateway);
-        } catch (SecurityException exception) {
-            return false;
-        }
-    }
-
-    private boolean isEspApAddress(int address) {
-        int first = address & 0xff;
-        int second = (address >>> 8) & 0xff;
-        int third = (address >>> 16) & 0xff;
-        int fourth = (address >>> 24) & 0xff;
-        return (first == 192 && second == 168 && third == 4 && fourth == 1)
-                || (first == 1 && second == 4 && third == 168 && fourth == 192);
-    }
-
-    private String connectedWifiSsid() {
-        try {
-            WifiManager wifiManager = getSystemService(WifiManager.class);
-            if (wifiManager == null) {
-                return null;
-            }
-            WifiInfo info = wifiManager.getConnectionInfo();
-            if (info == null) {
-                return null;
-            }
-            String ssid = info.getSSID();
-            if (ssid == null || "<unknown ssid>".equalsIgnoreCase(ssid)) {
-                return null;
-            }
-            if (ssid.length() >= 2 && ssid.startsWith("\"")
-                    && ssid.endsWith("\"")) {
-                ssid = ssid.substring(1, ssid.length() - 1);
-            }
-            return ssid;
-        } catch (SecurityException exception) {
-            return null;
-        }
-    }
-
-    private boolean hasWifiTransport() {
-        ConnectivityManager manager = getSystemService(ConnectivityManager.class);
-        if (manager == null) {
-            return false;
-        }
-        for (Network network : manager.getAllNetworks()) {
-            NetworkCapabilities capabilities = manager.getNetworkCapabilities(network);
-            if (capabilities != null && capabilities.hasTransport(
-                    NetworkCapabilities.TRANSPORT_WIFI)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private String bluetoothStateName(int state) {
-        switch (state) {
-            case BluetoothProfile.STATE_CONNECTED:
-                return "CONNECTED";
-            case BluetoothProfile.STATE_CONNECTING:
-                return "CONNECTING";
-            case BluetoothProfile.STATE_DISCONNECTING:
-                return "DISCONNECTING";
-            case BluetoothProfile.STATE_DISCONNECTED:
-                return "DISCONNECTED";
-            default:
-                return "UNKNOWN (" + state + ")";
-        }
-    }
-
-    private void openBluetoothSettings() {
-        if (!hasBluetoothConnectPermission()) {
-            openBluetoothSettingsAfterPermission = true;
-            bluetoothPermissionRequested = true;
-            requestPermissions(
-                    new String[]{Manifest.permission.BLUETOOTH_CONNECT},
-                    REQUEST_BLUETOOTH_CONNECT);
-            return;
-        }
-        startActivity(new Intent(Settings.ACTION_BLUETOOTH_SETTINGS));
-    }
-
-    private void openWifiSettings() {
-        connectEspWifi();
-    }
-
-    private boolean hasNearbyWifiPermission() {
-        if (Build.VERSION.SDK_INT >= 33) {
-            return checkSelfPermission(Manifest.permission.NEARBY_WIFI_DEVICES)
-                    == PackageManager.PERMISSION_GRANTED;
-        }
-        if (Build.VERSION.SDK_INT >= 29) {
-            return checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-                    == PackageManager.PERMISSION_GRANTED;
-        }
-        return true;
-    }
-
-    private void connectEspWifi() {
-        if (!hasNearbyWifiPermission()) {
-            if (!nearbyWifiPermissionRequested) {
-                nearbyWifiPermissionRequested = true;
-                connectEspWifiAfterPermission = true;
-                String permission = Build.VERSION.SDK_INT >= 33
-                        ? Manifest.permission.NEARBY_WIFI_DEVICES
-                        : Manifest.permission.ACCESS_FINE_LOCATION;
-                requestPermissions(new String[]{permission}, REQUEST_NEARBY_WIFI);
-            }
-            return;
-        }
-        startService(new Intent(this, CaptureService.class)
-                .setAction(CaptureService.ACTION_CONNECT_AUDIO_WIFI));
-        setAudioDisplayText("Wi-Fi: requesting managed local connection to "
-                + WIFI_AP_SSID);
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_NEARBY_WIFI) {
-            nearbyWifiPermissionRequested = false;
-            boolean granted = grantResults.length > 0
-                    && grantResults[0] == PackageManager.PERMISSION_GRANTED;
-            if (granted && connectEspWifiAfterPermission) {
-                connectEspWifiAfterPermission = false;
-                connectEspWifi();
-            } else if (!granted) {
-                connectEspWifiAfterPermission = false;
-                Toast.makeText(this,
-                        "ESP32 Wi-Fi connection needs nearby-device permission",
-                        Toast.LENGTH_LONG).show();
-            }
-            return;
-        }
-        if (requestCode != REQUEST_BLUETOOTH_CONNECT) {
-            return;
-        }
-        bluetoothPermissionRequested = false;
-        boolean granted = grantResults.length > 0
-                && grantResults[0] == PackageManager.PERMISSION_GRANTED;
-        if (granted) {
-            ensureBluetoothReady();
-            if (openBluetoothSettingsAfterPermission) {
-                openBluetoothSettingsAfterPermission = false;
-                startActivity(new Intent(Settings.ACTION_BLUETOOTH_SETTINGS));
-            }
-        } else {
-            openBluetoothSettingsAfterPermission = false;
-            refreshAudioStatus();
-            Toast.makeText(this, "Bluetooth receiver monitoring needs BLUETOOTH_CONNECT",
-                    Toast.LENGTH_LONG).show();
-        }
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_AUDIO_MODEL) {
-            if (resultCode != RESULT_OK || data == null || data.getData() == null) {
-                return;
-            }
-            try {
-                installAudioModel(data.getData());
-                startService(new Intent(this, CaptureService.class)
-                        .setAction(CaptureService.ACTION_RELOAD_AUDIO_MODEL));
-                Toast.makeText(this, "Audio model installed and reloaded",
-                        Toast.LENGTH_LONG).show();
-            } catch (IOException | RuntimeException error) {
-                Toast.makeText(this, "Audio model rejected: " + error.getMessage(),
-                        Toast.LENGTH_LONG).show();
-            }
-            return;
-        }
         if (requestCode != REQUEST_MEDIA_PROJECTION) {
             return;
         }
@@ -1828,35 +948,35 @@ public final class MainActivity extends Activity {
                 .putExtra(CaptureService.EXTRA_RESULT_DATA, data);
         startForegroundService(service);
         setCaptureRunning(true);
-        statusView.setText("STARTING: waiting for visual stream; audio authority is external");
+        statusView.setText("STARTING: waiting for the first native frame");
     }
 
-    /**
-     * Display name of the configured target, read from the installed package.
-     *
-     * <p>The helper is calibrated for one game at a time, so the UI names the
-     * game {@link #GAME_PACKAGE} will actually launch instead of a hardcoded
-     * title. When the target is absent there is no label to read, so the
-     * package id is the only honest thing left to show.</p>
-     */
+    /** Display name of the named target, from the installed package when it can be read. */
     private String targetGameName() {
+        Targets.Target target = currentTarget();
+        if (target == null) return "the game";
         PackageManager packages = getPackageManager();
         try {
             return packages.getApplicationLabel(
-                    packages.getApplicationInfo(GAME_PACKAGE, 0)).toString();
+                    packages.getApplicationInfo(target.packageName, 0)).toString();
         } catch (PackageManager.NameNotFoundException absent) {
-            return GAME_PACKAGE;
+            return target.label;
         }
     }
 
+    /** Bring the named target to the front without restarting it. */
     private void openGame() {
-        Intent launch = getPackageManager().getLaunchIntentForPackage(GAME_PACKAGE);
-        if (launch == null) {
-            Toast.makeText(this, targetGameName() + " is not installed",
-                    Toast.LENGTH_LONG).show();
+        Targets.Target target = currentTarget();
+        if (target == null) {
+            Toast.makeText(this, "No target is named", Toast.LENGTH_LONG).show();
             return;
         }
-        launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        Intent launch = getPackageManager().getLaunchIntentForPackage(target.packageName);
+        if (launch == null) {
+            Toast.makeText(this, target.label + " is not installed", Toast.LENGTH_LONG).show();
+            return;
+        }
+        launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         startActivity(launch);
     }
 

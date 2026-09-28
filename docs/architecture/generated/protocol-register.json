@@ -2,6 +2,12 @@
   "schema": "protocol-register-v1",
   "protocols": [
     {
+      "id": "companion-status-v1",
+      "owner": "android/companion",
+      "kind": "wire",
+      "validator": "parseCompanionStatus"
+    },
+    {
       "id": "cue-helper-control-v1",
       "owner": "android/companion",
       "kind": "wire",
@@ -12,12 +18,6 @@
       "owner": "core/telemetry",
       "kind": "wire",
       "validator": "encodeFactMessage"
-    },
-    {
-      "id": "pcm-udp-v1",
-      "owner": "firmware",
-      "kind": "wire",
-      "validator": "28-byte header"
     },
     {
       "id": "hid-executor-v1",

@@ -1,7 +1,13 @@
 #!/bin/bash
-# Sample the already-running visual MediaProjection helper without touching
-# the game. Defaults to 41 one-minute samples: a 40-minute endpoint-to-endpoint
-# soak matching the unresolved memory gate in android/companion/README.md.
+# Sample the already-running Companion capture without touching the game.
+# Defaults to 41 one-minute samples: a 40-minute endpoint-to-endpoint soak
+# matching the unresolved memory gate in android/companion/README.md.
+#
+# Each sample reads the versioned status (`query-cue-helper.sh status`,
+# companion-status-v1): capture on, frames advancing, frame age, fps, content
+# geometry, and the named target, whose package must hold focus. Any game the
+# Companion is pointed at can be soaked; a helper older than 0.2.0 has no
+# STATUS and fails the first sample.
 set -euo pipefail
 
 SAMPLES="${1:-41}"
@@ -46,11 +52,11 @@ case "$initial_pid" in
     ;;
 esac
 
-printf 'sample\telapsed_s\tepoch_s\tpid\tpss_kb\trss_kb\tthreads\tthermal_status\tstatus_age_s\tvisual_seq\tvisual_age_us\tcontent_width\tcontent_height\tvisible\tgame_focused\taudio_authority\n' \
+printf 'sample\telapsed_s\tepoch_s\tpid\tpss_kb\trss_kb\tthreads\tthermal\tframes\tframe_age_ms\tfps\tcontent_width\tcontent_height\tvisible\ttarget_focused\ttarget\n' \
   > "$OUTPUT"
 
 started=$SECONDS
-previous_visual=-1
+previous_frames=-1
 failed=0
 i=1
 while [ "$i" -le "$SAMPLES" ]; do
@@ -88,61 +94,64 @@ while [ "$i" -le "$SAMPLES" ]; do
   [ -n "$rss" ] || rss=-1
   [ -n "$threads" ] || threads=-1
 
-  thermal="$(adb shell dumpsys thermalservice 2>/dev/null | tr -d '\r' | awk -F': *' '/Thermal Status:/ { print $2; exit }' || true)"
-  [ -n "$thermal" ] || thermal=-1
-
-  if adb shell dumpsys window 2>/dev/null | \
-      awk '/mCurrentFocus=.*com\.scottgames\.fnaf2/ { found=1 } END { exit !found }'; then
-    game_focused=1
-  else
-    game_focused=0
-    echo "sample $i: FNaF is not the focused physical-display window" >&2
-    failed=1
-  fi
-
-  status="$(adb logcat -d --pid="$pid" -v epoch -s FnafCueHelper:I '*:S' 2>/dev/null | tr -d '\r' | awk '/visual=(OBSERVED|UNKNOWN).*audio=EXTERNAL/ { line=$0 } END { print line }')"
-  status_epoch="$(printf '%s\n' "$status" | awk '{ value=$1; sub(/\..*/, "", value); print value }')"
-  status_age=-1
-  case "$status_epoch" in
-    ''|*[!0-9]*) ;;
-    *) status_age=$((epoch - status_epoch)) ;;
+  status="$("$HERE/query-cue-helper.sh" status 2>/dev/null | tr -d '\r' || true)"
+  field() { printf '%s\n' "$status" | tr ' ' '\n' | sed -n "s/^$1=//p" | head -n1; }
+  capture="$(field capture)"
+  frames="$(field frames)"
+  frame_age="$(field frameAgeMs)"
+  fps="$(field fps)"
+  content="$(field content)"
+  visible="$(field visible)"
+  target="$(field target)"
+  thermal="$(field thermal)"
+  case "$status" in
+    'OK schema=companion-status-v1 '*) ;;
+    *) echo "sample $i: no companion-status-v1 answer from the helper" >&2; failed=1 ;;
   esac
-  visual="$(printf '%s\n' "$status" | sed -n 's/.*visual=OBSERVED seq=\([0-9][0-9]*\).*/\1/p')"
-  visual_age="$(printf '%s\n' "$status" | sed -n 's/.*visual=OBSERVED.*ageUs=\([-0-9][0-9]*\) content=.*/\1/p')"
-  content_width="$(printf '%s\n' "$status" | sed -n 's/.*content=\([0-9][0-9]*\)x[0-9][0-9]*.*/\1/p')"
-  content_height="$(printf '%s\n' "$status" | sed -n 's/.*content=[0-9][0-9]*x\([0-9][0-9]*\).*/\1/p')"
-  visible="$(printf '%s\n' "$status" | sed -n 's/.*visible=\([-0-9][0-9]*\).*/\1/p')"
-  audio_authority="$(printf '%s\n' "$status" | sed -n 's/.*audio=EXTERNAL authority=\([^ ]*\).*/\1/p')"
-
-  if [ -z "$visual" ] || [ -z "$audio_authority" ]; then
-    echo "sample $i: no fail-closed visual status with external audio declaration found" >&2
+  if [ "$capture" != ON ]; then
+    echo "sample $i: capture is ${capture:-UNKNOWN}, not ON" >&2
     failed=1
   fi
-  if [ "$status_age" -lt -2 ] || [ "$status_age" -gt 5 ]; then
-    echo "sample $i: latest sensor status is not fresh (age ${status_age}s)" >&2
+  case "$frames" in ''|*[!0-9]*) frames=-1 ;; esac
+  case "$frame_age" in ''|*[!0-9]*) frame_age=-1 ;; esac
+  case "$content" in
+    [0-9]*x[0-9]*) content_width="${content%x*}"; content_height="${content#*x}" ;;
+    *) content_width=-1; content_height=-1 ;;
+  esac
+  visible="${visible:-UNKNOWN}"
+  fps="${fps:-UNKNOWN}"
+  thermal="${thermal:-UNKNOWN}"
+  target="${target:-NONE}"
+  if [ "$frame_age" -lt 0 ] || [ "$frame_age" -gt 5000 ]; then
+    echo "sample $i: the newest frame is not fresh (age ${frame_age} ms)" >&2
     failed=1
   fi
-  visual="${visual:--1}"
-  visual_age="${visual_age:--1}"
-  content_width="${content_width:--1}"
-  content_height="${content_height:--1}"
-  visible="${visible:--1}"
-
-  if [ "$i" -gt 1 ]; then
-    if [ "$visual" -le "$previous_visual" ]; then
-      echo "sample $i: visual sequence did not advance ($previous_visual -> $visual)" >&2
-      failed=1
-    fi
+  if [ "$target" = NONE ]; then
+    target_focused=0
+    echo "sample $i: the Companion has no named target" >&2
+    failed=1
+  elif adb shell dumpsys window 2>/dev/null | \
+      awk -v target="$target" 'index($0, "mCurrentFocus=") && index($0, target "/") { found=1 } END { exit !found }'; then
+    target_focused=1
+  else
+    target_focused=0
+    echo "sample $i: the target $target is not the focused window" >&2
+    failed=1
   fi
-  previous_visual=$visual
+
+  if [ "$i" -gt 1 ] && [ "$frames" -le "$previous_frames" ]; then
+    echo "sample $i: frames did not advance ($previous_frames -> $frames)" >&2
+    failed=1
+  fi
+  previous_frames=$frames
 
   printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
     "$i" "$elapsed" "$epoch" "$pid" "$pss" "$rss" "$threads" "$thermal" \
-    "$status_age" "$visual" "$visual_age" "$content_width" "$content_height" "$visible" \
-    "$game_focused" "$audio_authority" >> "$OUTPUT"
+    "$frames" "$frame_age" "$fps" "$content_width" "$content_height" "$visible" \
+    "$target_focused" "$target" >> "$OUTPUT"
 
-  printf 'sample %d/%d elapsed=%ss pid=%s pss=%sKiB rss=%sKiB visual=%s audio=%s thermal=%s\n' \
-    "$i" "$SAMPLES" "$elapsed" "$pid" "$pss" "$rss" "$visual" "$audio_authority" "$thermal"
+  printf 'sample %d/%d elapsed=%ss pid=%s pss=%sKiB rss=%sKiB frames=%s fps=%s target=%s thermal=%s\n' \
+    "$i" "$SAMPLES" "$elapsed" "$pid" "$pss" "$rss" "$frames" "$fps" "$target" "$thermal"
   if [ "$i" -lt "$SAMPLES" ]; then
     sleep "$INTERVAL_SECONDS"
   fi

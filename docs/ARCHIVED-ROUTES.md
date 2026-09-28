@@ -24,8 +24,18 @@ them. A route listed here is **parked, not refuted**, unless its row says so.
 
 The ESP32 route superseded: rendered audio now reaches the host over A2DP
 directly (`tools/cue/bt-audio-link.sh`, `tools/cue/bt-audio-collector.py`).
-The Cue Helper APK still carries its ESP32 receiver path and the `pcm-udp-v1`
-wire contract; neither was removed with the firmware.
+The Companion APK kept its ESP32 receiver path and the `pcm-udp-v1` wire
+contract until **2026-09-27** (Companion 0.2.0), when both left with the rest
+of the APK's audio stack: the UDP health/PCM listeners and Wi-Fi request, the
+authenticated audio-fact port 49708, the phone-side `AudioAnalyzer`,
+`CueDetector` and `PhaseClock`, the PCM monitor/recorder and the Bluetooth
+receiver card. The host tools that only fed that stack went with it:
+`tools/cue/bridge-audio-authority.py` (facts into port 49708) and
+`tools/device/provision-cue-model.sh` (a model into the APK's storage), with
+their tests. Nothing else read them: the working audio path is the phone's
+A2DP mix recorded on the host (`tools/cue/bt-audio-link.sh`,
+`tools/cue/capture-bt-audio.sh`, `tools/cue/fnaf4-cues.py`), which never
+enters the APK.
 
 ## Removed tools (2026-09-24)
 

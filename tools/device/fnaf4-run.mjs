@@ -982,6 +982,9 @@ async function main(argv) {
   await record.save('PREFLIGHT');
 
   const port = new AdbCueHelperPort({ serial });
+  // Name the target and show the lease on the phone (companion-status-v1). A
+  // helper older than 0.2.0 answers unknown-verb; nothing this run reads changes.
+  await record.event('companion-announce', await port.announce({ target: PACKAGE, lease: id.slice(0, 48) }));
   const snapDir = join(tmpdir(), `fnaf4-snap-${process.pid}`);
   await mkdir(snapDir, { recursive: true });
   let n = 0;

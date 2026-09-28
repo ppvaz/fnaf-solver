@@ -1,6 +1,6 @@
 package com.ppvaz.fnafcompanion;
 
-/** Host-only regression for the native watchlist contract and reducers. */
+/** Host-only regression for the FNaF 2 legacy camera watch and control strokes. */
 public final class PixelWatchTest {
     private static int failures;
 
@@ -11,12 +11,10 @@ public final class PixelWatchTest {
         }
     }
 
-    private static final class Frame implements PixelWatch.Frame {
+    static final class Frame implements NativeFrame {
         private final int width;
         private final int height;
         private final int[] cells;
-        private boolean rejectBatterySamples;
-        private int batterySamples;
 
         Frame(int width, int height, int fill) {
             this.width = width;
@@ -29,27 +27,12 @@ public final class PixelWatchTest {
         @Override public int width() { return width; }
         @Override public int height() { return height; }
         @Override public int rgb(int x, int y) {
-            if (inBatteryBar(x, y)) {
-                batterySamples++;
-                if (rejectBatterySamples) {
-                    throw new AssertionError("covered battery ROI was sampled");
-                }
-            }
             return x < 0 || y < 0 || x >= width || y >= height
-                    ? PixelWatch.UNKNOWN : cells[y * width + x];
-        }
-
-        private static boolean inBatteryBar(int x, int y) {
-            if (y < 70 || y >= 102) return false;
-            for (int bar = 0; bar < PixelWatch.BATTERY_BAR_COUNT; bar++) {
-                int left = 132 + bar * 40;
-                if (x >= left && x < left + 28) return true;
-            }
-            return false;
+                    ? NativeFrame.UNKNOWN : cells[y * width + x];
         }
     }
 
-    private static void drawControlStrokes(Frame frame, boolean maskControl, int rgb) {
+    static void drawControlStrokes(Frame frame, boolean maskControl, int rgb) {
         int buttonX = maskControl ? PixelWatch.MASK_BUTTON_X : PixelWatch.MONITOR_BUTTON_X;
         int start = buttonX + (maskControl
                 ? PixelWatch.MASK_STROKE_X_START : PixelWatch.MONITOR_STROKE_X_START);
@@ -80,77 +63,34 @@ public final class PixelWatchTest {
 
     public static void main(String[] args) {
         PixelWatch.Spec spec = PixelWatch.defaultSpec();
-        check("default spec has the four sourced entries, battery bars, map buttons, and Foxy channels",
-                spec.size() == 25);
-        check("the battery bars follow the sourced entries",
-                spec.entry(4).name.equals("battery_bar_1")
-                        && spec.entry(7).name.equals("battery_bar_4")
-                        && spec.entry(4).x == 132 && spec.entry(4).y == 70);
-        check("the map buttons follow the battery bars",
-                spec.entry(8).name.equals("cam01_button")
-                        && spec.entry(19).name.equals("cam12_button")
-                        && spec.entry(14).x == 1776 && spec.entry(14).y == 606);
-        check("the Foxy channels use the shared provisional hall envelope",
-                PixelWatch.isCanonicalFoxyHall(spec.entry(20), "luma")
-                        && PixelWatch.isCanonicalFoxyHall(spec.entry(21), "redness")
-                        && PixelWatch.isCanonicalFoxyHall(spec.entry(22), "red_cells"));
-        check("the paired bottom controls use sparse native ROIs",
-                PixelWatch.isCanonicalMaskButton(spec.entry(23))
-                        && PixelWatch.isCanonicalMonitorButton(spec.entry(24)));
+        check("the watch is exactly the twelve map buttons", spec.size() == 12);
+        check("the map buttons keep their measured names and centres",
+                spec.entry(0).name.equals("cam01_button")
+                        && spec.entry(11).name.equals("cam12_button")
+                        && spec.entry(6).x == 1776 && spec.entry(6).y == 606);
+        for (int camera = 1; camera <= 12; camera++) {
+            check("cam " + camera + " is the canonical profile point",
+                    PixelWatch.isCanonicalCameraButton(spec.entry(camera - 1), camera));
+        }
+        // The camera rule names these entries and their pixel-watch-v1 rows;
+        // the row format is what WATCH <sha> hashes.
+        check("canonical rows keep the pixel-watch-v1 format",
+                spec.canonical().startsWith("pixel-watch-v1\ncam01_button|PIXEL|1412|784|1|1|YELLOWNESS|1|0\n"));
         check("spec hash is stable and lowercase sha256",
                 spec.sha256().matches("[0-9a-f]{64}")
                         && spec.sha256().equals(PixelWatch.defaultSpec().sha256()));
-        check("canonical spec is versioned", spec.canonical().startsWith("pixel-watch-v1\n"));
 
         Frame frame = new Frame(PixelWatch.NATIVE_WIDTH, PixelWatch.NATIVE_HEIGHT, 0x808080);
-        frame.set(451, 730, 0x90d1ff);
         frame.set(1776, 606, 0xc2dd00);
-        for (int bar = 1; bar <= PixelWatch.BATTERY_BAR_COUNT; bar++) {
-            int x = 132 + (bar - 1) * 40;
-            for (int y = 70; y < 102; y++) {
-                for (int xx = x; xx < x + 28; xx++) frame.set(xx, y, 0xffffff);
-            }
-        }
         int[] values = new int[spec.size()];
-        check("readInto fills every entry",
-                PixelWatch.readInto(spec, frame, values, true) == spec.size());
-        check("BB anchor luma is native RGB luma", values[0] == 194);
-        check("BB anchor yellowness preserves the channel reducer", values[1] == -111);
-        check("uniform CAM ROI returns its mean luma",
-                values[2] == 128);
-        check("uniform grey coarse screen is all grey cells", values[3] == 180);
-        check("a full battery bar reads bright meter luma",
-                values[spec.indexOfName("battery_bar_1")] == 255);
+        check("readInto fills every entry", PixelWatch.readInto(spec, frame, values) == spec.size());
         check("an unselected map button reads grey, not yellow",
                 values[spec.indexOfName("cam01_button")] == 0);
         check("the lit CAM 07 button reads the measured selected yellowness",
                 values[spec.indexOfName("cam07_button")] == 194);
-        check("the provisional Foxy luma channel reads its envelope mean",
-                values[spec.indexOfName("foxy_hall_mean_luma")] == 128);
-        check("the provisional Foxy redness channel reads neutral grey as zero",
-                values[spec.indexOfName("foxy_hall_mean_redness")] == 0);
-        check("the provisional Foxy red-cell channel ignores neutral samples",
-                values[spec.indexOfName("foxy_hall_red_cells")] == 0);
-
-        Frame redHall = new Frame(PixelWatch.NATIVE_WIDTH, PixelWatch.NATIVE_HEIGHT, 0x808080);
-        redHall.set(PixelWatch.FOXY_HALL_X, PixelWatch.FOXY_HALL_Y, 0xc21e14);
-        check("the provisional Foxy red-cell channel counts sampled red pixels",
-                PixelWatch.read(spec.entry(spec.indexOfName("foxy_hall_red_cells")), redHall) == 1);
-
-        Frame controls = new Frame(PixelWatch.NATIVE_WIDTH, PixelWatch.NATIVE_HEIGHT, 0);
-        for (int y = PixelWatch.MASK_BUTTON_Y;
-                y < PixelWatch.MASK_BUTTON_Y + PixelWatch.MASK_BUTTON_HEIGHT;
-                y += PixelWatch.CONTROL_BUTTON_STEP) {
-            for (int x = PixelWatch.MASK_BUTTON_X;
-                    x < PixelWatch.MASK_BUTTON_X + PixelWatch.MASK_BUTTON_WIDTH;
-                    x += PixelWatch.CONTROL_BUTTON_STEP) {
-                controls.set(x, y, 0xffffff);
-            }
-        }
-        check("mask control ROI reads a visible sparse bar",
-                PixelWatch.read(spec.entry(spec.indexOfName("mask_button_mean_luma")), controls) == 255);
-        check("monitor control ROI reads absent as dark",
-                PixelWatch.read(spec.entry(spec.indexOfName("monitor_button_mean_luma")), controls) == 0);
+        PixelWatch.Entry outside = new PixelWatch.Entry("outside", 99, 99);
+        check("out-of-frame watch refuses with UNKNOWN",
+                PixelWatch.read(outside, new Frame(10, 10, 0)) == PixelWatch.UNKNOWN);
 
         Frame chevrons = new Frame(PixelWatch.NATIVE_WIDTH, PixelWatch.NATIVE_HEIGHT, 0x202020);
         drawControlStrokes(chevrons, true, 0xff90a0);
@@ -171,39 +111,29 @@ public final class PixelWatchTest {
                 PixelWatch.controlDownStrokeScore(new Frame(100, 100, 0), true)
                         == PixelWatch.UNKNOWN);
         check("both bottom strokes identify the unmasked office",
-                PixelWatch.controlState(140, 140)
-                        == PixelWatch.ControlState.OFFICE_UNMASKED);
+                PixelWatch.controlState(140, 140) == PixelWatch.ControlState.OFFICE_UNMASKED);
         check("mask stroke absent plus monitor stroke visible identifies monitor up",
-                PixelWatch.controlState(0, 140)
-                        == PixelWatch.ControlState.MONITOR_UP);
+                PixelWatch.controlState(0, 140) == PixelWatch.ControlState.MONITOR_UP);
         check("monitor stroke absent plus mask stroke visible identifies mask on",
-                PixelWatch.controlState(140, 0)
-                        == PixelWatch.ControlState.MASK_ON);
+                PixelWatch.controlState(140, 0) == PixelWatch.ControlState.MASK_ON);
         check("partial bottom strokes refuse a surface state",
                 PixelWatch.controlState(60, 80) == PixelWatch.ControlState.UNKNOWN);
 
-        Frame masked = new Frame(PixelWatch.NATIVE_WIDTH, PixelWatch.NATIVE_HEIGHT, 0xffffff);
-        masked.rejectBatterySamples = true;
-        int[] maskedValues = new int[spec.size()];
-        java.util.Arrays.fill(maskedValues, PixelWatch.UNKNOWN);
-        check("safe readInto never samples covered battery ROIs",
-                PixelWatch.readInto(spec, masked, maskedValues, false) == spec.size()
-                        && masked.batterySamples == 0
-                        && maskedValues[spec.indexOfName("battery_bar_1")] == PixelWatch.UNKNOWN);
-
-        Frame mixed = new Frame(10, 10, 0x808080);
-        mixed.set(0, 0, 0xc2dd00);
-        PixelWatch.Entry pixel = new PixelWatch.Entry("p", PixelWatch.Kind.PIXEL,
-                0, 0, 1, 1, PixelWatch.Reducer.LUMA, 1, 0);
-        check("pixel reducer reads a selected pixel", PixelWatch.read(pixel, mixed) == 187);
-        PixelWatch.Entry grey = new PixelWatch.Entry("g", PixelWatch.Kind.ROI,
-                0, 0, 10, 10, PixelWatch.Reducer.GREY_CELLS, 5, 25);
-        check("grey-cell reducer samples the bounded ROI", PixelWatch.read(grey, mixed) == 3);
-
-        PixelWatch.Entry outside = new PixelWatch.Entry("outside", PixelWatch.Kind.PIXEL,
-                99, 99, 1, 1, PixelWatch.Reducer.LUMA, 1, 0);
-        check("out-of-frame watch refuses with UNKNOWN",
-                PixelWatch.read(outside, mixed) == PixelWatch.UNKNOWN);
+        Frame bar = new Frame(PixelWatch.NATIVE_WIDTH, PixelWatch.NATIVE_HEIGHT, 0);
+        for (int y = PixelWatch.MASK_BUTTON_Y;
+                y < PixelWatch.MASK_BUTTON_Y + PixelWatch.MASK_BUTTON_HEIGHT;
+                y += PixelWatch.CONTROL_BUTTON_STEP) {
+            for (int x = PixelWatch.MASK_BUTTON_X;
+                    x < PixelWatch.MASK_BUTTON_X + PixelWatch.MASK_BUTTON_WIDTH;
+                    x += PixelWatch.CONTROL_BUTTON_STEP) {
+                bar.set(x, y, 0xffffff);
+            }
+        }
+        check("the frozen trace block mean reads a visible sparse bar",
+                PixelWatch.blockLuma(bar, PixelWatch.MASK_BUTTON_X, PixelWatch.MASK_BUTTON_Y,
+                        PixelWatch.MASK_BUTTON_X + PixelWatch.MASK_BUTTON_WIDTH,
+                        PixelWatch.MASK_BUTTON_Y + PixelWatch.MASK_BUTTON_HEIGHT,
+                        PixelWatch.CONTROL_BUTTON_STEP) == 255);
 
         if (failures > 0) {
             System.out.println(failures + " check(s) failed");

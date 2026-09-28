@@ -247,7 +247,6 @@ const ENGINE = [
   // fact contract regardless of its receiver. The ESP32 receiver and its
   // firmware are archived (docs/ARCHIVED-ROUTES.md); BlueALSA is the one left.
   ['audio authority', ['cue/test-audio-authority.py']],
-  ['provision-cue-model', ['device/test-provision-cue-model.sh']],
   // The campaign can request any story night, so every story night must build,
   // replay and receive a verdict priced against ITS OWN AI table. Nights 1 and
   // 3 used to crash the builder on one shared message that covered two
@@ -285,7 +284,6 @@ const ENGINE = [
   ['BT audio collector', ['cue/test-bt-audio-collector.py']],
   // Plan 19 P3: derive a native-resolution watch adapter from labelled frames;
   // weak separation is an explicit refusal and foreign geometry is not resized.
-  ['watch calibration', ['device/test-watch-calibrate.py']],
   // Plan 22 device boundary: fit the monitorUp rule over the helper grid from
   // labelled frames. Mask/animation/blackout evidence is mandatory: a rule
   // that cannot separate the mask, contain the animation, or clear a blackout
@@ -331,10 +329,8 @@ const ENGINE = [
   // Plan 23's retained overlay evidence must be complete before a qualification
   // sidecar can be reviewed: no-device synthetic records exercise the same
   // refusal reasons as the device-side gate.
-  ['overlay qualification', ['device/test-overlay-qualification.py']],
   // Plan 23's device observer must retain enough paired telemetry to calculate
   // detector delta and render cadence, without inventing a qualified HUD run.
-  ['overlay observation', ['device/test-overlay-qualification-observe.sh']],
   // The cue helper's detector, compiled and exercised on the host. CueDetector
   // imports nothing from android.*, so this needs no phone and no Android SDK
   // -- only a JDK, which test.sh probes for and fails loudly without.
@@ -385,7 +381,6 @@ const ENGINE = [
   ['cue shadow window builder', ['cue/test-build-shadow-windows.py']],
   ['cue model promotion', ['cue/test-export-model.py']],
   ['latency experiment', ['cue/test-latency-experiment.py']],
-  ['audio fact bridge', ['cue/test-bridge-audio-authority.py']],
 ];
 
 // These checks establish robustness margins and campaign-wide survival floors,
