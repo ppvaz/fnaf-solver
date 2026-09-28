@@ -85,6 +85,15 @@ fifteen days because it was written down instead of read.
 
 Two routes lead to one answer, and they run side by side.
 
+**Observatory direction (Pedro, 2026-09-27):** the
+[research-frontier assessment](../docs/research/FNAF2-OBSERVATORY.md) prioritises
+causal reconstruction, input/clock identification and timing topology. Its first
+experiment replays `full-06` using individually observable press landings in
+place of a nightly median, checking whether window 6 remains occupied. Its
+interface milestone is an experiment that rules out a named explanation, not
+the completion of a dashboard. This advances S2 and leaves S3-S7's dependencies
+intact.
+
 - **S2a, on the phone.** A same-phase twin at a verified seed and anchor phase,
   both nights frame-traced. The 2026-09-27 repeated clock-pin protocol did not
   establish seed 24850: five interrupted attempts are retained, and pinned or

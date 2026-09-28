@@ -27,6 +27,7 @@ controller research, and device evidence form one program.
 | Recover stock-APK RNG seed candidates without modifying the APK | [`device/RNG-SEED-RECOVERY.md`](device/RNG-SEED-RECOVERY.md) |
 | Understand the project's scope and claim discipline | [`../PROJECT-CHARTER.md`](../PROJECT-CHARTER.md) |
 | See what completely solving the game would mean, and where we stand on that ladder | [`research/SOLVING-FNAF2.md`](research/SOLVING-FNAF2.md) |
+| Prioritize the research frontier and the Observatory's first encounter experiment | [`research/FNAF2-OBSERVATORY.md`](research/FNAF2-OBSERVATORY.md) |
 | Read what the project has learned | [`chronicle/README.md`](chronicle/README.md) |
 | Understand why facts stay hidden here, and where to look next | [`operations/WHY-FACTS-HIDE.md`](operations/WHY-FACTS-HIDE.md) |
 | Find the right command | [`../tools/README.md`](../tools/README.md) (one index per tool directory) |
