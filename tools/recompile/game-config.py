@@ -3,8 +3,14 @@
 # by object type number, since each game numbers its extensions differently.
 # Toolchain code only; the CCN, APK and generated output stay outside the repo.
 #
-#   MMFPARSER_ANDROID_RAW_DIR=<apk res/raw> python -m chowdren.run \
+#   MMFPARSER_ANDROID_RAW_DIR=<apk res/raw> MMFPARSER_OI_XOR=<k> MMFPARSER_LO_XOR=<l> \
+#   CHOWDREN_IMAGE_COMPRESS=zlib CHOWDREN_IMAGE_WORKERS=2 python -m chowdren.run \
 #       --config tools/recompile/game-config.py <owned.ccn> <gamesrc>
+#
+# The object-handle XORs are per game, read from each APK's dex
+# (OI/COI.loadHeader, Frame/CLO.load) and set before the CCN is parsed, so they
+# are environment variables, not config: FNaF 1 0/0, FNaF 2 28/48 (the
+# defaults), FNaF 3 29/50, FNaF 4 29/62.
 
 EXTENSION_BASE = 32
 

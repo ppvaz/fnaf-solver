@@ -1,0 +1,245 @@
+{
+ "claimLevel": "MODEL_ONLY",
+ "evidenceId": "recompile-game-builds-995dfaa99a76042a",
+ "fidelity": "rebuilt-runtime",
+ "question": "Does each build-296 game convert, build for the host, boot under the harness without input, and package as an Android APK, with its sounds reaching the mixer?",
+ "rows": [
+  {
+   "apk": {
+    "status": "NOT_BUILT"
+   },
+   "audio": {
+    "auditionNonSilent": 52,
+    "declared": 53,
+    "evidenceId": "recompile-audio-a3950c66deefc9de",
+    "record": "fnaf1-audio-20260927.json",
+    "resolvedFiles": 53
+   },
+   "blocker": "Host conversion/build/audition succeeded; Android APK remains not built.",
+   "boot": {
+    "audioInitialized": true,
+    "env": {
+     "CHOWDREN_HARNESS": "1",
+     "CHOWDREN_MAX_TOTAL_TICKS": "3000",
+     "CHOWDREN_SEED": "24850",
+     "CHOWDREN_SNAP": "3:300,3:900",
+     "CHOWDREN_TIMEOUT_SECONDS": "400"
+    },
+    "exitCode": 0,
+    "glErrors": 0,
+    "reachedTitle": "YES",
+    "samplePlays": 2,
+    "status": "OK",
+    "stop": "stop total ticks 3000 frame 3 tick 2729",
+    "updates": 3000,
+    "visits": [
+     {
+      "frame": 0,
+      "name": "01-Warning",
+      "updates": 271
+     },
+     {
+      "frame": 3,
+      "name": "04-title",
+      "updates": 2729
+     }
+    ]
+   },
+   "conversion": {
+    "ccnSha256": "70a1ec40284d4f5232d0ecedcbd94a68c51cd937983ad17d2cbf329aad35b6d4",
+    "eventFiles": 18,
+    "exitCode": 0,
+    "frames": 19,
+    "mp3Decoded": 1,
+    "omittedActions": 55,
+    "playSites": {
+     "invalid": 0,
+     "resolved": 95
+    },
+    "silencedSounds": 0,
+    "status": "OK",
+    "truncatedFramesSkipped": 6
+   },
+   "firstFailedStep": "apk",
+   "game": "fnaf1",
+   "host": {
+    "assetsSha256": "2c0da2231dc3ffe121b78bbb5b6ee947d7a40712a70d29ead16e015c35988b48",
+    "binarySha256": "6623f263fba1c7382bb2d277e40bd33506db7dd15bdca1ad99ddb59704213061",
+    "pinned": "6623f263-2c0da223",
+    "status": "OK"
+   }
+  },
+  {
+   "apk": {
+    "bytes": 134599332,
+    "file": "fnaf2-rebuild-research.apk",
+    "libmainBytes": 33666936,
+    "libmainSha256": "de25ec0ac338e6db7eef48cac35c87b60a5d312d4d898cbc92efa619094b4f21",
+    "package": "org.fnaf2rebuild.play",
+    "sha256": "755fde09d3e80169be8803cd61ff84fdbc0d58b796e39fab625c088190b425f7",
+    "status": "OK"
+   },
+   "audio": {
+    "auditionNonSilent": 67,
+    "declared": 67,
+    "evidenceId": "recompile-audio-36820f08affce640",
+    "record": "fnaf2-audio-20260927.json",
+    "resolvedFiles": 67
+   },
+   "blocker": "Host and Android builds use distinct retained runtime revisions; native Companion audio playback capture remains UNKNOWN.",
+   "boot": {
+    "audioInitialized": true,
+    "env": {
+     "CHOWDREN_HARNESS": "1",
+     "CHOWDREN_MAX_TICKS": "30",
+     "CHOWDREN_MAX_TOTAL_TICKS": "40000",
+     "CHOWDREN_NO_DRAW": "1",
+     "CHOWDREN_SEED": "24850",
+     "CHOWDREN_STOP_FRAME": "5",
+     "CHOWDREN_TIMEOUT_SECONDS": "400"
+    },
+    "exitCode": 0,
+    "glErrors": 0,
+    "reachedTitle": "YES",
+    "samplePlays": 27,
+    "status": "OK",
+    "stop": "stop total ticks 40000 frame 1 tick 21218",
+    "updates": 40000,
+    "visits": [
+     {
+      "frame": 0,
+      "name": "01-Initialize & Setup",
+      "updates": 180
+     },
+     {
+      "frame": 1,
+      "name": "02-title",
+      "updates": 256
+     },
+     {
+      "frame": 8,
+      "name": "09-ad",
+      "updates": 659
+     },
+     {
+      "frame": 2,
+      "name": "03-what day",
+      "updates": 189
+     },
+     {
+      "frame": 7,
+      "name": "08-wait",
+      "updates": 6
+     },
+     {
+      "frame": 3,
+      "name": "04-Office",
+      "updates": 16592
+     },
+     {
+      "frame": 4,
+      "name": "05-static",
+      "updates": 300
+     },
+     {
+      "frame": 6,
+      "name": "07-gameover",
+      "updates": 600
+     },
+     {
+      "frame": 1,
+      "name": "02-title",
+      "updates": 21218
+     }
+    ]
+   },
+   "conversion": {
+    "ccnSha256": "835655e698142299eda5bd6a5ac2c899bf2199f2a6ad51d7779589f2bb4c0b23",
+    "eventFiles": 32,
+    "exitCode": 0,
+    "frames": 29,
+    "mp3Decoded": 1,
+    "omittedActions": 98,
+    "playSites": {
+     "invalid": 0,
+     "resolved": 121
+    },
+    "silencedSounds": 0,
+    "status": "OK",
+    "truncatedFramesSkipped": 4
+   },
+   "firstFailedStep": null,
+   "game": "fnaf2",
+   "host": {
+    "assetsSha256": "d9cc45ffa293fc0e93a4cce22f0c1f0fe47330628885c4c521d97d556f5eaaaa",
+    "binarySha256": "66d6e2f6b23f9af9c967f06337b55dd6afec9b2c27e686cebd304ea03eafec95",
+    "pinned": "66d6e2f6-d9cc45ff",
+    "status": "OK"
+   }
+  },
+  {
+   "apk": {
+    "status": "NOT_BUILT"
+   },
+   "audio": "UNKNOWN",
+   "blocker": "Converter fails with KeyError: 1 in shader.get_name; host and APK not built.",
+   "boot": {
+    "status": "NOT_RUN"
+   },
+   "conversion": {
+    "ccnSha256": "a8203d6130a21894ca342ab88b7bd67569919ae32d3bacf7efd9389d5b8eadba",
+    "eventFiles": 25,
+    "exitCode": 1,
+    "frames": 24,
+    "mp3Decoded": 0,
+    "omittedActions": 38,
+    "playSites": {
+     "invalid": 0,
+     "resolved": 140
+    },
+    "silencedSounds": 0,
+    "status": "FAILED",
+    "truncatedFramesSkipped": 1
+   },
+   "firstFailedStep": "conversion",
+   "game": "fnaf3",
+   "host": {
+    "status": "NOT_BUILT"
+   }
+  },
+  {
+   "apk": {
+    "status": "NOT_BUILT"
+   },
+   "audio": "UNKNOWN",
+   "blocker": "Host linked successfully; no retained boot/audition or Android APK qualification.",
+   "boot": {
+    "status": "NOT_RUN"
+   },
+   "conversion": {
+    "ccnSha256": "5b032de7f243b9a8de15c38cadd0dc1c256f18d0552823b80f1c5f61ff8616f1",
+    "eventFiles": 24,
+    "exitCode": 0,
+    "frames": 20,
+    "mp3Decoded": 0,
+    "omittedActions": 36,
+    "playSites": {
+     "invalid": 0,
+     "resolved": 178
+    },
+    "silencedSounds": 0,
+    "status": "OK",
+    "truncatedFramesSkipped": 3
+   },
+   "firstFailedStep": "boot",
+   "game": "fnaf4",
+   "host": {
+    "assetsSha256": "615f2ea01b9546709e8d9bc2b15cd9616aeda403a317c4db4bcde9f4d87f0049",
+    "binarySha256": "1c40c7ebcde5a35ca048152c0e199501cf00cad09ac3f5908b83bc4c848323fa",
+    "pinned": null,
+    "status": "OK"
+   }
+  }
+ ],
+ "schema": "recompile-game-builds-v1"
+}

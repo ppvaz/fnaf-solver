@@ -3273,6 +3273,7 @@
     {
       "file": "tools/validate-references.js",
       "imports": [
+        "node:fs",
         "node:fs/promises",
         "node:path",
         "node:url"
