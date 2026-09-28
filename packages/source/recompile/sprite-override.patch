@@ -1,0 +1,140 @@
+--- a/Chowdren/base/image.cpp
++++ b/Chowdren/base/image.cpp
+@@ -36,6 +36,129 @@
+     return out;
+ }
+ 
++// CHOWDREN_IMAGE_OVERRIDE=<id>=<png>[,<id>=<png>...]: when image <id> loads
++// from Assets.dat, its pixels come from <png> instead. The asset keeps its
++// width, height, hotspot and action point; the PNG is scale-fitted into that
++// width and height (aspect kept, premultiplied bilinear) and anchored
++// bottom-centre, the rest left transparent. A PNG of exactly the asset's size
++// is copied as it is. A PNG that cannot be read leaves the asset's pixels.
++
++#include <stdlib.h>
++#include <vector>
++
++static std::vector<std::pair<int, std::string> > image_overrides;
++static bool image_overrides_parsed = false;
++
++static void parse_image_overrides()
++{
++    image_overrides_parsed = true;
++    const char * spec = getenv("CHOWDREN_IMAGE_OVERRIDE");
++    for (const char * c = spec; c && *c; ) {
++        const char * end = strchr(c, ',');
++        std::string item = end ? std::string(c, end - c) : std::string(c);
++        c = end ? end + 1 : NULL;
++        size_t eq = item.find('=');
++        if (eq == std::string::npos || eq == 0 || eq + 1 >= item.size()) {
++            fprintf(stderr, "image override: ignoring '%s' (want <id>=<png>)\n",
++                    item.c_str());
++            continue;
++        }
++        int id = atoi(item.substr(0, eq).c_str());
++        image_overrides.push_back(std::make_pair(id, item.substr(eq + 1)));
++    }
++}
++
++static const std::string * find_image_override(int handle)
++{
++    if (!image_overrides_parsed)
++        parse_image_overrides();
++    for (size_t i = 0; i < image_overrides.size(); i++)
++        if (image_overrides[i].first == handle)
++            return &image_overrides[i].second;
++    return NULL;
++}
++
++static void apply_image_override(Image * img)
++{
++    const std::string * path = find_image_override(img->handle);
++    if (path == NULL || img->image == NULL)
++        return;
++    FILE * fp = fopen(path->c_str(), "rb");
++    if (fp == NULL) {
++        fprintf(stderr, "image override: cannot open %s for image %d\n",
++                path->c_str(), int(img->handle));
++        return;
++    }
++    fseek(fp, 0, SEEK_END);
++    long size = ftell(fp);
++    fseek(fp, 0, SEEK_SET);
++    std::vector<unsigned char> data(size > 0 ? size : 1);
++    size_t got = size > 0 ? fread(&data[0], 1, size, fp) : 0;
++    fclose(fp);
++    int sw, sh, channels;
++    unsigned char * src = NULL;
++    if (got == size_t(size) && size > 0)
++        src = stbi_load_from_memory(&data[0], int(size), &sw, &sh, &channels, 4);
++    if (src == NULL) {
++        fprintf(stderr, "image override: cannot decode %s for image %d\n",
++                path->c_str(), int(img->handle));
++        return;
++    }
++    int dw = img->width, dh = img->height;
++    unsigned char * dst = img->image;
++    if (sw == dw && sh == dh) {
++        memcpy(dst, src, size_t(dw) * dh * 4);
++    } else {
++        double scale = double(dw) / sw;
++        if (double(dh) / sh < scale)
++            scale = double(dh) / sh;
++        int fw = int(sw * scale + 0.5), fh = int(sh * scale + 0.5);
++        if (fw < 1) fw = 1;
++        if (fh < 1) fh = 1;
++        int ox = (dw - fw) / 2, oy = dh - fh;
++        memset(dst, 0, size_t(dw) * dh * 4);
++        for (int y = 0; y < fh; y++) {
++            double fy = (y + 0.5) / scale - 0.5;
++            if (fy < 0.0) fy = 0.0;
++            if (fy > sh - 1) fy = sh - 1;
++            int y0 = int(fy), y1 = y0 + 1 < sh ? y0 + 1 : y0;
++            double ty = fy - y0;
++            for (int x = 0; x < fw; x++) {
++                double fx = (x + 0.5) / scale - 0.5;
++                if (fx < 0.0) fx = 0.0;
++                if (fx > sw - 1) fx = sw - 1;
++                int x0 = int(fx), x1 = x0 + 1 < sw ? x0 + 1 : x0;
++                double tx = fx - x0;
++                const unsigned char * p[4] = {
++                    src + (size_t(y0) * sw + x0) * 4, src + (size_t(y0) * sw + x1) * 4,
++                    src + (size_t(y1) * sw + x0) * 4, src + (size_t(y1) * sw + x1) * 4
++                };
++                double w[4] = {(1 - tx) * (1 - ty), tx * (1 - ty), (1 - tx) * ty, tx * ty};
++                double acc[4] = {0.0, 0.0, 0.0, 0.0};
++                for (int k = 0; k < 4; k++) {
++                    double a = p[k][3] * w[k];
++                    acc[0] += p[k][0] * a;
++                    acc[1] += p[k][1] * a;
++                    acc[2] += p[k][2] * a;
++                    acc[3] += a;
++                }
++                unsigned char * o = dst + (size_t(oy + y) * dw + ox + x) * 4;
++                if (acc[3] <= 0.0)
++                    continue;
++                for (int k = 0; k < 3; k++) {
++                    double v = acc[k] / acc[3];
++                    o[k] = (unsigned char)(v > 255.0 ? 255 : v + 0.5);
++                }
++                o[3] = (unsigned char)(acc[3] > 255.0 ? 255 : acc[3] + 0.5);
++            }
++        }
++    }
++    fprintf(stderr, "image override: image %d (%dx%d, hotspot %d,%d) <- %s (%dx%d)\n",
++            int(img->handle), dw, dh, int(img->hotspot_x), int(img->hotspot_y),
++            path->c_str(), sw, sh);
++    stbi_image_free(src);
++}
++
+ typedef vector<Image*> ImageList;
+ 
+ static AssetFile image_file;
+@@ -145,6 +268,7 @@
+         image = NULL;
+     }
+     delete[] buf;
++    apply_image_override(this);
+ }
+ 
+ void Image::unload()
