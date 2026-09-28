@@ -1,0 +1,66 @@
+{
+  "schema": "evidence-record-v1",
+  "id": "phone-hour-grid-20d3c13b0de8a50f",
+  "claimLevel": "DEVICE_MEASURED observations from retained frame traces; arithmetic fit only",
+  "date": "2026-09-28",
+  "step": "ROADMAP S2 (host-side clock reference measurement supporting S2b)",
+  "question": "Do the phone's dark hour-transition frames place its 70-second hour grid at the measured night-go anchor fire?",
+  "verdict": "full-06 has five retained transitions on a 70-second grid: the fitted zero is first night frame +3836.7 ms, +0.7 ms from the anchor fire at +3836.0 ms. full-04 has one transition before death: its fitted zero is +3831.4 ms, -48.2 ms from the anchor fire at +3879.6 ms. The full-06 trace supports the phase and interval measurements; full-04's single transition is a weak phase cross-check and says nothing about rate.",
+  "method": {
+    "tool": "tools/recompile/hour-grid-fit.mjs",
+    "rule": "For each k=1..6, take the first frame within 8 s of releaseAfterFirstFrameMs + 70000*k whose grid_mean_luma is below 20 after a frame at least 30; fit t = zero + 70000*k by mean phase.",
+    "gate": "tools/recompile/test-hour-grid-fit.mjs recomputes transition arithmetic, residuals, intervals, anchor phase, evidence IDs and the committed record hashes without requiring ignored traces.",
+    "limits": [
+      "full-06 has five transitions and four measured intervals; full-04 has one transition only.",
+      "The raw frame traces remain on the acquisition machine under artifacts/; committed records retain trace hashes and the extracted luma/time observations.",
+      "This record measures the displayed hour-grid timing. It does not establish that encounter rolls use the same accumulator."
+    ]
+  },
+  "results": [
+    {
+      "night": "full-06",
+      "path": "tools/recompile/results/phone-hour-grid-full-06-20260928.json",
+      "sha256": "6aacc47daf7dd493a9acbf39c6d5479f55745d8c9e2809367cff2fab884a1403",
+      "evidenceId": "phone-hour-grid-20d3c13b0de8a50f",
+      "traceSha256": "3fe9587c06708a991e5a2c983ebc1feaf9be89cda9c7c787999a2ac6052dd261",
+      "anchorEvents": {
+        "path": "docs/evidence/runs/night7-night7-k3-full-06-20260915T225056Z/events.jsonl",
+        "sha256": "5f5fc480be02e24d3e3c7bcad8d0b13078f79458fc10da3aac11355264375d94",
+        "seedStampWallMs": 1789512694249,
+        "firedWallMs": 1789512698166,
+        "seedToFirstFrameMs": 81.0,
+        "fireAfterFirstFrameMs": 3836.0
+      },
+      "fit": {
+        "transitions": 5,
+        "zeroAfterFirstFrameMs": 3836.7,
+        "zeroMinusAnchorFireMs": 0.7,
+        "intervalsMs": [69972.8, 70020.0, 70030.9, 69995.0],
+        "residualsMs": [-1.6, -28.8, -8.8, 22.1, 17.1]
+      }
+    },
+    {
+      "night": "full-04",
+      "path": "tools/recompile/results/phone-hour-grid-full-04-20260928.json",
+      "sha256": "6927f8ee63e9b4b193cbd56035761d80886030bd1eae7af665b1e2e4b7c44596",
+      "evidenceId": "phone-hour-grid-f5cbfa0fcea0e545",
+      "traceSha256": "1dd475ded11300436efcf8226f6b56aaf4a0917ffc89818ad5ca5ba1262721bc",
+      "anchorEvents": {
+        "path": "docs/evidence/runs/night7-night7-k3-full-04-20260915T051327Z/events.jsonl",
+        "sha256": "aaec5a28e70b57dcf00af37b561d824b560f3692d686dc97ef98e62242f63f23",
+        "seedStampWallMs": 1789449241851,
+        "firedWallMs": 1789449245816,
+        "seedToFirstFrameMs": 85.4,
+        "fireAfterFirstFrameMs": 3879.6
+      },
+      "fit": {
+        "transitions": 1,
+        "zeroAfterFirstFrameMs": 3831.4,
+        "zeroMinusAnchorFireMs": -48.2,
+        "intervalsMs": [],
+        "residualsMs": [0.0]
+      }
+    }
+  ],
+  "next": "Test the joint measured reference correction in the host replay; this observation alone does not identify why encounters differ."
+}

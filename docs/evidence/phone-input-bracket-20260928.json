@@ -1,0 +1,91 @@
+{
+  "schema": "evidence-record-v1",
+  "id": "recompile-phone-input-bracket-f7147f352c9115f7",
+  "claimLevel": "MODEL_ONLY: host model replay against retained DEVICE_MEASURED phone observations",
+  "date": "2026-09-28",
+  "step": "ROADMAP S2b (full-06 per-contact response-bracket search)",
+  "question": "Can any per-contact update timing admitted by the retained visual-response brackets preserve phone windows 0-5 and clear phone window 6?",
+  "verdict": "No within this measured response-proxy family. The first 1500 ms of phone window 6 admits 29 relevant mask or monitor contacts, and all 29 have observed response brackets. Twenty-seven map to one update each; two monitor contacts map to two updates each. All four Cartesian combinations preserve the first six phone windows but still show Withered Bonnie in window 6. The input timing family does not explain the empty phone read under these assumptions.",
+  "measurements": {
+    "sourceResponseRecord": "tools/recompile/results/full06-responses-20260928.json",
+    "sourceResponseEvidenceId": "recompile-phone-encounters-9efc5551ed385de1",
+    "target": {
+      "night": "full-06",
+      "seed": 47593,
+      "windowIndex": 6,
+      "horizonMs": 65767.6,
+      "phoneWindows": "...BC..BC.BC.BC..BC.BCF.BCFBC.B.CBC.BC.CBC",
+      "responseReadyModelWindows": "...BC.BCFB.CBC.C.BC.BC.BCF.BC.BC.BC.BC.BC.?",
+      "responseReadyRebuildWindow6": "C",
+      "phoneWindow6": "."
+    },
+    "coverage": {
+      "relevantContacts": 29,
+      "observedResponseBrackets": 29,
+      "unknown": 0,
+      "ambiguousUpdateTicks": [
+        {
+          "contactIndex": 12,
+          "control": "monitor",
+          "possibleTicks": [
+            606,
+            607
+          ]
+        },
+        {
+          "contactIndex": 16,
+          "control": "monitor",
+          "possibleTicks": [
+            831,
+            832
+          ]
+        }
+      ],
+      "candidateSchedules": 4,
+      "allPreserveWindows0To5": true,
+      "allModelWindow6": "B"
+    },
+    "modelStateAtWindow6": {
+      "maskWindowTick": 3864,
+      "modelClockMs": 64235.4,
+      "occupant": "Withered Bonnie",
+      "node": "ventL",
+      "atOpeningSinceFrame": 3627,
+      "blackoutStartedFrame": 3840,
+      "blackoutClockMs": 63858,
+      "blackoutLeadUpdates": 24
+    },
+    "drawStreamSplit": {
+      "responseReady": {
+        "tick": 205,
+        "modelFrame": 206,
+        "imageMs": 3416.6
+      },
+      "landedControl": {
+        "tick": 904,
+        "modelFrame": 905,
+        "imageMs": 15014.8
+      }
+    }
+  },
+  "results": [
+    {
+      "path": "tools/recompile/results/phone-input-bracket-full-06-20260928.json",
+      "sha256": "efe3cad74bc5406321a22e7e6facdd5756ab35fce07d4063a72879e19184321d",
+      "evidenceId": "recompile-phone-input-bracket-f7147f352c9115f7",
+      "claimLevel": "MODEL_ONLY",
+      "candidates": 4
+    }
+  ],
+  "tool": "tools/recompile/phone-input-bracket-sweep.mjs",
+  "config": "tools/recompile/full06-response-experiment.json",
+  "gate": "tools/recompile/test-phone-input-bracket-sweep.mjs in npm run test:unit; checks complete branch enumeration, target state, source hashes, and the generated result hash without ignored frame traces or a binary.",
+  "limits": [
+    "Observed visual responses bound possible update ticks; they do not measure Android dispatch or prove which touch caused a transition.",
+    "Only mask and monitor contacts have response-classifier rows; wind and camera/light contacts retain their baseline timing mapping.",
+    "The press bracket choices were exhaustive over those update ticks. Releases shift with their press by the same number of updates to preserve scheduled contact duration.",
+    "The model and rebuilt runtime already differ in draw stream before window 6; the actor state at window 6 is not a device observation.",
+    "The eyehole reader reports an empty phone window; it does not establish the hidden route state that produced it. No new phone run was made."
+  ],
+  "next": "Keep S2 open. Compare the host model's Withered Bonnie approach and office-encounter start against the rebuilt runtime around the retained divergence, and seek a same-phase phone twin with a valid seed and per-press landing reads."
+}

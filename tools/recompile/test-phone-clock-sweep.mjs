@@ -3,11 +3,26 @@
 // summaries and the verdict), then the committed sweep result's own arithmetic, re-derived from
 // its rows and the retained control without the model or any private input. In `npm run test:unit`.
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { bestCell, cellMatches, cellScore, check, deriveNight, deriveVerdict, scaledDeltas, SCHEMA } from './phone-clock-sweep.mjs';
+import { bestCell, cellMatches, cellScore, check, deriveNight, deriveVerdict, droppedClock, scaledDeltas, SCHEMA } from './phone-clock-sweep.mjs';
+import { officeClock, traceTick } from './phone-encounter-replay.mjs';
 
 const read = (rel) => readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8');
+const sha256 = (value) => createHash('sha256').update(value).digest('hex');
 const cleaningMap = (cells) => cells.map((c) => c.deltaMs).sort((a, b) => a - b);
+
+// --- dropping the intro rebuilds update 0 at the retained image and re-bases event time to it
+{
+  const clock = officeClock([0, 16_667_000, 33_334_000, 50_001_000], 0, { catchUp: true });
+  const dropped = droppedClock(clock, 20);
+  assert.equal(dropped.startMs, 33.334);
+  assert.equal(dropped.droppedFrames, 2);
+  assert.deepEqual(dropped.imageMs, [0, 16.667]);
+  assert.equal(traceTick(33.334 - dropped.startMs, dropped), 0, 'the first kept frame is update 0');
+  assert.equal(traceTick(50.001 - dropped.startMs, dropped), 1, 'a scheduled event keeps its relative time after re-zeroing');
+  assert.equal(traceTick(16.667 - dropped.startMs, dropped), 0, 'an event before the new zero clamps to update 0');
+}
 
 // --- the rate scaling: 0 is the identity; r scales the timer's share of the clock by (1 + r)
 {
@@ -97,7 +112,7 @@ const cleaningMap = (cells) => cells.map((c) => c.deltaMs).sort((a, b) => a - b)
     for (const night of result.nights) {
       assert.ok(night.control.retainedEqual, resultPath);
       assert.ok(night.cells.length >= minCells, 'the predeclared grid ran');
-      assert.equal(new Set(night.cells.map((c) => `${c.deltaMs}/${c.timerRate}`)).size, night.cells.length, 'no cell ran twice');
+      assert.equal(new Set(night.cells.map((c) => `${c.deltaMs}/${c.timerRate}/${c.dropMs ?? 0}`)).size, night.cells.length, 'no cell ran twice');
       assert.ok(night.cells.some((c) => c.deltaMs === 0 && c.timerRate === 0), 'the control cell is a row');
     }
   }
@@ -134,4 +149,34 @@ const cleaningMap = (cells) => cells.map((c) => c.deltaMs).sort((a, b) => a - b)
   }
 }
 
-console.log('phone-clock-sweep: fixtures and both committed results rechecked');
+// --- the measured clock-zero and schedule-phase candidates stay model-only and are row-rechecked
+{
+  const config = JSON.parse(read('tools/recompile/phone-clock-sweep-zero.json'));
+  const evidence = JSON.parse(read('docs/evidence/phone-clock-zero-sweep-20260928.json'));
+  for (const [name, suffix, expectedControl, expectedJoint] of [
+    ['full-04', 'full-04', 4, 3], ['full-06', 'full-06', 14, 2],
+  ]) {
+    const result = JSON.parse(read(`tools/recompile/results/phone-clock-sweep-zero-${suffix}-20260928.json`));
+    const retained = evidence.results.find((r) => r.night === name);
+    assert.equal(retained.evidenceId, result.evidenceId);
+    assert.equal(retained.sha256, sha256(read(retained.path)));
+    assert.equal(result.claimLevel, 'MODEL_ONLY');
+    assert.equal(check(result).status, 'NO_PHASE_RATE_ALIGNMENT');
+    const night = result.nights[0];
+    assert.equal(night.name, name);
+    assert.equal(night.cells.find((c) => c.deltaMs === 0 && c.dropMs === 0).agree, expectedControl);
+    const reference = config.references[name];
+    const grid = config.grid.byNight[name];
+    assert.equal(Number((reference.anchorFireAfterFirstFrameMs - reference.configuredOriginAfterFirstFrameMs).toFixed(1)), reference.scheduleDelayMs);
+    assert.ok(grid.deltaMs.includes(-reference.scheduleDelayMs));
+    assert.ok(grid.dropMs.includes(reference.clockZeroAfterFirstFrameMs));
+    const joint = night.cells.find((c) => c.deltaMs === -reference.scheduleDelayMs && c.dropMs === reference.clockZeroAfterFirstFrameMs);
+    assert.ok(joint, 'the joint measured correction ran');
+    assert.ok(joint.clockStartMs >= joint.dropMs && joint.clockStartMs - joint.dropMs < 40, 'clock zero uses the first captured frame at or after the fitted phase');
+    assert.ok(joint.droppedFrames > 0);
+    assert.equal(joint.agree, expectedJoint);
+    assert.equal(night.derived.matchCells.length, 0, 'neither trace has a matching measured-reference cell');
+  }
+}
+
+console.log('phone-clock-sweep: clock-origin fixtures and four retained results rechecked');

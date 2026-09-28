@@ -2750,3 +2750,51 @@ release acceptance, unsupported contacts, runtime updates versus captured
 frames, independently varied contact brackets, and a same-phase phone twin
 with a valid seed measurement. The collective early endpoint is a sensitivity,
 not a worst-case robustness proof. S2 stays OPEN; no new phone run or promotion.
+
+## 2026-09-28 — Measure the phone hour grid; test the joint clock correction (S2b)
+
+The retained full-06 frame trace gives five dark hour-transition observations.
+Their 70,000 ms grid fits zero at first frame +3836.7 ms, 0.7 ms from the
+retained anchor fire. full-04 contributes one transition before death and a
+weaker phase check at +3831.4 ms, 48.2 ms before its anchor fire. These are
+DEVICE_MEASURED frame observations with arithmetic fits, not evidence that
+encounter rolls share the displayed-hour accumulator
+([record](../docs/evidence/phone-hour-grid-20260928.json),
+`phone-hour-grid-20d3c13b0de8a50f`).
+
+The corrected sweep rebuilt update zero at the first sampled frame after the
+fitted phase and delayed each schedule to its measured anchor fire. Its four
+predeclared cells per night include control and each single/joint correction.
+The joint correction dies after 2/2 compared windows on full-06 and 3/3 on
+full-04; the control remains best on both. No cell matches or meets the
+improvement threshold. MODEL_ONLY; no recompile confirmation or new phone run
+([record](../docs/evidence/phone-clock-zero-sweep-20260928.json),
+`recompile-phone-clock-sweep-0e3154b26906334e`; full-04 result
+`recompile-phone-clock-sweep-7e97bb2a648418af`).
+
+Next: compare Withered Bonnie's route eligibility and encounter start in the
+rebuild against the model around the earlier draw split. The physical same-phase
+twin remains open and requires a valid seed plus per-press landing reads. S2
+stays OPEN.
+
+## 2026-09-28 — Exhaust the measured full-06 response brackets (S2b)
+
+`recompile-phone-input-bracket-f7147f352c9115f7` checks the full-06 schedule
+through the complete 1500 ms read of window 6. The 29 relevant mask/monitor
+contacts all have observed visual-response brackets. Only monitor contacts 12
+and 16 admit more than one reconstructed update tick, so the complete family
+has four combinations. Each preserves phone windows 0–5 and each leaves model
+window 6 occupied by Withered Bonnie
+([record](../docs/evidence/phone-input-bracket-20260928.json),
+[generated result](../tools/recompile/results/phone-input-bracket-full-06-20260928.json)).
+
+The model snapshot places Bonnie at ventL from update 3627, with his office
+encounter starting at update 3840, 24 updates before the window at tick 3864.
+The response-ready recompile reads Chica there; the phone read is empty. The
+model/rebuild stream already splits at update 205 under response-ready inputs
+and update 904 under the landed control. This rejects only the measured
+visual-response timing family; dispatch lag, releases, decoded-rule fidelity,
+and phone route state remain unresolved. The scan varies only mask/monitor
+brackets: wind/camera-light contacts retain the baseline mapping, and each
+release shifts with its press instead of receiving an independent bound. No
+device run or promotion. S2 stays OPEN.

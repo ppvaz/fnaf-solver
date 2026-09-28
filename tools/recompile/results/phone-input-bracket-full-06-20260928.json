@@ -1,0 +1,583 @@
+{
+ "schema": "recompile-phone-input-bracket-sweep-v1",
+ "claimLevel": "MODEL_ONLY",
+ "purpose": "Exhaust all distinct per-contact update ticks admitted by the retained visual-response brackets through full-06 window 6, with each release shifted by the same update count as its press.",
+ "source": {
+  "config": {
+   "path": "tools/recompile/full06-response-experiment.json",
+   "sha256": "6057617855221fe0d3455dfb25137fc1a05b186564a77b776dce60d16253cc36"
+  },
+  "responseResult": {
+   "path": "tools/recompile/results/full06-responses-20260928.json",
+   "sha256": "9c67da2747e6907edf5d9fcfa12f00d13cb342cb75cbf51c7ef192233361be37",
+   "evidenceId": "recompile-phone-encounters-9efc5551ed385de1"
+  },
+  "sourceTrace": {
+   "path": "artifacts/forensics/k3-frametrace-nights-20260915/ft2-full-06-875229878053244.tsv",
+   "sha256": "3fe9587c06708a991e5a2c983ebc1feaf9be89cda9c7c787999a2ac6052dd261"
+  },
+  "winner": {
+   "path": "tools/device/campaign-night7-k3-winner.json",
+   "sha256": "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78"
+  },
+  "modelOptions": {
+   "path": "tools/recompile/sourced-rebuild-model-options-20260927c.json",
+   "sha256": "b7eddb6025147181a8f837ed15e013925809c03d37d9f9b8aa358984daad44a4"
+  },
+  "modelSources": {
+   "packages/core/src/mechanics/plant-model.js": "404200fe025f57d68da876e9b7ff0f4ea58c89890bbd6da320a7c6d7fa2f1b13",
+   "packages/core/src/mechanics/config.js": "3da601d1233454b7386ebab415c827fe87117ed2b9b031e51168c338f89f6f70",
+   "packages/core/src/mechanics/rng.js": "1a2b615eda3a152aea548054c873c8da83a96b06b6ac65fc0a74e4997a3e651e"
+  },
+  "toolSha256": "b7957ff5105a5c1dca6a9d85aa7cb81ce260e12b2ee69e2717dbe2b0a938c63d"
+ },
+ "target": {
+  "night": "full-06",
+  "seed": 47593,
+  "windowIndex": 6,
+  "horizonMs": 65767.6,
+  "horizonRule": "the landed window start plus its 1500 ms read interval",
+  "phoneWindows": "...BC..BC.BC.BC..BC.BCF.BCFBC.B.CBC.BC.CBC",
+  "baselineModelWindows": "...BC.BCFB.CBC.C.BC.BC.BCF.BC.BC.BC.BC.BC.?",
+  "prefixLength": 6,
+  "targetPhoneCode": "."
+ },
+ "coverage": {
+  "measuredResponseRowsThroughHorizon": 29,
+  "observedResponseRowsThroughHorizon": 29,
+  "unknownRowsThroughHorizon": 0,
+  "relevantMaskOrMonitorContactsThroughHorizon": 29,
+  "contactsWithoutResponseRowsThroughHorizon": [],
+  "responseBracketRows": [
+   {
+    "contactIndex": 0,
+    "control": "monitor",
+    "status": "OBSERVED_RESPONSE",
+    "sendImageMs": 2435.8,
+    "lowerImageMs": 2508.422462,
+    "upperImageMs": 2533.817154,
+    "priorImageMs": 2508.422462,
+    "readyAfterSend": false,
+    "earlyTick": 152,
+    "lateTick": 152
+   },
+   {
+    "contactIndex": 3,
+    "control": "monitor",
+    "status": "OBSERVED_RESPONSE",
+    "sendImageMs": 3318.8,
+    "lowerImageMs": 3360.508846,
+    "upperImageMs": 3380.856,
+    "priorImageMs": 3360.508846,
+    "readyAfterSend": false,
+    "earlyTick": 203,
+    "lateTick": 203
+   },
+   {
+    "contactIndex": 4,
+    "control": "monitor",
+    "status": "OBSERVED_RESPONSE",
+    "sendImageMs": 4051.8,
+    "lowerImageMs": 4115.62577,
+    "upperImageMs": 4133.406077,
+    "priorImageMs": 4115.62577,
+    "readyAfterSend": false,
+    "earlyTick": 248,
+    "lateTick": 248
+   },
+   {
+    "contactIndex": 8,
+    "control": "monitor",
+    "status": "OBSERVED_RESPONSE",
+    "sendImageMs": 4768.8,
+    "lowerImageMs": 4832.653462,
+    "upperImageMs": 4849.121231,
+    "priorImageMs": 4832.653462,
+    "readyAfterSend": false,
+    "earlyTick": 290,
+    "lateTick": 290
+   },
+   {
+    "contactIndex": 9,
+    "control": "mask",
+    "status": "OBSERVED_RESPONSE",
+    "sendImageMs": 5350.8,
+    "lowerImageMs": 5399.928,
+    "upperImageMs": 5417.028923,
+    "priorImageMs": 5399.928,
+    "readyAfterSend": false,
+    "earlyTick": 324,
+    "lateTick": 324
+   },
+   {
+    "contactIndex": 10,
+    "control": "mask",
+    "status": "OBSERVED_RESPONSE",
+    "sendImageMs": 9435.8,
+    "lowerImageMs": 9488.037154,
+    "upperImageMs": 9516.036847,
+    "priorImageMs": 9488.037154,
+    "readyAfterSend": false,
+    "earlyTick": 570,
+    "lateTick": 570
+   },
+   {
+    "contactIndex": 12,
+    "control": "monitor",
+    "status": "OBSERVED_RESPONSE",
+    "sendImageMs": 10035.8,
+    "lowerImageMs": 10095.632231,
+    "upperImageMs": 10113.283616,
+    "priorImageMs": 10095.632231,
+    "readyAfterSend": false,
+    "earlyTick": 606,
+    "lateTick": 607
+   },
+   {
+    "contactIndex": 16,
+    "control": "monitor",
+    "status": "OBSERVED_RESPONSE",
+    "sendImageMs": 13735.8,
+    "lowerImageMs": 13810.743078,
+    "upperImageMs": 13826.225847,
+    "priorImageMs": 13810.743078,
+    "readyAfterSend": false,
+    "earlyTick": 831,
+    "lateTick": 832
+   },
+   {
+    "contactIndex": 17,
+    "control": "mask",
+    "status": "OBSERVED_RESPONSE",
+    "sendImageMs": 14184.8,
+    "lowerImageMs": 14232.895309,
+    "upperImageMs": 14250.626078,
+    "priorImageMs": 14232.895309,
+    "readyAfterSend": true,
+    "earlyTick": 858,
+    "lateTick": 858
+   },
+   {
+    "contactIndex": 18,
+    "control": "mask",
+    "status": "OBSERVED_RESPONSE",
+    "sendImageMs": 19435.8,
+    "lowerImageMs": 19499.429463,
+    "upperImageMs": 19516.160232,
+    "priorImageMs": 19499.429463,
+    "readyAfterSend": false,
+    "earlyTick": 1174,
+    "lateTick": 1174
+   },
+   {
+    "contactIndex": 20,
+    "control": "monitor",
+    "status": "OBSERVED_RESPONSE",
+    "sendImageMs": 20035.8,
+    "lowerImageMs": 20075.515386,
+    "upperImageMs": 20088.14677,
+    "priorImageMs": 20075.515386,
+    "readyAfterSend": false,
+    "earlyTick": 1209,
+    "lateTick": 1209
+   },
+   {
+    "contactIndex": 24,
+    "control": "monitor",
+    "status": "OBSERVED_RESPONSE",
+    "sendImageMs": 23735.8,
+    "lowerImageMs": 23819.690155,
+    "upperImageMs": 23831.460617,
+    "priorImageMs": 23819.690155,
+    "readyAfterSend": false,
+    "earlyTick": 1432,
+    "lateTick": 1432
+   },
+   {
+    "contactIndex": 25,
+    "control": "mask",
+    "status": "OBSERVED_RESPONSE",
+    "sendImageMs": 24184.8,
+    "lowerImageMs": 24234.264617,
+    "upperImageMs": 24248.686155,
+    "priorImageMs": 24234.264617,
+    "readyAfterSend": true,
+    "earlyTick": 1459,
+    "lateTick": 1459
+   },
+   {
+    "contactIndex": 26,
+    "control": "mask",
+    "status": "OBSERVED_RESPONSE",
+    "sendImageMs": 29435.8,
+    "lowerImageMs": 29500.938463,
+    "upperImageMs": 29521.717771,
+    "priorImageMs": 29500.938463,
+    "readyAfterSend": false,
+    "earlyTick": 1775,
+    "lateTick": 1775
+   },
+   {
+    "contactIndex": 28,
+    "control": "monitor",
+    "status": "OBSERVED_RESPONSE",
+    "sendImageMs": 30035.8,
+    "lowerImageMs": 30075.531386,
+    "upperImageMs": 30096.563002,
+    "priorImageMs": 30075.531386,
+    "readyAfterSend": false,
+    "earlyTick": 1809,
+    "lateTick": 1809
+   },
+   {
+    "contactIndex": 32,
+    "control": "monitor",
+    "status": "OBSERVED_RESPONSE",
+    "sendImageMs": 33735.8,
+    "lowerImageMs": 33758.54731,
+    "upperImageMs": 33827.236541,
+    "priorImageMs": 33758.54731,
+    "readyAfterSend": false,
+    "earlyTick": 2029,
+    "lateTick": 2029
+   },
+   {
+    "contactIndex": 33,
+    "control": "mask",
+    "status": "OBSERVED_RESPONSE",
+    "sendImageMs": 34184.8,
+    "lowerImageMs": 34231.048541,
+    "upperImageMs": 34253.52331,
+    "priorImageMs": 34231.048541,
+    "readyAfterSend": false,
+    "earlyTick": 2056,
+    "lateTick": 2056
+   },
+   {
+    "contactIndex": 34,
+    "control": "mask",
+    "status": "OBSERVED_RESPONSE",
+    "sendImageMs": 39435.8,
+    "lowerImageMs": 39471.757849,
+    "upperImageMs": 39488.173233,
+    "priorImageMs": 39471.757849,
+    "readyAfterSend": false,
+    "earlyTick": 2369,
+    "lateTick": 2369
+   },
+   {
+    "contactIndex": 36,
+    "control": "monitor",
+    "status": "OBSERVED_RESPONSE",
+    "sendImageMs": 40035.8,
+    "lowerImageMs": 40111.478464,
+    "upperImageMs": 40126.063695,
+    "priorImageMs": 40111.478464,
+    "readyAfterSend": false,
+    "earlyTick": 2408,
+    "lateTick": 2408
+   },
+   {
+    "contactIndex": 40,
+    "control": "monitor",
+    "status": "OBSERVED_RESPONSE",
+    "sendImageMs": 43735.8,
+    "lowerImageMs": 43818.301849,
+    "upperImageMs": 43834.058695,
+    "priorImageMs": 43818.301849,
+    "readyAfterSend": false,
+    "earlyTick": 2634,
+    "lateTick": 2634
+   },
+   {
+    "contactIndex": 41,
+    "control": "mask",
+    "status": "OBSERVED_RESPONSE",
+    "sendImageMs": 44184.8,
+    "lowerImageMs": 44232.933541,
+    "upperImageMs": 44250.153233,
+    "priorImageMs": 44232.933541,
+    "readyAfterSend": true,
+    "earlyTick": 2659,
+    "lateTick": 2659
+   },
+   {
+    "contactIndex": 42,
+    "control": "mask",
+    "status": "OBSERVED_RESPONSE",
+    "sendImageMs": 49435.8,
+    "lowerImageMs": 49482.765157,
+    "upperImageMs": 49504.578772,
+    "priorImageMs": 49482.765157,
+    "readyAfterSend": false,
+    "earlyTick": 2976,
+    "lateTick": 2976
+   },
+   {
+    "contactIndex": 44,
+    "control": "monitor",
+    "status": "OBSERVED_RESPONSE",
+    "sendImageMs": 50035.8,
+    "lowerImageMs": 50084.577849,
+    "upperImageMs": 50100.777234,
+    "priorImageMs": 50084.577849,
+    "readyAfterSend": false,
+    "earlyTick": 3012,
+    "lateTick": 3012
+   },
+   {
+    "contactIndex": 48,
+    "control": "monitor",
+    "status": "OBSERVED_RESPONSE",
+    "sendImageMs": 53735.8,
+    "lowerImageMs": 53816.459311,
+    "upperImageMs": 53832.304234,
+    "priorImageMs": 53816.459311,
+    "readyAfterSend": false,
+    "earlyTick": 3236,
+    "lateTick": 3236
+   },
+   {
+    "contactIndex": 49,
+    "control": "mask",
+    "status": "OBSERVED_RESPONSE",
+    "sendImageMs": 54184.8,
+    "lowerImageMs": 54234.215003,
+    "upperImageMs": 54249.832311,
+    "priorImageMs": 54234.215003,
+    "readyAfterSend": true,
+    "earlyTick": 3261,
+    "lateTick": 3261
+   },
+   {
+    "contactIndex": 50,
+    "control": "mask",
+    "status": "OBSERVED_RESPONSE",
+    "sendImageMs": 59435.8,
+    "lowerImageMs": 59485.557773,
+    "upperImageMs": 59500.589234,
+    "priorImageMs": 59485.557773,
+    "readyAfterSend": false,
+    "earlyTick": 3579,
+    "lateTick": 3579
+   },
+   {
+    "contactIndex": 52,
+    "control": "monitor",
+    "status": "OBSERVED_RESPONSE",
+    "sendImageMs": 60035.8,
+    "lowerImageMs": 60088.850081,
+    "upperImageMs": 60101.050696,
+    "priorImageMs": 60088.850081,
+    "readyAfterSend": false,
+    "earlyTick": 3615,
+    "lateTick": 3615
+   },
+   {
+    "contactIndex": 56,
+    "control": "monitor",
+    "status": "OBSERVED_RESPONSE",
+    "sendImageMs": 63735.8,
+    "lowerImageMs": 63798.747388,
+    "upperImageMs": 63820.311004,
+    "priorImageMs": 63798.747388,
+    "readyAfterSend": false,
+    "earlyTick": 3838,
+    "lateTick": 3838
+   },
+   {
+    "contactIndex": 57,
+    "control": "mask",
+    "status": "OBSERVED_RESPONSE",
+    "sendImageMs": 64184.8,
+    "lowerImageMs": 64218.688312,
+    "upperImageMs": 64236.718465,
+    "priorImageMs": 64218.688312,
+    "readyAfterSend": true,
+    "earlyTick": 3864,
+    "lateTick": 3864
+   }
+  ]
+ },
+ "dimensions": [
+  {
+   "contactIndex": 12,
+   "control": "monitor",
+   "sendImageMs": 10035.8,
+   "lowerImageMs": 10095.632231,
+   "upperImageMs": 10113.283616,
+   "readyAfterSend": false,
+   "minTick": 606,
+   "maxTick": 607,
+   "possibleTicks": [
+    606,
+    607
+   ]
+  },
+  {
+   "contactIndex": 16,
+   "control": "monitor",
+   "sendImageMs": 13735.8,
+   "lowerImageMs": 13810.743078,
+   "upperImageMs": 13826.225847,
+   "readyAfterSend": false,
+   "minTick": 831,
+   "maxTick": 832,
+   "possibleTicks": [
+    831,
+    832
+   ]
+  }
+ ],
+ "candidateCount": 4,
+ "candidates": [
+  {
+   "choices": [
+    {
+     "contactIndex": 12,
+     "tick": 606
+    },
+    {
+     "contactIndex": 16,
+     "tick": 831
+    }
+   ],
+   "scheduleSha256": "12690f87363ff0862e35dcad9a55903467a3d7c41ebcae810eb9aed56d033d81",
+   "modelWindows": "...BC.BC.BC.FCBC..BC.BC..BC.BC.BC.CB.CB.CB?",
+   "targetState": {
+    "windowIndex": 6,
+    "windowTick": 3864,
+    "windowClockMs": 64235.4,
+    "modelOccupant": "B",
+    "activeBlackoutUnit": "withbonnie",
+    "withBonnie": {
+     "node": "ventL",
+     "idx": 5,
+     "atOpening": true,
+     "openingSince": 3627,
+     "inside": false,
+     "done": false
+    },
+    "withBonnieEncounterFrame": 3840,
+    "withBonnieEncounterClockMs": 63858,
+    "encounterLeadUpdates": 24
+   },
+   "preservesPhonePrefix": true,
+   "targetCode": "B",
+   "clearsTarget": false
+  },
+  {
+   "choices": [
+    {
+     "contactIndex": 12,
+     "tick": 606
+    },
+    {
+     "contactIndex": 16,
+     "tick": 832
+    }
+   ],
+   "scheduleSha256": "191090e5cd6c747078d68abb790d1b2c10b33595f0c6fc4e2ee1fb19b9362c44",
+   "modelWindows": "...BC.BCFB.CBC.C.BC.BC.BCF.BC.BC.BC.BC.BC.?",
+   "targetState": {
+    "windowIndex": 6,
+    "windowTick": 3864,
+    "windowClockMs": 64235.4,
+    "modelOccupant": "B",
+    "activeBlackoutUnit": "withbonnie",
+    "withBonnie": {
+     "node": "ventL",
+     "idx": 5,
+     "atOpening": true,
+     "openingSince": 3627,
+     "inside": false,
+     "done": false
+    },
+    "withBonnieEncounterFrame": 3840,
+    "withBonnieEncounterClockMs": 63858,
+    "encounterLeadUpdates": 24
+   },
+   "preservesPhonePrefix": true,
+   "targetCode": "B",
+   "clearsTarget": false
+  },
+  {
+   "choices": [
+    {
+     "contactIndex": 12,
+     "tick": 607
+    },
+    {
+     "contactIndex": 16,
+     "tick": 831
+    }
+   ],
+   "scheduleSha256": "9cab88b62a47f3adcbbdf57dc6db9405cb2aff4895b5adbeae36e8596458fdc1",
+   "modelWindows": "...BC.BC.BC.FCBC..BC.BC..BC.BC.BC.CB.CB.CB?",
+   "targetState": {
+    "windowIndex": 6,
+    "windowTick": 3864,
+    "windowClockMs": 64235.4,
+    "modelOccupant": "B",
+    "activeBlackoutUnit": "withbonnie",
+    "withBonnie": {
+     "node": "ventL",
+     "idx": 5,
+     "atOpening": true,
+     "openingSince": 3627,
+     "inside": false,
+     "done": false
+    },
+    "withBonnieEncounterFrame": 3840,
+    "withBonnieEncounterClockMs": 63858,
+    "encounterLeadUpdates": 24
+   },
+   "preservesPhonePrefix": true,
+   "targetCode": "B",
+   "clearsTarget": false
+  },
+  {
+   "choices": [
+    {
+     "contactIndex": 12,
+     "tick": 607
+    },
+    {
+     "contactIndex": 16,
+     "tick": 832
+    }
+   ],
+   "scheduleSha256": "66a48be8398f7390b57bf938f88c28332b603fe854c37e743afbfa0f8d90aa03",
+   "modelWindows": "...BC.BCFB.CBC.C.BC.BC.BCF.BC.BC.BC.BC.BC.?",
+   "targetState": {
+    "windowIndex": 6,
+    "windowTick": 3864,
+    "windowClockMs": 64235.4,
+    "modelOccupant": "B",
+    "activeBlackoutUnit": "withbonnie",
+    "withBonnie": {
+     "node": "ventL",
+     "idx": 5,
+     "atOpening": true,
+     "openingSince": 3627,
+     "inside": false,
+     "done": false
+    },
+    "withBonnieEncounterFrame": 3840,
+    "withBonnieEncounterClockMs": 63858,
+    "encounterLeadUpdates": 24
+   },
+   "preservesPhonePrefix": true,
+   "targetCode": "B",
+   "clearsTarget": false
+  }
+ ],
+ "conclusion": "No measured response-bracket timing choice preserves the first six phone windows and clears window 6.",
+ "limitations": [
+  "A visible response bounds a possible input update; it does not measure Android dispatch or prove causation.",
+  "Only mask and monitor contacts have response-classifier rows; wind and camera/light contacts retain their baseline timing mapping.",
+  "The response brackets constrain press timing only. Releases shift by the same number of updates to preserve scheduled contact duration.",
+  "This search is MODEL_ONLY; it reuses the retained phone trace, response rows, and phone window reads and performs no device run."
+ ],
+ "evidenceId": "recompile-phone-input-bracket-f7147f352c9115f7"
+}

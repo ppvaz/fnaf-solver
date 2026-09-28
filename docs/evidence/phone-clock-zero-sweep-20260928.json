@@ -1,0 +1,64 @@
+{
+  "schema": "evidence-record-v1",
+  "id": "recompile-phone-clock-sweep-0e3154b26906334e",
+  "claimLevel": "MODEL_ONLY: host model replay against retained DEVICE_MEASURED phone observations",
+  "date": "2026-09-28",
+  "step": "ROADMAP S2b (measured clock-zero and schedule-phase candidate)",
+  "question": "Does the joint phone-measured clock zero and anchor-fire schedule phase explain the model-versus-phone encounter disagreement?",
+  "verdict": "No. The four predeclared cells on each traced night retain the control, clock-zero-only, schedule-phase-only and joint measured correction. On full-06, the control stays best at 14/42; the joint correction dies after agreeing on 2/2 compared windows. On full-04, the control stays best at 4/8; the joint correction dies after 3/3. Neither joint candidate improves by the configured threshold or matches all read windows. These results reject this measured correction as an explanation; they do not close S2 or distinguish per-press input from a shared decoded-rule difference.",
+  "measurements": {
+    "source": "phone-hour-grid-20260928.json",
+    "claimLevel": "DEVICE_MEASURED observations; used as fixed inputs to this MODEL_ONLY replay",
+    "schedulePhase": "deltaMs is negative to delay the configured schedule origin until the measured anchor fire.",
+    "clockZero": "dropMs rebuilds update zero at the first captured frame at or after the fitted hour-grid phase. The exact retained frame timestamp is recorded as clockStartMs in each cell."
+  },
+  "results": [
+    {
+      "night": "full-06",
+      "path": "tools/recompile/results/phone-clock-sweep-zero-full-06-20260928.json",
+      "sha256": "84075f6a64c33f485ea1940ea4e7149740445e2defce532e270b0816670e745f",
+      "evidenceId": "recompile-phone-clock-sweep-0e3154b26906334e",
+      "cells": 4,
+      "control": { "agree": 14, "compared": 42, "outcome": "6am" },
+      "jointMeasuredCorrection": {
+        "deltaMs": -1400.2,
+        "dropMs": 3836.7,
+        "clockStartMs": 3849.000231,
+        "droppedFrames": 226,
+        "agree": 2,
+        "compared": 2,
+        "unplayed": 40,
+        "outcome": "death"
+      },
+      "best": { "deltaMs": 0, "dropMs": 0, "agree": 14, "compared": 42 }
+    },
+    {
+      "night": "full-04",
+      "path": "tools/recompile/results/phone-clock-sweep-zero-full-04-20260928.json",
+      "sha256": "ce6e13560bee347c472998e4d62b72930e510242ce18a8019341837e8de121da",
+      "evidenceId": "recompile-phone-clock-sweep-7e97bb2a648418af",
+      "cells": 4,
+      "control": { "agree": 4, "compared": 8, "outcome": "death" },
+      "jointMeasuredCorrection": {
+        "deltaMs": -1443.6,
+        "dropMs": 3831.4,
+        "clockStartMs": 3846.169231,
+        "droppedFrames": 219,
+        "agree": 3,
+        "compared": 3,
+        "unplayed": 7,
+        "outcome": "death"
+      },
+      "best": { "deltaMs": 0, "dropMs": 0, "agree": 4, "compared": 8 }
+    }
+  ],
+  "tool": "tools/recompile/phone-clock-sweep.mjs",
+  "config": "tools/recompile/phone-clock-sweep-zero.json",
+  "gate": "tools/recompile/test-phone-clock-sweep.mjs, in npm run test:unit; rechecks the clock rebase and both four-cell records from committed rows without source traces or a model run.",
+  "limits": [
+    "MODEL_ONLY: no recompile confirmation and no new phone run.",
+    "The joint cells compare only the retained phone windows; full-04's phone trace ends in death and the joint model cell does not reach the later windows.",
+    "A negative on this measured timing correction does not establish which remaining upstream cause is correct."
+  ],
+  "next": "Run the prefix-constrained per-press bracket search for full-06 windows 0-6. If no allowed configuration clears window 6 while preserving windows 0-5, inspect the model and recompile eligibility/roll state at that cycle. The physical S2a same-phase twin remains open."
+}

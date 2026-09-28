@@ -62,10 +62,17 @@ directory (`/private/tmp/fnaf2-recompile.*` on the dev machine).
 | `test-schedule-replay.mjs` | FIXTURE for both: stretch points, one expansion, pointers and same-tick edges, the Night 1 minimal binding, prefix/slip/split/death outcomes, the attacker read from `# counter` lines, ledger pairing, input binding. In `npm run test:unit`. |
 | `phone-encounter-replay.mjs` | Phone nights with an established seed, replayed into the rebuild on the phone's own clock and compared window by window (S2b). `emit` writes a night's harness input (its binding at the measured release, checked action for action against the retained press file), `frametimes.txt` (`CHOWDREN_FRAME_TIMES`) and the watches; `compare` scores every configured replay against the retained phone reads and terminals, runs the model on the same inputs and clock, and writes `recompile-phone-encounters-v1`; `check` re-derives a result's arithmetic. Press rules `landed` (send plus the night's measured landing latency; primary), `sched`, `cum`, and `native-response` (individual native-stroke visual response proxies, with UNKNOWN contacts retaining the median); clocks catch-up, raw and constant 60 Hz. A configured response experiment binds its retained control and focused conclusion; `compare --evidence FILE.json` emits the compact generated evidence record. MODEL_ONLY; phone reads are reused DEVICE_MEASURED observations; visible responses and inferred releases are not input dispatch. |
 | `phone-encounter-nights.json` | The nights, their seeds' records, bindings, release origins, hashed private inputs (press files, frame traces), phone windows and terminals, and the replay variants. No frames, recordings or game data. |
-| `phone-clock-sweep.mjs` | The press-phase x office-timer-rate sweep over the phone-encounter nights (S2b: rule a shared timing-reference error in or out). `sweep --config CONFIG --out RESULT.json [--night NAME] [--inputs-root DIR]` runs, per configured night, the control cell (deltaMs 0, timerRate 0, which must reproduce the retained phone-encounters result's model windows byte for byte under the options its config pins) and then the predeclared grid: `deltaMs` shifts the whole schedule against the office clock through the `sched` press rule, `timerRate` scales every office update's timer delta by `(1 + r)` while presses stay pinned to captured frames; a night with no trace sweeps deltaMs only. Scoring, windows and terminals are `phone-encounter-replay.mjs`'s own rules. `check RESULT.json` re-derives every score, best cell, match/improve verdict and the retained control from the rows alone. MODEL_ONLY. |
-| `phone-clock-sweep.json`, `phone-clock-sweep-fine.json` | The two retained sweep configs: coarse (+-10 s at 1 s x +-8% at 2%, refinement around each night's best) and fine (-200..+150 ms at 10 ms refined to 5, rate 0), each predeclaring its grid, control variants, refinement rule and verdict thresholds. |
-| `test-phone-clock-sweep.mjs` | FIXTURE for the rate scaling, cell scoring, the match rule and the ranking (a match beats every non-match; agreeing windows by count, never by rate); then both committed results' schema, control equality to the retained replay, every cell score, best cell and verdict re-derived from their rows, with the retained conclusions stated where the check reads them: no full-read match anywhere, window 6 phase-robust (34 of 44 fine cells; every clearing cell still disagrees elsewhere), and twin-01's all-empty read matched at two configurations 6 s apart. In `npm run test:unit`; no model, binary or private inputs required. |
+| `phone-clock-sweep.mjs` | The press-phase x office-timer-rate sweep over the phone-encounter nights (S2b). `deltaMs` shifts the schedule through the `sched` press rule, `timerRate` scales each office update, and `dropMs` starts a rebuilt frame clock at the first captured image at or after the supplied phase; dropped traces rebase scheduled times to that new clock zero. Controls must reproduce retained model windows byte for byte. `check RESULT.json` re-derives scores, rankings, verdict and control from retained rows alone. MODEL_ONLY. |
+| `phone-clock-sweep.json`, `phone-clock-sweep-fine.json`, `phone-clock-sweep-zero.json` | The retained coarse and fine phase/rate sweeps plus the exact measured-reference check. The zero config compares control, each single-axis correction and the joint hour-grid/anchor correction on full-04 and full-06; it has no local search. |
+| `results/phone-clock-sweep-zero-full-04-20260928.json`, `results/phone-clock-sweep-zero-full-06-20260928.json` | MODEL_ONLY outcomes for the measured schedule-phase and clock-zero corrections; the joint candidate does not improve on either retained control. |
+| `hour-grid-fit.mjs` | Reads retained frame-trace `image_ns` and `grid_mean_luma` columns, records each first dark interstitial near the expected 70 s boundary, fits `t = zero + 70000k`, and checks residuals, intervals, anchor-fire phase and the trace hash. Result arithmetic is checkable without the private trace in a clean checkout; DEVICE_MEASURED observations, arithmetic fit. |
+| `results/phone-hour-grid-full-04-20260928.json`, `results/phone-hour-grid-full-06-20260928.json` | Hash-bound hour-grid observations: full-06 has five transitions and a 3836.7 ms zero (+0.7 ms from anchor fire); full-04 has one pre-death transition and a 3831.4 ms zero (-48.2 ms from anchor fire). |
+| `docs/evidence/phone-hour-grid-20260928.json`, `docs/evidence/phone-clock-zero-sweep-20260928.json` | Structured S2 records for the DEVICE_MEASURED hour-grid observation and the MODEL_ONLY joint-correction result, with result hashes and remaining open causes. |
+| `test-phone-clock-sweep.mjs`, `test-hour-grid-fit.mjs` | FIXTURE for rebased clock mapping, scoring and rankings, then rechecks the retained phase sweeps and hour-grid records from their rows and hashes; no model, binary or private trace needed in CI. Both run in `npm run test:unit`. |
 | `test-phone-encounter-replay.mjs` | FIXTURE for the clock, press rules, landing latency, native response attribution/UNKNOWN/readiness/brackets, occupant, window codes and scoring; then the retained phone comparison and `results/full06-responses-20260928.json` re-derived from their rows, including the reproduced control, coverage, focused conclusion and generated evidence record. In `npm run test:unit`; no private inputs or binary required. |
+| `phone-input-bracket-sweep.mjs` | Replays every distinct update tick admitted by full-06's retained response brackets through window 6, independently choosing each ambiguous press update and shifting its release by the same count. `run` needs the retained frame trace; `check RESULT.json` verifies the complete branch family and target-state arithmetic from committed rows without the private trace or binary. MODEL_ONLY. |
+| `results/phone-input-bracket-full-06-20260928.json`, `docs/evidence/phone-input-bracket-20260928.json` | Four measured-bracket combinations preserve phone windows 0-5 but all show Withered Bonnie in model window 6; 29/29 relevant contacts have an observed response bracket. The model's Bonnie encounter begins 24 updates before the target window. |
+| `test-phone-input-bracket-sweep.mjs` | Checks all 4 combinations, their prefix/target codes and route snapshot, source bindings and result hash without ignored traces; runs in `npm run test:unit`. |
 
 ## Environment
 
@@ -1564,14 +1571,45 @@ phone's own stamp), full-06 at 370.3 s. The model's queue has no tap releases
 and cannot show it. Each variant's `heldTapDrops` lists them.
 
 Open:
-- Per-press landings, where the retained trace shows them (raises, drops, mask),
-  in place of one median. Then see whether full-06's window 6 empties.
+- Response-to-dispatch causality, release acceptance and the actual runtime
+  update between captured frames. The full-06 prefix scan exhausts its measured
+  response-proxy update ticks, but those are not device dispatch measurements.
 - The same-phase frame-traced twin (S2a), with each press's landing frame read
   on the phone.
 - The k3 route's 200 ms monitor hold against the 12-update raise: a
   test-seam-slack candidate for S4. It is not a promotion.
 - Rebuild-vs-model draw splits on the phone clock: first mismatches at updates
   166-2400 on the primary replays, earlier than on the 60 Hz ones.
+
+## The first full-06 response-bracket family (2026-09-28, S2b)
+
+The fourth Observatory host experiment searches all distinct per-contact update
+ticks admitted by the retained visual-response intervals from the start through
+window 6's 1500 ms read. The window's own mask contact is included. All 29
+mask/monitor contacts in this prefix have an observed response; only two
+monitor contacts span two possible update ticks, so the family has four
+combinations. Every combination preserves phone windows 0-5 and still reads
+Withered Bonnie in model window 6. The target mask press itself maps to update
+3864 under both ends of its measured bracket. The search varies only mask and
+monitor response brackets. Wind and camera/light contacts retain their
+baseline mapping, and each release moves with its press instead of varying
+independently.
+
+The model snapshot explains the result inside the model: Bonnie is already at
+the ventL opening from update 3627, then his office encounter starts at update
+3840, 24 updates before target window 6 at 3864. The response-ready recompile
+reads Chica there, while the model reads Bonnie and the phone reader says empty.
+The model/rebuild draw stream already splits at update 205 under that response
+mapping; the primary landed replay splits at update 904. The bracket family
+does not locate the earlier state difference or prove which route the phone
+took. MODEL_ONLY, no new phone run
+([record](../../docs/evidence/phone-input-bracket-20260928.json),
+`recompile-phone-input-bracket-f7147f352c9115f7`). S2 remains open.
+
+The next host comparison is Bonnie's approach and eligibility in the rebuild
+against this model snapshot, using the retained counter/overlap trace around
+the earlier draw split. The physical separator remains a same-phase phone twin
+with a valid seed and per-press landing reads.
 
 
 ## Sound (2026-09-27, recovered wrap-up)

@@ -156,25 +156,38 @@ Details:
     MODEL_ONLY
     ([rebuild vs phone](../docs/evidence/rebuild-phone-encounters-20260927.json),
     `recompile-phone-encounters-e18a527d01bcdb54`).
-  - **The two upstream causes are now separated, and the timing-reference one is
-    ruled out.** A two-pass press-phase × office-timer-rate sweep over the same
-    four nights (coarse ±10 s × ±8 %, fine −200..+150 ms at 5–10 ms; 214 and 44
-    cells per night) reproduces the retained controls byte for byte and finds no
-    cell of that family reproducing the phone's occupied windows. full-06's best
-    cell anywhere is 32/42 (deltaMs +50); window 6 disagrees at every coarse
-    rate-0 cell and 34 of 44 fine cells; press phase redistributes disagreement
-    without resolving it (every clearing cell still disagrees on ≥ 8 windows),
-    over a landscape chaotic at 5–10 ms. The phone's own night length on the
-    6 AM night (420.19 s wall from origin against the reconstruction's 420.01 s)
-    bounds any accumulated timer loss — constant, uniform or bursty — below
-    about 1 s over the night, an order of magnitude too small for the observed
-    ~4–10 s encounter offsets, because hours and rolls drink from the same
-    accumulated timer. A shared constant-phase, uniform-rate or accumulated-loss
-    clock error cannot be the first disagreements' cause; what remains upstream
-    is the per-press input configuration or a rule divergence both host programs
-    inherited from the dump
-    ([sweep](../docs/evidence/phone-clock-sweep-20260928.json),
-    `recompile-phone-clock-sweep-616ca1010c7259f7`). MODEL_ONLY.
+  - **The timing-reference lead is constrained at measured points; S2 remains
+    open.** The coarse/fine press-phase × rate sweeps reproduce their controls
+    and find no cell reproducing the phone's occupied windows. full-06 peaks at
+    32/42; window 6 clears only on isolated phase cells that still disagree on
+    at least eight other windows. The night-length bound limits a large
+    accumulated-timer loss if the decoded shared-accumulator rule holds
+    ([phase/rate sweep](../docs/evidence/phone-clock-sweep-20260928.json),
+    `recompile-phone-clock-sweep-616ca1010c7259f7`). A separate frame-trace
+    measurement puts full-06's hour-grid zero at first frame +3836.7 ms, within
+    0.7 ms of anchor fire; full-04 has one pre-death transition and a -48.2 ms
+    offset. Re-zeroing the model clock and delaying the schedule by the measured
+    anchor-origin gap does not improve either night: the joint cells die after
+    two compared windows on full-06 and three on full-04, while each control
+    remains best
+    ([hour grid](../docs/evidence/phone-hour-grid-20260928.json),
+    [measured correction](../docs/evidence/phone-clock-zero-sweep-20260928.json)).
+    The measured correction does not explain the encounters. The full-06
+    response-bracket family is now exhaustively enumerated through window 6:
+    29/29 relevant contacts have observed response brackets, two admit an
+    alternate update tick, and all four combinations preserve windows 0-5 but
+    leave model window 6 occupied by Withered Bonnie. At that window the model
+    has Bonnie at ventL, with his office encounter starting 24 updates earlier;
+    the response-ready rebuild reads Chica and the phone reader says empty.
+    Their draw stream already split at update 205 under response-ready inputs
+    and update 904 under the primary landed replay. This rules out the measured
+    visual-response timing family as the explanation, not dispatch timing or
+    release acceptance
+    ([input bracket](../docs/evidence/phone-input-bracket-20260928.json),
+    `recompile-phone-input-bracket-f7147f352c9115f7`). Compare Bonnie's route
+    eligibility and encounter start in the rebuild against the model around
+    the earlier draw split; the same-phase phone twin remains the physical
+    separator. S2 stays open.
 - **Absorbs** Plan 17 (route 5), Plan 25 horizon 2, and the model parts of
   Plans 15 and 19.
 

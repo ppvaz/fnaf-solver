@@ -49,13 +49,39 @@ export function scaledDeltas(deltas, timerRate) {
   return deltas.map((d) => d * (1 + timerRate));
 }
 
+/**
+ * The measured night-zero correction: the game's night clock starts at the night-go tap (the anchor fire),
+ * which the retained hour transitions put at first-night-frame + 3836.7 ms on full-06 and + 3831.4 ms on
+ * full-04 (70.000 s hours, residuals +-30 ms; zero = fire within +-50 ms on both nights). The retained
+ * reconstruction instead starts office updates at the first captured night frame, attributing ~3.84 s of
+ * pre-night capture to the office clock. `dropMs` drops every captured frame whose image time (after the
+ * first night frame) is under dropMs from the office clock: those frames contribute no update and no timer,
+ * and the office clock's zero moves to the first kept frame. A press mapped before the kept clock starts is
+ * clamped to update 0 (it landed during the intro; what the game did with it is not modelled here).
+ */
+export function droppedClock(clock, dropMs) {
+  if (!Number.isFinite(dropMs) || dropMs < 0) throw new Error('dropMs must be 0 or positive');
+  if (!clock) throw new Error('a dropped clock needs a frame trace');
+  let k = 0;
+  while (k < clock.imageMs.length && clock.imageMs[k] < dropMs) k += 1;
+  if (k >= clock.imageMs.length) throw new Error('dropMs drops the whole trace');
+  const startMs = clock.imageMs[k];
+  const imageNs = clock.imageMs.slice(k).map((t) => Math.round((t - startMs) * 1e6));
+  // Rebuild from the first retained image; slicing the old deltas retains the interval that led
+  // into the dropped region as update 0.
+  const kept = officeClock(imageNs, 0, { catchUp: true });
+  return { ...kept, droppedFrames: k, startMs };
+}
+
 /** One model replay at a cell: the schedule shifted by deltaMs against the office clock. */
-export function modelCell({ nightCfg, sched, clock, deltas, modelOptions, customNight, deltaMs, timerRate }) {
-  const scaled = scaledDeltas(deltas, timerRate);
+export function modelCell({ nightCfg, sched, clock, deltas, modelOptions, customNight, deltaMs, timerRate, dropMs = 0 }) {
+  const kept = clock ? (dropMs > 0 ? droppedClock(clock, dropMs) : { ...clock, droppedFrames: 0, startMs: 0 }) : null;
+  const keptDeltas = dropMs > 0 ? kept.deltas.map((d) => Number(d.toFixed(6))) : deltas;
+  const scaled = scaledDeltas(keptDeltas, timerRate);
   const shift = nightCfg.trace ? nightCfg.trace.releaseAfterFirstNightFrameMs - nightCfg.originMs : 0;
   const tickOf = nightCfg.trace
-    ? (ms) => traceTick(ms + shift - deltaMs, clock)
-    : (ms) => cumTick(ms - deltaMs, deltas);
+    ? (ms) => Math.max(0, traceTick(ms + shift - deltaMs - kept.startMs, kept))
+    : (ms) => cumTick(ms - deltaMs, keptDeltas);
   const mapped = mapSchedule(sched, tickOf);
   const observe = (sim) => ({ mask: LEDGERS.mask.model(sim), unit: sim.blackout.active ? sim.blackout.unitId : null });
   const model = drawTrace({ night: nightCfg.night, seed: nightCfg.seed, frames: MODEL_FRAMES, rows: mapped.queue,
@@ -69,7 +95,8 @@ export function modelCell({ nightCfg, sched, clock, deltas, modelOptions, custom
   const endMs = Number(cum[model.out.length - 1].toFixed(1));
   const windows = windowCodes(presses, state, cum, endMs);
   return { codes: windows.map((w) => w.code).join(''), rows: windows, result: model.won ? '6am' : model.death ? 'death' : 'alive',
-    endMs, stretched: mapped.stretched, firstPressTick: mapped.queue[0][0] };
+    endMs, clockStartMs: kept?.startMs ?? null, droppedFrames: kept?.droppedFrames ?? 0,
+    stretched: mapped.stretched, firstPressTick: mapped.queue[0][0] };
 }
 
 /** A cell's scores, recomputed from its codes string and the night's phone reads. */
@@ -89,7 +116,8 @@ export function bestCell(cells, verdictCfg) {
     if (rank(b) !== rank(a)) return rank(b) > rank(a) ? b : a;
     if (b.agree !== a.agree) return b.agree > a.agree ? b : a;
     if (b.occupancyAgree !== a.occupancyAgree) return b.occupancyAgree > a.occupancyAgree ? b : a;
-    return Math.abs(b.deltaMs) + Math.abs(b.timerRate) * 1000 < Math.abs(a.deltaMs) + Math.abs(a.timerRate) * 1000 ? b : a;
+    return Math.abs(b.deltaMs) + Math.abs(b.timerRate) * 1000 + (b.dropMs ?? 0)
+      < Math.abs(a.deltaMs) + Math.abs(a.timerRate) * 1000 + (a.dropMs ?? 0) ? b : a;
   });
 }
 
@@ -110,11 +138,12 @@ export function deriveNight(night) {
   const rate = (c) => (c.compared ? c.agree / c.compared : -1);
   const best = bestCell(withScores, v);
   const matches = withScores.filter((c) => cellMatches(c, v));
+  const hasDropAxis = night.cells.some((c) => c.dropMs !== undefined);
   return { cells: withScores, controlScore,
-    best: { deltaMs: best.deltaMs, timerRate: best.timerRate, agree: best.agree, compared: best.compared,
+    best: { deltaMs: best.deltaMs, timerRate: best.timerRate, ...(hasDropAxis ? { dropMs: best.dropMs ?? 0 } : {}), agree: best.agree, compared: best.compared,
       occupancyAgree: best.occupancyAgree, unplayed: best.unplayed, modelResult: best.modelResult,
       outcomeAgrees: best.outcomeAgrees, outcomeDeltaMs: best.outcomeDeltaMs, codes: best.codes },
-    matchCells: matches.map((c) => ({ deltaMs: c.deltaMs, timerRate: c.timerRate, agree: c.agree, compared: c.compared })),
+    matchCells: matches.map((c) => ({ deltaMs: c.deltaMs, timerRate: c.timerRate, ...(hasDropAxis ? { dropMs: c.dropMs ?? 0 } : {}), agree: c.agree, compared: c.compared })),
     matches: matches.length > 0, improves: best.agree >= controlScore.agree + Math.ceil(v.improveMargin * controlScore.compared),
     bestRate: rate(best), controlRate: rate({ compared: controlScore.compared, agree: controlScore.agree }) };
 }
@@ -131,7 +160,8 @@ export function deriveVerdict(nights) {
       for (let j = i + 1; j < matched.length; j += 1) {
         const a = matched[i].derived.best;
         const b = matched[j].derived.best;
-        if (Math.abs(a.deltaMs - b.deltaMs) > v.consistentDeltaMs || Math.abs(a.timerRate - b.timerRate) > v.consistentRate) ok = false;
+        if (Math.abs(a.deltaMs - b.deltaMs) > v.consistentDeltaMs || Math.abs(a.timerRate - b.timerRate) > v.consistentRate
+          || Math.abs((a.dropMs ?? 0) - (b.dropMs ?? 0)) > (v.consistentDropMs ?? 0)) ok = false;
       }
     }
     consistency = ok ? 'CONSISTENT_ACROSS_NIGHTS' : 'NIGHT_SPECIFIC';
@@ -191,10 +221,11 @@ function nightInputs(sweepCfg, nightCfg, inputsRoot, modelOptions) {
   return { sched, pressCount, clock, deltas, customNight, modelOptions };
 }
 
-function runCell(inputs, nightCfg, deltaMs, timerRate) {
+function runCell(inputs, nightCfg, deltaMs, timerRate, dropMs = 0) {
   const cell = modelCell({ nightCfg, sched: inputs.sched, clock: inputs.clock, deltas: inputs.deltas,
-    modelOptions: inputs.modelOptions, customNight: inputs.customNight, deltaMs, timerRate });
-  return { deltaMs, timerRate, codes: cell.codes, modelResult: cell.result, modelEndMs: cell.endMs,
+    modelOptions: inputs.modelOptions, customNight: inputs.customNight, deltaMs, timerRate, dropMs });
+  return { deltaMs, timerRate, dropMs, clockStartMs: cell.clockStartMs, droppedFrames: cell.droppedFrames,
+    codes: cell.codes, modelResult: cell.result, modelEndMs: cell.endMs,
     stretchedContacts: cell.stretched, firstPressTick: cell.firstPressTick };
 }
 
@@ -204,20 +235,31 @@ function sweep(sweepCfg, cfgPath, inputsRoot, only) {
   if (sha256(readFileSync(resolve(ROOT, sweepCfg.control.reference.path))) !== sweepCfg.control.reference.sha256)
     throw new Error('the retained control result hash differs');
   const modelOptions = JSON.parse(readFileSync(resolve(ROOT, sweepCfg.modelOptions ?? nightsCfg.modelOptions), 'utf8'));
-  const grid = sweepCfg.grid;
+  const baseGrid = sweepCfg.grid;
   const refineCells = (best) => {
     const out = [];
-    for (let d = best.deltaMs - sweepCfg.refine.deltaWindowMs; d <= best.deltaMs + sweepCfg.refine.deltaWindowMs + 1e-9; d += sweepCfg.refine.deltaStepMs) out.push({ deltaMs: Math.round(d), timerRate: best.timerRate });
+    for (let d = best.deltaMs - sweepCfg.refine.deltaWindowMs; d <= best.deltaMs + sweepCfg.refine.deltaWindowMs + 1e-9; d += sweepCfg.refine.deltaStepMs) {
+      out.push({ deltaMs: Number(d.toFixed(3)), timerRate: best.timerRate, dropMs: best.dropMs ?? 0 });
+    }
     return out;
   };
   const refineRates = (best) => {
     const out = [];
-    for (let r = best.timerRate - sweepCfg.refine.rateWindow; r <= best.timerRate + sweepCfg.refine.rateWindow + 1e-9; r += sweepCfg.refine.rateStep) out.push({ deltaMs: best.deltaMs, timerRate: Number(r.toFixed(4)) });
+    for (let r = best.timerRate - sweepCfg.refine.rateWindow; r <= best.timerRate + sweepCfg.refine.rateWindow + 1e-9; r += sweepCfg.refine.rateStep) out.push({ deltaMs: best.deltaMs, timerRate: Number(r.toFixed(4)), dropMs: best.dropMs ?? 0 });
+    return out;
+  };
+  const refineDrops = (best) => {
+    const out = [];
+    if (!sweepCfg.refine.dropWindowMs) return out;
+    for (let d = (best.dropMs ?? 0) - sweepCfg.refine.dropWindowMs; d <= (best.dropMs ?? 0) + sweepCfg.refine.dropWindowMs + 1e-9; d += sweepCfg.refine.dropStepMs) {
+      if (d > 0) out.push({ deltaMs: best.deltaMs, timerRate: best.timerRate, dropMs: Math.round(d) });
+    }
     return out;
   };
   const nights = [];
   for (const nightCfg of nightsCfg.nights) {
     if (only && nightCfg.name !== only) continue;
+    const grid = baseGrid.byNight?.[nightCfg.name] ? { ...baseGrid, ...baseGrid.byNight[nightCfg.name] } : baseGrid;
     const refNight = reference.nights.find((n) => n.name === nightCfg.name);
     if (!refNight) throw new Error(`${nightCfg.name} is not in the retained control result`);
     const controlVariant = sweepCfg.control.variant[nightCfg.name];
@@ -228,14 +270,17 @@ function sweep(sweepCfg, cfgPath, inputsRoot, only) {
     if (controlCell.codes !== retained.windows.model)
       throw new Error(`${nightCfg.name}: control cell ${controlCell.codes.slice(0, 20)} is not the retained ${controlVariant} model windows ${retained.windows.model.slice(0, 20)}`);
     const rates = nightCfg.trace ? grid.timerRate : [0];
-    const seen = new Set(['0/0']);
+    const seen = new Set(['0/0/0']);
     const cells = [controlCell];
-    for (const timerRate of rates) {
-      for (const deltaMs of grid.deltaMs) {
-        const key = `${deltaMs}/${timerRate}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-        cells.push(runCell(inputs, nightCfg, deltaMs, timerRate));
+    const drops = nightCfg.trace ? (grid.dropMs ?? [0]) : [0];   // a dropped clock needs a frame trace
+    for (const dropMs of drops) {
+      for (const timerRate of rates) {
+        for (const deltaMs of grid.deltaMs) {
+          const key = `${deltaMs}/${timerRate}/${dropMs}`;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          cells.push(runCell(inputs, nightCfg, deltaMs, timerRate, dropMs));
+        }
       }
     }
     const night = {
@@ -250,13 +295,13 @@ function sweep(sweepCfg, cfgPath, inputsRoot, only) {
     const coarseDerived = deriveNight(night);
     // refinement, predeclared: around this night's own best coarse cell
     const around = [];
-    for (const c of [...refineCells(coarseDerived.best), ...refineRates(coarseDerived.best)]) {
-      const key = `${c.deltaMs}/${c.timerRate}`;
+    for (const c of [...refineCells(coarseDerived.best), ...refineRates(coarseDerived.best), ...refineDrops(coarseDerived.best)]) {
+      const key = `${c.deltaMs}/${c.timerRate}/${c.dropMs ?? 0}`;
       if (seen.has(key)) continue;
       seen.add(key);
       around.push(c);
     }
-    for (const c of around) cells.push(runCell(inputs, nightCfg, c.deltaMs, c.timerRate));
+    for (const c of around) cells.push(runCell(inputs, nightCfg, c.deltaMs, c.timerRate, c.dropMs ?? 0));
     night.derived = deriveNight(night);
     night.cells = night.derived.cells;                      // the scored rows are the record's rows
     const { cells: _scored, ...summary } = night.derived;
@@ -264,14 +309,15 @@ function sweep(sweepCfg, cfgPath, inputsRoot, only) {
     night.refined = around.length;
     nights.push(night);
     console.log(`  ${nightCfg.name} seed ${nightCfg.seed}: control ${controlVariant} reproduced; ${cells.length} cells; ` +
-      `best deltaMs ${night.derived.best.deltaMs} rate ${night.derived.best.timerRate} agree ${night.derived.best.agree}/${night.derived.best.compared} ` +
+      `best deltaMs ${night.derived.best.deltaMs} rate ${night.derived.best.timerRate} dropMs ${night.derived.best.dropMs ?? 0} ` +
+      `agree ${night.derived.best.agree}/${night.derived.best.compared} ` +
       `(control ${night.derived.controlScore.agree}/${night.derived.controlScore.compared}); matches ${night.derived.matchCells.length}`);
   }
   if (!nights.length) throw new Error(`no configured night named ${only}`);
   const result = {
     schema: SCHEMA, claimLevel: 'MODEL_ONLY', fidelity: 'model',
     comparedWith: 'DEVICE_MEASURED phone reads and terminals, reused from the records each night names; no new phone run',
-    question: 'Does any constant press-phase error or uniform office-timer rate error make the model agree with the phone window by window on the clock-seeded nights?',
+      question: 'Does the measured clock-origin and schedule-phase correction, alone or together, make the model agree with the phone window by window?',
     method: {
       sweepConfig: relative(ROOT, cfgPath), sweepConfigSha256: sha256(readFileSync(cfgPath)),
       nightsConfig: sweepCfg.nights, nightsConfigSha256: sha256(readFileSync(resolve(ROOT, sweepCfg.nights))),
@@ -280,7 +326,7 @@ function sweep(sweepCfg, cfgPath, inputsRoot, only) {
       toolSha256: sha256(readFileSync(new URL(import.meta.url))),
       modelSourceSha256: Object.fromEntries(MODEL_SOURCES.map((path) => [path.slice(ROOT.length + 1), sha256(readFileSync(path))])),
       frames: MODEL_FRAMES,
-      cellRule: 'presses by the sched rule on the update clock (image-pinned for a traced night, no landing latency), the whole schedule shifted by deltaMs; timerRate r scales every office update timer delta by (1 + r)',
+      cellRule: 'presses by the sched rule on the update clock (image-pinned for a traced night, no landing latency), the whole schedule shifted by deltaMs; dropMs starts a rebuilt office clock at the first captured frame at or after that image time; timerRate r scales every office update timer delta by (1 + r)',
       refineRule: sweepCfg.refine.rule,
     },
     nights,
@@ -324,7 +370,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   writeFileSync(args.out, `${JSON.stringify(result, null, 1)}\n`);
   console.log(`${result.evidenceId}: ${result.verdict.status} (MODEL_ONLY model-side sweep vs retained phone reads)`);
   for (const n of result.nights) {
-    console.log(`  ${n.name} seed ${n.seed}: best ${n.derived.best.agree}/${n.derived.best.compared} at deltaMs ${n.derived.best.deltaMs} rate ${n.derived.best.timerRate}; ` +
+    console.log(`  ${n.name} seed ${n.seed}: best ${n.derived.best.agree}/${n.derived.best.compared} at deltaMs ${n.derived.best.deltaMs} rate ${n.derived.best.timerRate} dropMs ${n.derived.best.dropMs ?? 0}; ` +
       `control ${n.derived.controlScore.agree}/${n.derived.controlScore.compared}; matches ${JSON.stringify(n.derived.matchCells)}`);
   }
 }

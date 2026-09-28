@@ -1,0 +1,224 @@
+{
+ "schema": "phone-clock-sweep-result-v1",
+ "claimLevel": "MODEL_ONLY",
+ "fidelity": "model",
+ "comparedWith": "DEVICE_MEASURED phone reads and terminals, reused from the records each night names; no new phone run",
+ "question": "Does the measured clock-origin and schedule-phase correction, alone or together, make the model agree with the phone window by window?",
+ "method": {
+  "sweepConfig": "tools/recompile/phone-clock-sweep-zero.json",
+  "sweepConfigSha256": "f71f570d4937b3d0cc0bfc4bc7b785b8a2bf06c4f4dd6dff9b8007ce732367b5",
+  "nightsConfig": "tools/recompile/phone-encounter-nights.json",
+  "nightsConfigSha256": "26b89b453e2b483610c118c264d1eb0dbb5d06758ab53db283807ffc25d666d0",
+  "modelOptions": "tools/recompile/sourced-rebuild-model-options-20260927c.json",
+  "modelOptionsSha256": "b7eddb6025147181a8f837ed15e013925809c03d37d9f9b8aa358984daad44a4",
+  "toolSha256": "b09d4855c0039777cbb288bee4eb90bcb26245249549cda5877b73c179b513db",
+  "modelSourceSha256": {
+   "packages/core/src/mechanics/plant-model.js": "404200fe025f57d68da876e9b7ff0f4ea58c89890bbd6da320a7c6d7fa2f1b13",
+   "packages/core/src/mechanics/config.js": "3da601d1233454b7386ebab415c827fe87117ed2b9b031e51168c338f89f6f70",
+   "packages/core/src/mechanics/rng.js": "1a2b615eda3a152aea548054c873c8da83a96b06b6ac65fc0a74e4997a3e651e"
+  },
+  "frames": 40000,
+  "cellRule": "presses by the sched rule on the update clock (image-pinned for a traced night, no landing latency), the whole schedule shifted by deltaMs; dropMs starts a rebuilt office clock at the first captured frame at or after that image time; timerRate r scales every office update timer delta by (1 + r)",
+  "refineRule": "No local search: the four cells per night are the predeclared control and measured corrections."
+ },
+ "nights": [
+  {
+   "name": "full-06",
+   "run": "night7-night7-k3-full-06-20260915T225056Z",
+   "night": 7,
+   "seed": 47593,
+   "originMs": 2516.8,
+   "hasTrace": true,
+   "controlVariant": "sched",
+   "pressCount": 517,
+   "phone": {
+    "windows": "...BC..BC.BC.BC..BC.BCF.BCFBC.B.CBC.BC.CBC",
+    "source": "artifacts/forensics/k3-frametrace-nights-20260915/eyehole-full-06.json (sha256 e43aeeb820166b368e3b747df09185a5d736d8078233682cfeeb427d7036daf7; eyehole-read.py right-eyehole reads, retained DEVICE_MEASURED); read c is window c",
+    "terminal": {
+     "result": "6am",
+     "seedClockMs": 422706,
+     "killer": null,
+     "source": "docs/evidence/runs/night7-night7-k3-full-06-20260915T225056Z/events.jsonl: state=sixam at 2026-09-15T22:58:38.357Z (host wall, a poll), skew 1402.2 ms, seed stamp 1789512694249; executor terminal sixam, 42/42 gates agreed"
+    }
+   },
+   "verdictCfg": {
+    "matchMinCompared": 8,
+    "matchRule": "a cell matches when unplayed = 0, compared >= matchMinCompared and agree = compared: every phone-read window the model played agrees",
+    "improveMargin": 0.15,
+    "improveRule": "a night improves when its best cell's agreeing windows (count) reach the control's plus ceil(improveMargin x the control's compared windows); a cell that dies early and agrees on a bare majority of the few windows it played does not improve anything",
+    "consistentDeltaMs": 100,
+    "consistentRate": 0.01,
+    "consistentDropMs": 50,
+    "consistencyRule": "matching cells across nights are consistent when every pair's deltaMs, timerRate and dropMs differ by at most their configured margins",
+    "statusRule": "ALIGNMENT_CELLS_FOUND if any measured-reference cell matches; IMPROVED_NOT_ALIGNED if none matches but some night improves; NO_PHASE_RATE_ALIGNMENT otherwise. No status promotes MODEL_ONLY results to trace-equivalence."
+   },
+   "control": {
+    "deltaMs": 0,
+    "timerRate": 0,
+    "codes": "...BC.B.C.C.BC..BC..BC.BC.BC.BC.C.BC.BCF.B?",
+    "modelResult": "6am",
+    "modelEndMs": 420012.9,
+    "retainedModelWindows": "...BC.B.C.C.BC..BC..BC.BC.BC.BC.C.BC.BCF.B?",
+    "retainedEqual": true
+   },
+   "cells": [
+    {
+     "deltaMs": 0,
+     "timerRate": 0,
+     "dropMs": 0,
+     "clockStartMs": 0,
+     "droppedFrames": 0,
+     "codes": "...BC.B.C.C.BC..BC..BC.BC.BC.BC.C.BC.BCF.B?",
+     "modelResult": "6am",
+     "modelEndMs": 420012.9,
+     "stretchedContacts": 0,
+     "firstPressTick": 148,
+     "agree": 14,
+     "compared": 42,
+     "occupied": 27,
+     "occupancyAgree": 25,
+     "unplayed": 0,
+     "hits": 6,
+     "read": 42,
+     "firstDisagreement": {
+      "window": 6,
+      "phone": ".",
+      "side": "B"
+     },
+     "outcomeAgrees": true,
+     "outcomeDeltaMs": -2693.1
+    },
+    {
+     "deltaMs": -1400.2,
+     "timerRate": 0,
+     "dropMs": 0,
+     "clockStartMs": 0,
+     "droppedFrames": 0,
+     "codes": ".??????????????????????????????????????????",
+     "modelResult": "death",
+     "modelEndMs": 15183.4,
+     "stretchedContacts": 0,
+     "firstPressTick": 231,
+     "agree": 1,
+     "compared": 1,
+     "occupied": 27,
+     "occupancyAgree": 1,
+     "unplayed": 41,
+     "hits": 0,
+     "read": 42,
+     "firstDisagreement": {
+      "window": 1,
+      "phone": ".",
+      "side": "?"
+     },
+     "outcomeAgrees": false,
+     "outcomeDeltaMs": -407522.6
+    },
+    {
+     "deltaMs": 0,
+     "timerRate": 0,
+     "dropMs": 3836.7,
+     "clockStartMs": 3849.000231,
+     "droppedFrames": 226,
+     "codes": "???????????????????????????????????????????",
+     "modelResult": "death",
+     "modelEndMs": 16520.1,
+     "stretchedContacts": 4,
+     "firstPressTick": 0,
+     "agree": 0,
+     "compared": 0,
+     "occupied": 27,
+     "occupancyAgree": 0,
+     "unplayed": 42,
+     "hits": 0,
+     "read": 42,
+     "firstDisagreement": {
+      "window": 0,
+      "phone": ".",
+      "side": "?"
+     },
+     "outcomeAgrees": false,
+     "outcomeDeltaMs": -406185.9
+    },
+    {
+     "deltaMs": -1400.2,
+     "timerRate": 0,
+     "dropMs": 3836.7,
+     "clockStartMs": 3849.000231,
+     "droppedFrames": 226,
+     "codes": "..?????????????????????????????????????????",
+     "modelResult": "death",
+     "modelEndMs": 17418.5,
+     "stretchedContacts": 0,
+     "firstPressTick": 0,
+     "agree": 2,
+     "compared": 2,
+     "occupied": 27,
+     "occupancyAgree": 2,
+     "unplayed": 40,
+     "hits": 0,
+     "read": 42,
+     "firstDisagreement": {
+      "window": 2,
+      "phone": ".",
+      "side": "?"
+     },
+     "outcomeAgrees": false,
+     "outcomeDeltaMs": -405287.5
+    }
+   ],
+   "derived": {
+    "controlScore": {
+     "agree": 14,
+     "compared": 42,
+     "occupied": 27,
+     "occupancyAgree": 25,
+     "unplayed": 0,
+     "hits": 6,
+     "read": 42,
+     "firstDisagreement": {
+      "window": 6,
+      "phone": ".",
+      "side": "B"
+     },
+     "outcomeAgrees": true,
+     "outcomeDeltaMs": -2693.1
+    },
+    "best": {
+     "deltaMs": 0,
+     "timerRate": 0,
+     "dropMs": 0,
+     "agree": 14,
+     "compared": 42,
+     "occupancyAgree": 25,
+     "unplayed": 0,
+     "modelResult": "6am",
+     "outcomeAgrees": true,
+     "outcomeDeltaMs": -2693.1,
+     "codes": "...BC.B.C.C.BC..BC..BC.BC.BC.BC.C.BC.BCF.B?"
+    },
+    "matchCells": [],
+    "matches": false,
+    "improves": false,
+    "bestRate": 0.3333333333333333,
+    "controlRate": 0.3333333333333333
+   },
+   "refined": 0
+  }
+ ],
+ "limitations": [
+  "Model-side sweep only: no rebuild run and no phone run; the rebuild shares the model side of every retained first disagreement, but a found cell is a candidate until confirmed in the rebuild.",
+  "A uniform rate and a constant phase are one-parameter families, not a full timing topology: intermittent jank deficits, per-press jitter and lost contacts are not in this grid.",
+  "deltaMs shifts the whole schedule, keeping the press file shape; the phone press stream itself was not changed.",
+  "A night with no frame trace (twin-01) cannot separate press phase from timer rate and sweeps deltaMs only on a constant 60 Hz clock.",
+  "Phone windows are the retained right-eyehole readers' codes; they cannot see Balloon Boy, Mangle or the vent Toys, and full-04 window 3's occupant is unlabelled.",
+  "Matching cells would be necessary, not sufficient, for equivalence: the outcome must also agree, and one night at one cell is not a trace-equivalence record."
+ ],
+ "verdict": {
+  "status": "NO_PHASE_RATE_ALIGNMENT",
+  "nightsWithMatches": [],
+  "nightsImproved": [],
+  "consistency": null
+ },
+ "evidenceId": "recompile-phone-clock-sweep-0e3154b26906334e"
+}

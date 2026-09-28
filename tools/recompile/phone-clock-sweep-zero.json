@@ -1,0 +1,75 @@
+{
+  "schema": "phone-clock-sweep-v1",
+  "claimLevel": "MODEL_ONLY",
+  "purpose": "S2 measured-reference check. The phone hour grid puts the internal zero at first-frame +3836.7 ms on full-06 and +3831.4 ms on full-04; the released anchor is at +3836.0 and +3879.6 ms respectively. The configured schedule origins precede those fires by 1400.2 and 1443.6 ms. For each trace night, compare control, zero-only, schedule-phase-only (deltaMs negative delays the schedule), and the joint measured correction. dropMs starts a freshly rebuilt office update clock at the first captured frame at or after the fitted zero. These are exact measured candidates, not a fitted search; the result stays MODEL_ONLY.",
+  "nights": "tools/recompile/phone-encounter-nights.json",
+  "modelOptions": "tools/recompile/sourced-rebuild-model-options-20260927c.json",
+  "modelOptionsNote": "the options the retained control result ran under (its method.modelOptionsSha256 b7eddb6025147181a8f837ed15e013925809c03d37d9f9b8aa358984daad44a4)",
+  "references": {
+    "full-04": {
+      "hourGridResult": "tools/recompile/results/phone-hour-grid-full-04-20260928.json",
+      "traceSha256": "1dd475ded11300436efcf8226f6b56aaf4a0917ffc89818ad5ca5ba1262721bc",
+      "clockZeroAfterFirstFrameMs": 3831.4,
+      "anchorFireAfterFirstFrameMs": 3879.6,
+      "configuredOriginAfterFirstFrameMs": 2436.0,
+      "scheduleDelayMs": 1443.6,
+      "anchorEvents": "docs/evidence/runs/night7-night7-k3-full-04-20260915T051327Z/events.jsonl",
+      "anchorEventsSha256": "aaec5a28e70b57dcf00af37b561d824b560f3692d686dc97ef98e62242f63f23",
+      "seedStampWallMs": 1789449241851,
+      "firedWallMs": 1789449245816,
+      "seedToFirstFrameMs": 85.4
+    },
+    "full-06": {
+      "hourGridResult": "tools/recompile/results/phone-hour-grid-full-06-20260928.json",
+      "traceSha256": "3fe9587c06708a991e5a2c983ebc1feaf9be89cda9c7c787999a2ac6052dd261",
+      "clockZeroAfterFirstFrameMs": 3836.7,
+      "anchorFireAfterFirstFrameMs": 3836.0,
+      "configuredOriginAfterFirstFrameMs": 2435.8,
+      "scheduleDelayMs": 1400.2,
+      "anchorEvents": "docs/evidence/runs/night7-night7-k3-full-06-20260915T225056Z/events.jsonl",
+      "anchorEventsSha256": "5f5fc480be02e24d3e3c7bcad8d0b13078f79458fc10da3aac11355264375d94",
+      "seedStampWallMs": 1789512694249,
+      "firedWallMs": 1789512698166,
+      "seedToFirstFrameMs": 81.0
+    }
+  },
+  "control": {
+    "reference": {
+      "path": "tools/recompile/results/phone-encounters-20260927.json",
+      "sha256": "7cea083dcf87de999e2a1fc3d8c91abcf3126a90bcf4871aaeb611b9cd1f10dc"
+    },
+    "variant": { "tw-12": "sched", "twin-01": "const60", "full-04": "sched", "full-06": "sched" },
+    "rule": "at deltaMs 0, timerRate 0 and dropMs 0 each night's model window string must equal the retained variant's windows.model byte for byte"
+  },
+  "grid": {
+    "deltaMs": [0],
+    "timerRate": [0],
+    "dropMs": [0],
+    "byNight": {
+      "full-04": { "deltaMs": [0, -1443.6], "dropMs": [0, 3831.4] },
+      "full-06": { "deltaMs": [0, -1400.2], "dropMs": [0, 3836.7] }
+    },
+    "timerRateRule": "rate 0 only. deltaMs -L delays every scheduled send by L ms; dropMs starts the rebuilt trace clock at the first sampled frame at or after that offset. The control, each one-axis correction and their joint measured correction are retained for both trace nights.",
+    "focus": "full-06"
+  },
+  "refine": {
+    "rule": "No local search: the four cells per night are the predeclared control and measured corrections.",
+    "deltaWindowMs": 0,
+    "deltaStepMs": 1,
+    "rateWindow": 0,
+    "rateStep": 1,
+    "dropWindowMs": 0,
+    "dropStepMs": 1
+  },
+  "verdict": {
+    "matchMinCompared": 8,
+    "matchRule": "a cell matches when unplayed = 0, compared >= matchMinCompared and agree = compared: every phone-read window the model played agrees",
+    "improveMargin": 0.15,
+    "improveRule": "a night improves when its best cell's agreeing windows (count) reach the control's plus ceil(improveMargin x the control's compared windows); a cell that dies early and agrees on a bare majority of the few windows it played does not improve anything",
+    "consistentDeltaMs": 100,
+    "consistentRate": 0.01,
+    "consistentDropMs": 50,
+    "consistencyRule": "matching cells across nights are consistent when every pair's deltaMs, timerRate and dropMs differ by at most their configured margins",
+    "statusRule": "ALIGNMENT_CELLS_FOUND if any measured-reference cell matches; IMPROVED_NOT_ALIGNED if none matches but some night improves; NO_PHASE_RATE_ALIGNMENT otherwise. No status promotes MODEL_ONLY results to trace-equivalence."
+  }
+}

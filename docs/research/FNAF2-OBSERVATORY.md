@@ -105,6 +105,45 @@ configuration, or a rule divergence both host programs inherited from the dump.
 The physical separator is the S2a same-phase twin; the host-side one is the
 eligibility microscope on full-06 window 6.
 
+**Third experiment retained (2026-09-28 UTC):**
+[phone hour grid](../evidence/phone-hour-grid-20260928.json),
+`phone-hour-grid-20d3c13b0de8a50f`, DEVICE_MEASURED observations; and
+[joint reference correction](../evidence/phone-clock-zero-sweep-20260928.json),
+`recompile-phone-clock-sweep-0e3154b26906334e`, MODEL_ONLY. Five full-06
+interstitials fit a 70 s grid whose zero is first frame +3836.7 ms, +0.7 ms
+from anchor fire. full-04 supplies one pre-death transition at +3831.4 ms,
+-48.2 ms from fire, too few observations to establish its rate. The host replay
+then tested control, clock-zero-only, schedule-phase-only and the joint measured
+correction on each traced night. The joint cells fail earlier than their
+controls (2/2 compared on full-06; 3/3 on full-04), so this measured clock and
+origin correction does not explain the encounter disagreement. The hour-grid
+result is an observation about the displayed phone clock; by itself it does
+not prove that encounter rolls use the same accumulator.
+
+**Fourth experiment retained (2026-09-28 UTC):**
+[full-06 response-bracket family](../evidence/phone-input-bracket-20260928.json),
+`recompile-phone-input-bracket-f7147f352c9115f7`, MODEL_ONLY. All 29 relevant
+mask/monitor contacts through window 6's 1500 ms read have an observed response
+bracket. Twenty-seven brackets map to a single update; two monitor brackets
+admit two updates each, giving four complete combinations. Each preserves
+phone windows 0–5 and each still places Withered Bonnie in model window 6. The
+mask press that starts window 6 itself maps to update 3864 across both ends of
+its bracket. This exhausts the measured mask/monitor response ticks only;
+wind and camera/light contacts retain the baseline timing mapping, and contact
+releases shift with their press rather than receiving independent response
+measurements.
+
+The model's internal state shows Bonnie at the ventL opening from update 3627;
+his office encounter starts at update 3840, 24 updates before window 6 at 3864.
+At that window the response-ready recompile reads Chica, the model reads
+Bonnie, and the retained phone eyehole read is empty. Their draw stream had
+already split at update 205 under response-ready inputs and update 904 under
+the primary landed control. That makes the remaining host question concrete:
+compare Bonnie's route eligibility and encounter start in the rebuild against
+the model, around the earlier draw split. The same-phase phone twin with a
+valid seed and per-press landing reads remains the physical separator; S2
+stays open.
+
 ## Contributions beyond FNaF
 
 The broader candidate contributions are a benchmark for agents earning causal
