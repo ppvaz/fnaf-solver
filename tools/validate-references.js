@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 /** CI guard for stable contract, graph, ADR, and evidence references. */
+import { existsSync } from 'node:fs';
 import { readFile, readdir } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -13,6 +14,10 @@ async function walk(directory) {
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     if (SKIP.has(entry.name)) continue;
     const path = join(directory, entry.name);
+    // A nested checkout (a git worktree under .claude/worktrees/ has a `.git`
+    // file) is another tree with its own register: an agent's unfinished
+    // contract there failed this check on master (2026-09-27).
+    if (entry.isDirectory() && existsSync(join(path, '.git'))) continue;
     if (entry.isDirectory()) result.push(...await walk(path));
     else if (sourceExtensions.test(entry.name)) result.push(path);
   }
