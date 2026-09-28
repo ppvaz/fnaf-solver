@@ -2083,7 +2083,9 @@
       "imports": [
         "../../packages/adapters/src/transports/hid.js",
         "./fnaf4-fredbear.mjs",
+        "./fnaf4-run.mjs",
         "./night-kit.mjs",
+        "node:crypto",
         "node:fs"
       ]
     },

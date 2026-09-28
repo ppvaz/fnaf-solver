@@ -56,6 +56,7 @@ HOP_S = 0.1
 FAMILY_THRESHOLD = {"step": 0.33}
 FAMILY_WIN_S: dict = {}
 FAMILY_MAX_HOPS: dict = {}
+FAMILY_STEREO: set = set()
 WIN_S = 0.6
 HEARING = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "device", "models",
                        "hearing-fnaf4-fredbear-moto-g56-v204.json")
@@ -104,25 +105,42 @@ def load_hearing(path: str) -> dict:
         if handles != sorted(spec["handles"]):
             raise ValueError(f"{path}: {family} handles {spec['handles']} != templates {handles}")
         win_s, emit, hops = float(spec["windowS"]), float(spec["emitNcc"]), int(spec["maxHops"])
-        if not (0.2 <= win_s <= BREATH_WIN_S and 0.0 < emit < 1.0 and 1 <= hops <= 20):
-            raise ValueError(f"{path}: {family} window {win_s} s, floor {emit} or hops {hops} out of range")
-        out[family] = (win_s, emit, hops)
+        channels = spec.get("channels", "mono")
+        if not (0.2 <= win_s <= BREATH_WIN_S and 0.0 < emit < 1.0 and 1 <= hops <= 20) or channels not in ("mono", "stereo"):
+            raise ValueError(f"{path}: {family} window {win_s} s, floor {emit}, hops {hops} or channels {channels} out of range")
+        out[family] = (win_s, emit, hops, channels)
     return out
 
 
 def apply_hearing(path: str) -> None:
-    for family, (win_s, emit, hops) in load_hearing(path).items():
+    for family, (win_s, emit, hops, channels) in load_hearing(path).items():
         FAMILY_WIN_S[family] = win_s
         FAMILY_THRESHOLD[family] = emit
         FAMILY_MAX_HOPS[family] = hops
+        if channels == "stereo":
+            FAMILY_STEREO.add(family)
+        else:
+            FAMILY_STEREO.discard(family)
+
+
+def _ref_path(refs: str, handle: int) -> str:
+    base = os.path.join(refs, f"s{handle:04d}")
+    return base + ".wav" if os.path.exists(base + ".wav") else base + ".ogg"
 
 
 def load_ref(refs: str, handle: int) -> np.ndarray:
-    base = os.path.join(refs, f"s{handle:04d}")
-    path = base + ".wav" if os.path.exists(base + ".wav") else base + ".ogg"
-    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", path, "-f", "f32le", "-ac", "1",
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", _ref_path(refs, handle), "-f", "f32le", "-ac", "1",
                           "-ar", str(SR), "-"], check=True, capture_output=True).stdout
     return np.frombuffer(raw, np.float32).astype(np.float64)
+
+
+def load_ref_stereo(refs: str, handle: int) -> tuple:
+    """The sample's own two channels at SR (s0025/s0026 are stereo recordings,
+    left/right correlation 0.41/0.16: a mono downmix throws half the match away)."""
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", _ref_path(refs, handle), "-f", "f32le", "-ac", "2",
+                          "-ar", str(SR), "-"], check=True, capture_output=True).stdout
+    a = np.frombuffer(raw, np.float32).astype(np.float64).reshape(-1, 2)
+    return a[:, 0].copy(), a[:, 1].copy()
 
 
 class Template:
@@ -149,17 +167,56 @@ class Template:
         return float(xc[k]), k
 
 
+class StereoTemplate:
+    """One sample matched channel against channel: the NCC of the stacked
+    (left, right) window against the stacked reference at every lag. On n5b and
+    n5d's grid instants their landings score 0.24-0.40 and their silent
+    instants stay <= 0.137 (docs/evidence/fnaf4-night5-n5b-20260927.json)."""
+
+    def __init__(self, name: str, ref_l: np.ndarray, ref_r: np.ndarray, win: int):
+        self.name = name
+        self.len = len(ref_l)
+        self.win = win
+        pad = max(0, win - len(ref_l) + 1)
+        self.rl = np.concatenate([ref_l, np.zeros(pad)])
+        self.rr = np.concatenate([ref_r, np.zeros(pad)])
+        c2 = np.concatenate([[0.0], np.cumsum(self.rl * self.rl + self.rr * self.rr)])
+        self.er = np.sqrt(np.maximum(c2[win:] - c2[:-win], 0)) + 1e-9
+        self.silent = self.er < 1e-4 * self.er.max()
+
+    def match(self, wl: np.ndarray, wr: np.ndarray) -> tuple[float, int]:
+        wl = wl - wl.mean()
+        wr = wr - wr.mean()
+        ew = np.sqrt((wl * wl).sum() + (wr * wr).sum()) + 1e-9
+        xc = (fftconvolve(self.rl, wl[::-1], mode="valid") + fftconvolve(self.rr, wr[::-1], mode="valid")) / (self.er * ew)
+        xc[self.silent] = 0
+        k = int(np.argmax(xc))
+        return float(xc[k]), k
+
+
 class Detector:
-    def __init__(self, refs: str, threshold: float, emit):
+    def __init__(self, refs: str, threshold: float, emit, families=None, breath: bool = True):
+        """families: the template families to match (None: all). breath: match
+        the breathing loop every hop. A Fredbear-only night needs neither
+        Foxy's, Bonnie's and Chica's families nor the breathing, and all of
+        them cost the hop budget (109 ms of a 100 ms hop on a loaded host,
+        2026-09-27; breathing alone 33 ms)."""
         self.threshold = threshold
         self.emit = emit
         self.templates = []
         self.refs = {}
+        self.match_breath = breath
         for family, handle, _ in TEMPLATES:
+            if families is not None and family not in families:
+                continue
             ref = load_ref(refs, handle)
             self.refs[f"{family}#{handle}"] = ref
-            self.templates.append(Template(f"{family}#{handle}", ref,
-                                           win=int(FAMILY_WIN_S.get(family, WIN_S) * SR)))
+            win = int(FAMILY_WIN_S.get(family, WIN_S) * SR)
+            if family in FAMILY_STEREO:
+                ref_l, ref_r = load_ref_stereo(refs, handle)
+                self.templates.append(StereoTemplate(f"{family}#{handle}", ref_l, ref_r, win))
+            else:
+                self.templates.append(Template(f"{family}#{handle}", ref, win=win))
         self.breath = Template("breath", load_ref(refs, 22), circular=True, win=int(BREATH_WIN_S * SR))
         self.buf = np.zeros(0)
         self.buf_l = np.zeros(0)        # the two channels, aligned with buf: the game pans some
@@ -206,19 +263,22 @@ class Detector:
         while self.done <= end_abs:
             e = self.done - self.buf_start
             for t in self.templates:
-                w = self.buf[e - t.win:e]
-                v, k = t.match(w)
+                if isinstance(t, StereoTemplate):
+                    v, k = t.match(self.buf_l[e - t.win:e], self.buf_r[e - t.win:e])
+                else:
+                    v, k = t.match(self.buf[e - t.win:e])
                 # window [e-win, e) aligns with reference [k, k+win): onset at e-win-k
                 onset = self.done - t.win - k
                 self._peak(t.name, v, onset, sample_ms)
-            v, k = self.breath.match(self.buf[e - self.breath.win:e])
-            # loopStartMs: when, on the host clock, the loop would have started
-            # for this lag (mod its length) -- comparable with the game's own
-            # loop start, which is fixed 1 s into the level (g4).
-            self.emit({"cue": "breath", "ncc": round(v, 4), "lag": k,
-                       "phase": round(((k - (self.done - self.breath.win)) % self.breath.len) / SR, 3),
-                       "loopStartMs": sample_ms(self.done - self.breath.win - k),
-                       "atMs": sample_ms(self.done)})
+            if self.match_breath:
+                v, k = self.breath.match(self.buf[e - self.breath.win:e])
+                # loopStartMs: when, on the host clock, the loop would have started
+                # for this lag (mod its length) -- comparable with the game's own
+                # loop start, which is fixed 1 s into the level (g4).
+                self.emit({"cue": "breath", "ncc": round(v, 4), "lag": k,
+                           "phase": round(((k - (self.done - self.breath.win)) % self.breath.len) / SR, 3),
+                           "loopStartMs": sample_ms(self.done - self.breath.win - k),
+                           "atMs": sample_ms(self.done)})
             self.done += self.hop
         # Keep 4 s: an onset is published a few hops after it, and its pan is
         # read from the first 0.4 s of the sample in the retained channels.
@@ -298,7 +358,7 @@ def to_channels_sr(block: np.ndarray, rate: int):
 def run_wav(args, emit) -> None:
     from scipy.io import wavfile
     rate, x = wavfile.read(args.wav)
-    det = Detector(args.refs, args.threshold, emit)
+    det = Detector(args.refs, args.threshold, emit, families=args.families, breath=not args.no_breath)
     emit(det.envelope())
     mono, left, right = to_channels_sr(x, rate)
     step = int(0.5 * SR)
@@ -320,7 +380,7 @@ def run_live(args, emit) -> int:
     stop = {"flag": False}
     for sig in (signal.SIGINT, signal.SIGTERM):
         signal.signal(sig, lambda *_: stop.__setitem__("flag", True))
-    det = Detector(args.refs, args.threshold, emit)
+    det = Detector(args.refs, args.threshold, emit, families=args.families, breath=not args.no_breath)
     frame_bytes = 2 * channels
     received = 0                                   # frames at the PCM rate
     origin = None                                  # wall ms of frame 0 (lower envelope)
@@ -368,7 +428,13 @@ def main() -> int:
     ap.add_argument("--quiet-breath", action="store_true", help="print breath levels only above 0.3")
     ap.add_argument("--hearing", default=HEARING,
                     help="fnaf4-fredbear-hearing-v1: window and publishing floor of Fredbear's families")
+    ap.add_argument("--families", type=lambda s: set(s.split(",")), default=None,
+                    help="comma list of template families to match (default: all)")
+    ap.add_argument("--no-breath", action="store_true", help="do not match the breathing loop (no breath lines)")
     args = ap.parse_args()
+    known = {family for family, _, _ in TEMPLATES}
+    if args.families is not None and not args.families <= known:
+        ap.error(f"unknown families: {sorted(args.families - known)}")
     apply_hearing(args.hearing)
     sink = open(args.events, "a") if args.events else None
 

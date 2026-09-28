@@ -865,7 +865,7 @@
     },
     {
       "id": "tools/cue/fnaf4-cues.py",
-      "invocation": "tools/cue/fnaf4-cues.py --refs DIR --live PCM [--raw OUT] [--events OUT.jsonl] [--hearing MODEL] \\| --wav REC --start-wall-ms MS",
+      "invocation": "tools/cue/fnaf4-cues.py --refs DIR --live PCM [--raw OUT] [--events OUT.jsonl] [--hearing MODEL] [--families LIST] [--no-breath] \\| --wav REC --start-wall-ms MS",
       "kind": "detector",
       "lifecycle": "supported"
     },

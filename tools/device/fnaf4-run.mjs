@@ -95,9 +95,21 @@ export function parseArgs(argv) {
  * The live audio detector as a child: its JSON lines are kept in order with
  * their host wall times (cue onsets, and the breathing level every 100 ms).
  */
-function startCues(captureDir) {
-  const child = spawn('python3', [CUES, '--refs', REFS, '--live', PCM, '--raw', join(captureDir, 'audio.raw'),
-    '--events', join(captureDir, 'cues.jsonl'), '--hearing', fileURLToPath(HEARING_PATH)], { stdio: ['ignore', 'pipe', 'pipe'] });
+/**
+ * Night 5 is Fredbear's alone (g228; every other AI stays 0), so its detector
+ * matches only his families and our own run: the full set costs 109 ms of a
+ * 100 ms hop on a loaded host (2026-09-27), and a detector that falls behind
+ * hears every landing late.
+ */
+export const FREDBEAR_ONLY_FAMILIES = ['run', 'fb-left', 'fb-right', 'laugh'];
+export function cueArgs(captureDir, night) {
+  return [CUES, '--refs', REFS, '--live', PCM, '--raw', join(captureDir, 'audio.raw'),
+    '--events', join(captureDir, 'cues.jsonl'), '--hearing', fileURLToPath(HEARING_PATH),
+    ...(night === 5 ? ['--families', FREDBEAR_ONLY_FAMILIES.join(','), '--no-breath'] : [])];
+}
+
+function startCues(captureDir, night) {
+  const child = spawn('python3', cueArgs(captureDir, night), { stdio: ['ignore', 'pipe', 'pipe'] });
   const events = [];
   const errors = [];
   createInterface({ input: child.stdout }).on('line', (line) => {
@@ -1001,7 +1013,7 @@ async function main(argv) {
     await hid.start();
     const act = new Actor(hid, record, CONTACT_MS, { interrupt: naps.interrupt });
 
-    cues = startCues(captureDir);
+    cues = startCues(captureDir, options.night);
     for (let i = 0; i < 50 && !cues.started(); i += 1) await sleep(100);
     if (!cues.started()) fail(`audio detector did not start: ${cues.errors.slice(-3).join(' | ')}`);
     channel = port.openRegions({ timeoutMs: 1500 });
