@@ -36,8 +36,15 @@ const ZERO = /^0+$/;
 // Each lane is one `ci.yml` step. `needs` names a binary the lane cannot run
 // without; a missing one is reported as SKIPPED rather than passed, because a
 // gate that quietly drops a lane is how a green local run turns red online.
+// `heavy` marks a lane the default (pre-push) run skips and reports as
+// unverified: on 2026-09-28 the whole gate was measured at about six minutes,
+// five of them the slow census gates (`npm run test:unit:slow`), and Pedro
+// ruled that iteration time outranks re-running censuses that no ordinary
+// commit changes. CI still runs every lane; `npm run push-gate -- --full`
+// runs them all here.
 const LANES = [
   { name: 'Type and architecture contracts', run: 'npm run typecheck && npm run test:unit && npm run test:contracts' },
+  { name: 'Slow census gates', run: 'npm run test:unit:slow', heavy: true },
   { name: 'Clean-checkout model lane', run: 'npm run test:core' },
   { name: 'Trainer build', run: 'npm run build:trainer' },
   { name: 'Campaign dry-run over a committed winner', run: 'd=$(mktemp -d) && trap \'rm -rf "$d"\' EXIT && npm run --silent device:emit -- --winner tools/device/campaign-night7-k3-winner.json --out "$d/k3" && npm run --silent device:campaign -- --bundle "$d/k3" --nights 7 --profile hid-mediaprojection' },
@@ -305,6 +312,11 @@ function validate(sha, subject) {
       skipped.push('CI Python dependencies');
     }
     for (const lane of LANES) {
+      if (lane.heavy && !FULL) {
+        console.log(`  SKIP ${lane.name} (heavy; \`npm run push-gate -- --full\` runs it here, CI runs it on the push)`);
+        skipped.push(lane.name);
+        continue;
+      }
       if (lane.needs && spawnSync('sh', ['-c', `command -v ${lane.needs} >/dev/null 2>&1 && ${lane.needs} info >/dev/null 2>&1`]).status !== 0) {
         console.log(`  SKIP ${lane.name} (${lane.needs} is not available here; CI still runs it)`);
         skipped.push(lane.name);
@@ -352,7 +364,8 @@ function commitsFromStdin() {
   return shas;
 }
 
-const argv = process.argv.slice(2);
+const argv = process.argv.slice(2).filter(arg => arg !== '--full');
+const FULL = process.argv.includes('--full');
 const commits = argv.includes('--stdin')
   ? commitsFromStdin()
   : (argv.length ? argv : ['HEAD']).map(ref =>
@@ -380,4 +393,5 @@ if (broken.length) {
   console.log('Fix them, or push with --no-verify to send them anyway.');
   process.exit(1);
 }
-console.log('\npush-gate: every lane CI runs passes on the pushed commit');
+console.log(FULL ? '\npush-gate: every lane CI runs passes on the pushed commit'
+  : '\npush-gate: every fast lane passes on the pushed commit (heavy lanes are CI\'s; --full runs them here)');

@@ -42,6 +42,8 @@ jobs:
         run: npm ci
       - name: Type and architecture contracts
         run: npm run typecheck && npm run test:unit && npm run test:contracts
+      - name: Slow census gates
+        run: npm run test:unit:slow
       - name: Clean-checkout model lane
         run: npm run test:core
       - name: Trainer build
