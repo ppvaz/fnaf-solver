@@ -156,6 +156,25 @@ Details:
     MODEL_ONLY
     ([rebuild vs phone](../docs/evidence/rebuild-phone-encounters-20260927.json),
     `recompile-phone-encounters-e18a527d01bcdb54`).
+  - **The two upstream causes are now separated, and the timing-reference one is
+    ruled out.** A two-pass press-phase × office-timer-rate sweep over the same
+    four nights (coarse ±10 s × ±8 %, fine −200..+150 ms at 5–10 ms; 214 and 44
+    cells per night) reproduces the retained controls byte for byte and finds no
+    cell of that family reproducing the phone's occupied windows. full-06's best
+    cell anywhere is 32/42 (deltaMs +50); window 6 disagrees at every coarse
+    rate-0 cell and 34 of 44 fine cells; press phase redistributes disagreement
+    without resolving it (every clearing cell still disagrees on ≥ 8 windows),
+    over a landscape chaotic at 5–10 ms. The phone's own night length on the
+    6 AM night (420.19 s wall from origin against the reconstruction's 420.01 s)
+    bounds any accumulated timer loss — constant, uniform or bursty — below
+    about 1 s over the night, an order of magnitude too small for the observed
+    ~4–10 s encounter offsets, because hours and rolls drink from the same
+    accumulated timer. A shared constant-phase, uniform-rate or accumulated-loss
+    clock error cannot be the first disagreements' cause; what remains upstream
+    is the per-press input configuration or a rule divergence both host programs
+    inherited from the dump
+    ([sweep](../docs/evidence/phone-clock-sweep-20260928.json),
+    `recompile-phone-clock-sweep-616ca1010c7259f7`). MODEL_ONLY.
 - **Absorbs** Plan 17 (route 5), Plan 25 horizon 2, and the model parts of
   Plans 15 and 19.
 

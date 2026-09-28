@@ -1,0 +1,39 @@
+{
+  "schema": "phone-clock-sweep-v1",
+  "claimLevel": "MODEL_ONLY",
+  "purpose": "S2 experiment: on the phone nights whose seed is established, does any constant press-phase error (deltaMs, the whole schedule shifted against the office clock) or uniform office-timer rate error (timerRate, the timer's share of the reconstructed clock), alone or combined, make the model's occupied mask windows agree with the phone's reads? A shared origin or timer-rate measurement error is upstream of both host programs and was never varied; the press rules moved presses by at most ~100 ms.",
+  "nights": "tools/recompile/phone-encounter-nights.json",
+  "modelOptions": "tools/recompile/sourced-rebuild-model-options-20260927c.json",
+  "modelOptionsNote": "the options the retained control result ran under (its method.modelOptionsSha256 b7eddb6025147181a8f837ed15e013925809c03d37d9f9b8aa358984daad44a4); the nights config's plain sourced-rebuild-model-options.json has changed since and would not reproduce the control",
+  "control": {
+    "reference": {
+      "path": "tools/recompile/results/phone-encounters-20260927.json",
+      "sha256": "7cea083dcf87de999e2a1fc3d8c91abcf3126a90bcf4871aaeb611b9cd1f10dc"
+    },
+    "variant": { "tw-12": "sched", "twin-01": "const60", "full-04": "sched", "full-06": "sched" },
+    "rule": "at deltaMs 0 and timerRate 0 each night's model window string must equal the retained variant's windows.model byte for byte"
+  },
+  "grid": {
+    "deltaMs": [-10000, -9000, -8000, -7000, -6000, -5000, -4000, -3000, -2000, -1000, 0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000],
+    "timerRate": [-0.08, -0.06, -0.04, -0.02, 0, 0.02, 0.04, 0.06, 0.08],
+    "timerRateRule": "timerRate r scales every office update's timer delta by (1 + r): r < 0 runs the office timer slower than the reconstructed clock, delaying rolls in image time; presses stay pinned to captured frames (the sched rule, no landing latency). A night with no frame trace cannot separate the two clocks and runs deltaMs only.",
+    "focus": "full-06"
+  },
+  "refine": {
+    "rule": "after the coarse grid, every traced night refines around its own best coarse cell: deltaMs within +-1000 ms at 100 ms, timerRate within +-0.02 at 0.005; a night with no trace refines deltaMs only. Cells already run are not repeated.",
+    "deltaWindowMs": 1000,
+    "deltaStepMs": 100,
+    "rateWindow": 0.02,
+    "rateStep": 0.005
+  },
+  "verdict": {
+    "matchMinCompared": 8,
+    "matchRule": "a cell matches when unplayed = 0, compared >= matchMinCompared and agree = compared: every phone-read window the model played agrees",
+    "improveMargin": 0.15,
+    "improveRule": "a night improves when its best cell's agreeing windows (count) reach the control's plus ceil(improveMargin x the control's compared windows); a cell that dies early and agrees on a bare majority of the few windows it played does not improve anything",
+    "consistentDeltaMs": 1000,
+    "consistentRate": 0.01,
+    "consistencyRule": "matching cells across nights are consistent when every pair's deltaMs differs by at most consistentDeltaMs and every pair's timerRate by at most consistentRate",
+    "statusRule": "ALIGNMENT_CELLS_FOUND if any night has a matching cell; IMPROVED_NOT_ALIGNED if none matches but some night improves; NO_PHASE_RATE_ALIGNMENT otherwise (no constant phase or uniform rate cell in this grid reproduces or approaches the phone's occupied windows on these nights)"
+  }
+}

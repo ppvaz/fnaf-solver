@@ -84,6 +84,27 @@ clock were not identified. The early endpoint is a collective sensitivity,
 not a proof across independent contact perturbations. This retains an S2
 negative; it does not close S2 or the Observatory's stronger milestone below.
 
+**Second experiment retained (2026-09-28 UTC):**
+[phase × rate sweep](../evidence/phone-clock-sweep-20260928.json),
+`recompile-phone-clock-sweep-616ca1010c7259f7`, MODEL_ONLY — the milestone's
+first ruled-out explanation. Two predeclared grids (coarse ±10 s × ±8 %,
+fine −200..+150 ms at 5–10 ms) sweep the two timing references both host
+programs share, with each pass's control reproducing the retained replay byte
+for byte. No cell of the constant-phase / uniform-rate family reproduces the
+phone's occupied windows on any night with a full read: full-06 peaks at 32/42
+(presses 50 ms early), window 6 clears on ten scattered cells that each still
+disagree on ≥ 8 other windows, and the landscape is chaotic at 5–10 ms. A
+corollary bounds the varying-error variant no grid can map: the phone's own
+night length on the 6 AM night (420.19 s wall from origin against the
+reconstruction's 420.01 s) caps accumulated timer loss — constant, uniform or
+bursty — at about 1 s per night, an order of magnitude below the ~4–10 s the
+encounter offsets need, since hours and rolls accumulate the same timer. A
+shared timing-reference error is ruled out at constant-phase, uniform-rate and
+accumulated-loss scales. Remaining upstream families: the per-press input
+configuration, or a rule divergence both host programs inherited from the dump.
+The physical separator is the S2a same-phase twin; the host-side one is the
+eligibility microscope on full-06 window 6.
+
 ## Contributions beyond FNaF
 
 The broader candidate contributions are a benchmark for agents earning causal

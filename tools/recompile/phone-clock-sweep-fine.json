@@ -1,0 +1,39 @@
+{
+  "schema": "phone-clock-sweep-v1",
+  "claimLevel": "MODEL_ONLY",
+  "purpose": "S2 experiment, fine pass: the coarse sweep left only full-06 cells within +-100 ms of the retained reference alive, agreement rose monotonically with uniform press lag (+0 ms -> 14/42, +60 -> 15, +81.6 -> 18, +100 -> 26) and the retained landing latency is 81.6 ms (p10 52.3, p90 99.8), so the press-acceptance lag is mapped at 10 ms resolution over [-200, +150] ms at rate 0. Uniform timer rate is not repeated: every coarse rate cell died or disagreed, and the night-length integral (full-06: phone 6 AM 420.2 s after origin vs the model's 420.0 s) already bounds any accumulated-timer error, constant or varying, below ~1 s over the night.",
+  "nights": "tools/recompile/phone-encounter-nights.json",
+  "modelOptions": "tools/recompile/sourced-rebuild-model-options-20260927c.json",
+  "modelOptionsNote": "the options the retained control result ran under (its method.modelOptionsSha256 b7eddb6025147181a8f837ed15e013925809c03d37d9f9b8aa358984daad44a4)",
+  "control": {
+    "reference": {
+      "path": "tools/recompile/results/phone-encounters-20260927.json",
+      "sha256": "7cea083dcf87de999e2a1fc3d8c91abcf3126a90bcf4871aaeb611b9cd1f10dc"
+    },
+    "variant": { "tw-12": "sched", "twin-01": "const60", "full-04": "sched", "full-06": "sched" },
+    "rule": "at deltaMs 0 and timerRate 0 each night's model window string must equal the retained variant's windows.model byte for byte"
+  },
+  "grid": {
+    "deltaMs": [-200, -190, -180, -170, -160, -150, -140, -130, -120, -110, -100, -90, -80, -70, -60, -50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150],
+    "timerRate": [0],
+    "timerRateRule": "rate 0 only: the coarse grid showed uniform rate is lethal (no rate cell survives or improves) and the press-lag axis is where the surviving structure lives. deltaMs is the schedule shifted against the office clock; deltaMs -L means every press lands L ms later than its send's frame (the sched rule), toward and past the measured landing latency.",
+    "focus": "full-06"
+  },
+  "refine": {
+    "rule": "after the fine grid, every night refines around its own best cell: deltaMs within +-40 ms at 5 ms; rate is not refined (rateWindow 0). Cells already run are not repeated.",
+    "deltaWindowMs": 40,
+    "deltaStepMs": 5,
+    "rateWindow": 0,
+    "rateStep": 1
+  },
+  "verdict": {
+    "matchMinCompared": 8,
+    "matchRule": "a cell matches when unplayed = 0, compared >= matchMinCompared and agree = compared: every phone-read window the model played agrees",
+    "improveMargin": 0.15,
+    "improveRule": "a night improves when its best cell's agreeing windows (count) reach the control's plus ceil(improveMargin x the control's compared windows); a cell that dies early and agrees on a bare majority of the few windows it played does not improve anything",
+    "consistentDeltaMs": 40,
+    "consistentRate": 0.01,
+    "consistencyRule": "matching cells across nights are consistent when every pair's deltaMs differs by at most consistentDeltaMs and every pair's timerRate by at most consistentRate; the per-night measured landing latencies (tw-12 74.8, full-04 64.7, full-06 81.6 ms) are the physical anchor a consistent peak would have to sit near",
+    "statusRule": "ALIGNMENT_CELLS_FOUND if any night has a matching cell; IMPROVED_NOT_ALIGNED if none matches but some night improves; NO_PHASE_RATE_ALIGNMENT otherwise (no constant phase or uniform rate cell in this grid reproduces or approaches the phone's occupied windows on these nights)"
+  }
+}

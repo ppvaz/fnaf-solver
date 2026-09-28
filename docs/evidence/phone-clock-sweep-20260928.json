@@ -1,0 +1,55 @@
+{
+  "schema": "evidence-record-v1",
+  "id": "recompile-phone-clock-sweep-616ca1010c7259f7",
+  "claimLevel": "MODEL_ONLY: two host-side sweeps of the simulator against retained phone reads. No rebuild run, no phone run, no promotion. Phone windows and terminals are reused DEVICE_MEASURED observations from the records each night names.",
+  "date": "2026-09-28",
+  "step": "ROADMAP S2 (S2b; Observatory experiment 2: rule a named explanation in or out)",
+  "question": "Does a constant press-phase error (the whole schedule shifted against the office clock) or a uniform office-timer rate error - alone or combined, at coarse and fine resolution - make the model's occupied mask windows agree with the phone's reads on the four clock-seeded nights? Both references are shared by the model and the rebuild, so a shared measurement error would sit exactly where the retained first disagreements live.",
+  "verdict": "REFUTED as the explanation of the retained encounter disagreements. No cell of this family reproduces the phone's occupied windows on any night with a full read. On full-06 the best cell anywhere is 32/42 agreeing windows (deltaMs +50, presses 50 ms earlier than the send's frame); the retained reference (0,0) holds 14/42; the landscape between them is chaotic - agreement swings between 26, 14 and an early death over 30 ms of shift - with no basin a real measurement error would leave. The target disagreement (window 6, empty on the phone, occupied on every host side) is phase-robust: it stands at 41 of 44 fine cells and at every coarse 6 AM survivor, and empties only on three isolated needles (deltaMs -10, +50, +110) whose other windows still disagree (10 windows at +50, clustered at 16-22 and 31-38 after a perfect 0-15). Press phase redistributes disagreement; it does not resolve it. The matches the predeclared rule found elsewhere carry no mechanism: twin-01's all-empty 9-window read is matched at deltaMs +20..+30 here and at -6000 in the coarse pass - two configurations 6 s apart - and tw-12's 12/12 cells sit on the coarse rate grid's +0.08 edge as single points with no terminal to compare (operator abort). A corollary bounds the varying-error variant no grid can map: on full-06, the only 6 AM night, the phone's night ran 420.19 s from origin to 6 AM against the reconstruction's 420.01 s (+176 ms, within poll and skew slop), and hours and encounter rolls drink from the same accumulated timer, so any time-losing clock error - constant, uniform or bursty - large enough to delay an encounter by the needed ~4-10 s by mid-night would stretch the night by at least that much at its end. It does not. The named explanation 'a shared timing-reference error' is ruled out at constant-phase, uniform-rate and accumulated-loss scales; what remains upstream is the per-press input configuration (individual landings and releases, combinatorial - the per-contact visual-response substitutions of 2026-09-28 already failed and broke earlier windows) and a rule divergence both host programs inherited from the decoded dump.",
+  "results": [
+    {
+      "pass": "coarse",
+      "path": "tools/recompile/results/phone-clock-sweep-20260928.json",
+      "sha256": "e465d8ea290d268c6ccddf0566af7ad4b7ad080315e9264b31e3b726227bfd8a",
+      "evidenceId": "recompile-phone-clock-sweep-b1b4cb7901ec2501",
+      "grid": "deltaMs +-10000 at 1000 x timerRate +-0.08 at 0.02, refinement around each night's best cell; 214/47/213/213 cells",
+      "status": "ALIGNMENT_CELLS_FOUND (vacuous: tw-12 edge needles at rate +0.08, twin-01 single deltaMs -6000), NIGHT_SPECIFIC; full-06 improves to 26/42 at deltaMs -100, no match",
+      "config": "tools/recompile/phone-clock-sweep.json"
+    },
+    {
+      "pass": "fine",
+      "path": "tools/recompile/results/phone-clock-sweep-fine-20260928.json",
+      "sha256": "fcfd6f72b90f50a7d342c72cbf6a2762b41154e0b5338a4639a669bd6f0b71ed",
+      "evidenceId": "recompile-phone-clock-sweep-616ca1010c7259f7",
+      "grid": "deltaMs -200..+150 at 10 (refined to 5) x timerRate 0; 44 cells per night",
+      "status": "ALIGNMENT_CELLS_FOUND (vacuous: twin-01 at +20..+30 over an all-empty read), no full-read match on any night; full-06 best 32/42 at deltaMs +50",
+      "config": "tools/recompile/phone-clock-sweep-fine.json"
+    }
+  ],
+  "tool": "tools/recompile/phone-clock-sweep.mjs",
+  "gate": "tools/recompile/test-phone-clock-sweep.mjs, in npm run test:unit: fixtures for the rate scaling, the match and ranking rules and the derived summaries, then both results' control equality to the retained replay and every score, best cell and verdict re-derived from their rows without the model or any private input",
+  "method": {
+    "nights": "The four phone nights with an established office seed (tw-12, twin-01, full-04, full-06), on their retained seeds, bindings, press files, frame traces and phone reads, as phone-encounter-nights.json names them. Control: each pass's (0,0) cell must reproduce the retained phone-encounters-20260927 result's model windows byte for byte (variant sched for traced nights, const60 for twin-01), under the options that result ran under (sourced-rebuild-model-options-20260927c.json, b7eddb60...).",
+    "cells": "deltaMs shifts the whole schedule against the office clock through the sched press rule (presses on the frame of the send; negative deltaMs lands presses later); timerRate r scales every office update's timer delta by (1 + r) while presses stay pinned to captured frames. A night with no frame trace (twin-01) cannot separate the two clocks and sweeps deltaMs only on a constant 60 Hz clock. The model runs to 40000 frames on the measured clock; windows, scoring and terminals are phone-encounter-replay.mjs's own rules.",
+    "nightLengthCorollary": "full-06: the executor stamps 6 AM at 422706 ms after the seed (an observer's poll, skew-corrected); the night origin is 2516.8 ms after the seed, so the phone's night ran about 420.19 s of wall time; the model's 6 AM on the reconstructed clock is 420013 ms. In the decoded runtime and the model, the hour clock (g627's one-second cadence, hour at 70) and the encounter rolls (CND_EVERY2) accumulate the same loop timer, so night length integrates the timer an accumulated-loss error would have to distort."
+  },
+  "findings": {
+    "phaseRobustWindow6": "full-06 window 6 (phone empty, every retained host side occupied) disagrees at all 39 coarse rate-0 cells and 34 of 44 fine cells, and led the disagreement at 23 of the 32 fine cells that reached 6 AM. It empties on ten scattered fine cells (deltaMs -40, -20, -10, +50, +60, +65, +70, +75, +110, +130), five of them contiguous (+50..+75, about two update periods); at every one of them at least 8 other windows still disagree. No constant timing-reference error produces a disagreement this invariant, and none of the clearing cells resolves the night.",
+    "conservedDisagreement": "At every cell of both passes the model disagrees with the phone on 10-28 of full-06's 42 read windows; the best cell (+50) agrees perfectly through window 15 (window 6 included) and then disagrees in clusters at 16-22 and 31-38, with the terminal agreeing (6 AM, -2.7 s). Disagreement is redistributed by press phase, not removed - the signature of a diverging state stream, not of a timing offset.",
+    "chaoticLandscape": "Only 3 of 41 coarse rate-0 phase cells on full-06 survive to 6 AM (deltaMs -100, 0, +100); every other shift kills the night by window 2. At 5-10 ms resolution agreement swings 26 -> 14 -> death over 30 ms. This matches the Night 7 phase census's knife-edge bands and means needle cells cannot be read as measurement corrections.",
+    "vacuousMatches": "twin-01's phone read is nine empty windows; the model matches it at +20..+30 (fine) and at -6000 (coarse), two configurations 6 s apart, and its matching cells' terminals still differ from the phone's by +47.7 s. tw-12's 12/12 cells sit at the coarse rate grid's +0.08 edge as three single points with the phone's terminal unknown (operator abort). The predeclared verdict says ALIGNMENT_CELLS_FOUND; these cells are retained as the rule's honest output and read as noise, not mechanism.",
+    "landingLatencyNotIt": "The retained press-lag ladder (sched +0 -> 14/42, cum ~+60 -> 15, landed +81.6 -> 18, deltaMs -100 (+100) -> 26) rises toward the measured landing latency but the fine pass puts the true peak at +50 ms EARLY (32/42) with chaos on both sides, so the smooth landing-latency mechanism is not supported either."
+  },
+  "limits": [
+    "Model-side only; the rebuild was not re-run. It shares the model's side of every retained first disagreement, and no candidate basin emerged that would be worth a binary confirmation; a chaotic needle in the model would not transfer.",
+    "Constant phase and uniform rate are one-parameter families at 5 ms / 0.5% resolution over +-10 s / +-8%; intermittent warps are bounded only by the night-length corollary, which assumes hours and rolls share the accumulated timer in the real runtime as decoded (if they do not, that split is itself a shared rule difference, not a timing error).",
+    "deltaMs shifts the schedule as a whole; the phone's per-press landings, releases and any lost contacts are not representable in this family, and the per-contact visual-response substitutions (2026-09-28) that did vary them individually failed and broke earlier windows.",
+    "Phone windows are the retained right-eyehole readers' codes; they cannot see Balloon Boy, Mangle or the vent Toys, and full-04 window 3's occupant is unlabelled.",
+    "The sweep's window metric is necessary, not sufficient: even a full 42/42 cell would still need the per-cycle ledger and the rebuild before anything is called equivalent."
+  ],
+  "next": "The two upstream causes the 2026-09-27 record asked to separate are now separated: neither a shared constant phase, a uniform rate, nor (by the night-length corollary) an accumulated timer loss explains the first disagreements. What remains is the per-press input configuration or a rule divergence both host programs inherited. The discriminating physical test is S2a: a same-phase frame-traced twin on the phone at a verified seed, with the Companion reading each press's landing frame, replaying exactly those landings into both host programs; host-side, the next step is the eligibility microscope on full-06 window 6 - dump the rebuild's and the model's roll and eligibility state for that cycle and diff them against the phone recording to find which decoded rule places the occupant one cycle early.",
+  "retained": {
+    "inputs": "artifacts/forensics/frametrace-night6-20260918/ and k3-frametrace-nights-20260915/, captures/frame-traces/, all named by sha256 in tools/recompile/phone-encounter-nights.json",
+    "runs": "none beyond the model: both sweeps ran in-process against this checkout's model sources, whose sha256 the results' method.modelSourceSha256 record"
+  }
+}
