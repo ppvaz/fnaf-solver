@@ -24,7 +24,7 @@
   100.35,
   146.71
  ],
- "method": "every hallLight contact of the landed replay moved by the named updates (press, release), harness rows regenerated, the pinned rebuild re-run on the same measured clock; windows by phone-encounter-replay.mjs rules",
+ "method": "every contact of the named controls in the landed replay moved by the named updates (press, release), harness rows regenerated, the pinned rebuild re-run on the same measured clock; windows by phone-encounter-replay.mjs rules",
  "variants": {
   "v-hallLight_down_0_up_0": {
    "shiftsUpdates": {
@@ -237,7 +237,143 @@
     140.03,
     145.0
    ]
+  },
+  "v-mask_down_0_up_-3": {
+   "shiftsUpdates": {
+    "mask": {
+     "down": 0,
+     "up": -3
+    }
+   },
+   "inputSha256": "0d8f5600a1209136681b6b40d8d49742fad9d6d2fbdc2ad48a9d312b6631b426",
+   "traceSha256": "b45b7894c69254dc44432d6e73e04e734289ec62f446cf17f2be7c89fb9bf729",
+   "rebuiltWindows": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.B?????",
+   "agreeOverCompared": "14/38",
+   "firstDisagreement": {
+    "window": 6,
+    "phone": ".",
+    "side": "B"
+   },
+   "end": "death 377.8s (Withered Bonnie 377.3s)",
+   "bangsGameS": [
+    20.01,
+    25.0,
+    30.33,
+    37.48,
+    45.02,
+    50.02,
+    55.01,
+    59.32,
+    65.02,
+    70.03,
+    70.32,
+    79.2,
+    80.02,
+    85.02,
+    89.15,
+    100.01,
+    110.01,
+    110.34,
+    115.02,
+    115.74,
+    120.0,
+    128.92,
+    145.0
+   ]
+  },
+  "v-mask_down_0_up_-3_hallLight_down_-2_up_-5": {
+   "shiftsUpdates": {
+    "mask": {
+     "down": 0,
+     "up": -3
+    },
+    "hallLight": {
+     "down": -2,
+     "up": -5
+    }
+   },
+   "inputSha256": "7dcadf7a52e2518c21862cbf5ba48fa5182bcac2af3d2a7bd80c401d2d9e6bf9",
+   "traceSha256": "d15ffe432f9640622a321171c2432789606cbb32d0f2e01a056e0e52de1930fb",
+   "rebuiltWindows": "...BC.C.BCFBC.BC.BC.BC.BC.BC.BC.CBC..B?????",
+   "agreeOverCompared": "17/38",
+   "firstDisagreement": {
+    "window": 6,
+    "phone": ".",
+    "side": "C"
+   },
+   "end": "death 376.9s (Withered Bonnie 376.3s)",
+   "bangsGameS": [
+    20.01,
+    25.0,
+    30.33,
+    37.48,
+    55.01,
+    60.01,
+    60.03,
+    70.32,
+    75.0,
+    79.2,
+    100.01,
+    100.02,
+    105.0,
+    110.01,
+    110.34,
+    114.77,
+    118.97,
+    130.0,
+    135.0,
+    140.03,
+    145.0
+   ]
+  },
+  "v-mask_down_-1_up_-2_monitor_down_-1_up_-1_hallLight_down_-2_up_-5": {
+   "shiftsUpdates": {
+    "mask": {
+     "down": -1,
+     "up": -2
+    },
+    "monitor": {
+     "down": -1,
+     "up": -1
+    },
+    "hallLight": {
+     "down": -2,
+     "up": -5
+    }
+   },
+   "inputSha256": "97a118f1fbbe51ad6aa4497612582487922dd6385028b8d6006bbe4adf192ee5",
+   "traceSha256": "f022c8359dbacd23f286d860587fbd03af3c49e2e9d75be43fd650a8d56103cc",
+   "rebuiltWindows": "...BC.B.CFBC.CB..BC..BC.BC.BC.BC.BC.BC?????",
+   "agreeOverCompared": "27/38",
+   "firstDisagreement": {
+    "window": 6,
+    "phone": ".",
+    "side": "B"
+   },
+   "end": "death 380.2s (attacker 3 379.5s)",
+   "bangsGameS": [
+    20.01,
+    25.0,
+    30.32,
+    37.46,
+    50.02,
+    50.03,
+    60.01,
+    69.3,
+    70.02,
+    70.3,
+    79.25,
+    90.02,
+    95.0,
+    100.32,
+    105.63,
+    109.07,
+    125.0,
+    140.32,
+    145.0,
+    148.87
+   ]
   }
  },
- "conclusion": "No hall-light shift inside the phone-measured bracket empties window 6; the shifts move Mangle and Balloon Boy hops downstream but Balloon Boy never reaches the office at 60.3 s as the phone audio has him."
+ "conclusion": "No shift inside the phone-measured brackets empties window 6. The mask release alone (-3) changes nothing at all; hall shifts move Mangle and Balloon Boy hops downstream; the all-controls variant reaches 27/38 agreeing windows, the best of any full-06 replay, with window 6 still Withered Bonnie. Balloon Boy never reaches the office at 60.3 s as the phone audio has him."
 }

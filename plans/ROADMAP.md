@@ -198,7 +198,7 @@ Details:
     the rebuild's Balloon Boy after his leave is UNKNOWN; hall-contact shifts
     inside the measured bracket never empty window 6
     ([record](../docs/evidence/full06-input-registration-20260928.json),
-    `s2-input-registration-638d6ba349b9e1d2`). DEVICE_MEASURED reads against
+    `s2-input-registration-b09be5c86b35a4a3`). DEVICE_MEASURED reads against
     MODEL_ONLY replays.
 - **Absorbs** Plan 17 (route 5), Plan 25 horizon 2, and the model parts of
   Plans 15 and 19.

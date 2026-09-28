@@ -146,7 +146,7 @@ stays open.
 
 **Fifth experiment retained (2026-09-28 UTC):**
 [input registration and first divergent state](../evidence/full06-input-registration-20260928.json),
-`s2-input-registration-638d6ba349b9e1d2`. The phone's frames put the hall
+`s2-input-registration-b09be5c86b35a4a3`. The phone's frames put the hall
 flash 3-5 updates before the replayed hall release in every flashed cycle
 (monitor raises -2..+1, mask presses 0..-1), and its eyehole cells confirm the
 window reads. Its audio, aligned on the mask sound, has Balloon Boy one hop

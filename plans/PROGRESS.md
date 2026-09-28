@@ -2802,7 +2802,7 @@ device run or promotion. S2 stays OPEN.
 ## 2026-09-28 — Do the replayed contacts register when the phone's did, and where does the state first diverge (S2b)
 
 The phone's own frames and audio, read per cycle against the full-06 landed
-replay (`s2-input-registration-638d6ba349b9e1d2`,
+replay (`s2-input-registration-b09be5c86b35a4a3`,
 [record](../docs/evidence/full06-input-registration-20260928.json)). The
 hall flash is over 3-5 updates before the replayed hall contact releases in
 every flashed cycle; monitor raises land within -2..+1 updates and mask presses

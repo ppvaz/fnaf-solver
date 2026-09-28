@@ -1,11 +1,11 @@
 {
  "schema": "evidence-record-v1",
- "id": "s2-input-registration-638d6ba349b9e1d2",
+ "id": "s2-input-registration-b09be5c86b35a4a3",
  "date": "2026-09-28",
  "step": "ROADMAP S2b (full-06: input registration and the first divergent game state)",
  "claimLevel": "DEVICE_MEASURED phone frames and A2DP audio read by arithmetic rules, against MODEL_ONLY rebuild replays and the dump; no new phone run, nothing promoted",
  "question": "Do the replayed contacts of the full-06 landed replay act on the updates the phone's own frames show them acting on, and where does the phone's game state first diverge from the rebuild's before the empty window 6?",
- "verdict": "No, and at the 40.0 s roll tick. The phone's hall flash is over 3-5 updates before the replayed hall contact releases, in every flashed cycle; monitor raises land within -2..+1 updates and the mask presses within 0..-1, as the landed rule assumed. The phone's right eyehole confirms Withered Bonnie in window 3, Withered Chica in window 4 and nobody in windows 5 and 6. Aligned on the mask put-on sound (offset -0.246 s), the phone's audio has Balloon Boy hopping at 40.0, 45.1 and 50.0 s (his vocals), entering the left vent camera at 55.0 s and arriving at the office at 60.38 s (vent bangs), while the rebuild and the model both hold him at CAM 10 through the 40.0 and 45.0 s rolls after his 37.5 s leave and bring him to the office at 70.3 s. The rebuild's Balloon Boy shows value 0 = 0 through both rolls although the dump's g342 sets it to 1 on every 5 s roll at AI 20 and g413 moves him on value 0 = 2 with no light or mask condition; what held him is UNKNOWN and is the first host-vs-phone state difference located. Moving every hall contact 2-5 updates earlier (the phone's own flash frames) changes Mangle's and Balloon Boy's later hops but never empties window 6, so the hall light alone is not the cause. S2 stays OPEN.",
+ "verdict": "No, and at the 40.0 s roll tick. The phone's hall flash is over 3-5 updates before the replayed hall contact releases, in every flashed cycle; monitor raises land within -2..+1 updates and the mask presses within 0..-1, as the landed rule assumed. The phone's right eyehole confirms Withered Bonnie in window 3, Withered Chica in window 4 and nobody in windows 5 and 6. Aligned on the mask put-on sound (offset -0.246 s), the phone's audio has Balloon Boy hopping at 40.0, 45.1 and 50.0 s (his vocals), entering the left vent camera at 55.0 s and arriving at the office at 60.38 s (vent bangs), while the rebuild and the model both hold him at CAM 10 through the 40.0 and 45.0 s rolls after his 37.5 s leave and bring him to the office at 70.3 s. The rebuild's Balloon Boy shows value 0 = 0 through both rolls although the dump's g342 sets it to 1 on every 5 s roll at AI 20 and g413 moves him on value 0 = 2 with no light or mask condition; what held him is UNKNOWN and is the first host-vs-phone state difference located. Moving every hall contact 2-5 updates earlier (the phone's own flash frames) changes Mangle's and Balloon Boy's later hops but never empties window 6; the mask release 3 updates earlier changes nothing; hall, mask and monitor together reach 27 of 38 agreeing windows, the best full-06 replay yet, with window 6 still Withered Bonnie. S2 stays OPEN.",
  "measurements": {
   "inputRegistration": {
    "source": "tools/recompile/results/phone-input-ledger-full-06-20260928.json",
@@ -264,6 +264,51 @@
      "rebuiltWindows": "...BC.C.BCFBC.BC.BC.BC.BC.BC.BC.CBC..B?????",
      "agreeOverCompared": "17/38",
      "window6": "C"
+    },
+    "v-mask_down_0_up_-3": {
+     "shifts": {
+      "mask": {
+       "down": 0,
+       "up": -3
+      }
+     },
+     "rebuiltWindows": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.B?????",
+     "agreeOverCompared": "14/38",
+     "window6": "B"
+    },
+    "v-mask_down_0_up_-3_hallLight_down_-2_up_-5": {
+     "shifts": {
+      "mask": {
+       "down": 0,
+       "up": -3
+      },
+      "hallLight": {
+       "down": -2,
+       "up": -5
+      }
+     },
+     "rebuiltWindows": "...BC.C.BCFBC.BC.BC.BC.BC.BC.BC.CBC..B?????",
+     "agreeOverCompared": "17/38",
+     "window6": "C"
+    },
+    "v-mask_down_-1_up_-2_monitor_down_-1_up_-1_hallLight_down_-2_up_-5": {
+     "shifts": {
+      "mask": {
+       "down": -1,
+       "up": -2
+      },
+      "monitor": {
+       "down": -1,
+       "up": -1
+      },
+      "hallLight": {
+       "down": -2,
+       "up": -5
+      }
+     },
+     "rebuiltWindows": "...BC.B.CFBC.CB..BC..BC.BC.BC.BC.BC.BC?????",
+     "agreeOverCompared": "27/38",
+     "window6": "B"
     }
    }
   }
@@ -283,7 +328,7 @@
   },
   {
    "path": "tools/recompile/results/hall-shift-sensitivity-full-06-20260928.json",
-   "sha256": "4e84b7f034969201a6444212f1c9b3b3289d86c698b34f70bb9c61d6e5e9a22f"
+   "sha256": "3c1abd0160ab006d3f95eec7b909f2a992ad50d71e8ea2f4d2db56a26d166a74"
   }
  ],
  "tools": [
@@ -297,7 +342,7 @@
   "A matched sound is a sound in the Bluetooth mix within 0.3 s, aligned by the mask sound's median; it does not prove which event played it. Balloon Boy's three vocals and the vent bang are shared by several events (rebuild-audio record, semantics).",
   "The capture's time axis is BROKEN (6.5 s missing over 488 s); the alignment is local to 34-134 s where nine mask sounds agree to within the spread reported.",
   "The rebuild's Balloon Boy hold at 40.0/45.0 s is read from its alterable values; the group that held value 0 at 0 was not identified in this session.",
-  "Hall-shift variants move every hall contact alike; they are sensitivities on the landed replay, not a search."
+  "Shift variants move every contact of a control alike; they are sensitivities on the landed replay, not a search."
  ],
  "next": "Identify in the rebuild which event holds Balloon Boy's value 0 at 0 through the 40.0 and 45.0 s rolls after his 37.5 s leave (trace his alterable values 0-12 and the groups writing them), then test whether a phone-consistent input inside the measured brackets releases him at 40.0 s and whether Withered Bonnie's window-6 entry then moves to window 7 as the phone read. The same-phase phone twin with per-press landing reads and a continuous audio capture remains the physical separator."
 }
