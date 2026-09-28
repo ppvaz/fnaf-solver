@@ -2993,6 +2993,7 @@
     {
       "file": "tools/recompile/phone-encounter-replay.mjs",
       "imports": [
+        "../../packages/adapters/src/button-strokes.js",
         "../device/bundle.mjs",
         "../device/minus-toys-plan.mjs",
         "../encounter-replay.mjs",

@@ -2714,3 +2714,39 @@ checks passed; the final integrated clean-checkout push gate remains required.
 Open: FNaF 3 shader conversion, FNaF 1/3/4 APKs, FNaF 4 boot and sound audition,
 the quiet FNaF 1 audition, native Companion capture and a valid background-pause
 measurement. These host measurements do not close device fidelity or reliability.
+
+## 2026-09-27 — Observatory first experiment: per-contact responses (S2b)
+
+Pedro's research-frontier assessment is recorded in
+[FNAF2-OBSERVATORY](../docs/research/FNAF2-OBSERVATORY.md) and linked from S2.
+It was pushed as `d12b49f` after every clean-checkout CI lane passed, before
+the experiment began. The contribution beyond FNaF is framed as a candidate
+method/benchmark for agents earning causal explanations, not a novelty claim
+for active learning, differential testing or autonomous science themselves.
+
+Generated evidence (2026-09-28 UTC):
+[full06-per-contact-responses-20260928.json](../docs/evidence/full06-per-contact-responses-20260928.json),
+`recompile-phone-encounters-9efc5551ed385de1`, **MODEL_ONLY**. The pinned rebuild
+and assets were hash-verified; each of four inputs reproduces the retained
+517-action press file. The median control matches the retained input-row,
+clock and draw-stream hashes, both encounter strings, and both outcomes.
+
+The shared native-stroke rule identifies individual response brackets for
+85/88 monitor presses and 44/85 mask presses. The separate ready-after-send
+branch identifies 83/85 mask responses, 39 acquiring a positive prior state
+after the send. Unsupported contacts retain the median assumption. Releases
+are inferred at the same delay to preserve scheduled contact duration.
+
+**Negative:** all three response variants leave window 6 occupied: Chica in
+the rebuild, Bonnie in the model, empty on the phone. Their first observed
+rebuild/phone disagreement moves to window 2; the rebuild dies to Toy Bonnie
+at 94.3 s while the phone won. Substituting these partial visual response
+proxies is insufficient. The fixture/record gate re-derives coverage, the
+reproduced control, the focused conclusion, and the compact evidence record
+without private frames or a binary, and refuses changed conclusions/coverage.
+
+Open: action-specific response-to-input lag (drop/mask-off sheet-order delay),
+release acceptance, unsupported contacts, runtime updates versus captured
+frames, independently varied contact brackets, and a same-phase phone twin
+with a valid seed measurement. The collective early endpoint is a sensitivity,
+not a worst-case robustness proof. S2 stays OPEN; no new phone run or promotion.

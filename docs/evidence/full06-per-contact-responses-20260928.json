@@ -1,0 +1,155 @@
+{
+ "schema": "evidence-record-v1",
+ "id": "recompile-phone-encounters-9efc5551ed385de1",
+ "claimLevel": "MODEL_ONLY",
+ "step": "ROADMAP S2b",
+ "question": "Does substituting individually observed native response proxies for the nightly median empty full-06 window 6?",
+ "result": {
+  "path": "tools/recompile/results/full06-responses-20260928.json",
+  "sha256": "9c67da2747e6907edf5d9fcfa12f00d13cb342cb75cbf51c7ef192233361be37",
+  "evidenceId": "recompile-phone-encounters-9efc5551ed385de1",
+  "status": "TARGET_DISAGREEMENT_PERSISTS"
+ },
+ "experiment": {
+  "schema": "per-contact-response-experiment-v1",
+  "claimLevel": "MODEL_ONLY",
+  "status": "TARGET_DISAGREEMENT_PERSISTS",
+  "control": {
+   "reference": {
+    "path": "tools/recompile/results/phone-encounters-20260927.json",
+    "sha256": "7cea083dcf87de999e2a1fc3d8c91abcf3126a90bcf4871aaeb611b9cd1f10dc"
+   },
+   "variant": "landed",
+   "reproduced": true,
+   "checks": {
+    "officeRowsHash": true,
+    "clockHash": true,
+    "drawHash": true,
+    "rebuiltWindows": true,
+    "modelWindows": true,
+    "outcomes": true
+   }
+  },
+  "focus": {
+   "night": "full-06",
+   "window": 6,
+   "phone": ".",
+   "controlRebuilt": "B",
+   "controlModel": "C"
+  },
+  "candidates": [
+   {
+    "variant": "response-strict",
+    "rebuilt": "C",
+    "model": "B",
+    "coverage": {
+     "monitor": {
+      "total": 88,
+      "observed": 85,
+      "unknown": 3,
+      "readyAfterSend": 0
+     },
+     "mask": {
+      "total": 85,
+      "observed": 44,
+      "unknown": 41,
+      "readyAfterSend": 0
+     }
+    },
+    "firstDisagreement": {
+     "window": 2,
+     "phone": ".",
+     "side": "f"
+    },
+    "rebuiltOutcome": "death",
+    "modelOutcome": "6am"
+   },
+   {
+    "variant": "response-ready",
+    "rebuilt": "C",
+    "model": "B",
+    "coverage": {
+     "monitor": {
+      "total": 88,
+      "observed": 85,
+      "unknown": 3,
+      "readyAfterSend": 0
+     },
+     "mask": {
+      "total": 85,
+      "observed": 83,
+      "unknown": 2,
+      "readyAfterSend": 39
+     }
+    },
+    "firstDisagreement": {
+     "window": 2,
+     "phone": ".",
+     "side": "f"
+    },
+    "rebuiltOutcome": "death",
+    "modelOutcome": "6am"
+   },
+   {
+    "variant": "response-early",
+    "rebuilt": "C",
+    "model": "B",
+    "coverage": {
+     "monitor": {
+      "total": 88,
+      "observed": 85,
+      "unknown": 3,
+      "readyAfterSend": 0
+     },
+     "mask": {
+      "total": 85,
+      "observed": 83,
+      "unknown": 2,
+      "readyAfterSend": 39
+     }
+    },
+    "firstDisagreement": {
+     "window": 2,
+     "phone": ".",
+     "side": "f"
+    },
+    "rebuiltOutcome": "death",
+    "modelOutcome": "6am"
+   }
+  ],
+  "scope": "Only these partial visual-response substitutions on the retained clock, seed, binding and model options. No general refutation of input timing and no new phone measurement.",
+  "open": [
+   "response-to-input lag by action (drop and mask-off have a sheet-order delay)",
+   "release acceptance and unknown contacts",
+   "runtime updates versus captured frames",
+   "independently varied contact brackets; the early endpoint is one collective sensitivity",
+   "same-phase phone twin with a valid seed measurement"
+  ]
+ },
+ "config": {
+  "path": "tools/recompile/full06-response-experiment.json",
+  "sha256": "6057617855221fe0d3455dfb25137fc1a05b186564a77b776dce60d16253cc36"
+ },
+ "modelOptions": {
+  "path": "tools/recompile/sourced-rebuild-model-options-20260927c.json",
+  "sha256": "b7eddb6025147181a8f837ed15e013925809c03d37d9f9b8aa358984daad44a4"
+ },
+ "binary": {
+  "sha256": "7ab9a755efa80383467a53f1914a7c23232341f39e6abda68b491a41a79c1737",
+  "assetsSha256": "7163d6283de2a10e2cd2842a1402ea6e724b52abc7b5efcb0fc227abe9ef78a8",
+  "pinned": "pinned/7ab9a755-7163d628 in the external recompile directory",
+  "note": "8eb41219 plus CHOWDREN_FRAME_TIMES/_FRAME and CHOWDREN_WATCH_OVERLAP; with neither set it replays grid-screen n6-h's frame/tick/draw/state projection exactly (25,822 updates)"
+ },
+ "limitations": [
+  "The rebuild and the model are host programs; neither result is a phone observation and neither promotes anything.",
+  "Phone windows are the retained right-eyehole readers' codes (B/C/F, \".\" empty); they cannot see Balloon Boy or the vent Toys.",
+  "Visible responses are not input dispatch: the press-to-update rule and action-specific response lag remain assumptions. Each variant names its mapping.",
+  "Frame traces time the displayed frames; the runtime's loops, its catch-up rule and its integer-ms timer are inferred from them.",
+  "The harness raises one new-touch trigger per update; same-tick edges are counted per replay.",
+  "Native responses reuse the shared stroke classifier on retained captures; two positive prior frames and two target frames are required. Unsupported contacts remain UNKNOWN and retain the median assumption.",
+  "Response classification is exploratory. A target may settle after another control was sent; temporal association alone does not prove which input caused a transition.",
+  "The same response-proxy delay is applied to each observed contact release to preserve its scheduled duration; release acceptance is not measured.",
+  "The first changed capture can lag game acceptance, including the sourced one-update drop/mask-off sheet-order delay. No response-lag correction is applied.",
+  "The early sensitivity moves all supported contacts to one bracket endpoint; it is not an exhaustive or adversarial search over independently varying landings."
+ ]
+}

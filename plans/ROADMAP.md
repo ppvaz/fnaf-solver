@@ -94,6 +94,13 @@ interface milestone is an experiment that rules out a named explanation, not
 the completion of a dashboard. This advances S2 and leaves S3-S7's dependencies
 intact.
 
+The first host experiment is retained in
+[full06-per-contact-responses-20260928](../docs/evidence/full06-per-contact-responses-20260928.json):
+the median control reproduces, but all three native-response variants keep
+window 6 occupied and introduce an earlier disagreement. MODEL_ONLY; partial
+visual-response substitutions are insufficient. Response lag, releases and
+the runtime clock remain open, so this does not close S2.
+
 - **S2a, on the phone.** A same-phase twin at a verified seed and anchor phase,
   both nights frame-traced. The 2026-09-27 repeated clock-pin protocol did not
   establish seed 24850: five interrupted attempts are retained, and pinned or

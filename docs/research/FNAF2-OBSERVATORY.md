@@ -69,6 +69,37 @@ A subsequent same-phase phone twin needs a valid seed measurement and per-press
 observations under the existing device safety contract. No phone interaction is
 required for the first host experiment.
 
+**First experiment retained (2026-09-28 UTC):**
+[generated comparison](../evidence/full06-per-contact-responses-20260928.json),
+`recompile-phone-encounters-9efc5551ed385de1`, MODEL_ONLY. The median control
+reproduces its retained input rows, clock, draw stream, windows and outcomes.
+All three response variants keep window 6 occupied (Chica in the rebuild,
+Bonnie in the model; phone empty). They introduce an earlier disagreement at
+window 2 and the rebuild dies to Toy Bonnie at 94.3 s, against the phone's win.
+The strict mapping observes 85 monitor and 44 mask responses; allowing an
+observed prior state after send raises mask coverage to 83, with 39 such cases.
+These substitutions are insufficient. Input timing generally remains open:
+visible response lag by action, releases, unsupported contacts and the runtime
+clock were not identified. The early endpoint is a collective sensitivity,
+not a proof across independent contact perturbations. This retains an S2
+negative; it does not close S2 or the Observatory's stronger milestone below.
+
+## Contributions beyond FNaF
+
+The broader candidate contributions are a benchmark for agents earning causal
+explanations under imperfect observation/actuation; a three-implementation
+diagnosis method with explicit shared assumptions; and executable evidence
+discipline that turns observed inferential mistakes into checks. The latter
+already exists as engineering; a research claim needs comparative validation.
+The benchmark and autonomous discovery claims remain to be demonstrated.
+
+Their components have precedent: [LearnLib black-box checking](https://link.springer.com/article/10.1007/s11334-019-00342-6),
+[Csmith differential testing](https://users.cs.utah.edu/~regehr/papers/pldi11-preprint.pdf),
+[causal diagnosis of simulation gaps](https://proceedings.mlr.press/v229/huang23c.html),
+and [The AI Scientist](https://arxiv.org/abs/2408.06292). The novelty hypothesis
+concerns their demonstrated combination and results, not invention of those
+fields. A focused literature comparison does not establish priority.
+
 ## Five synchronized panes
 
 | Pane | First useful content |

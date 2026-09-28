@@ -8,6 +8,8 @@ import { readFileSync, readdirSync } from 'node:fs';
 import {
   FRAME_MS, OFFICE_FRAME, check, compareOutcome, compareSides, cumTick, cumulative, derive, landingLatency, maskPresses,
   officeClock, overlapSeries, rebuiltOccupant, scoreWindows, traceTick, verdictOf, windowCodes, checkPressFile, phoneSchedule,
+  nativeResponses, responseCoverage, mapResponses, mapSchedule,
+  responseEvidence, deriveResponseExperiment,
 } from './phone-encounter-replay.mjs';
 import { drawTrace, measuredClock } from './model-draw-trace.mjs';
 
@@ -150,6 +152,65 @@ const sha256 = (value) => createHash('sha256').update(value).digest('hex');
 }
 
 // --- the committed record: its arithmetic, re-derived from its rows
+// Native responses: require a positive prior state and a confirmed target, distinguish ready-after-send,
+// and change only the attributable contacts. Release timing remains explicitly inferred.
+{
+  const image_ns = Array.from({ length: 120 }, (_, k) => 1e9 + k * 10e6);
+  const mask_downstroke = Array(120).fill(142);
+  const monitor_downstroke = Array(120).fill(144);
+  const set = (from, to, mask, monitor) => { for (let k = from; k < to; k += 1) {
+    mask_downstroke[k] = mask; monitor_downstroke[k] = monitor;
+  } };
+  set(16, 18, 0, 0); set(18, 33, 0, 144);     // monitor raise after send 100
+  set(33, 37, 0, 0);                          // monitor drop after send 280
+  set(46, 48, 0, 0); set(48, 75, 142, 0);     // mask on after send 410
+  set(75, 78, 0, 0);                          // mask off after send 700
+  const columns = { image_ns, mask_downstroke, monitor_downstroke };
+  const contacts = [{ control: 'monitor', downMs: 100, upMs: 200 }, { control: 'wind', downMs: 220, upMs: 270 },
+    { control: 'monitor', downMs: 280, upMs: 380 }, { control: 'mask', downMs: 410, upMs: 510 },
+    { control: 'mask', downMs: 700, upMs: 800 }];
+  const queueMs = contacts.flatMap((c) => [[c.downMs, 'press', c.control], [c.upMs, 'release', c.control]])
+    .sort((a, b) => a[0] - b[0]);
+  const sched = { contacts, queueMs };
+  const rows = nativeResponses(columns, 0, contacts, 0);
+  assert.deepEqual(rows.map((r) => [r.status, r.responseRow]), Array.from([16, 33, 46, 75], (r) => ['OBSERVED_RESPONSE', r]));
+  assert.deepEqual(responseCoverage(rows), { monitor: { total: 2, observed: 2, unknown: 0, readyAfterSend: 0 },
+    mask: { total: 2, observed: 2, unknown: 0, readyAfterSend: 0 } });
+  assert.equal(rows[0].lowerImageMs, 150);
+  assert.equal(rows[0].upperImageMs, 160);
+  const clock = officeClock(image_ns, 0);
+  const median = (ms) => traceTick(ms + 80, clock);
+  const mapped = mapResponses(sched, median, rows, clock, 0);
+  assert.equal(mapped.queue.find(([, kind, control]) => kind === 'press' && control === 'monitor')[0], 16);
+  assert.deepEqual(mapped.contacts.find((c) => c.control === 'wind'), mapSchedule(sched, median).contacts.find((c) => c.control === 'wind'));
+  assert.equal(mapped.contacts[0].upFrame - mapped.contacts[0].downFrame, 10, 'scheduled duration, not observed release acceptance');
+  // If the expected prior state is acquired only after send, the strict variant withholds its mapping.
+  const late = { ...columns, mask_downstroke: [...mask_downstroke], monitor_downstroke: [...monitor_downstroke] };
+  for (let k = 37; k < 43; k += 1) { late.mask_downstroke[k] = 0; late.monitor_downstroke[k] = 0; }
+  const strict = nativeResponses(late, 0, contacts, 0);
+  assert.equal(strict[2].status, 'UNKNOWN');
+  const ready = nativeResponses(late, 0, contacts, 0, { allowReadyAfterSend: true });
+  assert.equal(ready[2].status, 'OBSERVED_RESPONSE');
+  assert.equal(ready[2].readyAfterSend, true);
+  const noTarget = { ...columns, mask_downstroke: Array(120).fill(142), monitor_downstroke: Array(120).fill(144) };
+  assert.ok(nativeResponses(noTarget, 0, contacts, 0).every((r) => r.status === 'UNKNOWN'));
+  assert.deepEqual(mapResponses(sched, median, nativeResponses(noTarget, 0, contacts, 0), clock, 0), mapSchedule(sched, median),
+    'UNKNOWN never changes a contact');
+  assert.throws(() => nativeResponses({ image_ns }, 0, contacts, 0), /both native stroke columns/);
+  assert.throws(() => nativeResponses({ ...columns, image_ns: Array(120).fill(5) }, 0, contacts, 0), /not increasing/);
+  const bad = rows.map((r) => ({ ...r })); bad[0].sendMs += 1;
+  assert.throws(() => mapResponses(sched, median, bad, clock, 0), /identity differs/);
+  // A capture gap contains several inferred updates. The early sensitivity is after the unchanged capture.
+  const gap = officeClock([0, 50e6, 100e6, 116e6], 0);
+  const gapSched = { contacts: [{ control: 'monitor', downMs: 10, upMs: 100 }], queueMs: [[10, 'press', 'monitor']] };
+  const gapRows = [{ status: 'OBSERVED_RESPONSE', contactIndex: 0, control: 'monitor', sendMs: 10,
+    priorImageMs: 50, upperImageMs: 100, latencyMs: 90 }];
+  const early = mapResponses(gapSched, (ms) => traceTick(ms, gap), gapRows, gap, 0, { early: true });
+  const latest = mapResponses(gapSched, (ms) => traceTick(ms, gap), gapRows, gap, 0);
+  assert.ok(early.contacts[0].downFrame < latest.contacts[0].downFrame);
+  assert.equal(early.contacts[0].upFrame - early.contacts[0].downFrame, latest.contacts[0].upFrame - latest.contacts[0].downFrame);
+}
+
 const result = JSON.parse(read('tools/recompile/results/phone-encounters-20260927.json'));
 const summary = check(result);
 assert.equal(result.method.configSha256, sha256(read('tools/recompile/phone-encounter-nights.json')),
@@ -198,3 +259,46 @@ for (const row of evidence.nights) {
   assert.deepEqual(row.firstDisagreement, d.firstDisagreement, `${row.name}: first disagreeing window`);
 }
 console.log(`phone-encounter-replay: fixtures pass; ${summary.evidenceId} ${summary.status} over ${summary.nights} nights re-derived`);
+
+// The Observatory experiment binds its reproduced control and re-derives the focused conclusion, coverage,
+// claim ceiling and evidence wrapper without private media or a binary.
+const responsePath = 'tools/recompile/results/full06-responses-20260928.json';
+const responseBytes = read(responsePath);
+const responseResult = JSON.parse(responseBytes);
+check(responseResult);
+const experiment = deriveResponseExperiment(responseResult, result);
+assert.equal(experiment.status, 'TARGET_DISAGREEMENT_PERSISTS');
+assert.equal(experiment.control.reproduced, true);
+assert.equal(experiment.focus.phone, '.');
+assert.deepEqual(experiment.candidates.map((v) => v.rebuilt), ['C', 'C', 'C']);
+assert.ok(experiment.candidates.every((v) => v.model === 'B'));
+assert.deepEqual(experiment.candidates[1].coverage, {
+  monitor: { total: 88, observed: 85, unknown: 3, readyAfterSend: 0 },
+  mask: { total: 85, observed: 83, unknown: 2, readyAfterSend: 39 },
+});
+assert.equal(responseResult.method.configSha256, sha256(read(responseResult.method.config)));
+assert.equal(responseResult.method.modelOptionsSha256, sha256(read(responseResult.method.modelOptions)));
+assert.equal(responseResult.nights[0].winnerSha256, sha256(read(responseResult.nights[0].winner)));
+for (const v of responseResult.nights[0].variants) {
+  if (!v.responses) continue;
+  assert.equal(v.responses.ruleSourceSha256, sha256(read(v.responses.rule.source)));
+  assert.equal(v.responses.rule.source, 'packages/adapters/src/button-strokes.js');
+  for (const row of v.responses.rows.filter((r) => r.status === 'OBSERVED_RESPONSE')) {
+    assert.ok(row.lowerImageMs >= row.sendImageMs && row.lowerImageMs < row.upperImageMs);
+    assert.equal(row.responseRow, row.priorRow + 1);
+    assert.ok(row.settledRow >= row.responseRow);
+    assert.ok(row.readyAfterSend || row.priorImageMs >= row.sendImageMs);
+  }
+}
+const badControl = structuredClone(result);
+badControl.nights.find((n) => n.name === 'full-06').variants.find((v) => v.variant === 'landed').windows.rebuilt = '?';
+assert.equal(deriveResponseExperiment(responseResult, badControl).status, 'CONTROL_NOT_REPRODUCED');
+const changed = structuredClone(responseResult);
+changed.responseExperiment.status = 'TARGET_CLEARS_IN_TESTED_VARIANTS';
+assert.throws(() => check(changed), /conclusion differs/);
+const badCoverage = structuredClone(responseResult);
+badCoverage.nights[0].variants[1].responses.coverage.mask.observed += 1;
+assert.throws(() => check(badCoverage), /coverage differs/);
+assert.deepEqual(JSON.parse(read('docs/evidence/full06-per-contact-responses-20260928.json')),
+  responseEvidence(responseResult, responsePath, responseBytes));
+console.log(`${responseResult.evidenceId}: control reproduced; native response coverage and window-6 disagreement re-derived (MODEL_ONLY)`);

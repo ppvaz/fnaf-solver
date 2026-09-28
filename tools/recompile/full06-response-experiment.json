@@ -1,0 +1,99 @@
+{
+ "schema": "phone-encounter-nights-v1",
+ "purpose": "Predeclared Observatory S2 host experiment: full-06 window 6 under per-contact native visual response proxies. Retained measurements only, no phone claim or promotion.",
+ "modelOptions": "tools/recompile/sourced-rebuild-model-options-20260927c.json",
+ "profile": "apps/device/profiles/hid-mediaprojection.json",
+ "binary": {
+  "sha256": "7ab9a755efa80383467a53f1914a7c23232341f39e6abda68b491a41a79c1737",
+  "assetsSha256": "7163d6283de2a10e2cd2842a1402ea6e724b52abc7b5efcb0fc227abe9ef78a8",
+  "pinned": "pinned/7ab9a755-7163d628 in the external recompile directory",
+  "note": "8eb41219 plus CHOWDREN_FRAME_TIMES/_FRAME and CHOWDREN_WATCH_OVERLAP; with neither set it replays grid-screen n6-h's frame/tick/draw/state projection exactly (25,822 updates)"
+ },
+ "harness": {
+  "container": "fnaf2-chowdren:buster",
+  "runner": "tools/recompile/run-harness.sh (CHOWDREN_BINARY = the pinned binary), CHOWDREN_HARNESS=1, CHOWDREN_NO_DRAW=1",
+  "env": "the RUNDIR/env lines emit writes: seed, stop at 06-next day, 40000 total updates, the three watches, and the measured clock"
+ },
+ "variants": {
+  "landed": {
+   "clock": "trace-catchup",
+   "presses": "landed",
+   "what": "the phone's frame trace with Fusion's catch-up; each press on the pass that drew the frame it landed in: send plus the night's measured landing latency"
+  },
+  "response-strict": {
+   "clock": "trace-catchup",
+   "presses": "native-response",
+   "what": "Individual native-stroke response proxies only where the expected prior state was stable before send; other contacts keep the median."
+  },
+  "response-ready": {
+   "clock": "trace-catchup",
+   "presses": "native-response",
+   "allowReadyAfterSend": true,
+   "what": "Also permit the prior state to become positively visible after the send, before the observed departure."
+  },
+  "response-early": {
+   "clock": "trace-catchup",
+   "presses": "native-response",
+   "allowReadyAfterSend": true,
+   "early": true,
+   "what": "Sensitivity: first reconstructed update after the last unchanged capture, capped by the first changed capture; releases shift by the same updates."
+  }
+ },
+ "nights": [
+  {
+   "name": "full-06",
+   "run": "night7-night7-k3-full-06-20260915T225056Z",
+   "night": 7,
+   "seed": 47593,
+   "seedEvidence": "docs/evidence/night6-h-seedlock-census-20260916.json reDerived: k3 full-06 20260915 14 -> 1: 47593",
+   "winner": "tools/device/campaign-night7-k3-winner.json",
+   "originMs": 2516.8,
+   "presses": {
+    "path": "artifacts/forensics/frametrace-night6-20260918/full-06-k3-presses.json",
+    "sha256": "be2066875caec6a65be6e149e973223addc231f6068dbf6ec7436b4ec21a4cde"
+   },
+   "trace": {
+    "path": "artifacts/forensics/k3-frametrace-nights-20260915/ft2-full-06-875229878053244.tsv",
+    "sha256": "3fe9587c06708a991e5a2c983ebc1feaf9be89cda9c7c787999a2ac6052dd261",
+    "first": 201,
+    "releaseAfterFirstNightFrameMs": 2435.8,
+    "source": "artifacts/forensics/frametrace-night6-20260918/k3-night7-origins.json: origin 2516.8 ms after the seed less seedToFirstFrameMs 81.0, first 201"
+   },
+   "navigation": "tools/recompile/fixtures/night7-dials20-5x2.input",
+   "save": "tools/recompile/fixtures/night7-before.ini",
+   "customNight": "tools/recompile/fixtures/night7-dials20.json",
+   "phone": {
+    "windows": "...BC..BC.BC.BC..BC.BCF.BCFBC.B.CBC.BC.CBC",
+    "source": "artifacts/forensics/k3-frametrace-nights-20260915/eyehole-full-06.json (sha256 e43aeeb820166b368e3b747df09185a5d736d8078233682cfeeb427d7036daf7; eyehole-read.py right-eyehole reads, retained DEVICE_MEASURED); read c is window c",
+    "terminal": {
+     "result": "6am",
+     "seedClockMs": 422706,
+     "killer": null,
+     "source": "docs/evidence/runs/night7-night7-k3-full-06-20260915T225056Z/events.jsonl: state=sixam at 2026-09-15T22:58:38.357Z (host wall, a poll), skew 1402.2 ms, seed stamp 1789512694249; executor terminal sixam, 42/42 gates agreed"
+    }
+   },
+   "modelRecord": {
+    "path": "docs/evidence/model-encounter-fidelity-20260927.json",
+    "pointer": "night7Reproduction.rows[name=full-06-k3].windows",
+    "windows": "..CBC.FBC..BC..BC.BC.fCbBC.BC",
+    "outcome": "death"
+   },
+   "variants": [
+    "landed",
+    "response-strict",
+    "response-ready",
+    "response-early"
+   ],
+   "primaryVariant": "landed"
+  }
+ ],
+ "responseExperiment": {
+  "night": "full-06",
+  "window": 6,
+  "control": "landed",
+  "reference": {
+   "path": "tools/recompile/results/phone-encounters-20260927.json",
+   "sha256": "7cea083dcf87de999e2a1fc3d8c91abcf3126a90bcf4871aaeb611b9cd1f10dc"
+  }
+ }
+}

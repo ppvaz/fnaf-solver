@@ -5,6 +5,7 @@
 //   node tools/recompile/phone-encounter-replay.mjs emit --config tools/recompile/phone-encounter-nights.json \
 //        --night full-06 --variant landed --out-dir RUNDIR [--inputs-root /path/to/main/checkout]
 //   node tools/recompile/phone-encounter-replay.mjs compare --config ... --runs DIR --out RESULT.json [--inputs-root ...]
+//        [--evidence docs/evidence/RECORD.json]  (a predeclared response experiment only)
 //   node tools/recompile/phone-encounter-replay.mjs check RESULT.json
 //
 // emit writes RUNDIR/run.input (navigation plus the night's office contacts), RUNDIR/frametimes.txt (one
@@ -46,7 +47,7 @@
 // terminals are reused DEVICE_MEASURED observations named by their records. Nothing here promotes anything.
 import { createHash } from 'node:crypto';
 import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { compareTrace } from './compare-draw-trace.mjs';
 import { MODEL_SOURCES } from './model-draw-trace.mjs';
@@ -56,6 +57,7 @@ import { STRATEGY_REGISTRY, validateWinner } from '../device/bundle.mjs';
 import { KNOBS0, build } from '../device/minus-toys-plan.mjs';
 import { windowCode } from '../encounter-replay.mjs';
 import { MODEL_CONTEXT_LIGHT } from '@fnaf2-1020/core/control';
+import { buttonStrokeState, BUTTON_STROKE_THRESHOLDS } from '../../packages/adapters/src/button-strokes.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../..');
 const sha256 = (value) => createHash('sha256').update(value).digest('hex');
@@ -129,6 +131,103 @@ export function landingLatency(columns, first, sends) {
   const sorted = [...latencies].sort((a, b) => a - b);
   const q = (p) => Number(sorted[Math.floor(p * (sorted.length - 1))].toFixed(1));
   return { raises: sorted.length, officeViewLuma: office, medianMs: q(0.5), p10Ms: q(0.1), p90Ms: q(0.9), minMs: q(0), maxMs: q(1) };
+}
+
+// These are bounded analysis searches, not measured input/animation floors.
+export const RESPONSE_RULE = Object.freeze({ searchMs: 200, confirmMs: 600, stableFrames: 2,
+  thresholds: BUTTON_STROKE_THRESHOLDS, source: 'packages/adapters/src/button-strokes.js' });
+
+/**
+ * Per-contact visual response brackets from retained native strokes. Scheduled alternation supplies the
+ * expected states, but both states must be observed. A missing response is UNKNOWN, never a lost-input claim.
+ * A response is not dispatch: the preceding positive frame and first changed frame bound visible departure.
+ * allowReadyAfterSend explicitly permits an observed prior state acquired after the scheduled send.
+ */
+export function nativeResponses(columns, first, contacts, shift, { allowReadyAfterSend = false } = {}) {
+  const { image_ns, mask_downstroke, monitor_downstroke } = columns;
+  if (!image_ns?.length || !mask_downstroke || !monitor_downstroke ||
+      mask_downstroke.length !== image_ns.length || monitor_downstroke.length !== image_ns.length)
+    throw new Error('native responses need image_ns and both native stroke columns');
+  if (!Number.isInteger(first) || first < 0 || first >= image_ns.length) throw new Error('response first frame outside trace');
+  const times = image_ns.map((ns, k) => {
+    if (!Number.isFinite(ns) || (k && ns <= image_ns[k - 1])) throw new Error('response image clock is not increasing');
+    return (ns - image_ns[first]) / 1e6;
+  });
+  const states = image_ns.map((_, k) => buttonStrokeState({ maskButtonDownstroke: mask_downstroke[k],
+    monitorButtonDownstroke: monitor_downstroke[k] }).signature);
+  const at = (ms) => { let lo = first; let hi = times.length;
+    while (lo < hi) { const mid = (lo + hi) >> 1; if (times[mid] < ms) lo = mid + 1; else hi = mid; } return lo; };
+  const ordinal = { mask: 0, monitor: 0 };
+  const rows = [];
+  contacts.forEach((c, contactIndex) => {
+    if (!['mask', 'monitor'].includes(c.control)) return;
+    const on = ordinal[c.control]++ % 2 === 0;
+    const other = c.control === 'mask' ? 'mask-on' : 'monitor-up';
+    const from = on ? 'office' : other; const to = on ? other : 'office';
+    const sendImageMs = c.downMs + shift;
+    const row = { contactIndex, control: c.control, sendMs: c.downMs, sendImageMs, from, to,
+      status: 'UNKNOWN', reason: 'no positive prior state' };
+    rows.push(row);
+    const k = at(sendImageMs);
+    if (k >= times.length) { row.reason = 'send outside trace'; return; }
+    let start = k;
+    let prior = k - 1;
+    if (k < first + 2 || states[k - 2] !== from || states[k - 1] !== from) {
+      if (!allowReadyAfterSend) return;
+      while (start + 1 < times.length && times[start + 1] - sendImageMs <= RESPONSE_RULE.searchMs &&
+          !(states[start] === from && states[start + 1] === from)) start += 1;
+      if (start + 1 >= times.length || times[start + 1] - sendImageMs > RESPONSE_RULE.searchMs) return;
+      prior = start + 1; start += 2;
+    }
+    let j = start;
+    while (j < times.length && times[j] - sendImageMs <= RESPONSE_RULE.searchMs && states[j] === from) j += 1;
+    if (j >= times.length || times[j] - sendImageMs > RESPONSE_RULE.searchMs) { row.reason = 'no bounded departure'; return; }
+    const nextSame = contacts.slice(contactIndex + 1).find((x) => x.control === c.control);
+    const limit = Math.min(times[j] + RESPONSE_RULE.confirmMs, nextSame ? nextSame.downMs + shift : Infinity);
+    let settled = j;
+    while (settled + 1 < times.length && times[settled + 1] < limit &&
+        !(states[settled] === to && states[settled + 1] === to)) settled += 1;
+    if (settled + 1 >= times.length || times[settled + 1] >= limit) { row.reason = 'no confirmed target'; return; }
+    Object.assign(row, { status: 'OBSERVED_RESPONSE', reason: undefined, priorRow: j - 1, responseRow: j,
+      settledRow: settled, readyAfterSend: prior >= k, priorImageMs: times[j - 1], responseImageMs: times[j],
+      lowerImageMs: Math.max(sendImageMs, times[j - 1]), upperImageMs: times[j],
+      latencyMs: times[j] - sendImageMs });
+  });
+  return rows;
+}
+
+/** Coverage is derived from rows, retaining every unsupported contact as a median assumption. */
+export function responseCoverage(rows) {
+  return Object.fromEntries(['monitor', 'mask'].map((control) => {
+    const rr = rows.filter((r) => r.control === control);
+    const observed = rr.filter((r) => r.status === 'OBSERVED_RESPONSE');
+    return [control, { total: rr.length, observed: observed.length, unknown: rr.length - observed.length,
+      readyAfterSend: observed.filter((r) => r.readyAfterSend).length }];
+  }));
+}
+
+/**
+ * Override only observed monitor/mask presses. Release latency is unmeasured: preserve the scheduled contact
+ * duration by giving the release the same visual-proxy delay. Other contacts keep the control's median rule.
+ * The early sensitivity uses the first reconstructed update after the preceding unchanged capture, capped
+ * by the first changed capture's update. It shifts the release by the same update count; it is not a proof
+ * over every independently perturbed contact in the brackets.
+ */
+export function mapResponses(sched, baselineTickOf, rows, clock, shift, { early = false } = {}) {
+  const ticks = new Map();
+  const key = (ms, kind, control) => `${control}/${kind}/${ms.toFixed(3)}`;
+  for (const row of rows) {
+    if (row.status !== 'OBSERVED_RESPONSE') continue;
+    const c = sched.contacts[row.contactIndex];
+    if (!c || c.control !== row.control || c.downMs !== row.sendMs) throw new Error('response contact identity differs');
+    const last = traceTick(row.upperImageMs, clock);
+    const first = Math.min(last, traceTick(row.priorImageMs, clock) + 1);
+    const down = early ? first : last;
+    const up = traceTick(c.upMs + shift + row.latencyMs, clock) - (last - down);
+    ticks.set(key(c.downMs, 'press', c.control), down);
+    ticks.set(key(c.upMs, 'release', c.control), up);
+  }
+  return mapSchedule(sched, (ms, kind, control) => ticks.get(key(ms, kind, control)) ?? baselineTickOf(ms));
 }
 
 /**
@@ -240,12 +339,12 @@ export function checkPressFile(queueMs, pressFile) {
 export function mapSchedule(sched, tickOf) {
   let stretched = 0;
   const contacts = sched.contacts.map((c) => {
-    const downFrame = tickOf(c.downMs);
-    let upFrame = tickOf(c.upMs);
+    const downFrame = tickOf(c.downMs, 'press', c.control);
+    let upFrame = tickOf(c.upMs, 'release', c.control);
     if (upFrame <= downFrame) { upFrame = downFrame + 1; stretched += 1; }
     return { ...c, downFrame, upFrame };
   }).sort((x, y) => x.downFrame - y.downFrame || x.upFrame - y.upFrame);
-  const queue = sched.queueMs.map(([ms, kind, action]) => [tickOf(ms), kind, action]);
+  const queue = sched.queueMs.map(([ms, kind, action]) => [tickOf(ms, kind, action), kind, action]).sort((a, b) => a[0] - b[0]);
   return { contacts, queue, stretched };
 }
 
@@ -396,9 +495,11 @@ export function prepare(cfg, nightCfg, variant, inputsRoot) {
   if (!spec) throw new Error(`unknown variant ${variant}`);
   let clock = null;
   let latency = null;
+  let columns = null;
   if (spec.clock !== 'constant-60hz') {
     if (!nightCfg.trace) throw new Error(`${nightCfg.name} has no frame trace for the ${variant} variant`);
-    const columns = traceColumns(privateFile(inputsRoot, nightCfg.trace), ['image_ns', 'monitor_luma']);
+    columns = traceColumns(privateFile(inputsRoot, nightCfg.trace), ['image_ns', 'monitor_luma',
+      ...(spec.presses === 'native-response' ? ['mask_downstroke', 'monitor_downstroke'] : [])]);
     clock = officeClock(columns.image_ns, nightCfg.trace.first, { catchUp: spec.clock === 'trace-catchup' });
     const shift = nightCfg.trace.releaseAfterFirstNightFrameMs - nightCfg.originMs;
     const sends = sched.queueMs.filter(([, kind, action]) => kind === 'press' && action === 'monitor').map(([ms]) => ms + shift);
@@ -407,13 +508,23 @@ export function prepare(cfg, nightCfg, variant, inputsRoot) {
   // the harness reads frametimes.txt's six decimals; the model gets the same numbers
   const deltas = clock ? clock.deltas.map((d) => Number(d.toFixed(6))) : [];
   let tickOf;
-  if (spec.presses === 'landed' || spec.presses === 'sched') {
+  if (spec.presses === 'landed' || spec.presses === 'sched' || spec.presses === 'native-response') {
     if (!clock) throw new Error(`the ${spec.presses} press rule needs a frame trace`);
-    const shift = nightCfg.trace.releaseAfterFirstNightFrameMs - nightCfg.originMs + (spec.presses === 'landed' ? latency.medianMs : 0);
+    const shift = nightCfg.trace.releaseAfterFirstNightFrameMs - nightCfg.originMs + (spec.presses !== 'sched' ? latency.medianMs : 0);
     tickOf = (ms) => traceTick(ms + shift, clock);
   } else if (spec.presses === 'cum') tickOf = (ms) => cumTick(ms, deltas);
   else throw new Error(`unknown press rule ${spec.presses}`);
-  const mapped = mapSchedule(sched, tickOf);
+  let responses = null;
+  let mapped = mapSchedule(sched, tickOf);
+  if (spec.presses === 'native-response') {
+    const shift = nightCfg.trace.releaseAfterFirstNightFrameMs - nightCfg.originMs;
+    const rows = nativeResponses(columns, nightCfg.trace.first, sched.contacts, shift,
+      { allowReadyAfterSend: spec.allowReadyAfterSend === true });
+    mapped = mapResponses(sched, tickOf, rows, clock, shift, { early: spec.early === true });
+    responses = { rule: RESPONSE_RULE, ruleSourceSha256: sha256(readFileSync(resolve(ROOT, RESPONSE_RULE.source))),
+      coverage: responseCoverage(rows), rows,
+      interpretation: 'Visible response proxies, not dispatch or measured release acceptance; UNKNOWN contacts retain the nightly median. The model tap queue still omits tap releases.' };
+  }
   const profile = JSON.parse(readFileSync(resolve(ROOT, cfg.profile), 'utf8'));
   const office = harnessRows(mapped.contacts, controlPoints(profile), { frame: OFFICE_FRAME });
   const navigation = readFileSync(resolve(ROOT, nightCfg.navigation), 'utf8');
@@ -422,7 +533,7 @@ export function prepare(cfg, nightCfg, variant, inputsRoot) {
     `# clock ${spec.clock}, presses ${spec.presses}; ${mapped.stretched} contacts stretched to one update`];
   const inputText = `${navigation.endsWith('\n') ? navigation : `${navigation}\n`}${header.join('\n')}\n${body}`;
   const frameTimesText = clock ? `# ${nightCfg.name} ${variant}: office update timer deltas (ms)\n${deltas.map((d) => d.toFixed(6)).join('\n')}\n` : null;
-  return { sched, pressCount, clock, latency, deltas, mapped, office, inputText, frameTimesText, spec, officeRowsSha256: sha256(body) };
+  return { sched, pressCount, clock, latency, responses, deltas, mapped, office, inputText, frameTimesText, spec, officeRowsSha256: sha256(body) };
 }
 
 function emit(cfg, nightCfg, variant, outDir, inputsRoot) {
@@ -520,6 +631,7 @@ export function compareOne(cfg, nightCfg, variant, runDir, inputsRoot, modelOpti
   return {
     variant, clock: p.spec.clock, presses: p.spec.presses,
     landingLatency: p.latency,
+    ...(p.responses ? { responses: p.responses } : {}),
     input: { officeRows: p.office.rows.length, officeRowsSha256: p.officeRowsSha256, stretchedContacts: p.mapped.stretched,
       sameTickEdgeSets: p.office.sameTickEdges.length, firstPressTick: p.mapped.queue[0][0], measuredUpdates: p.clock ? p.deltas.length : 0,
       frameTimesSha256: p.frameTimesText ? sha256(p.frameTimesText) : null, inputSha256: sha256(p.inputText) },
@@ -575,6 +687,61 @@ export function derive(night) {
   return out;
 }
 
+/** A predeclared per-contact experiment's conclusion, from rows and its hash-bound retained control. */
+export function deriveResponseExperiment(result, reference) {
+  const spec = result.method.responseExperiment;
+  const night = result.nights.find((n) => n.name === spec.night);
+  const control = night?.variants.find((v) => v.variant === spec.control);
+  const retained = reference.nights.find((n) => n.name === spec.night)?.variants.find((v) => v.variant === spec.control);
+  if (!control || !retained || !Number.isInteger(spec.window) || spec.window < 0 || spec.window >= night.phone.windows.length)
+    throw new Error('response experiment has no named control or phone window');
+  const checks = {
+    officeRowsHash: control.input.officeRowsSha256 === retained.input.officeRowsSha256,
+    clockHash: control.input.frameTimesSha256 === retained.input.frameTimesSha256,
+    drawHash: control.runtime.drawTraceSha256 === retained.runtime.drawTraceSha256,
+    rebuiltWindows: control.windows.rebuilt === retained.windows.rebuilt,
+    modelWindows: control.windows.model === retained.windows.model,
+    outcomes: JSON.stringify(control.outcome) === JSON.stringify(retained.outcome),
+  };
+  const candidates = night.variants.filter((v) => v.variant !== spec.control).map((v) => ({
+    variant: v.variant, rebuilt: v.windows.rebuilt[spec.window] ?? '?', model: v.windows.model[spec.window] ?? '?',
+    coverage: v.responses?.coverage ?? null, firstDisagreement: night.derived[v.variant].rebuiltVsPhone.firstDisagreement,
+    rebuiltOutcome: v.outcome.rebuilt.result, modelOutcome: v.outcome.model.result,
+  }));
+  if (!candidates.length) throw new Error('response experiment has no candidates');
+  const phone = night.phone.windows[spec.window];
+  const reproduced = Object.values(checks).every(Boolean);
+  const status = !reproduced ? 'CONTROL_NOT_REPRODUCED' : phone === '?' || phone === '*' || candidates.some((v) => v.rebuilt === '?')
+    ? 'UNKNOWN' : candidates.every((v) => v.rebuilt !== phone) ? 'TARGET_DISAGREEMENT_PERSISTS'
+      : candidates.every((v) => v.rebuilt === phone) ? 'TARGET_CLEARS_IN_TESTED_VARIANTS' : 'VARIANT_SENSITIVE';
+  return { schema: 'per-contact-response-experiment-v1', claimLevel: 'MODEL_ONLY', status,
+    control: { reference: spec.reference, variant: spec.control, reproduced, checks },
+    focus: { night: spec.night, window: spec.window, phone, controlRebuilt: control.windows.rebuilt[spec.window],
+      controlModel: control.windows.model[spec.window] }, candidates,
+    scope: 'Only these partial visual-response substitutions on the retained clock, seed, binding and model options. No general refutation of input timing and no new phone measurement.',
+    open: ['response-to-input lag by action (drop and mask-off have a sheet-order delay)',
+      'release acceptance and unknown contacts', 'runtime updates versus captured frames',
+      'independently varied contact brackets; the early endpoint is one collective sensitivity', 'same-phase phone twin with a valid seed measurement'] };
+}
+
+/** A compact generated evidence record; the detailed result owns all response and encounter rows. */
+export function responseEvidence(result, resultPath, resultBytes) {
+  if (!result.responseExperiment) throw new Error('an evidence record needs a response experiment');
+  return { schema: 'evidence-record-v1', id: result.evidenceId, claimLevel: 'MODEL_ONLY', step: 'ROADMAP S2b',
+    question: 'Does substituting individually observed native response proxies for the nightly median empty full-06 window 6?',
+    result: { path: resultPath, sha256: sha256(resultBytes), evidenceId: result.evidenceId, status: result.responseExperiment.status },
+    experiment: result.responseExperiment, config: { path: result.method.config, sha256: result.method.configSha256 },
+    modelOptions: { path: result.method.modelOptions, sha256: result.method.modelOptionsSha256 },
+    binary: result.method.binary, limitations: result.limitations };
+}
+
+function responseExperiment(result) {
+  const ref = result.method.responseExperiment.reference;
+  const bytes = readFileSync(resolve(ROOT, ref.path));
+  if (sha256(bytes) !== ref.sha256) throw new Error('response experiment control reference hash differs');
+  return deriveResponseExperiment(result, JSON.parse(bytes.toString('utf8')));
+}
+
 /** The night's verdict from its primary variant: every phone-read window played and agreeing, and the same end. */
 export function verdictOf(night, derived) {
   const primary = derived[night.primaryVariant];
@@ -592,6 +759,8 @@ export function check(result) {
   if (result.claimLevel !== 'MODEL_ONLY') throw new Error('a rebuild comparison is MODEL_ONLY');
   for (const night of result.nights) {
     for (const v of night.variants) {
+      if (v.responses && JSON.stringify(responseCoverage(v.responses.rows)) !== JSON.stringify(v.responses.coverage))
+        throw new Error(`${night.name}/${v.variant}: response coverage differs from rows`);
       if (v.windows.rows.map((r) => r.rebuilt).join('') !== v.windows.rebuilt) throw new Error(`${night.name}/${v.variant}: rebuilt rows`);
       if (v.windows.rows.map((r) => r.model).join('') !== v.windows.model) throw new Error(`${night.name}/${v.variant}: model rows`);
     }
@@ -603,6 +772,8 @@ export function check(result) {
   const overall = verdicts.every((v) => v === 'EQUIVALENT_ON_READ_WINDOWS') ? 'EQUIVALENT_ON_READ_WINDOWS'
     : verdicts.some((v) => v === 'DIVERGENT') ? 'DIVERGENT' : 'UNKNOWN';
   if (overall !== result.status) throw new Error(`status ${result.status} is not ${overall}`);
+  if (result.method.responseExperiment && JSON.stringify(responseExperiment(result)) !== JSON.stringify(result.responseExperiment))
+    throw new Error('response experiment conclusion differs from its rows or retained control');
   if (idOf(result) !== result.evidenceId) throw new Error(`evidenceId ${result.evidenceId} is not ${idOf(result)}`);
   return { nights: result.nights.length, status: overall, evidenceId: result.evidenceId };
 }
@@ -636,10 +807,11 @@ function compareAll(cfg, cfgPath, runsDir, inputsRoot) {
     status: verdicts.every((v) => v === 'EQUIVALENT_ON_READ_WINDOWS') ? 'EQUIVALENT_ON_READ_WINDOWS'
       : verdicts.some((v) => v === 'DIVERGENT') ? 'DIVERGENT' : 'UNKNOWN',
     method: {
-      config: 'tools/recompile/phone-encounter-nights.json', configSha256: sha256(readFileSync(cfgPath)),
+      config: relative(ROOT, cfgPath), configSha256: sha256(readFileSync(cfgPath)),
       variants: cfg.variants, windowMs: WINDOW_MS, watch: WATCH, officeFrame: OFFICE_FRAME,
       modelOptions: cfg.modelOptions, modelOptionsSha256: sha256(readFileSync(resolve(ROOT, cfg.modelOptions))),
       binary: cfg.binary, harness: cfg.harness,
+      ...(cfg.responseExperiment ? { responseExperiment: cfg.responseExperiment } : {}),
       windowRule: 'window k = the k-th schedule mask-on press; its code is the first occupant in its first 1500 ms of the update clock',
       scoring: 'agree = same code on a window both sides read ("*" never agrees on the character); hits = agreeing occupied phone windows; occupancyAgree = both empty or both occupied',
     },
@@ -652,11 +824,19 @@ function compareAll(cfg, cfgPath, runsDir, inputsRoot) {
     limitations: [
       'The rebuild and the model are host programs; neither result is a phone observation and neither promotes anything.',
       'Phone windows are the retained right-eyehole readers\' codes (B/C/F, "." empty); they cannot see Balloon Boy or the vent Toys.',
-      'The press-to-update rule is not measured: the trace and cum rules differ by about four updates and both are run.',
+      'Visible responses are not input dispatch: the press-to-update rule and action-specific response lag remain assumptions. Each variant names its mapping.',
       'Frame traces time the displayed frames; the runtime\'s loops, its catch-up rule and its integer-ms timer are inferred from them.',
       'The harness raises one new-touch trigger per update; same-tick edges are counted per replay.',
+      ...(cfg.responseExperiment ? [
+        'Native responses reuse the shared stroke classifier on retained captures; two positive prior frames and two target frames are required. Unsupported contacts remain UNKNOWN and retain the median assumption.',
+        'Response classification is exploratory. A target may settle after another control was sent; temporal association alone does not prove which input caused a transition.',
+        'The same response-proxy delay is applied to each observed contact release to preserve its scheduled duration; release acceptance is not measured.',
+        'The first changed capture can lag game acceptance, including the sourced one-update drop/mask-off sheet-order delay. No response-lag correction is applied.',
+        'The early sensitivity moves all supported contacts to one bracket endpoint; it is not an exhaustive or adversarial search over independently varying landings.',
+      ] : []),
     ],
   };
+  if (cfg.responseExperiment) result.responseExperiment = responseExperiment(result);
   result.evidenceId = idOf(result);
   return result;
 }
@@ -674,7 +854,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     process.exit(0);
   }
   for (let i = 0; i < rest.length; i += 2) {
-    if (!['--config', '--night', '--variant', '--out-dir', '--runs', '--out', '--inputs-root'].includes(rest[i]) || !rest[i + 1])
+    if (!['--config', '--night', '--variant', '--out-dir', '--runs', '--out', '--inputs-root', '--evidence'].includes(rest[i]) || !rest[i + 1])
       throw new Error('see usage at top of file');
     args[rest[i].slice(2)] = rest[i + 1];
   }
@@ -689,9 +869,14 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   } else if (mode === 'compare') {
     if (!args.runs || !args.out) throw new Error('compare needs --runs and --out');
     if (!args.out.endsWith('.json')) throw new Error('--out must be a .json path');
+    if (args.evidence && (!cfg.responseExperiment || !args.evidence.endsWith('.json')))
+      throw new Error('--evidence needs a response experiment and a .json path');
     const result = compareAll(cfg, cfgPath, resolve(args.runs), inputsRoot);
     check(result);
-    writeFileSync(args.out, `${JSON.stringify(result, null, 1)}\n`);
+    const resultBytes = `${JSON.stringify(result, null, 1)}\n`;
+    writeFileSync(args.out, resultBytes);
+    if (args.evidence) writeFileSync(args.evidence, `${JSON.stringify(responseEvidence(result,
+      relative(ROOT, resolve(args.out)), resultBytes), null, 1)}\n`);
     console.log(`${result.evidenceId}: ${result.status} (MODEL_ONLY rebuild vs retained phone reads)`);
     for (const n of result.nights) {
       console.log(`  ${n.name} seed ${n.seed}: ${n.verdict}; phone ${n.phone.windows.slice(0, 42)} (${n.phone.terminal.result})`);
