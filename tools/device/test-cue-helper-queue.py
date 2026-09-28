@@ -177,5 +177,28 @@ with module.QueueRunnerLock(Path(sys.argv[2])):
         else:
             os.environ["CUE_HELPER_QUEUE_FILE"] = previous_queue
 
+# cancel retires PENDING jobs and keeps their records; a RUNNING job or an unknown id refuses the whole call.
+with tempfile.TemporaryDirectory(prefix="cue-helper-queue-cancel-") as directory:
+    queue = Path(directory) / "jobs.json"
+    environment = {**os.environ, "CUE_HELPER_QUEUE_FILE": str(queue)}
+    def cli(*args, check=True):
+        return subprocess.run(["python3", str(HERE / "cue-helper-queue.py"), *args], cwd=HERE.parents[1],
+                              env=environment, check=check, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    cli("enqueue", "menu-check"); cli("enqueue", "night-check", "--screen", "night"); cli("enqueue", "menu-check")
+    jobs = json.loads(queue.read_text(encoding="utf-8"))
+    jobs[2]["state"] = "RUNNING"
+    queue.write_text(json.dumps(jobs) + "\n", encoding="utf-8")
+    refused = cli("cancel", jobs[0]["id"], jobs[2]["id"], "--reason", "stale", check=False)
+    assert refused.returncode == 2 and "only a PENDING job" in refused.stderr, refused.stderr
+    assert [j["state"] for j in json.loads(queue.read_text(encoding="utf-8"))] == ["PENDING", "PENDING", "RUNNING"]
+    assert cli("cancel", "cue-0-missing", "--reason", "stale", check=False).returncode == 2
+    assert cli("cancel", jobs[0]["id"], check=False).returncode == 2, "a cancel without --reason ran"
+    done = cli("cancel", jobs[0]["id"], jobs[1]["id"], "--reason", "stale since an earlier session")
+    assert done.stdout.count("CANCELLED id=") == 2
+    after = json.loads(queue.read_text(encoding="utf-8"))
+    assert [j["state"] for j in after] == ["CANCELLED", "CANCELLED", "RUNNING"] and len(after) == 3
+    assert after[0]["cancelReason"] == "stale since an earlier session" and after[0]["cancelledAt"]
+    assert MODULE.claimable(after[0], True) is False, "a cancelled job can still be claimed"
+
 print("cue-helper queue persistence, closed vocabulary, absent-device hold, one-job runs, "
-      "window notes and killed-job release passed")
+      "window notes, killed-job release and cancel passed")

@@ -406,6 +406,29 @@ def finish(job_id: str, state: str, output: str = "") -> None:
         write_jobs(path, jobs)
 
 
+def cancel(job_ids: list[str], reason: str) -> list[str]:
+    """Retire PENDING jobs by id, keeping each record (state CANCELLED, when and why). A job that is not
+    PENDING, or an id the queue does not hold, refuses the whole call and changes nothing."""
+    if not reason.strip():
+        raise QueueError("cancel needs a --reason")
+    path = queue_path()
+    with QueueFile(path):
+        jobs = read_jobs(path)
+        by_id = {job.get("id"): job for job in jobs}
+        for job_id in job_ids:
+            job = by_id.get(job_id)
+            if job is None:
+                raise QueueError(f"no queued job {job_id}")
+            if job.get("state") != "PENDING":
+                raise QueueError(f"{job_id} is {job.get('state')}, only a PENDING job can be cancelled")
+        for job_id in job_ids:
+            by_id[job_id]["state"] = "CANCELLED"
+            by_id[job_id]["cancelledAt"] = now_text()
+            by_id[job_id]["cancelReason"] = reason[:500]
+        write_jobs(path, jobs)
+    return job_ids
+
+
 def note_pending(note: dict) -> list[str]:
     """Attach a window's note to every job it left PENDING.
 
@@ -670,6 +693,9 @@ def main(argv: list[str] | None = None) -> int:
     add.add_argument("--json", action="store_true", help="emit the queued job as structured JSON")
     list_parser = sub.add_parser("list", help="show queued jobs")
     list_parser.add_argument("--json", action="store_true", help="emit structured JSON")
+    cancel_parser = sub.add_parser("cancel", help="retire PENDING jobs, keeping their records")
+    cancel_parser.add_argument("ids", nargs="+", help="job ids from `list`")
+    cancel_parser.add_argument("--reason", required=True, help="why, kept in each job's record")
     run = sub.add_parser("run", help="run pending jobs when device is ready")
     run.add_argument("--wait", type=float, default=0.0,
                      help="wait for a ready device for this many seconds")
@@ -701,6 +727,10 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps({"jobs": jobs}, sort_keys=True))
             else:
                 print_jobs(jobs)
+            return 0
+        if args.command == "cancel":
+            for job_id in cancel(args.ids, args.reason):
+                print(f"CANCELLED id={job_id}")
             return 0
         if args.wait < 0 or args.wait > 86400 or args.interval <= 0 or args.interval > 300:
             raise QueueError("wait must be 0..86400 and interval must be 0..300")
