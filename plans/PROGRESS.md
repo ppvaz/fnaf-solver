@@ -1893,3 +1893,21 @@ Open:
 - Android's collision masks for RGB565 (native code).
 - The native-frame comparison against phone frames of matched states.
 - The census of the current set.
+
+
+## 2026-09-27 — Companion rework recovered from the Claude worktree (S5/S6)
+
+The Companion 0.2.0 branch removes the ESP32 audio stack and debug HUD,
+quarantines the frozen FNaF 2 readers, names the target explicitly, and adds
+companion-status-v1 plus the endpoint-file handshake. The bounded playback
+capture probe returns derived numbers only; silence remains inconclusive.
+The title identity calibration is **FIXTURE**, evidence ID `companion-game-screen-sha256-fbd233a9d57bdc50`
+(`docs/evidence/companion-game-screen-20260927.json`): 2,771 retained native
+frames, zero cross-game identifications on the development corpus; no held-out
+block. This is a host replay of device frames, not phone qualification.
+
+Open: install/qualification of the reworked Companion, audio capture OFF/ON
+comparison on the rebuild, setup integration of the game-screen reader, and
+replacement of the quarantined FNaF 2 grid/legacy readers by native REGION
+rules. Setup currently reports no helper identity for non-FNaF 2 targets.
+The clear and Night 7 reliability claims remain unchanged.

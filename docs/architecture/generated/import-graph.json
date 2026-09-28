@@ -1257,6 +1257,13 @@
       ]
     },
     {
+      "file": "tools/device/audio-probe.mjs",
+      "imports": [
+        "../../apps/device/src/physical-ports.js",
+        "node:fs"
+      ]
+    },
+    {
       "file": "tools/device/bundle.mjs",
       "imports": [
         "./artifact-commands.mjs",
@@ -1795,6 +1802,13 @@
         "./artifact-commands.mjs",
         "./recipe.mjs",
         "@fnaf2-1020/core/mechanics"
+      ]
+    },
+    {
+      "file": "tools/device/test-audio-probe.mjs",
+      "imports": [
+        "./audio-probe.mjs",
+        "node:assert/strict"
       ]
     },
     {

@@ -51,7 +51,8 @@ public final class CompanionStatusTest {
                 .put("lesson", "NONE").put("lessonState", "OFF").put("panel", "NONE")
                 .put("clearance", "UNCHECKED").put("overlayPermission", "DENIED").put("lease", "NONE")
                 .put("battery", "UNKNOWN").put("charging", "UNKNOWN").put("thermal", CompanionStatus.thermalWord(-1))
-                .put("foreground", "OTHER").put("snapshotNs", 1000L).put("wallMs", 1_790_000_000_000L));
+                .put("foreground", "OTHER").put("audioProbe", "OFF")
+                .put("snapshotNs", 1000L).put("wallMs", 1_790_000_000_000L));
         built.put("fnaf4-teach", base("3", "ON", "none")
                 .put("content", "2400x1080").put("visible", "1").put("frames", 18234L)
                 .put("frameAgeMs", "12").put("fps", String.format(java.util.Locale.US, "%.1f", 59.83))
@@ -60,7 +61,8 @@ public final class CompanionStatusTest {
                 .put("lesson", "f4").put("lessonState", "ATTACHED").put("panel", "440,8,1960,188")
                 .put("clearance", "OK:37px").put("overlayPermission", "GRANTED").put("lease", "fnaf4-run:n5a")
                 .put("battery", "64").put("charging", "1").put("thermal", CompanionStatus.thermalWord(0))
-                .put("foreground", "OTHER").put("snapshotNs", 123_456_789_012L).put("wallMs", 1_790_000_000_123L));
+                .put("foreground", "OTHER").put("audioProbe", "DONE")
+                .put("snapshotNs", 123_456_789_012L).put("wallMs", 1_790_000_000_123L));
         built.put("fnaf2-legacy", base("7", "ON", "none")
                 .put("content", "2400x1080").put("visible", "0").put("frames", 42)
                 .put("frameAgeMs", "250").put("fps", String.format(java.util.Locale.US, "%.1f", 0.0))
@@ -70,7 +72,8 @@ public final class CompanionStatusTest {
                 .put("panel", "10,310,590,410").put("clearance", "VIOLATION:left_door")
                 .put("overlayPermission", "GRANTED").put("lease", "NONE")
                 .put("battery", "100").put("charging", "0").put("thermal", CompanionStatus.thermalWord(2))
-                .put("foreground", "COMPANION").put("snapshotNs", 5L).put("wallMs", 6L));
+                .put("foreground", "COMPANION").put("audioProbe", "RUNNING")
+                .put("snapshotNs", 5L).put("wallMs", 6L));
         // A value the line cannot carry faithfully is not carried at all.
         built.put("hostile-values", new CompanionStatus().put("app", "0.2.0 beta").put("code", "16")
                 .put("session", "1").put("capture", "ON").put("captureReason", "bad=value")
@@ -81,7 +84,8 @@ public final class CompanionStatusTest {
                 .put("lesson", "NONE").put("lessonState", "OFF").put("panel", "NONE")
                 .put("clearance", "UNCHECKED").put("overlayPermission", "DENIED").put("lease", "NONE")
                 .put("battery", "UNKNOWN").put("charging", "UNKNOWN").put("thermal", CompanionStatus.thermalWord(99))
-                .put("foreground", "OTHER").put("snapshotNs", 9L).put("wallMs", 10L));
+                .put("foreground", "OTHER").put("audioProbe", "OFF")
+                .put("snapshotNs", 9L).put("wallMs", 10L));
         for (Map.Entry<String, CompanionStatus> entry : built.entrySet()) {
             String expected = lines.get(entry.getKey());
             String actual = entry.getValue().line();

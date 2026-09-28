@@ -36,7 +36,7 @@ public final class CompanionStatus {
             "target", "game", "targetBuild", "legacy",
             "regions", "regionSamples", "regionFrames",
             "lesson", "lessonState", "panel", "clearance", "overlayPermission",
-            "lease", "battery", "charging", "thermal", "foreground",
+            "lease", "battery", "charging", "thermal", "foreground", "audioProbe",
             "snapshotNs", "wallMs",
     };
 

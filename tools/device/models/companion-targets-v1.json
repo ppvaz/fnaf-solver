@@ -34,7 +34,7 @@
       "label": "FNaF 4",
       "rebuild": false,
       "legacyReaders": null,
-      "titleModel": null
+      "titleModel": "tools/device/models/title-fnaf4-moto-g56-v204.json"
     },
     {
       "game": "fnaf1-rebuild",

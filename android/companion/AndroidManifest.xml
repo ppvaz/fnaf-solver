@@ -8,6 +8,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- AUDIO probe only: AudioPlaybackCapture of the projection, reduced on the
+         phone to derived numbers (AudioProbe.java); no audio is stored or sent. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <!-- Explicitly enabled by the user for the teach panels (non-interactive overlay windows). -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 

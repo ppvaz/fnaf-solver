@@ -77,6 +77,8 @@ mkdir -p "$CLASSES_DIR" "$DEX_DIR"
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/NativeFrame.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/Targets.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/CompanionStatus.java" \
+    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/AudioProbeAnalysis.java" \
+    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/AudioProbe.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/PixelWatch.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/Fnaf2Legacy.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/NativeRegions.java" \

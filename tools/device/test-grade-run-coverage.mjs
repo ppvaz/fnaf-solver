@@ -21,6 +21,8 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 // Not instruments, and why. An entry here is a decision, not a formality:
 // deleting one is how a script gets promoted into grade-run.sh.
 const EXCLUDED = new Map([
+  ['audio-probe.mjs', 'bounded live playback-capture qualification probe, not a grader of a completed night; test-audio-probe.mjs gates arguments and derived-only replies'],
+  ['game-screen.py', 'native title identity reader used before setup, not a completed-night grader; calibration retained in companion-game-screen-20260927.json'],
   ['office-seed-bracket.py', 'the office frame seed bracket from a live MMFRuntime logcat; consumed by the seed-lock scorer, not by a run grade yet -- it joins grade-run.sh once runs retain mmfruntime.logcat'],
   ['grade-run.sh', 'the pipeline itself'],
   ['game-teardown.sh', 'a lifecycle action that runs AFTER a night and before there is anything to grade: it stops a target game only once title-observe.py has confirmed the title, so the post-night sequence finishes and the save is banked. It sends one force-stop and reads no run artifact; gated by test-game-teardown.sh'],

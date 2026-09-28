@@ -28,6 +28,9 @@ during physical cleanup and restores signal handling before host analysis.
 
 | Tool | Kind | Purpose and interface |
 |---|---|---|
+| `tools/device/audio-probe.mjs --seconds N [--scope GAME] [--out FILE]` | device action | Bounded leased Companion playback-capture probe; retains derived levels and onset times only. Phone qualification is still open. |
+| `tools/device/test-audio-probe.mjs` | check | Argument refusals and derived-only playback probe replies; runs in test:contracts. |
+| `tools/device/game-screen.py [--expect GAME] [--json] < FRAME.png` | check | Native title identity across registered games, returning UNKNOWN on conflicts; --calibrate CORPUS.tsv --out FILE retains hashed measurements. |
 | `tools/device/device-lane.mjs --bundle DIR --night N [--seeds N] [--epoch MS]` | report | Replays the executor's compiled HID reports through the simulator and device constraints. Mask floor and seams are measured; merged trigger-read contacts are an explicitly labelled hypothesis. Supports `--no-merge`, `--no-floor`, `--no-seams`, `--late a,b` and `--dials JSON`. MODEL_ONLY, not a phone grade. |
 | `tools/device/test-night-run-dry.mjs` | check | A mocked dry run must not actuate the phone. The runner's real EXIT handler, under device-free stage doubles, must finish physical cleanup and retain evidence even after repeated interrupts. Runs in `test:unit`. |
 | `npm run device:emit -- --winner winner.json --out artifacts/run-001` | compiler/check | Converts a `winner-v1` into an immutable `device-bundle-v1`: `manifest.json`, one `night-N.plan` per requested night, the resolved `profile.json`, and hashed transport-neutral `artifact.json` semantic blocks. It validates interpreter syntax, controls, contacts/timings, policy/night/profile identity, content hashes, and a bounded exact-engine replay before returning `READY`; the strategy registry contains `minus-toys`, `minus3`, and `minus7`. |

@@ -224,6 +224,26 @@ export class AdbCueHelperPort {
   }
 
   /**
+   * One bounded AudioPlaybackCapture probe on the phone, reduced there to
+   * derived numbers (AudioProbe.java): rate, channels, duration, RMS/peak
+   * dBFS, active fraction, onset count and times. No audio crosses the wire.
+   * `scope` is `all`, `target`, a game key or a package.
+   * @param {{seconds: number, scope?: string, pollMs?: number}} options
+   */
+  async audioProbe({ seconds, scope = 'target', pollMs = 500 }) {
+    if (!Number.isInteger(seconds) || seconds < 1 || seconds > 30) throw new TypeError('audio probe seconds must be 1..30');
+    if (typeof scope !== 'string' || !/^[a-z0-9._-]{1,64}$/.test(scope)) throw new TypeError('audio probe scope must be all, target, a game key or a package');
+    await this.#exchangeOnce(`AUDIO <token> probe ${seconds} ${scope}`);
+    const deadline = performance.now() + (seconds + 15) * 1000;
+    while (performance.now() < deadline) {
+      await sleep(pollMs);
+      const fields = parseCueResponse(await this.#exchangeOnce('AUDIO <token> status'));
+      if (fields.audioProbe === 'DONE' || fields.audioProbe === 'ERROR') return fields;
+    }
+    throw new Error('cue-helper audio probe did not finish before its deadline');
+  }
+
+  /**
    * Best-effort: name the target and the lease label a runner holds, so the
    * phone's own screen says what it serves. A helper older than 0.2.0 answers
    * `ERROR unknown-verb`; that is reported, never thrown, because it changes

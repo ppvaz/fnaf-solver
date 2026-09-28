@@ -24,7 +24,7 @@ export const COMPANION_STATUS_FIELDS = Object.freeze([
   'target', 'game', 'targetBuild', 'legacy',
   'regions', 'regionSamples', 'regionFrames',
   'lesson', 'lessonState', 'panel', 'clearance', 'overlayPermission',
-  'lease', 'battery', 'charging', 'thermal', 'foreground',
+  'lease', 'battery', 'charging', 'thermal', 'foreground', 'audioProbe',
   'snapshotNs', 'wallMs',
 ]);
 
@@ -154,6 +154,7 @@ export function parseCompanionStatus(line) {
     charging: flag('charging'),
     thermal: orNull(fields.thermal),
     foreground: orNull(foreground),
+    audioProbe: orNull(fields.audioProbe),
     snapshotNs: BigInt(fields.snapshotNs),
     wallMs: integer(fields, 'wallMs'),
     fields: Object.freeze({ ...fields }),

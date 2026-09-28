@@ -41,6 +41,7 @@ JAVA="$JDK_ROOT/bin/java"
   "$HERE/src/com/ppvaz/fnafcompanion/NativeFrame.java" \
   "$HERE/src/com/ppvaz/fnafcompanion/Targets.java" \
   "$HERE/src/com/ppvaz/fnafcompanion/CompanionStatus.java" \
+  "$HERE/src/com/ppvaz/fnafcompanion/AudioProbeAnalysis.java" \
   "$HERE/src/com/ppvaz/fnafcompanion/PixelWatch.java" \
   "$HERE/src/com/ppvaz/fnafcompanion/Fnaf2Legacy.java" \
   "$HERE/src/com/ppvaz/fnafcompanion/MonitorStateDetector.java" \
@@ -61,6 +62,7 @@ JAVA="$JDK_ROOT/bin/java"
   "$HERE/test/com/ppvaz/fnafcompanion/Fnaf2LegacyTest.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/CompanionStatusTest.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/TargetsTest.java" \
+  "$HERE/test/com/ppvaz/fnafcompanion/AudioProbeAnalysisTest.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/Fnaf1LessonTest.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/Fnaf3LessonTest.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/Fnaf4LessonTest.java"
@@ -70,6 +72,7 @@ JAVA="$JDK_ROOT/bin/java"
   -cp "$TEST_TMP" com.ppvaz.fnafcompanion.CompanionStatusTest
 "$JAVA" -Dtargets.model="$HERE/../../tools/device/models/companion-targets-v1.json" \
   -cp "$TEST_TMP" com.ppvaz.fnafcompanion.TargetsTest
+"$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.AudioProbeAnalysisTest
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.Fnaf1LessonTest
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.Fnaf3LessonTest
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.Fnaf4LessonTest

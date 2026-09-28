@@ -164,6 +164,8 @@ public final class CaptureService extends Service {
     private final Fnaf2Legacy legacy = new Fnaf2Legacy(IMAGE_READER_MAX_IMAGES);
     private final Object lessonLock = new Object();
     private CycleLesson.Builder pendingLesson;
+    // One bounded AudioPlaybackCapture probe at a time; derived numbers only.
+    private AudioProbe audioProbe;
     // The named target (null: none named) and the host lease's label.
     private volatile Targets.Target target;
     private volatile String leaseLabel;
@@ -188,6 +190,8 @@ public final class CaptureService extends Service {
         getSystemService(NotificationManager.class).createNotificationChannel(channel);
         target = Targets.byPackage(getSharedPreferences(PREFS, Context.MODE_PRIVATE)
                 .getString(PREF_TARGET, null));
+        audioProbe = new AudioProbe(this,
+                () -> publishCombinedStatus(projection == null ? "UNAVAILABLE" : "RUNNING"));
     }
 
     /**
@@ -659,6 +663,7 @@ public final class CaptureService extends Service {
         status.put("thermal", power == null ? "UNKNOWN"
                 : CompanionStatus.thermalWord(power.getCurrentThermalStatus()));
         status.put("foreground", companionForeground ? "COMPANION" : "OTHER")
+                .put("audioProbe", audioProbe == null ? "OFF" : audioProbe.state())
                 .put("snapshotNs", nowNs)
                 .put("wallMs", System.currentTimeMillis());
         return status.line();
@@ -836,6 +841,8 @@ public final class CaptureService extends Service {
                 return regionControl(field);
             case "SNAP":
                 return snapControl(field);
+            case "AUDIO":
+                return audioControl(field);
             case "OVERLAY":
                 if (field.length != 2) return "ERROR overlay-usage";
                 return "OK " + (overlayController == null
@@ -898,6 +905,43 @@ public final class CaptureService extends Service {
                 return field.length == 3 ? "OK " + legacy.traceStatus() : "ERROR trace-status-usage";
             default:
                 return "ERROR trace-usage";
+        }
+    }
+
+    /**
+     * {@code AUDIO <token> probe <seconds> <all|package|game>},
+     * {@code AUDIO <token> status}, {@code AUDIO <token> stop}: one bounded
+     * AudioPlaybackCapture recording reduced on the phone to derived numbers
+     * (AudioProbe); the reply never carries audio.
+     */
+    private String audioControl(String[] field) {
+        if (field.length < 3) return "ERROR audio-usage";
+        switch (field[2]) {
+            case "probe": {
+                if (field.length != 5 || !field[3].matches("[0-9]{1,2}")) return "ERROR audio-probe-usage";
+                int uid = -1;
+                String scope = "all";
+                if (!"all".equals(field[4])) {
+                    Targets.Target named = "target".equals(field[4]) ? target : Targets.resolve(field[4]);
+                    if (named == null) return "ERROR audio-probe-scope";
+                    try {
+                        uid = getPackageManager().getApplicationInfo(named.packageName, 0).uid;
+                    } catch (PackageManager.NameNotFoundException absent) {
+                        return "ERROR target-not-installed";
+                    }
+                    scope = named.packageName;
+                }
+                String refused = audioProbe.start(projection, Integer.parseInt(field[3]), uid, scope);
+                return refused == null ? "OK " + audioProbe.status() : "ERROR " + refused;
+            }
+            case "status":
+                return field.length == 3 ? "OK " + audioProbe.status() : "ERROR audio-usage";
+            case "stop":
+                if (field.length != 3) return "ERROR audio-usage";
+                audioProbe.stop();
+                return "OK " + audioProbe.status();
+            default:
+                return "ERROR audio-usage";
         }
     }
 
@@ -1119,6 +1163,7 @@ public final class CaptureService extends Service {
             Log.i(TAG, "frame trace during stop: " + legacy.traceStop());
         }
 
+        if (audioProbe != null) audioProbe.stop();
         controlRunning = false;
         ServerSocket server = controlServer;
         controlServer = null;

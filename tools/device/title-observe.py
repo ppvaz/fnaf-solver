@@ -36,6 +36,12 @@ margin of 0.0014, which is not a classifier. So the item bands are consulted
 only after the game logo says this is the title screen at all -- the word "Five"
 reads 0.106-0.123 on every title frame measured and 0.007-0.012 on Options.
 
+A model counts a pixel as lit when its channels all exceed `bright_min` --
+the white menu text of FNaF 1, 2 and 3. A model may instead name a `pixel`
+predicate (`{"kind": "red", "red_min": R, "other_max": O}`: red above R with
+green and blue at most O), for FNaF 4's red-on-red title, and a gate may carry
+its own `pixel`. Models without one behave exactly as before.
+
 With no `TITLE_MODEL` this prints `unknown=no-title-model` and the selector
 refuses. To calibrate a different handset or build, run `--measure` over frames
 of each save state and set thresholds that separate them, with the undecided
@@ -70,6 +76,26 @@ def fail(reason):
     raise SystemExit(3)
 
 
+def parse_pixel(spec, bright_min):
+    """A lit-pixel predicate spec, validated: bright (min channel) or red."""
+    if spec is None:
+        return {"kind": "bright", "min": bright_min}
+    if not isinstance(spec, dict):
+        fail("title-model-bad-pixel")
+    kind = spec.get("kind")
+    try:
+        if kind == "bright":
+            return {"kind": "bright", "min": int(spec["min"])}
+        if kind == "red":
+            red_min, other_max = int(spec["red_min"]), int(spec["other_max"])
+            if not 0 <= other_max < red_min <= 255:
+                fail("title-model-bad-pixel")
+            return {"kind": "red", "red_min": red_min, "other_max": other_max}
+    except (KeyError, TypeError, ValueError):
+        fail("title-model-bad-pixel")
+    fail("title-model-bad-pixel")
+
+
 def load_model(path):
     if not path:
         return None
@@ -89,6 +115,10 @@ def load_model(path):
         if (not isinstance(point, list) or len(point) != 2
                 or not all(isinstance(v, int) for v in point)):
             fail(f"title-model-bad-point:{name}")
+    try:
+        model_pixel = parse_pixel(model.get("pixel"), int(model["bright_min"]))
+    except (KeyError, TypeError, ValueError):
+        fail("title-model-incomplete")
     gates = {}
     for key in ("title_gate", "menu_gate", "foreign_gate"):
         gate = model.get(key)
@@ -98,7 +128,9 @@ def load_model(path):
         try:
             box = [int(v) for v in gate["box"]]
             gate = {"box": tuple(box), "min": float(gate["min"]),
-                    "max_absent": float(gate["max_absent"])}
+                    "max_absent": float(gate["max_absent"]),
+                    "pixel": parse_pixel(gate["pixel"], model_pixel.get("min", 150))
+                    if "pixel" in gate else model_pixel}
         except (KeyError, TypeError, ValueError):
             fail(f"title-model-bad-gate:{key}")
         if len(box) != 4 or not gate["max_absent"] < gate["min"]:
@@ -162,7 +194,7 @@ def load_model(path):
             "bright_min": bright, "band": (band_w, band_h),
             "title_gate": gates["title_gate"], "menu_gate": gates["menu_gate"],
             "foreign_gate": gates["foreign_gate"], "static_guard": guard,
-            "continue_subtitle": subtitle,
+            "continue_subtitle": subtitle, "pixel": model_pixel,
             "build": model.get("build", "unnamed")}
 
 
@@ -176,9 +208,21 @@ def read_frame(source, declared=None):
     return image
 
 
+def lit(pixel):
+    """The per-pixel predicate: an int is the classic bright_min threshold."""
+    if isinstance(pixel, int):
+        return lambda r, g, b: min(r, g, b) > pixel
+    if pixel["kind"] == "bright":
+        threshold = pixel["min"]
+        return lambda r, g, b: min(r, g, b) > threshold
+    red_min, other_max = pixel["red_min"], pixel["other_max"]
+    return lambda r, g, b: r >= red_min and max(g, b) <= other_max
+
+
 def box_fraction(image, box, bright_min):
+    test = lit(bright_min)
     data = list(image.crop(box).resize((32, 32)).getdata())
-    return sum(1 for r, g, b in data if min(r, g, b) > bright_min) / len(data)
+    return sum(1 for r, g, b in data if test(r, g, b)) / len(data)
 
 
 def bright_fraction(image, point, band, bright_min):
@@ -253,7 +297,7 @@ def main(argv):
     if measure:
         model = load_model(model_path) if model_path else None
         band = model["band"] if model else (660, 76)
-        bright_min = model["bright_min"] if model else 150
+        bright_min = model["pixel"] if model else 150
         points = model["items"] if model else {
             "newGame": [400, 640], "continue": [400, 730], "sixthNight": [400, 880]}
         image = read_frame(capture_via_adb(8.0) if use_adb else sys.stdin.buffer, declared)
@@ -278,7 +322,7 @@ def main(argv):
     # consulted once the screen is known to be the title.
     gate = model["title_gate"]
     if gate is not None:
-        value = box_fraction(image, gate["box"], model["bright_min"])
+        value = box_fraction(image, gate["box"], gate["pixel"])
         if value <= gate["max_absent"]:
             fail(f"not-the-title-screen:{value:.4f}")
         if value < gate["min"]:
@@ -294,7 +338,7 @@ def main(argv):
     # reports; the interval between the thresholds refuses, as every gate does.
     foreign = model["foreign_gate"]
     if foreign is not None:
-        value = box_fraction(image, foreign["box"], model["bright_min"])
+        value = box_fraction(image, foreign["box"], foreign["pixel"])
         if value > foreign["max_absent"]:
             if foreign["static_x"] is not None:
                 _, top, _, bottom = foreign["box"]
@@ -321,7 +365,7 @@ def main(argv):
     # 0.0000 on the confirmation and 0.0000 on the Options screen.
     menu = model["menu_gate"]
     if menu is not None:
-        value = box_fraction(image, menu["box"], model["bright_min"])
+        value = box_fraction(image, menu["box"], menu["pixel"])
         if value <= menu["max_absent"]:
             fail(f"title-dialog:{value:.4f}")
         if value < menu["min"]:
@@ -349,7 +393,7 @@ def main(argv):
             if lit > guard["max"]:
                 fail(f"ambiguous:static-bar:{name}:{lit:.4f}")
         value = bright_fraction(image, model["items"][name], model["band"],
-                                model["bright_min"])
+                                model["pixel"])
         if value >= model["present_min"]:
             present.append(name)
         elif value > model["absent_max"]:
