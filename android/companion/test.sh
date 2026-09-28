@@ -39,6 +39,8 @@ JAVA="$JDK_ROOT/bin/java"
 # system modules and warns that the result may not run on 17.
 "$JAVAC" -encoding UTF-8 --release 17 -d "$TEST_TMP" \
   "$HERE/src/com/ppvaz/fnafcompanion/NativeFrame.java" \
+  "$HERE/src/com/ppvaz/fnafcompanion/Targets.java" \
+  "$HERE/src/com/ppvaz/fnafcompanion/CompanionStatus.java" \
   "$HERE/src/com/ppvaz/fnafcompanion/PixelWatch.java" \
   "$HERE/src/com/ppvaz/fnafcompanion/Fnaf2Legacy.java" \
   "$HERE/src/com/ppvaz/fnafcompanion/MonitorStateDetector.java" \
@@ -57,11 +59,17 @@ JAVA="$JDK_ROOT/bin/java"
   "$HERE/test/com/ppvaz/fnafcompanion/TeachPanelTest.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/NativeRegionsTest.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/Fnaf2LegacyTest.java" \
+  "$HERE/test/com/ppvaz/fnafcompanion/CompanionStatusTest.java" \
+  "$HERE/test/com/ppvaz/fnafcompanion/TargetsTest.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/Fnaf1LessonTest.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/Fnaf3LessonTest.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/Fnaf4LessonTest.java"
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.NativeRegionsTest
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.Fnaf2LegacyTest
+"$JAVA" -Dstatus.vector="$HERE/../../tools/device/testdata/companion-status-v1.txt" \
+  -cp "$TEST_TMP" com.ppvaz.fnafcompanion.CompanionStatusTest
+"$JAVA" -Dtargets.model="$HERE/../../tools/device/models/companion-targets-v1.json" \
+  -cp "$TEST_TMP" com.ppvaz.fnafcompanion.TargetsTest
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.Fnaf1LessonTest
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.Fnaf3LessonTest
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.Fnaf4LessonTest

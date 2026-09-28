@@ -378,6 +378,9 @@ async function main(argv) {
 
   const adbBridge = new AdbDeviceBridge({ serial });
   const port = new AdbCueHelperPort({ serial });
+  // Name the target and show the lease on the phone (companion-status-v1). A
+  // helper older than 0.2.0 answers unknown-verb; nothing this run reads changes.
+  await record.event('companion-announce', await port.announce({ target: 'com.scottgames.fivenightsatfreddys', lease: id.slice(0, 48) }));
   const bridge = new HelperFrameBridge(serial, port, adbBridge);
   const snapTo = async (name) => { const png = await bridge.capturePng(); await record.capture(name, png); };
   let hidProcess = null; let hid = null; let recorder = null; let channel = null;

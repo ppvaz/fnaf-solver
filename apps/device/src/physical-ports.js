@@ -13,13 +13,19 @@ import { execFileSync } from 'node:child_process';
 import { connect } from 'node:net';
 import { writeFileSync } from 'node:fs';
 import { parseCueResponse, parseRegionRead, regionSetLine, REGION_LIMITS } from '@fnaf2-1020/adapters/transports/cue-helper';
+import { COMPANION_ENDPOINT_FILE, parseCompanionEndpoint, parseCompanionStatus } from '@fnaf2-1020/adapters/transports/companion-status';
 const HELPER_PACKAGE = 'com.ppvaz.fnafcompanion';
 const READY_DEVICE = 'FNAF Timed Touch';
 const sleep = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
 
 function endpointError(message) { throw new Error(`cue-helper endpoint: ${message}`); }
 
-/** Parse the latest authenticated Cue Helper endpoint announcement. */
+/**
+ * Parse the latest authenticated endpoint announcement from logcat: the
+ * legacy `control=READY port=... token=...` line. The Companion's endpoint
+ * file (companion-endpoint-v1) is read first; this is the fallback for a
+ * helper older than 0.2.0 or a device where run-as is unavailable.
+ */
 export function parseCueHelperEndpoint(text) {
   if (typeof text !== 'string') endpointError('logcat output is not text');
   const lines = text.split(/\r?\n/).filter(line => /control=(?:READY|DEGRADED)/.test(line));
@@ -143,9 +149,27 @@ export class AdbCueHelperPort {
     this.serial = serial; this.adb = adb; this.endpoint = null;
   }
 
+  /**
+   * Find the live session's endpoint: the Companion's handshake file first
+   * (files/companion-endpoint.properties, read with run-as; it cannot rotate
+   * out the way a logcat line does), and the logcat announcement only when
+   * the file is absent -- a helper older than 0.2.0. The file must belong to
+   * the running process.
+   */
   discover() {
     const pid = runSync(this.adb, ['-s', this.serial, 'shell', 'pidof', HELPER_PACKAGE]).trim().split(/\s+/)[0];
     if (!/^\d+$/.test(pid)) endpointError('helper process is not running');
+    let text = null;
+    try {
+      text = runSync(this.adb, ['-s', this.serial, 'exec-out', 'run-as', HELPER_PACKAGE, 'cat', COMPANION_ENDPOINT_FILE]);
+    } catch { /* no file: an older helper, or no session yet */ }
+    if (text && text.includes('schema=')) {
+      const file = parseCompanionEndpoint(text);
+      if (String(file.pid) !== pid) endpointError(`endpoint file belongs to pid ${file.pid}, not the running helper ${pid}`);
+      this.endpoint = Object.freeze({ port: file.port, token: file.token, socket: file.socket,
+        session: file.session, source: 'endpoint-file' });
+      return { ...this.endpoint };
+    }
     // A night fills this tag with capture diagnostics. Filter on the phone so
     // discovery still fits its bounded buffer after a long-running capture,
     // while retaining the latest endpoint rather than the first announcement.
@@ -153,6 +177,68 @@ export class AdbCueHelperPort {
       { input: HELPER_DISCOVERY_SCRIPT });
     this.endpoint = parseCueHelperEndpoint(log);
     return { ...this.endpoint };
+  }
+
+  /**
+   * One request line over a short-lived forward, for the game-agnostic verbs
+   * (STATUS, TARGET, LEASE). Returns the reply text; an ERROR reply rejects.
+   * @param {string} line @param {{timeoutMs?: number}} [options]
+   */
+  async #exchangeOnce(line, { timeoutMs = 2000 } = {}) {
+    const endpoint = this.endpoint ?? this.discover();
+    const forwarded = runSync(this.adb, ['-s', this.serial, 'forward', 'tcp:0', `tcp:${endpoint.port}`]).trim().split(/\s+/).at(-1);
+    if (!/^\d+$/.test(forwarded ?? '')) throw new Error('cue-helper: adb forward returned no host port');
+    try {
+      const reply = await lineExchange(Number(forwarded), line.replace('<token>', endpoint.token), timeoutMs, 8192);
+      if (!reply.startsWith('OK')) throw new Error(`cue-helper ${line.split(' ')[0]}: ${reply}`);
+      return reply;
+    } finally {
+      try { runSync(this.adb, ['-s', this.serial, 'forward', '--remove', `tcp:${forwarded}`]); } catch { /* the forward dies with adb */ }
+    }
+  }
+
+  /** The versioned status (companion-status-v1), decoded. */
+  async status() {
+    return parseCompanionStatus(await this.#exchangeOnce('STATUS <token>'));
+  }
+
+  /**
+   * Name the Companion's target (a package or game key; `clear` for none).
+   * The FNaF 2 legacy readers run only while the target is retail FNaF 2.
+   * @param {string} target
+   */
+  async setTarget(target) {
+    if (typeof target !== 'string' || !/^[a-z0-9._-]{1,64}$/.test(target)) throw new TypeError('target must be a package, a game key, or clear');
+    return parseCueResponse(await this.#exchangeOnce(`TARGET <token> ${target}`));
+  }
+
+  /**
+   * Show who holds the host's serial lease on the phone (a label, not an
+   * authority: the lease itself is the host's lock). `null` clears it.
+   * @param {string | null} label
+   */
+  async setLease(label) {
+    const value = label === null ? 'clear' : label;
+    if (typeof value !== 'string' || !/^[A-Za-z0-9._:@-]{1,48}$/.test(value)) throw new TypeError('lease label must be 1..48 of [A-Za-z0-9._:@-]');
+    return parseCueResponse(await this.#exchangeOnce(`LEASE <token> ${value}`));
+  }
+
+  /**
+   * Best-effort: name the target and the lease label a runner holds, so the
+   * phone's own screen says what it serves. A helper older than 0.2.0 answers
+   * `ERROR unknown-verb`; that is reported, never thrown, because it changes
+   * nothing a runner reads.
+   * @param {{target?: string, lease?: string | null}} options
+   */
+  async announce({ target, lease } = {}) {
+    const result = { target: null, lease: null, errors: [] };
+    if (target !== undefined) {
+      try { result.target = await this.setTarget(target); } catch (error) { result.errors.push(String(error?.message ?? error)); }
+    }
+    if (lease !== undefined) {
+      try { result.lease = await this.setLease(lease); } catch (error) { result.errors.push(String(error?.message ?? error)); }
+    }
+    return result;
   }
 
   /** Synchronous by design: CueHelperControlTransport is a bounded request/response codec. */

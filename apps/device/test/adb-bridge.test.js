@@ -48,6 +48,29 @@ const args = process.argv.slice(2);
   }, 'capture diagnostics exceeding 1 MB do not hide the latest helper endpoint');
 } finally { rmSync(scratch, { recursive: true, force: true }); }
 
+// The Companion's endpoint file (companion-endpoint-v1) is read first: it
+// cannot rotate out of logcat, and it must belong to the running helper.
+const fileScratch = mkdtempSync(join(tmpdir(), 'helper-endpoint-file-'));
+try {
+  const adb = join(fileScratch, 'adb.cjs');
+  writeFileSync(adb, `#!/usr/bin/env node
+const args = process.argv.slice(2);
+if (args.includes('pidof')) { console.log(process.env.MOCK_PID || '1234'); }
+else if (args.includes('run-as')) {
+  process.stdout.write('schema=companion-endpoint-v1\\napp=0.2.0\\ncode=16\\nsession=3\\npid=1234\\nport=49707\\n'
+    + 'socket=com.fnaf2.cuehelper.control.3\\ntoken=00112233445566778899aabbccddeeff\\n');
+} else { process.exitCode = 2; }
+`, { mode: 0o755 });
+  assert.deepEqual(new AdbCueHelperPort({ serial: 'usb-1', adb }).discover(), {
+    port: 49707, token: '00112233445566778899aabbccddeeff', socket: 'com.fnaf2.cuehelper.control.3',
+    session: 3, source: 'endpoint-file',
+  }, 'the endpoint file is the discovery source when present');
+  process.env.MOCK_PID = '999';
+  assert.throws(() => new AdbCueHelperPort({ serial: 'usb-1', adb }).discover(),
+    /belongs to pid 1234, not the running helper 999/, 'a stale endpoint file from another process is refused');
+  delete process.env.MOCK_PID;
+} finally { rmSync(fileScratch, { recursive: true, force: true }); }
+
 const noAdb = new AdbDeviceBridge({ run: async () => ({ ok: false, code: 'ENOENT', stdout: '', stderr: 'adb missing' }) });
 assert.deepEqual(await noAdb.preflight({ targetBuild: 'com.scottgames.fnaf2:2.0.7+26' }), {
   schema: 'device-preflight-v1', version: 1, status: 'HOLD', reason: 'adb-unavailable',
@@ -86,16 +109,19 @@ const restartedPreflightBridge = new AdbDeviceBridge({ serial: 'usb-1', run,
 const restartedPreflight = await restartedPreflightBridge.preflight({
   targetBuild: 'com.scottgames.fnaf2:2.0.7+26', restartCapture: true });
 assert.equal(restartedPreflight.status, 'READY');
-assert.deepEqual(captureRestart, { serial: 'usb-1', adb: 'adb', screen: 'menu', waitSeconds: 30 });
+assert.deepEqual(captureRestart, { serial: 'usb-1', adb: 'adb', target: 'fnaf2', screen: 'menu', waitSeconds: 30 });
 assert.deepEqual(restartedPreflight.checks.find(item => item.id === 'cue-helper-capture-restart'), {
   id: 'cue-helper-capture-restart', status: 'PASS', detail: 'CAPTURE started',
 });
 
 let setupCall;
-const captureResult = await restartCueHelperCapture({ serial: 'usb-1', adb: '/mock/adb',
+await assert.rejects(() => restartCueHelperCapture({ serial: 'usb-1', adb: '/mock/adb',
+  run: async () => ({ exitCode: 0, stdout: '', stderr: '' }) }), /explicit target game/,
+  'a capture restart without a named target is refused: setup has no default game');
+const captureResult = await restartCueHelperCapture({ serial: 'usb-1', adb: '/mock/adb', target: 'fnaf4',
   run: async (...args) => { setupCall = args; return { exitCode: 0, stdout: 'CAPTURE started\n', stderr: '' }; } });
 assert.equal(captureResult.status, 'READY');
-assert.deepEqual(setupCall[1], ['--restart-capture', '--screen', 'menu', '--wait', '30']);
+assert.deepEqual(setupCall[1], ['--restart-capture', '--target', 'fnaf4', '--screen', 'menu', '--wait', '30']);
 assert.equal(setupCall[2].env.ANDROID_SERIAL, 'usb-1');
 assert.equal(setupCall[2].env.ADB_BIN, '/mock/adb');
 

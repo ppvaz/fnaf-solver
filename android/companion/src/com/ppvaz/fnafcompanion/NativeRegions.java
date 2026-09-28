@@ -109,6 +109,52 @@ public final class NativeRegions {
 
     public int size() { return active.length; }
 
+    /** Samples across every registered region. */
+    public int samples() {
+        int total = 0;
+        for (Region region : active) total += region.samples();
+        return total;
+    }
+
+    /** Frames copied since the service started. */
+    public synchronized long captured() { return captured; }
+
+    /** One registered region's sampled footprint in native pixels. */
+    public static final class Footprint {
+        public final String name;
+        /** [left, right) x [top, bottom) of the pixels the region reads. */
+        public final int left;
+        public final int top;
+        public final int right;
+        public final int bottom;
+
+        Footprint(String name, int left, int top, int right, int bottom) {
+            this.name = name;
+            this.left = left;
+            this.top = top;
+            this.right = right;
+            this.bottom = bottom;
+        }
+    }
+
+    /**
+     * Every registered region's footprint, from one consistent registration,
+     * for the teach panels' clearance check. The footprint ends at the last
+     * sampled pixel, not the requested edge: a strided region reads nothing
+     * beyond {@code x + (cols - 1) * step}.
+     */
+    public Footprint[] footprints() {
+        Region[] regions = active;
+        Footprint[] out = new Footprint[regions.length];
+        for (int i = 0; i < regions.length; i++) {
+            Region region = regions[i];
+            out[i] = new Footprint(region.name, region.x, region.y,
+                    region.x + (region.cols - 1) * region.step + 1,
+                    region.y + (region.rows - 1) * region.step + 1);
+        }
+        return out;
+    }
+
     /**
      * Capture thread: copy every active region out of {@code frame}. Returns
      * false, and publishes nothing, if any sample fell outside the frame --

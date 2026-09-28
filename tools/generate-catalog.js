@@ -64,6 +64,7 @@ const contractEvidence = {
   'trainer-trace-v1': ['tools/tracereport.mjs'],
   'artifact-ref-v1': ['tools/evidence.js'],
   'claim-evidence-v1': ['tools/evidence.js'],
+  'companion-status-v1': ['packages/adapters/test/companion-status.test.js', 'android/companion/test/com/ppvaz/fnafcompanion/CompanionStatusTest.java'],
   'cue-helper-control-v1': ['tools/cue/test-cue.py'],
   'fact-message-v1': ['packages/core/test/fixtures/fact-message-v1.jsonl'],
   'hid-executor-v1': ['packages/adapters/test/conformance.test.js', 'apps/device/test/adb-device-local-executor.test.js'],

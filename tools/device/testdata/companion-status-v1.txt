@@ -1,0 +1,30 @@
+# companion-status-v1 contract vectors.
+#
+# Each case is a `line:` the Companion's writer (CompanionStatus.java) emits
+# for the inputs CompanionStatusTest.java gives it, and an `expect:` of what
+# the host parser (packages/adapters/src/transports/companion-status.js)
+# decodes from that line. Both sides read this file, so a writer change that
+# the reader does not follow -- or the reverse -- fails a test on the side
+# that drifted. snapshotNs is a string in `expect` because JSON has no bigint.
+#
+# Endpoint vectors (`endpoint:` + `endpoint-expect:`) hold the handshake file
+# (companion-endpoint-v1) as one line with `\n` separators.
+
+case: idle
+line: schema=companion-status-v1 app=0.2.0 code=16 session=0 capture=OFF captureReason=not-started content=UNKNOWN visible=UNKNOWN frames=0 frameAgeMs=UNKNOWN fps=UNKNOWN target=NONE game=NONE targetBuild=NONE legacy=OFF regions=0 regionSamples=0 regionFrames=0 lesson=NONE lessonState=OFF panel=NONE clearance=UNCHECKED overlayPermission=DENIED lease=NONE battery=UNKNOWN charging=UNKNOWN thermal=UNKNOWN foreground=OTHER snapshotNs=1000 wallMs=1790000000000
+expect: {"app":"0.2.0","code":16,"session":0,"capture":"OFF","captureReason":"not-started","content":null,"visible":null,"frames":0,"frameAgeMs":null,"fps":null,"target":null,"game":null,"targetBuild":null,"legacy":null,"regions":0,"regionSamples":0,"regionFrames":0,"lesson":null,"lessonState":"OFF","panel":null,"clearance":{"state":"UNCHECKED"},"overlayPermission":false,"lease":null,"battery":null,"charging":null,"thermal":null,"foreground":"OTHER","snapshotNs":"1000","wallMs":1790000000000}
+
+case: fnaf4-teach
+line: schema=companion-status-v1 app=0.2.0 code=16 session=3 capture=ON captureReason=none content=2400x1080 visible=1 frames=18234 frameAgeMs=12 fps=59.8 target=com.scottgames.fnaf4 game=fnaf4 targetBuild=11:2.0.4 legacy=OFF regions=9 regionSamples=3120 regionFrames=18230 lesson=f4 lessonState=ATTACHED panel=440,8,1960,188 clearance=OK:37px overlayPermission=GRANTED lease=fnaf4-run:n5a battery=64 charging=1 thermal=NONE foreground=OTHER snapshotNs=123456789012 wallMs=1790000000123
+expect: {"app":"0.2.0","code":16,"session":3,"capture":"ON","captureReason":"none","content":{"width":2400,"height":1080},"visible":true,"frames":18234,"frameAgeMs":12,"fps":59.8,"target":"com.scottgames.fnaf4","game":"fnaf4","targetBuild":"11:2.0.4","legacy":null,"regions":9,"regionSamples":3120,"regionFrames":18230,"lesson":"f4","lessonState":"ATTACHED","panel":{"left":440,"top":8,"right":1960,"bottom":188},"clearance":{"state":"OK","gapPx":37},"overlayPermission":true,"lease":"fnaf4-run:n5a","battery":64,"charging":true,"thermal":"NONE","foreground":"OTHER","snapshotNs":"123456789012","wallMs":1790000000123}
+
+case: fnaf2-legacy
+line: schema=companion-status-v1 app=0.2.0 code=16 session=7 capture=ON captureReason=none content=2400x1080 visible=0 frames=42 frameAgeMs=250 fps=0.0 target=com.scottgames.fnaf2 game=fnaf2 targetBuild=26:2.0.7 legacy=fnaf2 regions=0 regionSamples=0 regionFrames=0 lesson=f2 lessonState=RUNNING/k3-night7 panel=10,310,590,410 clearance=VIOLATION:left_door overlayPermission=GRANTED lease=NONE battery=100 charging=0 thermal=MODERATE foreground=COMPANION snapshotNs=5 wallMs=6
+expect: {"app":"0.2.0","code":16,"session":7,"capture":"ON","captureReason":"none","content":{"width":2400,"height":1080},"visible":false,"frames":42,"frameAgeMs":250,"fps":0,"target":"com.scottgames.fnaf2","game":"fnaf2","targetBuild":"26:2.0.7","legacy":"fnaf2","regions":0,"regionSamples":0,"regionFrames":0,"lesson":"f2","lessonState":"RUNNING/k3-night7","panel":{"left":10,"top":310,"right":590,"bottom":410},"clearance":{"state":"VIOLATION","region":"left_door"},"overlayPermission":true,"lease":null,"battery":100,"charging":false,"thermal":"MODERATE","foreground":"COMPANION","snapshotNs":"5","wallMs":6}
+
+case: hostile-values
+line: schema=companion-status-v1 app=UNKNOWN code=16 session=1 capture=ON captureReason=UNKNOWN content=UNKNOWN visible=UNKNOWN frames=1 frameAgeMs=UNKNOWN fps=UNKNOWN target=NONE game=NONE targetBuild=NOT_INSTALLED legacy=OFF regions=0 regionSamples=0 regionFrames=0 lesson=NONE lessonState=OFF panel=NONE clearance=UNCHECKED overlayPermission=DENIED lease=NONE battery=UNKNOWN charging=UNKNOWN thermal=UNKNOWN foreground=OTHER snapshotNs=9 wallMs=10
+expect: {"app":null,"code":16,"session":1,"capture":"ON","captureReason":null,"content":null,"visible":null,"frames":1,"frameAgeMs":null,"fps":null,"target":null,"game":null,"targetBuild":"NOT_INSTALLED","legacy":null,"regions":0,"regionSamples":0,"regionFrames":0,"lesson":null,"lessonState":"OFF","panel":null,"clearance":{"state":"UNCHECKED"},"overlayPermission":false,"lease":null,"battery":null,"charging":null,"thermal":null,"foreground":"OTHER","snapshotNs":"9","wallMs":10}
+
+endpoint: schema=companion-endpoint-v1\napp=0.2.0\ncode=16\nsession=3\npid=7007\nport=49707\nsocket=com.fnaf2.cuehelper.control.3\ntoken=0123456789abcdef0123456789abcdef\n
+endpoint-expect: {"schema":"companion-endpoint-v1","app":"0.2.0","code":16,"session":3,"pid":7007,"port":49707,"socket":"com.fnaf2.cuehelper.control.3","token":"0123456789abcdef0123456789abcdef"}

@@ -57,8 +57,8 @@ mkdir -p "$CLASSES_DIR" "$DEX_DIR"
     --auto-add-overlay \
     --min-sdk-version 29 \
     --target-sdk-version 36 \
-    --version-code 15 \
-    --version-name 0.1.14 \
+    --version-code 16 \
+    --version-name 0.2.0 \
     -o "$BUILD_DIR/base-unsigned.apk"
 
 "$JAVAC" \
@@ -75,6 +75,8 @@ mkdir -p "$CLASSES_DIR" "$DEX_DIR"
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/AccessibilityGameProbeReceiver.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/AccessibilityProbeService.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/NativeFrame.java" \
+    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/Targets.java" \
+    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/CompanionStatus.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/PixelWatch.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/Fnaf2Legacy.java" \
     "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/NativeRegions.java" \

@@ -105,6 +105,12 @@
       "validator": "validateClaimEvidence"
     },
     {
+      "id": "companion-status-v1",
+      "owner": "android/companion",
+      "kind": "wire",
+      "validator": "parseCompanionStatus"
+    },
+    {
       "id": "cue-helper-control-v1",
       "owner": "android/companion",
       "kind": "wire",

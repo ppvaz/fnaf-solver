@@ -297,7 +297,7 @@ export async function createCampaignPorts(options = {}) {
     throw new TypeError('modern campaign ports require a HID + MediaProjection profile');
   const bridge = new AdbDeviceBridge({ serial, adb });
   if (!captureRestarted) {
-    const restarted = await bridge.restartCueHelperCapture({ screen: 'menu' });
+    const restarted = await bridge.restartCueHelperCapture({ target: 'fnaf2', screen: 'menu' });
     if (restarted.status !== 'READY')
       throw new Error(`Cue Helper capture restart failed: ${restarted.output ?? restarted.status}`);
   }
@@ -334,6 +334,12 @@ export async function createCampaignPorts(options = {}) {
   // validated semantic bundle and the authenticated Cue Helper read port.
   const cuePort = new AdbCueHelperPort({ serial, adb });
   let cueEndpoint = cuePort.discover();
+  // The FNaF 2 legacy readers (FRAME, READ, TRACE, the onset latch) run only
+  // while the Companion's target is retail FNaF 2; name it, and show the
+  // phone who holds the lease. A pre-0.2.0 helper answers unknown-verb, which
+  // changes nothing this lane reads.
+  onEvent({ type: 'companion.announce', ...(await cuePort.announce({ target: 'fnaf2',
+    lease: `fnaf2-campaign:${process.pid}` })) });
   const cueTransport = new CueHelperControlTransport({
     request: line => cuePort.request(line), token: cueEndpoint.token,
   });
@@ -949,7 +955,7 @@ export async function createCampaignPorts(options = {}) {
         throw new Error(`game restart failed at ${restarted.stage}: ${restarted.detail ?? 'unknown error'}`);
       const state = await waitFor(bridge, serial, value => value === 'title', 30000,
         'post-abort game restart');
-      const capture = await bridge.restartCueHelperCapture({ screen: 'menu' });
+      const capture = await bridge.restartCueHelperCapture({ target: 'fnaf2', screen: 'menu' });
       if (capture.status !== 'READY')
         throw new Error(`Cue Helper capture restart failed: ${capture.output ?? capture.status}`);
       const endpoint = refreshCueEndpoint();

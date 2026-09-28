@@ -141,9 +141,12 @@ public final class Fnaf2Legacy {
      * Capture thread, full detector pass over one frame. {@code teachShown}
      * withholds the one reader that cannot avoid the FNaF 2 teach panel (the
      * native lifecycle labels): identity falls back to the grid alone.
+     * {@code companionForeground} is the system's own fact that the
+     * Companion's activity is on screen: the frame is the helper, whatever its
+     * colours would make a grid rule say.
      */
     public void onFrame(NativeFrame frame, long frameImageNs, long callbackNs,
-            long elapsedNs, boolean teachShown) {
+            long elapsedNs, boolean teachShown, boolean companionForeground) {
         boolean nativeSize = frame.width() == NativeFrame.WIDTH
                 && frame.height() == NativeFrame.HEIGHT;
         synchronized (lock) {
@@ -151,7 +154,8 @@ public final class Fnaf2Legacy {
             imageNs = frameImageNs;
             boolean complete = sampleGrid(frame, grid);
             gridValid = complete;
-            identity = !complete ? ScreenIdentity.UNKNOWN
+            identity = companionForeground ? ScreenIdentity.CUE_HELPER
+                    : !complete ? ScreenIdentity.UNKNOWN
                     : teachShown ? ScreenIdentity.classify(grid)
                     : ScreenIdentity.classify(frame, grid);
             if (nativeSize) {

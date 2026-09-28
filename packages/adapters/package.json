@@ -10,6 +10,7 @@
     ".": "./src/index.js",
     "./transports/hid": "./src/transports/hid.js",
     "./transports/cue-helper": "./src/transports/cue-helper.js",
-    "./night-onset": "./src/night-onset.js"
+    "./night-onset": "./src/night-onset.js",
+    "./transports/companion-status": "./src/transports/companion-status.js"
   }
 }

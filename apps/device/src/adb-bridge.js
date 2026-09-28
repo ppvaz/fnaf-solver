@@ -149,7 +149,7 @@ export class AdbDeviceBridge {
       if (restartCapture) {
         let restarted;
         try {
-          restarted = await this.restartCueHelperCapture({ serial });
+          restarted = await this.restartCueHelperCapture({ serial, target: 'fnaf2' });
         } catch (error) {
           restarted = { status: 'FAIL', detail: error.message };
         }
@@ -169,8 +169,12 @@ export class AdbDeviceBridge {
     return { schema: PRELIGHT_SCHEMA, version: 1, status: readyStatus(checks), serial, checks };
   }
 
-  async restartCueHelperCapture({ serial = this.serial, screen = 'menu', waitSeconds = 30 } = {}) {
-    return this.captureRestart({ serial, adb: this.adb, screen, waitSeconds });
+  /**
+   * This bridge is the FNaF 2 campaign's (GAME_PACKAGE), so it names FNaF 2
+   * explicitly; setup itself has no default game.
+   */
+  async restartCueHelperCapture({ serial = this.serial, target = 'fnaf2', screen = 'menu', waitSeconds = 30 } = {}) {
+    return this.captureRestart({ serial, adb: this.adb, target, screen, waitSeconds });
   }
 
   async capturePng(serial) {

@@ -22,19 +22,23 @@ async function runSetup(file, args, options) {
   }
 }
 
-/** @param {{serial?: string, adb?: string, screen?: string, waitSeconds?: number,
+/** @param {{serial?: string, adb?: string, target?: string, screen?: string, waitSeconds?: number,
  * run?: (file: any, args: any, options: any) => Promise<{exitCode: any, stdout: any, stderr: any}>}} options
  *
- * Stop any current helper projection and drive a fresh named consent flow.
- * `screen` is checked after the helper has been restarted so callers receive
- * the game focused again, with a live control endpoint before they continue.
+ * Stop any current helper projection and drive a fresh named consent flow for
+ * the NAMED target (a game key from tools/device/models/companion-targets-v1.json).
+ * There is no default game: setup returns to the target it is told, and
+ * `screen` is checked there, so callers receive that game focused again with
+ * a live control endpoint before they continue.
  */
-export async function restartCueHelperCapture({ serial, adb = 'adb', screen = 'menu',
+export async function restartCueHelperCapture({ serial, adb = 'adb', target, screen = 'menu',
   waitSeconds = 30, run = runSetup } = {}) {
   if (typeof serial !== 'string' || serial.length === 0)
     throw new TypeError('Cue Helper capture restart requires an ADB serial');
   if (typeof adb !== 'string' || adb.length === 0)
     throw new TypeError('Cue Helper capture restart requires an ADB executable');
+  if (typeof target !== 'string' || !/^fnaf[1-4](?:-rebuild)?$/.test(target))
+    throw new TypeError('Cue Helper capture restart needs an explicit target game (fnaf1..fnaf4 or fnafN-rebuild)');
   if (screen !== 'menu' && screen !== 'night')
     throw new TypeError('Cue Helper capture restart screen must be menu or night');
   if (!Number.isInteger(waitSeconds) || waitSeconds < 1 || waitSeconds > 300)
@@ -42,7 +46,7 @@ export async function restartCueHelperCapture({ serial, adb = 'adb', screen = 'm
   if (typeof run !== 'function') throw new TypeError('Cue Helper capture restart needs a runner');
 
   const result = await run(SETUP,
-    ['--restart-capture', '--screen', screen, '--wait', String(waitSeconds)], {
+    ['--restart-capture', '--target', target, '--screen', screen, '--wait', String(waitSeconds)], {
       cwd: ROOT, shell: false,
       env: { ...process.env, ANDROID_SERIAL: serial, ADB_BIN: adb },
       timeout: Math.max(120000, (waitSeconds + 120) * 1000),

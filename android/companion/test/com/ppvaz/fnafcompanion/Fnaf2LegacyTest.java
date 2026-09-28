@@ -57,7 +57,7 @@ public final class Fnaf2LegacyTest {
         // A night held for more than 500 ms latches its first frame.
         long first = 10 * SECOND;
         for (int i = 0; i < 40; i++) {
-            legacy.onFrame(office, first + i * 16_666_667L, first + i * 16_666_667L, 0L, false);
+            legacy.onFrame(office, first + i * 16_666_667L, first + i * 16_666_667L, 0L, false, false);
         }
         long last = first + 39 * 16_666_667L;
         check("the office frame is a FNaF 2 night", legacy.identity() == ScreenIdentity.FNAF2_NIGHT);
@@ -105,7 +105,7 @@ public final class Fnaf2LegacyTest {
                 .startsWith("ERROR watch-native-resolution-required"));
         check("the watch loads", legacy.watchCommand(legacy.watchSpec().sha256(), true)
                 .equals("OK watch=ACTIVE spec=" + legacy.watchSpec().sha256() + " entries=12"));
-        legacy.onFrame(office, last + 16_666_667L, last + 16_666_667L, 0L, false);
+        legacy.onFrame(office, last + 16_666_667L, last + 16_666_667L, 0L, false, false);
         String read = legacy.readLine(last + 20_000_000L, null);
         check("READ is observed", read.startsWith("OK read=OBSERVED"));
         check("READ carries the lit camera", "194".equals(field(read, "cam07_button"))
@@ -150,6 +150,12 @@ public final class Fnaf2LegacyTest {
         String[] missing = lines.get(5).split("\t");
         check("a plane-less frame is kept with UNKNOWN values",
                 Integer.toString(Integer.MIN_VALUE).equals(missing[7]) && "0".equals(missing[6]));
+
+        // The Companion's own activity on screen is the helper, never a game
+        // label, whatever the frame's colours.
+        legacy.onFrame(office, traceStart + SECOND, traceStart + SECOND, 0L, false, true);
+        check("the Companion in front reads CUE_HELPER",
+                legacy.identity() == ScreenIdentity.CUE_HELPER);
 
         legacy.reset();
         check("reset clears the onset", legacy.onsetNs() == NightOnsetLatch.NOT_LATCHED);

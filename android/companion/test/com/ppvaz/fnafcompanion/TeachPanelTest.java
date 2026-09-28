@@ -168,10 +168,10 @@ public final class TeachPanelTest {
         check("the legacy watch loads", legacy.watchCommand(legacy.watchSpec().sha256(), true)
                 .startsWith("OK watch=ACTIVE"));
         clear("Fnaf2Legacy full pass while the panel may show",
-                frame -> legacy.onFrame(frame, 1L, 1L, 1L, true));
+                frame -> legacy.onFrame(frame, 1L, 1L, 1L, true, false));
         clear("Fnaf2Legacy trace pass", frame -> legacy.onTraceFrame(frame, 1L, 1L, 1L));
         withheld("Fnaf2Legacy full pass with the panel hidden",
-                frame -> legacy.onFrame(frame, 1L, 1L, 1L, false));
+                frame -> legacy.onFrame(frame, 1L, 1L, 1L, false, false));
 
         // Identity is grid-first. On a frame the grid already calls a night --
         // the only frames the panel is drawn over -- the native frame is never

@@ -155,4 +155,35 @@ MOCK_LOGCAT_ROTATED=1 MOCK_UNAUTHORIZED=1 PATH="$TEMP_DIR/bin:$PATH" \
 grep -q 'stashed cue helper endpoint is stale' "$rotated_err" || {
   echo "a rejected stashed token must be reported as stale: $(cat "$rotated_err")" >&2; exit 1; }
 
+# The versioned status is game-agnostic: no focus guard, both transports.
+for transport in loopback forward; do
+  status_line="$(CUE_HELPER_TRANSPORT="$transport" PATH="$TEMP_DIR/bin:$PATH" \
+    "$HERE/query-cue-helper.sh" status)"
+  case "$status_line" in
+    'OK schema=companion-status-v1 app=0.2.0 code=16 session=3 capture=ON '*"target=com.scottgames.fnaf2 game=fnaf2"*) ;;
+    *) echo "unexpected $transport status: $status_line" >&2; exit 1 ;;
+  esac
+done
+named="$(PATH="$TEMP_DIR/bin:$PATH" "$HERE/query-cue-helper.sh" target com.scottgames.fnaf4)"
+case "$named" in 'OK target=com.scottgames.fnaf4 game=fnaf4 legacy=OFF') ;; *) echo "target naming failed: $named" >&2; exit 1 ;; esac
+leased="$(PATH="$TEMP_DIR/bin:$PATH" "$HERE/query-cue-helper.sh" lease fnaf4-run:n5a)"
+case "$leased" in 'OK lease=fnaf4-run:n5a') ;; *) echo "lease labelling failed: $leased" >&2; exit 1 ;; esac
+if PATH="$TEMP_DIR/bin:$PATH" "$HERE/query-cue-helper.sh" lease 'bad label' >/dev/null 2>&1; then
+  echo "a lease label with a space must refuse" >&2; exit 1
+fi
+
+# The handshake file is the endpoint source when it names the running pid,
+# even with no logcat announcement left; a file from another pid is ignored.
+rm -f "$CUE_HELPER_ENDPOINT_STASH"
+from_file="$(MOCK_ENDPOINT_FILE=1 MOCK_LOGCAT_ROTATED=1 PATH="$TEMP_DIR/bin:$PATH" \
+  "$HERE/query-cue-helper.sh" status 2>"$rotated_err")" || {
+  echo "the endpoint file must stand in for a rotated logcat line: $(cat "$rotated_err")" >&2; exit 1; }
+case "$from_file" in 'OK schema=companion-status-v1 '*) ;; *) echo "endpoint-file status: $from_file" >&2; exit 1 ;; esac
+if grep -q 'stashed' "$rotated_err"; then echo "the endpoint file must win over the stash" >&2; exit 1; fi
+rm -f "$CUE_HELPER_ENDPOINT_STASH"
+if MOCK_ENDPOINT_FILE=1 MOCK_ENDPOINT_PID=4242 MOCK_LOGCAT_ROTATED=1 PATH="$TEMP_DIR/bin:$PATH" \
+    "$HERE/query-cue-helper.sh" status >/dev/null 2>&1; then
+  echo "an endpoint file from another pid must not be used" >&2; exit 1
+fi
+
 echo "cue-helper query tests passed"

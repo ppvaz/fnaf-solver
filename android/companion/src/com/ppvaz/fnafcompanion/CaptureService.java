@@ -6,7 +6,11 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
 import android.graphics.Bitmap;
 import android.graphics.PixelFormat;
@@ -19,13 +23,16 @@ import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.net.LocalServerSocket;
 import android.net.LocalSocket;
+import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.PowerManager;
 import android.os.Process;
 import android.os.SystemClock;
+import android.provider.Settings;
 import android.util.Log;
 
 import java.io.File;
@@ -54,7 +61,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * rectangles' raw native pixels, every frame; {@link NativeRegions}) and
  * {@code SNAP} (one whole native frame on request). The rule that decides lives
  * on the host, over those pixels. The FNaF 2 night lane's remaining on-device
- * readers are quarantined in {@link Fnaf2Legacy}.</p>
+ * readers are quarantined in {@link Fnaf2Legacy} and run only while the target
+ * is retail FNaF 2.</p>
+ *
+ * <p>The target is always named: by the host's setup (through the activity's
+ * {@code target} extra), by {@code TARGET <token> <package>}, or by the
+ * operator's picker. {@code STATUS <token>} answers the versioned
+ * {@link CompanionStatus} line; the endpoint is handed to hosts in
+ * {@code files/companion-endpoint.properties}.</p>
  */
 public final class CaptureService extends Service {
     public static final String ACTION_START =
@@ -65,11 +79,22 @@ public final class CaptureService extends Service {
             "com.fnaf2.cuehelper.action.STOP";
     public static final String ACTION_STATUS =
             "com.fnaf2.cuehelper.action.STATUS";
+    public static final String ACTION_SET_TARGET =
+            "com.ppvaz.fnafcompanion.action.SET_TARGET";
     public static final String EXTRA_RESULT_CODE = "resultCode";
     public static final String EXTRA_RESULT_DATA = "resultData";
     public static final String EXTRA_CAPTURE_WIDTH = "captureWidth";
     public static final String EXTRA_CAPTURE_HEIGHT = "captureHeight";
     public static final String EXTRA_STATUS = "status";
+    /** The versioned {@link CompanionStatus} line, beside the legacy multi-line status. */
+    public static final String EXTRA_COMPANION_STATUS = "companionStatus";
+    /** A target package or game key (ACTION_SET_TARGET, and the activity's launch intent). */
+    public static final String EXTRA_TARGET = "target";
+    public static final String PREFS = "companion";
+    public static final String PREF_TARGET = "target";
+
+    /** Whether the Companion's own activity is resumed (set by MainActivity). */
+    static volatile boolean companionForeground;
 
     private static final String TAG = "FnafCueHelper";
     private static final String NOTIFICATION_CHANNEL = "capture";
@@ -139,6 +164,16 @@ public final class CaptureService extends Service {
     private final Fnaf2Legacy legacy = new Fnaf2Legacy(IMAGE_READER_MAX_IMAGES);
     private final Object lessonLock = new Object();
     private CycleLesson.Builder pendingLesson;
+    // The named target (null: none named) and the host lease's label.
+    private volatile Targets.Target target;
+    private volatile String leaseLabel;
+    private volatile String captureReason = "not-started";
+    // Frame accounting for the status line, written by the capture thread.
+    private volatile long framesProcessed;
+    private volatile long lastImageNs;
+    private volatile double lastFps = -1;
+    private long framesAtLastReport;
+    private long lastFpsReportNs;
 
     @Override
     public void onCreate() {
@@ -151,6 +186,48 @@ public final class CaptureService extends Service {
                 NotificationManager.IMPORTANCE_LOW);
         channel.setDescription("Active on-device native frame capture");
         getSystemService(NotificationManager.class).createNotificationChannel(channel);
+        target = Targets.byPackage(getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .getString(PREF_TARGET, null));
+    }
+
+    /**
+     * Name the target, or clear it with null. Refused while a FNaF 2 frame
+     * trace is running: the trace belongs to the legacy readers the target
+     * enables. Returns null, or the refusal.
+     */
+    private String setTarget(String name) {
+        Targets.Target next = null;
+        if (name != null && !"clear".equals(name) && !"NONE".equals(name)) {
+            next = Targets.resolve(name);
+            if (next == null) return "target-unknown";
+            if (installedBuild(next.packageName) == null) return "target-not-installed";
+        }
+        Targets.Target previous = target;
+        if (previous == next) return null;
+        if (legacy.traceActive()) return "target-busy-trace";
+        target = next;
+        getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+                .putString(PREF_TARGET, next == null ? null : next.packageName).apply();
+        // The legacy readers' onset and watch belong to one target.
+        legacy.reset();
+        publishCombinedStatus(projection == null ? "UNAVAILABLE" : "RUNNING");
+        return null;
+    }
+
+    /** {@code versionCode:versionName} of an installed package, or null. */
+    private String installedBuild(String packageName) {
+        try {
+            PackageInfo info = getPackageManager().getPackageInfo(packageName, 0);
+            return info.getLongVersionCode() + ":" + (info.versionName == null ? "" : info.versionName);
+        } catch (PackageManager.NameNotFoundException | RuntimeException absent) {
+            return null;
+        }
+    }
+
+    /** The FNaF 2 legacy readers run only for retail FNaF 2 at native size. */
+    private boolean legacyActive() {
+        Targets.Target current = target;
+        return current != null && current.fnaf2Legacy() && nativeCapture();
     }
 
     @Override
@@ -163,6 +240,12 @@ public final class CaptureService extends Service {
             return START_NOT_STICKY;
         }
         if (ACTION_QUERY_STATUS.equals(action)) {
+            publishCombinedStatus(projection == null ? "UNAVAILABLE" : "RUNNING");
+            return START_NOT_STICKY;
+        }
+        if (ACTION_SET_TARGET.equals(action)) {
+            String refused = setTarget(intent.getStringExtra(EXTRA_TARGET));
+            if (refused != null) Log.w(TAG, "target refused: " + refused);
             publishCombinedStatus(projection == null ? "UNAVAILABLE" : "RUNNING");
             return START_NOT_STICKY;
         }
@@ -179,6 +262,12 @@ public final class CaptureService extends Service {
 
         stopping.set(false);
         final long generation = ++sessionGeneration;
+        captureReason = "none";
+        framesProcessed = 0L;
+        framesAtLastReport = 0L;
+        lastFpsReportNs = 0L;
+        lastFps = -1;
+        lastImageNs = 0L;
 
         int resultCode = intent.getIntExtra(EXTRA_RESULT_CODE, Activity.RESULT_CANCELED);
         Intent resultData;
@@ -311,13 +400,16 @@ public final class CaptureService extends Service {
         Image image = null;
         // A frame trace drains the queue in order and keeps each Image
         // timestamp; normal observation asks for the newest frame.
-        boolean drainFrames = legacy.traceActive() && nativeCapture();
+        boolean legacyOn = legacyActive();
+        boolean drainFrames = legacyOn && legacy.traceActive();
         try {
             do {
                 image = drainFrames ? reader.acquireNextImage() : reader.acquireLatestImage();
                 if (image == null) return;
                 long imageNs = image.getTimestamp();
                 long callbackNs = System.nanoTime();
+                framesProcessed++;
+                lastImageNs = imageNs;
                 Image.Plane[] planes = image.getPlanes();
                 if (planes.length == 0) {
                     if (drainFrames) {
@@ -344,17 +436,18 @@ public final class CaptureService extends Service {
                     if (drainFrames) {
                         legacy.onTraceFrame(frameView, imageNs, callbackNs,
                                 SystemClock.elapsedRealtimeNanos());
-                    } else {
+                    } else if (legacyOn) {
                         // While the FNaF 2 teach panel may be on screen, the
                         // one reader that cannot avoid its rectangle is
                         // withheld (TeachPanelTest).
                         boolean teachShown = overlayController != null
                                 && overlayController.teachMayBeVisible(imageNs);
                         legacy.onFrame(frameView, imageNs, callbackNs,
-                                SystemClock.elapsedRealtimeNanos(), teachShown);
+                                SystemClock.elapsedRealtimeNanos(), teachShown,
+                                companionForeground);
                     }
                 }
-                if (overlayController != null && overlayController.teachRunning()) {
+                if (legacyOn && overlayController != null && overlayController.teachRunning()) {
                     overlayController.onTeachFrame(legacy.identity(), legacy.controlState());
                 }
                 if (callbackNs - lastVisualReportNs >= VISUAL_REPORT_INTERVAL_NS) {
@@ -365,7 +458,8 @@ public final class CaptureService extends Service {
                     image.close();
                     image = null;
                 }
-            } while (drainFrames && legacy.traceActive() && sessionActive(generation));
+            } while (drainFrames && legacy.traceActive() && legacyActive()
+                    && sessionActive(generation));
         } catch (Throwable error) {
             lastVisual = "visual=UNAVAILABLE(" + error.getClass().getSimpleName() + ")";
             Log.e(TAG, "visual frame failed", error);
@@ -377,6 +471,12 @@ public final class CaptureService extends Service {
 
     /** The once-a-second visual line of the combined status. */
     private void reportVisual(long imageNs, long callbackNs) {
+        long frames = framesProcessed;
+        if (lastFpsReportNs > 0L && callbackNs > lastFpsReportNs) {
+            lastFps = (frames - framesAtLastReport) * 1e9 / (callbackNs - lastFpsReportNs);
+        }
+        framesAtLastReport = frames;
+        lastFpsReportNs = callbackNs;
         long ageUs = imageNs > 0 ? (callbackNs - imageNs) / 1_000L : -1;
         if (ageUs < 0 || ageUs > 10_000_000L) ageUs = -1;
         String content = capturedContentWidth + "x" + capturedContentHeight
@@ -384,11 +484,11 @@ public final class CaptureService extends Service {
         String invalidReason = ageUs < 0 ? "timestamp-invalid"
                 : ageUs > Fnaf2Legacy.MAX_FRAME_AGE_US ? "frame-stale"
                 : capturedContentInvalidReason();
+        String screen = legacyActive() ? ScreenIdentity.label(legacy.identity()) : "UNKNOWN";
         lastVisual = invalidReason == null
-                ? "visual=OBSERVED seq=" + legacy.sequence() + " ageUs=" + ageUs
-                        + " content=" + content + " screen="
-                        + ScreenIdentity.label(legacy.identity())
-                : "visual=UNKNOWN seq=" + legacy.sequence() + " reason=" + invalidReason
+                ? "visual=OBSERVED seq=" + frames + " ageUs=" + ageUs
+                        + " content=" + content + " screen=" + screen
+                : "visual=UNKNOWN seq=" + frames + " reason=" + invalidReason
                         + " ageUs=" + ageUs + " content=" + content + " screen=UNKNOWN";
         publishCombinedStatus("RUNNING");
     }
@@ -460,12 +560,108 @@ public final class CaptureService extends Service {
         controlRunning = true;
         publishControlStatus();
         Log.i(TAG, lastControl);
+        writeEndpoint(generation);
 
         controlThread = new Thread(() -> controlLoop(generation, server), "cue-control");
         controlThread.start();
         localControlThread = new Thread(
                 () -> localControlLoop(generation, localServer), "cue-control-local");
         localControlThread.start();
+    }
+
+    /**
+     * Hand the endpoint to hosts through app-private storage (read with
+     * {@code run-as}), so a host never depends on a logcat line that a long
+     * night rotates out of the 256 KiB ring. Written atomically; removed when
+     * capture stops.
+     */
+    private void writeEndpoint(long generation) {
+        String app = appVersion()[0];
+        long code = Long.parseLong(appVersion()[1]);
+        String text = CompanionStatus.endpointProperties(app, code, generation,
+                Process.myPid(), CONTROL_PORT, controlSocketName, controlToken);
+        File target = new File(getFilesDir(), CompanionStatus.ENDPOINT_FILE);
+        File staged = new File(getFilesDir(), CompanionStatus.ENDPOINT_FILE + ".new");
+        try (FileOutputStream stream = new FileOutputStream(staged, false)) {
+            stream.write(text.getBytes(StandardCharsets.US_ASCII));
+        } catch (IOException error) {
+            Log.e(TAG, "endpoint file write failed", error);
+            return;
+        }
+        if (!staged.renameTo(target)) Log.e(TAG, "endpoint file rename failed");
+        Log.i(TAG, CompanionStatus.endpointLogLine(app, code, generation, Process.myPid(),
+                CONTROL_PORT, controlSocketName, controlToken));
+    }
+
+    private void deleteEndpoint() {
+        File file = new File(getFilesDir(), CompanionStatus.ENDPOINT_FILE);
+        if (file.exists() && !file.delete()) Log.w(TAG, "endpoint file delete failed");
+    }
+
+    private String[] cachedVersion;
+
+    /** {versionName, versionCode} of this APK. */
+    private String[] appVersion() {
+        if (cachedVersion != null) return cachedVersion;
+        try {
+            PackageInfo info = getPackageManager().getPackageInfo(getPackageName(), 0);
+            cachedVersion = new String[] {info.versionName == null ? "UNKNOWN" : info.versionName,
+                    Long.toString(info.getLongVersionCode())};
+        } catch (PackageManager.NameNotFoundException | RuntimeException error) {
+            cachedVersion = new String[] {"UNKNOWN", "0"};
+        }
+        return cachedVersion;
+    }
+
+    /** The versioned status line (STATUS verb, broadcast and log). */
+    private String statusLine() {
+        CompanionStatus status = new CompanionStatus();
+        String[] version = appVersion();
+        status.put("app", version[0]).put("code", version[1]);
+        boolean capturing = projection != null && !stopping.get();
+        status.put("session", capturing ? sessionGeneration : 0L)
+                .put("capture", capturing ? "ON" : "OFF")
+                .put("captureReason", captureReason);
+        int width = capturedContentWidth;
+        int height = capturedContentHeight;
+        status.put("content", capturing && width > 0 && height > 0 ? width + "x" + height : "UNKNOWN")
+                .put("visible", capturedContentVisibility < 0 ? "UNKNOWN"
+                        : Integer.toString(capturedContentVisibility));
+        long imageNs = lastImageNs;
+        long nowNs = System.nanoTime();
+        status.put("frames", framesProcessed)
+                .put("frameAgeMs", capturing && imageNs > 0L && nowNs >= imageNs
+                        ? Long.toString((nowNs - imageNs) / 1_000_000L) : "UNKNOWN")
+                .put("fps", capturing && lastFps >= 0
+                        ? String.format(java.util.Locale.US, "%.1f", lastFps) : "UNKNOWN");
+        Targets.Target current = target;
+        String build = current == null ? null : installedBuild(current.packageName);
+        status.put("target", current == null ? "NONE" : current.packageName)
+                .put("game", current == null ? "NONE" : current.game)
+                .put("targetBuild", current == null ? "NONE" : build == null ? "NOT_INSTALLED" : build)
+                .put("legacy", legacyActive() ? "fnaf2" : "OFF")
+                .put("regions", nativeRegions.size())
+                .put("regionSamples", nativeRegions.samples())
+                .put("regionFrames", nativeRegions.captured());
+        String[] lesson = overlayController == null
+                ? new String[] {"NONE", "OFF", "NONE"} : overlayController.lessonStatus();
+        status.put("lesson", lesson[0]).put("lessonState", lesson[1]).put("panel", lesson[2])
+                .put("clearance", "UNCHECKED")
+                .put("overlayPermission", Settings.canDrawOverlays(this) ? "GRANTED" : "DENIED");
+        String lease = leaseLabel;
+        status.put("lease", lease == null ? "NONE" : lease);
+        BatteryManager battery = getSystemService(BatteryManager.class);
+        int percent = battery == null ? -1
+                : battery.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+        status.put("battery", percent >= 0 && percent <= 100 ? Integer.toString(percent) : "UNKNOWN")
+                .put("charging", battery == null ? "UNKNOWN" : battery.isCharging() ? "1" : "0");
+        PowerManager power = getSystemService(PowerManager.class);
+        status.put("thermal", power == null ? "UNKNOWN"
+                : CompanionStatus.thermalWord(power.getCurrentThermalStatus()));
+        status.put("foreground", companionForeground ? "COMPANION" : "OTHER")
+                .put("snapshotNs", nowNs)
+                .put("wallMs", System.currentTimeMillis());
+        return status.line();
     }
 
     private LocalServerSocket openLocalControlServer(String socketName) throws IOException {
@@ -596,6 +792,64 @@ public final class CaptureService extends Service {
 
     private String dispatchControl(String[] field) {
         switch (field[0]) {
+            case "STATUS":
+                return field.length == 2 ? "OK " + statusLine() : "ERROR status-usage";
+            case "TARGET": {
+                if (field.length == 2) {
+                    Targets.Target current = target;
+                    return "OK target=" + (current == null ? "NONE" : current.packageName)
+                            + " game=" + (current == null ? "NONE" : current.game)
+                            + " legacy=" + (legacyActive() ? "fnaf2" : "OFF");
+                }
+                if (field.length != 3) return "ERROR target-usage";
+                String refused = setTarget(field[2]);
+                if (refused != null) return "ERROR " + refused;
+                Targets.Target current = target;
+                return "OK target=" + (current == null ? "NONE" : current.packageName)
+                        + " game=" + (current == null ? "NONE" : current.game)
+                        + " legacy=" + (legacyActive() ? "fnaf2" : "OFF");
+            }
+            case "LEASE":
+                if (field.length != 3) return "ERROR lease-usage";
+                if ("clear".equals(field[2])) {
+                    leaseLabel = null;
+                } else if (field[2].matches("[A-Za-z0-9._:@-]{1,48}")) {
+                    leaseLabel = field[2];
+                } else {
+                    return "ERROR lease-label";
+                }
+                publishCombinedStatus(projection == null ? "UNAVAILABLE" : "RUNNING");
+                return "OK lease=" + (leaseLabel == null ? "NONE" : leaseLabel);
+            case "GET":
+            case "FRAME":
+            case "WATCH":
+            case "READ":
+            case "TRACE":
+                if (!legacyActive() && !(field[0].equals("TRACE") && field.length == 3
+                        && !"start".equals(field[2]))) {
+                    Targets.Target current = target;
+                    return "ERROR legacy-inactive target="
+                            + (current == null ? "NONE" : current.packageName);
+                }
+                return dispatchLegacy(field);
+            case "REGION":
+                return regionControl(field);
+            case "SNAP":
+                return snapControl(field);
+            case "OVERLAY":
+                if (field.length != 2) return "ERROR overlay-usage";
+                return "OK " + (overlayController == null
+                        ? "overlay=UNAVAILABLE" : overlayController.status());
+            case "LESSON":
+                return dispatchLesson(field);
+            default:
+                return "ERROR unknown-verb";
+        }
+    }
+
+    /** The FNaF 2 legacy verbs; reached only while the legacy readers run. */
+    private String dispatchLegacy(String[] field) {
+        switch (field[0]) {
             case "GET":
                 // The game seeds its RNG from System.currentTimeMillis() at
                 // scene load; the wall clock beside the monotonic one lets the
@@ -621,16 +875,6 @@ public final class CaptureService extends Service {
                         : "ERROR read-usage";
             case "TRACE":
                 return traceControl(field);
-            case "REGION":
-                return regionControl(field);
-            case "SNAP":
-                return snapControl(field);
-            case "OVERLAY":
-                if (field.length != 2) return "ERROR overlay-usage";
-                return "OK " + (overlayController == null
-                        ? "overlay=UNAVAILABLE" : overlayController.status());
-            case "LESSON":
-                return dispatchLesson(field);
             default:
                 return "ERROR unknown-verb";
         }
@@ -835,11 +1079,19 @@ public final class CaptureService extends Service {
                         : overlayController.status()));
     }
 
+    /**
+     * Broadcast and log both the legacy multi-line status (whose control line
+     * is the logcat fallback for endpoint discovery) and the versioned
+     * {@link CompanionStatus} line.
+     */
     private void publishStatus(String status) {
+        String line = statusLine();
         Log.i(TAG, status.replace('\n', ' '));
+        Log.i(TAG, "STATUS " + line);
         Intent broadcast = new Intent(ACTION_STATUS)
                 .setPackage(getPackageName())
-                .putExtra(EXTRA_STATUS, status);
+                .putExtra(EXTRA_STATUS, status)
+                .putExtra(EXTRA_COMPANION_STATUS, line);
         sendBroadcast(broadcast);
     }
 
@@ -853,7 +1105,9 @@ public final class CaptureService extends Service {
             return;
         }
         ++sessionGeneration;
+        captureReason = reason;
         Log.w(TAG, "stopping capture: " + reason);
+        deleteEndpoint();
 
         if (overlayController != null) {
             overlayController.onCaptureStopped();

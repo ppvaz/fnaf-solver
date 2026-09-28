@@ -47,7 +47,6 @@ import android.widget.Toast;
 
 public final class MainActivity extends Activity {
     private static final int REQUEST_MEDIA_PROJECTION = 1002;
-    private static final String GAME_PACKAGE = "com.scottgames.fnaf2";
     private static final String TERMUX_PACKAGE = "com.termux";
     private static final String TERMUX_STORE_URI = "market://details?id=com.termux";
     private static final String TERMUX_STORE_URL =
@@ -161,6 +160,7 @@ public final class MainActivity extends Activity {
                     "Runner catalog unavailable: " + error.getMessage());
         }
         setContentView(buildUi());
+        applyTargetExtra(getIntent());
         refreshOverlayControls("overlay=" + (Settings.canDrawOverlays(this)
                 ? "READY" : "DISABLED(permission)"));
     }
@@ -193,6 +193,7 @@ public final class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        CaptureService.companionForeground = true;
         refreshRunnerReadiness();
         if (overlayEnableAfterSettings) {
             overlayEnableAfterSettings = false;
@@ -210,6 +211,38 @@ public final class MainActivity extends Activity {
             termuxBridge = null;
         }
         super.onDestroy();
+    }
+
+    @Override
+    protected void onPause() {
+        CaptureService.companionForeground = false;
+        super.onPause();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        applyTargetExtra(intent);
+    }
+
+    /**
+     * The host's setup names the target in the launch intent
+     * ({@code --es target <package|game>}); forward it to the service, which
+     * validates it against {@link Targets} and persists it.
+     */
+    private void applyTargetExtra(Intent intent) {
+        String named = intent == null ? null : intent.getStringExtra(CaptureService.EXTRA_TARGET);
+        if (named == null) return;
+        startService(new Intent(this, CaptureService.class)
+                .setAction(CaptureService.ACTION_SET_TARGET)
+                .putExtra(CaptureService.EXTRA_TARGET, named));
+    }
+
+    /** The named target, or null when none is named. */
+    private Targets.Target currentTarget() {
+        return Targets.byPackage(getSharedPreferences(CaptureService.PREFS, MODE_PRIVATE)
+                .getString(CaptureService.PREF_TARGET, null));
     }
 
     @Override
@@ -918,32 +951,32 @@ public final class MainActivity extends Activity {
         statusView.setText("STARTING: waiting for the first native frame");
     }
 
-    /**
-     * Display name of the configured target, read from the installed package.
-     *
-     * <p>The helper is calibrated for one game at a time, so the UI names the
-     * game {@link #GAME_PACKAGE} will actually launch instead of a hardcoded
-     * title. When the target is absent there is no label to read, so the
-     * package id is the only honest thing left to show.</p>
-     */
+    /** Display name of the named target, from the installed package when it can be read. */
     private String targetGameName() {
+        Targets.Target target = currentTarget();
+        if (target == null) return "the game";
         PackageManager packages = getPackageManager();
         try {
             return packages.getApplicationLabel(
-                    packages.getApplicationInfo(GAME_PACKAGE, 0)).toString();
+                    packages.getApplicationInfo(target.packageName, 0)).toString();
         } catch (PackageManager.NameNotFoundException absent) {
-            return GAME_PACKAGE;
+            return target.label;
         }
     }
 
+    /** Bring the named target to the front without restarting it. */
     private void openGame() {
-        Intent launch = getPackageManager().getLaunchIntentForPackage(GAME_PACKAGE);
-        if (launch == null) {
-            Toast.makeText(this, targetGameName() + " is not installed",
-                    Toast.LENGTH_LONG).show();
+        Targets.Target target = currentTarget();
+        if (target == null) {
+            Toast.makeText(this, "No target is named", Toast.LENGTH_LONG).show();
             return;
         }
-        launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        Intent launch = getPackageManager().getLaunchIntentForPackage(target.packageName);
+        if (launch == null) {
+            Toast.makeText(this, target.label + " is not installed", Toast.LENGTH_LONG).show();
+            return;
+        }
+        launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         startActivity(launch);
     }
 

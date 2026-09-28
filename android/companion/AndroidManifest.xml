@@ -8,11 +8,21 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <!-- Explicitly enabled by the user for the read-only HUD window. -->
+    <!-- Explicitly enabled by the user for the teach panels (non-interactive overlay windows). -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
+    <!-- Every target the Companion may name (Targets.java,
+         tools/device/models/companion-targets-v1.json), so it can read their
+         installed build and launch intent. -->
     <queries>
+        <package android:name="com.scottgames.fivenightsatfreddys" />
         <package android:name="com.scottgames.fnaf2" />
+        <package android:name="com.scottgames.fnaf3" />
+        <package android:name="com.scottgames.fnaf4" />
+        <package android:name="org.fnaf1rebuild.play" />
+        <package android:name="org.fnaf2rebuild.play" />
+        <package android:name="org.fnaf3rebuild.play" />
+        <package android:name="org.fnaf4rebuild.play" />
         <package android:name="com.termux" />
     </queries>
 

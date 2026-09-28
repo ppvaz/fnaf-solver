@@ -54,8 +54,22 @@ elif [ "${1:-}" = shell ] && [ "${2:-}" = sh ] && [ "${3:-}" = -s ]; then
     WATCH/*) echo 'OK watch=ACTIVE spec=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa entries=12' ;;
     READ/*|READ) echo 'OK read=OBSERVED spec=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa seq=122 snapshotNs=10000 ageUs=1200 cam01_button=0 cam02_button=0 cam03_button=0 cam04_button=0 cam05_button=194 cam06_button=0 cam07_button=0 cam08_button=0 cam09_button=0 cam10_button=0 cam11_button=0 cam12_button=0' ;;
     OVERLAY/*) echo 'OK overlay=READY teach=OFF f1=NONE f3=NONE f4=NONE' ;;
+    STATUS/*) echo 'OK schema=companion-status-v1 app=0.2.0 code=16 session=3 capture=ON captureReason=none content=2400x1080 visible=1 frames=18234 frameAgeMs=12 fps=59.8 target=com.scottgames.fnaf2 game=fnaf2 targetBuild=26:2.0.7 legacy=fnaf2 regions=0 regionSamples=0 regionFrames=0 lesson=NONE lessonState=OFF panel=NONE clearance=UNCHECKED overlayPermission=GRANTED lease=NONE battery=64 charging=1 thermal=NONE foreground=OTHER snapshotNs=9000 wallMs=1700000000000' ;;
+    TARGET/com.scottgames.fnaf4) echo 'OK target=com.scottgames.fnaf4 game=fnaf4 legacy=OFF' ;;
+    TARGET/*) echo 'OK target=com.scottgames.fnaf2 game=fnaf2 legacy=fnaf2' ;;
+    LEASE/*) echo "OK lease=${8:-NONE}" ;;
     *) echo 'ERROR unknown-verb' ;;
   esac
+elif [ "${1:-}" = exec-out ] && [ "${2:-}" = run-as ] && [ "${5:-}" = files/companion-endpoint.properties ]; then
+  # MOCK_ENDPOINT_FILE serves the Companion's handshake file (companion-endpoint-v1);
+  # MOCK_ENDPOINT_PID makes it belong to another process.
+  if [ "${MOCK_ENDPOINT_FILE:-0}" = 1 ]; then
+    printf 'schema=companion-endpoint-v1\napp=0.2.0\ncode=16\nsession=3\npid=%s\nport=49707\n' "${MOCK_ENDPOINT_PID:-7007}"
+    printf 'socket=com.fnaf2.cuehelper.control.3\ntoken=%s\n' "${MOCK_ENDPOINT_TOKEN:-0123456789abcdef0123456789abcdef}"
+  else
+    echo 'run-as: cat: files/companion-endpoint.properties: No such file or directory' >&2
+    exit 1
+  fi
 elif [ "${1:-}" = exec-out ] && [ "${2:-}" = run-as ]; then
   # 44-byte header plus a little payload, so the size guard is exercised.
   printf 'RIFF____WAVEfmt _________________________data____'

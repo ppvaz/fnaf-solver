@@ -119,6 +119,32 @@
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
+      "id": "contract.companion-status-v1",
+      "kind": "CONTRACT",
+      "path": "android/companion/test/com/ppvaz/fnafcompanion/CompanionStatusTest.java",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.companion-status-v1",
+      "kind": "CONTRACT",
+      "path": "packages/adapters/src/transports/companion-status.js",
+      "line": 13,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.companion-status-v1",
+      "kind": "CONTRACT",
+      "path": "packages/adapters/test/companion-status.test.js",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.companion-status-v1",
+      "kind": "CONTRACT",
+      "path": "packages/adapters/test/companion-status.test.js",
+      "line": 6,
+      "relation": "REFERENCES"
+    },
+    {
       "id": "contract.control-exclusion-v1",
       "kind": "CONTRACT",
       "path": "packages/adapters/src/control-exclusion.js",

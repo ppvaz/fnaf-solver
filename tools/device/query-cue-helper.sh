@@ -1,6 +1,9 @@
 #!/bin/bash
 # Talk to the cue helper's authenticated snapshot socket.
 #
+#   query-cue-helper.sh status                    the versioned status (companion-status-v1)
+#   query-cue-helper.sh target [PKG|GAME|clear]   read or name the Companion's target
+#   query-cue-helper.sh lease LABEL|clear         show a lease label on the phone
 #   query-cue-helper.sh [loopback|forward]        one FNaF 2 snapshot (default loopback)
 #   query-cue-helper.sh overlay                   authenticated teach-panel status
 #   query-cue-helper.sh latency [count]           time device-local snapshot reads
@@ -10,8 +13,14 @@
 #                                                    pull a device-local frame trace
 #
 # snapshot, watchlist, read and trace are the FNaF 2 legacy readers
-# (android/companion Fnaf2Legacy.java). The 20x9 `grid` render and the luma
-# `watch` log were retired with the discontinued sensors on 2026-09-27.
+# (android/companion Fnaf2Legacy.java); they answer only while the target is
+# retail FNaF 2. The 20x9 `grid` render and the luma `watch` log were retired
+# with the discontinued sensors on 2026-09-27.
+#
+# The endpoint comes from the Companion's handshake file
+# (files/companion-endpoint.properties, companion-endpoint-v1, read with
+# run-as); the logcat announcement and the per-pid stash are the fallbacks
+# for a helper older than 0.2.0.
 #
 # Transports:
 #   loopback  device-side nc to 127.0.0.1:PORT. The exchange happens entirely
@@ -33,6 +42,9 @@ VERB=snapshot
 TRANSPORT="${CUE_HELPER_TRANSPORT:-loopback}"
 case "${1:-}" in
   loopback|forward) TRANSPORT="$1" ;;
+  status) VERB=status; shift ;;
+  target) VERB=target; shift ;;
+  lease) VERB=lease; shift ;;
   record) VERB=record; shift ;;
   latency) VERB=latency; shift ;;
   log) VERB=log; shift ;;
@@ -48,7 +60,7 @@ case "${1:-}" in
   arm) VERB=arm; shift ;;
   result) VERB=result; shift ;;
   '') ;;
-  *) echo "usage: query-cue-helper.sh [loopback|forward|overlay|latency|watchlist|read|trace]" >&2; exit 2 ;;
+  *) echo "usage: query-cue-helper.sh [status|target|lease|loopback|forward|overlay|latency|watchlist|read|trace]" >&2; exit 2 ;;
 esac
 case "$VERB" in
   record|log|model|arm|result)
@@ -60,6 +72,22 @@ case "$TRANSPORT" in
   loopback|forward) ;;
   *) echo "unknown transport: $TRANSPORT (use loopback or forward)" >&2; exit 2 ;;
 esac
+
+if [ "$VERB" = target ]; then
+  TARGET_NAME="${1:-}"
+  case "$TARGET_NAME" in
+    ''|clear) ;;
+    *[!a-z0-9._-]*) echo "target must be a package, a game key, or clear" >&2; exit 2 ;;
+  esac
+fi
+
+if [ "$VERB" = lease ]; then
+  LEASE_LABEL="${1:?lease needs a label or clear}"
+  case "$LEASE_LABEL" in
+    *[!A-Za-z0-9._:@-]*) echo "lease label must be [A-Za-z0-9._:@-]" >&2; exit 2 ;;
+  esac
+  [ "${#LEASE_LABEL}" -le 48 ] || { echo "lease label must be at most 48 characters" >&2; exit 2; }
+fi
 
 if [ "$VERB" = latency ]; then
   COUNT="${1:-50}"
@@ -171,12 +199,22 @@ case "$VERB" in
     ;;
 esac
 
-control="$(adb logcat -d --pid="$pid" -v brief -s FnafCueHelper:I '*:S' 2>/dev/null | \
-  tr -d '\r' | awk '/control=(READY|DEGRADED)/ { line=$0 } END { print line }')"
-port="$(printf '%s\n' "$control" | sed -n 's/.*control=[A-Z][A-Z]* [a-z]*=[^ ]* port=\([^ ]*\).*/\1/p')"
-[ -n "$port" ] || port="$(printf '%s\n' "$control" | sed -n 's/.* port=\([^ ]*\).*/\1/p')"
-socket="$(printf '%s\n' "$control" | sed -n 's/.* socket=\([^ ]*\).*/\1/p')"
-token="$(printf '%s\n' "$control" | sed -n 's/.*token=\([0-9a-f][0-9a-f]*\).*/\1/p')"
+# The Companion's handshake file first: it belongs to one capture session
+# and cannot rotate out of a ring buffer. It must name the running pid.
+endpoint_file="$(adb exec-out run-as "$PACKAGE" cat files/companion-endpoint.properties 2>/dev/null | tr -d '\r' || true)"
+file_pid="$(printf '%s\n' "$endpoint_file" | sed -n 's/^pid=\([0-9][0-9]*\)$/\1/p')"
+if printf '%s\n' "$endpoint_file" | grep -qx 'schema=companion-endpoint-v1' && [ "$file_pid" = "$pid" ]; then
+  port="$(printf '%s\n' "$endpoint_file" | sed -n 's/^port=\([0-9][0-9]*\)$/\1/p')"
+  socket="$(printf '%s\n' "$endpoint_file" | sed -n 's/^socket=\([^ ]*\)$/\1/p')"
+  token="$(printf '%s\n' "$endpoint_file" | sed -n 's/^token=\([0-9a-f]*\)$/\1/p')"
+else
+  control="$(adb logcat -d --pid="$pid" -v brief -s FnafCueHelper:I '*:S' 2>/dev/null | \
+    tr -d '\r' | awk '/control=(READY|DEGRADED)/ { line=$0 } END { print line }')"
+  port="$(printf '%s\n' "$control" | sed -n 's/.*control=[A-Z][A-Z]* [a-z]*=[^ ]* port=\([^ ]*\).*/\1/p')"
+  [ -n "$port" ] || port="$(printf '%s\n' "$control" | sed -n 's/.* port=\([^ ]*\).*/\1/p')"
+  socket="$(printf '%s\n' "$control" | sed -n 's/.* socket=\([^ ]*\).*/\1/p')"
+  token="$(printf '%s\n' "$control" | sed -n 's/.*token=\([0-9a-f][0-9a-f]*\).*/\1/p')"
+fi
 
 # The endpoint is announced ONCE, as a logcat line, and this script used to
 # re-read it on every call. The handset's main log is a 256 KiB ring buffer, so
@@ -282,6 +320,31 @@ sys.stdout.write(b"".join(chunks).decode("ascii", "replace").strip())
 CLIENT
   fi
 }
+
+if [ "$VERB" = status ]; then
+  response="$(exchange "STATUS $token")"
+  printf '%s\n' "$response"
+  case "$response" in
+    'OK schema=companion-status-v1 '*) exit 0 ;;
+    *) echo "cue helper status query failed (a helper older than 0.2.0 has no STATUS)" >&2; exit 1 ;;
+  esac
+fi
+
+if [ "$VERB" = target ]; then
+  if [ -n "$TARGET_NAME" ]; then
+    response="$(exchange "TARGET $token $TARGET_NAME")"
+  else
+    response="$(exchange "TARGET $token")"
+  fi
+  printf '%s\n' "$response"
+  case "$response" in 'OK target='*) exit 0 ;; *) exit 1 ;; esac
+fi
+
+if [ "$VERB" = lease ]; then
+  response="$(exchange "LEASE $token $LEASE_LABEL")"
+  printf '%s\n' "$response"
+  case "$response" in 'OK lease='*) exit 0 ;; *) exit 1 ;; esac
+fi
 
 if [ "$VERB" = model ]; then
   response="$(exchange "MODEL $token $MODEL_ACTION")"

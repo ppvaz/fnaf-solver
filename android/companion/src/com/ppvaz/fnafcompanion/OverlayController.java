@@ -62,6 +62,41 @@ public final class OverlayController {
         windowManager = this.context.getSystemService(WindowManager.class);
     }
 
+    /**
+     * The lesson channel for the status line: the game whose lesson was last
+     * addressed, that lesson's state, and the rectangle of the attached panel.
+     */
+    public String[] lessonStatus() {
+        String game = lastLessonGame;
+        if ("f2".equals(game)) {
+            return new String[] {"f2", teachState.replace(':', '/'),
+                    teachAttached ? rect(TeachPanel.LEFT, TeachPanel.TOP, TeachPanel.RIGHT,
+                            TeachPanel.BOTTOM) : "NONE"};
+        }
+        if ("f1".equals(game)) {
+            return new String[] {"f1", f1View != null ? "ATTACHED" : "OFF",
+                    f1View != null ? rect(Fnaf1Lesson.LEFT, Fnaf1Lesson.TOP, Fnaf1Lesson.RIGHT,
+                            Fnaf1Lesson.BOTTOM) : "NONE"};
+        }
+        if ("f3".equals(game)) {
+            return new String[] {"f3", f3View != null ? "ATTACHED" : "OFF",
+                    f3View != null ? rect(Fnaf3Lesson.LEFT, Fnaf3Lesson.TOP, Fnaf3Lesson.RIGHT,
+                            Fnaf3Lesson.BOTTOM) : "NONE"};
+        }
+        if ("f4".equals(game)) {
+            return new String[] {"f4", f4View != null ? "ATTACHED" : "OFF",
+                    f4View != null ? rect(Fnaf4Lesson.LEFT, Fnaf4Lesson.TOP, Fnaf4Lesson.RIGHT,
+                            Fnaf4Lesson.BOTTOM) : "NONE"};
+        }
+        return new String[] {"NONE", "OFF", "NONE"};
+    }
+
+    private volatile String lastLessonGame = "NONE";
+
+    private static String rect(int left, int top, int right, int bottom) {
+        return left + "," + top + "," + right + "," + bottom;
+    }
+
     public String status() {
         return "overlay=" + (permissionGranted() ? "READY" : "DISABLED(permission)")
                 + " teach=" + teachState
@@ -95,6 +130,7 @@ public final class OverlayController {
         if (!debuggable()) return "ERROR teach-release-build";
         if (!permissionGranted()) return "ERROR teach-permission";
         // Synchronous, so an origin that follows the commit finds the lesson.
+        lastLessonGame = "f2";
         stopTeachNow("ARMED:" + lesson.id);
         teachLesson = lesson;
         mainHandler.post(this::emit);
@@ -132,6 +168,7 @@ public final class OverlayController {
         if (!debuggable()) return "ERROR teach-release-build";
         if (field.length <= from) return "ERROR f1-usage";
         String verb = field[from];
+        lastLessonGame = "f1";
         if ("clear".equals(verb)) {
             mainHandler.post(this::detachF1);
             f1Lesson = new Fnaf1Lesson();
@@ -174,6 +211,7 @@ public final class OverlayController {
         if (!debuggable()) return "ERROR teach-release-build";
         if (field.length <= from) return "ERROR f4-usage";
         String verb = field[from];
+        lastLessonGame = "f4";
         if ("clear".equals(verb)) {
             mainHandler.post(this::detachF4);
             f4Lesson = new Fnaf4Lesson();
@@ -216,6 +254,7 @@ public final class OverlayController {
         if (!debuggable()) return "ERROR teach-release-build";
         if (field.length <= from) return "ERROR f3-usage";
         String verb = field[from];
+        lastLessonGame = "f3";
         if ("clear".equals(verb)) {
             mainHandler.post(this::detachF3);
             f3Lesson = new Fnaf3Lesson();
