@@ -1635,10 +1635,20 @@ below the measurement floor. These are MODEL_ONLY rebuilt-runtime results.
 They retain the input hashes and are rechecked by `test-audio-records.py`.
 
 [Per-game builds](results/game-builds-20260927.json),
-`recompile-game-builds-995dfaa99a76042a`, retains the actual partial outcome:
-FNaF 1 converts, links and boots to its title; FNaF 2 also has a retained Android
-APK; FNaF 3 conversion stops at `shader.get_name` with `KeyError: 1`; FNaF 4
-converts and links, with boot and APK still unmeasured. Host and Android
-revisions differ and are individually hashed. Native Companion audio capture,
-background-pause correctness (its retained wave capture was malformed), and
-all-game APK completion remain open. No new device action was made at wrap-up.
+`recompile-game-builds-a7144a1e1d5955a2`, now holds all four games complete
+(2026-09-28): each converts, links, boots to its title under the harness, has
+a committed audio record, and a signed arm64 APK (packages
+`org.fnaf{1,3,4}rebuild.play`, built from the phone-proven `chowdren-audio2`
+base with static OpenSL ES openal). What closed FNaF 3: build-296's `SetEffect`
+carries the classic ink-effect code (Short: 0 none, 1 semi-transparent, 9 add,
+... the `SetInkEffect` enum), not a shader file name — the converter now routes
+numeric codes through the ink-effect path (`ACT_GOLEVEL`'s dex confirms literal
+`JumpToFrame` params are frame handles via `HCellToNCell`, which the patch
+already applied). FNaF 4's boot record is its second boot: the first visit
+routes warning -> 15-test (the porter's one-time teaser, which writes
+`test=1` into the `fn4` INI), exactly as a fresh retail install does once.
+[FNaF 3 audio](results/fnaf3-audio-20260928.json) measures 70 of 70 non-silent;
+[FNaF 4 audio](results/fnaf4-audio-20260928.json) 72 of 73, the one below floor
+being the sample named `SILENCE`. No rebuilt APK has been installed or run on
+any phone yet; native Companion audio capture and background-pause correctness
+remain open. All MODEL_ONLY rebuilt-runtime results.

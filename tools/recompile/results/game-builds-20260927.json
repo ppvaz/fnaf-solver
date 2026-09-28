@@ -1,12 +1,18 @@
 {
  "claimLevel": "MODEL_ONLY",
- "evidenceId": "recompile-game-builds-995dfaa99a76042a",
+ "evidenceId": "recompile-game-builds-a7144a1e1d5955a2",
  "fidelity": "rebuilt-runtime",
  "question": "Does each build-296 game convert, build for the host, boot under the harness without input, and package as an Android APK, with its sounds reaching the mixer?",
  "rows": [
   {
    "apk": {
-    "status": "NOT_BUILT"
+    "bytes": 145535652,
+    "file": "fnaf1-rebuild-research.apk",
+    "libmainBytes": 26727768,
+    "libmainSha256": "02287501666a77f280f3f0339c1b2813ab7bac84961f7ab0ebb0c229c01dd1c4",
+    "package": "org.fnaf1rebuild.play",
+    "sha256": "da4ecac3e1c421d71d35f5d1f93a1c96375feb44a203752fa3a18b01af57e744",
+    "status": "OK"
    },
    "audio": {
     "auditionNonSilent": 52,
@@ -15,7 +21,7 @@
     "record": "fnaf1-audio-20260927.json",
     "resolvedFiles": 53
    },
-   "blocker": "Host conversion/build/audition succeeded; Android APK remains not built.",
+   "blocker": "APK built and signed (arm64, chowdren-audio2 base); not yet installed or run on any phone.",
    "boot": {
     "audioInitialized": true,
     "env": {
@@ -60,7 +66,7 @@
     "status": "OK",
     "truncatedFramesSkipped": 6
    },
-   "firstFailedStep": "apk",
+   "firstFailedStep": null,
    "game": "fnaf1",
    "host": {
     "assetsSha256": "2c0da2231dc3ffe121b78bbb5b6ee947d7a40712a70d29ead16e015c35988b48",
@@ -179,42 +185,121 @@
   },
   {
    "apk": {
-    "status": "NOT_BUILT"
+    "bytes": 81744548,
+    "file": "fnaf3-rebuild-research.apk",
+    "libmainBytes": 31264424,
+    "libmainSha256": "4f1219e174b620dd23cd7c4247f177758d4670ffb27920440f9ccd205755bf4d",
+    "package": "org.fnaf3rebuild.play",
+    "sha256": "7f7cd7c1f4996472278a12a6011088c8529c0f34d0200e89eeefe86acf1f37fb",
+    "status": "OK"
    },
-   "audio": "UNKNOWN",
-   "blocker": "Converter fails with KeyError: 1 in shader.get_name; host and APK not built.",
+   "audio": {
+    "auditionNonSilent": 70,
+    "declared": 70,
+    "evidenceId": "recompile-audio-504960804b93b30d",
+    "record": "fnaf3-audio-20260928.json",
+    "resolvedFiles": 70
+   },
+   "blocker": "Conversion fixed 2026-09-28 (SetEffect carries the classic ink-effect code on build 296); APK built and signed, not yet run on any phone.",
    "boot": {
-    "status": "NOT_RUN"
+    "audioInitialized": true,
+    "env": {
+     "CHOWDREN_HARNESS": "1",
+     "CHOWDREN_MAX_TOTAL_TICKS": "3000",
+     "CHOWDREN_SEED": "24850",
+     "CHOWDREN_SNAP": "1:300,1:900",
+     "CHOWDREN_TIMEOUT_SECONDS": "400"
+    },
+    "exitCode": 0,
+    "glErrors": 0,
+    "reachedTitle": "YES",
+    "samplePlays": 1,
+    "status": "OK",
+    "stop": "stop total ticks 3000 frame 1 tick 2820",
+    "updates": 3000,
+    "visits": [
+     {
+      "frame": 0,
+      "name": "01-Initialize & setup",
+      "updates": 180
+     },
+     {
+      "frame": 1,
+      "name": "02-title",
+      "updates": 2820
+     }
+    ]
    },
    "conversion": {
     "ccnSha256": "a8203d6130a21894ca342ab88b7bd67569919ae32d3bacf7efd9389d5b8eadba",
-    "eventFiles": 25,
-    "exitCode": 1,
-    "frames": 24,
+    "eventFiles": 28,
+    "exitCode": 0,
+    "frames": 26,
     "mp3Decoded": 0,
-    "omittedActions": 38,
+    "omittedActions": 44,
     "playSites": {
      "invalid": 0,
-     "resolved": 140
+     "resolved": 143
     },
     "silencedSounds": 0,
-    "status": "FAILED",
-    "truncatedFramesSkipped": 1
+    "status": "OK",
+    "truncatedFramesSkipped": 5
    },
-   "firstFailedStep": "conversion",
+   "firstFailedStep": null,
    "game": "fnaf3",
    "host": {
-    "status": "NOT_BUILT"
+    "assetsSha256": "c5e092a33a3f02edc9f306ae8e2bc57160e865ec6bf2aa34962838b4c7c4897c",
+    "binarySha256": "7820b092da3eadd03913fdd15d7106ca297670295b1906ad394c6e84b488a03a",
+    "pinned": "7820b092-c5e092a3",
+    "status": "OK"
    }
   },
   {
    "apk": {
-    "status": "NOT_BUILT"
+    "bytes": 336540324,
+    "file": "fnaf4-rebuild-research.apk",
+    "libmainBytes": 28709840,
+    "libmainSha256": "49cffa5c0702fe12590a8637d704c019b35a10f79d77806cf66506212b933294",
+    "package": "org.fnaf4rebuild.play",
+    "sha256": "bd869790438f5fa95270d18b3fdfb864aa3de230ab19452e04ae7718b1a98885",
+    "status": "OK"
    },
-   "audio": "UNKNOWN",
-   "blocker": "Host linked successfully; no retained boot/audition or Android APK qualification.",
+   "audio": {
+    "auditionNonSilent": 72,
+    "declared": 73,
+    "evidenceId": "recompile-audio-44dea5a5aba0ec90",
+    "record": "fnaf4-audio-20260928.json",
+    "resolvedFiles": 73
+   },
+   "blocker": "Boot record is the second boot (INI test=1 after the first-run teaser, as retail); APK built and signed, not yet run on any phone.",
    "boot": {
-    "status": "NOT_RUN"
+    "audioInitialized": true,
+    "env": {
+     "CHOWDREN_HARNESS": "1",
+     "CHOWDREN_MAX_TOTAL_TICKS": "3000",
+     "CHOWDREN_SEED": "24850",
+     "CHOWDREN_SNAP": "1:300,1:900",
+     "CHOWDREN_TIMEOUT_SECONDS": "400"
+    },
+    "exitCode": 0,
+    "glErrors": 0,
+    "reachedTitle": "YES",
+    "samplePlays": 1,
+    "status": "OK",
+    "stop": "stop total ticks 3000 frame 1 tick 2820",
+    "updates": 3000,
+    "visits": [
+     {
+      "frame": 0,
+      "name": "01-warning",
+      "updates": 180
+     },
+     {
+      "frame": 1,
+      "name": "02-titlescreen",
+      "updates": 2820
+     }
+    ]
    },
    "conversion": {
     "ccnSha256": "5b032de7f243b9a8de15c38cadd0dc1c256f18d0552823b80f1c5f61ff8616f1",
@@ -231,12 +316,12 @@
     "status": "OK",
     "truncatedFramesSkipped": 3
    },
-   "firstFailedStep": "boot",
+   "firstFailedStep": null,
    "game": "fnaf4",
    "host": {
     "assetsSha256": "615f2ea01b9546709e8d9bc2b15cd9616aeda403a317c4db4bcde9f4d87f0049",
     "binarySha256": "1c40c7ebcde5a35ca048152c0e199501cf00cad09ac3f5908b83bc4c848323fa",
-    "pinned": null,
+    "pinned": "1c40c7eb-615f2ea0",
     "status": "OK"
    }
   }

@@ -1358,7 +1358,7 @@ index 1943544..ab10e20 100644
              print 'meth:', self.method
              raise e
 diff --git a/Chowdren/chowdren/writers/events/system.py b/Chowdren/chowdren/writers/events/system.py
-index 48623cf..1c5b9bb 100644
+index 48623cf..65777ed 100644
 --- a/Chowdren/chowdren/writers/events/system.py
 +++ b/Chowdren/chowdren/writers/events/system.py
 @@ -2,7 +2,8 @@ from mmfparser.data.chunkloaders.objectinfo import SEMITRANSPARENT_EFFECT
@@ -1728,7 +1728,31 @@ index 48623cf..1c5b9bb 100644
          writer.putlnc('if (!%s) {', container.code_name)
          writer.indent()
          writer.putlnc('%s = true;', container.code_name)
-@@ -1872,13 +2041,49 @@ class MinusExpression(ConstantExpression):
+@@ -1791,6 +1960,23 @@ class SetEffect(ActionWriter):
+                                            copy=False):
+             obj = self.converter.get_object(self.get_object())
+             name = self.parameters[0].loader.value
++            if isinstance(name, (int, long)):
++                # Build-296 mobile packs the effect as the classic ink-effect
++                # code (Short), not a shader file name: 0 none, 1 semi
++                # transparent, 9 add, ... same enum as SetInkEffect.
++                ink_effect = name
++                if ink_effect in INK_EFFECTS:
++                    writer.putlnc('%s->set_shader(%s);', obj,
++                                  shader.get_name(INK_EFFECTS[ink_effect]))
++                elif ink_effect == SEMITRANSPARENT_EFFECT:
++                    writer.putlnc(
++                        '%s->blend_color.set_semi_transparency(%s);',
++                        obj, 128)
++                    writer.putlnc('%s->set_shader(Render::NONE);', obj)
++                else:
++                    print 'unknown set ink effect:', ink_effect
++                writer.putlnc('%s->blend_color.set_rgb(255, 255, 255);', obj)
++                return
+             if name == '':
+                 name = None
+             shader_name = shader.get_name(name)
+@@ -1872,13 +2058,49 @@ class MinusExpression(ConstantExpression):
  class MultiplyExpression(ConstantExpression):
      value = '*'
  
@@ -1780,7 +1804,7 @@ index 48623cf..1c5b9bb 100644
  
  class ModulusExpression(ConstantExpression):
      value = '%'
-@@ -1970,9 +2175,13 @@ class GetLoopIndex(ExpressionWriter):
+@@ -1970,9 +2192,13 @@ class GetLoopIndex(ExpressionWriter):
              size = 2
              next_exp = items[converter.item_index + 1]
              if next_exp.getName() != 'String':
@@ -1797,7 +1821,7 @@ index 48623cf..1c5b9bb 100644
              else:
                  name = next_exp.loader.value
          converter.item_index += size
-@@ -2055,6 +2264,7 @@ actions = make_table(ActionMethodWriter, {
+@@ -2055,6 +2281,7 @@ actions = make_table(ActionMethodWriter, {
      'CreateObject' : CreateObject,
      'Shoot' : ShootObject,
      'StartLoop' : StartLoop,
@@ -1805,7 +1829,7 @@ index 48623cf..1c5b9bb 100644
      'Foreach' : Foreach,
      'StopLoop' : StopLoop,
      'SwapPosition' : SwapPosition,
-@@ -2072,6 +2282,11 @@ actions = make_table(ActionMethodWriter, {
+@@ -2072,6 +2299,11 @@ actions = make_table(ActionMethodWriter, {
      'SetMinimumValue' : 'set_min',
      'SetGlobalString' : 'global_strings->set',
      'SetGlobalValue' : 'global_values->set',
@@ -1817,7 +1841,7 @@ index 48623cf..1c5b9bb 100644
      'AddGlobalValue' : 'global_values->add',
      'AddGlobalValueInt' : 'global_values->add',
      'SubtractGlobalValue' : 'global_values->sub',
-@@ -2160,6 +2375,7 @@ actions = make_table(ActionMethodWriter, {
+@@ -2160,6 +2392,7 @@ actions = make_table(ActionMethodWriter, {
      'PauseApplication' : 'pause',
      'SetRandomSeed' : 'set_random_seed',
      'SetTimer' : 'set_timer((%s) / 1000.0)',
@@ -1825,7 +1849,7 @@ index 48623cf..1c5b9bb 100644
      'SetLoopIndex' : SetLoopIndex,
      'IgnoreControls' : IgnoreControls,
      'RestoreControls' : RestoreControls,
-@@ -2225,6 +2441,10 @@ conditions = make_table(ConditionMethodWriter, {
+@@ -2225,6 +2458,10 @@ conditions = make_table(ConditionMethodWriter, {
      'WhileMousePressed' : 'is_mouse_pressed',
      'MouseOnObject' : MouseOnObject,
      'Always' : Always,
@@ -1836,7 +1860,7 @@ index 48623cf..1c5b9bb 100644
      'MouseClicked' : MouseClicked,
      'ObjectClicked' : ObjectClicked,
      'PlayerKeyDown' : PlayerKeyDown,
-@@ -2266,12 +2486,12 @@ conditions = make_table(ConditionMethodWriter, {
+@@ -2266,12 +2503,12 @@ conditions = make_table(ConditionMethodWriter, {
      'PathFinished' : PathFinished,
      'NodeReached' : NodeReached,
      'CompareSpeed' : make_comparison('get_movement()->get_speed()'),
@@ -1851,7 +1875,7 @@ index 48623cf..1c5b9bb 100644
      'NumberOfLives' :  make_comparison('manager.lives'),
      'PlayerDied' : PlayerDied,
      'AnyKeyPressed' : AnyKeyPressed,
-@@ -2290,6 +2510,7 @@ conditions = make_table(ConditionMethodWriter, {
+@@ -2290,6 +2527,7 @@ conditions = make_table(ConditionMethodWriter, {
  })
  
  expressions = make_table(ExpressionMethodWriter, {

@@ -2826,3 +2826,24 @@ name the group that holds value 0 at 0 after his leave; then test whether an
 input inside the measured brackets releases him at 40.0 s and whether Withered
 Bonnie's entry moves to window 7 as the phone read. The same-phase twin with
 per-press landing reads and a continuous capture remains the physical separator.
+
+## 2026-09-28 — The other three games rebuilt end to end on host and APK (S6 groundwork)
+
+FNaF 1, 3 and 4 now match FNaF 2's build status: convert, host link, harness
+boot to title, committed audio record, and a signed arm64 research APK
+(`recompile-game-builds-a7144a1e1d5955a2`,
+[record](../tools/recompile/results/game-builds-20260927.json)). FNaF 3's
+conversion blocker was build-296's `SetEffect` packing the classic ink-effect
+code (Short 1 = semi-transparent, 9 = add) where desktop Chowdren expects a
+shader file name; the converter patch now routes numeric codes through the
+`SetInkEffect` path, confirmed against the runtime's own tables
+(`ACT_GOLEVEL` literal params are frame handles resolved by `HCellToNCell` —
+the patch already had that right, which is why FNaF 2's navigation worked).
+FNaF 4's first no-input boot routed warning -> 15-test, the porter's one-time
+teaser that writes `test=1` into the `fn4` INI — the second boot reaches the
+title, so the rebuild reproduces the retail first-run behavior. Audio:
+FNaF 3 70/70 non-silent (`recompile-audio-504960804b93b30d`), FNaF 4 72/73
+(`recompile-audio-44dea5a5aba0ec90`, the floor-miss is the sample named
+`SILENCE`). APKs (`org.fnaf{1,3,4}rebuild.play`) are built from the
+phone-proven `chowdren-audio2` base with the static OpenSL ES openal; none has
+been installed or run on any phone. MODEL_ONLY, rebuilt-runtime throughout.
