@@ -27,6 +27,7 @@ import { AdbCueHelperPort, AdbHidProcess } from '../../apps/device/src/physical-
 import { HidWireTransport } from '../../packages/adapters/src/transports/hid.js';
 import { loadRegionSet, registerSet } from './native-regions.mjs';
 import { Actor, RegionRecorder, RunRecord, interruptibleSleep, startVideo } from './night-kit.mjs';
+import { audioPreflight } from './audio-players.mjs';
 import {
   HEARING_PATH, loadHearing, sideGrid, laughGrid, landings, laughs, quietTapAt, releaseAt, shadowOf,
 } from './fnaf4-fredbear.mjs';
@@ -983,6 +984,15 @@ async function main(argv) {
     const link = execFileSync(join(ROOT, 'tools/cue/bt-audio-link.sh'), ['--ensure', '--game-package', PACKAGE],
       { encoding: 'utf8', timeout: 90000 });
     await record.event('audio-link', { status: link.trim().split('\n').pop() });
+    // The mix is the whole phone's: another app's player masks the game (n5c:
+    // org.fnaf2rebuild.play's title music, -22 against -35 dBFS, a deaf night).
+    const players = audioPreflight({ serial, target: PACKAGE });
+    await record.event('audio-players', players);
+    if (players.status !== 'READY') {
+      const refusal = new Error(`fnaf4-run: audio preflight ${players.status}: ${players.reason}`);
+      refusal.refused = true;
+      throw refusal;
+    }
     await snapTo('title-before');
     hidProcess = new AdbHidProcess({ serial });
     // One sleep port the Actor can cut short: a door hold is ONE contact (holdWhile).
@@ -1080,7 +1090,7 @@ async function main(argv) {
   if (error) {
     record.document.error = error.message;
     await record.event('error', { message: error.message });
-    await record.save('FAILED_OR_REFUSED');
+    await record.save(error.refused && record.document.inputsSent === 0 ? 'REFUSED' : 'FAILED_OR_REFUSED');
   } else await record.save('COMPLETE');
   console.log(`fnaf4 run ${id}: ${record.document.status}; inputs=${record.document.inputsSent}; ` +
     `regionFrames=${record.document.regions?.frames}; audioEvents=${record.document.audio?.events}; out=${outdir}; frames=${captureDir}`);

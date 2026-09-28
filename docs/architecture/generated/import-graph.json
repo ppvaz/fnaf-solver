@@ -1366,6 +1366,14 @@
       ]
     },
     {
+      "file": "tools/device/audio-players.mjs",
+      "imports": [
+        "node:child_process",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/device/bundle.mjs",
       "imports": [
         "./artifact-commands.mjs",
@@ -1613,6 +1621,7 @@
       "imports": [
         "../../apps/device/src/physical-ports.js",
         "../../packages/adapters/src/transports/hid.js",
+        "./audio-players.mjs",
         "./fnaf4-fredbear.mjs",
         "./native-regions.mjs",
         "./night-kit.mjs",
@@ -1932,6 +1941,12 @@
         "./artifact-commands.mjs",
         "./recipe.mjs",
         "@fnaf2-1020/core/mechanics"
+      ]
+    },
+    {
+      "file": "tools/device/test-audio-players.mjs",
+      "imports": [
+        "./audio-players.mjs"
       ]
     },
     {
