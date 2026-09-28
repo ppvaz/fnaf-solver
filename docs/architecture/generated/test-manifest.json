@@ -3918,6 +3918,24 @@
       }
     },
     {
+      "id": "tools/recompile/test-hour-grid-fit.mjs",
+      "lane": "test:unit",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "tools/recompile/test-mobile-parser.py",
       "lane": "test:unit",
       "owner": "legacy migration",
@@ -3936,6 +3954,24 @@
       }
     },
     {
+      "id": "tools/recompile/test-phone-clock-sweep.mjs",
+      "lane": "test:unit",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "tools/recompile/test-phone-encounter-replay.mjs",
       "lane": "test:unit",
       "owner": "legacy migration",
@@ -3946,6 +3982,24 @@
       "fixedSleeps": [],
       "sharedResources": [],
       "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "tools/recompile/test-phone-input-bracket-sweep.mjs",
+      "lane": "test:unit",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",
         "runs": 0,

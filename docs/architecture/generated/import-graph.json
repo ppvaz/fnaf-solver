@@ -2982,9 +2982,30 @@
       ]
     },
     {
+      "file": "tools/recompile/hour-grid-fit.mjs",
+      "imports": [
+        "./phone-encounter-replay.mjs",
+        "node:crypto",
+        "node:fs",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/recompile/model-draw-trace.mjs",
       "imports": [
         "@fnaf2-1020/core/mechanics",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "tools/recompile/phone-clock-sweep.mjs",
+      "imports": [
+        "./compare-schedule-replay.mjs",
+        "./model-draw-trace.mjs",
+        "./phone-encounter-replay.mjs",
+        "node:crypto",
         "node:fs",
         "node:path",
         "node:url"
@@ -3002,6 +3023,19 @@
         "./model-draw-trace.mjs",
         "./schedule-to-input.mjs",
         "@fnaf2-1020/core/control",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "tools/recompile/phone-input-bracket-sweep.mjs",
+      "imports": [
+        "./compare-schedule-replay.mjs",
+        "./model-draw-trace.mjs",
+        "./phone-encounter-replay.mjs",
+        "./schedule-to-input.mjs",
         "node:crypto",
         "node:fs",
         "node:path",
@@ -3037,10 +3071,38 @@
       ]
     },
     {
+      "file": "tools/recompile/test-hour-grid-fit.mjs",
+      "imports": [
+        "./hour-grid-fit.mjs",
+        "node:assert/strict",
+        "node:crypto",
+        "node:fs"
+      ]
+    },
+    {
+      "file": "tools/recompile/test-phone-clock-sweep.mjs",
+      "imports": [
+        "./phone-clock-sweep.mjs",
+        "./phone-encounter-replay.mjs",
+        "node:assert/strict",
+        "node:crypto",
+        "node:fs"
+      ]
+    },
+    {
       "file": "tools/recompile/test-phone-encounter-replay.mjs",
       "imports": [
         "./model-draw-trace.mjs",
         "./phone-encounter-replay.mjs",
+        "node:assert/strict",
+        "node:crypto",
+        "node:fs"
+      ]
+    },
+    {
+      "file": "tools/recompile/test-phone-input-bracket-sweep.mjs",
+      "imports": [
+        "./phone-input-bracket-sweep.mjs",
         "node:assert/strict",
         "node:crypto",
         "node:fs"
