@@ -41,84 +41,8 @@ SPEC = importlib.util.spec_from_file_location("cue_helper_queue", HERE / "cue-he
 assert SPEC and SPEC.loader
 QUEUE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(QUEUE)
-
-FAKE_ADB = r'''#!/usr/bin/env python3
-import fcntl, json, os, sys
-path = os.environ["FAKE_ADB_STATE"]
-args = sys.argv[1:]
-serial = os.environ.get("ANDROID_SERIAL")
-if args[:1] == ["-s"]:
-    serial, args = args[1], args[2:]
-out, code, known = "", 0, True
-with open(path + ".lock", "a") as lock:
-    fcntl.flock(lock, fcntl.LOCK_EX)
-    with open(path) as handle:
-        state = json.load(handle)
-    command = " ".join(args[1:]) if args[:1] == ["shell"] else None
-    if args == ["devices", "-l"]:
-        out = "List of devices attached\n" + (state["serial"] + " device usb:1-1\n" if state["present"] else "")
-    elif not state["present"] or serial != state["serial"]:
-        out, code = "error: device '%s' not found" % serial, 1
-    elif args == ["get-state"]:
-        out = "device"
-    elif command is None:
-        known, code = False, 1
-    elif args[1:3] == ["settings", "get"]:
-        out = state["settings"].get(args[3] + "/" + args[4], "null")
-    elif args[1:3] == ["settings", "put"]:
-        state["settings"][args[3] + "/" + args[4]] = args[5]
-    elif args[1:3] == ["settings", "delete"]:
-        state["settings"].pop(args[3] + "/" + args[4], None)
-    elif command == "dumpsys power":
-        out = "  mWakefulness=" + ("Awake" if state["awake"] else "Asleep")
-    elif command == "dumpsys window policy":
-        out = "  isKeyguardShowing=" + ("true" if state["keyguard"] else "false")
-    elif command == "dumpsys window":
-        out = "  mCurrentFocus=null\n  mCurrentFocus=Window{1a2b u0 %s}" % state["focus"]
-    elif command == "dumpsys telephony.registry":
-        out = "".join("  mCallState=%d\n" % value for value in state["calls"])
-    elif command == "dumpsys battery":
-        battery = state["battery"]
-        out = ("Current Battery Service state:\n  AC powered: false\n  USB powered: %s\n"
-               "  Wireless powered: false\n  Dock powered: false\n  status: 2\n  level: %d\n"
-               "  scale: 100\n  temperature: %d\n" % (
-                   "true" if battery["plugged"] else "false", battery["level"], battery["temp10"]))
-    elif command == "dumpsys media_projection":
-        out = "  com.ppvaz.fnafcompanion TYPE_SCREEN_CAPTURE" if state["projection"] else "  (none)"
-    elif command == "dumpsys package com.ppvaz.fnafcompanion":
-        out = state["helperDump"]
-    elif command.startswith("dumpsys package "):
-        out = ""
-    elif command == ("cmd package resolve-activity --brief -a android.intent.action.MAIN "
-                     "-c android.intent.category.HOME"):
-        out = "priority=0 preferredOrder=0 match=0x108000 isDefault=true\ncom.fake.launcher/.Home"
-    elif command == "input keyevent KEYCODE_HOME":
-        state["focus"] = "com.fake.launcher/com.fake.launcher.Home"
-    elif command == "am force-stop com.ppvaz.fnafcompanion":
-        state["projection"] = False
-    elif args[1:2] == ["getprop"]:
-        out = {"ro.build.version.release": "15", "ro.build.version.sdk": "35",
-               "ro.product.model": "fixture"}.get(args[2], "")
-    elif command == "perfetto --query":
-        out = "android.surfaceflinger.frame\nlinux.ftrace\n"
-    elif command == "wm size":
-        out = "Physical size: 1080x2400"
-    elif command in ("ls /system/bin/hid", "ls /system/bin/screenrecord"):
-        out = args[2]
-    elif command == "pm list packages com.scottgames.fnaf2":
-        out = "package:com.scottgames.fnaf2"
-    elif args[1:2] == ["__fixture"]:
-        state[args[2]] = json.loads(args[3])
-    else:
-        known, code = False, 1
-    with open(path + ".log", "a") as log:
-        log.write(json.dumps({"actor": os.environ.get("FAKE_ADB_ACTOR", "runner"),
-                              "serial": serial, "args": args, "known": known}) + "\n")
-    with open(path, "w") as handle:
-        json.dump(state, handle)
-print(out)
-sys.exit(code)
-'''
+sys.path.insert(0, str(HERE / "testdata"))
+import fake_phone  # noqa: E402
 
 # Stands in for `cue-helper-queue.sh run --max-jobs 1`: one scripted step per call.
 FAKE_QUEUE = r'''#!/usr/bin/env python3
@@ -175,7 +99,8 @@ sys.exit(module.main(sys.argv[3:]))
 FAST = {
     "JOB_TIMEOUT_S": 1.0, "CHILD_WAIT_S": 0.5, "QUEUE_INTERVAL_S": 0.1,
     "STOP_GRACE_S": 1.0, "TERM_GRACE_S": 1.0, "KILL_GRACE_S": 1.0,
-    "RESTORE_BUDGET_S": 1.5, "RESTORE_RETRY_S": 0.0, "RESTORE_RETRY_POLL_S": 0.1,
+    "RESTORE_BUDGET_S": 1.5, "NIGHT_RECOVERY_S": 1.0, "PACK_TIMEOUT_S": 5.0,
+    "RESTORE_RETRY_S": 0.0, "RESTORE_RETRY_POLL_S": 0.1,
     "LOCK_POLL_S": 0.2, "ARM_POLL_S": 0.1,
 }
 PRIOR = {
@@ -208,7 +133,8 @@ class Case:
         self.dir.mkdir()
         self.bin = self.dir / "bin"
         self.bin.mkdir()
-        (self.bin / "adb").write_text(FAKE_ADB, encoding="utf-8")
+        (self.bin / "adb").write_text(f"#!/bin/sh\nexec {sys.executable} {HERE / 'testdata/fake_phone.py'} adb \"$@\"\n",
+                                      encoding="utf-8")
         (self.bin / "adb").chmod(0o755)
         self.fake_queue = self.dir / "fake-queue.py"
         self.fake_queue.write_text(FAKE_QUEUE, encoding="utf-8")
@@ -218,23 +144,23 @@ class Case:
         self.state_path = self.dir / "phone.json"
         self.queue_file = self.dir / "jobs.json"
         self.window_dir = self.dir / "windows"
+        self.state_dir = self.dir / "state"
         self.steps = self.dir / "steps.json"
         self.lock_dir = lock_dir
-        phone = {"serial": SERIAL, "present": True, "awake": True, "keyguard": False,
-                 "focus": "com.fake.launcher/com.fake.launcher.Home", "calls": [0],
-                 "battery": {"plugged": True, "level": 88, "temp10": 310},
-                 "projection": False, "helperDump": "    versionCode=14 minSdk=29\n    versionName=0.1.14\n",
-                 "settings": dict(PRIOR)}
-        phone.update(state)
-        self.state_path.write_text(json.dumps(phone), encoding="utf-8")
+        self.state_path.write_text(json.dumps(fake_phone.default_phone(**state)), encoding="utf-8")
+
+    def pending(self) -> list[Path]:
+        return list((self.state_dir / "overnight-window").glob("pending-restore-*.json"))
 
     def env(self) -> dict:
         env = {key: value for key, value in os.environ.items()
                if key not in ("ANDROID_SERIAL", "FNAF_SERIAL", "ADB_BIN", "CUE_HELPER_LEASE_OWNER_PID",
                               "FNAF_WINDOW_START", "FNAF_WINDOW_END", "FNAF_WINDOW_BATTERY_FLOOR")}
-        env.update({"PATH": f"{self.bin}:{os.environ['PATH']}", "FAKE_ADB_STATE": str(self.state_path),
+        env.update({"PATH": f"{self.bin}:{os.environ['PATH']}",
                     "FAKE_QUEUE_SCRIPT": str(self.steps), "CUE_HELPER_QUEUE_FILE": str(self.queue_file),
-                    "CUE_HELPER_LOCK_DIR": str(self.lock_dir), "FNAF_WINDOW_DIR": str(self.window_dir)})
+                    "CUE_HELPER_LOCK_DIR": str(self.lock_dir), "FNAF_WINDOW_DIR": str(self.window_dir),
+                    "CUE_HELPER_STATE_DIR": str(self.state_dir), "FNAF_NIGHT_JOB_DIR": str(self.dir / "night-jobs"),
+                    "FAKE_PHONE_STATE": str(self.state_path)})
         return env
 
     def jobs(self, count: int, steps: list[str] | None = None) -> None:
@@ -312,13 +238,13 @@ def restored_to_prior(case: Case, name: str, record: dict) -> None:
           record.get("settings", {}).get("applied", {}).get("global/stay_on_while_plugged_in")
           == {"value": "7", "readBack": "7"}, record.get("settings", {}).get("applied"))
     check(f"{name}: no pending-restore record is left",
-          not list(case.window_dir.glob("pending-restore-*.json")))
+          not case.pending())
 
 
 def unchanged(case: Case, name: str) -> None:
     check(f"{name}: the runner wrote no setting", case.writes() == [], case.writes())
     check(f"{name}: the phone's settings are untouched", case.phone()["settings"] == PRIOR)
-    check(f"{name}: no pending-restore record", not list(case.window_dir.glob("pending-restore-*.json")))
+    check(f"{name}: no pending-restore record", not case.pending())
 
 
 def pure_checks() -> None:
@@ -521,7 +447,8 @@ def main() -> int:
         check("complete: capture the window started is stopped", complete.phone()["projection"] is False)
         check("complete: the launcher is in front again",
               complete.phone()["focus"].startswith("com.fake.launcher/"), complete.phone()["focus"])
-        argv = [json.loads(line) for line in Path(f"{complete.steps}.argv").read_text().splitlines()]
+        argv_file = Path(f"{complete.steps}.argv")
+        argv = [json.loads(line) for line in argv_file.read_text().splitlines()] if argv_file.exists() else []
         check("complete: the queue ran one job per call",
               len(argv) == 3 and all(a[:3] == ["run", "--max-jobs", "1"] for a in argv), argv)
         check("complete: the record has three child attempts",
@@ -604,9 +531,9 @@ def main() -> int:
         # --- recovery: a killed window left stay-awake on; restore puts it back,
         # deleting a setting the window found unset.
         recovery = case("recovery", settings={**PRIOR, "global/stay_on_while_plugged_in": "7"})
-        recovery.window_dir.mkdir(parents=True)
+        (recovery.state_dir / "overnight-window").mkdir(parents=True)
         digest = __import__("hashlib").sha256(SERIAL.encode()).hexdigest()[:16]
-        (recovery.window_dir / f"pending-restore-{digest}.json").write_text(json.dumps({
+        (recovery.state_dir / "overnight-window" / f"pending-restore-{digest}.json").write_text(json.dumps({
             "schema": "overnight-window-pending-v1", "windowId": "window-killed", "serial": SERIAL,
             "prior": {**PRIOR, "global/stay_on_while_plugged_in": "null"}}), encoding="utf-8")
         result = recovery.run("restore")
@@ -614,7 +541,7 @@ def main() -> int:
               result.stdout)
         check("recovery: the unset setting is unset again",
               "global/stay_on_while_plugged_in" not in recovery.phone()["settings"], recovery.phone()["settings"])
-        check("recovery: the pending record is gone", not list(recovery.window_dir.glob("pending-restore-*.json")))
+        check("recovery: the pending record is gone", not recovery.pending())
         before = len(recovery.calls(None))
         again = recovery.run("restore")
         check("recovery: nothing pending touches nothing",

@@ -252,9 +252,42 @@ export function replayArguments(winner, { label = 'replay', home = homedir() } =
  * the materialized tree's runner, which skips its own lease (the lease it
  * would take lives under its tree's `captures`, i.e. this checkout's, by link).
  */
+/**
+ * The main checkout, seen from it or from any of its worktrees: a worktree's
+ * `.git` file names its git dir, whose `commondir` leads to the main `.git`.
+ * Mirrors cue_helper_device_lock.py's main_checkout().
+ */
+export function mainCheckout(root = ROOT) {
+  try {
+    const marker = join(root, '.git');
+    if (existsSync(marker) && lstatSync(marker).isFile()) {
+      const text = readFileSync(marker, 'utf8').trim();
+      if (text.startsWith('gitdir:')) {
+        const gitdir = resolve(root, text.slice('gitdir:'.length).trim());
+        const common = join(gitdir, 'commondir');
+        if (existsSync(common)) {
+          const commonDir = resolve(gitdir, readFileSync(common, 'utf8').trim());
+          if (commonDir.endsWith(`${'/'}.git`)) return dirname(commonDir);
+        }
+      }
+    }
+  } catch { /* fall through to this checkout */ }
+  return root;
+}
+
+/**
+ * The serial lease's directory: one for the host, shared by every checkout and
+ * worktree (cue_helper_device_lock.py's lock_dir()), so a replay started from a
+ * worktree contends with the overnight window's lease, not a private copy.
+ */
+export function sharedLockDir(root = ROOT, env = process.env) {
+  if (env.CUE_HELPER_LOCK_DIR) return env.CUE_HELPER_LOCK_DIR;
+  return join(env.CUE_HELPER_STATE_DIR || join(mainCheckout(root), 'captures/cue-helper'), 'locks');
+}
+
 export function replayInvocation(winner, { root = ROOT, tree, serial, label, env = process.env, home = homedir() }) {
   if (!SERIAL.test(String(serial))) fail('the serial is invalid');
-  const lockDir = env.CUE_HELPER_LOCK_DIR || join(root, 'captures/cue-helper/locks');
+  const lockDir = sharedLockDir(root, env);
   const args = replayArguments(winner, { label, home });
   return {
     file: 'python3',

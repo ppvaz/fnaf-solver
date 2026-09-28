@@ -13,16 +13,54 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_LOCK_DIR = ROOT / "captures/cue-helper/locks"
+
+
+def main_checkout(root: Path = ROOT) -> Path:
+    """The main checkout of this repository, seen from it or from any worktree.
+
+    A worktree's `.git` is a file naming its own git dir, whose `commondir`
+    leads back to the main checkout's `.git`. Until 2026-09-27 the lease and
+    the queue lived under each checkout's own `captures/`, so an agent in a
+    worktree took a different lock file for the same phone than the main
+    checkout's overnight window held, and enqueued into a queue no window read.
+    """
+    marker = root / ".git"
+    try:
+        if marker.is_file():
+            text = marker.read_text(encoding="utf-8").strip()
+            if text.startswith("gitdir:"):
+                gitdir = Path(text.split(":", 1)[1].strip())
+                if not gitdir.is_absolute():
+                    gitdir = (root / gitdir).resolve()
+                common = gitdir / "commondir"
+                if common.is_file():
+                    common_dir = (gitdir / common.read_text(encoding="utf-8").strip()).resolve()
+                    if common_dir.name == ".git":
+                        return common_dir.parent
+    except OSError:
+        pass
+    return root
+
+
+def state_dir() -> Path:
+    """Host-wide Cue Helper state: the lease files, the queue, pending restores."""
+    return Path(os.environ.get("CUE_HELPER_STATE_DIR", str(main_checkout() / "captures/cue-helper")))
+
+
+DEFAULT_LOCK_DIR = state_dir() / "locks"
 
 
 class DeviceBusy(RuntimeError):
     """Another process currently owns the device lease."""
 
 
+def lock_dir() -> Path:
+    return Path(os.environ.get("CUE_HELPER_LOCK_DIR", str(state_dir() / "locks")))
+
+
 def lock_path(serial: str) -> Path:
     digest = hashlib.sha256(serial.encode("utf-8")).hexdigest()[:24]
-    return Path(os.environ.get("CUE_HELPER_LOCK_DIR", str(DEFAULT_LOCK_DIR))) / f"device-{digest}.lock"
+    return lock_dir() / f"device-{digest}.lock"
 
 
 def inherited_owner(serial: str, text: str) -> int | None:

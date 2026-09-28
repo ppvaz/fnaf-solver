@@ -40,6 +40,13 @@ wakes the phone, never taps anything, never writes airplane mode or Do Not
 Disturb, and runs no command outside its own fixed vocabulary. The jobs carry
 their own resolved profiles; the window infers no mode, geometry, coordinate
 or timing.
+
+Nights (Pedro, 2026-09-27: "Yes, play nights"): the window's queue child is
+the only runner that claims `night` jobs (`--nights`), one per call, each only
+if its own budget fits before the stop instant. After a night killed before it
+could observe the title, the window recovers the title itself
+(`night-job.py title --recover`). In the morning, after the lease, it packs
+each night's run and appends one summary line per window.
 """
 
 from __future__ import annotations
@@ -63,7 +70,8 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
-from cue_helper_device_lock import DeviceBusy, DeviceLock  # noqa: E402
+import night_jobs  # noqa: E402
+from cue_helper_device_lock import DeviceBusy, DeviceLock, state_dir  # noqa: E402
 
 
 def _load(name: str, file: str):
@@ -114,13 +122,21 @@ TARGETS = (SETUP.TARGET_PACKAGE, *SETUP.OTHER_TARGETS.values())
 LOCKED_PATTERNS = SETUP.LOCKED_PATTERNS
 
 # --- deadlines (seconds) -----------------------------------------------------
-JOB_TIMEOUT_S = QUEUE.JOB_TIMEOUT_S   # one queue job's own ceiling
+# A job's own ceiling is the queue's: JOB_TIMEOUT_S for a setup or check, and
+# a night job's budgetS (night_jobs.budget_s: every step's bound plus the
+# night's own length). No job starts unless that ceiling fits before the stop.
+JOB_TIMEOUT_S = QUEUE.JOB_TIMEOUT_S
 CHILD_WAIT_S = 120.0              # the queue child's --wait for a ready device or a hold
 QUEUE_INTERVAL_S = 5.0            # the queue child's --interval
-STOP_GRACE_S = 150.0              # SIGINT -> SIGTERM: a job's own cleanup (night-run resets the game)
+# SIGINT -> SIGTERM: a job's own cleanup. A night's runner stops and pulls its
+# recording and resets the game to the title (night-run.sh's EXIT trap), then
+# the night job observes the title (night_jobs.POST_TITLE_S).
+STOP_GRACE_S = 300.0
 TERM_GRACE_S = 20.0               # SIGTERM -> SIGKILL
 KILL_GRACE_S = 5.0
+NIGHT_RECOVERY_S = night_jobs.POST_TITLE_S   # the window's own title recovery after a killed night
 RESTORE_BUDGET_S = 120.0          # reserved before the window end for leave + restore
+PACK_TIMEOUT_S = 300.0            # one morning `evidence pack` (host only, after the lease)
 RESTORE_RETRY_S = 1800.0          # a phone unreachable at restore is retried this long
 RESTORE_RETRY_POLL_S = 30.0
 LOCK_POLL_S = 15.0
@@ -134,6 +150,10 @@ FOCUS_RETRIES = 3
 QUEUE_COMMAND = [str(HERE / "cue-helper-queue.sh")]
 HELPER_STOP_COMMAND = [str(HERE / "cue-helper-setup.sh"), "--stop"]
 CAPABILITIES_COMMAND = ["node", str(HERE / "capabilities.mjs")]
+NIGHT_JOB_COMMAND = [sys.executable, str(HERE / "night-job.py")]
+PACK_COMMAND = ["node", str(ROOT / "tools/evidence.js"), "pack"]
+PACKS_ROOT = ROOT                 # docs/evidence/runs/<run> lives here
+RUNS_ROOT = ROOT                  # artifacts/runs/<run> lives here
 
 SERIAL = re.compile(r"^[A-Za-z0-9._:-]{1,96}$")
 CLOCK = re.compile(r"^([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$")
@@ -194,8 +214,10 @@ def window_dir() -> Path:
 
 
 def pending_path(serial: str) -> Path:
+    """The phone's unrestored settings: host-wide (state_dir()), so a restore
+    from any checkout or worktree finds what the main checkout's window left."""
     digest = hashlib.sha256(serial.encode("utf-8")).hexdigest()[:16]
-    return window_dir() / f"pending-restore-{digest}.json"
+    return state_dir() / "overnight-window" / f"pending-restore-{digest}.json"
 
 
 def write_json(path: Path, value: object) -> None:
@@ -271,10 +293,10 @@ def resolve_config(args: argparse.Namespace) -> dict:
         "witnessedSettings": list(WITNESSED_SETTINGS),
         "allowedForeground": ["<the phone's resolved HOME activity>", COMPANION, *TARGETS],
         "deadlines": {
-            "jobTimeoutS": JOB_TIMEOUT_S, "childWaitS": CHILD_WAIT_S,
-            "stopGraceS": STOP_GRACE_S, "termGraceS": TERM_GRACE_S,
-            "restoreBudgetS": RESTORE_BUDGET_S, "restoreRetryS": RESTORE_RETRY_S,
-            "maxHolds": MAX_HOLDS,
+            "jobTimeoutS": JOB_TIMEOUT_S, "nightJobBudget": "per job: night_jobs.budget_s(nightMs)",
+            "childWaitS": CHILD_WAIT_S, "stopGraceS": STOP_GRACE_S, "termGraceS": TERM_GRACE_S,
+            "nightRecoveryS": NIGHT_RECOVERY_S, "restoreBudgetS": RESTORE_BUDGET_S,
+            "restoreRetryS": RESTORE_RETRY_S, "maxHolds": MAX_HOLDS,
         },
         "queueFile": str(QUEUE.queue_path()),
     }
@@ -617,6 +639,16 @@ class Window:
     def pending(self) -> list[dict]:
         return [job for job in self.queue_jobs() if job.get("state") == "PENDING"]
 
+    def next_budget(self) -> float:
+        """The ceiling of the job the queue claims next (its first PENDING)."""
+        pending = self.pending()
+        if not pending or pending[0].get("kind") != "night":
+            return JOB_TIMEOUT_S
+        try:
+            return QUEUE.job_timeout_s(pending[0])
+        except QUEUE.QueueError:
+            return float("inf")
+
     def child_env(self) -> dict:
         env = dict(os.environ)
         env["ANDROID_SERIAL"] = self.serial
@@ -631,10 +663,11 @@ class Window:
                             event=self.event, sleep=self.sleep)
 
     # -- the queue child
-    def run_child(self, stop: Deadline) -> dict:
-        wait = max(0.0, min(CHILD_WAIT_S, stop.remaining() - JOB_TIMEOUT_S))
+    def run_child(self, stop: Deadline, budget: float) -> dict:
+        wait = max(0.0, min(CHILD_WAIT_S, stop.remaining() - budget))
+        # --nights: only a window's queue child claims night jobs.
         command = [*QUEUE_COMMAND, "run", "--max-jobs", "1", "--wait", f"{wait:.1f}",
-                   "--interval", str(QUEUE_INTERVAL_S)]
+                   "--interval", str(QUEUE_INTERVAL_S), "--nights"]
         offset = self.jobs_log.stat().st_size if self.jobs_log.exists() else 0
         attempt = {"attempt": len(self.record["jobs"]) + 1, "startedAt": iso(now_local()),
                    "command": command}
@@ -662,6 +695,9 @@ class Window:
         attempt.update({"endedAt": iso(now_local()), "exit": code, "signals": self.child_signals,
                         "done": re.findall(r"^DONE id=(\S+)", output, re.M),
                         "failed": re.findall(r"^FAILED id=(\S+)", output, re.M),
+                        "nights": [{"id": m.group(1), "game": m.group(2), "night": int(m.group(3))}
+                                   for m in re.finditer(r"^RUNNING id=(\S+) kind=night game=(\S+) night=(\d)",
+                                                        output, re.M)],
                         "outputTail": output[-2000:]})
         hold = re.search(r"QUEUE HOLD reason=([a-z0-9-]+)", output)
         if stopped:
@@ -674,6 +710,8 @@ class Window:
             attempt["kind"] = "failed"
         elif code == 75:
             attempt.update({"kind": "hold", "hold": hold.group(1) if hold else "unknown"})
+        elif code == 130:
+            attempt["kind"] = "interrupted"
         else:
             attempt["kind"] = "error"
         self.event("child.end", exit=code, kind=attempt["kind"])
@@ -740,7 +778,7 @@ class Window:
         # The queue child is signalled here, so that its own cleanup (the
         # SIGINT, SIGTERM and SIGKILL graces) and then the leave and the
         # restore all fit before the window's end.
-        stop = Deadline((closes - now).total_seconds() - RESTORE_BUDGET_S - STOP_GRACE_S
+        stop = Deadline((closes - now).total_seconds() - RESTORE_BUDGET_S - NIGHT_RECOVERY_S - STOP_GRACE_S
                         - TERM_GRACE_S - KILL_GRACE_S, now, base)
         armed = now < opens
         self.record["window"].update({
@@ -751,8 +789,9 @@ class Window:
                                             "kind": job.get("kind")} for job in queue_before]}
         if not armed and not self.pending():
             return self.end("COMPLETE", "queue-empty")
-        if stop.remaining() - max(0.0, start.remaining()) < CHILD_WAIT_S + JOB_TIMEOUT_S:
-            return self.end("DEADLINE", "no-room-for-a-job-before-the-deadline")
+        budget = self.next_budget()
+        if stop.remaining() - max(0.0, start.remaining()) < CHILD_WAIT_S + budget:
+            return self.end("DEADLINE", f"no-room-for-a-job-before-the-deadline (next job {budget:.0f} s)")
 
         if not device_present(self.serial):
             return self.end("DEVICE_ABSENT", "adb get-state is not device")
@@ -812,12 +851,13 @@ class Window:
                 return self.end("ABORTED", f"signal {self.signals[0]}")
             if not self.pending():
                 return self.end("COMPLETE", "queue-drained")
-            if stop.remaining() < CHILD_WAIT_S + JOB_TIMEOUT_S:
-                return self.end("DEADLINE", "no-room-for-the-next-job")
+            budget = self.next_budget()
+            if stop.remaining() < CHILD_WAIT_S + budget:
+                return self.end("DEADLINE", f"no-room-for-the-next-job ({budget:.0f} s)")
             verdict = self.check_phone(lock_wait=True)
             if verdict is not None:
                 return self.end(*verdict)
-            attempt = self.run_child(stop)
+            attempt = self.run_child(stop, budget)
             kind = attempt["kind"]
             if kind == "aborted":
                 return self.end("ABORTED", f"signal {self.signals[0]}")
@@ -825,7 +865,7 @@ class Window:
                 return self.end("DEADLINE", "hard-deadline")
             if kind == "empty":
                 return self.end("COMPLETE", "queue-drained")
-            if kind == "failed":
+            if kind in ("failed", "interrupted"):
                 return self.end("JOB_FAILED", ",".join(attempt["failed"]) or f"exit {attempt['exit']}")
             if kind == "hold":
                 holds += 1
@@ -839,8 +879,8 @@ class Window:
 
     # -- the end: always runs
     def finish(self) -> None:
-        steps = (self.finish_child, self.finish_queue, self.finish_leave,
-                 self.finish_restore, self.finish_lease)
+        steps = (self.finish_child, self.finish_queue, self.finish_nights, self.finish_leave,
+                 self.finish_restore, self.finish_lease, self.finish_morning)
         for step in steps:
             try:
                 step()
@@ -880,6 +920,105 @@ class Window:
         self.record.setdefault("queue", {})["after"] = [
             {"id": job.get("id"), "state": job.get("state"), "kind": job.get("kind")}
             for job in self.queue_jobs()]
+
+    def night_jobs_run(self) -> list[dict]:
+        """Every night job this window started, with its record if it wrote one."""
+        seen, nights = set(), []
+        for attempt in self.record["jobs"]:
+            for night in attempt.get("nights", []):
+                if night["id"] in seen:
+                    continue
+                seen.add(night["id"])
+                path = night_jobs.job_root() / night["id"] / "job.json"
+                try:
+                    record = json.loads(path.read_text(encoding="utf-8"))
+                except (OSError, ValueError):
+                    record = None
+                nights.append({**night, "record": record, "recordPath": str(path)})
+        return nights
+
+    def finish_nights(self) -> None:
+        """Mistake register 6, the window's side: a night job killed before it
+        could observe the title leaves the game wherever the night was. Observe
+        it here, force-stopping and relaunching if need be, under the lease."""
+        if self.lease is None:
+            return
+        recoveries = []
+        for night in self.night_jobs_run():
+            after = ((night["record"] or {}).get("titleAfter") or {}).get("status")
+            started = bool((night["record"] or {}).get("runner"))
+            if after == "OBSERVED" or (night["record"] is not None and not started):
+                continue
+            command = [*NIGHT_JOB_COMMAND, "title", "--game", night["game"], "--recover"]
+            try:
+                result = subprocess.run(command, cwd=ROOT, env=self.child_env(), check=False, text=True,
+                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                        timeout=NIGHT_RECOVERY_S, start_new_session=True)
+                line = next((row for row in reversed(result.stdout.splitlines()) if row.startswith("TITLE ")),
+                            f"exit {result.returncode}")
+                recoveries.append({"job": night["id"], "exit": result.returncode, "title": line[:500]})
+            except subprocess.TimeoutExpired:
+                recoveries.append({"job": night["id"], "exit": None, "title": "timeout"})
+            self.event("night.title-recovery", **recoveries[-1])
+        if recoveries:
+            self.record["nightRecoveries"] = recoveries
+
+    def finish_morning(self) -> None:
+        """Pack each night's evidence and write one summary line for the window.
+
+        Host-only, after the lease: `evidence pack` for a FNaF 2 or FNaF 1 run
+        that night-run.sh did not already pack (a killed runner never reaches
+        its own pack), and the run record for FNaF 4."""
+        nights = []
+        for night in self.night_jobs_run():
+            record = night["record"] or {}
+            run_id = record.get("runId")
+            entry = {"job": night["id"], "game": night["game"], "night": night["night"],
+                     "outcome": record.get("outcome", "NO_RECORD"), "runId": run_id,
+                     "terminal": (record.get("terminal") or {}).get("outcome")}
+            if run_id and night["game"] in ("fnaf2", "fnaf1"):
+                pack_dir = PACKS_ROOT / "docs/evidence/runs" / run_id
+                if not pack_dir.is_dir() and (RUNS_ROOT / "artifacts/runs" / run_id).is_dir():
+                    try:
+                        result = subprocess.run([*PACK_COMMAND, run_id], cwd=ROOT, check=False, text=True,
+                                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                                timeout=PACK_TIMEOUT_S, start_new_session=True)
+                        entry["packExit"] = result.returncode
+                        entry["packOutput"] = result.stdout[-500:]
+                    except subprocess.TimeoutExpired:
+                        entry["packExit"] = None
+                    entry["pack"] = "packed" if pack_dir.is_dir() else "FAILED"
+                else:
+                    entry["pack"] = "present" if pack_dir.is_dir() else "no-run-directory"
+                try:
+                    entry["packOutcome"] = json.loads((pack_dir / "pack.json").read_text(encoding="utf-8")).get("outcome")
+                    entry["packDir"] = str(pack_dir.relative_to(PACKS_ROOT))
+                except (OSError, ValueError):
+                    pass
+            elif run_id and night["game"] == "fnaf4":
+                run_json = RUNS_ROOT / "artifacts/runs" / run_id / "run.json"
+                entry["pack"] = "run-record" if run_json.is_file() else "no-run-record"
+                entry["runRecord"] = str(run_json.relative_to(RUNS_ROOT))
+            else:
+                entry["pack"] = "no-run"
+            nights.append(entry)
+        restore = (self.record.get("settings") or {}).get("restore")
+        parts = [f"{night['game']} N{night['night']} {night['runId'] or '-'} {night['outcome']}"
+                 f"{'/' + str(night['terminal']) if night['terminal'] else ''} pack={night['pack']}"
+                 f"{':' + str(night.get('packOutcome')) if night.get('packOutcome') else ''}" for night in nights]
+        setups = sum(len(attempt.get("done", [])) for attempt in self.record["jobs"]) - \
+            sum(1 for night in nights if night["outcome"] == "NIGHT_PLAYED")
+        line = (f"{self.record['window'].get('start', self.record['window']['openedAt'])[:10]} {self.id} "
+                f"{self.outcome} ({self.reason}) | nights {len(nights)}: {'; '.join(parts) or 'none'} | "
+                f"other jobs done {max(0, setups)} | restored "
+                f"{'n/a' if restore is None else ('verified' if restore['verified'] else 'NOT VERIFIED')} | "
+                f"lease {'released' if self.lease_released else 'not held'}")
+        self.record["morning"] = {"nights": nights, "summary": line}
+        summary = window_dir() / "summary.log"
+        summary.parent.mkdir(parents=True, exist_ok=True)
+        with summary.open("a", encoding="utf-8") as handle:
+            handle.write(line + "\n")
+        print(f"MORNING {line}", flush=True)
 
     def finish_leave(self) -> None:
         """Leave the screen as the window found it: projection, then foreground."""
@@ -964,10 +1103,17 @@ def dry_run(config: dict) -> int:
         print(f"window   OUTSIDE_WINDOW at {iso(now)}")
     else:
         opens, closes = window
-        stop = closes - timedelta(seconds=RESTORE_BUDGET_S + STOP_GRACE_S + TERM_GRACE_S + KILL_GRACE_S)
+        stop = closes - timedelta(seconds=RESTORE_BUDGET_S + NIGHT_RECOVERY_S + STOP_GRACE_S
+                                  + TERM_GRACE_S + KILL_GRACE_S)
         print(f"window   {iso(opens)} .. {iso(closes)}{' (would arm early)' if now < opens else ''}")
-        print(f"deadline the queue child is stopped at {iso(stop)}; no job starts after "
+        print(f"deadline the queue child is stopped at {iso(stop)}; a setup or check starts no later than "
               f"{iso(stop - timedelta(seconds=CHILD_WAIT_S + JOB_TIMEOUT_S))}")
+        for job in jobs:
+            if job.get("state") == "PENDING" and job.get("kind") == "night":
+                latest = stop - timedelta(seconds=CHILD_WAIT_S + float(job.get("budgetS", 0)))
+                print(f"night    {job.get('id')} {job.get('game')} N{job.get('night')} budget "
+                      f"{int(job.get('budgetS', 0))} s: starts no later than {iso(latest)}"
+                      f"{'' if latest > opens else ' (NEVER: longer than the window)'}")
     pending = pending_path(config["serial"]) if config["serial"] != "UNKNOWN" else None
     if pending is not None and pending.exists():
         print(f"pending  {pending} (an earlier window left settings unrestored)")
@@ -1089,8 +1235,8 @@ def render_units(config: dict, out: str | None) -> int:
             path_dirs.append(directory)
     start = parse_clock(config["start"], "start")
     length = window_length_s(start, parse_clock(config["end"], "end"))
-    stop_s = int(STOP_GRACE_S + TERM_GRACE_S + KILL_GRACE_S + RESTORE_BUDGET_S + 60)
-    runtime_s = int(config["maxArmLeadS"] + length + stop_s + RESTORE_RETRY_S)
+    stop_s = int(STOP_GRACE_S + TERM_GRACE_S + KILL_GRACE_S + NIGHT_RECOVERY_S + RESTORE_BUDGET_S + 60)
+    runtime_s = int(config["maxArmLeadS"] + length + stop_s + RESTORE_RETRY_S + PACK_TIMEOUT_S * 4)
     env = {"PATH": ":".join(path_dirs), "FNAF_SERIAL": config["serial"],
            "FNAF_WINDOW_START": config["start"], "FNAF_WINDOW_END": config["end"],
            "FNAF_WINDOW_BATTERY_FLOOR": str(config["batteryFloorPercent"])}

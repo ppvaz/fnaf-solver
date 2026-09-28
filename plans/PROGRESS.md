@@ -2471,3 +2471,82 @@ Open:
   foreground check catches it, and only while its UI is in front.
 - A projection-consent dialog left open reads IN_USE (systemui). That ends the
   window, which is the safe side.
+
+## 2026-09-27 — Night jobs: the overnight window plays committed winners (S7, FIXTURE, no device run)
+
+**Decision (Pedro, 2026-09-27).** Asked whether overnight windows may play full
+nights unattended on his phone (a queued job that runs a committed winner's
+bundle, with the usual lease, deadlines and abort), he answered "Yes, play
+nights".
+
+- **The queue has a `night` kind.**
+  - A job is one night of a *committed* `tools/device/*-winner.json`
+    (`enqueue night --game fnaf2|fnaf1|fnaf4 --winner W --night N`).
+  - `night_jobs.py` validates it and binds it by the winner's sha256 and, for
+    FNaF 2, the sha256 of a freshly emitted plan.
+  - Its budget is every step's bound plus the night's length (the plan's
+    `#observe-until`, or the route winner's `stopAfterMs`). k3's is 2135 s.
+  - Only the overnight window claims night jobs (`run --nights`).
+    `cue.queue.run` holds them and reports `nights-held=N`.
+  - A night interrupted or killed ends FAILED and is never replayed.
+- **`tools/device/night-job.py` plays one.** Under the window's lease:
+  - it checks custody and emits a bundle into the job's directory, hashed;
+  - it refuses on a checkout without the post-night static halt (669447b), or
+    if the plan moved since the job was queued;
+  - it links audio where the runner reads it;
+  - it observes the title (SNAP, `native-frame.mjs`, then `title-observe.py`)
+    and refuses unless the title offers the declared night.
+
+  The runner is `night-run.sh --no-grade`, `fnaf1-winner.mjs` or
+  `fnaf4-run.sh --mode loop`. It runs in the job's process group, with its
+  lease-held marker. After any end or abort, the title is observed again, and
+  if need be the game is force-stopped, relaunched and observed.
+- **The window.**
+  - A job starts only if its own budget fits before the stop instant, and the
+    stop instant now also reserves the window's title recovery.
+  - After a night killed before it could observe the title, the window
+    recovers the title itself.
+  - In the morning it packs each night (`evidence pack`) and appends one line
+    per window to `artifacts/overnight-windows/summary.log`.
+- **Gaps from the last entry, closed.**
+  - A live `night-run.sh` now takes the serial lease (or trusts
+    `FNAF_LEASE_HELD=1`).
+  - The lease files, the queue and the pending restore are host-wide: the main
+    checkout's `captures/cue-helper/`, seen from every worktree.
+    `fnaf1-winner.mjs` uses the same directory.
+- **Found on the way.** `subprocess.run` SIGKILLs its child 0.25 s after a
+  KeyboardInterrupt. So an interrupted queue killed the job it was running,
+  before any night runner's reset could run. The queue now records the signal
+  and waits, and a job past its ceiling gets SIGINT, SIGTERM, then SIGKILL on
+  its whole process tree.
+- **Gate:** `tools/device/test-night-job.py` in `npm run test:unit`, 73 checks.
+  It runs the real queue, window, `night-job.py`, emit of k3, and the FNaF 2
+  title model over synthetic native frames. It uses the real lease and pack
+  builder, against `testdata/fake_phone.py`. It covers:
+  - title mismatch: refused before any runner;
+  - abort mid-night, with a runner that does not reset: the game at an
+    observed title, the settings restored, the lease released;
+  - a SIGKILLed night: recovered by the window;
+  - a deadline too close: the job is not started;
+  - a played night: packed in the morning.
+
+  `test-night-run-dry.mjs` now also checks the live lease, and
+  `test-cue-helper-device-lock.py` checks the host-wide lease directory.
+  FIXTURE only; no device claim.
+- **Gate loosened,** recorded in the ROADMAP table: the queue's "no
+  game-control actions", by the one word `night`, citing Pedro's answer.
+- **No device contact.** Other agents are sharing the phone tonight. Nothing
+  was enqueued and no timer was installed.
+
+Open:
+- **What can run tonight.** Only FNaF 2 Nights 6 and 7 (the 6th Night and
+  Custom Night items) and the FNaF 1 Custom Night winner. FNaF 2 Nights 1-5
+  refuse until the FNaF 2 title model has a Continue digit reader (the FNaF 1
+  model has one). FNaF 4 refuses until a FNaF 4 title model is measured.
+- **Check on the phone, when Pedro allows it,** with `preflight` and a single
+  night job in a short daytime window:
+  - the SNAP-read title on the real phone;
+  - the job's force-stop, relaunch and title recovery;
+  - `night-run.sh` under the borrowed lease.
+- Packing happens both in `night-run.sh` and in the morning. The morning packs
+  only a run that has none yet.

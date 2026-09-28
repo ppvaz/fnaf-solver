@@ -39,7 +39,7 @@ import { designBlock } from '../winner-census.mjs';
 import { FOUR_TWENTY, LANE_FILE, POPULATION_KIND, POPULATION_LANES, TIMING_PATH, loadTiming, newestTreeRecord,
   pinnedGrid420, runDeviceNight, winnerPolicyOptions } from '../fnaf1-device-lane.mjs';
 import { ROOT, RUNNER, listWinners, shapeProblems, pinsAtCommit, pinnedCommit, routeDrift, materialize, removeTree,
-  treeProblems, replayArguments, replayInvocation, sha256, winnerCustody } from './fnaf1-winner.mjs';
+  treeProblems, replayArguments, replayInvocation, sha256, sharedLockDir, winnerCustody } from './fnaf1-winner.mjs';
 
 const failures = [];
 let checks = 0;
@@ -129,8 +129,9 @@ try {
     eq(`${path}: the replay's lease is this checkout's`, plan.args.slice(0, 3), [join(ROOT, 'tools/device/device-lock-exec.py'), winner.target.device, '--']);
     const runAt = plan.args.indexOf(join(tree, RUNNER));
     ok(`${path}: the process under the lease is the pinned tree's runner`, runAt > 0 && !relative(tree, plan.args[runAt]).startsWith('..'));
-    ok(`${path}: the pinned runner skips its own lease and shares this checkout's lock dir`,
-      plan.args.includes('FNAF1_LEASE_HELD=1') && plan.args.includes(`CUE_HELPER_LOCK_DIR=${join(ROOT, 'captures/cue-helper/locks')}`));
+    ok(`${path}: the pinned runner skips its own lease and shares the host-wide lock dir (the main checkout's)`,
+      plan.args.includes('FNAF1_LEASE_HELD=1') && plan.args.includes(`CUE_HELPER_LOCK_DIR=${sharedLockDir(ROOT, {})}`)
+      && sharedLockDir(ROOT, {}).endsWith('captures/cue-helper/locks'));
     const won = winner.command.trim().split(/\s+/).slice(1).map((t) => (t.startsWith('~/') ? `/home/gate/${t.slice(2)}` : t));
     const labelAt = won.indexOf('--label');
     eq(`${path}: the replay passes the won command's arguments, only the label changed`,
