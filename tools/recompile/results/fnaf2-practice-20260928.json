@@ -1,0 +1,36 @@
+{
+  "schema": "recompile-practice-apk-v1",
+  "evidenceId": "recompile-practice-apk-ad92f5548c4cf9a5",
+  "step": "ROADMAP S2",
+  "claimLevel": "DEVICE_MEASURED",
+  "fidelity": "rebuilt-runtime",
+  "status": "installed-and-booted",
+  "recordedAt": "2026-09-28",
+  "device": {
+    "serial": "ZF525F5BH5",
+    "model": "moto g56 5G",
+    "package": "org.fnaf2practice.play",
+    "apkSha256Prefix": "ad92f5548c4cf9a5",
+    "install": "Success",
+    "packagePathVerified": true,
+    "processPidObserved": true,
+    "titleFrameObserved": true,
+    "titleFrame": "Five Nights at Freddy's 2 / New Game / Continue Night 1"
+  },
+  "instrument": {
+    "stateLog": "practice-state.jsonl",
+    "inputLog": "practice-input.jsonl",
+    "scope": "office updates only; read-only",
+    "fields": [
+      "camera/view/mask/danger/blackout/time-left/got-you/drop-everything/office-occupied/golden",
+      "music-fill/battery",
+      "rng draws and state",
+      "actor x/y/animation/frame/direction/alterables 0-1"
+    ]
+  },
+  "open": [
+    "No office encounter trace has been collected yet; title boot is the only DEVICE_MEASURED runtime observation.",
+    "Preflight capture-restart remains FAIL because the Cue Helper capture button was not found.",
+    "The APK is a research rebuild and does not claim stock-game or Shooter25 fidelity."
+  ]
+}

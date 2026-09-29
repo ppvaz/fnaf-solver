@@ -299,3 +299,24 @@ because SDL blocks the event pump while paused. On the host,
 **Every game.** `build-lib.sh` cross-builds any converted game's `libmain.so`
 (`--gles1` for the ES 1.1 target). `build-apk.sh --package org.fnaf<N>rebuild.play
 --label ...` packages it, so the four games install side by side.
+
+## FNaF 2 practice APK, first layer
+
+`apply-practice-mod.py --gamesrc DIR` adds the first, read-only practice layer
+to a **private copy** of FNaF 2's generated `gamesrc`. The office HUD shows the
+raw camera, view, mask, danger, blackout, music-box and battery values. The
+`practice-state.jsonl` file records those values every office update, the
+rebuild harness clock and RNG state, and snapshots of each encounter actor's
+position, animation/frame, direction and first two alterables. A separate
+`practice-input.jsonl` records left-button down/up edges observed by the game
+loop. On Android those edges represent the SDL button stream that the game
+receives; neither log identifies the physical input device or proves that a
+particular event changed game state. Both files are written to the app's
+private working directory.
+
+Build in a separate external workspace and package with a distinct ID, for
+example `org.fnaf2practice.play`. The input CCN, assets, generated source,
+libraries and APK stay outside Git. This is an initial Android practice port,
+not Shooter25's original Windows executable; it does not yet include its
+scenario toggles or reactive bot. Its state values are research readouts and
+the game remains a recompiled runtime, not stock-game evidence.
