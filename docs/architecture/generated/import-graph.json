@@ -1995,7 +1995,7 @@
       "file": "tools/device/closed-families.mjs",
       "imports": [
         "./policy-grammar.mjs",
-        "@sixam/core/control",
+        "@sixam/propose/policy",
         "node:fs"
       ]
     },
@@ -2424,7 +2424,7 @@
         "./policy-equivalence.mjs",
         "./policy-interpreter.mjs",
         "./policy-ir.mjs",
-        "@sixam/core/control",
+        "@sixam/propose/policy",
         "node:crypto",
         "node:fs",
         "node:url"
@@ -2434,7 +2434,7 @@
       "file": "tools/device/policy-equivalence.mjs",
       "imports": [
         "./policy-interpreter.mjs",
-        "@sixam/core/control",
+        "@sixam/propose/policy",
         "@sixam/source",
         "node:crypto"
       ]
@@ -2443,13 +2443,13 @@
       "file": "tools/device/policy-grammar.mjs",
       "imports": [
         "./policy-ir.mjs",
-        "@sixam/core/control"
+        "@sixam/propose/policy"
       ]
     },
     {
       "file": "tools/device/policy-interpreter.mjs",
       "imports": [
-        "@sixam/core/control",
+        "@sixam/propose/policy",
         "@sixam/source/fnaf2"
       ]
     },
@@ -2458,7 +2458,7 @@
       "imports": [
         "./arm-verification.mjs",
         "./minus-toys-plan.mjs",
-        "@sixam/core/control",
+        "@sixam/propose/policy",
         "@sixam/source"
       ]
     },
@@ -2469,7 +2469,7 @@
         "./policy-equivalence.mjs",
         "./policy-grammar.mjs",
         "./policy-interpreter.mjs",
-        "@sixam/core/control",
+        "@sixam/propose/policy",
         "node:crypto",
         "node:fs"
       ]
@@ -2862,7 +2862,7 @@
       "file": "tools/device/test-policy-ir.mjs",
       "imports": [
         "./policy-ir.mjs",
-        "@sixam/core/control",
+        "@sixam/propose/policy",
         "node:crypto"
       ]
     },
@@ -3028,9 +3028,9 @@
     {
       "file": "tools/factreplay.mjs",
       "imports": [
-        "@sixam/core/control",
         "@sixam/core/sensing",
         "@sixam/kernel/contracts",
+        "@sixam/propose/fnaf2",
         "@sixam/source/fnaf2",
         "node:child_process",
         "node:fs",
@@ -3121,8 +3121,8 @@
     {
       "file": "tools/mangletest.mjs",
       "imports": [
-        "@sixam/core/control",
         "@sixam/core/sensing",
+        "@sixam/propose/fnaf2",
         "@sixam/source/fnaf2"
       ]
     },
@@ -3332,8 +3332,8 @@
     {
       "file": "tools/nightloop-run.mjs",
       "imports": [
-        "@sixam/core/control",
         "@sixam/core/sensing",
+        "@sixam/propose/fnaf2",
         "@sixam/source/fnaf2"
       ]
     },
@@ -3354,8 +3354,8 @@
         "./device/policy-grammar.mjs",
         "./device/policy-interpreter.mjs",
         "./device/policy-ir.mjs",
-        "@sixam/core/control",
-        "@sixam/core/sensing"
+        "@sixam/core/sensing",
+        "@sixam/propose/policy"
       ]
     },
     {
@@ -3400,7 +3400,7 @@
       "file": "tools/policy-inspect.js",
       "imports": [
         "./device/policy-ir.mjs",
-        "@sixam/core/control"
+        "@sixam/propose/policy"
       ]
     },
     {
@@ -3513,8 +3513,8 @@
       "imports": [
         "../tools/device/minus-toys-plan.mjs",
         "./stat.mjs",
-        "@sixam/core/control",
         "@sixam/core/sensing",
+        "@sixam/propose/fnaf2",
         "@sixam/source/fnaf2",
         "node:url"
       ]
@@ -4189,8 +4189,8 @@
         "./device/minus-toys-jitter.mjs",
         "./device/minus-toys-plan.mjs",
         "./stat.mjs",
-        "@sixam/core/control",
         "@sixam/core/sensing",
+        "@sixam/propose/fnaf2",
         "@sixam/source/fnaf2",
         "node:url"
       ]

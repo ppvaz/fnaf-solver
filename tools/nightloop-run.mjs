@@ -12,7 +12,7 @@ import * as C from '@sixam/source/fnaf2';
 import { Sim, Rng } from '@sixam/source/fnaf2';
 import { Observer } from '@sixam/core/sensing';
 import { CycleController, makeUnknownFacts, getCycle, NightPolicy,
-         NIGHT_POLICY_CYCLES } from '@sixam/core/control';
+         NIGHT_POLICY_CYCLES } from '@sixam/propose/fnaf2';
 
 export const LIBRARY_IDS = NIGHT_POLICY_CYCLES;
 const REVIEWED = new Set(LIBRARY_IDS);

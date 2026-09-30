@@ -10,7 +10,7 @@
 import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
 import { Observer } from '@sixam/core/sensing';
-import { MangleThreatReactive } from '@sixam/core/control';
+import { MangleThreatReactive } from '@sixam/propose/fnaf2';
 
 let failures = 0;
 const ok = (what, condition) => {

@@ -6,7 +6,7 @@
 // smuggle in an unsourced opening as an anonymous list of taps.
 import {
   BRANCH_SCHEMA, POLICY_SCHEMA, canonicalPolicy, validateBranch, validatePolicy,
-} from '@sixam/core/control';
+} from '@sixam/propose/policy';
 import { minimalPolicy } from './policy-ir.mjs';
 
 export const GRAMMAR_SCHEMA = 'policy-grammar-v1';

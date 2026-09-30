@@ -11,7 +11,7 @@ import {
   admissibleFacts, deviceAdmissibleFacts, earliestReactionMs, evaluatePredicate,
   excludedFacts, observationLanguage, validateBranch, validatePredicate,
   validatePolicy, worstCaseFactAgeMs,
-} from '@sixam/core/control';
+} from '@sixam/propose/policy';
 import { minimalPolicy } from './device/policy-ir.mjs';
 import {
   policyBranches, policyFingerprint, structuralShape, validateGrammarPolicy,

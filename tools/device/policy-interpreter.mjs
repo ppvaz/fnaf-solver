@@ -1,7 +1,7 @@
 // Finite semantic interpreter for policy-v1 (Plan 21 package 2 foundation).
 // It expands only the reviewed action modes in the IR; it has no shell or
 // callback escape hatch. A later Sim adapter can consume this event stream.
-import { validatePolicy } from '@sixam/core/control';
+import { validatePolicy } from '@sixam/propose/policy';
 import { Sim } from '@sixam/source/fnaf2';
 import * as C from '@sixam/source/fnaf2';
 

@@ -10,7 +10,7 @@
 // admit one as a declared control (that is what `mode: 'record'` is for), but
 // it may not admit one by accident.
 import { readFileSync } from 'node:fs';
-import { OBSERVATION_BUDGET } from '@sixam/core/control';
+import { OBSERVATION_BUDGET } from '@sixam/propose/policy';
 import { knownPolicyShapes, policyBranches, structuralShape } from './policy-grammar.mjs';
 
 const REGISTER = JSON.parse(readFileSync(

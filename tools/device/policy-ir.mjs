@@ -2,7 +2,7 @@
 import { build, KNOBS0 } from './minus-toys-plan.mjs';
 import { DOUBLE_GLITCH_CAMERA_PAIRS } from './arm-verification.mjs';
 import { FNAF2_CONTROL_VOCABULARY as V } from '@sixam/source';
-import { POLICY_SCHEMA, validatePolicy } from '@sixam/core/control';
+import { POLICY_SCHEMA, validatePolicy } from '@sixam/propose/policy';
 
 const rowAction = (row, defaultContactMs = 33) => {
   const [at, kind, action, duration] = row;

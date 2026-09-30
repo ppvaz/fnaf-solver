@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /** Inspect a finite policy artifact without executing it or touching a device. */
-import { canonicalPolicy } from '@sixam/core/control';
+import { canonicalPolicy } from '@sixam/propose/policy';
 import { minimalPolicy } from './device/policy-ir.mjs';
 
 if (process.argv.includes('--help') || process.argv.length < 3) {

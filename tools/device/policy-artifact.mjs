@@ -7,7 +7,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
-import { canonicalPolicy, validatePolicy } from '@sixam/core/control';
+import { canonicalPolicy, validatePolicy } from '@sixam/propose/policy';
 import { minimalPolicy } from './policy-ir.mjs';
 import { compileDevicePlan, comparePolicyToDevice } from './policy-equivalence.mjs';
 import { replayPolicy } from './policy-interpreter.mjs';
