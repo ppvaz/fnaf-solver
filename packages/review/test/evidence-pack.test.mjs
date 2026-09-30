@@ -1,4 +1,4 @@
-// Run packs (tools/evidence-pack.mjs) carry a night's text evidence into the repository and
+// Run packs (packages/review/src/evidence-pack.mjs) carry a night's text evidence into the repository and
 // leave its frames behind. This builds a campaign and its night-run directory in a throwaway
 // tree, packs them, and checks what may and may not cross: no media file, no pixel array, no
 // machine path; every frame still named by hash; tampering refused; the gate reading the pack.
@@ -8,10 +8,10 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { stableHash } from '@sixam/core/contracts';
-import { CAMPAIGN_RESULT_SCHEMA } from './evidence-campaign.mjs';
+import { CAMPAIGN_RESULT_SCHEMA } from '../src/evidence-campaign.mjs';
 import { ATTESTATION_FILE, ATTESTATION_SCHEMA, ATTESTATION_SCHEMA_V1, buildFnaf1Pack, buildPack, packCustody, packDigest, packEntry,
   packPromotionChecks, readPack, recoverFromRunLog, recoveryCheck, refuseFrames, resolvePackTargets, trackedWinners,
-  writePack } from './evidence-pack.mjs';
+  writePack } from '../src/evidence-pack.mjs';
 
 const sha256 = data => createHash('sha256').update(data).digest('hex');
 const root = mkdtempSync(join(tmpdir(), 'evidence-pack-test-'));
@@ -107,7 +107,7 @@ try {
     manifestComplete: true, plan12Attestation: false, winnerCommitted: true },
   'a packed live win passes everything but the attestation, which is never inferred from the others');
   // A v1 attestation (a person's name, the schema until 2026-09-27) is still read; v2, which an
-  // agent may write under Pedro's delegation, is pinned in test-evidence-promotion.mjs.
+  // agent may write under Pedro's delegation, is pinned in evidence-promotion.test.mjs.
   assert.equal(ATTESTATION_SCHEMA, 'plan12-attestation-v2');
   const attest = packSha256 => writeFileSync(join(dir, ATTESTATION_FILE),
     JSON.stringify({ schema: ATTESTATION_SCHEMA_V1, status: 'PASS', packSha256, attestedBy: 'test' }));
@@ -120,7 +120,7 @@ try {
   // A bundle records the winner as compiled, which compileBundle normalises: the committed
   // Night 6 winner's file hashes to fnv1a-de095950 and compiles to fnv1a-59908edd. A pack from
   // that bundle must still find its winner.
-  const night6 = readFileSync(new URL('./device/campaign-night6-winner.json', import.meta.url), 'utf8');
+  const night6 = readFileSync(new URL('../../../tools/device/campaign-night6-winner.json', import.meta.url), 'utf8');
   put('tools/device/campaign-night6-winner.json', night6);
   const withNight6 = trackedWinners(root);
   assert.equal(withNight6.get(stableHash(JSON.parse(night6))), 'campaign-night6-winner.json');

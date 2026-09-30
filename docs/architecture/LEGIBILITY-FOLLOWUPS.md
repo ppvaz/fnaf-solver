@@ -67,7 +67,9 @@ bindings produce honest `REJECTED`/`FAILED` results. Add conformance tests for
 
 ### LEG-003 — Make affected validation complete (P0)
 
-**Status:** OPEN
+**Status:** OPEN -- interim: `packages/review/` (2026-09-29) is mapped to its tests and the
+evidence CLI test; every new path is mapped in the change that creates it until the lanes are
+generated from one manifest (migration M10).
 **Owner:** test infrastructure
 **Evidence:** [`affected-test.js` (lines 52 and 65)](../../tools/affected-test.js)
 
@@ -203,9 +205,18 @@ add focused seed tests; record derivation as `golden`, `explicit`, or
 
 ### LEG-011 — Upgrade the architectural guard from regex heuristics (P2)
 
-**Status:** OPEN
+**Status:** RESOLVED (2026-09-29) -- every import check in
+[`architecture-test.js`](../../tools/architecture-test.js) now reads the module's syntax tree
+through the pinned `typescript` parser (no new dependency): static imports, aliased and namespace
+re-exports, dynamic `import()` (a computed specifier is refused in a guarded package), `require()`
+and TS import types, resolved to the workspace or directory they land in. The host-global,
+search-knob and HID-transport scans read the tree too. Planted fixtures run first and must be
+caught: a dynamic import, a template-literal import, a computed import, an aliased re-export, a
+namespace re-export and import, `require` through `createRequire`, and a comment and a string
+that only look like imports (which the regexes misread). The same change adds the rule that
+`packages/review` never imports `apps/device`, `packages/adapters` or `packages/research`.
 **Owner:** architecture tooling
-**Evidence:** [`architecture-test.js` (lines 30 and 41)](../../tools/architecture-test.js)
+**Evidence:** [`architecture-test.js`](../../tools/architecture-test.js) (`moduleReferences`, `RULES`, the planted fixtures)
 
 The guard strips strings and finds imports with regular expressions. It is a
 useful fast check, but it is not a complete parser and should not be the only

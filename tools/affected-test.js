@@ -48,9 +48,18 @@ if (changed.some(path => path.startsWith('packages/core/src/control/') ||
 }
 if (changed.some(path => path.startsWith('packages/research/')))
   add('research-contracts', 'node', ['packages/research/test/experiment.test.js']);
+// Review reads the committed evidence: its own tests, the evidence CLI that
+// composes it (`npm run evidence`), and the night-job packer that loads it.
+// LEG-003's interim mapping for the package created on 2026-09-29.
+if (changed.some(path => path.startsWith('packages/review/') || path === 'tools/evidence.js' ||
+    path === 'tools/evidence-pack.mjs' || path.startsWith('docs/evidence/runs/') || path === 'docs/evidence/graph.json')) {
+  for (const test of ['evidence-campaign', 'evidence-pack', 'evidence-cohort', 'evidence-promotion'])
+    add(`test:packages/review/test/${test}.test.mjs`, 'node', [`packages/review/test/${test}.test.mjs`]);
+  add('evidence-cli', 'node', ['tools/test-evidence-cli.mjs']);
+}
 if (changed.some(path => path.startsWith('apps/trainer/')))
   add('trainer-build', 'python3', ['tools/build.py']);
-for (const path of changed.filter(p => /^packages\/[^/]+\/test\/.*\.test\.js$/.test(p)))
+for (const path of changed.filter(p => /^packages\/[^/]+\/test\/.*\.test\.m?js$/.test(p)))
   add(`test:${path}`, 'node', [path]);
 if (changed.some(path => path.startsWith('docs/') || path.startsWith('plans/')))
   add('documentation', 'node', ['tools/test-docs.mjs']);

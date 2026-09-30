@@ -10,8 +10,8 @@ import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { PACKS_DIR, readPack, trackedWinners } from './evidence-pack.mjs';
-import { promotionSummary } from './evidence-promotion.mjs';
+import { PACKS_DIR, readPack, trackedWinners } from '@sixam/review/evidence-pack';
+import { promotionSummary } from '@sixam/review/evidence-promotion';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));
 const CLI = join(ROOT, 'tools/evidence.js');

@@ -1,4 +1,4 @@
-// A cohort result computed from run packs (tools/evidence-cohort.mjs). Builds a
+// A cohort result computed from run packs (packages/review/src/evidence-cohort.mjs). Builds a
 // four-slot cohort of packs in a throwaway tree -- a clean win, a death, a sixam
 // the video never graded, and a slot re-run after an attempt that never reached
 // the night -- and checks the predeclared rule is applied, not assumed.
@@ -6,9 +6,9 @@ import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { CAMPAIGN_RESULT_SCHEMA } from './evidence-campaign.mjs';
-import { buildPack, resolvePackTargets, writePack } from './evidence-pack.mjs';
-import { COHORT_RESULT_SCHEMA, CORNER_COHORT_RESULT_SCHEMA, computeCohort, labelPrefix } from './evidence-cohort.mjs';
+import { CAMPAIGN_RESULT_SCHEMA } from '../src/evidence-campaign.mjs';
+import { buildPack, resolvePackTargets, writePack } from '../src/evidence-pack.mjs';
+import { COHORT_RESULT_SCHEMA, CORNER_COHORT_RESULT_SCHEMA, computeCohort, labelPrefix } from '../src/evidence-cohort.mjs';
 
 const root = mkdtempSync(join(tmpdir(), 'evidence-cohort-test-'));
 const packs = join(root, 'docs/evidence/runs');

@@ -1,8 +1,8 @@
-// The evidence index reads the phone's own nights (tools/evidence-campaign.mjs). Before
+// The evidence index reads the phone's own nights (packages/review/src/evidence-campaign.mjs). Before
 // 2026-09-18 every artifacts/campaign-*/result.json was UNRECOGNIZED_ARTIFACT, so the index
 // reported zero DEVICE_MEASURED runs on a machine holding 24 device wins.
 import assert from 'node:assert/strict';
-import { isCampaignResult, campaignEntry, campaignPromotionChecks, CAMPAIGN_RESULT_SCHEMA } from './evidence-campaign.mjs';
+import { isCampaignResult, campaignEntry, campaignPromotionChecks, CAMPAIGN_RESULT_SCHEMA } from '../src/evidence-campaign.mjs';
 
 const attempt = over => ({ attempt: 1, mode: 'live', night: 5, status: 'WIN', proofHash: 'fnv1a-7990063c',
   terminal: { night: 5, outcome: 'sixam', sixAm: true }, ...over });

@@ -101,6 +101,13 @@
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
+      "id": "contract.campaign-proof-v1",
+      "kind": "CONTRACT",
+      "path": "packages/core/src/contracts/campaign-records.js",
+      "line": 9,
+      "relation": "REFERENCES"
+    },
+    {
       "id": "contract.claim-evidence-v1",
       "kind": "CONTRACT",
       "path": "tools/evidence.js",
@@ -298,6 +305,13 @@
       "kind": "CONTRACT",
       "path": "apps/device/test/campaign.test.js",
       "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.device-campaign-result-v1",
+      "kind": "CONTRACT",
+      "path": "packages/core/src/contracts/campaign-records.js",
+      "line": 9,
+      "relation": "REFERENCES"
     },
     {
       "id": "contract.device-campaign-v1",

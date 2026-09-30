@@ -10,12 +10,12 @@ import { canonicalJson, stableHash, validateArtifactRef } from '@sixam/core/cont
 import { validateManifest } from '@sixam/core/contracts';
 import { replayModelResult } from '@sixam/research';
 import { BUNDLE_SCHEMA, validateBundle } from './device/bundle.mjs';
-import { isCampaignResult, campaignEntry, campaignPromotionChecks } from './evidence-campaign.mjs';
+import { isCampaignResult, campaignEntry, campaignPromotionChecks } from '@sixam/review/evidence-campaign';
 import { PACKS_DIR, resolvePackTargets, buildPack, buildFnaf1Pack, writePack, readPack, packPromotionChecks,
-  trackedWinners, packEntry, recoveryCheck, attestationStatus, packCustody } from './evidence-pack.mjs';
+  trackedWinners, packEntry, recoveryCheck, attestationStatus, packCustody } from '@sixam/review/evidence-pack';
 import { GRAPH_FILE, attestPack, derivePromotion, formatGraph, promotionEdgeFor, promotionSummary, readGraph,
-  recordPromotion } from './evidence-promotion.mjs';
-import { computeCohort } from './evidence-cohort.mjs';
+  recordPromotion } from '@sixam/review/evidence-promotion';
+import { computeCohort } from '@sixam/review/evidence-cohort';
 import { writeFileSync } from 'node:fs';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));
@@ -118,7 +118,7 @@ async function loadCampaign(run) {
   return { kind: 'device-campaign', entry: campaignEntry(run, wrapper), wrapper, files: await readdir(base) };
 }
 
-// A committed run pack (tools/evidence-pack.mjs): the same campaign facts, verified against
+// A committed run pack (packages/review/src/evidence-pack.mjs): the same campaign facts, verified against
 // the pack's own hashes, readable on any checkout.
 function loadPack(run) {
   if (!run || !/^[\w.-]+$/.test(run)) throw new Error('a safe RUN_ID is required');
@@ -188,7 +188,7 @@ async function loadAny(run) {
 }
 
 const sha256 = data => createHash('sha256').update(data).digest('hex');
-// What a campaign directory writes (tools/evidence-pack.mjs packs the same four).
+// What a campaign directory writes (packages/review/src/evidence-pack.mjs packs the same four).
 const CAMPAIGN_FILES = ['result.json', 'events.jsonl', 'request.json', 'observations.jsonl'];
 
 /** Where a loaded campaign or pack keeps its text, and what its custody lost. */

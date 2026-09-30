@@ -147,6 +147,9 @@ export {
   bindQualificationVenue, qualificationStanding,
 } from './qualification.js';
 export * from './venue-identity.js';
+// The campaign result and save proof a device campaign retains, read back by
+// the evidence index (campaign-records.js).
+export { CAMPAIGN_STATES, validateCampaignResult, validateSaveProof } from './campaign-records.js';
 
 export function validateTelemetry(value) {
   if (!value || value.schema !== 'telemetry-event-v1' || typeof value.sessionId !== 'string' ||

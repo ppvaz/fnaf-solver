@@ -5,7 +5,7 @@
 // 2026-09-27: "i give agents full permission, this is bullshit bureaucracy that is impeding
 // progress" -- agents may now write Plan 12 attestations, and nothing else is delegated
 // (`PEDRO-OK`, `--no-verify` and `commit -n` stay human-only or forbidden). The same day he
-// accepted packs recovered from a night-run log fully (tools/evidence-pack.mjs,
+// accepted packs recovered from a night-run log fully (evidence-pack.mjs,
 // packManifestComplete).
 //
 // The delegation is to write the file, not to wave a pack through, so an attestation is only
@@ -21,9 +21,8 @@
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { canonicalJson, stableHash } from '@sixam/core/contracts';
+import { canonicalJson, stableHash, validateSaveProof } from '@sixam/core/contracts';
 import { AI_DIALS, PUPPET_AI } from '@sixam/core/mechanics';
-import { validateSaveProof } from '../apps/device/src/campaign-proof.js';
 import { campaignEntry } from './evidence-campaign.mjs';
 import { AGENT_DELEGATION, ATTESTATION_FILE, ATTESTATION_SCHEMA, PACKS_DIR, RECOVERY_RECORD, attestationStatus,
   packCustody, packManifestComplete, packPromotionChecks, readPack } from './evidence-pack.mjs';
@@ -39,7 +38,7 @@ const night7Label = dials => AI_DIALS.every(dial => dials[dial] === 20) ? '10-20
 /**
  * The claim a won night supports. Story nights are named by number. A Custom Night is named by
  * the dial vector the executor's own menu readback observed before the night began (the last
- * PASS readback before `state=night`, as tools/evidence-cohort.mjs reads it), and, when the pack
+ * PASS readback before `state=night`, as evidence-cohort.mjs reads it), and, when the pack
  * kept request.json, only if that is the vector requested.
  * @returns {{pass: boolean, claim: any, detail: any}}
  */

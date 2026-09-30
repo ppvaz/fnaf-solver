@@ -5,7 +5,7 @@
 // was a JSON record someone wrote from the run directories, the ledger and the
 // video grades. That record is only as good as the copying, and it cites media a
 // later reader may not have. This reads the committed packs instead
-// (tools/evidence-pack.mjs), applies the predeclared win rule -- the executor's
+// (evidence-pack.mjs), applies the predeclared win rule -- the executor's
 // terminal is sixam AND the video's terminal is clear -- and reports every slot,
 // including the ones the packs cannot decide yet.
 //
@@ -16,7 +16,7 @@
 // grade.log (`TERMINAL: clear -- ...`, the line run-timeline.py prints) or its
 // timeline.json (run-timeline.py's `terminal.outcome`); without either, a sixam run is
 // UNGRADED, not a win. A pack whose result was never printed (recovered from its night-run
-// log, tools/evidence-pack.mjs) has no executor terminal: its slot is decided by the video if
+// log, evidence-pack.mjs) has no executor terminal: its slot is decided by the video if
 // the video saw a death, and is otherwise UNKNOWN with the executor's own abort reason beside
 // it -- this does not promote an abort to a death on the rule's behalf.
 import { existsSync, readdirSync, readFileSync } from 'node:fs';

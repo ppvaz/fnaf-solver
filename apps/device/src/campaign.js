@@ -8,14 +8,14 @@
  * CONTRACT:device-campaign-v1.
  */
 import { AI_10_20, AI_DIALS, PUPPET_AI } from '@sixam/core/mechanics';
-import { stableHash } from '@sixam/core/contracts';
+import { CAMPAIGN_STATES, stableHash, validateCampaignResult } from '@sixam/core/contracts';
 import { makeCustomNightConfig, validateCustomNightConfig } from './custom-night.js';
 
 export const CAMPAIGN_SCHEMA = 'device-campaign-v1';
-export const CAMPAIGN_STATES = Object.freeze([
-  'IDLE', 'PREFLIGHT', 'MENU', 'INTRO_VERIFY', 'ACTIVE',
-  'CUSTOM_VERIFY', 'TERMINAL_VERIFY', 'RETRY_VERIFY', 'SAVE_VERIFY', 'HOLD', 'ABORTED', 'COMPLETE',
-]);
+// The result validator and its state list live in core/contracts since
+// 2026-09-29, so the evidence index reads a retained result without importing
+// this app; they are re-exported here unchanged.
+export { CAMPAIGN_STATES, validateCampaignResult };
 
 const PACKAGE = 'com.scottgames.fnaf2';
 const NIGHT5 = 5;
@@ -189,18 +189,6 @@ export function campaignVenue(result) {
   const preflight = result?.events?.find(item => item?.type === 'campaign.state' &&
     item.data?.previous === 'PREFLIGHT');
   return preflight?.data?.venue ?? null;
-}
-
-export function validateCampaignResult(value) {
-  if (!isRecord(value) || value.schema !== 'device-campaign-result-v1' || value.version !== 1)
-    fail('result schema/version mismatch');
-  if (!CAMPAIGN_STATES.includes(value.state)) fail('result state is invalid');
-  text(value.specHash, 'result.specHash');
-  if (!Array.isArray(value.completedNights) || !Array.isArray(value.attempts) || !Array.isArray(value.events))
-    fail('result attempts/events are required');
-  if (value.completedNights.some(night => !Number.isInteger(night) || night < 1 || night > 7))
-    fail('result completedNights contains an unsupported night');
-  return value;
 }
 
 /**

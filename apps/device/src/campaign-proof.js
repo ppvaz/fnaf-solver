@@ -3,7 +3,7 @@
  * CONTRACT:campaign-proof-v1.
  */
 import { AI_DIALS, PUPPET_AI } from '@sixam/core/mechanics';
-import { stableHash } from '@sixam/core/contracts';
+import { stableHash, validateSaveProof } from '@sixam/core/contracts';
 import { makeCustomNightConfig, validateCustomNightConfig } from './custom-night.js';
 
 export const CAMPAIGN_PROOF_SCHEMA = 'campaign-proof-v1';
@@ -26,27 +26,10 @@ export function validateSixAmProof(value, target) {
   return value;
 }
 
-export function validateSaveProof(value, target) {
-  if (target?.night === 6) {
-    if (!isRecord(value) || value.observed !== true ||
-        (value.cursorNight !== 7 && value.customNightVisible !== true))
-      fail('Night 6 save proof must positively observe cursor Night 7 or Custom Night visibility');
-  } else if (target?.night === 7) {
-    if (!isRecord(value) || value.menuReturned !== true || value.customCompleted !== true || value.observed !== true)
-      fail('Custom Night save proof must positively observe the completed menu return');
-  } else if (target?.night >= 1 && target?.night <= 4) {
-    // Story Nights 1..4 roll directly into the next night's gameplay on the
-    // target build. The observed next-night office is the save advancement
-    // proof; there is no title screen to inspect between the two nights.
-    if (!isRecord(value) || value.observed !== true || value.nextNightStarted !== true)
-      fail(`Story Night ${target?.night} save proof must positively observe the next-night roll-through`);
-  } else if (!isRecord(value) || value.observed !== true || value.menuReturned !== true ||
-      value.continueVisible !== true ||
-      (target?.night === 5 && value.sixthNightVisible !== true && value.cursorNight !== 6)) {
-    fail(`Story Night ${target?.night} save proof must positively observe the menu return and save advancement`);
-  }
-  return value;
-}
+// The save-proof validator lives in core/contracts since 2026-09-29, so the
+// evidence index re-derives a promotion without importing this app; it is
+// re-exported here unchanged.
+export { validateSaveProof };
 
 export function validateCustomReadback(value, target) {
   const expected = validateCustomNightConfig(target?.custom ?? makeCustomNightConfig());

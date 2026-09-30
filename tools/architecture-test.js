@@ -2,12 +2,24 @@
  * Architectural guardrails for the refactor. This is intentionally small and
  * deterministic: it protects package ownership while explicitly named legacy
  * device boundaries remain.
+ *
+ * Every import check reads the module's syntax tree through the pinned
+ * `typescript` parser (LEG-011, 2026-09-29), not regexes over its text. A
+ * module reference is a static import, any re-export (`export * as x from`,
+ * `export { a as b } from`), a dynamic `import()` with a string or template
+ * specifier, a `require()` call, `import x = require()` and a TS import type.
+ * A dynamic import whose specifier is computed cannot be checked, so a guarded
+ * package refuses it. The regex guard it replaces found imports in comments
+ * and strings, and let `import(\`...\`)` through. The planted fixtures below run
+ * first and must be caught, or the guard fails.
  */
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { readFile, readdir } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { builtinModules } from 'node:module';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import ts from 'typescript';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));
 const rootPackage = JSON.parse(await readFile(join(ROOT, 'package.json')));
@@ -26,38 +38,244 @@ async function files(directory) {
   return output;
 }
 
-// Keep the guard deterministic without depending on a parser/toolchain in the
-// fast lane.  Strings/comments are removed before checking runtime globals so
-// prose such as `const window = ...` does not create a false boundary failure.
-function codeOnly(source) {
-  return source
-    .replace(/`(?:\\.|[^`\\])*`/gs, template =>
-      [...template.matchAll(/\$\{([\s\S]*?)\}/g)].map(match => match[1]).join('\n'))
-    .replace(/'(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*"/gs, '')
-    .replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, '');
+// --- Reading a module's syntax tree ----------------------------------------
+
+/** @param {string} path repository-relative @param {string} source */
+function parse(path, source) {
+  return ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true,
+    path.endsWith('.ts') ? ts.ScriptKind.TS : ts.ScriptKind.JS);
 }
 
-function importSpecifiers(source) {
-  return [...source.matchAll(/\b(?:from|import)\s*(?:\(\s*)?['"]([^'"]+)['"]/g)]
-    .map(match => match[1]);
+/**
+ * Every module the file loads or re-exports. `specifier` is null when the
+ * parser cannot know it (a computed dynamic import or require).
+ * @param {ts.SourceFile} file
+ * @returns {{specifier: string | null, form: string}[]}
+ */
+function moduleReferences(file) {
+  const found = [];
+  const literal = node => node && ts.isStringLiteralLike(node) ? node.text : null;
+  const visit = node => {
+    if (ts.isImportDeclaration(node)) found.push({ specifier: literal(node.moduleSpecifier), form: 'import' });
+    else if (ts.isExportDeclaration(node) && node.moduleSpecifier)
+      found.push({ specifier: literal(node.moduleSpecifier), form: 're-export' });
+    else if (ts.isImportEqualsDeclaration(node) && ts.isExternalModuleReference(node.moduleReference))
+      found.push({ specifier: literal(node.moduleReference.expression), form: 'import-equals' });
+    else if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument))
+      found.push({ specifier: literal(node.argument.literal), form: 'import-type' });
+    else if (ts.isCallExpression(node)) {
+      if (node.expression.kind === ts.SyntaxKind.ImportKeyword)
+        found.push({ specifier: literal(node.arguments[0]), form: 'dynamic-import' });
+      else if (ts.isIdentifier(node.expression) && node.expression.text === 'require')
+        found.push({ specifier: literal(node.arguments[0]), form: 'require' });
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(file);
+  return found;
 }
 
-const forbiddenCoreGlobal = /\b(?:document|window|fetch|process|globalThis|performance)\b/;
-const forbiddenCoreNames = ['document', 'window', 'fetch', 'process', 'globalThis', 'performance'];
-const unboundCoreCode = source => {
-  const code = codeOnly(source);
-  const bindings = [...code.matchAll(/\b(?:const|let|var|function|class)\s+([A-Za-z_$][\w$]*)/g)]
-    .map(match => match[1]).filter(name => forbiddenCoreNames.includes(name));
-  return bindings.length
-    ? code.replace(new RegExp(`\\b(?:${[...new Set(bindings)].join('|')})\\b`, 'g'), '')
-    : code;
+/** Is this identifier read as a value, rather than naming a property, a member or a declaration? */
+function isReference(node) {
+  const parent = node.parent;
+  if (!parent) return true;
+  if ((ts.isPropertyAccessExpression(parent) || ts.isQualifiedName(parent)) && parent.name === node) return false;
+  if ((ts.isPropertyAssignment(parent) || ts.isMethodDeclaration(parent) || ts.isPropertyDeclaration(parent) ||
+       ts.isGetAccessorDeclaration(parent) || ts.isSetAccessorDeclaration(parent) || ts.isEnumMember(parent) ||
+       ts.isPropertySignature(parent) || ts.isMethodSignature(parent)) && parent.name === node) return false;
+  if (ts.isImportSpecifier(parent) || ts.isExportSpecifier(parent) || ts.isImportClause(parent) ||
+      ts.isNamespaceImport(parent) || ts.isNamespaceExport(parent)) return false;
+  if (ts.isLabeledStatement(parent) || ts.isBreakOrContinueStatement(parent)) return false;
+  if (ts.isBindingElement(parent) && parent.propertyName === node) return false;
+  return true;
+}
+
+/** Names the file binds anywhere: a declared `window` shadows the global in this heuristic, as before. */
+function declaredNames(file) {
+  const names = new Set();
+  const visit = node => {
+    if ((ts.isVariableDeclaration(node) || ts.isParameter(node) || ts.isBindingElement(node) ||
+         ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node) || ts.isFunctionExpression(node) ||
+         ts.isClassExpression(node)) && node.name && ts.isIdentifier(node.name)) names.add(node.name.text);
+    if ((ts.isImportSpecifier(node) || ts.isNamespaceImport(node) || ts.isImportClause(node)) && node.name)
+      names.add(node.name.text);
+    ts.forEachChild(node, visit);
+  };
+  visit(file);
+  return names;
+}
+
+/** @param {ts.SourceFile} file @param {(node: ts.Identifier) => boolean} test */
+function identifiers(file, test) {
+  const found = [];
+  const visit = node => {
+    if (ts.isIdentifier(node) && test(node)) found.push(node);
+    ts.forEachChild(node, visit);
+  };
+  visit(file);
+  return found;
+}
+
+const HOST_GLOBALS = ['document', 'window', 'fetch', 'process', 'globalThis', 'performance'];
+/** Host or browser globals a core module reads. @param {ts.SourceFile} file */
+function hostGlobals(file) {
+  const declared = declaredNames(file);
+  return [...new Set(identifiers(file, node => HOST_GLOBALS.includes(node.text) && !declared.has(node.text) &&
+    isReference(node)).map(node => node.text))];
+}
+
+/** Writes into the process-global search knobs. @param {ts.SourceFile} file */
+function searchKnobWrites(file) {
+  let writes = 0;
+  const onKnobs = node => (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) &&
+    ts.isIdentifier(node.expression) && node.expression.text === 'SEARCH_KNOBS';
+  const visit = node => {
+    if (ts.isBinaryExpression(node) && node.operatorToken.kind >= ts.SyntaxKind.FirstAssignment &&
+        node.operatorToken.kind <= ts.SyntaxKind.LastAssignment && onKnobs(node.left)) writes += 1;
+    if ((ts.isPrefixUnaryExpression(node) || ts.isPostfixUnaryExpression(node)) &&
+        [ts.SyntaxKind.PlusPlusToken, ts.SyntaxKind.MinusMinusToken].includes(node.operator) && onKnobs(node.operand))
+      writes += 1;
+    ts.forEachChild(node, visit);
+  };
+  visit(file);
+  return writes;
+}
+
+// --- Where a reference lands -------------------------------------------------
+
+const WORKSPACES = new Map();
+for (const group of ['packages', 'apps']) {
+  for (const entry of await readdir(join(ROOT, group), { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    try {
+      const manifest = JSON.parse(await readFile(join(ROOT, group, entry.name, 'package.json'), 'utf8'));
+      WORKSPACES.set(manifest.name, `${group}/${entry.name}`);
+    } catch { /* a folder without a package.json is not a workspace */ }
+  }
+}
+const BUILTINS = new Set(builtinModules);
+const unitOf = path => {
+  const [top, next] = path.split('/');
+  return (top === 'packages' || top === 'apps') && next ? `${top}/${next}` : top;
 };
-assert.match(unboundCoreCode('const host = window;'), forbiddenCoreGlobal,
+
+/**
+ * The repository unit a reference lands in: a workspace directory
+ * (`packages/core`, `apps/device`), a top-level directory (`tools`), `builtin`,
+ * `external`, `outside` the repository, or `UNRESOLVED`.
+ * @param {string} from repository-relative path of the importing file
+ * @param {string | null} specifier
+ */
+function landing(from, specifier) {
+  if (specifier === null) return { unit: 'UNRESOLVED', target: null };
+  if (specifier.startsWith('node:') || BUILTINS.has(specifier.split('/')[0]))
+    return { unit: 'builtin', target: specifier.startsWith('node:') ? specifier : `node:${specifier}` };
+  if (specifier.startsWith('.') || specifier.startsWith('/')) {
+    const target = relative(ROOT, resolve(ROOT, dirname(from), specifier)).split(sep).join('/');
+    return target.startsWith('..') ? { unit: 'outside', target } : { unit: unitOf(target), target };
+  }
+  const name = specifier.split('/').slice(0, specifier.startsWith('@') ? 2 : 1).join('/');
+  if (WORKSPACES.has(name)) {
+    const dir = WORKSPACES.get(name);
+    return { unit: dir, target: `${dir}${specifier.slice(name.length)}` };
+  }
+  return { unit: name.startsWith('@sixam/') ? name : 'external', target: specifier };
+}
+
+// --- The dependency rule -------------------------------------------------------
+
+/**
+ * One rule per guarded area. `scope` picks the files, `refuse` a reference that
+ * crosses the boundary. ADR 0002: `kernel <- source <- play <- propose -> review
+ * -> source`; in today's names review is packages/review, play is apps/device
+ * and packages/adapters, propose is packages/research, and source is core.
+ */
+const RULES = [
+  {
+    id: 'core', scope: path => path.startsWith('packages/core/src/'),
+    refuse: ref => !['packages/core', 'packages/kernel'].includes(ref.unit),
+    why: 'core imports only itself and the kernel: no application, adapter, research, review, tools module, host API or dependency',
+  },
+  {
+    id: 'research', scope: path => path.startsWith('packages/research/src/'),
+    refuse: ref => ref.unit === 'UNRESOLVED' || ref.unit === 'apps/device' || Boolean(ref.target?.startsWith('tools/device/')) ||
+      ['node:child_process', 'node:net', 'node:dgram'].includes(ref.target ?? ''),
+    why: 'research never reaches the device shell: no apps/device, tools/device, child_process, net or dgram',
+  },
+  {
+    id: 'review', scope: path => path.startsWith('packages/review/'),
+    refuse: ref => ['UNRESOLVED', 'apps/device', 'packages/adapters', 'packages/research'].includes(ref.unit),
+    why: 'review never imports play or propose (ADR 0002): no apps/device, packages/adapters or packages/research',
+  },
+];
+
+/**
+ * Every boundary a file crosses.
+ * @param {string} path repository-relative
+ * @param {ts.SourceFile} file
+ */
+function violations(path, file) {
+  const found = [];
+  const references = moduleReferences(file).map(reference => ({ ...reference, ...landing(path, reference.specifier) }));
+  for (const rule of RULES.filter(item => item.scope(path)))
+    for (const reference of references.filter(item => rule.refuse(item)))
+      found.push({ rule: rule.id, why: rule.why, reference });
+  return found;
+}
+const describe = (path, found) => found.map(({ rule, why, reference }) =>
+  `${path} crosses the ${rule} boundary with ${reference.form} ${JSON.stringify(reference.specifier)} ` +
+  `(lands in ${reference.unit}): ${why}`).join('\n');
+
+// --- Planted violations: each must be caught, or the guard measures nothing ---
+
+const planted = (path, source) => violations(path, parse(path, source)).map(item => item.rule);
+const REVIEW = 'packages/review/src/planted.mjs';
+// A dynamic import() is an import, however its specifier is written.
+assert.deepEqual(planted(REVIEW, "export const load = () => import('../../../apps/device/src/campaign.js');"), ['review'],
+  'the guard must catch a dynamic import() of the device app');
+assert.deepEqual(planted(REVIEW, 'export const load = () => import(`@sixam/research`);'), ['review'],
+  'the guard must catch a dynamic import() written with a template literal');
+assert.deepEqual(planted(REVIEW, "const where = '@sixam/adapters';\nexport const load = () => import(where);"), ['review'],
+  'the guard must refuse a dynamic import() it cannot resolve');
+// An alias is still an import: aliased and namespace re-exports, namespace imports, require.
+assert.deepEqual(planted(REVIEW, "export { validateCampaignResult as validate } from '../../../apps/device/src/campaign.js';"),
+  ['review'], 'the guard must catch an aliased re-export');
+assert.deepEqual(planted(REVIEW, "export * as adapters from '@sixam/adapters/night-onset';"), ['review'],
+  'the guard must catch a namespace re-export');
+assert.deepEqual(planted(REVIEW, "import * as seeds from '@sixam/research/seeds';\nexport const s = seeds;"), ['review'],
+  'the guard must catch a namespace import');
+assert.deepEqual(planted(REVIEW, "import { createRequire } from 'node:module';\nconst load = createRequire(import.meta.url);\n" +
+  "const require = load;\nexport const device = require('@sixam/device/package.json');"), ['review'],
+'the guard must catch a require() through createRequire');
+// Text that only looks like an import is not one.
+assert.deepEqual(planted(REVIEW, "// import('../../../apps/device/src/cli.js')\nexport const text = \"from '@sixam/research'\";"), [],
+  'the guard must not read comments or strings as imports');
+assert.deepEqual(planted(REVIEW, "import { stableHash } from '@sixam/core/contracts';\nexport const h = stableHash;"), [],
+  'review may import core');
+// The rules the regex guard held keep holding.
+assert.deepEqual(planted('packages/core/src/planted.js', "import { spawn } from 'node:child_process';"), ['core']);
+assert.deepEqual(planted('packages/core/src/planted.js', "export { cli } from '@sixam/device';"), ['core']);
+assert.deepEqual(planted('packages/research/src/planted.js', "import '../../../tools/device/bundle.mjs';"), ['research']);
+const globalsOf = source => hostGlobals(parse('packages/core/src/planted.js', source));
+assert.deepEqual(globalsOf('const host = window;'), ['window'],
   'architecture guard must recognize host-global access in module bodies');
-assert.doesNotMatch(unboundCoreCode('const window = 1; return window;'), forbiddenCoreGlobal,
+assert.deepEqual(globalsOf('const window = 1; export const again = window;'), [],
   'architecture guard must not mistake a local binding for a host global');
-assert.match(unboundCoreCode('const host = `${window}`;'), forbiddenCoreGlobal,
+assert.deepEqual(globalsOf('const host = `${window}`;'), ['window'],
   'architecture guard must inspect template interpolations');
+assert.deepEqual(globalsOf('export const read = state => state.window + state.process;'), [],
+  'architecture guard must not mistake a property for a host global');
+assert.equal(searchKnobWrites(parse('tools/planted.mjs', 'SEARCH_KNOBS.maskMs = 3; SEARCH_KNOBS[key] += 1;')), 2);
+assert.equal(searchKnobWrites(parse('tools/planted.mjs', '// SEARCH_KNOBS.maskMs = 3\nconst copy = { ...SEARCH_KNOBS };')), 0);
+
+// --- The tree ------------------------------------------------------------------
+
+const parsed = new Map();
+const tree = async path => {
+  if (!parsed.has(path)) parsed.set(path, parse(relative(ROOT, path).split(sep).join('/'), await readFile(path, 'utf8')));
+  return parsed.get(path);
+};
+const repoPath = path => relative(ROOT, path).split(sep).join('/');
 
 const core = await files(join(ROOT, 'packages/core/src'));
 const legacyCatalog = JSON.parse(await readFile(join(ROOT, 'docs/architecture/generated/legacy-paths.json'), 'utf8'));
@@ -112,41 +330,32 @@ try {
 } catch (error) {
   assert.equal(error.code, 'ENOENT');
 }
-for (const path of core) {
-  const source = await readFile(path, 'utf8');
-  const imports = importSpecifiers(source);
-  assert.ok(!imports.some(spec => spec.startsWith('node:') ||
-    /^@sixam\/(?:adapters|device|trainer)/.test(spec)),
-  `${path} crosses the core package boundary`);
-  assert.doesNotMatch(unboundCoreCode(source), forbiddenCoreGlobal,
-    `${path} uses a host/browser global in core`);
-}
-const research = await files(join(ROOT, 'packages/research/src'));
-for (const path of research) {
-  const source = await readFile(path, 'utf8');
-  const imports = importSpecifiers(source);
-  assert.ok(!imports.some(spec => spec.includes('tools/device') || spec.includes('apps/device') ||
-    spec === '@sixam/device' ||
-    spec === 'node:child_process' || spec === 'node:net' || spec === 'node:dgram'),
-  `${path} imports a device-shell boundary directly`);
-}
 const production = await files(join(ROOT, 'packages'));
 for (const path of production) {
-  const source = await readFile(path, 'utf8');
-  assert.doesNotMatch(source, /from ['"][^'"]*(?:test|report)[^'"]*['"]/, `${path} imports a test/report module`);
+  const file = await tree(path);
+  const found = violations(repoPath(path), file);
+  assert.equal(found.length, 0, describe(repoPath(path), found));
+  const reports = moduleReferences(file).filter(ref => ref.specifier !== null && /(?:test|report)/.test(ref.specifier));
+  assert.equal(reports.length, 0, `${path} imports a test/report module: ${reports.map(ref => ref.specifier).join(', ')}`);
 }
+for (const path of core) {
+  const globals = hostGlobals(await tree(path));
+  assert.equal(globals.length, 0, `${path} uses a host/browser global in core: ${globals.join(', ')}`);
+}
+const testNamed = path => /(?:^|\/)test[^/]*\.(?:js|mjs|ts)$/.test(path);
+const reportNamed = path => /(?:^|\/)report[^/]*\.(?:js|mjs|ts)$/.test(path);
 const operational = [
   ...production,
   ...await files(join(ROOT, 'apps')),
   ...await files(join(ROOT, 'tools')),
-].filter(path => !/(?:^|\/)test[^/]*\.(?:js|mjs|ts)$/.test(path) &&
-                !/(?:^|\/)report[^/]*\.(?:js|mjs|ts)$/.test(path));
+].filter(path => !testNamed(path) && !reportNamed(path));
 for (const path of operational) {
-  const source = await readFile(path, 'utf8');
+  const file = await tree(path);
   // `apps/trainer/src/report.js` is presentation code, not a report harness;
   // only test-named modules are forbidden across operational boundaries.
-  assert.doesNotMatch(source, /(?:from\s+|import\s*\()['"][^'"]*(?:^|\/|[-_.])test[^'"]*['"]/i, `${path} imports a test module`);
-  assert.doesNotMatch(source, /\bSEARCH_KNOBS(?:\s*\.\s*[A-Za-z_$][\w$]*|\s*\[[^\]]+\])\s*=/, `${path} mutates a process-global search knob`);
+  const tests = moduleReferences(file).filter(ref => ref.specifier !== null && /(?:^|\/|[-_.])test/i.test(ref.specifier));
+  assert.equal(tests.length, 0, `${path} imports a test module: ${tests.map(ref => ref.specifier).join(', ')}`);
+  assert.equal(searchKnobWrites(file), 0, `${path} mutates a process-global search knob`);
 }
 // The HID transport presses the phone. Only the device runners compose it:
 // the FNaF 2 campaign ports, the three FNaF 1 runners, the FNaF 3 and FNaF 4
@@ -159,11 +368,8 @@ const physicalActuatorOwners = new Set(['apps/device/src/modern-campaign-ports.j
   'tools/device/fnaf3-run.mjs', 'tools/device/fnaf4-run.mjs', 'tools/device/explore-step.mjs']
   .map(path => join(ROOT, path)));
 for (const path of [...await files(join(ROOT, 'apps')), ...await files(join(ROOT, 'tools'))]
-  .filter(path => !/(?:^|\/)test[^/]*\.(?:js|mjs|ts)$/.test(path) &&
-                  !/(?:^|\/)report[^/]*\.(?:js|mjs|ts)$/.test(path) &&
-                  path !== fileURLToPath(import.meta.url))) {
-  const source = await readFile(path, 'utf8');
-  if (!physicalActuatorOwners.has(path) && /\bHidWireTransport\b/.test(codeOnly(source)))
+  .filter(path => !testNamed(path) && !reportNamed(path) && path !== fileURLToPath(import.meta.url))) {
+  if (!physicalActuatorOwners.has(path) && identifiers(await tree(path), node => node.text === 'HidWireTransport').length)
     assert.fail(`${path} reaches the HID transport outside the device runners`);
 }
 const cli = await readFile(join(ROOT, 'apps/device/src/cli.js'), 'utf8');
@@ -177,4 +383,5 @@ assert.match(cli, /if \(!options\.confirmLive\) throw new Error\('live campaign 
 const commands = cli.match(/const knownCommands = new Set\(\[([^\]]*)\]\)/)?.[1] ?? '';
 assert.ok(commands && !/'(live|dry-run|calibrate)'/.test(commands),
   'device CLI must not regain a live command outside the campaign');
-console.log(`architecture: ${core.length} core modules and ${production.length} package modules obey boundary checks`);
+console.log(`architecture: ${core.length} core modules and ${production.length} package modules obey boundary checks ` +
+  `(${parsed.size} modules parsed; rules: ${RULES.map(rule => rule.id).join(', ')})`);

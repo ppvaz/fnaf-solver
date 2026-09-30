@@ -1,0 +1,15 @@
+{
+  "name": "@sixam/review",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@sixam/core": "file:../core"
+  },
+  "exports": {
+    "./evidence-campaign": "./src/evidence-campaign.mjs",
+    "./evidence-cohort": "./src/evidence-cohort.mjs",
+    "./evidence-pack": "./src/evidence-pack.mjs",
+    "./evidence-promotion": "./src/evidence-promotion.mjs"
+  }
+}
