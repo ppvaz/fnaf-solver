@@ -24,7 +24,7 @@ import { existsSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 
 export const GAMES = Object.freeze({
   fnaf2: { runner: 'tools/device/night-run.sh', packs: null },

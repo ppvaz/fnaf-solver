@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));
+const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '../..'));
 const WORDS = ['refut', 'retract', 'wrong', 'fail', 'measur', 'calibrat', 'source', 'decomp', 'device', 'clear', 'victory', 'prove', 'evidence', 'gate', 'stale', 'correct', 'drift', 'desync', 'latency', 'timing', 'night', 'strategy', 'route', 'model', 'record', 'truth', 'negative', 'blocker', 'accept', 'reject', 'unsafe', 'unverified'];
 const DATE = /\b20\d{2}-\d{2}-\d{2}\b/;
 
@@ -15,7 +15,7 @@ function arg(name) {
 }
 
 function usage() {
-  console.error('Usage: node tools/chronicle-harvest.mjs --since COMMIT [--until COMMIT] [--json]');
+  console.error('Usage: node apps/wiki/chronicle-harvest.js --since COMMIT [--until COMMIT] [--json]');
 }
 
 function countWords(text) {

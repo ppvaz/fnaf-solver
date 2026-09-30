@@ -3,11 +3,11 @@
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { GAMES, KINDS, LABELS_V2, NIGHTS, ROUTES, RUNGS, SCHEMAS, STATUSES, checkCorpus, gameTitle, readEntries } from './chronicle-schema.mjs';
-import { STORY_OUTPUT, loadStory, renderStory } from './chronicle-story.mjs';
-import { currentPath } from './renamed-path.mjs';
+import { GAMES, KINDS, LABELS_V2, NIGHTS, ROUTES, RUNGS, SCHEMAS, STATUSES, checkCorpus, gameTitle, readEntries } from '@sixam/review/chronicle-schema';
+import { STORY_OUTPUT, loadStory, renderStory } from './chronicle-story.js';
+import { currentPath } from '@sixam/review/renamed-path';
 
-export const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));
+export const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '../..'));
 export const ENTRY_DIR = join(ROOT, 'docs/chronicle/entries');
 export const OUTPUT = join(ROOT, 'docs/portal/chronicle.html');
 

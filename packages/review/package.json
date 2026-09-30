@@ -11,7 +11,9 @@
     "fnaf2-review": "src/cli.mjs"
   },
   "exports": {
+    "./chronicle-schema": "./src/chronicle-schema.js",
     "./consequence": "./src/consequence.mjs",
+    "./renamed-path": "./src/renamed-path.js",
     "./envelopes": "./src/envelopes.mjs",
     "./evidence-campaign": "./src/evidence-campaign.mjs",
     "./evidence-cohort": "./src/evidence-cohort.mjs",

@@ -18,7 +18,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));
+const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '../../..'));
 
 /** The versions and pins ci.yml gives its runner, or the README's when ci.yml is unreadable. */
 function ciVersions() {
@@ -135,6 +135,7 @@ function report(checks) {
     lines.push(`  ${checks[key].status.padEnd(9)}${checks[key].name}: ${checks[key].detail}`);
   const checkout = ['node', 'deps'];
   const full = ['node', 'deps', 'java', 'python', 'ffmpeg', 'clone'];
+  /** @type {Record<string, [{ ready: boolean, blocking: string[], differs: string[] }, string]>} */
   const routes = {
     Story: [{ ready: true, blocking: [], differs: [] }, 'nothing to install; README.md and the clips in it'],
     Strategies: [route(checks, checkout), '`npm run research -- --help`'],

@@ -9,12 +9,12 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { CONTROL_CATALOGS, GAME_PACKAGES } from '@sixam/source';
 import { isUnknown, unknown } from '@sixam/kernel';
-import { KINDS, ROUTES, RUNGS, SCHEMAS, V1_GAME, checkCorpus, readEntries } from '../../../tools/chronicle-schema.mjs';
+import { KINDS, ROUTES, RUNGS, SCHEMAS, V1_GAME, checkCorpus, readEntries } from './chronicle-schema.js';
 import { PACKS_DIR, attestationStatus, packCustody, packEntry, readPack } from './evidence-pack.mjs';
 import { GRAPH_FILE, PROMOTION_EDGE, readGraph } from './evidence-promotion.mjs';
 
 export const CHRONICLE_DIR = 'docs/chronicle/entries';
-export const CHRONICLE_SCHEMA_MODULE = 'tools/chronicle-schema.mjs';
+export const CHRONICLE_SCHEMA_MODULE = 'packages/review/src/chronicle-schema.js';
 export const CONTRACT_REGISTER = 'packages/kernel/contracts/register.json';
 export const CONTRACT_SPECIFICATIONS = 'docs/architecture/generated/contract-specifications.json';
 export const COMMAND_REGISTRY = 'docs/architecture/generated/command-registry.json';
@@ -42,7 +42,7 @@ export const executorGames = () => GAMES.filter(game => CONTROL_CATALOGS[game.pa
 
 /**
  * A chronicle-entries-v2 entry names its game. A chronicle-entries-v1 entry has no game field,
- * and its route and rung vocabularies (ROUTES, RUNGS in tools/chronicle-schema.mjs) are FNaF 2's
+ * and its route and rung vocabularies (ROUTES, RUNGS in packages/review/src/chronicle-schema.js) are FNaF 2's
  * -- Minus 7 to 10/20, and Plan 12's FNaF 2 ladder -- so every v1 entry is attributed to FNaF 2,
  * and to no other game, by that rule.
  */
@@ -56,7 +56,7 @@ export const NEGATIVE_KINDS = Object.freeze(['refutation', 'retraction', 'negati
  * Every checkpoint and entry, checked by the chronicle's own corpus rules; a corpus that fails
  * them is refused rather than served. Each entry carries its game (v1 entries read as fnaf2) and
  * `target`, that game's package; an entry a v2 correction supersedes reads as superseded, and
- * `storedStatus` keeps what its frozen file says (readEntries in tools/chronicle-schema.mjs).
+ * `storedStatus` keeps what its frozen file says (readEntries in packages/review/src/chronicle-schema.js).
  * @param {string} root
  */
 export function readChronicle(root) {

@@ -28,7 +28,7 @@ It is not a rewrite, and it is not an agent. It is a **read-mostly projection**
 of registers this repository already generates —
 [contracts](../docs/architecture/generated/contract-register.json),
 [commands](../docs/architecture/generated/command-registry.json),
-[the chronicle](../tools/chronicle-schema.mjs),
+[the chronicle](../packages/review/src/chronicle-schema.js),
 [the evidence graph](../docs/evidence/graph.json) — plus two write paths that
 already exist behind gates ([simulation](../tools/device/bundle.mjs),
 [device](../apps/desktop/src/device-cli.js)). What is new below is envelope, routing and
@@ -119,7 +119,7 @@ schedule -> graded physical outcome, where every link states what it is worth.
 
 Every tool returns one shape. The vocabulary is not invented here; it is
 [`docs/README.md`](../docs/README.md)'s evidence labels and
-[`chronicle-schema.mjs`](../tools/chronicle-schema.mjs)'s statuses, verbatim.
+[`chronicle-schema.mjs`](../packages/review/src/chronicle-schema.js)'s statuses, verbatim.
 
 ```json
 {

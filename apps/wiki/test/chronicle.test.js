@@ -7,10 +7,10 @@ import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { ENTRIES_SCHEMA, ENTRIES_SCHEMA_V2, NIGHTS, checkCorpus, readEntries } from './chronicle-schema.mjs';
-import { STORY_OUTPUT, chapterView, checkStory } from './chronicle-story.mjs';
-import { generate, loadCorpus, OUTPUT, ROOT } from './chronicle.mjs';
-import { currentPath } from './renamed-path.mjs';
+import { ENTRIES_SCHEMA, ENTRIES_SCHEMA_V2, NIGHTS, checkCorpus, readEntries } from '@sixam/review/chronicle-schema';
+import { STORY_OUTPUT, chapterView, checkStory } from '../chronicle-story.js';
+import { generate, loadCorpus, OUTPUT, ROOT } from '../chronicle.js';
+import { currentPath } from '@sixam/review/renamed-path';
 
 // The v1 checkpoints are frozen byte for byte: a correction is a v2 entry that
 // supersedes, never an edit (ADR 0002 principle 9; docs/chronicle/README.md).
@@ -135,7 +135,7 @@ for (const item of [...(corpus.outlook?.next ?? []), ...(corpus.outlook?.missing
 
 const since = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: ROOT, encoding: 'utf8' }).trim();
 checkSource(`commit:${since}`);
-const harvested = JSON.parse(execFileSync(process.execPath, ['tools/chronicle-harvest.mjs', '--since', since, '--until', 'HEAD', '--json'], { cwd: ROOT, encoding: 'utf8' }));
+const harvested = JSON.parse(execFileSync(process.execPath, ['apps/wiki/chronicle-harvest.js', '--since', since, '--until', 'HEAD', '--json'], { cwd: ROOT, encoding: 'utf8' }));
 assert(Array.isArray(harvested), 'harvester did not emit a JSON array');
 for (const candidate of harvested) {
   assert(candidate.id && candidate.date && candidate.sources?.length, 'harvester emitted an incomplete candidate');

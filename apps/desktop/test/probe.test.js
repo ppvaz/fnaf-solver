@@ -1,4 +1,4 @@
-// `npm run probe` (tools/probe.mjs): the shape of its report, on this machine and on machines
+// `npm run probe` (apps/desktop/src/probe.js): the shape of its report, on this machine and on machines
 // built for the test out of fake programs on PATH. The probe is informational, so it must exit 0
 // whatever is missing, and it must never contact a Docker daemon that is not on a local socket:
 // the fake docker below records any `docker info` it is asked, and a remote daemon must leave no
@@ -10,8 +10,8 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));
-const PROBE = join(ROOT, 'tools/probe.mjs');
+const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '../../..'));
+const PROBE = join(ROOT, 'apps/desktop/src/probe.js');
 const CHECKS = ['Node', 'npm ci', 'Java', 'Python', 'ffmpeg', 'Clone', 'Docker'];
 const ROUTES = ['Story', 'Strategies', 'Claims', 'Full tests', 'Rebuild (owner only)', 'Phone'];
 const PHONE = 'Ready: Phone -- not checked here, no phone access (needs a Moto g56 and the game)';

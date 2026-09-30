@@ -14,10 +14,10 @@
     {
       "file": "apps/desktop/src/companion-mcp.mjs",
       "imports": [
-        "../../../tools/chronicle-schema.mjs",
         "./lab.mjs",
         "./mcp.js",
         "@sixam/kernel",
+        "@sixam/review/chronicle-schema",
         "@sixam/review/refusals",
         "@sixam/review/registers",
         "@sixam/review/solver",
@@ -71,6 +71,24 @@
       ]
     },
     {
+      "file": "apps/desktop/src/night.js",
+      "imports": [
+        "node:child_process",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "apps/desktop/src/probe.js",
+      "imports": [
+        "node:child_process",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "apps/desktop/test/companion-mcp.test.mjs",
       "imports": [
         "../../../packages/source/test/fixtures/truth-dump.mjs",
@@ -108,6 +126,27 @@
         "node:fs",
         "node:os",
         "node:path"
+      ]
+    },
+    {
+      "file": "apps/desktop/test/night.test.js",
+      "imports": [
+        "../src/night.js",
+        "node:assert/strict",
+        "node:fs",
+        "node:os",
+        "node:path"
+      ]
+    },
+    {
+      "file": "apps/desktop/test/probe.test.js",
+      "imports": [
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
       ]
     },
     {
@@ -203,6 +242,50 @@
         "./lane.js",
         "./report.js",
         "@sixam/source/fnaf2"
+      ]
+    },
+    {
+      "file": "apps/wiki/chronicle-harvest.js",
+      "imports": [
+        "node:child_process",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "apps/wiki/chronicle-story.js",
+      "imports": [
+        "@sixam/review/chronicle-schema",
+        "@sixam/review/renamed-path",
+        "node:fs/promises",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "apps/wiki/chronicle.js",
+      "imports": [
+        "./chronicle-story.js",
+        "@sixam/review/chronicle-schema",
+        "@sixam/review/renamed-path",
+        "node:fs/promises",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "apps/wiki/test/chronicle.test.js",
+      "imports": [
+        "../chronicle-story.js",
+        "../chronicle.js",
+        "@sixam/review/chronicle-schema",
+        "@sixam/review/renamed-path",
+        "node:assert/strict",
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:path"
       ]
     },
     {
@@ -1121,6 +1204,12 @@
       ]
     },
     {
+      "file": "packages/review/src/chronicle-schema.js",
+      "imports": [
+        "@sixam/source"
+      ]
+    },
+    {
       "file": "packages/review/src/cli.mjs",
       "imports": [
         "./envelopes.mjs",
@@ -1231,11 +1320,19 @@
     {
       "file": "packages/review/src/registers.mjs",
       "imports": [
-        "../../../tools/chronicle-schema.mjs",
+        "./chronicle-schema.js",
         "./evidence-pack.mjs",
         "./evidence-promotion.mjs",
         "@sixam/kernel",
         "@sixam/source",
+        "node:fs",
+        "node:path"
+      ]
+    },
+    {
+      "file": "packages/review/src/renamed-path.js",
+      "imports": [
+        "node:child_process",
         "node:fs",
         "node:path"
       ]
@@ -2154,42 +2251,6 @@
       ]
     },
     {
-      "file": "tools/chronicle-harvest.mjs",
-      "imports": [
-        "node:child_process",
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/chronicle-schema.mjs",
-      "imports": [
-        "@sixam/source"
-      ]
-    },
-    {
-      "file": "tools/chronicle-story.mjs",
-      "imports": [
-        "./chronicle-schema.mjs",
-        "./renamed-path.mjs",
-        "node:fs/promises",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/chronicle.mjs",
-      "imports": [
-        "./chronicle-schema.mjs",
-        "./chronicle-story.mjs",
-        "./renamed-path.mjs",
-        "node:fs/promises",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
       "file": "tools/constrainedsearch.mjs",
       "imports": [
         "./minus7/paramsearch.mjs",
@@ -2928,8 +2989,8 @@
     {
       "file": "tools/device/test-fnaf1-winner.mjs",
       "imports": [
+        "../../apps/desktop/src/night.js",
         "../fnaf1-device-lane.mjs",
-        "../night.mjs",
         "../winner-census.mjs",
         "./fnaf1-custom-run.mjs",
         "./fnaf1-winner.mjs",
@@ -3540,15 +3601,6 @@
       ]
     },
     {
-      "file": "tools/night.mjs",
-      "imports": [
-        "node:child_process",
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
       "file": "tools/nightloop-run.mjs",
       "imports": [
         "@sixam/play/sim",
@@ -3699,15 +3751,6 @@
       "imports": [
         "node:os",
         "node:worker_threads"
-      ]
-    },
-    {
-      "file": "tools/probe.mjs",
-      "imports": [
-        "node:child_process",
-        "node:fs",
-        "node:path",
-        "node:url"
       ]
     },
     {
@@ -4075,14 +4118,6 @@
       ]
     },
     {
-      "file": "tools/renamed-path.mjs",
-      "imports": [
-        "node:child_process",
-        "node:fs",
-        "node:path"
-      ]
-    },
-    {
       "file": "tools/renderertest.mjs",
       "imports": [
         "../apps/trainer/src/microtrainer.js",
@@ -4114,20 +4149,6 @@
       ]
     },
     {
-      "file": "tools/test-chronicle.mjs",
-      "imports": [
-        "./chronicle-schema.mjs",
-        "./chronicle-story.mjs",
-        "./chronicle.mjs",
-        "./renamed-path.mjs",
-        "node:assert/strict",
-        "node:child_process",
-        "node:crypto",
-        "node:fs",
-        "node:path"
-      ]
-    },
-    {
       "file": "tools/test-companion-name.mjs",
       "imports": [
         "node:child_process",
@@ -4139,7 +4160,7 @@
     {
       "file": "tools/test-docs.mjs",
       "imports": [
-        "./renamed-path.mjs",
+        "@sixam/review/renamed-path",
         "node:child_process",
         "node:fs",
         "node:os",
@@ -4249,31 +4270,10 @@
       ]
     },
     {
-      "file": "tools/test-night.mjs",
-      "imports": [
-        "./night.mjs",
-        "node:assert/strict",
-        "node:fs",
-        "node:os",
-        "node:path"
-      ]
-    },
-    {
       "file": "tools/test-no-serial.mjs",
       "imports": [
         "node:child_process",
         "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/test-probe.mjs",
-      "imports": [
-        "node:assert/strict",
-        "node:child_process",
-        "node:fs",
-        "node:os",
         "node:path",
         "node:url"
       ]

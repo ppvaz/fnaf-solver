@@ -25,7 +25,7 @@ import { REPOSITORY_TARGET, claimEnvelope, refusalEnvelope, unknown } from '@six
 import { CHECKS } from '@sixam/review/refusals';
 import { GAMES, resolveGame } from '@sixam/review/registers';
 import { INSTRUMENTS, QUERIES, SURFACE_DOC, createSolver } from '@sixam/review/solver';
-import { KINDS } from '../../../tools/chronicle-schema.mjs';
+import { KINDS } from '@sixam/review/chronicle-schema';
 import { createCompanionMcp } from './mcp.js';
 import { createLab } from './lab.mjs';
 
