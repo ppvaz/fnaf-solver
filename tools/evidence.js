@@ -16,6 +16,7 @@ import { PACKS_DIR, resolvePackTargets, buildPack, buildFnaf1Pack, writePack, re
 import { GRAPH_FILE, attestPack, derivePromotion, formatGraph, promotionEdgeFor, promotionSummary, readGraph,
   recordPromotion } from '@sixam/review/evidence-promotion';
 import { computeCohort } from '@sixam/review/evidence-cohort';
+import { FNAF2, promotionSummaryEnvelope, showEnvelope } from '@sixam/review/envelopes';
 import { writeFileSync } from 'node:fs';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));
@@ -24,13 +25,14 @@ const PACKS = join(ROOT, PACKS_DIR);
 const SESSION_RESULT_SCHEMAS = new Set(['device-run-result-v1', 'experiment-result-v1']);
 const CLAIM_LEVELS = new Set(['MODEL_ONLY', 'FIXTURE', 'DEVICE_MEASURED']);
 const help = () => console.log('Usage: npm run evidence -- <list|show|replay|why|promote> RUN_ID\n'
+  + '       npm run evidence -- show RUN_ID --envelope   (the same object, as a claim-envelope-v1)\n'
   + '       npm run evidence -- diff LEFT_ID RIGHT_ID\n'
   + '                  (an id is read from artifacts/<id> first, then from the committed pack docs/evidence/runs/<id>)\n'
   + '       npm run evidence -- pack <CAMPAIGN_ID|NIGHT_RUN_LABEL> [--replace] [--timeline GRADED_TIMELINE.json]\n'
   + '       npm run evidence -- attest <PACK_ID> --by agent --note "SESSION OR AGENT" [--replace]\n'
   + '       npm run evidence -- attest <PACK_ID> --by human --name "NAME" [--replace]\n'
   + '                  (re-derives every other check from the pack, refuses on any failure, writes plan12-attestation.json)\n'
-  + '       npm run evidence -- promotions      (every pack against the gate and the graph, per night)\n'
+  + '       npm run evidence -- promotions [--envelope]   (every pack against the gate and the graph, per night)\n'
   + '       npm run evidence -- recovery-check    (does run/campaign.log reproduce the campaigns still on disk?)\n'
   + '       npm run evidence -- cohort <PREDECLARATION.json> [--prefix LABEL_PREFIX]');
 
@@ -42,6 +44,27 @@ const flag = name => {
   if (value === undefined || value.startsWith('--')) throw new Error(`${name} needs a value`);
   return value;
 };
+
+/** `--envelope`: `show` and `promotions` print their object as a claim-envelope-v1 (Plan 28 step 1). */
+const envelope = process.argv.includes('--envelope');
+
+/** What a shown record is about, where it was read, and its own claim level. */
+function showTarget(id, loaded) {
+  if (loaded.packed) {
+    const where = `${PACKS_DIR}/${id}/pack.json`;
+    if (loaded.kind === 'fnaf1-run') {
+      const pkg = loaded.packed.pack.target?.package;
+      return { target: typeof pkg === 'string' && /^com\.scottgames\.[a-z0-9]+$/.test(pkg) ? pkg
+        : { kind: 'UNKNOWN', reason: `${where} names no target package` }, source: where, claimLevel: loaded.entry.claimLevel };
+    }
+    return { target: FNAF2, source: where, claimLevel: loaded.entry.claimLevel };
+  }
+  const source = `artifacts/${id}`;
+  if (loaded.kind === 'device-campaign') return { target: FNAF2, source, claimLevel: loaded.entry.claimLevel };
+  if (loaded.kind === 'session') return { target: { kind: 'UNKNOWN', reason: 'a session result names no game package' }, source,
+    claimLevel: loaded.result.claimLevel };
+  return { target: FNAF2, source, claimLevel: loaded.bundle?.manifest?.gate?.claimLevel ?? 'MODEL_ONLY' };
+}
 
 /** Who attested a pack and whether the attestation binds it: printed by list, show and promote. */
 const attestationView = packed => {
@@ -359,9 +382,14 @@ async function main([operation = 'help', first, second]) {
     if (outcome.status === 'REFUSED') process.exitCode = 1;
     return;
   }
-  if (operation === 'promotions') return console.log(JSON.stringify(promotionSummary(ROOT, trackedWinners(ROOT)), null, 2));
+  if (operation === 'promotions') {
+    const summary = promotionSummary(ROOT, trackedWinners(ROOT));
+    return console.log(JSON.stringify(envelope ? promotionSummaryEnvelope(summary) : summary, null, 2));
+  }
   if (operation === 'show') {
     const loaded = await loadAny(first);
+    // --envelope: the same object, as the claim of a claim-envelope-v1 at the record's own claim level.
+    const print = shown => console.log(JSON.stringify(envelope ? showEnvelope(first, shown, showTarget(first, loaded)) : shown, null, 2));
     if (loaded.kind === 'device-campaign') {
       const packView = loaded.packed ? (() => {
         const edge = promotionEdgeFor(readGraph(ROOT), first);
@@ -369,10 +397,10 @@ async function main([operation = 'help', first, second]) {
           attestation: attestationView(loaded.packed),
           promotion: edge && edge.packSha256 === loaded.packed.digest ? edge : edge ? { stale: true, edge } : null };
       })() : {};
-      return console.log(JSON.stringify({ kind: loaded.kind, ...loaded.entry, mode: loaded.wrapper?.mode ?? null,
-        status: loaded.wrapper?.status ?? null, files: loaded.files, ...packView }, null, 2));
+      return print({ kind: loaded.kind, ...loaded.entry, mode: loaded.wrapper?.mode ?? null,
+        status: loaded.wrapper?.status ?? null, files: loaded.files, ...packView });
     }
-    return console.log(JSON.stringify(loaded, null, 2));
+    return print(loaded);
   }
   if (operation === 'diff') {
     if (!first || !second) throw new Error('diff needs two ids: npm run evidence -- diff LEFT RIGHT');

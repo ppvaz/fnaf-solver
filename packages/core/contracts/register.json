@@ -52,6 +52,7 @@
     {"id":"venue-identity-v1","owner":"core/contracts","kind":"data","validator":"validateVenueIdentity"},
     {"id":"venue-check-v1","owner":"core/contracts","kind":"artifact","validator":"validateVenueCheck"},
     {"id":"venue-binding-v1","owner":"core/contracts","kind":"artifact","validator":"validateVenueBinding"},
-    {"id":"qualification-v2","owner":"core/contracts","kind":"data","validator":"validateQualification"}
+    {"id":"qualification-v2","owner":"core/contracts","kind":"data","validator":"validateQualification"},
+    {"id":"claim-envelope-v1","owner":"packages/kernel","kind":"data","validator":"packages/kernel/src/claim-envelope.js validateClaimEnvelope"}
   ]
 }

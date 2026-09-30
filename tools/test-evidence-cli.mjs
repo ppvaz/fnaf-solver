@@ -4,7 +4,9 @@
 // `replay` crashed on the FNaF 1 pack, and a misspelled id got the same ENOENT. This runs the
 // CLI itself against committed packs of each custody kind and pins: `why`, `show`, `diff` and
 // `replay` read the pack; what a recovered pack lost is named, not thrown; an unknown id is
-// refused with the nearest ids; and `promotions` prints exactly the library's summary.
+// refused with the nearest ids; and `promotions` prints exactly the library's summary. Under
+// `--envelope`, `show` and `promotions` print that same object as the claim of a
+// claim-envelope-v1 (Plan 28 step 1), while their default output stays byte for byte.
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
@@ -12,6 +14,7 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PACKS_DIR, readPack, trackedWinners } from '@sixam/review/evidence-pack';
 import { promotionSummary } from '@sixam/review/evidence-promotion';
+import { validateClaimEnvelope } from '@sixam/kernel';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));
 const CLI = join(ROOT, 'tools/evidence.js');
@@ -39,9 +42,9 @@ const rows = id => readFileSync(join(packDir(id), 'events.jsonl'), 'utf8').split
   .map(line => JSON.parse(line));
 
 // promotions runs beside everything else: it compiles every committed winner (~7 s), and the
-// in-process summary it must equal byte for byte compiles them again.
-const promotionsRun = new Promise((done, fail) => {
-  const child = spawn(process.execPath, [CLI, 'promotions'], { cwd: ROOT });
+// in-process summary it must equal byte for byte compiles them again. So does its --envelope.
+const background = (...args) => new Promise((done, fail) => {
+  const child = spawn(process.execPath, [CLI, ...args], { cwd: ROOT });
   let stdout = '';
   let stderr = '';
   child.stdout.on('data', chunk => { stdout += chunk; });
@@ -49,6 +52,8 @@ const promotionsRun = new Promise((done, fail) => {
   child.on('error', fail);
   child.on('close', status => done({ status, stdout, stderr }));
 });
+const promotionsRun = background('promotions');
+const promotionsEnvelopeRun = background('promotions', '--envelope');
 
 // --- why: the pack's event rows, verbatim, with the custody they came through ----------------
 for (const id of [FNAF1, ORIGINAL, RESULT_LOST]) {
@@ -73,6 +78,20 @@ const lostShown = json(cli('show', RESULT_LOST), 'show');
 assert.equal(lostShown.outcome, 'RESULT_LOST', 'no result is invented for a pack that lost it');
 assert.ok(lostShown.custody.lost.includes('result.json'));
 assert.equal(json(cli('show', FNAF1), 'show').kind, 'fnaf1-run');
+
+// --- show --envelope: the same object as a claim-envelope-v1 at the record's own claim level -----
+for (const id of [FNAF1, ORIGINAL, RESULT_LOST, RECOVERED]) {
+  const plain = json(cli('show', id), `show ${id}`);
+  const wrapped = validateClaimEnvelope(json(cli('show', id, '--envelope'), `show ${id} --envelope`));
+  assert.deepEqual(wrapped.claim, plain, `show ${id} --envelope wraps exactly what show prints`);
+  const level = packJson(id).claimLevel;
+  if (level === 'UNKNOWN') assert.equal(wrapped.label.kind, 'UNKNOWN', `${id}'s UNKNOWN claim level stays UNKNOWN, with its reason`);
+  else assert.equal(wrapped.label, level, `${id}'s envelope carries its pack's claim level`);
+  assert.equal(wrapped.target, id === FNAF1 ? packJson(id).target.package : 'com.scottgames.fnaf2');
+  assert.equal(wrapped.reproducer, `npm run evidence -- show ${id}`);
+  for (const name of packJson(id).custody?.lost ?? [])
+    assert.ok(wrapped.notMeasured.some(item => item.startsWith(`${name}:`)), `${id}: lost ${name} is named as not measured`);
+}
 
 // --- diff: two committed packs, file by file, the lost result named ----------------------------
 const diff = json(cli('diff', RESULT_LOST, RECOVERED), 'diff');
@@ -132,10 +151,19 @@ refused(cli('attest', typo, '--by', 'agent', '--note', 'test-evidence-cli'), typ
 assert.ok(!existsSync(packDir(typo)), 'a refused attestation writes nothing');
 
 // --- promotions: byte for byte the library's summary ----------------------------------------------
-const expected = `${JSON.stringify(promotionSummary(ROOT, trackedWinners(ROOT)), null, 2)}\n`;
+const summary = promotionSummary(ROOT, trackedWinners(ROOT));
+const expected = `${JSON.stringify(summary, null, 2)}\n`;
 const promotions = await promotionsRun;
 assert.equal(promotions.status, 0, promotions.stderr);
 assert.equal(promotions.stdout, expected, 'promotions prints exactly promotionSummary, nothing added or reordered');
+const wrappedPromotions = await promotionsEnvelopeRun;
+assert.equal(wrappedPromotions.status, 0, wrappedPromotions.stderr);
+const promotionsEnvelope = validateClaimEnvelope(JSON.parse(wrappedPromotions.stdout));
+assert.deepEqual(promotionsEnvelope.claim, summary, 'promotions --envelope wraps exactly the summary');
+assert.equal(promotionsEnvelope.label, 'DEVICE_MEASURED');
+assert.ok(summary.refusedWins.every(win => promotionsEnvelope.notMeasured.some(item => item.startsWith(`${win.id}:`))),
+  'every executor 6 AM that is not promoted is named as not measured');
 
 console.log(`evidence cli: why, show, diff and replay read committed packs (${packs.size} here), a lost result is named rather than thrown, `
-  + 'an unknown id gets the three nearest ids, and promotions prints the library summary byte for byte');
+  + 'an unknown id gets the three nearest ids, promotions prints the library summary byte for byte, and show and promotions '
+  + 'wrap exactly that output in claim-envelope-v1 under --envelope');

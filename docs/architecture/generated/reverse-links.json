@@ -108,6 +108,32 @@
       "relation": "REFERENCES"
     },
     {
+      "id": "contract.claim-envelope-v1",
+      "kind": "CONTRACT",
+      "path": "packages/kernel/src/claim-envelope.js",
+      "line": 20,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.claim-envelope-v1",
+      "kind": "CONTRACT",
+      "path": "packages/kernel/test/claim-envelope.test.js",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.claim-envelope-v1",
+      "kind": "CONTRACT",
+      "path": "packages/kernel/test/claim-envelope.test.js",
+      "line": 4,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.claim-envelope-v1",
+      "kind": "CONTRACT",
+      "path": "tools/device/test-cue-helper-mcp.mjs",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
       "id": "contract.claim-evidence-v1",
       "kind": "CONTRACT",
       "path": "tools/evidence.js",

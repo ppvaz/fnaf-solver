@@ -2981,3 +2981,35 @@ Open:
 - a k3 schedule with slack on that seam, and a second phone run of it;
 - the same reading of a retail night, whose last input hop and seed are the Clickteam runtime's.
 
+
+## 2026-09-29 — the solver interface's first steps (S6, Plan 28 steps 1-4)
+
+The `fnaf-solver` MCP server now answers questions about the games as well as
+queueing phone jobs ([surface](../docs/device/CUE-HELPER-MCP.md)). Every new
+answer is a `claim-envelope-v1`: the claim, its label (a claim level, a source
+label, or `UNKNOWN(reason)`), the game, citations, status, what it does not
+measure, and a command that reproduces it. A refusal names its rule, reason,
+citation and remedy.
+
+- **The envelope** is a kernel contract (`packages/kernel/src/claim-envelope.js`,
+  registered in the contract register, pinned by `claim-envelope.test.js`).
+  `evidence -- show|promotions --envelope` and `review -- query promotions
+  --envelope` emit it. Without the flag, their output is byte-identical to master.
+- **`describe({game})`** joins the control catalog, the contract register, the
+  chronicle, the packs and the promotion graph, and computes Plan 28's four
+  gaps as queries. For FNaF 2 it re-derives the promotions summary
+  `plan12-promotions-fnv1a-8ab7e8a0` (47 promoted of 48 executor 6 AMs).
+- **Resources**: `fnaf://chronicle`, `fnaf://evidence/graph`, `fnaf://contracts`,
+  `fnaf://refuted` and `fnaf://game/{pkg}/controls`.
+- **Refusals**: `seed-floor`, `directional-reuse` (mistake 10), `capabilities-first`
+  (mistake 8) and `unknown-as-number`, as pure checkers
+  (`packages/review/src/refusals.mjs`). Each is tested on a planted violation
+  and on a clean case.
+- **Tools**: `describe`, `query`, `review`, `promote` and `check`, plus
+  `jobs.*` aliases of the queue. `promote` only proposes or refuses. The
+  `cue.*` tools are unchanged.
+
+Nothing is measured or promoted. Open: Plan 28 steps 5 and 6 (`truth.*`,
+`sim.*`, `device.*`). The chronicle ends on 2026-09-09, so `fnaf://refuted` holds
+no negative result recorded after that date. Which commands besides the listed
+emitters should carry the envelope is not recorded anywhere.

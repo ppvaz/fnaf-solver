@@ -1040,6 +1040,27 @@
         "packages/core/test/venue-identity.test.js",
         "apps/device/test/venue-preflight.test.js"
       ]
+    },
+    {
+      "contractId": "claim-envelope-v1",
+      "id": "claim-envelope-v1",
+      "version": 1,
+      "owner": "packages/kernel",
+      "kind": "data",
+      "purpose": "Stable claim-envelope-v1 boundary for packages/kernel; its validator is packages/kernel/src/claim-envelope.js validateClaimEnvelope.",
+      "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
+      "clockDomains": [
+        "declared-by-payload-or-profile"
+      ],
+      "units": "Values carry explicit units or are documented by the owning validator.",
+      "unknownBehavior": "Invalid or unavailable data is rejected or represented as an explicit UNKNOWN state; it is never silently promoted.",
+      "errorBehavior": "Reject malformed, incompatible, uncalibrated, or out-of-budget values at the boundary.",
+      "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
+      "runtimeValidation": "packages/kernel/src/claim-envelope.js validateClaimEnvelope",
+      "conformanceFixtures": [
+        "packages/kernel/test/claim-envelope.test.js",
+        "tools/device/test-cue-helper-mcp.mjs"
+      ]
     }
   ]
 }

@@ -307,6 +307,12 @@
       "owner": "core/contracts",
       "kind": "data",
       "validator": "validateQualification"
+    },
+    {
+      "id": "claim-envelope-v1",
+      "owner": "packages/kernel",
+      "kind": "data",
+      "validator": "packages/kernel/src/claim-envelope.js validateClaimEnvelope"
     }
   ]
 }

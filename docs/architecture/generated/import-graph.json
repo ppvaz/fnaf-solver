@@ -1208,6 +1208,13 @@
       ]
     },
     {
+      "file": "packages/kernel/src/claim-envelope.js",
+      "imports": [
+        "./labels.js",
+        "./types.js"
+      ]
+    },
+    {
       "file": "packages/kernel/src/game-run.js",
       "imports": [
         "./labels.js",
@@ -1219,6 +1226,7 @@
       "file": "packages/kernel/src/index.js",
       "imports": [
         "./annotation.js",
+        "./claim-envelope.js",
         "./game-run.js",
         "./labels.js",
         "./outcome.js",
@@ -1244,6 +1252,13 @@
       "imports": [
         "./labels.js",
         "./types.js"
+      ]
+    },
+    {
+      "file": "packages/kernel/test/claim-envelope.test.js",
+      "imports": [
+        "../src/index.js",
+        "node:assert/strict"
       ]
     },
     {
@@ -1403,11 +1418,22 @@
     {
       "file": "packages/review/src/cli.mjs",
       "imports": [
+        "./envelopes.mjs",
         "./promotions-query.mjs",
+        "./solver.mjs",
         "node:child_process",
         "node:fs",
         "node:path",
         "node:url"
+      ]
+    },
+    {
+      "file": "packages/review/src/envelopes.mjs",
+      "imports": [
+        "./evidence-pack.mjs",
+        "./evidence-promotion.mjs",
+        "./promotions-query.mjs",
+        "@sixam/kernel"
       ]
     },
     {
@@ -1468,6 +1494,42 @@
         "@sixam/core/contracts",
         "@sixam/kernel",
         "node:crypto",
+        "node:fs",
+        "node:path"
+      ]
+    },
+    {
+      "file": "packages/review/src/refusals.mjs",
+      "imports": [
+        "@sixam/kernel"
+      ]
+    },
+    {
+      "file": "packages/review/src/registers.mjs",
+      "imports": [
+        "../../../tools/chronicle-schema.mjs",
+        "./evidence-pack.mjs",
+        "./evidence-promotion.mjs",
+        "@sixam/core/control",
+        "@sixam/kernel",
+        "node:fs",
+        "node:path"
+      ]
+    },
+    {
+      "file": "packages/review/src/solver.mjs",
+      "imports": [
+        "./envelopes.mjs",
+        "./evidence-cohort.mjs",
+        "./evidence-pack.mjs",
+        "./evidence-promotion.mjs",
+        "./pack-lift.mjs",
+        "./promotions-query.mjs",
+        "./refusals.mjs",
+        "./registers.mjs",
+        "@sixam/core/contracts",
+        "@sixam/core/control",
+        "@sixam/kernel",
         "node:fs",
         "node:path"
       ]
@@ -1541,6 +1603,36 @@
         "@sixam/kernel",
         "node:assert/strict",
         "node:child_process",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/review/test/refusals.test.mjs",
+      "imports": [
+        "../src/refusals.mjs",
+        "@sixam/kernel",
+        "node:assert/strict",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/review/test/solver.test.mjs",
+      "imports": [
+        "../src/evidence-pack.mjs",
+        "../src/evidence-promotion.mjs",
+        "../src/promotions-query.mjs",
+        "../src/registers.mjs",
+        "../src/solver.mjs",
+        "@sixam/core/contracts",
+        "@sixam/core/control",
+        "@sixam/kernel",
+        "node:assert/strict",
+        "node:child_process",
+        "node:crypto",
         "node:fs",
         "node:path",
         "node:url"
@@ -1775,7 +1867,13 @@
     {
       "file": "tools/device/cue-helper-mcp.mjs",
       "imports": [
-        "../../apps/device/src/mcp.js"
+        "../../apps/device/src/mcp.js",
+        "../chronicle-schema.mjs",
+        "@sixam/kernel",
+        "@sixam/review/refusals",
+        "@sixam/review/registers",
+        "@sixam/review/solver",
+        "node:url"
       ]
     },
     {
@@ -2368,9 +2466,12 @@
     {
       "file": "tools/device/test-cue-helper-mcp.mjs",
       "imports": [
+        "@sixam/kernel",
         "node:assert/strict",
         "node:child_process",
+        "node:crypto",
         "node:events",
+        "node:fs",
         "node:fs/promises",
         "node:os",
         "node:path",
@@ -2762,6 +2863,7 @@
         "./device/bundle.mjs",
         "@sixam/core/contracts",
         "@sixam/research",
+        "@sixam/review/envelopes",
         "@sixam/review/evidence-campaign",
         "@sixam/review/evidence-cohort",
         "@sixam/review/evidence-pack",
@@ -3298,6 +3400,64 @@
       ]
     },
     {
+      "file": "tools/recompile/android/capture-latency.mjs",
+      "imports": [
+        "../../../apps/device/src/physical-ports.js",
+        "../../device/local-profile.mjs",
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "tools/recompile/android/practice-audit.mjs",
+      "imports": [
+        "../../device/tap-stall-audit.mjs",
+        "@sixam/adapters",
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "tools/recompile/android/rebuild-night.mjs",
+      "imports": [
+        "../../device/local-profile.mjs",
+        "@sixam/adapters",
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "tools/recompile/android/test-practice-audit.mjs",
+      "imports": [
+        "./practice-audit.mjs",
+        "@sixam/adapters"
+      ]
+    },
+    {
+      "file": "tools/recompile/android/test-rebuild-night.mjs",
+      "imports": [
+        "./rebuild-night.mjs"
+      ]
+    },
+    {
+      "file": "tools/recompile/calib-replay.mjs",
+      "imports": [
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/recompile/compare-draw-trace.mjs",
       "imports": [
         "./model-draw-trace.mjs",
@@ -3457,6 +3617,12 @@
         "node:fs",
         "node:path",
         "node:url"
+      ]
+    },
+    {
+      "file": "tools/recompile/test-calib-replay.mjs",
+      "imports": [
+        "./calib-replay.mjs"
       ]
     },
     {
@@ -3632,6 +3798,7 @@
     {
       "file": "tools/test-evidence-cli.mjs",
       "imports": [
+        "@sixam/kernel",
         "@sixam/review/evidence-pack",
         "@sixam/review/evidence-promotion",
         "node:assert/strict",

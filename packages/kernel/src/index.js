@@ -10,3 +10,5 @@ export { interval, validateInterval } from './time.js';
 export { OUTCOME_KINDS, aborted, death, invalid, sixAm, timeout, validateOutcome } from './outcome.js';
 export { CUSTODY_CLASSES, GAME_RUN_FIELDS, RUN_MODES, validateGameRun } from './game-run.js';
 export { ANNOTATION_KINDS, ANNOTATION_STATUSES, SUBJECT_KINDS, validateAnnotation } from './annotation.js';
+export { CLAIM_ENVELOPE_SCHEMA, CLAIM_FIELDS, ENVELOPE_STATUSES, REFUSAL_FIELDS, REPOSITORY_TARGET, claimEnvelope,
+  isEnvelopeLabel, isRefusal, refusalEnvelope, unknownsIn, validateClaimEnvelope, validateEnvelopeLabel } from './claim-envelope.js';

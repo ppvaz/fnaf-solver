@@ -119,3 +119,37 @@ export type Annotation =
   | (AnnotationBase & { readonly class: string })
   | (AnnotationBase & { readonly measure: string })
   | (AnnotationBase & { readonly tag: string });
+
+/**
+ * An envelope's label: one of the two closed enums, or UNKNOWN(reason). The enums stay distinct;
+ * a label is never read as the other enum's value.
+ */
+export type EnvelopeLabel = ClaimLevel | SourceLabel;
+export type EnvelopeStatus = 'standing' | 'superseded' | 'retracted';
+
+/**
+ * claim-envelope-v1 (Plan 28; v1 under ADR 0002): an answer with what it is worth, what it is
+ * about, where it was read, whether it stands, what it does not measure, and how to reproduce it.
+ */
+export interface ClaimEnvelope {
+  readonly schema: 'claim-envelope-v1';
+  readonly claim: unknown;
+  readonly label: EnvelopeLabel;
+  /** A game's Android package (optionally `@version`), `repository`, or UNKNOWN(reason). */
+  readonly target: string | Unknown;
+  readonly cite: readonly string[];
+  readonly status: EnvelopeStatus;
+  readonly supersededBy: string | null;
+  readonly notMeasured: readonly string[];
+  readonly reproducer: string;
+}
+
+/** A known-bad move refused: the rule, because what, where the rule is written, and the remedy. */
+export interface RefusalEnvelope {
+  readonly schema: 'claim-envelope-v1';
+  readonly refused: true;
+  readonly rule: string;
+  readonly because: string;
+  readonly cite: readonly string[];
+  readonly remedy: string;
+}

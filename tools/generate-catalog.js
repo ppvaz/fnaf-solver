@@ -99,6 +99,7 @@ const contractEvidence = {
   'camera-rule-v1': ['packages/adapters/test/camera-rule.test.js', 'tools/device/test-camera-calibrate.py'],
   'calibration-state-v1': ['apps/device/test/calibration-state-rule.test.js'],
   'control-exclusion-v1': ['packages/adapters/test/control-exclusion.test.js'],
+  'claim-envelope-v1': ['packages/kernel/test/claim-envelope.test.js', 'tools/device/test-cue-helper-mcp.mjs'],
 };
 const repositoryPaths = new Set(files.map(path => relative(ROOT, path)));
 for (const contract of contractRegister.contracts) {

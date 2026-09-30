@@ -4,6 +4,13 @@
 question "at maturity, what does someone — or someone's agent — call, instead
 of investigating the game by hand?"
 
+**Steps 1–4 built 2026-09-29** and served by the `fnaf-solver` MCP server
+([surface](../docs/device/CUE-HELPER-MCP.md)): `claim-envelope-v1` in the kernel,
+emitted by `evidence -- show|promotions --envelope` and `review -- query promotions
+--envelope`; `describe`; the five resources; the four refusals. Steps 5 and 6
+(`truth.*`, `sim.*`, `device.*`) remain. Which of the four gaps still hold is
+`npm run review -- describe fnaf2`, not prose.
+
 Plan 25 horizon 3 designs a loop that runs *this* lab. This plan designs the
 surface a *stranger's* lab calls. They are different problems: the self-running
 loop may trust its own memory, and an outside caller may not.
@@ -301,15 +308,15 @@ Each step is useful alone and none requires the next.
 1. **The envelope, as a core contract.** A `claim-envelope-v1` beside the other
    61, with a validator. Retrofit `evidence.js` and `sim` output first — they
    already carry most fields under other names. *Milestone:* two existing tools
-   emit it and a contract test pins the shape.
+   emit it and a contract test pins the shape. *Done 2026-09-29.*
 2. **`fnaf.describe`, built from the registers that already exist.** No new
    measurement; it is a join over the chronicle, the contract register and the
    evidence list. *Milestone:* it reports FNaF 2 honestly, including the four
-   gaps above, without a human editing its text.
+   gaps above, without a human editing its text. *Done 2026-09-29.*
 3. **Resources before tools.** The five URIs are read-only projections and need
    no safety review. *Milestone:* a cold agent answers "what has been refuted
-   about Foxy?" by citation, in one call.
-4. **The four missing refusals.** Cheapest real safety win in the list.
+   about Foxy?" by citation, in one call. *Done 2026-09-29.*
+4. **The four missing refusals.** Cheapest real safety win in the list. *Done 2026-09-29.*
 5. **`truth.*`.** The largest piece of new engineering, and the one that makes
    the other three games cheap.
 6. **`sim.*` and `device.*`,** which are wrappers over existing gated paths.
