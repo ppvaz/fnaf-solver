@@ -510,6 +510,18 @@
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
+      "id": "contract.experiment-result-v2",
+      "kind": "CONTRACT",
+      "path": "packages/kernel/test/experiment-v2.test.js",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.experiment-result-v2",
+      "kind": "CONTRACT",
+      "path": "packages/propose/test/census.test.js",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
       "id": "contract.experiment-spec-v1",
       "kind": "CONTRACT",
       "path": "packages/propose/README.md",
@@ -520,6 +532,18 @@
       "id": "contract.experiment-spec-v1",
       "kind": "CONTRACT",
       "path": "packages/propose/test/experiment.test.js",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.experiment-spec-v2",
+      "kind": "CONTRACT",
+      "path": "packages/kernel/test/experiment-v2.test.js",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.experiment-spec-v2",
+      "kind": "CONTRACT",
+      "path": "packages/propose/test/census.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {

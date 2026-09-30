@@ -25,6 +25,12 @@ for (const id of cases) {
   assert.ok(result.evaluations.every(item => item.traceHash.startsWith('fnv1a-')), `${id}: trace hashes`);
   const replay = replayModelResult(spec, { evidenceId: `replay-${id}` });
   assert.equal(replay.resultHash, replayModelResult(spec, { evidenceId: `replay-${id}` }).resultHash, `${id}: replay hash`);
+  // LEG-009: the result's terminal spans every evaluation, not the first one's.
+  const frames = result.evaluations.map(item => item.terminal.frame);
+  assert.deepEqual(replay.payload.terminalAggregate,
+    { clock: 'simulator-frame', frames: { lo: Math.min(...frames), hi: Math.max(...frames) },
+      evaluations: result.evaluations.length, reporting: frames.length }, `${id}: aggregate terminal`);
+  assert.equal(replay.payload.terminal, undefined, `${id}: no first-evaluation terminal`);
 }
 const synthesis = JSON.parse(await readFile(join(ROOT, 'experiments', 'controller-synthesis.json'), 'utf8'));
 assert.equal(generateCandidates(synthesis).length, 18, 'controller synthesis expands its cartesian candidate space');

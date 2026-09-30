@@ -105,7 +105,7 @@ export function checkUnknownAsNumber(operands, { operation = 'this arithmetic' }
   const others = kinds.filter(item => item.kind !== 'number');
   if (others.length)
     return refuse('not-a-number', `${operation} would consume ${others.map(item => item.kind === 'interval'
-      ? `${item.name}, an Interval{lo, hi}` : `${item.name} (${item.type})`).join('; ')} as one number`,
+      ? `${item.name}, an Interval{lo, hi}` : `${item.name} (${'type' in item ? item.type : item.kind})`).join('; ')} as one number`,
     'carry an interval as both bounds, and convert text to a number only where its unit and source are named');
   return passed([]);
 }

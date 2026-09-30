@@ -17,6 +17,7 @@ shell, Python, Java, C, and retained artifacts.
 | `venue-binding-v1` | core | binds a measured identity to a profile or winner; one that names another subject is refused, not ignored |
 | `qualification-v1` / `qualification-v2` | core | v1 is still read and binds no venue; v2 adds the `venue` it was measured on, and drift demotes it from `QUALIFIED` to `CANDIDATE` |
 | `fact-message-v1` | core telemetry | malformed, oversized, or out-of-order frames are rejected |
+| `experiment-spec-v2` / `experiment-result-v2` | propose (validators in the kernel) | fewer than two competing explanations, a prediction over a measure the separating observation does not name, a held-out block that overlaps the development block or shares its name, a seed set whose count or derivation disagree, a query not decided on the held-out block, and an optional-stopping rule are refused; a result must tag every explanation once, surviving exactly when its prediction held, and carry each rate as successes of n with an `Interval` and its method. v1 is still read |
 | `bench-transport-trace-v1` | core telemetry | incomplete paths, mixed clocks, and unsafe continuation are rejected |
 | `exercise-v1` / `commitment-v1` / `resolution-v1` | core training | questions freeze; commitments and independently evidenced outcomes remain separate |
 | `exercise-cancellation-v1` / `exercise-event-v1` / `exercise-attempt-v1` | core training | interruption, deadline, ordering, and presentation data are explicit |

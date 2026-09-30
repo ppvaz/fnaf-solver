@@ -562,9 +562,19 @@
       ]
     },
     {
+      "file": "packages/kernel/src/contracts/experiment.js",
+      "imports": [
+        "../labels.js",
+        "../seed.js",
+        "../time/interval.js",
+        "./types.js"
+      ]
+    },
+    {
       "file": "packages/kernel/src/contracts/index.js",
       "imports": [
         "./campaign-records.js",
+        "./experiment.js",
         "./qualification.js",
         "./venue-identity.js"
       ]
@@ -598,6 +608,33 @@
         "./game-run.js",
         "./labels.js",
         "./outcome.js",
+        "./seed.js",
+        "./time/interval.js"
+      ]
+    },
+    {
+      "file": "packages/kernel/src/index.js",
+      "imports": [
+        "./annotation.js",
+        "./bindings.js",
+        "./claim-envelope.js",
+        "./game-run.js",
+        "./labels.js",
+        "./outcome.js",
+        "./seed.js",
+        "./time/interval.js"
+      ]
+    },
+    {
+      "file": "packages/kernel/src/index.js",
+      "imports": [
+        "./annotation.js",
+        "./bindings.js",
+        "./claim-envelope.js",
+        "./game-run.js",
+        "./labels.js",
+        "./outcome.js",
+        "./seed.js",
         "./time/interval.js"
       ]
     },
@@ -609,6 +646,14 @@
     },
     {
       "file": "packages/kernel/src/outcome.js",
+      "imports": [
+        "./labels.js",
+        "./time/interval.js",
+        "./types.js"
+      ]
+    },
+    {
+      "file": "packages/kernel/src/seed.js",
       "imports": [
         "./labels.js",
         "./time/interval.js",
@@ -634,6 +679,14 @@
     {
       "file": "packages/kernel/test/claim-envelope.test.js",
       "imports": [
+        "../src/index.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/kernel/test/experiment-v2.test.js",
+      "imports": [
+        "../src/contracts/index.js",
         "../src/index.js",
         "node:assert/strict"
       ]
@@ -1638,6 +1691,26 @@
         "../../../play/games/fnaf1/fnaf1-winner.mjs",
         "./fnaf1-device-lane.mjs",
         "./winner-census.mjs",
+        "node:crypto",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/census/policy-census.mjs",
+      "imports": [
+        "../../../play/bin/phone/actuator.mjs",
+        "../../bindings/fact-register.mjs",
+        "../plans/bundle.mjs",
+        "../plans/minus-toys-plan.mjs",
+        "./winner-census.mjs",
+        "@sixam/kernel/contracts",
+        "@sixam/propose/census",
+        "@sixam/review/renamed-path",
+        "@sixam/source/fnaf2",
+        "node:child_process",
         "node:crypto",
         "node:fs",
         "node:os",
@@ -2782,9 +2855,19 @@
       ]
     },
     {
+      "file": "packages/propose/src/experiment/census.js",
+      "imports": [
+        "./seeds.js",
+        "@sixam/kernel",
+        "@sixam/kernel/contracts",
+        "@sixam/review/refusals"
+      ]
+    },
+    {
       "file": "packages/propose/src/experiment/cli.js",
       "imports": [
         "./experiment.js",
+        "@sixam/kernel",
         "@sixam/kernel/contracts",
         "node:fs/promises",
         "node:path",
@@ -2796,6 +2879,7 @@
       "imports": [
         "./families/minus-toys.js",
         "./families/minus-two.js",
+        "@sixam/kernel",
         "@sixam/kernel/contracts",
         "@sixam/source",
         "@sixam/source/fnaf2"
@@ -2817,6 +2901,8 @@
     {
       "file": "packages/propose/src/experiment/seeds.js",
       "imports": [
+        "@sixam/kernel",
+        "@sixam/kernel/contracts",
         "node:crypto"
       ]
     },
@@ -2990,6 +3076,16 @@
       "file": "packages/propose/test/androidstalltest.mjs",
       "imports": [
         "../parked/minus7/reactive-pilot.mjs"
+      ]
+    },
+    {
+      "file": "packages/propose/test/census.test.js",
+      "imports": [
+        "../src/experiment/census.js",
+        "../src/experiment/experiment.js",
+        "../src/experiment/seeds.js",
+        "@sixam/kernel",
+        "node:assert/strict"
       ]
     },
     {
@@ -4449,6 +4545,32 @@
       "imports": [
         "node:child_process",
         "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "tools/generate-catalog.js",
+      "imports": [
+        "@sixam/source",
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:fs/promises",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "tools/generate-catalog.js",
+      "imports": [
+        "@sixam/source",
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:fs/promises",
+        "node:os",
         "node:path",
         "node:url"
       ]

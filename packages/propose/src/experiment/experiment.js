@@ -1,12 +1,13 @@
 /** Pure experiment primitives shared by named research cases. */
 import { PlantModel } from '@sixam/source/fnaf2';
+import { interval, unknown } from '@sixam/kernel';
 import { stableHash, validateExperiment, validateExperimentResult } from '@sixam/kernel/contracts';
 import { validateControlCommand } from '@sixam/source';
 import { summarizeMinusToys } from './families/minus-toys.js';
 import { summarizeMinusTwo } from './families/minus-two.js';
 
-export { runMinusToys, summarizeMinusToys } from './families/minus-toys.js';
-export { runMinusTwo, summarizeMinusTwo } from './families/minus-two.js';
+export { runMinusToys } from './families/minus-toys.js';
+export { runMinusTwo } from './families/minus-two.js';
 
 const FAMILY_EVALUATORS = Object.freeze({
   'minus-toys-v1': summarizeMinusToys,
@@ -43,7 +44,7 @@ export function generateCandidates(spec) {
   })));
 }
 
-export function evaluateModelCandidate(spec, candidate) {
+function evaluateModelCandidate(spec, candidate) {
   if (spec.evaluator) {
     const summary = FAMILY_EVALUATORS[spec.evaluator]({
       seed: candidate.seed, ...candidate.parameters,
@@ -140,7 +141,7 @@ function campaignSummary(spec, evaluations) {
   };
 }
 
-export function aggregateExperiment(spec, evaluations) {
+function aggregateExperiment(spec, evaluations) {
   const result = {
     schema: 'experiment-result-v1', operation: spec.operation, verdict: 'MODEL_ONLY',
     outcome: 'COMPLETED', modelHash: spec.modelHash, specHash: stableHash(spec),
@@ -159,11 +160,30 @@ export function runModelExperiment(spec) {
   return aggregateExperiment(spec, candidates.map(candidate => evaluateModelCandidate(spec, candidate)));
 }
 
+/**
+ * When the experiment's evaluations ended, as one aggregate (LEG-009): the
+ * Interval from the earliest to the latest terminal frame over EVERY
+ * evaluation, in the simulator's frame clock, with how many evaluations it
+ * spans. Each evaluation keeps its own terminal state. When no evaluation
+ * reports a terminal frame the aggregate is UNKNOWN with its reason, never 0.
+ * @param {{terminal?: {frame?: number}}[]} evaluations
+ */
+export function aggregateTerminal(evaluations) {
+  const frames = evaluations.map(item => item.terminal?.frame).filter(Number.isFinite);
+  if (!frames.length) return unknown('no evaluation reported a terminal frame');
+  return {
+    clock: 'simulator-frame',
+    frames: interval(Math.min(...frames), Math.max(...frames)),
+    evaluations: evaluations.length,
+    reporting: frames.length,
+  };
+}
+
 export function makeResultPayload(evaluation, evidenceId) {
   return {
     ...evaluation,
     evidenceId,
-    terminal: evaluation.evaluations[0]?.terminal,
+    terminalAggregate: aggregateTerminal(evaluation.evaluations),
     eventCount: evaluation.evaluations.reduce((sum, item) => sum + item.eventCount, 0),
   };
 }

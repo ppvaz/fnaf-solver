@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 /** Experiment composition root; evaluators remain pure core consumers. */
+import { isUnknown } from '@sixam/kernel';
 import { stableHash, validateArtifactRef } from '@sixam/kernel/contracts';
 import { makeResultPayload, runModelExperiment } from './experiment.js';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -34,6 +35,11 @@ async function runCase(id) {
     result: artifact('result.json', resultText, 'application/json', 'research-cli'),
     spec: artifact('experiment-spec.json', specText, 'application/json', 'research-cli'),
   };
+  // The result event is stamped when the LAST evaluation ended (LEG-009), on
+  // the aggregate over every evaluation; an experiment none of whose
+  // evaluations reports a terminal frame has no time to stamp, and is refused.
+  const ended = result.terminalAggregate;
+  if (isUnknown(ended)) throw new Error(`${id}: the result event has no time: ${ended.reason}`);
   const manifestPayload = {
     schema: 'session-manifest-v1', version: 1, id: result.evidenceId,
     targetBuild: 'com.scottgames.fnaf2:2.0.7+26', profile: result.profile,
@@ -41,7 +47,7 @@ async function runCase(id) {
     policyHash: stableHash({ operation: spec.operation, policyFamily: spec.policyFamily }),
     specHash: result.specHash, resultHash: result.resultHash,
     reproducer: result.reproducer,
-    events: [{ schema: 'telemetry-event-v1', sessionId: result.evidenceId, type: 'experiment.result', component: 'research', at: { clock: 'simulator-frame', value: result.terminal?.frame ?? 0 }, data: { evidenceId: result.evidenceId, resultHash: result.resultHash, verdict: result.verdict, claimLevel: result.claimLevel } }],
+    events: [{ schema: 'telemetry-event-v1', sessionId: result.evidenceId, type: 'experiment.result', component: 'research', at: { clock: ended.clock, value: ended.frames.hi }, data: { evidenceId: result.evidenceId, resultHash: result.resultHash, verdict: result.verdict, claimLevel: result.claimLevel, terminalFrames: ended.frames, evaluations: ended.evaluations } }],
     artifacts, outcome: 'COMPLETED', redaction: { media: 'none', secrets: 'excluded' },
   };
   const manifest = {

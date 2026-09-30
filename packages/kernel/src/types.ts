@@ -58,6 +58,23 @@ export type Outcome = SixAM | Death | Timeout | Aborted | Invalid | Unknown;
 
 export type RunMode = 'dry' | 'shadow' | 'replay' | 'live';
 
+/**
+ * A seed's provenance: the game drew it, it was forced into a bracket, or it was recovered after
+ * the fact. Adversarial is an RNG mode, not a seed. Not "origin", which is a night's time zero.
+ */
+export type SeedProvenance = 'natural' | 'pinned' | 'identified';
+export type SeedBelief = 'known' | 'candidates' | 'unknown';
+export interface Seed {
+  readonly provenance: SeedProvenance;
+  /** The window a pinned seed was forced into; only a pinned seed has one. */
+  readonly bracket?: Interval;
+  readonly belief: SeedBelief;
+  /** The seed, when the belief is `known`. */
+  readonly value?: number;
+  /** The set, when the belief is `candidates`. */
+  readonly candidates?: readonly number[];
+}
+
 /** How a run's record reached the repository, and what did not. */
 export type CustodyClass = 'complete' | 'recovered';
 export interface Custody {

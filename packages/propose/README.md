@@ -10,10 +10,10 @@ policies, controllers, and experiments with their seed cohorts.
 | `src/games/fnaf2/` | FNaF 2's reactive controllers, the reviewed Minus Toys cycle library, its planner, the belief-backed cycle controller and the sourced night policy | `@sixam/propose/fnaf2` |
 | `src/games/policy-fnaf{1,3,4}.js` | FNaF 1, 3 and 4's published lines and controls, which `packages/propose/bin/census/census.mjs` runs | `@sixam/propose/games/policy-fnaf1.js` (each exports its own `POLICIES`) |
 | `src/strategies/{minus-3,minus-toys,right-vent-camp}/` | each strategy's manifest, route and model gate | `@sixam/propose/strategies/<name>` |
-| `src/experiment/` | the experiment runner (`experiment.js`), the Minus Toys and Minus Two family evaluators (`families/`), seed cohorts (`seeds.js`) and the CLI (`cli.js`) | `@sixam/propose/experiment`, `@sixam/propose/seeds`, `npm run research` |
+| `src/experiment/` | the experiment runner (`experiment.js`), the Minus Toys and Minus Two family evaluators (`families/`), seed cohorts and seed sets (`seeds.js`), the pure half of a census over a policy family (`census.js`) and the CLI (`cli.js`) | `@sixam/propose/experiment`, `@sixam/propose/seeds`, `@sixam/propose/census`, `npm run research` |
 | `experiments/` | the eight named experiment specs (`CONTRACT:experiment-spec-v1`) | `npm run research -- <case>` |
 | `parked/minus7/` | Minus 7, kept on purpose ([archived routes](../../docs/ARCHIVED-ROUTES.md)) | `@sixam/propose/parked/minus7` |
-| `test/` | the cycle library, planner and controller, the night policy, the experiment cases and the legacy aliases (`test:contracts`) | |
+| `test/` | the cycle library, planner and controller, the night policy, the experiment cases, seed derivation and the census helpers (`census.test.js`), and the legacy aliases (`test:contracts`) | |
 
 The package root re-exports the policy language and FNaF 2's controllers,
 which read no host or browser global; the experiment half reads the filesystem
@@ -31,7 +31,38 @@ glitchless Minus Two path; they do not route through the generic
 monitor/camera smoke evaluator. Each claim-producing operation retains its
 input spec, structured result and session manifest under `artifacts/`; console
 output is a view of that bundle. Candidate-family statistics include a
-fixed-sample Wilson interval, terminal causes and a trace hash.
+fixed-sample Wilson interval, terminal causes and a trace hash. Each
+evaluation keeps its own terminal state; the result's `terminalAggregate` is the
+kernel `Interval` of terminal frames over every evaluation (or `UNKNOWN` with its
+reason), and the session manifest's result event is stamped at its upper bound
+(LEG-009).
+
+## Experiments v2 and censuses over a policy family
+
+`experiment-spec-v2` (validators in `@sixam/kernel/contracts`, registered in
+the kernel's contract register; v1 is still read) holds the question; at least
+two competing `explanations[]`, each with its assumptions and the observation
+it predicts, written as a predicate over named measures; the separating
+observation, which names those measures; the cohort -- a development block and
+a named, disjoint held-out block, each a seed set that says how it was derived
+(`golden`, `explicit` or `explicit-range {from, to}`) and which kernel Seed
+provenance its members stand for (`natural | pinned | identified`); the
+deciding query, decided on the held-out block; and a fixed-sample stopping
+rule. A census also names its policy family and grid. `experiment-result-v2`
+tags every explanation `ruled-out` or `surviving` with the values that decided
+it, and reports each rate as successes of n with a kernel `Interval` and its
+method (`wilson`, `wilson-bonferroni` for rates taken jointly, or `exhaustive`
+for a count over the whole population).
+
+`src/experiment/census.js` is the pure half: `resolveCensusCohort` expands both
+blocks, refuses an overlap or a seed outside the population, and refuses a
+census block under 3000 seeds with review's own `seed-floor` rule
+(`@sixam/review/refusals`); `rateOf` computes the rate records; and
+`decideExperiment` writes the result. The replay half lives with the family's
+emitter in `tools/policy-census.mjs`, which runs only a committed, clean spec.
+`seeds.js` records every cohort's derivation from the seeds themselves, so a
+salt passed beside an explicit list is never recorded as its provenance
+(LEG-010).
 
 There is no sandbox beside it (ADR 0002 principle 7): a claim-bearing cohort or
 census is pre-registered with its family and held-out block, and a diagnostic
@@ -131,6 +162,7 @@ moved them here, with the description their tool index gave them.
 | `packages/propose/bin/census/census.mjs --game fnaf1` | report | Seed census over a game simulator. `--seeds` (default 3000, the standing floor), `--start` for a disjoint seed block, `--night`, `--policy`, `--custom 20` for 4/20, `--all` for every policy, `--json`. Covers FNaF 1, 3 and 4; a model result, not a device measurement. |
 | `packages/propose/bin/census/winner-census.mjs [--winner FILE ...] [--start S] [--count N] [--jobs J] [--out FILE] [--sim-opt NAME ...]` | report | Every committed FNaF 2 `winner-v1` binding replayed exactly as its bundle gate replays it (its emitter, at `anchorEpochMs` + `phaseOffsetMs`, each binding first recompiled by `compileBundle`) over seeds 0..65535 -- every night the 16-bit RNG can deal, so the count is a population, not a sample. Splits each binding into the design block (every seed the tuning cohorts reach: 0..3000, the golden cohort mod 2^16, the policy sweep's strides) and the held-out rest, lists each loss with its cause and frame, and gives the best binding per night as a lower bound on `P_max` scoped to the committed bindings. Writes an `evidence-record-v1`; MODEL_ONLY. `--sim-opt` switches on a default-off simulator option that is read only at tick time (today `sourcedGatedEvery`) in the forked replays, after each binding compiles on the default model; that record's id carries the option name, because it is a comparison against the default census, never the default census. |
 | `packages/propose/bin/census/winner-phase-census.mjs --night N [--count K] [--window MS] [--jobs J] [--out FILE]` | report | A night's committed phase-aware winners replayed at every frame phase within `--window` of each binding's declared epoch, over the first K seeds outside the design block: a `#`/`.`/`+` map per binding (every seed wins / every seed loses / some do), its fully won bands in the epoch the game sees, whether the registered anchor's effective interval (aim + onset bias + latency, `fact-register.mjs`) lies inside one, and the seed oracle -- choosing among the bindings per seed -- against the best single binding at each phase. Writes an `evidence-record-v1`; MODEL_ONLY. |
+| `packages/propose/bin/census/policy-census.mjs --spec FILE [--jobs 1\|2] [--out FILE] [--date YYYY-MM-DD] [--unregistered]` | report | A census over a POLICY FAMILY, run from a pre-registered `experiment-spec-v2` (ADR 0002 principle 7): it refuses a spec that is not committed and clean (`--unregistered` is for fixtures and gates, never a record), refuses either block under the 3000-seed floor (review's `seed-floor` rule through `@sixam/propose/census`), and runs at most two workers. Family `night7-anchor-band-v1`: each committed Night 7 Minus Toys binding the spec names, at every integer-ms epoch of its registered anchor's effective interval (`fact-register.mjs` `ANCHOR_AIMS`), members with an identical emitted queue replayed once as a schedule class; a device lane replays each binding at its aim with per-press lateness from the same band (`actuator.mjs`). Selects the policy on the development block, decides the spec's explanations on the held-out block (`experiment-result-v2`), and reports P_max over the family as the selected policy's worst class with a Bonferroni-split Wilson interval. Writes an `evidence-record-v1` with an `evidenceId`; MODEL_ONLY. |
 | `packages/propose/bin/census/test-winner-census.mjs` | check | Holds the newest `docs/evidence/fnaf2-winner-census-*.json` to the tree without re-running it: each binding's file and emitted plan hash to what was censused, every listed loss still dies of the same cause on the same frame, a fixed held-out sample replays as recorded, the design block rebuilds, and seed `s` and `s + 2^16` deal the same night. Also holds the newest `fnaf2-night<N>-phase-census-*.json`: its bindings and seed block as censused, and every band edge, the declared phase and each partial cell's first listed loss replaying as recorded. Reports committed winners the record does not cover as `UNCENSUSED_WINNERS` rather than failing. `test:unit`. |
 | `packages/propose/test/test-encounter-fidelity.mjs` | check | Recomputes the retained study's window scores, refuses post-death empty matches, checks its design/held-out counts, and verifies the census's first-tick option injection against construction. `test:unit`. |
 | `packages/propose/bin/census/test-fnaf3-census.mjs` | check | Pins the FNaF 3 simulator and the published community line: the controls that must lose (office camping, doing nothing), the six-night census, the 240/360 s clock, the vent topology behind the sealing order, and that the attack chain advances on the ventilation blackout rather than on a move. Its negative control is that disabling the blackout ramp makes the failing controls pass. |

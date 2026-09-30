@@ -400,7 +400,7 @@
       },
       "sources": [
         "packages/propose/bin/plans/artifact-commands.mjs (preconditions)",
-        "apps/device/profiles/hid-mediaprojection.json viewScroll (anchors)",
+        "packages/play/profiles/fnaf2/moto-g56/hid-mediaprojection.json viewScroll (anchors)",
         "packages/play/src/sensors/fnaf2/monitor-rule.js, camera-rule.js; packages/play/src/campaign/control-effect.js (observations)"
       ]
     },

@@ -251,6 +251,48 @@
       ]
     },
     {
+      "contractId": "experiment-spec-v2",
+      "id": "experiment-spec-v2",
+      "version": 2,
+      "owner": "propose/experiment",
+      "kind": "data",
+      "purpose": "Stable experiment-spec-v2 boundary for propose/experiment; its validator is validateExperimentSpecV2.",
+      "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
+      "clockDomains": [
+        "declared-by-payload-or-profile"
+      ],
+      "units": "Values carry explicit units or are documented by the owning validator.",
+      "unknownBehavior": "Invalid or unavailable data is rejected or represented as an explicit UNKNOWN state; it is never silently promoted.",
+      "errorBehavior": "Reject malformed, incompatible, uncalibrated, or out-of-budget values at the boundary.",
+      "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
+      "runtimeValidation": "validateExperimentSpecV2",
+      "conformanceFixtures": [
+        "packages/kernel/test/experiment-v2.test.js",
+        "packages/propose/test/census.test.js"
+      ]
+    },
+    {
+      "contractId": "experiment-result-v2",
+      "id": "experiment-result-v2",
+      "version": 2,
+      "owner": "propose/experiment",
+      "kind": "artifact",
+      "purpose": "Stable experiment-result-v2 boundary for propose/experiment; its validator is validateExperimentResultV2.",
+      "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
+      "clockDomains": [
+        "declared-by-payload-or-profile"
+      ],
+      "units": "Values carry explicit units or are documented by the owning validator.",
+      "unknownBehavior": "Invalid or unavailable data is rejected or represented as an explicit UNKNOWN state; it is never silently promoted.",
+      "errorBehavior": "Reject malformed, incompatible, uncalibrated, or out-of-budget values at the boundary.",
+      "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
+      "runtimeValidation": "validateExperimentResultV2",
+      "conformanceFixtures": [
+        "packages/kernel/test/experiment-v2.test.js",
+        "packages/propose/test/census.test.js"
+      ]
+    },
+    {
       "contractId": "winner-v1",
       "id": "winner-v1",
       "version": 1,

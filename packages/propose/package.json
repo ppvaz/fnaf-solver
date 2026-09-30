@@ -6,6 +6,7 @@
   "dependencies": {
     "@sixam/kernel": "file:../kernel",
     "@sixam/play": "file:../play",
+    "@sixam/review": "file:../review",
     "@sixam/source": "file:../source"
   },
   "bin": {
@@ -18,6 +19,7 @@
     "./games/*": "./src/games/*",
     "./experiment": "./src/experiment/experiment.js",
     "./seeds": "./src/experiment/seeds.js",
+    "./census": "./src/experiment/census.js",
     "./strategies/*": "./src/strategies/*/index.js",
     "./parked/minus7": "./parked/minus7/index.js"
   }

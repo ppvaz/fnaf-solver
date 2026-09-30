@@ -75,6 +75,18 @@
       "validator": "validateExperimentResult"
     },
     {
+      "id": "experiment-spec-v2",
+      "owner": "propose/experiment",
+      "kind": "data",
+      "validator": "validateExperimentSpecV2"
+    },
+    {
+      "id": "experiment-result-v2",
+      "owner": "propose/experiment",
+      "kind": "artifact",
+      "validator": "validateExperimentResultV2"
+    },
+    {
       "id": "winner-v1",
       "owner": "propose/device",
       "kind": "artifact",

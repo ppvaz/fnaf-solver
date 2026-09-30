@@ -1,7 +1,8 @@
 # Architecture legibility follow-up register
 
-Status: findings recorded on 2026-09-11; statuses updated 2026-09-29 (LEG-001, 002 and 005
-resolved by removal on 2026-09-25; LEG-011 resolved on 2026-09-29). This register
+Status: findings recorded on 2026-09-11; statuses updated 2026-09-30 (LEG-001, 002 and 005
+resolved by removal on 2026-09-25; LEG-011 resolved on 2026-09-29; LEG-009 and 010
+resolved on 2026-09-30 in migration M8). This register
 is a backlog for implementation work; an item is only marked resolved with the change that did it.
 
 The scope is human and agent legibility: a contributor should be able to find
@@ -196,9 +197,18 @@ one canonical invocation per group; keep compatibility wrappers visibly thin.
 
 ### LEG-009 — Make research result timing and terminal semantics explicit (P2)
 
-**Status:** OPEN
+**Status:** RESOLVED (2026-09-30, migration M8) -- `makeResultPayload()` no longer
+writes a result-level `terminal`; each evaluation keeps its own, and the payload's
+`terminalAggregate` (`aggregateTerminal()`) is the kernel `Interval` from the
+earliest to the latest terminal frame over every evaluation, in `simulator-frame`,
+with how many evaluations it spans, or `UNKNOWN(reason)` when none reports one. The
+CLI stamps the manifest's `experiment.result` event at that interval's upper bound
+and refuses an experiment with no terminal frame instead of writing 0. The
+regression is `packages/propose/test/census.test.js` (three evaluations whose first
+is not the latest, reordered) and every named case in
+`packages/propose/test/experiment.test.js`, both in `test:contracts`.
 **Owner:** `packages/propose` (was `packages/research`)
-**Evidence:** [`experiment.js` (line 160)](../../packages/propose/src/experiment/experiment.js), [`cli.js` (line 44)](../../packages/propose/src/experiment/cli.js)
+**Evidence:** [`experiment.js`](../../packages/propose/src/experiment/experiment.js), [`cli.js`](../../packages/propose/src/experiment/cli.js)
 
 `makeResultPayload()` promotes the terminal state of the first evaluation to
 the whole experiment, and the CLI uses that value as the result event time.
@@ -211,7 +221,21 @@ aggregate field and add a multi-evaluation regression test.
 
 ### LEG-010 — Finish and verify the seed-cohort boundary (P1, current-tree item)
 
-**Status:** OPEN — confirm after the current dirty research changes settle
+**Status:** RESOLVED (2026-09-30, migration M8) -- `resolveSeedCohort()` takes a typed
+options object and validates an explicit cohort by the generator's own rules
+(uint32, distinct, non-empty: `validateSeedList`). `seedCohortDescriptor()` reads the
+derivation from the seeds (`seedDerivation`: `golden` only when the list IS the
+stream for the salt named, else `explicit-range` or `explicit`), drops a salt passed
+beside an explicit list, and records the kernel Seed provenance its members stand
+for (`natural | pinned | identified`, `packages/kernel/src/seed.js`); its `sha256`
+is unchanged, so every figure keyed by it stands. The experiment-spec-v2 seed set
+(`describeSeedSet`, `expandSeedSet`, validated by the kernel's `validateSeedSet`)
+carries derivation, provenance, count and sha256, and a census under 3000 seeds is
+refused by review's `seed-floor` rule (`resolveCensusCohort`). Focused tests:
+`packages/propose/test/census.test.js` and `packages/kernel/test/experiment-v2.test.js`
+(`test:contracts`). `packages/propose/bin/plans/minus-3-plan.mjs` still passes the golden salt
+beside an explicit list; its bytes are hashed into every Minus 3 bundle, so it is
+not edited, and the descriptor now records such a list by what it is.
 **Owner:** `packages/propose` (was `packages/research`), device plan consumers
 **Evidence:** current-tree path `packages/propose/src/experiment/seeds.js:64` (not yet
 versioned in this audit commit), [`minus-3-plan.mjs` (line 211)](../../packages/propose/bin/plans/minus-3-plan.mjs)

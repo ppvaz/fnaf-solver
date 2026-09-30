@@ -6,8 +6,23 @@
  * cohort, not the project's golden model cohort.  This module samples
  * uint32 seeds from a deterministic SplitMix32 stream so every strategy sees
  * the same random-looking population and a result can still be replayed.
+ *
+ * Every seed set says how it was derived (LEG-010): `golden` (this stream,
+ * from a salt), `explicit` (a list) or `explicit-range` ({from, to}), read from
+ * the seeds themselves rather than inferred from a salt a caller passes, and
+ * which kernel Seed provenance its members stand for (`natural`, `pinned`,
+ * `identified`). The experiment-spec-v2 seed set (`describeSeedSet`,
+ * `expandSeedSet`) carries both, with the list's count and sha256.
  */
 import { createHash } from 'node:crypto';
+import { validateSeedProvenance } from '@sixam/kernel';
+import { validateSeedDerivation, validateSeedSet } from '@sixam/kernel/contracts';
+
+/**
+ * A kernel seed set (experiment-spec-v2; shape in packages/kernel/src/contracts/types.ts).
+ * @typedef {{name: string, derivation: any, provenance: 'natural' | 'pinned' | 'identified',
+ *   bracket?: {lo: number, hi: number}, count: number, sha256?: string, definition?: string}} SeedSet
+ */
 
 export const MODEL_SEED_COHORT_SCHEMA = 'model-seed-cohort-v1';
 export const GOLDEN_MODEL_SEEDS = 3000;
@@ -44,31 +59,109 @@ export function randomSeedCohort({ count = GOLDEN_MODEL_SEEDS,
   return seeds;
 }
 
-/** Stable identity for the exact population used by a model result. */
-export function seedCohortDescriptor(seeds, { salt = null, label = 'random' } = {}) {
-  if (!Array.isArray(seeds) || seeds.length < 1 ||
-      seeds.some(seed => !Number.isInteger(seed) || seed < 0 || seed > 0xffffffff))
-    throw new TypeError('seed cohort must be a non-empty array of uint32 seeds');
-  const bytes = Buffer.from(JSON.stringify(seeds));
+const isUint32 = seed => Number.isInteger(seed) && seed >= 0 && seed <= 0xffffffff;
+const sha256Of = seeds => createHash('sha256').update(Buffer.from(JSON.stringify(seeds))).digest('hex');
+
+/**
+ * Refuse a seed list that is not a non-empty list of distinct uint32 seeds:
+ * the canonical generator never repeats a seed, so an explicit cohort may not.
+ * @param {unknown} seeds @param {string} [label]
+ * @returns {number[]}
+ */
+export function validateSeedList(seeds, label = 'seed cohort') {
+  if (!Array.isArray(seeds) || seeds.length < 1 || !seeds.every(isUint32))
+    throw new TypeError(`${label} must be a non-empty array of uint32 seeds`);
+  if (new Set(seeds).size !== seeds.length) throw new TypeError(`${label} repeats a seed`);
+  return seeds;
+}
+
+/**
+ * How a list of seeds was derived, read from the list itself (LEG-010):
+ * `golden` only when it IS `randomSeedCohort({count, salt})` for the salt a
+ * caller names -- a salt passed beside an explicit list is not recorded, since
+ * it would misstate the list's provenance -- `explicit-range` when it is every
+ * integer from its first to its last in order, and `explicit` otherwise.
+ * @param {number[]} seeds @param {{salt?: number | null}} [options]
+ * @returns {{kind: 'golden', count: number, salt: number} | {kind: 'explicit-range', from: number, to: number} | {kind: 'explicit'}}
+ */
+export function seedDerivation(seeds, { salt = null } = {}) {
+  validateSeedList(seeds);
+  if (salt !== null) {
+    const golden = randomSeedCohort({ count: seeds.length, salt: salt >>> 0 });
+    if (golden.every((seed, index) => seed === seeds[index])) return { kind: 'golden', count: seeds.length, salt: salt >>> 0 };
+  }
+  if (seeds.every((seed, index) => seed === seeds[0] + index))
+    return { kind: 'explicit-range', from: seeds[0], to: seeds[seeds.length - 1] };
+  return { kind: 'explicit' };
+}
+
+/**
+ * Stable identity for the exact population used by a model result. It records
+ * the derivation read from the seeds (`seedDerivation`) and the kernel Seed
+ * provenance its members stand for; `salt` appears only for a golden cohort.
+ * @param {number[]} seeds
+ * @param {{salt?: number | null, label?: string, provenance?: 'natural' | 'pinned' | 'identified'}} [options]
+ */
+export function seedCohortDescriptor(seeds, { salt = null, label = 'random', provenance = 'natural' } = {}) {
+  validateSeedProvenance(provenance, undefined);
+  const derivation = seedDerivation(seeds, { salt });
   return {
     schema: MODEL_SEED_COHORT_SCHEMA,
     label,
     count: seeds.length,
-    ...(salt === null ? {} : { salt: salt >>> 0 }),
-    sha256: createHash('sha256').update(bytes).digest('hex'),
+    ...(derivation.kind === 'golden' ? { salt: derivation.salt } : {}),
+    derivation,
+    provenance,
+    sha256: sha256Of(seeds),
     first: seeds.slice(0, 8),
   };
 }
 
 /**
- * Resolve the canonical random population, with an explicit escape hatch for
- * tests.
- * @param {{seeds?: number[], count?: number, salt?: number}} options
+ * Resolve the canonical random population, or an explicit one a caller
+ * supplies, validated like the generator's own output.
+ * @param {{seeds?: number[], count?: number, salt?: number}} [options]
+ * @returns {number[]}
  */
 export function resolveSeedCohort({ seeds, count = GOLDEN_MODEL_SEEDS,
                                     salt = GOLDEN_MODEL_SEED_SALT } = {}) {
-  const population = seeds ?? randomSeedCohort({ count, salt });
-  if (!Array.isArray(population) || population.length < 1)
-    throw new TypeError('a non-empty seed population is required');
-  return population;
+  if (seeds !== undefined) return validateSeedList(seeds, 'an explicit seed population');
+  return randomSeedCohort({ count, salt });
+}
+
+/**
+ * The seeds of a kernel seed set (experiment-spec-v2), checked against the
+ * count and, when the set names one, the sha256 it declares. A golden
+ * derivation with a modulus keeps each night's first occurrence.
+ * @param {SeedSet} set
+ * @returns {number[]}
+ */
+export function expandSeedSet(set) {
+  validateSeedSet(set, `seed set ${set?.name ?? '?'}`);
+  const seeds = seedsOf(set.derivation);
+  if (seeds.length !== set.count) throw new TypeError(`seed set ${set.name}: ${seeds.length} seeds, not the ${set.count} it declares`);
+  if (set.sha256 !== undefined && sha256Of(seeds) !== set.sha256)
+    throw new TypeError(`seed set ${set.name}: its seeds do not hash to the sha256 it declares`);
+  return seeds;
+}
+
+/** @param {any} derivation @returns {number[]} */
+function seedsOf(derivation) {
+  if (derivation.kind === 'explicit') return [...derivation.seeds];
+  if (derivation.kind === 'explicit-range')
+    return Array.from({ length: derivation.to - derivation.from + 1 }, (_, index) => derivation.from + index);
+  const seeds = randomSeedCohort({ count: derivation.count, salt: derivation.salt });
+  return derivation.modulus === undefined ? seeds : [...new Set(seeds.map(seed => seed % derivation.modulus))];
+}
+
+/**
+ * A complete seed set for a spec: the count and sha256 computed from its derivation.
+ * @param {{name: string, derivation: any, provenance?: 'natural' | 'pinned' | 'identified', bracket?: {lo: number, hi: number}, definition?: string}} input
+ * @returns {SeedSet}
+ */
+export function describeSeedSet({ name, derivation, provenance = 'natural', bracket, definition }) {
+  validateSeedDerivation(derivation, `seed set ${name}`);
+  const seeds = seedsOf(derivation);
+  return validateSeedSet({ name, derivation, provenance, ...(bracket ? { bracket } : {}), count: seeds.length,
+    sha256: sha256Of(seeds), ...(definition ? { definition } : {}) }, `seed set ${name}`);
 }

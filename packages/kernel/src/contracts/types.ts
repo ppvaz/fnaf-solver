@@ -265,3 +265,84 @@ export interface ActivityGateProfile {
   };
   readonly requiredCapabilities: readonly ('overlay' | 'capture' | 'response')[];
 }
+
+/** How a seed set was derived (experiment-spec-v2). */
+export type SeedDerivation =
+  | { readonly kind: 'golden'; readonly count: number; readonly salt: number; readonly modulus?: number }
+  | { readonly kind: 'explicit'; readonly seeds: readonly number[] }
+  | { readonly kind: 'explicit-range'; readonly from: number; readonly to: number };
+
+/** A named seed set, its derivation, and the provenance its seeds stand for (the kernel Seed). */
+export interface SeedSet {
+  readonly name: string;
+  readonly derivation: SeedDerivation;
+  readonly provenance: 'natural' | 'pinned' | 'identified';
+  readonly bracket?: { readonly lo: number; readonly hi: number };
+  readonly count: number;
+  /** sha256 of JSON.stringify of the expanded seed list. */
+  readonly sha256?: string;
+  readonly definition?: string;
+}
+
+/** A predicate over the separating observation's named measures. */
+export type ExperimentPredicate =
+  | { readonly measure: string; readonly op: 'eq' | 'ne' | 'lt' | 'le' | 'gt' | 'ge'; readonly value: number }
+  | { readonly all: readonly ExperimentPredicate[] }
+  | { readonly any: readonly ExperimentPredicate[] }
+  | { readonly not: ExperimentPredicate };
+
+export interface ExperimentExplanation {
+  readonly id: string;
+  readonly statement: string;
+  readonly assumptions: readonly string[];
+  readonly predicts: { readonly observation: string; readonly when: ExperimentPredicate };
+}
+
+/** experiment-spec-v2: competing explanations, the observation that separates them, and a cohort with a held-out block. */
+export interface ExperimentSpecV2 {
+  readonly schema: 'experiment-spec-v2';
+  readonly id: string;
+  readonly purpose: 'census' | 'diagnostic';
+  readonly question: string;
+  readonly claimLevel: 'MODEL_ONLY' | 'FIXTURE' | 'DEVICE_MEASURED';
+  readonly family?: { readonly id: string; readonly description: string; readonly grid: Readonly<Record<string, unknown>> };
+  readonly explanations: readonly ExperimentExplanation[];
+  readonly separatingObservation: { readonly description: string; readonly measures: readonly string[] };
+  readonly cohort: {
+    readonly population: { readonly description: string; readonly size: number };
+    readonly development: SeedSet;
+    readonly heldOut: SeedSet;
+  };
+  readonly decidingQuery: { readonly text: string; readonly block: 'heldOut' };
+  readonly stoppingRule: { readonly kind: 'fixed-sample'; readonly text: string };
+  readonly [extra: string]: unknown;
+}
+
+/** A rate, with its interval and the method that produced it. */
+export interface ExperimentRate {
+  readonly name: string;
+  readonly successes: number;
+  readonly n: number;
+  readonly rate: number;
+  readonly interval: { readonly lo: number; readonly hi: number };
+  readonly method: 'wilson' | 'wilson-bonferroni' | 'exhaustive';
+  readonly confidence: number;
+  readonly comparisons?: number;
+}
+
+/** experiment-result-v2: every explanation tagged ruled-out or surviving, with its evidence. */
+export interface ExperimentResultV2 {
+  readonly schema: 'experiment-result-v2';
+  readonly specId: string;
+  readonly specSha256: string;
+  readonly claimLevel: 'MODEL_ONLY' | 'FIXTURE' | 'DEVICE_MEASURED';
+  readonly observations: { readonly block: 'heldOut'; readonly values: Readonly<Record<string, number>> };
+  readonly explanations: readonly {
+    readonly id: string;
+    readonly status: 'ruled-out' | 'surviving';
+    readonly evidence: { readonly holds: boolean; readonly values: Readonly<Record<string, number>>; readonly [extra: string]: unknown };
+  }[];
+  readonly rates: readonly ExperimentRate[];
+  readonly stopped: { readonly rule: string; readonly reached: string };
+  readonly [extra: string]: unknown;
+}

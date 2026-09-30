@@ -14,6 +14,8 @@
     {"id":"session-manifest-v1","owner":"kernel/contracts","kind":"artifact","validator":"validateManifest"},
     {"id":"experiment-spec-v1","owner":"propose/experiment","kind":"data","validator":"validateExperiment"},
     {"id":"experiment-result-v1","owner":"propose/experiment","kind":"artifact","validator":"validateExperimentResult"},
+    {"id":"experiment-spec-v2","owner":"propose/experiment","kind":"data","validator":"validateExperimentSpecV2"},
+    {"id":"experiment-result-v2","owner":"propose/experiment","kind":"artifact","validator":"validateExperimentResultV2"},
     {"id":"winner-v1","owner":"propose/device","kind":"artifact","validator":"packages/propose/bin/plans/bundle.mjs validateWinner"},
     {"id":"device-bundle-v1","owner":"packages/play","kind":"artifact","validator":"packages/propose/bin/plans/bundle.mjs validateBundle"},
     {"id":"trainer-trace-v1","owner":"apps/trainer","kind":"artifact","validator":"validateTrainerTrace"},

@@ -23,7 +23,8 @@ export const CONTRACTS = Object.freeze([
   'activity-gate-v1', 'activity-gate-profile-v1', 'activity-gate-decision-v1',
   'microtrainer-session-v1',
   'exercise-renderer-v1', 'arcade-lab-progress-v1',
-  'venue-identity-v1', 'venue-check-v1', 'venue-binding-v1', 'qualification-v2', ]);
+  'venue-identity-v1', 'venue-check-v1', 'venue-binding-v1', 'qualification-v2',
+  'experiment-spec-v2', 'experiment-result-v2', ]);
 
 export const CLOCKS = Object.freeze([
   'game-frame', 'simulator-frame', 'device-monotonic-ms',
@@ -97,6 +98,13 @@ export {
   bindQualificationVenue, qualificationStanding,
 } from './qualification.js';
 export * from './venue-identity.js';
+// Experiments and censuses, v2: competing explanations, a named held-out block,
+// seed sets that say how they were derived, and rates with their intervals
+// (experiment.js). The v1 validators above are still read.
+export {
+  EXPERIMENT_PURPOSES, RATE_METHODS, SEED_DERIVATIONS, derivedCount, knownOverlap, validateExperimentResultV2,
+  validateExperimentSpecV2, validateRate, validateSeedDerivation, validateSeedSet,
+} from './experiment.js';
 // The campaign result and save proof a device campaign retains, read back by
 // the evidence index (campaign-records.js).
 export { CAMPAIGN_STATES, validateCampaignResult, validateSaveProof } from './campaign-records.js';

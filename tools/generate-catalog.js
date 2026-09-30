@@ -78,6 +78,8 @@ const contractEvidence = {
   'session-manifest-v1': ['packages/play/bin/phone/test-session-manifest.sh'],
   'experiment-spec-v1': ['packages/propose/test/experiment.test.js'],
   'experiment-result-v1': ['packages/propose/test/experiment.test.js'],
+  'experiment-spec-v2': ['packages/kernel/test/experiment-v2.test.js', 'packages/propose/test/census.test.js'],
+  'experiment-result-v2': ['packages/kernel/test/experiment-v2.test.js', 'packages/propose/test/census.test.js'],
   'winner-v1': ['packages/propose/test/test-bundle.mjs'],
   'device-bundle-v1': ['packages/propose/test/test-bundle.mjs'],
   'device-artifact-v1': ['packages/propose/test/test-bundle.mjs'],
