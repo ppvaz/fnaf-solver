@@ -185,7 +185,10 @@ function attempt(o, gameModule, seed, dir, extra) {
     let out = '', err = '';
     child.stdout.on('data', (d) => { out += d; });
     child.stderr.on('data', (d) => { err += d; });
-    child.on('exit', (code) => {
+    // 'close', not 'exit': a child's last stdout chunk can arrive after its
+    // exit event, and a summary that lists every task start is long enough to
+    // be cut off (seed 50005, 2026-09-30, read as a night that never started).
+    child.on('close', (code) => {
       let summary = null;
       try { summary = JSON.parse(out.trim().split('\n').pop()); } catch { /* reported below */ }
       const save = existsSync(join(dir, saveName)) ? iniKeys(readFileSync(join(dir, saveName), 'utf8')) : {};
