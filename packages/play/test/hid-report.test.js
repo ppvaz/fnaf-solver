@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const fixture = join(here, 'device', 'hid-multitouch-smoke.json');
+const fixture = join(here, 'testdata', 'hid-multitouch-smoke.json');
 const text = readFileSync(fixture, 'utf8').replace(/^\s*\/\/.*$/gm, '');
 const events = [...text.matchAll(/\{[^{}]*\}/gs)].map(match => JSON.parse(match[0]));
 

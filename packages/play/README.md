@@ -21,7 +21,7 @@ Public API: `src/index.js` (the export set `@sixam/adapters` had) and the
 subpaths `@sixam/play/venues/phone/<name>`, `@sixam/play/phone/<name>`,
 `@sixam/play/sensors/fnaf2/<name>`, `@sixam/play/sim`, `@sixam/play/player` and
 `@sixam/play/clocks`. The Sim observer, the player and the clocks keep core's
-host-global rule (no DOM, process or wall clock); `tools/belieftest.mjs`,
+host-global rule (no DOM, process or wall clock); `packages/play/test/belief.test.js`,
 `estimatortest.mjs`, `phaseclocktest.mjs` and `reactivetest.mjs` test them.
 `packages/core/src/sensing/index.js` stays as a shim over `@sixam/play/sim`
 for `tools/device/minus-toys-plan.mjs`, whose bytes every Minus Toys bundle
@@ -94,3 +94,16 @@ transport to the device runners.
 The capability registry, the actuator and sensor classes and the fixture
 adapters that served the retired fixture service path were removed on
 2026-09-25 (`docs/ARCHIVED-ROUTES.md`).
+
+## Scripts
+
+Entry points and checks that lived in `tools/` until the ADR 0002 layout
+moved them here, with the description their tool index gave them.
+
+| Script | Kind | What it does |
+|---|---|---|
+| `test/phase-clock.test.js` | check | Phone-free Plan 21 phase contract: paired A2DP latency calibration, 2 Hz period/phase lock, explicit one-second parity, confidence/stale handling, and refusal to convert uncalibrated receipt phase into game-frame boundaries. |
+| `test/belief.test.js` | check | Phone-free Plan 20 belief contract: deterministic replay, unknown-safe facts with provenance, calibration mismatch incidents, and sent-versus-verified control actions. |
+| `test/estimator.test.js` | check | Plan 20 package 3 estimator contract: delayed fact timing, UNKNOWN risk preservation, stale-control recovery, calibration refusal, contradictory sensors, and transactional verification. |
+| `test/hid-report.test.js` | check | Parses the HID fixture and fails unless CAM 10/04/07 each receive a fresh contact-1 down/up while contact 0 stays on the light, with a final explicit two-contact release. Runs without a device. |
+| `test/testdata/hid-multitouch-smoke.json` | **device action/fixture** | Direct `/system/bin/hid FILE` replay that selects 6th Night, holds camera light as contact 0, and taps CAM 10/04/07 as independently released contact 1. Read `docs/device/HID-MULTITOUCH.md`; it is not focus-guarded by itself. |

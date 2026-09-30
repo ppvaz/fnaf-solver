@@ -709,6 +709,12 @@
       ]
     },
     {
+      "file": "packages/play/test/belief.test.js",
+      "imports": [
+        "@sixam/play/player"
+      ]
+    },
+    {
       "file": "packages/play/test/calibration-state-rule.test.js",
       "imports": [
         "@sixam/play",
@@ -812,12 +818,26 @@
       ]
     },
     {
+      "file": "packages/play/test/estimator.test.js",
+      "imports": [
+        "@sixam/play/player"
+      ]
+    },
+    {
       "file": "packages/play/test/hid-read-gap.test.js",
       "imports": [
         "../src/campaign/hid-schedule.js",
         "@sixam/kernel/contracts",
         "node:assert/strict",
         "node:fs/promises"
+      ]
+    },
+    {
+      "file": "packages/play/test/hid-report.test.js",
+      "imports": [
+        "node:fs",
+        "node:path",
+        "node:url"
       ]
     },
     {
@@ -856,6 +876,13 @@
       "imports": [
         "@sixam/play/phone/night-onset",
         "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/play/test/phase-clock.test.js",
+      "imports": [
+        "@sixam/kernel/time",
+        "@sixam/play/clocks"
       ]
     },
     {
@@ -2205,12 +2232,6 @@
       ]
     },
     {
-      "file": "tools/belieftest.mjs",
-      "imports": [
-        "@sixam/play/player"
-      ]
-    },
-    {
       "file": "tools/browsertest.mjs",
       "imports": [
         "./chrome.mjs",
@@ -3284,12 +3305,6 @@
       ]
     },
     {
-      "file": "tools/estimatortest.mjs",
-      "imports": [
-        "@sixam/play/player"
-      ]
-    },
-    {
       "file": "tools/evidence.js",
       "imports": [
         "./device/bundle.mjs",
@@ -3367,14 +3382,6 @@
         "@sixam/source",
         "node:child_process",
         "node:fs/promises",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/hidreporttest.mjs",
-      "imports": [
-        "node:fs",
         "node:path",
         "node:url"
       ]
@@ -3641,13 +3648,6 @@
       "imports": [
         "./minus7/cycle.mjs",
         "./minustoys/cycle.mjs"
-      ]
-    },
-    {
-      "file": "tools/phaseclocktest.mjs",
-      "imports": [
-        "@sixam/kernel/time",
-        "@sixam/play/clocks"
       ]
     },
     {

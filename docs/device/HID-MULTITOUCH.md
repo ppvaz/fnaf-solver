@@ -13,7 +13,7 @@ CAM 10, CAM 04, and CAM 07. The recording contained the complete
 `10 -> 04 -> 07 -> 11` selected-camera trace while the light stayed down.
 
 The working device fixture is
-[`tools/device/hid-multitouch-smoke.json`](../../tools/device/hid-multitouch-smoke.json).
+[`packages/play/test/testdata/hid-multitouch-smoke.json`](../../packages/play/test/testdata/hid-multitouch-smoke.json).
 It is a **device action**: it selects 6th Night and injects touches. Do not run
 it unless the game is focused and it is safe to start that night.
 

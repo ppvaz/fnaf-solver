@@ -142,7 +142,7 @@
     {
       "id": "contract.clock-v1",
       "kind": "CONTRACT",
-      "path": "tools/phaseclocktest.mjs",
+      "path": "packages/play/test/phase-clock.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -828,7 +828,7 @@
     {
       "id": "contract.state-estimate-v1",
       "kind": "CONTRACT",
-      "path": "tools/estimatortest.mjs",
+      "path": "packages/play/test/estimator.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {

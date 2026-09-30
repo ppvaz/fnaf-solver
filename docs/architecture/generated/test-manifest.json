@@ -306,6 +306,24 @@
       }
     },
     {
+      "id": "packages/play/test/belief.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "packages/play/test/calibration-state-rule.test.js",
       "lane": "test:unit",
       "owner": "@sixam/play",
@@ -532,7 +550,45 @@
       }
     },
     {
+      "id": "packages/play/test/estimator.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "packages/play/test/hid-read-gap.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "device-transport"
+      ],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/test/hid-report.test.js",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -627,6 +683,24 @@
     },
     {
       "id": "packages/play/test/night-onset.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/test/phase-clock.test.js",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -2079,24 +2153,6 @@
         "device-transport"
       ],
       "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/belieftest.mjs",
-      "lane": "test:unit",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
       "measurement": {
         "status": "NOT_MEASURED",
         "runs": 0,
@@ -3857,24 +3913,6 @@
       }
     },
     {
-      "id": "tools/estimatortest.mjs",
-      "lane": "test:unit",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
       "id": "tools/exercisetest.mjs",
       "lane": "test:unit",
       "owner": "legacy migration",
@@ -3905,26 +3943,6 @@
       ],
       "fixedSleeps": [],
       "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/hidreporttest.mjs",
-      "lane": "test:unit",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "device-transport"
-      ],
       "subprocesses": false,
       "measurement": {
         "status": "NOT_MEASURED",
@@ -4115,24 +4133,6 @@
     },
     {
       "id": "tools/observationlanguagetest.mjs",
-      "lane": "test:unit",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/phaseclocktest.mjs",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,

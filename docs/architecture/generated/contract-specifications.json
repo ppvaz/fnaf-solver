@@ -125,7 +125,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateStateEstimate",
       "conformanceFixtures": [
-        "tools/estimatortest.mjs"
+        "packages/play/test/estimator.test.js"
       ]
     },
     {
@@ -145,7 +145,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateClockRef",
       "conformanceFixtures": [
-        "tools/phaseclocktest.mjs"
+        "packages/play/test/phase-clock.test.js"
       ]
     },
     {

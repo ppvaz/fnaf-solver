@@ -134,7 +134,7 @@ models, aligned by comment only.
   coordinates, and `test-camera-calibrate.py` holds it to the camera rule.
 - **Phase clock.** Resolved 2026-09-27: the APK's `PhaseClock.java` left with
   the Companion's audio path, so `packages/play/src/clocks/phase-clock.js`
-  (tested by `tools/phaseclocktest.mjs`) is the only implementation.
+  (tested by `packages/play/test/phase-clock.test.js`) is the only implementation.
 
 Cleanup decision: these are the two strongest candidates for the shared-JSONL
 vector pattern already used by `packages/kernel/test/contract-vectors.py` (§20).

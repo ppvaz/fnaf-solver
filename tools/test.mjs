@@ -52,7 +52,7 @@ const ENGINE = [
   ['minus toys worst', ['minustoystest.mjs', '100', '--worst', '--assert']],
   ['minus toys no-split', ['minustoystest.mjs', '200', '--no-split', '--assert']],
   ['simtest', ['simtest.mjs', '--sweep']],
-  ['hidreporttest', ['hidreporttest.mjs']],
+  ['hidreporttest', ['../packages/play/test/hid-report.test.js']],
   // Plan 19 pkg 1: the stock-device observation model (OBSERVED/UNKNOWN facts,
   // sensor cadence + latency + drops) and the blackout-reactive controller
   // (animation-window guard, lower-mask-verify-raise, graceful under a noisy
@@ -68,20 +68,20 @@ const ENGINE = [
   // Plan 21 phase-clock foundation: paired A2DP latency calibration, 2 Hz
   // period/phase lock, explicit 500 ms parity, and stale/low-confidence
   // recovery. No privileged engine phase is used here.
-  ['phase clock', ['phaseclocktest.mjs']],
+  ['phase clock', ['../packages/play/test/phase-clock.test.js']],
   // Plan 20 package 6 foundation: bounded fact messages, ordered receipt and
   // gap/stale reporting, plus a local drain that can finish an already-
   // approved cycle without inventing actions after the host link drops.
   ['fact link', ['../packages/kernel/test/factlinktest.mjs']],
   // Plan 20 package 1: unknown-safe, calibration-bound facts and explicit
   // action verification in a deterministic replayable belief contract.
-  ['belief state', ['belieftest.mjs']],
+  ['belief state', ['../packages/play/test/belief.test.js']],
   // Plan 20 package 2: controller-visible reduced transition model agrees with
   // seeded Sim control/resource traces; hidden routes remain risk buckets.
   ['reduced model', ['reducedmodeltest.mjs']],
   // Plan 20 package 3: delayed facts retain event time, UNKNOWN never clears
   // risk, stale controls require verification, and contradictions fail safe.
-  ['estimator', ['estimatortest.mjs']],
+  ['estimator', ['../packages/play/test/estimator.test.js']],
   // Plan 20 package 4: reviewed cycle data, reduced-model locks, device
   // contact floors, and mandatory exact-engine proof callback.
   // Plan 20 package 5 foundation: worst-case (not average) selection across
