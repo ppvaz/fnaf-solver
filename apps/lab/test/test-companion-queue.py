@@ -13,7 +13,7 @@ from pathlib import Path
 
 
 HERE = Path(__file__).resolve().parent
-SPEC = importlib.util.spec_from_file_location("companion_queue", HERE / "companion-queue.py")
+SPEC = importlib.util.spec_from_file_location("companion_queue", HERE / "../companion-queue.py")
 assert SPEC and SPEC.loader
 MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
@@ -23,22 +23,22 @@ with tempfile.TemporaryDirectory(prefix="companion-queue-test-") as directory:
     queue = Path(directory) / "jobs.json"
     environment = {**os.environ, "CUE_HELPER_QUEUE_FILE": str(queue)}
     result = subprocess.run(
-        ["python3", str(HERE / "companion-queue.py"), "enqueue", "menu-check"],
-        cwd=HERE.parents[1], env=environment, check=True, text=True,
+        ["python3", str(HERE / "../companion-queue.py"), "enqueue", "menu-check"],
+        cwd=HERE.parents[2], env=environment, check=True, text=True,
         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert "QUEUED" in result.stdout
     jobs = json.loads(queue.read_text(encoding="utf-8"))
     assert len(jobs) == 1 and jobs[0]["state"] == "PENDING"
 
     keyed = subprocess.run(
-        ["python3", str(HERE / "companion-queue.py"), "enqueue", "menu-check",
+        ["python3", str(HERE / "../companion-queue.py"), "enqueue", "menu-check",
          "--idempotency-key", "same-agent-request", "--json"],
-        cwd=HERE.parents[1], env=environment, check=True, text=True,
+        cwd=HERE.parents[2], env=environment, check=True, text=True,
         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     keyed_again = subprocess.run(
-        ["python3", str(HERE / "companion-queue.py"), "enqueue", "menu-check",
+        ["python3", str(HERE / "../companion-queue.py"), "enqueue", "menu-check",
          "--idempotency-key", "same-agent-request", "--json"],
-        cwd=HERE.parents[1], env=environment, check=True, text=True,
+        cwd=HERE.parents[2], env=environment, check=True, text=True,
         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert json.loads(keyed.stdout)["created"] is True
     assert json.loads(keyed_again.stdout)["created"] is False
@@ -48,8 +48,8 @@ with tempfile.TemporaryDirectory(prefix="companion-queue-test-") as directory:
     assert all(part not in ("input", "tap", "hid") for part in MODULE.job_command(jobs[0]))
 
     hold = subprocess.run(
-        ["python3", str(HERE / "companion-queue.py"), "run"],
-        cwd=HERE.parents[1], env={**environment, "ANDROID_SERIAL": "missing-device"},
+        ["python3", str(HERE / "../companion-queue.py"), "run"],
+        cwd=HERE.parents[2], env={**environment, "ANDROID_SERIAL": "missing-device"},
         check=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert hold.returncode == 75
     assert "QUEUE HOLD reason=device-unavailable" in hold.stdout
@@ -76,7 +76,7 @@ with module.QueueRunnerLock(Path(sys.argv[2])):
     signal.pause()
 """
     child = subprocess.Popen(
-        [sys.executable, "-c", child_code, str(HERE / "companion-queue.py"),
+        [sys.executable, "-c", child_code, str(HERE / "../companion-queue.py"),
          str(queue)],
         env=environment, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     try:
@@ -182,7 +182,7 @@ with tempfile.TemporaryDirectory(prefix="companion-queue-cancel-") as directory:
     queue = Path(directory) / "jobs.json"
     environment = {**os.environ, "CUE_HELPER_QUEUE_FILE": str(queue)}
     def cli(*args, check=True):
-        return subprocess.run(["python3", str(HERE / "companion-queue.py"), *args], cwd=HERE.parents[1],
+        return subprocess.run(["python3", str(HERE / "../companion-queue.py"), *args], cwd=HERE.parents[2],
                               env=environment, check=check, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     cli("enqueue", "menu-check"); cli("enqueue", "night-check", "--screen", "night"); cli("enqueue", "menu-check")
     jobs = json.loads(queue.read_text(encoding="utf-8"))

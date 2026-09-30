@@ -298,7 +298,7 @@ def runner_command(game: str, binding: dict, winner: dict, night: int, label: st
                    audio: bool) -> tuple[list[str], dict]:
     """The one runner a game's night uses, and the lease-held marker it takes."""
     if game == "fnaf2":
-        argv = [str(HERE / "night-run.sh"), "--live", "--confirm-live", "--label", label,
+        argv = [str(HERE / "../../tools/device/night-run.sh"), "--live", "--confirm-live", "--label", label,
                 "--bundle", binding["bundle"]["dir"], "--night", str(night), "--serial", serial,
                 "--profile", binding["profile"], "--no-grade"]
         if audio:
@@ -306,7 +306,7 @@ def runner_command(game: str, binding: dict, winner: dict, night: int, label: st
         return argv, {"FNAF_LEASE_HELD": "1", "FNAF_SERIAL": serial}
     if game == "fnaf4":
         options = winner.get("resolvedOptions") or {}
-        argv = [str(HERE / "fnaf4-run.sh"), "--live", "--confirm-live", "--mode", "loop",
+        argv = [str(HERE / "../../tools/device/fnaf4-run.sh"), "--live", "--confirm-live", "--mode", "loop",
                 "--detectors", str(expand_home(winner["detectors"]["file"])), "--night", str(night),
                 "--label", label, "--stop-after-ms", str(binding["nightMs"])]
         if options.get("teach"):
@@ -314,7 +314,7 @@ def runner_command(game: str, binding: dict, winner: dict, night: int, label: st
         if options.get("video"):
             argv.append("--video")
         return argv, {"FNAF4_LEASE_HELD": "1", "FNAF_SERIAL": serial}
-    argv = ["node", str(HERE / "fnaf1-winner.mjs"), "--winner", binding["winner"], "--live", "--confirm-live",
+    argv = ["node", str(HERE / "../../tools/device/fnaf1-winner.mjs"), "--winner", binding["winner"], "--live", "--confirm-live",
             "--label", label]
     return argv, {"FNAF_SERIAL": serial}
 

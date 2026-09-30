@@ -126,7 +126,7 @@ try {
     const executes = Object.fromEntries(Object.keys(winner.sources).map((p) => [p, sha256(readFileSync(join(tree, p)))]));
     eq(`${path}: the replay executes the pinned route`, differsFromPins(winner, executes), []);
     const plan = replayInvocation(winner, { tree, serial: winner.target.device, label: 'gate', env: {}, home: '/home/gate' });
-    eq(`${path}: the replay's lease is this checkout's`, plan.args.slice(0, 3), [join(ROOT, 'tools/device/device-lock-exec.py'), winner.target.device, '--']);
+    eq(`${path}: the replay's lease is this checkout's`, plan.args.slice(0, 3), [join(ROOT, 'packages/play/src/safety/device-lock-exec.py'), winner.target.device, '--']);
     const runAt = plan.args.indexOf(join(tree, RUNNER));
     ok(`${path}: the process under the lease is the pinned tree's runner`, runAt > 0 && !relative(tree, plan.args[runAt]).startsWith('..'));
     ok(`${path}: the pinned runner skips its own lease and shares the host-wide lock dir (the main checkout's)`,

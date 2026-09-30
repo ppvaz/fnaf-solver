@@ -132,18 +132,28 @@ for (const page of docPages)
 // Source context took it on 2026-09-30). A script is held to the README
 // nearest to it -- its own directory's, or the closest parent's -- so a reader
 // in tools/device/ finds tools/device/'s scripts there.
-const TOOL_ROOTS = ['tools', 'packages/source/decompile'];
-const underToolRoot = (f) => TOOL_ROOTS.some((root) => f.startsWith(`${root}/`));
+const TOOL_ROOTS = ['tools', 'packages/source/decompile', 'apps/lab'];
+// Entry points that left tools/ for their context: each package's bin/ and
+// propose's parked work are held to the Scripts table of the nearest README
+// (ADR 0002 layout, LEG-008).
+const underToolRoot = (f) => TOOL_ROOTS.some((root) => f.startsWith(`${root}/`)) ||
+  /^packages\/[^/]+\/bin\//.test(f) || f.startsWith('packages/propose/parked/');
+const SCRIPTS_HEADING = '\n## Scripts\n';
+const scriptsIndex = (f) => /^(?:packages|apps)\/[^/]+\/README\.md$/.test(f) &&
+  readFileSync(join(ROOT, f), 'utf8').includes(SCRIPTS_HEADING);
 const indexes = tracked.filter((f) => /^tools\/(?:[^/]+\/)?README\.md$/.test(f) ||
-  f === 'packages/source/decompile/README.md').sort();
+  f === 'packages/source/decompile/README.md' || f === 'apps/lab/README.md' || scriptsIndex(f)).sort();
 const entriesOf = new Map();
 for (const index of indexes) {
   const entries = new Set();
-  for (const line of readFileSync(join(ROOT, index), 'utf8').split('\n')) {
+  let text = readFileSync(join(ROOT, index), 'utf8');
+  if (/^(?:packages|apps)\/[^/]+\/README\.md$/.test(index) && text.includes(SCRIPTS_HEADING))
+    text = text.split(SCRIPTS_HEADING)[1].split('\n## ')[0];
+  for (const line of text.split('\n')) {
     if (!line.startsWith('|')) continue;
     const cells = line.split('|');
     if (cells.length < 3) continue;
-    for (const m of cells[1].matchAll(/`([\w./-]+\.(?:mjs|json|cs|py|sh|c|S))\b/g))
+    for (const m of cells[1].matchAll(/`([\w./-]+\.(?:mjs|js|json|cs|py|sh|c|S))\b/g))
       entries.add(basename(m[1]));
   }
   entriesOf.set(index, entries);
@@ -163,11 +173,14 @@ for (const script of scripts) {
       'mention in prose, which is what let this drift to 47 missing scripts');
 }
 
-// --- 4. an index must not list a script that has been deleted.
+// --- 4. an index must not list a script that has been deleted: every entry
+// names a tracked file under the index's own directory.
 for (const [index, entries] of entriesOf) {
+  const here = dirname(index);
+  const present = new Set(tracked.filter((f) => f.startsWith(`${here}/`)).map((f) => basename(f)));
   for (const name of entries) {
     if (/\.(cs|json|S)$/.test(name)) continue; // fixtures and plugin sources
-    if (!scripts.some((s) => basename(s) === name))
+    if (!present.has(name))
       complain(`${index} has an entry for ${name}, which is not a tracked ` +
         'tool script -- a stale entry sends a reader after a command that is gone');
   }

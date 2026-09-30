@@ -5,7 +5,17 @@
     "tools/README.md",
     "tools/cue/README.md",
     "tools/device/README.md",
-    "packages/source/decompile/README.md"
+    "packages/source/decompile/README.md",
+    "apps/desktop/README.md",
+    "apps/device/README.md",
+    "apps/lab/README.md",
+    "apps/trainer/README.md",
+    "apps/wiki/README.md",
+    "packages/kernel/README.md",
+    "packages/play/README.md",
+    "packages/propose/README.md",
+    "packages/review/README.md",
+    "packages/source/README.md"
   ],
   "commands": [
     {
@@ -50,12 +60,12 @@
     },
     {
       "id": "test:unit:slow",
-      "command": "node tools/device/test-night7-presets.mjs && node tools/test-fnaf1-census.mjs && python3 tools/device/test-overnight-window.py && node tools/test-fnaf3-census.mjs && python3 tools/device/test-night-job.py && node tools/test.mjs --gates && python3 tools/cue/test-fnaf4-cues.py && node tools/device/test-winners-rebuild.mjs",
+      "command": "node tools/device/test-night7-presets.mjs && node tools/test-fnaf1-census.mjs && python3 apps/lab/test/test-overnight-window.py && node tools/test-fnaf3-census.mjs && python3 apps/lab/test/test-night-job.py && node tools/test.mjs --gates && python3 tools/cue/test-fnaf4-cues.py && node tools/device/test-winners-rebuild.mjs",
       "lifecycle": "supported"
     },
     {
       "id": "test:contracts",
-      "command": "node packages/source/test/contracts.test.js && node packages/source/test/control-catalog.test.js && node packages/source/test/truth.test.js && node packages/kernel/test/claim-envelope.test.js && node packages/kernel/test/venue-identity.test.js && node packages/propose/test/cycle-library.test.js && node packages/propose/test/cycle-planner.test.js && node packages/propose/test/cycle-controller.test.js && node packages/propose/test/night-policy.test.js && node packages/source/test/route-forks.test.js && node packages/source/test/drop-light-order.test.js && node packages/source/test/foxy-chain.test.js && node packages/source/test/unconditional-draws.test.js && node packages/source/test/event-draws.test.js && node packages/source/test/blackout-draws.test.js && node packages/source/test/view-draws.test.js && node packages/source/test/roll-draws.test.js && node packages/source/test/monitor-down-draw.test.js && node packages/source/test/second-pass.test.js && node packages/source/test/puppet-glitch-draws.test.js && node packages/source/test/sheet-order.test.js && node packages/source/test/frame-time-hook.test.js && node packages/source/test/last-view-pause.test.js && node packages/source/test/footstep-draws.test.js && node packages/source/test/vent-cam-draws.test.js && node packages/source/test/random-image-draw.test.js && node packages/source/test/monitor-raise-gate.test.js && node packages/source/test/mangle-return.test.js && node packages/source/test/gated-every.test.js && node packages/source/test/every-origin.test.js && node packages/source/test/rebuild-order.test.js && node packages/source/test/footstep-value2.test.js && node packages/source/test/foxy-move-value2.test.js && node packages/source/test/promoted-view-draws.test.js && node packages/source/test/hall-latch-order.test.js && node packages/source/test/rolls-before-moves.test.js && node packages/source/test/promoted-moves.test.js && node packages/source/test/value5.test.js && node packages/source/test/office-footsteps.test.js && node packages/source/test/blackout-clock-end.test.js && node packages/source/test/b-drain-order.test.js && node packages/source/test/route-pass.test.js && node packages/source/test/office-rolls.test.js && node packages/source/test/animation-count.test.js && node packages/source/test/bb-moves.test.js && node packages/source/test/exposure-value5.test.js && node packages/source/test/route-view-draws.test.js && node packages/source/test/drop-flag-order.test.js && node packages/source/test/mask-animation-input.test.js && node packages/play/test/control-exclusion.test.js && node packages/play/test/android-venue.test.js && node packages/play/test/conformance.test.js && node packages/play/test/monitor-rule.test.js && node packages/play/test/camera-rule.test.js && node packages/play/test/night-onset.test.js && node apps/desktop/test/device-cli.test.js && node packages/play/test/campaign.test.js && node packages/play/test/campaign-runner.test.js && node packages/play/test/campaign-infrastructure.test.js && node packages/play/test/campaign-composition.test.js && node packages/play/test/modern-campaign-terminal.test.js && node packages/play/test/campaign-signal.test.js && node packages/play/test/adb-bridge.test.js && node packages/play/test/venue-preflight.test.js && node packages/play/test/adb-device-local-executor.test.js && node packages/play/test/profile-game.test.js && node packages/play/test/static-terminal-window.test.js && node packages/play/test/post-night-halt.test.js && node packages/play/test/hid-read-gap.test.js && node packages/play/test/hid-second-contact.test.js && node packages/play/test/night-anchor.test.js && node packages/play/test/cycle-lesson.test.js && node packages/play/test/timed-start.test.js && node packages/propose/test/experiment.test.js && node packages/propose/test/legacy-equivalence.test.js && node tools/device/test-bundle.mjs && node tools/device/test-phase-reconstruct.mjs && node tools/device/test-tap-stall-audit.mjs && python3 tools/device/test-framesource.py && python3 tools/device/test-decode-once.py && python3 tools/device/test-grade-night.py && python3 tools/device/test-cycle-ledger.py && python3 tools/device/test-office-seed-bracket.py && node tools/device/test-minus3-frame-light.mjs && node tools/device/test-artifact-animation-gates.mjs && node packages/review/test/vault.test.mjs && node packages/kernel/test/factlinktest.mjs && node packages/review/test/bench-trace.test.mjs && node apps/trainer/test/exercise.test.mjs && node apps/trainer/test/activity-gate.test.mjs && node apps/trainer/test/microtrainer.test.mjs && node apps/trainer/test/renderer.test.mjs && node apps/trainer/test/arcade-lab.test.mjs && node apps/trainer/test/coach.test.mjs && node apps/trainer/test/lessons.test.mjs && node apps/trainer/test/route-facts.test.mjs && node packages/play/test/phase-clock.test.js && node tools/observationlanguagetest.mjs && python3 packages/kernel/test/contract-vectors.py && python3 tools/device/test-companion-setup.py && python3 tools/device/test-companion-device-lock.py && python3 tools/device/test-companion-queue.py && node apps/desktop/test/companion-mcp.test.mjs && python3 tools/device/test-teach-panel-clearance.py && python3 tools/device/test-death-cause.py && tools/device/test-game-teardown.sh && tools/cue/test-bt-audio-link.sh && android/companion/test.sh && npm run test:device:calibration && node packages/source/test/footstep-value2.test.js &&node packages/source/test/mask-animation-input.test.js && node packages/play/test/companion-status.test.js && node tools/device/test-audio-probe.mjs",
+      "command": "node packages/source/test/contracts.test.js && node packages/source/test/control-catalog.test.js && node packages/source/test/truth.test.js && node packages/kernel/test/claim-envelope.test.js && node packages/kernel/test/venue-identity.test.js && node packages/propose/test/cycle-library.test.js && node packages/propose/test/cycle-planner.test.js && node packages/propose/test/cycle-controller.test.js && node packages/propose/test/night-policy.test.js && node packages/source/test/route-forks.test.js && node packages/source/test/drop-light-order.test.js && node packages/source/test/foxy-chain.test.js && node packages/source/test/unconditional-draws.test.js && node packages/source/test/event-draws.test.js && node packages/source/test/blackout-draws.test.js && node packages/source/test/view-draws.test.js && node packages/source/test/roll-draws.test.js && node packages/source/test/monitor-down-draw.test.js && node packages/source/test/second-pass.test.js && node packages/source/test/puppet-glitch-draws.test.js && node packages/source/test/sheet-order.test.js && node packages/source/test/frame-time-hook.test.js && node packages/source/test/last-view-pause.test.js && node packages/source/test/footstep-draws.test.js && node packages/source/test/vent-cam-draws.test.js && node packages/source/test/random-image-draw.test.js && node packages/source/test/monitor-raise-gate.test.js && node packages/source/test/mangle-return.test.js && node packages/source/test/gated-every.test.js && node packages/source/test/every-origin.test.js && node packages/source/test/rebuild-order.test.js && node packages/source/test/footstep-value2.test.js && node packages/source/test/foxy-move-value2.test.js && node packages/source/test/promoted-view-draws.test.js && node packages/source/test/hall-latch-order.test.js && node packages/source/test/rolls-before-moves.test.js && node packages/source/test/promoted-moves.test.js && node packages/source/test/value5.test.js && node packages/source/test/office-footsteps.test.js && node packages/source/test/blackout-clock-end.test.js && node packages/source/test/b-drain-order.test.js && node packages/source/test/route-pass.test.js && node packages/source/test/office-rolls.test.js && node packages/source/test/animation-count.test.js && node packages/source/test/bb-moves.test.js && node packages/source/test/exposure-value5.test.js && node packages/source/test/route-view-draws.test.js && node packages/source/test/drop-flag-order.test.js && node packages/source/test/mask-animation-input.test.js && node packages/play/test/control-exclusion.test.js && node packages/play/test/android-venue.test.js && node packages/play/test/conformance.test.js && node packages/play/test/monitor-rule.test.js && node packages/play/test/camera-rule.test.js && node packages/play/test/night-onset.test.js && node apps/desktop/test/device-cli.test.js && node packages/play/test/campaign.test.js && node packages/play/test/campaign-runner.test.js && node packages/play/test/campaign-infrastructure.test.js && node packages/play/test/campaign-composition.test.js && node packages/play/test/modern-campaign-terminal.test.js && node packages/play/test/campaign-signal.test.js && node packages/play/test/adb-bridge.test.js && node packages/play/test/venue-preflight.test.js && node packages/play/test/adb-device-local-executor.test.js && node packages/play/test/profile-game.test.js && node packages/play/test/static-terminal-window.test.js && node packages/play/test/post-night-halt.test.js && node packages/play/test/hid-read-gap.test.js && node packages/play/test/hid-second-contact.test.js && node packages/play/test/night-anchor.test.js && node packages/play/test/cycle-lesson.test.js && node packages/play/test/timed-start.test.js && node packages/propose/test/experiment.test.js && node packages/propose/test/legacy-equivalence.test.js && node tools/device/test-bundle.mjs && node tools/device/test-phase-reconstruct.mjs && node tools/device/test-tap-stall-audit.mjs && python3 tools/device/test-framesource.py && python3 tools/device/test-decode-once.py && python3 tools/device/test-grade-night.py && python3 tools/device/test-cycle-ledger.py && python3 tools/device/test-office-seed-bracket.py && node tools/device/test-minus3-frame-light.mjs && node tools/device/test-artifact-animation-gates.mjs && node packages/review/test/vault.test.mjs && node packages/kernel/test/factlinktest.mjs && node packages/review/test/bench-trace.test.mjs && node apps/trainer/test/exercise.test.mjs && node apps/trainer/test/activity-gate.test.mjs && node apps/trainer/test/microtrainer.test.mjs && node apps/trainer/test/renderer.test.mjs && node apps/trainer/test/arcade-lab.test.mjs && node apps/trainer/test/coach.test.mjs && node apps/trainer/test/lessons.test.mjs && node apps/trainer/test/route-facts.test.mjs && node packages/play/test/phase-clock.test.js && node tools/observationlanguagetest.mjs && python3 packages/kernel/test/contract-vectors.py && python3 tools/device/test-companion-setup.py && python3 packages/play/test/test-companion-device-lock.py && python3 apps/lab/test/test-companion-queue.py && node apps/desktop/test/companion-mcp.test.mjs && python3 tools/device/test-teach-panel-clearance.py && python3 tools/device/test-death-cause.py && tools/device/test-game-teardown.sh && tools/cue/test-bt-audio-link.sh && android/companion/test.sh && npm run test:device:calibration && node packages/source/test/footstep-value2.test.js &&node packages/source/test/mask-animation-input.test.js && node packages/play/test/companion-status.test.js && node tools/device/test-audio-probe.mjs",
       "lifecycle": "supported"
     },
     {
@@ -782,6 +792,12 @@
       "lifecycle": "supported"
     },
     {
+      "id": "tools/device/overnight-window.py",
+      "invocation": "tools/device/overnight-window.py",
+      "kind": "compatibility",
+      "lifecycle": "supported"
+    },
+    {
       "id": "tools/device/audio-probe.mjs",
       "invocation": "tools/device/audio-probe.mjs --seconds N [--scope GAME] [--out FILE]",
       "kind": "device action",
@@ -824,12 +840,6 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/play/src/campaign/artifact-executor.js",
-      "invocation": "packages/play/src/campaign/artifact-executor.js",
-      "kind": "device boundary",
-      "lifecycle": "supported"
-    },
-    {
       "id": "npm",
       "invocation": "npm run device:campaign -- --guided [--json]",
       "kind": "guided preflight",
@@ -839,24 +849,6 @@
       "id": "npm",
       "invocation": "npm run device:campaign -- --live --confirm-live --bundle DIR --calibration FILE --qualification FILE",
       "kind": "supported-live gate",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "packages/play/src/campaign/custom-night.js",
-      "invocation": "packages/play/src/campaign/custom-night.js",
-      "kind": "device contract",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "packages/play/src/campaign/device-local-executor.js",
-      "invocation": "packages/play/src/campaign/device-local-executor.js",
-      "kind": "device boundary",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "packages/play/src/campaign/campaign-composition.js",
-      "invocation": "packages/play/src/campaign/campaign-composition.js",
-      "kind": "device composition",
       "lifecycle": "supported"
     },
     {
@@ -947,66 +939,6 @@
       "id": "tools/device/test-companion-setup.py",
       "invocation": "tools/device/test-companion-setup.py",
       "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/companion-queue.sh",
-      "invocation": "tools/device/companion-queue.sh enqueue\\|list\\|cancel IDS --reason TEXT\\|run [--wait SECONDS] [--interval SECONDS] [--max-jobs N] [--nights]",
-      "kind": "device action/check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/companion-queue.py",
-      "invocation": "tools/device/companion-queue.py",
-      "kind": "internal module",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-companion-queue.py",
-      "invocation": "tools/device/test-companion-queue.py",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/overnight-window.py",
-      "invocation": "tools/device/overnight-window.py [run\\|preflight\\|restore\\|units] [--live --confirm-live] [--serial ID] [--start HH:MM] [--end HH:MM] [--battery-floor PCT] [--lock-wait S]",
-      "kind": "**device action** (live only)",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-overnight-window.py",
-      "invocation": "tools/device/test-overnight-window.py",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/night_jobs.py",
-      "invocation": "tools/device/night_jobs.py",
-      "kind": "internal module",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-night-job.py",
-      "invocation": "tools/device/test-night-job.py",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/companion_device_lock.py",
-      "invocation": "tools/device/companion_device_lock.py",
-      "kind": "internal module",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-companion-device-lock.py",
-      "invocation": "tools/device/test-companion-device-lock.py",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/device-lock-exec.py",
-      "invocation": "tools/device/device-lock-exec.py",
-      "kind": "internal module",
       "lifecycle": "supported"
     },
     {
@@ -1670,6 +1602,12 @@
       "lifecycle": "supported"
     },
     {
+      "id": "tools/device/test-native-regions.mjs",
+      "invocation": "tools/device/test-native-regions.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
       "id": "tools/device/fnaf1-teach-media.py",
       "invocation": "tools/device/fnaf1-teach-media.py --run DIR --video FILE.mp4 --out DIR [--only gif\\|all]",
       "kind": "report",
@@ -2086,6 +2024,324 @@
     {
       "id": "packages/source/decompile/test-aimap.py",
       "invocation": "packages/source/decompile/test-aimap.py",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "apps/desktop/test/night.test.js",
+      "invocation": "apps/desktop/test/night.test.js",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "apps/desktop/src/probe.js",
+      "invocation": "apps/desktop/src/probe.js",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "apps/desktop/test/probe.test.js",
+      "invocation": "apps/desktop/test/probe.test.js",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "apps/lab/companion-queue.sh",
+      "invocation": "apps/lab/companion-queue.sh enqueue\\|list\\|cancel IDS --reason TEXT\\|run [--wait SECONDS] [--interval SECONDS] [--max-jobs N] [--nights]",
+      "kind": "device action/check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "apps/lab/companion-queue.py",
+      "invocation": "apps/lab/companion-queue.py",
+      "kind": "internal module",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "apps/lab/test/test-companion-queue.py",
+      "invocation": "apps/lab/test/test-companion-queue.py",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "apps/lab/overnight-window.py",
+      "invocation": "apps/lab/overnight-window.py [run\\|preflight\\|restore\\|units] [--live --confirm-live] [--serial ID] [--start HH:MM] [--end HH:MM] [--battery-floor PCT] [--lock-wait S]",
+      "kind": "**device action** (live only)",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "apps/lab/test/test-overnight-window.py",
+      "invocation": "apps/lab/test/test-overnight-window.py",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "apps/lab/night_jobs.py",
+      "invocation": "apps/lab/night_jobs.py",
+      "kind": "internal module",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "apps/lab/test/test-night-job.py",
+      "invocation": "apps/lab/test/test-night-job.py",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "apps/wiki/chronicle.js",
+      "invocation": "apps/wiki/chronicle.js",
+      "kind": "generator",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "apps/wiki/chronicle-story.js",
+      "invocation": "apps/wiki/chronicle-story.js",
+      "kind": "module",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "apps/wiki/chronicle-harvest.js",
+      "invocation": "apps/wiki/chronicle-harvest.js --since COMMIT [--until COMMIT] [--json]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "apps/wiki/test/chronicle.test.js",
+      "invocation": "apps/wiki/test/chronicle.test.js",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/kernel/test/contract-vectors.py",
+      "invocation": "packages/kernel/test/contract-vectors.py",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/kernel/test/factlinktest.mjs",
+      "invocation": "packages/kernel/test/factlinktest.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/play/test/phase-clock.test.js",
+      "invocation": "packages/play/test/phase-clock.test.js",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/play/test/belief.test.js",
+      "invocation": "packages/play/test/belief.test.js",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/play/test/estimator.test.js",
+      "invocation": "packages/play/test/estimator.test.js",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/play/test/hid-report.test.js",
+      "invocation": "packages/play/test/hid-report.test.js",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/play/test/testdata/hid-multitouch-smoke.json",
+      "invocation": "packages/play/test/testdata/hid-multitouch-smoke.json",
+      "kind": "**device action/fixture**",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/play/bin/phone/actuator.mjs",
+      "invocation": "packages/play/bin/phone/actuator.mjs",
+      "kind": "internal module",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/play/bin/probe/arm-verification.mjs",
+      "invocation": "packages/play/bin/probe/arm-verification.mjs",
+      "kind": "module",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/play/src/safety/companion_device_lock.py",
+      "invocation": "packages/play/src/safety/companion_device_lock.py",
+      "kind": "internal module",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/play/test/test-companion-device-lock.py",
+      "invocation": "packages/play/test/test-companion-device-lock.py",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/play/src/safety/device-lock-exec.py",
+      "invocation": "packages/play/src/safety/device-lock-exec.py",
+      "kind": "internal module",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/play/src/campaign/artifact-executor.js",
+      "invocation": "packages/play/src/campaign/artifact-executor.js",
+      "kind": "device boundary",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/play/src/campaign/custom-night.js",
+      "invocation": "packages/play/src/campaign/custom-night.js",
+      "kind": "device contract",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/play/src/campaign/device-local-executor.js",
+      "invocation": "packages/play/src/campaign/device-local-executor.js",
+      "kind": "device boundary",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/play/src/campaign/campaign-composition.js",
+      "invocation": "packages/play/src/campaign/campaign-composition.js",
+      "kind": "device composition",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/hid-device-pilot.mjs",
+      "invocation": "packages/propose/parked/minus7/hid-device-pilot.mjs [runs] [--night=6]",
+      "kind": "report/check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/plans/emit.mjs",
+      "invocation": "packages/propose/bin/plans/emit.mjs --winner winner.json --out artifacts/run-001",
+      "kind": "compiler",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/plans/artifact-commands.mjs",
+      "invocation": "packages/propose/bin/plans/artifact-commands.mjs",
+      "kind": "module/check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/plans/bundle.mjs",
+      "invocation": "packages/propose/bin/plans/bundle.mjs",
+      "kind": "module/check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/plans/recipe.mjs",
+      "invocation": "packages/propose/bin/plans/recipe.mjs",
+      "kind": "generator/report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/plans/minus-toys-plan.mjs",
+      "invocation": "packages/propose/bin/plans/minus-toys-plan.mjs --night=N [--gate] [--knobs=k=v,...]",
+      "kind": "generator/check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/plans/minus-3-plan.mjs",
+      "invocation": "packages/propose/bin/plans/minus-3-plan.mjs --night=N [--gate] [--runs=N]",
+      "kind": "generator/check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/plans/minus-toys-plan.mjs",
+      "invocation": "packages/propose/bin/plans/minus-toys-plan.mjs --phasegate",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/src/vault.mjs",
+      "invocation": "packages/review/src/vault.mjs <export|import|verify|refs|list>",
+      "kind": "evidence CLI",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/test/vault.test.mjs",
+      "invocation": "packages/review/test/vault.test.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/test/bench-trace.test.mjs",
+      "invocation": "packages/review/test/bench-trace.test.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/report/bench-trace.mjs",
+      "invocation": "packages/review/bin/report/bench-trace.mjs --input TRACE.json [--out SUMMARY.json]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/venue-grid/encounter-replay.mjs",
+      "invocation": "packages/review/venue-grid/encounter-replay.mjs CONFIG.json OUT.json",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/venue-grid/model-encounter-fidelity.mjs",
+      "invocation": "packages/review/venue-grid/model-encounter-fidelity.mjs INPUT_DIR OUT.json",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/src/renamed-path.js",
+      "invocation": "packages/review/src/renamed-path.js",
+      "kind": "internal module",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/src/chronicle-schema.js",
+      "invocation": "packages/review/src/chronicle-schema.js",
+      "kind": "module",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/test/stat.test.mjs",
+      "invocation": "packages/review/test/stat.test.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/source/test/sourcetest.mjs",
+      "invocation": "packages/source/test/sourcetest.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/source/test/seed-recovery.mjs",
+      "invocation": "packages/source/test/seed-recovery.mjs",
+      "kind": "report/module",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/source/test/seed-recoverytest.mjs",
+      "invocation": "packages/source/test/seed-recoverytest.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/source/test/propertytest.mjs",
+      "invocation": "packages/source/test/propertytest.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/source/test/test-night-models.mjs",
+      "invocation": "packages/source/test/test-night-models.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/source/test/simtest.mjs",
+      "invocation": "packages/source/test/simtest.mjs",
       "kind": "check",
       "lifecycle": "supported"
     }

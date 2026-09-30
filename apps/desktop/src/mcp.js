@@ -12,7 +12,7 @@ const CUE_TOOLS = Object.freeze(['cue.setup', 'cue.queue.enqueue', 'cue.queue.li
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const CUE_SETUP = fileURLToPath(new URL('../../../tools/device/companion-setup.sh', import.meta.url));
-const CUE_QUEUE = fileURLToPath(new URL('../../../tools/device/companion-queue.sh', import.meta.url));
+const CUE_QUEUE = fileURLToPath(new URL('../../../apps/lab/companion-queue.sh', import.meta.url));
 const execFile = promisify(execFileCallback);
 
 function error(code, message) { return { ok: false, error: { code, message } }; }

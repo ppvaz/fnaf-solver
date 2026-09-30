@@ -42,20 +42,21 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-ROOT = HERE.parents[1]
-FAKE = HERE / "testdata" / "fake_phone.py"
+ROOT = HERE.parents[2]
+FAKE = HERE / "../../../tools/device/testdata" / "fake_phone.py"
 SERIAL = "FAKE0001"
 K3 = "tools/device/campaign-night7-k3-winner.json"
 N5 = "tools/device/campaign-night5-mask5plus-winner.json"
-sys.path.insert(0, str(HERE))
-sys.path.insert(0, str(HERE / "testdata"))
+sys.path.insert(0, str(HERE.parent))
+sys.path.insert(0, str(ROOT / "packages/play/src/safety"))
+sys.path.insert(0, str(HERE / "../../../tools/device/testdata"))
 import fake_phone  # noqa: E402
 import night_jobs  # noqa: E402
 from companion_device_lock import DeviceBusy, DeviceLock  # noqa: E402
 
 
 def load(name: str, file: str):
-    spec = importlib.util.spec_from_file_location(name, HERE / file)
+    spec = importlib.util.spec_from_file_location(name, HERE.parent / file)  # the lab's modules
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -144,14 +145,14 @@ class Case:
         self.overrides.write_text(json.dumps({
             "overnight_window": {
                 **FAST_WINDOW, **(window or {}),
-                "QUEUE_COMMAND": [sys.executable, str(self.driver), str(HERE / "companion-queue.py"),
+                "QUEUE_COMMAND": [sys.executable, str(self.driver), str(HERE / "../companion-queue.py"),
                                   str(self.overrides)],
-                "NIGHT_JOB_COMMAND": [sys.executable, str(self.driver), str(HERE / "night-job.py"),
+                "NIGHT_JOB_COMMAND": [sys.executable, str(self.driver), str(HERE / "../night-job.py"),
                                       str(self.overrides)],
                 "PACK_COMMAND": ["node", str(self.pack), str(self.root)],
                 "PACKS_ROOT": str(self.root), "RUNS_ROOT": str(self.root)},
             "companion_queue": {
-                "NIGHT_JOB_COMMAND": [sys.executable, str(self.driver), str(HERE / "night-job.py"),
+                "NIGHT_JOB_COMMAND": [sys.executable, str(self.driver), str(HERE / "../night-job.py"),
                                       str(self.overrides)],
                 "JOB_STOP_GRACE_S": 2.0, "JOB_TERM_GRACE_S": 1.0},
             "night_job": {
@@ -192,7 +193,7 @@ class Case:
         return job
 
     def window_argv(self, end: float) -> list[str]:
-        return [sys.executable, str(self.driver), str(HERE / "overnight-window.py"), str(self.overrides), "run",
+        return [sys.executable, str(self.driver), str(HERE / "../overnight-window.py"), str(self.overrides), "run",
                 "--serial", SERIAL, "--start", clock(-60), "--end", clock(end), "--lock-wait", "1",
                 "--live", "--confirm-live"]
 

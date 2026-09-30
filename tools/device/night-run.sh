@@ -134,7 +134,7 @@ fi
 # as FNAF4_LEASE_HELD. A dry run touches no phone and takes no lease.
 [ "$DRY" = 1 ] || case "$SERIAL" in ''|*[!A-Za-z0-9._:-]*) die "--serial is invalid: $SERIAL" ;; esac
 if [ "$DRY" = 0 ] && [ "${FNAF_LEASE_HELD:-}" != 1 ]; then
-  exec python3 "$HERE/device-lock-exec.py" "$SERIAL" -- \
+  exec python3 "$HERE/../../packages/play/src/safety/device-lock-exec.py" "$SERIAL" -- \
     env FNAF_LEASE_HELD=1 FNAF_SERIAL="$SERIAL" bash "$HERE/night-run.sh" "${ORIGINAL_ARGS[@]}"
 fi
 

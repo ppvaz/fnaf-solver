@@ -42,8 +42,17 @@ const commandRegistry = Object.entries(rootPackage.scripts).map(([id, command]) 
   lifecycle: id.includes('legacy') ? 'legacy'
     : id.includes('qualification') ? 'supported-live' : 'supported',
 }));
-const toolIndexes = ['tools/README.md', 'tools/cue/README.md', 'tools/device/README.md', 'packages/source/decompile/README.md'];
-const toolsIndex = (await Promise.all(toolIndexes.map(path => readFile(join(ROOT, path), 'utf8')))).join('\n');
+// The tool indexes: tools/'s own READMEs and the decompile chain's, plus the
+// `## Scripts` table of every package and application README, where a script
+// that left tools/ for its context keeps its row (ADR 0002 layout, LEG-008).
+const SCRIPTS_HEADING = '\n## Scripts\n';
+const scriptsReadmes = files.map(path => relative(ROOT, path))
+  .filter(path => /^(?:packages|apps)\/[^/]+\/README\.md$/.test(path)).sort();
+const toolIndexes = ['tools/README.md', 'tools/cue/README.md', 'tools/device/README.md', 'packages/source/decompile/README.md', ...scriptsReadmes];
+const toolsIndex = (await Promise.all(toolIndexes.map(async path => {
+  const text = await readFile(join(ROOT, path), 'utf8');
+  return scriptsReadmes.includes(path) ? (text.split(SCRIPTS_HEADING)[1] ?? '').split('\n## ')[0] : text;
+}))).join('\n');
 const toolCommands = [...toolsIndex.matchAll(/^\| `([^`]+)` \| ([^|]+) \|/gm)].map(match => ({
   id: match[1].split(/\s+/)[0], invocation: match[1], kind: match[2].trim(), lifecycle: /legacy|historical/i.test(match[2]) ? 'legacy' : 'supported',
 }));
@@ -346,6 +355,17 @@ const legacyPaths = [
     removalGate: 'Every stored citation of apps/device/profiles/ is read through the path\'s history at its commit, not the working tree: the 55 tools/recompile/results records that pair `profile: apps/device/profiles/hid-mediaprojection.json` with its profileSha256, the recompile configs full06-response-experiment.json (hash-bound by full06-responses-20260928) and phone-encounter-nights.json, schedule-to-input.mjs\'s DEFAULT_PROFILE, and graph.json\'s citation of fixture-hid-screencap.json; packages/propose/bin/plans/bundle.mjs and the device CLI then resolve profiles from the new home',
     notes: 'Unmoved and byte for byte. The profile bytes are what every bundle binds by sha256 (profile.json); the path is what retained records cite.',
   })),
+  // The overnight window moved to apps/lab with the queue and the night jobs it
+  // runs; a host's installed systemd units still name the old path in ExecStart.
+  {
+    id: 'lab.overnight-window-path', path: 'tools/device/overnight-window.py', category: 'host-unit-path',
+    lifecycle: 'compatibility', owner: 'apps/lab',
+    replacement: 'apps/lab/overnight-window.py, which renders its units from its own path',
+    removalGate: 'Every host that installed the window\'s systemd units has re-rendered them from the new path ' +
+      '(python3 apps/lab/overnight-window.py units --serial ID --out ~/.config/systemd/user, then systemctl --user daemon-reload), ' +
+      'so no ExecStart names tools/device/overnight-window.py',
+    notes: 'A thin forwarder: it execs apps/lab/overnight-window.py with every argument unchanged.',
+  },
   {
     id: 'package.legacy-engine-command', path: 'package.json#scripts.test:legacy:engine', category: 'command',
     lifecycle: 'compatibility', owner: '@sixam/core',

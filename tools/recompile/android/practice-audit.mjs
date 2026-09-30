@@ -449,7 +449,7 @@ function preflight(serial) {
 async function live(args) {
   if (!args.includes('--live')) fail('dry by default: add --live to press the phone');
   if (process.env.CUE_HELPER_LEASE_OWNER_PID === undefined && process.env.FNAF_LEASE_HELD !== '1')
-    fail('run under tools/device/device-lock-exec.py SERIAL -- ... so the serial lease is held');
+    fail('run under packages/play/src/safety/device-lock-exec.py SERIAL -- ... so the serial lease is held');
   const serial = process.env.FNAF_SERIAL
     ?? JSON.parse(readFileSync(join(ROOT, 'tools/device/local-profile.json'), 'utf8')).serial;
   const out = resolve(opt(args, '--out') ?? fail('--out DIR is required'));

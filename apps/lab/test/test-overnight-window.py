@@ -38,17 +38,18 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-ROOT = HERE.parents[1]
-WINDOW = HERE / "overnight-window.py"
+ROOT = HERE.parents[2]
+WINDOW = HERE / "../overnight-window.py"
 SERIAL = "FAKE0001"
-sys.path.insert(0, str(HERE))
+sys.path.insert(0, str(HERE.parent))
+sys.path.insert(0, str(ROOT / "packages/play/src/safety"))
 from companion_device_lock import DeviceBusy, DeviceLock  # noqa: E402
 
-SPEC = importlib.util.spec_from_file_location("companion_queue", HERE / "companion-queue.py")
+SPEC = importlib.util.spec_from_file_location("companion_queue", HERE / "../companion-queue.py")
 assert SPEC and SPEC.loader
 QUEUE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(QUEUE)
-sys.path.insert(0, str(HERE / "testdata"))
+sys.path.insert(0, str(HERE / "../../../tools/device/testdata"))
 import fake_phone  # noqa: E402
 
 # Stands in for `companion-queue.sh run --max-jobs 1`: one scripted step per call.
@@ -149,7 +150,7 @@ class Case:
         self.dir.mkdir()
         self.bin = self.dir / "bin"
         self.bin.mkdir()
-        (self.bin / "adb").write_text(f"#!/bin/sh\nexec {sys.executable} {HERE / 'testdata/fake_phone.py'} adb \"$@\"\n",
+        (self.bin / "adb").write_text(f"#!/bin/sh\nexec {sys.executable} {HERE / '../../../tools/device/testdata/fake_phone.py'} adb \"$@\"\n",
                                       encoding="utf-8")
         (self.bin / "adb").chmod(0o755)
         self.fake_queue = self.dir / "fake-queue.py"
@@ -734,14 +735,14 @@ def main() -> int:
             "schema": "overnight-window-fixture-v1", "claimLevel": "FIXTURE", "status": "PASS",
             "checksPassed": passed,
             "sources": {name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest() for name in (
-                "tools/device/overnight-window.py", "tools/device/night-job.py",
-                "tools/device/test-overnight-window.py", "tools/device/testdata/fake_phone.py")},
+                "apps/lab/overnight-window.py", "apps/lab/night-job.py",
+                "apps/lab/test/test-overnight-window.py", "tools/device/testdata/fake_phone.py")},
             "coverage": ["normal-end", "double-interrupt-during-restore", "signal-barrage",
                          "killed-adb-retries", "job-failure", "hard-deadline", "refusals",
                          "killed-window-recovery", "lease-release", "closed-adb-vocabulary",
                          "dnd-set-restore-refuse"],
             "open": ["Real-phone settings restoration and title recovery are unmeasured."],
-            "reproducer": "python3 tools/device/test-overnight-window.py --record " + str(destination),
+            "reproducer": "python3 apps/lab/test/test-overnight-window.py --record " + str(destination),
         }
         body["evidenceId"] = "overnight-window-fixture-" + hashlib.sha256(
             json.dumps(body, sort_keys=True, separators=(",", ":")).encode()).hexdigest()[:16]

@@ -13,7 +13,8 @@ from pathlib import Path
 
 
 HERE = Path(__file__).resolve().parent
-SPEC = importlib.util.spec_from_file_location("companion_device_lock", HERE / "companion_device_lock.py")
+SAFETY = (HERE / "../src/safety").resolve()
+SPEC = importlib.util.spec_from_file_location("companion_device_lock", SAFETY / "companion_device_lock.py")
 assert SPEC and SPEC.loader
 MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
@@ -34,10 +35,10 @@ with tempfile.TemporaryDirectory(prefix="companion-device-lock-") as directory:
             pass
 
         child = subprocess.Popen(
-            [sys.executable, str(HERE / "device-lock-exec.py"), "one-device", "--",
+            [sys.executable, str(HERE / "../src/safety/device-lock-exec.py"), "one-device", "--",
              sys.executable, "-c",
              "import signal, sys; "
-             f"sys.path.insert(0, {str(HERE)!r}); "
+             f"sys.path.insert(0, {str(SAFETY)!r}); "
              "from companion_device_lock import DeviceLock; "
              "lease = DeviceLock('one-device'); "
              "lease.__enter__(); lease.__exit__(); "
@@ -88,10 +89,10 @@ with tempfile.TemporaryDirectory(prefix="companion-device-lock-") as directory:
         # must work past the parent on hosts with no /proc (macOS). `; true`
         # keeps sh from exec'ing python in its own place.
         grandchild = subprocess.run(
-            [sys.executable, str(HERE / "device-lock-exec.py"), "one-device", "--",
+            [sys.executable, str(HERE / "../src/safety/device-lock-exec.py"), "one-device", "--",
              "sh", "-c",
              f"{sys.executable} -c \""
-             f"import sys; sys.path.insert(0, {str(HERE)!r}); "
+             f"import sys; sys.path.insert(0, {str(SAFETY)!r}); "
              "from companion_device_lock import DeviceLock; "
              "lease = DeviceLock('one-device'); lease.__enter__(); lease.__exit__(); "
              "print('grandchild-lease-acquired')\"; true"],
@@ -123,7 +124,7 @@ with tempfile.TemporaryDirectory(prefix="companion-worktree-") as directory:
     assert MODULE.main_checkout(plain) == plain
     mirror = subprocess.run(
         ["node", "--input-type=module", "-e",
-         f"import {{ mainCheckout }} from {json.dumps((HERE / 'fnaf1-winner.mjs').as_uri())};"
+         f"import {{ mainCheckout }} from {json.dumps((HERE / '../../../tools/device/fnaf1-winner.mjs').as_uri())};"
          "process.stdout.write(mainCheckout(process.argv[1]));", str(worktree)],
         check=True, text=True, stdout=subprocess.PIPE)
     # The same directory, however spelled: on macOS the temporary directory

@@ -18,10 +18,10 @@ import time
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from companion_device_lock import DeviceBusy, DeviceLock
-
-
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "packages/play/src/safety"))  # the serial lease: Play's
+from companion_device_lock import DeviceBusy, DeviceLock  # noqa: E402
+
 HELPER_PACKAGE = "com.ppvaz.fnafcompanion"
 TARGET_PACKAGE = "com.scottgames.fnaf2"
 # The other targets the Companion serves. The helper has a screen identity

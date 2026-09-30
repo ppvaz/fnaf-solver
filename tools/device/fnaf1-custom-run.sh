@@ -9,7 +9,7 @@ for arg in "$@"; do [ "$arg" != --live ] || LIVE=1; done
 # FNAF_SERIAL, else the untracked local profile; no default (ADR 0002 decision 8).
 SERIAL="$(node "$HERE/local-profile.mjs" serial)" || exit 2
 if [ "${FNAF1_LEASE_HELD:-}" != 1 ]; then
-  exec python3 "$HERE/device-lock-exec.py" "$SERIAL" -- \
+  exec python3 "$HERE/../../packages/play/src/safety/device-lock-exec.py" "$SERIAL" -- \
     env FNAF1_LEASE_HELD=1 FNAF_SERIAL="$SERIAL" node "$HERE/fnaf1-custom-run.mjs" "$@"
 fi
 exec env FNAF_SERIAL="$SERIAL" node "$HERE/fnaf1-custom-run.mjs" "$@"

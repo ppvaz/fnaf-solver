@@ -55,7 +55,7 @@ export function decodeBeacon(pixels) {
 
 async function live(args) {
   if (!args.includes('--live')) fail('dry by default: add --live to read the phone');
-  if (process.env.CUE_HELPER_LEASE_OWNER_PID === undefined) fail('run under tools/device/device-lock-exec.py SERIAL -- ...');
+  if (process.env.CUE_HELPER_LEASE_OWNER_PID === undefined) fail('run under packages/play/src/safety/device-lock-exec.py SERIAL -- ...');
   const out = resolve(opt(args, '--out') ?? fail('--out DIR'));
   if (!relative(ROOT, out).startsWith('..')) fail('--out must be outside the repository');
   const seconds = Number(opt(args, '--seconds') ?? 20);

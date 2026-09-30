@@ -276,7 +276,7 @@ export function replayInvocation(winner, { root = ROOT, tree, serial, label, env
   const args = replayArguments(winner, { label, home });
   return {
     file: 'python3',
-    args: [join(root, 'tools/device/device-lock-exec.py'), serial, '--',
+    args: [join(root, 'packages/play/src/safety/device-lock-exec.py'), serial, '--',
       'env', 'FNAF1_LEASE_HELD=1', `FNAF_SERIAL=${serial}`, `CUE_HELPER_LOCK_DIR=${lockDir}`, join(tree, RUNNER), ...args],
     cwd: tree,
     env: { ...env, CUE_HELPER_LOCK_DIR: lockDir },

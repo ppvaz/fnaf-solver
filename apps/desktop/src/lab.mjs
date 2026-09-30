@@ -33,7 +33,7 @@ export const SESSION_FILE = 'artifacts/lab/session.json';
 export const SESSIONS_DIR = 'artifacts/lab/sessions';
 export const SESSION_SCHEMA = 'lab-session-v1';
 export const HOOK = '.githooks/commit-msg';
-export const QUEUE_TOOL = 'tools/device/companion-queue.sh';
+export const QUEUE_TOOL = 'apps/lab/companion-queue.sh';
 /** A PENDING job older than this is stale (the operators note's doctor table: "older than 72 h"). */
 export const STALE_PENDING_HOURS = 72;
 /** An agent worktree idle this long, unlocked and with no process inside, is orphaned. */
@@ -258,7 +258,7 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
 
   function queueJobs() {
     if (queueOverride) return queueOverride();
-    const result = spawnSync('python3', [join(root, 'tools/device/companion-queue.py'), 'list', '--json'],
+    const result = spawnSync('python3', [join(root, 'apps/lab/companion-queue.py'), 'list', '--json'],
       { cwd: root, encoding: 'utf8', env: cleanEnv, timeout: 30000 });
     if (result.status !== 0) throw new Error((result.stderr || result.error?.message || 'no output').trim().split('\n').at(-1));
     return JSON.parse(result.stdout);
@@ -714,7 +714,7 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
       claim: { verb: 'morning', since: iso(from), at: iso(at), windows: windowRows, windowDir: win.dir, queue: activity, packs: packRows,
         pending: isUnknown(jobs) ? jobs : jobs.pending, todo,
         summary: nothing ? `nothing since ${iso(from)}: no overnight window record, no queue activity and no run pack` : null },
-      label: label('a summary of host records and packs'), target: REPOSITORY_TARGET, cite: [QUEUE_TOOL, 'docs/evidence/runs', 'tools/device/overnight-window.py', LAB_DOC],
+      label: label('a summary of host records and packs'), target: REPOSITORY_TARGET, cite: [QUEUE_TOOL, 'docs/evidence/runs', 'apps/lab/overnight-window.py', LAB_DOC],
       status: 'standing', supersededBy: null,
       notMeasured: [...(isUnknown(jobs) ? [jobs.reason] : []), 'each night\'s cause of death: a pack\'s outcome is the venue\'s report, graded by review',
         ...(win.records ? [] : [`no overnight window has left a record in ${win.dir}`])],

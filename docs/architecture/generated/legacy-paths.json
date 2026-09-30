@@ -213,6 +213,16 @@
       "notes": "Unmoved and byte for byte. The profile bytes are what every bundle binds by sha256 (profile.json); the path is what retained records cite."
     },
     {
+      "id": "lab.overnight-window-path",
+      "path": "tools/device/overnight-window.py",
+      "category": "host-unit-path",
+      "lifecycle": "compatibility",
+      "owner": "apps/lab",
+      "replacement": "apps/lab/overnight-window.py, which renders its units from its own path",
+      "removalGate": "Every host that installed the window's systemd units has re-rendered them from the new path (python3 apps/lab/overnight-window.py units --serial ID --out ~/.config/systemd/user, then systemctl --user daemon-reload), so no ExecStart names tools/device/overnight-window.py",
+      "notes": "A thin forwarder: it execs apps/lab/overnight-window.py with every argument unchanged."
+    },
+    {
       "id": "package.legacy-engine-command",
       "path": "package.json#scripts.test:legacy:engine",
       "category": "command",

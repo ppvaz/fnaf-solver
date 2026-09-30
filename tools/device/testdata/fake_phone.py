@@ -35,6 +35,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 DEVICE = HERE.parent
 sys.path.insert(0, str(DEVICE))
+sys.path.insert(0, str(HERE.parents[2] / "packages/play/src/safety"))  # the serial lease: Play's
 
 SERIAL = "FAKE0001"
 LAUNCHER = "com.fake.launcher/com.fake.launcher.Home"

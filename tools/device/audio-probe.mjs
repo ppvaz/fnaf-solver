@@ -16,7 +16,7 @@
  * near 0), never as "no event happened".
  *
  * Needs a running capture, RECORD_AUDIO granted to the Companion, and the
- * serial lease (run under tools/device/device-lock-exec.py or a night wrapper).
+ * serial lease (run under packages/play/src/safety/device-lock-exec.py or a night wrapper).
  * `--out` appends one JSON row per probe for a retained comparison.
  */
 import { appendFileSync } from 'node:fs';
@@ -63,7 +63,7 @@ async function main(argv) {
   let options;
   try { options = parseArgs(argv); } catch (error) { fail(error.message); }
   if (process.env.FNAF_LEASE_HELD !== '1' && process.env.FNAF1_LEASE_HELD !== '1' && process.env.CUE_HELPER_LEASE_OWNER_PID === undefined)
-    fail('run under the serial lease (tools/device/device-lock-exec.py SERIAL -- ...)');
+    fail('run under the serial lease (packages/play/src/safety/device-lock-exec.py SERIAL -- ...)');
   let serial;
   try { ({ serial } = resolveSerial({ names: ['FNAF_SERIAL', 'ANDROID_SERIAL'] })); } catch (error) { fail(error.message); }
   const port = new AdbCompanionPort({ serial });

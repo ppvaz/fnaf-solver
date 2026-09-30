@@ -168,7 +168,7 @@ Pedro's own, and he uses it for everything else in his life. Queued jobs run on
 it overnight, on the charger with stay-awake on, and only inside a scheduled
 window. Everything the window changes is recorded before it changes it and
 restored at the end, however the window ends.
-`tools/device/overnight-window.py` is the runner; its row in
+`apps/lab/overnight-window.py` is the runner; its row in
 [`tools/device/README.md`](../../tools/device/README.md) has the full contract.
 
 - **Default window: 01:30-07:00 local.** `--start` and `--end` (or
@@ -227,8 +227,8 @@ restored at the end, however the window ends.
 
   ```sh
   node tools/device/local-profile.mjs set <serial>                       # once per host (untracked)
-  python3 tools/device/overnight-window.py preflight                     # read-only: FIT, or why not
-  python3 tools/device/overnight-window.py units --out ~/.config/systemd/user
+  python3 apps/lab/overnight-window.py preflight                     # read-only: FIT, or why not
+  python3 apps/lab/overnight-window.py units --out ~/.config/systemd/user
   systemctl --user daemon-reload
   systemctl --user enable --now fnaf2-overnight-window.timer             # opens at 01:30 every night
   systemctl --user start fnaf2-overnight-window.service                  # or: arm now, at bedtime
@@ -247,7 +247,7 @@ Pedro answered "Yes, play nights". A night job is the queue's one
 game-playing word:
 
 ```sh
-tools/device/companion-queue.sh enqueue night --game fnaf2 \
+apps/lab/companion-queue.sh enqueue night --game fnaf2 \
   --winner tools/device/campaign-night7-k3-winner.json --night 7 [--label k3a] [--audio]
 ```
 

@@ -156,7 +156,7 @@ try {
   // The serial comes from --serial, or from the local profile when none is given.
   const holdLease = async (serial, body) => {
     const holder = spawn('python3', ['-c', [
-      'import sys, time', `sys.path.insert(0, ${JSON.stringify(join(ROOT, 'tools/device'))})`,
+      'import sys, time', `sys.path.insert(0, ${JSON.stringify(join(ROOT, 'packages/play/src/safety'))})`,
       'from companion_device_lock import DeviceLock', `lease = DeviceLock(${JSON.stringify(serial)}); lease.__enter__()`,
       "print('held', flush=True)", 'time.sleep(120)'].join('\n')],
     { env: { ...process.env, CUE_HELPER_LOCK_DIR: locks }, stdio: ['ignore', 'pipe', 'inherit'] });

@@ -54,12 +54,13 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
+sys.path.insert(0, str(HERE.parents[1] / "packages/play/src/safety"))  # the serial lease: Play's
 import night_jobs  # noqa: E402
 from companion_device_lock import DeviceBusy, DeviceLock, lock_dir  # noqa: E402
 
-SETUP_COMMAND = [str(HERE / "companion-setup.sh")]
-SNAP_COMMAND = ["node", str(HERE / "native-frame.mjs")]
-TITLE_COMMAND = [sys.executable, str(HERE / "title-observe.py")]
+SETUP_COMMAND = [str(HERE / "../../tools/device/companion-setup.sh")]
+SNAP_COMMAND = ["node", str(HERE / "../../tools/device/native-frame.mjs")]
+TITLE_COMMAND = [sys.executable, str(HERE / "../../tools/device/title-observe.py")]
 AUDIO_COMMAND = [str(ROOT / "tools/cue/bt-audio-link.sh")]
 # A test replaces the runner with a stand-in that receives the real argv.
 RUNNER_PREFIX: list[str] | None = None

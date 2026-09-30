@@ -130,15 +130,9 @@ const EXCLUDED = new Map([
   ['minus3-frame-light.mjs', 'the device-proven Minus 3 frame-light recipe and its edge-hash checks, gated by test-minus3-frame-light.mjs'],
   ['mask-calibrate.py', 'maskOn grid-anchor fitter, gated by test-mask-calibrate.py; calibration frames are inputs, not a night-run artifact'],
   ['companion-setup.py', 'helper setup and target-menu check, gated by test-companion-setup.py; it prepares a session rather than grading one'],
-  ['companion-queue.py', 'persistent job queue for absent-device work, gated by test-companion-queue.py'],
-  ['companion_device_lock.py', 'per-serial exclusive lease library, gated by test-companion-device-lock.py'],
   ['local-profile.mjs', 'resolves the handset serial a live runner addresses (FNAF_SERIAL, then the untracked local profile) before any adb call; it reads no run, gated by test-night-run-dry.mjs'],
-  ['device-lock-exec.py', 'holds the lease around one bounded command, gated by test-companion-device-lock.py'],
   ['companion-setup.sh', 'thin one-serial wrapper; all UI work and every gate belong to companion-setup.py'],
-  ['companion-queue.sh', 'thin wrapper that deliberately does NOT select a device, so enqueue/list work while the phone is absent; the queue gate is test-companion-queue.py'],
-  ['night-job.py', 'runs one queued night of a committed winner through its registered runner (night-run.sh, fnaf1-winner.mjs, fnaf4-run.sh) and observes the title before and after it; night-run.sh then grades, and the window packs. test-night-job.py gates it'],
-  ['night_jobs.py', 'night-job vocabulary module (winner custody, binding hash, budget, title expectation, runner argv) for the queue and night-job.py, gated by test-night-job.py'],
-  ['overnight-window.py','the scheduled window that RUNS the queue on the owner\'s phone and restores its settings; it grades no run (a job\'s own runner does), and test-overnight-window.py gates its restore, refusal, deadline and lease contract'],
+  ['overnight-window.py', 'a forwarder to apps/lab/overnight-window.py, kept while a host\'s installed systemd units name this path (legacy-paths.json lab.overnight-window-path); the window itself is gated in apps/lab'],
 
   // The three below have NO gate. They are excused here so the check can be
   // green about the other 216 scripts, and they are recorded as open gaps in

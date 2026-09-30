@@ -236,7 +236,7 @@ const VERB_TOOLS = Object.freeze({ describe: solver.describe, query: solver.quer
   'lab.status': () => lab.status(), 'lab.next': () => lab.next(), 'lab.doctor': () => lab.doctor({ catalog: false }) });
 /** Tools whose op picks the arguments they take. */
 const OP_ARGUMENTS = Object.freeze({ jobs: JOB_ARGUMENTS, truth: TRUTH_ARGUMENTS });
-const QUEUE_CITE = Object.freeze(['tools/device/companion-queue.sh', SURFACE_DOC]);
+const QUEUE_CITE = Object.freeze(['apps/lab/companion-queue.sh', SURFACE_DOC]);
 
 /** A queue answer as a claim envelope: a queued, listed or held job measures nothing about the game. */
 function jobsEnvelope(op, args, result) {
@@ -252,7 +252,7 @@ function jobsEnvelope(op, args, result) {
       ? [result.status === 'HOLD' ? 'the pending jobs: the phone was absent, locked, asleep or ambiguous, so none ran'
         : 'what each job found: jobs op list reads its state']
       : ['whether the phone is present, awake and unlocked: only jobs op run reads it'],
-    reproducer: op === 'run' ? 'tools/device/companion-queue.sh run --wait 0' : 'tools/device/companion-queue.sh list --json',
+    reproducer: op === 'run' ? 'apps/lab/companion-queue.sh run --wait 0' : 'apps/lab/companion-queue.sh list --json',
   });
 }
 

@@ -190,7 +190,7 @@ try {
   assert.equal(ranked.actions[0].kind, 'fix', 'a hooks path that is unset comes first');
   assert.equal(ranked.actions[0].command, 'git config core.hooksPath .githooks');
   const s1 = ranked.actions.find(item => item.step === 'S1');
-  assert.equal(s1.command, 'tools/device/companion-queue.sh enqueue night --game fnaf2 --winner tools/device/campaign-night1-x-winner.json --night 1');
+  assert.equal(s1.command, 'apps/lab/companion-queue.sh enqueue night --game fnaf2 --winner tools/device/campaign-night1-x-winner.json --night 1');
   assert.ok(ranked.blocked.some(row => row.step === 'S3' && row.needs[0].startsWith('S2')), 'S3 waits on S2');
   assert.ok(ranked.actions.findIndex(item => item.step === 'S1') < ranked.actions.findIndex(item => item.step === 'S2'), 'S1 before S2');
   git(root, 'config', 'core.hooksPath', '.githooks');
@@ -222,7 +222,7 @@ try {
   assert.deepEqual(report.checks.map(item => item.id), ['hooks-path', 'stale-pending', 'push-gate-worktrees', 'agent-worktrees', 'node-modules',
     'local-profile', 'catalog-drift', 'memory', 'untracked-winner']);
   assert.equal(found('hooks-path')[0].remedy, 'git config core.hooksPath .githooks');
-  assert.equal(found('stale-pending')[0].remedy, 'tools/device/companion-queue.sh cancel cue-1-stale --reason stale');
+  assert.equal(found('stale-pending')[0].remedy, 'apps/lab/companion-queue.sh cancel cue-1-stale --reason stale');
   assert.equal(found('push-gate-worktrees')[0].remedy, `rm -r ${pushgate}`);
   assert.match(found('agent-worktrees')[0].remedy, new RegExp(`^git worktree remove ${agent.replaceAll('.', '\\.')}`));
   assert.deepEqual(found('node-modules').map(item => item.finding).sort(),
@@ -273,7 +273,7 @@ try {
   assert.deepEqual(morning.packs.map(pack => [pack.id, pack.tracked, pack.attested]), [['night7-q1-20260930T043100Z', false, false]]);
   assert.deepEqual(morning.todo.map(item => item.command), ['git add docs/evidence/runs/night7-q1-20260930T043100Z',
     'npm run evidence -- attest night7-q1-20260930T043100Z --by agent --note "<session>" && npm run evidence -- promote night7-q1-20260930T043100Z',
-    'tools/device/companion-queue.sh list']);
+    'apps/lab/companion-queue.sh list']);
   assert.equal(morning.summary, null);
   const quiet = claim(nightLab.lab.morning({ since: '2026-10-01T00:00:00Z' }));
   assert.match(quiet.summary, /^nothing since 2026-10-01T00:00:00\.000Z: no overnight window record, no queue activity and no run pack$/);

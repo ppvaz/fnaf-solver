@@ -146,6 +146,77 @@
       }
     },
     {
+      "id": "apps/lab/test/test-companion-queue.py",
+      "lane": "test:unit",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "device-transport"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "apps/lab/test/test-night-job.py",
+      "lane": "test:unit",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [
+        "time.sleep(0.1",
+        "time.sleep(0.5",
+        "time.sleep(0.1",
+        "time.sleep(0.5"
+      ],
+      "sharedResources": [
+        "device-transport",
+        "local-http-port"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "apps/lab/test/test-overnight-window.py",
+      "lane": "test:unit",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [
+        "time.sleep(600",
+        "time.sleep(600",
+        "time.sleep(0.02",
+        "time.sleep(0.002"
+      ],
+      "sharedResources": [
+        "device-transport"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "apps/trainer/test/activity-gate.test.mjs",
       "lane": "test:unit",
       "owner": "legacy migration",
@@ -1182,6 +1253,24 @@
         "device-transport"
       ],
       "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/test/test-companion-device-lock.py",
+      "lane": "test:contracts",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",
         "runs": 0,
@@ -2893,44 +2982,6 @@
       }
     },
     {
-      "id": "tools/device/test-companion-device-lock.py",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/device/test-companion-queue.py",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "device-transport"
-      ],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
       "id": "tools/device/test-companion-setup.py",
       "lane": "test:contracts",
       "owner": "legacy migration",
@@ -3658,32 +3709,6 @@
       }
     },
     {
-      "id": "tools/device/test-night-job.py",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [
-        "time.sleep(0.1",
-        "time.sleep(0.5",
-        "time.sleep(0.1",
-        "time.sleep(0.5"
-      ],
-      "sharedResources": [
-        "device-transport",
-        "local-http-port"
-      ],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
       "id": "tools/device/test-night-matrix.mjs",
       "lane": "test:contracts",
       "owner": "legacy migration",
@@ -3752,31 +3777,6 @@
       "fixedSleeps": [],
       "sharedResources": [],
       "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/device/test-overnight-window.py",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [
-        "time.sleep(600",
-        "time.sleep(600",
-        "time.sleep(0.02",
-        "time.sleep(0.002"
-      ],
-      "sharedResources": [
-        "device-transport"
-      ],
-      "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",
         "runs": 0,
