@@ -38,6 +38,7 @@ controller research, and device evidence form one program.
 | Find where the same thing is implemented twice | [`architecture/DUPLICATE-IMPLEMENTATION-MAP.md`](architecture/DUPLICATE-IMPLEMENTATION-MAP.md) |
 | Review the generated contract and command catalogs | [`architecture/generated/README.md`](architecture/generated/README.md) |
 | Read the workspace/core decision | [`decisions/0001-workspaces-and-core.md`](decisions/0001-workspaces-and-core.md) |
+| Read the kernel, contexts and vocabulary decision, and Pedro's 2026-09-29 answers | [`decisions/0002-kernel-contexts-vocabulary.md`](decisions/0002-kernel-contexts-vocabulary.md) |
 | Inspect evidence retention and claim ceilings | [`evidence/README.md`](evidence/README.md) |
 | Run device work safely | [`operations/DEVICE-SAFETY.md`](operations/DEVICE-SAFETY.md) |
 | See what each grade-run.sh video step feeds, which a frame trace can replace, and how the recording is decoded once | [`operations/GRADE-PIPELINE-STEPS.md`](operations/GRADE-PIPELINE-STEPS.md) |

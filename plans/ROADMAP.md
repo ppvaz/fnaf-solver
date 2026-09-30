@@ -294,6 +294,19 @@ identifies the seed during the night (65,536 -> 1), then plays that seed's plan.
   level.
 - The trainer and coach then teach it, and a person clears 10/20 on video, with
   the learning curve recorded.
+- **Closes when** a person clears Night 7 at 10/20 on the retail phone on a
+  counted, uncoached night, playing a route whose certification runs are
+  packed, and every counted attempt before that clear, won or lost, is in the
+  record as the learning curve.
+- **Rules (Pedro, 2026-09-29, [ADR 0002](../docs/decisions/0002-kernel-contexts-vocabulary.md)):**
+  - Pedro is the only participant until a second person plays. A written,
+    predeclared protocol and consent form come before anyone else's attempt is
+    recorded.
+  - The coach is off on counted nights. Coached nights are practice and never
+    count toward `P(win | H)`.
+  - A participant's attempts stay in the local Evidence Vault, out of git, until
+    they sign off at the study's close, so withdrawal before then is a real
+    deletion. After sign-off they are committed under a pseudonym and frozen.
 - **Artifact:**
   - the certification runs;
   - trainer code that a gate exercises;
@@ -326,6 +339,16 @@ FNaF 1, 3 and 4 go through the same chain: dump, model, census, device lane,
 pack, promotion. Then come the rebrand to `fnaf-solver` / `@sixam/*` (Plan 27)
 and the solver MCP with its claim envelope (Plan 28).
 
+- **Closes when** all three hold:
+  - FNaF 1, 3 and 4 have each been through the whole chain at least once: a
+    committed winner, a census naming its family and held-out block, a device
+    run pack of that winner, and a `PROMOTED_BY` edge for it;
+  - the repository, packages and MCP server carry the `fnaf-solver` /
+    `@sixam/*` names (Plan 27 commits A, B, C and R);
+  - the `fnaf-solver` MCP server answers every Plan 28 verb in the claim
+    envelope, and a contract test exercises each one.
+- **Artifact:** the three games' promotion edges and census records, and the
+  envelope's contract tests.
 - **Stands:**
   - **FNaF 1:** 4/20 reached 6 AM on 2 of 4 nights on the phone
     ([first 6 AM](../docs/evidence/fnaf1-420-first-6am-20260925.json)).
@@ -364,6 +387,12 @@ the same day, a queued `night` job plays one night of a committed winner
 there (`tools/device/night-job.py`). The title is observed before each night
 and after it, and each night's pack is written in the morning.
 
+- **Closes when** both hold:
+  - a morning report refutes a mechanism that no person queued an experiment
+    for, the runs that refuted it are packed, and a Review instrument, not the
+    planner, confirms the refutation on re-read;
+  - every entry in both mistake registers names the gate that enforces it, and
+    that gate runs in a CI lane.
 - **Artifact:** a morning report that refutes a mechanism nobody had queued,
   with the run bundles that did it.
 - **Absorbs** Plan 25 horizon 3 and Plans 07, 18 and 22.
@@ -375,6 +404,24 @@ and after it, and each night's pack is written in the morning.
 - **S5** needs S3's robustness field.
 - **S6** is already under way. Its gates are restated below.
 - **S7** comes last, because it automates S2 to S5.
+
+## The end state: Archive
+
+The project ends in an Archive state, whether every step closes first or Pedro
+stops it earlier. Archive is reached when all of these exist:
+
+- a signed, frozen tag on a green commit;
+- a final claims snapshot under `docs/evidence/`, produced by the promotions and
+  census queries rather than written by hand, with the retractions and refuted
+  routes included;
+- the Content Vault and the toolchain archived: the Docker images saved by
+  digest, the Python 2.7 converter environment exported, and the CTFAK and
+  Anaconda forks pushed where Pedro chooses;
+- the Evidence Vault replicated off this host, with a committed manifest that
+  maps every hash the evidence cites to where it resolves;
+- a "How to verify in 2030" page that starts from a clean clone and the
+  archived images, and says which claims can still be re-checked and which
+  cannot.
 
 ## Where the threads meet
 
@@ -395,8 +442,9 @@ and after it, and each night's pack is written in the morning.
 
 - **PAIRIP (Pedro, 2026-08-28).** No runtime attach to the retail APK, and no
   re-signing. The recompile is a personal research artifact. Dumps, generated
-  code, recordings and game frames are never committed. What is published is the
-  method and the equivalence evidence.
+  code, recordings and game frames are never committed, except the two README
+  clips (gate table below). Dump text is cited, never quoted (ADR 0002). What is
+  published is the method and the equivalence evidence.
 - **21^10 dial vectors** are reachable only through monotonicity, and that is a
   hypothesis to test, not a shortcut: Balloon Boy and Golden Freddy interact
   with other dials.
@@ -405,7 +453,8 @@ and after it, and each night's pack is written in the morning.
 - **One handset.** Plan 14 package 6 waits for a second device and is not
   counted against the path.
 - **S5 needs people:** volunteers, consent and a predeclared protocol. Feedback
-  comes only between attempts.
+  comes only between attempts. Until a second person plays, Pedro is the only
+  participant (S5's rules).
 - **A belief-state solution** is tractable only if the state quotient collapses
   to few classes. That too is a hypothesis.
 
@@ -458,6 +507,7 @@ Rows are from 2026-09-25 unless they carry another date.
 | "Agents never write `plan12-attestation.json`"; the attestation was "a person's file" | `CLAUDE.md` S1, `docs/evidence/README.md`, Plan 12, this file's S1 artifact, `tools/evidence-campaign.mjs` | **2026-09-27, Pedro:** "i give agents full permission, this is bullshit bureaucracy that is impeding progress". It held every executor-proven 6 AM one check short of promotion. | **Loosened.** An agent may write the attestation under delegation `pedro-2026-09-27`, and only through `npm run evidence -- attest`, which re-derives every other check from the pack and refuses to write on any failure. `plan12-attestation-v2` names its author (`attestedBy: {kind: 'agent', delegation, note}`, or a person by name), binds the pack sha256, and lists each check verified with the sha256 of its inputs. `promote` records a `PROMOTED_BY` edge in `docs/evidence/graph.json` naming the author and the custody, and `list`/`show` print both. The delegation covers attestations only: `PEDRO-OK` stays human-only and no agent bypasses a hook. |
 | `manifestComplete` requires `request.json`, so a pack recovered from its night-run log could not be promoted; recorded as "Pedro's decision" | `packPromotionChecks` (`tools/evidence-pack.mjs`), `CLAUDE.md` S1, this file's S1 | **2026-09-27, Pedro**, on recovered packs: "Accept fully". | **Loosened.** A recovered pack's manifest is complete when its result and events came back, the log it cites is withheld under the same sha256, the recovery check it cites is byte-identical, and its `lost` list is present (`packManifestComplete`). The `lost` list stays in the pack, the attestation, the edge and every reading. |
 | The Cue Helper queue "cannot hold ... game-control actions" (setup and screen checks only) | `tools/device/cue-helper-queue.py`, the MCP `cue.queue.enqueue` | Pedro, 2026-09-27, asked whether overnight windows may play full nights unattended on his phone: "Yes, play nights". S7's phone time needs the queue to hold a night. | **Loosened, 2026-09-27**, by one word: `night`, one night of a *committed* winner file, run by the runner its schema fixes. It still takes no shell text, coordinates or timing. Only the overnight window claims one (`run --nights`), never `cue.queue.run`. It refuses unless the observed title offers that night, and fits inside the window's deadline. `night-run.sh` now takes the serial lease, and the lease and queue are host-wide. |
+| "Recordings and game frames are never committed" | `CONTRIBUTING.md`, this file's Boundaries | `e6de745` re-added two gameplay GIFs (12.4 MB) the day after `701f5ab` dropped committed game frames, and the exception lived only in a commit message. | **Loosened, 2026-09-29, Pedro:** a written exception for at most two README clips, `docs/img/night7-teach-panel-cycle22.gif` and `docs/img/fnaf1-420-teach-panel-bonnie.gif`, each 4 MB or less. Any other game media is refused: the four `tearing-vs-flash` test frames were removed in `b253d98`, and the gate that refuses new media is open work. |
 
 ## Gates changed on 2026-09-27 (Companion rework)
 
