@@ -8,14 +8,14 @@
 // sent. The shell and Python copies left with the legacy lane on 2026-09-25 and
 // hid-sweep-probe.mjs now re-exports the transport's function, so two remain:
 //
-//   packages/adapters/src/transports/hid.js   Math.floor   the campaign executor
+//   packages/play/src/venues/phone/hid.js    Math.floor   the campaign executor
 //   android/.../NightRunner.java              int /        the Companion's runner
 //
 // The transport is the authority: it is what presses the phone.
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { toRaw } from '@sixam/adapters/transports/hid';
+import { toRaw } from '@sixam/play/venues/phone/hid';
 import { toRaw as probeToRaw, COORDS } from './hid-sweep-probe.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));

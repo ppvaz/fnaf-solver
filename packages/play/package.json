@@ -1,0 +1,16 @@
+{
+  "name": "@sixam/play",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@sixam/kernel": "file:../kernel",
+    "@sixam/source": "file:../source"
+  },
+  "exports": {
+    ".": "./src/index.js",
+    "./phone/*": "./src/phone/*.js",
+    "./venues/phone/*": "./src/venues/phone/*.js",
+    "./sensors/fnaf2/*": "./src/sensors/fnaf2/*.js"
+  }
+}

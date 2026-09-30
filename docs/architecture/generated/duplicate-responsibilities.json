@@ -15,7 +15,7 @@
     },
     {
       "responsibility": "physical actuation",
-      "owner": "@sixam/adapters",
+      "owner": "@sixam/play",
       "legacy": [
         "tools/device/actuator.mjs"
       ]

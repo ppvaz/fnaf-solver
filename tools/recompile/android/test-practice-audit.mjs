@@ -2,7 +2,7 @@
 // stream is the campaign transport's vocabulary, glued and cut log rows are
 // read safely, and the chain's verdicts follow the pumps: a contact whose press
 // and release one pump drains is INVISIBLE. No device.
-import { HID_FEATURE_REPORTS } from '@sixam/adapters';
+import { HID_FEATURE_REPORTS } from '@sixam/play';
 import { MONITOR_POINT, READY_DELAY_MS, SYNC, chain, jsonl, plan, stream } from './practice-audit.mjs';
 
 const check = (ok, message) => { if (!ok) throw new Error(message); };

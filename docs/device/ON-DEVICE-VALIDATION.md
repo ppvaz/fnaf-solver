@@ -63,7 +63,7 @@ Regression gate: `npm run test:device:calibration` (also in CI's contracts lane)
 
 ### Measured clock maps and live-gate scaffolding (2026-09-05, follow-on)
 
-`fitClockMap` (`packages/adapters/src/clocks.js`) produces `clock-map-v1`
+`fitClockMap` (`packages/play/src/phone/clocks.js`) produces `clock-map-v1`
 artifacts from bracketed anchor samples by interval arithmetic, not
 statistics: every pairwise slope interval must contain the true rate, so the
 intersection bounds it and one sample whose bounds are violated refuses the
@@ -90,7 +90,7 @@ per-boot measurements: re-measure per live session and never reuse across a
 reboot.
 
 Two live-gate contracts are now formal. A `calibration-state-v1` artifact
-(`packages/adapters/src/calibration-state-rule.js`) binds a fitted
+(`packages/play/src/sensors/fnaf2/calibration-state-rule.js`) binds a fitted
 `monitor-rule-v1` plus a fitted `mask-rule-v1` under one sha256 digest;
 `composeModernDevice` enforces the digest when the profile binds
 `calibrations.calibration-state`, and `measureCalibrationState` resolves

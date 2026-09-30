@@ -29,7 +29,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { performance } from 'node:perf_hooks';
 import { AdbDeviceBridge } from '../../apps/device/src/adb-bridge.js';
 import { AdbHidProcess } from '../../apps/device/src/physical-ports.js';
-import { HidWireTransport } from '../../packages/adapters/src/transports/hid.js';
+import { HidWireTransport } from '../../packages/play/src/venues/phone/hid.js';
 import { resolveSerial } from './local-profile.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));

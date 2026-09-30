@@ -6,7 +6,7 @@ independent of the camera feed behind it.  This tool searches the helper's
 20x9 point-sampled grid -- cell by cell, luma and yellowness -- for the cells
 that separate labelled monitor-up frames from office-down and mask frames,
 and emits the versioned ``monitor-rule-v1`` artifact that
-``packages/adapters/src/monitor-rule.js`` consumes.  The runtime reads those
+``packages/play/src/sensors/fnaf2/monitor-rule.js`` consumes.  The runtime reads those
 anchor cells through the existing ``GRID`` verb; no APK change is required.
 
 Rule semantics are strict: a frame is monitor-up only when every anchor reads

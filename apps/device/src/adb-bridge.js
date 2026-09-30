@@ -20,7 +20,7 @@ import { execFile as execFileCallback } from 'node:child_process';
 import { promisify } from 'node:util';
 import { parseCueHelperEndpoint } from './physical-ports.js';
 import { restartCueHelperCapture as defaultRestartCueHelperCapture } from './cue-helper-capture.js';
-import { readVenueIdentity } from '@sixam/adapters';
+import { readVenueIdentity } from '@sixam/play';
 import { compareVenueIdentity } from '@sixam/kernel/contracts';
 
 const execFile = promisify(execFileCallback);

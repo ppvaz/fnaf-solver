@@ -144,7 +144,7 @@ vector pattern already used by `tools/contract-vectors.py` (§20).
 Five host-side fitters: `monitor-calibrate.py` (424), `camera-calibrate.py`
 (304), `watch-calibrate.py` (336), `mask-calibrate.py` (267),
 `screen-calibrate.py` (237). Their consumers on the JS side are
-`packages/adapters/src/monitor-rule.js`, `camera-rule.js`, and
+`packages/play/src/sensors/fnaf2/monitor-rule.js`, `camera-rule.js`, and
 `calibration-state-rule.js`.
 
 The **fitting algorithm is not duplicated** — see §1: `mask-calibrate.py` and
@@ -175,7 +175,7 @@ practice **28 tracked files invoke `adb` directly**, led by
 `tools/device/legacy-trial.sh` (55 call sites), `trial-maskcamp.sh` (19),
 `hid-sweep-probe.sh` (16), `query-cue-helper.sh` and `capture-screen-sample.sh`
 (10 each). `apps/device/src/adb-device-local-executor.js` (974) holds the
-sanctioned device-local path; `packages/adapters/src/transports/hid.js` and
+sanctioned device-local path; `packages/play/src/venues/phone/hid.js` and
 `transports/cue-helper.js` hold the codecs and deliberately open nothing.
 
 `legacy-paths.json` already records the legacy runners with removal gates, so

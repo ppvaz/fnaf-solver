@@ -48,8 +48,8 @@
       "imports": [
         "./cue-helper-capture.js",
         "./physical-ports.js",
-        "@sixam/adapters",
         "@sixam/kernel/contracts",
+        "@sixam/play",
         "node:child_process",
         "node:util"
       ]
@@ -61,7 +61,7 @@
         "./control-effect.js",
         "./device-shell.js",
         "./hid-schedule.js",
-        "@sixam/adapters",
+        "@sixam/play",
         "node:child_process",
         "node:util"
       ]
@@ -133,8 +133,8 @@
         "./custom-night.js",
         "./physical-ports.js",
         "./venue.js",
-        "@sixam/adapters",
         "@sixam/kernel/contracts",
+        "@sixam/play",
         "@sixam/source",
         "node:fs/promises",
         "node:path",
@@ -172,7 +172,7 @@
       "imports": [
         "./artifact-executor.js",
         "./device-local-executor.js",
-        "@sixam/adapters",
+        "@sixam/play",
         "@sixam/source"
       ]
     },
@@ -197,7 +197,7 @@
         "./night-anchor.js",
         "./physical-ports.js",
         "./timed-start.js",
-        "@sixam/adapters",
+        "@sixam/play",
         "node:child_process",
         "node:fs",
         "node:fs/promises",
@@ -208,14 +208,14 @@
     {
       "file": "apps/device/src/night-anchor.js",
       "imports": [
-        "@sixam/adapters/night-onset"
+        "@sixam/play/phone/night-onset"
       ]
     },
     {
       "file": "apps/device/src/physical-ports.js",
       "imports": [
-        "@sixam/adapters/transports/companion-status",
-        "@sixam/adapters/transports/cue-helper",
+        "@sixam/play/venues/phone/companion-status",
+        "@sixam/play/venues/phone/cue-helper",
         "node:child_process",
         "node:fs",
         "node:net"
@@ -259,7 +259,7 @@
     {
       "file": "apps/device/test/calibration-state-rule.test.js",
       "imports": [
-        "@sixam/adapters",
+        "@sixam/play",
         "node:assert/strict"
       ]
     },
@@ -324,7 +324,7 @@
     {
       "file": "apps/device/test/clock-map.test.js",
       "imports": [
-        "@sixam/adapters",
+        "@sixam/play",
         "node:assert/strict"
       ]
     },
@@ -520,110 +520,6 @@
       ]
     },
     {
-      "file": "packages/adapters/src/calibration-state-rule.js",
-      "imports": [
-        "./monitor-rule.js",
-        "node:crypto"
-      ]
-    },
-    {
-      "file": "packages/adapters/src/camera-rule.js",
-      "imports": [
-        "node:crypto"
-      ]
-    },
-    {
-      "file": "packages/adapters/src/clocks.js",
-      "imports": [
-        "@sixam/kernel/time"
-      ]
-    },
-    {
-      "file": "packages/adapters/src/index.js",
-      "imports": [
-        "./button-strokes.js",
-        "./calibration-state-rule.js",
-        "./camera-rule.js",
-        "./clocks.js",
-        "./control-anchor.js",
-        "./control-exclusion.js",
-        "./monitor-rule.js",
-        "./transports/android-venue.js",
-        "./transports/companion-status.js",
-        "./transports/cue-helper.js",
-        "./transports/hid.js"
-      ]
-    },
-    {
-      "file": "packages/adapters/src/monitor-rule.js",
-      "imports": [
-        "node:crypto"
-      ]
-    },
-    {
-      "file": "packages/adapters/src/transports/android-venue.js",
-      "imports": [
-        "@sixam/kernel/contracts",
-        "node:crypto"
-      ]
-    },
-    {
-      "file": "packages/adapters/test/android-venue.test.js",
-      "imports": [
-        "../src/transports/android-venue.js",
-        "@sixam/kernel/contracts",
-        "node:assert/strict",
-        "node:crypto",
-        "node:fs",
-        "node:url"
-      ]
-    },
-    {
-      "file": "packages/adapters/test/camera-rule.test.js",
-      "imports": [
-        "../src/camera-rule.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/adapters/test/companion-status.test.js",
-      "imports": [
-        "../src/transports/companion-status.js",
-        "node:assert/strict",
-        "node:fs"
-      ]
-    },
-    {
-      "file": "packages/adapters/test/conformance.test.js",
-      "imports": [
-        "../src/clocks.js",
-        "../src/transports/cue-helper.js",
-        "../src/transports/hid.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/adapters/test/control-exclusion.test.js",
-      "imports": [
-        "../src/control-exclusion.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/adapters/test/monitor-rule.test.js",
-      "imports": [
-        "../src/monitor-rule.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/adapters/test/night-onset.test.js",
-      "imports": [
-        "@sixam/adapters/night-onset",
-        "node:assert/strict"
-      ]
-    },
-    {
       "file": "packages/core/src/contracts/index.js",
       "imports": [
         "@sixam/kernel/contracts",
@@ -812,6 +708,110 @@
       "file": "packages/kernel/test/venue-identity.test.js",
       "imports": [
         "../src/contracts/index.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/play/src/index.js",
+      "imports": [
+        "./phone/android-venue.js",
+        "./phone/clocks.js",
+        "./phone/control-anchor.js",
+        "./phone/control-exclusion.js",
+        "./sensors/fnaf2/button-strokes.js",
+        "./sensors/fnaf2/calibration-state-rule.js",
+        "./sensors/fnaf2/camera-rule.js",
+        "./sensors/fnaf2/monitor-rule.js",
+        "./venues/phone/companion-status.js",
+        "./venues/phone/cue-helper.js",
+        "./venues/phone/hid.js"
+      ]
+    },
+    {
+      "file": "packages/play/src/phone/android-venue.js",
+      "imports": [
+        "@sixam/kernel/contracts",
+        "node:crypto"
+      ]
+    },
+    {
+      "file": "packages/play/src/phone/clocks.js",
+      "imports": [
+        "@sixam/kernel/time"
+      ]
+    },
+    {
+      "file": "packages/play/src/sensors/fnaf2/calibration-state-rule.js",
+      "imports": [
+        "./monitor-rule.js",
+        "node:crypto"
+      ]
+    },
+    {
+      "file": "packages/play/src/sensors/fnaf2/camera-rule.js",
+      "imports": [
+        "node:crypto"
+      ]
+    },
+    {
+      "file": "packages/play/src/sensors/fnaf2/monitor-rule.js",
+      "imports": [
+        "node:crypto"
+      ]
+    },
+    {
+      "file": "packages/play/test/android-venue.test.js",
+      "imports": [
+        "../src/phone/android-venue.js",
+        "@sixam/kernel/contracts",
+        "node:assert/strict",
+        "node:crypto",
+        "node:fs",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/play/test/camera-rule.test.js",
+      "imports": [
+        "../src/sensors/fnaf2/camera-rule.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/play/test/companion-status.test.js",
+      "imports": [
+        "../src/venues/phone/companion-status.js",
+        "node:assert/strict",
+        "node:fs"
+      ]
+    },
+    {
+      "file": "packages/play/test/conformance.test.js",
+      "imports": [
+        "../src/phone/clocks.js",
+        "../src/venues/phone/cue-helper.js",
+        "../src/venues/phone/hid.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/play/test/control-exclusion.test.js",
+      "imports": [
+        "../src/phone/control-exclusion.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/play/test/monitor-rule.test.js",
+      "imports": [
+        "../src/sensors/fnaf2/monitor-rule.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/play/test/night-onset.test.js",
+      "imports": [
+        "@sixam/play/phone/night-onset",
         "node:assert/strict"
       ]
     },
@@ -1943,6 +1943,7 @@
     {
       "file": "tools/architecture-test.js",
       "imports": [
+        "../../../apps/desktop/src/lab.mjs",
         "../../../apps/device/src/campaign.js",
         "../../../apps/device/src/cli.js",
         "../../../tools/device/bundle.mjs",
@@ -1951,7 +1952,7 @@
         "../src/index.js",
         "./clockwork/index.js",
         "./labels.js",
-        "@sixam/adapters/night-onset",
+        "./phone/clocks.js",
         "@sixam/core/contracts",
         "@sixam/core/control",
         "@sixam/core/mechanics",
@@ -1959,6 +1960,8 @@
         "@sixam/device",
         "@sixam/kernel",
         "@sixam/kernel/contracts",
+        "@sixam/play",
+        "@sixam/play/phone/night-onset",
         "@sixam/propose",
         "@sixam/propose/fnaf2",
         "@sixam/propose/seeds",
@@ -2232,7 +2235,7 @@
       "file": "tools/device/explore-step.mjs",
       "imports": [
         "../../apps/device/src/physical-ports.js",
-        "../../packages/adapters/src/transports/hid.js",
+        "../../packages/play/src/venues/phone/hid.js",
         "./local-profile.mjs",
         "node:child_process",
         "node:fs",
@@ -2265,7 +2268,7 @@
       "imports": [
         "../../apps/device/src/adb-bridge.js",
         "../../apps/device/src/physical-ports.js",
-        "../../packages/adapters/src/transports/hid.js",
+        "../../packages/play/src/venues/phone/hid.js",
         "../fnaf1-device-lane.mjs",
         "./fnaf1-detectors.mjs",
         "./fnaf1-menu-probe.mjs",
@@ -2295,7 +2298,7 @@
       "imports": [
         "../../apps/device/src/adb-bridge.js",
         "../../apps/device/src/physical-ports.js",
-        "../../packages/adapters/src/transports/hid.js",
+        "../../packages/play/src/venues/phone/hid.js",
         "./local-profile.mjs",
         "node:child_process",
         "node:crypto",
@@ -2312,7 +2315,7 @@
       "imports": [
         "../../apps/device/src/adb-bridge.js",
         "../../apps/device/src/physical-ports.js",
-        "../../packages/adapters/src/transports/hid.js",
+        "../../packages/play/src/venues/phone/hid.js",
         "./local-profile.mjs",
         "node:child_process",
         "node:crypto",
@@ -2350,7 +2353,7 @@
       "file": "tools/device/fnaf3-run.mjs",
       "imports": [
         "../../apps/device/src/physical-ports.js",
-        "../../packages/adapters/src/transports/hid.js",
+        "../../packages/play/src/venues/phone/hid.js",
         "./fnaf3-detectors.mjs",
         "./local-profile.mjs",
         "./native-regions.mjs",
@@ -2386,7 +2389,7 @@
       "file": "tools/device/fnaf4-run.mjs",
       "imports": [
         "../../apps/device/src/physical-ports.js",
-        "../../packages/adapters/src/transports/hid.js",
+        "../../packages/play/src/venues/phone/hid.js",
         "./audio-players.mjs",
         "./fnaf4-fredbear.mjs",
         "./local-profile.mjs",
@@ -2420,7 +2423,7 @@
     {
       "file": "tools/device/hid-sweep-probe.mjs",
       "imports": [
-        "@sixam/adapters/transports/hid",
+        "@sixam/play/venues/phone/hid",
         "node:url"
       ]
     },
@@ -2438,7 +2441,7 @@
       "file": "tools/device/intersection-state-gate.mjs",
       "imports": [
         "../../apps/device/src/physical-ports.js",
-        "@sixam/adapters",
+        "@sixam/play",
         "node:fs",
         "node:fs/promises",
         "node:path"
@@ -2578,7 +2581,7 @@
     {
       "file": "tools/device/phase-reconstruct.mjs",
       "imports": [
-        "@sixam/adapters/night-onset",
+        "@sixam/play/phone/night-onset",
         "@sixam/source/fnaf2",
         "node:fs",
         "node:path",
@@ -2689,7 +2692,7 @@
     {
       "file": "tools/device/tap-stall-audit.mjs",
       "imports": [
-        "@sixam/adapters",
+        "@sixam/play",
         "node:fs",
         "node:path",
         "node:url"
@@ -2758,7 +2761,7 @@
     {
       "file": "tools/device/test-control-anchor.mjs",
       "imports": [
-        "../../packages/adapters/src/control-anchor.js",
+        "../../packages/play/src/phone/control-anchor.js",
         "@sixam/source",
         "node:assert/strict",
         "node:fs",
@@ -2871,7 +2874,7 @@
     {
       "file": "tools/device/test-fnaf4-fredbear.mjs",
       "imports": [
-        "../../packages/adapters/src/transports/hid.js",
+        "../../packages/play/src/venues/phone/hid.js",
         "./fnaf4-fredbear.mjs",
         "./fnaf4-run.mjs",
         "./night-kit.mjs",
@@ -2919,7 +2922,7 @@
       "file": "tools/device/test-intersection-state-gate.mjs",
       "imports": [
         "./intersection-state-gate.mjs",
-        "@sixam/adapters",
+        "@sixam/play",
         "node:assert/strict",
         "node:fs/promises"
       ]
@@ -2965,7 +2968,7 @@
     {
       "file": "tools/device/test-native-regions.mjs",
       "imports": [
-        "../../packages/adapters/src/transports/cue-helper.js",
+        "../../packages/play/src/venues/phone/cue-helper.js",
         "./fnaf1-custom-run.mjs",
         "./fnaf1-detectors.mjs",
         "./native-regions.mjs",
@@ -3068,7 +3071,7 @@
       "file": "tools/device/test-screen-map.mjs",
       "imports": [
         "./hid-sweep-probe.mjs",
-        "@sixam/adapters/transports/hid",
+        "@sixam/play/venues/phone/hid",
         "node:fs",
         "node:path",
         "node:url"
@@ -3721,7 +3724,7 @@
       "file": "tools/recompile/android/practice-audit.mjs",
       "imports": [
         "../../device/tap-stall-audit.mjs",
-        "@sixam/adapters",
+        "@sixam/play",
         "node:child_process",
         "node:crypto",
         "node:fs",
@@ -3733,7 +3736,7 @@
       "file": "tools/recompile/android/rebuild-night.mjs",
       "imports": [
         "../../device/local-profile.mjs",
-        "@sixam/adapters",
+        "@sixam/play",
         "node:child_process",
         "node:crypto",
         "node:fs",
@@ -3745,7 +3748,7 @@
       "file": "tools/recompile/android/test-practice-audit.mjs",
       "imports": [
         "./practice-audit.mjs",
-        "@sixam/adapters"
+        "@sixam/play"
       ]
     },
     {
@@ -3830,7 +3833,7 @@
     {
       "file": "tools/recompile/phone-encounter-replay.mjs",
       "imports": [
-        "../../packages/adapters/src/button-strokes.js",
+        "../../packages/play/src/sensors/fnaf2/button-strokes.js",
         "../device/bundle.mjs",
         "../device/minus-toys-plan.mjs",
         "../encounter-replay.mjs",

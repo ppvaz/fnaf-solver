@@ -13,7 +13,7 @@
 // Usage: node hid-sweep-probe.mjs [spacingMs ...]   (default 240 160 120 100)
 import { pathToFileURL } from 'node:url';
 
-// The screen->HID transform is the transport's own (packages/adapters, the one
+// The screen->HID transform is the transport's own (packages/play, the one
 // the campaign executor presses with): 2400x1080 landscape onto the
 // portrait-natural HID axes, truncated. It was written here a second time until
 // 2026-09-25, beside a shell copy in the legacy runner and a Python one in
@@ -21,8 +21,8 @@ import { pathToFileURL } from 'node:url';
 // here). Both other copies are archived and this one re-exports the
 // transport's, so test-screen-map.mjs is left comparing the transport with the
 // Companion's Java copy.
-export { toRaw } from '@sixam/adapters/transports/hid';
-import { toRaw } from '@sixam/adapters/transports/hid';
+export { toRaw } from '@sixam/play/venues/phone/hid';
+import { toRaw } from '@sixam/play/venues/phone/hid';
 
 // No title coordinate lives here. Selecting a night is menu.sh's job, and it
 // is the only place that looks at the screen before pressing: it refuses when

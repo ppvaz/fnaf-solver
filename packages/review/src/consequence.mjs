@@ -72,7 +72,7 @@ export const CODE_AREAS = Object.freeze([
     || path === 'tools/device/cue-helper-mcp.mjs' || path === 'tools/evidence.js' },
   { area: 'companion', test: path => path.startsWith('android/companion/') },
   { area: 'trainer', test: path => path.startsWith('apps/trainer/') },
-  { area: 'controller', test: path => path.startsWith('apps/device/src/') || path.startsWith('packages/adapters/src/')
+  { area: 'controller', test: path => path.startsWith('packages/play/src/') || path.startsWith('apps/device/src/')
     || path.startsWith('tools/device/') },
 ].map(rule => Object.freeze(rule)));
 

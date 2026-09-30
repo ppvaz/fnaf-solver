@@ -4,7 +4,7 @@ ADR 0002's rule, `kernel <- source <- play <- propose -> review -> source`, in
 today's package names:
 
 ```text
-kernel <-- source <-- core, adapters, apps/device (play) <-- propose (research: its shim)
+kernel <-- source <-- play, core, apps/device (play) <-- propose (research: its shim)
               ^                                                   |
               |                                                   v
               +------------------------------------------- review (review)
@@ -23,16 +23,20 @@ an arrow points at what a package imports; review never imports play or propose
   `/control` subpath is a compatibility shim that re-exports propose, the one
   re-export of propose a package may carry (it is registered in
   `legacy-paths.json`, owned by `@sixam/propose`).
-- **adapters** report measured limitations; **apps/device** composes them with
-  a resolved, immutable profile that each run retains.
-- **propose** imports the kernel, source, core's Play modules and review, and
-  never the device shell (`apps/device`, `packages/adapters`, `tools/`,
+- **play** (`@sixam/play`) imports only itself, the kernel, source and Node
+  built-ins. It holds the phone's transports, clocks and night onset, and the
+  deprecated FNaF 2 grid/luma rules; nothing in a package imports it but
+  propose and a compatibility path registered as owned by `@sixam/play`
+  (`packages/adapters` keeps one link). **apps/device** composes it with a
+  resolved, immutable profile that each run retains.
+- **propose** imports the kernel, source, play, core's Play modules and review,
+  and never the device shell (the applications, `tools/`,
   `child_process`, `net`, `dgram`). Nothing imports propose except the
   applications and the registered shims. **research** is an empty
   compatibility shim: its two registered modules only re-export propose, for
   the engine-source files a bundle hashes.
-- **review** uses the kernel, source and core and never `apps/device`,
-  `packages/adapters`, `packages/propose` or `packages/research`. One edge is
+- **review** uses the kernel, source and core and never `packages/play`, an
+  application, `packages/adapters`, `packages/propose` or `packages/research`. One edge is
   still open: it compiles a committed winner through `tools/device/bundle.mjs`
   (and so, transitively, the research seed helpers and propose's controllers)
   to learn the hash a bundle records; it closes when `tools/device` is sorted by

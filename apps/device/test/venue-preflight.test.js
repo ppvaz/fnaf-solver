@@ -17,7 +17,7 @@ import { loadVenueBindings, renderVenueCheck } from '../src/venue.js';
 const SERIAL = 'FAKE0SERIAL1';
 const TARGET = 'com.scottgames.fnaf2:2.0.7+26';
 const DUMPSYS = readFileSync(fileURLToPath(new URL(
-  '../../../packages/adapters/test/fixtures/dumpsys-package-android15.txt', import.meta.url)), 'utf8');
+  '../../../packages/play/test/fixtures/dumpsys-package-android15.txt', import.meta.url)), 'utf8');
 const FINGERPRINT = 'motorola/fake/fake:15/V1FAKE.1/abc:user/release-keys';
 
 /** A phone whose venue answers can be changed between preflights. */

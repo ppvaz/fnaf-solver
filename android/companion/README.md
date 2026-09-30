@@ -116,7 +116,7 @@ no sensor data.
 
 | Request | Response | Notes |
 |---|---|---|
-| `STATUS <token>` | `OK schema=companion-status-v1 ...` | The versioned status line, for any target (`CompanionStatus.java`; host parser `packages/adapters/src/transports/companion-status.js`; both held to `tools/device/testdata/companion-status-v1.txt`). |
+| `STATUS <token>` | `OK schema=companion-status-v1 ...` | The versioned status line, for any target (`CompanionStatus.java`; host parser `packages/play/src/venues/phone/companion-status.js`; both held to `tools/device/testdata/companion-status-v1.txt`). |
 | `TARGET <token> [<package>\|<game>\|clear]` | `OK target=... game=... legacy=...` | Read or name the target (`Targets.java`, `tools/device/models/companion-targets-v1.json`). The FNaF 2 legacy readers run only while it is retail FNaF 2; refused while a FNaF 2 trace runs. |
 | `LEASE <token> <label>\|clear` | `OK lease=...` | A label for the phone's screen naming who holds the host's serial lease; the lease itself stays the host's lock. |
 | `GET <token>` | `OK <snapshot>` | FNaF 2 legacy snapshot (`Fnaf2Legacy.snapshotLine`): freshness, the grid-fitted `screen`, the stroke-derived `monitorUp`, both control stroke scores, the latched `nightOnsetImageNs` and the phone's `wallMs`; never an image. |

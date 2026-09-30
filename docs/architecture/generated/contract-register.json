@@ -142,27 +142,27 @@
     },
     {
       "id": "monitor-rule-v1",
-      "owner": "packages/adapters",
+      "owner": "packages/play",
       "kind": "artifact",
-      "validator": "packages/adapters/src/monitor-rule.js parseMonitorRule"
+      "validator": "packages/play/src/sensors/fnaf2/monitor-rule.js parseMonitorRule"
     },
     {
       "id": "camera-rule-v1",
-      "owner": "packages/adapters",
+      "owner": "packages/play",
       "kind": "artifact",
-      "validator": "packages/adapters/src/camera-rule.js parseCameraRule"
+      "validator": "packages/play/src/sensors/fnaf2/camera-rule.js parseCameraRule"
     },
     {
       "id": "calibration-state-v1",
-      "owner": "packages/adapters",
+      "owner": "packages/play",
       "kind": "artifact",
-      "validator": "packages/adapters/src/calibration-state-rule.js parseCalibrationStateRule"
+      "validator": "packages/play/src/sensors/fnaf2/calibration-state-rule.js parseCalibrationStateRule"
     },
     {
       "id": "control-exclusion-v1",
-      "owner": "packages/adapters",
+      "owner": "packages/play",
       "kind": "data",
-      "validator": "packages/adapters/src/control-exclusion.js reconcileExclusiveControls"
+      "validator": "packages/play/src/phone/control-exclusion.js reconcileExclusiveControls"
     },
     {
       "id": "device-campaign-v1",

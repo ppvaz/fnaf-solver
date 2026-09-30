@@ -6,7 +6,7 @@ except its two eye holes.  This tool searches the helper's 20x9 point-sampled
 grid -- cell by cell, luma and yellowness -- for the cells that separate
 labelled mask-on frames from mask-off frames, and emits the versioned
 ``mask-rule-v1`` artifact that
-``packages/adapters/src/calibration-state-rule.js`` consumes alongside the
+``packages/play/src/sensors/fnaf2/calibration-state-rule.js`` consumes alongside the
 already-fitted ``monitor-rule-v1``.  The runtime reads those anchor cells
 through the existing ``GRID`` verb; no APK change is required.
 

@@ -49,7 +49,7 @@ export const FACTS = Object.freeze({
     ],
   },
   // DELEGATED, so not ranked against actuating callers. The explicit helper
-  // fact is read inside `packages/adapters/src/monitor-rule.js`, and every
+  // fact is read inside `packages/play/src/sensors/fnaf2/monitor-rule.js`, and every
   // actuating caller reaches it through `measureMonitorUp`. At file
   // granularity this register cannot tell a producer from a caller that
   // delegates to one, and flagging the callers would be a false positive
@@ -497,7 +497,7 @@ export function anchorAimFor(winnerHash) {
     migratedFrom: migration ? { hash: asked, winner: migration.file } : null };
 }
 
-const SEARCH_DIRS = ['tools/device', 'apps/device/src', 'packages/adapters/src'];
+const SEARCH_DIRS = ['tools/device', 'apps/device/src', 'packages/play/src'];
 const SKIP = /^(test-|_)|\.test\.js$|fact-register/;
 
 function sources() {

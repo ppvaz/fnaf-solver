@@ -11,7 +11,7 @@
  * different handset, so each of those is a field here.
  *
  * Pure data and comparison. Reading the identity off a phone is the adapter's
- * job (packages/adapters/src/transports/android-venue.js); the device app
+ * job (packages/play/src/phone/android-venue.js); the device app
  * records it at preflight. A field that could not be read is `null` with its
  * reason in `unknown`, never a guess. The raw serial is never stored: the
  * handset is named by `handsetHash`, the first 16 hex of sha256(serial).

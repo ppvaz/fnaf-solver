@@ -366,7 +366,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "parseCompanionStatus",
       "conformanceFixtures": [
-        "packages/adapters/test/companion-status.test.js",
+        "packages/play/test/companion-status.test.js",
         "android/companion/test/com/ppvaz/fnafcompanion/CompanionStatusTest.java"
       ]
     },
@@ -427,7 +427,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "trajectory JSONL",
       "conformanceFixtures": [
-        "packages/adapters/test/conformance.test.js",
+        "packages/play/test/conformance.test.js",
         "apps/device/test/adb-device-local-executor.test.js"
       ]
     },
@@ -476,9 +476,9 @@
       "contractId": "monitor-rule-v1",
       "id": "monitor-rule-v1",
       "version": 1,
-      "owner": "packages/adapters",
+      "owner": "packages/play",
       "kind": "artifact",
-      "purpose": "Stable monitor-rule-v1 boundary for packages/adapters; its validator is packages/adapters/src/monitor-rule.js parseMonitorRule.",
+      "purpose": "Stable monitor-rule-v1 boundary for packages/play; its validator is packages/play/src/sensors/fnaf2/monitor-rule.js parseMonitorRule.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -487,9 +487,9 @@
       "unknownBehavior": "Invalid or unavailable data is rejected or represented as an explicit UNKNOWN state; it is never silently promoted.",
       "errorBehavior": "Reject malformed, incompatible, uncalibrated, or out-of-budget values at the boundary.",
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
-      "runtimeValidation": "packages/adapters/src/monitor-rule.js parseMonitorRule",
+      "runtimeValidation": "packages/play/src/sensors/fnaf2/monitor-rule.js parseMonitorRule",
       "conformanceFixtures": [
-        "packages/adapters/test/monitor-rule.test.js",
+        "packages/play/test/monitor-rule.test.js",
         "tools/device/test-monitor-calibrate.py"
       ]
     },
@@ -497,9 +497,9 @@
       "contractId": "camera-rule-v1",
       "id": "camera-rule-v1",
       "version": 1,
-      "owner": "packages/adapters",
+      "owner": "packages/play",
       "kind": "artifact",
-      "purpose": "Stable camera-rule-v1 boundary for packages/adapters; its validator is packages/adapters/src/camera-rule.js parseCameraRule.",
+      "purpose": "Stable camera-rule-v1 boundary for packages/play; its validator is packages/play/src/sensors/fnaf2/camera-rule.js parseCameraRule.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -508,9 +508,9 @@
       "unknownBehavior": "Invalid or unavailable data is rejected or represented as an explicit UNKNOWN state; it is never silently promoted.",
       "errorBehavior": "Reject malformed, incompatible, uncalibrated, or out-of-budget values at the boundary.",
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
-      "runtimeValidation": "packages/adapters/src/camera-rule.js parseCameraRule",
+      "runtimeValidation": "packages/play/src/sensors/fnaf2/camera-rule.js parseCameraRule",
       "conformanceFixtures": [
-        "packages/adapters/test/camera-rule.test.js",
+        "packages/play/test/camera-rule.test.js",
         "tools/device/test-camera-calibrate.py"
       ]
     },
@@ -518,9 +518,9 @@
       "contractId": "calibration-state-v1",
       "id": "calibration-state-v1",
       "version": 1,
-      "owner": "packages/adapters",
+      "owner": "packages/play",
       "kind": "artifact",
-      "purpose": "Stable calibration-state-v1 boundary for packages/adapters; its validator is packages/adapters/src/calibration-state-rule.js parseCalibrationStateRule.",
+      "purpose": "Stable calibration-state-v1 boundary for packages/play; its validator is packages/play/src/sensors/fnaf2/calibration-state-rule.js parseCalibrationStateRule.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -529,7 +529,7 @@
       "unknownBehavior": "Invalid or unavailable data is rejected or represented as an explicit UNKNOWN state; it is never silently promoted.",
       "errorBehavior": "Reject malformed, incompatible, uncalibrated, or out-of-budget values at the boundary.",
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
-      "runtimeValidation": "packages/adapters/src/calibration-state-rule.js parseCalibrationStateRule",
+      "runtimeValidation": "packages/play/src/sensors/fnaf2/calibration-state-rule.js parseCalibrationStateRule",
       "conformanceFixtures": [
         "apps/device/test/calibration-state-rule.test.js"
       ]
@@ -538,9 +538,9 @@
       "contractId": "control-exclusion-v1",
       "id": "control-exclusion-v1",
       "version": 1,
-      "owner": "packages/adapters",
+      "owner": "packages/play",
       "kind": "data",
-      "purpose": "Stable control-exclusion-v1 boundary for packages/adapters; its validator is packages/adapters/src/control-exclusion.js reconcileExclusiveControls.",
+      "purpose": "Stable control-exclusion-v1 boundary for packages/play; its validator is packages/play/src/phone/control-exclusion.js reconcileExclusiveControls.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -549,9 +549,9 @@
       "unknownBehavior": "Invalid or unavailable data is rejected or represented as an explicit UNKNOWN state; it is never silently promoted.",
       "errorBehavior": "Reject malformed, incompatible, uncalibrated, or out-of-budget values at the boundary.",
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
-      "runtimeValidation": "packages/adapters/src/control-exclusion.js reconcileExclusiveControls",
+      "runtimeValidation": "packages/play/src/phone/control-exclusion.js reconcileExclusiveControls",
       "conformanceFixtures": [
-        "packages/adapters/test/control-exclusion.test.js"
+        "packages/play/test/control-exclusion.test.js"
       ]
     },
     {
@@ -975,7 +975,7 @@
       "runtimeValidation": "validateVenueIdentity",
       "conformanceFixtures": [
         "packages/kernel/test/venue-identity.test.js",
-        "packages/adapters/test/android-venue.test.js"
+        "packages/play/test/android-venue.test.js"
       ]
     },
     {

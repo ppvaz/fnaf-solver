@@ -107,7 +107,7 @@ export const FNAF2_CONTROL_CATALOG = defineControlCatalog({
   sources: [
     'tools/device/artifact-commands.mjs (preconditions)',
     'apps/device/profiles/hid-mediaprojection.json viewScroll (anchors)',
-    'packages/adapters/src/monitor-rule.js, camera-rule.js; apps/device/src/control-effect.js (observations)',
+    'packages/play/src/sensors/fnaf2/monitor-rule.js, camera-rule.js; apps/device/src/control-effect.js (observations)',
   ],
 });
 

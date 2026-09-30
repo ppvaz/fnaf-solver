@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { reconcileExclusiveControls } from '../src/control-exclusion.js';
+import { reconcileExclusiveControls } from '../src/phone/control-exclusion.js';
 
 assert.deepEqual(reconcileExclusiveControls({ monitorUp: true, maskOn: null }), {
   monitorUp: true, maskOn: false,

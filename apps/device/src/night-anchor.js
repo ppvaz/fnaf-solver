@@ -3,7 +3,7 @@
  *
  * Two independent facts meet here:
  *   - WHEN the night began: the Cue Helper's latched onset (NightOnsetLatch.java,
- *     rule in @sixam/adapters/night-onset), read over a forwarded socket
+ *     rule in @sixam/play/phone/night-onset), read over a forwarded socket
  *     together with a device->host clock offset bounded by RTT/2;
  *   - WHETHER actuation may start: the lifecycle classifier's `state=night`,
  *     which stays the only authorization. Nothing is released before it.
@@ -26,7 +26,7 @@
  * plus release jitter. Actuation latency (effect frame minus injection) is a
  * separate quantity and never enters it.
  */
-import { latchedNightOnsetMs } from '@sixam/adapters/night-onset';
+import { latchedNightOnsetMs } from '@sixam/play/phone/night-onset';
 
 // The earliest a release may follow the latched onset is a latch hold plus a
 // lead, and only with authorizeOnLatch; otherwise it waits for the classifier.

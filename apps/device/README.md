@@ -9,7 +9,7 @@ dry by default (ADR 0002). The serial comes from `--serial`, `FNAF_SERIAL` or th
 untracked local profile (`tools/device/local-profile.mjs`).
 
 Public surface: the CLI and the Cue Helper MCP (`mcp.js`). Dependencies: core
-and adapters. Commands: `device:campaign`, `device:preflight`,
+and play. Commands: `device:campaign`, `device:preflight`,
 `device:clockmap` and `device:grade`. Artifacts: campaign
 directories under ignored `artifacts/`, which `npm run evidence -- pack` turns
 into committed run packs. The fixture service path, its composition roots, the
@@ -44,7 +44,7 @@ Preflight also records the venue identity (ADR 0002, decision 1). Its
 - the Companion's version;
 - a hash of the serial, never the serial.
 
-The adapter parses the record (`@sixam/adapters`, `transports/android-venue`)
+Play parses the record (`@sixam/play`, `phone/android-venue`)
 from fixed read-only `dumpsys package` and `getprop` queries. Core compares it
 (`compareVenueIdentity`) with what the run is bound to: a `qualification-v2`
 passed with `--qualification`, and any `venue-binding-v1` that names this
@@ -117,7 +117,7 @@ death retry, positive terminal proof, Custom Night readback, and save/menu
 proof.
 
 Monitor state comes from a calibrated `monitor-rule-v1` artifact
-(`packages/adapters/src/monitor-rule.js`), fitted offline from labeled
+(`packages/play/src/sensors/fnaf2/monitor-rule.js`, deprecated), fitted offline from labeled
 2400x1080 frames by `tools/device/monitor-calibrate.py`. The rule anchors on
 the monitor's map layout drawing — present if and only if the monitor is up,
 independent of the camera feed — read through the helper's `GRID` verb. The
@@ -132,7 +132,7 @@ helper-emitted explicit `monitorUp` field supersedes the derived value
 frame-by-frame.
 
 `cameraSelected` is the sibling fact (`camera-rule-v1`,
-`packages/adapters/src/camera-rule.js`, fitted by
+`packages/play/src/sensors/fnaf2/camera-rule.js`, deprecated, fitted by
 `tools/device/camera-calibrate.py` from `models/camera-rule-moto-g56-v207.json`):
 the twelve map buttons are measured watch pixels, the selected one renders
 yellow (bright ~194, dimmed ~96 while the wind control is held) against

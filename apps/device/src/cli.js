@@ -12,7 +12,7 @@ import { validateCampaignBundle } from './campaign-bundle.js';
 import { AdbCueHelperPort } from './physical-ports.js';
 import { installCampaignSignalHandlers } from './campaign-signal.js';
 import { loadVenueBindings, renderVenueCheck } from './venue.js';
-import { fitClockMap, CueHelperControlTransport } from '@sixam/adapters';
+import { fitClockMap, CueHelperControlTransport } from '@sixam/play';
 import { resolveDeviceProfile } from '@sixam/source';
 import { stableHash } from '@sixam/kernel/contracts';
 
@@ -272,7 +272,7 @@ async function main(argv = process.argv.slice(2)) {
       sourceClock: 'device-monotonic-ms', targetClock: 'host-monotonic-ms',
       sourceSession, targetSession: hostBoot,
       id, evidenceId: id, sourceUncertaintyMs: quantizationMs + (options.source === 'helper' ? 0 : 1) });
-    const { mapClockInterval } = await import('@sixam/adapters');
+    const { mapClockInterval } = await import('@sixam/play');
     const check = anchors[anchors.length - 2];
     const mapped = mapClockInterval({ clock: 'device-monotonic-ms', value: check.sourceMs }, {
       targetClock: 'host-monotonic-ms', targetSession: hostBoot, sourceSession,

@@ -13,7 +13,7 @@ import { appendFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CueHelperControlTransport, HidWireTransport, measureMaskOn, measureMonitorUp,
-  parseCameraRule, parseMaskRule, parseMonitorRule, reconcileExclusiveControls } from '@sixam/adapters';
+  parseCameraRule, parseMaskRule, parseMonitorRule, reconcileExclusiveControls } from '@sixam/play';
 import { configureCustomNight, selectCustomNightPreset, validateCustomNightCalibration, CUSTOM_NIGHT_CONTACT_MS } from './custom-night.js';
 import { AdbDeviceBridge } from './adb-bridge.js';
 import { composeCampaignPorts } from './campaign-composition.js';
@@ -496,7 +496,7 @@ export async function createCampaignPorts(options = {}) {
       // The helper's fixed downward-chevron scores, carried through untouched.
       // They are the strongest tell the device offers for whether the office
       // controls are drawn, and the cycle gate refuses rather than falling back
-      // to luma when they are missing (packages/adapters button-strokes.js).
+      // to luma when they are missing (packages/play/src/sensors/fnaf2/button-strokes.js).
       maskButtonDownstroke: frame.mask_button_downstroke ?? null,
       monitorButtonDownstroke: frame.monitor_button_downstroke ?? null,
       monitorUp,

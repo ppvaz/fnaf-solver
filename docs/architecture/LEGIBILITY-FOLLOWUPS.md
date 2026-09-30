@@ -139,7 +139,7 @@ game's control catalog; the game is derived, so no profile file changed and ever
 before. `profile-game.test.js` and `control-catalog.test.js` print it in `npm run test:contracts`.
 Open: one canonical schema source for the register's other contracts, deep experiment validation
 (seeds, claim levels, nested samples), capability relationships, and the lax JS check.
-**Owner:** `packages/kernel` (the contracts), `packages/source` (the catalog-generated validators), `packages/adapters`
+**Owner:** `packages/kernel` (the contracts), `packages/source` (the catalog-generated validators), `packages/play`
 **Evidence:** [`types.ts` (line 152)](../../packages/kernel/src/contracts/types.ts), [`index.js`](../../packages/kernel/src/contracts/index.js), `registry.js` line 69 (removed 2026-09-25)
 
 Compile-time types, JavaScript validators, the contract register, and generated

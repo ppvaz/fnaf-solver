@@ -22,7 +22,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { performance } from 'node:perf_hooks';
 import { AdbCueHelperPort, AdbHidProcess } from '../../apps/device/src/physical-ports.js';
-import { HidWireTransport } from '../../packages/adapters/src/transports/hid.js';
+import { HidWireTransport } from '../../packages/play/src/venues/phone/hid.js';
 import { loadRegionSet, registerSet } from './native-regions.mjs';
 import { Actor, RegionRecorder, RunRecord, startVideo } from './night-kit.mjs';
 import { Reader, boxLuma, loadPairs, medianLuma, occupancy, stateScore } from './fnaf3-detectors.mjs';

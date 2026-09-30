@@ -64,21 +64,21 @@
     {
       "id": "contract.calibration-state-v1",
       "kind": "CONTRACT",
-      "path": "packages/adapters/src/calibration-state-rule.js",
+      "path": "packages/play/src/sensors/fnaf2/calibration-state-rule.js",
       "line": 14,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.camera-rule-v1",
       "kind": "CONTRACT",
-      "path": "packages/adapters/src/camera-rule.js",
+      "path": "packages/play/src/sensors/fnaf2/camera-rule.js",
       "line": 15,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.camera-rule-v1",
       "kind": "CONTRACT",
-      "path": "packages/adapters/test/camera-rule.test.js",
+      "path": "packages/play/test/camera-rule.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -160,34 +160,34 @@
     {
       "id": "contract.companion-status-v1",
       "kind": "CONTRACT",
-      "path": "packages/adapters/src/transports/companion-status.js",
+      "path": "packages/play/src/venues/phone/companion-status.js",
       "line": 13,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.companion-status-v1",
       "kind": "CONTRACT",
-      "path": "packages/adapters/test/companion-status.test.js",
+      "path": "packages/play/test/companion-status.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.companion-status-v1",
       "kind": "CONTRACT",
-      "path": "packages/adapters/test/companion-status.test.js",
+      "path": "packages/play/test/companion-status.test.js",
       "line": 6,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.control-exclusion-v1",
       "kind": "CONTRACT",
-      "path": "packages/adapters/src/control-exclusion.js",
+      "path": "packages/play/src/phone/control-exclusion.js",
       "line": 9,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.control-exclusion-v1",
       "kind": "CONTRACT",
-      "path": "packages/adapters/test/control-exclusion.test.js",
+      "path": "packages/play/test/control-exclusion.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -240,21 +240,21 @@
     {
       "id": "contract.cue-helper-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/adapters/src/transports/cue-helper.js",
+      "path": "packages/play/src/venues/phone/cue-helper.js",
       "line": 5,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.cue-helper-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/adapters/src/transports/cue-helper.js",
+      "path": "packages/play/src/venues/phone/cue-helper.js",
       "line": 31,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.cue-helper-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/adapters/src/transports/cue-helper.js",
+      "path": "packages/play/src/venues/phone/cue-helper.js",
       "line": 48,
       "relation": "REFERENCES"
     },
@@ -558,14 +558,14 @@
     {
       "id": "contract.hid-executor-v1",
       "kind": "CONTRACT",
-      "path": "packages/adapters/src/transports/hid.js",
+      "path": "packages/play/src/venues/phone/hid.js",
       "line": 6,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.hid-executor-v1",
       "kind": "CONTRACT",
-      "path": "packages/adapters/test/conformance.test.js",
+      "path": "packages/play/test/conformance.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -584,14 +584,14 @@
     {
       "id": "contract.monitor-rule-v1",
       "kind": "CONTRACT",
-      "path": "packages/adapters/src/monitor-rule.js",
+      "path": "packages/play/src/sensors/fnaf2/monitor-rule.js",
       "line": 16,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.monitor-rule-v1",
       "kind": "CONTRACT",
-      "path": "packages/adapters/test/monitor-rule.test.js",
+      "path": "packages/play/test/monitor-rule.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -708,6 +708,13 @@
       "kind": "CONTRACT",
       "path": "packages/kernel/src/contracts/index.js",
       "line": 8,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.semantic-control-v1",
+      "kind": "CONTRACT",
+      "path": "packages/play/src/sensors/fnaf2/button-strokes.js",
+      "line": 18,
       "relation": "REFERENCES"
     },
     {
@@ -891,19 +898,6 @@
     {
       "id": "contract.venue-identity-v1",
       "kind": "CONTRACT",
-      "path": "packages/adapters/src/transports/android-venue.js",
-      "line": 17,
-      "relation": "REFERENCES"
-    },
-    {
-      "id": "contract.venue-identity-v1",
-      "kind": "CONTRACT",
-      "path": "packages/adapters/test/android-venue.test.js",
-      "relation": "CONFORMANCE_FIXTURE"
-    },
-    {
-      "id": "contract.venue-identity-v1",
-      "kind": "CONTRACT",
       "path": "packages/kernel/src/contracts/venue-identity.js",
       "line": 18,
       "relation": "REFERENCES"
@@ -912,6 +906,19 @@
       "id": "contract.venue-identity-v1",
       "kind": "CONTRACT",
       "path": "packages/kernel/test/venue-identity.test.js",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.venue-identity-v1",
+      "kind": "CONTRACT",
+      "path": "packages/play/src/phone/android-venue.js",
+      "line": 17,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.venue-identity-v1",
+      "kind": "CONTRACT",
+      "path": "packages/play/test/android-venue.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {

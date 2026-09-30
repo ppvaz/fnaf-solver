@@ -2,7 +2,7 @@
  * measures a handset, and the fit must stay interval arithmetic rather than
  * statistics so a bound, once emitted, is derivable from the samples. */
 import assert from 'node:assert/strict';
-import { fitClockMap, mapClockInterval } from '@sixam/adapters';
+import { fitClockMap, mapClockInterval } from '@sixam/play';
 
 const exact = (fromMs, toMs, count, spanMs) => Array.from({ length: count }, (_, index) => {
   const sourceMs = fromMs + Math.round(spanMs * index / (count - 1));

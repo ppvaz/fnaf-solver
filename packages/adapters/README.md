@@ -1,32 +1,14 @@
-# `@sixam/adapters`
+# `packages/adapters` (moved into `@sixam/play`)
 
-What the campaign executor sends and reads through: the HID wire
-(`transports/hid`), the Cue Helper control protocol (`transports/cue-helper`),
-clocks and clock maps, night-onset detection, and the fitted detection rules
-the executor consults -- monitor, mask and camera rules, the calibration-state
-rule, control exclusion, button strokes and the pan-aware control anchor.
+The transports, clocks and detection rules that lived here are in
+[`@sixam/play`](../play/README.md) since ADR 0002's Play move. This folder is no
+longer a workspace; nothing imports it.
 
-Public API: `src/index.js` plus the `/transports/hid`, `/transports/cue-helper`,
-`/transports/companion-status`, `/transports/android-venue` and `/night-onset`
-subpaths. Dependency: core only. Command: the root `test:contracts` lane
-(`packages/adapters/test/`).
-
-**Venue identity.** `transports/android-venue` turns the text of fixed
-read-only queries into core's `venue-identity-v1`. The queries are
-`dumpsys package` for the game and the Companion, and `getprop` for the build
-fingerprint, the security patch and the time zone. It hashes the serial and
-drops it, and it records any field it cannot read, or whose shape it does not
-know, as `null` with the reason. The adb bridge in `apps/device` runs the
-queries; this module never opens adb. Its fixtures are shaped like current and
-Android 10 `dumpsys package` output.
-
-The transport modules are codecs over injected ports. They own report
-encoding, coordinate conversion, authentication framing and protocol parsing,
-but never open adb, select a policy, or claim that a legal write was accepted by
-the game: a legal HID send is not evidence of acceptance. `apps/device`
-composes the ports at the edge, and `tools/architecture-test.js` confines the
-HID transport to the device runners.
-
-The capability registry, the actuator and sensor classes and the fixture
-adapters that served the retired fixture service path were removed on
-2026-09-25 (`docs/ARCHIVED-ROUTES.md`).
+One path is kept: `src/button-strokes.js`, a symbolic link to
+`packages/play/src/sensors/fnaf2/button-strokes.js`. The retained
+`tools/recompile/results/full06-responses-20260928.json` records the response
+rule's source as `packages/adapters/src/button-strokes.js` with its sha256, and
+`tools/recompile/test-phone-encounter-replay.mjs` reads that path and compares.
+It is registered as `adapters.button-strokes-link` in
+[`legacy-paths.json`](../../docs/architecture/generated/legacy-paths.json), with
+its removal gate.

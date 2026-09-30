@@ -1,6 +1,6 @@
 /** MonitorUp rule artifact conformance: calibration in, UNKNOWN or OBSERVED out. */
 import assert from 'node:assert/strict';
-import { monitorRuleDigest, measureMonitorUp, parseMonitorRule } from '../src/monitor-rule.js';
+import { monitorRuleDigest, measureMonitorUp, parseMonitorRule } from '../src/sensors/fnaf2/monitor-rule.js';
 
 const artifact = {
   schema: 'monitor-rule-v1',

@@ -54,7 +54,7 @@ const contractEvidence = {
   'controller-v1': ['tools/reactivetest.mjs', 'packages/propose/test/cycle-controller.test.js'],
   'qualification-v1': ['packages/source/test/contracts.test.js', 'packages/kernel/test/venue-identity.test.js'],
   'qualification-v2': ['packages/kernel/test/venue-identity.test.js', 'apps/device/test/venue-preflight.test.js'],
-  'venue-identity-v1': ['packages/kernel/test/venue-identity.test.js', 'packages/adapters/test/android-venue.test.js'],
+  'venue-identity-v1': ['packages/kernel/test/venue-identity.test.js', 'packages/play/test/android-venue.test.js'],
   'venue-check-v1': ['packages/kernel/test/venue-identity.test.js', 'apps/device/test/venue-preflight.test.js'],
   'venue-binding-v1': ['packages/kernel/test/venue-identity.test.js', 'apps/device/test/venue-preflight.test.js'],
   'state-estimate-v1': ['tools/estimatortest.mjs'],
@@ -70,10 +70,10 @@ const contractEvidence = {
   'trainer-trace-v1': ['tools/tracereport.mjs'],
   'artifact-ref-v1': ['tools/evidence.js'],
   'claim-evidence-v1': ['tools/evidence.js'],
-  'companion-status-v1': ['packages/adapters/test/companion-status.test.js', 'android/companion/test/com/ppvaz/fnafcompanion/CompanionStatusTest.java'],
+  'companion-status-v1': ['packages/play/test/companion-status.test.js', 'android/companion/test/com/ppvaz/fnafcompanion/CompanionStatusTest.java'],
   'cue-helper-control-v1': ['tools/cue/test-cue.py'],
   'fact-message-v1': ['packages/source/test/fixtures/fact-message-v1.jsonl'],
-  'hid-executor-v1': ['packages/adapters/test/conformance.test.js', 'apps/device/test/adb-device-local-executor.test.js'],
+  'hid-executor-v1': ['packages/play/test/conformance.test.js', 'apps/device/test/adb-device-local-executor.test.js'],
   'device-executor-v1': ['apps/device/test/adb-device-local-executor.test.js', 'apps/device/test/profile-game.test.js'],
   'device-campaign-v1': ['apps/device/test/campaign.test.js', 'apps/device/test/campaign-runner.test.js'],
   'device-adb-preflight-v1': ['apps/device/test/adb-bridge.test.js'],
@@ -95,10 +95,10 @@ const contractEvidence = {
   'microtrainer-session-v1': ['tools/microtrainertest.mjs'],
   'exercise-renderer-v1': ['tools/renderertest.mjs'],
   'arcade-lab-progress-v1': ['tools/arcadelabtest.mjs'],
-  'monitor-rule-v1': ['packages/adapters/test/monitor-rule.test.js', 'tools/device/test-monitor-calibrate.py'],
-  'camera-rule-v1': ['packages/adapters/test/camera-rule.test.js', 'tools/device/test-camera-calibrate.py'],
+  'monitor-rule-v1': ['packages/play/test/monitor-rule.test.js', 'tools/device/test-monitor-calibrate.py'],
+  'camera-rule-v1': ['packages/play/test/camera-rule.test.js', 'tools/device/test-camera-calibrate.py'],
   'calibration-state-v1': ['apps/device/test/calibration-state-rule.test.js'],
-  'control-exclusion-v1': ['packages/adapters/test/control-exclusion.test.js'],
+  'control-exclusion-v1': ['packages/play/test/control-exclusion.test.js'],
   'claim-envelope-v1': ['packages/kernel/test/claim-envelope.test.js', 'tools/device/test-cue-helper-mcp.mjs'],
 };
 const repositoryPaths = new Set(files.map(path => relative(ROOT, path)));
@@ -185,6 +185,7 @@ for (const path of sourceFiles.filter(path => /(?:test|check|spec)[^/]*\.(?:mjs|
   tests.push({
     id, lane,
     owner: path.includes('packages/core') ? '@sixam/core' : path.includes('packages/source') ? '@sixam/source' : path.includes('packages/propose') ? '@sixam/propose'
+      : path.includes('packages/play') ? '@sixam/play'
       : path.includes('packages/kernel') ? '@sixam/kernel' : path.includes('packages') ? 'package boundary' : 'legacy migration',
     timeoutMs: lane === 'test:browser:realtime' ? 360000
       : id === 'tools/ventreacttest.mjs' ? 900000
@@ -203,7 +204,7 @@ for (const path of sourceFiles.filter(path => /(?:test|check|spec)[^/]*\.(?:mjs|
 const duplicateResponsibilities = [
   { responsibility: 'canonical mechanics', owner: '@sixam/source', legacy: [] },
   { responsibility: 'semantic policy IR', owner: '@sixam/propose', legacy: ['tools/device/policy-ir.mjs'] },
-  { responsibility: 'physical actuation', owner: '@sixam/adapters', legacy: ['tools/device/actuator.mjs'] },
+  { responsibility: 'physical actuation', owner: '@sixam/play', legacy: ['tools/device/actuator.mjs'] },
   { responsibility: 'device composition', owner: '@sixam/device', legacy: ['tools/device/recipe.mjs'] },
   { responsibility: 'research execution', owner: '@sixam/propose', legacy: ['tools/*search*', 'tools/*sweep*', 'tools/*probe*'] },
 ];
@@ -251,14 +252,14 @@ const legacyPaths = [
   },
   {
     id: 'device.shell-adb-selector', path: 'tools/device/select-adb.sh', category: 'transport',
-    lifecycle: 'transitional', owner: '@sixam/adapters',
+    lifecycle: 'transitional', owner: '@sixam/play',
     replacement: 'explicit injected transport selected by the device composition root',
     removalGate: 'All direct-ADB probes either become adapters or are explicitly archived',
     notes: 'Useful characterization guard, but it must not select a canonical live strategy.',
   },
   {
     id: 'device.shell-coordinates', path: 'tools/device/coords.sh', category: 'transport',
-    lifecycle: 'transitional', owner: '@sixam/adapters',
+    lifecycle: 'transitional', owner: '@sixam/play',
     replacement: 'resolved device profile controlMap',
     removalGate: 'All device actions consume profile geometry; probe-only users are archived',
     notes: 'Legacy shell coordinate authority; modern semantic commands carry no coordinates.',
@@ -272,7 +273,7 @@ const legacyPaths = [
   },
   {
     id: 'device.simulated-actuator', path: 'tools/device/actuator.mjs', category: 'simulation',
-    lifecycle: 'transitional', owner: '@sixam/adapters',
+    lifecycle: 'transitional', owner: '@sixam/play',
     replacement: 'adapter actuator/error model with conformance fixtures',
     removalGate: 'Pilot/model consumers migrate without changing measured error semantics',
     notes: 'Historical device-lateness model; not a physical transport.',
@@ -396,6 +397,33 @@ const legacyPaths = [
     removalGate: 'No tracked module imports `ClockPort` from `@sixam/core/timing` (true since D3, 2026-09-30), and phase-clock.js has its Play home',
     notes: 'Re-exports the kernel clock port by name beside phase-clock.js, which still lives here.',
   },
+  // ADR 0002: packages/adapters moved into @sixam/play (the phone's transports
+  // to src/venues/phone, clocks, night onset, the control anchor and exclusion
+  // and the venue parser to src/phone, the FNaF 2 grid/luma rules to
+  // src/sensors/fnaf2). One path stays, as a link, because a retained record
+  // hashes the file at it.
+  {
+    id: 'adapters.button-strokes-link', path: 'packages/adapters/src/button-strokes.js', category: 'record-source',
+    lifecycle: 'compatibility', owner: '@sixam/play',
+    replacement: 'packages/play/src/sensors/fnaf2/button-strokes.js (the same bytes; this path is a symbolic link to it)',
+    removalGate: 'tools/recompile/phone-encounter-replay.mjs (the recompile session\'s) names the response rule\'s source through @sixam/play, and the frozen full06-responses-20260928 result is checked through the path\'s history at its commit instead of the working tree',
+    notes: 'tools/recompile/results/full06-responses-20260928.json records `rule.source: packages/adapters/src/button-strokes.js` with its sha256, and test-phone-encounter-replay.mjs (test:unit) reads that path and compares; phone-encounter-replay.mjs writes the same path into new records. Nothing imports it: every importer names the play module.',
+  },
+  // The FNaF 2 sensors CLAUDE.md discontinued on 2026-09-24/25 (the 20x9 grid,
+  // grid-fitted rules, luma reducers) moved as they are: they are to be
+  // converted to native-region rules, never extended.
+  ...[
+    ['monitor-rule', 'the grid-fitted monitor rule (monitor-rule-v1): map anchors read through the 20x9 GRID'],
+    ['camera-rule', 'the grid-fitted camera rule (camera-rule-v1): watch pixels on the map buttons'],
+    ['calibration-state-rule', 'the mask and monitor calibration-state rule (calibration-state-v1) over the grid cells, with its luma refutation'],
+    ['button-strokes', 'the helper\'s downward-chevron stroke scores and their thresholds, the executor\'s mask and monitor tell'],
+  ].map(([name, what]) => ({
+    id: `play.sensor.fnaf2-${name}`, path: `packages/play/src/sensors/fnaf2/${name}.js`, category: 'sensor',
+    lifecycle: 'legacy', owner: '@sixam/play',
+    replacement: 'a rule over native region pixels (the Cue Helper REGION verb, tools/device/native-regions.mjs), recalibrated for FNaF 2',
+    removalGate: 'FNaF 2\'s pipeline is recalibrated on native regions (ADR 0002 migration M7) and the campaign executor reads no grid, luma or grid-fitted rule; the retained grid_hex readers of old evidence stay',
+    notes: `Deprecated: ${what}. Moved from packages/adapters unchanged; to be converted, not extended (CLAUDE.md, Sensors and on-device code).`,
+  })),
   {
     id: 'package.legacy-engine-command', path: 'package.json#scripts.test:legacy:engine', category: 'command',
     lifecycle: 'compatibility', owner: '@sixam/core',

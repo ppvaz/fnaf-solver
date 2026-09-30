@@ -124,7 +124,7 @@ def main():
               artifact["adapter"]["limitations"] == [])
 
         # -- Cross-language: the artifact drives the production JS detector ----
-        module = (HERE.parent.parent / "packages" / "adapters" / "src"
+        module = (HERE.parent.parent / "packages" / "play" / "src" / "sensors" / "fnaf2"
                   / "monitor-rule.js").resolve().as_uri()
 
         def js(script):

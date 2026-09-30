@@ -5,7 +5,7 @@
  * adb-device-local-executor.js on 2026-09-25; nothing here touches adb.
  * CONTRACT:hid-executor-v1.
  */
-import { HID_DESCRIPTOR, HID_FEATURE_REPORTS, report } from '@sixam/adapters';
+import { HID_DESCRIPTOR, HID_FEATURE_REPORTS, report } from '@sixam/play';
 import { validateExecutorRequest } from './artifact-executor.js';
 import { expandNightBlocks } from './device-local-executor.js';
 import { deviceProfileGame } from '@sixam/source';

@@ -1,0 +1,52 @@
+# `@sixam/play`
+
+Play is the Embodiment context of [ADR 0002](../../docs/decisions/0002-kernel-contexts-vocabulary.md):
+what the campaign executor sends and reads through on the phone. It imports
+only `@sixam/kernel`, `@sixam/source` and Node built-ins, and nothing imports
+it but `@sixam/propose` and the applications (`tools/architecture-test.js`).
+
+| Folder | What it holds |
+|---|---|
+| `src/venues/phone/` | The phone's transports: the HID wire (`hid.js`), the Cue Helper control protocol (`cue-helper.js`) and the Companion status record (`companion-status.js`). |
+| `src/phone/` | Clocks and clock maps (`clocks.js`), night-onset detection (`night-onset.js`), the pan-aware control anchor (`control-anchor.js`), control exclusion (`control-exclusion.js`) and the venue parser (`android-venue.js`). |
+| `src/sensors/fnaf2/` | **Deprecated.** The FNaF 2 grid/luma readers the executor still consults: the monitor, camera and calibration-state rules and the button strokes. |
+| `test/` | Their tests and the `dumpsys package` fixtures, in the root `test:contracts` lane. |
+
+Public API: `src/index.js` (the export set `@sixam/adapters` had) and the
+subpaths `@sixam/play/venues/phone/<name>`, `@sixam/play/phone/<name>` and
+`@sixam/play/sensors/fnaf2/<name>`.
+
+**Deprecated sensors.** CLAUDE.md discontinued the 20x9 point-sampled grid,
+grid-fitted rules and luma reducers on 2026-09-24/25. The four modules in
+`src/sensors/fnaf2/` are exactly those readers, moved unchanged: they are to be
+converted to rules over native region pixels (FNaF 2's pipeline after
+recalibration), never extended. Each is registered with lifecycle `legacy` in
+[`legacy-paths.json`](../../docs/architecture/generated/legacy-paths.json)
+(`play.sensor.fnaf2-*`), with that removal gate.
+
+**Venue identity.** `phone/android-venue.js` turns the text of fixed read-only
+queries into the kernel's `venue-identity-v1`. The queries are `dumpsys
+package` for the game and the Companion, and `getprop` for the build
+fingerprint, the security patch and the time zone. It hashes the serial and
+drops it, and it records any field it cannot read, or whose shape it does not
+know, as `null` with the reason. The adb bridge runs the queries; this module
+never opens adb. Its fixtures are shaped like current and Android 10 `dumpsys
+package` output.
+
+The transport modules are codecs over injected ports. They own report
+encoding, coordinate conversion, authentication framing and protocol parsing,
+but never open adb, select a policy, or claim that a legal write was accepted by
+the game: a legal HID send is not evidence of acceptance. The composition root
+wires the ports at the edge, and `tools/architecture-test.js` confines the HID
+transport to the device runners.
+
+**Moved from `packages/adapters` (ADR 0002).** One path stays there:
+`packages/adapters/src/button-strokes.js`, a symbolic link to
+`src/sensors/fnaf2/button-strokes.js`, because the retained
+`full06-responses-20260928` result records that path with the file's sha256 and
+`tools/recompile/test-phone-encounter-replay.mjs` compares them
+(`adapters.button-strokes-link`).
+
+The capability registry, the actuator and sensor classes and the fixture
+adapters that served the retired fixture service path were removed on
+2026-09-25 (`docs/ARCHIVED-ROUTES.md`).
