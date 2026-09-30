@@ -26,6 +26,10 @@ node "$(dirname "$0")/../tools/dump-text-check.mjs" "$msgfile" || exit 1
 staged=$(git diff --cached --name-only)
 [ -z "$staged" ] && exit 0
 
+# Change locality (ADR 0002, principle 8): staged code in three or more
+# contexts needs a "Contexts:" line saying why. PEDRO-OK does not waive it.
+node "$(dirname "$0")/../tools/change-locality.mjs" "$msgfile" || exit 1
+
 # Paired evidence staged in this commit?
 if echo "$staged" | grep -Eq '^(artifacts/|docs/evidence/)'; then
   exit 0

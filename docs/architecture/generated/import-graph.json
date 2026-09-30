@@ -4257,6 +4257,14 @@
       ]
     },
     {
+      "file": "tools/change-locality.mjs",
+      "imports": [
+        "node:child_process",
+        "node:fs",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/chrome.mjs",
       "imports": [
         "node:child_process",
@@ -4353,6 +4361,14 @@
         "node:fs/promises",
         "node:path",
         "node:url"
+      ]
+    },
+    {
+      "file": "tools/test-change-locality.mjs",
+      "imports": [
+        "./change-locality.mjs",
+        "node:assert/strict",
+        "node:fs"
       ]
     },
     {

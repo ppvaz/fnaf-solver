@@ -163,6 +163,34 @@ longer rebuilds.
   feature. `packages/play/bin/companion/companion-setup.sh` drives install and projection
   consent by named UI controls.
 
+## Quality gates and the method (Pedro, 2026-09-30)
+
+Executable, in `test:unit` or the commit hook: ambient entropy in replayable
+modules (`tools/architecture-test.js`), the 2,000-line ceiling, dead code,
+copied code, TODOs without an owner, and change locality (`Contexts:` line for
+three or more contexts). The first four are ratchets over
+`tools/quality-baseline.json`: never add an entry to turn a gate green; add one
+only as `{count, why}` naming why the finding is accepted, and lower or remove
+entries as debt is paid.
+
+What no gate can run, before implementing:
+- Classify the task (research, bug, feature, refactor, qualification). If you
+  cannot say what is known, from which evidence, what would refute it and the
+  smallest experiment that could, it is research, not implementation.
+- Search the code's own vocabulary before claiming something is absent (the
+  double-camera glitch is `split`/`arm` in code), and never read a verdict off
+  output cut by `head`.
+- Stop when two independent results contradict the premise, the signal is
+  unobservable, three fixes fail for one reason, or the change would duplicate a
+  source of truth. Do not work around a failed premise. DISPROVEN, BLOCKED and
+  INCONCLUSIVE are results.
+- A loss is attributed in order: execution before strategy
+  (`npm run review -- query audit`), planned against landed inputs before the
+  model, and the actuator is blamed only when the planned execution would have
+  won. UNKNOWN is an attribution.
+- An experiment that proves a point is written up, then production is designed;
+  experiment code is not renamed and shipped.
+
 ## Mistake register (2026-09-06 — check before acting; never repeat)
 
 Each entry below cost a live attempt or a false diagnosis on 2026-09-06.
