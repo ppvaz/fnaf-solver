@@ -6,7 +6,7 @@ import { isMainThread } from 'node:worker_threads';
 import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
 import { Rng } from '@sixam/source/fnaf2';
-import { formatRate } from '../../../review/src/stat.mjs';
+import { formatRate } from '../../../review/src/stat.ts';
 
 // The scripted half of the routine, as frame offsets from the cycle anchor.
 // packages/propose/parked/minus7/cyclesearch.mjs optimises alternatives to this table; everything the

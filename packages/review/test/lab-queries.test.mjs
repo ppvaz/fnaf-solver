@@ -7,10 +7,10 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { isUnknown } from '@sixam/kernel';
-import { CODE_AREAS, RECORD_RULES, classifyChange, consequenceKey, pathKind } from '../src/consequence.mjs';
-import { MISTAKE_AREAS, MISTAKE_TAGS, STEP_AREAS, matchMistakes, parseMistakes, readMistakes, stepFamily } from '../src/mistakes.mjs';
-import { MISTAKE_ENTRIES } from '../src/refusals.mjs';
-import { ORDER, ORDER_OF, STEPS, closesWhen, mistakeGates, roadmapDrift, stateKey, stepRecords, stepStatus } from '../src/roadmap.mjs';
+import { CODE_AREAS, RECORD_RULES, classifyChange, consequenceKey, pathKind } from '../src/consequence.ts';
+import { MISTAKE_AREAS, MISTAKE_TAGS, STEP_AREAS, matchMistakes, parseMistakes, readMistakes, stepFamily } from '../src/mistakes.ts';
+import { MISTAKE_ENTRIES } from '../src/refusals.ts';
+import { ORDER, ORDER_OF, STEPS, closesWhen, mistakeGates, roadmapDrift, stateKey, stepRecords, stepStatus } from '../src/roadmap.ts';
 
 const ROOT = resolve(import.meta.dirname, '../../..');
 let checks = 0;

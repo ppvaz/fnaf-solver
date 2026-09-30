@@ -14,12 +14,12 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { aborted, death, invalid, sixAm, timeout, unknown, validateGameRun } from '@sixam/kernel';
-import { PACKS_DIR, readPack } from './evidence-pack.mjs';
+import { PACKS_DIR, readPack } from './evidence-pack.ts';
 
 export const LIFT_SOURCE = 'run-pack-v1';
 
-/** @param {string} text a .jsonl file */
-const rows = text => text.split('\n').filter(line => line.trim()).map(line => JSON.parse(line));
+/** @param text a .jsonl file */
+const rows = (text: string) => text.split('\n').filter(line => line.trim()).map(line => JSON.parse(line));
 
 /** The events a phase of the run holds, cut at the venue's own reads of the night's start and end. */
 function phases(events, { isStart, isEnd, startName, endName }) {
@@ -57,9 +57,8 @@ const CLOCKS = unknown('run-pack-v1 retains no clock trace: its event rows carry
 /**
  * The executor's terminal for one attempt, as the kernel's reported outcome. An `invalid`
  * terminal (ADR 0002, decision 3: it spent no campaign attempt) is Invalid with its own why.
- * @param {any} terminal
  */
-export function reportedFromTerminal(terminal) {
+export function reportedFromTerminal(terminal: any) {
   if (terminal?.outcome === 'sixam') return sixAm();
   if (terminal?.outcome === 'invalid') return typeof terminal.why === 'string' && terminal.why
     ? invalid(terminal.why) : unknown('the executor terminal reads invalid and names no reason');
@@ -166,12 +165,12 @@ function liftFnaf1(dir, loaded) {
 
 /**
  * Lift one committed pack. Throws when the pack fails its own integrity check (readPack).
- * @param {string} root repository root
- * @param {string} id pack directory under docs/evidence/runs
- * @returns {{id: string, loaded: ReturnType<typeof readPack>, runs: object[]}} runs are kernel GameRuns
+ * @param root repository root
+ * @param id pack directory under docs/evidence/runs
+ * @returns runs are kernel GameRuns
  *   (packages/kernel/src/types.ts), each checked by validateGameRun
  */
-export function liftPack(root, id) {
+export function liftPack(root: string, id: string): { id: string; loaded: { pack: any; digest: string; wrapper: any; files: any; attestation: any; }; runs: any[]; } {
   const dir = join(root, PACKS_DIR, id);
   const loaded = readPack(dir);
   const runs = loaded.pack.kind === 'fnaf1-run' ? liftFnaf1(dir, loaded) : liftCampaign(dir, loaded);
@@ -179,5 +178,5 @@ export function liftPack(root, id) {
   return { id, loaded, runs };
 }
 
-/** Every committed pack, in directory order. @param {string} root */
-export const packIds = root => readdirSync(join(root, PACKS_DIR)).sort();
+/** Every committed pack, in directory order. */
+export const packIds = (root: string) => readdirSync(join(root, PACKS_DIR)).sort();

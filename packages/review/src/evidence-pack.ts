@@ -38,7 +38,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSy
 import { basename, join } from 'node:path';
 import { canonicalJson, stableHash } from '@sixam/kernel/contracts';
 import { BINDINGS_DIR } from '@sixam/kernel';
-import { isCampaignResult, campaignEntry, campaignPromotionChecks } from './evidence-campaign.mjs';
+import { isCampaignResult, campaignEntry, campaignPromotionChecks } from './evidence-campaign.ts';
 
 export const RUN_PACK_SCHEMA = 'run-pack-v1';
 /**
@@ -82,10 +82,9 @@ const sha256 = data => createHash('sha256').update(data).digest('hex');
 
 /**
  * Throw unless `text` is free of pixel-shaped payloads.
- * @param {string} name file name, for the message
- * @param {string} text
+ * @param name file name, for the message
  */
-export function refuseFrames(name, text) {
+export function refuseFrames(name: string, text: string) {
   if (text.includes('\0')) throw new Error(`${name}: binary content is never packed`);
   if (NUMERIC_ARRAY.test(text))
     throw new Error(`${name}: a numeric array of 64+ entries looks like pixels; redact its key (PIXEL_KEYS) or drop the file`);
@@ -94,7 +93,7 @@ export function refuseFrames(name, text) {
 }
 
 /** Replace this machine's repository root and home directory with portable prefixes. */
-function scrubPaths(text, { root, home }) {
+function scrubPaths(text, { root, home }: { root: string, home?: string }) {
   let paths = 0;
   const swap = (from, to) => {
     if (!from) return;
@@ -123,11 +122,10 @@ function redact(value, counts) {
 
 /**
  * One text file, made portable and frame-free.
- * @param {string} name name inside the pack
- * @param {Buffer} source original bytes
- * @param {{root: string, home?: string, frames?: Map<string, {sha256: string, bytes: number}>}} context
+ * @param name name inside the pack
+ * @param source original bytes
  */
-function packText(name, source, context) {
+function packText(name: string, source: Buffer, context: {root: string, home?: string, frames?: Map<string, {sha256: string, bytes: number}>}) {
   const scrubbed = scrubPaths(source.toString('utf8'), context);
   const counts = { paths: scrubbed.paths, pixelArrays: 0, frameRefs: 0 };
   let text = scrubbed.text;
@@ -169,8 +167,7 @@ const withheldEntry = (name, file) => {
   return { name, sha256: sha256(data), bytes: data.length, kind: withheldKind(name) };
 };
 
-/** @param {string} file */
-const readJson = file => JSON.parse(readFileSync(file, 'utf8'));
+const readJson = (file: string) => JSON.parse(readFileSync(file, 'utf8'));
 
 /**
  * One campaign's result.json and events.jsonl, recovered from the night-run log that captured
@@ -179,11 +176,10 @@ const readJson = file => JSON.parse(readFileSync(file, 'utf8'));
  * directory name, a timestamp: verdicts before 2026-09-13 record the directory relative to the
  * repository while the log records it absolute. Null when the log never started this campaign;
  * `result` is null when no result was printed for it.
- * @param {string} log run/campaign.log
- * @param {string} campaignDir the evidence directory as the campaign recorded it
- * @returns {{result: string | null, events: string} | null}
+ * @param log run/campaign.log
+ * @param campaignDir the evidence directory as the campaign recorded it
  */
-export function recoverFromRunLog(log, campaignDir) {
+export function recoverFromRunLog(log: string, campaignDir: string): {result: string | null, events: string} | null {
   const lines = log.split('\n');
   const events = [];
   let inside = false;
@@ -222,9 +218,9 @@ export function recoverFromRunLog(log, campaignDir) {
  * Does recovery reproduce the campaigns that are still on disk? For every night-run directory
  * whose log and campaign directory both survive, recover the campaign from the log and compare
  * it with the files the campaign wrote. This is the check a recovered pack's custody cites.
- * @param {string} root repository root
+ * @param root repository root
  */
-export function recoveryCheck(root) {
+export function recoveryCheck(root: string) {
   const runsDir = join(root, 'artifacts', 'runs');
   const campaigns = [];
   for (const run of existsSync(runsDir) ? readdirSync(runsDir).sort() : []) {
@@ -259,11 +255,10 @@ export function recoveryCheck(root) {
 
 /**
  * The run directory night-run.sh wrote for a campaign, and which attempt that campaign was.
- * @param {string} root repository root
- * @param {string} campaign campaign directory name
- * @returns {{runDir: string, attempt: number} | null}
+ * @param root repository root
+ * @param campaign campaign directory name
  */
-export function findRunDir(root, campaign) {
+export function findRunDir(root: string, campaign: string): {runDir: string, attempt: number} | null {
   const runs = join(root, 'artifacts', 'runs');
   if (!existsSync(runs)) return null;
   for (const label of readdirSync(runs).sort()) {
@@ -294,11 +289,8 @@ export function findRunDir(root, campaign) {
 /**
  * Every campaign directory a pack request names: a campaign directory itself, or a night-run
  * label whose verdict lists one campaign per attempt.
- * @param {string} root
- * @param {string} id
- * @returns {{campaignDir: string, runDir: string | null, packId: string}[]}
  */
-export function resolvePackTargets(root, id) {
+export function resolvePackTargets(root: string, id: string): {campaignDir?: string, runDir?: string | null, packId: string, fnaf1RunDir?: string, recoverFromLog?: boolean}[] {
   if (!/^[\w.-]+$/.test(id)) throw new Error('a safe RUN_ID is required');
   const direct = join(root, 'artifacts', id);
   if (existsSync(join(direct, 'result.json')) || incompleteCampaign(direct)) {
@@ -315,7 +307,7 @@ export function resolvePackTargets(root, id) {
   const text = readFileSync(join(runDir, 'verdict.txt'), 'utf8');
   const named = [...text.matchAll(/^--- attempt (\d+) of \d+: (\S+)$/gm)].map(m => [Number(m[1]), m[2]]);
   const first = text.match(/^campaign dir (\S+)$/m)?.[1];
-  const attempts = named.length ? named : first && first !== 'NONE' ? [[1, first]] : [];
+  const attempts: [number, string][] = named.length ? named as [number, string][] : first && first !== 'NONE' ? [[1, first]] : [];
   if (!attempts.length) throw new Error(`${id} produced no campaign directory; there is nothing the gate could read`);
   return attempts.map(([attempt, path]) => {
     const campaignDir = join(root, 'artifacts', basename(path));
@@ -343,9 +335,8 @@ function incompleteCampaign(dir) {
  * there by sha256, and the `replay.json` fnaf1-winner.mjs leaves beside a winner's replay.
  * There is no campaign result, so the outcome is the runner's own `night-ended` event and
  * record status; the Plan 12 gate does not read these packs.
- * @param {{root: string, home?: string, fnaf1RunDir: string, packId: string}} options
  */
-export function buildFnaf1Pack({ root, home = '', fnaf1RunDir, packId }) {
+export function buildFnaf1Pack({ root, home = '', fnaf1RunDir, packId }: {root: string, home?: string, fnaf1RunDir: string, packId: string}) {
   const files = [];
   const texts = new Map();
   const withheld = [];
@@ -375,9 +366,8 @@ export function buildFnaf1Pack({ root, home = '', fnaf1RunDir, packId }) {
 
 /**
  * Build a pack in memory. Nothing is written.
- * @param {{root: string, home?: string, campaignDir: string, runDir?: string | null, packId: string}} options
  */
-export function buildPack({ root, home = '', campaignDir, runDir = null, packId, recoverFromLog = false, timeline = null }) {
+export function buildPack({ root, home = '', campaignDir, runDir = null, packId, recoverFromLog = false, timeline = null }: {root: string, home?: string, campaignDir: string, runDir?: string | null, packId: string, recoverFromLog?: boolean, timeline?: any}) {
   let recovered = null;
   if (recoverFromLog) {
     if (!runDir) throw new Error('recovering a campaign needs the night-run directory whose log captured it');
@@ -476,17 +466,16 @@ export function buildPack({ root, home = '', campaignDir, runDir = null, packId,
   return { pack, texts };
 }
 
-/** The sha256 a Plan 12 attestation binds to. @param {object} pack */
-export const packDigest = pack => sha256(canonicalJson(pack));
+/** The sha256 a Plan 12 attestation binds to. */
+export const packDigest = (pack: any) => sha256(canonicalJson(pack));
 
 /**
  * Write a built pack. An identical pack already on disk is left alone; a different one is
  * refused unless `replace`, because evidence is not edited in place.
- * @returns {'WRITTEN' | 'UNCHANGED' | 'REPLACED'}
  */
-export function writePack(dir, { pack, texts }, { replace = false } = {}) {
+export function writePack(dir, { pack, texts }, { replace = false } = {}): 'WRITTEN' | 'UNCHANGED' | 'REPLACED' {
   const existing = join(dir, 'pack.json');
-  let status = 'WRITTEN';
+  let status: 'WRITTEN' | 'UNCHANGED' | 'REPLACED' = 'WRITTEN';
   if (existsSync(existing)) {
     if (packDigest(readJson(existing)) === packDigest(pack)) return 'UNCHANGED';
     if (!replace) throw new Error(`${dir} holds a different pack; pass --replace to supersede it`);
@@ -503,9 +492,8 @@ export function writePack(dir, { pack, texts }, { replace = false } = {}) {
 /**
  * Read and verify a pack: every file must match its recorded sha256 and size and still be
  * frame-free. The attestation, if one has been written, is returned alongside, unjudged.
- * @param {string} dir
  */
-export function readPack(dir) {
+export function readPack(dir: string) {
   const pack = readJson(join(dir, 'pack.json'));
   if (pack.schema !== RUN_PACK_SCHEMA || pack.version !== 1) throw new Error('not a run-pack-v1');
   for (const file of pack.files) {
@@ -528,10 +516,10 @@ export function readPack(dir) {
 /**
  * The index entry for a campaign pack: the campaign's own reading when its result survived,
  * and the pack's RESULT_LOST record when it did not.
- * @param {string} id
- * @param {{pack: any, wrapper: any}} packed readPack's result
+ * 
+ * @param packed readPack's result
  */
-export function packEntry(id, { pack, wrapper }) {
+export function packEntry(id: string, { pack, wrapper }: {pack: any, wrapper: any}) {
   return wrapper ? campaignEntry(id, wrapper)
     : { id, kind: 'device-campaign', outcome: pack.outcome, claimLevel: pack.claimLevel, nights: pack.nights, attempts: [] };
 }
@@ -541,10 +529,8 @@ export const WINNER_HASHES = 'docs/architecture/generated/winner-hashes.json';
 
 /**
  * Every committed winner, repository-relative and sorted by file name: `<BINDINGS_DIR>/<game>/*-winner.json`.
- * @param {string} root
- * @returns {string[]}
  */
-export function winnerFiles(root) {
+export function winnerFiles(root: string): string[] {
   const games = existsSync(join(root, BINDINGS_DIR)) ? readdirSync(join(root, BINDINGS_DIR), { withFileTypes: true })
     .filter(entry => entry.isDirectory()).map(entry => entry.name) : [];
   return games.flatMap(game => readdirSync(join(root, BINDINGS_DIR, game)).filter(file => file.endsWith('-winner.json'))
@@ -559,16 +545,14 @@ export function winnerFiles(root) {
  * file hash. Compiling is Propose's, and Review never imports Propose (ADR 0002), so the
  * compiled hashes come from the generated register; a winner file whose bytes differ from the
  * register's sha256, or that the register does not list, is refused as a stale register.
- * @param {string} root
- * @returns {Map<string, string>}
  */
-export function trackedWinners(root) {
+export function trackedWinners(root: string): Map<string, string> {
   const register = new Map(readJson(join(root, WINNER_HASHES)).winners.map(row => [basename(row.file), row]));
   const winners = new Map();
   for (const file of winnerFiles(root)) {
     const name = basename(file);
     const bytes = readFileSync(join(root, file));
-    const row = register.get(name);
+    const row: any = register.get(name);
     if (!row || row.sha256 !== sha256(bytes))
       throw new Error(`${WINNER_HASHES} is stale for ${file}: run \`npm run catalog\``);
     winners.set(stableHash(JSON.parse(bytes.toString('utf8'))), name);
@@ -584,10 +568,10 @@ export function trackedWinners(root) {
  * named among the withheld files by the same sha256, the recovery check it cites, and an
  * explicit `lost` list, which stays visible; request.json is on that list. An incomplete
  * campaign never wrote its result and is not complete.
- * @param {any} pack pack.json
- * @param {string[]} files packed file names
+ * @param pack pack.json
+ * @param files packed file names
  */
-export function packManifestComplete(pack, files) {
+export function packManifestComplete(pack: any, files: string[]) {
   const has = name => files.includes(name);
   const custody = pack.custody;
   if (!custody) return CAMPAIGN_MANIFEST.every(has);
@@ -605,8 +589,8 @@ export const packCustody = pack => ({ kind: pack.custody?.kind ?? 'original', lo
 
 const named = value => typeof value === 'string' && value.trim().length > 0;
 
-/** Who attested, in one line, whatever the attestation's validity. @param {any} attestation */
-export function attestedBy(attestation) {
+/** Who attested, in one line, whatever the attestation's validity. */
+export function attestedBy(attestation: any) {
   const by = attestation?.attestedBy;
   if (attestation?.schema === ATTESTATION_SCHEMA_V1) return named(by) ? `human:${by}` : null;
   if (by?.kind === 'agent') return `agent:${by.delegation ?? 'no-delegation'}`;
@@ -619,11 +603,10 @@ export function attestedBy(attestation) {
  * author -- a person by name, or an agent under Pedro's 2026-09-27 delegation with a note naming
  * the session -- and every other promotion check listed as verified. Schema v1 (a person's
  * name, as the policy defined it until 2026-09-27) is still read.
- * @param {any} attestation parsed plan12-attestation.json, or null
- * @param {string} digest packDigest of the pack it sits beside
- * @returns {{valid: boolean, reason: string | null, by: string | null}}
+ * @param attestation parsed plan12-attestation.json, or null
+ * @param digest packDigest of the pack it sits beside
  */
-export function attestationStatus(attestation, digest) {
+export function attestationStatus(attestation: any, digest: string): {valid: boolean, reason: string | null, by: string | null} {
   const by = attestedBy(attestation);
   const refuse = reason => ({ valid: false, reason, by });
   if (!attestation) return refuse('no attestation');
@@ -649,10 +632,8 @@ export function attestationStatus(attestation, digest) {
  * The campaign gate's four checks for a pack, with the attestation read from the pack's own
  * attestation file and bound to its digest, plus one more: the winner the bundle was compiled
  * from is committed, so the night can be re-run from a clean checkout.
- * @param {ReturnType<typeof readPack>} loaded
- * @param {Map<string, string>} winners
  */
-export function packPromotionChecks({ pack, digest, wrapper, files, attestation }, winners) {
+export function packPromotionChecks({ pack, digest, wrapper, files, attestation }: ReturnType<typeof readPack>, winners: Map<string, string>) {
   return {
     ...(wrapper ? campaignPromotionChecks(wrapper, files)
       : { offlineEvidence: false, terminalPass: false, manifestComplete: false, plan12Attestation: false }),

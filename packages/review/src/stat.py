@@ -1,4 +1,4 @@
-"""Dependency-free statistical primitives matching packages/review/src/stat.mjs.
+"""Dependency-free statistical primitives matching packages/review/src/stat.ts.
 
 The functions use proportions in [0, 1].  ``required_n`` is a planning
 estimate; an observed sample should always be reported with its own Wilson

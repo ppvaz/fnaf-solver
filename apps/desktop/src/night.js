@@ -14,7 +14,7 @@
 // drive, and each takes the serial lease before its first adb call.
 //
 // This only picks the runner, passes the arguments through untouched, and
-// packs what the night left behind (packages/review/src/evidence-pack.mjs) once it ends,
+// packs what the night left behind (packages/review/src/evidence-pack.ts) once it ends,
 // however it ends: a death, an abort and a Ctrl-C are evidence too. night-run.sh
 // packs its own campaigns, so FNaF 2 is only dispatched; the FNaF 1 runners do
 // not, so their new run directories are packed here. A FNaF 1 dry run leaves no

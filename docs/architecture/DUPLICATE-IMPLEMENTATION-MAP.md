@@ -381,7 +381,7 @@ control works.
 Nine readers of overlapping run telemetry: `clocktrace.mjs` (129),
 `drifttrace.mjs` (211), `windtrace.mjs` (85), `camtrace.py` (140),
 `inputtrace.py` (484), `run-timeline.py` (478), `packages/review/bin/report/bench-trace.mjs` (36)
-over `packages/review/src/measure/bench-trace.js`, `apps/trainer/test/tracereport.mjs` (115),
+over `packages/review/src/measure/bench-trace.ts`, `apps/trainer/test/tracereport.mjs` (115),
 `atrace-input.sh`. `run-timeline.py` and `drifttrace.mjs` both join plan
 against phone on one clock.
 
@@ -430,7 +430,7 @@ green.
 
 | Twin | Lines | Verdict |
 |---|---|---|
-| `packages/review/src/stat.mjs` / `packages/review/src/stat.py` | 129 / 113 | **`GATE`, keep.** Same five functions; `packages/review/test/stat.test.mjs:49` spawns `python3` and compares. The model pair. |
+| `packages/review/src/stat.ts` / `packages/review/src/stat.py` | 129 / 113 | **`GATE`, keep.** Same five functions; `packages/review/test/stat.test.mjs:49` spawns `python3` and compares. The model pair. |
 | `packages/propose/bin/policy/closed-families.mjs` / `tools/invent/closed-families.mjs` | 70 / 134 | Two registers of closed policy families — device-plan surface vs privileged genome surface. Same register, two classifiers. |
 | `tools/invent/search.mjs` / `packages/propose/parked/minus7/search.mjs` | 248 / 189 | Two constrained searches; see §12. |
 | `packages/propose/parked/minus7/cycle.mjs` / `packages/propose/bin/minus-toys/cycle.mjs` | 244 / 263 | Same shape, different route. `tools/minustoys/` holds **exactly one file**. **Decided 2026-09-08: keep.** One directory per route is the convention; a move would touch importers, the `TOOLS.md` row and the generated catalogs for no behaviour change, and Minus Toys is the live Night 5/6 route. |

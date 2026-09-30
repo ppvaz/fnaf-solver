@@ -555,7 +555,7 @@ analyze() {
 
   # Custody that outlives artifacts/: the campaign's text evidence and this run's
   # derived facts go to docs/evidence/runs/, and every recording and frame is
-  # named there by sha256 only (packages/review/src/evidence-pack.mjs). The Plan 12 gate reads
+  # named there by sha256 only (packages/review/src/evidence-pack.ts). The Plan 12 gate reads
   # that directory on any checkout; commit it. Its log goes to captures/, not to
   # $OUTDIR, because a file written into the run directory while it is packed
   # would change the pack. A later regrade that adds files needs --replace.

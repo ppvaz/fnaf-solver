@@ -59,10 +59,8 @@ const LEAD = /^\*\*(.+?)\*\*\s*/s;
 /**
  * The numbered entries of a register's text: each entry's number, bold lead (which may wrap) and
  * whole text, up to the next entry, heading, or unindented paragraph.
- * @param {string} text
- * @returns {{n: number, lead: string, text: string}[]}
  */
-export function parseMistakes(text) {
+export function parseMistakes(text: string): {n: number, lead: string, text: string}[] {
   const blocks = [];
   let current = null;
   for (const line of text.split('\n')) {
@@ -85,10 +83,8 @@ export function parseMistakes(text) {
 
 /**
  * The register as it stands: the first source that holds entries.
- * @param {string} root
- * @returns {{source: string | null, entries: {n: number, lead: string, text: string}[]}}
  */
-export function readMistakes(root) {
+export function readMistakes(root: string): {source: string | null, entries: {n: number, lead: string, text: string}[]} {
   for (const source of MISTAKE_REGISTER_SOURCES) {
     const path = join(root, source);
     if (!existsSync(path)) continue;
@@ -98,8 +94,8 @@ export function readMistakes(root) {
   return { source: null, entries: [] };
 }
 
-/** S1..S7, and S2a/S2b as S2; anything else is null. @param {unknown} step */
-export function stepFamily(step) {
+/** S1..S7, and S2a/S2b as S2; anything else is null. */
+export function stepFamily(step: unknown) {
   const match = /^S([1-7])([ab])?$/i.exec(String(step ?? '').trim());
   if (!match) return null;
   if (match[2] && match[1] !== '2') return null;
@@ -111,10 +107,8 @@ const mentions = (text, word) => new RegExp(`(?:^|[^a-z0-9])${escape(word.toLowe
 
 /**
  * The entries a task should read before it acts, each with why it matched.
- * @param {{n: number, lead: string, text: string}[]} entries
- * @param {{step?: string, text?: string}} task
  */
-export function matchMistakes(entries, { step, text = '' } = {}) {
+export function matchMistakes(entries: {n: number, lead: string, text: string}[], { step, text = '' }: {step?: string, text?: string} = {}) {
   const family = stepFamily(step);
   const stepAreas = family ? STEP_AREAS[family] : [];
   const matched = [];

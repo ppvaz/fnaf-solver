@@ -5,7 +5,7 @@
 import { pathToFileURL } from 'node:url';
 import { runMinusToys } from '@sixam/propose/experiment';
 import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '@sixam/propose/seeds';
-import { formatRate } from '../../review/src/stat.mjs';
+import { formatRate } from '../../review/src/stat.ts';
 
 const main = () => {
   const runs = +(process.argv[2] || 3000);

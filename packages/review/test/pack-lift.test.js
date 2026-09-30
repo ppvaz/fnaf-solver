@@ -10,8 +10,8 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isUnknown, validateGameRun } from '@sixam/kernel';
-import { PACKS_DIR } from '../src/evidence-pack.mjs';
-import { liftPack, packIds, reportedFromTerminal } from '../src/pack-lift.mjs';
+import { PACKS_DIR } from '../src/evidence-pack.ts';
+import { liftPack, packIds, reportedFromTerminal } from '../src/pack-lift.ts';
 
 const ROOT = resolve(fileURLToPath(new URL('../../..', import.meta.url)));
 

@@ -612,7 +612,7 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
     }
     return claimEnvelope({
       claim: { verb: 'commit', dry: true, staged, nothingStaged: staged.length === 0, hook, consequence,
-        rule: `the hook's verdict is ${HOOK} itself, run on the staged set and the message; the class is packages/review/src/consequence.mjs ` +
+        rule: `the hook's verdict is ${HOOK} itself, run on the staged set and the message; the class is packages/review/src/consequence.ts ` +
           'over the staged paths, which a reference to prior evidence does not change. The lab never commits.' },
       label: label('a prediction of the hook'), target: REPOSITORY_TARGET, cite: [HOOK, ...CONSEQUENCE_CITES],
       status: 'standing', supersededBy: null,
@@ -653,7 +653,7 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
       base: baseSha.slice(0, 7), head: at?.short ?? null, commits, ratio, ratioText: `${ratio.consequential}:${ratio.bookkeeping}`,
       records: [...new Set(commits.flatMap(item => item.records))], open,
       uncommitted: at?.uncommitted ?? 0, pushGate: gate,
-      rule: 'each commit on the first-parent line since the base, classed by packages/review/src/consequence.mjs; an UNKNOWN is outside the ratio',
+      rule: 'each commit on the first-parent line since the base, classed by packages/review/src/consequence.ts; an UNKNOWN is outside the ratio',
     };
     if (session && !since) {
       mkdirSync(join(root, SESSIONS_DIR), { recursive: true });

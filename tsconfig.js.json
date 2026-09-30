@@ -14,6 +14,7 @@
     "packages/source/src/**/*.ts",
     "packages/play/src/**/*.ts",
     "packages/propose/src/**/*.ts",
+    "packages/review/src/**/*.ts",
     "packages/propose/parked/**/*.js",
     "apps/desktop/src/**/*.js",
     "apps/trainer/src/**/*.js",

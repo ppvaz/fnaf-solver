@@ -60,12 +60,12 @@ export const AUDIO_READ_COST_SOURCE =
 // The host round trip is NOT measured. `Observer.readDelayFrames` defaults to
 // 0 and its header calls it a model of host round-trip latency; the bench
 // trace that would carry a real one is host-only today
-// (`packages/review/src/measure/bench-trace.js`). So the budget below is
+// (`packages/review/src/measure/bench-trace.ts`). So the budget below is
 // valid for a DEVICE-LOCAL reader only. A host-mediated controller may not
 // claim it.
 export const HOST_ROUND_TRIP_MS = UNKNOWN;
 export const HOST_ROUND_TRIP_SOURCE =
-  'packages/play/src/venues/sim/observer.ts readDelayFrames (knob, default 0); packages/review/src/measure/bench-trace.js is host-only';
+  'packages/play/src/venues/sim/observer.ts readDelayFrames (knob, default 0); packages/review/src/measure/bench-trace.ts is host-only';
 
 // Every fact below is served by a classifier whose threshold is NOT calibrated
 // on the projection scaler (`docs/device/ON-DEVICE-VALIDATION.md`: "the

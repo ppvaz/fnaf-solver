@@ -23,9 +23,9 @@ import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { canonicalJson, stableHash, validateSaveProof } from '@sixam/kernel/contracts';
 import { AI_DIALS, PUPPET_AI } from '@sixam/source/fnaf2';
-import { campaignEntry } from './evidence-campaign.mjs';
+import { campaignEntry } from './evidence-campaign.ts';
 import { AGENT_DELEGATION, ATTESTATION_FILE, ATTESTATION_SCHEMA, PACKS_DIR, RECOVERY_RECORD, attestationStatus,
-  packCustody, packManifestComplete, packPromotionChecks, readPack, winnerFiles } from './evidence-pack.mjs';
+  packCustody, packManifestComplete, packPromotionChecks, readPack, winnerFiles } from './evidence-pack.ts';
 
 export const GRAPH_FILE = 'docs/evidence/graph.json';
 export const PROMOTION_EDGE = 'PROMOTED_BY';
@@ -40,9 +40,8 @@ const night7Label = dials => AI_DIALS.every(dial => dials[dial] === 20) ? '10-20
  * the dial vector the executor's own menu readback observed before the night began (the last
  * PASS readback before `state=night`, as evidence-cohort.mjs reads it), and, when the pack
  * kept request.json, only if that is the vector requested.
- * @returns {{pass: boolean, claim: any, detail: any}}
  */
-function claimFor(night, mode, eventsText, requestText) {
+function claimFor(night, mode, eventsText, requestText): {pass: boolean, claim: any, detail: any} {
   if (night >= 1 && night <= 6 && mode === 'story')
     return { pass: true, detail: { night, mode },
       claim: { id: `claim.fnaf2.night${night}.device-6am`, night, mode,
@@ -82,11 +81,11 @@ function claimFor(night, mode, eventsText, requestText) {
 /**
  * Re-derive every promotion check but the attestation from the pack itself. Nothing is written.
  * readPack refuses a pack whose files no longer match their recorded sha256.
- * @param {string} root repository root
- * @param {string} id pack directory name under PACKS_DIR
- * @param {Map<string, string>} winners trackedWinners(root)
+ * @param root repository root
+ * @param id pack directory name under PACKS_DIR
+ * @param winners trackedWinners(root)
  */
-export function derivePromotion(root, id, winners) {
+export function derivePromotion(root: string, id: string, winners: Map<string, string>) {
   if (!/^[\w.-]+$/.test(id ?? '')) throw new Error('a safe RUN_ID is required');
   const dir = join(root, PACKS_DIR, id);
   const loaded = readPack(dir);
@@ -168,10 +167,8 @@ export function derivePromotion(root, id, winners) {
 
 /**
  * The attestation `attestPack` writes. The date is the only field that is not derived.
- * @param {ReturnType<typeof derivePromotion>} derived
- * @param {{by: 'agent' | 'human', note?: string, name?: string, date: string}} author
  */
-export function makeAttestation(derived, { by, note, name, date }) {
+export function makeAttestation(derived: ReturnType<typeof derivePromotion>, { by, note, name, date }: {by: 'agent' | 'human', note?: string, name?: string, date: string}) {
   if (by === 'agent' && !(typeof note === 'string' && note.trim())) throw new Error('an agent attestation needs --note naming the session or agent');
   if (by === 'human' && !(typeof name === 'string' && name.trim())) throw new Error('a human attestation needs --name');
   if (!['agent', 'human'].includes(by)) throw new Error('--by must be agent or human');
@@ -190,15 +187,14 @@ const withoutDate = attestation => canonicalJson({ ...attestation, date: null })
  * Re-derive, refuse on any failing check, and write the pack's plan12-attestation.json. An
  * identical attestation (up to its date) is left alone; a different one is refused unless
  * `replace`, because an attestation is evidence and is not edited in place.
- * @returns {{status: 'WRITTEN' | 'UNCHANGED' | 'REPLACED' | 'REFUSED', derived: any, attestation: any, failed: string[]}}
  */
-export function attestPack(root, id, winners, author, { replace = false } = {}) {
+export function attestPack(root, id, winners, author, { replace = false } = {}): {status: 'WRITTEN' | 'UNCHANGED' | 'REPLACED' | 'REFUSED', derived: any, attestation: any, failed: string[]} {
   const derived = derivePromotion(root, id, winners);
   const failed = derived.verified.filter(item => !item.pass).map(item => item.check);
   if (failed.length) return { status: 'REFUSED', derived, attestation: null, failed };
   const attestation = makeAttestation(derived, author);
   const file = join(derived.dir, ATTESTATION_FILE);
-  let status = 'WRITTEN';
+  let status: 'WRITTEN' | 'UNCHANGED' | 'REPLACED' | 'REFUSED' = 'WRITTEN';
   if (existsSync(file)) {
     const existing = JSON.parse(readFileSync(file, 'utf8'));
     if (withoutDate(existing) === withoutDate(attestation)) return { status: 'UNCHANGED', derived, attestation: existing, failed };
@@ -209,8 +205,8 @@ export function attestPack(root, id, winners, author, { replace = false } = {}) 
   return { status, derived, attestation, failed };
 }
 
-/** The graph file in its committed layout: one node or edge per line. @param {any} graph */
-export function formatGraph(graph) {
+/** The graph file in its committed layout: one node or edge per line. */
+export function formatGraph(graph: any) {
   const list = items => items.length ? `\n    ${items.map(item => JSON.stringify(item)).join(',\n    ')}\n  ` : '';
   const rest = Object.entries(graph).filter(([key]) => !['schema', 'version', 'nodes', 'edges'].includes(key));
   return `{\n  "schema": ${JSON.stringify(graph.schema)},\n  "version": ${JSON.stringify(graph.version)},\n`
@@ -218,8 +214,7 @@ export function formatGraph(graph) {
     + `  "nodes": [${list(graph.nodes)}],\n  "edges": [${list(graph.edges)}]\n}\n`;
 }
 
-/** @param {string} root */
-export function readGraph(root) {
+export function readGraph(root: string) {
   const graph = JSON.parse(readFileSync(join(root, GRAPH_FILE), 'utf8'));
   if (graph.schema !== 'claim-evidence-v1' || !Array.isArray(graph.nodes) || !Array.isArray(graph.edges))
     throw new Error(`${GRAPH_FILE} is not a claim-evidence-v1 graph`);
@@ -235,9 +230,8 @@ export const promotionEdgeFor = (graph, id) => graph.edges.find(edge => edge.typ
  * Record a promotion: the claim node, the run node, and a PROMOTED_BY edge from the claim to
  * the run that names the attestation, its author and the pack's custody. Idempotent; an edge
  * for the same run with another pack sha256 or author is replaced and reported as UPDATED.
- * @returns {{graph: any, status: 'ADDED' | 'ALREADY_RECORDED' | 'UPDATED', edge: any}}
  */
-export function recordPromotion(graph, { id, claim, digest, attestation, custody, nights }) {
+export function recordPromotion(graph, { id, claim, digest, attestation, custody, nights }): {graph: any, status: 'ADDED' | 'ALREADY_RECORDED' | 'UPDATED', edge: any} {
   const next = { ...graph, nodes: [...graph.nodes], edges: [...graph.edges] };
   const claimNode = { id: claim.id, kind: 'Claim', label: claim.label, claimLevel: 'DEVICE_MEASURED' };
   const runNode = { id: runNodeId(id), kind: 'Run', label: `Night ${nights.join(',')} 6 AM on the phone, run pack ${id}`,
@@ -268,12 +262,10 @@ const nightOf = (id, pack) => pack?.kind === 'fnaf1-run' ? 'fnaf1'
  * Every committed pack against the promotion gate and the graph, per night: packs, executor
  * wins, valid attestations, recorded promotions, and each refused pack's failing checks. A
  * PROMOTED_BY edge whose pack no longer passes is reported as stale, never hidden.
- * @param {string} root
- * @param {Map<string, string>} winners
  */
-export function promotionSummary(root, winners) {
+export function promotionSummary(root: string, winners: Map<string, string>) {
   const graph = readGraph(root);
-  const nights = {};
+  const nights: any = {};
   const refusedWins = [];
   const stale = [];
   const promoted = [];
@@ -314,7 +306,7 @@ export function promotionSummary(root, winners) {
     schema: PROMOTION_SUMMARY_SCHEMA, tool: 'npm run evidence -- promotions', authority: 'plans/12-end-to-end-evidence-campaign.md',
     packs: PACKS_DIR, graph: GRAPH_FILE,
     rule: 'promoted = every packPromotionChecks check passes (offlineEvidence, terminalPass, manifestComplete, plan12Attestation, winnerCommitted) and a PROMOTED_BY edge binds the same pack sha256',
-    nights, totals: Object.values(nights).reduce((sum, row) => ({ packs: sum.packs + row.packs, executorWins: sum.executorWins + row.executorWins,
+    nights, totals: Object.values(nights).reduce((sum: any, row: any) => ({ packs: sum.packs + row.packs, executorWins: sum.executorWins + row.executorWins,
       attested: sum.attested + row.attested, promoted: sum.promoted + row.promoted }), { packs: 0, executorWins: 0, attested: 0, promoted: 0 }),
     claims: Object.entries(promoted.reduce((sum, item) => ({ ...sum, [item.claim]: (sum[item.claim] ?? 0) + 1 }), {}))
       .sort(([a], [b]) => a.localeCompare(b)).map(([claim, runs]) => ({ claim, runs })),

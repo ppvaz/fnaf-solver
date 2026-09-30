@@ -17,16 +17,16 @@ import { CONTROL_CATALOGS } from '@sixam/source';
 import { NO_LOCAL_DUMP, VAULT_ENV, VAULT_FILE, createTruth } from '@sixam/source/truth';
 import { canonicalJson } from '@sixam/kernel/contracts';
 import { REPOSITORY_TARGET, claimEnvelope, isRefusal, isUnknown, refusalEnvelope, unknown, validateClaimEnvelope } from '@sixam/kernel';
-import { videoTerminal } from './evidence-cohort.mjs';
-import { ATTESTATION_FILE, PACKS_DIR, packPromotionChecks, readPack, trackedWinners, winnerFiles } from './evidence-pack.mjs';
-import { GRAPH_FILE, PROMOTION_EDGE, derivePromotion, readGraph, recordPromotion } from './evidence-promotion.mjs';
-import { FNAF2, ONE_CLEAR, PLAN12, levelLabel, promotionsQueryEnvelope } from './envelopes.mjs';
-import { liftPack } from './pack-lift.mjs';
-import { queryPromotions } from './promotions-query.mjs';
-import { CHECKS, RULE_CITES, checkUnknownAsNumber } from './refusals.mjs';
+import { videoTerminal } from './evidence-cohort.ts';
+import { ATTESTATION_FILE, PACKS_DIR, packPromotionChecks, readPack, trackedWinners, winnerFiles } from './evidence-pack.ts';
+import { GRAPH_FILE, PROMOTION_EDGE, derivePromotion, readGraph, recordPromotion } from './evidence-promotion.ts';
+import { FNAF2, ONE_CLEAR, PLAN12, levelLabel, promotionsQueryEnvelope } from './envelopes.ts';
+import { liftPack } from './pack-lift.ts';
+import { queryPromotions } from './promotions-query.ts';
+import { CHECKS, RULE_CITES, checkUnknownAsNumber } from './refusals.ts';
 import { ARCHIVED_ROUTES, CHRONICLE_ATTRIBUTION, CHRONICLE_DIR, CHRONICLE_SCHEMA_MODULE, COMMAND_REGISTRY,
   CONTRACT_REGISTER, CONTROL_CATALOG_DIR, GAMES, controlCatalogFile, catalogUnknowns, chronicleLabel, gameKey, isNegative, packDirectories,
-  readArchivedRoutes, readChronicle, readCommandRegistry, readContracts, readPackRow, readPacks, resolveGame } from './registers.mjs';
+  readArchivedRoutes, readChronicle, readCommandRegistry, readContracts, readPackRow, readPacks, resolveGame } from './registers.ts';
 
 export const SURFACE_DOC = 'docs/device/COMPANION-MCP.md';
 export const PLAN28 = 'plans/28-solver-interface.md';
@@ -58,7 +58,7 @@ const tally = (items, key) => items.reduce((counts, item) => {
   const value = key(item);
   counts[value] = (counts[value] ?? 0) + 1;
   return counts;
-}, /** @type {Record<string, number>} */ ({}));
+}, ({} as Record<string, number>));
 const sorted = counts => Object.fromEntries(Object.entries(counts).sort(([a], [b]) => a.localeCompare(b)));
 
 /** A caller's argument refused: the rule, what was wrong, and what is accepted. */
@@ -82,10 +82,10 @@ function winnersKey(root) {
 
 /**
  * The surface over one checkout.
- * @param {{root: string, winners?: () => Map<string, string>, truth?: ReturnType<typeof createTruth>}} options `winners`
- *   overrides the committed-winner compile (tests pass a precomputed map); `truth` the local-dump reader
+ * @param options `winners`
+ * overrides the committed-winner compile (tests pass a precomputed map); `truth` the local-dump reader
  */
-export function createSolver({ root, winners: winnersOverride, truth: truthOverride }) {
+export function createSolver({ root, winners: winnersOverride, truth: truthOverride }: {root: string, winners?: () => Map<string, string>, truth?: ReturnType<typeof createTruth>}) {
   const truth = truthOverride ?? createTruth({ root });
   let cache = null;
   /** trackedWinners compiles every committed winner (~7 s); it is kept until a winner file changes. */
@@ -125,8 +125,7 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
     ];
   }
 
-  /** @param {{game?: string}} args */
-  function describe({ game } = {}) {
+  function describe({ game }: {game?: string} = {}) {
     const named = resolveGame(game);
     if (!named) return gameRefusal(game);
     const pkg = named.package;
@@ -228,7 +227,7 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
 
     const gapRows = gaps(pkg, gamePacks, gameEdges.length);
     notMeasured.push(...gapRows.filter(row => row.holds !== false).map(row => `Plan 28 gap ${row.gap} (${row.name}) holds${row.holds === true ? '' : ' partly'}`),
-      ...gapRows.flatMap(row => row.notMeasured ?? []));
+      ...gapRows.flatMap((row: any) => row.notMeasured ?? []));
 
     return claimEnvelope({
       claim: {
@@ -252,7 +251,7 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
     ...Object.entries(args).filter(([, value]) => value !== undefined && value !== null && value !== false)
       .map(([key, value]) => (value === true ? `--${key}` : `--${key} ${shellQuote(value)}`))].join(' ');
 
-  function queryChronicle({ game, text, kind, negative, limit }) {
+  function queryChronicle({ game, text, kind, negative, limit }: { game?: string, text?: string, kind?: string, negative?: boolean, limit?: number }) {
     const named = game === undefined ? null : resolveGame(game);
     if (game !== undefined && !named) return gameRefusal(game);
     const chronicle = readChronicle(root);
@@ -276,7 +275,7 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
     });
   }
 
-  function queryPacks({ game, text, limit }) {
+  function queryPacks({ game, text, limit }: { game?: string, text?: string, limit?: number }) {
     const named = game === undefined ? null : resolveGame(game);
     if (game !== undefined && !named) return gameRefusal(game);
     const rows = readPacks(root).filter(pack => (!named || gameKey(pack.game) === named.package) && matches(text, [pack.id]))
@@ -299,7 +298,7 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
     });
   }
 
-  function queryContracts({ text, limit }) {
+  function queryContracts({ text, limit }: { text?: string, limit?: number }) {
     const register = readContracts(root);
     const rows = register.contracts.filter(item => matches(text, [item.id, item.owner, item.kind, item.validator]));
     const shown = rows.slice(0, limitOf(limit) ?? rows.length);
@@ -315,8 +314,7 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
     });
   }
 
-  /** @param {{what?: string, game?: string, text?: string, kind?: string, negative?: boolean, limit?: number}} args */
-  function query(args = {}) {
+  function query(args: {what?: string, game?: string, text?: string, kind?: string, negative?: boolean, limit?: number} = {}) {
     const { what } = args;
     if (what === 'promotions') return promotionsQueryEnvelope(queryPromotions(root, { winners: winners() }));
     if (what === 'chronicle') return queryChronicle(args);
@@ -327,8 +325,7 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
 
   // --- review: read-only instruments over one pack --------------------------------------------
 
-  /** @param {string} id */
-  function loadPack(id) {
+  function loadPack(id: string) {
     if (typeof id !== 'string' || !PACK_ID.test(id) || id.startsWith('.')) return { refusal: badArgument('a pack id is letters, digits, dots, dashes and underscores', 'name a directory under docs/evidence/runs') };
     if (!packDirectories(root).includes(id)) return { refusal: badArgument(`no committed pack is named ${id}`, 'query packs lists them') };
     const row = readPackRow(root, id);
@@ -337,11 +334,10 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
     return { row, lifted: liftPack(root, id), dir: join(root, PACKS_DIR, id) };
   }
 
-  /** @param {{pack?: string, instrument?: string}} args */
-  function review({ pack, instrument } = {}) {
-    if (!INSTRUMENTS.includes(/** @type {string} */ (instrument)))
+  function review({ pack, instrument }: {pack?: string, instrument?: string} = {}) {
+    if (!INSTRUMENTS.includes((instrument as string)))
       return badArgument(`${JSON.stringify(instrument ?? null)} is not an instrument`, `name one of ${INSTRUMENTS.join(', ')}`);
-    const loaded = loadPack(/** @type {string} */ (pack));
+    const loaded = loadPack((pack as string));
     if (loaded.refusal) return loaded.refusal;
     const { row, lifted, dir } = loaded;
     const where = `${PACKS_DIR}/${row.id}`;
@@ -411,9 +407,8 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
 
   // --- promote: a proposal or a refusal, never a write -----------------------------------------
 
-  /** @param {{pack?: string}} args */
-  function promote({ pack } = {}) {
-    const loaded = loadPack(/** @type {string} */ (pack));
+  function promote({ pack }: {pack?: string} = {}) {
+    const loaded = loadPack((pack as string));
     if (loaded.refusal) return loaded.refusal;
     const { row, dir } = loaded;
     const where = `${PACKS_DIR}/${row.id}`;
@@ -457,12 +452,11 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
 
   // --- check: the refusals, on a statement a caller is about to make ---------------------------
 
-  /** @param {{rule?: string, [key: string]: any}} args */
-  function check(args = {}) {
+  function check(args: {rule?: string, [key: string]: any} = {}) {
     const { rule, ...input } = args;
-    if (!Object.hasOwn(CHECKS, /** @type {string} */ (rule)))
+    if (!Object.hasOwn(CHECKS, (rule as string)))
       return badArgument(`${JSON.stringify(rule ?? null)} is not a refusal rule`, `name one of ${Object.keys(CHECKS).join(', ')}`);
-    const result = CHECKS[/** @type {keyof typeof CHECKS} */ (rule)](input);
+    const result = CHECKS[(rule as keyof typeof CHECKS)](input);
     if (isRefusal(result)) return result;
     const subject = rule === 'seed-floor' ? { seeds: input.seeds, wins: input.wins ?? null, heldOut: input.heldOut ?? null }
       : rule === 'directional-reuse' ? { constant: input.constant, use: input.use }
@@ -472,7 +466,7 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
     return claimEnvelope({
       claim: { rule, passed: true, subject },
       label: unknown('passing a refusal rule measures nothing: the statement it guarded stands or falls on its own evidence'),
-      target, cite: [...RULE_CITES[/** @type {keyof typeof RULE_CITES} */ (rule)]], status: 'standing', supersededBy: null,
+      target, cite: [...RULE_CITES[(rule as keyof typeof RULE_CITES)]], status: 'standing', supersededBy: null,
       notMeasured: [...result.notMeasured, 'the statement itself: a rule check is not evidence for it'],
       reproducer: `npm run review -- check ${rule} ${shellQuote(JSON.stringify(input))}`,
     });
@@ -480,13 +474,12 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
 
   // --- truth: the game's own event sheet, from the caller's local dump -------------------------
 
-  /** @param {{op?: string, [key: string]: any}} args decode {path, game} | events {game, query} | object {game, name | handle} */
-  const truthVerb = (args = {}) => truth.call(args);
+  /** @param args decode {path, game} | events {game, query} | object {game, name | handle} */
+  const truthVerb = (args: {op?: string, [key: string]: any} = {}) => truth.call(args);
 
   // --- resources -----------------------------------------------------------------------------
 
-  /** @param {string} uri */
-  function readResource(uri) {
+  function readResource(uri: string) {
     if (String(uri ?? '').startsWith('fnaf://truth/')) return truth.readUri(uri);
     if (uri === 'fnaf://chronicle') {
       const chronicle = readChronicle(root);
@@ -554,8 +547,7 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
   return {
     describe: checked(describe), query: checked(query), review: checked(review), promote: checked(promote), check: checked(check),
     truth: checked(truthVerb),
-    /** @param {string} uri */
-    readResource: uri => { const value = readResource(uri); return value === null ? null : validateClaimEnvelope(value); },
+    readResource: (uri: string) => { const value = readResource(uri); return value === null ? null : validateClaimEnvelope(value); },
     listResources, resourceTemplates: () => [...RESOURCE_TEMPLATES],
     /** The committed-winner compile this surface caches, for another door on the same checkout (the lab). */
     winners,

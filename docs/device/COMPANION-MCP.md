@@ -82,7 +82,7 @@ Resources, each a read-only projection in the same envelope:
 `fnaf://truth/{game}/frame/{frame}/group/{group}` (one cited event group of
 your local dump, read back; a refusal where none is configured).
 
-The verbs live in [`packages/review/src/solver.mjs`](../../packages/review/src/solver.mjs),
+The verbs live in [`packages/review/src/solver.mjs`](../../packages/review/src/solver.ts),
 so the MCP server, the review CLI and a later wiki or desk share one verb table;
 `truth` is Source's own reading, [`packages/source/decompile/truth.mjs`](../../packages/source/decompile/truth.mjs).
 Not here yet (Plan 28 step 6): `sim.*` and `device.*` over the gated simulation

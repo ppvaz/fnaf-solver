@@ -30,7 +30,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { canonicalJson } from '@sixam/kernel/contracts';
 import { validateAnnotation } from '@sixam/kernel';
-import { PACKS_DIR } from './evidence-pack.mjs';
+import { PACKS_DIR } from './evidence-pack.ts';
 
 export const RUN_AUDIT_INSTRUMENT = 'run-audit@1';
 export const RUN_AUDIT_KIND = 'run-audit-v1';
@@ -44,11 +44,9 @@ const epoch = (at) => (typeof at === 'number' ? at : Date.parse(at));
 
 /**
  * The pack's own files, parsed, with the sha256 of each one read.
- * @param {string} dir
  */
-function readInputs(dir) {
-  /** @type {string[]} */
-  const inputs = [];
+function readInputs(dir: string) {
+  const inputs: string[] = [];
   const read = (rel) => {
     const file = join(dir, rel);
     if (!existsSync(file)) return null;
@@ -67,9 +65,8 @@ function readInputs(dir) {
 
 /**
  * The last moment the night was still observed, in epoch ms, or null.
- * @param {any} phase @param {any[]} events
  */
-function deathOnset(phase, events) {
+function deathOnset(phase: any, events: any[]) {
   const terminal = phase?.terminal;
   if (Number.isFinite(terminal?.lastNightAt))
     return { at: terminal.lastNightAt, from: 'phase.json terminal.lastNightAt', terminalAt: terminal.terminalAt ?? null,
@@ -81,13 +78,11 @@ function deathOnset(phase, events) {
 
 /**
  * Execution faults, each with its time and its stage, split by the onset.
- * @param {any[]} events @param {any} report @param {number} onset
  */
-function executionFaults(events, report, onset) {
+function executionFaults(events: any[], report: any, onset: number) {
   const systematic = new Set((report?.effects?.systematicMisses ?? [])
     .filter((miss) => miss.verdict === 'ACTUATOR-GAP').map((miss) => miss.key));
-  /** @type {{at: number, stage: string, kind: string, detail: string, decisive: boolean}[]} */
-  const faults = [];
+  const faults: {at: number, stage: string, kind: string, detail: string, decisive: boolean}[] = [];
   for (const event of events) {
     if (event.type === 'control.gate.abort')
       faults.push({ at: epoch(event.at), stage: 'OBSERVATION', kind: 'gate-abort', detail: String(event.reason ?? ''), decisive: true });
@@ -105,13 +100,12 @@ function executionFaults(events, report, onset) {
 
 /**
  * One run's verdict as a kernel Annotation.
- * @param {string} dir the pack directory
+ * @param dir the pack directory
  */
-export function auditRun(dir) {
+export function auditRun(dir: string) {
   const { pack, events, report, phase, inputs } = readInputs(dir);
   const outcome = typeof pack?.outcome === 'string' ? pack.outcome : 'UNKNOWN';
-  /** @type {string[]} */
-  const undecided = [];
+  const undecided: string[] = [];
   const onset = deathOnset(phase, events);
   let attribution = 'UNKNOWN';
   let firstDivergence = null;
@@ -167,9 +161,8 @@ export function auditRun(dir) {
 
 /**
  * Every committed pack whose outcome a loss audit explains, audited.
- * @param {string} root
  */
-export function auditRuns(root) {
+export function auditRuns(root: string) {
   const dir = join(root, PACKS_DIR);
   const ids = existsSync(dir) ? readdirSync(dir).filter((id) => existsSync(join(dir, id, 'pack.json'))).sort() : [];
   const outcomes = {};
@@ -189,10 +182,8 @@ export function auditRuns(root) {
 
 /**
  * The committed record of an audit.
- * @param {ReturnType<typeof auditRuns>} result
- * @param {{date: string, command: string, commit: string, dirtyInputs: string[]}} provenance
  */
-export function runAuditRecord(result, { date, command, commit, dirtyInputs }) {
+export function runAuditRecord(result: ReturnType<typeof auditRuns>, { date, command, commit, dirtyInputs }: {date: string, command: string, commit: string, dirtyInputs: string[]}) {
   const decided = result.audited - result.byAttribution.UNKNOWN;
   const record = {
     schema: 'evidence-record-v1', kind: RUN_AUDIT_KIND, id: `run-audit-${date.replaceAll('-', '')}`, date,
@@ -201,10 +192,10 @@ export function runAuditRecord(result, { date, command, commit, dirtyInputs }) {
     answer: `${decided} of ${result.audited} audited runs attributed (` +
       `${ATTRIBUTIONS.filter((name) => name !== 'UNKNOWN' && result.byAttribution[name]).map((name) => `${name} ${result.byAttribution[name]}`).join(', ') || 'none'}); ` +
       `${result.byAttribution.UNKNOWN} UNKNOWN, undecided by ` +
-      `${Object.entries(result.undecided).sort((a, b) => b[1] - a[1]).map(([reason, n]) => `${reason} ${n}`).join(', ')}.`,
+      `${Object.entries(result.undecided as Record<string, number>).sort((a, b) => b[1] - a[1]).map(([reason, n]) => `${reason} ${n}`).join(', ')}.`,
     labels: 'An instrument over committed packs: the run data are DEVICE_MEASURED as packed, the phase response it reads is ' +
       'MODEL_ONLY, and an attribution promotes nothing.',
-    method: { tool: 'packages/review/src/cli.mjs', command, instrument: RUN_AUDIT_INSTRUMENT,
+    method: { tool: 'packages/review/src/cli.ts', command, instrument: RUN_AUDIT_INSTRUMENT,
       git: { commit, dirtyInputs, note: 'the audit code is in the commit that adds this record' } },
     audit: result,
   };

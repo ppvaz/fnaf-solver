@@ -175,7 +175,7 @@ class Case:
                     "CUE_HELPER_QUEUE_FILE": str(self.queue_file), "CUE_HELPER_LOCK_DIR": str(self.locks),
                     "CUE_HELPER_STATE_DIR": str(self.state_dir), "FNAF_WINDOW_DIR": str(self.windows),
                     "FNAF_NIGHT_JOB_DIR": str(self.jobs_dir),
-                    "EVIDENCE_PACK_MODULE": str(ROOT / "packages/review/src/evidence-pack.mjs")})
+                    "EVIDENCE_PACK_MODULE": str(ROOT / "packages/review/src/evidence-pack.ts")})
         return env
 
     def enqueue(self, game: str, winner: str, night: int, **options) -> dict:

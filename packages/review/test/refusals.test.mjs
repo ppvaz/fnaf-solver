@@ -12,7 +12,7 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isRefusal, unknown, validateClaimEnvelope } from '@sixam/kernel';
 import { CAPABILITIES_SCHEMA, CHECKS, DIRECTIONAL_CONSTANTS, MISTAKE_ENTRIES, RULE_CITES, RULE_SOURCES, SEED_FLOOR,
-  checkCapabilitiesFirst, checkDirectionalReuse, checkSeedFloor, checkUnknownAsNumber, numberKind } from '../src/refusals.mjs';
+  checkCapabilitiesFirst, checkDirectionalReuse, checkSeedFloor, checkUnknownAsNumber, numberKind } from '../src/refusals.ts';
 
 const ROOT = resolve(fileURLToPath(new URL('../../..', import.meta.url)));
 // Whitespace is folded, so a cited sentence that wraps across lines still matches.

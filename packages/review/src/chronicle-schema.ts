@@ -97,11 +97,10 @@ export const gameOf = (entry) => entry.game ?? V1_GAME;
  * Field-level validation of one entry. Returns a list of complaints, so a bad
  * corpus reports every fault at once instead of one per run -- the same reason
  * `push-gate.mjs` runs every lane rather than stopping at the first failure.
- * @param {object} entry
- * @param {string} where
- * @param {string} [schema] the checkpoint's schema; v1 when omitted
+ *
+ * @param schema the checkpoint's schema; v1 when omitted
  */
-export function checkEntry(entry, where, schema = ENTRIES_SCHEMA) {
+export function checkEntry(entry: any, where: string, schema: string = ENTRIES_SCHEMA) {
   const at = (message) => `${where}: ${message}`;
   const problems = [];
   const v2 = isV2(schema);
@@ -215,7 +214,7 @@ export function checkCorpus(checkpoints) {
     if (!Array.isArray(checkpoint.entries))
       problems.push(`${checkpoint.file}: entries must be an array`);
 
-    for (const [day, count] of Object.entries(checkpoint.pulseByDay ?? {})) {
+    for (const [day, count] of Object.entries((checkpoint.pulseByDay ?? {}) as Record<string, number>)) {
       if (!DATE.test(day)) problems.push(`${checkpoint.file}: pulseByDay key ${day} is not a date`);
       if (!Number.isInteger(count) || count < 0)
         problems.push(`${checkpoint.file}: pulseByDay[${day}] must be a non-negative integer`);

@@ -7,7 +7,7 @@ import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
 import { Observer, OBSERVE_INTERVAL, val } from '@sixam/play/sim';
 import { BlackoutReactive, guardIntents, GUARD_FRAMES } from '@sixam/propose/fnaf2';
-import { formatRate } from '../../review/src/stat.mjs';
+import { formatRate } from '../../review/src/stat.ts';
 
 let failures = 0;
 const ok = (group, what, cond) => {

@@ -22,7 +22,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { stableHash } from '@sixam/kernel/contracts';
-import { packEntry, readPack } from './evidence-pack.mjs';
+import { packEntry, readPack } from './evidence-pack.ts';
 
 export const COHORT_RESULT_SCHEMA = 'cohort-result-v2';
 export const CORNER_COHORT_RESULT_SCHEMA = 'corner-cohort-result-v1';
@@ -74,11 +74,10 @@ function slotStatus(entry, video) {
 
 /**
  * Compute a cohort result from the packs under `packsDir`.
- * @param {any} predeclaration parsed cohort-predeclaration-v1
- * @param {string} packsDir directory holding docs/evidence/runs/<run>/
- * @param {{prefix?: string, source?: string}} [options]
+ * @param predeclaration parsed cohort-predeclaration-v1
+ * @param packsDir directory holding docs/evidence/runs/<run>/
  */
-export function computeCohort(predeclaration, packsDir, { prefix, source = null } = {}) {
+export function computeCohort(predeclaration: any, packsDir: string, { prefix, source = null }: {prefix?: string, source?: string} = {}) {
   if (predeclaration?.schema !== 'cohort-predeclaration-v1') throw new Error('not a cohort-predeclaration-v1');
   if (Array.isArray(predeclaration.corners)) {
     if (prefix !== undefined) throw new Error('a corner cohort uses each corner\'s declared labels, not a prefix override');
@@ -146,7 +145,7 @@ function computeCorners(predeclaration, packsDir, source) {
       throw new Error(`corner ${corner.id} must explicitly name consecutive rNN labels starting at r01`);
     if (prefixes.has(prefix)) throw new Error('corners must use distinct label prefixes');
     prefixes.add(prefix);
-    const result = computeCohort({ ...shared, size: labels.length }, packsDir, { prefix, source });
+    const result: any = computeCohort({ ...shared, size: labels.length }, packsDir, { prefix, source });
     for (const slot of result.slots) for (const run of slot.runs) {
       if (run.role !== 'counted') continue;
       const dir = join(packsDir, run.run);

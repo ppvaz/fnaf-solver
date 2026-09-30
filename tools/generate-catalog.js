@@ -377,7 +377,7 @@ const legacyPaths = [
 // catalog diff keeps it current, and Review's trackedWinners() reads it, refusing
 // when a winner file's bytes differ from the sha256 recorded here.
 const { compileBundle } = await import(pathToFileURL(join(ROOT, 'packages/propose/bin/plans/bundle.mjs')).href);
-const { winnerFiles } = await import(pathToFileURL(join(ROOT, 'packages/review/src/evidence-pack.mjs')).href);
+const { winnerFiles } = await import(pathToFileURL(join(ROOT, 'packages/review/src/evidence-pack.ts')).href);
 const winnerHashes = [];
 for (const file of winnerFiles(ROOT)) {
   const bytes = await readFile(join(ROOT, file));

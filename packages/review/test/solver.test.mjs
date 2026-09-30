@@ -17,14 +17,14 @@ import { canonicalJson } from '@sixam/kernel/contracts';
 import { CONTROL_CATALOGS } from '@sixam/source';
 import { NO_LOCAL_DUMP, VAULT_ENV } from '@sixam/source/truth';
 import { isUnknown, validateClaimEnvelope } from '@sixam/kernel';
-import { PACKS_DIR, trackedWinners } from '../src/evidence-pack.mjs';
-import { GRAPH_FILE, PROMOTION_EDGE } from '../src/evidence-promotion.mjs';
-import { queryPromotions } from '../src/promotions-query.mjs';
-import { GAMES, catalogUnknowns, isNegative, readArchivedRoutes, readChronicle, readContracts } from '../src/registers.mjs';
-import { INSTRUMENTS, VERBS, createSolver } from '../src/solver.mjs';
+import { PACKS_DIR, trackedWinners } from '../src/evidence-pack.ts';
+import { GRAPH_FILE, PROMOTION_EDGE } from '../src/evidence-promotion.ts';
+import { queryPromotions } from '../src/promotions-query.ts';
+import { GAMES, catalogUnknowns, isNegative, readArchivedRoutes, readChronicle, readContracts } from '../src/registers.ts';
+import { INSTRUMENTS, VERBS, createSolver } from '../src/solver.ts';
 
 const ROOT = resolve(fileURLToPath(new URL('../../..', import.meta.url)));
-const CLI = join(ROOT, 'packages/review/src/cli.mjs');
+const CLI = join(ROOT, 'packages/review/src/cli.ts');
 // truth reads a host's own local dump; this test runs with none configured, in process and in the CLI it spawns.
 process.env[VAULT_ENV] = join(tmpdir(), `solver-test-no-vault-${process.pid}.json`);
 

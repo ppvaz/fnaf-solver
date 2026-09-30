@@ -1,4 +1,4 @@
-// Plan 12 attestation and promotion over run packs (packages/review/src/evidence-promotion.mjs). Pedro,
+// Plan 12 attestation and promotion over run packs (packages/review/src/evidence-promotion.ts). Pedro,
 // 2026-09-27, delegated writing the attestation to agents and accepted recovered packs fully.
 // What that must not become: an attestation written over a pack nobody re-derived, one that
 // outlives an edit to its pack, one over a pack failing another check, a recovered pack whose
@@ -9,11 +9,11 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { stableHash } from '@sixam/kernel/contracts';
-import { CAMPAIGN_RESULT_SCHEMA } from '../src/evidence-campaign.mjs';
+import { CAMPAIGN_RESULT_SCHEMA } from '../src/evidence-campaign.ts';
 import { AGENT_DELEGATION, ATTESTATION_FILE, ATTESTATION_SCHEMA, ATTESTATION_SCHEMA_V1, ATTESTED_CHECKS, RECOVERY_RECORD,
-  attestationStatus, buildPack, packManifestComplete, packPromotionChecks, readPack, resolvePackTargets, writePack } from '../src/evidence-pack.mjs';
+  attestationStatus, buildPack, packManifestComplete, packPromotionChecks, readPack, resolvePackTargets, writePack } from '../src/evidence-pack.ts';
 import { GRAPH_FILE, attestPack, derivePromotion, formatGraph, makeAttestation, promotionEdgeFor, promotionSummary, readGraph,
-  recordPromotion } from '../src/evidence-promotion.mjs';
+  recordPromotion } from '../src/evidence-promotion.ts';
 
 const sha256 = data => createHash('sha256').update(data).digest('hex');
 const root = mkdtempSync(join(tmpdir(), 'evidence-promotion-test-'));

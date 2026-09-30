@@ -19,7 +19,7 @@ import { sweep, runPolicy } from './policy.mjs';
 import { POLICIES } from './policybaselines.mjs';
 import { run as bbRun, DEFAULT_CYCLE, LEGACY_ANIMATION_INVALID_CYCLE } from './reactive-pilot.mjs';
 import { genCycle, KNOBS0, MIN } from './cyclesearch.mjs';
-import { formatRate } from '../../../review/src/stat.mjs';
+import { formatRate } from '../../../review/src/stat.ts';
 
 const RUNS = +(process.env.POLICY_RUNS || 100);
 const SLACKS = [0, 20, 40, 60, 100];

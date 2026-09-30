@@ -5,7 +5,7 @@
       "file": "apps/desktop/bin/deathchart.mjs",
       "imports": [
         "../../../packages/propose/bin/plans/human-gate.mjs",
-        "../../../packages/review/src/stat.mjs",
+        "../../../packages/review/src/stat.ts",
         "../../../tools/chrome.mjs",
         "@sixam/source/fnaf2",
         "node:child_process",
@@ -1876,7 +1876,7 @@
     {
       "file": "packages/propose/bin/minustoystest.mjs",
       "imports": [
-        "../../review/src/stat.mjs",
+        "../../review/src/stat.ts",
         "@sixam/propose/experiment",
         "@sixam/propose/seeds",
         "node:url"
@@ -1893,7 +1893,7 @@
     {
       "file": "packages/propose/bin/nightloop.mjs",
       "imports": [
-        "../../review/src/stat.mjs",
+        "../../review/src/stat.ts",
         "./census/pool.mjs",
         "./nightloop-run.mjs",
         "@sixam/source/fnaf2"
@@ -1976,7 +1976,7 @@
     {
       "file": "packages/propose/bin/plans/human-gate.mjs",
       "imports": [
-        "../../../review/src/stat.mjs",
+        "../../../review/src/stat.ts",
         "./recipe.mjs",
         "@sixam/source/fnaf2",
         "node:fs",
@@ -2146,7 +2146,7 @@
     {
       "file": "packages/propose/bin/plans/test-night-matrix.mjs",
       "imports": [
-        "../../../review/src/stat.mjs",
+        "../../../review/src/stat.ts",
         "../census/pool.mjs",
         "./human-gate.mjs",
         "./recipe.mjs",
@@ -2564,7 +2564,7 @@
     {
       "file": "packages/propose/bin/ventreacttest.mjs",
       "imports": [
-        "../../review/src/stat.mjs",
+        "../../review/src/stat.ts",
         "./plans/minus-toys-jitter.mjs",
         "./plans/minus-toys-plan.mjs",
         "@sixam/play/sim",
@@ -2683,7 +2683,7 @@
       "file": "packages/propose/parked/minus7/hid-device-pilot.mjs",
       "imports": [
         "../../../play/bin/phone/actuator.mjs",
-        "../../../review/src/stat.mjs",
+        "../../../review/src/stat.ts",
         "@sixam/source/fnaf2",
         "node:url"
       ]
@@ -2780,7 +2780,7 @@
     {
       "file": "packages/propose/parked/minus7/policytest.mjs",
       "imports": [
-        "../../../review/src/stat.mjs",
+        "../../../review/src/stat.ts",
         "./cyclesearch.mjs",
         "./policy.mjs",
         "./policybaselines.mjs",
@@ -2794,7 +2794,7 @@
     {
       "file": "packages/propose/parked/minus7/reactive-pilot.mjs",
       "imports": [
-        "../../../review/src/stat.mjs",
+        "../../../review/src/stat.ts",
         "@sixam/source/fnaf2",
         "node:url",
         "node:worker_threads"
@@ -2840,7 +2840,7 @@
       "file": "packages/propose/parked/minus7/stock-device-pilot.mjs",
       "imports": [
         "../../../play/bin/phone/actuator.mjs",
-        "../../../review/src/stat.mjs",
+        "../../../review/src/stat.ts",
         "@sixam/source/fnaf2",
         "node:url"
       ]
@@ -3245,7 +3245,7 @@
     {
       "file": "packages/propose/test/reactivetest.mjs",
       "imports": [
-        "../../review/src/stat.mjs",
+        "../../review/src/stat.ts",
         "../bin/plans/minus-toys-plan.mjs",
         "@sixam/play/sim",
         "@sixam/propose/fnaf2",
@@ -3460,18 +3460,18 @@
       ]
     },
     {
-      "file": "packages/review/src/chronicle-schema.js",
+      "file": "packages/review/src/chronicle-schema.ts",
       "imports": [
         "@sixam/source"
       ]
     },
     {
-      "file": "packages/review/src/cli.mjs",
+      "file": "packages/review/src/cli.ts",
       "imports": [
-        "./envelopes.mjs",
-        "./promotions-query.mjs",
-        "./run-audit.mjs",
-        "./solver.mjs",
+        "./envelopes.ts",
+        "./promotions-query.ts",
+        "./run-audit.ts",
+        "./solver.ts",
         "node:child_process",
         "node:fs",
         "node:path",
@@ -3479,39 +3479,39 @@
       ]
     },
     {
-      "file": "packages/review/src/consequence.mjs",
+      "file": "packages/review/src/consequence.ts",
       "imports": [
         "@sixam/kernel"
       ]
     },
     {
-      "file": "packages/review/src/envelopes.mjs",
+      "file": "packages/review/src/envelopes.ts",
       "imports": [
-        "./evidence-pack.mjs",
-        "./evidence-promotion.mjs",
-        "./promotions-query.mjs",
+        "./evidence-pack.ts",
+        "./evidence-promotion.ts",
+        "./promotions-query.ts",
         "@sixam/kernel"
       ]
     },
     {
-      "file": "packages/review/src/evidence-campaign.mjs",
+      "file": "packages/review/src/evidence-campaign.ts",
       "imports": [
         "@sixam/kernel/contracts"
       ]
     },
     {
-      "file": "packages/review/src/evidence-cohort.mjs",
+      "file": "packages/review/src/evidence-cohort.ts",
       "imports": [
-        "./evidence-pack.mjs",
+        "./evidence-pack.ts",
         "@sixam/kernel/contracts",
         "node:fs",
         "node:path"
       ]
     },
     {
-      "file": "packages/review/src/evidence-pack.mjs",
+      "file": "packages/review/src/evidence-pack.ts",
       "imports": [
-        "./evidence-campaign.mjs",
+        "./evidence-campaign.ts",
         "@sixam/kernel",
         "@sixam/kernel/contracts",
         "node:crypto",
@@ -3520,10 +3520,10 @@
       ]
     },
     {
-      "file": "packages/review/src/evidence-promotion.mjs",
+      "file": "packages/review/src/evidence-promotion.ts",
       "imports": [
-        "./evidence-campaign.mjs",
-        "./evidence-pack.mjs",
+        "./evidence-campaign.ts",
+        "./evidence-pack.ts",
         "@sixam/kernel/contracts",
         "@sixam/source/fnaf2",
         "node:crypto",
@@ -3532,33 +3532,33 @@
       ]
     },
     {
-      "file": "packages/review/src/measure/index.js",
+      "file": "packages/review/src/measure/index.ts",
       "imports": [
-        "./bench-trace.js"
+        "./bench-trace.ts"
       ]
     },
     {
-      "file": "packages/review/src/mistakes.mjs",
+      "file": "packages/review/src/mistakes.ts",
       "imports": [
         "node:fs",
         "node:path"
       ]
     },
     {
-      "file": "packages/review/src/pack-lift.mjs",
+      "file": "packages/review/src/pack-lift.ts",
       "imports": [
-        "./evidence-pack.mjs",
+        "./evidence-pack.ts",
         "@sixam/kernel",
         "node:fs",
         "node:path"
       ]
     },
     {
-      "file": "packages/review/src/promotions-query.mjs",
+      "file": "packages/review/src/promotions-query.ts",
       "imports": [
-        "./evidence-pack.mjs",
-        "./evidence-promotion.mjs",
-        "./pack-lift.mjs",
+        "./evidence-pack.ts",
+        "./evidence-promotion.ts",
+        "./pack-lift.ts",
         "@sixam/kernel",
         "@sixam/kernel/contracts",
         "node:crypto",
@@ -3567,17 +3567,17 @@
       ]
     },
     {
-      "file": "packages/review/src/refusals.mjs",
+      "file": "packages/review/src/refusals.ts",
       "imports": [
         "@sixam/kernel"
       ]
     },
     {
-      "file": "packages/review/src/registers.mjs",
+      "file": "packages/review/src/registers.ts",
       "imports": [
-        "./chronicle-schema.js",
-        "./evidence-pack.mjs",
-        "./evidence-promotion.mjs",
+        "./chronicle-schema.ts",
+        "./evidence-pack.ts",
+        "./evidence-promotion.ts",
         "@sixam/kernel",
         "@sixam/source",
         "node:fs",
@@ -3585,7 +3585,7 @@
       ]
     },
     {
-      "file": "packages/review/src/renamed-path.js",
+      "file": "packages/review/src/renamed-path.ts",
       "imports": [
         "node:child_process",
         "node:fs",
@@ -3593,21 +3593,21 @@
       ]
     },
     {
-      "file": "packages/review/src/roadmap.mjs",
+      "file": "packages/review/src/roadmap.ts",
       "imports": [
-        "./mistakes.mjs",
-        "./refusals.mjs",
-        "./registers.mjs",
-        "./solver.mjs",
+        "./mistakes.ts",
+        "./refusals.ts",
+        "./registers.ts",
+        "./solver.ts",
         "@sixam/kernel",
         "node:fs",
         "node:path"
       ]
     },
     {
-      "file": "packages/review/src/run-audit.mjs",
+      "file": "packages/review/src/run-audit.ts",
       "imports": [
-        "./evidence-pack.mjs",
+        "./evidence-pack.ts",
         "@sixam/kernel",
         "@sixam/kernel/contracts",
         "node:crypto",
@@ -3616,16 +3616,16 @@
       ]
     },
     {
-      "file": "packages/review/src/solver.mjs",
+      "file": "packages/review/src/solver.ts",
       "imports": [
-        "./envelopes.mjs",
-        "./evidence-cohort.mjs",
-        "./evidence-pack.mjs",
-        "./evidence-promotion.mjs",
-        "./pack-lift.mjs",
-        "./promotions-query.mjs",
-        "./refusals.mjs",
-        "./registers.mjs",
+        "./envelopes.ts",
+        "./evidence-cohort.ts",
+        "./evidence-pack.ts",
+        "./evidence-promotion.ts",
+        "./pack-lift.ts",
+        "./promotions-query.ts",
+        "./refusals.ts",
+        "./registers.ts",
         "@sixam/kernel",
         "@sixam/kernel/contracts",
         "@sixam/source",
@@ -3635,7 +3635,7 @@
       ]
     },
     {
-      "file": "packages/review/src/vault.mjs",
+      "file": "packages/review/src/vault.ts",
       "imports": [
         "@sixam/kernel/contracts",
         "node:child_process",
@@ -3661,16 +3661,16 @@
     {
       "file": "packages/review/test/evidence-campaign.test.mjs",
       "imports": [
-        "../src/evidence-campaign.mjs",
+        "../src/evidence-campaign.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/review/test/evidence-cohort.test.mjs",
       "imports": [
-        "../src/evidence-campaign.mjs",
-        "../src/evidence-cohort.mjs",
-        "../src/evidence-pack.mjs",
+        "../src/evidence-campaign.ts",
+        "../src/evidence-cohort.ts",
+        "../src/evidence-pack.ts",
         "node:assert/strict",
         "node:fs",
         "node:os",
@@ -3680,8 +3680,8 @@
     {
       "file": "packages/review/test/evidence-pack.test.mjs",
       "imports": [
-        "../src/evidence-campaign.mjs",
-        "../src/evidence-pack.mjs",
+        "../src/evidence-campaign.ts",
+        "../src/evidence-pack.ts",
         "@sixam/kernel/contracts",
         "node:assert/strict",
         "node:crypto",
@@ -3693,9 +3693,9 @@
     {
       "file": "packages/review/test/evidence-promotion.test.mjs",
       "imports": [
-        "../src/evidence-campaign.mjs",
-        "../src/evidence-pack.mjs",
-        "../src/evidence-promotion.mjs",
+        "../src/evidence-campaign.ts",
+        "../src/evidence-pack.ts",
+        "../src/evidence-promotion.ts",
         "@sixam/kernel/contracts",
         "node:assert/strict",
         "node:crypto",
@@ -3707,10 +3707,10 @@
     {
       "file": "packages/review/test/lab-queries.test.mjs",
       "imports": [
-        "../src/consequence.mjs",
-        "../src/mistakes.mjs",
-        "../src/refusals.mjs",
-        "../src/roadmap.mjs",
+        "../src/consequence.ts",
+        "../src/mistakes.ts",
+        "../src/refusals.ts",
+        "../src/roadmap.ts",
         "@sixam/kernel",
         "node:assert/strict",
         "node:fs",
@@ -3721,8 +3721,8 @@
     {
       "file": "packages/review/test/pack-lift.test.js",
       "imports": [
-        "../src/evidence-pack.mjs",
-        "../src/pack-lift.mjs",
+        "../src/evidence-pack.ts",
+        "../src/pack-lift.ts",
         "@sixam/kernel",
         "node:assert/strict",
         "node:crypto",
@@ -3734,9 +3734,9 @@
     {
       "file": "packages/review/test/promotions-query.test.js",
       "imports": [
-        "../src/evidence-pack.mjs",
-        "../src/evidence-promotion.mjs",
-        "../src/promotions-query.mjs",
+        "../src/evidence-pack.ts",
+        "../src/evidence-promotion.ts",
+        "../src/promotions-query.ts",
         "@sixam/kernel",
         "@sixam/kernel/contracts",
         "node:assert/strict",
@@ -3749,7 +3749,7 @@
     {
       "file": "packages/review/test/refusals.test.mjs",
       "imports": [
-        "../src/refusals.mjs",
+        "../src/refusals.ts",
         "@sixam/kernel",
         "node:assert/strict",
         "node:fs",
@@ -3760,7 +3760,7 @@
     {
       "file": "packages/review/test/run-audit.test.mjs",
       "imports": [
-        "../src/run-audit.mjs",
+        "../src/run-audit.ts",
         "node:assert/strict",
         "node:fs",
         "node:os",
@@ -3770,11 +3770,11 @@
     {
       "file": "packages/review/test/solver.test.mjs",
       "imports": [
-        "../src/evidence-pack.mjs",
-        "../src/evidence-promotion.mjs",
-        "../src/promotions-query.mjs",
-        "../src/registers.mjs",
-        "../src/solver.mjs",
+        "../src/evidence-pack.ts",
+        "../src/evidence-promotion.ts",
+        "../src/promotions-query.ts",
+        "../src/registers.ts",
+        "../src/solver.ts",
         "@sixam/kernel",
         "@sixam/kernel/contracts",
         "@sixam/source",
@@ -3791,7 +3791,7 @@
     {
       "file": "packages/review/test/stat.test.mjs",
       "imports": [
-        "../src/stat.mjs",
+        "../src/stat.ts",
         "node:assert/strict",
         "node:child_process",
         "node:path",
@@ -4740,7 +4740,9 @@
     {
       "file": "tools/test-ts-migrate.mjs",
       "imports": [
+        "./lib.js",
         "./types.ts",
+        "\\.\\/lib\\.ts",
         "\\.\\/types\\.ts",
         "node:assert/strict",
         "node:child_process",

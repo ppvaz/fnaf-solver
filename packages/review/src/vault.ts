@@ -170,10 +170,10 @@ function exportPack() {
   const requested = listValues('paths');
   if (requested.length === 0) refuse('--paths PATH... is required');
 
-  const paths = new Set();
+  const paths = new Set<string>();
   for (const input of requested) expand(repoRelative(input), paths);
   const ordered = [...paths].sort();
-  const classes = captureClasses(ordered.some(path => path.startsWith('captures/')));
+  const classes = captureClasses(ordered.some((path: any) => path.startsWith('captures/')));
 
   const files = ordered.map(path => ({
     path,

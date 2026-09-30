@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { ATTRIBUTIONS, auditRun, auditRuns, runAuditRecord } from '../src/run-audit.mjs';
+import { ATTRIBUTIONS, auditRun, auditRuns, runAuditRecord } from '../src/run-audit.ts';
 
 const root = mkdtempSync(join(tmpdir(), 'run-audit-'));
 const ONSET = Date.parse('2026-09-30T01:00:00.000Z');

@@ -25,7 +25,7 @@
 //           into the true future of the same RNG stream; it is an upper bound
 //           and a diagnostic, never a device-realistic result.
 import * as C from '@sixam/source/fnaf2';
-import { wilsonInterval } from '../../review/src/stat.mjs';
+import { wilsonInterval } from '../../review/src/stat.ts';
 import { runNight } from './nightloop-run.mjs';
 import { SimPool } from './census/pool.mjs';
 

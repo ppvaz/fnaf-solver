@@ -80,10 +80,9 @@ export const CODE_AREAS = Object.freeze([
 
 /**
  * What one path is: a record, a gate, bookkeeping, or code in an area (or in none of the four).
- * @param {string} path repository-relative, forward slashes
- * @returns {{kind: 'record', rule: string, what: string} | {kind: 'gate'} | {kind: 'bookkeeping'} | {kind: 'code', area: string | null}}
+ * @param path repository-relative, forward slashes
  */
-export function pathKind(path) {
+export function pathKind(path: string): {kind: 'record', rule: string, what: string} | {kind: 'gate'} | {kind: 'bookkeeping'} | {kind: 'code', area: string | null} {
   const record = RECORD_RULES.find(rule => rule.test(path));
   if (record) return { kind: 'record', rule: record.id, what: record.what };
   if (GATE.some(pattern => pattern.test(path))) return { kind: 'gate' };
@@ -96,9 +95,9 @@ const list = items => (items.length <= 3 ? items.join(', ') : `${items.slice(0, 
 /**
  * The consequence class of one change: `consequence` is `consequential`, `bookkeeping` or
  * UNKNOWN(reason), and `because` says which rule decided it.
- * @param {string[]} paths every path the change touches
+ * @param paths every path the change touches
  */
-export function classifyChange(paths) {
+export function classifyChange(paths: string[]) {
   const rows = [...new Set(paths)].sort().map(path => ({ path, ...pathKind(path) }));
   const records = rows.filter(row => row.kind === 'record');
   const gates = rows.filter(row => row.kind === 'gate').map(row => row.path);
@@ -124,5 +123,5 @@ export function classifyChange(paths) {
   return { consequence: 'bookkeeping', because: `no record, and ${what.join(' and ')} only`, ...summary };
 }
 
-/** The class as one word: consequential, bookkeeping or UNKNOWN. @param {ReturnType<typeof classifyChange>} result */
-export const consequenceKey = result => (typeof result.consequence === 'string' ? result.consequence : 'UNKNOWN');
+/** The class as one word: consequential, bookkeeping or UNKNOWN. */
+export const consequenceKey = (result: ReturnType<typeof classifyChange>) => (typeof result.consequence === 'string' ? result.consequence : 'UNKNOWN');

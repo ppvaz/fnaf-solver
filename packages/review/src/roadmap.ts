@@ -22,10 +22,10 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { isUnknown, unknown } from '@sixam/kernel';
-import { MISTAKE_ENTRIES } from './refusals.mjs';
-import { readMistakes, stepFamily } from './mistakes.mjs';
-import { GAMES, gameKey } from './registers.mjs';
-import { VERBS } from './solver.mjs';
+import { MISTAKE_ENTRIES } from './refusals.ts';
+import { readMistakes, stepFamily } from './mistakes.ts';
+import { GAMES, gameKey } from './registers.ts';
+import { VERBS } from './solver.ts';
 
 export const ROADMAP = 'plans/ROADMAP.md';
 export const MISTAKE_GATES_FILE = 'tools/test-mistake-register.mjs';
@@ -57,10 +57,8 @@ export const ORDER_OF = Object.freeze({ S1: 0, S2: 1, S3: 2, S4: 2, S5: 3, S6: 4
 
 /**
  * Each step's "Closes when" text as the ROADMAP writes it, markdown emphasis removed.
- * @param {string} root
- * @returns {Record<string, string | null>}
  */
-export function closesWhen(root) {
+export function closesWhen(root: string): Record<string, string | null> {
   const text = readFileSync(join(root, ROADMAP), 'utf8');
   const out = {};
   for (const step of STEPS) {
@@ -81,8 +79,8 @@ export function closesWhen(root) {
   return out;
 }
 
-/** The ROADMAP headings and order lines this module relies on that the file no longer holds. @param {string} root */
-export function roadmapDrift(root) {
+/** The ROADMAP headings and order lines this module relies on that the file no longer holds. */
+export function roadmapDrift(root: string) {
   const text = readFileSync(join(root, ROADMAP), 'utf8');
   return [...STEPS.map(step => `### ${step.id}: ${step.title}`), ...ORDER].filter(line => !text.includes(line));
 }
@@ -96,9 +94,8 @@ const recordDate = (file, record) => {
 /**
  * The evidence records that name a step in their top-level `step` field (docs/evidence/*.json and
  * tools/recompile/results/*.json), by step, oldest first.
- * @param {string} root
  */
-export function stepRecords(root) {
+export function stepRecords(root: string) {
   const byStep = Object.fromEntries(STEPS.map(step => [step.id, []]));
   for (const dir of ['docs/evidence', 'tools/recompile/results']) {
     if (!existsSync(join(root, dir))) continue;
@@ -116,8 +113,8 @@ export function stepRecords(root) {
   return byStep;
 }
 
-/** The gate each mistake-register entry relies on: tools/test-mistake-register.mjs's REGISTER_GATES, and the refusals. @param {string} root */
-export function mistakeGates(root) {
+/** The gate each mistake-register entry relies on: tools/test-mistake-register.mjs's REGISTER_GATES, and the refusals. */
+export function mistakeGates(root: string) {
   const text = readFileSync(join(root, MISTAKE_GATES_FILE), 'utf8');
   const block = /const REGISTER_GATES = \[([\s\S]*?)\n\];/.exec(text)?.[1];
   if (block === undefined) return null;
@@ -137,12 +134,10 @@ const workspaceNames = root => ['packages', 'apps'].flatMap(group => (existsSync
 
 /**
  * Every step's state.
- * @param {string} root
- * @param {{promotions: any, packs: any[]}} inputs the promotions query (queryPromotions) and the pack rows (readPacks)
- * @returns {{id: string, title: string, closesWhen: string | null, state: 'open' | 'closed' | {kind: 'UNKNOWN', reason: string},
- *   met: string[], unmet: string[], needs: string[], records: {count: number, newest: any}, where: string}[]}
+ * 
+ * @param inputs the promotions query (queryPromotions) and the pack rows (readPacks)
  */
-export function stepStatus(root, { promotions, packs }) {
+export function stepStatus(root: string, { promotions, packs }: {promotions: any, packs: any[]}): {id: string, title: string, closesWhen: string | null, state: 'open' | 'closed' | {kind: 'UNKNOWN', reason: string}, met: string[], unmet: string[], needs: string[], records: {count: number, newest: any}, where: string}[] {
   const closes = closesWhen(root);
   const records = stepRecords(root);
   const rows = new Map();
@@ -151,7 +146,7 @@ export function stepStatus(root, { promotions, packs }) {
 
   // S1: the promotions query's own edges and open items.
   {
-    const row = base(STEPS[0]);
+    const row: any = base(STEPS[0]);
     if (!promotions || isUnknown(promotions)) row.state = unknown(`the promotions query did not run: ${promotions?.reason ?? 'no result'}`);
     else if (!promotions.consistent) row.state = unknown('graph.json and the derivation from the packs disagree (npm run review -- query promotions)');
     else {
@@ -172,7 +167,7 @@ export function stepStatus(root, { promotions, packs }) {
 
   // S2: no record kind states its verdict.
   {
-    const row = base(STEPS[1]);
+    const row: any = base(STEPS[1]);
     row.state = unknown(`S2 closes on a frame-traced twin record or a trace-equivalence record, and no registered record kind states ` +
       `either verdict, so a closing record cannot be told from the ${row.records.count} records that name step S2` +
       (row.records.newest ? ` (newest ${row.records.newest.file})` : ''));
@@ -181,7 +176,7 @@ export function stepStatus(root, { promotions, packs }) {
 
   // S3-S5: their needs first.
   for (const step of STEPS.slice(2, 5)) {
-    const row = base(step);
+    const row: any = base(step);
     const need = rows.get(step.needs[0]);
     if (need.state === 'closed') row.state = unknown(`${step.needs[0]} is closed; ${step.id}'s own condition has no registered record kind to query`);
     else if (need.state === 'open') { row.state = 'open'; row.unmet.push(`needs ${need.id}, which is open`); }
@@ -191,7 +186,7 @@ export function stepStatus(root, { promotions, packs }) {
 
   // S6: the three games' promotion edges, the names, and the interface's verbs.
   {
-    const row = base(STEPS[5]);
+    const row: any = base(STEPS[5]);
     for (const game of GAMES.filter(item => item.alias !== 'fnaf2')) {
       const own = packs.filter(pack => gameKey(pack.game) === game.package);
       const promoted = own.filter(pack => pack.promoted);
@@ -212,7 +207,7 @@ export function stepStatus(root, { promotions, packs }) {
 
   // S7: the registers' gates; the morning report no record kind states.
   {
-    const row = base(STEPS[6]);
+    const row: any = base(STEPS[6]);
     const register = readMistakes(root);
     const gates = mistakeGates(root);
     const lanes = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).scripts;
@@ -231,7 +226,7 @@ export function stepStatus(root, { promotions, packs }) {
   return STEPS.map(step => rows.get(step.id));
 }
 
-/** A step's state as one word. @param {{state: any}} row */
-export const stateKey = row => (typeof row.state === 'string' ? row.state : 'UNKNOWN');
+/** A step's state as one word. */
+export const stateKey = (row: {state: any}) => (typeof row.state === 'string' ? row.state : 'UNKNOWN');
 
 export { stepFamily };

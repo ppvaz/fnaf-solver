@@ -8,24 +8,24 @@
     "@sixam/source": "file:../source"
   },
   "bin": {
-    "fnaf2-review": "src/cli.mjs"
+    "fnaf2-review": "src/cli.ts"
   },
   "exports": {
-    "./chronicle-schema": "./src/chronicle-schema.js",
-    "./consequence": "./src/consequence.mjs",
-    "./renamed-path": "./src/renamed-path.js",
-    "./envelopes": "./src/envelopes.mjs",
-    "./evidence-campaign": "./src/evidence-campaign.mjs",
-    "./evidence-cohort": "./src/evidence-cohort.mjs",
-    "./evidence-pack": "./src/evidence-pack.mjs",
-    "./evidence-promotion": "./src/evidence-promotion.mjs",
-    "./measure": "./src/measure/index.js",
-    "./mistakes": "./src/mistakes.mjs",
-    "./pack-lift": "./src/pack-lift.mjs",
-    "./promotions-query": "./src/promotions-query.mjs",
-    "./refusals": "./src/refusals.mjs",
-    "./registers": "./src/registers.mjs",
-    "./roadmap": "./src/roadmap.mjs",
-    "./solver": "./src/solver.mjs"
+    "./chronicle-schema": "./src/chronicle-schema.ts",
+    "./consequence": "./src/consequence.ts",
+    "./renamed-path": "./src/renamed-path.ts",
+    "./envelopes": "./src/envelopes.ts",
+    "./evidence-campaign": "./src/evidence-campaign.ts",
+    "./evidence-cohort": "./src/evidence-cohort.ts",
+    "./evidence-pack": "./src/evidence-pack.ts",
+    "./evidence-promotion": "./src/evidence-promotion.ts",
+    "./measure": "./src/measure/index.ts",
+    "./mistakes": "./src/mistakes.ts",
+    "./pack-lift": "./src/pack-lift.ts",
+    "./promotions-query": "./src/promotions-query.ts",
+    "./refusals": "./src/refusals.ts",
+    "./registers": "./src/registers.ts",
+    "./roadmap": "./src/roadmap.ts",
+    "./solver": "./src/solver.ts"
   }
 }

@@ -13,15 +13,15 @@ import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { canonicalJson, stableHash } from '@sixam/kernel/contracts';
 import { CUSTODY_CLASSES, isUnknown, validateAnnotation } from '@sixam/kernel';
-import { PACKS_DIR, trackedWinners, winnerFiles } from '../src/evidence-pack.mjs';
-import { GRAPH_FILE, PROMOTION_EDGE } from '../src/evidence-promotion.mjs';
-import { compareEdges, promotionsRecord, queryPromotions } from '../src/promotions-query.mjs';
+import { PACKS_DIR, trackedWinners, winnerFiles } from '../src/evidence-pack.ts';
+import { GRAPH_FILE, PROMOTION_EDGE } from '../src/evidence-promotion.ts';
+import { compareEdges, promotionsRecord, queryPromotions } from '../src/promotions-query.ts';
 
 const ROOT = resolve(fileURLToPath(new URL('../../..', import.meta.url)));
 
 // The CLI runs beside the in-process query: each compiles every committed winner (~8 s).
 const cliRun = new Promise((done, fail) => {
-  const child = spawn(process.execPath, [join(ROOT, 'packages/review/src/cli.mjs'), 'query', 'promotions'], { cwd: ROOT });
+  const child = spawn(process.execPath, [join(ROOT, 'packages/review/src/cli.ts'), 'query', 'promotions'], { cwd: ROOT });
   let stdout = '';
   let stderr = '';
   child.stdout.on('data', chunk => { stdout += chunk; });

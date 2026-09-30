@@ -124,7 +124,7 @@
     },
     {
       "id": "review",
-      "command": "node packages/review/src/cli.mjs",
+      "command": "node packages/review/src/cli.ts",
       "lifecycle": "supported"
     },
     {
@@ -139,7 +139,7 @@
     },
     {
       "id": "vault",
-      "command": "node packages/review/src/vault.mjs",
+      "command": "node packages/review/src/vault.ts",
       "lifecycle": "supported"
     },
     {
@@ -2423,8 +2423,8 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/review/src/vault.mjs",
-      "invocation": "packages/review/src/vault.mjs <export|import|verify|refs|list>",
+      "id": "packages/review/src/vault.ts",
+      "invocation": "packages/review/src/vault.ts <export|import|verify|refs|list>",
       "kind": "evidence CLI",
       "lifecycle": "supported"
     },
@@ -2459,14 +2459,14 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/review/src/renamed-path.js",
-      "invocation": "packages/review/src/renamed-path.js",
+      "id": "packages/review/src/renamed-path.ts",
+      "invocation": "packages/review/src/renamed-path.ts",
       "kind": "internal module",
       "lifecycle": "supported"
     },
     {
-      "id": "packages/review/src/chronicle-schema.js",
-      "invocation": "packages/review/src/chronicle-schema.js",
+      "id": "packages/review/src/chronicle-schema.ts",
+      "invocation": "packages/review/src/chronicle-schema.ts",
       "kind": "module",
       "lifecycle": "supported"
     },

@@ -22,9 +22,9 @@ import { execFileSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { promotionsQueryEnvelope } from './envelopes.mjs';
-import { QUERY_COMMAND, QUERY_INPUTS, promotionsRecord, queryPromotions } from './promotions-query.mjs';
-import { auditRuns, runAuditRecord } from './run-audit.mjs';
+import { promotionsQueryEnvelope } from './envelopes.ts';
+import { QUERY_COMMAND, QUERY_INPUTS, promotionsRecord, queryPromotions } from './promotions-query.ts';
+import { auditRuns, runAuditRecord } from './run-audit.ts';
 
 const ROOT = resolve(fileURLToPath(new URL('../../..', import.meta.url)));
 const USAGE = `Usage: npm run review -- query promotions [--envelope] [--write FILE] [--date YYYY-MM-DD]
@@ -47,14 +47,14 @@ const USAGE = `Usage: npm run review -- query promotions [--envelope] [--write F
 
   query audit attributes every committed death or error to what failed first before the death's
   onset -- OBSERVATION, ACTUATION, SCHEDULING, STRATEGY or MODEL -- or UNKNOWN naming each check
-  the pack could not decide (packages/review/src/run-audit.mjs). Prints JSON; exit 0.
+  the pack could not decide (packages/review/src/run-audit.ts). Prints JSON; exit 0.
 
   --envelope    print it as a claim-envelope-v1 (a refusal when graph and derivation disagree)
   --write FILE  also retain the output as an evidence record (command, commit, dirty inputs,
                 evidenceId), e.g. docs/evidence/review-promotions-YYYYMMDD.json
   --date DATE   the record's date (default: today, UTC)
 
-  The other verbs are the solver interface's (packages/review/src/solver.mjs, the functions the
+  The other verbs are the solver interface's (packages/review/src/solver.ts, the functions the
   fnaf-solver MCP server calls). Each prints a claim-envelope-v1: exit 0 for a claim, 1 for a
   refusal. promote never writes an attestation or an edge; it proposes one or refuses.
 
@@ -77,7 +77,7 @@ if (args.includes('--help') || args.includes('-h')) {
 const [verb, what, ...rest] = args;
 // Resolves once the write is handed to the OS: stdout to a pipe is asynchronous on macOS, so a
 // process.exit() straight after a large write cut the promotions query off mid-string there.
-const print = value => new Promise(done => process.stdout.write(`${JSON.stringify(value, null, 2)}\n`, done));
+const print = value => new Promise<any>(done => process.stdout.write(`${JSON.stringify(value, null, 2)}\n`, done));
 const answer = async envelope => { await print(envelope); process.exit(envelope.refused ? 1 : 0); };
 
 if (verb === 'query' && (what === 'promotions' || what === 'audit')) {
@@ -91,14 +91,14 @@ if (verb === 'query' && (what === 'promotions' || what === 'audit')) {
     else usage(`unknown or incomplete option ${rest[index]}`);
   }
   const audit = what === 'audit';
-  const result = audit ? auditRuns(ROOT) : queryPromotions(ROOT);
+  const result: any = audit ? auditRuns(ROOT) : queryPromotions(ROOT);
   await print(envelope ? promotionsQueryEnvelope(result) : result);
   if (write) {
     const file = resolve(write);
     const rel = relative(ROOT, file);
     const git = argv => execFileSync('git', argv, { cwd: ROOT, encoding: 'utf8' });
     const commit = git(['rev-parse', 'HEAD']).trim();
-    const inputs = audit ? ['docs/evidence/runs', 'packages/review/src/run-audit.mjs'] : QUERY_INPUTS;
+    const inputs = audit ? ['docs/evidence/runs', 'packages/review/src/run-audit.ts'] : QUERY_INPUTS;
     const dirtyInputs = git(['status', '--porcelain=v1', '--', ...inputs]).split('\n').filter(Boolean).sort();
     const command = `${audit ? 'npm run review -- query audit' : QUERY_COMMAND} --write ${rel} --date ${date}`;
     const record = (audit ? runAuditRecord : promotionsRecord)(result, { date, commit, dirtyInputs, command });
@@ -111,12 +111,12 @@ if (verb === 'query' && (what === 'promotions' || what === 'audit')) {
 const VERBS = ['query', 'describe', 'review', 'promote', 'check', 'resource', 'truth'];
 if (!VERBS.includes(verb)) usage(verb ? `unknown verb ${verb}` : 'a verb is required');
 // The solver is loaded only for its verbs, so `query promotions` runs exactly as it always has.
-const { createSolver } = await import('./solver.mjs');
+const { createSolver } = await import('./solver.ts');
 const solver = createSolver({ root: ROOT });
 
 if (verb === 'query') {
   if (!what) usage('query needs a name');
-  const options = { what };
+  const options: any = { what };
   for (let index = 0; index < rest.length; index += 1) {
     const flag = rest[index];
     if (flag === '--negative') options.negative = true;

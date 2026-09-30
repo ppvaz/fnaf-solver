@@ -1,4 +1,4 @@
-// Run packs (packages/review/src/evidence-pack.mjs) carry a night's text evidence into the repository and
+// Run packs (packages/review/src/evidence-pack.ts) carry a night's text evidence into the repository and
 // leave its frames behind. This builds a campaign and its night-run directory in a throwaway
 // tree, packs them, and checks what may and may not cross: no media file, no pixel array, no
 // machine path; every frame still named by hash; tampering refused; the gate reading the pack.
@@ -8,10 +8,10 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { stableHash } from '@sixam/kernel/contracts';
-import { CAMPAIGN_RESULT_SCHEMA } from '../src/evidence-campaign.mjs';
+import { CAMPAIGN_RESULT_SCHEMA } from '../src/evidence-campaign.ts';
 import { ATTESTATION_FILE, ATTESTATION_SCHEMA, ATTESTATION_SCHEMA_V1, buildFnaf1Pack, buildPack, packCustody, packDigest, packEntry,
   packPromotionChecks, readPack, recoverFromRunLog, recoveryCheck, refuseFrames, resolvePackTargets, trackedWinners,
-  writePack, WINNER_HASHES } from '../src/evidence-pack.mjs';
+  writePack, WINNER_HASHES } from '../src/evidence-pack.ts';
 
 const sha256 = data => createHash('sha256').update(data).digest('hex');
 const root = mkdtempSync(join(tmpdir(), 'evidence-pack-test-'));

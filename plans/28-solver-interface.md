@@ -28,7 +28,7 @@ It is not a rewrite, and it is not an agent. It is a **read-mostly projection**
 of registers this repository already generates —
 [contracts](../docs/architecture/generated/contract-register.json),
 [commands](../docs/architecture/generated/command-registry.json),
-[the chronicle](../packages/review/src/chronicle-schema.js),
+[the chronicle](../packages/review/src/chronicle-schema.ts),
 [the evidence graph](../docs/evidence/graph.json) — plus two write paths that
 already exist behind gates ([simulation](../packages/propose/bin/plans/bundle.mjs),
 [device](../apps/desktop/src/device-cli.js)). What is new below is envelope, routing and
@@ -119,7 +119,7 @@ schedule -> graded physical outcome, where every link states what it is worth.
 
 Every tool returns one shape. The vocabulary is not invented here; it is
 [`docs/README.md`](../docs/README.md)'s evidence labels and
-[`chronicle-schema.mjs`](../packages/review/src/chronicle-schema.js)'s statuses, verbatim.
+[`chronicle-schema.mjs`](../packages/review/src/chronicle-schema.ts)'s statuses, verbatim.
 
 ```json
 {
@@ -219,7 +219,7 @@ habit a tired reader drops.
 - `proof.promote({ run })` — **proposes** an edge and returns a structured
   refusal until a human approves it.
 - `proof.custody({ pack })` — fetch and hash-verify blobs through
-  [the vault](../packages/review/src/vault.mjs). Without it a third party receives claims they
+  [the vault](../packages/review/src/vault.ts). Without it a third party receives claims they
   cannot check, which is the state the project is in today.
 
 ## Resources and prompts

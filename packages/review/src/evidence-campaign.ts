@@ -17,16 +17,16 @@ const isCampaignError = wrapper => wrapper?.status === 'ERROR'
   && ['live', 'dry-run'].includes(wrapper.mode) && wrapper.result === undefined
   && typeof wrapper.error === 'string' && wrapper.error.trim().length > 0;
 
-/** @param {any} wrapper parsed result.json */
-export const isCampaignResult = wrapper => wrapper?.result?.schema === CAMPAIGN_RESULT_SCHEMA || isCampaignError(wrapper);
+/** @param wrapper parsed result.json */
+export const isCampaignResult = (wrapper: any) => wrapper?.result?.schema === CAMPAIGN_RESULT_SCHEMA || isCampaignError(wrapper);
 
 /**
  * One index row for a campaign directory. A live campaign is DEVICE_MEASURED: its attempts are
  * the executor's own reads of the phone. Anything else (a dry run, a fixture) is FIXTURE.
- * @param {string} id directory name
- * @param {any} wrapper parsed result.json
+ * @param id directory name
+ * @param wrapper parsed result.json
  */
-export function campaignEntry(id, wrapper) {
+export function campaignEntry(id: string, wrapper: any) {
   if (isCampaignError(wrapper)) return {
     id, kind: 'device-campaign', outcome: 'ERROR', claimLevel: 'UNKNOWN',
     nights: [], attempts: [], error: wrapper.error,
@@ -53,10 +53,10 @@ export function campaignEntry(id, wrapper) {
  * written over a committed run pack (`npm run evidence -- attest`, by a person or, since Pedro's
  * 2026-09-27 delegation, an agent that re-derived every other check), so a campaign directory
  * without one is refused with every other check reported.
- * @param {any} wrapper parsed result.json
- * @param {string[]} files names present in the campaign directory
+ * @param wrapper parsed result.json
+ * @param files names present in the campaign directory
  */
-export function campaignPromotionChecks(wrapper, files) {
+export function campaignPromotionChecks(wrapper: any, files: string[]) {
   const entry = campaignEntry('check', wrapper);
   return {
     offlineEvidence: entry.claimLevel === 'DEVICE_MEASURED',

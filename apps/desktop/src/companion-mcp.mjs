@@ -10,7 +10,7 @@
  * `jobs` (op enqueue | list | run) is the same queue answering in
  * claim-envelope-v1. The verbs `describe`, `query`, `review`, `promote`,
  * `check` and `truth` and the fnaf:// resources are
- * packages/review/src/solver.mjs, the one verb table every door shares; every
+ * packages/review/src/solver.ts, the one verb table every door shares; every
  * answer they give is a claim-envelope-v1, and `promote` only ever proposes or
  * refuses. `truth` (op decode | events | object) reads the caller's own local
  * dump and decodes only a local APK or CCN: it ships the decoder, never the

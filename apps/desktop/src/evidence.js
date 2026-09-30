@@ -141,7 +141,7 @@ async function loadCampaign(run) {
   return { kind: 'device-campaign', entry: campaignEntry(run, wrapper), wrapper, files: await readdir(base) };
 }
 
-// A committed run pack (packages/review/src/evidence-pack.mjs): the same campaign facts, verified against
+// A committed run pack (packages/review/src/evidence-pack.ts): the same campaign facts, verified against
 // the pack's own hashes, readable on any checkout.
 function loadPack(run) {
   if (!run || !/^[\w.-]+$/.test(run)) throw new Error('a safe RUN_ID is required');
@@ -211,7 +211,7 @@ async function loadAny(run) {
 }
 
 const sha256 = data => createHash('sha256').update(data).digest('hex');
-// What a campaign directory writes (packages/review/src/evidence-pack.mjs packs the same four).
+// What a campaign directory writes (packages/review/src/evidence-pack.ts packs the same four).
 const CAMPAIGN_FILES = ['result.json', 'events.jsonl', 'request.json', 'observations.jsonl'];
 
 /** Where a loaded campaign or pack keeps its text, and what its custody lost. */

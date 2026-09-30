@@ -66,10 +66,8 @@ const isRecord = value => value !== null && typeof value === 'object' && !Array.
 /**
  * What a value is, when it is not a finite number: UNKNOWN (with its reason, if it has one),
  * missing, an interval, or something else.
- * @param {any} value
- * @returns {{kind: 'number'} | {kind: 'unknown', reason: string | null} | {kind: 'missing'} | {kind: 'interval'} | {kind: 'other', type: string}}
  */
-export function numberKind(value) {
+export function numberKind(value: any): {kind: 'number'} | {kind: 'unknown', reason: string | null} | {kind: 'missing'} | {kind: 'interval'} | {kind: 'other', type: string} {
   if (typeof value === 'number' && Number.isFinite(value)) return { kind: 'number' };
   if (isUnknown(value)) return { kind: 'unknown', reason: value.reason };
   if (isRecord(value) && value.kind === 'UNKNOWN') return { kind: 'unknown', reason: null };
@@ -87,10 +85,10 @@ export function numberKind(value) {
  * unknown-as-number: every operand an arithmetic step consumes must be a finite number. An
  * UNKNOWN or a missing value is refused under `unknown-as-number`; an interval or any other
  * non-number under `not-a-number`.
- * @param {Record<string, any>} operands name -> value
- * @param {{operation?: string}} [context] what the numbers were going to be used for
+ * @param operands name -> value
+ * @param context what the numbers were going to be used for
  */
-export function checkUnknownAsNumber(operands, { operation = 'this arithmetic' } = {}) {
+export function checkUnknownAsNumber(operands: Record<string, any>, { operation = 'this arithmetic' }: {operation?: string} = {}) {
   if (!isRecord(operands) || !Object.keys(operands).length)
     return refuse('not-a-number', `${operation} names no operands`, 'name each operand and its value');
   const kinds = Object.entries(operands).map(([name, value]) => ({ name, ...numberKind(value) }));
@@ -112,9 +110,8 @@ export function checkUnknownAsNumber(operands, { operation = 'this arithmetic' }
 
 /**
  * seed-floor: a win rate may be quoted only over at least SEED_FLOOR seeds.
- * @param {{seeds: any, wins?: any, heldOut?: any}} quote
  */
-export function checkSeedFloor(quote) {
+export function checkSeedFloor(quote: {seeds: any, wins?: any, heldOut?: any}) {
   const operands = { seeds: quote?.seeds, ...(quote && 'wins' in quote ? { wins: quote.wins } : {}) };
   const numbers = checkUnknownAsNumber(operands, { operation: 'a quoted win rate' });
   if (numbers.refused) return numbers;
@@ -163,9 +160,8 @@ const arrow = ({ first, then }) => `${first} -> ${then}`;
  * directional-reuse: a constant measured as `first` then `then` is used only in that order. The
  * direction comes from DIRECTIONAL_CONSTANTS for a registered constant (a caller's `measured`
  * that disagrees is refused), or from the caller's `measured` for any other.
- * @param {{constant: string, use: {first: string, then: string}, measured?: {first: string, then: string}}} reuse
  */
-export function checkDirectionalReuse(reuse) {
+export function checkDirectionalReuse(reuse: {constant: string, use: {first: string, then: string}, measured?: {first: string, then: string}}) {
   const constant = typeof reuse?.constant === 'string' && reuse.constant ? reuse.constant : null;
   const use = direction(reuse?.use);
   if (!constant || !use)
@@ -198,9 +194,8 @@ const CAPABILITIES_REMEDY = 'with the phone attached, run `npm run device:capabi
 /**
  * capabilities-first: an instrument is proposed only against a device-capabilities-v1 report,
  * and never when the report says the phone cannot feed it.
- * @param {{instrument: string, capabilities?: any}} proposal
  */
-export function checkCapabilitiesFirst(proposal) {
+export function checkCapabilitiesFirst(proposal: {instrument: string, capabilities?: any}) {
   const instrument = typeof proposal?.instrument === 'string' && proposal.instrument.trim() ? proposal.instrument.trim() : null;
   if (!instrument)
     return refuse('capabilities-first', 'a proposal names no instrument', 'name the instrument (its tool path) and pass the capabilities report');

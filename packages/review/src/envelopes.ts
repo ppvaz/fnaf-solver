@@ -6,8 +6,8 @@
 // was read, and what it does not measure. The MCP server's `query promotions` uses the same
 // wrapper, so a caller gets one answer however it asks.
 import { claimEnvelope, isClaimLevel, refusalEnvelope, unknown, unknownsIn } from '@sixam/kernel';
-import { PACKS_DIR } from './evidence-pack.mjs';
-import { GRAPH_FILE } from './evidence-promotion.mjs';
+import { PACKS_DIR } from './evidence-pack.ts';
+import { GRAPH_FILE } from './evidence-promotion.ts';
 
 export const PLAN12 = 'plans/12-end-to-end-evidence-campaign.md';
 export const FNAF2 = 'com.scottgames.fnaf2';
@@ -16,9 +16,8 @@ export const ONE_CLEAR = 'reliability: a promotion is one clear on the phone, no
 
 /**
  * A claim level as an envelope label: a ClaimLevel, or UNKNOWN(reason) naming what was there.
- * @param {unknown} level @param {string} where
  */
-export const levelLabel = (level, where) => (isClaimLevel(level) ? level
+export const levelLabel = (level: unknown, where: string) => (isClaimLevel(level) ? level
   : level === 'UNKNOWN' ? unknown(`${where} records its claim level as UNKNOWN, with no reason`)
     : unknown(`${where} records claim level ${JSON.stringify(level ?? null)}, which is not a ClaimLevel`));
 
@@ -26,9 +25,8 @@ export const levelLabel = (level, where) => (isClaimLevel(level) ? level
  * `npm run review -- query promotions --envelope`: the query as the claim, DEVICE_MEASURED for
  * the promoted edges it re-derives, and S1's open items as what it does not measure. A graph that
  * disagrees with the derivation is refused, not wrapped.
- * @param {ReturnType<typeof import('./promotions-query.mjs').queryPromotions>} result
  */
-export function promotionsQueryEnvelope(result) {
+export function promotionsQueryEnvelope(result: ReturnType<typeof import('./promotions-query.ts').queryPromotions>) {
   if (!result.consistent) {
     const { edges, lift } = result;
     const faults = [
@@ -66,9 +64,8 @@ export function promotionsQueryEnvelope(result) {
 
 /**
  * `npm run evidence -- promotions --envelope`: the per-night summary as the claim.
- * @param {ReturnType<typeof import('./evidence-promotion.mjs').promotionSummary>} summary
  */
-export function promotionSummaryEnvelope(summary) {
+export function promotionSummaryEnvelope(summary: ReturnType<typeof import('./evidence-promotion.ts').promotionSummary>) {
   return claimEnvelope({
     claim: summary, label: 'DEVICE_MEASURED', target: FNAF2,
     cite: [GRAPH_FILE, PACKS_DIR, PLAN12, `evidence:${summary.evidenceId}`],
@@ -78,7 +75,7 @@ export function promotionSummaryEnvelope(summary) {
       ...summary.refusedWins.map(item => `${item.id}: an executor 6 AM that is not promoted (${item.failing.join(', ')} fail)`),
       ...summary.staleEdges.map(item => `${item.id}: a recorded edge that no longer holds (${item.reason})`),
       ...Object.entries(summary.nights).filter(([night]) => night === 'fnaf1')
-        .map(([, row]) => `${row.packs} FNaF 1 packs: no Plan 12 gate reads a FNaF 1 run`),
+        .map(([, row]) => `${(row as any).packs} FNaF 1 packs: no Plan 12 gate reads a FNaF 1 run`),
     ],
     reproducer: 'npm run evidence -- promotions',
   });
@@ -87,10 +84,9 @@ export function promotionSummaryEnvelope(summary) {
 /**
  * `npm run evidence -- show ID --envelope`: what `show` prints, as the claim, at the claim level
  * the run's own record carries.
- * @param {string} id @param {any} shown the object show prints
- * @param {{target: any, source: string, claimLevel: unknown}} where
+ * @param shown the object show prints
  */
-export function showEnvelope(id, shown, { target, source, claimLevel }) {
+export function showEnvelope(id: string, shown: any, { target, source, claimLevel }: {target: any, source: string, claimLevel: unknown}) {
   const custody = shown.custody && typeof shown.custody === 'object' ? shown.custody : null;
   const lost = Array.isArray(custody?.lost) ? custody.lost : [];
   return claimEnvelope({

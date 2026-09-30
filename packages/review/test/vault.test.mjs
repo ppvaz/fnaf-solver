@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 
 const check = (condition, message) => { if (!condition) throw new Error(message); };
 const HERE = fileURLToPath(new URL('.', import.meta.url));
-const TOOL = join(HERE, '../src/vault.mjs');
+const TOOL = join(HERE, '../src/vault.ts');
 
 const scratch = mkdtempSync(join(tmpdir(), 'fnaf2-vault-'));
 const repo = join(scratch, 'repo');
