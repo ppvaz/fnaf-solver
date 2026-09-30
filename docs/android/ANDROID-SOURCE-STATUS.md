@@ -46,7 +46,7 @@ under either reading W. Foxy could never have left CAM 08. Under the runtime's
 rule all twelve markers are placed once, 196 of 205 Office instances join to
 an object the Office events reference (154 and 158 under the wrong rules),
 and the approach markers form one column. `readdump.py --lo-xor` (default 48)
-and `tools/dump/test-instances.py` carry it; `SOURCE-DUMP-GUIDE.md` §4 has the
+and `packages/source/decompile/test-instances.py` carry it; `SOURCE-DUMP-GUIDE.md` §4 has the
 table and the retraction of the recompile join that backed the first pass.
 
 The Office layout that falls out (frame units, hotspot-corrected boxes):
@@ -148,7 +148,7 @@ Consequences for this ledger:
 - **The dump is reproducible on this machine (2026-08-20).** The extracted
   `application.ccn` plus a CTFAK build carrying our own `EventTextDumper`
   regenerate the true-name event sheet locally in about six seconds; see
-  [`SOURCE-DUMP-GUIDE.md`](SOURCE-DUMP-GUIDE.md) and `tools/dump/`. Group
+  [`SOURCE-DUMP-GUIDE.md`](SOURCE-DUMP-GUIDE.md) and `packages/source/decompile/`. Group
   numbering matches the citations already in this ledger. Item 7 (same-frame
   ordering) is therefore answerable here; item 23 still needs image export,
   which this logic-only dumper does not do.
@@ -156,7 +156,7 @@ Consequences for this ledger:
 ## 2026-08-20: coverage, measured
 
 Every pass before this one was a targeted lookup: it answered its own question
-and said nothing about what had not been read. `tools/dump/coverage.py` now
+and said nothing about what had not been read. `packages/source/decompile/coverage.py` now
 classifies all 1332 office-frame groups by what they can change and diffs that
 against every group number cited in the repo. Current state: **72% of the
 state-writing groups and 86% of the input groups are cited**, with 87 unread
@@ -685,7 +685,7 @@ band, which is what an unclaimed touch there does.
 because its expectation was wrong in an instructive way: the instance list
 exists and is readable, and it still does not answer the question.)*
 
-`tools/dump/EventTextDumper.cs` emits logic only, so the **frame object
+`packages/source/decompile/EventTextDumper.cs` emits logic only, so the **frame object
 placements are not in it**: the scene X of `left light` and `right light`, their
 hitbox sizes, and therefore the pan positions at which each is on screen are
 `[UNKNOWN]` from this artifact. Closing it needs either an extension to the
@@ -1086,7 +1086,7 @@ is a grading-model correction, not a new simulated rule.
 | Mechanic | Evidence / implementation status |
 | --- | --- |
 | Night clock and movement cadence | Global 1000 ms ticker, 70 ticks/hour, movement opportunity every 5000 ms |
-| Movement RNG and the AI table | `Random(20)+1 <= AI`, with the Puppet's bare `<=` variant (g494-497). The per-night/per-hour levels are implemented 2026-08-23 from g673-684 (table), g787 (Custom Night dials), g804 (Golden Freddy below night 6), g815-821 (Puppet) and the caps g829/g830/g856-863. Rebuild the table from the dump with `tools/dump/aimap.py`. **Generator sourced 2026-08-25 from the APK runtime:** `RunLoop/CRun.random` advances `graine = (graine * 31415 + 1) & 0xffff` and returns `(graine * N) >>> 16`; absent a frame seed chunk, `CRun` seeds it from the low 16 bits of `System.currentTimeMillis()`. `src/rng.js` is the bit-exact port and `sourcetest.mjs` pins its vectors, scaling, seed truncation, and four disjoint 16,384-state cycles. |
+| Movement RNG and the AI table | `Random(20)+1 <= AI`, with the Puppet's bare `<=` variant (g494-497). The per-night/per-hour levels are implemented 2026-08-23 from g673-684 (table), g787 (Custom Night dials), g804 (Golden Freddy below night 6), g815-821 (Puppet) and the caps g829/g830/g856-863. Rebuild the table from the dump with `packages/source/decompile/aimap.py`. **Generator sourced 2026-08-25 from the APK runtime:** `RunLoop/CRun.random` advances `graine = (graine * 31415 + 1) & 0xffff` and returns `(graine * N) >>> 16`; absent a frame seed chunk, `CRun` seeds it from the low 16 bits of `System.currentTimeMillis()`. `src/rng.js` is the bit-exact port and `sourcetest.mjs` pins its vectors, scaling, seed truncation, and four disjoint 16,384-state cycles. |
 | Main route graph | Re-extracted 2026-08-20 from the true-name dump, including the off-camera `hall stage 1`/`hall stage 2` transit markers (120/121) |
 | Per-edge monitor gates | Final approaches use cams-up conditions; Toy Bonnie's polarity is inverted (monitor DOWN + `right light`); Toy Chica's final hop is unconditioned |
 | Office-light movement latch | Physical light state is immediate; the `viewing hall light` latch persists to the next one-second event and guards only specific route edges (W. Chica and Toy Bonnie exempt) |

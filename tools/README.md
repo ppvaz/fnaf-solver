@@ -11,7 +11,7 @@ these pages are the narrative inventory, one per directory:
   phone, observes it, or grades what it recorded;
 - [`cue/README.md`](cue/README.md): the audio cue detector and the Bluetooth
   audio capture it reads;
-- [`dump/README.md`](dump/README.md): the Android source-dump extraction and
+- [`packages/source/decompile/README.md`](../packages/source/decompile/README.md): the Android source-dump extraction and
   readers.
 
 `tools/test-docs.mjs` holds each script to a row in the index of its own
@@ -49,7 +49,7 @@ assets.
 | Explore a strategy or cycle | `tools/cyclesearch.mjs` |
 | Run a night on the phone | `npm run night -- fnaf2\|fnaf1\|fnaf1-custom\|fnaf1-winner ... --live --confirm-live` (`tools/night.mjs`), which runs that game's runner -- for FNaF 2 [`tools/device/night-run.sh`](device/README.md): records, runs the campaign, grades, packs the evidence, resets the game -- and packs FNaF 1 runs when they end. Without `--live --confirm-live` every runner is a dry run (ADR 0002). The handset serial comes from `FNAF_SERIAL` or the untracked local profile: `node tools/device/local-profile.mjs set <serial>` once per host |
 | Analyze a recorded phone trial | `grade-minus7.py`, `camtrace.py`, `windpct.py`, `find-events.py` |
-| Inspect the Android event-sheet dump | [`tools/dump/readdump.py`, `tools/dump/coverage.py`](dump/README.md) |
+| Inspect the Android event-sheet dump | [`packages/source/decompile/readdump.py`, `packages/source/decompile/coverage.py`](../packages/source/decompile/README.md) |
 
 Paths in the tables are relative to the repository root.
 
@@ -208,7 +208,7 @@ tests; `tools/evidence.js` below composes them as `npm run evidence`.
 
 ## Game simulator censuses
 
-The dump readers these are checked against are in [`dump/README.md`](dump/README.md).
+The dump readers these are checked against are in [`packages/source/decompile/README.md`](../packages/source/decompile/README.md).
 
 | Tool | Kind | Purpose and interface |
 |---|---|---|

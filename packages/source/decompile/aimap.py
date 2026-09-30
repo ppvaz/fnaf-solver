@@ -2,7 +2,7 @@
 """Map every character's AI level, per hour and night, from the event sheet.
 
 Two input forms are accepted. The canonical one is the tabular
-`events-android.txt` that `tools/dump/regen-dump.sh` produces and
+`events-android.txt` that `packages/source/decompile/regen-dump.sh` produces and
 `readdump.py` reads; the older CTFAK-rendered `03-04-Office.txt` is still
 parsed for archived sheets. Either way the relevant groups carry a night
 comparison, an optional hour comparison, and `<name> AI` counter writes.
@@ -11,8 +11,8 @@ Levels carry forward within a night: group 673 zeroes every counter on any
 night but Custom Night, then each night/hour group overwrites only the
 characters it names.
 
-  tools/dump/aimap.py [path/to/events-android.txt]
-  tools/dump/aimap.py --json
+  packages/source/decompile/aimap.py [path/to/events-android.txt]
+  packages/source/decompile/aimap.py --json
 
 `$FNAF2_DUMP` (canonical) or `$FNAF2_OFFICE_DUMP` (rendered sheet) selects the
 input. Either file is extracted game content and stays outside the repository.

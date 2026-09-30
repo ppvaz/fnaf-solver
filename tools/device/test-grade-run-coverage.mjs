@@ -149,7 +149,7 @@ const EXCLUDED = new Map([
   ['validate-session.py', 'Plan 09 session-manifest validator, run by session-manifest.py when a session producer (collect-cue-audio.sh, capture-screen-sample.sh) finalizes; night-run.sh writes no session manifest, so no night has one to grade; gated by test-validate-session.py'],
 ]);
 
-// tools/cue and tools/dump, under the same rule. The audit that widened this
+// tools/cue and packages/source/decompile, under the same rule. The audit that widened this
 // scan noted the hole: CLAUDE.md's purest "instrument nobody runs" example is
 // tools/cue/detect.py, and this check did not look at it.
 const SIBLING_EXCLUDED = new Map([
@@ -315,12 +315,15 @@ for (const [name, reason] of EXCLUDED) {
 // and it was scoped to this directory only -- while CLAUDE.md's purest
 // example of an instrument nobody runs lives in tools/cue. A sibling
 // directory is not a loophole.
-for (const dir of ['cue', 'dump']) {
-  const path = join(HERE, '..', dir);
-  if (!existsSync(path)) continue;
+// The decompile scripts left tools/dump for packages/source/decompile on
+// 2026-09-30 (ADR 0002 migration D4); the scan follows them rather than
+// silently skipping a directory that no longer exists.
+for (const dir of ['../cue', '../../packages/source/decompile']) {
+  const path = join(HERE, dir);
+  if (!existsSync(path)) { complain(`${dir} is gone: the sibling scan has nothing to read`); continue; }
   for (const name of readdirSync(path).sort()) {
     if (!/\.(py|mjs|sh)$/.test(name)) continue;
-    const rel = `../${dir}/${name}`;
+    const rel = `${dir}/${name}`;
     if (name.startsWith('test-')) {
       if (!runs(name))
         complain(`${rel} is a gate that nothing runs -- register it in ` +
@@ -335,6 +338,6 @@ for (const dir of ['cue', 'dump']) {
 }
 
 if (!failed) console.log(`grade-run.sh coverage: ${referenced.size} scripts invoked, ` +
-  `${EXCLUDED.size + SIBLING_EXCLUDED.size} exclusions across device/cue/dump, ` +
+  `${EXCLUDED.size + SIBLING_EXCLUDED.size} exclusions across device, cue and the decompile scripts, ` +
   'every gate reachable, nothing unaccounted for');
 process.exit(failed);

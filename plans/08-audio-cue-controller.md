@@ -517,7 +517,7 @@ departure false positive.
 `tools/cue/` implements the detector shape above in stdlib Python: 32 ms
 frames, 16 log-spaced bands from 120 Hz to 7 kHz, each frame's own mean
 removed so a score is a *shape* agreement rather than a level, and `UNKNOWN`
-for empty, silent, clipped, or too-short windows. `tools/dump/extract-samples.sh`
+for empty, silent, clipped, or too-short windows. `packages/source/decompile/extract-samples.sh`
 pulls the reference waveforms out of the APK by handle — outside the repository,
 always — so cues are matched against ground truth instead of memory of the
 audible mix.

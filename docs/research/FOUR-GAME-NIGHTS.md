@@ -1,7 +1,7 @@
 # The four games' nights, modelled from the dumps
 
 *2026-09-21. Every number here was read out of this project's own event-sheet
-dumps with `tools/dump/nightmap.py`, which parsed all four sheets — 4,450
+dumps with `packages/source/decompile/nightmap.py`, which parsed all four sheets — 4,450
 groups — with **zero unclassified lines**. Nothing was taken from a wiki.
 Census results are **model** results: they say what a simulator built from
 these rules does, and are not device measurements.*
@@ -10,7 +10,7 @@ these rules does, and are not device measurements.*
 
 | Layer | Where | Covers |
 |---|---|---|
-| Reader | `tools/dump/nightmap.py` | all four sheets: clock, difficulty table, rolls, movement graphs, draw census |
+| Reader | `packages/source/decompile/nightmap.py` | all four sheets: clock, difficulty table, rolls, movement graphs, draw census |
 | Night models | `packages/core/src/mechanics/games/` | all four: clock, per-night table, roll schedule |
 | Simulator | `packages/source/src/games/fnaf1/sim-fnaf1.js`, `sim-fnaf3.js`, `sim-fnaf4.js` | FNaF 1, 3 and 4; FNaF 4 remains **MODEL_ONLY** |
 | Policies | `policy-fnaf1.js`, `policy-fnaf3.js`, `policy-fnaf4.js` | FNaF 1, 3 and 4 published lines and controls |
@@ -636,8 +636,8 @@ in hand.
 ## Reproducing
 
 ```sh
-tools/dump/nightmap.py --game fnaf3 --table --clock --rolls
-tools/dump/nightmap.py --game fnaf1 --graph charBonnie
+packages/source/decompile/nightmap.py --game fnaf3 --table --clock --rolls
+packages/source/decompile/nightmap.py --game fnaf1 --graph charBonnie
 node tools/census.mjs --game fnaf1 --seeds 3000 --policy roll-grid
 node tools/census.mjs --game fnaf1 --policy roll-grid --custom 20 --seeds 3000
 node tools/census.mjs --game fnaf4 --night 5 --policy community-loop --seeds 3000
@@ -645,7 +645,7 @@ node tools/census.mjs --game fnaf4 --night 5 --policy community-loop --seeds 300
 node tools/test-fnaf4-census.mjs
 ```
 
-Gated by `tools/dump/test-nightmap.py`, `tools/test-night-models.mjs` and
+Gated by `packages/source/decompile/test-nightmap.py`, `tools/test-night-models.mjs` and
 `tools/test-fnaf1-census.mjs`, `tools/test-fnaf3-census.mjs` and
 `tools/test-fnaf4-census.mjs`, all in `npm run test:unit`. The model censuses
 need no game content; `--start` selects a disjoint seed block for the three

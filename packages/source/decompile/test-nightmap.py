@@ -21,7 +21,7 @@ the shapes that were *nearly* misread while writing the reader:
   - a line the reader cannot classify, so that `--audit` is shown to report
     rather than to swallow.
 
-  python3 tools/dump/test-nightmap.py
+  python3 packages/source/decompile/test-nightmap.py
 """
 import os
 import sys

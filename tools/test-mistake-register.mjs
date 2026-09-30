@@ -240,7 +240,7 @@ export function walk(text, via, sink, scripts = SCRIPTS, open = new Set()) {
 // --- The test files ---------------------------------------------------------
 
 const TEST_FILE = [
-  /^tools\/(?:[\w.-]+\/)*test-[\w.-]+\.(?:mjs|js|py|sh)$/,
+  /^(?:tools|packages\/source\/decompile)\/(?:[\w.-]+\/)*test-[\w.-]+\.(?:mjs|js|py|sh)$/,
   /^tools\/(?:[\w.-]+\/)*[a-z0-9-]*test\.(?:mjs|js)$/,
   /(?:^|\/)test_[\w.-]+\.py$|_test\.py$/,
   /^(?:packages|apps)\/[\w.-]+\/test\/(?:[\w.-]+\/)*[\w.-]+\.test\.(?:mjs|js)$/,

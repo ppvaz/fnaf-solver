@@ -68,7 +68,7 @@ cadence already extracted.
 ### Claimed, then traced — all four now located (2026-09-20)
 
 Every item in this section was `[C]` or `UNKNOWN(not-located)` when this note
-was written. `tools/dump/nightmap.py` found them all in one pass over the same
+was written. `packages/source/decompile/nightmap.py` found them all in one pass over the same
 sheet, and three of the four needed a correction.
 
 - `SOURCE` **The Foxy cooldown is located.** **Group 460** sets `charChica`

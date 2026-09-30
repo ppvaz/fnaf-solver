@@ -7,7 +7,7 @@ and the older rendered one -- with the same shapes the real table uses: the
 night-start zeroing group, per-night and per-hour sets, `<` and `>` night
 comparisons, a Random assignment, and the Custom Night dial copy.
 
-  python3 tools/dump/test-aimap.py
+  python3 packages/source/decompile/test-aimap.py
 """
 import os
 import sys

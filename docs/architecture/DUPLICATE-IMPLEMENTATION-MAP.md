@@ -326,7 +326,7 @@ verb in `apps/device/src/cli.js:193`.
 
 **The best existing inventory in the repository is this family's gate.**
 `tools/device/test-grade-run-coverage.mjs` enforces that every script in
-`tools/device`, `tools/cue` and `tools/dump` is either invoked by
+`tools/device`, `tools/cue` and `packages/source/decompile` is either invoked by
 `grade-run.sh`, a gate the suite runs, or **excluded with a written reason** —
 and its `EXCLUDED` map carries ~90 one-line rationales ("simulator layer, gated
 by test-actuator.mjs"; "charts the model gate's death census for a PLAN ...
@@ -507,7 +507,7 @@ count.
 
 Not surveyed: `apps/trainer` beyond §16, the `tools/cue` detection chain beyond
 §15, the 39-file Java overlay/capture family beyond §3, the 147 test-shaped
-files as a family of their own, and `tools/dump` / `tools/recompile`. For
+files as a family of their own, and `packages/source/decompile` / `tools/recompile`. For
 `tools/device` specifically, the `EXCLUDED` map in
 `tools/device/test-grade-run-coverage.mjs` is a more complete per-script census
 than anything here, and it is gate-enforced; read it alongside §13.

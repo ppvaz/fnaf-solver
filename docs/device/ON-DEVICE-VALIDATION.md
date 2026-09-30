@@ -550,7 +550,7 @@ engine had: it read one 15-AI cap for the seven and a 17 for Foxy. The AI table
 is now sourced per night *and* per hour — g673 zeroes the counters, g674-684
 write the table, g787 copies the Custom Night dials, g804 zeroes Golden Freddy
 below night 6, g815-821 set the Puppet, and g829/g830/g856-863 cap the result.
-Rebuild it from the dump with `tools/dump/aimap.py`; `pilottest --night=6`
+Rebuild it from the dump with `packages/source/decompile/aimap.py`; `pilottest --night=6`
 replays the same schedule against the night the runner actually selects.
 
 6th Night is two rows, and only the second is 10/20-like:
@@ -642,7 +642,7 @@ is why threat sampling now begins at cycle 0 during validation runs.
 
 ## Availability of calibration targets
 
-`tools/dump/aimap.py` on the owned canonical Office sheet makes a prior null
+`packages/source/decompile/aimap.py` on the owned canonical Office sheet makes a prior null
 Golden Freddy recording unsurprising, but does not prove he was unavailable.
 At the start of Night 6, one run in ten assigns him AI 1 and the other nine
 assign 0; 2 AM overwrites either result with AI 3. Even on the enabled early

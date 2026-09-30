@@ -2,7 +2,7 @@
 // FNaF 1's night, from `05-06-Main_Room.txt` (951 groups, 0 unclassified).
 //
 // Every constant here carries the group that states it. Regenerate with
-//   tools/dump/nightmap.py --game fnaf1 --table --clock --rolls
+//   packages/source/decompile/nightmap.py --game fnaf1 --table --clock --rolls
 //
 // The published community figures for this game are unusually complete, which
 // makes it the calibration target for the whole reader: the four movement

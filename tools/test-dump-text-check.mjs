@@ -1,7 +1,7 @@
 // tools/dump-text-check.mjs and its place in .githooks/commit-msg.
 //
 // Every fixture below is written for this test from the dumpers' grammar
-// (tools/dump/EventTextDumper.cs, tools/dump/aimap.py, tools/dump/readdump.py)
+// (packages/source/decompile/EventTextDumper.cs, packages/source/decompile/aimap.py, packages/source/decompile/readdump.py)
 // with invented objects and numbers. None is copied from a dump: that is the
 // rule under test (ADR 0002, decision 12).
 import assert from 'node:assert/strict';
@@ -48,7 +48,7 @@ const POSITIVE = [
 const NEGATIVE = [
   'g262 and g274 perform `drop everything` and g612 clears it.',
   'Only after that do g618 and g619 set it from a touch (group 33, events 542_3/543_3).',
-  'See tools/dump/readdump.py:132 and 03-04-Office.txt:1234 for the rendering.',
+  'See packages/source/decompile/readdump.py:132 and 03-04-Office.txt:1234 for the rendering.',
   'Run `readdump.py group 3 413-418` with the dump to read them.',
   'FRAME 3 GROUP 413 is the drop; g618 (monitor v0 == 2, v1 == 0, mask == 0).',
   'The first difference moves from 6953 -> 10200, the split.',

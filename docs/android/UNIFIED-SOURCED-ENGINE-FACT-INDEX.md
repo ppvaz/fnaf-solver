@@ -33,8 +33,8 @@ the same commit.
 | Project revision | modern Android **release 7**, August 2025 |
 | Event sheet | frame **3**, `04-Office` — **1332 groups**; dump ≈ 20,500 lines. Frame is **1600 × 768**, 9 layers, 205 placed instances |
 | Logic rate | **60 fps** — every frame constant in this file is a count of these ticks |
-| Toolchain | CTFAK (.NET 6, run in `mcr.microsoft.com/dotnet/sdk:6.0`) + `tools/dump/EventTextDumper.cs` → `events-android.txt` |
-| Regenerate | `tools/dump/regen-dump.sh /path/to/application.ccn`; AI table via `tools/dump/aimap.py` |
+| Toolchain | CTFAK (.NET 6, run in `mcr.microsoft.com/dotnet/sdk:6.0`) + `packages/source/decompile/EventTextDumper.cs` → `events-android.txt` |
+| Regenerate | `packages/source/decompile/regen-dump.sh /path/to/application.ccn`; AI table via `packages/source/decompile/aimap.py` |
 | Never committed | the APK, the CCN, the dump — game content. Only derived rules live in the repo. |
 
 **The one rule that makes any of this readable — the XOR‑28 handle scramble.**
@@ -177,7 +177,7 @@ and edge cases are in the sections that follow.
   the Puppet (g815‑821) has no dial and **no cap**. Table application sits below
   every group that reads an AI counter, so a new hour's levels reach the rolls
   on the frame *after* the hour ticks over. `[SOURCED]` — full table in
-  `src/config.js:285‑316` (`AI_BY_NIGHT`), rebuild with `tools/dump/aimap.py`.
+  `src/config.js:285‑316` (`AI_BY_NIGHT`), rebuild with `packages/source/decompile/aimap.py`.
 - **`{oneIn: N}` (Golden Freddy only).** Source's `(Random(N)+1)/N` under integer
   division: 1 with probability 1/N. g804 zeroes GF below night 6 but runs once,
   at night start — so nights 3/4/5 write him at 12 AM and lose it, while **night
@@ -773,7 +773,7 @@ a small dispatch bank turns it into sound:
   the `radarMap` folder targets and g0's 11 folder switches (`GroupPointer`
   rendered as class name); the identity of global value 8 (g0's gate, nothing
   writes it); `FLAGS 0x8000` / `0x8000` event-flag meaning. All blocked on a
-  `tools/dump/EventTextDumper.cs` change.
+  `packages/source/decompile/EventTextDumper.cs` change.
 - **What `night` (object 108) holds during Custom Night** — the 45-frame fuse
   applies to anything the game calls night ≥ 7, but that variable has not been
   read on a Custom Night run. Do not price a 10/20 route against 0.75 s until it
@@ -785,7 +785,7 @@ a small dispatch bank turns it into sound:
 
 ## 16. Coverage and provenance
 
-`tools/dump/coverage.py` classifies all 1332 frame-3 groups and diffs them
+`packages/source/decompile/coverage.py` classifies all 1332 frame-3 groups and diffs them
 against every group number cited in the repo (it **excludes**
 `ANDROID-GROUP-MAP.md` itself, so a cluster written up only there stays on the
 unread list until its numbers land in `ANDROID-SOURCE-STATUS.md`).

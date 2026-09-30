@@ -5,7 +5,7 @@
     "tools/README.md",
     "tools/cue/README.md",
     "tools/device/README.md",
-    "tools/dump/README.md"
+    "packages/source/decompile/README.md"
   ],
   "commands": [
     {
@@ -45,7 +45,7 @@
     },
     {
       "id": "test:unit",
-      "command": "node tools/architecture-test.js && node tools/validate-references.js && node tools/device/test-grade-run-coverage.mjs && node tools/test-mistake-register.mjs && node tools/test-dump-text-check.mjs && node tools/test-media.mjs && node tools/recompile/test-compare-draw-trace.mjs && node tools/recompile/test-schedule-replay.mjs && node tools/recompile/test-phone-encounter-replay.mjs && node tools/recompile/test-phone-clock-sweep.mjs && node tools/recompile/test-hour-grid-fit.mjs && node tools/recompile/test-phone-input-bracket-sweep.mjs && python3 tools/recompile/test-phone-input-ledger.py && node tools/recompile/test-child-diagnosis.mjs && node tools/policyequivalencetest.mjs && node tools/device/test-seam-slack.mjs && node tools/device/test-static-terminal-window.mjs && node tools/device/test-post-night-static.mjs && node tools/device/test-control-anchor.mjs && node tools/device/test-schedule-economy.mjs && node tools/device/test-anchor-aim-band.mjs && node tools/device/test-seedpin.mjs && node packages/review/test/evidence-campaign.test.mjs && node packages/review/test/evidence-pack.test.mjs && node packages/review/test/evidence-cohort.test.mjs && node packages/review/test/evidence-promotion.test.mjs && node tools/test-encounter-fidelity.mjs && node tools/test-winner-census.mjs && node tools/test-rebuild-options-census.mjs && node tools/test-night.mjs && node tools/device/test-night-run-dry.mjs && node tools/device/test-fact-register.mjs && node tools/device/test-fnaf1-winner.mjs && node tools/device/test-event-clocks.mjs && python3 tools/dump/test-instances.py && python3 tools/dump/test-nightmap.py && node tools/test-night-models.mjs && node tools/device/test-fnaf1-menu-probe.mjs && python3 tools/device/test-fnaf1-menus.py && node tools/device/test-fnaf1-night-run.mjs && python3 tools/device/test-fnaf1-door-light.py && python3 tools/cue/test-bt-audio-collector.py && python3 tools/device/test-fnaf1-teach-overlay.py && python3 tools/device/test-sensor.py && node tools/test-fnaf1-device-lane.mjs && node tools/test-fnaf1-population-checkpoints.mjs && node tools/device/test-native-regions.mjs && node tools/device/test-fnaf3-run.mjs && node tools/test-fnaf4-census.mjs && npm run test:chronicle && node tools/device/test-fnaf4-fredbear.mjs && node tools/device/test-audio-players.mjs && node tools/test-evidence-cli.mjs && node tools/test-push-gate.mjs && python3 tools/test-serve.py && node tools/test-probe.mjs && node tools/test-no-serial.mjs && node packages/kernel/test/kernel.test.js && node packages/review/test/pack-lift.test.js && node packages/review/test/promotions-query.test.js && python3 tools/recompile/test-audio-records.py && node tools/recompile/pilot/test-pilot.mjs && node tools/recompile/test-calib-replay.mjs && node tools/recompile/android/test-practice-audit.mjs && node tools/recompile/android/test-rebuild-night.mjs && node packages/review/test/refusals.test.mjs && node packages/review/test/solver.test.mjs",
+      "command": "node tools/architecture-test.js && node tools/validate-references.js && node tools/device/test-grade-run-coverage.mjs && node tools/test-mistake-register.mjs && node tools/test-dump-text-check.mjs && node tools/test-media.mjs && node tools/recompile/test-compare-draw-trace.mjs && node tools/recompile/test-schedule-replay.mjs && node tools/recompile/test-phone-encounter-replay.mjs && node tools/recompile/test-phone-clock-sweep.mjs && node tools/recompile/test-hour-grid-fit.mjs && node tools/recompile/test-phone-input-bracket-sweep.mjs && python3 tools/recompile/test-phone-input-ledger.py && node tools/recompile/test-child-diagnosis.mjs && node tools/policyequivalencetest.mjs && node tools/device/test-seam-slack.mjs && node tools/device/test-static-terminal-window.mjs && node tools/device/test-post-night-static.mjs && node tools/device/test-control-anchor.mjs && node tools/device/test-schedule-economy.mjs && node tools/device/test-anchor-aim-band.mjs && node tools/device/test-seedpin.mjs && node packages/review/test/evidence-campaign.test.mjs && node packages/review/test/evidence-pack.test.mjs && node packages/review/test/evidence-cohort.test.mjs && node packages/review/test/evidence-promotion.test.mjs && node tools/test-encounter-fidelity.mjs && node tools/test-winner-census.mjs && node tools/test-rebuild-options-census.mjs && node tools/test-night.mjs && node tools/device/test-night-run-dry.mjs && node tools/device/test-fact-register.mjs && node tools/device/test-fnaf1-winner.mjs && node tools/device/test-event-clocks.mjs && python3 packages/source/decompile/test-instances.py && python3 packages/source/decompile/test-nightmap.py && node tools/test-night-models.mjs && node tools/device/test-fnaf1-menu-probe.mjs && python3 tools/device/test-fnaf1-menus.py && node tools/device/test-fnaf1-night-run.mjs && python3 tools/device/test-fnaf1-door-light.py && python3 tools/cue/test-bt-audio-collector.py && python3 tools/device/test-fnaf1-teach-overlay.py && python3 tools/device/test-sensor.py && node tools/test-fnaf1-device-lane.mjs && node tools/test-fnaf1-population-checkpoints.mjs && node tools/device/test-native-regions.mjs && node tools/device/test-fnaf3-run.mjs && node tools/test-fnaf4-census.mjs && npm run test:chronicle && node tools/device/test-fnaf4-fredbear.mjs && node tools/device/test-audio-players.mjs && node tools/test-evidence-cli.mjs && node tools/test-push-gate.mjs && python3 tools/test-serve.py && node tools/test-probe.mjs && node tools/test-no-serial.mjs && node packages/kernel/test/kernel.test.js && node packages/review/test/pack-lift.test.js && node packages/review/test/promotions-query.test.js && python3 tools/recompile/test-audio-records.py && node tools/recompile/pilot/test-pilot.mjs && node tools/recompile/test-calib-replay.mjs && node tools/recompile/android/test-practice-audit.mjs && node tools/recompile/android/test-rebuild-night.mjs && node packages/review/test/refusals.test.mjs && node packages/review/test/solver.test.mjs",
       "lifecycle": "supported"
     },
     {
@@ -2373,68 +2373,68 @@
       "lifecycle": "supported"
     },
     {
-      "id": "tools/dump/regen-dump.sh",
-      "invocation": "tools/dump/regen-dump.sh APPLICATION.CCN [outfile]",
+      "id": "packages/source/decompile/regen-dump.sh",
+      "invocation": "packages/source/decompile/regen-dump.sh APPLICATION.CCN [outfile]",
       "kind": "extraction",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/dump/ctfak-gdiplus.Dockerfile",
-      "invocation": "tools/dump/ctfak-gdiplus.Dockerfile",
+      "id": "packages/source/decompile/ctfak-gdiplus.Dockerfile",
+      "invocation": "packages/source/decompile/ctfak-gdiplus.Dockerfile",
       "kind": "extraction",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/dump/EventTextDumper.cs",
-      "invocation": "tools/dump/EventTextDumper.cs",
+      "id": "packages/source/decompile/EventTextDumper.cs",
+      "invocation": "packages/source/decompile/EventTextDumper.cs",
       "kind": "CTFAK plugin source",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/dump/extract-samples.sh",
-      "invocation": "tools/dump/extract-samples.sh APK [outdir] [handle ...]",
+      "id": "packages/source/decompile/extract-samples.sh",
+      "invocation": "packages/source/decompile/extract-samples.sh APK [outdir] [handle ...]",
       "kind": "query",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/dump/readdump.py",
-      "invocation": "tools/dump/readdump.py",
+      "id": "packages/source/decompile/readdump.py",
+      "invocation": "packages/source/decompile/readdump.py",
       "kind": "query",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/dump/coverage.py",
-      "invocation": "tools/dump/coverage.py",
+      "id": "packages/source/decompile/coverage.py",
+      "invocation": "packages/source/decompile/coverage.py",
       "kind": "report",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/dump/aimap.py",
-      "invocation": "tools/dump/aimap.py [event-sheet]",
+      "id": "packages/source/decompile/aimap.py",
+      "invocation": "packages/source/decompile/aimap.py [event-sheet]",
       "kind": "report",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/dump/test-instances.py",
-      "invocation": "tools/dump/test-instances.py",
+      "id": "packages/source/decompile/test-instances.py",
+      "invocation": "packages/source/decompile/test-instances.py",
       "kind": "check",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/dump/nightmap.py",
-      "invocation": "tools/dump/nightmap.py --game <g>",
+      "id": "packages/source/decompile/nightmap.py",
+      "invocation": "packages/source/decompile/nightmap.py --game <g>",
       "kind": "report",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/dump/test-nightmap.py",
-      "invocation": "tools/dump/test-nightmap.py",
+      "id": "packages/source/decompile/test-nightmap.py",
+      "invocation": "packages/source/decompile/test-nightmap.py",
       "kind": "check",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/dump/test-aimap.py",
-      "invocation": "tools/dump/test-aimap.py",
+      "id": "packages/source/decompile/test-aimap.py",
+      "invocation": "packages/source/decompile/test-aimap.py",
       "kind": "check",
       "lifecycle": "supported"
     }

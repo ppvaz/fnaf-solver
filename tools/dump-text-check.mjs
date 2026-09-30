@@ -13,8 +13,8 @@
 // `[0]ot=..,num=..,oi=..`, `22:ExpressionParameter:cmp=`, the CTFAK-rendered
 // `IF  obj -> CompareCounter (COMPARISON{= Long[7]})`, and the header and row
 // shapes readdump.py prints. The three forms are those of
-// tools/dump/EventTextDumper.cs (tabular), the older rendered
-// `03-04-Office.txt` (tools/dump/aimap.py), and tools/dump/readdump.py.
+// packages/source/decompile/EventTextDumper.cs (tabular), the older rendered
+// `03-04-Office.txt` (packages/source/decompile/aimap.py), and packages/source/decompile/readdump.py.
 //
 // Measured 2026-09-29, locally against the FNaF 2 dump (which stays outside
 // the repo): every line of each form is caught -- 15232 tabular C/A rows (also
@@ -23,7 +23,7 @@
 // headers of 03-04-Office.txt, and 6374 lines readdump.py prints for frame 3.
 // No signature fires on any of the 1060 commit messages in the history
 // (`--log 1060`). Over the 2302 tracked text files it fires in six: the
-// synthetic fixtures of three tools/dump/test-*.py, two grammar notes with
+// synthetic fixtures of three packages/source/decompile/test-*.py, two grammar notes with
 // placeholders, and one `IF Once` inside a paraphrased block.
 //
 //   node tools/dump-text-check.mjs MSGFILE     exit 1 when the message copies dump text
@@ -137,7 +137,7 @@ export function refusal(hits) {
   lines.push(
     'Cite instead, and paraphrase:',
     '  - the group id: "g673", or a range "g618-g619";',
-    '  - the dump file and line: "03-04-Office.txt:1234", or a tools/dump/readdump.py',
+    '  - the dump file and line: "03-04-Office.txt:1234", or a packages/source/decompile/readdump.py',
     '    command a reader with the dump can run ("readdump.py group 3 673");',
     '  - what the group does, in your own words: "g673 zeroes every AI unless the',
     '    night is 7", not the IF/DO or C/A lines that say it.',

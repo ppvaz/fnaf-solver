@@ -277,7 +277,7 @@ def main():
 
     refs = load_references(opts.refs, opts.core)
     if not refs:
-        sys.exit("no reference samples in %s -- run tools/dump/extract-samples.sh"
+        sys.exit("no reference samples in %s -- run packages/source/decompile/extract-samples.sh"
                  % opts.refs)
 
     if opts.only:

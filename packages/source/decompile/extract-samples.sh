@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Extract reference sound samples from the Android APK by Fusion sample handle.
 #
-#   tools/dump/extract-samples.sh /path/to/base.apk [outdir] [handle ...]
+#   packages/source/decompile/extract-samples.sh /path/to/base.apk [outdir] [handle ...]
 #
 # The samples are game content. Like the CCN and the event dump they live
 # OUTSIDE the repository, and this script refuses to write anywhere inside it.
@@ -22,7 +22,7 @@ HANDLES=("$@")
 
 [ -f "$APK" ] || { echo "no APK at $APK" >&2; exit 1; }
 
-REPO="$(cd "$(dirname "$0")/../.." && pwd)"
+REPO="$(cd "$(dirname "$0")/../../.." && pwd)"
 ABS_OUT="$(mkdir -p "$OUT" && cd "$OUT" && pwd)"
 case "$ABS_OUT/" in
   "$REPO"/*) echo "refusing to extract game audio inside the repository: $ABS_OUT" >&2; exit 1 ;;

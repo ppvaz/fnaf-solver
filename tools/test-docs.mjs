@@ -109,10 +109,15 @@ for (const page of docPages)
 // --- 3. every tool script has an ENTRY in the index of its own directory.
 //
 // The tool index is one README per directory (tools/README.md, tools/device/,
-// tools/cue/, tools/dump/), split from a single TOOLS.md on 2026-09-25. A script
-// is held to the README nearest to it -- its own directory's, or the closest
-// parent's -- so a reader in tools/device/ finds tools/device/'s scripts there.
-const indexes = tracked.filter((f) => /^tools\/(?:[^/]+\/)?README\.md$/.test(f)).sort();
+// tools/cue/), split from a single TOOLS.md on 2026-09-25, plus the decompile
+// scripts' own (packages/source/decompile/, which was tools/dump/ until ADR 0002's
+// Source context took it on 2026-09-30). A script is held to the README
+// nearest to it -- its own directory's, or the closest parent's -- so a reader
+// in tools/device/ finds tools/device/'s scripts there.
+const TOOL_ROOTS = ['tools', 'packages/source/decompile'];
+const underToolRoot = (f) => TOOL_ROOTS.some((root) => f.startsWith(`${root}/`));
+const indexes = tracked.filter((f) => /^tools\/(?:[^/]+\/)?README\.md$/.test(f) ||
+  f === 'packages/source/decompile/README.md').sort();
 const entriesOf = new Map();
 for (const index of indexes) {
   const entries = new Set();
@@ -126,12 +131,12 @@ for (const index of indexes) {
   entriesOf.set(index, entries);
 }
 const nearestIndex = (file) => {
-  for (let dir = dirname(file); dir.startsWith('tools'); dir = dirname(dir))
+  for (let dir = dirname(file); dir !== '.' && dir !== ''; dir = dirname(dir))
     if (entriesOf.has(`${dir}/README.md`)) return `${dir}/README.md`;
   return null;
 };
 if (!entriesOf.has('tools/README.md')) complain('tools/README.md, the root tool index, is missing');
-const scripts = tracked.filter((f) => f.startsWith('tools/') && /\.(mjs|py|sh|c|S)$/.test(f));
+const scripts = tracked.filter((f) => underToolRoot(f) && /\.(mjs|py|sh|c|S)$/.test(f));
 for (const script of scripts) {
   const index = nearestIndex(script);
   if (index && !entriesOf.get(index).has(basename(script)))

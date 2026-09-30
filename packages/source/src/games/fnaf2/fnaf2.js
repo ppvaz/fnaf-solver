@@ -10,7 +10,7 @@
 // into the cross-game shape so all four games can be asked the same question.
 //
 // Regenerate the clock with
-//   tools/dump/nightmap.py --game fnaf2 --clock
+//   packages/source/decompile/nightmap.py --game fnaf2 --clock
 // ---------------------------------------------------------------------------
 
 import {

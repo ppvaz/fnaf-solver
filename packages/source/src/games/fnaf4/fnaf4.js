@@ -2,7 +2,7 @@
 // FNaF 4's night, from `03-04-level.txt` (937 groups, 0 unclassified).
 //
 // Regenerate with
-//   tools/dump/nightmap.py --game fnaf4 --table --clock --rolls
+//   packages/source/decompile/nightmap.py --game fnaf4 --table --clock --rolls
 //
 // The night counter here is `Night`, capitalised, where FNaF 1 and 3 use
 // `night number` and FNaF 2 uses `night`. A lowercase-only sweep finds

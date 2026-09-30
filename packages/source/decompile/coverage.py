@@ -6,8 +6,8 @@ at. This walks the whole office frame, sorts each group by what it can change,
 and cross-references the group numbers cited anywhere in the repo -- so the
 blind spots are a list instead of a feeling.
 
-    tools/dump/coverage.py            # summary + the unread state clusters
-    tools/dump/coverage.py --map      # the full per-cluster map (Markdown)
+    packages/source/decompile/coverage.py            # summary + the unread state clusters
+    packages/source/decompile/coverage.py --map      # the full per-cluster map (Markdown)
 
 Classes, in order of how much a missing group would matter:
 

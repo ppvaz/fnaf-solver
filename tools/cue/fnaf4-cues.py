@@ -5,7 +5,7 @@
   fnaf4-cues.py --refs DIR --wav REC.bt.wav --start-wall-ms MS
 
 The game plays its cues as Fusion samples (`res/raw/sNNNN.*`, extracted outside
-the repository by tools/dump/extract-samples.sh). The Bluetooth encoder sits
+the repository by packages/source/decompile/extract-samples.sh). The Bluetooth encoder sits
 downstream of the whole mix, so every sample reaches the host
 (docs/device/ANDROID-AUDIO-CAPTURE.md); what this tool adds is detection.
 

@@ -7,10 +7,10 @@ of the features a detector would actually compare. That separability is a
 property of the cue set alone, before any device noise, so it is the ceiling
 any detector on this phone can reach.
 
-  tools/dump/extract-samples.sh /path/to/base.apk
+  packages/source/decompile/extract-samples.sh /path/to/base.apk
   tools/cue/reference-report.py [refdir] [--json out.json]
 
-Handles come from the event sheet: `tools/dump/readdump.py sounds 3`.
+Handles come from the event sheet: `packages/source/decompile/readdump.py sounds 3`.
 """
 import argparse
 import hashlib
@@ -87,7 +87,7 @@ def main():
 
     root = pathlib.Path(opts.refdir)
     if not root.is_dir():
-        sys.exit("no reference directory at %s -- run tools/dump/extract-samples.sh"
+        sys.exit("no reference directory at %s -- run packages/source/decompile/extract-samples.sh"
                  % root)
     found = {}
     for path in sorted(root.glob("s*.wav")):

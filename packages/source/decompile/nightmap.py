@@ -30,9 +30,9 @@ Reports (each also available as `--json`):
 
 Usage:
 
-    tools/dump/nightmap.py --game fnaf1 --table
-    tools/dump/nightmap.py --sheet path/to/03-04-Office.txt --clock --json
-    tools/dump/nightmap.py --game fnaf4 --graph Bonnie
+    packages/source/decompile/nightmap.py --game fnaf1 --table
+    packages/source/decompile/nightmap.py --sheet path/to/03-04-Office.txt --clock --json
+    packages/source/decompile/nightmap.py --game fnaf4 --graph Bonnie
 
 `--game` resolves a sheet through `$FNAF_DUMP_ROOT` (default `~/fnaf-apks`),
 whose per-game `events/` directories hold extracted game content and stay

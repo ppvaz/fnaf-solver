@@ -6,7 +6,7 @@ one charter layer, over a shared kernel:
 
 | Context | Layer | In today's code |
 |---|---|---|
-| Source | Truth | `@sixam/source` (each game's Rulebook data, Sim and controls; the nights registry, night model, RNG, control vocabulary and the validators generated from the catalogs); `@sixam/core` keeps the policy language, sensing, estimation and training until they move; `tools/dump`, `tools/recompile` |
+| Source | Truth | `@sixam/source` (each game's Rulebook data, Sim and controls; the nights registry, night model, RNG, control vocabulary and the validators generated from the catalogs); `@sixam/core` keeps the policy language, sensing, estimation and training until they move; `packages/source/decompile`, `tools/recompile` |
 | Propose | Decision | `@sixam/research`; the winner bindings and plan generators in `tools/device` |
 | Play | Embodiment | `apps/device` (the campaign, the one composition root that plays a night), `@sixam/adapters` (transports, clocks, fitted rules), the Companion (`android/companion`) |
 | Review | Proof | `@sixam/review` (run packs, Plan 12 attestation and promotion, cohorts, the pack lift to `GameRun`, and `npm run review` queries); the grade pipeline in `tools/device` |

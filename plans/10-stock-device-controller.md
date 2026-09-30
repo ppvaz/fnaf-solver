@@ -197,7 +197,7 @@ What the source settles, so the phone probe need not re-derive it:
 What only the device (or a richer dump) can answer:
 
 1. **Scene X of `left light` and `right light`**, and their hitbox sizes. A
-   logic-only dump has no frame instance list; `tools/dump/EventTextDumper.cs`
+   logic-only dump has no frame instance list; `packages/source/decompile/EventTextDumper.cs`
    would have to be extended to emit X/Y/layer. Until then the travel a
    right-vent read costs is `[UNKNOWN]` and everything above is a rate without a
    distance.
@@ -263,7 +263,7 @@ integer clamped to [512, 1088]; the phone is needed for the coordinate-to-outcom
 mapping, which is a classification rather than a distance.
 
 **Still open.** The scene X and hitbox extents of `left light` / `right light`
-cannot come from a logic-only dump — `tools/dump/EventTextDumper.cs` would have
+cannot come from a logic-only dump — `packages/source/decompile/EventTextDumper.cs` would have
 to emit instance X/Y/layer. That is the cheaper path to the rest of this map
 than sweeping the phone, and it is what would let plans/14 derive coordinates on
 a new device instead of hand-calibrating them. The right vent still has no

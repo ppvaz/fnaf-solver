@@ -10,7 +10,7 @@ Read docs/android/SOURCE-DUMP-GUIDE.md first -- it explains the file format, the
 scramble, and the alterable-value vocabulary these commands print.
 
 The dump itself is game content: it lives outside the repo. Point --dump (or
-$FNAF2_DUMP) at it; regenerate it with tools/dump/regen-dump.sh.
+$FNAF2_DUMP) at it; regenerate it with packages/source/decompile/regen-dump.sh.
 
   readdump.py frames                     every frame and its group count
   readdump.py objects [pattern]          objects by event-space handle

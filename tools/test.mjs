@@ -312,10 +312,10 @@ const ENGINE = [
   // the image the dumper wrote beside it is the XOR partner's. The 2026-08-26
   // reading had it backwards; recompiled Office positions decide it, 186/189.
   // Also gated in npm run test:unit.
-  ['dump instances', ['dump/test-instances.py']],
+  ['dump instances', ['../packages/source/decompile/test-instances.py']],
   // Unwired since it was written; the AI table is what every survival figure
   // in this repository is computed against.
-  ['aimap', ['dump/test-aimap.py']],
+  ['aimap', ['../packages/source/decompile/test-aimap.py']],
   ['observation index', ['device/test-index-observations.py']],
   // Plan 09's v1 session contract: the manifest/event schemas, and the proof
   // that each way of being malformed fails with its own reason rather than one

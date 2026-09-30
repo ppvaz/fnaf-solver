@@ -176,7 +176,7 @@ caller starts probing. It exists nowhere today.
   destroyed-by.
 
 This is the highest-value layer and the least accessible one:
-[`tools/dump/`](../tools/dump/) is scripts plus a directory on one machine. It is
+[`packages/source/decompile/`](../packages/source/decompile/) is scripts plus a directory on one machine. It is
 also what makes "answer from the dump, not the model" enforceable instead of a
 habit a tired reader drops.
 

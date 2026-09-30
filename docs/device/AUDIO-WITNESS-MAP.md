@@ -16,7 +16,7 @@ capture paths is from [`ANDROID-AUDIO-CAPTURE.md`](ANDROID-AUDIO-CAPTURE.md).
 | phone -> Bluetooth A2DP -> Linux BlueALSA (`bluealsa-cli open`, SBC) | decoder validated 2026-08-29; integrated as `night-run.sh --bt-audio`; transport continuity still unqualified | the full HAL mix: the winding tick s0033 matched at 0.44-0.56 NC while winding, 0.09-0.15 not winding. `capture-bt-audio.sh --start/--stop` supplies host-clock bounds and a loss sidecar; see `ANDROID-AUDIO-CAPTURE.md` §"Current host modes and loss acceptance". |
 | phone -> ESP32 A2DP sink -> Wi-Fi PCM -> same phone | retracted 2026-08-31 (loss) | -- |
 | ESP32 as local DSP -> timestamped cue facts | firmware archived 2026-09-24 (`firmware/esp32-audio-consumer`, [`../ARCHIVED-ROUTES.md`](../ARCHIVED-ROUTES.md)), one shadow model (`~/fnaf-apks/cue-models/bang-shadow-g56-bluealsa-20260830.txt`, cue=bang id=17, threshold 0.35) | never connected on a graded run: every 2026-09-12/13 run reports `audio=ESP32 state=UNKNOWN reason=esp32-not-connected`, `audioAnalyzer=UNAVAILABLE reason=model-missing`. |
-| extracted references (`~/fnaf-apks/cue-refs`) | partial | s0015-s0033 as wav (s0015/s0020 also ogg). Handles 3-14 and 34-66 are not extracted. `tools/dump/extract-samples.sh` pulls from `base.apk`. |
+| extracted references (`~/fnaf-apks/cue-refs`) | partial | s0015-s0033 as wav (s0015/s0020 also ogg). Handles 3-14 and 34-66 are not extracted. `packages/source/decompile/extract-samples.sh` pulls from `base.apk`. |
 
 ## The handle map (event sheet `Play sample` / `PlayLoopingChannelSample`, night frame 3)
 
@@ -98,7 +98,7 @@ controlled acceptance gate is now three 300-second runs, each at no more than
 | `tools/device/bb-inside.py` | s0016, s0021/23/24 | BB-at-opening and BB-inside intervals | run-report's `encounter` section; the model's BB entry rule test |
 | `tools/device/danger-windows.py` | s0010 envelope (loop un-muted) | `in danger` intervals per cycle | the FLAT-flash census (`bracket`), blackout timing vs model |
 | `tools/device/death-cue.py` | s0012/s0062 | death instant, +-1 frame | `grade-run.sh` survival line, replacing the static heuristic when audio is present |
-| `tools/dump/extract-samples.sh` (extend) | `base.apk` | all handles 3-66 as wav under `cue-refs` | corpus for the above |
+| `packages/source/decompile/extract-samples.sh` (extend) | `base.apk` | all handles 3-66 as wav under `cue-refs` | corpus for the above |
 | `tools/device/wind-ticks.py` | s0033 | ticks per cycle, first-tick phase mod 500 | arm verification per cycle (replaces the model's arming-hole guess) |
 
 Every one of these is offline on a retained capture, the same shape as the

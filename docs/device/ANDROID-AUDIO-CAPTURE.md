@@ -463,7 +463,7 @@ driven to a night, music box wound, captured through the validated
 **phone → aptX HD → BlueALSA → `bluealsa-cli open` → raw S24_LE/32-bit** path
 with `bluealsa-aplay` and WirePlumber stopped. Container normalised `volume=256`,
 resampled to 48 kHz mono. Reference: `res/raw/s0033.wav` pulled straight from
-`base.apk` (`tools/dump/extract-samples.sh` — sample handle 33 `'WinD'`, 12513
+`base.apk` (`packages/source/decompile/extract-samples.sh` — sample handle 33 `'WinD'`, 12513
 samples / 0.284 s at 44.1 kHz, the exact fast-track burst length recorded in
 "Discrete SFX are on the fast mixer" above).
 
@@ -508,7 +508,7 @@ check that a capture is the game mix and not broadband noise or a mic fallback.
 **Reproduce.** `tools/cue/capture-bt-audio.sh <seconds>` wraps it:
 `bluealsa-cli open /org/bluealsa/hci0/dev_<mac>/a2dpsnk/source` to a raw file
 (nothing else may hold that PCM), then `ffmpeg -f s32le -ar 48000 -ac 2 -i raw
--af volume=256 out.wav`. Reference samples: `tools/dump/extract-samples.sh
+-af volume=256 out.wav`. Reference samples: `packages/source/decompile/extract-samples.sh
 ~/fnaf-apks/fnaf2/base.apk` pulls `res/raw/sNNNN.*` by handle. Raw artifacts and
 the winding reference: `~/fnaf-apks/audio-capture-2026-08-29/` and
 `~/fnaf-apks/bt-audio-captures/` (outside the repo, game content).

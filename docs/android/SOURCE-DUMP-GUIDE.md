@@ -17,7 +17,7 @@ that rule and had every Toy↔Withered pair silently swapped.
 com.scottgames.fnaf2 v2.0.7 (owned, pulled from the device)
   └─ base.apk
        └─ res/raw/application.ccn      89 MB, Fusion CCN, magic PAMU, build 296
-            └─ CTFAK + tools/dump/EventTextDumper.cs
+            └─ CTFAK + packages/source/decompile/EventTextDumper.cs
                  └─ events-android.txt   ~20 500 lines — what we read
 ```
 
@@ -29,24 +29,24 @@ scratch directory (`/private/tmp/fnaf2-android-dump/` by convention) and point
 Regenerate with:
 
 ```sh
-tools/dump/regen-dump.sh /path/to/application.ccn
+packages/source/decompile/regen-dump.sh /path/to/application.ccn
 ```
 
-The separate `tools/dump/aimap.py` report reconstructs the AI counter table by
+The separate `packages/source/decompile/aimap.py` report reconstructs the AI counter table by
 night and hour from the same canonical dump; it also still reads CTFAK's older
 rendered `03-04-Office.txt` form, chosen by content, for archived sheets. Set
-`$FNAF2_OFFICE_DUMP` or pass a path to use one of those. `tools/dump/test-aimap.py`
+`$FNAF2_OFFICE_DUMP` or pass a path to use one of those. `packages/source/decompile/test-aimap.py`
 checks it against a synthetic sheet, so that path stays covered without game
 content. General rule queries should use `readdump.py` below.
 
 CTFAK is .NET 6 and this Mac has no `dotnet`, so the script runs it in the
-`mcr.microsoft.com/dotnet/sdk:6.0` image. `tools/dump/EventTextDumper.cs` is our
+`mcr.microsoft.com/dotnet/sdk:6.0` image. `packages/source/decompile/EventTextDumper.cs` is our
 own CTFAK tool — drop it into a CTFAK checkout at
 `Core/CTFAK.Core/Tools/`, `dotnet build -c Release`, and CTFAK offers it as
 "Event Text Dumper" in its tool list. With `CTFAK_IMAGE_DIR` and
 `CTFAK_IMAGE_HANDLES` (comma-separated image handles) set, the same run also
 writes those images as PNG; that needs GDI+, so run it in the image built
-from `tools/dump/ctfak-gdiplus.Dockerfile` (`CTFAK_IMAGE=fnaf2-ctfak-gdiplus:local`).
+from `packages/source/decompile/ctfak-gdiplus.Dockerfile` (`CTFAK_IMAGE=fnaf2-ctfak-gdiplus:local`).
 The pictures are game content: keep them beside the dump, never in the repo.
 The checkout is upstream
 `github.com/CTFAK/CTFAK2.0` plus the Linux port described in
@@ -131,7 +131,7 @@ Field meanings:
   `A 31` = set alterable value, `A 1` = set position (this is how movement happens).
 - **`OI`** — the object handle the event addresses. **Scrambled — see §4.**
 - **`NAME`** — the dumper's naive lookup of `OI` in the item table. **Wrong on
-  Android.** `tools/dump/readdump.py` ignores it and resolves properly.
+  Android.** `packages/source/decompile/readdump.py` ignores it and resolves properly.
 - **`COTHER`** — condition flags; **bit 0 set = the condition is negated**
   ("NOT overlapping", "monitor is NOT up"). `readdump.py` prints `!` in front.
 - **`PARAMS`** — ` || `-separated parameter list, each `code:type:rendering`.
@@ -192,7 +192,7 @@ true object of instance OI s    =   item_table[s ^ 48 ^ 28]  =  item_table[s ^ 4
 ```
 
 `readdump.py` applies this (`--lo-xor`, default 48; `0` on PC builds), and
-`tools/dump/test-instances.py` pins it. The two earlier rules were both wrong,
+`packages/source/decompile/test-instances.py` pins it. The two earlier rules were both wrong,
 and the way each one failed is the check to keep:
 
 | Reading of instance OI | Office camera markers placed | frame-3 instances joined to an event-referenced object |
@@ -293,16 +293,16 @@ Three things fall out of that, none of which are visible from playing:
 ```sh
 export FNAF2_DUMP=/private/tmp/fnaf2-android-dump/events-android.txt
 
-tools/dump/readdump.py frames                    # confirm frame 3 is the office
-tools/dump/readdump.py objects balloon           # event-space handles by name
-tools/dump/readdump.py object 3 "balloon boy"    # every group touching him
-tools/dump/readdump.py writes 3 "balloon boy" 0  # who sets his movement state
-tools/dump/readdump.py group  3 413-418          # read the range
-tools/dump/readdump.py find   3 "in office"      # text search over rendered groups
-tools/dump/readdump.py instances 3 light         # placed scene objects: X, Y, layer, box
+packages/source/decompile/readdump.py frames                    # confirm frame 3 is the office
+packages/source/decompile/readdump.py objects balloon           # event-space handles by name
+packages/source/decompile/readdump.py object 3 "balloon boy"    # every group touching him
+packages/source/decompile/readdump.py writes 3 "balloon boy" 0  # who sets his movement state
+packages/source/decompile/readdump.py group  3 413-418          # read the range
+packages/source/decompile/readdump.py find   3 "in office"      # text search over rendered groups
+packages/source/decompile/readdump.py instances 3 light         # placed scene objects: X, Y, layer, box
 ```
 
-`tools/dump/test-instances.py` and `tools/dump/test-aimap.py` check the reader
+`packages/source/decompile/test-instances.py` and `packages/source/decompile/test-aimap.py` check the reader
 against synthetic sheets, so both stay covered without game content.
 
 The productive order is almost always: **find who writes the state → read the
