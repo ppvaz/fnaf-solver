@@ -82,6 +82,26 @@ h3{font:600 9px var(--mono);text-transform:uppercase;letter-spacing:.2em;color:v
   .rail-spacer{display:none}
 }
 
+/* What the trainer teaches and why the bot plays another route: the first
+   thing on the work side of the menu, above the ladder. */
+.route-note{display:flex;flex-direction:column;gap:6px;padding:10px 13px;border:1px solid var(--line);
+  border-radius:12px;background:var(--bg2)}
+.route-note>p{color:var(--fg3);font-size:12px;line-height:1.5}
+.route-note .eyebrow{font-size:9px;color:var(--amber)}
+.facts{list-style:none;display:flex;flex-direction:column;gap:5px}
+.fact{font-size:11.5px;line-height:1.5;color:var(--fg3)}
+.fact .rec{font:500 10px var(--mono);color:var(--cyan);margin-left:2px}
+/* An evidence label, always spelled out: colour only repeats it. */
+.label{display:inline-block;padding:1px 6px;margin-right:3px;border:1px solid;border-radius:5px;
+  font:600 8.5px var(--mono);letter-spacing:.06em;vertical-align:1px}
+.label-device_measured{color:var(--good);background:var(--good-bg);border-color:#2A5A33}
+.label-model_only{color:var(--amber);background:var(--amber-bg);border-color:var(--amber-line)}
+.label-fixture{color:var(--violet);background:var(--violet-bg);border-color:var(--violet-line)}
+.board a,.route-note a{color:var(--cyan)}
+button.inline{display:inline;padding:0;border:0;background:none;color:var(--cyan);font:inherit;
+  text-decoration:underline;cursor:pointer}
+#brief-status:empty{display:none}
+
 .anchor-badge{display:flex;align-items:center;gap:10px;border:1px dashed #33402F;
   border-radius:10px;padding:9px 12px}
 .anchor-badge b{font:700 15px var(--mono);color:var(--amber)}

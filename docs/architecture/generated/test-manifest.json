@@ -407,6 +407,7 @@
         "setTimeout(r, ms",
         "sleep(200",
         "sleep(2000",
+        "sleep(200",
         "sleep(300",
         "sleep(3500",
         "sleep(800"
@@ -458,6 +459,24 @@
     },
     {
       "id": "apps/trainer/test/renderer.test.mjs",
+      "lane": "test:unit",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "apps/trainer/test/route-facts.test.mjs",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,

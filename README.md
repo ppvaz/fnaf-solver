@@ -73,8 +73,9 @@ games of one series.
 ## Try it
 
 **No install.** The [trainer](https://ppvaz.github.io/fnaf-solver/) drills Niko Frost's Minus 7, the first
-zero-RNG FNaF 2 10/20 route, as touch exercises in a phone browser held sideways. The trainer teaches Minus 7,
-while the bot wins 10/20 with Minus Toys; [the lineage](docs/strategy/STRATEGY-HISTORY.md) covers both.
+zero-RNG FNaF 2 10/20 route, as touch exercises in a phone browser held sideways, graded against the model. The
+trainer teaches Minus 7, while the bot wins 10/20 with Minus Toys: its first screen says why, with each number's
+evidence label, and [the lineage](docs/strategy/STRATEGY-HISTORY.md) covers both.
 
 **With a checkout.** These commands need only Node 20+, plus Python 3 for the trainer:
 

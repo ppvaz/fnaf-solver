@@ -107,6 +107,21 @@ async function main(url, chrome) {
     await expect('lessons listed', 'document.querySelectorAll("#mode-list .mode").length', v => v > 0);
     await expect('no sideways scroll', 'document.documentElement.scrollWidth - innerWidth', v => v <= 0);
   }
+  // Sideways, the first screen says what the trainer teaches and why the bot
+  // plays another route, and every statement about a route wears its label.
+  await expect('it names what it teaches', 'document.getElementById("teaches").textContent',
+    v => /Niko Frost/.test(v) && /Minus.7/.test(v));
+  await expect('it names the bot\'s route', 'document.getElementById("route-note").textContent',
+    v => /Minus.Toys/.test(v) && /Zach_Scream/.test(v));
+  await expect('the route note is on the first screen',
+    'document.getElementById("route-note").getBoundingClientRect().top < innerHeight', v => v === true);
+  await expect('every route statement carries a claim level',
+    '[...document.querySelectorAll(".fact")].map(li => li.querySelector(".label")?.textContent)',
+    v => v.length >= 7 && v.every(label => ['MODEL_ONLY', 'FIXTURE', 'DEVICE_MEASURED'].includes(label)));
+  await expect('a full night says its model status is UNKNOWN',
+    '(window.app.brief("night"), document.getElementById("brief-status").textContent)', v => /UNKNOWN/.test(v));
+  await ev('document.getElementById("btn-brief-back").click()');
+  await sleep(200);
   // No dev server here, so nothing offers to write one.
   await expect('no layout save offered', 'getComputedStyle(document.getElementById("row-savemap")).display', v => v === 'none');
 

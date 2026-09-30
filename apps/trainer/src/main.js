@@ -10,6 +10,7 @@ import * as Assets from './assets.js';
 import { LESSONS, LESSON_FRAMES, MINUS7_CYCLE, byId, lessonSim, loadProgress, saveProgress, markPassed,
   recordCombo, unlockedIndex } from './curriculum.js';
 import { ArcadeLab } from './arcade-ui.js';
+import { REPOSITORY, factById, factText } from './route-facts.js';
 
 // The brief's "ON SCREEN" row: what a lesson's `controls` list looks like to
 // the player, colour-coded the same way the rhythm lane codes those inputs.
@@ -209,6 +210,7 @@ class App {
     document.getElementById('brief-goal').textContent = l.goal;
     document.getElementById('brief-teach').textContent = l.teach;
     document.getElementById('brief-when').textContent = l.when ? `WHEN — ${l.when}` : '';
+    document.getElementById('brief-status').innerHTML = (l.facts || []).map(factItem).join('');
     const need = l.fullNight ? 'clear the night'
       : l.drill === 'phaseB' ? `beat ${l.duelTarget * 1000 | 0} ms on ${l.target} attacks`
       : `${l.target} clean passes in a row`;
@@ -590,6 +592,23 @@ function renderReport(sum, sim, duel, modeKey) {
   requestAnimationFrame(() => drawTimeline(document.getElementById('rep-canvas'), sim));
 }
 
+// A statement about a route, as a list item: its evidence label first, as text
+// and not colour alone, then what it says, then the record that holds it.
+const escapeHtml = text => text.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+function factItem(id) {
+  const fact = factById(id);
+  // JSON.stringify quotes the address, so the bundle holds no quoted href
+  // around a template, which build.py's leftover-reference scan would flag.
+  const record = fact.record ? ` <a class="rec" href=${JSON.stringify(REPOSITORY + fact.record)} target="_blank"
+    rel="noopener" aria-label="evidence record ${fact.record}">record</a>` : '';
+  return `<li class="fact"><b class="label label-${fact.label.toLowerCase()}">${fact.label}</b> ` +
+    `<span>${escapeHtml(factText(fact))}</span>${record}</li>`;
+}
+function renderFacts() {
+  for (const list of document.querySelectorAll('[data-facts]'))
+    list.innerHTML = /** @type {any} */ (list).dataset.facts.split(' ').map(factItem).join('');
+}
+
 // The strategy board's pass, drawn from the cycle the lessons teach so the two
 // cannot disagree (until 2026-09-30 the board was typed out by hand).
 const PASS_KIND = { monitor: '', mask: 'k-mask', light: 'k-light', camflash: 'k-cam', cam: 'k-wind', wind: 'k-hold' };
@@ -660,6 +679,7 @@ function buildMenu() {
 }
 
 buildMenu();
+renderFacts();
 renderPassBoard();
 window.app = new App();
 showPanel('menu');

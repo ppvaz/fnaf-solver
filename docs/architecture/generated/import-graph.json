@@ -204,6 +204,7 @@
         "./input.js",
         "./lane.js",
         "./report.js",
+        "./route-facts.js",
         "./ui.js",
         "@sixam/source/fnaf2"
       ]
@@ -360,6 +361,16 @@
         "../src/microtrainer.js",
         "../src/renderers.js",
         "node:assert/strict"
+      ]
+    },
+    {
+      "file": "apps/trainer/test/route-facts.test.mjs",
+      "imports": [
+        "../src/route-facts.js",
+        "@sixam/kernel",
+        "node:assert/strict",
+        "node:fs",
+        "node:url"
       ]
     },
     {

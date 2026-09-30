@@ -7,6 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Minus 7 Trainer</title>
+<meta name="description" content="Touch drills for Niko Frost's Minus 7, a FNaF 2 10/20 route, graded by a model of the Android game. Why the fnaf-solver bot plays Minus Toys instead, with every number's evidence label.">
 <link rel="icon" href="data:image/svg+xml,<svg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'><rect%20width='64'%20height='64'%20rx='12'%20fill='%230A0C0A'/><text%20x='32'%20y='44'%20text-anchor='middle'%20font-family='monospace'%20font-weight='700'%20font-size='34'%20fill='%23FFB020'>-7</text></svg>">
 <script type="importmap">{"imports":{"@sixam/kernel":"./packages/kernel/src/index.js","@sixam/kernel/contracts":"./packages/kernel/src/contracts/index.js","@sixam/kernel/time":"./packages/kernel/src/time/index.js","@sixam/play/sim":"./packages/play/src/venues/sim/index.js","@sixam/propose/policy":"./packages/propose/src/policy/index.js","@sixam/propose/fnaf2":"./packages/propose/src/games/fnaf2/index.js","@sixam/source":"./packages/source/src/index.js","@sixam/source/fnaf1":"./packages/source/src/games/fnaf1/index.js","@sixam/source/fnaf2":"./packages/source/src/games/fnaf2/index.js","@sixam/source/fnaf3":"./packages/source/src/games/fnaf3/index.js","@sixam/source/fnaf4":"./packages/source/src/games/fnaf4/index.js","@sixam/source/games/":"./packages/source/src/games/"}}</script>
 <link rel="stylesheet" href="apps/trainer/src/fonts.css">
@@ -16,20 +17,31 @@
 
 <div id="menu" class="panel shown">
   <aside class="rail">
-    <div class="eyebrow">10/20 MODE &middot; INPUT TRAINER</div>
+    <div class="eyebrow">FNAF&nbsp;2 &middot; 10/20 MODE &middot; PRACTICE TRAINER</div>
     <h1>MINUS <span>7</span></h1>
-    <p>Touch drills for the FNaF&nbsp;2 Minus&nbsp;7 routine. Built for Android timing (1.00&times;).
+    <p id="teaches">Touch drills for Niko Frost's Minus&nbsp;7, a 10/20 route with no luck in it: every five
+       seconds, flash three cameras to freeze seven animatronics, flick the mask, flash the hall, then wind
+       the box. One new move per lesson, at the game's own speed, graded against a model of the game.
        Turn your phone sideways.</p>
     <div class="anchor-badge"><b>:X2 / :X7</b><span>one pass every<br>five seconds</span></div>
     <div class="rail-spacer"></div>
     <nav class="menu-nav">
-      <button data-ui="arcade">ARCADE LAB</button>
-      <button data-ui="settings">Settings</button>
       <button data-ui="about">How it works</button>
+      <button data-ui="settings">Settings</button>
+      <button data-ui="arcade">Arcade lab</button>
       <button id="btn-resetprogress" class="danger">Reset</button>
     </nav>
   </aside>
   <section class="work">
+    <section class="route-note" id="route-note" aria-labelledby="route-note-head">
+      <h2 class="eyebrow" id="route-note-head">WHY THE BOT PLAYS ANOTHER ROUTE</h2>
+      <p>The bot that plays this project's phone wins 10/20 with Zach_Scream's Minus&nbsp;Toys instead: a
+         camera-glitch route that holds the three Toys, far easier than Minus&nbsp;7 by the community's
+         verdict, run as a ten-second schedule timed to that phone.</p>
+      <ul class="facts" data-facts="bot-cohort bot-lateness"></ul>
+      <p class="fine">Which route a person should learn is still open:
+        <button class="inline" data-ui="about">how it works</button>.</p>
+    </section>
     <div class="ladder-head">
       <span class="eyebrow">LESSONS</span>
       <div class="pips" id="mode-pips"></div>
@@ -80,6 +92,21 @@
     <nav class="report-nav"><button data-close>Done</button></nav>
   </header>
 
+  <div class="board" id="which-route">
+    <div class="board-title amber">WHICH ROUTE, AND WHY</div>
+    <p>This trainer teaches Minus&nbsp;7 by Niko Frost, the first 10/20 strategy with no luck in it, and
+       the route Markiplier reinvented by hand for his 2026 clear (see the
+       <a href="https://github.com/ppvaz/fnaf-solver/blob/master/docs/strategy/STRATEGY-HISTORY.md">strategy history</a>).
+       The bot on the phone plays Minus&nbsp;Toys by Zach_Scream, a camera-glitch route it can time to the
+       phone's measured delays. A route for a person should instead keep the widest timing margin; the
+       project's roadmap (step S5) asks for that route to be certified on the phone first, and taught here
+       after.</p>
+    <ul class="facts" data-facts="bot-cohort bot-lateness preset-margin mask-gate minus7-1020"></ul>
+    <p class="fine"><b class="label label-device_measured">DEVICE_MEASURED</b> the real game on the project's
+       phone. <b class="label label-model_only">MODEL_ONLY</b> the project's simulator of it. Neither stands
+       in for the other, and a clear in this trainer is practice in the model, not a clear on a phone.</p>
+  </div>
+
   <div class="board">
     <div class="board-title amber" id="pass-title">THE PASS</div>
     <div class="pass-steps" id="pass-steps"></div>
@@ -118,7 +145,8 @@
       <div class="byhand gf"><b>G.F.</b><span>Mask flick before the flash &mdash; flashing the hall
         with him in the office is lethal.</span></div>
       <div class="byhand bb"><b>B.B.</b><span>Third laugh: cams down across every 5&nbsp;s interval.
-        Fourth: the duel &mdash; ~0.7&nbsp;s to un-mask, raise and re-flash.</span></div>
+        Fourth: the duel &mdash; about 0.7&nbsp;s to un-mask, raise and re-flash, by the strategy guide's
+        count; this project has not measured it.</span></div>
     </div>
   </div>
 
@@ -129,10 +157,10 @@
       <p style="flex:0 1 420px">50&nbsp;s of flashlight must cover a 420&nbsp;s night. The HUD shows
          your live rate; over budget turns red.</p>
     </div>
-    <p class="fine">The camera map geometry is a reconstruction, not an extraction &mdash; use
-       Settings&nbsp;&rarr;&nbsp;Calibrate to match your device. Simulation constants come from the
-       community AI breakdowns; a few are calibrated rather than sourced and are marked as such in
-       <code>packages/source/src/games/fnaf2/config.js</code>. This is a practice tool, not the game.</p>
+    <p class="fine">The game model is this project's simulator of the Android build, read from its decompiled
+       event sheets; each constant in <code>packages/source/src/games/fnaf2/config.js</code> is labelled
+       SOURCED, CALIBRATED or MODEL. The camera map was traced from a screenshot by eye &mdash; use
+       Settings&nbsp;&rarr;&nbsp;Calibrate to match your device. This is a practice tool, not the game.</p>
   </div>
 </div>
 
@@ -143,6 +171,7 @@
     <p class="brief-goal" id="brief-goal"></p>
     <p class="brief-teach" id="brief-teach"></p>
     <p class="brief-when" id="brief-when"></p>
+    <ul class="facts" id="brief-status"></ul>
     <div class="rail-spacer"></div>
     <div class="eyebrow">ON SCREEN</div>
     <div class="chips" id="brief-controls"></div>

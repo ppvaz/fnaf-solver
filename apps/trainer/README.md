@@ -1,44 +1,53 @@
 # `@sixam/trainer`
 
-The trainer is the public browser application under the Understanding layer.
-It owns UI, touch input, audio, assets, curriculum, coaching, and trainer
-traces. It does not own sourced mechanics, device profiles, policy authority,
-or live actuation; those come from `@sixam/source`, `@sixam/kernel` and explicit device
-services. Its replayable exercise and activity-gate records (`exercise-v1`,
-`activity-gate-v1` and their siblings) live in `src/training/`
-(`@sixam/trainer/training`), which moved here from `@sixam/core/training` in ADR
-0002's Play move; `test/exercise.test.mjs` and `test/activity-gate.test.mjs` test
-them. The static HTML entry remains at the repository root for publishing,
-while its browser modules live under this application.
+The browser trainer: ADR 0002's Teach context, in the charter's Understanding
+layer. It drills Niko Frost's Minus 7 for FNaF 2's 10/20 mode as touch lessons
+on a phone held sideways, graded against the Sim from `@sixam/source/fnaf2`,
+and it says on its first screen why the bot on the phone plays Zach_Scream's
+Minus Toys instead. It is published from the repository root's `index.html`
+(GitHub Pages, through its import map) and built into one offline file by
+`npm run build:trainer`.
 
-Public API: the browser entry, `Coach`, and the DOM-free replay microtrainer
-factory from `src/index.js`. The microtrainer builds prediction and timing
-exercises from retained snapshots plus independently evidenced future facts;
-recognition requires retained profile-bound crops and an `UNKNOWN` choice; and
-strategy cases require visible exact-simulator `MODEL_ONLY` provenance. Its
-`microtrainer-session-v1` records retain prompt, commitment, resolution,
-latency, scheduler, source-fact, artifact, and split metadata without raw
-media. Censored or unresolved exercises never receive a correctness score.
-The adaptive skill model is an isolated per-player/profile consumer of those
-records: it reports denominators and Wilson uncertainty, excludes holdout data
-from training, and records capped selection probabilities; it cannot affect
-game belief, safety, or device policy.
-The renderer boundary also exposes campaign, Rhythm Highway, and Threat
-Constellation descriptors with shared semantic grading and accessibility
-capabilities. The shipped menu includes a clearly labelled offline
-`FIXTURE / PRACTICE` Arcade Lab drawer with prediction answer flow and local
-progress export/reset; retained/live corpus joins and the rhythm/spatial pilots
-remain separate follow-up work.
-The Rhythm Highway chart boundary also reuses canonical routine windows,
-refuses dense-lane collisions, and keeps prediction outcomes out of chart data;
-its real canvas and player qualification are still separate pilot work.
-The Threat Constellation boundary similarly fixes profile-relative semantic
-anchors and touch-target geometry, with explicit tap/hold/slider records and
-non-pointer alternatives; the retained-corpus hit-circle pilot is not implied.
-Dependency: core only. Commands: root `build:trainer`, `serve:trainer`, and
-`test:trainer`. Artifacts: the ignored single-file trainer bundle and optional
-trace captures. This app does not own the canonical model, device execution,
-or claim promotion.
+It owns the UI, touch input, audio, the lesson ladder and the taught cycle
+(`MINUS7_CYCLE`, `src/curriculum.js`), the coach, trainer traces, and its
+replayable exercise and activity-gate records (`exercise-v1`,
+`activity-gate-v1` and their siblings, in `src/training/`, the
+`@sixam/trainer/training` export). It imports only `@sixam/kernel` and
+`@sixam/source`. It does not own the game's mechanics, device profiles,
+policies, live input to the phone or claim promotion.
+
+## What it teaches, and how that is kept honest
+
+- **The taught pass is one the Sim accepts.** Every gap the Sim gates on an
+  animation is the sourced animation length plus two frames; the rest keeps
+  Source's `CYCLE_SCRIPT` spacing, whose own mask-off the Sim has refused since
+  3d5c5f7. `test/lessons.test.mjs` plays every lesson through the Sim.
+- **The coach grades what the game took.** `playPress` lets the Sim take a
+  press before the coach grades it, and a press the Sim refuses is graded
+  `refused`, not on its timing.
+- **Every number about a route wears its label.** `src/route-facts.js` holds
+  each statement with its claim level (`MODEL_ONLY`, `DEVICE_MEASURED`) and
+  the committed record behind it; `test/route-facts.test.mjs` fails when a
+  label or a value differs from that record. A quantity nobody has measured is
+  shown as UNKNOWN with its reason: whether this Minus 7 pass clears a whole
+  10/20 night in the model, and how late each of its steps may be.
+- **The page names what its server can write.** Only `serve.py` adds the
+  `trainer-dev-server` tag, so only there does a coached run post its trace
+  (`trainer-trace-v1`, dry when a browser is automated) or a layout get saved.
+
+Which route a person should learn is roadmap step S5's question: its
+widest-margin candidate so far is a preset Minus Toys schedule that has never
+been played on the phone. The trainer keeps teaching Minus 7 until a route is
+certified there. Coached nights are practice and never count toward S5's
+`P(win | H)` (ADR 0002, Pedro's decision 19).
+
+The DOM-free parts are exported from `src/index.js`: `Coach`, and the Plan 24
+replay microtrainer and renderer descriptors (`microtrainer-session-v1`,
+`exercise-renderer-v1`, `arcade-lab-progress-v1`). The Arcade lab in the menu
+is a clearly labelled `FIXTURE / PRACTICE` prediction demo over three fixture
+items; the Rhythm Highway and Threat Constellation modules and the adaptive
+skill model were archived on 2026-09-25 (`8a49403c`) and only their renderer
+ids remain.
 
 ## Tests and tools
 
@@ -58,6 +67,7 @@ until 2026-09-30).
 | `arcade-lab.test.mjs` | check | Phone-free Plan 24 Arcade Lab progression contract: deterministic seeded sets, local personal-best counters, neutral censored outcomes, reset, export, and no cross-player state. `test:contracts`. |
 | `coach.test.mjs` | check | The coach grades what the game did with a press: `pressLanded` judges a press from the Sim state it changes, and `playPress`, the app's one press path, lets the Sim take the press before the coach grades it, so a press the Sim refuses (the mask mid-animation, anything but the mask while it is on, a camera before the monitor is up) is graded `refused` and breaks the pass instead of scoring on its timing. A pass that ends on the held WIND is settled when the hold ends, at the next anchor, so its hold is graded on that pass and not the next. `test:contracts`. |
 | `lessons.test.mjs` | check | Every scripted lesson played headless on its cues through `playPress`: no press refused by the Sim, every graded row `good` from the first pass, every drill passed, the lethal "survive" lesson survived on ten seeds, and the taught cycle's animation-gated gaps equal the sourced animation plus two frames. Its control plays Source's `CYCLE_SCRIPT`, the pattern taught until 2026-09-30, and must see it refused. `test:contracts`. |
+| `route-facts.test.mjs` | check | Every statement the trainer makes about a route's results (`src/route-facts.js`) is checked against the committed record it cites: the record's `claimLevel` must equal the fact's label, each value must equal the record field it names, and every other number in its text must be one of those values or a name (10/20, 6 AM, the ±60 ms human gate, a date). An UNKNOWN fact must carry its reason and cite no value. `test:contracts`. |
 | `trace.test.mjs` | check | Gates the trainer's per-step trace: the Coach's census rows against scripted lateness, `tracereport.mjs` banding math, and `serve.py`'s `/save-trace` against a temporary directory. No browser or phone. `tools/test.mjs --engine` (`trainer trace`). |
 | `tracereport.mjs [dir]` | report | Bands the recorded trainer traces per step: lateness quantiles, wind-hold coverage, inter-press spacing, and provenance. Excludes webdriver and off-speed runs from the census. The measured replacement for plans/04's `[INFERRED]` human profile, once enough runs accumulate. `tools/test.mjs --reports`. |
 | `browser.test.mjs [url] [screenshot]` | check | Browser group (`browsertest`). General load/input smoke check; writes `/tmp/m7-report.png` by default. |

@@ -157,6 +157,7 @@ export const LESSONS = [
            'once it is fully on, and flash once it is fully off. A touch while it moves is refused.',
     controls: ['light', 'mask', 'monitor'],
     script: MINUS7_CYCLE.slice(0, 5),
+    facts: ['mask-gate'],
     sim: { ...INERT, foxyEnabled: true, gfEnabled: true },
     start: { monitor: 'up' },
     tol: EASY, target: 8,
@@ -212,7 +213,8 @@ export const LESSONS = [
     title: 'The duel',
     goal: 'Un-mask, cams up, CAM 10, CAM 04 — as one motion, under 0.7s.',
     teach: 'His fourth laugh puts him in the opening. Flash all three cams, drop, mask up, and wait. ' +
-           'When you hear him leave you have about seven tenths of a second before the stun lapses. ' +
+           'When you hear him leave you have about seven tenths of a second before the stun lapses, by ' +
+           'the strategy guide\'s count; this project has not measured it. ' +
            'Leave the monitor parked on CAM 07 with the light held and you get that third flash free.',
     controls: ['light', 'camlight', 'mask', 'monitor', 'cams', 'wind'],
     script: null,           // measured by the duel timer, not the cycle coach
@@ -231,6 +233,7 @@ export const LESSONS = [
            'camera lapsed and when.',
     controls: ['light', 'camlight', 'mask', 'monitor', 'cams', 'wind', 'vents'],
     script: MINUS7_CYCLE,
+    facts: ['minus7-1020'],
     sim: {},
     start: { monitor: 'up', cam: 11 },
     target: 1,
@@ -241,10 +244,11 @@ export const LESSONS = [
     when: ':X2 and :X7, and he will never be kind.',
     title: 'Worst luck',
     goal: 'Every roll pinned to the worst case.',
-    teach: 'BB moves every time and never leaves early. If you can clear this you can clear anything — ' +
-           'this is the run that proves Minus 7 has no unwinnable RNG.',
+    teach: 'BB moves every time and never leaves early. The strategy\'s claim is that no roll makes ' +
+           'Minus 7 unwinnable; a clear here is one night in the model, not a proof of that.',
     controls: ['light', 'camlight', 'mask', 'monitor', 'cams', 'wind', 'vents'],
     script: MINUS7_CYCLE,
+    facts: ['minus7-1020'],
     sim: { worst: true },
     start: { monitor: 'up', cam: 11 },
     target: 1,
