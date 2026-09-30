@@ -145,7 +145,7 @@ TRACE_TOOL="packages/play/bin/probe/atrace-input.sh"
 for path in "$BUNDLE/manifest.json" "$QUALIFICATION" "$TITLE_MODEL_PATH" \
             packages/propose/bin/report/phase-reconstruct.mjs packages/review/bin/grade/run-timeline.py \
             packages/play/src/sensors/screencap/title-observe.py packages/play/bin/probe/inputtrace.py \
-            "$TRACE_TOOL" apps/desktop/src/device-cli.js tools/evidence.js; do
+            "$TRACE_TOOL" apps/desktop/src/device-cli.js apps/desktop/src/evidence.js; do
   [ -e "$path" ] || die "missing required input: $path"
 done
 # A dry run stops short of the phone: it asks adb nothing, not even get-state.
@@ -561,7 +561,7 @@ analyze() {
   # would change the pack. A later regrade that adds files needs --replace.
   if [ "${#ATTEMPT_DIRS[@]}" -gt 0 ]; then
     say "evidence pack"
-    node tools/evidence.js pack "$RUNID" 2>&1 | tee "captures/$RUNID-pack.log" || true
+    node apps/desktop/src/evidence.js pack "$RUNID" 2>&1 | tee "captures/$RUNID-pack.log" || true
   fi
 
   say "verdict"

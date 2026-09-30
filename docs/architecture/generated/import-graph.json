@@ -79,6 +79,25 @@
       ]
     },
     {
+      "file": "apps/desktop/src/evidence.js",
+      "imports": [
+        "../../../packages/propose/bin/plans/bundle.mjs",
+        "@sixam/kernel/contracts",
+        "@sixam/propose/experiment",
+        "@sixam/review/envelopes",
+        "@sixam/review/evidence-campaign",
+        "@sixam/review/evidence-cohort",
+        "@sixam/review/evidence-pack",
+        "@sixam/review/evidence-promotion",
+        "node:crypto",
+        "node:fs",
+        "node:fs/promises",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "apps/desktop/src/lab.mjs",
       "imports": [
         "../../../packages/play/bin/phone/local-profile.mjs",
@@ -200,23 +219,14 @@
       ]
     },
     {
-      "file": "apps/desktop/test/test-deathchart.mjs",
+      "file": "apps/desktop/test/test-evidence-cli.mjs",
       "imports": [
-        "../bin/deathchart.mjs",
-        "\\.\\/(plant-[\\w-]+\\.js)",
+        "@sixam/kernel",
+        "@sixam/review/evidence-pack",
+        "@sixam/review/evidence-promotion",
+        "node:assert/strict",
+        "node:child_process",
         "node:fs",
-        "node:os",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "apps/desktop/test/test-deathchart.mjs",
-      "imports": [
-        "../bin/deathchart.mjs",
-        "\\.\\/(plant-[\\w-]+\\.js)",
-        "node:fs",
-        "node:os",
         "node:path",
         "node:url"
       ]
@@ -4435,25 +4445,6 @@
       ]
     },
     {
-      "file": "tools/evidence.js",
-      "imports": [
-        "../packages/propose/bin/plans/bundle.mjs",
-        "@sixam/kernel/contracts",
-        "@sixam/propose/experiment",
-        "@sixam/review/envelopes",
-        "@sixam/review/evidence-campaign",
-        "@sixam/review/evidence-cohort",
-        "@sixam/review/evidence-pack",
-        "@sixam/review/evidence-promotion",
-        "node:crypto",
-        "node:fs",
-        "node:fs/promises",
-        "node:os",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
       "file": "tools/gate-kit.mjs",
       "imports": [
         "node:child_process",
@@ -4557,19 +4548,6 @@
         "node:crypto",
         "node:fs",
         "node:path"
-      ]
-    },
-    {
-      "file": "tools/test-evidence-cli.mjs",
-      "imports": [
-        "@sixam/kernel",
-        "@sixam/review/evidence-pack",
-        "@sixam/review/evidence-promotion",
-        "node:assert/strict",
-        "node:child_process",
-        "node:fs",
-        "node:path",
-        "node:url"
       ]
     },
     {

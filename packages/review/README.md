@@ -6,7 +6,7 @@ outcomes; review decides them, and claims, promotions and status are queries
 over what it reads. It holds the evidence tools that read committed run packs:
 the campaign reader, the run-pack writer and reader, Plan 12 attestation and
 promotion, and the cohort computation. They moved here from `tools/` on
-2026-09-29, unchanged; `npm run evidence` (`tools/evidence.js`) composes them,
+2026-09-29, unchanged; `npm run evidence` (`apps/desktop/src/evidence.js`) composes them,
 and its output did not change by a byte. Beside them, the first reader in
 kernel words: a read-only lift of every committed pack to a kernel `GameRun`,
 and `npm run review -- query promotions`, which re-derives the `PROMOTED_BY`

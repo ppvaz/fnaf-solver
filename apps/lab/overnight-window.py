@@ -189,7 +189,7 @@ HELPER_STOP_COMMAND = [str(HERE / "../../packages/play/bin/companion/companion-s
 CAPABILITIES_COMMAND = ["node", str(HERE / "../../packages/play/bin/phone/capabilities.mjs")]
 LOCAL_PROFILE_COMMAND = ["node", str(HERE / "../../packages/play/bin/phone/local-profile.mjs"), "serial"]
 NIGHT_JOB_COMMAND = [sys.executable, str(HERE / "night-job.py")]
-PACK_COMMAND = ["node", str(ROOT / "tools/evidence.js"), "pack"]
+PACK_COMMAND = ["node", str(ROOT / "apps/desktop/src/evidence.js"), "pack"]
 PACKS_ROOT = ROOT                 # docs/evidence/runs/<run> lives here
 RUNS_ROOT = ROOT                  # artifacts/runs/<run> lives here
 

@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { canonicalJson, stableHash, validateArtifactRef } from '@sixam/kernel/contracts';
 import { validateManifest } from '@sixam/kernel/contracts';
 import { replayModelResult } from '@sixam/propose/experiment';
-import { BUNDLE_SCHEMA, validateBundle } from '../packages/propose/bin/plans/bundle.mjs';
+import { BUNDLE_SCHEMA, validateBundle } from '../../../packages/propose/bin/plans/bundle.mjs';
 import { isCampaignResult, campaignEntry, campaignPromotionChecks } from '@sixam/review/evidence-campaign';
 import { PACKS_DIR, resolvePackTargets, buildPack, buildFnaf1Pack, writePack, readPack, packPromotionChecks,
   trackedWinners, packEntry, recoveryCheck, attestationStatus, packCustody } from '@sixam/review/evidence-pack';
@@ -19,7 +19,7 @@ import { computeCohort } from '@sixam/review/evidence-cohort';
 import { FNAF2, promotionSummaryEnvelope, showEnvelope } from '@sixam/review/envelopes';
 import { writeFileSync } from 'node:fs';
 
-const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));
+const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '../../..'));
 const ARTIFACTS = join(ROOT, 'artifacts');
 const PACKS = join(ROOT, PACKS_DIR);
 const SESSION_RESULT_SCHEMAS = new Set(['device-run-result-v1', 'experiment-result-v1']);

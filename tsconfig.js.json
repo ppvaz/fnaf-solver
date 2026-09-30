@@ -15,5 +15,5 @@
     "apps/trainer/src/**/*.js",
     "apps/trainer/src/**/*.d.ts"
   ],
-  "exclude": ["node_modules", "dist", "artifacts"]
+  "exclude": ["node_modules", "dist", "artifacts", "apps/desktop/src/evidence.js"]
 }

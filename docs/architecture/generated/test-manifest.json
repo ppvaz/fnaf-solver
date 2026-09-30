@@ -167,7 +167,7 @@
       }
     },
     {
-      "id": "apps/desktop/test/test-deathchart.mjs",
+      "id": "apps/desktop/test/test-evidence-cli.mjs",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,
@@ -175,31 +175,7 @@
       "deterministic": true,
       "determinismSignals": [],
       "fixedSleeps": [],
-      "sharedResources": [
-        "browser",
-        "device-transport"
-      ],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "apps/desktop/test/test-deathchart.mjs",
-      "lane": "test:unit",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "browser",
-        "device-transport"
-      ],
+      "sharedResources": [],
       "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",
@@ -5191,24 +5167,6 @@
         "device-transport"
       ],
       "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/test-evidence-cli.mjs",
-      "lane": "test:unit",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",
         "runs": 0,

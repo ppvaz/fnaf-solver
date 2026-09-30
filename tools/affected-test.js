@@ -94,14 +94,14 @@ if (changed.some(path => ['packages/propose/src/experiment/', 'packages/propose/
 // evidence CLI that composes it (`npm run evidence`). Review imports the
 // kernel, so a kernel change runs both. LEG-003's interim mapping for the two
 // packages created on 2026-09-29.
-if (changed.some(path => path.startsWith('packages/review/') || path.startsWith('packages/kernel/') || path === 'tools/evidence.js' ||
+if (changed.some(path => path.startsWith('packages/review/') || path.startsWith('packages/kernel/') || path === 'apps/desktop/src/evidence.js' ||
     path === 'tools/evidence-pack.mjs' || path.startsWith('docs/evidence/runs/') || path === 'docs/evidence/graph.json' ||
     path === 'packages/propose/bindings/fact-register.mjs' || /^packages\/propose\/bindings\/[^/]+\/[^/]+-winner\.json$/.test(path))) {
   for (const test of ['evidence-campaign', 'evidence-pack', 'evidence-cohort', 'evidence-promotion'])
     add(`test:packages/review/test/${test}.test.mjs`, 'node', [`packages/review/test/${test}.test.mjs`]);
   for (const test of ['pack-lift', 'promotions-query'])
     add(`test:packages/review/test/${test}.test.js`, 'node', [`packages/review/test/${test}.test.js`]);
-  add('evidence-cli', 'node', ['tools/test-evidence-cli.mjs']);
+  add('evidence-cli', 'node', ['apps/desktop/test/test-evidence-cli.mjs']);
 }
 // The composition root: the MCP server and the lab.
 if (changed.some(path => path.startsWith('apps/desktop/')))

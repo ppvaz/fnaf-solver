@@ -75,7 +75,7 @@ export async function runNight(game, args, { root = ROOT, pack = packRun } = {})
 
 function packRun(root, id) {
   return new Promise((done, failed) => {
-    const child = spawn(process.execPath, [join(root, 'tools/evidence.js'), 'pack', id], { cwd: root, stdio: 'inherit' });
+    const child = spawn(process.execPath, [join(root, 'apps/desktop/src/evidence.js'), 'pack', id], { cwd: root, stdio: 'inherit' });
     child.on('error', failed);
     child.on('close', code => done(code ?? 1));
   });

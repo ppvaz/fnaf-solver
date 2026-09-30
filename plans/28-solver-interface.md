@@ -267,7 +267,7 @@ part that genuinely transfers to a stranger. Four of the seven do not exist yet.
 
 Already built, and more than most projects ever have: the contract register, the
 command registry, the chronicle corpus with kinds/labels/rungs/statuses,
-[`evidence.js`](../tools/evidence.js) with real claim ceilings and a `why` verb,
+[`evidence.js`](../apps/desktop/src/evidence.js) with real claim ceilings and a `why` verb,
 the content-addressed vault, a proven MCP safety boundary, capability preflight,
 and the per-game vocabulary registry added to
 [`vocabulary.js`](../packages/source/src/clockwork/vocabulary.js) this week.
