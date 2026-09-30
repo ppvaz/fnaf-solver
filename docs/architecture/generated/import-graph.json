@@ -1760,8 +1760,12 @@
         "./minus-toys-plan.mjs",
         "./recipe.mjs",
         "@sixam/kernel/contracts",
+        "@sixam/propose/parked/minus7",
+        "@sixam/propose/strategies/minus-3",
+        "@sixam/propose/strategies/minus-toys",
         "@sixam/source",
         "@sixam/source/fnaf2",
+        "@sixam/source/games/fnaf2/mechanics.js",
         "node:crypto",
         "node:fs",
         "node:path",
@@ -2844,6 +2848,12 @@
       ]
     },
     {
+      "file": "packages/propose/src/strategies/minus-3/manifest.js",
+      "imports": [
+        "@sixam/source/games/fnaf2/mechanics.js"
+      ]
+    },
+    {
       "file": "packages/propose/src/strategies/minus-3/model.js",
       "imports": [
         "../../experiment/seeds.js",
@@ -2863,6 +2873,12 @@
         "./manifest.js",
         "./model.js",
         "./route.js"
+      ]
+    },
+    {
+      "file": "packages/propose/src/strategies/minus-toys/manifest.js",
+      "imports": [
+        "@sixam/source/games/fnaf2/mechanics.js"
       ]
     },
     {
@@ -2958,6 +2974,22 @@
         "@sixam/play/sim",
         "@sixam/propose/fnaf2",
         "@sixam/source/fnaf2"
+      ]
+    },
+    {
+      "file": "packages/propose/test/mechanic-constraints.test.js",
+      "imports": [
+        "../bin/plans/bundle.mjs",
+        "@sixam/propose/parked/minus7",
+        "@sixam/propose/strategies/minus-3",
+        "@sixam/propose/strategies/minus-toys",
+        "@sixam/source/games/fnaf2/mechanics.js",
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
       ]
     },
     {

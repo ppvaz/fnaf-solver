@@ -19,6 +19,10 @@ import { canonicalJson, stableHash } from '@sixam/kernel/contracts';
 import { resolveDeviceProfile } from '@sixam/source';
 import { FNAF2_CONTROL_VOCABULARY as V } from '@sixam/source';
 import * as C from '@sixam/source/fnaf2';
+import { FNAF2_MECHANICS } from '@sixam/source/games/fnaf2/mechanics.js';
+import { MANIFEST as MINUS_TOYS } from '@sixam/propose/strategies/minus-toys';
+import { MANIFEST as MINUS_3 } from '@sixam/propose/strategies/minus-3';
+import { MANIFEST as MINUS_7 } from '@sixam/propose/parked/minus7';
 
 export const WINNER_SCHEMA = 'winner-v1';
 export const BUNDLE_SCHEMA = 'device-bundle-v1';
@@ -558,15 +562,36 @@ function minus7Emitter(winner, night) {
 // `phaseAware` names the strategies whose replay accepts an epoch. minus3 and
 // minus7 replay at epoch 0 only, so a phase offset on one of those winners
 // would be emitted into the plan and never scored; the validator refuses it
-// rather than certifying a phase no census has seen.
+// rather than certifying a phase no census has seen. `requires` is the FNaF 2
+// mechanics the strategy's manifest declares it cannot win without.
 export const STRATEGY_REGISTRY = Object.freeze({
-  'minus-toys': Object.freeze({ emit: minusToysEmitter, phaseAware: true,
+  'minus-toys': Object.freeze({ emit: minusToysEmitter, phaseAware: true, requires: MINUS_TOYS.requires,
     sources: Object.freeze(['packages/propose/bin/plans/minus-toys-plan.mjs', 'packages/propose/bin/plans/recipe.mjs']) }),
-  minus3: Object.freeze({ emit: minus3Emitter,
+  minus3: Object.freeze({ emit: minus3Emitter, requires: MINUS_3.requires,
     sources: Object.freeze(['packages/propose/bin/plans/minus-3-plan.mjs', 'packages/play/bin/probe/arm-verification.mjs']) }),
-  minus7: Object.freeze({ emit: minus7Emitter,
+  minus7: Object.freeze({ emit: minus7Emitter, requires: MINUS_7.requires,
     sources: Object.freeze(['packages/propose/bin/plans/recipe.mjs', 'packages/propose/parked/minus7/hid-device-pilot.mjs']) }),
 });
+
+// A run's constraints (ADR 0002's RunSpec `constraints`) may forbid FNaF 2
+// mechanics by id. The default forbids none, so every committed winner builds
+// exactly as before; a strategy that requires a forbidden mechanic is refused.
+// A constraint checks the build and never changes what is emitted.
+/** @param {string} strategy @param {any} constraints */
+function checkConstraints(strategy, constraints) {
+  if (!isRecord(constraints)) fail('constraints must be an object');
+  for (const key of Object.keys(constraints))
+    if (key !== 'forbidMechanics') fail(`constraints has unknown field ${key}`);
+  const forbidden = constraints.forbidMechanics ?? [];
+  if (!Array.isArray(forbidden)) fail('constraints.forbidMechanics must be an array of mechanic ids');
+  for (const id of forbidden)
+    if (typeof id !== 'string' || !Object.hasOwn(FNAF2_MECHANICS, id))
+      fail(`constraints.forbidMechanics names ${JSON.stringify(id)}, which is not a known FNaF 2 mechanic ` +
+        `(${Object.keys(FNAF2_MECHANICS).join(', ')})`);
+  for (const id of STRATEGY_REGISTRY[strategy].requires)
+    if (forbidden.includes(id))
+      fail(`strategy ${strategy} requires ${id} (${FNAF2_MECHANICS[id].name}), which the run's constraints forbid`);
+}
 
 function emitterFor(winner, night) {
   const strategy = normalizeStrategy(winner.strategy);
@@ -661,8 +686,10 @@ function checkGatePlans(gate, emitted) {
   }
 }
 
-export function compileBundle(input, outDirectory) {
+/** @param {any} input @param {string} outDirectory @param {{constraints?: {forbidMechanics?: string[]}}} [options] */
+export function compileBundle(input, outDirectory, { constraints = {} } = {}) {
   const winner = validateWinner(input);
+  checkConstraints(winner.strategy, constraints);
   const out = resolve(outDirectory);
   mkdirSync(out, { recursive: true });
   if (readdirSync(out, { withFileTypes: true }).length > 0) fail(`refusing to overwrite non-empty output ${out}`);

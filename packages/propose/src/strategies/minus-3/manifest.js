@@ -1,3 +1,5 @@
+import { CAMERA_SPLIT } from '@sixam/source/games/fnaf2/mechanics.js';
+
 export const MANIFEST = Object.freeze({
   id: 'minus-3',
   name: 'Minus 3',
@@ -5,6 +7,7 @@ export const MANIFEST = Object.freeze({
   canonicalNights: Object.freeze([3, 4, 5]),
   target: 'story',
   split: { viewing: 11, marker: 8 },
+  requires: Object.freeze([CAMERA_SPLIT]),
   claim: 'MODEL_ONLY',
   status: 'model-route',
   notes: [
