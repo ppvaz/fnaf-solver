@@ -3327,6 +3327,16 @@
       ]
     },
     {
+      "file": "tools/test-media.mjs",
+      "imports": [
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/test-mistake-register.mjs",
       "imports": [
         "./device/run-report.mjs",
