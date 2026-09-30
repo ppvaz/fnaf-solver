@@ -2977,6 +2977,15 @@
       ]
     },
     {
+      "file": "tools/probe.mjs",
+      "imports": [
+        "node:child_process",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/propertytest.mjs",
       "imports": [
         "@fnaf2-1020/core/mechanics",
@@ -3435,6 +3444,17 @@
         "node:fs",
         "node:os",
         "node:path"
+      ]
+    },
+    {
+      "file": "tools/test-probe.mjs",
+      "imports": [
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
       ]
     },
     {

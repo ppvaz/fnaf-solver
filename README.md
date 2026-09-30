@@ -79,6 +79,7 @@ while the bot wins 10/20 with Minus Toys; [the lineage](docs/strategy/STRATEGY-H
 **With a checkout.** These commands need only Node 20+, plus Python 3 for the trainer:
 
 ```sh
+npm run probe                                   # which routes below this machine is ready for, and what it still needs
 npm ci
 npm run evidence -- promotions                  # re-check every committed run pack against the promotion gate
 npm run build:trainer && npm run serve:trainer  # the trainer on http://localhost:8731
