@@ -64,4 +64,35 @@ const QUIET = { bbEnabled: false, foxyEnabled: false, gfEnabled: false, boxEnabl
   assert.deepEqual(passes, [false], 'a pass with a refused press is not a clean pass');
 }
 
-console.log('coach: a press the Sim refuses is graded refused, on its own and through the app\'s press path');
+// A pass that ends on the held WIND is settled when the hold ends, at the next
+// anchor. Until 2026-09-30 it was settled at the WIND press, so it graded the
+// PREVIOUS pass's hold: every lesson's first pass read `no-wind` however long
+// the player held, and each trace `holds` row carried the wrong cycle.
+{
+  const sim = { t: 0, isWinding: false };
+  const script = [
+    { id: 'tap', at: 0, label: 'Tap', action: 'light' },
+    { id: 'wind', at: 1, label: 'Hold WIND', action: 'wind', hold: 3.5 },
+  ];
+  const passes = [];
+  const coach = new Coach(sim, { script, tolGood: 0.2, tolOk: 0.4, onCycle: ok => passes.push(ok) });
+  // Anchors at 2 and 7. Pass 0 winds its full 3.5 s; pass 1 only taps WIND.
+  const presses = new Map([[2 * C.FPS, 'light'], [3 * C.FPS, 'wind'], [7 * C.FPS, 'light'], [8 * C.FPS, 'wind']]);
+  for (let f = 0; f <= 12.5 * C.FPS; f++) {
+    sim.t = f / C.FPS;
+    sim.isWinding = f >= 3 * C.FPS && f < 6.5 * C.FPS;
+    coach.update();
+    const act = presses.get(f);
+    if (act) coach.onInput(act);
+  }
+  assert.deepEqual(passes, [true, false], 'the held pass is clean and the tapped one is not');
+  assert.equal(coach.holds[0].cycle, 0);
+  assert.ok(Math.abs(coach.holds[0].heldSec - 3.5) < 1 / C.FPS, `pass 0 held ${coach.holds[0].heldSec} s`);
+  assert.equal(coach.holds[1].cycle, 1);
+  assert.equal(coach.holds[1].heldSec, 0);
+  const flagged = coach.trace.filter(row => row.grade === 'no-wind');
+  assert.deepEqual(flagged.map(row => row.cycle), [1], 'no-wind lands on the pass that did not wind');
+}
+
+console.log('coach: a press the Sim refuses is graded refused, on its own and through the app\'s press path; ' +
+  'a pass that ends on WIND is settled when its hold ends');

@@ -71,11 +71,14 @@ for (const lesson of LESSONS.filter(l => l.script)) {
   const seeds = lethal ? 10 : 1;
   for (let seed = 1; seed <= seeds; seed++) {
     const seconds = lesson.fullNight ? 20 : (lesson.target + 2) * 5 + 3;
-    const { sim, coach } = play(lesson, { seed, seconds });
+    const { sim, coach, passes } = play(lesson, { seed, seconds });
     assert.deepEqual(refused(coach), [], `${lesson.id} seed ${seed}: the Sim refused a press on its cue`);
     assert.ok(coach.trace.length > 0, `${lesson.id} seed ${seed}: no step was graded`);
+    const off = coach.trace.filter(row => row.grade !== 'good').map(row => `${row.cycle}:${row.stepId}:${row.grade}`);
+    assert.deepEqual(off, [], `${lesson.id} seed ${seed}: a perfect player graded below good`);
     if (!lesson.fullNight) {
       assert.ok(sim.alive, `${lesson.id} seed ${seed}: died (${sim.death?.reason}) before its pass target`);
+      assert.equal(passes[0], true, `${lesson.id} seed ${seed}: the first pass was not clean`);
       assert.ok(coach.bestStreak >= lesson.target,
         `${lesson.id} seed ${seed}: best streak ${coach.bestStreak} of ${lesson.target} with every cue hit`);
     }
@@ -83,4 +86,4 @@ for (const lesson of LESSONS.filter(l => l.script)) {
   lessons++;
 }
 console.log(`lessons: ${lessons} scripted lessons played on their cues in the Sim, no press refused, ` +
-  'every drill passed; CYCLE_SCRIPT refused as the control');
+  'every row graded good from the first pass, every drill passed; CYCLE_SCRIPT refused as the control');

@@ -84,6 +84,7 @@ export class Coach {
     this.streak = 0;          // consecutive clean passes
     this.bestStreak = 0;
     this.cycles = 0;
+    this.settleAt = null;     // when a pass ending on a hold is settled
   }
 
   get expected() { return this.cycleStart == null ? null : this.script[this.idx]; }
@@ -126,6 +127,7 @@ export class Coach {
     if (this.sim.isWinding) this.windFrames++;
     const t = this.sim.t;
     if (this.cycleStart == null) { this.start(t); return null; }
+    if (this.settleAt != null && t >= this.settleAt) { this.settleAt = null; this.completeCycle(); }
     // a camflash needs its light within 0.4s of the cam tap
     if (this.pendingFlash && t - this.pendingFlash.t > 0.4) {
       const p = this.pendingFlash; this.pendingFlash = null;
@@ -133,18 +135,28 @@ export class Coach {
       this.advance(t);
     }
     const e = this.expected;
-    if (!e) { this.completeCycle(); this.cycleStart = this.nextAnchor(t + 0.2); this.idx = 0; return null; }
+    if (!e) { this.wrap(t); return null; }
     if (t > this.cycleStart + e.at + 1.0) { this.push(e, null, 'missed'); this.advance(t); }
     return null;
   }
 
   advance(t) {
     this.idx++;
-    if (this.idx >= this.script.length) {
-      this.completeCycle();
-      this.cycleStart = this.nextAnchor(t + 0.2);
-      this.idx = 0;
-    }
+    if (this.idx >= this.script.length) this.wrap(t);
+  }
+
+  // The pass is over once its last step is graded -- unless that step is a
+  // hold, WIND, which runs on until the next anchor. Then the next pass is
+  // scheduled now and this one is settled when the hold has ended. Until
+  // 2026-09-30 it was settled at the WIND press, which graded the previous
+  // pass's hold: every lesson's first pass read `no-wind`, and each trace
+  // `holds` row carried the next pass's cycle.
+  wrap(t) {
+    const last = this.script[this.script.length - 1];
+    this.cycleStart = this.nextAnchor(t + 0.2);
+    this.idx = 0;
+    if (last?.hold) this.settleAt = this.cycleStart;
+    else this.completeCycle();
   }
 
   push(step, delta, grade) {
