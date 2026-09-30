@@ -2945,3 +2945,39 @@ Open:
   group 275;
 - neither rebuilt APK has been run on the phone, and neither win is a device
   claim.
+
+## 2026-09-29 — The rebuild on the phone reads its own phase; k3 dies to one seam (S2, S4)
+
+The FNaF 2 practice rebuild became a timing instrument on the phone
+([`apply-calib-mod.py`](../tools/recompile/android/apply-calib-mod.py)): every update's pump,
+events and swap on `CLOCK_MONOTONIC`, its exact `dt` and `timer_units`, its RNG state and each
+frame's seed, every touch as Android and SDL saw it, a beacon of the update index on screen,
+and a second finger reaching Multiple Touch. rebuilt-runtime measurements of this phone; no
+retail claim, nothing promoted.
+
+- **Replay closes.** From only the phone's seed, per-update `dt` and polled input updates the
+  host harness reproduces two phone nights draw for draw (18,814/18,814 and 16,113/16,113); the
+  next seed, a 60 Hz clock and monitor presses one update late each diverge
+  (`calib-replay-summary-492e9e289e5285e1`).
+- **The input chain.** Through the campaign's `/system/bin/hid`, every hold of 17 ms or more
+  is taken; an 8 ms hold is lost when one pump drains both edges; getevent is `CLOCK_MONOTONIC`;
+  kernel to the game's poll is 8.5 ms at the median (`practice-actuation-audit-9c83886c7491fa45`).
+- **The Companion's capture.** Its image of an update is stamped 26.4 ms after the swap, one
+  update stale, and shows 47.5% of updates (`capture-latency-79e85709947685c1`).
+- **k3 on the rebuild.** k3 died at office update 5,934 (Night 7 10/20, seed 27656); the host
+  reproduces the death from the phone's landings, and survives to 6 AM as planned, one update
+  late throughout, and on the phone's coordinates. One landing alone reproduces it: the monitor
+  raise planned at tick 5402 on its tick with its release one late, a 13-tick hold where the
+  plan holds 12 (`calib-replay-summary-629da4eddc1f2ee0`).
+
+The first k3 run pressed on after the death, through the title, Custom Night and three more
+offices, until it was killed by PID: `pkill -x hid` matched nothing, because `/system/bin/hid`
+runs as `app_process`. [`rebuild-night.mjs`](../tools/recompile/android/rebuild-night.mjs) now
+stops hid by its PID the moment the office is left, verified on the phone's shell.
+
+Open:
+- what the thirteenth tick of the monitor hold does (the streams first differ at update
+  5,415), and the two-draw event one update early at 4,814 in the exact replay;
+- a k3 schedule with slack on that seam, and a second phone run of it;
+- the same reading of a retail night, whose last input hop and seed are the Clickteam runtime's.
+

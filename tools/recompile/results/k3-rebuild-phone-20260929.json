@@ -1,0 +1,1389 @@
+{
+ "schema": "recompile-calib-replay-summary-v1",
+ "step": "ROADMAP S2",
+ "claimLevel": "MODEL_ONLY",
+ "fidelity": "rebuilt-runtime",
+ "question": "Night 7 10/20 k3 played on the calibration build on the phone died at office update 5934: does the host rebuild reproduce it from the phone's own landings, and which landing kills it at the phone's seed and clock?",
+ "hostBinary": "66d6e2f6-d9cc45ff",
+ "phoneApkSha256": "9c775717347c5a47d2273b8d15891b369bcf752fc98b9440b611f1c9de9facc5",
+ "delivery": {
+  "plannedDue": 164,
+  "landed": 164,
+  "missing": 0,
+  "extra": 0,
+  "landedMinusPlanned": {
+   "0": 19,
+   "1": 144,
+   "2": 1
+  },
+  "rows": [
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 146,
+    "landed": 147
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 148,
+    "landed": 149
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 164,
+    "landed": 165
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 166,
+    "landed": 167
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 196,
+    "landed": 197
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 198,
+    "landed": 199
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 199,
+    "landed": 200
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 201,
+    "landed": 202
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 243,
+    "landed": 244
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 245,
+    "landed": 246
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 261,
+    "landed": 262
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 267,
+    "landed": 268
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 271,
+    "landed": 272
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 274,
+    "landed": 276
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 274,
+    "landed": 275
+   },
+   {
+    "pointer": 1,
+    "op": "down",
+    "planned": 286,
+    "landed": 287
+   },
+   {
+    "pointer": 1,
+    "op": "up",
+    "planned": 298,
+    "landed": 299
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 310,
+    "landed": 310
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 321,
+    "landed": 322
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 323,
+    "landed": 324
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 566,
+    "landed": 567
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 578,
+    "landed": 579
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 590,
+    "landed": 591
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 592,
+    "landed": 593
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 602,
+    "landed": 603
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 614,
+    "landed": 615
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 620,
+    "landed": 621
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 626,
+    "landed": 627
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 630,
+    "landed": 631
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 812,
+    "landed": 813
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 815,
+    "landed": 816
+   },
+   {
+    "pointer": 1,
+    "op": "down",
+    "planned": 824,
+    "landed": 825
+   },
+   {
+    "pointer": 1,
+    "op": "up",
+    "planned": 836,
+    "landed": 837
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 848,
+    "landed": 849
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 851,
+    "landed": 852
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 863,
+    "landed": 864
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 1166,
+    "landed": 1167
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 1178,
+    "landed": 1179
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 1190,
+    "landed": 1191
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 1192,
+    "landed": 1192
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 1202,
+    "landed": 1203
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 1214,
+    "landed": 1214
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 1220,
+    "landed": 1221
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 1226,
+    "landed": 1227
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 1230,
+    "landed": 1231
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 1412,
+    "landed": 1413
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 1415,
+    "landed": 1416
+   },
+   {
+    "pointer": 1,
+    "op": "down",
+    "planned": 1424,
+    "landed": 1425
+   },
+   {
+    "pointer": 1,
+    "op": "up",
+    "planned": 1436,
+    "landed": 1437
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 1448,
+    "landed": 1449
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 1451,
+    "landed": 1452
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 1463,
+    "landed": 1463
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 1766,
+    "landed": 1767
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 1778,
+    "landed": 1779
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 1790,
+    "landed": 1791
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 1792,
+    "landed": 1792
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 1802,
+    "landed": 1803
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 1814,
+    "landed": 1814
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 1820,
+    "landed": 1821
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 1826,
+    "landed": 1827
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 1830,
+    "landed": 1830
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 2012,
+    "landed": 2013
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 2015,
+    "landed": 2016
+   },
+   {
+    "pointer": 1,
+    "op": "down",
+    "planned": 2024,
+    "landed": 2025
+   },
+   {
+    "pointer": 1,
+    "op": "up",
+    "planned": 2036,
+    "landed": 2037
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 2048,
+    "landed": 2049
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 2051,
+    "landed": 2052
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 2063,
+    "landed": 2064
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 2366,
+    "landed": 2367
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 2378,
+    "landed": 2379
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 2390,
+    "landed": 2391
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 2392,
+    "landed": 2392
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 2402,
+    "landed": 2403
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 2414,
+    "landed": 2415
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 2420,
+    "landed": 2421
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 2426,
+    "landed": 2427
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 2430,
+    "landed": 2431
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 2612,
+    "landed": 2613
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 2615,
+    "landed": 2616
+   },
+   {
+    "pointer": 1,
+    "op": "down",
+    "planned": 2624,
+    "landed": 2625
+   },
+   {
+    "pointer": 1,
+    "op": "up",
+    "planned": 2636,
+    "landed": 2637
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 2648,
+    "landed": 2649
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 2651,
+    "landed": 2652
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 2663,
+    "landed": 2664
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 2966,
+    "landed": 2967
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 2978,
+    "landed": 2979
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 2990,
+    "landed": 2991
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 2992,
+    "landed": 2993
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 3002,
+    "landed": 3003
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 3014,
+    "landed": 3015
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 3020,
+    "landed": 3021
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 3026,
+    "landed": 3027
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 3030,
+    "landed": 3031
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 3212,
+    "landed": 3213
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 3215,
+    "landed": 3216
+   },
+   {
+    "pointer": 1,
+    "op": "down",
+    "planned": 3224,
+    "landed": 3225
+   },
+   {
+    "pointer": 1,
+    "op": "up",
+    "planned": 3236,
+    "landed": 3237
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 3248,
+    "landed": 3249
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 3251,
+    "landed": 3252
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 3263,
+    "landed": 3264
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 3566,
+    "landed": 3567
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 3578,
+    "landed": 3579
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 3590,
+    "landed": 3591
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 3592,
+    "landed": 3593
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 3602,
+    "landed": 3602
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 3614,
+    "landed": 3614
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 3620,
+    "landed": 3621
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 3626,
+    "landed": 3626
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 3630,
+    "landed": 3631
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 3812,
+    "landed": 3813
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 3815,
+    "landed": 3816
+   },
+   {
+    "pointer": 1,
+    "op": "down",
+    "planned": 3824,
+    "landed": 3825
+   },
+   {
+    "pointer": 1,
+    "op": "up",
+    "planned": 3836,
+    "landed": 3837
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 3848,
+    "landed": 3849
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 3851,
+    "landed": 3852
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 3863,
+    "landed": 3864
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 4166,
+    "landed": 4167
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 4178,
+    "landed": 4179
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 4190,
+    "landed": 4191
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 4192,
+    "landed": 4193
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 4202,
+    "landed": 4203
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 4214,
+    "landed": 4214
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 4220,
+    "landed": 4221
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 4226,
+    "landed": 4227
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 4230,
+    "landed": 4230
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 4412,
+    "landed": 4413
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 4415,
+    "landed": 4416
+   },
+   {
+    "pointer": 1,
+    "op": "down",
+    "planned": 4424,
+    "landed": 4425
+   },
+   {
+    "pointer": 1,
+    "op": "up",
+    "planned": 4436,
+    "landed": 4437
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 4448,
+    "landed": 4449
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 4451,
+    "landed": 4452
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 4463,
+    "landed": 4464
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 4766,
+    "landed": 4767
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 4778,
+    "landed": 4779
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 4790,
+    "landed": 4791
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 4792,
+    "landed": 4792
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 4802,
+    "landed": 4803
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 4814,
+    "landed": 4815
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 4820,
+    "landed": 4821
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 4826,
+    "landed": 4826
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 4830,
+    "landed": 4831
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 5012,
+    "landed": 5013
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 5015,
+    "landed": 5016
+   },
+   {
+    "pointer": 1,
+    "op": "down",
+    "planned": 5024,
+    "landed": 5025
+   },
+   {
+    "pointer": 1,
+    "op": "up",
+    "planned": 5036,
+    "landed": 5037
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 5048,
+    "landed": 5049
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 5051,
+    "landed": 5052
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 5063,
+    "landed": 5064
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 5366,
+    "landed": 5367
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 5378,
+    "landed": 5379
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 5390,
+    "landed": 5391
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 5392,
+    "landed": 5392
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 5402,
+    "landed": 5402
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 5414,
+    "landed": 5415
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 5420,
+    "landed": 5421
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 5426,
+    "landed": 5426
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 5430,
+    "landed": 5430
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 5612,
+    "landed": 5613
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 5615,
+    "landed": 5616
+   },
+   {
+    "pointer": 1,
+    "op": "down",
+    "planned": 5624,
+    "landed": 5625
+   },
+   {
+    "pointer": 1,
+    "op": "up",
+    "planned": 5636,
+    "landed": 5637
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 5648,
+    "landed": 5649
+   },
+   {
+    "pointer": 0,
+    "op": "down",
+    "planned": 5651,
+    "landed": 5652
+   },
+   {
+    "pointer": 0,
+    "op": "up",
+    "planned": 5663,
+    "landed": 5664
+   }
+  ]
+ },
+ "runs": [
+  {
+   "label": "k3-phone-exact",
+   "variant": {
+    "seed": 27656,
+    "phoneFrameTimes": true,
+    "runInputSha256": "12acb48c3e9fdbe46acc946fe2510d14d153ad28c89fee10fabb1cc83478e88e"
+   },
+   "outcome": {
+    "officeUpdates": 5934,
+    "nextFrame": 4
+   },
+   "schema": "recompile-calib-replay-v1",
+   "step": "ROADMAP S2",
+   "claimLevel": "MODEL_ONLY",
+   "fidelity": "rebuilt-runtime",
+   "question": "Given the phone's seed, per-update dt and polled input updates, does the host harness reproduce the calibration build's office night draw for draw?",
+   "seed": 27656,
+   "inputsSha256": {
+    "calibUpdates": "6ce602bb663c66b5ac482ed16ad5dae46f01964d4dbb26e248def0029ffe10c3",
+    "frametimes": "8de9eb15750a828ab08082ad03428dc76bfdad267f59e5ee30f5c5817083e85c",
+    "runInput": "12acb48c3e9fdbe46acc946fe2510d14d153ad28c89fee10fabb1cc83478e88e",
+    "trace": "1d6d750157adf79dee9ef7eeb5a5486e66d899a0a034eb2b1d905f9a7ecab519"
+   },
+   "result": {
+    "compared": 5934,
+    "phoneUpdates": 5934,
+    "hostUpdates": 5934,
+    "agree": 5928,
+    "firstDivergence": {
+     "update": 4814,
+     "phone": {
+      "draws": 3053,
+      "state": 26857
+     },
+     "host": {
+      "draws": 3055,
+      "state": 48881
+     }
+    }
+   },
+   "evidenceId": "calib-replay-7581882bdf2a00de"
+  },
+  {
+   "label": "k3-planned-fixed-dt",
+   "variant": {
+    "seed": 27656,
+    "phoneFrameTimes": false,
+    "runInputSha256": "21eedb5824846d4d6b896be0a24fc99b8e35e92c026fc365c6c5c8ae5917c438"
+   },
+   "outcome": {
+    "officeUpdates": 25201,
+    "nextFrame": 5
+   },
+   "evidenceId": "calib-run-9238870a5e091253"
+  },
+  {
+   "label": "k3-planned-phone-dt",
+   "variant": {
+    "seed": 27656,
+    "phoneFrameTimes": true,
+    "runInputSha256": "21eedb5824846d4d6b896be0a24fc99b8e35e92c026fc365c6c5c8ae5917c438"
+   },
+   "outcome": {
+    "officeUpdates": 25202,
+    "nextFrame": 5
+   },
+   "evidenceId": "calib-run-47e17b65c04350c8"
+  },
+  {
+   "label": "k3-late1-fixed-dt",
+   "variant": {
+    "seed": 27656,
+    "phoneFrameTimes": false,
+    "runInputSha256": "07194a95b7225ce7b6e6096d52d833bc69f45b9a85e8045fa1eb4df7a9ea447d"
+   },
+   "outcome": {
+    "officeUpdates": 25201,
+    "nextFrame": 5
+   },
+   "evidenceId": "calib-run-b5e4afe7a37df797"
+  },
+  {
+   "label": "k3-late1-phone-dt",
+   "variant": {
+    "seed": 27656,
+    "phoneFrameTimes": true,
+    "runInputSha256": "07194a95b7225ce7b6e6096d52d833bc69f45b9a85e8045fa1eb4df7a9ea447d"
+   },
+   "outcome": {
+    "officeUpdates": 25202,
+    "nextFrame": 5
+   },
+   "evidenceId": "calib-run-527cc7b9115c33a0"
+  },
+  {
+   "label": "k3-late1-phone-coords",
+   "variant": {
+    "seed": 27656,
+    "phoneFrameTimes": true,
+    "runInputSha256": "8df75aae0554061063677b221f637bb89af496390a7eaf31590f6fd025fc5a3b"
+   },
+   "outcome": {
+    "officeUpdates": 25202,
+    "nextFrame": 5
+   },
+   "evidenceId": "calib-run-4e645029caf3c920"
+  },
+  {
+   "label": "k3-phone-ticks",
+   "variant": {
+    "seed": 27656,
+    "phoneFrameTimes": true,
+    "runInputSha256": "ed66fbbdc97d23e66d95203979b986880b4930e3684b575a381327be5a544e13"
+   },
+   "outcome": {
+    "officeUpdates": 5934,
+    "nextFrame": 4
+   },
+   "evidenceId": "calib-run-0bb907e2f8282d0a"
+  },
+  {
+   "label": "k3-late1-with-down0-275-at-276",
+   "variant": {
+    "seed": 27656,
+    "phoneFrameTimes": true,
+    "runInputSha256": "efb426beccfb3abce76211ed1dbb6ffa97647edf4460fe25b160215506e515b5"
+   },
+   "outcome": {
+    "officeUpdates": 25202,
+    "nextFrame": 5
+   },
+   "evidenceId": "calib-run-56ba6fce0c925267"
+  },
+  {
+   "label": "k3-late1-with-up0-311-at-310",
+   "variant": {
+    "seed": 27656,
+    "phoneFrameTimes": true,
+    "runInputSha256": "7ddac32d1d3b751e0a3ff8b6792a9a87c588c67e68bab0e1fcf76baee83c1e8d"
+   },
+   "outcome": {
+    "officeUpdates": 25202,
+    "nextFrame": 5
+   },
+   "evidenceId": "calib-run-e94746a66aaf8b6e"
+  },
+  {
+   "label": "k3-late1-with-up0-1193-at-1192",
+   "variant": {
+    "seed": 27656,
+    "phoneFrameTimes": true,
+    "runInputSha256": "07a574550580ef924f6c223387a38ed609670d8f1bda2f9b6053a07500f581e9"
+   },
+   "outcome": {
+    "officeUpdates": 25202,
+    "nextFrame": 5
+   },
+   "evidenceId": "calib-run-420d3756659e9284"
+  },
+  {
+   "label": "k3-late1-with-up0-1215-at-1214",
+   "variant": {
+    "seed": 27656,
+    "phoneFrameTimes": true,
+    "runInputSha256": "d9aa5c148c1e2f5a3f9fd0831ff96a8490cf7ba5e4de532ff61acf89c46da0e9"
+   },
+   "outcome": {
+    "officeUpdates": 25202,
+    "nextFrame": 5
+   },
+   "evidenceId": "calib-run-5c504291b7f8ed6d"
+  },
+  {
+   "label": "k3-late1-with-up0-1464-at-1463",
+   "variant": {
+    "seed": 27656,
+    "phoneFrameTimes": true,
+    "runInputSha256": "7e02f005c8770c08f7dbd7cfaa2d1a16691502f035e96d49d4b042f1ba119db4"
+   },
+   "outcome": {
+    "officeUpdates": 25202,
+    "nextFrame": 5
+   },
+   "evidenceId": "calib-run-177432275f26e544"
+  },
+  {
+   "label": "k3-late1-with-up0-1793-at-1792",
+   "variant": {
+    "seed": 27656,
+    "phoneFrameTimes": true,
+    "runInputSha256": "6d0be58cd684bcc36b8bd16a62745e7c229fb9b519e718ee25cf80d33a17ef7c"
+   },
+   "outcome": {
+    "officeUpdates": 25202,
+    "nextFrame": 5
+   },
+   "evidenceId": "calib-run-cd87d474b8faa6d0"
+  },
+  {
+   "label": "k3-late1-with-up0-1815-at-1814",
+   "variant": {
+    "seed": 27656,
+    "phoneFrameTimes": true,
+    "runInputSha256": "6e290270560763e8c9450028939938ad14d592e04ff10563f1002375557d586c"
+   },
+   "outcome": {
+    "officeUpdates": 25202,
+    "nextFrame": 5
+   },
+   "evidenceId": "calib-run-0a57b08cdb1dccc0"
+  },
+  {
+   "label": "k3-late1-with-down0-1831-at-1830",
+   "variant": {
+    "seed": 27656,
+    "phoneFrameTimes": true,
+    "runInputSha256": "1227375fb62c3cddbea243d0ea21a55f9cad74388a28bc462c93d8e52508c35c"
+   },
+   "outcome": {
+    "officeUpdates": 25202,
+    "nextFrame": 5
+   },
+   "evidenceId": "calib-run-4bd62ec9063ef399"
+  },
+  {
+   "label": "k3-late1-with-up0-2393-at-2392",
+   "variant": {
+    "seed": 27656,
+    "phoneFrameTimes": true,
+    "runInputSha256": "f01af9dcc8de7185e2a8c109a4f5c2febc36f7d066c207b42c920763a77a4463"
+   },
+   "outcome": {
+    "officeUpdates": 25202,
+    "nextFrame": 5
+   },
+   "evidenceId": "calib-run-db3a25717f7cc4fd"
+  },
+  {
+   "label": "k3-late1-with-down0-3603-at-3602",
+   "variant": {
+    "seed": 27656,
+    "phoneFrameTimes": true,
+    "runInputSha256": "512d876c9ebc016aa8ce9f957ddd32d225d2665fe0271a32297af5e2f4176f39"
+   },
+   "outcome": {
+    "officeUpdates": 4066,
+    "nextFrame": 4
+   },
+   "evidenceId": "calib-run-3c62896694a55d07"
+  },
+  {
+   "label": "k3-late1-with-up0-3615-at-3614",
+   "variant": {
+    "seed": 27656,
+    "phoneFrameTimes": true,
+    "runInputSha256": "f2d522b71389234ba62cc987b4c2293a7d33bafe671ac5b58c6c71132013e301"
+   },
+   "outcome": {
+    "officeUpdates": 25202,
+    "nextFrame": 5
+   },
+   "evidenceId": "calib-run-60cc7f69fa247f2a"
+  },
+  {
+   "label": "k3-late1-with-up0-3627-at-3626",
+   "variant": {
+    "seed": 27656,
+    "phoneFrameTimes": true,
+    "runInputSha256": "301dad0e5769404f8105e27b685c521fd1e75bea159930c420633094e586f55c"
+   },
+   "outcome": {
+    "officeUpdates": 25202,
+    "nextFrame": 5
+   },
+   "evidenceId": "calib-run-6bc58a9b271032d1"
+  },
+  {
+   "label": "k3-late1-with-up0-4215-at-4214",
+   "variant": {
+    "seed": 27656,
+    "phoneFrameTimes": true,
+    "runInputSha256": "c5d465a9ebb7722600cd86d3f7f0911d05a9a8f7b116dea7be0052179805b3aa"
+   },
+   "outcome": {
+    "officeUpdates": 25202,
+    "nextFrame": 5
+   },
+   "evidenceId": "calib-run-88bd78b8c6e95a65"
+  },
+  {
+   "label": "k3-late1-with-down0-4231-at-4230",
+   "variant": {
+    "seed": 27656,
+    "phoneFrameTimes": true,
+    "runInputSha256": "cba6580d08b3ed6f86dce9c215d1ca9807e485c4c16a412d4f9030c4d93689f6"
+   },
+   "outcome": {
+    "officeUpdates": 25202,
+    "nextFrame": 5
+   },
+   "evidenceId": "calib-run-0092bed788df3fbd"
+  },
+  {
+   "label": "k3-late1-with-up0-4793-at-4792",
+   "variant": {
+    "seed": 27656,
+    "phoneFrameTimes": true,
+    "runInputSha256": "6194c6cc2934e2f629b606937f8cb5ca749eb8961d8b8d8c1337c6d04f88b33a"
+   },
+   "outcome": {
+    "officeUpdates": 25202,
+    "nextFrame": 5
+   },
+   "evidenceId": "calib-run-84fafe155eb06551"
+  },
+  {
+   "label": "k3-late1-with-up0-4827-at-4826",
+   "variant": {
+    "seed": 27656,
+    "phoneFrameTimes": true,
+    "runInputSha256": "7c52c4d4504fcee76eaf62f8b12311d166dac1ddcaf2ce57849acbcb25d33134"
+   },
+   "outcome": {
+    "officeUpdates": 25202,
+    "nextFrame": 5
+   },
+   "evidenceId": "calib-run-deb5f6aeed13fb42"
+  },
+  {
+   "label": "k3-late1-with-up0-5393-at-5392",
+   "variant": {
+    "seed": 27656,
+    "phoneFrameTimes": true,
+    "runInputSha256": "e8973af1d332898e01f00444b79a010ca09fc4636a0b65891972d2b0d7119c5b"
+   },
+   "outcome": {
+    "officeUpdates": 25202,
+    "nextFrame": 5
+   },
+   "evidenceId": "calib-run-3cdf244dba39ce27"
+  },
+  {
+   "label": "k3-late1-with-down0-5403-at-5402",
+   "variant": {
+    "seed": 27656,
+    "phoneFrameTimes": true,
+    "runInputSha256": "71544824ff9ca87266d65e8061e1aa128bee98c71ecc8dfb23af845e707c35b4"
+   },
+   "outcome": {
+    "officeUpdates": 5934,
+    "nextFrame": 4
+   },
+   "evidenceId": "calib-run-2a1eb70d6c43389d"
+  },
+  {
+   "label": "k3-late1-with-up0-5427-at-5426",
+   "variant": {
+    "seed": 27656,
+    "phoneFrameTimes": true,
+    "runInputSha256": "2c154aed6aa96247491d091440e8b45240df01b79a43f6e28215dcad61f93f42"
+   },
+   "outcome": {
+    "officeUpdates": 25202,
+    "nextFrame": 5
+   },
+   "evidenceId": "calib-run-14706dbc0a24f961"
+  },
+  {
+   "label": "k3-late1-with-down0-5431-at-5430",
+   "variant": {
+    "seed": 27656,
+    "phoneFrameTimes": true,
+    "runInputSha256": "483857423010858fb5782d8baf23ef5cf6b5872544961cb237788d834a681f48"
+   },
+   "outcome": {
+    "officeUpdates": 25202,
+    "nextFrame": 5
+   },
+   "evidenceId": "calib-run-c8ac2530379d7d4f"
+  }
+ ],
+ "evidenceId": "calib-replay-summary-629da4eddc1f2ee0"
+}

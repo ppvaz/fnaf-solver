@@ -9,18 +9,20 @@
 // to one frame (the office, 3) into a harness run directory:
 //   env              CHOWDREN_SEED / _SEED_FRAME = the phone's seed for that frame
 //                    CHOWDREN_FRAME_TIMES = the phone's dt for each of its updates
-//   run.input        the title's Continue (fixtures/continue.input), then a
-//                    down / up row on the update whose poll first read the
-//                    button down / up, at the point the runtime maps the SDL
-//                    mouse event to (the 1024 x 768 frame, EXACT_FIT from 2400 x 1080)
+//   run.input        the route to the office (--navigation, fixtures/continue.input by
+//                    default), then pointer 0's down / up on the update whose poll first
+//                    read the button down / up, at the point the runtime maps the SDL
+//                    mouse event to (the 1024 x 768 frame, EXACT_FIT from 2400 x 1080),
+//                    and pointers 1.. on the update the phone applied them
 //   save-before.ini  the save the phone held when the night began
 // `compare` reads the harness trace and reports the first update whose draw
 // count or RNG state differs from the phone's, and how many agree.
 //
-//   node tools/recompile/calib-replay.mjs build --calib DIR --run DIR [--frame 3]
+//   node tools/recompile/calib-replay.mjs build --calib DIR --run DIR [--frame 3] [--navigation FILE]
 //   node tools/recompile/calib-replay.mjs compare --calib DIR --run DIR [--record FILE]
-//   node tools/recompile/calib-replay.mjs summary --out FILE --host-binary ID --phone-apk SHA LABEL=RUNDIR ...
-//     (one results record composed from each run's own record.json, never retyped)
+//   node tools/recompile/calib-replay.mjs summary --out FILE --host-binary ID --phone-apk SHA
+//        [--delivery CALIBDIR:PLANNED.input] [--question TEXT] LABEL=RUNDIR ...
+//     (one results record composed from each run's own record.json or trace, never retyped)
 //
 // Content-free: it reads and writes timings, counters and coordinates only;
 // the run directory lives outside the repository beside the harness.
@@ -80,9 +82,18 @@ export function visit(allRows, frame) {
 /** SDL mouse point (window px) -> frame point, as the runtime scales EXACT_FIT. */
 export const toGame = (x, y) => [Math.floor(x * GAME[0] / NATIVE[0]), Math.floor(y * GAME[1] / NATIVE[1])];
 
+/**
+ * Harness rows for the office visit. Pointer 0 is the mouse play mode mirrors
+ * once per update, so its edges are the polled button's transitions, at the
+ * point the SDL mouse-down that poll took maps to. Pointers 1.. are the
+ * calibration build's `mt` rows, each applied at the start of update `u`'s
+ * events, after pointer 0's mirror, as the phone applies them.
+ */
 export function inputRows(office, input) {
   const downs = input.filter(r => r.src === 'sdl' && r.k === 'mdown');
-  const out = [];
+  const u0 = office[0].u;
+  const byTick = new Map();
+  const add = (tick, row) => { if (!byTick.has(tick)) byTick.set(tick, []); byTick.get(tick).push(row); };
   let prev = office[0].m;
   if (prev !== 0) throw new Error('the button was already down on the first update');
   for (let i = 1; i < office.length; i++) {
@@ -94,11 +105,19 @@ export function inputRows(office, input) {
       const q = downs.filter(d => d.t <= r.tp).at(-1);
       if (!q) throw new Error(`no SDL mouse-down before update ${r.u}`);
       const [x, y] = toGame(q.x, q.y);
-      out.push(`3 ${tick} down 0 ${x} ${y}`);
-    } else out.push(`3 ${tick} up 0`);
+      add(tick, `3 ${tick} down 0 ${x} ${y}`);
+    } else add(tick, `3 ${tick} up 0`);
     prev = r.m;
   }
-  return out;
+  const last = office.at(-1).u;
+  for (const m of input.filter(r => r.src === 'mt' && r.u >= u0 && r.u <= last)) {
+    const tick = m.u - u0;
+    if (m.k === 'new') add(tick, `3 ${tick} down ${m.p} ${m.x} ${m.y}`);
+    else if (m.k === 'end') add(tick, `3 ${tick} up ${m.p}`);
+    else if (m.k === 'move') add(tick, `3 ${tick} move ${m.p} ${m.x} ${m.y}`);
+    else if (m.k === 'lost') throw new Error(`the phone dropped ${m.n} finger events at update ${m.u}`);
+  }
+  return [...byTick.keys()].sort((a, b) => a - b).flatMap(t => byTick.get(t));
 }
 
 function build(args) {
@@ -113,7 +132,10 @@ function build(args) {
   mkdirSync(run, { recursive: true });
   const times = office.map(r => (r.dt * 1000).toFixed(6));
   writeFileSync(join(run, 'frametimes.txt'), `# phone dt of ${office.length} updates of frame ${frame}\n${times.join('\n')}\n`);
-  const title = readFileSync(join(ROOT, 'tools/recompile/fixtures/continue.input'), 'utf8').trimEnd();
+  // The navigation to the office: the phone's own title route (Continue by
+  // default; Custom Night's title and customize rows for a Night 7 visit).
+  const navFile = resolve(opt(args, '--navigation') ?? join(ROOT, 'tools/recompile/fixtures/continue.input'));
+  const title = readFileSync(navFile, 'utf8').split('\n').filter(l => !/^3\s/.test(l)).join('\n').trimEnd();
   const office_inputs = inputRows(office, input);
   writeFileSync(join(run, 'run.input'), `${title}\n# office: the phone's polled edges, on their updates\n${office_inputs.join('\n')}\n`);
   writeFileSync(join(run, 'env'), [
@@ -170,28 +192,90 @@ function compareCmd(args) {
   console.log(JSON.stringify({ evidenceId: record.evidenceId, seed, ...result }, null, 1));
 }
 
+/** How a harness run's first office visit ended: its update count and the frame it went to. */
+export function outcome(traceText, frame = 3) {
+  let visits = 0, on = false, updates = 0, next = null;
+  for (const line of traceText.split('\n')) {
+    const seeded = line.match(/^# frame (\d+) seeded (\d+)/);
+    if (seeded) {
+      if (on) { next = { frame: Number(seeded[1]), seed: Number(seeded[2]) }; break; }
+      if (Number(seeded[1]) === frame && ++visits === 1) on = true;
+      continue;
+    }
+    if (on && line.startsWith(`${frame} `)) updates++;
+  }
+  return { officeUpdates: updates, nextFrame: next?.frame ?? null };
+}
+
+/**
+ * Where the phone landed each planned office edge: planned rows (the harness
+ * file the phone was driven from) against the landed edges the calibration
+ * log holds, paired in order per pointer and edge, up to the office's end.
+ */
+export function delivery(office, input, plannedText) {
+  const planned = plannedText.split('\n').filter(l => /^3\s/.test(l)).map(l => l.trim().split(/\s+/))
+    .map(([, tick, op, pointer]) => ({ tick: Number(tick), op, pointer: Number(pointer) }));
+  const landed = [];
+  for (let i = 1; i < office.length; i++)
+    if (office[i].m !== office[i - 1].m) landed.push({ pointer: 0, op: office[i].m ? 'down' : 'up', tick: office[i].fu - 1 });
+  const u0 = office[0].u, last = office.at(-1).u;
+  for (const m of input.filter(r => r.src === 'mt' && r.u >= u0 && r.u <= last))
+    if (m.k === 'new' || m.k === 'end') landed.push({ pointer: m.p, op: m.k === 'new' ? 'down' : 'up', tick: m.u - u0 });
+  const lastTick = office.at(-1).fu - 1;
+  const due = planned.filter(r => r.tick <= lastTick);
+  const offsets = {}, rows = [];
+  let missing = 0, extra = 0;
+  for (const pointer of [...new Set(due.map(r => r.pointer))]) for (const op of ['down', 'up']) {
+    const P = due.filter(r => r.pointer === pointer && r.op === op), L = landed.filter(r => r.pointer === pointer && r.op === op);
+    missing += Math.max(0, P.length - L.length);
+    extra += Math.max(0, L.length - P.length);
+    for (let i = 0; i < Math.min(P.length, L.length); i++) {
+      const d = L[i].tick - P[i].tick;
+      offsets[d] = (offsets[d] ?? 0) + 1;
+      rows.push({ pointer, op, planned: P[i].tick, landed: L[i].tick });
+    }
+  }
+  return { plannedDue: due.length, landed: landed.length, missing, extra, landedMinusPlanned: offsets,
+    rows: rows.sort((a, b) => a.planned - b.planned) };
+}
+
 function summary(args) {
   const out = opt(args, '--out') ?? fail('--out FILE');
   const hostBinary = opt(args, '--host-binary') ?? fail('--host-binary ID (the pinned harness binary)');
   const phoneApk = opt(args, '--phone-apk') ?? fail('--phone-apk SHA (the calibration build installed)');
   const runs = args.filter(a => /^[\w.-]+=/.test(a) && !a.startsWith('--')).map(a => {
     const [label, dir] = a.split(/=(.*)/s);
-    const record = JSON.parse(readFileSync(join(resolve(dir), 'record.json'), 'utf8'));
-    const env = readFileSync(join(resolve(dir), 'env'), 'utf8');
-    return { label, variant: { seed: Number(env.match(/CHOWDREN_SEED=(\d+)/)?.[1]),
-      phoneFrameTimes: /CHOWDREN_FRAME_TIMES=/.test(env) }, ...record };
+    const d = resolve(dir);
+    const env = readFileSync(join(d, 'env'), 'utf8');
+    const traceText = readFileSync(join(d, 'trace'), 'utf8');
+    const variant = { seed: Number(env.match(/CHOWDREN_SEED=(\d+)/)?.[1]), phoneFrameTimes: /CHOWDREN_FRAME_TIMES=/.test(env),
+      runInputSha256: sha256(readFileSync(join(d, 'run.input'), 'utf8')) };
+    // A run compared with a phone night carries its record; a host experiment carries its outcome.
+    const record = existsSync(join(d, 'record.json')) ? JSON.parse(readFileSync(join(d, 'record.json'), 'utf8')) : null;
+    return { label, variant, outcome: outcome(traceText), ...(record ?? { evidenceId: `calib-run-${sha256(traceText).slice(0, 16)}` }) };
   });
+  const deliveryArg = opt(args, '--delivery');
+  let deliveryResult = null;
+  if (deliveryArg) {
+    const [calibDir, plannedFile] = deliveryArg.split(':');
+    const { rows: office } = visit(rows(readFileSync(join(resolve(calibDir), 'calib-updates.jsonl'), 'utf8')), 3);
+    deliveryResult = delivery(office, rows(readFileSync(join(resolve(calibDir), 'calib-input.jsonl'), 'utf8')),
+      readFileSync(resolve(plannedFile), 'utf8'));
+  }
   if (runs.length === 0) fail('name at least one LABEL=RUNDIR');
   const composed = {
     schema: 'recompile-calib-replay-summary-v1', step: 'ROADMAP S2', claimLevel: 'MODEL_ONLY',
     fidelity: 'rebuilt-runtime',
     question: 'Does the host harness, given only the phone\'s seed, per-update dt and polled input updates, reproduce a night the calibration build played on the phone, and does each of the three matter?',
     hostBinary, phoneApkSha256: phoneApk,
+    ...(opt(args, '--question') ? { question: opt(args, '--question') } : {}),
+    ...(deliveryResult ? { delivery: deliveryResult } : {}),
     runs,
   };
   composed.evidenceId = `calib-replay-summary-${sha256(runs.map(r => r.evidenceId).join(',')).slice(0, 16)}`;
   writeFileSync(out, JSON.stringify(composed, null, 1) + '\n');
-  console.log(JSON.stringify({ evidenceId: composed.evidenceId, runs: runs.map(r => [r.label, r.result.agree, r.result.compared, r.result.firstDivergence?.update ?? null]) }));
+  console.log(JSON.stringify({ evidenceId: composed.evidenceId, runs: runs.map(r => [r.label, r.outcome.officeUpdates, r.outcome.nextFrame,
+    r.result ? `${r.result.agree}/${r.result.compared}` : '']) }));
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

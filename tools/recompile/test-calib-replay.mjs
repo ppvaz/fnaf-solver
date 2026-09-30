@@ -2,7 +2,7 @@
 // session, polled edges become harness rows on their own update at the point
 // the runtime maps the SDL mouse event to, and the comparison names the first
 // update whose draw count or RNG state differs. No device, no harness.
-import { compare, inputRows, rows, toGame, visit } from './calib-replay.mjs';
+import { compare, delivery, inputRows, outcome, rows, toGame, visit } from './calib-replay.mjs';
 
 const check = (ok, message) => { if (!ok) throw new Error(message); };
 
@@ -36,6 +36,14 @@ const input = [
 const rowsOut = inputRows(v.rows, input);
 check(JSON.stringify(rowsOut) === JSON.stringify(['3 2 down 0 384 383', '3 4 up 0', '3 6 down 0 759 721', '3 7 up 0']),
   `polled edges must land on tick fu-1 at the mapped point: ${JSON.stringify(rowsOut)}`);
+// A second finger: the phone applies it at the start of update u's events, after pointer 0's mirror.
+const withFinger = inputRows(v.rows, [...input,
+  { src: 'mt', k: 'new', p: 1, u: 22, x: 759, y: 708 }, { src: 'mt', k: 'end', p: 1, u: 23 }]);
+check(JSON.stringify(withFinger) === JSON.stringify(['3 2 down 0 384 383', '3 2 down 1 759 708', '3 3 up 1', '3 4 up 0',
+  '3 6 down 0 759 721', '3 7 up 0']), `pointer 1 rows must follow pointer 0 on their tick: ${JSON.stringify(withFinger)}`);
+let lost = null;
+try { inputRows(v.rows, [...input, { src: 'mt', k: 'lost', n: 2, u: 24 }]); } catch (e) { lost = e.message; }
+check(lost && lost.includes('dropped 2'), 'a finger queue overflow must refuse the replay');
 
 const trace = (mutate) => ['# frame 1 seeded 5', '1 0 0 0', '# frame 3 seeded 24952',
   ...v.rows.map((r, i) => `3 ${i} ${mutate(i) ? r.rd + 1 : r.rd} ${r.rs} 0`), '# frame 4 seeded 6736', '4 0 9 9'].join('\n');
@@ -44,4 +52,10 @@ check(same.agree === office.length && same.firstDivergence === null, 'an identic
 const off = compare(v.rows, trace(i => i >= 5));
 check(off.firstDivergence?.update === 6 && off.agree === 5, 'the first differing update must be named by its phone update');
 
-console.log('calib-replay: session, visit, input rows and comparison hold');
+const ended = outcome(['# frame 1 seeded 5', '1 0 0 0', '# frame 3 seeded 9', '3 0 1 1', '3 1 1 1', '# frame 4 seeded 7', '4 0 1 1'].join('\n'));
+check(ended.officeUpdates === 2 && ended.nextFrame === 4, 'an outcome is the office visit\'s length and the frame after it');
+const d = delivery(v.rows, input, ['3 1 down 0 384 384', '3 4 up 0', '3 5 down 0 759 708', '3 7 up 0', '3 99 down 0 1 1'].join('\n'));
+check(d.plannedDue === 4 && d.missing === 0 && JSON.stringify(d.landedMinusPlanned) === '{"0":2,"1":2}',
+  `delivery pairs planned edges with landings in order: ${JSON.stringify(d)}`);
+
+console.log('calib-replay: session, visit, input rows, comparison, outcome and delivery hold');

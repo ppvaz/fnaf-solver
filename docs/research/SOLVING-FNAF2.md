@@ -300,9 +300,22 @@ index on screen. These are `rebuilt-runtime` measurements of this phone, not ret
   whole seconds (`(s × 1000) & 0xFFFF`), where the retail runtime takes milliseconds, and the
   phone's frame times reach the random stream within seven updates.
 
-Open: the same reading of a retail night, whose last input hop and seed are the Clickteam
-runtime's own; and k3 on the rebuild, which needed the second finger its camdrops use (43 of its
-346 contacts) wired into play mode first.
+- **k3 on the rebuild dies to one landing.** Played on the calibration build (Night 7 10/20,
+  seed 27656), k3 died at office update 5,934, 98.9 s in. Every edge due by then landed: 144 one
+  update after the harness row, 19 on it, one two after. The host rebuild reproduces the death
+  on the same update from the phone's own landings (5,928 of 5,934 updates agree; a two-draw
+  event lands one update early at 4,814 and realigns). At the phone's seed and clock, k3 as
+  planned, one update late throughout, and with the phone's one-pixel coordinates all reach
+  6 AM; the phone's landing ticks alone die at 5,934. Of the 20 edges that did not land one late,
+  one reproduces the death by itself: the monitor raise planned at tick 5402 landed on its tick
+  while its release landed one late, so a 12-tick hold became 13
+  ([k3](../../tools/recompile/results/k3-rebuild-phone-20260929.json),
+  `calib-replay-summary-629da4eddc1f2ee0`). The same slot 30 s earlier kills alone as well. The
+  night is decided by a seam between two contacts of one control, not by the schedule's phase.
+
+Open: what the thirteenth tick of that hold does (the draws first differ at update 5,415); the
+two-draw event at 4,814; the same reading of a retail night, whose last input hop and seed are
+the Clickteam runtime's own.
 
 ### Solving phase, completely and robustly
 
