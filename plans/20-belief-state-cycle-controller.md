@@ -361,7 +361,7 @@ command, and observed result on one declared monotonic millisecond clock.
 Summaries report nearest-rank p50/p95/p99/p99.9 for every leg and path and
 retain UNKNOWN-result counts. The continuation record requires all actions in
 one bounded approval to drain after an upstream drop, while rejecting any
-replacement action. `tools/benchtracetest.mjs` is the deterministic fixture
+replacement action. `packages/review/test/bench-trace.test.mjs` is the deterministic fixture
 gate. This advances the contract and reporting layer only; a physical bench
 trace, measured external-HID timing, and P7 shadow campaign are still open.
 

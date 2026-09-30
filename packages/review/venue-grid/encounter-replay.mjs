@@ -1,6 +1,6 @@
 // Encounter harness: win-score.mjs's run() (artifacts/forensics/twin-nights-night6-cohort2/win-score.mjs),
 // unchanged in its press/frame-clock/constructor handling, plus per-unit movement and encounter ledgers.
-//   node tools/encounter-replay.mjs CFG.json OUT.json
+//   node packages/review/venue-grid/encounter-replay.mjs CFG.json OUT.json
 // Inputs are private frame traces and derived press schedules; outputs contain derived facts only.
 // CFG: { nights: [{ name, presses, trace?, first?, seeds, phone? }], opts?, catchUp?, windowMs?, summaryOnly? }
 import { readFileSync, writeFileSync } from 'node:fs';

@@ -82,7 +82,7 @@ const contractEvidence = {
   'custom-night-config-v1': ['packages/play/test/campaign.test.js', 'packages/play/test/campaign-infrastructure.test.js'],
   'custom-night-calibration-v1': ['packages/play/test/campaign-infrastructure.test.js'],
   'device-campaign-preflight-v1': ['packages/play/test/campaign-infrastructure.test.js'],
-  'bench-transport-trace-v1': ['tools/benchtracetest.mjs'],
+  'bench-transport-trace-v1': ['packages/review/test/bench-trace.test.mjs'],
   'exercise-v1': ['tools/exercisetest.mjs'],
   'commitment-v1': ['tools/exercisetest.mjs'],
   'resolution-v1': ['tools/exercisetest.mjs'],
@@ -312,13 +312,6 @@ const legacyPaths = [
     replacement: 'npm run research -- minus-two',
     removalGate: 'Package structured artifacts and fixed-seed output are equivalent',
     notes: 'Compatibility alias for the propose package family evaluator (packages/propose/src/experiment/families/).',
-  },
-  {
-    id: 'review.evidence-pack-shim', path: 'tools/evidence-pack.mjs', category: 'evidence',
-    lifecycle: 'compatibility', owner: '@sixam/review',
-    replacement: 'packages/review/src/evidence-pack.mjs (`@sixam/review/evidence-pack`)',
-    removalGate: 'No tracked file imports tools/evidence-pack.mjs, and every reader of a pack takes its stored `packer` as a name read against the commit that wrote the pack (ADR 0002 principle 9), never as a path to load',
-    notes: 'One-line re-export left by the 2026-09-29 move of the four evidence tools into packages/review. Every committed run pack records `packer: tools/evidence-pack.mjs`, a stored value the pack digest (and so every attestation) covers, so the value stays and the path keeps resolving.',
   },
   // ADR 0002 migration D1/D3/D4 (Plan 27's move map): the contracts, the
   // register and Time moved into @sixam/kernel. The core subpaths that named

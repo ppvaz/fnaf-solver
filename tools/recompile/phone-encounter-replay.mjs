@@ -55,7 +55,7 @@ import { LEDGERS, compareLedger, counterSeries, mismatchRuns, outcomes, watchSer
 import { controlPoints, expandRows, frameOf, formatRows, harnessRows } from './schedule-to-input.mjs';
 import { STRATEGY_REGISTRY, validateWinner } from '../device/bundle.mjs';
 import { KNOBS0, build } from '../device/minus-toys-plan.mjs';
-import { windowCode } from '../encounter-replay.mjs';
+import { windowCode } from '../../packages/review/venue-grid/encounter-replay.mjs';
 import { MODEL_CONTEXT_LIGHT } from '@sixam/core/control';
 import { buttonStrokeState, BUTTON_STROKE_THRESHOLDS } from '../../packages/play/src/sensors/fnaf2/button-strokes.js';
 

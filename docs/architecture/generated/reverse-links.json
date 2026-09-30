@@ -52,7 +52,7 @@
     {
       "id": "contract.bench-transport-trace-v1",
       "kind": "CONTRACT",
-      "path": "tools/benchtracetest.mjs",
+      "path": "packages/review/test/bench-trace.test.mjs",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {

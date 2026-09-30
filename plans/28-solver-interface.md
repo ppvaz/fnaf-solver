@@ -219,7 +219,7 @@ habit a tired reader drops.
 - `proof.promote({ run })` — **proposes** an edge and returns a structured
   refusal until a human approves it.
 - `proof.custody({ pack })` — fetch and hash-verify blobs through
-  [the vault](../tools/vault.mjs). Without it a third party receives claims they
+  [the vault](../packages/review/src/vault.mjs). Without it a third party receives claims they
   cannot check, which is the state the project is in today.
 
 ## Resources and prompts

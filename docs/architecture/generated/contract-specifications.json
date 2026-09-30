@@ -714,7 +714,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateBenchTrace",
       "conformanceFixtures": [
-        "tools/benchtracetest.mjs"
+        "packages/review/test/bench-trace.test.mjs"
       ]
     },
     {

@@ -14,7 +14,7 @@ edges of `docs/evidence/graph.json` and S1's open items from the packs, the
 attestations and the winners. `src/measure/` holds the Plan 20 bench transport
 trace (`bench-transport-trace-v1`, `@sixam/review/measure`), a measuring
 instrument that moved from `@sixam/core/telemetry` in ADR 0002's Play move;
-`tools/bench-trace.mjs` reports over it and `tools/benchtracetest.mjs` tests it.
+`packages/review/bin/report/bench-trace.mjs` reports over it and `packages/review/test/bench-trace.test.mjs` tests it.
 
 **Boundary.** Review never imports Play or Propose. In today's names it never
 imports `packages/play`, an application (`apps/*`), `packages/adapters`, `packages/propose` or `packages/research`, and
@@ -30,9 +30,10 @@ the research seed helpers), and `fact-register.mjs`, whose `ANCHOR_AIMS` and
 `tools/device` is sorted by context (migration M9).
 
 **Stored names.** Every pack records `packer: tools/evidence-pack.mjs`, and the
-pack digest an attestation binds covers it, so the value never changes. The old
-path is a one-line re-export (`tools/evidence-pack.mjs`, registered in
-`legacy-paths.json` as `review.evidence-pack-shim`).
+pack digest an attestation binds covers it, so the value never changes. It is a
+name read against the commit that wrote the pack (ADR 0002 principle 9), not a
+path any reader loads: the one-line re-export that kept the path alive left on
+2026-09-30, when its removal gate held.
 
 Public API: the `./evidence-campaign`, `./evidence-pack`, `./evidence-promotion`,
 `./evidence-cohort`, `./pack-lift`, `./promotions-query`, `./envelopes`, `./refusals`,
@@ -78,3 +79,17 @@ verdict does not lose the run identity carried by its `evidence.started` log.
 | `src/mistakes.mjs` | module | The mistake registers read where they are written (`docs/operations/MISTAKE-REGISTER.md` if it holds entries, else `CLAUDE.md`), leads that wrap a line read whole; `MISTAKE_TAGS`, keyed by entry number, gives each entry its areas and words, and `STEP_AREAS` each ROADMAP step's areas, so `matchMistakes` returns the entries a task should read before it acts. An entry with no tag row is always returned. |
 | `src/roadmap.mjs` | module | Each ROADMAP step open, closed or UNKNOWN(reason), computed from what its "Closes when" can be checked against: S1 from the promotions query's edges and MODEL_ONLY winners; S2 UNKNOWN (no record kind states a twin or trace-equivalence verdict); S3-S5 through their needs; S6 from FNaF 1, 3 and 4 promotion edges, the `fnaf-solver`/`@sixam` names and the solver's verbs; S7 from each mistake entry's gate (`tools/test-mistake-register.mjs`'s `REGISTER_GATES` and the refusals) in a CI lane. Quotes each step's "Closes when" and the "Order." lines; `roadmapDrift` names any it no longer finds. |
 | `test/lab-queries.test.mjs` | check | Fourteen planted changes classed (docs-only, the evidence README, evidence records, packs, a winner, area code with and without a gate, model code, gates alone, nothing); the real register read with every entry tagged and every tag an entry, a moved register read from its new home, a wrapped lead, an untagged entry kept; `plans/ROADMAP.md` holding every heading and order line; step states under a closed, an open and an inconsistent promotions stub. `test:unit`. |
+
+## Scripts
+
+Entry points and checks that lived in `tools/` until the ADR 0002 layout
+moved them here, with the description their tool index gave them.
+
+| Script | Kind | What it does |
+|---|---|---|
+| `src/vault.mjs <export|import|verify|refs|list>` | evidence CLI | Moves ignored evidence media (`artifacts/`, `captures/`) between machines through a content-addressed vault outside the repository at `$FNAF2_VAULT_DIR`, and reports tracked evidence whose media is no longer here. Pack manifests under `docs/evidence/packs/` are tracked and record repository-relative paths and sha256 only -- **a vault location is one machine's private detail and never enters a tracked file**, the same rule `session-manifest.py` enforces. `export` takes explicit `--paths` because no run id reliably selects its captures: artifact manifests do not name them, and the stems disagree (`artifacts/night5-drift-20260909-a` against `captures/n5-drift-20260909-a-*`). Blobs are cloned copy-on-write through `cp -c` when the vault shares a filesystem -- 607 MB of measured pftrace/video exported for 1 MB of disk -- and plainly copied to another disk; **node's `COPYFILE_FICLONE` is a no-op on Darwin and copies the whole file**, which is why the clone is a `cp -c` call. Never hardlinked, so editing a capture cannot corrupt the vault copy of it. `import` hashes every object before writing anything and refuses to overwrite divergent content without `--force`; `refs` exits 1 while any referenced path is missing, so it is a report, not a green-lane gate. |
+| `test/vault.test.mjs` | check | Round trip, dedup, empty-file fan-out through one shared object, tamper and clobber refusals, the scope guard, and the no-private-paths rule, against a throwaway tree reached with `FNAF2_REPO`. No device, no real captures. |
+| `test/bench-trace.test.mjs` | check | Phone-free Plan 20 package 6 bench-trace contract: validates complete visual/audio event-to-result paths, reports nearest-rank p50/p95/p99/p99.9 latency legs, and refuses unsafe link-loss continuation evidence. It does not claim physical timing. |
+| `bin/report/bench-trace.mjs --input TRACE.json [--out SUMMARY.json]` | report | Read-only Plan 20 package 6 report: validates a retained visual/audio transport trace and emits per-path and aggregate p50/p95/p99/p99.9 latency legs plus safe-cycle continuation facts. It cannot create physical evidence or raise a claim level. |
+| `venue-grid/encounter-replay.mjs CONFIG.json OUT.json` | report | Replays derived press schedules on retained private frame traces (or a declared constant 60 Hz clock) and emits versioned per-character encounter/movement rows with an evidence ID. Config names `nights`, `seeds`, `presses`, optional `trace`/`first` and simulator `opts`. Missing windows and terminally truncated empty windows score UNKNOWN. Ordinal mask-window matching alone is not time-aligned equivalence. No phone access; MODEL_ONLY. |
+| `venue-grid/model-encounter-fidelity.mjs INPUT_DIR OUT.json` | report | Builds the dated S2 encounter study from the retained 2026-09-27 replay, ablation, mask-window and census outputs; hashes every input and preserves negatives. Private inputs normally live in `artifacts/forensics/encounter-fidelity-20260927`. The gated census contains 3000 design seeds and no held-out seeds. |

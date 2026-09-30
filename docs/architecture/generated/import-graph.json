@@ -1114,6 +1114,13 @@
       ]
     },
     {
+      "file": "packages/review/bin/report/bench-trace.mjs",
+      "imports": [
+        "@sixam/review/measure",
+        "node:fs/promises"
+      ]
+    },
+    {
       "file": "packages/review/src/cli.mjs",
       "imports": [
         "./envelopes.mjs",
@@ -1265,6 +1272,30 @@
       ]
     },
     {
+      "file": "packages/review/src/vault.mjs",
+      "imports": [
+        "@sixam/kernel/contracts",
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/review/test/bench-trace.test.mjs",
+      "imports": [
+        "@sixam/review/measure",
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/review/test/evidence-campaign.test.mjs",
       "imports": [
         "../src/evidence-campaign.mjs",
@@ -1380,6 +1411,36 @@
         "node:crypto",
         "node:fs",
         "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/review/test/vault.test.mjs",
+      "imports": [
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/review/venue-grid/encounter-replay.mjs",
+      "imports": [
+        "@sixam/source",
+        "@sixam/source/fnaf2",
+        "node:crypto",
+        "node:fs",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/review/venue-grid/model-encounter-fidelity.mjs",
+      "imports": [
+        "./encounter-replay.mjs",
+        "node:crypto",
+        "node:fs",
         "node:path",
         "node:url"
       ]
@@ -2050,25 +2111,6 @@
       "file": "tools/belieftest.mjs",
       "imports": [
         "@sixam/play/player"
-      ]
-    },
-    {
-      "file": "tools/bench-trace.mjs",
-      "imports": [
-        "@sixam/review/measure",
-        "node:fs/promises"
-      ]
-    },
-    {
-      "file": "tools/benchtracetest.mjs",
-      "imports": [
-        "@sixam/review/measure",
-        "node:assert/strict",
-        "node:child_process",
-        "node:fs",
-        "node:os",
-        "node:path",
-        "node:url"
       ]
     },
     {
@@ -3181,25 +3223,9 @@
       ]
     },
     {
-      "file": "tools/encounter-replay.mjs",
-      "imports": [
-        "@sixam/source",
-        "@sixam/source/fnaf2",
-        "node:crypto",
-        "node:fs",
-        "node:url"
-      ]
-    },
-    {
       "file": "tools/estimatortest.mjs",
       "imports": [
         "@sixam/play/player"
-      ]
-    },
-    {
-      "file": "tools/evidence-pack.mjs",
-      "imports": [
-        "../packages/review/src/evidence-pack.mjs"
       ]
     },
     {
@@ -3475,16 +3501,6 @@
         "./stat.mjs",
         "@sixam/propose/experiment",
         "@sixam/propose/seeds",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/model-encounter-fidelity.mjs",
-      "imports": [
-        "./encounter-replay.mjs",
-        "node:crypto",
-        "node:fs",
-        "node:path",
         "node:url"
       ]
     },
@@ -3858,9 +3874,9 @@
       "file": "tools/recompile/phone-encounter-replay.mjs",
       "imports": [
         "../../packages/play/src/sensors/fnaf2/button-strokes.js",
+        "../../packages/review/venue-grid/encounter-replay.mjs",
         "../device/bundle.mjs",
         "../device/minus-toys-plan.mjs",
-        "../encounter-replay.mjs",
         "./compare-draw-trace.mjs",
         "./compare-schedule-replay.mjs",
         "./model-draw-trace.mjs",
@@ -4146,8 +4162,8 @@
     {
       "file": "tools/test-encounter-fidelity.mjs",
       "imports": [
+        "../packages/review/venue-grid/encounter-replay.mjs",
         "./device/bundle.mjs",
-        "./encounter-replay.mjs",
         "./winner-census.mjs",
         "@sixam/source/fnaf2",
         "node:assert/strict",
@@ -4349,28 +4365,6 @@
       "imports": [
         "node:fs",
         "node:fs/promises",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/vault.mjs",
-      "imports": [
-        "@sixam/kernel/contracts",
-        "node:child_process",
-        "node:crypto",
-        "node:fs",
-        "node:os",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/vaulttest.mjs",
-      "imports": [
-        "node:child_process",
-        "node:fs",
-        "node:os",
         "node:path",
         "node:url"
       ]

@@ -32,7 +32,7 @@ const MAX_CLIP_BYTES = 4_000_000;
 const ADMIT = `Look at it. If it is a diagram, icon, UI art or font preview, add ` +
   `{ "path", "class", "shows" } to ${MANIFEST}. If it shows a game (a capture, frame ` +
   `or clip), it may not be committed: take it out of the tree (\`git rm --cached <path>\` ` +
-  `once staged) and keep it in the vault (tools/vault.mjs), because the only game media allowed are the two ` +
+  `once staged) and keep it in the vault (packages/review/src/vault.mjs), because the only game media allowed are the two ` +
   `README clips (ADR 0002 decision 6).`;
 
 // Every violation, as a message saying what to do: [] when the tree is clean.

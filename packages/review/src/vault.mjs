@@ -27,7 +27,7 @@ import { canonicalJson } from '@sixam/kernel/contracts';
 
 const HERE = fileURLToPath(new URL('.', import.meta.url));
 // FNAF2_REPO relocates the tree under test, as FNAF2_CAPTURES does for session-manifest.py.
-const ROOT = resolve(process.env.FNAF2_REPO || join(HERE, '..'));
+const ROOT = resolve(process.env.FNAF2_REPO || join(HERE, '../../..'));
 const PACKS = join(ROOT, 'docs', 'evidence', 'packs');
 const EVIDENCE = join(ROOT, 'docs', 'evidence');
 const PACK_SCHEMA = 'capture-pack-v1';
@@ -103,7 +103,7 @@ function expand(relPath, into) {
 /** Reuse the existing corpus classifier rather than restating its table here. */
 function captureClasses(wanted) {
   if (!wanted) return new Map();
-  const tool = join(HERE, 'device', 'index-observations.py');
+  const tool = join(HERE, '../../../tools/device', 'index-observations.py');
   const output = execFileSync('python3', [tool, 'captures', '--json'],
     { cwd: ROOT, encoding: 'utf8', maxBuffer: 128 * 1024 * 1024 });
   const classes = new Map();

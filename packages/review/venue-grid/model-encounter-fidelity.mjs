@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Assemble the 2026-09-27 encounter study from its retained derived outputs.
 // No phone, media decode or simulation is performed by this report command.
-// node tools/model-encounter-fidelity.mjs INPUT_DIR OUT.json
+// node packages/review/venue-grid/model-encounter-fidelity.mjs INPUT_DIR OUT.json
 // INPUT_DIR is artifacts/forensics/encounter-fidelity-20260927 (private inputs).
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { score } from './encounter-replay.mjs';
 
 // Paths are written relative to this checkout's root, whatever the directory is called.
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../..');
 const repoRel = p => (p && isAbsolute(p) && !relative(ROOT, p).startsWith('..')) ? relative(ROOT, p) : p;
 
 const [input, output] = process.argv.slice(2);
@@ -82,14 +82,14 @@ const record = {
   question: 'Do sourced countdown and movement-order corrections close the occupied-mask-window gap, and do gated countdowns expose the short BB/Mangle mask-window hazard?',
   verdict: 'S2 remains OPEN. The tw-04 reproduction remains 2/11 and 1/11 at its bracket seeds after the mask-animation input change. Gated Every timers expose short-mask BB/Mangle failures, but do not improve those encounter hits; their lower total occupancy is largely early death. Keep the option default off.',
   method: {
-    tool: 'tools/model-encounter-fidelity.mjs',
-    command: 'node tools/model-encounter-fidelity.mjs artifacts/forensics/encounter-fidelity-20260927 docs/evidence/model-encounter-fidelity-20260927.json',
-    replayTool: 'tools/encounter-replay.mjs',
-    replayCommand: 'node tools/encounter-replay.mjs CONFIG.json OUT.json',
+    tool: 'packages/review/venue-grid/model-encounter-fidelity.mjs',
+    command: 'node packages/review/venue-grid/model-encounter-fidelity.mjs artifacts/forensics/encounter-fidelity-20260927 docs/evidence/model-encounter-fidelity-20260927.json',
+    replayTool: 'packages/review/venue-grid/encounter-replay.mjs',
+    replayCommand: 'node packages/review/venue-grid/encounter-replay.mjs CONFIG.json OUT.json',
     historicalTool: 'artifacts/forensics/twin-nights-night6-cohort2/win-score.mjs',
     historicalRecord: 'docs/evidence/model-encounter-fidelity-20260918.json',
     baseCommit: census.method.git.commit,
-    modelSha256: hashFile(new URL('../packages/source/src/games/fnaf2/plant-model.js', import.meta.url)),
+    modelSha256: hashFile(new URL('../../source/src/games/fnaf2/plant-model.js', import.meta.url)),
     runtimeSource: {
       localPath: '~/fnaf-apks/fnaf2/base.apk!classes.dex',
       sha256: 'ca5c98a4d6ceefc3e0efe542695762263b87e73ca7e3956e3c688177d4c0d8a3',

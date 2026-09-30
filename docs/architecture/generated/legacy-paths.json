@@ -143,16 +143,6 @@
       "notes": "Compatibility alias for the propose package family evaluator (packages/propose/src/experiment/families/)."
     },
     {
-      "id": "review.evidence-pack-shim",
-      "path": "tools/evidence-pack.mjs",
-      "category": "evidence",
-      "lifecycle": "compatibility",
-      "owner": "@sixam/review",
-      "replacement": "packages/review/src/evidence-pack.mjs (`@sixam/review/evidence-pack`)",
-      "removalGate": "No tracked file imports tools/evidence-pack.mjs, and every reader of a pack takes its stored `packer` as a name read against the commit that wrote the pack (ADR 0002 principle 9), never as a path to load",
-      "notes": "One-line re-export left by the 2026-09-29 move of the four evidence tools into packages/review. Every committed run pack records `packer: tools/evidence-pack.mjs`, a stored value the pack digest (and so every attestation) covers, so the value stays and the path keeps resolving."
-    },
-    {
       "id": "core.contracts-shim",
       "path": "packages/core/src/contracts/index.js",
       "category": "package-subpath",
