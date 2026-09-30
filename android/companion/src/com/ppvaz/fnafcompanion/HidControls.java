@@ -96,6 +96,19 @@ public final class HidControls {
         return point;
     }
 
+    /**
+     * A plan's control token as the file names it: a camera spelled {@code camN}
+     * is {@code cam:N}, every other name is itself. Until 2026-09-30 the runner
+     * rewrote any token starting with "cam", so {@code cameraFeedLight} became
+     * {@code cam:eraFeedLight} and every Minus Toys plan was refused.
+     */
+    public static String planControl(String token) throws IOException {
+        if (token == null || !token.matches("[A-Za-z][A-Za-z0-9:]*")) {
+            throw new IOException("unknown plan control: " + token);
+        }
+        return token.matches("cam\\d+") ? "cam:" + token.substring(3) : token;
+    }
+
     /** One contact record: flags, raw X low and high byte, raw Y low and high byte. */
     public static String contact(int flags, int[] point) {
         return "[" + flags + "," + (point[0] & 255) + "," + ((point[0] >> 8) & 255)

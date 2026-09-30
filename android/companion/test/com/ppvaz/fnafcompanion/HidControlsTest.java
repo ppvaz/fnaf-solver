@@ -68,11 +68,19 @@ public final class HidControlsTest {
         refused("a malformed control line", "malformed", () -> HidControls.parse(text + "mask 1\n", sha));
         refused("a missing file", "missing", () -> HidControls.parse(null, sha));
 
+        check("a camera spelled camN is cam:N", "cam:11".equals(HidControls.planControl("cam11")));
+        check("cam:N stays", "cam:9".equals(HidControls.planControl("cam:9")));
+        check("the camera feed light is not a camera",
+                "cameraFeedLight".equals(HidControls.planControl("cameraFeedLight")));
+        check("other controls are themselves", "mask".equals(HidControls.planControl("mask")));
+        refused("a token that is not a control name", "unknown plan control", () -> HidControls.planControl("cam 9"));
+
         if (failures > 0) {
             System.out.println("HidControlsTest: " + failures + " failure(s)");
             System.exit(1);
         }
         System.out.println("hid controls: the runner reads the bundle's controls bound to its profile, refuses "
-                + "another profile, an unknown or unnamed control and a point off the axes, and encodes contacts");
+                + "another profile, an unknown or unnamed control and a point off the axes, encodes contacts, "
+                + "and spells camN as cam:N without touching cameraFeedLight");
     }
 }

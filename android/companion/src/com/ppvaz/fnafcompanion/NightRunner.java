@@ -550,13 +550,8 @@ public final class NightRunner {
         throw new IOException("unknown sweep camera: " + token);
     }
 
-    /** The plan spells cameras camN or cam:N; the controls file names them cam:N. */
     private static String normalizeControl(String control) throws IOException {
-        if (control.startsWith("cam") && !control.startsWith("cam:")) {
-            control = "cam:" + control.substring(3);
-        }
-        if (!control.matches("[A-Za-z][A-Za-z0-9:]*")) throw new IOException("unknown plan control: " + control);
-        return control;
+        return HidControls.planControl(control);
     }
 
     private int[] point(String control) throws IOException {
