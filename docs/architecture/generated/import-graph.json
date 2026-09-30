@@ -2796,7 +2796,8 @@
         "./encounter-replay.mjs",
         "node:crypto",
         "node:fs",
-        "node:path"
+        "node:path",
+        "node:url"
       ]
     },
     {

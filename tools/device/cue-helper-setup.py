@@ -344,7 +344,7 @@ def main() -> int:
 
             adb("get-state")
             if args.install:
-                apk = ROOT / "android/companion/build/fnaf2-companion.apk"
+                apk = ROOT / "android/companion/build/fnaf-companion.apk"
                 if not apk.is_file():
                     raise SetupError(f"APK does not exist: {apk}")
                 adb("install", "-r", str(apk), timeout=60.0)

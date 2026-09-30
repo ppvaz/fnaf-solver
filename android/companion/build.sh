@@ -127,8 +127,8 @@ fi
     --ks "$KEYSTORE" \
     --ks-pass pass:android \
     --key-pass pass:android \
-    --out "$BUILD_DIR/fnaf2-companion.apk" \
+    --out "$BUILD_DIR/fnaf-companion.apk" \
     "$BUILD_DIR/companion-aligned.apk"
-"$APKSIGNER" verify --verbose "$BUILD_DIR/fnaf2-companion.apk"
+"$APKSIGNER" verify --verbose "$BUILD_DIR/fnaf-companion.apk"
 
-echo "$BUILD_DIR/fnaf2-companion.apk"
+echo "$BUILD_DIR/fnaf-companion.apk"

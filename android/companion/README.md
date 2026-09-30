@@ -70,7 +70,7 @@ and a JDK directly:
 
 ```sh
 android/companion/build.sh
-adb install -r android/companion/build/fnaf2-companion.apk
+adb install -r android/companion/build/fnaf-companion.apk
 adb shell am start -n com.ppvaz.fnafcompanion/com.ppvaz.fnafcompanion.MainActivity
 ```
 

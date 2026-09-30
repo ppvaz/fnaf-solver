@@ -5,8 +5,13 @@
 // INPUT_DIR is artifacts/forensics/encounter-fidelity-20260927 (private inputs).
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, isAbsolute, join, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { score } from './encounter-replay.mjs';
+
+// Paths are written relative to this checkout's root, whatever the directory is called.
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const repoRel = p => (p && isAbsolute(p) && !relative(ROOT, p).startsWith('..')) ? relative(ROOT, p) : p;
 
 const [input, output] = process.argv.slice(2);
 if (!input || !output) throw new Error('usage: model-encounter-fidelity.mjs INPUT_DIR OUT.json');
@@ -39,7 +44,7 @@ const nights = base.out.map((night) => {
     phoneCounts.read++;
     if (c !== '.') { phoneCounts.occupied++; phoneCounts.byCharacter[c]++; }
   }
-  const path = p => p?.replace(/^.*\/fnaf2-1020\//, '').replace(/^.*\/scratchpad\//, 'artifacts/forensics/encounter-fidelity-20260927/');
+  const path = p => repoRel(p)?.replace(/^.*\/scratchpad\//, 'artifacts/forensics/encounter-fidelity-20260927/');
   const baseline = night.rows.map(r => compactRow(r, night.phone));
   return {
     name: night.name, phoneWindows: night.phone,
@@ -123,8 +128,8 @@ const record = {
     rows: night7.out.map(n => {
       const cfg = night7.cfg.nights.find(c => c.name === n.name);
       return { name: n.name, firstNightFrameIndex: cfg.first,
-        presses: cfg.presses.replace(/^.*\/fnaf2-1020\//, ''), pressesSha256: hashFile(cfg.presses),
-        trace: cfg.trace.replace(/^.*\/fnaf2-1020\//, ''), traceSha256: hashFile(cfg.trace),
+        presses: repoRel(cfg.presses), pressesSha256: hashFile(cfg.presses),
+        trace: repoRel(cfg.trace), traceSha256: hashFile(cfg.trace),
         ...compactRow(n.rows[0], null) };
     }),
     verdict: 'The prior discrepancy reproduces: full-04-k3 seed 34043 dies inside-office at 174499 ms; full-06-k3 seed 47593 dies inside-office at 294544 ms although that phone night won. No new equivalence claim or seed-offset fit is made.',
