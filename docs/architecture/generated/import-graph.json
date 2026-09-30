@@ -4462,6 +4462,15 @@
       ]
     },
     {
+      "file": "tools/test-todo-refs.mjs",
+      "imports": [
+        "./gate-kit.mjs",
+        "node:assert/strict",
+        "node:fs",
+        "node:path"
+      ]
+    },
+    {
       "file": "tools/test.mjs",
       "imports": [
         "./chrome.mjs",
