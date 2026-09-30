@@ -24,11 +24,11 @@ The licence texts are in tools/recompile/LICENSES/.
 
 Fonts
 -----
-- assets/fonts/chakra-petch-*.woff2: Copyright 2018 The Chakra Petch Project
-  Authors, SIL Open Font License 1.1 (assets/fonts/LICENSE-chakra-petch.txt).
-- assets/fonts/ibm-plex-mono-*.woff2: Copyright 2017 IBM Corp., with Reserved
+- apps/trainer/assets/fonts/chakra-petch-*.woff2: Copyright 2018 The Chakra Petch Project
+  Authors, SIL Open Font License 1.1 (apps/trainer/assets/fonts/LICENSE-chakra-petch.txt).
+- apps/trainer/assets/fonts/ibm-plex-mono-*.woff2: Copyright 2017 IBM Corp., with Reserved
   Font Name "Plex", SIL Open Font License 1.1
-  (assets/fonts/LICENSE-ibm-plex-mono.txt).
+  (apps/trainer/assets/fonts/LICENSE-ibm-plex-mono.txt).
 - android/companion/assets/fonts/hud-font.otf: "HUD FONT" by Asksk, CC0 1.0
   (android/companion/assets/fonts/license.txt).
 

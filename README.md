@@ -179,7 +179,7 @@ rebuild it. Every patch and finding owed back is tracked in the [upstream ledger
 - **License.** This project's own code and documentation are under the MIT license ([LICENSE](LICENSE)).
   Patches to third-party tools keep those tools' licenses: the Anaconda patches under `tools/recompile` are
   GPL, as their upstream is ([NOTICE](NOTICE)). The trainer's fonts are under the SIL Open Font License 1.1
-  ([assets/fonts](assets/fonts/)). None of these licenses covers the games.
+  ([apps/trainer/assets/fonts](apps/trainer/assets/fonts/)). None of these licenses covers the games.
 
 ## Project status
 
