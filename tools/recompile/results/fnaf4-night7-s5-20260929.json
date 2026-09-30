@@ -1,0 +1,105 @@
+{
+ "schema": "recompile-pilot-night-v1",
+ "evidenceId": "recompile-pilot-night-058228090b83d691",
+ "claimLevel": "MODEL_ONLY",
+ "fidelity": "rebuilt-runtime",
+ "game": "fnaf4",
+ "night": "Night 7 with the All Nightmare (Fredbear alone at 20 all night, shadow 2) and Blind challenges; no cheats",
+ "recordedAt": "2026-09-30",
+ "question": "Does the rebuilt fnaf4 reach 6 AM on its hardest night from the recorded touches alone?",
+ "controller": {
+  "policy": "warden",
+  "knobs": {
+   "challenges": [
+    "4_AllNightmare",
+    "1_Blind"
+   ]
+  },
+  "source": "tools/recompile/pilot/fnaf4.mjs",
+  "reads": "the rebuilt runtime's own objects each update (an oracle, not a player's view)",
+  "acts": "in-window touches only, through the harness input path",
+  "pilotOutcome": "6AM"
+ },
+ "binarySha256": "6d3a66673ae1fe1be93217aafdea4113bc0753958b1e805068105e6f36247e1d",
+ "assetsSha256": "615f2ea01b9546709e8d9bc2b15cd9616aeda403a317c4db4bcde9f4d87f0049",
+ "seed": 24850,
+ "saveBefore": {
+  "sha256": "1621f3adefe63cb62984f2138f7f8afc813436c6b7d37309c369e0c4cb53b71d",
+  "keys": {
+   "fn4.test": "1",
+   "fn4.beat7": "1",
+   "fn4.night": "5",
+   "fn4.scene": "1",
+   "fn4.beat5": "1",
+   "fn4.beat6": "1",
+   "fn4.beat8": "1",
+   "options.joystickSize": "120"
+  }
+ },
+ "input": {
+  "fixture": "tools/recompile/fixtures/fnaf4-night7-s5-win.input",
+  "sha256": "7e15991855dc4762597357d93b17f80973d8f0aa690015eba81cb0ba9927b82c",
+  "rows": 522
+ },
+ "pilotTrace": {
+  "rows": 30000,
+  "sha256": "87ea8a0041bbaf4d8ad91217c9d29eaad2b14f9c9250d8fb6d7ea61b231c4d48"
+ },
+ "replay": {
+  "rows": 30000,
+  "sha256": "87ea8a0041bbaf4d8ad91217c9d29eaad2b14f9c9250d8fb6d7ea61b231c4d48",
+  "traceEqual": true,
+  "visits": [
+   {
+    "frame": 0,
+    "updates": 180
+   },
+   {
+    "frame": 1,
+    "updates": 364
+   },
+   {
+    "frame": 11,
+    "updates": 1
+   },
+   {
+    "frame": 10,
+    "updates": 590
+   },
+   {
+    "frame": 2,
+    "updates": 126
+   },
+   {
+    "frame": 3,
+    "updates": 21601
+   },
+   {
+    "frame": 5,
+    "updates": 719
+   },
+   {
+    "frame": 1,
+    "updates": 6419
+   }
+  ]
+ },
+ "saveAfter": {
+  "fn4.test": "1",
+  "fn4.beat7": "1",
+  "fn4.night": "5",
+  "fn4.scene": "1",
+  "fn4.beat5": "1",
+  "fn4.beat6": "1",
+  "fn4.beat8": "1",
+  "fn4.s1": "1",
+  "fn4.s4": "1",
+  "fn4.s5": "1",
+  "options.joystickSize": "120"
+ },
+ "winKeys": [
+  "fn4.s5=1",
+  "fn4.s4=1"
+ ],
+ "status": "WON"
+}

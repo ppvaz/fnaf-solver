@@ -378,9 +378,14 @@ and the solver MCP with its claim envelope (Plan 28).
     [`recompile-pilot-night-9bba02f11189549a`](../tools/recompile/results/fnaf3-aggressive-nightmare-20260929.json))
     and FNaF 4 Night 8, 20/20/20/20 (`beat8=1`,
     [`recompile-pilot-night-4a296d97011c3ae2`](../tools/recompile/results/fnaf4-night8-20260929.json)).
+    FNaF 4's challenge stars are won on Night 7 too: `s6`
+    ([`recompile-pilot-night-91ea0be07e47c961`](../tools/recompile/results/fnaf4-night7-s6-20260929.json))
+    and `s5`
+    ([`recompile-pilot-night-058228090b83d691`](../tools/recompile/results/fnaf4-night7-s5-20260929.json)).
     The recorded touches replay to an equal trace with no pilot. The
-    controllers read the runtime's objects, so neither is a device route or a
-    census. The FNaF 3 controller wins 1 of 6 other seeds, the FNaF 4 one 5 of 6.
+    controllers read the runtime's objects, so none of these is a device route
+    or a census. The FNaF 3 controller wins 1 of 6 other seeds, the FNaF 4 one
+    5 of 6.
 - **Absorbs** Plan 25 horizon 5 and Plans 26, 27 and 28.
 
 ### S7: The lab runs itself

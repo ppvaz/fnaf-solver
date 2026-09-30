@@ -86,6 +86,7 @@ directory (`/private/tmp/fnaf2-recompile.*` on the dev machine).
 | `fixtures/fnaf3-aggressive-nightmare.ini`, `fixtures/fnaf3-aggressive-nightmare-win.input`, `results/fnaf3-aggressive-nightmare-20260929.json` | The unlocked FNaF 3 save (`beatgame`, `beat6`, `goodend`, `hyper=1`; the three easing cheats off), the 332 touch rows the guard applied, and the record: the rebuilt FNaF 3 (pinned `239c59cb-c5e092a3`) reaches 6 AM on Aggressive Nightmare at seed 24850 and writes `4thstar=1`, and the rows replayed with no pilot give the same 30,000-update trace. MODEL_ONLY, rebuilt-runtime. |
 | `fixtures/fnaf4-night8-before.ini` | The FNaF 4 save for Night 8 (`beat5`-`beat7`, `beat8=0`, `test=1`): the Extras Nightmare button then takes eight taps to arm 20/20/20/20 (`shadow` 2). |
 | `fixtures/fnaf4-night8-win.input`, `results/fnaf4-night8-20260929.json` | The 584 touch rows the FNaF 4 `warden` applied, and the record: the rebuilt FNaF 4 (pinned `6d3a6667-615f2ea0`) reaches 6 AM on Night 8, the 20/20/20/20 Nightmare, at seed 24850, and writes `beat8=1`; the rows replayed with no pilot give the same 30,000-update trace. MODEL_ONLY, rebuilt-runtime. |
+| `fixtures/fnaf4-challenges-before.ini`, `fixtures/fnaf4-night7-s6-win.input`, `fixtures/fnaf4-night7-s5-win.input`, `results/fnaf4-night7-s6-20260929.json`, `results/fnaf4-night7-s5-20260929.json` | The save the Night 8 win wrote (`beat8=1`), which unlocks the challenges, and the two challenge wins on Night 7: Blind + Mad Freddy + Insta-Foxy (the game writes `s1`-`s3` and `s6`, 546 rows) and All Nightmare + Blind (`s1`, `s4`, `s5`, 522 rows). Both replay with no pilot to an equal trace on the pinned binary. MODEL_ONLY, rebuilt-runtime. |
 
 ## Environment
 
@@ -1741,5 +1742,19 @@ The sheet's rules the controller relies on:
 Once `beat8=1` the Extras challenges unlock (groups 197-200 need
 `beat 8` = 1), but the 20/20/20/20 selection needs `beat 8` = 0 (groups
 104/105). So the menus pair the challenges with Night 7 only, and Night 8 is
-the hardest night the menus offer. MODEL_ONLY, rebuilt-runtime: nothing here
-was run on the phone.
+the hardest night the menus offer.
+
+The challenge stars were also won, from the save the Night 8 win wrote. Mad
+Freddy and Insta-Foxy each clear All Nightmare, and All Nightmare clears them
+(groups 198-200), so two sets are the maximum:
+
+- **Blind + Mad Freddy + Insta-Foxy** (`recompile-pilot-night-91ea0be07e47c961`):
+  the game writes `s1`, `s2`, `s3` and `s6`. The warden ran with the bed
+  thresholds lowered to 26/36 for Mad Freddy's 2.5/s fill (g398).
+- **All Nightmare + Blind** (`recompile-pilot-night-058228090b83d691`):
+  Fredbear alone at 20 for all six hours (g672). The game writes `s1`, `s4`
+  and `s5`.
+
+Blind only draws the black overlay: no group tests its visibility, so it
+does not bind a controller that reads the runtime. MODEL_ONLY,
+rebuilt-runtime: nothing here was run on the phone.

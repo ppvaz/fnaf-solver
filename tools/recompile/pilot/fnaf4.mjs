@@ -22,8 +22,12 @@ export const COUNTERS = ['Freddy counter', 'listening mode', 'viewing left hall'
   'Foxy AI', 'Chica AI', 'Bonnie AI', 'Freddy AI', 'Fredbear AI', 'Night', 'force turn', 'fredcheck', 'what side',
   'bonnie danger', 'chica danger', 'foxy danger', 'freddy danger', 'fredbear danger', 'total danger', 'random',
   'challenge mode', 'cheat mode', 'any cheats?'];
+export const CHALLENGES = ['btnMain08_Challenges.Active', 'btnChallenge01_Blind.Active', 'btnChallenge02_MadFreddy.Active',
+  'btnChallenge03_InstaFoxy.Active', 'btnChallenge04_AllNightmare.Active', 'btnChallenge01_Blind_Checkmark.Active',
+  'btnChallenge02_MadFreddy_Checkmark.Active', 'btnChallenge03_InstaFoxy_Checkmark.Active',
+  'btnChallenge04_AllNightmare_Checkmark.Active'];
 export const WATCH = [
-  'btnMain04_Extra.Active', 'btnMain06_Nightmare.Active', 'btnNightmare_Start.Active', 'selection',
+  'btnMain04_Extra.Active', 'btnMain06_Nightmare.Active', 'btnNightmare_Start.Active', 'selection', ...CHALLENGES,
   'beat 6', 'beat 7', 'beat 8', 'Multiple Touch', 'follow', 'black flash', 'Active_room',
   ...MARKERS, ...ACTORS, ...HUD, ...COUNTERS,
 ];
@@ -97,6 +101,33 @@ export function menuNight8() {
       if (s.t === 200) tap(v, 'btnMain06_Nightmare.Active');
       if (s.t >= 260 && s.t < 260 + 20 * 9 && (s.t - 260) % 20 === 0) tap(v, 'btnMain06_Nightmare.Active');
       if (s.t === 500) tap(v, 'btnNightmare_Start.Active');
+    }
+    const out = [];
+    queue = queue.filter((q) => (q.at <= 0 ? (out.push(q.cmd), false) : (q.at -= 1, true)));
+    return out;
+  };
+}
+
+/**
+ * The Night 7 challenge path (needs `beat8=1`): Extras -> Challenges ->
+ * each named challenge (groups 197-200; a 10-frame cooldown between toggles,
+ * g207) -> Nightmare -> Start. With `beat 8` = 1 the 20/20/20/20 arming
+ * (groups 104/105) is closed, so Start plays Night 7 (`shadow` 1).
+ */
+export function menuChallenges(names) {
+  let queue = [];
+  const tap = (v, name, delay = 0) => {
+    const o = v.one(name);
+    if (!o || !inWindow(o.c)) return;
+    queue.push({ at: delay, cmd: `down 0 ${o.c[0]} ${o.c[1]}` }, { at: delay + 3, cmd: 'up 0' });
+  };
+  return (s, v) => {
+    if (s.f === TITLE && s.t === 300) tap(v, 'btnMain04_Extra.Active');
+    if (s.f === EXTRAS) {
+      if (s.t === 200) tap(v, 'btnMain08_Challenges.Active');
+      names.forEach((n, i) => { if (s.t === 260 + 40 * i) tap(v, `btnChallenge0${n}.Active`); });
+      if (s.t === 460) tap(v, 'btnMain06_Nightmare.Active');
+      if (s.t === 520) tap(v, 'btnNightmare_Start.Active');
     }
     const out = [];
     queue = queue.filter((q) => (q.at <= 0 ? (out.push(q.cmd), false) : (q.at -= 1, true)));
@@ -273,7 +304,8 @@ function warden({ run, knobs }) {
   const out = join(run, 'warden.jsonl');
   writeFileSync(out, '');
   const ctx = { v: null, log: (o) => appendFileSync(out, JSON.stringify({ t: ctx.v?.tick, ...o }) + '\n') };
-  const menu = menuNight8();
+  const menu = knobs.challenges ? menuChallenges(knobs.challenges) : menuNight8();
+  let loggedLevel = false;
   let task = null, taskName = null, last = null, outcome = null;
   const bedAt = knobs.bedAt ?? 32, foxyAt = knobs.foxyAt ?? 6;
 
@@ -434,6 +466,11 @@ function warden({ run, knobs }) {
       }
       ctx.v = v;
       const f = facts4(v);
+      if (!loggedLevel) {
+        loggedLevel = true;
+        ctx.log({ level: { night: v.cv('Night'), shadow: v.cv('shadow'), cheats: v.cv('any cheats?'),
+          challenges: CHALLENGES.filter((n) => n.endsWith('_Checkmark.Active')).map((n) => [n.slice(15, -17), v.al(n, 0)]) } });
+      }
       const key = JSON.stringify([f.at, f.follow, Math.floor(f.freddy / 10), f.foxy, f.bTag, f.cTag, f.interlock, f.hour, f.gameover, f.fredbearAI, f.flash > 0, f.fbHall, f.fbBed, f.fbView > 0]);
       if (key !== last || knobs.probe) { ctx.log({ ...f, freddy: Math.round(f.freddy), task: taskName, x: v.one('follow')?.x, mt: v.one('Multiple Touch')?.al }); last = key; }
       if (f.gameover) { outcome = outcome ?? `gameover at ${s.t}`; }

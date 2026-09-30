@@ -2927,11 +2927,21 @@ writes `beat8=1`; the 584 rows replay to an equal trace
 
 Beating Night 8 unlocks the challenges, but the menus then pair them only
 with Night 7 (groups 104/105 against 197-200). So Night 8 is the hardest night
-the game offers. MODEL_ONLY, rebuilt-runtime; no device run, nothing promoted.
+the game offers.
+
+The challenge tier was won too, starting from the save the Night 8 win wrote:
+
+- **Blind + Mad Freddy + Insta-Foxy:** `s1`-`s3` and `s6`
+  (`recompile-pilot-night-91ea0be07e47c961`).
+- **All Nightmare + Blind:** `s1`, `s4`, `s5`
+  (`recompile-pilot-night-058228090b83d691`).
+
+Both replay to equal traces on the pinned binary. Every night-star FNaF 4
+offers is now won in the rebuild. MODEL_ONLY, rebuilt-runtime; no device run,
+nothing promoted.
 
 Open:
 - the FNaF 3 controller's rate over seeds (1 of 6) and the model's missing
   group 275;
-- FNaF 4's Night 7 challenge stars (`s1`-`s6`), which were not attempted;
 - neither rebuilt APK has been run on the phone, and neither win is a device
   claim.

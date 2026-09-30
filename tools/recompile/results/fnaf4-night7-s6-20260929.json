@@ -1,0 +1,110 @@
+{
+ "schema": "recompile-pilot-night-v1",
+ "evidenceId": "recompile-pilot-night-91ea0be07e47c961",
+ "claimLevel": "MODEL_ONLY",
+ "fidelity": "rebuilt-runtime",
+ "game": "fnaf4",
+ "night": "Night 7 (shadow 1: Bonnie, Chica, Foxy 15, Freddy 6 to 4 AM, then Fredbear 20) with the Blind, Mad Freddy and Insta-Foxy challenges; no cheats",
+ "recordedAt": "2026-09-30",
+ "question": "Does the rebuilt fnaf4 reach 6 AM on its hardest night from the recorded touches alone?",
+ "controller": {
+  "policy": "warden",
+  "knobs": {
+   "challenges": [
+    "1_Blind",
+    "2_MadFreddy",
+    "3_InstaFoxy"
+   ],
+   "bedAt": 26,
+   "bedUrgent": 36
+  },
+  "source": "tools/recompile/pilot/fnaf4.mjs",
+  "reads": "the rebuilt runtime's own objects each update (an oracle, not a player's view)",
+  "acts": "in-window touches only, through the harness input path",
+  "pilotOutcome": "6AM"
+ },
+ "binarySha256": "6d3a66673ae1fe1be93217aafdea4113bc0753958b1e805068105e6f36247e1d",
+ "assetsSha256": "615f2ea01b9546709e8d9bc2b15cd9616aeda403a317c4db4bcde9f4d87f0049",
+ "seed": 24850,
+ "saveBefore": {
+  "sha256": "1621f3adefe63cb62984f2138f7f8afc813436c6b7d37309c369e0c4cb53b71d",
+  "keys": {
+   "fn4.test": "1",
+   "fn4.beat7": "1",
+   "fn4.night": "5",
+   "fn4.scene": "1",
+   "fn4.beat5": "1",
+   "fn4.beat6": "1",
+   "fn4.beat8": "1",
+   "options.joystickSize": "120"
+  }
+ },
+ "input": {
+  "fixture": "tools/recompile/fixtures/fnaf4-night7-s6-win.input",
+  "sha256": "b0d2ecd0ac1a5f3cba1107788cc4fecddaf6a71b59378912c2379e9e3cb1bd5a",
+  "rows": 546
+ },
+ "pilotTrace": {
+  "rows": 30000,
+  "sha256": "267f909a069b6901d3e7d7f5457e30aaccfef7ac9c3c705466e4c14623878818"
+ },
+ "replay": {
+  "rows": 30000,
+  "sha256": "267f909a069b6901d3e7d7f5457e30aaccfef7ac9c3c705466e4c14623878818",
+  "traceEqual": true,
+  "visits": [
+   {
+    "frame": 0,
+    "updates": 180
+   },
+   {
+    "frame": 1,
+    "updates": 364
+   },
+   {
+    "frame": 11,
+    "updates": 1
+   },
+   {
+    "frame": 10,
+    "updates": 590
+   },
+   {
+    "frame": 2,
+    "updates": 126
+   },
+   {
+    "frame": 3,
+    "updates": 21601
+   },
+   {
+    "frame": 5,
+    "updates": 719
+   },
+   {
+    "frame": 1,
+    "updates": 6419
+   }
+  ]
+ },
+ "saveAfter": {
+  "fn4.test": "1",
+  "fn4.beat7": "1",
+  "fn4.night": "5",
+  "fn4.scene": "1",
+  "fn4.beat5": "1",
+  "fn4.beat6": "1",
+  "fn4.beat8": "1",
+  "fn4.s1": "1",
+  "fn4.s2": "1",
+  "fn4.s3": "1",
+  "fn4.s6": "1",
+  "options.joystickSize": "120"
+ },
+ "winKeys": [
+  "fn4.s6=1",
+  "fn4.s2=1",
+  "fn4.s3=1"
+ ],
+ "status": "WON"
+}
