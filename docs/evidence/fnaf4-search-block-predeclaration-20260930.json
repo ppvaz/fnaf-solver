@@ -1,0 +1,46 @@
+{
+ "schema": "evidence-record-v1",
+ "id": "fnaf4-search-block-predeclaration-20260930",
+ "claimLevel": "PREDECLARATION (fixed before any seed of the block is run)",
+ "fidelity": "rebuilt-runtime",
+ "date": "2026-09-30",
+ "question": "Does every FNaF 4 Night 8 (20/20/20/20) seed of a 3000-seed block the controller and search were not developed on have a sequence of in-window touches that wins it in the rebuilt runtime?",
+ "binding": {
+  "game": "fnaf4",
+  "night": "Night 8, 20/20/20/20 (fnaf4-night8-before.ini)",
+  "policy": "warden3",
+  "search": "tools/recompile/pilot/search.mjs",
+  "budget": 40,
+  "sourcesSha256": "719dde1727c4ce528e654a37c5331af819ac34a9033a5f82706caa8762b1a545",
+  "sources": [
+   "tools/recompile/pilot/pilot.mjs",
+   "tools/recompile/pilot/fnaf4.mjs",
+   "tools/recompile/pilot/search.mjs",
+   "tools/recompile/pilot/replay.mjs"
+  ],
+  "sourcesCommit": "ffea7bd",
+  "binarySha256": "57b48ac1596879f8c8e8b121679f02314737107bacdcbe1af3258fe93121cd21",
+  "assetsSha256": "615f2ea01b9546709e8d9bc2b15cd9616aeda403a317c4db4bcde9f4d87f0049",
+  "saveBefore": {
+   "fixture": "tools/recompile/fixtures/fnaf4-night8-before.ini",
+   "sha256": "a58acc2d42e40653a3797dc783d54daef47f6f726140eccc36a905b261e95231"
+  },
+  "winKey": "fn4.beat8=1"
+ },
+ "development": "warden3 was shaped on the warden2 held-out block's four losses (docs/evidence/fnaf4-night8-warden2-holdout-20260930.json) and checked on development seeds 0-299; the search on FNaF 3 (docs/evidence/rebuild-fnaf3-search-v2-dev-20260930.json)",
+ "block": {
+  "seeds": "50000-52999",
+  "count": 3000,
+  "why": "disjoint from development (0-299, 24850) and from the warden2 held-out block (30000-32999), whose four losses shaped warden3"
+ },
+ "command": "systemd-run --user --scope -p MemoryMax=1300M -p MemorySwapMax=512M -- node tools/recompile/pilot/search.mjs --game fnaf4 --policy warden3 --binary <pinned 57b48ac1-615f2ea0>/Chowdren --assets <same>/Assets.dat --save tools/recompile/fixtures/fnaf4-night8-before.ini --seeds 50000-52999 --budget 40 --jobs 3 --out <outside the repository> --win-key fn4.beat8=1",
+ "rules": [
+  "Every row's sourcesSha256 must equal the one above; search.mjs stops if a source changes.",
+  "A seed is winnable only if its row is WON and replayWon is true: the touches, replayed with no pilot, win.",
+  "Each seed is reported: WON (with its winning input's sha256 and the attempt that found it), EXHAUSTED, NO_NIGHT or ERROR. An EXHAUSTED seed is open, not shown unwinnable.",
+  "The claim \"every seed of the block is winnable by touches\" is made only if all 3000 are winnable. The controller alone's wins are reported as a count and a rate over the 3000.",
+  "Nothing is tuned on this block."
+ ],
+ "resultRecord": "docs/evidence/fnaf4-search-block-20260930.json",
+ "rung": "None. MODEL_ONLY, rebuilt-runtime; not a device claim."
+}
