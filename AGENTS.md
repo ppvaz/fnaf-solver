@@ -1,3 +1,6 @@
+**Read [`CLAUDE.md`](CLAUDE.md) first and in full: it is this repository's canonical agent contract.**
+The ai-memory block below is tool routing only; the project contract section after it points back to `CLAUDE.md`.
+
 <!-- ai-memory:start -->
 ## Long-term memory (ai-memory)
 
@@ -135,11 +138,7 @@ is not opened. **None of these replaces reading it.**
   progress/result record with its generated evidence ID, stating what remains
   open.
 
-Standing directive (Pedro, 2026-09-06; target moved 2026-09-17):
-**laser-focus on 6 AM successes on-device.** Every story night and Custom Night
-10/20 have reached 6 AM. The current target is **Night 7 reliability and
-promotion** — see `CLAUDE.md`, whose S1 paragraph records what is promoted
-(first Plan 12 edges on 2026-09-27) and Pedro's two decisions of that day:
-recovered packs are accepted fully, and agents may write Plan 12 attestations
-through `npm run evidence -- attest`. That delegation covers attestations only;
-`PEDRO-OK` stays human-only and no hook is bypassed.
+**What to work on is the path.** The 2026-09-06 standing directive is replaced
+by the path in [`plans/ROADMAP.md`](plans/ROADMAP.md) (Pedro, 2026-09-25): the
+steps S1-S7, what closes each, the boundaries, and the gates loosened or
+archived for it. Read it there; this file does not restate it.

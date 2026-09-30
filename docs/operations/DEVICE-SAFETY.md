@@ -1,17 +1,50 @@
 # Device operation safety
 
-Use a versioned profile and `DeviceControlService`. Profiles resolve adapter
-capabilities, geometry, timing, calibration, target build, and safety limits;
-the resolved profile and hash are retained in the session manifest.
+One path plays a FNaF 2 night on the phone: the campaign executor. A night is a
+committed winner (`tools/device/campaign-night<N>-<name>-winner.json`) that
+`npm run device:emit` compiles into a bundle, and `npm run device:campaign --
+--bundle DIR --nights N --profile hid-mediaprojection` runs it.
+`tools/device/night-run.sh` (`npm run night -- fnaf2`) wraps that one command
+with recording, grading, packing and the reset to the title. The fixture
+`DeviceControlService`, its adapter layer and the artifact lane never played a
+night and were retired on 2026-09-25 (`6d78c7e`, `903ffab`;
+[archived routes](../ARCHIVED-ROUTES.md)).
 
-Dry-run is the default and uses fixture transports. Live mode requires an
-explicit `--live --confirm-live`, a non-fixture profile, an exclusive lease,
-bounded action count/duration, preflight, externally evidenced
-`qualification-v1`, mandatory abort/release methods, and sensor→detector
-observation in the execution loop. The service owns semantic-to-physical
-mapping, temporal/deadline checks, emergency release/abort, telemetry, and
-cleanup. Agent-facing interfaces may call this service only with semantic
-bounded commands; they may not execute arbitrary shell or invent coordinates.
+- **Dry run by default.** Without `--live --confirm-live`, `device:campaign`
+  validates the campaign chain, the bundle and the proof gates and opens no
+  transport. CI runs that dry run over the committed Night 7 winner.
+  `night-run.sh --dry-run` prints the command and touches no phone. The CLI
+  refuses `--live` without `--confirm-live`, and `tools/architecture-test.js`
+  holds that gate and refuses a second live command in the CLI.
+- **A resolved, hashed profile.** The profile comes from
+  `apps/device/profiles/` (`device-profile-v1`). The bundle binds its id and
+  sha256, and the CLI refuses a bundle compiled for another profile.
+- **Preflight before any press.** The ADB preflight checks the target build,
+  the Cue Helper and `/system/bin/hid`. The campaign preflight
+  (`campaign-preflight.js`) must then read READY: one compiled artifact bound
+  per night, the 6 AM and save proof ports, a `DEVICE_MEASURED`
+  `qualification-v1` bound to the bundle's winner and model hashes, the Custom
+  Night calibration for Night 7, and the device-local scheduler. HOLD or
+  UNKNOWN plays nothing, and FAIL exits nonzero.
+- **An exclusive lease.** A live `night-run.sh` takes the serial lease before
+  its first adb call, or trusts `FNAF_LEASE_HELD=1` from the holder (an
+  overnight window's night job, below).
+- **Named ways to press, one way to see.** Only the device runners that
+  `architecture-test.js` names compose the HID transport: the FNaF 2 campaign
+  ports, the FNaF 1, 3 and 4 runners and the one-step explorer, each behind its
+  own lease and `--confirm-live`. A new composer has to be named there in the
+  diff that adds it. Frames come from the Companion's Cue Helper (`REGION`,
+  `SNAP`).
+- **Fail-safe release.** An interrupt releases the HID process before Node
+  exits. The composition's cleanup force-stops and relaunches the game and
+  verifies the title. `night-run.sh`'s exit trap stops the recording, pulls
+  what was captured, and drives the game back to an observed title.
+- **Retained telemetry.** Each campaign writes its evidence directory and
+  `result.json`, and `night-run.sh` packs it (`npm run evidence -- pack`).
+- **Agents.** The agent-facing surface is the Cue Helper MCP
+  (`apps/device/src/mcp.js`): `cue.setup` and the device-work queue
+  (`cue.queue.enqueue`, `list`, `run`), a closed vocabulary with no raw
+  coordinates, HID input or shell.
 
 **A death stops the presses, not the observer (2026-09-27).** Once a night has
 been observed, the device-local executor halts actuation on the first `static`

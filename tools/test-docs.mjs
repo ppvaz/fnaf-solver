@@ -62,6 +62,38 @@ for (const file of markdown) {
   }
 }
 
+// --- 1b. every relative href/src in a tracked HTML page resolves.
+//
+// The portal (docs/portal/) and the trainer's root index.html are the pages a
+// reader reaches from Pages, and the Markdown check never read them: the
+// portal linked adapter-registry.json for four days after `903ffab` retired
+// the adapter layer and deleted its generated registry
+// (docs/ARCHIVED-ROUTES.md, 2026-09-25). Remote, data: and javascript: URLs and in-page anchors are
+// skipped; a site-absolute "/path" is a failure, because the project's Pages
+// site does not live at the domain root. plans/archive/ is frozen byte for
+// byte and holds no HTML (ADR 0002, Consequences).
+const pages = tracked.filter((f) => /\.html?$/i.test(f) && !f.startsWith('plans/archive/'));
+let htmlLinks = 0;
+const entity = (s) => s.replace(/&amp;/g, '&').replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"');
+for (const file of pages) {
+  const text = readFileSync(join(ROOT, file), 'utf8');
+  const here = dirname(join(ROOT, file));
+  for (const m of text.matchAll(/\s(?:href|src)\s*=\s*(?:"([^"]*)"|'([^']*)')/gi)) {
+    const raw = entity(m[1] ?? m[2]).trim();
+    if (!raw || /^([a-z][a-z0-9+.-]*:|#|\/\/)/i.test(raw)) continue;
+    const target = raw.replace(/[?#].*$/, '');
+    if (!target) continue;
+    htmlLinks += 1;
+    if (target.startsWith('/')) {
+      complain(`${file} links to ${raw}, a site-absolute path: the Pages site is not at the domain root, so link relative to the page`);
+      continue;
+    }
+    if (!existsSync(resolve(here, decodeURI(target))))
+      complain(`${file} links to ${raw}, which does not exist. If a generator writes this page ` +
+        '(tools/chronicle.mjs writes docs/portal/chronicle.html), fix the generator and regenerate; otherwise fix the page');
+  }
+}
+
 // --- 2. docs/README.md lists every page under docs/.
 const docsIndex = readFileSync(join(ROOT, 'docs', 'README.md'), 'utf8');
 const docPages = markdown.filter((f) => f.startsWith('docs/') && f !== 'docs/README.md'
@@ -116,5 +148,6 @@ for (const [index, entries] of entriesOf) {
 }
 
 if (failed) process.exit(1);
-console.log(`docs: ${links} links resolve, ${docPages.length} pages indexed, ` +
+console.log(`docs: ${links} links resolve, ${htmlLinks} links in ${pages.length} HTML pages resolve, ` +
+  `${docPages.length} pages indexed, ` +
   `${scripts.length} tool scripts carry an entry in ${indexes.length} tool indexes`);
