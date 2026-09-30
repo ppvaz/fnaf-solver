@@ -154,5 +154,41 @@
       "orphan:packages/kernel/src/types.ts": 1,
       "orphan:packages/propose/src/index.js": 1
     }
+  },
+  "duplication": {
+    "recorded": "2026-09-30",
+    "why": "Pairs of files sharing a run of 6 or more normalised lines when tools/test-duplication.mjs landed; an entry only shrinks.",
+    "entries": {
+      "clone:apps/desktop/bin/fnaf1-custom-run.mjs <> packages/play/games/fnaf3/fnaf3-run.mjs": 14,
+      "clone:apps/desktop/bin/fnaf1-custom-run.mjs <> packages/play/games/fnaf4/fnaf4-run.mjs": 18,
+      "clone:packages/kernel/src/contracts/index.js <> packages/source/src/clockwork/control-contracts.js": 7,
+      "clone:packages/play/bin/grade/tap-stall-audit.mjs <> packages/propose/bin/report/phase-reconstruct.mjs": 8,
+      "clone:packages/play/bin/phone/night-kit.mjs <> packages/play/games/fnaf1/fnaf1-menu-probe.mjs": 12,
+      "clone:packages/play/bin/phone/night-kit.mjs <> packages/play/games/fnaf1/fnaf1-night-run.mjs": 6,
+      "clone:packages/play/bin/recompile/practice-audit.mjs <> packages/propose/bin/census/fnaf1-device-lane.mjs": 6,
+      "clone:packages/play/games/fnaf1/fnaf1-menu-probe.mjs <> packages/play/games/fnaf1/fnaf1-night-run.mjs": 27,
+      "clone:packages/play/games/fnaf3/fnaf3-run.mjs <> packages/play/games/fnaf4/fnaf4-run.mjs": 48,
+      "clone:packages/play/games/fnaf3/fnaf3-run.mjs <> packages/propose/src/games/policy-fnaf3.js": 15,
+      "clone:packages/play/src/sensors/fnaf2/calibration-state-rule.js <> packages/play/src/sensors/fnaf2/camera-rule.js": 6,
+      "clone:packages/play/src/sensors/fnaf2/calibration-state-rule.js <> packages/play/src/sensors/fnaf2/monitor-rule.js": 13,
+      "clone:packages/play/src/sensors/fnaf2/camera-rule.js <> packages/play/src/sensors/fnaf2/monitor-rule.js": 6,
+      "clone:packages/propose/bin/factreplay.mjs <> packages/propose/bin/nightloop-run.mjs": 9,
+      "clone:packages/propose/bin/minus-toys/cycle.mjs <> packages/propose/parked/minus7/cycle.mjs": 6,
+      "clone:packages/propose/bin/plans/minus-3-plan.mjs <> packages/propose/src/strategies/minus-3/model.js": 7,
+      "clone:packages/propose/bin/plans/minus3-frame-light.mjs <> packages/propose/src/strategies/minus-3/route.js": 14,
+      "clone:packages/propose/bin/recompile/compare-schedule-replay.mjs <> packages/propose/bin/recompile/phone-encounter-replay.mjs": 6,
+      "clone:packages/propose/bin/recompile/phone-clock-sweep.mjs <> packages/propose/bin/recompile/phone-encounter-replay.mjs": 6,
+      "clone:packages/propose/bin/recompile/pilot/batch.mjs <> packages/propose/bin/recompile/pilot/record.mjs": 9,
+      "clone:packages/propose/bin/recompile/pilot/batch.mjs <> packages/propose/bin/recompile/pilot/search.mjs": 27,
+      "clone:packages/propose/bin/recompile/pilot/fnaf3.mjs <> packages/propose/bin/recompile/pilot/fnaf4.mjs": 13,
+      "clone:packages/propose/bin/recompile/pilot/record.mjs <> packages/propose/bin/recompile/pilot/search.mjs": 9,
+      "clone:packages/propose/parked/minus7/hid-device-pilot.mjs <> packages/propose/parked/minus7/stock-device-pilot.mjs": 6,
+      "clone:packages/propose/parked/minus7/model.js <> packages/propose/src/strategies/minus-toys/model.js": 26,
+      "clone:packages/propose/parked/minus7/periodicsweep.mjs <> packages/propose/parked/minus7/phasesweep.mjs": 9,
+      "clone:packages/review/bin/grade/post-night-static.mjs <> packages/review/bin/grade/static-terminal-window.mjs": 7,
+      "clone:packages/source/src/games/fnaf1/sim-fnaf1.js <> packages/source/src/games/fnaf3/sim-fnaf3.js": 7,
+      "clone:packages/source/src/games/fnaf1/sim-fnaf1.js <> packages/source/src/games/fnaf4/sim-fnaf4.js": 7,
+      "clone:packages/source/src/games/fnaf3/sim-fnaf3.js <> packages/source/src/games/fnaf4/sim-fnaf4.js": 7
+    }
   }
 }

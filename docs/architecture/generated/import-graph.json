@@ -4402,6 +4402,16 @@
       ]
     },
     {
+      "file": "tools/test-duplication.mjs",
+      "imports": [
+        "./gate-kit.mjs",
+        "node:assert/strict",
+        "node:crypto",
+        "node:fs",
+        "node:path"
+      ]
+    },
+    {
       "file": "tools/test-evidence-cli.mjs",
       "imports": [
         "@sixam/kernel",
