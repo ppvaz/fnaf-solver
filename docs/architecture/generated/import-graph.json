@@ -2365,6 +2365,15 @@
       ]
     },
     {
+      "file": "tools/dump-text-check.mjs",
+      "imports": [
+        "node:child_process",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/encounter-replay.mjs",
       "imports": [
         "../packages/core/src/control/vocabulary.js",
@@ -3196,6 +3205,18 @@
       "imports": [
         "node:child_process",
         "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "tools/test-dump-text-check.mjs",
+      "imports": [
+        "./dump-text-check.mjs",
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:os",
         "node:path",
         "node:url"
       ]

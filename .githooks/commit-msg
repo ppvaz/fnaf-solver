@@ -7,8 +7,22 @@
 # commit, or referenced from a prior commit with EVIDENCE:<path>.
 # PEDRO-OK in the message is the human-only override. Agents never write
 # the key and never bypass this hook (--no-verify, commit -n).
+#
+# Before that lock, every message is checked for copied dump text
+# (tools/dump-text-check.mjs).
 
 msgfile="$1"
+
+# Decompiled dump text (ADR 0002, decision 12): a message may cite g###, a
+# file and a line, and paraphrase, but never copy dump lines. This runs first
+# and on every commit, even one with nothing staged, and PEDRO-OK below waives
+# the consequence lock, not this.
+if ! command -v node > /dev/null 2>&1; then
+  echo "dump-text check: node is not on PATH, so the message cannot be checked." >&2
+  exit 1
+fi
+node "$(dirname "$0")/../tools/dump-text-check.mjs" "$msgfile" || exit 1
+
 staged=$(git diff --cached --name-only)
 [ -z "$staged" ] && exit 0
 
