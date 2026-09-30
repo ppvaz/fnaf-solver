@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 /** Inspect retained session/result bundles without re-entering measurements. */
+import { createHash } from 'node:crypto';
+import { existsSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -21,7 +23,9 @@ const ARTIFACTS = join(ROOT, 'artifacts');
 const PACKS = join(ROOT, PACKS_DIR);
 const SESSION_RESULT_SCHEMAS = new Set(['device-run-result-v1', 'experiment-result-v1']);
 const CLAIM_LEVELS = new Set(['MODEL_ONLY', 'FIXTURE', 'DEVICE_MEASURED']);
-const help = () => console.log('Usage: npm run evidence -- <list|show|diff|replay|why|promote> [RUN_ID]\n'
+const help = () => console.log('Usage: npm run evidence -- <list|show|replay|why|promote> RUN_ID\n'
+  + '       npm run evidence -- diff LEFT_ID RIGHT_ID\n'
+  + '                  (an id is read from artifacts/<id> first, then from the committed pack docs/evidence/runs/<id>)\n'
   + '       npm run evidence -- pack <CAMPAIGN_ID|NIGHT_RUN_LABEL> [--replace] [--timeline GRADED_TIMELINE.json]\n'
   + '       npm run evidence -- attest <PACK_ID> --by agent --note "SESSION OR AGENT" [--replace]\n'
   + '       npm run evidence -- attest <PACK_ID> --by human --name "NAME" [--replace]\n'
@@ -118,6 +122,7 @@ async function loadCampaign(run) {
 // the pack's own hashes, readable on any checkout.
 function loadPack(run) {
   if (!run || !/^[\w.-]+$/.test(run)) throw new Error('a safe RUN_ID is required');
+  if (!existsSync(join(PACKS, run, 'pack.json'))) throw new Error(`${PACKS_DIR}/${run} holds no pack.json`);
   const packed = readPack(join(PACKS, run));
   if (packed.pack.kind === 'fnaf1-run')
     return { kind: 'fnaf1-run', entry: { id: run, kind: 'fnaf1-run', outcome: packed.pack.outcome?.ended ?? null,
@@ -126,18 +131,102 @@ function loadPack(run) {
     files: packed.files, packed };
 }
 
+/** The directories under `base`, or none when it does not exist. */
+const directories = async base => {
+  try { return (await readdir(base, { withFileTypes: true })).filter(item => item.isDirectory()).map(item => item.name); }
+  catch { return []; }
+};
+
+/** Levenshtein distance: the typo a suggestion is ranked by. */
+function editDistance(a, b) {
+  let previous = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i += 1) {
+    const current = [i];
+    for (let j = 1; j <= b.length; j += 1)
+      current[j] = Math.min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    previous = current;
+  }
+  return previous[b.length];
+}
+
+/**
+ * The error for an id that names nothing here, carrying the three nearest ids: those the typed
+ * id is a prefix of first, then by edit distance. `artifacts/` is gitignored, so on a clean
+ * checkout the committed packs are the only candidates.
+ * @param {string} run
+ * @param {{packsOnly?: boolean}} [options]
+ */
+async function unknownRun(run, { packsOnly = false } = {}) {
+  const ids = [...new Set([...(packsOnly ? [] : await directories(ARTIFACTS)), ...await directories(PACKS)])];
+  const nearest = ids.map(name => ({ name, prefix: name.startsWith(run) ? 0 : 1, distance: editDistance(run, name) }))
+    .sort((a, b) => a.prefix - b.prefix || a.distance - b.distance || a.name.localeCompare(b.name))
+    .slice(0, 3).map(item => `  ${item.name}`);
+  return new Error([`no ${packsOnly ? 'pack' : 'run or pack'} named ${run}`,
+    ...(nearest.length ? ['nearest ids:', ...nearest] : ['(this checkout holds no runs and no packs)']),
+    '`npm run evidence -- list` shows them all'].join('\n'));
+}
+
+/**
+ * artifacts/<run> first -- a session, a device bundle or a campaign directory -- then the
+ * committed pack docs/evidence/runs/<run>, so every reading works on a clean checkout. An id
+ * that names neither is refused with the nearest ids, never with a raw ENOENT.
+ */
 async function loadAny(run) {
-  try { return { ...(await load(run)), kind: 'session' }; }
-  catch (sessionError) {
-    try { return await loadDeviceBundle(run); }
-    catch {
-      try { return await loadCampaign(run); }
-      catch {
-        try { return loadPack(run); }
-        catch { throw sessionError; }
-      }
+  if (!run || !/^[\w.-]+$/.test(run) || run.startsWith('.')) throw new Error('a safe RUN_ID is required');
+  const local = existsSync(join(ARTIFACTS, run));
+  const packed = existsSync(join(PACKS, run));
+  if (!local && !packed) throw await unknownRun(run);
+  if (local) {
+    try { return { ...(await load(run)), kind: 'session' }; }
+    catch (sessionError) {
+      try { return await loadDeviceBundle(run); } catch { /* not a bundle: a campaign? */ }
+      try { return await loadCampaign(run); } catch { /* not a campaign: the pack, if one exists */ }
+      if (!packed) throw sessionError;
     }
   }
+  return loadPack(run);
+}
+
+const sha256 = data => createHash('sha256').update(data).digest('hex');
+// What a campaign directory writes (tools/evidence-pack.mjs packs the same four).
+const CAMPAIGN_FILES = ['result.json', 'events.jsonl', 'request.json', 'observations.jsonl'];
+
+/** Where a loaded campaign or pack keeps its text, and what its custody lost. */
+const holder = (run, loaded) => loaded.packed
+  ? { source: 'pack', dir: join(PACKS, run), where: `${PACKS_DIR}/${run}`, custody: packCustody(loaded.packed.pack) }
+  : { source: 'artifacts', dir: join(ARTIFACTS, run), where: `artifacts/${run}`, custody: null };
+
+/** Why a campaign or pack lacks `name`, in words: lost with its custody, or never there. */
+function lacking(place, name) {
+  const lost = place.custody?.lost ?? [];
+  return lost.includes(name)
+    ? `${place.where} holds no ${name}: its custody (${place.custody.kind}) lists it as lost (lost: ${lost.join(', ')})`
+    : `${place.where} holds no ${name}`;
+}
+
+/** A campaign's or pack's text files by the sha256 of the bytes it holds. */
+async function heldFiles(place, loaded) {
+  if (loaded.packed) return new Map(loaded.packed.pack.files.map(file => [file.name, file.sha256]));
+  const held = new Map();
+  for (const name of loaded.files.filter(item => CAMPAIGN_FILES.includes(item)).sort())
+    held.set(name, sha256(await readFile(join(place.dir, name))));
+  return held;
+}
+
+/** The facts two campaigns or packs are compared on, beside their files. */
+function sideView(run, loaded, place) {
+  return { source: place.source, kind: loaded.kind, outcome: loaded.entry.outcome ?? null,
+    claimLevel: loaded.entry.claimLevel ?? null, nights: loaded.entry.nights ?? null,
+    ...(loaded.packed ? { packSha256: loaded.packed.digest, winnerHash: loaded.packed.pack.bundle?.winnerHash ?? null,
+      custody: place.custody } : {}) };
+}
+
+/** Everything one side cannot be compared on: what its pack lost, or a campaign file never written. */
+function unavailable(place, loaded, held) {
+  const { lost } = place.custody ?? { lost: CAMPAIGN_FILES.filter(name => !held.has(name)) };
+  if (!lost.length) return [];
+  return [loaded.packed ? `${place.where} lost ${lost.join(', ')} (custody ${place.custody.kind}); not compared`
+    : `${place.where} holds no ${lost.join(', ')}; not compared`];
 }
 
 async function list() {
@@ -254,6 +343,8 @@ async function main([operation = 'help', first, second]) {
       source: first, ...(prefixAt > 0 ? { prefix: process.argv[prefixAt + 1] } : {}) }), null, 2));
   }
   if (operation === 'attest') {
+    if (first && /^[\w.-]+$/.test(first) && !first.startsWith('.') && !existsSync(join(PACKS, first)))
+      throw await unknownRun(first, { packsOnly: true });
     const by = flag('--by');
     const derivedFor = trackedWinners(ROOT);
     const outcome = attestPack(ROOT, first, derivedFor, { by, note: flag('--note') ?? undefined, name: flag('--name') ?? undefined,
@@ -284,16 +375,40 @@ async function main([operation = 'help', first, second]) {
     return console.log(JSON.stringify(loaded, null, 2));
   }
   if (operation === 'diff') {
-    const [left, right] = await Promise.all([load(first), load(second)]);
-    const changes = [];
-    if (stable(left.result) !== stable(right.result)) changes.push('result');
-    if (stable(left.manifest) !== stable(right.manifest)) changes.push('manifest');
-    return console.log(JSON.stringify({ schema: 'evidence-diff-v1', left: first, right: second, changed: changes }, null, 2));
+    if (!first || !second) throw new Error('diff needs two ids: npm run evidence -- diff LEFT RIGHT');
+    const left = await loadAny(first);
+    const right = await loadAny(second);
+    if (left.kind === 'session' && right.kind === 'session') {
+      const changes = [];
+      if (stable(left.result) !== stable(right.result)) changes.push('result');
+      if (stable(left.manifest) !== stable(right.manifest)) changes.push('manifest');
+      return console.log(JSON.stringify({ schema: 'evidence-diff-v1', left: first, right: second, changed: changes }, null, 2));
+    }
+    // A campaign directory or a committed pack: the text each holds, file by file, beside the
+    // facts its index entry reads. What a pack lost is named, never compared as if empty.
+    const sides = [[first, left], [second, right]];
+    for (const [id, loaded] of sides)
+      if (!['device-campaign', 'fnaf1-run'].includes(loaded.kind))
+        throw new Error(`diff compares two sessions, or two campaigns or packs; ${id} is a ${loaded.kind}`);
+    const [[leftPlace, leftHeld], [rightPlace, rightHeld]] = await Promise.all(sides.map(async ([id, loaded]) => {
+      const place = holder(id, loaded);
+      return [place, await heldFiles(place, loaded)];
+    }));
+    const names = [...new Set([...leftHeld.keys(), ...rightHeld.keys()])].sort();
+    const both = names.filter(name => leftHeld.has(name) && rightHeld.has(name));
+    return console.log(JSON.stringify({ schema: 'evidence-diff-v1', left: first, right: second,
+      changed: both.filter(name => leftHeld.get(name) !== rightHeld.get(name)),
+      onlyLeft: names.filter(name => !rightHeld.has(name)), onlyRight: names.filter(name => !leftHeld.has(name)),
+      unchanged: both.filter(name => leftHeld.get(name) === rightHeld.get(name)),
+      sides: { left: sideView(first, left, leftPlace), right: sideView(second, right, rightPlace) },
+      unavailable: [...unavailable(leftPlace, left, leftHeld), ...unavailable(rightPlace, right, rightHeld)] }, null, 2));
   }
   if (operation === 'replay') {
     const loaded = await loadAny(first);
     if (loaded.kind === 'device-campaign')
       return console.log(`replay=${first} status=NOT_REPLAYABLE reason="a night on the phone is not a deterministic replay; replay its bundle"`);
+    if (loaded.kind === 'fnaf1-run')
+      return console.log(`replay=${first} status=NOT_REPLAYABLE reason="a FNaF 1 night on the phone is not a deterministic replay; its pack holds the runner's record and events only"`);
     if (loaded.kind === 'device-bundle') {
       const { bundle } = loaded;
       return console.log(`replay=${first} evaluations=${bundle.replay.results.length} resultHash=${bundle.manifest.replay.hash} status=REPLAYED`);
@@ -307,8 +422,24 @@ async function main([operation = 'help', first, second]) {
     return console.log(`replay=${result.evidenceId} evaluations=${evaluation.evaluations.length} resultHash=${replayHash} status=REPLAYED`);
   }
   if (operation === 'why') {
-    const { manifest } = await load(first);
-    return console.log(JSON.stringify({ schema: 'causal-trace-v1', run: first, events: manifest.events.map(event => ({ type: event.type, component: event.component, at: event.at, data: event.data })) }, null, 2));
+    const loaded = await loadAny(first);
+    if (loaded.kind === 'session') {
+      const { manifest } = loaded;
+      return console.log(JSON.stringify({ schema: 'causal-trace-v1', run: first, events: manifest.events.map(event => ({ type: event.type, component: event.component, at: event.at, data: event.data })) }, null, 2));
+    }
+    if (loaded.kind === 'device-bundle')
+      throw new Error(`${first} is a compiled device bundle, a plan rather than a run, so it has no causal trace; \`npm run evidence -- replay ${first}\` replays it`);
+    // A campaign directory or a pack: the event rows as the executor (or a FNaF 1 runner) appended
+    // them, verbatim -- their stamps keep their own clocks -- beside the custody they came through.
+    const place = holder(first, loaded);
+    if (!loaded.files.includes('events.jsonl'))
+      throw new Error(`why reads a run's event rows, and ${lacking(place, 'events.jsonl')}`);
+    const text = await readFile(join(place.dir, 'events.jsonl'), 'utf8');
+    const events = text.split('\n').filter(line => line.trim()).map((line, index) => {
+      try { return JSON.parse(line); } catch (error) { throw new Error(`${place.where}/events.jsonl line ${index + 1}: ${error.message}`); }
+    });
+    return console.log(JSON.stringify({ schema: 'causal-trace-v1', run: first, source: place.source, kind: loaded.kind,
+      ...(place.custody ? { custody: place.custody } : {}), events }, null, 2));
   }
   if (operation === 'promote') {
     const loaded = await loadAny(first);

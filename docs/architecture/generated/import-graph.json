@@ -2500,6 +2500,7 @@
         "./evidence-promotion.mjs",
         "@fnaf2-1020/core/contracts",
         "@fnaf2-1020/research",
+        "node:crypto",
         "node:fs",
         "node:fs/promises",
         "node:os",
@@ -3299,6 +3300,18 @@
       "imports": [
         "./evidence-campaign.mjs",
         "node:assert/strict"
+      ]
+    },
+    {
+      "file": "tools/test-evidence-cli.mjs",
+      "imports": [
+        "./evidence-pack.mjs",
+        "./evidence-promotion.mjs",
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:path",
+        "node:url"
       ]
     },
     {
