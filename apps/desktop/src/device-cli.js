@@ -45,6 +45,9 @@ Options:
   --guided      print the one-time Custom Night calibration checklist
   --calibration FILE  measured Custom Night calibration artifact
   --bundle DIR  validated device bundle containing the requested plans
+  --forbid-mechanic ID  campaign only: refuse, before any phone is opened, a bundle whose strategy
+                requires this mechanic (fnaf2.camera-split); repeatable. The bundle's own
+                forbidden mechanics apply too, and the spec and its first event carry them
   --qualification FILE  DEVICE_MEASURED qualification artifact (a qualification-v2 also binds its venue)
   --venue-binding FILE  venue-binding-v1 naming this profile or winner; repeatable. Preflight
                 refuses when the observed venue identity drifted from any binding, and a live
@@ -87,6 +90,7 @@ function parse(argv) {
     requireHelper: true, requireHid: true,
     guided: false, machineOnly: false, armMode: 'blocking', allowSaveReset: false, nightAnchorAimMs: null, nightAnchorMaxK: null, nightAnchorPeriodMs: 1000, nightAnchorStrict: false, nightAnchorAuthorizeOnLatch: false, teachOverlay: false, calibration: undefined, bundle: undefined,
     qualification: undefined, venueBindings: [], bindVenue: undefined, by: undefined, ports: undefined,
+    forbidMechanics: [],
     count: 12, spanMs: 30000, out: undefined, source: 'uptime' };
   for (let index = 0; index < rest.length; index += 1) {
     const item = rest[index];
@@ -138,6 +142,12 @@ function parse(argv) {
       options.venueBindings.push(path);
     }
     else if (item.startsWith('--venue-binding=')) options.venueBindings.push(item.slice('--venue-binding='.length));
+    else if (item === '--forbid-mechanic') {
+      const id = rest[++index];
+      if (!id || id.startsWith('--')) throw new Error('--forbid-mechanic requires a mechanic id');
+      options.forbidMechanics.push(id);
+    }
+    else if (item.startsWith('--forbid-mechanic=')) options.forbidMechanics.push(item.slice('--forbid-mechanic='.length));
     else if (item === '--bind-venue') {
       options.bindVenue = rest[++index];
       if (!options.bindVenue || options.bindVenue.startsWith('--')) throw new Error('--bind-venue requires a file');
@@ -169,6 +179,8 @@ function parse(argv) {
     throw new Error('--bind-venue belongs to preflight');
   if (options.bindVenue !== undefined && options.by === undefined)
     throw new Error('--bind-venue requires --by NAME, who binds the venue');
+  if (options.forbidMechanics.length && options.command !== 'campaign')
+    throw new Error('--forbid-mechanic belongs to campaign');
   return options;
 }
 
@@ -213,15 +225,25 @@ async function campaignBundle(path, spec, profileId) {
     bundleDirectory: resolve(path) };
 }
 
-async function campaignTiming(path, nights) {
-  if (!path) return {};
-  const { validateBundle } = await import(pathToFileURL(join(ROOT, 'packages/propose/bin/plans/bundle.mjs')).href);
+/**
+ * The bundle's timing per night, and the mechanics the run carries: what its
+ * strategy requires and what its build and this run forbid, refused here,
+ * before any phone is opened, when they meet (Pedro, 2026-09-30).
+ * @param {string | undefined} path @param {number[]} nights @param {string[]} forbid
+ */
+async function campaignTiming(path, nights, forbid = []) {
+  if (!path) {
+    if (forbid.length) throw new Error('--forbid-mechanic needs the --bundle it constrains');
+    return { timingByNight: {}, mechanics: undefined };
+  }
+  const { runMechanics, validateBundle } = await import(pathToFileURL(join(ROOT, 'packages/propose/bin/plans/bundle.mjs')).href);
   const validated = validateBundle(resolve(path));
   if (!validated.compiled) throw new Error('campaign bundle has no compiled artifact');
   const requested = new Set(nights);
-  return Object.fromEntries(validated.compiled
+  return { timingByNight: Object.fromEntries(validated.compiled
     .filter(plan => requested.has(plan.night))
-    .map(plan => [String(plan.night), plan.timing]));
+    .map(plan => [String(plan.night), plan.timing])),
+  mechanics: runMechanics(validated.manifest, forbid) };
 }
 
 async function main(argv = process.argv.slice(2)) {
@@ -334,10 +356,10 @@ async function main(argv = process.argv.slice(2)) {
     if (!options.nights.every(Number.isInteger) || options.nights.length < 1 || options.nights.length > 7 ||
         options.nights.some(night => night < 1 || night > 7) || new Set(options.nights).size !== options.nights.length)
       throw new Error('--nights must be a unique set of nights in 1..7');
-    const timingByNight = await campaignTiming(options.bundle, options.nights);
+    const { timingByNight, mechanics } = await campaignTiming(options.bundle, options.nights, options.forbidMechanics);
     const spec = makeCampaignSpec({ profile: selected.id, targetBuild: selected.targetBuild,
       timingByNight, nights: options.nights, maxAttempts: options.maxAttempts, storyStart: options.storyStart,
-      storySaveCursor: options.saveCursor,
+      storySaveCursor: options.saveCursor, ...(mechanics === undefined ? {} : { mechanics }),
       ...(options.night7Dials ? { night7Dials: options.night7Dials } : {}) });
     const machine = new CampaignStateMachine({ spec });
     const calibration = await jsonFile(options.calibration, 'calibration');

@@ -585,13 +585,36 @@ function checkConstraints(strategy, constraints) {
     if (key !== 'forbidMechanics') fail(`constraints has unknown field ${key}`);
   const forbidden = constraints.forbidMechanics ?? [];
   if (!Array.isArray(forbidden)) fail('constraints.forbidMechanics must be an array of mechanic ids');
+  checkMechanics(strategy, STRATEGY_REGISTRY[strategy].requires, forbidden);
+  return { requires: [...STRATEGY_REGISTRY[strategy].requires], forbidden: [...new Set(forbidden)].sort() };
+}
+
+/** @param {string} strategy @param {readonly string[]} requires @param {readonly string[]} forbidden */
+function checkMechanics(strategy, requires, forbidden) {
   for (const id of forbidden)
     if (typeof id !== 'string' || !Object.hasOwn(FNAF2_MECHANICS, id))
       fail(`constraints.forbidMechanics names ${JSON.stringify(id)}, which is not a known FNaF 2 mechanic ` +
         `(${Object.keys(FNAF2_MECHANICS).join(', ')})`);
-  for (const id of STRATEGY_REGISTRY[strategy].requires)
+  for (const id of requires)
     if (forbidden.includes(id))
       fail(`strategy ${strategy} requires ${id} (${FNAF2_MECHANICS[id].name}), which the run's constraints forbid`);
+}
+
+/**
+ * The mechanics a run of this bundle carries to the phone: what its strategy
+ * requires and what the bundle's build and the run forbid, refused when they
+ * meet. Pedro, 2026-09-30: a RunSpec's constraints travel with the bundle
+ * (the manifest records them since that day; an older bundle is read through
+ * the strategy registry, with nothing forbidden), and the campaign checks
+ * them again before it opens the phone.
+ * @param {any} manifest a validated bundle manifest @param {string[]} [forbid] the run's own forbidden mechanics
+ */
+export function runMechanics(manifest, forbid = []) {
+  if (!Array.isArray(forbid)) fail('the run\'s forbidden mechanics must be an array of mechanic ids');
+  const recorded = manifest.mechanics ?? { requires: [...STRATEGY_REGISTRY[normalizeStrategy(manifest.strategy)].requires], forbidden: [] };
+  const forbidden = [...new Set([...recorded.forbidden, ...forbid])].sort();
+  checkMechanics(manifest.strategy, recorded.requires, forbidden);
+  return { requires: [...recorded.requires], forbidden };
 }
 
 function emitterFor(winner, night) {
@@ -690,7 +713,7 @@ function checkGatePlans(gate, emitted) {
 /** @param {any} input @param {string} outDirectory @param {{constraints?: {forbidMechanics?: string[]}}} [options] */
 export function compileBundle(input, outDirectory, { constraints = {} } = {}) {
   const winner = validateWinner(input);
-  checkConstraints(winner.strategy, constraints);
+  const mechanics = checkConstraints(winner.strategy, constraints);
   const out = resolve(outDirectory);
   mkdirSync(out, { recursive: true });
   if (readdirSync(out, { withFileTypes: true }).length > 0) fail(`refusing to overwrite non-empty output ${out}`);
@@ -732,6 +755,7 @@ export function compileBundle(input, outDirectory, { constraints = {} } = {}) {
     winnerHash: stableHash(finalWinner), engineHash: winner.engineHash,
     nights: winner.nights, profile: { id: profile.id, file: 'profile.json', sha256: sha256(profileText) },
     controls: { file: HID_CONTROLS_FILE, schema: HID_CONTROLS_SCHEMA, sha256: sha256(controlsText) },
+    mechanics,
     ...(winner.anchorEpochMs === undefined ? {} : { anchorEpochMs: winner.anchorEpochMs }),
     plans, gate: finalWinner.gate, replay,
     source: { compiler: 'packages/propose/bin/plans/bundle.mjs', registry: Object.keys(STRATEGY_REGISTRY) },
@@ -758,6 +782,17 @@ export function validateBundle(directory, { night } = {}) {
   if (winner.strategy !== manifest.strategy || manifest.policy !== manifest.strategy ||
       manifest.engineHash !== winner.engineHash || !same(winner.nights, manifest.nights))
     fail('manifest strategy/night/engine identity mismatch');
+  // Bundles built before 2026-09-30 record no mechanics; one that does must
+  // still name what its strategy requires, and forbid none of it.
+  if (manifest.mechanics !== undefined) {
+    const { requires, forbidden } = manifest.mechanics ?? {};
+    if (!isRecord(manifest.mechanics) || !Array.isArray(requires) || !Array.isArray(forbidden))
+      fail('manifest mechanics are {requires, forbidden}');
+    if (!same([...requires], [...STRATEGY_REGISTRY[normalizeStrategy(winner.strategy)].requires]))
+      fail(`manifest mechanics require ${requires.join(', ') || 'nothing'}, and the strategy now requires ` +
+        `${STRATEGY_REGISTRY[normalizeStrategy(winner.strategy)].requires.join(', ') || 'nothing'}`);
+    checkMechanics(winner.strategy, requires, forbidden);
+  }
   const source = strategySourceDigest(winner.strategy);
   if (!isRecord(manifest.engine) || manifest.engine.declaredHash !== winner.engineHash ||
       manifest.engine.sourceSha256 !== source.sha256 || !same(manifest.engine.sources, source.sources))

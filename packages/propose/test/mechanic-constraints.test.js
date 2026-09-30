@@ -12,7 +12,7 @@ import { CAMERA_SPLIT, FNAF2_MECHANICS } from '@sixam/source/games/fnaf2/mechani
 import { MANIFEST as MINUS_TOYS } from '@sixam/propose/strategies/minus-toys';
 import { MANIFEST as MINUS_3 } from '@sixam/propose/strategies/minus-3';
 import { MANIFEST as MINUS_7 } from '@sixam/propose/parked/minus7';
-import { STRATEGY_REGISTRY, compileBundle } from '../bin/plans/bundle.mjs';
+import { STRATEGY_REGISTRY, compileBundle, runMechanics } from '../bin/plans/bundle.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '../../..');
@@ -67,12 +67,34 @@ try {
     { constraints: { forbidMechanic: [CAMERA_SPLIT] } }), /constraints has unknown field forbidMechanic/);
 
   // -- the default allows every known mechanic, and a constraint the strategy
-  //    satisfies changes nothing: the bundles are byte-identical.
+  //    satisfies changes only what the manifest records (Pedro, 2026-09-30:
+  //    the constraints travel with the bundle): the plans, profile, controls,
+  //    winner and artifact are byte-identical.
   const minus7 = JSON.parse(readFileSync(MINUS7_WINNER, 'utf8'));
   const bytes = dir => Object.fromEntries(readdirSync(dir).sort().map(file => [file, readFileSync(join(dir, file), 'utf8')]));
   compileBundle(minus7, join(scratch, 'minus7-default'));
   compileBundle(minus7, join(scratch, 'minus7-no-split'), FORBID_SPLIT);
-  assert.deepEqual(bytes(join(scratch, 'minus7-no-split')), bytes(join(scratch, 'minus7-default')));
+  const { 'manifest.json': constrained, ...constrainedFiles } = bytes(join(scratch, 'minus7-no-split'));
+  const { 'manifest.json': plain, ...plainFiles } = bytes(join(scratch, 'minus7-default'));
+  assert.deepEqual(constrainedFiles, plainFiles);
+  assert.deepEqual(JSON.parse(plain).mechanics, { requires: [], forbidden: [] });
+  assert.deepEqual(JSON.parse(constrained).mechanics, { requires: [], forbidden: [CAMERA_SPLIT] });
+  const { mechanics: _drop, ...constrainedRest } = JSON.parse(constrained);
+  const { mechanics: _drop2, ...plainRest } = JSON.parse(plain);
+  assert.deepEqual(constrainedRest, plainRest, 'the constraint is the one thing the two manifests disagree on');
+
+  // -- the campaign's check: a run that forbids what the bundle's strategy
+  //    requires is refused by name; the bundle's own forbidden list rides
+  //    along; a bundle from before the manifest recorded mechanics is read
+  //    through the strategy registry.
+  const toys = compileBundle(fixture('minus-toys', [2]), join(scratch, 'toys')).manifest;
+  assert.deepEqual(toys.mechanics, { requires: [CAMERA_SPLIT], forbidden: [] });
+  assert.deepEqual(runMechanics(toys), { requires: [CAMERA_SPLIT], forbidden: [] });
+  assert.throws(() => runMechanics(toys, [CAMERA_SPLIT]), error => refusal('minus-toys').test(String(error)));
+  assert.deepEqual(runMechanics(JSON.parse(constrained)), { requires: [], forbidden: [CAMERA_SPLIT] });
+  const { mechanics: _old, ...older } = toys;
+  assert.deepEqual(runMechanics(older), { requires: [CAMERA_SPLIT], forbidden: [] });
+  assert.throws(() => runMechanics(older, [CAMERA_SPLIT]), error => refusal('minus-toys').test(String(error)));
 
   // -- `npm run device:emit` takes the constraint and refuses the same way.
   const emitted = spawnSync(process.execPath, [EMIT, '--winner', K3, '--out', join(scratch, 'k3'),
@@ -85,4 +107,5 @@ try {
 }
 
 console.log('mechanic constraints: Source names fnaf2.camera-split, Minus Toys and Minus 3 require it, ' +
-  'a build that forbids it refuses them by name, and the default and a satisfied constraint build identical bundles');
+  'a build that forbids it refuses them by name, a satisfied constraint differs only in what the manifest records, ' +
+  'and a run that forbids what its bundle requires is refused, old bundles included');

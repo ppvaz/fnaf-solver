@@ -121,16 +121,37 @@ export function validateCampaignSpec(value) {
     fail('retry.maxAttempts must be an integer in 1..5');
   if (value.proof?.requireSixAm !== true || value.proof?.requireSaveOrMenu !== true)
     fail('proof must require positive six-AM and save/menu evidence');
+  if (value.mechanics !== undefined) validateMechanics(value.mechanics);
   return value;
+}
+
+/**
+ * The mechanics a run carries from its bundle (Pedro, 2026-09-30: a RunSpec's
+ * constraints travel with the bundle): what the strategy requires and what
+ * the build and the run forbid, never both.
+ * @param {any} mechanics
+ */
+function validateMechanics(mechanics) {
+  const ids = (value, label) => {
+    if (!Array.isArray(value) || value.some(id => typeof id !== 'string' || id.trim() === ''))
+      fail(`mechanics.${label} must list mechanic ids`);
+    return value;
+  };
+  if (!isRecord(mechanics) || Object.keys(mechanics).some(key => key !== 'requires' && key !== 'forbidden'))
+    fail('mechanics is {requires, forbidden}');
+  const forbidden = ids(mechanics.forbidden, 'forbidden');
+  const clash = ids(mechanics.requires, 'requires').filter(id => forbidden.includes(id));
+  if (clash.length) fail(`the run forbids ${clash.join(', ')}, which its strategy requires`);
 }
 
 /** Construct a reviewed campaign over any consecutive story-night chain. */
 /** @param {{profile?: string, targetBuild?: string, maxAttempts?: number, night6MenuTarget?: string,
  *   timingByNight?: Record<string, object>, nights?: number[], storyStart?: string,
- *   storySaveCursor?: number, night7Dials?: Record<string, number>}} options */
+ *   storySaveCursor?: number, night7Dials?: Record<string, number>,
+ *   mechanics?: {requires: string[], forbidden: string[]}}} options */
 export function makeCampaignSpec({ profile, targetBuild, maxAttempts = 3,
   night6MenuTarget = 'sixthNight', timingByNight = {}, nights = [...DEFAULT_CAMPAIGN_NIGHTS],
-  storyStart = undefined, storySaveCursor = undefined, night7Dials = undefined } = {}) {
+  storyStart = undefined, storySaveCursor = undefined, night7Dials = undefined, mechanics = undefined } = {}) {
   text(profile, 'profile');
   text(targetBuild, 'targetBuild');
   if (!['continue', 'sixthNight'].includes(night6MenuTarget))
@@ -180,6 +201,7 @@ export function makeCampaignSpec({ profile, targetBuild, maxAttempts = 3,
     nights: entries,
     retry: { maxAttempts },
     proof: { requireSixAm: true, requireSaveOrMenu: true },
+    ...(mechanics === undefined ? {} : { mechanics: { requires: [...mechanics.requires], forbidden: [...mechanics.forbidden] } }),
   });
 }
 
@@ -252,7 +274,11 @@ export class CampaignStateMachine {
     return this.snapshot();
   }
 
-  startPreflight() { return this.transition('PREFLIGHT'); }
+  // The run's mechanics go in the first event, so the result -- and the pack
+  // made from it -- names them, as the spec hash covers them.
+  startPreflight() {
+    return this.transition('PREFLIGHT', this.spec.mechanics ? { mechanics: structuredClone(this.spec.mechanics) } : {});
+  }
 
   /** @param {any} result */
   acceptPreflight(result) {

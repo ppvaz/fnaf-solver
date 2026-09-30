@@ -240,5 +240,27 @@ play(bare);
 bare.acceptTerminal({ night: 6, outcome: 'invalid' });
 assert.equal(bare.state, 'HOLD');
 assert.equal(bare.events.at(-1).data.reason, 'terminal-invalid-without-reason');
+// Pedro, 2026-09-30: a RunSpec's constraints travel with the bundle. The spec
+// carries the mechanics the bundle's strategy requires and the ones the build
+// and the run forbid, its hash covers them, a spec that forbids what it
+// requires is refused, and the first event names them, so the result and the
+// pack made from it do.
+const mechanics = { requires: ['fnaf2.camera-split'], forbidden: [] };
+const carried = makeCampaignSpec({ profile: 'hid-mediaprojection', targetBuild: 'com.scottgames.fnaf2:2.0.7+26',
+  nights: [7], mechanics });
+assert.deepEqual(carried.mechanics, mechanics);
+const unconstrained = makeCampaignSpec({ profile: 'hid-mediaprojection', targetBuild: 'com.scottgames.fnaf2:2.0.7+26', nights: [7] });
+assert.equal(unconstrained.mechanics, undefined, 'a spec without a bundle records no mechanics');
+assert.throws(() => makeCampaignSpec({ profile: 'hid-mediaprojection', targetBuild: 'com.scottgames.fnaf2:2.0.7+26',
+  nights: [7], mechanics: { requires: ['fnaf2.camera-split'], forbidden: ['fnaf2.camera-split'] } }),
+/the run forbids fnaf2\.camera-split, which its strategy requires/);
+assert.throws(() => validateCampaignSpec({ ...carried, mechanics: { requires: [], forbidden: [], extra: [] } }),
+  /mechanics is \{requires, forbidden\}/);
+const carrying = new CampaignStateMachine({ spec: carried });
+carrying.startPreflight();
+assert.deepEqual(carrying.result().events[0].data.mechanics, mechanics, 'the first event names the run\'s mechanics');
+assert.notEqual(carrying.result().specHash, new CampaignStateMachine({ spec: unconstrained }).result().specHash,
+  'the spec hash covers the mechanics');
+
 console.log('device campaign: target validation, lifecycle gates, retry boundary, story Nights 1..5 chain, completion proof, ' +
-  'and Invalid runs that spend no attempt and hold when consecutive pass');
+  'Invalid runs that spend no attempt and hold when consecutive, and the bundle\'s mechanics carried in the spec pass');

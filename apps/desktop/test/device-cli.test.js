@@ -76,5 +76,28 @@ try {
   assert.match(bound.stdout, /\nvenue UNKNOWN \(dry run: no phone is opened, .*\): a live run compares the phone with profile fixture-hid-screencap and refuses on drift$/m);
 } finally { rmSync(scratch, { recursive: true, force: true }); }
 
+// Pedro, 2026-09-30: a RunSpec's constraints travel with the bundle. The dry
+// run's spec carries the k3 bundle's mechanics, and a run that forbids the
+// split its strategy requires is refused before any phone is opened.
+const k3 = join(ROOT, 'packages/propose/bindings/fnaf2/campaign-night7-k3-winner.json');
+const bundles = mkdtempSync(join(tmpdir(), 'device-cli-mechanics-'));
+try {
+  const emitted = spawnSync(process.execPath, [join(ROOT, 'packages/propose/bin/plans/emit.mjs'),
+    '--winner', k3, '--out', join(bundles, 'k3')], { cwd: ROOT, encoding: 'utf8' });
+  assert.equal(emitted.status, 0, emitted.stderr);
+  const dry = run(['campaign', '--bundle', join(bundles, 'k3'), '--nights', '7', '--profile', 'hid-mediaprojection', '--json']);
+  assert.equal(dry.status, 0, dry.stderr);
+  assert.deepEqual(JSON.parse(dry.stdout).spec.mechanics, { requires: ['fnaf2.camera-split'], forbidden: [] });
+  const refused = run(['campaign', '--bundle', join(bundles, 'k3'), '--nights', '7', '--profile', 'hid-mediaprojection',
+    '--forbid-mechanic', 'fnaf2.camera-split', '--live', '--confirm-live']);
+  assert.notEqual(refused.status, 0);
+  assert.match(refused.stderr, /strategy minus-toys requires fnaf2\.camera-split \(the double-camera glitch\), which the run's constraints forbid/);
+  assert.doesNotMatch(refused.stdout + refused.stderr, /preflight|adb/i, 'refused before any phone is opened');
+  const stray = run(['preflight', '--forbid-mechanic', 'fnaf2.camera-split']);
+  assert.notEqual(stray.status, 0);
+  assert.match(stray.stderr, /--forbid-mechanic belongs to campaign/);
+} finally { rmSync(bundles, { recursive: true, force: true }); }
+
 console.log('device CLI: help is side-effect free, unknown, missing and retired commands fail closed, ' +
-  'a venue binding is refused without its author, and the dry run reports the venue it did not check');
+  'a venue binding is refused without its author, the dry run reports the venue it did not check, and a run ' +
+  'carries its bundle\'s mechanics and is refused before the phone when it forbids one its strategy requires');
