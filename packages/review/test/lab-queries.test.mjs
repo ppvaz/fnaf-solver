@@ -29,7 +29,7 @@ const cases = [
   [['packages/play/src/campaign/campaign.js'], 'UNKNOWN', 'controller code with no gate beside it'],
   [['apps/trainer/src/app.js', 'docs/x.md'], 'UNKNOWN', 'trainer code with no gate beside it'],
   [['packages/core/src/mechanics/plant-model.js', 'packages/core/test/foxy.test.js'], 'bookkeeping', 'model code and a test, no record'],
-  [['tools/device/test-seam-slack.mjs', '.githooks/commit-msg'], 'bookkeeping', 'gates alone'],
+  [['packages/propose/test/test-seam-slack.mjs', '.githooks/commit-msg'], 'bookkeeping', 'gates alone'],
   [[], 'bookkeeping', 'nothing changed'],
 ];
 for (const [paths, expected, why] of cases) {

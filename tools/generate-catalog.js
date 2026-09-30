@@ -48,7 +48,7 @@ const commandRegistry = Object.entries(rootPackage.scripts).map(([id, command]) 
 const SCRIPTS_HEADING = '\n## Scripts\n';
 const scriptsReadmes = files.map(path => relative(ROOT, path))
   .filter(path => /^(?:packages|apps)\/[^/]+\/README\.md$/.test(path)).sort();
-const toolIndexes = ['tools/README.md', 'tools/cue/README.md', 'tools/device/README.md', 'packages/source/decompile/README.md', ...scriptsReadmes];
+const toolIndexes = ['tools/README.md', 'tools/device/README.md', 'packages/source/decompile/README.md', ...scriptsReadmes];
 const toolsIndex = (await Promise.all(toolIndexes.map(async path => {
   const text = await readFile(join(ROOT, path), 'utf8');
   return scriptsReadmes.includes(path) ? (text.split(SCRIPTS_HEADING)[1] ?? '').split('\n## ')[0] : text;
@@ -61,9 +61,9 @@ const protocols = contractRegister.contracts.filter(item => ['wire', 'process'].
 const contractEvidence = {
   'plant-model-v1': ['packages/source/test/sourcetest.mjs', 'packages/source/test/simtest.mjs'],
   'semantic-control-v1': ['packages/source/test/contracts.test.js', 'packages/source/test/control-catalog.test.js',
-    'tools/device/test-policy-interpreter.mjs'],
-  'policy-program-v1': ['tools/policygrammartest.mjs', 'tools/device/test-policy-ir.mjs'],
-  'controller-v1': ['tools/reactivetest.mjs', 'packages/propose/test/cycle-controller.test.js'],
+    'packages/propose/bin/policy/test-policy-interpreter.mjs'],
+  'policy-program-v1': ['packages/propose/test/policygrammartest.mjs', 'packages/propose/bin/policy/test-policy-ir.mjs'],
+  'controller-v1': ['packages/propose/test/reactivetest.mjs', 'packages/propose/test/cycle-controller.test.js'],
   'qualification-v1': ['packages/source/test/contracts.test.js', 'packages/kernel/test/venue-identity.test.js'],
   'qualification-v2': ['packages/kernel/test/venue-identity.test.js', 'packages/play/test/venue-preflight.test.js'],
   'venue-identity-v1': ['packages/kernel/test/venue-identity.test.js', 'packages/play/test/android-venue.test.js'],
@@ -71,19 +71,19 @@ const contractEvidence = {
   'venue-binding-v1': ['packages/kernel/test/venue-identity.test.js', 'packages/play/test/venue-preflight.test.js'],
   'state-estimate-v1': ['packages/play/test/estimator.test.js'],
   'clock-v1': ['packages/play/test/phase-clock.test.js'],
-  'device-profile-v1': ['tools/device/test-bundle.mjs', 'packages/play/test/profile-game.test.js'],
+  'device-profile-v1': ['packages/propose/test/test-bundle.mjs', 'packages/play/test/profile-game.test.js'],
   'telemetry-event-v1': ['packages/kernel/test/factlinktest.mjs'],
   'session-manifest-v1': ['packages/play/bin/phone/test-session-manifest.sh'],
   'experiment-spec-v1': ['packages/propose/test/experiment.test.js'],
   'experiment-result-v1': ['packages/propose/test/experiment.test.js'],
-  'winner-v1': ['tools/device/test-bundle.mjs'],
-  'device-bundle-v1': ['tools/device/test-bundle.mjs'],
-  'device-artifact-v1': ['tools/device/test-bundle.mjs'],
+  'winner-v1': ['packages/propose/test/test-bundle.mjs'],
+  'device-bundle-v1': ['packages/propose/test/test-bundle.mjs'],
+  'device-artifact-v1': ['packages/propose/test/test-bundle.mjs'],
   'trainer-trace-v1': ['apps/trainer/test/tracereport.mjs'],
   'artifact-ref-v1': ['tools/evidence.js'],
   'claim-evidence-v1': ['tools/evidence.js'],
   'companion-status-v1': ['packages/play/test/companion-status.test.js', 'android/companion/test/com/ppvaz/fnafcompanion/CompanionStatusTest.java'],
-  'cue-helper-control-v1': ['tools/cue/test-cue.py'],
+  'cue-helper-control-v1': ['packages/propose/parked/minus7/cue/test-cue.py'],
   'fact-message-v1': ['packages/source/test/fixtures/fact-message-v1.jsonl'],
   'hid-executor-v1': ['packages/play/test/conformance.test.js', 'packages/play/test/adb-device-local-executor.test.js'],
   'device-executor-v1': ['packages/play/test/adb-device-local-executor.test.js', 'packages/play/test/profile-game.test.js'],
@@ -200,10 +200,10 @@ for (const path of sourceFiles.filter(path => /(?:test|check|spec)[^/]*\.(?:mjs|
       : path.includes('packages/play') ? '@sixam/play'
       : path.includes('packages/kernel') ? '@sixam/kernel' : path.includes('packages') ? 'package boundary' : 'legacy migration',
     timeoutMs: lane === 'test:browser:realtime' ? 360000
-      : id === 'tools/ventreacttest.mjs' ? 900000
-        : id === 'tools/minus7/test-search.mjs' ? 600000
-        : id === 'tools/reactivetest.mjs' ? 300000
-          : id === 'tools/device/test-human-gate.mjs' ? 240000 : 180000,
+      : id === 'packages/propose/bin/ventreacttest.mjs' ? 900000
+        : id === 'packages/propose/parked/minus7/test-search.mjs' ? 600000
+        : id === 'packages/propose/test/reactivetest.mjs' ? 300000
+          : id === 'packages/propose/bin/plans/test-human-gate.mjs' ? 240000 : 180000,
     timeoutSource: 'tools/test.mjs per-test watchdog',
     deterministic: nondeterministic.length === 0,
     determinismSignals: nondeterministic,
@@ -215,7 +215,7 @@ for (const path of sourceFiles.filter(path => /(?:test|check|spec)[^/]*\.(?:mjs|
 }
 const duplicateResponsibilities = [
   { responsibility: 'canonical mechanics', owner: '@sixam/source', legacy: [] },
-  { responsibility: 'semantic policy IR', owner: '@sixam/propose', legacy: ['tools/device/policy-ir.mjs'] },
+  { responsibility: 'semantic policy IR', owner: '@sixam/propose', legacy: ['packages/propose/bin/policy/policy-ir.mjs'] },
   { responsibility: 'physical actuation', owner: '@sixam/play', legacy: ['packages/play/bin/phone/actuator.mjs'] },
   { responsibility: 'device composition', owner: '@sixam/desktop', legacy: ['packages/propose/bin/plans/recipe.mjs'] },
   { responsibility: 'research execution', owner: '@sixam/propose', legacy: ['tools/*search*', 'tools/*sweep*', 'tools/*probe*'] },
@@ -298,28 +298,28 @@ const legacyPaths = [
     notes: 'Still used by the bundle compiler, so removal is blocked until extraction.',
   },
   {
-    id: 'device.policy-ir-module', path: 'tools/device/policy-ir.mjs', category: 'policy',
+    id: 'device.policy-ir-module', path: 'packages/propose/bin/policy/policy-ir.mjs', category: 'policy',
     lifecycle: 'transitional', owner: '@sixam/propose',
     replacement: 'the policy-program contract in `@sixam/propose/policy` and the propose experiment emitter',
     removalGate: 'P3 policy vocabulary migration and fixed-seed artifact equivalence',
     notes: 'Compatibility policy builder retained while policy ownership moves out of tools.',
   },
   {
-    id: 'research.stock-device-pilot', path: 'tools/model/stock-device-pilot.mjs', category: 'research',
+    id: 'research.stock-device-pilot', path: 'packages/propose/parked/minus7/stock-device-pilot.mjs', category: 'research',
     lifecycle: 'legacy', owner: '@sixam/propose',
     replacement: 'experiment spec/runner with an explicit historical actuator model',
     removalGate: 'Historical sweeps have structured, replayable experiment artifacts',
     notes: 'Retired swipe-era schedule report; it is not a selectable device route.',
   },
   {
-    id: 'research.minus-toys-alias', path: 'tools/minustoystest.mjs', category: 'research-alias',
+    id: 'research.minus-toys-alias', path: 'packages/propose/bin/minustoystest.mjs', category: 'research-alias',
     lifecycle: 'compatibility', owner: '@sixam/propose',
     replacement: 'npm run research -- minus-toys',
     removalGate: 'Package structured artifacts and fixed-seed output are equivalent',
     notes: 'Compatibility alias for the propose package family evaluator (packages/propose/src/experiment/families/).',
   },
   {
-    id: 'research.minus-two-alias', path: 'tools/minus2test.mjs', category: 'research-alias',
+    id: 'research.minus-two-alias', path: 'packages/propose/bin/minus2test.mjs', category: 'research-alias',
     lifecycle: 'compatibility', owner: '@sixam/propose',
     replacement: 'npm run research -- minus-two',
     removalGate: 'Package structured artifacts and fixed-seed output are equivalent',

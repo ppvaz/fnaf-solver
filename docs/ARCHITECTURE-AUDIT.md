@@ -22,7 +22,7 @@ verified directly.
 ## 1. The model gate passes on its seed block, not on the model
 
 **Measured, not inferred.** `human-gate.mjs` evaluates the plan on seeds
-1..`GATE_RUNS` with `GATE_RUNS = 100` (`tools/device/human-gate.mjs:45,108`).
+1..`GATE_RUNS` with `GATE_RUNS = 100` (`packages/propose/bin/plans/human-gate.mjs:45,108`).
 `test-human-gate.mjs:77-79` asserts the shipped Night 6 plan clears
 `GATE_MIN_SURVIVAL = 0.40` on exactly that block, and CI runs it.
 
@@ -76,7 +76,7 @@ block table remains above as the evidence for widening the sample.
 block 1..100 is a biased sample of the Fusion LCG's state space. It is not. The
 map `s -> (s*31415+1) mod 2^16` decomposes into exactly 4 cycles of 16,384, and
 seeds 1..100 hit them 25/25/25/25 — identical to the spread seeds
-`i*2246822519` the search tools use (`tools/cyclesearch.mjs:87`). The seed block
+`i*2246822519` the search tools use (`packages/propose/parked/minus7/cyclesearch.mjs:87`). The seed block
 is unbiased; it is simply too small.
 
 ---
@@ -175,7 +175,7 @@ read as coverage. Seven paths through it still do:
 - **`camtrace.py`** can only exit non-zero via `--expected`
   (`camtrace.py:126-127`), which `grade-run.sh:148` does not pass. The "camera
   selections" step cannot fail.
-- **`tools/cue/detect.py:279-284`** places the `if not refs` guard *before* the
+- **`packages/propose/parked/minus7/cue/detect.py:279-284`** places the `if not refs` guard *before* the
   `--only` filter. `scan-night.sh:79` always passes `--only 17`. If `s0017.wav`
   is missing while other refs are present, `refs` is empty after the filter and
   nothing re-checks; the scan prints a complete, correctly formatted bang report
@@ -566,7 +566,7 @@ Recorded so they can be dropped rather than carried:
   `fast-swipe` branch and is stale against the shipped route. CLAUDE.md already
   flags `pilottest` as a research model, so this is documented drift — but the
   file's own header still asserts it replays "that exact table". A comment fix.
-- **`tools/cue/evaluate.py:102-113`** takes an argmax with no threshold on a
+- **`packages/propose/parked/minus7/cue/evaluate.py:102-113`** takes an argmax with no threshold on a
   control window that by construction contains no cue. Offline harness; its
   docstring flags the false positives.
 - **`grid-signature.py:156-159`** derives its abstain band from the frames the

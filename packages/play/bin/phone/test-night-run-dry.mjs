@@ -130,7 +130,9 @@ try {
 
   // --- the FNaF 1, 3 and 4 wrappers: dry, and serial-less refusals ------------------
   // Each is a thin lease wrapper around a Node runner with the same contract.
-  const wrapperPath = name => `packages/play/games/${name.split('-')[0]}/${name}`;
+  // The Custom Night runner composes Play with Propose's grid420, so it is the desktop's.
+  const wrapperPath = name => (name === 'fnaf1-custom-run.sh' ? `apps/desktop/bin/${name}`
+    : `packages/play/games/${name.split('-')[0]}/${name}`);
   const wrappers = {
     'fnaf1-night-run.sh': { live: ['--bt-audio', '--teach-overlay', '--night', '1', '--cursor-observed', '1'] },
     'fnaf1-custom-run.sh': { live: ['--dials', '0,0,0,0', '--mode', 'calibrate-empty'] },

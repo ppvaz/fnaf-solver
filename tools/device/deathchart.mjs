@@ -29,7 +29,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { writeFileSync, existsSync } from 'node:fs';
 import { chromeBinary, chromeAvailable } from '../chrome.mjs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { modelGate, GATE_RUNS, HUMAN_SLACK_MS } from './human-gate.mjs';
+import { modelGate, GATE_RUNS, HUMAN_SLACK_MS } from '../../packages/propose/bin/plans/human-gate.mjs';
 import { formatRate } from '../../packages/review/src/stat.mjs';
 import * as C from '@sixam/source/fnaf2';
 

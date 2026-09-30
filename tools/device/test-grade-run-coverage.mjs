@@ -25,39 +25,15 @@ const EXCLUDED = new Map([
   ['office-seed-bracket.py', 'the office frame seed bracket from a live MMFRuntime logcat; consumed by the seed-lock scorer, not by a run grade yet -- it joins grade-run.sh once runs retain mmfruntime.logcat'],
   ['grade-run.sh', 'the pipeline itself'],
   ['fact-register.mjs', 'a generated register of which producer answers each semantic fact and on what evidence; it reads source, not a run, and test-fact-register.mjs is the gate over it'],
-  ['test-seam-slack.mjs', 'a gate, not an instrument: it audits compiled plans and the timing floors themselves, and is registered in npm run test:unit'],
   ['test-anchor-aim-band.mjs', 'a gate, not an instrument: it multiplies each ANCHOR_AIMS entry out through its own onset bias and input latency and checks the effective epoch lands in a confirmed winning band. It reads the register and evidence records, never a run; registered in npm run test:unit'],
-  ['test-schedule-economy.mjs', 'a gate, not an instrument: it derives a night prefix from aiUpdates and a box safe-stop from the drain table, then audits emitted plans against them. It reads source and the model, never a run; registered in npm run test:unit'],
-  ['strategy-night-matrix.mjs', 'a coverage report over the emitters, not a grader of a run: it asks which (strategy, night) cells the registered emitters can compile against the resolved profile and what the emitted plan scores in its own replay. It reads source and the model, never a recording, and it sends no input -- the nearest analogue here is capabilities.mjs, which asks the same shape of question about the phone'],
-  ['death-prediction.mjs', 'runs BEFORE a run, not after it: writes the model\'s death prediction (killer shares, time quantiles over phases) that night-run.sh retains as prediction.json; grading reads that file, it does not regenerate it -- gated by test-bundle.mjs through the DEATH_TARGETED gate it produces'],
   ['tickphase.py', 'reads the retained Bluetooth audio (night-run.sh --bt-audio) after a run: roll-witness onsets and WinD folds. Run by hand while its thresholds and the clock-rate correction are being calibrated (2026-09-13); it joins grade-run.sh once a fold-based phase read survives a second run'],
-  ['epoch-scan.mjs', 'runs BEFORE a run: a model census over release epochs (the bands an anchor aim is priced on); never reads a recording'],
   ['cycle-ledger.py', 'reads the retained video (and audio census) after a run; run by hand while its flash classes and colour rule are calibrated on Night 6 recordings (2026-09-13); its cycle timings come from the winner of the bundle the run names (test-cycle-ledger.py, 2026-09-14); joins grade-run.sh with tickphase.py'],
-  ['night7-presets.mjs', 'a model scorer that runs BEFORE any run and never reads a recording: it replays the Minus Toys schedule against the ten Custom Night presets over a fixed seed cohort, in an exact lane and an actuator lane, to price the route and its timing floors. It sends no input to a phone. The gate over it is test-night7-presets.mjs, registered in npm run test:unit'],
-  ['night7-robustness.mjs', 'a model scorer that runs BEFORE any run and never reads a recording: it ranks the preset schedule and the committed Night 7 bindings by phase band, per-press lateness and +-60 ms jitter over held-out seeds. It sends no input to a phone. The gate over its record is test-night7-presets.mjs, registered in npm run test:unit'],
-  ['night7-robustness-field.mjs', 'MODEL_ONLY per-event robustness field and jitter/lateness census over held-out seeds with the measured mask floor; it never reads a recording, and test-night7-presets.mjs check 7 replays its retained record'],
   ['death-census.py', 'cross-run census -- answers "what keeps happening", not "what happened in this run"'],
   ['static-terminal-window.mjs', 'cross-pack census over committed run packs that derives the executor\'s static-to-terminal window, not a per-run instrument; test-static-terminal-window.mjs (npm run test:unit) reproduces its record'],
   ['post-night-static.mjs', 'cross-pack census over committed run packs that decides the executor\'s post-night static halt (whether a night ever went on after a post-night static), not a per-run instrument; test-post-night-static.mjs (npm run test:unit) reproduces its record'],
   ['deathchart.mjs', 'charts the model gate\'s death census for a PLAN under modeled human slack -- a simulator result with no run artifact to read; gated by test-deathchart.mjs'],
   ['find-events.py', 'mask-camp trial scrubber, not a night-run grader'],
   ['index-observations.py', 'read-only corpus inventory; indexes artifacts rather than grading one run'],
-  ['device-lane.mjs', 'MODEL_ONLY scorer of the compiled HID schedule through the simulator and measured actuator constraints, with an explicit merged-press hypothesis; it never reads a recording or grades a completed run, and its HID constraints are exercised by hid-read-gap.test.js and hid-second-contact.test.js'],
-  ['bb-cue-state.mjs', 'pure BB route uncertainty state machine, gated by test-bb-cue-state.mjs'],
-  ['gate-worker.mjs', 'pure worker for test-night-matrix.mjs; it simulates gate chunks and has no run artifacts to grade'],
-  ['windtrace.mjs', 'grades a MODEL, not a run: it replays the plan and reports what fraction of its wind frames the engine credited. There is no device counterpart -- the box level is not observable on the phone beyond the CAM 11 pie that windpct.py reads -- so grade-run.sh has nothing to hand it'],
-  ['policy-ir.mjs', 'finite policy artifact builder, gated by test-policy-ir.mjs; it creates a program rather than grading a run'],
-  ['policy-interpreter.mjs', 'finite semantic compiler and exact-engine adapter, gated by test-policy-interpreter.mjs; it consumes policy data rather than a device run'],
-  ['policy-grammar.mjs', 'finite policy grammar library, gated by tools/policygrammartest.mjs; it validates candidates rather than grading a device run'],
-  ['policy-equivalence.mjs', 'IR/device/mock-phone equivalence compiler, gated by tools/policyequivalencetest.mjs; it audits artifacts rather than grading a device run'],
-  ['policy-search.mjs', 'explicit-dimension structural search library, gated by tools/policysearchtest.mjs; it emits a campaign report rather than grading a live run'],
-  ['policy-artifact.mjs', 'compiled policy artifact builder/verifier, gated by tools/policyartifacttest.mjs; it creates execution provenance rather than grading a device run'],
-  ['fnaf1-custom-run.mjs', 'FNaF 1 Custom Night runner (calibrate-empty, grid420) behind fnaf1-custom-run.sh; an executor, gated by test-native-regions.mjs'],
-  ['test-native-regions.mjs', 'the gate for the REGION codec, the FNaF 1 classifier and the runner refusals; runs in npm run test:unit'],
-  ['fnaf1-teach-media.py', 'cuts a FNaF 1 run video into a README GIF and phone videos; a presentation tool, not a grader'],
-  ['minus-toys-margin.mjs', 'per-instruction timing margin map for the Minus Toys plan -- a model analysis, no run artifact to read; gated by test-minus-toys-margin.mjs'],
-  ['minus-toys-jitter.mjs', 'robustness evaluator for the Minus Toys plan -- replays the model under a calibrated clock-error ensemble, no run artifact to read; gated by test-minus-toys-jitter.mjs'],
-  ['human-gate.mjs', 'pre-flight gate on plan files, gated by test-human-gate.mjs'],
   ['death-cause.py', 'shadow-only labelled visual-cause model builder used by run-timeline.py when explicitly supplied; it builds a model rather than grading a run, gated by test-death-cause.py'],
   ['framesource.py', 'the one frame source every video instrument decodes through (ffmpeg privately, or the shared single decode when the pipeline offers a pipe); a library, gated by test-framesource.py'],
   ['session-manifest.py', 'the manifest producer -- grade-run.sh consumes its output through validate-session.py; gated by test-session-manifest.sh'],
@@ -67,30 +43,24 @@ const EXCLUDED = new Map([
   // "nothing runs" complaints. Each reason below was checked against the
   // gate or caller it names -- an unchecked reason is the drawer problem
   // again, and four earlier exclusions cited gates that did not run.
-  ['closed-families.mjs', 'closed-family duplicate control imported by policy-search.mjs, gated by tools/observationlanguagetest.mjs'],
-  ['minus3-frame-light.mjs', 'the device-proven Minus 3 frame-light recipe and its edge-hash checks, gated by test-minus3-frame-light.mjs'],
   ['overnight-window.py', 'a forwarder to apps/lab/overnight-window.py, kept while a host\'s installed systemd units name this path (legacy-paths.json lab.overnight-window-path); the window itself is gated in apps/lab'],
   ['validate-session.py', 'Plan 09 session-manifest validator, run by session-manifest.py when a session producer (collect-cue-audio.sh, capture-screen-sample.sh) finalizes; night-run.sh writes no session manifest, so no night has one to grade; gated by test-validate-session.py'],
 ]);
 
 // The sibling directories, under the same rule. The audit that widened this scan noted the
-// hole: CLAUDE.md's purest "instrument nobody runs" example is tools/cue/detect.py, and this
+// hole: CLAUDE.md's purest "instrument nobody runs" example is packages/propose/parked/minus7/cue/detect.py, and this
 // check did not look at it. A script that leaves tools/device for its context (ADR 0002) is
 // followed there with its exclusion, so moving a script is never how it leaves coverage.
-const SIBLINGS = ['../cue', '../../packages/source/decompile', '../../packages/propose/bin/plans',
+const SIBLINGS = ['../../packages/source/decompile',
+  ...['bin/plans', 'bin/policy', 'bin/report', 'parked/minus7/cue'].map(dir => `../../packages/propose/${dir}`),
   ...['bin/phone', 'bin/companion', 'bin/probe', 'bin/calibrate', 'bin/audio', 'games/fnaf1', 'games/fnaf3',
-    'games/fnaf4', 'src/sensors/screencap', 'test'].map(dir => `../../packages/play/${dir}`)];
+    'games/fnaf4', 'src/sensors/screencap', 'test'].map(dir => `../../packages/play/${dir}`),
+  '../../apps/desktop/bin', '../../apps/wiki'];
+// Where tools/device's tests went beside models, censuses and searches over the simulator, none of
+// which reads a run: only the tests there are checked, and in a test/ directory every script is one.
+const TEST_DIRS = ['../../packages/propose/test', '../../packages/propose/bin/census', '../../packages/propose/parked/minus7',
+  '../../apps/desktop/test'];
 const SIBLING_EXCLUDED = new Map([
-  ['audio-authority.py', 'live rendered-audio authority and run input, not a grader; gated by test-audio-authority.py'],
-  ['collect-facts.py', 'fact sidecar producer for the external audio authority (latency-experiment.py); it produces facts rather than grading a run'],
-  ['latency-experiment.py', 'paired calibration experiment harness that creates evidence rather than grading a night; gated by test-latency-experiment.py'],
-  ['detect.py', 'the bang detector scan-night.sh drives'],
-  ['scan-night.sh', 'the Balloon Boy bang scan over a receiver PCM capture. grade-run.sh called it only for the legacy trial.sh lane, the one that kept such a capture; night-run.sh keeps the A2DP mix instead, which it has never been pointed at, so it runs by hand (2026-09-25)'],
-  ['features.py', 'feature extraction library for detect.py/evaluate.py, gated by test-cue.py'],
-  ['correlate.py', 'offline waveform cross-correlation -- the control that refuted the 22 thuds, run by hand against a chosen pair'],
-  ['evaluate.py', 'offline sweep harness over labelled audio; reports a matrix, grades no run'],
-  ['label-misses.py', 'labelling aid for building the reference set'],
-  ['reference-report.py', 'inventory of the reference samples, which live outside the repository'],
   ['aimap.py', 'AI-table extractor from the event-sheet dump, gated by test-aimap.py'],
   ['nightmap.py', 'per-game night reader over any of the four event-sheet dumps -- clock, difficulty table, rolls, movement edges and draw census, gated by test-nightmap.py; it reads source, not a run'],
   ['readdump.py', 'event-sheet dump reader library, gated by test-instances.py'],
@@ -151,7 +121,6 @@ const SIBLING_EXCLUDED = new Map([
   ['fnaf1-menu-probe.sh', 'thin exclusive-lease wrapper around fnaf1-menu-probe.mjs; it sends no input of its own'],
   ['fnaf1-custom-night-read.py', 'reads the four FNaF 1 Custom Night dials off one native frame for the menu probe; a menu reader, not a run grader, gated by test-fnaf1-menus.py'],
   ['fnaf1-door-light.py', 'per-run native FNaF 1 door-light calibration and occupancy reader; it derives the current run\'s ROI/bands rather than grading a completed run, and test-fnaf1-door-light.py gates its native-only and UNKNOWN behavior'],
-  ['fnaf1-custom-run.sh', 'lease wrapper for the FNaF 1 Custom Night runner; a live route/calibration executor, not a post-run grader'],
   ['fnaf1-winner.mjs', 'the replay of a committed FNaF 1 route winner: it materializes the pinned commit and runs that commit\'s fnaf1-custom-run.sh under the lease; an executor that produces a run, not a grader of one, gated by test-fnaf1-winner.mjs'],
   ['fnaf1-detectors.mjs', 'builds FNaF 1 empty-scene templates from a calibration run and classifies REGION reads for the runner; gated by test-native-regions.mjs'],
   ['fnaf1-calibration-analyze.mjs', 'offline reader of a FNaF 1 calibration record (press-to-frame latency, office onset, hour change); a calibration tool, not a night grader'],
@@ -174,12 +143,50 @@ const SIBLING_EXCLUDED = new Map([
   ['intro_card.py', 'fractional generic intro-card predicate used by lifecycle-observe.py/run-timeline.py; gated by test-intro-card.py'],
   ['title-observe.py', 'live title observer, mock-gated by test-menu.sh -- it classifies a menu, not a run'],
   // packages/propose/bin/plans
+  ['strategy-night-matrix.mjs', 'a coverage report over the emitters, not a grader of a run: it asks which (strategy, night) cells the registered emitters can compile against the resolved profile and what the emitted plan scores in its own replay. It reads source and the model, never a recording, and it sends no input -- the nearest analogue here is capabilities.mjs, which asks the same shape of question about the phone'],
+  ['death-prediction.mjs', 'runs BEFORE a run, not after it: writes the model\'s death prediction (killer shares, time quantiles over phases) that night-run.sh retains as prediction.json; grading reads that file, it does not regenerate it -- gated by test-bundle.mjs through the DEATH_TARGETED gate it produces'],
+  ['epoch-scan.mjs', 'runs BEFORE a run: a model census over release epochs (the bands an anchor aim is priced on); never reads a recording'],
+  ['night7-presets.mjs', 'a model scorer that runs BEFORE any run and never reads a recording: it replays the Minus Toys schedule against the ten Custom Night presets over a fixed seed cohort, in an exact lane and an actuator lane, to price the route and its timing floors. It sends no input to a phone. The gate over it is test-night7-presets.mjs, registered in npm run test:unit'],
+  ['night7-robustness.mjs', 'a model scorer that runs BEFORE any run and never reads a recording: it ranks the preset schedule and the committed Night 7 bindings by phase band, per-press lateness and +-60 ms jitter over held-out seeds. It sends no input to a phone. The gate over its record is test-night7-presets.mjs, registered in npm run test:unit'],
+  ['night7-robustness-field.mjs', 'MODEL_ONLY per-event robustness field and jitter/lateness census over held-out seeds with the measured mask floor; it never reads a recording, and test-night7-presets.mjs check 7 replays its retained record'],
+  ['device-lane.mjs', 'MODEL_ONLY scorer of the compiled HID schedule through the simulator and measured actuator constraints, with an explicit merged-press hypothesis; it never reads a recording or grades a completed run, and its HID constraints are exercised by hid-read-gap.test.js and hid-second-contact.test.js'],
+  ['gate-worker.mjs', 'pure worker for test-night-matrix.mjs; it simulates gate chunks and has no run artifacts to grade'],
+  ['minus-toys-margin.mjs', 'per-instruction timing margin map for the Minus Toys plan -- a model analysis, no run artifact to read; gated by test-minus-toys-margin.mjs'],
+  ['minus-toys-jitter.mjs', 'robustness evaluator for the Minus Toys plan -- replays the model under a calibrated clock-error ensemble, no run artifact to read; gated by test-minus-toys-jitter.mjs'],
+  ['human-gate.mjs', 'pre-flight gate on plan files, gated by test-human-gate.mjs'],
+  ['minus3-frame-light.mjs', 'the device-proven Minus 3 frame-light recipe and its edge-hash checks, gated by test-minus3-frame-light.mjs'],
   ['recipe.mjs', 'library, gated by test-recipe.mjs'],
   ['minus-toys-plan.mjs', 'device plan emitter + model gate for Minus Toys, gated by test-minus-toys-plan.mjs; bundle.mjs compiles it and it has no run to grade'],
   ['bundle.mjs', 'winner -> device-bundle compiler and validator, gated by test-bundle.mjs; it builds an artifact rather than grading a run'],
   ['artifact-commands.mjs', 'plan-row -> semantic block compiler, gated by test-bundle.mjs and test-artifact-animation-gates.mjs'],
   ['emit.mjs', 'the device:emit entry point over bundle.mjs, gated by test-bundle.mjs'],
   ['minus-3-plan.mjs', 'device plan emitter + model gate for the Minus 3 route, gated by test-minus3-frame-light.mjs; bundle.mjs compiles it and it has no run to grade'],
+  // packages/propose/bin/policy
+  ['policy-ir.mjs', 'finite policy artifact builder, gated by test-policy-ir.mjs; it creates a program rather than grading a run'],
+  ['policy-interpreter.mjs', 'finite semantic compiler and exact-engine adapter, gated by test-policy-interpreter.mjs; it consumes policy data rather than a device run'],
+  ['policy-grammar.mjs', 'finite policy grammar library, gated by packages/propose/test/policygrammartest.mjs; it validates candidates rather than grading a device run'],
+  ['policy-equivalence.mjs', 'IR/device/mock-phone equivalence compiler, gated by packages/propose/test/policyequivalencetest.mjs; it audits artifacts rather than grading a device run'],
+  ['policy-search.mjs', 'explicit-dimension structural search library, gated by packages/propose/test/policysearchtest.mjs; it emits a campaign report rather than grading a live run'],
+  ['policy-artifact.mjs', 'compiled policy artifact builder/verifier, gated by packages/propose/test/policyartifacttest.mjs; it creates execution provenance rather than grading a device run'],
+  ['closed-families.mjs', 'closed-family duplicate control imported by policy-search.mjs, gated by packages/propose/test/observationlanguagetest.mjs'],
+  // packages/propose/bin/report
+  ['windtrace.mjs', 'grades a MODEL, not a run: it replays the plan and reports what fraction of its wind frames the engine credited. There is no device counterpart -- the box level is not observable on the phone beyond the CAM 11 pie that windpct.py reads -- so grade-run.sh has nothing to hand it'],
+  // packages/propose/parked/minus7/cue
+  ['audio-authority.py', 'live rendered-audio authority and run input, not a grader; gated by test-audio-authority.py'],
+  ['collect-facts.py', 'fact sidecar producer for the external audio authority (latency-experiment.py); it produces facts rather than grading a run'],
+  ['latency-experiment.py', 'paired calibration experiment harness that creates evidence rather than grading a night; gated by test-latency-experiment.py'],
+  ['detect.py', 'the bang detector scan-night.sh drives'],
+  ['scan-night.sh', 'the Balloon Boy bang scan over a receiver PCM capture. grade-run.sh called it only for the legacy trial.sh lane, the one that kept such a capture; night-run.sh keeps the A2DP mix instead, which it has never been pointed at, so it runs by hand (2026-09-25)'],
+  ['features.py', 'feature extraction library for detect.py/evaluate.py, gated by test-cue.py'],
+  ['correlate.py', 'offline waveform cross-correlation -- the control that refuted the 22 thuds, run by hand against a chosen pair'],
+  ['evaluate.py', 'offline sweep harness over labelled audio; reports a matrix, grades no run'],
+  ['label-misses.py', 'labelling aid for building the reference set'],
+  ['reference-report.py', 'inventory of the reference samples, which live outside the repository'],
+  // apps/desktop/bin
+  ['fnaf1-custom-run.mjs', 'FNaF 1 Custom Night runner (calibrate-empty, grid420) behind fnaf1-custom-run.sh; an executor, gated by test-native-regions.mjs'],
+  ['fnaf1-custom-run.sh', 'lease wrapper for the FNaF 1 Custom Night runner; a live route/calibration executor, not a post-run grader'],
+  // apps/wiki
+  ['fnaf1-teach-media.py', 'cuts a FNaF 1 run video into a README GIF and phone videos; a presentation tool, not a grader'],
 ]);
 
 const sh = readFileSync(join(HERE, 'grade-run.sh'), 'utf8');
@@ -353,6 +360,13 @@ for (const dir of SIBLINGS) {
     complain(`${rel} is neither invoked by grade-run.sh nor excluded. ` +
       'Wire it in, or record why it is not an instrument.');
   }
+}
+for (const dir of TEST_DIRS) {
+  const path = join(HERE, dir);
+  if (!existsSync(path)) { complain(`${dir} is gone: the test scan has nothing to read`); continue; }
+  for (const name of readdirSync(path).sort())
+    if (/\.(py|mjs|sh)$/.test(name) && (name.startsWith('test-') || dir.endsWith('/test')) && !runs(name))
+      complain(`${dir}/${name} is a gate that nothing runs -- register it in tools/test.mjs or ci.yml, or delete it.`);
 }
 
 if (!failed) console.log(`grade-run.sh coverage: ${referenced.size} scripts invoked, ` +

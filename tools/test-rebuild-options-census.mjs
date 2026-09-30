@@ -33,7 +33,7 @@ import { Sim } from '@sixam/source/fnaf2';
 import { simOptionsFrom } from './recompile/model-draw-trace.mjs';
 import { KIND, OPTIONS_FILE, mcnemarExact, optionSets, seedBlocks, subjects, verdict, wilson95, withModelOptions }
   from './rebuild-options-census.mjs';
-import { committedWinners } from './winner-census.mjs';
+import { committedWinners } from '../packages/propose/bin/census/winner-census.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const EVIDENCE = join(ROOT, 'docs/evidence');

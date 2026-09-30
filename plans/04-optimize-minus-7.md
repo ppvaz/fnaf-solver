@@ -168,7 +168,7 @@ duel window must stay handleable, wind must keep the box off empty on worst luck
 ## Work
 
 1. ~~Build the search and per-step sensitivity harness~~ — done in
-   `tools/cyclesearch.mjs`.
+   `packages/propose/parked/minus7/cyclesearch.mjs`.
 2. ~~Revalidate the shipped cycle and publish current per-step windows~~ — done;
    see the dated status above.
 3. ~~Re-run candidate ranking on the current engine~~ — done 2026-08-23; see the

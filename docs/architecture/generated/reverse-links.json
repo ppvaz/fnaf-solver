@@ -220,7 +220,7 @@
     {
       "id": "contract.controller-v1",
       "kind": "CONTRACT",
-      "path": "tools/reactivetest.mjs",
+      "path": "packages/propose/test/reactivetest.mjs",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -261,7 +261,7 @@
     {
       "id": "contract.cue-helper-control-v1",
       "kind": "CONTRACT",
-      "path": "tools/cue/test-cue.py",
+      "path": "packages/propose/parked/minus7/cue/test-cue.py",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -312,13 +312,13 @@
     {
       "id": "contract.device-artifact-v1",
       "kind": "CONTRACT",
-      "path": "tools/device/test-bundle.mjs",
+      "path": "packages/propose/test/test-bundle.mjs",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.device-bundle-v1",
       "kind": "CONTRACT",
-      "path": "tools/device/test-bundle.mjs",
+      "path": "packages/propose/test/test-bundle.mjs",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -456,6 +456,12 @@
     {
       "id": "contract.device-profile-v1",
       "kind": "CONTRACT",
+      "path": "packages/propose/test/test-bundle.mjs",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.device-profile-v1",
+      "kind": "CONTRACT",
       "path": "packages/source/src/clockwork/control-contracts.js",
       "line": 8,
       "relation": "REFERENCES"
@@ -466,12 +472,6 @@
       "path": "packages/source/test/control-catalog.test.js",
       "line": 4,
       "relation": "REFERENCES"
-    },
-    {
-      "id": "contract.device-profile-v1",
-      "kind": "CONTRACT",
-      "path": "tools/device/test-bundle.mjs",
-      "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.exercise-attempt-v1",
@@ -622,6 +622,12 @@
     {
       "id": "contract.policy-program-v1",
       "kind": "CONTRACT",
+      "path": "packages/propose/bin/policy/test-policy-ir.mjs",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.policy-program-v1",
+      "kind": "CONTRACT",
       "path": "packages/propose/README.md",
       "line": 9,
       "relation": "REFERENCES"
@@ -636,13 +642,7 @@
     {
       "id": "contract.policy-program-v1",
       "kind": "CONTRACT",
-      "path": "tools/device/test-policy-ir.mjs",
-      "relation": "CONFORMANCE_FIXTURE"
-    },
-    {
-      "id": "contract.policy-program-v1",
-      "kind": "CONTRACT",
-      "path": "tools/policygrammartest.mjs",
+      "path": "packages/propose/test/policygrammartest.mjs",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -709,6 +709,12 @@
       "path": "packages/play/src/sensors/fnaf2/button-strokes.js",
       "line": 18,
       "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.semantic-control-v1",
+      "kind": "CONTRACT",
+      "path": "packages/propose/bin/policy/test-policy-interpreter.mjs",
+      "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.semantic-control-v1",
@@ -805,12 +811,6 @@
       "path": "plans/27-pivot-and-rebrand.md",
       "line": 98,
       "relation": "REFERENCES"
-    },
-    {
-      "id": "contract.semantic-control-v1",
-      "kind": "CONTRACT",
-      "path": "tools/device/test-policy-interpreter.mjs",
-      "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.session-manifest-v1",
@@ -917,7 +917,7 @@
     {
       "id": "contract.winner-v1",
       "kind": "CONTRACT",
-      "path": "tools/device/test-bundle.mjs",
+      "path": "packages/propose/test/test-bundle.mjs",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {

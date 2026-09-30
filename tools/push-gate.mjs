@@ -5,7 +5,7 @@
 // runs there; a developer running the same `npm run` lines runs them against a
 // working tree that also holds uncommitted edits, untracked files, and stale
 // generated output. Those two answers differ, and the difference is not
-// theoretical: `fcd4312` added `tools/nightloop-run.mjs` without its
+// theoretical: `fcd4312` added `packages/propose/bin/nightloop-run.mjs` without its
 // `command-registry.json` row and CI failed `git diff --exit-code` on every
 // push for a day, while the same catalog command in the author's tree looked
 // settled. `npm run catalog` in a dirty tree is a DIFFERENT MEASUREMENT from

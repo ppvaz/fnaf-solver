@@ -40,7 +40,7 @@ honesty:
 | `captures/screencheck-keep/RUN/` | when a read was not confidently `empty` | 2400x1080 raw frames, ~10.4 MB each, named `ELAPSED-CLASS.raw` |
 | `captures/RUN-hid.jsonl` | **only if `HID_TRACE_RUN=1`** | default is **0** |
 | `captures/RUN-cue.txt` | **only if `CUE_HELPER=1`** | default is **0**; ~14 Hz `GET` responses |
-| Android Companion PCM | never | The APK is visual-only; external rendered audio belongs to `tools/cue/audio-authority.py` |
+| Android Companion PCM | never | The APK is visual-only; external rendered audio belongs to `packages/propose/parked/minus7/cue/audio-authority.py` |
 | `captures/RUN-audio-facts.jsonl` | **only if `CUE_AUDIO=1 AUDIO_AUTHORITY_SOCKET=PATH`** | `fact-message-v1` JSONL sidecar from the receiver authority; transport/profile identify BlueALSA, ESP32, or another backend |
 
 ### An aborted run

@@ -346,7 +346,7 @@ The important implementation findings are:
   public mutable truth state is also consumed directly, so a narrow
   `PlantModel` facade and a separate privileged truth-sensor contract are
   needed before moving it.
-- `tools/policy.mjs` defines a useful but implicit controller API—`reset` and
+- `packages/propose/parked/minus7/policy.mjs` defines a useful but implicit controller API—`reset` and
   `step` plus tap/hold/press/release scheduling—but `PolicyRun` also owns
   observation privilege, timing, simulated actuation faults, and reporting.
   Those are separate runtime services.

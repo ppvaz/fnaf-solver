@@ -128,7 +128,7 @@ it becomes trainer doctrine, but it is unambiguous in source.)
 
 ## Controlled model verification
 
-`tools/androidstalltest.mjs`, shipped Minus 7 schedule:
+`packages/propose/test/androidstalltest.mjs`, shipped Minus 7 schedule:
 
 | Model | Normal seeds | Pinned worst luck |
 | --- | ---: | ---: |

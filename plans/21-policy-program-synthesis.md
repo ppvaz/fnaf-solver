@@ -79,7 +79,7 @@ replay identically to their current gated behavior or have a documented,
 source-backed semantic difference.
 
 The finite interpreter and exact-engine adapter are now in
-`tools/device/policy-interpreter.mjs`. The initial Night 1 Minimal target is
+`packages/propose/bin/policy/policy-interpreter.mjs`. The initial Night 1 Minimal target is
 equivalence-gated against `schedule()` frame-for-frame, including release/press
 seams, and reaches the same `Sim` terminal state. Standard Minus Toys and the
 separate Minus 7 policy family remain explicit follow-on ports rather than
@@ -106,16 +106,16 @@ the same control state as each other and restore the monitor/mask mode they
 started from. A fact is admissible only when its read cost is measured — which
 excludes all four audio facts as `UNKNOWN` — and a branch may not demand a fact
 fresher than one sample interval plus one read, nor act sooner after its
-observation than one read costs. `tools/observationlanguagetest.mjs` pins the
+observation than one read costs. `packages/propose/test/observationlanguagetest.mjs` pins the
 budget, the two rules, the grammar constraints, and the duplicate control.
 
 The Minus 7 family is still unported, and the branch construct has no evaluator:
 see P2 below.
 
-`tools/device/policy-grammar.mjs` builds the finite five-phase program shape,
+`packages/propose/bin/policy/policy-grammar.mjs` builds the finite five-phase program shape,
 requires a named sourced setup target, checks action timing/overlap and
 engine-shaped monitor/mask/camera ordering, and fingerprints the current
-Minus Toys Minimal family. `tools/policygrammartest.mjs` includes duplicate and
+Minus Toys Minimal family. `packages/propose/test/policygrammartest.mjs` includes duplicate and
 illegal-order controls; the standard Minus Toys and separate Minus 7 families
 remain explicit follow-on ports as documented under P2.
 
@@ -130,10 +130,10 @@ dependency set.
 controls and known negatives, and no candidate is admitted solely because an
 unmodelled device behavior was assumed.
 
-`tools/device/policy-search.mjs` enumerates caller-declared period/action
+`packages/propose/bin/policy/policy-search.mjs` enumerates caller-declared period/action
 mutations, validates the structural grammar, checks device-plan equivalence and
 contact floors, replays the exact engine, and Pareto-prunes accepted results.
-`tools/policysearchtest.mjs` persists a reproducible Minimal positive plus
+`packages/propose/test/policysearchtest.mjs` persists a reproducible Minimal positive plus
 dropped-wind/period negative campaign with source and calibration provenance.
 This closes the initial policy target's infrastructure; the broader
 1200-seed invention campaign, additional policy families, and device promotion
@@ -150,9 +150,9 @@ declared clock rounding.
 2026-08-29: early arm, hard-coded 10 s cadence, and missing terminal/observe
 tail.
 
-`tools/device/policy-equivalence.mjs` compiles the policy to the device-plan
+`packages/propose/bin/policy/policy-equivalence.mjs` compiles the policy to the device-plan
 text, parses that text through a finite mocked phone interpreter, and compares
-its semantic events with the IR compiler. `tools/policyequivalencetest.mjs`
+its semantic events with the IR compiler. `packages/propose/test/policyequivalencetest.mjs`
 also runs the shipped emitter and rejects each of the three named Night 1
 defects. This closes the initial Minimal target; broader policy-family ports
 remain open.
@@ -168,13 +168,13 @@ observation phases, and never launch unbounded host analysis automatically.
 host remains responsive; post-run analysis is an explicit, resource-capped
 operation.
 
-`tools/device/policy-artifact.mjs` now binds canonical `policy-v1` bytes to the
+`packages/propose/bin/policy/policy-artifact.mjs` now binds canonical `policy-v1` bytes to the
 compiled device plan, carries both hashes in the plan, and refuses altered
 artifacts or projections. The Night 1 Minimal branch of `trial.sh` consumes
 that artifact, records the policy and plan hashes plus the retained artifact in
 the session manifest, verifies the remote plan hash after `adb push`, and keeps
 `GRADE_RUN=0` as the low-cost default; grading remains an explicit opt-in.
-`tools/policyartifacttest.mjs` covers the mutations and runner wiring without a
+`packages/propose/test/policyartifacttest.mjs` covers the mutations and runner wiring without a
 phone. A physical run is still required before any live-device claim, and the
 standard Minus Toys/Minus 7 routes remain on their pre-IR paths until their
 family ports are complete.
@@ -279,7 +279,7 @@ capture remains gated on that check.
 ## First seed facts: the Night 2 vent-threat conflict (2026-08-30)
 
 The reactive BB-only build (`VentThreatReactive`, `src/controller.js`;
-`tools/ventreacttest.mjs`) measured the constraint system a Night 2 program
+`packages/propose/bin/ventreacttest.mjs`) measured the constraint system a Night 2 program
 must satisfy — four demands on one monitor-down/up boundary, which is why
 hand-tuned cycles keep failing and why this plan's structural search is the
 right instrument for the resolution:
@@ -338,7 +338,7 @@ reactive extension is an observation-gated branch with a hard deadline, not an
 unbounded hold.
 
 **Iteration record (same day, three cuts, each measured at the story Night 2
-table — `tools/ventreacttest.mjs`):**
+table — `packages/propose/bin/ventreacttest.mjs`):**
 
 1. *Blunt pre-emption* (mask ~6.8 s, schedule frozen through verify): 8/300 —
    dropped a wind cycle per rescue; the Puppet collected.

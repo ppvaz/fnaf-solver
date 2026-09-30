@@ -42,7 +42,7 @@
       "conformanceFixtures": [
         "packages/source/test/contracts.test.js",
         "packages/source/test/control-catalog.test.js",
-        "tools/device/test-policy-interpreter.mjs"
+        "packages/propose/bin/policy/test-policy-interpreter.mjs"
       ]
     },
     {
@@ -62,8 +62,8 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validatePolicy",
       "conformanceFixtures": [
-        "tools/policygrammartest.mjs",
-        "tools/device/test-policy-ir.mjs"
+        "packages/propose/test/policygrammartest.mjs",
+        "packages/propose/bin/policy/test-policy-ir.mjs"
       ]
     },
     {
@@ -83,7 +83,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "Controller",
       "conformanceFixtures": [
-        "tools/reactivetest.mjs",
+        "packages/propose/test/reactivetest.mjs",
         "packages/propose/test/cycle-controller.test.js"
       ]
     },
@@ -165,7 +165,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateProfile",
       "conformanceFixtures": [
-        "tools/device/test-bundle.mjs",
+        "packages/propose/test/test-bundle.mjs",
         "packages/play/test/profile-game.test.js"
       ]
     },
@@ -266,7 +266,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "packages/propose/bin/plans/bundle.mjs validateWinner",
       "conformanceFixtures": [
-        "tools/device/test-bundle.mjs"
+        "packages/propose/test/test-bundle.mjs"
       ]
     },
     {
@@ -286,7 +286,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "packages/propose/bin/plans/bundle.mjs validateBundle",
       "conformanceFixtures": [
-        "tools/device/test-bundle.mjs"
+        "packages/propose/test/test-bundle.mjs"
       ]
     },
     {
@@ -387,7 +387,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "bounded ASCII codec",
       "conformanceFixtures": [
-        "tools/cue/test-cue.py"
+        "packages/propose/parked/minus7/cue/test-cue.py"
       ]
     },
     {
@@ -448,7 +448,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "hashed semantic blocks",
       "conformanceFixtures": [
-        "tools/device/test-bundle.mjs"
+        "packages/propose/test/test-bundle.mjs"
       ]
     },
     {

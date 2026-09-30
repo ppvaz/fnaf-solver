@@ -75,7 +75,7 @@ designs the cheapest run that separates the explanations, runs it, and writes a
 morning report.
 
 **Already here.** Death-targeted bundles record a prediction before a run
-(`tools/device/death-prediction.mjs`); `cycle-ledger.py` and
+(`packages/propose/bin/plans/death-prediction.mjs`); `cycle-ledger.py` and
 `phase-reconstruct.mjs` read what happened; the Cue Helper queue holds jobs
 until the phone is awake; the lease, deadlines and title recovery make
 unattended runs safe.

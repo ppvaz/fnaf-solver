@@ -116,7 +116,7 @@ reason is unchanged.
 1. **Consecutive-tick mask clears** (g292-294): a masked vent visitor should
    need ~5 s of *continuous* mask to be forced out (10%/s early roll), not the
    PC-style sub-second repel. This single rule refuted the whole Minus 3
-   family in `tools/minus2test.mjs`; if the device disagrees, that family
+   family in `packages/propose/bin/minus2test.mjs`; if the device disagrees, that family
    reopens.
 2. ~~Double-camera glitch absence (one `viewing` counter, atomic per touch).~~
    **Reversed 2026-08-26:** the glitch transfers — `viewing` (counter 55) and
@@ -439,7 +439,7 @@ frame it already captures, so that path no longer requires one.
 
 ## Simulating the pilot (2026-08-20)
 
-`tools/model/stock-device-pilot.mjs` replays `trial.sh`'s millisecond table in the
+`packages/propose/parked/minus7/stock-device-pilot.mjs` replays `trial.sh`'s millisecond table in the
 sourced engine with no state reads, so schedule changes can be judged without
 spending a night on the phone. The shipped blind schedule dies **200/200 to
 Foxy**, with Balloon Boy as the cause rather than the recorded killer.
@@ -508,7 +508,7 @@ The chain is gone, under pinned worst-luck RNG as well as normal seeds: Balloon
 Boy never reaches the office, so Foxy never collects a run because of him. The
 blind schedule's Foxy deaths were never really Foxy's.
 
-`node tools/model/stock-device-pilot.mjs 200 --vent --sync --assert` guards exactly that
+`node packages/propose/parked/minus7/stock-device-pilot.mjs 200 --vent --sync --assert` guards exactly that
 claim and nothing more — it asserts BB never gets in and no Foxy death follows
 him, and deliberately does **not** assert survival. It runs in
 `tools/test.mjs --engine`, normal and `--worst`. The blind schedule fails it
@@ -1273,7 +1273,7 @@ The flip gate and the classifier checkpoint above are the two places
 contained them. Every actuator figure for Nights 2+ was therefore a statement
 about a controller the phone does not run, and plans/12 said so and left the
 number unmeasured. `packages/play/bin/phone/actuator.mjs` now carries `MonitorSupervisor`,
-and `tools/model/closed-loop-reclaim.mjs` prices it. **Everything below is in the
+and `packages/propose/parked/minus7/closed-loop-reclaim.mjs` prices it. **Everything below is in the
 simulator.** No phone was involved.
 
 ### What was modelled, from the shell rather than from an ideal
@@ -1363,7 +1363,7 @@ deaths. A loop whose false corrections invert the monitor stops the pilot
 executing the geometry that was killing it. That is not a defence of a broken
 loop. It is another measurement saying the deaths are geometric.
 
-The zero and its vacuity guard are pinned in `tools/device/test-actuator.mjs`:
+The zero and its vacuity guard are pinned in `packages/propose/test/test-actuator.mjs`:
 if a future change leaves the loop with nothing to correct, the zero stops being
 a result and the check fails.
 
@@ -1992,7 +1992,7 @@ be graded against a signature recalibrated from an `ALT_LIGHT` run recorded
 ## A second device policy: Minus Toys, wired into the same runner (2026-08-28)
 
 Until now `trial.sh` emitted only Minus 7 (`recipe.mjs --device-plan`). The
-Minus Toys engine result (plan 02 pkg 2a; `tools/minustoystest.mjs`, 200/200
+Minus Toys engine result (plan 02 pkg 2a; `packages/propose/bin/minustoystest.mjs`, 200/200
 normal + 100/100 worst per night, 0/200 no-split control) existed only as an
 engine schedule. `packages/propose/bin/plans/minus-toys-plan.mjs` ports it into the on-phone
 interpreter's plan format and `DEVICE_POLICY=minus-toys tools/device/trial.sh`
@@ -2119,7 +2119,7 @@ deterministic engine. Measured this session, with the engine:
   locks on. The cadence never reaches more than **4** `maskTicks` against a
   `VENT_MASK_TICKS = 5` repel threshold -- it never *cleanly* evicts Balloon
   Boy, it relies entirely on the 10 %/tick `VENT_EARLY_LEAVE_CHANCE` roll.
-- **The per-instruction margin map** (`tools/device/minus-toys-margin.mjs`,
+- **The per-instruction margin map** (`packages/propose/bin/plans/minus-toys-margin.mjs`,
   Night 2, 120 seeds, model only, no jitter -- it shifts one press in isolation
   and reports how far it can move before some seed dies):
 
@@ -2456,7 +2456,7 @@ Two instruments, two names, deliberately distinct:
   death-time quantiles over every epoch phase a drawn release can land on, at
   the 3000-replay standard — and the grader reads killer and time off the
   frames afterwards. The residual is the measurement.
-  `tools/device/death-prediction.mjs` writes the `death-prediction-v1` record;
+  `packages/propose/bin/plans/death-prediction.mjs` writes the `death-prediction-v1` record;
   `night-run.sh` retains it as `prediction.json` beside the run *before* the
   campaign, so it cannot be fitted to the outcome, and prints it. A 6 AM
   attempt carries the trivial prediction "no death".

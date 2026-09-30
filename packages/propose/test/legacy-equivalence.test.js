@@ -14,10 +14,10 @@ const run = (file, args) => execFileSync(process.execPath, [join(ROOT, file), ..
 
 const toys = seeds.map(seed => runMinusToys({ seed, splitCamera: true }));
 assert.equal(toys.filter(result => result.sim.won).length, 4);
-assert.match(run('tools/minustoystest.mjs', ['4', '--assert']), /4\/4 survived/);
-assert.match(run('tools/minustoystest.mjs', ['4', '--no-split', '--assert']), /0\/4 survived/);
+assert.match(run('packages/propose/bin/minustoystest.mjs', ['4', '--assert']), /4\/4 survived/);
+assert.match(run('packages/propose/bin/minustoystest.mjs', ['4', '--no-split', '--assert']), /0\/4 survived/);
 
 const two = seeds.map(seed => runMinusTwo({ seed, flashCams: [3] }));
 assert.equal(two.filter(result => result.sim.won).length, 0);
-assert.match(run('tools/minus2test.mjs', ['4']), /0\/4 survived/);
+assert.match(run('packages/propose/bin/minus2test.mjs', ['4']), /0\/4 survived/);
 console.log('research aliases: Minus Toys split/control and Minus Two match shared family evaluators');

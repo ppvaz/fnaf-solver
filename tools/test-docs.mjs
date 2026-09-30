@@ -126,18 +126,18 @@ for (const page of docPages)
 
 // --- 3. every tool script has an ENTRY in the index of its own directory.
 //
-// The tool index is one README per directory (tools/README.md, tools/device/,
-// tools/cue/), split from a single TOOLS.md on 2026-09-25, plus the decompile
+// The tool index is one README per directory (tools/README.md, tools/device/;
+// tools/cue/'s until its scripts moved on), split from a single TOOLS.md on 2026-09-25, plus the decompile
 // scripts' own (packages/source/decompile/, which was tools/dump/ until ADR 0002's
 // Source context took it on 2026-09-30). A script is held to the README
 // nearest to it -- its own directory's, or the closest parent's -- so a reader
 // in tools/device/ finds tools/device/'s scripts there.
 const TOOL_ROOTS = ['tools', 'packages/source/decompile', 'apps/lab'];
-// Entry points that left tools/ for their context: each package's bin/ and
+// Entry points that left tools/ for their context: each package's and application's bin/ and
 // propose's parked work are held to the Scripts table of the nearest README
 // (ADR 0002 layout, LEG-008).
 const underToolRoot = (f) => TOOL_ROOTS.some((root) => f.startsWith(`${root}/`)) ||
-  /^packages\/[^/]+\/bin\//.test(f) || f.startsWith('packages/propose/parked/');
+  /^(?:packages|apps)\/[^/]+\/bin\//.test(f) || f.startsWith('packages/propose/parked/');
 const SCRIPTS_HEADING = '\n## Scripts\n';
 const scriptsIndex = (f) => /^(?:packages|apps)\/[^/]+\/README\.md$/.test(f) &&
   readFileSync(join(ROOT, f), 'utf8').includes(SCRIPTS_HEADING);

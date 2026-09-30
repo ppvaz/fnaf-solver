@@ -5,7 +5,7 @@
 #
 # The samples are game content. Like the CCN and the event dump they live
 # OUTSIDE the repository, and this script refuses to write anywhere inside it.
-# Commit the fingerprint report from tools/cue/reference-report.py instead.
+# Commit the fingerprint report from packages/propose/parked/minus7/cue/reference-report.py instead.
 #
 # Handles are the same numbers the event sheet plays: `readdump.py sounds 3`
 # lists them, and res/raw/sNNNN.* in the APK is indexed by handle.

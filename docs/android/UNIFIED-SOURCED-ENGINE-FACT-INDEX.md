@@ -227,7 +227,7 @@ are reads in g450‑457. B drains by `min(4, frameDelta/16.666)` per frame
 - The exclusions carry **no night condition** — the 8/9/11 gates are absolute.
 - `{4, 7, 10}` is a route cut set: every `STALLED` path crosses it within two
   hops, which is why the Minus 7 three-camera loop covers seven characters.
-- Model controls (`tools/androidstalltest.mjs`, shipped Minus 7 schedule):
+- Model controls (`packages/propose/test/androidstalltest.mjs`, shipped Minus 7 schedule):
   sourced model 200/200 + 100/100 worst-luck; **stall removed 0/200**; marker
   hold alone 0/200. The flash is the strategy's load-bearing mechanism.
 
@@ -695,7 +695,7 @@ a small dispatch bank turns it into sound:
   hops (g414‑416) play at **25**; g906 plays at **60** when he is on the camera
   you are watching (5 %/s roll). So the same three samples carry two meanings
   and level is what separates them — quiet = a route hop, loud = on your feed.
-  `tools/cue/features.py` removes each frame's mean (level-invariant by design)
+  `packages/propose/parked/minus7/cue/features.py` removes each frame's mean (level-invariant by design)
   and therefore throws that away. g814 replays sample 24 every 2000 ms while BB
   is at marker 123.
 - **Mangle's private movement bank:** when `new foxy` (Mangle) overlaps

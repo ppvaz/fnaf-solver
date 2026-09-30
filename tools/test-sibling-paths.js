@@ -114,7 +114,9 @@ export function refusals(root, files) {
     const text = readFileSync(join(root, file), 'utf8');
     for (const [line, rel] of siblingReferences(file, text)) {
       const target = normalize(join(dirname(file), rel));
-      if (target.startsWith('..') || exists(root, target)) continue;
+      // A script's own directory is inside the tree, so a path out of it has miscounted its climb.
+      if (target.startsWith('..')) { missing.push({ file, line, target, outside: true }); continue; }
+      if (exists(root, target)) continue;
       if (INTENTIONAL.has(`${file} -> ${target}`)) continue;
       missing.push({ file, line, target });
     }
@@ -122,7 +124,7 @@ export function refusals(root, files) {
   // A directory pattern (`build/`) matches only a path git is told is a directory, so each target
   // is asked both ways.
   const skip = root === ROOT ? ignored(missing.flatMap(item => [item.target, `${item.target}/`])) : new Set();
-  return missing.filter(item => !skip.has(item.target) && !skip.has(`${item.target}/`));
+  return missing.filter(item => item.outside || (!skip.has(item.target) && !skip.has(`${item.target}/`)));
 }
 
 // Planted: each idiom pointing at a sibling that is not there must be refused, and the same
@@ -141,11 +143,12 @@ function planted() {
       'a/q.py': 'HERE = os.path.dirname(os.path.abspath(__file__))\nos.path.join(HERE, "gone.txt")\n',
       'a/s.sh': 'HERE="$(cd "$(dirname "$0")" && pwd)"\npython3 "$HERE/gone.py"\nnode "$HERE/there.mjs"\nfor m in "$HERE"/th*.mjs; do :; done\nfor m in "$HERE"/none-*.json; do :; done\n',
       'a/t.sh': 'X_HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"\nsource "$X_HERE/gone.sh"\n',
+      'a/up.sh': 'HERE="$(cd "$(dirname "$0")" && pwd)"\nnode "$HERE/../../../out.mjs"\n',
     };
     for (const [file, text] of Object.entries(files)) writeFileSync(join(dir, file), text);
     const got = refusals(dir, Object.keys(files)).map(item => `${item.file} -> ${item.target}`).sort();
     const want = ['a/join.js -> a/gone.json', 'a/p.py -> a/gone.py', 'a/q.py -> a/gone.txt',
-      'a/s.sh -> a/gone.py', 'a/s.sh -> a/none-*.json', 'a/t.sh -> a/gone.sh', 'a/tpl.js -> a/gone.js', 'a/url.mjs -> a/gone.mjs'];
+      'a/s.sh -> a/gone.py', 'a/s.sh -> a/none-*.json', 'a/t.sh -> a/gone.sh', 'a/tpl.js -> a/gone.js', 'a/up.sh -> ../../out.mjs', 'a/url.mjs -> a/gone.mjs'];
     return JSON.stringify(got) === JSON.stringify(want) ? [] : [`planted: expected ${want.join(', ')}; got ${got.join(', ') || 'nothing'}`];
   } finally {
     rmSync(dir, { recursive: true, force: true });
@@ -155,8 +158,8 @@ function planted() {
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const failures = planted();
   const files = candidates();
-  for (const { file, line, target } of refusals(ROOT, files))
-    failures.push(`${file}:${line} names ${target}, which does not exist`);
+  for (const { file, line, target, outside } of refusals(ROOT, files))
+    failures.push(`${file}:${line} names ${target}, ${outside ? 'outside the repository' : 'which does not exist'}`);
   for (const key of INTENTIONAL.keys()) {
     const [file, target] = key.split(' -> ');
     if (!existsSync(join(ROOT, file)) || existsSync(join(ROOT, target)))

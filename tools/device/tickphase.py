@@ -15,7 +15,7 @@ What it measures, and nothing else:
   (g337-342 -> route moves -> g691-694 / g704-708); and of the winding ratchet
   (s0033), played on the `Every 500 ms` timer while the wind button is held
   (g637/g644). Detection is normalised cross-correlation of the APK's own PCM
-  against the capture (tools/cue/correlate.py's method, vectorised), peaks
+  against the capture (packages/propose/parked/minus7/cue/correlate.py's method, vectorised), peaks
   above a per-handle threshold with a refractory gap.
 - `gridPhaseMs`: the circular mean of the roll-onset times modulo 5000 ms,
   measured from the HID release. This is the quantity the Night 6 anchor aims

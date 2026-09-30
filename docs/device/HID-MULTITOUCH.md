@@ -242,7 +242,7 @@ not the mask toggle. `maskraise` now holds that seam at the measured-safe
 > measured-safe `maskraise` compound resets Foxy without moving the read or the
 > stun sweep, and scores **673/1200 = 56.1%** on the same seeds. Nights 1–5
 > remain above contract at 99.1, 68.9, 78.8, 73.2, and 63.9 per cent
-> (`tools/device/human-gate.mjs`; absolute, no override). A gap floor was the
+> (`packages/propose/bin/plans/human-gate.mjs`; absolute, no override). A gap floor was the
 > first form of this rule and was
 > retired the same day: gap width never separated human from machine —
 > precision does, which is exactly what error-injected replay measures. The
@@ -386,7 +386,7 @@ first place to look if a select goes missing.
 The probes above ran a burst that led the light pulse by 10 ms inside a 100 ms
 select, leaving the pulse itself 90 ms. That is under the 100-120 ms this
 document's own verified report sequence requires, and the contact floor in
-`tools/device/test-hid-trace.mjs` was briefly lowered to 90 to accommodate it —
+`packages/propose/test/test-hid-trace.mjs` was briefly lowered to 90 to accommodate it —
 the wrong direction to move a device threshold.
 
 Four constraints cannot all hold at once:
@@ -452,7 +452,7 @@ the shell's clock is not *a* contributor to the actuator cliff — on this route
 it is the whole of it, and the budget it has to fit into is a **frame count,
 not a millisecond figure**.
 
-`tools/latenesssweep.mjs` sweeps `packages/play/bin/phone/actuator.mjs`'s lateness band
+`packages/propose/parked/minus7/latenesssweep.mjs` sweeps `packages/play/bin/phone/actuator.mjs`'s lateness band
 across Nights 1–7 at the `hidpilot n6 target` settings, 200 seeds a cell.
 **Every number here is a simulator number** — the actuator models launch
 lateness and the mask seam and nothing else. Two controls make the table
@@ -708,7 +708,7 @@ alone emits a zero delay, which is why two green test suites missed it.
 - **`tools/device/test-plan-interpreter.sh`** fails on any emitted
   `hid_delay <= 0`, and was verified to fail on the pre-fix code before it was
   fixed, so the assertion is not passing vacuously.
-- **`tools/device/test-hid-trace.mjs`** reports a zero-length delay as a
+- **`packages/propose/test/test-hid-trace.mjs`** reports a zero-length delay as a
   problem, and its self-test requires that it be caught alongside the short
   contact, the zero-gap button change and the latched contact.
 

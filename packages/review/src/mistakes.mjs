@@ -1,6 +1,6 @@
 // The mistake registers, read where they are written, and matched to a task.
 //
-// CLAUDE.md holds two registers of numbered entries (`N. **lead** body`). A pending move may put
+// CLAUDE.md holds three registers of numbered entries (`N. **lead** body`). A pending move may put
 // them in docs/operations/MISTAKE-REGISTER.md, so the reader takes the first of
 // MISTAKE_REGISTER_SOURCES that holds entries, and never keeps a copy of the text: an entry that is
 // edited, added or moved is read as it now stands.
@@ -38,6 +38,8 @@ export const MISTAKE_TAGS = Object.freeze({
   11: { areas: ['analysis'], words: ['census', 'band', 'margin', 'phase', 'model', 'cliff'] },
   12: { areas: ['analysis', 'observation'], words: ['missing', 'absent', 'detector', 'miss', 'grade', 'rule'] },
   13: { areas: ['gates'], words: ['gate', 'ci', 'lane', 'test:unit', 'register'] },
+  14: { areas: ['tooling', 'gates'], words: ['move', 'migration', 'path', 'rename', 'layout', 'adr 0002'] },
+  15: { areas: ['tooling', 'live-device'], words: ['winner', 'pinned', 'replay', 'sources', 'move', 'sha256'] },
 });
 
 /** The areas each ROADMAP step works in. S2a and S2b read as S2. */

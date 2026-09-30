@@ -69,7 +69,7 @@ function nightsOf(winner) {
 // claim the run will be read against (killer shares and death-time quantiles
 // over the phases a drawn epoch can land on, at the 3000-replay standard).
 // It rides in the manifest so nothing downstream can mistake such a run for a
-// route claim. Written by tools/device/death-prediction.mjs.
+// route claim. Written by packages/propose/bin/plans/death-prediction.mjs.
 export const DEATH_PREDICTION_SCHEMA = 'death-prediction-v1';
 export const DEATH_TARGETED_STATUS = 'DEATH_TARGETED';
 const MIN_PREDICTION_REPLAYS = 3000;

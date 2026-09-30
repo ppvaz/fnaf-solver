@@ -14,7 +14,7 @@ these rules does, and are not device measurements.*
 | Night models | `packages/source/src/games/fnaf*/fnaf*.js`, `packages/source/src/clockwork/night-model.js` | all four: clock, per-night table, roll schedule |
 | Simulator | `packages/source/src/games/fnaf1/sim-fnaf1.js`, `sim-fnaf3.js`, `sim-fnaf4.js` | FNaF 1, 3 and 4; FNaF 4 remains **MODEL_ONLY** |
 | Policies | `packages/propose/src/games/policy-fnaf1.js`, `policy-fnaf3.js`, `policy-fnaf4.js` | FNaF 1, 3 and 4 published lines and controls |
-| Census | `tools/census.mjs` | FNaF 1, 3 and 4; held-out seed blocks via `--start` |
+| Census | `packages/propose/bin/census/census.mjs` | FNaF 1, 3 and 4; held-out seed blocks via `--start` |
 
 FNaF 2's night already has a simulator (`plant-model.js`) and a route; its
 entry here contributes the clock groups its constants lacked. FNaF 3 and FNaF 4
@@ -474,7 +474,7 @@ door press [g166, g168-g228], the 23-frame monitor flip that locks the tab and
 keeps `viewing` 0 until it completes [g5/g6, g270/g271, g846], doors that take 32
 frames to close or open and during which nobody dies or leaves [g160/g161,
 g343/g344], lights put out by the put-down [g357], and door power charged while
-shut and opening but not while closing [g305-g308]. `tools/fnaf1-device-lane.mjs`
+shut and opening but not while closing [g305-g308]. `packages/propose/bin/census/fnaf1-device-lane.mjs`
 drives it through the handset's measured costs: a 160 ms contact, a 310 ms pan
 hold, controls reachable only at their own pan, and reads that return a frame
 that is already old.
@@ -638,15 +638,15 @@ in hand.
 ```sh
 packages/source/decompile/nightmap.py --game fnaf3 --table --clock --rolls
 packages/source/decompile/nightmap.py --game fnaf1 --graph charBonnie
-node tools/census.mjs --game fnaf1 --seeds 3000 --policy roll-grid
-node tools/census.mjs --game fnaf1 --policy roll-grid --custom 20 --seeds 3000
-node tools/census.mjs --game fnaf4 --night 5 --policy community-loop --seeds 3000
-node tools/census.mjs --game fnaf4 --night 5 --policy community-loop --seeds 3000 --start 3000
-node tools/test-fnaf4-census.mjs
+node packages/propose/bin/census/census.mjs --game fnaf1 --seeds 3000 --policy roll-grid
+node packages/propose/bin/census/census.mjs --game fnaf1 --policy roll-grid --custom 20 --seeds 3000
+node packages/propose/bin/census/census.mjs --game fnaf4 --night 5 --policy community-loop --seeds 3000
+node packages/propose/bin/census/census.mjs --game fnaf4 --night 5 --policy community-loop --seeds 3000 --start 3000
+node packages/propose/bin/census/test-fnaf4-census.mjs
 ```
 
 Gated by `packages/source/decompile/test-nightmap.py`, `packages/source/test/test-night-models.mjs` and
-`tools/test-fnaf1-census.mjs`, `tools/test-fnaf3-census.mjs` and
-`tools/test-fnaf4-census.mjs`, all in `npm run test:unit`. The model censuses
+`packages/propose/bin/census/test-fnaf1-census.mjs`, `packages/propose/bin/census/test-fnaf3-census.mjs` and
+`packages/propose/bin/census/test-fnaf4-census.mjs`, all in `npm run test:unit`. The model censuses
 need no game content; `--start` selects a disjoint seed block for the three
 simulator-backed games.

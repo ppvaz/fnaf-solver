@@ -3,7 +3,6 @@
   "source": [
     "package.json",
     "tools/README.md",
-    "tools/cue/README.md",
     "tools/device/README.md",
     "packages/source/decompile/README.md",
     "apps/desktop/README.md",
@@ -55,17 +54,17 @@
     },
     {
       "id": "test:unit",
-      "command": "node tools/architecture-test.js && node tools/validate-references.js && node tools/device/test-grade-run-coverage.mjs && node tools/test-mistake-register.mjs && node tools/test-dump-text-check.mjs && node tools/test-media.mjs && node tools/recompile/test-compare-draw-trace.mjs && node tools/recompile/test-schedule-replay.mjs && node tools/recompile/test-phone-encounter-replay.mjs && node tools/recompile/test-phone-clock-sweep.mjs && node tools/recompile/test-hour-grid-fit.mjs && node tools/recompile/test-phone-input-bracket-sweep.mjs && python3 tools/recompile/test-phone-input-ledger.py && node tools/recompile/test-child-diagnosis.mjs && node tools/policyequivalencetest.mjs && node tools/device/test-seam-slack.mjs && node tools/device/test-static-terminal-window.mjs && node tools/device/test-post-night-static.mjs && node packages/play/bin/phone/test-control-anchor.mjs && node tools/device/test-schedule-economy.mjs && node tools/device/test-anchor-aim-band.mjs && node packages/play/bin/probe/seedpin/test-seedpin.mjs && node packages/review/test/evidence-campaign.test.mjs && node packages/review/test/evidence-pack.test.mjs && node packages/review/test/evidence-cohort.test.mjs && node packages/review/test/evidence-promotion.test.mjs && node tools/test-encounter-fidelity.mjs && node tools/test-winner-census.mjs && node tools/test-rebuild-options-census.mjs && node apps/desktop/test/night.test.js && node packages/play/bin/phone/test-night-run-dry.mjs && node tools/device/test-fact-register.mjs && node tools/device/test-fnaf1-winner.mjs && node packages/play/bin/phone/test-event-clocks.mjs && python3 packages/source/decompile/test-instances.py && python3 packages/source/decompile/test-nightmap.py && node packages/source/test/test-night-models.mjs && node packages/play/games/fnaf1/test-fnaf1-menu-probe.mjs && python3 packages/play/games/fnaf1/test-fnaf1-menus.py && node packages/play/games/fnaf1/test-fnaf1-night-run.mjs && python3 packages/play/games/fnaf1/test-fnaf1-door-light.py && python3 packages/play/bin/audio/test-bt-audio-collector.py && python3 packages/play/games/fnaf1/test-fnaf1-teach-overlay.py && python3 packages/play/src/sensors/screencap/test-sensor.py && node tools/test-fnaf1-device-lane.mjs && node tools/test-fnaf1-population-checkpoints.mjs && node tools/device/test-native-regions.mjs && node packages/play/games/fnaf3/test-fnaf3-run.mjs && node tools/test-fnaf4-census.mjs && npm run test:chronicle && node packages/play/games/fnaf4/test-fnaf4-fredbear.mjs && node packages/play/bin/companion/test-audio-players.mjs && node tools/test-evidence-cli.mjs && node tools/test-push-gate.mjs && python3 apps/trainer/test/serve_test.py && node apps/desktop/test/probe.test.js && node tools/test-no-serial.mjs && node tools/test-companion-name.mjs && node tools/test-sibling-paths.js && node packages/kernel/test/kernel.test.js && node packages/review/test/pack-lift.test.js && node packages/review/test/promotions-query.test.js && python3 tools/recompile/test-audio-records.py && node tools/recompile/pilot/test-pilot.mjs && node tools/recompile/test-calib-replay.mjs && node tools/recompile/android/test-practice-audit.mjs && node tools/recompile/android/test-rebuild-night.mjs && node packages/review/test/refusals.test.mjs && node packages/review/test/solver.test.mjs && node packages/review/test/lab-queries.test.mjs && node apps/desktop/test/lab.test.mjs",
+      "command": "node tools/architecture-test.js && node tools/validate-references.js && node tools/device/test-grade-run-coverage.mjs && node tools/test-mistake-register.mjs && node tools/test-dump-text-check.mjs && node tools/test-media.mjs && node tools/recompile/test-compare-draw-trace.mjs && node tools/recompile/test-schedule-replay.mjs && node tools/recompile/test-phone-encounter-replay.mjs && node tools/recompile/test-phone-clock-sweep.mjs && node tools/recompile/test-hour-grid-fit.mjs && node tools/recompile/test-phone-input-bracket-sweep.mjs && python3 tools/recompile/test-phone-input-ledger.py && node tools/recompile/test-child-diagnosis.mjs && node packages/propose/test/policyequivalencetest.mjs && node packages/propose/test/test-seam-slack.mjs && node tools/device/test-static-terminal-window.mjs && node tools/device/test-post-night-static.mjs && node packages/play/bin/phone/test-control-anchor.mjs && node packages/propose/test/test-schedule-economy.mjs && node tools/device/test-anchor-aim-band.mjs && node packages/play/bin/probe/seedpin/test-seedpin.mjs && node packages/review/test/evidence-campaign.test.mjs && node packages/review/test/evidence-pack.test.mjs && node packages/review/test/evidence-cohort.test.mjs && node packages/review/test/evidence-promotion.test.mjs && node packages/propose/test/test-encounter-fidelity.mjs && node packages/propose/bin/census/test-winner-census.mjs && node tools/test-rebuild-options-census.mjs && node apps/desktop/test/night.test.js && node packages/play/bin/phone/test-night-run-dry.mjs && node tools/device/test-fact-register.mjs && node apps/desktop/test/test-fnaf1-winner.mjs && node packages/play/bin/phone/test-event-clocks.mjs && python3 packages/source/decompile/test-instances.py && python3 packages/source/decompile/test-nightmap.py && node packages/source/test/test-night-models.mjs && node packages/play/games/fnaf1/test-fnaf1-menu-probe.mjs && python3 packages/play/games/fnaf1/test-fnaf1-menus.py && node packages/play/games/fnaf1/test-fnaf1-night-run.mjs && python3 packages/play/games/fnaf1/test-fnaf1-door-light.py && python3 packages/play/bin/audio/test-bt-audio-collector.py && python3 packages/play/games/fnaf1/test-fnaf1-teach-overlay.py && python3 packages/play/src/sensors/screencap/test-sensor.py && node packages/propose/bin/census/test-fnaf1-device-lane.mjs && node packages/propose/bin/census/test-fnaf1-population-checkpoints.mjs && node apps/desktop/test/test-native-regions.mjs && node packages/play/games/fnaf3/test-fnaf3-run.mjs && node packages/propose/bin/census/test-fnaf4-census.mjs && npm run test:chronicle && node packages/play/games/fnaf4/test-fnaf4-fredbear.mjs && node packages/play/bin/companion/test-audio-players.mjs && node tools/test-evidence-cli.mjs && node tools/test-push-gate.mjs && python3 apps/trainer/test/serve_test.py && node apps/desktop/test/probe.test.js && node tools/test-no-serial.mjs && node tools/test-companion-name.mjs && node tools/test-sibling-paths.js && node packages/kernel/test/kernel.test.js && node packages/review/test/pack-lift.test.js && node packages/review/test/promotions-query.test.js && python3 tools/recompile/test-audio-records.py && node tools/recompile/pilot/test-pilot.mjs && node tools/recompile/test-calib-replay.mjs && node tools/recompile/android/test-practice-audit.mjs && node tools/recompile/android/test-rebuild-night.mjs && node packages/review/test/refusals.test.mjs && node packages/review/test/solver.test.mjs && node packages/review/test/lab-queries.test.mjs && node apps/desktop/test/lab.test.mjs",
       "lifecycle": "supported"
     },
     {
       "id": "test:unit:slow",
-      "command": "node tools/device/test-night7-presets.mjs && node tools/test-fnaf1-census.mjs && python3 apps/lab/test/test-overnight-window.py && node tools/test-fnaf3-census.mjs && python3 apps/lab/test/test-night-job.py && node tools/test.mjs --gates && python3 packages/play/bin/audio/test-fnaf4-cues.py && node tools/device/test-winners-rebuild.mjs",
+      "command": "node packages/propose/bin/plans/test-night7-presets.mjs && node packages/propose/bin/census/test-fnaf1-census.mjs && python3 apps/lab/test/test-overnight-window.py && node packages/propose/bin/census/test-fnaf3-census.mjs && python3 apps/lab/test/test-night-job.py && node tools/test.mjs --gates && python3 packages/play/bin/audio/test-fnaf4-cues.py && node packages/propose/test/test-winners-rebuild.mjs",
       "lifecycle": "supported"
     },
     {
       "id": "test:contracts",
-      "command": "node packages/source/test/contracts.test.js && node packages/source/test/control-catalog.test.js && node packages/source/test/truth.test.js && node packages/kernel/test/claim-envelope.test.js && node packages/kernel/test/venue-identity.test.js && node packages/propose/test/cycle-library.test.js && node packages/propose/test/cycle-planner.test.js && node packages/propose/test/cycle-controller.test.js && node packages/propose/test/night-policy.test.js && node packages/source/test/route-forks.test.js && node packages/source/test/drop-light-order.test.js && node packages/source/test/foxy-chain.test.js && node packages/source/test/unconditional-draws.test.js && node packages/source/test/event-draws.test.js && node packages/source/test/blackout-draws.test.js && node packages/source/test/view-draws.test.js && node packages/source/test/roll-draws.test.js && node packages/source/test/monitor-down-draw.test.js && node packages/source/test/second-pass.test.js && node packages/source/test/puppet-glitch-draws.test.js && node packages/source/test/sheet-order.test.js && node packages/source/test/frame-time-hook.test.js && node packages/source/test/last-view-pause.test.js && node packages/source/test/footstep-draws.test.js && node packages/source/test/vent-cam-draws.test.js && node packages/source/test/random-image-draw.test.js && node packages/source/test/monitor-raise-gate.test.js && node packages/source/test/mangle-return.test.js && node packages/source/test/gated-every.test.js && node packages/source/test/every-origin.test.js && node packages/source/test/rebuild-order.test.js && node packages/source/test/footstep-value2.test.js && node packages/source/test/foxy-move-value2.test.js && node packages/source/test/promoted-view-draws.test.js && node packages/source/test/hall-latch-order.test.js && node packages/source/test/rolls-before-moves.test.js && node packages/source/test/promoted-moves.test.js && node packages/source/test/value5.test.js && node packages/source/test/office-footsteps.test.js && node packages/source/test/blackout-clock-end.test.js && node packages/source/test/b-drain-order.test.js && node packages/source/test/route-pass.test.js && node packages/source/test/office-rolls.test.js && node packages/source/test/animation-count.test.js && node packages/source/test/bb-moves.test.js && node packages/source/test/exposure-value5.test.js && node packages/source/test/route-view-draws.test.js && node packages/source/test/drop-flag-order.test.js && node packages/source/test/mask-animation-input.test.js && node packages/play/test/control-exclusion.test.js && node packages/play/test/android-venue.test.js && node packages/play/test/conformance.test.js && node packages/play/test/monitor-rule.test.js && node packages/play/test/camera-rule.test.js && node packages/play/test/night-onset.test.js && node apps/desktop/test/device-cli.test.js && node packages/play/test/campaign.test.js && node packages/play/test/campaign-runner.test.js && node packages/play/test/campaign-infrastructure.test.js && node packages/play/test/campaign-composition.test.js && node packages/play/test/modern-campaign-terminal.test.js && node packages/play/test/campaign-signal.test.js && node packages/play/test/adb-bridge.test.js && node packages/play/test/venue-preflight.test.js && node packages/play/test/adb-device-local-executor.test.js && node packages/play/test/profile-game.test.js && node packages/play/test/static-terminal-window.test.js && node packages/play/test/post-night-halt.test.js && node packages/play/test/hid-read-gap.test.js && node packages/play/test/hid-second-contact.test.js && node packages/play/test/night-anchor.test.js && node packages/play/test/cycle-lesson.test.js && node packages/play/test/timed-start.test.js && node packages/propose/test/experiment.test.js && node packages/propose/test/legacy-equivalence.test.js && node tools/device/test-bundle.mjs && node tools/device/test-phase-reconstruct.mjs && node tools/device/test-tap-stall-audit.mjs && python3 tools/device/test-framesource.py && python3 tools/device/test-decode-once.py && python3 tools/device/test-grade-night.py && python3 tools/device/test-cycle-ledger.py && python3 tools/device/test-office-seed-bracket.py && node tools/device/test-minus3-frame-light.mjs && node tools/device/test-artifact-animation-gates.mjs && node packages/review/test/vault.test.mjs && node packages/kernel/test/factlinktest.mjs && node packages/review/test/bench-trace.test.mjs && node apps/trainer/test/exercise.test.mjs && node apps/trainer/test/activity-gate.test.mjs && node apps/trainer/test/microtrainer.test.mjs && node apps/trainer/test/renderer.test.mjs && node apps/trainer/test/arcade-lab.test.mjs && node apps/trainer/test/coach.test.mjs && node apps/trainer/test/lessons.test.mjs && node apps/trainer/test/route-facts.test.mjs && node packages/play/test/phase-clock.test.js && node tools/observationlanguagetest.mjs && python3 packages/kernel/test/contract-vectors.py && python3 packages/play/bin/companion/test-companion-setup.py && python3 packages/play/test/test-companion-device-lock.py && python3 apps/lab/test/test-companion-queue.py && node apps/desktop/test/companion-mcp.test.mjs && python3 packages/play/bin/companion/test-teach-panel-clearance.py && python3 tools/device/test-death-cause.py && packages/play/bin/phone/test-game-teardown.sh && packages/play/bin/audio/test-bt-audio-link.sh && android/companion/test.sh && npm run test:device:calibration && node packages/source/test/footstep-value2.test.js &&node packages/source/test/mask-animation-input.test.js && node packages/play/test/companion-status.test.js && node packages/play/bin/companion/test-audio-probe.mjs",
+      "command": "node packages/source/test/contracts.test.js && node packages/source/test/control-catalog.test.js && node packages/source/test/truth.test.js && node packages/kernel/test/claim-envelope.test.js && node packages/kernel/test/venue-identity.test.js && node packages/propose/test/cycle-library.test.js && node packages/propose/test/cycle-planner.test.js && node packages/propose/test/cycle-controller.test.js && node packages/propose/test/night-policy.test.js && node packages/source/test/route-forks.test.js && node packages/source/test/drop-light-order.test.js && node packages/source/test/foxy-chain.test.js && node packages/source/test/unconditional-draws.test.js && node packages/source/test/event-draws.test.js && node packages/source/test/blackout-draws.test.js && node packages/source/test/view-draws.test.js && node packages/source/test/roll-draws.test.js && node packages/source/test/monitor-down-draw.test.js && node packages/source/test/second-pass.test.js && node packages/source/test/puppet-glitch-draws.test.js && node packages/source/test/sheet-order.test.js && node packages/source/test/frame-time-hook.test.js && node packages/source/test/last-view-pause.test.js && node packages/source/test/footstep-draws.test.js && node packages/source/test/vent-cam-draws.test.js && node packages/source/test/random-image-draw.test.js && node packages/source/test/monitor-raise-gate.test.js && node packages/source/test/mangle-return.test.js && node packages/source/test/gated-every.test.js && node packages/source/test/every-origin.test.js && node packages/source/test/rebuild-order.test.js && node packages/source/test/footstep-value2.test.js && node packages/source/test/foxy-move-value2.test.js && node packages/source/test/promoted-view-draws.test.js && node packages/source/test/hall-latch-order.test.js && node packages/source/test/rolls-before-moves.test.js && node packages/source/test/promoted-moves.test.js && node packages/source/test/value5.test.js && node packages/source/test/office-footsteps.test.js && node packages/source/test/blackout-clock-end.test.js && node packages/source/test/b-drain-order.test.js && node packages/source/test/route-pass.test.js && node packages/source/test/office-rolls.test.js && node packages/source/test/animation-count.test.js && node packages/source/test/bb-moves.test.js && node packages/source/test/exposure-value5.test.js && node packages/source/test/route-view-draws.test.js && node packages/source/test/drop-flag-order.test.js && node packages/source/test/mask-animation-input.test.js && node packages/play/test/control-exclusion.test.js && node packages/play/test/android-venue.test.js && node packages/play/test/conformance.test.js && node packages/play/test/monitor-rule.test.js && node packages/play/test/camera-rule.test.js && node packages/play/test/night-onset.test.js && node apps/desktop/test/device-cli.test.js && node packages/play/test/campaign.test.js && node packages/play/test/campaign-runner.test.js && node packages/play/test/campaign-infrastructure.test.js && node packages/play/test/campaign-composition.test.js && node packages/play/test/modern-campaign-terminal.test.js && node packages/play/test/campaign-signal.test.js && node packages/play/test/adb-bridge.test.js && node packages/play/test/venue-preflight.test.js && node packages/play/test/adb-device-local-executor.test.js && node packages/play/test/profile-game.test.js && node packages/play/test/static-terminal-window.test.js && node packages/play/test/post-night-halt.test.js && node packages/play/test/hid-read-gap.test.js && node packages/play/test/hid-second-contact.test.js && node packages/play/test/night-anchor.test.js && node packages/play/test/cycle-lesson.test.js && node packages/play/test/timed-start.test.js && node packages/propose/test/experiment.test.js && node packages/propose/test/legacy-equivalence.test.js && node packages/propose/test/test-bundle.mjs && node tools/device/test-phase-reconstruct.mjs && node tools/device/test-tap-stall-audit.mjs && python3 tools/device/test-framesource.py && python3 tools/device/test-decode-once.py && python3 tools/device/test-grade-night.py && python3 tools/device/test-cycle-ledger.py && python3 tools/device/test-office-seed-bracket.py && node packages/propose/bin/plans/test-minus3-frame-light.mjs && node packages/propose/test/test-artifact-animation-gates.mjs && node packages/review/test/vault.test.mjs && node packages/kernel/test/factlinktest.mjs && node packages/review/test/bench-trace.test.mjs && node apps/trainer/test/exercise.test.mjs && node apps/trainer/test/activity-gate.test.mjs && node apps/trainer/test/microtrainer.test.mjs && node apps/trainer/test/renderer.test.mjs && node apps/trainer/test/arcade-lab.test.mjs && node apps/trainer/test/coach.test.mjs && node apps/trainer/test/lessons.test.mjs && node apps/trainer/test/route-facts.test.mjs && node packages/play/test/phase-clock.test.js && node packages/propose/test/observationlanguagetest.mjs && python3 packages/kernel/test/contract-vectors.py && python3 packages/play/bin/companion/test-companion-setup.py && python3 packages/play/test/test-companion-device-lock.py && python3 apps/lab/test/test-companion-queue.py && node apps/desktop/test/companion-mcp.test.mjs && python3 packages/play/bin/companion/test-teach-panel-clearance.py && python3 tools/device/test-death-cause.py && packages/play/bin/phone/test-game-teardown.sh && packages/play/bin/audio/test-bt-audio-link.sh && android/companion/test.sh && npm run test:device:calibration && node packages/source/test/footstep-value2.test.js &&node packages/source/test/mask-animation-input.test.js && node packages/play/test/companion-status.test.js && node packages/play/bin/companion/test-audio-probe.mjs",
       "lifecycle": "supported"
     },
     {
@@ -115,7 +114,7 @@
     },
     {
       "id": "policy",
-      "command": "node tools/policy-inspect.js",
+      "command": "node packages/propose/bin/policy/policy-inspect.js",
       "lifecycle": "supported"
     },
     {
@@ -264,12 +263,6 @@
       "lifecycle": "supported"
     },
     {
-      "id": "tools/policy-inspect.js",
-      "invocation": "tools/policy-inspect.js",
-      "kind": "inspection CLI",
-      "lifecycle": "supported"
-    },
-    {
       "id": "tools/test-docs.mjs",
       "invocation": "tools/test-docs.mjs",
       "kind": "check",
@@ -330,312 +323,6 @@
       "lifecycle": "supported"
     },
     {
-      "id": "tools/model/reactive-pilot.mjs",
-      "invocation": "tools/model/reactive-pilot.mjs [n]",
-      "kind": "report/check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/policy.mjs",
-      "invocation": "tools/policy.mjs",
-      "kind": "internal module",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/policybaselines.mjs",
-      "invocation": "tools/policybaselines.mjs",
-      "kind": "internal module",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/policytest.mjs",
-      "invocation": "tools/policytest.mjs",
-      "kind": "report/check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/androidstalltest.mjs",
-      "invocation": "tools/androidstalltest.mjs",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/minustoystest.mjs",
-      "invocation": "tools/minustoystest.mjs [n]",
-      "kind": "report/check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/minus2test.mjs",
-      "invocation": "tools/minus2test.mjs [n]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/minus6test.mjs",
-      "invocation": "tools/minus6test.mjs [n]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/rvctest.mjs",
-      "invocation": "tools/rvctest.mjs [n]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/model/stock-device-pilot.mjs",
-      "invocation": "tools/model/stock-device-pilot.mjs [n]",
-      "kind": "legacy report/check",
-      "lifecycle": "legacy"
-    },
-    {
-      "id": "tools/phasesweep.mjs",
-      "invocation": "tools/phasesweep.mjs [n] [--sync]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/periodicsweep.mjs",
-      "invocation": "tools/periodicsweep.mjs [n]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/flicksweep.mjs",
-      "invocation": "tools/flicksweep.mjs [n]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/reactivetest.mjs",
-      "invocation": "tools/reactivetest.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/nightloop.mjs",
-      "invocation": "tools/nightloop.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/nightloop-run.mjs",
-      "invocation": "tools/nightloop-run.mjs",
-      "kind": "module",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/minus7/cycle.mjs",
-      "invocation": "tools/minus7/cycle.mjs",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/minustoys/cycle.mjs",
-      "invocation": "tools/minustoys/cycle.mjs",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/phase-tolerance.mjs",
-      "invocation": "tools/phase-tolerance.mjs",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/factreplay.mjs",
-      "invocation": "tools/factreplay.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/ventreacttest.mjs",
-      "invocation": "tools/ventreacttest.mjs",
-      "kind": "check/report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/mangletest.mjs",
-      "invocation": "tools/mangletest.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/reducedmodeltest.mjs",
-      "invocation": "tools/reducedmodeltest.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/latenesssweep.mjs",
-      "invocation": "tools/latenesssweep.mjs",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/model/closed-loop-reclaim.mjs",
-      "invocation": "tools/model/closed-loop-reclaim.mjs",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/cyclesearch.mjs",
-      "invocation": "tools/cyclesearch.mjs",
-      "kind": "search/report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/minus7/paramsearch.mjs",
-      "invocation": "tools/minus7/paramsearch.mjs --nights=N,N --shape=correlated [--runs --admit --beam --rounds --geom=slot:dev:con] [--winner-out PATH]",
-      "kind": "search/report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/minus7/geometrysearch.mjs",
-      "invocation": "tools/minus7/geometrysearch.mjs [--mode=grid\\|admit] [--runs --slots --dev-offsets --configs] [--winner-out PATH --admit-runs N]",
-      "kind": "search/report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/minus7/i10latency.mjs",
-      "invocation": "tools/minus7/i10latency.mjs [--runs=800] [--latencies=...]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/minus7/n7probe.mjs",
-      "invocation": "tools/minus7/n7probe.mjs [--runs=800]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/minus7/cyclelengthsearch.mjs",
-      "invocation": "tools/minus7/cyclelengthsearch.mjs [--windows=6000,...] [--runs --nights]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/minus7/devicetimesearch.mjs",
-      "invocation": "tools/minus7/devicetimesearch.mjs [--runs=600] [--nights=2,3,4,5,6,7]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/constrainedsearch.mjs",
-      "invocation": "tools/constrainedsearch.mjs --mode=screen\\|exhaustive\\|validate [--workers=N --pool-batch=N]",
-      "kind": "search/report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/minus7/constrained-worker.mjs",
-      "invocation": "tools/minus7/constrained-worker.mjs",
-      "kind": "module",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/minus7/robustify.mjs",
-      "invocation": "tools/minus7/robustify.mjs --night=N [--seeds --range --descend]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/minus7/sim.mjs",
-      "invocation": "tools/minus7/sim.mjs",
-      "kind": "module",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/minus7/test-search.mjs",
-      "invocation": "tools/minus7/test-search.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/pool.mjs",
-      "invocation": "tools/pool.mjs",
-      "kind": "internal module",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/pool-worker.mjs",
-      "invocation": "tools/pool-worker.mjs",
-      "kind": "internal module",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/policygrammartest.mjs",
-      "invocation": "tools/policygrammartest.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/observationlanguagetest.mjs",
-      "invocation": "tools/observationlanguagetest.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/policyequivalencetest.mjs",
-      "invocation": "tools/policyequivalencetest.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/policysearchtest.mjs",
-      "invocation": "tools/policysearchtest.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/policyartifacttest.mjs",
-      "invocation": "tools/policyartifacttest.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/fnaf1-device-lane.mjs",
-      "invocation": "tools/fnaf1-device-lane.mjs [--seeds N] [--start S] [--lane typical\\|worst\\|best\\|starved] [--policy grid420\\|flick4b] [--opt.key value] [--population [--route tree\\|winner] [--jobs J] [--out FILE]]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/fnaf1-population-checkpoints.mjs",
-      "invocation": "tools/fnaf1-population-checkpoints.mjs --checkpoints DIR --out FILE [--route winner\\|tree] [--start S] [--count N] [--jobs J] [--block-size N]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/test-fnaf1-population-checkpoints.mjs",
-      "invocation": "tools/test-fnaf1-population-checkpoints.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/census.mjs",
-      "invocation": "tools/census.mjs --game fnaf1",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/winner-census.mjs",
-      "invocation": "tools/winner-census.mjs [--winner FILE ...] [--start S] [--count N] [--jobs J] [--out FILE] [--sim-opt NAME ...]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/winner-phase-census.mjs",
-      "invocation": "tools/winner-phase-census.mjs --night N [--count K] [--window MS] [--jobs J] [--out FILE]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/test-winner-census.mjs",
-      "invocation": "tools/test-winner-census.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
       "id": "tools/rebuild-options-census.mjs",
       "invocation": "tools/rebuild-options-census.mjs [--jobs J] [--count N] [--out FILE] [--date YYYY-MM-DD] [--suffix LETTER] [--checkpoint DIR] [--assemble DIR] [--options FILE]",
       "kind": "report",
@@ -648,117 +335,9 @@
       "lifecycle": "supported"
     },
     {
-      "id": "tools/test-encounter-fidelity.mjs",
-      "invocation": "tools/test-encounter-fidelity.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/test-fnaf3-census.mjs",
-      "invocation": "tools/test-fnaf3-census.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/test-fnaf1-census.mjs",
-      "invocation": "tools/test-fnaf1-census.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/test-fnaf4-census.mjs",
-      "invocation": "tools/test-fnaf4-census.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/cue/audio-authority.py",
-      "invocation": "tools/cue/audio-authority.py [--socket PATH] [--model MODEL] [--profile PROFILE] [--raw-output PATH]",
-      "kind": "external-device authority",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/cue/latency-experiment.py",
-      "invocation": "tools/cue/latency-experiment.py preflight|run|analyze",
-      "kind": "report (`run` retired)",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/cue/collect-facts.py",
-      "invocation": "tools/cue/collect-facts.py --socket PATH --output OUT",
-      "kind": "external-device action",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/cue/test-audio-authority.py",
-      "invocation": "tools/cue/test-audio-authority.py",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/cue/features.py",
-      "invocation": "tools/cue/features.py",
-      "kind": "module",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/cue/reference-report.py",
-      "invocation": "tools/cue/reference-report.py [refdir]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/cue/detect.py",
-      "invocation": "tools/cue/detect.py WINDOW...",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/cue/evaluate.py",
-      "invocation": "tools/cue/evaluate.py BACKGROUND",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/cue/scan-night.sh",
-      "invocation": "tools/cue/scan-night.sh WAV [--refs DIR]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/cue/label-misses.py",
-      "invocation": "tools/cue/label-misses.py VISUAL AUDIO --start-ns N",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/cue/correlate.py",
-      "invocation": "tools/cue/correlate.py",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/cue/test-cue.py",
-      "invocation": "tools/cue/test-cue.py",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/cue/test-latency-experiment.py",
-      "invocation": "tools/cue/test-latency-experiment.py",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
       "id": "tools/device/overnight-window.py",
       "invocation": "tools/device/overnight-window.py",
       "kind": "compatibility",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/device-lane.mjs",
-      "invocation": "tools/device/device-lane.mjs --bundle DIR --night N [--seeds N] [--epoch MS]",
-      "kind": "report",
       "lifecycle": "supported"
     },
     {
@@ -780,12 +359,6 @@
       "lifecycle": "supported"
     },
     {
-      "id": "tools/device/test-bundle.mjs",
-      "invocation": "tools/device/test-bundle.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
       "id": "tools/device/phase-reconstruct.mjs",
       "invocation": "tools/device/phase-reconstruct.mjs --run DIR [--night N] [--seeds N] [--out FILE]",
       "kind": "report",
@@ -801,168 +374,6 @@
       "id": "tools/device/clocktrace.mjs",
       "invocation": "tools/device/clocktrace.mjs VIDEO",
       "kind": "analyzer",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-recipe.mjs",
-      "invocation": "tools/device/test-recipe.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-actuator.mjs",
-      "invocation": "tools/device/test-actuator.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/policy-ir.mjs",
-      "invocation": "tools/device/policy-ir.mjs",
-      "kind": "module",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/policy-interpreter.mjs",
-      "invocation": "tools/device/policy-interpreter.mjs",
-      "kind": "module/check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/policy-grammar.mjs",
-      "invocation": "tools/device/policy-grammar.mjs",
-      "kind": "module",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/closed-families.mjs",
-      "invocation": "tools/device/closed-families.mjs",
-      "kind": "module",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/policy-equivalence.mjs",
-      "invocation": "tools/device/policy-equivalence.mjs",
-      "kind": "module/check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/policy-search.mjs",
-      "invocation": "tools/device/policy-search.mjs",
-      "kind": "module",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/policy-artifact.mjs",
-      "invocation": "tools/device/policy-artifact.mjs",
-      "kind": "module/check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-policy-ir.mjs",
-      "invocation": "tools/device/test-policy-ir.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-policy-interpreter.mjs",
-      "invocation": "tools/device/test-policy-interpreter.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/night7-robustness.mjs",
-      "invocation": "tools/device/night7-robustness.mjs [--count K] [--jobs J] [--out FILE]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-night7-presets.mjs",
-      "invocation": "tools/device/test-night7-presets.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-minus-toys-plan.mjs",
-      "invocation": "tools/device/test-minus-toys-plan.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/minus3-frame-light.mjs",
-      "invocation": "tools/device/minus3-frame-light.mjs [--verify\\|--census] [--runs=N]",
-      "kind": "module/check/report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-minus3-frame-light.mjs",
-      "invocation": "tools/device/test-minus3-frame-light.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-artifact-animation-gates.mjs",
-      "invocation": "tools/device/test-artifact-animation-gates.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/night7-presets.mjs",
-      "invocation": "tools/device/night7-presets.mjs [--gate] [--epochs] [--bands] [--preset=id] [--runs=N] [--band=name] [--population [--jobs J] [--out FILE]] [--plane A,B [--bases 0,20] [--count K] [--jobs J] [--out FILE]]",
-      "kind": "generator/check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/night7-robustness-field.mjs",
-      "invocation": "tools/device/night7-robustness-field.mjs [--count N] [--lane-count M] [--jobs J] [--schedules ids] [--date D] [--out FILE]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/device-lane.mjs",
-      "invocation": "tools/device/device-lane.mjs --bundle DIR --night N [--seeds N] [--epoch MS] [--no-merge] [--no-floor] [--no-seams] [--late a,b] [--dials JSON]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/minus-toys-margin.mjs",
-      "invocation": "tools/device/minus-toys-margin.mjs [--night=N] [--seeds=N] [--max=MS]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-minus-toys-margin.mjs",
-      "invocation": "tools/device/test-minus-toys-margin.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/minus-toys-jitter.mjs",
-      "invocation": "tools/device/minus-toys-jitter.mjs [--nights=N,N] [--seeds=N] [--reanchor=none\\|am] [--basin\\|--sweep-jitter]",
-      "kind": "search/report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-minus-toys-jitter.mjs",
-      "invocation": "tools/device/test-minus-toys-jitter.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/human-gate.mjs",
-      "invocation": "tools/device/human-gate.mjs plan.txt",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-human-gate.mjs",
-      "invocation": "tools/device/test-human-gate.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-hid-trace.mjs",
-      "invocation": "tools/device/test-hid-trace.mjs [trace]",
-      "kind": "check",
       "lifecycle": "supported"
     },
     {
@@ -1020,12 +431,6 @@
       "lifecycle": "supported"
     },
     {
-      "id": "tools/device/death-prediction.mjs",
-      "invocation": "tools/device/death-prediction.mjs --winner W.json --night N [--replays 3000] [--step-ms 50] [--out FILE] [--attach]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
       "id": "tools/device/test-input-frame-align.py",
       "invocation": "tools/device/test-input-frame-align.py",
       "kind": "check",
@@ -1050,48 +455,6 @@
       "lifecycle": "supported"
     },
     {
-      "id": "tools/device/test-fnaf1-winner.mjs",
-      "invocation": "tools/device/test-fnaf1-winner.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/fnaf1-custom-run.mjs",
-      "invocation": "tools/device/fnaf1-custom-run.mjs",
-      "kind": "module",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-native-regions.mjs",
-      "invocation": "tools/device/test-native-regions.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/fnaf1-teach-media.py",
-      "invocation": "tools/device/fnaf1-teach-media.py --run DIR --video FILE.mp4 --out DIR [--only gif\\|all]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-device-input-gaps.mjs",
-      "invocation": "tools/device/test-device-input-gaps.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-night-matrix.mjs",
-      "invocation": "tools/device/test-night-matrix.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/gate-worker.mjs",
-      "invocation": "tools/device/gate-worker.mjs",
-      "kind": "internal module",
-      "lifecycle": "supported"
-    },
-    {
       "id": "tools/device/grade-run.sh",
       "invocation": "tools/device/grade-run.sh RUN_NAME [--require-seconds N]",
       "kind": "check",
@@ -1104,20 +467,8 @@
       "lifecycle": "supported"
     },
     {
-      "id": "tools/device/test-seam-slack.mjs",
-      "invocation": "tools/device/test-seam-slack.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
       "id": "tools/device/test-fact-register.mjs",
       "invocation": "tools/device/test-fact-register.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-winners-rebuild.mjs",
-      "invocation": "tools/device/test-winners-rebuild.mjs",
       "kind": "check",
       "lifecycle": "supported"
     },
@@ -1152,18 +503,6 @@
       "lifecycle": "supported"
     },
     {
-      "id": "tools/device/test-schedule-economy.mjs",
-      "invocation": "tools/device/test-schedule-economy.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/strategy-night-matrix.mjs",
-      "invocation": "tools/device/strategy-night-matrix.mjs [--runs 3000] [--structural] [--json]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
       "id": "tools/device/run-report.mjs",
       "invocation": "tools/device/run-report.mjs --run artifacts/campaign-... [--json]",
       "kind": "report",
@@ -1191,12 +530,6 @@
       "id": "tools/device/test-death-cause.py",
       "invocation": "tools/device/test-death-cause.py",
       "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/windtrace.mjs",
-      "invocation": "tools/device/windtrace.mjs --night=N [--seeds=A..B]",
-      "kind": "report",
       "lifecycle": "supported"
     },
     {
@@ -1278,12 +611,6 @@
       "lifecycle": "supported"
     },
     {
-      "id": "tools/device/epoch-scan.mjs",
-      "invocation": "tools/device/epoch-scan.mjs --winner W.json --night N [--from MS] [--to MS] [--step MS] [--seeds N] [--knobs JSON] [--epochs a,b] [--json OUT]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
       "id": "tools/device/office-seed-bracket.py",
       "invocation": "tools/device/office-seed-bracket.py LOGCAT [--onset-ms MS] [--json OUT]",
       "kind": "report",
@@ -1311,18 +638,6 @@
       "id": "tools/device/find-events.py",
       "invocation": "tools/device/find-events.py VIDEO",
       "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/bb-cue-state.mjs",
-      "invocation": "tools/device/bb-cue-state.mjs",
-      "kind": "module",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-bb-cue-state.mjs",
-      "invocation": "tools/device/test-bb-cue-state.mjs",
-      "kind": "check",
       "lifecycle": "supported"
     },
     {
@@ -1416,6 +731,36 @@
       "lifecycle": "supported"
     },
     {
+      "id": "apps/desktop/test/test-fnaf1-winner.mjs",
+      "invocation": "apps/desktop/test/test-fnaf1-winner.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "apps/desktop/bin/fnaf1-custom-run.mjs",
+      "invocation": "apps/desktop/bin/fnaf1-custom-run.mjs",
+      "kind": "module",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "apps/desktop/test/test-native-regions.mjs",
+      "invocation": "apps/desktop/test/test-native-regions.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "apps/desktop/bin/fnaf1-custom-run.sh",
+      "invocation": "apps/desktop/bin/fnaf1-custom-run.sh [--dry-run] \\| --live --confirm-live --dials F,B,C,X --mode calibrate-empty\\|grid420 [--detectors FILE] [--winner FILE \\| --route tree] [--teach] [--video] [--stop-after-ms MS] [--label NAME]",
+      "kind": "**device action**",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "apps/desktop/test/test-native-regions.mjs",
+      "invocation": "apps/desktop/test/test-native-regions.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
       "id": "apps/lab/companion-queue.sh",
       "invocation": "apps/lab/companion-queue.sh enqueue\\|list\\|cancel IDS --reason TEXT\\|run [--wait SECONDS] [--interval SECONDS] [--max-jobs N] [--nights]",
       "kind": "device action/check",
@@ -1479,6 +824,12 @@
       "id": "apps/wiki/test/chronicle.test.js",
       "invocation": "apps/wiki/test/chronicle.test.js",
       "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "apps/wiki/fnaf1-teach-media.py",
+      "invocation": "apps/wiki/fnaf1-teach-media.py --run DIR --video FILE.mp4 --out DIR [--only gif\\|all]",
+      "kind": "report",
       "lifecycle": "supported"
     },
     {
@@ -1950,12 +1301,6 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/play/games/fnaf1/fnaf1-custom-run.sh",
-      "invocation": "packages/play/games/fnaf1/fnaf1-custom-run.sh [--dry-run] \\| --live --confirm-live --dials F,B,C,X --mode calibrate-empty\\|grid420 [--detectors FILE] [--winner FILE \\| --route tree] [--teach] [--video] [--stop-after-ms MS] [--label NAME]",
-      "kind": "**device action**",
-      "lifecycle": "supported"
-    },
-    {
       "id": "packages/play/games/fnaf1/fnaf1-winner.mjs",
       "invocation": "packages/play/games/fnaf1/fnaf1-winner.mjs --winner FILE [--live --confirm-live] [--label NAME]",
       "kind": "**device action**",
@@ -2259,6 +1604,672 @@
       "id": "packages/propose/bin/plans/minus-toys-plan.mjs",
       "invocation": "packages/propose/bin/plans/minus-toys-plan.mjs --phasegate",
       "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/policy/policy-inspect.js",
+      "invocation": "packages/propose/bin/policy/policy-inspect.js",
+      "kind": "inspection CLI",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/reactive-pilot.mjs",
+      "invocation": "packages/propose/parked/minus7/reactive-pilot.mjs [n]",
+      "kind": "report/check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/policy.mjs",
+      "invocation": "packages/propose/parked/minus7/policy.mjs",
+      "kind": "internal module",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/policybaselines.mjs",
+      "invocation": "packages/propose/parked/minus7/policybaselines.mjs",
+      "kind": "internal module",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/policytest.mjs",
+      "invocation": "packages/propose/parked/minus7/policytest.mjs",
+      "kind": "report/check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/test/androidstalltest.mjs",
+      "invocation": "packages/propose/test/androidstalltest.mjs",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/minustoystest.mjs",
+      "invocation": "packages/propose/bin/minustoystest.mjs [n]",
+      "kind": "report/check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/minus2test.mjs",
+      "invocation": "packages/propose/bin/minus2test.mjs [n]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/minus6test.mjs",
+      "invocation": "packages/propose/bin/minus6test.mjs [n]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/rvctest.mjs",
+      "invocation": "packages/propose/bin/rvctest.mjs [n]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/stock-device-pilot.mjs",
+      "invocation": "packages/propose/parked/minus7/stock-device-pilot.mjs [n]",
+      "kind": "legacy report/check",
+      "lifecycle": "legacy"
+    },
+    {
+      "id": "packages/propose/parked/minus7/phasesweep.mjs",
+      "invocation": "packages/propose/parked/minus7/phasesweep.mjs [n] [--sync]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/periodicsweep.mjs",
+      "invocation": "packages/propose/parked/minus7/periodicsweep.mjs [n]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/flicksweep.mjs",
+      "invocation": "packages/propose/parked/minus7/flicksweep.mjs [n]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/test/reactivetest.mjs",
+      "invocation": "packages/propose/test/reactivetest.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/nightloop.mjs",
+      "invocation": "packages/propose/bin/nightloop.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/nightloop-run.mjs",
+      "invocation": "packages/propose/bin/nightloop-run.mjs",
+      "kind": "module",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/cycle.mjs",
+      "invocation": "packages/propose/parked/minus7/cycle.mjs",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/minus-toys/cycle.mjs",
+      "invocation": "packages/propose/bin/minus-toys/cycle.mjs",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/phase-tolerance.mjs",
+      "invocation": "packages/propose/parked/minus7/phase-tolerance.mjs",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/factreplay.mjs",
+      "invocation": "packages/propose/bin/factreplay.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/ventreacttest.mjs",
+      "invocation": "packages/propose/bin/ventreacttest.mjs",
+      "kind": "check/report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/test/mangletest.mjs",
+      "invocation": "packages/propose/test/mangletest.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/test/reducedmodeltest.mjs",
+      "invocation": "packages/propose/test/reducedmodeltest.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/latenesssweep.mjs",
+      "invocation": "packages/propose/parked/minus7/latenesssweep.mjs",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/closed-loop-reclaim.mjs",
+      "invocation": "packages/propose/parked/minus7/closed-loop-reclaim.mjs",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/cyclesearch.mjs",
+      "invocation": "packages/propose/parked/minus7/cyclesearch.mjs",
+      "kind": "search/report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/paramsearch.mjs",
+      "invocation": "packages/propose/parked/minus7/paramsearch.mjs --nights=N,N --shape=correlated [--runs --admit --beam --rounds --geom=slot:dev:con] [--winner-out PATH]",
+      "kind": "search/report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/geometrysearch.mjs",
+      "invocation": "packages/propose/parked/minus7/geometrysearch.mjs [--mode=grid\\|admit] [--runs --slots --dev-offsets --configs] [--winner-out PATH --admit-runs N]",
+      "kind": "search/report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/i10latency.mjs",
+      "invocation": "packages/propose/parked/minus7/i10latency.mjs [--runs=800] [--latencies=...]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/n7probe.mjs",
+      "invocation": "packages/propose/parked/minus7/n7probe.mjs [--runs=800]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/cyclelengthsearch.mjs",
+      "invocation": "packages/propose/parked/minus7/cyclelengthsearch.mjs [--windows=6000,...] [--runs --nights]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/devicetimesearch.mjs",
+      "invocation": "packages/propose/parked/minus7/devicetimesearch.mjs [--runs=600] [--nights=2,3,4,5,6,7]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/constrainedsearch.mjs",
+      "invocation": "packages/propose/parked/minus7/constrainedsearch.mjs --mode=screen\\|exhaustive\\|validate [--workers=N --pool-batch=N]",
+      "kind": "search/report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/constrained-worker.mjs",
+      "invocation": "packages/propose/parked/minus7/constrained-worker.mjs",
+      "kind": "module",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/robustify.mjs",
+      "invocation": "packages/propose/parked/minus7/robustify.mjs --night=N [--seeds --range --descend]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/sim.mjs",
+      "invocation": "packages/propose/parked/minus7/sim.mjs",
+      "kind": "module",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/test-search.mjs",
+      "invocation": "packages/propose/parked/minus7/test-search.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/census/pool.mjs",
+      "invocation": "packages/propose/bin/census/pool.mjs",
+      "kind": "internal module",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/census/pool-worker.mjs",
+      "invocation": "packages/propose/bin/census/pool-worker.mjs",
+      "kind": "internal module",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/test/policygrammartest.mjs",
+      "invocation": "packages/propose/test/policygrammartest.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/test/observationlanguagetest.mjs",
+      "invocation": "packages/propose/test/observationlanguagetest.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/test/policyequivalencetest.mjs",
+      "invocation": "packages/propose/test/policyequivalencetest.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/test/policysearchtest.mjs",
+      "invocation": "packages/propose/test/policysearchtest.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/test/policyartifacttest.mjs",
+      "invocation": "packages/propose/test/policyartifacttest.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/census/fnaf1-device-lane.mjs",
+      "invocation": "packages/propose/bin/census/fnaf1-device-lane.mjs [--seeds N] [--start S] [--lane typical\\|worst\\|best\\|starved] [--policy grid420\\|flick4b] [--opt.key value] [--population [--route tree\\|winner] [--jobs J] [--out FILE]]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/census/fnaf1-population-checkpoints.mjs",
+      "invocation": "packages/propose/bin/census/fnaf1-population-checkpoints.mjs --checkpoints DIR --out FILE [--route winner\\|tree] [--start S] [--count N] [--jobs J] [--block-size N]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/census/test-fnaf1-population-checkpoints.mjs",
+      "invocation": "packages/propose/bin/census/test-fnaf1-population-checkpoints.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/census/test-fnaf1-device-lane.mjs",
+      "invocation": "packages/propose/bin/census/test-fnaf1-device-lane.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/census/census.mjs",
+      "invocation": "packages/propose/bin/census/census.mjs --game fnaf1",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/census/winner-census.mjs",
+      "invocation": "packages/propose/bin/census/winner-census.mjs [--winner FILE ...] [--start S] [--count N] [--jobs J] [--out FILE] [--sim-opt NAME ...]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/census/winner-phase-census.mjs",
+      "invocation": "packages/propose/bin/census/winner-phase-census.mjs --night N [--count K] [--window MS] [--jobs J] [--out FILE]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/census/test-winner-census.mjs",
+      "invocation": "packages/propose/bin/census/test-winner-census.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/test/test-encounter-fidelity.mjs",
+      "invocation": "packages/propose/test/test-encounter-fidelity.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/census/test-fnaf3-census.mjs",
+      "invocation": "packages/propose/bin/census/test-fnaf3-census.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/census/test-fnaf1-census.mjs",
+      "invocation": "packages/propose/bin/census/test-fnaf1-census.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/census/test-fnaf4-census.mjs",
+      "invocation": "packages/propose/bin/census/test-fnaf4-census.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/plans/device-lane.mjs",
+      "invocation": "packages/propose/bin/plans/device-lane.mjs --bundle DIR --night N [--seeds N] [--epoch MS]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/test/test-bundle.mjs",
+      "invocation": "packages/propose/test/test-bundle.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/test/test-recipe.mjs",
+      "invocation": "packages/propose/test/test-recipe.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/test/test-actuator.mjs",
+      "invocation": "packages/propose/test/test-actuator.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/policy/policy-ir.mjs",
+      "invocation": "packages/propose/bin/policy/policy-ir.mjs",
+      "kind": "module",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/policy/policy-interpreter.mjs",
+      "invocation": "packages/propose/bin/policy/policy-interpreter.mjs",
+      "kind": "module/check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/policy/policy-grammar.mjs",
+      "invocation": "packages/propose/bin/policy/policy-grammar.mjs",
+      "kind": "module",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/policy/closed-families.mjs",
+      "invocation": "packages/propose/bin/policy/closed-families.mjs",
+      "kind": "module",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/policy/policy-equivalence.mjs",
+      "invocation": "packages/propose/bin/policy/policy-equivalence.mjs",
+      "kind": "module/check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/policy/policy-search.mjs",
+      "invocation": "packages/propose/bin/policy/policy-search.mjs",
+      "kind": "module",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/policy/policy-artifact.mjs",
+      "invocation": "packages/propose/bin/policy/policy-artifact.mjs",
+      "kind": "module/check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/policy/test-policy-ir.mjs",
+      "invocation": "packages/propose/bin/policy/test-policy-ir.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/policy/test-policy-interpreter.mjs",
+      "invocation": "packages/propose/bin/policy/test-policy-interpreter.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/plans/night7-robustness.mjs",
+      "invocation": "packages/propose/bin/plans/night7-robustness.mjs [--count K] [--jobs J] [--out FILE]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/plans/test-night7-presets.mjs",
+      "invocation": "packages/propose/bin/plans/test-night7-presets.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/plans/test-minus-toys-plan.mjs",
+      "invocation": "packages/propose/bin/plans/test-minus-toys-plan.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/plans/minus3-frame-light.mjs",
+      "invocation": "packages/propose/bin/plans/minus3-frame-light.mjs [--verify\\|--census] [--runs=N]",
+      "kind": "module/check/report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/plans/test-minus3-frame-light.mjs",
+      "invocation": "packages/propose/bin/plans/test-minus3-frame-light.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/test/test-artifact-animation-gates.mjs",
+      "invocation": "packages/propose/test/test-artifact-animation-gates.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/plans/night7-presets.mjs",
+      "invocation": "packages/propose/bin/plans/night7-presets.mjs [--gate] [--epochs] [--bands] [--preset=id] [--runs=N] [--band=name] [--population [--jobs J] [--out FILE]] [--plane A,B [--bases 0,20] [--count K] [--jobs J] [--out FILE]]",
+      "kind": "generator/check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/plans/night7-robustness-field.mjs",
+      "invocation": "packages/propose/bin/plans/night7-robustness-field.mjs [--count N] [--lane-count M] [--jobs J] [--schedules ids] [--date D] [--out FILE]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/plans/device-lane.mjs",
+      "invocation": "packages/propose/bin/plans/device-lane.mjs --bundle DIR --night N [--seeds N] [--epoch MS] [--no-merge] [--no-floor] [--no-seams] [--late a,b] [--dials JSON]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/plans/minus-toys-margin.mjs",
+      "invocation": "packages/propose/bin/plans/minus-toys-margin.mjs [--night=N] [--seeds=N] [--max=MS]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/plans/test-minus-toys-margin.mjs",
+      "invocation": "packages/propose/bin/plans/test-minus-toys-margin.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/plans/minus-toys-jitter.mjs",
+      "invocation": "packages/propose/bin/plans/minus-toys-jitter.mjs [--nights=N,N] [--seeds=N] [--reanchor=none\\|am] [--basin\\|--sweep-jitter]",
+      "kind": "search/report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/plans/test-minus-toys-jitter.mjs",
+      "invocation": "packages/propose/bin/plans/test-minus-toys-jitter.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/plans/human-gate.mjs",
+      "invocation": "packages/propose/bin/plans/human-gate.mjs plan.txt",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/plans/test-human-gate.mjs",
+      "invocation": "packages/propose/bin/plans/test-human-gate.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/test/test-hid-trace.mjs",
+      "invocation": "packages/propose/test/test-hid-trace.mjs [trace]",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/plans/death-prediction.mjs",
+      "invocation": "packages/propose/bin/plans/death-prediction.mjs --winner W.json --night N [--replays 3000] [--step-ms 50] [--out FILE] [--attach]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/test-device-input-gaps.mjs",
+      "invocation": "packages/propose/parked/minus7/test-device-input-gaps.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/plans/test-night-matrix.mjs",
+      "invocation": "packages/propose/bin/plans/test-night-matrix.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/plans/gate-worker.mjs",
+      "invocation": "packages/propose/bin/plans/gate-worker.mjs",
+      "kind": "internal module",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/test/test-seam-slack.mjs",
+      "invocation": "packages/propose/test/test-seam-slack.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/test/test-winners-rebuild.mjs",
+      "invocation": "packages/propose/test/test-winners-rebuild.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/test/test-schedule-economy.mjs",
+      "invocation": "packages/propose/test/test-schedule-economy.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/plans/strategy-night-matrix.mjs",
+      "invocation": "packages/propose/bin/plans/strategy-night-matrix.mjs [--runs 3000] [--structural] [--json]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/report/windtrace.mjs",
+      "invocation": "packages/propose/bin/report/windtrace.mjs --night=N [--seeds=A..B]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/plans/epoch-scan.mjs",
+      "invocation": "packages/propose/bin/plans/epoch-scan.mjs --winner W.json --night N [--from MS] [--to MS] [--step MS] [--seeds N] [--knobs JSON] [--epochs a,b] [--json OUT]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/bb-cue-state.mjs",
+      "invocation": "packages/propose/parked/minus7/bb-cue-state.mjs",
+      "kind": "module",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/test-bb-cue-state.mjs",
+      "invocation": "packages/propose/parked/minus7/test-bb-cue-state.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/cue/audio-authority.py",
+      "invocation": "packages/propose/parked/minus7/cue/audio-authority.py [--socket PATH] [--model MODEL] [--profile PROFILE] [--raw-output PATH]",
+      "kind": "external-device authority",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/cue/latency-experiment.py",
+      "invocation": "packages/propose/parked/minus7/cue/latency-experiment.py preflight|run|analyze",
+      "kind": "report (`run` retired)",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/cue/collect-facts.py",
+      "invocation": "packages/propose/parked/minus7/cue/collect-facts.py --socket PATH --output OUT",
+      "kind": "external-device action",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/cue/test-audio-authority.py",
+      "invocation": "packages/propose/parked/minus7/cue/test-audio-authority.py",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/cue/features.py",
+      "invocation": "packages/propose/parked/minus7/cue/features.py",
+      "kind": "module",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/cue/reference-report.py",
+      "invocation": "packages/propose/parked/minus7/cue/reference-report.py [refdir]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/cue/detect.py",
+      "invocation": "packages/propose/parked/minus7/cue/detect.py WINDOW...",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/cue/evaluate.py",
+      "invocation": "packages/propose/parked/minus7/cue/evaluate.py BACKGROUND",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/cue/scan-night.sh",
+      "invocation": "packages/propose/parked/minus7/cue/scan-night.sh WAV [--refs DIR]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/cue/label-misses.py",
+      "invocation": "packages/propose/parked/minus7/cue/label-misses.py VISUAL AUDIO --start-ns N",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/cue/correlate.py",
+      "invocation": "packages/propose/parked/minus7/cue/correlate.py",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/cue/test-cue.py",
+      "invocation": "packages/propose/parked/minus7/cue/test-cue.py",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/parked/minus7/cue/test-latency-experiment.py",
+      "invocation": "packages/propose/parked/minus7/cue/test-latency-experiment.py",
+      "kind": "check",
       "lifecycle": "supported"
     },
     {

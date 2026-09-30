@@ -143,7 +143,7 @@ coarse end description. It is not yet a positive 6 AM/win classifier.
 | Root/format | `captures/cue-helper/calibration/LABEL-cue-WALLTIME-pPRE-qPOST.wav`; mono 16-bit WAV at the helper's capture rate |
 | Primary content | External receiver's rendered mix. The current BlueALSA/A2DP path includes the full output mix; an ESP32 adapter must use its own transport calibration. Legacy Android playback-capture artifacts are historical and not interchangeable. |
 | Clock | PCM sample offset plus helper monotonic `startNs` for continuous logs; filename uses wall time |
-| Consumers | `tools/cue/detect.py`, `evaluate.py`, `scan-night.sh`, `label-misses.py`, `grade-run.sh` |
+| Consumers | `packages/propose/parked/minus7/cue/detect.py`, `evaluate.py`, `scan-night.sh`, `label-misses.py`, `grade-run.sh` |
 | Labels | Filename label is operator/collection intent; true bang labels require an independent visual arrival stream |
 | Split discipline | `collect-cue-audio.sh` writes a sessions TSV to preserve round boundaries; detector plan requires complete-session splits |
 | Critical gap | External authority fact streams carry sender timestamps and sequence numbers, but a trial does not yet persist a joined audio-fact/visual timeline. A future bridge must preserve the authority clock domain and reject stale or missing facts rather than infer audio state from the visual APK snapshot. |

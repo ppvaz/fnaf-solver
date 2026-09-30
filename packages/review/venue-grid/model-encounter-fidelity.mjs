@@ -180,7 +180,7 @@ const record = {
     'The prior Night 7 traced-night discrepancy remains open; this record makes no new Night 7 traced-clock equivalence claim.',
     'A full or held-out census under the gated option and a same-phase traced phone validation remain open.',
   ],
-  gates: ['packages/source/test/gated-every.test.js', 'tools/test-encounter-fidelity.mjs'],
+  gates: ['packages/source/test/gated-every.test.js', 'packages/propose/test/test-encounter-fidelity.mjs'],
 };
 writeFileSync(output, `${JSON.stringify(record, null, 2)}\n`);
 console.log(`${record.id}: tw-04 2/11 and 1/11 unchanged; short-mask BB/Mangle hazard reproduced MODEL_ONLY; S2 OPEN; census ${census.bindings.length} night-bindings, 3000 design / 0 held-out seeds`);

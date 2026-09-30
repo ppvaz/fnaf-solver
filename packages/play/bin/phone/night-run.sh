@@ -621,7 +621,7 @@ CAMPAIGN=(node apps/desktop/src/device-cli.js campaign
 # bound at all the anchor is OFF. Every anchor refusal at run time also
 # releases at once.
 BUNDLE_WINNER_HASH="$(node -e 'process.stdout.write(String(JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).winnerHash ?? ""))' "$BUNDLE/manifest.json" 2>/dev/null || true)"
-# A death-targeting bundle (gate DEATH_TARGETED, tools/device/death-prediction.mjs)
+# A death-targeting bundle (gate DEATH_TARGETED, packages/propose/bin/plans/death-prediction.mjs)
 # exists to test a model prediction of a death. The prediction is retained
 # beside the run BEFORE the campaign starts, so the read-out cannot be fitted
 # to the outcome, and it is printed so the operator knows what the run claims.

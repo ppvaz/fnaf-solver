@@ -195,7 +195,7 @@ parsers skip, because they only read rows once a matching `#cycle` has opened),
 a Night 3 plan against Night 6's table) and `human-gate.mjs` (which refuses a
 plan that names no night rather than guessing one).
 
-`tools/device/test-night-matrix.mjs` holds the matrix, and Night 6's emitted
+`packages/propose/bin/plans/test-night-matrix.mjs` holds the matrix, and Night 6's emitted
 plan is pinned byte-for-byte against `testdata/n6-device-plan.txt`:
 
 | Night | Exact | Human slack ±60 ms | Light frames | Peak BB AI | Attack branch | BB reads |

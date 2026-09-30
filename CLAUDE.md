@@ -185,7 +185,7 @@ Each entry below cost a live attempt or a false diagnosis on 2026-09-06.
    while the game clock can trail by a minute). Port reuse is not timing
    reuse.
 5. **Never report a test PASS you did not see print.** A wrong test path
-   (`tools/test-bundle.mjs` vs `tools/device/test-bundle.mjs`) failed
+   (`tools/test-bundle.mjs` vs `packages/propose/test/test-bundle.mjs`) failed
    silently behind `> /dev/null 2>&1 && echo` twice before being caught.
    Confirm the file exists and the pass line is in the output before
    claiming green.
@@ -249,6 +249,28 @@ Each entry below cost a wrong diagnosis or a wasted device run on 2026-09-11.
     describes as holding intentionally red controls. It had been failing on 11
     scripts, `phase-reconstruct.mjs` among them — which is exactly why two
     sessions ran that by hand. Structural gates belong in `npm run test:unit`.
+
+## Mistake register (2026-09-30 — the moves)
+
+Each entry below broke a gate, a test or a replay during the ADR 0002 moves.
+
+14. **A move rewrites what names a path, not what builds one.** A `git mv` plus
+    a rewrite of imports and repo-rooted mentions left references built from a
+    script's own location broken across three moves: `new URL('x',
+    import.meta.url)`, `join(HERE, 'x')`, `${HERE}x`, `HERE / "x"` and
+    `"$HERE/x"`; a glob that then matched nothing (grade-run.sh's death-cause
+    models); `readdirSync(HERE)` that then listed nothing, so two tests passed
+    over zero winners; an import placed before its `sys.path` insert; a
+    regex-escaped path. `tools/test-sibling-paths.js` refuses the literal forms.
+    A listing, a template or a string inside another language still has to be
+    read, and a test that finds nothing to check must fail.
+
+15. **A path inside a pinned record names that record's tree, not this
+    checkout.** A winner's `sources` keys, `fnaf1-winner.mjs`'s `RUNNER` and the
+    lane a pinned tree imports are where each file stood at the pinned commit;
+    rewriting them to the new location made every FNaF 1 replay refuse
+    (`test-fnaf1-winner.mjs`). A record pinned by sha256 keeps its bytes too,
+    and its readers follow the file instead.
 
 Canonical routes: [charter](PROJECT-CHARTER.md),
 [architecture](docs/architecture/README.md),

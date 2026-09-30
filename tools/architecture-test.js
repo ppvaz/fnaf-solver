@@ -200,6 +200,13 @@ const legacyCatalog = JSON.parse(await readFile(join(ROOT, 'docs/architecture/ge
 const PLAY_READS = ['packages/play', 'packages/kernel', 'packages/source', 'builtin'];
 const DEVICE_SHELL = ['node:child_process', 'node:net', 'node:dgram'];
 const PROPOSE_READS = ['packages/propose', 'packages/kernel', 'packages/source', 'packages/play', 'packages/review', 'builtin'];
+// Propose command lines that import a module whose path is computed, each with why it cannot be written down.
+const COMPUTED_IMPORTS = new Map([
+  ['packages/propose/bin/census/fnaf1-device-lane.mjs', 'grid420 as a winner\'s pinned commit holds it, from the ' +
+    'temporary tree fnaf1-winner.mjs materializes and checks file by file'],
+  ['packages/propose/bin/census/pool-worker.mjs', 'the task module a pool.mjs batch names, held for the life of the worker'],
+  ['packages/propose/bin/census/pool.mjs', 'the same task module, imported in-process when the pool runs serially'],
+]);
 const RULES = [
   {
     id: 'kernel', scope: path => path.startsWith('packages/kernel/src/'),
@@ -232,10 +239,17 @@ const RULES = [
     why: 'play tests import only play, the kernel, source and Node built-ins',
   },
   {
-    id: 'propose', scope: path => path.startsWith('packages/propose/') && !path.startsWith('packages/propose/test/'),
+    id: 'propose', scope: path => path.startsWith('packages/propose/src/'),
     refuse: ref => !PROPOSE_READS.includes(ref.unit) || DEVICE_SHELL.includes(ref.target ?? ''),
     why: 'propose imports itself, the kernel, source, play and review (ADR 0002), ' +
       'never the device shell (apps, tools, child_process, net, dgram)',
+  },
+  {
+    id: 'propose-bin', scope: path => path.startsWith('packages/propose/') && !path.startsWith('packages/propose/src/') &&
+      !path.startsWith('packages/propose/test/'),
+    refuse: (ref, path) => !PROPOSE_READS.includes(ref.unit) && !(ref.unit === 'UNRESOLVED' && COMPUTED_IMPORTS.has(path)),
+    why: 'propose\'s command lines and parked work import what propose may and Node built-ins, a child process ' +
+      'included; never an application, tools/ or a computed import outside COMPUTED_IMPORTS',
   },
   {
     id: 'propose-test', scope: path => path.startsWith('packages/propose/test/'),
@@ -348,6 +362,13 @@ assert.deepEqual(planted(PROPOSE, "import { NightPolicy } from '@sixam/core/cont
 assert.deepEqual(planted('packages/propose/test/planted.test.js',
   "import { spawn } from 'node:child_process';\nimport { NightPolicy } from '@sixam/propose/fnaf2';"), [],
 'a propose test may import propose and node:');
+// Its command lines (bin/, parked/) run censuses in child processes; they still stay out of the applications.
+const PROPOSE_BIN = 'packages/propose/bin/planted.mjs';
+assert.deepEqual(planted(PROPOSE_BIN, "import { fork } from 'node:child_process';"), [], 'a propose command line may fork');
+assert.deepEqual(planted(PROPOSE_BIN, "import { cli } from '@sixam/desktop';"), ['propose-bin'],
+  'a propose command line must not import the composition root');
+assert.deepEqual(planted(PROPOSE_BIN, "export const load = (where) => import(where);"), ['propose-bin'],
+  'a propose command line must not import a computed path unless COMPUTED_IMPORTS names it');
 assert.deepEqual(planted('packages/play/src/planted.js', "import { NightPolicy } from '@sixam/propose';"),
   ['play', 'propose-importers'], 'play must not import propose');
 // Play (ADR 0002) imports itself, the kernel, source and Node built-ins; nothing
@@ -500,7 +521,7 @@ for (const path of operational) {
 // new composer is a new way onto the phone and has to be named here in the
 // diff that adds it.
 const physicalActuatorOwners = new Set(['packages/play/src/campaign/modern-campaign-ports.js',
-  'packages/play/games/fnaf1/fnaf1-night-run.mjs', 'tools/device/fnaf1-custom-run.mjs', 'packages/play/games/fnaf1/fnaf1-menu-probe.mjs',
+  'packages/play/games/fnaf1/fnaf1-night-run.mjs', 'apps/desktop/bin/fnaf1-custom-run.mjs', 'packages/play/games/fnaf1/fnaf1-menu-probe.mjs',
   'packages/play/games/fnaf3/fnaf3-run.mjs', 'packages/play/games/fnaf4/fnaf4-run.mjs', 'packages/play/bin/phone/explore-step.mjs']
   .map(path => join(ROOT, path)));
 // The transport's own module defines the class; every other module in apps,

@@ -30,7 +30,7 @@
 #             socket. Cable-bound: nothing on the device has to open a port.
 #             Select with CUE_HELPER_TRANSPORT=forward.
 #
-# Audio is not an APK operation. Use `tools/cue/audio-authority.py` on the
+# Audio is not an APK operation. Use `packages/propose/parked/minus7/cue/audio-authority.py` on the
 # external receiver host for route checks, PCM, and fact messages.
 set -euo pipefail
 
@@ -64,7 +64,7 @@ case "${1:-}" in
 esac
 case "$VERB" in
   record|log|model|arm|result)
-    echo "$VERB is no longer an APK operation; use tools/cue/audio-authority.py on the external receiver host" >&2
+    echo "$VERB is no longer an APK operation; use packages/propose/parked/minus7/cue/audio-authority.py on the external receiver host" >&2
     exit 2
     ;;
 esac

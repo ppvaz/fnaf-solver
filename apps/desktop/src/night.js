@@ -29,7 +29,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 export const GAMES = Object.freeze({
   fnaf2: { runner: 'packages/play/bin/phone/night-run.sh', packs: null },
   fnaf1: { runner: 'packages/play/games/fnaf1/fnaf1-night-run.sh', packs: /^fnaf1-night\d+-/ },
-  'fnaf1-custom': { runner: 'packages/play/games/fnaf1/fnaf1-custom-run.sh', packs: /^fnaf1-custom-/ },
+  'fnaf1-custom': { runner: 'apps/desktop/bin/fnaf1-custom-run.sh', packs: /^fnaf1-custom-/ },
   // A committed FNaF 1 winner, re-run from its pinned commit (fnaf1-winner.mjs).
   'fnaf1-winner': { runner: 'packages/play/games/fnaf1/fnaf1-winner.mjs', packs: /^fnaf1-custom-/ },
 });

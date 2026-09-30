@@ -168,7 +168,7 @@ That is a **one-frame phase island**, and it is bounded on both sides:
 
 Night 6 only halves (20/20 → 10/20) under the same shift, because AI 10/15
 tolerates D = 5 and only the post-2 AM hours do not. This is exactly what
-`tools/device/human-gate.mjs` exists to refuse: precision, not speed, is what
+`packages/propose/bin/plans/human-gate.mjs` exists to refuse: precision, not speed, is what
 separates a human from a machine, and no hand holds a one-frame phase.
 
 **Follow-up, 2026-08-27 (simulator; see `plans/PROGRESS.md` item 11).** The

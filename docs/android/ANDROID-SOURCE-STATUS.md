@@ -488,7 +488,7 @@ Best scores over that recording: sample 17 **0.606**, sample 21 0.486, sample 23
 0.437, sample 24 0.347, against per-sample p99 background of 0.476/0.367/0.335/
 0.249. The cue is quiet by design, not missing by accident.
 
-It also indicts the detector's own design. `tools/cue/features.py` removes each
+It also indicts the detector's own design. `packages/propose/parked/minus7/cue/features.py` removes each
 frame's mean precisely to be level-invariant, which is right for robustness to
 capture gain — and which throws away exactly the quantity that separates
 `your view` from a route hop. A detector that wants both must carry a separately
@@ -557,7 +557,7 @@ already assumed.
 ### The simulator has been reading a field the phone cannot hear
 
 `src/engine.js` emits `vent-bang` with a `who`, and two controllers consume it:
-`tools/minus6test.mjs` counts threats with `e.data?.who !== 'bb'`, and
+`packages/propose/bin/minus6test.mjs` counts threats with `e.data?.who !== 'bb'`, and
 `packages/propose/parked/minus7/hid-device-pilot.mjs --vocal-cam5` resets its vocal count on
 `who === 'bb' && leaving`. The source says every one of those events is sample
 17. No audio detector can recover `who`, so both controllers are using a sensor
@@ -1026,7 +1026,7 @@ parameter).
 - **The engine now models this.** `src/engine.js` keeps `viewing`, `cam`, and
   `lastViewed` separately; the raise restore can create the sourced split, and
   the camera-light rule applies its target from the marker while retaining the
-  `viewing` immunity gate. `tools/minustoystest.mjs` and
+  `viewing` immunity gate. `packages/propose/bin/minustoystest.mjs` and
   `packages/propose/bin/plans/minus-toys-plan.mjs` exercise it with split and no-split
   controls. The remaining question is transfer of a full policy under device
   timing, not whether Android has the state.

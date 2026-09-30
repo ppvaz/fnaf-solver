@@ -21,7 +21,7 @@
 //            positive state in the same run." run-report.mjs's five-read
 //            threshold is exercised on both sides of the boundary; before this
 //            nothing asserted it.
-//   items 7, 9  are tools/device/test-seam-slack.mjs's: every compiled plan
+//   items 7, 9  are packages/propose/test/test-seam-slack.mjs's: every compiled plan
 //            clears every floor by the allowance, and the mask floor IS its
 //            measurement, read from SEAM_FLOORS rather than from a comment.
 //            That equality was checked in one direction only; a floor BELOW
@@ -64,17 +64,17 @@ const EXEMPT = new Map([
   ['apps/trainer/test/pages.test.mjs', 'browser group: needs Chrome, like its siblings, and runs with them (npm run test:browser:realtime); not timing-sensitive, so a CI step could run it'],
   // tools/test.mjs's REPORTS group: named like tests, but they print numbers
   // and always exit 0, so a lane would count a verdict that does not exist.
-  ['tools/minus2test.mjs', 'report, not a check: tools/test.mjs --reports prints it and never judges it'],
-  ['tools/minus6test.mjs', 'report, not a check: tools/test.mjs --reports prints it and never judges it'],
-  ['tools/rvctest.mjs', 'report, not a check: tools/test.mjs --reports prints it and never judges it'],
-  ['tools/androidstalltest.mjs', 'report, not a check: tools/test.mjs --reports prints it and never judges it'],
+  ['packages/propose/bin/minus2test.mjs', 'report, not a check: tools/test.mjs --reports prints it and never judges it'],
+  ['packages/propose/bin/minus6test.mjs', 'report, not a check: tools/test.mjs --reports prints it and never judges it'],
+  ['packages/propose/bin/rvctest.mjs', 'report, not a check: tools/test.mjs --reports prints it and never judges it'],
+  ['packages/propose/test/androidstalltest.mjs', 'report, not a check: tools/test.mjs --reports prints it and never judges it'],
   // tools/test.mjs's EXTENDED_ENGINE: "green, but four minutes on its own
   // (2026-09-24): too slow for --gates". No CI step runs --extended either, so
   // these four are item 13's open debt, recorded rather than hidden.
-  ['tools/device/test-minus-toys-plan.mjs', 'extended tier (minutes): only `npm run test:simulation` runs it, and no CI step does -- open item-13 debt'],
-  ['tools/device/test-minus-toys-margin.mjs', 'extended tier (minutes): only `npm run test:simulation` runs it, and no CI step does -- open item-13 debt'],
-  ['tools/device/test-minus-toys-jitter.mjs', 'extended tier (minutes): only `npm run test:simulation` runs it, and no CI step does -- open item-13 debt'],
-  ['tools/device/test-night-matrix.mjs', 'extended tier (minutes): only `npm run test:simulation` runs it, and no CI step does -- open item-13 debt'],
+  ['packages/propose/bin/plans/test-minus-toys-plan.mjs', 'extended tier (minutes): only `npm run test:simulation` runs it, and no CI step does -- open item-13 debt'],
+  ['packages/propose/bin/plans/test-minus-toys-margin.mjs', 'extended tier (minutes): only `npm run test:simulation` runs it, and no CI step does -- open item-13 debt'],
+  ['packages/propose/bin/plans/test-minus-toys-jitter.mjs', 'extended tier (minutes): only `npm run test:simulation` runs it, and no CI step does -- open item-13 debt'],
+  ['packages/propose/bin/plans/test-night-matrix.mjs', 'extended tier (minutes): only `npm run test:simulation` runs it, and no CI step does -- open item-13 debt'],
   // Named like a test, but a runner: it picks gates from the working tree's
   // diff, so its answer depends on what is dirty, and every gate it can pick
   // is judged by this file on its own.
@@ -86,11 +86,13 @@ const EXEMPT = new Map([
 // has no gate.
 const REGISTER_GATES = [
   [5, SELF],
-  [7, 'tools/device/test-seam-slack.mjs'],
-  [9, 'tools/device/test-seam-slack.mjs'],
+  [7, 'packages/propose/test/test-seam-slack.mjs'],
+  [9, 'packages/propose/test/test-seam-slack.mjs'],
   [12, SELF],
   [13, SELF],
   [13, 'tools/device/test-grade-run-coverage.mjs'],
+  [14, 'tools/test-sibling-paths.js'],
+  [15, 'apps/desktop/test/test-fnaf1-winner.mjs'],
 ];
 
 let failed = 0;
@@ -242,8 +244,9 @@ export function walk(text, via, sink, scripts = SCRIPTS, open = new Set()) {
 // --- The test files ---------------------------------------------------------
 
 const TEST_FILE = [
-  /^(?:tools|packages\/source\/decompile)\/(?:[\w.-]+\/)*test-[\w.-]+\.(?:mjs|js|py|sh)$/,
-  /^tools\/(?:[\w.-]+\/)*[a-z0-9-]*test\.(?:mjs|js)$/,
+  // Wherever the ADR 0002 moves put them: tools/, a package or an application.
+  /^(?:tools|packages|apps)\/(?:[\w.-]+\/)*test-[\w.-]+\.(?:mjs|js|py|sh)$/,
+  /^(?:tools|packages\/propose)\/(?:[\w.-]+\/)*[a-z0-9-]*test\.(?:mjs|js)$/,
   /(?:^|\/)test_[\w.-]+\.py$|_test\.py$/,
   /^(?:packages|apps)\/[\w.-]+\/test\/(?:[\w.-]+\/)*[\w.-]+\.test\.(?:mjs|js)$/,
   /^android\/[\w.-]+\/test\.sh$/,
@@ -365,7 +368,7 @@ export function missingPaths({ scripts, ciText, exists }) {
 
 // --- Positive controls: each check must catch a planted violation -----------
 {
-  // item 5, the incident itself: tools/test-bundle.mjs for tools/device/test-bundle.mjs.
+  // item 5, the incident itself: tools/test-bundle.mjs for packages/propose/test/test-bundle.mjs.
   const planted = missingPaths({
     scripts: { 'test:planted': 'node tools/test-bundle.mjs > /dev/null 2>&1 && echo PASS', 'test:alias': 'npm run test:nope' },
     ciText: null, exists: path => existsSync(join(ROOT, path)),

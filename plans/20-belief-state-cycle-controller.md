@@ -193,7 +193,7 @@ bounds over seeded replay.
 
 `src/reduced-model.js` is the deliberately narrow model: it predicts the
 monitor/mask animation and input locks, camera sampling anchor, winding/box and
-power resources, plus explicit hazard/risk buckets. `tools/reducedmodeltest.mjs`
+power resources, plus explicit hazard/risk buckets. `packages/propose/test/reducedmodeltest.mjs`
 compares those controller-visible fields against seeded Night 1 `Sim` traces;
 unknown route state is not copied from the simulator.
 

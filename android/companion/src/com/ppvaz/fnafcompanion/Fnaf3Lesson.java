@@ -17,7 +17,7 @@ package com.ppvaz.fnafcompanion;
  * <p>The panel paints only inside {@link #LEFT}..{@link #RIGHT} x
  * {@link #TOP}..{@link #BOTTOM}, the band above the monitor that every FNaF 3
  * native region the loop reads clears by {@link #GUARD_PX}
- * (packages/play/profiles/fnaf3/moto-g56/regions-fnaf3-*.json; tools/device/test-native-regions.mjs
+ * (packages/play/profiles/fnaf3/moto-g56/regions-fnaf3-*.json; apps/desktop/test/test-native-regions.mjs
  * checks it).</p>
  *
  * <p>Pure Java: no Android types, so android/companion/test.sh runs it on the

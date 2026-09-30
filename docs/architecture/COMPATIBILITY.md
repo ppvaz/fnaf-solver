@@ -46,10 +46,10 @@ of the path that climbs. See the [2026-09-02 roadmap](../../plans/archive/ROADMA
 |---|---|---|---|
 | `packages/propose/bin/plans/recipe.mjs` | transitional | package-owned winner/device-bundle emitter | bundle compiler no longer imports the tools tree and replay hashes match |
 | `packages/play/bin/phone/actuator.mjs` | transitional | stays the model's actuator/error table; the adapter actuator it was to move behind was retired on 2026-09-25 | a package owns the error model and the pilot consumers replay unchanged |
-| `tools/device/policy-ir.mjs` | transitional | core policy-program contract and research emitter | P3 vocabulary migration and fixed-seed artifact equivalence |
-| `tools/model/stock-device-pilot.mjs` | legacy | structured research experiment with an explicit historical actuator model | historical sweeps replay from retained artifacts |
-| `tools/minustoystest.mjs` | compatibility | `npm run research -- minus-toys` | package artifacts and fixed-seed output are equivalent |
-| `tools/minus2test.mjs` | compatibility | `npm run research -- minus-two` | package artifacts and fixed-seed output are equivalent |
+| `packages/propose/bin/policy/policy-ir.mjs` | transitional | core policy-program contract and research emitter | P3 vocabulary migration and fixed-seed artifact equivalence |
+| `packages/propose/parked/minus7/stock-device-pilot.mjs` | legacy | structured research experiment with an explicit historical actuator model | historical sweeps replay from retained artifacts |
+| `packages/propose/bin/minustoystest.mjs` | compatibility | `npm run research -- minus-toys` | package artifacts and fixed-seed output are equivalent |
+| `packages/propose/bin/minus2test.mjs` | compatibility | `npm run research -- minus-two` | package artifacts and fixed-seed output are equivalent |
 | `package.json#scripts.test:legacy:engine` | compatibility | `node tools/test.mjs --engine` (canonical engine fixture lane) | bare-Node compatibility lane is no longer needed and P9 is green |
 
 The cue-model provisioner (`tools/device/provision-cue-model.sh`) is also

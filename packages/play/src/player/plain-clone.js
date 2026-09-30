@@ -2,7 +2,7 @@
 //
 // `structuredClone` is the obvious way to copy these values and it was the
 // measured cost of the entire closed loop. Profiling one full Night 1 run of
-// `tools/nightloop.mjs` on 2026-09-02 put **95% of 48.5 s inside
+// `packages/propose/bin/nightloop.mjs` on 2026-09-02 put **95% of 48.5 s inside
 // structuredClone**, 80% of it in the single `clone(estimator)` at the head of
 // `predict()`: the bounded 4096-entry diagnostic trace is deep-copied on every
 // decision boundary, twice more per committed action, which is ~150M value

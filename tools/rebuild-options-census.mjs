@@ -64,10 +64,10 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Sim } from '@sixam/source/fnaf2';
 import { STRATEGY_REGISTRY, compileBundle, validateWinner } from '../packages/propose/bin/plans/bundle.mjs';
-import { PRESET_KNOBS, loadPresets, runNight } from './device/night7-presets.mjs';
+import { PRESET_KNOBS, loadPresets, runNight } from '../packages/propose/bin/plans/night7-presets.mjs';
 import { simOptionsFrom } from './recompile/model-draw-trace.mjs';
-import { committedWinners, designBlock, forkBlocks, gitState, phoneCohorts } from './winner-census.mjs';
-import { heldOutSeeds } from './winner-phase-census.mjs';
+import { committedWinners, designBlock, forkBlocks, gitState, phoneCohorts } from '../packages/propose/bin/census/winner-census.mjs';
+import { heldOutSeeds } from '../packages/propose/bin/census/winner-phase-census.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 export const KIND = 'fnaf2-rebuild-options-census-v1';

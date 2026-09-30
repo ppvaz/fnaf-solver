@@ -20,7 +20,7 @@
  *   `monitorUp` (monitor-rule-v1), `maskOn` (the effect grader in
  *   packages/play/src/campaign/control-effect.js) and `cameraSelected` (camera-rule-v1).
  * - `model`: the simulator action the control drives. Both lights drive the
- *   one context-dependent `light` (tools/device/device-lane.mjs SIM_ACTION).
+ *   one context-dependent `light` (packages/propose/bin/plans/device-lane.mjs SIM_ACTION).
  * CONTRACT:semantic-control-v1 CONTRACT:device-executor-v1.
  */
 import { ARTIFACT_ACTION_TABLE_SCHEMA, CONTROL_CATALOG_SCHEMA, defineControlCatalog } from '../../clockwork/control-catalog.js';

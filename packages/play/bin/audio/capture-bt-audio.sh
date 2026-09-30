@@ -31,7 +31,7 @@
 # so it does not fight BlueALSA for the BlueZ endpoints.
 #
 # Recorded audio is game content: this script refuses to write inside the repo.
-# Commit the derived fingerprint (tools/cue/reference-report.py) instead.
+# Commit the derived fingerprint (packages/propose/parked/minus7/cue/reference-report.py) instead.
 set -euo pipefail
 
 DEFAULT_MAC=10:2B:1C:DA:18:2C

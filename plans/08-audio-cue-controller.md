@@ -109,7 +109,7 @@ of the work:
 
 1. **Injection, no gameplay.** Real night background plus the true reference at
    a known level and time, swept across levels. Arbitrary N, no device time.
-   Gives miss rate as a function of level. `tools/cue/evaluate.py --anchor`.
+   Gives miss rate as a function of level. `packages/propose/parked/minus7/cue/evaluate.py --anchor`.
 2. **Visually labeled arrivals, to pin where real bangs sit on that curve.** BB
    entering the lit left opening *is* g417, and it is exactly what the one-pixel
    classifier reads: bright when empty, black when he is in it. So a
@@ -118,7 +118,7 @@ of the work:
 The second needs the two streams on one clock, which they now are: `log stop`
 reports `startNs` for the first audio frame, `watch` logs `snapshotNs` with each
 luma at ~11 Hz, and both come from the same `System.nanoTime()` inside the
-helper. `tools/cue/label-misses.py` joins them.
+helper. `packages/propose/parked/minus7/cue/label-misses.py` joins them.
 
 Two things that protect the number from being nonsense. The luma split is
 derived from each recording rather than assumed, because the projection scaler
@@ -490,7 +490,7 @@ recording -- roughly twenty seconds *after* that run's game over at 36 s. It is
 menu audio. No run so far has evidence that BB reached the office at all, which
 is consistent with him barely moving at AI 5 and leaves the confound intact.
 
-The detector's own design is implicated. `tools/cue/features.py` removes each
+The detector's own design is implicated. `packages/propose/parked/minus7/cue/features.py` removes each
 frame's mean to be level-invariant, which is right for robustness to capture
 gain and which discards the one quantity that separates a route hop from
 `your view`. A detector wanting both needs a separately calibrated level
@@ -536,7 +536,7 @@ vocal-versus-thud is the easy discrimination. The footstep bank is effectively
 one sound (pairwise ~1.00) sitting in the thud's spectral region, so it adds
 nothing separable.
 
-**Against the real contaminated background.** `tools/cue/evaluate.py` injects a
+**Against the real contaminated background.** `packages/propose/parked/minus7/cue/evaluate.py` injects a
 reference into a captured device window at a swept ratio.
 [`ANDROID-AUDIO-CAPTURE.md`](../docs/device/ANDROID-AUDIO-CAPTURE.md) records
 that internal capture always carries the music-box loop and Mangle's static;
@@ -591,7 +591,7 @@ One bug worth keeping: the first front end floored band energies at an absolute
 epsilon, so dropping a signal 20 dB pinned its quiet bands while its loud bands
 moved, and the "level-invariant" features changed shape purely because the sound
 got quieter. The floor is now relative to each frame's loudest band.
-`tools/cue/test-cue.py` asserts the invariance that mistake broke.
+`packages/propose/parked/minus7/cue/test-cue.py` asserts the invariance that mistake broke.
 
 ### 3. Measure window and action latency
 
@@ -647,7 +647,7 @@ anything.
 
 Plan 16 item 10 is "fire the attack cycle's mask-off/reset/raise the instant a
 BB departure bang is heard" — the one policy the `bang` cue could still enable.
-`tools/minus7/i10latency.mjs` sweeps the whole audio path as one number
+`packages/propose/parked/minus7/i10latency.mjs` sweeps the whole audio path as one number
 (`replay()`'s `bangLatencyMs` = PCM buffering + onset classification + IPC +
 reaction) against the blind baseline, 800 seeds correlated:
 
@@ -824,7 +824,7 @@ measured at 2.9-4.6 detections per minute on the phone, where the vocals were
 
 **Correction (2026-08-24, from gate 0).** That upper bound is further out of
 reach than recorded above. `--vocal-cam5` resets its count on
-`vent-bang who === 'bb' && leaving`, and `tools/minus6test.mjs` counts threats
+`vent-bang who === 'bb' && leaving`, and `packages/propose/bin/minus6test.mjs` counts threats
 with `who !== 'bb'`. Both read an identity the source does not put in the
 audio: every one of those events is sample 17. The 3,000/3,000 figure therefore
 assumes a perfectly attributed departure cue that no detector can produce, on

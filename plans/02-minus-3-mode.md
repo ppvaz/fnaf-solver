@@ -10,7 +10,7 @@ and 7 on the phone; the defect `n2-minustoys-0117` found was phase, not the
 policy class. See [`PROGRESS.md`](PROGRESS.md).* Step 2's original
 pass established that the *glitchless*
 member is NOT zero-RNG on the canonical Android model — the adapted Minus Two
-probe (`tools/minus2test.mjs`) scores 16/200 with a structural Toy Chica failure
+probe (`packages/propose/bin/minus2test.mjs`) scores 16/200 with a structural Toy Chica failure
 against the sourced consecutive-mask semantics, see `MINUS-3-STRATEGY.md` §7.
 Engine gaps from §5 that were load-bearing are now closed, including the
 `viewing` / marker split added in the 2026-08-28 pass.
@@ -36,7 +36,7 @@ actuator hit the stale-sample window?” with **yes for one bounded attempt**. I
 does not yet prove repeatability or that a held glitched light actually stuns
 the Toys.
 
-**The engine half is now answered positively.** `tools/minustoystest.mjs` arms
+**The engine half is now answered positively.** `packages/propose/bin/minustoystest.mjs` arms
 `viewing == 11` with the marker on CAM 09, runs the published 10 s wind/mask
 cadence, and scores **200/200 normal plus 100/100 pinned worst-luck**. The same
 cadence without the split is **0/200**, all inside-office deaths. The continuous
@@ -106,7 +106,7 @@ So this is "new script + new lesson ladder + strategy selection UI," not a new e
    with zero desync all night — but the fixed cadence has a ~300–500 ms mask-
    window cliff the deterministic gate (`sim.won && splitAt >= 0`) cannot see,
    and the arming geometry's 17 ms released gap collapsed to 0 ms in the HID
-   trace. The per-instruction margin map (`tools/device/minus-toys-margin.mjs`)
+   trace. The per-instruction margin map (`packages/propose/bin/plans/minus-toys-margin.mjs`)
    puts the whole-schedule phase tolerance at **33 ms early / 99 ms late** —
    against the 302 ms epoch bracket the run reported. Under a full clock-error
    model (302 ms epoch bracket, −184 ms/min drift, σ 29 ms jitter) Night 2 goes

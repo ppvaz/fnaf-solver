@@ -23,7 +23,7 @@ and gains its outcome in place, per the retraction convention in
 | 4 | Calibration CLI | **Resolved for four of five.** `add_common_arguments()` in `monitor-calibrate.py`; `screen-calibrate.py` left alone because it has no gate |
 | 13 | Grading census | **Resolved.** The coverage gate reads all three registries and is green; 22 exclusion rows added, one gate registered |
 | 16 | Trainer validators | **Resolved.** `apps/trainer/src/validate.js`; 34 duplicate definitions removed from six modules |
-| 17 | `tools/minustoys/` | **Decided: keep.** Route-per-directory is deliberate; see the row |
+| 17 | `packages/propose/bin/minus-toys/` (was `tools/minustoys/`) | **Decided: keep.** Route-per-directory is deliberate; see the row |
 | 19 | Dead citations | **Resolved.** Four files repointed at `plant-model.js` |
 
 Open gaps this pass created or exposed are in §22. Everything else on the page
@@ -190,7 +190,7 @@ per-serial lease, re-exec under the lock — is copied across device scripts:
 - 17 scripts source `packages/play/bin/phone/select-adb.sh`.
 - The `[ ! -e "$OUTPUT" ] || { echo "refusing to overwrite: ...` idiom appears
   in 14 files (8 times inside `legacy-trial.sh` alone, and in five
-  `tools/cue/*.py` scripts).
+  `packages/propose/parked/minus7/cue/*.py` scripts).
 - The `COMPANION_DEVICE_LOCK_HELD` re-exec through `device-lock-exec.py`
   appears in 4 scripts.
 
@@ -244,19 +244,19 @@ Host-side schedulers and their simulator twins:
 Twelve modules spell "policy", in at least three unrelated vocabularies.
 
 - **policy-v1 IR (gated).** `packages/propose/src/policy/policy-ir.js` (86) owns
-  the schema with `observation-language.js`; `tools/device/policy-grammar.mjs`
+  the schema with `observation-language.js`; `packages/propose/bin/policy/policy-grammar.mjs`
   (387), `policy-interpreter.mjs` (77), `policy-search.mjs` (169),
   `policy-artifact.mjs` (142) build on it, and `policy-equivalence.mjs` (214)
-  is a real compiler-equivalence gate. `tools/device/policy-ir.mjs` (51) is a
+  is a real compiler-equivalence gate. `packages/propose/bin/policy/policy-ir.mjs` (51) is a
   **name collision, not a copy**: it converts one Night 1 plan into the IR.
 - **Invention language.** `tools/invent/policy-lang.mjs` (499) — a rule-list
   genome over a privileged simulator surface, explicitly not device-promotable.
   Its header states the duplication outright: first-match-wins "exactly like
-  the cascade in `tools/minus7/policy.mjs`'s `decide()`".
-- **Reactive rule cascade.** `tools/minus7/policy.mjs` (96).
-- **Comparison adapter.** `tools/policy.mjs` (361) and
-  `tools/policybaselines.mjs` (532) — the plans/11 observation/action contract.
-  `tools/policy-inspect.js` (12) is the CLI shim.
+  the cascade in `packages/propose/parked/minus7/reactive-policy.mjs`'s `decide()`".
+- **Reactive rule cascade.** `packages/propose/parked/minus7/reactive-policy.mjs` (96).
+- **Comparison adapter.** `packages/propose/parked/minus7/policy.mjs` (361) and
+  `packages/propose/parked/minus7/policybaselines.mjs` (532) — the plans/11 observation/action contract.
+  `packages/propose/bin/policy/policy-inspect.js` (12) is the CLI shim.
 
 Cleanup decision: the three vocabularies are probably all warranted (device IR,
 privileged genome, comparison adapter) — but nothing says so, and the shared
@@ -281,8 +281,8 @@ is not, which is why a fourth route means a fourth hand-written module.
   mechanics authority.
 - `plant.js` (44) — semantic facade over it (`plant-model-v1`).
 - `reduced-model.js` (334) — deliberately not a second engine; gated against
-  seeded `Sim` replays by `tools/reducedmodeltest.mjs`.
-- `tools/minus7/sim.mjs` (149) — searchable wrapper: clone, semantic actions,
+  seeded `Sim` replays by `packages/propose/test/reducedmodeltest.mjs`.
+- `packages/propose/parked/minus7/sim.mjs` (149) — searchable wrapper: clone, semantic actions,
   privileged view.
 - `packages/propose/src/experiment/families/minus-toys.js`, `minus-two.js` — exact
   evaluators, with `packages/propose/test/legacy-equivalence.test.js`.
@@ -295,7 +295,7 @@ one authority, an equivalence gate for each derived model.
 Roughly twenty independent harnesses over the same engine. Already flagged as
 globs in the generated register; named here so they can be triaged:
 
-- `tools/minus7/`: `search.mjs` (189), `paramsearch.mjs` (239),
+- `packages/propose/parked/minus7/` (was `tools/minus7/`): `search.mjs` (189), `paramsearch.mjs` (239),
   `geometrysearch.mjs` (303), `cyclelengthsearch.mjs` (129),
   `devicetimesearch.mjs` (97), `robustify.mjs` (117), `constrained-worker.mjs`.
 - `tools/invent/`: `search.mjs` (248), `campaign.mjs` (290), `ablate.mjs` (151).
@@ -303,10 +303,10 @@ globs in the generated register; named here so they can be triaged:
   `gatesearch.mjs` (113), `strategysearch.mjs` (179), `knobsweep.mjs` (133),
   `latenesssweep.mjs` (185), `phasesweep.mjs` (47), `periodicsweep.mjs` (40),
   `flicksweep.mjs` (39), `phase-tolerance.mjs` (198).
-- `tools/device/policy-search.mjs` (169), `gate-worker.mjs` (42).
+- `packages/propose/bin/policy/policy-search.mjs` (169), `gate-worker.mjs` (42).
 - Owner per the charter: `packages/propose/src/experiment/experiment.js` with specs under
   `packages/propose/experiments/`.
-- Shared execution machinery that already exists: `tools/pool.mjs` (129) +
+- Shared execution machinery that already exists: `packages/propose/bin/census/pool.mjs` (129) +
   `pool-worker.mjs`.
 
 ## 13. Grading instruments — binding: `GATE` on coverage only
@@ -326,7 +326,8 @@ verb in `apps/desktop/src/device-cli.js` (was `apps/device/src/cli.js:193`).
 
 **The best existing inventory in the repository is this family's gate.**
 `tools/device/test-grade-run-coverage.mjs` enforces that every script in
-`tools/device`, `tools/cue` and `packages/source/decompile` is either invoked by
+`tools/device`, `packages/source/decompile` and the directories the device and
+cue scripts moved to (its `SIBLINGS`) is either invoked by
 `grade-run.sh`, a gate the suite runs, or **excluded with a written reason** —
 and its `EXCLUDED` map carries ~90 one-line rationales ("simulator layer, gated
 by test-actuator.mjs"; "charts the model gate's death census for a PLAN ...
@@ -387,7 +388,7 @@ against phone on one clock.
 ## 15. Audio cue authorities — binding: `NONE`
 
 Three "authority" implementations for one job — decide that a cue happened —
-one per transport: `tools/cue/audio-authority.py` (552),
+one per transport: `packages/propose/parked/minus7/cue/audio-authority.py` (552),
 `bridge-audio-authority.py` (362, removed 2026-09-27), `esp32-audio-authority.py` (345, archived); plus the
 phone-side `AudioAnalyzer.java` (365, removed 2026-09-27 with the Companion's audio path). The feature/decision chain behind them
 is itself staged across `features.py` (190), `detect.py` (348),
@@ -430,10 +431,10 @@ green.
 | Twin | Lines | Verdict |
 |---|---|---|
 | `packages/review/src/stat.mjs` / `packages/review/src/stat.py` | 129 / 113 | **`GATE`, keep.** Same five functions; `packages/review/test/stat.test.mjs:49` spawns `python3` and compares. The model pair. |
-| `tools/device/closed-families.mjs` / `tools/invent/closed-families.mjs` | 70 / 134 | Two registers of closed policy families — device-plan surface vs privileged genome surface. Same register, two classifiers. |
-| `tools/invent/search.mjs` / `tools/minus7/search.mjs` | 248 / 189 | Two constrained searches; see §12. |
-| `tools/minus7/cycle.mjs` / `tools/minustoys/cycle.mjs` | 244 / 263 | Same shape, different route. `tools/minustoys/` holds **exactly one file**. **Decided 2026-09-08: keep.** One directory per route is the convention; a move would touch importers, the `TOOLS.md` row and the generated catalogs for no behaviour change, and Minus Toys is the live Night 5/6 route. |
-| `packages/propose/src/policy/policy-ir.js` / `tools/device/policy-ir.mjs` | 86 / 51 | Name collision only; see §9. |
+| `packages/propose/bin/policy/closed-families.mjs` / `tools/invent/closed-families.mjs` | 70 / 134 | Two registers of closed policy families — device-plan surface vs privileged genome surface. Same register, two classifiers. |
+| `tools/invent/search.mjs` / `packages/propose/parked/minus7/search.mjs` | 248 / 189 | Two constrained searches; see §12. |
+| `packages/propose/parked/minus7/cycle.mjs` / `packages/propose/bin/minus-toys/cycle.mjs` | 244 / 263 | Same shape, different route. `tools/minustoys/` holds **exactly one file**. **Decided 2026-09-08: keep.** One directory per route is the convention; a move would touch importers, the `TOOLS.md` row and the generated catalogs for no behaviour change, and Minus Toys is the live Night 5/6 route. |
+| `packages/propose/src/policy/policy-ir.js` / `packages/propose/bin/policy/policy-ir.mjs` | 86 / 51 | Name collision only; see §9. |
 
 ## 18. Not duplication (checked, so a cleanup does not "fix" them)
 
@@ -449,9 +450,9 @@ green.
 
 ## 19. Stale authority citations
 
-**RESOLVED 2026-09-08 in code.** `tools/policy.mjs`,
-`tools/constrainedsearch.mjs`, `tools/minus7/sim.mjs` and
-`tools/minus7/search.mjs` named `src/engine.js` as the mechanics authority — a
+**RESOLVED 2026-09-08 in code.** `packages/propose/parked/minus7/policy.mjs`,
+`packages/propose/parked/minus7/constrainedsearch.mjs`, `packages/propose/parked/minus7/sim.mjs` and
+`packages/propose/parked/minus7/search.mjs` named `src/engine.js` as the mechanics authority — a
 path that no longer exists. All four now name
 `packages/source/src/games/fnaf2/plant-model.js`.
 
@@ -475,8 +476,8 @@ A cleanup should reuse one of these five rather than invent a sixth:
 3. **Shared JSONL vectors read from both languages.**
    `packages/kernel/test/contract-vectors.py` over `packages/source/test/fixtures/*.jsonl`.
 4. **Equivalence gate between a model and its authority.**
-   `tools/reducedmodeltest.mjs` (reduced model vs seeded `Sim`),
-   `tools/device/policy-equivalence.mjs` (two compilers of one plan format),
+   `packages/propose/test/reducedmodeltest.mjs` (reduced model vs seeded `Sim`),
+   `packages/propose/bin/policy/policy-equivalence.mjs` (two compilers of one plan format),
    `packages/propose/test/legacy-equivalence.test.js`.
 5. **Enforced census with written exclusions** — the pattern that keeps an
    inventory from rotting into prose. `tools/device/test-grade-run-coverage.mjs`

@@ -2,7 +2,7 @@
 //
 // Two things are checked here and neither is a survival number: that the
 // policy's PRIORITIES are the sourced ones, and that it reads nothing it is
-// not allowed to read. Survival belongs to `tools/nightloop.mjs`, which runs
+// not allowed to read. Survival belongs to `packages/propose/bin/nightloop.mjs`, which runs
 // whole nights against the exact engine and its controls.
 import { STUN_FRAMES } from '@sixam/source/fnaf2';
 import { initialReducedState, advanceReduced, observeReduced } from '@sixam/source/fnaf2';

@@ -46,7 +46,7 @@ searches were already closed.
 |---|---|---|
 | `tools/gatesearch.mjs`, `tools/gatebot.mjs` | Gate-aware visible-state policy search | Plan 06, no survivor — [`strategy/GATE-SEARCH.md`](strategy/GATE-SEARCH.md) |
 | `tools/strategysearch.mjs` | Fixed camera-cover strategy enumeration | [`strategy/CAM-6-7-STRATEGY.md`](strategy/CAM-6-7-STRATEGY.md) |
-| `tools/knobsweep.mjs` | `NightPolicy` knob factorial over a held-out cohort | Plan 20; `tools/nightloop.mjs` remains |
+| `tools/knobsweep.mjs` | `NightPolicy` knob factorial over a held-out cohort | Plan 20; `packages/propose/bin/nightloop.mjs` remains |
 
 ## Closed device probes (2026-09-24, second pass)
 
@@ -244,7 +244,7 @@ FNaF 2 night run reads. It stays.
 
 Minus 7 is **not** archived: Pedro means to bring it back as a second
 device-bot strategy (2026-09-24). `tools/minus7/`, `tools/model/`,
-`tools/cyclesearch.mjs`, `tools/constrainedsearch.mjs`, `tools/flicksweep.mjs`
-and `tools/phase-tolerance.mjs` stay, and the engine checks the current model
+`packages/propose/parked/minus7/cyclesearch.mjs`, `packages/propose/parked/minus7/constrainedsearch.mjs`, `packages/propose/parked/minus7/flicksweep.mjs`
+and `packages/propose/parked/minus7/phase-tolerance.mjs` stay, and the engine checks the current model
 fails on it are named in `BACKLOG` in [`../tools/test.mjs`](../tools/test.mjs)
 as the recovery list.

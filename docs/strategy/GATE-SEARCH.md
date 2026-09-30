@@ -95,7 +95,7 @@ it — W. Freddy is held at CAM 07 like the rest. And W. Freddy is the one with
 the still-undecoded `decide path` fork (g376-377), which is unmodeled here;
 if a branch bypasses CAM 07 it would only make this result worse.
 
-`tools/minus6test.mjs` drives an observable-only controller: the bbtest bot
+`packages/propose/bin/minus6test.mjs` drives an observable-only controller: the bbtest bot
 with a 06/07/11 table, a full-cost encounter defense (mask inside the
 45-frame fuse, the whole 300-frame sequence spent cams-down), minus2test's
 held-mask cycles for leaked vent threats with the in-hold Foxy flash, and the
@@ -120,7 +120,7 @@ Chica armed at a vent while BB stands in the opening: raising the monitor is
 her marker-123 entry, staying down is Foxy's 10 s interval or the box.
 Encounters chained up to 26 per night and the box hit 0%. Notably the six
 covered routes never broke the stall itself — the cover works; the tolerance
-traffic destroys it from behind. Reproduce with `node tools/minus6test.mjs
+traffic destroys it from behind. Reproduce with `node packages/propose/bin/minus6test.mjs
 200` (add `--worst` for the pinned sweep).
 
 ## What this closes—and what it does not
@@ -141,4 +141,4 @@ traffic destroys it from behind. Reproduce with `node tools/minus6test.mjs
   model.
 
 Reproduce with `node tools/gatesearch.mjs` (removed 2026-09-24; restore it and `gatebot.mjs` from the tag in [`../ARCHIVED-ROUTES.md`](../ARCHIVED-ROUTES.md)); use `--quick` for a smoke sweep. The
-Minus 7 control is `node tools/model/reactive-pilot.mjs 200`.
+Minus 7 control is `node packages/propose/parked/minus7/reactive-pilot.mjs 200`.

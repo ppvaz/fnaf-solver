@@ -27,7 +27,7 @@ or a refusal of a known-bad move:
 ```json
 { "schema": "claim-envelope-v1", "refused": true, "rule": "seed-floor",
   "because": "a win rate is quoted over 1200 seeds; ...",
-  "cite": ["plans/ROADMAP.md", "tools/census.mjs"], "remedy": "..." }
+  "cite": ["plans/ROADMAP.md", "packages/propose/bin/census/census.mjs"], "remedy": "..." }
 ```
 
 `label` is a claim level (`MODEL_ONLY`, `FIXTURE`, `DEVICE_MEASURED`), a source

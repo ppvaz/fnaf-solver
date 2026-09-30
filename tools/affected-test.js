@@ -58,9 +58,9 @@ if (sourceChanged || coreChanged || proposeChanged || playModelChanged) {
     add(`test:packages/propose/test/${gate}.test.js`, 'node', [`packages/propose/test/${gate}.test.js`]);
   // Offline replay determinism: the same recorded facts must rebuild the same
   // decisions, which is what makes a retained stream evidence rather than a log.
-  add('fact-replay', 'node', ['tools/factreplay.mjs', '--assert']);
+  add('fact-replay', 'node', ['packages/propose/bin/factreplay.mjs', '--assert']);
   // The winners compile through the Sim and the catalogs.
-  add('winners-rebuild', 'node', ['tools/device/test-winners-rebuild.mjs']);
+  add('winners-rebuild', 'node', ['packages/propose/test/test-winners-rebuild.mjs']);
 }
 if (changed.some(path => path.startsWith('packages/play/') || path.startsWith('packages/adapters/') || path.startsWith('apps/device/') ||
     path === 'apps/desktop/src/device-cli.js')) {
@@ -68,15 +68,15 @@ if (changed.some(path => path.startsWith('packages/play/') || path.startsWith('p
   add('device-executor', 'node', ['packages/play/test/adb-device-local-executor.test.js']);
   add('device-campaign', 'node', ['packages/play/test/campaign.test.js']);
   add('device-cli', 'node', ['apps/desktop/test/device-cli.test.js']);
-  add('winners-rebuild', 'node', ['tools/device/test-winners-rebuild.mjs']);
+  add('winners-rebuild', 'node', ['packages/propose/test/test-winners-rebuild.mjs']);
 }
 if (changed.some(path => path.startsWith('packages/propose/src/policy/') || path.startsWith('packages/core/src/control/') ||
     path.startsWith('packages/source/src/clockwork/') || path.startsWith('tools/device/policy-') ||
     path.startsWith('tools/device/closed-families'))) {
-  add('policy-grammar', 'node', ['tools/policygrammartest.mjs']);
-  add('policy-search', 'node', ['tools/policysearchtest.mjs']);
-  add('policy-equivalence', 'node', ['tools/policyequivalencetest.mjs']);
-  add('observation-language', 'node', ['tools/observationlanguagetest.mjs']);
+  add('policy-grammar', 'node', ['packages/propose/test/policygrammartest.mjs']);
+  add('policy-search', 'node', ['packages/propose/test/policysearchtest.mjs']);
+  add('policy-equivalence', 'node', ['packages/propose/test/policyequivalencetest.mjs']);
+  add('observation-language', 'node', ['packages/propose/test/observationlanguagetest.mjs']);
 }
 // FNaF 1, 3 and 4's policies are what each game's census runs.
 for (const game of [1, 3, 4])
@@ -115,8 +115,8 @@ if (changed.some(path => path.startsWith('docs/') || path.startsWith('plans/')))
   add('documentation', 'node', ['tools/test-docs.mjs']);
 if (changed.some(path => path === 'packages/review/src/vault.mjs' || path === 'packages/review/test/vault.test.mjs'))
   add('vault', 'node', ['packages/review/test/vault.test.mjs']);
-if (changed.some(path => path.startsWith('tools/model/') || path.startsWith('tools/minus7/')))
-  add('model-syntax', 'node', ['--check', ...changed.filter(path => /\.(?:js|mjs)$/.test(path) && (path.startsWith('tools/model/') || path.startsWith('tools/minus7/')))]);
+if (changed.some(path => path.startsWith('packages/propose/parked/')))
+  add('model-syntax', 'node', ['--check', ...changed.filter(path => /\.(?:js|mjs)$/.test(path) && path.startsWith('packages/propose/parked/'))]);
 
 assert.ok(checks.size > 0);
 console.log(`affected: ${changed.length} changed paths -> ${[...checks.keys()].join(', ')}`);

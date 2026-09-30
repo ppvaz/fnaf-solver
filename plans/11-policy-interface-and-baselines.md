@@ -7,9 +7,9 @@ policies. Public FNaF RL projects show the value of that interface and the
 danger of silently changing the environment to suit it.
 
 The adapter, the three reimplemented baselines and their measurement live in
-[`tools/policy.mjs`](../tools/policy.mjs),
-[`tools/policybaselines.mjs`](../tools/policybaselines.mjs) and
-[`tools/policytest.mjs`](../tools/policytest.mjs). Package results are recorded
+[`packages/propose/parked/minus7/policy.mjs`](../packages/propose/parked/minus7/policy.mjs),
+[`packages/propose/parked/minus7/policybaselines.mjs`](../packages/propose/parked/minus7/policybaselines.mjs) and
+[`packages/propose/parked/minus7/policytest.mjs`](../packages/propose/parked/minus7/policytest.mjs). Package results are recorded
 under each work package below. **Packages 5 and 6 are untouched, and packages
 1-3 close only in part, so the plan is not done.**
 
@@ -101,7 +101,7 @@ record every behavioral assumption that cannot be derived from public source.
 through the adapter.
 
 **Result (partial — the gate closes, the package does not).**
-[`tools/policy.mjs`](../tools/policy.mjs) is the adapter. It creates no second
+[`packages/propose/parked/minus7/policy.mjs`](../packages/propose/parked/minus7/policy.mjs) is the adapter. It creates no second
 simulator: it wraps `Sim` construction, a frame-sorted action queue,
 observation privilege, the error models and the terminal report, and the run
 loop is `hid-device-pilot.mjs`'s (`schedule -> drain -> actuator.deliver() ->
@@ -114,12 +114,12 @@ version, the observation mode, the slack magnitude and shape, and whether the
 device actuator was in the path.
 
 The bit-identity gate is asserted, not asserted-by-eye:
-`node tools/policytest.mjs --assert` replays 25 seeds of `bbtest.mjs`'s `run()`
+`node packages/propose/parked/minus7/policytest.mjs --assert` replays 25 seeds of `bbtest.mjs`'s `run()`
 against the same seeds driven through the adapter and requires the same
 `won`/`frame`/`reason`/`detail`. It also requires that zero slack is an
 identity in all three error shapes and that a zero-lateness `DeviceActuator` is
 an identity for the Minus 7 schedule with no seam drops (the same claim
-`tools/device/test-actuator.mjs` makes for `pilottest`).
+`packages/propose/test/test-actuator.mjs` makes for `pilottest`).
 
 **Not done:** `snapshot()`/`restore()` and their continuation tests, and the
 `sensor-model` and `recorded` observation modes. Only `truth` and
@@ -137,7 +137,7 @@ adding new baselines.
 
 **Result (partial).** One local policy is ported, and it is not a
 reimplementation: the Minus 7 control in
-[`tools/policybaselines.mjs`](../tools/policybaselines.mjs) **is**
+[`packages/propose/parked/minus7/policybaselines.mjs`](../packages/propose/parked/minus7/policybaselines.mjs) **is**
 `bbtest.mjs`'s `Bot`, handed a proxy `sim` that forwards its presses into the
 adapter. There is therefore no equivalence to argue for at zero error — it is
 the same object graph — and the 25-seed identity above proves the wrapper does
@@ -207,7 +207,7 @@ stock FNaF 2 comparator and its reported roughly one-in-three success provides
 an external sanity target, not an expected exact match across PC and Android.
 
 **Result (2026-08-26).** Three families are reimplemented in
-[`tools/policybaselines.mjs`](../tools/policybaselines.mjs) from this
+[`packages/propose/parked/minus7/policybaselines.mjs`](../packages/propose/parked/minus7/policybaselines.mjs) from this
 repository's own reconstructions — the census, the implementation comparison,
 and `docs/in-engine/SHOOTER25-BOT-STATE-MACHINE.md` — with no source read from
 any of those projects. Every value the public description does not determine is
@@ -363,7 +363,7 @@ sensor that would buy it.
 
 A favourable number is not a result until something that should not produce it
 has been checked (CLAUDE.md). Five negative controls and one positive, all
-asserted by `node tools/policytest.mjs --assert`:
+asserted by `node packages/propose/parked/minus7/policytest.mjs --assert`:
 
 - **C1 null policy** — no inputs at all. 0/100 from Night 2 on. If this scored,
   the engine, not the policy, would be doing the work.
