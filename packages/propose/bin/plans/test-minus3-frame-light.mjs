@@ -84,7 +84,7 @@ check(deviceEdges({ knobs: { ...WIN_KNOBS, windMs: WIN_KNOBS.windMs + 250 } }).l
 
 // --- 3. controls resolve, and the two flash points stay distinct -------------
 {
-  const profile = JSON.parse(readFileSync(join(here, '../../../../apps/device/profiles/hid-mediaprojection.json')));
+  const profile = JSON.parse(readFileSync(join(here, '../../../../packages/play/profiles/fnaf2/moto-g56/hid-mediaprojection.json')));
   const map = profile.controlMap;
   const used = [...new Set(edges.map(e => e.control))].sort();
   for (const control of used)

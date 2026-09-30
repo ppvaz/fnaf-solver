@@ -256,7 +256,7 @@ check(
 // from the checked-in fixture so this test checks the same canonical bindings
 // that a bundle will carry to the device executor.
 const profile = JSON.parse(readFileSync(
-  join(here, '../../../../apps/device/profiles/fixture-hid-screencap.json'), 'utf8'));
+  join(here, '../../../../packages/play/profiles/fnaf2/moto-g56/fixture-hid-screencap.json'), 'utf8'));
 const parsed = parsePlan(plan, { strategy: 'minus-toys', night: 7, profile });
 const compiled = compileArtifactPlans(
   [{ text: plan, policy: 'minus-toys', night: 7 }], parsePlan, profile)[0];

@@ -34,7 +34,7 @@ try {
     if (winner.schema !== 'winner-v1') continue; // FNaF 1 routes carry their own schema: test-fnaf1-winner.mjs
     try {
       const built = compileBundle(winner, join(scratch, name));
-      const profile = JSON.parse(readFileSync(join(ROOT, 'apps/device/profiles', `${built.profile.id}.json`), 'utf8'));
+      const profile = JSON.parse(readFileSync(join(ROOT, 'packages/play/profiles/fnaf2/moto-g56', `${built.profile.id}.json`), 'utf8'));
       const nights = built.manifest.nights;
       const timingByNight = Object.fromEntries(built.compiled.map(plan => [String(plan.night), plan.timing]));
       const spec = makeCampaignSpec({ profile: profile.id, targetBuild: profile.targetBuild, timingByNight, nights });

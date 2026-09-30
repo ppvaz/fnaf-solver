@@ -86,7 +86,7 @@ const INSTRUMENTS = [
     needs: 'screenrecord',
     capture: 'night-run.sh records at 1280x576 automatically',
     available: d => d.screenrecord, ifMissing: 'no video means no video instrument runs.' },
-  { tool: 'apps/device HID execution',
+  { tool: 'packages/play/src/campaign HID execution',
     needs: '/system/bin/hid',
     capture: 'n/a -- the executor opens it directly',
     available: d => d.hidBinary, ifMissing: 'no UHID transport; the device lane cannot actuate.' },

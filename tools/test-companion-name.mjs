@@ -46,7 +46,8 @@ export const STORED = [
 export const UNSCANNED = [
   [/^docs\/evidence\/|^docs\/chronicle\/|^tools\/recompile\/results\/|^plans\/archive\/|^packages\/propose\/bindings\/[^/]+\/[^/]+-winner\.json$|^docs\/research\/ROOT-README-HISTORY\.txt$/,
     'frozen byte for byte (CLAUDE.md, ADR 0002)'],
-  [/^apps\/device\/profiles\/|^android\/companion\/assets\/runners\//, 'device profiles, bound by profileSha256'],
+  [/^packages\/play\/profiles\/fnaf2\/moto-g56\/(?:hid-mediaprojection(?:-17ms)?|fixture-hid-screencap)\.json$|^android\/companion\/assets\/runners\//,
+    'device profiles, bound by profileSha256'],
   [/^models\/[^/]+\.json$/, 'fitted rules and calibration records pinned by sha256'],
   [/^packages\/play\/src\/sensors\/fnaf2\/button-strokes\.js$|^packages\/adapters\/src\/button-strokes\.js$/,
     'full06-responses-20260928 pins its bytes as ruleSourceSha256 (test-phone-encounter-replay.mjs); the adapters path is its registered link'],

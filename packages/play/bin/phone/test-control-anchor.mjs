@@ -120,10 +120,13 @@ assert.equal(fnaf1.cameraRange, 'UNKNOWN(unmapped-view-ids)',
 //    profile's bytes are hashed into the bundles bound to it, so rewriting one
 //    here would orphan those bindings. This assertion exists so that migrating
 //    one is a deliberate edit to this list rather than a silent change.
-const PROFILES = join(ROOT, 'apps/device/profiles');
+const PROFILES = join(ROOT, 'packages/play/profiles/fnaf2/moto-g56');
+// The profiles share Play's FNaF 2 folder with the fitted models, so they are picked by schema.
 const unstatedByProfile = Object.fromEntries(readdirSync(PROFILES)
   .filter(name => name.endsWith('.json'))
-  .map(name => [name, unstatedPanDependentControls(JSON.parse(readFileSync(join(PROFILES, name), 'utf8')))])
+  .map(name => [name, JSON.parse(readFileSync(join(PROFILES, name), 'utf8'))])
+  .filter(([, profile]) => profile.schema === 'device-profile-v1')
+  .map(([name, profile]) => [name, unstatedPanDependentControls(profile)])
   .filter(([, controls]) => controls.length));
 assert.deepEqual(unstatedByProfile, {
   'hid-mediaprojection.json': ['hallLight', 'leftVentLight', 'rightVentLight', 'cameraFeedLight'],

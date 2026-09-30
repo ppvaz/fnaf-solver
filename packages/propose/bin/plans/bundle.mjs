@@ -30,7 +30,7 @@ export const REPLAY_SCHEMA = 'bundle-replay-v1';
 export const ARTIFACT_SCHEMA = 'device-artifact-v1';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '../../../..'));
-const PROFILE_DIR = join(ROOT, 'apps/device/profiles');
+const PROFILE_DIR = join(ROOT, 'packages/play/profiles/fnaf2/moto-g56');
 const MAX_REPLAY_SEEDS = 8;
 const CONTROL_NAMES = new Set([
   V.monitor, V.mask, V.wind, V.cameraFeedLight, V.hallLight,

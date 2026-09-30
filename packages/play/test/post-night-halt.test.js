@@ -74,7 +74,7 @@ assert.ok(r02.secondReadMs > OBSERVER_INTERVAL_BOUND_MS && r02.gapBeforeMs > OBS
   'r02 is the measured violation of the observer-interval bound');
 
 // --- Fixtures ---------------------------------------------------------------
-const profile = JSON.parse(await readFile(new URL('../../../apps/device/profiles/hid-mediaprojection.json', import.meta.url), 'utf8'));
+const profile = JSON.parse(await readFile(new URL('../../../packages/play/profiles/fnaf2/moto-g56/hid-mediaprojection.json', import.meta.url), 'utf8'));
 const action = (id, kind, control, atMs, extra = {}) => ({ schema: 'artifact-action-v1', id, cycle: 'toys', atMs,
   kind, control, ...extra });
 const block = (id, atMs, actions) => ({ schema: 'artifact-action-block-v1', id, cycle: 'toys', night: 6, atMs, actions });

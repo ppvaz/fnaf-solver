@@ -196,7 +196,7 @@ const unitOf = path => {
 
 /**
  * The repository unit a reference lands in: a workspace directory
- * (`packages/core`, `apps/device`), a top-level directory (`tools`), `builtin`,
+ * (`packages/play`, `apps/desktop`), a top-level directory (`tools`), `builtin`,
  * `external`, `outside` the repository, or `UNRESOLVED`.
  * @param {string} from repository-relative path of the importing file
  * @param {string | null} specifier

@@ -144,7 +144,7 @@ export interface DeviceProfileLimits {
 }
 
 /**
- * A `device-profile-v1` as stored under apps/device/profiles. Its bytes are
+ * A `device-profile-v1` as stored under packages/play/profiles/fnaf2/moto-g56. Its bytes are
  * hashed into every bundle and qualification bound to it, so it never gains a
  * field to carry what can be derived: the game is the package half of
  * `targetBuild`.

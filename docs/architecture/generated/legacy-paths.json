@@ -183,36 +183,6 @@
       "notes": "Deprecated: the helper's downward-chevron stroke scores and their thresholds, the executor's mask and monitor tell. Moved from packages/adapters unchanged; to be converted, not extended (CLAUDE.md, Sensors and on-device code)."
     },
     {
-      "id": "play.profile.hid-mediaprojection",
-      "path": "apps/device/profiles/hid-mediaprojection.json",
-      "category": "device-profile",
-      "lifecycle": "compatibility",
-      "owner": "@sixam/play",
-      "replacement": "packages/play/profiles/fnaf2/moto-g56/hid-mediaprojection.json, the layout's home for it, once the path is free to move",
-      "removalGate": "Every stored citation of apps/device/profiles/ is read through the path's history at its commit, not the working tree: the 55 tools/recompile/results records that pair `profile: apps/device/profiles/hid-mediaprojection.json` with its profileSha256, the recompile configs full06-response-experiment.json (hash-bound by full06-responses-20260928) and phone-encounter-nights.json, schedule-to-input.mjs's DEFAULT_PROFILE, and graph.json's citation of fixture-hid-screencap.json; packages/propose/bin/plans/bundle.mjs and the device CLI then resolve profiles from the new home",
-      "notes": "Unmoved and byte for byte. The profile bytes are what every bundle binds by sha256 (profile.json); the path is what retained records cite."
-    },
-    {
-      "id": "play.profile.hid-mediaprojection-17ms",
-      "path": "apps/device/profiles/hid-mediaprojection-17ms.json",
-      "category": "device-profile",
-      "lifecycle": "compatibility",
-      "owner": "@sixam/play",
-      "replacement": "packages/play/profiles/fnaf2/moto-g56/hid-mediaprojection-17ms.json, the layout's home for it, once the path is free to move",
-      "removalGate": "Every stored citation of apps/device/profiles/ is read through the path's history at its commit, not the working tree: the 55 tools/recompile/results records that pair `profile: apps/device/profiles/hid-mediaprojection.json` with its profileSha256, the recompile configs full06-response-experiment.json (hash-bound by full06-responses-20260928) and phone-encounter-nights.json, schedule-to-input.mjs's DEFAULT_PROFILE, and graph.json's citation of fixture-hid-screencap.json; packages/propose/bin/plans/bundle.mjs and the device CLI then resolve profiles from the new home",
-      "notes": "Unmoved and byte for byte. The profile bytes are what every bundle binds by sha256 (profile.json); the path is what retained records cite."
-    },
-    {
-      "id": "play.profile.fixture-hid-screencap",
-      "path": "apps/device/profiles/fixture-hid-screencap.json",
-      "category": "device-profile",
-      "lifecycle": "compatibility",
-      "owner": "@sixam/play",
-      "replacement": "packages/play/profiles/fnaf2/moto-g56/fixture-hid-screencap.json, the layout's home for it, once the path is free to move",
-      "removalGate": "Every stored citation of apps/device/profiles/ is read through the path's history at its commit, not the working tree: the 55 tools/recompile/results records that pair `profile: apps/device/profiles/hid-mediaprojection.json` with its profileSha256, the recompile configs full06-response-experiment.json (hash-bound by full06-responses-20260928) and phone-encounter-nights.json, schedule-to-input.mjs's DEFAULT_PROFILE, and graph.json's citation of fixture-hid-screencap.json; packages/propose/bin/plans/bundle.mjs and the device CLI then resolve profiles from the new home",
-      "notes": "Unmoved and byte for byte. The profile bytes are what every bundle binds by sha256 (profile.json); the path is what retained records cite."
-    },
-    {
       "id": "lab.overnight-window-path",
       "path": "tools/device/overnight-window.py",
       "category": "host-unit-path",

@@ -24,7 +24,6 @@ import os
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(HERE))))
 sys.path.insert(0, HERE)
 
 from pathlib import Path
@@ -116,7 +115,7 @@ check("--exclude-rect parses the model's rectangle",
       timeline.parse_rect(f"{L},{T},{R},{B}") == (L, T, R, B))
 
 # Taps: no control the schedule can press during a night is under the panel.
-profile = json.load(open(os.path.join(ROOT, "apps", "device", "profiles", "hid-mediaprojection.json")))
+profile = json.load(open(os.path.join(HERE, "..", "..", "profiles", "fnaf2", "moto-g56", "hid-mediaprojection.json")))
 for control, point in profile["controlMap"].items():
     d = gap(point["x"], point["y"], point["x"] + 1, point["y"] + 1)
     check(f"control {control} ({point['x']},{point['y']}) is {GUARD} px clear of the panel "

@@ -348,15 +348,6 @@ const legacyPaths = [
     removalGate: 'FNaF 2\'s pipeline is recalibrated on native regions (ADR 0002 migration M7) and the campaign executor reads no grid, luma or grid-fitted rule; the retained grid_hex readers of old evidence stay',
     notes: `Deprecated: ${what}. Moved from packages/adapters unchanged; to be converted, not extended (CLAUDE.md, Sensors and on-device code).`,
   })),
-  // The device profiles stay where the device app kept them: stored hashes
-  // cover the path (the layout's home for them is packages/play/profiles/fnaf2/moto-g56/).
-  ...['hid-mediaprojection', 'hid-mediaprojection-17ms', 'fixture-hid-screencap'].map(name => ({
-    id: `play.profile.${name}`, path: `apps/device/profiles/${name}.json`, category: 'device-profile',
-    lifecycle: 'compatibility', owner: '@sixam/play',
-    replacement: `packages/play/profiles/fnaf2/moto-g56/${name}.json, the layout's home for it, once the path is free to move`,
-    removalGate: 'Every stored citation of apps/device/profiles/ is read through the path\'s history at its commit, not the working tree: the 55 tools/recompile/results records that pair `profile: apps/device/profiles/hid-mediaprojection.json` with its profileSha256, the recompile configs full06-response-experiment.json (hash-bound by full06-responses-20260928) and phone-encounter-nights.json, schedule-to-input.mjs\'s DEFAULT_PROFILE, and graph.json\'s citation of fixture-hid-screencap.json; packages/propose/bin/plans/bundle.mjs and the device CLI then resolve profiles from the new home',
-    notes: 'Unmoved and byte for byte. The profile bytes are what every bundle binds by sha256 (profile.json); the path is what retained records cite.',
-  })),
   // The overnight window moved to apps/lab with the queue and the night jobs it
   // runs; a host's installed systemd units still name the old path in ExecStart.
   {

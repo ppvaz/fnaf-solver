@@ -55,9 +55,22 @@ Monitor state comes from a calibrated `monitor-rule-v1` artifact
 `packages/play/bin/calibrate/camera-calibrate.py`). Without a fitted rule, or on a stale,
 off-identity, blackout-dark or mid-animation frame, the detector returns
 `UNKNOWN` with the reason and the executor refuses to act on it. The profiles
-(`apps/device/profiles/`) bind each rule's digest; the Moto g56 100 ms and 17 ms
+(`profiles/fnaf2/moto-g56/`) bind each rule's digest; the Moto g56 100 ms and 17 ms
 profiles are separate qualification candidates, and a 100 ms result never
 promotes the 17 ms one.
+
+**The device profiles** (`device-profile-v1`) share that folder with the
+fitted models and are told apart by schema: `hid-mediaprojection.json`, the
+qualified Moto g56 profile every committed winner and CI's dry run use;
+`hid-mediaprojection-17ms.json`, the 17 ms candidate, `dryRunOnly` until its
+own qualification; and `fixture-hid-screencap.json`, the test fixture. A
+winner and a bundle name a profile by its id, never its path, and a bundle
+binds its bytes by sha256 (`profile.json`), so any change to one is a new
+profile, never an edit. They lived in `apps/device/profiles/` until
+2026-09-30: the 55 `tools/recompile/results/` records, the two hash-bound
+recompile configs and `docs/evidence/graph.json` keep citing that path, and
+the readers that open it (`phone-encounter-replay.mjs`,
+`phone-input-bracket-sweep.mjs`) follow it through git's renames.
 
 **Deprecated sensors.** CLAUDE.md discontinued the 20x9 point-sampled grid,
 grid-fitted rules and luma reducers on 2026-09-24/25. The four modules in

@@ -95,7 +95,7 @@ function probeWinner(strategy, night) {
 }
 
 const profile = JSON.parse(readFileSync(
-  join(HERE, '../../../../apps/device/profiles/hid-mediaprojection.json'), 'utf8'));
+  join(HERE, '../../../../packages/play/profiles/fnaf2/moto-g56/hid-mediaprojection.json'), 'utf8'));
 
 export function probeCell(strategy, night, { runs = 0 } = {}) {
   const cell = { strategy, night, emit: null, emitReason: null, model: null, modelReason: null,

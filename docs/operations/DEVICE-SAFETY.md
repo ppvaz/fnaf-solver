@@ -17,8 +17,9 @@ night and were retired on 2026-09-25 (`6d78c7e`, `903ffab`;
   refuses `--live` without `--confirm-live`, and `tools/architecture-test.js`
   holds that gate and refuses a second live command in the CLI.
 - **A resolved, hashed profile.** The profile comes from
-  `apps/device/profiles/` (`device-profile-v1`; the files stay at that path
-  because retained records cite it with their sha256). The bundle binds its id and
+  `packages/play/profiles/fnaf2/moto-g56/` (`device-profile-v1`; records
+  written before 2026-09-30 cite `apps/device/profiles/`, and their readers
+  follow git's renames). The bundle binds its id and
   sha256, and the CLI refuses a bundle compiled for another profile.
 - **Preflight before any press.** The ADB preflight checks the target build,
   the Companion and `/system/bin/hid`. The campaign preflight

@@ -136,7 +136,7 @@ assert.equal(venueCheck(unreadable).status, 'HOLD');
 assert.match(venueCheck(unreadable).detail, /securityPatch unread \(getprop ro\.build\.version\.security_patch failed: getprop: closed\)/);
 
 // 7. Campaign preflight: the qualification's standing on the observed venue.
-const fixtureProfile = JSON.parse(readFileSync(fileURLToPath(new URL('../../../apps/device/profiles/fixture-hid-screencap.json', import.meta.url)), 'utf8'));
+const fixtureProfile = JSON.parse(readFileSync(fileURLToPath(new URL('../../../packages/play/profiles/fnaf2/moto-g56/fixture-hid-screencap.json', import.meta.url)), 'utf8'));
 const liveProfile = { ...fixtureProfile, limits: { ...fixtureProfile.limits, dryRunOnly: false } };
 const spec = makeCampaignSpec({ profile: liveProfile.id, targetBuild: liveProfile.targetBuild, nights: [2] });
 const campaign = (device, qualification) => evaluateCampaignPreflight({ spec, device, profile: liveProfile, qualification,

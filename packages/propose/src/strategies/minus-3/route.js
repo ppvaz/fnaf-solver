@@ -118,7 +118,7 @@ export function schedule({ opening, clear, knobs, untilMs } = {}) {
 }
 
 // Branch-aware route timing. These are frame offsets because the plant is
-// frame-locked; device conversion happens in apps/device later.
+// frame-locked; device conversion happens in Play's campaign later.
 export const REACTIVE_KNOBS = Object.freeze({
   firstAnchorFrames: 600,
   cycleFrames: 600,

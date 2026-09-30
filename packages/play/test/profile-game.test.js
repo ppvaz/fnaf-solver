@@ -9,14 +9,16 @@ import { stableHash } from '@sixam/kernel/contracts';
 import { validateExecutorRequest } from '../src/campaign/artifact-executor.js';
 import { compileDeviceLocalHidSchedule } from '../src/campaign/hid-schedule.js';
 
-const PROFILES = fileURLToPath(new URL('../../../apps/device/profiles/', import.meta.url));
+const PROFILES = fileURLToPath(new URL('../../../packages/play/profiles/fnaf2/moto-g56/', import.meta.url));
 const read = name => JSON.parse(readFileSync(`${PROFILES}${name}`, 'utf8'));
 
 // -- every committed profile still loads, unchanged: resolution derives the
 //    game from targetBuild and adds no field, because a profile's bytes are
 //    hashed into the bundles bound to it.
-const names = readdirSync(PROFILES).filter(name => name.endsWith('.json')).sort();
-assert.ok(names.length >= 3, 'the committed profiles are present');
+// The profiles share Play's FNaF 2 folder with the fitted models, so they are picked by schema.
+const names = readdirSync(PROFILES).filter(name => name.endsWith('.json') && read(name).schema === 'device-profile-v1').sort();
+assert.deepEqual(names, ['fixture-hid-screencap.json', 'hid-mediaprojection-17ms.json', 'hid-mediaprojection.json'],
+  'the committed profiles are present');
 for (const name of names) {
   const text = readFileSync(`${PROFILES}${name}`, 'utf8');
   const profile = JSON.parse(text);

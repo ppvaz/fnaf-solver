@@ -58,7 +58,7 @@ const winners = readdirSync(WINNERS)
   .filter(name => name.startsWith('campaign-') && name.endsWith('-winner.json')).sort();
 if (!winners.length) fail(`no shipped winner was found in ${WINNERS} to characterize`);
 const profile = JSON.parse(readFileSync(
-  join(HERE, '../../../apps/device/profiles/hid-mediaprojection.json'), 'utf8'));
+  join(HERE, '../../../packages/play/profiles/fnaf2/moto-g56/hid-mediaprojection.json'), 'utf8'));
 
 const isBoxWork = row => row.kind === 'hold' && row.control === 'wind';
 

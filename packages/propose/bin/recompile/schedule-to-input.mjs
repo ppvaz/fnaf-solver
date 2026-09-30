@@ -3,7 +3,7 @@
 //
 //   node packages/propose/bin/recompile/schedule-to-input.mjs --winner packages/propose/bindings/fnaf2/campaign-night1-minimal-winner.json
 //        --night 1 --out FILE [--navigation packages/source/recompile/fixtures/night1-newgame.input]
-//        [--profile apps/device/profiles/hid-mediaprojection.json] [--frame 3]
+//        [--profile packages/play/profiles/fnaf2/moto-g56/hid-mediaprojection.json] [--frame 3]
 //
 // The schedule is the one the binding's gate replays (bundle.mjs STRATEGY_REGISTRY[s].emit(winner,
 // night).replay(seed)): minus-toys-plan.mjs build(knobs) rows at the winner's epoch (anchorEpochMs +
@@ -15,7 +15,7 @@
 // and compare-draw-trace.mjs compares harness office update F with model frame F+1.
 // A tap or hold is `down` at its press frame and `up` at its release frame (the row's own contact
 // or hold length); a camdrop holds the camera-feed light and taps the monitor as a second contact,
-// as apps/device/src/hid-schedule.js sends it; a hall row is the hallLight control.
+// as packages/play/src/campaign/hid-schedule.js sends it; a hall row is the hallLight control.
 // Points: the device profile's controlMap (the phone's touch points, 2400 x 1080) mapped into the
 // game's 1024 x 768 window by Display Mode FULL's stretch (x * 1024 / 2400, y * 768 / 1080;
 // packages/source/recompile/native-frame.py), rounded to whole window pixels.
@@ -35,7 +35,7 @@ import { KNOBS0, build, schedule } from '../plans/minus-toys-plan.mjs';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
 export const FPS = 60;
 export const OFFICE_FRAME = 3;
-export const DEFAULT_PROFILE = 'apps/device/profiles/hid-mediaprojection.json';
+export const DEFAULT_PROFILE = 'packages/play/profiles/fnaf2/moto-g56/hid-mediaprojection.json';
 // Display Mode FULL fills the 2400 x 1080 native frame with the 1024 x 768 game frame.
 export const NATIVE = Object.freeze([2400, 1080]);
 export const WINDOW = Object.freeze([1024, 768]);

@@ -72,11 +72,8 @@ controls, and the cross-game clockwork, into
 2's controllers and cycle machinery and FNaF 1, 3 and 4's policies into
 [`@sixam/propose`](../../packages/propose/README.md), which also absorbed
 `@sixam/research`; the phone, the campaign and core's last modules into
-[`@sixam/play`](../../packages/play/README.md). One compatibility path is left:
-
-| Surface | Lifecycle | Canonical replacement | Removal gate |
-|---|---|---|---|
-| `apps/device/profiles/*.json` (the three device profiles, unmoved) | compatibility | `packages/play/profiles/fnaf2/moto-g56/`, the layout's home, once the path is free | every stored citation of the path (55 recompile results with `profileSha256`, two hash-bound recompile configs, `schedule-to-input.mjs`'s default, `graph.json`) is read through its history; the device CLI and `bundle.mjs` then resolve profiles from the new home |
+[`@sixam/play`](../../packages/play/README.md). No compatibility path is left: the last, the three device profiles under
+`apps/device/profiles/`, moved on 2026-09-30 (see below).
 
 ## Already removed
 
@@ -88,6 +85,15 @@ every compiled plan stayed byte-identical, and the five `tools/recompile`
 importers were repointed with the removal), and the retained records that name
 their paths (`packages/core/src/mechanics/*.js`, `packages/adapters/src/button-strokes.js`)
 are read through those paths' git history (ADR 0002 principle 9).
+
+The device profiles moved from `apps/device/profiles/` to
+`packages/play/profiles/fnaf2/moto-g56/` on 2026-09-30, byte for byte, once their
+removal gate held: the readers that open a path a record cites
+(`phone-encounter-replay.mjs`, `phone-input-bracket-sweep.mjs`) follow it
+through git's renames, no reader opens the 55 recompile results' or
+`graph.json`'s citation, and the device CLI, `bundle.mjs` and
+`schedule-to-input.mjs` resolve profiles from the new home. Winners and
+bundles name a profile by its id, which did not change.
 
 The root `src/` compatibility re-exports were removed after the import
 equivalence gate. Package and application imports are canonical. Historical

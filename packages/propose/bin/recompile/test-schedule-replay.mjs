@@ -53,7 +53,7 @@ assert.throws(() => harnessRows([{ control: 'wind', downFrame: 0, upFrame: 2 }],
 assert.throws(() => harnessInput({ navigation: '3 0 down 0 1 1\n', schedule: expanded, points }), /already acts on frame 3/);
 
 // --- a committed binding: the Night 1 minimal schedule ---
-const devProfile = json('apps/device/profiles/hid-mediaprojection.json');
+const devProfile = json('packages/play/profiles/fnaf2/moto-g56/hid-mediaprojection.json');
 const minimal = json('packages/propose/bindings/fnaf2/campaign-night1-minimal-winner.json');
 const sched = winnerSchedule(minimal, 1);
 assert.equal(sched.contacts.length, 96);

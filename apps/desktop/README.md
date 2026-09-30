@@ -16,8 +16,10 @@ until ADR 0002's Play move), and as an application it may import any package:
 `@sixam/play` for the campaign, `@sixam/review` for the queries, the kernel and
 source. The campaign itself -- the executor, state machine, runner, ports, HID
 schedule and night anchor -- is Play's ([`packages/play`](../../packages/play/README.md)).
-The device profiles stay in [`apps/device/profiles/`](../device/README.md),
-because retained records cite that path with the profile's sha256.
+The device profiles are Play's too, in
+[`packages/play/profiles/fnaf2/moto-g56/`](../../packages/play/profiles/fnaf2/moto-g56/)
+since 2026-09-30; records written before then cite `apps/device/profiles/`,
+and their readers follow the file through git's renames.
 
 ## The device command line
 

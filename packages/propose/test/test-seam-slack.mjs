@@ -111,7 +111,7 @@ const winners = readdirSync(WINNERS)
 if (!winners.length) fail('no shipped winner was found to audit');
 
 const profile = JSON.parse(readFileSync(
-  join(HERE, '../../../apps/device/profiles/hid-mediaprojection.json'), 'utf8'));
+  join(HERE, '../../../packages/play/profiles/fnaf2/moto-g56/hid-mediaprojection.json'), 'utf8'));
 
 // --- 2b. every REGISTERED strategy, not only the ones with a shipped winner --
 // Auditing `campaign-*-winner.json` alone audits whatever already won. Every

@@ -29,7 +29,7 @@ an arrow points at what a package imports; review never imports play or propose
   propose. It also holds the campaign: the
   executor, the state machine, the runner and its ports. **apps/desktop** is
   the composition root: its command line composes play with a resolved,
-  immutable profile (`apps/device/profiles/`) that each run retains, and it
+  immutable profile (`packages/play/profiles/fnaf2/moto-g56/`) that each run retains, and it
   serves the `fnaf-solver` MCP server. Applications may import any package.
 - **propose** imports the kernel, source, play and review, and never the
   device shell (the applications, `tools/`, `child_process`, `net`, `dgram`).

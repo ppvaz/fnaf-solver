@@ -8,7 +8,7 @@ import { evaluateCampaignPreflight } from '../src/campaign/campaign-preflight.js
 import { validateCampaignBundle, makeCampaignExecutionRequest } from '../src/campaign/campaign-bundle.js';
 import { DeviceLocalArtifactExecutor, expandNightBlocks } from '../src/campaign/device-local-executor.js';
 
-const profile = JSON.parse(await readFile(fileURLToPath(new URL('../../../apps/device/profiles/fixture-hid-screencap.json', import.meta.url)), 'utf8'));
+const profile = JSON.parse(await readFile(fileURLToPath(new URL('../../../packages/play/profiles/fnaf2/moto-g56/fixture-hid-screencap.json', import.meta.url)), 'utf8'));
 const spec = makeCampaignSpec({ profile: profile.id, targetBuild: profile.targetBuild, nights: [6, 7] });
 const block = (id, cycle, atMs) => ({ schema: 'artifact-action-block-v1', id, cycle, atMs,
   actions: [{ schema: 'artifact-action-v1', id: `${id}-action`, cycle, atMs,

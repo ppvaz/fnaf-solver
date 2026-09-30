@@ -17,7 +17,7 @@ import { resolveDeviceProfile } from '@sixam/source';
 import { stableHash } from '@sixam/kernel/contracts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
-const PROFILES = join(ROOT, 'apps/device/profiles');
+const PROFILES = join(ROOT, 'packages/play/profiles/fnaf2/moto-g56');
 
 function help() {
   console.log(`fnaf2-device — the campaign executor's command line (night-run.sh drives it)
@@ -37,7 +37,7 @@ Commands:
   grade RUN_ID  show a retained result
 
 Options:
-  --profile ID  resolved profile under apps/device/profiles
+  --profile ID  resolved profile under packages/play/profiles/fnaf2/moto-g56
   --serial ID   select one explicit ADB device
   --nights 1-7  campaign target nights, one ascending chain (default: 1,2,3,4,5,6,7)
   --max-attempts N  campaign attempts per target (default: 3)

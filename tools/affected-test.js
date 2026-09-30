@@ -62,7 +62,7 @@ if (sourceChanged || coreChanged || proposeChanged || playModelChanged) {
   // The winners compile through the Sim and the catalogs.
   add('winners-rebuild', 'node', ['packages/propose/test/test-winners-rebuild.mjs']);
 }
-if (changed.some(path => path.startsWith('packages/play/') || path.startsWith('packages/adapters/') || path.startsWith('apps/device/') ||
+if (changed.some(path => path.startsWith('packages/play/') || path.startsWith('packages/adapters/') ||
     path === 'apps/desktop/src/device-cli.js')) {
   add('adapter-contracts', 'node', ['packages/play/test/conformance.test.js']);
   add('device-executor', 'node', ['packages/play/test/adb-device-local-executor.test.js']);

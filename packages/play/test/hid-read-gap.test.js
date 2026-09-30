@@ -8,7 +8,7 @@ import { readFile } from 'node:fs/promises';
 import { stableHash } from '@sixam/kernel/contracts';
 import { compileDeviceLocalHidSchedule } from '../src/campaign/hid-schedule.js';
 
-const profile = JSON.parse(await readFile(new URL('../../../apps/device/profiles/hid-mediaprojection.json', import.meta.url), 'utf8'));
+const profile = JSON.parse(await readFile(new URL('../../../packages/play/profiles/fnaf2/moto-g56/hid-mediaprojection.json', import.meta.url), 'utf8'));
 const timing = { periodMs: 5000, loopStartMs: 0, stopAtMs: 5000, observeUntilMs: 5000, idleUntilMs: 0 };
 const request = {
   schema: 'device-executor-v1', version: 1, mode: 'live',

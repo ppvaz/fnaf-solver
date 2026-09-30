@@ -9,7 +9,7 @@
 // state (practice-state.jsonl). This tool sends one stream of contacts
 // through the campaign's own transport -- `/system/bin/hid` on the phone, the
 // HID_DESCRIPTOR / report() codec and the stream vocabulary of
-// apps/device/src/hid-schedule.js -- and grades each contact three ways:
+// packages/play/src/campaign/hid-schedule.js -- and grades each contact three ways:
 // planned, stamped by the kernel (getevent -lt), and taken by the game loop.
 //
 // What it measures is shared with the retail game up to Android's dispatch;

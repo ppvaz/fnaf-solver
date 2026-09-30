@@ -57,7 +57,7 @@ assert.ok(executorSource.includes(RECORD_PATH) && executorSource.includes(record
   'the executor must cite the record and evidence id its window is derived from');
 
 // --- The rule on a fake lifecycle observer ----------------------------------
-const profile = JSON.parse(await readFile(new URL('../../../apps/device/profiles/hid-mediaprojection.json', import.meta.url), 'utf8'));
+const profile = JSON.parse(await readFile(new URL('../../../packages/play/profiles/fnaf2/moto-g56/hid-mediaprojection.json', import.meta.url), 'utf8'));
 const request = {
   schema: 'device-executor-v1', version: 1, mode: 'live',
   artifact: { winnerHash: 'a'.repeat(64), engineHash: 'b'.repeat(64), profileHash: 'c'.repeat(64),

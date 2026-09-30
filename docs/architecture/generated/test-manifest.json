@@ -5113,7 +5113,9 @@
       "deterministic": true,
       "determinismSignals": [],
       "fixedSleeps": [],
-      "sharedResources": [],
+      "sharedResources": [
+        "device-transport"
+      ],
       "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",
