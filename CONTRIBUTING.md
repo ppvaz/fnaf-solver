@@ -2,8 +2,11 @@
 
 This repository publishes derived knowledge about the modern Android target;
 never commit game assets, decompiled content, recordings, secrets, or local
-calibrations. Preserve evidence labels, negative results, controls, and
-retractions.
+calibrations. The one written exception (Pedro, 2026-09-29) is the README's two
+gameplay clips, `docs/img/night7-teach-panel-cycle22.gif` and
+`docs/img/fnaf1-420-teach-panel-bonnie.gif`: at most two clips, each at most
+4,000,000 bytes, and the exception covers no other game media. Preserve
+evidence labels, negative results, controls, and retractions.
 
 ## Clean-checkout workflow
 
