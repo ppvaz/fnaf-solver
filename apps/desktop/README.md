@@ -6,7 +6,7 @@ It composes; it does not decide. It holds three doors onto the contexts:
 - the **device command line** (`src/device-cli.js`, `npm run device:*`), the
   only path onto a phone;
 - the **`fnaf-solver` MCP server** (`src/companion-mcp.mjs`, `npm run
-  device:mcp`), with the Cue Helper tools (`src/mcp.js`), the solver
+  device:mcp`), with the Companion tools (`src/mcp.js`), the solver
   interface's verbs and the lab's read-only verbs;
 - the **operator verbs**, `npm run lab -- <verb>`: status, next, start,
   commit, end, morning and doctor ([`docs/operations/LAB.md`](../../docs/operations/LAB.md)).
@@ -46,7 +46,7 @@ the Night 7 Custom Night 10/20 target, and its bounded retry/proof contract
 without touching a phone. The second prints the one-time calibration
 checklist. The third performs closed, read-only ADB discovery: exactly one
 ready device, the pinned FNaF 2 build, awake/unlocked state, game focus,
-`/system/bin/hid`, and Cue Helper. A `HOLD` is expected when the phone is
+`/system/bin/hid`, and Companion. A `HOLD` is expected when the phone is
 absent or not ready; it does not become qualification evidence.
 
 Preflight also records the venue identity (ADR 0002, decision 1): the game's
@@ -80,7 +80,7 @@ inferred from a policy or conversation.
 `npm run device:mcp` runs the stdio server; its project configuration is
 checked in as `.mcp.json` (Claude Code) and `opencode.json` (OpenCode), and
 Codex registers it once ([`docs/device/COMPANION-MCP.md`](../../docs/device/COMPANION-MCP.md)).
-The Cue Helper tools are `cue.setup`, `cue.queue.enqueue`, `cue.queue.list` and
+The Companion tools are `cue.setup`, `cue.queue.enqueue`, `cue.queue.list` and
 `cue.queue.run`: enqueue and list work without a phone; run returns a safe
 HOLD while the phone is absent, locked, asleep or ambiguous and leaves the job
 pending. The server cannot unlock the phone, tap the game, send HID, run a
@@ -94,7 +94,7 @@ idempotency key so retries from several agents do not duplicate jobs.
 
 The pure queries are in `@sixam/review` (`consequence.mjs`, `mistakes.mjs`,
 `roadmap.mjs`, the promotions query), and the lab joins them with git, this
-host's `/proc`, the Cue Helper queue and the push-gate record. The MCP server
+host's `/proc`, the Companion queue and the push-gate record. The MCP server
 serves `status`, `next` and `doctor` from the same functions as `lab.status`,
 `lab.next` and `lab.doctor`. Every answer is a `claim-envelope-v1`. The lab
 writes only its own untracked state (`artifacts/lab/session.json`, then
@@ -104,7 +104,7 @@ prints every remedy without running it, and never writes the owner's override.
 | File | Kind | Purpose and interface |
 |---|---|---|
 | `src/device-cli.js` | CLI | `npm run device:campaign`, `device:preflight`, `device:clockmap`, `device:grade` (the `fnaf2-device` bin): the campaign's command line, above. `tools/architecture-test.js` holds its `--confirm-live` gate and refuses a second live command. |
-| `src/mcp.js` | module | `createCompanionMcp()`: the Cue Helper tools over `tools/device/companion-setup.sh` and `companion-queue.sh`, a closed vocabulary with no coordinates, HID or shell. |
+| `src/mcp.js` | module | `createCompanionMcp()`: the Companion tools over `tools/device/companion-setup.sh` and `companion-queue.sh`, a closed vocabulary with no coordinates, HID or shell. |
 | `src/companion-mcp.mjs` | MCP server | The `fnaf-solver` stdio server (`npm run device:mcp`): the four `cue.*` tools, the solver verbs of `@sixam/review/solver` (`describe`, `query`, `review`, `promote`, `check`), `jobs`, `truth` and `lab.status`, `lab.next`, `lab.doctor`, fourteen tools in all, every answer a `claim-envelope-v1`. Was `tools/device/companion-mcp.mjs`. |
 | `src/lab.mjs` | module | `createLab({root})`: the seven verbs over one checkout, each returning a validated envelope, and `LAB_VERBS`, the verb table every door reads. `status` joins HEAD and its push-gate record (`tools/push-gate.mjs` appends `push-gate-run-v1` lines to the main checkout's `artifacts/lab/push-gate.jsonl`), sync with origin as of the last fetch, each ROADMAP step's state, the promotions query, the lease (the owner record, never the lock), the queue (`companion-queue.py list --json`), the overnight window's records, ADRs still proposed, and the doctor's count. `next` ranks an open session, doctor findings that stop every commit, each step not closed whose needs are closed (ROADMAP order), pending decisions and the push gate. `start` writes the session and prints the matching mistake-register entries. `commit --dry` runs `.githooks/commit-msg` itself on the staged set and message, and classes the stage. `end` classes each first-parent commit since the session's base (or `--since`) and closes the session. `morning` reads windows, queue activity and packs since the last 18:00. `doctor` checks hooks, stale PENDING jobs (72 h), orphaned push-gate worktrees, idle unlocked agent worktrees (24 h), the `@sixam` scope, the local profile, generated-catalog drift at HEAD (in a throwaway worktree, as push-gate builds one), memory under 1536 MB beside a process over 1 GB, and untracked winners. Tests replace the promotions query, packs, queue and host. |
 | `src/cli.mjs` | CLI | `npm run lab -- <verb> [--json]`: text, or the envelope with `--json`. Exit 0 for a claim, 1 for a refusal or a predicted hook refusal, 2 on a usage error. |

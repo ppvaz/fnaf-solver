@@ -28,12 +28,12 @@ function harness({ startMs = 8000, authorizeAt, latchAt = ONSET_HOST_MS + 500, o
     clock: {
       read: async () => {
         state.reads += 1; state.t += 10;
-        if (readError || (failUntil !== null && state.t < failUntil)) { state.t += 1000; throw readError ?? new Error('cue-helper clock probe timed out'); }
+        if (readError || (failUntil !== null && state.t < failUntil)) { state.t += 1000; throw readError ?? new Error('Companion clock probe timed out'); }
         return sample();
       },
       probe: async () => {
         state.t += 170;
-        if (readError || (failUntil !== null && state.t < failUntil)) { state.t += 1000; throw readError ?? new Error('cue-helper clock probe timed out'); }
+        if (readError || (failUntil !== null && state.t < failUntil)) { state.t += 1000; throw readError ?? new Error('Companion clock probe timed out'); }
         return sample();
       },
     },

@@ -47,7 +47,7 @@ fi
 initial_pid="$(adb shell pidof "$PACKAGE" 2>/dev/null | tr -d '\r' | awk '{print $1}')"
 case "$initial_pid" in
   ''|*[!0-9]*)
-    echo "cue helper is not running; start capture and grant consent first" >&2
+    echo "Companion is not running; start capture and grant consent first" >&2
     exit 1
     ;;
 esac
@@ -65,13 +65,13 @@ while [ "$i" -le "$SAMPLES" ]; do
   pid="$(adb shell pidof "$PACKAGE" 2>/dev/null | tr -d '\r' | awk '{print $1}')"
   case "$pid" in
     ''|*[!0-9]*)
-      echo "sample $i: cue-helper process disappeared" >&2
+      echo "sample $i: Companion process disappeared" >&2
       failed=1
       pid=0
       ;;
   esac
   if [ "$pid" != 0 ] && [ "$pid" != "$initial_pid" ]; then
-    echo "sample $i: cue-helper process restarted ($initial_pid -> $pid)" >&2
+    echo "sample $i: Companion process restarted ($initial_pid -> $pid)" >&2
     failed=1
   fi
 
@@ -174,6 +174,6 @@ awk -F '\t' '
 echo "report: $OUTPUT"
 
 if [ "$failed" -ne 0 ]; then
-  echo "cue-helper soak observed one or more lifecycle/sensor failures" >&2
+  echo "Companion soak observed one or more lifecycle/sensor failures" >&2
   exit 1
 fi

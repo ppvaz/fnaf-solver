@@ -421,7 +421,7 @@ next read — 98059 ms, five seconds later — still photographed the **Main Hal
 camera feed. `monitor-resync` restored the pilot's belief, not the game's state.
 
 **The opportunity: pan is a cheap desync detector, and a better one than what is
-there.** The current check reads the cue helper's luma to ask whether the cams
+there.** The current check reads the Companion's luma to ask whether the cams
 are up, and it caught one of about eight. A horizontal cross-correlation of the
 office against an unpanned reference separated 16 of 16 good reads from 6 of 7
 bad ones in this run, offline. Whether it can be afforded *inside* the cycle is

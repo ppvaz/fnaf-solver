@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Queue Cue Helper jobs across device absence or lock state.
+"""Queue Companion jobs across device absence or lock state.
 
 The queue is intentionally a closed vocabulary. It can defer observation setup
 and screen checks, and -- since Pedro's "Yes, play nights" (2026-09-27) -- one
@@ -676,7 +676,7 @@ def run_queue(wait_seconds: float, interval: float, max_jobs: int = 0, allow_nig
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Queue Cue Helper setup/check jobs and night jobs")
+    parser = argparse.ArgumentParser(description="Queue Companion setup/check jobs and night jobs")
     sub = parser.add_subparsers(dest="command", required=True)
     add = sub.add_parser("enqueue", help="append a deferred job")
     add.add_argument("kind", choices=("setup", "menu-check", "night-check", "night"))

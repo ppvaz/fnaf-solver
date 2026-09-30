@@ -1,7 +1,7 @@
 // Read-only gate for the legal camera-light intersection probe.
 //
-// This process owns no input writer. It polls Cue Helper's authenticated,
-// atomic Cue Helper read and exits only after two fresh, increasing frame
+// This process owns no input writer. It polls the Companion's authenticated,
+// atomic Companion read and exits only after two fresh, increasing frame
 // sequences agree. The bottom controls are translucent, so their whole-ROI
 // means are diagnostic only. The gate consumes the fixed native downward
 // chevrons: a local max-channel contrast score over the two stroke lines.

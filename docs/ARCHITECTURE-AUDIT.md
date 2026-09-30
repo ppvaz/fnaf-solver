@@ -324,7 +324,7 @@ Two adjacent traps worth naming in the same breath:
   reads runner constants with `grep -m1`, so it asserts against line 1798 while
   the runtime value comes from line 1869 — under a header comment claiming
   *"Device constants come from the runner, never restated here."*
-- The cue-helper read cost is **59 ms in some call sites and 42 ms in others**,
+- The Companion read cost is **59 ms in some call sites and 42 ms in others**,
   in the runner, the actuator and two docs. `actuator.mjs:108-111` states the
   conflict openly and picks the pessimistic one; nothing else does.
 

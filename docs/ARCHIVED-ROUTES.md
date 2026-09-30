@@ -129,7 +129,7 @@ of it from the last commit that carried it:
 |---|---|
 | `packages/runtime/` | Fixture temporal dispatcher (`trajectory-v1`), safety supervisor (`supervisor-v1`) and the retained-run validators |
 | `apps/device/src/service.js`, `composition.js`, `modern-composition.js`, `calibration-fixture.js`, `live-seam-composition.js`, `seam-calibration.js`, `index.js`, `apps/device/fixtures/seam-calibration.json` | The service, its composition roots, the seam calibration workflow (`seam-actuator-qualification-v1`) and the package barrel |
-| `createActuatorMcp` in `apps/device/src/mcp.js` | The MCP surface over the service; the Cue Helper MCP beside it stays |
+| `createActuatorMcp` in `apps/device/src/mcp.js` | The MCP surface over the service; the Companion MCP beside it stays |
 | `tools/device/trial.sh`, `tools/device/artifact-runner.mjs` | The artifact lane's launcher and runner |
 
 What moved rather than left: `validateQualification`, `validateTelemetry` and
@@ -153,7 +153,7 @@ profile. Seven contracts whose only producers were these are retired:
 `capability-v1`, `calibration-v1`, `screencheck-process-v1`. Restore from
 `6d78c7e`: `git checkout 6d78c7e -- <path>`.
 
-What the campaign does use stays: the HID and Cue Helper transports, clocks,
+What the campaign does use stays: the HID and Companion transports, clocks,
 night onset, the monitor/mask/camera and calibration-state rules, control
 exclusion, button strokes, the control anchor, and the `fixture-hid-screencap`
 profile the bundle tests compile against.

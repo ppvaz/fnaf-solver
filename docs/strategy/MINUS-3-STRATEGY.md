@@ -735,7 +735,7 @@ tick is wall-timed it is a dead end, cheaply.
 ### The calibration run happened — `n1-minustoys-calib-01`, 2026-08-29
 
 First device run of `minus-toys-plan.mjs --night=1` (the 10/20-shaped plan, not
-`--minimal`) on the g56 / 2.0.7+26, with the cue helper capturing internal
+`--minimal`) on the g56 / 2.0.7+26, with the Companion capturing internal
 audio + `HID_TRACE_RUN=1`. Aborted by hand at ~305 s (the plan can't lock the
 Toys any better than the model and the audio was the point), but graded fully.
 Artifacts: `captures/n1-minustoys-calib-01-*` and
@@ -891,7 +891,7 @@ stresses the monitor. Do this before acting on the no-drift result.
 
 ### What a video-only live loop can and can't do
 
-With audio out, the live sensor is the cue helper's `VirtualDisplay`
+With audio out, the live sensor is the Companion's `VirtualDisplay`
 (~59 ms device-local read, ~14 Hz, its own MediaProjection surface — does not
 touch SurfaceFlinger, so it does not contend with rendering or presses).
 

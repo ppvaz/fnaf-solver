@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Report native-frame state coverage for one physical actuation.
 
-The frame trace is the Cue Helper's native-resolution 2400x1080 ImageReader
+The frame trace is the Companion's native-resolution 2400x1080 ImageReader
 stream.  This
 tool applies the native fixed bottom-control strokes when a v3 trace carries
 them, and falls back to the checked-in monitor and mask anchor rules for older

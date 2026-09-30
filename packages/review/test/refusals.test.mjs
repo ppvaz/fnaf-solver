@@ -83,8 +83,8 @@ const report = {
   device: { serial: 'UNKNOWN', perfettoDataSources: ['android.inputmethod'] },
   instruments: [
     { tool: 'tools/device/inputtrace.py', needs: 'a Perfetto app input-dispatch data source (android.input.inputevent)',
-      available: false, ifMissing: 'use the Cue Helper native frame trace instead' },
-    { tool: 'tools/device/actuation-frame-metric.py', needs: 'the Cue Helper native frame trace', available: true },
+      available: false, ifMissing: 'use the Companion native frame trace instead' },
+    { tool: 'tools/device/actuation-frame-metric.py', needs: 'the Companion native frame trace', available: true },
     { tool: 'tools/device/input-frame-align.py', needs: 'both traces', available: null, ifMissing: 'alignment needs dispatch' },
     { tool: 'tools/device/run-timeline.py, grade-night.py, grade-minus7.py', needs: 'screenrecord', available: true },
   ],
@@ -97,7 +97,7 @@ refusedBy(checkCapabilitiesFirst({ instrument: 'tools/device/inputtrace.py', cap
   'capabilities-first', 'a report of another schema');
 const missing = refusedBy(checkCapabilitiesFirst({ instrument: 'tools/device/inputtrace.py', capabilities: report }), 'capabilities-first',
   'an instrument the report says the phone cannot feed');
-assert.equal(missing.remedy, 'use the Cue Helper native frame trace instead', 'the report\'s own ifMissing is the remedy');
+assert.equal(missing.remedy, 'use the Companion native frame trace instead', 'the report\'s own ifMissing is the remedy');
 refusedBy(checkCapabilitiesFirst({ instrument: 'input-frame-align.py', capabilities: report }), 'capabilities-first',
   'an instrument whose need the report could not read');
 passes(checkCapabilitiesFirst({ instrument: 'tools/device/actuation-frame-metric.py', capabilities: report }), 'an offered instrument');

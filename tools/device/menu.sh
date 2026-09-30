@@ -87,7 +87,7 @@ menu_observe() {
   # the observation's own duration -- and that duration is not small: the
   # observer runs a screencap plus a model classification, measured at ~1497 ms
   # median idle on this phone and ~2.3 s under run conditions, where
-  # screenrecord and the cue helper are both capturing. Against a 2000 ms
+  # screenrecord and the Companion are both capturing. Against a 2000 ms
   # limit, that refused a perfectly valid title with "the title observation is
   # 2376 ms old", aborting a Night 1 run on the title screen.
   #

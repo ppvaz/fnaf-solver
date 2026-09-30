@@ -98,7 +98,7 @@ export const LAUNCH_LATE_MAX_MS = 300;
 // runner's, quoted from the file, not invented for the model.
 //
 // `light_down_at`, the flip gate: wait MONITOR_ANIM_DOWN_MS from the *logged*
-// monitor press, read the cue helper, and only correct if a second read agrees.
+// monitor press, read the Companion, and only correct if a second read agrees.
 // The cycle loop, the classifier checkpoint: the same frame the BB model reads
 // is asked whether the cams are up, and a `cams=UP-DESYNCED` answer lowers,
 // verifies, and lowers once more before resuming the cycle from a floor.
@@ -107,7 +107,7 @@ export const MONITOR_ANIM_DOWN_MS = 367; // src/config.js MONITOR_ANIM_DOWN, in 
 // controls. 100 ms was a conservative swipe-era margin, not the device floor.
 export const TAP_CONTACT_MS = 33;
 export const FUSION_POLL_MS = 33;
-// The cue helper's device-local read. CLAUDE.md prices it at 59 ms; the flip
+// The Companion's device-local read. CLAUDE.md prices it at 59 ms; the flip
 // gate's own comment says 42 ms for the same call. 59 is the published number
 // and the pessimistic one, so it is the default.
 export const CUE_READ_MS = 59;
@@ -117,7 +117,7 @@ export const CUE_READ_MS = 59;
 export const CUE_MATCH_MS = 100;
 // Light-down to the classifier's answer, as the HID pilot schedules it.
 export const CLASSIFY_MS = 260;
-// How long the cue helper still reads the cameras as up after a lowering
+// How long the Companion still reads the cameras as up after a lowering
 // press. Measured across nights 6-36 to 6-38: `luma >= CUE_CAMS_UP_LUMA` up to
 // **+202 ms and never later** (ON-DEVICE-VALIDATION.md, "Which press desyncs,
 // and why").
@@ -276,7 +276,7 @@ export class DeviceActuator {
 //
 //   1. The flip gate (`light_down_at`). Immediately before the vent light goes
 //      down, wait `MONITOR_ANIM_DOWN_MS` from the anchor's LOGGED monitor
-//      press, read the cue helper, and -- if it says the cams are up -- read it
+//      press, read the Companion, and -- if it says the cams are up -- read it
 //      once more, because "one sample cannot tell a flash from the cams". Two
 //      agreeing reads press the monitor again and push the light-down out past
 //      the corrective flip. Both reads cost time, and the shell is blocking, so
@@ -307,7 +307,7 @@ export class DeviceActuator {
 //   - Classifier accuracy itself. The pilot's BB read stays whatever the pilot
 //     models; `errorRate` here perturbs only the MONITOR observation, and only
 //     as a control.
-//   - The `nolight` / `unknown` streak branches, the cue helper's stale-frame
+//   - The `nolight` / `unknown` streak branches, the Companion's stale-frame
 //     age, and the 1-3% parasite read stalls. None has a rate this model could
 //     honour.
 //   - One known optimism, stated so it is not mistaken for a result: when the
@@ -378,7 +378,7 @@ export class MonitorSupervisor {
     if (action === 'monitor') this.lastMonitorSent = frame;
   }
 
-  // What the cue helper answers. `camsUp` alone is not it: during the lowering
+  // What the Companion answers. `camsUp` alone is not it: during the lowering
   // animation the camera feed is still on screen, which is the whole reason the
   // gate has to wait the flip out.
   cueSaysUp(frame) {

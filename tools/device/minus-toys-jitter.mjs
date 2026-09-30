@@ -24,7 +24,7 @@
 //               assumed sensitivity parameter, not measured dispatch jitter.
 //   reanchor 'am': at each in-game hour edge (70 s -- verified from
 //               n2-minustoys-0117: HUD-first 7550 ms, 1 AM 77550 ms), a live
-//               clock read (cue helper, ~3 ms) zeroes the accumulated drift.
+//               clock read (Companion, ~3 ms) zeroes the accumulated drift.
 //               A fresh +/- 17 ms read error remains (clocktrace.mjs
 //               resolution). 'none' (default) = anchored to T0 only.
 //

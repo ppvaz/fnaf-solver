@@ -98,7 +98,7 @@ def parse_rect(text):
 def exclude(frame, rect):
     """Black out a declared native rectangle before anything reads the frame.
 
-    A teach run (night-run.sh --teach-overlay) carries the Cue Helper's panel in
+    A teach run (night-run.sh --teach-overlay) carries the Companion's panel in
     its video, in the rectangle its run directory's teach-panel.json names.
     Every decoded pixel the rectangle touches, even partly, reads black, so no
     phase rule sees the panel. Under the mask that region of the game is black

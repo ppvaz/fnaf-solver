@@ -41,7 +41,7 @@ does not change its class.
 ## What it reads and writes
 
 The lab reads the push-gate record (`artifacts/lab/push-gate.jsonl` in the main
-checkout), the Cue Helper queue and lease files, the overnight window's records
+checkout), the Companion queue and lease files, the overnight window's records
 and `/proc`. It writes only `artifacts/lab/session.json` and, at `end`,
 `artifacts/lab/sessions/<id>.json`. `doctor` builds and removes one throwaway
 worktree for the catalog check and deletes nothing else. Over MCP, `lab.status`,

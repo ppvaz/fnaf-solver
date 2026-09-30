@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * One FNaF 3 night on the handset, observed through the Cue Helper's native
+ * One FNaF 3 night on the handset, observed through the Companion's native
  * REGION frames (and SNAPs for a person to read). No screencap, no luma, no grid.
  *
  *   tools/device/fnaf3-run.sh [--dry-run]          (dry by default: no --live, no phone)

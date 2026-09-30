@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # One FNaF 1 device attempt under the shared serial lease.  The JS runner
 # refuses a live invocation without FNAF1_LEASE_HELD=1, so callers cannot
-# accidentally bypass this wrapper while a Cue Helper/device operation owns
+# accidentally bypass this wrapper while a Companion/device operation owns
 # the phone.
 #
 # Dry unless --live (ADR 0002): without it the runner prints its bindings and

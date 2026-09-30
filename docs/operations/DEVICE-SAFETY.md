@@ -21,7 +21,7 @@ night and were retired on 2026-09-25 (`6d78c7e`, `903ffab`;
   because retained records cite it with their sha256). The bundle binds its id and
   sha256, and the CLI refuses a bundle compiled for another profile.
 - **Preflight before any press.** The ADB preflight checks the target build,
-  the Cue Helper and `/system/bin/hid`. The campaign preflight
+  the Companion and `/system/bin/hid`. The campaign preflight
   (`campaign-preflight.js`) must then read READY: one compiled artifact bound
   per night, the 6 AM and save proof ports, a `DEVICE_MEASURED`
   `qualification-v1` bound to the bundle's winner and model hashes, the Custom
@@ -34,7 +34,7 @@ night and were retired on 2026-09-25 (`6d78c7e`, `903ffab`;
   `architecture-test.js` names compose the HID transport: the FNaF 2 campaign
   ports, the FNaF 1, 3 and 4 runners and the one-step explorer, each behind its
   own lease and `--confirm-live`. A new composer has to be named there in the
-  diff that adds it. Frames come from the Companion's Cue Helper (`REGION`,
+  diff that adds it. Frames come from the Companion (`REGION`,
   `SNAP`).
 - **Fail-safe release.** An interrupt releases the HID process before Node
   exits. The composition's cleanup force-stops and relaunches the game and
@@ -42,7 +42,7 @@ night and were retired on 2026-09-25 (`6d78c7e`, `903ffab`;
   what was captured, and drives the game back to an observed title.
 - **Retained telemetry.** Each campaign writes its evidence directory and
   `result.json`, and `night-run.sh` packs it (`npm run evidence -- pack`).
-- **Agents.** The agent-facing surface is the Cue Helper MCP
+- **Agents.** The agent-facing surface is the Companion MCP
   (`apps/desktop/src/mcp.js`, served by `apps/desktop/src/companion-mcp.mjs`):
   `cue.setup` and the device-work queue
   (`cue.queue.enqueue`, `list`, `run`), a closed vocabulary with no raw
@@ -271,7 +271,7 @@ tools/device/companion-queue.sh enqueue night --game fnaf2 \
 - **Only the window plays nights.** Its queue child alone passes `--nights`.
   `cue.queue.run` from an agent drains setups and checks, and reports the nights
   it left waiting.
-- **The title is observed, never assumed.** Before the night, the Cue Helper
+- **The title is observed, never assumed.** Before the night, the Companion
   SNAPs a native frame and `title-observe.py` reads it with the game's model.
   The job refuses unless the title offers the declared night:
   - Custom Night for 7;

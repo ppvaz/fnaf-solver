@@ -11,6 +11,7 @@ calibration, and a changed binding means a new qualification.
 | Term | Meaning |
 |---|---|
 | **Android target** | `com.scottgames.fnaf2` v2.0.7, release-7 / Fusion build 296; the only device target this project claims. |
+| **Companion** | The one app on the phone (`android/companion`, application id `com.ppvaz.fnafcompanion`): capture, native regions, the teach panel and the device side of the queue. It was called the Cue Helper until 2026-09-30. That name survives only where it is stored: the `cue-helper-control-v1` and `cue-helper-overlay-qualification-v1` ids, the `com.fnaf2.cuehelper.*` wire names, the `FnafCueHelper` log tag, the `CUE_HELPER` screen label, sensor and check ids such as `cue-helper-mediaprojection-2400x1080`, record keys such as `cueHelperPort`, the `captures/cue-helper/` state directory, and the lease, queue and operator variables `CUE_HELPER_LOCK_DIR`, `CUE_HELPER_STATE_DIR`, `CUE_HELPER_QUEUE_FILE`, `CUE_HELPER_LEASE_OWNER_PID`, `CUE_HELPER_TRANSPORT` and `CUE_HELPER_CALIBRATION`. New prose and code say Companion; `tools/test-companion-name.mjs` refuses the old name anywhere else. |
 | **actuator** | The component that sends a semantic control to the game. It may be simulated, fixture-backed, ADB-based, or HID-based; it does not prove that the game accepted the input. |
 | **camera feed** | The selected camera view shown after raising the monitor. |
 | **camera selection** | A semantic `cam:N` control, such as `cam:9`; it changes the selected feed and is distinct from flashing that feed. |

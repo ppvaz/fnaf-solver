@@ -1,6 +1,6 @@
 /**
  * The teach panel's lesson: the compiled artifact's own semantic actions,
- * encoded as the bounded `LESSON` rows the Cue Helper re-expands
+ * encoded as the bounded `LESSON` rows the Companion re-expands
  * (CycleLesson.java). The helper owns the words; this sends only verbs,
  * times, and the header it needs to repeat the steady cycle exactly the way
  * expandNightBlocks() does. A lesson is a narration of the schedule, never an

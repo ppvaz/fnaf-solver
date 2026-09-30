@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The teach panel against every host-side reader of a frame, and every tap.
 
-The Cue Helper's teach panel (android/companion TeachPanel.java) paints one
+The Companion's teach panel (android/companion TeachPanel.java) paints one
 opaque rectangle over the game during a --teach-overlay night. Its helper-side
 clearance is TeachPanelTest.java; this is the host side, read from the modules
 themselves rather than copied:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Align game-channel input with the Cue Helper's native presented frames.
+"""Align game-channel input with the Companion's native presented frames.
 
 This is deliberately narrower than ``inputtrace.py``.  Android dispatch and
 the app-channel FINISHED acknowledgement prove transport, but neither proves

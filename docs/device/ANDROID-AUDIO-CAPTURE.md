@@ -291,7 +291,7 @@ music is captured, SFX are not — so it is purely the fast-mixer routing.
   tap) is the only non-root path; the recompile's openal-soft `Play sample`
   hook is the frame-perfect one.
 - **`plans/08` (the audio-cue controller) is blocked on this device.** BB's
-  laughs are samples 21/23/24 — the same SoundPool/fast path. The cue helper's
+  laughs are samples 21/23/24 — the same SoundPool/fast path. The Companion's
   2026-08-24 "PCM was nonzero" result was the ambient bed, never the vocals. An
   on-device `AudioPlaybackCapture` cue controller cannot hear discrete cues here
   without root.
@@ -600,8 +600,8 @@ on-phone capture API:
 
 ```
 FNaF 2 on phone -> Bluetooth A2DP -> ESP32 sink
-ESP32 decoded PCM -> Wi-Fi UDP 49710 -> Cue Helper on the same phone
-Cue Helper -> detector / recorder / AudioTrack -> built-in speaker
+ESP32 decoded PCM -> Wi-Fi UDP 49710 -> Companion on the same phone
+Companion -> detector / recorder / AudioTrack -> built-in speaker
 ```
 
 The word **callback** does not remove the return transport. ESP-IDF invokes

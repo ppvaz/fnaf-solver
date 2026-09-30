@@ -123,7 +123,7 @@ coarse end description. It is not yet a positive 6 AM/win classifier.
 | Gaps | Optional and therefore absent from many run bundles; no plan/config hash; JSONL has no header/session metadata; a probe `.hid` is an input artifact, not observed output |
 | Authority | Authoritative emitted-action record. Video or a state sensor must establish acceptance. |
 
-### 5. Continuous cue-helper scalar trace
+### 5. Continuous Companion scalar trace
 
 | Property | Inventory |
 |---|---|
@@ -135,7 +135,7 @@ coarse end description. It is not yet a positive 6 AM/win classifier.
 | Gaps | No schema/header, helper PID/session/model/build, dropped-read count, or durable mapping to video/HID; first timestamp and inner monotonic timestamp use different domains |
 | Retention | Ignored text. It should never contain the helper token; producer output currently records responses, not requests. |
 
-### 6. Cue-helper PCM windows and night logs
+### 6. Companion PCM windows and night logs
 
 | Property | Inventory |
 |---|---|
@@ -256,7 +256,7 @@ exclude bots/off-speed runs but have no participant/session grouping.
   game frames and currently lack reproducible provenance.
 - Commit only schemas, synthetic fixtures, collection/replay code, hashes,
   aggregate reports, and non-copyright diagnostics.
-- Never store cue-helper session tokens, webhook/account credentials, device
+- Never store Companion session tokens, webhook/account credentials, device
   serials, or absolute private paths in a manifest intended for commit.
 - Event dumps, APK/CCN files, and extracted reference samples belong to the
   source-dump boundary outside the repository. They are detector references,

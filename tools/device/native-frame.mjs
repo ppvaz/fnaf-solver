@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Pull one whole native frame from the Cue Helper's projection as a PNG.
+ * Pull one whole native frame from the Companion's projection as a PNG.
  *
  *   native-frame.mjs --out FRAME.png [--label NAME]
  *

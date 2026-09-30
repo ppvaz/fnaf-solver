@@ -15,7 +15,7 @@ Composition is valid when every selected component satisfies its declared
 capability, timing, health, and data contracts.
 
 **Deployment direction, 2026-09-06.** The role contract stays hardware-neutral,
-but the preferred eventual placement is now phone-first: Cue Helper should
+but the preferred eventual placement is now phone-first: Companion should
 become the full device authority for capture, top-level lifecycle/game-state
 estimation, belief/fusion, safety arbitration, campaign supervision, and the
 selected input backend. The PC remains an offline build/calibration/replay/
@@ -24,7 +24,7 @@ the intended authority during a finished run.
 
 This is not yet a live-runtime claim. The APK currently exposes a read-only
 helper boundary and the host composition remains the qualification lane. The
-lifecycle object must move into Cue Helper before host removal is complete.
+lifecycle object must move into Companion before host removal is complete.
 AccessibilityService remains an unqualified framework candidate: its first
 stock-game acceptance gate completed at the framework but was ignored by
 FNaF2, while the same UHID tap was accepted. `/system/bin/hid` UHID remains
@@ -89,8 +89,8 @@ missing audio/video into a confident boolean.
 |---|---:|---|---|
 | L0: I/O | sub-ms where hardware permits | acquisition / actuator MCU | timestamping, input delivery, watchdogs |
 | L1: reflex | ~1–5 ms after a local fact | qualified reflex and actuator capabilities | deadline actions, cancellation, safe hold |
-| L2: belief | ~10–30 ms | Cue Helper preferred; host during qualification | event fusion, prediction, uncertainty, health |
-| L3: tactical | ~100–500 ms | Cue Helper preferred; host during qualification | select and revise a short safe action prefix |
+| L2: belief | ~10–30 ms | The Companion preferred; host during qualification | event fusion, prediction, uncertainty, health |
+| L3: tactical | ~100–500 ms | The Companion preferred; host during qualification | select and revise a short safe action prefix |
 | L4: strategic | 100 ms to seconds | optional planner/model | policy parameters, diagnostics, candidate plans |
 
 The budgets are design targets, **not measured device performance**. Promotion
@@ -121,7 +121,7 @@ hold/recovery behavior rather than continuing a stale plan.
   co-located with the source, bridge, belief host, reflex node, or actuator.
 - **Reflex node:** consumes qualified facts, owns deadline/cancellation state,
   and can issue only the bounded actions declared by its capability profile.
-- **Android Cue Helper:** is the preferred eventual visual authority and
+- **Android Companion:** is the preferred eventual visual authority and
   belief/planner host. It currently produces visual events and control-state
   confirmations only; its capture rate and compositor delay are measured inputs
   to the model, not assumed to be real-time. Its lifecycle reducer and belief

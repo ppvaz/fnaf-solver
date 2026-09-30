@@ -420,7 +420,7 @@ const legacyPaths = [
   ].map(([name, what]) => ({
     id: `play.sensor.fnaf2-${name}`, path: `packages/play/src/sensors/fnaf2/${name}.js`, category: 'sensor',
     lifecycle: 'legacy', owner: '@sixam/play',
-    replacement: 'a rule over native region pixels (the Cue Helper REGION verb, tools/device/native-regions.mjs), recalibrated for FNaF 2',
+    replacement: 'a rule over native region pixels (the Companion REGION verb, tools/device/native-regions.mjs), recalibrated for FNaF 2',
     removalGate: 'FNaF 2\'s pipeline is recalibrated on native regions (ADR 0002 migration M7) and the campaign executor reads no grid, luma or grid-fitted rule; the retained grid_hex readers of old evidence stay',
     notes: `Deprecated: ${what}. Moved from packages/adapters unchanged; to be converted, not extended (CLAUDE.md, Sensors and on-device code).`,
   })),

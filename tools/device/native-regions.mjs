@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Read small native-resolution regions from the Cue Helper's projection.
+ * Read small native-resolution regions from the Companion's projection.
  *
  * This is the observation path that replaces full-display screencaps, the
  * 20x9 grid and every luma reducer: the helper copies the registered

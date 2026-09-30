@@ -110,7 +110,7 @@ to compose a 2.59-million-pixel display.
 
 ### The projection path, measured (2026-08-24)
 
-The prediction above has now been tested. The cue helper keeps one consented
+The prediction above has now been tested. The Companion keeps one consented
 `MediaProjection` producing a 20x9 virtual display and answers a device-local
 socket with the already-classified pixel, so a reader pays neither the
 full-display compose nor the classification. On the same handset, 60

@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * The fnaf-solver stdio MCP server: the safe Cue Helper setup/queue boundary,
+ * The fnaf-solver stdio MCP server: the safe Companion setup/queue boundary,
  * the solver interface's verbs and resources (Plan 28 steps 1-5), and the
  * operator's read-only verbs `lab.status`, `lab.next` and `lab.doctor`.
  *
  * The server deliberately exposes no actuator, shell, coordinate, HID, rebuild
- * or game-control tool. The Cue Helper tools keep their names and their
+ * or game-control tool. The Companion tools keep their names and their
  * answers byte for byte (CLAUDE.md tells agents to use cue.queue.enqueue);
  * `jobs` (op enqueue | list | run) is the same queue answering in
  * claim-envelope-v1. The verbs `describe`, `query`, `review`, `promote`,
@@ -95,7 +95,7 @@ const TRUTH_SCHEMA = { type: 'object', additionalProperties: false, required: ['
 const TOOL_DEFINITIONS = Object.freeze([
   {
     name: 'cue.setup',
-    description: 'Run the image-free Cue Helper setup and screen check. Uses only named helper/system controls; never taps the game or writes qualification evidence.',
+    description: 'Run the image-free Companion setup and screen check. Uses only named helper/system controls; never taps the game or writes qualification evidence.',
     inputSchema: { type: 'object', additionalProperties: false, properties: {
       install: { type: 'boolean', description: 'Install the checked-in helper APK first.' },
       probe: { type: 'boolean', description: 'Start the debug-only sensor probe; does not qualify the overlay.' },
@@ -115,7 +115,7 @@ const TOOL_DEFINITIONS = Object.freeze([
   },
   {
     name: 'cue.queue.list',
-    description: 'List persisted Cue Helper jobs and their PENDING/RUNNING/DONE/FAILED state.',
+    description: 'List persisted Companion jobs and their PENDING/RUNNING/DONE/FAILED state.',
     inputSchema: NO_ARGS,
     annotations: { ...SAFE, readOnlyHint: true },
   },
@@ -190,7 +190,7 @@ const TOOL_DEFINITIONS = Object.freeze([
   },
   {
     name: 'jobs',
-    description: 'The Cue Helper queue answering in claim-envelope-v1: op enqueue (cue.queue.enqueue\'s arguments), list, or run '
+    description: 'The Companion queue answering in claim-envelope-v1: op enqueue (cue.queue.enqueue\'s arguments), list, or run '
       + '(waitSeconds, intervalSeconds: runs setup and check jobs only on exactly one awake, unlocked phone; never a night).',
     inputSchema: JOBS_SCHEMA,
     annotations: SAFE,

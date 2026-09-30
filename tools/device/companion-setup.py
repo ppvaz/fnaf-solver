@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Semantic, image-free Cue Helper setup and FNaF menu check.
+"""Semantic, image-free Companion setup and FNaF menu check.
 
 The only input this tool can generate is a tap on a named helper button or a
 named Android projection-consent button discovered from UIAutomator XML. It
 does not know, accept, or emit game-control coordinates. The target is started
-with ``am start`` and checked through the authenticated cue-helper protocol.
+with ``am start`` and checked through the authenticated Companion protocol.
 """
 
 from __future__ import annotations
@@ -307,7 +307,7 @@ def device_ready_reason() -> str | None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Set up Cue Helper and verify the FNaF 2 menu without screenshots"
+        description="Set up Companion and verify the FNaF 2 menu without screenshots"
     )
     parser.add_argument("--install", action="store_true", help="install the checked-in APK first")
     parser.add_argument("--probe", action="store_true", help="start the debug-only sensor probe")

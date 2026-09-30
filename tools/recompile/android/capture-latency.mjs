@@ -3,7 +3,7 @@
 //
 // The calibration build (apply-calib-mod.py) draws each update's index as a
 // 16-cell Gray code along the top of the frame and logs, on CLOCK_MONOTONIC,
-// when that update's buffer swap returned. The Cue Helper copies registered
+// when that update's buffer swap returned. The Companion copies registered
 // rectangles out of every MediaProjection frame and reports each frame's
 // image timestamp. This tool registers one row across the beacon's cell
 // centres, decodes the update every captured frame shows, and joins it with
@@ -151,7 +151,7 @@ function gradeCmd(args) {
   const record = {
     schema: SCHEMA, step: 'ROADMAP S4', claimLevel: 'DEVICE_MEASURED', fidelity: 'rebuilt-runtime display, Companion capture',
     evidenceId: `capture-latency-${sha256(JSON.stringify(inputs)).slice(0, 16)}`,
-    question: 'How long after the game swaps a frame does the Cue Helper\'s MediaProjection image of it carry, and which updates does the capture never show?',
+    question: 'How long after the game swaps a frame does the Companion\'s MediaProjection image of it carry, and which updates does the capture never show?',
     instrument: { region: BEACON_REGION, beacon: '16-cell Gray code of the update index, top 8 frame rows (apply-calib-mod.py)' },
     inputsSha256: inputs,
     notClaimed: ['The retail runtime\'s own swap-to-display path; the capture side (SurfaceFlinger, MediaProjection, the helper) is the phone\'s.',

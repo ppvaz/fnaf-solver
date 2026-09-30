@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # One FNaF 1 menu probe under the shared serial lease.  The JS probe refuses a
 # live invocation without FNAF1_LEASE_HELD=1, so a caller cannot reach the
-# phone around this wrapper while a Cue Helper/device operation owns it.
+# phone around this wrapper while a Companion/device operation owns it.
 # Without --live the probe touches no phone, so it needs no serial and no lease.
 set -euo pipefail
 

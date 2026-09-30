@@ -142,5 +142,5 @@ with tempfile.TemporaryDirectory(prefix="companion-worktree-") as directory:
             else:
                 os.environ[key] = value
 
-print("cue-helper lease: descendants can borrow, unrelated owners cannot, parent lock survives child exit, "
+print("Companion lease: descendants can borrow, unrelated owners cannot, parent lock survives child exit, "
       "kernel-release, and one host-wide lease for every worktree passed")

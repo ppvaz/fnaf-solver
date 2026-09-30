@@ -1,5 +1,5 @@
 /**
- * The Cue Helper's MCP surface (./companion-mcp.mjs): setup and
+ * The Companion's MCP surface (./companion-mcp.mjs): setup and
  * the device-work queue, as a closed vocabulary. Raw coordinates, HID input
  * and arbitrary shell are absent. It queues bounded jobs and never runs a
  * control loop; the campaign executor is the one path onto a phone.
@@ -158,7 +158,7 @@ function cueResult(operation, result) {
 }
 
 /**
- * The Cue Helper host tools are also usable without composing the actuation
+ * The Companion host tools are also usable without composing the actuation
  * service. They intentionally remain a closed, safe vocabulary: setup and
  * queue scripts are fixed, and no caller-provided shell, coordinates, or HID
  * input can cross this boundary.

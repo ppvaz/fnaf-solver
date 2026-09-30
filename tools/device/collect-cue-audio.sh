@@ -52,7 +52,7 @@ state() {
 
 pid="$(adb shell pidof "$PACKAGE" 2>/dev/null | tr -d '\r' | awk '{print $1}')"
 case "$pid" in
-  ''|*[!0-9]*) echo "cue helper is not running; start capture first" >&2; exit 1 ;;
+  ''|*[!0-9]*) echo "Companion is not running; start capture first" >&2; exit 1 ;;
 esac
 
 mkdir -p "$OUT_DIR"

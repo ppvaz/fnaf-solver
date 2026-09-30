@@ -152,7 +152,7 @@ grep -q 'belongs to helper pid 7007, not 8008' "$rotated_err" || {
 
 MOCK_LOGCAT_ROTATED=1 MOCK_UNAUTHORIZED=1 PATH="$TEMP_DIR/bin:$PATH" \
   "$HERE/query-companion.sh" watchlist status >/dev/null 2>"$rotated_err" || true
-grep -q 'stashed cue helper endpoint is stale' "$rotated_err" || {
+grep -q 'stashed Companion endpoint is stale' "$rotated_err" || {
   echo "a rejected stashed token must be reported as stale: $(cat "$rotated_err")" >&2; exit 1; }
 
 # The versioned status is game-agnostic: no focus guard, both transports.
@@ -186,4 +186,4 @@ if MOCK_ENDPOINT_FILE=1 MOCK_ENDPOINT_PID=4242 MOCK_LOGCAT_ROTATED=1 PATH="$TEMP
   echo "an endpoint file from another pid must not be used" >&2; exit 1
 fi
 
-echo "cue-helper query tests passed"
+echo "Companion query tests passed"

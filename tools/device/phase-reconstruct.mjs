@@ -66,7 +66,7 @@ export function phoneWallFrom(anchor, { released, nightGoAt }) {
 }
 
 
-// --- the game's own first night frame, from the Cue Helper native trace ------
+// --- the game's own first night frame, from the Companion native trace ------
 //
 // The header above says the interval between the game's true first night frame
 // and the classifier calling it is what the bundle cannot pin. The native frame

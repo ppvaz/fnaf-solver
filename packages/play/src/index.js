@@ -1,5 +1,5 @@
 /**
- * Play's phone half (ADR 0002): the HID and Cue Helper transports, clocks, night onset, the control anchor
+ * Play's phone half (ADR 0002): the HID and Companion transports, clocks, night onset, the control anchor
  * and exclusion, the venue parser, and the deprecated FNaF 2 grid/luma rules the campaign still reads. Its
  * export set is the one `@sixam/adapters` had.
  */

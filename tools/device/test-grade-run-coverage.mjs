@@ -72,8 +72,8 @@ const EXCLUDED = new Map([
   ['policy-equivalence.mjs', 'IR/device/mock-phone equivalence compiler, gated by tools/policyequivalencetest.mjs; it audits artifacts rather than grading a device run'],
   ['policy-search.mjs', 'explicit-dimension structural search library, gated by tools/policysearchtest.mjs; it emits a campaign report rather than grading a live run'],
   ['policy-artifact.mjs', 'compiled policy artifact builder/verifier, gated by tools/policyartifacttest.mjs; it creates execution provenance rather than grading a device run'],
-  ['native-regions.mjs', 'Cue Helper native-region reader: registers rectangles, measures read latency and records calibration corpora; a live observation path and corpus tool, not a post-run grader'],
-  ['native-frame.mjs', 'Cue Helper SNAP puller: one native frame as a PNG for title/menu readers and calibration; an observation path, not a post-run grader'],
+  ['native-regions.mjs', 'Companion native-region reader: registers rectangles, measures read latency and records calibration corpora; a live observation path and corpus tool, not a post-run grader'],
+  ['native-frame.mjs', 'Companion SNAP puller: one native frame as a PNG for title/menu readers and calibration; an observation path, not a post-run grader'],
   ['fnaf1-custom-run.sh', 'lease wrapper for the FNaF 1 Custom Night runner; a live route/calibration executor, not a post-run grader'],
   ['fnaf1-custom-run.mjs', 'FNaF 1 Custom Night runner (calibrate-empty, grid420) behind fnaf1-custom-run.sh; an executor, gated by test-native-regions.mjs'],
   ['fnaf1-winner.mjs', 'the replay of a committed FNaF 1 route winner: it materializes the pinned commit and runs that commit\'s fnaf1-custom-run.sh under the lease; an executor that produces a run, not a grader of one, gated by test-fnaf1-winner.mjs'],
@@ -255,7 +255,7 @@ for (const line of ci.split('\n')) {
 // `npm run test:core`, so a gate whose only registration is a package.json
 // script command line IS run -- and reading only tools/test.mjs and ci.yml
 // reported eleven such gates as "a gate that nothing runs", including every
-// cue-helper gate and three of the calibration gates. A checker that knows
+// Companion gate and three of the calibration gates. A checker that knows
 // one of two registries measures the registry it knows, not the coverage.
 const pkgPath = join(HERE, '..', '..', 'package.json');
 const scriptNamesRun = new Set();

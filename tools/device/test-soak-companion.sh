@@ -32,4 +32,4 @@ if PATH="$MOCK_BIN:$PATH" "$HERE/soak-companion.sh" 1 1 "$REPORT" >/dev/null 2>&
   exit 1
 fi
 
-echo "cue-helper soak tests passed"
+echo "Companion soak tests passed"

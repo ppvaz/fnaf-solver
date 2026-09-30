@@ -3,7 +3,7 @@
 
 plans/15. A classifier calibrated on one capture method must refuse frames from
 another rather than resize them into a plausible answer. The repository already
-paid for the general version of this: the cue helper's threshold was derived
+paid for the general version of this: the Companion's threshold was derived
 from `screencap` frames and an offline bilinear simulation rather than from
 Android's own VirtualDisplay scaler, and is therefore still uncalibrated -- so
 the 42 ms sensor cannot answer the question the 225 ms sensor can.

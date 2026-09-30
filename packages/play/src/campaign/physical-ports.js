@@ -2,7 +2,7 @@
  * ADB-backed physical ports for the modern composition.
  *
  * These ports only open two named channels: `/system/bin/hid -` for the
- * existing HID JSONL protocol and the Cue Helper's authenticated loopback
+ * existing HID JSONL protocol and the Companion's authenticated loopback
  * control port. There is intentionally no public command/shell escape hatch.
  * Full-night timing remains owned by a device-local executor, not by a series
  * of host ADB calls.
@@ -18,7 +18,7 @@ const HELPER_PACKAGE = 'com.ppvaz.fnafcompanion';
 const READY_DEVICE = 'FNAF Timed Touch';
 const sleep = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
 
-function endpointError(message) { throw new Error(`cue-helper endpoint: ${message}`); }
+function endpointError(message) { throw new Error(`Companion endpoint: ${message}`); }
 
 /**
  * Parse the latest authenticated endpoint announcement from logcat: the
@@ -87,24 +87,24 @@ function timedExchange(hostPort, line, timeoutMs) {
     // arrived in time would lose to its own timeout (night5-anchor3: "clock
     // probe timed out" during the intro, while the native anchor loop polled).
     // Defer the verdict one turn so arrived bytes are read first.
-    const timer = setTimeout(() => setImmediate(() => settle(new Error('cue-helper clock probe timed out'))), timeoutMs);
+    const timer = setTimeout(() => setImmediate(() => settle(new Error('Companion clock probe timed out'))), timeoutMs);
     socket.setNoDelay(true);
     socket.on('connect', () => { sentAt = performance.now(); socket.write(`${line}\n`); });
     socket.on('data', chunk => {
       text += chunk.toString('utf8');
       const newline = text.indexOf('\n');
-      if (newline < 0) { if (text.length > 65536) settle(new Error('cue-helper clock probe reply is oversized')); return; }
+      if (newline < 0) { if (text.length > 65536) settle(new Error('Companion clock probe reply is oversized')); return; }
       const receivedAt = performance.now();
       try {
         const fields = parseCueResponse(text.slice(0, newline));
-        if (!/^\d+$/.test(fields.snapshotNs ?? '')) throw new Error('cue-helper reply has no snapshotNs');
+        if (!/^\d+$/.test(fields.snapshotNs ?? '')) throw new Error('Companion reply has no snapshotNs');
         const deviceMs = Number(BigInt(fields.snapshotNs)) / 1e6;
         const rttMs = receivedAt - sentAt;
         settle(null, { offsetMs: (sentAt + receivedAt) / 2 - deviceMs, rttMs, fields });
       } catch (error) { settle(error); }
     });
     socket.on('error', error => settle(error));
-    socket.on('end', () => settle(new Error('cue-helper closed the clock probe without a reply')));
+    socket.on('end', () => settle(new Error('Companion closed the clock probe without a reply')));
   });
 }
 
@@ -127,17 +127,17 @@ function lineExchange(hostPort, line, timeoutMs, maxChars = 4096) {
     };
     // Same deferral as timedExchange: bytes that arrived in time win over a
     // timer that expired while the event loop was blocked.
-    const timer = setTimeout(() => setImmediate(() => settle(new Error('cue-helper exchange timed out'))), timeoutMs);
+    const timer = setTimeout(() => setImmediate(() => settle(new Error('Companion exchange timed out'))), timeoutMs);
     socket.setNoDelay(true);
     socket.on('connect', () => socket.write(`${line}\n`));
     socket.on('data', chunk => {
       text += chunk.toString('utf8');
       const newline = text.indexOf('\n');
       if (newline >= 0) settle(null, text.slice(0, newline).trim());
-      else if (text.length > maxChars) settle(new Error('cue-helper reply is oversized'));
+      else if (text.length > maxChars) settle(new Error('Companion reply is oversized'));
     });
     socket.on('error', error => settle(error));
-    socket.on('end', () => settle(text ? null : new Error('cue-helper closed the exchange without a reply'), text.trim()));
+    socket.on('end', () => settle(text ? null : new Error('Companion closed the exchange without a reply'), text.trim()));
   });
 }
 
@@ -145,7 +145,7 @@ export class AdbCompanionPort {
   /** @param {{serial: string, adb?: string}} options */
   constructor(options) {
     const { serial, adb = 'adb' } = options ?? {};
-    if (typeof serial !== 'string' || serial.length === 0) throw new TypeError('Cue Helper port requires an ADB serial');
+    if (typeof serial !== 'string' || serial.length === 0) throw new TypeError('Companion port requires an ADB serial');
     this.serial = serial; this.adb = adb; this.endpoint = null;
   }
 
@@ -187,10 +187,10 @@ export class AdbCompanionPort {
   async #exchangeOnce(line, { timeoutMs = 2000 } = {}) {
     const endpoint = this.endpoint ?? this.discover();
     const forwarded = runSync(this.adb, ['-s', this.serial, 'forward', 'tcp:0', `tcp:${endpoint.port}`]).trim().split(/\s+/).at(-1);
-    if (!/^\d+$/.test(forwarded ?? '')) throw new Error('cue-helper: adb forward returned no host port');
+    if (!/^\d+$/.test(forwarded ?? '')) throw new Error('Companion: adb forward returned no host port');
     try {
       const reply = await lineExchange(Number(forwarded), line.replace('<token>', endpoint.token), timeoutMs, 8192);
-      if (!reply.startsWith('OK')) throw new Error(`cue-helper ${line.split(' ')[0]}: ${reply}`);
+      if (!reply.startsWith('OK')) throw new Error(`Companion ${line.split(' ')[0]}: ${reply}`);
       return reply;
     } finally {
       try { runSync(this.adb, ['-s', this.serial, 'forward', '--remove', `tcp:${forwarded}`]); } catch { /* the forward dies with adb */ }
@@ -240,7 +240,7 @@ export class AdbCompanionPort {
       const fields = parseCueResponse(await this.#exchangeOnce('AUDIO <token> status'));
       if (fields.audioProbe === 'DONE' || fields.audioProbe === 'ERROR') return fields;
     }
-    throw new Error('cue-helper audio probe did not finish before its deadline');
+    throw new Error('Companion audio probe did not finish before its deadline');
   }
 
   /**
@@ -266,7 +266,7 @@ export class AdbCompanionPort {
     // FNaF 2 legacy reads (Fnaf2Legacy.java). FRAME is the snapshot and its
     // grid from one locked read; the separate GRID verb is retired.
     if (typeof line !== 'string' || !/^(?:GET|FRAME|WATCH|READ) [0-9a-f]{32}(?: status| [0-9a-f]{64})?$/.test(line))
-      throw new TypeError('Cue Helper request is outside the authenticated read vocabulary');
+      throw new TypeError('Companion request is outside the authenticated read vocabulary');
     const endpoint = this.endpoint ?? this.discover();
     const args = ['-s', this.serial, 'shell', 'sh', '-s', '--', String(endpoint.port), ...line.split(/\s+/)];
     return runSync(this.adb, args, { timeout: 10000, input: HELPER_QUERY_SCRIPT });
@@ -286,10 +286,10 @@ export class AdbCompanionPort {
   openClock({ timeoutMs = 1000 } = {}) {
     const endpoint = this.endpoint ?? this.discover();
     const forwarded = runSync(this.adb, ['-s', this.serial, 'forward', 'tcp:0', `tcp:${endpoint.port}`]).trim().split(/\s+/).at(-1);
-    if (!/^\d+$/.test(forwarded ?? '')) throw new Error('cue-helper clock: adb forward returned no host port');
+    if (!/^\d+$/.test(forwarded ?? '')) throw new Error('Companion clock: adb forward returned no host port');
     let closed = false;
     const exchange = async () => {
-      if (closed) throw new Error('cue-helper clock is closed');
+      if (closed) throw new Error('Companion clock is closed');
       const sample = await timedExchange(Number(forwarded), `GET ${endpoint.token}`, timeoutMs);
       return { ...sample, uncertaintyMs: sample.rttMs / 2, hostClock: 'performance-now-ms' };
     };
@@ -327,16 +327,16 @@ export class AdbCompanionPort {
     if (!(lessonLine instanceof RegExp)) throw new TypeError('lesson channel needs the LESSON line grammar');
     const endpoint = this.endpoint ?? this.discover();
     const forwarded = runSync(this.adb, ['-s', this.serial, 'forward', 'tcp:0', `tcp:${endpoint.port}`]).trim().split(/\s+/).at(-1);
-    if (!/^\d+$/.test(forwarded ?? '')) throw new Error('cue-helper lesson: adb forward returned no host port');
+    if (!/^\d+$/.test(forwarded ?? '')) throw new Error('Companion lesson: adb forward returned no host port');
     let closed = false;
     return {
       /** @param {string} line */
       send: async line => {
-        if (closed) throw new Error('cue-helper lesson channel is closed');
+        if (closed) throw new Error('Companion lesson channel is closed');
         if (typeof line !== 'string' || !lessonLine.test(line))
-          throw new TypeError('Cue Helper lesson line is outside the LESSON vocabulary');
+          throw new TypeError('Companion lesson line is outside the LESSON vocabulary');
         const reply = await lineExchange(Number(forwarded), line, timeoutMs);
-        if (!reply.startsWith('OK')) throw new Error(`cue-helper lesson: ${reply}`);
+        if (!reply.startsWith('OK')) throw new Error(`Companion lesson: ${reply}`);
         return reply;
       },
       close: () => {
@@ -358,10 +358,10 @@ export class AdbCompanionPort {
   openRegions({ timeoutMs = 1000 } = {}) {
     const endpoint = this.endpoint ?? this.discover();
     const forwarded = runSync(this.adb, ['-s', this.serial, 'forward', 'tcp:0', `tcp:${endpoint.port}`]).trim().split(/\s+/).at(-1);
-    if (!/^\d+$/.test(forwarded ?? '')) throw new Error('cue-helper regions: adb forward returned no host port');
+    if (!/^\d+$/.test(forwarded ?? '')) throw new Error('Companion regions: adb forward returned no host port');
     let closed = false;
     const exchange = async (line) => {
-      if (closed) throw new Error('cue-helper region channel is closed');
+      if (closed) throw new Error('Companion region channel is closed');
       const sentAt = performance.now();
       const reply = await lineExchange(Number(forwarded), line, timeoutMs, REGION_LIMITS.lineChars);
       return { reply, sentAt, receivedAt: performance.now() };
@@ -370,12 +370,12 @@ export class AdbCompanionPort {
       /** @param {string} name @param {{x:number,y:number,width:number,height:number,step?:number}} rect */
       set: async (name, rect) => {
         const { reply } = await exchange(regionSetLine(endpoint.token, name, rect));
-        if (!reply.startsWith('OK')) throw new Error(`cue-helper region ${name}: ${reply}`);
+        if (!reply.startsWith('OK')) throw new Error(`Companion region ${name}: ${reply}`);
         return reply;
       },
       clear: async () => {
         const { reply } = await exchange(`REGION ${endpoint.token} clear`);
-        if (!reply.startsWith('OK')) throw new Error(`cue-helper region clear: ${reply}`);
+        if (!reply.startsWith('OK')) throw new Error(`Companion region clear: ${reply}`);
       },
       read: async () => {
         const { reply, sentAt, receivedAt } = await exchange(`REGION ${endpoint.token} read`);
@@ -408,10 +408,10 @@ export class AdbCompanionPort {
     try {
       const reply = await lineExchange(Number(forwarded), `SNAP ${endpoint.token} ${label}`, timeoutMs);
       const fields = parseCueResponse(reply);
-      if (fields.path !== `files/frames/${label}.png`) throw new Error(`cue-helper snap wrote an unexpected path: ${reply}`);
+      if (fields.path !== `files/frames/${label}.png`) throw new Error(`Companion snap wrote an unexpected path: ${reply}`);
       const bytes = runSync(this.adb, ['-s', this.serial, 'exec-out', 'run-as', HELPER_PACKAGE, 'cat', fields.path],
         { timeout: 10000, encoding: null, maxBuffer: 64 * 1024 * 1024 });
-      if (!bytes || bytes.length < 1000) throw new Error('cue-helper snap pulled an empty frame');
+      if (!bytes || bytes.length < 1000) throw new Error('Companion snap pulled an empty frame');
       writeFileSync(target, bytes);
       try { runSync(this.adb, ['-s', this.serial, 'shell', 'run-as', HELPER_PACKAGE, 'rm', '-f', fields.path]); } catch { /* next snap overwrites */ }
       return { path: target, imageNs: BigInt(fields.imageNs), snapshotNs: BigInt(fields.snapshotNs), bytes: bytes.length };

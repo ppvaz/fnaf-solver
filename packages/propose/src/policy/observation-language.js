@@ -36,7 +36,7 @@ export const UNKNOWN = 'UNKNOWN';
 // reproduced by `tools/device/query-companion.sh latency`: 60 samples timed
 // inside one device shell against the device's own clock, p50 48.8 ms,
 // p95 59.5 ms, p99 60.8 ms, max 66.9 ms. That is a DEVICE_MEASURED read of the
-// cue helper's already-classified watchlist, and it is the same cost for every
+// the Companion's already-classified watchlist, and it is the same cost for every
 // fact the watchlist serves -- one read returns the whole visual snapshot
 // (`Observer._sample`).
 export const VISUAL_READ_COST_MS = 59.5;

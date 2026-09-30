@@ -23,7 +23,7 @@ The project searched for an online AccessibilityService-versus-UHID latency or
 reliability benchmark and found none that measures the same endpoint. Android's
 current framework can generate accessibility gesture steps at display-refresh
 timing for newer target SDKs, so the old 100 ms warning does not apply directly
-to Cue Helper's SDK-36 build. That improves the theoretical case for a
+to the Companion's SDK-36 build. That improves the theoretical case for a
 hostless AccessibilityService backend; it does not establish lower end-to-end
 latency, contact continuation, or FNaF2 acceptance than this already-tested
 UHID path.
@@ -922,7 +922,7 @@ Its diagnostic rule is this repository's graded-interval rule in miniature:
 *Full Combo but not All-Perfect **always** means the timer sync is off, never the
 plan.* Read that against `RUN-TELEMETRY.md` §10, where today's run put T0 exactly
 2^32 ms low and nothing but the driver log noticed. **The nearest thing this
-project has to a solved version of phisap's open problem is the cue helper and
+project has to a solved version of phisap's open problem is the Companion and
 the epoch latch** — the parts that answer "where am I", not the parts that press.
 Actuation was never the bottleneck for the one person who tried this before.
 
@@ -933,7 +933,7 @@ Corroboration, not validation — these are other people's devices:
 | Ours | Field | Source |
 |---|---|---|
 | `screencap` **225 ms** | `adb screencap` **~350 ms** on an accelerated emulator with "pretty beefy hardware"; an MJPEG server ~150 ms | [appiumpro](https://appiumpro.com/editions/83-speeding-up-android-screenshots-with-mjpeg-servers) [V] |
-| cue helper **59 ms** device-local | nothing published for a physical handset beats it; minicap self-reports 10–40 fps and "one to a few frames behind" | [DeviceFarmer/minicap](https://github.com/DeviceFarmer/minicap) [V] |
+| Companion **59 ms** device-local | nothing published for a physical handset beats it; minicap self-reports 10–40 fps and "one to a few frames behind" | [DeviceFarmer/minicap](https://github.com/DeviceFarmer/minicap) [V] |
 | ≥**100 ms** bare contact | Unity's own manual: *"If you read out touch state from `Touchscreen` directly inside of `Update`... your app will miss changes in touch state."* | [Unity Input System 1.7, "Touch support"](https://docs.unity3d.com/Packages/com.unity.inputsystem@1.7/manual/Touch.html) [V] |
 | ~680 ms free per cycle | Alas grades a click <100 ms and a screenshot <300 ms as "Fast"; its scale only reaches "Insane Fast" below 25 ms | [Alas benchmark.py](https://github.com/LmeSzinc/AzurLaneAutoScript/blob/master/module/daemon/benchmark.py) [V] |
 
@@ -1072,7 +1072,7 @@ shell has never been removed on any Android version.
 
 ### Correction 3 — the 59 ms sampler is paying overhead, not pixels
 
-Two source findings that bear directly on the cue helper's design:
+Two source findings that bear directly on the Companion's design:
 
 - **On `screencap`'s path, `sourceCrop` is ignored.**
   `SurfaceFlinger::captureDisplay(DisplayId, ...)` — the overload

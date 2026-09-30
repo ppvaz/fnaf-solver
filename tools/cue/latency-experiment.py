@@ -9,7 +9,7 @@ parts of a run so that a session is not reconstructed from shell history:
   tools/cue/latency-experiment.py run ...        # retired with Companion 0.2.0
   tools/cue/latency-experiment.py analyze /path/to/session
 
-``run`` requires FNaF 2 to be focused and the Cue Helper to be running.  It
+``run`` requires FNaF 2 to be focused and the Companion to be running.  It
 does not launch either application or inject game input.  During the run,
 produce the event being measured in the game (the default analysis pairs the
 BB vent arrival's bright->dark visual transition with sample 17's bang).
@@ -76,10 +76,10 @@ def run(command: list[str], *, timeout: float = 15.0) -> subprocess.CompletedPro
 
 def parse_snapshot(text: str) -> int:
     if "visual=OBSERVED" not in text:
-        fail("Cue Helper returned no observed visual snapshot: %s" % text.strip())
+        fail("Companion returned no observed visual snapshot: %s" % text.strip())
     match = re.search(r"snapshotNs=(\d+)", text)
     if not match:
-        fail("Cue Helper response has no snapshotNs: %s" % text.strip())
+        fail("Companion response has no snapshotNs: %s" % text.strip())
     return int(match.group(1))
 
 
@@ -114,7 +114,7 @@ def sync_clock(count: int = 7) -> dict:
             "offset_device_minus_host_ns": device_ns - midpoint,
         })
     if not samples:
-        fail("could not synchronize host and Cue Helper monotonic clocks")
+        fail("could not synchronize host and Companion monotonic clocks")
     selected = min(samples, key=lambda item: item["rtt_ns"])
     return {
         "clock_domain": "host_monotonic_ns / helper_monotonic_ns",

@@ -1,7 +1,7 @@
 # AccessibilityService versus on-device HID
 
 **Status: research conclusion plus device pilot, 2026-09-06.** This note
-records the online search prompted by the hostless Cue Helper discussion and
+records the online search prompted by the hostless Companion discussion and
 the first safe phone-side comparison. It separates framework facts, public
 claims, and the measurements this project still needs to make on the Moto g56
 target.
@@ -39,7 +39,7 @@ The relevant framework implementation is more precise than the common “100 ms
 accessibility lag” claim. AOSP's `AccessibilityService` source says that
 services targeting Android Q or earlier use a fixed 100 ms gesture sample
 period; newer targets calculate the period from the display refresh rate. The
-Cue Helper manifest targets SDK 36, so the old 100 ms rule is not the expected
+Companion manifest targets SDK 36, so the old 100 ms rule is not the expected
 path for this APK. This is a framework scheduling fact, not a measurement of
 the Moto g56's delivery or the game's response. See [AOSP's gesture sample-time
 code](https://android.googlesource.com/platform/frameworks/base/+/c917c0a9e4ab2dd19b52c0acbacdccc055f4372e/core/java/android/accessibilityservice/AccessibilityService.java)
@@ -84,7 +84,7 @@ continues in [ANDROID-BOT-LANDSCAPE.md](../research/ANDROID-BOT-LANDSCAPE.md).
 ## First Moto g56 pilot — 120 Hz, synthetic target only
 
 On 2026-09-06 the connected Moto g56 5G (`<serial>`, Android 16/API 36,
-Cue Helper target SDK 36, landscape `2400x1080`) ran both paths against the
+Companion target SDK 36, landscape `2400x1080`) ran both paths against the
 same foreground synthetic probe view. The display was temporarily requested
 at 120 Hz and the probe reported `refreshHz=120.00001`. The original refresh
 settings and disabled accessibility state were restored afterward; FNaF2 was

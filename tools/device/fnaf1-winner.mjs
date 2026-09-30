@@ -20,7 +20,7 @@
  * created gets a `replay.json` naming the winner, the commit and the checks.
  *
  * The whole commit runs, not only the pinned files: the runner's import
- * closure (menu probe, adb bridge, HID transport, the Cue Helper port) and the
+ * closure (menu probe, adb bridge, HID transport, the Companion port) and the
  * scripts it spawns (title observer, dial reader, teardown) are that commit's
  * too, which is what ran on 2026-09-25. Workspace packages resolve inside the
  * materialized tree, never to this checkout's.

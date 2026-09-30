@@ -30,7 +30,7 @@ and the 6 AM transition now have positive signals, but neither can stand in for
 those missing facts.
 
 One correction worth carrying: the death static on this build is DARK (frame
-mean 34.1, the same as the office), not the bright static the cue helper's death
+mean 34.1, the same as the office), not the bright static the Companion's death
 signature was measured against. Brightness does not separate it; roughness does.
 """
 import json

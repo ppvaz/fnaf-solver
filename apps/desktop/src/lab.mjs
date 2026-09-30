@@ -3,7 +3,7 @@
 // ADR 0002 wants one verb table and one set of query functions for every door. This is that table
 // for the operator's questions: `npm run lab -- <verb>` (cli.mjs) and the fnaf-solver MCP server
 // (`lab.status`, `lab.next`, `lab.doctor`) both call createLab(). It lives in apps/desktop, the
-// final layout's composition root, because it composes: git, this host's /proc, the Cue Helper
+// final layout's composition root, because it composes: git, this host's /proc, the Companion
 // queue, the push-gate record and the review package's queries. The pure queries are in
 // packages/review (consequence.mjs, mistakes.mjs, roadmap.mjs, promotions-query.mjs).
 //

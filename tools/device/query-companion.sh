@@ -1,5 +1,5 @@
 #!/bin/bash
-# Talk to the cue helper's authenticated snapshot socket.
+# Talk to the Companion's authenticated snapshot socket.
 #
 #   query-companion.sh status                    the versioned status (companion-status-v1)
 #   query-companion.sh target [PKG|GAME|clear]   read or name the Companion's target
@@ -177,7 +177,7 @@ adb get-state >/dev/null
 
 pid="$(adb shell pidof "$PACKAGE" 2>/dev/null | tr -d '\r' | awk '{print $1}')"
 case "$pid" in
-  ''|*[!0-9]*) echo "cue helper is not running" >&2; exit 1 ;;
+  ''|*[!0-9]*) echo "Companion is not running" >&2; exit 1 ;;
 esac
 
 # The focus guard exists so that a reading is *about the game*. Retrieving or
@@ -219,7 +219,7 @@ fi
 # The endpoint is announced ONCE, as a logcat line, and this script used to
 # re-read it on every call. The handset's main log is a 256 KiB ring buffer, so
 # on a long, noisy night that line rotates out and every later call fails with
-# "no valid per-run cue-helper token found" although the helper is healthy.
+# "no valid per-run Companion token found" although the helper is healthy.
 # That is how night5-final2 and night5-rep4 (2026-09-12) lost their frame
 # traces: `trace start` at night-go read a fresh line, `trace stop` at the end
 # of the night found none. (The executor's own gate reads are not exposed: its
@@ -246,13 +246,13 @@ elif [ -f "$ENDPOINT_STASH" ]; then
     socket="$(sed -n 's/^socket=//p' "$ENDPOINT_STASH")"
     token="$(sed -n 's/^token=//p' "$ENDPOINT_STASH")"
     ENDPOINT_FROM_STASH=1
-    echo "cue helper endpoint line rotated out of logcat; using the endpoint stashed for helper pid $pid" >&2
+    echo "Companion endpoint line rotated out of logcat; using the endpoint stashed for helper pid $pid" >&2
   else
-    echo "cue helper endpoint line rotated out of logcat, and the stashed endpoint belongs to helper pid ${stash_pid:-none}, not $pid" >&2
+    echo "Companion endpoint line rotated out of logcat, and the stashed endpoint belongs to helper pid ${stash_pid:-none}, not $pid" >&2
   fi
 fi
 if [ "${#token}" -ne 32 ]; then
-  echo "no valid per-run cue-helper token found" >&2
+  echo "no valid per-run Companion token found" >&2
   exit 1
 fi
 
@@ -262,11 +262,11 @@ trap cleanup EXIT HUP INT TERM
 
 if [ "$TRANSPORT" = loopback ]; then
   case "$port" in
-    ''|*[!0-9]*) echo "cue helper has no live loopback port" >&2; exit 1 ;;
+    ''|*[!0-9]*) echo "Companion has no live loopback port" >&2; exit 1 ;;
   esac
 else
   case "$socket" in
-    ''|none) echo "cue helper has no live abstract control socket" >&2; exit 1 ;;
+    ''|none) echo "Companion has no live abstract control socket" >&2; exit 1 ;;
   esac
   host_port="$(adb forward tcp:0 "localabstract:$socket" | tr -d '\r' | tail -n1)"
   case "$host_port" in
@@ -284,7 +284,7 @@ exchange() {
   local reply
   reply="$(exchange_raw "$1")"
   if [ "$ENDPOINT_FROM_STASH" = 1 ] && [ "$reply" = "ERROR unauthorized" ]; then
-    echo "stashed cue helper endpoint is stale: helper pid $pid rejected its token; rerun tools/device/companion-setup.sh" >&2
+    echo "stashed Companion endpoint is stale: helper pid $pid rejected its token; rerun tools/device/companion-setup.sh" >&2
   fi
   printf '%s\n' "$reply"
 }
@@ -326,7 +326,7 @@ if [ "$VERB" = status ]; then
   printf '%s\n' "$response"
   case "$response" in
     'OK schema=companion-status-v1 '*) exit 0 ;;
-    *) echo "cue helper status query failed (a helper older than 0.2.0 has no STATUS)" >&2; exit 1 ;;
+    *) echo "Companion status query failed (a helper older than 0.2.0 has no STATUS)" >&2; exit 1 ;;
   esac
 fi
 
@@ -369,8 +369,8 @@ if [ "$VERB" = snapshot ]; then
   printf '%s\n' "$response"
   case "$response" in
     'OK '*"visual=OBSERVED"*) ;;
-    'OK '*) echo "cue helper returned a fail-closed observation" >&2; exit 1 ;;
-    *) echo "cue helper control query failed" >&2; exit 1 ;;
+    'OK '*) echo "Companion returned a fail-closed observation" >&2; exit 1 ;;
+    *) echo "Companion control query failed" >&2; exit 1 ;;
   esac
   exit 0
 fi
@@ -402,7 +402,7 @@ if [ "$VERB" = overlay ]; then
   printf '%s\n' "$response"
   case "$response" in
     'OK overlay='*) exit 0 ;;
-    *) echo "cue helper overlay query failed" >&2; exit 1 ;;
+    *) echo "Companion overlay query failed" >&2; exit 1 ;;
   esac
 fi
 
@@ -413,7 +413,7 @@ if [ "$VERB" = trace ]; then
       printf '%s\n' "$response"
       case "$response" in
         'OK trace=ACTIVE'*) exit 0 ;;
-        *) echo "cue helper frame trace did not start" >&2; exit 1 ;;
+        *) echo "Companion frame trace did not start" >&2; exit 1 ;;
       esac
       ;;
     status)
@@ -421,7 +421,7 @@ if [ "$VERB" = trace ]; then
       printf '%s\n' "$response"
       case "$response" in
         'OK trace='*) exit 0 ;;
-        *) echo "cue helper frame trace status failed" >&2; exit 1 ;;
+        *) echo "Companion frame trace status failed" >&2; exit 1 ;;
       esac
       ;;
     stop)
@@ -429,7 +429,7 @@ if [ "$VERB" = trace ]; then
       printf '%s\n' "$response"
       case "$response" in
         'OK trace=STOPPED '*|'OK trace=FULL '*) ;;
-        *) echo "cue helper frame trace did not stop" >&2; exit 1 ;;
+        *) echo "Companion frame trace did not stop" >&2; exit 1 ;;
       esac
       name="$(printf '%s\n' "$response" | sed -n 's/.* file=\([^ ]*\).*/\1/p')"
       case "$name" in

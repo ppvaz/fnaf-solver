@@ -2,7 +2,7 @@
 """No-device fixture for night jobs (Pedro, 2026-09-27: "Yes, play nights").
 
 The queue's `night` kind, night-job.py and the overnight window, together,
-against the fake phone in testdata/fake_phone.py: its `adb`, the Cue Helper
+against the fake phone in testdata/fake_phone.py: its `adb`, the Companion
 setup, the SNAP frame, the audio link, and a night runner that is handed the
 real argv. What is real: the queue, the window, night-job.py, night_jobs.py,
 device:emit on the committed k3 winner, title-observe.py with the real FNaF 2

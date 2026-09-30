@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""No-device contract tests for the safe Cue Helper queue."""
+"""No-device contract tests for the safe Companion queue."""
 
 from __future__ import annotations
 
@@ -200,5 +200,5 @@ with tempfile.TemporaryDirectory(prefix="companion-queue-cancel-") as directory:
     assert after[0]["cancelReason"] == "stale since an earlier session" and after[0]["cancelledAt"]
     assert MODULE.claimable(after[0], True) is False, "a cancelled job can still be claimed"
 
-print("cue-helper queue persistence, closed vocabulary, absent-device hold, one-job runs, "
+print("Companion queue persistence, closed vocabulary, absent-device hold, one-job runs, "
       "window notes, killed-job release and cancel passed")

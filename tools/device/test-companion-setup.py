@@ -79,4 +79,4 @@ try:
         assert str(error) == "target-not-night"
 finally:
     MODULE.query_snapshot = original_query_snapshot
-print("cue-helper setup parser and tap boundary passed")
+print("Companion setup parser and tap boundary passed")

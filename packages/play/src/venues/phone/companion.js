@@ -1,5 +1,5 @@
 /**
- * Authenticated cue-helper control protocol codec.  The request function is
+ * Authenticated Companion control protocol codec.  The request function is
  * injected by the device composition root (loopback or forwarded socket), so
  * this adapter contains no adb, shell, strategy, or policy selection.
  * CONTRACT:cue-helper-control-v1.
@@ -8,9 +8,9 @@
 const bounded = value => typeof value === 'string' && value.length <= 4096;
   /** @param {string} line */
 export function parseCueResponse(line) {
-  if (!bounded(line)) throw new TypeError('cue-helper response is missing or oversized');
+  if (!bounded(line)) throw new TypeError('Companion response is missing or oversized');
   const text = line.trim();
-  if (!text.startsWith('OK ')) throw new Error(text.startsWith('ERROR ') ? text : 'cue-helper response is not OK');
+  if (!text.startsWith('OK ')) throw new Error(text.startsWith('ERROR ') ? text : 'Companion response is not OK');
   /** @type {Record<string, string>} */
   const fields = {};
   for (const token of text.slice(3).split(/\s+/)) {
@@ -80,8 +80,8 @@ export function parseRegionRead(line) {
 export class CompanionControlTransport {
   /** @param {any} options */
   constructor({ request, token, maxAgeUs = 500000 } = {}) {
-    if (typeof request !== 'function') throw new TypeError('cue-helper transport needs an injected request function');
-    if (typeof token !== 'string' || !/^[0-9a-f]{32}$/.test(token)) throw new TypeError('cue-helper token must be 128-bit hex');
+    if (typeof request !== 'function') throw new TypeError('Companion transport needs an injected request function');
+    if (typeof token !== 'string' || !/^[0-9a-f]{32}$/.test(token)) throw new TypeError('Companion token must be 128-bit hex');
     this.request = request; this.token = token; this.maxAgeUs = maxAgeUs;
   }
 
@@ -97,16 +97,16 @@ export class CompanionControlTransport {
    */
   frame() {
     const fields = /** @type {any} */ (parseCueResponse(this.request(`FRAME ${this.token}`)));
-    if (fields.grid !== '20x9') throw new Error('cue-helper frame is missing its sensor');
+    if (fields.grid !== '20x9') throw new Error('Companion frame is missing its sensor');
     const body = typeof fields.cells === 'string' ? fields.cells : '';
-    if (!/^[0-9a-f]*$/.test(body)) throw new Error('cue-helper frame cell is malformed');
-    if (body.length !== 180 * 6) throw new TypeError('cue-helper frame must carry the 180-cell sensor');
+    if (!/^[0-9a-f]*$/.test(body)) throw new Error('Companion frame cell is malformed');
+    if (body.length !== 180 * 6) throw new TypeError('Companion frame must carry the 180-cell sensor');
     const cells = [];
     for (let index = 0; index < body.length; index += 6) cells.push(parseInt(body.slice(index, index + 6), 16));
     return Object.freeze({ ...fields, gridSeq: fields.seq, cells: Object.freeze(cells) });
   }
   watch(action) {
-    if (action !== 'status' && !/^[0-9a-f]{64}$/.test(action)) throw new TypeError('cue-helper watch action is invalid');
+    if (action !== 'status' && !/^[0-9a-f]{64}$/.test(action)) throw new TypeError('Companion watch action is invalid');
     return parseCueResponse(this.request(`WATCH ${this.token} ${action}`));
   }
   read() { return parseCueResponse(this.request(`READ ${this.token}`)); }

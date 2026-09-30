@@ -16,7 +16,7 @@ elif [ "${1:-}" = shell ] && [ "${2:-}" = dumpsys ] && [ "${3:-}" = meminfo ]; t
 elif [ "${1:-}" = shell ] && [ "${2:-}" = dumpsys ] && [ "${3:-}" = package ]; then
   echo 'versionCode=26 versionName=2.0.7'
 elif [ "${1:-}" = shell ] && [ "${2:-}" = cat ]; then
-  printf '%s\n' 'Name: cue-helper' 'VmRSS: 64000 kB' 'Threads: 7'
+  printf '%s\n' 'Name: companion' 'VmRSS: 64000 kB' 'Threads: 7'
 elif [ "${1:-}" = shell ] && [ "${2:-}" = dumpsys ] && [ "${3:-}" = thermalservice ]; then
   echo 'Thermal Status: 0'
 elif [ "${1:-}" = shell ] && [ "${2:-}" = dumpsys ] && [ "${3:-}" = cpuinfo ]; then

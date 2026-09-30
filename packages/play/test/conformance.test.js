@@ -1,4 +1,4 @@
-/** Adapter conformance: the HID wire, the Cue Helper transport, clocks and the detection rules the campaign reads. */
+/** Adapter conformance: the HID wire, the Companion transport, clocks and the detection rules the campaign reads. */
 import assert from 'node:assert/strict';
 import { Clock } from '../src/phone/clocks.js';
 import { HID_DESCRIPTOR, HidWireTransport, toRaw, report } from '../src/venues/phone/hid.js';
@@ -58,8 +58,8 @@ for (const bad of [
   'OK snapshotNs=3 seq=42 grid=20x9 cells=deadbeef',
   'OK snapshotNs=3 seq=42 cells=' + runBody,
 ]) assert.throws(() => new CompanionControlTransport({ token: '0123456789abcdef0123456789abcdef',
-  request: () => bad }).frame(), /cue-helper frame/);
+  request: () => bad }).frame(), /Companion frame/);
 assert.throws(() => cue.visualAcquisition({ snapshotNs: '1', ageUs: '1', seq: '1' }), /invalid/);
 assert.throws(() => cue.visualAcquisition({ snapshotNs: '5000000000',
   visualCaptureNs: '4990000000', ageUs: '1', seq: '12' }), /disagrees/);
-console.log('adapter contracts: HID wire, Cue Helper transport, clock and detection rules pass');
+console.log('adapter contracts: HID wire, Companion transport, clock and detection rules pass');

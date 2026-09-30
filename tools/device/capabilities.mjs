@@ -68,16 +68,16 @@ const INSTRUMENTS = [
       : d.perfettoDataSources.includes('android.input.inputevent')),
     ifMissing: 'the trace still records SurfaceFlinger and atrace categories, but there are no app ' +
       'MotionEvent rows to match, and the parser reports NO APP DISPATCH SLICES rather than guessing. ' +
-      'Use the Cue Helper native frame trace instead: it is what measured the mask button appearing ' +
+      'Use the Companion native frame trace instead: it is what measured the mask button appearing ' +
       'at ~382.5 ms after monitor-down.' },
   { tool: 'tools/device/actuation-frame-metric.py',
-    needs: 'the Cue Helper native frame trace',
+    needs: 'the Companion native frame trace',
     capture: 'tools/device/query-companion.sh trace start LABEL / trace stop ' +
       '(night-run.sh --frame-trace does it around a run)',
     available: d => d.cueHelper !== null,
-    ifMissing: 'install/verify the Cue Helper; without it there is no native frame stream to grade.' },
+    ifMissing: 'install/verify the Companion; without it there is no native frame stream to grade.' },
   { tool: 'tools/device/input-frame-align.py',
-    needs: 'BOTH a Perfetto trace and the Cue Helper native frame trace',
+    needs: 'BOTH a Perfetto trace and the Companion native frame trace',
     capture: 'atrace-input.sh around the run, plus query-companion.sh trace start/stop',
     available: d => (d.perfettoDataSources === null ? null
       : d.perfettoDataSources.includes('android.input.inputevent') && d.cueHelper !== null),
@@ -118,7 +118,7 @@ export function render(value) {
     `display ${d.displayGeometry}`];
   lines.push(`  /system/bin/hid ${d.hidBinary ? 'present' : 'ABSENT'}` +
     `   screenrecord ${d.screenrecord ? 'present' : 'ABSENT'}` +
-    `   cue helper ${d.cueHelper ?? 'ABSENT'}` +
+    `   Companion ${d.cueHelper ?? 'ABSENT'}` +
     `   target ${d.targetInstalled ? 'installed' : 'ABSENT'}`);
   lines.push(`  perfetto data sources: ${d.perfettoDataSources
     ? `${d.perfettoDataSources.length} advertised` : 'UNREADABLE'}`);

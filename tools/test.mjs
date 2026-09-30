@@ -331,7 +331,7 @@ const ENGINE = [
   // refusal reasons as the device-side gate.
   // Plan 23's device observer must retain enough paired telemetry to calculate
   // detector delta and render cadence, without inventing a qualified HUD run.
-  // The cue helper's detector, compiled and exercised on the host. CueDetector
+  // The Companion's detector, compiled and exercised on the host. CueDetector
   // imports nothing from android.*, so this needs no phone and no Android SDK
   // -- only a JDK, which test.sh probes for and fails loudly without.
   //

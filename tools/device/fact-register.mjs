@@ -8,7 +8,7 @@
 // runs, and -- the one this file exists for -- a better classifier for a fact
 // the executor was answering with a worse one.
 //
-// `tools/device/intersection-state-gate.mjs` consumes the Cue Helper's native
+// `tools/device/intersection-state-gate.mjs` consumes the Companion's native
 // button downstroke scores and states its discipline plainly: "fitted grid
 // anchors are a diagnostic fallback only" and "a missing stroke score is a
 // refusal, never a luma fallback". `packages/play/src/campaign/modern-campaign-ports.js`

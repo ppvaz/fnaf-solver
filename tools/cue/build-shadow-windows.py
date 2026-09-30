@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Join raw cue-helper shadow results to independent labels and anchored PCM.
+"""Join raw Companion shadow results to independent labels and anchored PCM.
 
 The trace is deliberately simple and append-only::
 

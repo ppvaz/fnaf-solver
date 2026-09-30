@@ -223,7 +223,7 @@ ANALYZED=0
 CAMPAIGN_CODE=""
 CAMPAIGN_DIR=""
 
-# The Cue Helper's native frame trace, which is the instrument that measured
+# The Companion's native frame trace, which is the instrument that measured
 # the mask button's appearance in the first place (absent to 322 ms after
 # monitor-down, faint at ~337 ms, fully visible at ~382.5 ms) and the one
 # `actuation-frame-metric.py` and `input-frame-align.py` both read.
@@ -270,7 +270,7 @@ start_frame_trace() {
       return 0
     fi
 
-    # The trace lives in the Cue Helper's projection. `restartAfterAbort` in
+    # The trace lives in the Companion's projection. `restartAfterAbort` in
     # modern-campaign-ports.js calls `restartCompanionCapture`, whose contract
     # is "stop any current helper projection" -- which drops the in-flight
     # buffer. On 2026-09-12 (night5-strokes1) that path ran after a 120 s

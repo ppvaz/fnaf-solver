@@ -1,5 +1,5 @@
 /**
- * Calibrated monitorUp detection over the cue-helper snapshot + grid.
+ * Calibrated monitorUp detection over the Companion snapshot + grid.
  *
  * The helper emits verdict-free observations: the `GET` snapshot (freshness,
  * screen identity, whole-grid counts) and the `GRID` verb (all 180 point
@@ -131,7 +131,7 @@ function anchorReadsUp(anchor, cells) {
 export { cellFeatures, anchorReadsUp };
 
 /**
- * Derive the monitorUp measurement from one cue-helper observation.
+ * Derive the monitorUp measurement from one Companion observation.
  * `snapshot` carries the GET fields; `cells` carries the GRID sensor rows
  * from the same frame. Freshness policy mirrors
  * CompanionControlTransport.monitorMeasurement.

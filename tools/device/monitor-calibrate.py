@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fit the monitorUp anchor rule over the cue-helper grid from labelled frames.
+"""Fit the monitorUp anchor rule over the Companion grid from labelled frames.
 
 The monitor's map layout drawing is present if and only if the monitor is up,
 independent of the camera feed behind it.  This tool searches the helper's

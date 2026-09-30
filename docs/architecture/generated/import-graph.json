@@ -4093,6 +4093,15 @@
       ]
     },
     {
+      "file": "tools/test-companion-name.mjs",
+      "imports": [
+        "node:child_process",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/test-docs.mjs",
       "imports": [
         "node:child_process",

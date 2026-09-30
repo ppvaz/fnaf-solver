@@ -1,4 +1,4 @@
-# Cue Helper overlay qualification
+# Companion overlay qualification
 
 > **Retired 2026-09-27 (Companion 0.2.0).** The full-screen sensor/debug HUD
 > this protocol qualified was removed with the watchlist ROIs it drew, and with

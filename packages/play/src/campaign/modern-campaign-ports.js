@@ -302,7 +302,7 @@ export async function createCampaignPorts(options = {}) {
   if (!captureRestarted) {
     const restarted = await bridge.restartCompanionCapture({ target: 'fnaf2', screen: 'menu' });
     if (restarted.status !== 'READY')
-      throw new Error(`Cue Helper capture restart failed: ${restarted.output ?? restarted.status}`);
+      throw new Error(`Companion capture restart failed: ${restarted.output ?? restarted.status}`);
   }
   const evidenceDirectory = resolve('artifacts', `campaign-${new Date().toISOString().replaceAll(':', '-')}`);
   await mkdir(evidenceDirectory, { recursive: false });
@@ -334,7 +334,7 @@ export async function createCampaignPorts(options = {}) {
   };
   // Endpoint discovery is bounded and happens before the executor is armed;
   // no input is sent here. The modern artifact executor consumes only the
-  // validated semantic bundle and the authenticated Cue Helper read port.
+  // validated semantic bundle and the authenticated Companion read port.
   const cuePort = new AdbCompanionPort({ serial, adb });
   let cueEndpoint = cuePort.discover();
   // The FNaF 2 legacy readers (FRAME, READ, TRACE, the onset latch) run only
@@ -574,7 +574,7 @@ export async function createCampaignPorts(options = {}) {
   });
   let pendingExecution = null;
   const prearm = target => {
-    // The native watchlist is a synchronous Cue Helper operation. Load it
+    // The native watchlist is a synchronous Companion operation. Load it
     // before starting the held executor so its setup cannot block the
     // phase-critical night release later in intro().
     if (bundle.plans.find(plan => plan.night === target.night)?.armVerification)
@@ -965,10 +965,10 @@ export async function createCampaignPorts(options = {}) {
         'post-abort game restart');
       const capture = await bridge.restartCompanionCapture({ target: 'fnaf2', screen: 'menu' });
       if (capture.status !== 'READY')
-        throw new Error(`Cue Helper capture restart failed: ${capture.output ?? capture.status}`);
+        throw new Error(`Companion capture restart failed: ${capture.output ?? capture.status}`);
       const endpoint = refreshCueEndpoint();
       const refreshedState = await waitFor(bridge, serial, value => value === 'title', 30000,
-        'post-abort game restart after Cue Helper capture');
+        'post-abort game restart after Companion capture');
       onEvent({ type: 'campaign.abort.restarted', state: refreshedState ?? state,
         launcher: restarted.launcher, cueHelperPort: endpoint.port });
     } catch (error) {

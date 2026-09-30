@@ -2,7 +2,7 @@
 """Play one queued night of a committed winner, then leave the game at an
 observed title.
 
-The Cue Helper queue runs this for a `night` job, and claims night jobs only
+The Companion queue runs this for a `night` job, and claims night jobs only
 inside an overnight window (overnight-window.py; Pedro, 2026-09-27: "Yes, play
 nights"). It is never an agent-facing command.
 
@@ -20,7 +20,7 @@ nights"). It is never an agent-facing command.
     static halt (669447b);
  4. the audio link, where the runner reads audio (FNaF 4), or where a FNaF 2
     job asked to retain it (`bt-audio-link.sh --ensure`);
- 5. the title, OBSERVED (Cue Helper SNAP, native-frame.mjs, read by
+ 5. the title, OBSERVED (Companion SNAP, native-frame.mjs, read by
     title-observe.py with the game's model), never assumed: the job refuses
     unless it offers the declared night -- Custom Night for 7, 6th Night for 6,
     and for 1-5 the digit under Continue. A game or night whose title cannot be

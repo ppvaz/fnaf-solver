@@ -2,7 +2,7 @@
  * Place the night schedule's release against the game's own one-second grid.
  *
  * Two independent facts meet here:
- *   - WHEN the night began: the Cue Helper's latched onset (NightOnsetLatch.java,
+ *   - WHEN the night began: the Companion's latched onset (NightOnsetLatch.java,
  *     rule in @sixam/play/phone/night-onset), read over a forwarded socket
  *     together with a device->host clock offset bounded by RTT/2;
  *   - WHETHER actuation may start: the lifecycle classifier's `state=night`,

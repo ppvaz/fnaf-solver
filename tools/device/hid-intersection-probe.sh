@@ -88,7 +88,7 @@ cleanup() {
   # known title/menu state. This is deliberately unconditional after device
   # selection and is followed by the authoritative title observer.
   if ! bash "$HERE/companion-setup.sh" --screen menu --wait 60; then
-    echo "RESTORE FAIL cue-helper setup did not reach menu" >&2
+    echo "RESTORE FAIL Companion setup did not reach menu" >&2
     status=1
   fi
   if title_line="$(TITLE_MODEL="$HERE/models/title-moto-g56-v207.json" \

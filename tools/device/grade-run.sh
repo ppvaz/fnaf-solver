@@ -24,7 +24,7 @@
 #   RUN_NAME is night-run.sh's run id, e.g. night7-k3-cohort-r01-20260918T030258Z.
 #
 # It grades what a night-run.sh attempt retains: the recording, the campaign
-# directory, and the Perfetto input and Cue Helper frame traces when the run
+# directory, and the Perfetto input and Companion frame traces when the run
 # asked for them. The legacy trial.sh lane's inputs -- its HID trace, session
 # manifest, driver log, cue trace and receiver PCM -- left with that lane on
 # 2026-09-25 (docs/ARCHIVED-ROUTES.md).
@@ -75,7 +75,7 @@ CAMPAIGN_DIR="${GRADE_CAMPAIGN_DIR:-}"
 if [ -z "$CAMPAIGN_DIR" ] && [ -f "$CAPTURES/$RUN-campaign-dir.txt" ]; then
   CAMPAIGN_DIR="$(cat "$CAPTURES/$RUN-campaign-dir.txt")"
 fi
-# Cue Helper native frame trace, pulled by `query-companion.sh trace stop`
+# Companion native frame trace, pulled by `query-companion.sh trace stop`
 # into captures/frame-traces/. Only present when a run asked for one.
 FRAME_TRACE=""
 # The helper names the file LABEL-<startNs>.tsv, so the run id is a HYPHEN
@@ -375,7 +375,7 @@ fi
 
 # 5b-ii. Did the frames actually carry the state the actuation asked for, and
 # did Android's dispatch line up with the frames that were presented? Both read
-# the Cue Helper's native frame trace, which only a run that requested one has.
+# the Companion's native frame trace, which only a run that requested one has.
 if [ -n "$FRAME_TRACE" ]; then
   step "native-frame state coverage for the actuation" \
     python3 "$HERE/actuation-frame-metric.py" "$FRAME_TRACE"

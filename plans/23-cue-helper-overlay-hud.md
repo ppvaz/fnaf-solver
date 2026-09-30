@@ -1,6 +1,6 @@
-# Cue Helper overlay HUD
+# Companion overlay HUD
 
-**Status: proposed 2026-09-01, Pedro's directive.** Extend the Cue Helper from
+**Status: proposed 2026-09-01, Pedro's directive.** Extend the Companion from
 an observation surface into a spatially aligned, read-only HUD over the stock
 FNaF 2 APK. This plan does not authorize game input and does not promote any
 detector or recommendation beyond its existing evidence level.
@@ -45,7 +45,7 @@ PixelFormat.TRANSLUCENT
 ```
 
 `TYPE_APPLICATION_OVERLAY` is available from API 26 and requires the special
-`SYSTEM_ALERT_WINDOW` app-op. Because the Cue Helper targets API 36, the user
+`SYSTEM_ALERT_WINDOW` app-op. Because the Companion targets API 36, the user
 must grant it through `Settings.ACTION_MANAGE_OVERLAY_PERMISSION`; the app must
 check `Settings.canDrawOverlays()` before adding the window. Permission denial
 is a normal `overlay=DISABLED(permission)` state and must not affect capture.
@@ -171,7 +171,7 @@ the ROI border or label over pixels used by a detector could therefore create
 a feedback loop: the HUD changes the evidence that produces the HUD.
 
 Before the overlay can run beside sensing, retain paired frames with HUD off
-and on and determine whether the Cue Helper window appears in the captured
+and on and determine whether the Companion window appears in the captured
 buffer on every supported OS/device configuration. Promotion requires one of
 these measured designs:
 

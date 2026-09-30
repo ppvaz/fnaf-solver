@@ -1,5 +1,5 @@
 #!/bin/bash
-# Image-free Cue Helper setup and target-menu check.
+# Image-free Companion setup and target-menu check.
 #
 # This wrapper selects exactly one ADB device, then delegates all UI work to
 # companion-setup.py. The Python command may tap only named controls belonging

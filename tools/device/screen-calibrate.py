@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fit the screenIdentity rule over the cue-helper grid from labelled frames.
+"""Fit the screenIdentity rule over the Companion grid from labelled frames.
 
 WHY THIS EXISTS.  Screen identity was the one fact the host trusted the helper
 to decide: `GET` returns `screen=FNAF2_NIGHT|FNAF2_MENU|...` from

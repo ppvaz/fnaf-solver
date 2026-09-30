@@ -205,7 +205,7 @@ Four roots that each bind ports to a service, plus two that mirror each other:
 | File | Lines | Binds |
 |---|---|---|
 | `apps/device/src/composition.js` | 42 | profile name → adapters, shared runtime |
-| `apps/device/src/modern-composition.js` | 112 | Plan 22 physical seam (HID + cue-helper transports) |
+| `apps/device/src/modern-composition.js` | 112 | Plan 22 physical seam (HID + Companion transports) |
 | `apps/device/src/modern-campaign-ports.js` | 580 | campaign root: title/lifecycle observers + physical ports |
 | `apps/device/src/campaign-composition.js` | 52 | reviewed bundle → runner |
 | `apps/device/src/calibration-fixture.js` | 80 | offline logical-clock fixture |
@@ -343,7 +343,7 @@ Two caveats, both measured on the clean tree at `a8260aa`:
   added since the exclusion list was last extended: `bundle.mjs`,
   `mask-calibrate.py`, `screen-calibrate.py`, `minus-3-plan.mjs`,
   `minus3-frame-light.mjs`, `artifact-commands.mjs`, `artifact-runner.mjs`,
-  `emit.mjs`, `seed-clock.mjs`, `closed-families.mjs`, the five cue-helper
+  `emit.mjs`, `seed-clock.mjs`, `closed-families.mjs`, the five Companion
   entry points, `companion_device_lock.py`, `device-lock-exec.py`,
   `pan-path-capture.py`/`.sh`, `companion-mcp.mjs`, now `apps/desktop/src/`). The other 12 are the gate
   reading the wrong registry: it looks for gate registrations in

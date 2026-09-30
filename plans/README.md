@@ -55,7 +55,7 @@ Triage of 2026-09-17 (kept for its reasoning; the path above is current):
   is a traceable personal research APK with internal observation and actuation.
 - **Plans 22–24 are foundations, not claims.** Plan 22 owns the phase-1
   workspace, contracts, profiles, and composition boundaries; Plan 23 owns the
-  read-only Cue Helper HUD qualification; Plan 24 owns replay-only exercises,
+  read-only Companion HUD qualification; Plan 24 owns replay-only exercises,
   activity gating, and adaptive training.
 - **Plan 25 is the horizon list** written after the Night 7 clear, and is the
   only plan authored with that clear as its premise.
@@ -171,7 +171,7 @@ progress log written before 2026-09-09.
     knowledge indexes/portal, a legible repository front door, and a
     characterized migration away from the monolithic device shell path.
 23. [23-cue-helper-overlay-hud.md](23-cue-helper-overlay-hud.md) — a single
-    transparent, non-interactive Cue Helper HUD over the stock game, with one
+    transparent, non-interactive Companion HUD over the stock game, with one
     shared ROI geometry authority, separate sensor/debug and decision/run
     modes, fail-closed cue expiry, and explicit touch-through, target-overlay-
     suppression, self-capture, latency, and lifecycle qualification gates.

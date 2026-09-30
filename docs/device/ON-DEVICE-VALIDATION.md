@@ -74,7 +74,7 @@ brackets each device clock read in host-monotonic time and refuses reboots,
 short spans, inconsistent anchors, and blown `errorMs`/`rateErrorPpm` budgets.
 
 **The device has two monotonic domains and they are not interchangeable.**
-The Cue Helper stamps `snapshotNs` with `System.nanoTime()` (suspend-
+The Companion stamps `snapshotNs` with `System.nanoTime()` (suspend-
 excluding), while `/proc/uptime` is boottime (suspend-including); the two
 drift apart by the cumulative suspend time. The map's `sourceSession`
 carries the measured domain — `<bootId>#monotonic` for `--source helper`
@@ -364,7 +364,7 @@ reason is unchanged.
   action path is 395 ms, leaving about 305 ms against the shortest 700 ms BB
   window.
 - **The projection path measures 59 ms for the same observation (2026-08-24).**
-  The cue helper holds one consented `MediaProjection` producing a 20x9 virtual
+  The Companion holds one consented `MediaProjection` producing a 20x9 virtual
   display and answers a device-local socket with the already-classified pixel,
   so a reader pays neither the full-display compose nor the classification. 60
   samples inside one device shell: p50 48.8 ms, **p95 59.5 ms**, p99 60.8 ms,
@@ -432,7 +432,7 @@ wind, and the loss compounds because a short wind leaves less box for the next
 cycle to protect.
 
 Two consequences worth carrying. Adding an observation to this loop is not free
-and must be priced before it is scheduled; and the cue helper's device-local
+and must be priced before it is scheduled; and the Companion's device-local
 read at 59 ms exists precisely so an observation need not cost a screencap. The
 helper now also reports the CAM 05 feed region as a block of the same 20x9
 frame it already captures, so that path no longer requires one.
@@ -776,7 +776,7 @@ verdict. The runner calls it. See CLAUDE.md, "Instruments are not a pipeline".
   are fork+exec here (`sleep 0.02` costs 75 ms wall; one `date` fork ~25 ms).
 - **`hid_delay` holds +/-2 ms**, stdev 0.76, measured from the kernel's own
   `getevent` timestamps over 60 contacts. That 25x gap is why the macro exists.
-- **The cue helper answers in 42 ms p50 / 57 ms p95**, against ~225 ms for
+- **The Companion answers in 42 ms p50 / 57 ms p95**, against ~225 ms for
   `screencap` + `fnaf-screencheck`. The runner had *no* helper integration at
   all until this session; every read was the expensive path, which is why it can
   only afford one read per five-second cycle -- and why Balloon Boy is only ever
@@ -935,7 +935,7 @@ The other two live seams are smaller and both real:
   runner no longer uses: its monitor press went down while the wind contact was
   still held.)
 - **The in-cycle correction can cause the desync it looks for.** Night 6-38:
-  the anchor's monitor press at 12.132 s, the cue helper's read 247 ms later
+  the anchor's monitor press at 12.132 s, the Companion's read 247 ms later
   reporting the cams still up -- which they visibly were, because
   `MONITOR_ANIM_DOWN` is 367 ms and the flip was still running -- and a
   "corrective" press at 12.379 s that the port dropped for the same reason.
@@ -1106,7 +1106,7 @@ What the run's own instruments recorded, against the mechanism's predictions:
 Two consequences were fixed with it:
 
 - **The recovery now closes its loop.** After the resync press it reads the
-  cams back through the cue helper (59 ms) and presses once more if they are
+  cams back through the Companion (59 ms) and presses once more if they are
   still up, bounded at one retry. An unverified resync is the same open-loop
   mistake at one remove, and it is why 6-43 stayed inverted through four of
   them.
@@ -1201,7 +1201,7 @@ What this does *not* retract: night 6-41's lamp really was dark, measured from
 the recording rather than the trace -- lit exactly once for 531 ms across 20 s.
 And night 6-42 really did desync; `desync-scan.py` reads the screen, not the
 trace, and it stands. **The desync's mechanism is open again**, and the live
-evidence points elsewhere: the runner's own cue-helper read saw the cams up at
+evidence points elsewhere: the runner's own Companion read saw the cams up at
 17.876 s (`luma 255`) and corrected in-cycle, then resynced twice more before
 `desync-scan.py` calls it permanently inverted at 30.38 s. The auditor's timing
 numbers cannot be used to choose between candidates until the timeline is
@@ -1259,7 +1259,7 @@ to matter**, and until a read is known to be an observation, nothing about
 Balloon Boy can be concluded from it either way.
 
 The original reasoning is kept because it was right about everything except the
-cause: the pilot does look only once per five-second cycle, and the cue helper
+cause: the pilot does look only once per five-second cycle, and the Companion
 at 42 ms is still the reason a cheaper read is worth asking about. One claim in
 it was wrong on its own terms and is corrected here -- the vent light is **not**
 gated on the flashlight budget. Only `lit?` drains `battery life` (g284); vent
@@ -1374,7 +1374,7 @@ screencap consumer -- the BB left-opening read at 225 ms. Host-side streamers
 (scrcpy, minicap, adbnativeblitz) are the wrong endpoint: their advertised
 latency is to the *host's* memory, and the host round trip is already measured
 as disqualifying above (692-785 ms per classification, ~500 ms schedule slip).
-The device-local stream already exists -- the cue helper's 60 fps projection --
+The device-local stream already exists -- the Companion's 60 fps projection --
 and the `GRID` verb already carries the whole 20x9 frame. What it did not have
 was a price. `query-companion.sh latency` now times GET, GRID, and the
 forked-shell baseline in one device loop:
@@ -1396,7 +1396,7 @@ calibration frames must come through `GRID` on the live loop.
 ### The 1 s read stall, and the orphaned loops that caused it
 
 The first pricing runs showed something the repository had never measured:
-**1-3% of cue-helper reads stalled ~1060 ms**, in both GET and GRID, and
+**1-3% of Companion reads stalled ~1060 ms**, in both GET and GRID, and
 spacing the reads 100 ms apart did not remove it (3 of 120 spaced reads
 stalled). The signature -- a normal read plus almost exactly 1000 ms -- is a
 TCP SYN retransmission, and `/proc/net/netstat` confirmed it: one measurement
@@ -1500,7 +1500,7 @@ platform offers, which is why the two genuinely fast paths in the field
 therefore cannot exist on a physical phone at all.
 
 The useful consequence is about our own read, and it is a reframing rather than
-a new number. The cue helper's 59 ms is not a better position on this ladder;
+a new number. The Companion's 59 ms is not a better position on this ladder;
 **it is not on this ladder.** Every row above captures a frame. The helper
 captures a 20x9 region and answers a question. The saving is the resolution and
 the round trip, not a cleverer codec, and no amount of tuning a `screencap`
@@ -1593,7 +1593,7 @@ capture-pipeline lateness recorded above, and the 1 s stalls traced to the
 orphaned trace loops, are both cases where **a read returned a truthful answer
 about the wrong moment** — and a staleness bound is the standard defence against
 exactly that. This is a design note, not a finding: no measurement here says the
-cue helper is currently returning stale frames, and adding a staleness check
+Companion is currently returning stale frames, and adding a staleness check
 would itself need pricing against the 680 ms budget before it went near the
 loop. It belongs on the list in §"Next steps", not in the loop.
 
@@ -1633,7 +1633,7 @@ phone are the ones measured on it.
 
 ## Which anchor survives a point-sampling sensor (2026-08-26)
 
-The cue helper's `20x9` grid **point-samples ~180 source pixels**; it is not a
+The Companion's `20x9` grid **point-samples ~180 source pixels**; it is not a
 small image of the screen. `ONE-PIXEL-VISION.md` §3 carries the measurement and
 the correction it forced. This section is the consequence for classifiers: it
 prices every anchor this project has considered for "is the office visible?"
@@ -1891,7 +1891,7 @@ worth keeping:
 - A variance scan rejected frames carrying white bands as "torn". Those bands
   are not decode damage, and rejecting them discarded the frame where Toy
   Bonnie was visible. Three explanations for them were measured and refuted:
-  not the cue helper (the run without it bands *more*, 34.7% vs 27.7%), not the
+  not the Companion (the run without it bands *more*, 34.7% vs 27.7%), not the
   "lost signal" cue (that is a dark camera carrying text), and not the
   camera-switch animation (they are uniform across cycle phase at a ~0.2-0.3 s
   period, not twice per 5 s cycle). **Do not filter on them, and do not use
@@ -1956,12 +1956,12 @@ the likely source of the n7 number -- a model inconsistency, not a lever. It
 was found in passing while measuring the localized fix and is not chased here;
 untangle the legacy-path contact semantics before trusting it.
 
-## The cue helper runs concurrently with the sweep without degrading it (2026-08-27)
+## The Companion runs concurrently with the sweep without degrading it (2026-08-27)
 
 The old worry, from the `screencap` era: a second capture pipeline contends
 with the game's rendering. Per-frame `screencap` from the night watchdog
 "more than doubled" its own capture time and read `unknown` on 7 of 8 cycles
-(night 6-23). The cue helper uses a *continuous* MediaProjection
+(night 6-23). The Companion uses a *continuous* MediaProjection
 VirtualDisplay instead, and it had never been measured against a live sweep.
 
 Measured on the Moto g56 (`<serial>`), with the helper capturing
@@ -2330,7 +2330,7 @@ currently name the right one.** The wish is not a better hand; it is a watch.
 
 Corroborates §"There is no fast, portable, lossless capture on Android" from the
 other direction. Current published practice for low-latency Android capture is
-what the cue helper already does — MediaProjection `VirtualDisplay`, buffer
+what the Companion already does — MediaProjection `VirtualDisplay`, buffer
 wrapped without a copy, no GPU→CPU readback (readback is reported at
 **12–18 ms/frame** on Mali) — and the best-in-class end-to-end
 capture→encode→save figure quoted for a mid-tier handset is **~214 ms median**,

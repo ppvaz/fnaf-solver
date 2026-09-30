@@ -1,5 +1,5 @@
 /**
- * Closed host boundary for replacing the Cue Helper MediaProjection session.
+ * Closed host boundary for replacing the Companion MediaProjection session.
  * The checked-in setup script owns the named UI taps and projection consent;
  * this module only supplies the selected serial and a bounded invocation.
  * CONTRACT:device-adb-preflight-v1.
@@ -34,16 +34,16 @@ async function runSetup(file, args, options) {
 export async function restartCompanionCapture({ serial, adb = 'adb', target, screen = 'menu',
   waitSeconds = 30, run = runSetup } = {}) {
   if (typeof serial !== 'string' || serial.length === 0)
-    throw new TypeError('Cue Helper capture restart requires an ADB serial');
+    throw new TypeError('Companion capture restart requires an ADB serial');
   if (typeof adb !== 'string' || adb.length === 0)
-    throw new TypeError('Cue Helper capture restart requires an ADB executable');
+    throw new TypeError('Companion capture restart requires an ADB executable');
   if (typeof target !== 'string' || !/^fnaf[1-4](?:-rebuild)?$/.test(target))
-    throw new TypeError('Cue Helper capture restart needs an explicit target game (fnaf1..fnaf4 or fnafN-rebuild)');
+    throw new TypeError('Companion capture restart needs an explicit target game (fnaf1..fnaf4 or fnafN-rebuild)');
   if (screen !== 'menu' && screen !== 'night')
-    throw new TypeError('Cue Helper capture restart screen must be menu or night');
+    throw new TypeError('Companion capture restart screen must be menu or night');
   if (!Number.isInteger(waitSeconds) || waitSeconds < 1 || waitSeconds > 300)
-    throw new TypeError('Cue Helper capture restart waitSeconds must be an integer in 1..300');
-  if (typeof run !== 'function') throw new TypeError('Cue Helper capture restart needs a runner');
+    throw new TypeError('Companion capture restart waitSeconds must be an integer in 1..300');
+  if (typeof run !== 'function') throw new TypeError('Companion capture restart needs a runner');
 
   const result = await run(SETUP,
     ['--restart-capture', '--target', target, '--screen', screen, '--wait', String(waitSeconds)], {

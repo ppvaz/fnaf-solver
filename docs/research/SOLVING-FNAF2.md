@@ -291,7 +291,7 @@ index on screen. These are `rebuilt-runtime` measurements of this phone, not ret
   update grid ([audit](../../tools/recompile/results/practice-actuation-audit-20260929.json),
   `practice-actuation-audit-9c83886c7491fa45`). The phone's input path is not what loses a
   33 ms contact; only a game loop that skips a poll longer than the hold can.
-- **The Companion's capture latency.** The Cue Helper's MediaProjection image of an update is
+- **The Companion's capture latency.** The Companion's MediaProjection image of an update is
   stamped 26.4 ms after that update's swap (22.4-30.7), is already one update stale when stamped
   on every frame, reaches the helper's reply 12.9 ms later, and shows 47.5% of updates
   ([capture](../../tools/recompile/results/capture-latency-20260929.json),

@@ -1,8 +1,8 @@
-# Cue Helper MCP
+# Companion MCP
 
 The repository includes a project-local stdio MCP server, `fnaf-solver`, at
 `apps/desktop/src/companion-mcp.mjs` (it was `tools/device/companion-mcp.mjs`
-until ADR 0002's Play move made `apps/desktop` the composition root). It carries two surfaces: the safe Cue Helper
+until ADR 0002's Play move made `apps/desktop` the composition root). It carries two surfaces: the safe Companion
 operations, and steps 1-5 of the solver interface of
 [Plan 28](../../plans/28-solver-interface.md), with the operator's read-only
 `lab.*` verbs beside them: fourteen tools in all. Neither exposes a tap, a
@@ -88,7 +88,7 @@ so the MCP server, the review CLI and a later wiki or desk share one verb table;
 Not here yet (Plan 28 step 6): `sim.*` and `device.*` over the gated simulation
 and device paths.
 
-## The Cue Helper queue
+## The Companion queue
 
 These four tools keep their names and their answers unchanged:
 

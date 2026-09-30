@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Stdio MCP contract test for the fnaf-solver server: the safe Cue Helper
+ * Stdio MCP contract test for the fnaf-solver server: the safe Companion
  * queue as it always answered, and the solver interface's verbs, the `jobs`
  * queue tool, `truth`, the lab's read-only `lab.status`, `lab.next` and
  * `lab.doctor`, and the fnaf:// resources, every one of which answers in
@@ -121,7 +121,7 @@ try {
   for (const name of ['start', 'commit', 'end', 'morning'])
     assert.ok(!names.includes(`lab.${name}`), `lab ${name} is not served over MCP: only status, next and doctor are`);
 
-  // --- the Cue Helper queue, unchanged ---------------------------------------------------------
+  // --- the Companion queue, unchanged ---------------------------------------------------------
   send({ jsonrpc: '2.0', id: 3, method: 'tools/call', params: {
     name: 'cue.queue.enqueue', arguments: { kind: 'menu-check' },
   } });
@@ -342,5 +342,5 @@ try {
   await rm(temp, { recursive: true, force: true });
 }
 
-console.log('fnaf-solver stdio MCP: 14 tools; the Cue Helper queue unchanged, jobs, lab.* and every verb and resource in claim-envelope-v1, ' +
+console.log('fnaf-solver stdio MCP: 14 tools; the Companion queue unchanged, jobs, lab.* and every verb and resource in claim-envelope-v1, ' +
   'truth over a synthetic local dump and refused without one, a refused promote, the four refusals, and no write under docs/evidence');

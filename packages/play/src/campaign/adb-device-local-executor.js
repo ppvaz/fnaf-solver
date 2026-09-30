@@ -24,7 +24,7 @@ import { boundedRemotePath, renderDeviceLocalScript } from './device-shell.js';
 
 const MAX_ARM_ATTEMPTS = 3;
 const ARM_SETTLE_MS = 600;
-// The native screen identity the Cue Helper reports for the office HUD, and
+// The native screen identity the Companion reports for the office HUD, and
 // how often the origin anchor asks for it. The helper's own detector latency
 // was measured at 43 ms, so this cadence -- not the classifier round trip --
 // becomes the origin's resolution.
@@ -534,7 +534,7 @@ export class AdbDeviceLocalArtifactExecutor {
     // origin.bracketedByMs = 1852 against a 1000 ms model phase period, which
     // leaves the delivered phase unconstrained.
     //
-    // The native Cue Helper read already names the screen at ~43 ms, so it can
+    // The native Companion read already names the screen at ~43 ms, so it can
     // say WHEN inside the bracket the authority establishes. It is never
     // allowed to say WHETHER: `observe` remains the authority on a night
     // running, per the rule that a detector which knows one way to be dead is

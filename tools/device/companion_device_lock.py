@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Kernel-released per-device lease for safe Cue Helper host operations."""
+"""Kernel-released per-device lease for safe Companion host operations."""
 
 from __future__ import annotations
 
@@ -44,7 +44,7 @@ def main_checkout(root: Path = ROOT) -> Path:
 
 
 def state_dir() -> Path:
-    """Host-wide Cue Helper state: the lease files, the queue, pending restores."""
+    """Host-wide Companion state: the lease files, the queue, pending restores."""
     return Path(os.environ.get("CUE_HELPER_STATE_DIR", str(main_checkout() / "captures/cue-helper")))
 
 

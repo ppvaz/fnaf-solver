@@ -12,7 +12,7 @@ capture paths is from [`ANDROID-AUDIO-CAPTURE.md`](ANDROID-AUDIO-CAPTURE.md).
 
 | path | status | what it carries |
 |---|---|---|
-| on-device `AudioPlaybackCapture` (Cue Helper `audioRecord`) | works, wrong stream | the deep-buffer loops only (music box s0015, Mangle s0020, ambience). Every discrete `Play sample` cue is on the FAST mixer and absent. Settled 2026-08-29. |
+| on-device `AudioPlaybackCapture` (Companion `audioRecord`) | works, wrong stream | the deep-buffer loops only (music box s0015, Mangle s0020, ambience). Every discrete `Play sample` cue is on the FAST mixer and absent. Settled 2026-08-29. |
 | phone -> Bluetooth A2DP -> Linux BlueALSA (`bluealsa-cli open`, SBC) | decoder validated 2026-08-29; integrated as `night-run.sh --bt-audio`; transport continuity still unqualified | the full HAL mix: the winding tick s0033 matched at 0.44-0.56 NC while winding, 0.09-0.15 not winding. `capture-bt-audio.sh --start/--stop` supplies host-clock bounds and a loss sidecar; see `ANDROID-AUDIO-CAPTURE.md` §"Current host modes and loss acceptance". |
 | phone -> ESP32 A2DP sink -> Wi-Fi PCM -> same phone | retracted 2026-08-31 (loss) | -- |
 | ESP32 as local DSP -> timestamped cue facts | firmware archived 2026-09-24 (`firmware/esp32-audio-consumer`, [`../ARCHIVED-ROUTES.md`](../ARCHIVED-ROUTES.md)), one shadow model (`~/fnaf-apks/cue-models/bang-shadow-g56-bluealsa-20260830.txt`, cue=bang id=17, threshold 0.35) | never connected on a graded run: every 2026-09-12/13 run reports `audio=ESP32 state=UNKNOWN reason=esp32-not-connected`, `audioAnalyzer=UNAVAILABLE reason=model-missing`. |

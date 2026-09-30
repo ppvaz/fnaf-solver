@@ -1,7 +1,7 @@
 // What a stock-device native-resolution pixel watchlist can see, modelled with
 // the real sensor's coarseness and latency. Plan 19 package 1.
 //
-// The device sensor is the cue helper's MediaProjection VirtualDisplay read
+// The device sensor is the Companion's MediaProjection VirtualDisplay read
 // (~59 ms device-local, ~15 Hz, its own surface -- no SurfaceFlinger contention,
 // ONE-PIXEL-VISION.md). It samples a fixed watchlist of native pixels / tiny
 // ROIs and returns their reduced values; the calibration that maps those values

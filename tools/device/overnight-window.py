@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the Cue Helper queue on the owner's phone inside a scheduled window,
+"""Run the Companion queue on the owner's phone inside a scheduled window,
 then put the phone back the way the window found it.
 
 Pedro's decision (2026-09-27): the phone stops being the bottleneck through
@@ -1448,7 +1448,7 @@ def render_units(config: dict, out: str | None) -> int:
     service = "\n".join([
         "# Rendered by tools/device/overnight-window.py units; edit the flags there, not here.",
         "[Unit]",
-        "Description=FNaF 2 overnight device window (Cue Helper queue on the owner's phone)",
+        "Description=FNaF 2 overnight device window (Companion queue on the owner's phone)",
         f"Documentation=file://{root}/docs/operations/DEVICE-SAFETY.md",
         "",
         "[Service]",
@@ -1494,7 +1494,7 @@ def render_units(config: dict, out: str | None) -> int:
 
 
 def parse(argv: list[str] | None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Overnight device window for the Cue Helper queue")
+    parser = argparse.ArgumentParser(description="Overnight device window for the Companion queue")
     parser.add_argument("command", nargs="?", default="run",
                         choices=("run", "preflight", "restore", "units"))
     parser.add_argument("--live", action="store_true", help="touch the phone (run, restore)")

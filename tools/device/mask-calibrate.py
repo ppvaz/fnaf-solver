@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fit the maskOn anchor rule over the cue-helper grid from labelled frames.
+"""Fit the maskOn anchor rule over the Companion grid from labelled frames.
 
 The Freddy mask is OPAQUE: putting it on blacks out the office everywhere
 except its two eye holes.  This tool searches the helper's 20x9 point-sampled

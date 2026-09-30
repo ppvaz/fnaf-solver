@@ -42,7 +42,7 @@ const finite = value => typeof value === 'number' && Number.isFinite(value);
 export const ANCHOR_KINDS = Object.freeze(['screen', 'world']);
 
 /** The pan is unknown until something reads it; `view-scroll-v1` records that
- * the Cue Helper's `pan_anchor_state` read UNKNOWN throughout 2026-09-19. */
+ * the Companion's `pan_anchor_state` read UNKNOWN throughout 2026-09-19. */
 export const PAN_UNKNOWN = null;
 
 class ControlAnchorError extends Error {}

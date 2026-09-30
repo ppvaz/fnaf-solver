@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: 22
       # Pin boundary toolchains before any contract lane can invoke them. The
-      # Cue Helper tests compile Java and the fixture classifiers use Pillow;
+      # Companion tests compile Java and the fixture classifiers use Pillow;
       # neither may depend on whatever happens to be preinstalled on the image.
       - uses: actions/setup-java@v4
         with:
@@ -69,7 +69,7 @@ jobs:
         run: tools/device/test-shell-footguns.sh
       # The full historical campaign remains an explicit local/release lane;
       # its deliberately red negative experiments are not a green edit gate.
-      - name: Cue helper query (mock ADB)
+      - name: Companion query (mock ADB)
         run: tools/device/test-query-companion.sh
-      - name: Cue helper soak (mock ADB)
+      - name: Companion soak (mock ADB)
         run: tools/device/test-soak-companion.sh

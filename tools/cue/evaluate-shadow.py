@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Evaluate cue-helper shadow windows with whole-session holdouts.
+"""Evaluate Companion shadow windows with whole-session holdouts.
 
 Input is JSONL, one independently labelled detector window per line::
 

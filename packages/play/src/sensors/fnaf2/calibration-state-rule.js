@@ -131,7 +131,7 @@ export function parseCalibrationStateRule(artifact) {
 }
 
 /**
- * Derive the fitted `maskOn` fact from one atomic Cue Helper FRAME.
+ * Derive the fitted `maskOn` fact from one atomic Companion FRAME.
  *
  * This is deliberately a measurement, not an actuator gate: callers can
  * retain its reason and the fitted rule's limitations in an evidence ledger.
@@ -177,7 +177,7 @@ export function measureMaskOn(snapshot, rule, { maxAgeUs = 500000, cells = null 
 }
 
 /**
- * Derive the calibrationState measurement from one cue-helper observation.
+ * Derive the calibrationState measurement from one Companion observation.
  * OBSERVED requires BOTH the bound monitor rule and mask rule to resolve
  * the same frame positively; any UNKNOWN refuses the state. A positive,
  * guard-qualified mask rule may also establish NIGHT when the helper reports

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * One FNaF 4 night on the handset, observed through the Cue Helper (native
+ * One FNaF 4 night on the handset, observed through the Companion (native
  * REGION frames, SNAP for the title) and through the phone's own A2DP mix
  * (tools/cue/fnaf4-cues.py, live). No screencap, no luma, no grid.
  *

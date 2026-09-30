@@ -561,7 +561,7 @@ def cmd_finalize(run, argv):
         # safety for a session that had one.
         manifest["redaction"]["commit_safe"] = False
         manifest["redaction"]["notes"] += \
-            "; a cue-helper session token was in play, so this manifest is not " \
+            "; a Companion session token was in play, so this manifest is not " \
             "declared commit-safe (the token itself is never recorded)"
 
     missing = [key for key in ("game_package", "game_version", "game_build", "night",

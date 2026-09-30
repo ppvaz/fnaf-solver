@@ -80,7 +80,7 @@ labels still do not promote one another.
   to produce. If that artifact cannot be produced this session, say so and
   stop — no substitute work that closes no step.
 - If device work is blocked because the phone is absent or locked, enqueue a
-  Cue Helper job (`cue.queue.enqueue`) and end the device work there.
+  Companion job (`cue.queue.enqueue`) and end the device work there.
 - When a route is refuted on device, the next commit is the next route's
   physical test or a decision request to Pedro — never further documentation
   of the refutation.
@@ -138,7 +138,7 @@ longer rebuilds.
 
 ## Sensors and on-device code (Pedro, 2026-09-24/25 — start here, not with the old sensors)
 
-- **A detector reads small regions of native frames.** The Cue Helper copies
+- **A detector reads small regions of native frames.** The Companion copies
   registered rectangles' raw pixels out of every MediaProjection frame
   (`REGION`, `NativeRegions.java`; host `openRegions()`, `native-regions.mjs`)
   and whole native frames on request (`SNAP`, `native-frame.mjs`) for title and

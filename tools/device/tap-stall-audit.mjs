@@ -1,4 +1,4 @@
-// Audit every scheduled contact of a device run against the Cue Helper's
+// Audit every scheduled contact of a device run against the Companion's
 // native frame trace: was the button there when the contact arrived, did the
 // effect follow, and did a frame stall longer than the contact cover it.
 //

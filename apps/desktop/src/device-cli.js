@@ -56,8 +56,8 @@ Options:
   --night-anchor-period-ms P  the game timer period the aim is a phase of (default 1000; Night 6's Foxy roll grid is 5000)
   --night-anchor-strict  refuse (abort the attempt) instead of releasing unanchored when the aim cannot be met
   --night-anchor-authorize-on-latch  release on the helper's latched onset alone once the aim is past its hold
-  --teach-overlay  narrate the schedule on the Cue Helper's teach panel for a person watching (needs an anchor)
-  --no-helper   preflight without requiring Cue Helper
+  --teach-overlay  narrate the schedule on the Companion's teach panel for a person watching (needs an anchor)
+  --no-helper   preflight without requiring Companion
   --no-hid      preflight without requiring /system/bin/hid
   --live        explicitly enable physical actuation
   --confirm-live  acknowledge the bounded live-device safety gate
