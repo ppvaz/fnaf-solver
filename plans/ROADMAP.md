@@ -213,7 +213,25 @@ Details:
   family and held-out block, plus the device runs at the frontier corners.
 - **Stands:**
   - Exhaustive censuses are routine, but over *fixed schedules*, not over
-    policies.
+    policies; the one census over a policy family so far is the next bullet.
+  - **Night 7 (10/20), policies j, k2, k3 released by their registered
+    anchors: every deliverable epoch wins (exact lane, pre-registered).** The
+    family is each binding at every integer-ms epoch of its anchor's effective
+    interval (108 members, 32 schedule classes); a policy's value is its worst
+    epoch. All 32 classes win all 3000 seeds of the development block (0..2999)
+    and of the held-out block `held-out-32768` (3000 seeds outside the tuning
+    cohorts), so `P_max` over this family >= 3000/3000 held-out, Wilson
+    [0.99744, 1] at joint 0.95 over k3's 9 classes (k3 selected by the
+    pre-registered tie order; j and k2 tie). The band is flat (E1 survives; the
+    phase and the seed inside the band are ruled out), and the device lane,
+    per-press lateness in the anchor's 47-82 ms band, also wins 3000/3000 for
+    each binding. So k3's two phone losses lie outside what this lane models
+    (an epoch outside the band, lateness beyond it), or in S2
+    ([record](../docs/evidence/night7-anchor-band-census-20260930.json),
+    `night7-anchor-band-census-1e49be7fa931a5aa`;
+    [pre-registration](../docs/evidence/night7-anchor-band-census-predeclaration-20260930.json);
+    held by `test-policy-census.mjs`). MODEL_ONLY. Scoped to three open-loop
+    bindings; no seed-aware policy or story night has a policy census yet.
   - **Story Nights 1-7 (Night 7 = 10/20): `P_max = 1` in the model's exact
     lane, at each binding's declared phase.** All 26 committed `winner-v1`
     bindings, replayed as their gates replay them, win all 65,536 seeds, and

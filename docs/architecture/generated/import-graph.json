@@ -613,32 +613,6 @@
       ]
     },
     {
-      "file": "packages/kernel/src/index.js",
-      "imports": [
-        "./annotation.js",
-        "./bindings.js",
-        "./claim-envelope.js",
-        "./game-run.js",
-        "./labels.js",
-        "./outcome.js",
-        "./seed.js",
-        "./time/interval.js"
-      ]
-    },
-    {
-      "file": "packages/kernel/src/index.js",
-      "imports": [
-        "./annotation.js",
-        "./bindings.js",
-        "./claim-envelope.js",
-        "./game-run.js",
-        "./labels.js",
-        "./outcome.js",
-        "./seed.js",
-        "./time/interval.js"
-      ]
-    },
-    {
       "file": "packages/kernel/src/labels.js",
       "imports": [
         "./types.js"
@@ -1773,6 +1747,20 @@
         "@sixam/propose/games/policy-fnaf4.js",
         "@sixam/source",
         "@sixam/source/fnaf4"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/census/test-policy-census.mjs",
+      "imports": [
+        "./policy-census.mjs",
+        "@sixam/kernel/contracts",
+        "@sixam/propose/census",
+        "node:assert/strict",
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
       ]
     },
     {
@@ -4545,32 +4533,6 @@
       "imports": [
         "node:child_process",
         "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/generate-catalog.js",
-      "imports": [
-        "@sixam/source",
-        "node:child_process",
-        "node:crypto",
-        "node:fs",
-        "node:fs/promises",
-        "node:os",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/generate-catalog.js",
-      "imports": [
-        "@sixam/source",
-        "node:child_process",
-        "node:crypto",
-        "node:fs",
-        "node:fs/promises",
-        "node:os",
         "node:path",
         "node:url"
       ]

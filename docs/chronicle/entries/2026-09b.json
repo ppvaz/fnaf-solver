@@ -1525,6 +1525,25 @@
       "status": "standing",
       "supersededBy": null,
       "supersedes": null
+    },
+    {
+      "id": "night7-anchor-band-policy-census",
+      "date": "2026-09-30",
+      "game": "fnaf2",
+      "kind": "fact",
+      "title": "The first census over a policy family: every epoch the Night 7 anchor can deliver wins in the model",
+      "body": "Every earlier census scored a binding at the one epoch it declares. The phone plays a policy: the anchor releases the schedule somewhere inside an interval (aim, onset bias, 47-82 ms latency), and the binding does not choose where. Pre-registered before a seed was run, the census took j, k2 and k3 at every integer millisecond of their bands: 108 members, 32 distinct press schedules. All 32 won all 3000 seeds of the development block and all 3000 of a held-out block no tuning cohort reaches, and the device lane, each press late by its own draw from the latency band, won 3000/3000 for each binding. The band is flat, so k3's two phone losses lie outside what this lane models, or in S2.",
+      "measured": "3000/3000 held-out at every one of 32 schedule classes; P_max >= 3000/3000, Wilson [0.99744, 1]",
+      "label": "MODEL_ONLY",
+      "rung": null,
+      "plan": null,
+      "night": 7,
+      "route": "Minus Toys",
+      "tags": ["model", "census", "policy", "held-out", "s3"],
+      "sources": ["docs/evidence/night7-anchor-band-census-20260930.json", "docs/evidence/night7-anchor-band-census-predeclaration-20260930.json"],
+      "status": "standing",
+      "supersededBy": null,
+      "supersedes": null
     }
   ]
 }
