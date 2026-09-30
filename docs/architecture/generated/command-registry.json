@@ -55,7 +55,7 @@
     },
     {
       "id": "test:contracts",
-      "command": "node packages/source/test/contracts.test.js && node packages/source/test/control-catalog.test.js && node packages/source/test/truth.test.js && node packages/kernel/test/claim-envelope.test.js && node packages/kernel/test/venue-identity.test.js && node packages/propose/test/cycle-library.test.js && node packages/propose/test/cycle-planner.test.js && node packages/propose/test/cycle-controller.test.js && node packages/propose/test/night-policy.test.js && node packages/source/test/route-forks.test.js && node packages/source/test/drop-light-order.test.js && node packages/source/test/foxy-chain.test.js && node packages/source/test/unconditional-draws.test.js && node packages/source/test/event-draws.test.js && node packages/source/test/blackout-draws.test.js && node packages/source/test/view-draws.test.js && node packages/source/test/roll-draws.test.js && node packages/source/test/monitor-down-draw.test.js && node packages/source/test/second-pass.test.js && node packages/source/test/puppet-glitch-draws.test.js && node packages/source/test/sheet-order.test.js && node packages/source/test/frame-time-hook.test.js && node packages/source/test/last-view-pause.test.js && node packages/source/test/footstep-draws.test.js && node packages/source/test/vent-cam-draws.test.js && node packages/source/test/random-image-draw.test.js && node packages/source/test/monitor-raise-gate.test.js && node packages/source/test/mangle-return.test.js && node packages/source/test/gated-every.test.js && node packages/source/test/every-origin.test.js && node packages/source/test/rebuild-order.test.js && node packages/source/test/footstep-value2.test.js && node packages/source/test/foxy-move-value2.test.js && node packages/source/test/promoted-view-draws.test.js && node packages/source/test/hall-latch-order.test.js && node packages/source/test/rolls-before-moves.test.js && node packages/source/test/promoted-moves.test.js && node packages/source/test/value5.test.js && node packages/source/test/office-footsteps.test.js && node packages/source/test/blackout-clock-end.test.js && node packages/source/test/b-drain-order.test.js && node packages/source/test/route-pass.test.js && node packages/source/test/office-rolls.test.js && node packages/source/test/animation-count.test.js && node packages/source/test/bb-moves.test.js && node packages/source/test/exposure-value5.test.js && node packages/source/test/route-view-draws.test.js && node packages/source/test/drop-flag-order.test.js && node packages/source/test/mask-animation-input.test.js && node packages/play/test/control-exclusion.test.js && node packages/play/test/android-venue.test.js && node packages/play/test/conformance.test.js && node packages/play/test/monitor-rule.test.js && node packages/play/test/camera-rule.test.js && node packages/play/test/night-onset.test.js && node apps/desktop/test/device-cli.test.js && node packages/play/test/campaign.test.js && node packages/play/test/campaign-runner.test.js && node packages/play/test/campaign-infrastructure.test.js && node packages/play/test/campaign-composition.test.js && node packages/play/test/modern-campaign-terminal.test.js && node packages/play/test/campaign-signal.test.js && node packages/play/test/adb-bridge.test.js && node packages/play/test/venue-preflight.test.js && node packages/play/test/adb-device-local-executor.test.js && node packages/play/test/profile-game.test.js && node packages/play/test/static-terminal-window.test.js && node packages/play/test/post-night-halt.test.js && node packages/play/test/hid-read-gap.test.js && node packages/play/test/hid-second-contact.test.js && node packages/play/test/night-anchor.test.js && node packages/play/test/cycle-lesson.test.js && node packages/play/test/timed-start.test.js && node packages/propose/test/experiment.test.js && node packages/propose/test/legacy-equivalence.test.js && node tools/device/test-bundle.mjs && node tools/device/test-phase-reconstruct.mjs && node tools/device/test-tap-stall-audit.mjs && python3 tools/device/test-framesource.py && python3 tools/device/test-decode-once.py && python3 tools/device/test-grade-night.py && python3 tools/device/test-cycle-ledger.py && python3 tools/device/test-office-seed-bracket.py && node tools/device/test-minus3-frame-light.mjs && node tools/device/test-artifact-animation-gates.mjs && node tools/vaulttest.mjs && node tools/factlinktest.mjs && node tools/benchtracetest.mjs && node tools/exercisetest.mjs && node tools/activitygatetest.mjs && node tools/microtrainertest.mjs && node tools/renderertest.mjs && node tools/arcadelabtest.mjs && node tools/phaseclocktest.mjs && node tools/observationlanguagetest.mjs && python3 tools/contract-vectors.py && python3 tools/device/test-cue-helper-setup.py && python3 tools/device/test-cue-helper-device-lock.py && python3 tools/device/test-cue-helper-queue.py && node apps/desktop/test/cue-helper-mcp.test.mjs && python3 tools/device/test-teach-panel-clearance.py && python3 tools/device/test-death-cause.py && tools/device/test-game-teardown.sh && tools/cue/test-bt-audio-link.sh && android/companion/test.sh && npm run test:device:calibration && node packages/source/test/footstep-value2.test.js &&node packages/source/test/mask-animation-input.test.js && node packages/play/test/companion-status.test.js && node tools/device/test-audio-probe.mjs",
+      "command": "node packages/source/test/contracts.test.js && node packages/source/test/control-catalog.test.js && node packages/source/test/truth.test.js && node packages/kernel/test/claim-envelope.test.js && node packages/kernel/test/venue-identity.test.js && node packages/propose/test/cycle-library.test.js && node packages/propose/test/cycle-planner.test.js && node packages/propose/test/cycle-controller.test.js && node packages/propose/test/night-policy.test.js && node packages/source/test/route-forks.test.js && node packages/source/test/drop-light-order.test.js && node packages/source/test/foxy-chain.test.js && node packages/source/test/unconditional-draws.test.js && node packages/source/test/event-draws.test.js && node packages/source/test/blackout-draws.test.js && node packages/source/test/view-draws.test.js && node packages/source/test/roll-draws.test.js && node packages/source/test/monitor-down-draw.test.js && node packages/source/test/second-pass.test.js && node packages/source/test/puppet-glitch-draws.test.js && node packages/source/test/sheet-order.test.js && node packages/source/test/frame-time-hook.test.js && node packages/source/test/last-view-pause.test.js && node packages/source/test/footstep-draws.test.js && node packages/source/test/vent-cam-draws.test.js && node packages/source/test/random-image-draw.test.js && node packages/source/test/monitor-raise-gate.test.js && node packages/source/test/mangle-return.test.js && node packages/source/test/gated-every.test.js && node packages/source/test/every-origin.test.js && node packages/source/test/rebuild-order.test.js && node packages/source/test/footstep-value2.test.js && node packages/source/test/foxy-move-value2.test.js && node packages/source/test/promoted-view-draws.test.js && node packages/source/test/hall-latch-order.test.js && node packages/source/test/rolls-before-moves.test.js && node packages/source/test/promoted-moves.test.js && node packages/source/test/value5.test.js && node packages/source/test/office-footsteps.test.js && node packages/source/test/blackout-clock-end.test.js && node packages/source/test/b-drain-order.test.js && node packages/source/test/route-pass.test.js && node packages/source/test/office-rolls.test.js && node packages/source/test/animation-count.test.js && node packages/source/test/bb-moves.test.js && node packages/source/test/exposure-value5.test.js && node packages/source/test/route-view-draws.test.js && node packages/source/test/drop-flag-order.test.js && node packages/source/test/mask-animation-input.test.js && node packages/play/test/control-exclusion.test.js && node packages/play/test/android-venue.test.js && node packages/play/test/conformance.test.js && node packages/play/test/monitor-rule.test.js && node packages/play/test/camera-rule.test.js && node packages/play/test/night-onset.test.js && node apps/desktop/test/device-cli.test.js && node packages/play/test/campaign.test.js && node packages/play/test/campaign-runner.test.js && node packages/play/test/campaign-infrastructure.test.js && node packages/play/test/campaign-composition.test.js && node packages/play/test/modern-campaign-terminal.test.js && node packages/play/test/campaign-signal.test.js && node packages/play/test/adb-bridge.test.js && node packages/play/test/venue-preflight.test.js && node packages/play/test/adb-device-local-executor.test.js && node packages/play/test/profile-game.test.js && node packages/play/test/static-terminal-window.test.js && node packages/play/test/post-night-halt.test.js && node packages/play/test/hid-read-gap.test.js && node packages/play/test/hid-second-contact.test.js && node packages/play/test/night-anchor.test.js && node packages/play/test/cycle-lesson.test.js && node packages/play/test/timed-start.test.js && node packages/propose/test/experiment.test.js && node packages/propose/test/legacy-equivalence.test.js && node tools/device/test-bundle.mjs && node tools/device/test-phase-reconstruct.mjs && node tools/device/test-tap-stall-audit.mjs && python3 tools/device/test-framesource.py && python3 tools/device/test-decode-once.py && python3 tools/device/test-grade-night.py && python3 tools/device/test-cycle-ledger.py && python3 tools/device/test-office-seed-bracket.py && node tools/device/test-minus3-frame-light.mjs && node tools/device/test-artifact-animation-gates.mjs && node tools/vaulttest.mjs && node tools/factlinktest.mjs && node tools/benchtracetest.mjs && node tools/exercisetest.mjs && node tools/activitygatetest.mjs && node tools/microtrainertest.mjs && node tools/renderertest.mjs && node tools/arcadelabtest.mjs && node tools/phaseclocktest.mjs && node tools/observationlanguagetest.mjs && python3 tools/contract-vectors.py && python3 tools/device/test-companion-setup.py && python3 tools/device/test-companion-device-lock.py && python3 tools/device/test-companion-queue.py && node apps/desktop/test/companion-mcp.test.mjs && python3 tools/device/test-teach-panel-clearance.py && python3 tools/device/test-death-cause.py && tools/device/test-game-teardown.sh && tools/cue/test-bt-audio-link.sh && android/companion/test.sh && npm run test:device:calibration && node packages/source/test/footstep-value2.test.js &&node packages/source/test/mask-animation-input.test.js && node packages/play/test/companion-status.test.js && node tools/device/test-audio-probe.mjs",
       "lifecycle": "supported"
     },
     {
@@ -200,7 +200,7 @@
     },
     {
       "id": "device:mcp",
-      "command": "node apps/desktop/src/cue-helper-mcp.mjs",
+      "command": "node apps/desktop/src/companion-mcp.mjs",
       "lifecycle": "supported"
     }
   ],
@@ -1226,56 +1226,56 @@
       "lifecycle": "supported"
     },
     {
-      "id": "tools/device/soak-cue-helper.sh",
-      "invocation": "tools/device/soak-cue-helper.sh [samples] [interval-seconds] [output]",
+      "id": "tools/device/soak-companion.sh",
+      "invocation": "tools/device/soak-companion.sh [samples] [interval-seconds] [output]",
       "kind": "device check/report",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/device/test-soak-cue-helper.sh",
-      "invocation": "tools/device/test-soak-cue-helper.sh",
+      "id": "tools/device/test-soak-companion.sh",
+      "invocation": "tools/device/test-soak-companion.sh",
       "kind": "check",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/device/query-cue-helper.sh",
-      "invocation": "tools/device/query-cue-helper.sh [status\\|target\\|lease\\|loopback\\|forward\\|overlay\\|watchlist\\|read\\|trace\\|latency]",
+      "id": "tools/device/query-companion.sh",
+      "invocation": "tools/device/query-companion.sh [status\\|target\\|lease\\|loopback\\|forward\\|overlay\\|watchlist\\|read\\|trace\\|latency]",
       "kind": "device check/report",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/device/cue-helper-setup.sh",
-      "invocation": "tools/device/cue-helper-setup.sh [--install] [--probe] [--restart-capture] [--target fnaf2\\|fnaf1] [--screen menu\\|night] [--stop] [--wait SECONDS]",
+      "id": "tools/device/companion-setup.sh",
+      "invocation": "tools/device/companion-setup.sh [--install] [--probe] [--restart-capture] [--target fnaf2\\|fnaf1] [--screen menu\\|night] [--stop] [--wait SECONDS]",
       "kind": "device action/check",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/device/cue-helper-setup.py",
-      "invocation": "tools/device/cue-helper-setup.py",
+      "id": "tools/device/companion-setup.py",
+      "invocation": "tools/device/companion-setup.py",
       "kind": "internal module",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/device/test-cue-helper-setup.py",
-      "invocation": "tools/device/test-cue-helper-setup.py",
+      "id": "tools/device/test-companion-setup.py",
+      "invocation": "tools/device/test-companion-setup.py",
       "kind": "check",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/device/cue-helper-queue.sh",
-      "invocation": "tools/device/cue-helper-queue.sh enqueue\\|list\\|cancel IDS --reason TEXT\\|run [--wait SECONDS] [--interval SECONDS] [--max-jobs N] [--nights]",
+      "id": "tools/device/companion-queue.sh",
+      "invocation": "tools/device/companion-queue.sh enqueue\\|list\\|cancel IDS --reason TEXT\\|run [--wait SECONDS] [--interval SECONDS] [--max-jobs N] [--nights]",
       "kind": "device action/check",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/device/cue-helper-queue.py",
-      "invocation": "tools/device/cue-helper-queue.py",
+      "id": "tools/device/companion-queue.py",
+      "invocation": "tools/device/companion-queue.py",
       "kind": "internal module",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/device/test-cue-helper-queue.py",
-      "invocation": "tools/device/test-cue-helper-queue.py",
+      "id": "tools/device/test-companion-queue.py",
+      "invocation": "tools/device/test-companion-queue.py",
       "kind": "check",
       "lifecycle": "supported"
     },
@@ -1304,14 +1304,14 @@
       "lifecycle": "supported"
     },
     {
-      "id": "tools/device/cue_helper_device_lock.py",
-      "invocation": "tools/device/cue_helper_device_lock.py",
+      "id": "tools/device/companion_device_lock.py",
+      "invocation": "tools/device/companion_device_lock.py",
       "kind": "internal module",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/device/test-cue-helper-device-lock.py",
-      "invocation": "tools/device/test-cue-helper-device-lock.py",
+      "id": "tools/device/test-companion-device-lock.py",
+      "invocation": "tools/device/test-companion-device-lock.py",
       "kind": "check",
       "lifecycle": "supported"
     },
@@ -1328,8 +1328,8 @@
       "lifecycle": "supported"
     },
     {
-      "id": "tools/device/test-query-cue-helper.sh",
-      "invocation": "tools/device/test-query-cue-helper.sh",
+      "id": "tools/device/test-query-companion.sh",
+      "invocation": "tools/device/test-query-companion.sh",
       "kind": "check",
       "lifecycle": "supported"
     },
@@ -2342,8 +2342,8 @@
       "lifecycle": "supported"
     },
     {
-      "id": "tools/device/testdata/mock-adb-cue-helper.sh",
-      "invocation": "tools/device/testdata/mock-adb-cue-helper.sh",
+      "id": "tools/device/testdata/mock-adb-companion.sh",
+      "invocation": "tools/device/testdata/mock-adb-companion.sh",
       "kind": "mock",
       "lifecycle": "supported"
     },

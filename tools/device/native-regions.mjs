@@ -21,7 +21,7 @@
 import { writeFileSync, mkdirSync, readFileSync, appendFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { deflateSync } from 'node:zlib';
-import { AdbCueHelperPort } from '../../packages/play/src/campaign/physical-ports.js';
+import { AdbCompanionPort } from '../../packages/play/src/campaign/physical-ports.js';
 import { resolveSerial } from './local-profile.mjs';
 
 function fail(message) { console.error(`native-regions: ${message}`); process.exit(2); }
@@ -95,7 +95,7 @@ async function main(argv) {
   const { set } = loadRegionSet(opt.model, opt.set);
   let serial;
   try { ({ serial } = resolveSerial()); } catch (error) { fail(error.message); }
-  const port = new AdbCueHelperPort({ serial });
+  const port = new AdbCompanionPort({ serial });
   const channel = port.openRegions({ timeoutMs: 1500 });
   try {
     await registerSet(channel, set);

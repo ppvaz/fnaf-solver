@@ -157,7 +157,7 @@ try {
   const holdLease = async (serial, body) => {
     const holder = spawn('python3', ['-c', [
       'import sys, time', `sys.path.insert(0, ${JSON.stringify(join(ROOT, 'tools/device'))})`,
-      'from cue_helper_device_lock import DeviceLock', `lease = DeviceLock(${JSON.stringify(serial)}); lease.__enter__()`,
+      'from companion_device_lock import DeviceLock', `lease = DeviceLock(${JSON.stringify(serial)}); lease.__enter__()`,
       "print('held', flush=True)", 'time.sleep(120)'].join('\n')],
     { env: { ...process.env, CUE_HELPER_LOCK_DIR: locks }, stdio: ['ignore', 'pipe', 'inherit'] });
     try {

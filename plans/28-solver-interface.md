@@ -5,7 +5,7 @@ question "at maturity, what does someone — or someone's agent — call, instea
 of investigating the game by hand?"
 
 **Steps 1–4 built 2026-09-29** and served by the `fnaf-solver` MCP server
-([surface](../docs/device/CUE-HELPER-MCP.md)): `claim-envelope-v1` in the kernel,
+([surface](../docs/device/COMPANION-MCP.md)): `claim-envelope-v1` in the kernel,
 emitted by `evidence -- show|promotions --envelope` and `review -- query promotions
 --envelope`; `describe`; the five resources; the four refusals. **Step 5 built
 2026-09-30:** one `truth` tool (op `decode | events | object`) over the caller's
@@ -33,7 +33,7 @@ of registers this repository already generates —
 already exist behind gates ([simulation](../tools/device/bundle.mjs),
 [device](../apps/desktop/src/device-cli.js)). What is new below is envelope, routing and
 refusal; the knowledge is already here and the safety boundary is already proven
-in [`cue-helper-mcp.mjs`](../apps/desktop/src/cue-helper-mcp.mjs).
+in [`companion-mcp.mjs`](../apps/desktop/src/companion-mcp.mjs).
 `UNKNOWN(not-estimated)`: no line count or schedule is offered, because none was
 measured and an invented one would be the tautology mistake 7 describes.
 
@@ -94,7 +94,7 @@ envelope rather than in prose.
 | Chronicle entries | 83 across 2 checkpoints | `npm run chronicle` |
 | — of which refutation, retraction, negative | 6, 7, 11 (**24 of 83**) | |
 | Evidence runs | 148 | `npm run evidence -- list` |
-| MCP tools today | **4**, one namespace, 0 resources, 0 prompts | `cue-helper-mcp.mjs` |
+| MCP tools today | **4**, one namespace, 0 resources, 0 prompts | `companion-mcp.mjs` |
 
 Twenty-four of eighty-three chronicle entries are negative results. That ratio
 is the asset. A caller who can query it does not repeat the Foxy dump chain, the
@@ -209,7 +209,7 @@ habit a tired reader drops.
   `device.run({ bundle, mode })` -> lease, deadline, retained telemetry, held in
   a queue when the phone is absent, `device.grade({ run })` -> cycle ledger,
   death cause, phase reconstruction.
-- No taps, no coordinates, no shell. `cue-helper-mcp.mjs`'s refusal to expose an
+- No taps, no coordinates, no shell. `companion-mcp.mjs`'s refusal to expose an
   actuator is the right instinct at the right layer and survives unchanged; see
   [device safety](../docs/operations/DEVICE-SAFETY.md).
 

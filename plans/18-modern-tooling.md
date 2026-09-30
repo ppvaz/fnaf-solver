@@ -276,8 +276,8 @@ number also assumes one host's `adb`/`ffmpeg`.
 - CI derives its versions from the same pin.
 
 **Done when.** From a clean checkout inside the container,
-`node tools/test.mjs --engine`, `tools/device/test-query-cue-helper.sh` and
-`tools/device/test-soak-cue-helper.sh` all pass; CI and local report the same
+`node tools/test.mjs --engine`, `tools/device/test-query-companion.sh` and
+`tools/device/test-soak-companion.sh` all pass; CI and local report the same
 tool versions.
 
 ## Suggested execution order

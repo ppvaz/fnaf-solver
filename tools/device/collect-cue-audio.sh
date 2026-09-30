@@ -85,7 +85,7 @@ fnaf_session_record controller \
   actuator=adb-input emitted_action_trace=null
 fnaf_session_record helper token_present=false "process_identity=cue-helper-pid-$pid"
 
-"$HERE/query-cue-helper.sh" log start >/dev/null
+"$HERE/query-companion.sh" log start >/dev/null
 LOG_T0=$(date +%s)
 # The host wall clock the round table is written in. It is coarse -- seconds --
 # and that is exactly why it is named rather than merged into anything finer.
@@ -102,7 +102,7 @@ fnaf_session_record align from_domain=host_wall_s to_domain=host_monotonic_ms \
 SESSION_CLOSED=0
 stop_log() {
   local status=$?
-  "$HERE/query-cue-helper.sh" log stop "$LABEL" || true
+  "$HERE/query-companion.sh" log stop "$LABEL" || true
   # EXIT fires after INT/TERM have already run this handler; closing twice
   # would report a missing spool as if the session had never existed.
   [ "$SESSION_CLOSED" -eq 0 ] || return 0

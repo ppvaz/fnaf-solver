@@ -13,12 +13,12 @@ from pathlib import Path
 
 
 HERE = Path(__file__).resolve().parent
-SPEC = importlib.util.spec_from_file_location("cue_helper_device_lock", HERE / "cue_helper_device_lock.py")
+SPEC = importlib.util.spec_from_file_location("companion_device_lock", HERE / "companion_device_lock.py")
 assert SPEC and SPEC.loader
 MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
 
-with tempfile.TemporaryDirectory(prefix="cue-helper-device-lock-") as directory:
+with tempfile.TemporaryDirectory(prefix="companion-device-lock-") as directory:
     previous = os.environ.get("CUE_HELPER_LOCK_DIR")
     os.environ["CUE_HELPER_LOCK_DIR"] = directory
     try:
@@ -38,7 +38,7 @@ with tempfile.TemporaryDirectory(prefix="cue-helper-device-lock-") as directory:
              sys.executable, "-c",
              "import signal, sys; "
              f"sys.path.insert(0, {str(HERE)!r}); "
-             "from cue_helper_device_lock import DeviceLock; "
+             "from companion_device_lock import DeviceLock; "
              "lease = DeviceLock('one-device'); "
              "lease.__enter__(); lease.__exit__(); "
              "signal.signal(signal.SIGTERM, lambda signum, frame: "
@@ -92,7 +92,7 @@ with tempfile.TemporaryDirectory(prefix="cue-helper-device-lock-") as directory:
              "sh", "-c",
              f"{sys.executable} -c \""
              f"import sys; sys.path.insert(0, {str(HERE)!r}); "
-             "from cue_helper_device_lock import DeviceLock; "
+             "from companion_device_lock import DeviceLock; "
              "lease = DeviceLock('one-device'); lease.__enter__(); lease.__exit__(); "
              "print('grandchild-lease-acquired')\"; true"],
             env=os.environ.copy(), capture_output=True, text=True, timeout=30)
@@ -108,7 +108,7 @@ with tempfile.TemporaryDirectory(prefix="cue-helper-device-lock-") as directory:
 # overnight window instead of taking a private lock file (until 2026-09-27
 # each checkout had its own captures/cue-helper/locks). The FNaF 1 replay's
 # JavaScript mirror must agree.
-with tempfile.TemporaryDirectory(prefix="cue-helper-worktree-") as directory:
+with tempfile.TemporaryDirectory(prefix="companion-worktree-") as directory:
     main = Path(directory) / "main"
     worktree = Path(directory) / "elsewhere" / "wt"
     gitdir = main / ".git" / "worktrees" / "wt"

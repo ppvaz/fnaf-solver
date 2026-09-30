@@ -11,7 +11,7 @@ import sys
 
 # Field-for-field with the device (Fnaf2Legacy.snapshotLine/readLine,
 # OverlayController.status) and with the loopback mock in
-# mock-adb-cue-helper.sh. Both transports must answer the same shape or a
+# mock-adb-companion.sh. Both transports must answer the same shape or a
 # consumer that works over one silently fails over the other.
 SNAPSHOT = "OK snapshotNs=9000 wallMs=1700000000000 visualCaptureNs=7800 nightOnsetImageNs=-1 visual=OBSERVED visualReason=none seq=121 ageUs=1200 content=2400x1080 visible=1 screen=FNAF2_NIGHT monitorUp=true monitorReason=native-stroke-monitor-up mask_button_downstroke=0 monitor_button_downstroke=140 watch=OFF spec=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa entries=12"
 READ = "OK read=OBSERVED spec=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa seq=122 snapshotNs=10000 ageUs=1200 cam01_button=0 cam02_button=0 cam03_button=0 cam04_button=0 cam05_button=194 cam06_button=0 cam07_button=0 cam08_button=0 cam09_button=0 cam10_button=0 cam11_button=0 cam12_button=0"

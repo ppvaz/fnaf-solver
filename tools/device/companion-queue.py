@@ -31,12 +31,12 @@ HERE = Path(__file__).resolve().parent
 if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
 import night_jobs  # noqa: E402
-from cue_helper_device_lock import state_dir  # noqa: E402
+from companion_device_lock import state_dir  # noqa: E402
 
 ROOT = HERE.parents[1]
 # One queue for every checkout: the main checkout's captures (state_dir()).
 DEFAULT_QUEUE = state_dir() / "queued-jobs.json"
-HELPER_SETUP = ROOT / "tools/device/cue-helper-setup.sh"
+HELPER_SETUP = ROOT / "tools/device/companion-setup.sh"
 NIGHT_JOB_COMMAND = [sys.executable, str(HERE / "night-job.py")]
 # A setup or check job's hard ceiling. A night job carries its own (budgetS).
 # The overnight window (overnight-window.py) starts a job only when its

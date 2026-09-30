@@ -41,7 +41,7 @@ import time
 
 HERE = pathlib.Path(__file__).resolve().parent
 REPO = HERE.parents[1]
-QUERY = REPO / "tools/device/query-cue-helper.sh"
+QUERY = REPO / "tools/device/query-companion.sh"
 AUTHORITY = HERE / "audio-authority.py"
 COLLECT_FACTS = HERE / "collect-facts.py"
 DEFAULT_MAC = "10:2B:1C:DA:18:2C"
@@ -846,7 +846,7 @@ def run_experiment(args: argparse.Namespace) -> int:
 
     The live run fed the APK's authenticated audio-fact port through
     ``bridge-audio-authority.py`` and logged the ``GET`` single-pixel luma
-    through ``query-cue-helper.sh watch``. The Companion no longer accepts
+    through ``query-companion.sh watch``. The Companion no longer accepts
     audio facts (its audio path was the ESP32 bench receiver, now removed) and
     the luma reducers are discontinued sensors, so a new session cannot be
     captured this way. ``analyze`` still reads every retained session.

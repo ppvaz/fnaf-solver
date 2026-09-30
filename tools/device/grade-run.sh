@@ -75,7 +75,7 @@ CAMPAIGN_DIR="${GRADE_CAMPAIGN_DIR:-}"
 if [ -z "$CAMPAIGN_DIR" ] && [ -f "$CAPTURES/$RUN-campaign-dir.txt" ]; then
   CAMPAIGN_DIR="$(cat "$CAPTURES/$RUN-campaign-dir.txt")"
 fi
-# Cue Helper native frame trace, pulled by `query-cue-helper.sh trace stop`
+# Cue Helper native frame trace, pulled by `query-companion.sh trace stop`
 # into captures/frame-traces/. Only present when a run asked for one.
 FRAME_TRACE=""
 # The helper names the file LABEL-<startNs>.tsv, so the run id is a HYPHEN
@@ -95,7 +95,7 @@ echo "capture: ${VIDEO##*/}"
 [ -f "$INPUT_TRACE" ] && echo "input trace: ${INPUT_TRACE##*/}" || echo "input trace: none (run atrace-input.sh around the command)"
 [ -f "$SF_LATENCY" ] && echo "SurfaceFlinger latency: ${SF_LATENCY##*/}" || echo "SurfaceFlinger latency: none (set SF_LAYER for capture)"
 [ -n "$CAMPAIGN_DIR" ] && echo "campaign bundle: $CAMPAIGN_DIR" || echo "campaign bundle: none (no pointer written)"
-[ -n "$FRAME_TRACE" ] && echo "frame trace: ${FRAME_TRACE##*/}" || echo "frame trace: none (run query-cue-helper.sh trace start/stop around the run)"
+[ -n "$FRAME_TRACE" ] && echo "frame trace: ${FRAME_TRACE##*/}" || echo "frame trace: none (run query-companion.sh trace start/stop around the run)"
 
 fail=0
 

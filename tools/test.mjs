@@ -337,7 +337,7 @@ const ENGINE = [
   //
   // It is here because it was the one check that actually exercises the live
   // detector and it ran nowhere: not in this suite, not in ci.yml. The mock-ADB
-  // regressions around it drive `query-cue-helper.sh` against fixtures that
+  // regressions around it drive `query-companion.sh` against fixtures that
   // FABRICATE the detector's answers, so before this entry the detector's own
   // fail-closed behaviour -- shadow evidence cannot arm control, silence is
   // UNKNOWN, an unsupported rate refuses -- was asserted by nothing that ran.

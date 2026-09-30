@@ -14,7 +14,7 @@ Every runner is dry unless told otherwise (ADR 0002, 2026-09-29), so each
 command below passes `--live --confirm-live` itself: a night job is a live
 night by definition, and a runner that went dry would play nothing.
 
-The queue (cue-helper-queue.py) validates a job here when it is enqueued, and
+The queue (companion-queue.py) validates a job here when it is enqueued, and
 night-job.py runs it. The budget below is the sum of bounds each step enforces
 with its own timeout, plus the night's own length from the binding (the
 emitted plan's `#observe-until`, or the route winner's `stopAfterMs`). It is
@@ -74,7 +74,7 @@ GAMES = {
 # --- the budget: bounds each step enforces, in seconds ------------------------
 EMIT_TIMEOUT_S = 120.0          # device:emit's bounded replay
 AUDIO_LINK_TIMEOUT_S = 120.0    # bt-audio-link.sh --ensure (fnaf4-run.mjs allows it 90 s)
-SETUP_WAIT_S = 60               # cue-helper-setup.sh --wait: the helper's FNAF2_MENU identity
+SETUP_WAIT_S = 60               # companion-setup.sh --wait: the helper's FNAF2_MENU identity
 SETUP_TIMEOUT_S = 180.0         # the setup process: install/consent/launch plus that wait
 TITLE_READ_TIMEOUT_S = 90.0     # SNAP + title-observe retries until a confident read
 RUNNER_PRE_S = 300.0            # the runner's own preflight, menu and intro before the night

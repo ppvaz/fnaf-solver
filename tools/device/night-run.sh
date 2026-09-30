@@ -187,7 +187,7 @@ fi
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 RUNID="night${NIGHT}-${LABEL}-${STAMP}"
 # The helper's trace label is at most 48 plain-ASCII characters
-# (query-cue-helper.sh refuses longer ones). A --frame-trace run whose run id
+# (query-companion.sh refuses longer ones). A --frame-trace run whose run id
 # is longer starts normally, loses its trace at `trace start`, and finishes as
 # a blind attempt: night7-night7-anchoredj9-aim2315-tf-20260913T233252Z (52
 # characters, the label already carried the night prefix) did exactly that on
@@ -252,7 +252,7 @@ start_frame_trace() {
   ( waited_ms=0 started=0
     while [ "$waited_ms" -lt 240000 ]; do
       if grep -q '"type":"evidence.started"' "$OUTDIR/campaign.log" 2>/dev/null; then
-        if tools/device/query-cue-helper.sh trace start "$RUNID" >/dev/null 2>&1; then
+        if tools/device/query-companion.sh trace start "$RUNID" >/dev/null 2>&1; then
           printf '\nframe trace started (label %s)\n' "$RUNID"
           started=1
         else
@@ -271,7 +271,7 @@ start_frame_trace() {
     fi
 
     # The trace lives in the Cue Helper's projection. `restartAfterAbort` in
-    # modern-campaign-ports.js calls `restartCueHelperCapture`, whose contract
+    # modern-campaign-ports.js calls `restartCompanionCapture`, whose contract
     # is "stop any current helper projection" -- which drops the in-flight
     # buffer. On 2026-09-12 (night5-strokes1) that path ran after a 120 s
     # terminal-wait abort and the whole trace was lost: start reported OK, stop
@@ -320,7 +320,7 @@ pull_frame_trace() {
   mkdir -p "$out"
   before="$(ls -1 "$out" 2>/dev/null | wc -l)"
   say "pulling the native frame trace ($why)"
-  if FRAME_TRACE_OUT="$out" tools/device/query-cue-helper.sh trace stop; then
+  if FRAME_TRACE_OUT="$out" tools/device/query-companion.sh trace stop; then
     after="$(ls -1 "$out" 2>/dev/null | wc -l)"
     if [ "$after" -gt "$before" ]; then
       printf 'PULLED\n' > "$OUTDIR/frame-trace.state"
@@ -330,7 +330,7 @@ pull_frame_trace() {
   fi
   printf 'LOST\n' > "$OUTDIR/frame-trace.state"
   printf 'night-run: FRAME TRACE LOST -- stop did not yield a file (%s)\n' "$why" >&2
-  tools/device/query-cue-helper.sh trace status 2>&1 | tail -1 >&2 || true
+  tools/device/query-companion.sh trace status 2>&1 | tail -1 >&2 || true
 }
 
 stop_frame_trace() {

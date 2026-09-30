@@ -388,8 +388,8 @@ assumption and it is false for five files:
 | `test-session-manifest.sh` | **no** | **no** |
 | `test-select-adb.sh` | **no** | **no** |
 | `test-screencheck.py` | **no** | **no** |
-| `test-query-cue-helper.sh` | no | yes |
-| `test-soak-cue-helper.sh` | no | yes |
+| `test-query-companion.sh` | no | yes |
+| `test-soak-companion.sh` | no | yes |
 
 And the `EXCLUDED` reason strings name exactly those three as why a script is
 not an instrument:
@@ -573,7 +573,7 @@ Recorded so they can be dropped rather than carried:
   model was built on. It marks the result `PROVISIONAL` and `cmd_test` prints
   "NOT VALIDATED", so the caveat travels.
 - **`collect-cue-audio.sh`** accepts `0` rounds and reports success, where its
-  siblings `soak-cue-helper.sh:20` and `bench-screencheck.sh:21` both guard
+  siblings `soak-companion.sh:20` and `bench-screencheck.sh:21` both guard
   `-gt 0`. **`extract-samples.sh:31-40`** has an unreachable diagnostic branch
   (`unzip -Z1` exits 11 under `set -e` before the check). Both are on the audio
   path, which is an optional sensor.

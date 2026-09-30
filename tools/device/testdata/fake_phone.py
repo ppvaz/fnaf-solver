@@ -11,7 +11,7 @@ Every stand-in below reads and writes that file under a lock and appends each
 call to `<state>.log`, so a test can say exactly what was asked of the phone.
 
     fake_phone.py adb ...      stands in for `adb` (a known, closed vocabulary)
-    fake_phone.py setup ...    for cue-helper-setup.sh (capture, launch, FNAF2_MENU)
+    fake_phone.py setup ...    for companion-setup.sh (capture, launch, FNAF2_MENU)
     fake_phone.py snap ...     for native-frame.mjs (a synthetic native title frame)
     fake_phone.py runner ...   for a night runner, given the real argv (FAKE_RUNNER_MODE)
     fake_phone.py audio ...    for bt-audio-link.sh --ensure
@@ -210,7 +210,7 @@ def adb(argv: list[str]) -> int:
 
 
 def setup(argv: list[str]) -> int:
-    """cue-helper-setup.sh: capture on, the target launched; for FNaF 2 --screen
+    """companion-setup.sh: capture on, the target launched; for FNaF 2 --screen
     menu, the helper's FNAF2_MENU identity (the game at its title)."""
     log("setup", argv)
     if os.environ.get("FNAF_LEASE_HELD") != "1" and not os.environ.get("CUE_HELPER_LEASE_OWNER_PID"):
@@ -319,7 +319,7 @@ def runner(argv: list[str]) -> int:
     hang      mid-night until SIGINT, then exits WITHOUT resetting (the worst case)
     stubborn  mid-night, ignoring SIGINT and SIGTERM
     """
-    from cue_helper_device_lock import DeviceBusy, DeviceLock
+    from companion_device_lock import DeviceBusy, DeviceLock
     log("night-runner", argv)
     mode = os.environ.get("FAKE_RUNNER_MODE", "win")
     label = argv[argv.index("--label") + 1]

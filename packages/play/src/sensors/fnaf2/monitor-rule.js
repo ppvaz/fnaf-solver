@@ -134,7 +134,7 @@ export { cellFeatures, anchorReadsUp };
  * Derive the monitorUp measurement from one cue-helper observation.
  * `snapshot` carries the GET fields; `cells` carries the GRID sensor rows
  * from the same frame. Freshness policy mirrors
- * CueHelperControlTransport.monitorMeasurement.
+ * CompanionControlTransport.monitorMeasurement.
  * @param {any} snapshot parsed `OK k=v` fields from GET
  * @param {any} rule parsed monitor-rule-v1 artifact, or null */
 export function measureMonitorUp(snapshot, rule, { maxAgeUs = 500000, cells = null } = {}) {

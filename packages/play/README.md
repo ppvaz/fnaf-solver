@@ -9,7 +9,7 @@ it but `@sixam/propose` and the applications (`tools/architecture-test.js`).
 |---|---|
 | `src/campaign/` | The campaign executor, moved from `apps/device`: the artifact and device-local executors, the HID schedule and device shell, the control-effect grader, the adb bridge and physical ports, the campaign state machine, runner, proof, preflight, bundle and composition, the custom-night procedure, the night anchor, the timed start and the venue bindings. `modern-campaign-ports.js` is the one module here that composes the HID transport. `@sixam/play/campaign/<name>`. |
 | `src/coach/` | The teach feed the Companion's panel narrates (`cycle-lesson.js`). `@sixam/play/coach/<name>`. |
-| `src/venues/phone/` | The phone's transports: the HID wire (`hid.js`), the Cue Helper control protocol (`cue-helper.js`) and the Companion status record (`companion-status.js`). |
+| `src/venues/phone/` | The phone's transports: the HID wire (`hid.js`), the Companion control protocol (`companion.js`) and the Companion status record (`companion-status.js`). |
 | `src/phone/` | Clocks and clock maps (`clocks.js`), night-onset detection (`night-onset.js`), the pan-aware control anchor (`control-anchor.js`), control exclusion (`control-exclusion.js`) and the venue parser (`android-venue.js`). |
 | `src/venues/sim/` | The Sim venue's observer: what a player could see, sampled at the device cadence (was `@sixam/core/sensing`). `@sixam/play/sim`. |
 | `src/player/` | The player's belief and estimator, unknown-safe (was `@sixam/core/estimation`). `@sixam/play/player`. |

@@ -18,7 +18,7 @@ import time
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from cue_helper_device_lock import DeviceBusy, DeviceLock
+from companion_device_lock import DeviceBusy, DeviceLock
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -30,7 +30,7 @@ TARGET_PACKAGE = "com.scottgames.fnaf2"
 OTHER_TARGETS = {"fnaf1": "com.scottgames.fivenightsatfreddys", "fnaf3": "com.scottgames.fnaf3",
                  "fnaf4": "com.scottgames.fnaf4"}
 OVERLAY_SUPPRESSION_PERMISSION = "android.permission.HIDE_NON_SYSTEM_OVERLAY_WINDOWS"
-UI_REMOTE = "/sdcard/cue-helper-setup-ui.xml"
+UI_REMOTE = "/sdcard/companion-setup-ui.xml"
 UI_ALLOWED = {
     "helper": (HELPER_PACKAGE,),
     "system": ("com.android.systemui",),
@@ -249,7 +249,7 @@ def ensure_overlay_mode(mode: str | None) -> None:
 
 
 def query_snapshot() -> tuple[int, str]:
-    command = [str(ROOT / "tools/device/query-cue-helper.sh"), "loopback"]
+    command = [str(ROOT / "tools/device/query-companion.sh"), "loopback"]
     result = subprocess.run(
         command,
         cwd=ROOT,
@@ -332,7 +332,7 @@ def main() -> int:
     try:
         serial = os.environ.get("ANDROID_SERIAL", "")
         if not serial:
-            raise SetupError("ANDROID_SERIAL was not selected by cue-helper-setup.sh")
+            raise SetupError("ANDROID_SERIAL was not selected by companion-setup.sh")
         with DeviceLock(serial):
             ready_reason = device_ready_reason()
             if ready_reason is not None and not args.stop:
@@ -402,7 +402,7 @@ def main() -> int:
 
 
 def query_snapshot_overlay() -> tuple[int, str]:
-    command = [str(ROOT / "tools/device/query-cue-helper.sh"), "overlay"]
+    command = [str(ROOT / "tools/device/query-companion.sh"), "overlay"]
     result = subprocess.run(
         command,
         cwd=ROOT,

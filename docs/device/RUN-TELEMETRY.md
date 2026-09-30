@@ -128,10 +128,10 @@ cost, not no work.
 | 5 | **Bracket every cue read** with `now_rel` and log the raw response verbatim | 0.72 ms × ~2 = **~1.5 ms** | The 1-3% / ~1060 ms stall tail that *every night since the trace feature landed* carried invisibly, and part of the documented 30-900 ms capture lateness |
 | 6 | **Three clock reads per wall-timed boundary** — entry, return, immediately before the first `hid_down` byte (`plans/12:313-319` specifies exactly this) | ~1 ms × ~10 boundaries = **~10 ms** | Separates arrival slip into wait overshoot, shell launch, and write latency. Today only the composite is logged, which is why 49-106 and 110-300 cannot be reconciled |
 | 7 | **Switch the continuous cue trace from `GET` to `GRID`** | **0 ms** — measured p95 68.3 ms (GRID) vs 70.2 ms (GET), n=120, `V:1267-1269`. Runs in its own device process. ~15 kB/s → **~6.3 MB/night** | Turns three scalars into a 20x9, ~14 Hz record of the whole night — the only artifact not capped at 180 s. `V:1270-1272`: *"The full sensor frame costs the same as the single pixel."* |
-| 8 | **PCM `startNs` sidecar** beside the WAV | **0 ms** (cleanup), ~40 bytes | The inventory's only "**Critical gap**" (`OBSERVATION-CORPUS-INVENTORY.md:149`): `log stop` prints it and `query-cue-helper.sh` throws it away, so every WAV on disk is unalignable |
+| 8 | **PCM `startNs` sidecar** beside the WAV | **0 ms** (cleanup), ~40 bytes | The inventory's only "**Critical gap**" (`OBSERVATION-CORPUS-INVENTORY.md:149`): `log stop` prints it and `query-companion.sh` throws it away, so every WAV on disk is unalignable |
 | 9 | **Second `(date, /proc/uptime)` latch at run end** → drift | **21 ms once**, in cleanup | `PROGRESS.md:36`'s second criterion: whether the `/proc/uptime`↔epoch offset drifts across a night |
 | 10 | **One `GRID` read paired with each classifier `screencap`** | **68.3 ms p95** | The labelled cross-sensor pair `plans/15` package 4 needs, as a by-product of every night. Today the 42/59 ms sensor cannot answer the BB question because its threshold was calibrated on the 225 ms one |
-| 11 | **`soak-cue-helper.sh`'s sampler alongside the night** — helper PID, RSS, thermal, status age, visual/audio counters | **0 ms** (separate `adb shell`) | "A consented helper that can die mid-night" (`V:270-277`), and the `Address already in use` restart failure (`ANDROID-AUDIO-CAPTURE.md:120-128`) |
+| 11 | **`soak-companion.sh`'s sampler alongside the night** — helper PID, RSS, thermal, status age, visual/audio counters | **0 ms** (separate `adb shell`) | "A consented helper that can die mid-night" (`V:270-277`), and the `Address already in use` restart failure (`ANDROID-AUDIO-CAPTURE.md:120-128`) |
 | 12 | **`kill -0 $HID_PID` once per cycle**, and hid's stderr to a device file | ~0 ms | The zero-delay `IllegalStateException` that ends the night at the next write, which the owner saw before the log did |
 | 13 | **`getevent -lt` on the HID node**, dedicated run | separate device process; unmeasured perturbation | The **only** measurement of the write→kernel leg, currently a bound (≤~13 ms, `plans/12:268-270`) inferred from two agreeing measurements |
 | 14 | **`logcat -v threadtime` for the run** | separate `adb` channel; ~1 MB/night | App crashes and helper exceptions. Nothing else — the game is a Fusion export and logs no state |
@@ -199,9 +199,9 @@ and the run already spends one.
 
 | Thing | Status |
 |---|---|
-| The helper's `GRID` verb | Exists, wired into `query-cue-helper.sh`, **never used in a run**. Its cost has been *measured* (68.3 ms p95) but its cost *inside the trace loop* has not |
+| The helper's `GRID` verb | Exists, wired into `query-companion.sh`, **never used in a run**. Its cost has been *measured* (68.3 ms p95) but its cost *inside the trace loop* has not |
 | `getevent -lt` | Used once, offline, on empty wallpaper, to measure `hid_delay`'s 0.76 ms stdev. Never during a night |
-| `soak-cue-helper.sh`'s process sampler | Exists; runs only in soak tests |
+| `soak-companion.sh`'s process sampler | Exists; runs only in soak tests |
 | The v1 `observation`/`decision`/`action-result` event kinds | Defined in `schema/session-events-v1.json`; nothing emits them |
 | External audio facts | `CUE_AUDIO=1 AUDIO_AUTHORITY_SOCKET=PATH`, off by default. The trial subscribes to the live external authority and persists its JSONL facts; it never falls back to Android `AudioPlaybackCapture` |
 | `windpct.py --samples` | The series is computed and discarded |
@@ -232,7 +232,7 @@ Say these out loud rather than assuming them.
   as `read < /proc/uptime` at 0.36 ms, and the runner already performs dozens
   per cycle when `HID_TRACE_RUN=1` — but nobody has timed it. The measurement
   is cheap and needs no game: extend the device-side loop in
-  `query-cue-helper.sh latency`, which already times a fork-free baseline.
+  `query-companion.sh latency`, which already times a fork-free baseline.
 - **`GRID` inside the ~14 Hz trace loop.** Measured as a standalone exchange,
   never as a sustained load.
 - **Whether `screenrecord` on this handset really refuses `--time-limit` above

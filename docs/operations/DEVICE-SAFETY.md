@@ -43,7 +43,7 @@ night and were retired on 2026-09-25 (`6d78c7e`, `903ffab`;
 - **Retained telemetry.** Each campaign writes its evidence directory and
   `result.json`, and `night-run.sh` packs it (`npm run evidence -- pack`).
 - **Agents.** The agent-facing surface is the Cue Helper MCP
-  (`apps/desktop/src/mcp.js`, served by `apps/desktop/src/cue-helper-mcp.mjs`):
+  (`apps/desktop/src/mcp.js`, served by `apps/desktop/src/companion-mcp.mjs`):
   `cue.setup` and the device-work queue
   (`cue.queue.enqueue`, `list`, `run`), a closed vocabulary with no raw
   coordinates, HID input or shell.
@@ -247,7 +247,7 @@ Pedro answered "Yes, play nights". A night job is the queue's one
 game-playing word:
 
 ```sh
-tools/device/cue-helper-queue.sh enqueue night --game fnaf2 \
+tools/device/companion-queue.sh enqueue night --game fnaf2 \
   --winner tools/device/campaign-night7-k3-winner.json --night 7 [--label k3a] [--audio]
 ```
 

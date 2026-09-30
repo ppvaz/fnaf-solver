@@ -256,13 +256,13 @@ export function replayArguments(winner, { label = 'replay', home = homedir() } =
 /**
  * The main checkout, seen from it or from any of its worktrees (it lives in
  * local-profile.mjs since 2026-09-29, beside the profile it also locates).
- * Mirrors cue_helper_device_lock.py's main_checkout().
+ * Mirrors companion_device_lock.py's main_checkout().
  */
 export { mainCheckout };
 
 /**
  * The serial lease's directory: one for the host, shared by every checkout and
- * worktree (cue_helper_device_lock.py's lock_dir()), so a replay started from a
+ * worktree (companion_device_lock.py's lock_dir()), so a replay started from a
  * worktree contends with the overnight window's lease, not a private copy.
  */
 export function sharedLockDir(root = ROOT, env = process.env) {

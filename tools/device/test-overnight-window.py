@@ -42,16 +42,16 @@ ROOT = HERE.parents[1]
 WINDOW = HERE / "overnight-window.py"
 SERIAL = "FAKE0001"
 sys.path.insert(0, str(HERE))
-from cue_helper_device_lock import DeviceBusy, DeviceLock  # noqa: E402
+from companion_device_lock import DeviceBusy, DeviceLock  # noqa: E402
 
-SPEC = importlib.util.spec_from_file_location("cue_helper_queue", HERE / "cue-helper-queue.py")
+SPEC = importlib.util.spec_from_file_location("companion_queue", HERE / "companion-queue.py")
 assert SPEC and SPEC.loader
 QUEUE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(QUEUE)
 sys.path.insert(0, str(HERE / "testdata"))
 import fake_phone  # noqa: E402
 
-# Stands in for `cue-helper-queue.sh run --max-jobs 1`: one scripted step per call.
+# Stands in for `companion-queue.sh run --max-jobs 1`: one scripted step per call.
 FAKE_QUEUE = r'''#!/usr/bin/env python3
 import json, os, signal, subprocess, sys, time
 script = os.environ["FAKE_QUEUE_SCRIPT"]

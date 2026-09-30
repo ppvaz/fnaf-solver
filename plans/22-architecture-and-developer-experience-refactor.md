@@ -804,7 +804,7 @@ physical denominator.
 *Retired 2026-09-25 (`6d78c7e`).* The service below was built as a fixture
 path, never played a night, and was removed with `packages/runtime`; the
 campaign executor is the one path onto a phone, and the Cue Helper MCP
-(`apps/desktop/src/cue-helper-mcp.mjs`) is the agent surface that stays. The
+(`apps/desktop/src/companion-mcp.mjs`) is the agent surface that stays. The
 section is kept as the design that was tried.
 
 Introduce one local `DeviceControlService` over the actuator, sensor,

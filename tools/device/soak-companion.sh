@@ -3,7 +3,7 @@
 # Defaults to 41 one-minute samples: a 40-minute endpoint-to-endpoint soak
 # matching the unresolved memory gate in android/companion/README.md.
 #
-# Each sample reads the versioned status (`query-cue-helper.sh status`,
+# Each sample reads the versioned status (`query-companion.sh status`,
 # companion-status-v1): capture on, frames advancing, frame age, fps, content
 # geometry, and the named target, whose package must hold focus. Any game the
 # Companion is pointed at can be soaked; a helper older than 0.2.0 has no
@@ -39,8 +39,8 @@ mkdir -p "$(dirname "$OUTPUT")"
 adb get-state >/dev/null
 
 # Keep long-lived resource telemetry coherent with the active helper session.
-if [ "${CUE_HELPER_DEVICE_LOCK_HELD:-0}" != 1 ]; then
-  export CUE_HELPER_DEVICE_LOCK_HELD=1
+if [ "${COMPANION_DEVICE_LOCK_HELD:-0}" != 1 ]; then
+  export COMPANION_DEVICE_LOCK_HELD=1
   exec python3 "$HERE/device-lock-exec.py" "$ANDROID_SERIAL" -- "$0" "$@"
 fi
 
@@ -94,7 +94,7 @@ while [ "$i" -le "$SAMPLES" ]; do
   [ -n "$rss" ] || rss=-1
   [ -n "$threads" ] || threads=-1
 
-  status="$("$HERE/query-cue-helper.sh" status 2>/dev/null | tr -d '\r' || true)"
+  status="$("$HERE/query-companion.sh" status 2>/dev/null | tr -d '\r' || true)"
   field() { printf '%s\n' "$status" | tr ' ' '\n' | sed -n "s/^$1=//p" | head -n1; }
   capture="$(field capture)"
   frames="$(field frames)"

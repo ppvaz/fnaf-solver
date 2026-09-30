@@ -55,9 +55,9 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
 import night_jobs  # noqa: E402
-from cue_helper_device_lock import DeviceBusy, DeviceLock, lock_dir  # noqa: E402
+from companion_device_lock import DeviceBusy, DeviceLock, lock_dir  # noqa: E402
 
-SETUP_COMMAND = [str(HERE / "cue-helper-setup.sh")]
+SETUP_COMMAND = [str(HERE / "companion-setup.sh")]
 SNAP_COMMAND = ["node", str(HERE / "native-frame.mjs")]
 TITLE_COMMAND = [sys.executable, str(HERE / "title-observe.py")]
 AUDIO_COMMAND = [str(ROOT / "tools/cue/bt-audio-link.sh")]

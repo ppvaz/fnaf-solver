@@ -173,7 +173,7 @@ small result type first.
 `packages/play/src/campaign/adb-bridge.js` (251) is the closed, reviewable port. In
 practice **28 tracked files invoke `adb` directly**, led by
 `tools/device/legacy-trial.sh` (55 call sites), `trial-maskcamp.sh` (19),
-`hid-sweep-probe.sh` (16), `query-cue-helper.sh` and `capture-screen-sample.sh`
+`hid-sweep-probe.sh` (16), `query-companion.sh` and `capture-screen-sample.sh`
 (10 each). `packages/play/src/campaign/adb-device-local-executor.js` (974) holds the
 sanctioned device-local path; `packages/play/src/venues/phone/hid.js` and
 `transports/cue-helper.js` hold the codecs and deliberately open nothing.
@@ -191,11 +191,11 @@ per-serial lease, re-exec under the lock — is copied across device scripts:
 - The `[ ! -e "$OUTPUT" ] || { echo "refusing to overwrite: ...` idiom appears
   in 14 files (8 times inside `legacy-trial.sh` alone, and in five
   `tools/cue/*.py` scripts).
-- The `CUE_HELPER_DEVICE_LOCK_HELD` re-exec through `device-lock-exec.py`
+- The `COMPANION_DEVICE_LOCK_HELD` re-exec through `device-lock-exec.py`
   appears in 4 scripts.
 
 Measured overlap: 11 shared 7-line windows between
-`overlay-qualification-observe.sh:36` and `soak-cue-helper.sh:29` — the
+`overlay-qualification-observe.sh:36` and `soak-companion.sh:29` — the
 output-path, lease, and `adb get-state` preamble verbatim.
 
 ## 7. Composition roots — binding: `COMMENT` for the fixture pair, else `NONE`
@@ -344,8 +344,8 @@ Two caveats, both measured on the clean tree at `a8260aa`:
   `mask-calibrate.py`, `screen-calibrate.py`, `minus-3-plan.mjs`,
   `minus3-frame-light.mjs`, `artifact-commands.mjs`, `artifact-runner.mjs`,
   `emit.mjs`, `seed-clock.mjs`, `closed-families.mjs`, the five cue-helper
-  entry points, `cue_helper_device_lock.py`, `device-lock-exec.py`,
-  `pan-path-capture.py`/`.sh`, `cue-helper-mcp.mjs`, now `apps/desktop/src/`). The other 12 are the gate
+  entry points, `companion_device_lock.py`, `device-lock-exec.py`,
+  `pan-path-capture.py`/`.sh`, `companion-mcp.mjs`, now `apps/desktop/src/`). The other 12 are the gate
   reading the wrong registry: it looks for gate registrations in
   `tools/test.mjs` and `.github/workflows/ci.yml`, and 11 of those 12 gates are
   registered in `package.json`'s `test:contracts` /
@@ -436,9 +436,9 @@ green.
 
 ## 18. Not duplication (checked, so a cleanup does not "fix" them)
 
-- `tools/device/cue-helper-setup.sh` (12), `cue-helper-queue.sh` (7),
+- `tools/device/companion-setup.sh` (12), `companion-queue.sh` (7),
   `pan-path-capture.sh` (17) are thin serial-selecting wrappers that delegate
-  to the same-named `.py`. `cue-helper-queue.sh:1` states why it must *not*
+  to the same-named `.py`. `companion-queue.sh:1` states why it must *not*
   source `select-adb.sh`: enqueue and list have to work with no phone present.
 - `tools/device/hid-sweep-probe.mjs` / `.sh` are complementary: the `.mjs`
   emits the report stream, the `.sh` drives and measures the phone.

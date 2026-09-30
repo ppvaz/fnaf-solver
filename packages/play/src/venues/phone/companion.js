@@ -77,7 +77,7 @@ export function parseRegionRead(line) {
   return Object.freeze(out);
 }
 
-export class CueHelperControlTransport {
+export class CompanionControlTransport {
   /** @param {any} options */
   constructor({ request, token, maxAgeUs = 500000 } = {}) {
     if (typeof request !== 'function') throw new TypeError('cue-helper transport needs an injected request function');

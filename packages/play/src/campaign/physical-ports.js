@@ -12,7 +12,7 @@ import { spawn } from 'node:child_process';
 import { execFileSync } from 'node:child_process';
 import { connect } from 'node:net';
 import { writeFileSync } from 'node:fs';
-import { parseCueResponse, parseRegionRead, regionSetLine, REGION_LIMITS } from '@sixam/play/venues/phone/cue-helper';
+import { parseCueResponse, parseRegionRead, regionSetLine, REGION_LIMITS } from '@sixam/play/venues/phone/companion';
 import { COMPANION_ENDPOINT_FILE, parseCompanionEndpoint, parseCompanionStatus } from '@sixam/play/venues/phone/companion-status';
 const HELPER_PACKAGE = 'com.ppvaz.fnafcompanion';
 const READY_DEVICE = 'FNAF Timed Touch';
@@ -26,7 +26,7 @@ function endpointError(message) { throw new Error(`cue-helper endpoint: ${messag
  * file (companion-endpoint-v1) is read first; this is the fallback for a
  * helper older than 0.2.0 or a device where run-as is unavailable.
  */
-export function parseCueHelperEndpoint(text) {
+export function parseCompanionLogEndpoint(text) {
   if (typeof text !== 'string') endpointError('logcat output is not text');
   const lines = text.split(/\r?\n/).filter(line => /control=(?:READY|DEGRADED)/.test(line));
   const line = lines.at(-1);
@@ -141,7 +141,7 @@ function lineExchange(hostPort, line, timeoutMs, maxChars = 4096) {
   });
 }
 
-export class AdbCueHelperPort {
+export class AdbCompanionPort {
   /** @param {{serial: string, adb?: string}} options */
   constructor(options) {
     const { serial, adb = 'adb' } = options ?? {};
@@ -175,7 +175,7 @@ export class AdbCueHelperPort {
     // while retaining the latest endpoint rather than the first announcement.
     const log = runSync(this.adb, ['-s', this.serial, 'shell', 'sh', '-s', '--', pid],
       { input: HELPER_DISCOVERY_SCRIPT });
-    this.endpoint = parseCueHelperEndpoint(log);
+    this.endpoint = parseCompanionLogEndpoint(log);
     return { ...this.endpoint };
   }
 
@@ -261,7 +261,7 @@ export class AdbCueHelperPort {
     return result;
   }
 
-  /** Synchronous by design: CueHelperControlTransport is a bounded request/response codec. */
+  /** Synchronous by design: CompanionControlTransport is a bounded request/response codec. */
   request(line) {
     // FNaF 2 legacy reads (Fnaf2Legacy.java). FRAME is the snapshot and its
     // grid from one locked read; the separate GRID verb is retired.
@@ -495,6 +495,6 @@ export class AdbHidProcess {
 export function createAdbModernPorts(options) {
   const { serial, adb = 'adb' } = options ?? {};
   const hid = new AdbHidProcess({ serial, adb });
-  const cue = new AdbCueHelperPort({ serial, adb });
+  const cue = new AdbCompanionPort({ serial, adb });
   return Object.freeze({ hid, cue, close: () => hid.close() });
 }

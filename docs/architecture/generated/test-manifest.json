@@ -43,7 +43,7 @@
       }
     },
     {
-      "id": "apps/desktop/test/cue-helper-mcp.test.mjs",
+      "id": "apps/desktop/test/companion-mcp.test.mjs",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,
@@ -2402,7 +2402,45 @@
       }
     },
     {
-      "id": "tools/device/test-control-anchor.mjs",
+      "id": "tools/device/test-companion-device-lock.py",
+      "lane": "test:contracts",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "tools/device/test-companion-queue.py",
+      "lane": "test:contracts",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "device-transport"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "tools/device/test-companion-setup.py",
       "lane": "test:contracts",
       "owner": "legacy migration",
       "timeoutMs": 180000,
@@ -2422,45 +2460,7 @@
       }
     },
     {
-      "id": "tools/device/test-cue-helper-device-lock.py",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/device/test-cue-helper-queue.py",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "device-transport"
-      ],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/device/test-cue-helper-setup.py",
+      "id": "tools/device/test-control-anchor.mjs",
       "lane": "test:contracts",
       "owner": "legacy migration",
       "timeoutMs": 180000,
@@ -3371,7 +3371,7 @@
       }
     },
     {
-      "id": "tools/device/test-query-cue-helper.sh",
+      "id": "tools/device/test-query-companion.sh",
       "lane": "test:contracts",
       "owner": "legacy migration",
       "timeoutMs": 180000,
@@ -3590,7 +3590,7 @@
       }
     },
     {
-      "id": "tools/device/test-soak-cue-helper.sh",
+      "id": "tools/device/test-soak-companion.sh",
       "lane": "test:contracts",
       "owner": "legacy migration",
       "timeoutMs": 180000,

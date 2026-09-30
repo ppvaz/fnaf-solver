@@ -10,7 +10,7 @@ import { promisify } from 'node:util';
 
 const execFile = promisify(execFileCallback);
 const ROOT = fileURLToPath(new URL('../../../../', import.meta.url));
-const SETUP = fileURLToPath(new URL('../../../../tools/device/cue-helper-setup.sh', import.meta.url));
+const SETUP = fileURLToPath(new URL('../../../../tools/device/companion-setup.sh', import.meta.url));
 
 async function runSetup(file, args, options) {
   try {
@@ -31,7 +31,7 @@ async function runSetup(file, args, options) {
  * `screen` is checked there, so callers receive that game focused again with
  * a live control endpoint before they continue.
  */
-export async function restartCueHelperCapture({ serial, adb = 'adb', target, screen = 'menu',
+export async function restartCompanionCapture({ serial, adb = 'adb', target, screen = 'menu',
   waitSeconds = 30, run = runSetup } = {}) {
   if (typeof serial !== 'string' || serial.length === 0)
     throw new TypeError('Cue Helper capture restart requires an ADB serial');

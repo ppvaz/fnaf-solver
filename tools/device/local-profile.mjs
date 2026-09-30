@@ -18,7 +18,7 @@
  *
  * `adb devices -l` lists the serial. A worktree reads its own profile if it
  * has one, else the main checkout's, so every worktree on the host resolves the
- * same handset, as the serial lease does (cue_helper_device_lock.state_dir()).
+ * same handset, as the serial lease does (companion_device_lock.state_dir()).
  * FNAF_LOCAL_PROFILE names another file; the tests point it at a fixture.
  * Order: an explicit environment variable (FNAF_SERIAL), then the profile, then
  * a refusal. A dry run needs no serial; only a live run asks for one.
@@ -46,7 +46,7 @@ export class SerialUnset extends Error {}
 /**
  * The main checkout, seen from it or from any of its worktrees: a worktree's
  * `.git` file names its git dir, whose `commondir` leads to the main `.git`.
- * Mirrors cue_helper_device_lock.py's main_checkout().
+ * Mirrors companion_device_lock.py's main_checkout().
  */
 export function mainCheckout(root = ROOT) {
   try {

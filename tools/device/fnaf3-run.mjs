@@ -21,7 +21,7 @@ import { homedir, tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { performance } from 'node:perf_hooks';
-import { AdbCueHelperPort, AdbHidProcess } from '../../packages/play/src/campaign/physical-ports.js';
+import { AdbCompanionPort, AdbHidProcess } from '../../packages/play/src/campaign/physical-ports.js';
 import { HidWireTransport } from '../../packages/play/src/venues/phone/hid.js';
 import { loadRegionSet, registerSet } from './native-regions.mjs';
 import { Actor, RegionRecorder, RunRecord, startVideo } from './night-kit.mjs';
@@ -761,7 +761,7 @@ async function main(argv) {
     sensor: 'cue-helper-mediaprojection-2400x1080' });
   await record.save('PREFLIGHT');
 
-  const port = new AdbCueHelperPort({ serial });
+  const port = new AdbCompanionPort({ serial });
   // Name the target and show the lease on the phone (companion-status-v1). A
   // helper older than 0.2.0 answers unknown-verb; nothing this run reads changes.
   await record.event('companion-announce', await port.announce({ target: PACKAGE, lease: id.slice(0, 48) }));

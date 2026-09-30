@@ -3,7 +3,7 @@
   "mcp": {
     "fnaf-solver": {
       "type": "local",
-      "command": ["node", "apps/desktop/src/cue-helper-mcp.mjs"],
+      "command": ["node", "apps/desktop/src/companion-mcp.mjs"],
       "cwd": ".",
       "enabled": true
     }

@@ -549,7 +549,7 @@ camera is open, including the dark ones.
 is a 20x9 VirtualDisplay (`CaptureService.java:71-72`), and the map button is a
 few pixels of a 1280x576 screen: whether it survives that downscale is an open
 question this session could not answer, because the only way to answer it is to
-read the helper's own sensor, not a recording. `query-cue-helper.sh watch`
+read the helper's own sensor, not a recording. `query-companion.sh watch`
 during a night, against known monitor state, is the measurement that settles it.
 Until then the yellow anchor is a hypothesis with a good mechanism and no
 device evidence.

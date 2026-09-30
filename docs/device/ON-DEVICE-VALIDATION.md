@@ -370,7 +370,7 @@ reason is unchanged.
   samples inside one device shell: p50 48.8 ms, **p95 59.5 ms**, p99 60.8 ms,
   max 66.9 ms; the same loop with the socket call removed costs 22.5 ms at p50,
   so the exchange itself is about 26 ms and the rest is the shell forking `date`
-  and `nc`. Reproduce with `tools/device/query-cue-helper.sh latency`.
+  and `nc`. Reproduce with `tools/device/query-companion.sh latency`.
 
   The consequences are arithmetic on measured parts, not an end-to-end result.
   The visual-plus-action path becomes 59 + 170 = **229 ms**, leaving about
@@ -1376,7 +1376,7 @@ latency is to the *host's* memory, and the host round trip is already measured
 as disqualifying above (692-785 ms per classification, ~500 ms schedule slip).
 The device-local stream already exists -- the cue helper's 60 fps projection --
 and the `GRID` verb already carries the whole 20x9 frame. What it did not have
-was a price. `query-cue-helper.sh latency` now times GET, GRID, and the
+was a price. `query-companion.sh latency` now times GET, GRID, and the
 forked-shell baseline in one device loop:
 
 | read, device-local, n=120 | p50 | p95 | max |
@@ -1708,7 +1708,7 @@ is not the office. It means `grey=` must never be read as "the monitor is up"
 without the game state already being known to be a night. `screenstate.py`
 remains the authority on that.
 
-**Trap 2 -- do not price the helper with `query-cue-helper.sh`.** Timed from
+**Trap 2 -- do not price the helper with `query-companion.sh`.** Timed from
 the host it takes **~429 ms** per call, which looks catastrophic next to a
 225 ms `screencap` and is the wrong comparison. That script is a host-side
 one-off tool: transport detection, forward setup, and several USB round-trips,

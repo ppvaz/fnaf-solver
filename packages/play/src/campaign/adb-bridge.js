@@ -18,8 +18,8 @@
  */
 import { execFile as execFileCallback } from 'node:child_process';
 import { promisify } from 'node:util';
-import { parseCueHelperEndpoint } from './physical-ports.js';
-import { restartCueHelperCapture as defaultRestartCueHelperCapture } from './cue-helper-capture.js';
+import { parseCompanionLogEndpoint } from './physical-ports.js';
+import { restartCompanionCapture as defaultRestartCompanionCapture } from './companion-capture.js';
 import { readVenueIdentity } from '@sixam/play';
 import { compareVenueIdentity } from '@sixam/kernel/contracts';
 
@@ -93,7 +93,7 @@ export class AdbDeviceBridge {
 
   /** @param {{adb?: string, serial?: string, timeoutMs?: number, maxBuffer?: number, run?: Function, captureRestart?: Function}} options */
   constructor({ adb = 'adb', serial, timeoutMs = 10000, maxBuffer = 2 * 1024 * 1024, run,
-    captureRestart = defaultRestartCueHelperCapture } = {}) {
+    captureRestart = defaultRestartCompanionCapture } = {}) {
     this.adb = adb; this.serial = serial; this.timeoutMs = timeoutMs; this.maxBuffer = maxBuffer;
     if (typeof captureRestart !== 'function') throw new TypeError('captureRestart must be a function');
     this.captureRestart = captureRestart;
@@ -195,7 +195,7 @@ export class AdbDeviceBridge {
       if (restartCapture) {
         let restarted;
         try {
-          restarted = await this.restartCueHelperCapture({ serial, target: 'fnaf2' });
+          restarted = await this.restartCompanionCapture({ serial, target: 'fnaf2' });
         } catch (error) {
           restarted = { status: 'FAIL', detail: error.message };
         }
@@ -208,7 +208,7 @@ export class AdbDeviceBridge {
       checks.push(check('cue-helper-running', helper.ok && helper.stdout.trim().length > 0 ? 'PASS' : 'HOLD', helper.ok ? helper.stdout.trim() : helper.stderr.trim()));
       if (helper.ok && helper.stdout.trim().length > 0) {
         const endpoint = await this.#shell(serial, ['logcat', '-d', `--pid=${helper.stdout.trim().split(/\s+/)[0]}`, '-v', 'brief', '-s', 'FnafCueHelper:I', '*:S']);
-        try { checks.push(check('cue-helper-endpoint', 'PASS', parseCueHelperEndpoint(endpoint.stdout))); }
+        try { checks.push(check('cue-helper-endpoint', 'PASS', parseCompanionLogEndpoint(endpoint.stdout))); }
         catch (error) { checks.push(check('cue-helper-endpoint', 'HOLD', error.message)); }
       }
     }
@@ -220,7 +220,7 @@ export class AdbDeviceBridge {
    * This bridge is the FNaF 2 campaign's (GAME_PACKAGE), so it names FNaF 2
    * explicitly; setup itself has no default game.
    */
-  async restartCueHelperCapture({ serial = this.serial, target = 'fnaf2', screen = 'menu', waitSeconds = 30 } = {}) {
+  async restartCompanionCapture({ serial = this.serial, target = 'fnaf2', screen = 'menu', waitSeconds = 30 } = {}) {
     return this.captureRestart({ serial, adb: this.adb, target, screen, waitSeconds });
   }
 

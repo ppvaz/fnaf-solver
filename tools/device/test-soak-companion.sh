@@ -2,17 +2,17 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
-TEMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/cue-helper-soak-test.XXXXXX")"
-# query-cue-helper.sh stashes the endpoint it resolves; keep it out of captures/.
-export CUE_HELPER_ENDPOINT_STASH="$TEMP_DIR/endpoint-stash"
+TEMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/companion-soak-test.XXXXXX")"
+# query-companion.sh stashes the endpoint it resolves; keep it out of captures/.
+export COMPANION_ENDPOINT_STASH="$TEMP_DIR/endpoint-stash"
 trap 'rm -rf "$TEMP_DIR"' EXIT HUP INT TERM
 
 MOCK_BIN="$TEMP_DIR/bin"
 mkdir -p "$MOCK_BIN"
-ln -s "$HERE/testdata/mock-adb-cue-helper.sh" "$MOCK_BIN/adb"
+ln -s "$HERE/testdata/mock-adb-companion.sh" "$MOCK_BIN/adb"
 
 REPORT="$TEMP_DIR/report.tsv"
-PATH="$MOCK_BIN:$PATH" "$HERE/soak-cue-helper.sh" 1 1 "$REPORT" >/dev/null
+PATH="$MOCK_BIN:$PATH" "$HERE/soak-companion.sh" 1 1 "$REPORT" >/dev/null
 
 header="$(sed -n '1p' "$REPORT")"
 row="$(sed -n '2p' "$REPORT")"
@@ -27,7 +27,7 @@ case "$row" in
   *) echo "unexpected parsed row: $row" >&2; exit 1 ;;
 esac
 
-if PATH="$MOCK_BIN:$PATH" "$HERE/soak-cue-helper.sh" 1 1 "$REPORT" >/dev/null 2>&1; then
+if PATH="$MOCK_BIN:$PATH" "$HERE/soak-companion.sh" 1 1 "$REPORT" >/dev/null 2>&1; then
   echo "existing reports must not be overwritten" >&2
   exit 1
 fi

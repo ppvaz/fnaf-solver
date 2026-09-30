@@ -1,5 +1,5 @@
 /**
- * The Cue Helper's MCP surface (./cue-helper-mcp.mjs): setup and
+ * The Cue Helper's MCP surface (./companion-mcp.mjs): setup and
  * the device-work queue, as a closed vocabulary. Raw coordinates, HID input
  * and arbitrary shell are absent. It queues bounded jobs and never runs a
  * control loop; the campaign executor is the one path onto a phone.
@@ -11,8 +11,8 @@ import { promisify } from 'node:util';
 const CUE_TOOLS = Object.freeze(['cue.setup', 'cue.queue.enqueue', 'cue.queue.list', 'cue.queue.run']);
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
-const CUE_SETUP = fileURLToPath(new URL('../../../tools/device/cue-helper-setup.sh', import.meta.url));
-const CUE_QUEUE = fileURLToPath(new URL('../../../tools/device/cue-helper-queue.sh', import.meta.url));
+const CUE_SETUP = fileURLToPath(new URL('../../../tools/device/companion-setup.sh', import.meta.url));
+const CUE_QUEUE = fileURLToPath(new URL('../../../tools/device/companion-queue.sh', import.meta.url));
 const execFile = promisify(execFileCallback);
 
 function error(code, message) { return { ok: false, error: { code, message } }; }
@@ -163,7 +163,7 @@ function cueResult(operation, result) {
  * queue scripts are fixed, and no caller-provided shell, coordinates, or HID
  * input can cross this boundary.
  */
-export function createCueHelperMcp({ run = runCueCommand } = {}) {
+export function createCompanionMcp({ run = runCueCommand } = {}) {
   return {
     tools: () => [...CUE_TOOLS],
     async call(name, args = {}) {

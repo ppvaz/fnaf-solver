@@ -77,13 +77,13 @@ adb shell am start -n com.ppvaz.fnafcompanion/com.ppvaz.fnafcompanion.MainActivi
 The image-free setup/menu protocol can be run after the APK is built:
 
 ```sh
-tools/device/cue-helper-setup.sh --install       # install, start capture, check FNaF menu
-tools/device/cue-helper-setup.sh                 # reuse an active capture and check menu
-tools/device/cue-helper-setup.sh --overlay-mode debug # persist SENSOR / DEBUG mode
-tools/device/cue-helper-setup.sh --overlay-mode run   # persist DECISION / RUN mode
-tools/device/cue-helper-setup.sh --probe         # optional debug-only sensor probe
-tools/device/cue-helper-setup.sh --screen night --probe  # wait for a manually entered night
-tools/device/cue-helper-setup.sh --stop          # force-stop helper capture for cleanup
+tools/device/companion-setup.sh --install       # install, start capture, check FNaF menu
+tools/device/companion-setup.sh                 # reuse an active capture and check menu
+tools/device/companion-setup.sh --overlay-mode debug # persist SENSOR / DEBUG mode
+tools/device/companion-setup.sh --overlay-mode run   # persist DECISION / RUN mode
+tools/device/companion-setup.sh --probe         # optional debug-only sensor probe
+tools/device/companion-setup.sh --screen night --probe  # wait for a manually entered night
+tools/device/companion-setup.sh --stop          # force-stop helper capture for cleanup
 ```
 
 It resolves the target launcher and build, discovers helper/system buttons by
@@ -140,10 +140,10 @@ The two visual channels are:
 | abstract unix | `@com.fnaf2.cuehelper.control.<session>` | host tooling over `adb forward` |
 
 ```sh
-tools/device/query-cue-helper.sh                    # loopback snapshot
-tools/device/query-cue-helper.sh forward            # forwarded snapshot
-tools/device/query-cue-helper.sh watchlist status
-tools/device/query-cue-helper.sh overlay             # teach-panel status
+tools/device/query-companion.sh                    # loopback snapshot
+tools/device/query-companion.sh forward            # forwarded snapshot
+tools/device/query-companion.sh watchlist status
+tools/device/query-companion.sh overlay             # teach-panel status
 ```
 
 The Java namespace, APK id, and source tree use `com.ppvaz.fnafcompanion`.
@@ -207,7 +207,7 @@ age around 1–3 ms. A 40-minute memory soak is still required before visual
 stability is considered proven:
 
 ```sh
-tools/device/soak-cue-helper.sh
+tools/device/soak-companion.sh
 ```
 
 The soak checks helper lifetime, focus, visual sequence progress, content

@@ -78,7 +78,7 @@ cleanup() {
   fi
   if [ "$FRAME_TRACE_STARTED" -eq 1 ]; then
     FRAME_TRACE_STARTED=0
-    bash "$HERE/query-cue-helper.sh" trace stop || TRACE_STOP_FAILED=1
+    bash "$HERE/query-companion.sh" trace stop || TRACE_STOP_FAILED=1
   fi
   [ -n "$FIFO" ] && rm -f "$FIFO"
   adb shell "rm -f $REMOTE_STREAM" >/dev/null 2>&1 || true
@@ -87,7 +87,7 @@ cleanup() {
   # Every live attempt, including a gate refusal, must leave the game at a
   # known title/menu state. This is deliberately unconditional after device
   # selection and is followed by the authoritative title observer.
-  if ! bash "$HERE/cue-helper-setup.sh" --screen menu --wait 60; then
+  if ! bash "$HERE/companion-setup.sh" --screen menu --wait 60; then
     echo "RESTORE FAIL cue-helper setup did not reach menu" >&2
     status=1
   fi
@@ -187,7 +187,7 @@ gate() {
 echo "waiting for initial office: monitor-down, mask-down, both bottom buttons"
 gate office "$CAPTURE_DIR/$OUT.initial-office-gate.jsonl"
 echo "initial office gate passed; starting native frame trace"
-bash "$HERE/query-cue-helper.sh" trace start "$OUT"
+bash "$HERE/query-companion.sh" trace start "$OUT"
 FRAME_TRACE_STARTED=1
 
 echo "writing monitor raise phase"
@@ -220,5 +220,5 @@ wait "$HID_PID" 2>/dev/null || true
 HID_PID=""
 
 FRAME_TRACE_STARTED=0
-bash "$HERE/query-cue-helper.sh" trace stop
+bash "$HERE/query-companion.sh" trace stop
 echo "intersection probe complete; visual game acceptance remains UNKNOWN"

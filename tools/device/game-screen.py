@@ -31,7 +31,7 @@ A pixel model names the title a frame shows, not the package that drew it:
 the clean-room rebuilds render their game's title, and no rebuild has a
 measured model, so their frames read as that retail title or as UNKNOWN. Which
 package is in front is the focus fact (`dumpsys window`), which
-cue-helper-setup.py reads beside this.
+companion-setup.py reads beside this.
 
 One line on stdout:
 

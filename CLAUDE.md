@@ -157,7 +157,7 @@ longer rebuilds.
   records itself must survive a starved capture; `420-c` did not at full size.
 - **Everything that runs on the phone lives in the Companion**
   (`android/companion`). No separate APKs; a new on-device feature is a Companion
-  feature. `tools/device/cue-helper-setup.sh` drives install and projection
+  feature. `tools/device/companion-setup.sh` drives install and projection
   consent by named UI controls.
 
 ## Mistake register (2026-09-06 — check before acting; never repeat)

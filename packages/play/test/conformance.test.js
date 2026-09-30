@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { Clock } from '../src/phone/clocks.js';
 import { HID_DESCRIPTOR, HidWireTransport, toRaw, report } from '../src/venues/phone/hid.js';
-import { CueHelperControlTransport, parseCueResponse } from '../src/venues/phone/cue-helper.js';
+import { CompanionControlTransport, parseCueResponse } from '../src/venues/phone/companion.js';
 
 assert.deepEqual(new Clock({ name: 'simulator-frame', read: () => 7 }).now(), { clock: 'simulator-frame', value: 7 });
 assert.deepEqual(toRaw([2275, 685]), [877, 1023], 'HID transform must truncate at the adapter boundary');
@@ -20,7 +20,7 @@ await hid.abort();
 assert.equal(lines.at(-1).report[1], 2, 'abort must emit a two-contact release');
 assert.deepEqual(parseCueResponse('OK snapshotNs=3 ageUs=17 monitorUp=true'),
   { snapshotNs: '3', ageUs: '17', monitorUp: 'true' });
-const cue = new CueHelperControlTransport({ token: '0123456789abcdef0123456789abcdef', request: request =>
+const cue = new CompanionControlTransport({ token: '0123456789abcdef0123456789abcdef', request: request =>
   request.startsWith('GET ') ? 'OK snapshotNs=3 ageUs=17 monitorUp=true' : 'ERROR unsupported' });
 assert.deepEqual(cue.monitorMeasurement(await cue.snapshot()),
   { signal: 'monitorUp', state: 'OBSERVED', value: true, confidence: 1 });
@@ -39,7 +39,7 @@ assert.equal(oldTiming.uncertaintyMs, 0.001);
 // the 180-cell length decides.
 const runCells = Array.from({ length: 180 }, (_, index) => (index << 8) | 0x11);
 const runBody = runCells.map(cell => cell.toString(16).padStart(6, '0')).join('');
-const framed = new CueHelperControlTransport({ token: '0123456789abcdef0123456789abcdef',
+const framed = new CompanionControlTransport({ token: '0123456789abcdef0123456789abcdef',
   request: request => request.startsWith('FRAME ')
     ? `OK snapshotNs=3 seq=42 ageUs=17 screen=FNAF2_NIGHT grid=20x9 cells=${runBody}`
     : 'ERROR unsupported' });
@@ -57,7 +57,7 @@ for (const retired of ['grid', 'cameraMeasurement', 'cameraHighlightsMeasurement
 for (const bad of [
   'OK snapshotNs=3 seq=42 grid=20x9 cells=deadbeef',
   'OK snapshotNs=3 seq=42 cells=' + runBody,
-]) assert.throws(() => new CueHelperControlTransport({ token: '0123456789abcdef0123456789abcdef',
+]) assert.throws(() => new CompanionControlTransport({ token: '0123456789abcdef0123456789abcdef',
   request: () => bad }).frame(), /cue-helper frame/);
 assert.throws(() => cue.visualAcquisition({ snapshotNs: '1', ageUs: '1', seq: '1' }), /invalid/);
 assert.throws(() => cue.visualAcquisition({ snapshotNs: '5000000000',

@@ -73,7 +73,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
 import night_jobs  # noqa: E402
-from cue_helper_device_lock import DeviceBusy, DeviceLock, state_dir  # noqa: E402
+from companion_device_lock import DeviceBusy, DeviceLock, state_dir  # noqa: E402
 
 
 def _load(name: str, file: str):
@@ -85,8 +85,8 @@ def _load(name: str, file: str):
 
 
 # The queue and the setup own their vocabularies; the window reuses them.
-QUEUE = _load("cue_helper_queue", "cue-helper-queue.py")
-SETUP = _load("cue_helper_setup", "cue-helper-setup.py")
+QUEUE = _load("companion_queue", "companion-queue.py")
+SETUP = _load("companion_setup", "companion-setup.py")
 
 SCHEMA = "overnight-window-v1"
 CONFIG_SCHEMA = "overnight-window-config-v1"
@@ -183,8 +183,8 @@ CAPABILITY_TIMEOUT_S = 150.0
 LEAVE_TIMEOUT_S = 60.0
 FOCUS_RETRIES = 3
 
-QUEUE_COMMAND = [str(HERE / "cue-helper-queue.sh")]
-HELPER_STOP_COMMAND = [str(HERE / "cue-helper-setup.sh"), "--stop"]
+QUEUE_COMMAND = [str(HERE / "companion-queue.sh")]
+HELPER_STOP_COMMAND = [str(HERE / "companion-setup.sh"), "--stop"]
 CAPABILITIES_COMMAND = ["node", str(HERE / "capabilities.mjs")]
 LOCAL_PROFILE_COMMAND = ["node", str(HERE / "local-profile.mjs"), "serial"]
 NIGHT_JOB_COMMAND = [sys.executable, str(HERE / "night-job.py")]

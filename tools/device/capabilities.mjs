@@ -72,13 +72,13 @@ const INSTRUMENTS = [
       'at ~382.5 ms after monitor-down.' },
   { tool: 'tools/device/actuation-frame-metric.py',
     needs: 'the Cue Helper native frame trace',
-    capture: 'tools/device/query-cue-helper.sh trace start LABEL / trace stop ' +
+    capture: 'tools/device/query-companion.sh trace start LABEL / trace stop ' +
       '(night-run.sh --frame-trace does it around a run)',
     available: d => d.cueHelper !== null,
     ifMissing: 'install/verify the Cue Helper; without it there is no native frame stream to grade.' },
   { tool: 'tools/device/input-frame-align.py',
     needs: 'BOTH a Perfetto trace and the Cue Helper native frame trace',
-    capture: 'atrace-input.sh around the run, plus query-cue-helper.sh trace start/stop',
+    capture: 'atrace-input.sh around the run, plus query-companion.sh trace start/stop',
     available: d => (d.perfettoDataSources === null ? null
       : d.perfettoDataSources.includes('android.input.inputevent') && d.cueHelper !== null),
     ifMissing: 'alignment needs dispatch on one side; with no app dispatch source this cannot run here.' },

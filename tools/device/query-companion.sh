@@ -1,15 +1,15 @@
 #!/bin/bash
 # Talk to the cue helper's authenticated snapshot socket.
 #
-#   query-cue-helper.sh status                    the versioned status (companion-status-v1)
-#   query-cue-helper.sh target [PKG|GAME|clear]   read or name the Companion's target
-#   query-cue-helper.sh lease LABEL|clear         show a lease label on the phone
-#   query-cue-helper.sh [loopback|forward]        one FNaF 2 snapshot (default loopback)
-#   query-cue-helper.sh overlay                   authenticated teach-panel status
-#   query-cue-helper.sh latency [count]           time device-local snapshot reads
-#   query-cue-helper.sh watchlist status|load HASH inspect/load the FNaF 2 camera watch
-#   query-cue-helper.sh read                      read the active camera watch
-#   query-cue-helper.sh trace start LABEL|stop|status
+#   query-companion.sh status                    the versioned status (companion-status-v1)
+#   query-companion.sh target [PKG|GAME|clear]   read or name the Companion's target
+#   query-companion.sh lease LABEL|clear         show a lease label on the phone
+#   query-companion.sh [loopback|forward]        one FNaF 2 snapshot (default loopback)
+#   query-companion.sh overlay                   authenticated teach-panel status
+#   query-companion.sh latency [count]           time device-local snapshot reads
+#   query-companion.sh watchlist status|load HASH inspect/load the FNaF 2 camera watch
+#   query-companion.sh read                      read the active camera watch
+#   query-companion.sh trace start LABEL|stop|status
 #                                                    pull a device-local frame trace
 #
 # snapshot, watchlist, read and trace are the FNaF 2 legacy readers
@@ -60,7 +60,7 @@ case "${1:-}" in
   arm) VERB=arm; shift ;;
   result) VERB=result; shift ;;
   '') ;;
-  *) echo "usage: query-cue-helper.sh [status|target|lease|loopback|forward|overlay|latency|watchlist|read|trace]" >&2; exit 2 ;;
+  *) echo "usage: query-companion.sh [status|target|lease|loopback|forward|overlay|latency|watchlist|read|trace]" >&2; exit 2 ;;
 esac
 case "$VERB" in
   record|log|model|arm|result)
@@ -223,7 +223,7 @@ fi
 # That is how night5-final2 and night5-rep4 (2026-09-12) lost their frame
 # traces: `trace start` at night-go read a fresh line, `trace stop` at the end
 # of the night found none. (The executor's own gate reads are not exposed: its
-# AdbCueHelperPort discovers the endpoint once and reuses it.)
+# AdbCompanionPort discovers the endpoint once and reuses it.)
 #
 # So a valid endpoint is stashed the moment it is seen, keyed by the helper's
 # pid, and reused only for that same process. The token belongs to a capture
@@ -231,7 +231,7 @@ fi
 # and so correctly invalidates the stash. A new generation inside the SAME
 # process would also mint a new token; that case is caught below by the
 # helper's own "ERROR unauthorized" reply rather than trusted.
-ENDPOINT_STASH="${CUE_HELPER_ENDPOINT_STASH:-$HERE/../../captures/.cue-helper-endpoint-${ANDROID_SERIAL:-default}}"
+ENDPOINT_STASH="${COMPANION_ENDPOINT_STASH:-$HERE/../../captures/.cue-helper-endpoint-${ANDROID_SERIAL:-default}}"
 ENDPOINT_FROM_STASH=0
 if [ "${#token}" -eq 32 ]; then
   ( umask 077
@@ -284,7 +284,7 @@ exchange() {
   local reply
   reply="$(exchange_raw "$1")"
   if [ "$ENDPOINT_FROM_STASH" = 1 ] && [ "$reply" = "ERROR unauthorized" ]; then
-    echo "stashed cue helper endpoint is stale: helper pid $pid rejected its token; rerun tools/device/cue-helper-setup.sh" >&2
+    echo "stashed cue helper endpoint is stale: helper pid $pid rejected its token; rerun tools/device/companion-setup.sh" >&2
   fi
   printf '%s\n' "$reply"
 }
@@ -541,7 +541,7 @@ if [ "$VERB" = log ]; then
       'OK log=started'*) ;;
       *) exchange "CAL $token off" >/dev/null 2>&1 || true; exit 1 ;;
     esac
-    echo "capturing; stop with: tools/device/query-cue-helper.sh log stop [label]"
+    echo "capturing; stop with: tools/device/query-companion.sh log stop [label]"
     exit 0
   fi
 

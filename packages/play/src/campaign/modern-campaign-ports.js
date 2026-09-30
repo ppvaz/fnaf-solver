@@ -12,14 +12,14 @@ import { readFile, mkdir, writeFile, appendFile } from 'node:fs/promises';
 import { appendFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { CueHelperControlTransport, HidWireTransport, measureMaskOn, measureMonitorUp,
+import { CompanionControlTransport, HidWireTransport, measureMaskOn, measureMonitorUp,
   parseCameraRule, parseMaskRule, parseMonitorRule, reconcileExclusiveControls } from '@sixam/play';
 import { configureCustomNight, selectCustomNightPreset, validateCustomNightCalibration, CUSTOM_NIGHT_CONTACT_MS } from './custom-night.js';
 import { AdbDeviceBridge } from './adb-bridge.js';
 import { composeCampaignPorts } from './campaign-composition.js';
 import { AdbDeviceLocalArtifactExecutor } from './adb-device-local-executor.js';
 import { makeCampaignExecutionRequest } from './campaign-bundle.js';
-import { AdbCueHelperPort, AdbHidProcess } from './physical-ports.js';
+import { AdbCompanionPort, AdbHidProcess } from './physical-ports.js';
 import { anchorNightRelease } from './night-anchor.js';
 import { LESSON_LINE, lessonForNight, lessonLines, lessonOriginLine } from '../coach/cycle-lesson.js';
 import { phoneWallAt, planTimedStart, waitUntilHostMs } from './timed-start.js';
@@ -300,7 +300,7 @@ export async function createCampaignPorts(options = {}) {
     throw new TypeError('modern campaign ports require a HID + MediaProjection profile');
   const bridge = new AdbDeviceBridge({ serial, adb });
   if (!captureRestarted) {
-    const restarted = await bridge.restartCueHelperCapture({ target: 'fnaf2', screen: 'menu' });
+    const restarted = await bridge.restartCompanionCapture({ target: 'fnaf2', screen: 'menu' });
     if (restarted.status !== 'READY')
       throw new Error(`Cue Helper capture restart failed: ${restarted.output ?? restarted.status}`);
   }
@@ -335,7 +335,7 @@ export async function createCampaignPorts(options = {}) {
   // Endpoint discovery is bounded and happens before the executor is armed;
   // no input is sent here. The modern artifact executor consumes only the
   // validated semantic bundle and the authenticated Cue Helper read port.
-  const cuePort = new AdbCueHelperPort({ serial, adb });
+  const cuePort = new AdbCompanionPort({ serial, adb });
   let cueEndpoint = cuePort.discover();
   // The FNaF 2 legacy readers (FRAME, READ, TRACE, the onset latch) run only
   // while the Companion's target is retail FNaF 2; name it, and show the
@@ -343,7 +343,7 @@ export async function createCampaignPorts(options = {}) {
   // changes nothing this lane reads.
   onEvent({ type: 'companion.announce', ...(await cuePort.announce({ target: 'fnaf2',
     lease: `fnaf2-campaign:${process.pid}` })) });
-  const cueTransport = new CueHelperControlTransport({
+  const cueTransport = new CompanionControlTransport({
     request: line => cuePort.request(line), token: cueEndpoint.token,
   });
   const refreshCueEndpoint = () => {
@@ -963,7 +963,7 @@ export async function createCampaignPorts(options = {}) {
         throw new Error(`game restart failed at ${restarted.stage}: ${restarted.detail ?? 'unknown error'}`);
       const state = await waitFor(bridge, serial, value => value === 'title', 30000,
         'post-abort game restart');
-      const capture = await bridge.restartCueHelperCapture({ target: 'fnaf2', screen: 'menu' });
+      const capture = await bridge.restartCompanionCapture({ target: 'fnaf2', screen: 'menu' });
       if (capture.status !== 'READY')
         throw new Error(`Cue Helper capture restart failed: ${capture.output ?? capture.status}`);
       const endpoint = refreshCueEndpoint();

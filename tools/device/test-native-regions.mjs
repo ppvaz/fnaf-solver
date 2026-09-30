@@ -11,7 +11,7 @@
 //
 //   node tools/device/test-native-regions.mjs
 
-import { parseRegionRead, regionSetLine } from '../../packages/play/src/venues/phone/cue-helper.js';
+import { parseRegionRead, regionSetLine } from '../../packages/play/src/venues/phone/companion.js';
 import { pngFromRegion } from './native-regions.mjs';
 import { makeClassifier } from './fnaf1-detectors.mjs';
 import { parseArgs } from './fnaf1-custom-run.mjs';

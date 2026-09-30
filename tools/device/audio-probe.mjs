@@ -20,7 +20,7 @@
  * `--out` appends one JSON row per probe for a retained comparison.
  */
 import { appendFileSync } from 'node:fs';
-import { AdbCueHelperPort } from '../../packages/play/src/campaign/physical-ports.js';
+import { AdbCompanionPort } from '../../packages/play/src/campaign/physical-ports.js';
 import { resolveSerial } from './local-profile.mjs';
 
 function fail(message) { console.error(`audio-probe: ${message}`); process.exit(2); }
@@ -66,7 +66,7 @@ async function main(argv) {
     fail('run under the serial lease (tools/device/device-lock-exec.py SERIAL -- ...)');
   let serial;
   try { ({ serial } = resolveSerial({ names: ['FNAF_SERIAL', 'ANDROID_SERIAL'] })); } catch (error) { fail(error.message); }
-  const port = new AdbCueHelperPort({ serial });
+  const port = new AdbCompanionPort({ serial });
   const fields = await port.audioProbe({ seconds: options.seconds, scope: options.scope });
   const row = { at: new Date().toISOString(), ...probeRow(fields, options) };
   if (options.out) appendFileSync(options.out, `${JSON.stringify(row)}\n`);

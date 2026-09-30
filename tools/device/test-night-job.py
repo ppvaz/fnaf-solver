@@ -51,7 +51,7 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE / "testdata"))
 import fake_phone  # noqa: E402
 import night_jobs  # noqa: E402
-from cue_helper_device_lock import DeviceBusy, DeviceLock  # noqa: E402
+from companion_device_lock import DeviceBusy, DeviceLock  # noqa: E402
 
 
 def load(name: str, file: str):
@@ -62,7 +62,7 @@ def load(name: str, file: str):
     return module
 
 
-QUEUE = load("cue_helper_queue", "cue-helper-queue.py")
+QUEUE = load("companion_queue", "companion-queue.py")
 
 # Loads a module by path, sets the given constants (on it or on night_jobs),
 # and runs its main(argv). Only this test sets them: production reads none.
@@ -144,13 +144,13 @@ class Case:
         self.overrides.write_text(json.dumps({
             "overnight_window": {
                 **FAST_WINDOW, **(window or {}),
-                "QUEUE_COMMAND": [sys.executable, str(self.driver), str(HERE / "cue-helper-queue.py"),
+                "QUEUE_COMMAND": [sys.executable, str(self.driver), str(HERE / "companion-queue.py"),
                                   str(self.overrides)],
                 "NIGHT_JOB_COMMAND": [sys.executable, str(self.driver), str(HERE / "night-job.py"),
                                       str(self.overrides)],
                 "PACK_COMMAND": ["node", str(self.pack), str(self.root)],
                 "PACKS_ROOT": str(self.root), "RUNS_ROOT": str(self.root)},
-            "cue_helper_queue": {
+            "companion_queue": {
                 "NIGHT_JOB_COMMAND": [sys.executable, str(self.driver), str(HERE / "night-job.py"),
                                       str(self.overrides)],
                 "JOB_STOP_GRACE_S": 2.0, "JOB_TERM_GRACE_S": 1.0},

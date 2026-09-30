@@ -105,7 +105,7 @@ if (changed.some(path => path.startsWith('packages/review/') || path.startsWith(
 }
 // The composition root: the MCP server and the lab.
 if (changed.some(path => path.startsWith('apps/desktop/')))
-  for (const test of ['apps/desktop/test/cue-helper-mcp.test.mjs', 'apps/desktop/test/lab.test.mjs'])
+  for (const test of ['apps/desktop/test/companion-mcp.test.mjs', 'apps/desktop/test/lab.test.mjs'])
     add(`test:${test}`, 'node', [test]);
 if (changed.some(path => path.startsWith('apps/trainer/')))
   add('trainer-build', 'python3', ['tools/build.py']);

@@ -37,7 +37,7 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { performance } from 'node:perf_hooks';
 import { AdbDeviceBridge } from '../../packages/play/src/campaign/adb-bridge.js';
-import { AdbCueHelperPort, AdbHidProcess } from '../../packages/play/src/campaign/physical-ports.js';
+import { AdbCompanionPort, AdbHidProcess } from '../../packages/play/src/campaign/physical-ports.js';
 import { HidWireTransport } from '../../packages/play/src/venues/phone/hid.js';
 import { ProbeRecord, ensureTitle, titleRead, titleConsensus, settleCustomNight, setDials, restartToTitle,
   DIALS, PACKAGE, BUILD, LEAVE_WAIT_MS } from './fnaf1-menu-probe.mjs';
@@ -381,7 +381,7 @@ async function main(argv) {
   await record.save('PREFLIGHT');
 
   const adbBridge = new AdbDeviceBridge({ serial });
-  const port = new AdbCueHelperPort({ serial });
+  const port = new AdbCompanionPort({ serial });
   // Name the target and show the lease on the phone (companion-status-v1). A
   // helper older than 0.2.0 answers unknown-verb; nothing this run reads changes.
   await record.event('companion-announce', await port.announce({ target: 'com.scottgames.fivenightsatfreddys', lease: id.slice(0, 48) }));

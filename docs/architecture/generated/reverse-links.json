@@ -110,7 +110,7 @@
     {
       "id": "contract.claim-envelope-v1",
       "kind": "CONTRACT",
-      "path": "apps/desktop/test/cue-helper-mcp.test.mjs",
+      "path": "apps/desktop/test/companion-mcp.test.mjs",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -240,21 +240,21 @@
     {
       "id": "contract.cue-helper-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/venues/phone/cue-helper.js",
+      "path": "packages/play/src/venues/phone/companion.js",
       "line": 5,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.cue-helper-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/venues/phone/cue-helper.js",
+      "path": "packages/play/src/venues/phone/companion.js",
       "line": 31,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.cue-helper-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/venues/phone/cue-helper.js",
+      "path": "packages/play/src/venues/phone/companion.js",
       "line": 48,
       "relation": "REFERENCES"
     },
@@ -299,7 +299,7 @@
     {
       "id": "contract.device-adb-preflight-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/campaign/cue-helper-capture.js",
+      "path": "packages/play/src/campaign/companion-capture.js",
       "line": 5,
       "relation": "REFERENCES"
     },

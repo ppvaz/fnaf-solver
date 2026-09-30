@@ -5,7 +5,7 @@
  */
 export * from './phone/clocks.js';
 export * from './venues/phone/hid.js';
-export * from './venues/phone/cue-helper.js';
+export * from './venues/phone/companion.js';
 export * from './venues/phone/companion-status.js';
 export * from './phone/android-venue.js';
 export * from './sensors/fnaf2/monitor-rule.js';

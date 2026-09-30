@@ -156,7 +156,7 @@ or revoked records fall back to `self-capture-unqualified`.
    valid target-night frame may reattach after an app switch returns to FNaF.
 5. Retain the `OverlayMetrics` update-to-draw p50/p95/p99 trace alongside
    detector latency, frame drops, CPU, memory, thermal, and cue-clear latency.
-   The authenticated device query `tools/device/query-cue-helper.sh overlay`
+   The authenticated device query `tools/device/query-companion.sh overlay`
    returns the HUD lifecycle/gate and bounded counters without requiring the
    game to remain focused; capture its output at each lifecycle boundary and
    at the end of the observe-only run.

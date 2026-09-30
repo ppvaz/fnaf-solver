@@ -2985,7 +2985,7 @@ Open:
 ## 2026-09-29 — the solver interface's first steps (S6, Plan 28 steps 1-4)
 
 The `fnaf-solver` MCP server now answers questions about the games as well as
-queueing phone jobs ([surface](../docs/device/CUE-HELPER-MCP.md)). Every new
+queueing phone jobs ([surface](../docs/device/COMPANION-MCP.md)). Every new
 answer is a `claim-envelope-v1`: the claim, its label (a claim level, a source
 label, or `UNKNOWN(reason)`), the game, citations, status, what it does not
 measure, and a command that reproduces it. A refusal names its rule, reason,

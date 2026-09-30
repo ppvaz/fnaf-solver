@@ -28,7 +28,7 @@ import { ARCHIVED_ROUTES, CHRONICLE_ATTRIBUTION, CHRONICLE_DIR, CHRONICLE_SCHEMA
   CONTRACT_REGISTER, CONTROL_CATALOG_DIR, GAMES, controlCatalogFile, catalogUnknowns, chronicleLabel, gameKey, isNegative, packDirectories,
   readArchivedRoutes, readChronicle, readCommandRegistry, readContracts, readPackRow, readPacks, resolveGame } from './registers.mjs';
 
-export const SURFACE_DOC = 'docs/device/CUE-HELPER-MCP.md';
+export const SURFACE_DOC = 'docs/device/COMPANION-MCP.md';
 export const PLAN28 = 'plans/28-solver-interface.md';
 
 /** The verbs, by the name every door calls them. */

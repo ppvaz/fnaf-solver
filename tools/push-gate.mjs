@@ -52,8 +52,8 @@ export const LANES = [
   { name: 'Documentation and catalog links', run: 'npm run catalog && npm run chronicle && git diff --exit-code -- docs/architecture/generated docs/portal && node tools/test-docs.mjs' },
   { name: 'ShellCheck critical diagnostics', needs: 'docker', multiline: true },
   { name: 'Shell footgun regressions', run: 'tools/device/test-shell-footguns.sh' },
-  { name: 'Cue helper query (mock ADB)', run: 'tools/device/test-query-cue-helper.sh' },
-  { name: 'Cue helper soak (mock ADB)', run: 'tools/device/test-soak-cue-helper.sh' },
+  { name: 'Cue helper query (mock ADB)', run: 'tools/device/test-query-companion.sh' },
+  { name: 'Cue helper soak (mock ADB)', run: 'tools/device/test-soak-companion.sh' },
 ];
 
 // --- The gate must stay the job it claims to mirror ------------------------

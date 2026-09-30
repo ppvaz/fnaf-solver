@@ -153,9 +153,9 @@ coarse end description. It is not yet a positive 6 AM/win classifier.
 
 | Artifact | Producer | Content/clock | Consumer and gap |
 |---|---|---|---|
-| `LABEL-visual.tsv` | `watch-vent-cue.sh` via `query-cue-helper.sh watch` | `snapshot_ns`, visual seq, luma, observed state; helper monotonic | `label-misses.py`; independently labels bright→dark transitions, but only if the matching audio `startNs` survived |
+| `LABEL-visual.tsv` | `watch-vent-cue.sh` via `query-companion.sh watch` | `snapshot_ns`, visual seq, luma, observed state; helper monotonic | `label-misses.py`; independently labels bright→dark transitions, but only if the matching audio `startNs` survived |
 | `LABEL-sessions.tsv` | `collect-cue-audio.sh` | round/start/night/end/state in host seconds relative to collection start | Intended session split; too coarse for event alignment and not cryptographically joined to its WAV |
-| `captures/cue-helper/soak-*.tsv` | `soak-cue-helper.sh` | host elapsed/epoch, helper PID, memory, thermal, status age, visual/audio counters | Health/latency evidence; not gameplay labels, no session manifest/model hash |
+| `captures/cue-helper/soak-*.tsv` | `soak-companion.sh` | host elapsed/epoch, helper PID, memory, thermal, status age, visual/audio counters | Health/latency evidence; not gameplay labels, no session manifest/model hash |
 
 These are operational metadata and label channels, not interchangeable TSV
 schemas.
@@ -177,7 +177,7 @@ pixels. A frame extracted from 1280×576 H.264 video is not equivalent to these
 
 | Property | Inventory |
 |---|---|
-| Producer | `query-cue-helper.sh grid [OUT.png]` for one 20×9 projected frame; direct `GRID` response lines may be redirected manually |
+| Producer | `query-companion.sh grid [OUT.png]` for one 20×9 projected frame; direct `GRID` response lines may be redirected manually |
 | Format | Control response with sequence plus 180 RGB cells; optional nearest-neighbor PNG visualization |
 | Clock | Response includes sequence in the grid line, but the current `GRID` response/parser does not persist `snapshotNs` in the saved representation |
 | Consumers | Manual inspection; `grid-signature.py` can build/test/match signatures from captured GRID lines |

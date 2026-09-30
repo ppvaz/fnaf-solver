@@ -63,13 +63,13 @@ jobs:
           docker run --rm -v "$PWD:/mnt:ro" koalaman/shellcheck-alpine:v0.10.0 \
             sh -c 'find /mnt -type f -name "*.sh" -not -path "/mnt/.git/*" \
               -not -path "/mnt/captures/*" -not -path "/mnt/dist/*" \
-              -not -path "/mnt/android/cue-helper/build/*" -print0 |
+              -not -path "/mnt/android/companion/build/*" -print0 |
               xargs -0 shellcheck -S error'
       - name: Shell footgun regressions
         run: tools/device/test-shell-footguns.sh
       # The full historical campaign remains an explicit local/release lane;
       # its deliberately red negative experiments are not a green edit gate.
       - name: Cue helper query (mock ADB)
-        run: tools/device/test-query-cue-helper.sh
+        run: tools/device/test-query-companion.sh
       - name: Cue helper soak (mock ADB)
-        run: tools/device/test-soak-cue-helper.sh
+        run: tools/device/test-soak-companion.sh

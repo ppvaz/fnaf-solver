@@ -10,7 +10,7 @@
  * latency does not matter; a night reads native regions instead
  * (native-regions.mjs). Run under the serial lease.
  */
-import { AdbCueHelperPort } from '../../packages/play/src/campaign/physical-ports.js';
+import { AdbCompanionPort } from '../../packages/play/src/campaign/physical-ports.js';
 import { resolveSerial } from './local-profile.mjs';
 
 function fail(message) { console.error(`native-frame: ${message}`); process.exit(2); }
@@ -27,7 +27,7 @@ if (!out) fail('--out is required');
 if (process.env.FNAF_LEASE_HELD !== '1' && process.env.FNAF1_LEASE_HELD !== '1') fail('run under the serial lease');
 let serial;
 try { ({ serial } = resolveSerial()); } catch (error) { fail(error.message); }
-const port = new AdbCueHelperPort({ serial });
+const port = new AdbCompanionPort({ serial });
 port.snap(label, out).then((r) => {
   console.log(JSON.stringify({ out: r.path, bytes: r.bytes, imageNs: String(r.imageNs), snapshotNs: String(r.snapshotNs) }));
 }).catch((error) => fail(error.message));

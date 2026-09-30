@@ -9,10 +9,10 @@ import { DeviceCampaignRunner } from '@sixam/play/campaign/campaign-runner';
 import { guidedCalibrationSteps, validateCustomNightCalibration } from '@sixam/play/campaign/custom-night';
 import { evaluateCampaignPreflight } from '@sixam/play/campaign/campaign-preflight';
 import { validateCampaignBundle } from '@sixam/play/campaign/campaign-bundle';
-import { AdbCueHelperPort } from '@sixam/play/campaign/physical-ports';
+import { AdbCompanionPort } from '@sixam/play/campaign/physical-ports';
 import { installCampaignSignalHandlers } from '@sixam/play/campaign/campaign-signal';
 import { loadVenueBindings, renderVenueCheck } from '@sixam/play/campaign/venue';
-import { fitClockMap, CueHelperControlTransport } from '@sixam/play';
+import { fitClockMap, CompanionControlTransport } from '@sixam/play';
 import { resolveDeviceProfile } from '@sixam/source';
 import { stableHash } from '@sixam/kernel/contracts';
 
@@ -228,9 +228,9 @@ async function main(argv = process.argv.slice(2)) {
     if (options.source === 'helper') {
       const selected = await bridge.selectDevice();
       if (selected.status !== 'READY') throw new Error(`clockmap needs one ready device: ${selected.reason ?? 'unavailable'}`);
-      const port = new AdbCueHelperPort({ serial: selected.serial });
+      const port = new AdbCompanionPort({ serial: selected.serial });
       const endpoint = port.discover();
-      helperTransport = new CueHelperControlTransport({ request: line => port.request(line), token: endpoint.token });
+      helperTransport = new CompanionControlTransport({ request: line => port.request(line), token: endpoint.token });
     }
     const sleep = ms => new Promise(done => setTimeout(done, ms));
     /** @type {{bootId: string, quantizationMs: number, sourceMs: number,

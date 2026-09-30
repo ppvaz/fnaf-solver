@@ -3,18 +3,18 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { AdbDeviceBridge, parseAdbDevices } from '../src/campaign/adb-bridge.js';
-import { restartCueHelperCapture } from '../src/campaign/cue-helper-capture.js';
-import { AdbCueHelperPort, parseCueHelperEndpoint } from '../src/campaign/physical-ports.js';
+import { restartCompanionCapture } from '../src/campaign/companion-capture.js';
+import { AdbCompanionPort, parseCompanionLogEndpoint } from '../src/campaign/physical-ports.js';
 
 assert.deepEqual(parseAdbDevices('List of devices attached\nusb-1\tdevice product/foo transport_id:1\noffline\toffline\n'), [
   { serial: 'usb-1', status: 'device', details: ['product/foo', 'transport_id:1'] },
   { serial: 'offline', status: 'offline', details: [] },
 ]);
-assert.deepEqual(parseCueHelperEndpoint('I/FnafCueHelper: control=DEGRADED port=49707 token=0123456789abcdef0123456789abcdef\n'), {
+assert.deepEqual(parseCompanionLogEndpoint('I/FnafCueHelper: control=DEGRADED port=49707 token=0123456789abcdef0123456789abcdef\n'), {
   port: 49707, token: '0123456789abcdef0123456789abcdef',
 });
-assert.throws(() => parseCueHelperEndpoint('control=READY port=1 token=short'), /endpoint has no bounded/);
-assert.throws(() => new AdbCueHelperPort({ serial: 'usb-1' }).request('SHELL anything'), /outside the authenticated/);
+assert.throws(() => parseCompanionLogEndpoint('control=READY port=1 token=short'), /endpoint has no bounded/);
+assert.throws(() => new AdbCompanionPort({ serial: 'usb-1' }).request('SHELL anything'), /outside the authenticated/);
 
 const scratch = mkdtempSync(join(tmpdir(), 'helper-discovery-'));
 try {
@@ -43,7 +43,7 @@ const args = process.argv.slice(2);
   const filter = at < 0 ? null : new RegExp(args[at + 1]);
   console.log(rows.filter(row => !filter || filter.test(row)).join('\\n'));
 `, { mode: 0o755 });
-  assert.deepEqual(new AdbCueHelperPort({ serial: 'usb-1', adb }).discover(), {
+  assert.deepEqual(new AdbCompanionPort({ serial: 'usb-1', adb }).discover(), {
     port: 49708, token: 'fedcba9876543210fedcba9876543210',
   }, 'capture diagnostics exceeding 1 MB do not hide the latest helper endpoint');
 } finally { rmSync(scratch, { recursive: true, force: true }); }
@@ -61,12 +61,12 @@ else if (args.includes('run-as')) {
     + 'socket=com.fnaf2.cuehelper.control.3\\ntoken=00112233445566778899aabbccddeeff\\n');
 } else { process.exitCode = 2; }
 `, { mode: 0o755 });
-  assert.deepEqual(new AdbCueHelperPort({ serial: 'usb-1', adb }).discover(), {
+  assert.deepEqual(new AdbCompanionPort({ serial: 'usb-1', adb }).discover(), {
     port: 49707, token: '00112233445566778899aabbccddeeff', socket: 'com.fnaf2.cuehelper.control.3',
     session: 3, source: 'endpoint-file',
   }, 'the endpoint file is the discovery source when present');
   process.env.MOCK_PID = '999';
-  assert.throws(() => new AdbCueHelperPort({ serial: 'usb-1', adb }).discover(),
+  assert.throws(() => new AdbCompanionPort({ serial: 'usb-1', adb }).discover(),
     /belongs to pid 1234, not the running helper 999/, 'a stale endpoint file from another process is refused');
   delete process.env.MOCK_PID;
 } finally { rmSync(fileScratch, { recursive: true, force: true }); }
@@ -124,10 +124,10 @@ assert.deepEqual(restartedPreflight.checks.find(item => item.id === 'cue-helper-
 });
 
 let setupCall;
-await assert.rejects(() => restartCueHelperCapture({ serial: 'usb-1', adb: '/mock/adb',
+await assert.rejects(() => restartCompanionCapture({ serial: 'usb-1', adb: '/mock/adb',
   run: async () => ({ exitCode: 0, stdout: '', stderr: '' }) }), /explicit target game/,
   'a capture restart without a named target is refused: setup has no default game');
-const captureResult = await restartCueHelperCapture({ serial: 'usb-1', adb: '/mock/adb', target: 'fnaf4',
+const captureResult = await restartCompanionCapture({ serial: 'usb-1', adb: '/mock/adb', target: 'fnaf4',
   run: async (...args) => { setupCall = args; return { exitCode: 0, stdout: 'CAPTURE started\n', stderr: '' }; } });
 assert.equal(captureResult.status, 'READY');
 assert.deepEqual(setupCall[1], ['--restart-capture', '--target', 'fnaf4', '--screen', 'menu', '--wait', '30']);

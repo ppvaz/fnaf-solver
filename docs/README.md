@@ -157,7 +157,7 @@ Fusion build 296, August 2025.
 
 - [`android/companion/README.md`](../android/companion/README.md) — the unified
   MediaProjection APK, its build/run procedure, and first target-device soak.
-- [`CUE-HELPER-MCP.md`](device/CUE-HELPER-MCP.md) — the bounded MCP/queue
+- [`COMPANION-MCP.md`](device/COMPANION-MCP.md) — the bounded MCP/queue
   interface for safe helper setup and read-only device readiness checks.
 - [`OVERLAY-QUALIFICATION.md`](device/OVERLAY-QUALIFICATION.md) — the retained
   evidence protocol and structural validator for the non-interactive HUD's

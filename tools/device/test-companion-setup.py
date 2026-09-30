@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""No-device safety regression for cue-helper-setup.py."""
+"""No-device safety regression for companion-setup.py."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 HERE = Path(__file__).resolve().parent
-SPEC = importlib.util.spec_from_file_location("cue_helper_setup", HERE / "cue-helper-setup.py")
+SPEC = importlib.util.spec_from_file_location("companion_setup", HERE / "companion-setup.py")
 assert SPEC and SPEC.loader
 MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)

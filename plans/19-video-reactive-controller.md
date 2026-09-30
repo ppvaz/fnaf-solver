@@ -101,7 +101,7 @@ blackout-specific metric excludes by design.
   resolution (default native), `WATCH <token> <spec-hash>` to load a watchlist,
   `READ <token>` to return the current values as one bounded ASCII line. `GET`
   keeps working unchanged (the 20×9 scalars) so nothing downstream breaks.
-- `android/companion/build.sh` still Gradle-free; `test-query-cue-helper.sh`
+- `android/companion/build.sh` still Gradle-free; `test-query-companion.sh`
   gains the two verbs' argument handling and reply shape (mock ADB, no phone).
 - `CueDetector` is untouched — this is the visual path only.
 

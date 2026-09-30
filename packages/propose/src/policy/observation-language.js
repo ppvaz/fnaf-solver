@@ -33,7 +33,7 @@ export const UNKNOWN = 'UNKNOWN';
 // --- The measured observation budget -------------------------------------
 //
 // `docs/device/ON-DEVICE-VALIDATION.md` §"The projection path measures 59 ms",
-// reproduced by `tools/device/query-cue-helper.sh latency`: 60 samples timed
+// reproduced by `tools/device/query-companion.sh latency`: 60 samples timed
 // inside one device shell against the device's own clock, p50 48.8 ms,
 // p95 59.5 ms, p99 60.8 ms, max 66.9 ms. That is a DEVICE_MEASURED read of the
 // cue helper's already-classified watchlist, and it is the same cost for every

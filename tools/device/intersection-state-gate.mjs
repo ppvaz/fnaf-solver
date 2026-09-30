@@ -17,9 +17,9 @@
 import { appendFileSync, mkdirSync, openSync, closeSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
-import { CueHelperControlTransport, measureMaskOn, measureMonitorUp,
+import { CompanionControlTransport, measureMaskOn, measureMonitorUp,
   parseMaskRule, parseMonitorRule } from '@sixam/play';
-import { AdbCueHelperPort } from '../../packages/play/src/campaign/physical-ports.js';
+import { AdbCompanionPort } from '../../packages/play/src/campaign/physical-ports.js';
 
 export const BUTTON_THRESHOLDS = Object.freeze({
   /** 100 of roughly 142 sampled stroke columns is a full glyph. */
@@ -207,9 +207,9 @@ async function run({ target, timeoutMs, pollMs, log }) {
     new URL('../../models/monitor-rule-moto-g56-v207.json', import.meta.url), 'utf8')));
   const maskRule = parseMaskRule(JSON.parse(await readFile(
     new URL('../../models/mask-rule-moto-g56-v207.json', import.meta.url), 'utf8')));
-  const port = new AdbCueHelperPort({ serial, adb: process.env.ADB || 'adb' });
+  const port = new AdbCompanionPort({ serial, adb: process.env.ADB || 'adb' });
   const endpoint = port.discover();
-  const cue = new CueHelperControlTransport({ token: endpoint.token,
+  const cue = new CompanionControlTransport({ token: endpoint.token,
     request: request => port.request(request), maxAgeUs: 500000 });
   const startedAt = Date.now();
   const deadline = startedAt + timeoutMs;

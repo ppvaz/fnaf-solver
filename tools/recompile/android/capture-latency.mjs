@@ -22,7 +22,7 @@ import { execFileSync } from 'node:child_process';
 import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { AdbCueHelperPort } from '../../../packages/play/src/campaign/physical-ports.js';
+import { AdbCompanionPort } from '../../../packages/play/src/campaign/physical-ports.js';
 import { resolveSerial } from '../../device/local-profile.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
@@ -65,7 +65,7 @@ async function live(args) {
   const adb = (a, timeout = 30000) => execFileSync('adb', ['-s', serial, ...a], { encoding: 'utf8', timeout, maxBuffer: 256 << 20 });
   const top = adb(['shell', 'dumpsys activity activities | grep -m1 topResumedActivity']);
   if (!top.includes(PACKAGE)) fail(`the calibration build is not in front: ${top.trim()}`);
-  const port = new AdbCueHelperPort({ serial });
+  const port = new AdbCompanionPort({ serial });
   const channel = port.openRegions({ timeoutMs: 1500 });
   const frames = join(out, 'frames.jsonl');
   writeFileSync(frames, '');

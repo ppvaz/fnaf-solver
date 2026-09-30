@@ -8,7 +8,7 @@ import signal
 import subprocess
 import sys
 
-from cue_helper_device_lock import DeviceBusy, DeviceLock
+from companion_device_lock import DeviceBusy, DeviceLock
 
 
 def main() -> int:

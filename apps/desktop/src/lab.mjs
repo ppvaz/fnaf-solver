@@ -33,7 +33,7 @@ export const SESSION_FILE = 'artifacts/lab/session.json';
 export const SESSIONS_DIR = 'artifacts/lab/sessions';
 export const SESSION_SCHEMA = 'lab-session-v1';
 export const HOOK = '.githooks/commit-msg';
-export const QUEUE_TOOL = 'tools/device/cue-helper-queue.sh';
+export const QUEUE_TOOL = 'tools/device/companion-queue.sh';
 /** A PENDING job older than this is stale (the operators note's doctor table: "older than 72 h"). */
 export const STALE_PENDING_HOURS = 72;
 /** An agent worktree idle this long, unlocked and with no process inside, is orphaned. */
@@ -258,7 +258,7 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
 
   function queueJobs() {
     if (queueOverride) return queueOverride();
-    const result = spawnSync('python3', [join(root, 'tools/device/cue-helper-queue.py'), 'list', '--json'],
+    const result = spawnSync('python3', [join(root, 'tools/device/companion-queue.py'), 'list', '--json'],
       { cwd: root, encoding: 'utf8', env: cleanEnv, timeout: 30000 });
     if (result.status !== 0) throw new Error((result.stderr || result.error?.message || 'no output').trim().split('\n').at(-1));
     return JSON.parse(result.stdout);

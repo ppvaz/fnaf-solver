@@ -2,7 +2,7 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
-TEST_TMP="$(mktemp -d "${TMPDIR:-/tmp}/cue-helper-java-test.XXXXXX")"
+TEST_TMP="$(mktemp -d "${TMPDIR:-/tmp}/companion-java-test.XXXXXX")"
 trap 'rm -rf "$TEST_TMP"' EXIT HUP INT TERM
 # Find a JDK rather than assuming one machine's. This used to hardcode the
 # Homebrew prefix as the fallback, which made the check pass on the laptop that

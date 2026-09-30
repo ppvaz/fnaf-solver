@@ -27,7 +27,7 @@ import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { performance } from 'node:perf_hooks';
-import { AdbCueHelperPort, AdbHidProcess } from '../../packages/play/src/campaign/physical-ports.js';
+import { AdbCompanionPort, AdbHidProcess } from '../../packages/play/src/campaign/physical-ports.js';
 import { HidWireTransport } from '../../packages/play/src/venues/phone/hid.js';
 import { resolveSerial } from './local-profile.mjs';
 
@@ -69,7 +69,7 @@ const coord = (v, max) => {
 if (!Number.isInteger(holdMs) || holdMs < 16 || holdMs > 5000) fail('--hold is 16..5000 ms');
 
 async function snap(name) {
-  const port = new AdbCueHelperPort({ serial: SERIAL });
+  const port = new AdbCompanionPort({ serial: SERIAL });
   const n = existsSync(join(outdir, 'events.jsonl'))
     ? (await readFile(join(outdir, 'events.jsonl'), 'utf8')).split('\n').filter(Boolean).length : 0;
   const file = join(framedir, `${String(n).padStart(4, '0')}-${name ?? 'snap'}.png`);
