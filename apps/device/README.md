@@ -30,6 +30,37 @@ device, the pinned FNaF 2 build, awake/unlocked state, game focus, `/system/bin/
 and Cue Helper. A `HOLD` is expected when the phone is absent or not ready; it
 does not become qualification evidence.
 
+### Venue identity
+
+Preflight also records the venue identity (ADR 0002, decision 1). Its
+`venue-identity-v1` record holds:
+
+- the game's `versionName`, `versionCode`, `firstInstallTime` and
+  `lastUpdateTime`, with the time zone they are printed in;
+- the OS build fingerprint and security patch;
+- the Companion's version;
+- a hash of the serial, never the serial.
+
+The adapter parses the record (`@fnaf2-1020/adapters`, `transports/android-venue`)
+from fixed read-only `dumpsys package` and `getprop` queries. Core compares it
+(`compareVenueIdentity`) with what the run is bound to: a `qualification-v2`
+passed with `--qualification`, and any `venue-binding-v1` that names this
+profile or winner, passed with `--venue-binding FILE`. The result is
+`device-preflight-v2` with `venue` and a `venue-identity` check:
+
+- `UNBOUND` records the identity and passes. Every committed profile is
+  unbound today.
+- `MATCH` passes.
+- `DRIFT` fails. It names each field from what to what, and gives the remedy:
+  re-qualify, or roll the game back.
+- `UNKNOWN` holds, because a bound field was unreadable.
+
+In a live campaign, `qualification-venue` reports a drifted `qualification-v2`
+as demoted from `QUALIFIED` to `CANDIDATE`. The venue is kept in the campaign
+result's preflight event (`campaignVenue(result)`). `venue.js` loads the
+bindings and prints the venue block. The rules are in
+[`docs/operations/DEVICE-SAFETY.md`](../../docs/operations/DEVICE-SAFETY.md#venue-identity-pedro-2026-09-29).
+
 `--guided` prints the one-time calibration checklist. A live campaign also
 requires `--bundle DIR` with one full-night plan per requested night,
 `--calibration FILE` containing measured Custom Night menu/dial readback

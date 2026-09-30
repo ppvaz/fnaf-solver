@@ -11,6 +11,7 @@ import { evaluateCampaignPreflight } from './campaign-preflight.js';
 import { validateCampaignBundle } from './campaign-bundle.js';
 import { AdbCueHelperPort } from './physical-ports.js';
 import { installCampaignSignalHandlers } from './campaign-signal.js';
+import { loadVenueBindings, renderVenueCheck } from './venue.js';
 import { fitClockMap, CueHelperControlTransport } from '@fnaf2-1020/adapters';
 import { stableHash } from '@fnaf2-1020/core/contracts';
 
@@ -23,7 +24,7 @@ function help() {
 Usage:
   npm run device:campaign -- --bundle DIR --nights N --profile hid-mediaprojection   (dry run)
   npm run device:campaign -- --bundle DIR --nights N --profile hid-mediaprojection --live --confirm-live
-  npm run device:preflight -- --profile hid-mediaprojection
+  npm run device:preflight -- --profile hid-mediaprojection [--qualification FILE] [--venue-binding FILE]
   npm run device:campaign -- --guided
   npm run device:clockmap -- --count 12 --span-ms 30000 --out FILE
 
@@ -42,7 +43,9 @@ Options:
   --guided      print the one-time Custom Night calibration checklist
   --calibration FILE  measured Custom Night calibration artifact
   --bundle DIR  validated device bundle containing the requested plans
-  --qualification FILE  DEVICE_MEASURED qualification artifact
+  --qualification FILE  DEVICE_MEASURED qualification artifact (a qualification-v2 also binds its venue)
+  --venue-binding FILE  venue-binding-v1 naming this profile or winner; repeatable. Preflight
+                refuses when the observed venue identity drifted from any binding
   --ports MODULE  explicit campaign-port composition module
   --machine-only  run an explicit MODEL_ONLY machine-input experiment; no claim promotion
   --arm-observe-once  run the double-camera check once without blocking the schedule; abort only on a definite mismatch
@@ -77,7 +80,7 @@ function parse(argv) {
     json: false, serial: undefined, nights: [...DEFAULT_CAMPAIGN_NIGHTS], maxAttempts: 3, storyStart: undefined, saveCursor: undefined,
     requireHelper: true, requireHid: true,
     guided: false, machineOnly: false, armMode: 'blocking', allowSaveReset: false, nightAnchorAimMs: null, nightAnchorMaxK: null, nightAnchorPeriodMs: 1000, nightAnchorStrict: false, nightAnchorAuthorizeOnLatch: false, teachOverlay: false, calibration: undefined, bundle: undefined,
-    qualification: undefined, ports: undefined, count: 12, spanMs: 30000, out: undefined,
+    qualification: undefined, venueBindings: [], ports: undefined, count: 12, spanMs: 30000, out: undefined,
     source: 'uptime' };
   for (let index = 0; index < rest.length; index += 1) {
     const item = rest[index];
@@ -123,6 +126,12 @@ function parse(argv) {
     else if (item.startsWith('--bundle=')) options.bundle = item.slice('--bundle='.length);
     else if (item === '--qualification') options.qualification = rest[++index];
     else if (item.startsWith('--qualification=')) options.qualification = item.slice('--qualification='.length);
+    else if (item === '--venue-binding') {
+      const path = rest[++index];
+      if (!path || path.startsWith('--')) throw new Error('--venue-binding requires a file');
+      options.venueBindings.push(path);
+    }
+    else if (item.startsWith('--venue-binding=')) options.venueBindings.push(item.slice('--venue-binding='.length));
     else if (item === '--count') options.count = Number(rest[++index]);
     else if (item.startsWith('--count=')) options.count = Number(item.slice('--count='.length));
     else if (item === '--span-ms') options.spanMs = Number(rest[++index]);
@@ -278,13 +287,16 @@ async function main(argv = process.argv.slice(2)) {
   }
   const selected = await profile(options.profile);
   if (options.command === 'preflight') {
+    const venueBindings = await loadVenueBindings({ profileId: selected.id,
+      qualification: await jsonFile(options.qualification, 'qualification'), paths: options.venueBindings });
     const bridge = new AdbDeviceBridge({ serial: options.serial });
     const result = await bridge.preflight({ targetBuild: selected.targetBuild,
       requireHelper: options.requireHelper, requireHid: options.requireHid,
-      restartCapture: true });
+      restartCapture: true, venueBindings });
     console.log(options.json ? JSON.stringify(result, null, 2) :
       `${result.status} ${result.serial ?? ''} ${result.reason ?? ''}\n` +
-      result.checks.map(item => `  ${item.status.padEnd(7)} ${item.id}: ${typeof item.detail === 'string' ? item.detail : JSON.stringify(item.detail)}`).join('\n'));
+      result.checks.map(item => `  ${item.status.padEnd(7)} ${item.id}: ${typeof item.detail === 'string' ? item.detail : JSON.stringify(item.detail)}`).join('\n') +
+      `\n${renderVenueCheck(result.venue)}`);
     if (result.status === 'FAIL') process.exitCode = 1;
     return;
   }
@@ -317,14 +329,18 @@ async function main(argv = process.argv.slice(2)) {
       return;
     }
     if (!options.confirmLive) throw new Error('live campaign requires --confirm-live');
+    // The bundle and qualification are host files; they are read before the
+    // phone is queried so the preflight can compare the venue they bind.
+    const bundle = await campaignBundle(options.bundle, spec, selected.id);
+    const qualification = await jsonFile(options.qualification, 'qualification');
+    const venueBindings = await loadVenueBindings({ profileId: selected.id,
+      winnerHash: bundle?.artifact?.winnerHash ?? null, qualification, paths: options.venueBindings });
     const bridge = new AdbDeviceBridge({ serial: options.serial });
     machine.startPreflight();
     const device = await bridge.preflight({ targetBuild: selected.targetBuild,
       requireHelper: options.requireHelper, requireHid: options.requireHid,
-      restartCapture: true });
+      restartCapture: true, venueBindings });
     machine.acceptPreflight(device);
-    const bundle = await campaignBundle(options.bundle, spec, selected.id);
-    const qualification = await jsonFile(options.qualification, 'qualification');
     let composition = null;
     const useDefaultModernPorts = bundle && selected.actuator === 'hid-multi' && selected.visualSensor === 'mediaprojection';
     if (options.ports || useDefaultModernPorts) {
@@ -341,7 +357,7 @@ async function main(argv = process.argv.slice(2)) {
         nightAnchorAimMs: options.nightAnchorAimMs, nightAnchorMaxK: options.nightAnchorMaxK,
         nightAnchorPeriodMs: options.nightAnchorPeriodMs, nightAnchorStrict: options.nightAnchorStrict,
         nightAnchorAuthorizeOnLatch: options.nightAnchorAuthorizeOnLatch,
-        teachOverlay: options.teachOverlay });
+        teachOverlay: options.teachOverlay, venueBindings });
     }
     const ports = composition?.ports ?? composition;
     // Once a live composition exists, an operator interrupt must release the
@@ -362,7 +378,10 @@ async function main(argv = process.argv.slice(2)) {
     const campaignPreflight = evaluateCampaignPreflight({ spec, device, profile: selected,
       calibration, bundle, qualification, allowSaveReset: options.allowSaveReset,
       machineOnly: options.machineOnly, executor: capabilities });
+    // The venue is printed with the gates: a refused campaign retains no
+    // result.json, and night-run.sh's campaign.log is then its only record.
     const output = { status: campaignPreflight.status, mode: 'live', preflight: campaignPreflight,
+      venue: device.venue ?? null,
       state: machine.snapshot(), reason: campaignPreflight.status === 'READY' ? null : 'campaign-gates-incomplete' };
     console.log(JSON.stringify(output, (key, value) => key === 'token' ? '[REDACTED]' : value, 2));
     try {

@@ -6,6 +6,8 @@
       "imports": [
         "./cue-helper-capture.js",
         "./physical-ports.js",
+        "@fnaf2-1020/adapters",
+        "@fnaf2-1020/core/contracts",
         "node:child_process",
         "node:util"
       ]
@@ -48,6 +50,7 @@
     {
       "file": "apps/device/src/campaign-preflight.js",
       "imports": [
+        "./adb-bridge.js",
         "./campaign.js",
         "./custom-night.js",
         "@fnaf2-1020/core/contracts"
@@ -87,6 +90,7 @@
         "./campaign.js",
         "./custom-night.js",
         "./physical-ports.js",
+        "./venue.js",
         "@fnaf2-1020/adapters",
         "@fnaf2-1020/core/contracts",
         "node:fs/promises",
@@ -172,6 +176,14 @@
         "node:child_process",
         "node:fs",
         "node:net"
+      ]
+    },
+    {
+      "file": "apps/device/src/venue.js",
+      "imports": [
+        "@fnaf2-1020/core/contracts",
+        "node:fs/promises",
+        "node:path"
       ]
     },
     {
@@ -350,6 +362,21 @@
       ]
     },
     {
+      "file": "apps/device/test/venue-preflight.test.js",
+      "imports": [
+        "../src/adb-bridge.js",
+        "../src/campaign-preflight.js",
+        "../src/campaign.js",
+        "../src/venue.js",
+        "@fnaf2-1020/core/contracts",
+        "node:assert/strict",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "apps/trainer/src/arcade-lab.js",
       "imports": [
         "./validate.js",
@@ -466,6 +493,7 @@
         "./control-anchor.js",
         "./control-exclusion.js",
         "./monitor-rule.js",
+        "./transports/android-venue.js",
         "./transports/companion-status.js",
         "./transports/cue-helper.js",
         "./transports/hid.js"
@@ -475,6 +503,24 @@
       "file": "packages/adapters/src/monitor-rule.js",
       "imports": [
         "node:crypto"
+      ]
+    },
+    {
+      "file": "packages/adapters/src/transports/android-venue.js",
+      "imports": [
+        "@fnaf2-1020/core/contracts",
+        "node:crypto"
+      ]
+    },
+    {
+      "file": "packages/adapters/test/android-venue.test.js",
+      "imports": [
+        "../src/transports/android-venue.js",
+        "@fnaf2-1020/core/contracts",
+        "node:assert/strict",
+        "node:crypto",
+        "node:fs",
+        "node:url"
       ]
     },
     {
@@ -525,7 +571,15 @@
     {
       "file": "packages/core/src/contracts/index.js",
       "imports": [
-        "../control/vocabulary.js"
+        "../control/vocabulary.js",
+        "./qualification.js",
+        "./venue-identity.js"
+      ]
+    },
+    {
+      "file": "packages/core/src/contracts/qualification.js",
+      "imports": [
+        "./venue-identity.js"
       ]
     },
     {
@@ -1063,6 +1117,13 @@
       "file": "packages/core/test/vent-cam-draws.test.js",
       "imports": [
         "../src/mechanics/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/core/test/venue-identity.test.js",
+      "imports": [
+        "../src/contracts/index.js",
         "node:assert/strict"
       ]
     },

@@ -246,7 +246,7 @@
       "id": "contract.device-adb-preflight-v1",
       "kind": "CONTRACT",
       "path": "apps/device/src/adb-bridge.js",
-      "line": 9,
+      "line": 17,
       "relation": "REFERENCES"
     },
     {
@@ -278,7 +278,7 @@
       "id": "contract.device-campaign-preflight-v1",
       "kind": "CONTRACT",
       "path": "apps/device/src/campaign-preflight.js",
-      "line": 5,
+      "line": 12,
       "relation": "REFERENCES"
     },
     {
@@ -526,7 +526,46 @@
     {
       "id": "contract.qualification-v1",
       "kind": "CONTRACT",
+      "path": "packages/core/src/contracts/qualification.js",
+      "line": 10,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.qualification-v1",
+      "kind": "CONTRACT",
       "path": "packages/core/test/contracts.test.js",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.qualification-v1",
+      "kind": "CONTRACT",
+      "path": "packages/core/test/venue-identity.test.js",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.qualification-v2",
+      "kind": "CONTRACT",
+      "path": "apps/device/src/campaign-preflight.js",
+      "line": 12,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.qualification-v2",
+      "kind": "CONTRACT",
+      "path": "apps/device/test/venue-preflight.test.js",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.qualification-v2",
+      "kind": "CONTRACT",
+      "path": "packages/core/src/contracts/qualification.js",
+      "line": 10,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.qualification-v2",
+      "kind": "CONTRACT",
+      "path": "packages/core/test/venue-identity.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -611,6 +650,84 @@
       "id": "contract.trainer-trace-v1",
       "kind": "CONTRACT",
       "path": "tools/tracereport.mjs",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.venue-binding-v1",
+      "kind": "CONTRACT",
+      "path": "apps/device/src/venue.js",
+      "line": 6,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.venue-binding-v1",
+      "kind": "CONTRACT",
+      "path": "apps/device/test/venue-preflight.test.js",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.venue-binding-v1",
+      "kind": "CONTRACT",
+      "path": "packages/core/src/contracts/venue-identity.js",
+      "line": 18,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.venue-binding-v1",
+      "kind": "CONTRACT",
+      "path": "packages/core/test/venue-identity.test.js",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.venue-check-v1",
+      "kind": "CONTRACT",
+      "path": "apps/device/src/adb-bridge.js",
+      "line": 17,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.venue-check-v1",
+      "kind": "CONTRACT",
+      "path": "apps/device/test/venue-preflight.test.js",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.venue-check-v1",
+      "kind": "CONTRACT",
+      "path": "packages/core/src/contracts/venue-identity.js",
+      "line": 18,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.venue-check-v1",
+      "kind": "CONTRACT",
+      "path": "packages/core/test/venue-identity.test.js",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.venue-identity-v1",
+      "kind": "CONTRACT",
+      "path": "packages/adapters/src/transports/android-venue.js",
+      "line": 17,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.venue-identity-v1",
+      "kind": "CONTRACT",
+      "path": "packages/adapters/test/android-venue.test.js",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.venue-identity-v1",
+      "kind": "CONTRACT",
+      "path": "packages/core/src/contracts/venue-identity.js",
+      "line": 18,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.venue-identity-v1",
+      "kind": "CONTRACT",
+      "path": "packages/core/test/venue-identity.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {

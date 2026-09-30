@@ -2,16 +2,40 @@
  * Campaign-specific readiness gate. Basic ADB readiness is not enough for an
  * unattended multi-night run: this also checks the measured Custom Night UI,
  * a bound full-night artifact, proof adapters, and a qualified local runner.
- * CONTRACT:device-campaign-preflight-v1.
+ *
+ * The device preflight's `venue-identity` check is copied in with the rest,
+ * so a drifted venue refuses here too. `qualification-venue` then says where
+ * the qualification stands on the observed venue: a qualification-v1 is
+ * unbound and only recorded; a qualification-v2 whose venue drifted is
+ * demoted from QUALIFIED to CANDIDATE and refuses (ADR 0002, principle 12).
+ * The demotion is reported, not persisted: it is re-derived every preflight.
+ * CONTRACT:device-campaign-preflight-v1. CONTRACT:qualification-v2.
  */
-import { validateQualification } from '@fnaf2-1020/core/contracts';
+import { validateQualification, qualificationStanding } from '@fnaf2-1020/core/contracts';
 import { stableHash } from '@fnaf2-1020/core/contracts';
+import { preflightVenue } from './adb-bridge.js';
 import { validateCustomNightCalibration } from './custom-night.js';
 import { validateCampaignSpec } from './campaign.js';
 
 export const CAMPAIGN_PREFLIGHT_SCHEMA = 'device-campaign-preflight-v1';
 const check = (id, status, detail) => Object.freeze({ id, status, detail });
 const isRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+
+/**
+ * @param {any} qualification a validated qualification
+ * @param {any} device the device preflight record
+ */
+function qualificationVenueCheck(qualification, device) {
+  const observed = preflightVenue(device)?.observed ?? null;
+  const standing = qualificationStanding({ qualification, observed });
+  if (standing.venue === 'UNBOUND') return check('qualification-venue', 'PASS', standing.message);
+  const detail = { lifecycle: standing.lifecycle, demotedFrom: standing.demotedFrom,
+    venue: standing.venue, message: standing.message, drift: standing.check.drift,
+    remedy: standing.check.remedy };
+  if (standing.venue === 'DRIFT') return check('qualification-venue', 'FAIL', detail);
+  if (standing.venue === 'UNKNOWN') return check('qualification-venue', 'HOLD', detail);
+  return check('qualification-venue', 'PASS', standing.message);
+}
 
 function statusOf(checks) {
   if (checks.some(item => item.status === 'FAIL')) return 'FAIL';
@@ -79,6 +103,7 @@ export function evaluateCampaignPreflight({ spec, device, profile, calibration,
           qualification.modelHash === bundle.artifact.engineHash;
         checks.push(check('qualification-binding', bound ? 'PASS' : 'FAIL', bound ? 'bundle winner/model hashes match' : 'qualification is not bound to bundle winner/model'));
       }
+      checks.push(qualificationVenueCheck(qualification, device));
     } catch (error) { checks.push(check('qualified-live-profile', 'FAIL', error.message)); }
   }
   if (spec.nights[0]?.menuTarget === 'newGame') {

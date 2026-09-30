@@ -1,0 +1,75 @@
+Activity Resolver Table:
+  Non-Data Actions:
+      android.intent.action.MAIN:
+        5b1f0c2 com.scottgames.fnaf2/.MainActivity filter 8e2d4a1
+          Action: "android.intent.action.MAIN"
+          Category: "android.intent.category.LAUNCHER"
+
+Key Set Manager:
+  [com.scottgames.fnaf2]
+      Signing KeySets: 41
+
+Packages:
+  Package [com.scottgames.fnaf2] (3c9a7e1):
+    appId=10231
+    pkg=Package{7d20b4e com.scottgames.fnaf2}
+    codePath=/data/app/~~Qm4f0x1YfX2c==/com.scottgames.fnaf2-Zp8o1Lw3Ev0==
+    resourcePath=/data/app/~~Qm4f0x1YfX2c==/com.scottgames.fnaf2-Zp8o1Lw3Ev0==
+    legacyNativeLibraryDir=/data/app/~~Qm4f0x1YfX2c==/com.scottgames.fnaf2-Zp8o1Lw3Ev0==/lib
+    extractNativeLibs=false
+    primaryCpuAbi=arm64-v8a
+    secondaryCpuAbi=null
+    cpuAbiOverride=null
+    versionCode=26 minSdk=21 targetSdk=34
+    minExtensionVersions=[]
+    versionName=2.0.7
+    usesNonSdkApi=false
+    splits=[base]
+    apkSigningVersion=2
+    flags=[ HAS_CODE ALLOW_CLEAR_USER_DATA ALLOW_BACKUP ]
+    privateFlags=[ PRIVATE_FLAG_ACTIVITIES_RESIZEABLE_VIA_SDK_VERSION ALLOW_AUDIO_PLAYBACK_CAPTURE ]
+    forceQueryable=false
+    dataDir=/data/user/0/com.scottgames.fnaf2
+    supportsScreens=[small, medium, large, xlarge, resizeable, anyDensity]
+    timeStamp=2026-09-27 01:34:05
+    lastUpdateTime=2026-09-27 01:34:10
+    installerPackageName=com.android.vending
+    installerPackageUid=10151
+    initiatingPackageName=com.android.vending
+    originatingPackageName=null
+    packageSource=0
+    appMetadataFilePath=null
+    signatures=PackageSignatures{2a6e5f9 version:2, signatures:[0f3c9d21], past signatures:[]}
+    installPermissionsFixed=true
+    pkgFlags=[ HAS_CODE ALLOW_CLEAR_USER_DATA ALLOW_BACKUP ]
+    requested permissions:
+      android.permission.INTERNET
+      com.android.vending.BILLING
+    install permissions:
+      android.permission.INTERNET: granted=true
+      com.android.vending.BILLING: granted=true
+    User 0: ceDataInode=409621 deDataInode=0 installed=true hidden=false suspended=false distractionFlags=0 stopped=false notLaunched=false enabled=0 instant=false virtual=false quarantined=false
+      installReason=4
+      dataDir=/data/user/0/com.scottgames.fnaf2
+      firstInstallTime=2026-08-20 11:02:13
+      uninstallReason=0
+      gids=[3003]
+      runtime permissions:
+
+Hidden system packages:
+  Package [com.scottgames.fnaf2] (0a1b2c3):
+    appId=10231
+    versionCode=19 minSdk=21 targetSdk=30
+    versionName=2.0.5
+    timeStamp=2025-01-01 00:00:00
+    lastUpdateTime=2025-01-01 00:00:00
+    User 0: installed=true
+      firstInstallTime=2025-01-01 00:00:00
+
+Queries:
+  system apps queryable: false
+
+Dexopt state:
+  [com.scottgames.fnaf2]
+    path: /data/app/~~Qm4f0x1YfX2c==/com.scottgames.fnaf2-Zp8o1Lw3Ev0==/base.apk
+      arm64: [status=speed-profile] [reason=bg-dexopt] [primary-abi]

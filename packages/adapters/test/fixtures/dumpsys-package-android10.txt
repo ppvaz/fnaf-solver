@@ -1,0 +1,26 @@
+Packages:
+  Package [com.scottgames.fnaf2] (e4d1a07):
+    userId=10188
+    pkg=Package{b3f2c10 com.scottgames.fnaf2}
+    codePath=/data/app/com.scottgames.fnaf2-1
+    resourcePath=/data/app/com.scottgames.fnaf2-1
+    legacyNativeLibraryDir=/data/app/com.scottgames.fnaf2-1/lib
+    primaryCpuAbi=arm64-v8a
+    secondaryCpuAbi=null
+    versionCode=26 minSdk=21 targetSdk=29
+    versionName=2.0.7
+    splits=[base]
+    apkSigningVersion=2
+    applicationInfo=ApplicationInfo{9c7a2e1 com.scottgames.fnaf2}
+    flags=[ HAS_CODE ALLOW_CLEAR_USER_DATA ALLOW_BACKUP ]
+    dataDir=/data/user/0/com.scottgames.fnaf2
+    supportsScreens=[small, medium, large, xlarge, resizeable, anyDensity]
+    timeStamp=2026-09-11 09:58:40
+    firstInstallTime=2026-08-20 11:02:13
+    lastUpdateTime=2026-09-11 09:58:42
+    installerPackageName=com.android.vending
+    signatures=PackageSignatures{4e8b1d2 version:2, signatures:[0f3c9d21], past signatures:[]}
+    installPermissionsFixed=true
+    pkgFlags=[ HAS_CODE ALLOW_CLEAR_USER_DATA ALLOW_BACKUP ]
+    User 0: ceDataInode=388102 installed=true hidden=false suspended=false stopped=false notLaunched=false enabled=0 instant=false virtual=false
+      gids=[3003]

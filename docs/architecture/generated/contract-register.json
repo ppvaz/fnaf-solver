@@ -283,6 +283,30 @@
       "owner": "apps/trainer",
       "kind": "data",
       "validator": "apps/trainer/src/arcade-lab.js validateArcadeProgress"
+    },
+    {
+      "id": "venue-identity-v1",
+      "owner": "core/contracts",
+      "kind": "data",
+      "validator": "validateVenueIdentity"
+    },
+    {
+      "id": "venue-check-v1",
+      "owner": "core/contracts",
+      "kind": "artifact",
+      "validator": "validateVenueCheck"
+    },
+    {
+      "id": "venue-binding-v1",
+      "owner": "core/contracts",
+      "kind": "artifact",
+      "validator": "validateVenueBinding"
+    },
+    {
+      "id": "qualification-v2",
+      "owner": "core/contracts",
+      "kind": "data",
+      "validator": "validateQualification"
     }
   ]
 }

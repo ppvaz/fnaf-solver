@@ -12,6 +12,10 @@ shell, Python, Java, C, and retained artifacts.
 | `actuation-result-v1` | core/adapters | send and game acceptance remain separate |
 | `capability-v1` | adapters | absent capability fails closed |
 | `device-profile-v1` | device | unresolved calibration/map is refused |
+| `venue-identity-v1` | core (read by adapters) | closed record; an unread field is `null` with its reason; a raw serial is refused, the handset is `handsetHash` |
+| `venue-check-v1` | core | no binding is `UNBOUND` (recorded, not refused); a moved drift field is `DRIFT` and refuses; an unread bound field is `UNKNOWN` and holds |
+| `venue-binding-v1` | core | binds a measured identity to a profile or winner; one that names another subject is refused, not ignored |
+| `qualification-v1` / `qualification-v2` | core | v1 is still read and binds no venue; v2 adds the `venue` it was measured on, and drift demotes it from `QUALIFIED` to `CANDIDATE` |
 | `fact-message-v1` | core telemetry | malformed, oversized, or out-of-order frames are rejected |
 | `bench-transport-trace-v1` | core telemetry | incomplete paths, mixed clocks, and unsafe continuation are rejected |
 | `exercise-v1` / `commitment-v1` / `resolution-v1` | core training | questions freeze; commitments and independently evidenced outcomes remain separate |

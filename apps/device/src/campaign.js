@@ -180,6 +180,17 @@ function event(state, type, data, at) {
   return Object.freeze({ schema: 'campaign-event-v1', type, state, at, data: structuredClone(data ?? {}) });
 }
 
+/**
+ * The venue-check-v1 a campaign result recorded at preflight, or null when
+ * its preflight predates venue identity (every result before 2026-09-29).
+ * @param {any} result a device-campaign-result-v1
+ */
+export function campaignVenue(result) {
+  const preflight = result?.events?.find(item => item?.type === 'campaign.state' &&
+    item.data?.previous === 'PREFLIGHT');
+  return preflight?.data?.venue ?? null;
+}
+
 export function validateCampaignResult(value) {
   if (!isRecord(value) || value.schema !== 'device-campaign-result-v1' || value.version !== 1)
     fail('result schema/version mismatch');
@@ -244,8 +255,11 @@ export class CampaignStateMachine {
 
   /** @param {any} result */
   acceptPreflight(result) {
-    if (result?.status !== 'READY') return this.transition('HOLD', { reason: result?.reason ?? 'device-not-ready' });
-    return this.transition('MENU', { device: result.serial ?? null });
+    // A device-preflight-v2 carries the venue it observed; the transition
+    // event keeps it, so the campaign result names the venue it ran on.
+    const venue = result?.venue ? { venue: structuredClone(result.venue) } : {};
+    if (result?.status !== 'READY') return this.transition('HOLD', { reason: result?.reason ?? 'device-not-ready', ...venue });
+    return this.transition('MENU', { device: result.serial ?? null, ...venue });
   }
 
   /** @param {{target?: string, visible?: boolean, selected?: boolean, rolledThrough?: boolean}} options */

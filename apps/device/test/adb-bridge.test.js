@@ -72,10 +72,14 @@ else if (args.includes('run-as')) {
 } finally { rmSync(fileScratch, { recursive: true, force: true }); }
 
 const noAdb = new AdbDeviceBridge({ run: async () => ({ ok: false, code: 'ENOENT', stdout: '', stderr: 'adb missing' }) });
-assert.deepEqual(await noAdb.preflight({ targetBuild: 'com.scottgames.fnaf2:2.0.7+26' }), {
-  schema: 'device-preflight-v1', version: 1, status: 'HOLD', reason: 'adb-unavailable',
+const noAdbPreflight = await noAdb.preflight({ targetBuild: 'com.scottgames.fnaf2:2.0.7+26' });
+const { venue: noAdbVenue, ...noAdbRecord } = noAdbPreflight;
+assert.deepEqual(noAdbRecord, {
+  schema: 'device-preflight-v2', version: 2, status: 'HOLD', reason: 'adb-unavailable',
   checks: [{ id: 'adb-device', status: 'HOLD', detail: 'adb missing' }], devices: [],
 });
+assert.equal(noAdbVenue.status, 'UNBOUND', 'no device and no binding: unbound, nothing observed');
+assert.equal(noAdbVenue.observed, null);
 
 const run = async (args, options = {}) => {
   if (args.includes('exec-out')) {
@@ -87,6 +91,8 @@ const run = async (args, options = {}) => {
   if (args.at(-1) === 'get-state') return { ok: true, stdout: 'device\n', stderr: '' };
   if (args.includes('pm')) return { ok: true, stdout: 'package:/data/app/com.scottgames.fnaf2/base.apk\n', stderr: '' };
   if (args.includes('dumpsys') && args.includes('package')) return { ok: true, stdout: 'versionCode=26 versionName=2.0.7\n', stderr: '' };
+  if (args.includes('getprop')) return { ok: true, stdout: ({ 'ro.build.fingerprint': 'motorola/fake/fake:15/V1FAKE.1/abc:user/release-keys',
+    'ro.build.version.security_patch': '2026-08-01', 'persist.sys.timezone': 'America/Sao_Paulo' })[args.at(-1)] + '\n', stderr: '' };
   if (args.includes('power')) return { ok: true, stdout: 'mWakefulness=Awake\n', stderr: '' };
   if (args.includes('window')) return { ok: true, stdout: 'mCurrentFocus=Window{ com.scottgames.fnaf2/.MainActivity }\nisKeyguardShowing=false\nmInputRestricted=false\n', stderr: '' };
   if (args.includes('wm')) return { ok: true, stdout: 'Physical size: 1080x2400\n', stderr: '' };
@@ -102,6 +108,9 @@ const ready = await bridge.preflight({ targetBuild: 'com.scottgames.fnaf2:2.0.7+
 assert.equal(ready.status, 'READY');
 assert.equal(ready.serial, 'usb-1');
 assert.ok(ready.checks.every(item => item.status === 'PASS'));
+assert.equal(ready.schema, 'device-preflight-v2');
+assert.equal(ready.venue.status, 'UNBOUND', 'every committed profile is unbound: recorded, not refused');
+assert.equal(ready.venue.observed.versionCode, '26');
 
 let captureRestart;
 const restartedPreflightBridge = new AdbDeviceBridge({ serial: 'usb-1', run,
@@ -174,4 +183,4 @@ assert.deepEqual(restartCalls, [
   ['-s', 'usb-1', 'shell', 'am', 'start', '-n', 'com.scottgames.fnaf2/.Main'],
 ]);
 
-console.log('adb bridge: closed command set, selection, build, lock, focus, HID, and helper gates pass');
+console.log('adb bridge: closed command set, selection, build, lock, focus, HID, helper and venue record gates pass');

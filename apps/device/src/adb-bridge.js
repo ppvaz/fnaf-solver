@@ -6,17 +6,29 @@
  * a fixed, reviewable command with bounded output and timeout.  Actuation is
  * still supplied by the qualified device composition; merely seeing a phone
  * here never promotes a claim level.
- * CONTRACT:device-adb-preflight-v1.
+ *
+ * Preflight also records the venue identity (ADR 0002, principle 12): the
+ * game's version and its install and update times, the OS build fingerprint
+ * and security patch, the Companion version and a hash of the serial, read by
+ * four more fixed read-only queries. It is compared with whatever the run is
+ * bound to (a qualification-v2, or a venue-binding-v1 naming the profile or
+ * winner). Drift refuses; an unbound run records the identity and says so.
+ * The record is `device-preflight-v2` (v1 plus `venue`); readers take both.
+ * CONTRACT:device-adb-preflight-v1. CONTRACT:venue-check-v1.
  */
 import { execFile as execFileCallback } from 'node:child_process';
 import { promisify } from 'node:util';
 import { parseCueHelperEndpoint } from './physical-ports.js';
 import { restartCueHelperCapture as defaultRestartCueHelperCapture } from './cue-helper-capture.js';
+import { readVenueIdentity } from '@fnaf2-1020/adapters';
+import { compareVenueIdentity } from '@fnaf2-1020/core/contracts';
 
 const execFile = promisify(execFileCallback);
 const GAME_PACKAGE = 'com.scottgames.fnaf2';
 const HELPER_PACKAGE = 'com.ppvaz.fnafcompanion';
-const PRELIGHT_SCHEMA = 'device-preflight-v1';
+const PRELIGHT_SCHEMA = 'device-preflight-v2';
+const PRELIGHT_SCHEMAS = Object.freeze(['device-preflight-v1', PRELIGHT_SCHEMA]);
+const PRELIGHT_VERSION = 2;
 const CLOCK_SAMPLE_SCHEMA = 'device-clock-sample-v1';
 const UPTIME_SAMPLE_SCHEMA = 'device-uptime-sample-v1';
 const CAPTURE_MAX_BUFFER = 16 * 1024 * 1024;
@@ -52,6 +64,21 @@ function awakeAndUnlocked(text) {
   if (/mWakefulness=Asleep|mWakefulness=Dozing|mDreamingLockscreen=true|isKeyguardShowing=true|mShowingLockscreen=true/i.test(text)) return false;
   if (/mWakefulness=Awake/i.test(text) && /isKeyguardShowing=false|mInputRestricted=false|keyguardgoingaway=false/i.test(text)) return true;
   return null;
+}
+
+// A venue check becomes a preflight check: drift refuses, an unreadable bound
+// field holds, and an unbound venue is recorded without holding the run.
+const VENUE_CHECK_STATUS = Object.freeze({ UNBOUND: 'PASS', MATCH: 'PASS', DRIFT: 'FAIL', UNKNOWN: 'HOLD' });
+const venueCheckDetail = venue => (venue.remedy ? `${venue.message}. Remedy: ${venue.remedy}` : venue.message);
+
+/**
+ * The venue a device preflight recorded, or null for a v1 record (which
+ * predates it) and for anything that is not a device preflight.
+ * @param {any} preflight
+ */
+export function preflightVenue(preflight) {
+  if (!PRELIGHT_SCHEMAS.includes(preflight?.schema)) return null;
+  return preflight.schema === 'device-preflight-v1' ? null : (preflight.venue ?? null);
 }
 
 function readyStatus(checks) {
@@ -107,13 +134,29 @@ export class AdbDeviceBridge {
 
   async #shell(serial, args) { return this.#command(['-s', serial, 'shell', ...args]); }
 
-  /** @param {{targetPackage?: string, targetBuild?: string, requireHelper?: boolean, requireHid?: boolean, restartCapture?: boolean}} options */
+  /**
+   * The venue identity through fixed read-only queries. `dump` is the game's
+   * `dumpsys package` the build check already read.
+   * @param {string} serial @param {string} targetPackage @param {any} dump @param {boolean} requireHelper
+   */
+  async #venueIdentity(serial, targetPackage, dump, requireHelper) {
+    const fingerprint = await this.#shell(serial, ['getprop', 'ro.build.fingerprint']);
+    const securityPatch = await this.#shell(serial, ['getprop', 'ro.build.version.security_patch']);
+    const timeZone = await this.#shell(serial, ['getprop', 'persist.sys.timezone']);
+    const companion = requireHelper ? await this.#shell(serial, ['dumpsys', 'package', HELPER_PACKAGE]) : null;
+    return readVenueIdentity({ packageName: targetPackage, serial, game: dump, fingerprint, securityPatch,
+      timeZone, companion, companionPackage: HELPER_PACKAGE });
+  }
+
+  /** @param {{targetPackage?: string, targetBuild?: string, requireHelper?: boolean, requireHid?: boolean,
+   *   restartCapture?: boolean, venueBindings?: {source: string, id: string, identity: any}[]}} options */
   async preflight({ targetPackage = GAME_PACKAGE, targetBuild, requireHelper = true,
-    requireHid = true, restartCapture = false } = {}) {
+    requireHid = true, restartCapture = false, venueBindings = [] } = {}) {
     const selected = await this.selectDevice();
     if (selected.status !== 'READY') return {
-      schema: PRELIGHT_SCHEMA, version: 1, status: 'HOLD', reason: selected.reason,
+      schema: PRELIGHT_SCHEMA, version: PRELIGHT_VERSION, status: 'HOLD', reason: selected.reason,
       checks: [check('adb-device', selected.status, selected.detail ?? selected.reason)], devices: selected.devices ?? [],
+      venue: compareVenueIdentity({ observed: null, bindings: venueBindings }),
     };
     const serial = selected.serial;
     const checks = [check('adb-device', 'PASS', serial)];
@@ -126,6 +169,9 @@ export class AdbDeviceBridge {
     const installedBuild = packageBuild(dump.stdout);
     const expectedBuild = expectedBuildSuffix(targetBuild);
     checks.push(check('target-build', installedBuild && expectedBuild && installedBuild === expectedBuild ? 'PASS' : 'FAIL', { expected: expectedBuild, installed: installedBuild }));
+    const venue = compareVenueIdentity({
+      observed: await this.#venueIdentity(serial, targetPackage, dump, requireHelper), bindings: venueBindings });
+    checks.push(check('venue-identity', VENUE_CHECK_STATUS[venue.status], venueCheckDetail(venue)));
 
     const power = await this.#shell(serial, ['dumpsys', 'power']);
     const windows = await this.#shell(serial, ['dumpsys', 'window']);
@@ -166,7 +212,8 @@ export class AdbDeviceBridge {
         catch (error) { checks.push(check('cue-helper-endpoint', 'HOLD', error.message)); }
       }
     }
-    return { schema: PRELIGHT_SCHEMA, version: 1, status: readyStatus(checks), serial, checks };
+    return { schema: PRELIGHT_SCHEMA, version: PRELIGHT_VERSION, status: readyStatus(checks), serial, checks,
+      reason: venue.refuses ? 'venue-identity-drift' : null, venue };
   }
 
   /**
@@ -292,5 +339,6 @@ export class AdbDeviceBridge {
 }
 
 export const devicePreflightSchema = PRELIGHT_SCHEMA;
+export const devicePreflightSchemas = PRELIGHT_SCHEMAS;
 export const deviceClockSampleSchema = CLOCK_SAMPLE_SCHEMA;
 export const deviceUptimeSampleSchema = UPTIME_SAMPLE_SCHEMA;

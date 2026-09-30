@@ -270,8 +270,11 @@ export async function createCampaignPorts(options = {}) {
     // strategy -- Minus 7 among them -- out of the device lane entirely.
     machineOnly = false, allowSaveReset = false, armMode = undefined, captureRestarted = false,
     nightAnchorAimMs = null, nightAnchorMaxK = null, nightAnchorPeriodMs = 1000, nightAnchorStrict = false, nightAnchorAuthorizeOnLatch = false,
-    teachOverlay = false } = options;
+    teachOverlay = false, venueBindings = [] } = options;
   if (typeof teachOverlay !== 'boolean') throw new TypeError('teachOverlay must be boolean');
+  // The runner's own preflight compares the venue against the same bindings
+  // the CLI's did, so the retained result records the same verdict.
+  if (!Array.isArray(venueBindings)) throw new TypeError('venueBindings must be an array');
   // The teach panel narrates from the anchor's release; an unanchored night
   // has no origin on the helper's clock to narrate from.
   if (teachOverlay && nightAnchorAimMs === null) throw new TypeError('teachOverlay requires a night anchor');
@@ -946,7 +949,7 @@ export async function createCampaignPorts(options = {}) {
   };
 
   const devicePreflight = args => bridge.preflight({ targetBuild: spec.target.build,
-    restartCapture: false, ...args });
+    restartCapture: false, venueBindings, ...args });
   const restartAfterAbort = async reason => {
     // The HID release stops input delivery; it does not rewind the game state.
     // Close the shared title process before restarting the target so no stale

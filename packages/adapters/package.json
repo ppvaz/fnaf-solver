@@ -11,6 +11,7 @@
     "./transports/hid": "./src/transports/hid.js",
     "./transports/cue-helper": "./src/transports/cue-helper.js",
     "./night-onset": "./src/night-onset.js",
-    "./transports/companion-status": "./src/transports/companion-status.js"
+    "./transports/companion-status": "./src/transports/companion-status.js",
+    "./transports/android-venue": "./src/transports/android-venue.js"
   }
 }

@@ -71,6 +71,67 @@ never read as static, such as a minigame read as unknown from its start.
 input. `UNKNOWN`, unsupported, uncalibrated, transport-failed, rejected, and
 unverified states remain distinct in results.
 
+## Venue identity (Pedro, 2026-09-29)
+
+On 2026-09-27 the Play Store reinstalled FNaF 2 at 01:34, inside the overnight
+window, and reset the save. The build check could not see it, because the
+reinstalled build was still `2.0.7+26`. So every preflight now records what the
+phone is (ADR 0002, decision 1 and principle 12), and it refuses when that has
+moved from what the run is bound to.
+
+- **What is recorded.** The `venue-identity-v1` record holds the following:
+  - the game package, `versionName` and `versionCode`;
+  - `firstInstallTime` and `lastUpdateTime`, from `dumpsys package`, together
+    with the phone's time zone, because dumpsys prints both as local wall-clock
+    strings;
+  - `ro.build.fingerprint` and `ro.build.version.security_patch`;
+  - the Companion's version;
+  - `handsetHash`, the first 16 hex of sha256 over the serial.
+
+  The raw serial is never written into the record, and the validator refuses a
+  record that carries one. A field that cannot be read is `null` with its
+  reason. `AdbDeviceBridge.preflight` reads the record with four more fixed
+  read-only queries and writes it into `device-preflight-v2`, which is v1 plus
+  `venue`, a `venue-check-v1`. It also adds a `venue-identity` check. The
+  campaign result keeps the venue in its preflight event (`campaignVenue()`),
+  and a live campaign prints it next to its gates.
+- **What binds it.** Two records can bind a run to a venue:
+  - a `qualification-v2`, which is a v1 plus `venue`, the identity the
+    qualification was measured on;
+  - a `venue-binding-v1` that names the run's profile or winner, passed with
+    `--venue-binding FILE`.
+
+  No committed profile, winner or qualification is bound yet, so today preflight
+  records the identity and says so, and does not refuse:
+
+  ```text
+  PASS    venue-identity: unbound: the observed venue identity is recorded; no profile, winner or qualification binds one, so drift is not checked
+  venue UNBOUND: the observed venue identity is recorded; no profile, winner or qualification binds one, so drift is not checked
+  ```
+
+- **Drift refuses.** A change in any of these from any binding is a `FAIL`
+  with reason `venue-identity-drift`:
+  - the package, `versionName` or `versionCode`;
+  - `firstInstallTime` or `lastUpdateTime`;
+  - the fingerprint or the security patch;
+  - the handset hash.
+
+  The message names each field, from what to what, and gives the remedy:
+  re-qualify on the observed venue, or roll the game back to the bound build and
+  keep Play auto-update off. An OS update cannot be rolled back, so re-qualifying
+  is the only remedy for it. A bound field that cannot be read holds the run
+  (`HOLD`) and does not pass it. A Companion or time-zone change is reported and
+  not refused.
+- **Drift demotes the qualification.** The campaign preflight's
+  `qualification-venue` check reports a `qualification-v2` whose venue drifted
+  as `CANDIDATE`, demoted from `QUALIFIED`, and refuses. Nothing persists that
+  demotion: it is derived again at every preflight. A `qualification-v1` is
+  still read, and it is reported as unbound.
+- **Binding is a deliberate act.** Bind the identity that the qualifying run's
+  own preflight recorded (`bindQualificationVenue`, or a `venue-binding-v1`
+  over it). Never bind the identity observed after a drift: that would bless
+  the change the refusal exists to catch.
+
 ## Overnight windows (Pedro, 2026-09-27)
 
 The phone stops being the bottleneck through overnight windows. The phone is

@@ -21,7 +21,8 @@ export const CONTRACTS = Object.freeze([
   'exercise-event-v1', 'exercise-attempt-v1',
   'activity-gate-v1', 'activity-gate-profile-v1', 'activity-gate-decision-v1',
   'microtrainer-session-v1',
-  'exercise-renderer-v1', 'arcade-lab-progress-v1', ]);
+  'exercise-renderer-v1', 'arcade-lab-progress-v1',
+  'venue-identity-v1', 'venue-check-v1', 'venue-binding-v1', 'qualification-v2', ]);
 
 export const CLOCKS = Object.freeze([
   'game-frame', 'simulator-frame', 'device-monotonic-ms',
@@ -139,17 +140,13 @@ export function validateClaimEvidence(input) {
   return input;
 }
 
-// Retained-run contracts. They lived in packages/runtime beside the fixture
-// scheduler and supervisor until 2026-09-25; the campaign preflight, the
-// artifact runner and the evidence index read them, so they belong here.
-export function validateQualification(value) {
-  if (!value || value.schema !== 'qualification-v1' || typeof value.policyHash !== 'string' ||
-      typeof value.modelHash !== 'string' || !Number.isInteger(value.sampleCount) || value.sampleCount < 1 ||
-      !['PASS', 'FAIL', 'INCONCLUSIVE'].includes(value.verdict) ||
-      typeof value.evidenceId !== 'string' || value.evidenceId.length === 0)
-    throw new TypeError('qualification is incomplete');
-  return value;
-}
+// Retained-run contracts: the qualification (v1, and v2 with its venue) lives
+// in qualification.js beside the venue identity it binds.
+export {
+  QUALIFICATION_SCHEMAS, QUALIFICATION_LIFECYCLES, validateQualification,
+  bindQualificationVenue, qualificationStanding,
+} from './qualification.js';
+export * from './venue-identity.js';
 
 export function validateTelemetry(value) {
   if (!value || value.schema !== 'telemetry-event-v1' || typeof value.sessionId !== 'string' ||
