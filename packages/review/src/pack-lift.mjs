@@ -13,7 +13,7 @@
 // list; a custody the kernel has no class for (`incomplete-campaign`) is UNKNOWN with its reason.
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { aborted, death, sixAm, timeout, unknown, validateGameRun } from '@sixam/kernel';
+import { aborted, death, invalid, sixAm, timeout, unknown, validateGameRun } from '@sixam/kernel';
 import { PACKS_DIR, readPack } from './evidence-pack.mjs';
 
 export const LIFT_SOURCE = 'run-pack-v1';
@@ -54,9 +54,15 @@ function custodyOf(pack) {
 const CLOCKS = unknown('run-pack-v1 retains no clock trace: its event rows carry host wall-clock stamps and ' +
   'unlabelled numeric times, and no per-update frame times');
 
-/** The executor's terminal for one attempt, as the kernel's reported outcome. */
-function reportedFromTerminal(terminal) {
+/**
+ * The executor's terminal for one attempt, as the kernel's reported outcome. An `invalid`
+ * terminal (ADR 0002, decision 3: it spent no campaign attempt) is Invalid with its own why.
+ * @param {any} terminal
+ */
+export function reportedFromTerminal(terminal) {
   if (terminal?.outcome === 'sixam') return sixAm();
+  if (terminal?.outcome === 'invalid') return typeof terminal.why === 'string' && terminal.why
+    ? invalid(terminal.why) : unknown('the executor terminal reads invalid and names no reason');
   if (terminal?.outcome === 'death') return death({
     by: unknown('the executor terminal names no character; a graded video or death-cause read decides it'),
     how: unknown('the executor terminal records no mechanism'),

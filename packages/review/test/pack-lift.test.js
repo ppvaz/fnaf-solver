@@ -11,7 +11,7 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isUnknown, validateGameRun } from '@sixam/kernel';
 import { PACKS_DIR } from '../src/evidence-pack.mjs';
-import { liftPack, packIds } from '../src/pack-lift.mjs';
+import { liftPack, packIds, reportedFromTerminal } from '../src/pack-lift.mjs';
 
 const ROOT = resolve(fileURLToPath(new URL('../../..', import.meta.url)));
 
@@ -98,6 +98,13 @@ assert.deepEqual(fnaf1.reportedOutcome, { kind: 'Timeout' });
 assert.equal(fnaf1.runMode, 'live');
 assert.equal(fnaf1.night[0].type, 'night-origin');
 assert.equal(fnaf1.night.at(-1).type, 'night-ended');
+
+// A campaign attempt the executor reported Invalid (ADR 0002, decision 3) lifts to the kernel's
+// Invalid with its why; one with no reason is UNKNOWN, never a guessed why.
+assert.deepEqual(reportedFromTerminal({ night: 6, outcome: 'invalid', sixAm: false, why: 'phase-invalid: arm release lag' }),
+  { kind: 'Invalid', why: 'phase-invalid: arm release lag' });
+assert.equal(reportedFromTerminal({ night: 6, outcome: 'invalid', sixAm: false }).kind, 'UNKNOWN');
+assert.match(reportedFromTerminal({ night: 6, outcome: 'invalid', sixAm: false }).reason, /names no reason/);
 
 const count = key => [...lifted.values()].flat().reduce((sum, run) => ({ ...sum, [key(run)]: (sum[key(run)] ?? 0) + 1 }), {});
 const outcomes = count(run => run.reportedOutcome.kind);
