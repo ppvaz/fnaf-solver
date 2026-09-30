@@ -29,12 +29,12 @@ structural fix is decode-once with concurrent consumers, not skipping.
   nothing decoded may live there. Measured on final2 (232 s), one core, niced:
   decode-only 55 s, the sweepcheck branch 72 s, the camtrace branch 63 s; the
   pipeline ran nine such decodes.
-- `tools/device/framesource.py` is the seam: every instrument's `decode()` asks
+- `packages/review/bin/grade/framesource.py` is the seam: every instrument's `decode()` asks
   it for frames with its own chain, verbatim; it spawns the same ffmpeg the
   instrument used to, or reads a fifo when `decode-once.py` offers one.
   Characterised on a 40 s clip of final2: all seven instruments' stdout, stderr,
   exit codes and the keyframes sheet byte-identical before and after.
-- `tools/device/decode-once.py` is the rendezvous: the instruments run
+- `packages/review/bin/grade/decode-once.py` is the rendezvous: the instruments run
   concurrently; each announces its spec beside a fresh fifo and blocks on it;
   one ffmpeg (`-filter_complex split`, one branch per announced spec) decodes the
   recording once into every fifo; a second, smaller decode serves the two

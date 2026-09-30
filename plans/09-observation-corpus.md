@@ -110,7 +110,7 @@ reason, and does not expose tokens or device-specific secrets.
 emitted-action records, derived evidence, models, operational metadata, eight
 clock/alignment domains, producer/consumer joins, label provenance, split
 discipline, retention, and the exact minimum schema fields. Existing files were
-read but not renamed or rewritten. `tools/device/index-observations.py` makes
+read but not renamed or rewritten. `packages/review/bin/legacy/index-observations.py` makes
 the path/authority/family inventory reproducible; synthetic tests enforce its
 strict-mode and read-only contracts.
 
@@ -128,16 +128,16 @@ session fails validation.
 **Result (partial — no completion credit).** The gate as written is met, and
 nothing else in this package is.
 
-Shipped: [`schema/session-manifest-v1.json`](../tools/device/schema/session-manifest-v1.json)
-and [`schema/session-events-v1.json`](../tools/device/schema/session-events-v1.json)
+Shipped: [`schema/session-manifest-v1.json`](../packages/review/bin/legacy/schema/session-manifest-v1.json)
+and [`schema/session-events-v1.json`](../packages/review/bin/legacy/schema/session-events-v1.json)
 carry all twelve minimum field groups from the inventory, including named clock
 domains with explicit alignment edges, authority class, artifact hash, label
 provenance and split role, model authorization with its holdout report,
 lifecycle outcome with independent evidence, helper identity and faults, and
-redaction. [`validate-session.py`](../tools/device/validate-session.py) is
+redaction. [`validate-session.py`](../packages/review/bin/legacy/validate-session.py) is
 standard-library only and interprets those schema files rather than restating
 them, so a field added to a schema cannot go unchecked.
-[`test-validate-session.py`](../tools/device/test-validate-session.py) proves
+[`test-validate-session.py`](../packages/review/bin/legacy/test-validate-session.py) proves
 two synthetic sessions pass and that nine defects each fail with their *own*
 reason: `schema-version-unsupported`, `mixed-game-builds`,
 `artifact-hash-missing`, `model-stale`, `model-unauthorized`,
@@ -154,7 +154,7 @@ general secret scanner — it makes no claim about shapes it was not told about.
 
 **Result (producer slice, 2026-08-26).** Every producer now writes one.
 
-[`session-manifest.py`](../tools/device/session-manifest.py) is the emitter and
+[`session-manifest.py`](../packages/review/bin/legacy/session-manifest.py) is the emitter and
 [`session.sh`](../packages/play/bin/phone/session.sh) is the threading: `fnaf_session_begin`
 latches one id and one `time.monotonic()` origin, exports them, and every later
 call — including a helper started *inside* a run — reads them back rather than

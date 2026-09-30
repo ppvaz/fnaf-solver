@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Validate a v1 stock-device session manifest and its ordered event stream.
 
-    tools/device/validate-session.py MANIFEST.json [--events PATH] [--json]
+    packages/review/bin/legacy/validate-session.py MANIFEST.json [--events PATH] [--json]
 
 Standard library only, like index-observations.py: this must run on the phone's
 host, in CI, and in a checkout with no virtualenv, so there is no jsonschema
-dependency. The schemas in tools/device/schema/ are the machine-readable
+dependency. The schemas in packages/review/bin/legacy/schema/ are the machine-readable
 contract; this file interprets them rather than restating them, so a field
 added to a schema cannot silently go unchecked.
 

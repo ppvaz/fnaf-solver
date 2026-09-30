@@ -25,7 +25,7 @@ Three properties it exists to guarantee:
   came from another domain keeps its own `source_clock`/`source_t`; the
   manifest carries the measured alignment edge instead of rewriting the value.
 
-Fields are typed by tools/device/schema/*.json, not by a table restated here,
+Fields are typed by packages/review/bin/legacy/schema/*.json, not by a table restated here,
 so a key this tool cannot place in the schema is refused at `record` time
 rather than surfacing as a validation failure minutes later.
 
@@ -44,7 +44,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-REPO = HERE.parent.parent
+REPO = HERE.parents[3]
 SCHEMA_DIR = HERE / "schema"
 # FNAF2_CAPTURES exists so the mock-ADB regression can build real sessions
 # without colliding with a live run's files. It must stay inside the checkout:
@@ -253,7 +253,7 @@ def typed_fields(schema_name, obj_name, pairs, skip=()):
         spec = leaf_spec(objects, obj_name, parts)
         if spec is None:
             die(f"{key!r} is not a field of schema object {obj_name!r}; the "
-                "schema in tools/device/schema/ is the contract", 2)
+                "schema in packages/review/bin/legacy/schema/ is the contract", 2)
         value = coerce(spec, key, text)
         guard(key, value)
         node = out

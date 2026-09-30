@@ -14,7 +14,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 TOOL = HERE / "validate-session.py"
-DATA = HERE / "testdata" / "session-v1"
+DATA = HERE / "../../test/legacy-session"
 SCHEMA = HERE / "schema"
 
 

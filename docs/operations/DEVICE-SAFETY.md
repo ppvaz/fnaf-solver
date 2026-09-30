@@ -90,7 +90,7 @@ post-death screens: it skipped Game Over into Custom Night
 (`night7-n7-420-minimal-m3-p1b-20260927T195732Z`), and k3's left vent light
 lies on the title's New Game. The rule, why no confirmation read is required,
 and its numbers are in `docs/evidence/post-night-static-halt-20260927.json`
-(`tools/device/post-night-static.mjs`). The halt, the stop and every
+(`packages/review/bin/grade/post-night-static.mjs`). The halt, the stop and every
 post-halt read gap over the 2418 ms observer bound are evented
 (`lifecycle.actuation-halted`, `lifecycle.actuation-stopped`,
 `lifecycle.observe-gap`). Not covered: a death whose post-death screens are

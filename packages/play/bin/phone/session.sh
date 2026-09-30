@@ -18,7 +18,7 @@
 # no provenance, which is the state this plan exists to end.
 
 FNAF2_SESSION_HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-FNAF2_SESSION_TOOL="$FNAF2_SESSION_HERE/../../../../tools/device/session-manifest.py"
+FNAF2_SESSION_TOOL="$FNAF2_SESSION_HERE/../../../../packages/review/bin/legacy/session-manifest.py"
 FNAF2_MANIFEST="${FNAF2_MANIFEST:-1}"
 FNAF2_SESSION_FAULT=0
 # The build coords.sh, the screen models and the sourced event model are all

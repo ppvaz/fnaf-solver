@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The office frame's RNG seed bracket, from the game's own log.
 
-  tools/device/office-seed-bracket.py LOGCAT [--onset-ms MS] [--clock-pinned] [--json OUT]
+  packages/review/bin/grade/office-seed-bracket.py LOGCAT [--onset-ms MS] [--clock-pinned] [--json OUT]
 
 LOGCAT is `adb logcat -v epoch -s MMFRuntime:V` captured live around a run
 (the phone's 256 KiB log ring rolls over in about a minute, so it must be

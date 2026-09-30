@@ -621,6 +621,21 @@
       ]
     },
     {
+      "file": "packages/play/bin/grade/tap-stall-audit.mjs",
+      "imports": [
+        "@sixam/play",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/play/bin/grade/test-tap-stall-audit.mjs",
+      "imports": [
+        "./tap-stall-audit.mjs"
+      ]
+    },
+    {
       "file": "packages/play/bin/phone/actuator.mjs",
       "imports": [
         "@sixam/source/fnaf2"
@@ -2025,6 +2040,23 @@
       ]
     },
     {
+      "file": "packages/propose/bin/report/phase-reconstruct.mjs",
+      "imports": [
+        "../plans/minus-toys-plan.mjs",
+        "@sixam/play/phone/night-onset",
+        "@sixam/source/fnaf2",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/report/test-phase-reconstruct.mjs",
+      "imports": [
+        "./phase-reconstruct.mjs"
+      ]
+    },
+    {
       "file": "packages/propose/bin/report/windtrace.mjs",
       "imports": [
         "../plans/human-gate.mjs",
@@ -2729,6 +2761,70 @@
         "../../play/src/campaign/campaign-bundle.js",
         "../../play/src/campaign/campaign.js",
         "../bin/plans/bundle.mjs",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/review/bin/grade/clocktrace.mjs",
+      "imports": [
+        "node:child_process",
+        "node:fs"
+      ]
+    },
+    {
+      "file": "packages/review/bin/grade/post-night-static.mjs",
+      "imports": [
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/review/bin/grade/run-report.mjs",
+      "imports": [
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/review/bin/grade/static-terminal-window.mjs",
+      "imports": [
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/review/bin/grade/test-grade-run-coverage.mjs",
+      "imports": [
+        "node:child_process",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/review/bin/grade/test-post-night-static.mjs",
+      "imports": [
+        "./post-night-static.mjs",
+        "node:assert/strict",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/review/bin/grade/test-static-terminal-window.mjs",
+      "imports": [
+        "./static-terminal-window.mjs",
+        "node:assert/strict",
         "node:fs",
         "node:os",
         "node:path",
@@ -3741,13 +3837,6 @@
       ]
     },
     {
-      "file": "tools/device/clocktrace.mjs",
-      "imports": [
-        "node:child_process",
-        "node:fs"
-      ]
-    },
-    {
       "file": "tools/device/deathchart.mjs",
       "imports": [
         "../../packages/propose/bin/plans/human-gate.mjs",
@@ -3763,51 +3852,6 @@
       "file": "tools/device/fact-register.mjs",
       "imports": [
         "@sixam/kernel/contracts",
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/device/phase-reconstruct.mjs",
-      "imports": [
-        "@sixam/play/phone/night-onset",
-        "@sixam/source/fnaf2",
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/device/post-night-static.mjs",
-      "imports": [
-        "node:crypto",
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/device/run-report.mjs",
-      "imports": [
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/device/static-terminal-window.mjs",
-      "imports": [
-        "node:crypto",
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/device/tap-stall-audit.mjs",
-      "imports": [
-        "@sixam/play",
         "node:fs",
         "node:path",
         "node:url"
@@ -3843,49 +3887,6 @@
         "node:os",
         "node:path",
         "node:url"
-      ]
-    },
-    {
-      "file": "tools/device/test-grade-run-coverage.mjs",
-      "imports": [
-        "node:child_process",
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/device/test-phase-reconstruct.mjs",
-      "imports": [
-        "./phase-reconstruct.mjs"
-      ]
-    },
-    {
-      "file": "tools/device/test-post-night-static.mjs",
-      "imports": [
-        "./post-night-static.mjs",
-        "node:assert/strict",
-        "node:fs",
-        "node:os",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/device/test-static-terminal-window.mjs",
-      "imports": [
-        "./static-terminal-window.mjs",
-        "node:assert/strict",
-        "node:fs",
-        "node:os",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/device/test-tap-stall-audit.mjs",
-      "imports": [
-        "./tap-stall-audit.mjs"
       ]
     },
     {
@@ -3971,7 +3972,7 @@
     {
       "file": "tools/recompile/android/practice-audit.mjs",
       "imports": [
-        "../../device/tap-stall-audit.mjs",
+        "../../../packages/play/bin/grade/tap-stall-audit.mjs",
         "@sixam/play",
         "node:child_process",
         "node:crypto",
@@ -4343,7 +4344,7 @@
     {
       "file": "tools/test-mistake-register.mjs",
       "imports": [
-        "./device/run-report.mjs",
+        "../packages/review/bin/grade/run-report.mjs",
         "node:child_process",
         "node:fs",
         "node:path",

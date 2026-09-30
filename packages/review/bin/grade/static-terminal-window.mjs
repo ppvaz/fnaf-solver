@@ -23,9 +23,9 @@
 // The record is content-free: run ids and milliseconds, no frames or labels
 // beyond the lifecycle state names.
 //
-//   node tools/device/static-terminal-window.mjs           # print the record
-//   node tools/device/static-terminal-window.mjs --write   # write RECORD_PATH
-//   node tools/device/static-terminal-window.mjs --check   # the committed record
+//   node packages/review/bin/grade/static-terminal-window.mjs           # print the record
+//   node packages/review/bin/grade/static-terminal-window.mjs --write   # write RECORD_PATH
+//   node packages/review/bin/grade/static-terminal-window.mjs --check   # the committed record
 //       reproduces from the runs it lists, and no pack committed since reads a
 //       terminal later than its measured maximum (which would eat the margin)
 import { createHash } from 'node:crypto';
@@ -33,7 +33,7 @@ import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
 export const RUNS_DIR = 'docs/evidence/runs';
 export const RECORD_PATH = 'docs/evidence/static-terminal-window-20260927.json';
 export const RECORD_ID = 'static-terminal-window-20260927';
@@ -175,6 +175,7 @@ export function measureStaticTerminalWindow({ root = ROOT, runs } = {}) {
     scope: 'Host-clock timing of lifecycle observation rows in committed run packs. It grades no run, promotes nothing, and changes no pack\'s outcome.',
     question: 'After the first static read that follows a night, how long until the lifecycle observer reads the terminal screen, and how long did the old three-read static exit take?',
     method: {
+      // The committed record's own words, hashed into its evidenceId: where it was written from.
       tool: 'tools/device/static-terminal-window.mjs',
       command: 'node tools/device/static-terminal-window.mjs --write',
       source: `${RUNS_DIR}/*/events.jsonl: observation rows (written on label change, host clock, after the classifier returned) and campaign.abort.restart rows; observations.jsonl, where retained, for direct read gaps`,

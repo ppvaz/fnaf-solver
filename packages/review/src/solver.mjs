@@ -404,7 +404,7 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
         return refusalEnvelope({ ...numbers, cite: [...numbers.cite, `${where}/pack.json`],
           remedy: `${numbers.remedy}. Review decides a death's time from an independent witness${video
             ? ` (this pack's ${video.source} reads ${video.outcome}${video.detail ? ` -- ${video.detail}` : ''}; its clock is the recording's, not the night's origin)`
-            : ' (a graded video: tools/device/grade-run.sh)'}` });
+            : ' (a graded video: packages/review/bin/grade/grade-run.sh)'}` });
       }
     }
     return envelope({ deaths: deaths.map(run => ({ id: run.id, at: run.reportedOutcome.at, unit: 'ms from the night origin' })) }, lostNotes);

@@ -258,8 +258,8 @@ def main():
             spec.loader.exec_module(mod)
             return mod
 
-        gn = load("gn", "../../../../../tools/device/grade-night.py")
-        dc = load("dc", "../../../../../tools/device/death-census.py")
+        gn = load("gn", "../../../../../packages/review/bin/grade/grade-night.py")
+        dc = load("dc", "../../../../../packages/review/bin/report/death-census.py")
         ss = load("ss", "screenstate.py")
 
         def watch_rows(rgb, meter=False):

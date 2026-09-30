@@ -139,7 +139,7 @@
           ]
         },
         {
-          "file": "tools/device/phase-reconstruct.mjs",
+          "file": "packages/propose/bin/report/phase-reconstruct.mjs",
           "evidence": [
             "python-classifier"
           ]

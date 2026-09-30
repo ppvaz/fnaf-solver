@@ -449,7 +449,7 @@ if [ "$VERB" = trace ]; then
       fi
       adb shell run-as "$PACKAGE" rm -f "files/frame-traces/$name" >/dev/null 2>&1 || true
       echo "wrote $target ($bytes bytes)"
-      metric_args=("$HERE/../../../../tools/device/actuation-frame-metric.py" "$target")
+      metric_args=("$HERE/../../../../packages/review/bin/grade/actuation-frame-metric.py" "$target")
       if [ -n "${FRAME_TRACE_METRIC_START_NS:-}" ]; then
         metric_args+=(--start-ns "$FRAME_TRACE_METRIC_START_NS")
       fi

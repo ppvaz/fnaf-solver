@@ -4,7 +4,7 @@
 The command classifies paths and their evidence role. It deliberately does not
 infer labels from filenames, migrate layouts, or rewrite old captures.
 
-    tools/device/index-observations.py [captures] [--json] [--hash] [--strict]
+    packages/review/bin/legacy/index-observations.py [captures] [--json] [--hash] [--strict]
 
 `--strict` fails when a file is empty or unclassified. It does not make an old
 artifact replayable; that requires the session manifest introduced by Plan 09.

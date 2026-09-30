@@ -4,7 +4,7 @@
 // The failure mode this closes is the one CLAUDE.md documents: the drawer is
 // full of instruments and what is not remembered is not run -- screenstate.py
 // could have refuted the 163 s claim from any frame, and nobody invoked it.
-// So every script in tools/device must be one of three things: invoked by
+// So every script beside grade-run.sh must be one of three things: invoked by
 // grade-run.sh, a test- gate the suite runs, or consciously excluded below
 // with a reason. A new instrument fails here until that decision is made in
 // the diff.
@@ -14,52 +14,47 @@
 // read as coverage.
 import { execFileSync } from 'node:child_process';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
+const ROOT = resolve(HERE, '../../../..');
+// A script as the repository names it, however a caller climbed to it: grade-run.sh and this gate
+// sit together, but the directories they reach are not beside either of them.
+const key = (path) => relative(ROOT, resolve(HERE, path));
 
 // Not instruments, and why. An entry here is a decision, not a formality:
 // deleting one is how a script gets promoted into grade-run.sh.
 const EXCLUDED = new Map([
   ['office-seed-bracket.py', 'the office frame seed bracket from a live MMFRuntime logcat; consumed by the seed-lock scorer, not by a run grade yet -- it joins grade-run.sh once runs retain mmfruntime.logcat'],
   ['grade-run.sh', 'the pipeline itself'],
-  ['fact-register.mjs', 'a generated register of which producer answers each semantic fact and on what evidence; it reads source, not a run, and test-fact-register.mjs is the gate over it'],
-  ['test-anchor-aim-band.mjs', 'a gate, not an instrument: it multiplies each ANCHOR_AIMS entry out through its own onset bias and input latency and checks the effective epoch lands in a confirmed winning band. It reads the register and evidence records, never a run; registered in npm run test:unit'],
-  ['tickphase.py', 'reads the retained Bluetooth audio (night-run.sh --bt-audio) after a run: roll-witness onsets and WinD folds. Run by hand while its thresholds and the clock-rate correction are being calibrated (2026-09-13); it joins grade-run.sh once a fold-based phase read survives a second run'],
   ['cycle-ledger.py', 'reads the retained video (and audio census) after a run; run by hand while its flash classes and colour rule are calibrated on Night 6 recordings (2026-09-13); its cycle timings come from the winner of the bundle the run names (test-cycle-ledger.py, 2026-09-14); joins grade-run.sh with tickphase.py'],
-  ['death-census.py', 'cross-run census -- answers "what keeps happening", not "what happened in this run"'],
   ['static-terminal-window.mjs', 'cross-pack census over committed run packs that derives the executor\'s static-to-terminal window, not a per-run instrument; test-static-terminal-window.mjs (npm run test:unit) reproduces its record'],
   ['post-night-static.mjs', 'cross-pack census over committed run packs that decides the executor\'s post-night static halt (whether a night ever went on after a post-night static), not a per-run instrument; test-post-night-static.mjs (npm run test:unit) reproduces its record'],
-  ['deathchart.mjs', 'charts the model gate\'s death census for a PLAN under modeled human slack -- a simulator result with no run artifact to read; gated by test-deathchart.mjs'],
-  ['find-events.py', 'mask-camp trial scrubber, not a night-run grader'],
-  ['index-observations.py', 'read-only corpus inventory; indexes artifacts rather than grading one run'],
   ['death-cause.py', 'shadow-only labelled visual-cause model builder used by run-timeline.py when explicitly supplied; it builds a model rather than grading a run, gated by test-death-cause.py'],
   ['framesource.py', 'the one frame source every video instrument decodes through (ffmpeg privately, or the shared single decode when the pipeline offers a pipe); a library, gated by test-framesource.py'],
-  ['session-manifest.py', 'the manifest producer -- grade-run.sh consumes its output through validate-session.py; gated by test-session-manifest.sh'],
 
   // Added 2026-09-08. These nineteen accumulated after the list was last
   // extended, and the registry bug above hid them behind twelve false
   // "nothing runs" complaints. Each reason below was checked against the
   // gate or caller it names -- an unchecked reason is the drawer problem
   // again, and four earlier exclusions cited gates that did not run.
-  ['overnight-window.py', 'a forwarder to apps/lab/overnight-window.py, kept while a host\'s installed systemd units name this path (legacy-paths.json lab.overnight-window-path); the window itself is gated in apps/lab'],
-  ['validate-session.py', 'Plan 09 session-manifest validator, run by session-manifest.py when a session producer (collect-cue-audio.sh, capture-screen-sample.sh) finalizes; night-run.sh writes no session manifest, so no night has one to grade; gated by test-validate-session.py'],
 ]);
 
 // The sibling directories, under the same rule. The audit that widened this scan noted the
 // hole: CLAUDE.md's purest "instrument nobody runs" example is packages/propose/parked/minus7/cue/detect.py, and this
 // check did not look at it. A script that leaves tools/device for its context (ADR 0002) is
 // followed there with its exclusion, so moving a script is never how it leaves coverage.
-const SIBLINGS = ['../../packages/source/decompile',
-  ...['bin/plans', 'bin/policy', 'bin/report', 'parked/minus7/cue'].map(dir => `../../packages/propose/${dir}`),
+const SIBLINGS = ['../../../../tools/device', '../../../../packages/source/decompile',
+  ...['bin/report', 'bin/legacy'].map(dir => `../../../../packages/review/${dir}`),
+  ...['bin/plans', 'bin/policy', 'bin/report', 'parked/minus7/cue'].map(dir => `../../../../packages/propose/${dir}`),
   ...['bin/phone', 'bin/companion', 'bin/probe', 'bin/calibrate', 'bin/audio', 'games/fnaf1', 'games/fnaf3',
-    'games/fnaf4', 'src/sensors/screencap', 'test'].map(dir => `../../packages/play/${dir}`),
-  '../../apps/desktop/bin', '../../apps/wiki'];
+    'games/fnaf4', 'src/sensors/screencap', 'test', 'bin/grade'].map(dir => `../../../../packages/play/${dir}`),
+  '../../../../apps/desktop/bin', '../../../../apps/wiki'];
 // Where tools/device's tests went beside models, censuses and searches over the simulator, none of
 // which reads a run: only the tests there are checked, and in a test/ directory every script is one.
-const TEST_DIRS = ['../../packages/propose/test', '../../packages/propose/bin/census', '../../packages/propose/parked/minus7',
-  '../../apps/desktop/test'];
+const TEST_DIRS = ['../../../../packages/propose/test', '../../../../packages/propose/bin/census', '../../../../packages/propose/parked/minus7',
+  '../../../../apps/desktop/test'];
 const SIBLING_EXCLUDED = new Map([
   ['aimap.py', 'AI-table extractor from the event-sheet dump, gated by test-aimap.py'],
   ['nightmap.py', 'per-game night reader over any of the four event-sheet dumps -- clock, difficulty table, rolls, movement edges and draw census, gated by test-nightmap.py; it reads source, not a run'],
@@ -187,6 +182,20 @@ const SIBLING_EXCLUDED = new Map([
   ['fnaf1-custom-run.sh', 'lease wrapper for the FNaF 1 Custom Night runner; a live route/calibration executor, not a post-run grader'],
   // apps/wiki
   ['fnaf1-teach-media.py', 'cuts a FNaF 1 run video into a README GIF and phone videos; a presentation tool, not a grader'],
+  // tools/device
+  ['fact-register.mjs', 'a generated register of which producer answers each semantic fact and on what evidence; it reads source, not a run, and test-fact-register.mjs is the gate over it'],
+  ['test-anchor-aim-band.mjs', 'a gate, not an instrument: it multiplies each ANCHOR_AIMS entry out through its own onset bias and input latency and checks the effective epoch lands in a confirmed winning band. It reads the register and evidence records, never a run; registered in npm run test:unit'],
+  ['deathchart.mjs', 'charts the model gate\'s death census for a PLAN under modeled human slack -- a simulator result with no run artifact to read; gated by test-deathchart.mjs'],
+  ['overnight-window.py', 'a forwarder to apps/lab/overnight-window.py, kept while a host\'s installed systemd units name this path (legacy-paths.json lab.overnight-window-path); the window itself is gated in apps/lab'],
+  // packages/review/bin/report
+  ['bench-trace.mjs', 'a read-only report over a retained Plan 20 bench trace, not a run: it summarizes a trace the bench wrote and upgrades no claim level'],
+  ['tickphase.py', 'reads the retained Bluetooth audio (night-run.sh --bt-audio) after a run: roll-witness onsets and WinD folds. Run by hand while its thresholds and the clock-rate correction are being calibrated (2026-09-13); it joins grade-run.sh once a fold-based phase read survives a second run'],
+  ['death-census.py', 'cross-run census -- answers "what keeps happening", not "what happened in this run"'],
+  ['find-events.py', 'mask-camp trial scrubber, not a night-run grader'],
+  // packages/review/bin/legacy
+  ['index-observations.py', 'read-only corpus inventory; indexes artifacts rather than grading one run'],
+  ['session-manifest.py', 'the manifest producer -- grade-run.sh consumes its output through validate-session.py; gated by test-session-manifest.sh'],
+  ['validate-session.py', 'Plan 09 session-manifest validator, run by session-manifest.py when a session producer (collect-cue-audio.sh, capture-screen-sample.sh) finalizes; night-run.sh writes no session manifest, so no night has one to grade; gated by test-validate-session.py'],
 ]);
 
 const sh = readFileSync(join(HERE, 'grade-run.sh'), 'utf8');
@@ -223,10 +232,10 @@ const invocations = sh.split('\n').filter((line) => !/^\s*#/.test(line));
 const referenced = new Set();
 for (const line of invocations)
   for (const m of line.matchAll(/\$HERE\/((?:\.\.\/)?[\w./-]+\.(?:py|mjs|sh))/g))
-    referenced.add(m[1]);
+    referenced.add(key(m[1]));
 
 for (const ref of referenced)
-  if (!existsSync(resolve(HERE, ref)))
+  if (!existsSync(join(ROOT, ref)))
     complain(`grade-run.sh invokes ${ref}, which does not exist -- ` +
       'that step will silently grade nothing');
 
@@ -250,8 +259,8 @@ const scriptNames = (text) => {
   }
   return found;
 };
-const suitePath = join(HERE, '..', 'test.mjs');
-const ciPath = join(HERE, '..', '..', '.github', 'workflows', 'ci.yml');
+const suitePath = join(ROOT, 'tools', 'test.mjs');
+const ciPath = join(ROOT, '.github', 'workflows', 'ci.yml');
 const registered = scriptNames(readFileSync(suitePath, 'utf8'));
 // CI invokes gates as shell command lines rather than quoted strings.
 const ci = existsSync(ciPath) ? readFileSync(ciPath, 'utf8') : '';
@@ -267,7 +276,7 @@ for (const line of ci.split('\n')) {
 // reported eleven such gates as "a gate that nothing runs", including every
 // Companion gate and three of the calibration gates. A checker that knows
 // one of two registries measures the registry it knows, not the coverage.
-const pkgPath = join(HERE, '..', '..', 'package.json');
+const pkgPath = join(ROOT, 'package.json');
 const scriptNamesRun = new Set();
 for (const command of Object.values(JSON.parse(readFileSync(pkgPath, 'utf8')).scripts ?? {}))
   for (const m of String(command).matchAll(/([\w./-]+\.(?:py|mjs|sh))/g))
@@ -292,7 +301,7 @@ for (const name of readdirSync(HERE).sort()) {
         'Register it, or delete it.');
     continue;
   }
-  if (referenced.has(name)) continue;
+  if (referenced.has(key(name))) continue;
   if (EXCLUDED.has(name)) continue;
   complain(`${name} is neither invoked by grade-run.sh nor excluded here. ` +
     'Wire it into grade-run.sh, or record above why it is not an instrument.');
@@ -301,7 +310,7 @@ for (const name of readdirSync(HERE).sort()) {
 // A stale exclusion reads as "not an instrument" about something the pipeline
 // runs, so it dies the moment it stops being true.
 for (const name of EXCLUDED.keys())
-  if (referenced.has(name))
+  if (referenced.has(key(name)))
     complain(`${name} is excluded but grade-run.sh invokes it -- delete the stale exclusion`);
 
 // The reasons are free text and nothing parsed them, so a script could drop
@@ -310,8 +319,8 @@ for (const name of EXCLUDED.keys())
 // wherever that gate lives now: a gate moves with its context, not always
 // with the script it excuses.
 const tracked = new Set(execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard'],
-  { cwd: join(HERE, '..', '..'), maxBuffer: 1 << 28 }).toString().split('\n')
-  .filter(file => existsSync(join(HERE, '..', '..', file))).map(file => file.split('/').pop()));
+  { cwd: ROOT, maxBuffer: 1 << 28 }).toString().split('\n')
+  .filter(file => existsSync(join(ROOT, file))).map(file => file.split('/').pop()));
 for (const [name, reason] of [...EXCLUDED, ...SIBLING_EXCLUDED]) {
   for (const m of reason.matchAll(/\btest-[\w.-]+\.(?:py|mjs|sh)\b/g)) {
     const gate = m[0];
@@ -331,7 +340,7 @@ for (const [name, reason] of [...EXCLUDED, ...SIBLING_EXCLUDED]) {
 // compilers' move to packages/propose that way.
 for (const name of EXCLUDED.keys())
   if (!existsSync(join(HERE, name)))
-    complain(`${name} is excluded here but is not in tools/device -- move the entry with the script, or delete it`);
+    complain(`${name} is excluded here but is not beside grade-run.sh -- move the entry with the script, or delete it`);
 for (const name of SIBLING_EXCLUDED.keys())
   if (!SIBLINGS.some(dir => existsSync(join(HERE, dir, name))))
     complain(`${name} is excluded as a sibling but is in none of the sibling directories -- move or delete the entry`);
@@ -355,7 +364,7 @@ for (const dir of SIBLINGS) {
           'tools/test.mjs or .github/workflows/ci.yml, or delete it.');
       continue;
     }
-    if (referenced.has(rel)) continue;
+    if (referenced.has(key(rel))) continue;
     if (SIBLING_EXCLUDED.has(name)) continue;
     complain(`${rel} is neither invoked by grade-run.sh nor excluded. ` +
       'Wire it in, or record why it is not an instrument.');
@@ -370,6 +379,6 @@ for (const dir of TEST_DIRS) {
 }
 
 if (!failed) console.log(`grade-run.sh coverage: ${referenced.size} scripts invoked, ` +
-  `${EXCLUDED.size + SIBLING_EXCLUDED.size} exclusions across device and ${SIBLINGS.length} sibling directories, ` +
+  `${EXCLUDED.size + SIBLING_EXCLUDED.size} exclusions beside it and in ${SIBLINGS.length} sibling directories, ` +
   'every gate reachable, nothing unaccounted for');
 process.exit(failed);

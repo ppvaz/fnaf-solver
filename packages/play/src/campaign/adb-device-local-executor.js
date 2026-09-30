@@ -39,7 +39,7 @@ const EXIT_CONFIRM_SAMPLES = 3;
 // was read: night7-corner-bbfoxy-r01-20260927T072310Z became UNKNOWN that way
 // while its video shows the jumpscare. Measured over the committed run packs
 // (docs/evidence/static-terminal-window-20260927.json, evidence
-// static-terminal-window-fb44824c48fdc471; tools/device/static-terminal-window.mjs):
+// static-terminal-window-fb44824c48fdc471; packages/review/bin/grade/static-terminal-window.mjs):
 // 32 packs read Game Over 1964-6306 ms after the first static read of a night,
 // one read 6 AM 5763 ms after it, and 45 packs instead ended on the third
 // static read 3119-4835 ms after the first -- two observer intervals, so one is
@@ -72,7 +72,7 @@ export const STATIC_TERMINAL_WAIT_MS = STATIC_TERMINAL_MAX_MS + OBSERVER_INTERVA
 //
 // Why the FIRST static and not a confirmed one, measured over the committed
 // packs (docs/evidence/post-night-static-halt-20260927.json, evidence
-// post-night-static-halt-1f27592aee56cc26; tools/device/post-night-static.mjs):
+// post-night-static-halt-1f27592aee56cc26; packages/review/bin/grade/post-night-static.mjs):
 // 81 static episodes follow a night in 184 packs, and in none of them was the
 // office read twice in a row again: 33 end at Game Over, 45 at the old
 // three-static abort and its relaunch, 2 at the title, 1 at 6 AM. In the 27

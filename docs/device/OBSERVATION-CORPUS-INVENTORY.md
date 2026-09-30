@@ -27,7 +27,7 @@ or model reports are present in this checkout. That is not evidence they never
 existed; `captures/` is ignored and prior documentation describes data that was
 later removed or lives on another machine/session.
 
-[`index-observations.py`](../../tools/device/index-observations.py) reproduces
+[`index-observations.py`](../../packages/review/bin/legacy/index-observations.py) reproduces
 the filesystem side of this inventory without modifying captures. Its default
 report reads paths and sizes only; `--hash` opts into file reads, `--json` emits
 structured output, and `--strict` rejects empty or unclassified artifacts. It

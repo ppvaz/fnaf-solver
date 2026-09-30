@@ -311,7 +311,7 @@ globs in the generated register; named here so they can be triaged:
 
 ## 13. Grading instruments — binding: `GATE` on coverage only
 
-`tools/device/grade-run.sh` (330) exists **because** this family sprawled; its
+`packages/review/bin/grade/grade-run.sh` (330) exists **because** this family sprawled; its
 header is the best statement of the problem in the repository ("we have a
 drawer full of them ... and nothing that runs them"), and it records the false
 record that cost: nights 6-36 and 6-37 reported past 2 AM while the retained
@@ -325,7 +325,7 @@ Instruments: `grade-night.py` (278), `grade-minus7.py` (159),
 verb in `apps/desktop/src/device-cli.js` (was `apps/device/src/cli.js:193`).
 
 **The best existing inventory in the repository is this family's gate.**
-`tools/device/test-grade-run-coverage.mjs` enforces that every script in
+`packages/review/bin/grade/test-grade-run-coverage.mjs` enforces that every script in
 `tools/device`, `packages/source/decompile` and the directories the device and
 cue scripts moved to (its `SIBLINGS`) is either invoked by
 `grade-run.sh`, a gate the suite runs, or **excluded with a written reason** —
@@ -480,7 +480,7 @@ A cleanup should reuse one of these five rather than invent a sixth:
    `packages/propose/bin/policy/policy-equivalence.mjs` (two compilers of one plan format),
    `packages/propose/test/legacy-equivalence.test.js`.
 5. **Enforced census with written exclusions** — the pattern that keeps an
-   inventory from rotting into prose. `tools/device/test-grade-run-coverage.mjs`
+   inventory from rotting into prose. `packages/review/bin/grade/test-grade-run-coverage.mjs`
    (every script is wired, gated, or excluded *with a reason*) and
    `tools/test-docs.mjs` (every page indexed, every tool script carries a
    `TOOLS.md` row, no stale row survives a deletion). This is the pattern this
@@ -511,7 +511,7 @@ Not surveyed: `apps/trainer` beyond §16, the `tools/cue` detection chain beyond
 §15, the 39-file Java overlay/capture family beyond §3, the 147 test-shaped
 files as a family of their own, and `packages/source/decompile` / `tools/recompile`. For
 `tools/device` specifically, the `EXCLUDED` map in
-`tools/device/test-grade-run-coverage.mjs` is a more complete per-script census
+`packages/review/bin/grade/test-grade-run-coverage.mjs` is a more complete per-script census
 than anything here, and it is gate-enforced; read it alongside §13.
 
 Ownership rules that decide most of these questions live in
@@ -522,7 +522,7 @@ the command surface is [`../../tools/README.md`](../../tools/README.md).
 ## 22. Open gaps
 
 The 2026-09-08 pass left these named rather than fixed. The first three are
-cited by name in `tools/device/test-grade-run-coverage.mjs`'s exclusion rows,
+cited by name in `packages/review/bin/grade/test-grade-run-coverage.mjs`'s exclusion rows,
 which point here — so this list is load-bearing, not a wish list.
 
 - **`packages/play/bin/calibrate/screen-calibrate.py` has no gate.** The only one of the five

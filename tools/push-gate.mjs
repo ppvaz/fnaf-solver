@@ -145,7 +145,7 @@ export function linkDependencies(worktree, root = ROOT) {
 // CI's runner gets setup-python's interpreter plus the `pip install` pins in
 // ci.yml and nothing else. This machine's python3 carries numpy and more, so a
 // test that imports an unpinned package passes here and fails online: on
-// 2026-09-15 tools/device/test-cycle-ledger.py (numpy through cycle-ledger.py)
+// 2026-09-15 packages/review/bin/grade/test-cycle-ledger.py (numpy through cycle-ledger.py)
 // failed CI on four pushes that this gate had passed. So the lanes run on an
 // isolated interpreter whose packages are exactly the pins, or the gate says it
 // could not check Python dependencies instead of passing them.

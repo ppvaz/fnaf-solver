@@ -25,9 +25,9 @@
 //                       end in 6 AM.
 // The record is content-free: run ids, lifecycle state names and milliseconds.
 //
-//   node tools/device/post-night-static.mjs           # print the record
-//   node tools/device/post-night-static.mjs --write   # write RECORD_PATH
-//   node tools/device/post-night-static.mjs --check   # the committed record
+//   node packages/review/bin/grade/post-night-static.mjs           # print the record
+//   node packages/review/bin/grade/post-night-static.mjs --write   # write RECORD_PATH
+//   node packages/review/bin/grade/post-night-static.mjs --check   # the committed record
 //       reproduces from the runs it lists, and no pack committed since reads a
 //       night that goes on after a post-night static
 import { createHash } from 'node:crypto';
@@ -35,7 +35,7 @@ import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
 export const RUNS_DIR = 'docs/evidence/runs';
 export const RECORD_PATH = 'docs/evidence/post-night-static-halt-20260927.json';
 export const RECORD_ID = 'post-night-static-halt-20260927';
@@ -263,6 +263,7 @@ export function measurePostNightStatic({ root = ROOT, runs } = {}) {
     scope: 'Lifecycle reads in committed run packs, on the host clock. It grades no run, promotes nothing, and changes no pack\'s outcome.',
     question: 'Once a night has been observed, is a static read ever followed by a night that goes on, and how soon after a first static does the next read come?',
     method: {
+      // The committed record's own words, hashed into its evidenceId: where it was written from.
       tool: 'tools/device/post-night-static.mjs',
       command: 'node tools/device/post-night-static.mjs --write',
       source: `${RUNS_DIR}/*/observations.jsonl lifecycle-observe.py rows where kept (every read), else events.jsonl observation rows (written on label change); events.jsonl campaign.abort.restart and control.gate rows for episodes that end at 6 AM`,

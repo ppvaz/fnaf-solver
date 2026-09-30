@@ -51,7 +51,7 @@ export const UNSCANNED = [
   [/^packages\/play\/src\/sensors\/fnaf2\/button-strokes\.js$|^packages\/adapters\/src\/button-strokes\.js$/,
     'full06-responses-20260928 pins its bytes as ruleSourceSha256 (test-phone-encounter-replay.mjs); the adapters path is its registered link'],
   [/^tools\/recompile\/native-frame\.py$/, 'gles2-renderer and three native-frame-title records pin its sha256'],
-  [/^tools\/device\/testdata\/session-v1\/|^docs\/device\/[^/]+\.json$/, 'stored-format fixtures and retained device records'],
+  [/^packages\/review\/test\/legacy-session\/|^docs\/device\/[^/]+\.json$/, 'stored-format fixtures and retained device records'],
   [/^plans\/PROGRESS\.md$|^docs\/operations\/CLAUDE-HISTORY\.txt$|^docs\/portal\/(?:chronicle|story)\.html$/,
     'history, and pages generated from the frozen chronicle'],
   [/^plans\/(?:0\d|1\d|20|21|24|25|26|27|28)-|^plans\/22-architecture-/, 'dated plan prose keeps the words of its date'],

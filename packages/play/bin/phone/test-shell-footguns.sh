@@ -37,7 +37,7 @@ fi
 # contract behind the old GRADE_RUN=1 -> "$OUT.mp4" no-op.
 run="shell-footgun-missing-$$"
 set +e
-output="$("$HERE/../../../../tools/device/grade-run.sh" "$run" 2>&1)"
+output="$("$HERE/../../../../packages/review/bin/grade/grade-run.sh" "$run" 2>&1)"
 grade_status=$?
 set -e
 [ "$grade_status" -eq 2 ] || fail "missing-input grade exited $grade_status, not 2"

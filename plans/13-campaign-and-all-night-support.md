@@ -495,7 +495,7 @@ inventoried, so recorded here where it was found):
   same video, answers confidently for one frame and refuses the next. Both
   answers are correct. Nothing in the output says which path produced them.
 
-**Death-cause foundation, extended 2026-08-30.** `tools/device/death-cause.py`
+**Death-cause foundation, extended 2026-08-30.** `packages/review/bin/grade/death-cause.py`
 and `run-timeline.py --cause-model` now provide separate, shadow-only visual
 Foxy/Marionette-jumpscare facts. Models remain measured nearest-centroid
 envelopes over explicitly labelled 20:9 frames and refuse uncalibrated geometry

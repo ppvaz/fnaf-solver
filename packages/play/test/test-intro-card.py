@@ -70,7 +70,7 @@ def main():
         os.environ["INTRO_CARD_MODEL"] = str(model_path)
         try:
             lifecycle = load("lifecycle_observe", HERE / "../src/sensors/screencap/lifecycle-observe.py")
-            timeline = load("run_timeline", HERE / "../../../tools/device/run-timeline.py")
+            timeline = load("run_timeline", HERE / "../../../packages/review/bin/grade/run-timeline.py")
             lifecycle_model = json.loads(
                 (HERE / "../profiles/fnaf2/moto-g56/lifecycle-moto-g56-v207.json").read_text())
             th = lifecycle_model["thresholds"]
@@ -87,7 +87,7 @@ def main():
             else:
                 os.environ["INTRO_CARD_MODEL"] = old
 
-        grade = (HERE / "../../../tools/device/grade-run.sh").read_text()
+        grade = (HERE / "../../../packages/review/bin/grade/grade-run.sh").read_text()
         check('"$HERE/run-timeline.py" "$VIDEO"' in grade,
               "grade-run no longer invokes the lifecycle timeline")
 

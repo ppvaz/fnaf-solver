@@ -3,7 +3,7 @@
   "schema_version": 1,
   "supported_versions": [1],
   "root": "manifest",
-  "description": "v1 stock-device session manifest. The twelve field groups below are the minimum facts enumerated in docs/device/OBSERVATION-CORPUS-INVENTORY.md section 'Fields demanded of the v1 schemas'. This file is the machine-readable contract that tools/device/validate-session.py interprets; it is not JSON Schema, because the validator is standard-library only.",
+  "description": "v1 stock-device session manifest. The twelve field groups below are the minimum facts enumerated in docs/device/OBSERVATION-CORPUS-INVENTORY.md section 'Fields demanded of the v1 schemas'. This file is the machine-readable contract that packages/review/bin/legacy/validate-session.py interprets; it is not JSON Schema, because the validator is standard-library only.",
   "field_groups": [
     {
       "group": 1,

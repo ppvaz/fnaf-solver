@@ -939,7 +939,7 @@ and repeatedly stalled (§3, §7). If the goal is instead "clear the story
 campaign on the g56 with the least fragile input", story-night Minus 3 is a far
 easier target: no Golden Freddy, no zero-RNG bar, and the one sourced device
 risk is arming the glitch — proved once already (`captures/n2-doublecam-hid-0003`,
-§8). A recorded Night 3–5 sweep through `tools/device/grade-run.sh` would turn
+§8). A recorded Night 3–5 sweep through `packages/review/bin/grade/grade-run.sh` would turn
 this play report into a graded result.
 
 ## Sources

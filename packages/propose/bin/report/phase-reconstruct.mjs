@@ -17,7 +17,7 @@
 // With `--night`, it also prints the minus-toys model's response to phase, so
 // a measured offset can be read against the band it landed in.
 //
-//   node tools/device/phase-reconstruct.mjs --run artifacts/campaign-... \
+//   node packages/propose/bin/report/phase-reconstruct.mjs --run artifacts/campaign-... \
 //     [--night 5] [--seeds 100] [--runs 3000] [--out docs/evidence/name.json]
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -318,8 +318,7 @@ export function reconstruct(events, observations, frameTrace = null) {
 
 /** The minus-toys model's response to phase, at frame resolution over one second. */
 async function phaseResponse(night, seeds) {
-  const here = new URL('.', import.meta.url);
-  const plan = await import(new URL('minus-toys-plan.mjs', here).href);
+  const plan = await import('../plans/minus-toys-plan.mjs');
   const C = await import('@sixam/source/fnaf2');
   const stepMs = 1000 / C.FPS;
   const ticksIn = window => {
@@ -357,8 +356,7 @@ async function phaseResponse(night, seeds) {
  * and the rate is the number that has to carry the golden 3000 seeds.
  */
 async function uncontrolledPhase(night, runs) {
-  const here = new URL('.', import.meta.url);
-  const plan = await import(new URL('minus-toys-plan.mjs', here).href);
+  const plan = await import('../plans/minus-toys-plan.mjs');
   const C = await import('@sixam/source/fnaf2');
   const frames = Math.round(C.FPS);
   let wins = 0, armed = 0;

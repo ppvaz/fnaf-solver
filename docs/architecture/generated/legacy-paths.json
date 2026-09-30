@@ -14,7 +14,7 @@
     },
     {
       "id": "device.session-manifest-producer",
-      "path": "tools/device/session-manifest.py",
+      "path": "packages/review/bin/legacy/session-manifest.py",
       "category": "device",
       "lifecycle": "legacy",
       "owner": "@sixam/play",
@@ -24,7 +24,7 @@
     },
     {
       "id": "device.session-manifest-validator",
-      "path": "tools/device/validate-session.py",
+      "path": "packages/review/bin/legacy/validate-session.py",
       "category": "device",
       "lifecycle": "transitional",
       "owner": "@sixam/evidence",
@@ -34,7 +34,7 @@
     },
     {
       "id": "device.session-manifest-schema",
-      "path": "tools/device/schema/session-manifest-v1.json",
+      "path": "packages/review/bin/legacy/schema/session-manifest-v1.json",
       "category": "device",
       "lifecycle": "legacy",
       "owner": "@sixam/play",
@@ -44,7 +44,7 @@
     },
     {
       "id": "device.legacy-grader",
-      "path": "tools/device/grade-run.sh",
+      "path": "packages/review/bin/grade/grade-run.sh",
       "category": "device-evidence",
       "lifecycle": "transitional",
       "owner": "@sixam/evidence",

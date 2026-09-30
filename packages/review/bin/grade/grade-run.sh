@@ -31,8 +31,8 @@
 set -uo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
-RUNS_DIR="$HERE/../../artifacts/runs"
-CAPTURES="$HERE/../../captures"
+RUNS_DIR="$HERE/../../../../artifacts/runs"
+CAPTURES="$HERE/../../../../captures"
 RUN="${1:?usage: grade-run.sh RUN_NAME [--require-seconds N]}"
 shift || true
 REQUIRE=""
@@ -271,7 +271,7 @@ SURVIVAL_ARGS=(python3 "$HERE/grade-night.py" "$VIDEO")
 #     control for the rendered-video inference. A trace artifact without a
 #     host parser is a diagnostic failure, not evidence that the input landed.
 if [ -f "$INPUT_TRACE" ]; then
-  INPUT_TRACE_ARGS=(python3 "$HERE/../../packages/play/bin/probe/inputtrace.py" "$INPUT_TRACE"
+  INPUT_TRACE_ARGS=(python3 "$HERE/../../../play/bin/probe/inputtrace.py" "$INPUT_TRACE"
     --package com.scottgames.fnaf2)
   [ -f "$SF_LATENCY" ] && INPUT_TRACE_ARGS+=(--sf-latency "$SF_LATENCY")
   step "input dispatch / frame landing (Perfetto)" "${INPUT_TRACE_ARGS[@]}"
@@ -329,7 +329,7 @@ if [ -n "${GRADE_CAUSE_MODELS:-}" ]; then
     [ -f "$model" ] && TIMELINE_ARGS+=(--cause-model "$model")
   done
 else
-  for model in "$HERE"/../../packages/play/profiles/fnaf2/moto-g56/death-cause-*.json; do
+  for model in "$HERE"/../../../../packages/play/profiles/fnaf2/moto-g56/death-cause-*.json; do
     [ -f "$model" ] && TIMELINE_ARGS+=(--cause-model "$model")
   done
 fi
@@ -365,7 +365,7 @@ if [ -n "$CAMPAIGN_DIR" ] && [ -d "$CAMPAIGN_DIR" ]; then
   FRAME_TRACE_ARG=()
   [ -n "$FRAME_TRACE" ] && FRAME_TRACE_ARG=(--frame-trace "$FRAME_TRACE")
   step "delivered phase vs the model band" \
-    node "$HERE/phase-reconstruct.mjs" --run "$CAMPAIGN_DIR" "${RUN_NIGHT_ARG[@]}" "${FRAME_TRACE_ARG[@]}"
+    node "$HERE/../../../propose/bin/report/phase-reconstruct.mjs" --run "$CAMPAIGN_DIR" "${RUN_NIGHT_ARG[@]}" "${FRAME_TRACE_ARG[@]}"
 else
   echo
   echo "--- campaign bundle (executor-owned facts) ---"
@@ -391,7 +391,7 @@ if [ -n "$FRAME_TRACE" ]; then
     INPUT_EVENTS_ARG=()
     [ -f "$RUNS_DIR/$RUN/input-events.txt" ] && INPUT_EVENTS_ARG=(--input-events "$RUNS_DIR/$RUN/input-events.txt")
     step "scheduled contacts against frame stalls" \
-      node "$HERE/tap-stall-audit.mjs" --run "$CAMPAIGN_DIR" --frame-trace "$FRAME_TRACE" --transitions "${INPUT_EVENTS_ARG[@]}"
+      node "$HERE/../../../play/bin/grade/tap-stall-audit.mjs" --run "$CAMPAIGN_DIR" --frame-trace "$FRAME_TRACE" --transitions "${INPUT_EVENTS_ARG[@]}"
   else
     echo
     echo "--- scheduled contacts against frame stalls ---"

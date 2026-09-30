@@ -49,12 +49,12 @@
     },
     {
       "id": "test:device:calibration",
-      "command": "node packages/play/test/clock-map.test.js && node packages/play/test/calibration-state-rule.test.js && python3 packages/play/bin/calibrate/test-mask-calibrate.py && python3 packages/play/bin/probe/test-inputtrace.py && python3 tools/device/test-input-frame-align.py && python3 tools/device/test-actuation-frame-metric.py && node packages/play/bin/probe/test-intersection-state-gate.mjs && node packages/play/bin/probe/test-hid-intersection-probe.mjs",
+      "command": "node packages/play/test/clock-map.test.js && node packages/play/test/calibration-state-rule.test.js && python3 packages/play/bin/calibrate/test-mask-calibrate.py && python3 packages/play/bin/probe/test-inputtrace.py && python3 packages/review/bin/grade/test-input-frame-align.py && python3 packages/review/bin/grade/test-actuation-frame-metric.py && node packages/play/bin/probe/test-intersection-state-gate.mjs && node packages/play/bin/probe/test-hid-intersection-probe.mjs",
       "lifecycle": "supported"
     },
     {
       "id": "test:unit",
-      "command": "node tools/architecture-test.js && node tools/validate-references.js && node tools/device/test-grade-run-coverage.mjs && node tools/test-mistake-register.mjs && node tools/test-dump-text-check.mjs && node tools/test-media.mjs && node tools/recompile/test-compare-draw-trace.mjs && node tools/recompile/test-schedule-replay.mjs && node tools/recompile/test-phone-encounter-replay.mjs && node tools/recompile/test-phone-clock-sweep.mjs && node tools/recompile/test-hour-grid-fit.mjs && node tools/recompile/test-phone-input-bracket-sweep.mjs && python3 tools/recompile/test-phone-input-ledger.py && node tools/recompile/test-child-diagnosis.mjs && node packages/propose/test/policyequivalencetest.mjs && node packages/propose/test/test-seam-slack.mjs && node tools/device/test-static-terminal-window.mjs && node tools/device/test-post-night-static.mjs && node packages/play/bin/phone/test-control-anchor.mjs && node packages/propose/test/test-schedule-economy.mjs && node tools/device/test-anchor-aim-band.mjs && node packages/play/bin/probe/seedpin/test-seedpin.mjs && node packages/review/test/evidence-campaign.test.mjs && node packages/review/test/evidence-pack.test.mjs && node packages/review/test/evidence-cohort.test.mjs && node packages/review/test/evidence-promotion.test.mjs && node packages/propose/test/test-encounter-fidelity.mjs && node packages/propose/bin/census/test-winner-census.mjs && node tools/test-rebuild-options-census.mjs && node apps/desktop/test/night.test.js && node packages/play/bin/phone/test-night-run-dry.mjs && node tools/device/test-fact-register.mjs && node apps/desktop/test/test-fnaf1-winner.mjs && node packages/play/bin/phone/test-event-clocks.mjs && python3 packages/source/decompile/test-instances.py && python3 packages/source/decompile/test-nightmap.py && node packages/source/test/test-night-models.mjs && node packages/play/games/fnaf1/test-fnaf1-menu-probe.mjs && python3 packages/play/games/fnaf1/test-fnaf1-menus.py && node packages/play/games/fnaf1/test-fnaf1-night-run.mjs && python3 packages/play/games/fnaf1/test-fnaf1-door-light.py && python3 packages/play/bin/audio/test-bt-audio-collector.py && python3 packages/play/games/fnaf1/test-fnaf1-teach-overlay.py && python3 packages/play/src/sensors/screencap/test-sensor.py && node packages/propose/bin/census/test-fnaf1-device-lane.mjs && node packages/propose/bin/census/test-fnaf1-population-checkpoints.mjs && node apps/desktop/test/test-native-regions.mjs && node packages/play/games/fnaf3/test-fnaf3-run.mjs && node packages/propose/bin/census/test-fnaf4-census.mjs && npm run test:chronicle && node packages/play/games/fnaf4/test-fnaf4-fredbear.mjs && node packages/play/bin/companion/test-audio-players.mjs && node tools/test-evidence-cli.mjs && node tools/test-push-gate.mjs && python3 apps/trainer/test/serve_test.py && node apps/desktop/test/probe.test.js && node tools/test-no-serial.mjs && node tools/test-companion-name.mjs && node tools/test-sibling-paths.js && node packages/kernel/test/kernel.test.js && node packages/review/test/pack-lift.test.js && node packages/review/test/promotions-query.test.js && python3 tools/recompile/test-audio-records.py && node tools/recompile/pilot/test-pilot.mjs && node tools/recompile/test-calib-replay.mjs && node tools/recompile/android/test-practice-audit.mjs && node tools/recompile/android/test-rebuild-night.mjs && node packages/review/test/refusals.test.mjs && node packages/review/test/solver.test.mjs && node packages/review/test/lab-queries.test.mjs && node apps/desktop/test/lab.test.mjs",
+      "command": "node tools/architecture-test.js && node tools/validate-references.js && node packages/review/bin/grade/test-grade-run-coverage.mjs && node tools/test-mistake-register.mjs && node tools/test-dump-text-check.mjs && node tools/test-media.mjs && node tools/recompile/test-compare-draw-trace.mjs && node tools/recompile/test-schedule-replay.mjs && node tools/recompile/test-phone-encounter-replay.mjs && node tools/recompile/test-phone-clock-sweep.mjs && node tools/recompile/test-hour-grid-fit.mjs && node tools/recompile/test-phone-input-bracket-sweep.mjs && python3 tools/recompile/test-phone-input-ledger.py && node tools/recompile/test-child-diagnosis.mjs && node packages/propose/test/policyequivalencetest.mjs && node packages/propose/test/test-seam-slack.mjs && node packages/review/bin/grade/test-static-terminal-window.mjs && node packages/review/bin/grade/test-post-night-static.mjs && node packages/play/bin/phone/test-control-anchor.mjs && node packages/propose/test/test-schedule-economy.mjs && node tools/device/test-anchor-aim-band.mjs && node packages/play/bin/probe/seedpin/test-seedpin.mjs && node packages/review/test/evidence-campaign.test.mjs && node packages/review/test/evidence-pack.test.mjs && node packages/review/test/evidence-cohort.test.mjs && node packages/review/test/evidence-promotion.test.mjs && node packages/propose/test/test-encounter-fidelity.mjs && node packages/propose/bin/census/test-winner-census.mjs && node tools/test-rebuild-options-census.mjs && node apps/desktop/test/night.test.js && node packages/play/bin/phone/test-night-run-dry.mjs && node tools/device/test-fact-register.mjs && node apps/desktop/test/test-fnaf1-winner.mjs && node packages/play/bin/phone/test-event-clocks.mjs && python3 packages/source/decompile/test-instances.py && python3 packages/source/decompile/test-nightmap.py && node packages/source/test/test-night-models.mjs && node packages/play/games/fnaf1/test-fnaf1-menu-probe.mjs && python3 packages/play/games/fnaf1/test-fnaf1-menus.py && node packages/play/games/fnaf1/test-fnaf1-night-run.mjs && python3 packages/play/games/fnaf1/test-fnaf1-door-light.py && python3 packages/play/bin/audio/test-bt-audio-collector.py && python3 packages/play/games/fnaf1/test-fnaf1-teach-overlay.py && python3 packages/play/src/sensors/screencap/test-sensor.py && node packages/propose/bin/census/test-fnaf1-device-lane.mjs && node packages/propose/bin/census/test-fnaf1-population-checkpoints.mjs && node apps/desktop/test/test-native-regions.mjs && node packages/play/games/fnaf3/test-fnaf3-run.mjs && node packages/propose/bin/census/test-fnaf4-census.mjs && npm run test:chronicle && node packages/play/games/fnaf4/test-fnaf4-fredbear.mjs && node packages/play/bin/companion/test-audio-players.mjs && node tools/test-evidence-cli.mjs && node tools/test-push-gate.mjs && python3 apps/trainer/test/serve_test.py && node apps/desktop/test/probe.test.js && node tools/test-no-serial.mjs && node tools/test-companion-name.mjs && node tools/test-sibling-paths.js && node packages/kernel/test/kernel.test.js && node packages/review/test/pack-lift.test.js && node packages/review/test/promotions-query.test.js && python3 tools/recompile/test-audio-records.py && node tools/recompile/pilot/test-pilot.mjs && node tools/recompile/test-calib-replay.mjs && node tools/recompile/android/test-practice-audit.mjs && node tools/recompile/android/test-rebuild-night.mjs && node packages/review/test/refusals.test.mjs && node packages/review/test/solver.test.mjs && node packages/review/test/lab-queries.test.mjs && node apps/desktop/test/lab.test.mjs",
       "lifecycle": "supported"
     },
     {
@@ -64,7 +64,7 @@
     },
     {
       "id": "test:contracts",
-      "command": "node packages/source/test/contracts.test.js && node packages/source/test/control-catalog.test.js && node packages/source/test/truth.test.js && node packages/kernel/test/claim-envelope.test.js && node packages/kernel/test/venue-identity.test.js && node packages/propose/test/cycle-library.test.js && node packages/propose/test/cycle-planner.test.js && node packages/propose/test/cycle-controller.test.js && node packages/propose/test/night-policy.test.js && node packages/source/test/route-forks.test.js && node packages/source/test/drop-light-order.test.js && node packages/source/test/foxy-chain.test.js && node packages/source/test/unconditional-draws.test.js && node packages/source/test/event-draws.test.js && node packages/source/test/blackout-draws.test.js && node packages/source/test/view-draws.test.js && node packages/source/test/roll-draws.test.js && node packages/source/test/monitor-down-draw.test.js && node packages/source/test/second-pass.test.js && node packages/source/test/puppet-glitch-draws.test.js && node packages/source/test/sheet-order.test.js && node packages/source/test/frame-time-hook.test.js && node packages/source/test/last-view-pause.test.js && node packages/source/test/footstep-draws.test.js && node packages/source/test/vent-cam-draws.test.js && node packages/source/test/random-image-draw.test.js && node packages/source/test/monitor-raise-gate.test.js && node packages/source/test/mangle-return.test.js && node packages/source/test/gated-every.test.js && node packages/source/test/every-origin.test.js && node packages/source/test/rebuild-order.test.js && node packages/source/test/footstep-value2.test.js && node packages/source/test/foxy-move-value2.test.js && node packages/source/test/promoted-view-draws.test.js && node packages/source/test/hall-latch-order.test.js && node packages/source/test/rolls-before-moves.test.js && node packages/source/test/promoted-moves.test.js && node packages/source/test/value5.test.js && node packages/source/test/office-footsteps.test.js && node packages/source/test/blackout-clock-end.test.js && node packages/source/test/b-drain-order.test.js && node packages/source/test/route-pass.test.js && node packages/source/test/office-rolls.test.js && node packages/source/test/animation-count.test.js && node packages/source/test/bb-moves.test.js && node packages/source/test/exposure-value5.test.js && node packages/source/test/route-view-draws.test.js && node packages/source/test/drop-flag-order.test.js && node packages/source/test/mask-animation-input.test.js && node packages/play/test/control-exclusion.test.js && node packages/play/test/android-venue.test.js && node packages/play/test/conformance.test.js && node packages/play/test/monitor-rule.test.js && node packages/play/test/camera-rule.test.js && node packages/play/test/night-onset.test.js && node apps/desktop/test/device-cli.test.js && node packages/play/test/campaign.test.js && node packages/play/test/campaign-runner.test.js && node packages/play/test/campaign-infrastructure.test.js && node packages/play/test/campaign-composition.test.js && node packages/play/test/modern-campaign-terminal.test.js && node packages/play/test/campaign-signal.test.js && node packages/play/test/adb-bridge.test.js && node packages/play/test/venue-preflight.test.js && node packages/play/test/adb-device-local-executor.test.js && node packages/play/test/profile-game.test.js && node packages/play/test/static-terminal-window.test.js && node packages/play/test/post-night-halt.test.js && node packages/play/test/hid-read-gap.test.js && node packages/play/test/hid-second-contact.test.js && node packages/play/test/night-anchor.test.js && node packages/play/test/cycle-lesson.test.js && node packages/play/test/timed-start.test.js && node packages/propose/test/experiment.test.js && node packages/propose/test/legacy-equivalence.test.js && node packages/propose/test/test-bundle.mjs && node tools/device/test-phase-reconstruct.mjs && node tools/device/test-tap-stall-audit.mjs && python3 tools/device/test-framesource.py && python3 tools/device/test-decode-once.py && python3 tools/device/test-grade-night.py && python3 tools/device/test-cycle-ledger.py && python3 tools/device/test-office-seed-bracket.py && node packages/propose/bin/plans/test-minus3-frame-light.mjs && node packages/propose/test/test-artifact-animation-gates.mjs && node packages/review/test/vault.test.mjs && node packages/kernel/test/factlinktest.mjs && node packages/review/test/bench-trace.test.mjs && node apps/trainer/test/exercise.test.mjs && node apps/trainer/test/activity-gate.test.mjs && node apps/trainer/test/microtrainer.test.mjs && node apps/trainer/test/renderer.test.mjs && node apps/trainer/test/arcade-lab.test.mjs && node apps/trainer/test/coach.test.mjs && node apps/trainer/test/lessons.test.mjs && node apps/trainer/test/route-facts.test.mjs && node packages/play/test/phase-clock.test.js && node packages/propose/test/observationlanguagetest.mjs && python3 packages/kernel/test/contract-vectors.py && python3 packages/play/bin/companion/test-companion-setup.py && python3 packages/play/test/test-companion-device-lock.py && python3 apps/lab/test/test-companion-queue.py && node apps/desktop/test/companion-mcp.test.mjs && python3 packages/play/bin/companion/test-teach-panel-clearance.py && python3 tools/device/test-death-cause.py && packages/play/bin/phone/test-game-teardown.sh && packages/play/bin/audio/test-bt-audio-link.sh && android/companion/test.sh && npm run test:device:calibration && node packages/source/test/footstep-value2.test.js &&node packages/source/test/mask-animation-input.test.js && node packages/play/test/companion-status.test.js && node packages/play/bin/companion/test-audio-probe.mjs",
+      "command": "node packages/source/test/contracts.test.js && node packages/source/test/control-catalog.test.js && node packages/source/test/truth.test.js && node packages/kernel/test/claim-envelope.test.js && node packages/kernel/test/venue-identity.test.js && node packages/propose/test/cycle-library.test.js && node packages/propose/test/cycle-planner.test.js && node packages/propose/test/cycle-controller.test.js && node packages/propose/test/night-policy.test.js && node packages/source/test/route-forks.test.js && node packages/source/test/drop-light-order.test.js && node packages/source/test/foxy-chain.test.js && node packages/source/test/unconditional-draws.test.js && node packages/source/test/event-draws.test.js && node packages/source/test/blackout-draws.test.js && node packages/source/test/view-draws.test.js && node packages/source/test/roll-draws.test.js && node packages/source/test/monitor-down-draw.test.js && node packages/source/test/second-pass.test.js && node packages/source/test/puppet-glitch-draws.test.js && node packages/source/test/sheet-order.test.js && node packages/source/test/frame-time-hook.test.js && node packages/source/test/last-view-pause.test.js && node packages/source/test/footstep-draws.test.js && node packages/source/test/vent-cam-draws.test.js && node packages/source/test/random-image-draw.test.js && node packages/source/test/monitor-raise-gate.test.js && node packages/source/test/mangle-return.test.js && node packages/source/test/gated-every.test.js && node packages/source/test/every-origin.test.js && node packages/source/test/rebuild-order.test.js && node packages/source/test/footstep-value2.test.js && node packages/source/test/foxy-move-value2.test.js && node packages/source/test/promoted-view-draws.test.js && node packages/source/test/hall-latch-order.test.js && node packages/source/test/rolls-before-moves.test.js && node packages/source/test/promoted-moves.test.js && node packages/source/test/value5.test.js && node packages/source/test/office-footsteps.test.js && node packages/source/test/blackout-clock-end.test.js && node packages/source/test/b-drain-order.test.js && node packages/source/test/route-pass.test.js && node packages/source/test/office-rolls.test.js && node packages/source/test/animation-count.test.js && node packages/source/test/bb-moves.test.js && node packages/source/test/exposure-value5.test.js && node packages/source/test/route-view-draws.test.js && node packages/source/test/drop-flag-order.test.js && node packages/source/test/mask-animation-input.test.js && node packages/play/test/control-exclusion.test.js && node packages/play/test/android-venue.test.js && node packages/play/test/conformance.test.js && node packages/play/test/monitor-rule.test.js && node packages/play/test/camera-rule.test.js && node packages/play/test/night-onset.test.js && node apps/desktop/test/device-cli.test.js && node packages/play/test/campaign.test.js && node packages/play/test/campaign-runner.test.js && node packages/play/test/campaign-infrastructure.test.js && node packages/play/test/campaign-composition.test.js && node packages/play/test/modern-campaign-terminal.test.js && node packages/play/test/campaign-signal.test.js && node packages/play/test/adb-bridge.test.js && node packages/play/test/venue-preflight.test.js && node packages/play/test/adb-device-local-executor.test.js && node packages/play/test/profile-game.test.js && node packages/play/test/static-terminal-window.test.js && node packages/play/test/post-night-halt.test.js && node packages/play/test/hid-read-gap.test.js && node packages/play/test/hid-second-contact.test.js && node packages/play/test/night-anchor.test.js && node packages/play/test/cycle-lesson.test.js && node packages/play/test/timed-start.test.js && node packages/propose/test/experiment.test.js && node packages/propose/test/legacy-equivalence.test.js && node packages/propose/test/test-bundle.mjs && node packages/propose/bin/report/test-phase-reconstruct.mjs && node packages/play/bin/grade/test-tap-stall-audit.mjs && python3 packages/review/bin/grade/test-framesource.py && python3 packages/review/bin/grade/test-decode-once.py && python3 packages/review/bin/grade/test-grade-night.py && python3 packages/review/bin/grade/test-cycle-ledger.py && python3 packages/review/bin/grade/test-office-seed-bracket.py && node packages/propose/bin/plans/test-minus3-frame-light.mjs && node packages/propose/test/test-artifact-animation-gates.mjs && node packages/review/test/vault.test.mjs && node packages/kernel/test/factlinktest.mjs && node packages/review/test/bench-trace.test.mjs && node apps/trainer/test/exercise.test.mjs && node apps/trainer/test/activity-gate.test.mjs && node apps/trainer/test/microtrainer.test.mjs && node apps/trainer/test/renderer.test.mjs && node apps/trainer/test/arcade-lab.test.mjs && node apps/trainer/test/coach.test.mjs && node apps/trainer/test/lessons.test.mjs && node apps/trainer/test/route-facts.test.mjs && node packages/play/test/phase-clock.test.js && node packages/propose/test/observationlanguagetest.mjs && python3 packages/kernel/test/contract-vectors.py && python3 packages/play/bin/companion/test-companion-setup.py && python3 packages/play/test/test-companion-device-lock.py && python3 apps/lab/test/test-companion-queue.py && node apps/desktop/test/companion-mcp.test.mjs && python3 packages/play/bin/companion/test-teach-panel-clearance.py && python3 packages/review/bin/grade/test-death-cause.py && packages/play/bin/phone/test-game-teardown.sh && packages/play/bin/audio/test-bt-audio-link.sh && android/companion/test.sh && npm run test:device:calibration && node packages/source/test/footstep-value2.test.js &&node packages/source/test/mask-animation-input.test.js && node packages/play/test/companion-status.test.js && node packages/play/bin/companion/test-audio-probe.mjs",
       "lifecycle": "supported"
     },
     {
@@ -359,176 +359,14 @@
       "lifecycle": "supported"
     },
     {
-      "id": "tools/device/phase-reconstruct.mjs",
-      "invocation": "tools/device/phase-reconstruct.mjs --run DIR [--night N] [--seeds N] [--out FILE]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-phase-reconstruct.mjs",
-      "invocation": "tools/device/test-phase-reconstruct.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/clocktrace.mjs",
-      "invocation": "tools/device/clocktrace.mjs VIDEO",
-      "kind": "analyzer",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/actuation-frame-metric.py",
-      "invocation": "tools/device/actuation-frame-metric.py TRACE [--start-ns N] [--end-ns N] [--json]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/input-frame-align.py",
-      "invocation": "tools/device/input-frame-align.py INPUT.pftrace FRAME.tsv [--trace-processor PATH] [--json]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-actuation-frame-metric.py",
-      "invocation": "tools/device/test-actuation-frame-metric.py",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/framesource.py",
-      "invocation": "tools/device/framesource.py",
-      "kind": "lib",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-framesource.py",
-      "invocation": "tools/device/test-framesource.py",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/decode-once.py",
-      "invocation": "tools/device/decode-once.py [--cpuset SET] [--vmem-kb N] [--timeout S] [--settle S] [--max-concurrent N] --step LABEL -- CMD... [--step ...]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-decode-once.py",
-      "invocation": "tools/device/test-decode-once.py",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/tap-stall-audit.mjs",
-      "invocation": "tools/device/tap-stall-audit.mjs --run DIR --frame-trace FILE [--input-events FILE] [--night N] [--transitions] [--json] [--out FILE]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-tap-stall-audit.mjs",
-      "invocation": "tools/device/test-tap-stall-audit.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-input-frame-align.py",
-      "invocation": "tools/device/test-input-frame-align.py",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/session-manifest.py",
-      "invocation": "tools/device/session-manifest.py",
-      "kind": "producer",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/validate-session.py",
-      "invocation": "tools/device/validate-session.py",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-validate-session.py",
-      "invocation": "tools/device/test-validate-session.py",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/grade-run.sh",
-      "invocation": "tools/device/grade-run.sh RUN_NAME [--require-seconds N]",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-grade-run-coverage.mjs",
-      "invocation": "tools/device/test-grade-run-coverage.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
       "id": "tools/device/test-fact-register.mjs",
       "invocation": "tools/device/test-fact-register.mjs",
       "kind": "check",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/device/static-terminal-window.mjs",
-      "invocation": "tools/device/static-terminal-window.mjs [--write] [--check]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/post-night-static.mjs",
-      "invocation": "tools/device/post-night-static.mjs [--write] [--check]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-post-night-static.mjs",
-      "invocation": "tools/device/test-post-night-static.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-static-terminal-window.mjs",
-      "invocation": "tools/device/test-static-terminal-window.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
       "id": "tools/device/test-anchor-aim-band.mjs",
       "invocation": "tools/device/test-anchor-aim-band.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/run-report.mjs",
-      "invocation": "tools/device/run-report.mjs --run artifacts/campaign-... [--json]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/grade-night.py",
-      "invocation": "tools/device/grade-night.py VIDEO [--fps 4] [--require-seconds 420]",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-grade-night.py",
-      "invocation": "tools/device/test-grade-night.py",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/death-cause.py",
-      "invocation": "tools/device/death-cause.py build POSITIVE NEGATIVE --label {foxy,mangle,marionette,toy-chica,withered-chica} --output MODEL",
-      "kind": "classifier/check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-death-cause.py",
-      "invocation": "tools/device/test-death-cause.py",
       "kind": "check",
       "lifecycle": "supported"
     },
@@ -542,102 +380,6 @@
       "id": "tools/device/test-deathchart.mjs",
       "invocation": "tools/device/test-deathchart.mjs",
       "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-sweepcheck.py",
-      "invocation": "tools/device/test-sweepcheck.py",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/run-timeline.py",
-      "invocation": "tools/device/run-timeline.py VIDEO [--cause-fps 12] [--cause-model MODEL ...] [--exclude-rect X0,Y0,X1,Y1]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/keyframes.py",
-      "invocation": "tools/device/keyframes.py VIDEO [--count 12] [--fps 2] [--out sheet.png]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/death-census.py",
-      "invocation": "tools/device/death-census.py OUT_DIR",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/index-observations.py",
-      "invocation": "tools/device/index-observations.py [root] [--json] [--hash] [--strict]",
-      "kind": "report/check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-index-observations.py",
-      "invocation": "tools/device/test-index-observations.py",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/grade-minus7.py",
-      "invocation": "tools/device/grade-minus7.py VIDEO",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/camtrace.py",
-      "invocation": "tools/device/camtrace.py VIDEO",
-      "kind": "report/check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-camtrace.py",
-      "invocation": "tools/device/test-camtrace.py",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/windpct.py",
-      "invocation": "tools/device/windpct.py [--samples] VIDEO",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/tickphase.py",
-      "invocation": "tools/device/tickphase.py RUN_DIR [--refs DIR] [--rate HZ] [--json OUT]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/office-seed-bracket.py",
-      "invocation": "tools/device/office-seed-bracket.py LOGCAT [--onset-ms MS] [--json OUT]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/cycle-ledger.py",
-      "invocation": "tools/device/cycle-ledger.py RUN_DIR [--release-video-s S] [--cycles N] [--winner WINNER.json] [--json OUT]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-cycle-ledger.py",
-      "invocation": "tools/device/test-cycle-ledger.py",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-office-seed-bracket.py",
-      "invocation": "tools/device/test-office-seed-bracket.py",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/find-events.py",
-      "invocation": "tools/device/find-events.py VIDEO",
-      "kind": "report",
       "lifecycle": "supported"
     },
     {
@@ -1559,6 +1301,18 @@
       "lifecycle": "supported"
     },
     {
+      "id": "packages/play/bin/grade/tap-stall-audit.mjs",
+      "invocation": "packages/play/bin/grade/tap-stall-audit.mjs --run DIR --frame-trace FILE [--input-events FILE] [--night N] [--transitions] [--json] [--out FILE]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/play/bin/grade/test-tap-stall-audit.mjs",
+      "invocation": "packages/play/bin/grade/test-tap-stall-audit.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
       "id": "packages/propose/parked/minus7/hid-device-pilot.mjs",
       "invocation": "packages/propose/parked/minus7/hid-device-pilot.mjs [runs] [--night=6]",
       "kind": "report/check",
@@ -2273,6 +2027,18 @@
       "lifecycle": "supported"
     },
     {
+      "id": "packages/propose/bin/report/phase-reconstruct.mjs",
+      "invocation": "packages/propose/bin/report/phase-reconstruct.mjs --run DIR [--night N] [--seeds N] [--out FILE]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/report/test-phase-reconstruct.mjs",
+      "invocation": "packages/propose/bin/report/test-phase-reconstruct.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
       "id": "packages/review/src/vault.mjs",
       "invocation": "packages/review/src/vault.mjs <export|import|verify|refs|list>",
       "kind": "evidence CLI",
@@ -2324,6 +2090,240 @@
       "id": "packages/review/test/stat.test.mjs",
       "invocation": "packages/review/test/stat.test.mjs",
       "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/clocktrace.mjs",
+      "invocation": "packages/review/bin/grade/clocktrace.mjs VIDEO",
+      "kind": "analyzer",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/actuation-frame-metric.py",
+      "invocation": "packages/review/bin/grade/actuation-frame-metric.py TRACE [--start-ns N] [--end-ns N] [--json]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/input-frame-align.py",
+      "invocation": "packages/review/bin/grade/input-frame-align.py INPUT.pftrace FRAME.tsv [--trace-processor PATH] [--json]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/test-actuation-frame-metric.py",
+      "invocation": "packages/review/bin/grade/test-actuation-frame-metric.py",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/framesource.py",
+      "invocation": "packages/review/bin/grade/framesource.py",
+      "kind": "lib",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/test-framesource.py",
+      "invocation": "packages/review/bin/grade/test-framesource.py",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/decode-once.py",
+      "invocation": "packages/review/bin/grade/decode-once.py [--cpuset SET] [--vmem-kb N] [--timeout S] [--settle S] [--max-concurrent N] --step LABEL -- CMD... [--step ...]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/test-decode-once.py",
+      "invocation": "packages/review/bin/grade/test-decode-once.py",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/test-input-frame-align.py",
+      "invocation": "packages/review/bin/grade/test-input-frame-align.py",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/legacy/session-manifest.py",
+      "invocation": "packages/review/bin/legacy/session-manifest.py",
+      "kind": "producer",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/legacy/validate-session.py",
+      "invocation": "packages/review/bin/legacy/validate-session.py",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/legacy/test-validate-session.py",
+      "invocation": "packages/review/bin/legacy/test-validate-session.py",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/grade-run.sh",
+      "invocation": "packages/review/bin/grade/grade-run.sh RUN_NAME [--require-seconds N]",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/test-grade-run-coverage.mjs",
+      "invocation": "packages/review/bin/grade/test-grade-run-coverage.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/static-terminal-window.mjs",
+      "invocation": "packages/review/bin/grade/static-terminal-window.mjs [--write] [--check]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/post-night-static.mjs",
+      "invocation": "packages/review/bin/grade/post-night-static.mjs [--write] [--check]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/test-post-night-static.mjs",
+      "invocation": "packages/review/bin/grade/test-post-night-static.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/test-static-terminal-window.mjs",
+      "invocation": "packages/review/bin/grade/test-static-terminal-window.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/run-report.mjs",
+      "invocation": "packages/review/bin/grade/run-report.mjs --run artifacts/campaign-... [--json]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/grade-night.py",
+      "invocation": "packages/review/bin/grade/grade-night.py VIDEO [--fps 4] [--require-seconds 420]",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/test-grade-night.py",
+      "invocation": "packages/review/bin/grade/test-grade-night.py",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/death-cause.py",
+      "invocation": "packages/review/bin/grade/death-cause.py build POSITIVE NEGATIVE --label {foxy,mangle,marionette,toy-chica,withered-chica} --output MODEL",
+      "kind": "classifier/check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/test-death-cause.py",
+      "invocation": "packages/review/bin/grade/test-death-cause.py",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/test-sweepcheck.py",
+      "invocation": "packages/review/bin/grade/test-sweepcheck.py",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/run-timeline.py",
+      "invocation": "packages/review/bin/grade/run-timeline.py VIDEO [--cause-fps 12] [--cause-model MODEL ...] [--exclude-rect X0,Y0,X1,Y1]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/keyframes.py",
+      "invocation": "packages/review/bin/grade/keyframes.py VIDEO [--count 12] [--fps 2] [--out sheet.png]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/report/death-census.py",
+      "invocation": "packages/review/bin/report/death-census.py OUT_DIR",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/legacy/index-observations.py",
+      "invocation": "packages/review/bin/legacy/index-observations.py [root] [--json] [--hash] [--strict]",
+      "kind": "report/check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/legacy/test-index-observations.py",
+      "invocation": "packages/review/bin/legacy/test-index-observations.py",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/grade-minus7.py",
+      "invocation": "packages/review/bin/grade/grade-minus7.py VIDEO",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/camtrace.py",
+      "invocation": "packages/review/bin/grade/camtrace.py VIDEO",
+      "kind": "report/check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/test-camtrace.py",
+      "invocation": "packages/review/bin/grade/test-camtrace.py",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/windpct.py",
+      "invocation": "packages/review/bin/grade/windpct.py [--samples] VIDEO",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/report/tickphase.py",
+      "invocation": "packages/review/bin/report/tickphase.py RUN_DIR [--refs DIR] [--rate HZ] [--json OUT]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/office-seed-bracket.py",
+      "invocation": "packages/review/bin/grade/office-seed-bracket.py LOGCAT [--onset-ms MS] [--json OUT]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/cycle-ledger.py",
+      "invocation": "packages/review/bin/grade/cycle-ledger.py RUN_DIR [--release-video-s S] [--cycles N] [--winner WINNER.json] [--json OUT]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/test-cycle-ledger.py",
+      "invocation": "packages/review/bin/grade/test-cycle-ledger.py",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/test-office-seed-bracket.py",
+      "invocation": "packages/review/bin/grade/test-office-seed-bracket.py",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/report/find-events.py",
+      "invocation": "packages/review/bin/report/find-events.py VIDEO",
+      "kind": "report",
       "lifecycle": "supported"
     },
     {

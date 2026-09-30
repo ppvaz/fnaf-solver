@@ -98,7 +98,7 @@ public final class PixelWatch {
      * Mean luma over a half-open native rectangle with a sampling step, or -1.
      * Kept only for the frozen {@code fnaf2-frame-trace-v3} columns
      * ({@code mask_luma}, {@code monitor_luma}), which
-     * {@code tools/device/actuation-frame-metric.py} still requires.
+     * {@code packages/review/bin/grade/actuation-frame-metric.py} still requires.
      */
     public static int blockLuma(NativeFrame frame, int x0, int y0, int x1, int y1, int step) {
         if (step < 1) return -1;

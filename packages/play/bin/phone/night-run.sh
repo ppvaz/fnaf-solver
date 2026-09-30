@@ -143,7 +143,7 @@ TITLE_MODEL_PATH="packages/play/profiles/fnaf2/moto-g56/title-moto-g56-v207.json
 CAUSE_MODEL_PATH="packages/play/profiles/fnaf2/moto-g56/death-cause-withered-chica-moto-g56-v207.json"
 TRACE_TOOL="packages/play/bin/probe/atrace-input.sh"
 for path in "$BUNDLE/manifest.json" "$QUALIFICATION" "$TITLE_MODEL_PATH" \
-            tools/device/phase-reconstruct.mjs tools/device/run-timeline.py \
+            packages/propose/bin/report/phase-reconstruct.mjs packages/review/bin/grade/run-timeline.py \
             packages/play/src/sensors/screencap/title-observe.py packages/play/bin/probe/inputtrace.py \
             "$TRACE_TOOL" apps/desktop/src/device-cli.js tools/evidence.js; do
   [ -e "$path" ] || die "missing required input: $path"
@@ -486,13 +486,13 @@ analyze() {
       [ "$attempt" -gt 1 ] && suffix="-attempt$attempt"
       say "modern campaign bundle (attempt $attempt of ${#ATTEMPT_DIRS[@]}: $dir)"
       printf -- '--- attempt %s of %s: %s ---\n' "$attempt" "${#ATTEMPT_DIRS[@]}" "$dir" | tee -a "$OUTDIR/verdict.txt"
-      node tools/device/run-report.mjs --run "$dir" 2>&1 \
+      node packages/review/bin/grade/run-report.mjs --run "$dir" 2>&1 \
         | tee -a "$OUTDIR/verdict.txt" || true
-      node tools/device/run-report.mjs --run "$dir" --json \
+      node packages/review/bin/grade/run-report.mjs --run "$dir" --json \
         > "$OUTDIR/run-report$suffix.json" 2>/dev/null || true
 
       say "delivered phase against the model band (attempt $attempt)"
-      node tools/device/phase-reconstruct.mjs --run "$dir" --night "$NIGHT" \
+      node packages/propose/bin/report/phase-reconstruct.mjs --run "$dir" --night "$NIGHT" \
         --out "$OUTDIR/phase$suffix.json" 2>&1 | tee "$OUTDIR/phase$suffix.log" || true
     done
   else
@@ -503,7 +503,7 @@ analyze() {
   # grade-run.sh resolves captures/<RUN>.mp4 by name, which is why the harness
   # names the recording after the run id.
   if [ -s "$HOST_VIDEO" ] && [ "$GRADE" = 0 ]; then
-    say "video instruments skipped (--no-grade); grade later with tools/device/grade-run.sh $RUNID"
+    say "video instruments skipped (--no-grade); grade later with packages/review/bin/grade/grade-run.sh $RUNID"
   elif [ -s "$HOST_VIDEO" ]; then
     say "video instruments (grade-run.sh)"
     # Streamed, not buffered. Reading a finished log is how a still-decoding
@@ -545,7 +545,7 @@ analyze() {
        systemd-run --user --scope -q --slice="$GRADE_SLICE" true >/dev/null 2>&1; then
       GRADE_WRAP=(systemd-run --user --scope -q --slice="$GRADE_SLICE" "${GRADE_WRAP[@]}")
     fi
-    "${GRADE_ENV[@]}" "${GRADE_WRAP[@]}" tools/device/grade-run.sh "$RUNID" 2>&1 | tee "$OUTDIR/grade.log" || true
+    "${GRADE_ENV[@]}" "${GRADE_WRAP[@]}" packages/review/bin/grade/grade-run.sh "$RUNID" 2>&1 | tee "$OUTDIR/grade.log" || true
     grep -E "^(outcome|terminal|survival|  clear|  death)" "$OUTDIR/grade.log" \
       >> "$OUTDIR/verdict.txt" 2>/dev/null || true
   else

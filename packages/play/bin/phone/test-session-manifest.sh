@@ -129,7 +129,7 @@ say "a complete session validates end to end"
 build_session ok-run unknown
 grep -q 'finalize_exit=0' "$WORK/ok-run.log"; check "finalize succeeded" $?
 [ -f "$WORK/ok-run-session.json" ]; check "manifest written" $?
-python3 "$HERE/../../../../tools/device/validate-session.py" "$WORK/ok-run-session.json" >/dev/null 2>&1
+python3 "$HERE/../../../../packages/review/bin/legacy/validate-session.py" "$WORK/ok-run-session.json" >/dev/null 2>&1
 check "validate-session.py accepts it" $?
 [ ! -f "$WORK/ok-run-session.spool.jsonl" ]
 check "spool removed once the manifest validated" $?
@@ -202,7 +202,7 @@ m = json.load(open(sys.argv[1]))
 m["alignment_edges"] = []
 json.dump(m, open(sys.argv[2], "w"))
 PY
-python3 "$HERE/../../../../tools/device/validate-session.py" "$WORK/no-edge.json" \
+python3 "$HERE/../../../../packages/review/bin/legacy/validate-session.py" "$WORK/no-edge.json" \
   --events "$WORK/ok-run-session.events.jsonl" >"$WORK/no-edge.log" 2>&1
 [ $? -ne 0 ]; check "deleting the alignment edge breaks the same session" $?
 grep -q 'clock-alignment-missing' "$WORK/no-edge.log"
@@ -243,15 +243,15 @@ check "a completed run is 'unknown', never 'win'" $?
 
 # ------------------------------------------------------------ 6. refusals
 say "secrets and private paths never reach a manifest"
-python3 "$HERE/../../../../tools/device/session-manifest.py" record ok-run env CUE_HELPER_TOKEN=abc123 \
+python3 "$HERE/../../../../packages/review/bin/legacy/session-manifest.py" record ok-run env CUE_HELPER_TOKEN=abc123 \
   >/dev/null 2>&1
 [ $? -ne 0 ]; check "a credential-shaped env key is refused" $?
-python3 "$HERE/../../../../tools/device/session-manifest.py" record ok-run note text=/Users/someone/secret \
+python3 "$HERE/../../../../packages/review/bin/legacy/session-manifest.py" record ok-run note text=/Users/someone/secret \
   >/dev/null 2>&1
 [ $? -ne 0 ]; check "an absolute private path is refused" $?
 grep -q '/Users/' "$WORK/ok-run-session.json"
 [ $? -ne 0 ]; check "no private path survived into the manifest" $?
-python3 "$HERE/../../../../tools/device/session-manifest.py" record ok-run target not_a_field=1 \
+python3 "$HERE/../../../../packages/review/bin/legacy/session-manifest.py" record ok-run target not_a_field=1 \
   >/dev/null 2>&1
 [ $? -ne 0 ]; check "a key the schema does not define is refused at record time" $?
 

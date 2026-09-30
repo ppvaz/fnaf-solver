@@ -5,7 +5,7 @@
 // eaten; write a new dated record and re-derive STATIC_TERMINAL_WAIT_MS).
 // Each check first runs against a planted violation and must catch it.
 //
-//   node tools/device/test-static-terminal-window.mjs
+//   node packages/review/bin/grade/test-static-terminal-window.mjs
 import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -16,7 +16,7 @@ import {
   staticEpisodes, staticReadGaps,
 } from './static-terminal-window.mjs';
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
 const iso = ms => new Date(Date.UTC(2026, 8, 27) + ms).toISOString();
 const obs = (ms, label) => ({ at: iso(ms), type: 'observation', label });
 

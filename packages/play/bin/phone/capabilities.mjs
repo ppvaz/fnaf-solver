@@ -70,19 +70,19 @@ const INSTRUMENTS = [
       'MotionEvent rows to match, and the parser reports NO APP DISPATCH SLICES rather than guessing. ' +
       'Use the Companion native frame trace instead: it is what measured the mask button appearing ' +
       'at ~382.5 ms after monitor-down.' },
-  { tool: 'tools/device/actuation-frame-metric.py',
+  { tool: 'packages/review/bin/grade/actuation-frame-metric.py',
     needs: 'the Companion native frame trace',
     capture: 'packages/play/bin/companion/query-companion.sh trace start LABEL / trace stop ' +
       '(night-run.sh --frame-trace does it around a run)',
     available: d => d.cueHelper !== null,
     ifMissing: 'install/verify the Companion; without it there is no native frame stream to grade.' },
-  { tool: 'tools/device/input-frame-align.py',
+  { tool: 'packages/review/bin/grade/input-frame-align.py',
     needs: 'BOTH a Perfetto trace and the Companion native frame trace',
     capture: 'atrace-input.sh around the run, plus query-companion.sh trace start/stop',
     available: d => (d.perfettoDataSources === null ? null
       : d.perfettoDataSources.includes('android.input.inputevent') && d.cueHelper !== null),
     ifMissing: 'alignment needs dispatch on one side; with no app dispatch source this cannot run here.' },
-  { tool: 'tools/device/run-timeline.py, grade-night.py, grade-minus7.py, windpct.py, camtrace.py',
+  { tool: 'packages/review/bin/grade/run-timeline.py, grade-night.py, grade-minus7.py, windpct.py, camtrace.py',
     needs: 'screenrecord',
     capture: 'night-run.sh records at 1280x576 automatically',
     available: d => d.screenrecord, ifMissing: 'no video means no video instrument runs.' },

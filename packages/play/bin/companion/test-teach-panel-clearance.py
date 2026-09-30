@@ -96,7 +96,7 @@ for name, signature in lifecycle["signatures"].items():
     clear(f"lifecycle.{name}", box)
 
 # The video grader. Its row bands are fractions of the decoded frame.
-timeline = load("run_timeline", os.path.join(HERE, "..", "..", "..", "..", "tools", "device", "run-timeline.py"))
+timeline = load("run_timeline", os.path.join(HERE, "..", "..", "..", "review", "bin", "grade", "run-timeline.py"))
 clear("run-timeline mask bar rows", (0, int(0.88 * H), W, H))
 clear("run-timeline clock band rows", (0, int(0.40 * H), W, int(0.56 * H) + 1))
 # The confetti band (upper 45%) and the dark-frame mean cannot avoid the

@@ -94,7 +94,7 @@ controlled acceptance gate is now three 300-second runs, each at no more than
 | instrument | consumes | produces | gate it feeds |
 |---|---|---|---|
 | `tools/device/bt-audio-capture.sh` | BlueALSA capture started/stopped by `night-run.sh` (new `--bt-audio`), host-clock stamped at start, aligned to the release by the HID release event | `captures/<run>.bt.wav` + `<run>.bt.json` (start stamp, rate, drops) | none (retention) |
-| `tools/device/tickphase.py` | the capture + `cue-refs` s0017, s0025-29, s0030-32 | onset list per handle; `gridPhaseMs` (mod 5000 vs release), per-cycle drift, NC scores | `phase-reconstruct.mjs` gains a `deliveredGridPhaseMs` beside `deliveredEpochMs`; the anchor evidence's `onsetBiasMs` becomes a measurement per run |
+| `packages/review/bin/report/tickphase.py` | the capture + `cue-refs` s0017, s0025-29, s0030-32 | onset list per handle; `gridPhaseMs` (mod 5000 vs release), per-cycle drift, NC scores | `phase-reconstruct.mjs` gains a `deliveredGridPhaseMs` beside `deliveredEpochMs`; the anchor evidence's `onsetBiasMs` becomes a measurement per run |
 | `tools/device/bb-inside.py` | s0016, s0021/23/24 | BB-at-opening and BB-inside intervals | run-report's `encounter` section; the model's BB entry rule test |
 | `tools/device/danger-windows.py` | s0010 envelope (loop un-muted) | `in danger` intervals per cycle | the FLAT-flash census (`bracket`), blackout timing vs model |
 | `tools/device/death-cue.py` | s0012/s0062 | death instant, +-1 frame | `grade-run.sh` survival line, replacing the static heuristic when audio is present |

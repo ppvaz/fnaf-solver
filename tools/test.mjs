@@ -239,7 +239,7 @@ const ENGINE = [
   // Plan 13 package 3 foundation: a labelled, nearest-centroid visual Foxy
   // cause envelope can add attribution after the last office segment, but it
   // is hard-bound to shadow mode and cannot replace lifecycle authority.
-  ['death cause', ['device/test-death-cause.py']],
+  ['death cause', ['../packages/review/bin/grade/test-death-cause.py']],
   // The external audio recorder must expose a fail-closed, phone-free route
   // preflight before it can create an output directory or stop monitoring.
   ['BT audio route', ['../packages/play/bin/audio/test-capture-bt-audio.sh']],
@@ -305,7 +305,7 @@ const ENGINE = [
   // score zero on Night 7, and Night 1 -- whose AI table cannot arm Balloon Boy
   // -- is the positive control every family must clear.
   ['policytest', ['../packages/propose/parked/minus7/policytest.mjs', '--assert']],
-  ['camtrace', ['device/test-camtrace.py']],
+  ['camtrace', ['../packages/review/bin/grade/test-camtrace.py']],
   // Plan 09's read-only corpus index: classify existing artifacts without
   // rewriting them, preserve basename joins, and surface unknown/empty files.
   // The dump's frame instance list, and the trap that comes with it: an
@@ -317,12 +317,12 @@ const ENGINE = [
   // Unwired since it was written; the AI table is what every survival figure
   // in this repository is computed against.
   ['aimap', ['../packages/source/decompile/test-aimap.py']],
-  ['observation index', ['device/test-index-observations.py']],
+  ['observation index', ['../packages/review/bin/legacy/test-index-observations.py']],
   // Plan 09's v1 session contract: the manifest/event schemas, and the proof
   // that each way of being malformed fails with its own reason rather than one
   // generic rejection. A validator that refuses everything identically is
   // indistinguishable from one that refuses everything.
-  ['session contract', ['device/test-validate-session.py']],
+  ['session contract', ['../packages/review/bin/legacy/test-validate-session.py']],
   // Plan 09 package 2's producer half: one session id threaded through the
   // runners, hashes rather than filenames, and a manifest on every exit path.
   // Mock adb, synthetic artifacts, no phone.
@@ -375,8 +375,8 @@ const ENGINE = [
   // torn-and-unlit frame's whole-ROI mean is 173 against a clean-and-lit
   // frame's 111. The four reference frames were removed on 2026-09-29 (no
   // game media beyond the two README clips); the synthetic checks remain.
-  ['sweepcheck discriminator', ['device/test-sweepcheck.py']],
-  ['grade-run coverage', ['device/test-grade-run-coverage.mjs']],
+  ['sweepcheck discriminator', ['../packages/review/bin/grade/test-sweepcheck.py']],
+  ['grade-run coverage', ['../packages/review/bin/grade/test-grade-run-coverage.mjs']],
   ['cuetest', ['../packages/propose/parked/minus7/cue/test-cue.py']],
   ['BB cue state', ['../packages/propose/parked/minus7/test-bb-cue-state.mjs']],
   ['latency experiment', ['../packages/propose/parked/minus7/cue/test-latency-experiment.py']],

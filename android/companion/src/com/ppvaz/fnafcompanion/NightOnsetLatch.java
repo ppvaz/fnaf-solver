@@ -12,7 +12,7 @@ package com.ppvaz.fnafcompanion;
  * a host re-deriving it through 140-240 ms reads.
  *
  * The rule is the post-hoc one in packages/adapters night-onset.js (and
- * tools/device/phase-reconstruct.mjs): the onset is the first frame of the
+ * packages/propose/bin/report/phase-reconstruct.mjs): the onset is the first frame of the
  * first run of FNAF2_NIGHT identities that spans at least HOLD_NS of image
  * time. Any other identity before the hold is met restarts the run, so a
  * single-frame flicker is never an onset. Once latched it stays latched for

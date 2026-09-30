@@ -35,7 +35,7 @@ import sys
 from dataclasses import dataclass
 
 
-ROOT = pathlib.Path(__file__).resolve().parents[2]
+ROOT = pathlib.Path(__file__).resolve().parents[4]
 DEFAULT_MONITOR = ROOT / "models" / "monitor-rule-moto-g56-v207.json"
 DEFAULT_MASK = ROOT / "models" / "mask-rule-moto-g56-v207.json"
 GRID_CELLS = 20 * 9

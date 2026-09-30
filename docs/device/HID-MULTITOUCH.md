@@ -134,7 +134,7 @@ The confirmed detector produced last-clear → first-HUD brackets of **252, 312,
 through about 340 ms but almost no early T0, so the conservative first-positive
 edge is correct; midpoint interpolation is not. A 94-second recorded trial put
 1 AM **69,950 ms** after the first office HUD, within the analyzer's 50 ms
-resolution of the sourced 70,000 ms hour edge. `tools/device/clocktrace.mjs`
+resolution of the sourced 70,000 ms hour edge. `packages/review/bin/grade/clocktrace.mjs`
 turns that relationship into an assertion.
 
 MediaProjection can tighten this observation and replace the screencap loop,
@@ -335,7 +335,7 @@ recordings scored 3/4, 1/4 and 2/4 at the default resolution and 4/4 at
 
 Treat "the shortest repeatedly proven primitive is 240 ms" as withdrawn: it was
 established with the same 30 fps grader and never separated the actuator from
-the detector. `tools/device/test-camtrace.py` now guards the gate that hid it.
+the detector. `packages/review/bin/grade/test-camtrace.py` now guards the gate that hid it.
 
 ### The shell's clock is 25x looser than the actuator's (2026-08-24)
 

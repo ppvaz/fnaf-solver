@@ -36,7 +36,7 @@ import os, subprocess, sys, re
 from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, str(Path(__file__).resolve().parent / "../../packages/play/src/sensors/screencap"))  # Play's screencap readers
+sys.path.insert(0, str(Path(__file__).resolve().parent / "../../../../packages/play/src/sensors/screencap"))  # Play's screencap readers
 import nightpredicate  # noqa: E402
 W,H = 1280,576
 def decode(p,fps,w,h,pix,d):

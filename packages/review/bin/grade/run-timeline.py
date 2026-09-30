@@ -51,19 +51,19 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from pathlib import Path
-sys.path.insert(0, str(Path(__file__).resolve().parent / "../../packages/play/src/sensors/screencap"))  # Play's screencap readers
+sys.path.insert(0, str(Path(__file__).resolve().parent / "../../../../packages/play/src/sensors/screencap"))  # Play's screencap readers
 import framesource  # noqa: E402
 import nightpredicate  # noqa: E402
 
 W, H = 640, 288
-DEFAULT_MODEL = os.path.join(HERE, "..", "..", "packages", "play", "profiles", "fnaf2", "moto-g56", "lifecycle-moto-g56-v207.json")
+DEFAULT_MODEL = os.path.join(HERE, "..", "..", "..", "play", "profiles", "fnaf2", "moto-g56", "lifecycle-moto-g56-v207.json")
 DEFAULT_CAUSE_FPS = 12.0
 VISUAL_CAUSES = frozenset(("foxy", "marionette", "withered-chica"))
 
 
 def _lifecycle():
     spec = importlib.util.spec_from_file_location(
-        "lifecycle_observe", os.path.join(HERE, "..", "..", "packages", "play", "src", "sensors", "screencap", "lifecycle-observe.py"))
+        "lifecycle_observe", os.path.join(HERE, "..", "..", "..", "play", "src", "sensors", "screencap", "lifecycle-observe.py"))
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod

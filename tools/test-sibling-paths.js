@@ -61,6 +61,9 @@ export function siblingReferences(file, text) {
   };
   if (lang === 'js') {
     for (const match of text.matchAll(/new URL\(\s*(['"])([^'"]+)\1\s*,\s*import\.meta\.url\s*\)/g)) add(match.index, [match[2]]);
+    // `new URL('x', here)`, where `here` is the file's own directory as a URL.
+    for (const match of text.matchAll(/new URL\(\s*(['"])([^'"]+)\1\s*,\s*([A-Za-z_$][\w$]*)\s*\)/g))
+      if (match[3] !== 'import' && ownDir(text, match[3], 'js')) add(match.index, [match[2]]);
     for (const match of text.matchAll(/\b(?:join|resolve)\(\s*([A-Za-z_$][\w$]*)\s*,((?:\s*(['"])[^'"]*\3\s*,?)+)\s*\)/g))
       if (match[1] === '__dirname' || ownDir(text, match[1], 'js')) add(match.index, literals(match[2]));
     // `${HERE}x`, where HERE is the directory with its trailing slash.
@@ -136,6 +139,7 @@ function planted() {
     writeFileSync(join(dir, 'a/there.mjs'), '');
     const files = {
       'a/url.mjs': "new URL('gone.mjs', import.meta.url); new URL('there.mjs', import.meta.url);",
+      'a/urlvar.mjs': "  const here = new URL('.', import.meta.url);\n  import(new URL('gone-plan.mjs', here).href); new URL('there.mjs', here);",
       'a/join.js': "const HERE = dirname(fileURLToPath(import.meta.url));\njoin(HERE, 'gone.json'); join(HERE, 'there.mjs');",
       'a/tpl.js': "const HERE = fileURLToPath(new URL('.', import.meta.url));\nconst A = `${HERE}gone.js`; const B = `${HERE}there.mjs`;",
       'a/root.js': "const HERE = resolve(dirname(fileURLToPath(import.meta.url)), '..');\njoin(HERE, 'not-a-sibling.json');",
@@ -148,7 +152,7 @@ function planted() {
     for (const [file, text] of Object.entries(files)) writeFileSync(join(dir, file), text);
     const got = refusals(dir, Object.keys(files)).map(item => `${item.file} -> ${item.target}`).sort();
     const want = ['a/join.js -> a/gone.json', 'a/p.py -> a/gone.py', 'a/q.py -> a/gone.txt',
-      'a/s.sh -> a/gone.py', 'a/s.sh -> a/none-*.json', 'a/t.sh -> a/gone.sh', 'a/tpl.js -> a/gone.js', 'a/up.sh -> ../../out.mjs', 'a/url.mjs -> a/gone.mjs'];
+      'a/s.sh -> a/gone.py', 'a/s.sh -> a/none-*.json', 'a/t.sh -> a/gone.sh', 'a/tpl.js -> a/gone.js', 'a/up.sh -> ../../out.mjs', 'a/url.mjs -> a/gone.mjs', 'a/urlvar.mjs -> a/gone-plan.mjs'];
     return JSON.stringify(got) === JSON.stringify(want) ? [] : [`planted: expected ${want.join(', ')}; got ${got.join(', ') || 'nothing'}`];
   } finally {
     rmSync(dir, { recursive: true, force: true });

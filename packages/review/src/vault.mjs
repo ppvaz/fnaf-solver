@@ -103,7 +103,7 @@ function expand(relPath, into) {
 /** Reuse the existing corpus classifier rather than restating its table here. */
 function captureClasses(wanted) {
   if (!wanted) return new Map();
-  const tool = join(HERE, '../../../tools/device', 'index-observations.py');
+  const tool = join(HERE, '../bin/legacy', 'index-observations.py');
   const output = execFileSync('python3', [tool, 'captures', '--json'],
     { cwd: ROOT, encoding: 'utf8', maxBuffer: 128 * 1024 * 1024 });
   const classes = new Map();

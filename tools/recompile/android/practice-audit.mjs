@@ -34,7 +34,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { HID_DESCRIPTOR, HID_FEATURE_REPORTS, report } from '@sixam/play';
-import { parseInputEvents, touchEdges } from '../../device/tap-stall-audit.mjs';
+import { parseInputEvents, touchEdges } from '../../../packages/play/bin/grade/tap-stall-audit.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 export const SCHEMA = 'recompile-practice-actuation-audit-v1';
@@ -539,7 +539,7 @@ function gradeDir(args) {
     question: 'Which contacts of the campaign transport does a game loop on this phone take, lose or merge, and on which update?',
     device: { package: PACKAGE, apkSha256Prefix: (meta.apkSha256 ?? '').slice(0, 16) },
     instrument: { transport: '/system/bin/hid, HID_DESCRIPTOR and report() of @sixam/adapters',
-      kernel: 'getevent -lt, touchEdges() of tools/device/tap-stall-audit.mjs',
+      kernel: 'getevent -lt, touchEdges() of packages/play/bin/grade/tap-stall-audit.mjs',
       game: 'practice-input.jsonl level-polled left-button edges and practice-state.jsonl SDL ticks' },
     inputsSha256: inputs,
     droppedFragments: dropped.rows,

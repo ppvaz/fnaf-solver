@@ -6,7 +6,7 @@
 // (re-derive POST_NIGHT_STATIC_HALT). Each check first runs against a planted
 // violation and must catch it.
 //
-//   node tools/device/test-post-night-static.mjs
+//   node packages/review/bin/grade/test-post-night-static.mjs
 import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -17,7 +17,7 @@ import {
   measurePostNightStatic, newerPacksContradicting, nightWentOn, postNightStaticEpisodes, serialize,
 } from './post-night-static.mjs';
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
 const reads = rows => rows.map(([at, label]) => ({ at, label }));
 
 // --- The tool's window is the executor's measured one -----------------------

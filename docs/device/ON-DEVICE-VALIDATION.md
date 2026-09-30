@@ -734,7 +734,7 @@ Two independent failures let that through, and neither was subtle:
   in the log, exactly like grading. `screenstate.py` could have refuted the
   163 s claim from any single frame of that recording. Nobody ran it.
 
-`tools/device/grade-run.sh` exists because of this: one pipeline that finds
+`packages/review/bin/grade/grade-run.sh` exists because of this: one pipeline that finds
 whichever capture exists and runs every instrument -- survival, the HID trace
 auditor, camtrace at 60 fps, sweepcheck, windpct, grade-minus7 -- and prints one
 verdict. The runner calls it. See CLAUDE.md, "Instruments are not a pipeline".
@@ -829,7 +829,7 @@ requested, only caught.
 
 ### What actually killed the forty runs, and a corrected cause
 
-`tools/device/death-census.py` pulls the death frame out of every recording on
+`packages/review/bin/report/death-census.py` pulls the death frame out of every recording on
 disk and tiles them. Across 33 nights with an identifiable ending:
 
 | killer | count |
