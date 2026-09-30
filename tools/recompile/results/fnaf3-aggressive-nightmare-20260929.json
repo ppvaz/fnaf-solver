@@ -1,0 +1,100 @@
+{
+ "schema": "recompile-pilot-night-v1",
+ "evidenceId": "recompile-pilot-night-9bba02f11189549a",
+ "claimLevel": "MODEL_ONLY",
+ "fidelity": "rebuilt-runtime",
+ "game": "fnaf3",
+ "night": "6th Night (Nightmare, AI 7) with Aggressive (hyper=1); Fast Nights, No Errors (nocams) and Radar (vents) off",
+ "recordedAt": "2026-09-30",
+ "question": "Does the rebuilt fnaf3 reach 6 AM on its hardest night from the recorded touches alone?",
+ "controller": {
+  "policy": "guard",
+  "knobs": {},
+  "source": "tools/recompile/pilot/fnaf3.mjs",
+  "reads": "the rebuilt runtime's own objects each update (an oracle, not a player's view)",
+  "acts": "in-window touches only, through the harness input path",
+  "pilotOutcome": "6AM"
+ },
+ "binarySha256": "239c59cbeeb8c6226bc212abe6d78c949fff899e737ae52c137833d2e69261a3",
+ "assetsSha256": "c5e092a33a3f02edc9f306ae8e2bc57160e865ec6bf2aa34962838b4c7c4897c",
+ "seed": 24850,
+ "saveBefore": {
+  "sha256": "a3fad9efee8285676e77ace130dfad0568dc60e0df7183f568b6c6f4864317a4",
+  "keys": {
+   "freddy3.level": "5",
+   "freddy3.beatgame": "1",
+   "freddy3.beat6": "1",
+   "freddy3.goodend": "1",
+   "freddy3.hyper": "1",
+   "freddy3.fast": "0",
+   "freddy3.vents": "0",
+   "freddy3.nocams": "0",
+   "options.joystickSize": "120"
+  }
+ },
+ "input": {
+  "fixture": "tools/recompile/fixtures/fnaf3-aggressive-nightmare-win.input",
+  "sha256": "f87351138c1b76338107c4941543c0c727b0c077536e0baad89b86c0c5b79356",
+  "rows": 332
+ },
+ "pilotTrace": {
+  "rows": 30000,
+  "sha256": "e0dc3c6321bd124e94b40a68474eed80e576fa22fa3ba28198f925337d9bdf6a"
+ },
+ "replay": {
+  "rows": 30000,
+  "sha256": "e0dc3c6321bd124e94b40a68474eed80e576fa22fa3ba28198f925337d9bdf6a",
+  "traceEqual": true,
+  "visits": [
+   {
+    "frame": 0,
+    "updates": 180
+   },
+   {
+    "frame": 1,
+    "updates": 217
+   },
+   {
+    "frame": 2,
+    "updates": 219
+   },
+   {
+    "frame": 7,
+    "updates": 6
+   },
+   {
+    "frame": 3,
+    "updates": 21601
+   },
+   {
+    "frame": 5,
+    "updates": 559
+   },
+   {
+    "frame": 11,
+    "updates": 1019
+   },
+   {
+    "frame": 1,
+    "updates": 6199
+   }
+  ]
+ },
+ "saveAfter": {
+  "freddy3.level": "7",
+  "freddy3.goodend": "1",
+  "freddy3.beatgame": "1",
+  "freddy3.beat6": "1",
+  "freddy3.hyper": "1",
+  "freddy3.fast": "0",
+  "freddy3.4thstar": "1",
+  "freddy3.vents": "0",
+  "freddy3.cine": "1",
+  "freddy3.nocams": "0",
+  "options.joystickSize": "120"
+ },
+ "winKeys": [
+  "freddy3.4thstar=1"
+ ],
+ "status": "WON"
+}

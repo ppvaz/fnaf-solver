@@ -3325,6 +3325,62 @@
       ]
     },
     {
+      "file": "tools/recompile/pilot/fnaf3.mjs",
+      "imports": [
+        "node:fs",
+        "node:path"
+      ]
+    },
+    {
+      "file": "tools/recompile/pilot/fnaf4.mjs",
+      "imports": [
+        "node:fs",
+        "node:path"
+      ]
+    },
+    {
+      "file": "tools/recompile/pilot/pilot.mjs",
+      "imports": [
+        "node:child_process",
+        "node:fs",
+        "node:net",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "tools/recompile/pilot/record.mjs",
+      "imports": [
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "tools/recompile/pilot/replay.mjs",
+      "imports": [
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:readline",
+        "node:url"
+      ]
+    },
+    {
+      "file": "tools/recompile/pilot/test-pilot.mjs",
+      "imports": [
+        "../../../packages/core/src/mechanics/games/sim-fnaf3.js",
+        "./fnaf3.mjs",
+        "./record.mjs",
+        "node:assert/strict",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/recompile/schedule-to-input.mjs",
       "imports": [
         "../device/bundle.mjs",

@@ -477,10 +477,20 @@ index ed74b78..f9d064d 100644
  
  inline void to_lower(std::string & str)
 diff --git a/Chowdren/chowdren/converter.py b/Chowdren/chowdren/converter.py
-index d8edac8..de9af93 100644
+index d8edac8..85118a1 100644
 --- a/Chowdren/chowdren/converter.py
 +++ b/Chowdren/chowdren/converter.py
-@@ -22,7 +22,8 @@ import string
+@@ -16,13 +16,18 @@ from mmfparser.data.chunkloaders.frame import NONE_PARENT
+ from mmfparser.bitdict import BitDict
+ from cStringIO import StringIO
+ import textwrap
++
++# (ace_type, name, object) of every ACE that fell back to an inert writer;
++# get_ace_writer prints each once.
++UNMAPPED_ACES = set()
+ from PIL import Image
+ from mmfparser.data.font import LogFont
+ import string
  import functools
  import itertools
  from collections import defaultdict, Counter
@@ -490,7 +500,7 @@ index d8edac8..de9af93 100644
  from chowdren.writers.events import system as system_writers
  from chowdren.writers.events.system import SystemObject
  from chowdren.writers.objects.system import system_objects
-@@ -50,6 +51,7 @@ import cPickle
+@@ -50,6 +55,7 @@ import cPickle
  import multiprocessing
  from chowdren.local import write_locals
  from chowdren import transition
@@ -498,7 +508,7 @@ index d8edac8..de9af93 100644
  
  WRITE_SOUNDS = True
  PROFILE = False
-@@ -534,6 +536,30 @@ class FrameDataWriter(MultiFileWriter):
+@@ -534,6 +540,30 @@ class FrameDataWriter(MultiFileWriter):
          self.putln('#include "events.h"')
          self.putlnc('#include "%s.h"', self.get_filename())
  
@@ -529,7 +539,7 @@ index d8edac8..de9af93 100644
  def fix_sound(data, extension):
      data = str(data)
      if extension != 'wav':
-@@ -1101,13 +1127,33 @@ class Converter(object):
+@@ -1101,13 +1131,33 @@ class Converter(object):
          self.image_indexes = {}
          image_hashes = {}
          new_entries = []
@@ -565,7 +575,7 @@ index d8edac8..de9af93 100644
                      image.height), image.getImageData())
  
                  handle = (image.handle, game_index)
-@@ -1134,7 +1180,10 @@ class Converter(object):
+@@ -1134,7 +1184,10 @@ class Converter(object):
                  image_hashes[image_hash] = image_index
  
                  new_entries.append((image, image_hash))
@@ -577,7 +587,7 @@ index d8edac8..de9af93 100644
  
                  image_index += 1
  
-@@ -1144,32 +1193,6 @@ class Converter(object):
+@@ -1144,32 +1197,6 @@ class Converter(object):
          # for file_index, rects in enumerate(maxrects):
          #     rects.get().save('./testmaxrects/atlas%s.png' % file_index)
  
@@ -610,7 +620,7 @@ index d8edac8..de9af93 100644
          for i in xrange(worker_count):
              in_queue.put(None)
  
-@@ -1191,18 +1214,31 @@ class Converter(object):
+@@ -1191,18 +1218,31 @@ class Converter(object):
          for game in self.games:
              if not game.sounds:
                  continue
@@ -647,7 +657,7 @@ index d8edac8..de9af93 100644
  
          # files
          for game in self.games:
-@@ -1251,7 +1287,14 @@ class Converter(object):
+@@ -1251,7 +1291,14 @@ class Converter(object):
          self.container_ids = Counter()
          frame_file = FrameDataWriter(frame_index+1, self)
          frame_class_name = self.frame_class = frame_file.class_name
@@ -663,7 +673,7 @@ index d8edac8..de9af93 100644
          self.current_frame = frame
          self.current_frame_index = frame_index
          self.config.init_frame(frame)
-@@ -1268,7 +1311,15 @@ class Converter(object):
+@@ -1268,7 +1315,15 @@ class Converter(object):
          object_writers.append(self.system_object)
  
          for instance in getattr(frame.instances, 'items', ()):
@@ -680,7 +690,7 @@ index d8edac8..de9af93 100644
              obj = (frameitem.handle, frameitem.objectType)
              all_startup_infos.add(obj)
              try:
-@@ -1299,6 +1350,14 @@ class Converter(object):
+@@ -1299,6 +1354,14 @@ class Converter(object):
              elif object_writer.has_autodestruct():
                  self.multiple_instances.add(obj)
  
@@ -695,7 +705,7 @@ index d8edac8..de9af93 100644
          events = frame.events
  
          self.qualifier_names = {}
-@@ -1345,10 +1404,22 @@ class Converter(object):
+@@ -1345,10 +1408,22 @@ class Converter(object):
          changed_containers = set()
  
          event_items = events.items
@@ -719,7 +729,7 @@ index d8edac8..de9af93 100644
              name = self.get_condition_name(first_condition)
              if name == 'NewGroup':
                  group_loader = first_condition.items[0].loader
-@@ -1359,6 +1430,9 @@ class Converter(object):
+@@ -1359,6 +1434,9 @@ class Converter(object):
                      current_container.add_child(new_container)
                  current_container = new_container
                  containers[group_loader.offset] = current_container
@@ -729,7 +739,7 @@ index d8edac8..de9af93 100644
                  always_groups.append(ContainerMark(current_container, name))
                  continue
              elif name == 'GroupEnd':
-@@ -1403,6 +1477,8 @@ class Converter(object):
+@@ -1403,6 +1481,8 @@ class Converter(object):
              for action in group.actions:
                  action_writer = self.get_action_writer(action)
                  action_writer.container = current_container
@@ -738,7 +748,7 @@ index d8edac8..de9af93 100644
                  actions.append(action_writer)
  
                  action_name = self.get_action_name(action)
-@@ -1426,8 +1502,11 @@ class Converter(object):
+@@ -1426,8 +1506,11 @@ class Converter(object):
                          self.multiple_instances.add(create_info)
                  elif action_name in ('DeactivateGroup',
                                       'ActivateGroup'):
@@ -752,7 +762,7 @@ index d8edac8..de9af93 100644
  
              always_group_index = None
              generated_group_index = None
-@@ -1466,7 +1545,12 @@ class Converter(object):
+@@ -1466,7 +1549,12 @@ class Converter(object):
                  new_group.post_event = first_writer.post_event
                  new_group.precedence = first_writer.precedence
  
@@ -766,7 +776,7 @@ index d8edac8..de9af93 100644
                      new_always_groups.append(new_group)
                      new_group.local_id = len(always_groups_dict[name])+1
  
-@@ -1610,9 +1694,13 @@ class Converter(object):
+@@ -1610,9 +1698,13 @@ class Converter(object):
  
          # set up qualifiers
          for name, instances in qualifier_setup.iteritems():
@@ -781,7 +791,7 @@ index d8edac8..de9af93 100644
              start_writer.putlnc('%s.set(%s, &%s_instances[0]);', name,
                                  len(instances), name)
  
-@@ -1620,6 +1708,16 @@ class Converter(object):
+@@ -1620,6 +1712,16 @@ class Converter(object):
              startup_instances)
          self.startup_instances = startup_instances
  
@@ -798,7 +808,7 @@ index d8edac8..de9af93 100644
          for instance, frameitem in startup_instances:
              obj = (frameitem.handle, frameitem.objectType)
              object_writer = self.get_object_writer(obj)
-@@ -1674,6 +1772,19 @@ class Converter(object):
+@@ -1674,6 +1776,19 @@ class Converter(object):
              frame_file.end_brace()
          frame_file.end_brace()
  
@@ -818,7 +828,7 @@ index d8edac8..de9af93 100644
          # write 'always' event subfunctions
          group_index = 0
          call_groups = []
-@@ -2178,6 +2289,8 @@ class Converter(object):
+@@ -2178,6 +2293,8 @@ class Converter(object):
              return 'SavedIterator'
          if is_qualifier(obj[0]):
              return 'QualifierIterator'
@@ -827,7 +837,7 @@ index d8edac8..de9af93 100644
          return 'ObjectIterator'
  
      @contextlib.contextmanager
-@@ -2217,6 +2330,13 @@ class Converter(object):
+@@ -2217,6 +2334,13 @@ class Converter(object):
              return
          
          list_name = self.get_object_list(object_info)
@@ -841,7 +851,7 @@ index d8edac8..de9af93 100644
          is_qual = is_qualifier(object_info[0])
          if is_qual:
              writer.putlnc('for (int i = 0; i < %s.count; i++)', list_name)
-@@ -2280,6 +2400,14 @@ class Converter(object):
+@@ -2280,6 +2404,14 @@ class Converter(object):
              writer.putln('if (!%s) goto %s;' % (
                  item.code_name, item.end_label))
  
@@ -856,7 +866,7 @@ index d8edac8..de9af93 100644
      def get_container_check(self, container):
          groups = []
          for item in container.tree:
-@@ -2508,6 +2636,30 @@ class Converter(object):
+@@ -2508,6 +2640,30 @@ class Converter(object):
          return self.write_events(name, writer, groups, True, pre_calls,
                                   post_calls)
  
@@ -887,7 +897,7 @@ index d8edac8..de9af93 100644
      def get_event_code(self, group, triggered=False):
          group.set_groups(self, self.current_groups)
          self.is_triggered = triggered
-@@ -2541,6 +2693,7 @@ class Converter(object):
+@@ -2541,6 +2697,7 @@ class Converter(object):
  
          conditions = group.conditions
          if triggered:
@@ -895,7 +905,7 @@ index d8edac8..de9af93 100644
              conditions = conditions[1:]
  
          if conditions or has_container_check:
-@@ -2602,26 +2755,36 @@ class Converter(object):
+@@ -2602,26 +2759,36 @@ class Converter(object):
  
                  for write_condition in write_conditions:
                      negated = not write_condition.is_negated()
@@ -947,7 +957,7 @@ index d8edac8..de9af93 100644
                      if negated:
                          writer.put(')')
                      if has_multiple:
-@@ -2655,6 +2818,8 @@ class Converter(object):
+@@ -2655,6 +2822,8 @@ class Converter(object):
                  or_lists.add(list_name)
  
              for list_name in or_lists:
@@ -956,7 +966,7 @@ index d8edac8..de9af93 100644
                  if is_logical:
                      writer.putlnc('%s.clear_selection();', list_name)
                  else:
-@@ -2673,7 +2838,8 @@ class Converter(object):
+@@ -2673,7 +2842,8 @@ class Converter(object):
                  check = '%s' % (' || '.join(or_bools))
                  writer.putlnc('if (%s) {', check)
                  writer.indent()
@@ -966,7 +976,7 @@ index d8edac8..de9af93 100644
                  writer.end_brace()
  
              # writer.start_brace()
-@@ -2689,15 +2855,28 @@ class Converter(object):
+@@ -2689,15 +2859,28 @@ class Converter(object):
              if action_writer.custom:
                  action_writer.write(writer)
                  continue
@@ -996,7 +1006,7 @@ index d8edac8..de9af93 100644
              if object_info is not None:
                  if obj in self.has_single_selection:
                      has_single = True
-@@ -2705,9 +2884,20 @@ class Converter(object):
+@@ -2705,9 +2888,20 @@ class Converter(object):
                      has_multiple = True
                  elif not self.is_valid_object(obj):
                      object_info = None
@@ -1017,7 +1027,7 @@ index d8edac8..de9af93 100644
              object_name = None
              write_actions = [action_writer]
              if has_single:
-@@ -2721,6 +2911,9 @@ class Converter(object):
+@@ -2721,6 +2915,9 @@ class Converter(object):
                          break
                      if next_action.custom:
                          break
@@ -1027,7 +1037,7 @@ index d8edac8..de9af93 100644
                      if next_action.iterate_objects is False:
                          break
                      action_index += 1
-@@ -2734,6 +2927,19 @@ class Converter(object):
+@@ -2734,6 +2931,19 @@ class Converter(object):
                  self.set_iterator(obj, list_name)
                  object_name = '*it'
              elif object_info is not None:
@@ -1047,7 +1057,7 @@ index d8edac8..de9af93 100644
                  writer.putindent()
                  writer.put('%s->' % self.get_object(obj))
              elif action_writer.static:
-@@ -2805,7 +3011,8 @@ class Converter(object):
+@@ -2805,7 +3015,8 @@ class Converter(object):
                  continue
              list_name = self.get_object_list(obj, True)
              group.or_selected[obj] = list_name
@@ -1057,7 +1067,7 @@ index d8edac8..de9af93 100644
  
          writer.putlnc('if (%s) {', group.or_temp_result)
          writer.indent()
-@@ -2817,7 +3024,8 @@ class Converter(object):
+@@ -2817,7 +3028,8 @@ class Converter(object):
          for obj, list_name in self.has_selection.iteritems():
              if obj in has_qualifier:
                  continue
@@ -1067,7 +1077,7 @@ index d8edac8..de9af93 100644
  
          writer.end_brace()
  
-@@ -2893,6 +3101,18 @@ class Converter(object):
+@@ -2893,6 +3105,18 @@ class Converter(object):
              if parameter_name == 'Object':
                  return self.get_object((loader.objectInfo, loader.objectType))
              elif parameter_name == 'Sample':
@@ -1086,7 +1096,7 @@ index d8edac8..de9af93 100644
                  return self.assets.get_sound_id(loader.name)
              elif parameter_name in ('Position', 'Shoot', 'Create'):
                  if parameter_name != 'Position':
-@@ -2965,6 +3185,14 @@ class Converter(object):
+@@ -2965,6 +3189,14 @@ class Converter(object):
                  return self.intern_string(loader.value)
              elif parameter_name in ('TwoShorts'):
                  return to_c('%r, %r', loader.value1, loader.value2)
@@ -1101,7 +1111,7 @@ index d8edac8..de9af93 100644
              else:
                  raise NotImplementedError('parameter: %s' % parameter_name)
          self.start_clauses += out.count('(')
-@@ -2978,16 +3206,25 @@ class Converter(object):
+@@ -2978,16 +3210,25 @@ class Converter(object):
  
              if remove != 1:
                  print out
@@ -1132,7 +1142,7 @@ index d8edac8..de9af93 100644
  
              filtered = out[end+1:]
              out = out[:end+1]
-@@ -3068,7 +3305,8 @@ class Converter(object):
+@@ -3068,7 +3309,8 @@ class Converter(object):
              clear_lists = (list_name,)
  
          for obj_list in clear_lists:
@@ -1142,7 +1152,7 @@ index d8edac8..de9af93 100644
  
          for obj in objs:
              if obj == object_info:
-@@ -3149,6 +3387,18 @@ class Converter(object):
+@@ -3149,6 +3391,18 @@ class Converter(object):
                  if default_instance:
                      args.append(default_instance)
  
@@ -1161,7 +1171,7 @@ index d8edac8..de9af93 100644
              if is_qual:
                  getter_name = 'get_qualifier'
              else:
-@@ -3160,6 +3410,25 @@ class Converter(object):
+@@ -3160,6 +3414,25 @@ class Converter(object):
      def get_default_instance(self, object_type):
          return self.get_object_impl(object_type).default_instance
  
@@ -1187,7 +1197,7 @@ index d8edac8..de9af93 100644
      def get_object_list(self, obj, allow_single=False):
          if self.has_single(obj) and not allow_single:
              print 'single exception:', self.get_single(obj)
-@@ -3170,11 +3439,23 @@ class Converter(object):
+@@ -3170,11 +3443,23 @@ class Converter(object):
          if is_qual:
              return type_id
          obj = self.filter_object_type(obj)
@@ -1213,7 +1223,7 @@ index d8edac8..de9af93 100644
  
      def filter_object_type(self, obj):
          if is_qualifier(obj[0]):
-@@ -3285,9 +3566,12 @@ class Converter(object):
+@@ -3285,9 +3570,12 @@ class Converter(object):
                  return get_method_name('_'.join(full_name))
          ret = item.getName()
          if ret is None:
@@ -1229,7 +1239,7 @@ index d8edac8..de9af93 100644
          return ret
  
      def get_action_writer(self, item, as_klass = False):
-@@ -3329,6 +3613,24 @@ class Converter(object):
+@@ -3329,6 +3617,30 @@ class Converter(object):
              klass = getattr(writer_module, ace_type)[key]
          except (KeyError, AttributeError):
              klass = default_writers[ace_type]
@@ -1239,6 +1249,12 @@ index d8edac8..de9af93 100644
 +        # system ACE) an object receiver.  Keep source generation/build probes
 +        # honest by making an unsupported operation explicitly inert instead.
 +        if klass is default_writers[ace_type]:
++            # Name every silent fallback once, so a game's inert ACEs are a
++            # list in the conversion log rather than an empty event body.
++            unmapped = (ace_type, str(key), str(object_name))
++            if unmapped not in UNMAPPED_ACES:
++                UNMAPPED_ACES.add(unmapped)
++                print 'unmapped ACE: %s %s (%s)' % unmapped
 +            if ace_type == 'actions':
 +                klass = EmptyAction
 +            elif ace_type == 'conditions':
@@ -1358,7 +1374,7 @@ index 1943544..ab10e20 100644
              print 'meth:', self.method
              raise e
 diff --git a/Chowdren/chowdren/writers/events/system.py b/Chowdren/chowdren/writers/events/system.py
-index 48623cf..65777ed 100644
+index 48623cf..98f1e02 100644
 --- a/Chowdren/chowdren/writers/events/system.py
 +++ b/Chowdren/chowdren/writers/events/system.py
 @@ -2,7 +2,8 @@ from mmfparser.data.chunkloaders.objectinfo import SEMITRANSPARENT_EFFECT
@@ -1402,13 +1418,27 @@ index 48623cf..65777ed 100644
  
      def write_start(self, writer):
          for name in self.loops.keys():
-@@ -292,9 +313,18 @@ class SystemObject(ObjectWriter):
-         loop_objects = {}
+@@ -288,28 +309,51 @@ class SystemObject(ObjectWriter):
+         writer.end_brace()
+ 
+     def write_foreach(self, writer):
++        # One generated body per (loop, object). Build 296 reuses a loop
++        # number across object types: FNaF 3's office runs loop 0 over its
++        # cameras (qualifier 33), its vents (32) and its cupcakes (31). Keyed
++        # by the loop alone, the three OnObjectLoop groups shared one body and
++        # one instance, bound to the last group's object, so every iteration
++        # ran all three and the camera bodies walked their whole qualifier:
++        # 150 camera hitboxes where the sheet makes 10, one tagged, all naming
++        # CAM 01. A loop with a single object keeps its historic names.
++        by_name = {}
+         loops = defaultdict(list)
+-        loop_objects = {}
          for loop in self.get_conditions('OnObjectLoop'):
              parameter = loop.conditions[0].data.items[0]
 -            items = parameter.loader.items
 -            name = self.converter.convert_static_expression(items)
 -            loop_objects[name] = loop.conditions[0].get_object()
+-            loops[name].append(loop)
 +            name = static_loop_name(self.converter, parameter)
 +            obj = loop.conditions[0].get_object()
 +            if obj[0] is None:
@@ -1420,11 +1450,43 @@ index 48623cf..65777ed 100644
 +                # walks the whole list on every iteration.
 +                data = loop.conditions[0].data
 +                obj = (data.objectInfo, data.objectType)
-+            loop_objects[name] = obj
-             loops[name].append(loop)
++            objects = by_name.setdefault(name, [])
++            if obj not in objects:
++                objects.append(obj)
++            loops[(name, obj)].append(loop)
  
          self.foreach_names = {}
-@@ -320,8 +350,7 @@ class SystemObject(ObjectWriter):
+         self.converter.begin_events()
+-        for real_name, groups in loops.iteritems():
+-            obj = loop_objects[real_name]
+-            name = get_method_name(real_name)
+-            instance_name = 'foreach_instance_' + name
+-            writer.add_member('FrameObject * %s' % instance_name)
+-            object_class = self.converter.get_object_class(obj[1])
+-            self.converter.set_object(obj, '((%s)%s)' % (object_class,
+-                                                         instance_name))
+-            name = 'foreach_%s_%s' % (name, self.converter.current_frame_index)
+-            name = self.converter.write_generated(name, writer, groups)
+-            self.foreach_names[real_name] = name
++        for real_name, objects in by_name.iteritems():
++            for obj in objects:
++                groups = loops[(real_name, obj)]
++                name = get_method_name(real_name)
++                if len(objects) > 1:
++                    name = '%s_%s_%s' % (name, obj[0] & 0xFFFF, obj[1] & 0xFFFF)
++                instance_name = 'foreach_instance_' + name
++                writer.add_member('FrameObject * %s' % instance_name)
++                object_class = self.converter.get_object_class(obj[1])
++                self.converter.set_object(obj, '((%s)%s)' % (object_class,
++                                                             instance_name))
++                func = 'foreach_%s_%s' % (name, self.converter.current_frame_index)
++                func = self.converter.write_generated(func, writer, groups)
++                self.foreach_names.setdefault(real_name, []).append(
++                    (obj, instance_name, func))
+ 
+     def write_loops(self, writer):
+         self.loop_names = set()
+@@ -320,8 +364,7 @@ class SystemObject(ObjectWriter):
  
          for loop_group in self.get_conditions('OnLoop'):
              parameter = loop_group.conditions[0].data.items[0]
@@ -1434,7 +1496,7 @@ index 48623cf..65777ed 100644
              if name is None:
                  # try and get config to give us a loop name
                  name = self.converter.config.get_loop_name(parameter)
-@@ -490,6 +519,18 @@ class IsOverlapping(CollisionCondition):
+@@ -490,6 +533,18 @@ class IsOverlapping(CollisionCondition):
          other_info = (data.items[0].loader.objectInfo,
                        data.items[0].loader.objectType)
          converter = self.converter
@@ -1453,7 +1515,7 @@ index 48623cf..65777ed 100644
          selected_name = converter.create_list(object_info, writer)
          if negated:
              other_selected = converter.get_object_list(other_info,
-@@ -548,6 +589,71 @@ class Always(ConditionWriter):
+@@ -548,6 +603,71 @@ class Always(ConditionWriter):
      def write(self, writer):
          pass
  
@@ -1525,7 +1587,7 @@ index 48623cf..65777ed 100644
  class MouseClicked(ConditionWriter):
      is_always = True
      pre_event = True
-@@ -659,15 +765,23 @@ class TimerEvery(ConditionWriter):
+@@ -659,15 +779,23 @@ class TimerEvery(ConditionWriter):
      custom = True
  
      def write(self, writer):
@@ -1554,7 +1616,7 @@ index 48623cf..65777ed 100644
  
  class AnimationFinished(ConditionWriter):
      is_always = True
-@@ -751,8 +865,7 @@ class OnceCondition(ConditionWriter):
+@@ -751,8 +879,7 @@ class OnceCondition(ConditionWriter):
  
  class GroupActivated(ConditionWriter):
      def write(self, writer):
@@ -1564,7 +1626,7 @@ index 48623cf..65777ed 100644
          writer.put(self.converter.get_container_check(container))
  
  class PickRandom(ConditionWriter):
-@@ -924,6 +1037,42 @@ class PickFlagOn(PickAlterableCondition):
+@@ -924,6 +1051,42 @@ class PickFlagOn(PickAlterableCondition):
          writer.end_brace()
  
  
@@ -1607,7 +1669,20 @@ index 48623cf..65777ed 100644
  class PickFromFixed(PickCondition):
      def write_pick(self, writer, objs):
          writer.start_brace()
-@@ -1120,8 +1269,14 @@ class CreateBase(ActionWriter):
+@@ -971,8 +1134,11 @@ class CompareFixedValue(ConditionWriter):
+         if not is_instance:
+             writer.putln('if (%s == NULL) %s' % (fixed_name, event_break))
+         if is_single:
++            # Break when the comparison fails. This branch broke when it held,
++            # so FNaF 3's monitor tab (flip it out == FlipHitbox value 0)
++            # never raised the monitor, and each tab fired the other's group.
+             obj = converter.get_object(obj)
+-            writer.putlnc('if (%s %s %s) %s', obj, comparison, fixed_name,
++            writer.putlnc('if (!(%s %s %s)) %s', obj, comparison, fixed_name,
+                           event_break)
+         elif test_all:
+             list_name = converter.create_list(obj, writer)
+@@ -1120,8 +1286,14 @@ class CreateBase(ActionWriter):
  
          if object_info != parent_info and (not has_selection and
                                             not select_single):
@@ -1624,7 +1699,7 @@ index 48623cf..65777ed 100644
  
          writer.putlnc('// select single: %s %s %s', select_single,
                        multi, has_selection)
-@@ -1191,6 +1346,11 @@ class CreateBase(ActionWriter):
+@@ -1191,6 +1363,11 @@ class CreateBase(ActionWriter):
                  writer.indent()
                  writer.putlnc('%s = new_obj;', single_name)
                  writer.dedent()
@@ -1636,7 +1711,7 @@ index 48623cf..65777ed 100644
              else:
                  writer.putlnc('%s.add_back();', list_name)
              if is_shoot:
-@@ -1425,9 +1585,7 @@ class Foreach(ActionWriter):
+@@ -1425,9 +1602,7 @@ class Foreach(ActionWriter):
      custom = True
  
      def get_name(self):
@@ -1647,8 +1722,27 @@ index 48623cf..65777ed 100644
  
      def write(self, writer):
          self.reorder = self.converter.config.reorder_foreach()
-@@ -1461,14 +1619,26 @@ class Foreach(ActionWriter):
-             writer.putlnc('%s();', func_call)
+@@ -1454,21 +1629,42 @@ class Foreach(ActionWriter):
+             writer.end_brace()
+             print 'foreach error! nested foreach not implemented yet'
+             return
+-        func_call = self.converter.system_object.foreach_names[real_name]
++        bodies = self.converter.system_object.foreach_names[real_name]
++        if len(bodies) > 1:
++            # The loop runs the OnObjectLoop bodies of the object it iterates
++            # (system write_foreach), or, failing an exact match, of any
++            # object sharing an instance type with it.
++            mine = set(self.converter.resolve_qualifier(obj))
++            exact = [b for b in bodies if b[0] == obj]
++            bodies = exact or [b for b in bodies
++                               if mine & set(self.converter.resolve_qualifier(b[0]))]
+         with self.converter.iterate_object(obj, writer):
+             selected = self.converter.get_object(obj)
+-            writer.putlnc('foreach_instance_%s = %s;', name, selected)
+-            writer.putlnc('%s();', func_call)
++            for _, instance_name, func_call in bodies:
++                writer.putlnc('%s = %s;', instance_name, selected)
++                writer.putlnc('%s();', func_call)
          writer.end_brace()
  
 +def static_loop_name(converter, parameter):
@@ -1676,7 +1770,7 @@ index 48623cf..65777ed 100644
          if name is not None:
              return name
          return self.converter.config.get_dynamic_loop_call_name(parameter)
-@@ -1558,8 +1728,11 @@ class StartLoop(ActionWriter):
+@@ -1558,8 +1754,11 @@ class StartLoop(ActionWriter):
                  times = exp.loader.value
                  if times == -1:
                      comparison = 'true'
@@ -1690,7 +1784,7 @@ index 48623cf..65777ed 100644
          if times is None:
              times = self.convert_index(1)
          is_infinite = comparison is not None
-@@ -1622,15 +1795,13 @@ class DeactivateGroup(ActionWriter):
+@@ -1622,15 +1821,13 @@ class DeactivateGroup(ActionWriter):
  
      def get_deactivated_container(self):
          if self.deactivated_container is None:
@@ -1708,7 +1802,7 @@ index 48623cf..65777ed 100644
          if name is None:
              name = self.converter.convert_parameter(parameter)
              print 'Could not convert stop loop name for', name
-@@ -1640,8 +1811,7 @@ class StopLoop(ActionWriter):
+@@ -1640,8 +1837,7 @@ class StopLoop(ActionWriter):
  
  class SetLoopIndex(ActionWriter):
      def write(self, writer):
@@ -1718,7 +1812,7 @@ index 48623cf..65777ed 100644
          index_name = get_loop_index_name(name)
          value = self.convert_index(1)
          writer.putln('%s = %s;' % (index_name, value))
-@@ -1650,8 +1820,7 @@ class ActivateGroup(ActionWriter):
+@@ -1650,8 +1846,7 @@ class ActivateGroup(ActionWriter):
      custom = True
  
      def write(self, writer):
@@ -1728,7 +1822,7 @@ index 48623cf..65777ed 100644
          writer.putlnc('if (!%s) {', container.code_name)
          writer.indent()
          writer.putlnc('%s = true;', container.code_name)
-@@ -1791,6 +1960,23 @@ class SetEffect(ActionWriter):
+@@ -1791,6 +1986,23 @@ class SetEffect(ActionWriter):
                                             copy=False):
              obj = self.converter.get_object(self.get_object())
              name = self.parameters[0].loader.value
@@ -1752,7 +1846,7 @@ index 48623cf..65777ed 100644
              if name == '':
                  name = None
              shader_name = shader.get_name(name)
-@@ -1872,13 +2058,49 @@ class MinusExpression(ConstantExpression):
+@@ -1872,13 +2084,49 @@ class MinusExpression(ConstantExpression):
  class MultiplyExpression(ConstantExpression):
      value = '*'
  
@@ -1804,7 +1898,7 @@ index 48623cf..65777ed 100644
  
  class ModulusExpression(ConstantExpression):
      value = '%'
-@@ -1970,9 +2192,13 @@ class GetLoopIndex(ExpressionWriter):
+@@ -1970,9 +2218,13 @@ class GetLoopIndex(ExpressionWriter):
              size = 2
              next_exp = items[converter.item_index + 1]
              if next_exp.getName() != 'String':
@@ -1821,7 +1915,7 @@ index 48623cf..65777ed 100644
              else:
                  name = next_exp.loader.value
          converter.item_index += size
-@@ -2055,6 +2281,7 @@ actions = make_table(ActionMethodWriter, {
+@@ -2055,6 +2307,7 @@ actions = make_table(ActionMethodWriter, {
      'CreateObject' : CreateObject,
      'Shoot' : ShootObject,
      'StartLoop' : StartLoop,
@@ -1829,7 +1923,7 @@ index 48623cf..65777ed 100644
      'Foreach' : Foreach,
      'StopLoop' : StopLoop,
      'SwapPosition' : SwapPosition,
-@@ -2072,6 +2299,11 @@ actions = make_table(ActionMethodWriter, {
+@@ -2072,9 +2325,21 @@ actions = make_table(ActionMethodWriter, {
      'SetMinimumValue' : 'set_min',
      'SetGlobalString' : 'global_strings->set',
      'SetGlobalValue' : 'global_values->set',
@@ -1841,7 +1935,17 @@ index 48623cf..65777ed 100644
      'AddGlobalValue' : 'global_values->add',
      'AddGlobalValueInt' : 'global_values->add',
      'SubtractGlobalValue' : 'global_values->sub',
-@@ -2160,6 +2392,7 @@ actions = make_table(ActionMethodWriter, {
++    # build 296's typed forms (names.py 33, 35, 37). Unmapped, they fell back
++    # to EmptyAction: FNaF 3's office touch-pan gate counts global 10 down
++    # from 2 with SubtractGlobalValueInt, so it never reached 0 and the office
++    # never panned (nor the monitor tab come into reach).
++    'AddGlobalValueDouble' : 'global_values->add',
++    'SubtractGlobalValueInt' : 'global_values->sub',
++    'SubtractGlobalValueDouble' : 'global_values->sub',
+     'SetString' : 'set_string',
+     'SetBold' : 'set_bold',
+     'Hide' : 'set_visible(false)',
+@@ -2160,6 +2425,7 @@ actions = make_table(ActionMethodWriter, {
      'PauseApplication' : 'pause',
      'SetRandomSeed' : 'set_random_seed',
      'SetTimer' : 'set_timer((%s) / 1000.0)',
@@ -1849,7 +1953,7 @@ index 48623cf..65777ed 100644
      'SetLoopIndex' : SetLoopIndex,
      'IgnoreControls' : IgnoreControls,
      'RestoreControls' : RestoreControls,
-@@ -2225,6 +2458,10 @@ conditions = make_table(ConditionMethodWriter, {
+@@ -2225,6 +2491,10 @@ conditions = make_table(ConditionMethodWriter, {
      'WhileMousePressed' : 'is_mouse_pressed',
      'MouseOnObject' : MouseOnObject,
      'Always' : Always,
@@ -1860,7 +1964,7 @@ index 48623cf..65777ed 100644
      'MouseClicked' : MouseClicked,
      'ObjectClicked' : ObjectClicked,
      'PlayerKeyDown' : PlayerKeyDown,
-@@ -2266,12 +2503,12 @@ conditions = make_table(ConditionMethodWriter, {
+@@ -2266,12 +2536,12 @@ conditions = make_table(ConditionMethodWriter, {
      'PathFinished' : PathFinished,
      'NodeReached' : NodeReached,
      'CompareSpeed' : make_comparison('get_movement()->get_speed()'),
@@ -1875,7 +1979,7 @@ index 48623cf..65777ed 100644
      'NumberOfLives' :  make_comparison('manager.lives'),
      'PlayerDied' : PlayerDied,
      'AnyKeyPressed' : AnyKeyPressed,
-@@ -2290,6 +2527,7 @@ conditions = make_table(ConditionMethodWriter, {
+@@ -2290,6 +2560,7 @@ conditions = make_table(ConditionMethodWriter, {
  })
  
  expressions = make_table(ExpressionMethodWriter, {
@@ -3484,10 +3588,10 @@ index 30eb23e..fbd2156 100644
          platform_sleep(t);
 diff --git a/Chowdren/base/harness.cpp b/Chowdren/base/harness.cpp
 new file mode 100644
-index 0000000..8aae049
+index 0000000..6d77b21
 --- /dev/null
 +++ b/Chowdren/base/harness.cpp
-@@ -0,0 +1,670 @@
+@@ -0,0 +1,933 @@
 +// Deterministic research harness for the build-296 recompile. See harness.h.
 +// Compiled once, included from run.cpp next to crashdump.cpp.
 +
@@ -3500,6 +3604,14 @@ index 0000000..8aae049
 +#include <math.h>
 +#include <time.h>
 +#include <string>
++#ifndef _WIN32
++#include <sys/types.h>
++#include <sys/socket.h>
++#include <netdb.h>
++#include <netinet/in.h>
++#include <netinet/tcp.h>
++#include <unistd.h>
++#endif
 +
 +unsigned int fusion_graine = 0;
 +unsigned int fusion_draws = 0;
@@ -3865,6 +3977,8 @@ index 0000000..8aae049
 +                         "background" : "foreground", frame_index, h_tick);
 +}
 +
++static void pilot_apply(int frame_index);
++
 +void harness_before_events(int frame_index)
 +{
 +    if (h_active) h_audio_time += manager.dt;
@@ -3913,6 +4027,7 @@ index 0000000..8aae049
 +        else end_touch(r.pointer);
 +        r.consumed = true;
 +    }
++    pilot_apply(frame_index);
 +}
 +
 +// CHOWDREN_WATCH=name:i,j,...: after each update, one '# watch' trace line with
@@ -4061,6 +4176,257 @@ index 0000000..8aae049
 +    fputc('\n', h_trace);
 +}
 +
++// The object type ids built as an Active (objects/active.cpp notes each one),
++// so the pilot reports animation state only for instances that have it.
++static unsigned char h_active_types[65536];
++
++void harness_note_active_type(int type_id)
++{
++    if (type_id >= 0 && type_id < int(sizeof h_active_types)) h_active_types[type_id] = 1;
++}
++
++// CHOWDREN_PILOT_STATE=<fifo> and CHOWDREN_PILOT_CMD=<fifo>: a lockstep
++// controller. After every update the harness writes one JSON line to STATE --
++// the frame index, tick, Random draws and graine, the frame scroll, the global
++// values, and for each object named in CHOWDREN_PILOT_WATCH (comma-separated,
++// names may hold spaces) up to CHOWDREN_PILOT_MAX_INSTANCES (default 16) live
++// instances: position, visibility, the centre of the collision box in window
++// pixels (the point a `downobj` row touches), alterable values trimmed after
++// the last non-zero, flags, animation/frame/direction for an Active and the
++// value for a Counter. It then reads command lines from CMD up to a line "E":
++//   down <pointer> <x> <y> | move <pointer> <x> <y> | up <pointer>
++//   downobj <pointer> <index> <name>   (touch that instance's centre; index 0 = first)
++//   quit                               (stop exchanging; the game runs on)
++// Commands apply at the start of the next update, the point an input row for
++// that update applies, and each is appended to CHOWDREN_PILOT_LOG as the
++// CHOWDREN_INPUT row that reproduces it (a downobj is written as the down it
++// resolved to), so the log replays the pilot's night without the pilot.
++// Nothing here changes game state except through those touches.
++static FILE * h_pilot_state = NULL, * h_pilot_cmd = NULL, * h_pilot_log = NULL;
++static bool h_pilot_on = false, h_pilot_parsed = false;
++static std::vector<std::string> h_pilot_names;
++static int h_pilot_max_instances = 16;
++struct PilotRow { int op, pointer, index; float x, y; std::string object; };
++static std::vector<PilotRow> h_pilot_pending;
++
++// CHOWDREN_PILOT_CONNECT=<host>:<port> is the same channel over one TCP
++// connection, for a controller on the far side of a container VM (Docker
++// Desktop), where a FIFO on a bind mount does not reach the host.
++static bool pilot_connect(const char * spec)
++{
++    std::string s(spec);
++    size_t colon = s.rfind(':');
++    if (colon == std::string::npos) return false;
++    std::string host = s.substr(0, colon), port = s.substr(colon + 1);
++    struct addrinfo hints, * res = NULL;
++    memset(&hints, 0, sizeof hints);
++    hints.ai_family = AF_UNSPEC;
++    hints.ai_socktype = SOCK_STREAM;
++    if (getaddrinfo(host.c_str(), port.c_str(), &hints, &res) != 0 || res == NULL) return false;
++    int fd = -1;
++    for (struct addrinfo * a = res; a != NULL && fd < 0; a = a->ai_next) {
++        fd = socket(a->ai_family, a->ai_socktype, a->ai_protocol);
++        if (fd >= 0 && connect(fd, a->ai_addr, a->ai_addrlen) != 0) { close(fd); fd = -1; }
++    }
++    freeaddrinfo(res);
++    if (fd < 0) return false;
++    int one = 1;
++    setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof one);
++    h_pilot_state = fdopen(fd, "w");
++    h_pilot_cmd = fdopen(dup(fd), "r");
++    return h_pilot_state != NULL && h_pilot_cmd != NULL;
++}
++
++static void pilot_open()
++{
++    h_pilot_parsed = true;
++    const char * sp = getenv("CHOWDREN_PILOT_STATE");
++    const char * cp = getenv("CHOWDREN_PILOT_CMD");
++    const char * tcp = getenv("CHOWDREN_PILOT_CONNECT");
++    bool use_tcp = tcp && *tcp;
++    if (!use_tcp && (!sp || !*sp || !cp || !*cp)) return;
++    const char * w = getenv("CHOWDREN_PILOT_WATCH");
++    for (const char * c = w; c && *c; ) {
++        const char * end = strchr(c, ',');
++        h_pilot_names.push_back(end ? std::string(c, end - c) : std::string(c));
++        c = end ? end + 1 : NULL;
++    }
++    h_pilot_max_instances = env_int("CHOWDREN_PILOT_MAX_INSTANCES", 16);
++    if (use_tcp) {
++        if (!pilot_connect(tcp)) { fprintf(stderr, "harness: cannot connect the pilot channel to %s\n", tcp); exit(3); }
++    } else {
++        h_pilot_state = fopen(sp, "w");
++        h_pilot_cmd = h_pilot_state ? fopen(cp, "r") : NULL;
++        if (!h_pilot_state || !h_pilot_cmd) {
++            fprintf(stderr, "harness: cannot open the pilot channel %s / %s\n", sp, cp);
++            exit(3);
++        }
++    }
++    const char * lp = getenv("CHOWDREN_PILOT_LOG");
++    if (lp && *lp) {
++        h_pilot_log = fopen(lp, "w");
++        if (!h_pilot_log) { fprintf(stderr, "harness: cannot open CHOWDREN_PILOT_LOG %s\n", lp); exit(3); }
++        fprintf(h_pilot_log, "# pilot log: CHOWDREN_INPUT rows, as applied\n");
++    }
++    h_pilot_on = true;
++    fprintf(stderr, "harness: pilot on, %d watched names\n", int(h_pilot_names.size()));
++}
++
++static void pilot_json_string(FILE * f, const std::string & s)
++{
++    fputc('"', f);
++    for (size_t i = 0; i < s.size(); i++) {
++        unsigned char ch = (unsigned char)s[i];
++        if (ch == '"' || ch == '\\') { fputc('\\', f); fputc(ch, f); }
++        else if (ch < 0x20) fprintf(f, "\\u%04x", ch);
++        else fputc(ch, f);
++    }
++    fputc('"', f);
++}
++
++static void pilot_instance(FILE * f, FrameObject & obj, Layer & layer, Frame * fr)
++{
++    fprintf(f, "{\"x\":%d,\"y\":%d,\"v\":%d,\"fl\":%d", obj.x, obj.y, (obj.flags & VISIBLE) ? 1 : 0, obj.flags);
++    // The instance's FixedValue as the event sheet stores it in an alterable
++    // (a hitbox's value 0 names its target this way).
++    fprintf(f, ",\"fx\":%.17g", double(obj.get_fixed()));
++    if (obj.collision != NULL) {
++        int * b = obj.collision->aabb;
++        fprintf(f, ",\"c\":[%.1f,%.1f],\"box\":[%d,%d,%d,%d]",
++                (b[0] + b[2]) * 0.5f + layer.off_x - fr->off_x, (b[1] + b[3]) * 0.5f + layer.off_y - fr->off_y,
++                b[0], b[1], b[2], b[3]);
++    }
++    if (obj.id >= 0 && obj.id < int(sizeof h_active_types) && h_active_types[obj.id]) {
++        Active * a = (Active *)&obj;
++        fprintf(f, ",\"an\":%d,\"af\":%d,\"ad\":%d", a->current_animation, a->animation_frame, a->animation_direction);
++    }
++    if (obj.id >= 0 && obj.id < int(sizeof h_counter_types) && h_counter_types[obj.id])
++        fprintf(f, ",\"cv\":%.17g", ((Counter *)&obj)->value);
++    if (obj.alterables) {
++        int last = -1;
++        for (int v = 0; v < ALT_VALUES; v++) if (double(obj.alterables->values.get(v)) != 0.0) last = v;
++        fputs(",\"al\":[", f);
++        for (int v = 0; v <= last; v++) fprintf(f, v ? ",%.17g" : "%.17g", double(obj.alterables->values.get(v)));
++        int bits = 0;
++        for (int b = 0; b < 32; b++) if (obj.alterables->flags.is_on(b)) bits |= (1 << b);
++        fprintf(f, "],\"af32\":%d", bits);
++    }
++    fputc('}', f);
++}
++
++static void pilot_exchange(int frame_index)
++{
++    if (!h_pilot_parsed) pilot_open();
++    if (!h_pilot_on) return;
++    FILE * f = h_pilot_state;
++    Frame * fr = manager.frame;
++    fprintf(f, "{\"f\":%d,\"t\":%d,\"d\":%u,\"g\":%u,\"off\":[%d,%d],\"gv\":[", frame_index, h_tick,
++            fusion_draws, fusion_graine, fr->off_x, fr->off_y);
++    GlobalValues * g = manager.values;
++    if (g) for (size_t i = 0; i < g->values.size(); i++) fprintf(f, i ? ",%.17g" : "%.17g", double(g->values[i]));
++    fputs("],\"o\":{", f);
++    for (size_t n = 0; n < h_pilot_names.size(); n++) {
++        if (n) fputc(',', f);
++        pilot_json_string(f, h_pilot_names[n]);
++        fputs(":[", f);
++        int count = 0;
++        for (size_t li = 0; li < fr->layers.size(); li++) {
++            Layer & layer = fr->layers[li];
++            for (LayerInstances::iterator it = layer.instances.begin(); it != layer.instances.end(); ++it) {
++                FrameObject & obj = *it;
++                if (obj.flags & DESTROYING) continue;
++                if (obj.get_name() != h_pilot_names[n]) continue;
++                if (count >= h_pilot_max_instances) { count++; continue; }
++                if (count) fputc(',', f);
++                pilot_instance(f, obj, layer, fr);
++                count++;
++            }
++        }
++        fputc(']', f);
++    }
++    fputs("}}\n", f);
++    fflush(f);
++    char line[512];
++    while (true) {
++        if (!fgets(line, sizeof line, h_pilot_cmd)) {
++            fprintf(stderr, "harness: pilot channel closed at frame %d tick %d\n", frame_index, h_tick);
++            h_pilot_on = false;
++            return;
++        }
++        if (line[0] == 'E' && (line[1] == '\n' || line[1] == '\0')) return;
++        PilotRow r; r.x = r.y = 0.0f; r.pointer = 0; r.index = 0;
++        char op[16]; int used = 0;
++        if (sscanf(line, "%15s %n", op, &used) < 1) continue;
++        if (!strcmp(op, "quit")) {
++            h_pilot_on = false;
++            fprintf(stderr, "harness: pilot quit at frame %d tick %d\n", frame_index, h_tick);
++            return;
++        }
++        if (!strcmp(op, "down") && sscanf(line + used, "%d %f %f", &r.pointer, &r.x, &r.y) == 3) r.op = OP_DOWN;
++        else if (!strcmp(op, "move") && sscanf(line + used, "%d %f %f", &r.pointer, &r.x, &r.y) == 3) r.op = OP_MOVE;
++        else if (!strcmp(op, "up") && sscanf(line + used, "%d", &r.pointer) == 1) r.op = OP_UP;
++        else if (!strcmp(op, "downobj")) {
++            int more = 0;
++            if (sscanf(line + used, "%d %d %n", &r.pointer, &r.index, &more) < 2) {
++                fprintf(stderr, "harness: bad pilot line: %s", line); exit(3);
++            }
++            std::string name(line + used + more);
++            while (!name.empty() && (name[name.size() - 1] == '\n' || name[name.size() - 1] == '\r')) name.erase(name.size() - 1);
++            r.op = OP_DOWN_OBJECT; r.object = name;
++        } else { fprintf(stderr, "harness: bad pilot line: %s", line); exit(3); }
++        h_pilot_pending.push_back(r);
++    }
++}
++
++// The index-th live instance named `name`, as object_center finds the first.
++static bool pilot_instance_center(const std::string & name, int index, float * x, float * y)
++{
++    Frame * f = manager.frame;
++    int seen = 0;
++    for (size_t li = 0; li < f->layers.size(); li++) {
++        Layer & layer = f->layers[li];
++        for (LayerInstances::iterator it = layer.instances.begin(); it != layer.instances.end(); ++it) {
++            FrameObject & obj = *it;
++            if (obj.flags & DESTROYING) continue;
++            if (obj.get_name() != name || obj.collision == NULL) continue;
++            if (seen++ != index) continue;
++            int * b = obj.collision->aabb;
++            *x = (b[0] + b[2]) * 0.5f + layer.off_x - f->off_x;
++            *y = (b[1] + b[3]) * 0.5f + layer.off_y - f->off_y;
++            return true;
++        }
++    }
++    return false;
++}
++
++static void pilot_apply(int frame_index)
++{
++    for (size_t i = 0; i < h_pilot_pending.size(); i++) {
++        PilotRow & r = h_pilot_pending[i];
++        if (r.op == OP_DOWN_OBJECT) {
++            if (!pilot_instance_center(r.object, r.index, &r.x, &r.y)) {
++                fprintf(stderr, "harness: pilot: frame %d tick %d: no live instance %d of '%s'\n", frame_index, h_tick,
++                        r.index, r.object.c_str());
++                if (h_pilot_log) fprintf(h_pilot_log, "# miss %d %d %d %s\n", frame_index, h_tick, r.index, r.object.c_str());
++                continue;
++            }
++            if (h_pilot_log) fprintf(h_pilot_log, "# %s #%d\n", r.object.c_str(), r.index);
++            r.op = OP_DOWN;
++        }
++        if (r.op == OP_DOWN) new_touch(r.pointer, r.x, r.y);
++        else if (r.op == OP_MOVE) move_touch(r.pointer, r.x, r.y);
++        else end_touch(r.pointer);
++        if (h_pilot_log) {
++            if (r.op == OP_UP) fprintf(h_pilot_log, "%d %d up %d\n", frame_index, h_tick, r.pointer);
++            else fprintf(h_pilot_log, "%d %d %s %d %.1f %.1f\n", frame_index, h_tick, r.op == OP_DOWN ? "down" : "move",
++                         r.pointer, r.x, r.y);
++        }
++        if (h_trace) fprintf(h_trace, "# pilot %d %d %d %d %.1f %.1f\n", frame_index, h_tick, r.op, r.pointer, r.x, r.y);
++    }
++    if (!h_pilot_pending.empty() && h_pilot_log) fflush(h_pilot_log);
++    h_pilot_pending.clear();
++}
++
 +bool harness_after_events(int frame_index)
 +{
 +    if (!h_active) return true;
@@ -4073,6 +4439,7 @@ index 0000000..8aae049
 +        if (g) for (size_t i = 0; i < g->values.size(); i++) fprintf(h_trace, " %g", double(g->values[i]));
 +        fputc('\n', h_trace);
 +    }
++    pilot_exchange(frame_index);
 +    h_tick++;
 +    h_total_ticks++;
 +    if (h_stop_frame >= 0 && frame_index == h_stop_frame && h_max_ticks >= 0 && h_tick >= h_max_ticks) {
@@ -4614,10 +4981,29 @@ index 77baf6b..58e8f32 100644
          if (channels[i].is_stopped())
              continue;
 diff --git a/Chowdren/base/objects/active.cpp b/Chowdren/base/objects/active.cpp
-index 72cc910..5799d90 100644
+index 72cc910..e84190e 100644
 --- a/Chowdren/base/objects/active.cpp
 +++ b/Chowdren/base/objects/active.cpp
-@@ -599,3 +599,4 @@ public:
+@@ -4,6 +4,10 @@
+ 
+ // Active
+ 
++// harness.cpp: lets the pilot channel report animation state only for Actives.
++// It records the type id only; nothing reads it in a game.
++void harness_note_active_type(int type_id);
++
+ Active::Active(int x, int y, int type_id)
+ : FrameObject(x, y, type_id), forced_animation(-1),
+   animation_frame(0), counter(0), angle(0.0f), forced_frame(-1),
+@@ -14,6 +18,7 @@ Active::Active(int x, int y, int type_id)
+ {
+     sprite_col.instance = this;
+     collision = &sprite_col;
++    harness_note_active_type(type_id);
+ }
+ 
+ void Active::initialize_active(bool collision_box)
+@@ -599,3 +604,4 @@ public:
  
  static DefaultActive default_active;
  FrameObject * default_active_instance = &default_active;

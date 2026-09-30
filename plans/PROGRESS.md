@@ -2890,3 +2890,35 @@ reaches `tools/device/bundle.mjs` (and through it the research seed helpers)
 and `tools/device/fact-register.mjs`; those edges close with M9. The review
 modules are `.mjs`, outside the JS typecheck lane, because checking them pulls
 in untyped `tools/device` modules. `npm run push-gate` was not run.
+
+## 2026-09-29 — FNaF 3 Aggressive Nightmare won in the rebuild by a pilot (S6)
+
+The rebuilt FNaF 3 now reaches 6 AM on its hardest night: Nightmare with
+Aggressive (`hyper=1`) and the three easing cheats off. The game writes
+`4thstar=1`, its own mark for that win, and the recorded touches replayed with
+no controller give the same 30,000-update trace
+([record](../tools/recompile/results/fnaf3-aggressive-nightmare-20260929.json),
+`recompile-pilot-night-9bba02f11189549a`).
+
+- **Pilot channel.** The harness gained a lockstep channel
+  (`CHOWDREN_PILOT_CONNECT`, TCP, since Docker Desktop's VM does not pass a
+  FIFO). `tools/recompile/pilot/` drives it and records every applied touch as
+  a plain input row. The controller reads the rebuild's objects (an oracle)
+  and acts only by in-window touches.
+- **Three converter defects fixed.** They made the office unplayable by
+  touch: `SubtractGlobalValueInt` compiled to nothing (no panning), the
+  single-instance `CompareFixedValue` was inverted (the monitor tab raised
+  nothing), and `OnObjectLoop` bodies sharing a loop number were merged (150
+  camera hitboxes, one tagged). FNaF 2's generated code is unchanged by all
+  three.
+- **A sheet rule the core model lacks.** Group 275 advances attack stage 1 on
+  any roll above 2 while a screen is up. `sim-fnaf3.js` advances stage 1 only
+  on the blackout.
+- **Not robust.** The same controller wins 1 of 6 other seeds.
+
+MODEL_ONLY, rebuilt-runtime; no device run, nothing promoted.
+
+Open: FNaF 4 Night 8 (20/20/20/20, `beat8`) is re-converted, built with the
+pilot channel, and its menu path and controls are surveyed; its controller is
+next. The FNaF 3 controller's rate over seeds, and the model's missing
+group 275, remain open.

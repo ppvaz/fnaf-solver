@@ -78,6 +78,13 @@ directory (`/private/tmp/fnaf2-recompile.*` on the dev machine).
 | `phone-audio-cues.py CAPTURE.wav --refs DIR --cues LIST [--anchor s0007=T,...] [--json OUT]` | Matched-filter onsets of extracted game samples in a phone's A2DP capture (0.4 s cores, NCC, near-silent stretches excluded), aligned to the game clock by the median offset of the mask put-on sound against the rebuild's audio-trace play times. A match is a sound in the mix, not the event that played it; a miss is UNKNOWN. Needs numpy and scipy; DEVICE_MEASURED audio, arithmetic alignment. |
 | `results/phone-input-ledger-full-06-20260928.json`, `results/phone-audio-cues-full-06-20260928.json`, `results/rebuild-audio-full-06-landed-20260928.json`, `results/hall-shift-sensitivity-full-06-20260928.json`, `docs/evidence/full06-input-registration-20260928.json` | full-06 landed: the phone's hall flash ends 3-5 updates before the replayed hall release in every flashed cycle (monitor raises -2..+1, mask presses 0..-1); the eyehole confirms B, C, empty, empty in windows 3-6; audio aligned at -0.246 s has Balloon Boy hopping at 40.0/45.1/50.0 s and at the office at 60.38 s while the rebuild (audio-trace build 66d6e2f6, same draws as the retained replay) holds him at CAM 10 through the 40 and 45 s rolls and brings him at 70.3 s; moving every hall contact 2-5 updates earlier never empties window 6. |
 | `test-phone-input-ledger.py` | The frame classifiers and the catch-up clock on synthetic cells, then every difference, alignment, hash and id of the input-registration record re-derived from its retained rows; no trace, capture, numpy or binary. In `npm run test:unit`. |
+| `pilot/pilot.mjs --game fnaf3\|fnaf4 --run DIR --binary FILE --assets FILE --save FILE --policy NAME [--seed N] [--knobs JSON]` | Lockstep controller for a rebuilt night. The harness (`CHOWDREN_PILOT_CONNECT=host:port`, in the patch) sends one JSON line per update over TCP, with the frame, tick, graine and globals, and for each object in `CHOWDREN_PILOT_WATCH` its position, window centre, `FixedValue`, alterables, animation or counter value. It then waits for touches. TCP rather than a FIFO because Docker Desktop's bind mounts do not carry a FIFO out of its VM. Every applied touch is written to `DIR/pilot.input` as a plain `CHOWDREN_INPUT` row. Host-only; DIR stays outside the repository. |
+| `pilot/fnaf3.mjs`, `pilot/fnaf4.mjs` | The games' pilot modules: the watched object names, the state readers (`whereIs` from the radar dot `dhfgh`; `proxyOf` maps a port hitbox to its target by the `FixedValue` in its value 0) and the policies. FNaF 3 `guard` stays on the vent map, seals the vent beside Springtrap or the one he is in, lures him outward from CAM 05/02/03/04 and stage 1, freezes `pic random` by watching his camera when that is phantom-safe, and reboots ventilation on error and audio only in the far corner. It reads the rebuilt runtime's objects, an oracle rather than a player's view, and acts only by in-window touches. |
+| `pilot/replay.mjs --game G --from PILOT_RUN --run DIR --binary FILE --assets FILE` | Replays a pilot run's `pilot.input` with no pilot and compares the two traces update for update (frame, tick, draws, graine, every global). Writes `replay-summary.json` with the save the game wrote. |
+| `pilot/record.mjs record ... \| check RESULT.json` | `recompile-pilot-night-v1`: hashes of the binary, assets, save and input, the two trace digests, the frames visited, and the save keys the game wrote. It is WON only if the replay's trace equals the pilot's and every `--win-key` is absent before the night and written by it. `check` re-derives the verdict and evidenceId. |
+| `pilot/test-pilot.mjs` | Re-derives every committed pilot record and refuses a fixture touch outside the 1024 x 768 window. Its negative controls must fail: a diverged replay, a win key already in the save, a missing win key, a changed seed. It pins `SEAL_FOR`/`LURE_TO` to the core FNaF 3 graph and lure table (`sim-fnaf3.js`). In `npm run test:unit`; no binary. |
+| `fixtures/fnaf3-aggressive-nightmare.ini`, `fixtures/fnaf3-aggressive-nightmare-win.input`, `results/fnaf3-aggressive-nightmare-20260929.json` | The unlocked FNaF 3 save (`beatgame`, `beat6`, `goodend`, `hyper=1`; the three easing cheats off), the 332 touch rows the guard applied, and the record: the rebuilt FNaF 3 (pinned `239c59cb-c5e092a3`) reaches 6 AM on Aggressive Nightmare at seed 24850 and writes `4thstar=1`, and the rows replayed with no pilot give the same 30,000-update trace. MODEL_ONLY, rebuilt-runtime. |
+| `fixtures/fnaf4-night8-before.ini` | The FNaF 4 save for Night 8 (`beat5`-`beat7`, `beat8=0`, `test=1`): the Extras Nightmare button then takes eight taps to arm 20/20/20/20 (`shadow` 2). |
 
 ## Environment
 
@@ -1653,3 +1660,60 @@ routes warning -> 15-test (the porter's one-time teaser, which writes
 being the sample named `SILENCE`. No rebuilt APK has been installed or run on
 any phone yet; native Companion audio capture and background-pause correctness
 remain open. All MODEL_ONLY rebuilt-runtime results.
+
+## FNaF 3 and 4 at their hardest nights, played by a pilot (2026-09-29)
+
+Each game's own sheet names its hardest night and the save key it writes for
+winning it:
+
+- **FNaF 3:** the 4th star, `4thstar=1`, written by `05-06-next_day` group 16
+  only for Nightmare (`night number` 7 at the next day) with `hyper on?` = 1
+  and Fast Nights, the vent Radar (`ventproof on?`) and No Errors (`no cams on?`)
+  all off. Aggressive (`hyper`) is the only knob above Nightmare; `AI` caps at 7.
+- **FNaF 4:** `beat8=1`, written by `05-06-night_win` group 25 only for Night 8
+  (the 20/20/20/20 night, `shadow` 2) with `any cheats?` = 0.
+
+The saves in `fixtures/` unlock each night the way the menus do (FNaF 3's
+cheat row needs `goodend` and `beat6`; FNaF 4's Nightmare counter needs
+`beat7`).
+
+**Three converter defects kept the rebuilt FNaF 3 office from being playable
+by touch.** All three are in the patch:
+
+- **`SubtractGlobalValueInt`** (with `AddGlobalValueDouble` and
+  `SubtractGlobalValueDouble`) had no writer and compiled to nothing. The
+  office's touch-pan gate counts global 10 down from 2 with it, so no touch
+  ever panned the office. The monitor tab, which needs `scroll` at x 1488,
+  was never in reach. The converter now also prints every ACE that falls back
+  to an inert writer (`unmapped ACE: ...`).
+- **`CompareFixedValue`'s single-instance branch** broke out when the
+  comparison held. So `flip it out == FlipHitbox value 0` failed on the
+  monitor's own hitbox, and each tab fired the other tab's group. It is
+  inverted at 3 sites in FNaF 3, 1 in FNaF 1, and none in FNaF 2 or FNaF 4.
+- **`OnObjectLoop` bodies were keyed by loop number alone.** FNaF 3's office
+  runs loop 0 over its cameras, vents and cupcakes. All three bodies shared
+  one function bound to the last object, and every iteration ran all three,
+  so the office made 150 camera hitboxes where the sheet makes 10. Only one
+  was tagged, and it named CAM 01. Bodies are now keyed by (loop, object). No
+  other frame of the four games shares a loop number across objects, so no
+  other game's output changes.
+
+FNaF 3 was re-converted (`recompile-fnaf3-20260927/convert-v2c-20260929.log`)
+and FNaF 4 too (`recompile-fnaf4-20260927/convert-v2c-20260929.log`). FNaF 4's
+conversion needs more than the Docker Desktop VM's 1.8 GiB: it ran with a
+temporary 4 GiB swap file on the `fnaf-convert-swap` volume.
+
+**The sheet has a rule the core model lacks.** At attack stage 1, a roll
+above 2 sets `dhfgh` value 17, and group 275 moves him to stage 2 on the next
+update in which a screen is up. The model (`sim-fnaf3.js`) advances stage 1
+only on the blackout, so in the rebuild the stage-1 wait it relies on ends
+within a few rolls. A CAM 02 lure is the only exit from stage 1.
+
+**The result.** `results/fnaf3-aggressive-nightmare-20260929.json`
+(`recompile-pilot-night-9bba02f11189549a`): at seed 24850 the `guard`
+controller reaches 6 AM, frame 5 then 11, and the game writes `4thstar=1`.
+The 332 applied touch rows, replayed with no pilot, give a trace equal to the
+pilot run's on all 30,000 updates. The same controller at seeds 1-6 wins 1 of
+6 (seed 2); the others die to a vent entered during an audio-reboot trip, or to
+stage 1 with the audio spent. A win is one clear, not a rate. MODEL_ONLY,
+rebuilt-runtime: nothing here was run on the phone.
