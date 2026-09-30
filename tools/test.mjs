@@ -430,8 +430,8 @@ const BROWSER = [
   ['lightcheck', ['../apps/trainer/test/light.test.mjs']],
   ['phasetest', ['../apps/trainer/test/phase.test.mjs']],
   ['lessontest', ['../apps/trainer/test/lesson.test.mjs']],
-  // The Pages entry: the root index.html, unbundled, from its own GET-only
-  // server, the way GitHub Pages serves it; the checks above load dist/.
+  // The Pages entry: build.py's bundle at /, over the repository's other
+  // files, from its own GET-only server, the way pages.yml publishes it.
   ['pages entry', ['../apps/trainer/test/pages.test.mjs']],
 ];
 const REPORTS = [

@@ -1,0 +1,63 @@
+name: Pages
+
+# Publishes https://ppvaz.github.io/fnaf-solver/. Until 2026-09-30 Pages was a
+# legacy branch build of master:/, which served the trainer's sources as
+# committed. The sources run under Node's type stripping (Pedro, 2026-09-30:
+# "runtime .ts", with an Actions Pages build), and a browser cannot strip
+# types, so this builds the site the branch build did -- the same Jekyll over
+# the same tree, so the portal pages and every linked file stay where they were
+# -- and replaces index.html with build.py's single-file trainer, whose modules
+# have their types erased by Node's own stripper (strip-types.mjs).
+# apps/trainer/test/pages.test.mjs loads that same entry in a phone-sized
+# browser.
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      # Type stripping is on by default from Node 22.18; this is the version
+      # the CI job pins.
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22.23.2'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/configure-pages@v5
+      - name: The site as the branch build made it
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./
+          destination: ./_site
+      - name: The trainer, bundled with its types stripped
+        run: |
+          python3 apps/trainer/test/build.py
+          sudo cp dist/index.html _site/index.html
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./_site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -91,6 +91,32 @@ def main():
             check('the page names what this server writes', serve.DEV_META in page and page.count(serve.DEV_META) == 1)
             connection.close()
 
+            # A .ts module is served as JavaScript with its types erased; a path
+            # outside the repository and a declaration file are not served.
+            module = Path(trace_dir) / 'probe.ts'
+            module.write_text('export const answer: number = 42;\nexport interface Shape { a: string }\n')
+            original, serve.ROOT = serve.ROOT, Path(trace_dir).resolve()
+            try:
+                connection = http.client.HTTPConnection('127.0.0.1', port, timeout=10)
+                connection.request('GET', '/probe.ts')
+                response = connection.getresponse()
+                code = response.read().decode()
+                check('a .ts module is served', response.status == 200, response.status)
+                check('as JavaScript', response.getheader('Content-Type', '').startswith('text/javascript'),
+                      response.getheader('Content-Type'))
+                check('with its types erased', 'export const answer         = 42;' in code and 'interface' not in code, repr(code))
+                connection.close()
+                for path in ['/../outside.ts', '/missing.ts']:
+                    connection = http.client.HTTPConnection('127.0.0.1', port, timeout=10)
+                    connection.request('GET', path)
+                    response = connection.getresponse()
+                    response.read()
+                    check(f'{path} is not served', response.status == 404, response.status)
+                    connection.close()
+            finally:
+                serve.ROOT = original
+                module.unlink()
+
             trace = {'v': 1, 'lesson': 'cycle', 'steps': [{'stepId': 'a', 'grade': 'ok'}], 'dry': True}
             own = f'127.0.0.1:{port}'
             status, headers, body = post(port, '/save-trace', trace, {'Host': own})
@@ -118,7 +144,8 @@ def main():
             print(f'FAIL {failure}', file=sys.stderr)
         return 1
     print('serve: binds 127.0.0.1, writes from this machine\'s own page or a loopback client, refuses a foreign '
-          'origin, a rebound Host and an off-host client, and sends no Access-Control-Allow-Origin')
+          'origin, a rebound Host and an off-host client, sends no Access-Control-Allow-Origin, and serves a .ts '
+          'module as JavaScript with its types erased')
     return 0
 
 

@@ -21,7 +21,7 @@ loopback, and localhost is a secure context, so wake lock and vibration work.
     npm run serve:trainer          # port 8731
     python3 apps/trainer/test/serve.py [port]
 """
-import datetime, ipaddress, json, os, re, subprocess, sys, pathlib
+import datetime, ipaddress, json, os, re, subprocess, sys, pathlib, urllib.parse
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
 # Loopback only. There is deliberately no LAN switch: the writes are this
@@ -45,6 +45,26 @@ WID_BLOCK = re.compile(r"export const DEFAULT_WIDGETS = \{.*?\n\};\n", re.S)
 # to a /save-trace that answers 405, and queued the trace to post again on
 # every later visit.
 DEV_META = b'<meta name="trainer-dev-server" content="save-layout save-trace">'
+# The sources run under Node's type stripping (Pedro, 2026-09-30: "runtime
+# .ts"). A browser cannot strip types, so every .ts module the import map
+# reaches is served as JavaScript with its types erased by the same stripper
+# the Pages build uses (strip-types.mjs), cached until the file changes.
+STRIP_TYPES = HERE / 'strip-types.mjs'
+_STRIPPED = {}
+
+
+def stripped_module(path):
+    """A .ts module's code as the browser runs it, as bytes."""
+    stamp = path.stat().st_mtime_ns
+    hit = _STRIPPED.get(path)
+    if hit and hit[0] == stamp:
+        return hit[1]
+    done = subprocess.run(['node', '--no-warnings', str(STRIP_TYPES), str(path)], capture_output=True, text=True)
+    if done.returncode:
+        raise ValueError(done.stderr.strip() or f'strip-types failed on {path}')
+    body = json.loads(done.stdout)[str(path)].encode()
+    _STRIPPED[path] = (stamp, body)
+    return body
 PAGES = {'/': 'index.html', '/index.html': 'index.html', '/dist/': 'dist/index.html',
          '/dist/index.html': 'dist/index.html'}
 VALID = set(range(1, 13))
@@ -196,12 +216,30 @@ class Handler(SimpleHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self):
-        page = PAGES.get(self.path.split('?', 1)[0].split('#', 1)[0])
+        route = self.path.split('?', 1)[0].split('#', 1)[0]
+        if route.endswith('.ts'):
+            return self.send_module(route)
+        page = PAGES.get(route)
         if page is None or not (ROOT / page).is_file():
             return super().do_GET()
         body = (ROOT / page).read_bytes().replace(b'<head>', b'<head>\n' + DEV_META, 1)
         self.send_response(200)
         self.send_header('Content-Type', 'text/html; charset=utf-8')
+        self.send_header('Content-Length', str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def send_module(self, route):
+        path = (ROOT / urllib.parse.unquote(route).lstrip('/')).resolve()
+        if not path.is_relative_to(ROOT) or not path.is_file() or path.name.endswith('.d.ts'):
+            return self.send_error(404)
+        try:
+            body = stripped_module(path)
+        except ValueError as error:
+            print(f'{route}: {error}')
+            return self.send_error(500, 'types could not be stripped')
+        self.send_response(200)
+        self.send_header('Content-Type', 'text/javascript; charset=utf-8')
         self.send_header('Content-Length', str(len(body)))
         self.end_headers()
         self.wfile.write(body)
@@ -258,7 +296,9 @@ class Handler(SimpleHTTPRequestHandler):
         super().end_headers()
 
     def log_message(self, fmt, *args):
-        first = args[0] if args else ''
+        # send_error logs its status code first, an int, so read it as text:
+        # until 2026-09-30 every 404 raised here and dropped the connection.
+        first = str(args[0]) if args else ''
         if 'save-layout' in first or 'save-trace' in first:
             super().log_message(fmt, *args)
 

@@ -3,8 +3,9 @@ name: CI
 # Runs exactly the checks CLAUDE.md defines. The `--browser` suite is
 # deliberately absent: it drives a trainer graded in real-time milliseconds,
 # and a shared CI runner is exactly the load that degrades it — a fail there
-# would say nothing about the code. Deployment needs no job either: GitHub
-# Pages serves the trainer straight from `master`, with nothing to build.
+# would say nothing about the code. Deployment is its own workflow
+# (pages.yml): since 2026-09-30 the trainer is published as build.py's bundle,
+# its modules' types stripped, instead of master's tree as committed.
 
 on:
   push:

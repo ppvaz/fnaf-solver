@@ -483,6 +483,13 @@
       ]
     },
     {
+      "file": "apps/trainer/test/strip-types.mjs",
+      "imports": [
+        "node:fs",
+        "node:module"
+      ]
+    },
+    {
       "file": "apps/trainer/test/trace.test.mjs",
       "imports": [
         "./tracereport.mjs",

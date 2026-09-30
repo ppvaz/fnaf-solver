@@ -1,16 +1,19 @@
-// The Pages entry, as a visitor's phone gets it: the repository root's
-// index.html, unbundled, its import map resolving @sixam/source and
-// @sixam/kernel to files, from a server that only answers GET -- which is all
-// GitHub Pages is. The other browser checks load the dist/ bundle from the dev
-// server, which has no import map and accepts POSTs, so from d3b5fc93 until
-// 155abe07 (2026-09-30) the published trainer failed on load ("Failed to
-// resolve module specifier @sixam/source/fnaf2") while every one of them
-// passed. This starts its own static server over the repository and fails on
-// any console error, uncaught exception, failed or 4xx request, or page wider
-// than a phone's screen, sideways or upright.
+// The Pages entry, as a visitor's phone gets it, from a server that only
+// answers GET -- which is all GitHub Pages is. Until 2026-09-30 Pages served
+// master's tree as committed, so the entry was the root index.html, unbundled,
+// its import map resolving @sixam/source and @sixam/kernel to files; from
+// d3b5fc93 until 155abe07 (2026-09-30) that published trainer failed on load
+// ("Failed to resolve module specifier @sixam/source/fnaf2") while every other
+// browser check passed. Since the sources became TypeScript that a browser
+// cannot run (Pedro, 2026-09-30: "runtime .ts", with an Actions Pages build),
+// .github/workflows/pages.yml publishes the tree as the branch build did with
+// index.html replaced by build.py's bundle, types stripped. This builds that
+// bundle, serves it at / over the repository's other files, and fails on any
+// console error, uncaught exception, failed or 4xx request, or page wider than
+// a phone's screen, sideways or upright.
 //
 //   node apps/trainer/test/pages.test.mjs [url]   # default: its own static server
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { mkdtempSync } from 'node:fs';
 import { readFile, stat } from 'node:fs/promises';
 import { createServer } from 'node:http';
@@ -23,13 +26,15 @@ const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css',
   '.json': 'application/json', '.woff2': 'font/woff2', '.svg': 'image/svg+xml', '.png': 'image/png' };
 
-// GET files under the repository, 404 otherwise, 405 for any other method.
+// The published site: / and /index.html are the built bundle, every other
+// path a file under the repository; 404 otherwise, 405 for any other method.
+const ENTRY = new Set(['/', '/index.html']);
 function staticServer() {
   return new Promise(resolve => {
     const server = createServer(async (req, res) => {
       if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405); res.end(); return; }
       const path = normalize(decodeURIComponent(new URL(req.url, 'http://x').pathname));
-      let file = join(ROOT, path);
+      let file = ENTRY.has(path) ? join(ROOT, 'dist/index.html') : join(ROOT, path);
       try {
         if (!file.startsWith(ROOT)) throw new Error('outside the repository');
         if ((await stat(file)).isDirectory()) file = join(file, 'index.html');
@@ -125,7 +130,7 @@ async function main(url, chrome) {
   // No dev server here, so nothing offers to write one.
   await expect('no layout save offered', 'getComputedStyle(document.getElementById("row-savemap")).display', v => v === 'none');
 
-  // A lesson runs on the unbundled Sim, and ending it -- which saves the run's
+  // A lesson runs on the Sim the build bundled, and ending it -- which saves the run's
   // trace where a dev server is there to take it -- must not reach for one
   // that is not.
   await tap('#mode-list .mode');
@@ -145,6 +150,10 @@ async function main(url, chrome) {
 }
 
 const given = process.argv.find(arg => /^https?:\/\//.test(arg));
+if (!given) {
+  const build = spawnSync('python3', [join(ROOT, 'apps/trainer/test/build.py')], { cwd: ROOT, encoding: 'utf8' });
+  if (build.status !== 0) { console.error(build.stderr || build.stdout); process.exit(2); }
+}
 const server = given ? null : await staticServer();
 const url = given || `http://127.0.0.1:${server.address().port}/index.html`;
 const chrome = spawn(chromeBinary(), chromeArgs(PORT, mkdtempSync(join(tmpdir(), 'm7p-'))), { stdio: 'ignore' });

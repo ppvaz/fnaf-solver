@@ -5,7 +5,7 @@ The trainer has no dependencies and no build step for development (just serve
 the folder). This exists so the page can be opened from a phone or published as
 a single file.
 """
-import base64, json, re, pathlib, sys
+import base64, json, re, pathlib, subprocess, sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[3]
 SRC = ROOT / 'apps' / 'trainer' / 'src'
@@ -21,6 +21,26 @@ EXPORT_STAR = re.compile(r"^export \* from ['\"]([^'\"]+)['\"];\s*$", re.M)
 EXPORT_FROM = re.compile(r"^export \{([^}]*)\} from ['\"]([^'\"]+)['\"];\s*$", re.M)
 EXPORT_DECL = re.compile(r"^export\s+(async\s+function|function|class|const|let)\s+(\w+)", re.M)
 EXPORT_LIST = re.compile(r"^export \{([^}]*)\};\s*$", re.M)
+
+
+STRIP_TYPES = pathlib.Path(__file__).resolve().parent / 'strip-types.mjs'
+_STRIPPED = {}
+
+
+def source_of(path):
+    """A module's code as the browser runs it. A .ts module has its types
+    erased by Node's own stripper (strip-types.mjs) and is otherwise the same
+    text, so every regex below reads plain JavaScript either way."""
+    path = pathlib.Path(path)
+    if path.suffix != '.ts':
+        return path.read_text()
+    if path not in _STRIPPED:
+        done = subprocess.run(['node', '--no-warnings', str(STRIP_TYPES), str(path)],
+                              capture_output=True, text=True)
+        if done.returncode:
+            raise RuntimeError(done.stderr.strip() or f'strip-types failed on {path}')
+        _STRIPPED[path] = json.loads(done.stdout)[str(path)]
+    return _STRIPPED[path]
 
 
 def _workspaces():
@@ -66,7 +86,7 @@ def resolve_path(path, spec):
         target = workspace_target(spec)
         if target is None:
             raise RuntimeError(f"trainer bundle cannot resolve bare import {spec!r} from {path}")
-    if target.suffix != '.js':
+    if target.suffix not in ('.js', '.ts'):
         target = target.with_suffix('.js')
     if not target.exists():
         raise RuntimeError(f"{path.relative_to(ROOT)} imports missing {spec}")
@@ -80,7 +100,7 @@ def canonical_path(path, seen=None):
     if path in seen:
         raise RuntimeError(f"compatibility export cycle at {path}")
     seen.add(path)
-    source = path.read_text()
+    source = source_of(path)
     matches = EXPORT_STAR.findall(source)
     if len(matches) == 1 and not re.search(r"^export\s+(?:async\s+function|function|class|const|let|\{)", source, re.M):
         return canonical_path(resolve_path(path, matches[0]), seen)
@@ -144,7 +164,7 @@ def resolve(entry=ENTRY):
         if name in stack:
             raise RuntimeError(f'import cycle involving {name}')
         stack.add(name)
-        source = path.read_text()
+        source = source_of(path)
         for spec in IMPORT_NS.findall(source) + IMPORT_NAMED.findall(source):
             visit(resolve_path(path, spec[1]))
         for spec in EXPORT_STAR.findall(source):
@@ -156,7 +176,7 @@ def resolve(entry=ENTRY):
         order.append(name)
 
     visit((ROOT / entry).resolve())
-    stray = {module_name(p) for p in SRC.glob('*.js')} - seen
+    stray = {module_name(p) for p in [*SRC.glob('*.js'), *SRC.glob('*.ts')] if not p.name.endswith('.d.ts')} - seen
     if stray:
         print(f'note: not bundled (nothing imports them): {sorted(stray)}', file=sys.stderr)
     return order
@@ -185,7 +205,7 @@ def main():
             "if(!m)throw new Error('module not bundled: '+n);"
             "if(!m.x){m.x={};m.f(m.x,__req);}return m.x;};\n")
     order = resolve()
-    bundle = shim + ''.join(transform(n, ROOT / n, (ROOT / n).read_text()) for n in order) + f"__req('{module_name(canonical_path((ROOT / ENTRY).resolve()))}');\n"
+    bundle = shim + ''.join(transform(n, ROOT / n, source_of(ROOT / n)) for n in order) + f"__req('{module_name(canonical_path((ROOT / ENTRY).resolve()))}');\n"
 
     html = html.replace('<link rel="stylesheet" href="apps/trainer/src/fonts.css">\n', '')
     html = html.replace('<link rel="stylesheet" href="apps/trainer/src/style.css">', f'<style>\n{css}\n</style>')
