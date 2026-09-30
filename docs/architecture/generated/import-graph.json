@@ -4314,6 +4314,15 @@
       ]
     },
     {
+      "file": "tools/gate-kit.mjs",
+      "imports": [
+        "node:child_process",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/generate-catalog.js",
       "imports": [
         "@sixam/source",
@@ -4389,6 +4398,15 @@
         "node:fs",
         "node:path",
         "node:url"
+      ]
+    },
+    {
+      "file": "tools/test-file-size.mjs",
+      "imports": [
+        "./gate-kit.mjs",
+        "node:assert/strict",
+        "node:fs",
+        "node:path"
       ]
     },
     {
