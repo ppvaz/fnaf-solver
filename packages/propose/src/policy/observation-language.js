@@ -22,7 +22,7 @@
 // fact below is `classifier: 'UNCALIBRATED'` today, so `deviceAdmissibleFacts()`
 // is empty and stays empty until Plan 15 lands a calibrated pairing.
 import * as C from '@sixam/source/games/fnaf2/config.js';
-import { FACTS, OBSERVE_INTERVAL } from '../sensing/observer.js';
+import { FACTS, OBSERVE_INTERVAL } from '@sixam/core/sensing';
 
 export const OBSERVATION_LANGUAGE_SCHEMA = 'observation-language-v1';
 export const BRANCH_SCHEMA = 'observation-branch-v1';

@@ -16,13 +16,13 @@
     },
     {
       "id": "policy-program-v1",
-      "owner": "core/control",
+      "owner": "propose/policy",
       "kind": "data",
       "validator": "validatePolicy"
     },
     {
       "id": "controller-v1",
-      "owner": "core/control",
+      "owner": "propose/policy",
       "kind": "port",
       "validator": "Controller"
     },

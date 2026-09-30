@@ -524,7 +524,7 @@ async function main(argv) {
       start: 0, count: 2 * args.count, jobs: args.jobs });
   }
   const record = buildRecord({ merged, count: args.count, all, winnerHashes, cohorts: phoneCohorts(),
-    git: gitState(['packages/core', 'packages/source', 'packages/kernel', 'tools/device', 'tools/recompile']), date: args.date,
+    git: gitState(['packages/core', 'packages/source', 'packages/kernel', 'packages/propose', 'tools/device', 'tools/recompile']), date: args.date,
     command: args.assemble ? `${command} --checkpoint DIR` : command,
     wallSeconds: args.assemble ? null : Math.round((Date.now() - started) / 1000), run, suffix: args.suffix });
   const text = `${formatRecord(record)}\n`;

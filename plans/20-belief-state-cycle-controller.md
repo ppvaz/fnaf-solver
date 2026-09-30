@@ -227,7 +227,7 @@ constraint, and every selected cycle has a readable decision record.
 `src/cycle-library.js` provides reviewed wind, mask, hall-reset, and
 monitor-verification primitives. Its gate checks reduced-model prerequisites,
 animation collisions, contact/released gaps, and a required exact-engine proof
-callback; `packages/core/test/cycle-library.test.js` pins both accepted records and fail-closed
+callback; `packages/propose/test/cycle-library.test.js` pins both accepted records and fail-closed
 controls.
 
 ### P5 -- robust short-horizon selector — DONE (worktree)
@@ -244,7 +244,7 @@ observation control without approaching the oracle through privileged state.
 library, and worst-case selector. It accepts only fact envelopes and commits
 the selected cycle's immediate prefix; delayed actions remain deferred until a
 new boundary and control actions stay locked until a matching observation
-reconciles them. `packages/core/test/cycle-controller.test.js` runs the exact engine over a
+reconciles them. `packages/propose/test/cycle-controller.test.js` runs the exact engine over a
 bounded, sourced five-second-blackout scenario: the fixed and observation-
 disabled controls score 0/80, the normal delayed/dropped estimator scores
 80/80, the deliberately harsh stress control scores 46/80, and the explicit
@@ -257,7 +257,7 @@ engine import; the exact replay is confined to the test's proof callback.
 **Full-night survival landed 2026-09-03.** P5's recorded gate is a nine-second
 horizon against one synthetic blackout; driven over whole nights the same
 controller was 0/3 on Night 1 with a scorer its own harness called a baseline
-control. `packages/core/src/control/night-policy.js` supplies the sourced route
+control. `packages/propose/src/games/fnaf2/night-policy.js` supplies the sourced route
 model P5 leaves to the caller, and on a held-out 200-seed cohort per night
 (`--gate=static`, the device-realistic gate) the closed loop is 184/200,
 101/200, 167/200, 165/200, 75/200, 0/200 and 0/200 on Nights 1-7 against

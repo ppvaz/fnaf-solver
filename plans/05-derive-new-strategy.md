@@ -233,7 +233,7 @@ simulator" on all of them.
 open.** ROADMAP B1 needs the language to range over facts *the controller can
 observe within its measured budget*, which is the `Observer` surface, not 6a's
 privileged Custom Night view of `Sim` internals. What landed for that surface:
-`packages/core/src/control/observation-language.js` (the measured per-fact
+`packages/propose/src/policy/observation-language.js` (the measured per-fact
 observation budget, with all four audio facts `UNKNOWN` and excluded, and the
 host round trip `UNKNOWN`), an observation-conditioned branch construct in
 `tools/device/policy-grammar.mjs`, and a mechanical duplicate control in

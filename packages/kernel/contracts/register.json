@@ -4,8 +4,8 @@
   "contracts": [
     {"id":"plant-model-v1","owner":"source/games/fnaf2","kind":"port","validator":"PlantModel"},
     {"id":"semantic-control-v1","owner":"source/clockwork","kind":"data","validator":"validateControlCommand"},
-    {"id":"policy-program-v1","owner":"core/control","kind":"data","validator":"validatePolicy"},
-    {"id":"controller-v1","owner":"core/control","kind":"port","validator":"Controller"},
+    {"id":"policy-program-v1","owner":"propose/policy","kind":"data","validator":"validatePolicy"},
+    {"id":"controller-v1","owner":"propose/policy","kind":"port","validator":"Controller"},
     {"id":"qualification-v1","owner":"kernel/contracts","kind":"data","validator":"validateQualification"},
     {"id":"state-estimate-v1","owner":"core/estimation","kind":"data","validator":"validateStateEstimate"},
     {"id":"clock-v1","owner":"kernel/time","kind":"data","validator":"validateClockRef"},

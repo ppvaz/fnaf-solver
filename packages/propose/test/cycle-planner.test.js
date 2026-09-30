@@ -1,6 +1,6 @@
 // Plan 20 package 5 foundation: worst-case finite-cycle selection.
-import { getCycle } from '@sixam/core/control';
-import { selectCycle } from '@sixam/core/control';
+import { getCycle } from '@sixam/propose/fnaf2';
+import { selectCycle } from '@sixam/propose/fnaf2';
 import { initialReducedState, advanceReduced, applyReduced } from '@sixam/source/fnaf2';
 import * as C from '@sixam/source/fnaf2';
 

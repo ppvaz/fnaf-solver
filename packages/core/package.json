@@ -5,6 +5,7 @@
   "type": "module",
   "dependencies": {
     "@sixam/kernel": "file:../kernel",
+    "@sixam/propose": "file:../propose",
     "@sixam/source": "file:../source"
   },
   "exports": {

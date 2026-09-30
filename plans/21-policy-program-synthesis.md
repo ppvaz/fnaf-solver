@@ -99,7 +99,7 @@ action orderings, and identifies each known family from its canonical IR.
 date the grammar could not express a branch on an observable fact at all: the
 five phases are unconditional, and `observations` were recorded and never read.
 `policy-grammar.mjs` now accepts `branches` on a `repeat` body, validated
-through `packages/core/src/control/observation-language.js`
+through `packages/propose/src/policy/observation-language.js`
 (`observation-language-v1`): a branch names one admissible fact, one predicate
 from a finite UNKNOWN-total vocabulary, and two reviewed arms that must leave
 the same control state as each other and restore the monitor/mask mode they

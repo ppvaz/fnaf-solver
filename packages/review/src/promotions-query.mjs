@@ -200,5 +200,5 @@ export function promotionsRecord(result, { date, command, commit, dirtyInputs })
 }
 
 /** The paths the query reads, for a record's dirty-input list. */
-export const QUERY_INPUTS = Object.freeze(['packages/review', 'packages/kernel', 'packages/source', 'packages/core', 'tools/device/bundle.mjs',
+export const QUERY_INPUTS = Object.freeze(['packages/review', 'packages/kernel', 'packages/source', 'packages/core', 'packages/propose', 'tools/device/bundle.mjs',
   'tools/device/fact-register.mjs', 'tools/device/*-winner.json', PACKS_DIR, GRAPH_FILE]);

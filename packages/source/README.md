@@ -16,7 +16,7 @@ and it imports only [`@sixam/kernel`](../kernel/README.md)
 | `decompile/` | the decompile and read chain (was `tools/dump/`): the CTFAK event-text dumper and its Docker image, `regen-dump.sh`, the sheet readers (`readdump.py`, `nightmap.py`, `aimap.py`, `coverage.py`), `extract-samples.sh` and their tests; its [`README.md`](decompile/README.md) is the tool index `tools/test-docs.mjs` holds them to. Two comments still name `tools/dump/`: one in `src/games/fnaf2/config.js`, whose bytes are frozen, and one in `src/games/fnaf3/fnaf3.js`, which another session is editing |
 
 Any file under `src/games/` is importable as `@sixam/source/games/<game>/<file>`,
-for a caller that wants one module's exact namespace (core's controllers read
+for a caller that wants one module's exact namespace (propose's controllers read
 FNaF 2's `config.js` that way).
 
 **The three model sources.** `src/games/fnaf2/plant-model.js`, `config.js`

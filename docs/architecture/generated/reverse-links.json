@@ -9,7 +9,7 @@
       "id": "claim.android.g779.empty-hall",
       "kind": "CLAIM",
       "path": "plans/22-architecture-and-developer-experience-refactor.md",
-      "line": 1135,
+      "line": 1142,
       "relation": "REFERENCES"
     },
     {
@@ -193,14 +193,28 @@
     {
       "id": "contract.controller-v1",
       "kind": "CONTRACT",
-      "path": "packages/core/src/control/ports.js",
+      "path": "packages/propose/README.md",
+      "line": 8,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.controller-v1",
+      "kind": "CONTRACT",
+      "path": "packages/propose/src/policy/index.js",
+      "line": 4,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.controller-v1",
+      "kind": "CONTRACT",
+      "path": "packages/propose/src/policy/ports.js",
       "line": 1,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.controller-v1",
       "kind": "CONTRACT",
-      "path": "packages/core/test/cycle-controller.test.js",
+      "path": "packages/propose/test/cycle-controller.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -551,7 +565,7 @@
       "id": "contract.hid-executor-v1",
       "kind": "CONTRACT",
       "path": "plans/22-architecture-and-developer-experience-refactor.md",
-      "line": 1134,
+      "line": 1141,
       "relation": "REFERENCES"
     },
     {
@@ -597,6 +611,20 @@
       "kind": "CONTRACT",
       "path": "tools/sourcetest.mjs",
       "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.policy-program-v1",
+      "kind": "CONTRACT",
+      "path": "packages/propose/README.md",
+      "line": 8,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.policy-program-v1",
+      "kind": "CONTRACT",
+      "path": "packages/propose/src/policy/index.js",
+      "line": 3,
+      "relation": "REFERENCES"
     },
     {
       "id": "contract.policy-program-v1",
@@ -889,7 +917,7 @@
       "id": "evidence.runtime-gh",
       "kind": "EVIDENCE",
       "path": "plans/22-architecture-and-developer-experience-refactor.md",
-      "line": 1135,
+      "line": 1142,
       "relation": "REFERENCES"
     }
   ]

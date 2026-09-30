@@ -1,11 +1,18 @@
 /**
- * Semantic control laws, policy IR, and reviewed cycle primitives.
+ * Compatibility shim for `@sixam/core/control` (ADR 0002 migrations D4 and M8).
+ * Nothing here is implemented in core any more:
  *
- * The control vocabulary and the per-game control catalogs moved to
- * `@sixam/source` (ADR 0002 migration D4). This barrel re-exports them by
- * name, so its export set is the one it had before the move: a compatibility
- * shim registered in docs/architecture/generated/legacy-paths.json
- * (`core.control-vocabulary-shim`). New code imports them from `@sixam/source`.
+ * - the control vocabulary and the per-game control catalogs live in
+ *   `@sixam/source`, re-exported by name (`core.control-vocabulary-shim` in
+ *   docs/architecture/generated/legacy-paths.json);
+ * - the policy language (`@sixam/propose/policy`) and FNaF 2's controllers and
+ *   cycle machinery (`@sixam/propose/fnaf2`) live in `@sixam/propose`
+ *   (`core.control-policy-shim`).
+ *
+ * Its export set is the one it had before either move. It stays because
+ * tools/device/minus-toys-plan.mjs, whose bytes every Minus Toys bundle hashes
+ * into engine.sourceSha256, imports it, as do two tools/recompile modules.
+ * New code imports `@sixam/source` and `@sixam/propose`.
  */
 export {
   ALL_GAME_CONTROL_NAMES, ARTIFACT_ACTION_TABLE_SCHEMA, BINDING_ANCHORS, BINDING_CONTACTS, CONTROL_CATALOGS,
@@ -16,11 +23,5 @@ export {
   PRECONDITION_VALUES, artifactActionTableFor, catalogAcceptsControl, catalogCamera, controlCatalogFor, controlIds,
   controlVocabularyFor, defineControlCatalog, gameOfTargetBuild, isUnknown, unknownProfilePoints,
 } from '@sixam/source';
-export * from './policy-ir.js';
-export * from './observation-language.js';
-export * from './controller.js';
-export * from './cycle-library.js';
-export * from './cycle-planner.js';
-export * from './cycle-controller.js';
-export * from './night-policy.js';
-export * from './ports.js';
+export * from '@sixam/propose/policy';
+export * from '@sixam/propose/fnaf2';

@@ -6,7 +6,7 @@
 // whole nights against the exact engine and its controls.
 import { STUN_FRAMES } from '@sixam/source/fnaf2';
 import { initialReducedState, advanceReduced, observeReduced } from '@sixam/source/fnaf2';
-import { CYCLE_LIBRARY, NightPolicy, NIGHT_POLICY_CYCLES } from '@sixam/core/control';
+import { CYCLE_LIBRARY, NightPolicy, NIGHT_POLICY_CYCLES } from '@sixam/propose/fnaf2';
 
 let failures = 0;
 const check = (condition, message) => {

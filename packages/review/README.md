@@ -14,7 +14,7 @@ edges of `docs/evidence/graph.json` and S1's open items from the packs, the
 attestations and the winners.
 
 **Boundary.** Review never imports Play or Propose. In today's names it never
-imports `apps/device`, `packages/adapters` or `packages/research`, and
+imports `apps/device`, `packages/adapters`, `packages/propose` or `packages/research`, and
 `tools/architecture-test.js` refuses any module here that does, by a static
 import, a re-export, a dynamic `import()` or a `require()`. The two campaign
 validators it needs (`validateCampaignResult`, `validateSaveProof`) moved to

@@ -49,9 +49,9 @@
       "contractId": "policy-program-v1",
       "id": "policy-program-v1",
       "version": 1,
-      "owner": "core/control",
+      "owner": "propose/policy",
       "kind": "data",
-      "purpose": "Stable policy-program-v1 boundary for core/control; its validator is validatePolicy.",
+      "purpose": "Stable policy-program-v1 boundary for propose/policy; its validator is validatePolicy.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -70,9 +70,9 @@
       "contractId": "controller-v1",
       "id": "controller-v1",
       "version": 1,
-      "owner": "core/control",
+      "owner": "propose/policy",
       "kind": "port",
-      "purpose": "Stable controller-v1 boundary for core/control; its validator is Controller.",
+      "purpose": "Stable controller-v1 boundary for propose/policy; its validator is Controller.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -84,7 +84,7 @@
       "runtimeValidation": "Controller",
       "conformanceFixtures": [
         "tools/reactivetest.mjs",
-        "packages/core/test/cycle-controller.test.js"
+        "packages/propose/test/cycle-controller.test.js"
       ]
     },
     {

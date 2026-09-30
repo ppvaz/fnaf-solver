@@ -11,9 +11,9 @@ these rules does, and are not device measurements.*
 | Layer | Where | Covers |
 |---|---|---|
 | Reader | `packages/source/decompile/nightmap.py` | all four sheets: clock, difficulty table, rolls, movement graphs, draw census |
-| Night models | `packages/core/src/mechanics/games/` | all four: clock, per-night table, roll schedule |
+| Night models | `packages/source/src/games/fnaf*/fnaf*.js`, `packages/source/src/clockwork/night-model.js` | all four: clock, per-night table, roll schedule |
 | Simulator | `packages/source/src/games/fnaf1/sim-fnaf1.js`, `sim-fnaf3.js`, `sim-fnaf4.js` | FNaF 1, 3 and 4; FNaF 4 remains **MODEL_ONLY** |
-| Policies | `policy-fnaf1.js`, `policy-fnaf3.js`, `policy-fnaf4.js` | FNaF 1, 3 and 4 published lines and controls |
+| Policies | `packages/propose/src/games/policy-fnaf1.js`, `policy-fnaf3.js`, `policy-fnaf4.js` | FNaF 1, 3 and 4 published lines and controls |
 | Census | `tools/census.mjs` | FNaF 1, 3 and 4; held-out seed blocks via `--start` |
 
 FNaF 2's night already has a simulator (`plant-model.js`) and a route; its

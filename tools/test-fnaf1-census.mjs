@@ -19,7 +19,7 @@
 
 import { Fnaf1Sim, DOOR_OPEN, DOOR_SHUT } from '@sixam/source/fnaf1';
 import { communityLoop, rollGrid, sealed, doNothing, CAM }
-  from '../packages/core/src/mechanics/games/policy-fnaf1.js';
+  from '@sixam/propose/games/policy-fnaf1.js';
 import { POWER, ROLLS, FOXY } from '@sixam/source/fnaf1';
 
 const failures = [];

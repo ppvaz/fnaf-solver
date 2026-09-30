@@ -6,7 +6,7 @@
 // collide with a scheduled press's -- the night 6-38 rule: a reactive
 // `monitor-resync` fired mid-`MONITOR_ANIM_DOWN` caused the desync it hunted.
 import * as C from '@sixam/source/games/fnaf2/config.js';
-import { val } from '../sensing/observer.js';
+import { val } from '@sixam/core/sensing';
 
 // Only monitor/mask presses animate; light/wind presses are instantaneous and
 // never conflict. GUARD_FRAMES is the longest of the two animations.

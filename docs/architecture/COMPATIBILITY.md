@@ -63,21 +63,25 @@ schema (`fnaf2.session-manifest`) from the runtime `session-manifest-v1`
 contract. That distinction is recorded in the generated map so removal cannot
 silently strand old manifests or merge two incompatible validators.
 
-## ADR 0002 context move (Plan 27, migration D1, D3, D4)
+## ADR 0002 context moves (Plan 27, migrations D1, D3, D4, M8)
 
 The contracts, the register and Time moved out of `@sixam/core` into
 [`@sixam/kernel`](../../packages/kernel/README.md); each game's mechanics and
 controls, and the cross-game clockwork, into
-[`@sixam/source`](../../packages/source/README.md). The core subpaths that
+[`@sixam/source`](../../packages/source/README.md); the policy language, FNaF
+2's controllers and cycle machinery and FNaF 1, 3 and 4's policies into
+[`@sixam/propose`](../../packages/propose/README.md). The core subpaths that
 named them stay as re-export shims with their export sets unchanged, so an
-importer the move did not repoint keeps working.
+importer the move did not repoint keeps working. `tools/architecture-test.js`
+lets a shim registered as owned by `@sixam/propose` re-export propose, and
+nothing else in a package import it.
 
 | Surface | Lifecycle | Canonical replacement | Removal gate |
 |---|---|---|---|
 | `@sixam/core/contracts` (`packages/core/src/contracts/index.js`) | compatibility | `@sixam/kernel/contracts`; the three catalog-generated validators from `@sixam/source` | no tracked module imports a contract from `@sixam/core` |
 | `@sixam/core/mechanics` (`packages/core/src/mechanics/index.js`) | compatibility | `@sixam/source/fnaf2` (the same export set) | no tracked module imports it: tools/recompile's importers are repointed by their owner, and the engine-source files a bundle manifest hashes in a commit that re-derives every bundle |
 | `packages/core/src/mechanics/{plant-model,config,rng}.js` (symbolic links) | compatibility | `packages/source/src/games/fnaf2/` (the same bytes) | `tools/recompile/model-draw-trace.mjs` finds the model it hashes through `@sixam/source`; the bracket check already reads a record's old paths through their history |
-| `@sixam/core/control` (`packages/core/src/control/index.js`) | compatibility | `@sixam/source` for the vocabulary and the catalogs | no importer reads them here, and the policy language has its Propose home |
+| `@sixam/core/control` (`packages/core/src/control/index.js`) | compatibility | `@sixam/source` for the vocabulary and the catalogs; `@sixam/propose/policy` and `@sixam/propose/fnaf2` for the policy language, FNaF 2's controllers and the cycle machinery (migration M8) | no tracked module imports it: tools/recompile's two importers are repointed by their owner, and `tools/device/minus-toys-plan.mjs`, whose bytes every Minus Toys bundle hashes, in a commit that re-derives every bundle |
 | `@sixam/core/telemetry` (`packages/core/src/telemetry/index.js`) | compatibility | `@sixam/kernel/time` for the fact link and event clocks | no importer reads them here, and the bench trace has its Review home |
 | `@sixam/core/timing` (`packages/core/src/timing/index.js`) | compatibility | `@sixam/kernel/time` for `ClockPort` | no importer reads it here, and the phase clock has its Play home |
 

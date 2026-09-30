@@ -51,7 +51,7 @@ const contractEvidence = {
   'semantic-control-v1': ['packages/source/test/contracts.test.js', 'packages/source/test/control-catalog.test.js',
     'tools/device/test-policy-interpreter.mjs'],
   'policy-program-v1': ['tools/policygrammartest.mjs', 'tools/device/test-policy-ir.mjs'],
-  'controller-v1': ['tools/reactivetest.mjs', 'packages/core/test/cycle-controller.test.js'],
+  'controller-v1': ['tools/reactivetest.mjs', 'packages/propose/test/cycle-controller.test.js'],
   'qualification-v1': ['packages/source/test/contracts.test.js', 'packages/kernel/test/venue-identity.test.js'],
   'qualification-v2': ['packages/kernel/test/venue-identity.test.js', 'apps/device/test/venue-preflight.test.js'],
   'venue-identity-v1': ['packages/kernel/test/venue-identity.test.js', 'packages/adapters/test/android-venue.test.js'],
@@ -184,7 +184,7 @@ for (const path of sourceFiles.filter(path => /(?:test|check|spec)[^/]*\.(?:mjs|
   ])];
   tests.push({
     id, lane,
-    owner: path.includes('packages/core') ? '@sixam/core' : path.includes('packages/source') ? '@sixam/source'
+    owner: path.includes('packages/core') ? '@sixam/core' : path.includes('packages/source') ? '@sixam/source' : path.includes('packages/propose') ? '@sixam/propose'
       : path.includes('packages/kernel') ? '@sixam/kernel' : path.includes('packages') ? 'package boundary' : 'legacy migration',
     timeoutMs: lane === 'test:browser:realtime' ? 360000
       : id === 'tools/ventreacttest.mjs' ? 900000
@@ -202,7 +202,7 @@ for (const path of sourceFiles.filter(path => /(?:test|check|spec)[^/]*\.(?:mjs|
 }
 const duplicateResponsibilities = [
   { responsibility: 'canonical mechanics', owner: '@sixam/source', legacy: [] },
-  { responsibility: 'semantic policy IR', owner: '@sixam/core', legacy: ['tools/device/policy-ir.mjs'] },
+  { responsibility: 'semantic policy IR', owner: '@sixam/propose', legacy: ['tools/device/policy-ir.mjs'] },
   { responsibility: 'physical actuation', owner: '@sixam/adapters', legacy: ['tools/device/actuator.mjs'] },
   { responsibility: 'device composition', owner: '@sixam/device', legacy: ['tools/device/recipe.mjs'] },
   { responsibility: 'research execution', owner: '@sixam/research', legacy: ['tools/*search*', 'tools/*sweep*', 'tools/*probe*'] },
@@ -286,8 +286,8 @@ const legacyPaths = [
   },
   {
     id: 'device.policy-ir-module', path: 'tools/device/policy-ir.mjs', category: 'policy',
-    lifecycle: 'transitional', owner: '@sixam/core',
-    replacement: 'core policy-program contract and research package emitter',
+    lifecycle: 'transitional', owner: '@sixam/propose',
+    replacement: 'the policy-program contract in `@sixam/propose/policy` and the propose experiment emitter',
     removalGate: 'P3 policy vocabulary migration and fixed-seed artifact equivalence',
     notes: 'Compatibility policy builder retained while policy ownership moves out of tools.',
   },
@@ -346,9 +346,18 @@ const legacyPaths = [
   {
     id: 'core.control-vocabulary-shim', path: 'packages/core/src/control/index.js', category: 'package-subpath',
     lifecycle: 'compatibility', owner: '@sixam/source',
-    replacement: '`@sixam/source` for the control vocabulary and the per-game catalogs; the policy language, controllers and cycle machinery stay here until they move to Propose',
-    removalGate: 'No tracked module imports a vocabulary or catalog name from `@sixam/core/control` (true since D3, 2026-09-30, outside tools/recompile, whose owner repoints two), and the rest of the barrel has its Propose home',
-    notes: 'Re-exports the 37 vocabulary and catalog names by name from `@sixam/source` beside the modules that still live in core; its export set is the one it had before the move.',
+    replacement: '`@sixam/source` for the control vocabulary and the per-game catalogs; `@sixam/propose` for the rest of the barrel (`core.control-policy-shim`)',
+    removalGate: 'No tracked module imports a vocabulary or catalog name from `@sixam/core/control`: true since D3, 2026-09-30, except tools/device/minus-toys-plan.mjs (an engine-source file every Minus Toys bundle hashes into engine.sourceSha256, repointed only in a commit that re-derives every emitted bundle) and two tools/recompile modules (their owner repoints them)',
+    notes: 'Re-exports the 37 vocabulary and catalog names by name from `@sixam/source`, beside the propose re-exports; its export set is the one it had before either move.',
+  },
+  // ADR 0002 migration M8: the policy language, FNaF 2's controllers and cycle
+  // machinery and the other games' policies moved into @sixam/propose.
+  {
+    id: 'core.control-policy-shim', path: 'packages/core/src/control/index.js', category: 'package-subpath',
+    lifecycle: 'compatibility', owner: '@sixam/propose',
+    replacement: '`@sixam/propose/policy` (policy IR, observation language, ports) and `@sixam/propose/fnaf2` (FNaF 2\'s controllers, cycle library, planner, cycle controller, night policy)',
+    removalGate: 'No tracked module imports a policy, controller or cycle name from `@sixam/core/control` or `@sixam/core`. Once M8 has repointed the tools, the one left is tools/device/minus-toys-plan.mjs, an engine-source file every Minus Toys bundle hashes into engine.sourceSha256, repointed only in a commit that re-derives every emitted bundle',
+    notes: 'Two `export *` lines of propose\'s barrels. The only re-export of propose outside propose that tools/architecture-test.js admits besides the research shims: a registered shim may re-export propose, never import it.',
   },
   {
     id: 'core.telemetry-shim', path: 'packages/core/src/telemetry/index.js', category: 'package-subpath',

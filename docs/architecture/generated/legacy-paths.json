@@ -107,8 +107,8 @@
       "path": "tools/device/policy-ir.mjs",
       "category": "policy",
       "lifecycle": "transitional",
-      "owner": "@sixam/core",
-      "replacement": "core policy-program contract and research package emitter",
+      "owner": "@sixam/propose",
+      "replacement": "the policy-program contract in `@sixam/propose/policy` and the propose experiment emitter",
       "removalGate": "P3 policy vocabulary migration and fixed-seed artifact equivalence",
       "notes": "Compatibility policy builder retained while policy ownership moves out of tools."
     },
@@ -208,9 +208,19 @@
       "category": "package-subpath",
       "lifecycle": "compatibility",
       "owner": "@sixam/source",
-      "replacement": "`@sixam/source` for the control vocabulary and the per-game catalogs; the policy language, controllers and cycle machinery stay here until they move to Propose",
-      "removalGate": "No tracked module imports a vocabulary or catalog name from `@sixam/core/control` (true since D3, 2026-09-30, outside tools/recompile, whose owner repoints two), and the rest of the barrel has its Propose home",
-      "notes": "Re-exports the 37 vocabulary and catalog names by name from `@sixam/source` beside the modules that still live in core; its export set is the one it had before the move."
+      "replacement": "`@sixam/source` for the control vocabulary and the per-game catalogs; `@sixam/propose` for the rest of the barrel (`core.control-policy-shim`)",
+      "removalGate": "No tracked module imports a vocabulary or catalog name from `@sixam/core/control`: true since D3, 2026-09-30, except tools/device/minus-toys-plan.mjs (an engine-source file every Minus Toys bundle hashes into engine.sourceSha256, repointed only in a commit that re-derives every emitted bundle) and two tools/recompile modules (their owner repoints them)",
+      "notes": "Re-exports the 37 vocabulary and catalog names by name from `@sixam/source`, beside the propose re-exports; its export set is the one it had before either move."
+    },
+    {
+      "id": "core.control-policy-shim",
+      "path": "packages/core/src/control/index.js",
+      "category": "package-subpath",
+      "lifecycle": "compatibility",
+      "owner": "@sixam/propose",
+      "replacement": "`@sixam/propose/policy` (policy IR, observation language, ports) and `@sixam/propose/fnaf2` (FNaF 2's controllers, cycle library, planner, cycle controller, night policy)",
+      "removalGate": "No tracked module imports a policy, controller or cycle name from `@sixam/core/control` or `@sixam/core`. Once M8 has repointed the tools, the one left is tools/device/minus-toys-plan.mjs, an engine-source file every Minus Toys bundle hashes into engine.sourceSha256, repointed only in a commit that re-derives every emitted bundle",
+      "notes": "Two `export *` lines of propose's barrels. The only re-export of propose outside propose that tools/architecture-test.js admits besides the research shims: a registered shim may re-export propose, never import it."
     },
     {
       "id": "core.telemetry-shim",

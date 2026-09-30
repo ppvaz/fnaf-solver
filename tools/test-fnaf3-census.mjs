@@ -13,7 +13,7 @@
 
 import { Fnaf3Sim } from '@sixam/source/fnaf3';
 import { communityLine, doNothing, officeCamp, trackingLoop, searchOrder, VENT_FROM }
-  from '../packages/core/src/mechanics/games/policy-fnaf3.js';
+  from '@sixam/propose/games/policy-fnaf3.js';
 import { GRAPH } from '@sixam/source/fnaf3';
 import { searchOrder as deviceSearchOrder } from './device/fnaf3-run.mjs';
 import { CLOCK, VENTILATION, SPRINGTRAP } from '@sixam/source/fnaf3';

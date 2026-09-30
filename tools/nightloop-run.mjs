@@ -26,14 +26,14 @@ export const seedOf = index => (index * 2654435761) >>> 0;
 // `static` is what a phone can actually run: the reviewed library IS the
 // proof. Plan 20 P4's obligation ("the planner cannot emit a primitive that
 // has not passed the exact model gate") is discharged once, offline, when a
-// primitive is admitted to the library -- `packages/core/test/cycle-library.test.js` is
+// primitive is admitted to the library -- `packages/propose/test/cycle-library.test.js` is
 // where that happens -- and at run time the gate attests membership.
 //
 // `exact` replays the primitive through the live engine from a snapshot and
 // accepts it only if the run is still alive at the end of it. That is a
 // PRIVILEGED LOOKAHEAD: it reads the true future of the same RNG stream, which
 // no controller beside a phone can do. It is a legitimate upper bound and it
-// is what `packages/core/test/cycle-controller.test.js` uses at a nine-second
+// is what `packages/propose/test/cycle-controller.test.js` uses at a nine-second
 // horizon; it is not a device-realistic result and must never be quoted as one.
 export function staticGate(cycle) {
   return REVIEWED.has(cycle.id)

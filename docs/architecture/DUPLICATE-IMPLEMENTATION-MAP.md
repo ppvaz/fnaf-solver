@@ -243,7 +243,7 @@ Host-side schedulers and their simulator twins:
 
 Twelve modules spell "policy", in at least three unrelated vocabularies.
 
-- **policy-v1 IR (gated).** `packages/core/src/control/policy-ir.js` (86) owns
+- **policy-v1 IR (gated).** `packages/propose/src/policy/policy-ir.js` (86) owns
   the schema with `observation-language.js`; `tools/device/policy-grammar.mjs`
   (387), `policy-interpreter.mjs` (77), `policy-search.mjs` (169),
   `policy-artifact.mjs` (142) build on it, and `policy-equivalence.mjs` (214)
@@ -432,7 +432,7 @@ green.
 | `tools/device/closed-families.mjs` / `tools/invent/closed-families.mjs` | 70 / 134 | Two registers of closed policy families — device-plan surface vs privileged genome surface. Same register, two classifiers. |
 | `tools/invent/search.mjs` / `tools/minus7/search.mjs` | 248 / 189 | Two constrained searches; see §12. |
 | `tools/minus7/cycle.mjs` / `tools/minustoys/cycle.mjs` | 244 / 263 | Same shape, different route. `tools/minustoys/` holds **exactly one file**. **Decided 2026-09-08: keep.** One directory per route is the convention; a move would touch importers, the `TOOLS.md` row and the generated catalogs for no behaviour change, and Minus Toys is the live Night 5/6 route. |
-| `packages/core/src/control/policy-ir.js` / `tools/device/policy-ir.mjs` | 86 / 51 | Name collision only; see §9. |
+| `packages/propose/src/policy/policy-ir.js` / `tools/device/policy-ir.mjs` | 86 / 51 | Name collision only; see §9. |
 
 ## 18. Not duplication (checked, so a cleanup does not "fix" them)
 

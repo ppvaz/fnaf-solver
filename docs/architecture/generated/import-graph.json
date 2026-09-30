@@ -589,66 +589,11 @@
       ]
     },
     {
-      "file": "packages/core/src/control/controller.js",
-      "imports": [
-        "../sensing/observer.js",
-        "@sixam/source/games/fnaf2/config.js"
-      ]
-    },
-    {
-      "file": "packages/core/src/control/cycle-controller.js",
-      "imports": [
-        "../estimation/estimator.js",
-        "./cycle-library.js",
-        "./cycle-planner.js",
-        "@sixam/source/games/fnaf2/config.js",
-        "@sixam/source/games/fnaf2/reduced-model.js"
-      ]
-    },
-    {
-      "file": "packages/core/src/control/cycle-library.js",
-      "imports": [
-        "@sixam/source/games/fnaf2/config.js",
-        "@sixam/source/games/fnaf2/reduced-model.js"
-      ]
-    },
-    {
-      "file": "packages/core/src/control/cycle-planner.js",
-      "imports": [
-        "./cycle-library.js"
-      ]
-    },
-    {
       "file": "packages/core/src/control/index.js",
       "imports": [
-        "./controller.js",
-        "./cycle-controller.js",
-        "./cycle-library.js",
-        "./cycle-planner.js",
-        "./night-policy.js",
-        "./observation-language.js",
-        "./policy-ir.js",
-        "./ports.js",
+        "@sixam/propose/fnaf2",
+        "@sixam/propose/policy",
         "@sixam/source"
-      ]
-    },
-    {
-      "file": "packages/core/src/control/night-policy.js",
-      "imports": [
-        "@sixam/source/games/fnaf2/config.js"
-      ]
-    },
-    {
-      "file": "packages/core/src/control/observation-language.js",
-      "imports": [
-        "../sensing/observer.js",
-        "@sixam/source/games/fnaf2/config.js"
-      ]
-    },
-    {
-      "file": "packages/core/src/control/policy-ir.js",
-      "imports": [
-        "./observation-language.js"
       ]
     },
     {
@@ -682,18 +627,6 @@
         "./telemetry/index.js",
         "./timing/index.js",
         "./training/index.js"
-      ]
-    },
-    {
-      "file": "packages/core/src/mechanics/games/policy-fnaf1.js",
-      "imports": [
-        "@sixam/source/games/fnaf1/sim-fnaf1.js"
-      ]
-    },
-    {
-      "file": "packages/core/src/mechanics/games/policy-fnaf4.js",
-      "imports": [
-        "@sixam/source/games/fnaf4/fnaf4.js"
       ]
     },
     {
@@ -740,36 +673,6 @@
       "imports": [
         "./activity-gate.js",
         "./exercise.js"
-      ]
-    },
-    {
-      "file": "packages/core/test/cycle-controller.test.js",
-      "imports": [
-        "@sixam/core/control",
-        "@sixam/core/sensing",
-        "@sixam/source/fnaf2",
-        "node:fs"
-      ]
-    },
-    {
-      "file": "packages/core/test/cycle-library.test.js",
-      "imports": [
-        "@sixam/core/control",
-        "@sixam/source/fnaf2"
-      ]
-    },
-    {
-      "file": "packages/core/test/cycle-planner.test.js",
-      "imports": [
-        "@sixam/core/control",
-        "@sixam/source/fnaf2"
-      ]
-    },
-    {
-      "file": "packages/core/test/night-policy.test.js",
-      "imports": [
-        "@sixam/core/control",
-        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -868,6 +771,122 @@
       "imports": [
         "../src/contracts/index.js",
         "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/propose/src/games/fnaf2/controller.js",
+      "imports": [
+        "@sixam/core/sensing",
+        "@sixam/source/games/fnaf2/config.js"
+      ]
+    },
+    {
+      "file": "packages/propose/src/games/fnaf2/cycle-controller.js",
+      "imports": [
+        "./cycle-library.js",
+        "./cycle-planner.js",
+        "@sixam/core/estimation",
+        "@sixam/source/games/fnaf2/config.js",
+        "@sixam/source/games/fnaf2/reduced-model.js"
+      ]
+    },
+    {
+      "file": "packages/propose/src/games/fnaf2/cycle-library.js",
+      "imports": [
+        "@sixam/source/games/fnaf2/config.js",
+        "@sixam/source/games/fnaf2/reduced-model.js"
+      ]
+    },
+    {
+      "file": "packages/propose/src/games/fnaf2/cycle-planner.js",
+      "imports": [
+        "./cycle-library.js"
+      ]
+    },
+    {
+      "file": "packages/propose/src/games/fnaf2/index.js",
+      "imports": [
+        "./controller.js",
+        "./cycle-controller.js",
+        "./cycle-library.js",
+        "./cycle-planner.js",
+        "./night-policy.js"
+      ]
+    },
+    {
+      "file": "packages/propose/src/games/fnaf2/night-policy.js",
+      "imports": [
+        "@sixam/source/games/fnaf2/config.js"
+      ]
+    },
+    {
+      "file": "packages/propose/src/games/policy-fnaf1.js",
+      "imports": [
+        "@sixam/source/games/fnaf1/sim-fnaf1.js"
+      ]
+    },
+    {
+      "file": "packages/propose/src/games/policy-fnaf4.js",
+      "imports": [
+        "@sixam/source/games/fnaf4/fnaf4.js"
+      ]
+    },
+    {
+      "file": "packages/propose/src/index.js",
+      "imports": [
+        "./games/fnaf2/index.js",
+        "./policy/index.js"
+      ]
+    },
+    {
+      "file": "packages/propose/src/policy/index.js",
+      "imports": [
+        "./observation-language.js",
+        "./policy-ir.js",
+        "./ports.js"
+      ]
+    },
+    {
+      "file": "packages/propose/src/policy/observation-language.js",
+      "imports": [
+        "@sixam/core/sensing",
+        "@sixam/source/games/fnaf2/config.js"
+      ]
+    },
+    {
+      "file": "packages/propose/src/policy/policy-ir.js",
+      "imports": [
+        "./observation-language.js"
+      ]
+    },
+    {
+      "file": "packages/propose/test/cycle-controller.test.js",
+      "imports": [
+        "@sixam/core/sensing",
+        "@sixam/propose/fnaf2",
+        "@sixam/source/fnaf2",
+        "node:fs"
+      ]
+    },
+    {
+      "file": "packages/propose/test/cycle-library.test.js",
+      "imports": [
+        "@sixam/propose/fnaf2",
+        "@sixam/source/fnaf2"
+      ]
+    },
+    {
+      "file": "packages/propose/test/cycle-planner.test.js",
+      "imports": [
+        "@sixam/propose/fnaf2",
+        "@sixam/source/fnaf2"
+      ]
+    },
+    {
+      "file": "packages/propose/test/night-policy.test.js",
+      "imports": [
+        "@sixam/propose/fnaf2",
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -1764,7 +1783,8 @@
       "imports": [
         "../../../apps/device/src/campaign.js",
         "../../../apps/device/src/cli.js",
-        "../../core/src/control/night-policy.js",
+        "../../../tools/device/bundle.mjs",
+        "../../core/src/sensing/observer.js",
         "../../review/src/pack-lift.mjs",
         "../src/index.js",
         "./clockwork/index.js",
@@ -1773,15 +1793,20 @@
         "@sixam/core/contracts",
         "@sixam/core/control",
         "@sixam/core/mechanics",
+        "@sixam/core/sensing",
         "@sixam/device",
         "@sixam/kernel",
         "@sixam/kernel/contracts",
+        "@sixam/propose",
+        "@sixam/propose/fnaf2",
         "@sixam/research",
         "@sixam/research/seeds",
         "@sixam/review/evidence-pack",
+        "@sixam/source/fnaf2",
         "@sixam/source/games/fnaf2/config.js",
         "node:assert/strict",
         "node:child_process",
+        "node:crypto",
         "node:fs",
         "node:fs/promises",
         "node:module",
@@ -1838,11 +1863,11 @@
     {
       "file": "tools/census.mjs",
       "imports": [
-        "../packages/core/src/mechanics/games/policy-fnaf1.js",
-        "../packages/core/src/mechanics/games/policy-fnaf3.js",
-        "../packages/core/src/mechanics/games/policy-fnaf4.js",
         "./policy.mjs",
         "./policybaselines.mjs",
+        "@sixam/propose/games/policy-fnaf1.js",
+        "@sixam/propose/games/policy-fnaf3.js",
+        "@sixam/propose/games/policy-fnaf4.js",
         "@sixam/source/fnaf1",
         "@sixam/source/fnaf3",
         "@sixam/source/fnaf4"
@@ -3935,7 +3960,7 @@
     {
       "file": "tools/test-fnaf1-census.mjs",
       "imports": [
-        "../packages/core/src/mechanics/games/policy-fnaf1.js",
+        "@sixam/propose/games/policy-fnaf1.js",
         "@sixam/source/fnaf1"
       ]
     },
@@ -3963,15 +3988,15 @@
     {
       "file": "tools/test-fnaf3-census.mjs",
       "imports": [
-        "../packages/core/src/mechanics/games/policy-fnaf3.js",
         "./device/fnaf3-run.mjs",
+        "@sixam/propose/games/policy-fnaf3.js",
         "@sixam/source/fnaf3"
       ]
     },
     {
       "file": "tools/test-fnaf4-census.mjs",
       "imports": [
-        "../packages/core/src/mechanics/games/policy-fnaf4.js",
+        "@sixam/propose/games/policy-fnaf4.js",
         "@sixam/source",
         "@sixam/source/fnaf4"
       ]

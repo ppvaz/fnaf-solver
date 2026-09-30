@@ -172,7 +172,7 @@ export async function forkBlocks({ script, args, start, count, jobs, childFlag =
   }));
 }
 
-export function gitState(enginePaths = ['packages/core', 'packages/source', 'packages/kernel', 'tools/device']) {
+export function gitState(enginePaths = ['packages/core', 'packages/source', 'packages/kernel', 'packages/propose', 'tools/device']) {
   const git = (...args) => execFileSync('git', ['-C', ROOT, ...args], { encoding: 'utf8' }).trim();
   return { commit: git('rev-parse', 'HEAD'),
     dirtyEnginePaths: git('status', '--porcelain', '--', ...enginePaths).split('\n').filter(Boolean) };

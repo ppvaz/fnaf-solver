@@ -234,9 +234,9 @@ fnaf2-1020/                     (amended 2026-09-29: ADR 0002 contexts in bracke
       test/                    the sourced draw-order and Sim contract tests
                                 (later: acquire, derive, recompile; the identity chain, M6)
 
-    core/                       @sixam/core      what is left: moving to propose, play, review, teach
+    core/                       @sixam/core      what is left: moving to play, review, teach
       src/
-        control/               policies, supervisors, policy IR (+ shim over source's vocabulary)
+        control/               shim over source's vocabulary and propose's policy language
         sensing/               measurement and observation semantics
         estimation/            belief and state estimation
         timing/                the phase clock (+ shim over the kernel's clock port)
@@ -247,6 +247,11 @@ fnaf2-1020/                     (amended 2026-09-29: ADR 0002 contexts in bracke
     adapters/                   @sixam/adapters  [play]
       src/                      HID and Cue Helper transports, clocks, night onset,
                                 the fitted detection rules the campaign reads
+
+    propose/                    @sixam/propose   [propose] since 2026-09-30 (migration M8)
+      src/policy/              the policy IR, observation language and ports
+      src/games/               FNaF 2's controllers and cycle machinery; FNaF 1/3/4 policies
+      test/                    the cycle library, planner, controller and night policy
 
     research/                   @sixam/research  [propose]
       src/                      experiment.js, seeds.js, families/, strategies/, cli.js
@@ -292,23 +297,25 @@ kernel <- source <- play <- propose -> review -> source
 
   kernel   @sixam/kernel     imports nothing; every package may import it
   source   @sixam/source     imports only itself and the kernel
-  play     packages/adapters, apps/device
-  propose  packages/research
+  play     packages/adapters, apps/device, and core's sensing, estimation and phase clock
+  propose  packages/propose, packages/research   imported by nothing but the applications
   review   packages/review        never imports play or propose
   teach    apps/trainer           core only
 ```
 
 - `kernel` has no dependency and imports nothing in the repository: no
   workspace, no relative path out of itself, no Node built-in.
-- `core` imports only itself and the kernel: no application, adapter,
-  research, review, tools module, host API or dependency.
+- `core` imports only itself, source and the kernel: no application, adapter,
+  propose, research, review, tools module, host API or dependency. Its
+  `/control` subpath is a registered shim that may re-export propose.
 - `adapters` depend on core. `apps/device` is the one composition root that
   plays a night; it composes the adapters and a resolved profile.
-- `research` may use core and explicit simulation and error models, but never
-  `apps/device`, `tools/device` or a live shell (`child_process`, `net`,
-  `dgram`).
+- `propose` imports the kernel, source, core's Play modules and review, never
+  the device shell. `research` may use source and explicit simulation and
+  error models, but never `apps/device`, `tools/device` or a live shell
+  (`child_process`, `net`, `dgram`).
 - `review` imports core and the kernel and never `apps/device`,
-  `packages/adapters` or `packages/research`. It still reaches
+  `packages/adapters`, `packages/propose` or `packages/research`. It still reaches
   `tools/device/bundle.mjs` to compile a committed winner to its bundle hash;
   that edge closes when `tools/device` is sorted by context (migration M9).
 - `trainer` depends on core and browser-local presentation only.

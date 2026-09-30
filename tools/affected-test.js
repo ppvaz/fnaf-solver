@@ -19,14 +19,16 @@ const add = (id, command, args = []) => checks.set(id, { command, args });
 add('architecture', 'node', ['tools/architecture-test.js']);
 add('references', 'node', ['tools/validate-references.js']);
 
-// ADR 0002 migration D1/D4: the contracts, the register and Time live in the
-// kernel, each game's Rulebook, Sim and controls in source, and core keeps the
-// policy language and the cycle machinery over them. A change to any of the
-// three runs the contract and Sim lanes that read them; core's own gates run
-// when core, or what it imports, changes.
+// ADR 0002 migrations D1/D4/M8: the contracts, the register and Time live in
+// the kernel, each game's Rulebook, Sim and controls in source, the policy
+// language and the cycle machinery over them in propose, and core keeps play's
+// host-free half (sensing, estimation, the phase clock) and training. A change
+// to the kernel, source or core runs the contract and Sim lanes that read them;
+// propose's own gates run when propose, or what it imports, changes.
 const kernelChanged = changed.some(path => path.startsWith('packages/kernel/'));
 const sourceChanged = changed.some(path => path.startsWith('packages/source/'));
 const coreChanged = changed.some(path => path.startsWith('packages/core/'));
+const proposeChanged = changed.some(path => path.startsWith('packages/propose/'));
 if (kernelChanged)
   for (const test of ['kernel', 'venue-identity', 'claim-envelope'])
     add(`test:packages/kernel/test/${test}.test.js`, 'node', [`packages/kernel/test/${test}.test.js`]);
@@ -35,13 +37,13 @@ if (kernelChanged || sourceChanged || coreChanged) {
   add('control-catalog', 'node', ['packages/source/test/control-catalog.test.js']);
   add('source-mechanics', 'node', ['tools/sourcetest.mjs']);
 }
-if (sourceChanged || coreChanged) {
+if (sourceChanged || coreChanged || proposeChanged) {
   // The closed loop is the device work's spine (ROADMAP Track A); its gates
   // belong in the same lane as the code they gate, not the legacy campaign.
   // Keyed by path so an edit to the gate itself (below) dedupes against this.
   for (const gate of ['cycle-library', 'cycle-planner', 'cycle-controller',
     'night-policy'])
-    add(`test:packages/core/test/${gate}.test.js`, 'node', [`packages/core/test/${gate}.test.js`]);
+    add(`test:packages/propose/test/${gate}.test.js`, 'node', [`packages/propose/test/${gate}.test.js`]);
   // Offline replay determinism: the same recorded facts must rebuild the same
   // decisions, which is what makes a retained stream evidence rather than a log.
   add('fact-replay', 'node', ['tools/factreplay.mjs', '--assert']);
@@ -55,13 +57,18 @@ if (changed.some(path => path.startsWith('packages/adapters/') || path.startsWit
   add('device-cli', 'node', ['apps/device/test/cli.test.js']);
   add('winners-rebuild', 'node', ['tools/device/test-winners-rebuild.mjs']);
 }
-if (changed.some(path => path.startsWith('packages/core/src/control/') || path.startsWith('packages/source/src/clockwork/') ||
-    path.startsWith('tools/device/policy-') || path.startsWith('tools/device/closed-families'))) {
+if (changed.some(path => path.startsWith('packages/propose/src/policy/') || path.startsWith('packages/core/src/control/') ||
+    path.startsWith('packages/source/src/clockwork/') || path.startsWith('tools/device/policy-') ||
+    path.startsWith('tools/device/closed-families'))) {
   add('policy-grammar', 'node', ['tools/policygrammartest.mjs']);
   add('policy-search', 'node', ['tools/policysearchtest.mjs']);
   add('policy-equivalence', 'node', ['tools/policyequivalencetest.mjs']);
   add('observation-language', 'node', ['tools/observationlanguagetest.mjs']);
 }
+// FNaF 1, 3 and 4's policies are what each game's census runs.
+for (const game of [1, 3, 4])
+  if (changed.includes(`packages/propose/src/games/policy-fnaf${game}.js`))
+    add(`census-fnaf${game}`, 'node', [`tools/test-fnaf${game}-census.mjs`]);
 if (changed.some(path => path.startsWith('packages/research/')))
   add('research-contracts', 'node', ['packages/research/test/experiment.test.js']);
 // Review reads the committed evidence (packs, graph, winners, the anchor

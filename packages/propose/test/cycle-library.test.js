@@ -1,5 +1,5 @@
 // Plan 20 package 4: finite cycle primitives and fail-closed constraint gate.
-import { DEVICE_CONSTRAINTS, gateCycle, getCycle } from '@sixam/core/control';
+import { DEVICE_CONSTRAINTS, gateCycle, getCycle } from '@sixam/propose/fnaf2';
 import { initialReducedState, advanceReduced, applyReduced } from '@sixam/source/fnaf2';
 import * as C from '@sixam/source/fnaf2';
 
@@ -76,7 +76,7 @@ console.log('cycle library: reviewed primitive, prerequisite, animation, contact
 //
 // Plan 20 P5's nine-second blackout fixture cannot see this, and the wind gate
 // above hand-builds the state the library cannot reach on its own.
-import { CYCLE_LIBRARY } from '@sixam/core/control';
+import { CYCLE_LIBRARY } from '@sixam/propose/fnaf2';
 
 const keyOf = reduced => JSON.stringify([reduced.monitor, reduced.maskOn,
   reduced.viewedCamera, reduced.winding, reduced.lightHeld,

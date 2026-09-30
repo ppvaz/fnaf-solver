@@ -1,0 +1,16 @@
+{
+  "name": "@sixam/propose",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@sixam/core": "file:../core",
+    "@sixam/source": "file:../source"
+  },
+  "exports": {
+    ".": "./src/index.js",
+    "./policy": "./src/policy/index.js",
+    "./fnaf2": "./src/games/fnaf2/index.js",
+    "./games/*": "./src/games/*"
+  }
+}

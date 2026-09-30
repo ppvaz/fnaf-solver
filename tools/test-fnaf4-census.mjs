@@ -18,7 +18,7 @@
 //   node tools/test-fnaf4-census.mjs
 
 import { Fnaf4Sim } from '@sixam/source/fnaf4';
-import { POLICIES } from '../packages/core/src/mechanics/games/policy-fnaf4.js';
+import { POLICIES } from '@sixam/propose/games/policy-fnaf4.js';
 import { MODEL, BLACK_FLASH, BEDROOM, FOXY_CLOSET } from '@sixam/source/fnaf4';
 import { nightSchedule, hourStartMs } from '@sixam/source';
 
