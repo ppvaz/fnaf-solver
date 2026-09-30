@@ -36,8 +36,9 @@ from dataclasses import dataclass
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[4]
-DEFAULT_MONITOR = ROOT / "models" / "monitor-rule-moto-g56-v207.json"
-DEFAULT_MASK = ROOT / "models" / "mask-rule-moto-g56-v207.json"
+PLAY_PROFILES = ROOT / "packages" / "play" / "profiles" / "fnaf2" / "moto-g56"
+DEFAULT_MONITOR = PLAY_PROFILES / "monitor-rule-moto-g56-v207.json"
+DEFAULT_MASK = PLAY_PROFILES / "mask-rule-moto-g56-v207.json"
 GRID_CELLS = 20 * 9
 GRID_HEX_WIDTH = GRID_CELLS * 6
 STROKE_VISIBLE_MIN = 100

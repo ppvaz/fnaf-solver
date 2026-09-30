@@ -5,9 +5,9 @@ import { classifyFrame, bottomButtons, BUTTON_THRESHOLDS } from './intersection-
 import { parseMaskRule, parseMonitorRule } from '@sixam/play';
 
 const monitorRule = parseMonitorRule(JSON.parse(await readFile(
-  new URL('../../../../models/monitor-rule-moto-g56-v207.json', import.meta.url), 'utf8')));
+  new URL('../../profiles/fnaf2/moto-g56/monitor-rule-moto-g56-v207.json', import.meta.url), 'utf8')));
 const maskRule = parseMaskRule(JSON.parse(await readFile(
-  new URL('../../../../models/mask-rule-moto-g56-v207.json', import.meta.url), 'utf8')));
+  new URL('../../profiles/fnaf2/moto-g56/mask-rule-moto-g56-v207.json', import.meta.url), 'utf8')));
 const rgb = (luma, blue = luma) => (luma << 16) | (luma << 8) | blue;
 
 function frame({ monitorUp, maskOn = false, sequence = 1, visual = 'OBSERVED',

@@ -204,9 +204,9 @@ async function run({ target, timeoutMs, pollMs, log }) {
     throw new Error('ANDROID_SERIAL must be selected before the state gate starts');
   const logger = writeLogger(log);
   const monitorRule = parseMonitorRule(JSON.parse(await readFile(
-    new URL('../../../../models/monitor-rule-moto-g56-v207.json', import.meta.url), 'utf8')));
+    new URL('../../profiles/fnaf2/moto-g56/monitor-rule-moto-g56-v207.json', import.meta.url), 'utf8')));
   const maskRule = parseMaskRule(JSON.parse(await readFile(
-    new URL('../../../../models/mask-rule-moto-g56-v207.json', import.meta.url), 'utf8')));
+    new URL('../../profiles/fnaf2/moto-g56/mask-rule-moto-g56-v207.json', import.meta.url), 'utf8')));
   const port = new AdbCompanionPort({ serial, adb: process.env.ADB || 'adb' });
   const endpoint = port.discover();
   const cue = new CompanionControlTransport({ token: endpoint.token,

@@ -13,7 +13,7 @@ import java.util.Locale;
  * <ul>
  * <li>the twelve monitor-map camera-button pixels, served by {@code WATCH} /
  *     {@code READ} to the camera rule behind the arm check
- *     ({@code models/camera-rule-moto-g56-v207.json});</li>
+ *     ({@code packages/play/profiles/fnaf2/moto-g56/camera-rule-moto-g56-v207.json});</li>
  * <li>the two bottom-control chevron strokes, published on every FNaF 2
  *     {@code FRAME} and read by {@code packages/adapters/src/button-strokes.js};</li>
  * <li>the 20x9 lattice the FNaF 2 screen identity and the grid-fitted monitor

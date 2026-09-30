@@ -26,9 +26,9 @@ import { phoneWallAt, planTimedStart, waitUntilHostMs } from './timed-start.js';
 import { DeviceCampaignRunner } from './campaign-runner.js';
 
 const TITLE_MODEL = new URL('../../../../packages/play/profiles/fnaf2/moto-g56/title-moto-g56-v207.json', import.meta.url);
-const CAMERA_RULE = new URL('../../../../models/camera-rule-moto-g56-v207.json', import.meta.url);
-const MONITOR_RULE = new URL('../../../../models/monitor-rule-moto-g56-v207.json', import.meta.url);
-const MASK_RULE = new URL('../../../../models/mask-rule-moto-g56-v207.json', import.meta.url);
+const CAMERA_RULE = new URL('../../../../packages/play/profiles/fnaf2/moto-g56/camera-rule-moto-g56-v207.json', import.meta.url);
+const MONITOR_RULE = new URL('../../../../packages/play/profiles/fnaf2/moto-g56/monitor-rule-moto-g56-v207.json', import.meta.url);
+const MASK_RULE = new URL('../../../../packages/play/profiles/fnaf2/moto-g56/mask-rule-moto-g56-v207.json', import.meta.url);
 const LIFECYCLE_OBSERVER = new URL('../../../../packages/play/src/sensors/screencap/lifecycle-observe.py', import.meta.url);
 const TITLE_OBSERVER = new URL('../../../../packages/play/src/sensors/screencap/title-observe.py', import.meta.url);
 const CUSTOM_NIGHT_READBACK = new URL('../../../../packages/play/bin/probe/custom-night-readback.py', import.meta.url);
@@ -893,7 +893,7 @@ export async function createCampaignPorts(options = {}) {
 
   // The Custom Night dial readback: packages/play/bin/probe/custom-night-readback.py over
   // a screenshot, with the measured calibration and the glyph fingerprints
-  // that sit beside it (models/custom-night-glyphs-v1.json). An explicit
+  // that sit beside it (packages/play/profiles/fnaf2/moto-g56/custom-night-glyphs-v1.json). An explicit
   // `configReadback` in options still wins (tests, fixtures).
   const configReadback = options.configReadback ?? (calibrationPath === null ? undefined
     : async ({ bridge: readBridge, serial: readSerial }) => {

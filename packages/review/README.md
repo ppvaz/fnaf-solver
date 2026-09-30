@@ -101,7 +101,9 @@ The video graders apply Play's screen predicate (`nightpredicate.py`, in
 `packages/play/src/sensors/screencap/`) through `sys.path`, so that a recording is
 judged by the rule the live night used. That is a Review-to-Play edge that
 `tools/architecture-test.js` does not see, because it reads JavaScript only. It
-is recorded here rather than hidden.
+is recorded here rather than hidden. `actuation-frame-metric.py` likewise reads
+its default monitor and mask rules, as data, from Play's
+`packages/play/profiles/fnaf2/moto-g56/`.
 
 ## Scripts
 

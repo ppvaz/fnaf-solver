@@ -68,7 +68,7 @@ menu_coord() {
     continue)    printf '%s' "$TAP_CONTINUE" ;;
     sixthNight)  printf '%s' "$TAP_6TH" ;;
     # Measured 2026-09-06 after the operator beat 6th Night and the item first
-    # appeared: see models/title-moto-g56-v207.json customNight_note. The row
+    # appeared: see packages/play/profiles/fnaf2/moto-g56/title-moto-g56-v207.json customNight_note. The row
     # was band-scanned independently; this is not a spacing-derived point.
     customNight) printf '%s' "$TAP_CUSTOM" ;;
     *)           echo "menu: not a MenuTarget: $1" >&2; return 3 ;;

@@ -3,7 +3,7 @@
 
 The fixtures prove conjunction and refusal behavior, not device thresholds or
 night-number recognition.  Real threshold evidence is recorded in
-``models/intro-card-moto-g56-v207.json``; no generated file is a device model.
+``packages/play/profiles/fnaf2/moto-g56/intro-card-moto-g56-v207.json``; no generated file is a device model.
 
     python3 make-intro-card-fixture.py OUTDIR
 """

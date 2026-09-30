@@ -17,7 +17,7 @@ Output is exactly one line on stdout:
     items=<comma-separated MenuTargets>   a confident read   (exit 0)
     unknown=<reason>                      refuse             (exit 3)
 
-`models/title-moto-g56-v207.json` is the measured model for the canonical build
+`packages/play/profiles/fnaf2/moto-g56/title-moto-g56-v207.json` is the measured model for the canonical build
 on the calibrated handset (2026-08-26, 26 frames). Its numbers, with their
 control:
 

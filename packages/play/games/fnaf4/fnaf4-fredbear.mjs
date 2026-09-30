@@ -2,7 +2,7 @@
  * Hearing Fredbear on the level's own grid, and the timing rules the FNaF 4
  * runner's Fredbear branch keeps (fnaf4-run.mjs). Pure: no device, no clock
  * of its own; every number comes from the hearing model
- * (models/hearing-fnaf4-fredbear-moto-g56-v204.json), which cites the run it
+ * (packages/play/profiles/fnaf4/moto-g56/hearing-fnaf4-fredbear-moto-g56-v204.json), which cites the run it
  * was measured on, and test-fnaf4-fredbear.mjs replays that run's derived rows.
  *
  * Why a grid: his side sounds (h26 landing left, h25 landing right, g239/g242)

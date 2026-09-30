@@ -189,7 +189,7 @@ import {{ parseMaskRule, maskRuleDigest, parseCalibrationStateRule }}
 import {{ monitorRuleDigest }} from './packages/play/src/sensors/fnaf2/monitor-rule.js';
 const mask = JSON.parse(readFileSync({json.dumps(str(fitted))}, 'utf8'));
 parseMaskRule(mask);
-const monitor = JSON.parse(readFileSync('models/monitor-rule-moto-g56-v207.json', 'utf8'));
+const monitor = JSON.parse(readFileSync('packages/play/profiles/fnaf2/moto-g56/monitor-rule-moto-g56-v207.json', 'utf8'));
 const state = {{ schema: 'calibration-state-v1', schema_version: 1, status: 'calibrated',
   fact: {{ id: 'calibrationState', labels: ['NIGHT', 'UP', 'DOWN', 'ON', 'OFF'] }},
   screen: {{ identity: 'FNAF2_NIGHT' }},
@@ -200,7 +200,7 @@ catch (error) {{ if (!/unproven darkness guard/.test(error.message)) process.exi
 """).returncode == 0)
 
     # -- The fitted handset artifact ------------------------------------------
-    handset = ROOT / "models" / "mask-rule-moto-g56-v207.json"
+    handset = ROOT / "packages" / "play" / "profiles" / "fnaf2" / "moto-g56" / "mask-rule-moto-g56-v207.json"
     check("the fitted handset mask rule round-trips", node(f"""
 import {{ readFileSync }} from 'node:fs';
 import {{ parseMaskRule }} from './packages/play/src/sensors/fnaf2/calibration-state-rule.js';

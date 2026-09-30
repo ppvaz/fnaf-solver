@@ -15,7 +15,7 @@
 //             no band behind it is a wish.
 //
 // The presets are read from the calibrated menu model
-// (`models/custom-night-moto-g56-v207.json`), not retyped here: that file is
+// (`packages/play/profiles/fnaf2/moto-g56/custom-night-moto-g56-v207.json`), not retyped here: that file is
 // what the phone's dial driver reads, so a preset this gate clears is the
 // preset the runner would actually set. The engine caps still clamp on apply
 // (g829/g830/g856-863), so a dial at 20 is Foxy 17, Golden Freddy 10 and 15

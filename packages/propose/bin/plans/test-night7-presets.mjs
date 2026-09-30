@@ -4,7 +4,7 @@
 // elsewhere in this repository:
 //
 //  1. The presets could drift from the file the phone's dial driver reads.
-//     They are loaded from `models/custom-night-moto-g56-v207.json`, so this
+//     They are loaded from `packages/play/profiles/fnaf2/moto-g56/custom-night-moto-g56-v207.json`, so this
 //     checks the ten are present, that every dial is one the engine knows, and
 //     that `golden-freddy` reduces to the night-7 table after the caps -- the
 //     control that proves the customNight path reaches the engine at all.
