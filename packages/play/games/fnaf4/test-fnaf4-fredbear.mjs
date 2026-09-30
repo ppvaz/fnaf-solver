@@ -9,7 +9,7 @@ import {
   HEARING_PATH, loadHearing, Grid, sideGrid, laughGrid, landings, laughs, walkSlot, quietTapAt, releaseAt, shadowOf,
 } from './fnaf4-fredbear.mjs';
 import { Actor, interruptibleSleep } from '../../bin/phone/night-kit.mjs';
-import { HidWireTransport } from '../../src/venues/phone/hid.js';
+import { HidWireTransport } from '../../src/venues/phone/hid.ts';
 
 const failures = [];
 let checks = 0;

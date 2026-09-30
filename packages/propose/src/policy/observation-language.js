@@ -47,7 +47,7 @@ export const VISUAL_READ_COST_SOURCE =
 // This is the modelled cadence the sensor was given, not a second measurement.
 export const VISUAL_CADENCE_MS = (OBSERVE_INTERVAL / C.FPS) * 1000;
 export const VISUAL_CADENCE_SOURCE =
-  'packages/play/src/venues/sim/observer.js OBSERVE_INTERVAL (~15 Hz, the measured device cadence)';
+  'packages/play/src/venues/sim/observer.ts OBSERVE_INTERVAL (~15 Hz, the measured device cadence)';
 
 // The g56's audio path is unmeasured and the ARM/HIT/MISS protocol that would
 // measure it does not exist (`plans/08-audio-cue-controller.md` §"The latency
@@ -65,7 +65,7 @@ export const AUDIO_READ_COST_SOURCE =
 // claim it.
 export const HOST_ROUND_TRIP_MS = UNKNOWN;
 export const HOST_ROUND_TRIP_SOURCE =
-  'packages/play/src/venues/sim/observer.js readDelayFrames (knob, default 0); packages/review/src/measure/bench-trace.js is host-only';
+  'packages/play/src/venues/sim/observer.ts readDelayFrames (knob, default 0); packages/review/src/measure/bench-trace.js is host-only';
 
 // Every fact below is served by a classifier whose threshold is NOT calibrated
 // on the projection scaler (`docs/device/ON-DEVICE-VALIDATION.md`: "the

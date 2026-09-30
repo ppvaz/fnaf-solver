@@ -8,14 +8,14 @@
     "@sixam/source": "file:../source"
   },
   "exports": {
-    ".": "./src/index.js",
-    "./phone/*": "./src/phone/*.js",
-    "./venues/phone/*": "./src/venues/phone/*.js",
-    "./sensors/fnaf2/*": "./src/sensors/fnaf2/*.js",
-    "./campaign/*": "./src/campaign/*.js",
-    "./coach/*": "./src/coach/*.js",
-    "./sim": "./src/venues/sim/index.js",
-    "./player": "./src/player/index.js",
-    "./clocks": "./src/clocks/index.js"
+    ".": "./src/index.ts",
+    "./phone/*": "./src/phone/*.ts",
+    "./venues/phone/*": "./src/venues/phone/*.ts",
+    "./sensors/fnaf2/*": "./src/sensors/fnaf2/*.ts",
+    "./campaign/*": "./src/campaign/*.ts",
+    "./coach/*": "./src/coach/*.ts",
+    "./sim": "./src/venues/sim/index.ts",
+    "./player": "./src/player/index.ts",
+    "./clocks": "./src/clocks/index.ts"
   }
 }

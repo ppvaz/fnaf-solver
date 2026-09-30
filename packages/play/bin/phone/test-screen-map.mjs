@@ -12,7 +12,7 @@
 // hid-controls.txt, which the transport derives from the bundle's profile
 // (hidControlsText). One transform remains:
 //
-//   packages/play/src/venues/phone/hid.js    Math.floor   the campaign executor
+//   packages/play/src/venues/phone/hid.ts    Math.floor   the campaign executor
 //
 // and this holds every committed Companion bundle's controls file to it.
 import { createHash } from 'node:crypto';

@@ -6,7 +6,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { stableHash } from '@sixam/kernel/contracts';
-import { compileDeviceLocalHidSchedule } from '../src/campaign/hid-schedule.js';
+import { compileDeviceLocalHidSchedule } from '../src/campaign/hid-schedule.ts';
 
 const profile = JSON.parse(await readFile(new URL('../../../packages/play/profiles/fnaf2/moto-g56/hid-mediaprojection.json', import.meta.url), 'utf8'));
 const timing = { periodMs: 5000, loopStartMs: 0, stopAtMs: 5000, observeUntilMs: 5000, idleUntilMs: 0 };

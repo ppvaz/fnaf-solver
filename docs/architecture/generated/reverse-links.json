@@ -58,7 +58,7 @@
     {
       "id": "contract.calibration-state-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/sensors/fnaf2/calibration-state-rule.js",
+      "path": "packages/play/src/sensors/fnaf2/calibration-state-rule.ts",
       "line": 14,
       "relation": "REFERENCES"
     },
@@ -77,7 +77,7 @@
     {
       "id": "contract.camera-rule-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/sensors/fnaf2/camera-rule.js",
+      "path": "packages/play/src/sensors/fnaf2/camera-rule.ts",
       "line": 15,
       "relation": "REFERENCES"
     },
@@ -97,7 +97,7 @@
     {
       "id": "contract.campaign-proof-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/campaign/campaign-proof.js",
+      "path": "packages/play/src/campaign/campaign-proof.ts",
       "line": 3,
       "relation": "REFERENCES"
     },
@@ -160,7 +160,7 @@
     {
       "id": "contract.companion-status-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/venues/phone/companion-status.js",
+      "path": "packages/play/src/venues/phone/companion-status.ts",
       "line": 13,
       "relation": "REFERENCES"
     },
@@ -180,7 +180,7 @@
     {
       "id": "contract.control-exclusion-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/phone/control-exclusion.js",
+      "path": "packages/play/src/phone/control-exclusion.ts",
       "line": 9,
       "relation": "REFERENCES"
     },
@@ -226,36 +226,36 @@
     {
       "id": "contract.cue-helper-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/campaign/physical-ports.js",
+      "path": "packages/play/src/campaign/physical-ports.ts",
       "line": 9,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.cue-helper-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/coach/cycle-lesson.js",
+      "path": "packages/play/src/coach/cycle-lesson.ts",
       "line": 8,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.cue-helper-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/venues/phone/companion.js",
+      "path": "packages/play/src/venues/phone/companion.ts",
       "line": 5,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.cue-helper-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/venues/phone/companion.js",
-      "line": 31,
+      "path": "packages/play/src/venues/phone/companion.ts",
+      "line": 29,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.cue-helper-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/venues/phone/companion.js",
-      "line": 48,
+      "path": "packages/play/src/venues/phone/companion.ts",
+      "line": 46,
       "relation": "REFERENCES"
     },
     {
@@ -273,7 +273,7 @@
     {
       "id": "contract.custom-night-config-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/campaign/custom-night.js",
+      "path": "packages/play/src/campaign/custom-night.ts",
       "line": 7,
       "relation": "REFERENCES"
     },
@@ -292,14 +292,14 @@
     {
       "id": "contract.device-adb-preflight-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/campaign/adb-bridge.js",
+      "path": "packages/play/src/campaign/adb-bridge.ts",
       "line": 19,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.device-adb-preflight-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/campaign/companion-capture.js",
+      "path": "packages/play/src/campaign/companion-capture.ts",
       "line": 5,
       "relation": "REFERENCES"
     },
@@ -324,7 +324,7 @@
     {
       "id": "contract.device-campaign-preflight-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/campaign/campaign-preflight.js",
+      "path": "packages/play/src/campaign/campaign-preflight.ts",
       "line": 12,
       "relation": "REFERENCES"
     },
@@ -356,21 +356,21 @@
     {
       "id": "contract.device-campaign-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/campaign/campaign-runner.js",
+      "path": "packages/play/src/campaign/campaign-runner.ts",
       "line": 8,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.device-campaign-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/campaign/campaign.js",
+      "path": "packages/play/src/campaign/campaign.ts",
       "line": 13,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.device-campaign-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/campaign/modern-campaign-ports.js",
+      "path": "packages/play/src/campaign/modern-campaign-ports.ts",
       "line": 8,
       "relation": "REFERENCES"
     },
@@ -389,28 +389,28 @@
     {
       "id": "contract.device-executor-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/campaign/adb-device-local-executor.js",
+      "path": "packages/play/src/campaign/adb-device-local-executor.ts",
       "line": 12,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.device-executor-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/campaign/artifact-executor.js",
+      "path": "packages/play/src/campaign/artifact-executor.ts",
       "line": 8,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.device-executor-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/campaign/device-local-executor.js",
+      "path": "packages/play/src/campaign/device-local-executor.ts",
       "line": 9,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.device-executor-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/campaign/modern-campaign-ports.js",
+      "path": "packages/play/src/campaign/modern-campaign-ports.ts",
       "line": 8,
       "relation": "REFERENCES"
     },
@@ -555,28 +555,28 @@
     {
       "id": "contract.hid-executor-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/campaign/adb-device-local-executor.js",
+      "path": "packages/play/src/campaign/adb-device-local-executor.ts",
       "line": 12,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.hid-executor-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/campaign/hid-schedule.js",
+      "path": "packages/play/src/campaign/hid-schedule.ts",
       "line": 6,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.hid-executor-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/campaign/physical-ports.js",
+      "path": "packages/play/src/campaign/physical-ports.ts",
       "line": 9,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.hid-executor-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/venues/phone/hid.js",
+      "path": "packages/play/src/venues/phone/hid.ts",
       "line": 6,
       "relation": "REFERENCES"
     },
@@ -614,7 +614,7 @@
     {
       "id": "contract.monitor-rule-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/sensors/fnaf2/monitor-rule.js",
+      "path": "packages/play/src/sensors/fnaf2/monitor-rule.ts",
       "line": 16,
       "relation": "REFERENCES"
     },
@@ -717,7 +717,7 @@
     {
       "id": "contract.qualification-v2",
       "kind": "CONTRACT",
-      "path": "packages/play/src/campaign/campaign-preflight.js",
+      "path": "packages/play/src/campaign/campaign-preflight.ts",
       "line": 12,
       "relation": "REFERENCES"
     },
@@ -743,7 +743,7 @@
     {
       "id": "contract.semantic-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/sensors/fnaf2/button-strokes.js",
+      "path": "packages/play/src/sensors/fnaf2/button-strokes.ts",
       "line": 18,
       "relation": "REFERENCES"
     },
@@ -889,7 +889,7 @@
     {
       "id": "contract.venue-binding-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/campaign/venue.js",
+      "path": "packages/play/src/campaign/venue.ts",
       "line": 13,
       "relation": "REFERENCES"
     },
@@ -915,7 +915,7 @@
     {
       "id": "contract.venue-check-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/campaign/adb-bridge.js",
+      "path": "packages/play/src/campaign/adb-bridge.ts",
       "line": 19,
       "relation": "REFERENCES"
     },
@@ -941,7 +941,7 @@
     {
       "id": "contract.venue-identity-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/phone/android-venue.js",
+      "path": "packages/play/src/phone/android-venue.ts",
       "line": 17,
       "relation": "REFERENCES"
     },

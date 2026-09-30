@@ -41,7 +41,7 @@ import { FPS } from '@sixam/source/fnaf2';
 import { compileBundle } from './bundle.mjs';
 import { runNight, loadPresets, PRESET_KNOBS } from './night7-presets.mjs';
 import { forkBlocks, gitState } from '../census/winner-census.mjs';
-import { DEFAULT_LATCH_HOLD_MS, DEFAULT_MIN_LEAD_MS } from '../../../play/src/campaign/night-anchor.js';
+import { DEFAULT_LATCH_HOLD_MS, DEFAULT_MIN_LEAD_MS } from '../../../play/src/campaign/night-anchor.ts';
 import { heldOutSeeds, nightBindings } from '../census/winner-phase-census.mjs';
 import { winnerTag } from '@sixam/kernel';
 

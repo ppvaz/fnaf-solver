@@ -27,8 +27,8 @@ import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { performance } from 'node:perf_hooks';
-import { AdbCompanionPort, AdbHidProcess } from '../../src/campaign/physical-ports.js';
-import { HidWireTransport } from '../../src/venues/phone/hid.js';
+import { AdbCompanionPort, AdbHidProcess } from '../../src/campaign/physical-ports.ts';
+import { HidWireTransport } from '../../src/venues/phone/hid.ts';
 import { resolveSerial } from './local-profile.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..');

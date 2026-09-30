@@ -14,12 +14,12 @@ import { tmpdir } from 'node:os';
 import { stableHash } from '@sixam/kernel/contracts';
 import {
   AdbDeviceLocalArtifactExecutor, OBSERVER_INTERVAL_BOUND_MS, STATIC_TERMINAL_MAX_MS, STATIC_TERMINAL_WAIT_MS,
-} from '../src/campaign/adb-device-local-executor.js';
-import { SHARED_HID_RELEASE } from '../src/campaign/hid-schedule.js';
+} from '../src/campaign/adb-device-local-executor.ts';
+import { SHARED_HID_RELEASE } from '../src/campaign/hid-schedule.ts';
 
 const RECORD_PATH = 'docs/evidence/static-terminal-window-20260927.json';
 const record = JSON.parse(await readFile(new URL(`../../../${RECORD_PATH}`, import.meta.url), 'utf8'));
-const executorSource = await readFile(new URL('../src/campaign/adb-device-local-executor.js', import.meta.url), 'utf8');
+const executorSource = await readFile(new URL('../src/campaign/adb-device-local-executor.ts', import.meta.url), 'utf8');
 
 // --- The constant is the record's measurement plus its named margin ---------
 assert.equal(record.schema, 'static-terminal-window-v1');

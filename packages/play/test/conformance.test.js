@@ -1,8 +1,8 @@
 /** Adapter conformance: the HID wire, the Companion transport, clocks and the detection rules the campaign reads. */
 import assert from 'node:assert/strict';
-import { Clock } from '../src/phone/clocks.js';
-import { HID_DESCRIPTOR, HidWireTransport, toRaw, report } from '../src/venues/phone/hid.js';
-import { CompanionControlTransport, parseCueResponse } from '../src/venues/phone/companion.js';
+import { Clock } from '../src/phone/clocks.ts';
+import { HID_DESCRIPTOR, HidWireTransport, toRaw, report } from '../src/venues/phone/hid.ts';
+import { CompanionControlTransport, parseCueResponse } from '../src/venues/phone/companion.ts';
 
 assert.deepEqual(new Clock({ name: 'simulator-frame', read: () => 7 }).now(), { clock: 'simulator-frame', value: 7 });
 assert.deepEqual(toRaw([2275, 685]), [877, 1023], 'HID transform must truncate at the adapter boundary');

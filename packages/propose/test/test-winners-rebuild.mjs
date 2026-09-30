@@ -18,8 +18,8 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compileBundle } from '../bin/plans/bundle.mjs';
-import { makeCampaignSpec } from '../../play/src/campaign/campaign.js';
-import { validateCampaignBundle } from '../../play/src/campaign/campaign-bundle.js';
+import { makeCampaignSpec } from '../../play/src/campaign/campaign.ts';
+import { validateCampaignBundle } from '../../play/src/campaign/campaign-bundle.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '../../..');

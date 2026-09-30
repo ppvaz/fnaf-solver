@@ -21,7 +21,7 @@
 import { writeFileSync, mkdirSync, readFileSync, appendFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { deflateSync } from 'node:zlib';
-import { AdbCompanionPort } from '../../src/campaign/physical-ports.js';
+import { AdbCompanionPort } from '../../src/campaign/physical-ports.ts';
 import { resolveSerial } from './local-profile.mjs';
 
 function fail(message) { console.error(`native-regions: ${message}`); process.exit(2); }

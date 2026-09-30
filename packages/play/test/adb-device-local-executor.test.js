@@ -4,10 +4,10 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { stableHash } from '@sixam/kernel/contracts';
-import { AdbDeviceLocalArtifactExecutor } from '../src/campaign/adb-device-local-executor.js';
-import { compileDeviceLocalHidSchedule, sharedScheduleBody } from '../src/campaign/hid-schedule.js';
-import { renderDeviceLocalScript } from '../src/campaign/device-shell.js';
-import { expandNightBlocks } from '../src/campaign/device-local-executor.js';
+import { AdbDeviceLocalArtifactExecutor } from '../src/campaign/adb-device-local-executor.ts';
+import { compileDeviceLocalHidSchedule, sharedScheduleBody } from '../src/campaign/hid-schedule.ts';
+import { renderDeviceLocalScript } from '../src/campaign/device-shell.ts';
+import { expandNightBlocks } from '../src/campaign/device-local-executor.ts';
 
 const profile = JSON.parse(await readFile(new URL('../../../packages/play/profiles/fnaf2/moto-g56/hid-mediaprojection.json', import.meta.url), 'utf8'));
 const timing = { periodMs: 1000, loopStartMs: 0, stopAtMs: 3000, observeUntilMs: 3000, idleUntilMs: 0 };

@@ -22,9 +22,9 @@
         "../../../packages/play/games/fnaf1/fnaf1-detectors.mjs",
         "../../../packages/play/games/fnaf1/fnaf1-menu-probe.mjs",
         "../../../packages/play/games/fnaf1/fnaf1-winner.mjs",
-        "../../../packages/play/src/campaign/adb-bridge.js",
-        "../../../packages/play/src/campaign/physical-ports.js",
-        "../../../packages/play/src/venues/phone/hid.js",
+        "../../../packages/play/src/campaign/adb-bridge.ts",
+        "../../../packages/play/src/campaign/physical-ports.ts",
+        "../../../packages/play/src/venues/phone/hid.ts",
         "../../../packages/propose/bin/census/fnaf1-device-lane.mjs",
         "node:crypto",
         "node:fs",
@@ -253,7 +253,7 @@
       "imports": [
         "../../../packages/play/bin/phone/native-regions.mjs",
         "../../../packages/play/games/fnaf1/fnaf1-detectors.mjs",
-        "../../../packages/play/src/venues/phone/companion.js",
+        "../../../packages/play/src/venues/phone/companion.ts",
         "../bin/fnaf1-custom-run.mjs",
         "node:fs"
       ]
@@ -704,7 +704,7 @@
     {
       "file": "packages/play/bin/companion/audio-probe.mjs",
       "imports": [
-        "../../src/campaign/physical-ports.js",
+        "../../src/campaign/physical-ports.ts",
         "../phone/local-profile.mjs",
         "node:fs"
       ]
@@ -763,8 +763,8 @@
     {
       "file": "packages/play/bin/phone/explore-step.mjs",
       "imports": [
-        "../../src/campaign/physical-ports.js",
-        "../../src/venues/phone/hid.js",
+        "../../src/campaign/physical-ports.ts",
+        "../../src/venues/phone/hid.ts",
         "./local-profile.mjs",
         "node:child_process",
         "node:fs",
@@ -793,14 +793,14 @@
     {
       "file": "packages/play/bin/phone/native-frame.mjs",
       "imports": [
-        "../../src/campaign/physical-ports.js",
+        "../../src/campaign/physical-ports.ts",
         "./local-profile.mjs"
       ]
     },
     {
       "file": "packages/play/bin/phone/native-regions.mjs",
       "imports": [
-        "../../src/campaign/physical-ports.js",
+        "../../src/campaign/physical-ports.ts",
         "./local-profile.mjs",
         "node:fs",
         "node:path",
@@ -822,7 +822,7 @@
     {
       "file": "packages/play/bin/phone/test-control-anchor.mjs",
       "imports": [
-        "../../src/phone/control-anchor.js",
+        "../../src/phone/control-anchor.ts",
         "@sixam/source",
         "node:assert/strict",
         "node:fs",
@@ -881,7 +881,7 @@
     {
       "file": "packages/play/bin/probe/intersection-state-gate.mjs",
       "imports": [
-        "../../src/campaign/physical-ports.js",
+        "../../src/campaign/physical-ports.ts",
         "@sixam/play",
         "node:fs",
         "node:fs/promises",
@@ -915,7 +915,7 @@
     {
       "file": "packages/play/bin/recompile/capture-latency.mjs",
       "imports": [
-        "../../src/campaign/physical-ports.js",
+        "../../src/campaign/physical-ports.ts",
         "../phone/local-profile.mjs",
         "node:child_process",
         "node:crypto",
@@ -981,9 +981,9 @@
       "file": "packages/play/games/fnaf1/fnaf1-menu-probe.mjs",
       "imports": [
         "../../bin/phone/local-profile.mjs",
-        "../../src/campaign/adb-bridge.js",
-        "../../src/campaign/physical-ports.js",
-        "../../src/venues/phone/hid.js",
+        "../../src/campaign/adb-bridge.ts",
+        "../../src/campaign/physical-ports.ts",
+        "../../src/venues/phone/hid.ts",
         "node:child_process",
         "node:crypto",
         "node:fs",
@@ -998,9 +998,9 @@
       "file": "packages/play/games/fnaf1/fnaf1-night-run.mjs",
       "imports": [
         "../../bin/phone/local-profile.mjs",
-        "../../src/campaign/adb-bridge.js",
-        "../../src/campaign/physical-ports.js",
-        "../../src/venues/phone/hid.js",
+        "../../src/campaign/adb-bridge.ts",
+        "../../src/campaign/physical-ports.ts",
+        "../../src/venues/phone/hid.ts",
         "node:child_process",
         "node:crypto",
         "node:fs",
@@ -1058,8 +1058,8 @@
         "../../bin/phone/local-profile.mjs",
         "../../bin/phone/native-regions.mjs",
         "../../bin/phone/night-kit.mjs",
-        "../../src/campaign/physical-ports.js",
-        "../../src/venues/phone/hid.js",
+        "../../src/campaign/physical-ports.ts",
+        "../../src/venues/phone/hid.ts",
         "./fnaf3-detectors.mjs",
         "node:child_process",
         "node:crypto",
@@ -1104,8 +1104,8 @@
         "../../bin/phone/local-profile.mjs",
         "../../bin/phone/native-regions.mjs",
         "../../bin/phone/night-kit.mjs",
-        "../../src/campaign/physical-ports.js",
-        "../../src/venues/phone/hid.js",
+        "../../src/campaign/physical-ports.ts",
+        "../../src/venues/phone/hid.ts",
         "./fnaf4-fredbear.mjs",
         "node:child_process",
         "node:crypto",
@@ -1121,7 +1121,7 @@
       "file": "packages/play/games/fnaf4/test-fnaf4-fredbear.mjs",
       "imports": [
         "../../bin/phone/night-kit.mjs",
-        "../../src/venues/phone/hid.js",
+        "../../src/venues/phone/hid.ts",
         "./fnaf4-fredbear.mjs",
         "./fnaf4-run.mjs",
         "node:crypto",
@@ -1129,10 +1129,10 @@
       ]
     },
     {
-      "file": "packages/play/src/campaign/adb-bridge.js",
+      "file": "packages/play/src/campaign/adb-bridge.ts",
       "imports": [
-        "./companion-capture.js",
-        "./physical-ports.js",
+        "./companion-capture.ts",
+        "./physical-ports.ts",
         "@sixam/kernel/contracts",
         "@sixam/play",
         "node:child_process",
@@ -1140,74 +1140,74 @@
       ]
     },
     {
-      "file": "packages/play/src/campaign/adb-device-local-executor.js",
+      "file": "packages/play/src/campaign/adb-device-local-executor.ts",
       "imports": [
-        "./artifact-executor.js",
-        "./control-effect.js",
-        "./device-shell.js",
-        "./hid-schedule.js",
+        "./artifact-executor.ts",
+        "./control-effect.ts",
+        "./device-shell.ts",
+        "./hid-schedule.ts",
         "@sixam/play",
         "node:child_process",
         "node:util"
       ]
     },
     {
-      "file": "packages/play/src/campaign/artifact-executor.js",
+      "file": "packages/play/src/campaign/artifact-executor.ts",
       "imports": [
         "@sixam/kernel/contracts",
         "@sixam/source"
       ]
     },
     {
-      "file": "packages/play/src/campaign/campaign-bundle.js",
+      "file": "packages/play/src/campaign/campaign-bundle.ts",
       "imports": [
-        "./artifact-executor.js",
-        "./campaign.js",
+        "./artifact-executor.ts",
+        "./campaign.ts",
         "@sixam/kernel/contracts",
         "node:crypto"
       ]
     },
     {
-      "file": "packages/play/src/campaign/campaign-composition.js",
+      "file": "packages/play/src/campaign/campaign-composition.ts",
       "imports": [
-        "./campaign-bundle.js",
-        "./campaign-runner.js"
+        "./campaign-bundle.ts",
+        "./campaign-runner.ts"
       ]
     },
     {
-      "file": "packages/play/src/campaign/campaign-preflight.js",
+      "file": "packages/play/src/campaign/campaign-preflight.ts",
       "imports": [
-        "./adb-bridge.js",
-        "./campaign.js",
-        "./custom-night.js",
+        "./adb-bridge.ts",
+        "./campaign.ts",
+        "./custom-night.ts",
         "@sixam/kernel/contracts"
       ]
     },
     {
-      "file": "packages/play/src/campaign/campaign-proof.js",
+      "file": "packages/play/src/campaign/campaign-proof.ts",
       "imports": [
-        "./custom-night.js",
+        "./custom-night.ts",
         "@sixam/kernel/contracts",
         "@sixam/source/fnaf2"
       ]
     },
     {
-      "file": "packages/play/src/campaign/campaign-runner.js",
+      "file": "packages/play/src/campaign/campaign-runner.ts",
       "imports": [
-        "./campaign-proof.js",
-        "./campaign.js"
+        "./campaign-proof.ts",
+        "./campaign.ts"
       ]
     },
     {
-      "file": "packages/play/src/campaign/campaign.js",
+      "file": "packages/play/src/campaign/campaign.ts",
       "imports": [
-        "./custom-night.js",
+        "./custom-night.ts",
         "@sixam/kernel/contracts",
         "@sixam/source/fnaf2"
       ]
     },
     {
-      "file": "packages/play/src/campaign/companion-capture.js",
+      "file": "packages/play/src/campaign/companion-capture.ts",
       "imports": [
         "node:child_process",
         "node:url",
@@ -1215,40 +1215,40 @@
       ]
     },
     {
-      "file": "packages/play/src/campaign/custom-night.js",
+      "file": "packages/play/src/campaign/custom-night.ts",
       "imports": [
         "@sixam/source/fnaf2"
       ]
     },
     {
-      "file": "packages/play/src/campaign/device-local-executor.js",
+      "file": "packages/play/src/campaign/device-local-executor.ts",
       "imports": [
-        "./artifact-executor.js"
+        "./artifact-executor.ts"
       ]
     },
     {
-      "file": "packages/play/src/campaign/hid-schedule.js",
+      "file": "packages/play/src/campaign/hid-schedule.ts",
       "imports": [
-        "./artifact-executor.js",
-        "./device-local-executor.js",
+        "./artifact-executor.ts",
+        "./device-local-executor.ts",
         "@sixam/play",
         "@sixam/source"
       ]
     },
     {
-      "file": "packages/play/src/campaign/modern-campaign-ports.js",
+      "file": "packages/play/src/campaign/modern-campaign-ports.ts",
       "imports": [
-        "../coach/cycle-lesson.js",
-        "./adb-bridge.js",
-        "./adb-device-local-executor.js",
-        "./campaign-bundle.js",
-        "./campaign-composition.js",
-        "./campaign-runner.js",
-        "./custom-night.js",
-        "./night-anchor.js",
-        "./physical-ports.js",
-        "./timed-start.js",
-        "./venue.js",
+        "../coach/cycle-lesson.ts",
+        "./adb-bridge.ts",
+        "./adb-device-local-executor.ts",
+        "./campaign-bundle.ts",
+        "./campaign-composition.ts",
+        "./campaign-runner.ts",
+        "./custom-night.ts",
+        "./night-anchor.ts",
+        "./physical-ports.ts",
+        "./timed-start.ts",
+        "./venue.ts",
         "@sixam/play",
         "node:child_process",
         "node:fs",
@@ -1258,118 +1258,119 @@
       ]
     },
     {
-      "file": "packages/play/src/campaign/night-anchor.js",
+      "file": "packages/play/src/campaign/night-anchor.ts",
       "imports": [
         "@sixam/play/phone/night-onset"
       ]
     },
     {
-      "file": "packages/play/src/campaign/physical-ports.js",
+      "file": "packages/play/src/campaign/physical-ports.ts",
       "imports": [
         "@sixam/play/venues/phone/companion",
         "@sixam/play/venues/phone/companion-status",
         "node:child_process",
         "node:fs",
-        "node:net"
+        "node:net",
+        "node:stream"
       ]
     },
     {
-      "file": "packages/play/src/campaign/venue.js",
+      "file": "packages/play/src/campaign/venue.ts",
       "imports": [
-        "./adb-bridge.js",
+        "./adb-bridge.ts",
         "@sixam/kernel/contracts",
         "node:fs/promises",
         "node:path"
       ]
     },
     {
-      "file": "packages/play/src/clocks/index.js",
+      "file": "packages/play/src/clocks/index.ts",
       "imports": [
-        "./phase-clock.js"
+        "./phase-clock.ts"
       ]
     },
     {
-      "file": "packages/play/src/coach/cycle-lesson.js",
+      "file": "packages/play/src/coach/cycle-lesson.ts",
       "imports": [
         "node:crypto"
       ]
     },
     {
-      "file": "packages/play/src/index.js",
+      "file": "packages/play/src/index.ts",
       "imports": [
-        "./phone/android-venue.js",
-        "./phone/clocks.js",
-        "./phone/control-anchor.js",
-        "./phone/control-exclusion.js",
-        "./sensors/fnaf2/button-strokes.js",
-        "./sensors/fnaf2/calibration-state-rule.js",
-        "./sensors/fnaf2/camera-rule.js",
-        "./sensors/fnaf2/monitor-rule.js",
-        "./venues/phone/companion-status.js",
-        "./venues/phone/companion.js",
-        "./venues/phone/hid.js"
+        "./phone/android-venue.ts",
+        "./phone/clocks.ts",
+        "./phone/control-anchor.ts",
+        "./phone/control-exclusion.ts",
+        "./sensors/fnaf2/button-strokes.ts",
+        "./sensors/fnaf2/calibration-state-rule.ts",
+        "./sensors/fnaf2/camera-rule.ts",
+        "./sensors/fnaf2/monitor-rule.ts",
+        "./venues/phone/companion-status.ts",
+        "./venues/phone/companion.ts",
+        "./venues/phone/hid.ts"
       ]
     },
     {
-      "file": "packages/play/src/phone/android-venue.js",
+      "file": "packages/play/src/phone/android-venue.ts",
       "imports": [
         "@sixam/kernel/contracts",
         "node:crypto"
       ]
     },
     {
-      "file": "packages/play/src/phone/clocks.js",
+      "file": "packages/play/src/phone/clocks.ts",
       "imports": [
         "@sixam/kernel/time"
       ]
     },
     {
-      "file": "packages/play/src/player/belief-state.js",
+      "file": "packages/play/src/player/belief-state.ts",
       "imports": [
-        "./plain-clone.js"
+        "./plain-clone.ts"
       ]
     },
     {
-      "file": "packages/play/src/player/estimator.js",
+      "file": "packages/play/src/player/estimator.ts",
       "imports": [
-        "./belief-state.js",
-        "./plain-clone.js"
+        "./belief-state.ts",
+        "./plain-clone.ts"
       ]
     },
     {
-      "file": "packages/play/src/player/index.js",
+      "file": "packages/play/src/player/index.ts",
       "imports": [
-        "./belief-state.js",
-        "./estimator.js"
+        "./belief-state.ts",
+        "./estimator.ts"
       ]
     },
     {
-      "file": "packages/play/src/sensors/fnaf2/calibration-state-rule.js",
+      "file": "packages/play/src/sensors/fnaf2/calibration-state-rule.ts",
       "imports": [
-        "./monitor-rule.js",
+        "./monitor-rule.ts",
         "node:crypto"
       ]
     },
     {
-      "file": "packages/play/src/sensors/fnaf2/camera-rule.js",
-      "imports": [
-        "node:crypto"
-      ]
-    },
-    {
-      "file": "packages/play/src/sensors/fnaf2/monitor-rule.js",
+      "file": "packages/play/src/sensors/fnaf2/camera-rule.ts",
       "imports": [
         "node:crypto"
       ]
     },
     {
-      "file": "packages/play/src/venues/sim/index.js",
+      "file": "packages/play/src/sensors/fnaf2/monitor-rule.ts",
       "imports": [
-        "./observer.js"
+        "node:crypto"
       ]
     },
     {
-      "file": "packages/play/src/venues/sim/observer.js",
+      "file": "packages/play/src/venues/sim/index.ts",
+      "imports": [
+        "./observer.ts"
+      ]
+    },
+    {
+      "file": "packages/play/src/venues/sim/observer.ts",
       "imports": [
         "@sixam/source/games/fnaf2/config.ts"
       ]
@@ -1377,9 +1378,9 @@
     {
       "file": "packages/play/test/adb-bridge.test.js",
       "imports": [
-        "../src/campaign/adb-bridge.js",
-        "../src/campaign/companion-capture.js",
-        "../src/campaign/physical-ports.js",
+        "../src/campaign/adb-bridge.ts",
+        "../src/campaign/companion-capture.ts",
+        "../src/campaign/physical-ports.ts",
         "node:assert/strict",
         "node:fs",
         "node:os",
@@ -1389,10 +1390,10 @@
     {
       "file": "packages/play/test/adb-device-local-executor.test.js",
       "imports": [
-        "../src/campaign/adb-device-local-executor.js",
-        "../src/campaign/device-local-executor.js",
-        "../src/campaign/device-shell.js",
-        "../src/campaign/hid-schedule.js",
+        "../src/campaign/adb-device-local-executor.ts",
+        "../src/campaign/device-local-executor.ts",
+        "../src/campaign/device-shell.ts",
+        "../src/campaign/hid-schedule.ts",
         "@sixam/kernel/contracts",
         "node:assert/strict",
         "node:fs",
@@ -1404,7 +1405,7 @@
     {
       "file": "packages/play/test/android-venue.test.js",
       "imports": [
-        "../src/phone/android-venue.js",
+        "../src/phone/android-venue.ts",
         "@sixam/kernel/contracts",
         "node:assert/strict",
         "node:crypto",
@@ -1428,16 +1429,16 @@
     {
       "file": "packages/play/test/camera-rule.test.js",
       "imports": [
-        "../src/sensors/fnaf2/camera-rule.js",
+        "../src/sensors/fnaf2/camera-rule.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/play/test/campaign-composition.test.js",
       "imports": [
-        "../src/campaign/campaign-bundle.js",
-        "../src/campaign/campaign-composition.js",
-        "../src/campaign/campaign.js",
+        "../src/campaign/campaign-bundle.ts",
+        "../src/campaign/campaign-composition.ts",
+        "../src/campaign/campaign.ts",
         "node:assert/strict",
         "node:fs/promises",
         "node:url"
@@ -1446,11 +1447,11 @@
     {
       "file": "packages/play/test/campaign-infrastructure.test.js",
       "imports": [
-        "../src/campaign/campaign-bundle.js",
-        "../src/campaign/campaign-preflight.js",
-        "../src/campaign/campaign.js",
-        "../src/campaign/custom-night.js",
-        "../src/campaign/device-local-executor.js",
+        "../src/campaign/campaign-bundle.ts",
+        "../src/campaign/campaign-preflight.ts",
+        "../src/campaign/campaign.ts",
+        "../src/campaign/custom-night.ts",
+        "../src/campaign/device-local-executor.ts",
         "node:assert/strict",
         "node:fs/promises",
         "node:url"
@@ -1459,15 +1460,15 @@
     {
       "file": "packages/play/test/campaign-runner.test.js",
       "imports": [
-        "../src/campaign/campaign-runner.js",
-        "../src/campaign/campaign.js",
+        "../src/campaign/campaign-runner.ts",
+        "../src/campaign/campaign.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/play/test/campaign-signal.test.js",
       "imports": [
-        "../src/campaign/campaign-signal.js",
+        "../src/campaign/campaign-signal.ts",
         "node:assert/strict",
         "node:events"
       ]
@@ -1475,8 +1476,8 @@
     {
       "file": "packages/play/test/campaign.test.js",
       "imports": [
-        "../src/campaign/campaign-proof.js",
-        "../src/campaign/campaign.js",
+        "../src/campaign/campaign-proof.ts",
+        "../src/campaign/campaign.ts",
         "@sixam/source/fnaf2",
         "node:assert/strict"
       ]
@@ -1491,7 +1492,7 @@
     {
       "file": "packages/play/test/companion-status.test.js",
       "imports": [
-        "../src/venues/phone/companion-status.js",
+        "../src/venues/phone/companion-status.ts",
         "node:assert/strict",
         "node:fs"
       ]
@@ -1499,23 +1500,23 @@
     {
       "file": "packages/play/test/conformance.test.js",
       "imports": [
-        "../src/phone/clocks.js",
-        "../src/venues/phone/companion.js",
-        "../src/venues/phone/hid.js",
+        "../src/phone/clocks.ts",
+        "../src/venues/phone/companion.ts",
+        "../src/venues/phone/hid.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/play/test/control-exclusion.test.js",
       "imports": [
-        "../src/phone/control-exclusion.js",
+        "../src/phone/control-exclusion.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/play/test/cycle-lesson.test.js",
       "imports": [
-        "../src/coach/cycle-lesson.js",
+        "../src/coach/cycle-lesson.ts",
         "node:assert/strict",
         "node:fs",
         "node:url"
@@ -1530,7 +1531,7 @@
     {
       "file": "packages/play/test/hid-read-gap.test.js",
       "imports": [
-        "../src/campaign/hid-schedule.js",
+        "../src/campaign/hid-schedule.ts",
         "@sixam/kernel/contracts",
         "node:assert/strict",
         "node:fs/promises"
@@ -1547,7 +1548,7 @@
     {
       "file": "packages/play/test/hid-second-contact.test.js",
       "imports": [
-        "../src/campaign/hid-schedule.js",
+        "../src/campaign/hid-schedule.ts",
         "@sixam/kernel/contracts",
         "node:assert/strict",
         "node:fs/promises"
@@ -1556,8 +1557,8 @@
     {
       "file": "packages/play/test/modern-campaign-terminal.test.js",
       "imports": [
-        "../src/campaign/modern-campaign-ports.js",
-        "../src/campaign/venue.js",
+        "../src/campaign/modern-campaign-ports.ts",
+        "../src/campaign/venue.ts",
         "@sixam/kernel/contracts",
         "node:assert/strict",
         "node:test"
@@ -1566,14 +1567,14 @@
     {
       "file": "packages/play/test/monitor-rule.test.js",
       "imports": [
-        "../src/sensors/fnaf2/monitor-rule.js",
+        "../src/sensors/fnaf2/monitor-rule.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/play/test/night-anchor.test.js",
       "imports": [
-        "../src/campaign/night-anchor.js",
+        "../src/campaign/night-anchor.ts",
         "node:assert/strict"
       ]
     },
@@ -1602,8 +1603,8 @@
     {
       "file": "packages/play/test/post-night-halt.test.js",
       "imports": [
-        "../src/campaign/adb-device-local-executor.js",
-        "../src/campaign/hid-schedule.js",
+        "../src/campaign/adb-device-local-executor.ts",
+        "../src/campaign/hid-schedule.ts",
         "@sixam/kernel/contracts",
         "node:assert/strict",
         "node:fs",
@@ -1615,8 +1616,8 @@
     {
       "file": "packages/play/test/profile-game.test.js",
       "imports": [
-        "../src/campaign/artifact-executor.js",
-        "../src/campaign/hid-schedule.js",
+        "../src/campaign/artifact-executor.ts",
+        "../src/campaign/hid-schedule.ts",
         "@sixam/kernel/contracts",
         "@sixam/source",
         "node:assert/strict",
@@ -1627,8 +1628,8 @@
     {
       "file": "packages/play/test/static-terminal-window.test.js",
       "imports": [
-        "../src/campaign/adb-device-local-executor.js",
-        "../src/campaign/hid-schedule.js",
+        "../src/campaign/adb-device-local-executor.ts",
+        "../src/campaign/hid-schedule.ts",
         "@sixam/kernel/contracts",
         "node:assert/strict",
         "node:fs",
@@ -1640,18 +1641,18 @@
     {
       "file": "packages/play/test/timed-start.test.js",
       "imports": [
-        "../src/campaign/modern-campaign-ports.js",
-        "../src/campaign/timed-start.js",
+        "../src/campaign/modern-campaign-ports.ts",
+        "../src/campaign/timed-start.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/play/test/venue-preflight.test.js",
       "imports": [
-        "../src/campaign/adb-bridge.js",
-        "../src/campaign/campaign-preflight.js",
-        "../src/campaign/campaign.js",
-        "../src/campaign/venue.js",
+        "../src/campaign/adb-bridge.ts",
+        "../src/campaign/campaign-preflight.ts",
+        "../src/campaign/campaign.ts",
+        "../src/campaign/venue.ts",
         "@sixam/kernel/contracts",
         "node:assert/strict",
         "node:fs",
@@ -1940,8 +1941,8 @@
       "file": "packages/propose/bin/plans/device-lane.mjs",
       "imports": [
         "../../../play/bin/phone/actuator.mjs",
-        "../../../play/src/campaign/artifact-executor.js",
-        "../../../play/src/campaign/hid-schedule.js",
+        "../../../play/src/campaign/artifact-executor.ts",
+        "../../../play/src/campaign/hid-schedule.ts",
         "./artifact-commands.mjs",
         "@sixam/kernel/contracts",
         "@sixam/source",
@@ -2064,7 +2065,7 @@
     {
       "file": "packages/propose/bin/plans/night7-robustness.mjs",
       "imports": [
-        "../../../play/src/campaign/night-anchor.js",
+        "../../../play/src/campaign/night-anchor.ts",
         "../census/winner-census.mjs",
         "../census/winner-phase-census.mjs",
         "./bundle.mjs",
@@ -2307,7 +2308,7 @@
     {
       "file": "packages/propose/bin/recompile/phone-encounter-replay.mjs",
       "imports": [
-        "../../../play/src/sensors/fnaf2/button-strokes.js",
+        "../../../play/src/sensors/fnaf2/button-strokes.ts",
         "../../../review/bin/recompile/compare-draw-trace.mjs",
         "../../../review/venue-grid/encounter-replay.mjs",
         "../../../source/recompile/model-draw-trace.mjs",
@@ -3280,7 +3281,7 @@
     {
       "file": "packages/propose/test/test-bundle.mjs",
       "imports": [
-        "../../play/src/campaign/artifact-executor.js",
+        "../../play/src/campaign/artifact-executor.ts",
         "../bin/plans/artifact-commands.mjs",
         "../bin/plans/bundle.mjs",
         "@sixam/kernel/contracts",
@@ -3343,8 +3344,8 @@
     {
       "file": "packages/propose/test/test-winners-rebuild.mjs",
       "imports": [
-        "../../play/src/campaign/campaign-bundle.js",
-        "../../play/src/campaign/campaign.js",
+        "../../play/src/campaign/campaign-bundle.ts",
+        "../../play/src/campaign/campaign.ts",
         "../bin/plans/bundle.mjs",
         "node:fs",
         "node:os",
@@ -4734,6 +4735,19 @@
         "node:assert/strict",
         "node:fs",
         "node:path"
+      ]
+    },
+    {
+      "file": "tools/test-ts-migrate.mjs",
+      "imports": [
+        "./types.ts",
+        "\\.\\/types\\.ts",
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
       ]
     },
     {

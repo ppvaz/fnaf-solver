@@ -107,7 +107,7 @@ against host unit tests.
 The route runner holds no device geometry. Each route bundle under
 `assets/runners` carries `hid-controls.txt`, every control's raw HID point as
 the host's transport derives it from the bundle's `profile.json`
-(`packages/play/src/venues/phone/hid.js` `hidControlsText`), naming that
+(`packages/play/src/venues/phone/hid.ts` `hidControlsText`), naming that
 profile's sha256; `HidControls` reads it, refuses one bound to another profile,
 and `NightRunner` refuses a plan that uses a control the file does not name.
 Until 2026-09-30 `NightRunner` kept its own control map and 2400x1080 transform.
@@ -127,7 +127,7 @@ no sensor data.
 
 | Request | Response | Notes |
 |---|---|---|
-| `STATUS <token>` | `OK schema=companion-status-v1 ...` | The versioned status line, for any target (`CompanionStatus.java`; host parser `packages/play/src/venues/phone/companion-status.js`; both held to `packages/play/test/testdata/companion-status-v1.txt`). |
+| `STATUS <token>` | `OK schema=companion-status-v1 ...` | The versioned status line, for any target (`CompanionStatus.java`; host parser `packages/play/src/venues/phone/companion-status.ts`; both held to `packages/play/test/testdata/companion-status-v1.txt`). |
 | `TARGET <token> [<package>\|<game>\|clear]` | `OK target=... game=... legacy=...` | Read or name the target (`Targets.java`, `packages/play/profiles/fnaf2/moto-g56/companion-targets-v1.json`). The FNaF 2 legacy readers run only while it is retail FNaF 2; refused while a FNaF 2 trace runs. |
 | `LEASE <token> <label>\|clear` | `OK lease=...` | A label for the phone's screen naming who holds the host's serial lease; the lease itself stays the host's lock. |
 | `GET <token>` | `OK <snapshot>` | FNaF 2 legacy snapshot (`Fnaf2Legacy.snapshotLine`): freshness, the grid-fitted `screen`, the stroke-derived `monitorUp`, both control stroke scores, the latched `nightOnsetImageNs` and the phone's `wallMs`; never an image. |
@@ -178,7 +178,7 @@ controls. `seen` is the only observation on the panel; everything else is the
 schedule.
 
 `night-run.sh --live --confirm-live --teach-overlay` drives it. At the attempt's menu the host sends
-the compiled artifact's semantic actions (`packages/play/src/coach/cycle-lesson.js`),
+the compiled artifact's semantic actions (`packages/play/src/coach/cycle-lesson.ts`),
 which `CycleLesson.java` re-expands with the executor's own repeat rule and
 refuses unless the rows hash to the id the host sent. After the anchored
 release the host sends `origin <onsetNs> <afterOnsetUs>`, and the helper

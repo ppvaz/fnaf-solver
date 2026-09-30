@@ -573,14 +573,14 @@ for (const path of operational) {
 // --confirm-live. A
 // new composer is a new way onto the phone and has to be named here in the
 // diff that adds it.
-const physicalActuatorOwners = new Set(['packages/play/src/campaign/modern-campaign-ports.js',
+const physicalActuatorOwners = new Set(['packages/play/src/campaign/modern-campaign-ports.ts',
   'packages/play/games/fnaf1/fnaf1-night-run.mjs', 'apps/desktop/bin/fnaf1-custom-run.mjs', 'packages/play/games/fnaf1/fnaf1-menu-probe.mjs',
   'packages/play/games/fnaf3/fnaf3-run.mjs', 'packages/play/games/fnaf4/fnaf4-run.mjs', 'packages/play/bin/phone/explore-step.mjs']
   .map(path => join(ROOT, path)));
 // The transport's own module defines the class; every other module in apps,
 // tools and every package (the runners live in packages/play/games and bin/
 // since the ADR 0002 layout) is checked.
-const HID_TRANSPORT = join(ROOT, 'packages/play/src/venues/phone/hid.js');
+const HID_TRANSPORT = join(ROOT, 'packages/play/src/venues/phone/hid.ts');
 for (const path of [...await files(join(ROOT, 'apps')), ...await files(join(ROOT, 'tools')), ...await files(join(ROOT, 'packages'))]
   .filter(path => !testNamed(path) && !reportNamed(path) && path !== fileURLToPath(import.meta.url) && path !== HID_TRANSPORT)) {
   if (!physicalActuatorOwners.has(path) && identifiers(await tree(path), node => node.text === 'HidWireTransport').length)

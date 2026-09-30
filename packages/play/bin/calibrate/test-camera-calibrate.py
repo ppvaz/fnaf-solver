@@ -94,7 +94,7 @@ def main():
 
         # -- Cross-language: the artifact drives the production JS detector ----
         module = (HERE.parent.parent / "src" / "sensors" / "fnaf2"
-                  / "camera-rule.js").resolve().as_uri()
+                  / "camera-rule.ts").resolve().as_uri()
 
         def js(script):
             return subprocess.run(["node", "-e", script],

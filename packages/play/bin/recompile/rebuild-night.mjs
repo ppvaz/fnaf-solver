@@ -18,7 +18,7 @@
 // the calibration log, and calib-replay.mjs replays those, not these.
 //
 // Two contacts are encoded as the transport sends them (hid-sweep-probe.mjs,
-// packages/play/src/campaign/hid-schedule.js): pointer p is HID contact p; contact 0 is
+// packages/play/src/campaign/hid-schedule.ts): pointer p is HID contact p; contact 0 is
 // 0x03 down / 0x00 up, contact 1 is 0x07 down / 0x04 up, and a report carries
 // both records whenever contact 1 is down or just released.
 //

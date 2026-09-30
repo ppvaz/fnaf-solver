@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { makeCampaignSpec } from '../src/campaign/campaign.js';
-import { validateCampaignBundle } from '../src/campaign/campaign-bundle.js';
-import { composeCampaignPorts } from '../src/campaign/campaign-composition.js';
+import { makeCampaignSpec } from '../src/campaign/campaign.ts';
+import { validateCampaignBundle } from '../src/campaign/campaign-bundle.ts';
+import { composeCampaignPorts } from '../src/campaign/campaign-composition.ts';
 
 const profile = JSON.parse(await readFile(fileURLToPath(new URL('../../../packages/play/profiles/fnaf2/moto-g56/fixture-hid-screencap.json', import.meta.url)), 'utf8'));
 const full = makeCampaignSpec({ profile: profile.id, targetBuild: profile.targetBuild, nights: [6, 7] });

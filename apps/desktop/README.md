@@ -24,7 +24,7 @@ and their readers follow the file through git's renames.
 ## The device command line
 
 `device-cli.js campaign` chooses the profile, loads the default ports module
-(`packages/play/src/campaign/modern-campaign-ports.js`), and plays a validated
+(`packages/play/src/campaign/modern-campaign-ports.ts`), and plays a validated
 bundle only with `--live --confirm-live`. `packages/play/bin/phone/night-run.sh` drives it
 for every night, and forwards that pair only when it is itself given `--live
 --confirm-live`: it is dry by default (ADR 0002). The serial comes from

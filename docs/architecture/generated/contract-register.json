@@ -150,73 +150,73 @@
       "id": "device-executor-v1",
       "owner": "packages/play",
       "kind": "artifact",
-      "validator": "packages/play/src/campaign/artifact-executor.js validateExecutorRequest"
+      "validator": "packages/play/src/campaign/artifact-executor.ts validateExecutorRequest"
     },
     {
       "id": "monitor-rule-v1",
       "owner": "packages/play",
       "kind": "artifact",
-      "validator": "packages/play/src/sensors/fnaf2/monitor-rule.js parseMonitorRule"
+      "validator": "packages/play/src/sensors/fnaf2/monitor-rule.ts parseMonitorRule"
     },
     {
       "id": "camera-rule-v1",
       "owner": "packages/play",
       "kind": "artifact",
-      "validator": "packages/play/src/sensors/fnaf2/camera-rule.js parseCameraRule"
+      "validator": "packages/play/src/sensors/fnaf2/camera-rule.ts parseCameraRule"
     },
     {
       "id": "calibration-state-v1",
       "owner": "packages/play",
       "kind": "artifact",
-      "validator": "packages/play/src/sensors/fnaf2/calibration-state-rule.js parseCalibrationStateRule"
+      "validator": "packages/play/src/sensors/fnaf2/calibration-state-rule.ts parseCalibrationStateRule"
     },
     {
       "id": "control-exclusion-v1",
       "owner": "packages/play",
       "kind": "data",
-      "validator": "packages/play/src/phone/control-exclusion.js reconcileExclusiveControls"
+      "validator": "packages/play/src/phone/control-exclusion.ts reconcileExclusiveControls"
     },
     {
       "id": "device-campaign-v1",
       "owner": "packages/play",
       "kind": "data",
-      "validator": "packages/play/src/campaign/campaign.js CampaignStateMachine"
+      "validator": "packages/play/src/campaign/campaign.ts CampaignStateMachine"
     },
     {
       "id": "device-adb-preflight-v1",
       "owner": "packages/play",
       "kind": "port",
-      "validator": "packages/play/src/campaign/adb-bridge.js AdbDeviceBridge"
+      "validator": "packages/play/src/campaign/adb-bridge.ts AdbDeviceBridge"
     },
     {
       "id": "device-campaign-result-v1",
       "owner": "packages/play",
       "kind": "artifact",
-      "validator": "packages/play/src/campaign/campaign.js CampaignStateMachine.result"
+      "validator": "packages/play/src/campaign/campaign.ts CampaignStateMachine.result"
     },
     {
       "id": "campaign-proof-v1",
       "owner": "packages/play",
       "kind": "artifact",
-      "validator": "packages/play/src/campaign/campaign-proof.js makeAttemptProof"
+      "validator": "packages/play/src/campaign/campaign-proof.ts makeAttemptProof"
     },
     {
       "id": "custom-night-config-v1",
       "owner": "packages/play",
       "kind": "data",
-      "validator": "packages/play/src/campaign/custom-night.js validateCustomNightConfig"
+      "validator": "packages/play/src/campaign/custom-night.ts validateCustomNightConfig"
     },
     {
       "id": "custom-night-calibration-v1",
       "owner": "packages/play",
       "kind": "artifact",
-      "validator": "packages/play/src/campaign/custom-night.js validateCustomNightCalibration"
+      "validator": "packages/play/src/campaign/custom-night.ts validateCustomNightCalibration"
     },
     {
       "id": "device-campaign-preflight-v1",
       "owner": "packages/play",
       "kind": "artifact",
-      "validator": "packages/play/src/campaign/campaign-preflight.js evaluateCampaignPreflight"
+      "validator": "packages/play/src/campaign/campaign-preflight.ts evaluateCampaignPreflight"
     },
     {
       "id": "bench-transport-trace-v1",

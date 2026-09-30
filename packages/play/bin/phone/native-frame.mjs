@@ -10,7 +10,7 @@
  * latency does not matter; a night reads native regions instead
  * (native-regions.mjs). Run under the serial lease.
  */
-import { AdbCompanionPort } from '../../src/campaign/physical-ports.js';
+import { AdbCompanionPort } from '../../src/campaign/physical-ports.ts';
 import { resolveSerial } from './local-profile.mjs';
 
 function fail(message) { console.error(`native-frame: ${message}`); process.exit(2); }

@@ -13,7 +13,7 @@ import java.util.TreeSet;
  * The raw HID coordinates of a route's controls, as its bundle carries them.
  *
  * <p>The host derives {@code hid-controls.txt} from the device profile beside it
- * ({@code packages/play/src/venues/phone/hid.js} {@code hidControlsText}, the
+ * ({@code packages/play/src/venues/phone/hid.ts} {@code hidControlsText}, the
  * transport that presses the phone from the host) and names that profile and its
  * sha256. The runner holds no geometry of its own: until 2026-09-30
  * {@link NightRunner} kept a copy of the control map and of the screen transform,

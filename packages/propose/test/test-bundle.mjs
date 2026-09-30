@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { compileBundle, parsePlan, validateBundle } from '../bin/plans/bundle.mjs';
 import { stableHash } from '@sixam/kernel/contracts';
 import { compileArtifactPlans } from '../bin/plans/artifact-commands.mjs';
-import { makeExecutorRequest } from '../../play/src/campaign/artifact-executor.js';
+import { makeExecutorRequest } from '../../play/src/campaign/artifact-executor.ts';
 
 const check = (condition, message) => { if (!condition) throw new Error(message); };
 const expectFailure = (fn, message) => {

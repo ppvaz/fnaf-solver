@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
-import { phoneWallAt, planTimedStart, waitUntilHostMs, SEED_PERIOD_MS } from '../src/campaign/timed-start.js';
+import { phoneWallAt, planTimedStart, waitUntilHostMs, SEED_PERIOD_MS } from '../src/campaign/timed-start.ts';
 import { timedStartHeld, PRESS_TO_OFFICE_MS, settledAfterPress, FIRST_PRESS_SETTLE_MS,
-  FIRST_PRESS_LAST_READ_MS } from '../src/campaign/modern-campaign-ports.js';
+  FIRST_PRESS_LAST_READ_MS } from '../src/campaign/modern-campaign-ports.ts';
 
 // Helper sample: snapshot at device mono 5000 ms, host perf = device mono + 1000, wall 1 789 431 000 000 at the snapshot.
 const sample = { offsetMs: 1000, fields: { snapshotNs: String(5000n * 1000000n), wallMs: '1789431000000' } };

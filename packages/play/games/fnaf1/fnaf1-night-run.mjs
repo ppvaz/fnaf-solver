@@ -27,9 +27,9 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { spawn } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { performance } from 'node:perf_hooks';
-import { AdbDeviceBridge } from '../../src/campaign/adb-bridge.js';
-import { AdbHidProcess } from '../../src/campaign/physical-ports.js';
-import { HidWireTransport } from '../../src/venues/phone/hid.js';
+import { AdbDeviceBridge } from '../../src/campaign/adb-bridge.ts';
+import { AdbHidProcess } from '../../src/campaign/physical-ports.ts';
+import { HidWireTransport } from '../../src/venues/phone/hid.ts';
 import { resolveSerial } from '../../bin/phone/local-profile.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));

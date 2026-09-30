@@ -185,8 +185,8 @@ def main():
               "guard is refused as a live gate", node(f"""
 import {{ readFileSync }} from 'node:fs';
 import {{ parseMaskRule, maskRuleDigest, parseCalibrationStateRule }}
-  from './packages/play/src/sensors/fnaf2/calibration-state-rule.js';
-import {{ monitorRuleDigest }} from './packages/play/src/sensors/fnaf2/monitor-rule.js';
+  from './packages/play/src/sensors/fnaf2/calibration-state-rule.ts';
+import {{ monitorRuleDigest }} from './packages/play/src/sensors/fnaf2/monitor-rule.ts';
 const mask = JSON.parse(readFileSync({json.dumps(str(fitted))}, 'utf8'));
 parseMaskRule(mask);
 const monitor = JSON.parse(readFileSync('packages/play/profiles/fnaf2/moto-g56/monitor-rule-moto-g56-v207.json', 'utf8'));
@@ -203,7 +203,7 @@ catch (error) {{ if (!/unproven darkness guard/.test(error.message)) process.exi
     handset = ROOT / "packages" / "play" / "profiles" / "fnaf2" / "moto-g56" / "mask-rule-moto-g56-v207.json"
     check("the fitted handset mask rule round-trips", node(f"""
 import {{ readFileSync }} from 'node:fs';
-import {{ parseMaskRule }} from './packages/play/src/sensors/fnaf2/calibration-state-rule.js';
+import {{ parseMaskRule }} from './packages/play/src/sensors/fnaf2/calibration-state-rule.ts';
 const rule = parseMaskRule(JSON.parse(readFileSync({json.dumps(str(handset))}, 'utf8')));
 if (rule.adapter.anchors.length < 2) process.exit(1);
 if (!rule.adapter.anchors.every(anchor => anchor.kind === 'absent')) process.exit(1);

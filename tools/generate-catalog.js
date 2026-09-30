@@ -344,7 +344,7 @@ const legacyPaths = [
     ['calibration-state-rule', 'the mask and monitor calibration-state rule (calibration-state-v1) over the grid cells, with its luma refutation'],
     ['button-strokes', 'the helper\'s downward-chevron stroke scores and their thresholds, the executor\'s mask and monitor tell'],
   ].map(([name, what]) => ({
-    id: `play.sensor.fnaf2-${name}`, path: `packages/play/src/sensors/fnaf2/${name}.js`, category: 'sensor',
+    id: `play.sensor.fnaf2-${name}`, path: `packages/play/src/sensors/fnaf2/${name}.ts`, category: 'sensor',
     lifecycle: 'legacy', owner: '@sixam/play',
     replacement: 'a rule over native region pixels (the Companion REGION verb, packages/play/bin/phone/native-regions.mjs), recalibrated for FNaF 2',
     removalGate: 'FNaF 2\'s pipeline is recalibrated on native regions (ADR 0002 migration M7) and the campaign executor reads no grid, luma or grid-fitted rule; the retained grid_hex readers of old evidence stay',

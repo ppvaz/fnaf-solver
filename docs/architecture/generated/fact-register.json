@@ -18,7 +18,7 @@
         "grid-luma-fallback"
       ],
       "strongestAvailable": "native-stroke",
-      "weakestInUse": "grid-luma-fallback",
+      "weakestInUse": "grid-anchor",
       "producers": [
         {
           "file": "packages/play/bin/grade/tap-stall-audit.mjs",
@@ -30,38 +30,6 @@
           "file": "packages/play/bin/probe/intersection-state-gate.mjs",
           "evidence": [
             "native-stroke",
-            "grid-anchor"
-          ]
-        },
-        {
-          "file": "packages/play/src/campaign/adb-device-local-executor.js",
-          "evidence": [
-            "native-stroke",
-            "grid-luma-fallback"
-          ]
-        },
-        {
-          "file": "packages/play/src/campaign/control-effect.js",
-          "evidence": [
-            "native-stroke"
-          ]
-        },
-        {
-          "file": "packages/play/src/campaign/modern-campaign-ports.js",
-          "evidence": [
-            "native-stroke",
-            "grid-anchor"
-          ]
-        },
-        {
-          "file": "packages/play/src/sensors/fnaf2/button-strokes.js",
-          "evidence": [
-            "native-stroke"
-          ]
-        },
-        {
-          "file": "packages/play/src/sensors/fnaf2/calibration-state-rule.js",
-          "evidence": [
             "grid-anchor"
           ]
         }
@@ -85,32 +53,6 @@
             "native-explicit",
             "grid-anchor"
           ]
-        },
-        {
-          "file": "packages/play/src/campaign/modern-campaign-ports.js",
-          "evidence": [
-            "native-stroke",
-            "grid-anchor"
-          ]
-        },
-        {
-          "file": "packages/play/src/sensors/fnaf2/button-strokes.js",
-          "evidence": [
-            "native-stroke"
-          ]
-        },
-        {
-          "file": "packages/play/src/sensors/fnaf2/calibration-state-rule.js",
-          "evidence": [
-            "grid-anchor"
-          ]
-        },
-        {
-          "file": "packages/play/src/sensors/fnaf2/monitor-rule.js",
-          "evidence": [
-            "native-explicit",
-            "grid-anchor"
-          ]
         }
       ]
     },
@@ -122,53 +64,10 @@
         "python-classifier"
       ],
       "strongestAvailable": "native-screen",
-      "weakestInUse": "python-classifier",
+      "weakestInUse": "native-screen",
       "producers": [
         {
           "file": "packages/play/bin/probe/intersection-state-gate.mjs",
-          "evidence": [
-            "native-screen"
-          ]
-        },
-        {
-          "file": "packages/play/src/campaign/adb-device-local-executor.js",
-          "evidence": [
-            "native-screen"
-          ]
-        },
-        {
-          "file": "packages/play/src/campaign/control-effect.js",
-          "evidence": [
-            "native-screen"
-          ]
-        },
-        {
-          "file": "packages/play/src/campaign/modern-campaign-ports.js",
-          "evidence": [
-            "native-screen",
-            "python-classifier"
-          ]
-        },
-        {
-          "file": "packages/play/src/campaign/night-anchor.js",
-          "evidence": [
-            "native-screen"
-          ]
-        },
-        {
-          "file": "packages/play/src/phone/night-onset.js",
-          "evidence": [
-            "native-screen"
-          ]
-        },
-        {
-          "file": "packages/play/src/sensors/fnaf2/calibration-state-rule.js",
-          "evidence": [
-            "native-screen"
-          ]
-        },
-        {
-          "file": "packages/play/src/sensors/fnaf2/monitor-rule.js",
           "evidence": [
             "native-screen"
           ]
@@ -184,37 +83,9 @@
         "python-classifier",
         "intro-handoff"
       ],
-      "strongestAvailable": "native-onset-latch",
-      "weakestInUse": "intro-handoff",
-      "producers": [
-        {
-          "file": "packages/play/src/campaign/adb-device-local-executor.js",
-          "evidence": [
-            "native-screen",
-            "python-classifier",
-            "intro-handoff"
-          ]
-        },
-        {
-          "file": "packages/play/src/campaign/modern-campaign-ports.js",
-          "evidence": [
-            "native-onset-latch",
-            "python-classifier"
-          ]
-        },
-        {
-          "file": "packages/play/src/campaign/night-anchor.js",
-          "evidence": [
-            "native-onset-latch"
-          ]
-        },
-        {
-          "file": "packages/play/src/phone/night-onset.js",
-          "evidence": [
-            "native-onset-latch"
-          ]
-        }
-      ]
+      "strongestAvailable": null,
+      "weakestInUse": null,
+      "producers": []
     }
   }
 }

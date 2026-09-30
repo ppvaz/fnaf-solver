@@ -11,7 +11,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validateControlAnchor, resolveControlPoint, worldX, unstatedPanDependentControls, ANCHOR_KINDS, PAN_UNKNOWN }
-  from '../../src/phone/control-anchor.js';
+  from '../../src/phone/control-anchor.ts';
 import { GAME_CONTROLS } from '@sixam/source';
 import { validateControlCommand } from '@sixam/source';
 

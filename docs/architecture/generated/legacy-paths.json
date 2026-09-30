@@ -144,7 +144,7 @@
     },
     {
       "id": "play.sensor.fnaf2-monitor-rule",
-      "path": "packages/play/src/sensors/fnaf2/monitor-rule.js",
+      "path": "packages/play/src/sensors/fnaf2/monitor-rule.ts",
       "category": "sensor",
       "lifecycle": "legacy",
       "owner": "@sixam/play",
@@ -154,7 +154,7 @@
     },
     {
       "id": "play.sensor.fnaf2-camera-rule",
-      "path": "packages/play/src/sensors/fnaf2/camera-rule.js",
+      "path": "packages/play/src/sensors/fnaf2/camera-rule.ts",
       "category": "sensor",
       "lifecycle": "legacy",
       "owner": "@sixam/play",
@@ -164,7 +164,7 @@
     },
     {
       "id": "play.sensor.fnaf2-calibration-state-rule",
-      "path": "packages/play/src/sensors/fnaf2/calibration-state-rule.js",
+      "path": "packages/play/src/sensors/fnaf2/calibration-state-rule.ts",
       "category": "sensor",
       "lifecycle": "legacy",
       "owner": "@sixam/play",
@@ -174,7 +174,7 @@
     },
     {
       "id": "play.sensor.fnaf2-button-strokes",
-      "path": "packages/play/src/sensors/fnaf2/button-strokes.js",
+      "path": "packages/play/src/sensors/fnaf2/button-strokes.ts",
       "category": "sensor",
       "lifecycle": "legacy",
       "owner": "@sixam/play",

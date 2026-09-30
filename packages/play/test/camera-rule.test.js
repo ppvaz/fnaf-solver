@@ -1,6 +1,6 @@
 /** CameraSelected rule artifact conformance: calibration in, honest verdicts out. */
 import assert from 'node:assert/strict';
-import { cameraRuleDigest, measureCameraSelected, parseCameraRule } from '../src/sensors/fnaf2/camera-rule.js';
+import { cameraRuleDigest, measureCameraSelected, parseCameraRule } from '../src/sensors/fnaf2/camera-rule.ts';
 
 const buttons = [
   { control: 'cam:1', entry: 'cam01_button', x: 1412, y: 784, feature: 'yellowness',

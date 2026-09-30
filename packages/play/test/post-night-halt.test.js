@@ -18,12 +18,12 @@ import { tmpdir } from 'node:os';
 import { stableHash } from '@sixam/kernel/contracts';
 import {
   AdbDeviceLocalArtifactExecutor, OBSERVER_INTERVAL_BOUND_MS, POST_NIGHT_STATIC_HALT, STATIC_TERMINAL_WAIT_MS,
-} from '../src/campaign/adb-device-local-executor.js';
-import { SHARED_HID_RELEASE, compileDeviceLocalHidSchedule } from '../src/campaign/hid-schedule.js';
+} from '../src/campaign/adb-device-local-executor.ts';
+import { SHARED_HID_RELEASE, compileDeviceLocalHidSchedule } from '../src/campaign/hid-schedule.ts';
 
 const RECORD_PATH = 'docs/evidence/post-night-static-halt-20260927.json';
 const record = JSON.parse(await readFile(new URL(`../../../${RECORD_PATH}`, import.meta.url), 'utf8'));
-const executorSource = await readFile(new URL('../src/campaign/adb-device-local-executor.js', import.meta.url), 'utf8');
+const executorSource = await readFile(new URL('../src/campaign/adb-device-local-executor.ts', import.meta.url), 'utf8');
 
 // --- The rule is the record's, and the comment's numbers are the record's ----
 assert.equal(record.schema, 'post-night-static-halt-v1');

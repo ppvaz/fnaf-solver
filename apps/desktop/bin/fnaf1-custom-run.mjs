@@ -36,9 +36,9 @@ import { homedir, tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { performance } from 'node:perf_hooks';
-import { AdbDeviceBridge } from '../../../packages/play/src/campaign/adb-bridge.js';
-import { AdbCompanionPort, AdbHidProcess } from '../../../packages/play/src/campaign/physical-ports.js';
-import { HidWireTransport } from '../../../packages/play/src/venues/phone/hid.js';
+import { AdbDeviceBridge } from '../../../packages/play/src/campaign/adb-bridge.ts';
+import { AdbCompanionPort, AdbHidProcess } from '../../../packages/play/src/campaign/physical-ports.ts';
+import { HidWireTransport } from '../../../packages/play/src/venues/phone/hid.ts';
 import { ProbeRecord, ensureTitle, titleRead, titleConsensus, settleCustomNight, setDials, restartToTitle,
   DIALS, PACKAGE, BUILD, LEAVE_WAIT_MS } from '../../../packages/play/games/fnaf1/fnaf1-menu-probe.mjs';
 import { loadRegionSet, registerSet } from '../../../packages/play/bin/phone/native-regions.mjs';

@@ -15,7 +15,7 @@
 // and compare-draw-trace.mjs compares harness office update F with model frame F+1.
 // A tap or hold is `down` at its press frame and `up` at its release frame (the row's own contact
 // or hold length); a camdrop holds the camera-feed light and taps the monitor as a second contact,
-// as packages/play/src/campaign/hid-schedule.js sends it; a hall row is the hallLight control.
+// as packages/play/src/campaign/hid-schedule.ts sends it; a hall row is the hallLight control.
 // Points: the device profile's controlMap (the phone's touch points, 2400 x 1080) mapped into the
 // game's 1024 x 768 window by Display Mode FULL's stretch (x * 1024 / 2400, y * 768 / 1080;
 // packages/source/recompile/native-frame.py), rounded to whole window pixels.

@@ -19,7 +19,7 @@ import { readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { CompanionControlTransport, measureMaskOn, measureMonitorUp,
   parseMaskRule, parseMonitorRule } from '@sixam/play';
-import { AdbCompanionPort } from '../../src/campaign/physical-ports.js';
+import { AdbCompanionPort } from '../../src/campaign/physical-ports.ts';
 
 export const BUTTON_THRESHOLDS = Object.freeze({
   /** 100 of roughly 142 sampled stroke columns is a full glyph. */

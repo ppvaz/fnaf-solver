@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { terminalFromExecution } from '../src/campaign/modern-campaign-ports.js';
+import { terminalFromExecution } from '../src/campaign/modern-campaign-ports.ts';
 
 const target = { night: 5, mode: 'story' };
 
@@ -73,7 +73,7 @@ test('an Invalid execution is an Invalid terminal with its why', () => {
 });
 
 test('a venue that moved during the night makes the run Invalid, whatever it showed', async () => {
-  const { venueCheckedTerminal } = await import('../src/campaign/modern-campaign-ports.js');
+  const { venueCheckedTerminal } = await import('../src/campaign/modern-campaign-ports.ts');
   const sixAm = { night: 7, identity: 'custom', outcome: 'sixam', sixAm: true, positive: true, state: 'sixam' };
   const drift = [{ field: 'versionCode', from: '26', to: '27' }];
   const checked = venueCheckedTerminal(sixAm, drift);
@@ -88,7 +88,7 @@ test('a venue that moved during the night makes the run Invalid, whatever it sho
 });
 
 test('venue drift during a run counts only drift fields both readings know', async () => {
-  const { venueDriftDuringRun } = await import('../src/campaign/venue.js');
+  const { venueDriftDuringRun } = await import('../src/campaign/venue.ts');
   const { VENUE_DRIFT_FIELDS } = await import('@sixam/kernel/contracts');
   const [first, second] = VENUE_DRIFT_FIELDS;
   const before = { [first]: 'a', [second]: 'b', timeZone: 'America/Sao_Paulo', companionVersion: '1' };

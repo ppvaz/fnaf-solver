@@ -103,7 +103,7 @@ console.log(`  n2-minustoys-0117 reported a 302 ms epoch bracket alone.`);
 // observation and releases the REMAINDER when the pair confirms. Whatever wall
 // time that observation costs past the plan's own cursor is added to every
 // press from the first wind onward and to nothing before it (`phaseLagMs` in
-// packages/play/src/campaign/adb-device-local-executor.js).
+// packages/play/src/campaign/adb-device-local-executor.ts).
 //
 // **This response is BANDED, not a cliff, and `edge()` above must not be used
 // on it.** `edge()` scans outward and stops at the first failure, which is

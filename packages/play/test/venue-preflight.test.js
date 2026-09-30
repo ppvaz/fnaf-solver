@@ -9,10 +9,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { bindQualificationVenue } from '@sixam/kernel/contracts';
-import { AdbDeviceBridge, preflightVenue } from '../src/campaign/adb-bridge.js';
-import { CampaignStateMachine, campaignVenue, makeCampaignSpec } from '../src/campaign/campaign.js';
-import { evaluateCampaignPreflight } from '../src/campaign/campaign-preflight.js';
-import { bindVenueFromPreflight, dryRunVenue, loadVenueBindings, renderVenueCheck } from '../src/campaign/venue.js';
+import { AdbDeviceBridge, preflightVenue } from '../src/campaign/adb-bridge.ts';
+import { CampaignStateMachine, campaignVenue, makeCampaignSpec } from '../src/campaign/campaign.ts';
+import { evaluateCampaignPreflight } from '../src/campaign/campaign-preflight.ts';
+import { bindVenueFromPreflight, dryRunVenue, loadVenueBindings, renderVenueCheck } from '../src/campaign/venue.ts';
 
 const SERIAL = 'FAKE0SERIAL1';
 const TARGET = 'com.scottgames.fnaf2:2.0.7+26';

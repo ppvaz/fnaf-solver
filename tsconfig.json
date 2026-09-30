@@ -15,5 +15,5 @@
   },
   "include": ["packages/**/*.ts", "apps/**/*.ts"],
   "files": ["packages/kernel/src/types.ts", "packages/kernel/src/contracts/types.ts"],
-  "exclude": ["node_modules", "dist", "artifacts", "packages/kernel/src/**/*.ts", "packages/source/src/**/*.ts"]
+  "exclude": ["node_modules", "dist", "artifacts", "packages/kernel/src/**/*.ts", "packages/source/src/**/*.ts", "packages/play/src/**/*.ts"]
 }

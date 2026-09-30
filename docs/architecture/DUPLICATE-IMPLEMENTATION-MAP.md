@@ -133,7 +133,7 @@ models, aligned by comment only.
   `packages/play/bin/calibrate/camera-calibrate.py` still carries its own copy of the twelve
   coordinates, and `test-camera-calibrate.py` holds it to the camera rule.
 - **Phase clock.** Resolved 2026-09-27: the APK's `PhaseClock.java` left with
-  the Companion's audio path, so `packages/play/src/clocks/phase-clock.js`
+  the Companion's audio path, so `packages/play/src/clocks/phase-clock.ts`
   (tested by `packages/play/test/phase-clock.test.js`) is the only implementation.
 
 Cleanup decision: these are the two strongest candidates for the shared-JSONL
@@ -144,7 +144,7 @@ vector pattern already used by `packages/kernel/test/contract-vectors.py` (§20)
 Five host-side fitters: `monitor-calibrate.py` (424), `camera-calibrate.py`
 (304), `watch-calibrate.py` (336), `mask-calibrate.py` (267),
 `screen-calibrate.py` (237). Their consumers on the JS side are
-`packages/play/src/sensors/fnaf2/monitor-rule.js`, `camera-rule.js`, and
+`packages/play/src/sensors/fnaf2/monitor-rule.ts`, `camera-rule.js`, and
 `calibration-state-rule.js`.
 
 The **fitting algorithm is not duplicated** — see §1: `mask-calibrate.py` and
@@ -170,12 +170,12 @@ small result type first.
 ## 5. ADB transport — binding: `NONE`, against a stated owner
 
 `CLAUDE.md` gives adapters ownership of transport, and
-`packages/play/src/campaign/adb-bridge.js` (251) is the closed, reviewable port. In
+`packages/play/src/campaign/adb-bridge.ts` (251) is the closed, reviewable port. In
 practice **28 tracked files invoke `adb` directly**, led by
 `tools/device/legacy-trial.sh` (55 call sites), `trial-maskcamp.sh` (19),
 `hid-sweep-probe.sh` (16), `query-companion.sh` and `capture-screen-sample.sh`
-(10 each). `packages/play/src/campaign/adb-device-local-executor.js` (974) holds the
-sanctioned device-local path; `packages/play/src/venues/phone/hid.js` and
+(10 each). `packages/play/src/campaign/adb-device-local-executor.ts` (974) holds the
+sanctioned device-local path; `packages/play/src/venues/phone/hid.ts` and
 `transports/cue-helper.js` hold the codecs and deliberately open nothing.
 
 `legacy-paths.json` already records the legacy runners with removal gates, so

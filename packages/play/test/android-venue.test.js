@@ -1,4 +1,4 @@
-// Reading venue-identity-v1 off Android text (packages/play/src/phone/android-venue.js).
+// Reading venue-identity-v1 off Android text (packages/play/src/phone/android-venue.ts).
 // The two fixtures are shaped like `dumpsys package com.scottgames.fnaf2` on
 // current Android (firstInstallTime under `User 0:`, a `Hidden system
 // packages` block after) and on Android 10 (firstInstallTime at package
@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { handsetHash, parseDumpsysPackage, parseGetprop, readVenueIdentity } from '../src/phone/android-venue.js';
+import { handsetHash, parseDumpsysPackage, parseGetprop, readVenueIdentity } from '../src/phone/android-venue.ts';
 import { validateVenueIdentity } from '@sixam/kernel/contracts';
 
 const fixture = name => readFileSync(fileURLToPath(new URL(`./fixtures/${name}`, import.meta.url)), 'utf8');

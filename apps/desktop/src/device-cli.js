@@ -266,7 +266,7 @@ async function main(argv = process.argv.slice(2)) {
     const bridge = new AdbDeviceBridge({ serial: options.serial });
     let helperTransport = null;
     if (options.source === 'helper') {
-      const selected = await bridge.selectDevice();
+      const selected = /** @type {any} */ (await bridge.selectDevice());
       if (selected.status !== 'READY') throw new Error(`clockmap needs one ready device: ${selected.reason ?? 'unavailable'}`);
       const port = new AdbCompanionPort({ serial: selected.serial });
       const endpoint = port.discover();
@@ -403,7 +403,7 @@ async function main(argv = process.argv.slice(2)) {
     if (options.ports || useDefaultModernPorts) {
       const modulePath = options.ports
         ? resolve(options.ports)
-        : join(ROOT, 'packages/play/src/campaign/modern-campaign-ports.js');
+        : join(ROOT, 'packages/play/src/campaign/modern-campaign-ports.ts');
       const module = await import(pathToFileURL(modulePath).href);
       const factory = module.createCampaignPorts ?? module.default;
       if (typeof factory !== 'function') throw new Error('ports module must export createCampaignPorts()');

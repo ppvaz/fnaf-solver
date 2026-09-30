@@ -8,7 +8,7 @@ unselected.  This tool measures the yellowness of the twelve watch pixels
 (mechanically aligned with ``PixelWatch.defaultSpec``, the twelve
 camera-button pixels the FNaF 2 watch serves) over labelled captures -- one label per camera --
 and emits the versioned ``camera-rule-v1`` artifact that
-``packages/play/src/sensors/fnaf2/camera-rule.js`` consumes.
+``packages/play/src/sensors/fnaf2/camera-rule.ts`` consumes.
 
 Verdict semantics are strict: exactly one lit button names the selected
 camera; zero and several are distinct UNKNOWN reasons (``no-camera-highlight``

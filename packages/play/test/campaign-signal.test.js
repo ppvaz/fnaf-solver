@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
-import { installCampaignSignalHandlers } from '../src/campaign/campaign-signal.js';
+import { installCampaignSignalHandlers } from '../src/campaign/campaign-signal.ts';
 
 const processObject = new EventEmitter();
 let cleanupReason = null;

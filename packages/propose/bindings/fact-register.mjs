@@ -11,7 +11,7 @@
 // `packages/play/bin/probe/intersection-state-gate.mjs` consumes the Companion's native
 // button downstroke scores and states its discipline plainly: "fitted grid
 // anchors are a diagnostic fallback only" and "a missing stroke score is a
-// refusal, never a luma fallback". `packages/play/src/campaign/modern-campaign-ports.js`
+// refusal, never a luma fallback". `packages/play/src/campaign/modern-campaign-ports.ts`
 // answers the same maskOn question from the 20x9 grid and, when that returns
 // null, falls back to exactly the luma refutation the other file forbids. Both
 // were in the tree for weeks. Nothing compared them, because nothing was
@@ -49,7 +49,7 @@ export const FACTS = Object.freeze({
     ],
   },
   // DELEGATED, so not ranked against actuating callers. The explicit helper
-  // fact is read inside `packages/play/src/sensors/fnaf2/monitor-rule.js`, and every
+  // fact is read inside `packages/play/src/sensors/fnaf2/monitor-rule.ts`, and every
   // actuating caller reaches it through `measureMonitorUp`. At file
   // granularity this register cannot tell a producer from a caller that
   // delegates to one, and flagging the callers would be a false positive
