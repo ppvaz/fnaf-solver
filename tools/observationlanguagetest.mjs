@@ -5,7 +5,7 @@
 // language exists to enforce -- a fact is searchable only if its read cost is
 // measured, and a branch may only demand a decision the measured budget can
 // supply -- plus the exclusion of the families Plans 05/06/16 closed.
-import { FACTS } from '@sixam/core/sensing';
+import { FACTS } from '@sixam/play/sim';
 import {
   BRANCH_SCHEMA, OBSERVATION_BUDGET, UNKNOWN, VISUAL_READ_COST_MS,
   admissibleFacts, deviceAdmissibleFacts, earliestReactionMs, evaluatePredicate,

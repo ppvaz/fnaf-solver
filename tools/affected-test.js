@@ -21,14 +21,26 @@ add('references', 'node', ['tools/validate-references.js']);
 
 // ADR 0002 migrations D1/D4/M8: the contracts, the register and Time live in
 // the kernel, each game's Rulebook, Sim and controls in source, the policy
-// language and the cycle machinery over them in propose, and core keeps play's
-// host-free half (sensing, estimation, the phase clock) and training. A change
+// language and the cycle machinery over them in propose; core keeps only
+// registered shims (the Play move took its last modules). A change
 // to the kernel, source or core runs the contract and Sim lanes that read them;
 // propose's own gates run when propose, or what it imports, changes.
 const kernelChanged = changed.some(path => path.startsWith('packages/kernel/'));
 const sourceChanged = changed.some(path => path.startsWith('packages/source/'));
 const coreChanged = changed.some(path => path.startsWith('packages/core/'));
 const proposeChanged = changed.some(path => path.startsWith('packages/propose/'));
+// Play's host-free modules (were core's): the Sim observer, the estimator and
+// the phase clock, which propose's controllers read; their own gates run too.
+const playModelChanged = changed.some(path => ['packages/play/src/venues/sim/', 'packages/play/src/player/',
+  'packages/play/src/clocks/'].some(prefix => path.startsWith(prefix)));
+if (playModelChanged)
+  for (const test of ['belieftest', 'estimatortest', 'phaseclocktest', 'reactivetest'])
+    add(`test:tools/${test}.mjs`, 'node', [`tools/${test}.mjs`]);
+if (changed.some(path => path.startsWith('packages/review/src/measure/')))
+  add('bench-trace', 'node', ['tools/benchtracetest.mjs']);
+if (changed.some(path => path.startsWith('apps/trainer/src/training/')))
+  for (const test of ['exercisetest', 'activitygatetest'])
+    add(`test:tools/${test}.mjs`, 'node', [`tools/${test}.mjs`]);
 if (kernelChanged)
   for (const test of ['kernel', 'venue-identity', 'claim-envelope'])
     add(`test:packages/kernel/test/${test}.test.js`, 'node', [`packages/kernel/test/${test}.test.js`]);
@@ -37,7 +49,7 @@ if (kernelChanged || sourceChanged || coreChanged) {
   add('control-catalog', 'node', ['packages/source/test/control-catalog.test.js']);
   add('source-mechanics', 'node', ['tools/sourcetest.mjs']);
 }
-if (sourceChanged || coreChanged || proposeChanged) {
+if (sourceChanged || coreChanged || proposeChanged || playModelChanged) {
   // The closed loop is the device work's spine (ROADMAP Track A); its gates
   // belong in the same lane as the code they gate, not the legacy campaign.
   // Keyed by path so an edit to the gate itself (below) dedupes against this.

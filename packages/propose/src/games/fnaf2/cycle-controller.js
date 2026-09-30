@@ -6,7 +6,7 @@
 // exact proof callback and the route score, keeping those two authorities
 // explicit at the boundary.
 import * as C from '@sixam/source/games/fnaf2/config.js';
-import { initialEstimator, update, reconcile, send, needsVerification } from '@sixam/core/estimation';
+import { initialEstimator, update, reconcile, send, needsVerification } from '@sixam/play/player';
 import { initialReducedState, observeReduced, applyReduced, advanceReduced, REDUCED_SCHEMA } from '@sixam/source/games/fnaf2/reduced-model.js';
 import { getCycle } from './cycle-library.js';
 import { selectCycle } from './cycle-planner.js';

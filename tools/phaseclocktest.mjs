@@ -1,6 +1,6 @@
 // Phone-free contract tests for the Plan 21 winding-tick estimator.
 import { EstimatedPhaseClock, LatencyCalibrator, PhaseClockEstimator,
-         WindTickFactAdapter, PHASE_STATES } from '@sixam/core/timing';
+         WindTickFactAdapter, PHASE_STATES } from '@sixam/play/clocks';
 import { messageToFact } from '@sixam/kernel/time';
 
 let failures = 0;

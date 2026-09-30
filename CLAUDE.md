@@ -11,11 +11,11 @@ data, Sim, controls) and imports only the kernel; `@sixam/kernel` holds the ADR
 `@sixam/propose` owns the policy language, the controllers and the cycle
 machinery over them, the strategies and the experiments, imports the kernel,
 source, play and review, and is imported by nothing but the applications
-(`@sixam/research` is only a compatibility shim over it); `@sixam/core` keeps
-play's host-free half (sensing, estimation, the phase clock) and training
-until they move; `@sixam/play` owns the phone's transports, clocks, night
-onset and detection rules (the FNaF 2 grid/luma rules deprecated), the
-campaign executor and its supervision, and imports only the kernel and source;
+(`@sixam/research` is only a compatibility shim over it); `@sixam/play` owns
+the phone's transports, clocks, night onset and detection rules (the FNaF 2
+grid/luma rules deprecated), the campaign executor and its supervision, the Sim
+observer, the player's estimator and the phase clock, and imports only the
+kernel and source; `@sixam/core` holds only registered compatibility shims;
 the device app is the command line that composes it; trainer and device are
 leaves; `@sixam/review` reads the evidence
 and never imports play, the device app, propose or research

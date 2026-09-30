@@ -76,7 +76,11 @@ with their export sets unchanged, and research keeps, with unchanged export
 sets, the two subpaths that hash-bound files import, so an importer the move
 did not repoint keeps working. `tools/architecture-test.js`
 lets a shim registered as owned by `@sixam/propose` re-export propose, and
-nothing else in a package import it.
+nothing else in a package import it; the Play move (packages/adapters, the
+device campaign and core's last modules into `@sixam/play`) does the same for
+a shim owned by `@sixam/play`. `@sixam/core/telemetry`, `/timing`,
+`/estimation`, `/training` and the `.` barrel were removed in that move:
+their removal gates held once their importers were repointed.
 
 | Surface | Lifecycle | Canonical replacement | Removal gate |
 |---|---|---|---|
@@ -87,8 +91,8 @@ nothing else in a package import it.
 | `@sixam/research` (`packages/research/package.json`) | compatibility | `@sixam/propose` (experiments, strategies, seed cohorts, specs, parked Minus 7); `npm run research` runs `packages/propose/src/experiment/cli.js` | both subpath shims below are removed; then the workspace goes |
 | `@sixam/research/seeds` (`packages/research/seeds.js`) | compatibility | `@sixam/propose/seeds` | `tools/device/minus-toys-plan.mjs` and `minus-3-plan.mjs`, whose bytes every Minus Toys and Minus 3 bundle hashes, are repointed in a commit that re-derives every bundle |
 | `@sixam/research/strategies/minus-3` (`packages/research/strategies/minus-3.js`) | compatibility | `@sixam/propose/strategies/minus-3` | `tools/device/minus-3-plan.mjs` is repointed in a commit that re-derives every bundle |
-| `@sixam/core/telemetry` (`packages/core/src/telemetry/index.js`) | compatibility | `@sixam/kernel/time` for the fact link and event clocks | no importer reads them here, and the bench trace has its Review home |
-| `@sixam/core/timing` (`packages/core/src/timing/index.js`) | compatibility | `@sixam/kernel/time` for `ClockPort` | no importer reads it here, and the phase clock has its Play home |
+| `@sixam/core/sensing` (`packages/core/src/sensing/index.js`) | compatibility | `@sixam/play/sim` (the same export set) | `tools/device/minus-toys-plan.mjs`, whose bytes every Minus Toys bundle hashes, is repointed in a commit that re-derives every bundle |
+| `packages/adapters/src/button-strokes.js` (symbolic link) | compatibility | `packages/play/src/sensors/fnaf2/button-strokes.js` (the same bytes) | `tools/recompile/phone-encounter-replay.mjs` names the rule source through play, and the retained full06-responses result is checked through the path's history |
 
 ## Already removed
 

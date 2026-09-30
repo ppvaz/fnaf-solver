@@ -34,7 +34,7 @@
     },
     {
       "id": "state-estimate-v1",
-      "owner": "core/estimation",
+      "owner": "play/player",
       "kind": "data",
       "validator": "validateStateEstimate"
     },
@@ -208,61 +208,61 @@
     },
     {
       "id": "bench-transport-trace-v1",
-      "owner": "core/telemetry",
+      "owner": "review/measure",
       "kind": "artifact",
       "validator": "validateBenchTrace"
     },
     {
       "id": "exercise-v1",
-      "owner": "core/training",
+      "owner": "apps/trainer",
       "kind": "data",
       "validator": "validateExercise"
     },
     {
       "id": "commitment-v1",
-      "owner": "core/training",
+      "owner": "apps/trainer",
       "kind": "data",
       "validator": "validateCommitment"
     },
     {
       "id": "resolution-v1",
-      "owner": "core/training",
+      "owner": "apps/trainer",
       "kind": "data",
       "validator": "validateResolution"
     },
     {
       "id": "exercise-cancellation-v1",
-      "owner": "core/training",
+      "owner": "apps/trainer",
       "kind": "data",
       "validator": "validateCancellation"
     },
     {
       "id": "exercise-event-v1",
-      "owner": "core/training",
+      "owner": "apps/trainer",
       "kind": "data",
       "validator": "validateExerciseEvent"
     },
     {
       "id": "exercise-attempt-v1",
-      "owner": "core/training",
+      "owner": "apps/trainer",
       "kind": "data",
       "validator": "validateExerciseAttempt"
     },
     {
       "id": "activity-gate-v1",
-      "owner": "core/training",
+      "owner": "apps/trainer",
       "kind": "data",
       "validator": "evaluateActivityGate"
     },
     {
       "id": "activity-gate-profile-v1",
-      "owner": "core/training",
+      "owner": "apps/trainer",
       "kind": "data",
       "validator": "validateActivityGateProfile"
     },
     {
       "id": "activity-gate-decision-v1",
-      "owner": "core/training",
+      "owner": "apps/trainer",
       "kind": "data",
       "validator": "evaluateActivityGate"
     },

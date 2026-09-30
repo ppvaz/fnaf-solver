@@ -17,6 +17,7 @@
     "./evidence-cohort": "./src/evidence-cohort.mjs",
     "./evidence-pack": "./src/evidence-pack.mjs",
     "./evidence-promotion": "./src/evidence-promotion.mjs",
+    "./measure": "./src/measure/index.js",
     "./mistakes": "./src/mistakes.mjs",
     "./pack-lift": "./src/pack-lift.mjs",
     "./promotions-query": "./src/promotions-query.mjs",

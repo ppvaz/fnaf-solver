@@ -5,7 +5,7 @@ import {
   EXERCISE_EVENT_SCHEMA, EXERCISE_SCHEMA, RESOLUTION_SCHEMA,
   makeExercise, replayExercise, validateCommitment, validateExercise,
   validateExerciseAttempt, validateExerciseEvent, validateResolution,
-} from '@sixam/core/training';
+} from '@sixam/trainer/training';
 
 const base = makeExercise({
   id: 'exercise-001', kind: 'prediction', sourceSessionId: 'session-001',

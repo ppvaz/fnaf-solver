@@ -5,7 +5,7 @@
 // motor/timing telemetry is stored in ExerciseAttempt; it cannot rewrite the
 // question or independently choose the outcome.
 
-import { validateExercise, validateExerciseAttempt } from '@sixam/core/training';
+import { validateExercise, validateExerciseAttempt } from './training/index.js';
 import { makeMicrotrainerAttempt, gradeMicrotrainerAttempt } from './microtrainer.js';
 import { freeze, validatorsFor } from './validate.js';
 const { fail, object, text } = validatorsFor('renderer');

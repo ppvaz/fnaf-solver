@@ -112,9 +112,9 @@
       "contractId": "state-estimate-v1",
       "id": "state-estimate-v1",
       "version": 1,
-      "owner": "core/estimation",
+      "owner": "play/player",
       "kind": "data",
-      "purpose": "Stable state-estimate-v1 boundary for core/estimation; its validator is validateStateEstimate.",
+      "purpose": "Stable state-estimate-v1 boundary for play/player; its validator is validateStateEstimate.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -701,9 +701,9 @@
       "contractId": "bench-transport-trace-v1",
       "id": "bench-transport-trace-v1",
       "version": 1,
-      "owner": "core/telemetry",
+      "owner": "review/measure",
       "kind": "artifact",
-      "purpose": "Stable bench-transport-trace-v1 boundary for core/telemetry; its validator is validateBenchTrace.",
+      "purpose": "Stable bench-transport-trace-v1 boundary for review/measure; its validator is validateBenchTrace.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -721,9 +721,9 @@
       "contractId": "exercise-v1",
       "id": "exercise-v1",
       "version": 1,
-      "owner": "core/training",
+      "owner": "apps/trainer",
       "kind": "data",
-      "purpose": "Stable exercise-v1 boundary for core/training; its validator is validateExercise.",
+      "purpose": "Stable exercise-v1 boundary for apps/trainer; its validator is validateExercise.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -741,9 +741,9 @@
       "contractId": "commitment-v1",
       "id": "commitment-v1",
       "version": 1,
-      "owner": "core/training",
+      "owner": "apps/trainer",
       "kind": "data",
-      "purpose": "Stable commitment-v1 boundary for core/training; its validator is validateCommitment.",
+      "purpose": "Stable commitment-v1 boundary for apps/trainer; its validator is validateCommitment.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -761,9 +761,9 @@
       "contractId": "resolution-v1",
       "id": "resolution-v1",
       "version": 1,
-      "owner": "core/training",
+      "owner": "apps/trainer",
       "kind": "data",
-      "purpose": "Stable resolution-v1 boundary for core/training; its validator is validateResolution.",
+      "purpose": "Stable resolution-v1 boundary for apps/trainer; its validator is validateResolution.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -781,9 +781,9 @@
       "contractId": "exercise-cancellation-v1",
       "id": "exercise-cancellation-v1",
       "version": 1,
-      "owner": "core/training",
+      "owner": "apps/trainer",
       "kind": "data",
-      "purpose": "Stable exercise-cancellation-v1 boundary for core/training; its validator is validateCancellation.",
+      "purpose": "Stable exercise-cancellation-v1 boundary for apps/trainer; its validator is validateCancellation.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -801,9 +801,9 @@
       "contractId": "exercise-event-v1",
       "id": "exercise-event-v1",
       "version": 1,
-      "owner": "core/training",
+      "owner": "apps/trainer",
       "kind": "data",
-      "purpose": "Stable exercise-event-v1 boundary for core/training; its validator is validateExerciseEvent.",
+      "purpose": "Stable exercise-event-v1 boundary for apps/trainer; its validator is validateExerciseEvent.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -821,9 +821,9 @@
       "contractId": "exercise-attempt-v1",
       "id": "exercise-attempt-v1",
       "version": 1,
-      "owner": "core/training",
+      "owner": "apps/trainer",
       "kind": "data",
-      "purpose": "Stable exercise-attempt-v1 boundary for core/training; its validator is validateExerciseAttempt.",
+      "purpose": "Stable exercise-attempt-v1 boundary for apps/trainer; its validator is validateExerciseAttempt.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -841,9 +841,9 @@
       "contractId": "activity-gate-v1",
       "id": "activity-gate-v1",
       "version": 1,
-      "owner": "core/training",
+      "owner": "apps/trainer",
       "kind": "data",
-      "purpose": "Stable activity-gate-v1 boundary for core/training; its validator is evaluateActivityGate.",
+      "purpose": "Stable activity-gate-v1 boundary for apps/trainer; its validator is evaluateActivityGate.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -861,9 +861,9 @@
       "contractId": "activity-gate-profile-v1",
       "id": "activity-gate-profile-v1",
       "version": 1,
-      "owner": "core/training",
+      "owner": "apps/trainer",
       "kind": "data",
-      "purpose": "Stable activity-gate-profile-v1 boundary for core/training; its validator is validateActivityGateProfile.",
+      "purpose": "Stable activity-gate-profile-v1 boundary for apps/trainer; its validator is validateActivityGateProfile.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -881,9 +881,9 @@
       "contractId": "activity-gate-decision-v1",
       "id": "activity-gate-decision-v1",
       "version": 1,
-      "owner": "core/training",
+      "owner": "apps/trainer",
       "kind": "data",
-      "purpose": "Stable activity-gate-decision-v1 boundary for core/training; its validator is evaluateActivityGate.",
+      "purpose": "Stable activity-gate-decision-v1 boundary for apps/trainer; its validator is evaluateActivityGate.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"

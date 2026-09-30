@@ -383,19 +383,19 @@ const legacyPaths = [
     removalGate: 'tools/device/minus-3-plan.mjs, an engine-source file every Minus 3 bundle hashes into engine.sourceSha256, imports `@sixam/propose/strategies/minus-3` in a commit that re-derives every emitted bundle',
     notes: 'Serves `@sixam/research/strategies/minus-3`; minus-3-plan.mjs is its only importer.',
   },
+  // ADR 0002's Play move took core's last modules: the Sim observer to
+  // @sixam/play/sim, the estimator to @sixam/play/player, the phase clock to
+  // @sixam/play/clocks, the bench trace to @sixam/review/measure and training
+  // to the trainer. `/telemetry`, `/timing`, `/estimation`, `/training` and
+  // the `.` barrel were removed (their removal gates held: nothing imported
+  // them once their importers were repointed); `/sensing` stays for a
+  // hash-bound importer.
   {
-    id: 'core.telemetry-shim', path: 'packages/core/src/telemetry/index.js', category: 'package-subpath',
-    lifecycle: 'compatibility', owner: '@sixam/kernel',
-    replacement: '`@sixam/kernel/time` for the fact link and the event clocks; the bench transport trace stays here until it moves to Review',
-    removalGate: 'No tracked module imports the fact link or the event clocks from `@sixam/core/telemetry` (true since D3, 2026-09-30), and bench-trace.js has its Review home',
-    notes: 'Re-exports fact-link.js and event-clocks.js by name from the kernel beside bench-trace.js, which still lives here.',
-  },
-  {
-    id: 'core.timing-shim', path: 'packages/core/src/timing/index.js', category: 'package-subpath',
-    lifecycle: 'compatibility', owner: '@sixam/kernel',
-    replacement: '`@sixam/kernel/time` for `ClockPort`; the phase clock stays here until it moves to Play',
-    removalGate: 'No tracked module imports `ClockPort` from `@sixam/core/timing` (true since D3, 2026-09-30), and phase-clock.js has its Play home',
-    notes: 'Re-exports the kernel clock port by name beside phase-clock.js, which still lives here.',
+    id: 'core.sensing-shim', path: 'packages/core/src/sensing/index.js', category: 'package-subpath',
+    lifecycle: 'compatibility', owner: '@sixam/play',
+    replacement: '`@sixam/play/sim` (packages/play/src/venues/sim/), whose export set is exactly this subpath\'s',
+    removalGate: 'tools/device/minus-toys-plan.mjs, an engine-source file every Minus Toys bundle hashes into engine.sourceSha256, imports `@sixam/play/sim` in a commit that re-derives every emitted bundle',
+    notes: 'One `export *` of `@sixam/play/sim`; minus-toys-plan.mjs is its only importer.',
   },
   // ADR 0002: packages/adapters moved into @sixam/play (the phone's transports
   // to src/venues/phone, clocks, night onset, the control anchor and exclusion

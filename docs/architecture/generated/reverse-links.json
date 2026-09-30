@@ -45,7 +45,7 @@
     {
       "id": "contract.bench-transport-trace-v1",
       "kind": "CONTRACT",
-      "path": "packages/core/src/telemetry/bench-trace.js",
+      "path": "packages/review/src/measure/bench-trace.js",
       "line": 1,
       "relation": "REFERENCES"
     },

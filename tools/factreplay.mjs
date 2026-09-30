@@ -16,7 +16,7 @@ import { dirname } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import * as C from '@sixam/source/fnaf2';
 import { Sim, Rng } from '@sixam/source/fnaf2';
-import { Observer } from '@sixam/core/sensing';
+import { Observer } from '@sixam/play/sim';
 import { CycleController, getCycle } from '@sixam/propose/fnaf2';
 import { canonicalJson, stableHash } from '@sixam/kernel/contracts';
 

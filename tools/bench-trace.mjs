@@ -3,7 +3,7 @@
 // It validates the raw path before calculating any percentile, and never
 // upgrades the trace's claim level or supplies missing physical measurements.
 import { readFile, writeFile } from 'node:fs/promises';
-import { summarizeBenchTrace } from '@sixam/core/telemetry';
+import { summarizeBenchTrace } from '@sixam/review/measure';
 
 function argument(name) {
   const index = process.argv.indexOf(name);

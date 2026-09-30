@@ -66,9 +66,8 @@ New code imports `@sixam/propose/*`.
 ## Dependencies
 
 `tools/architecture-test.js` (rules `propose`, `propose-test` and
-`propose-importers`): propose imports the kernel, source, play (`@sixam/play`, and Play's host-free
-half that core still holds, `@sixam/core/sensing` and `@sixam/core/estimation`),
-review, and Node built-ins. It never reaches the device shell -- the
+`propose-importers`): propose imports the kernel, source, play (`@sixam/play/sim` for the Sim
+observer, `@sixam/play/player` for the estimator), review, and Node built-ins. It never reaches the device shell -- the
 applications, `tools/`, `child_process`, `net`, `dgram` -- and never
 imports `@sixam/core` or `@sixam/core/control`, which re-export it. Nothing
 imports propose except the applications and the registered shims, which may

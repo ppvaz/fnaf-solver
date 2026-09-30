@@ -4,7 +4,7 @@ import {
   ACTIVITY_GATE_SCHEMA, ACTIVITY_GATE_PROFILE_SCHEMA,
   evaluateActivityGate, validateActivityGateProfile,
   validateActivityGateSnapshot,
-} from '@sixam/core/training';
+} from '@sixam/trainer/training';
 
 const profile = {
   schema: ACTIVITY_GATE_PROFILE_SCHEMA, id: 'fixture-quiet-v1', version: '1',

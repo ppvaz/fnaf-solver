@@ -1,46 +1,33 @@
 # `@sixam/core`
 
-What is left of the canonical core while ADR 0002's contexts take it apart:
-Play's host-free half -- the Sim observer (sensing), estimation and the phase
-clock -- the bench transport trace, and training. Later migration steps move
-them to Play, Review and the trainer ([Plan 27](../../plans/27-pivot-and-rebrand.md),
-the layout in ADR 0002).
+What is left of the canonical core after ADR 0002's context moves: registered
+compatibility shims and nothing else. Every module here re-exports the context
+that now owns it, with the export set the subpath had before the move (checked
+name by name), and each is registered in
+[`legacy-paths.json`](../../docs/architecture/generated/legacy-paths.json) with
+its removal gate.
 
-Public entry points are `.`, `/mechanics`, `/control`, `/sensing`,
-`/estimation`, `/timing`, `/telemetry`, `/training`, and `/contracts`.
+| Subpath | Now owned by | Why it stays |
+|---|---|---|
+| `/contracts` | [`@sixam/kernel/contracts`](../kernel/README.md) and three catalog-generated validators from `@sixam/source` | hand-run commands and docs still name it (`core.contracts-shim`) |
+| `/mechanics` | [`@sixam/source/fnaf2`](../source/README.md) | `tools/device/minus-toys-plan.mjs`, `recipe.mjs` and `tools/model/hid-device-pilot.mjs`, whose bytes every bundle hashes into `engine.sourceSha256`, and `tools/recompile` import it (`core.mechanics-shim`) |
+| `/control` | `@sixam/source` (vocabulary, catalogs) and [`@sixam/propose`](../propose/README.md) `/policy` and `/fnaf2` | `minus-toys-plan.mjs` and two `tools/recompile` modules import it (`core.control-*-shim`) |
+| `/sensing` | [`@sixam/play/sim`](../play/README.md) (the Sim observer) | `minus-toys-plan.mjs` imports it (`core.sensing-shim`) |
 
-**Moved out, with shims (ADR 0002 migrations D1, D4, M8).** The contracts, the
-contract register and the kernel's Time live in
-[`@sixam/kernel`](../kernel/README.md); each game's Rulebook data, Sim and
-controls, and the cross-game clockwork (nights registry, RNG, control
-catalogs and vocabulary, and the validators generated from them), live in
-[`@sixam/source`](../source/README.md); the policy IR and observation language,
-FNaF 2's controllers and Minus Toys cycle machinery, and the FNaF 1, 3 and 4
-policies live in [`@sixam/propose`](../propose/README.md). `/contracts`,
-`/mechanics`, `/control`, `/telemetry` and `/timing` still export every name
-they did (checked name by name), re-exporting the new owners: compatibility
-shims registered in
-[`legacy-paths.json`](../../docs/architecture/generated/legacy-paths.json), each
-with its removal gate. New code imports `@sixam/kernel/contracts`,
-`@sixam/kernel/time`, `@sixam/source`, `@sixam/source/fnaf2`,
-`@sixam/propose/policy` and `@sixam/propose/fnaf2` directly.
 `src/mechanics/` also keeps symbolic links named `plant-model.js`, `config.js`
-and `rng.js` to FNaF 2's model sources, because
-`tools/recompile/model-draw-trace.mjs` looks for the model beside this barrel.
+and `rng.js` to FNaF 2's model sources in `@sixam/source`, because
+`tools/recompile/model-draw-trace.mjs` looks for the model beside that barrel
+(`core.model-source-link.*`).
 
-Core depends on the kernel and source only, and has no knowledge of DOM,
-shell, devices, transports, or trainer presentation. Applications select those
-adapters at their composition roots. The one exception is the `/control` shim,
-which re-exports `@sixam/propose` for `tools/device/minus-toys-plan.mjs` (its
-bytes are hashed into every Minus Toys bundle) and two `tools/recompile`
-modules; `tools/architecture-test.js` admits that re-export because the shim
-is registered as owned by propose, and refuses any other core import of it.
+**Removed in the Play move**, because nothing imported them once their
+importers were repointed: `/estimation` (now `@sixam/play/player`), `/timing`
+(the phase clock, now `@sixam/play/clocks`; `ClockPort` has been
+`@sixam/kernel/time` since D1), `/telemetry` (the bench trace, now
+`@sixam/review/measure`; the fact link and event clocks are
+`@sixam/kernel/time`), `/training` (now the trainer's own
+`apps/trainer/src/training`, `@sixam/trainer/training`) and the `.` barrel.
 
-Commands: use the root `test:core`, `test:contracts`, and `typecheck` lanes.
-Core's own modules are tested by `tools/belieftest.mjs`,
-`tools/estimatortest.mjs`, `tools/phaseclocktest.mjs`,
-`tools/benchtracetest.mjs` and the training checks; it has no `test/` folder
-since the cycle and night-policy tests moved with their code to
-`packages/propose/test`.
-Non-responsibilities: browser UI, device profiles/transports, shell execution,
-policies, and evidence promotion.
+`tools/architecture-test.js` (rule `core`) lets core import only itself, source
+and the kernel, and lets a shim registered as owned by `@sixam/propose` or
+`@sixam/play` re-export its owner and nothing else. Nothing new is added here:
+new code imports the owning package.

@@ -10,7 +10,7 @@
 // frame by the caller-owned queue below.
 import * as C from '@sixam/source/fnaf2';
 import { Sim, Rng } from '@sixam/source/fnaf2';
-import { Observer } from '@sixam/core/sensing';
+import { Observer } from '@sixam/play/sim';
 import { CycleController, makeUnknownFacts, getCycle, NightPolicy,
          NIGHT_POLICY_CYCLES } from '@sixam/propose/fnaf2';
 

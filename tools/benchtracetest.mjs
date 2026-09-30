@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import {
   BENCH_TRACE_SCHEMA, BENCH_TRACE_SUMMARY_SCHEMA,
   makeBenchTrace, summarizeBenchTrace, validateBenchTrace,
-} from '@sixam/core/telemetry';
+} from '@sixam/review/measure';
 
 const sample = (id, path, offset, resultState = 'OBSERVED') => ({
   id, path,

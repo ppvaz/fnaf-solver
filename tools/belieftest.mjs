@@ -2,7 +2,7 @@
 import {
   BELIEF_SCHEMA, initialBelief, observed, unknown,
   reduceBelief, replayBelief,
-} from '@sixam/core/estimation';
+} from '@sixam/play/player';
 
 let failures = 0;
 const check = (name, condition) => {

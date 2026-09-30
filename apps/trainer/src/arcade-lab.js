@@ -4,7 +4,7 @@
 // correctness score.
 
 import { stableHash } from '@sixam/kernel/contracts';
-import { validateExercise } from '@sixam/core/training';
+import { validateExercise } from './training/index.js';
 import { freeze, validatorsFor } from './validate.js';
 const { fail, object, text } = validatorsFor('arcade lab');
 

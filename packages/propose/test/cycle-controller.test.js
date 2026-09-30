@@ -5,7 +5,7 @@
 import { readFileSync } from 'node:fs';
 import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
-import { Observer } from '@sixam/core/sensing';
+import { Observer } from '@sixam/play/sim';
 import { Rng } from '@sixam/source/fnaf2';
 import { CycleController, getCycle, makeUnknownFacts } from '@sixam/propose/fnaf2';
 

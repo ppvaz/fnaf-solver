@@ -5,7 +5,7 @@
 import { pathToFileURL } from 'node:url';
 import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
-import { Observer, OBSERVE_INTERVAL, val } from '@sixam/core/sensing';
+import { Observer, OBSERVE_INTERVAL, val } from '@sixam/play/sim';
 import { BlackoutReactive, guardIntents, GUARD_FRAMES } from '@sixam/propose/fnaf2';
 import { formatRate } from './stat.mjs';
 

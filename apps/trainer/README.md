@@ -3,8 +3,12 @@
 The trainer is the public browser application under the Understanding layer.
 It owns UI, touch input, audio, assets, curriculum, coaching, and trainer
 traces. It does not own sourced mechanics, device profiles, policy authority,
-or live actuation; those come from `@sixam/source`, `@sixam/kernel`, `@sixam/core` and explicit device
-services. The static HTML entry remains at the repository root for publishing,
+or live actuation; those come from `@sixam/source`, `@sixam/kernel` and explicit device
+services. Its replayable exercise and activity-gate records (`exercise-v1`,
+`activity-gate-v1` and their siblings) live in `src/training/`
+(`@sixam/trainer/training`), which moved here from `@sixam/core/training` in ADR
+0002's Play move; `tools/exercisetest.mjs` and `tools/activitygatetest.mjs` test
+them. The static HTML entry remains at the repository root for publishing,
 while its browser modules live under this application.
 
 Public API: the browser entry, `Coach`, and the DOM-free replay microtrainer

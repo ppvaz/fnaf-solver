@@ -1,8 +1,8 @@
 // Plan 20 package 3: estimator timing, uncertainty, and reconciliation.
 import {
   initialEstimator, predict, update, send, reconcile, needsVerification,
-} from '@sixam/core/estimation';
-import { initialBelief, observed, unknown } from '@sixam/core/estimation';
+} from '@sixam/play/player';
+import { initialBelief, observed, unknown } from '@sixam/play/player';
 
 const check = (condition, message) => { if (!condition) throw new Error(message); };
 const O = (value, extra = {}) => observed(value, {

@@ -11,7 +11,10 @@ and its output did not change by a byte. Beside them, the first reader in
 kernel words: a read-only lift of every committed pack to a kernel `GameRun`,
 and `npm run review -- query promotions`, which re-derives the `PROMOTED_BY`
 edges of `docs/evidence/graph.json` and S1's open items from the packs, the
-attestations and the winners.
+attestations and the winners. `src/measure/` holds the Plan 20 bench transport
+trace (`bench-transport-trace-v1`, `@sixam/review/measure`), a measuring
+instrument that moved from `@sixam/core/telemetry` in ADR 0002's Play move;
+`tools/bench-trace.mjs` reports over it and `tools/benchtracetest.mjs` tests it.
 
 **Boundary.** Review never imports Play or Propose. In today's names it never
 imports `packages/play`, an application (`apps/*`), `packages/adapters`, `packages/propose` or `packages/research`, and

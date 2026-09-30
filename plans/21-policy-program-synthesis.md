@@ -184,7 +184,7 @@ family ports are complete.
 into either arm would replay a different program under the branched program's
 name, so `compilePolicy` and `compileDevicePlan` now **refuse** a branched
 program instead. A branched interpreter — one that reads facts through
-`packages/core/src/sensing/observer.js` as the night runs, at the measured
+`packages/play/src/venues/sim/observer.js` as the night runs, at the measured
 cadence, and honours `maxAgeMs`/`confidenceFloor`/UNKNOWN — does not exist. It
 is the prerequisite for P7 and for ROADMAP B2.
 

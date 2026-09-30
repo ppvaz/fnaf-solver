@@ -5,18 +5,14 @@
   "type": "module",
   "dependencies": {
     "@sixam/kernel": "file:../kernel",
+    "@sixam/play": "file:../play",
     "@sixam/propose": "file:../propose",
     "@sixam/source": "file:../source"
   },
   "exports": {
-    ".": "./src/index.js",
     "./contracts": "./src/contracts/index.js",
     "./mechanics": "./src/mechanics/index.js",
     "./control": "./src/control/index.js",
-    "./sensing": "./src/sensing/index.js",
-    "./estimation": "./src/estimation/index.js",
-    "./timing": "./src/timing/index.js",
-    "./telemetry": "./src/telemetry/index.js",
-    "./training": "./src/training/index.js"
+    "./sensing": "./src/sensing/index.js"
   }
 }

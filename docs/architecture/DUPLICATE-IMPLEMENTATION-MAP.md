@@ -133,7 +133,7 @@ models, aligned by comment only.
   `tools/device/camera-calibrate.py` still carries its own copy of the twelve
   coordinates, and `test-camera-calibrate.py` holds it to the camera rule.
 - **Phase clock.** Resolved 2026-09-27: the APK's `PhaseClock.java` left with
-  the Companion's audio path, so `packages/core/src/timing/phase-clock.js`
+  the Companion's audio path, so `packages/play/src/clocks/phase-clock.js`
   (tested by `tools/phaseclocktest.mjs`) is the only implementation.
 
 Cleanup decision: these are the two strongest candidates for the shared-JSONL
@@ -380,7 +380,7 @@ control works.
 Nine readers of overlapping run telemetry: `clocktrace.mjs` (129),
 `drifttrace.mjs` (211), `windtrace.mjs` (85), `camtrace.py` (140),
 `inputtrace.py` (484), `run-timeline.py` (478), `tools/bench-trace.mjs` (36)
-over `packages/core/src/telemetry/bench-trace.js`, `tracereport.mjs` (115),
+over `packages/review/src/measure/bench-trace.js`, `tracereport.mjs` (115),
 `atrace-input.sh`. `run-timeline.py` and `drifttrace.mjs` both join plan
 against phone on one clock.
 

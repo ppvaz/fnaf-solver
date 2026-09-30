@@ -83,8 +83,8 @@
     {
       "file": "apps/trainer/src/arcade-lab.js",
       "imports": [
+        "./training/index.js",
         "./validate.js",
-        "@sixam/core/training",
         "@sixam/kernel/contracts"
       ]
     },
@@ -141,8 +141,8 @@
     {
       "file": "apps/trainer/src/microtrainer.js",
       "imports": [
+        "./training/index.js",
         "./validate.js",
-        "@sixam/core/training",
         "@sixam/kernel/contracts"
       ]
     },
@@ -150,14 +150,21 @@
       "file": "apps/trainer/src/renderers.js",
       "imports": [
         "./microtrainer.js",
-        "./validate.js",
-        "@sixam/core/training"
+        "./training/index.js",
+        "./validate.js"
       ]
     },
     {
       "file": "apps/trainer/src/report.js",
       "imports": [
         "@sixam/source/fnaf2"
+      ]
+    },
+    {
+      "file": "apps/trainer/src/training/index.js",
+      "imports": [
+        "./activity-gate.js",
+        "./exercise.js"
       ]
     },
     {
@@ -184,39 +191,6 @@
       ]
     },
     {
-      "file": "packages/core/src/estimation/belief-state.js",
-      "imports": [
-        "./plain-clone.js"
-      ]
-    },
-    {
-      "file": "packages/core/src/estimation/estimator.js",
-      "imports": [
-        "./belief-state.js",
-        "./plain-clone.js"
-      ]
-    },
-    {
-      "file": "packages/core/src/estimation/index.js",
-      "imports": [
-        "./belief-state.js",
-        "./estimator.js"
-      ]
-    },
-    {
-      "file": "packages/core/src/index.js",
-      "imports": [
-        "./contracts/index.js",
-        "./control/index.js",
-        "./estimation/index.js",
-        "./mechanics/index.js",
-        "./sensing/index.js",
-        "./telemetry/index.js",
-        "./timing/index.js",
-        "./training/index.js"
-      ]
-    },
-    {
       "file": "packages/core/src/mechanics/index.js",
       "imports": [
         "@sixam/source/fnaf2"
@@ -232,34 +206,7 @@
     {
       "file": "packages/core/src/sensing/index.js",
       "imports": [
-        "./observer.js"
-      ]
-    },
-    {
-      "file": "packages/core/src/sensing/observer.js",
-      "imports": [
-        "@sixam/source/games/fnaf2/config.js"
-      ]
-    },
-    {
-      "file": "packages/core/src/telemetry/index.js",
-      "imports": [
-        "./bench-trace.js",
-        "@sixam/kernel/time"
-      ]
-    },
-    {
-      "file": "packages/core/src/timing/index.js",
-      "imports": [
-        "./phase-clock.js",
-        "@sixam/kernel/time"
-      ]
-    },
-    {
-      "file": "packages/core/src/training/index.js",
-      "imports": [
-        "./activity-gate.js",
-        "./exercise.js"
+        "@sixam/play/sim"
       ]
     },
     {
@@ -513,6 +460,12 @@
       ]
     },
     {
+      "file": "packages/play/src/clocks/index.js",
+      "imports": [
+        "./phase-clock.js"
+      ]
+    },
+    {
       "file": "packages/play/src/coach/cycle-lesson.js",
       "imports": [
         "node:crypto"
@@ -548,6 +501,26 @@
       ]
     },
     {
+      "file": "packages/play/src/player/belief-state.js",
+      "imports": [
+        "./plain-clone.js"
+      ]
+    },
+    {
+      "file": "packages/play/src/player/estimator.js",
+      "imports": [
+        "./belief-state.js",
+        "./plain-clone.js"
+      ]
+    },
+    {
+      "file": "packages/play/src/player/index.js",
+      "imports": [
+        "./belief-state.js",
+        "./estimator.js"
+      ]
+    },
+    {
       "file": "packages/play/src/sensors/fnaf2/calibration-state-rule.js",
       "imports": [
         "./monitor-rule.js",
@@ -564,6 +537,18 @@
       "file": "packages/play/src/sensors/fnaf2/monitor-rule.js",
       "imports": [
         "node:crypto"
+      ]
+    },
+    {
+      "file": "packages/play/src/venues/sim/index.js",
+      "imports": [
+        "./observer.js"
+      ]
+    },
+    {
+      "file": "packages/play/src/venues/sim/observer.js",
+      "imports": [
+        "@sixam/source/games/fnaf2/config.js"
       ]
     },
     {
@@ -879,7 +864,7 @@
     {
       "file": "packages/propose/src/games/fnaf2/controller.js",
       "imports": [
-        "@sixam/core/sensing",
+        "@sixam/play/sim",
         "@sixam/source/games/fnaf2/config.js"
       ]
     },
@@ -888,7 +873,7 @@
       "imports": [
         "./cycle-library.js",
         "./cycle-planner.js",
-        "@sixam/core/estimation",
+        "@sixam/play/player",
         "@sixam/source/games/fnaf2/config.js",
         "@sixam/source/games/fnaf2/reduced-model.js"
       ]
@@ -952,7 +937,7 @@
     {
       "file": "packages/propose/src/policy/observation-language.js",
       "imports": [
-        "@sixam/core/sensing",
+        "@sixam/play/sim",
         "@sixam/source/games/fnaf2/config.js"
       ]
     },
@@ -1032,7 +1017,7 @@
     {
       "file": "packages/propose/test/cycle-controller.test.js",
       "imports": [
-        "@sixam/core/sensing",
+        "@sixam/play/sim",
         "@sixam/propose/fnaf2",
         "@sixam/source/fnaf2",
         "node:fs"
@@ -1156,6 +1141,12 @@
         "node:crypto",
         "node:fs",
         "node:path"
+      ]
+    },
+    {
+      "file": "packages/review/src/measure/index.js",
+      "imports": [
+        "./bench-trace.js"
       ]
     },
     {
@@ -1913,7 +1904,7 @@
     {
       "file": "tools/activitygatetest.mjs",
       "imports": [
-        "@sixam/core/training",
+        "@sixam/trainer/training",
         "node:assert/strict"
       ]
     },
@@ -1962,6 +1953,7 @@
         "@sixam/kernel/contracts",
         "@sixam/play",
         "@sixam/play/phone/night-onset",
+        "@sixam/play/sim",
         "@sixam/propose",
         "@sixam/propose/fnaf2",
         "@sixam/propose/seeds",
@@ -1984,20 +1976,20 @@
     {
       "file": "tools/belieftest.mjs",
       "imports": [
-        "@sixam/core/estimation"
+        "@sixam/play/player"
       ]
     },
     {
       "file": "tools/bench-trace.mjs",
       "imports": [
-        "@sixam/core/telemetry",
+        "@sixam/review/measure",
         "node:fs/promises"
       ]
     },
     {
       "file": "tools/benchtracetest.mjs",
       "imports": [
-        "@sixam/core/telemetry",
+        "@sixam/review/measure",
         "node:assert/strict",
         "node:child_process",
         "node:fs",
@@ -3156,7 +3148,7 @@
     {
       "file": "tools/estimatortest.mjs",
       "imports": [
-        "@sixam/core/estimation"
+        "@sixam/play/player"
       ]
     },
     {
@@ -3187,7 +3179,7 @@
     {
       "file": "tools/exercisetest.mjs",
       "imports": [
-        "@sixam/core/training",
+        "@sixam/trainer/training",
         "node:assert/strict"
       ]
     },
@@ -3200,8 +3192,8 @@
     {
       "file": "tools/factreplay.mjs",
       "imports": [
-        "@sixam/core/sensing",
         "@sixam/kernel/contracts",
+        "@sixam/play/sim",
         "@sixam/propose/fnaf2",
         "@sixam/source/fnaf2",
         "node:child_process",
@@ -3293,7 +3285,7 @@
     {
       "file": "tools/mangletest.mjs",
       "imports": [
-        "@sixam/core/sensing",
+        "@sixam/play/sim",
         "@sixam/propose/fnaf2",
         "@sixam/source/fnaf2"
       ]
@@ -3504,7 +3496,7 @@
     {
       "file": "tools/nightloop-run.mjs",
       "imports": [
-        "@sixam/core/sensing",
+        "@sixam/play/sim",
         "@sixam/propose/fnaf2",
         "@sixam/source/fnaf2"
       ]
@@ -3526,7 +3518,7 @@
         "./device/policy-grammar.mjs",
         "./device/policy-interpreter.mjs",
         "./device/policy-ir.mjs",
-        "@sixam/core/sensing",
+        "@sixam/play/sim",
         "@sixam/propose/policy"
       ]
     },
@@ -3547,8 +3539,8 @@
     {
       "file": "tools/phaseclocktest.mjs",
       "imports": [
-        "@sixam/core/timing",
-        "@sixam/kernel/time"
+        "@sixam/kernel/time",
+        "@sixam/play/clocks"
       ]
     },
     {
@@ -3686,7 +3678,7 @@
       "imports": [
         "../tools/device/minus-toys-plan.mjs",
         "./stat.mjs",
-        "@sixam/core/sensing",
+        "@sixam/play/sim",
         "@sixam/propose/fnaf2",
         "@sixam/source/fnaf2",
         "node:url"
@@ -4366,7 +4358,7 @@
         "./device/minus-toys-jitter.mjs",
         "./device/minus-toys-plan.mjs",
         "./stat.mjs",
-        "@sixam/core/sensing",
+        "@sixam/play/sim",
         "@sixam/propose/fnaf2",
         "@sixam/source/fnaf2",
         "node:url"

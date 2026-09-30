@@ -7,14 +7,25 @@ it but `@sixam/propose` and the applications (`tools/architecture-test.js`).
 
 | Folder | What it holds |
 |---|---|
+| `src/campaign/` | The campaign executor, moved from `apps/device`: the artifact and device-local executors, the HID schedule and device shell, the control-effect grader, the adb bridge and physical ports, the campaign state machine, runner, proof, preflight, bundle and composition, the custom-night procedure, the night anchor, the timed start and the venue bindings. `modern-campaign-ports.js` is the one module here that composes the HID transport. `@sixam/play/campaign/<name>`. |
+| `src/coach/` | The teach feed the Companion's panel narrates (`cycle-lesson.js`). `@sixam/play/coach/<name>`. |
 | `src/venues/phone/` | The phone's transports: the HID wire (`hid.js`), the Cue Helper control protocol (`cue-helper.js`) and the Companion status record (`companion-status.js`). |
 | `src/phone/` | Clocks and clock maps (`clocks.js`), night-onset detection (`night-onset.js`), the pan-aware control anchor (`control-anchor.js`), control exclusion (`control-exclusion.js`) and the venue parser (`android-venue.js`). |
+| `src/venues/sim/` | The Sim venue's observer: what a player could see, sampled at the device cadence (was `@sixam/core/sensing`). `@sixam/play/sim`. |
+| `src/player/` | The player's belief and estimator, unknown-safe (was `@sixam/core/estimation`). `@sixam/play/player`. |
+| `src/clocks/` | The Plan 21 winding-tick phase clock and its estimator (was `@sixam/core/timing`). `@sixam/play/clocks`. |
 | `src/sensors/fnaf2/` | **Deprecated.** The FNaF 2 grid/luma readers the executor still consults: the monitor, camera and calibration-state rules and the button strokes. |
 | `test/` | Their tests and the `dumpsys package` fixtures, in the root `test:contracts` lane. |
 
 Public API: `src/index.js` (the export set `@sixam/adapters` had) and the
-subpaths `@sixam/play/venues/phone/<name>`, `@sixam/play/phone/<name>` and
-`@sixam/play/sensors/fnaf2/<name>`.
+subpaths `@sixam/play/venues/phone/<name>`, `@sixam/play/phone/<name>`,
+`@sixam/play/sensors/fnaf2/<name>`, `@sixam/play/sim`, `@sixam/play/player` and
+`@sixam/play/clocks`. The Sim observer, the player and the clocks keep core's
+host-global rule (no DOM, process or wall clock); `tools/belieftest.mjs`,
+`estimatortest.mjs`, `phaseclocktest.mjs` and `reactivetest.mjs` test them.
+`packages/core/src/sensing/index.js` stays as a shim over `@sixam/play/sim`
+for `tools/device/minus-toys-plan.mjs`, whose bytes every Minus Toys bundle
+hashes (`core.sensing-shim`).
 
 **Deprecated sensors.** CLAUDE.md discontinued the 20x9 point-sampled grid,
 grid-fitted rules and luma reducers on 2026-09-24/25. The four modules in
