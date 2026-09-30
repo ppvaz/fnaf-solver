@@ -642,6 +642,19 @@
     {
       "id": "contract.policy-program-v1",
       "kind": "CONTRACT",
+      "path": "packages/propose/test/policy-game.test.js",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.policy-program-v1",
+      "kind": "CONTRACT",
+      "path": "packages/propose/test/policy-game.test.js",
+      "line": 3,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.policy-program-v1",
+      "kind": "CONTRACT",
       "path": "packages/propose/test/policygrammartest.mjs",
       "relation": "CONFORMANCE_FIXTURE"
     },

@@ -1,12 +1,22 @@
 // Finite semantic interpreter for policy-v1 (Plan 21 package 2 foundation).
 // It expands only the reviewed action modes in the IR; it has no shell or
 // callback escape hatch. A later Sim adapter can consume this event stream.
-import { validatePolicy } from '@sixam/propose/policy';
+import { policyGame, validatePolicy } from '@sixam/propose/policy';
 import { Sim } from '@sixam/source/fnaf2';
 import * as C from '@sixam/source/fnaf2';
 
-const control = action => action.startsWith('cam') ? `cam:${action.slice(3)}`
-  : action === 'ventl' ? 'light' : action;
+// The FNaF 2 Sim action each of the IR's FNaF 2 spellings presses. The IR
+// accepts every control in the game's catalog, and the Sim ignores a name it
+// does not know, so an action outside this table is refused, not dropped.
+const SIM_ACTION = Object.freeze({
+  monitor: 'monitor', mask: 'mask', cam9: 'cam:9', cam11: 'cam:11',
+  ventl: 'light', light: 'light', wind: 'wind', hall: 'hall',
+});
+const control = action => {
+  if (!Object.hasOwn(SIM_ACTION, action))
+    throw new TypeError(`policy interpreter: action ${JSON.stringify(action)} has no FNaF 2 Sim expansion`);
+  return SIM_ACTION[action];
+};
 
 function expandAction(action, baseMs, out) {
   const atMs = baseMs + (action.atMs ?? action.offsetMs ?? 0);
@@ -27,6 +37,9 @@ function expandAction(action, baseMs, out) {
 
 export function compilePolicy(program, { untilMs = Infinity } = {}) {
   validatePolicy(program);
+  const game = policyGame(program);
+  if (game !== 'fnaf2')
+    throw new TypeError(`policy interpreter: ${program.metadata.id} is a ${game} policy; this interpreter replays FNaF 2`);
   // This compiler produces one unconditional event stream. An
   // observation-conditioned branch has no expansion here: flattening it into
   // either arm would replay a DIFFERENT program from the one being searched,

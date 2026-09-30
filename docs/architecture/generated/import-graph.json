@@ -2831,7 +2831,8 @@
     {
       "file": "packages/propose/src/policy/policy-ir.js",
       "imports": [
-        "./observation-language.js"
+        "./observation-language.js",
+        "@sixam/source"
       ]
     },
     {
@@ -2976,6 +2977,17 @@
         "../bin/policy/policy-ir.mjs",
         "@sixam/play/sim",
         "@sixam/propose/policy"
+      ]
+    },
+    {
+      "file": "packages/propose/test/policy-game.test.js",
+      "imports": [
+        "../bin/policy/policy-artifact.mjs",
+        "../bin/policy/policy-interpreter.mjs",
+        "../bin/policy/policy-ir.mjs",
+        "@sixam/propose/policy",
+        "node:assert/strict",
+        "node:crypto"
       ]
     },
     {

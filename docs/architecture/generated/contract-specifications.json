@@ -63,7 +63,8 @@
       "runtimeValidation": "validatePolicy",
       "conformanceFixtures": [
         "packages/propose/test/policygrammartest.mjs",
-        "packages/propose/bin/policy/test-policy-ir.mjs"
+        "packages/propose/bin/policy/test-policy-ir.mjs",
+        "packages/propose/test/policy-game.test.js"
       ]
     },
     {
