@@ -13,7 +13,7 @@ the same commit.
   [`ON-DEVICE-VALIDATION.md`](../device/ON-DEVICE-VALIDATION.md), and
   `docs/android/ANDROID-SOURCE-STATUS.md` §"The simulator prices nothing".
 - **Canonical authority:** [`ANDROID-SOURCE-STATUS.md`](ANDROID-SOURCE-STATUS.md)
-  is the enforced ledger (`tools/sourcetest.mjs`, one case per group citation).
+  is the enforced ledger (`packages/source/test/sourcetest.mjs`, one case per group citation).
   Everything below traces to it, to [`ANDROID-CAMERA-STALL.md`](ANDROID-CAMERA-STALL.md),
   [`ANDROID-OFFICE-ENDGAME.md`](ANDROID-OFFICE-ENDGAME.md),
   [`ANDROID-GROUP-MAP.md`](ANDROID-GROUP-MAP.md),

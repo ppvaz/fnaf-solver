@@ -19,7 +19,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "PlantModel",
       "conformanceFixtures": [
-        "tools/sourcetest.mjs",
+        "packages/source/test/sourcetest.mjs",
         "tools/simtest.mjs"
       ]
     },
@@ -186,7 +186,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateTelemetry",
       "conformanceFixtures": [
-        "tools/factlinktest.mjs"
+        "packages/kernel/test/factlinktest.mjs"
       ]
     },
     {

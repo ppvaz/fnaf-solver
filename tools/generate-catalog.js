@@ -47,7 +47,7 @@ const toolCommands = [...toolsIndex.matchAll(/^\| `([^`]+)` \| ([^|]+) \|/gm)].m
 const contractRegister = JSON.parse(await readFile(join(ROOT, 'packages/kernel/contracts/register.json'), 'utf8'));
 const protocols = contractRegister.contracts.filter(item => ['wire', 'process'].includes(item.kind));
 const contractEvidence = {
-  'plant-model-v1': ['tools/sourcetest.mjs', 'tools/simtest.mjs'],
+  'plant-model-v1': ['packages/source/test/sourcetest.mjs', 'tools/simtest.mjs'],
   'semantic-control-v1': ['packages/source/test/contracts.test.js', 'packages/source/test/control-catalog.test.js',
     'tools/device/test-policy-interpreter.mjs'],
   'policy-program-v1': ['tools/policygrammartest.mjs', 'tools/device/test-policy-ir.mjs'],
@@ -60,7 +60,7 @@ const contractEvidence = {
   'state-estimate-v1': ['tools/estimatortest.mjs'],
   'clock-v1': ['tools/phaseclocktest.mjs'],
   'device-profile-v1': ['tools/device/test-bundle.mjs', 'packages/play/test/profile-game.test.js'],
-  'telemetry-event-v1': ['tools/factlinktest.mjs'],
+  'telemetry-event-v1': ['packages/kernel/test/factlinktest.mjs'],
   'session-manifest-v1': ['tools/device/test-session-manifest.sh'],
   'experiment-spec-v1': ['packages/propose/test/experiment.test.js'],
   'experiment-result-v1': ['packages/propose/test/experiment.test.js'],

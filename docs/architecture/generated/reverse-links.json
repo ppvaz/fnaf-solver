@@ -610,13 +610,13 @@
     {
       "id": "contract.plant-model-v1",
       "kind": "CONTRACT",
-      "path": "tools/simtest.mjs",
+      "path": "packages/source/test/sourcetest.mjs",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.plant-model-v1",
       "kind": "CONTRACT",
-      "path": "tools/sourcetest.mjs",
+      "path": "tools/simtest.mjs",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -834,7 +834,7 @@
     {
       "id": "contract.telemetry-event-v1",
       "kind": "CONTRACT",
-      "path": "tools/factlinktest.mjs",
+      "path": "packages/kernel/test/factlinktest.mjs",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {

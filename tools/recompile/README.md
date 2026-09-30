@@ -651,7 +651,7 @@ With all three on, Nights 1-6 give byte-identical model traces.
   `night number` into `night`. `night` is frame-local (no global flag in the
   CCN) with initial value 0, so g486 parks `your view` on CAM 09 every night.
   The rebuild's dump puts it inside CAM 09's box on Custom Night. The model's
-  `parkedCamera(7) = 10` (and `tools/sourcetest.mjs`'s g486-487 check) did not
+  `parkedCamera(7) = 10` (and `packages/source/test/sourcetest.mjs`'s g486-487 check) did not
   account for g632's order. It matters before the first raise (g4 still opens
   CAM 07): the g498 draws and the flash target.
 - `sourcedCustomDialOrder` (at 20: tick 60, g781's first Golden Freddy hall

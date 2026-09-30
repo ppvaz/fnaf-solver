@@ -47,7 +47,7 @@ if (kernelChanged)
 if (kernelChanged || sourceChanged || coreChanged) {
   add('source-contracts', 'node', ['packages/source/test/contracts.test.js']);
   add('control-catalog', 'node', ['packages/source/test/control-catalog.test.js']);
-  add('source-mechanics', 'node', ['tools/sourcetest.mjs']);
+  add('source-mechanics', 'node', ['packages/source/test/sourcetest.mjs']);
 }
 if (sourceChanged || coreChanged || proposeChanged || playModelChanged) {
   // The closed loop is the device work's spine (ROADMAP Track A); its gates

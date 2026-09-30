@@ -2,9 +2,9 @@
 // Stock-APK RNG hypothesis tooling.
 //
 // Examples:
-//   node tools/seed-recovery.mjs window --center-ms 1760000000123 --half-width-ms 8
-//   node tools/seed-recovery.mjs clock-window clock-sample.json
-//   node tools/seed-recovery.mjs filter trace.json
+//   node packages/source/test/seed-recovery.mjs window --center-ms 1760000000123 --half-width-ms 8
+//   node packages/source/test/seed-recovery.mjs clock-window clock-sample.json
+//   node packages/source/test/seed-recovery.mjs filter trace.json
 //
 // `filter` accepts the JSON contract documented in
 // docs/device/RNG-SEED-RECOVERY.md. Roll filtering can scan all 65,536 seeds;

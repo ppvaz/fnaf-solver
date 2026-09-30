@@ -48,11 +48,11 @@ host, the helper combines the marker with a selected sample and makes a
 conservative inclusive time window:
 
 ```sh
-node tools/seed-recovery.mjs marker-window clock-samples.json \
+node packages/source/test/seed-recovery.mjs marker-window clock-samples.json \
   --sample-index 0 --host-marker-ms 1760000000123 \
   --marker-uncertainty-ms 8
 
-node tools/seed-recovery.mjs clock-window clock-sample.json
+node packages/source/test/seed-recovery.mjs clock-window clock-sample.json
 ```
 
 `clock-window` is a convenience for a sample taken at the event itself.
@@ -61,7 +61,7 @@ separate. The direct form is also available when the device-time window is
 already known:
 
 ```sh
-node tools/seed-recovery.mjs window \
+node packages/source/test/seed-recovery.mjs window \
   --center-ms 1760000000123 --half-width-ms 8
 ```
 
@@ -98,7 +98,7 @@ be skipped by specifying a later `drawIndex`.
 Run it with:
 
 ```sh
-node tools/seed-recovery.mjs filter roll-trace.json --mode=rolls
+node packages/source/test/seed-recovery.mjs filter roll-trace.json --mode=rolls
 ```
 
 This filter can scan all 65,536 seeds quickly. It is exact only if the draw
@@ -133,7 +133,7 @@ matching event occurred in the specified range.
 Run it with:
 
 ```sh
-node tools/seed-recovery.mjs filter event-trace.json --mode=events
+node packages/source/test/seed-recovery.mjs filter event-trace.json --mode=events
 ```
 
 Event replay is intentionally capped at 4,096 candidates by default because it

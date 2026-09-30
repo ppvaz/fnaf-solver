@@ -350,7 +350,7 @@ sender-receipt, and local-link-receipt times, finite latency bounds, and an
 ordered sequence with visible gaps and stale state. `SafeCycleHandoff` accepts
 at most 16 actions over at most 15 seconds and can drain only the actions the
 host already approved; a stale link cannot create a replacement action and an
-expired approval emits nothing. `tools/factlinktest.mjs` covers the contract
+expired approval emits nothing. `packages/kernel/test/factlinktest.mjs` covers the contract
 and is in the normal suite. These are deliberate protocol bounds, not a
 measurement of USB timing or proof that an MCU/external HID accepts the wire.
 

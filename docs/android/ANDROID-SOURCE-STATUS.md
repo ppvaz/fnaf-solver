@@ -6,7 +6,7 @@ August 2025. Community PC mechanics and strategies are useful leads, but a rule
 enters the Android simulator only when the Android event sheet, an Android
 experiment, or an explicitly labeled approximation supports it.
 
-## The ledger is enforced by `tools/sourcetest.mjs` (2026-08-20)
+## The ledger is enforced by `packages/source/test/sourcetest.mjs` (2026-08-20)
 
 A rule entering this ledger used to be an assertion about the engine that
 nothing checked. The engine's other checks are population statistics —

@@ -645,7 +645,7 @@ node tools/census.mjs --game fnaf4 --night 5 --policy community-loop --seeds 300
 node tools/test-fnaf4-census.mjs
 ```
 
-Gated by `packages/source/decompile/test-nightmap.py`, `tools/test-night-models.mjs` and
+Gated by `packages/source/decompile/test-nightmap.py`, `packages/source/test/test-night-models.mjs` and
 `tools/test-fnaf1-census.mjs`, `tools/test-fnaf3-census.mjs` and
 `tools/test-fnaf4-census.mjs`, all in `npm run test:unit`. The model censuses
 need no game content; `--start` selects a disjoint seed block for the three

@@ -110,7 +110,7 @@ branch-prompt problem.
 
 > **2026-08-24 implementation pass:** the four rules the sweep left decoded but
 > unmodelled are now in the engine and asserted per group in
-> `tools/sourcetest.mjs`. Gap 4 (consecutive mask ticks) and gap 5 (the Puppet
+> `packages/source/test/sourcetest.mjs`. Gap 4 (consecutive mask ticks) and gap 5 (the Puppet
 > flash-stall) were already implemented; gaps 2 and 7 were already sourced.
 > **Gap 6 was the expensive one** and its own parenthetical predicted why: the
 > lockout is the mask-off animation itself, and Foxy's D reset runs through

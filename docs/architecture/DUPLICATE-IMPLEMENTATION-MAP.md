@@ -137,7 +137,7 @@ models, aligned by comment only.
   (tested by `tools/phaseclocktest.mjs`) is the only implementation.
 
 Cleanup decision: these are the two strongest candidates for the shared-JSONL
-vector pattern already used by `tools/contract-vectors.py` (§20).
+vector pattern already used by `packages/kernel/test/contract-vectors.py` (§20).
 
 ## 4. Calibration fitters — binding: `COMMENT` (spec) / partial reuse (code)
 
@@ -473,7 +473,7 @@ A cleanup should reuse one of these five rather than invent a sixth:
 2. **Cross-language spawn comparison.** `tools/test-stat.mjs` imports the JS
    module and spawns `python3` against `stat.py` in the same test.
 3. **Shared JSONL vectors read from both languages.**
-   `tools/contract-vectors.py` over `packages/source/test/fixtures/*.jsonl`.
+   `packages/kernel/test/contract-vectors.py` over `packages/source/test/fixtures/*.jsonl`.
 4. **Equivalence gate between a model and its authority.**
    `tools/reducedmodeltest.mjs` (reduced model vs seeded `Sim`),
    `tools/device/policy-equivalence.mjs` (two compilers of one plan format),

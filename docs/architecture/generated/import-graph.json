@@ -324,6 +324,12 @@
       ]
     },
     {
+      "file": "packages/kernel/test/factlinktest.mjs",
+      "imports": [
+        "@sixam/kernel/time"
+      ]
+    },
+    {
       "file": "packages/kernel/test/kernel.test.js",
       "imports": [
         "../src/index.js",
@@ -1814,6 +1820,13 @@
       ]
     },
     {
+      "file": "packages/source/test/propertytest.mjs",
+      "imports": [
+        "@sixam/source/fnaf2",
+        "node:assert/strict"
+      ]
+    },
+    {
       "file": "packages/source/test/puppet-glitch-draws.test.js",
       "imports": [
         "../src/games/fnaf2/plant-model.js",
@@ -1880,11 +1893,40 @@
       ]
     },
     {
+      "file": "packages/source/test/seed-recovery.mjs",
+      "imports": [
+        "@sixam/source/fnaf2",
+        "node:fs"
+      ]
+    },
+    {
+      "file": "packages/source/test/seed-recoverytest.mjs",
+      "imports": [
+        "@sixam/source/fnaf2",
+        "node:assert/strict"
+      ]
+    },
+    {
       "file": "packages/source/test/sheet-order.test.js",
       "imports": [
         "../src/games/fnaf2/config.js",
         "../src/games/fnaf2/plant-model.js",
         "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/sourcetest.mjs",
+      "imports": [
+        "@sixam/source/fnaf2",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/source/test/test-night-models.mjs",
+      "imports": [
+        "@sixam/source",
+        "@sixam/source/fnaf2",
+        "@sixam/source/games/fnaf2/config.js"
       ]
     },
     {
@@ -3187,12 +3229,6 @@
       ]
     },
     {
-      "file": "tools/factlinktest.mjs",
-      "imports": [
-        "@sixam/kernel/time"
-      ]
-    },
-    {
       "file": "tools/factreplay.mjs",
       "imports": [
         "@sixam/kernel/contracts",
@@ -3659,13 +3695,6 @@
       ]
     },
     {
-      "file": "tools/propertytest.mjs",
-      "imports": [
-        "@sixam/source/fnaf2",
-        "node:assert/strict"
-      ]
-    },
-    {
       "file": "tools/push-gate.mjs",
       "imports": [
         "./device/local-profile.mjs",
@@ -4062,31 +4091,10 @@
       ]
     },
     {
-      "file": "tools/seed-recovery.mjs",
-      "imports": [
-        "@sixam/source/fnaf2",
-        "node:fs"
-      ]
-    },
-    {
-      "file": "tools/seed-recoverytest.mjs",
-      "imports": [
-        "@sixam/source/fnaf2",
-        "node:assert/strict"
-      ]
-    },
-    {
       "file": "tools/simtest.mjs",
       "imports": [
         "@sixam/source/fnaf2",
         "@sixam/trainer"
-      ]
-    },
-    {
-      "file": "tools/sourcetest.mjs",
-      "imports": [
-        "@sixam/source/fnaf2",
-        "node:url"
       ]
     },
     {
@@ -4222,14 +4230,6 @@
         "node:fs",
         "node:path",
         "node:url"
-      ]
-    },
-    {
-      "file": "tools/test-night-models.mjs",
-      "imports": [
-        "@sixam/source",
-        "@sixam/source/fnaf2",
-        "@sixam/source/games/fnaf2/config.js"
       ]
     },
     {

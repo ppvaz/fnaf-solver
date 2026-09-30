@@ -14,7 +14,7 @@
 // So this file asserts the mechanisms directly, one case per group citation,
 // against a hand-driven Sim. A failure here names the group that broke.
 //
-//   node tools/sourcetest.mjs
+//   node packages/source/test/sourcetest.mjs
 import { pathToFileURL } from 'node:url';
 import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';

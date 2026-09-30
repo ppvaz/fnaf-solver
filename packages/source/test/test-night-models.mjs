@@ -18,7 +18,7 @@
 // Structural checks cover the rest: every row cites the group it came from,
 // and no clock is missing its source.
 //
-//   node tools/test-night-models.mjs
+//   node packages/source/test/test-night-models.mjs
 
 import {
   GAMES, GAME_IDS, PACKAGES, scheduleFor, peakFor, canActIn, nightsOf,

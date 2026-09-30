@@ -38,10 +38,10 @@ const ENGINE = [
   // First, because it is the only check that fails on a wrong *rule* rather
   // than a wrong *outcome*: the population checks below all pass with a
   // corrupted sourced constant.
-  ['sourcetest', ['sourcetest.mjs']],
+  ['sourcetest', ['../packages/source/test/sourcetest.mjs']],
   // Stock-APK seed recovery is bounded to device-time windows or explicit
   // observed outcomes; it never turns an inferred candidate into authority.
-  ['seed recovery', ['seed-recoverytest.mjs']],
+  ['seed recovery', ['../packages/source/test/seed-recoverytest.mjs']],
   // Plan 18 package 3: JavaScript/Python statistical primitives agree on
   // Wilson intervals, planning-N, two-proportion tests and fail-closed bars.
   ['stat helper', ['test-stat.mjs']],
@@ -72,7 +72,7 @@ const ENGINE = [
   // Plan 20 package 6 foundation: bounded fact messages, ordered receipt and
   // gap/stale reporting, plus a local drain that can finish an already-
   // approved cycle without inventing actions after the host link drops.
-  ['fact link', ['factlinktest.mjs']],
+  ['fact link', ['../packages/kernel/test/factlinktest.mjs']],
   // Plan 20 package 1: unknown-safe, calibration-bound facts and explicit
   // action verification in a deterministic replayable belief contract.
   ['belief state', ['belieftest.mjs']],
@@ -357,7 +357,7 @@ const ENGINE = [
   ['shell footguns', ['device/test-shell-footguns.sh']],
   // Plan 18 Package 4: bounded dependency-free properties for Sim state,
   // event determinism, and sourced Night-1 reachability.
-  ['engine properties', ['propertytest.mjs']],
+  ['engine properties', ['../packages/source/test/propertytest.mjs']],
   // The indexes are how a cold session finds anything, and nothing recomputed
   // them: TOOLS.md was missing 47 of 137 scripts including grade-run.sh, and
   // docs/README.md was missing HID-MULTITOUCH.md. Cheap, so it runs here
