@@ -25,9 +25,9 @@ FNaF 2's `config.js` that way).
 and `rng.js` moved byte for byte and stay together, because `plant-model.js`
 imports the other two by `./`. A retained bracket-sweep result names them by
 their old paths and sha256; its check
-(`tools/recompile/test-phone-input-bracket-sweep.mjs`) finds each old path's
+(`packages/propose/bin/recompile/test-phone-input-bracket-sweep.mjs`) finds each old path's
 bytes in that path's git history and matches the files by name, so it no
-longer depends on where they live; `tools/recompile/model-draw-trace.mjs`
+longer depends on where they live; `packages/source/recompile/model-draw-trace.mjs`
 hashes the model beside the `@sixam/source/fnaf2` barrel into new records.
 `src/clockwork/rng.js` is the cross-game name for the RNG and
 re-exports FNaF 2's file until migration step D2 splits the plant model.

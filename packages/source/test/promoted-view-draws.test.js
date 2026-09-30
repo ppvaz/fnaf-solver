@@ -1,6 +1,6 @@
 // sourcedPromotedViewDraws: g366/g368/g419 draw only for a Toy whose move is promoted (value 0 == 2), and
 // g344-g360 write the fade counter C = 10 at that promotion, not at the roll. The schedule replays into the
-// rebuilt runtime split on this on all three nights (tools/recompile/README.md, "Winner schedules replayed").
+// rebuilt runtime split on this on all three nights (packages/source/recompile/README.md, "Winner schedules replayed").
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.js';
 

@@ -17,9 +17,9 @@ What stays is `profiles/`, the resolved device profiles (`device-profile-v1`):
 They stay at this path, unmoved and byte for byte, because stored hashes cover
 it: 55 retained results in `tools/recompile/results/` record `profile:
 apps/device/profiles/hid-mediaprojection.json` beside its `profileSha256`; the
-recompile configs `tools/recompile/full06-response-experiment.json` (whose
+recompile configs `packages/propose/bin/recompile/full06-response-experiment.json` (whose
 sha256 `full06-responses-20260928` binds) and `phone-encounter-nights.json` name
-it; `tools/recompile/schedule-to-input.mjs` defaults to it; and
+it; `packages/propose/bin/recompile/schedule-to-input.mjs` defaults to it; and
 `docs/evidence/graph.json` cites `fixture-hid-screencap.json` here. Each profile
 is registered in
 [`legacy-paths.json`](../../docs/architecture/generated/legacy-paths.json)

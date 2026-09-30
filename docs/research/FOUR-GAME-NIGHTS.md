@@ -283,7 +283,7 @@ with a screen up — the monitor or the maintenance panel (g289-g291) — moves
 him to stage 2 (g275), from which g253 needs no screen. The model left stage 1
 only on the blackout (g486), so it treated stage 1 as a wait, and a line that
 never lures could sit him there all night. The rebuilt runtime found the rule
-first (`tools/recompile/README.md`, 2026-09-29). With it, exhaustively
+first (`packages/source/recompile/README.md`, 2026-09-29). With it, exhaustively
 ([record](../evidence/fnaf3-stage1-g275-census-20260930.json)):
 
 | Night | `community-line` with g275 | without (`--sim.stage1Advance 0`) |

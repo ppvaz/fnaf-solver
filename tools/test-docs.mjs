@@ -132,7 +132,7 @@ for (const page of docPages)
 // Source context took it on 2026-09-30). A script is held to the README
 // nearest to it -- its own directory's, or the closest parent's -- so a reader
 // in tools/device/ finds tools/device/'s scripts there.
-const TOOL_ROOTS = ['tools', 'packages/source/decompile', 'apps/lab'];
+const TOOL_ROOTS = ['tools', 'packages/source/decompile', 'packages/source/recompile', 'apps/lab'];
 // Entry points that left tools/ for their context: each package's and application's bin/ and
 // propose's parked work are held to the Scripts table of the nearest README
 // (ADR 0002 layout, LEG-008).
@@ -142,7 +142,8 @@ const SCRIPTS_HEADING = '\n## Scripts\n';
 const scriptsIndex = (f) => /^(?:packages|apps)\/[^/]+\/README\.md$/.test(f) &&
   readFileSync(join(ROOT, f), 'utf8').includes(SCRIPTS_HEADING);
 const indexes = tracked.filter((f) => /^tools\/(?:[^/]+\/)?README\.md$/.test(f) ||
-  f === 'packages/source/decompile/README.md' || f === 'apps/lab/README.md' || scriptsIndex(f)).sort();
+  f === 'packages/source/decompile/README.md' || f === 'packages/source/recompile/README.md' || f === 'apps/lab/README.md' ||
+  scriptsIndex(f)).sort();
 const entriesOf = new Map();
 for (const index of indexes) {
   const entries = new Set();

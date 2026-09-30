@@ -10,13 +10,13 @@ Patches to third-party tools (tools/recompile)
 Each patch has a REUSE-style sidecar (<patch>.license) with its SPDX identifier.
 The licence texts are in tools/recompile/LICENSES/.
 
-- tools/recompile/mmfparser-chowdren-mobile.patch
-- tools/recompile/android/gles2-renderer.patch
+- packages/source/recompile/mmfparser-chowdren-mobile.patch
+- packages/source/recompile/android/gles2-renderer.patch
   Modify Anaconda (mmfparser and Chowdren), Copyright (c) Mathias Kaerlev 2012,
   through the fnmwolf fork (https://github.com/fnmwolf/Anaconda).
   Licence: GNU General Public License v3.0 or later (GPL-3.0-or-later).
 
-- tools/recompile/android/openal-soft-1.23.1-opensl-performance-mode.patch
+- packages/source/recompile/android/openal-soft-1.23.1-opensl-performance-mode.patch
   Modifies alc/backends/opensl.cpp of OpenAL Soft 1.23.1, a file Copyright (C)
   2011 The Android Open Source Project under the Apache License 2.0. OpenAL
   Soft as a whole is under the GNU Library General Public License v2.

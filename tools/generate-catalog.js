@@ -48,7 +48,8 @@ const commandRegistry = Object.entries(rootPackage.scripts).map(([id, command]) 
 const SCRIPTS_HEADING = '\n## Scripts\n';
 const scriptsReadmes = files.map(path => relative(ROOT, path))
   .filter(path => /^(?:packages|apps)\/[^/]+\/README\.md$/.test(path)).sort();
-const toolIndexes = ['tools/README.md', 'tools/device/README.md', 'packages/source/decompile/README.md', ...scriptsReadmes];
+const toolIndexes = ['tools/README.md', 'tools/device/README.md', 'packages/source/decompile/README.md',
+  'packages/source/recompile/README.md', ...scriptsReadmes];
 const toolsIndex = (await Promise.all(toolIndexes.map(async path => {
   const text = await readFile(join(ROOT, path), 'utf8');
   return scriptsReadmes.includes(path) ? (text.split(SCRIPTS_HEADING)[1] ?? '').split('\n## ')[0] : text;

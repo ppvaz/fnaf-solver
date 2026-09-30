@@ -50,7 +50,7 @@ export const UNSCANNED = [
   [/^models\/[^/]+\.json$/, 'fitted rules and calibration records pinned by sha256'],
   [/^packages\/play\/src\/sensors\/fnaf2\/button-strokes\.js$|^packages\/adapters\/src\/button-strokes\.js$/,
     'full06-responses-20260928 pins its bytes as ruleSourceSha256 (test-phone-encounter-replay.mjs); the adapters path is its registered link'],
-  [/^tools\/recompile\/native-frame\.py$/, 'gles2-renderer and three native-frame-title records pin its sha256'],
+  [/^packages\/source\/recompile\/native-frame\.py$/, 'gles2-renderer and three native-frame-title records pin its sha256'],
   [/^packages\/review\/test\/legacy-session\/|^docs\/device\/[^/]+\.json$/, 'stored-format fixtures and retained device records'],
   [/^plans\/PROGRESS\.md$|^docs\/operations\/CLAUDE-HISTORY\.txt$|^docs\/portal\/(?:chronicle|story)\.html$/,
     'history, and pages generated from the frozen chronicle'],

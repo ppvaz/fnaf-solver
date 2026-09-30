@@ -51,8 +51,8 @@ const explain = process.argv.includes('--explain');
 // tools/test.mjs's BACKLOG is the other exemption table, and it is read rather
 // than copied here: an engine check red on purpose carries its reason there.
 const EXEMPT = new Map([
-  ['tools/recompile/test-child-events.py', 'external-toolchain fixture: emits C++ with the pinned patched Chowdren converter under Python 2.7 and compiles it with C++; toolchain is external and absent from CI; run explicitly per tools/recompile/README.md, never count as a CI pass'],
-  ['tools/recompile/test-mobile-parser.py', 'external-toolchain fixture: imports the pinned patched Anaconda parser and its compiled Cython modules under Python 2.7, absent from this repository and CI; run explicitly per tools/recompile/README.md, never count as a CI pass'],
+  ['packages/source/recompile/test-child-events.py', 'external-toolchain fixture: emits C++ with the pinned patched Chowdren converter under Python 2.7 and compiles it with C++; toolchain is external and absent from CI; run explicitly per packages/source/recompile/README.md, never count as a CI pass'],
+  ['packages/source/recompile/test-mobile-parser.py', 'external-toolchain fixture: imports the pinned patched Anaconda parser and its compiled Cython modules under Python 2.7, absent from this repository and CI; run explicitly per packages/source/recompile/README.md, never count as a CI pass'],
   // tools/test.mjs's BROWSER group. ci.yml's header gives the reason: a
   // trainer graded in real-time milliseconds on a shared runner says nothing
   // about the code when it fails.

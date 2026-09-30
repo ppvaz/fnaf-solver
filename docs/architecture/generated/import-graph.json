@@ -801,6 +801,55 @@
       ]
     },
     {
+      "file": "packages/play/bin/recompile/capture-latency.mjs",
+      "imports": [
+        "../../src/campaign/physical-ports.js",
+        "../phone/local-profile.mjs",
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/play/bin/recompile/practice-audit.mjs",
+      "imports": [
+        "../grade/tap-stall-audit.mjs",
+        "@sixam/play",
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/play/bin/recompile/rebuild-night.mjs",
+      "imports": [
+        "../phone/local-profile.mjs",
+        "@sixam/play",
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/play/bin/recompile/test-practice-audit.mjs",
+      "imports": [
+        "./practice-audit.mjs",
+        "@sixam/play"
+      ]
+    },
+    {
+      "file": "packages/play/bin/recompile/test-rebuild-night.mjs",
+      "imports": [
+        "./rebuild-night.mjs"
+      ]
+    },
+    {
       "file": "packages/play/games/fnaf1/fnaf1-calibration-analyze.mjs",
       "imports": [
         "node:fs",
@@ -2040,6 +2089,270 @@
       ]
     },
     {
+      "file": "packages/propose/bin/recompile/calib-replay.mjs",
+      "imports": [
+        "../../../source/recompile/model-draw-trace.mjs",
+        "./schedule-to-input.mjs",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/recompile/compare-schedule-replay.mjs",
+      "imports": [
+        "../../../review/bin/recompile/compare-draw-trace.mjs",
+        "../../../source/recompile/model-draw-trace.mjs",
+        "./rebuild-options-census.mjs",
+        "./schedule-to-input.mjs",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/recompile/hour-grid-fit.mjs",
+      "imports": [
+        "./phone-encounter-replay.mjs",
+        "node:crypto",
+        "node:fs",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/recompile/phone-clock-sweep.mjs",
+      "imports": [
+        "../../../source/recompile/model-draw-trace.mjs",
+        "./compare-schedule-replay.mjs",
+        "./phone-encounter-replay.mjs",
+        "@sixam/review/renamed-path",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/recompile/phone-encounter-replay.mjs",
+      "imports": [
+        "../../../play/src/sensors/fnaf2/button-strokes.js",
+        "../../../review/bin/recompile/compare-draw-trace.mjs",
+        "../../../review/venue-grid/encounter-replay.mjs",
+        "../../../source/recompile/model-draw-trace.mjs",
+        "../plans/bundle.mjs",
+        "../plans/minus-toys-plan.mjs",
+        "./compare-schedule-replay.mjs",
+        "./schedule-to-input.mjs",
+        "@sixam/source",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/recompile/phone-input-bracket-sweep.mjs",
+      "imports": [
+        "../../../source/recompile/model-draw-trace.mjs",
+        "./compare-schedule-replay.mjs",
+        "./phone-encounter-replay.mjs",
+        "./schedule-to-input.mjs",
+        "@sixam/review/renamed-path",
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/recompile/pilot/batch.mjs",
+      "imports": [
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/recompile/pilot/fnaf3.mjs",
+      "imports": [
+        "node:fs",
+        "node:path"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/recompile/pilot/fnaf4.mjs",
+      "imports": [
+        "node:fs",
+        "node:path"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/recompile/pilot/pilot.mjs",
+      "imports": [
+        "node:child_process",
+        "node:fs",
+        "node:net",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/recompile/pilot/record.mjs",
+      "imports": [
+        "@sixam/review/renamed-path",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/recompile/pilot/replay.mjs",
+      "imports": [
+        "./pilot.mjs",
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:readline",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/recompile/pilot/search.mjs",
+      "imports": [
+        "./replay.mjs",
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/recompile/pilot/test-pilot.mjs",
+      "imports": [
+        "../../../../source/src/games/fnaf3/sim-fnaf3.js",
+        "./fnaf3.mjs",
+        "./fnaf4.mjs",
+        "./record.mjs",
+        "./search.mjs",
+        "@sixam/review/renamed-path",
+        "node:assert/strict",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/recompile/rebuild-options-census.mjs",
+      "imports": [
+        "../../../source/recompile/model-draw-trace.mjs",
+        "../census/winner-census.mjs",
+        "../census/winner-phase-census.mjs",
+        "../plans/bundle.mjs",
+        "../plans/night7-presets.mjs",
+        "@sixam/source/fnaf2",
+        "node:crypto",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/recompile/schedule-to-input.mjs",
+      "imports": [
+        "../plans/bundle.mjs",
+        "../plans/minus-toys-plan.mjs",
+        "@sixam/source",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/recompile/test-calib-replay.mjs",
+      "imports": [
+        "./calib-replay.mjs"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/recompile/test-hour-grid-fit.mjs",
+      "imports": [
+        "./hour-grid-fit.mjs",
+        "node:assert/strict",
+        "node:crypto",
+        "node:fs"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/recompile/test-phone-clock-sweep.mjs",
+      "imports": [
+        "./phone-clock-sweep.mjs",
+        "./phone-encounter-replay.mjs",
+        "node:assert/strict",
+        "node:crypto",
+        "node:fs"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/recompile/test-phone-encounter-replay.mjs",
+      "imports": [
+        "../../../source/recompile/model-draw-trace.mjs",
+        "./phone-encounter-replay.mjs",
+        "./phone-input-bracket-sweep.mjs",
+        "@sixam/review/renamed-path",
+        "node:assert/strict",
+        "node:crypto",
+        "node:fs",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/recompile/test-phone-input-bracket-sweep.mjs",
+      "imports": [
+        "./phone-input-bracket-sweep.mjs",
+        "node:assert/strict",
+        "node:crypto",
+        "node:fs"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/recompile/test-rebuild-options-census.mjs",
+      "imports": [
+        "../../../source/recompile/model-draw-trace.mjs",
+        "../census/winner-census.mjs",
+        "./rebuild-options-census.mjs",
+        "@sixam/review/renamed-path",
+        "@sixam/source/fnaf2",
+        "node:assert/strict",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/recompile/test-schedule-replay.mjs",
+      "imports": [
+        "../../../source/recompile/model-draw-trace.mjs",
+        "../plans/minus-toys-plan.mjs",
+        "./compare-schedule-replay.mjs",
+        "./schedule-to-input.mjs",
+        "node:assert/strict",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/propose/bin/report/phase-reconstruct.mjs",
       "imports": [
         "../plans/minus-toys-plan.mjs",
@@ -2832,6 +3145,41 @@
       ]
     },
     {
+      "file": "packages/review/bin/recompile/compare-draw-trace.mjs",
+      "imports": [
+        "../../../source/recompile/model-draw-trace.mjs",
+        "@sixam/source/fnaf2",
+        "node:crypto",
+        "node:fs",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/review/bin/recompile/diagnose-child-events.mjs",
+      "imports": [
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/review/bin/recompile/test-child-diagnosis.mjs",
+      "imports": [
+        "./diagnose-child-events.mjs",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/review/bin/recompile/test-compare-draw-trace.mjs",
+      "imports": [
+        "../../../source/recompile/model-draw-trace.mjs",
+        "./compare-draw-trace.mjs",
+        "@sixam/source/fnaf2",
+        "node:assert/strict"
+      ]
+    },
+    {
       "file": "packages/review/bin/report/bench-trace.mjs",
       "imports": [
         "@sixam/review/measure",
@@ -3196,6 +3544,15 @@
         "node:os",
         "node:path",
         "node:zlib"
+      ]
+    },
+    {
+      "file": "packages/source/recompile/model-draw-trace.mjs",
+      "imports": [
+        "@sixam/source/fnaf2",
+        "node:fs",
+        "node:path",
+        "node:url"
       ]
     },
     {
@@ -3942,342 +4299,6 @@
       ]
     },
     {
-      "file": "tools/rebuild-options-census.mjs",
-      "imports": [
-        "../packages/propose/bin/census/winner-census.mjs",
-        "../packages/propose/bin/census/winner-phase-census.mjs",
-        "../packages/propose/bin/plans/bundle.mjs",
-        "../packages/propose/bin/plans/night7-presets.mjs",
-        "./recompile/model-draw-trace.mjs",
-        "@sixam/source/fnaf2",
-        "node:crypto",
-        "node:fs",
-        "node:os",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/recompile/android/capture-latency.mjs",
-      "imports": [
-        "../../../packages/play/bin/phone/local-profile.mjs",
-        "../../../packages/play/src/campaign/physical-ports.js",
-        "node:child_process",
-        "node:crypto",
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/recompile/android/practice-audit.mjs",
-      "imports": [
-        "../../../packages/play/bin/grade/tap-stall-audit.mjs",
-        "@sixam/play",
-        "node:child_process",
-        "node:crypto",
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/recompile/android/rebuild-night.mjs",
-      "imports": [
-        "../../../packages/play/bin/phone/local-profile.mjs",
-        "@sixam/play",
-        "node:child_process",
-        "node:crypto",
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/recompile/android/test-practice-audit.mjs",
-      "imports": [
-        "./practice-audit.mjs",
-        "@sixam/play"
-      ]
-    },
-    {
-      "file": "tools/recompile/android/test-rebuild-night.mjs",
-      "imports": [
-        "./rebuild-night.mjs"
-      ]
-    },
-    {
-      "file": "tools/recompile/calib-replay.mjs",
-      "imports": [
-        "./model-draw-trace.mjs",
-        "./schedule-to-input.mjs",
-        "node:crypto",
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/recompile/compare-draw-trace.mjs",
-      "imports": [
-        "./model-draw-trace.mjs",
-        "@sixam/source/fnaf2",
-        "node:crypto",
-        "node:fs",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/recompile/compare-schedule-replay.mjs",
-      "imports": [
-        "../rebuild-options-census.mjs",
-        "./compare-draw-trace.mjs",
-        "./model-draw-trace.mjs",
-        "./schedule-to-input.mjs",
-        "node:crypto",
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/recompile/diagnose-child-events.mjs",
-      "imports": [
-        "node:crypto",
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/recompile/hour-grid-fit.mjs",
-      "imports": [
-        "./phone-encounter-replay.mjs",
-        "node:crypto",
-        "node:fs",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/recompile/model-draw-trace.mjs",
-      "imports": [
-        "@sixam/source/fnaf2",
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/recompile/phone-clock-sweep.mjs",
-      "imports": [
-        "./compare-schedule-replay.mjs",
-        "./model-draw-trace.mjs",
-        "./phone-encounter-replay.mjs",
-        "node:crypto",
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/recompile/phone-encounter-replay.mjs",
-      "imports": [
-        "../../packages/play/src/sensors/fnaf2/button-strokes.js",
-        "../../packages/propose/bin/plans/bundle.mjs",
-        "../../packages/propose/bin/plans/minus-toys-plan.mjs",
-        "../../packages/review/venue-grid/encounter-replay.mjs",
-        "./compare-draw-trace.mjs",
-        "./compare-schedule-replay.mjs",
-        "./model-draw-trace.mjs",
-        "./schedule-to-input.mjs",
-        "@sixam/source",
-        "node:crypto",
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/recompile/phone-input-bracket-sweep.mjs",
-      "imports": [
-        "./compare-schedule-replay.mjs",
-        "./model-draw-trace.mjs",
-        "./phone-encounter-replay.mjs",
-        "./schedule-to-input.mjs",
-        "node:child_process",
-        "node:crypto",
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/recompile/pilot/batch.mjs",
-      "imports": [
-        "node:child_process",
-        "node:crypto",
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/recompile/pilot/fnaf3.mjs",
-      "imports": [
-        "node:fs",
-        "node:path"
-      ]
-    },
-    {
-      "file": "tools/recompile/pilot/fnaf4.mjs",
-      "imports": [
-        "node:fs",
-        "node:path"
-      ]
-    },
-    {
-      "file": "tools/recompile/pilot/pilot.mjs",
-      "imports": [
-        "node:child_process",
-        "node:fs",
-        "node:net",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/recompile/pilot/record.mjs",
-      "imports": [
-        "node:crypto",
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/recompile/pilot/replay.mjs",
-      "imports": [
-        "./pilot.mjs",
-        "node:child_process",
-        "node:crypto",
-        "node:fs",
-        "node:path",
-        "node:readline",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/recompile/pilot/search.mjs",
-      "imports": [
-        "./replay.mjs",
-        "node:child_process",
-        "node:crypto",
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/recompile/pilot/test-pilot.mjs",
-      "imports": [
-        "../../../packages/source/src/games/fnaf3/sim-fnaf3.js",
-        "./fnaf3.mjs",
-        "./fnaf4.mjs",
-        "./record.mjs",
-        "./search.mjs",
-        "node:assert/strict",
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/recompile/schedule-to-input.mjs",
-      "imports": [
-        "../../packages/propose/bin/plans/bundle.mjs",
-        "../../packages/propose/bin/plans/minus-toys-plan.mjs",
-        "@sixam/source",
-        "node:crypto",
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/recompile/test-calib-replay.mjs",
-      "imports": [
-        "./calib-replay.mjs"
-      ]
-    },
-    {
-      "file": "tools/recompile/test-child-diagnosis.mjs",
-      "imports": [
-        "./diagnose-child-events.mjs",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "tools/recompile/test-compare-draw-trace.mjs",
-      "imports": [
-        "./compare-draw-trace.mjs",
-        "./model-draw-trace.mjs",
-        "@sixam/source/fnaf2",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "tools/recompile/test-hour-grid-fit.mjs",
-      "imports": [
-        "./hour-grid-fit.mjs",
-        "node:assert/strict",
-        "node:crypto",
-        "node:fs"
-      ]
-    },
-    {
-      "file": "tools/recompile/test-phone-clock-sweep.mjs",
-      "imports": [
-        "./phone-clock-sweep.mjs",
-        "./phone-encounter-replay.mjs",
-        "node:assert/strict",
-        "node:crypto",
-        "node:fs"
-      ]
-    },
-    {
-      "file": "tools/recompile/test-phone-encounter-replay.mjs",
-      "imports": [
-        "./model-draw-trace.mjs",
-        "./phone-encounter-replay.mjs",
-        "./phone-input-bracket-sweep.mjs",
-        "node:assert/strict",
-        "node:crypto",
-        "node:fs"
-      ]
-    },
-    {
-      "file": "tools/recompile/test-phone-input-bracket-sweep.mjs",
-      "imports": [
-        "./phone-input-bracket-sweep.mjs",
-        "node:assert/strict",
-        "node:crypto",
-        "node:fs"
-      ]
-    },
-    {
-      "file": "tools/recompile/test-schedule-replay.mjs",
-      "imports": [
-        "../../packages/propose/bin/plans/minus-toys-plan.mjs",
-        "./compare-schedule-replay.mjs",
-        "./model-draw-trace.mjs",
-        "./schedule-to-input.mjs",
-        "node:assert/strict",
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
       "file": "tools/retrieval-benchmark.mjs",
       "imports": [
         "node:assert/strict",
@@ -4369,20 +4390,6 @@
         "node:child_process",
         "node:fs",
         "node:os",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/test-rebuild-options-census.mjs",
-      "imports": [
-        "../packages/propose/bin/census/winner-census.mjs",
-        "./rebuild-options-census.mjs",
-        "./recompile/model-draw-trace.mjs",
-        "@sixam/source/fnaf2",
-        "node:assert/strict",
-        "node:crypto",
-        "node:fs",
         "node:path",
         "node:url"
       ]

@@ -271,7 +271,7 @@ variable.
 ### First measurements: the rebuilt runtime on the phone (2026-09-29)
 
 The practice rebuild became the instrument that reads its own phase
-([`apply-calib-mod.py`](../../tools/recompile/android/apply-calib-mod.py)): every update's
+([`apply-calib-mod.py`](../../packages/source/recompile/android/apply-calib-mod.py)): every update's
 pump, events and swap on `CLOCK_MONOTONIC`, its exact `dt` and `timer_units`, its RNG state and
 each frame's seed, every touch as Android and SDL saw it, and a beacon that puts the update
 index on screen. These are `rebuilt-runtime` measurements of this phone, not retail evidence.

@@ -43,7 +43,7 @@ assert.deepEqual(pathKind('apps/desktop/src/companion-mcp.mjs'), { kind: 'code',
 assert.deepEqual(pathKind('apps/desktop/src/lab.mjs'), { kind: 'code', area: 'solver-interface' });
 assert.deepEqual(pathKind('packages/play/bin/phone/actuator.mjs'), { kind: 'code', area: 'controller' });
 assert.deepEqual(pathKind('packages/propose/bin/plans/bundle.mjs'), { kind: 'code', area: 'controller' }, 'moved device code keeps its area');
-assert.deepEqual(pathKind('tools/recompile/pilot/pilot.mjs'), { kind: 'code', area: null }, 'rebuild tooling is outside the four areas');
+assert.deepEqual(pathKind('packages/propose/bin/recompile/pilot/pilot.mjs'), { kind: 'code', area: null }, 'rebuild tooling is outside the four areas');
 assert.equal(pathKind('packages/source/test/simtest.mjs').kind, 'gate');
 assert.equal(pathKind('docs/evidence/night5-first-6am-20260912.md').kind, 'record', 'a Markdown evidence record is still a record');
 assert.equal(new Set(RECORD_RULES.map(rule => rule.id)).size, RECORD_RULES.length);

@@ -336,7 +336,7 @@ bytes each, with a header and name but no `LAST` marker. The real game is frames
 
 ### Phase 2 — fixes landed and the next boundary (2026-08-28)
 
-All in `tools/recompile/mmfparser-chowdren-mobile.patch`:
+All in `packages/source/recompile/mmfparser-chowdren-mobile.patch`:
 
 | gap | fix |
 | --- | --- |
@@ -497,7 +497,7 @@ placed only on later frames, some are dead cross-frame references. Fusion runs a
 ACE on zero selected instances as a no-op; Chowdren assumed every single-instance
 object had a startup instance and dereferenced `back_obj` unconditionally.
 
-Fixes landed this slice (all in `tools/recompile/mmfparser-chowdren-mobile.patch`;
+Fixes landed this slice (all in `packages/source/recompile/mmfparser-chowdren-mobile.patch`;
 converter + a few `Chowdren/base` runtime files, no game content):
 
 - **Absent single-object ACEs.** `write_frame` records `frame_startup_handles`;
@@ -644,7 +644,7 @@ valid Android `.so`. Syntax-checked **20 translation units** — engine core +
 `renderplatform` + `platform` + `fbo` + generated `events_*/objects*/frame*_1/
 lists/fonts` — for `arm64-v8a` with `-DCHOWDREN_USE_GLES1` against NDK
 `<GLES/gl.h>` + a small `include_gl` shim
-(`tools/recompile/android/include_gl-android.h.draft`, ~12 `#define`s). **Total:
+(`packages/source/recompile/android/include_gl-android.h.draft`, ~12 `#define`s). **Total:
 12 errors, all trivial** — `fileio.cpp` needs `#include <iostream>`,
 `overlap.cpp` has an include-order / one-cast issue; **every other TU, including
 all generated FNaF 2 code, compiled with zero changes.** NDK sysroot ships
@@ -652,7 +652,7 @@ all generated FNaF 2 code, compiled with zero changes.** NDK sysroot ships
 `libEGL`, `libOpenSLES`, `liblog`, `libandroid`. Deps needing an NDK cross-build:
 freetype, libogg/libvorbis, OpenAL-soft (all solved-problem). Revised estimate:
 **~1 week to a device boot attempt.** Full checklist:
-`tools/recompile/android/README.md`.
+`packages/source/recompile/android/README.md`.
 
 ### Tooling survey (2026-08-28) — NebulaFD is the reference spec
 
@@ -697,7 +697,7 @@ supports. Adds a paid tool and a manual step; keep it in reserve.
 
 Toolchain (content-free, committed): `tools/recompile/` — the build-296
 `mmfparser-chowdren-mobile.patch`, `fnaf2-config.py`, and the two probes, with
-`tools/recompile/README.md` for setup. External, uncommitted: the parsed CCN +
+`packages/source/recompile/README.md` for setup. External, uncommitted: the parsed CCN +
 `android-res-raw/`, the populated `gamesrc/cache.dat` + `image_cache/`, and the
 applied/rebuilt Chowdren checkout.
 

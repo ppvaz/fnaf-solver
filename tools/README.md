@@ -5,12 +5,18 @@ tools, then extend the closest tool when possible. The generated command catalog
 under `docs/architecture/generated/` is the machine-readable command authority;
 these pages are the narrative inventory, one per directory:
 
-- this page: suite, build, simulator, search, browser and evidence tools in
-  `tools/` itself and its small subdirectories (`model/`, `minus7/`, `minustoys/`);
-- [`device/README.md`](device/README.md): everything that runs a night on the
-  phone, observes it, or grades what it recorded;
-- [`packages/source/decompile/README.md`](../packages/source/decompile/README.md): the Android source-dump extraction and
-  readers.
+- this page: the repository's gates (suite, catalog, docs, push-gate and the
+  registers) and the few tools that still sit in `tools/`;
+- [`device/README.md`](device/README.md): the committed winners, the fact
+  register and the death chart;
+- each package's and application's README (its `## Scripts` table): every script
+  that left `tools/` for its context under the ADR 0002 layout, among them the
+  phone's runners and sensors (Play), the censuses, plans and parked Minus 7 work
+  (Propose) and the grade pipeline (Review);
+- [`packages/source/decompile/README.md`](../packages/source/decompile/README.md) and
+  [`packages/source/recompile/README.md`](../packages/source/recompile/README.md): the
+  source-dump extraction and readers, and the rebuild toolchain. The rebuild's
+  records stay frozen in `tools/recompile/results/`.
 
 `tools/test-docs.mjs` holds each script to a row in the index of its own
 directory, or of the nearest parent that has one.
@@ -121,15 +127,13 @@ The dump readers these are checked against are in [`packages/source/decompile/RE
 
 | Tool | Kind | Purpose and interface |
 |---|---|---|
-| `tools/rebuild-options-census.mjs [--jobs J] [--count N] [--out FILE] [--date YYYY-MM-DD] [--suffix LETTER] [--checkpoint DIR] [--assemble DIR] [--options FILE]` | report | Every committed winner-v1 binding on its Nights 1-6, the Night 7 binding k3 and the Night 7 preset schedule (`PRESET_KNOBS`, `golden-freddy`, won only with the split armed) scored under three model option sets on the same seeds: `default`, `rebuild` (`tools/recompile/sourced-rebuild-model-options.json`, under which the model matches the rebuilt runtime on no-input Nights 1-5) and `rebuild-no-cam-markers` (the same without the disputed `footstepCamMarkers`). Options are merged into each Sim's constructor through a scoped setter, so constructor-read options are exact, and every replay checks its Sim carries the set. Design block seeds 1..N, held-out block the first N seeds outside `winner-census.mjs` `designBlock()`; each set is paired with the default seed by seed (exact McNemar) and a row is MOVED when both blocks shift the same way at p < 0.05. Bindings with identical replays are scored once. `--checkpoint` lets a killed block resume; `--assemble DIR` writes the record from a stopped run's checkpoints, every unfinished subject a NOT_RUN row with no figures. `--options FILE` scores a dated snapshot of the set, which the record names; `--suffix b` names a second record on the same date `rebuild-options-census-YYYYMMDDb`. Writes an `evidence-record-v1`; MODEL_ONLY, no default changes. |
-| `tools/test-rebuild-options-census.mjs` | check | Holds every committed `docs/evidence/rebuild-options-census-YYYYMMDD[x].json` to the tree without re-running it, each against the options file it names: the option file, option sets and both seed blocks as scored, each binding's file and plan hash, every row's counts, p values and verdicts recomputed from its own paired counts, the option scope reaching the constructor and not leaking past it, and for each distinct replay and set the first listed held-out loss and first discordant seed each way replaying as recorded. `test:unit`. |
 
 ## Archived toolchains
 
 The ESP32 audio bridge and its host tools, and the Plan 05 invention engine
 (`tools/invent/`) left the tree on 2026-09-24. The in-engine recompile
 toolchain left with them and came back on 2026-09-27 for ROADMAP S2b:
-[`tools/recompile/README.md`](recompile/README.md) indexes it. [`docs/ARCHIVED-ROUTES.md`](../docs/ARCHIVED-ROUTES.md) names the
+[`packages/source/recompile/README.md`](../packages/source/recompile/README.md) indexes it. [`docs/ARCHIVED-ROUTES.md`](../docs/ARCHIVED-ROUTES.md) names the
 tag that holds them and how to restore one.
 
 ## Generated files and dependencies

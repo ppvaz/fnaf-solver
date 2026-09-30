@@ -206,6 +206,10 @@ const COMPUTED_IMPORTS = new Map([
     'temporary tree fnaf1-winner.mjs materializes and checks file by file'],
   ['packages/propose/bin/census/pool-worker.mjs', 'the task module a pool.mjs batch names, held for the life of the worker'],
   ['packages/propose/bin/census/pool.mjs', 'the same task module, imported in-process when the pool runs serially'],
+  ['packages/propose/bin/recompile/pilot/batch.mjs', 'the game\'s pilot module (./fnaf3.mjs or ./fnaf4.mjs) that --game names'],
+  ['packages/propose/bin/recompile/pilot/pilot.mjs', 'the game\'s pilot module (./fnaf3.mjs or ./fnaf4.mjs) that --game names'],
+  ['packages/propose/bin/recompile/pilot/replay.mjs', 'the game\'s pilot module (./fnaf3.mjs or ./fnaf4.mjs) that --game names'],
+  ['packages/propose/bin/recompile/pilot/search.mjs', 'the game\'s pilot module (./fnaf3.mjs or ./fnaf4.mjs) that --game names'],
 ]);
 const RULES = [
   {
