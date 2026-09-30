@@ -5,7 +5,7 @@ Adaptive-icon geometry, so the numbers live where something reads them
 instead of in a comment:
 
   108dp  full adaptive canvas (both layers are drawn at this size)
-   16dp  inset applied by res/drawable/cue_helper_icon_foreground.xml,
+   16dp  inset applied by res/drawable/companion_icon_foreground.xml,
          leaving the artwork in the central 76dp
    72dp  the region a launcher actually shows, masked to its own shape
    66dp  the shape-independent safe zone
@@ -24,8 +24,8 @@ LEGACY_PX = 192       # xxxhdpi launcher icon (48dp @ 4x), pre-API-26 path
 
 HERE = Path(__file__).parent
 TARGETS = [
-    (HERE / "res/drawable-nodpi/cue_helper_icon_foreground_bitmap.png", FOREGROUND_PX),
-    (HERE / "res/mipmap-xxxhdpi/cue_helper_icon_legacy.png", LEGACY_PX),
+    (HERE / "res/drawable-nodpi/companion_icon_foreground_bitmap.png", FOREGROUND_PX),
+    (HERE / "res/mipmap-xxxhdpi/companion_icon_legacy.png", LEGACY_PX),
 ]
 
 

@@ -155,7 +155,7 @@ public final class Fnaf2LegacyTest {
         // label, whatever the frame's colours.
         legacy.onFrame(office, traceStart + SECOND, traceStart + SECOND, 0L, false, true);
         check("the Companion in front reads CUE_HELPER",
-                legacy.identity() == ScreenIdentity.CUE_HELPER);
+                legacy.identity() == ScreenIdentity.COMPANION);
 
         legacy.reset();
         check("reset clears the onset", legacy.onsetNs() == NightOnsetLatch.NOT_LATCHED);

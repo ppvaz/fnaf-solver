@@ -29,7 +29,7 @@ for candidate in "${JAVA_HOME:-}" \
 done
 if [ -z "$JDK_ROOT" ]; then
   echo "no working JDK found: set JAVA_HOME or put a real javac on PATH" >&2
-  echo "this check compiles Cue Helper host contracts on the host; it needs no phone or Android SDK" >&2
+  echo "this check compiles the Companion's host contracts on the host; it needs no phone or Android SDK" >&2
   exit 2
 fi
 JAVAC="$JDK_ROOT/bin/javac"

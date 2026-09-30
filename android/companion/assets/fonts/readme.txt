@@ -8,5 +8,5 @@ The font was originally cloned from “Five Nights at Freddy's 1 and 2” by
 “FontofFame”, also under CC0:
 https://www.fontstruct.com/fontstructions/show/1169554
 
-This asset is used by Cue Helper for the title, section labels, explanatory
+This asset is used by the Companion for the title, section labels, explanatory
 copy, and action buttons. Telemetry remains monospace for legibility.

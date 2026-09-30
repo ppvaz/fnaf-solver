@@ -10,12 +10,12 @@
   },
   "files": [
     {
-      "path": "android/companion/res/drawable-nodpi/cue_helper_icon_foreground_bitmap.png",
+      "path": "android/companion/res/drawable-nodpi/companion_icon_foreground_bitmap.png",
       "class": "icon",
       "shows": "The Companion's adaptive launcher icon foreground, 512 x 512: a stylised render of a character holding a cupcake on a dark background, resized by android/companion/make-icon.py from its source render. Not a screen capture; it does depict a FNaF 2 character (Toy Chica)."
     },
     {
-      "path": "android/companion/res/mipmap-xxxhdpi/cue_helper_icon_legacy.png",
+      "path": "android/companion/res/mipmap-xxxhdpi/companion_icon_legacy.png",
       "class": "icon",
       "shows": "The same render at 192 x 192, the pre-API-26 legacy launcher icon, from android/companion/make-icon.py."
     },

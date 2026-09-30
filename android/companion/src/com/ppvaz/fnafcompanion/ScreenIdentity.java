@@ -16,7 +16,7 @@ package com.ppvaz.fnafcompanion;
  *
  * <p>The capture grid is intentionally tiny and point-sampled. This classifier
  * therefore uses stable UI colour anchors rather than pretending that the grid
- * is an OCR image. The anchors come from the locally retained Cue Helper
+ * is an OCR image. The anchors come from the locally retained Companion
  * frames in both orientations: dark display background, panel fill, and the
  * Bonnie/Freddy/Chica control colours. Dynamic status text is not used.</p>
  *
@@ -27,7 +27,7 @@ package com.ppvaz.fnafcompanion;
  */
 public final class ScreenIdentity {
     public static final int UNKNOWN = 0;
-    public static final int CUE_HELPER = 1;
+    public static final int COMPANION = 1;
     public static final int FNAF2_NIGHT = 2;
     public static final int FNAF2_MENU = 3;
     public static final int FNAF2_INTRO = 4;
@@ -63,14 +63,14 @@ public final class ScreenIdentity {
     private ScreenIdentity() {
     }
 
-    /** Return {@link #CUE_HELPER} only when one of the calibrated layouts fits. */
+    /** Return {@link #COMPANION} only when one of the calibrated layouts fits. */
     public static int classify(int[] grid) {
         if (grid == null || grid.length != GRID_WIDTH * GRID_HEIGHT) {
             return UNKNOWN;
         }
         if (landscapeScore(grid) >= LANDSCAPE_THRESHOLD
                 || portraitScore(grid) >= PORTRAIT_THRESHOLD) {
-            return CUE_HELPER;
+            return COMPANION;
         }
         // A menu-like frame wins an ambiguous dark/red match. This keeps a
         // title/menu accent from being mistaken for the night mask bar and
@@ -92,7 +92,7 @@ public final class ScreenIdentity {
      */
     public static int classify(NativeFrame frame, int[] grid) {
         int gridIdentity = classify(grid);
-        if (gridIdentity == CUE_HELPER || gridIdentity == FNAF2_MENU
+        if (gridIdentity == COMPANION || gridIdentity == FNAF2_MENU
                 || gridIdentity == FNAF2_NIGHT || !nativeFrame(frame)) {
             return gridIdentity;
         }
@@ -109,7 +109,8 @@ public final class ScreenIdentity {
 
     public static String label(int state) {
         switch (state) {
-            case CUE_HELPER:
+            case COMPANION:
+                // A stored name: host rules and retained records read this label.
                 return "CUE_HELPER";
             case FNAF2_NIGHT:
                 return "FNAF2_NIGHT";

@@ -32,11 +32,11 @@
     <application
         android:allowBackup="false"
         android:debuggable="true"
-        android:icon="@mipmap/cue_helper_icon_adaptive"
+        android:icon="@mipmap/companion_icon_adaptive"
         android:label="FNaF Companion"
-        android:roundIcon="@mipmap/cue_helper_icon_adaptive"
+        android:roundIcon="@mipmap/companion_icon_adaptive"
         android:supportsRtl="true"
-        android:theme="@style/CueHelperTheme">
+        android:theme="@style/CompanionTheme">
         <activity
             android:name="com.ppvaz.fnafcompanion.MainActivity"
             android:exported="true"

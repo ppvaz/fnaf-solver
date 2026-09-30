@@ -154,7 +154,7 @@ public final class Fnaf2Legacy {
             imageNs = frameImageNs;
             boolean complete = sampleGrid(frame, grid);
             gridValid = complete;
-            identity = companionForeground ? ScreenIdentity.CUE_HELPER
+            identity = companionForeground ? ScreenIdentity.COMPANION
                     : !complete ? ScreenIdentity.UNKNOWN
                     : teachShown ? ScreenIdentity.classify(grid)
                     : ScreenIdentity.classify(frame, grid);

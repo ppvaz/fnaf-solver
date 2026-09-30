@@ -1,6 +1,6 @@
 package com.ppvaz.fnafcompanion;
 
-/** Phone-free regression for the Cue Helper screen identity gate. */
+/** Phone-free regression for the Companion screen identity gate. */
 public final class ScreenIdentityTest {
     private static int failures;
 
@@ -178,9 +178,9 @@ public final class ScreenIdentityTest {
 
     public static void main(String[] args) {
         check("landscape helper frame is identified",
-                ScreenIdentity.classify(landscapeHelper()) == ScreenIdentity.CUE_HELPER);
+                ScreenIdentity.classify(landscapeHelper()) == ScreenIdentity.COMPANION);
         check("portrait helper frame is identified",
-                ScreenIdentity.classify(portraitHelper()) == ScreenIdentity.CUE_HELPER);
+                ScreenIdentity.classify(portraitHelper()) == ScreenIdentity.COMPANION);
         check("dark office with lit meter is identified as night",
                 ScreenIdentity.classify(nightWithFlash()) == ScreenIdentity.FNAF2_NIGHT);
         check("masked office is identified as night",

@@ -3,5 +3,5 @@
     <background android:drawable="@color/cue_icon_background" />
     <!-- Keep the artwork inside the adaptive-icon safe zone. Without this
          inset the launcher mask clips the Freddy artwork too aggressively. -->
-    <foreground android:drawable="@drawable/cue_helper_icon_foreground" />
+    <foreground android:drawable="@drawable/companion_icon_foreground" />
 </adaptive-icon>
