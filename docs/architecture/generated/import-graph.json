@@ -1565,6 +1565,14 @@
       ]
     },
     {
+      "file": "packages/play/test/observer-entropy.test.js",
+      "imports": [
+        "@sixam/play/sim",
+        "@sixam/source/fnaf2",
+        "node:assert/strict"
+      ]
+    },
+    {
       "file": "packages/play/test/phase-clock.test.js",
       "imports": [
         "@sixam/kernel/time",

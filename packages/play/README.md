@@ -155,6 +155,7 @@ moved them here, with the description their tool index gave them.
 | Script | Kind | What it does |
 |---|---|---|
 | `packages/play/test/phase-clock.test.js` | check | Phone-free Plan 21 phase contract: paired A2DP latency calibration, 2 Hz period/phase lock, explicit one-second parity, confidence/stale handling, and refusal to convert uncalibrated receipt phase into game-frame boundaries. |
+| `packages/play/test/observer-entropy.test.js` | check | The Sim observer draws its noise only from the seeded generator the caller passes: each of its seven rates above zero without one is refused by name, a noise-free night draws nothing, and a noisy night replays frame for frame with `Math.random()` stubbed to throw. Until 2026-09-30 a missing generator fell back to `Math.random()` in silence. `test:contracts`. |
 | `packages/play/test/belief.test.js` | check | Phone-free Plan 20 belief contract: deterministic replay, unknown-safe facts with provenance, calibration mismatch incidents, and sent-versus-verified control actions. |
 | `packages/play/test/estimator.test.js` | check | Plan 20 package 3 estimator contract: delayed fact timing, UNKNOWN risk preservation, stale-control recovery, calibration refusal, contradictory sensors, and transactional verification. |
 | `packages/play/test/hid-report.test.js` | check | Parses the HID fixture and fails unless CAM 10/04/07 each receive a fresh contact-1 down/up while contact 0 stays on the light, with a final explicit two-contact release. Runs without a device. |

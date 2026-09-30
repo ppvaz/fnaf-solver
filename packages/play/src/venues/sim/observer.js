@@ -70,6 +70,15 @@ export class Observer {
     this.mangleAudioDropRate = mangleAudioDropRate;
     this.mangleAudioFalseNegativeRate = mangleAudioFalseNegativeRate;
     this.mangleAudioFalsePositiveRate = mangleAudioFalsePositiveRate;
+    // A noisy observation has to replay: every rate above zero draws from the
+    // seeded generator the caller passes. Until 2026-09-30 a missing one fell
+    // back to Math.random() in silence, and the same seed gave another night.
+    const noisy = Object.entries({ dropRate, audioDropRate, audioFalseNegativeRate, audioFalsePositiveRate,
+      mangleAudioDropRate, mangleAudioFalseNegativeRate, mangleAudioFalsePositiveRate })
+      .filter(([, rate]) => rate > 0).map(([name]) => name);
+    if (noisy.length && typeof rng?.next !== 'function')
+      throw new Error(`Observer: ${noisy.join(', ')} above zero needs a seeded rng ({next() -> [0,1)}); ` +
+        'there is no ambient fallback');
     this.evtCursor = 0;                      // how much of the event feed is heard
     this.lastCueAt = -Infinity;              // device-frame the last cue became audible
     /** @type {any} */ this.lastCueType = false; // 'route' | 'pending' | 'opening'
@@ -168,12 +177,13 @@ export class Observer {
     return { ...this.cache, ...this._audioFacts(sim) };
   }
 
-  _random() { return this.rng ? this.rng.next() : Math.random(); }
+  // `rng` is a src/rng.js Rng (next() -> [0,1)) or any {next()}; the
+  // constructor refuses a rate above zero without one.
+  _random() { return this.rng.next(); }
 
   _drop() {
     if (!this.dropRate) return false;
-    // `rng` is a src/rng.js Rng (next() -> [0,1)) or any {next()}; else Math.random.
-    return (this.rng ? this.rng.next() : Math.random()) < this.dropRate;
+    return this._random() < this.dropRate;
   }
 
   _sample(sim) {

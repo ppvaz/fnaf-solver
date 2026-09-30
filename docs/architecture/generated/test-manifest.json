@@ -2019,6 +2019,31 @@
       }
     },
     {
+      "id": "packages/play/test/observer-entropy.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": false,
+      "determinismSignals": [
+        "Math.random",
+        "Math.random",
+        "Math.random",
+        "Math.random",
+        "Math.random",
+        "Math.random"
+      ],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "packages/play/test/phase-clock.test.js",
       "lane": "test:unit",
       "owner": "@sixam/play",
@@ -5077,7 +5102,6 @@
         "new Date(",
         "Math.random",
         "Date.now",
-        "Math.random",
         "Math.random",
         "Math.random",
         "Math.random",

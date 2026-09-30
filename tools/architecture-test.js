@@ -155,8 +155,6 @@ const AMBIENT_ENTROPY_TOLERATED = new Map([
     why: 'an unseeded Sim draws a natural seed; every census and gate passes its seed' }],
   ['packages/source/src/games/fnaf2/rng.js', { count: 1,
     why: 'the generator\'s default seed for an unseeded Sim; the same default as plant-options.js' }],
-  ['packages/play/src/venues/sim/observer.js', { count: 2,
-    why: 'the Sim observer\'s noise falls back to Math.random() when no generator is given: a silent fallback to remove' }],
 ]);
 
 /** Writes into the process-global search knobs. @param {ts.SourceFile} file */
