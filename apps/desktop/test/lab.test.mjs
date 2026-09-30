@@ -4,7 +4,7 @@
 // promotions query, the queue and the host are stubs. No network, no phone, no adb.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { isUnknown, validateClaimEnvelope } from '@sixam/kernel';
@@ -15,7 +15,8 @@ import { LAB_VERBS, SESSION_FILE, STALE_PENDING_HOURS, createLab, lastEvening, p
 const REPO = resolve(import.meta.dirname, '../../..');
 const OVERRIDE = ['PEDRO', 'OK'].join('-');
 const HOUR = 3600 * 1000;
-const base = mkdtempSync(join(tmpdir(), 'lab-test-'));
+// The real path: git reports worktrees by it, and macOS's temporary directory sits under /var -> /private/var.
+const base = realpathSync(mkdtempSync(join(tmpdir(), 'lab-test-')));
 let checks = 0;
 
 const cleanEnv = Object.fromEntries(Object.entries(process.env).filter(([name]) => !name.startsWith('GIT_')));

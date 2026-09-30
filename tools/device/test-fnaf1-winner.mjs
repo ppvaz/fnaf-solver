@@ -29,7 +29,7 @@
 //
 //   node tools/device/test-fnaf1-winner.mjs
 import { execFileSync } from 'node:child_process';
-import { appendFileSync, chmodSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
+import { appendFileSync, chmodSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
@@ -141,7 +141,9 @@ try {
     // @fnaf2-1020 workspace names; these strings name that tree's packages, not this checkout's.
     const cueHelper = createRequire(join(tree, 'apps/device/src/physical-ports.js')).resolve('@fnaf2-1020/adapters/transports/cue-helper');
     ok(`${path}: @fnaf2-1020/adapters resolves inside the pinned tree, not this checkout (${cueHelper})`,
-      !relative(tree, cueHelper).startsWith('..'));
+      // Against the tree's real path, as fnaf1-winner.mjs checks its links: macOS's temporary
+      // directory sits under /var -> /private/var, and resolve() answers with the real one.
+      !relative(realpathSync(tree), cueHelper).startsWith('..'));
     // The pinned runner's own parser turns the replay's arguments into the options that won.
     const pinnedRunner = await import(pathToFileURL(join(tree, RUNNER_MJS)).href);
     const parsed = pinnedRunner.parseArgs(plan.runnerArgs);
