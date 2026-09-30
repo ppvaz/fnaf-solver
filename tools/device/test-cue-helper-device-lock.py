@@ -82,6 +82,21 @@ with tempfile.TemporaryDirectory(prefix="cue-helper-device-lock-") as directory:
         # serial for future agents.
         with MODULE.DeviceLock("one-device"):
             pass
+
+        # A campaign's capture setup borrows the lease five processes below
+        # the wrapper (bash, node, setup.sh, setup.py), so the ancestry walk
+        # must work past the parent on hosts with no /proc (macOS). `; true`
+        # keeps sh from exec'ing python in its own place.
+        grandchild = subprocess.run(
+            [sys.executable, str(HERE / "device-lock-exec.py"), "one-device", "--",
+             "sh", "-c",
+             f"{sys.executable} -c \""
+             f"import sys; sys.path.insert(0, {str(HERE)!r}); "
+             "from cue_helper_device_lock import DeviceLock; "
+             "lease = DeviceLock('one-device'); lease.__enter__(); lease.__exit__(); "
+             "print('grandchild-lease-acquired')\"; true"],
+            env=os.environ.copy(), capture_output=True, text=True, timeout=30)
+        assert grandchild.stdout.strip() == "grandchild-lease-acquired", (grandchild.stdout, grandchild.stderr)
     finally:
         if previous is None:
             os.environ.pop("CUE_HELPER_LOCK_DIR", None)
@@ -111,7 +126,10 @@ with tempfile.TemporaryDirectory(prefix="cue-helper-worktree-") as directory:
          f"import {{ mainCheckout }} from {json.dumps((HERE / 'fnaf1-winner.mjs').as_uri())};"
          "process.stdout.write(mainCheckout(process.argv[1]));", str(worktree)],
         check=True, text=True, stdout=subprocess.PIPE)
-    assert mirror.stdout == str(main.resolve()), mirror.stdout
+    # The same directory, however spelled: on macOS the temporary directory
+    # sits under the /var -> /private/var link, which Python resolves and the
+    # mirror does not; both open the same lock file.
+    assert Path(mirror.stdout).resolve() == main.resolve(), mirror.stdout
     previous = {key: os.environ.get(key) for key in ("CUE_HELPER_LOCK_DIR", "CUE_HELPER_STATE_DIR")}
     os.environ.pop("CUE_HELPER_LOCK_DIR", None)
     os.environ["CUE_HELPER_STATE_DIR"] = str(main / "captures/cue-helper")

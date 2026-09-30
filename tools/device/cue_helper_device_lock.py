@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 import socket
+import subprocess
 import time
 from pathlib import Path
 
@@ -63,6 +64,17 @@ def lock_path(serial: str) -> Path:
     return lock_dir() / f"device-{digest}.lock"
 
 
+def parent_pid(pid: int) -> int:
+    """`pid`'s parent: from /proc on Linux, from `ps` where there is none (macOS)."""
+    if Path("/proc").is_dir():
+        # comm can contain spaces and parentheses; fields after its final
+        # ')' begin with state, then PPID.
+        stat = Path(f"/proc/{pid}/stat").read_text(encoding="utf-8")
+        return int(stat.rsplit(")", 1)[1].split()[1])
+    return int(subprocess.run(["ps", "-o", "ppid=", "-p", str(pid)],
+                              capture_output=True, text=True, check=True).stdout)
+
+
 def inherited_owner(serial: str, text: str) -> int | None:
     """Borrow only an explicit lease held by a still-running ancestor.
 
@@ -83,11 +95,8 @@ def inherited_owner(serial: str, text: str) -> int | None:
             if pid == expected:
                 return expected
             seen.add(pid)
-            # comm can contain spaces and parentheses; fields after its final
-            # ')' begin with state, then PPID.
-            stat = Path(f"/proc/{pid}/stat").read_text(encoding="utf-8")
-            pid = int(stat.rsplit(")", 1)[1].split()[1])
-    except (OSError, ValueError, TypeError):
+            pid = parent_pid(pid)
+    except (OSError, ValueError, TypeError, subprocess.CalledProcessError):
         pass
     return None
 
