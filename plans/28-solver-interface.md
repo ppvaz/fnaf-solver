@@ -7,9 +7,12 @@ of investigating the game by hand?"
 **Steps 1–4 built 2026-09-29** and served by the `fnaf-solver` MCP server
 ([surface](../docs/device/CUE-HELPER-MCP.md)): `claim-envelope-v1` in the kernel,
 emitted by `evidence -- show|promotions --envelope` and `review -- query promotions
---envelope`; `describe`; the five resources; the four refusals. Steps 5 and 6
-(`truth.*`, `sim.*`, `device.*`) remain. Which of the four gaps still hold is
-`npm run review -- describe fnaf2`, not prose.
+--envelope`; `describe`; the five resources; the four refusals. **Step 5 built
+2026-09-30:** one `truth` tool (op `decode | events | object`) over the caller's
+own local dump, in `packages/source` (`src/truth/` reads, `decompile/truth.mjs`
+finds the dump and decodes); the three `jobs.*` aliases folded into one `jobs`
+tool, eleven tools in all. Step 6 (`sim.*`, `device.*`) remains. Which of the
+four gaps still hold is `npm run review -- describe fnaf2`, not prose.
 
 Plan 25 horizon 3 designs a loop that runs *this* lab. This plan designs the
 surface a *stranger's* lab calls. They are different problems: the self-running
@@ -318,7 +321,26 @@ Each step is useful alone and none requires the next.
    about Foxy?" by citation, in one call. *Done 2026-09-29.*
 4. **The four missing refusals.** Cheapest real safety win in the list. *Done 2026-09-29.*
 5. **`truth.*`.** The largest piece of new engineering, and the one that makes
-   the other three games cheap.
+   the other three games cheap. *Done 2026-09-30,* as one MCP tool `truth` and
+   `npm run review -- truth`: `events` returns the groups that read or write an
+   object, an alterable value, a flag or a global, as frame, `g###` and parsed
+   condition and action fields; `object` returns type, frames, created-by and
+   destroyed-by; `decode` runs the local CTFAK dumper on a caller's APK or CCN
+   and estimates `K` by object-type agreement (built here: nothing in the
+   decompile chain estimated it). Answers are `SOURCED` and cite
+   `fnaf://truth/<game>/frame/<n>/group/<g>`, readable back as a resource. The
+   dump is found through the untracked `packages/source/decompile/local-vault.json`
+   or `$SIXAM_TRUTH_VAULT`; with none, `truth` refuses naming the decode and
+   `describe` reports gap 2 closed with `no local dump configured on this host`.
+   Checked on a synthetic dump only (`packages/source/test/truth.test.js`); on
+   this host the estimator reproduced the table above from the four local
+   copies, FNaF 1 `K=0`, FNaF 2 `K=28`, FNaF 3 and 4 `K=29`, each at 1.0000,
+   and nothing it read was committed. Open: where each object is *placed*
+   (frame instances carry a second, layout scramble, 48 on FNaF 2, that is not
+   estimated per build: `UNKNOWN`); `K` is still an estimate, not a read of
+   `COI.loadHeader`; the older rendered per-frame sheets are refused, not read;
+   and only the handful of engine ACE numbers that decide read or write are
+   named.
 6. **`sim.*` and `device.*`,** which are wrappers over existing gated paths.
 
 `UNKNOWN(not-designed)`: transport, authentication and whether the server is

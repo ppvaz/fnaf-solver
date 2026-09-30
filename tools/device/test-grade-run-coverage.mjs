@@ -176,6 +176,7 @@ const SIBLING_EXCLUDED = new Map([
   ['fnaf4-cues.py', 'FNaF 4 live A2DP cue detector the FNaF 4 runner spawns during a night (matched filters, breathing level); an in-night sensor, not a post-run grader'],
   ['bt-audio-link.sh', 'brings the phone A2DP link up before a capture (night-run.sh --bt-audio); a link action on the phone and BlueALSA, grades no run'],
   ['regen-dump.sh', 'regenerates the event-sheet dump from the APK'],
+  ['truth.mjs', 'the truth surface (Plan 28 step 5) over the caller\'s own local dump, called by the MCP truth tool and npm run review -- truth; it reads source, not a run, and is gated by packages/source/test/truth.test.js'],
   ['census.mjs', 'seed census over a game simulator -- a model result, not a run grading; gated by test-fnaf1-census.mjs and test-fnaf3-census.mjs'],
 ]);
 

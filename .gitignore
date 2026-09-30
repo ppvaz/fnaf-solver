@@ -13,3 +13,5 @@ __pycache__/
 /.agents/
 # The handset serial, one per host (tools/device/local-profile.mjs; ADR 0002 decision 8).
 /tools/device/local-profile.json
+# The truth surface's local vault: this host's own dump paths, decoder and cache (Plan 28 step 5).
+/packages/source/decompile/local-vault.json

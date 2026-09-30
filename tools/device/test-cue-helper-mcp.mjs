@@ -1,29 +1,38 @@
 #!/usr/bin/env node
 /**
  * Stdio MCP contract test for the fnaf-solver server: the safe Cue Helper
- * queue as it always answered, and the solver interface's verbs, `jobs.*`
- * aliases and fnaf:// resources, every one of which answers in
- * claim-envelope-v1 (Plan 28 steps 1-4). It checks that no tool takes a tap, a
+ * queue as it always answered, and the solver interface's verbs, the `jobs`
+ * queue tool, `truth` and the fnaf:// resources, every one of which answers in
+ * claim-envelope-v1 (Plan 28 steps 1-5). It checks that no tool takes a tap, a
  * coordinate, a shell command or a rebuild; that a refused promote is a
- * refusal envelope; and that nothing the verbs do writes the evidence graph or
- * a run pack.
+ * refusal envelope; that truth reads only a local dump (here a synthetic one)
+ * and refuses where none is configured; and that nothing the verbs do writes
+ * the evidence graph or a run pack.
  */
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { once } from 'node:events';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { createInterface } from 'node:readline';
 import { spawn } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { isUnknown, validateClaimEnvelope } from '@sixam/kernel';
+import { CACHE_ENV, NO_LOCAL_DUMP, VAULT_ENV } from '@sixam/source/truth';
+import { syntheticDump } from '../../packages/source/test/fixtures/truth-dump.mjs';
 
 const root = resolve(import.meta.dirname, '../..');
 const temp = await mkdtemp(join(tmpdir(), 'fnaf-solver-mcp-'));
+// truth reads a local dump named by the local vault: here a synthetic FNaF 2 one, and none for any other game.
+writeFileSync(join(temp, 'events.txt'), syntheticDump());
+writeFileSync(join(temp, 'vault.json'), JSON.stringify({ schema: 'truth-local-vault-v1',
+  games: { 'com.scottgames.fnaf2': { dump: join(temp, 'events.txt') } } }));
+const { CTFAK_SRC, DOTNET, DOTNET_ROOT, ...inherited } = process.env;
 const child = spawn(process.execPath, [join(root, 'tools/device/cue-helper-mcp.mjs')], {
   cwd: root,
-  env: { ...process.env, CUE_HELPER_QUEUE_FILE: join(temp, 'jobs.json'), ANDROID_SERIAL: 'missing-device' },
+  env: { ...inherited, CUE_HELPER_QUEUE_FILE: join(temp, 'jobs.json'), ANDROID_SERIAL: 'missing-device',
+    [VAULT_ENV]: join(temp, 'vault.json'), [CACHE_ENV]: join(temp, 'cache'), PATH: process.env.PATH },
   stdio: ['pipe', 'pipe', 'pipe'],
 });
 const lines = createInterface({ input: child.stdout });
@@ -96,7 +105,8 @@ try {
   const names = listed.result.tools.map(tool => tool.name);
   assert.deepEqual(names.slice(0, 4), ['cue.setup', 'cue.queue.enqueue', 'cue.queue.list', 'cue.queue.run'],
     'every existing tool name still answers, first and in order');
-  assert.deepEqual(names.slice(4), ['describe', 'query', 'review', 'promote', 'check', 'jobs.enqueue', 'jobs.list', 'jobs.run']);
+  assert.deepEqual(names.slice(4), ['describe', 'query', 'review', 'promote', 'check', 'jobs', 'truth']);
+  assert.equal(names.length, 11, 'eleven tools: the lab tools, due next, bring it to fourteen');
   assert.ok(names.length <= 15, 'Plan 28: agents degrade past about fifteen tools');
   for (const name of names) assert.doesNotMatch(name, /shell|exec|tap|coord|hid|touch|rebuild|build|attest/i, `${name} is not an actuator`);
   for (const tool of listed.result.tools) {
@@ -165,15 +175,18 @@ try {
   assert.equal(held.status, 'HOLD');
   assert.equal(held.ok, true);
 
-  // --- jobs.*: the same queue, in claim-envelope-v1 --------------------------------------------
-  const jobQueued = claimed(await call('jobs.enqueue', { kind: 'night-check' }), 'jobs.enqueue');
+  // --- jobs: the same queue, in claim-envelope-v1, one tool with an op ---------------------------
+  const jobQueued = claimed(await call('jobs', { op: 'enqueue', kind: 'night-check' }), 'jobs op enqueue');
   assert.equal(jobQueued.claim.status, 'QUEUED');
   assert.ok(isUnknown(jobQueued.label), 'a queue record carries no evidence label');
-  const jobList = claimed(await call('jobs.list', {}), 'jobs.list');
-  assert.equal(jobList.claim.jobs.length, 4, 'jobs.list reads the queue cue.queue.enqueue wrote');
-  const jobHeld = claimed(await call('jobs.run', { waitSeconds: 0 }), 'jobs.run');
+  const jobList = claimed(await call('jobs', { op: 'list' }), 'jobs op list');
+  assert.equal(jobList.claim.jobs.length, 4, 'jobs op list reads the queue cue.queue.enqueue wrote');
+  const jobHeld = claimed(await call('jobs', { op: 'run', waitSeconds: 0 }), 'jobs op run');
   assert.equal(jobHeld.claim.status, 'HOLD');
-  refused(await call('jobs.enqueue', { kind: 'night', game: 'fnaf2', winner: '/etc/passwd', night: 7 }), 'queue', 'a bad night job');
+  refused(await call('jobs', { op: 'enqueue', kind: 'night', game: 'fnaf2', winner: '/etc/passwd', night: 7 }), 'queue', 'a bad night job');
+  refused(await call('jobs', { op: 'list', kind: 'setup' }), 'invalid-argument', 'an argument its op does not take');
+  refused(await call('jobs', { kind: 'setup' }), 'invalid-argument', 'jobs without an op');
+  refused(await call('jobs', { op: 'drain' }), 'invalid-argument', 'an op that does not exist');
 
   // --- describe ------------------------------------------------------------------------------
   const fnaf2 = claimed(await call('describe', { game: 'fnaf2' }), 'describe fnaf2');
@@ -190,11 +203,13 @@ try {
   assert.ok(negatives.length >= 24 && negatives.every(entry => ['refutation', 'retraction', 'negative'].includes(entry.kind) || entry.status !== 'standing'));
   assert.deepEqual(gaps.map(gap => gap.gap), [1, 2, 3, 4], 'Plan 28\'s four gaps, each a query');
   assert.equal(gaps[2].holds, false, 'describe exists, so "no coverage map" no longer holds');
-  assert.equal(gaps[1].holds, true, 'no truth.* verb exists yet');
+  assert.deepEqual([gaps[1].holds, gaps[1].localDump], [false, true], 'truth exists and this game has a local dump');
   assert.equal(gaps[0].registered, true, 'claim-envelope-v1 is registered');
   assert.ok(fnaf2.notMeasured.some(item => item.includes('MODEL_ONLY')) || phone.modelOnlyWinners.files.length === 0);
-  assert.ok(fnaf2.notMeasured.some(item => item.startsWith('Plan 28 gap 2')));
+  assert.ok(!fnaf2.notMeasured.some(item => item.startsWith('Plan 28 gap 2')) && !fnaf2.notMeasured.includes(NO_LOCAL_DUMP));
   const fnaf3 = claimed(await call('describe', { game: 'com.scottgames.fnaf3' }), 'describe fnaf3');
+  assert.deepEqual([fnaf3.claim.gaps[1].holds, fnaf3.claim.gaps[1].notMeasured], [false, [NO_LOCAL_DUMP]], 'closed, with no dump for FNaF 3 here');
+  assert.ok(fnaf3.notMeasured.includes(NO_LOCAL_DUMP));
   assert.ok(isUnknown(fnaf3.claim.phone), 'no pack is attributed to FNaF 3');
   assert.ok(isUnknown(fnaf3.claim.chronicle), 'the chronicle attributes nothing to FNaF 3');
   const fnaf1 = claimed(await call('describe', { game: 'fnaf1' }), 'describe fnaf1');
@@ -239,6 +254,22 @@ try {
   assert.equal(proposal.label, 'DEVICE_MEASURED');
   refused(await call('promote', { pack: 'fnaf1-custom-grid420-420-a-20260925T024452598Z' }), 'plan12-promotion', 'a FNaF 1 run');
 
+  // --- truth: the caller's own local dump, never the repository's --------------------------------
+  const events = claimed(await call('truth', { op: 'events', game: 'fnaf2', query: { object: 'lamp', value: 2 } }), 'truth events');
+  assert.equal(events.label, 'SOURCED');
+  assert.deepEqual(events.claim.matches.map(match => `${match.frame}/${match.group}`), ['1/g0', '1/g1']);
+  assert.deepEqual(events.cite.slice(0, 2), ['fnaf://truth/fnaf2/frame/1/group/0', 'fnaf://truth/fnaf2/frame/1/group/1']);
+  assert.ok(events.claim.matches.every(match => match.conditions.every(row => typeof row.num === 'number' && Array.isArray(row.params))),
+    'conditions and actions come back as parsed fields');
+  const object = claimed(await call('truth', { op: 'object', game: 'fnaf2', name: 'crate' }), 'truth object');
+  assert.deepEqual([object.claim.objects[0].createdBy[0].group, object.claim.objects[0].destroyedBy[0].group], ['g2', 'g3']);
+  const noDump = refused(await call('truth', { op: 'events', game: 'fnaf3', query: { global: 1 } }), 'no-local-dump', 'a game with no local dump');
+  assert.match(noDump.remedy, /truth decode/);
+  refused(await call('truth', { op: 'decode', game: 'fnaf2', path: join(temp, 'missing.apk') }), 'invalid-argument', 'decode of a file not on this host');
+  refused(await call('truth', { op: 'decode', game: 'fnaf2', path: join(root, 'package.json') }), 'game-content-in-repository', 'decode inside the repository');
+  refused(await call('truth', { op: 'events', game: 'fnaf2', path: '/tmp/x' }), 'invalid-argument', 'an argument its op does not take');
+  refused(await call('truth', { op: 'pull', game: 'fnaf2' }), 'invalid-argument', 'an op that does not exist');
+
   // --- check: the four refusals --------------------------------------------------------------
   refused(await call('check', { rule: 'seed-floor', seeds: 1200, wins: 1199 }), 'seed-floor', 'a rate over 1200 seeds');
   claimed(await call('check', { rule: 'seed-floor', seeds: 3000, wins: 2990, heldOut: { start: 3000, seeds: 3000 } }), 'a rate over 3000 seeds');
@@ -257,7 +288,11 @@ try {
   for (const uri of ['fnaf://chronicle', 'fnaf://evidence/graph', 'fnaf://contracts', 'fnaf://refuted',
     'fnaf://game/com.scottgames.fnaf2/controls']) assert.ok(resources.includes(uri), `${uri} is listed`);
   send({ jsonrpc: '2.0', id: 9, method: 'resources/templates/list' });
-  assert.deepEqual((await next()).result.resourceTemplates.map(item => item.uriTemplate), ['fnaf://game/{pkg}/controls']);
+  assert.deepEqual((await next()).result.resourceTemplates.map(item => item.uriTemplate),
+    ['fnaf://game/{pkg}/controls', 'fnaf://truth/{game}/frame/{frame}/group/{group}']);
+  send({ jsonrpc: '2.0', id: 12, method: 'resources/read', params: { uri: 'fnaf://truth/fnaf2/frame/1/group/2' } });
+  const citedGroup = envelope(JSON.parse((await next()).result.contents[0].text), 'a cited truth group');
+  assert.deepEqual(citedGroup.claim.matches.map(match => match.group), ['g2'], 'a truth citation reads back as its group');
   for (const [index, uri] of resources.entries()) {
     send({ jsonrpc: '2.0', id: 1000 + index, method: 'resources/read', params: { uri } });
     const read = await next();
@@ -280,5 +315,5 @@ try {
   await rm(temp, { recursive: true, force: true });
 }
 
-console.log('fnaf-solver stdio MCP: the Cue Helper queue unchanged, jobs.* and every verb and resource in claim-envelope-v1, ' +
-  'a refused promote, the four refusals, and no write under docs/evidence');
+console.log('fnaf-solver stdio MCP: 11 tools; the Cue Helper queue unchanged, jobs and every verb and resource in claim-envelope-v1, ' +
+  'truth over a synthetic local dump and refused without one, a refused promote, the four refusals, and no write under docs/evidence');

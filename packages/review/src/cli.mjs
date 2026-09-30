@@ -9,6 +9,7 @@
 //   npm run review -- promote PACK_ID
 //   npm run review -- check RULE 'JSON'
 //   npm run review -- resource URI
+//   npm run review -- truth events GAME 'JSON' | truth object GAME NAME|--handle N | truth decode /abs/APK|CCN --game G
 //
 // `query promotions` prints the query as JSON, unchanged, and exits 0 when the graph and the
 // derivation agree, 1 when they do not; `--envelope` prints it as a claim-envelope-v1 instead
@@ -31,6 +32,9 @@ const USAGE = `Usage: npm run review -- query promotions [--envelope] [--write F
        npm run review -- promote PACK_ID
        npm run review -- check seed-floor|directional-reuse|capabilities-first|unknown-as-number 'JSON'
        npm run review -- resource URI
+       npm run review -- truth events GAME '{"object": NAME, "value": N, "access": "write"}'
+       npm run review -- truth object GAME NAME | truth object GAME --handle N
+       npm run review -- truth decode /abs/path/base.apk|application.ccn --game GAME
 
   query promotions re-derives every PROMOTED_BY edge in docs/evidence/graph.json from the
   committed run packs (each lifted to a kernel GameRun), their plan12-attestation.json and the
@@ -45,7 +49,12 @@ const USAGE = `Usage: npm run review -- query promotions [--envelope] [--write F
 
   The other verbs are the solver interface's (packages/review/src/solver.mjs, the functions the
   fnaf-solver MCP server calls). Each prints a claim-envelope-v1: exit 0 for a claim, 1 for a
-  refusal. promote never writes an attestation or an edge; it proposes one or refuses.`;
+  refusal. promote never writes an attestation or an edge; it proposes one or refuses.
+
+  truth reads your own local dump of the game's event sheet (packages/source/decompile/truth.mjs):
+  it is found through packages/source/decompile/local-vault.json (untracked) or $SIXAM_TRUTH_VAULT,
+  and truth decode makes one from an APK or CCN on this host with the local CTFAK dumper. The
+  repository ships the decoder, never the decoded data.`;
 
 const usage = message => {
   if (message) console.error(`review: ${message}`);
@@ -88,7 +97,7 @@ if (verb === 'query' && what === 'promotions') {
   process.exit(result.consistent ? 0 : 1);
 }
 
-const VERBS = ['query', 'describe', 'review', 'promote', 'check', 'resource'];
+const VERBS = ['query', 'describe', 'review', 'promote', 'check', 'resource', 'truth'];
 if (!VERBS.includes(verb)) usage(verb ? `unknown verb ${verb}` : 'a verb is required');
 // The solver is loaded only for its verbs, so `query promotions` runs exactly as it always has.
 const { createSolver } = await import('./solver.mjs');
@@ -125,6 +134,29 @@ if (verb === 'check') {
   try { input = rest.length ? JSON.parse(rest[0]) : {}; } catch (error) { usage(`the check input is not JSON: ${error.message}`); }
   if (input === null || typeof input !== 'object' || Array.isArray(input)) usage('the check input is a JSON object');
   answer(solver.check({ ...input, rule: what }));
+}
+if (verb === 'truth') {
+  const [first, second, ...more] = rest;
+  if (what === 'events') {
+    if (!first || second === undefined || more.length) usage('truth events takes a game and one JSON query');
+    let query;
+    try { query = JSON.parse(second); } catch (error) { usage(`the truth query is not JSON: ${error.message}`); }
+    answer(solver.truth({ op: 'events', game: first, query }));
+  }
+  if (what === 'object') {
+    if (!first || second === undefined) usage('truth object takes a game and a name, or --handle N');
+    if (second === '--handle') {
+      if (more.length !== 1 || !/^\d+$/.test(more[0])) usage('--handle takes one integer');
+      answer(solver.truth({ op: 'object', game: first, handle: Number(more[0]) }));
+    }
+    if (more.length) usage('truth object takes one name (quote it)');
+    answer(solver.truth({ op: 'object', game: first, name: second }));
+  }
+  if (what === 'decode') {
+    if (!first || second !== '--game' || more.length !== 1) usage('truth decode takes an absolute path and --game G');
+    answer(solver.truth({ op: 'decode', path: first, game: more[0] }));
+  }
+  usage(`truth takes events, object or decode, not ${what ?? 'nothing'}`);
 }
 if (verb === 'resource') {
   if (!what || rest.length) usage('resource takes one URI');

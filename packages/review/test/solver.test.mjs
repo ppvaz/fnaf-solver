@@ -10,10 +10,12 @@ import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { canonicalJson } from '@sixam/kernel/contracts';
 import { CONTROL_CATALOGS } from '@sixam/source';
+import { NO_LOCAL_DUMP, VAULT_ENV } from '@sixam/source/truth';
 import { isUnknown, validateClaimEnvelope } from '@sixam/kernel';
 import { PACKS_DIR, trackedWinners } from '../src/evidence-pack.mjs';
 import { GRAPH_FILE, PROMOTION_EDGE } from '../src/evidence-promotion.mjs';
@@ -23,6 +25,8 @@ import { INSTRUMENTS, VERBS, createSolver } from '../src/solver.mjs';
 
 const ROOT = resolve(fileURLToPath(new URL('../../..', import.meta.url)));
 const CLI = join(ROOT, 'packages/review/src/cli.mjs');
+// truth reads a host's own local dump; this test runs with none configured, in process and in the CLI it spawns.
+process.env[VAULT_ENV] = join(tmpdir(), `solver-test-no-vault-${process.pid}.json`);
 
 // The CLI's promotions envelope compiles every committed winner (~7 s): it runs beside the rest.
 const envelopeRun = new Promise((done, fail) => {
@@ -60,7 +64,7 @@ const refusal = (value, rule, what) => {
   assert.equal(value.rule, rule, `${what} is refused by ${rule}, not ${value.rule}`);
   return value;
 };
-assert.deepEqual([...VERBS], ['describe', 'query', 'review', 'promote', 'check']);
+assert.deepEqual([...VERBS], ['describe', 'query', 'review', 'promote', 'check', 'truth']);
 
 // --- describe: a join over the registers, for every registered game ---------------------------
 const graph = JSON.parse(readFileSync(join(ROOT, GRAPH_FILE), 'utf8'));
@@ -80,8 +84,11 @@ for (const game of GAMES) {
   assert.equal(bound.registered, contracts.length);
   assert.deepEqual(bound.gameScoped.map(item => item.id), catalog.artifactActions ? ['semantic-control-v1', 'device-executor-v1'] : ['semantic-control-v1']);
   assert.ok(isUnknown(bound.others), 'the contract register has no game dimension, and says so');
-  assert.deepEqual(gaps.map(gap => [gap.gap, gap.holds === false ? 'closed' : 'open']).slice(0, 3), [[1, 'open'], [2, 'open'], [3, 'closed']],
-    'Plan 28 gaps 1 and 2 still hold (partly), gap 3 is closed by describe itself');
+  assert.deepEqual(gaps.map(gap => [gap.gap, gap.holds === false ? 'closed' : 'open']).slice(0, 3), [[1, 'open'], [2, 'closed'], [3, 'closed']],
+    'Plan 28 gap 1 still holds (partly); gap 2 is closed by truth, gap 3 by describe itself');
+  assert.equal(gaps[1].localDump, false);
+  assert.deepEqual(gaps[1].notMeasured, [NO_LOCAL_DUMP], 'with no local dump the surface is there, and what it cannot read is said');
+  assert.ok(described.notMeasured.includes(NO_LOCAL_DUMP));
   if (game.alias === 'fnaf2') {
     assert.equal(story.entries, chronicle.entries.length);
     assert.equal(story.newest, chronicle.entries.map(entry => entry.date).sort().at(-1));
@@ -99,6 +106,14 @@ for (const game of GAMES) {
   if (game.alias === 'fnaf1') assert.ok(isUnknown(phone.promotion), 'no Plan 12 gate reads a FNaF 1 run');
 }
 refusal(solver.describe({ game: 'fnaf5' }), 'invalid-argument', 'an unregistered game');
+
+// --- truth: with no local dump it refuses and names the decode (packages/source/test/truth.test.js reads one) ---
+const noDump = refusal(solver.truth({ op: 'events', game: 'fnaf2', query: { global: 1 } }), 'no-local-dump', 'truth events with no dump');
+assert.match(noDump.remedy, /npm run review -- truth decode/);
+refusal(solver.truth({ op: 'object', game: 'fnaf4', name: 'x' }), 'no-local-dump', 'truth object with no dump');
+refusal(solver.truth({ op: 'grep' }), 'invalid-argument', 'a truth op that does not exist');
+validateClaimEnvelope(solver.readResource('fnaf://truth/fnaf2/frame/3/group/413'));
+assert.equal(solver.readResource('fnaf://truth/fnaf2/frame/3/group/413').rule, 'no-local-dump', 'a cited group with no dump is a refusal');
 
 // --- query ---------------------------------------------------------------------------------
 const packs = claim(solver.query({ what: 'packs' }), 'query packs');
@@ -161,6 +176,10 @@ assert.equal(JSON.parse(passed.stdout).reproducer, "npm run review -- check seed
 assert.equal(run('query', 'contracts', '--text', 'claim-envelope').status, 0);
 assert.equal(run('resource', 'fnaf://game/com.scottgames.fnaf2/controls').status, 0);
 assert.equal(run('frobnicate').status, 2, 'a usage error exits 2');
+const truthCli = run('truth', 'events', 'fnaf2', '{"global":1}');
+assert.equal(truthCli.status, 1, 'truth with no local dump is a refusal');
+assert.equal(JSON.parse(truthCli.stdout).rule, 'no-local-dump');
+assert.equal(run('truth', 'events', 'fnaf2', 'not json').status, 2, 'a truth query that is not JSON is a usage error');
 const wrapped = await envelopeRun;
 assert.equal(wrapped.status, 0);
 assert.deepEqual(validateClaimEnvelope(JSON.parse(wrapped.stdout)).claim, queryPromotions(ROOT, { winners }),

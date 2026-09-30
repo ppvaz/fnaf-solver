@@ -2,9 +2,9 @@
 
 The repository includes a project-local stdio MCP server, `fnaf-solver`, at
 `tools/device/cue-helper-mcp.mjs`. It carries two surfaces: the safe Cue Helper
-operations, and the first steps of the solver interface of
-[Plan 28](../../plans/28-solver-interface.md). Neither exposes a tap, a
-coordinate, HID input, a shell command or a rebuild.
+operations, and steps 1-5 of the solver interface of
+[Plan 28](../../plans/28-solver-interface.md), eleven tools in all. Neither
+exposes a tap, a coordinate, HID input, a shell command or a rebuild.
 
 ## The solver interface
 
@@ -44,18 +44,46 @@ generated command registry, and every verb runs from a shell as
 | `review` | An instrument over one committed pack: `custody`, `outcome` (the venue's reported outcome beside any video grade), `promotion-checks`, `death-time` (refused while the death time is UNKNOWN). | read-only |
 | `promote` | The `PROMOTED_BY` edge Plan 12 would record for a pack, or a `plan12-promotion` refusal naming the failing checks. It never writes an attestation or an edge: a caller of this interface cannot promote. | read-only |
 | `check` | The four refusals, run on a statement before it is made: `seed-floor` (a win rate under 3000 seeds), `directional-reuse` (a constant used in another order than it was measured; CLAUDE.md mistake 10), `capabilities-first` (an instrument proposed without the phone's `device-capabilities-v1` report; mistake 8), `unknown-as-number` (an UNKNOWN consumed as a number). | read-only |
-| `jobs.enqueue`, `jobs.list`, `jobs.run` | The queue tools below, answering in the envelope. | as `cue.queue.*` |
+| `truth` | The game's own event sheet, read from **your** local dump (Plan 28 step 5). `op: "events"` with `{game, query}`: the event groups that read or write one target -- an object (`object` by name, or `handle`), optionally one of its alterable values (`value`) or flags (`flag`); a global value (`global`); or one group (`frame` and `group`) -- narrowed by `frame`, `access` (`read`, `write`, `any`) and `limit`. Each match is its frame, its group id (`g###`) and every condition and action as parsed fields (object type and number, the object resolved through the handle scramble K, each parameter), never the dump's text; a hit the dump does not pin down (an indexed read, a flag number computed at run time) says `certain: false`. `op: "object"` with `{game, name \| handle}`: type, the frames whose events reference it, created-by and destroyed-by. `op: "decode"` with `{path, game}`: runs the local CTFAK event-text dumper on an APK or CCN on this host, estimates K by object-type agreement, caches the dump outside the repository and binds it to the game named. Every answer is `SOURCED` and cites `fnaf://truth/<game>/frame/<n>/group/<g>`; `npm run review -- truth events\|object\|decode` is the same call from a shell. | reads; `decode` writes only the local cache and vault |
+| `jobs` | The queue tools below, answering in the envelope: `op` `enqueue` (with `cue.queue.enqueue`'s arguments), `list`, or `run` (`waitSeconds`, `intervalSeconds`). Each op refuses an argument it does not take. | as `cue.queue.*` |
+
+**Where the dump comes from.** The server ships the decoder, not the decoded
+data (Plan 28): no dump, decoded text or game asset is tracked, and the tests
+build a synthetic dump from the dumper's grammar at run time. `truth` reads the
+dump each host makes from its own copy of the game, named in the untracked
+`packages/source/decompile/local-vault.json` or in the file
+`$SIXAM_TRUTH_VAULT` names:
+
+```json
+{ "schema": "truth-local-vault-v1",
+  "games": { "com.scottgames.fnaf2": { "dump": "/abs/path/events-android.txt" } },
+  "cache": "~/.cache/sixam-truth",
+  "decoder": { "ctfakSrc": "/abs/ctfak-checkout", "dotnet": "/abs/dotnet" } }
+```
+
+With no dump for a game, `truth` refuses (`no-local-dump`) and names the
+decode; `describe` reports Plan 28's gap 2 closed and says `no local dump
+configured on this host`. `decode` refuses a path inside the repository, a file
+that is neither an APK nor a CCN, and a missing toolchain (`decoder-absent`,
+naming `CTFAK_SRC`, `DOTNET_ROOT` and
+[`regen-dump.sh`](../../packages/source/decompile/regen-dump.sh)). A game `k`
+pinned in the vault that object-type agreement contradicts is refused
+(`handle-scramble`). The estimate cannot tell a K that permutes objects within
+one type class, and every answer says so.
 
 Resources, each a read-only projection in the same envelope:
 `fnaf://chronicle`, `fnaf://evidence/graph`, `fnaf://contracts`,
 `fnaf://refuted` (chronicle negatives and the parked routes of
-[`../ARCHIVED-ROUTES.md`](../ARCHIVED-ROUTES.md)), and the template
-`fnaf://game/{pkg}/controls` (one game's `control-catalog-v1`).
+[`../ARCHIVED-ROUTES.md`](../ARCHIVED-ROUTES.md)), and the templates
+`fnaf://game/{pkg}/controls` (one game's `control-catalog-v1`) and
+`fnaf://truth/{game}/frame/{frame}/group/{group}` (one cited event group of
+your local dump, read back; a refusal where none is configured).
 
 The verbs live in [`packages/review/src/solver.mjs`](../../packages/review/src/solver.mjs),
-so the MCP server, the review CLI and a later wiki or desk share one verb table.
-Not here yet (Plan 28 steps 5 and 6): `truth.*` over the game's own event
-sheet, and `sim.*` and `device.*` over the gated simulation and device paths.
+so the MCP server, the review CLI and a later wiki or desk share one verb table;
+`truth` is Source's own reading, [`packages/source/decompile/truth.mjs`](../../packages/source/decompile/truth.mjs).
+Not here yet (Plan 28 step 6): `sim.*` and `device.*` over the gated simulation
+and device paths.
 
 ## The Cue Helper queue
 

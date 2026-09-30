@@ -8,10 +8,13 @@
 // writes an attestation or an edge (Plan 28: "the moment proof.promote succeeds without a human,
 // every label becomes worthless"). No verb takes a tap, a coordinate, a shell command or a
 // rebuild. State is never written as prose (ADR 0002 principle 4): `describe` is a join over the
-// registers registers.mjs reads, and each of Plan 28's four gaps is a query.
+// registers registers.mjs reads, and each of Plan 28's four gaps is a query. `truth` (step 5) is
+// Source's reading of the caller's own local dump (@sixam/source/truth): it ships the decoder, not
+// the decoded data, and refuses, naming the decode, where no dump is configured.
 import { readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { CONTROL_CATALOGS } from '@sixam/source';
+import { NO_LOCAL_DUMP, VAULT_ENV, VAULT_FILE, createTruth } from '@sixam/source/truth';
 import { canonicalJson } from '@sixam/kernel/contracts';
 import { REPOSITORY_TARGET, claimEnvelope, isRefusal, isUnknown, refusalEnvelope, unknown, validateClaimEnvelope } from '@sixam/kernel';
 import { videoTerminal } from './evidence-cohort.mjs';
@@ -29,7 +32,7 @@ export const SURFACE_DOC = 'docs/device/CUE-HELPER-MCP.md';
 export const PLAN28 = 'plans/28-solver-interface.md';
 
 /** The verbs, by the name every door calls them. */
-export const VERBS = Object.freeze(['describe', 'query', 'review', 'promote', 'check']);
+export const VERBS = Object.freeze(['describe', 'query', 'review', 'promote', 'check', 'truth']);
 export const QUERIES = Object.freeze(['promotions', 'packs', 'chronicle', 'contracts']);
 export const INSTRUMENTS = Object.freeze(['custody', 'outcome', 'promotion-checks', 'death-time']);
 /** Commands that emit claim-envelope-v1: this surface's verbs through the review CLI, and the two retrofitted tools. */
@@ -45,6 +48,8 @@ export const RESOURCES = Object.freeze([
 ]);
 export const RESOURCE_TEMPLATES = Object.freeze([
   { uriTemplate: 'fnaf://game/{pkg}/controls', name: 'game controls', description: "One game's control-catalog-v1 (D5), by Android package." },
+  { uriTemplate: 'fnaf://truth/{game}/frame/{frame}/group/{group}', name: 'event group',
+    description: "One event group of the caller's own local dump, parsed into fields (truth events over a frame and a group)." },
 ]);
 
 const PACK_ID = /^[\w.-]+$/;
@@ -78,10 +83,11 @@ function winnersKey(root) {
 
 /**
  * The surface over one checkout.
- * @param {{root: string, winners?: () => Map<string, string>}} options `winners` overrides the
- *   committed-winner compile (tests pass a precomputed map)
+ * @param {{root: string, winners?: () => Map<string, string>, truth?: ReturnType<typeof createTruth>}} options `winners`
+ *   overrides the committed-winner compile (tests pass a precomputed map); `truth` the local-dump reader
  */
-export function createSolver({ root, winners: winnersOverride }) {
+export function createSolver({ root, winners: winnersOverride, truth: truthOverride }) {
+  const truth = truthOverride ?? createTruth({ root });
   let cache = null;
   /** trackedWinners compiles every committed winner (~7 s); it is kept until a winner file changes. */
   const winners = () => {
@@ -94,21 +100,24 @@ export function createSolver({ root, winners: winnersOverride }) {
   // --- describe ------------------------------------------------------------------------------
 
   /** Plan 28's four gaps, each as a query over the registers and this surface's own verb table. */
-  function gaps(gamePacks, graphEdges) {
+  function gaps(pkg, gamePacks, graphEdges) {
     const contracts = readContracts(root).contracts.map(item => item.id);
     const registered = contracts.includes('claim-envelope-v1');
     const registry = readCommandRegistry(root);
     const emitterIds = new Set(ENVELOPE_EMITTERS.map(command => command.split(' ')[2]));
     const custody = tally(gamePacks, pack => (pack.valid ? pack.custody.kind : 'invalid'));
     const complete = custody.original ?? 0;
+    const local = truth.status(pkg);
     return [
       { gap: 1, name: 'The envelope is not shared',
         query: `claim-envelope-v1 in ${CONTRACT_REGISTER}; the commands of ${COMMAND_REGISTRY} this surface lists as emitters`,
         registered, emitters: ENVELOPE_EMITTERS,
         commandsWithoutEnvelope: registry.commands.filter(id => !emitterIds.has(id)).length, commands: registry.commands.length,
         holds: !registered ? true : 'partly' },
-      { gap: 2, name: 'Truth has no programmatic surface', query: 'a truth.* or rulebook verb in this surface\'s VERBS',
-        verbs: VERBS, holds: !VERBS.some(verb => verb === 'rulebook' || verb.startsWith('truth')) },
+      { gap: 2, name: 'Truth has no programmatic surface',
+        query: `a truth.* or rulebook verb in this surface's VERBS; this game's local dump in ${VAULT_FILE} or $${VAULT_ENV}`,
+        verbs: VERBS, localDump: local.configured, holds: !VERBS.some(verb => verb === 'rulebook' || verb.startsWith('truth')),
+        ...(local.configured ? {} : { notMeasured: [NO_LOCAL_DUMP] }) },
       { gap: 3, name: 'No coverage map', query: 'describe in this surface\'s VERBS', holds: !VERBS.includes('describe') },
       { gap: 4, name: 'Custody is incomplete and promotion is empty',
         query: `this game's packs in ${PACKS_DIR} by custody kind, and its ${PROMOTION_EDGE} edges in ${GRAPH_FILE}`,
@@ -218,8 +227,9 @@ export function createSolver({ root, winners: winnersOverride }) {
     }
     if ((outcomes.UNKNOWN ?? 0) > 0) notMeasured.push(`the reported outcome of ${outcomes.UNKNOWN} of this game's lifted runs`);
 
-    const gapRows = gaps(gamePacks, gameEdges.length);
-    notMeasured.push(...gapRows.filter(row => row.holds !== false).map(row => `Plan 28 gap ${row.gap} (${row.name}) holds${row.holds === true ? '' : ' partly'}`));
+    const gapRows = gaps(pkg, gamePacks, gameEdges.length);
+    notMeasured.push(...gapRows.filter(row => row.holds !== false).map(row => `Plan 28 gap ${row.gap} (${row.name}) holds${row.holds === true ? '' : ' partly'}`),
+      ...gapRows.flatMap(row => row.notMeasured ?? []));
 
     return claimEnvelope({
       claim: {
@@ -469,10 +479,16 @@ export function createSolver({ root, winners: winnersOverride }) {
     });
   }
 
+  // --- truth: the game's own event sheet, from the caller's local dump -------------------------
+
+  /** @param {{op?: string, [key: string]: any}} args decode {path, game} | events {game, query} | object {game, name | handle} */
+  const truthVerb = (args = {}) => truth.call(args);
+
   // --- resources -----------------------------------------------------------------------------
 
   /** @param {string} uri */
   function readResource(uri) {
+    if (String(uri ?? '').startsWith('fnaf://truth/')) return truth.readUri(uri);
     if (uri === 'fnaf://chronicle') {
       const chronicle = readChronicle(root);
       return claimEnvelope({
@@ -538,6 +554,7 @@ export function createSolver({ root, winners: winnersOverride }) {
   const checked = fn => (...args) => validateClaimEnvelope(fn(...args));
   return {
     describe: checked(describe), query: checked(query), review: checked(review), promote: checked(promote), check: checked(check),
+    truth: checked(truthVerb),
     /** @param {string} uri */
     readResource: uri => { const value = readResource(uri); return value === null ? null : validateClaimEnvelope(value); },
     listResources, resourceTemplates: () => [...RESOURCE_TEMPLATES],

@@ -12,6 +12,8 @@
     "./fnaf2": "./src/games/fnaf2/index.js",
     "./fnaf3": "./src/games/fnaf3/index.js",
     "./fnaf4": "./src/games/fnaf4/index.js",
+    "./truth": "./decompile/truth.mjs",
+    "./truth/read": "./src/truth/index.js",
     "./games/*": "./src/games/*"
   }
 }

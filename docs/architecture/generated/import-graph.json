@@ -1165,6 +1165,7 @@
         "@sixam/kernel",
         "@sixam/kernel/contracts",
         "@sixam/source",
+        "@sixam/source/truth",
         "node:fs",
         "node:path"
       ]
@@ -1265,12 +1266,28 @@
         "@sixam/kernel",
         "@sixam/kernel/contracts",
         "@sixam/source",
+        "@sixam/source/truth",
         "node:assert/strict",
         "node:child_process",
         "node:crypto",
         "node:fs",
+        "node:os",
         "node:path",
         "node:url"
+      ]
+    },
+    {
+      "file": "packages/source/decompile/truth.mjs",
+      "imports": [
+        "../src/index.js",
+        "../src/truth/index.js",
+        "@sixam/kernel",
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:zlib"
       ]
     },
     {
@@ -1447,6 +1464,36 @@
       ]
     },
     {
+      "file": "packages/source/src/truth/dump.js",
+      "imports": [
+        "@sixam/kernel"
+      ]
+    },
+    {
+      "file": "packages/source/src/truth/handles.js",
+      "imports": [
+        "./dump.js",
+        "./engine.js"
+      ]
+    },
+    {
+      "file": "packages/source/src/truth/index.js",
+      "imports": [
+        "./dump.js",
+        "./engine.js",
+        "./handles.js",
+        "./query.js"
+      ]
+    },
+    {
+      "file": "packages/source/src/truth/query.js",
+      "imports": [
+        "./dump.js",
+        "./engine.js",
+        "@sixam/kernel"
+      ]
+    },
+    {
       "file": "packages/source/test/animation-count.test.js",
       "imports": [
         "../src/games/fnaf2/plant-model.js",
@@ -1541,6 +1588,13 @@
       "imports": [
         "../src/games/fnaf2/plant-model.js",
         "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/fixtures/truth-decoder-stub.mjs",
+      "imports": [
+        "./truth-dump.mjs",
+        "node:fs"
       ]
     },
     {
@@ -1729,6 +1783,21 @@
         "../src/games/fnaf2/config.js",
         "../src/games/fnaf2/plant-model.js",
         "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/truth.test.js",
+      "imports": [
+        "./fixtures/truth-dump.mjs",
+        "@sixam/kernel",
+        "@sixam/source/truth",
+        "@sixam/source/truth/read",
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
       ]
     },
     {
@@ -2602,7 +2671,9 @@
     {
       "file": "tools/device/test-cue-helper-mcp.mjs",
       "imports": [
+        "../../packages/source/test/fixtures/truth-dump.mjs",
         "@sixam/kernel",
+        "@sixam/source/truth",
         "node:assert/strict",
         "node:child_process",
         "node:crypto",

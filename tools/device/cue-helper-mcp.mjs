@@ -1,17 +1,20 @@
 #!/usr/bin/env node
 /**
  * The fnaf-solver stdio MCP server: the safe Cue Helper setup/queue boundary,
- * and the solver interface's read-only verbs and resources (Plan 28 steps 1-4).
+ * and the solver interface's verbs and resources (Plan 28 steps 1-5).
  *
  * The server deliberately exposes no actuator, shell, coordinate, HID, rebuild
  * or game-control tool. The Cue Helper tools keep their names and their
  * answers byte for byte (CLAUDE.md tells agents to use cue.queue.enqueue);
- * `jobs.*` are the same queue operations answering in claim-envelope-v1. The
- * verbs `describe`, `query`, `review`, `promote` and `check` and the fnaf://
- * resources are packages/review/src/solver.mjs, the one verb table every door
- * shares; every answer they give is a claim-envelope-v1, and `promote` only
- * ever proposes or refuses. Messages use MCP's newline-delimited JSON-RPC
- * transport.
+ * `jobs` (op enqueue | list | run) is the same queue answering in
+ * claim-envelope-v1. The verbs `describe`, `query`, `review`, `promote`,
+ * `check` and `truth` and the fnaf:// resources are
+ * packages/review/src/solver.mjs, the one verb table every door shares; every
+ * answer they give is a claim-envelope-v1, and `promote` only ever proposes or
+ * refuses. `truth` (op decode | events | object) reads the caller's own local
+ * dump and decodes only a local APK or CCN: it ships the decoder, never the
+ * decoded data, and never touches a phone. Messages use MCP's
+ * newline-delimited JSON-RPC transport.
  */
 import { fileURLToPath } from 'node:url';
 import { REPOSITORY_TARGET, claimEnvelope, refusalEnvelope, unknown } from '@sixam/kernel';
@@ -51,6 +54,36 @@ const CUE_ENQUEUE_SCHEMA = { type: 'object', additionalProperties: false, requir
 const CUE_RUN_SCHEMA = { type: 'object', additionalProperties: false, properties: {
   waitSeconds: { type: 'number', minimum: 0, maximum: 86400, default: 0, description: 'Keep polling for a ready phone for this many seconds.' },
   intervalSeconds: { type: 'number', minimum: 0.1, maximum: 300, default: 5 },
+} };
+/** jobs: one tool, the queue operation named by op; each op takes only its cue.queue.* arguments. */
+const JOB_OPS = Object.freeze({ enqueue: 'cue.queue.enqueue', list: 'cue.queue.list', run: 'cue.queue.run' });
+const JOB_ARGUMENTS = Object.freeze({ enqueue: Object.keys(CUE_ENQUEUE_SCHEMA.properties), list: [], run: Object.keys(CUE_RUN_SCHEMA.properties) });
+const JOBS_SCHEMA = { type: 'object', additionalProperties: false, required: ['op'], properties: {
+  op: { type: 'string', enum: Object.keys(JOB_OPS), description: 'enqueue (cue.queue.enqueue), list (cue.queue.list) or run (cue.queue.run).' },
+  ...CUE_ENQUEUE_SCHEMA.properties, ...CUE_RUN_SCHEMA.properties,
+} };
+/** truth: the game's own event sheet, from the caller's local dump; each op takes only its own arguments. */
+const TRUTH_ARGUMENTS = Object.freeze({ decode: ['path', 'game'], events: ['game', 'query'], object: ['game', 'name', 'handle'] });
+const TRUTH_SCHEMA = { type: 'object', additionalProperties: false, required: ['op'], properties: {
+  op: { type: 'string', enum: Object.keys(TRUTH_ARGUMENTS),
+    description: 'events: which event groups read or write a target; object: one object\'s type, frames, created-by and destroyed-by; '
+      + 'decode: make the local dump from an APK or CCN on this host.' },
+  game: GAME,
+  path: { type: 'string', minLength: 1, maxLength: 4096, description: 'decode only: the absolute path of an APK or CCN you own, on this host.' },
+  query: { type: 'object', additionalProperties: false, description: 'events only: exactly one target -- object (or handle), optionally '
+    + 'with value or flag; global; or frame with group -- and optionally frame, access and limit.', properties: {
+    object: { type: 'string', minLength: 1, maxLength: 200, description: 'An object\'s name in your dump (exact, case-insensitive).' },
+    handle: { type: 'integer', minimum: 0, maximum: 65535, description: 'An event-space object handle.' },
+    value: { type: 'integer', minimum: 0, maximum: 1023, description: 'An alterable-value index of the object.' },
+    flag: { type: 'integer', minimum: 0, maximum: 31, description: 'A flag index of the object.' },
+    global: { type: 'integer', minimum: 0, maximum: 1023, description: 'A global-value index.' },
+    frame: { type: 'integer', minimum: 0, description: 'Only this frame.' },
+    group: { type: 'integer', minimum: 0, description: 'With frame: this one group (g###, as a number).' },
+    access: { type: 'string', enum: ['read', 'write', 'any'], default: 'any' },
+    limit: { type: 'integer', minimum: 1, maximum: 500, default: 50 },
+  } },
+  name: { type: 'string', minLength: 1, maxLength: 200, description: 'object only: the object\'s name in your dump.' },
+  handle: { type: 'integer', minimum: 0, maximum: 32767, description: 'object only: an event-space object handle.' },
 } };
 
 const TOOL_DEFINITIONS = Object.freeze([
@@ -150,33 +183,34 @@ const TOOL_DEFINITIONS = Object.freeze([
     annotations: READ_ONLY,
   },
   {
-    name: 'jobs.enqueue',
-    description: 'cue.queue.enqueue, answering in claim-envelope-v1.',
-    inputSchema: CUE_ENQUEUE_SCHEMA,
+    name: 'jobs',
+    description: 'The Cue Helper queue answering in claim-envelope-v1: op enqueue (cue.queue.enqueue\'s arguments), list, or run '
+      + '(waitSeconds, intervalSeconds: runs setup and check jobs only on exactly one awake, unlocked phone; never a night).',
+    inputSchema: JOBS_SCHEMA,
     annotations: SAFE,
   },
   {
-    name: 'jobs.list',
-    description: 'cue.queue.list, answering in claim-envelope-v1.',
-    inputSchema: NO_ARGS,
-    annotations: { ...SAFE, readOnlyHint: true },
-  },
-  {
-    name: 'jobs.run',
-    description: 'cue.queue.run, answering in claim-envelope-v1: runs setup and check jobs only on exactly one awake, unlocked phone; never a night.',
-    inputSchema: CUE_RUN_SCHEMA,
+    name: 'truth',
+    description: 'The game\'s own event sheet, read from YOUR local dump (Plan 28 step 5): op events ({game, query}: the event groups '
+      + 'that read or write an object, one of its alterable values or flags, or a global -- frame, group id and every condition and '
+      + 'action as parsed fields, never the dump\'s text), op object ({game, name | handle}: type, frames, created-by, destroyed-by), or '
+      + 'op decode ({path, game}: make that dump from an APK or CCN on this host with the local CTFAK dumper; never from a phone). '
+      + 'Refuses, naming the decode, when no dump is configured. Answers in claim-envelope-v1, labelled SOURCED, citing '
+      + 'fnaf://truth/<game>/frame/<n>/group/<g>.',
+    inputSchema: TRUTH_SCHEMA,
     annotations: SAFE,
   },
 ]);
 
 const SCHEMAS = new Map(TOOL_DEFINITIONS.map(tool => [tool.name, tool.inputSchema]));
 const VERB_TOOLS = Object.freeze({ describe: solver.describe, query: solver.query, review: solver.review,
-  promote: solver.promote, check: solver.check });
-const JOB_TOOLS = Object.freeze({ 'jobs.enqueue': 'cue.queue.enqueue', 'jobs.list': 'cue.queue.list', 'jobs.run': 'cue.queue.run' });
+  promote: solver.promote, check: solver.check, truth: solver.truth });
+/** Tools whose op picks the arguments they take. */
+const OP_ARGUMENTS = Object.freeze({ jobs: JOB_ARGUMENTS, truth: TRUTH_ARGUMENTS });
 const QUEUE_CITE = Object.freeze(['tools/device/cue-helper-queue.sh', SURFACE_DOC]);
 
 /** A queue answer as a claim envelope: a queued, listed or held job measures nothing about the game. */
-function jobsEnvelope(name, args, result) {
+function jobsEnvelope(op, args, result) {
   if (result.ok === false)
     return refusalEnvelope({ rule: 'queue', because: `${result.error.code}: ${result.error.message}`, cite: [...QUEUE_CITE],
       remedy: 'correct the arguments against the tool\'s input schema; a HOLD is not a refusal' });
@@ -185,31 +219,37 @@ function jobsEnvelope(name, args, result) {
   return claimEnvelope({
     claim, label: unknown('a queue record measures nothing about the game: a job queued, listed or held is not a result'),
     target: game ?? REPOSITORY_TARGET, cite: [...QUEUE_CITE], status: 'standing', supersededBy: null,
-    notMeasured: name === 'jobs.run'
+    notMeasured: op === 'run'
       ? [result.status === 'HOLD' ? 'the pending jobs: the phone was absent, locked, asleep or ambiguous, so none ran'
-        : 'what each job found: jobs.list reads its state']
-      : ['whether the phone is present, awake and unlocked: only jobs.run reads it'],
-    reproducer: name === 'jobs.run' ? 'tools/device/cue-helper-queue.sh run --wait 0' : 'tools/device/cue-helper-queue.sh list --json',
+        : 'what each job found: jobs op list reads its state']
+      : ['whether the phone is present, awake and unlocked: only jobs op run reads it'],
+    reproducer: op === 'run' ? 'tools/device/cue-helper-queue.sh run --wait 0' : 'tools/device/cue-helper-queue.sh list --json',
   });
 }
 
-/** Arguments the tool's schema does not name are refused before anything runs. */
+/** Arguments the tool's schema does not name -- or, for an op tool, its op does not take -- are refused before anything runs. */
 function unknownArguments(name, args) {
-  const schema = SCHEMAS.get(name);
-  const allowed = Object.keys(schema?.properties ?? {});
+  const perOp = OP_ARGUMENTS[name];
+  const allowed = perOp ? ['op', ...(perOp[args.op] ?? [])] : Object.keys(SCHEMAS.get(name)?.properties ?? {});
   return Object.keys(args).filter(key => !allowed.includes(key));
 }
 
 async function callTool(name, args) {
   if (args === null || typeof args !== 'object' || Array.isArray(args))
     return refusalEnvelope({ rule: 'invalid-argument', because: 'tool arguments are an object', cite: [SURFACE_DOC], remedy: 'pass an object' });
+  const perOp = OP_ARGUMENTS[name];
+  if (perOp && !Object.hasOwn(perOp, args.op))
+    return refusalEnvelope({ rule: 'invalid-argument', because: `${name} takes op ${Object.keys(perOp).join(' | ')}, not ${JSON.stringify(args.op ?? null)}`,
+      cite: [SURFACE_DOC], remedy: `pass op: one of ${Object.keys(perOp).join(', ')}` });
   const extra = unknownArguments(name, args);
-  if (Object.hasOwn(VERB_TOOLS, name)) {
-    if (extra.length) return refusalEnvelope({ rule: 'invalid-argument', because: `${name} takes no ${extra.join(', ')}`,
-      cite: [SURFACE_DOC], remedy: `pass only ${Object.keys(SCHEMAS.get(name).properties).join(', ')}` });
-    return VERB_TOOLS[name](args);
+  if (extra.length && (Object.hasOwn(VERB_TOOLS, name) || perOp))
+    return refusalEnvelope({ rule: 'invalid-argument', because: `${name}${perOp ? ` op ${args.op}` : ''} takes no ${extra.join(', ')}`,
+      cite: [SURFACE_DOC], remedy: `pass only ${perOp ? ['op', ...perOp[args.op]].join(', ') : Object.keys(SCHEMAS.get(name).properties).join(', ')}` });
+  if (Object.hasOwn(VERB_TOOLS, name)) return VERB_TOOLS[name](args);
+  if (name === 'jobs') {
+    const { op, ...rest } = args;
+    return jobsEnvelope(op, rest, await cue.call(JOB_OPS[op], rest));
   }
-  if (Object.hasOwn(JOB_TOOLS, name)) return jobsEnvelope(name, args, await cue.call(JOB_TOOLS[name], args));
   return cue.call(name, args);
 }
 
@@ -232,8 +272,9 @@ async function handle(request) {
       protocolVersion: typeof requested === 'string' ? requested : '2024-11-05',
       capabilities: { tools: { listChanged: false }, resources: { listChanged: false, subscribe: false } },
       serverInfo: SERVER,
-      instructions: 'Start with describe({game}); describe, query, review, promote, check and the fnaf:// resources answer in '
-        + 'claim-envelope-v1, and promote only proposes. Use cue.queue.enqueue while the device is absent or locked; '
+      instructions: 'Start with describe({game}); describe, query, review, promote, check, truth, jobs and the fnaf:// resources answer in '
+        + 'claim-envelope-v1, and promote only proposes. truth reads your own local dump of the game\'s event sheet and refuses, '
+        + 'naming the decode, where none is configured. Use cue.queue.enqueue while the device is absent or locked; '
         + 'cue.queue.run holds safely until the device is awake and unlocked.',
     } };
   }
