@@ -345,10 +345,10 @@ const ENGINE = [
   ['cue detector (java)', ['../android/companion/test.sh']],
   ['fnaf1 teach presenter (java)', ['../android/fnaf1-teach/test.sh']],
   ['fnaf1 teach overlay clearance', ['../packages/play/games/fnaf1/test-fnaf1-teach-overlay.py']],
-  // One screen->raw transform, held to one answer over the real tap table
-  // wherever it is written: the HID transport (the authority) and the
-  // Companion's Java copy. Its shell and Python copies once disagreed on 24 of
-  // 39 coordinates; they left with the legacy lane.
+  // One screen->raw transform, the HID transport's: the Companion's Java copy
+  // left on 2026-09-30, and its route bundles' hid-controls.txt are held to
+  // what the transport derives from their profiles. Its shell and Python copies
+  // once disagreed on 24 of 39 coordinates; they left with the legacy lane.
   ['screen map', ['../packages/play/bin/phone/test-screen-map.mjs']],
   // Plan 18 Package 5: parse source-side InputDispatcher evidence without a
   // phone or a trace-processor dependency in the normal checkout.

@@ -4,17 +4,17 @@ import android.content.res.AssetManager;
 import android.os.SystemClock;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BooleanSupplier;
 
@@ -26,6 +26,12 @@ import java.util.function.BooleanSupplier;
  * from {@link RunnerCatalog}, and the catalog must explicitly allow a route
  * before this class will open the HID stream. Visual arm/read and reactive
  * cycle adapters are intentionally fail-closed until they are qualified.</p>
+ *
+ * <p>It holds no device geometry. Every control it presses comes from the route
+ * bundle's {@link HidControls#FILE}, which the host derives from the bundle's
+ * device profile and binds to that profile's sha256; a plan that uses a control
+ * the file does not name is refused before anything is sent. Until 2026-09-30
+ * this class kept its own control map and 2400x1080 transform.</p>
  */
 public final class NightRunner {
     private static final int HID_ID = 92;
@@ -43,36 +49,8 @@ public final class NightRunner {
             "192",
     };
 
-    private static final Map<String, Point> CONTROL_MAP = new HashMap<>();
-
-    static {
-        CONTROL_MAP.put("mask", new Point(600, 995));
-        CONTROL_MAP.put("monitor", new Point(1780, 995));
-        CONTROL_MAP.put("cameraFeedLight", new Point(900, 540));
-        CONTROL_MAP.put("hallLight", new Point(1200, 540));
-        CONTROL_MAP.put("wind", new Point(500, 888));
-        CONTROL_MAP.put("leftVentLight", new Point(350, 615));
-        CONTROL_MAP.put("rightVentLight", new Point(2050, 615));
-        CONTROL_MAP.put("cam:4", new Point(1728, 690));
-        CONTROL_MAP.put("cam:7", new Point(1776, 606));
-        CONTROL_MAP.put("cam:8", new Point(1412, 590));
-        CONTROL_MAP.put("cam:9", new Point(2144, 548));
-        CONTROL_MAP.put("cam:10", new Point(1984, 716));
-        CONTROL_MAP.put("cam:11", new Point(2228, 652));
-    }
-
     public interface ProgressListener {
         void onProgress(String text);
-    }
-
-    private static final class Point {
-        final int x;
-        final int y;
-
-        Point(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
     }
 
     private static final class Action {
@@ -127,6 +105,7 @@ public final class NightRunner {
     private final AssetManager assets;
     private final RunnerCatalog.Route route;
     private final AtomicBoolean cancelled = new AtomicBoolean(false);
+    private HidControls controls;
 
     public NightRunner(AssetManager assets, RunnerCatalog.Route route) {
         this.assets = assets;
@@ -201,6 +180,9 @@ public final class NightRunner {
                 || !route.planAsset.startsWith("runners/")) {
             throw new IOException("route plan asset is unsafe");
         }
+        String bundle = route.planAsset.substring(0, route.planAsset.lastIndexOf('/'));
+        controls = HidControls.parse(HidControls.utf8(assetBytes(bundle + "/" + HidControls.FILE)),
+                HidControls.sha256Hex(assetBytes(bundle + "/profile.json")));
         Plan plan = new Plan();
         try (InputStream input = assets.open(route.planAsset);
                 BufferedReader reader = new BufferedReader(new InputStreamReader(
@@ -272,7 +254,64 @@ public final class NightRunner {
         if (route.night != plan.night || !route.strategy.equals(plan.policy)) {
             throw new IOException("plan identity does not match the selected route");
         }
+        controls.requireAll(controlsUsed(plan));
         return plan;
+    }
+
+    private byte[] assetBytes(String name) throws IOException {
+        try (InputStream input = assets.open(name)) {
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            byte[] chunk = new byte[4096];
+            for (int read; (read = input.read(chunk)) > 0; ) bytes.write(chunk, 0, read);
+            return bytes.toByteArray();
+        }
+    }
+
+    /** Every control the plan's actions press, as {@link #addAction} presses them. */
+    private static Set<String> controlsUsed(Plan plan) {
+        Set<String> used = new TreeSet<>();
+        for (Action action : plan.actions) {
+            switch (action.kind) {
+                case "tap":
+                case "hold":
+                    used.add(action.control);
+                    break;
+                case "hall":
+                    used.add("hallLight");
+                    break;
+                case "hallvent":
+                    used.add("hallLight");
+                    used.add("rightVentLight");
+                    break;
+                case "hallraise":
+                    used.add("hallLight");
+                    used.add("monitor");
+                    break;
+                case "maskraise":
+                    used.add("mask");
+                    used.add("monitor");
+                    if ("hall".equals(action.control)) used.add("hallLight");
+                    break;
+                case "camdrop":
+                    used.add("cameraFeedLight");
+                    used.add("monitor");
+                    break;
+                case "sweep":
+                    used.add("cameraFeedLight");
+                    for (String camera : action.tokens) {
+                        int split = camera.indexOf(':', 4);
+                        used.add(split > 0 ? camera.substring(0, split) : camera);
+                    }
+                    break;
+                case "read":
+                    used.add(action.control);
+                    if (action.fourth > 0) used.add("hallLight");
+                    break;
+                default:
+                    break;
+            }
+        }
+        return used;
     }
 
     private static void parseAction(Plan plan, String cycle, String[] fields)
@@ -404,7 +443,7 @@ public final class NightRunner {
 
     private int addSingle(List<String> lines, String control, int duration)
             throws IOException {
-        Point target = point(control);
+        int[] target = point(control);
         lines.add(reportSingle(active(target)));
         addDelay(lines, duration);
         lines.add(reportSingle(released(target)));
@@ -413,8 +452,8 @@ public final class NightRunner {
 
     private int addTwo(List<String> lines, String firstControl, String secondControl,
             int duration) throws IOException {
-        Point first = point(firstControl);
-        Point second = point(secondControl);
+        int[] first = point(firstControl);
+        int[] second = point(secondControl);
         lines.add(reportTwo(active(first), active(second)));
         addDelay(lines, duration);
         lines.add(reportTwo(released(first), released(second)));
@@ -422,7 +461,7 @@ public final class NightRunner {
     }
 
     private int addMaskRaise(List<String> lines, Action action) throws IOException {
-        Point mask = point("mask");
+        int[] mask = point("mask");
         lines.add(reportSingle(active(mask)));
         addDelay(lines, DEFAULT_MASK_CONTACT_MS);
         lines.add(reportSingle(released(mask)));
@@ -442,8 +481,8 @@ public final class NightRunner {
     }
 
     private int addCameraDrop(List<String> lines, Action action) throws IOException {
-        Point light = point("cameraFeedLight");
-        Point monitor = point("monitor");
+        int[] light = point("cameraFeedLight");
+        int[] monitor = point("monitor");
         lines.add(reportSingle(active(light)));
         addDelay(lines, action.first);
         lines.add(reportTwo(active(light), active(monitor)));
@@ -464,7 +503,7 @@ public final class NightRunner {
                 lightMs = parseInt(camera.substring(split + 1), "sweep camera contact");
                 camera = camera.substring(0, split);
             }
-            Point selected = point(camera);
+            int[] selected = point(camera);
             lines.add(reportSingle(active(selected)));
             addDelay(lines, action.second);
             lines.add(reportSingle(released(selected)));
@@ -511,18 +550,17 @@ public final class NightRunner {
         throw new IOException("unknown sweep camera: " + token);
     }
 
+    /** The plan spells cameras camN or cam:N; the controls file names them cam:N. */
     private static String normalizeControl(String control) throws IOException {
         if (control.startsWith("cam") && !control.startsWith("cam:")) {
             control = "cam:" + control.substring(3);
         }
-        if (!CONTROL_MAP.containsKey(control)) throw new IOException("unknown plan control: " + control);
+        if (!control.matches("[A-Za-z][A-Za-z0-9:]*")) throw new IOException("unknown plan control: " + control);
         return control;
     }
 
-    private static Point point(String control) throws IOException {
-        Point point = CONTROL_MAP.get(control);
-        if (point == null) throw new IOException("missing HID control map: " + control);
-        return point;
+    private int[] point(String control) throws IOException {
+        return controls.raw(control);
     }
 
     private static String registerLine() {
@@ -538,19 +576,12 @@ public final class NightRunner {
                 + descriptor + ",\"feature_reports\":[{\"id\":1,\"data\":[0]}]}";
     }
 
-    private static String active(Point point) {
-        return contact(3, point);
+    private static String active(int[] point) {
+        return HidControls.contact(3, point);
     }
 
-    private static String released(Point point) {
-        return contact(0, point);
-    }
-
-    private static String contact(int flags, Point point) {
-        int rawX = (1080 - point.y) * 20 / 9;
-        int rawY = point.x * 9 / 20;
-        return "[" + flags + "," + (rawX & 255) + "," + ((rawX >> 8) & 255)
-                + "," + (rawY & 255) + "," + ((rawY >> 8) & 255) + "]";
+    private static String released(int[] point) {
+        return HidControls.contact(0, point);
     }
 
     private static String reportSingle(String contact) {

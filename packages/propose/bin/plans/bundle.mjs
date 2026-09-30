@@ -17,6 +17,7 @@ import { build as buildMinus7, devicePlan as emitMinus7Plan,
 import { compileArtifactPlans, persistArtifactPlans } from './artifact-commands.mjs';
 import { canonicalJson, stableHash } from '@sixam/kernel/contracts';
 import { resolveDeviceProfile } from '@sixam/source';
+import { HID_CONTROLS_FILE, HID_CONTROLS_SCHEMA, hidControlsText } from '@sixam/play/venues/phone/hid';
 import { FNAF2_CONTROL_VOCABULARY as V } from '@sixam/source';
 import * as C from '@sixam/source/fnaf2';
 import { FNAF2_MECHANICS } from '@sixam/source/games/fnaf2/mechanics.js';
@@ -710,6 +711,9 @@ export function compileBundle(input, outDirectory, { constraints = {} } = {}) {
   const profileText = canonicalJson(profile);
   writeFileSync(join(out, 'winner.json'), winnerText);
   writeFileSync(join(out, 'profile.json'), profileText);
+  // The Companion presses these, not a control map of its own (hidControlsText).
+  const controlsText = hidControlsText(profile, sha256(profileText));
+  writeFileSync(join(out, HID_CONTROLS_FILE), controlsText);
   const plans = [];
   for (const night of winner.nights) {
     const file = `night-${night}.plan`;
@@ -727,6 +731,7 @@ export function compileBundle(input, outDirectory, { constraints = {} } = {}) {
     schema: BUNDLE_SCHEMA, version: 1, strategy: winner.strategy, policy: winner.strategy,
     winnerHash: stableHash(finalWinner), engineHash: winner.engineHash,
     nights: winner.nights, profile: { id: profile.id, file: 'profile.json', sha256: sha256(profileText) },
+    controls: { file: HID_CONTROLS_FILE, schema: HID_CONTROLS_SCHEMA, sha256: sha256(controlsText) },
     ...(winner.anchorEpochMs === undefined ? {} : { anchorEpochMs: winner.anchorEpochMs }),
     plans, gate: finalWinner.gate, replay,
     source: { compiler: 'packages/propose/bin/plans/bundle.mjs', registry: Object.keys(STRATEGY_REGISTRY) },
@@ -762,6 +767,16 @@ export function validateBundle(directory, { night } = {}) {
   resolveDeviceProfile(profile);
   if (profile.id !== manifest.profile.id || sha256(profileText) !== manifest.profile.sha256)
     fail('profile identity or hash mismatch');
+  // Bundles built before 2026-09-30 carry no controls file; one that does must
+  // carry exactly what the transport derives from the profile beside it.
+  if (manifest.controls !== undefined) {
+    if (!isRecord(manifest.controls) || manifest.controls.file !== HID_CONTROLS_FILE ||
+        manifest.controls.schema !== HID_CONTROLS_SCHEMA) fail('manifest controls reference is incomplete');
+    const controlsText = readFileSync(join(out, HID_CONTROLS_FILE), 'utf8');
+    if (sha256(controlsText) !== manifest.controls.sha256) fail(`${HID_CONTROLS_FILE} hash does not match manifest`);
+    if (controlsText !== hidControlsText(profile, manifest.profile.sha256))
+      fail(`${HID_CONTROLS_FILE} is not what the HID transport derives from profile.json`);
+  }
   const expected = new Map(winner.nights.map(planNight => [planNight, emitterFor(winner, planNight)]));
   const selected = night === undefined ? winner.nights : [night];
   for (const planNight of selected) if (!winner.nights.includes(planNight)) fail(`night ${planNight} is not in this bundle`);

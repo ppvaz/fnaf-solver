@@ -88,6 +88,7 @@ const SIBLING_EXCLUDED = new Map([
   ['soak-companion.sh', 'live helper, mock-gated by test-soak-companion.sh'],
   ['companion-setup.py', 'helper setup and target-menu check, gated by test-companion-setup.py; it prepares a session rather than grading one'],
   ['companion-setup.sh', 'thin one-serial wrapper; all UI work and every gate belong to companion-setup.py'],
+  ['hid-controls.mjs', 'build helper: writes a route bundle\'s hid-controls.txt from the profile.json beside it through the HID transport; it reads no run, and test-screen-map.mjs holds its output to the transport'],
   // packages/play/bin/probe
   ['hid-intersection-probe.mjs', 'device probe generator -- emits an intersection stream to a phone rather than grading a night run'],
   ['hid-intersection-probe.sh', 'device probe runner for hid-intersection-probe.mjs; it acts on a phone rather than grading a run'],

@@ -53,6 +53,7 @@ JAVA="$JDK_ROOT/bin/java"
   "$HERE/src/com/ppvaz/fnafcompanion/Fnaf1Lesson.java" \
   "$HERE/src/com/ppvaz/fnafcompanion/Fnaf3Lesson.java" \
   "$HERE/src/com/ppvaz/fnafcompanion/Fnaf4Lesson.java" \
+  "$HERE/src/com/ppvaz/fnafcompanion/HidControls.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/PixelWatchTest.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/ScreenIdentityTest.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/NightOnsetLatchTest.java" \
@@ -65,7 +66,8 @@ JAVA="$JDK_ROOT/bin/java"
   "$HERE/test/com/ppvaz/fnafcompanion/AudioProbeAnalysisTest.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/Fnaf1LessonTest.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/Fnaf3LessonTest.java" \
-  "$HERE/test/com/ppvaz/fnafcompanion/Fnaf4LessonTest.java"
+  "$HERE/test/com/ppvaz/fnafcompanion/Fnaf4LessonTest.java" \
+  "$HERE/test/com/ppvaz/fnafcompanion/HidControlsTest.java"
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.NativeRegionsTest
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.Fnaf2LegacyTest
 "$JAVA" -Dstatus.vector="$HERE/../../packages/play/test/testdata/companion-status-v1.txt" \
@@ -76,6 +78,8 @@ JAVA="$JDK_ROOT/bin/java"
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.Fnaf1LessonTest
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.Fnaf3LessonTest
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.Fnaf4LessonTest
+"$JAVA" -Dhid.bundle="$HERE/assets/runners/generated/minus-toys" \
+  -cp "$TEST_TMP" com.ppvaz.fnafcompanion.HidControlsTest
 $JAVA -cp "$TEST_TMP" com.ppvaz.fnafcompanion.PixelWatchTest
 # Compiled above since 2026-09-01 and never executed until 2026-09-27: a test
 # that is only compiled asserts nothing (tools/test-mistake-register.mjs).

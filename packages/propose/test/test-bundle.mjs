@@ -134,6 +134,19 @@ try {
   check(validateBundle(bundlePath).compiled?.length === 2,
     'bundle did not recover after restoring the compiled artifact');
 
+  // The Companion presses the controls file, not a map of its own, so the
+  // bundle carries it bound to the profile and the validator re-derives it.
+  const controlsPath = join(bundlePath, 'hid-controls.txt');
+  const controlsText = readFileSync(controlsPath, 'utf8');
+  check(/^#schema hid-controls-v1\n#profile fixture-hid-screencap\n#profile-sha256 [0-9a-f]{64}\n/.test(controlsText) &&
+    /^mask \d+ \d+$/m.test(controlsText), 'bundle did not carry the HID controls derived from its profile');
+  const planted = JSON.parse(readFileSync(join(bundlePath, 'manifest.json'), 'utf8'));
+  writeFileSync(controlsPath, controlsText.replace(/^mask (\d+) /m, (m, x) => `mask ${Number(x) + 1} `));
+  expectFailure(() => validateBundle(bundlePath), 'validator accepted a moved control in hid-controls.txt');
+  writeFileSync(controlsPath, controlsText);
+  check(planted.controls?.sha256 && validateBundle(bundlePath).status === 'READY',
+    'bundle did not recover after restoring hid-controls.txt');
+
   // The manifest's winner hash pins winner.json exactly as the emitter stored
   // it, not the winner after validateWinner fills knob defaults: a default
   // added after a bundle was built must fail the engine-source gate (if it

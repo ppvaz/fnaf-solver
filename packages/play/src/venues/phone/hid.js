@@ -35,6 +35,43 @@ export function toRaw([x, y]) {
   return [Math.floor((1080 - y) * 20 / 9), Math.floor(x * 9 / 20)];
 }
 
+// The HID axes' logical ranges, from HID_DESCRIPTOR (Logical Maximum 2399 on
+// X, 1079 on Y): a raw coordinate outside them is not a place on the screen.
+const RAW_MAX = Object.freeze([2399, 1079]);
+
+/** The bundle file that carries each control's HID coordinates beside the profile it came from. */
+export const HID_CONTROLS_FILE = 'hid-controls.txt';
+export const HID_CONTROLS_SCHEMA = 'hid-controls-v1';
+
+/**
+ * Every control a device profile's controlMap names, as the raw HID
+ * coordinates this transport would press, in the line file a bundle carries
+ * (HID_CONTROLS_FILE). The Companion's runner reads them from there and holds
+ * no geometry of its own: until 2026-09-30 NightRunner.java kept a copy of the
+ * control map and of toRaw, and test-screen-map.mjs held the two copies to one
+ * answer. The file names the profile and its sha256, so a runner can refuse
+ * controls that were not derived from the profile beside them.
+ * @param {{id: string, controlMap: Record<string, {x: number, y: number}>}} profile
+ * @param {string} profileSha256 sha256 of the profile file's bytes
+ */
+export function hidControlsText(profile, profileSha256) {
+  if (!profile || typeof profile.controlMap !== 'object' || profile.controlMap === null)
+    throw new TypeError('the profile names no controlMap');
+  if (typeof profile.id !== 'string' || !/^\S+$/.test(profile.id)) throw new TypeError('the profile has no id');
+  if (!/^[0-9a-f]{64}$/.test(profileSha256)) throw new TypeError('the profile sha256 must be 64 hex digits');
+  const lines = [`#schema ${HID_CONTROLS_SCHEMA}`, `#profile ${profile.id}`, `#profile-sha256 ${profileSha256}`];
+  for (const name of Object.keys(profile.controlMap).sort()) {
+    if (!/^[A-Za-z][A-Za-z0-9:]*$/.test(name)) throw new TypeError(`control name ${JSON.stringify(name)} is not a plan token`);
+    const point = profile.controlMap[name];
+    if (!finitePoint(point)) throw new TypeError(`control ${name} has no finite x and y`);
+    const raw = toRaw([point.x, point.y]);
+    if (raw.some((value, axis) => value < 0 || value > RAW_MAX[axis]))
+      throw new RangeError(`control ${name} at (${point.x}, ${point.y}) maps to raw (${raw.join(', ')}), off the HID axes`);
+    lines.push(`${name} ${raw[0]} ${raw[1]}`);
+  }
+  return `${lines.join('\n')}\n`;
+}
+
 function record(flags, point) {
   const [x, y] = toRaw([point.x, point.y]);
   return [flags, byte(x), high(x), byte(y), high(y)];

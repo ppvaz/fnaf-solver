@@ -881,6 +881,12 @@
       "lifecycle": "supported"
     },
     {
+      "id": "packages/play/bin/companion/hid-controls.mjs",
+      "invocation": "packages/play/bin/companion/hid-controls.mjs [--check] BUNDLE_DIR...",
+      "kind": "build",
+      "lifecycle": "supported"
+    },
+    {
       "id": "packages/play/bin/companion/test-audio-probe.mjs",
       "invocation": "packages/play/bin/companion/test-audio-probe.mjs",
       "kind": "check",

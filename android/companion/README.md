@@ -101,7 +101,18 @@ If the SDK or JDK is elsewhere, set `ANDROID_SDK_ROOT` or `JAVA_HOME`. Generated
 build output and the local debug keystore are ignored.
 
 `android/companion/test.sh` compiles the pure-Java helpers (native regions,
-teach lessons, the FNaF 2 legacy readers) against host unit tests.
+teach lessons, the FNaF 2 legacy readers, the route bundles' HID controls)
+against host unit tests.
+
+The route runner holds no device geometry. Each route bundle under
+`assets/runners` carries `hid-controls.txt`, every control's raw HID point as
+the host's transport derives it from the bundle's `profile.json`
+(`packages/play/src/venues/phone/hid.js` `hidControlsText`), naming that
+profile's sha256; `HidControls` reads it, refuses one bound to another profile,
+and `NightRunner` refuses a plan that uses a control the file does not name.
+Until 2026-09-30 `NightRunner` kept its own control map and 2400x1080 transform.
+Regenerate the files with `node packages/play/bin/companion/hid-controls.mjs
+DIR...`; `test-screen-map.mjs` holds them to the transport.
 
 On the phone, tap **Start video capture** and grant screen-capture consent, then
 open the game. No other permission is needed for capture.

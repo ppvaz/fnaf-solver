@@ -6,16 +6,20 @@
 // 878 vs 877, mute 2227 vs 2226, newGame 778 vs 777, continue 978 vs 977): the
 // probe that measured what the phone accepts sent a coordinate the runner never
 // sent. The shell and Python copies left with the legacy lane on 2026-09-25 and
-// hid-sweep-probe.mjs now re-exports the transport's function, so two remain:
+// hid-sweep-probe.mjs now re-exports the transport's function. The last copy,
+// NightRunner.java's (with its own control map), left on 2026-09-30: the
+// Companion's runner now presses the raw points its route bundle carries in
+// hid-controls.txt, which the transport derives from the bundle's profile
+// (hidControlsText). One transform remains:
 //
 //   packages/play/src/venues/phone/hid.js    Math.floor   the campaign executor
-//   android/.../NightRunner.java              int /        the Companion's runner
 //
-// The transport is the authority: it is what presses the phone.
-import { readFileSync } from 'node:fs';
+// and this holds every committed Companion bundle's controls file to it.
+import { createHash } from 'node:crypto';
+import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { toRaw } from '@sixam/play/venues/phone/hid';
+import { HID_CONTROLS_FILE, hidControlsText, toRaw } from '@sixam/play/venues/phone/hid';
 import { toRaw as probeToRaw, COORDS } from './hid-sweep-probe.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -38,23 +42,29 @@ for (const [name, point] of Object.entries(COORDS)) taps.set(name, point);
 if (probeToRaw !== toRaw)
   complain('hid-sweep-probe.mjs carries its own transform again; re-export the transport\'s');
 
-// The Companion's copy is Java int arithmetic, which truncates like Math.floor
-// for these non-negative operands. Hold its text to the one expression, and
-// evaluate that expression's semantics over every real tap.
+// The Companion holds no transform and no control coordinates of its own.
 const java = readFileSync(join(ROOT, 'android/companion/src/com/ppvaz/fnafcompanion/NightRunner.java'), 'utf8');
-if (!/int rawX = \(1080 - point\.y\) \* 20 \/ 9;/.test(java) || !/int rawY = point\.x \* 9 \/ 20;/.test(java))
-  complain('NightRunner.java no longer computes rawX = (1080 - y) * 20 / 9, rawY = x * 9 / 20');
-const javaInt = (x, y) => [Math.trunc((1080 - y) * 20 / 9), Math.trunc(x * 9 / 20)];
+if (/\* 20 \/ 9|\* 9 \/ 20|CONTROL_MAP|new Point\(/.test(java))
+  complain('NightRunner.java carries a screen transform or a control map again; it presses the points in its bundle\'s ' +
+    `${HID_CONTROLS_FILE}, derived by the transport`);
 
+// Every committed Companion route bundle carries the controls the transport
+// derives from the profile beside it, bound to that profile's sha256.
+const runners = join(ROOT, 'android/companion/assets/runners');
+const bundles = [runners, ...readdirSync(join(runners, 'generated'), { withFileTypes: true })
+  .filter(entry => entry.isDirectory()).map(entry => join(runners, 'generated', entry.name))];
 let compared = 0;
-for (const [name, point] of taps) {
-  const js = toRaw(point);
-  const jv = javaInt(...point);
+for (const dir of bundles) {
+  const profileText = readFileSync(join(dir, 'profile.json'), 'utf8');
+  const want = hidControlsText(JSON.parse(profileText), createHash('sha256').update(profileText).digest('hex'));
+  let have = null;
+  try { have = readFileSync(join(dir, HID_CONTROLS_FILE), 'utf8'); } catch { /* reported below */ }
+  if (have !== want)
+    complain(`${dir.slice(ROOT.length + 1)}/${HID_CONTROLS_FILE} is ${have === null ? 'missing' : 'not what the transport derives from its profile'}; ` +
+      `run node packages/play/bin/companion/hid-controls.mjs ${dir.slice(ROOT.length + 1)}`);
   compared += 1;
-  if (js[0] !== jv[0] || js[1] !== jv[1])
-    complain(`${name} ${JSON.stringify(point)} maps two ways: transport=${JSON.stringify(js)} ` +
-      `java=${JSON.stringify(jv)}. The transport is the authority -- it is what presses the phone.`);
 }
+if (compared < 4) complain(`only ${compared} Companion route bundles found; the layout changed and this check no longer reads them`);
 
 // The transform must also be a truncation, not a rounding, at a point where the
 // two differ. Without this the check passes if every copy is changed to round
@@ -67,5 +77,6 @@ if (toRaw(halfUp)[0] !== 777)
     'has ever pressed was truncated; changing that silently re-aims all of them.');
 
 if (failed) process.exit(1);
-console.log(`screen map: ${compared} taps agree between the transport and the Companion, ` +
-  'the probe re-exports the transport, and the transform truncates');
+console.log(`screen map: the Companion holds no transform, its ${compared} route bundles carry the controls the ` +
+  `transport derives from their profiles, ${taps.size} real taps map through the one transform, the probe ` +
+  're-exports it, and it truncates');

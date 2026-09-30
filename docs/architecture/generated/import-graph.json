@@ -710,6 +710,15 @@
       ]
     },
     {
+      "file": "packages/play/bin/companion/hid-controls.mjs",
+      "imports": [
+        "@sixam/play/venues/phone/hid",
+        "node:crypto",
+        "node:fs",
+        "node:path"
+      ]
+    },
+    {
       "file": "packages/play/bin/companion/test-audio-players.mjs",
       "imports": [
         "./audio-players.mjs"
@@ -855,6 +864,7 @@
       "imports": [
         "./hid-sweep-probe.mjs",
         "@sixam/play/venues/phone/hid",
+        "node:crypto",
         "node:fs",
         "node:path",
         "node:url"
@@ -1901,6 +1911,7 @@
         "./minus-toys-plan.mjs",
         "./recipe.mjs",
         "@sixam/kernel/contracts",
+        "@sixam/play/venues/phone/hid",
         "@sixam/propose/parked/minus7",
         "@sixam/propose/strategies/minus-3",
         "@sixam/propose/strategies/minus-toys",
