@@ -581,75 +581,34 @@
       ]
     },
     {
-      "file": "packages/core/src/contracts/control-contracts.js",
-      "imports": [
-        "../control/catalog/index.js",
-        "@sixam/kernel/contracts"
-      ]
-    },
-    {
       "file": "packages/core/src/contracts/index.js",
       "imports": [
-        "./control-contracts.js",
-        "@sixam/kernel/contracts"
-      ]
-    },
-    {
-      "file": "packages/core/src/control/catalog/fnaf1.js",
-      "imports": [
-        "./define.js"
-      ]
-    },
-    {
-      "file": "packages/core/src/control/catalog/fnaf2.js",
-      "imports": [
-        "./define.js"
-      ]
-    },
-    {
-      "file": "packages/core/src/control/catalog/fnaf3.js",
-      "imports": [
-        "./define.js"
-      ]
-    },
-    {
-      "file": "packages/core/src/control/catalog/fnaf4.js",
-      "imports": [
-        "./define.js"
-      ]
-    },
-    {
-      "file": "packages/core/src/control/catalog/index.js",
-      "imports": [
-        "./define.js",
-        "./fnaf1.js",
-        "./fnaf2.js",
-        "./fnaf3.js",
-        "./fnaf4.js"
+        "@sixam/kernel/contracts",
+        "@sixam/source"
       ]
     },
     {
       "file": "packages/core/src/control/controller.js",
       "imports": [
-        "../mechanics/config.js",
-        "../sensing/observer.js"
+        "../sensing/observer.js",
+        "@sixam/source/games/fnaf2/config.js"
       ]
     },
     {
       "file": "packages/core/src/control/cycle-controller.js",
       "imports": [
         "../estimation/estimator.js",
-        "../mechanics/config.js",
-        "../mechanics/reduced-model.js",
         "./cycle-library.js",
-        "./cycle-planner.js"
+        "./cycle-planner.js",
+        "@sixam/source/games/fnaf2/config.js",
+        "@sixam/source/games/fnaf2/reduced-model.js"
       ]
     },
     {
       "file": "packages/core/src/control/cycle-library.js",
       "imports": [
-        "../mechanics/config.js",
-        "../mechanics/reduced-model.js"
+        "@sixam/source/games/fnaf2/config.js",
+        "@sixam/source/games/fnaf2/reduced-model.js"
       ]
     },
     {
@@ -661,7 +620,6 @@
     {
       "file": "packages/core/src/control/index.js",
       "imports": [
-        "./catalog/index.js",
         "./controller.js",
         "./cycle-controller.js",
         "./cycle-library.js",
@@ -670,32 +628,26 @@
         "./observation-language.js",
         "./policy-ir.js",
         "./ports.js",
-        "./vocabulary.js"
+        "@sixam/source"
       ]
     },
     {
       "file": "packages/core/src/control/night-policy.js",
       "imports": [
-        "../mechanics/config.js"
+        "@sixam/source/games/fnaf2/config.js"
       ]
     },
     {
       "file": "packages/core/src/control/observation-language.js",
       "imports": [
-        "../mechanics/config.js",
-        "../sensing/observer.js"
+        "../sensing/observer.js",
+        "@sixam/source/games/fnaf2/config.js"
       ]
     },
     {
       "file": "packages/core/src/control/policy-ir.js",
       "imports": [
         "./observation-language.js"
-      ]
-    },
-    {
-      "file": "packages/core/src/control/vocabulary.js",
-      "imports": [
-        "./catalog/index.js"
       ]
     },
     {
@@ -732,94 +684,27 @@
       ]
     },
     {
-      "file": "packages/core/src/mechanics/games/fnaf2.js",
-      "imports": [
-        "../config.js"
-      ]
-    },
-    {
-      "file": "packages/core/src/mechanics/games/index.js",
-      "imports": [
-        "./fnaf1.js",
-        "./fnaf2.js",
-        "./fnaf3.js",
-        "./fnaf4.js",
-        "./night-model.js",
-        "@sixam/core/mechanics/games"
-      ]
-    },
-    {
       "file": "packages/core/src/mechanics/games/policy-fnaf1.js",
       "imports": [
-        "./sim-fnaf1.js"
+        "@sixam/source/games/fnaf1/sim-fnaf1.js"
       ]
     },
     {
       "file": "packages/core/src/mechanics/games/policy-fnaf4.js",
       "imports": [
-        "./fnaf4.js"
-      ]
-    },
-    {
-      "file": "packages/core/src/mechanics/games/sim-fnaf1.js",
-      "imports": [
-        "../rng.js",
-        "./fnaf1.js",
-        "./night-model.js"
-      ]
-    },
-    {
-      "file": "packages/core/src/mechanics/games/sim-fnaf3.js",
-      "imports": [
-        "../rng.js",
-        "./fnaf3.js",
-        "./night-model.js"
-      ]
-    },
-    {
-      "file": "packages/core/src/mechanics/games/sim-fnaf4.js",
-      "imports": [
-        "../rng.js",
-        "./fnaf4.js",
-        "./night-model.js"
+        "@sixam/source/games/fnaf4/fnaf4.js"
       ]
     },
     {
       "file": "packages/core/src/mechanics/index.js",
       "imports": [
-        "./config.js",
-        "./plant-model.js",
-        "./plant.js",
-        "./reduced-model.js",
-        "./rng.js",
-        "./seed-recovery.js"
+        "@sixam/source/fnaf2"
       ]
     },
     {
       "file": "packages/core/src/mechanics/plant-model.js",
       "imports": [
         "./config.js",
-        "./rng.js"
-      ]
-    },
-    {
-      "file": "packages/core/src/mechanics/plant.js",
-      "imports": [
-        "../contracts/index.js",
-        "../control/catalog/fnaf2.js",
-        "./plant-model.js"
-      ]
-    },
-    {
-      "file": "packages/core/src/mechanics/reduced-model.js",
-      "imports": [
-        "./config.js"
-      ]
-    },
-    {
-      "file": "packages/core/src/mechanics/seed-recovery.js",
-      "imports": [
-        "./plant-model.js",
         "./rng.js"
       ]
     },
@@ -832,7 +717,7 @@
     {
       "file": "packages/core/src/sensing/observer.js",
       "imports": [
-        "../mechanics/config.js"
+        "@sixam/source/games/fnaf2/config.js"
       ]
     },
     {
@@ -854,63 +739,6 @@
       "imports": [
         "./activity-gate.js",
         "./exercise.js"
-      ]
-    },
-    {
-      "file": "packages/core/test/animation-count.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/b-drain-order.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/bb-moves.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/blackout-clock-end.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/blackout-draws.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/contracts.test.js",
-      "imports": [
-        "../src/contracts/index.js",
-        "../src/mechanics/plant.js",
-        "@sixam/kernel/time",
-        "node:assert/strict",
-        "node:fs",
-        "node:url"
-      ]
-    },
-    {
-      "file": "packages/core/test/control-catalog.test.js",
-      "imports": [
-        "../src/contracts/index.js",
-        "../src/control/index.js",
-        "../src/mechanics/plant.js",
-        "node:assert/strict",
-        "node:fs",
-        "node:url"
       ]
     },
     {
@@ -937,265 +765,10 @@
       ]
     },
     {
-      "file": "packages/core/test/drop-flag-order.test.js",
-      "imports": [
-        "../src/mechanics/config.js",
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/drop-light-order.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/event-draws.test.js",
-      "imports": [
-        "../src/mechanics/config.js",
-        "../src/mechanics/plant-model.js",
-        "../src/mechanics/rng.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/every-origin.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/exposure-value5.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/footstep-draws.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/footstep-value2.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/foxy-chain.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "../src/mechanics/rng.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/foxy-move-value2.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/frame-time-hook.test.js",
-      "imports": [
-        "../src/mechanics/config.js",
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/gated-every.test.js",
-      "imports": [
-        "../src/mechanics/index.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/hall-latch-order.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/last-view-pause.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/mangle-return.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/mask-animation-input.test.js",
-      "imports": [
-        "../src/mechanics/index.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/monitor-down-draw.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/monitor-raise-gate.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
       "file": "packages/core/test/night-policy.test.js",
       "imports": [
         "@sixam/core/control",
         "@sixam/core/mechanics"
-      ]
-    },
-    {
-      "file": "packages/core/test/office-footsteps.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/office-rolls.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/promoted-moves.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/promoted-view-draws.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/puppet-glitch-draws.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/random-image-draw.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/rebuild-order.test.js",
-      "imports": [
-        "../src/mechanics/config.js",
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/roll-draws.test.js",
-      "imports": [
-        "../src/mechanics/config.js",
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/rolls-before-moves.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/route-forks.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "../src/mechanics/rng.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/route-pass.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/route-view-draws.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/second-pass.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/sheet-order.test.js",
-      "imports": [
-        "../src/mechanics/config.js",
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/unconditional-draws.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "../src/mechanics/rng.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/value5.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/vent-cam-draws.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/core/test/view-draws.test.js",
-      "imports": [
-        "../src/mechanics/plant-model.js",
-        "node:assert/strict"
       ]
     },
     {
@@ -1667,6 +1240,493 @@
       ]
     },
     {
+      "file": "packages/source/src/clockwork/control-contracts.js",
+      "imports": [
+        "./control-registry.js",
+        "@sixam/kernel/contracts"
+      ]
+    },
+    {
+      "file": "packages/source/src/clockwork/control-registry.js",
+      "imports": [
+        "../games/fnaf1/controls.js",
+        "../games/fnaf2/controls.js",
+        "../games/fnaf3/controls.js",
+        "../games/fnaf4/controls.js",
+        "./control-catalog.js"
+      ]
+    },
+    {
+      "file": "packages/source/src/clockwork/games.js",
+      "imports": [
+        "../games/fnaf1/fnaf1.js",
+        "../games/fnaf2/fnaf2.js",
+        "../games/fnaf3/fnaf3.js",
+        "../games/fnaf4/fnaf4.js",
+        "./night-model.js",
+        "@sixam/source"
+      ]
+    },
+    {
+      "file": "packages/source/src/clockwork/index.js",
+      "imports": [
+        "./control-contracts.js",
+        "./control-registry.js",
+        "./games.js",
+        "./rng.js",
+        "./vocabulary.js"
+      ]
+    },
+    {
+      "file": "packages/source/src/clockwork/rng.js",
+      "imports": [
+        "../games/fnaf2/rng.js"
+      ]
+    },
+    {
+      "file": "packages/source/src/clockwork/vocabulary.js",
+      "imports": [
+        "./control-registry.js"
+      ]
+    },
+    {
+      "file": "packages/source/src/games/fnaf1/controls.js",
+      "imports": [
+        "../../clockwork/control-catalog.js"
+      ]
+    },
+    {
+      "file": "packages/source/src/games/fnaf1/index.js",
+      "imports": [
+        "./controls.js",
+        "./fnaf1.js",
+        "./sim-fnaf1.js"
+      ]
+    },
+    {
+      "file": "packages/source/src/games/fnaf1/sim-fnaf1.js",
+      "imports": [
+        "../../clockwork/night-model.js",
+        "../../clockwork/rng.js",
+        "./fnaf1.js"
+      ]
+    },
+    {
+      "file": "packages/source/src/games/fnaf2/controls.js",
+      "imports": [
+        "../../clockwork/control-catalog.js"
+      ]
+    },
+    {
+      "file": "packages/source/src/games/fnaf2/fnaf2.js",
+      "imports": [
+        "./config.js"
+      ]
+    },
+    {
+      "file": "packages/source/src/games/fnaf2/index.js",
+      "imports": [
+        "./config.js",
+        "./plant-model.js",
+        "./plant.js",
+        "./reduced-model.js",
+        "./rng.js",
+        "./seed-recovery.js"
+      ]
+    },
+    {
+      "file": "packages/source/src/games/fnaf2/plant-model.js",
+      "imports": [
+        "./config.js",
+        "./rng.js"
+      ]
+    },
+    {
+      "file": "packages/source/src/games/fnaf2/plant.js",
+      "imports": [
+        "../../clockwork/control-contracts.js",
+        "./controls.js",
+        "./plant-model.js"
+      ]
+    },
+    {
+      "file": "packages/source/src/games/fnaf2/reduced-model.js",
+      "imports": [
+        "./config.js"
+      ]
+    },
+    {
+      "file": "packages/source/src/games/fnaf2/seed-recovery.js",
+      "imports": [
+        "./plant-model.js",
+        "./rng.js"
+      ]
+    },
+    {
+      "file": "packages/source/src/games/fnaf3/controls.js",
+      "imports": [
+        "../../clockwork/control-catalog.js"
+      ]
+    },
+    {
+      "file": "packages/source/src/games/fnaf3/index.js",
+      "imports": [
+        "./controls.js",
+        "./fnaf3.js",
+        "./sim-fnaf3.js"
+      ]
+    },
+    {
+      "file": "packages/source/src/games/fnaf3/sim-fnaf3.js",
+      "imports": [
+        "../../clockwork/night-model.js",
+        "../../clockwork/rng.js",
+        "./fnaf3.js"
+      ]
+    },
+    {
+      "file": "packages/source/src/games/fnaf4/controls.js",
+      "imports": [
+        "../../clockwork/control-catalog.js"
+      ]
+    },
+    {
+      "file": "packages/source/src/games/fnaf4/index.js",
+      "imports": [
+        "./controls.js",
+        "./fnaf4.js",
+        "./sim-fnaf4.js"
+      ]
+    },
+    {
+      "file": "packages/source/src/games/fnaf4/sim-fnaf4.js",
+      "imports": [
+        "../../clockwork/night-model.js",
+        "../../clockwork/rng.js",
+        "./fnaf4.js"
+      ]
+    },
+    {
+      "file": "packages/source/src/index.js",
+      "imports": [
+        "./clockwork/index.js"
+      ]
+    },
+    {
+      "file": "packages/source/test/animation-count.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/b-drain-order.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/bb-moves.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/blackout-clock-end.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/blackout-draws.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/contracts.test.js",
+      "imports": [
+        "../src/clockwork/control-contracts.js",
+        "../src/games/fnaf2/plant.js",
+        "@sixam/kernel/contracts",
+        "@sixam/kernel/time",
+        "node:assert/strict",
+        "node:fs",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/source/test/control-catalog.test.js",
+      "imports": [
+        "../src/clockwork/control-contracts.js",
+        "../src/clockwork/index.js",
+        "../src/games/fnaf2/plant.js",
+        "@sixam/kernel/contracts",
+        "node:assert/strict",
+        "node:fs",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/source/test/drop-flag-order.test.js",
+      "imports": [
+        "../src/games/fnaf2/config.js",
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/drop-light-order.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/event-draws.test.js",
+      "imports": [
+        "../src/games/fnaf2/config.js",
+        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/rng.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/every-origin.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/exposure-value5.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/footstep-draws.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/footstep-value2.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/foxy-chain.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/rng.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/foxy-move-value2.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/frame-time-hook.test.js",
+      "imports": [
+        "../src/games/fnaf2/config.js",
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/gated-every.test.js",
+      "imports": [
+        "../src/games/fnaf2/index.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/hall-latch-order.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/last-view-pause.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/mangle-return.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/mask-animation-input.test.js",
+      "imports": [
+        "../src/games/fnaf2/index.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/monitor-down-draw.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/monitor-raise-gate.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/office-footsteps.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/office-rolls.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/promoted-moves.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/promoted-view-draws.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/puppet-glitch-draws.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/random-image-draw.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/rebuild-order.test.js",
+      "imports": [
+        "../src/games/fnaf2/config.js",
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/roll-draws.test.js",
+      "imports": [
+        "../src/games/fnaf2/config.js",
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/rolls-before-moves.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/route-forks.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/rng.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/route-pass.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/route-view-draws.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/second-pass.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/sheet-order.test.js",
+      "imports": [
+        "../src/games/fnaf2/config.js",
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/unconditional-draws.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/rng.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/value5.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/vent-cam-draws.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/view-draws.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
       "file": "tools/activitygatetest.mjs",
       "imports": [
         "@sixam/core/training",
@@ -1701,16 +1761,22 @@
       "imports": [
         "../../../apps/device/src/campaign.js",
         "../../../apps/device/src/cli.js",
+        "../../core/src/control/night-policy.js",
         "../../review/src/pack-lift.mjs",
         "../src/index.js",
+        "./clockwork/index.js",
         "./labels.js",
         "@sixam/adapters/night-onset",
         "@sixam/core/contracts",
+        "@sixam/core/control",
+        "@sixam/core/mechanics",
         "@sixam/device",
         "@sixam/kernel",
+        "@sixam/kernel/contracts",
         "@sixam/research",
         "@sixam/research/seeds",
         "@sixam/review/evidence-pack",
+        "@sixam/source/games/fnaf2/config.js",
         "node:assert/strict",
         "node:child_process",
         "node:fs",
@@ -1772,9 +1838,9 @@
         "../packages/core/src/mechanics/games/policy-fnaf1.js",
         "../packages/core/src/mechanics/games/policy-fnaf3.js",
         "../packages/core/src/mechanics/games/policy-fnaf4.js",
-        "../packages/core/src/mechanics/games/sim-fnaf1.js",
-        "../packages/core/src/mechanics/games/sim-fnaf3.js",
-        "../packages/core/src/mechanics/games/sim-fnaf4.js",
+        "../packages/source/src/games/fnaf1/sim-fnaf1.js",
+        "../packages/source/src/games/fnaf3/sim-fnaf3.js",
+        "../packages/source/src/games/fnaf4/sim-fnaf4.js",
         "./policy.mjs",
         "./policybaselines.mjs"
       ]
@@ -2484,7 +2550,7 @@
       "imports": [
         "../../packages/adapters/src/control-anchor.js",
         "../../packages/core/src/contracts/index.js",
-        "../../packages/core/src/control/vocabulary.js",
+        "../../packages/source/src/clockwork/vocabulary.js",
         "node:assert/strict",
         "node:fs",
         "node:path",
@@ -2866,8 +2932,8 @@
     {
       "file": "tools/encounter-replay.mjs",
       "imports": [
-        "../packages/core/src/control/vocabulary.js",
-        "../packages/core/src/mechanics/plant-model.js",
+        "../packages/source/src/clockwork/vocabulary.js",
+        "../packages/source/src/games/fnaf2/plant-model.js",
         "node:crypto",
         "node:fs",
         "node:url"
@@ -2939,7 +3005,7 @@
     {
       "file": "tools/fnaf1-device-lane.mjs",
       "imports": [
-        "../packages/core/src/mechanics/games/sim-fnaf1.js",
+        "../packages/source/src/games/fnaf1/sim-fnaf1.js",
         "./device/fnaf1-winner.mjs",
         "./winner-census.mjs",
         "node:child_process",
@@ -3650,7 +3716,7 @@
     {
       "file": "tools/recompile/pilot/test-pilot.mjs",
       "imports": [
-        "../../../packages/core/src/mechanics/games/sim-fnaf3.js",
+        "../../../packages/source/src/games/fnaf3/sim-fnaf3.js",
         "./fnaf3.mjs",
         "./fnaf4.mjs",
         "./record.mjs",
@@ -3865,15 +3931,15 @@
     {
       "file": "tools/test-fnaf1-census.mjs",
       "imports": [
-        "../packages/core/src/mechanics/games/fnaf1.js",
         "../packages/core/src/mechanics/games/policy-fnaf1.js",
-        "../packages/core/src/mechanics/games/sim-fnaf1.js"
+        "../packages/source/src/games/fnaf1/fnaf1.js",
+        "../packages/source/src/games/fnaf1/sim-fnaf1.js"
       ]
     },
     {
       "file": "tools/test-fnaf1-device-lane.mjs",
       "imports": [
-        "../packages/core/src/mechanics/games/sim-fnaf1.js",
+        "../packages/source/src/games/fnaf1/sim-fnaf1.js",
         "./fnaf1-device-lane.mjs",
         "./winner-census.mjs",
         "node:crypto",
@@ -3894,19 +3960,19 @@
     {
       "file": "tools/test-fnaf3-census.mjs",
       "imports": [
-        "../packages/core/src/mechanics/games/fnaf3.js",
         "../packages/core/src/mechanics/games/policy-fnaf3.js",
-        "../packages/core/src/mechanics/games/sim-fnaf3.js",
+        "../packages/source/src/games/fnaf3/fnaf3.js",
+        "../packages/source/src/games/fnaf3/sim-fnaf3.js",
         "./device/fnaf3-run.mjs"
       ]
     },
     {
       "file": "tools/test-fnaf4-census.mjs",
       "imports": [
-        "../packages/core/src/mechanics/games/fnaf4.js",
-        "../packages/core/src/mechanics/games/night-model.js",
         "../packages/core/src/mechanics/games/policy-fnaf4.js",
-        "../packages/core/src/mechanics/games/sim-fnaf4.js"
+        "../packages/source/src/clockwork/night-model.js",
+        "../packages/source/src/games/fnaf4/fnaf4.js",
+        "../packages/source/src/games/fnaf4/sim-fnaf4.js"
       ]
     },
     {
@@ -3932,8 +3998,8 @@
     {
       "file": "tools/test-night-models.mjs",
       "imports": [
-        "../packages/core/src/mechanics/config.js",
-        "../packages/core/src/mechanics/games/index.js"
+        "../packages/source/src/clockwork/games.js",
+        "../packages/source/src/games/fnaf2/config.js"
       ]
     },
     {

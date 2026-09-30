@@ -5,11 +5,13 @@ the five charter layers—Truth, Understanding, Decision, Embodiment, Proof—an
 never silently promote a model or fixture result. Plan 12 owns promotion;
 known negatives and retractions remain discoverable.
 
-Ownership is directional: `@sixam/core` owns mechanics and semantic
-contracts; adapters own transport, detection rules and calibration; the device
-app composes and supervises the campaign; trainer, research, and device are
-leaves. `@sixam/kernel` holds the ADR 0002 kernel types and imports
-nothing; `@sixam/review` reads the evidence and never imports the device
+Ownership is directional: `@sixam/source` owns each game's mechanics (Rulebook
+data, Sim, controls) and imports only the kernel; `@sixam/kernel` holds the ADR
+0002 kernel types, the semantic contracts and Time, and imports nothing;
+`@sixam/core` keeps the policy language and cycle machinery over them until they
+move; adapters own transport, detection rules and calibration; the device app
+composes and supervises the campaign; trainer, research, and device are
+leaves; `@sixam/review` reads the evidence and never imports the device
 app, adapters or research (`tools/architecture-test.js`). There is no sandbox
 (ADR 0002 principle 7): claim-bearing cohorts and censuses are pre-registered,
 and diagnostic sweeps name the explanation they test. Production never

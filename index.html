@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Minus 7 Trainer</title>
 <link rel="icon" href="data:image/svg+xml,<svg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'><rect%20width='64'%20height='64'%20rx='12'%20fill='%230A0C0A'/><text%20x='32'%20y='44'%20text-anchor='middle'%20font-family='monospace'%20font-weight='700'%20font-size='34'%20fill='%23FFB020'>-7</text></svg>">
-<script type="importmap">{"imports":{"@sixam/core":"packages/core/src/index.js","@sixam/core/mechanics":"packages/core/src/mechanics/index.js","@sixam/core/control":"packages/core/src/control/index.js","@sixam/core/sensing":"packages/core/src/sensing/index.js","@sixam/core/estimation":"packages/core/src/estimation/index.js","@sixam/core/timing":"packages/core/src/timing/index.js","@sixam/core/telemetry":"packages/core/src/telemetry/index.js","@sixam/core/contracts":"packages/core/src/contracts/index.js","@sixam/core/training":"packages/core/src/training/index.js","@sixam/kernel":"packages/kernel/src/index.js","@sixam/kernel/contracts":"packages/kernel/src/contracts/index.js","@sixam/kernel/time":"packages/kernel/src/time/index.js"}}</script>
+<script type="importmap">{"imports":{"@sixam/core":"packages/core/src/index.js","@sixam/core/mechanics":"packages/core/src/mechanics/index.js","@sixam/core/control":"packages/core/src/control/index.js","@sixam/core/sensing":"packages/core/src/sensing/index.js","@sixam/core/estimation":"packages/core/src/estimation/index.js","@sixam/core/timing":"packages/core/src/timing/index.js","@sixam/core/telemetry":"packages/core/src/telemetry/index.js","@sixam/core/contracts":"packages/core/src/contracts/index.js","@sixam/core/training":"packages/core/src/training/index.js","@sixam/kernel":"packages/kernel/src/index.js","@sixam/kernel/contracts":"packages/kernel/src/contracts/index.js","@sixam/kernel/time":"packages/kernel/src/time/index.js","@sixam/source":"packages/source/src/index.js","@sixam/source/fnaf1":"packages/source/src/games/fnaf1/index.js","@sixam/source/fnaf2":"packages/source/src/games/fnaf2/index.js","@sixam/source/fnaf3":"packages/source/src/games/fnaf3/index.js","@sixam/source/fnaf4":"packages/source/src/games/fnaf4/index.js","@sixam/source/games/":"packages/source/src/games/"}}</script>
 <link rel="stylesheet" href="apps/trainer/src/fonts.css">
 <link rel="stylesheet" href="apps/trainer/src/style.css">
 </head>
@@ -54,7 +54,7 @@
       <button id="btn-calibrate">Open</button></div>
     <div class="row"><span>Reset layout to defaults</span><button id="btn-resetmap">Reset</button></div>
     <div class="row"><span>Save this layout as the code default
-      <em>writes packages/core/src/mechanics/config.js when served from tools/serve.py</em></span>
+      <em>writes packages/source/src/games/fnaf2/config.js when served from tools/serve.py</em></span>
       <button id="btn-savemap">Save</button></div>
   </div>
   <p id="savemap-note" class="note"></p>
@@ -143,7 +143,7 @@
     <p class="fine">The camera map geometry is a reconstruction, not an extraction &mdash; use
        Settings&nbsp;&rarr;&nbsp;Calibrate to match your device. Simulation constants come from the
        community AI breakdowns; a few are calibrated rather than sourced and are marked as such in
-       <code>packages/core/src/mechanics/config.js</code>. This is a practice tool, not the game.</p>
+       <code>packages/source/src/games/fnaf2/config.js</code>. This is a practice tool, not the game.</p>
   </div>
 </div>
 

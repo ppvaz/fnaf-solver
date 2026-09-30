@@ -65,7 +65,7 @@ identifies the game**, and now there are four of them on one phone.
 
 ### The RNG model transfers to all four
 
-`packages/core/src/mechanics/rng.js` grounds the entire seed apparatus on one
+`packages/source/src/games/fnaf2/rng.js` grounds the entire seed apparatus on one
 per-game fact: no frame carries the seed chunk (13124), so `m_wRandomSeed`
 stays −1 and each frame load takes 16 bits of wall clock.
 
@@ -707,7 +707,7 @@ Measured 2026-09-19.
 
 **Decoupling — small and localized.**
 
-- `CONTROL_VOCABULARY` (`packages/core/src/control/vocabulary.js`) is a frozen
+- `CONTROL_VOCABULARY` (`packages/source/src/clockwork/vocabulary.js`) is a frozen
   FNaF 2 enum bound to `CONTRACT:semantic-control-v1`: **113 reference sites
   across 11 files**. FNaF 1/3/4 share only `monitor`. This is the one real job.
 - Game rules that leaked out of core and must come back in:
@@ -1150,7 +1150,7 @@ are not elsewhere:
 `validateControl` accepted seven control names and `cam:0-12`, both FNaF 2
 facts, and refused `cam:13` with a message about coordinates and transport that
 named the wrong cause entirely. Now data-driven via a per-game registry in
-`packages/core/src/control/vocabulary.js`, with FNaF 3 and FNaF 4 registered.
+`packages/source/src/clockwork/vocabulary.js`, with FNaF 3 and FNaF 4 registered.
 FNaF 4 proved the generalisation was still too narrow: it has **no cameras at
 all**, so `cameraRange` is not universal and is now explicitly `null`.
 

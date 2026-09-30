@@ -6,7 +6,7 @@ one charter layer, over a shared kernel:
 
 | Context | Layer | In today's code |
 |---|---|---|
-| Source | Truth | `@sixam/core` (the sourced model, semantic contracts and their validators) until `packages/source` exists; `tools/dump`, `tools/recompile` |
+| Source | Truth | `@sixam/source` (each game's Rulebook data, Sim and controls; the nights registry, night model, RNG, control vocabulary and the validators generated from the catalogs); `@sixam/core` keeps the policy language, sensing, estimation and training until they move; `tools/dump`, `tools/recompile` |
 | Propose | Decision | `@sixam/research`; the winner bindings and plan generators in `tools/device` |
 | Play | Embodiment | `apps/device` (the campaign, the one composition root that plays a night), `@sixam/adapters` (transports, clocks, fitted rules), the Companion (`android/companion`) |
 | Review | Proof | `@sixam/review` (run packs, Plan 12 attestation and promotion, cohorts, the pack lift to `GameRun`, and `npm run review` queries); the grade pipeline in `tools/device` |
@@ -14,7 +14,9 @@ one charter layer, over a shared kernel:
 
 `@sixam/kernel` holds the kernel types that have a consumer today --
 `Interval`, `ClaimLevel`, `SourceLabel`, `Outcome`, `GameRun` with custody, and
-`Annotation` -- and imports nothing. The Source is canonical: where the model
+`Annotation` -- with the contracts, the contract register and Time (the event
+clocks, the fact link, the clock port), and imports nothing. `@sixam/source`
+imports only the kernel. The Source is canonical: where the model
 and the game's dump disagree, the dump is right and the model is fixed.
 
 ```text

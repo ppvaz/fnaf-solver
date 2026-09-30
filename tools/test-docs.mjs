@@ -50,7 +50,10 @@ const tracked = execFileSync('git', ['ls-files', '--cached', '--others', '--excl
 // answer if something in the repository generates it.
 const markdown = tracked.filter((f) => f.endsWith('.md'));
 let links = 0;
-for (const file of markdown) {
+// plans/archive/ is frozen byte for byte, and a link in it that a later move
+// breaks stays broken (ADR 0002, Consequences; Pedro's decision 24): its
+// links are read against the commit that archived the plan, not checked here.
+for (const file of markdown.filter((f) => !f.startsWith('plans/archive/'))) {
   const text = readFileSync(join(ROOT, file), 'utf8');
   const here = dirname(join(ROOT, file));
   for (const m of text.matchAll(/\]\(([^)\s]+?)(?:#[^)]*)?\)/g)) {

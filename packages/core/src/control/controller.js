@@ -5,7 +5,7 @@
 // the open-loop base schedule and DROPS any intent whose animation would
 // collide with a scheduled press's -- the night 6-38 rule: a reactive
 // `monitor-resync` fired mid-`MONITOR_ANIM_DOWN` caused the desync it hunted.
-import * as C from '../mechanics/config.js';
+import * as C from '@sixam/source/games/fnaf2/config.js';
 import { val } from '../sensing/observer.js';
 
 // Only monitor/mask presses animate; light/wind presses are instantaneous and

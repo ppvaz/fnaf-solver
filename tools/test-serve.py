@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check that tools/serve.py writes for this machine only.
 
-POST /save-layout rewrites packages/core/src/mechanics/config.js and
+POST /save-layout rewrites packages/source/src/games/fnaf2/config.js and
 /save-trace writes under captures/traces/. Until 2026-09-29 the server bound
 0.0.0.0, so anyone on the network could do either. This pins:
 

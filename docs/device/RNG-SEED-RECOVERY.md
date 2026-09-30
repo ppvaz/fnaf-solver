@@ -15,7 +15,7 @@ Random(N) = floor(state * N / 65536)
 The APK has no frame seed chunk, so the runtime seeds the stream from the low
 16 bits of `System.currentTimeMillis()` when the night/frame is initialized.
 The sourced implementation and regression vectors are in
-[`packages/core/src/mechanics/rng.js`](../../packages/core/src/mechanics/rng.js)
+[`packages/source/src/games/fnaf2/rng.js`](../../packages/source/src/games/fnaf2/rng.js)
 and the source ledger records the decompilation evidence in
 [`docs/android/ANDROID-SOURCE-STATUS.md`](../android/ANDROID-SOURCE-STATUS.md#implemented-android-mechanics).
 
@@ -76,7 +76,7 @@ initializer, not the time at which the host sent a command.
 ## Method 3: observation filtering
 
 There are two filters in
-[`packages/core/src/mechanics/seed-recovery.js`](../../packages/core/src/mechanics/seed-recovery.js).
+[`packages/source/src/games/fnaf2/seed-recovery.js`](../../packages/source/src/games/fnaf2/seed-recovery.js).
 
 ### Exact roll observations
 

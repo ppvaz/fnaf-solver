@@ -17,10 +17,10 @@
 //
 //   node tools/test-fnaf4-census.mjs
 
-import { Fnaf4Sim } from '../packages/core/src/mechanics/games/sim-fnaf4.js';
+import { Fnaf4Sim } from '../packages/source/src/games/fnaf4/sim-fnaf4.js';
 import { POLICIES } from '../packages/core/src/mechanics/games/policy-fnaf4.js';
-import { MODEL, BLACK_FLASH, BEDROOM, FOXY_CLOSET } from '../packages/core/src/mechanics/games/fnaf4.js';
-import { nightSchedule, hourStartMs } from '../packages/core/src/mechanics/games/night-model.js';
+import { MODEL, BLACK_FLASH, BEDROOM, FOXY_CLOSET } from '../packages/source/src/games/fnaf4/fnaf4.js';
+import { nightSchedule, hourStartMs } from '../packages/source/src/clockwork/night-model.js';
 
 const failures = [];
 let checks = 0;

@@ -30,7 +30,7 @@ price real sensor/actuator errors.
 
 ## Design rules
 
-- [`packages/core/src/mechanics/plant-model.js`](../packages/core/src/mechanics/plant-model.js) remains the sole mechanics authority.
+- [`packages/source/src/games/fnaf2/plant-model.js`](../packages/source/src/games/fnaf2/plant-model.js) remains the sole mechanics authority.
 - Observation modes may hide truth; they must never mutate underlying mechanics.
 - RNG, sensor noise, and actuator noise use independent seeded streams.
 - Every result states whether it used truth, belief, detector-like observations,

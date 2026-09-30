@@ -139,7 +139,7 @@ game's control catalog; the game is derived, so no profile file changed and ever
 before. `profile-game.test.js` and `control-catalog.test.js` print it in `npm run test:contracts`.
 Open: one canonical schema source for the register's other contracts, deep experiment validation
 (seeds, claim levels, nested samples), capability relationships, and the lax JS check.
-**Owner:** `packages/core`, `packages/adapters`
+**Owner:** `packages/kernel` (the contracts), `packages/source` (the catalog-generated validators), `packages/adapters`
 **Evidence:** [`types.ts` (line 152)](../../packages/kernel/src/contracts/types.ts), [`index.js`](../../packages/kernel/src/contracts/index.js), `registry.js` line 69 (removed 2026-09-25)
 
 Compile-time types, JavaScript validators, the contract register, and generated
@@ -167,8 +167,8 @@ table in the cartridge; the executor reads the table for the profile's game. Ope
 capabilities are not generated from it (`control-exclusion.js`, `button-strokes.js` and
 `calibration-state-rule.js` still name FNaF 2 controls), and `hid-schedule.js`'s macros are FNaF 2's,
 guarded to that game rather than read from the table.
-**Owner:** `packages/core/control`
-**Evidence:** [`define.js` (line 135)](../../packages/core/src/control/catalog/define.js), [`fnaf2.js` (line 40)](../../packages/core/src/control/catalog/fnaf2.js), [`artifact-executor.js` (line 42)](../../apps/device/src/artifact-executor.js), `service.js` line 17 (removed 2026-09-25)
+**Owner:** `packages/source` (the catalogs, since ADR 0002 migration D4)
+**Evidence:** [`define.js` (line 135)](../../packages/source/src/clockwork/control-catalog.js), [`fnaf2.js` (line 40)](../../packages/source/src/games/fnaf2/controls.js), [`artifact-executor.js` (line 42)](../../apps/device/src/artifact-executor.js), `service.js` line 17 (removed 2026-09-25)
 
 The canonical vocabulary coexists with legacy aliases and repeated camera
 lists. `service.js`, the artifact executor, the adapter registry, and the

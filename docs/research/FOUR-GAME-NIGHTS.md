@@ -12,7 +12,7 @@ these rules does, and are not device measurements.*
 |---|---|---|
 | Reader | `tools/dump/nightmap.py` | all four sheets: clock, difficulty table, rolls, movement graphs, draw census |
 | Night models | `packages/core/src/mechanics/games/` | all four: clock, per-night table, roll schedule |
-| Simulator | `packages/core/src/mechanics/games/sim-fnaf1.js`, `sim-fnaf3.js`, `sim-fnaf4.js` | FNaF 1, 3 and 4; FNaF 4 remains **MODEL_ONLY** |
+| Simulator | `packages/source/src/games/fnaf1/sim-fnaf1.js`, `sim-fnaf3.js`, `sim-fnaf4.js` | FNaF 1, 3 and 4; FNaF 4 remains **MODEL_ONLY** |
 | Policies | `policy-fnaf1.js`, `policy-fnaf3.js`, `policy-fnaf4.js` | FNaF 1, 3 and 4 published lines and controls |
 | Census | `tools/census.mjs` | FNaF 1, 3 and 4; held-out seed blocks via `--start` |
 
@@ -106,7 +106,7 @@ three expansion targets, not the fewest. Its own three background draws
 rolls.
 
 The reader agrees with this repository's own independent account of FNaF 2's
-unconditional draws (`packages/core/test/unconditional-draws.test.js`, which
+unconditional draws (`packages/source/test/unconditional-draws.test.js`, which
 names g58, g59, g192 and g822): it finds exactly those three timer-driven
 sites, and correctly does not call g822 timer-forced because it is a
 `StartOfFrame`, not a timer.

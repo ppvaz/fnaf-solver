@@ -18,7 +18,7 @@ with the best route found, its timing band, and the killer at each band edge.
 sweep, 2026-09-14). `docs/evidence/invent/frontier-*.json` already map
 single-animatronic frontiers for Balloon Boy, Foxy and Golden Freddy. The game's
 RNG is a 16-bit LCG seeded per night from the wall clock
-(`packages/core/src/mechanics/rng.js`), so there are only 65,536 possible
+(`packages/source/src/games/fnaf2/rng.js`), so there are only 65,536 possible
 nights: a per-vector verdict can be exhaustive over seeds, not sampled.
 
 **Why brute force fails.** 21^10 vectors (about 1.7 x 10^13) at 65,536 seeds

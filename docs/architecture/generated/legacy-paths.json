@@ -158,9 +158,59 @@
       "category": "package-subpath",
       "lifecycle": "compatibility",
       "owner": "@sixam/kernel",
-      "replacement": "`@sixam/kernel/contracts` (packages/kernel/src/contracts/); the catalog-generated validators from the control catalogs' owner",
+      "replacement": "`@sixam/kernel/contracts` (packages/kernel/src/contracts/); the three catalog-generated validators from `@sixam/source`",
       "removalGate": "No tracked module imports `@sixam/core/contracts` or `@sixam/core` for a contract, and core's own modules import the kernel directly",
       "notes": "Re-exports `@sixam/kernel/contracts` and the three catalog-generated validators (validateControlCommand, deviceProfileGame, resolveDeviceProfile); its export set is the one it had before the move."
+    },
+    {
+      "id": "core.mechanics-shim",
+      "path": "packages/core/src/mechanics/index.js",
+      "category": "package-subpath",
+      "lifecycle": "compatibility",
+      "owner": "@sixam/source",
+      "replacement": "`@sixam/source/fnaf2` (packages/source/src/games/fnaf2/), whose export set is exactly this barrel's",
+      "removalGate": "No tracked module imports `@sixam/core/mechanics`: the tools/recompile importers (their owner repoints them) and the engine-source files a bundle manifest hashes (tools/device/minus-toys-plan.mjs, recipe.mjs, tools/model/hid-device-pilot.mjs) are repointed in a commit that re-derives every emitted bundle",
+      "notes": "One `export *` of `@sixam/source/fnaf2`. tools/recompile/model-draw-trace.mjs resolves this barrel to find the model sources it hashes beside it, which is why the three links below live in this directory."
+    },
+    {
+      "id": "core.model-source-link.plant-model",
+      "path": "packages/core/src/mechanics/plant-model.js",
+      "category": "model-source",
+      "lifecycle": "compatibility",
+      "owner": "@sixam/source",
+      "replacement": "packages/source/src/games/fnaf2/plant-model.js (the same bytes; this path is a symbolic link to it)",
+      "removalGate": "tools/recompile/model-draw-trace.mjs (the recompile session's) finds the model sources it hashes into new records through @sixam/source instead of beside the @sixam/core/mechanics barrel",
+      "notes": "The frozen phone-input-bracket-full-06-20260928 result names these paths; since 2026-09-30 its check resolves each through that path's git history and matches the model files by name, so it passes without the links (pinned in test-phone-input-bracket-sweep.mjs). Record producers still hash MODEL_SOURCES at these paths; the link keeps them reading the moved file."
+    },
+    {
+      "id": "core.model-source-link.config",
+      "path": "packages/core/src/mechanics/config.js",
+      "category": "model-source",
+      "lifecycle": "compatibility",
+      "owner": "@sixam/source",
+      "replacement": "packages/source/src/games/fnaf2/config.js (the same bytes; this path is a symbolic link to it)",
+      "removalGate": "tools/recompile/model-draw-trace.mjs (the recompile session's) finds the model sources it hashes into new records through @sixam/source instead of beside the @sixam/core/mechanics barrel",
+      "notes": "The frozen phone-input-bracket-full-06-20260928 result names these paths; since 2026-09-30 its check resolves each through that path's git history and matches the model files by name, so it passes without the links (pinned in test-phone-input-bracket-sweep.mjs). Record producers still hash MODEL_SOURCES at these paths; the link keeps them reading the moved file."
+    },
+    {
+      "id": "core.model-source-link.rng",
+      "path": "packages/core/src/mechanics/rng.js",
+      "category": "model-source",
+      "lifecycle": "compatibility",
+      "owner": "@sixam/source",
+      "replacement": "packages/source/src/games/fnaf2/rng.js (the same bytes; this path is a symbolic link to it)",
+      "removalGate": "tools/recompile/model-draw-trace.mjs (the recompile session's) finds the model sources it hashes into new records through @sixam/source instead of beside the @sixam/core/mechanics barrel",
+      "notes": "The frozen phone-input-bracket-full-06-20260928 result names these paths; since 2026-09-30 its check resolves each through that path's git history and matches the model files by name, so it passes without the links (pinned in test-phone-input-bracket-sweep.mjs). Record producers still hash MODEL_SOURCES at these paths; the link keeps them reading the moved file."
+    },
+    {
+      "id": "core.control-vocabulary-shim",
+      "path": "packages/core/src/control/index.js",
+      "category": "package-subpath",
+      "lifecycle": "compatibility",
+      "owner": "@sixam/source",
+      "replacement": "`@sixam/source` for the control vocabulary and the per-game catalogs; the policy language, controllers and cycle machinery stay here until they move to Propose",
+      "removalGate": "No tracked module imports a vocabulary or catalog name from `@sixam/core/control`, and the rest of the barrel has its Propose home",
+      "notes": "Re-exports the 37 vocabulary and catalog names by name from `@sixam/source` beside the modules that still live in core; its export set is the one it had before the move."
     },
     {
       "id": "core.telemetry-shim",

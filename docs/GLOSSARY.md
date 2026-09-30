@@ -1,7 +1,7 @@
 # Glossary
 
 These are the names a new reader should use. The same vocabulary is exported
-from [`packages/core/src/control/vocabulary.js`](../packages/core/src/control/vocabulary.js)
+from [`packages/source/src/clockwork/vocabulary.js`](../packages/source/src/clockwork/vocabulary.js)
 so prose, policies, artifacts, and device profiles can share one meaning.
 
 Physical bindings below are quoted from the current Moto g56 profile. They are

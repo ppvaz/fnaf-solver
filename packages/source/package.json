@@ -1,0 +1,17 @@
+{
+  "name": "@sixam/source",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@sixam/kernel": "file:../kernel"
+  },
+  "exports": {
+    ".": "./src/index.js",
+    "./fnaf1": "./src/games/fnaf1/index.js",
+    "./fnaf2": "./src/games/fnaf2/index.js",
+    "./fnaf3": "./src/games/fnaf3/index.js",
+    "./fnaf4": "./src/games/fnaf4/index.js",
+    "./games/*": "./src/games/*"
+  }
+}

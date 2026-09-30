@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { check } from './phone-input-bracket-sweep.mjs';
+import { check, committedVersion, sameModelFiles } from './phone-input-bracket-sweep.mjs';
 
 const root = new URL('../../', import.meta.url);
 const read = (path) => readFileSync(new URL(path, root), 'utf8');
@@ -45,4 +45,18 @@ const changedState = structuredClone(result);
 changedState.candidates[0].targetState.encounterLeadUpdates += 1;
 assert.throws(() => check(changedState), /target-state snapshot/);
 
-console.log('phone-input-bracket-sweep: all measured prefix brackets, model snapshots and evidence hash rechecked');
+// A record names the paths it was computed at, and a file can move after it (ADR 0002 migration D1 moved
+// the model sources from packages/core/src/mechanics to packages/source/src/games/fnaf2). seed-recovery.js
+// moved with no link left behind: its old path is looked up in that path's history, not read.
+const movedPath = 'packages/core/src/mechanics/seed-recovery.js';
+const movedSha256 = '2198d6a3857327f448f0d19aa7d21788540440d3aef3c656ba41f387fd8936e4';
+const found = committedVersion(movedPath, movedSha256);
+assert.ok(found && found !== 'working tree', 'a moved file is found in its old path\'s history');
+assert.equal(committedVersion(movedPath, '0'.repeat(64)), null, 'a moved path with bytes it never had is no committed version');
+// The record's old paths name the same model files as the moved sources.
+const recorded = Object.keys(result.source.modelSources);
+assert.ok(recorded.every((path) => path.startsWith('packages/core/src/mechanics/')));
+assert.ok(sameModelFiles(recorded, ['plant-model.js', 'config.js', 'rng.js'].map((name) => `packages/source/src/games/fnaf2/${name}`)));
+assert.ok(!sameModelFiles(recorded, ['plant-model.js', 'rng.js', 'config.js'].map((name) => `packages/source/src/games/fnaf2/${name}`)));
+
+console.log('phone-input-bracket-sweep: all measured prefix brackets, model snapshots and evidence hash rechecked; a moved model path resolves through its history');

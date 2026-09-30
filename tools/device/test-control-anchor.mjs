@@ -12,7 +12,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validateControlAnchor, resolveControlPoint, worldX, unstatedPanDependentControls, ANCHOR_KINDS, PAN_UNKNOWN }
   from '../../packages/adapters/src/control-anchor.js';
-import { GAME_CONTROLS } from '../../packages/core/src/control/vocabulary.js';
+import { GAME_CONTROLS } from '../../packages/source/src/clockwork/vocabulary.js';
 import { validateControlCommand } from '../../packages/core/src/contracts/index.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));

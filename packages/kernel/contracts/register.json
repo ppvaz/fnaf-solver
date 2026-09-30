@@ -2,8 +2,8 @@
   "schema": "contract-register-v1",
   "owner": "@sixam/kernel",
   "contracts": [
-    {"id":"plant-model-v1","owner":"core/mechanics","kind":"port","validator":"PlantModel"},
-    {"id":"semantic-control-v1","owner":"core/contracts","kind":"data","validator":"validateControlCommand"},
+    {"id":"plant-model-v1","owner":"source/games/fnaf2","kind":"port","validator":"PlantModel"},
+    {"id":"semantic-control-v1","owner":"source/clockwork","kind":"data","validator":"validateControlCommand"},
     {"id":"policy-program-v1","owner":"core/control","kind":"data","validator":"validatePolicy"},
     {"id":"controller-v1","owner":"core/control","kind":"port","validator":"Controller"},
     {"id":"qualification-v1","owner":"kernel/contracts","kind":"data","validator":"validateQualification"},

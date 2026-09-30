@@ -277,7 +277,7 @@ is not, which is why a fourth route means a fourth hand-written module.
 
 ## 11. Plants and transition models — binding: `GATE` (the model to copy)
 
-- `packages/core/src/mechanics/plant-model.js` (1159) — `class Sim`, the sole
+- `packages/source/src/games/fnaf2/plant-model.js` (1159) — `class Sim`, the sole
   mechanics authority.
 - `plant.js` (44) — semantic facade over it (`plant-model-v1`).
 - `reduced-model.js` (334) — deliberately not a second engine; gated against
@@ -452,7 +452,7 @@ green.
 `tools/constrainedsearch.mjs`, `tools/minus7/sim.mjs` and
 `tools/minus7/search.mjs` named `src/engine.js` as the mechanics authority — a
 path that no longer exists. All four now name
-`packages/core/src/mechanics/plant-model.js`.
+`packages/source/src/games/fnaf2/plant-model.js`.
 
 Still open: several docs and plans cite the dead path too, and nothing catches
 it. `tools/validate-references.js` resolves `CONTRACT:`/`ADR:`/`CLAIM:`/
@@ -472,7 +472,7 @@ A cleanup should reuse one of these five rather than invent a sixth:
 2. **Cross-language spawn comparison.** `tools/test-stat.mjs` imports the JS
    module and spawns `python3` against `stat.py` in the same test.
 3. **Shared JSONL vectors read from both languages.**
-   `tools/contract-vectors.py` over `packages/core/test/fixtures/*.jsonl`.
+   `tools/contract-vectors.py` over `packages/source/test/fixtures/*.jsonl`.
 4. **Equivalence gate between a model and its authority.**
    `tools/reducedmodeltest.mjs` (reduced model vs seeded `Sim`),
    `tools/device/policy-equivalence.mjs` (two compilers of one plan format),

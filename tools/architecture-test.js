@@ -188,7 +188,9 @@ function landing(from, specifier) {
  * One rule per guarded area. `scope` picks the files, `refuse` a reference that
  * crosses the boundary. ADR 0002: `kernel <- source <- play <- propose -> review
  * -> source`; in today's names review is packages/review, play is apps/device
- * and packages/adapters, propose is packages/research, and source is core.
+ * and packages/adapters, propose is packages/research, and source is
+ * packages/source (with what is left of packages/core, which still holds the
+ * policy language, sensing, estimation and training, and imports source).
  */
 const RULES = [
   {
@@ -202,9 +204,19 @@ const RULES = [
     why: 'kernel tests import only the kernel and Node built-ins',
   },
   {
+    id: 'source', scope: path => path.startsWith('packages/source/src/'),
+    refuse: ref => !['packages/source', 'packages/kernel'].includes(ref.unit),
+    why: 'source imports only itself and the kernel (ADR 0002): no core, application, adapter, research, review, tools module, host API or dependency',
+  },
+  {
+    id: 'source-test', scope: path => path.startsWith('packages/source/') && !path.startsWith('packages/source/src/'),
+    refuse: ref => !['packages/source', 'packages/kernel', 'builtin'].includes(ref.unit),
+    why: 'source tests import only source, the kernel and Node built-ins',
+  },
+  {
     id: 'core', scope: path => path.startsWith('packages/core/src/'),
-    refuse: ref => !['packages/core', 'packages/kernel'].includes(ref.unit),
-    why: 'core imports only itself and the kernel: no application, adapter, research, review, tools module, host API or dependency',
+    refuse: ref => !['packages/core', 'packages/source', 'packages/kernel'].includes(ref.unit),
+    why: 'core imports only itself, source and the kernel: no application, adapter, research, review, tools module, host API or dependency',
   },
   {
     id: 'research', scope: path => path.startsWith('packages/research/src/'),
@@ -277,6 +289,19 @@ assert.deepEqual(planted('packages/kernel/test/planted.test.js', "import { readP
   ['kernel-test'], 'a kernel test must not import review');
 assert.deepEqual(planted(REVIEW, "import { unknown } from '@sixam/kernel';"), [], 'review may import the kernel');
 assert.deepEqual(planted('packages/core/src/planted.js', "import { unknown } from '@sixam/kernel';"), [], 'core may import the kernel');
+// Source imports only the kernel (ADR 0002), and core may import source.
+const SOURCE = 'packages/source/src/planted.js';
+assert.deepEqual(planted(SOURCE, "import { stableHash } from '@sixam/kernel/contracts';"), [], 'source may import the kernel');
+assert.deepEqual(planted(SOURCE, "export * from './clockwork/index.js';"), [], 'source may import itself');
+assert.deepEqual(planted(SOURCE, "import { NightPolicy } from '@sixam/core/control';"), ['source'],
+  'source must not import core');
+assert.deepEqual(planted(SOURCE, "export const load = () => import('../../core/src/control/night-policy.js');"), ['source'],
+  'source must not reach core by a relative dynamic import');
+assert.deepEqual(planted(SOURCE, "import { readFileSync } from 'node:fs';"), ['source'], 'source must not import a Node built-in');
+assert.deepEqual(planted('packages/source/test/planted.test.js', "import { Sim } from '@sixam/core/mechanics';"), ['source-test'],
+  'a source test must not import core');
+assert.deepEqual(planted('packages/core/src/planted.js', "import * as C from '@sixam/source/games/fnaf2/config.js';"), [],
+  'core may import source');
 // The rules the regex guard held keep holding.
 assert.deepEqual(planted('packages/core/src/planted.js', "import { spawn } from 'node:child_process';"), ['core']);
 assert.deepEqual(planted('packages/core/src/planted.js', "export { cli } from '@sixam/device';"), ['core']);
@@ -303,6 +328,8 @@ const tree = async path => {
 const repoPath = path => relative(ROOT, path).split(sep).join('/');
 
 const core = await files(join(ROOT, 'packages/core/src'));
+// Source and the kernel came out of core and keep its host-global rule.
+const hostFree = [...core, ...await files(join(ROOT, 'packages/source/src')), ...await files(join(ROOT, 'packages/kernel/src'))];
 const legacyCatalog = JSON.parse(await readFile(join(ROOT, 'docs/architecture/generated/legacy-paths.json'), 'utf8'));
 assert.equal(legacyCatalog.schema, 'legacy-path-map-v1');
 assert.ok(Array.isArray(legacyCatalog.entries) && legacyCatalog.entries.length > 0,
@@ -363,9 +390,9 @@ for (const path of production) {
   const reports = moduleReferences(file).filter(ref => ref.specifier !== null && /(?:test|report)/.test(ref.specifier));
   assert.equal(reports.length, 0, `${path} imports a test/report module: ${reports.map(ref => ref.specifier).join(', ')}`);
 }
-for (const path of core) {
+for (const path of hostFree) {
   const globals = hostGlobals(await tree(path));
-  assert.equal(globals.length, 0, `${path} uses a host/browser global in core: ${globals.join(', ')}`);
+  assert.equal(globals.length, 0, `${path} uses a host/browser global in core, source or the kernel: ${globals.join(', ')}`);
 }
 const testNamed = path => /(?:^|\/)test[^/]*\.(?:js|mjs|ts)$/.test(path);
 const reportNamed = path => /(?:^|\/)report[^/]*\.(?:js|mjs|ts)$/.test(path);
@@ -408,5 +435,5 @@ assert.match(cli, /if \(!options\.confirmLive\) throw new Error\('live campaign 
 const commands = cli.match(/const knownCommands = new Set\(\[([^\]]*)\]\)/)?.[1] ?? '';
 assert.ok(commands && !/'(live|dry-run|calibrate)'/.test(commands),
   'device CLI must not regain a live command outside the campaign');
-console.log(`architecture: ${core.length} core modules and ${production.length} package modules obey boundary checks ` +
+console.log(`architecture: ${hostFree.length} core, source and kernel modules and ${production.length} package modules obey boundary checks ` +
   `(${parsed.size} modules parsed; rules: ${RULES.map(rule => rule.id).join(', ')})`);

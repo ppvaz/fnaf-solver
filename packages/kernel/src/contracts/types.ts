@@ -14,7 +14,7 @@ export interface ClockRef {
   readonly value: number;
 }
 
-/** The Android package of each registered game (control/catalog/index.js). */
+/** The Android package of each registered game (@sixam/source clockwork/control-registry.js). */
 export type GamePackage =
   | 'com.scottgames.fivenightsatfreddys'
   | 'com.scottgames.fnaf2'

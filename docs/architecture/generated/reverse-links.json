@@ -422,7 +422,7 @@
     {
       "id": "contract.device-executor-v1",
       "kind": "CONTRACT",
-      "path": "packages/core/src/control/catalog/fnaf2.js",
+      "path": "packages/source/src/games/fnaf2/controls.js",
       "line": 24,
       "relation": "REFERENCES"
     },
@@ -442,14 +442,14 @@
     {
       "id": "contract.device-profile-v1",
       "kind": "CONTRACT",
-      "path": "packages/core/src/contracts/control-contracts.js",
+      "path": "packages/source/src/clockwork/control-contracts.js",
       "line": 8,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.device-profile-v1",
       "kind": "CONTRACT",
-      "path": "packages/core/test/control-catalog.test.js",
+      "path": "packages/source/test/control-catalog.test.js",
       "line": 4,
       "relation": "REFERENCES"
     },
@@ -504,7 +504,7 @@
     {
       "id": "contract.fact-message-v1",
       "kind": "CONTRACT",
-      "path": "packages/core/test/fixtures/fact-message-v1.jsonl",
+      "path": "packages/source/test/fixtures/fact-message-v1.jsonl",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -582,7 +582,7 @@
     {
       "id": "contract.plant-model-v1",
       "kind": "CONTRACT",
-      "path": "packages/core/src/mechanics/plant.js",
+      "path": "packages/source/src/games/fnaf2/plant.js",
       "line": 4,
       "relation": "REFERENCES"
     },
@@ -613,12 +613,6 @@
     {
       "id": "contract.qualification-v1",
       "kind": "CONTRACT",
-      "path": "packages/core/test/contracts.test.js",
-      "relation": "CONFORMANCE_FIXTURE"
-    },
-    {
-      "id": "contract.qualification-v1",
-      "kind": "CONTRACT",
       "path": "packages/kernel/src/contracts/qualification.js",
       "line": 10,
       "relation": "REFERENCES"
@@ -627,6 +621,12 @@
       "id": "contract.qualification-v1",
       "kind": "CONTRACT",
       "path": "packages/kernel/test/venue-identity.test.js",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.qualification-v1",
+      "kind": "CONTRACT",
+      "path": "packages/source/test/contracts.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -671,90 +671,90 @@
     {
       "id": "contract.semantic-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/core/src/contracts/control-contracts.js",
+      "path": "packages/kernel/src/contracts/index.js",
       "line": 8,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.semantic-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/core/src/control/catalog/define.js",
+      "path": "packages/source/src/clockwork/control-catalog.js",
       "line": 14,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.semantic-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/core/src/control/catalog/fnaf1.js",
-      "line": 19,
+      "path": "packages/source/src/clockwork/control-contracts.js",
+      "line": 8,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.semantic-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/core/src/control/catalog/fnaf2.js",
-      "line": 24,
-      "relation": "REFERENCES"
-    },
-    {
-      "id": "contract.semantic-control-v1",
-      "kind": "CONTRACT",
-      "path": "packages/core/src/control/catalog/fnaf3.js",
-      "line": 20,
-      "relation": "REFERENCES"
-    },
-    {
-      "id": "contract.semantic-control-v1",
-      "kind": "CONTRACT",
-      "path": "packages/core/src/control/catalog/fnaf4.js",
-      "line": 18,
-      "relation": "REFERENCES"
-    },
-    {
-      "id": "contract.semantic-control-v1",
-      "kind": "CONTRACT",
-      "path": "packages/core/src/control/catalog/index.js",
+      "path": "packages/source/src/clockwork/control-registry.js",
       "line": 9,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.semantic-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/core/src/control/vocabulary.js",
+      "path": "packages/source/src/clockwork/vocabulary.js",
       "line": 15,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.semantic-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/core/src/mechanics/plant.js",
+      "path": "packages/source/src/games/fnaf1/controls.js",
+      "line": 19,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.semantic-control-v1",
+      "kind": "CONTRACT",
+      "path": "packages/source/src/games/fnaf2/controls.js",
+      "line": 24,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.semantic-control-v1",
+      "kind": "CONTRACT",
+      "path": "packages/source/src/games/fnaf2/plant.js",
       "line": 4,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.semantic-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/core/test/contracts.test.js",
-      "relation": "CONFORMANCE_FIXTURE"
-    },
-    {
-      "id": "contract.semantic-control-v1",
-      "kind": "CONTRACT",
-      "path": "packages/core/test/control-catalog.test.js",
-      "relation": "CONFORMANCE_FIXTURE"
-    },
-    {
-      "id": "contract.semantic-control-v1",
-      "kind": "CONTRACT",
-      "path": "packages/core/test/control-catalog.test.js",
-      "line": 4,
+      "path": "packages/source/src/games/fnaf3/controls.js",
+      "line": 20,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.semantic-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/kernel/src/contracts/index.js",
-      "line": 8,
+      "path": "packages/source/src/games/fnaf4/controls.js",
+      "line": 18,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.semantic-control-v1",
+      "kind": "CONTRACT",
+      "path": "packages/source/test/contracts.test.js",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.semantic-control-v1",
+      "kind": "CONTRACT",
+      "path": "packages/source/test/control-catalog.test.js",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.semantic-control-v1",
+      "kind": "CONTRACT",
+      "path": "packages/source/test/control-catalog.test.js",
+      "line": 4,
       "relation": "REFERENCES"
     },
     {

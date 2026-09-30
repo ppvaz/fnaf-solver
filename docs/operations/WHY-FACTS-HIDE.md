@@ -190,7 +190,7 @@ already known.
 Run on 2026-09-19, immediately after writing this page, as the first test of
 whether these habits pay.
 
-`packages/core/src/mechanics/config.js` exports 110 constants, 39 carrying a
+`packages/source/src/games/fnaf2/config.js` exports 110 constants, 39 carrying a
 `[SOURCED]` label. Asking of each "is this the game, or the runtime?" and then
 **testing the answer against the other three dumps**:
 

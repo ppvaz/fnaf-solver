@@ -19,9 +19,23 @@ const add = (id, command, args = []) => checks.set(id, { command, args });
 add('architecture', 'node', ['tools/architecture-test.js']);
 add('references', 'node', ['tools/validate-references.js']);
 
-if (changed.some(path => path.startsWith('packages/core/'))) {
-  add('core-contracts', 'node', ['packages/core/test/contracts.test.js']);
-  add('core-mechanics', 'node', ['tools/sourcetest.mjs']);
+// ADR 0002 migration D1/D4: the contracts, the register and Time live in the
+// kernel, each game's Rulebook, Sim and controls in source, and core keeps the
+// policy language and the cycle machinery over them. A change to any of the
+// three runs the contract and Sim lanes that read them; core's own gates run
+// when core, or what it imports, changes.
+const kernelChanged = changed.some(path => path.startsWith('packages/kernel/'));
+const sourceChanged = changed.some(path => path.startsWith('packages/source/'));
+const coreChanged = changed.some(path => path.startsWith('packages/core/'));
+if (kernelChanged)
+  for (const test of ['kernel', 'venue-identity', 'claim-envelope'])
+    add(`test:packages/kernel/test/${test}.test.js`, 'node', [`packages/kernel/test/${test}.test.js`]);
+if (kernelChanged || sourceChanged || coreChanged) {
+  add('source-contracts', 'node', ['packages/source/test/contracts.test.js']);
+  add('control-catalog', 'node', ['packages/source/test/control-catalog.test.js']);
+  add('source-mechanics', 'node', ['tools/sourcetest.mjs']);
+}
+if (sourceChanged || coreChanged) {
   // The closed loop is the device work's spine (ROADMAP Track A); its gates
   // belong in the same lane as the code they gate, not the legacy campaign.
   // Keyed by path so an edit to the gate itself (below) dedupes against this.
@@ -31,6 +45,8 @@ if (changed.some(path => path.startsWith('packages/core/'))) {
   // Offline replay determinism: the same recorded facts must rebuild the same
   // decisions, which is what makes a retained stream evidence rather than a log.
   add('fact-replay', 'node', ['tools/factreplay.mjs', '--assert']);
+  // The winners compile through the Sim and the catalogs.
+  add('winners-rebuild', 'node', ['tools/device/test-winners-rebuild.mjs']);
 }
 if (changed.some(path => path.startsWith('packages/adapters/') || path.startsWith('apps/device/'))) {
   add('adapter-contracts', 'node', ['packages/adapters/test/conformance.test.js']);
@@ -39,7 +55,7 @@ if (changed.some(path => path.startsWith('packages/adapters/') || path.startsWit
   add('device-cli', 'node', ['apps/device/test/cli.test.js']);
   add('winners-rebuild', 'node', ['tools/device/test-winners-rebuild.mjs']);
 }
-if (changed.some(path => path.startsWith('packages/core/src/control/') ||
+if (changed.some(path => path.startsWith('packages/core/src/control/') || path.startsWith('packages/source/src/clockwork/') ||
     path.startsWith('tools/device/policy-') || path.startsWith('tools/device/closed-families'))) {
   add('policy-grammar', 'node', ['tools/policygrammartest.mjs']);
   add('policy-search', 'node', ['tools/policysearchtest.mjs']);
@@ -53,14 +69,6 @@ if (changed.some(path => path.startsWith('packages/research/')))
 // evidence CLI that composes it (`npm run evidence`). Review imports the
 // kernel, so a kernel change runs both. LEG-003's interim mapping for the two
 // packages created on 2026-09-29.
-// The kernel holds the contracts, the register and Time since ADR 0002's
-// migration D1: a kernel change runs its own tests and core's contract lane,
-// which reads the register and every contract through the core shim.
-if (changed.some(path => path.startsWith('packages/kernel/'))) {
-  for (const test of ['kernel', 'venue-identity'])
-    add(`test:packages/kernel/test/${test}.test.js`, 'node', [`packages/kernel/test/${test}.test.js`]);
-  add('core-contracts', 'node', ['packages/core/test/contracts.test.js']);
-}
 if (changed.some(path => path.startsWith('packages/review/') || path.startsWith('packages/kernel/') || path === 'tools/evidence.js' ||
     path === 'tools/evidence-pack.mjs' || path.startsWith('docs/evidence/runs/') || path === 'docs/evidence/graph.json' ||
     path === 'tools/device/fact-register.mjs' || /^tools\/device\/[^/]+-winner\.json$/.test(path))) {

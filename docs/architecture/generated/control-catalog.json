@@ -1,6 +1,6 @@
 {
   "schema": "control-catalog-register-v1",
-  "generatedFrom": "packages/core/src/control/catalog/",
+  "generatedFrom": "packages/source/src/games/*/controls.js",
   "games": [
     {
       "schema": "control-catalog-v1",

@@ -17,10 +17,10 @@
 //
 //   node tools/test-fnaf1-census.mjs
 
-import { Fnaf1Sim, DOOR_OPEN, DOOR_SHUT } from '../packages/core/src/mechanics/games/sim-fnaf1.js';
+import { Fnaf1Sim, DOOR_OPEN, DOOR_SHUT } from '../packages/source/src/games/fnaf1/sim-fnaf1.js';
 import { communityLoop, rollGrid, sealed, doNothing, CAM }
   from '../packages/core/src/mechanics/games/policy-fnaf1.js';
-import { POWER, ROLLS, FOXY } from '../packages/core/src/mechanics/games/fnaf1.js';
+import { POWER, ROLLS, FOXY } from '../packages/source/src/games/fnaf1/fnaf1.js';
 
 const failures = [];
 let checks = 0;

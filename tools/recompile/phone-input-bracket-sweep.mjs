@@ -4,7 +4,7 @@
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   check as checkEncounters, cumulative, landingLatency, maskPresses, mapSchedule, nativeResponses,
@@ -242,13 +242,25 @@ function simulateFamily() {
 
 /** 'working tree', the first revision whose committed `path` has `expected` as its sha256, or null. */
 export function committedVersion(path, expected) {
-  if (sha256(readFileSync(resolve(ROOT, path))) === expected) return 'working tree';
-  const revisions = execFileSync('git', ['-C', ROOT, 'log', '--format=%H', '--', path], { encoding: 'utf8' }).split('\n').filter(Boolean);
+  // A record keeps the path it was computed at, and the file may have moved since (ADR 0002 migration
+  // D1 moved the model sources to packages/source): a missing working file is only "not the working
+  // tree", and `git log -- <old path>` still lists that path's revisions. The commit that moved it away
+  // is listed too, with no file at the path, so only revisions that leave a file there are read.
+  let working = null;
+  try { working = readFileSync(resolve(ROOT, path)); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+  if (working !== null && sha256(working) === expected) return 'working tree';
+  const revisions = execFileSync('git', ['-C', ROOT, 'log', '--diff-filter=ACMRT', '--format=%H', '--', path], { encoding: 'utf8' }).split('\n').filter(Boolean);
   for (const revision of revisions) {
     const bytes = execFileSync('git', ['-C', ROOT, 'show', `${revision}:${path}`], { maxBuffer: 64 << 20 });
     if (sha256(bytes) === expected) return revision;
   }
   return null;
+}
+
+/** True when a record's model-source paths name the same model files, in order, as the current sources
+ *  do: by file name, because a record keeps the paths it was computed at and a move changes the directory. */
+export function sameModelFiles(recordedPaths, sourcePaths) {
+  return JSON.stringify(recordedPaths.map((path) => basename(path))) === JSON.stringify(sourcePaths.map((path) => basename(path)));
 }
 
 export function check(result) {
@@ -316,9 +328,9 @@ export function check(result) {
       minTick: row.earlyTick, maxTick: row.lateTick,
       possibleTicks: Array.from({ length: row.lateTick - row.earlyTick + 1 }, (_, offset) => row.earlyTick + offset) }));
   if (JSON.stringify(dimensions) !== JSON.stringify(expectedDimensions)) throw new Error('ambiguous response brackets were omitted or changed');
-  // The model's files by path; their bytes were checked above to be committed versions.
-  const modelPaths = MODEL_SOURCES.map((path) => path.slice(ROOT.length + 1));
-  if (JSON.stringify(Object.keys(result.source.modelSources)) !== JSON.stringify(modelPaths) || result.source.winner.path !== night.winner)
+  // The model's files by name, at the record's own paths; each path's bytes were checked above to be a
+  // committed version of that path.
+  if (!sameModelFiles(Object.keys(result.source.modelSources), MODEL_SOURCES) || result.source.winner.path !== night.winner)
     throw new Error('model or winner provenance differs');
   let combinations = 1;
   for (const dimension of dimensions) combinations *= dimension.possibleTicks.length;

@@ -35,7 +35,7 @@
 //      and re-checks with a flash, rather than watching continuously.
 // ---------------------------------------------------------------------------
 
-import { DOOR_OPEN, DOOR_SHUT } from './sim-fnaf1.js';
+import { DOOR_OPEN, DOOR_SHUT } from '@sixam/source/games/fnaf1/sim-fnaf1.js';
 
 // View ids [SOURCED: g556/g557 gate Freddy on `viewing <> 42` and `<> 4`;
 // g60 fires Foxy's run at `viewing = 3`; g90-g94 render Pirate Cove at 99].

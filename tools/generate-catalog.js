@@ -48,11 +48,11 @@ const contractRegister = JSON.parse(await readFile(join(ROOT, 'packages/kernel/c
 const protocols = contractRegister.contracts.filter(item => ['wire', 'process'].includes(item.kind));
 const contractEvidence = {
   'plant-model-v1': ['tools/sourcetest.mjs', 'tools/simtest.mjs'],
-  'semantic-control-v1': ['packages/core/test/contracts.test.js', 'packages/core/test/control-catalog.test.js',
+  'semantic-control-v1': ['packages/source/test/contracts.test.js', 'packages/source/test/control-catalog.test.js',
     'tools/device/test-policy-interpreter.mjs'],
   'policy-program-v1': ['tools/policygrammartest.mjs', 'tools/device/test-policy-ir.mjs'],
   'controller-v1': ['tools/reactivetest.mjs', 'packages/core/test/cycle-controller.test.js'],
-  'qualification-v1': ['packages/core/test/contracts.test.js', 'packages/kernel/test/venue-identity.test.js'],
+  'qualification-v1': ['packages/source/test/contracts.test.js', 'packages/kernel/test/venue-identity.test.js'],
   'qualification-v2': ['packages/kernel/test/venue-identity.test.js', 'apps/device/test/venue-preflight.test.js'],
   'venue-identity-v1': ['packages/kernel/test/venue-identity.test.js', 'packages/adapters/test/android-venue.test.js'],
   'venue-check-v1': ['packages/kernel/test/venue-identity.test.js', 'apps/device/test/venue-preflight.test.js'],
@@ -72,7 +72,7 @@ const contractEvidence = {
   'claim-evidence-v1': ['tools/evidence.js'],
   'companion-status-v1': ['packages/adapters/test/companion-status.test.js', 'android/companion/test/com/ppvaz/fnafcompanion/CompanionStatusTest.java'],
   'cue-helper-control-v1': ['tools/cue/test-cue.py'],
-  'fact-message-v1': ['packages/core/test/fixtures/fact-message-v1.jsonl'],
+  'fact-message-v1': ['packages/source/test/fixtures/fact-message-v1.jsonl'],
   'hid-executor-v1': ['packages/adapters/test/conformance.test.js', 'apps/device/test/adb-device-local-executor.test.js'],
   'device-executor-v1': ['apps/device/test/adb-device-local-executor.test.js', 'apps/device/test/profile-game.test.js'],
   'device-campaign-v1': ['apps/device/test/campaign.test.js', 'apps/device/test/campaign-runner.test.js'],
@@ -184,7 +184,8 @@ for (const path of sourceFiles.filter(path => /(?:test|check|spec)[^/]*\.(?:mjs|
   ])];
   tests.push({
     id, lane,
-    owner: path.includes('packages/core') ? '@sixam/core' : path.includes('packages') ? 'package boundary' : 'legacy migration',
+    owner: path.includes('packages/core') ? '@sixam/core' : path.includes('packages/source') ? '@sixam/source'
+      : path.includes('packages/kernel') ? '@sixam/kernel' : path.includes('packages') ? 'package boundary' : 'legacy migration',
     timeoutMs: lane === 'test:browser:realtime' ? 360000
       : id === 'tools/ventreacttest.mjs' ? 900000
         : id === 'tools/minus7/test-search.mjs' ? 600000
@@ -324,9 +325,30 @@ const legacyPaths = [
   {
     id: 'core.contracts-shim', path: 'packages/core/src/contracts/index.js', category: 'package-subpath',
     lifecycle: 'compatibility', owner: '@sixam/kernel',
-    replacement: '`@sixam/kernel/contracts` (packages/kernel/src/contracts/); the catalog-generated validators from the control catalogs\' owner',
+    replacement: '`@sixam/kernel/contracts` (packages/kernel/src/contracts/); the three catalog-generated validators from `@sixam/source`',
     removalGate: 'No tracked module imports `@sixam/core/contracts` or `@sixam/core` for a contract, and core\'s own modules import the kernel directly',
     notes: 'Re-exports `@sixam/kernel/contracts` and the three catalog-generated validators (validateControlCommand, deviceProfileGame, resolveDeviceProfile); its export set is the one it had before the move.',
+  },
+  {
+    id: 'core.mechanics-shim', path: 'packages/core/src/mechanics/index.js', category: 'package-subpath',
+    lifecycle: 'compatibility', owner: '@sixam/source',
+    replacement: '`@sixam/source/fnaf2` (packages/source/src/games/fnaf2/), whose export set is exactly this barrel\'s',
+    removalGate: 'No tracked module imports `@sixam/core/mechanics`: the tools/recompile importers (their owner repoints them) and the engine-source files a bundle manifest hashes (tools/device/minus-toys-plan.mjs, recipe.mjs, tools/model/hid-device-pilot.mjs) are repointed in a commit that re-derives every emitted bundle',
+    notes: 'One `export *` of `@sixam/source/fnaf2`. tools/recompile/model-draw-trace.mjs resolves this barrel to find the model sources it hashes beside it, which is why the three links below live in this directory.',
+  },
+  ...['plant-model', 'config', 'rng'].map(name => ({
+    id: `core.model-source-link.${name}`, path: `packages/core/src/mechanics/${name}.js`, category: 'model-source',
+    lifecycle: 'compatibility', owner: '@sixam/source',
+    replacement: `packages/source/src/games/fnaf2/${name}.js (the same bytes; this path is a symbolic link to it)`,
+    removalGate: 'tools/recompile/model-draw-trace.mjs (the recompile session\'s) finds the model sources it hashes into new records through @sixam/source instead of beside the @sixam/core/mechanics barrel',
+    notes: 'The frozen phone-input-bracket-full-06-20260928 result names these paths; since 2026-09-30 its check resolves each through that path\'s git history and matches the model files by name, so it passes without the links (pinned in test-phone-input-bracket-sweep.mjs). Record producers still hash MODEL_SOURCES at these paths; the link keeps them reading the moved file.',
+  })),
+  {
+    id: 'core.control-vocabulary-shim', path: 'packages/core/src/control/index.js', category: 'package-subpath',
+    lifecycle: 'compatibility', owner: '@sixam/source',
+    replacement: '`@sixam/source` for the control vocabulary and the per-game catalogs; the policy language, controllers and cycle machinery stay here until they move to Propose',
+    removalGate: 'No tracked module imports a vocabulary or catalog name from `@sixam/core/control`, and the rest of the barrel has its Propose home',
+    notes: 'Re-exports the 37 vocabulary and catalog names by name from `@sixam/source` beside the modules that still live in core; its export set is the one it had before the move.',
   },
   {
     id: 'core.telemetry-shim', path: 'packages/core/src/telemetry/index.js', category: 'package-subpath',
@@ -365,7 +387,7 @@ const outputs = {
   // aliases, action kinds, binding, preconditions and observation, and FNaF 2's
   // artifact action table. The validators are generated from the same objects.
   'control-catalog.json': { schema: 'control-catalog-register-v1',
-    generatedFrom: 'packages/core/src/control/catalog/', games: Object.values(CONTROL_CATALOGS) },
+    generatedFrom: 'packages/source/src/games/*/controls.js', games: Object.values(CONTROL_CATALOGS) },
 };
 for (const [name, value] of Object.entries(outputs)) await writeFile(join(OUT, name), JSON.stringify(value, null, 2) + '\n');
 console.log(`catalog: ${Object.keys(outputs).length} inventories (${sourceFiles.length} source files)`);

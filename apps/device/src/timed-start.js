@@ -1,7 +1,7 @@
 // Place a tap at a chosen phone wall-clock residue (twin-nights test of clock seeding).
 //
 // The stock game seeds its 16-bit Fusion RNG from (short) System.currentTimeMillis()
-// when a frame loads (packages/core/src/mechanics/rng.js, sourced from the
+// when a frame loads (packages/source/src/games/fnaf2/rng.js, sourced from the
 // decompile). Two nights whose scene loads fall on the same phone wall-clock
 // millisecond modulo 65 536 would then replay the same RNG stream. The helper
 // reports wallMs beside snapshotNs (CaptureService GET reply) and the clock port

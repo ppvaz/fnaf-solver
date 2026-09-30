@@ -12,7 +12,7 @@
 // plausible value"). A fact whose pixels are ambiguous THIS frame -- the screen
 // mid-animation, the office panned, a blackout hiding the opening -- resolves
 // UNKNOWN rather than guessing.
-import * as C from '../mechanics/config.js';
+import * as C from '@sixam/source/games/fnaf2/config.js';
 
 // One read per this many frames: ~15 Hz, the measured device cadence.
 export const OBSERVE_INTERVAL = 4;

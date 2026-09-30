@@ -4,13 +4,13 @@
   "contracts": [
     {
       "id": "plant-model-v1",
-      "owner": "core/mechanics",
+      "owner": "source/games/fnaf2",
       "kind": "port",
       "validator": "PlantModel"
     },
     {
       "id": "semantic-control-v1",
-      "owner": "core/contracts",
+      "owner": "source/clockwork",
       "kind": "data",
       "validator": "validateControlCommand"
     },

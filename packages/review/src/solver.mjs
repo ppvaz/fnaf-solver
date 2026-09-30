@@ -22,7 +22,7 @@ import { liftPack } from './pack-lift.mjs';
 import { queryPromotions } from './promotions-query.mjs';
 import { CHECKS, RULE_CITES, checkUnknownAsNumber } from './refusals.mjs';
 import { ARCHIVED_ROUTES, CHRONICLE_ATTRIBUTION, CHRONICLE_DIR, CHRONICLE_GAME, CHRONICLE_SCHEMA_MODULE, COMMAND_REGISTRY,
-  CONTRACT_REGISTER, CONTROL_CATALOG_DIR, GAMES, catalogUnknowns, chronicleLabel, gameKey, isNegative, packDirectories,
+  CONTRACT_REGISTER, CONTROL_CATALOG_DIR, GAMES, controlCatalogFile, catalogUnknowns, chronicleLabel, gameKey, isNegative, packDirectories,
   readArchivedRoutes, readChronicle, readCommandRegistry, readContracts, readPackRow, readPacks, resolveGame } from './registers.mjs';
 
 export const SURFACE_DOC = 'docs/device/CUE-HELPER-MCP.md';
@@ -521,7 +521,7 @@ export function createSolver({ root, winners: winnersOverride }) {
       const unknowns = catalogUnknowns(catalog);
       return claimEnvelope({
         claim: catalog, label: unknown('control-catalog-v1 carries no evidence label per fact; each catalog names where its facts were read in sources'),
-        target: game.package, cite: [`${CONTROL_CATALOG_DIR}/${game.alias}.js`, 'docs/architecture/generated/control-catalog.json'],
+        target: game.package, cite: [controlCatalogFile(game.alias), 'docs/architecture/generated/control-catalog.json'],
         status: 'standing', supersededBy: null,
         notMeasured: unknowns.length ? unknowns.map(item => `control ${item.control} ${item.field}: ${item.value}`)
           : ['nothing the catalog writes as UNKNOWN'],

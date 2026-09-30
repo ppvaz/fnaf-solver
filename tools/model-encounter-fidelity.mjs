@@ -89,7 +89,7 @@ const record = {
     historicalTool: 'artifacts/forensics/twin-nights-night6-cohort2/win-score.mjs',
     historicalRecord: 'docs/evidence/model-encounter-fidelity-20260918.json',
     baseCommit: census.method.git.commit,
-    modelSha256: hashFile(new URL('../packages/core/src/mechanics/plant-model.js', import.meta.url)),
+    modelSha256: hashFile(new URL('../packages/source/src/games/fnaf2/plant-model.js', import.meta.url)),
     runtimeSource: {
       localPath: '~/fnaf-apks/fnaf2/base.apk!classes.dex',
       sha256: 'ca5c98a4d6ceefc3e0efe542695762263b87e73ca7e3956e3c688177d4c0d8a3',
@@ -180,7 +180,7 @@ const record = {
     'The prior Night 7 traced-night discrepancy remains open; this record makes no new Night 7 traced-clock equivalence claim.',
     'A full or held-out census under the gated option and a same-phase traced phone validation remain open.',
   ],
-  gates: ['packages/core/test/gated-every.test.js', 'tools/test-encounter-fidelity.mjs'],
+  gates: ['packages/source/test/gated-every.test.js', 'tools/test-encounter-fidelity.mjs'],
 };
 writeFileSync(output, `${JSON.stringify(record, null, 2)}\n`);
 console.log(`${record.id}: tw-04 2/11 and 1/11 unchanged; short-mask BB/Mangle hazard reproduced MODEL_ONLY; S2 OPEN; census ${census.bindings.length} night-bindings, 3000 design / 0 held-out seeds`);

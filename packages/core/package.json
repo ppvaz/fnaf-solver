@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@sixam/kernel": "file:../kernel"
+    "@sixam/kernel": "file:../kernel",
+    "@sixam/source": "file:../source"
   },
   "exports": {
     ".": "./src/index.js",

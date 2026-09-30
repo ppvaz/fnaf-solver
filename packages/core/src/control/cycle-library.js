@@ -5,8 +5,8 @@
 // attest that the primitive was replayed through the exact engine. Keeping
 // those two checks separate prevents a controller-visible approximation from
 // being mistaken for a survival proof.
-import * as C from '../mechanics/config.js';
-import { REDUCED_SCHEMA, advanceReduced, applyReduced } from '../mechanics/reduced-model.js';
+import * as C from '@sixam/source/games/fnaf2/config.js';
+import { REDUCED_SCHEMA, advanceReduced, applyReduced } from '@sixam/source/games/fnaf2/reduced-model.js';
 
 export const CYCLE_SCHEMA = 'cycle-v1';
 export const DEVICE_CONSTRAINTS = Object.freeze({

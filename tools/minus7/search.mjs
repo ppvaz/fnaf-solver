@@ -3,7 +3,7 @@
 //
 // This is the SEED-CONDITIONED optimiser: given one exact RNG stream it beam-
 // searches the semantic-action sequence that survives longest, using
-// packages/core/src/mechanics/plant-model.js as the authoritative transition
+// packages/source/src/games/fnaf2/plant-model.js as the authoritative transition
 // model. Run over many seeds it answers the question hand-tuning could not:
 // is every night winnable at all, and if so what does optimal play look
 // like -- an upper bound on any policy.

@@ -6,8 +6,8 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
-import { Sim } from '../packages/core/src/mechanics/plant-model.js';
-import { MODEL_CONTEXT_LIGHT } from '../packages/core/src/control/vocabulary.js';
+import { Sim } from '../packages/source/src/games/fnaf2/plant-model.js';
+import { MODEL_CONTEXT_LIGHT } from '../packages/source/src/clockwork/vocabulary.js';
 
 const CODE = { withbonnie: 'B', withchica: 'C', withfreddy: 'F', toybonnie: 'b', toychica: 'c', toyfreddy: 'f', mangle: 'M', bb: 'x' };
 

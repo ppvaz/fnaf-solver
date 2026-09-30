@@ -19,7 +19,9 @@ export const CONTRACT_REGISTER = 'packages/kernel/contracts/register.json';
 export const CONTRACT_SPECIFICATIONS = 'docs/architecture/generated/contract-specifications.json';
 export const COMMAND_REGISTRY = 'docs/architecture/generated/command-registry.json';
 export const ARCHIVED_ROUTES = 'docs/ARCHIVED-ROUTES.md';
-export const CONTROL_CATALOG_DIR = 'packages/core/src/control/catalog';
+export const CONTROL_CATALOG_DIR = 'packages/source/src/games';
+/** A registered game's control catalog, `packages/source/src/games/<alias>/controls.js`. */
+export const controlCatalogFile = alias => `${CONTROL_CATALOG_DIR}/${alias}/controls.js`;
 
 const readJson = (root, path) => JSON.parse(readFileSync(join(root, path), 'utf8'));
 

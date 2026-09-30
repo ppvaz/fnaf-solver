@@ -2,7 +2,7 @@
 //
 // This searches only named device-plan geometry already implemented by
 // HidPilot.  Every trajectory goes through recipe.build -> devicePlan ->
-// jitterPlan -> replay over packages/core/src/mechanics/plant-model.js.
+// jitterPlan -> replay over packages/source/src/games/fnaf2/plant-model.js.
 // It is therefore a deterministic enumeration of this finite family, not a
 // new policy simulator.
 //

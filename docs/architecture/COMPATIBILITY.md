@@ -66,13 +66,18 @@ silently strand old manifests or merge two incompatible validators.
 ## ADR 0002 context move (Plan 27, migration D1, D3, D4)
 
 The contracts, the register and Time moved out of `@sixam/core` into
-[`@sixam/kernel`](../../packages/kernel/README.md). The core subpaths that
+[`@sixam/kernel`](../../packages/kernel/README.md); each game's mechanics and
+controls, and the cross-game clockwork, into
+[`@sixam/source`](../../packages/source/README.md). The core subpaths that
 named them stay as re-export shims with their export sets unchanged, so an
 importer the move did not repoint keeps working.
 
 | Surface | Lifecycle | Canonical replacement | Removal gate |
 |---|---|---|---|
-| `@sixam/core/contracts` (`packages/core/src/contracts/index.js`) | compatibility | `@sixam/kernel/contracts`; the catalog-generated validators from the control catalogs' owner | no tracked module imports a contract from `@sixam/core` |
+| `@sixam/core/contracts` (`packages/core/src/contracts/index.js`) | compatibility | `@sixam/kernel/contracts`; the three catalog-generated validators from `@sixam/source` | no tracked module imports a contract from `@sixam/core` |
+| `@sixam/core/mechanics` (`packages/core/src/mechanics/index.js`) | compatibility | `@sixam/source/fnaf2` (the same export set) | no tracked module imports it: tools/recompile's importers are repointed by their owner, and the engine-source files a bundle manifest hashes in a commit that re-derives every bundle |
+| `packages/core/src/mechanics/{plant-model,config,rng}.js` (symbolic links) | compatibility | `packages/source/src/games/fnaf2/` (the same bytes) | `tools/recompile/model-draw-trace.mjs` finds the model it hashes through `@sixam/source`; the bracket check already reads a record's old paths through their history |
+| `@sixam/core/control` (`packages/core/src/control/index.js`) | compatibility | `@sixam/source` for the vocabulary and the catalogs | no importer reads them here, and the policy language has its Propose home |
 | `@sixam/core/telemetry` (`packages/core/src/telemetry/index.js`) | compatibility | `@sixam/kernel/time` for the fact link and event clocks | no importer reads them here, and the bench trace has its Review home |
 | `@sixam/core/timing` (`packages/core/src/timing/index.js`) | compatibility | `@sixam/kernel/time` for `ClockPort` | no importer reads it here, and the phase clock has its Play home |
 

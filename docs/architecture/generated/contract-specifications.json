@@ -6,9 +6,9 @@
       "contractId": "plant-model-v1",
       "id": "plant-model-v1",
       "version": 1,
-      "owner": "core/mechanics",
+      "owner": "source/games/fnaf2",
       "kind": "port",
-      "purpose": "Stable plant-model-v1 boundary for core/mechanics; its validator is PlantModel.",
+      "purpose": "Stable plant-model-v1 boundary for source/games/fnaf2; its validator is PlantModel.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -27,9 +27,9 @@
       "contractId": "semantic-control-v1",
       "id": "semantic-control-v1",
       "version": 1,
-      "owner": "core/contracts",
+      "owner": "source/clockwork",
       "kind": "data",
-      "purpose": "Stable semantic-control-v1 boundary for core/contracts; its validator is validateControlCommand.",
+      "purpose": "Stable semantic-control-v1 boundary for source/clockwork; its validator is validateControlCommand.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -40,8 +40,8 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateControlCommand",
       "conformanceFixtures": [
-        "packages/core/test/contracts.test.js",
-        "packages/core/test/control-catalog.test.js",
+        "packages/source/test/contracts.test.js",
+        "packages/source/test/control-catalog.test.js",
         "tools/device/test-policy-interpreter.mjs"
       ]
     },
@@ -104,7 +104,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateQualification",
       "conformanceFixtures": [
-        "packages/core/test/contracts.test.js",
+        "packages/source/test/contracts.test.js",
         "packages/kernel/test/venue-identity.test.js"
       ]
     },
@@ -407,7 +407,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "encodeFactMessage",
       "conformanceFixtures": [
-        "packages/core/test/fixtures/fact-message-v1.jsonl"
+        "packages/source/test/fixtures/fact-message-v1.jsonl"
       ]
     },
     {

@@ -591,134 +591,6 @@
       }
     },
     {
-      "id": "packages/core/test/animation-count.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/b-drain-order.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/bb-moves.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/blackout-clock-end.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/blackout-draws.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/contracts.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/control-catalog.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "device-transport"
-      ],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
       "id": "packages/core/test/cycle-controller.test.js",
       "lane": "test:unit",
       "owner": "@sixam/core",
@@ -775,639 +647,7 @@
       }
     },
     {
-      "id": "packages/core/test/drop-flag-order.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/drop-light-order.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/event-draws.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/every-origin.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/exposure-value5.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/footstep-draws.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/footstep-value2.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/foxy-chain.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/foxy-move-value2.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/frame-time-hook.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/gated-every.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/hall-latch-order.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/last-view-pause.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/mangle-return.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/mask-animation-input.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/monitor-down-draw.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "device-transport"
-      ],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/monitor-raise-gate.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
       "id": "packages/core/test/night-policy.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/office-footsteps.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/office-rolls.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/promoted-moves.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/promoted-view-draws.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/puppet-glitch-draws.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/random-image-draw.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/rebuild-order.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/roll-draws.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/rolls-before-moves.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/route-forks.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/route-pass.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/route-view-draws.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/second-pass.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/sheet-order.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/unconditional-draws.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/value5.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/vent-cam-draws.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/core/test/view-draws.test.js",
       "lane": "test:unit",
       "owner": "@sixam/core",
       "timeoutMs": 180000,
@@ -1427,7 +667,7 @@
     {
       "id": "packages/kernel/test/claim-envelope.test.js",
       "lane": "test:unit",
-      "owner": "package boundary",
+      "owner": "@sixam/kernel",
       "timeoutMs": 180000,
       "timeoutSource": "tools/test.mjs per-test watchdog",
       "deterministic": true,
@@ -1445,7 +685,7 @@
     {
       "id": "packages/kernel/test/kernel.test.js",
       "lane": "test:unit",
-      "owner": "package boundary",
+      "owner": "@sixam/kernel",
       "timeoutMs": 180000,
       "timeoutSource": "tools/test.mjs per-test watchdog",
       "deterministic": true,
@@ -1463,7 +703,7 @@
     {
       "id": "packages/kernel/test/venue-identity.test.js",
       "lane": "test:unit",
-      "owner": "package boundary",
+      "owner": "@sixam/kernel",
       "timeoutMs": 180000,
       "timeoutSource": "tools/test.mjs per-test watchdog",
       "deterministic": true,
@@ -1662,6 +902,766 @@
       "fixedSleeps": [],
       "sharedResources": [],
       "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/animation-count.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/b-drain-order.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/bb-moves.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/blackout-clock-end.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/blackout-draws.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/contracts.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/control-catalog.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "device-transport"
+      ],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/drop-flag-order.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/drop-light-order.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/event-draws.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/every-origin.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/exposure-value5.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/footstep-draws.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/footstep-value2.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/foxy-chain.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/foxy-move-value2.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/frame-time-hook.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/gated-every.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/hall-latch-order.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/last-view-pause.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/mangle-return.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/mask-animation-input.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/monitor-down-draw.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "device-transport"
+      ],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/monitor-raise-gate.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/office-footsteps.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/office-rolls.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/promoted-moves.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/promoted-view-draws.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/puppet-glitch-draws.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/random-image-draw.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/rebuild-order.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/roll-draws.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/rolls-before-moves.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/route-forks.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/route-pass.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/route-view-draws.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/second-pass.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/sheet-order.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/unconditional-draws.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/value5.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/vent-cam-draws.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/view-draws.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
       "measurement": {
         "status": "NOT_MEASURED",
         "runs": 0,
