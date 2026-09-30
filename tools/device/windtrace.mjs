@@ -33,7 +33,7 @@ const night = +arg('night', 1);
 const png = arg('png', null);
 const [lo, hi] = String(arg('seeds', '1..200')).split('..').map(Number);
 
-const text = execSync(`node ${new URL('recipe.mjs', import.meta.url).pathname} --device-plan --night=${night}`).toString();
+const text = execSync(`node ${new URL('../../packages/propose/bin/plans/recipe.mjs', import.meta.url).pathname} --device-plan --night=${night}`).toString();
 const { plan, idleUntilMs } = parsePlanText(text);
 
 // Wrap tick from outside rather than teaching the engine to record: the engine

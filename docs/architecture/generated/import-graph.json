@@ -4333,6 +4333,16 @@
       ]
     },
     {
+      "file": "tools/test-sibling-paths.js",
+      "imports": [
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/test-winner-census.mjs",
       "imports": [
         "../packages/propose/bin/plans/bundle.mjs",

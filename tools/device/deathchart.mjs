@@ -229,7 +229,7 @@ function main() {
 
   const gates = nights.map(night => {
     const text = execFileSync(process.execPath,
-      [fileURLToPath(new URL('recipe.mjs', import.meta.url)), '--device-plan', `--night=${night}`]).toString();
+      [fileURLToPath(new URL('../../packages/propose/bin/plans/recipe.mjs', import.meta.url)), '--device-plan', `--night=${night}`]).toString();
     const g = modelGate(text, { runs });
     const rows = census(g.deaths, g.deathTimes);
     const total = rows.reduce((s, r) => s + r.n, 0);
