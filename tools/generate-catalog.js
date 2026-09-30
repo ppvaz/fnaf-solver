@@ -99,7 +99,7 @@ const contractEvidence = {
   'camera-rule-v1': ['packages/play/test/camera-rule.test.js', 'tools/device/test-camera-calibrate.py'],
   'calibration-state-v1': ['packages/play/test/calibration-state-rule.test.js'],
   'control-exclusion-v1': ['packages/play/test/control-exclusion.test.js'],
-  'claim-envelope-v1': ['packages/kernel/test/claim-envelope.test.js', 'tools/device/test-cue-helper-mcp.mjs'],
+  'claim-envelope-v1': ['packages/kernel/test/claim-envelope.test.js', 'apps/desktop/test/cue-helper-mcp.test.mjs'],
 };
 const repositoryPaths = new Set(files.map(path => relative(ROOT, path)));
 for (const contract of contractRegister.contracts) {
@@ -205,7 +205,7 @@ const duplicateResponsibilities = [
   { responsibility: 'canonical mechanics', owner: '@sixam/source', legacy: [] },
   { responsibility: 'semantic policy IR', owner: '@sixam/propose', legacy: ['tools/device/policy-ir.mjs'] },
   { responsibility: 'physical actuation', owner: '@sixam/play', legacy: ['tools/device/actuator.mjs'] },
-  { responsibility: 'device composition', owner: '@sixam/device', legacy: ['tools/device/recipe.mjs'] },
+  { responsibility: 'device composition', owner: '@sixam/desktop', legacy: ['tools/device/recipe.mjs'] },
   { responsibility: 'research execution', owner: '@sixam/propose', legacy: ['tools/*search*', 'tools/*sweep*', 'tools/*probe*'] },
 ];
 
@@ -217,14 +217,14 @@ const duplicateResponsibilities = [
 const legacyPaths = [
   {
     id: 'device.shell-session', path: 'tools/device/session.sh', category: 'device',
-    lifecycle: 'compatibility', owner: '@sixam/device',
+    lifecycle: 'compatibility', owner: '@sixam/play',
     replacement: 'run packs (docs/evidence/runs/) for nights; this bridge stays for collect-cue-audio.sh and capture-screen-sample.sh',
     removalGate: 'The cue-audio and screen-sample collectors write run packs or retire',
     notes: 'Sourced manifest bridge; the historical shell runner that also used it was archived 2026-09-25.',
   },
   {
     id: 'device.session-manifest-producer', path: 'tools/device/session-manifest.py', category: 'device',
-    lifecycle: 'legacy', owner: '@sixam/device',
+    lifecycle: 'legacy', owner: '@sixam/play',
     replacement: 'run packs for nights; `session-manifest-v1` (core/contracts) for research sessions',
     removalGate: 'Historical manifests are indexed/replayable and the shell runner is removed',
     notes: 'Plan 09 producer for the shell-specific `fnaf2.session-manifest` dialect.',
@@ -238,7 +238,7 @@ const legacyPaths = [
   },
   {
     id: 'device.session-manifest-schema', path: 'tools/device/schema/session-manifest-v1.json', category: 'device',
-    lifecycle: 'legacy', owner: '@sixam/device',
+    lifecycle: 'legacy', owner: '@sixam/play',
     replacement: 'core/contracts `session-manifest-v1` contract',
     removalGate: 'Legacy `fnaf2.session-manifest` fixtures and consumers are archived',
     notes: 'Legacy schema whose internal id is `fnaf2.session-manifest`; it is not the core JSON contract.',
@@ -266,7 +266,7 @@ const legacyPaths = [
   },
   {
     id: 'device.shell-menu', path: 'tools/device/menu.sh', category: 'device',
-    lifecycle: 'transitional', owner: '@sixam/device',
+    lifecycle: 'transitional', owner: '@sixam/play',
     replacement: 'title/menu detector and the campaign executor state gate',
     removalGate: 'Automated menu-state detector has calibrated evidence and a dry-run fixture',
     notes: 'Human-safe selector retained because the current phone cursor is not machine-qualified.',
@@ -280,7 +280,7 @@ const legacyPaths = [
   },
   {
     id: 'device.recipe-emitter', path: 'tools/device/recipe.mjs', category: 'device-artifact',
-    lifecycle: 'transitional', owner: '@sixam/device',
+    lifecycle: 'transitional', owner: '@sixam/play',
     replacement: 'package-owned winner/device-bundle emitter',
     removalGate: 'Bundle emitter no longer imports the tools tree and replay hashes match',
     notes: 'Still used by the bundle compiler, so removal is blocked until extraction.',
@@ -423,6 +423,15 @@ const legacyPaths = [
     replacement: 'a rule over native region pixels (the Cue Helper REGION verb, tools/device/native-regions.mjs), recalibrated for FNaF 2',
     removalGate: 'FNaF 2\'s pipeline is recalibrated on native regions (ADR 0002 migration M7) and the campaign executor reads no grid, luma or grid-fitted rule; the retained grid_hex readers of old evidence stay',
     notes: `Deprecated: ${what}. Moved from packages/adapters unchanged; to be converted, not extended (CLAUDE.md, Sensors and on-device code).`,
+  })),
+  // The device profiles stay where the device app kept them: stored hashes
+  // cover the path (the layout's home for them is packages/play/profiles/fnaf2/moto-g56/).
+  ...['hid-mediaprojection', 'hid-mediaprojection-17ms', 'fixture-hid-screencap'].map(name => ({
+    id: `play.profile.${name}`, path: `apps/device/profiles/${name}.json`, category: 'device-profile',
+    lifecycle: 'compatibility', owner: '@sixam/play',
+    replacement: `packages/play/profiles/fnaf2/moto-g56/${name}.json, the layout's home for it, once the path is free to move`,
+    removalGate: 'Every stored citation of apps/device/profiles/ is read through the path\'s history at its commit, not the working tree: the 55 tools/recompile/results records that pair `profile: apps/device/profiles/hid-mediaprojection.json` with its profileSha256, the recompile configs full06-response-experiment.json (hash-bound by full06-responses-20260928) and phone-encounter-nights.json, schedule-to-input.mjs\'s DEFAULT_PROFILE, and graph.json\'s citation of fixture-hid-screencap.json; tools/device/bundle.mjs and the device CLI then resolve profiles from the new home',
+    notes: 'Unmoved and byte for byte. The profile bytes are what every bundle binds by sha256 (profile.json); the path is what retained records cite.',
   })),
   {
     id: 'package.legacy-engine-command', path: 'package.json#scripts.test:legacy:engine', category: 'command',

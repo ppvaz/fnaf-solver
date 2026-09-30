@@ -39,7 +39,7 @@ for (const [paths, expected, why] of cases) {
   else assert.equal(typeof result.because, 'string');
   checks += 1;
 }
-assert.deepEqual(pathKind('tools/device/cue-helper-mcp.mjs'), { kind: 'code', area: 'solver-interface' }, 'the MCP server is the solver interface');
+assert.deepEqual(pathKind('apps/desktop/src/cue-helper-mcp.mjs'), { kind: 'code', area: 'solver-interface' }, 'the MCP server is the solver interface');
 assert.deepEqual(pathKind('apps/desktop/src/lab.mjs'), { kind: 'code', area: 'solver-interface' });
 assert.deepEqual(pathKind('tools/device/actuator.mjs'), { kind: 'code', area: 'controller' });
 assert.deepEqual(pathKind('tools/recompile/pilot/pilot.mjs'), { kind: 'code', area: null }, 'rebuild tooling is outside the four areas');

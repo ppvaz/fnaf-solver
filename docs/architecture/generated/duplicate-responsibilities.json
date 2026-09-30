@@ -22,7 +22,7 @@
     },
     {
       "responsibility": "device composition",
-      "owner": "@sixam/device",
+      "owner": "@sixam/desktop",
       "legacy": [
         "tools/device/recipe.mjs"
       ]

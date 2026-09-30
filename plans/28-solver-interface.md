@@ -31,9 +31,9 @@ of registers this repository already generates —
 [the chronicle](../tools/chronicle-schema.mjs),
 [the evidence graph](../docs/evidence/graph.json) — plus two write paths that
 already exist behind gates ([simulation](../tools/device/bundle.mjs),
-[device](../apps/device/src/cli.js)). What is new below is envelope, routing and
+[device](../apps/desktop/src/device-cli.js)). What is new below is envelope, routing and
 refusal; the knowledge is already here and the safety boundary is already proven
-in [`cue-helper-mcp.mjs`](../tools/device/cue-helper-mcp.mjs).
+in [`cue-helper-mcp.mjs`](../apps/desktop/src/cue-helper-mcp.mjs).
 `UNKNOWN(not-estimated)`: no line count or schedule is offered, because none was
 measured and an invented one would be the tautology mistake 7 describes.
 

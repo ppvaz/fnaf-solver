@@ -16,10 +16,10 @@ the phone's transports, clocks, night onset and detection rules (the FNaF 2
 grid/luma rules deprecated), the campaign executor and its supervision, the Sim
 observer, the player's estimator and the phase clock, and imports only the
 kernel and source; `@sixam/core` holds only registered compatibility shims;
-the device app is the command line that composes it; trainer and device are
-leaves; `@sixam/review` reads the evidence
-and never imports play, the device app, propose or research
-(`tools/architecture-test.js`). There is no sandbox
+`apps/desktop` is the one composition root (the device command line, the
+`fnaf-solver` MCP server and the lab verbs) and, with the trainer, a leaf;
+`@sixam/review` reads the evidence and never imports play, an application,
+propose or research (`tools/architecture-test.js`). There is no sandbox
 (ADR 0002 principle 7): claim-bearing cohorts and censuses are pre-registered,
 and diagnostic sweeps name the explanation they test. Production never
 imports tests, reports, mutable search knobs, DOM, shell, or device details

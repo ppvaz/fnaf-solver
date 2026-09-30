@@ -1,12 +1,15 @@
 {
-  "name": "@sixam/device",
+  "name": "@sixam/desktop",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "dependencies": {
     "@sixam/kernel": "file:../../packages/kernel",
     "@sixam/play": "file:../../packages/play",
+    "@sixam/review": "file:../../packages/review",
     "@sixam/source": "file:../../packages/source"
   },
-  "bin": {"fnaf2-device": "src/cli.js"}
+  "bin": {
+    "fnaf2-device": "src/device-cli.js"
+  }
 }

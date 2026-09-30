@@ -62,11 +62,12 @@ if (sourceChanged || coreChanged || proposeChanged || playModelChanged) {
   // The winners compile through the Sim and the catalogs.
   add('winners-rebuild', 'node', ['tools/device/test-winners-rebuild.mjs']);
 }
-if (changed.some(path => path.startsWith('packages/play/') || path.startsWith('packages/adapters/') || path.startsWith('apps/device/'))) {
+if (changed.some(path => path.startsWith('packages/play/') || path.startsWith('packages/adapters/') || path.startsWith('apps/device/') ||
+    path === 'apps/desktop/src/device-cli.js')) {
   add('adapter-contracts', 'node', ['packages/play/test/conformance.test.js']);
   add('device-executor', 'node', ['packages/play/test/adb-device-local-executor.test.js']);
   add('device-campaign', 'node', ['packages/play/test/campaign.test.js']);
-  add('device-cli', 'node', ['apps/device/test/cli.test.js']);
+  add('device-cli', 'node', ['apps/desktop/test/device-cli.test.js']);
   add('winners-rebuild', 'node', ['tools/device/test-winners-rebuild.mjs']);
 }
 if (changed.some(path => path.startsWith('packages/propose/src/policy/') || path.startsWith('packages/core/src/control/') ||
@@ -102,6 +103,10 @@ if (changed.some(path => path.startsWith('packages/review/') || path.startsWith(
     add(`test:packages/review/test/${test}.test.js`, 'node', [`packages/review/test/${test}.test.js`]);
   add('evidence-cli', 'node', ['tools/test-evidence-cli.mjs']);
 }
+// The composition root: the MCP server and the lab.
+if (changed.some(path => path.startsWith('apps/desktop/')))
+  for (const test of ['apps/desktop/test/cue-helper-mcp.test.mjs', 'apps/desktop/test/lab.test.mjs'])
+    add(`test:${test}`, 'node', [test]);
 if (changed.some(path => path.startsWith('apps/trainer/')))
   add('trainer-build', 'python3', ['tools/build.py']);
 for (const path of changed.filter(p => /^packages\/[^/]+\/test\/.*\.test\.m?js$/.test(p)))

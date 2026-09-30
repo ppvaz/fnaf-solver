@@ -25,11 +25,11 @@ import { REPOSITORY_TARGET, claimEnvelope, refusalEnvelope, unknown } from '@six
 import { CHECKS } from '@sixam/review/refusals';
 import { GAMES, resolveGame } from '@sixam/review/registers';
 import { INSTRUMENTS, QUERIES, SURFACE_DOC, createSolver } from '@sixam/review/solver';
-import { KINDS } from '../chronicle-schema.mjs';
-import { createCueHelperMcp } from '../../apps/device/src/mcp.js';
-import { createLab } from '../../apps/desktop/src/lab.mjs';
+import { KINDS } from '../../../tools/chronicle-schema.mjs';
+import { createCueHelperMcp } from './mcp.js';
+import { createLab } from './lab.mjs';
 
-const ROOT = fileURLToPath(new URL('../../', import.meta.url));
+const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const cue = createCueHelperMcp();
 const solver = createSolver({ root: ROOT });
 const lab = createLab({ root: ROOT, winners: solver.winners });

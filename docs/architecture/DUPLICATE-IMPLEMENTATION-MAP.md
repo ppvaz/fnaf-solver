@@ -322,7 +322,7 @@ Instruments: `grade-night.py` (278), `grade-minus7.py` (159),
 `maskraise-grade.py` (526), `death-cause.py` (224), `death-census.py` (145),
 `sweepcheck.py` (291), `windpct.py` (156), `camtrace.py` (140),
 `screenstate.py` (209), `replay-screen-model.py` (137), plus the `grade`
-verb in `apps/device/src/cli.js:193`.
+verb in `apps/desktop/src/device-cli.js` (was `apps/device/src/cli.js:193`).
 
 **The best existing inventory in the repository is this family's gate.**
 `tools/device/test-grade-run-coverage.mjs` enforces that every script in
@@ -345,7 +345,7 @@ Two caveats, both measured on the clean tree at `a8260aa`:
   `minus3-frame-light.mjs`, `artifact-commands.mjs`, `artifact-runner.mjs`,
   `emit.mjs`, `seed-clock.mjs`, `closed-families.mjs`, the five cue-helper
   entry points, `cue_helper_device_lock.py`, `device-lock-exec.py`,
-  `pan-path-capture.py`/`.sh`, `cue-helper-mcp.mjs`). The other 12 are the gate
+  `pan-path-capture.py`/`.sh`, `cue-helper-mcp.mjs`, now `apps/desktop/src/`). The other 12 are the gate
   reading the wrong registry: it looks for gate registrations in
   `tools/test.mjs` and `.github/workflows/ci.yml`, and 11 of those 12 gates are
   registered in `package.json`'s `test:contracts` /

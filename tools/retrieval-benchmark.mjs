@@ -33,7 +33,7 @@ for (const path of (await walk(ROOT)).sort()) {
 // retrieval catches index drift while remaining independent of a search service.
 const queries = [
   { id: 'semantic-command-boundary', terms: 'canonical mechanics semantic contracts validators', expected: 'packages/core/README.md' },
-  { id: 'safe-device-run', terms: 'device live lease abort qualification', expected: 'apps/device/README.md' },
+  { id: 'safe-device-run', terms: 'device live lease abort qualification', expected: 'apps/desktop/README.md' },
   { id: 'evidence-replay', terms: 'evidence replay result hash manifest', expected: 'docs/evidence/README.md' },
   { id: 'architecture-ownership', terms: 'architecture dependency direction package', expected: 'docs/architecture/DEPENDENCY-GRAPH.md' },
   { id: 'research-operation', terms: 'research experiment candidate evaluator statistics', expected: 'packages/propose/README.md' },

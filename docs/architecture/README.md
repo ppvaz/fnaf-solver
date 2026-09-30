@@ -8,13 +8,15 @@ one charter layer, over a shared kernel:
 |---|---|---|
 | Source | Truth | `@sixam/source` (each game's Rulebook data, Sim and controls; the nights registry, night model, RNG, control vocabulary and the validators generated from the catalogs); `packages/source/decompile`, `tools/recompile` |
 | Propose | Decision | `@sixam/propose` (the policy language, FNaF 2's controllers and cycle machinery, FNaF 1, 3 and 4's policies, the strategies, the experiments and their specs, parked Minus 7; `@sixam/research` is a compatibility shim over it); the winner bindings and plan generators in `tools/device` |
-| Play | Embodiment | `@sixam/play` (the campaign executor, its state machine, runner and ports, the HID schedule and device shell, the night anchor and the coach feed; the phone's transports, clocks, night onset, control anchor and exclusion, the venue parser, and the deprecated FNaF 2 grid/luma rules; `packages/adapters` is a registered link left in its place), `apps/device` (the command line, the one composition root that plays a night, and the device profiles), the Companion (`android/companion`); `@sixam/play` also holds the Sim observer, the player's estimator and the phase clock, and `@sixam/core` only registered shims over the contexts that own its old subpaths |
+| Play | Embodiment | `@sixam/play` (the campaign executor, its state machine, runner and ports, the HID schedule and device shell, the night anchor and the coach feed; the phone's transports, clocks, night onset, control anchor and exclusion, the venue parser, and the deprecated FNaF 2 grid/luma rules; `packages/adapters` is a registered link left in its place), the device profiles (`apps/device/profiles`, kept where stored hashes cite them), the Companion (`android/companion`); `@sixam/play` also holds the Sim observer, the player's estimator and the phase clock, and `@sixam/core` only registered shims over the contexts that own its old subpaths |
 | Review | Proof | `@sixam/review` (run packs, Plan 12 attestation and promotion, cohorts, the pack lift to `GameRun`, and `npm run review` queries); the grade pipeline in `tools/device` |
 | Teach | Understanding | `apps/trainer` |
 
-`apps/desktop`, a plain folder for now, is the final layout's composition root.
-Today it holds the operator verbs (`npm run lab`, [`../operations/LAB.md`](../operations/LAB.md)),
-which join Review's queries with git and this host and belong to no context.
+`apps/desktop` (`@sixam/desktop`) is the one composition root and belongs to no
+context: the device command line (`npm run device:*`, the one path onto a
+phone), the `fnaf-solver` MCP server and the operator verbs (`npm run lab`,
+[`../operations/LAB.md`](../operations/LAB.md)), which join Review's queries
+with git and this host. As an application it may import any package.
 
 `@sixam/kernel` holds the kernel types that have a consumer today --
 `Interval`, `ClaimLevel`, `SourceLabel`, `Outcome`, `GameRun` with custody, and

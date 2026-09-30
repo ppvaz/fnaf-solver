@@ -12,7 +12,7 @@ from history, aliases, and unrelated tools.
 The architecture direction ([ADR 0002](../decisions/0002-kernel-contexts-vocabulary.md)):
 `kernel` holds the shared kernel types and imports nothing, `core` owns the
 Source's model and semantic contracts, `adapters` own physical boundaries,
-`apps/device` owns composition and the campaign's supervision, and `review` reads
+`play` owns the campaign and its supervision, `apps/desktop` is the one composition root, and `review` reads
 the evidence and never imports Play or Propose. (`packages/runtime`, which owned
 a fixture temporal dispatcher and supervisor, was removed on 2026-09-25 with the
 fixture service path; its retained-run validators moved to `core/contracts`.)
@@ -114,9 +114,9 @@ entry point, one owner, and one focused test file.
 ### LEG-005 — Narrow the public API and isolate legacy paths (P1)
 
 **Status:** RESOLVED BY REMOVAL (2026-09-25) -- the device barrel and the extra composition roots
-it exported were deleted; `apps/device/src/cli.js` (`campaign`) is the one path onto a phone, and
+it exported were deleted; `apps/desktop/src/device-cli.js` (`campaign`) is the one path onto a phone, and
 `tools/architecture-test.js` refuses a second `live` command.
-**Owner:** `apps/device`
+**Owner:** `apps/desktop`
 **Evidence:** `index.js` line 1 (removed), [`COMPATIBILITY.md` (line 21)](COMPATIBILITY.md)
 
 The device barrel exposes many composition roots, executors, compatibility

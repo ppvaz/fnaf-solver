@@ -12,39 +12,20 @@
       ]
     },
     {
-      "file": "apps/desktop/src/lab.mjs",
+      "file": "apps/desktop/src/cue-helper-mcp.mjs",
       "imports": [
-        "../../../tools/device/local-profile.mjs",
-        "../../../tools/push-gate.mjs",
+        "../../../tools/chronicle-schema.mjs",
+        "./lab.mjs",
+        "./mcp.js",
         "@sixam/kernel",
-        "@sixam/review/consequence",
-        "@sixam/review/evidence-pack",
-        "@sixam/review/mistakes",
-        "@sixam/review/promotions-query",
+        "@sixam/review/refusals",
         "@sixam/review/registers",
-        "@sixam/review/roadmap",
-        "node:child_process",
-        "node:fs",
-        "node:os",
-        "node:path"
+        "@sixam/review/solver",
+        "node:url"
       ]
     },
     {
-      "file": "apps/desktop/test/lab.test.mjs",
-      "imports": [
-        "../../../tools/push-gate.mjs",
-        "../src/cli.mjs",
-        "../src/lab.mjs",
-        "@sixam/kernel",
-        "node:assert/strict",
-        "node:child_process",
-        "node:fs",
-        "node:os",
-        "node:path"
-      ]
-    },
-    {
-      "file": "apps/device/src/cli.js",
+      "file": "apps/desktop/src/device-cli.js",
       "imports": [
         "@sixam/kernel/contracts",
         "@sixam/play",
@@ -64,7 +45,25 @@
       ]
     },
     {
-      "file": "apps/device/src/mcp.js",
+      "file": "apps/desktop/src/lab.mjs",
+      "imports": [
+        "../../../tools/device/local-profile.mjs",
+        "../../../tools/push-gate.mjs",
+        "@sixam/kernel",
+        "@sixam/review/consequence",
+        "@sixam/review/evidence-pack",
+        "@sixam/review/mistakes",
+        "@sixam/review/promotions-query",
+        "@sixam/review/registers",
+        "@sixam/review/roadmap",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path"
+      ]
+    },
+    {
+      "file": "apps/desktop/src/mcp.js",
       "imports": [
         "node:child_process",
         "node:url",
@@ -72,12 +71,43 @@
       ]
     },
     {
-      "file": "apps/device/test/cli.test.js",
+      "file": "apps/desktop/test/cue-helper-mcp.test.mjs",
+      "imports": [
+        "../../../packages/source/test/fixtures/truth-dump.mjs",
+        "@sixam/kernel",
+        "@sixam/source/truth",
+        "node:assert/strict",
+        "node:child_process",
+        "node:crypto",
+        "node:events",
+        "node:fs",
+        "node:fs/promises",
+        "node:os",
+        "node:path",
+        "node:readline"
+      ]
+    },
+    {
+      "file": "apps/desktop/test/device-cli.test.js",
       "imports": [
         "node:assert/strict",
         "node:child_process",
         "node:path",
         "node:url"
+      ]
+    },
+    {
+      "file": "apps/desktop/test/lab.test.mjs",
+      "imports": [
+        "../../../tools/push-gate.mjs",
+        "../src/cli.mjs",
+        "../src/lab.mjs",
+        "@sixam/kernel",
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path"
       ]
     },
     {
@@ -1948,7 +1978,8 @@
         "@sixam/core/control",
         "@sixam/core/mechanics",
         "@sixam/core/sensing",
-        "@sixam/device",
+        "@sixam/desktop",
+        "@sixam/desktop/package.json",
         "@sixam/kernel",
         "@sixam/kernel/contracts",
         "@sixam/play",
@@ -2158,19 +2189,6 @@
         "./policy-grammar.mjs",
         "@sixam/propose/policy",
         "node:fs"
-      ]
-    },
-    {
-      "file": "tools/device/cue-helper-mcp.mjs",
-      "imports": [
-        "../../apps/desktop/src/lab.mjs",
-        "../../apps/device/src/mcp.js",
-        "../chronicle-schema.mjs",
-        "@sixam/kernel",
-        "@sixam/review/refusals",
-        "@sixam/review/registers",
-        "@sixam/review/solver",
-        "node:url"
       ]
     },
     {
@@ -2759,23 +2777,6 @@
         "node:fs",
         "node:path",
         "node:url"
-      ]
-    },
-    {
-      "file": "tools/device/test-cue-helper-mcp.mjs",
-      "imports": [
-        "../../packages/source/test/fixtures/truth-dump.mjs",
-        "@sixam/kernel",
-        "@sixam/source/truth",
-        "node:assert/strict",
-        "node:child_process",
-        "node:crypto",
-        "node:events",
-        "node:fs",
-        "node:fs/promises",
-        "node:os",
-        "node:path",
-        "node:readline"
       ]
     },
     {

@@ -328,7 +328,7 @@ assert.deepEqual(planted(REVIEW, "export * as phone from '@sixam/play/phone/nigh
 assert.deepEqual(planted(REVIEW, "import * as seeds from '@sixam/research/seeds';\nexport const s = seeds;"), ['review'],
   'the guard must catch a namespace import');
 assert.deepEqual(planted(REVIEW, "import { createRequire } from 'node:module';\nconst load = createRequire(import.meta.url);\n" +
-  "const require = load;\nexport const device = require('@sixam/device/package.json');"), ['review'],
+  "const require = load;\nexport const device = require('@sixam/desktop/package.json');"), ['review'],
 'the guard must catch a require() through createRequire');
 // Text that only looks like an import is not one.
 assert.deepEqual(planted(REVIEW, "// import('../../../apps/device/src/cli.js')\nexport const text = \"from '@sixam/research'\";"), [],
@@ -365,7 +365,7 @@ assert.deepEqual(planted('packages/core/src/planted.js', "import * as C from '@s
   'core may import source');
 // The rules the regex guard held keep holding.
 assert.deepEqual(planted('packages/core/src/planted.js', "import { spawn } from 'node:child_process';"), ['core']);
-assert.deepEqual(planted('packages/core/src/planted.js', "export { cli } from '@sixam/device';"), ['core']);
+assert.deepEqual(planted('packages/core/src/planted.js', "export { cli } from '@sixam/desktop';"), ['core']);
 assert.deepEqual(planted('packages/research/src/planted.js', "import '../../../tools/device/bundle.mjs';"), ['research']);
 // Propose (ADR 0002) imports the kernel, source, play's host-free half in core
 // and review, never the device shell; nothing imports it but the applications
@@ -377,7 +377,9 @@ assert.deepEqual(planted(PROPOSE, "import { Observer } from '@sixam/play/sim';\n
 assert.deepEqual(planted(PROPOSE, "import { Observer } from '@sixam/core/sensing';"), ['propose'],
   'propose must not import core, whose Play subpath is only a shim over play');
 assert.deepEqual(planted(PROPOSE, "import { spawn } from 'node:child_process';"), ['propose'], 'propose must not reach the device shell');
-assert.deepEqual(planted(PROPOSE, "import { cli } from '@sixam/device';"), ['propose'], 'propose must not import the device app');
+assert.deepEqual(planted(PROPOSE, "import { cli } from '@sixam/desktop';"), ['propose'], 'propose must not import the composition root');
+assert.deepEqual(planted('packages/play/src/planted.js', "import { createLab } from '@sixam/desktop/package.json';"), ['play'],
+  'play must not import the composition root');
 assert.deepEqual(planted(PROPOSE, "export const load = () => import('../../../tools/device/bundle.mjs');"), ['propose'],
   'propose must not reach tools/, even by a dynamic import');
 assert.deepEqual(planted(PROPOSE, "import { NightPolicy } from '@sixam/core/control';"), ['propose'],
@@ -546,7 +548,9 @@ for (const path of hostFree) {
   const globals = hostGlobals(await tree(path));
   assert.equal(globals.length, 0, `${path} uses a host/browser global in core, source, the kernel or propose's policy and game modules: ${globals.join(', ')}`);
 }
-const testNamed = path => /(?:^|\/)test[^/]*\.(?:js|mjs|ts)$/.test(path);
+// A test is a test-named file, or a `*.test.*` file in a package's or an
+// application's test folder (apps/desktop/test loads package fixtures).
+const testNamed = path => /(?:^|\/)test[^/]*\.(?:js|mjs|ts)$/.test(path) || /\/test\/[^/]+\.test\.m?js$/.test(path);
 const reportNamed = path => /(?:^|\/)report[^/]*\.(?:js|mjs|ts)$/.test(path);
 const operational = [
   ...production,
@@ -579,7 +583,7 @@ for (const path of [...await files(join(ROOT, 'apps')), ...await files(join(ROOT
   if (!physicalActuatorOwners.has(path) && identifiers(await tree(path), node => node.text === 'HidWireTransport').length)
     assert.fail(`${path} reaches the HID transport outside the device runners`);
 }
-const cli = await readFile(join(ROOT, 'apps/device/src/cli.js'), 'utf8');
+const cli = await readFile(join(ROOT, 'apps/desktop/src/device-cli.js'), 'utf8');
 // The campaign is the only command that touches a phone; its live branch must
 // keep refusing without the explicit confirmation.
 assert.match(cli, /if \(!options\.confirmLive\) throw new Error\('live campaign requires --confirm-live'\);/,

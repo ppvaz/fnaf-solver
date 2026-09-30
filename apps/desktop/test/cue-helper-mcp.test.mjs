@@ -21,16 +21,16 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { isUnknown, validateClaimEnvelope } from '@sixam/kernel';
 import { CACHE_ENV, NO_LOCAL_DUMP, VAULT_ENV } from '@sixam/source/truth';
-import { syntheticDump } from '../../packages/source/test/fixtures/truth-dump.mjs';
+import { syntheticDump } from '../../../packages/source/test/fixtures/truth-dump.mjs';
 
-const root = resolve(import.meta.dirname, '../..');
+const root = resolve(import.meta.dirname, '../../..');
 const temp = await mkdtemp(join(tmpdir(), 'fnaf-solver-mcp-'));
 // truth reads a local dump named by the local vault: here a synthetic FNaF 2 one, and none for any other game.
 writeFileSync(join(temp, 'events.txt'), syntheticDump());
 writeFileSync(join(temp, 'vault.json'), JSON.stringify({ schema: 'truth-local-vault-v1',
   games: { 'com.scottgames.fnaf2': { dump: join(temp, 'events.txt') } } }));
 const { CTFAK_SRC, DOTNET, DOTNET_ROOT, ...inherited } = process.env;
-const child = spawn(process.execPath, [join(root, 'tools/device/cue-helper-mcp.mjs')], {
+const child = spawn(process.execPath, [join(root, 'apps/desktop/src/cue-helper-mcp.mjs')], {
   cwd: root,
   env: { ...inherited, CUE_HELPER_QUEUE_FILE: join(temp, 'jobs.json'), ANDROID_SERIAL: 'missing-device',
     [VAULT_ENV]: join(temp, 'vault.json'), [CACHE_ENV]: join(temp, 'cache'), PATH: process.env.PATH },

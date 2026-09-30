@@ -138,13 +138,13 @@ try {
   verdict = dry('Retain a record\n');
   assert.deepEqual([verdict.hook.verdict, verdict.consequence.consequence], ['ACCEPT', 'consequential']);
   git(root, 'reset', '-q');
-  write(root, 'apps/device/src/y.js', 'export const y = 1;\n');
-  git(root, 'add', 'apps/device/src/y.js');
+  write(root, 'packages/play/src/y.js', 'export const y = 1;\n');
+  git(root, 'add', 'packages/play/src/y.js');
   verdict = dry('Change the controller\n');
   assert.equal(verdict.hook.verdict, 'ACCEPT');
   assert.ok(isUnknown(verdict.consequence.consequence), 'controller code with no gate: UNKNOWN');
   git(root, 'reset', '-q');
-  rmSync(join(root, 'apps'), { recursive: true, force: true });
+  rmSync(join(root, 'packages/play'), { recursive: true, force: true });
   rmSync(join(root, 'docs/notes'), { recursive: true, force: true });
   rmSync(join(root, 'docs/evidence/new-record-20260930.json'));
   verdict = dry();

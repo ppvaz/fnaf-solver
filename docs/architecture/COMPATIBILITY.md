@@ -29,7 +29,7 @@ Lifecycle meanings:
 
 The historical shell runner, its launcher facade, the artifact runner and the
 fixture service path were archived on 2026-09-25
-([`../ARCHIVED-ROUTES.md`](../ARCHIVED-ROUTES.md)); `apps/device/src/cli.js`
+([`../ARCHIVED-ROUTES.md`](../ARCHIVED-ROUTES.md)); `apps/desktop/src/device-cli.js`
 `campaign` is the one path onto a phone.
 
 **Deprecated 2026-09-02.** `legacy-trial.sh` is reference and characterization
@@ -92,6 +92,7 @@ their removal gates held once their importers were repointed.
 | `@sixam/research/seeds` (`packages/research/seeds.js`) | compatibility | `@sixam/propose/seeds` | `tools/device/minus-toys-plan.mjs` and `minus-3-plan.mjs`, whose bytes every Minus Toys and Minus 3 bundle hashes, are repointed in a commit that re-derives every bundle |
 | `@sixam/research/strategies/minus-3` (`packages/research/strategies/minus-3.js`) | compatibility | `@sixam/propose/strategies/minus-3` | `tools/device/minus-3-plan.mjs` is repointed in a commit that re-derives every bundle |
 | `@sixam/core/sensing` (`packages/core/src/sensing/index.js`) | compatibility | `@sixam/play/sim` (the same export set) | `tools/device/minus-toys-plan.mjs`, whose bytes every Minus Toys bundle hashes, is repointed in a commit that re-derives every bundle |
+| `apps/device/profiles/*.json` (the three device profiles, unmoved) | compatibility | `packages/play/profiles/fnaf2/moto-g56/`, the layout's home, once the path is free | every stored citation of the path (55 recompile results with `profileSha256`, two hash-bound recompile configs, `schedule-to-input.mjs`'s default, `graph.json`) is read through its history; the device CLI and `bundle.mjs` then resolve profiles from the new home |
 | `packages/adapters/src/button-strokes.js` (symbolic link) | compatibility | `packages/play/src/sensors/fnaf2/button-strokes.js` (the same bytes) | `tools/recompile/phone-encounter-replay.mjs` names the rule source through play, and the retained full06-responses result is checked through the path's history |
 
 ## Already removed

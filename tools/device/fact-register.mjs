@@ -497,7 +497,7 @@ export function anchorAimFor(winnerHash) {
     migratedFrom: migration ? { hash: asked, winner: migration.file } : null };
 }
 
-const SEARCH_DIRS = ['tools/device', 'apps/device/src', 'packages/play/src'];
+const SEARCH_DIRS = ['tools/device', 'apps/desktop/src', 'packages/play/src'];
 const SKIP = /^(test-|_)|\.test\.js$|fact-register/;
 
 function sources() {

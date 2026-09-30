@@ -27,6 +27,39 @@ host-global rule (no DOM, process or wall clock); `tools/belieftest.mjs`,
 for `tools/device/minus-toys-plan.mjs`, whose bytes every Minus Toys bundle
 hashes (`core.sensing-shim`).
 
+**The campaign.** `CampaignStateMachine` (`src/campaign/campaign.js`) is the
+lifecycle seam above the executor. It requires positive menu and intro
+identity, records bounded attempts, treats unknown observations as `HOLD`,
+advances story Nights 1 through 5 through their night-specific save/roll-through
+proof, advances Night 6 after a verified save cursor or newly visible Custom
+Night item, and advances Night 7 after all ten 20 dials plus Puppet 15 are read
+back and the return to the menu is observed. `AdbDeviceBridge` supplies the
+read-only discovery/preflight port; it exposes no arbitrary shell or game-input
+method. `DeviceLocalArtifactExecutor` is the deterministic test/local executor;
+`AdbDeviceLocalArtifactExecutor` is the physical one: it expands the declared
+opening and repeat-cycle blocks, encodes them through the HID transport, and
+transfers one fixed script whose delays execute on the phone. Plans are
+compiled into bounded state-conditioned blocks: monitor operations name an
+UP/DOWN target, camera coordinates require two agreeing UP observations, and
+office controls require DOWN; UNKNOWN or a failed bounded retry aborts and
+releases all contacts instead of continuing by toggle parity. Neither executor
+promotes a claim; `composeCampaignPorts` binds the selected executor to a
+validated campaign bundle, and `modern-campaign-ports.js` is the default ports
+module the device command line loads (`apps/desktop/src/device-cli.js`). The
+result contract records every attempt, death retry, positive terminal proof,
+Custom Night readback, and save/menu proof.
+
+Monitor state comes from a calibrated `monitor-rule-v1` artifact
+(`src/sensors/fnaf2/monitor-rule.js`), fitted offline by
+`tools/device/monitor-calibrate.py` and read through the helper's `GRID` verb;
+`cameraSelected` from `camera-rule-v1` (`src/sensors/fnaf2/camera-rule.js`,
+`tools/device/camera-calibrate.py`). Without a fitted rule, or on a stale,
+off-identity, blackout-dark or mid-animation frame, the detector returns
+`UNKNOWN` with the reason and the executor refuses to act on it. The profiles
+(`apps/device/profiles/`) bind each rule's digest; the Moto g56 100 ms and 17 ms
+profiles are separate qualification candidates, and a 100 ms result never
+promotes the 17 ms one.
+
 **Deprecated sensors.** CLAUDE.md discontinued the 20x9 point-sampled grid,
 grid-fitted rules and luma reducers on 2026-09-24/25. The four modules in
 `src/sensors/fnaf2/` are exactly those readers, moved unchanged: they are to be

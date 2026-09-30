@@ -1059,7 +1059,7 @@
       "runtimeValidation": "packages/kernel/src/claim-envelope.js validateClaimEnvelope",
       "conformanceFixtures": [
         "packages/kernel/test/claim-envelope.test.js",
-        "tools/device/test-cue-helper-mcp.mjs"
+        "apps/desktop/test/cue-helper-mcp.test.mjs"
       ]
     }
   ]

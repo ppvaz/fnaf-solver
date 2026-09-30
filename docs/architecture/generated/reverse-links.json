@@ -9,7 +9,7 @@
       "id": "claim.android.g779.empty-hall",
       "kind": "CLAIM",
       "path": "plans/22-architecture-and-developer-experience-refactor.md",
-      "line": 1147,
+      "line": 1158,
       "relation": "REFERENCES"
     },
     {
@@ -110,6 +110,12 @@
     {
       "id": "contract.claim-envelope-v1",
       "kind": "CONTRACT",
+      "path": "apps/desktop/test/cue-helper-mcp.test.mjs",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.claim-envelope-v1",
+      "kind": "CONTRACT",
       "path": "packages/kernel/src/claim-envelope.js",
       "line": 20,
       "relation": "REFERENCES"
@@ -126,12 +132,6 @@
       "path": "packages/kernel/test/claim-envelope.test.js",
       "line": 4,
       "relation": "REFERENCES"
-    },
-    {
-      "id": "contract.claim-envelope-v1",
-      "kind": "CONTRACT",
-      "path": "tools/device/test-cue-helper-mcp.mjs",
-      "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.claim-evidence-v1",
@@ -572,7 +572,7 @@
       "id": "contract.hid-executor-v1",
       "kind": "CONTRACT",
       "path": "plans/22-architecture-and-developer-experience-refactor.md",
-      "line": 1146,
+      "line": 1157,
       "relation": "REFERENCES"
     },
     {
@@ -931,7 +931,7 @@
       "id": "evidence.runtime-gh",
       "kind": "EVIDENCE",
       "path": "plans/22-architecture-and-developer-experience-refactor.md",
-      "line": 1147,
+      "line": 1158,
       "relation": "REFERENCES"
     }
   ]

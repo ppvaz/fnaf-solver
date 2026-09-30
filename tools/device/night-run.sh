@@ -145,7 +145,7 @@ TRACE_TOOL="tools/device/atrace-input.sh"
 for path in "$BUNDLE/manifest.json" "$QUALIFICATION" "$TITLE_MODEL_PATH" \
             tools/device/phase-reconstruct.mjs tools/device/run-timeline.py \
             tools/device/title-observe.py tools/device/inputtrace.py \
-            "$TRACE_TOOL" apps/device/src/cli.js tools/evidence.js; do
+            "$TRACE_TOOL" apps/desktop/src/device-cli.js tools/evidence.js; do
   [ -e "$path" ] || die "missing required input: $path"
 done
 # A dry run stops short of the phone: it asks adb nothing, not even get-state.
@@ -596,7 +596,7 @@ if [ "$NIGHT" = 7 ] && [ -z "$CALIBRATION" ]; then
   CALIBRATION="tools/device/models/custom-night-calibration-v1.json"
 fi
 [ -z "$CALIBRATION" ] || [ -f "$CALIBRATION" ] || die "calibration file not found: $CALIBRATION"
-CAMPAIGN=(node apps/device/src/cli.js campaign
+CAMPAIGN=(node apps/desktop/src/device-cli.js campaign
   --profile "$PROFILE" --serial "${SERIAL:-UNKNOWN}" --nights "$NIGHT" --max-attempts 1
   --bundle "$BUNDLE" --qualification "$QUALIFICATION" --json)
 # The save cursor is a STORY observation (campaign.js: storySaveCursor must

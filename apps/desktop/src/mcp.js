@@ -1,5 +1,5 @@
 /**
- * The Cue Helper's MCP surface (tools/device/cue-helper-mcp.mjs): setup and
+ * The Cue Helper's MCP surface (./cue-helper-mcp.mjs): setup and
  * the device-work queue, as a closed vocabulary. Raw coordinates, HID input
  * and arbitrary shell are absent. It queues bounded jobs and never runs a
  * control loop; the campaign executor is the one path onto a phone.

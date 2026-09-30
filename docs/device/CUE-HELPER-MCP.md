@@ -1,7 +1,8 @@
 # Cue Helper MCP
 
 The repository includes a project-local stdio MCP server, `fnaf-solver`, at
-`tools/device/cue-helper-mcp.mjs`. It carries two surfaces: the safe Cue Helper
+`apps/desktop/src/cue-helper-mcp.mjs` (it was `tools/device/cue-helper-mcp.mjs`
+until ADR 0002's Play move made `apps/desktop` the composition root). It carries two surfaces: the safe Cue Helper
 operations, and steps 1-5 of the solver interface of
 [Plan 28](../../plans/28-solver-interface.md), with the operator's read-only
 `lab.*` verbs beside them: fourteen tools in all. Neither exposes a tap, a
@@ -138,7 +139,7 @@ Register this project once from the repository root; after that the server is
 available to Codex sessions:
 
 ```sh
-codex mcp add fnaf-solver -- node "$PWD/tools/device/cue-helper-mcp.mjs"
+codex mcp add fnaf-solver -- node "$PWD/apps/desktop/src/cue-helper-mcp.mjs"
 ```
 
 The registration stores the absolute path, so repeat it after moving or

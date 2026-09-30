@@ -26,7 +26,8 @@ and a vocabulary, and settled this plan's principles. What changes here:
   played a night and was removed on 2026-09-25 (`6d78c7e`), and the adapter
   capability registry, the actuator/sensor/detector ports and `packages/screencheck`
   that only it used went the same day (`903ffab`). The campaign executor
-  (`apps/device/src/cli.js campaign`) is the one path onto a phone.
+  (`apps/desktop/src/device-cli.js campaign`, `apps/device/src/cli.js` until ADR
+  0002's Play move) is the one path onto a phone.
   `docs/ARCHIVED-ROUTES.md` says how to restore any of it.
 - **The package layout gains `kernel` and `review`, and a future `source`.**
   `@sixam/kernel` holds the ADR 0002 kernel types that have a consumer
@@ -234,19 +235,24 @@ fnaf2-1020/                     (amended 2026-09-29: ADR 0002 contexts in bracke
       test/                    the sourced draw-order and Sim contract tests
                                 (later: acquire, derive, recompile; the identity chain, M6)
 
-    core/                       @sixam/core      what is left: moving to play, review, teach
+    core/                       @sixam/core      registered compatibility shims only
       src/
         control/               shim over source's vocabulary and propose's policy language
-        sensing/               measurement and observation semantics
-        estimation/            belief and state estimation
-        timing/                the phase clock (+ shim over the kernel's clock port)
-        telemetry/             the bench transport trace (+ shim over the kernel's Time)
-        training/              the trainer's exercise contracts
+        sensing/               shim over @sixam/play/sim
         mechanics/, contracts/ compatibility shims over source and the kernel
 
-    adapters/                   @sixam/adapters  [play]
-      src/                      HID and Cue Helper transports, clocks, night onset,
-                                the fitted detection rules the campaign reads
+    play/                       @sixam/play      [play] since 2026-09-30 (the Play move)
+      src/campaign/            the executor, campaign state machine, runner, ports,
+                                HID schedule, device shell, night anchor
+      src/coach/               the teach feed
+      src/venues/phone/        HID, Cue Helper and Companion-status transports
+      src/venues/sim/          the Sim observer
+      src/phone/               clocks, night onset, control anchor and exclusion, venue parser
+      src/sensors/fnaf2/       DEPRECATED grid/luma rules, to be converted
+      src/player/, src/clocks/ the estimator; the phase clock
+      test/                    the transport, rule and campaign tests
+
+    adapters/                   (moved into play) one registered link, button-strokes.js
 
     propose/                    @sixam/propose   [propose] since 2026-09-30 (migration M8)
       src/policy/              the policy IR, observation language and ports
@@ -263,14 +269,18 @@ fnaf2-1020/                     (amended 2026-09-29: ADR 0002 contexts in bracke
     review/                     @sixam/review    [review]
       src/                      run packs, Plan 12 attestation and promotion, cohorts,
                                 the pack lift to GameRun, and queries (npm run review)
+      src/measure/             the bench transport trace
 
   apps/
     trainer/                    @sixam/trainer   [teach]
       src/                      UI, audio, input, lane, curriculum
+      src/training/            the exercise and activity-gate records
 
-    device/                     @sixam/device    [play]
-      src/                      the campaign: the one composition root that plays a night
-      profiles/                 versioned device/run profiles
+    desktop/                    @sixam/desktop   the one composition root
+      src/                      device-cli.js (npm run device:*), the fnaf-solver MCP
+                                server, the lab verbs (npm run lab)
+
+    device/                     (moved) profiles/ only: stored hashes cite the path
 
   docs/
     architecture/
@@ -301,29 +311,30 @@ kernel <- source <- play <- propose -> review -> source
 
   kernel   @sixam/kernel     imports nothing; every package may import it
   source   @sixam/source     imports only itself and the kernel
-  play     packages/adapters, apps/device, and core's sensing, estimation and phase clock
+  play     packages/play          imports only the kernel and source
   propose  packages/propose, packages/research   imported by nothing but the applications
   review   packages/review        never imports play or propose
-  teach    apps/trainer           core only
+  teach    apps/trainer           source and the kernel
+  apps     apps/desktop, apps/trainer   composition roots: may import any package
 ```
 
 - `kernel` has no dependency and imports nothing in the repository: no
   workspace, no relative path out of itself, no Node built-in.
-- `core` imports only itself, source and the kernel: no application, adapter,
-  propose, research, review, tools module, host API or dependency. Its
-  `/control` subpath is a registered shim that may re-export propose.
-- `adapters` depend on core. `apps/device` is the one composition root that
-  plays a night; it composes the adapters and a resolved profile.
-- `propose` imports the kernel, source, core's Play modules and review, and
-  explicit simulation and error models, but never `apps/device`,
-  `packages/adapters`, `tools/` or a live shell (`child_process`, `net`,
-  `dgram`). `research` is its compatibility shim: its registered modules only
+- `core` holds only registered shims and imports only itself, source and the
+  kernel; its `/control` shim may re-export propose and its `/sensing` shim
+  play.
+- `play` imports only itself, the kernel, source and Node built-ins; nothing in
+  a package imports it but propose. `apps/desktop` is the one composition root
+  that plays a night; it composes play and a resolved profile.
+- `propose` imports the kernel, source, play and review, and explicit
+  simulation and error models, but never core, an application, `tools/` or a
+  live shell (`child_process`, `net`, `dgram`). `research` is its compatibility shim: its registered modules only
   re-export propose.
-- `review` imports core and the kernel and never `apps/device`,
-  `packages/adapters`, `packages/propose` or `packages/research`. It still reaches
+- `review` imports core and the kernel and never `packages/play`, an
+  application, `packages/adapters`, `packages/propose` or `packages/research`. It still reaches
   `tools/device/bundle.mjs` to compile a committed winner to its bundle hash;
   that edge closes when `tools/device` is sorted by context (migration M9).
-- `trainer` depends on core and browser-local presentation only.
+- `trainer` depends on source, the kernel and browser-local presentation only.
 
 `tools/architecture-test.js` enforces the rule over each module's syntax tree
 (the pinned `typescript` parser): static imports, re-exports, dynamic
@@ -793,7 +804,7 @@ physical denominator.
 *Retired 2026-09-25 (`6d78c7e`).* The service below was built as a fixture
 path, never played a night, and was removed with `packages/runtime`; the
 campaign executor is the one path onto a phone, and the Cue Helper MCP
-(`tools/device/cue-helper-mcp.mjs`) is the agent surface that stays. The
+(`apps/desktop/src/cue-helper-mcp.mjs`) is the agent surface that stays. The
 section is kept as the design that was tried.
 
 Introduce one local `DeviceControlService` over the actuator, sensor,

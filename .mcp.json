@@ -2,7 +2,7 @@
   "mcpServers": {
     "fnaf-solver": {
       "command": "node",
-      "args": ["${CLAUDE_PROJECT_DIR:-.}/tools/device/cue-helper-mcp.mjs"]
+      "args": ["${CLAUDE_PROJECT_DIR:-.}/apps/desktop/src/cue-helper-mcp.mjs"]
     }
   }
 }

@@ -103,7 +103,7 @@ on Node 22. No phone is involved.
 | Find or tune a strategy | a checkout, Node 20+ | [Strategies, policies and experiments](packages/propose/README.md) |
 | Ask it from my AI agent | a checkout, an MCP client | not built yet: [Plan 28](plans/28-solver-interface.md) |
 | Understand how the rebuild works | nothing to read; your own APK and Docker to run it | [Recompile toolchain](tools/recompile/README.md) |
-| Run the bot on my own phone | research only: a Moto g56 and the game | [Device safety](docs/operations/DEVICE-SAFETY.md), then the [device app](apps/device/README.md) |
+| Run the bot on my own phone | research only: a Moto g56 and the game | [Device safety](docs/operations/DEVICE-SAFETY.md), then the [device command line](apps/desktop/README.md) |
 | Give a fix back upstream | nothing | [Upstream ledger](UPSTREAM-LEDGER.md) |
 | Work on this repository | a checkout | [Contributing](CONTRIBUTING.md), then [CLAUDE.md](CLAUDE.md); `npm run lab -- status` ([lab](docs/operations/LAB.md)) |
 

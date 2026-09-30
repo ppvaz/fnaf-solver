@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../..');
-const CLI = join(ROOT, 'apps/device/src/cli.js');
+const CLI = join(ROOT, 'apps/desktop/src/device-cli.js');
 const run = args => spawnSync(process.execPath, [CLI, ...args], {
   cwd: ROOT, encoding: 'utf8', env: { ...process.env, NODE_NO_WARNINGS: '1' },
 });

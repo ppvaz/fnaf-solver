@@ -136,7 +136,6 @@ const EXCLUDED = new Map([
   ['device-lock-exec.py', 'holds the lease around one bounded command, gated by test-cue-helper-device-lock.py'],
   ['cue-helper-setup.sh', 'thin one-serial wrapper; all UI work and every gate belong to cue-helper-setup.py'],
   ['cue-helper-queue.sh', 'thin wrapper that deliberately does NOT select a device, so enqueue/list work while the phone is absent; the queue gate is test-cue-helper-queue.py'],
-  ['cue-helper-mcp.mjs', 'bounded MCP entry point over the queue, gated by test-cue-helper-mcp.mjs'],
   ['night-job.py', 'runs one queued night of a committed winner through its registered runner (night-run.sh, fnaf1-winner.mjs, fnaf4-run.sh) and observes the title before and after it; night-run.sh then grades, and the window packs. test-night-job.py gates it'],
   ['night_jobs.py', 'night-job vocabulary module (winner custody, binding hash, budget, title expectation, runner argv) for the queue and night-job.py, gated by test-night-job.py'],
   ['overnight-window.py','the scheduled window that RUNS the queue on the owner\'s phone and restores its settings; it grades no run (a job\'s own runner does), and test-overnight-window.py gates its restore, refusal, deadline and lease contract'],

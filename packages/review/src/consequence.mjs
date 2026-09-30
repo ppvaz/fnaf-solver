@@ -69,10 +69,10 @@ const BOOKKEEPING = [
 /** The four areas whose code counts when a gate exercises it. The first that matches names it. */
 export const CODE_AREAS = Object.freeze([
   { area: 'solver-interface', test: path => /^packages\/(?:review|kernel)\/src\//.test(path) || path.startsWith('apps/desktop/src/')
-    || path === 'tools/device/cue-helper-mcp.mjs' || path === 'tools/evidence.js' },
+    || path === 'tools/evidence.js' },
   { area: 'companion', test: path => path.startsWith('android/companion/') },
   { area: 'trainer', test: path => path.startsWith('apps/trainer/') },
-  { area: 'controller', test: path => path.startsWith('packages/play/src/') || path.startsWith('apps/device/src/')
+  { area: 'controller', test: path => path.startsWith('packages/play/src/')
     || path.startsWith('tools/device/') },
 ].map(rule => Object.freeze(rule)));
 
