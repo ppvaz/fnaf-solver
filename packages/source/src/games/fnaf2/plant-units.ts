@@ -176,7 +176,7 @@ export function rollAllFiveSecond(this: Sim) {
     if (step === 'discard' || step === 'returned') { u.promoted = false; return; }
     if (this.opts.sourcedViewDraws && !this.opts.sourcedPromotedViewDraws) this.fadeUntil[u.id] = this.frame + 8;
     if (this.cam8CancelAt[id] === this.frame) return;                        // g380/g385 zeroed value 0 (sourcedCam8Cancel)
-    if (step !== 'hold' && this.canAdvance(u, this.frame)) this.advance(u);
+    if (step !== 'hold' && this.canAdvance(u, this.frame)) this.advanceUnit(u);
     else u.pending = true;
   };
   rollUnit('withfreddy'); rollUnit('withbonnie'); rollUnit('withchica');
@@ -265,7 +265,7 @@ export function routePass(this: Sim, f: number) {
     if (!u || !waiting(u)) continue;
     const step = this.sourcedRouteStep(u, f, 'move');
     if (step === 'returned') { u.pending = false; u.promoted = false; }
-    else if (step !== 'hold' && this.canAdvance(u, f)) { u.pending = false; this.advance(u); }
+    else if (step !== 'hold' && this.canAdvance(u, f)) { u.pending = false; this.advanceUnit(u); }
   }
 }
 
@@ -423,7 +423,7 @@ export function tickUnits(this: Sim, f) {
       this.footstepPromote(u, false);                                        // a held roll promoted late
       const step = this.sourcedRouteStep(u, f);
       if (step === 'discard' || step === 'returned') { u.pending = false; u.promoted = false; }
-      else if (step !== 'hold' && this.canAdvance(u, f)) { u.pending = false; this.advance(u); }
+      else if (step !== 'hold' && this.canAdvance(u, f)) { u.pending = false; this.advanceUnit(u); }
     }
     // The three Withereds and Toy Freddy -- the four `streak` openers --
     // start the shared office sequence as soon as marker 122 is evaluated
@@ -582,7 +582,7 @@ export function onFiveSecond(this: Sim) {
         else {
           if (this.opts.sourcedViewDraws && !this.opts.sourcedPromotedViewDraws)
             this.fadeUntil[u.id] = this.frame + 8;                               // g344-g358: A = 2, C = 10
-          if (step !== 'hold' && this.canAdvance(u, this.frame)) this.advance(u);
+          if (step !== 'hold' && this.canAdvance(u, this.frame)) this.advanceUnit(u);
           else u.pending = true;
         }
       }

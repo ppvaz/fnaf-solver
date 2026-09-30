@@ -4314,6 +4314,14 @@
       ]
     },
     {
+      "file": "packages/source/test/plant-facade.test.js",
+      "imports": [
+        "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant.ts",
+        "node:assert/strict"
+      ]
+    },
+    {
       "file": "packages/source/test/promoted-moves.test.js",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",

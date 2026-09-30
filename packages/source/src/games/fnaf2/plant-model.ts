@@ -750,7 +750,10 @@ export class Sim {
                  (this.bb.inOpening ? 8 : 0) | (this.gf.present ? 16 : 0) | (this.gf.inHall ? 32 : 0);
   }
 
-  // PlantModel (plant.js) overrides advance, and a subclass can override only a member the class declares.
+  // A unit's move. It was named `advance`, which PlantModel's port clock (plant.js) shadowed, so every
+  // PlantModel night threw at its first move (packages/source/test/plant-facade.test.js).
+  advanceUnit(u) { return units.advance.call(this, u); }
+  // The old name, for callers outside the Sim (simtest.mjs moves a unit by hand); a PlantModel shadows it.
   advance(u) { return units.advance.call(this, u); }
 }
 
