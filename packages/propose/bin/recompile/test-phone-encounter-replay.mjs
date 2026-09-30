@@ -4,13 +4,15 @@
 // or any private input. In `npm run test:unit`.
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { readFileSync, readdirSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   FRAME_MS, OFFICE_FRAME, check, compareOutcome, compareSides, cumTick, cumulative, derive, landingLatency, maskPresses,
   officeClock, overlapSeries, rebuiltOccupant, scoreWindows, traceTick, verdictOf, windowCodes, checkPressFile, phoneSchedule,
   nativeResponses, responseCoverage, mapResponses, mapSchedule,
-  responseEvidence, deriveResponseExperiment,
+  responseEvidence, deriveResponseExperiment, loadConfig, prepare,
 } from './phone-encounter-replay.mjs';
 import { drawTrace, measuredClock } from '../../../source/recompile/model-draw-trace.mjs';
 import { committedVersion } from './phone-input-bracket-sweep.mjs';
@@ -313,3 +315,24 @@ assert.throws(() => check(badCoverage), /coverage differs/);
 assert.deepEqual(JSON.parse(read('docs/evidence/full06-per-contact-responses-20260928.json')),
   responseEvidence(responseResult, responsePath, responseBytes));
 console.log(`${responseResult.evidenceId}: control reproduced; native response coverage and window-6 disagreement re-derived (MODEL_ONLY)`);
+
+// --- the two configs are hash-bound, so they keep the repository paths they were written with; every
+// file they name must still be found through its moves, and prepare() must follow the moves. With no
+// private inputs it reads the winner, then stops at the press file, which lives outside the repository.
+{
+  for (const config of ['packages/propose/bin/recompile/phone-encounter-nights.json',
+    'packages/propose/bin/recompile/full06-response-experiment.json']) {
+    const cfg = loadConfig(join(ROOT, config));
+    const named = [cfg.profile, cfg.modelOptions,
+      ...cfg.nights.flatMap((n) => [n.winner, n.navigation, n.save, n.customNight])].filter(Boolean);
+    for (const path of named) assert.ok(currentPath(ROOT, path), `${config} names ${path}, which no move leads to`);
+    const empty = mkdtempSync(join(tmpdir(), 'encounter-inputs-'));
+    try {
+      const night = cfg.nights[0];
+      assert.throws(() => prepare(cfg, night, night.variants[0], empty),
+        (error) => error.code === 'ENOENT' && error.path === join(empty, night.presses.path),
+        `${config}: prepare() must reach ${night.name}'s private press file`);
+    } finally { rmSync(empty, { recursive: true, force: true }); }
+  }
+  console.log('encounter configs: every repository path they name is followed through its moves');
+}

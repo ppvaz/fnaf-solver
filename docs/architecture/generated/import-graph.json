@@ -2215,6 +2215,7 @@
         "../plans/minus-toys-plan.mjs",
         "./compare-schedule-replay.mjs",
         "./schedule-to-input.mjs",
+        "@sixam/review/renamed-path",
         "@sixam/source",
         "node:crypto",
         "node:fs",
@@ -2383,6 +2384,8 @@
         "node:assert/strict",
         "node:crypto",
         "node:fs",
+        "node:os",
+        "node:path",
         "node:url"
       ]
     },

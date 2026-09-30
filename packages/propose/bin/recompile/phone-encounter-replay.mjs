@@ -58,8 +58,12 @@ import { KNOBS0, build } from '../plans/minus-toys-plan.mjs';
 import { windowCode } from '../../../review/venue-grid/encounter-replay.mjs';
 import { MODEL_CONTEXT_LIGHT } from '@sixam/source';
 import { buttonStrokeState, BUTTON_STROKE_THRESHOLDS } from '../../../play/src/sensors/fnaf2/button-strokes.js';
+import { currentPath } from '@sixam/review/renamed-path';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
+// A repository path a config names, where it lives now: the configs are hash-bound and keep the paths
+// they were written with (ADR 0002 principle 9), and the files they name have moved since.
+const current = (path) => currentPath(ROOT, path) ?? path;
 const sha256 = (value) => createHash('sha256').update(value).digest('hex');
 export const FRAME_MS = 1000 / 60;
 export const OFFICE_FRAME = 3;
@@ -487,7 +491,7 @@ function privateFile(inputsRoot, ref) {
 
 /** Everything one (night, variant) replay needs, derived only from the config and its hashed inputs. */
 export function prepare(cfg, nightCfg, variant, inputsRoot) {
-  const winnerPath = resolve(ROOT, nightCfg.winner);
+  const winnerPath = resolve(ROOT, current(nightCfg.winner));
   const winner = JSON.parse(readFileSync(winnerPath, 'utf8'));
   const sched = phoneSchedule(winner, nightCfg.night, nightCfg.originMs);
   const pressCount = checkPressFile(sched.queueMs, JSON.parse(privateFile(inputsRoot, nightCfg.presses)));
@@ -525,9 +529,9 @@ export function prepare(cfg, nightCfg, variant, inputsRoot) {
       coverage: responseCoverage(rows), rows,
       interpretation: 'Visible response proxies, not dispatch or measured release acceptance; UNKNOWN contacts retain the nightly median. The model tap queue still omits tap releases.' };
   }
-  const profile = JSON.parse(readFileSync(resolve(ROOT, cfg.profile), 'utf8'));
+  const profile = JSON.parse(readFileSync(resolve(ROOT, current(cfg.profile)), 'utf8'));
   const office = harnessRows(mapped.contacts, controlPoints(profile), { frame: OFFICE_FRAME });
-  const navigation = readFileSync(resolve(ROOT, nightCfg.navigation), 'utf8');
+  const navigation = readFileSync(resolve(ROOT, current(nightCfg.navigation)), 'utf8');
   const body = formatRows(office);
   const header = [`# phone-encounter-replay ${nightCfg.name} ${variant}: ${nightCfg.winner} night ${nightCfg.night} at ${nightCfg.originMs} ms after the seed`,
     `# clock ${spec.clock}, presses ${spec.presses}; ${mapped.stretched} contacts stretched to one update`];
@@ -540,7 +544,7 @@ function emit(cfg, nightCfg, variant, outDir, inputsRoot) {
   const p = prepare(cfg, nightCfg, variant, inputsRoot);
   mkdirSync(outDir, { recursive: true });
   writeFileSync(join(outDir, 'run.input'), p.inputText);
-  copyFileSync(resolve(ROOT, nightCfg.save), join(outDir, 'save-before.ini'));
+  copyFileSync(resolve(ROOT, current(nightCfg.save)), join(outDir, 'save-before.ini'));
   const env = [`CHOWDREN_SEED=${nightCfg.seed}`, 'CHOWDREN_STOP_FRAME=5', 'CHOWDREN_MAX_TICKS=30', 'CHOWDREN_MAX_TOTAL_TICKS=40000', ...watchEnv()];
   if (p.frameTimesText) {
     writeFileSync(join(outDir, 'frametimes.txt'), p.frameTimesText);
@@ -562,7 +566,7 @@ export function compareOne(cfg, nightCfg, variant, runDir, inputsRoot, modelOpti
   const text = readFileSync(join(runDir, 'trace'), 'utf8');
   if (p.frameTimesText && !text.includes(`# frametimes ${p.deltas.length} updates of frame ${OFFICE_FRAME}\n`))
     throw new Error(`${runDir}/trace was not run on the measured clock (no # frametimes line)`);
-  const customNight = nightCfg.customNight ? JSON.parse(readFileSync(resolve(ROOT, nightCfg.customNight), 'utf8')) : null;
+  const customNight = nightCfg.customNight ? JSON.parse(readFileSync(resolve(ROOT, current(nightCfg.customNight)), 'utf8')) : null;
   const observe = (sim) => ({ mask: LEDGERS.mask.model(sim), unit: sim.blackout.active ? sim.blackout.unitId : null });
   const result = compareTrace(text, { night: nightCfg.night, seed: nightCfg.seed, frame: OFFICE_FRAME, frames: 40000, modelOptions,
     customNight, schedule: p.mapped.queue, observe, ...(p.clock ? { frameTimes: p.deltas } : {}) });
@@ -781,7 +785,7 @@ export function check(result) {
 // ---------------------------------------------------------------- compare, whole config
 
 function compareAll(cfg, cfgPath, runsDir, inputsRoot) {
-  const modelOptions = JSON.parse(readFileSync(resolve(ROOT, cfg.modelOptions), 'utf8'));
+  const modelOptions = JSON.parse(readFileSync(resolve(ROOT, current(cfg.modelOptions)), 'utf8'));
   const nights = [];
   for (const nightCfg of cfg.nights) {
     const variants = [];
@@ -791,7 +795,7 @@ function compareAll(cfg, cfgPath, runsDir, inputsRoot) {
     }
     const night = {
       name: nightCfg.name, run: nightCfg.run, night: nightCfg.night, seed: nightCfg.seed, seedEvidence: nightCfg.seedEvidence,
-      winner: nightCfg.winner, winnerSha256: sha256(readFileSync(resolve(ROOT, nightCfg.winner))), originMs: nightCfg.originMs,
+      winner: nightCfg.winner, winnerSha256: sha256(readFileSync(resolve(ROOT, current(nightCfg.winner)))), originMs: nightCfg.originMs,
       presses: nightCfg.presses, trace: nightCfg.trace, customNight: nightCfg.customNight ?? null,
       phone: nightCfg.phone, modelRecord: nightCfg.modelRecord ?? null, primaryVariant: nightCfg.primaryVariant, variants,
     };
@@ -809,7 +813,7 @@ function compareAll(cfg, cfgPath, runsDir, inputsRoot) {
     method: {
       config: relative(ROOT, cfgPath), configSha256: sha256(readFileSync(cfgPath)),
       variants: cfg.variants, windowMs: WINDOW_MS, watch: WATCH, officeFrame: OFFICE_FRAME,
-      modelOptions: cfg.modelOptions, modelOptionsSha256: sha256(readFileSync(resolve(ROOT, cfg.modelOptions))),
+      modelOptions: cfg.modelOptions, modelOptionsSha256: sha256(readFileSync(resolve(ROOT, current(cfg.modelOptions)))),
       binary: cfg.binary, harness: cfg.harness,
       ...(cfg.responseExperiment ? { responseExperiment: cfg.responseExperiment } : {}),
       windowRule: 'window k = the k-th schedule mask-on press; its code is the first occupant in its first 1500 ms of the update clock',
