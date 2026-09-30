@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "dependencies": {
+    "@sixam/kernel": "file:../kernel"
+  },
   "exports": {
     ".": "./src/index.js",
     "./contracts": "./src/contracts/index.js",
@@ -13,6 +16,5 @@
     "./timing": "./src/timing/index.js",
     "./telemetry": "./src/telemetry/index.js",
     "./training": "./src/training/index.js"
-  },
-  "types": "./src/contracts/types.ts"
+  }
 }

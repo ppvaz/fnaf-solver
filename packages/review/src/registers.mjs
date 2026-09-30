@@ -15,7 +15,7 @@ import { GRAPH_FILE, PROMOTION_EDGE, readGraph } from './evidence-promotion.mjs'
 
 export const CHRONICLE_DIR = 'docs/chronicle/entries';
 export const CHRONICLE_SCHEMA_MODULE = 'tools/chronicle-schema.mjs';
-export const CONTRACT_REGISTER = 'packages/core/contracts/register.json';
+export const CONTRACT_REGISTER = 'packages/kernel/contracts/register.json';
 export const CONTRACT_SPECIFICATIONS = 'docs/architecture/generated/contract-specifications.json';
 export const COMMAND_REGISTRY = 'docs/architecture/generated/command-registry.json';
 export const ARCHIVED_ROUTES = 'docs/ARCHIVED-ROUTES.md';

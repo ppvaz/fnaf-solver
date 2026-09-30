@@ -21,7 +21,7 @@ Lifecycle meanings:
 | Surface | Lifecycle | Canonical replacement | Removal gate |
 |---|---|---|---|
 | `tools/device/session.sh` | compatibility | run packs for nights; kept for `collect-cue-audio.sh` and `capture-screen-sample.sh` | those collectors write run packs or retire |
-| `tools/device/session-manifest.py` + `validate-session.py` | legacy/transitional | `core/contracts` manifest validator and evidence CLI | historical shell manifests are indexed and replayable |
+| `tools/device/session-manifest.py` + `validate-session.py` | legacy/transitional | `@sixam/kernel/contracts` manifest validator and evidence CLI | historical shell manifests are indexed and replayable |
 | `tools/device/grade-run.sh` | transitional | evidence CLI over content-addressed device bundles | historical video/HID/session artifacts have an equivalent structured grader |
 | `tools/device/select-adb.sh` | transitional | injected transport selected by the device composition root | direct-ADB probes become adapters or are explicitly archived |
 | `tools/device/coords.sh` | transitional | resolved profile `controlMap` | every device action consumes profile geometry |
@@ -62,6 +62,19 @@ The legacy session producer/validator pair has a similarly named but distinct
 schema (`fnaf2.session-manifest`) from the runtime `session-manifest-v1`
 contract. That distinction is recorded in the generated map so removal cannot
 silently strand old manifests or merge two incompatible validators.
+
+## ADR 0002 context move (Plan 27, migration D1, D3, D4)
+
+The contracts, the register and Time moved out of `@sixam/core` into
+[`@sixam/kernel`](../../packages/kernel/README.md). The core subpaths that
+named them stay as re-export shims with their export sets unchanged, so an
+importer the move did not repoint keeps working.
+
+| Surface | Lifecycle | Canonical replacement | Removal gate |
+|---|---|---|---|
+| `@sixam/core/contracts` (`packages/core/src/contracts/index.js`) | compatibility | `@sixam/kernel/contracts`; the catalog-generated validators from the control catalogs' owner | no tracked module imports a contract from `@sixam/core` |
+| `@sixam/core/telemetry` (`packages/core/src/telemetry/index.js`) | compatibility | `@sixam/kernel/time` for the fact link and event clocks | no importer reads them here, and the bench trace has its Review home |
+| `@sixam/core/timing` (`packages/core/src/timing/index.js`) | compatibility | `@sixam/kernel/time` for `ClockPort` | no importer reads it here, and the phase clock has its Play home |
 
 ## Already removed
 

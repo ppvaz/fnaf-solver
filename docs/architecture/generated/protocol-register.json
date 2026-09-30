@@ -15,7 +15,7 @@
     },
     {
       "id": "fact-message-v1",
-      "owner": "core/telemetry",
+      "owner": "kernel/time",
       "kind": "wire",
       "validator": "encodeFactMessage"
     },

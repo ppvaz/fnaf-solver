@@ -24,7 +24,7 @@ async function walk(directory) {
   return result;
 }
 
-const register = JSON.parse(await readFile(join(ROOT, 'packages/core/contracts/register.json'), 'utf8'));
+const register = JSON.parse(await readFile(join(ROOT, 'packages/kernel/contracts/register.json'), 'utf8'));
 const allowed = {
   CONTRACT: new Set(register.contracts.map(item => item.id)),
   ADR: new Set((await readdir(join(ROOT, 'docs/decisions'))).filter(name => name.endsWith('.md')).map(name => name.replace(/\.md$/, ''))),

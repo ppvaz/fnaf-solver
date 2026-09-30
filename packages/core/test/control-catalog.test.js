@@ -48,7 +48,7 @@ assert.equal(GAME_CONTROLS[FNAF1].cameraRange, 'UNKNOWN(unmapped-view-ids)');
 //    catalogs, so the two cannot drift (LEG-006: "generate or mechanically
 //    compare types, validators, and catalogs").
 {
-  const types = readFileSync(fileURLToPath(new URL('../src/contracts/types.ts', import.meta.url)), 'utf8');
+  const types = readFileSync(fileURLToPath(new URL('../../kernel/src/contracts/types.ts', import.meta.url)), 'utf8');
   const block = /export interface GameControlIds \{([\s\S]*?)\n\}/.exec(types)?.[1];
   assert.ok(block, 'types.ts declares GameControlIds');
   const declared = Object.fromEntries([...block.matchAll(/readonly '([^']+)':([^;]+);/g)]

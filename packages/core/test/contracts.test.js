@@ -7,9 +7,9 @@ import {
   canonicalJson, stableHash, validateControlCommand,
   validateClockRef, validateQualification, validateManifest,
 } from '../src/contracts/index.js';
-import { decodeFactMessage } from '../src/telemetry/fact-link.js';
+import { decodeFactMessage } from '@sixam/kernel/time';
 
-const register = JSON.parse(readFileSync(fileURLToPath(new URL('../contracts/register.json', import.meta.url)), 'utf8'));
+const register = JSON.parse(readFileSync(fileURLToPath(new URL('../../kernel/contracts/register.json', import.meta.url)), 'utf8'));
 const catalog = JSON.parse(readFileSync(fileURLToPath(new URL('../../../docs/architecture/generated/contract-specifications.json', import.meta.url)), 'utf8'));
 assert.equal(catalog.specifications.length, register.contracts.length);
 for (const entry of register.contracts) assert.ok(catalog.specifications.some(spec => spec.contractId === entry.id && spec.runtimeValidation === entry.validator));

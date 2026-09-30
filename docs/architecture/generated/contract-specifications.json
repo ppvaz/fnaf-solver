@@ -1,6 +1,6 @@
 {
   "schema": "contract-specification-catalog-v1",
-  "generatedFrom": "packages/core/contracts/register.json",
+  "generatedFrom": "packages/kernel/contracts/register.json",
   "specifications": [
     {
       "contractId": "plant-model-v1",
@@ -91,9 +91,9 @@
       "contractId": "qualification-v1",
       "id": "qualification-v1",
       "version": 1,
-      "owner": "core/contracts",
+      "owner": "kernel/contracts",
       "kind": "data",
-      "purpose": "Stable qualification-v1 boundary for core/contracts; its validator is validateQualification.",
+      "purpose": "Stable qualification-v1 boundary for kernel/contracts; its validator is validateQualification.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -105,7 +105,7 @@
       "runtimeValidation": "validateQualification",
       "conformanceFixtures": [
         "packages/core/test/contracts.test.js",
-        "packages/core/test/venue-identity.test.js"
+        "packages/kernel/test/venue-identity.test.js"
       ]
     },
     {
@@ -132,9 +132,9 @@
       "contractId": "clock-v1",
       "id": "clock-v1",
       "version": 1,
-      "owner": "core/timing",
+      "owner": "kernel/time",
       "kind": "data",
-      "purpose": "Stable clock-v1 boundary for core/timing; its validator is validateClockRef.",
+      "purpose": "Stable clock-v1 boundary for kernel/time; its validator is validateClockRef.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -173,9 +173,9 @@
       "contractId": "telemetry-event-v1",
       "id": "telemetry-event-v1",
       "version": 1,
-      "owner": "core/contracts",
+      "owner": "kernel/contracts",
       "kind": "data",
-      "purpose": "Stable telemetry-event-v1 boundary for core/contracts; its validator is validateTelemetry.",
+      "purpose": "Stable telemetry-event-v1 boundary for kernel/contracts; its validator is validateTelemetry.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -193,9 +193,9 @@
       "contractId": "session-manifest-v1",
       "id": "session-manifest-v1",
       "version": 1,
-      "owner": "core/contracts",
+      "owner": "kernel/contracts",
       "kind": "artifact",
-      "purpose": "Stable session-manifest-v1 boundary for core/contracts; its validator is validateManifest.",
+      "purpose": "Stable session-manifest-v1 boundary for kernel/contracts; its validator is validateManifest.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -313,9 +313,9 @@
       "contractId": "artifact-ref-v1",
       "id": "artifact-ref-v1",
       "version": 1,
-      "owner": "core/contracts",
+      "owner": "kernel/contracts",
       "kind": "data",
-      "purpose": "Stable artifact-ref-v1 boundary for core/contracts; its validator is validateArtifactRef.",
+      "purpose": "Stable artifact-ref-v1 boundary for kernel/contracts; its validator is validateArtifactRef.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -394,9 +394,9 @@
       "contractId": "fact-message-v1",
       "id": "fact-message-v1",
       "version": 1,
-      "owner": "core/telemetry",
+      "owner": "kernel/time",
       "kind": "wire",
-      "purpose": "Stable fact-message-v1 boundary for core/telemetry; its validator is encodeFactMessage.",
+      "purpose": "Stable fact-message-v1 boundary for kernel/time; its validator is encodeFactMessage.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -961,9 +961,9 @@
       "contractId": "venue-identity-v1",
       "id": "venue-identity-v1",
       "version": 1,
-      "owner": "core/contracts",
+      "owner": "kernel/contracts",
       "kind": "data",
-      "purpose": "Stable venue-identity-v1 boundary for core/contracts; its validator is validateVenueIdentity.",
+      "purpose": "Stable venue-identity-v1 boundary for kernel/contracts; its validator is validateVenueIdentity.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -974,7 +974,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateVenueIdentity",
       "conformanceFixtures": [
-        "packages/core/test/venue-identity.test.js",
+        "packages/kernel/test/venue-identity.test.js",
         "packages/adapters/test/android-venue.test.js"
       ]
     },
@@ -982,9 +982,9 @@
       "contractId": "venue-check-v1",
       "id": "venue-check-v1",
       "version": 1,
-      "owner": "core/contracts",
+      "owner": "kernel/contracts",
       "kind": "artifact",
-      "purpose": "Stable venue-check-v1 boundary for core/contracts; its validator is validateVenueCheck.",
+      "purpose": "Stable venue-check-v1 boundary for kernel/contracts; its validator is validateVenueCheck.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -995,7 +995,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateVenueCheck",
       "conformanceFixtures": [
-        "packages/core/test/venue-identity.test.js",
+        "packages/kernel/test/venue-identity.test.js",
         "apps/device/test/venue-preflight.test.js"
       ]
     },
@@ -1003,9 +1003,9 @@
       "contractId": "venue-binding-v1",
       "id": "venue-binding-v1",
       "version": 1,
-      "owner": "core/contracts",
+      "owner": "kernel/contracts",
       "kind": "artifact",
-      "purpose": "Stable venue-binding-v1 boundary for core/contracts; its validator is validateVenueBinding.",
+      "purpose": "Stable venue-binding-v1 boundary for kernel/contracts; its validator is validateVenueBinding.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -1016,7 +1016,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateVenueBinding",
       "conformanceFixtures": [
-        "packages/core/test/venue-identity.test.js",
+        "packages/kernel/test/venue-identity.test.js",
         "apps/device/test/venue-preflight.test.js"
       ]
     },
@@ -1024,9 +1024,9 @@
       "contractId": "qualification-v2",
       "id": "qualification-v2",
       "version": 2,
-      "owner": "core/contracts",
+      "owner": "kernel/contracts",
       "kind": "data",
-      "purpose": "Stable qualification-v2 boundary for core/contracts; its validator is validateQualification.",
+      "purpose": "Stable qualification-v2 boundary for kernel/contracts; its validator is validateQualification.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -1037,7 +1037,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateQualification",
       "conformanceFixtures": [
-        "packages/core/test/venue-identity.test.js",
+        "packages/kernel/test/venue-identity.test.js",
         "apps/device/test/venue-preflight.test.js"
       ]
     },

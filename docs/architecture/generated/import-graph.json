@@ -581,18 +581,17 @@
       ]
     },
     {
-      "file": "packages/core/src/contracts/index.js",
+      "file": "packages/core/src/contracts/control-contracts.js",
       "imports": [
         "../control/catalog/index.js",
-        "./campaign-records.js",
-        "./qualification.js",
-        "./venue-identity.js"
+        "@sixam/kernel/contracts"
       ]
     },
     {
-      "file": "packages/core/src/contracts/qualification.js",
+      "file": "packages/core/src/contracts/index.js",
       "imports": [
-        "./venue-identity.js"
+        "./control-contracts.js",
+        "@sixam/kernel/contracts"
       ]
     },
     {
@@ -840,15 +839,14 @@
       "file": "packages/core/src/telemetry/index.js",
       "imports": [
         "./bench-trace.js",
-        "./event-clocks.js",
-        "./fact-link.js"
+        "@sixam/kernel/time"
       ]
     },
     {
       "file": "packages/core/src/timing/index.js",
       "imports": [
         "./phase-clock.js",
-        "./ports.js"
+        "@sixam/kernel/time"
       ]
     },
     {
@@ -898,7 +896,7 @@
       "imports": [
         "../src/contracts/index.js",
         "../src/mechanics/plant.js",
-        "../src/telemetry/fact-link.js",
+        "@sixam/kernel/time",
         "node:assert/strict",
         "node:fs",
         "node:url"
@@ -1194,13 +1192,6 @@
       ]
     },
     {
-      "file": "packages/core/test/venue-identity.test.js",
-      "imports": [
-        "../src/contracts/index.js",
-        "node:assert/strict"
-      ]
-    },
-    {
       "file": "packages/core/test/view-draws.test.js",
       "imports": [
         "../src/mechanics/plant-model.js",
@@ -1222,6 +1213,20 @@
       ]
     },
     {
+      "file": "packages/kernel/src/contracts/index.js",
+      "imports": [
+        "./campaign-records.js",
+        "./qualification.js",
+        "./venue-identity.js"
+      ]
+    },
+    {
+      "file": "packages/kernel/src/contracts/qualification.js",
+      "imports": [
+        "./venue-identity.js"
+      ]
+    },
+    {
       "file": "packages/kernel/src/game-run.js",
       "imports": [
         "./labels.js",
@@ -1237,7 +1242,7 @@
         "./game-run.js",
         "./labels.js",
         "./outcome.js",
-        "./time.js"
+        "./time/interval.js"
       ]
     },
     {
@@ -1250,15 +1255,24 @@
       "file": "packages/kernel/src/outcome.js",
       "imports": [
         "./labels.js",
-        "./time.js",
+        "./time/interval.js",
         "./types.js"
       ]
     },
     {
-      "file": "packages/kernel/src/time.js",
+      "file": "packages/kernel/src/time/index.js",
       "imports": [
-        "./labels.js",
-        "./types.js"
+        "./event-clocks.js",
+        "./fact-link.js",
+        "./interval.js",
+        "./ports.js"
+      ]
+    },
+    {
+      "file": "packages/kernel/src/time/interval.js",
+      "imports": [
+        "../labels.js",
+        "../types.js"
       ]
     },
     {
@@ -1272,6 +1286,13 @@
       "file": "packages/kernel/test/kernel.test.js",
       "imports": [
         "../src/index.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/kernel/test/venue-identity.test.js",
+      "imports": [
+        "../src/contracts/index.js",
         "node:assert/strict"
       ]
     },

@@ -103,7 +103,7 @@
     {
       "id": "contract.campaign-proof-v1",
       "kind": "CONTRACT",
-      "path": "packages/core/src/contracts/campaign-records.js",
+      "path": "packages/kernel/src/contracts/campaign-records.js",
       "line": 9,
       "relation": "REFERENCES"
     },
@@ -335,7 +335,7 @@
     {
       "id": "contract.device-campaign-result-v1",
       "kind": "CONTRACT",
-      "path": "packages/core/src/contracts/campaign-records.js",
+      "path": "packages/kernel/src/contracts/campaign-records.js",
       "line": 9,
       "relation": "REFERENCES"
     },
@@ -437,6 +437,13 @@
       "kind": "CONTRACT",
       "path": "apps/device/test/profile-game.test.js",
       "line": 3,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.device-profile-v1",
+      "kind": "CONTRACT",
+      "path": "packages/core/src/contracts/control-contracts.js",
+      "line": 8,
       "relation": "REFERENCES"
     },
     {
@@ -606,20 +613,20 @@
     {
       "id": "contract.qualification-v1",
       "kind": "CONTRACT",
-      "path": "packages/core/src/contracts/qualification.js",
-      "line": 10,
-      "relation": "REFERENCES"
-    },
-    {
-      "id": "contract.qualification-v1",
-      "kind": "CONTRACT",
       "path": "packages/core/test/contracts.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.qualification-v1",
       "kind": "CONTRACT",
-      "path": "packages/core/test/venue-identity.test.js",
+      "path": "packages/kernel/src/contracts/qualification.js",
+      "line": 10,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.qualification-v1",
+      "kind": "CONTRACT",
+      "path": "packages/kernel/test/venue-identity.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -638,14 +645,14 @@
     {
       "id": "contract.qualification-v2",
       "kind": "CONTRACT",
-      "path": "packages/core/src/contracts/qualification.js",
+      "path": "packages/kernel/src/contracts/qualification.js",
       "line": 10,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.qualification-v2",
       "kind": "CONTRACT",
-      "path": "packages/core/test/venue-identity.test.js",
+      "path": "packages/kernel/test/venue-identity.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -664,8 +671,8 @@
     {
       "id": "contract.semantic-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/core/src/contracts/index.js",
-      "line": 4,
+      "path": "packages/core/src/contracts/control-contracts.js",
+      "line": 8,
       "relation": "REFERENCES"
     },
     {
@@ -746,6 +753,13 @@
     {
       "id": "contract.semantic-control-v1",
       "kind": "CONTRACT",
+      "path": "packages/kernel/src/contracts/index.js",
+      "line": 8,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.semantic-control-v1",
+      "kind": "CONTRACT",
       "path": "plans/26-second-target-fnaf-1-3-4.md",
       "line": 711,
       "relation": "REFERENCES"
@@ -803,14 +817,14 @@
     {
       "id": "contract.venue-binding-v1",
       "kind": "CONTRACT",
-      "path": "packages/core/src/contracts/venue-identity.js",
+      "path": "packages/kernel/src/contracts/venue-identity.js",
       "line": 18,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.venue-binding-v1",
       "kind": "CONTRACT",
-      "path": "packages/core/test/venue-identity.test.js",
+      "path": "packages/kernel/test/venue-identity.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -829,14 +843,14 @@
     {
       "id": "contract.venue-check-v1",
       "kind": "CONTRACT",
-      "path": "packages/core/src/contracts/venue-identity.js",
+      "path": "packages/kernel/src/contracts/venue-identity.js",
       "line": 18,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.venue-check-v1",
       "kind": "CONTRACT",
-      "path": "packages/core/test/venue-identity.test.js",
+      "path": "packages/kernel/test/venue-identity.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -855,14 +869,14 @@
     {
       "id": "contract.venue-identity-v1",
       "kind": "CONTRACT",
-      "path": "packages/core/src/contracts/venue-identity.js",
+      "path": "packages/kernel/src/contracts/venue-identity.js",
       "line": 18,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.venue-identity-v1",
       "kind": "CONTRACT",
-      "path": "packages/core/test/venue-identity.test.js",
+      "path": "packages/kernel/test/venue-identity.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {

@@ -53,8 +53,14 @@ if (changed.some(path => path.startsWith('packages/research/')))
 // evidence CLI that composes it (`npm run evidence`). Review imports the
 // kernel, so a kernel change runs both. LEG-003's interim mapping for the two
 // packages created on 2026-09-29.
-if (changed.some(path => path.startsWith('packages/kernel/')))
-  add('test:packages/kernel/test/kernel.test.js', 'node', ['packages/kernel/test/kernel.test.js']);
+// The kernel holds the contracts, the register and Time since ADR 0002's
+// migration D1: a kernel change runs its own tests and core's contract lane,
+// which reads the register and every contract through the core shim.
+if (changed.some(path => path.startsWith('packages/kernel/'))) {
+  for (const test of ['kernel', 'venue-identity'])
+    add(`test:packages/kernel/test/${test}.test.js`, 'node', [`packages/kernel/test/${test}.test.js`]);
+  add('core-contracts', 'node', ['packages/core/test/contracts.test.js']);
+}
 if (changed.some(path => path.startsWith('packages/review/') || path.startsWith('packages/kernel/') || path === 'tools/evidence.js' ||
     path === 'tools/evidence-pack.mjs' || path.startsWith('docs/evidence/runs/') || path === 'docs/evidence/graph.json' ||
     path === 'tools/device/fact-register.mjs' || /^tools\/device\/[^/]+-winner\.json$/.test(path))) {

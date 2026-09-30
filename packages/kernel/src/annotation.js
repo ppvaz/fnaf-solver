@@ -13,7 +13,7 @@ export const ANNOTATION_KINDS = Object.freeze(['class', 'measure', 'tag']);
 export const ANNOTATION_STATUSES = Object.freeze(['standing', 'superseded', 'retracted']);
 export const SUBJECT_KINDS = Object.freeze(['GameRun', 'GameRuns', 'Census', 'Rule', 'Policy', 'Calibration', 'ChronicleEntry']);
 const FIELDS = Object.freeze(['subject', 'instrument', 'value', 'inputs', 'by', 'status', 'supersededBy', ...ANNOTATION_KINDS]);
-/** A content hash as the repository writes them: sha256 hex, or the fnv1a stableHash of core/contracts. */
+/** A content hash as the repository writes them: sha256 hex, or the fnv1a stableHash of kernel/contracts. */
 const HASH = /^(?:[0-9a-f]{64}|fnv1a-[0-9a-f]{8})$/;
 
 /** @param {any} subject */

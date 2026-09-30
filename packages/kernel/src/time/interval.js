@@ -2,9 +2,9 @@
  * Interval{lo, hi} (ADR 0002 kernel, "Time"): a value known only to lie
  * between two bounds, both included, in the unit of the field that holds it.
  */
-import { fail, isRecord } from './labels.js';
+import { fail, isRecord } from '../labels.js';
 
-/** @typedef {import('./types.js').Interval} Interval */
+/** @typedef {import('../types.js').Interval} Interval */
 
 /** @param {any} value @returns {Interval} */
 export function validateInterval(value) {

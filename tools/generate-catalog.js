@@ -44,7 +44,7 @@ const toolsIndex = (await Promise.all(toolIndexes.map(path => readFile(join(ROOT
 const toolCommands = [...toolsIndex.matchAll(/^\| `([^`]+)` \| ([^|]+) \|/gm)].map(match => ({
   id: match[1].split(/\s+/)[0], invocation: match[1], kind: match[2].trim(), lifecycle: /legacy|historical/i.test(match[2]) ? 'legacy' : 'supported',
 }));
-const contractRegister = JSON.parse(await readFile(join(ROOT, 'packages/core/contracts/register.json'), 'utf8'));
+const contractRegister = JSON.parse(await readFile(join(ROOT, 'packages/kernel/contracts/register.json'), 'utf8'));
 const protocols = contractRegister.contracts.filter(item => ['wire', 'process'].includes(item.kind));
 const contractEvidence = {
   'plant-model-v1': ['tools/sourcetest.mjs', 'tools/simtest.mjs'],
@@ -52,11 +52,11 @@ const contractEvidence = {
     'tools/device/test-policy-interpreter.mjs'],
   'policy-program-v1': ['tools/policygrammartest.mjs', 'tools/device/test-policy-ir.mjs'],
   'controller-v1': ['tools/reactivetest.mjs', 'packages/core/test/cycle-controller.test.js'],
-  'qualification-v1': ['packages/core/test/contracts.test.js', 'packages/core/test/venue-identity.test.js'],
-  'qualification-v2': ['packages/core/test/venue-identity.test.js', 'apps/device/test/venue-preflight.test.js'],
-  'venue-identity-v1': ['packages/core/test/venue-identity.test.js', 'packages/adapters/test/android-venue.test.js'],
-  'venue-check-v1': ['packages/core/test/venue-identity.test.js', 'apps/device/test/venue-preflight.test.js'],
-  'venue-binding-v1': ['packages/core/test/venue-identity.test.js', 'apps/device/test/venue-preflight.test.js'],
+  'qualification-v1': ['packages/core/test/contracts.test.js', 'packages/kernel/test/venue-identity.test.js'],
+  'qualification-v2': ['packages/kernel/test/venue-identity.test.js', 'apps/device/test/venue-preflight.test.js'],
+  'venue-identity-v1': ['packages/kernel/test/venue-identity.test.js', 'packages/adapters/test/android-venue.test.js'],
+  'venue-check-v1': ['packages/kernel/test/venue-identity.test.js', 'apps/device/test/venue-preflight.test.js'],
+  'venue-binding-v1': ['packages/kernel/test/venue-identity.test.js', 'apps/device/test/venue-preflight.test.js'],
   'state-estimate-v1': ['tools/estimatortest.mjs'],
   'clock-v1': ['tools/phaseclocktest.mjs'],
   'device-profile-v1': ['tools/device/test-bundle.mjs', 'apps/device/test/profile-game.test.js'],
@@ -113,7 +113,7 @@ for (const contract of contractRegister.contracts) {
 }
 const contractSpecifications = {
   schema: 'contract-specification-catalog-v1',
-  generatedFrom: 'packages/core/contracts/register.json',
+  generatedFrom: 'packages/kernel/contracts/register.json',
   specifications: contractRegister.contracts.map(item => ({
     contractId: item.id,
     id: item.id,
@@ -317,6 +317,30 @@ const legacyPaths = [
     replacement: 'packages/review/src/evidence-pack.mjs (`@sixam/review/evidence-pack`)',
     removalGate: 'No tracked file imports tools/evidence-pack.mjs, and every reader of a pack takes its stored `packer` as a name read against the commit that wrote the pack (ADR 0002 principle 9), never as a path to load',
     notes: 'One-line re-export left by the 2026-09-29 move of the four evidence tools into packages/review. Every committed run pack records `packer: tools/evidence-pack.mjs`, a stored value the pack digest (and so every attestation) covers, so the value stays and the path keeps resolving.',
+  },
+  // ADR 0002 migration D1/D3/D4 (Plan 27's move map): the contracts, the
+  // register and Time moved into @sixam/kernel. The core subpaths that named
+  // them keep every export as re-exports, so no importer breaks mid-migration.
+  {
+    id: 'core.contracts-shim', path: 'packages/core/src/contracts/index.js', category: 'package-subpath',
+    lifecycle: 'compatibility', owner: '@sixam/kernel',
+    replacement: '`@sixam/kernel/contracts` (packages/kernel/src/contracts/); the catalog-generated validators from the control catalogs\' owner',
+    removalGate: 'No tracked module imports `@sixam/core/contracts` or `@sixam/core` for a contract, and core\'s own modules import the kernel directly',
+    notes: 'Re-exports `@sixam/kernel/contracts` and the three catalog-generated validators (validateControlCommand, deviceProfileGame, resolveDeviceProfile); its export set is the one it had before the move.',
+  },
+  {
+    id: 'core.telemetry-shim', path: 'packages/core/src/telemetry/index.js', category: 'package-subpath',
+    lifecycle: 'compatibility', owner: '@sixam/kernel',
+    replacement: '`@sixam/kernel/time` for the fact link and the event clocks; the bench transport trace stays here until it moves to Review',
+    removalGate: 'No tracked module imports the fact link or the event clocks from `@sixam/core/telemetry`, and bench-trace.js has its Review home',
+    notes: 'Re-exports fact-link.js and event-clocks.js by name from the kernel beside bench-trace.js, which still lives here.',
+  },
+  {
+    id: 'core.timing-shim', path: 'packages/core/src/timing/index.js', category: 'package-subpath',
+    lifecycle: 'compatibility', owner: '@sixam/kernel',
+    replacement: '`@sixam/kernel/time` for `ClockPort`; the phase clock stays here until it moves to Play',
+    removalGate: 'No tracked module imports `ClockPort` from `@sixam/core/timing`, and phase-clock.js has its Play home',
+    notes: 'Re-exports the kernel clock port by name beside phase-clock.js, which still lives here.',
   },
   {
     id: 'package.legacy-engine-command', path: 'package.json#scripts.test:legacy:engine', category: 'command',

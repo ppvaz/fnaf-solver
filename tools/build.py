@@ -5,7 +5,7 @@ The trainer has no dependencies and no build step for development (just serve
 the folder). This exists so the page can be opened from a phone or published as
 a single file.
 """
-import base64, re, pathlib, sys
+import base64, json, re, pathlib, sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC = ROOT / 'apps' / 'trainer' / 'src'
@@ -14,28 +14,63 @@ ENTRY = 'apps/trainer/src/main.js'
 IMPORT_NS = re.compile(r"^import \* as (\w+) from ['\"]([^'\"]+)['\"];\s*$", re.M)
 IMPORT_NAMED = re.compile(r"^import \{([^}]*)\} from ['\"]([^'\"]+)['\"];\s*$", re.M)
 EXPORT_STAR = re.compile(r"^export \* from ['\"]([^'\"]+)['\"];\s*$", re.M)
+# `export { a, b as c } from './x.js';` -- a named re-export. The kernel's and
+# core's barrels use it; before 2026-09-29 this bundler stripped only the
+# `export ` keyword from it and left `{ ... } from '...';` in the bundle, a
+# syntax error that blanked the built trainer.
+EXPORT_FROM = re.compile(r"^export \{([^}]*)\} from ['\"]([^'\"]+)['\"];\s*$", re.M)
 EXPORT_DECL = re.compile(r"^export\s+(async\s+function|function|class|const|let)\s+(\w+)", re.M)
 EXPORT_LIST = re.compile(r"^export \{([^}]*)\};\s*$", re.M)
 
 
+def _workspaces():
+    """Every workspace package by name: its directory and its `exports` map."""
+    found = {}
+    for group in ('packages', 'apps'):
+        for directory in sorted((ROOT / group).iterdir()):
+            manifest = directory / 'package.json'
+            if manifest.is_file():
+                data = json.loads(manifest.read_text())
+                found[data['name']] = (directory, data.get('exports', {}))
+    return found
+
+
+WORKSPACES = _workspaces()
+
+
+def workspace_target(spec):
+    """Resolve a workspace specifier through its package.json `exports`, the way
+    Node does for the two forms this repository writes: an exact subpath and a
+    trailing-`*` subpath pattern. A subpath the package does not export fails."""
+    parts = spec.split('/')
+    name = '/'.join(parts[:2]) if spec.startswith('@') else parts[0]
+    if name not in WORKSPACES:
+        return None
+    directory, exports = WORKSPACES[name]
+    if isinstance(exports, str):
+        exports = {'.': exports}
+    subpath = '.' + spec[len(name):]
+    if subpath in exports:
+        return directory / exports[subpath]
+    for key, value in exports.items():
+        if key.endswith('*') and subpath.startswith(key[:-1]):
+            return directory / value.replace('*', subpath[len(key) - 1:])
+    raise RuntimeError(f"{name} does not export {subpath!r} (asked for {spec!r})")
+
+
 def resolve_path(path, spec):
-    """Resolve a relative ESM edge without inventing a package resolver."""
-    if spec == '@sixam/core':
-        target = ROOT / 'packages/core/src/index.js'
-    elif spec.startswith('@sixam/core/'):
-        suffix = spec.removeprefix('@sixam/core/')
-        target = ROOT / 'packages/core/src' / suffix
-        if target.suffix != '.js':
-            target = target / 'index.js'
-    elif spec.startswith('.'):
+    """Resolve an ESM edge: a relative path, or a workspace package's export."""
+    if spec.startswith('.'):
         target = (path.parent / spec).resolve()
     else:
-        raise RuntimeError(f"trainer bundle cannot resolve bare import {spec!r} from {path}")
+        target = workspace_target(spec)
+        if target is None:
+            raise RuntimeError(f"trainer bundle cannot resolve bare import {spec!r} from {path}")
     if target.suffix != '.js':
         target = target.with_suffix('.js')
     if not target.exists():
         raise RuntimeError(f"{path.relative_to(ROOT)} imports missing {spec}")
-    return target
+    return target.resolve()
 
 
 def canonical_path(path, seen=None):
@@ -63,10 +98,22 @@ def transform(name, path, code):
 
     def named(match):
         dep = module_name(canonical_path(resolve_path(path, match.group(2))))
-        return f"const {{{match.group(1)}}} = __req('{dep}');"
+        # `import { a as b }` destructures as `{ a: b }`.
+        names = ', '.join(part.strip().replace(' as ', ': ') for part in match.group(1).split(',') if part.strip())
+        return f"const {{ {names} }} = __req('{dep}');"
+
+    def reexport(match):
+        dep = module_name(canonical_path(resolve_path(path, match.group(2))))
+        pairs = []
+        for part in match.group(1).split(','):
+            local, _, exported = part.strip().partition(' as ')
+            if local:
+                pairs.append(f"{(exported or local).strip()}: __t.{local.strip()}")
+        return f"{{ const __t = __req('{dep}'); Object.assign(__x, {{ {', '.join(pairs)} }}); }}"
 
     code = IMPORT_NS.sub(ns, code)
     code = IMPORT_NAMED.sub(named, code)
+    code = EXPORT_FROM.sub(reexport, code)
     # A core barrel can be included by a future trainer module. Preserve its
     # explicit re-export semantics in the tiny bundle runtime.
     def star(match):
@@ -102,6 +149,8 @@ def resolve(entry=ENTRY):
             visit(resolve_path(path, spec[1]))
         for spec in EXPORT_STAR.findall(source):
             visit(resolve_path(path, spec))
+        for spec in EXPORT_FROM.findall(source):
+            visit(resolve_path(path, spec[1]))
         stack.discard(name)
         seen.add(name)
         order.append(name)

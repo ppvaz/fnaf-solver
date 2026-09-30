@@ -140,7 +140,7 @@ before. `profile-game.test.js` and `control-catalog.test.js` print it in `npm ru
 Open: one canonical schema source for the register's other contracts, deep experiment validation
 (seeds, claim levels, nested samples), capability relationships, and the lax JS check.
 **Owner:** `packages/core`, `packages/adapters`
-**Evidence:** [`types.ts` (line 152)](../../packages/core/src/contracts/types.ts), [`index.js` (line 138)](../../packages/core/src/contracts/index.js), `registry.js` line 69 (removed 2026-09-25)
+**Evidence:** [`types.ts` (line 152)](../../packages/kernel/src/contracts/types.ts), [`index.js`](../../packages/kernel/src/contracts/index.js), `registry.js` line 69 (removed 2026-09-25)
 
 Compile-time types, JavaScript validators, the contract register, and generated
 catalogs do not fully describe the same shapes. `DeviceProfile` omits fields

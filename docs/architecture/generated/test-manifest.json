@@ -1407,26 +1407,6 @@
       }
     },
     {
-      "id": "packages/core/test/venue-identity.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/core",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "device-transport"
-      ],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
       "id": "packages/core/test/view-draws.test.js",
       "lane": "test:unit",
       "owner": "@sixam/core",
@@ -1472,6 +1452,26 @@
       "determinismSignals": [],
       "fixedSleeps": [],
       "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/kernel/test/venue-identity.test.js",
+      "lane": "test:unit",
+      "owner": "package boundary",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "device-transport"
+      ],
       "subprocesses": false,
       "measurement": {
         "status": "NOT_MEASURED",

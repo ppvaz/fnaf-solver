@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.js"
+    ".": "./src/index.js",
+    "./contracts": "./src/contracts/index.js",
+    "./time": "./src/time/index.js"
   },
   "types": "./src/types.ts"
 }

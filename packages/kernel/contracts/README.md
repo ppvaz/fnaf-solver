@@ -1,4 +1,4 @@
-# Core contract specifications
+# Contract specifications
 
 Every boundary below is versioned plain data plus a runtime validator and a
 conformance fixture. TypeScript interfaces in `src/contracts/types.ts` protect

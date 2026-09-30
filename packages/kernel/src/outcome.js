@@ -5,7 +5,7 @@
  * from the night's origin.
  */
 import { fail, isRecord, isText, isUnknown } from './labels.js';
-import { validateInterval } from './time.js';
+import { validateInterval } from './time/interval.js';
 
 /** @typedef {import('./types.js').Outcome} Outcome */
 /** @typedef {import('./types.js').DeathCause} DeathCause */

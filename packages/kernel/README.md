@@ -27,8 +27,24 @@ the frozen enums, constructors (`unknown`, `interval`, `sixAm`, `death`,
 (`claimEnvelope`, `refusalEnvelope`, `validateClaimEnvelope`, `unknownsIn`, `src/claim-envelope.js`) are
 in `src/index.js`.
 
-Public API: the package root. Dependencies: none, and it imports nothing in the
-repository -- no workspace, no relative path out of itself, no Node built-in;
-every package may import it (`tools/architecture-test.js`). Tests:
-`test/kernel.test.js`, in `test:unit`, and `test/claim-envelope.test.js`, the claim envelope's contract
-test, in `test:contracts`.
+## Contracts and Time (from `@sixam/core`, ADR 0002 migration D1)
+
+| Path | What it is |
+|---|---|
+| `src/contracts/` (`@sixam/kernel/contracts`) | the runtime validators of the versioned plain-data contracts every context shares: clock refs, profiles, qualification v1/v2, venue identity, check and binding, the campaign result and save proof, telemetry, session manifest, artifact refs, `canonicalJson` and `stableHash`; compile-time shapes in `src/contracts/types.ts` |
+| `contracts/register.json` | the contract register: every contract id, its owner, kind and validator ([`contracts/README.md`](contracts/README.md)) |
+| `src/time/` (`@sixam/kernel/time`) | `Interval`, the declared clock of every campaign timestamp (`event-clocks.js`), the bounded fact link (`fact-link.js`, `fact-message-v1`) and the clock port (`ports.js`) |
+
+The validators generated from the per-game control catalogs
+(`validateControlCommand`, `deviceProfileGame`, `resolveDeviceProfile`) stay
+beside the catalogs, outside the kernel, because the kernel imports nothing.
+`@sixam/core/contracts`, `/telemetry` and `/timing` re-export all of this as
+compatibility shims until their removal gates
+([`legacy-paths.json`](../../docs/architecture/generated/legacy-paths.json)).
+
+Public API: the package root, `./contracts` and `./time`. Dependencies: none,
+and it imports nothing in the repository -- no workspace, no relative path out
+of itself, no Node built-in; every package may import it
+(`tools/architecture-test.js`). Tests: `test/kernel.test.js` in `test:unit`;
+`test/claim-envelope.test.js`, the claim envelope's contract test, and
+`test/venue-identity.test.js` in `test:contracts`.

@@ -1,6 +1,6 @@
 {
   "schema": "contract-register-v1",
-  "owner": "@sixam/core",
+  "owner": "@sixam/kernel",
   "contracts": [
     {
       "id": "plant-model-v1",
@@ -28,7 +28,7 @@
     },
     {
       "id": "qualification-v1",
-      "owner": "core/contracts",
+      "owner": "kernel/contracts",
       "kind": "data",
       "validator": "validateQualification"
     },
@@ -40,7 +40,7 @@
     },
     {
       "id": "clock-v1",
-      "owner": "core/timing",
+      "owner": "kernel/time",
       "kind": "data",
       "validator": "validateClockRef"
     },
@@ -52,13 +52,13 @@
     },
     {
       "id": "telemetry-event-v1",
-      "owner": "core/contracts",
+      "owner": "kernel/contracts",
       "kind": "data",
       "validator": "validateTelemetry"
     },
     {
       "id": "session-manifest-v1",
-      "owner": "core/contracts",
+      "owner": "kernel/contracts",
       "kind": "artifact",
       "validator": "validateManifest"
     },
@@ -94,7 +94,7 @@
     },
     {
       "id": "artifact-ref-v1",
-      "owner": "core/contracts",
+      "owner": "kernel/contracts",
       "kind": "data",
       "validator": "validateArtifactRef"
     },
@@ -118,7 +118,7 @@
     },
     {
       "id": "fact-message-v1",
-      "owner": "core/telemetry",
+      "owner": "kernel/time",
       "kind": "wire",
       "validator": "encodeFactMessage"
     },
@@ -286,25 +286,25 @@
     },
     {
       "id": "venue-identity-v1",
-      "owner": "core/contracts",
+      "owner": "kernel/contracts",
       "kind": "data",
       "validator": "validateVenueIdentity"
     },
     {
       "id": "venue-check-v1",
-      "owner": "core/contracts",
+      "owner": "kernel/contracts",
       "kind": "artifact",
       "validator": "validateVenueCheck"
     },
     {
       "id": "venue-binding-v1",
-      "owner": "core/contracts",
+      "owner": "kernel/contracts",
       "kind": "artifact",
       "validator": "validateVenueBinding"
     },
     {
       "id": "qualification-v2",
-      "owner": "core/contracts",
+      "owner": "kernel/contracts",
       "kind": "data",
       "validator": "validateQualification"
     },
