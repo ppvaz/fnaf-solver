@@ -12,6 +12,7 @@ import { readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gameTitle } from './chronicle-schema.mjs';
+import { currentPath } from './renamed-path.mjs';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));
 export const STORY_SCHEMA = 'chronicle-story-v1';
@@ -88,7 +89,8 @@ const when = (view) => (view.from === view.to ? view.from.slice(5) : `${view.fro
 function sourceLink(source) {
   if (source.startsWith('commit:')) return `<span class="src commit">${html(source.slice(0, 14))}</span>`;
   const path = source.replace(/:\d+$/, '');
-  return `<a class="src" href="../../${html(path)}">${html(source)}</a>`;
+  // Linked where the file lives now; the recorded words stay (ADR 0002 principle 9).
+  return `<a class="src" href="../../${html(currentPath(ROOT, path) ?? path)}">${html(source)}</a>`;
 }
 
 function itemMarkup(entry) {

@@ -2088,6 +2088,7 @@
       "file": "tools/chronicle-story.mjs",
       "imports": [
         "./chronicle-schema.mjs",
+        "./renamed-path.mjs",
         "node:fs/promises",
         "node:path",
         "node:url"
@@ -2098,6 +2099,7 @@
       "imports": [
         "./chronicle-schema.mjs",
         "./chronicle-story.mjs",
+        "./renamed-path.mjs",
         "node:fs/promises",
         "node:path",
         "node:url"
@@ -4028,6 +4030,14 @@
       ]
     },
     {
+      "file": "tools/renamed-path.mjs",
+      "imports": [
+        "node:child_process",
+        "node:fs",
+        "node:path"
+      ]
+    },
+    {
       "file": "tools/renderertest.mjs",
       "imports": [
         "../apps/trainer/src/microtrainer.js",
@@ -4085,6 +4095,7 @@
         "./chronicle-schema.mjs",
         "./chronicle-story.mjs",
         "./chronicle.mjs",
+        "./renamed-path.mjs",
         "node:assert/strict",
         "node:child_process",
         "node:crypto",
@@ -4104,8 +4115,10 @@
     {
       "file": "tools/test-docs.mjs",
       "imports": [
+        "./renamed-path.mjs",
         "node:child_process",
         "node:fs",
+        "node:os",
         "node:path",
         "node:url"
       ]

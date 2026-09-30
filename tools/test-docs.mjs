@@ -25,10 +25,12 @@
 // cell names the script, because prose naming a tool is what made the old
 // substring check pass while the tool had no entry -- the same trap
 // test-grade-run-coverage.mjs documents for grade-run.sh's header.
-import { readFileSync, existsSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, existsSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
-import { dirname, join, resolve, basename } from 'node:path';
+import { dirname, join, relative, resolve, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { currentPath } from './renamed-path.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 let failed = 0;
@@ -49,6 +51,7 @@ const tracked = execFileSync('git', ['ls-files', '--cached', '--others', '--excl
 // that is precisely the case that was found, and "it is generated" is only an
 // answer if something in the repository generates it.
 const markdown = tracked.filter((f) => f.endsWith('.md'));
+const RECORD = /^(docs\/evidence\/|docs\/chronicle\/|tools\/recompile\/results\/|plans\/PROGRESS\.md$|docs\/research\/ROOT-README-HISTORY\.txt$|docs\/operations\/CLAUDE-HISTORY\.txt$)/;
 let links = 0;
 // plans/archive/ is frozen byte for byte, and a link in it that a later move
 // breaks stays broken (ADR 0002, Consequences; Pedro's decision 24): its
@@ -60,7 +63,10 @@ for (const file of markdown.filter((f) => !f.startsWith('plans/archive/'))) {
     const target = m[1];
     if (/^(https?:|mailto:|#)/.test(target)) continue;
     links += 1;
-    if (!existsSync(resolve(here, decodeURI(target))))
+    const at = resolve(here, decodeURI(target));
+    // A frozen or dated page keeps the path it was written with (ADR 0002
+    // principle 9); a file that moved after it resolves through git's rename history.
+    if (!existsSync(at) && !(RECORD.test(file) && currentPath(ROOT, relative(ROOT, at))))
       complain(`${file} links to ${target}, which does not exist`);
   }
 }
@@ -165,6 +171,27 @@ for (const [index, entries] of entriesOf) {
       complain(`${index} has an entry for ${name}, which is not a tracked ` +
         'tool script -- a stale entry sends a reader after a command that is gone');
   }
+}
+
+// --- 5. the rename resolver the record pages lean on, against planted history:
+// a committed move, a chain of two, a staged move, and a deletion.
+{
+  const repo = mkdtempSync(join(tmpdir(), 'renamed-path-'));
+  const git = (...args) => execFileSync('git', ['-C', repo, '-c', 'user.name=t', '-c', 'user.email=t@t', ...args], { stdio: 'ignore' });
+  try {
+    git('init', '-q');
+    mkdirSync(join(repo, 'a'));
+    for (const name of ['one', 'two', 'three', 'gone']) writeFileSync(join(repo, 'a', `${name}.txt`), `${name} ${'x'.repeat(40)}\n`);
+    git('add', '.'); git('commit', '-qm', 'base');
+    mkdirSync(join(repo, 'b'));
+    git('mv', 'a/one.txt', 'b/one.txt'); git('mv', 'a/two.txt', 'b/two.txt'); git('rm', '-q', 'a/gone.txt');
+    git('commit', '-qm', 'move');
+    git('mv', 'b/two.txt', 'c.txt'); git('commit', '-qm', 'again');
+    git('mv', 'a/three.txt', 'b/three.txt');
+    const cases = [['a/one.txt', 'b/one.txt'], ['a/two.txt', 'c.txt'], ['a/three.txt', 'b/three.txt'], ['a/gone.txt', null], ['b/one.txt', 'b/one.txt']];
+    for (const [from, to] of cases)
+      if (currentPath(repo, from) !== to) complain(`renamed-path: ${from} resolved to ${currentPath(repo, from)}, not ${to}`);
+  } finally { rmSync(repo, { recursive: true, force: true }); }
 }
 
 if (failed) process.exit(1);

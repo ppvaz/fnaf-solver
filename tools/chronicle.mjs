@@ -5,6 +5,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { GAMES, KINDS, LABELS_V2, NIGHTS, ROUTES, RUNGS, SCHEMAS, STATUSES, checkCorpus, gameTitle, readEntries } from './chronicle-schema.mjs';
 import { STORY_OUTPUT, loadStory, renderStory } from './chronicle-story.mjs';
+import { currentPath } from './renamed-path.mjs';
 
 export const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));
 export const ENTRY_DIR = join(ROOT, 'docs/chronicle/entries');
@@ -17,7 +18,9 @@ const jsonScript = (value) => JSON.stringify(value).replaceAll('<', '\\u003c').r
 function sourceMarkup(source) {
   if (source.startsWith('commit:')) return `<span class="source commit">commit:${html(source.slice(7, 14))}</span>`;
   const match = source.match(/^(.*?)(?::(\d+))?$/);
-  const href = match ? `../../${match[1]}${match[2] ? `#L${match[2]}` : ''}` : null;
+  // The entry's words stay as written; the link follows a file that moved since
+  // (ADR 0002 principle 9), and one that is gone keeps its recorded path.
+  const href = match ? `../../${currentPath(ROOT, match[1]) ?? match[1]}${match[2] ? `#L${match[2]}` : ''}` : null;
   return href ? `<a class="source" href="${html(href)}">${html(source)}</a>` : `<span class="source">${html(source)}</span>`;
 }
 

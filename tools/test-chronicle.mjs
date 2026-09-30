@@ -10,6 +10,7 @@ import { resolve } from 'node:path';
 import { ENTRIES_SCHEMA, ENTRIES_SCHEMA_V2, NIGHTS, checkCorpus, readEntries } from './chronicle-schema.mjs';
 import { STORY_OUTPUT, chapterView, checkStory } from './chronicle-story.mjs';
 import { generate, loadCorpus, OUTPUT, ROOT } from './chronicle.mjs';
+import { currentPath } from './renamed-path.mjs';
 
 // The v1 checkpoints are frozen byte for byte: a correction is a v2 entry that
 // supersedes, never an edit (ADR 0002 principle 9; docs/chronicle/README.md).
@@ -24,8 +25,11 @@ function sourcePath(source) {
   if (source.startsWith('commit:')) return null;
   const match = source.match(/^(.*?)(?::(\d+))?$/);
   assert(match, `source has no path shape: ${source}`);
-  const file = resolve(ROOT, match[1]);
-  assert(existsSync(file), `source file does not exist: ${source}`);
+  // An entry keeps the path it was written with; a file moved since resolves
+  // through git's rename history (ADR 0002 principle 9).
+  const now = currentPath(ROOT, match[1]);
+  assert(now, `source file does not exist: ${source}`);
+  const file = resolve(ROOT, now);
   if (match[2]) {
     const line = Number(match[2]);
     const lines = readFileSync(file, 'utf8').split('\n').length;

@@ -266,6 +266,12 @@
       "lifecycle": "supported"
     },
     {
+      "id": "tools/renamed-path.mjs",
+      "invocation": "tools/renamed-path.mjs",
+      "kind": "internal module",
+      "lifecycle": "supported"
+    },
+    {
       "id": "tools/architecture-test.js",
       "invocation": "tools/architecture-test.js",
       "kind": "check",
