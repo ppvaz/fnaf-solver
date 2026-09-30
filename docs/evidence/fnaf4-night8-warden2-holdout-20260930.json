@@ -1,0 +1,108 @@
+{
+ "schema": "evidence-record-v1",
+ "id": "fnaf4-night8-warden2-holdout-20260930",
+ "claimLevel": "MODEL_ONLY",
+ "fidelity": "rebuilt-runtime",
+ "date": "2026-09-30",
+ "predeclaration": {
+  "id": "fnaf4-night8-warden2-holdout-predeclaration-20260930",
+  "path": "docs/evidence/fnaf4-night8-warden2-holdout-predeclaration-20260930.json"
+ },
+ "question": "On seeds it was not developed on, how many Night 8 (20/20/20/20) nights does the FNaF 4 warden2 controller win in the rebuilt runtime?",
+ "binding": {
+  "game": "fnaf4",
+  "night": "Night 8, 20/20/20/20 (shadow 2)",
+  "policy": "warden2",
+  "knobs": {
+   "bedAt": 24,
+   "foxyTo": 3
+  },
+  "policySourcesSha256": "5b56ce996e8f8efa5fd17aecd27dc39b7d8ae18af0699b823082bf8e81555e25",
+  "policySources": [
+   "tools/recompile/pilot/pilot.mjs",
+   "tools/recompile/pilot/fnaf4.mjs"
+  ],
+  "binarySha256": "57b48ac1596879f8c8e8b121679f02314737107bacdcbe1af3258fe93121cd21",
+  "assetsSha256": "615f2ea01b9546709e8d9bc2b15cd9616aeda403a317c4db4bcde9f4d87f0049",
+  "saveBefore": {
+   "fixture": "tools/recompile/fixtures/fnaf4-night8-before.ini",
+   "sha256": "a58acc2d42e40653a3797dc783d54daef47f6f726140eccc36a905b261e95231"
+  },
+  "winKey": "fn4.beat8=1"
+ },
+ "block": {
+  "seeds": "30000-32999",
+  "count": 3000,
+  "why": "disjoint from every seed used in development"
+ },
+ "checks": {
+  "everySeedRun": true,
+  "missingSeeds": [],
+  "noSeedOutsideBlock": true,
+  "everyRowOnTheDeclaredSources": true,
+  "rowsOnOtherSources": []
+ },
+ "valid": true,
+ "result": {
+  "won": 2996,
+  "of": 3000,
+  "rate": 0.998667,
+  "lost": 4,
+  "noNight": 0,
+  "other": 0,
+  "losses": [
+   {
+    "seed": 30820,
+    "verdict": "LOST",
+    "outcome": "gameover at 17303",
+    "updates": 18598
+   },
+   {
+    "seed": 31175,
+    "verdict": "LOST",
+    "outcome": "gameover at 16946",
+    "updates": 18241
+   },
+   {
+    "seed": 31567,
+    "verdict": "LOST",
+    "outcome": "gameover at 13089",
+    "updates": 14384
+   },
+   {
+    "seed": 31796,
+    "verdict": "LOST",
+    "outcome": "gameover at 19167",
+    "updates": 20462
+   }
+  ]
+ },
+ "findings": [
+  "warden2 (bedAt 24, foxyTo 3) reaches 6 AM and writes beat8=1 on 2996 of 3000 held-out Night 8 seeds; 4 are not wins (30820 gameover at 17303, 31175 gameover at 16946, 31567 gameover at 13089, 31796 gameover at 19167).",
+  "The four losses are two mechanisms, both named in lossCauses; warden3 (not yet run) targets both and needs its own predeclared block."
+ ],
+ "notMeasured": [
+  "A pilot-free replay of each won seed: the wins are the pilot runs themselves, each with beat8=1 in the save the game wrote.",
+  "Any seed outside 30000-32999; the 16-bit population is 65,536.",
+  "A player's version of the controller: warden2 reads the runtime's objects.",
+  "The phone: nothing here ran on the device."
+ ],
+ "rung": "None. MODEL_ONLY, rebuilt-runtime; not a promotion candidate.",
+ "lossCauses": {
+  "fredbearPhaseStuckDwell": {
+   "seeds": [
+    30820,
+    31175,
+    31796
+   ],
+   "mechanism": "After 4 AM Chica is away but her dwell (value 6) still stands at 20: g478 resets it only below 20, and only viewing her hall clears it (g481). Fredbear on the bed sends the warden there; viewing the bed with that dwell sets her value 7 (g480) and leaving the bed ends the night (g375). warden2 clears a standing dwell only before 4 AM."
+  },
+  "freddyPastTheBed": {
+   "seeds": [
+    31567
+   ],
+   "mechanism": "An 11 s closet hold for Foxy took the Freddy counter from 31 to 49 while Chica stood near until her dwell reached 10 and blocked the bed. Past 53 the bed is out of reach (arriving at 60 or more ends the night, g427/g428) and the counter rose to the black flash at 80+."
+  },
+  "readFrom": "each lost seed's warden.jsonl, the controller's last 200 records"
+ }
+}
