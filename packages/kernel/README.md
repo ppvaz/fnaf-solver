@@ -12,12 +12,14 @@ and they change only by a later ADR.
 | `SourceLabel` | `SOURCED \| CALIBRATED \| MEASURED \| INFERRED \| MODEL \| UNKNOWN(reason)`, closed | the `UNKNOWN(reason)` value the lift writes |
 | `Outcome` | `SixAM \| Death{by, how, rule, at} \| Timeout \| Aborted(why) \| Invalid(why) \| UNKNOWN`, plus `wouldDie[]` | `GameRun.reportedOutcome` |
 | `GameRun` | one night played once: spec, venue, runMode, clocks, before/night/after events, reported outcome, witnesses, custody `{class: complete \| recovered, lost[]}` | `packages/review` lifts every committed run pack into one |
+| `VenueIdentity` (`venue-identity-v1`) | the world under a phone venue, read at preflight: game package, `versionName`/`versionCode`, first-install and last-update time, build fingerprint, security patch, `handsetHash` (never the serial), Companion version, time zone; an unread field is null with its reason. v1 does not yet carry the ADR's runtime, placement and instrumentation | the adb bridge's preflight, `venue-binding-v1`, `qualification-v2` and the campaign result's venue check |
 | `Annotation` | `{subject, instrument@version, class \| measure \| tag, value, inputs, by, status: standing \| superseded \| retracted}`, with a wide subject | the promotions query writes one per `PROMOTED_BY` edge |
 | `ClaimEnvelope` (`claim-envelope-v1`) | an answer: `{claim, label, target, cite[], status, supersededBy, notMeasured[], reproducer}`, or a refusal `{refused: true, rule, because, cite[], remedy}`. `label` is a `ClaimLevel`, a named `SourceLabel` or `UNKNOWN(reason)`, never missing or bare; a claim holding any UNKNOWN value must name what it does not measure. v1 under ADR 0002 ("the claim envelope until Plan 28 lands"), registered in `contracts/register.json` | the fnaf-solver MCP verbs and resources, `npm run review`, and `npm run evidence -- show\|promotions --envelope` |
 
-The two label enums never promote one another. `GameRun.spec`, `venue` and
-`clocks` carry the source record's own fields, or `UNKNOWN(reason)`, until
-RunSpec, VenueIdentity and ClockTrace enter the kernel.
+The two label enums never promote one another. `GameRun.spec` and `clocks`
+carry the source record's own fields, or `UNKNOWN(reason)`, until RunSpec and
+ClockTrace enter the kernel; `GameRun.venue` carries the preflight's
+`venue-check-v1`, whose `observed` is a `VenueIdentity`, or `UNKNOWN(reason)`.
 
 Compile-time shapes are in `src/types.ts` (the strict `typecheck:ts` lane);
 the frozen enums, constructors (`unknown`, `interval`, `sixAm`, `death`,

@@ -72,9 +72,47 @@ export interface Witness {
   readonly kind: string;
 }
 
+/** A VenueIdentity field whose move refuses a bound run and demotes a qualification (principle 12). */
+export type VenueDriftField =
+  | 'package' | 'versionName' | 'versionCode' | 'firstInstallTime' | 'lastUpdateTime'
+  | 'buildFingerprint' | 'securityPatch' | 'handsetHash';
+/** Recorded and compared, reported when it moves, never refused. */
+export type VenueNoteField = 'companionVersion' | 'timeZone';
+export type VenueField = VenueDriftField | VenueNoteField;
+
 /**
- * One night played once. `spec`, `venue` and `clocks` carry the source record's
- * own fields until RunSpec, VenueIdentity and ClockTrace enter the kernel.
+ * VenueIdentity: the world under a phone venue, measured at preflight and
+ * stored as `venue-identity-v1` (`validateVenueIdentity`,
+ * `./contracts/venue-identity.js`). Each field is read off the phone, or null
+ * with its reason in `unknown` (principle 2). The handset is `handsetHash`,
+ * `sha256-` and the first 16 hex of sha256 over the serial; a record that
+ * carries the serial is refused (decision 8). v1 does not yet carry the
+ * ADR's runtime, placement and instrumentation as fields; adding them is a
+ * new version that readers lift v1 into.
+ */
+export interface VenueIdentity {
+  readonly schema: 'venue-identity-v1';
+  /** The Android package that was queried: always named. */
+  readonly package: string;
+  readonly versionName: string | null;
+  readonly versionCode: string | null;
+  /** dumpsys's local wall-clock `yyyy-MM-dd HH:mm:ss`, read in `timeZone`. */
+  readonly firstInstallTime: string | null;
+  readonly lastUpdateTime: string | null;
+  readonly buildFingerprint: string | null;
+  /** `ro.build.version.security_patch`, `yyyy-MM-dd`. */
+  readonly securityPatch: string | null;
+  readonly handsetHash: string | null;
+  readonly companionVersion: string | null;
+  readonly timeZone: string | null;
+  /** The reason for each field that is null; absent when every field was read. */
+  readonly unknown?: Readonly<Partial<Record<VenueField, string>>>;
+}
+
+/**
+ * One night played once. `spec` and `clocks` carry the source record's own
+ * fields until RunSpec and ClockTrace enter the kernel; `venue` carries the
+ * preflight's venue-check-v1, whose `observed` is a VenueIdentity.
  */
 export interface GameRun {
   readonly id: string;

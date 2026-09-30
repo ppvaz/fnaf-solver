@@ -1,9 +1,10 @@
 /**
  * GameRun and custody (ADR 0002 kernel, frozen): one night played once, with
  * its spec, venue, runMode, clocks, before/night/after events, reported
- * outcome, witnesses and custody. `spec`, `venue` and `clocks` carry the
- * source record's own fields, or UNKNOWN(reason), until RunSpec, VenueIdentity
- * and ClockTrace enter the kernel.
+ * outcome, witnesses and custody. `spec` and `clocks` carry the source
+ * record's own fields, or UNKNOWN(reason), until RunSpec and ClockTrace enter
+ * the kernel; `venue` carries the preflight's venue-check-v1, whose `observed`
+ * is a VenueIdentity, or UNKNOWN(reason).
  */
 import { fail, isRecord, isText, isUnknown } from './labels.js';
 import { validateOutcome } from './outcome.js';

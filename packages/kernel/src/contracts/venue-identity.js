@@ -18,6 +18,8 @@
  * CONTRACT:venue-identity-v1. CONTRACT:venue-check-v1. CONTRACT:venue-binding-v1.
  */
 
+/** @typedef {import('../types.js').VenueIdentity} VenueIdentity */
+
 export const VENUE_IDENTITY_SCHEMA = 'venue-identity-v1';
 export const VENUE_CHECK_SCHEMA = 'venue-check-v1';
 export const VENUE_BINDING_SCHEMA = 'venue-binding-v1';
@@ -70,6 +72,7 @@ const bounded = (value, label, max = 256) => {
  * field must be read (a binding cannot bind to an unknown).
  * @param {any} value
  * @param {{requireKnown?: boolean, label?: string}} [options]
+ * @returns {VenueIdentity}
  */
 export function validateVenueIdentity(value, { requireKnown = false, label = 'identity' } = {}) {
   if (!isRecord(value) || value.schema !== VENUE_IDENTITY_SCHEMA) fail(`${label} is not ${VENUE_IDENTITY_SCHEMA}`);
@@ -104,6 +107,7 @@ export function validateVenueIdentity(value, { requireKnown = false, label = 'id
  * null field takes its reason from `reasons` (a missing reason is refused).
  * @param {Record<string, string | null>} readings
  * @param {Record<string, string>} [reasons]
+ * @returns {VenueIdentity}
  */
 export function makeVenueIdentity(readings, reasons = {}) {
   const record = { schema: VENUE_IDENTITY_SCHEMA };

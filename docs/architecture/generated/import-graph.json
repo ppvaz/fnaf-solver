@@ -521,6 +521,12 @@
       ]
     },
     {
+      "file": "packages/kernel/src/contracts/venue-identity.js",
+      "imports": [
+        "../types.js"
+      ]
+    },
+    {
       "file": "packages/kernel/src/game-run.js",
       "imports": [
         "./labels.js",
