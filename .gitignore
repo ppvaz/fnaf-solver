@@ -2,7 +2,7 @@ dist/
 artifacts/
 captures/
 node_modules/
-/.claude/worktrees/
+/.claude/
 .DS_Store
 /tools/device/fnaf-screencheck
 __pycache__/

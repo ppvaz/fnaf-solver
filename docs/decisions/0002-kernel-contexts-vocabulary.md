@@ -180,7 +180,7 @@ Taken with this ADR, in answer to the architecture review's open questions.
 | 7 | GPL-derived patches | SPDX identifiers and licence texts under `tools/recompile`, and a root `NOTICE` naming what is not MIT. Done in `b253d98`, with REUSE-style `.license` sidecars, because a record cites a patch's sha256. |
 | 8 | Handset serial | Read from an untracked local profile with no default; a gate refuses new occurrences; frozen evidence keeps it; no history rewrite. |
 | 9 | GitHub topics and description | Applied 2026-09-29 (19 topics to 15). |
-| 10 | Commits from a corporate address and from `t <t@t>` | A `.mailmap`; no history rewrite. Done in `b253d98`. |
+| 10 | Commits from a corporate address and from `t <t@t>` | A `.mailmap`; no history rewrite. Done in `b253d98`. Reversed 2026-09-30 (Pedro): the `.mailmap` is removed; still no history rewrite, so the old commits keep their author lines. |
 | 11 | The Content Vault's host | This Debian host is Pedro's own; the vault stays here and is replicated to the peer. |
 | 12 | Decompiled dump text | Cite, never quote: tracked or pushed text may cite `g###`, a file and a line, and paraphrase, but never copy dump lines. A commit-msg check refuses dump-shaped text. Past commits stay. |
 | 13 | This ADR | Drafted by an agent, signed by Pedro. |
