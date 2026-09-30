@@ -16,15 +16,8 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-REPO = HERE.parent.parent
 sys.path.insert(0, str(HERE))
 import sweepcheck  # noqa: E402
-
-try:
-    from PIL import Image
-except ImportError:
-    print("PIL is required for this gate", file=sys.stderr)
-    raise SystemExit(2)
 
 fail = []
 
@@ -104,21 +97,9 @@ per = {10: True, 4: False, 7: False}
 if sum(per.values()) >= 2:
     fail.append("one lit camera must NOT be enough for a lit sweep")
 
-# --- 4. tearing reference frames land right ---------------------------
-FRAMES = REPO / "docs" / "img" / "tearing-vs-flash"
-d, l = FRAMES / "1-dark_cam11_bands0_luma18.png", FRAMES / "2-lit_cam11_bands0_luma115.png"
-if d.exists() and l.exists():
-    dv = sweepcheck.frame_features(Image.open(d).convert("L")
-                                   .resize((sweepcheck.WIDTH, sweepcheck.HEIGHT)).tobytes())
-    lvv = sweepcheck.frame_features(Image.open(l).convert("L")
-                                    .resize((sweepcheck.WIDTH, sweepcheck.HEIGHT)).tobytes())
-    if not (lvv[2] > dv[2]):
-        fail.append(f"lit reference frame must have higher brightfrac than dark "
-                    f"({lvv[2]:.2f} vs {dv[2]:.2f})")
-
 if fail:
     for f in fail:
         print("FAIL " + f, file=sys.stderr)
     raise SystemExit(1)
 print("sweepcheck classifier: signature complete (spec 1.0 all cams), "
-      "cam07 leans on edge/uniformity, synthetic features + >=2/3 vote + reference frames OK")
+      "cam07 leans on edge/uniformity, synthetic features + >=2/3 vote OK")

@@ -1,0 +1,42 @@
+fnaf2-1020
+Copyright 2026 Pedro Vaz
+
+This project's own code and documentation are under the MIT License (LICENSE),
+except for the files listed below, which keep the licences of the works they
+modify or include.
+
+Patches to third-party tools (tools/recompile)
+-----------------------------------------------
+Each patch has a REUSE-style sidecar (<patch>.license) with its SPDX identifier.
+The licence texts are in tools/recompile/LICENSES/.
+
+- tools/recompile/mmfparser-chowdren-mobile.patch
+- tools/recompile/android/gles2-renderer.patch
+  Modify Anaconda (mmfparser and Chowdren), Copyright (c) Mathias Kaerlev 2012,
+  through the fnmwolf fork (https://github.com/fnmwolf/Anaconda).
+  Licence: GNU General Public License v3.0 or later (GPL-3.0-or-later).
+
+- tools/recompile/android/openal-soft-1.23.1-opensl-performance-mode.patch
+  Modifies alc/backends/opensl.cpp of OpenAL Soft 1.23.1, a file Copyright (C)
+  2011 The Android Open Source Project under the Apache License 2.0. OpenAL
+  Soft as a whole is under the GNU Library General Public License v2.
+  Licence of the patch: Apache License 2.0 (Apache-2.0).
+
+Fonts
+-----
+- assets/fonts/chakra-petch-*.woff2: Copyright 2018 The Chakra Petch Project
+  Authors, SIL Open Font License 1.1 (assets/fonts/LICENSE-chakra-petch.txt).
+- assets/fonts/ibm-plex-mono-*.woff2: Copyright 2017 IBM Corp., with Reserved
+  Font Name "Plex", SIL Open Font License 1.1
+  (assets/fonts/LICENSE-ibm-plex-mono.txt).
+- android/companion/assets/fonts/hud-font.otf: "HUD FONT" by Asksk, CC0 1.0
+  (android/companion/assets/fonts/license.txt).
+
+The games
+---------
+None of these licences covers the games studied. Five Nights at Freddy's is
+(c) Scott Cawthon. This project is independent research and is not affiliated
+with, endorsed by, or sponsored by Scott Cawthon, Scott Games, or Clickteam. The
+names are used only to identify the games. The repository holds no APKs, game
+assets, decompiled event sheets, generated source or rebuilt binaries. Its only
+screen captures are the two README clips of the bot's own runs.

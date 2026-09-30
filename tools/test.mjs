@@ -372,7 +372,8 @@ const ENGINE = [
   // The tearing-vs-flash discriminator. sweepcheck reported 68/75 sweeps
   // flashed on a night where it was reading camera-switch tearing: a
   // torn-and-unlit frame's whole-ROI mean is 173 against a clean-and-lit
-  // frame's 111. Four reference frames pin all four states.
+  // frame's 111. The four reference frames were removed on 2026-09-29 (no
+  // game media beyond the two README clips); the synthetic checks remain.
   ['sweepcheck discriminator', ['device/test-sweepcheck.py']],
   ['grade-run coverage', ['device/test-grade-run-coverage.mjs']],
   ['cuetest', ['cue/test-cue.py']],
