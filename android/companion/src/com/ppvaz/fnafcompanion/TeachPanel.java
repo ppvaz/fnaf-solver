@@ -10,9 +10,9 @@ package com.ppvaz.fnafcompanion;
  * predicate's rows, the lifecycle boxes, and the video grader's clock band
  * (y >= 432) and mask bar. Those
  * claims are tests, not comments: TeachPanelTest drives every helper reader
- * over a recording frame, and tools/device/test-teach-panel-clearance.py
+ * over a recording frame, and packages/play/bin/companion/test-teach-panel-clearance.py
  * checks the host readers. The rectangle itself is declared once, in
- * tools/device/models/teach-panel-v1.json, and both tests read it.</p>
+ * packages/play/profiles/fnaf2/moto-g56/teach-panel-v1.json, and both tests read it.</p>
  *
  * <p>The palette is chosen against the video grader's selected-camera rule
  * (r > 150 and g > 150 and b < 110 anywhere in the frame): no ink, and no

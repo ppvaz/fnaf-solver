@@ -71,6 +71,12 @@
     {
       "id": "contract.camera-rule-v1",
       "kind": "CONTRACT",
+      "path": "packages/play/bin/calibrate/test-camera-calibrate.py",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.camera-rule-v1",
+      "kind": "CONTRACT",
       "path": "packages/play/src/sensors/fnaf2/camera-rule.js",
       "line": 15,
       "relation": "REFERENCES"
@@ -79,12 +85,6 @@
       "id": "contract.camera-rule-v1",
       "kind": "CONTRACT",
       "path": "packages/play/test/camera-rule.test.js",
-      "relation": "CONFORMANCE_FIXTURE"
-    },
-    {
-      "id": "contract.camera-rule-v1",
-      "kind": "CONTRACT",
-      "path": "tools/device/test-camera-calibrate.py",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -584,6 +584,12 @@
     {
       "id": "contract.monitor-rule-v1",
       "kind": "CONTRACT",
+      "path": "packages/play/bin/calibrate/test-monitor-calibrate.py",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.monitor-rule-v1",
+      "kind": "CONTRACT",
       "path": "packages/play/src/sensors/fnaf2/monitor-rule.js",
       "line": 16,
       "relation": "REFERENCES"
@@ -592,12 +598,6 @@
       "id": "contract.monitor-rule-v1",
       "kind": "CONTRACT",
       "path": "packages/play/test/monitor-rule.test.js",
-      "relation": "CONFORMANCE_FIXTURE"
-    },
-    {
-      "id": "contract.monitor-rule-v1",
-      "kind": "CONTRACT",
-      "path": "tools/device/test-monitor-calibrate.py",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -815,7 +815,7 @@
     {
       "id": "contract.session-manifest-v1",
       "kind": "CONTRACT",
-      "path": "tools/device/test-session-manifest.sh",
+      "path": "packages/play/bin/phone/test-session-manifest.sh",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {

@@ -47,7 +47,7 @@ export const UNSCANNED = [
   [/^docs\/evidence\/|^docs\/chronicle\/|^tools\/recompile\/results\/|^plans\/archive\/|^tools\/device\/[^/]+-winner\.json$|^docs\/research\/ROOT-README-HISTORY\.txt$/,
     'frozen byte for byte (CLAUDE.md, ADR 0002)'],
   [/^apps\/device\/profiles\/|^android\/companion\/assets\/runners\//, 'device profiles, bound by profileSha256'],
-  [/^models\/[^/]+\.json$|^tools\/device\/models\//, 'fitted rules and calibration records pinned by sha256'],
+  [/^models\/[^/]+\.json$/, 'fitted rules and calibration records pinned by sha256'],
   [/^packages\/play\/src\/sensors\/fnaf2\/button-strokes\.js$|^packages\/adapters\/src\/button-strokes\.js$/,
     'full06-responses-20260928 pins its bytes as ruleSourceSha256 (test-phone-encounter-replay.mjs); the adapters path is its registered link'],
   [/^tools\/recompile\/native-frame\.py$/, 'gles2-renderer and three native-frame-title records pin its sha256'],

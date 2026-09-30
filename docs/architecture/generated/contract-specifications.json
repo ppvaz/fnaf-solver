@@ -206,7 +206,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateManifest",
       "conformanceFixtures": [
-        "tools/device/test-session-manifest.sh"
+        "packages/play/bin/phone/test-session-manifest.sh"
       ]
     },
     {
@@ -490,7 +490,7 @@
       "runtimeValidation": "packages/play/src/sensors/fnaf2/monitor-rule.js parseMonitorRule",
       "conformanceFixtures": [
         "packages/play/test/monitor-rule.test.js",
-        "tools/device/test-monitor-calibrate.py"
+        "packages/play/bin/calibrate/test-monitor-calibrate.py"
       ]
     },
     {
@@ -511,7 +511,7 @@
       "runtimeValidation": "packages/play/src/sensors/fnaf2/camera-rule.js parseCameraRule",
       "conformanceFixtures": [
         "packages/play/test/camera-rule.test.js",
-        "tools/device/test-camera-calibrate.py"
+        "packages/play/bin/calibrate/test-camera-calibrate.py"
       ]
     },
     {

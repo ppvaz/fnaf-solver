@@ -11,7 +11,7 @@ import { promisify } from 'node:util';
 const CUE_TOOLS = Object.freeze(['cue.setup', 'cue.queue.enqueue', 'cue.queue.list', 'cue.queue.run']);
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
-const CUE_SETUP = fileURLToPath(new URL('../../../tools/device/companion-setup.sh', import.meta.url));
+const CUE_SETUP = fileURLToPath(new URL('../../../packages/play/bin/companion/companion-setup.sh', import.meta.url));
 const CUE_QUEUE = fileURLToPath(new URL('../../../apps/lab/companion-queue.sh', import.meta.url));
 const execFile = promisify(execFileCallback);
 

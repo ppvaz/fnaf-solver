@@ -9,7 +9,7 @@
 // Every runner is dry unless it is given --live --confirm-live (Pedro,
 // 2026-09-29; ADR 0002): without the pair it prints what it would run and
 // touches no phone. A live night reads the handset serial from FNAF_SERIAL or
-// the untracked local profile (tools/device/local-profile.mjs) and refuses
+// the untracked local profile (packages/play/bin/phone/local-profile.mjs) and refuses
 // without one. Each game keeps its own runner -- they differ in what they
 // drive, and each takes the serial lease before its first adb call.
 //
@@ -27,11 +27,11 @@ import { fileURLToPath } from 'node:url';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 
 export const GAMES = Object.freeze({
-  fnaf2: { runner: 'tools/device/night-run.sh', packs: null },
-  fnaf1: { runner: 'tools/device/fnaf1-night-run.sh', packs: /^fnaf1-night\d+-/ },
-  'fnaf1-custom': { runner: 'tools/device/fnaf1-custom-run.sh', packs: /^fnaf1-custom-/ },
+  fnaf2: { runner: 'packages/play/bin/phone/night-run.sh', packs: null },
+  fnaf1: { runner: 'packages/play/games/fnaf1/fnaf1-night-run.sh', packs: /^fnaf1-night\d+-/ },
+  'fnaf1-custom': { runner: 'packages/play/games/fnaf1/fnaf1-custom-run.sh', packs: /^fnaf1-custom-/ },
   // A committed FNaF 1 winner, re-run from its pinned commit (fnaf1-winner.mjs).
-  'fnaf1-winner': { runner: 'tools/device/fnaf1-winner.mjs', packs: /^fnaf1-custom-/ },
+  'fnaf1-winner': { runner: 'packages/play/games/fnaf1/fnaf1-winner.mjs', packs: /^fnaf1-custom-/ },
 });
 
 const runDirs = root => {

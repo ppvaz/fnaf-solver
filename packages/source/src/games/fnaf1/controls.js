@@ -13,7 +13,7 @@
  * semantic role. Unlike every other control here it is screen-PINNED: it reads
  * at x 475-1605 at both pan extremes.
  *
- * Anchors and the contact are tools/device/models/controls-fnaf1-moto-g56-v207.json
+ * Anchors and the contact are packages/play/profiles/fnaf1/moto-g56/controls-fnaf1-moto-g56-v207.json
  * (`anchor`, and its `contactRule`: a 160 ms held contact). FNaF 1 runs through
  * its own device lane, not `device-executor-v1`, so it has no artifact table.
  * CONTRACT:semantic-control-v1.
@@ -62,5 +62,5 @@ export const FNAF1_CONTROL_CATALOG = defineControlCatalog({
   modelControls: [],
   auxiliaryPoints: [],
   artifactActions: null,
-  sources: ['tools/device/models/controls-fnaf1-moto-g56-v207.json (anchors, contact rule)'],
+  sources: ['packages/play/profiles/fnaf1/moto-g56/controls-fnaf1-moto-g56-v207.json (anchors, contact rule)'],
 });

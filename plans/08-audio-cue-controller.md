@@ -294,7 +294,7 @@ token protects a length-bounded `GET` request, and the response contains a
 fresh monotonic visual/audio snapshot without PCM or image payloads. It is
 served on two channels — a `127.0.0.1:49707` loopback port for the on-device
 controller, and an abstract unix socket reachable over `adb forward` for host
-tooling. `tools/device/query-companion.sh` proves both boundaries against the
+tooling. `packages/play/bin/companion/query-companion.sh` proves both boundaries against the
 real device. This does not implement `ARM`/`HIT`/`MISS`, detector windows, or
 live HID decisions; those remain behind the measurement gates below.
 
@@ -419,7 +419,7 @@ post-run research, not this controller's timing loop.
 
 #### First collection run (2026-08-24): the cue is quiet by design
 
-`tools/device/collect-cue-audio.sh` and `query-companion.sh log` now capture a
+`packages/play/bin/companion/collect-cue-audio.sh` and `query-companion.sh log` now capture a
 whole night in one pass, and 285 seconds of real night audio were collected
 across mask-camp and pilot runs. The result is a clean negative with a source
 explanation.
@@ -610,7 +610,7 @@ disk writes and verbose logging for the production measurement.
 
 #### First leg measured (2026-08-24): result receipt
 
-`tools/device/query-companion.sh latency` times snapshot reads entirely inside
+`packages/play/bin/companion/query-companion.sh latency` times snapshot reads entirely inside
 one device shell, against the device's own clock, so no adb round trip is
 included. 60 samples on the target:
 

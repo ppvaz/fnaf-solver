@@ -58,10 +58,10 @@ sys.path.insert(0, str(HERE.parents[1] / "packages/play/src/safety"))  # the ser
 import night_jobs  # noqa: E402
 from companion_device_lock import DeviceBusy, DeviceLock, lock_dir  # noqa: E402
 
-SETUP_COMMAND = [str(HERE / "../../tools/device/companion-setup.sh")]
-SNAP_COMMAND = ["node", str(HERE / "../../tools/device/native-frame.mjs")]
-TITLE_COMMAND = [sys.executable, str(HERE / "../../tools/device/title-observe.py")]
-AUDIO_COMMAND = [str(ROOT / "tools/cue/bt-audio-link.sh")]
+SETUP_COMMAND = [str(HERE / "../../packages/play/bin/companion/companion-setup.sh")]
+SNAP_COMMAND = ["node", str(HERE / "../../packages/play/bin/phone/native-frame.mjs")]
+TITLE_COMMAND = [sys.executable, str(HERE / "../../packages/play/src/sensors/screencap/title-observe.py")]
+AUDIO_COMMAND = [str(ROOT / "packages/play/bin/audio/bt-audio-link.sh")]
 # A test replaces the runner with a stand-in that receives the real argv.
 RUNNER_PREFIX: list[str] | None = None
 RUNS_ROOT = ROOT

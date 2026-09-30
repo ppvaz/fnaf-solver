@@ -47,7 +47,7 @@
     {
       "file": "apps/desktop/src/lab.mjs",
       "imports": [
-        "../../../tools/device/local-profile.mjs",
+        "../../../packages/play/bin/phone/local-profile.mjs",
         "../../../tools/push-gate.mjs",
         "@sixam/kernel",
         "@sixam/review/consequence",
@@ -543,9 +543,364 @@
       ]
     },
     {
+      "file": "packages/play/bin/companion/audio-players.mjs",
+      "imports": [
+        "../phone/local-profile.mjs",
+        "node:child_process",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/play/bin/companion/audio-probe.mjs",
+      "imports": [
+        "../../src/campaign/physical-ports.js",
+        "../phone/local-profile.mjs",
+        "node:fs"
+      ]
+    },
+    {
+      "file": "packages/play/bin/companion/test-audio-players.mjs",
+      "imports": [
+        "./audio-players.mjs"
+      ]
+    },
+    {
+      "file": "packages/play/bin/companion/test-audio-probe.mjs",
+      "imports": [
+        "./audio-probe.mjs",
+        "node:assert/strict"
+      ]
+    },
+    {
       "file": "packages/play/bin/phone/actuator.mjs",
       "imports": [
         "@sixam/source/fnaf2"
+      ]
+    },
+    {
+      "file": "packages/play/bin/phone/capabilities.mjs",
+      "imports": [
+        "node:child_process",
+        "node:fs",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/play/bin/phone/explore-step.mjs",
+      "imports": [
+        "../../src/campaign/physical-ports.js",
+        "../../src/venues/phone/hid.js",
+        "./local-profile.mjs",
+        "node:child_process",
+        "node:fs",
+        "node:fs/promises",
+        "node:os",
+        "node:path",
+        "node:perf_hooks",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/play/bin/phone/hid-sweep-probe.mjs",
+      "imports": [
+        "@sixam/play/venues/phone/hid",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/play/bin/phone/local-profile.mjs",
+      "imports": [
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/play/bin/phone/native-frame.mjs",
+      "imports": [
+        "../../src/campaign/physical-ports.js",
+        "./local-profile.mjs"
+      ]
+    },
+    {
+      "file": "packages/play/bin/phone/native-regions.mjs",
+      "imports": [
+        "../../src/campaign/physical-ports.js",
+        "./local-profile.mjs",
+        "node:fs",
+        "node:path",
+        "node:zlib"
+      ]
+    },
+    {
+      "file": "packages/play/bin/phone/night-kit.mjs",
+      "imports": [
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:fs/promises",
+        "node:path",
+        "node:perf_hooks",
+        "node:zlib"
+      ]
+    },
+    {
+      "file": "packages/play/bin/phone/test-control-anchor.mjs",
+      "imports": [
+        "../../src/phone/control-anchor.js",
+        "@sixam/source",
+        "node:assert/strict",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/play/bin/phone/test-event-clocks.mjs",
+      "imports": [
+        "@sixam/kernel/time",
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/play/bin/phone/test-hid-sweep-probe.mjs",
+      "imports": [
+        "./hid-sweep-probe.mjs"
+      ]
+    },
+    {
+      "file": "packages/play/bin/phone/test-night-run-dry.mjs",
+      "imports": [
+        "./local-profile.mjs",
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/play/bin/phone/test-screen-map.mjs",
+      "imports": [
+        "./hid-sweep-probe.mjs",
+        "@sixam/play/venues/phone/hid",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/play/bin/probe/hid-intersection-probe.mjs",
+      "imports": [
+        "../phone/hid-sweep-probe.mjs",
+        "node:fs",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/play/bin/probe/intersection-state-gate.mjs",
+      "imports": [
+        "../../src/campaign/physical-ports.js",
+        "@sixam/play",
+        "node:fs",
+        "node:fs/promises",
+        "node:path"
+      ]
+    },
+    {
+      "file": "packages/play/bin/probe/seedpin/test-seedpin.mjs",
+      "imports": [
+        "node:child_process",
+        "node:fs"
+      ]
+    },
+    {
+      "file": "packages/play/bin/probe/test-hid-intersection-probe.mjs",
+      "imports": [
+        "../phone/hid-sweep-probe.mjs",
+        "./hid-intersection-probe.mjs",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/play/bin/probe/test-intersection-state-gate.mjs",
+      "imports": [
+        "./intersection-state-gate.mjs",
+        "@sixam/play",
+        "node:assert/strict",
+        "node:fs/promises"
+      ]
+    },
+    {
+      "file": "packages/play/games/fnaf1/fnaf1-calibration-analyze.mjs",
+      "imports": [
+        "node:fs",
+        "node:path",
+        "node:zlib"
+      ]
+    },
+    {
+      "file": "packages/play/games/fnaf1/fnaf1-detectors.mjs",
+      "imports": [
+        "./fnaf1-calibration-analyze.mjs",
+        "node:fs",
+        "node:path"
+      ]
+    },
+    {
+      "file": "packages/play/games/fnaf1/fnaf1-menu-probe.mjs",
+      "imports": [
+        "../../bin/phone/local-profile.mjs",
+        "../../src/campaign/adb-bridge.js",
+        "../../src/campaign/physical-ports.js",
+        "../../src/venues/phone/hid.js",
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:fs/promises",
+        "node:os",
+        "node:path",
+        "node:perf_hooks",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/play/games/fnaf1/fnaf1-night-run.mjs",
+      "imports": [
+        "../../bin/phone/local-profile.mjs",
+        "../../src/campaign/adb-bridge.js",
+        "../../src/campaign/physical-ports.js",
+        "../../src/venues/phone/hid.js",
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:fs/promises",
+        "node:os",
+        "node:path",
+        "node:perf_hooks",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/play/games/fnaf1/fnaf1-winner.mjs",
+      "imports": [
+        "../../bin/phone/local-profile.mjs",
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/play/games/fnaf1/test-fnaf1-menu-probe.mjs",
+      "imports": [
+        "./fnaf1-menu-probe.mjs",
+        "node:assert/strict",
+        "node:fs/promises"
+      ]
+    },
+    {
+      "file": "packages/play/games/fnaf1/test-fnaf1-night-run.mjs",
+      "imports": [
+        "./fnaf1-night-run.mjs",
+        "node:assert/strict",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/play/games/fnaf3/fnaf3-detectors.mjs",
+      "imports": [
+        "../../bin/phone/native-regions.mjs",
+        "node:fs",
+        "node:path",
+        "node:url",
+        "node:zlib"
+      ]
+    },
+    {
+      "file": "packages/play/games/fnaf3/fnaf3-run.mjs",
+      "imports": [
+        "../../bin/phone/local-profile.mjs",
+        "../../bin/phone/native-regions.mjs",
+        "../../bin/phone/night-kit.mjs",
+        "../../src/campaign/physical-ports.js",
+        "../../src/venues/phone/hid.js",
+        "./fnaf3-detectors.mjs",
+        "node:child_process",
+        "node:crypto",
+        "node:fs/promises",
+        "node:os",
+        "node:path",
+        "node:perf_hooks",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/play/games/fnaf3/test-fnaf3-run.mjs",
+      "imports": [
+        "../../bin/phone/native-regions.mjs",
+        "./fnaf3-detectors.mjs",
+        "./fnaf3-run.mjs",
+        "node:fs"
+      ]
+    },
+    {
+      "file": "packages/play/games/fnaf4/fnaf4-fredbear.mjs",
+      "imports": [
+        "node:fs"
+      ]
+    },
+    {
+      "file": "packages/play/games/fnaf4/fnaf4-hearing-evidence.mjs",
+      "imports": [
+        "./fnaf4-fredbear.mjs",
+        "node:crypto",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url",
+        "node:zlib"
+      ]
+    },
+    {
+      "file": "packages/play/games/fnaf4/fnaf4-run.mjs",
+      "imports": [
+        "../../bin/companion/audio-players.mjs",
+        "../../bin/phone/local-profile.mjs",
+        "../../bin/phone/native-regions.mjs",
+        "../../bin/phone/night-kit.mjs",
+        "../../src/campaign/physical-ports.js",
+        "../../src/venues/phone/hid.js",
+        "./fnaf4-fredbear.mjs",
+        "node:child_process",
+        "node:crypto",
+        "node:fs/promises",
+        "node:os",
+        "node:path",
+        "node:perf_hooks",
+        "node:readline",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/play/games/fnaf4/test-fnaf4-fredbear.mjs",
+      "imports": [
+        "../../bin/phone/night-kit.mjs",
+        "../../src/venues/phone/hid.js",
+        "./fnaf4-fredbear.mjs",
+        "./fnaf4-run.mjs",
+        "node:crypto",
+        "node:fs"
       ]
     },
     {
@@ -2445,31 +2800,6 @@
       ]
     },
     {
-      "file": "tools/device/audio-players.mjs",
-      "imports": [
-        "./local-profile.mjs",
-        "node:child_process",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/device/audio-probe.mjs",
-      "imports": [
-        "../../packages/play/src/campaign/physical-ports.js",
-        "./local-profile.mjs",
-        "node:fs"
-      ]
-    },
-    {
-      "file": "tools/device/capabilities.mjs",
-      "imports": [
-        "node:child_process",
-        "node:fs",
-        "node:url"
-      ]
-    },
-    {
       "file": "tools/device/clocktrace.mjs",
       "imports": [
         "node:child_process",
@@ -2528,21 +2858,6 @@
       ]
     },
     {
-      "file": "tools/device/explore-step.mjs",
-      "imports": [
-        "../../packages/play/src/campaign/physical-ports.js",
-        "../../packages/play/src/venues/phone/hid.js",
-        "./local-profile.mjs",
-        "node:child_process",
-        "node:fs",
-        "node:fs/promises",
-        "node:os",
-        "node:path",
-        "node:perf_hooks",
-        "node:url"
-      ]
-    },
-    {
       "file": "tools/device/fact-register.mjs",
       "imports": [
         "@sixam/kernel/contracts",
@@ -2552,152 +2867,24 @@
       ]
     },
     {
-      "file": "tools/device/fnaf1-calibration-analyze.mjs",
-      "imports": [
-        "node:fs",
-        "node:path",
-        "node:zlib"
-      ]
-    },
-    {
       "file": "tools/device/fnaf1-custom-run.mjs",
       "imports": [
+        "../../packages/play/bin/phone/local-profile.mjs",
+        "../../packages/play/bin/phone/native-regions.mjs",
+        "../../packages/play/bin/phone/night-kit.mjs",
+        "../../packages/play/games/fnaf1/fnaf1-detectors.mjs",
+        "../../packages/play/games/fnaf1/fnaf1-menu-probe.mjs",
+        "../../packages/play/games/fnaf1/fnaf1-winner.mjs",
         "../../packages/play/src/campaign/adb-bridge.js",
         "../../packages/play/src/campaign/physical-ports.js",
         "../../packages/play/src/venues/phone/hid.js",
         "../fnaf1-device-lane.mjs",
-        "./fnaf1-detectors.mjs",
-        "./fnaf1-menu-probe.mjs",
-        "./fnaf1-winner.mjs",
-        "./local-profile.mjs",
-        "./native-regions.mjs",
-        "./night-kit.mjs",
         "node:crypto",
         "node:fs",
         "node:fs/promises",
         "node:os",
         "node:path",
         "node:perf_hooks",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/device/fnaf1-detectors.mjs",
-      "imports": [
-        "./fnaf1-calibration-analyze.mjs",
-        "node:fs",
-        "node:path"
-      ]
-    },
-    {
-      "file": "tools/device/fnaf1-menu-probe.mjs",
-      "imports": [
-        "../../packages/play/src/campaign/adb-bridge.js",
-        "../../packages/play/src/campaign/physical-ports.js",
-        "../../packages/play/src/venues/phone/hid.js",
-        "./local-profile.mjs",
-        "node:child_process",
-        "node:crypto",
-        "node:fs",
-        "node:fs/promises",
-        "node:os",
-        "node:path",
-        "node:perf_hooks",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/device/fnaf1-night-run.mjs",
-      "imports": [
-        "../../packages/play/src/campaign/adb-bridge.js",
-        "../../packages/play/src/campaign/physical-ports.js",
-        "../../packages/play/src/venues/phone/hid.js",
-        "./local-profile.mjs",
-        "node:child_process",
-        "node:crypto",
-        "node:fs",
-        "node:fs/promises",
-        "node:os",
-        "node:path",
-        "node:perf_hooks",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/device/fnaf1-winner.mjs",
-      "imports": [
-        "./local-profile.mjs",
-        "node:child_process",
-        "node:crypto",
-        "node:fs",
-        "node:os",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/device/fnaf3-detectors.mjs",
-      "imports": [
-        "./native-regions.mjs",
-        "node:fs",
-        "node:path",
-        "node:url",
-        "node:zlib"
-      ]
-    },
-    {
-      "file": "tools/device/fnaf3-run.mjs",
-      "imports": [
-        "../../packages/play/src/campaign/physical-ports.js",
-        "../../packages/play/src/venues/phone/hid.js",
-        "./fnaf3-detectors.mjs",
-        "./local-profile.mjs",
-        "./native-regions.mjs",
-        "./night-kit.mjs",
-        "node:child_process",
-        "node:crypto",
-        "node:fs/promises",
-        "node:os",
-        "node:path",
-        "node:perf_hooks",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/device/fnaf4-fredbear.mjs",
-      "imports": [
-        "node:fs"
-      ]
-    },
-    {
-      "file": "tools/device/fnaf4-hearing-evidence.mjs",
-      "imports": [
-        "./fnaf4-fredbear.mjs",
-        "node:crypto",
-        "node:fs",
-        "node:os",
-        "node:path",
-        "node:url",
-        "node:zlib"
-      ]
-    },
-    {
-      "file": "tools/device/fnaf4-run.mjs",
-      "imports": [
-        "../../packages/play/src/campaign/physical-ports.js",
-        "../../packages/play/src/venues/phone/hid.js",
-        "./audio-players.mjs",
-        "./fnaf4-fredbear.mjs",
-        "./local-profile.mjs",
-        "./native-regions.mjs",
-        "./night-kit.mjs",
-        "node:child_process",
-        "node:crypto",
-        "node:fs/promises",
-        "node:os",
-        "node:path",
-        "node:perf_hooks",
-        "node:readline",
         "node:url"
       ]
     },
@@ -2709,45 +2896,12 @@
       ]
     },
     {
-      "file": "tools/device/hid-intersection-probe.mjs",
-      "imports": [
-        "./hid-sweep-probe.mjs",
-        "node:fs",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/device/hid-sweep-probe.mjs",
-      "imports": [
-        "@sixam/play/venues/phone/hid",
-        "node:url"
-      ]
-    },
-    {
       "file": "tools/device/human-gate.mjs",
       "imports": [
         "../../packages/propose/bin/plans/recipe.mjs",
         "../../packages/review/src/stat.mjs",
         "@sixam/source/fnaf2",
         "node:fs",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/device/intersection-state-gate.mjs",
-      "imports": [
-        "../../packages/play/src/campaign/physical-ports.js",
-        "@sixam/play",
-        "node:fs",
-        "node:fs/promises",
-        "node:path"
-      ]
-    },
-    {
-      "file": "tools/device/local-profile.mjs",
-      "imports": [
-        "node:fs",
-        "node:path",
         "node:url"
       ]
     },
@@ -2774,35 +2928,6 @@
         "@sixam/source/fnaf2",
         "node:crypto",
         "node:url"
-      ]
-    },
-    {
-      "file": "tools/device/native-frame.mjs",
-      "imports": [
-        "../../packages/play/src/campaign/physical-ports.js",
-        "./local-profile.mjs"
-      ]
-    },
-    {
-      "file": "tools/device/native-regions.mjs",
-      "imports": [
-        "../../packages/play/src/campaign/physical-ports.js",
-        "./local-profile.mjs",
-        "node:fs",
-        "node:path",
-        "node:zlib"
-      ]
-    },
-    {
-      "file": "tools/device/night-kit.mjs",
-      "imports": [
-        "node:child_process",
-        "node:crypto",
-        "node:fs",
-        "node:fs/promises",
-        "node:path",
-        "node:perf_hooks",
-        "node:zlib"
       ]
     },
     {
@@ -2994,19 +3119,6 @@
       ]
     },
     {
-      "file": "tools/device/test-audio-players.mjs",
-      "imports": [
-        "./audio-players.mjs"
-      ]
-    },
-    {
-      "file": "tools/device/test-audio-probe.mjs",
-      "imports": [
-        "./audio-probe.mjs",
-        "node:assert/strict"
-      ]
-    },
-    {
       "file": "tools/device/test-bb-cue-state.mjs",
       "imports": [
         "./bb-cue-state.mjs",
@@ -3024,17 +3136,6 @@
         "node:fs",
         "node:os",
         "node:path"
-      ]
-    },
-    {
-      "file": "tools/device/test-control-anchor.mjs",
-      "imports": [
-        "../../packages/play/src/phone/control-anchor.js",
-        "@sixam/source",
-        "node:assert/strict",
-        "node:fs",
-        "node:path",
-        "node:url"
       ]
     },
     {
@@ -3056,17 +3157,6 @@
       ]
     },
     {
-      "file": "tools/device/test-event-clocks.mjs",
-      "imports": [
-        "@sixam/kernel/time",
-        "node:assert/strict",
-        "node:child_process",
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
       "file": "tools/device/test-fact-register.mjs",
       "imports": [
         "../../packages/propose/bin/plans/bundle.mjs",
@@ -3080,31 +3170,13 @@
       ]
     },
     {
-      "file": "tools/device/test-fnaf1-menu-probe.mjs",
-      "imports": [
-        "./fnaf1-menu-probe.mjs",
-        "node:assert/strict",
-        "node:fs/promises"
-      ]
-    },
-    {
-      "file": "tools/device/test-fnaf1-night-run.mjs",
-      "imports": [
-        "./fnaf1-night-run.mjs",
-        "node:assert/strict",
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
       "file": "tools/device/test-fnaf1-winner.mjs",
       "imports": [
         "../../apps/desktop/src/night.js",
+        "../../packages/play/games/fnaf1/fnaf1-winner.mjs",
         "../fnaf1-device-lane.mjs",
         "../winner-census.mjs",
         "./fnaf1-custom-run.mjs",
-        "./fnaf1-winner.mjs",
         "node:child_process",
         "node:fs",
         "node:module",
@@ -3114,45 +3186,12 @@
       ]
     },
     {
-      "file": "tools/device/test-fnaf3-run.mjs",
-      "imports": [
-        "./fnaf3-detectors.mjs",
-        "./fnaf3-run.mjs",
-        "./native-regions.mjs",
-        "node:fs"
-      ]
-    },
-    {
-      "file": "tools/device/test-fnaf4-fredbear.mjs",
-      "imports": [
-        "../../packages/play/src/venues/phone/hid.js",
-        "./fnaf4-fredbear.mjs",
-        "./fnaf4-run.mjs",
-        "./night-kit.mjs",
-        "node:crypto",
-        "node:fs"
-      ]
-    },
-    {
       "file": "tools/device/test-grade-run-coverage.mjs",
       "imports": [
+        "node:child_process",
         "node:fs",
         "node:path",
         "node:url"
-      ]
-    },
-    {
-      "file": "tools/device/test-hid-intersection-probe.mjs",
-      "imports": [
-        "./hid-intersection-probe.mjs",
-        "./hid-sweep-probe.mjs",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "tools/device/test-hid-sweep-probe.mjs",
-      "imports": [
-        "./hid-sweep-probe.mjs"
       ]
     },
     {
@@ -3167,15 +3206,6 @@
       "imports": [
         "../../packages/propose/bin/plans/recipe.mjs",
         "./human-gate.mjs"
-      ]
-    },
-    {
-      "file": "tools/device/test-intersection-state-gate.mjs",
-      "imports": [
-        "./intersection-state-gate.mjs",
-        "@sixam/play",
-        "node:assert/strict",
-        "node:fs/promises"
       ]
     },
     {
@@ -3219,10 +3249,10 @@
     {
       "file": "tools/device/test-native-regions.mjs",
       "imports": [
+        "../../packages/play/bin/phone/native-regions.mjs",
+        "../../packages/play/games/fnaf1/fnaf1-detectors.mjs",
         "../../packages/play/src/venues/phone/companion.js",
         "./fnaf1-custom-run.mjs",
-        "./fnaf1-detectors.mjs",
-        "./native-regions.mjs",
         "node:fs"
       ]
     },
@@ -3235,18 +3265,6 @@
         "./human-gate.mjs",
         "@sixam/source/fnaf2",
         "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/device/test-night-run-dry.mjs",
-      "imports": [
-        "./local-profile.mjs",
-        "node:assert/strict",
-        "node:child_process",
-        "node:fs",
-        "node:os",
         "node:path",
         "node:url"
       ]
@@ -3319,16 +3337,6 @@
       ]
     },
     {
-      "file": "tools/device/test-screen-map.mjs",
-      "imports": [
-        "./hid-sweep-probe.mjs",
-        "@sixam/play/venues/phone/hid",
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
       "file": "tools/device/test-seam-slack.mjs",
       "imports": [
         "../../packages/propose/bin/plans/artifact-commands.mjs",
@@ -3337,13 +3345,6 @@
         "node:fs",
         "node:path",
         "node:url"
-      ]
-    },
-    {
-      "file": "tools/device/test-seedpin.mjs",
-      "imports": [
-        "node:child_process",
-        "node:fs"
       ]
     },
     {
@@ -3435,7 +3436,7 @@
     {
       "file": "tools/fnaf1-device-lane.mjs",
       "imports": [
-        "./device/fnaf1-winner.mjs",
+        "../packages/play/games/fnaf1/fnaf1-winner.mjs",
         "./winner-census.mjs",
         "@sixam/source/fnaf1",
         "node:child_process",
@@ -3449,7 +3450,7 @@
     {
       "file": "tools/fnaf1-population-checkpoints.mjs",
       "imports": [
-        "./device/fnaf1-winner.mjs",
+        "../packages/play/games/fnaf1/fnaf1-winner.mjs",
         "./fnaf1-device-lane.mjs",
         "./winner-census.mjs",
         "node:crypto",
@@ -3796,7 +3797,7 @@
     {
       "file": "tools/push-gate.mjs",
       "imports": [
-        "./device/local-profile.mjs",
+        "../packages/play/bin/phone/local-profile.mjs",
         "node:child_process",
         "node:fs",
         "node:os",
@@ -3834,8 +3835,8 @@
     {
       "file": "tools/recompile/android/capture-latency.mjs",
       "imports": [
+        "../../../packages/play/bin/phone/local-profile.mjs",
         "../../../packages/play/src/campaign/physical-ports.js",
-        "../../device/local-profile.mjs",
         "node:child_process",
         "node:crypto",
         "node:fs",
@@ -3858,7 +3859,7 @@
     {
       "file": "tools/recompile/android/rebuild-night.mjs",
       "imports": [
-        "../../device/local-profile.mjs",
+        "../../../packages/play/bin/phone/local-profile.mjs",
         "@sixam/play",
         "node:child_process",
         "node:crypto",
@@ -4262,7 +4263,7 @@
     {
       "file": "tools/test-fnaf3-census.mjs",
       "imports": [
-        "./device/fnaf3-run.mjs",
+        "../packages/play/games/fnaf3/fnaf3-run.mjs",
         "@sixam/propose/games/policy-fnaf3.js",
         "@sixam/source/fnaf3"
       ]
@@ -4307,7 +4308,7 @@
     {
       "file": "tools/test-push-gate.mjs",
       "imports": [
-        "./device/local-profile.mjs",
+        "../packages/play/bin/phone/local-profile.mjs",
         "./push-gate.mjs",
         "node:assert/strict",
         "node:child_process",

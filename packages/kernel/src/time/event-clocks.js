@@ -9,7 +9,7 @@
 // Foxy rule that was fine looked broken. So the clock of every timestamp field is
 // declared here, read off the code that writes it (packages/play/src/campaign/
 // adb-device-local-executor.js, modern-campaign-ports.js, night-anchor.js), and
-// tools/device/test-event-clocks.mjs refuses a packed event whose timestamp field
+// packages/play/bin/phone/test-event-clocks.mjs refuses a packed event whose timestamp field
 // is not declared or whose value is implausible for its clock. The executor's
 // rows are unchanged; this is the reader's contract for them.
 

@@ -210,7 +210,7 @@ public final class TeachPanelTest {
         // Geometry: the declared model and the class agree, and the panel is
         // on the frame.
         String model = new String(Files.readAllBytes(Paths.get(System.getProperty(
-                "teach.model", "tools/device/models/teach-panel-v1.json"))),
+                "teach.model", "packages/play/profiles/fnaf2/moto-g56/teach-panel-v1.json"))),
                 StandardCharsets.UTF_8);
         check("model schema", model.contains("\"schema\": \"" + TeachPanel.VERSION + "\""));
         check("model left", modelInt(model, "left") == TeachPanel.LEFT);

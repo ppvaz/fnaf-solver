@@ -1,0 +1,38 @@
+{
+  "schema": "fnaf1-teach-overlay-v1",
+  "target": {
+    "package": "com.scottgames.fivenightsatfreddys",
+    "build": "2.0.7+40",
+    "device": "ZF525F5BH5"
+  },
+  "presenter": {
+    "package": "com.ppvaz.fnaf1teach",
+    "service": "com.ppvaz.fnaf1teach/.Fnaf1TeachOverlayService",
+    "receiver": "com.ppvaz.fnaf1teach/.Fnaf1TeachCommandReceiver",
+    "contract": "android/fnaf1-teach/src/com/ppvaz/fnaf1teach/Fnaf1TeachContract.java"
+  },
+  "geometry": { "width": 2400, "height": 1080 },
+  "rect": { "left": 20, "top": 0, "right": 1020, "bottom": 50 },
+  "guardPx": 10,
+  "window": "one TYPE_APPLICATION_OVERLAY window, FLAG_NOT_FOCUSABLE | FLAG_NOT_TOUCHABLE | FLAG_LAYOUT_IN_SCREEN, opaque and confined to rect",
+  "purpose": "A bounded teaching narration only. It has no capture, title observation, visual detector, audio detector, or game-control capability.",
+  "clearance": {
+    "doorLightReader": "fnaf1-door-light.py samples y=60..900; rect.bottom + guardPx = 60 keeps its per-run calibration and score pixels outside the presenter.",
+    "titleReader": "title-fnaf1-moto-g56-v207.json starts its logo gate at y=50 and its menu band at y=606; this top strip neither authorizes nor modifies a title read.",
+    "controls": "All measured FNaF 1 control points are below y=495; their nearest vertical distance is 445 px."
+  },
+  "stages": [
+    "hands-off",
+    "left-calibration",
+    "left-watch",
+    "right-monitor-calibration",
+    "full-loop",
+    "night2-calibration"
+  ],
+  "claimLevel": "DEVICE_MEASURED geometry/control map; presenter visual attachment remains to be verified before a teaching run",
+  "sources": [
+    "packages/play/profiles/fnaf1/moto-g56/controls-fnaf1-moto-g56-v207.json",
+    "packages/play/games/fnaf1/fnaf1-door-light.py",
+    "packages/play/profiles/fnaf1/moto-g56/title-fnaf1-moto-g56-v207.json"
+  ]
+}

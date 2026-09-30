@@ -68,9 +68,9 @@ JAVA="$JDK_ROOT/bin/java"
   "$HERE/test/com/ppvaz/fnafcompanion/Fnaf4LessonTest.java"
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.NativeRegionsTest
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.Fnaf2LegacyTest
-"$JAVA" -Dstatus.vector="$HERE/../../tools/device/testdata/companion-status-v1.txt" \
+"$JAVA" -Dstatus.vector="$HERE/../../packages/play/test/testdata/companion-status-v1.txt" \
   -cp "$TEST_TMP" com.ppvaz.fnafcompanion.CompanionStatusTest
-"$JAVA" -Dtargets.model="$HERE/../../tools/device/models/companion-targets-v1.json" \
+"$JAVA" -Dtargets.model="$HERE/../../packages/play/profiles/fnaf2/moto-g56/companion-targets-v1.json" \
   -cp "$TEST_TMP" com.ppvaz.fnafcompanion.TargetsTest
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.AudioProbeAnalysisTest
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.Fnaf1LessonTest
@@ -81,9 +81,9 @@ $JAVA -cp "$TEST_TMP" com.ppvaz.fnafcompanion.PixelWatchTest
 # that is only compiled asserts nothing (tools/test-mistake-register.mjs).
 $JAVA -cp "$TEST_TMP" com.ppvaz.fnafcompanion.ScreenIdentityTest
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.NightOnsetLatchTest
-"$JAVA" -Dteach.vector="$HERE/../../tools/device/testdata/teach-lesson-night7-k3.txt" \
+"$JAVA" -Dteach.vector="$HERE/../../packages/play/test/testdata/teach-lesson-night7-k3.txt" \
   -cp "$TEST_TMP" com.ppvaz.fnafcompanion.CycleLessonTest
-"$JAVA" -Dteach.model="$HERE/../../tools/device/models/teach-panel-v1.json" \
+"$JAVA" -Dteach.model="$HERE/../../packages/play/profiles/fnaf2/moto-g56/teach-panel-v1.json" \
   -cp "$TEST_TMP" com.ppvaz.fnafcompanion.TeachPanelTest
 
 # Video capture is independent of the optional audio receiver. Keep this

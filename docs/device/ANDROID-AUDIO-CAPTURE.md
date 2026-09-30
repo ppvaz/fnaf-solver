@@ -308,7 +308,7 @@ music is captured, SFX are not — so it is purely the fast-mixer routing.
   §"The A2DP mix DOES carry the fast-mixer SFX" below.
 - **Flagship audio path (Pedro, 2026-08-30):** all cue work targets the
   validated external BlueALSA A2DP capture from now on
-  (`tools/cue/capture-bt-audio.sh`); internal capture stays settled-dead on this
+  (`packages/play/bin/audio/capture-bt-audio.sh`); internal capture stays settled-dead on this
   device. Night 2's vent-stage BB/Mangle tracking is the first consumer
   (`MINUS-3-STRATEGY.md` §9 "Night 2 detection scoping").
 
@@ -505,7 +505,7 @@ resume gap after every silent stretch. Content is also band-limited to
 ~10.5 kHz — consistent with the game's own low-rate assets, and a useful sanity
 check that a capture is the game mix and not broadband noise or a mic fallback.
 
-**Reproduce.** `tools/cue/capture-bt-audio.sh <seconds>` wraps it:
+**Reproduce.** `packages/play/bin/audio/capture-bt-audio.sh <seconds>` wraps it:
 `bluealsa-cli open /org/bluealsa/hci0/dev_<mac>/a2dpsnk/source` to a raw file
 (nothing else may hold that PCM), then `ffmpeg -f s32le -ar 48000 -ac 2 -i raw
 -af volume=256 out.wav`. Reference samples: `packages/source/decompile/extract-samples.sh
@@ -748,11 +748,11 @@ mkdir -p ~/fnaf-apks/bt-audio-captures
 tag="after-audio-route-fix-$(date +%Y%m%dT%H%M%S)"
 base="$HOME/fnaf-apks/bt-audio-captures/$tag"
 
-tools/cue/bt-audio-link.sh --ensure
-tools/cue/capture-bt-audio.sh --start "$base"
+packages/play/bin/audio/bt-audio-link.sh --ensure
+packages/play/bin/audio/capture-bt-audio.sh --start "$base"
 # Keep the same continuous title/menu music or in-game ambience playing for
 # 300 seconds.  Do not lock the phone or allow another Bluetooth audio stream.
-tools/cue/capture-bt-audio.sh --stop "$base"
+packages/play/bin/audio/capture-bt-audio.sh --stop "$base"
 
 jq '{format,rate,channels,wallDurationMs,audioDurationMs,missingMs,missingFraction,timeAxis}' \
   "$base.bt.json"

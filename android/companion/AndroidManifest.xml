@@ -15,7 +15,7 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <!-- Every target the Companion may name (Targets.java,
-         tools/device/models/companion-targets-v1.json), so it can read their
+         packages/play/profiles/fnaf2/moto-g56/companion-targets-v1.json), so it can read their
          installed build and launch intent. -->
     <queries>
         <package android:name="com.scottgames.fivenightsatfreddys" />

@@ -25,13 +25,13 @@ import { LESSON_LINE, lessonForNight, lessonLines, lessonOriginLine } from '../c
 import { phoneWallAt, planTimedStart, waitUntilHostMs } from './timed-start.js';
 import { DeviceCampaignRunner } from './campaign-runner.js';
 
-const TITLE_MODEL = new URL('../../../../tools/device/models/title-moto-g56-v207.json', import.meta.url);
+const TITLE_MODEL = new URL('../../../../packages/play/profiles/fnaf2/moto-g56/title-moto-g56-v207.json', import.meta.url);
 const CAMERA_RULE = new URL('../../../../models/camera-rule-moto-g56-v207.json', import.meta.url);
 const MONITOR_RULE = new URL('../../../../models/monitor-rule-moto-g56-v207.json', import.meta.url);
 const MASK_RULE = new URL('../../../../models/mask-rule-moto-g56-v207.json', import.meta.url);
-const LIFECYCLE_OBSERVER = new URL('../../../../tools/device/lifecycle-observe.py', import.meta.url);
-const TITLE_OBSERVER = new URL('../../../../tools/device/title-observe.py', import.meta.url);
-const CUSTOM_NIGHT_READBACK = new URL('../../../../tools/device/custom-night-readback.py', import.meta.url);
+const LIFECYCLE_OBSERVER = new URL('../../../../packages/play/src/sensors/screencap/lifecycle-observe.py', import.meta.url);
+const TITLE_OBSERVER = new URL('../../../../packages/play/src/sensors/screencap/title-observe.py', import.meta.url);
+const CUSTOM_NIGHT_READBACK = new URL('../../../../packages/play/bin/probe/custom-night-readback.py', import.meta.url);
 const AI_DIALS_ALL = ['withfreddy', 'withbonnie', 'withchica', 'foxy', 'toyfreddy', 'toybonnie', 'toychica', 'mangle', 'bb', 'golden'];
 const sleep = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
 const isRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -891,7 +891,7 @@ export async function createCampaignPorts(options = {}) {
     return { menuReady: items.includes(target.menuTarget), observed: true, items };
   };
 
-  // The Custom Night dial readback: tools/device/custom-night-readback.py over
+  // The Custom Night dial readback: packages/play/bin/probe/custom-night-readback.py over
   // a screenshot, with the measured calibration and the glyph fingerprints
   // that sit beside it (models/custom-night-glyphs-v1.json). An explicit
   // `configReadback` in options still wins (tests, fixtures).

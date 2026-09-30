@@ -66,10 +66,10 @@ jobs:
               -not -path "/mnt/android/companion/build/*" -print0 |
               xargs -0 shellcheck -S error'
       - name: Shell footgun regressions
-        run: tools/device/test-shell-footguns.sh
+        run: packages/play/bin/phone/test-shell-footguns.sh
       # The full historical campaign remains an explicit local/release lane;
       # its deliberately red negative experiments are not a green edit gate.
       - name: Companion query (mock ADB)
-        run: tools/device/test-query-companion.sh
+        run: packages/play/bin/companion/test-query-companion.sh
       - name: Companion soak (mock ADB)
-        run: tools/device/test-soak-companion.sh
+        run: packages/play/bin/companion/test-soak-companion.sh

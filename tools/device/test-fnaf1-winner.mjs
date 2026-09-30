@@ -39,7 +39,7 @@ import { designBlock } from '../winner-census.mjs';
 import { FOUR_TWENTY, LANE_FILE, POPULATION_KIND, POPULATION_LANES, TIMING_PATH, loadTiming, newestTreeRecord,
   pinnedGrid420, runDeviceNight, winnerPolicyOptions } from '../fnaf1-device-lane.mjs';
 import { ROOT, RUNNER, listWinners, shapeProblems, pinsAtCommit, pinnedCommit, routeDrift, materialize, removeTree,
-  treeProblems, replayArguments, replayInvocation, sha256, sharedLockDir, winnerCustody } from './fnaf1-winner.mjs';
+  treeProblems, replayArguments, replayInvocation, sha256, sharedLockDir, winnerCustody } from '../../packages/play/games/fnaf1/fnaf1-winner.mjs';
 
 const failures = [];
 let checks = 0;
@@ -153,7 +153,7 @@ try {
       [r.policy, winner.night.dials, r.chicaByCamera, r.originOffsetMs, r.stopAfterMs, true]);
     ok(`${path}: its replay.command is the night launcher's fnaf1-winner with this very file`,
       String(winner.replay?.command).startsWith(`npm run night -- fnaf1-winner --winner ${path} `));
-    eq('npm run night -- fnaf1-winner runs the replay', GAMES['fnaf1-winner']?.runner, 'tools/device/fnaf1-winner.mjs');
+    eq('npm run night -- fnaf1-winner runs the replay', GAMES['fnaf1-winner']?.runner, 'packages/play/games/fnaf1/fnaf1-winner.mjs');
 
     // 4. The winner names a census of its own route -- its pinned grid420 with the
     //    options its runner passed -- and that census still replays as recorded.
@@ -219,7 +219,7 @@ try {
       throws('control -- a command with shell syntax is not interpreted',
         () => replayArguments({ ...winner, command: `${winner.command} ; rm -rf ~` }), /shell syntax/);
       throws('control -- a command naming another runner is not replayed',
-        () => replayArguments({ ...winner, command: winner.command.replace(RUNNER, 'tools/device/night-run.sh') }), /not tools\/device\/fnaf1-custom-run\.sh/);
+        () => replayArguments({ ...winner, command: winner.command.replace(RUNNER, 'packages/play/bin/phone/night-run.sh') }), /not tools\/device\/fnaf1-custom-run\.sh/);
       // A winner whose pins the tree holds runs from the tree: the guard is not a blanket refusal.
       if (guard) {
         const held = { ...winner, sources: Object.fromEntries(Object.keys(winner.sources).map((p) => [p, treeHash(p)])) };

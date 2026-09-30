@@ -77,7 +77,7 @@ the wall-clock seeding, and the 65,536 possible streams are **properties of
 build 296, not of FNaF 2**.
 
 Everything built on that is therefore game-independent: the seed census, the
-3000-seed rule, `seed-recovery.js`, twins, and `tools/device/seedpin`.
+3000-seed rule, `seed-recovery.js`, twins, and `packages/play/bin/probe/seedpin`.
 
 > This also retires the caveat raised earlier in the session, when the same
 > question was asked with the vanilla mmfparser and could only be answered by
@@ -125,7 +125,7 @@ data only; nothing leaves this machine, per Plan 17's boundary.
 
 ### Capability preflight
 
-`node tools/device/capabilities.mjs` ran green on 2026-09-19 and is entirely
+`node packages/play/bin/phone/capabilities.mjs` ran green on 2026-09-19 and is entirely
 handset-level — geometry, HID, screenrecord, and 26 Perfetto data sources.
 **Exactly one field is game-bound** (`targetInstalled`, `capabilities.mjs:56`).
 Horizon 5's first milestone item is therefore already satisfied for every game
@@ -534,7 +534,7 @@ offset it assumes, or it is not a control point.
 
 #### The intersection coordinate has a precondition, and it may not hold
 
-FNaF 2 already solved a version of this. `tools/device/coords.sh` carries
+FNaF 2 already solved a version of this. `packages/play/bin/phone/coords.sh` carries
 `TAP_CAM_LIGHT="900 540"` labelled as the cam-flash/hall-flash **intersection
 position**, against `TAP_HALL="1200 540"` for the standalone beam, with
 `hid-intersection-probe.mjs` and `intersection-state-gate.mjs` built around it.
@@ -881,8 +881,8 @@ screen_y = design_y * 1.5                the frame is stretched, not cropped
 measured monitor point (1040,1002) only under the stretch -- a centred crop puts
 it off-screen at y=1117 -- and the title rows and every Custom Night control
 land within 4 px of their placed instances under it
-(`tools/device/models/title-fnaf1-moto-g56-v207.json`,
-`tools/device/models/custom-night-fnaf1-moto-g56-v207.json`). This is
+(`packages/play/profiles/fnaf1/moto-g56/title-fnaf1-moto-g56-v207.json`,
+`packages/play/profiles/fnaf1/moto-g56/custom-night-fnaf1-moto-g56-v207.json`). This is
 mistake register #12 in a new costume — an absent observation became evidence
 before the detector had ever read the positive — and the operator caught it
 before it was written down.
@@ -1107,7 +1107,7 @@ actuators now resolve through it and **every accepted press records the view
 offset it resolved at**; one that cannot be resolved is `REJECTED` with the
 reason before anything reaches the transport.
 
-`tools/device/models/controls-fnaf1-moto-g56-v207.json` is the first map to use
+`packages/play/profiles/fnaf1/moto-g56/controls-fnaf1-moto-g56-v207.json` is the first map to use
 it, and `test-control-anchor.mjs` (in `npm run test:unit`) derives the door
 separation from those coordinates rather than trusting this document's 2779 --
 it computes 2780, because the measured table reads x 2286 where the derivation

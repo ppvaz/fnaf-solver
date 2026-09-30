@@ -30,7 +30,7 @@ The teach panel (`night-run.sh --teach-overlay`; android/companion README,
 "Teach panel") attaches beside authoritative sensing without this record,
 debug builds only, because it makes the `OUTSIDE_PROTECTED_REGIONS` argument by
 construction rather than by measurement: its window is exactly the rectangle in
-`tools/device/models/teach-panel-v1.json`, which host tests prove is at least
+`packages/play/profiles/fnaf2/moto-g56/teach-panel-v1.json`, which host tests prove is at least
 10 px from every pixel any helper or host reader samples during a night, and the
 two helper readers that cannot avoid any rectangle are withheld while it may be
 on screen. What that does not cover is the compositor: the device evidence for a
@@ -156,7 +156,7 @@ or revoked records fall back to `self-capture-unqualified`.
    valid target-night frame may reattach after an app switch returns to FNaF.
 5. Retain the `OverlayMetrics` update-to-draw p50/p95/p99 trace alongside
    detector latency, frame drops, CPU, memory, thermal, and cue-clear latency.
-   The authenticated device query `tools/device/query-companion.sh overlay`
+   The authenticated device query `packages/play/bin/companion/query-companion.sh overlay`
    returns the HUD lifecycle/gate and bounded counters without requiring the
    game to remain focused; capture its output at each lifecycle boundary and
    at the end of the observe-only run.

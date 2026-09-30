@@ -10,7 +10,7 @@ import { promisify } from 'node:util';
 
 const execFile = promisify(execFileCallback);
 const ROOT = fileURLToPath(new URL('../../../../', import.meta.url));
-const SETUP = fileURLToPath(new URL('../../../../tools/device/companion-setup.sh', import.meta.url));
+const SETUP = fileURLToPath(new URL('../../../../packages/play/bin/companion/companion-setup.sh', import.meta.url));
 
 async function runSetup(file, args, options) {
   try {
@@ -26,7 +26,7 @@ async function runSetup(file, args, options) {
  * run?: (file: any, args: any, options: any) => Promise<{exitCode: any, stdout: any, stderr: any}>}} options
  *
  * Stop any current helper projection and drive a fresh named consent flow for
- * the NAMED target (a game key from tools/device/models/companion-targets-v1.json).
+ * the NAMED target (a game key from packages/play/profiles/fnaf2/moto-g56/companion-targets-v1.json).
  * There is no default game: setup returns to the target it is told, and
  * `screen` is checked there, so callers receive that game focused again with
  * a live control endpoint before they continue.

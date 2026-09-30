@@ -13,7 +13,7 @@
  *
  * Anchors, the frame each control is pressed on, and the device control map's
  * own key for it (listed as an alias) are
- * tools/device/models/controls-fnaf3-moto-g56-v204.json. A control drawn on
+ * packages/play/profiles/fnaf3/moto-g56/controls-fnaf3-moto-g56-v204.json. A control drawn on
  * the monitor needs the monitor up; the reboot rows need the maintenance menu
  * open, a state this catalog's precondition vocabulary does not have yet.
  * FNaF 3 runs through its own device lane, so it has no artifact table.
@@ -53,5 +53,5 @@ export const FNAF3_CONTROL_CATALOG = defineControlCatalog({
   modelControls: [],
   auxiliaryPoints: [],
   artifactActions: null,
-  sources: ['tools/device/models/controls-fnaf3-moto-g56-v204.json (anchors, frames, map keys)'],
+  sources: ['packages/play/profiles/fnaf3/moto-g56/controls-fnaf3-moto-g56-v204.json (anchors, frames, map keys)'],
 });

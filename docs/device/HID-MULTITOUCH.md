@@ -1453,9 +1453,9 @@ source needs to be requested explicitly next run).
 
 ### Package 5 host instrument follow-up (2026-08-30)
 
-The repository now has `tools/device/atrace-input.sh`, which brackets a
+The repository now has `packages/play/bin/probe/atrace-input.sh`, which brackets a
 command with a phone-side Perfetto trace and flushes the trace before pulling
-it, plus `tools/device/inputtrace.py`, which queries dispatch, delivery,
+it, plus `packages/play/bin/probe/inputtrace.py`, which queries dispatch, delivery,
 identity, and candidate frame rows without adding a trace-processor dependency
 to the checkout. `grade-run.sh` consumes the artifact when it exists, and the
 parser has phone-free regression coverage. The wrapper refuses to overwrite a

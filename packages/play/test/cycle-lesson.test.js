@@ -5,8 +5,8 @@ import { LESSON_LINE, lessonForNight, lessonFromArtifactPlan, lessonLines, lesso
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const TOKEN = '0123456789abcdef0123456789abcdef';
-const plan = JSON.parse(readFileSync(`${ROOT}tools/device/testdata/teach-night7-k3-plan.json`, 'utf8'));
-const vector = readFileSync(`${ROOT}tools/device/testdata/teach-lesson-night7-k3.txt`, 'ascii').trim().split('\n');
+const plan = JSON.parse(readFileSync(`${ROOT}packages/play/test/testdata/teach-night7-k3-plan.json`, 'utf8'));
+const vector = readFileSync(`${ROOT}packages/play/test/testdata/teach-lesson-night7-k3.txt`, 'ascii').trim().split('\n');
 
 // The shared vector: what this sends for k3 is exactly what CycleLessonTest.java
 // parses to the same id, so the two canonical texts agree.

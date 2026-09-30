@@ -155,7 +155,7 @@ general secret scanner — it makes no claim about shapes it was not told about.
 **Result (producer slice, 2026-08-26).** Every producer now writes one.
 
 [`session-manifest.py`](../tools/device/session-manifest.py) is the emitter and
-[`session.sh`](../tools/device/session.sh) is the threading: `fnaf_session_begin`
+[`session.sh`](../packages/play/bin/phone/session.sh) is the threading: `fnaf_session_begin`
 latches one id and one `time.monotonic()` origin, exports them, and every later
 call — including a helper started *inside* a run — reads them back rather than
 deriving a second identity from a filename. `trial.sh` begins the session
@@ -188,7 +188,7 @@ Three properties the emitter enforces rather than documents:
   the build `coords.sh` was calibrated on, so a phone carrying another build
   makes every model stale, loudly, in the manifest.
 
-[`test-session-manifest.sh`](../tools/device/test-session-manifest.sh) drives
+[`test-session-manifest.sh`](../packages/play/bin/phone/test-session-manifest.sh) drives
 the real shell entry points under a mock adb: a session validates end to end;
 its artifact digests match independently computed ones; an absent capture is a
 fault; an aborted session finalizes with exactly one matching terminal event;

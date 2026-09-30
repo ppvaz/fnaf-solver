@@ -4,7 +4,7 @@ One path plays a FNaF 2 night on the phone: the campaign executor. A night is a
 committed winner (`tools/device/campaign-night<N>-<name>-winner.json`) that
 `npm run device:emit` compiles into a bundle, and `npm run device:campaign --
 --bundle DIR --nights N --profile hid-mediaprojection` runs it.
-`tools/device/night-run.sh` (`npm run night -- fnaf2`) wraps that one command
+`packages/play/bin/phone/night-run.sh` (`npm run night -- fnaf2`) wraps that one command
 with recording, grading, packing and the reset to the title. The fixture
 service path, its adapter layer and the artifact lane never played a
 night and were retired on 2026-09-25 (`6d78c7e`, `903ffab`;
@@ -57,7 +57,7 @@ make no adb call, take no lease and need no serial. Until that day
 `night-run.sh` went live unless `--dry-run` was passed. A live FNaF 2 night is:
 
 ```sh
-tools/device/night-run.sh --live --confirm-live --label NAME --bundle DIR --night N
+packages/play/bin/phone/night-run.sh --live --confirm-live --label NAME --bundle DIR --night N
 ```
 
 **The handset serial lives on the host, never in the repository (ADR 0002,
@@ -68,7 +68,7 @@ and a live run with none of them refuses before it touches anything. Set it once
 per host:
 
 ```sh
-node tools/device/local-profile.mjs set <serial>    # adb devices -l lists it
+node packages/play/bin/phone/local-profile.mjs set <serial>    # adb devices -l lists it
 ```
 
 No tracked script carries a default, and `tools/test-no-serial.mjs` (in `npm
@@ -226,7 +226,7 @@ restored at the end, however the window ends.
 - **Installing it is Pedro's step.** Nothing here installs a timer:
 
   ```sh
-  node tools/device/local-profile.mjs set <serial>                       # once per host (untracked)
+  node packages/play/bin/phone/local-profile.mjs set <serial>                       # once per host (untracked)
   python3 apps/lab/overnight-window.py preflight                     # read-only: FIT, or why not
   python3 apps/lab/overnight-window.py units --out ~/.config/systemd/user
   systemctl --user daemon-reload

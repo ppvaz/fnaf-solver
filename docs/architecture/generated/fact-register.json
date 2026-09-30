@@ -37,7 +37,7 @@
           ]
         },
         {
-          "file": "tools/device/intersection-state-gate.mjs",
+          "file": "packages/play/bin/probe/intersection-state-gate.mjs",
           "evidence": [
             "native-stroke",
             "grid-anchor"
@@ -82,7 +82,7 @@
           ]
         },
         {
-          "file": "tools/device/intersection-state-gate.mjs",
+          "file": "packages/play/bin/probe/intersection-state-gate.mjs",
           "evidence": [
             "native-stroke",
             "native-explicit",
@@ -133,7 +133,7 @@
           ]
         },
         {
-          "file": "tools/device/intersection-state-gate.mjs",
+          "file": "packages/play/bin/probe/intersection-state-gate.mjs",
           "evidence": [
             "native-screen"
           ]

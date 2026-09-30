@@ -97,7 +97,7 @@ export function communityLine({ rebootAt = -4, dwellFrames = 12,
 
 // Where one move can take him from each place the monitor shows [SOURCED:
 // games/fnaf3/graph.json in @sixam/source, g227-g251, g604-g613]; vents resolve back to their camera
-// when sealed. The device loop (tools/device/fnaf3-run.mjs NEXT) carries the
+// when sealed. The device loop (packages/play/games/fnaf3/fnaf3-run.mjs NEXT) carries the
 // same table.
 const NEXT = {
   10: [9, 14], 9: [10, 8, 11], 8: [9, 7, 5], 7: [8, 6, 12], 6: [7, 5],

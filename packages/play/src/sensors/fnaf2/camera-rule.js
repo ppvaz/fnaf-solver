@@ -5,7 +5,7 @@
  * renders yellow (bright ~194 in the normal view, dimmed ~96 while the
  * music-box wind control is held) and unselected buttons read the map's cool
  * grey (~-19..-9).  A `camera-rule-v1` artifact -- fitted offline from
- * labelled captures by `tools/device/camera-calibrate.py` -- carries each
+ * labelled captures by `packages/play/bin/calibrate/camera-calibrate.py` -- carries each
  * button's measured threshold and refuse band.  Verdict semantics are
  * strict: exactly one lit button names the selected camera; zero and several
  * lit buttons are distinct UNKNOWN reasons, so a camera transition and the

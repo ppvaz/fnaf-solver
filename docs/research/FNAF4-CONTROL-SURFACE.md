@@ -193,7 +193,7 @@ and `Controller Size` (`joystickSize`, clamped 60..180 and snapped to multiples
 of 20, default 120) scales the zones directly. A FNaF 4 control map is valid
 only for a stated pair of these, and they belong in a resolved profile beside
 the build and the handset — exactly the caveat already recorded in
-`tools/device/models/title-fnaf3-moto-g56-v204.json`. That it recurs verbatim
+`packages/play/profiles/fnaf3/moto-g56/title-fnaf3-moto-g56-v204.json`. That it recurs verbatim
 on a second game makes it a property of the **mobile port**, not of a game.
 
 ## Entry path, and a label trap

@@ -8,9 +8,9 @@ when Balloon Boy is in it, so a bright->dark transition in the projection
 snapshot is a real g417 arrival, timestamped on the same monotonic clock the
 audio log is anchored to.
 
-  tools/device/query-companion.sh log start
-  tools/device/query-companion.sh watch 300 visual.tsv     # in another shell
-  tools/device/query-companion.sh log stop run1            # prints startNs=
+  packages/play/bin/companion/query-companion.sh log start
+  packages/play/bin/companion/query-companion.sh watch 300 visual.tsv     # in another shell
+  packages/play/bin/companion/query-companion.sh log stop run1            # prints startNs=
 
   tools/cue/label-misses.py visual.tsv run1-*.wav --start-ns 95671421840625
 

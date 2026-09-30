@@ -4,9 +4,9 @@
  * Helper: whole native frames (SNAP) for the title and the dials, raw native
  * regions (REGION) for the night. No screencap, no luma, no grid.
  *
- *   tools/device/fnaf1-custom-run.sh [--dry-run]          (dry by default: no --live, no phone)
- *   tools/device/fnaf1-custom-run.sh --live --confirm-live --dials 0,0,0,0 --mode calibrate-empty [--label NAME]
- *   tools/device/fnaf1-custom-run.sh --live --confirm-live --dials F,B,C,X --mode grid420 --detectors FILE
+ *   packages/play/games/fnaf1/fnaf1-custom-run.sh [--dry-run]          (dry by default: no --live, no phone)
+ *   packages/play/games/fnaf1/fnaf1-custom-run.sh --live --confirm-live --dials 0,0,0,0 --mode calibrate-empty [--label NAME]
+ *   packages/play/games/fnaf1/fnaf1-custom-run.sh --live --confirm-live --dials F,B,C,X --mode grid420 --detectors FILE
  *        [--winner FILE | --route tree] [--label NAME]
  *
  * A grid420 night that a committed FNaF 1 winner names runs from this tree
@@ -40,20 +40,20 @@ import { AdbDeviceBridge } from '../../packages/play/src/campaign/adb-bridge.js'
 import { AdbCompanionPort, AdbHidProcess } from '../../packages/play/src/campaign/physical-ports.js';
 import { HidWireTransport } from '../../packages/play/src/venues/phone/hid.js';
 import { ProbeRecord, ensureTitle, titleRead, titleConsensus, settleCustomNight, setDials, restartToTitle,
-  DIALS, PACKAGE, BUILD, LEAVE_WAIT_MS } from './fnaf1-menu-probe.mjs';
-import { loadRegionSet, registerSet } from './native-regions.mjs';
-import { RegionRecorder, startVideo } from './night-kit.mjs';
-import { loadDetectors, makeClassifier } from './fnaf1-detectors.mjs';
-import { listWinners, routeDrift } from './fnaf1-winner.mjs';
+  DIALS, PACKAGE, BUILD, LEAVE_WAIT_MS } from '../../packages/play/games/fnaf1/fnaf1-menu-probe.mjs';
+import { loadRegionSet, registerSet } from '../../packages/play/bin/phone/native-regions.mjs';
+import { RegionRecorder, startVideo } from '../../packages/play/bin/phone/night-kit.mjs';
+import { loadDetectors, makeClassifier } from '../../packages/play/games/fnaf1/fnaf1-detectors.mjs';
+import { listWinners, routeDrift } from '../../packages/play/games/fnaf1/fnaf1-winner.mjs';
 import { grid420, PHONE_OPTIONS } from '../fnaf1-device-lane.mjs';
-import { resolveSerial } from './local-profile.mjs';
+import { resolveSerial } from '../../packages/play/bin/phone/local-profile.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../..');
-const TITLE_MODEL_PATH = join(HERE, 'models/title-fnaf1-moto-g56-v207.json');
-const CUSTOM_NIGHT_MODEL_PATH = join(HERE, 'models/custom-night-fnaf1-moto-g56-v207.json');
-const CONTROLS_PATH = join(HERE, 'models/controls-fnaf1-moto-g56-v207.json');
-const REGIONS_PATH = join(HERE, 'models/regions-fnaf1-moto-g56-v207.json');
+const TITLE_MODEL_PATH = join(HERE, '../../packages/play/profiles/fnaf1/moto-g56/title-fnaf1-moto-g56-v207.json');
+const CUSTOM_NIGHT_MODEL_PATH = join(HERE, '../../packages/play/profiles/fnaf1/moto-g56/custom-night-fnaf1-moto-g56-v207.json');
+const CONTROLS_PATH = join(HERE, '../../packages/play/profiles/fnaf1/moto-g56/controls-fnaf1-moto-g56-v207.json');
+const REGIONS_PATH = join(HERE, '../../packages/play/profiles/fnaf1/moto-g56/regions-fnaf1-moto-g56-v207.json');
 const CONTACT_MS = 160;
 const MODES = Object.freeze(['calibrate-empty', 'grid420']);
 const NIGHT_MS = 535000;                 // 90 s + 5 x 89 s (fnaf1.js CLOCK)
@@ -108,9 +108,9 @@ export function parseArgs(argv) {
 
 /** What a grid420 night executes from this tree when no committed winner names its night. */
 const ROUTE_FILES = Object.freeze(['tools/fnaf1-device-lane.mjs', 'tools/device/fnaf1-custom-run.mjs',
-  'tools/device/fnaf1-detectors.mjs', 'tools/device/models/fnaf1-device-timing-moto-g56-v207.json',
-  'tools/device/models/regions-fnaf1-moto-g56-v207.json', 'tools/device/models/controls-fnaf1-moto-g56-v207.json',
-  'tools/device/models/custom-night-fnaf1-moto-g56-v207.json']);
+  'packages/play/games/fnaf1/fnaf1-detectors.mjs', 'packages/play/profiles/fnaf1/moto-g56/fnaf1-device-timing-moto-g56-v207.json',
+  'packages/play/profiles/fnaf1/moto-g56/regions-fnaf1-moto-g56-v207.json', 'packages/play/profiles/fnaf1/moto-g56/controls-fnaf1-moto-g56-v207.json',
+  'packages/play/profiles/fnaf1/moto-g56/custom-night-fnaf1-moto-g56-v207.json']);
 
 /**
  * Which route a grid420 night executes from this tree, and whether it is a

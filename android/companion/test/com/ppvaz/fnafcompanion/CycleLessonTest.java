@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * Phone-free regression for the teach panel's lesson.
  *
- * <p>The vector tools/device/testdata/teach-lesson-night7-k3.txt is what the
+ * <p>The vector packages/play/test/testdata/teach-lesson-night7-k3.txt is what the
  * host's cycle-lesson.js sends for the k3 Night 7 bundle; the host test
  * regenerates it from the same artifact plan. Parsing it here and landing on
  * the host's id is the cross-language agreement on the canonical text.</p>
@@ -70,7 +70,7 @@ public final class CycleLessonTest {
     public static void main(String[] args) throws IOException {
         List<String> vector = new ArrayList<>();
         for (String line : new String(Files.readAllBytes(Paths.get(System.getProperty(
-                "teach.vector", "tools/device/testdata/teach-lesson-night7-k3.txt"))),
+                "teach.vector", "packages/play/test/testdata/teach-lesson-night7-k3.txt"))),
                 StandardCharsets.US_ASCII).split("\n")) {
             if (!line.isEmpty()) vector.add(line);
         }

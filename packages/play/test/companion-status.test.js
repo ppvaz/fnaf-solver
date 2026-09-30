@@ -11,7 +11,7 @@ import {
   COMPANION_STATUS_FIELDS, companionStatusFields, parseCompanionEndpoint, parseCompanionStatus,
 } from '../src/venues/phone/companion-status.js';
 
-const vector = readFileSync(new URL('../../../tools/device/testdata/companion-status-v1.txt', import.meta.url), 'utf8');
+const vector = readFileSync(new URL('../../../packages/play/test/testdata/companion-status-v1.txt', import.meta.url), 'utf8');
 const cases = [];
 let endpoint = null;
 let endpointExpect = null;

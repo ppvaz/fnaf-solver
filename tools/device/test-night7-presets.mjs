@@ -140,7 +140,7 @@ let populationLine;
   check(record.method.knobsSha256 === sha256(JSON.stringify(PRESET_KNOBS)),
     `PRESET_KNOBS changed since ${name}; re-run night7-presets.mjs --population`);
   check(record.method.presetSource.sha256 ===
-      sha256(readFileSync(new URL('./models/custom-night-moto-g56-v207.json', import.meta.url))),
+      sha256(readFileSync(new URL('../../packages/play/profiles/fnaf2/moto-g56/custom-night-moto-g56-v207.json', import.meta.url))),
     `the menu model changed since ${name}; re-run night7-presets.mjs --population`);
   const design = designBlock();
   check(record.method.designBlock.sha256 === sha256(JSON.stringify(design.seeds)),

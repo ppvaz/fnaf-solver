@@ -29,7 +29,7 @@ import { appendFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirS
 import { homedir, hostname, tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { mainCheckout } from './device/local-profile.mjs';
+import { mainCheckout } from '../packages/play/bin/phone/local-profile.mjs';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));
 const ZERO = /^0+$/;
@@ -51,9 +51,9 @@ export const LANES = [
   { name: 'Campaign dry-run over a committed winner', run: 'd=$(mktemp -d) && trap \'rm -rf "$d"\' EXIT && npm run --silent device:emit -- --winner tools/device/campaign-night7-k3-winner.json --out "$d/k3" && npm run --silent device:campaign -- --bundle "$d/k3" --nights 7 --profile hid-mediaprojection' },
   { name: 'Documentation and catalog links', run: 'npm run catalog && npm run chronicle && git diff --exit-code -- docs/architecture/generated docs/portal && node tools/test-docs.mjs' },
   { name: 'ShellCheck critical diagnostics', needs: 'docker', multiline: true },
-  { name: 'Shell footgun regressions', run: 'tools/device/test-shell-footguns.sh' },
-  { name: 'Companion query (mock ADB)', run: 'tools/device/test-query-companion.sh' },
-  { name: 'Companion soak (mock ADB)', run: 'tools/device/test-soak-companion.sh' },
+  { name: 'Shell footgun regressions', run: 'packages/play/bin/phone/test-shell-footguns.sh' },
+  { name: 'Companion query (mock ADB)', run: 'packages/play/bin/companion/test-query-companion.sh' },
+  { name: 'Companion soak (mock ADB)', run: 'packages/play/bin/companion/test-soak-companion.sh' },
 ];
 
 // --- The gate must stay the job it claims to mirror ------------------------

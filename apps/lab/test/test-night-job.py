@@ -43,13 +43,13 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
-FAKE = HERE / "../../../tools/device/testdata" / "fake_phone.py"
+FAKE = HERE / "../../../packages/play/test/testdata" / "fake_phone.py"
 SERIAL = "FAKE0001"
 K3 = "tools/device/campaign-night7-k3-winner.json"
 N5 = "tools/device/campaign-night5-mask5plus-winner.json"
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(ROOT / "packages/play/src/safety"))
-sys.path.insert(0, str(HERE / "../../../tools/device/testdata"))
+sys.path.insert(0, str(HERE / "../../../packages/play/test/testdata"))
 import fake_phone  # noqa: E402
 import night_jobs  # noqa: E402
 from companion_device_lock import DeviceBusy, DeviceLock  # noqa: E402

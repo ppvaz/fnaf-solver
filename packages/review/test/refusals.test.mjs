@@ -82,20 +82,20 @@ const report = {
   schema: CAPABILITIES_SCHEMA, recordedAt: '2026-09-11',
   device: { serial: 'UNKNOWN', perfettoDataSources: ['android.inputmethod'] },
   instruments: [
-    { tool: 'tools/device/inputtrace.py', needs: 'a Perfetto app input-dispatch data source (android.input.inputevent)',
+    { tool: 'packages/play/bin/probe/inputtrace.py', needs: 'a Perfetto app input-dispatch data source (android.input.inputevent)',
       available: false, ifMissing: 'use the Companion native frame trace instead' },
     { tool: 'tools/device/actuation-frame-metric.py', needs: 'the Companion native frame trace', available: true },
     { tool: 'tools/device/input-frame-align.py', needs: 'both traces', available: null, ifMissing: 'alignment needs dispatch' },
     { tool: 'tools/device/run-timeline.py, grade-night.py, grade-minus7.py', needs: 'screenrecord', available: true },
   ],
 };
-refusedBy(checkCapabilitiesFirst({ instrument: 'tools/device/inputtrace.py' }), 'capabilities-first',
+refusedBy(checkCapabilitiesFirst({ instrument: 'packages/play/bin/probe/inputtrace.py' }), 'capabilities-first',
   'an input-dispatch trace proposed before the phone was asked (mistake 8)');
-refusedBy(checkCapabilitiesFirst({ instrument: 'tools/device/inputtrace.py', capabilities: unknown('the phone was away') }),
+refusedBy(checkCapabilitiesFirst({ instrument: 'packages/play/bin/probe/inputtrace.py', capabilities: unknown('the phone was away') }),
   'capabilities-first', 'an UNKNOWN report');
-refusedBy(checkCapabilitiesFirst({ instrument: 'tools/device/inputtrace.py', capabilities: { schema: 'something-else' } }),
+refusedBy(checkCapabilitiesFirst({ instrument: 'packages/play/bin/probe/inputtrace.py', capabilities: { schema: 'something-else' } }),
   'capabilities-first', 'a report of another schema');
-const missing = refusedBy(checkCapabilitiesFirst({ instrument: 'tools/device/inputtrace.py', capabilities: report }), 'capabilities-first',
+const missing = refusedBy(checkCapabilitiesFirst({ instrument: 'packages/play/bin/probe/inputtrace.py', capabilities: report }), 'capabilities-first',
   'an instrument the report says the phone cannot feed');
 assert.equal(missing.remedy, 'use the Companion native frame trace instead', 'the report\'s own ifMissing is the remedy');
 refusedBy(checkCapabilitiesFirst({ instrument: 'input-frame-align.py', capabilities: report }), 'capabilities-first',

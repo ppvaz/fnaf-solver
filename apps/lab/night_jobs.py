@@ -6,9 +6,9 @@ game-playing vocabulary word. It names a committed winner file and one night of
 it, and nothing else: no shell text, no coordinates, no timing. The runner is
 fixed by the winner's schema, and every runner is an existing, gated one:
 
-    winner-v1              FNaF 2  tools/device/night-run.sh (bundle emitted fresh)
-    fnaf1-route-winner-v1  FNaF 1  tools/device/fnaf1-winner.mjs (the pinned tree)
-    fnaf4-route-winner-v1  FNaF 4  tools/device/fnaf4-run.sh --mode loop
+    winner-v1              FNaF 2  packages/play/bin/phone/night-run.sh (bundle emitted fresh)
+    fnaf1-route-winner-v1  FNaF 1  packages/play/games/fnaf1/fnaf1-winner.mjs (the pinned tree)
+    fnaf4-route-winner-v1  FNaF 4  packages/play/games/fnaf4/fnaf4-run.sh --mode loop
 
 Every runner is dry unless told otherwise (ADR 0002, 2026-09-29), so each
 command below passes `--live --confirm-live` itself: a night job is a live
@@ -46,7 +46,7 @@ GAMES = {
     "fnaf2": {
         "schema": "winner-v1",
         "package": "com.scottgames.fnaf2",
-        "titleModel": "tools/device/models/title-moto-g56-v207.json",
+        "titleModel": "packages/play/profiles/fnaf2/moto-g56/title-moto-g56-v207.json",
         "setupTarget": "fnaf2",
         # Audio is retained evidence on FNaF 2, not a control input: opt-in.
         "audio": "optional",
@@ -54,7 +54,7 @@ GAMES = {
     "fnaf1": {
         "schema": "fnaf1-route-winner-v1",
         "package": "com.scottgames.fivenightsatfreddys",
-        "titleModel": "tools/device/models/title-fnaf1-moto-g56-v207.json",
+        "titleModel": "packages/play/profiles/fnaf1/moto-g56/title-fnaf1-moto-g56-v207.json",
         "setupTarget": "fnaf1",
         "audio": "none",
     },
@@ -66,7 +66,7 @@ GAMES = {
         # so a FNaF 4 job refuses TITLE_UNREADABLE until a model is measured.
         "titleModel": None,
         "setupTarget": "fnaf4",
-        # fnaf4-run.mjs reads the A2DP mix live (tools/cue/fnaf4-cues.py).
+        # fnaf4-run.mjs reads the A2DP mix live (packages/play/bin/audio/fnaf4-cues.py).
         "audio": "required",
     },
 }
@@ -298,7 +298,7 @@ def runner_command(game: str, binding: dict, winner: dict, night: int, label: st
                    audio: bool) -> tuple[list[str], dict]:
     """The one runner a game's night uses, and the lease-held marker it takes."""
     if game == "fnaf2":
-        argv = [str(HERE / "../../tools/device/night-run.sh"), "--live", "--confirm-live", "--label", label,
+        argv = [str(HERE / "../../packages/play/bin/phone/night-run.sh"), "--live", "--confirm-live", "--label", label,
                 "--bundle", binding["bundle"]["dir"], "--night", str(night), "--serial", serial,
                 "--profile", binding["profile"], "--no-grade"]
         if audio:
@@ -306,7 +306,7 @@ def runner_command(game: str, binding: dict, winner: dict, night: int, label: st
         return argv, {"FNAF_LEASE_HELD": "1", "FNAF_SERIAL": serial}
     if game == "fnaf4":
         options = winner.get("resolvedOptions") or {}
-        argv = [str(HERE / "../../tools/device/fnaf4-run.sh"), "--live", "--confirm-live", "--mode", "loop",
+        argv = [str(HERE / "../../packages/play/games/fnaf4/fnaf4-run.sh"), "--live", "--confirm-live", "--mode", "loop",
                 "--detectors", str(expand_home(winner["detectors"]["file"])), "--night", str(night),
                 "--label", label, "--stop-after-ms", str(binding["nightMs"])]
         if options.get("teach"):
@@ -314,7 +314,7 @@ def runner_command(game: str, binding: dict, winner: dict, night: int, label: st
         if options.get("video"):
             argv.append("--video")
         return argv, {"FNAF4_LEASE_HELD": "1", "FNAF_SERIAL": serial}
-    argv = ["node", str(HERE / "../../tools/device/fnaf1-winner.mjs"), "--winner", binding["winner"], "--live", "--confirm-live",
+    argv = ["node", str(HERE / "../../packages/play/games/fnaf1/fnaf1-winner.mjs"), "--winner", binding["winner"], "--live", "--confirm-live",
             "--label", label]
     return argv, {"FNAF_SERIAL": serial}
 

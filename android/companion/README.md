@@ -33,8 +33,8 @@ existing UHID path. The benchmark and online-research conclusion are recorded
 in [`ACCESSIBILITY-VS-HID-BENCHMARK.md`](../../docs/device/ACCESSIBILITY-VS-HID-BENCHMARK.md).
 
 The APK has no audio path. Rendered audio is the phone's A2DP mix, recorded
-and decoded on the host (`tools/cue/bt-audio-link.sh`, `tools/cue/capture-bt-audio.sh`,
-`tools/cue/fnaf4-cues.py`). The ESP32 receiver path (UDP health facts and PCM on
+and decoded on the host (`packages/play/bin/audio/bt-audio-link.sh`, `packages/play/bin/audio/capture-bt-audio.sh`,
+`packages/play/bin/audio/fnaf4-cues.py`). The ESP32 receiver path (UDP health facts and PCM on
 49709/49710, the managed Wi-Fi request, the phone-side analyzer, monitor and
 recorder) and the authenticated audio-fact port 49708 were removed on 2026-09-27;
 see `docs/ARCHIVED-ROUTES.md`.
@@ -77,13 +77,13 @@ adb shell am start -n com.ppvaz.fnafcompanion/com.ppvaz.fnafcompanion.MainActivi
 The image-free setup/menu protocol can be run after the APK is built:
 
 ```sh
-tools/device/companion-setup.sh --install       # install, start capture, check FNaF menu
-tools/device/companion-setup.sh                 # reuse an active capture and check menu
-tools/device/companion-setup.sh --overlay-mode debug # persist SENSOR / DEBUG mode
-tools/device/companion-setup.sh --overlay-mode run   # persist DECISION / RUN mode
-tools/device/companion-setup.sh --probe         # optional debug-only sensor probe
-tools/device/companion-setup.sh --screen night --probe  # wait for a manually entered night
-tools/device/companion-setup.sh --stop          # force-stop helper capture for cleanup
+packages/play/bin/companion/companion-setup.sh --install       # install, start capture, check FNaF menu
+packages/play/bin/companion/companion-setup.sh                 # reuse an active capture and check menu
+packages/play/bin/companion/companion-setup.sh --overlay-mode debug # persist SENSOR / DEBUG mode
+packages/play/bin/companion/companion-setup.sh --overlay-mode run   # persist DECISION / RUN mode
+packages/play/bin/companion/companion-setup.sh --probe         # optional debug-only sensor probe
+packages/play/bin/companion/companion-setup.sh --screen night --probe  # wait for a manually entered night
+packages/play/bin/companion/companion-setup.sh --stop          # force-stop helper capture for cleanup
 ```
 
 It resolves the target launcher and build, discovers helper/system buttons by
@@ -116,8 +116,8 @@ no sensor data.
 
 | Request | Response | Notes |
 |---|---|---|
-| `STATUS <token>` | `OK schema=companion-status-v1 ...` | The versioned status line, for any target (`CompanionStatus.java`; host parser `packages/play/src/venues/phone/companion-status.js`; both held to `tools/device/testdata/companion-status-v1.txt`). |
-| `TARGET <token> [<package>\|<game>\|clear]` | `OK target=... game=... legacy=...` | Read or name the target (`Targets.java`, `tools/device/models/companion-targets-v1.json`). The FNaF 2 legacy readers run only while it is retail FNaF 2; refused while a FNaF 2 trace runs. |
+| `STATUS <token>` | `OK schema=companion-status-v1 ...` | The versioned status line, for any target (`CompanionStatus.java`; host parser `packages/play/src/venues/phone/companion-status.js`; both held to `packages/play/test/testdata/companion-status-v1.txt`). |
+| `TARGET <token> [<package>\|<game>\|clear]` | `OK target=... game=... legacy=...` | Read or name the target (`Targets.java`, `packages/play/profiles/fnaf2/moto-g56/companion-targets-v1.json`). The FNaF 2 legacy readers run only while it is retail FNaF 2; refused while a FNaF 2 trace runs. |
 | `LEASE <token> <label>\|clear` | `OK lease=...` | A label for the phone's screen naming who holds the host's serial lease; the lease itself stays the host's lock. |
 | `GET <token>` | `OK <snapshot>` | FNaF 2 legacy snapshot (`Fnaf2Legacy.snapshotLine`): freshness, the grid-fitted `screen`, the stroke-derived `monitorUp`, both control stroke scores, the latched `nightOnsetImageNs` and the phone's `wallMs`; never an image. |
 | `FRAME <token>` | `OK ...snapshot... grid=20x9 cells=<180x6 hex>` (FNaF 2 legacy) | The snapshot fields AND the sensor from ONE locked read, so both describe the same frame and share one `seq`. GET followed by GRID cannot: they are two round trips against a 60 fps capture, and on the moto g56 their sequences agreed 0 times in 12, always 1-2 frames apart, so any detector needing freshness AND cells refused every observation. Use this verb for live detection. |
@@ -140,10 +140,10 @@ The two visual channels are:
 | abstract unix | `@com.fnaf2.cuehelper.control.<session>` | host tooling over `adb forward` |
 
 ```sh
-tools/device/query-companion.sh                    # loopback snapshot
-tools/device/query-companion.sh forward            # forwarded snapshot
-tools/device/query-companion.sh watchlist status
-tools/device/query-companion.sh overlay             # teach-panel status
+packages/play/bin/companion/query-companion.sh                    # loopback snapshot
+packages/play/bin/companion/query-companion.sh forward            # forwarded snapshot
+packages/play/bin/companion/query-companion.sh watchlist status
+packages/play/bin/companion/query-companion.sh overlay             # teach-panel status
 ```
 
 The Java namespace, APK id, and source tree use `com.ppvaz.fnafcompanion`.
@@ -174,12 +174,12 @@ release the host sends `origin <onsetNs> <afterOnsetUs>`, and the helper
 narrates from its own latched onset plus that interval, so no host clock enters
 the panel. The words are a fixed vocabulary in the APK, keyed by verb.
 
-The panel is one window of exactly `tools/device/models/teach-panel-v1.json`'s
+The panel is one window of exactly `packages/play/profiles/fnaf2/moto-g56/teach-panel-v1.json`'s
 rectangle (its buffer is opaque; the platform composites it at the 0.8 cap for
 untrusted overlays, so a fifth of the game shows through), shown only over a night (or a dark frame whose bottom controls are
 still read) and removed at once on any other positive screen. It never paints a
 pixel a reader samples: `TeachPanelTest.java` drives every native reader over a
-recording frame and `tools/device/test-teach-panel-clearance.py` checks the host
+recording frame and `packages/play/bin/companion/test-teach-panel-clearance.py` checks the host
 night authority, the lifecycle boxes, the video grader's bands, and the control
 points. One helper reader cannot avoid any panel -- the native lifecycle labels
 -- and is withheld (grid-only identity) for every frame captured while the
@@ -207,7 +207,7 @@ age around 1–3 ms. A 40-minute memory soak is still required before visual
 stability is considered proven:
 
 ```sh
-tools/device/soak-companion.sh
+packages/play/bin/companion/soak-companion.sh
 ```
 
 The soak checks helper lifetime, focus, visual sequence progress, content

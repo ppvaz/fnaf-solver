@@ -185,7 +185,7 @@ const ENGINE = [
   // samples are game content and live outside the repository.
   // The sweep probe is a device action, but its report stream is not: the
   // trap-2 contact discipline and the pulsed light are checked without a phone.
-  ['hid sweep probe', ['device/test-hid-sweep-probe.mjs']],
+  ['hid sweep probe', ['../packages/play/bin/phone/test-hid-sweep-probe.mjs']],
   // The device pilot's cycle recipes and their budgets: contact lengths above
   // the phone's floor, camera spacing it has actually landed, a hall flash per
   // cycle, wind above break-even, the flashlight inside night 6's 3000 frames,
@@ -242,8 +242,8 @@ const ENGINE = [
   ['death cause', ['device/test-death-cause.py']],
   // The external audio recorder must expose a fail-closed, phone-free route
   // preflight before it can create an output directory or stop monitoring.
-  ['BT audio route', ['cue/test-capture-bt-audio.sh']],
-  ['BT audio link', ['cue/test-bt-audio-link.sh']],
+  ['BT audio route', ['../packages/play/bin/audio/test-capture-bt-audio.sh']],
+  ['BT audio link', ['../packages/play/bin/audio/test-bt-audio-link.sh']],
   // The external authority owns rendered audio and publishes the same bounded
   // fact contract regardless of its receiver. The ESP32 receiver and its
   // firmware are archived (docs/ARCHIVED-ROUTES.md); BlueALSA is the one left.
@@ -257,43 +257,43 @@ const ENGINE = [
   // Game -- which erases a save that cannot be restored -- needs a capability
   // the caller sets for one run. The structural half proves no second title
   // table exists to route around this.
-  ['menu selector', ['device/test-menu.sh']],
+  ['menu selector', ['../packages/play/bin/phone/test-menu.sh']],
   // plans/10 package 0: an interaction must be distinguishable from a dropped
   // contact and from a pan. Two nights were lost to a finger that missed a
   // light hitbox and landed in the pan band, and nothing in the run noticed.
   // The alive/dead authority, and the regression that made it one: the New Game
   // newspaper cutscene read as `night` because it is bright everywhere, and no
   // route had ever pressed New Game so the gap had never been reachable.
-  ['screenstate', ['device/test-screenstate.py']],
+  ['screenstate', ['../packages/play/src/sensors/screencap/test-screenstate.py']],
   // Plan 13 package 3: a generic intro-card label needs all four measured
   // signals. It must reject the brighter pre-card cutscene, fade, office and
   // 6 AM, and must never turn "an intro exists" into a guessed night number.
-  ['intro card', ['device/test-intro-card.py']],
+  ['intro card', ['../packages/play/test/test-intro-card.py']],
   // plans/15: a classifier reads the capture method it was calibrated for and
   // refuses the rest. Resizing a foreign frame to fit is what makes a sensor
   // mismatch look like a working reading.
-  ['sensor', ['device/test-sensor.py']],
+  ['sensor', ['../packages/play/src/sensors/screencap/test-sensor.py']],
   // FNaF 1's live loop learns its doorway ROI and normal lit-frame variation
   // from the current run. Native-only geometry and explicit UNKNOWN bands are
   // safety properties, so the synthetic gate belongs beside sensor.
-  ['fnaf1 door light', ['device/test-fnaf1-door-light.py']],
+  ['fnaf1 door light', ['../packages/play/games/fnaf1/test-fnaf1-door-light.py']],
   // This pins the FNaF 1-only Continue title binding, audio requirement, and
   // serial-lease wrapper without touching a phone.
-  ['fnaf1 night runner', ['device/test-fnaf1-night-run.mjs']],
+  ['fnaf1 night runner', ['../packages/play/games/fnaf1/test-fnaf1-night-run.mjs']],
   // First/final PCM receipt bounds must survive an interactive stop; otherwise
   // a recorder's startup and teardown become fabricated Bluetooth loss.
-  ['BT audio collector', ['cue/test-bt-audio-collector.py']],
+  ['BT audio collector', ['../packages/play/bin/audio/test-bt-audio-collector.py']],
   // Plan 19 P3: derive a native-resolution watch adapter from labelled frames;
   // weak separation is an explicit refusal and foreign geometry is not resized.
   // Plan 22 device boundary: fit the monitorUp rule over the helper grid from
   // labelled frames. Mask/animation/blackout evidence is mandatory: a rule
   // that cannot separate the mask, contain the animation, or clear a blackout
   // refuses, and the artifact must drive the production JS detector.
-  ['monitor calibration', ['device/test-monitor-calibrate.py']],
+  ['monitor calibration', ['../packages/play/bin/calibrate/test-monitor-calibrate.py']],
   // The cameraSelected rule: twelve measured map-button pixels; exactly one
   // lit names the camera, zero and several are distinct refusals (a camera
   // transition and the Android double-camera glitch must stay separable).
-  ['camera calibration', ['device/test-camera-calibrate.py']],
+  ['camera calibration', ['../packages/play/bin/calibrate/test-camera-calibrate.py']],
   // The trainer's per-step lateness census -- the raw material for a future
   // HumanActuator's measured bands (plans/04). Checks the Coach's trace rows
   // against known lateness and the /save-trace endpoint against a temp dir,
@@ -326,7 +326,7 @@ const ENGINE = [
   // Plan 09 package 2's producer half: one session id threaded through the
   // runners, hashes rather than filenames, and a manifest on every exit path.
   // Mock adb, synthetic artifacts, no phone.
-  ['session producer', ['device/test-session-manifest.sh']],
+  ['session producer', ['../packages/play/bin/phone/test-session-manifest.sh']],
   // Plan 23's retained overlay evidence must be complete before a qualification
   // sidecar can be reviewed: no-device synthetic records exercise the same
   // refusal reasons as the device-side gate.
@@ -344,18 +344,18 @@ const ENGINE = [
   // UNKNOWN, an unsupported rate refuses -- was asserted by nothing that ran.
   ['cue detector (java)', ['../android/companion/test.sh']],
   ['fnaf1 teach presenter (java)', ['../android/fnaf1-teach/test.sh']],
-  ['fnaf1 teach overlay clearance', ['device/test-fnaf1-teach-overlay.py']],
+  ['fnaf1 teach overlay clearance', ['../packages/play/games/fnaf1/test-fnaf1-teach-overlay.py']],
   // One screen->raw transform, held to one answer over the real tap table
   // wherever it is written: the HID transport (the authority) and the
   // Companion's Java copy. Its shell and Python copies once disagreed on 24 of
   // 39 coordinates; they left with the legacy lane.
-  ['screen map', ['device/test-screen-map.mjs']],
+  ['screen map', ['../packages/play/bin/phone/test-screen-map.mjs']],
   // Plan 18 Package 5: parse source-side InputDispatcher evidence without a
   // phone or a trace-processor dependency in the normal checkout.
-  ['input trace', ['device/test-inputtrace.py']],
+  ['input trace', ['../packages/play/bin/probe/test-inputtrace.py']],
   // Plan 18 Package 1 foundation: reproduce the three shell failures that
   // already cost recorded nights, without requiring a phone or shellcheck.
-  ['shell footguns', ['device/test-shell-footguns.sh']],
+  ['shell footguns', ['../packages/play/bin/phone/test-shell-footguns.sh']],
   // Plan 18 Package 4: bounded dependency-free properties for Sim state,
   // event determinism, and sourced Night-1 reachability.
   ['engine properties', ['../packages/source/test/propertytest.mjs']],
@@ -366,7 +366,7 @@ const ENGINE = [
   ['docs', ['test-docs.mjs']],
   // Same story: the transport helper every device runner picks its phone
   // with, whose exclusion reads "gated by test-select-adb.sh".
-  ['select-adb', ['device/test-select-adb.sh']],
+  ['select-adb', ['../packages/play/bin/phone/test-select-adb.sh']],
   // The drawer itself: every tools/device script is either invoked by
   // grade-run.sh, a test- gate, or consciously excluded with a reason -- and
   // every test- gate is actually reachable from this list or from ci.yml.

@@ -221,7 +221,7 @@ for (const { night, attack, detections } of rows) {
 {
   const six = rows.find(r => r.night === 6);
   const emitted = planText(six.recipe, six.plan);
-  const pinned = readFileSync(join(HERE, 'testdata', 'n6-device-plan.txt'), 'utf8');
+  const pinned = readFileSync(join(HERE, '../../packages/play/test/testdata/n6-device-plan.txt'), 'utf8');
   check('the shipped night 6 plan is unchanged', emitted === pinned,
     'the per-night refactor moved the best-studied route; if that is intended, ' +
     're-pin testdata/n6-device-plan.txt in the same commit and say why');

@@ -699,6 +699,711 @@
       }
     },
     {
+      "id": "packages/play/bin/audio/test-bt-audio-collector.py",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [
+        "time.sleep(0.02",
+        "sleep(0.01",
+        "time.sleep(max(0.0, start + (i + 1",
+        "time.sleep(0.01",
+        "time.sleep(0.02"
+      ],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/bin/audio/test-bt-audio-link.sh",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "device-transport"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/bin/audio/test-capture-bt-audio.sh",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/bin/audio/test-fnaf4-cues.py",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/bin/calibrate/test-camera-calibrate.py",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/bin/calibrate/test-mask-calibrate.py",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/bin/calibrate/test-monitor-calibrate.py",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/bin/companion/test-audio-players.mjs",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "device-transport"
+      ],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/bin/companion/test-audio-probe.mjs",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/bin/companion/test-companion-setup.py",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "device-transport"
+      ],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/bin/companion/test-query-companion.sh",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "device-transport"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/bin/companion/test-soak-companion.sh",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "device-transport"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/bin/companion/test-teach-panel-clearance.py",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "device-transport",
+        "local-http-port"
+      ],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/bin/phone/test-control-anchor.mjs",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "device-transport"
+      ],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/bin/phone/test-event-clocks.mjs",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "device-transport"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/bin/phone/test-game-teardown.sh",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "device-transport"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/bin/phone/test-hid-sweep-probe.mjs",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "device-transport"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/bin/phone/test-menu.sh",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "device-transport",
+        "local-http-port"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/bin/phone/test-night-run-dry.mjs",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [
+        "time.sleep(120"
+      ],
+      "sharedResources": [
+        "device-transport"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/bin/phone/test-screen-map.mjs",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "device-transport"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/bin/phone/test-select-adb.sh",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "device-transport"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/bin/phone/test-session-manifest.sh",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "device-transport"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/bin/phone/test-shell-footguns.sh",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "device-transport"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/bin/probe/seedpin/test-seedpin.mjs",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/bin/probe/test-hid-intersection-probe.mjs",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "device-transport"
+      ],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/bin/probe/test-inputtrace.py",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/bin/probe/test-intersection-state-gate.mjs",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "device-transport"
+      ],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/games/fnaf1/test-fnaf1-door-light.py",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/games/fnaf1/test-fnaf1-menu-probe.mjs",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/games/fnaf1/test-fnaf1-menus.py",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/games/fnaf1/test-fnaf1-night-run.mjs",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/games/fnaf1/test-fnaf1-teach-overlay.py",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/games/fnaf3/test-fnaf3-run.mjs",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/games/fnaf4/test-fnaf4-fredbear.mjs",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": false,
+      "determinismSignals": [
+        "Date.now",
+        "Date.now",
+        "Date.now"
+      ],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "device-transport"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/src/sensors/screencap/test-screenstate.py",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "device-transport",
+        "local-http-port"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/src/sensors/screencap/test-sensor.py",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "local-http-port"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "packages/play/test/adb-bridge.test.js",
       "lane": "test:unit",
       "owner": "@sixam/play",
@@ -1270,6 +1975,26 @@
       "determinismSignals": [],
       "fixedSleeps": [],
       "sharedResources": [],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/play/test/test-intro-card.py",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "local-http-port"
+      ],
       "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",
@@ -2662,68 +3387,6 @@
       }
     },
     {
-      "id": "tools/cue/test-bt-audio-collector.py",
-      "lane": "test:unit",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [
-        "time.sleep(0.02",
-        "sleep(0.01",
-        "time.sleep(max(0.0, start + (i + 1",
-        "time.sleep(0.01",
-        "time.sleep(0.02"
-      ],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/cue/test-bt-audio-link.sh",
-      "lane": "test:unit",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "device-transport"
-      ],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/cue/test-capture-bt-audio.sh",
-      "lane": "test:unit",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
       "id": "tools/cue/test-cue.py",
       "lane": "test:unit",
       "owner": "legacy migration",
@@ -2735,24 +3398,6 @@
       "sharedResources": [
         "device-transport"
       ],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/cue/test-fnaf4-cues.py",
-      "lane": "test:unit",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
       "subprocesses": false,
       "measurement": {
         "status": "NOT_MEASURED",
@@ -2870,44 +3515,6 @@
       }
     },
     {
-      "id": "tools/device/test-audio-players.mjs",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "device-transport"
-      ],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/device/test-audio-probe.mjs",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
       "id": "tools/device/test-bb-cue-state.mjs",
       "lane": "test:contracts",
       "owner": "legacy migration",
@@ -2946,24 +3553,6 @@
       }
     },
     {
-      "id": "tools/device/test-camera-calibrate.py",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
       "id": "tools/device/test-camtrace.py",
       "lane": "test:contracts",
       "owner": "legacy migration",
@@ -2973,46 +3562,6 @@
       "determinismSignals": [],
       "fixedSleeps": [],
       "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/device/test-companion-setup.py",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "device-transport"
-      ],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/device/test-control-anchor.mjs",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "device-transport"
-      ],
       "subprocesses": false,
       "measurement": {
         "status": "NOT_MEASURED",
@@ -3115,117 +3664,7 @@
       }
     },
     {
-      "id": "tools/device/test-event-clocks.mjs",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "device-transport"
-      ],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
       "id": "tools/device/test-fact-register.mjs",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/device/test-fnaf1-door-light.py",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/device/test-fnaf1-menu-probe.mjs",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/device/test-fnaf1-menus.py",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/device/test-fnaf1-night-run.mjs",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/device/test-fnaf1-teach-overlay.py",
       "lane": "test:contracts",
       "owner": "legacy migration",
       "timeoutMs": 180000,
@@ -3261,48 +3700,6 @@
       }
     },
     {
-      "id": "tools/device/test-fnaf3-run.mjs",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/device/test-fnaf4-fredbear.mjs",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": false,
-      "determinismSignals": [
-        "Date.now",
-        "Date.now",
-        "Date.now"
-      ],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "device-transport"
-      ],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
       "id": "tools/device/test-framesource.py",
       "lane": "test:contracts",
       "owner": "legacy migration",
@@ -3313,26 +3710,6 @@
       "fixedSleeps": [],
       "sharedResources": [],
       "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/device/test-game-teardown.sh",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "device-transport"
-      ],
-      "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",
         "runs": 0,
@@ -3370,46 +3747,6 @@
       "sharedResources": [
         "device-transport",
         "local-http-port"
-      ],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/device/test-hid-intersection-probe.mjs",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "device-transport"
-      ],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/device/test-hid-sweep-probe.mjs",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "device-transport"
       ],
       "subprocesses": true,
       "measurement": {
@@ -3498,103 +3835,6 @@
       }
     },
     {
-      "id": "tools/device/test-inputtrace.py",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/device/test-intersection-state-gate.mjs",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "device-transport"
-      ],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/device/test-intro-card.py",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "local-http-port"
-      ],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/device/test-mask-calibrate.py",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/device/test-menu.sh",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "device-transport",
-        "local-http-port"
-      ],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
       "id": "tools/device/test-minus-toys-jitter.mjs",
       "lane": "test:contracts",
       "owner": "legacy migration",
@@ -3671,24 +3911,6 @@
       }
     },
     {
-      "id": "tools/device/test-monitor-calibrate.py",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
       "id": "tools/device/test-native-regions.mjs",
       "lane": "test:contracts",
       "owner": "legacy migration",
@@ -3719,28 +3941,6 @@
       "fixedSleeps": [],
       "sharedResources": [],
       "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/device/test-night-run-dry.mjs",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [
-        "time.sleep(120"
-      ],
-      "sharedResources": [
-        "device-transport"
-      ],
-      "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",
         "runs": 0,
@@ -3862,26 +4062,6 @@
       }
     },
     {
-      "id": "tools/device/test-query-companion.sh",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "device-transport"
-      ],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
       "id": "tools/device/test-recipe.mjs",
       "lane": "test:contracts",
       "owner": "legacy migration",
@@ -3922,47 +4102,6 @@
       }
     },
     {
-      "id": "tools/device/test-screen-map.mjs",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "device-transport"
-      ],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/device/test-screenstate.py",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "device-transport",
-        "local-http-port"
-      ],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
       "id": "tools/device/test-seam-slack.mjs",
       "lane": "test:contracts",
       "owner": "legacy migration",
@@ -3975,124 +4114,6 @@
         "device-transport"
       ],
       "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/device/test-seedpin.mjs",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/device/test-select-adb.sh",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "device-transport"
-      ],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/device/test-sensor.py",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "local-http-port"
-      ],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/device/test-session-manifest.sh",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "device-transport"
-      ],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/device/test-shell-footguns.sh",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "device-transport"
-      ],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/device/test-soak-companion.sh",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "device-transport"
-      ],
-      "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",
         "runs": 0,
@@ -4151,27 +4172,6 @@
       "fixedSleeps": [],
       "sharedResources": [
         "device-transport"
-      ],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/device/test-teach-panel-clearance.py",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "device-transport",
-        "local-http-port"
       ],
       "subprocesses": false,
       "measurement": {

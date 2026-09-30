@@ -23,7 +23,7 @@
 //     for, and returns `readMs` later; a doorway behind the monitor or a
 //     control off-screen is simply not visible.
 //
-// Every number comes from `tools/device/models/fnaf1-device-timing-*.json`,
+// Every number comes from `packages/play/profiles/fnaf1/moto-g56/fnaf1-device-timing-*.json`,
 // which states each one's claim level. This is a model lane -- MODEL_ONLY --
 // and it cannot be promoted as a device result.
 //
@@ -41,7 +41,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Fnaf1Sim, DOOR_OPEN, DOOR_SHUT, MS_PER_FRAME } from '@sixam/source/fnaf1';
 
 const HERE = fileURLToPath(new URL('.', import.meta.url));
-export const TIMING_PATH = `${HERE}device/models/fnaf1-device-timing-moto-g56-v207.json`;
+export const TIMING_PATH = `${HERE}../packages/play/profiles/fnaf1/moto-g56/fnaf1-device-timing-moto-g56-v207.json`;
 export const FOUR_TWENTY = Object.freeze({ freddy: 20, bonnie: 20, chica: 20, foxy: 20 });
 
 // Which pan a world-anchored control needs [controls-fnaf1-moto-g56-v207.json:
@@ -838,7 +838,7 @@ async function population(argv) {
   let scratch = null;
   let source = 'tree';
   let options = { ...PHONE_OPTIONS };
-  const { loadWinner, materialize, removeTree } = await import('./device/fnaf1-winner.mjs');
+  const { loadWinner, materialize, removeTree } = await import('../packages/play/games/fnaf1/fnaf1-winner.mjs');
   try {
     if (kind === 'winner') {
       const path = 'tools/device/fnaf1-custom-night7-420-grid420-winner.json';

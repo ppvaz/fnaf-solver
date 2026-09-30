@@ -23,7 +23,7 @@ them. A route listed here is **parked, not refuted**, unless its row says so.
 | HUD-signature down/mask/up probe (parked 2026-09-01) | `research/sandbox/hud-signature-probe.py`, `research/sandbox/hud-signature-n1-minustoys-calib-01.json` | 2026-09-01 | [The research sandbox](#the-research-sandbox-2026-09-29-adr-0002), below (its notes left `research/sandbox/README.md` when the directory retired) |
 
 The ESP32 route superseded: rendered audio now reaches the host over A2DP
-directly (`tools/cue/bt-audio-link.sh`, `tools/cue/bt-audio-collector.py`).
+directly (`packages/play/bin/audio/bt-audio-link.sh`, `packages/play/bin/audio/bt-audio-collector.py`).
 The Companion APK kept its ESP32 receiver path and the `pcm-udp-v1` wire
 contract until **2026-09-27** (Companion 0.2.0), when both left with the rest
 of the APK's audio stack: the UDP health/PCM listeners and Wi-Fi request, the
@@ -33,8 +33,8 @@ receiver card. The host tools that only fed that stack went with it:
 `tools/cue/bridge-audio-authority.py` (facts into port 49708) and
 `tools/device/provision-cue-model.sh` (a model into the APK's storage), with
 their tests. Nothing else read them: the working audio path is the phone's
-A2DP mix recorded on the host (`tools/cue/bt-audio-link.sh`,
-`tools/cue/capture-bt-audio.sh`, `tools/cue/fnaf4-cues.py`), which never
+A2DP mix recorded on the host (`packages/play/bin/audio/bt-audio-link.sh`,
+`packages/play/bin/audio/capture-bt-audio.sh`, `packages/play/bin/audio/fnaf4-cues.py`), which never
 enters the APK.
 
 ## Removed tools (2026-09-24)
@@ -211,7 +211,7 @@ promotion:
 
 1. Native re-fit of signature B ({down,up}|{mask}) on the 42-frame labelled
    corpus — frames live on Pedro's other machine. Copy them here as
-   `down=… up=… mask=…` sources and extend `tools/device/monitor-calibrate.py`
+   `down=… up=… mask=…` sources and extend `packages/play/bin/calibrate/monitor-calibrate.py`
    for the second signature; zero device cost.
 2. Blackout frames — the mask-vs-blackout discriminator (left button present
    + luma band) has never seen a blackout; `blackout-unproven` stands.
@@ -233,9 +233,9 @@ The final layout retires what nothing reads. Restore any of these with
 | Paths | Why it left |
 |---|---|
 | `tools/cue/build-shadow-windows.py`, `tools/cue/evaluate-shadow.py`, `tools/cue/export-model.py` and their three tests | They joined, evaluated and exported the on-phone cue detector's shadow corpus. Its `CUE_SHADOW` traces came from the archived `trial.sh` lane, and the detector left the Companion with its audio stack in 0.2.0 (2026-09-27). Their only callers were their own tests, which ran in the legacy ENGINE group alone. |
-| `models/screen-rule-moto-g56-v207.json` | A grid-fitted `screen-rule-v1` that nothing reads. Its producer, `tools/device/screen-calibrate.py`, stays with the other grid calibrators until FNaF 2's pipeline is converted to native regions. |
+| `models/screen-rule-moto-g56-v207.json` | A grid-fitted `screen-rule-v1` that nothing reads. Its producer, `packages/play/bin/calibrate/screen-calibrate.py`, stays with the other grid calibrators until FNaF 2's pipeline is converted to native regions. |
 
-The architecture review also listed `tools/device/intro_card.py` for
+The architecture review also listed `packages/play/src/sensors/screencap/intro_card.py` for
 retirement as having no runtime caller. It has one: `lifecycle-observe.py`
 imports it to label the story-night intro card (`state=intro`), which every
 FNaF 2 night run reads. It stays.

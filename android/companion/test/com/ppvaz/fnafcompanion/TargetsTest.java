@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/** Holds Targets.java to tools/device/models/companion-targets-v1.json, entry for entry. */
+/** Holds Targets.java to packages/play/profiles/fnaf2/moto-g56/companion-targets-v1.json, entry for entry. */
 public final class TargetsTest {
     private static int failures;
 
@@ -22,7 +22,7 @@ public final class TargetsTest {
 
     public static void main(String[] args) throws IOException {
         String model = new String(Files.readAllBytes(Paths.get(System.getProperty(
-                "targets.model", "tools/device/models/companion-targets-v1.json"))),
+                "targets.model", "packages/play/profiles/fnaf2/moto-g56/companion-targets-v1.json"))),
                 StandardCharsets.UTF_8);
         check("model schema", model.contains("\"schema\": \"" + Targets.SCHEMA + "\""));
         Matcher entry = Pattern.compile("\\{\\s*\"game\": \"([^\"]+)\",\\s*\"package\": \"([^\"]+)\","

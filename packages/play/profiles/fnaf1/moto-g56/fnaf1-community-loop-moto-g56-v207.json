@@ -1,0 +1,86 @@
+{
+  "schema": "fnaf1-device-route-v1",
+  "id": "fnaf1-community-loop-moto-g56-v207",
+  "claimLevel": "DEVICE_MEASURED controls + SOURCE_DERIVED route timings; occupancy thresholds are calibrated per run",
+  "target": {
+    "package": "com.scottgames.fivenightsatfreddys",
+    "build": "2.0.7+40",
+    "device": "ZF525F5BH5",
+    "launcher": ".Main",
+    "launcherClaim": "DEVICE_MEASURED: explicit am start -W -n com.scottgames.fivenightsatfreddys/.Main returned Status ok on 2026-09-22 after a deliberate aborted attempt."
+  },
+  "title": {
+    "observer": "packages/play/games/fnaf1/fnaf1-title-observe.sh",
+    "model": "packages/play/profiles/fnaf1/moto-g56/title-fnaf1-moto-g56-v207.json",
+    "requiredItem": "continue",
+    "consensusFrames": 3,
+    "why": "The wrapper clears TITLE_MODEL and passes FNaF 1's model explicitly. This route never calls menu.sh or accepts FNaF 2's title model."
+  },
+  "controls": {
+    "model": "packages/play/profiles/fnaf1/moto-g56/controls-fnaf1-moto-g56-v207.json",
+    "contactMs": 160,
+    "contactClaimLevel": "DEVICE_MEASURED",
+    "panSource": "controls.panMap",
+    "startsAtPan": 0
+  },
+  "timing": {
+    "lightAfterPressMs": 250,
+    "lightAfterPressClaim": "SOURCE_DERIVED: 10-frame click cooldown at 60 Hz is 166.7 ms; 250 ms retains an 83.3 ms margin before the next button press and before the native screenshot.",
+    "flipSettleMs": 450,
+    "flipSettleClaim": "SOURCE_DERIVED: mmonitorUp/mmonitorDown completes at 22.9 source frames; 22.9 / 60 s is 381.7 ms, plus a 33 ms seam margin and rounded up.",
+    "cameraUpDwellMs": 250,
+    "cameraUpDwellClaim": "SOURCE_DERIVED: Foxy's attention refreshes every 100 ms while any camera is up; 250 ms gives two refresh opportunities after the flip settles.",
+    "officeReadyDelayMs": 7000,
+    "officeReadyDelayClaim": "BOUND, not a readiness measurement: this only avoids pressing through the immediate Continue transition. The following off/on light calibration is the readiness gate; it refuses rather than asserting that a seven-second wait proved the office was interactive.",
+    "doorRecheckMs": 7000,
+    "doorRecheckClaim": "SOURCE_DERIVED: the door-side movement rolls are 4970/4980 ms. A 7000 ms closed interval spans one full roll plus 2.02 s slack before reopening for a fresh light read.",
+    "actionBoundMs": 570000,
+    "actionBoundClaim": "BOUND, not a terminal measurement: FNaF 1's sourced night length is 535000 ms. The runner stops control after 570000 ms and lets title-gated teardown wait for a banked title rather than pressing through an unknown terminal."
+  },
+  "night1Staging": {
+    "clockOrigin": "The Continue HID release. This is deliberately conservative: source initialization may begin immediately after that input, so a later visual card/office observation never moves a defensive control earlier.",
+    "bonnieArmedAtMs": 179000,
+    "bonnieArmedClaim": "SOURCE_DERIVED: CLOCK hour 0 is 90000 ms and hour 1 is 89000 ms; ROWS g470 adds Bonnie +1 at 2 AM. Until then Night 1 has all four activity counters at zero, and g318's Random(20)+1 <= 0 can never move Bonnie.",
+    "leftCalibrationAtMs": 166000,
+    "leftCalibrationBudgetMs": 10000,
+    "leftCalibrationObservedMs": 6182,
+    "leftCalibrationClaim": "DEVICE_MEASURED on fnaf1-night1-community-loop-a-20260922T043341216Z: from first left light contact to the completed two-pair detector model was 6182 ms. The 10000 ms bound leaves 3818 ms before the 2 AM activation boundary; it is a one-time readiness calibration, not a scan loop.",
+    "firstLeftScanAtMs": 179000,
+    "leftScanIntervalMs": 7000,
+    "leftScanClaim": "SOURCE_DERIVED: Bonnie's g318 roll period is 4970 ms. A 7000 ms clear-door interval spans one roll plus 2030 ms slack; no monitor, right pan, or right light is used in this phase.",
+    "rightAndCameraArmedAtMs": 268000,
+    "rightAndCameraArmedClaim": "SOURCE_DERIVED: hour 2 lasts 89000 ms after the 2 AM boundary, so g471 adds Chica and Foxy +1 at 3 AM (90000 + 89000 + 89000 = 268000 ms).",
+    "rightAndMonitorCalibrationAtMs": 246000,
+    "rightAndMonitorCalibrationBudgetMs": 18000,
+    "rightAndMonitorObservedMs": 12635,
+    "rightAndMonitorCalibrationClaim": "DEVICE_MEASURED on fnaf1-night1-community-loop-a-20260922T043341216Z: right pan/light calibration plus the monitor up/down calibration took 12635 ms. The 18000 ms bound leaves 4000 ms before 3 AM; this is the only right/camera preparation before their sourced activation.",
+    "fullLoopAtMs": 264000,
+    "fullLoopClaim": "SOURCE_DERIVED staging boundary: the full two-door/camera loop may begin only after the right/monitor preparation and before the 3 AM Chica/Foxy activation boundary."
+  },
+  "sensing": {
+    "sensor": "screencap-2400x1080",
+    "calibrationFramesPerSide": 2,
+    "unknownAction": "close-or-hold-door",
+    "why": "The light region and occupancy bands are derived from the current run's empty, lit frames; a missing or ambiguous result never opens a door."
+  },
+  "audio": {
+    "required": true,
+    "mode": "BlueALSA A2DP capture",
+    "purpose": "Passive, retained evidence only. Audio does not authorize, select, or suppress any game control.",
+    "sidecar": "bt-audio-capture-v1"
+  },
+  "teachingOverlay": {
+    "required": true,
+    "tool": "packages/play/games/fnaf1/fnaf1-teach-overlay.sh",
+    "model": "packages/play/profiles/fnaf1/moto-g56/teach-panel-fnaf1-moto-g56-v207.json",
+    "schema": "fnaf1-teach-overlay-v1",
+    "purpose": "A FNaF 1-only, noninteractive teaching narration. It starts only after this route's FNaF 1 title gate has allowed Continue, is verified through its own dumpsys contract, and never supplies a visual, title, audio, or control fact.",
+    "stages": ["hands-off", "left-calibration", "left-watch", "right-monitor-calibration", "full-loop", "night2-calibration"]
+  },
+  "sources": [
+    "packages/play/profiles/fnaf1/moto-g56/controls-fnaf1-moto-g56-v207.json",
+    "packages/play/profiles/fnaf1/moto-g56/title-fnaf1-moto-g56-v207.json",
+    "~/fnaf-apks/fnaf1/events/05-06-Main_Room.txt groups 213-237, 255-258, 318-321, 445, 460",
+    "packages/source/src/games/fnaf1/fnaf1.js"
+  ]
+}

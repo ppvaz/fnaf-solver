@@ -69,12 +69,12 @@ files live in `tools/device`.
 
 Two generations of "turn bytes into a frame, or refuse", live side by side.
 
-- **Owner (gen 2):** `tools/device/sensor.py` (74 lines) — `NATIVE =
+- **Owner (gen 2):** `packages/play/src/sensors/screencap/sensor.py` (74 lines) — `NATIVE =
   "screencap-2400x1080"`, a `SENSORS` registry, and `open_frame(source,
   declared)` that raises `SensorMismatch` rather than resizing an
   uncalibrated capture into a plausible answer. Consumed by
-  `tools/device/title-observe.py:55` and `tools/device/lifecycle-observe.py:46`.
-- **Gen 1 library:** `tools/device/monitor-calibrate.py:55` declares
+  `packages/play/src/sensors/screencap/title-observe.py:55` and `packages/play/src/sensors/screencap/lifecycle-observe.py:46`.
+- **Gen 1 library:** `packages/play/bin/calibrate/monitor-calibrate.py:55` declares
   `WIDTH = 2400` / `HEIGHT = 1080` and owns `load_raw` + `load_frame` +
   `paths_for`. `mask-calibrate.py:60` and `screen-calibrate.py:52` **import it
   by path** (`importlib.util.spec_from_file_location`, because the module name
@@ -82,7 +82,7 @@ Two generations of "turn bytes into a frame, or refuse", live side by side.
   adopted, and `mask-calibrate.py:57` states it: "One fitting algorithm, not
   two: the per-cell worst-case-gap fit, the grid replication and the frame
   loaders all live in monitor-calibrate.py and are imported here."
-- **Gen 1 copies:** `tools/device/camera-calibrate.py:43` and
+- **Gen 1 copies:** `packages/play/bin/calibrate/camera-calibrate.py:43` and
   `tools/device/watch-calibrate.py:36` import nothing from it and instead
   re-declare `WIDTH`/`HEIGHT` and re-implement the loaders.
 
@@ -130,7 +130,7 @@ models, aligned by comment only.
 - **Pixel watch spec.** Narrowed 2026-09-27: `PixelWatch.defaultSpec()` is
   now only the twelve FNaF 2 camera-button pixels, and `watch-calibrate.py`
   (the luma-entry calibrator) was removed with the luma entries.
-  `tools/device/camera-calibrate.py` still carries its own copy of the twelve
+  `packages/play/bin/calibrate/camera-calibrate.py` still carries its own copy of the twelve
   coordinates, and `test-camera-calibrate.py` holds it to the camera rule.
 - **Phase clock.** Resolved 2026-09-27: the APK's `PhaseClock.java` left with
   the Companion's audio path, so `packages/play/src/clocks/phase-clock.js`
@@ -187,7 +187,7 @@ and capture scripts that each re-derive device selection and command shape.
 The same opening — resolve one serial, refuse to overwrite an output, take the
 per-serial lease, re-exec under the lock — is copied across device scripts:
 
-- 17 scripts source `tools/device/select-adb.sh`.
+- 17 scripts source `packages/play/bin/phone/select-adb.sh`.
 - The `[ ! -e "$OUTPUT" ] || { echo "refusing to overwrite: ...` idiom appears
   in 14 files (8 times inside `legacy-trial.sh` alone, and in five
   `tools/cue/*.py` scripts).
@@ -437,11 +437,11 @@ green.
 
 ## 18. Not duplication (checked, so a cleanup does not "fix" them)
 
-- `tools/device/companion-setup.sh` (12), `companion-queue.sh` (7),
+- `packages/play/bin/companion/companion-setup.sh` (12), `companion-queue.sh` (7),
   `pan-path-capture.sh` (17) are thin serial-selecting wrappers that delegate
   to the same-named `.py`. `companion-queue.sh:1` states why it must *not*
   source `select-adb.sh`: enqueue and list have to work with no phone present.
-- `tools/device/hid-sweep-probe.mjs` / `.sh` are complementary: the `.mjs`
+- `packages/play/bin/phone/hid-sweep-probe.mjs` / `.sh` are complementary: the `.mjs`
   emits the report stream, the `.sh` drives and measures the phone.
 - The four `packages/core/src/*/ports.js` files are one port interface per
   concern (actuation, control, sensing, timing), not four copies.
@@ -464,7 +464,7 @@ it. `tools/validate-references.js` resolves `CONTRACT:`/`ADR:`/`CLAIM:`/
 A cleanup should reuse one of these five rather than invent a sixth:
 
 1. **Extract to one definition with a caller-supplied sampler.**
-   `tools/device/nightpredicate.py` — "Is the office HUD on screen? One
+   `packages/play/src/sensors/screencap/nightpredicate.py` — "Is the office HUD on screen? One
    definition, three callers." Its docstring records the exact failure this map
    is for: the predicate existed in two copies until 2026-08-26, only one copy
    got a correction, and the stale copy still carried the docstring claiming it
@@ -524,7 +524,7 @@ The 2026-09-08 pass left these named rather than fixed. The first three are
 cited by name in `tools/device/test-grade-run-coverage.mjs`'s exclusion rows,
 which point here — so this list is load-bearing, not a wish list.
 
-- **`tools/device/screen-calibrate.py` has no gate.** The only one of the five
+- **`packages/play/bin/calibrate/screen-calibrate.py` has no gate.** The only one of the five
   calibrate fitters without one; `test-screencheck.py` drives
   `build-screen-model.py` and `replay-screen-model.py`, not this. It fits a rule
   that adapters consume on device. Because nothing can prove a change to it, it

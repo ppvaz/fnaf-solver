@@ -13,7 +13,7 @@ import java.util.Map;
  * {@code UNKNOWN}, never a guess. The same line is broadcast to the activity,
  * which renders it, and logged. The host parser is
  * {@code packages/adapters/src/transports/companion-status.js}; both sides
- * are held to {@code tools/device/testdata/companion-status-v1.txt}.</p>
+ * are held to {@code packages/play/test/testdata/companion-status-v1.txt}.</p>
  *
  * <p>The endpoint handshake replaces scraping logcat for the per-session
  * token: the service writes {@code files/companion-endpoint.properties}

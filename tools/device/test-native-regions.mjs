@@ -12,8 +12,8 @@
 //   node tools/device/test-native-regions.mjs
 
 import { parseRegionRead, regionSetLine } from '../../packages/play/src/venues/phone/companion.js';
-import { pngFromRegion } from './native-regions.mjs';
-import { makeClassifier } from './fnaf1-detectors.mjs';
+import { pngFromRegion } from '../../packages/play/bin/phone/native-regions.mjs';
+import { makeClassifier } from '../../packages/play/games/fnaf1/fnaf1-detectors.mjs';
 import { parseArgs } from './fnaf1-custom-run.mjs';
 
 const failures = [];
@@ -78,15 +78,15 @@ const read = (regions) => ({ regions: { cam_label: fill(N, 0), ...regions } });
 {
   const { readFileSync } = await import('node:fs');
   for (const [game, lesson, regions] of [
-    ['FNaF 1', 'Fnaf1Lesson.java', 'regions-fnaf1-moto-g56-v207.json'],
-    ['FNaF 3', 'Fnaf3Lesson.java', 'regions-fnaf3-moto-g56-v204.json'],
-    ['FNaF 4', 'Fnaf4Lesson.java', 'regions-fnaf4-moto-g56-v204.json'],
+    ['FNaF 1', 'Fnaf1Lesson.java', 'fnaf1/moto-g56/regions-fnaf1-moto-g56-v207.json'],
+    ['FNaF 3', 'Fnaf3Lesson.java', 'fnaf3/moto-g56/regions-fnaf3-moto-g56-v204.json'],
+    ['FNaF 4', 'Fnaf4Lesson.java', 'fnaf4/moto-g56/regions-fnaf4-moto-g56-v204.json'],
   ]) {
     const java = readFileSync(new URL(`../../android/companion/src/com/ppvaz/fnafcompanion/${lesson}`, import.meta.url), 'utf8');
     const constant = (name) => Number(new RegExp(`int ${name} = (\\d+);`).exec(java)?.[1]);
     const panel = { left: constant('LEFT'), top: constant('TOP'), right: constant('RIGHT'), bottom: constant('BOTTOM'), guard: constant('GUARD_PX') };
     ok(`${game} panel constants read`, Object.values(panel).every(Number.isFinite));
-    const model = JSON.parse(readFileSync(new URL(`./models/${regions}`, import.meta.url), 'utf8'));
+    const model = JSON.parse(readFileSync(new URL(`../../packages/play/profiles/${regions}`, import.meta.url), 'utf8'));
     for (const [name, r] of Object.entries(model.sets.night)) {
       const apart = r.x >= panel.right + panel.guard || r.x + r.width <= panel.left - panel.guard
         || r.y >= panel.bottom + panel.guard || r.y + r.height <= panel.top - panel.guard;

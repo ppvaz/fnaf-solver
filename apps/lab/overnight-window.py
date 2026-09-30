@@ -87,7 +87,7 @@ def _load(name: str, file: str):
 
 # The queue and the setup own their vocabularies; the window reuses them.
 QUEUE = _load("companion_queue", "companion-queue.py")
-SETUP = _load("companion_setup", ROOT / "tools/device/companion-setup.py")
+SETUP = _load("companion_setup", ROOT / "packages/play/bin/companion/companion-setup.py")
 
 SCHEMA = "overnight-window-v1"
 CONFIG_SCHEMA = "overnight-window-config-v1"
@@ -185,9 +185,9 @@ LEAVE_TIMEOUT_S = 60.0
 FOCUS_RETRIES = 3
 
 QUEUE_COMMAND = [str(HERE / "companion-queue.sh")]
-HELPER_STOP_COMMAND = [str(HERE / "../../tools/device/companion-setup.sh"), "--stop"]
-CAPABILITIES_COMMAND = ["node", str(HERE / "../../tools/device/capabilities.mjs")]
-LOCAL_PROFILE_COMMAND = ["node", str(HERE / "../../tools/device/local-profile.mjs"), "serial"]
+HELPER_STOP_COMMAND = [str(HERE / "../../packages/play/bin/companion/companion-setup.sh"), "--stop"]
+CAPABILITIES_COMMAND = ["node", str(HERE / "../../packages/play/bin/phone/capabilities.mjs")]
+LOCAL_PROFILE_COMMAND = ["node", str(HERE / "../../packages/play/bin/phone/local-profile.mjs"), "serial"]
 NIGHT_JOB_COMMAND = [sys.executable, str(HERE / "night-job.py")]
 PACK_COMMAND = ["node", str(ROOT / "tools/evidence.js"), "pack"]
 PACKS_ROOT = ROOT                 # docs/evidence/runs/<run> lives here
@@ -306,7 +306,7 @@ def local_profile_serial() -> str:
 
 
 SERIAL_HOW_TO = ("--serial, FNAF_SERIAL, or the untracked local profile "
-                 "(node tools/device/local-profile.mjs set <serial>)")
+                 "(node packages/play/bin/phone/local-profile.mjs set <serial>)")
 
 
 def resolve_config(args: argparse.Namespace) -> dict:

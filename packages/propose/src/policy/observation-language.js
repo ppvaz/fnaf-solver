@@ -33,7 +33,7 @@ export const UNKNOWN = 'UNKNOWN';
 // --- The measured observation budget -------------------------------------
 //
 // `docs/device/ON-DEVICE-VALIDATION.md` §"The projection path measures 59 ms",
-// reproduced by `tools/device/query-companion.sh latency`: 60 samples timed
+// reproduced by `packages/play/bin/companion/query-companion.sh latency`: 60 samples timed
 // inside one device shell against the device's own clock, p50 48.8 ms,
 // p95 59.5 ms, p99 60.8 ms, max 66.9 ms. That is a DEVICE_MEASURED read of the
 // the Companion's already-classified watchlist, and it is the same cost for every
@@ -70,7 +70,7 @@ export const HOST_ROUND_TRIP_SOURCE =
 // Every fact below is served by a classifier whose threshold is NOT calibrated
 // on the projection scaler (`docs/device/ON-DEVICE-VALIDATION.md`: "the
 // classifier threshold on this path is not calibrated"), and no per-fact cue
-// model is provisioned (`tools/device/models/` carries lifecycle/title/intro
+// model is provisioned (`packages/play/profiles/` carries lifecycle/title/intro
 // card only). Read cost is a transport property and is measured; correctness
 // is a calibration property and is not. They are kept as separate fields so a
 // search may use the first without anyone claiming the second.

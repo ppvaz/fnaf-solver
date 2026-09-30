@@ -13,7 +13,7 @@
  * it is not universal.
  *
  * Anchors, gestures and the device control map's own key for each role (listed
- * as an alias) are tools/device/models/controls-fnaf4-moto-g56-v204.json.
+ * as an alias) are packages/play/profiles/fnaf4/moto-g56/controls-fnaf4-moto-g56-v204.json.
  * FNaF 4 runs through its own device lane, so it has no artifact table.
  * CONTRACT:semantic-control-v1.
  */
@@ -41,5 +41,5 @@ export const FNAF4_CONTROL_CATALOG = defineControlCatalog({
   modelControls: [],
   auxiliaryPoints: [],
   artifactActions: null,
-  sources: ['tools/device/models/controls-fnaf4-moto-g56-v204.json (anchors, gestures, map keys)'],
+  sources: ['packages/play/profiles/fnaf4/moto-g56/controls-fnaf4-moto-g56-v204.json (anchors, gestures, map keys)'],
 });

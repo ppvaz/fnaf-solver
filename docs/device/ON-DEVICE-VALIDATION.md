@@ -1,6 +1,6 @@
 # On-device validation (bot over adb)
 
-> Historical record. Nights now run through `tools/device/night-run.sh` and the
+> Historical record. Nights now run through `packages/play/bin/phone/night-run.sh` and the
 > campaign executor (`npm run device:campaign`). The shell procedure below ran
 > under `tools/device/legacy-trial.sh`, archived on 2026-09-25 with the fixture
 > service path (`docs/ARCHIVED-ROUTES.md`); it is kept as
@@ -370,7 +370,7 @@ reason is unchanged.
   samples inside one device shell: p50 48.8 ms, **p95 59.5 ms**, p99 60.8 ms,
   max 66.9 ms; the same loop with the socket call removed costs 22.5 ms at p50,
   so the exchange itself is about 26 ms and the rest is the shell forking `date`
-  and `nc`. Reproduce with `tools/device/query-companion.sh latency`.
+  and `nc`. Reproduce with `packages/play/bin/companion/query-companion.sh latency`.
 
   The consequences are arithmetic on measured parts, not an end-to-end result.
   The visual-plus-action path becomes 59 + 170 = **229 ms**, leaving about

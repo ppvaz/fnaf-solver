@@ -35,7 +35,7 @@ import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { HID_DESCRIPTOR, HID_FEATURE_REPORTS, report } from '@sixam/play';
-import { resolveSerial } from '../../device/local-profile.mjs';
+import { resolveSerial } from '../../../packages/play/bin/phone/local-profile.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const PACKAGE = 'org.fnaf2practice.play';

@@ -61,7 +61,7 @@ assert.equal(cyclicConfigured.steps, 10, 'cyclic dials use one decrement from 0 
 assert.equal(cyclicTaps.length, 10);
 assert.ok(cyclicTaps.every(value => value.point.x === 4), 'cyclic 0-to-20 uses each dial decrement');
 
-const screenModel = JSON.parse(await readFile(fileURLToPath(new URL('../../../tools/device/models/custom-night-moto-g56-v207.json', import.meta.url)), 'utf8'));
+const screenModel = JSON.parse(await readFile(fileURLToPath(new URL('../../../packages/play/profiles/fnaf2/moto-g56/custom-night-moto-g56-v207.json', import.meta.url)), 'utf8'));
 assert.doesNotThrow(() => validateCustomNightModel(screenModel));
 assert.equal(screenModel.presets.length, 10, 'the measured cycle contains ten presets');
 let presetIndex = 0;

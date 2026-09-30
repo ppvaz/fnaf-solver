@@ -9,7 +9,7 @@ package com.ppvaz.fnafcompanion;
  * and whether the FNaF 2 legacy readers run at all ({@link Fnaf2Legacy}, retail
  * FNaF 2 only). Everything else is game-agnostic.</p>
  *
- * <p>Mirrors {@code tools/device/models/companion-targets-v1.json};
+ * <p>Mirrors {@code packages/play/profiles/fnaf2/moto-g56/companion-targets-v1.json};
  * {@code TargetsTest} holds the two to each other. Pure Java.</p>
  */
 public final class Targets {

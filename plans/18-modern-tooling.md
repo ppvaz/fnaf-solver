@@ -142,8 +142,8 @@ control that separates 'never sent' from 'sent and swallowed' is the HID
 trace," and even that only audits what the phone was *sent*.
 
 **Work.**
-- `tools/device/atrace-input.sh` (or a Perfetto config) capturing `input`,
-  `view`, `sched` around a run; `tools/device/inputtrace.py` that reports each
+- `packages/play/bin/probe/atrace-input.sh` (or a Perfetto config) capturing `input`,
+  `view`, `sched` around a run; `packages/play/bin/probe/inputtrace.py` that reports each
   `MotionEvent`'s dispatch timestamp and the `Choreographer` frame it landed on,
   from the device's own trace.
 - Cross-check against `dumpsys SurfaceFlinger --latency` for frame timing that
@@ -182,7 +182,7 @@ pin whichever in Package 9). Then: capture one real camera sweep from
 the enclosing `doFrame`, and check whether each 33 ms / 133 ms selection
 produces its own consumed event on its own frame.
 
-**Host/capture foundation landed 2026-08-30.** `tools/device/atrace-input.sh`
+**Host/capture foundation landed 2026-08-30.** `packages/play/bin/probe/atrace-input.sh`
 now brackets a device command with a flush-safe phone-side Perfetto trace,
 refuses to overwrite evidence, defaults to all-app ATrace categories, and can
 optionally retain a `SurfaceFlinger --latency` dump. `inputtrace.py` queries
@@ -276,8 +276,8 @@ number also assumes one host's `adb`/`ffmpeg`.
 - CI derives its versions from the same pin.
 
 **Done when.** From a clean checkout inside the container,
-`node tools/test.mjs --engine`, `tools/device/test-query-companion.sh` and
-`tools/device/test-soak-companion.sh` all pass; CI and local report the same
+`node tools/test.mjs --engine`, `packages/play/bin/companion/test-query-companion.sh` and
+`packages/play/bin/companion/test-soak-companion.sh` all pass; CI and local report the same
 tool versions.
 
 ## Suggested execution order

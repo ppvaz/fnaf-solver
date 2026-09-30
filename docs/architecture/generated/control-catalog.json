@@ -75,7 +75,7 @@
       "auxiliaryPoints": [],
       "artifactActions": null,
       "sources": [
-        "tools/device/models/controls-fnaf1-moto-g56-v207.json (anchors, contact rule)"
+        "packages/play/profiles/fnaf1/moto-g56/controls-fnaf1-moto-g56-v207.json (anchors, contact rule)"
       ]
     },
     {
@@ -537,7 +537,7 @@
       "auxiliaryPoints": [],
       "artifactActions": null,
       "sources": [
-        "tools/device/models/controls-fnaf3-moto-g56-v204.json (anchors, frames, map keys)"
+        "packages/play/profiles/fnaf3/moto-g56/controls-fnaf3-moto-g56-v204.json (anchors, frames, map keys)"
       ]
     },
     {
@@ -633,7 +633,7 @@
       "auxiliaryPoints": [],
       "artifactActions": null,
       "sources": [
-        "tools/device/models/controls-fnaf4-moto-g56-v204.json (anchors, gestures, map keys)"
+        "packages/play/profiles/fnaf4/moto-g56/controls-fnaf4-moto-g56-v204.json (anchors, gestures, map keys)"
       ]
     }
   ]

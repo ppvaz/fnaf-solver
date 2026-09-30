@@ -227,7 +227,7 @@ try {
   assert.match(found('agent-worktrees')[0].remedy, new RegExp(`^git worktree remove ${agent.replaceAll('.', '\\.')}`));
   assert.deepEqual(found('node-modules').map(item => item.finding).sort(),
     ['node_modules has no @sixam scope, so the workspaces do not resolve', 'node_modules still links the retired @fnaf2-1020 scope']);
-  assert.match(found('local-profile')[0].remedy, /^node tools\/device\/local-profile\.mjs set <serial>/);
+  assert.match(found('local-profile')[0].remedy, /^node packages\/play\/bin\/phone\/local-profile\.mjs set <serial>/);
   assert.match(found('catalog-drift')[0].finding, /docs\/architecture\/generated\/x\.json/);
   assert.match(found('memory')[0].finding, /1000 MB available while Chowdren \(pid 4242, 1500 MB\)/);
   assert.deepEqual(found('untracked-winner').map(item => item.finding.split(' ')[0]).sort(),

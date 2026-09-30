@@ -87,7 +87,7 @@ is unbiased; it is simply too small.
 false positive on the "HELP WANTED" newspaper that FNaF 2 plays when a New Game
 starts, because it is bright everywhere and clears the flashlight-meter test.
 The fix is `GLOBAL_BRIGHT_MAX = 80.0` plus two extra scanlines (rows 500/700),
-and the docstring records it at `tools/device/screenstate.py:1-25,36-42`.
+and the docstring records it at `packages/play/src/sensors/screencap/screenstate.py:1-25,36-42`.
 
 The predicate exists in four places. Only two got the fix:
 
@@ -345,7 +345,7 @@ sends, while the auditor that decides what the game did was keyed to a third.
 presses the phone, and the auditor must match the runner or it attributes
 presses to the wrong control.
 
-`tools/device/test-screen-map.mjs` holds all three implementations to one
+`packages/play/bin/phone/test-screen-map.mjs` holds all three implementations to one
 answer, evaluating the shell and Python forms in their own interpreters over
 the real tables rather than restating them. It also pins the *truncation*, so
 the check cannot be satisfied by changing all three copies to round together —

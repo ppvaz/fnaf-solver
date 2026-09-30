@@ -4,7 +4,7 @@
  * The helper emits verdict-free observations: the `GET` snapshot (freshness,
  * screen identity, whole-grid counts) and the `GRID` verb (all 180 point
  * samples of its 20x9 sensor). A `monitor-rule-v1` artifact -- fitted
- * offline from labelled 2400x1080 frames by `tools/device/monitor-calibrate.py`
+ * offline from labelled 2400x1080 frames by `packages/play/bin/calibrate/monitor-calibrate.py`
  * -- names anchor cells on the monitor's map layout drawing, which is present
  * if and only if the monitor is up, independent of the camera feed behind it.
  * Each anchor carries its own measured threshold and refuse band; a frame is

@@ -41,7 +41,7 @@ import time
 
 HERE = pathlib.Path(__file__).resolve().parent
 REPO = HERE.parents[1]
-QUERY = REPO / "tools/device/query-companion.sh"
+QUERY = REPO / "packages/play/bin/companion/query-companion.sh"
 AUTHORITY = HERE / "audio-authority.py"
 COLLECT_FACTS = HERE / "collect-facts.py"
 DEFAULT_MAC = "10:2B:1C:DA:18:2C"

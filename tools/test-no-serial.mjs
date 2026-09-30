@@ -7,7 +7,7 @@
 // frozen evidence keeps it; no history rewrite." Until that day 18 scripts
 // defaulted to one handset's serial, so a run on any host addressed that phone
 // by name and every checkout published it. The runners now read FNAF_SERIAL or
-// tools/device/local-profile.json (gitignored; tools/device/local-profile.mjs).
+// tools/device/local-profile.json (gitignored; packages/play/bin/phone/local-profile.mjs).
 //
 // Scanned: every tracked file, plus untracked files git does not ignore, so a
 // new file is refused before it is committed (tools/test-docs.mjs does the
@@ -45,18 +45,18 @@ const MEASURED = 'calibration record: its device block names the handset it was 
 export const ALLOWLIST = {
   'docs/device/accessibility-game-acceptance-20260906.json': [1, 'retained 2026-09-06 measurement record (ACCESSIBILITY-VS-HID-BENCHMARK.md); its device block names the handset measured'],
   'docs/device/accessibility-hid-pilot-20260906.json': [1, 'retained 2026-09-06 measurement record (ACCESSIBILITY-VS-HID-BENCHMARK.md); its device block names the handset measured'],
-  'tools/device/models/controls-fnaf1-moto-g56-v207.json': [1, `${HASH_BOUND} in fnaf1-custom-night7-420-grid420-winner.json and a run pack's probe.json`],
-  'tools/device/models/controls-fnaf3-moto-g56-v204.json': [1, MEASURED],
-  'tools/device/models/controls-fnaf4-moto-g56-v204.json': [1, `${HASH_BOUND} in fnaf4-night3-loop-winner.json`],
-  'tools/device/models/custom-night-calibration-v1.json': [1, `${HASH_BOUND} in docs/evidence/night7-corner2-bbfoxy-predeclaration-20260927.json`],
-  'tools/device/models/custom-night-fnaf1-moto-g56-v207.json': [1, `${HASH_BOUND} in fnaf1-custom-night7-420-grid420-winner.json and a run pack's probe.json`],
-  'tools/device/models/custom-night-moto-g56-v207.json': [1, `${HASH_BOUND} in docs/evidence/night7-preset-population-20260925.json`],
-  'tools/device/models/fnaf1-community-loop-moto-g56-v207.json': [1, MEASURED],
-  'tools/device/models/fnaf1-device-timing-moto-g56-v207.json': [1, `${HASH_BOUND} in fnaf1-custom-night7-420-grid420-winner.json and three docs/evidence populations`],
-  'tools/device/models/regions-fnaf1-moto-g56-v207.json': [1, `${HASH_BOUND} in fnaf1-custom-night7-420-grid420-winner.json and a run pack's probe.json`],
-  'tools/device/models/regions-fnaf3-moto-g56-v204.json': [1, MEASURED],
-  'tools/device/models/regions-fnaf4-moto-g56-v204.json': [1, `${HASH_BOUND} in fnaf4-night3-loop-winner.json`],
-  'tools/device/models/teach-panel-fnaf1-moto-g56-v207.json': [1, MEASURED],
+  'packages/play/profiles/fnaf1/moto-g56/controls-fnaf1-moto-g56-v207.json': [1, `${HASH_BOUND} in fnaf1-custom-night7-420-grid420-winner.json and a run pack's probe.json`],
+  'packages/play/profiles/fnaf3/moto-g56/controls-fnaf3-moto-g56-v204.json': [1, MEASURED],
+  'packages/play/profiles/fnaf4/moto-g56/controls-fnaf4-moto-g56-v204.json': [1, `${HASH_BOUND} in fnaf4-night3-loop-winner.json`],
+  'packages/play/profiles/fnaf2/moto-g56/custom-night-calibration-v1.json': [1, `${HASH_BOUND} in docs/evidence/night7-corner2-bbfoxy-predeclaration-20260927.json`],
+  'packages/play/profiles/fnaf1/moto-g56/custom-night-fnaf1-moto-g56-v207.json': [1, `${HASH_BOUND} in fnaf1-custom-night7-420-grid420-winner.json and a run pack's probe.json`],
+  'packages/play/profiles/fnaf2/moto-g56/custom-night-moto-g56-v207.json': [1, `${HASH_BOUND} in docs/evidence/night7-preset-population-20260925.json`],
+  'packages/play/profiles/fnaf1/moto-g56/fnaf1-community-loop-moto-g56-v207.json': [1, MEASURED],
+  'packages/play/profiles/fnaf1/moto-g56/fnaf1-device-timing-moto-g56-v207.json': [1, `${HASH_BOUND} in fnaf1-custom-night7-420-grid420-winner.json and three docs/evidence populations`],
+  'packages/play/profiles/fnaf1/moto-g56/regions-fnaf1-moto-g56-v207.json': [1, `${HASH_BOUND} in fnaf1-custom-night7-420-grid420-winner.json and a run pack's probe.json`],
+  'packages/play/profiles/fnaf3/moto-g56/regions-fnaf3-moto-g56-v204.json': [1, MEASURED],
+  'packages/play/profiles/fnaf4/moto-g56/regions-fnaf4-moto-g56-v204.json': [1, `${HASH_BOUND} in fnaf4-night3-loop-winner.json`],
+  'packages/play/profiles/fnaf1/moto-g56/teach-panel-fnaf1-moto-g56-v207.json': [1, MEASURED],
 };
 
 const count = (buffer, needle) => {
@@ -94,7 +94,7 @@ if (refused.length || problems.length) {
   console.error(`no-serial: FAILED -- the handset serial must come from FNAF_SERIAL or ${PROFILE}, never a tracked file.`);
   if (refused.length) {
     console.error('Files that name it (use <serial> in docs, a fake such as FAKE0001 in fixtures, and '
-      + 'tools/device/local-profile.mjs in code):');
+      + 'packages/play/bin/phone/local-profile.mjs in code):');
     for (const line of refused) console.error(`  ${line}`);
   }
   for (const line of problems) console.error(`  ${line}`);

@@ -25,7 +25,7 @@ import { matchMistakes, readMistakes, stepFamily } from '@sixam/review/mistakes'
 import { queryPromotions } from '@sixam/review/promotions-query';
 import { readPacks } from '@sixam/review/registers';
 import { ORDER, ORDER_OF, ROADMAP, STEPS, stateKey, stepStatus } from '@sixam/review/roadmap';
-import { PROFILE_PATH, mainCheckout, profilePaths } from '../../../tools/device/local-profile.mjs';
+import { PROFILE_PATH, mainCheckout, profilePaths } from '../../../packages/play/bin/phone/local-profile.mjs';
 import { laneCommand, linkDependencies, runRecordPath } from '../../../tools/push-gate.mjs';
 
 export const LAB_DOC = 'docs/operations/LAB.md';
@@ -401,7 +401,7 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
     const profile = profiles.find(path => existsSync(path)) ?? null;
     check('local-profile', `a local device profile (${PROFILE_PATH}) exists`, Boolean(profile), profile);
     if (!profile) find('local-profile', `no local device profile: looked at ${profiles.join(', ')}`,
-      'node tools/device/local-profile.mjs set <serial>   (`adb devices -l` lists it; the file is gitignored)');
+      'node packages/play/bin/phone/local-profile.mjs set <serial>   (`adb devices -l` lists it; the file is gitignored)');
 
     // Generated-catalog drift at HEAD, in a clean worktree like push-gate's.
     const sha = git(['rev-parse', '--verify', '--quiet', 'HEAD'], { allowFail: true })?.trim();

@@ -9,7 +9,7 @@
  * `files/companion-endpoint.properties` (schema `companion-endpoint-v1`), read
  * with `run-as`, so discovery no longer depends on a logcat line surviving a
  * night in the ring buffer. Both sides are held to
- * tools/device/testdata/companion-status-v1.txt.
+ * packages/play/test/testdata/companion-status-v1.txt.
  * CONTRACT:companion-status-v1.
  */
 

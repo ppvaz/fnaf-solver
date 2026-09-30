@@ -29,6 +29,8 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent / "../../packages/play/src/sensors/screencap"))  # Play's screencap readers
 import nightpredicate  # noqa: E402
 import argparse
 import subprocess

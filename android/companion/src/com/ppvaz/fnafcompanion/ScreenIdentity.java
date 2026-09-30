@@ -10,7 +10,7 @@ package com.ppvaz.fnafcompanion;
  * runs only while the Companion's target is FNaF 2 ({@link Fnaf2Legacy}); any
  * other target reads {@code screen=UNKNOWN}, never a FNaF 2 label. Game
  * identity for setup comes from each game's own title regions on the host
- * ({@code tools/device/game-screen.py}).</p>
+ * ({@code packages/play/bin/phone/game-screen.py}).</p>
  *
  * <p>Original notes follow.</p>
  *

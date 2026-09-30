@@ -844,7 +844,7 @@ export class AdbDeviceLocalArtifactExecutor {
             // (71% across all runs, against 30% of gates that agreed). A
             // correction ACTS -- it presses the mask -- so a wrong one does not
             // report an inversion, it creates one.
-            // `tools/device/intersection-state-gate.mjs` has stated this rule
+            // `packages/play/bin/probe/intersection-state-gate.mjs` has stated this rule
             // all along: a missing stroke score is a refusal, never a luma
             // fallback.
             const strokes = buttonStrokeState(sample);

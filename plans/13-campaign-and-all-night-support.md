@@ -17,7 +17,7 @@ implemented.
 calibration, external `DEVICE_MEASURED` qualification, and actual qualified
 device wins remain open." All three have since landed. Custom Night is
 calibrated against measured readback boxes
-(`tools/device/models/custom-night-moto-g56-v207.json`), the g56 is qualified as
+(`packages/play/profiles/fnaf2/moto-g56/custom-night-moto-g56-v207.json`), the g56 is qualified as
 `hid-mediaprojection`, and every story night plus Custom Night 7 has a
 `DEVICE_MEASURED` 6 AM — Nights 1–4 on 2026-09-07/08, Night 5 on 09-12, Night 6
 on 09-13, Night 7 on 09-14. What remains open is reliability: the only declared
@@ -260,7 +260,7 @@ loss. A test proves that no unapproved path can press New Game.
 **Result: closed 2026-08-26.** The selector, the capability, the refusals, and
 a measured classifier for the canonical build all exist.
 
-What landed. `tools/device/menu.sh` is now the only place a title item is
+What landed. `packages/play/bin/phone/menu.sh` is now the only place a title item is
 pressed. Four scripts — `trial.sh`, `trial-maskcamp.sh`,
 `watch-vent-cue.sh`, `collect-cue-audio.sh` — each carried their own
 `NIGHT_TAP=$TAP_CONTINUE; [ "$NIGHT" = 6th ] && NIGHT_TAP=$TAP_6TH` and tapped
@@ -281,7 +281,7 @@ screen, a measurement inside the model's undecided band, lost focus, a stale
 observation, and an item that is on screen but has no measured coordinate —
 which is Custom Night's actual state, so it is observed and still refused.
 
-The measured model, `tools/device/models/title-moto-g56-v207.json`, was built
+The measured model, `packages/play/profiles/fnaf2/moto-g56/title-moto-g56-v207.json`, was built
 the same day from 26 real frames once the correct game was reinstalled. Its
 numbers and its control:
 

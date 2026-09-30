@@ -11,7 +11,7 @@ import java.util.Map;
 /**
  * The writer half of the companion-status-v1 contract: for fixed inputs,
  * {@link CompanionStatus} must emit exactly the vector lines the host parser
- * decodes (tools/device/testdata/companion-status-v1.txt).
+ * decodes (packages/play/test/testdata/companion-status-v1.txt).
  */
 public final class CompanionStatusTest {
     private static int failures;
@@ -30,7 +30,7 @@ public final class CompanionStatusTest {
 
     public static void main(String[] args) throws IOException {
         List<String> vector = Files.readAllLines(Paths.get(System.getProperty(
-                "status.vector", "tools/device/testdata/companion-status-v1.txt")),
+                "status.vector", "packages/play/test/testdata/companion-status-v1.txt")),
                 StandardCharsets.UTF_8);
         Map<String, String> lines = new HashMap<>();
         String currentCase = null;

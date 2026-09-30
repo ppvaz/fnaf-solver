@@ -23,7 +23,7 @@ import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { AdbCompanionPort } from '../../../packages/play/src/campaign/physical-ports.js';
-import { resolveSerial } from '../../device/local-profile.mjs';
+import { resolveSerial } from '../../../packages/play/bin/phone/local-profile.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 export const SCHEMA = 'recompile-capture-latency-v1';

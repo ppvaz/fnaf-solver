@@ -73,7 +73,7 @@ const contractEvidence = {
   'clock-v1': ['packages/play/test/phase-clock.test.js'],
   'device-profile-v1': ['tools/device/test-bundle.mjs', 'packages/play/test/profile-game.test.js'],
   'telemetry-event-v1': ['packages/kernel/test/factlinktest.mjs'],
-  'session-manifest-v1': ['tools/device/test-session-manifest.sh'],
+  'session-manifest-v1': ['packages/play/bin/phone/test-session-manifest.sh'],
   'experiment-spec-v1': ['packages/propose/test/experiment.test.js'],
   'experiment-result-v1': ['packages/propose/test/experiment.test.js'],
   'winner-v1': ['tools/device/test-bundle.mjs'],
@@ -107,8 +107,8 @@ const contractEvidence = {
   'microtrainer-session-v1': ['apps/trainer/test/microtrainer.test.mjs'],
   'exercise-renderer-v1': ['apps/trainer/test/renderer.test.mjs'],
   'arcade-lab-progress-v1': ['apps/trainer/test/arcade-lab.test.mjs'],
-  'monitor-rule-v1': ['packages/play/test/monitor-rule.test.js', 'tools/device/test-monitor-calibrate.py'],
-  'camera-rule-v1': ['packages/play/test/camera-rule.test.js', 'tools/device/test-camera-calibrate.py'],
+  'monitor-rule-v1': ['packages/play/test/monitor-rule.test.js', 'packages/play/bin/calibrate/test-monitor-calibrate.py'],
+  'camera-rule-v1': ['packages/play/test/camera-rule.test.js', 'packages/play/bin/calibrate/test-camera-calibrate.py'],
   'calibration-state-v1': ['packages/play/test/calibration-state-rule.test.js'],
   'control-exclusion-v1': ['packages/play/test/control-exclusion.test.js'],
   'claim-envelope-v1': ['packages/kernel/test/claim-envelope.test.js', 'apps/desktop/test/companion-mcp.test.mjs'],
@@ -228,7 +228,7 @@ const duplicateResponsibilities = [
 // the removal gate records the evidence still needed to make deletion safe.
 const legacyPaths = [
   {
-    id: 'device.shell-session', path: 'tools/device/session.sh', category: 'device',
+    id: 'device.shell-session', path: 'packages/play/bin/phone/session.sh', category: 'device',
     lifecycle: 'compatibility', owner: '@sixam/play',
     replacement: 'run packs (docs/evidence/runs/) for nights; this bridge stays for collect-cue-audio.sh and capture-screen-sample.sh',
     removalGate: 'The cue-audio and screen-sample collectors write run packs or retire',
@@ -263,21 +263,21 @@ const legacyPaths = [
     notes: 'The night grader. Since 2026-09-25 it reads what night-run.sh retains -- recording, campaign directory, input and frame traces; the shell runner inputs left with that runner.',
   },
   {
-    id: 'device.shell-adb-selector', path: 'tools/device/select-adb.sh', category: 'transport',
+    id: 'device.shell-adb-selector', path: 'packages/play/bin/phone/select-adb.sh', category: 'transport',
     lifecycle: 'transitional', owner: '@sixam/play',
     replacement: 'explicit injected transport selected by the device composition root',
     removalGate: 'All direct-ADB probes either become adapters or are explicitly archived',
     notes: 'Useful characterization guard, but it must not select a canonical live strategy.',
   },
   {
-    id: 'device.shell-coordinates', path: 'tools/device/coords.sh', category: 'transport',
+    id: 'device.shell-coordinates', path: 'packages/play/bin/phone/coords.sh', category: 'transport',
     lifecycle: 'transitional', owner: '@sixam/play',
     replacement: 'resolved device profile controlMap',
     removalGate: 'All device actions consume profile geometry; probe-only users are archived',
     notes: 'Legacy shell coordinate authority; modern semantic commands carry no coordinates.',
   },
   {
-    id: 'device.shell-menu', path: 'tools/device/menu.sh', category: 'device',
+    id: 'device.shell-menu', path: 'packages/play/bin/phone/menu.sh', category: 'device',
     lifecycle: 'transitional', owner: '@sixam/play',
     replacement: 'title/menu detector and the campaign executor state gate',
     removalGate: 'Automated menu-state detector has calibrated evidence and a dry-run fixture',
@@ -342,7 +342,7 @@ const legacyPaths = [
   ].map(([name, what]) => ({
     id: `play.sensor.fnaf2-${name}`, path: `packages/play/src/sensors/fnaf2/${name}.js`, category: 'sensor',
     lifecycle: 'legacy', owner: '@sixam/play',
-    replacement: 'a rule over native region pixels (the Companion REGION verb, tools/device/native-regions.mjs), recalibrated for FNaF 2',
+    replacement: 'a rule over native region pixels (the Companion REGION verb, packages/play/bin/phone/native-regions.mjs), recalibrated for FNaF 2',
     removalGate: 'FNaF 2\'s pipeline is recalibrated on native regions (ADR 0002 migration M7) and the campaign executor reads no grid, luma or grid-fitted rule; the retained grid_hex readers of old evidence stay',
     notes: `Deprecated: ${what}. Moved from packages/adapters unchanged; to be converted, not extended (CLAUDE.md, Sensors and on-device code).`,
   })),

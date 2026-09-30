@@ -40,7 +40,7 @@ import { designBlock, forkBlocks, gitState } from '../winner-census.mjs';
 import { heldOutSeeds } from '../winner-phase-census.mjs';
 import { STRATEGY_REGISTRY, validateWinner } from '../../packages/propose/bin/plans/bundle.mjs';
 
-const MENU_MODEL = new URL('./models/custom-night-moto-g56-v207.json', import.meta.url);
+const MENU_MODEL = new URL('../../packages/play/profiles/fnaf2/moto-g56/custom-night-moto-g56-v207.json', import.meta.url);
 
 export function loadPresets() {
   const model = JSON.parse(readFileSync(MENU_MODEL, 'utf8'));
@@ -230,7 +230,7 @@ export function populationRecord({ rows, start, count, git, date, command }) {
       lane: 'exact, normal RNG: runNight({preset, seed, knobs: PRESET_KNOBS}) at epoch 0; a win is sim.won AND splitAt >= 0',
       family: 'one schedule, PRESET_KNOBS (KNOBS0 with hallOffsetMs 9613); each figure is a lower bound scoped to it',
       knobs: PRESET_KNOBS, knobsSha256: sha256(JSON.stringify(PRESET_KNOBS)),
-      presetSource: { path: 'tools/device/models/custom-night-moto-g56-v207.json', sha256: sha256(readFileSync(MENU_MODEL)) },
+      presetSource: { path: 'packages/play/profiles/fnaf2/moto-g56/custom-night-moto-g56-v207.json', sha256: sha256(readFileSync(MENU_MODEL)) },
       designBlock: { ...design.components, distinct: design.seeds.length, inCensus: designIn,
         sha256: sha256(JSON.stringify(design.seeds)) },
       heldOutBlock: { definition: 'every censused seed not in the design block', n: count - designIn },

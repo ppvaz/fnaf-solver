@@ -12,7 +12,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { FOUR_TWENTY, LANE_FILE, PHONE_OPTIONS, POPULATION_LANES, TIMING_PATH, newestTreeRecord,
   populationRecord, winnerPolicyOptions } from './fnaf1-device-lane.mjs';
 import { designBlock, forkBlocks, gitState } from './winner-census.mjs';
-import { loadWinner, materialize, removeTree } from './device/fnaf1-winner.mjs';
+import { loadWinner, materialize, removeTree } from '../packages/play/games/fnaf1/fnaf1-winner.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');

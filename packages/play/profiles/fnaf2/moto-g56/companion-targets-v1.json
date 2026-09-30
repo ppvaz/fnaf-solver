@@ -1,0 +1,72 @@
+{
+  "schema": "companion-targets-v1",
+  "version": 1,
+  "device": "Moto g56 5G (the campaign handset; its serial is in the untracked local profile), 2400x1080 landscape",
+  "note": "The games the Companion may be pointed at. A target is always named explicitly (companion-setup.py --target, the MCP cue.setup target, the Companion's TARGET verb or its target picker); nothing launches a default game. `titleModel` is the title-model-v1 whose gates identify that game's title/menu screen from a native SNAP frame (packages/play/bin/phone/game-screen.py); null means no measured model, so the game's screen reads UNKNOWN. `legacyReaders` names the on-device reader set a target enables: only retail FNaF 2 has one (Fnaf2Legacy.java). The rebuild packages are the clean-room recompiles; none has a measured title model yet. android/companion Targets.java mirrors this list and TargetsTest.java holds the two to each other.",
+  "targets": [
+    {
+      "game": "fnaf1",
+      "package": "com.scottgames.fivenightsatfreddys",
+      "label": "FNaF 1",
+      "rebuild": false,
+      "legacyReaders": null,
+      "titleModel": "packages/play/profiles/fnaf1/moto-g56/title-fnaf1-moto-g56-v207.json"
+    },
+    {
+      "game": "fnaf2",
+      "package": "com.scottgames.fnaf2",
+      "label": "FNaF 2",
+      "rebuild": false,
+      "legacyReaders": "fnaf2",
+      "titleModel": "packages/play/profiles/fnaf2/moto-g56/title-moto-g56-v207.json"
+    },
+    {
+      "game": "fnaf3",
+      "package": "com.scottgames.fnaf3",
+      "label": "FNaF 3",
+      "rebuild": false,
+      "legacyReaders": null,
+      "titleModel": "packages/play/profiles/fnaf3/moto-g56/title-fnaf3-moto-g56-v204.json"
+    },
+    {
+      "game": "fnaf4",
+      "package": "com.scottgames.fnaf4",
+      "label": "FNaF 4",
+      "rebuild": false,
+      "legacyReaders": null,
+      "titleModel": "packages/play/profiles/fnaf4/moto-g56/title-fnaf4-moto-g56-v204.json"
+    },
+    {
+      "game": "fnaf1-rebuild",
+      "package": "org.fnaf1rebuild.play",
+      "label": "FNaF 1 rebuild",
+      "rebuild": true,
+      "legacyReaders": null,
+      "titleModel": null
+    },
+    {
+      "game": "fnaf2-rebuild",
+      "package": "org.fnaf2rebuild.play",
+      "label": "FNaF 2 rebuild",
+      "rebuild": true,
+      "legacyReaders": null,
+      "titleModel": null
+    },
+    {
+      "game": "fnaf3-rebuild",
+      "package": "org.fnaf3rebuild.play",
+      "label": "FNaF 3 rebuild",
+      "rebuild": true,
+      "legacyReaders": null,
+      "titleModel": null
+    },
+    {
+      "game": "fnaf4-rebuild",
+      "package": "org.fnaf4rebuild.play",
+      "label": "FNaF 4 rebuild",
+      "rebuild": true,
+      "legacyReaders": null,
+      "titleModel": null
+    }
+  ]
+}
