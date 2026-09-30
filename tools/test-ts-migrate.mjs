@@ -62,6 +62,12 @@ export function open(options = {}) { return options.flag ?? null; }
 export const later = cycles => Object.values(cycles).map(cycle => cycle.blocks.length);
 export const settled = new Promise((resolve) => { resolve(); });
 `);
+  // An .mjs module becomes .ts too, and JSDoc `{object}` is `any`, as JavaScript read it.
+  writeFileSync(join(repo, 'src/reader.mjs'), `import { norm } from './lib.js';
+/** @param {object} entry */
+export function idOf(entry) { return entry.id; }
+export const total = norm({ x: 1, y: 2 });
+`);
   git('add', '.');
   git('commit', '-qm', 'fixture');
 
@@ -80,6 +86,10 @@ export const settled = new Promise((resolve) => { resolve(); });
   assert.match(out, /export function open\(options: any = \{\}\)/, 'an open literal read types its parameter any');
   assert.match(out, /new Promise<void>\(/, 'a promise resolved with nothing is Promise<void>');
   assert.doesNotMatch(out, /\w: any =>/, 'no unparenthesized typed arrow parameter');
+  const reader = readFileSync(join(repo, 'src/reader.ts'), 'utf8');
+  assert.match(reader, /^import \{ norm \} from '\.\/lib\.ts';$/m, 'an .mjs module is .ts, its specifiers too');
+  assert.match(reader, /export function idOf\(entry: any\)/, 'JSDoc {object} is any, never a closed object');
+  assert.doesNotMatch(reader, /as any\)/, 'no read needed a cast');
 
   const typecheck = spawnSync(process.execPath, [TSC, '--noEmit', '-p', join(repo, 'tsconfig.js.json')], { encoding: 'utf8' });
   assert.equal(typecheck.status, 0, typecheck.stdout + typecheck.stderr);
@@ -99,8 +109,11 @@ export const settled = new Promise((resolve) => { resolve(); });
   assert.equal(lib.open(), null);
   assert.deepEqual(lib.later({ a: { blocks: [1, 2] } }), [2]);
   assert.equal(await lib.settled, undefined);
+  const readerModule = await import(pathToFileURL(join(repo, 'src/reader.ts')).href);
+  assert.equal(readerModule.idOf({ id: 'a' }), 'a');
+  assert.equal(readerModule.total, 3);
 } finally {
   rmSync(repo, { recursive: true, force: true });
 }
 console.log('ts-migrate: casts, one-parameter arrows, predicates, declare fields, installed members, this parameters, ' +
-  'arity, open literals and void promises migrate, typecheck, and run as the JavaScript did');
+  'arity, open literals, void promises, .mjs modules and JSDoc {object} migrate, typecheck, and run as the JavaScript did');

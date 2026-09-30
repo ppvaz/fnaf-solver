@@ -258,10 +258,13 @@ if (ARITY_ONLY) {
   console.log(`ts-migrate --arity: ${relaxArity(paths)} parameters marked optional under ${DIR}`);
   process.exit(0);
 }
-const moving = git('ls-files', '-z', '--', `${DIR}/**/*.js`, `${DIR}/*.js`).split('\0').filter(Boolean).sort();
-if (!moving.length) { console.error(`ts-migrate: no tracked .js under ${DIR}`); process.exit(1); }
+const moving = git('ls-files', '-z', '--', `${DIR}/**/*.js`, `${DIR}/*.js`, `${DIR}/**/*.mjs`, `${DIR}/*.mjs`)
+  .split('\0').filter(Boolean).sort();
+if (!moving.length) { console.error(`ts-migrate: no tracked .js or .mjs under ${DIR}`); process.exit(1); }
+// A module's TypeScript name: .js and .mjs alike become .ts (the packages are "type": "module").
+const toTs = path => path.replace(/\.m?js$/, '.ts');
 console.log(`ts-migrate: ${moving.length} modules under ${DIR}`);
-if (DRY) { for (const path of moving) console.log(`  ${path} -> ${path.replace(/\.js$/, '.ts')}`); process.exit(0); }
+if (DRY) { for (const path of moving) console.log(`  ${path} -> ${toTs(path)}`); process.exit(0); }
 const read = path => readFileSync(join(ROOT, path), 'utf8');
 const write = (path, text) => writeFileSync(join(ROOT, path), text);
 const notes = [];
@@ -287,7 +290,8 @@ function jsdocOnly(node) {
   let found = false;
   const visit = n => {
     if (found) return;
-    if (JSDOC_ONLY.has(n.kind)) { found = true; return; }
+    // `{object}` in JSDoc is `any` to JavaScript, a closed type to TypeScript.
+    if (JSDOC_ONLY.has(n.kind) || n.kind === K.ObjectKeyword) { found = true; return; }
     if (ts.isTypeReferenceNode(n)) {
       const name = n.typeName.getText();
       if ((name === 'Object' || name === 'object') && !n.typeArguments) { found = true; return; }
@@ -516,12 +520,12 @@ for (const path of moving) {
 }
 
 // ---- 2. the renames --------------------------------------------------------------------
-const renamed = new Map(moving.map(path => [path, path.replace(/\.js$/, '.ts')]));
+const renamed = new Map(moving.map(path => [path, toTs(path)]));
 for (const [from, to] of renamed) git('mv', from, to);
 const targets = [...renamed.values()];
 
 // ---- 3. import types become type imports ------------------------------------------------
-const tsSpecifier = spec => spec.startsWith('.') ? spec.replace(/\.js$/, '.ts') : spec;
+const tsSpecifier = spec => spec.startsWith('.') ? spec.replace(/\.m?js$/, '.ts') : spec;
 for (const [from, to] of renamed) {
   let text = read(to);
   const wanted = new Map(); // specifier -> Set of "Name" or "Name as Alias"
@@ -626,11 +630,11 @@ for (const path of targets) {
 // ---- 5. specifiers that named a moved module ------------------------------------------
 const movedAbs = new Map([...renamed].map(([from, to]) => [join(ROOT, from), join(ROOT, to)]));
 const scripts = git('ls-files', '-z', '--', '*.js', '*.mjs', '*.cjs', '*.ts', '*.mts').split('\0').filter(Boolean);
-const SPEC = /((?:\bfrom|\bimport)\s*\(?\s*['"])(\.{1,2}\/[^'"\n]+\.js)(['"])/g;
+const SPEC = /((?:\bfrom|\bimport)\s*\(?\s*['"])(\.{1,2}\/[^'"\n]+\.m?js)(['"])/g;
 // A workspace specifier that names a file through a wildcard export
 // (`@sixam/source/games/fnaf2/mechanics.js` through "./games/*") names the
 // .ts after the move; an exact export follows the manifest instead.
-const BARE = /((?:\bfrom|\bimport)\s*\(?\s*['"])(@[\w-]+\/[\w-]+\/[^'"\n]+\.js)(['"])/g;
+const BARE = /((?:\bfrom|\bimport)\s*\(?\s*['"])(@[\w-]+\/[\w-]+\/[^'"\n]+\.m?js)(['"])/g;
 const workspaces = new Map();
 for (const group of ['packages', 'apps']) {
   if (!existsSync(join(ROOT, group))) continue;
@@ -659,12 +663,12 @@ for (const path of scripts) {
   const next = text.replace(SPEC, (match, head, spec, tail) => {
     if (!movedAbs.has(resolve(ROOT, dirname(path), spec))) return match;
     rewritten += 1;
-    return `${head}${spec.replace(/\.js$/, '.ts')}${tail}`;
+    return `${head}${toTs(spec)}${tail}`;
   }).replace(BARE, (match, head, spec, tail) => {
     const target = wildcardTarget(spec);
     if (!target || !movedAbs.has(target)) return match;
     rewritten += 1;
-    return `${head}${spec.replace(/\.js$/, '.ts')}${tail}`;
+    return `${head}${toTs(spec)}${tail}`;
   });
   if (next !== text) write(path, next);
 }
@@ -674,8 +678,9 @@ const manifest = (() => {
 })();
 if (manifest) {
   const text = read(manifest);
-  const next = text.replace(/"(\.\/[^"]+)\.js"/g, (match, stem) => {
-    if (movedAbs.has(join(ROOT, dirname(manifest), `${stem}.js`))) return `"${stem}.ts"`;
+  // Exports and bin entries alike; a bin path may omit the leading `./`.
+  const next = text.replace(/"((?:\.\/)?[^"\s:]+)\.(m?js)"/g, (match, stem, extension) => {
+    if (movedAbs.has(join(ROOT, dirname(manifest), `${stem}.${extension}`))) return `"${stem}.ts"`;
     // A wildcard target (`./src/campaign/*.js`, `./src/strategies/*/index.js`) names the .ts
     // once every file it matches is a .ts and none a .js.
     if (stem.includes('*')) {
@@ -683,7 +688,7 @@ if (manifest) {
       const directory = join(ROOT, dirname(manifest), before);
       if (existsSync(directory)) {
         const hits = readdirSync(directory).map(entry => join(directory, `${entry}${after}`));
-        if (hits.some(hit => existsSync(`${hit}.ts`)) && !hits.some(hit => existsSync(`${hit}.js`))) return `"${stem}.ts"`;
+        if (hits.some(hit => existsSync(`${hit}.ts`)) && !hits.some(hit => existsSync(`${hit}.${extension}`))) return `"${stem}.ts"`;
       }
     }
     return match;
