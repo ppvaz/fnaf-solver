@@ -19,7 +19,7 @@ import { Rng, Sim } from '@sixam/source/fnaf2';
 // other than the one beside the tool (2026-09-27: a drop-flag replay ran the parent's model, unchanged).
 const MECHANICS = fileURLToPath(import.meta.resolve('@sixam/source/fnaf2'));
 /** The files that define the Sim this tool loaded, for a record's provenance. */
-export const MODEL_SOURCES = Object.freeze(['plant-model.js', 'config.js', 'rng.js'].map((name) => join(dirname(MECHANICS), name)));
+export const MODEL_SOURCES = Object.freeze(['plant-model.ts', 'config.ts', 'rng.ts'].map((name) => join(dirname(MECHANICS), name)));
 if (relative(join(dirname(fileURLToPath(import.meta.url)), '../../..'), MECHANICS).startsWith('..'))
   throw new Error(`@sixam/source resolves outside this checkout (${MECHANICS}): run npm ci here`);
 

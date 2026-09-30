@@ -3,7 +3,7 @@
 // so g514's blackout clock passes g517's `> 20` on the 20th loop of `in danger`, where value 5 = 1 needs 21 (Night 7
 // k3 tick 2044 and Night 5 contact-final tick 7460 in the rebuilt runtime). Off: value 5 is frameValue5, or 1.
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
 
 const SOURCED = { sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedSecondPass: true, sourcedSheetOrder: true,
                   sourcedBlackoutDraws: true };

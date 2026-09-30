@@ -3,7 +3,7 @@
 // f == stunUntil (Night 1 minimal tick 21714: Toy Bonnie promoted a loop early after a camera flash). The hall pin
 // (g848-g854) is written after g488/g489, so under sourcedHallLatchOrder it follows the deferred latch reset.
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
 
 const QUIET = { night: 7, seed: 5, lethal: false, bbEnabled: false, gfEnabled: false, boxEnabled: false, foxyEnabled: false };
 

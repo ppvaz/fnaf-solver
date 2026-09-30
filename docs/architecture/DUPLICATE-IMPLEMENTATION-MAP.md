@@ -277,7 +277,7 @@ is not, which is why a fourth route means a fourth hand-written module.
 
 ## 11. Plants and transition models — binding: `GATE` (the model to copy)
 
-- `packages/source/src/games/fnaf2/plant-model.js` (1159) — `class Sim`, the sole
+- `packages/source/src/games/fnaf2/plant-model.ts` (1159) — `class Sim`, the sole
   mechanics authority.
 - `plant.js` (44) — semantic facade over it (`plant-model-v1`).
 - `reduced-model.js` (334) — deliberately not a second engine; gated against
@@ -454,7 +454,7 @@ green.
 `packages/propose/parked/minus7/constrainedsearch.mjs`, `packages/propose/parked/minus7/sim.mjs` and
 `packages/propose/parked/minus7/search.mjs` named `src/engine.js` as the mechanics authority — a
 path that no longer exists. All four now name
-`packages/source/src/games/fnaf2/plant-model.js`.
+`packages/source/src/games/fnaf2/plant-model.ts`.
 
 Still open: several docs and plans cite the dead path too, and nothing catches
 it. `tools/validate-references.js` resolves `CONTRACT:`/`ADR:`/`CLAIM:`/

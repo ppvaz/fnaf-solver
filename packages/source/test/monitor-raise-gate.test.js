@@ -1,7 +1,7 @@
 // g254/g257 under sourcedMonitorRaiseGate: the monitor goes up only from a still, down panel with the mask fully
 // off, no encounter blackout and no committed attack. Off: the default is unchanged.
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
 
 const BASE = { night: 7, seed: 5, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false, boxEnabled: false, foxyEnabled: false };
 const settle = (s, n) => { for (let i = 0; i < n; i++) s.tick(); };

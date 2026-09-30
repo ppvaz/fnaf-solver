@@ -2,7 +2,7 @@
 // g344-g360 write the fade counter C = 10 at that promotion, not at the roll. The schedule replays into the
 // rebuilt runtime split on this on all three nights (packages/source/recompile/README.md, "Winner schedules replayed").
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
 
 const SOURCED = { sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedSecondPass: true, sourcedSheetOrder: true,
                   sourcedViewDraws: true };

@@ -227,8 +227,8 @@ function assertSuite(recordPath = null) {
 
   if (recordPath) {
     const sourceFiles = ['packages/propose/parked/minus7/reactive-pilot.mjs', 'packages/propose/parked/minus7/cyclesearch.mjs', 'packages/propose/parked/minus7/policytest.mjs',
-      'packages/propose/parked/minus7/policy.mjs', 'packages/propose/parked/minus7/policybaselines.mjs', 'packages/source/src/games/fnaf2/plant-model.js',
-      'packages/source/src/games/fnaf2/config.js', 'packages/source/src/games/fnaf2/rng.js'];
+      'packages/propose/parked/minus7/policy.mjs', 'packages/propose/parked/minus7/policybaselines.mjs', 'packages/source/src/games/fnaf2/plant-model.ts',
+      'packages/source/src/games/fnaf2/config.ts', 'packages/source/src/games/fnaf2/rng.ts'];
     const record = {
       schema: 'evidence-record-v1', id: 'policy-baseline-mask-animation-20260927', date: '2026-09-27',
       claimLevel: 'MODEL_ONLY', status: problems.length ? 'FAIL' : 'PASS',

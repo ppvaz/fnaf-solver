@@ -1,7 +1,7 @@
 // g811 under sourcedRandomImageDraw: Random(1000) on the first loop `viewing` is 0 -- at night start and after
 // every monitor drop -- never while a camera is up, never twice in one stretch.
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
 
 const BASE = { night: 7, seed: 111, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                boxEnabled: false, foxyEnabled: false };

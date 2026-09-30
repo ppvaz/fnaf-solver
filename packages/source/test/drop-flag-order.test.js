@@ -3,8 +3,8 @@
 // (mask fully on, viewing 0, in danger 0) set it from a touch, so a drop or mask-off touched on update F is
 // performed on F+1. A press queued before tick F -> F+1 is harness office update F. Off: the default is unchanged.
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
-import * as C from '../src/games/fnaf2/config.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import * as C from '../src/games/fnaf2/config.ts';
 
 const QUIET = { night: 7, seed: 3, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false, boxEnabled: false, foxyEnabled: false,
                 sourcedDropLightOrder: true };

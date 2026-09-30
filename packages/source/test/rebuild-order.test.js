@@ -6,8 +6,8 @@
 // sourcedParkedMarker (g486 parks `your view` on CAM 09), sourcedCustomDialOrder (g787 after g781) and
 // sourcedCam8Cancel (g380/g385 zero the other Withereds' value 0).
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
-import * as C from '../src/games/fnaf2/config.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import * as C from '../src/games/fnaf2/config.ts';
 
 const BASE = { night: 7, seed: 111, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                boxEnabled: false, foxyEnabled: false, sourcedSecondPass: true, sourcedSheetOrder: true };

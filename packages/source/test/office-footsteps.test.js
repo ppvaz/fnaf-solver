@@ -3,7 +3,7 @@
 // promoted (value 2 = 10) and g696/g700/g703 draw its footstep there; an arrival inside value 2's window draws too.
 // Off: a unit at 122 is not promoted by its roll, and 122 is no footstep marker (Night 7 k3's replay, tick 2100).
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
 
 const SOURCED = { sourcedSecondPass: true, sourcedSheetOrder: true, sourcedRollDraws: true, sourcedFootstepDraws: true,
                   sourcedFootstepValue2: true, footstepCamMarkers: true };

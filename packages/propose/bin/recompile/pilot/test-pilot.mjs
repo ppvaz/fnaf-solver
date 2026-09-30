@@ -13,7 +13,7 @@ import { SCHEMA, check, evidenceId, iniKeys, verdict } from './record.mjs';
 import { SEAL_FOR, LURE_TO, proxyOf, whereIs, playsLeft, whatDayRare, doomStart } from './fnaf3.mjs';
 import { branchPoints, parseSeeds, progress, withoutStrays, LEAD, BACKOFF } from './search.mjs';
 import { MARKERS, ACTORS, WATCH as WATCH4, places, doomStart as doomStart4 } from './fnaf4.mjs';
-import { GRAPH, LURE_FROM } from '../../../../source/src/games/fnaf3/sim-fnaf3.js';
+import { GRAPH, LURE_FROM } from '../../../../source/src/games/fnaf3/sim-fnaf3.ts';
 import { currentPath } from '@sixam/review/renamed-path';
 
 const HERE = dirname(fileURLToPath(import.meta.url));

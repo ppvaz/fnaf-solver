@@ -1,6 +1,6 @@
 // Camera-view draws under sourcedViewDraws (dump g366/g368/g419, g468-g476, g498).
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
 
 const QUIET = { night: 7, seed: 31, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                 boxEnabled: false, foxyEnabled: false };

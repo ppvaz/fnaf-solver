@@ -1,7 +1,7 @@
 // Dump route forks and gates behind sourcedRouteForks (docs/evidence/withered-freddy-route-night7-20260915.json).
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
-import { Rng } from '../src/games/fnaf2/rng.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import { Rng } from '../src/games/fnaf2/rng.ts';
 
 const sim = (night, extra = {}) => new Sim({ night, seed: 7, lethal: false, sourcedRouteForks: true, ...extra });
 const unit = (s, id) => s.units.find(u => u.id === id);

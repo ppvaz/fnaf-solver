@@ -28,7 +28,7 @@
 //   game       -- fnaf1 | fnaf2 | fnaf3 | fnaf4. A v1 entry has no game field
 //                 and is read as fnaf2: its ROUTES and RUNGS are FNaF 2's.
 //   night      -- 1..N, where N is the last night the game's Rulebook names
-//                 (nightsOf in packages/source/src/clockwork/games.js:
+//                 (nightsOf in packages/source/src/clockwork/games.ts:
 //                 7, 7, 6, 8). v1 stops at 7.
 //   plan       -- any positive integer. v1 stops at 24.
 //   label      -- LABELS plus the two claim levels docs/evidence/README.md

@@ -34,7 +34,7 @@
 // what the route is worth once a detector exists.
 // ---------------------------------------------------------------------------
 
-import { FOLLOW } from '@sixam/source/games/fnaf4/fnaf4.js';
+import { FOLLOW } from '@sixam/source/games/fnaf4/fnaf4.ts';
 
 const S = FOLLOW.stations;
 const FRAME_MS = 1000 / 60;

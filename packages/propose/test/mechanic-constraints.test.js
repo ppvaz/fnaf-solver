@@ -8,7 +8,7 @@ import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { CAMERA_SPLIT, FNAF2_MECHANICS } from '@sixam/source/games/fnaf2/mechanics.js';
+import { CAMERA_SPLIT, FNAF2_MECHANICS } from '@sixam/source/games/fnaf2/mechanics.ts';
 import { MANIFEST as MINUS_TOYS } from '@sixam/propose/strategies/minus-toys';
 import { MANIFEST as MINUS_3 } from '@sixam/propose/strategies/minus-3';
 import { MANIFEST as MINUS_7 } from '@sixam/propose/parked/minus7';

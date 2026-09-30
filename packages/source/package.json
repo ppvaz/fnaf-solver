@@ -7,13 +7,13 @@
     "@sixam/kernel": "file:../kernel"
   },
   "exports": {
-    ".": "./src/index.js",
-    "./fnaf1": "./src/games/fnaf1/index.js",
-    "./fnaf2": "./src/games/fnaf2/index.js",
-    "./fnaf3": "./src/games/fnaf3/index.js",
-    "./fnaf4": "./src/games/fnaf4/index.js",
+    ".": "./src/index.ts",
+    "./fnaf1": "./src/games/fnaf1/index.ts",
+    "./fnaf2": "./src/games/fnaf2/index.ts",
+    "./fnaf3": "./src/games/fnaf3/index.ts",
+    "./fnaf4": "./src/games/fnaf4/index.ts",
     "./truth": "./decompile/truth.mjs",
-    "./truth/read": "./src/truth/index.js",
+    "./truth/read": "./src/truth/index.ts",
     "./games/*": "./src/games/*"
   }
 }

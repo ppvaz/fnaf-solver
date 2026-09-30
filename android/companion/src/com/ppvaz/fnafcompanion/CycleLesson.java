@@ -32,7 +32,7 @@ public final class CycleLesson {
     public static final int MAX_NIGHT_MS = 900_000;
     /** One in-game hour on every night [SOURCED: packages/core HOUR_FRAMES, 1:10]. */
     public static final int HOUR_MS = 70_000;
-    /** STUN_FRAMES 400 at 60 fps [SOURCED: packages/source/src/games/fnaf2/config.js]. */
+    /** STUN_FRAMES 400 at 60 fps [SOURCED: packages/source/src/games/fnaf2/config.ts]. */
     private static final String STUN_SECONDS = "6.7";
 
     /** What the schedule does. The host maps artifact actions onto these. */

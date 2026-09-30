@@ -3,7 +3,7 @@
 // is released, the moves still see the latch set, and it clears only after them. The hooked clock used to
 // clear it at the top of the tick, before the rolls and moves (Night 7 k3's first replay mismatch).
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
 
 const SOURCED = { sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedSecondPass: true, sourcedSheetOrder: true };
 const HOOK60 = { frameMs: () => 50 / 3, frameValue5: () => 1 };

@@ -1,5 +1,5 @@
 // A searchable wrapper over the authoritative transition model in
-// packages/source/src/games/fnaf2/plant-model.js.
+// packages/source/src/games/fnaf2/plant-model.ts.
 //
 // Nothing here is a new game rule. That module is the only authority; this
 // file only (a) clones a Sim so a search can branch, (b) compiles a small set

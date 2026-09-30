@@ -1,7 +1,7 @@
 // The frame-time hook (frameMs, frameValue5) over the sheet-ordered countdowns.
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
-import * as C from '../src/games/fnaf2/config.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import * as C from '../src/games/fnaf2/config.ts';
 
 const SOURCED = { sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedUnconditionalDraws: true,
   sourcedEventDraws: true, sourcedBlackoutDraws: true, sourcedViewDraws: true, sourcedRollDraws: true,

@@ -3,7 +3,7 @@
 // (3) animation is dropped. The simulator used to toggle mid-animation and so
 // scored plans the phone does not execute.
 import assert from 'node:assert/strict';
-import * as C from '../src/games/fnaf2/index.js';
+import * as C from '../src/games/fnaf2/index.ts';
 
 const sim = new C.Sim({ night: 1, seed: 1 });
 sim.press('mask');

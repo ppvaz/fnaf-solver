@@ -418,7 +418,7 @@ const outputs = {
   // aliases, action kinds, binding, preconditions and observation, and FNaF 2's
   // artifact action table. The validators are generated from the same objects.
   'control-catalog.json': { schema: 'control-catalog-register-v1',
-    generatedFrom: 'packages/source/src/games/*/controls.js', games: Object.values(CONTROL_CATALOGS) },
+    generatedFrom: 'packages/source/src/games/*/controls.ts', games: Object.values(CONTROL_CATALOGS) },
 };
 for (const [name, value] of Object.entries(outputs)) await writeFile(join(OUT, name), JSON.stringify(value, null, 2) + '\n');
 console.log(`catalog: ${Object.keys(outputs).length} inventories (${sourceFiles.length} source files)`);

@@ -3,7 +3,7 @@
 // (the rebuilt runtime, tick 21715). Off: tickUnits settles waiting units one at a time, and Toy Bonnie's move lands
 // before Toy Chica's promotion test.
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
 
 const BASE = { night: 1, seed: 5, lethal: false, bbEnabled: false, gfEnabled: false, boxEnabled: false, foxyEnabled: false,
                sourcedRouteForks: true, sourcedRollDraws: true, sourcedPromotedMoves: true, sourcedRollsBeforeMoves: true };

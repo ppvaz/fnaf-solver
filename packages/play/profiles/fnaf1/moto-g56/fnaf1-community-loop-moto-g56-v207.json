@@ -81,6 +81,6 @@
     "packages/play/profiles/fnaf1/moto-g56/controls-fnaf1-moto-g56-v207.json",
     "packages/play/profiles/fnaf1/moto-g56/title-fnaf1-moto-g56-v207.json",
     "~/fnaf-apks/fnaf1/events/05-06-Main_Room.txt groups 213-237, 255-258, 318-321, 445, 460",
-    "packages/source/src/games/fnaf1/fnaf1.js"
+    "packages/source/src/games/fnaf1/fnaf1.ts"
   ]
 }

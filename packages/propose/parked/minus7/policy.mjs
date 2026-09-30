@@ -3,7 +3,7 @@
 // One observation/action contract so that scripted schedules, priority
 // machines and belief-state controllers can be compared on the same engine,
 // the same seeds and the same error models. It creates NO second simulator:
-// the `Sim` in `packages/source/src/games/fnaf2/plant-model.js` remains the sole
+// the `Sim` in `packages/source/src/games/fnaf2/plant-model.ts` remains the sole
 // mechanics authority and this file only wraps construction, action
 // delivery, observation privilege and the terminal report.
 //

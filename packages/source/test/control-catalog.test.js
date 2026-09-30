@@ -9,10 +9,10 @@ import {
   CONTROL_CATALOGS, CONTROL_VOCABULARY, DEVICE_CONTROL_NAMES, FNAF2_ARTIFACT_ACTIONS, FNAF2_CONTROL_VOCABULARY,
   GAME_CONTROLS, GAME_PACKAGES, LEGACY_CONTROL_NAMES, artifactActionTableFor, controlCatalogFor,
   controlVocabularyFor, defineControlCatalog, gameOfTargetBuild, isUnknown,
-} from '../src/clockwork/index.js';
-import { deviceProfileGame, resolveDeviceProfile, validateControlCommand } from '../src/clockwork/control-contracts.js';
+} from '../src/clockwork/index.ts';
+import { deviceProfileGame, resolveDeviceProfile, validateControlCommand } from '../src/clockwork/control-contracts.ts';
 import { stableHash } from '@sixam/kernel/contracts';
-import { PlantModel } from '../src/games/fnaf2/plant.js';
+import { PlantModel } from '../src/games/fnaf2/plant.ts';
 
 const FNAF1 = 'com.scottgames.fivenightsatfreddys';
 const FNAF2 = 'com.scottgames.fnaf2';

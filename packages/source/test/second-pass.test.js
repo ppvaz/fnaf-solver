@@ -1,6 +1,6 @@
 // The per-second draw groups as one sheet-ordered pass under sourcedSecondPass (dump g213..g781).
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
 
 const QUIET = { night: 7, seed: 61, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                 boxEnabled: false, foxyEnabled: false };

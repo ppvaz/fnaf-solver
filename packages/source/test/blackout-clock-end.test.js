@@ -4,7 +4,7 @@
 // tick 7740 and every Night 7 k3 encounter end in the rebuilt runtime). Off: the model resolves 300 frames after the
 // start frame.
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
 
 const SOURCED = { sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedSecondPass: true, sourcedSheetOrder: true,
                   sourcedBlackoutDraws: true, frameMs: () => 50 / 3 };

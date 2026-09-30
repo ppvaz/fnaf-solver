@@ -5,7 +5,7 @@
 // or the marker, so a promoted unit that is flashed while its move waits on the latch still moves. Off: the
 // stun and the marker are re-tested at the move, and Mangle has no latch gate off her CAM 07 / hall hops.
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
 
 const QUIET = { night: 7, seed: 5, lethal: false, bbEnabled: false, gfEnabled: false, boxEnabled: false, foxyEnabled: false };
 const LATCHED = Number.MAX_SAFE_INTEGER;

@@ -55,7 +55,7 @@
 // NOT PROMOTED. This is a simulator-facing decision layer. It makes no device
 // claim, and a survival number produced with it is a statement about the
 // model.
-import * as C from '@sixam/source/games/fnaf2/config.js';
+import * as C from '@sixam/source/games/fnaf2/config.ts';
 
 export const NIGHT_POLICY_SCHEMA = 'night-policy-v1';
 

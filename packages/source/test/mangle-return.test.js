@@ -1,6 +1,6 @@
 // Mangle's mask-leave return under sourcedMangleReturn (dump g400/g401: CAM 7, not the route start).
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
 const QUIET = { night: 7, seed: 121, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false, boxEnabled: false, foxyEnabled: false };
 const leave = opts => { const s = new Sim({ ...QUIET, ...opts }); const m = s.units.find(u => u.id === 'mangle'); m.idx = m.path.indexOf('ventR'); m.atOpening = true; s.unitLeave(m); return m.path[m.idx]; };
 assert.equal(leave({ sourcedMangleReturn: true }), 7, 'a mask leave puts Mangle at CAM 7');

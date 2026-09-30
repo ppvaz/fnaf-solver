@@ -21,7 +21,7 @@
 // any branch survives a model gate, and nothing about device readiness: every
 // fact below is `classifier: 'UNCALIBRATED'` today, so `deviceAdmissibleFacts()`
 // is empty and stays empty until Plan 15 lands a calibrated pairing.
-import * as C from '@sixam/source/games/fnaf2/config.js';
+import * as C from '@sixam/source/games/fnaf2/config.ts';
 import { FACTS, OBSERVE_INTERVAL } from '@sixam/play/sim';
 
 export const OBSERVATION_LANGUAGE_SCHEMA = 'observation-language-v1';

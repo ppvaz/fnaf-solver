@@ -211,7 +211,7 @@
       "file": "apps/desktop/test/test-deathchart.mjs",
       "imports": [
         "../bin/deathchart.mjs",
-        "\\.\\/(plant-[\\w-]+\\.js)",
+        "\\.\\/(plant-[\\w-]+\\.ts)",
         "node:fs",
         "node:os",
         "node:path",
@@ -1371,7 +1371,7 @@
     {
       "file": "packages/play/src/venues/sim/observer.js",
       "imports": [
-        "@sixam/source/games/fnaf2/config.js"
+        "@sixam/source/games/fnaf2/config.ts"
       ]
     },
     {
@@ -1920,7 +1920,7 @@
         "@sixam/propose/strategies/minus-toys",
         "@sixam/source",
         "@sixam/source/fnaf2",
-        "@sixam/source/games/fnaf2/mechanics.js",
+        "@sixam/source/games/fnaf2/mechanics.ts",
         "node:crypto",
         "node:fs",
         "node:path",
@@ -2408,7 +2408,7 @@
     {
       "file": "packages/propose/bin/recompile/pilot/test-pilot.mjs",
       "imports": [
-        "../../../../source/src/games/fnaf3/sim-fnaf3.js",
+        "../../../../source/src/games/fnaf3/sim-fnaf3.ts",
         "./fnaf3.mjs",
         "./fnaf4.mjs",
         "./record.mjs",
@@ -2927,7 +2927,7 @@
       "file": "packages/propose/src/games/fnaf2/controller.js",
       "imports": [
         "@sixam/play/sim",
-        "@sixam/source/games/fnaf2/config.js"
+        "@sixam/source/games/fnaf2/config.ts"
       ]
     },
     {
@@ -2936,15 +2936,15 @@
         "./cycle-library.js",
         "./cycle-planner.js",
         "@sixam/play/player",
-        "@sixam/source/games/fnaf2/config.js",
-        "@sixam/source/games/fnaf2/reduced-model.js"
+        "@sixam/source/games/fnaf2/config.ts",
+        "@sixam/source/games/fnaf2/reduced-model.ts"
       ]
     },
     {
       "file": "packages/propose/src/games/fnaf2/cycle-library.js",
       "imports": [
-        "@sixam/source/games/fnaf2/config.js",
-        "@sixam/source/games/fnaf2/reduced-model.js"
+        "@sixam/source/games/fnaf2/config.ts",
+        "@sixam/source/games/fnaf2/reduced-model.ts"
       ]
     },
     {
@@ -2966,19 +2966,19 @@
     {
       "file": "packages/propose/src/games/fnaf2/night-policy.js",
       "imports": [
-        "@sixam/source/games/fnaf2/config.js"
+        "@sixam/source/games/fnaf2/config.ts"
       ]
     },
     {
       "file": "packages/propose/src/games/policy-fnaf1.js",
       "imports": [
-        "@sixam/source/games/fnaf1/sim-fnaf1.js"
+        "@sixam/source/games/fnaf1/sim-fnaf1.ts"
       ]
     },
     {
       "file": "packages/propose/src/games/policy-fnaf4.js",
       "imports": [
-        "@sixam/source/games/fnaf4/fnaf4.js"
+        "@sixam/source/games/fnaf4/fnaf4.ts"
       ]
     },
     {
@@ -3000,7 +3000,7 @@
       "file": "packages/propose/src/policy/observation-language.js",
       "imports": [
         "@sixam/play/sim",
-        "@sixam/source/games/fnaf2/config.js"
+        "@sixam/source/games/fnaf2/config.ts"
       ]
     },
     {
@@ -3021,7 +3021,7 @@
     {
       "file": "packages/propose/src/strategies/minus-3/manifest.js",
       "imports": [
-        "@sixam/source/games/fnaf2/mechanics.js"
+        "@sixam/source/games/fnaf2/mechanics.ts"
       ]
     },
     {
@@ -3049,7 +3049,7 @@
     {
       "file": "packages/propose/src/strategies/minus-toys/manifest.js",
       "imports": [
-        "@sixam/source/games/fnaf2/mechanics.js"
+        "@sixam/source/games/fnaf2/mechanics.ts"
       ]
     },
     {
@@ -3164,7 +3164,7 @@
         "@sixam/propose/parked/minus7",
         "@sixam/propose/strategies/minus-3",
         "@sixam/propose/strategies/minus-toys",
-        "@sixam/source/games/fnaf2/mechanics.js",
+        "@sixam/source/games/fnaf2/mechanics.ts",
         "node:assert/strict",
         "node:child_process",
         "node:fs",
@@ -3830,8 +3830,8 @@
     {
       "file": "packages/source/decompile/truth.mjs",
       "imports": [
-        "../src/index.js",
-        "../src/truth/index.js",
+        "../src/index.ts",
+        "../src/truth/index.ts",
         "@sixam/kernel",
         "node:child_process",
         "node:crypto",
@@ -3851,300 +3851,303 @@
       ]
     },
     {
-      "file": "packages/source/src/clockwork/control-contracts.js",
+      "file": "packages/source/src/clockwork/control-contracts.ts",
       "imports": [
-        "./control-registry.js",
+        "./control-registry.ts",
         "@sixam/kernel/contracts"
       ]
     },
     {
-      "file": "packages/source/src/clockwork/control-registry.js",
+      "file": "packages/source/src/clockwork/control-registry.ts",
       "imports": [
-        "../games/fnaf1/controls.js",
-        "../games/fnaf2/controls.js",
-        "../games/fnaf3/controls.js",
-        "../games/fnaf4/controls.js",
-        "./control-catalog.js"
+        "../games/fnaf1/controls.ts",
+        "../games/fnaf2/controls.ts",
+        "../games/fnaf3/controls.ts",
+        "../games/fnaf4/controls.ts",
+        "./control-catalog.ts"
       ]
     },
     {
-      "file": "packages/source/src/clockwork/games.js",
+      "file": "packages/source/src/clockwork/games.ts",
       "imports": [
-        "../games/fnaf1/fnaf1.js",
-        "../games/fnaf2/fnaf2.js",
-        "../games/fnaf3/fnaf3.js",
-        "../games/fnaf4/fnaf4.js",
-        "./night-model.js",
+        "../games/fnaf1/fnaf1.ts",
+        "../games/fnaf2/fnaf2.ts",
+        "../games/fnaf3/fnaf3.ts",
+        "../games/fnaf4/fnaf4.ts",
+        "./night-model.ts",
         "@sixam/source"
       ]
     },
     {
-      "file": "packages/source/src/clockwork/index.js",
+      "file": "packages/source/src/clockwork/index.ts",
       "imports": [
-        "./control-contracts.js",
-        "./control-registry.js",
-        "./games.js",
-        "./rng.js",
-        "./vocabulary.js"
+        "./control-contracts.ts",
+        "./control-registry.ts",
+        "./games.ts",
+        "./rng.ts",
+        "./vocabulary.ts"
       ]
     },
     {
-      "file": "packages/source/src/clockwork/rng.js",
+      "file": "packages/source/src/clockwork/rng.ts",
       "imports": [
-        "../games/fnaf2/rng.js"
+        "../games/fnaf2/rng.ts"
       ]
     },
     {
-      "file": "packages/source/src/clockwork/vocabulary.js",
+      "file": "packages/source/src/clockwork/vocabulary.ts",
       "imports": [
-        "./control-registry.js"
+        "./control-registry.ts"
       ]
     },
     {
-      "file": "packages/source/src/games/fnaf1/controls.js",
+      "file": "packages/source/src/games/fnaf1/controls.ts",
       "imports": [
-        "../../clockwork/control-catalog.js"
+        "../../clockwork/control-catalog.ts"
       ]
     },
     {
-      "file": "packages/source/src/games/fnaf1/index.js",
+      "file": "packages/source/src/games/fnaf1/index.ts",
       "imports": [
-        "./controls.js",
-        "./fnaf1.js",
-        "./sim-fnaf1.js"
+        "./controls.ts",
+        "./fnaf1.ts",
+        "./sim-fnaf1.ts"
       ]
     },
     {
-      "file": "packages/source/src/games/fnaf1/sim-fnaf1.js",
+      "file": "packages/source/src/games/fnaf1/sim-fnaf1.ts",
       "imports": [
-        "../../clockwork/night-model.js",
-        "../../clockwork/rng.js",
-        "./fnaf1.js"
+        "../../clockwork/every.ts",
+        "../../clockwork/night-model.ts",
+        "../../clockwork/rng.ts",
+        "./fnaf1.ts"
       ]
     },
     {
-      "file": "packages/source/src/games/fnaf2/controls.js",
+      "file": "packages/source/src/games/fnaf2/controls.ts",
       "imports": [
-        "../../clockwork/control-catalog.js"
+        "../../clockwork/control-catalog.ts"
       ]
     },
     {
-      "file": "packages/source/src/games/fnaf2/fnaf2.js",
+      "file": "packages/source/src/games/fnaf2/fnaf2.ts",
       "imports": [
-        "./config.js"
+        "./config.ts"
       ]
     },
     {
-      "file": "packages/source/src/games/fnaf2/index.js",
+      "file": "packages/source/src/games/fnaf2/index.ts",
       "imports": [
-        "./config.js",
-        "./plant-model.js",
-        "./plant.js",
-        "./reduced-model.js",
-        "./rng.js",
-        "./seed-recovery.js"
+        "./config.ts",
+        "./plant-model.ts",
+        "./plant.ts",
+        "./reduced-model.ts",
+        "./rng.ts",
+        "./seed-recovery.ts"
       ]
     },
     {
-      "file": "packages/source/src/games/fnaf2/plant-hall.js",
+      "file": "packages/source/src/games/fnaf2/plant-hall.ts",
       "imports": [
-        "./config.js",
-        "./plant-constants.js",
-        "./plant-model.js"
+        "./config.ts",
+        "./plant-constants.ts",
+        "./plant-model.ts"
       ]
     },
     {
-      "file": "packages/source/src/games/fnaf2/plant-model.js",
+      "file": "packages/source/src/games/fnaf2/plant-model.ts",
       "imports": [
-        "./config.js",
-        "./plant-constants.js",
-        "./plant-hall.js",
-        "./plant-office.js",
-        "./plant-options.js",
-        "./plant-puppet.js",
-        "./plant-sheet.js",
-        "./plant-units.js",
-        "./rng.js"
+        "./config.ts",
+        "./plant-constants.ts",
+        "./plant-hall.ts",
+        "./plant-office.ts",
+        "./plant-options.ts",
+        "./plant-puppet.ts",
+        "./plant-sheet.ts",
+        "./plant-units.ts",
+        "./rng.ts"
       ]
     },
     {
-      "file": "packages/source/src/games/fnaf2/plant-office.js",
+      "file": "packages/source/src/games/fnaf2/plant-office.ts",
       "imports": [
-        "./config.js",
-        "./plant-constants.js",
-        "./plant-model.js"
+        "./config.ts",
+        "./plant-constants.ts",
+        "./plant-model.ts"
       ]
     },
     {
-      "file": "packages/source/src/games/fnaf2/plant-options.js",
+      "file": "packages/source/src/games/fnaf2/plant-options.ts",
       "imports": [
-        "./config.js"
+        "./config.ts"
       ]
     },
     {
-      "file": "packages/source/src/games/fnaf2/plant-puppet.js",
+      "file": "packages/source/src/games/fnaf2/plant-puppet.ts",
       "imports": [
-        "./config.js",
-        "./plant-model.js"
+        "./config.ts",
+        "./plant-model.ts"
       ]
     },
     {
-      "file": "packages/source/src/games/fnaf2/plant-sheet.js",
+      "file": "packages/source/src/games/fnaf2/plant-sheet.ts",
       "imports": [
-        "./config.js",
-        "./plant-constants.js",
-        "./plant-model.js"
+        "./config.ts",
+        "./plant-constants.ts",
+        "./plant-model.ts"
       ]
     },
     {
-      "file": "packages/source/src/games/fnaf2/plant-units.js",
+      "file": "packages/source/src/games/fnaf2/plant-units.ts",
       "imports": [
-        "./config.js",
-        "./plant-constants.js",
-        "./plant-model.js"
+        "./config.ts",
+        "./plant-constants.ts",
+        "./plant-model.ts"
       ]
     },
     {
-      "file": "packages/source/src/games/fnaf2/plant.js",
+      "file": "packages/source/src/games/fnaf2/plant.ts",
       "imports": [
-        "../../clockwork/control-contracts.js",
-        "./controls.js",
-        "./plant-model.js"
+        "../../clockwork/control-contracts.ts",
+        "./controls.ts",
+        "./plant-model.ts"
       ]
     },
     {
-      "file": "packages/source/src/games/fnaf2/reduced-model.js",
+      "file": "packages/source/src/games/fnaf2/reduced-model.ts",
       "imports": [
-        "./config.js"
+        "./config.ts"
       ]
     },
     {
-      "file": "packages/source/src/games/fnaf2/seed-recovery.js",
+      "file": "packages/source/src/games/fnaf2/seed-recovery.ts",
       "imports": [
-        "./plant-model.js",
-        "./rng.js"
+        "./plant-model.ts",
+        "./rng.ts"
       ]
     },
     {
-      "file": "packages/source/src/games/fnaf3/controls.js",
+      "file": "packages/source/src/games/fnaf3/controls.ts",
       "imports": [
-        "../../clockwork/control-catalog.js"
+        "../../clockwork/control-catalog.ts"
       ]
     },
     {
-      "file": "packages/source/src/games/fnaf3/index.js",
+      "file": "packages/source/src/games/fnaf3/index.ts",
       "imports": [
-        "./controls.js",
-        "./fnaf3.js",
-        "./sim-fnaf3.js"
+        "./controls.ts",
+        "./fnaf3.ts",
+        "./sim-fnaf3.ts"
       ]
     },
     {
-      "file": "packages/source/src/games/fnaf3/sim-fnaf3.js",
+      "file": "packages/source/src/games/fnaf3/sim-fnaf3.ts",
       "imports": [
-        "../../clockwork/night-model.js",
-        "../../clockwork/rng.js",
-        "./fnaf3.js"
+        "../../clockwork/every.ts",
+        "../../clockwork/night-model.ts",
+        "../../clockwork/rng.ts",
+        "./fnaf3.ts"
       ]
     },
     {
-      "file": "packages/source/src/games/fnaf4/controls.js",
+      "file": "packages/source/src/games/fnaf4/controls.ts",
       "imports": [
-        "../../clockwork/control-catalog.js"
+        "../../clockwork/control-catalog.ts"
       ]
     },
     {
-      "file": "packages/source/src/games/fnaf4/index.js",
+      "file": "packages/source/src/games/fnaf4/index.ts",
       "imports": [
-        "./controls.js",
-        "./fnaf4.js",
-        "./sim-fnaf4.js"
+        "./controls.ts",
+        "./fnaf4.ts",
+        "./sim-fnaf4.ts"
       ]
     },
     {
-      "file": "packages/source/src/games/fnaf4/sim-fnaf4.js",
+      "file": "packages/source/src/games/fnaf4/sim-fnaf4.ts",
       "imports": [
-        "../../clockwork/night-model.js",
-        "../../clockwork/rng.js",
-        "./fnaf4.js"
+        "../../clockwork/every.ts",
+        "../../clockwork/night-model.ts",
+        "../../clockwork/rng.ts",
+        "./fnaf4.ts"
       ]
     },
     {
-      "file": "packages/source/src/index.js",
+      "file": "packages/source/src/index.ts",
       "imports": [
-        "./clockwork/index.js"
+        "./clockwork/index.ts"
       ]
     },
     {
-      "file": "packages/source/src/truth/dump.js",
+      "file": "packages/source/src/truth/dump.ts",
       "imports": [
         "@sixam/kernel"
       ]
     },
     {
-      "file": "packages/source/src/truth/handles.js",
+      "file": "packages/source/src/truth/handles.ts",
       "imports": [
-        "./dump.js",
-        "./engine.js"
+        "./dump.ts",
+        "./engine.ts"
       ]
     },
     {
-      "file": "packages/source/src/truth/index.js",
+      "file": "packages/source/src/truth/index.ts",
       "imports": [
-        "./dump.js",
-        "./engine.js",
-        "./handles.js",
-        "./query.js"
+        "./dump.ts",
+        "./engine.ts",
+        "./handles.ts",
+        "./query.ts"
       ]
     },
     {
-      "file": "packages/source/src/truth/query.js",
+      "file": "packages/source/src/truth/query.ts",
       "imports": [
-        "./dump.js",
-        "./engine.js",
+        "./dump.ts",
+        "./engine.ts",
         "@sixam/kernel"
       ]
     },
     {
       "file": "packages/source/test/animation-count.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/b-drain-order.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/bb-moves.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/blackout-clock-end.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/blackout-draws.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/contracts.test.js",
       "imports": [
-        "../src/clockwork/control-contracts.js",
-        "../src/games/fnaf2/plant.js",
+        "../src/clockwork/control-contracts.ts",
+        "../src/games/fnaf2/plant.ts",
         "@sixam/kernel/contracts",
         "@sixam/kernel/time",
         "node:assert/strict",
@@ -4155,9 +4158,9 @@
     {
       "file": "packages/source/test/control-catalog.test.js",
       "imports": [
-        "../src/clockwork/control-contracts.js",
-        "../src/clockwork/index.js",
-        "../src/games/fnaf2/plant.js",
+        "../src/clockwork/control-contracts.ts",
+        "../src/clockwork/index.ts",
+        "../src/games/fnaf2/plant.ts",
         "@sixam/kernel/contracts",
         "node:assert/strict",
         "node:fs",
@@ -4167,38 +4170,38 @@
     {
       "file": "packages/source/test/drop-flag-order.test.js",
       "imports": [
-        "../src/games/fnaf2/config.js",
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/config.ts",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/drop-light-order.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/event-draws.test.js",
       "imports": [
-        "../src/games/fnaf2/config.js",
-        "../src/games/fnaf2/plant-model.js",
-        "../src/games/fnaf2/rng.js",
+        "../src/games/fnaf2/config.ts",
+        "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/rng.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/every-origin.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/exposure-value5.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
@@ -4212,114 +4215,114 @@
     {
       "file": "packages/source/test/footstep-draws.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/footstep-value2.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/foxy-chain.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
-        "../src/games/fnaf2/rng.js",
+        "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/rng.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/foxy-move-value2.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/frame-time-hook.test.js",
       "imports": [
-        "../src/games/fnaf2/config.js",
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/config.ts",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/gated-every.test.js",
       "imports": [
-        "../src/games/fnaf2/index.js",
+        "../src/games/fnaf2/index.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/hall-latch-order.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/last-view-pause.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/mangle-return.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/mask-animation-input.test.js",
       "imports": [
-        "../src/games/fnaf2/index.js",
+        "../src/games/fnaf2/index.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/monitor-down-draw.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/monitor-raise-gate.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/office-footsteps.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/office-rolls.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/promoted-moves.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/promoted-view-draws.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
@@ -4333,66 +4336,66 @@
     {
       "file": "packages/source/test/puppet-glitch-draws.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/random-image-draw.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/rebuild-order.test.js",
       "imports": [
-        "../src/games/fnaf2/config.js",
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/config.ts",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/roll-draws.test.js",
       "imports": [
-        "../src/games/fnaf2/config.js",
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/config.ts",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/rolls-before-moves.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/route-forks.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
-        "../src/games/fnaf2/rng.js",
+        "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/rng.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/route-pass.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/route-view-draws.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/second-pass.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
@@ -4413,8 +4416,8 @@
     {
       "file": "packages/source/test/sheet-order.test.js",
       "imports": [
-        "../src/games/fnaf2/config.js",
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/config.ts",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
@@ -4436,7 +4439,7 @@
       "imports": [
         "@sixam/source",
         "@sixam/source/fnaf2",
-        "@sixam/source/games/fnaf2/config.js"
+        "@sixam/source/games/fnaf2/config.ts"
       ]
     },
     {
@@ -4457,29 +4460,29 @@
     {
       "file": "packages/source/test/unconditional-draws.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
-        "../src/games/fnaf2/rng.js",
+        "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/rng.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/value5.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/vent-cam-draws.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/view-draws.test.js",
       "imports": [
-        "../src/games/fnaf2/plant-model.js",
+        "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },

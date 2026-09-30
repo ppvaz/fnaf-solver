@@ -89,7 +89,7 @@ const record = {
     historicalTool: 'artifacts/forensics/twin-nights-night6-cohort2/win-score.mjs',
     historicalRecord: 'docs/evidence/model-encounter-fidelity-20260918.json',
     baseCommit: census.method.git.commit,
-    modelSha256: hashFile(new URL('../../source/src/games/fnaf2/plant-model.js', import.meta.url)),
+    modelSha256: hashFile(new URL('../../source/src/games/fnaf2/plant-model.ts', import.meta.url)),
     runtimeSource: {
       localPath: '~/fnaf-apks/fnaf2/base.apk!classes.dex',
       sha256: 'ca5c98a4d6ceefc3e0efe542695762263b87e73ca7e3956e3c688177d4c0d8a3',

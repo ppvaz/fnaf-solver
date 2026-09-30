@@ -1,6 +1,6 @@
 // Drop latency, the hall latch and Foxy under sourcedDropLightOrder (dump g75/g84/g94/g262/g445/g488/g489/g614/g745/g573).
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
 
 const fresh = (extra = {}) => {
   const s = new Sim({ night: 7, seed: 3, lethal: false, sourcedDropLightOrder: true, stalledEnabled: false, bbEnabled: false, gfEnabled: false, boxEnabled: false, ...extra });

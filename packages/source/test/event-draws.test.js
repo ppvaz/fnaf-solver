@@ -1,8 +1,8 @@
 // Draws at events the model already simulates, under sourcedEventDraws (dump e237/e324/e338/e351-e354/e377/e478-e489/e548).
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
-import * as C from '../src/games/fnaf2/config.js';
-import { RNG_MULTIPLIER, RNG_INCREMENT, RNG_MASK, RNG_MODULUS } from '../src/games/fnaf2/rng.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import * as C from '../src/games/fnaf2/config.ts';
+import { RNG_MULTIPLIER, RNG_INCREMENT, RNG_MASK, RNG_MODULUS } from '../src/games/fnaf2/rng.ts';
 
 const lcg = s => (s * RNG_MULTIPLIER + RNG_INCREMENT) & RNG_MASK;
 const after = (s, n) => { for (let i = 0; i < n; i++) s = lcg(s); return s; };

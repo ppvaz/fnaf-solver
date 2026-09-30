@@ -3,7 +3,7 @@
 // (g343, Random(20)), not between her roll and Golden Freddy's. Off: the move and its draw happen inside the roll
 // pass, and every later roll of that loop reads another value (Night 7 k3's replay mismatch at tick 1200).
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
 
 const SOURCED = { sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedSecondPass: true, sourcedSheetOrder: true,
                   sourcedRollDraws: true, sourcedEventDraws: true };

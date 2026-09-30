@@ -2,7 +2,7 @@
 // g846 (> 100 * night) and g780 (> 100) compare them strictly, so with value 5 a hair above 1 the Nth lit loop already
 // passes > N (Night 7 k3 tick 20449: Foxy's retreat on his 700th lit loop). Off: both count 1 per loop.
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
 
 const SOURCED = { sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedSecondPass: true, sourcedSheetOrder: true,
                   frameMs: () => 50 / 3, sourcedValue5: true };

@@ -1,7 +1,7 @@
 // g685-g690 under sourcedVentCamDraws: Random(4) the first loop a unit stands on CAM 05 (Toy Chica, W. Bonnie)
 // or CAM 06 (Toy Bonnie, W. Chica, Mangle, Puppet), once per stay, in the sheet slot before the footstep cues.
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
 
 const BASE = { night: 7, seed: 111, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                boxEnabled: false, foxyEnabled: false, sourcedSecondPass: true, sourcedSheetOrder: true };

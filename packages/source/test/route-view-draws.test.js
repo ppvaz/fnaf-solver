@@ -2,7 +2,7 @@
 // so a Toy promoted and moved off the viewed camera on one loop still draws where it stood (Night 5 contact-final tick
 // 22241: Toy Bonnie leaves CAM 09 with your view on it). Off: the model drew them after every move.
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
 
 const SOURCED = { sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedSecondPass: true, sourcedSheetOrder: true,
                   sourcedRollDraws: true, sourcedViewDraws: true, sourcedPromotedViewDraws: true,

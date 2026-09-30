@@ -23,10 +23,10 @@ import { homedir } from 'node:os';
 import { delimiter, dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { inflateRawSync } from 'node:zlib';
 import { claimEnvelope, refusalEnvelope } from '@sixam/kernel';
-import { CONTROL_CATALOGS, GAME_PACKAGES } from '../src/index.js';
+import { CONTROL_CATALOGS, GAME_PACKAGES } from '../src/index.ts';
 import { ACCESS, DEFAULT_LIMIT, DUMPER, HANDLE_SCRAMBLE_LIMIT, QUERY_FIELDS, TRUTH_URI, describeObject, dumpShape,
   estimateHandleScramble, findEvents, handlesNamed, isTabularDump, namesContaining, objectAt, parseDump, qualifierRows,
-  unparsedLoaders } from '../src/truth/index.js';
+  unparsedLoaders } from '../src/truth/index.ts';
 
 export const VAULT_FILE = 'packages/source/decompile/local-vault.json';
 export const VAULT_ENV = 'SIXAM_TRUTH_VAULT';
@@ -39,7 +39,7 @@ export const DECODE_TIMEOUT_MS = 600_000;
 const PLAN28 = 'plans/28-solver-interface.md';
 const README = 'packages/source/decompile/README.md';
 const GUIDE = 'docs/android/SOURCE-DUMP-GUIDE.md';
-const ENGINE = 'packages/source/src/truth/engine.js';
+const ENGINE = 'packages/source/src/truth/engine.ts';
 const CLI_IN_CHECKOUT = 'Interface/CTFAK.Cli/bin/Release/net6.0/CTFAK.Cli.dll';
 const DUMPER_IN_CHECKOUT = 'Core/CTFAK.Core/Tools/EventTextDumper.cs';
 const CCN_ENTRIES = Object.freeze(['res/raw/application.ccn', 'assets/application.ccn']);
@@ -214,11 +214,11 @@ export function createTruth({ root, env = process.env }) {
     if (pinned !== null && !estimate.ambiguous && estimate.k !== pinned)
       return { refusal: refusal('handle-scramble', `the local vault pins K=${pinned} for ${game.alias}, but object-type agreement picks ` +
         `K=${estimate.k} (${estimate.agreement} of ${estimate.rows} rows; K=${pinned} is not the best): a wrong K names every object after an unrelated one`,
-      'remove the pin, or decompile COI.loadHeader and pin the K it reads', [PLAN28, 'packages/source/src/truth/handles.js']) };
+      'remove the pin, or decompile COI.loadHeader and pin the K it reads', [PLAN28, 'packages/source/src/truth/handles.ts']) };
     if (pinned === null && estimate.ambiguous)
       return { refusal: refusal('handle-scramble', `object-type agreement does not single out one K for ${game.alias} ` +
         `(${estimate.rows} rows; best K=${estimate.k} at ${estimate.agreement}, runner-up ${JSON.stringify(estimate.runnerUp)})`,
-      `pin k for ${game.alias} in the local vault after reading COI.loadHeader`, [PLAN28, 'packages/source/src/truth/handles.js']) };
+      `pin k for ${game.alias} in the local vault after reading COI.loadHeader`, [PLAN28, 'packages/source/src/truth/handles.ts']) };
     const result = { key, dump, k: pinned ?? estimate.k, handleScramble: { k: pinned ?? estimate.k, pinned, ...estimate },
       source: { ...dumpShape(dump), sha256: sha256(text) } };
     loaded.set(game.package, result);

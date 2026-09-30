@@ -2,7 +2,7 @@
 // g414-g416 draw his cue there, and g611 redraws a cue of 4 much later in the loop (after g556-g559). Off: he hops, and a
 // 4 is redrawn, inside the roll pass, before the Paper Pals roll.
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
 
 const SOURCED = { sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedSecondPass: true, sourcedSheetOrder: true,
                   sourcedRollDraws: true, sourcedEventDraws: true, sourcedPromotedMoves: true, sourcedRollsBeforeMoves: true,

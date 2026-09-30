@@ -270,7 +270,7 @@ command registry, the chronicle corpus with kinds/labels/rungs/statuses,
 [`evidence.js`](../apps/desktop/src/evidence.js) with real claim ceilings and a `why` verb,
 the content-addressed vault, a proven MCP safety boundary, capability preflight,
 and the per-game vocabulary registry added to
-[`vocabulary.js`](../packages/source/src/clockwork/vocabulary.js) this week.
+[`vocabulary.js`](../packages/source/src/clockwork/vocabulary.ts) this week.
 
 Missing:
 

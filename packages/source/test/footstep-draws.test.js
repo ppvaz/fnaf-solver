@@ -1,7 +1,7 @@
 // The footstep cue draws under sourcedFootstepDraws (dump g695-g703): one Random(5) per roll hop onto a
 // marker that overlaps `hear footsteps` (cams 01/2/3/4, hall stage 1/2), Random(3) for Mangle.
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
 
 const BASE = { night: 7, seed: 111, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                boxEnabled: false, foxyEnabled: false, sourcedSecondPass: true, sourcedSheetOrder: true };

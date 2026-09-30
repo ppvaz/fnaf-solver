@@ -1,6 +1,6 @@
 // The Puppet's static glitch chain under sourcedPuppetGlitchDraws (dump g500-g506, g774).
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
 
 const QUIET = { night: 7, seed: 71, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                 boxEnabled: false, foxyEnabled: false };

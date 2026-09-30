@@ -1,7 +1,7 @@
 // The Office frame's unconditional random draws under sourcedUnconditionalDraws (dump g58/g59/g192/g822).
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
-import { RNG_MULTIPLIER, RNG_INCREMENT, RNG_MASK } from '../src/games/fnaf2/rng.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import { RNG_MULTIPLIER, RNG_INCREMENT, RNG_MASK } from '../src/games/fnaf2/rng.ts';
 
 const lcg = (s, n = 1) => { for (let i = 0; i < n; i++) s = (s * RNG_MULTIPLIER + RNG_INCREMENT) & RNG_MASK; return s; };
 const QUIET = { night: 7, seed: 77, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,

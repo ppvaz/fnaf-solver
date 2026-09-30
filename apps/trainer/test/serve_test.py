@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check that serve.py (the trainer's dev server) writes for this machine only.
 
-POST /save-layout rewrites packages/source/src/games/fnaf2/config.js and
+POST /save-layout rewrites packages/source/src/games/fnaf2/config.ts and
 /save-trace writes under captures/traces/. Until 2026-09-29 the server bound
 0.0.0.0, so anyone on the network could do either. This pins:
 

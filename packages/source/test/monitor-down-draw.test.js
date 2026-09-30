@@ -1,6 +1,6 @@
 // The monitor-down image's draw under sourcedMonitorDownDraw (generated e7, e211, e720-e722, e871-e872; dump g807).
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
 
 const QUIET = { night: 7, seed: 51, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                 boxEnabled: false, foxyEnabled: false };

@@ -20,7 +20,7 @@ import { resolveDeviceProfile } from '@sixam/source';
 import { HID_CONTROLS_FILE, HID_CONTROLS_SCHEMA, hidControlsText } from '@sixam/play/venues/phone/hid';
 import { FNAF2_CONTROL_VOCABULARY as V } from '@sixam/source';
 import * as C from '@sixam/source/fnaf2';
-import { FNAF2_MECHANICS } from '@sixam/source/games/fnaf2/mechanics.js';
+import { FNAF2_MECHANICS } from '@sixam/source/games/fnaf2/mechanics.ts';
 import { MANIFEST as MINUS_TOYS } from '@sixam/propose/strategies/minus-toys';
 import { MANIFEST as MINUS_3 } from '@sixam/propose/strategies/minus-3';
 import { MANIFEST as MINUS_7 } from '@sixam/propose/parked/minus7';

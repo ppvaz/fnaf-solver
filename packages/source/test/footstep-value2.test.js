@@ -3,7 +3,7 @@
 // again on every passed roll while the move waits) and drained by global 5 per loop (g458-g466).
 // docs/evidence/footstep-cam-markers-adjudication-20260927.json
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
 
 const BASE = { night: 7, seed: 111, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                boxEnabled: false, foxyEnabled: false, sourcedSecondPass: true, sourcedSheetOrder: true,

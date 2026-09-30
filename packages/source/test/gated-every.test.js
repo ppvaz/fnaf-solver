@@ -5,7 +5,7 @@
 // 1000) is the one that decides Balloon Boy, Mangle and Toy Chica at the vent:
 // a fully-on window gets 4 or 5 ticks by the carried remainder, at any phase.
 import assert from 'node:assert/strict';
-import * as C from '../src/games/fnaf2/index.js';
+import * as C from '../src/games/fnaf2/index.ts';
 
 const QUIET = { night: 5, seed: 7, worst: true, lethal: false, stalledEnabled: false, gfEnabled: false, bbEnabled: false,
                 boxEnabled: false, foxyEnabled: false, powerEnabled: false };

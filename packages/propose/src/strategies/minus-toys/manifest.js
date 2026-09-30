@@ -1,4 +1,4 @@
-import { CAMERA_SPLIT } from '@sixam/source/games/fnaf2/mechanics.js';
+import { CAMERA_SPLIT } from '@sixam/source/games/fnaf2/mechanics.ts';
 
 export const MANIFEST = Object.freeze({
   id: 'minus-toys',

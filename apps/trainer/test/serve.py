@@ -8,7 +8,7 @@ picks it up. POST /save-trace records a coached run under captures/traces/.
 
 Both POSTs write to this machine, and /save-layout rewrites a source file of
 @sixam/core. So until 2026-09-29, when this bound 0.0.0.0, anyone on the
-network could rewrite packages/source/src/games/fnaf2/config.js. Now the socket is
+network could rewrite packages/source/src/games/fnaf2/config.ts. Now the socket is
 loopback only, and a write is refused unless its client is loopback, its Host
 names this machine, and any Origin is the page's own (write_refusal): a web
 page in the host's browser can reach 127.0.0.1 too, and must not write here.
@@ -31,7 +31,7 @@ LOOPBACK_NAMES = {'localhost', '127.0.0.1', '::1'}
 
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
-CONFIG = ROOT / 'packages' / 'source' / 'src' / 'games' / 'fnaf2' / 'config.js'
+CONFIG = ROOT / 'packages' / 'source' / 'src' / 'games' / 'fnaf2' / 'config.ts'
 # Where POST /save-trace lands. captures/ is ignored, like every other run
 # artifact; the env override exists so tests can exercise the real write
 # without littering the repository.
@@ -266,7 +266,7 @@ class Handler(SimpleHTTPRequestHandler):
             write_config(m, w)
             build = subprocess.run([sys.executable, str(HERE / 'build.py')],
                                    capture_output=True, text=True)
-            print(f'saved layout -> packages/source/src/games/fnaf2/config.js  ({build.stdout.strip()})')
+            print(f'saved layout -> packages/source/src/games/fnaf2/config.ts  ({build.stdout.strip()})')
             self._json(200, {'ok': True, 'build': build.stdout.strip()})
         except Exception as e:
             print(f'save-layout failed: {e}')

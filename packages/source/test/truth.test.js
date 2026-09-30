@@ -202,8 +202,8 @@ try {
 
   // --- the dump-text check: tracked files pass it, the generated text does not --------------------
   const check = file => spawnSync(process.execPath, [join(ROOT, 'tools/dump-text-check.mjs'), file], { encoding: 'utf8' });
-  const tracked = ['packages/source/src/truth/dump.js', 'packages/source/src/truth/engine.js', 'packages/source/src/truth/handles.js',
-    'packages/source/src/truth/query.js', 'packages/source/src/truth/index.js', 'packages/source/decompile/truth.mjs',
+  const tracked = ['packages/source/src/truth/dump.ts', 'packages/source/src/truth/engine.ts', 'packages/source/src/truth/handles.ts',
+    'packages/source/src/truth/query.ts', 'packages/source/src/truth/index.ts', 'packages/source/decompile/truth.mjs',
     'packages/source/test/truth.test.js', 'packages/source/test/fixtures/truth-dump.mjs', 'packages/source/test/fixtures/truth-decoder-stub.mjs'];
   for (const file of tracked) {
     const result = check(join(ROOT, file));

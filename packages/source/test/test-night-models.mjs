@@ -25,7 +25,7 @@ import {
   rollChance, rollsInHour, opportunities, modelFor, fnaf1, fnaf2, fnaf3, fnaf4,
 } from '@sixam/source';
 import { AI_BY_NIGHT, aiCap } from '@sixam/source/fnaf2';
-import * as FPS_C from '@sixam/source/games/fnaf2/config.js';
+import * as FPS_C from '@sixam/source/games/fnaf2/config.ts';
 
 const failures = [];
 let checks = 0;

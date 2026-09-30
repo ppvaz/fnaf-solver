@@ -1,6 +1,6 @@
 // g263's 200 ms last-viewed sample under sourcedLastViewPause: the countdown sits after `viewing > 0`.
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
 
 const QUIET = { night: 7, seed: 101, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                 boxEnabled: false, foxyEnabled: false };

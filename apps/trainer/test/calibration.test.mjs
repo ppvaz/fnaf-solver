@@ -11,7 +11,7 @@ const BASE = process.argv[2] || 'http://localhost:8731/dist/index.html';
 
 // This test exercises the save-to-config path, which really does rewrite
 // core config. Snapshot it so a test run never leaves the repo edited.
-const CONFIG = new URL('../../../packages/source/src/games/fnaf2/config.js', import.meta.url).pathname;
+const CONFIG = new URL('../../../packages/source/src/games/fnaf2/config.ts', import.meta.url).pathname;
 const SNAPSHOT = readFileSync(CONFIG, 'utf8');
 const restore = () => {
   try {

@@ -2,7 +2,7 @@
 // g10 (fully off, >= 14) fire at the top of the Nth loop after their Active is shown. The model spent constant - 1 updates
 // moving, one fewer than the sheet for the raise, the drop and the mask going on (MASK_ANIM_OFF = 15 already gives 14).
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
 
 const QUIET = { night: 7, seed: 5, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                 boxEnabled: false, foxyEnabled: false };

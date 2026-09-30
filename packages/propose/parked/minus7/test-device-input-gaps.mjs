@@ -43,7 +43,7 @@ import { build, devicePlan, MONITOR_ANIM_UP_MS, RAISE_MARGIN_MS, DEVICE_SPACING_
 // is how the emitter relaxed a raise to exactly the gap this file then called a
 // violation, which is precisely the two-files-one-number failure that produced
 // the 90-vs-100 contact floor. MONITOR_ANIM_UP_MS comes from recipe.mjs, which
-// converts src/config.js's sourced frame count with the same 60 fps the rest of
+// converts src/config.ts's sourced frame count with the same 60 fps the rest of
 // the codebase uses. The 33 ms margin absorbs the rounding (config's comment
 // calls 12 frames 0.204 s).
 export const SWIPE_ERA_FIGURE_MS = 500;

@@ -2,12 +2,12 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { PlantModel } from '../src/games/fnaf2/plant.js';
+import { PlantModel } from '../src/games/fnaf2/plant.ts';
 import {
   canonicalJson, stableHash,
   validateClockRef, validateQualification, validateManifest,
 } from '@sixam/kernel/contracts';
-import { validateControlCommand } from '../src/clockwork/control-contracts.js';
+import { validateControlCommand } from '../src/clockwork/control-contracts.ts';
 import { decodeFactMessage } from '@sixam/kernel/time';
 
 const register = JSON.parse(readFileSync(fileURLToPath(new URL('../../kernel/contracts/register.json', import.meta.url)), 'utf8'));

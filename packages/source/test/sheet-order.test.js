@@ -1,7 +1,7 @@
 // Sheet order for the hand-placed draws under sourcedSheetOrder (dump g213-g518 before the resolution, g556-g781 after tickBox).
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
-import * as C from '../src/games/fnaf2/config.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import * as C from '../src/games/fnaf2/config.ts';
 
 const QUIET = { night: 7, seed: 81, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                 boxEnabled: false, foxyEnabled: false };

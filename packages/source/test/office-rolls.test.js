@@ -2,7 +2,7 @@
 // g358 holds on the hall latch); Balloon Boy is rolled at 122 too (g359, g702), and his value 0 = 2 left there makes g413
 // move him on to CAM 07 on the loop g292/g294 send him to CAM 10.
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
 
 const SOURCED = { sourcedSecondPass: true, sourcedSheetOrder: true, sourcedRollDraws: true, sourcedFootstepDraws: true,
                   sourcedFootstepValue2: true, footstepCamMarkers: true, sourcedOfficeFootsteps: true,

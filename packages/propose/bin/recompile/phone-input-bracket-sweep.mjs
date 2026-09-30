@@ -261,9 +261,11 @@ export function committedVersion(path, expected) {
 }
 
 /** True when a record's model-source paths name the same model files, in order, as the current sources
- *  do: by file name, because a record keeps the paths it was computed at and a move changes the directory. */
+ *  do: by file name without its extension, because a record keeps the paths it was computed at, a move
+ *  changes the directory, and the move to runtime TypeScript (2026-09-30) changed .js to .ts. */
 export function sameModelFiles(recordedPaths, sourcePaths) {
-  return JSON.stringify(recordedPaths.map((path) => basename(path))) === JSON.stringify(sourcePaths.map((path) => basename(path)));
+  const stem = (path) => basename(path).replace(/\.(?:js|ts)$/, '');
+  return JSON.stringify(recordedPaths.map(stem)) === JSON.stringify(sourcePaths.map(stem));
 }
 
 export function check(result) {

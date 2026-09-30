@@ -1,7 +1,7 @@
 // Foxy's A/B chain under sourcedFoxyChain (dump g337/g349/g364/g389/g390/g573/g745/g824/g825/g846/g855/g864).
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
-import { RNG_MULTIPLIER, RNG_INCREMENT, RNG_MASK } from '../src/games/fnaf2/rng.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import { RNG_MULTIPLIER, RNG_INCREMENT, RNG_MASK } from '../src/games/fnaf2/rng.ts';
 
 const lcg = s => (s * RNG_MULTIPLIER + RNG_INCREMENT) & RNG_MASK;
 const ON = { sourcedDropLightOrder: true, sourcedFoxyChain: true };

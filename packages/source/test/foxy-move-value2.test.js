@@ -4,7 +4,7 @@
 // 309, moved on 361 with value 2 = 10 again, and the rebuilt runtime drew Random(5) there.
 // tools/recompile/results/model-foxy-move-value2-20260929.json
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
 
 const ON = { sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedSecondPass: true, sourcedSheetOrder: true,
              sourcedFootstepDraws: true };

@@ -29,8 +29,8 @@ const check = (name, cond, detail = '') => {
 // plant-model.js and the mechanism modules it imports, and kill() is called
 // from several of them.
 const MODEL = join(HERE, '../../../packages/source/src/games/fnaf2');
-const entry = readFileSync(join(MODEL, 'plant-model.js'), 'utf8');
-const parts = [...entry.matchAll(/^import .* from '\.\/(plant-[\w-]+\.js)';$/gm)].map(m => m[1]);
+const entry = readFileSync(join(MODEL, 'plant-model.ts'), 'utf8');
+const parts = [...entry.matchAll(/^import .* from '\.\/(plant-[\w-]+\.ts)';$/gm)].map(m => m[1]);
 check('the engine\'s mechanism modules are read', parts.length >= 5, parts.join());
 const engine = [entry, ...parts.map(name => readFileSync(join(MODEL, name), 'utf8'))].join('\n');
 const emitted = [...engine.matchAll(/this\.kill\(\s*'([^']+)'/g)].map(m => m[1]);

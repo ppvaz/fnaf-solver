@@ -436,7 +436,7 @@
     {
       "id": "contract.device-executor-v1",
       "kind": "CONTRACT",
-      "path": "packages/source/src/games/fnaf2/controls.js",
+      "path": "packages/source/src/games/fnaf2/controls.ts",
       "line": 24,
       "relation": "REFERENCES"
     },
@@ -462,7 +462,7 @@
     {
       "id": "contract.device-profile-v1",
       "kind": "CONTRACT",
-      "path": "packages/source/src/clockwork/control-contracts.js",
+      "path": "packages/source/src/clockwork/control-contracts.ts",
       "line": 8,
       "relation": "REFERENCES"
     },
@@ -627,7 +627,7 @@
     {
       "id": "contract.plant-model-v1",
       "kind": "CONTRACT",
-      "path": "packages/source/src/games/fnaf2/plant.js",
+      "path": "packages/source/src/games/fnaf2/plant.ts",
       "line": 4,
       "relation": "REFERENCES"
     },
@@ -756,63 +756,63 @@
     {
       "id": "contract.semantic-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/source/src/clockwork/control-catalog.js",
+      "path": "packages/source/src/clockwork/control-catalog.ts",
       "line": 14,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.semantic-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/source/src/clockwork/control-contracts.js",
+      "path": "packages/source/src/clockwork/control-contracts.ts",
       "line": 8,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.semantic-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/source/src/clockwork/control-registry.js",
+      "path": "packages/source/src/clockwork/control-registry.ts",
       "line": 9,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.semantic-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/source/src/clockwork/vocabulary.js",
+      "path": "packages/source/src/clockwork/vocabulary.ts",
       "line": 15,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.semantic-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/source/src/games/fnaf1/controls.js",
+      "path": "packages/source/src/games/fnaf1/controls.ts",
       "line": 19,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.semantic-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/source/src/games/fnaf2/controls.js",
+      "path": "packages/source/src/games/fnaf2/controls.ts",
       "line": 24,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.semantic-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/source/src/games/fnaf2/plant.js",
+      "path": "packages/source/src/games/fnaf2/plant.ts",
       "line": 4,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.semantic-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/source/src/games/fnaf3/controls.js",
+      "path": "packages/source/src/games/fnaf3/controls.ts",
       "line": 20,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.semantic-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/source/src/games/fnaf4/controls.js",
+      "path": "packages/source/src/games/fnaf4/controls.ts",
       "line": 18,
       "relation": "REFERENCES"
     },

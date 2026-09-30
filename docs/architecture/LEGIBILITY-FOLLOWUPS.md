@@ -169,7 +169,7 @@ capabilities are not generated from it (`control-exclusion.js`, `button-strokes.
 `calibration-state-rule.js` still name FNaF 2 controls), and `hid-schedule.js`'s macros are FNaF 2's,
 guarded to that game rather than read from the table.
 **Owner:** `packages/source` (the catalogs, since ADR 0002 migration D4)
-**Evidence:** [`define.js` (line 135)](../../packages/source/src/clockwork/control-catalog.js), [`fnaf2.js` (line 40)](../../packages/source/src/games/fnaf2/controls.js), [`artifact-executor.js` (line 42)](../../packages/play/src/campaign/artifact-executor.js), `service.js` line 17 (removed 2026-09-25)
+**Evidence:** [`define.js` (line 135)](../../packages/source/src/clockwork/control-catalog.ts), [`fnaf2.js` (line 40)](../../packages/source/src/games/fnaf2/controls.ts), [`artifact-executor.js` (line 42)](../../packages/play/src/campaign/artifact-executor.js), `service.js` line 17 (removed 2026-09-25)
 
 The canonical vocabulary coexists with legacy aliases and repeated camera
 lists. `service.js`, the artifact executor, the adapter registry, and the

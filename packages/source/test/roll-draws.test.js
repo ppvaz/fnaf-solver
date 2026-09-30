@@ -1,7 +1,7 @@
 // The eleven 5 s movement rolls under sourcedRollDraws (dump g333-g343): every roll draws, in sheet order.
 import assert from 'node:assert/strict';
-import { Sim } from '../src/games/fnaf2/plant-model.js';
-import * as C from '../src/games/fnaf2/config.js';
+import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import * as C from '../src/games/fnaf2/config.ts';
 
 const QUIET = { night: 7, seed: 41, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                 boxEnabled: false, foxyEnabled: false };
