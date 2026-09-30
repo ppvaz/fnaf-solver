@@ -68,8 +68,10 @@ if (args.includes('--help') || args.includes('-h')) {
   process.exit(0);
 }
 const [verb, what, ...rest] = args;
-const print = value => process.stdout.write(`${JSON.stringify(value, null, 2)}\n`);
-const answer = envelope => { print(envelope); process.exit(envelope.refused ? 1 : 0); };
+// Resolves once the write is handed to the OS: stdout to a pipe is asynchronous on macOS, so a
+// process.exit() straight after a large write cut the promotions query off mid-string there.
+const print = value => new Promise(done => process.stdout.write(`${JSON.stringify(value, null, 2)}\n`, done));
+const answer = async envelope => { await print(envelope); process.exit(envelope.refused ? 1 : 0); };
 
 if (verb === 'query' && what === 'promotions') {
   let write = null;
@@ -82,7 +84,7 @@ if (verb === 'query' && what === 'promotions') {
     else usage(`unknown or incomplete option ${rest[index]}`);
   }
   const result = queryPromotions(ROOT);
-  print(envelope ? promotionsQueryEnvelope(result) : result);
+  await print(envelope ? promotionsQueryEnvelope(result) : result);
   if (write) {
     const file = resolve(write);
     const rel = relative(ROOT, file);
@@ -114,26 +116,26 @@ if (verb === 'query') {
       options[flag.slice(2)] = flag === '--limit' ? Number(value) : value;
     } else usage(`unknown or incomplete option ${flag}`);
   }
-  answer(solver.query(options));
+  await answer(solver.query(options));
 }
 if (verb === 'describe') {
   if (!what || rest.length) usage('describe takes one game');
-  answer(solver.describe({ game: what }));
+  await answer(solver.describe({ game: what }));
 }
 if (verb === 'review') {
   if (!what || rest.length !== 1) usage('review takes a pack id and an instrument');
-  answer(solver.review({ pack: what, instrument: rest[0] }));
+  await answer(solver.review({ pack: what, instrument: rest[0] }));
 }
 if (verb === 'promote') {
   if (!what || rest.length) usage('promote takes one pack id');
-  answer(solver.promote({ pack: what }));
+  await answer(solver.promote({ pack: what }));
 }
 if (verb === 'check') {
   if (!what || rest.length > 1) usage('check takes a rule and one JSON object');
   let input = {};
   try { input = rest.length ? JSON.parse(rest[0]) : {}; } catch (error) { usage(`the check input is not JSON: ${error.message}`); }
   if (input === null || typeof input !== 'object' || Array.isArray(input)) usage('the check input is a JSON object');
-  answer(solver.check({ ...input, rule: what }));
+  await answer(solver.check({ ...input, rule: what }));
 }
 if (verb === 'truth') {
   const [first, second, ...more] = rest;
@@ -141,20 +143,20 @@ if (verb === 'truth') {
     if (!first || second === undefined || more.length) usage('truth events takes a game and one JSON query');
     let query;
     try { query = JSON.parse(second); } catch (error) { usage(`the truth query is not JSON: ${error.message}`); }
-    answer(solver.truth({ op: 'events', game: first, query }));
+    await answer(solver.truth({ op: 'events', game: first, query }));
   }
   if (what === 'object') {
     if (!first || second === undefined) usage('truth object takes a game and a name, or --handle N');
     if (second === '--handle') {
       if (more.length !== 1 || !/^\d+$/.test(more[0])) usage('--handle takes one integer');
-      answer(solver.truth({ op: 'object', game: first, handle: Number(more[0]) }));
+      await answer(solver.truth({ op: 'object', game: first, handle: Number(more[0]) }));
     }
     if (more.length) usage('truth object takes one name (quote it)');
-    answer(solver.truth({ op: 'object', game: first, name: second }));
+    await answer(solver.truth({ op: 'object', game: first, name: second }));
   }
   if (what === 'decode') {
     if (!first || second !== '--game' || more.length !== 1) usage('truth decode takes an absolute path and --game G');
-    answer(solver.truth({ op: 'decode', path: first, game: more[0] }));
+    await answer(solver.truth({ op: 'decode', path: first, game: more[0] }));
   }
   usage(`truth takes events, object or decode, not ${what ?? 'nothing'}`);
 }
@@ -162,5 +164,5 @@ if (verb === 'resource') {
   if (!what || rest.length) usage('resource takes one URI');
   const envelope = solver.readResource(what);
   if (!envelope) usage(`no resource ${what}; resources: ${solver.listResources().map(item => item.uri).join(', ')}`);
-  answer(envelope);
+  await answer(envelope);
 }
