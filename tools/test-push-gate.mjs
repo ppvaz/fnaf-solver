@@ -8,10 +8,11 @@
 // scan below reads code strings and, in shell hooks, the commands and any comment that tells
 // the reader to use it.
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { LANES, failureReport, reproduceCommand } from './push-gate.mjs';
+import { DEFAULT_MEMORY_MAX, LANES, failureReport, laneCommand, reproduceCommand } from './push-gate.mjs';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));
 const BYPASS = /--no-verify|\bcommit\s+-n\b/;
@@ -75,5 +76,20 @@ assert.match(report[8], /^Fix them and commit again\. `npm run push-gate -- 0123
 assert.equal(report.length, 9);
 assert.ok(report.every(line => !BYPASS.test(line)), 'the closing lines never offer the bypass');
 
+// Each lane runs under a memory ceiling, so an OOM kills the lane and not the session
+// running the gate (2026-09-29).
+const tricky = "printf '%s|' 'a b' \"c'd\"";
+assert.equal(laneCommand(tricky, { scoped: false }), tricky, 'unscoped, the command is unchanged');
+assert.equal(laneCommand(tricky, { memoryMax: 'off', scoped: true }), tricky, 'PUSH_GATE_MEMORY_MAX=off runs unscoped');
+const wrapped = laneCommand(tricky, { memoryMax: DEFAULT_MEMORY_MAX, scoped: true });
+assert.match(wrapped, /^systemd-run --user --scope -q -p MemoryMax=3G -p MemorySwapMax=4G -- sh -c '/);
+const unwrapped = wrapped.replace(/^systemd-run .*? -- /, '');
+assert.equal(spawnSync('sh', ['-c', unwrapped], { encoding: 'utf8' }).stdout, "a b|c'd|", 'quoting survives the wrapper');
+let scopedRun = 'no user manager here (CI), so lanes run unscoped';
+if (spawnSync('systemd-run', ['--user', '--scope', '-q', '--', 'true'], { stdio: 'ignore' }).status === 0) {
+  assert.equal(spawnSync('sh', ['-c', wrapped], { encoding: 'utf8' }).stdout, "a b|c'd|", 'a scoped lane runs and keeps its output');
+  scopedRun = 'a scoped command ran and kept its output';
+}
+
 console.log(`push gate: ${LANES.length} lanes each name the command that reproduces them, and neither the gate nor its hooks `
-  + 'suggest bypassing a hook (the scan catches a planted suggestion first)');
+  + `suggest bypassing a hook (the scan catches a planted suggestion first); lanes run under MemoryMax=${DEFAULT_MEMORY_MAX} (${scopedRun})`);

@@ -189,17 +189,45 @@ let LANE_ENV = withoutGit(process.env);
 
 // --- Running the lanes -----------------------------------------------------
 
+// --- A memory ceiling per lane ----------------------------------------------
+// This host has 7.8 GB, and a rebuild batch in another session can hold most of
+// it. On 2026-09-29 the kernel's OOM killer took whole Claude sessions (exit 137)
+// while a lane ran beside three 1.5 GB Chowdren processes. Each command now runs
+// in a systemd user scope with a ceiling, so the lane is what gets killed, and it
+// says so. PUSH_GATE_MEMORY_MAX=off runs unscoped; any other value replaces the
+// ceiling. Where no user manager answers (CI's runners), commands run as before.
+export const DEFAULT_MEMORY_MAX = '3G';
+const MEMORY_MAX = process.env.PUSH_GATE_MEMORY_MAX || DEFAULT_MEMORY_MAX;
+const SCOPED = MEMORY_MAX !== 'off'
+  && spawnSync('systemd-run', ['--user', '--scope', '-q', '--', 'true'], { stdio: 'ignore' }).status === 0;
+
+/** @param {string} text */
+const shellQuote = text => `'${text.replace(/'/g, `'\\''`)}'`;
+
+/**
+ * The shell command that runs `command` under the lane memory ceiling.
+ * @param {string} command
+ * @param {{ memoryMax?: string, scoped?: boolean }} [options]
+ */
+export function laneCommand(command, { memoryMax = MEMORY_MAX, scoped = SCOPED } = {}) {
+  if (!scoped || memoryMax === 'off') return command;
+  return `systemd-run --user --scope -q -p MemoryMax=${memoryMax} -p MemorySwapMax=4G -- sh -c ${shellQuote(command)}`;
+}
+
 function run(command, cwd, { live = false } = {}) {
   // A live lane streams its stdout (ShellCheck's findings appear as they are
   // produced) but its stderr is CAPTURED, because that is where a runner's own
   // refusal lands -- docker's `mounts denied`, a missing binary -- and a lane
   // that only streams cannot tell the caller why it failed. The capture is
   // printed on failure, so nothing that used to be visible is lost.
-  const result = spawnSync('sh', ['-c', command], live
+  const result = spawnSync('sh', ['-c', laneCommand(command)], live
     ? { cwd, stdio: ['inherit', 'inherit', 'pipe'], encoding: 'utf8', env: LANE_ENV }
     : { cwd, encoding: 'utf8', env: LANE_ENV });
+  const output = live ? (result.stderr ?? '') : `${result.stdout ?? ''}${result.stderr ?? ''}`;
+  const killed = SCOPED && (result.status === 137 || result.signal === 'SIGKILL');
   return { status: result.status,
-    output: live ? (result.stderr ?? '') : `${result.stdout ?? ''}${result.stderr ?? ''}` };
+    output: killed ? `${output}\npush-gate: killed at the lane memory ceiling (MemoryMax=${MEMORY_MAX}); `
+      + 'another process may hold the memory -- check `free -m`, then re-run this lane alone\n' : output };
 }
 
 // The scripts of the CHECKOUT being validated, not of the working tree: a
