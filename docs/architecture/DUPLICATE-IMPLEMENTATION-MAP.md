@@ -391,8 +391,9 @@ one per transport: `tools/cue/audio-authority.py` (552),
 `bridge-audio-authority.py` (362, removed 2026-09-27), `esp32-audio-authority.py` (345, archived); plus the
 phone-side `AudioAnalyzer.java` (365, removed 2026-09-27 with the Companion's audio path). The feature/decision chain behind them
 is itself staged across `features.py` (190), `detect.py` (348),
-`correlate.py` (177), `evaluate.py` (250) and `evaluate-shadow.py` (237) —
-the last pair being a live/shadow split worth confirming is still wanted.
+`correlate.py` (177) and `evaluate.py` (250). Its shadow half,
+`evaluate-shadow.py` with its window builder and model exporter, retired on
+2026-09-30 ([archived routes](../ARCHIVED-ROUTES.md)).
 
 ## 16. Trainer bounded-input validator — binding: `NONE`
 

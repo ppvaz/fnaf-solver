@@ -225,6 +225,21 @@ To re-run the probe, restore it from the archive tag first; it then takes
 `python3 research/sandbox/hud-signature-probe.py captures/<run>.mp4 --out
 <report>.json`, or `--self-test` for the logic only.
 
+## The cue shadow tools and an unread grid rule (2026-09-30, ADR 0002 layout)
+
+The final layout retires what nothing reads. Restore any of these with
+`git checkout eebe1416 -- <path>`.
+
+| Paths | Why it left |
+|---|---|
+| `tools/cue/build-shadow-windows.py`, `tools/cue/evaluate-shadow.py`, `tools/cue/export-model.py` and their three tests | They joined, evaluated and exported the on-phone cue detector's shadow corpus. Its `CUE_SHADOW` traces came from the archived `trial.sh` lane, and the detector left the Companion with its audio stack in 0.2.0 (2026-09-27). Their only callers were their own tests, which ran in the legacy ENGINE group alone. |
+| `models/screen-rule-moto-g56-v207.json` | A grid-fitted `screen-rule-v1` that nothing reads. Its producer, `tools/device/screen-calibrate.py`, stays with the other grid calibrators until FNaF 2's pipeline is converted to native regions. |
+
+The architecture review also listed `tools/device/intro_card.py` for
+retirement as having no runtime caller. It has one: `lifecycle-observe.py`
+imports it to label the story-night intro card (`state=intro`), which every
+FNaF 2 night run reads. It stays.
+
 ## Kept on purpose
 
 Minus 7 is **not** archived: Pedro means to bring it back as a second

@@ -1028,12 +1028,6 @@
       "lifecycle": "supported"
     },
     {
-      "id": "tools/cue/export-model.py",
-      "invocation": "tools/cue/export-model.py --refs DIR --cue C=H[,H] --threshold C=S --margin M --calibration NAME --output OUT",
-      "kind": "generator",
-      "lifecycle": "supported"
-    },
-    {
       "id": "tools/cue/correlate.py",
       "invocation": "tools/cue/correlate.py",
       "kind": "report",
@@ -1042,36 +1036,6 @@
     {
       "id": "tools/cue/test-cue.py",
       "invocation": "tools/cue/test-cue.py",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/cue/build-shadow-windows.py",
-      "invocation": "tools/cue/build-shadow-windows.py TRACE LABELS --output OUT",
-      "kind": "module",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/cue/evaluate-shadow.py",
-      "invocation": "tools/cue/evaluate-shadow.py WINDOWS --max-error CUE=RATE... --output OUT",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/cue/test-build-shadow-windows.py",
-      "invocation": "tools/cue/test-build-shadow-windows.py",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/cue/test-evaluate-shadow.py",
-      "invocation": "tools/cue/test-evaluate-shadow.py",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/cue/test-export-model.py",
-      "invocation": "tools/cue/test-export-model.py",
       "kind": "check",
       "lifecycle": "supported"
     },

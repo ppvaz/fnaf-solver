@@ -378,9 +378,6 @@ const ENGINE = [
   ['grade-run coverage', ['device/test-grade-run-coverage.mjs']],
   ['cuetest', ['cue/test-cue.py']],
   ['BB cue state', ['device/test-bb-cue-state.mjs']],
-  ['cue shadow evaluator', ['cue/test-evaluate-shadow.py']],
-  ['cue shadow window builder', ['cue/test-build-shadow-windows.py']],
-  ['cue model promotion', ['cue/test-export-model.py']],
   ['latency experiment', ['cue/test-latency-experiment.py']],
 ];
 
