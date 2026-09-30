@@ -45,7 +45,7 @@
     "device:grade": "node apps/desktop/src/device-cli.js grade",
     "device:capabilities": "node tools/device/capabilities.mjs",
     "device:facts": "node tools/device/fact-register.mjs",
-    "device:emit": "node tools/device/emit.mjs",
+    "device:emit": "node packages/propose/bin/plans/emit.mjs",
     "device:mcp": "node apps/desktop/src/companion-mcp.mjs"
   },
   "devDependencies": {

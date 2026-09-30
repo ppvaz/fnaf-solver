@@ -16,9 +16,9 @@ import * as C from '@sixam/source/fnaf2';
 import { Rng } from '@sixam/source/fnaf2';
 import { Observer } from '@sixam/play/sim';
 import { VentThreatReactive } from '@sixam/propose/fnaf2';
-import { replay, KNOBS0, ENGINE_PHASE_ORACLE } from './device/minus-toys-plan.mjs';
+import { replay, KNOBS0, ENGINE_PHASE_ORACLE } from '../packages/propose/bin/plans/minus-toys-plan.mjs';
 import { evalEnsemble } from './device/minus-toys-jitter.mjs';
-import { formatRate } from './stat.mjs';
+import { formatRate } from '../packages/review/src/stat.mjs';
 
 let failures = 0, knownNegatives = 0;
 const assertMode = process.argv.includes('--assert');

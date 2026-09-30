@@ -18,8 +18,8 @@
 import { pathToFileURL } from 'node:url';
 import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
-import { DeviceActuator } from '../device/actuator.mjs';
-import { formatRate } from '../stat.mjs';
+import { DeviceActuator } from '../../packages/play/bin/phone/actuator.mjs';
+import { formatRate } from '../../packages/review/src/stat.mjs';
 
 const ms = (v) => Math.round(v / 1000 * C.FPS);
 

@@ -32,7 +32,7 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { RNG_MODULUS, Sim } from '@sixam/source/fnaf2';
 import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort } from '@sixam/propose/seeds';
-import { STRATEGY_REGISTRY, WINNER_SCHEMA, compileBundle, validateWinner } from './device/bundle.mjs';
+import { STRATEGY_REGISTRY, WINNER_SCHEMA, compileBundle, validateWinner } from '../packages/propose/bin/plans/bundle.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '..');

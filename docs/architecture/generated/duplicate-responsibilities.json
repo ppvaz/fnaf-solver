@@ -17,14 +17,14 @@
       "responsibility": "physical actuation",
       "owner": "@sixam/play",
       "legacy": [
-        "tools/device/actuator.mjs"
+        "packages/play/bin/phone/actuator.mjs"
       ]
     },
     {
       "responsibility": "device composition",
       "owner": "@sixam/desktop",
       "legacy": [
-        "tools/device/recipe.mjs"
+        "packages/propose/bin/plans/recipe.mjs"
       ]
     },
     {

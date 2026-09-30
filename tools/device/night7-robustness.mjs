@@ -38,7 +38,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { FPS } from '@sixam/source/fnaf2';
-import { compileBundle } from './bundle.mjs';
+import { compileBundle } from '../../packages/propose/bin/plans/bundle.mjs';
 import { ANCHOR_AIMS } from './fact-register.mjs';
 import { runNight, loadPresets, PRESET_KNOBS } from './night7-presets.mjs';
 import { forkBlocks, gitState } from '../winner-census.mjs';

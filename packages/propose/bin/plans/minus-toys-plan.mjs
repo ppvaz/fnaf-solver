@@ -10,14 +10,14 @@
 // per cycle (docs/strategy/MINUS-3-STRATEGY.md sec.3). `minus-toys-margin.mjs`
 // maps where the slack is; a jitter/clock-error search sits on `schedule({shift})`.
 import { pathToFileURL } from 'node:url';
-import * as C from '@sixam/core/mechanics';
-import { Sim } from '@sixam/core/mechanics';
-import { Observer } from '@sixam/core/sensing';
-import { CONTROL_VOCABULARY as V, MODEL_CONTEXT_LIGHT,
-  VentThreatReactive, guardIntents, GUARD_FRAMES } from '@sixam/core/control';
-import { Rng } from '@sixam/core/mechanics';
-import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '@sixam/research/seeds';
-import { DOUBLE_GLITCH_CAMERA_PAIRS, cameraPairHeader } from './arm-verification.mjs';
+import * as C from '@sixam/source/fnaf2';
+import { Sim } from '@sixam/source/fnaf2';
+import { Observer } from '@sixam/play/sim';
+import { CONTROL_VOCABULARY as V, MODEL_CONTEXT_LIGHT } from '@sixam/source';
+import { VentThreatReactive, guardIntents, GUARD_FRAMES } from '@sixam/propose/fnaf2';
+import { Rng } from '@sixam/source/fnaf2';
+import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '@sixam/propose/seeds';
+import { DOUBLE_GLITCH_CAMERA_PAIRS, cameraPairHeader } from '../../../play/bin/probe/arm-verification.mjs';
 
 // Every tunable number in the schedule. build(KNOBS0) reproduces the shipped
 // opening/loop byte-for-byte (asserted below). Each knob names one decision the

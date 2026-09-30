@@ -41,7 +41,7 @@ an arrow points at what a package imports; review never imports play or propose
 - **review** uses the kernel, source and core and never `packages/play`, an
   application, `packages/adapters`, `packages/propose` or `packages/research`.
   It holds the bench trace (`src/measure/`). One edge is
-  still open: it compiles a committed winner through `tools/device/bundle.mjs`
+  still open: it compiles a committed winner through `packages/propose/bin/plans/bundle.mjs`
   (and so, transitively, the research seed helpers and propose's controllers)
   to learn the hash a bundle records; it closes when `tools/device` is sorted by
   context (migration M9).

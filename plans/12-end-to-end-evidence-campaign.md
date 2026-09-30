@@ -107,7 +107,7 @@ is **in the simulator**; reproduce with
 
 ```sh
 node tools/device/test-night-matrix.mjs            # the human-gate column
-node tools/model/hid-device-pilot.mjs 200 --night=N --device-sweep --pulse-light \
+node packages/propose/parked/minus7/hid-device-pilot.mjs 200 --night=N --device-sweep --pulse-light \
   --sweep-slot-ms=120 --mask-margin-ms=900 --read-latency-ms=480 \
   --pilot-offset-ms=167 [--device-actuator] [--press-late-ms=MIN,MAX]
 ```
@@ -158,7 +158,7 @@ with no flash and its mid-cycle 5 s check is unreachable by any single flash the
 plan's two-row shared prefix can schedule. `GATE_MIN_SURVIVAL` and
 `HUMAN_SLACK_MS` were not touched, and must not be.
 
-### The measured actuator (`tools/device/actuator.mjs`, HID pilot, 200 nights)
+### The measured actuator (`packages/play/bin/phone/actuator.mjs`, HID pilot, 200 nights)
 
 `recipe.replay()` has no actuator path, so this prices the *pilot* at the
 `hidpilot n6 target` settings, not the emitted plan.
@@ -210,7 +210,7 @@ loop, measured rather than asserted:
 
 ### The closed loop, modelled and priced (measured 2026-08-26)
 
-`tools/device/actuator.mjs` now carries `MonitorSupervisor`, a model of
+`packages/play/bin/phone/actuator.mjs` now carries `MonitorSupervisor`, a model of
 `trial.sh`'s actual monitor loop — the flip gate in `light_down_at`
 (wait `MONITOR_ANIM_DOWN` from the *logged* press, read the cue helper, confirm
 with a second read, correct only if both agree), the classifier checkpoint's

@@ -45,7 +45,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import * as C from '@sixam/source/fnaf2';
-import { KNOBS0 } from './minus-toys-plan.mjs';
+import { KNOBS0 } from '../../packages/propose/bin/plans/minus-toys-plan.mjs';
 import { loadPresets, cohort, runNight, PRESET_KNOBS, MEASURED_SPREAD_MS, HALL_PLATEAU_MS, BANDS,
   POPULATION_KIND, PLANE_KIND, planeSchedules, planeVector, planeWins } from './night7-presets.mjs';
 import { heldOutSeeds } from '../winner-phase-census.mjs';
@@ -54,7 +54,7 @@ import { ROBUSTNESS_KIND, PHASE_FRAMES, HUMAN_MS, schedules as robustSchedules, 
 import { designBlock } from '../winner-census.mjs';
 import { FIELD_KIND, FIELD_FRAMES, MASK_FLOOR_MS, fieldSchedules, fieldEvents, playField }
   from './night7-robustness-field.mjs';
-import { DeviceActuator } from './actuator.mjs';
+import { DeviceActuator } from '../../packages/play/bin/phone/actuator.mjs';
 
 const check = (ok, message) => { if (!ok) throw new Error(message); };
 

@@ -9,12 +9,12 @@
 //
 // It is deliberately the same machinery the existing tools already use:
 //
-//   - the run loop is `tools/model/hid-device-pilot.mjs`'s `run()` -- schedule rows into
+//   - the run loop is `packages/propose/parked/minus7/hid-device-pilot.mjs`'s `run()` -- schedule rows into
 //     a frame-sorted queue, drain what is due, `actuator.deliver()`, `tick()`;
 //   - the error streams follow `tools/model/reactive-pilot.mjs`: a jitter draw taken from
 //     `sim.rng` would move the game's own rolls, so slack and actuator noise
 //     each get their own salted `Rng` and never touch the sim's;
-//   - the device layer is `tools/device/actuator.mjs` unchanged.
+//   - the device layer is `packages/play/bin/phone/actuator.mjs` unchanged.
 //
 // --------------------------------------------------------------- the contract
 //
@@ -59,7 +59,7 @@
 import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
 import { Rng } from '@sixam/source/fnaf2';
-import { DeviceActuator } from './device/actuator.mjs';
+import { DeviceActuator } from '../packages/play/bin/phone/actuator.mjs';
 
 export const ADAPTER_VERSION = 1;
 

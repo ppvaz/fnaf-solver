@@ -10,10 +10,10 @@ whose bytes a bundle hashes still import them:
 
 | Subpath | Re-exports | Imported by |
 |---|---|---|
-| `@sixam/research/seeds` (`seeds.js`) | `@sixam/propose/seeds` | `tools/device/minus-toys-plan.mjs`, `tools/device/minus-3-plan.mjs` |
-| `@sixam/research/strategies/minus-3` (`strategies/minus-3.js`) | `@sixam/propose/strategies/minus-3` | `tools/device/minus-3-plan.mjs` |
+| `@sixam/research/seeds` (`seeds.js`) | `@sixam/propose/seeds` | `packages/propose/bin/plans/minus-toys-plan.mjs`, `packages/propose/bin/plans/minus-3-plan.mjs` |
+| `@sixam/research/strategies/minus-3` (`strategies/minus-3.js`) | `@sixam/propose/strategies/minus-3` | `packages/propose/bin/plans/minus-3-plan.mjs` |
 
-Both importers are engine sources: `tools/device/bundle.mjs` hashes their bytes
+Both importers are engine sources: `packages/propose/bin/plans/bundle.mjs` hashes their bytes
 into every Minus Toys and Minus 3 bundle's `engine.sourceSha256`, so they are
 repointed only in a commit that re-derives every emitted bundle. Each shim is
 registered in

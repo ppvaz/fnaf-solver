@@ -273,7 +273,7 @@ export class CycleController {
   /**
    * Release one deferred action at its own boundary. Scheduling is the
    * caller's: it owns the queue and decides when an action is due, matching
-   * `tools/device/actuator.mjs`'s `[dueFrame, kind, act]` and the runtime's
+   * `packages/play/bin/phone/actuator.mjs`'s `[dueFrame, kind, act]` and the runtime's
    * supervise-and-schedule role. Legality stays here, because the reduced
    * model is core's to interpret.
    *

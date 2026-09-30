@@ -25,7 +25,7 @@ export const BUNDLE_SCHEMA = 'device-bundle-v1';
 export const REPLAY_SCHEMA = 'bundle-replay-v1';
 export const ARTIFACT_SCHEMA = 'device-artifact-v1';
 
-const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '../..'));
+const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '../../../..'));
 const PROFILE_DIR = join(ROOT, 'apps/device/profiles');
 const MAX_REPLAY_SEEDS = 8;
 const CONTROL_NAMES = new Set([
@@ -561,11 +561,11 @@ function minus7Emitter(winner, night) {
 // rather than certifying a phase no census has seen.
 export const STRATEGY_REGISTRY = Object.freeze({
   'minus-toys': Object.freeze({ emit: minusToysEmitter, phaseAware: true,
-    sources: Object.freeze(['tools/device/minus-toys-plan.mjs', 'tools/device/recipe.mjs']) }),
+    sources: Object.freeze(['packages/propose/bin/plans/minus-toys-plan.mjs', 'packages/propose/bin/plans/recipe.mjs']) }),
   minus3: Object.freeze({ emit: minus3Emitter,
-    sources: Object.freeze(['tools/device/minus-3-plan.mjs', 'tools/device/arm-verification.mjs']) }),
+    sources: Object.freeze(['packages/propose/bin/plans/minus-3-plan.mjs', 'packages/play/bin/probe/arm-verification.mjs']) }),
   minus7: Object.freeze({ emit: minus7Emitter,
-    sources: Object.freeze(['tools/device/recipe.mjs', 'tools/model/hid-device-pilot.mjs']) }),
+    sources: Object.freeze(['packages/propose/bin/plans/recipe.mjs', 'packages/propose/parked/minus7/hid-device-pilot.mjs']) }),
 });
 
 function emitterFor(winner, night) {
@@ -702,7 +702,7 @@ export function compileBundle(input, outDirectory) {
     nights: winner.nights, profile: { id: profile.id, file: 'profile.json', sha256: sha256(profileText) },
     ...(winner.anchorEpochMs === undefined ? {} : { anchorEpochMs: winner.anchorEpochMs }),
     plans, gate: finalWinner.gate, replay,
-    source: { compiler: 'tools/device/bundle.mjs', registry: Object.keys(STRATEGY_REGISTRY) },
+    source: { compiler: 'packages/propose/bin/plans/bundle.mjs', registry: Object.keys(STRATEGY_REGISTRY) },
     engine: { declaredHash: winner.engineHash, sourceSha256: source.sha256, sources: source.sources },
     artifact: { file: 'artifact.json', schema: ARTIFACT_SCHEMA, sha256: sha256(canonicalJson(artifact)) },
   };

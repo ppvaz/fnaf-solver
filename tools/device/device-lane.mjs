@@ -47,8 +47,8 @@ import { stableHash } from '@sixam/kernel/contracts';
 import { MODEL_CONTEXT_LIGHT } from '@sixam/source';
 import { validateExecutorRequest } from '../../packages/play/src/campaign/artifact-executor.js';
 import { compileDeviceLocalHidSchedule } from '../../packages/play/src/campaign/hid-schedule.js';
-import { DeviceActuator } from './actuator.mjs';
-import { SEAM_FLOORS } from './artifact-commands.mjs';
+import { DeviceActuator } from '../../packages/play/bin/phone/actuator.mjs';
+import { SEAM_FLOORS } from '../../packages/propose/bin/plans/artifact-commands.mjs';
 
 export const FUSION_POLL_MS = 33;
 const frame = (ms) => Math.round(ms * FPS / 1000);

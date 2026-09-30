@@ -23,7 +23,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { stableHash } from '@sixam/kernel/contracts';
 import { RNG_MODULUS } from '@sixam/source/fnaf2';
-import { STRATEGY_REGISTRY, validateWinner } from './device/bundle.mjs';
+import { STRATEGY_REGISTRY, validateWinner } from '../packages/propose/bin/plans/bundle.mjs';
 import { CENSUS_KIND, committedWinners, designBlock } from './winner-census.mjs';
 import { PHASE_KIND, heldOutSeeds, nightBindings, phaseWins } from './winner-phase-census.mjs';
 

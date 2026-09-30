@@ -8,13 +8,13 @@
 // bands on Withered Foxy's five-second roll grid, the 50 ms split-arming
 // holes, the band's edges to the frame, and the 3000-seed confirmations an
 // anchor aim needs (fact-register ANCHOR_AIMS). It replays the winner's
-// schedule at each epoch (tools/device/minus-toys-plan.mjs replay) and prints
+// schedule at each epoch (packages/propose/bin/plans/minus-toys-plan.mjs replay) and prints
 // wins and killers per row; `--epochs` scores exact epochs (use 3000 seeds
 // there, the golden rule); `--step 16.67` walks one frame at a time.
 // `--knobs` overrides winner knobs for a what-if without editing the winner.
 // MODEL_ONLY: a row says what the model thinks, never what the phone does.
 import { readFileSync, writeFileSync } from 'node:fs';
-import { replay, KNOBS0 } from './minus-toys-plan.mjs';
+import { replay, KNOBS0 } from '../../packages/propose/bin/plans/minus-toys-plan.mjs';
 
 const arg = (name, fallback) => { const i = process.argv.indexOf(`--${name}`); return i >= 0 && process.argv[i + 1] !== undefined ? process.argv[i + 1] : fallback; };
 const winnerPath = arg('winner');

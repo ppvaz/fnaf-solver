@@ -18,7 +18,7 @@
 // Reports, per seed, the fraction of wind frames that were credited and the
 // minimum box level reached. A seed whose winds are sent but not credited is
 // the failure above, and it is invisible to every other instrument here.
-import { replay } from './recipe.mjs';
+import { replay } from '../../packages/propose/bin/plans/recipe.mjs';
 import { jitterPlan, parsePlanText } from './human-gate.mjs';
 import { execSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';

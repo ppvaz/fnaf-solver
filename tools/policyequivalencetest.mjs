@@ -1,5 +1,5 @@
 // Plan 21 package 5: compiler-equivalence regression gates.
-import { emitPlan } from './device/minus-toys-plan.mjs';
+import { emitPlan } from '../packages/propose/bin/plans/minus-toys-plan.mjs';
 import { minimalPolicy } from './device/policy-ir.mjs';
 import {
   compileDevicePlan, comparePolicyToDevice,

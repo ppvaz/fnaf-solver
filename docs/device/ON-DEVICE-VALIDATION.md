@@ -1272,7 +1272,7 @@ The flip gate and the classifier checkpoint above are the two places
 `trial.sh` stops being open-loop, and until now no simulator here
 contained them. Every actuator figure for Nights 2+ was therefore a statement
 about a controller the phone does not run, and plans/12 said so and left the
-number unmeasured. `tools/device/actuator.mjs` now carries `MonitorSupervisor`,
+number unmeasured. `packages/play/bin/phone/actuator.mjs` now carries `MonitorSupervisor`,
 and `tools/model/closed-loop-reclaim.mjs` prices it. **Everything below is in the
 simulator.** No phone was involved.
 
@@ -1994,7 +1994,7 @@ be graded against a signature recalibrated from an `ALT_LIGHT` run recorded
 Until now `trial.sh` emitted only Minus 7 (`recipe.mjs --device-plan`). The
 Minus Toys engine result (plan 02 pkg 2a; `tools/minustoystest.mjs`, 200/200
 normal + 100/100 worst per night, 0/200 no-split control) existed only as an
-engine schedule. `tools/device/minus-toys-plan.mjs` ports it into the on-phone
+engine schedule. `packages/propose/bin/plans/minus-toys-plan.mjs` ports it into the on-phone
 interpreter's plan format and `DEVICE_POLICY=minus-toys tools/device/trial.sh`
 runs it through the **same** title-safe, epoch-latched, watchdog-guarded runner
 -- not a second execution path.
@@ -2568,7 +2568,7 @@ failed split and aborts.
 What this changes:
 
 - A bundle can now be qualified at the epoch its anchor delivers
-  (`winner.anchorEpochMs`, `tools/device/bundle.mjs`): the gate replays there,
+  (`winner.anchorEpochMs`, `packages/propose/bin/plans/bundle.mjs`): the gate replays there,
   the manifest carries it, and `night-run.sh` refuses to run such a bundle
   unanchored. `artifacts/night6-anchored` (fnv1a-bc5e044c) is the hallfix
   knobs at anchorEpochMs 3850 with an honest PASS.

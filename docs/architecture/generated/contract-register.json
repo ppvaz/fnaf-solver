@@ -78,13 +78,13 @@
       "id": "winner-v1",
       "owner": "propose/device",
       "kind": "artifact",
-      "validator": "tools/device/bundle.mjs validateWinner"
+      "validator": "packages/propose/bin/plans/bundle.mjs validateWinner"
     },
     {
       "id": "device-bundle-v1",
       "owner": "packages/play",
       "kind": "artifact",
-      "validator": "tools/device/bundle.mjs validateBundle"
+      "validator": "packages/propose/bin/plans/bundle.mjs validateBundle"
     },
     {
       "id": "trainer-trace-v1",

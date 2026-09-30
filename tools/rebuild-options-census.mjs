@@ -63,7 +63,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Sim } from '@sixam/source/fnaf2';
-import { STRATEGY_REGISTRY, compileBundle, validateWinner } from './device/bundle.mjs';
+import { STRATEGY_REGISTRY, compileBundle, validateWinner } from '../packages/propose/bin/plans/bundle.mjs';
 import { PRESET_KNOBS, loadPresets, runNight } from './device/night7-presets.mjs';
 import { simOptionsFrom } from './recompile/model-draw-trace.mjs';
 import { committedWinners, designBlock, forkBlocks, gitState, phoneCohorts } from './winner-census.mjs';

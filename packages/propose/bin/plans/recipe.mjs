@@ -8,11 +8,11 @@
 // `grade-minus7.py` found zero visible beams, because 83 ms is under the
 // contact length Fusion's per-frame touch poll reliably sees.
 //
-// Usage: node tools/device/recipe.mjs [--night=6] [--slot-ms=120] ... [--json]
+// Usage: node packages/propose/bin/plans/recipe.mjs [--night=6] [--slot-ms=120] ... [--json]
 import { pathToFileURL } from 'node:url';
-import * as C from '@sixam/core/mechanics';
-import { Sim } from '@sixam/core/mechanics';
-import { run, DEFAULT_SEARCH_KNOBS, makeSearchKnobs, MASK_OFF_INPUT_FRAMES } from '../model/hid-device-pilot.mjs';
+import * as C from '@sixam/source/fnaf2';
+import { Sim } from '@sixam/source/fnaf2';
+import { run, DEFAULT_SEARCH_KNOBS, makeSearchKnobs, MASK_OFF_INPUT_FRAMES } from '../../parked/minus7/hid-device-pilot.mjs';
 
 // The phone's measured contact floor. The Moto g56 accepted 33 ms contacts
 // on camera-select, monitor, mask and hall controls; 100 ms was margin from

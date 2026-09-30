@@ -8,9 +8,9 @@ import { pathToFileURL } from 'node:url';
 import {
   KNOBS0, MINUS3_STORY_NIGHTS, build, schedule, replay,
   reactiveReplay, reactiveGate, countReactive, emitReactivePlan,
-} from '@sixam/research/strategies/minus-3';
-import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '@sixam/research/seeds';
-import { DOUBLE_GLITCH_CAMERA_PAIRS, cameraPairHeader } from './arm-verification.mjs';
+} from '@sixam/propose/strategies/minus-3';
+import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '@sixam/propose/seeds';
+import { DOUBLE_GLITCH_CAMERA_PAIRS, cameraPairHeader } from '../../../play/bin/probe/arm-verification.mjs';
 
 export {
   KNOBS0, MINUS3_STORY_NIGHTS, build, schedule, replay,

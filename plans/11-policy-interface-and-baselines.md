@@ -108,7 +108,7 @@ loop is `hid-device-pilot.mjs`'s (`schedule -> drain -> actuator.deliver() ->
 tick()`). Action duration is defined once — `api.hold(frame, frames, act)` is
 ONE scheduled row and therefore ONE error draw, so a hold keeps its length
 under every error model, which is `human-gate.mjs`'s and
-`tools/device/actuator.mjs`'s existing rule (plans/04: independent draws price
+`packages/play/bin/phone/actuator.mjs`'s existing rule (plans/04: independent draws price
 nothing). Every report carries the policy name and version, the adapter
 version, the observation mode, the slack magnitude and shape, and whether the
 device actuator was in the path.
@@ -167,7 +167,7 @@ Support forced single faults before sampled compound distributions. A policy
 that survives only average latency is rejected.
 
 **Result (partial).** The adapter takes `deviceActuator`, which is
-`tools/device/actuator.mjs` unchanged: measured launch lateness (110-300 ms)
+`packages/play/bin/phone/actuator.mjs` unchanged: measured launch lateness (110-300 ms)
 and the measured mask-seam monitor drop, through one order-preserving queue.
 One wall-timed launch is charged per DELIVERY frame, uniformly for every
 policy, so the actuator column compares like with like rather than rewarding a
@@ -279,7 +279,7 @@ whose integer spread term rounds to zero at that magnitude, i.e. it is the
 
 #### Through the measured device actuator (100 seeds a cell)
 
-`tools/device/actuator.mjs`: launch lateness 110-300 ms, one wall-timed launch
+`packages/play/bin/phone/actuator.mjs`: launch lateness 110-300 ms, one wall-timed launch
 per delivery frame, the measured mask-seam monitor drop, one order-preserving
 queue.
 

@@ -3,9 +3,9 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { compileBundle, parsePlan, validateBundle } from './bundle.mjs';
+import { compileBundle, parsePlan, validateBundle } from '../../packages/propose/bin/plans/bundle.mjs';
 import { stableHash } from '@sixam/kernel/contracts';
-import { compileArtifactPlans } from './artifact-commands.mjs';
+import { compileArtifactPlans } from '../../packages/propose/bin/plans/artifact-commands.mjs';
 import { makeExecutorRequest } from '../../packages/play/src/campaign/artifact-executor.js';
 
 const check = (condition, message) => { if (!condition) throw new Error(message); };
@@ -115,7 +115,7 @@ try {
   const cliWinner = join(root, 'winner-input.json');
   const cliBundle = join(root, 'cli-bundle');
   writeFileSync(cliWinner, JSON.stringify(winner) + '\n');
-  const cliOutput = execFileSync('node', [join(process.cwd(), 'tools/device/emit.mjs'),
+  const cliOutput = execFileSync('node', [join(process.cwd(), 'packages/propose/bin/plans/emit.mjs'),
     '--winner', cliWinner, '--out', cliBundle], { encoding: 'utf8' });
   check(cliOutput.includes('device bundle READY') && validateBundle(cliBundle).status === 'READY',
     'device:emit CLI did not create a valid bundle');

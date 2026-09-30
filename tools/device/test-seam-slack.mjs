@@ -25,9 +25,9 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { compileArtifactPlans, SEAM_FLOORS } from './artifact-commands.mjs';
-import { parsePlan, validateWinner, STRATEGY_REGISTRY } from './bundle.mjs';
-import { FUSION_POLL_MS } from './recipe.mjs';
+import { compileArtifactPlans, SEAM_FLOORS } from '../../packages/propose/bin/plans/artifact-commands.mjs';
+import { parsePlan, validateWinner, STRATEGY_REGISTRY } from '../../packages/propose/bin/plans/bundle.mjs';
+import { FUSION_POLL_MS } from '../../packages/propose/bin/plans/recipe.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 

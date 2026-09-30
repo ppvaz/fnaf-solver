@@ -44,7 +44,7 @@
 // readLatencyMs 480 (the `hidpilot n6 target` latch), because a geometry that
 // wins only at 550 is a resonance -- exactly how the pkg-4 timing search failed
 // (plan 16 progress log).
-import { build, devicePlan, replay, idleUntilMs } from '../device/recipe.mjs';
+import { build, devicePlan, replay, idleUntilMs } from '../../packages/propose/bin/plans/recipe.mjs';
 import { modelGate, jitterPlan } from '../device/human-gate.mjs';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';

@@ -26,9 +26,9 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { boxSafeStopMs, threatIdleUntilMs } from './recipe.mjs';
-import { KNOBS0 as TOYS_KNOBS } from './minus-toys-plan.mjs';
-import { parsePlan, validateWinner, STRATEGY_REGISTRY } from './bundle.mjs';
+import { boxSafeStopMs, threatIdleUntilMs } from '../../packages/propose/bin/plans/recipe.mjs';
+import { KNOBS0 as TOYS_KNOBS } from '../../packages/propose/bin/plans/minus-toys-plan.mjs';
+import { parsePlan, validateWinner, STRATEGY_REGISTRY } from '../../packages/propose/bin/plans/bundle.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 let failed = 0;

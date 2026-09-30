@@ -255,7 +255,7 @@
       "version": 1,
       "owner": "propose/device",
       "kind": "artifact",
-      "purpose": "Stable winner-v1 boundary for propose/device; its validator is tools/device/bundle.mjs validateWinner.",
+      "purpose": "Stable winner-v1 boundary for propose/device; its validator is packages/propose/bin/plans/bundle.mjs validateWinner.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -264,7 +264,7 @@
       "unknownBehavior": "Invalid or unavailable data is rejected or represented as an explicit UNKNOWN state; it is never silently promoted.",
       "errorBehavior": "Reject malformed, incompatible, uncalibrated, or out-of-budget values at the boundary.",
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
-      "runtimeValidation": "tools/device/bundle.mjs validateWinner",
+      "runtimeValidation": "packages/propose/bin/plans/bundle.mjs validateWinner",
       "conformanceFixtures": [
         "tools/device/test-bundle.mjs"
       ]
@@ -275,7 +275,7 @@
       "version": 1,
       "owner": "packages/play",
       "kind": "artifact",
-      "purpose": "Stable device-bundle-v1 boundary for packages/play; its validator is tools/device/bundle.mjs validateBundle.",
+      "purpose": "Stable device-bundle-v1 boundary for packages/play; its validator is packages/propose/bin/plans/bundle.mjs validateBundle.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -284,7 +284,7 @@
       "unknownBehavior": "Invalid or unavailable data is rejected or represented as an explicit UNKNOWN state; it is never silently promoted.",
       "errorBehavior": "Reject malformed, incompatible, uncalibrated, or out-of-budget values at the boundary.",
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
-      "runtimeValidation": "tools/device/bundle.mjs validateBundle",
+      "runtimeValidation": "packages/propose/bin/plans/bundle.mjs validateBundle",
       "conformanceFixtures": [
         "tools/device/test-bundle.mjs"
       ]

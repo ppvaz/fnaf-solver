@@ -7,7 +7,7 @@ import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
 import { Observer, OBSERVE_INTERVAL, val } from '@sixam/play/sim';
 import { BlackoutReactive, guardIntents, GUARD_FRAMES } from '@sixam/propose/fnaf2';
-import { formatRate } from './stat.mjs';
+import { formatRate } from '../packages/review/src/stat.mjs';
 
 let failures = 0;
 const ok = (group, what, cond) => {
@@ -217,7 +217,7 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
 // reactive layer must lower it, mask, verify the opening, then raise it back --
 // the full BlackoutReactive path.
 import { Rng } from '@sixam/source/fnaf2';
-import { build, schedule } from '../tools/device/minus-toys-plan.mjs';
+import { build, schedule } from '../packages/propose/bin/plans/minus-toys-plan.mjs';
 
 const NIGHT = 1;
 const N_BLACKOUTS = 4;

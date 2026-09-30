@@ -44,7 +44,7 @@ const ENGINE = [
   ['seed recovery', ['../packages/source/test/seed-recoverytest.mjs']],
   // Plan 18 package 3: JavaScript/Python statistical primitives agree on
   // Wilson intervals, planning-N, two-proportion tests and fail-closed bars.
-  ['stat helper', ['test-stat.mjs']],
+  ['stat helper', ['../packages/review/test/stat.test.mjs']],
   // Plan 02's reopened Android route: the sourced split-camera state must arm,
   // the published 10 s Minus Toys loop must clear both normal and pinned
   // worst-luck seeds, and the same loop without the split must fail.
@@ -125,11 +125,11 @@ const ENGINE = [
   ['stock device pilot --guard', ['model/stock-device-pilot.mjs', '200', '--night=6', '--vent', '--sync', '--assert-guard']],
   // The sparse-left Night 7 candidate is an aligned simulator contract, not a
   // device clear. Its explicit pilot offset keeps the phase dependency visible.
-  ['hidpilot sparse-left', ['model/hid-device-pilot.mjs', '500', '--night=7', '--sparse-left', '--assert']],
-  ['hidpilot sparse worst', ['model/hid-device-pilot.mjs', '200', '--night=7', '--sparse-left', '--worst', '--assert']],
+  ['hidpilot sparse-left', ['../packages/propose/parked/minus7/hid-device-pilot.mjs', '500', '--night=7', '--sparse-left', '--assert']],
+  ['hidpilot sparse worst', ['../packages/propose/parked/minus7/hid-device-pilot.mjs', '200', '--night=7', '--sparse-left', '--worst', '--assert']],
   // The phone-accepted 790 ms sweep invalidates that idealized table. Preserve
   // the rejection until a different policy is consciously modeled and proven.
-  ['hidpilot device reject', ['model/hid-device-pilot.mjs', '200', '--night=7', '--sparse-left', '--device-sweep', '--assert-rejected']],
+  ['hidpilot device reject', ['../packages/propose/parked/minus7/hid-device-pilot.mjs', '200', '--night=7', '--sparse-left', '--device-sweep', '--assert-rejected']],
   // The selected Night 6 left-opening route, priced against the actuator the
   // phone actually has. Held at 790 ms it dies -- and not only on stalls: a
   // 47-frame lit sweep 84 times over spends more than night 6's whole 3000
@@ -137,9 +137,9 @@ const ENGINE = [
   // but at the phone's proven 240 ms spacing the stun bridge across the
   // five-tick BB mask still lapses. Both rejections stay until a faster
   // camera actuator is measured on a phone.
-  ['hidpilot n6 device reject', ['model/hid-device-pilot.mjs', '200', '--night=6',
+  ['hidpilot n6 device reject', ['../packages/propose/parked/minus7/hid-device-pilot.mjs', '200', '--night=6',
     '--device-sweep', '--assert-rejected']],
-  ['hidpilot n6 pulse reject', ['model/hid-device-pilot.mjs', '200', '--night=6',
+  ['hidpilot n6 pulse reject', ['../packages/propose/parked/minus7/hid-device-pilot.mjs', '200', '--night=6',
     '--device-sweep', '--pulse-light', '--sweep-slot-ms=240',
     '--mask-margin-ms=800', '--pilot-offset-ms=217', '--assert-rejected']],
   // The route at the human floor's 350 ms slots: 0/200 at every offset tried
@@ -147,7 +147,7 @@ const ENGINE = [
   // sweep span cannot bridge the five-tick mask. The left-opening architecture
   // cannot be slowed into human compliance; a human-executable night 6 needs a
   // different route shape. If this check ever flips, that is a finding.
-  ['hidpilot n6 human reject', ['model/hid-device-pilot.mjs', '200', '--night=6',
+  ['hidpilot n6 human reject', ['../packages/propose/parked/minus7/hid-device-pilot.mjs', '200', '--night=6',
     '--device-sweep', '--pulse-light', '--sweep-slot-ms=350',
     '--mask-margin-ms=900', '--read-latency-ms=480', '--pilot-offset-ms=167',
     '--assert-rejected']],
@@ -155,30 +155,30 @@ const ENGINE = [
   // latch, and the centre of the 83-267 ms scheduler-phase window. The device
   // emitter widens those slots to 133 ms by moving the sweep start earlier and
   // preserving its end; recipe replay and the human gate cover that actuator.
-  ['hidpilot n6 target', ['model/hid-device-pilot.mjs', '500', '--night=6',
+  ['hidpilot n6 target', ['../packages/propose/parked/minus7/hid-device-pilot.mjs', '500', '--night=6',
     '--device-sweep', '--pulse-light', '--sweep-slot-ms=120',
     '--mask-margin-ms=900', '--read-latency-ms=480', '--pilot-offset-ms=167',
     '--assert']],
-  ['hidpilot n6 target worst', ['model/hid-device-pilot.mjs', '200', '--night=6',
+  ['hidpilot n6 target worst', ['../packages/propose/parked/minus7/hid-device-pilot.mjs', '200', '--night=6',
     '--device-sweep', '--pulse-light', '--sweep-slot-ms=120',
     '--mask-margin-ms=900', '--read-latency-ms=480', '--pilot-offset-ms=167',
     '--worst', '--assert']],
   // Just past the window's upper edge (83-267 ms), so the window is a
   // measurement and not a hope. Below the edge survival is a 1-in-400
   // straggler rather than a clean zero, which is why this control sits above.
-  ['hidpilot n6 off-phase', ['model/hid-device-pilot.mjs', '200', '--night=6',
+  ['hidpilot n6 off-phase', ['../packages/propose/parked/minus7/hid-device-pilot.mjs', '200', '--night=6',
     '--device-sweep', '--pulse-light', '--sweep-slot-ms=120',
     '--mask-margin-ms=900', '--read-latency-ms=480', '--pilot-offset-ms=300',
     '--assert-rejected']],
   // Perfect sourced events only: this guards the visual policy upper bound,
   // while plan 08's forced-miss report explicitly rejects promotion as-is.
-  ['hidpilot vocal bound', ['model/hid-device-pilot.mjs', '200', '--night=7', '--vocal-cam5', '--assert']],
+  ['hidpilot vocal bound', ['../packages/propose/parked/minus7/hid-device-pilot.mjs', '200', '--night=7', '--vocal-cam5', '--assert']],
   // The bang-armed policy, and the property that makes it worth having: the
   // CAM 05 read re-syncs the count, so false positives are absorbed. Guard
   // both, because the false-tolerance is the whole argument for it over the
   // counted-vocal policy plan 08 rejected.
-  ['hidpilot bang', ['model/hid-device-pilot.mjs', '200', '--night=7', '--bang-cam5', '--assert']],
-  ['hidpilot bang false', ['model/hid-device-pilot.mjs', '200', '--night=7', '--bang-cam5',
+  ['hidpilot bang', ['../packages/propose/parked/minus7/hid-device-pilot.mjs', '200', '--night=7', '--bang-cam5', '--assert']],
+  ['hidpilot bang false', ['../packages/propose/parked/minus7/hid-device-pilot.mjs', '200', '--night=7', '--bang-cam5',
     '--false-bang=2', '--assert']],
   // The cue detector's front end, on synthesised signals: the reference
   // samples are game content and live outside the repository.
@@ -457,7 +457,7 @@ const REPORTS = [
   // instant, always-right, bidirectional one. The cliff is geometric -- camera
   // stalls lapse, occupants reach the opening, and 177/180 die to the 45-frame
   // office-defense fuse. Read this as the price of LATENESS, not of open loop.
-  ['hidpilot n6 target actuator', ['model/hid-device-pilot.mjs', '200', '--night=6',
+  ['hidpilot n6 target actuator', ['../packages/propose/parked/minus7/hid-device-pilot.mjs', '200', '--night=6',
     '--device-sweep', '--pulse-light', '--sweep-slot-ms=120',
     '--mask-margin-ms=900', '--read-latency-ms=480', '--pilot-offset-ms=167',
     '--device-actuator']],

@@ -29,8 +29,8 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { compileArtifactPlans } from './artifact-commands.mjs';
-import { parsePlan, validateWinner, STRATEGY_REGISTRY } from './bundle.mjs';
+import { compileArtifactPlans } from '../../packages/propose/bin/plans/artifact-commands.mjs';
+import { parsePlan, validateWinner, STRATEGY_REGISTRY } from '../../packages/propose/bin/plans/bundle.mjs';
 import * as C from '@sixam/source/fnaf2';
 
 const HERE = dirname(fileURLToPath(import.meta.url));

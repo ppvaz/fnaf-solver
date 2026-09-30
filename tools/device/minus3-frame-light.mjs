@@ -23,7 +23,7 @@ import { pathToFileURL } from 'node:url';
 import { Sim } from '@sixam/source/fnaf2';
 import { FNAF2_CONTROL_VOCABULARY as V } from '@sixam/source';
 import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '@sixam/propose/seeds';
-import { KNOBS0, schedule } from './minus-3-plan.mjs';
+import { KNOBS0, schedule } from '../../packages/propose/bin/plans/minus-3-plan.mjs';
 
 /** Measured monitor DOWN -> mask DOWN gap on the winning runs. */
 export const MASK_GAP_MS = 67;

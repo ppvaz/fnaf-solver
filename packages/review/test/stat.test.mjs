@@ -8,7 +8,7 @@ import { dirname, join } from 'node:path';
 import {
   DEFAULT_Z, contractVerdict, formatRate, requiredN,
   twoProportionTest, wilsonInterval,
-} from './stat.mjs';
+} from '../src/stat.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 

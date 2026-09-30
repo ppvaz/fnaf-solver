@@ -34,11 +34,11 @@ import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
 import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor }
   from '@sixam/propose/seeds';
-import { KNOBS0, build, schedule } from './minus-toys-plan.mjs';
-import { DeviceActuator } from './actuator.mjs';
+import { KNOBS0, build, schedule } from '../../packages/propose/bin/plans/minus-toys-plan.mjs';
+import { DeviceActuator } from '../../packages/play/bin/phone/actuator.mjs';
 import { designBlock, forkBlocks, gitState } from '../winner-census.mjs';
 import { heldOutSeeds } from '../winner-phase-census.mjs';
-import { STRATEGY_REGISTRY, validateWinner } from './bundle.mjs';
+import { STRATEGY_REGISTRY, validateWinner } from '../../packages/propose/bin/plans/bundle.mjs';
 
 const MENU_MODEL = new URL('./models/custom-night-moto-g56-v207.json', import.meta.url);
 

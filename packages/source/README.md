@@ -35,8 +35,8 @@ re-exports FNaF 2's file until migration step D2 splits the plant model.
 
 Importers repointed in migration D3 name this package directly. Five
 `tools/recompile` modules (another session's) and the three engine-source files
-a bundle manifest hashes byte for byte (`tools/device/minus-toys-plan.mjs`,
-`tools/device/recipe.mjs`, `tools/model/hid-device-pilot.mjs`) still reach it
+a bundle manifest hashes byte for byte (`packages/propose/bin/plans/minus-toys-plan.mjs`,
+`packages/propose/bin/plans/recipe.mjs`, `packages/propose/parked/minus7/hid-device-pilot.mjs`) still reach it
 through core's compatibility shims
 ([`legacy-paths.json`](../../docs/architecture/generated/legacy-paths.json)).
 

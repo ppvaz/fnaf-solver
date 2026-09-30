@@ -207,8 +207,8 @@ for (const path of sourceFiles.filter(path => /(?:test|check|spec)[^/]*\.(?:mjs|
 const duplicateResponsibilities = [
   { responsibility: 'canonical mechanics', owner: '@sixam/source', legacy: [] },
   { responsibility: 'semantic policy IR', owner: '@sixam/propose', legacy: ['tools/device/policy-ir.mjs'] },
-  { responsibility: 'physical actuation', owner: '@sixam/play', legacy: ['tools/device/actuator.mjs'] },
-  { responsibility: 'device composition', owner: '@sixam/desktop', legacy: ['tools/device/recipe.mjs'] },
+  { responsibility: 'physical actuation', owner: '@sixam/play', legacy: ['packages/play/bin/phone/actuator.mjs'] },
+  { responsibility: 'device composition', owner: '@sixam/desktop', legacy: ['packages/propose/bin/plans/recipe.mjs'] },
   { responsibility: 'research execution', owner: '@sixam/propose', legacy: ['tools/*search*', 'tools/*sweep*', 'tools/*probe*'] },
 ];
 
@@ -275,14 +275,14 @@ const legacyPaths = [
     notes: 'Human-safe selector retained because the current phone cursor is not machine-qualified.',
   },
   {
-    id: 'device.simulated-actuator', path: 'tools/device/actuator.mjs', category: 'simulation',
+    id: 'device.simulated-actuator', path: 'packages/play/bin/phone/actuator.mjs', category: 'simulation',
     lifecycle: 'transitional', owner: '@sixam/play',
     replacement: 'adapter actuator/error model with conformance fixtures',
     removalGate: 'Pilot/model consumers migrate without changing measured error semantics',
     notes: 'Historical device-lateness model; not a physical transport.',
   },
   {
-    id: 'device.recipe-emitter', path: 'tools/device/recipe.mjs', category: 'device-artifact',
+    id: 'device.recipe-emitter', path: 'packages/propose/bin/plans/recipe.mjs', category: 'device-artifact',
     lifecycle: 'transitional', owner: '@sixam/play',
     replacement: 'package-owned winner/device-bundle emitter',
     removalGate: 'Bundle emitter no longer imports the tools tree and replay hashes match',
@@ -330,7 +330,7 @@ const legacyPaths = [
     id: 'core.mechanics-shim', path: 'packages/core/src/mechanics/index.js', category: 'package-subpath',
     lifecycle: 'compatibility', owner: '@sixam/source',
     replacement: '`@sixam/source/fnaf2` (packages/source/src/games/fnaf2/), whose export set is exactly this barrel\'s',
-    removalGate: 'No tracked module imports `@sixam/core/mechanics`: the tools/recompile importers (their owner repoints them) and the engine-source files a bundle manifest hashes (tools/device/minus-toys-plan.mjs, recipe.mjs, tools/model/hid-device-pilot.mjs) are repointed in a commit that re-derives every emitted bundle',
+    removalGate: 'No tracked module imports `@sixam/core/mechanics`: the tools/recompile importers (their owner repoints them) and the engine-source files a bundle manifest hashes (packages/propose/bin/plans/minus-toys-plan.mjs, recipe.mjs, packages/propose/parked/minus7/hid-device-pilot.mjs) are repointed in a commit that re-derives every emitted bundle',
     notes: 'One `export *` of `@sixam/source/fnaf2`. tools/recompile/model-draw-trace.mjs resolves this barrel to find the model sources it hashes beside it, which is why the three links below live in this directory.',
   },
   ...['plant-model', 'config', 'rng'].map(name => ({
@@ -344,7 +344,7 @@ const legacyPaths = [
     id: 'core.control-vocabulary-shim', path: 'packages/core/src/control/index.js', category: 'package-subpath',
     lifecycle: 'compatibility', owner: '@sixam/source',
     replacement: '`@sixam/source` for the control vocabulary and the per-game catalogs; `@sixam/propose` for the rest of the barrel (`core.control-policy-shim`)',
-    removalGate: 'No tracked module imports a vocabulary or catalog name from `@sixam/core/control`: true since D3, 2026-09-30, except tools/device/minus-toys-plan.mjs (an engine-source file every Minus Toys bundle hashes into engine.sourceSha256, repointed only in a commit that re-derives every emitted bundle) and two tools/recompile modules (their owner repoints them)',
+    removalGate: 'No tracked module imports a vocabulary or catalog name from `@sixam/core/control`: true since D3, 2026-09-30, except packages/propose/bin/plans/minus-toys-plan.mjs (an engine-source file every Minus Toys bundle hashes into engine.sourceSha256, repointed only in a commit that re-derives every emitted bundle) and two tools/recompile modules (their owner repoints them)',
     notes: 'Re-exports the 37 vocabulary and catalog names by name from `@sixam/source`, beside the propose re-exports; its export set is the one it had before either move.',
   },
   // ADR 0002 migration M8: the policy language, FNaF 2's controllers and cycle
@@ -353,7 +353,7 @@ const legacyPaths = [
     id: 'core.control-policy-shim', path: 'packages/core/src/control/index.js', category: 'package-subpath',
     lifecycle: 'compatibility', owner: '@sixam/propose',
     replacement: '`@sixam/propose/policy` (policy IR, observation language, ports) and `@sixam/propose/fnaf2` (FNaF 2\'s controllers, cycle library, planner, cycle controller, night policy)',
-    removalGate: 'No tracked module imports a policy, controller or cycle name from `@sixam/core/control` or `@sixam/core`. Once M8 has repointed the tools, the one left is tools/device/minus-toys-plan.mjs, an engine-source file every Minus Toys bundle hashes into engine.sourceSha256, repointed only in a commit that re-derives every emitted bundle',
+    removalGate: 'No tracked module imports a policy, controller or cycle name from `@sixam/core/control` or `@sixam/core`. Once M8 has repointed the tools, the one left is packages/propose/bin/plans/minus-toys-plan.mjs, an engine-source file every Minus Toys bundle hashes into engine.sourceSha256, repointed only in a commit that re-derives every emitted bundle',
     notes: 'Two `export *` lines of propose\'s barrels. The only re-export of propose outside propose that tools/architecture-test.js admits besides the research shims: a registered shim may re-export propose, never import it.',
   },
   // packages/research moved into @sixam/propose in the same migration and is
@@ -369,14 +369,14 @@ const legacyPaths = [
     id: 'research.seeds-shim', path: 'packages/research/seeds.js', category: 'package-subpath',
     lifecycle: 'compatibility', owner: '@sixam/propose',
     replacement: '`@sixam/propose/seeds` (packages/propose/src/experiment/seeds.js)',
-    removalGate: 'tools/device/minus-toys-plan.mjs and minus-3-plan.mjs, engine-source files every Minus Toys and Minus 3 bundle hashes into engine.sourceSha256, import `@sixam/propose/seeds` in a commit that re-derives every emitted bundle',
+    removalGate: 'packages/propose/bin/plans/minus-toys-plan.mjs and minus-3-plan.mjs, engine-source files every Minus Toys and Minus 3 bundle hashes into engine.sourceSha256, import `@sixam/propose/seeds` in a commit that re-derives every emitted bundle',
     notes: 'Serves `@sixam/research/seeds`; every other importer was repointed to propose in M8 (2026-09-30).',
   },
   {
     id: 'research.minus-3-shim', path: 'packages/research/strategies/minus-3.js', category: 'package-subpath',
     lifecycle: 'compatibility', owner: '@sixam/propose',
     replacement: '`@sixam/propose/strategies/minus-3` (packages/propose/src/strategies/minus-3/)',
-    removalGate: 'tools/device/minus-3-plan.mjs, an engine-source file every Minus 3 bundle hashes into engine.sourceSha256, imports `@sixam/propose/strategies/minus-3` in a commit that re-derives every emitted bundle',
+    removalGate: 'packages/propose/bin/plans/minus-3-plan.mjs, an engine-source file every Minus 3 bundle hashes into engine.sourceSha256, imports `@sixam/propose/strategies/minus-3` in a commit that re-derives every emitted bundle',
     notes: 'Serves `@sixam/research/strategies/minus-3`; minus-3-plan.mjs is its only importer.',
   },
   // ADR 0002's Play move took core's last modules: the Sim observer to
@@ -390,7 +390,7 @@ const legacyPaths = [
     id: 'core.sensing-shim', path: 'packages/core/src/sensing/index.js', category: 'package-subpath',
     lifecycle: 'compatibility', owner: '@sixam/play',
     replacement: '`@sixam/play/sim` (packages/play/src/venues/sim/), whose export set is exactly this subpath\'s',
-    removalGate: 'tools/device/minus-toys-plan.mjs, an engine-source file every Minus Toys bundle hashes into engine.sourceSha256, imports `@sixam/play/sim` in a commit that re-derives every emitted bundle',
+    removalGate: 'packages/propose/bin/plans/minus-toys-plan.mjs, an engine-source file every Minus Toys bundle hashes into engine.sourceSha256, imports `@sixam/play/sim` in a commit that re-derives every emitted bundle',
     notes: 'One `export *` of `@sixam/play/sim`; minus-toys-plan.mjs is its only importer.',
   },
   // ADR 0002: packages/adapters moved into @sixam/play (the phone's transports
@@ -426,7 +426,7 @@ const legacyPaths = [
     id: `play.profile.${name}`, path: `apps/device/profiles/${name}.json`, category: 'device-profile',
     lifecycle: 'compatibility', owner: '@sixam/play',
     replacement: `packages/play/profiles/fnaf2/moto-g56/${name}.json, the layout's home for it, once the path is free to move`,
-    removalGate: 'Every stored citation of apps/device/profiles/ is read through the path\'s history at its commit, not the working tree: the 55 tools/recompile/results records that pair `profile: apps/device/profiles/hid-mediaprojection.json` with its profileSha256, the recompile configs full06-response-experiment.json (hash-bound by full06-responses-20260928) and phone-encounter-nights.json, schedule-to-input.mjs\'s DEFAULT_PROFILE, and graph.json\'s citation of fixture-hid-screencap.json; tools/device/bundle.mjs and the device CLI then resolve profiles from the new home',
+    removalGate: 'Every stored citation of apps/device/profiles/ is read through the path\'s history at its commit, not the working tree: the 55 tools/recompile/results records that pair `profile: apps/device/profiles/hid-mediaprojection.json` with its profileSha256, the recompile configs full06-response-experiment.json (hash-bound by full06-responses-20260928) and phone-encounter-nights.json, schedule-to-input.mjs\'s DEFAULT_PROFILE, and graph.json\'s citation of fixture-hid-screencap.json; packages/propose/bin/plans/bundle.mjs and the device CLI then resolve profiles from the new home',
     notes: 'Unmoved and byte for byte. The profile bytes are what every bundle binds by sha256 (profile.json); the path is what retained records cite.',
   })),
   {
@@ -445,7 +445,7 @@ const legacyPaths = [
 // catalog diff keeps it current, and Review's trackedWinners() reads it, refusing
 // when a winner file's bytes differ from the sha256 recorded here.
 const WINNERS_DIR = 'tools/device';
-const { compileBundle } = await import(pathToFileURL(join(ROOT, WINNERS_DIR, 'bundle.mjs')).href);
+const { compileBundle } = await import(pathToFileURL(join(ROOT, 'packages/propose/bin/plans/bundle.mjs')).href);
 const winnerHashes = [];
 for (const name of readdirSync(join(ROOT, WINNERS_DIR)).filter(file => file.endsWith('-winner.json')).sort()) {
   const bytes = await readFile(join(ROOT, WINNERS_DIR, name));

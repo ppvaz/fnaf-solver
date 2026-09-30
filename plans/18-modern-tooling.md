@@ -86,7 +86,7 @@ Separately, "a detector reporting 22 thuds ... all 22 were false positives" —
 `CLAUDE.md` §"Numbers need their control".
 
 **Work.**
-- A small module (`tools/stat.mjs` + a Python twin): Wilson score interval,
+- A small module (`packages/review/src/stat.mjs` + a Python twin): Wilson score interval,
   required-N for a target half-width, two-proportion test.
 - `human-gate.mjs` and every `*test.mjs --assert` print `rate [lo, hi] n=…`
   and refuse a bare pass/fail verdict when the interval straddles the contract
@@ -98,7 +98,7 @@ Separately, "a detector reporting 22 thuds ... all 22 were false positives" —
 interval; a contract-straddling result is `INCONCLUSIVE`, never silently a
 pass; the ladder in the docs carries intervals.
 
-**Foundation landed 2026-08-30.** `tools/stat.mjs` and its Python twin now
+**Foundation landed 2026-08-30.** `packages/review/src/stat.mjs` and its Python twin now
 provide Wilson intervals, bounded required-N planning, two-proportion z tests,
 and explicit PASS/FAIL/INCONCLUSIVE contract verdicts. `test-stat.mjs`
 cross-checks both implementations. `human-gate.mjs` and the night matrix now

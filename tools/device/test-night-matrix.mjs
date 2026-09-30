@@ -29,9 +29,9 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as C from '@sixam/source/fnaf2';
 import { build, capture, devicePlan, replay, resolveAttack, TEMPLATE_NIGHT,
-         idleUntilMs } from './recipe.mjs';
+         idleUntilMs } from '../../packages/propose/bin/plans/recipe.mjs';
 import { modelGate, GATE_MIN_SURVIVAL, HUMAN_SLACK_MS, GATE_RUNS } from './human-gate.mjs';
-import { contractVerdict, formatRate } from '../stat.mjs';
+import { contractVerdict, formatRate } from '../../packages/review/src/stat.mjs';
 import { pool, closePool } from '../pool.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));

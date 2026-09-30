@@ -8,7 +8,7 @@
 // Nothing caught it, because nothing checked the stream the runner emits.
 import { build, track, devicePlan, replay, MIN_CONTACT_MS, DEVICE_SPACING_MS,
          MODEL_SLOT_MS, FUSION_POLL_MS, MASK_RAISE_GAP_MS, SWEEP_SELECT_MS, LA_SELECT_MS, LA_SETTLE_MS,
-         SWEEP_RELEASED_MS, sweepCamMs, sweepCams, sweepSpanMs } from './recipe.mjs';
+         SWEEP_RELEASED_MS, sweepCamMs, sweepCams, sweepSpanMs } from '../../packages/propose/bin/plans/recipe.mjs';
 import { MIN_RELEASED_MS } from './test-hid-trace.mjs';
 
 const check = (ok, message) => { if (!ok) throw new Error(message); };

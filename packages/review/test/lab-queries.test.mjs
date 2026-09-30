@@ -41,7 +41,8 @@ for (const [paths, expected, why] of cases) {
 }
 assert.deepEqual(pathKind('apps/desktop/src/companion-mcp.mjs'), { kind: 'code', area: 'solver-interface' }, 'the MCP server is the solver interface');
 assert.deepEqual(pathKind('apps/desktop/src/lab.mjs'), { kind: 'code', area: 'solver-interface' });
-assert.deepEqual(pathKind('tools/device/actuator.mjs'), { kind: 'code', area: 'controller' });
+assert.deepEqual(pathKind('packages/play/bin/phone/actuator.mjs'), { kind: 'code', area: 'controller' });
+assert.deepEqual(pathKind('packages/propose/bin/plans/bundle.mjs'), { kind: 'code', area: 'controller' }, 'moved device code keeps its area');
 assert.deepEqual(pathKind('tools/recompile/pilot/pilot.mjs'), { kind: 'code', area: null }, 'rebuild tooling is outside the four areas');
 assert.equal(pathKind('tools/simtest.mjs').kind, 'gate');
 assert.equal(pathKind('docs/evidence/night5-first-6am-20260912.md').kind, 'record', 'a Markdown evidence record is still a record');

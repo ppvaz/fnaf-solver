@@ -18,10 +18,10 @@ import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { OPENING, LOOP, KNOBS0, build, replay, emitPlan, schedule, maskWindows, phaseScan } from './minus-toys-plan.mjs';
-import { DOUBLE_GLITCH_CAMERA_PAIRS } from './arm-verification.mjs';
-import { parsePlan } from './bundle.mjs';
-import { compileArtifactPlans } from './artifact-commands.mjs';
+import { OPENING, LOOP, KNOBS0, build, replay, emitPlan, schedule, maskWindows, phaseScan } from '../../packages/propose/bin/plans/minus-toys-plan.mjs';
+import { DOUBLE_GLITCH_CAMERA_PAIRS } from '../../packages/play/bin/probe/arm-verification.mjs';
+import { parsePlan } from '../../packages/propose/bin/plans/bundle.mjs';
+import { compileArtifactPlans } from '../../packages/propose/bin/plans/artifact-commands.mjs';
 import * as C from '@sixam/source/fnaf2';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -121,7 +121,7 @@ check(controlArmed === 0,
 
 // The CLI entry point uses the same gate before emitting a bundle plan.
 for (const night of ['2', '7']) {
-  execFileSync('node', [join(here, 'minus-toys-plan.mjs'), `--night=${night}`, '--gate'],
+  execFileSync('node', [join(here, '../../packages/propose/bin/plans/minus-toys-plan.mjs'), `--night=${night}`, '--gate'],
     { stdio: 'ignore' });
 }
 
@@ -181,11 +181,11 @@ for (const night of ['2', '7']) {
     'the double-glitch camera pair registry drifted from Minus 3/Minus Toys');
 
   // --gate exits 0; and it refuses any night but 1.
-  execFileSync('node', [join(here, 'minus-toys-plan.mjs'), '--night=1', '--minimal', '--gate'],
+  execFileSync('node', [join(here, '../../packages/propose/bin/plans/minus-toys-plan.mjs'), '--night=1', '--minimal', '--gate'],
     { stdio: 'ignore' });
   let refused = false;
   try {
-    execFileSync('node', [join(here, 'minus-toys-plan.mjs'), '--night=3', '--minimal'],
+    execFileSync('node', [join(here, '../../packages/propose/bin/plans/minus-toys-plan.mjs'), '--night=3', '--minimal'],
       { stdio: 'ignore' });
   } catch { refused = true; }
   check(refused, '--minimal did not refuse night 3 (it is Night 1 only)');

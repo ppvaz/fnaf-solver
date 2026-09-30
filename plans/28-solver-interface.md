@@ -30,7 +30,7 @@ of registers this repository already generates —
 [commands](../docs/architecture/generated/command-registry.json),
 [the chronicle](../packages/review/src/chronicle-schema.js),
 [the evidence graph](../docs/evidence/graph.json) — plus two write paths that
-already exist behind gates ([simulation](../tools/device/bundle.mjs),
+already exist behind gates ([simulation](../packages/propose/bin/plans/bundle.mjs),
 [device](../apps/desktop/src/device-cli.js)). What is new below is envelope, routing and
 refusal; the knowledge is already here and the safety boundary is already proven
 in [`companion-mcp.mjs`](../apps/desktop/src/companion-mcp.mjs).

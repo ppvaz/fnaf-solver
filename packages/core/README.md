@@ -10,7 +10,7 @@ its removal gate.
 | Subpath | Now owned by | Why it stays |
 |---|---|---|
 | `/contracts` | [`@sixam/kernel/contracts`](../kernel/README.md) and three catalog-generated validators from `@sixam/source` | hand-run commands and docs still name it (`core.contracts-shim`) |
-| `/mechanics` | [`@sixam/source/fnaf2`](../source/README.md) | `tools/device/minus-toys-plan.mjs`, `recipe.mjs` and `tools/model/hid-device-pilot.mjs`, whose bytes every bundle hashes into `engine.sourceSha256`, and `tools/recompile` import it (`core.mechanics-shim`) |
+| `/mechanics` | [`@sixam/source/fnaf2`](../source/README.md) | `packages/propose/bin/plans/minus-toys-plan.mjs`, `recipe.mjs` and `packages/propose/parked/minus7/hid-device-pilot.mjs`, whose bytes every bundle hashes into `engine.sourceSha256`, and `tools/recompile` import it (`core.mechanics-shim`) |
 | `/control` | `@sixam/source` (vocabulary, catalogs) and [`@sixam/propose`](../propose/README.md) `/policy` and `/fnaf2` | `minus-toys-plan.mjs` and two `tools/recompile` modules import it (`core.control-*-shim`) |
 | `/sensing` | [`@sixam/play/sim`](../play/README.md) (the Sim observer) | `minus-toys-plan.mjs` imports it (`core.sensing-shim`) |
 

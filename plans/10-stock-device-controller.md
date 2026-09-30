@@ -168,7 +168,7 @@ is in [`ANDROID-SOURCE-STATUS.md`](../docs/android/ANDROID-SOURCE-STATUS.md)
 - **The engine does need a pan *cost*, and it does not belong in the engine.**
   A pan changes no game state and spends no game resource — only `lit?` drains
   the battery (g284). What it spends is actuator occupancy and wall clock, which
-  is exactly what `tools/device/actuator.mjs` already models. Put the duration
+  is exactly what `packages/play/bin/phone/actuator.mjs` already models. Put the duration
   and the reachability window there and the *decision* to pay it in the policy
   schedule; leave `src/engine.js` alone.
 - **The vents are not symmetric.** The office opens at v23 = 512, the **minimum**

@@ -195,7 +195,7 @@
     },
     {
       "id": "device:emit",
-      "command": "node tools/device/emit.mjs",
+      "command": "node packages/propose/bin/plans/emit.mjs",
       "lifecycle": "supported"
     },
     {
@@ -328,12 +328,6 @@
     {
       "id": "tools/retrieval-benchmark.mjs",
       "invocation": "tools/retrieval-benchmark.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/test-stat.mjs",
-      "invocation": "tools/test-stat.mjs",
       "kind": "check",
       "lifecycle": "supported"
     },
@@ -680,12 +674,6 @@
       "lifecycle": "supported"
     },
     {
-      "id": "tools/model/hid-device-pilot.mjs",
-      "invocation": "tools/model/hid-device-pilot.mjs [runs] [--night=6]",
-      "kind": "report/check",
-      "lifecycle": "supported"
-    },
-    {
       "id": "tools/fnaf1-device-lane.mjs",
       "invocation": "tools/fnaf1-device-lane.mjs [--seeds N] [--start S] [--lane typical\\|worst\\|best\\|starved] [--policy grid420\\|flick4b] [--opt.key value] [--population [--route tree\\|winner] [--jobs J] [--out FILE]]",
       "kind": "report",
@@ -932,18 +920,6 @@
       "lifecycle": "supported"
     },
     {
-      "id": "tools/device/emit.mjs",
-      "invocation": "tools/device/emit.mjs --winner winner.json --out artifacts/run-001",
-      "kind": "compiler",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/artifact-commands.mjs",
-      "invocation": "tools/device/artifact-commands.mjs",
-      "kind": "module/check",
-      "lifecycle": "supported"
-    },
-    {
       "id": "packages/play/src/campaign/artifact-executor.js",
       "invocation": "packages/play/src/campaign/artifact-executor.js",
       "kind": "device boundary",
@@ -977,12 +953,6 @@
       "id": "packages/play/src/campaign/campaign-composition.js",
       "invocation": "packages/play/src/campaign/campaign-composition.js",
       "kind": "device composition",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/bundle.mjs",
-      "invocation": "tools/device/bundle.mjs",
-      "kind": "module/check",
       "lifecycle": "supported"
     },
     {
@@ -1166,39 +1136,15 @@
       "lifecycle": "supported"
     },
     {
-      "id": "tools/device/recipe.mjs",
-      "invocation": "tools/device/recipe.mjs",
-      "kind": "generator/report",
-      "lifecycle": "supported"
-    },
-    {
       "id": "tools/device/test-recipe.mjs",
       "invocation": "tools/device/test-recipe.mjs",
       "kind": "check",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/device/actuator.mjs",
-      "invocation": "tools/device/actuator.mjs",
-      "kind": "internal module",
-      "lifecycle": "supported"
-    },
-    {
       "id": "tools/device/test-actuator.mjs",
       "invocation": "tools/device/test-actuator.mjs",
       "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/minus-toys-plan.mjs",
-      "invocation": "tools/device/minus-toys-plan.mjs --night=N [--gate] [--knobs=k=v,...]",
-      "kind": "generator/check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/arm-verification.mjs",
-      "invocation": "tools/device/arm-verification.mjs",
-      "kind": "module",
       "lifecycle": "supported"
     },
     {
@@ -1316,12 +1262,6 @@
       "lifecycle": "supported"
     },
     {
-      "id": "tools/device/minus-3-plan.mjs",
-      "invocation": "tools/device/minus-3-plan.mjs --night=N [--gate] [--runs=N]",
-      "kind": "generator/check",
-      "lifecycle": "supported"
-    },
-    {
       "id": "tools/device/minus3-frame-light.mjs",
       "invocation": "tools/device/minus3-frame-light.mjs [--verify\\|--census] [--runs=N]",
       "kind": "module/check/report",
@@ -1361,12 +1301,6 @@
       "id": "tools/device/test-night-run-dry.mjs",
       "invocation": "tools/device/test-night-run-dry.mjs",
       "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/minus-toys-plan.mjs",
-      "invocation": "tools/device/minus-toys-plan.mjs --phasegate",
-      "kind": "report",
       "lifecycle": "supported"
     },
     {

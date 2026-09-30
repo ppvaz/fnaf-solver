@@ -24,7 +24,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build, FACTS, ANCHOR_AIMS, ANCHOR_AIM_MIN_MARGIN_MS, UNTRACKED_WINNER_DEBT, anchorAimFor } from './fact-register.mjs';
-import { compileBundle } from './bundle.mjs';
+import { compileBundle } from '../../packages/propose/bin/plans/bundle.mjs';
 import { stableHash } from '@sixam/kernel/contracts';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '../..'));

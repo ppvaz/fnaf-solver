@@ -1,7 +1,7 @@
 // What the live runner's closed loop reclaims from the measured actuator.
 //
 // plans/12 left one number unmeasured and said so: the shipped route is
-// 23/200 on Night 1 and 0/200 on Nights 2-7 through `tools/device/actuator.mjs`,
+// 23/200 on Night 1 and 0/200 on Nights 2-7 through `packages/play/bin/phone/actuator.mjs`,
 // and "the live runner's checkpoint read and verified recovery are the untested
 // variable... how much of the gap is recoverable is currently unmeasured".
 // `MonitorSupervisor` now models that loop -- the flip gate, the classifier's
@@ -16,7 +16,7 @@
 //   node tools/model/closed-loop-reclaim.mjs --controls      # the controls, night 6
 //   node tools/model/closed-loop-reclaim.mjs --runs=500
 import { pathToFileURL } from 'node:url';
-import { run as hidRun } from './hid-device-pilot.mjs';
+import { run as hidRun } from '../../packages/propose/parked/minus7/hid-device-pilot.mjs';
 import { run as pilotRun } from './stock-device-pilot.mjs';
 
 // `hidpilot n6 target` in tools/test.mjs, which is the route plans/12 priced.

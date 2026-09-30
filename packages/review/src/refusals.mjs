@@ -141,17 +141,17 @@ export function checkSeedFloor(quote) {
  * written. `marker` is text the source file holds, so a test can tell the citation still stands.
  */
 export const DIRECTIONAL_CONSTANTS = Object.freeze({
-  SEAM_BANDS: Object.freeze({ first: 'mask', then: 'monitor', source: 'tools/device/actuator.mjs',
+  SEAM_BANDS: Object.freeze({ first: 'mask', then: 'monitor', source: 'packages/play/bin/phone/actuator.mjs',
     marker: 'under 140 ms after the mask press 5 of 7 monitor', measures: 'monitor presses lost after a mask press, by gap' }),
-  SEAM_SAFE_MS: Object.freeze({ first: 'mask', then: 'monitor', source: 'tools/device/actuator.mjs',
+  SEAM_SAFE_MS: Object.freeze({ first: 'mask', then: 'monitor', source: 'packages/play/bin/phone/actuator.mjs',
     marker: 'export const SEAM_SAFE_MS = 180', measures: 'the mask-to-monitor gap past which no monitor press was lost (0 of 17)' }),
-  maskButtonFullyVisibleAfterMonitorDownMs: Object.freeze({ first: 'monitor-down', then: 'mask', source: 'tools/device/artifact-commands.mjs',
+  maskButtonFullyVisibleAfterMonitorDownMs: Object.freeze({ first: 'monitor-down', then: 'mask', source: 'packages/propose/bin/plans/artifact-commands.mjs',
     marker: 'maskButtonFullyVisibleAfterMonitorDownMs', measures: 'the mask button fully drawn after monitor-down, native frame trace' }),
-  monitorMaskReadyMs: Object.freeze({ first: 'monitor-down', then: 'mask', source: 'tools/device/artifact-commands.mjs',
+  monitorMaskReadyMs: Object.freeze({ first: 'monitor-down', then: 'mask', source: 'packages/propose/bin/plans/artifact-commands.mjs',
     marker: 'monitorMaskReadyMs: MONITOR_MASK_READY_MS', measures: 'the floor on a mask press after monitor-down' }),
-  monitorReadyCameraMs: Object.freeze({ first: 'monitor-up', then: 'camera', source: 'tools/device/artifact-commands.mjs',
+  monitorReadyCameraMs: Object.freeze({ first: 'monitor-up', then: 'camera', source: 'packages/propose/bin/plans/artifact-commands.mjs',
     marker: 'monitorReadyCameraMs: MONITOR_READY_CAMERA_MS', measures: 'the floor on a camera select after the monitor raise' }),
-  monitorReadyWindMs: Object.freeze({ first: 'monitor-up', then: 'wind', source: 'tools/device/artifact-commands.mjs',
+  monitorReadyWindMs: Object.freeze({ first: 'monitor-up', then: 'wind', source: 'packages/propose/bin/plans/artifact-commands.mjs',
     marker: 'monitorReadyWindMs: MONITOR_READY_WIND_MS', measures: 'the floor on a wind hold after the monitor raise' }),
 });
 

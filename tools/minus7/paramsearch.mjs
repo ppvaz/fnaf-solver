@@ -1,7 +1,7 @@
 // Plan 16: constrained policy search over the device plan's named timing
 // geometry, evaluated on the exact engine through recipe.build ->
 // devicePlan -> modelGate. Dominance-pruned beam search over a small, sourced-
-// floored parameter space (tools/model/hid-device-pilot.mjs search knobs). No second
+// floored parameter space (packages/propose/parked/minus7/hid-device-pilot.mjs search knobs). No second
 // simulator, no semantic-action free search (Plan 16 non-goals).
 //
 //   node tools/minus7/paramsearch.mjs --nights=5,6,7 [--runs=400] [--admit=1200]
@@ -13,9 +13,9 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { build, devicePlan, idleUntilMs } from '../device/recipe.mjs';
+import { build, devicePlan, idleUntilMs } from '../../packages/propose/bin/plans/recipe.mjs';
 import { modelGate } from '../device/human-gate.mjs';
-import { makeSearchKnobs } from '../model/hid-device-pilot.mjs';
+import { makeSearchKnobs } from '../../packages/propose/parked/minus7/hid-device-pilot.mjs';
 import { canonicalJson } from '@sixam/kernel/contracts';
 import * as C from '@sixam/source/fnaf2';
 

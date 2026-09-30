@@ -7,7 +7,7 @@
  * control, never rename one. Each fact names where it was read; a fact that
  * was never read is `UNKNOWN(reason)`.
  *
- * - `requires`: tools/device/artifact-commands.mjs refuses a plan that breaks
+ * - `requires`: packages/propose/bin/plans/artifact-commands.mjs refuses a plan that breaks
  *   these (every control but the mask is illegal while the mask is up; the
  *   mask and the lights below it need the monitor down; the feed light, the
  *   cameras and the wind need it up; a wind needs the box camera viewed,
@@ -105,7 +105,7 @@ export const FNAF2_CONTROL_CATALOG = defineControlCatalog({
   auxiliaryPoints: ['mute'],
   artifactActions: FNAF2_ARTIFACT_ACTION_TABLE,
   sources: [
-    'tools/device/artifact-commands.mjs (preconditions)',
+    'packages/propose/bin/plans/artifact-commands.mjs (preconditions)',
     'apps/device/profiles/hid-mediaprojection.json viewScroll (anchors)',
     'packages/play/src/sensors/fnaf2/monitor-rule.js, camera-rule.js; packages/play/src/campaign/control-effect.js (observations)',
   ],

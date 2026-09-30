@@ -25,9 +25,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { FPS } from '@sixam/source/fnaf2';
-import { STRATEGY_REGISTRY, compileBundle, validateWinner } from './device/bundle.mjs';
+import { STRATEGY_REGISTRY, compileBundle, validateWinner } from '../packages/propose/bin/plans/bundle.mjs';
 import { ANCHOR_AIMS } from './device/fact-register.mjs';
-import { replay as replayToys } from './device/minus-toys-plan.mjs';
+import { replay as replayToys } from '../packages/propose/bin/plans/minus-toys-plan.mjs';
 import { committedWinners, designBlock, forkBlocks, gitState } from './winner-census.mjs';
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '..');

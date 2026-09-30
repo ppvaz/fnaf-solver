@@ -3,7 +3,7 @@
  * `core.sensing-shim` in docs/architecture/generated/legacy-paths.json). The
  * Sim observer lives in `@sixam/play/sim` (packages/play/src/venues/sim/),
  * whose export set is exactly the one this subpath had. It stays because
- * tools/device/minus-toys-plan.mjs, whose bytes every Minus Toys bundle
+ * packages/propose/bin/plans/minus-toys-plan.mjs, whose bytes every Minus Toys bundle
  * hashes into engine.sourceSha256, imports it. New code imports
  * `@sixam/play/sim`.
  */

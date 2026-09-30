@@ -13,9 +13,9 @@
 //
 // Results must be bit-identical to the serial path. The seeds are named, not
 // counted, so a chunk boundary cannot change which seeds ran.
-import { build, devicePlan } from './recipe.mjs';
+import { build, devicePlan } from '../../packages/propose/bin/plans/recipe.mjs';
 import { jitterPlan, parsePlanText, HUMAN_SLACK_MS } from './human-gate.mjs';
-import { replay } from './recipe.mjs';
+import { replay } from '../../packages/propose/bin/plans/recipe.mjs';
 
 const cache = new Map();
 

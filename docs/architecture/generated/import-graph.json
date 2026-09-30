@@ -427,6 +427,12 @@
       ]
     },
     {
+      "file": "packages/play/bin/phone/actuator.mjs",
+      "imports": [
+        "@sixam/source/fnaf2"
+      ]
+    },
+    {
       "file": "packages/play/src/campaign/adb-bridge.js",
       "imports": [
         "./companion-capture.js",
@@ -943,6 +949,75 @@
         "node:fs",
         "node:os",
         "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/plans/artifact-commands.mjs",
+      "imports": [
+        "./recipe.mjs",
+        "@sixam/source",
+        "@sixam/source/fnaf2"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/plans/bundle.mjs",
+      "imports": [
+        "./artifact-commands.mjs",
+        "./minus-3-plan.mjs",
+        "./minus-toys-plan.mjs",
+        "./recipe.mjs",
+        "@sixam/kernel/contracts",
+        "@sixam/source",
+        "@sixam/source/fnaf2",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/plans/emit.mjs",
+      "imports": [
+        "./bundle.mjs",
+        "node:fs"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/plans/minus-3-plan.mjs",
+      "imports": [
+        "../../../play/bin/probe/arm-verification.mjs",
+        "@sixam/propose/seeds",
+        "@sixam/propose/strategies/minus-3",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/plans/minus-toys-plan.mjs",
+      "imports": [
+        "../../../play/bin/probe/arm-verification.mjs",
+        "@sixam/play/sim",
+        "@sixam/propose/fnaf2",
+        "@sixam/propose/seeds",
+        "@sixam/source",
+        "@sixam/source/fnaf2",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/plans/recipe.mjs",
+      "imports": [
+        "../../parked/minus7/hid-device-pilot.mjs",
+        "@sixam/source/fnaf2",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/parked/minus7/hid-device-pilot.mjs",
+      "imports": [
+        "../../../play/bin/phone/actuator.mjs",
+        "../../../review/src/stat.mjs",
+        "@sixam/source/fnaf2",
         "node:url"
       ]
     },
@@ -1533,6 +1608,16 @@
         "node:crypto",
         "node:fs",
         "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/review/test/stat.test.mjs",
+      "imports": [
+        "../src/stat.mjs",
+        "node:assert/strict",
+        "node:child_process",
         "node:path",
         "node:url"
       ]
@@ -2288,20 +2373,6 @@
       ]
     },
     {
-      "file": "tools/device/actuator.mjs",
-      "imports": [
-        "@sixam/source/fnaf2"
-      ]
-    },
-    {
-      "file": "tools/device/artifact-commands.mjs",
-      "imports": [
-        "./recipe.mjs",
-        "@sixam/source",
-        "@sixam/source/fnaf2"
-      ]
-    },
-    {
       "file": "tools/device/audio-players.mjs",
       "imports": [
         "./local-profile.mjs",
@@ -2316,22 +2387,6 @@
         "../../packages/play/src/campaign/physical-ports.js",
         "./local-profile.mjs",
         "node:fs"
-      ]
-    },
-    {
-      "file": "tools/device/bundle.mjs",
-      "imports": [
-        "./artifact-commands.mjs",
-        "./minus-3-plan.mjs",
-        "./minus-toys-plan.mjs",
-        "./recipe.mjs",
-        "@sixam/kernel/contracts",
-        "@sixam/source",
-        "@sixam/source/fnaf2",
-        "node:crypto",
-        "node:fs",
-        "node:path",
-        "node:url"
       ]
     },
     {
@@ -2360,8 +2415,8 @@
     {
       "file": "tools/device/death-prediction.mjs",
       "imports": [
-        "./bundle.mjs",
-        "./minus-toys-plan.mjs",
+        "../../packages/propose/bin/plans/bundle.mjs",
+        "../../packages/propose/bin/plans/minus-toys-plan.mjs",
         "node:fs",
         "node:url"
       ]
@@ -2369,8 +2424,8 @@
     {
       "file": "tools/device/deathchart.mjs",
       "imports": [
+        "../../packages/review/src/stat.mjs",
         "../chrome.mjs",
-        "../stat.mjs",
         "./human-gate.mjs",
         "@sixam/source/fnaf2",
         "node:child_process",
@@ -2381,10 +2436,10 @@
     {
       "file": "tools/device/device-lane.mjs",
       "imports": [
+        "../../packages/play/bin/phone/actuator.mjs",
         "../../packages/play/src/campaign/artifact-executor.js",
         "../../packages/play/src/campaign/hid-schedule.js",
-        "./actuator.mjs",
-        "./artifact-commands.mjs",
+        "../../packages/propose/bin/plans/artifact-commands.mjs",
         "@sixam/kernel/contracts",
         "@sixam/source",
         "@sixam/source/fnaf2",
@@ -2394,16 +2449,9 @@
       ]
     },
     {
-      "file": "tools/device/emit.mjs",
-      "imports": [
-        "./bundle.mjs",
-        "node:fs"
-      ]
-    },
-    {
       "file": "tools/device/epoch-scan.mjs",
       "imports": [
-        "./minus-toys-plan.mjs",
+        "../../packages/propose/bin/plans/minus-toys-plan.mjs",
         "node:fs"
       ]
     },
@@ -2584,8 +2632,8 @@
     {
       "file": "tools/device/gate-worker.mjs",
       "imports": [
-        "./human-gate.mjs",
-        "./recipe.mjs"
+        "../../packages/propose/bin/plans/recipe.mjs",
+        "./human-gate.mjs"
       ]
     },
     {
@@ -2606,8 +2654,8 @@
     {
       "file": "tools/device/human-gate.mjs",
       "imports": [
-        "../stat.mjs",
-        "./recipe.mjs",
+        "../../packages/propose/bin/plans/recipe.mjs",
+        "../../packages/review/src/stat.mjs",
         "@sixam/source/fnaf2",
         "node:fs",
         "node:url"
@@ -2632,43 +2680,23 @@
       ]
     },
     {
-      "file": "tools/device/minus-3-plan.mjs",
-      "imports": [
-        "./arm-verification.mjs",
-        "@sixam/research/seeds",
-        "@sixam/research/strategies/minus-3",
-        "node:url"
-      ]
-    },
-    {
       "file": "tools/device/minus-toys-jitter.mjs",
       "imports": [
-        "./minus-toys-plan.mjs",
+        "../../packages/propose/bin/plans/minus-toys-plan.mjs",
         "node:url"
       ]
     },
     {
       "file": "tools/device/minus-toys-margin.mjs",
       "imports": [
-        "./minus-toys-plan.mjs",
+        "../../packages/propose/bin/plans/minus-toys-plan.mjs",
         "@sixam/source"
-      ]
-    },
-    {
-      "file": "tools/device/minus-toys-plan.mjs",
-      "imports": [
-        "./arm-verification.mjs",
-        "@sixam/core/control",
-        "@sixam/core/mechanics",
-        "@sixam/core/sensing",
-        "@sixam/research/seeds",
-        "node:url"
       ]
     },
     {
       "file": "tools/device/minus3-frame-light.mjs",
       "imports": [
-        "./minus-3-plan.mjs",
+        "../../packages/propose/bin/plans/minus-3-plan.mjs",
         "@sixam/propose/seeds",
         "@sixam/source",
         "@sixam/source/fnaf2",
@@ -2708,11 +2736,11 @@
     {
       "file": "tools/device/night7-presets.mjs",
       "imports": [
+        "../../packages/play/bin/phone/actuator.mjs",
+        "../../packages/propose/bin/plans/bundle.mjs",
+        "../../packages/propose/bin/plans/minus-toys-plan.mjs",
         "../winner-census.mjs",
         "../winner-phase-census.mjs",
-        "./actuator.mjs",
-        "./bundle.mjs",
-        "./minus-toys-plan.mjs",
         "@sixam/propose/seeds",
         "@sixam/source/fnaf2",
         "node:crypto",
@@ -2723,11 +2751,11 @@
     {
       "file": "tools/device/night7-robustness-field.mjs",
       "imports": [
+        "../../packages/play/bin/phone/actuator.mjs",
+        "../../packages/propose/bin/plans/artifact-commands.mjs",
+        "../../packages/propose/bin/plans/minus-toys-plan.mjs",
         "../winner-census.mjs",
         "../winner-phase-census.mjs",
-        "./actuator.mjs",
-        "./artifact-commands.mjs",
-        "./minus-toys-plan.mjs",
         "./night7-presets.mjs",
         "@sixam/source",
         "@sixam/source/fnaf2",
@@ -2741,9 +2769,9 @@
       "file": "tools/device/night7-robustness.mjs",
       "imports": [
         "../../packages/play/src/campaign/night-anchor.js",
+        "../../packages/propose/bin/plans/bundle.mjs",
         "../winner-census.mjs",
         "../winner-phase-census.mjs",
-        "./bundle.mjs",
         "./fact-register.mjs",
         "./night7-presets.mjs",
         "@sixam/source/fnaf2",
@@ -2802,8 +2830,8 @@
     {
       "file": "tools/device/policy-ir.mjs",
       "imports": [
-        "./arm-verification.mjs",
-        "./minus-toys-plan.mjs",
+        "../../packages/play/bin/probe/arm-verification.mjs",
+        "../../packages/propose/bin/plans/minus-toys-plan.mjs",
         "@sixam/propose/policy",
         "@sixam/source"
       ]
@@ -2830,14 +2858,6 @@
       ]
     },
     {
-      "file": "tools/device/recipe.mjs",
-      "imports": [
-        "../model/hid-device-pilot.mjs",
-        "@sixam/core/mechanics",
-        "node:url"
-      ]
-    },
-    {
       "file": "tools/device/run-report.mjs",
       "imports": [
         "node:fs",
@@ -2857,8 +2877,8 @@
     {
       "file": "tools/device/strategy-night-matrix.mjs",
       "imports": [
-        "./artifact-commands.mjs",
-        "./bundle.mjs",
+        "../../packages/propose/bin/plans/artifact-commands.mjs",
+        "../../packages/propose/bin/plans/bundle.mjs",
         "@sixam/source/fnaf2",
         "node:fs",
         "node:path",
@@ -2877,9 +2897,9 @@
     {
       "file": "tools/device/test-actuator.mjs",
       "imports": [
+        "../../packages/play/bin/phone/actuator.mjs",
         "../model/closed-loop-reclaim.mjs",
         "../model/stock-device-pilot.mjs",
-        "./actuator.mjs",
         "@sixam/source/fnaf2",
         "node:url"
       ]
@@ -2896,8 +2916,8 @@
     {
       "file": "tools/device/test-artifact-animation-gates.mjs",
       "imports": [
-        "./artifact-commands.mjs",
-        "./recipe.mjs",
+        "../../packages/propose/bin/plans/artifact-commands.mjs",
+        "../../packages/propose/bin/plans/recipe.mjs",
         "@sixam/source/fnaf2"
       ]
     },
@@ -2925,8 +2945,8 @@
       "file": "tools/device/test-bundle.mjs",
       "imports": [
         "../../packages/play/src/campaign/artifact-executor.js",
-        "./artifact-commands.mjs",
-        "./bundle.mjs",
+        "../../packages/propose/bin/plans/artifact-commands.mjs",
+        "../../packages/propose/bin/plans/bundle.mjs",
         "@sixam/kernel/contracts",
         "node:child_process",
         "node:fs",
@@ -2958,7 +2978,7 @@
     {
       "file": "tools/device/test-device-input-gaps.mjs",
       "imports": [
-        "./recipe.mjs",
+        "../../packages/propose/bin/plans/recipe.mjs",
         "@sixam/source/fnaf2",
         "node:url"
       ]
@@ -2977,7 +2997,7 @@
     {
       "file": "tools/device/test-fact-register.mjs",
       "imports": [
-        "./bundle.mjs",
+        "../../packages/propose/bin/plans/bundle.mjs",
         "./fact-register.mjs",
         "@sixam/kernel/contracts",
         "node:child_process",
@@ -3073,8 +3093,8 @@
     {
       "file": "tools/device/test-human-gate.mjs",
       "imports": [
-        "./human-gate.mjs",
-        "./recipe.mjs"
+        "../../packages/propose/bin/plans/recipe.mjs",
+        "./human-gate.mjs"
       ]
     },
     {
@@ -3103,10 +3123,10 @@
     {
       "file": "tools/device/test-minus-toys-plan.mjs",
       "imports": [
-        "./arm-verification.mjs",
-        "./artifact-commands.mjs",
-        "./bundle.mjs",
-        "./minus-toys-plan.mjs",
+        "../../packages/play/bin/probe/arm-verification.mjs",
+        "../../packages/propose/bin/plans/artifact-commands.mjs",
+        "../../packages/propose/bin/plans/bundle.mjs",
+        "../../packages/propose/bin/plans/minus-toys-plan.mjs",
         "@sixam/source/fnaf2",
         "node:child_process",
         "node:fs",
@@ -3117,7 +3137,7 @@
     {
       "file": "tools/device/test-minus3-frame-light.mjs",
       "imports": [
-        "./minus-3-plan.mjs",
+        "../../packages/propose/bin/plans/minus-3-plan.mjs",
         "./minus3-frame-light.mjs",
         "node:fs",
         "node:path",
@@ -3137,10 +3157,10 @@
     {
       "file": "tools/device/test-night-matrix.mjs",
       "imports": [
+        "../../packages/propose/bin/plans/recipe.mjs",
+        "../../packages/review/src/stat.mjs",
         "../pool.mjs",
-        "../stat.mjs",
         "./human-gate.mjs",
-        "./recipe.mjs",
         "@sixam/source/fnaf2",
         "node:fs",
         "node:path",
@@ -3162,10 +3182,10 @@
     {
       "file": "tools/device/test-night7-presets.mjs",
       "imports": [
+        "../../packages/play/bin/phone/actuator.mjs",
+        "../../packages/propose/bin/plans/minus-toys-plan.mjs",
         "../winner-census.mjs",
         "../winner-phase-census.mjs",
-        "./actuator.mjs",
-        "./minus-toys-plan.mjs",
         "./night7-presets.mjs",
         "./night7-robustness-field.mjs",
         "./night7-robustness.mjs",
@@ -3183,7 +3203,7 @@
     {
       "file": "tools/device/test-policy-interpreter.mjs",
       "imports": [
-        "./minus-toys-plan.mjs",
+        "../../packages/propose/bin/plans/minus-toys-plan.mjs",
         "./policy-interpreter.mjs",
         "./policy-ir.mjs",
         "@sixam/source/fnaf2"
@@ -3211,16 +3231,16 @@
     {
       "file": "tools/device/test-recipe.mjs",
       "imports": [
-        "./recipe.mjs",
+        "../../packages/propose/bin/plans/recipe.mjs",
         "./test-hid-trace.mjs"
       ]
     },
     {
       "file": "tools/device/test-schedule-economy.mjs",
       "imports": [
-        "./bundle.mjs",
-        "./minus-toys-plan.mjs",
-        "./recipe.mjs",
+        "../../packages/propose/bin/plans/bundle.mjs",
+        "../../packages/propose/bin/plans/minus-toys-plan.mjs",
+        "../../packages/propose/bin/plans/recipe.mjs",
         "node:fs",
         "node:path",
         "node:url"
@@ -3239,9 +3259,9 @@
     {
       "file": "tools/device/test-seam-slack.mjs",
       "imports": [
-        "./artifact-commands.mjs",
-        "./bundle.mjs",
-        "./recipe.mjs",
+        "../../packages/propose/bin/plans/artifact-commands.mjs",
+        "../../packages/propose/bin/plans/bundle.mjs",
+        "../../packages/propose/bin/plans/recipe.mjs",
         "node:fs",
         "node:path",
         "node:url"
@@ -3276,7 +3296,7 @@
       "imports": [
         "../../packages/play/src/campaign/campaign-bundle.js",
         "../../packages/play/src/campaign/campaign.js",
-        "./bundle.mjs",
+        "../../packages/propose/bin/plans/bundle.mjs",
         "node:fs",
         "node:os",
         "node:path",
@@ -3286,8 +3306,8 @@
     {
       "file": "tools/device/windtrace.mjs",
       "imports": [
+        "../../packages/propose/bin/plans/recipe.mjs",
         "./human-gate.mjs",
-        "./recipe.mjs",
         "@sixam/source/fnaf2",
         "node:child_process",
         "node:fs"
@@ -3305,7 +3325,7 @@
     {
       "file": "tools/evidence.js",
       "imports": [
-        "./device/bundle.mjs",
+        "../packages/propose/bin/plans/bundle.mjs",
         "@sixam/kernel/contracts",
         "@sixam/propose/experiment",
         "@sixam/review/envelopes",
@@ -3390,8 +3410,8 @@
     {
       "file": "tools/latenesssweep.mjs",
       "imports": [
+        "../packages/propose/parked/minus7/hid-device-pilot.mjs",
         "./model/closed-loop-reclaim.mjs",
-        "./model/hid-device-pilot.mjs",
         "@sixam/source/fnaf2",
         "node:url"
       ]
@@ -3462,25 +3482,25 @@
     {
       "file": "tools/minus7/cyclelengthsearch.mjs",
       "imports": [
+        "../../packages/propose/bin/plans/recipe.mjs",
+        "../../packages/propose/parked/minus7/hid-device-pilot.mjs",
         "../device/human-gate.mjs",
-        "../device/recipe.mjs",
-        "../model/hid-device-pilot.mjs",
         "@sixam/source/fnaf2"
       ]
     },
     {
       "file": "tools/minus7/devicetimesearch.mjs",
       "imports": [
-        "../device/human-gate.mjs",
-        "../device/recipe.mjs",
-        "../model/hid-device-pilot.mjs"
+        "../../packages/propose/bin/plans/recipe.mjs",
+        "../../packages/propose/parked/minus7/hid-device-pilot.mjs",
+        "../device/human-gate.mjs"
       ]
     },
     {
       "file": "tools/minus7/geometrysearch.mjs",
       "imports": [
+        "../../packages/propose/bin/plans/recipe.mjs",
         "../device/human-gate.mjs",
-        "../device/recipe.mjs",
         "@sixam/kernel/contracts",
         "node:fs",
         "node:path"
@@ -3489,25 +3509,25 @@
     {
       "file": "tools/minus7/i10latency.mjs",
       "imports": [
-        "../device/human-gate.mjs",
-        "../device/recipe.mjs",
-        "../model/hid-device-pilot.mjs"
+        "../../packages/propose/bin/plans/recipe.mjs",
+        "../../packages/propose/parked/minus7/hid-device-pilot.mjs",
+        "../device/human-gate.mjs"
       ]
     },
     {
       "file": "tools/minus7/n7probe.mjs",
       "imports": [
+        "../../packages/propose/bin/plans/recipe.mjs",
         "../device/human-gate.mjs",
-        "../device/recipe.mjs",
         "@sixam/source/fnaf2"
       ]
     },
     {
       "file": "tools/minus7/paramsearch.mjs",
       "imports": [
+        "../../packages/propose/bin/plans/recipe.mjs",
+        "../../packages/propose/parked/minus7/hid-device-pilot.mjs",
         "../device/human-gate.mjs",
-        "../device/recipe.mjs",
-        "../model/hid-device-pilot.mjs",
         "@sixam/kernel/contracts",
         "@sixam/source/fnaf2",
         "node:child_process",
@@ -3525,8 +3545,8 @@
     {
       "file": "tools/minus7/robustify.mjs",
       "imports": [
+        "../../packages/propose/bin/plans/recipe.mjs",
         "../device/human-gate.mjs",
-        "../device/recipe.mjs",
         "@sixam/source/fnaf2",
         "node:child_process"
       ]
@@ -3548,10 +3568,10 @@
     {
       "file": "tools/minus7/test-search.mjs",
       "imports": [
+        "../../packages/propose/bin/plans/recipe.mjs",
+        "../../packages/propose/parked/minus7/hid-device-pilot.mjs",
         "../constrainedsearch.mjs",
         "../device/human-gate.mjs",
-        "../device/recipe.mjs",
-        "../model/hid-device-pilot.mjs",
         "./paramsearch.mjs",
         "./sim.mjs",
         "@sixam/source/fnaf2"
@@ -3567,7 +3587,7 @@
     {
       "file": "tools/minustoystest.mjs",
       "imports": [
-        "./stat.mjs",
+        "../packages/review/src/stat.mjs",
         "@sixam/propose/experiment",
         "@sixam/propose/seeds",
         "node:url"
@@ -3576,24 +3596,15 @@
     {
       "file": "tools/model/closed-loop-reclaim.mjs",
       "imports": [
-        "./hid-device-pilot.mjs",
+        "../../packages/propose/parked/minus7/hid-device-pilot.mjs",
         "./stock-device-pilot.mjs",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/model/hid-device-pilot.mjs",
-      "imports": [
-        "../device/actuator.mjs",
-        "../stat.mjs",
-        "@sixam/core/mechanics",
         "node:url"
       ]
     },
     {
       "file": "tools/model/reactive-pilot.mjs",
       "imports": [
-        "../stat.mjs",
+        "../../packages/review/src/stat.mjs",
         "@sixam/source/fnaf2",
         "node:url",
         "node:worker_threads"
@@ -3602,8 +3613,8 @@
     {
       "file": "tools/model/stock-device-pilot.mjs",
       "imports": [
-        "../device/actuator.mjs",
-        "../stat.mjs",
+        "../../packages/play/bin/phone/actuator.mjs",
+        "../../packages/review/src/stat.mjs",
         "@sixam/source/fnaf2",
         "node:url"
       ]
@@ -3619,9 +3630,9 @@
     {
       "file": "tools/nightloop.mjs",
       "imports": [
+        "../packages/review/src/stat.mjs",
         "./nightloop-run.mjs",
         "./pool.mjs",
-        "./stat.mjs",
         "@sixam/source/fnaf2"
       ]
     },
@@ -3678,7 +3689,7 @@
     {
       "file": "tools/policy.mjs",
       "imports": [
-        "./device/actuator.mjs",
+        "../packages/play/bin/phone/actuator.mjs",
         "@sixam/source/fnaf2"
       ]
     },
@@ -3704,7 +3715,7 @@
     {
       "file": "tools/policyequivalencetest.mjs",
       "imports": [
-        "./device/minus-toys-plan.mjs",
+        "../packages/propose/bin/plans/minus-toys-plan.mjs",
         "./device/policy-equivalence.mjs",
         "./device/policy-ir.mjs"
       ]
@@ -3730,11 +3741,11 @@
     {
       "file": "tools/policytest.mjs",
       "imports": [
+        "../packages/review/src/stat.mjs",
         "./cyclesearch.mjs",
         "./model/reactive-pilot.mjs",
         "./policy.mjs",
         "./policybaselines.mjs",
-        "./stat.mjs",
         "@sixam/source/fnaf2",
         "node:crypto",
         "node:fs",
@@ -3768,8 +3779,8 @@
     {
       "file": "tools/reactivetest.mjs",
       "imports": [
-        "../tools/device/minus-toys-plan.mjs",
-        "./stat.mjs",
+        "../packages/propose/bin/plans/minus-toys-plan.mjs",
+        "../packages/review/src/stat.mjs",
         "@sixam/play/sim",
         "@sixam/propose/fnaf2",
         "@sixam/source/fnaf2",
@@ -3779,7 +3790,7 @@
     {
       "file": "tools/rebuild-options-census.mjs",
       "imports": [
-        "./device/bundle.mjs",
+        "../packages/propose/bin/plans/bundle.mjs",
         "./device/night7-presets.mjs",
         "./recompile/model-draw-trace.mjs",
         "./winner-census.mjs",
@@ -3918,9 +3929,9 @@
       "file": "tools/recompile/phone-encounter-replay.mjs",
       "imports": [
         "../../packages/play/src/sensors/fnaf2/button-strokes.js",
+        "../../packages/propose/bin/plans/bundle.mjs",
+        "../../packages/propose/bin/plans/minus-toys-plan.mjs",
         "../../packages/review/venue-grid/encounter-replay.mjs",
-        "../device/bundle.mjs",
-        "../device/minus-toys-plan.mjs",
         "./compare-draw-trace.mjs",
         "./compare-schedule-replay.mjs",
         "./model-draw-trace.mjs",
@@ -4029,8 +4040,8 @@
     {
       "file": "tools/recompile/schedule-to-input.mjs",
       "imports": [
-        "../device/bundle.mjs",
-        "../device/minus-toys-plan.mjs",
+        "../../packages/propose/bin/plans/bundle.mjs",
+        "../../packages/propose/bin/plans/minus-toys-plan.mjs",
         "@sixam/core/control",
         "node:crypto",
         "node:fs",
@@ -4101,7 +4112,7 @@
     {
       "file": "tools/recompile/test-schedule-replay.mjs",
       "imports": [
-        "../device/minus-toys-plan.mjs",
+        "../../packages/propose/bin/plans/minus-toys-plan.mjs",
         "./compare-schedule-replay.mjs",
         "./model-draw-trace.mjs",
         "./schedule-to-input.mjs",
@@ -4114,7 +4125,7 @@
     {
       "file": "tools/reducedmodeltest.mjs",
       "imports": [
-        "./device/minus-toys-plan.mjs",
+        "../packages/propose/bin/plans/minus-toys-plan.mjs",
         "@sixam/source/fnaf2"
       ]
     },
@@ -4184,8 +4195,8 @@
     {
       "file": "tools/test-encounter-fidelity.mjs",
       "imports": [
+        "../packages/propose/bin/plans/bundle.mjs",
         "../packages/review/venue-grid/encounter-replay.mjs",
-        "./device/bundle.mjs",
         "./winner-census.mjs",
         "@sixam/source/fnaf2",
         "node:assert/strict",
@@ -4307,19 +4318,9 @@
       ]
     },
     {
-      "file": "tools/test-stat.mjs",
-      "imports": [
-        "./stat.mjs",
-        "node:assert/strict",
-        "node:child_process",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
       "file": "tools/test-winner-census.mjs",
       "imports": [
-        "./device/bundle.mjs",
+        "../packages/propose/bin/plans/bundle.mjs",
         "./winner-census.mjs",
         "./winner-phase-census.mjs",
         "@sixam/kernel/contracts",
@@ -4373,9 +4374,9 @@
     {
       "file": "tools/ventreacttest.mjs",
       "imports": [
+        "../packages/propose/bin/plans/minus-toys-plan.mjs",
+        "../packages/review/src/stat.mjs",
         "./device/minus-toys-jitter.mjs",
-        "./device/minus-toys-plan.mjs",
-        "./stat.mjs",
         "@sixam/play/sim",
         "@sixam/propose/fnaf2",
         "@sixam/source/fnaf2",
@@ -4385,7 +4386,7 @@
     {
       "file": "tools/winner-census.mjs",
       "imports": [
-        "./device/bundle.mjs",
+        "../packages/propose/bin/plans/bundle.mjs",
         "@sixam/propose/seeds",
         "@sixam/source/fnaf2",
         "node:child_process",
@@ -4399,9 +4400,9 @@
     {
       "file": "tools/winner-phase-census.mjs",
       "imports": [
-        "./device/bundle.mjs",
+        "../packages/propose/bin/plans/bundle.mjs",
+        "../packages/propose/bin/plans/minus-toys-plan.mjs",
         "./device/fact-register.mjs",
-        "./device/minus-toys-plan.mjs",
         "./winner-census.mjs",
         "@sixam/source/fnaf2",
         "node:crypto",

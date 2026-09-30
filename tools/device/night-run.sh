@@ -679,7 +679,7 @@ if [ "$NIGHT_ANCHOR_AIM_MS" != off ] && [ -z "${NIGHT_ANCHOR_PERIOD_MS:-}" ]; th
   fi
 fi
 # A bundle whose gate was scored at an anchor epoch (manifest.anchorEpochMs,
-# tools/device/bundle.mjs) holds only there: released unanchored it runs a phase
+# packages/propose/bin/plans/bundle.mjs) holds only there: released unanchored it runs a phase
 # no census has seen, on Night 6 one the model loses to Foxy. Refuse, do not
 # "release the old way".
 BUNDLE_ANCHOR_EPOCH_MS="$(node -e 'const v = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).anchorEpochMs; process.stdout.write(v === undefined ? "" : String(v))' "$BUNDLE/manifest.json" 2>/dev/null || true)"

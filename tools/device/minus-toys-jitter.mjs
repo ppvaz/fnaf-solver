@@ -34,7 +34,7 @@
 // Golden-Freddy-interval and Toy-cam-stall model gaps (plans/02 sec.5). Read
 // each figure as "in the model, under the calibrated ensemble".
 import { pathToFileURL } from 'node:url';
-import { replay, KNOBS0 } from './minus-toys-plan.mjs';
+import { replay, KNOBS0 } from '../../packages/propose/bin/plans/minus-toys-plan.mjs';
 
 const HOUR_MS = 70000;
 const NIGHT_MS = 420000;

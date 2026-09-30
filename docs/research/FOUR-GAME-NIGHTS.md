@@ -617,7 +617,7 @@ the same bank, and a fresh dump reproduces all four to the millisecond
 But **an animation length is not control readiness**. FNaF 2 is the worked
 example: `mmonitorDown` runs 367 ms, while the native frame trace has the mask
 button absent through 322 ms, faint at ~337 ms and fully visible only at
-**382.5 ms** — about one frame later. `tools/device/artifact-commands.mjs`
+**382.5 ms** — about one frame later. `packages/propose/bin/plans/artifact-commands.mjs`
 uses the measured figure, because the derived one sat 66.5 ms above the real
 visibility point and chasing it took the Minus Toys loop from 120/120 to
 0/120. So every figure above is a **lower bound**, to be replaced per leg by a

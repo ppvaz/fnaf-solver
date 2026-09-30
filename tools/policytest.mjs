@@ -19,7 +19,7 @@ import { sweep, runPolicy } from './policy.mjs';
 import { POLICIES } from './policybaselines.mjs';
 import { run as bbRun, DEFAULT_CYCLE, LEGACY_ANIMATION_INVALID_CYCLE } from './model/reactive-pilot.mjs';
 import { genCycle, KNOBS0, MIN } from './cyclesearch.mjs';
-import { formatRate } from './stat.mjs';
+import { formatRate } from '../packages/review/src/stat.mjs';
 
 const RUNS = +(process.env.POLICY_RUNS || 100);
 const SLACKS = [0, 20, 40, 60, 100];
@@ -79,7 +79,7 @@ function slackTable(nights = [4, 5, 6, 7]) {
 }
 
 function actuatorTable(nights = [4, 5, 6, 7]) {
-  console.log('\n== through tools/device/actuator.mjs (measured phone) ==');
+  console.log('\n== through packages/play/bin/phone/actuator.mjs (measured phone) ==');
   console.log('   launch lateness 110-300 ms, one draw per delivery frame, ' +
     'mask-seam monitor drops\n');
   console.log('policy'.padEnd(20) + nights.map(n => `night ${n}`.padStart(12)).join('') +

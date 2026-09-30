@@ -24,7 +24,7 @@ subpaths `@sixam/play/venues/phone/<name>`, `@sixam/play/phone/<name>`,
 host-global rule (no DOM, process or wall clock); `packages/play/test/belief.test.js`,
 `estimatortest.mjs`, `phaseclocktest.mjs` and `reactivetest.mjs` test them.
 `packages/core/src/sensing/index.js` stays as a shim over `@sixam/play/sim`
-for `tools/device/minus-toys-plan.mjs`, whose bytes every Minus Toys bundle
+for `packages/propose/bin/plans/minus-toys-plan.mjs`, whose bytes every Minus Toys bundle
 hashes (`core.sensing-shim`).
 
 **The campaign.** `CampaignStateMachine` (`src/campaign/campaign.js`) is the
@@ -107,3 +107,5 @@ moved them here, with the description their tool index gave them.
 | `test/estimator.test.js` | check | Plan 20 package 3 estimator contract: delayed fact timing, UNKNOWN risk preservation, stale-control recovery, calibration refusal, contradictory sensors, and transactional verification. |
 | `test/hid-report.test.js` | check | Parses the HID fixture and fails unless CAM 10/04/07 each receive a fresh contact-1 down/up while contact 0 stays on the light, with a final explicit two-contact release. Runs without a device. |
 | `test/testdata/hid-multitouch-smoke.json` | **device action/fixture** | Direct `/system/bin/hid FILE` replay that selects 6th Night, holds camera light as contact 0, and taps CAM 10/04/07 as independently released contact 1. Read `docs/device/HID-MULTITOUCH.md`; it is not focus-guarded by itself. |
+| `bin/phone/actuator.mjs` | internal module | The phone's measured failure modes as a simulator layer: launch lateness (110-300 ms, order-preserving queue, one draw per hold so flash lengths survive) and the mask-seam monitor drop at the desync census's band rates (5/7 under 140 ms, 4/8 at 140-180 ms, 0/17 at 180+). Draws come from its own seeded RNG so the game's roll stream is unmoved. The wind-overlap and vent-light drops are documented in its header as measured-but-unmodelled: no clean rate yet. |
+| `bin/probe/arm-verification.mjs` | module | Shared exact double-camera arming pairs: Minus 3 is `cam:8,cam:11`, Minus Toys is `cam:9,cam:11`; emits the plan-header vocabulary consumed by the native/host verifier. |

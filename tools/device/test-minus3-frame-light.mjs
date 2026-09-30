@@ -19,7 +19,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { KNOBS0, emitPlan } from './minus-3-plan.mjs';
+import { KNOBS0, emitPlan } from '../../packages/propose/bin/plans/minus-3-plan.mjs';
 import { WIN_KNOBS, MASK_GAP_MS, EDGES_SHA256, deviceEdges, edgesSha256, winRows, census }
   from './minus3-frame-light.mjs';
 

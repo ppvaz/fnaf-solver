@@ -224,7 +224,7 @@ Host-side schedulers and their simulator twins:
   `campaign-runner.js`, `service.js` (443) — all under `apps/device/src`, all
   carrying `device-executor-v1`, which is the binding that makes this
   family legible.
-- **Simulator pilots:** `tools/model/hid-device-pilot.mjs` (962),
+- **Simulator pilots:** `packages/propose/parked/minus7/hid-device-pilot.mjs` (962),
   `stock-device-pilot.mjs` (412), `reactive-pilot.mjs` (344),
   `closed-loop-reclaim.mjs` (155). `stock-device-pilot.mjs:3` states its
   relationship — it replays `tools/device/trial.sh`'s millisecond table — and
@@ -264,7 +264,7 @@ name is what makes a newcomer read the wrong file.
 
 ## 10. Route plan emitters — binding: `NONE` on the shape, `GATE` per route
 
-`tools/device/minus-toys-plan.mjs` (554) and `minus-3-plan.mjs` (239) implement
+`packages/propose/bin/plans/minus-toys-plan.mjs` (554) and `minus-3-plan.mjs` (239) implement
 the *same undeclared interface*: `KNOBS0`, `build()`, `schedule()`,
 `replay()`, `emitPlan()`, plus a census entry point (`phaseScan` / `gate`).
 `minus3-frame-light.mjs` (145) is a third shape for the same job
@@ -429,7 +429,7 @@ green.
 
 | Twin | Lines | Verdict |
 |---|---|---|
-| `tools/stat.mjs` / `tools/stat.py` | 129 / 113 | **`GATE`, keep.** Same five functions; `tools/test-stat.mjs:49` spawns `python3` and compares. The model pair. |
+| `packages/review/src/stat.mjs` / `packages/review/src/stat.py` | 129 / 113 | **`GATE`, keep.** Same five functions; `packages/review/test/stat.test.mjs:49` spawns `python3` and compares. The model pair. |
 | `tools/device/closed-families.mjs` / `tools/invent/closed-families.mjs` | 70 / 134 | Two registers of closed policy families — device-plan surface vs privileged genome surface. Same register, two classifiers. |
 | `tools/invent/search.mjs` / `tools/minus7/search.mjs` | 248 / 189 | Two constrained searches; see §12. |
 | `tools/minus7/cycle.mjs` / `tools/minustoys/cycle.mjs` | 244 / 263 | Same shape, different route. `tools/minustoys/` holds **exactly one file**. **Decided 2026-09-08: keep.** One directory per route is the convention; a move would touch importers, the `TOOLS.md` row and the generated catalogs for no behaviour change, and Minus Toys is the live Night 5/6 route. |
@@ -470,7 +470,7 @@ A cleanup should reuse one of these five rather than invent a sixth:
    got a correction, and the stale copy still carried the docstring claiming it
    was frame-for-frame identical. The fix expresses boxes as **fractions** so a
    2400x1080 screencap caller and a 1280x576 video caller evaluate one rule.
-2. **Cross-language spawn comparison.** `tools/test-stat.mjs` imports the JS
+2. **Cross-language spawn comparison.** `packages/review/test/stat.test.mjs` imports the JS
    module and spawns `python3` against `stat.py` in the same test.
 3. **Shared JSONL vectors read from both languages.**
    `packages/kernel/test/contract-vectors.py` over `packages/source/test/fixtures/*.jsonl`.

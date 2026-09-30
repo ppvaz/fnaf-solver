@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import { score, windowCode } from '../packages/review/venue-grid/encounter-replay.mjs';
 import { Sim } from '@sixam/source/fnaf2';
 import { applySimOpts } from './winner-census.mjs';
-import { STRATEGY_REGISTRY, validateWinner } from './device/bundle.mjs';
+import { STRATEGY_REGISTRY, validateWinner } from '../packages/propose/bin/plans/bundle.mjs';
 
 assert.deepEqual(score('..CB?', '.'), {
   hits: 0, occ: 2, read: 4, agreeRead: 1, comparedRead: 1, unknownModel: 3,

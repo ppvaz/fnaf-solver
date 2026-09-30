@@ -85,7 +85,7 @@ So this is "new script + new lesson ladder + strategy selection UI," not a new e
    control. One 50 ms HID geometry has armed the state once on the phone
    (`captures/n2-doublecam-hid-0003`).
 
-   **Device half, 2026-08-28:** `tools/device/minus-toys-plan.mjs` ports that
+   **Device half, 2026-08-28:** `packages/propose/bin/plans/minus-toys-plan.mjs` ports that
    loop into the on-phone interpreter's plan format — an opening that arms the
    split before 0:05, then a repeating 10 s wind/mask cycle — and
    `trial.sh DEVICE_POLICY=minus-toys` runs it through the same title-safe,

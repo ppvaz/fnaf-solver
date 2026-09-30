@@ -171,7 +171,7 @@ async function jsonFile(path, label) {
 
 async function campaignBundle(path, spec, profileId) {
   if (!path) return null;
-  const { validateBundle } = await import(pathToFileURL(join(ROOT, 'tools/device/bundle.mjs')).href);
+  const { validateBundle } = await import(pathToFileURL(join(ROOT, 'packages/propose/bin/plans/bundle.mjs')).href);
   const validated = validateBundle(resolve(path));
   if (!validated.compiled) throw new Error('campaign bundle has no compiled artifact');
   if (validated.profile.id !== profileId) throw new Error(`campaign bundle profile ${validated.profile.id} does not match ${profileId}`);
@@ -197,7 +197,7 @@ async function campaignBundle(path, spec, profileId) {
 
 async function campaignTiming(path, nights) {
   if (!path) return {};
-  const { validateBundle } = await import(pathToFileURL(join(ROOT, 'tools/device/bundle.mjs')).href);
+  const { validateBundle } = await import(pathToFileURL(join(ROOT, 'packages/propose/bin/plans/bundle.mjs')).href);
   const validated = validateBundle(resolve(path));
   if (!validated.compiled) throw new Error('campaign bundle has no compiled artifact');
   const requested = new Set(nights);

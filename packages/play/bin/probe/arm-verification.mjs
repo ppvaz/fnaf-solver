@@ -1,5 +1,5 @@
 // Camera pairs that identify the two supported double-camera glitch arms.
-// Values use the same `cam:N` vocabulary as cue-helper and policy-v1.
+// Values use the same `cam:N` vocabulary as the Companion and policy-v1.
 export const DOUBLE_GLITCH_CAMERA_PAIRS = Object.freeze({
   minus3: Object.freeze(['cam:8', 'cam:11']),
   minusToys: Object.freeze(['cam:9', 'cam:11']),

@@ -398,7 +398,7 @@ export const MODEL = {
 // FNaF 2 is the worked example and the warning: `mmonitorDown` runs 0.367 s,
 // but the native frame trace has the mask button absent through 322 ms, faint
 // at ~337 ms and fully visible only at **382.5 ms**, and
-// `tools/device/artifact-commands.mjs` uses the measured figure because the
+// `packages/propose/bin/plans/artifact-commands.mjs` uses the measured figure because the
 // derived one sat 66.5 ms above the real visibility point. Treat every number
 // below as a **lower bound** on the leg, to be replaced per leg by a device
 // measurement before any FNaF 4 schedule is bound to it.

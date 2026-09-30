@@ -8,7 +8,7 @@
 // the device target.
 //
 // Every number this file prints is a SIMULATOR number. It prices the
-// `hidpilot n6 target` pilot through `tools/device/actuator.mjs`, which models
+// `hidpilot n6 target` pilot through `packages/play/bin/phone/actuator.mjs`, which models
 // launch lateness and the mask seam and nothing else -- not the runner's
 // blocking shell, not the classifier's tail, not `screenrecord` contention.
 // The actuator's own header says survival under it is still survival in a
@@ -36,7 +36,7 @@
 //   node tools/latenesssweep.mjs --runs=200 --assert
 import { pathToFileURL } from 'node:url';
 import * as C from '@sixam/source/fnaf2';
-import { run as hidRun } from './model/hid-device-pilot.mjs';
+import { run as hidRun } from '../packages/propose/parked/minus7/hid-device-pilot.mjs';
 import { N6_TARGET, NIGHTS } from './model/closed-loop-reclaim.mjs';
 
 const seedOf = (i) => (i * 2246822519) >>> 0;
@@ -165,7 +165,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const known = ['--ablate', '--assert', '--bands'];
   const bad = args.filter(a => !known.includes(a) && !a.startsWith('--runs='));
   if (bad.length) throw new Error(`unknown argument: ${bad.join(', ')}`);
-  console.log(`hidpilot n6 target through tools/device/actuator.mjs, ${runs} seeds per cell.`);
+  console.log(`hidpilot n6 target through packages/play/bin/phone/actuator.mjs, ${runs} seeds per cell.`);
   console.log('Every figure here is a simulator figure.');
   // `--assert` alone prints no table: it is the suite's entry point and the
   // sweep costs three minutes at 200 seeds, while the pins cost sixteen cells.

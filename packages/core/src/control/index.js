@@ -10,7 +10,7 @@
  *   (`core.control-policy-shim`).
  *
  * Its export set is the one it had before either move. It stays because
- * tools/device/minus-toys-plan.mjs, whose bytes every Minus Toys bundle hashes
+ * packages/propose/bin/plans/minus-toys-plan.mjs, whose bytes every Minus Toys bundle hashes
  * into engine.sourceSha256, imports it, as do two tools/recompile modules.
  * New code imports `@sixam/source` and `@sixam/propose`.
  */

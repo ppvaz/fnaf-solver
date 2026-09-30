@@ -19,7 +19,7 @@
 // Minus Toys counterpart. It is a measurement of the MODEL (no randomness), and
 // it inherits the engine's Golden-Freddy-interval and Toy-cam-stall gaps
 // (plans/02 sec.5) -- read it as "the model has at most this much slack here".
-import { OPENING, LOOP, replay } from './minus-toys-plan.mjs';
+import { OPENING, LOOP, replay } from '../../packages/propose/bin/plans/minus-toys-plan.mjs';
 import { FNAF2_CONTROL_VOCABULARY as V } from '@sixam/source';
 
 const arg = (k, d) => {

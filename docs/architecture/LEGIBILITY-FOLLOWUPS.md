@@ -214,7 +214,7 @@ aggregate field and add a multi-evaluation regression test.
 **Status:** OPEN — confirm after the current dirty research changes settle
 **Owner:** `packages/propose` (was `packages/research`), device plan consumers
 **Evidence:** current-tree path `packages/propose/src/experiment/seeds.js:64` (not yet
-versioned in this audit commit), [`minus-3-plan.mjs` (line 211)](../../tools/device/minus-3-plan.mjs)
+versioned in this audit commit), [`minus-3-plan.mjs` (line 211)](../../packages/propose/bin/plans/minus-3-plan.mjs)
 
 The current working tree fails JavaScript typecheck because the explicit
 `seeds` option is not typed. The escape hatch also does not enforce the same

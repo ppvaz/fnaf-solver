@@ -210,7 +210,7 @@ def detectors_check(winner: dict) -> dict:
 def emit_bundle(winner_path: str, out_dir: Path, timeout_s: float = EMIT_TIMEOUT_S) -> dict:
     """device:emit, fresh, into an empty directory; the manifest and plans hashed."""
     try:
-        result = subprocess.run(["node", str(HERE / "emit.mjs"), "--winner", winner_path, "--out", str(out_dir)],
+        result = subprocess.run(["node", str(HERE / "../../packages/propose/bin/plans/emit.mjs"), "--winner", winner_path, "--out", str(out_dir)],
                                 cwd=ROOT, check=False, text=True, stdout=subprocess.PIPE,
                                 stderr=subprocess.STDOUT, timeout=timeout_s, start_new_session=True)
     except subprocess.TimeoutExpired as error:

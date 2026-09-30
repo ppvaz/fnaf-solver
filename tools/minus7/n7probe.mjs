@@ -29,7 +29,7 @@
 //   node tools/minus7/n7probe.mjs [--runs=800]
 import { Sim } from '@sixam/source/fnaf2';
 import * as C from '@sixam/source/fnaf2';
-import { build, devicePlan, idleUntilMs } from '../device/recipe.mjs';
+import { build, devicePlan, idleUntilMs } from '../../packages/propose/bin/plans/recipe.mjs';
 import { modelGate } from '../device/human-gate.mjs';
 
 const arg = (k, d) => {

@@ -29,8 +29,8 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { MODEL_CONTEXT_LIGHT } from '@sixam/core/control';
-import { STRATEGY_REGISTRY, validateWinner } from '../device/bundle.mjs';
-import { KNOBS0, build, schedule } from '../device/minus-toys-plan.mjs';
+import { STRATEGY_REGISTRY, validateWinner } from '../../packages/propose/bin/plans/bundle.mjs';
+import { KNOBS0, build, schedule } from '../../packages/propose/bin/plans/minus-toys-plan.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../..');
 export const FPS = 60;

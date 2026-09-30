@@ -2,7 +2,7 @@
 // current Minimal Minus Toys setup/repeat/terminal semantics.
 import { minimalPolicy } from './policy-ir.mjs';
 import { compilePolicy, replayPolicy } from './policy-interpreter.mjs';
-import { build, schedule } from './minus-toys-plan.mjs';
+import { build, schedule } from '../../packages/propose/bin/plans/minus-toys-plan.mjs';
 import * as C from '@sixam/source/fnaf2';
 
 const check = (condition, message) => { if (!condition) throw new Error(message); };

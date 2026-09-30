@@ -70,7 +70,7 @@ beatable every single time, although this strat is way, way easier" (Tru3P1ay3r)
 Foxy is nullified, Toy Bonnie never vent-camps, the music box "never went below half."
 
 **Device-transfer result (2026-08-28, `n2-minustoys-0117`).** The engine port
-(`tools/minustoystest.mjs` / `tools/device/minus-toys-plan.mjs`, 200/200 in the
+(`tools/minustoystest.mjs` / `packages/propose/bin/plans/minus-toys-plan.mjs`, 200/200 in the
 deterministic model) was run open-loop on the Moto g56, Night 2. **It died at
 ~2 AM to Balloon Boy walking into the office, then Foxy** -- and the model
 explains why: shrinking the mask window by ±500 ms in the sim drops Night 2 to
@@ -458,7 +458,7 @@ AI 0 on Night 1 (`elegance.py`'s test).
 plan exists — the engine models no split-camera state". **Both halves were
 stale.** Plan 02 pkg 2a shipped 2026-08-28 (`c038938`): the engine separates
 `viewing`, sampled `lastViewed` and the parked marker; `tools/minustoystest.mjs`
-gates the split 200/200; and **`tools/device/minus-toys-plan.mjs --night=1`
+gates the split 200/200; and **`packages/propose/bin/plans/minus-toys-plan.mjs --night=1`
 emits a gated device plan that scores 200/200 normal + 100/100 worst-luck**.
 `trial.sh DEVICE_POLICY=minus-toys NIGHT=continue CALIBRATION_STORY_NIGHT=1`
 runs it.

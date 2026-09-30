@@ -332,7 +332,7 @@ kernel <- source <- play <- propose -> review -> source
   re-export propose.
 - `review` imports core and the kernel and never `packages/play`, an
   application, `packages/adapters`, `packages/propose` or `packages/research`. It still reaches
-  `tools/device/bundle.mjs` to compile a committed winner to its bundle hash;
+  `packages/propose/bin/plans/bundle.mjs` to compile a committed winner to its bundle hash;
   that edge closes when `tools/device` is sorted by context (migration M9).
 - `trainer` depends on source, the kernel and browser-local presentation only.
 
@@ -364,7 +364,7 @@ The important implementation findings are:
 - `policy-v1`, `belief-v1`, `estimator-v1`, `reduced-v1`, and `cycle-v1`
   already contain the beginnings of the target contracts. Validation and
   supported action semantics are split across core and device files.
-- `tools/device/recipe.mjs` compiles a simulation-derived schedule to an
+- `packages/propose/bin/plans/recipe.mjs` compiles a simulation-derived schedule to an
   undocumented line language consumed by shell. `trial/01-arguments.sh`
   accepts roughly fifty positional values, and `trial.sh` assembles twelve
   remote shell fragments. This is the largest untyped interface in the

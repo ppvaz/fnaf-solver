@@ -1141,6 +1141,26 @@
       }
     },
     {
+      "id": "packages/review/test/stat.test.mjs",
+      "lane": "test:unit",
+      "owner": "package boundary",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "device-transport"
+      ],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "packages/review/test/vault.test.mjs",
       "lane": "test:unit",
       "owner": "package boundary",
@@ -4952,26 +4972,6 @@
         "local-http-port"
       ],
       "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/test-stat.mjs",
-      "lane": "test:unit",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "device-transport"
-      ],
-      "subprocesses": false,
       "measurement": {
         "status": "NOT_MEASURED",
         "runs": 0,

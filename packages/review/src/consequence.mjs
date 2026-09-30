@@ -72,7 +72,9 @@ export const CODE_AREAS = Object.freeze([
     || path === 'tools/evidence.js' },
   { area: 'companion', test: path => path.startsWith('android/companion/') },
   { area: 'trainer', test: path => path.startsWith('apps/trainer/') },
-  { area: 'controller', test: path => path.startsWith('packages/play/src/')
+  // tools/device's code keeps its area as the ADR 0002 layout moves it: Play's executor and phone
+  // tools (src/ and bin/), and the plans a phone executes (packages/propose/bin/plans/).
+  { area: 'controller', test: path => path.startsWith('packages/play/') || path.startsWith('packages/propose/bin/plans/')
     || path.startsWith('tools/device/') },
 ].map(rule => Object.freeze(rule)));
 

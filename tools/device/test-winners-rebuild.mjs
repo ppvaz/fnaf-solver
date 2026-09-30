@@ -17,7 +17,7 @@ import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { compileBundle } from './bundle.mjs';
+import { compileBundle } from '../../packages/propose/bin/plans/bundle.mjs';
 import { makeCampaignSpec } from '../../packages/play/src/campaign/campaign.js';
 import { validateCampaignBundle } from '../../packages/play/src/campaign/campaign-bundle.js';
 
