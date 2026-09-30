@@ -3618,6 +3618,7 @@
     {
       "file": "tools/recompile/pilot/search.mjs",
       "imports": [
+        "./replay.mjs",
         "node:child_process",
         "node:crypto",
         "node:fs",

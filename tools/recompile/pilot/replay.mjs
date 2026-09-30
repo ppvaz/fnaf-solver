@@ -7,6 +7,8 @@
  *        --binary FILE --assets FILE [--seed N] [--max-ticks N] [--docker]
  *   node tools/recompile/pilot/replay.mjs --record tools/recompile/results/<name>.json --run DIR
  *        --binary FILE --assets FILE [--docker]
+ *   node tools/recompile/pilot/replay.mjs --game G --input ROWS --save FILE --run DIR
+ *        --binary FILE --assets FILE [--seed N] [--max-ticks N] [--docker]
  *
  * With --from, the save is the pilot run's `save-before.ini` and the rows its
  * `pilot.input`, and the replay's trace is compared with the pilot run's. With
@@ -14,7 +16,8 @@
  * seed, update count and input fixture, the save is the fixture in
  * tools/recompile/fixtures/ whose sha256 the record names, and the trace is
  * compared with the record's replay digest: that re-checks a committed win on
- * another binary. Either way the replay writes its own trace and save and
+ * another binary. With --input and --save, the rows and the save are given
+ * directly and there is no trace to compare (search.mjs checks its wins so). Either way the replay writes its own trace and save and
  * reports whether the traces agree update for update (frame, tick, Random
  * draws, graine and every global value) and what the game wrote to its save.
  * It runs natively (pilot.mjs NATIVE_ENV) unless --docker. Nothing leaves DIR.
@@ -41,6 +44,8 @@ function parseArgs(argv) {
     if (a === '--game') o.game = v();
     else if (a === '--from') o.from = resolve(v());
     else if (a === '--record') o.record = resolve(v());
+    else if (a === '--input') o.input = resolve(v());
+    else if (a === '--save') o.saveBefore = resolve(v());
     else if (a === '--docker') o.docker = true;
     else if (a === '--run') o.run = resolve(v());
     else if (a === '--binary') o.binary = resolve(v());
@@ -49,7 +54,9 @@ function parseArgs(argv) {
     else if (a === '--max-ticks') o.maxTicks = Number(v());
     else throw new Error(`replay: unknown argument ${a}`);
   }
-  if (!o.from === !o.record) throw new Error('replay: exactly one of --from and --record');
+  const modes = [o.from, o.record, o.input].filter(Boolean).length;
+  if (modes !== 1) throw new Error('replay: exactly one of --from, --record and --input');
+  if (o.input && !o.saveBefore) throw new Error('replay: --input needs --save');
   if (o.record) {
     const rec = JSON.parse(readFileSync(o.record, 'utf8'));
     const fixtures = join(ROOT, 'tools/recompile/fixtures');
@@ -58,7 +65,7 @@ function parseArgs(argv) {
     if (!save) throw new Error(`replay: no fixture in ${fixtures} has the record's save sha256 ${rec.saveBefore.sha256}`);
     Object.assign(o, { game: rec.game, seed: rec.seed, maxTicks: rec.replay.rows, input: join(ROOT, rec.input.fixture),
       saveBefore: join(fixtures, save), expect: rec.replay });
-  } else {
+  } else if (o.from) {
     Object.assign(o, { input: join(o.from, 'pilot.input'), saveBefore: join(o.from, 'save-before.ini') });
   }
   for (const k of ['game', 'run', 'binary', 'assets']) if (!o[k]) throw new Error(`replay: --${k} is required`);
@@ -120,17 +127,18 @@ async function main() {
   const game = await import(`./${o.game}.mjs`);
   const exit = runReplay(o, game);
   const replay = await traceDigest(join(o.run, 'trace'));
-  const pilot = o.expect ? { rows: o.expect.rows, sha256: o.expect.sha256 } : await traceDigest(join(o.from, 'trace'));
+  const pilot = o.expect ? { rows: o.expect.rows, sha256: o.expect.sha256 }
+    : o.from ? await traceDigest(join(o.from, 'trace')) : null;
   const out = {
     exit, runtime: o.docker ? 'docker' : 'native', ...(o.record ? { record: relative(ROOT, o.record) } : {}),
     binarySha256: sha256(o.binary), assetsSha256: sha256(o.assets),
     inputSha256: sha256(join(o.run, 'run.input')), saveBeforeSha256: sha256(join(o.run, 'save-before.ini')),
     pilotTrace: pilot, replayTrace: { rows: replay.rows, sha256: replay.sha256, visits: replay.visits },
-    traceEqual: pilot.sha256 === replay.sha256,
+    traceEqual: pilot ? pilot.sha256 === replay.sha256 : null,
     saveAfter: readFileSync(join(o.run, game.SAVE_NAME), 'utf8'),
   };
   writeFileSync(join(o.run, 'replay-summary.json'), JSON.stringify(out, null, 1) + '\n');
-  console.log(JSON.stringify({ exit, traceEqual: out.traceEqual, rows: [pilot.rows, replay.rows],
+  console.log(JSON.stringify({ exit, traceEqual: out.traceEqual, rows: [pilot?.rows ?? null, replay.rows],
     visits: replay.visits.map((v) => `${v.frame}:${v.updates}`).join(' ') }));
 }
 

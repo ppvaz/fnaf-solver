@@ -1,0 +1,298 @@
+{
+ "schema": "evidence-record-v1",
+ "id": "rebuild-fnaf3-search-dev-20260930",
+ "claimLevel": "MODEL_ONLY",
+ "fidelity": "rebuilt-runtime",
+ "date": "2026-09-30",
+ "kind": "diagnostic development run of the per-seed search, not a census: these seeds shaped the search",
+ "question": "Of the Aggressive Nightmare seeds the guard2 controller loses, how many does some sequence of in-window touches win in the rebuilt runtime?",
+ "explanationTested": "The runtime is deterministic, and a touch that draws from the shared generator (a play's Random(7) and Random(100), a seal's charge) draws at a different update when it is delayed, so delaying a task the controller started before the lost chain changes the rolls after it. If the controller's losses are bad rolls rather than dead positions, a few delays should find wins.",
+ "base": {
+  "policy": "guard2",
+  "block": "seeds 1-60 (docs/evidence/rebuild-pilot-dev-blocks-20260930.json)",
+  "won": 30,
+  "lost": 30
+ },
+ "binding": {
+  "binarySha256": "0f6a825fa24b7e56ac1e68f1992480210a190b4f6ee0587a63854d3268e18b37",
+  "save": "tools/recompile/fixtures/fnaf3-aggressive-nightmare.ini",
+  "winKey": "freddy3.4thstar=1",
+  "budget": 24,
+  "searchSources": "search.mjs as of this commit, less the verification, the stray filter and the source guard added after this run (the branch rules are unchanged); no source hash was stamped"
+ },
+ "result": {
+  "searched": 30,
+  "won": 25,
+  "exhausted": 5,
+  "exhaustedSeeds": [
+   6,
+   31,
+   35,
+   53,
+   56
+  ],
+  "seeds": [
+   {
+    "seed": 1,
+    "verdict": "WON",
+    "attempts": 11,
+    "winInputSha256": "90bd68af48d2bbdaa4eb42feac1cd4c8621c59237fdc19b767a29bb39155f841",
+    "straysDropped": 0,
+    "replayWon": true,
+    "verified": "replay.mjs --input, as logged"
+   },
+   {
+    "seed": 2,
+    "verdict": "WON",
+    "attempts": 2,
+    "winInputSha256": "b8cd1d22f71f5173e70d5a0ae6d3556f55b837de532047de69777e549bb8e9fc",
+    "straysDropped": 0,
+    "replayWon": true,
+    "verified": "replay.mjs --input, as logged"
+   },
+   {
+    "seed": 4,
+    "verdict": "WON",
+    "attempts": 11,
+    "winInputSha256": "81b2a68cecbc0d261e46e5083cfd5d9d1844b965b577a5a3cad8762ef1cc8500",
+    "straysDropped": 0,
+    "replayWon": true,
+    "verified": "replay.mjs --input, as logged"
+   },
+   {
+    "seed": 6,
+    "verdict": "EXHAUSTED",
+    "attempts": 25
+   },
+   {
+    "seed": 10,
+    "verdict": "WON",
+    "attempts": 4,
+    "winInputSha256": "b353d0bc2b16d56c9f74460be5f4ed4a1f14a0c785a9259c4ba38f2bf5621f0a",
+    "straysDropped": 0,
+    "replayWon": true,
+    "verified": "replay.mjs --input, as logged"
+   },
+   {
+    "seed": 13,
+    "verdict": "WON",
+    "attempts": 2,
+    "winInputSha256": "09458a58d12ff4bd4f4461e743f75be246430d3e07b75610f33dfcb8758f8eb3",
+    "straysDropped": 0,
+    "replayWon": true,
+    "verified": "replay.mjs --input, as logged"
+   },
+   {
+    "seed": 16,
+    "verdict": "WON",
+    "attempts": 2,
+    "winInputSha256": "6757c2b3b6d25591c5f90421f44e7c934ff75428e2e5ec619c11d30ff598bd51",
+    "straysDropped": 0,
+    "replayWon": true,
+    "verified": "replay.mjs --input, as logged"
+   },
+   {
+    "seed": 22,
+    "verdict": "WON",
+    "attempts": 13,
+    "winInputSha256": "62773cdc1a7c2f80b0d96f1d00f21ad5a884cefc5da8aca0de8fe8f5027e4fb7",
+    "straysDropped": 0,
+    "replayWon": true,
+    "verified": "replay.mjs --input, as logged"
+   },
+   {
+    "seed": 23,
+    "verdict": "WON",
+    "attempts": 3,
+    "winInputSha256": "a49984b18d782eef828427302cabb0c93dd6b63fe19054d0f1ca5cc7b5a39f84",
+    "straysDropped": 1,
+    "replayWon": true,
+    "verified": "replay.mjs --input after withoutStrays dropped the one 6 AM stray"
+   },
+   {
+    "seed": 25,
+    "verdict": "WON",
+    "attempts": 2,
+    "winInputSha256": "4b066f8073f64f7dc8d629c9f5bfda61954ae032ac83d61621de80e367690f86",
+    "straysDropped": 0,
+    "replayWon": true,
+    "verified": "replay.mjs --input, as logged"
+   },
+   {
+    "seed": 27,
+    "verdict": "WON",
+    "attempts": 2,
+    "winInputSha256": "9952e235f69134c57a2dacc118726cb169bcab7cb662a8a6b73254ed2e4c2036",
+    "straysDropped": 0,
+    "replayWon": true,
+    "verified": "replay.mjs --input, as logged"
+   },
+   {
+    "seed": 28,
+    "verdict": "WON",
+    "attempts": 3,
+    "winInputSha256": "fe1c01b3f2a2d57802355d8e9aeb30e069dc34ff8b9958a55c64a28409fc35db",
+    "straysDropped": 0,
+    "replayWon": true,
+    "verified": "replay.mjs --input, as logged"
+   },
+   {
+    "seed": 29,
+    "verdict": "WON",
+    "attempts": 4,
+    "winInputSha256": "215adc35fbd1fd5c30b87830ccf2f2bb5fb67e1b68ccd7924eb96db32924bcbb",
+    "straysDropped": 0,
+    "replayWon": true,
+    "verified": "replay.mjs --input, as logged"
+   },
+   {
+    "seed": 31,
+    "verdict": "EXHAUSTED",
+    "attempts": 21
+   },
+   {
+    "seed": 32,
+    "verdict": "WON",
+    "attempts": 5,
+    "winInputSha256": "9e2921d4119f9b78874eb5fdc08869d4b368eb52da03426dcbea12b00e381805",
+    "straysDropped": 0,
+    "replayWon": true,
+    "verified": "replay.mjs --input, as logged"
+   },
+   {
+    "seed": 35,
+    "verdict": "EXHAUSTED",
+    "attempts": 25
+   },
+   {
+    "seed": 36,
+    "verdict": "WON",
+    "attempts": 2,
+    "winInputSha256": "965b95766a494cc45da920d3eeae23cd63203779b02b3c21e39a7c094ef1728a",
+    "straysDropped": 0,
+    "replayWon": true,
+    "verified": "replay.mjs --input, as logged"
+   },
+   {
+    "seed": 37,
+    "verdict": "WON",
+    "attempts": 3,
+    "winInputSha256": "92524a847cb82689d9d5b80e46106b6c9cc60af0b8d463b6ae91bc13bb3afe5e",
+    "straysDropped": 0,
+    "replayWon": true,
+    "verified": "replay.mjs --input, as logged"
+   },
+   {
+    "seed": 39,
+    "verdict": "WON",
+    "attempts": 13,
+    "winInputSha256": "e761240ec97e31dfaef957c440dc16c67f06cf4c966e0d0346976a6df6c5f2ab",
+    "straysDropped": 0,
+    "replayWon": true,
+    "verified": "replay.mjs --input, as logged"
+   },
+   {
+    "seed": 40,
+    "verdict": "WON",
+    "attempts": 20,
+    "winInputSha256": "16bc144ffe5fb75720068a3bd6ebd4edc9e1ef2fb19fd1294a4c2e2f6688b25e",
+    "straysDropped": 1,
+    "replayWon": true,
+    "verified": "replay.mjs --input after withoutStrays dropped the one 6 AM stray"
+   },
+   {
+    "seed": 43,
+    "verdict": "WON",
+    "attempts": 2,
+    "winInputSha256": "bff0bb4a1b17ebea289ba176c6eeeab11de30b38641c72207bdf6dea833ab8df",
+    "straysDropped": 0,
+    "replayWon": true,
+    "verified": "replay.mjs --input, as logged"
+   },
+   {
+    "seed": 47,
+    "verdict": "WON",
+    "attempts": 5,
+    "winInputSha256": "dff32c22bad8724709935d72e66b2ba23eef2a4223576b77a9d4c86bf6cf2d9b",
+    "straysDropped": 0,
+    "replayWon": true,
+    "verified": "replay.mjs --input, as logged"
+   },
+   {
+    "seed": 50,
+    "verdict": "WON",
+    "attempts": 15,
+    "winInputSha256": "6eb81c73ab3cc563f7edb8d51f8e4571af8e378ea9c324d6e35791c8e88e2b0f",
+    "straysDropped": 0,
+    "replayWon": true,
+    "verified": "replay.mjs --input, as logged"
+   },
+   {
+    "seed": 52,
+    "verdict": "WON",
+    "attempts": 17,
+    "winInputSha256": "19876099f5632e2a355b8672c8ab8dec91799c1d8a907a8490741a47ebb1fe35",
+    "straysDropped": 0,
+    "replayWon": true,
+    "verified": "replay.mjs --input, as logged"
+   },
+   {
+    "seed": 53,
+    "verdict": "EXHAUSTED",
+    "attempts": 14
+   },
+   {
+    "seed": 54,
+    "verdict": "WON",
+    "attempts": 7,
+    "winInputSha256": "5375d94ec3ba0069198a87af92984c155c2a564ed5e0a49123607e8d7fd9d6f5",
+    "straysDropped": 1,
+    "replayWon": true,
+    "verified": "replay.mjs --input after withoutStrays dropped the one 6 AM stray"
+   },
+   {
+    "seed": 55,
+    "verdict": "WON",
+    "attempts": 2,
+    "winInputSha256": "ea49cafa1665db60f4a8ce7dc9124b5bf96dba66ec1e4f0b27650f8b233d9e93",
+    "straysDropped": 1,
+    "replayWon": true,
+    "verified": "replay.mjs --input, as logged"
+   },
+   {
+    "seed": 56,
+    "verdict": "EXHAUSTED",
+    "attempts": 25
+   },
+   {
+    "seed": 57,
+    "verdict": "WON",
+    "attempts": 4,
+    "winInputSha256": "dfe11024473b5b33b27e7b30c30828fac188aa72e6bc7a8f97aed408552fc65e",
+    "straysDropped": 0,
+    "replayWon": true,
+    "verified": "replay.mjs --input, as logged"
+   },
+   {
+    "seed": 59,
+    "verdict": "WON",
+    "attempts": 4,
+    "winInputSha256": "9c2793c42d517b1430a3b4e21922b056c0021492da9e99e6509ae6ed8036fc6c",
+    "straysDropped": 0,
+    "replayWon": true,
+    "verified": "replay.mjs --input, as logged"
+   }
+  ]
+ },
+ "defectFound": "Three winning attempts (seeds 23, 40, 54) did not win when their pilot.input was replayed with no pilot. Each held one row stamped with the office frame and update 0, last in the file: a touch sent in reply to the last office update landed on the 6 AM frame's first update, which the harness logs with the old frame index because harness_before_events runs before `frame->index` changes. Replayed, the row fires at the office's own update 0, a tap at the start of the night. withoutStrays drops such rows; all three then replay to a win. The harness's stamp is unchanged: other sessions' input rows depend on its update-0 semantics.",
+ "findings": [
+  "Of guard2's 30 lost development seeds, 25 are won by touches the search found, every one replayed to a win with no pilot; 5 exhausted a budget of 24 attempts (6, 31, 35, 53, 56), their chains starting later with each re-base.",
+  "With the controller's own 30, 55 of the 60 development seeds have a winning touch sequence. That is a statement about seeds used in development, not a rate."
+ ],
+ "notMeasured": [
+  "Whether the five exhausted seeds are winnable: an exhausted search is not a proof that none is.",
+  "A predeclared block: docs/evidence/fnaf3-search-block-predeclaration-20260930.json.",
+  "A player: the touches come from a controller that reads the runtime's objects, with delays chosen by replaying the night."
+ ],
+ "rung": "None. MODEL_ONLY, rebuilt-runtime."
+}

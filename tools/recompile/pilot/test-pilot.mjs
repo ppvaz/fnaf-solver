@@ -11,7 +11,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SCHEMA, check, evidenceId, iniKeys, verdict } from './record.mjs';
 import { SEAL_FOR, LURE_TO, proxyOf, whereIs, playsLeft, whatDayRare, doomStart } from './fnaf3.mjs';
-import { branchPoints, parseSeeds, progress, LEAD, BACKOFF } from './search.mjs';
+import { branchPoints, parseSeeds, progress, withoutStrays, LEAD, BACKOFF } from './search.mjs';
 import { MARKERS, ACTORS, WATCH as WATCH4, places } from './fnaf4.mjs';
 import { GRAPH, LURE_FROM } from '../../../packages/core/src/mechanics/games/sim-fnaf3.js';
 
@@ -111,6 +111,12 @@ assert.equal(branchPoints(9000, [], 0, null)[0], 9000 - 30 - BACKOFF[0]);
 assert.equal(progress({ doom: 6705, death: 7725 }), 6705);
 assert.equal(progress({ doom: null, death: 7725 }), 7725);
 ok('search: branch points precede the chain; doomStart finds the chain; progress is the chain start');
+// A touch logged across a frame change carries the old frame and update 0
+// (seed 23, 2026-09-30: `3 0 down 0 533.0 659.5` after `3 20054 up 0`); a
+// revisit of a frame with its own touches is not one.
+assert.equal(withoutStrays('1 201 down 0 1 1\n3 1 down 0 2 2\n3 20054 up 0\n3 0 down 0 533.0 659.5').dropped, 1);
+assert.equal(withoutStrays('1 201 down 0 1 1\n1 204 up 0\n1 5 down 0 3 3').dropped, 0);
+ok('withoutStrays drops the frame-change stray and keeps a revisit\'s touches');
 
 // 5. FNaF 4's map reader: every marker and actor it reads is watched, and an
 // actor is placed on the marker its box overlaps.
