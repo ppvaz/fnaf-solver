@@ -67,3 +67,31 @@ assert.equal(retried.attempts[0].status, 'DEATH');
 assert.equal(retried.attempts[1].status, 'WIN');
 assert.match(retried.attempts[1].proofHash, /^fnv1a-/);
 console.log('device campaign runner: bounded death retry and per-attempt result record pass');
+
+// An Invalid run (ADR 0002, decision 3) is stopped like a death and played
+// again without spending the attempt; two in a row hold before a third.
+const single = { ...full, nights: [full.nights[0]], retry: { maxAttempts: 1 } };
+const invalidRun = async (outcomes) => {
+  const stops = [];
+  let played = 0;
+  const runner = new DeviceCampaignRunner({ spec: single, ports: {
+    ...ports,
+    executeAttempt: async ({ attempt }) => { played += 1; return { attempt }; },
+    stopAttempt: async ({ reason }) => { stops.push(reason); },
+    terminal: async ({ target, execution }) => outcomes[execution.attempt - 1] === 'invalid'
+      ? { night: target.night, outcome: 'invalid', why: 'fixture: the delivered phase left its budget' }
+      : { night: target.night, identity: target.mode, outcome: 'sixam', sixAm: true },
+    save: async () => ({ customNightVisible: true, observed: true }),
+  } });
+  return { result: await runner.run(), stops, played };
+};
+const refunded = await invalidRun(['invalid', 'sixam']);
+assert.equal(refunded.result.state, 'COMPLETE', 'one attempt allowed, and the Invalid run did not spend it');
+assert.equal(refunded.played, 2);
+assert.deepEqual(refunded.stops, ['terminal-retry', 'terminal-proof']);
+assert.deepEqual(refunded.result.attempts.map(item => item.status), ['INVALID', 'WIN']);
+const heldInvalid = await invalidRun(['invalid', 'invalid', 'sixam']);
+assert.equal(heldInvalid.result.state, 'HOLD');
+assert.equal(heldInvalid.played, 2, 'the campaign holds after the second Invalid run and plays no third');
+assert.deepEqual(heldInvalid.stops, ['terminal-retry', 'HOLD'], 'the held attempt is stopped too');
+console.log('device campaign runner: an Invalid run is replayed without spending the attempt, and two in a row hold');

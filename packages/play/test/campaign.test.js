@@ -149,4 +149,96 @@ proven5.acceptTerminalVerification({ sixAm: true, positive: true });
 proven5.acceptSave({ observed: true, menuReturned: true, continueVisible: true, sixthNightVisible: true });
 assert.equal(proven5.result().state, 'COMPLETE');
 assert.deepEqual(proven5.result().completedNights, [5]);
-console.log('device campaign: target validation, lifecycle gates, retry boundary, story Nights 1..5 chain, and completion proof pass');
+
+// ADR 0002, decision 3: an Invalid run does not spend a campaign attempt, and
+// the campaign holds after two consecutive Invalid runs.
+const why = 'phase-invalid: arm release lag 1320ms exceeds budget 200ms';
+const oneNight = budget => ({ ...spec, nights: [spec.nights[0]], retry: { maxAttempts: budget } });
+const started = budget => {
+  const machine = new CampaignStateMachine({ spec: oneNight(budget) });
+  machine.startPreflight();
+  machine.acceptPreflight({ status: 'READY' });
+  return machine;
+};
+const play = machine => {
+  machine.acceptMenu({ target: 'sixthNight', visible: true, selected: true });
+  machine.acceptIntro({ night: 6, identity: 'story', observed: true });
+  machine.beginAttempt();
+  assert.equal(machine.state, 'ACTIVE');
+};
+
+// With one attempt allowed, an Invalid run leaves it unspent: the night is
+// played again, and a 6 AM on the second run completes the campaign.
+const refunded = started(1);
+play(refunded);
+refunded.acceptTerminal({ night: 6, outcome: 'invalid', why });
+assert.equal(refunded.state, 'RETRY_VERIFY');
+assert.equal(refunded.events.at(-1).data.reason, 'attempt-invalid');
+assert.equal(refunded.events.at(-1).data.why, why);
+assert.equal(refunded.snapshot().invalidRuns, 1);
+refunded.acceptRetry({ menuReady: true });
+assert.equal(refunded.state, 'MENU', 'the Invalid run did not spend the only attempt');
+play(refunded);
+refunded.acceptTerminal({ night: 6, outcome: 'sixam', sixAm: true });
+refunded.acceptTerminalVerification({ sixAm: true, positive: true });
+refunded.acceptSave({ customNightVisible: true, observed: true });
+const refundedResult = refunded.result();
+assert.equal(refundedResult.state, 'COMPLETE');
+assert.deepEqual(refundedResult.attempts.map(item => [item.attempt, item.status]), [[1, 'INVALID'], [2, 'WIN']],
+  'attempt numbers stay unique; only the status says the first did not count');
+assert.deepEqual(refundedResult.attempts[0].terminal, { night: 6, outcome: 'invalid', sixAm: false, why });
+
+// A death still spends its attempt: one allowed, one death, the budget is gone.
+const spent = started(1);
+play(spent);
+spent.acceptTerminal({ night: 6, outcome: 'death' });
+spent.acceptRetry({ menuReady: true });
+assert.equal(spent.state, 'ABORTED');
+assert.equal(spent.events.at(-1).data.reason, 'attempt-budget-exhausted');
+
+// Two consecutive Invalid runs hold the campaign, with the budget untouched.
+const twice = started(3);
+play(twice);
+twice.acceptTerminal({ night: 6, outcome: 'invalid', why });
+twice.acceptRetry({ menuReady: true });
+play(twice);
+twice.acceptTerminal({ night: 6, outcome: 'invalid', why: 'night identity read as Night 5' });
+assert.equal(twice.state, 'HOLD');
+assert.deepEqual(twice.events.at(-1).data, { previous: 'ACTIVE', reason: 'consecutive-invalid-runs', night: 6,
+  why: 'night identity read as Night 5', consecutive: 2 });
+assert.deepEqual(twice.result().attempts.map(item => item.status), ['INVALID', 'INVALID']);
+// A resume is the operator's decision: the count starts again, the budget stands.
+twice.resume();
+twice.acceptPreflight({ status: 'READY' });
+play(twice);
+assert.equal(twice.attempt, 3);
+twice.acceptTerminal({ night: 6, outcome: 'invalid', why });
+assert.equal(twice.state, 'RETRY_VERIFY', 'one Invalid run after a resume does not hold');
+
+// Only consecutive Invalid runs hold: a death between them resets the count,
+// and spends its own attempt, so the budget still bounds the campaign.
+const broken = started(2);
+play(broken);
+broken.acceptTerminal({ night: 6, outcome: 'invalid', why });
+broken.acceptRetry({ menuReady: true });
+play(broken);
+broken.acceptTerminal({ night: 6, outcome: 'death' });
+broken.acceptRetry({ menuReady: true });
+play(broken);
+broken.acceptTerminal({ night: 6, outcome: 'invalid', why });
+assert.equal(broken.state, 'RETRY_VERIFY');
+broken.acceptRetry({ menuReady: true });
+play(broken);
+broken.acceptTerminal({ night: 6, outcome: 'death' });
+broken.acceptRetry({ menuReady: true });
+assert.equal(broken.state, 'ABORTED', 'two deaths spend both attempts; the two Invalid runs spent none');
+assert.deepEqual(broken.result().attempts.map(item => item.status), ['INVALID', 'DEATH', 'INVALID', 'DEATH']);
+
+// Invalid is a value with a reason: an Invalid terminal without one holds.
+const bare = started(3);
+play(bare);
+bare.acceptTerminal({ night: 6, outcome: 'invalid' });
+assert.equal(bare.state, 'HOLD');
+assert.equal(bare.events.at(-1).data.reason, 'terminal-invalid-without-reason');
+console.log('device campaign: target validation, lifecycle gates, retry boundary, story Nights 1..5 chain, completion proof, ' +
+  'and Invalid runs that spend no attempt and hold when consecutive pass');

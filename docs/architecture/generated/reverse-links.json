@@ -364,7 +364,7 @@
       "id": "contract.device-campaign-v1",
       "kind": "CONTRACT",
       "path": "packages/play/src/campaign/campaign.js",
-      "line": 8,
+      "line": 13,
       "relation": "REFERENCES"
     },
     {

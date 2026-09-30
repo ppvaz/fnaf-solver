@@ -5,6 +5,11 @@
  * Custom Night run. It does not choose coordinates or send input; those
  * remain ports supplied by the composition root. A campaign can only become
  * COMPLETE after positive 6 AM and save/menu evidence.
+ *
+ * An Invalid run (the kernel's Invalid(why): the night was played but tests
+ * nothing) does not spend a campaign attempt, and the campaign holds after
+ * two consecutive Invalid runs (ADR 0002, decision 3). Attempt numbers stay
+ * one per run played; the budget counts the runs that were not Invalid.
  * CONTRACT:device-campaign-v1.
  */
 import { AI_10_20, AI_DIALS, PUPPET_AI } from '@sixam/source/fnaf2';
@@ -22,6 +27,8 @@ const NIGHT5 = 5;
 const NIGHT6 = 6;
 const NIGHT7 = 7;
 export const DEFAULT_CAMPAIGN_NIGHTS = Object.freeze([1, 2, 3, 4, 5, 6, NIGHT7]);
+/** Consecutive Invalid runs after which the campaign holds (ADR 0002, decision 3). */
+export const INVALID_RUNS_HOLD = 2;
 const MENU_TARGETS = new Set(['newGame', 'continue', 'sixthNight', 'customNight']);
 const TRANSITIONS = Object.freeze({
   IDLE: ['PREFLIGHT'],
@@ -205,6 +212,9 @@ export class CampaignStateMachine {
     this.state = 'IDLE';
     this.targetIndex = 0;
     this.attempt = 0;
+    // Runs of the current target that were Invalid, and Invalid runs in a row.
+    this.invalidRuns = 0;
+    this.consecutiveInvalid = 0;
     this.events = [];
     this.attempts = [];
     this.activeAttempt = null;
@@ -212,12 +222,15 @@ export class CampaignStateMachine {
 
   get target() { return this.spec.nights[this.targetIndex] ?? null; }
 
+  /** Attempts of the current target that count against the budget: every run but the Invalid ones. */
+  get spentAttempts() { return this.attempt - this.invalidRuns; }
+
   snapshot() {
     return {
       schema: CAMPAIGN_SCHEMA, version: 1, state: this.state,
       specHash: stableHash(this.spec), targetIndex: this.targetIndex,
       target: this.target, attempt: this.attempt, eventCount: this.events.length,
-      attempts: this.attempts.length,
+      attempts: this.attempts.length, invalidRuns: this.invalidRuns, consecutiveInvalid: this.consecutiveInvalid,
     };
   }
 
@@ -285,7 +298,7 @@ export class CampaignStateMachine {
   beginAttempt() {
     if (this.state !== 'ACTIVE') fail('beginAttempt requires ACTIVE');
     this.attempt += 1;
-    if (this.attempt > this.spec.retry.maxAttempts) {
+    if (this.spentAttempts > this.spec.retry.maxAttempts) {
       this.transition('ABORTED', { reason: 'attempt-budget-exhausted' });
       return this.snapshot();
     }
@@ -297,10 +310,12 @@ export class CampaignStateMachine {
     return this.snapshot();
   }
 
-  /** @param {{night?: number, outcome?: string, sixAm?: boolean}} options */
-  acceptTerminal({ night, outcome, sixAm = false } = {}) {
-    if (this.activeAttempt) this.activeAttempt.terminal = { night, outcome, sixAm };
+  /** @param {{night?: number, outcome?: string, sixAm?: boolean, why?: string}} options */
+  acceptTerminal({ night, outcome, sixAm = false, why } = {}) {
+    if (this.activeAttempt) this.activeAttempt.terminal = { night, outcome, sixAm, ...(why === undefined ? {} : { why }) };
     if (night !== this.target?.night) return this.transition('HOLD', { reason: 'terminal-night-identity-unknown', night });
+    if (outcome === 'invalid') return this.#acceptInvalid(night, why);
+    this.consecutiveInvalid = 0;
     if (outcome === 'unknown') return this.transition('HOLD', { reason: 'terminal-outcome-unknown', night });
     if (outcome === 'death') {
       if (this.activeAttempt) this.activeAttempt.status = 'DEATH';
@@ -311,10 +326,27 @@ export class CampaignStateMachine {
     return this.transition('TERMINAL_VERIFY', { night, outcome });
   }
 
+  /**
+   * An Invalid run is refunded: it goes to the same retry as a death but
+   * leaves the budget as it was. The second in a row holds instead, so a
+   * cause that invalidates every run cannot replay the night without end.
+   * @param {number} night @param {string | undefined} why
+   */
+  #acceptInvalid(night, why) {
+    if (typeof why !== 'string' || why.length === 0)
+      return this.transition('HOLD', { reason: 'terminal-invalid-without-reason', night });
+    this.invalidRuns += 1;
+    this.consecutiveInvalid += 1;
+    if (this.activeAttempt) this.activeAttempt.status = 'INVALID';
+    if (this.consecutiveInvalid >= INVALID_RUNS_HOLD)
+      return this.transition('HOLD', { reason: 'consecutive-invalid-runs', night, why, consecutive: this.consecutiveInvalid });
+    return this.transition('RETRY_VERIFY', { reason: 'attempt-invalid', night, why });
+  }
+
   /** @param {{menuReady?: boolean}} options */
   acceptRetry({ menuReady = false } = {}) {
     if (!menuReady) return this.transition('HOLD', { reason: 'retry-menu-not-confirmed' });
-    if (this.attempt >= this.spec.retry.maxAttempts)
+    if (this.spentAttempts >= this.spec.retry.maxAttempts)
       return this.transition('ABORTED', { reason: 'attempt-budget-exhausted' });
     return this.transition('MENU', { retry: true, attempt: this.attempt + 1 });
   }
@@ -365,6 +397,7 @@ export class CampaignStateMachine {
     if (this.targetIndex + 1 < this.spec.nights.length) {
       this.targetIndex += 1;
       this.attempt = 0;
+      this.invalidRuns = 0;
       return this.transition('MENU', { completedNight });
     }
     return this.transition('COMPLETE', { completedNight });
@@ -378,6 +411,9 @@ export class CampaignStateMachine {
 
   resume() {
     if (this.state !== 'HOLD') fail('resume requires HOLD');
+    // Resuming is the operator's decision on whatever held the run, so the
+    // Invalid runs are counted afresh; the attempt budget is not.
+    this.consecutiveInvalid = 0;
     return this.transition('PREFLIGHT');
   }
 
