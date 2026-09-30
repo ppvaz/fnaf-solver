@@ -376,6 +376,12 @@ for (const name of readdirSync(join(ROOT, WINNERS_DIR)).filter(file => file.ends
     compiledWinnerHash, ...(notCompiled ? { notCompiled } : {}) });
 }
 
+// The fact register's binding tables, for Review: the anchor aims registered
+// per binding hash and the closed list of anchor bindings with no committed
+// winner. The register is binding data a device run reads; Review never
+// imports it, so its promotions query reads this generated copy.
+const factRegister = await import(pathToFileURL(join(ROOT, 'tools/device/fact-register.mjs')).href);
+
 const outputs = {
   'import-graph.json': { schema: 'import-graph-v1', files: importGraph },
   'command-registry.json': { schema: 'command-registry-v1', source: ['package.json', ...toolIndexes], commands: commandRegistry, tools: toolCommands },
@@ -386,6 +392,8 @@ const outputs = {
   'duplicate-responsibilities.json': { schema: 'duplicate-responsibility-map-v1', entries: duplicateResponsibilities },
   'legacy-paths.json': { schema: 'legacy-path-map-v1', generatedFrom: 'tools/generate-catalog.js', entries: legacyPaths },
   'reverse-links.json': reverseLinks,
+  'anchor-aims.json': { schema: 'anchor-aims-v1', generatedFrom: 'tools/device/fact-register.mjs (ANCHOR_AIMS, UNTRACKED_WINNER_DEBT)',
+    anchorAims: factRegister.ANCHOR_AIMS, untrackedWinnerDebt: factRegister.UNTRACKED_WINNER_DEBT },
   'winner-hashes.json': { schema: 'winner-hashes-v1', generatedFrom: 'tools/generate-catalog.js (compileBundle over tools/device/*-winner.json)',
     winners: winnerHashes },
   // The per-game control catalogs as data (LEG-007): every descriptor with its

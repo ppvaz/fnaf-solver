@@ -23,11 +23,11 @@ import, a re-export, a dynamic `import()` or a `require()`. The two campaign
 validators it needs (`validateCampaignResult`, `validateSaveProof`) moved to
 `@sixam/kernel/contracts` for that reason; play's campaign
 (`packages/play/src/campaign/`) re-exports them.
-It still reaches two `tools/device` modules: `bundle.mjs`, to compile a
-committed winner to the hash a bundle records (`trackedWinners`, and through it
-the research seed helpers), and `fact-register.mjs`, whose `ANCHOR_AIMS` and
-`UNTRACKED_WINNER_DEBT` the promotions query reads. Those edges close when
-`tools/device` is sorted by context (migration M9).
+It imports no device or decision code: what it once took from `bundle.mjs` and
+`fact-register.mjs`, a committed winner's compiled hash and the registered
+anchor bindings, it reads from generated registers
+(`docs/architecture/generated/winner-hashes.json`, `anchor-aims.json`) that
+`npm run catalog` writes and CI's catalog diff keeps current.
 
 **Stored names.** Every pack records `packer: tools/evidence-pack.mjs`, and the
 pack digest an attestation binds covers it, so the value never changes. It is a

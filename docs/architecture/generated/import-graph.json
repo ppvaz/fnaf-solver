@@ -1354,7 +1354,6 @@
     {
       "file": "packages/review/src/promotions-query.mjs",
       "imports": [
-        "../../../tools/device/fact-register.mjs",
         "./evidence-pack.mjs",
         "./evidence-promotion.mjs",
         "./pack-lift.mjs",

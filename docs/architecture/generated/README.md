@@ -37,3 +37,9 @@ normalises a winner, so a pack can name a hash that is not the file's own
 and why. Compiling is Propose's, and Review never imports Propose (ADR 0002), so
 Review's `trackedWinners()` reads this register instead, and refuses it when a
 winner file's bytes differ from the sha256 recorded here.
+
+`anchor-aims.json` is the fact register's binding tables
+(`tools/device/fact-register.mjs`): the anchor aim registered per binding hash
+and the closed `UNTRACKED_WINNER_DEBT` list. The register is binding data that
+device runs read; Review never imports it, so the promotions query reads this
+generated copy, which CI's catalog diff keeps current.
