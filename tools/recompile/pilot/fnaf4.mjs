@@ -287,6 +287,18 @@ function* holdZone(ctx, name, keep, max) {
   yield* hold(2);
 }
 
+/**
+ * Where a lost night's chain began, for search.mjs: the first logged update
+ * with the Freddy counter past 53 (from there the bed kills on arrival,
+ * g427/g428, and away from it the counter climbs to the black flash), with
+ * Foxy's got-you set (g282), or with the black flash counting (g468).
+ * `records` are the warden log's lines, parsed.
+ */
+export function doomStart(records) {
+  const r = records.find((x) => x.at && (x.freddy > 53 || x.foxyGot === 1 || x.flash > 0));
+  return r ? r.t : null;
+}
+
 export function facts4(v) {
   const at = places(v);
   const al = (n, i) => v.one(n)?.al?.[i] ?? 0;
@@ -314,6 +326,12 @@ export function facts4(v) {
  *   occupant has gone but whose dwell stands, unblocks the bed before Freddy
  *   gets close, and never starts the walk to the bed at a count one Freddy
  *   tick (g397) could carry past 59.
+ * `warden3` (rev 3) adds the loss both of rev 2's held-out losses share
+ * (seeds 30820 and 31175): Chica's dwell of 20, standing since before 4 AM
+ * while she is away, makes the bed deadly (g480, then g375 on leaving it), and
+ * Fredbear on the bed sends the warden there. After 4 AM rev 3 views the right
+ * hall whenever her dwell stands and Fredbear is not on the bed, in the closet
+ * or in the right hall (g481).
  */
 function warden({ run, knobs }, rev = 1) {
   const out = join(run, 'warden.jsonl');
@@ -330,7 +348,11 @@ function warden({ run, knobs }, rev = 1) {
   const menu = knobs.challenges ? menuChallenges(knobs.challenges) : menuNight8();
   let loggedLevel = false;
   let task = null, taskName = null, last = null, outcome = null;
-  const bedAt = knobs.bedAt ?? 32, foxyAt = knobs.foxyAt ?? 6;
+  // Every play-frame update a task started on, for search.mjs: the quiet log
+  // keeps only its last 200 records.
+  const starts = [];
+  // rev 3 takes the knobs rev 2's development block chose (bedAt 24, foxyTo 3).
+  const bedAt = knobs.bedAt ?? (rev >= 3 ? 24 : 32), foxyAt = knobs.foxyAt ?? 6;
 
   const STATIONS = [LEFT_DOOR, RIGHT_DOOR, CLOSET, BED];
   function* toHub() {
@@ -409,7 +431,7 @@ function warden({ run, knobs }, rev = 1) {
   }
   function* serviceCloset() {
     yield* closet();
-    yield* holdZone(ctx, CLOSE, (v) => (v.one('foxy')?.al?.[2] ?? 0) > (knobs.foxyTo ?? 1) && places(v).foxy === 'in closet'
+    yield* holdZone(ctx, CLOSE, (v) => (v.one('foxy')?.al?.[2] ?? 0) > (knobs.foxyTo ?? (rev >= 3 ? 3 : 1)) && places(v).foxy === 'in closet'
       && (v.cv('Freddy counter') ?? 0) < (knobs.bedUrgent ?? 42) + 2, 600);
   }
   function* listen(side) { yield* door(side); yield* hold(10); }
@@ -508,6 +530,10 @@ function warden({ run, knobs }, rev = 1) {
       yield* door(far);
       yield* holdZone(ctx, CLOSE, (v) => places(v).Fredbear === `${far} hall far`, 600);
     })()];
+    // rev 3: with Fredbear not on the bed, in the closet or at a far hall,
+    // clear a Chica dwell that outlived her (g478/g481) before the bed is needed.
+    if (rev >= 3 && f.cDwell > 0 && !(at ?? '').includes('right hall')
+      && !Object.values(f.at).includes('right hall near')) return ['clear right (fredbear)', clearHall('right')];
     // Walk before the idle flash (g564, AV12 >= 25): a door walk is a carpet run.
     if (f.fbIdle >= (knobs.fbWalkAt ?? 18)) return [`walk ${side ?? 'left'}`, door(side ?? 'left')];
     // Otherwise wait at the hub facing his side: one door is 2.3 s away, the
@@ -538,15 +564,15 @@ function warden({ run, knobs }, rev = 1) {
       if (f.gameover) { outcome = outcome ?? `gameover at ${s.t}`; }
       if (!task) {
         const d = decide();
-        if (d) { [taskName, task] = d; ctx.log({ start: taskName }); }
+        if (d) { [taskName, task] = d; ctx.log({ start: taskName }); starts.push(s.t); }
       }
       if (!task) return [];
       const r = task.next();
       if (r.done) { task = null; taskName = null; return []; }
       return r.value ?? [];
     },
-    summary: () => { flush(); return { outcome }; },
+    summary: () => { flush(); return { outcome, starts }; },
   };
 }
 
-export const POLICIES = { nav, survey, survey2, warden, warden2: (o) => warden(o, 2) };
+export const POLICIES = { nav, survey, survey2, warden, warden2: (o) => warden(o, 2), warden3: (o) => warden(o, 3) };

@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 import { SCHEMA, check, evidenceId, iniKeys, verdict } from './record.mjs';
 import { SEAL_FOR, LURE_TO, proxyOf, whereIs, playsLeft, whatDayRare, doomStart } from './fnaf3.mjs';
 import { branchPoints, parseSeeds, progress, withoutStrays, LEAD, BACKOFF } from './search.mjs';
-import { MARKERS, ACTORS, WATCH as WATCH4, places } from './fnaf4.mjs';
+import { MARKERS, ACTORS, WATCH as WATCH4, places, doomStart as doomStart4 } from './fnaf4.mjs';
 import { GRAPH, LURE_FROM } from '../../../packages/source/src/games/fnaf3/sim-fnaf3.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -125,5 +125,11 @@ const s4 = { f: 3, t: 0, o: { 'left hall near': [box(788, 130)], 'kitchen': [box
 const v4 = { s: s4, all: (n) => s4.o[n] ?? [], one: (n) => (s4.o[n] ?? [])[0] ?? null };
 assert.deepEqual(places(v4), { foxy: null, Bonnie: 'left hall near', Chica: 'away', Fredbear: null });
 ok('fnaf4 places() reads the hidden map markers; WATCH covers them');
+// FNaF 4's lost chain: Freddy past 53 (the bed then kills on arrival,
+// g427/g428), Foxy's got-you (g282), or the black flash counting (g468).
+assert.equal(doomStart4([{ t: 5, at: {}, freddy: 40, foxyGot: 0, flash: 0 }, { t: 9, at: {}, freddy: 54, foxyGot: 0, flash: 0 }]), 9);
+assert.equal(doomStart4([{ t: 5, at: {}, freddy: 10, foxyGot: 1, flash: 0 }]), 5);
+assert.equal(doomStart4([{ t: 5, at: {}, freddy: 10, foxyGot: 0, flash: 0 }, { t: 7, start: 'bed' }]), null);
+ok('fnaf4 doomStart: Freddy past 53, Foxy\'s got-you or the black flash');
 
 console.log(`# pilot records: ${passed} passed`);

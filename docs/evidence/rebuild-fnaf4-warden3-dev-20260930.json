@@ -1,0 +1,96 @@
+{
+ "schema": "evidence-record-v1",
+ "id": "rebuild-fnaf4-warden3-dev-20260930",
+ "claimLevel": "MODEL_ONLY",
+ "fidelity": "rebuilt-runtime",
+ "date": "2026-09-30",
+ "kind": "diagnostic development of warden3 on the warden2 held-out block's four losses and the development block; not a census",
+ "question": "Does clearing a Chica dwell that outlives her after 4 AM remove the warden2 held-out losses without costing the development block?",
+ "explanationTested": "Three of warden2's four held-out losses are one mechanism: after 4 AM Chica is away but her dwell stands at 20 (g478 resets it only below 20, g481 only while her hall is viewed), and the bed visit Fredbear forces sets her bed flag (g480) and ends the night on leaving the bed (g375). warden3 views the right hall after 4 AM whenever her dwell stands and Fredbear is not on the bed, in the closet or in the right hall.",
+ "binding": {
+  "binarySha256": "57b48ac1596879f8c8e8b121679f02314737107bacdcbe1af3258fe93121cd21",
+  "save": "tools/recompile/fixtures/fnaf4-night8-before.ini",
+  "winKey": "fn4.beat8=1"
+ },
+ "rejected": {
+  "what": "a first warden3 that also ended a closet hold early (Freddy 36, or a near dwell of 5) for the fourth loss",
+  "development": {
+   "seeds": 300,
+   "won": 259,
+   "lost": [
+    12,
+    15,
+    18,
+    21,
+    25,
+    32,
+    33,
+    35,
+    44,
+    62,
+    68,
+    72,
+    75,
+    83,
+    100,
+    111,
+    114,
+    116,
+    119,
+    126,
+    138,
+    144,
+    148,
+    152,
+    158,
+    167,
+    177,
+    199,
+    201,
+    204,
+    217,
+    221,
+    226,
+    238,
+    254,
+    257,
+    260,
+    281,
+    283,
+    292,
+    294
+   ]
+  },
+  "why": "almost every new loss was Foxy reaching 10 (g282): released early, his counter climbed back before the next visit"
+ },
+ "warden3": {
+  "heldOutLosses": {
+   "seeds": 4,
+   "won": 3,
+   "lost": [
+    31567
+   ]
+  },
+  "development": {
+   "seeds": 300,
+   "won": 300,
+   "lost": []
+  },
+  "policySourcesSha256": [
+   "a94e0c9512dadaf8bdced3b44e2d6b165f6e29006a3c4489f8162696704acec6"
+  ]
+ },
+ "search": {
+  "seed": 31567,
+  "verdict": "WON",
+  "replayWon": true,
+  "attempts": 13,
+  "winInputSha256": "137b268bd756cc19dd02feda0a889e0b8a61b587ed1a4025f03bddbeb41698cc",
+  "note": "the one held-out loss warden3 keeps (31567, Bonnie and Chica near, Foxy at 7-9 and Freddy rising at once) is won by search.mjs at attempt 12, replayed with no pilot"
+ },
+ "findings": [
+  "warden3 wins 3 of warden2's 4 held-out losses (not 31567) and 300/300 of the development block; search wins the fourth, so all four have a winning touch sequence.",
+  "These are the seeds warden3 was shaped on; its own held-out claim is the predeclared search block."
+ ],
+ "rung": "None. MODEL_ONLY, rebuilt-runtime."
+}
