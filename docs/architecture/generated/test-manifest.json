@@ -2716,6 +2716,42 @@
       }
     },
     {
+      "id": "packages/propose/bindings/test-anchor-aim-band.mjs",
+      "lane": "test:unit",
+      "owner": "@sixam/propose",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/propose/bindings/test-fact-register.mjs",
+      "lane": "test:unit",
+      "owner": "@sixam/propose",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "packages/propose/parked/minus7/cue/test-audio-authority.py",
       "lane": "test:unit",
       "owner": "@sixam/propose",
@@ -4900,24 +4936,6 @@
       }
     },
     {
-      "id": "tools/device/test-anchor-aim-band.mjs",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
       "id": "tools/device/test-deathchart.mjs",
       "lane": "test:contracts",
       "owner": "legacy migration",
@@ -4930,24 +4948,6 @@
         "browser",
         "device-transport"
       ],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/device/test-fact-register.mjs",
-      "lane": "test:contracts",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
       "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",

@@ -18,9 +18,9 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, readlink
   writeFileSync } from 'node:fs';
 import { homedir, hostname, tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { REPOSITORY_TARGET, claimEnvelope, isUnknown, refusalEnvelope, unknown } from '@sixam/kernel';
+import { BINDINGS_DIR, REPOSITORY_TARGET, claimEnvelope, isUnknown, refusalEnvelope, unknown } from '@sixam/kernel';
 import { CONSEQUENCE_CITES, classifyChange, consequenceKey } from '@sixam/review/consequence';
-import { trackedWinners } from '@sixam/review/evidence-pack';
+import { trackedWinners, winnerFiles } from '@sixam/review/evidence-pack';
 import { matchMistakes, readMistakes, stepFamily } from '@sixam/review/mistakes';
 import { queryPromotions } from '@sixam/review/promotions-query';
 import { readPacks } from '@sixam/review/registers';
@@ -133,9 +133,8 @@ export const PROC_HOST = Object.freeze({
 
 /** Stat fingerprint of the committed winners, to know when a cached compile is stale (as solver.mjs keeps it). */
 function winnersKey(root) {
-  const dir = join(root, 'tools', 'device');
-  return readdirSync(dir).filter(name => name.endsWith('-winner.json')).sort()
-    .map(name => { const stat = statSync(join(dir, name)); return `${name}:${stat.size}:${stat.mtimeMs}`; }).join('|');
+  return winnerFiles(root)
+    .map(file => { const stat = statSync(join(root, file)); return `${file}:${stat.size}:${stat.mtimeMs}`; }).join('|');
 }
 
 /**
@@ -436,11 +435,11 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
     // Winners that live outside git.
     const untracked = lines(git(['ls-files', '--others', '--exclude-standard', '--', ':(glob)**/*-winner.json']));
     const ignored = lines(git(['ls-files', '--others', '--ignored', '--exclude-standard', '--',
-      ':(glob)artifacts/**/*-winner.json', ':(glob)tools/device/*-winner.json']));
+      ':(glob)artifacts/**/*-winner.json', `:(glob)${BINDINGS_DIR}/*/*-winner.json`]));
     const loose = [...new Set([...untracked, ...ignored])].sort();
     check('untracked-winner', 'every *-winner.json is tracked', loose.length === 0);
     for (const file of loose) find('untracked-winner', `${file} is not tracked: it cannot be re-run on another machine`,
-      'commit it as tools/device/campaign-night<N>-<name>-winner.json in the commit that uses it (CLAUDE.md; test-fact-register.mjs)');
+      `commit it as ${BINDINGS_DIR}/<game>/campaign-night<N>-<name>-winner.json in the commit that uses it (CLAUDE.md; test-fact-register.mjs)`);
 
     return { checks, findings };
   }

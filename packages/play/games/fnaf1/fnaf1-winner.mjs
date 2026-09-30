@@ -2,7 +2,7 @@
 /**
  * Re-run a committed FNaF 1 route winner on the phone exactly as it won.
  *
- *   packages/play/games/fnaf1/fnaf1-winner.mjs --winner tools/device/fnaf1-custom-night7-420-grid420-winner.json
+ *   packages/play/games/fnaf1/fnaf1-winner.mjs --winner packages/propose/bindings/fnaf1/fnaf1-custom-night7-420-grid420-winner.json
  *   packages/play/games/fnaf1/fnaf1-winner.mjs --winner FILE --live --confirm-live [--label NAME]
  *   npm run night -- fnaf1-winner --winner FILE --live --confirm-live [--label NAME]
  *
@@ -41,6 +41,7 @@ import { homedir, tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { mainCheckout, resolveSerial } from '../../bin/phone/local-profile.mjs';
+import { BINDINGS_DIR } from '@sixam/kernel';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const ROOT = resolve(HERE, '../../../..');
@@ -65,11 +66,11 @@ const git = (root, args, options = {}) => execFileSync('git', ['-C', root, ...ar
   { maxBuffer: 1 << 28, stdio: ['ignore', 'pipe', 'pipe'], ...options });
 function fail(message) { throw new Error(`fnaf1-winner: ${message}`); }
 
-/** Every committed FNaF 1 route winner under tools/device, repository-relative. */
+/** Every committed FNaF 1 route winner, repository-relative. */
 export function listWinners(root = ROOT) {
-  const dir = join(root, 'tools/device');
-  return readdirSync(dir).filter((name) => name.endsWith('-winner.json')).sort()
-    .map((name) => ({ path: `tools/device/${name}`, winner: JSON.parse(readFileSync(join(dir, name), 'utf8')) }))
+  const dir = join(root, BINDINGS_DIR, 'fnaf1');
+  return (existsSync(dir) ? readdirSync(dir) : []).filter((name) => name.endsWith('-winner.json')).sort()
+    .map((name) => ({ path: `${BINDINGS_DIR}/fnaf1/${name}`, winner: JSON.parse(readFileSync(join(dir, name), 'utf8')) }))
     .filter(({ winner }) => winner.schema === WINNER_SCHEMA);
 }
 

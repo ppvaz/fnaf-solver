@@ -45,8 +45,8 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
 FAKE = HERE / "../../../packages/play/test/testdata" / "fake_phone.py"
 SERIAL = "FAKE0001"
-K3 = "tools/device/campaign-night7-k3-winner.json"
-N5 = "tools/device/campaign-night5-mask5plus-winner.json"
+K3 = "packages/propose/bindings/fnaf2/campaign-night7-k3-winner.json"
+N5 = "packages/propose/bindings/fnaf2/campaign-night5-mask5plus-winner.json"
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(ROOT / "packages/play/src/safety"))
 sys.path.insert(0, str(HERE / "../../../packages/play/test/testdata"))
@@ -266,10 +266,10 @@ def enqueue_checks(base: Path) -> None:
     refusals = {
         "a night the winner does not bind": ("fnaf2", K3, 5, {}),
         "another game's winner": ("fnaf4", K3, 7, {}),
-        "a path outside tools/device": ("fnaf2", "artifacts/k3-winner.json", 7, {}),
-        "a path that climbs out": ("fnaf2", "tools/device/../../etc/passwd-winner.json", 7, {}),
+        "a path outside the bindings": ("fnaf2", "artifacts/k3-winner.json", 7, {}),
+        "a path that climbs out": ("fnaf2", "packages/propose/bindings/fnaf2/../../../../etc/passwd-winner.json", 7, {}),
         "a label with shell text": ("fnaf2", K3, 7, {"label": "k3;reboot"}),
-        "audio on a game whose audio is fixed": ("fnaf1", "tools/device/fnaf1-custom-night7-420-grid420-winner.json",
+        "audio on a game whose audio is fixed": ("fnaf1", "packages/propose/bindings/fnaf1/fnaf1-custom-night7-420-grid420-winner.json",
                                                  7, {"audio": True}),
     }
     for name, (game, winner, night, options) in refusals.items():
@@ -279,7 +279,7 @@ def enqueue_checks(base: Path) -> None:
         except QUEUE.QueueError:
             check(f"enqueue refuses {name}", True)
     check("custody: a file git does not track is UNTRACKED",
-          night_jobs.custody("tools/device/no-such-night-job-fixture-winner.json") == "UNTRACKED")
+          night_jobs.custody("packages/propose/bindings/fnaf2/no-such-night-job-fixture-winner.json") == "UNTRACKED")
     check("title: FNaF 4 has no title model, so its night cannot be observed",
           night_jobs.title_expectation("fnaf4", 3)["readable"] is False)
     check("title: 7 is Custom Night, 6 is 6th Night, 1-5 the digit under Continue",

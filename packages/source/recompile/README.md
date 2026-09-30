@@ -756,13 +756,13 @@ committed winner's own tap schedule into the pinned binary `036076d3` (patch
 `sourced-rebuild-model-options.json`, seed 24850.
 
 ```sh
-node packages/propose/bin/recompile/schedule-to-input.mjs --winner tools/device/campaign-night5-contact-final-winner.json \
+node packages/propose/bin/recompile/schedule-to-input.mjs --winner packages/propose/bindings/fnaf2/campaign-night5-contact-final-winner.json \
   --night 5 --navigation packages/source/recompile/fixtures/continue.input --out <run>/run.input
 # harness recipe above, plus CHOWDREN_STOP_FRAME=5 CHOWDREN_MAX_TICKS=30 (stop on 06-next day) and
 # CHOWDREN_WATCH='flip panel button:0' (a second run with CHOWDREN_WATCH=mask:0 for the mask ledger)
 node packages/propose/bin/recompile/compare-schedule-replay.mjs --trace <run>/trace --repeat-trace <run2>/trace \
   --input <run>/run.input --navigation packages/source/recompile/fixtures/continue.input \
-  --winner tools/device/campaign-night5-contact-final-winner.json --night 5 --seed 24850 \
+  --winner packages/propose/bindings/fnaf2/campaign-night5-contact-final-winner.json --night 5 --seed 24850 \
   --model-options packages/source/recompile/sourced-rebuild-model-options.json \
   --ledger monitor --ledger mask=<mask run>/trace --save ... --binary ... --out <result.json>
 ```

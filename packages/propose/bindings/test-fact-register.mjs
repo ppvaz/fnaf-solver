@@ -21,13 +21,15 @@
 import { execSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build, FACTS, ANCHOR_AIMS, ANCHOR_AIM_MIN_MARGIN_MS, UNTRACKED_WINNER_DEBT, anchorAimFor } from './fact-register.mjs';
-import { compileBundle } from '../../packages/propose/bin/plans/bundle.mjs';
+import { compileBundle } from '../bin/plans/bundle.mjs';
 import { stableHash } from '@sixam/kernel/contracts';
+import { BINDINGS_DIR } from '@sixam/kernel';
+import { winnerFiles } from '@sixam/review/evidence-pack';
 
-const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '../..'));
+const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '../../..'));
 
 const ACTUATING = 'packages/play/src/campaign';
 let failed = 0;
@@ -72,14 +74,13 @@ for (const [hash, entry] of Object.entries(ANCHOR_AIMS)) {
     `with >= ${ANCHOR_AIM_MIN_MARGIN_MS} ms margin, ${JSON.parse(readFileSync(join(ROOT, entry.evidence), 'utf8')).confirmations3000.length} clean 3000-seed rows\n`);
 }
 // A registered binding must be rebuildable from the tree: its winner.json,
-// hashed as stored, must be committed under tools/device/*-winner.json. The
+// hashed as stored, must be committed under packages/propose/bindings/<game>/. The
 // thirteen bindings registered before 2026-09-15 were carried as a closed debt
 // list; on 2026-09-25 ten of the eleven left were found on this machine and
 // committed, and the one that no longer rebuilds is all that remains. Anything
 // else without a tracked winner is refused, and so is any growth of that list.
-const trackedWinners = new Map(readdirSync(join(ROOT, 'tools/device'))
-  .filter(name => name.endsWith('-winner.json'))
-  .map(name => [stableHash(JSON.parse(readFileSync(join(ROOT, 'tools/device', name), 'utf8'))), name]));
+const trackedWinners = new Map(winnerFiles(ROOT)
+  .map(file => [stableHash(JSON.parse(readFileSync(join(ROOT, file), 'utf8'))), basename(file)]));
 const DEBT_CEILING = 1;
 if (Object.keys(UNTRACKED_WINNER_DEBT).length > DEBT_CEILING)
   fail(`UNTRACKED_WINNER_DEBT grew past its ${DEBT_CEILING} closed entries: commit the winner instead`);
@@ -92,7 +93,7 @@ for (const [hash, entry] of Object.entries(ANCHOR_AIMS)) {
   } else if (UNTRACKED_WINNER_DEBT[hash]) {
     process.stdout.write(`binding ${hash} (night ${entry.night}): UNTRACKED winner -- ${UNTRACKED_WINNER_DEBT[hash]}\n`);
   } else {
-    fail(`binding ${hash} (night ${entry.night}) has an anchor aim but no tracked tools/device/*-winner.json with that stableHash`);
+    fail(`binding ${hash} (night ${entry.night}) has an anchor aim but no tracked ${BINDINGS_DIR}/<game>/*-winner.json with that stableHash`);
   }
 }
 // The newest Night 5 qualification names the binding a run will carry; that

@@ -40,6 +40,7 @@ import { FOUR_TWENTY, LANE_FILE, LANE_FILES, POPULATION_KIND, POPULATION_LANES, 
   pinnedGrid420, runDeviceNight, winnerPolicyOptions } from '../../../packages/propose/bin/census/fnaf1-device-lane.mjs';
 import { ROOT, RUNNER, listWinners, shapeProblems, pinsAtCommit, pinnedCommit, routeDrift, materialize, removeTree,
   treeProblems, replayArguments, replayInvocation, sha256, sharedLockDir, winnerCustody } from '../../../packages/play/games/fnaf1/fnaf1-winner.mjs';
+import { currentPath } from '@sixam/review/renamed-path';
 
 const failures = [];
 let checks = 0;
@@ -152,7 +153,12 @@ try {
       [parsed.mode, parsed.dials, parsed.chicaByCamera, parsed.originOffsetMs, parsed.stopAfterMs, parsed.live && parsed.confirmLive],
       [r.policy, winner.night.dials, r.chicaByCamera, r.originOffsetMs, r.stopAfterMs, true]);
     ok(`${path}: its replay.command is the night launcher's fnaf1-winner with this very file`,
-      String(winner.replay?.command).startsWith(`npm run night -- fnaf1-winner --winner ${path} `));
+      (() => {
+        // The command is frozen with the winner's path of its day; the launcher follows that path to this file.
+        const words = String(winner.replay?.command).split(' ');
+        const named = words[words.indexOf('--winner') + 1];
+        return words.slice(0, 5).join(' ') === 'npm run night -- fnaf1-winner' && (currentPath(ROOT, named) ?? named) === path;
+      })());
     eq('npm run night -- fnaf1-winner runs the replay', GAMES['fnaf1-winner']?.runner, 'packages/play/games/fnaf1/fnaf1-winner.mjs');
 
     // 4. The winner names a census of its own route -- its pinned grid420 with the
@@ -290,7 +296,8 @@ function censusProblems(path, winner, commit, policy, { id = winner.census, reco
   const m = record.method ?? {};
   same(`${id}: kind and id`, [record.kind, record.id, record.claimLevel], [POPULATION_KIND, id, 'MODEL_ONLY']);
   same(`${id}: censuses this winner's pinned grid420 at its commit`,
-    [m.winner?.path, m.winner?.id, m.winner?.commit, m.policySha256], [path, winner.id, commit, winner.sources[LANE_FILES.find((lane) => lane in winner.sources)]]);
+    // The record names the winner where it stood when written; that name follows the file's renames.
+    [currentPath(ROOT, m.winner?.path ?? '') ?? m.winner?.path, m.winner?.id, m.winner?.commit, m.policySha256], [path, winner.id, commit, winner.sources[LANE_FILES.find((lane) => lane in winner.sources)]]);
   same(`${id}: with the options this winner's runner passed`, m.options, winnerPolicyOptions(winner));
   pass(`${id}: the timing model changed since; re-run the winner census`, m.timingSha256 === sha256(readFileSync(TIMING_PATH)));
   const design = designBlock();

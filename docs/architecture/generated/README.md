@@ -39,7 +39,7 @@ Review's `trackedWinners()` reads this register instead, and refuses it when a
 winner file's bytes differ from the sha256 recorded here.
 
 `anchor-aims.json` is the fact register's binding tables
-(`tools/device/fact-register.mjs`): the anchor aim registered per binding hash
+(`packages/propose/bindings/fact-register.mjs`): the anchor aim registered per binding hash
 and the closed `UNTRACKED_WINNER_DEBT` list. The register is binding data that
 device runs read; Review never imports it, so the promotions query reads this
 generated copy, which CI's catalog diff keeps current.

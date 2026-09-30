@@ -1,6 +1,6 @@
 {
   "schema": "anchor-aims-v1",
-  "generatedFrom": "tools/device/fact-register.mjs (ANCHOR_AIMS, UNTRACKED_WINNER_DEBT)",
+  "generatedFrom": "packages/propose/bindings/fact-register.mjs (ANCHOR_AIMS, UNTRACKED_WINNER_DEBT)",
   "anchorAims": {
     "fnv1a-81b5e51c": {
       "night": 5,
@@ -139,7 +139,7 @@
       "reason": "band [4766.67, 4916.67) as e; flash 9960 / mask off 9260 confirmed at 3000 seeds (see evidence)",
       "replayHash": "fnv1a-c651e2ff",
       "alsoBinds": {
-        "fnv1a-3d5b2167": "tools/device/campaign-night6-h-winner.json"
+        "fnv1a-3d5b2167": "packages/propose/bindings/fnaf2/campaign-night6-h-winner.json"
       }
     },
     "fnv1a-c27182da": {

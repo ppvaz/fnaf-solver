@@ -19,10 +19,10 @@ const home = '/home/pack-tester'; // only ever a string to scrub; the root is us
 const put = (path, content) => { mkdirSync(join(root, path, '..'), { recursive: true }); writeFileSync(join(root, path), content); };
 try {
   const winner = { schema: 'winner-v1', strategy: 'minus-toys', knobs: { hallOffsetMs: 7400 } };
-  put('tools/device/campaign-night5-test-winner.json', JSON.stringify(winner));
+  put('packages/propose/bindings/fnaf2/campaign-night5-test-winner.json', JSON.stringify(winner));
   // The generated register trackedWinners reads (tools/generate-catalog.js): this synthetic
   // winner does not compile, so only its file hash identifies it.
-  const registerRows = [{ file: 'tools/device/campaign-night5-test-winner.json', sha256: sha256(JSON.stringify(winner)), compiledWinnerHash: null }];
+  const registerRows = [{ file: 'packages/propose/bindings/fnaf2/campaign-night5-test-winner.json', sha256: sha256(JSON.stringify(winner)), compiledWinnerHash: null }];
   const writeRegister = () => put(WINNER_HASHES, JSON.stringify({ schema: 'winner-hashes-v1', winners: registerRows }));
   writeRegister();
   put('artifacts/b1/manifest.json', JSON.stringify({ schema: 'device-bundle-v1', winnerHash: stableHash(winner) }));
@@ -125,11 +125,11 @@ try {
   // A bundle records the winner as compiled, which compileBundle normalises: the committed
   // Night 6 winner's file hashes to fnv1a-de095950 and compiles to fnv1a-59908edd. A pack from
   // that bundle must still find its winner.
-  const night6 = readFileSync(new URL('../../../tools/device/campaign-night6-winner.json', import.meta.url), 'utf8');
-  put('tools/device/campaign-night6-winner.json', night6);
+  const night6 = readFileSync(new URL('../../../packages/propose/bindings/fnaf2/campaign-night6-winner.json', import.meta.url), 'utf8');
+  put('packages/propose/bindings/fnaf2/campaign-night6-winner.json', night6);
   // Its compiled hash comes from the committed register, which must hold it.
   const committed = JSON.parse(readFileSync(new URL(`../../../${WINNER_HASHES}`, import.meta.url), 'utf8'));
-  registerRows.push(committed.winners.find(row => row.file === 'tools/device/campaign-night6-winner.json'));
+  registerRows.push(committed.winners.find(row => row.file === 'packages/propose/bindings/fnaf2/campaign-night6-winner.json'));
   writeRegister();
   const withNight6 = trackedWinners(root);
   assert.equal(withNight6.get(stableHash(JSON.parse(night6))), 'campaign-night6-winner.json');
@@ -314,20 +314,20 @@ try {
 // that is Propose's) and refuses a register that no longer matches the committed winner files.
 {
   const root = mkdtempSync(join(tmpdir(), 'winner-hashes-'));
-  mkdirSync(join(root, 'tools/device'), { recursive: true });
+  mkdirSync(join(root, 'packages/propose/bindings/fnaf2'), { recursive: true });
   mkdirSync(join(root, 'docs/architecture/generated'), { recursive: true });
   const bytes = JSON.stringify({ schema: 'winner-v1', strategy: 'minus-toys' });
-  writeFileSync(join(root, 'tools/device/a-winner.json'), bytes);
+  writeFileSync(join(root, 'packages/propose/bindings/fnaf2/a-winner.json'), bytes);
   const register = rows => writeFileSync(join(root, WINNER_HASHES), JSON.stringify({ schema: 'winner-hashes-v1', winners: rows }));
   const digest = createHash('sha256').update(bytes).digest('hex');
   try {
-    register([{ file: 'tools/device/a-winner.json', sha256: digest, compiledWinnerHash: 'fnv1a-00c0ffee' }]);
+    register([{ file: 'packages/propose/bindings/fnaf2/a-winner.json', sha256: digest, compiledWinnerHash: 'fnv1a-00c0ffee' }]);
     const winners = trackedWinners(root);
     assert.equal(winners.get('fnv1a-00c0ffee'), 'a-winner.json', 'the compiled hash maps to its file');
     assert.equal(winners.get(stableHash(JSON.parse(bytes))), 'a-winner.json', "the file's own stableHash maps too");
-    register([{ file: 'tools/device/a-winner.json', sha256: digest, compiledWinnerHash: null, notCompiled: 'device bundle: winner schema mismatch' }]);
+    register([{ file: 'packages/propose/bindings/fnaf2/a-winner.json', sha256: digest, compiledWinnerHash: null, notCompiled: 'device bundle: winner schema mismatch' }]);
     assert.equal(trackedWinners(root).size, 1, 'a winner that does not compile keeps only its file hash');
-    register([{ file: 'tools/device/a-winner.json', sha256: 'e'.repeat(64), compiledWinnerHash: 'fnv1a-00c0ffee' }]);
+    register([{ file: 'packages/propose/bindings/fnaf2/a-winner.json', sha256: 'e'.repeat(64), compiledWinnerHash: 'fnv1a-00c0ffee' }]);
     assert.throws(() => trackedWinners(root), /stale.*npm run catalog/, 'changed winner bytes make the register stale');
     register([]);
     assert.throws(() => trackedWinners(root), /stale/, 'an unlisted winner makes the register stale');

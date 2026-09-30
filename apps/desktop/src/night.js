@@ -23,6 +23,7 @@ import { spawn } from 'node:child_process';
 import { existsSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { currentPath } from '@sixam/review/renamed-path';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 
@@ -42,7 +43,8 @@ const runDirs = root => {
 /**
  * Run one night and pack the run directories it created.
  * @param {string} game a key of GAMES
- * @param {string[]} args passed to the runner untouched
+ * @param {string[]} args passed to the runner as given, except that a `--winner` path a record wrote before the
+ *   winner moved (tools/device/, until 2026-09-30) is followed to where the winner lives now
  * @param {{root?: string, pack?: (root: string, id: string) => Promise<number>}} [options]
  * @returns {Promise<{status: number, packed: string[]}>}
  */
@@ -50,7 +52,8 @@ export async function runNight(game, args, { root = ROOT, pack = packRun } = {})
   const entry = GAMES[game];
   if (!entry) throw new Error(`unknown game ${JSON.stringify(game)}; one of ${Object.keys(GAMES).join(', ')}`);
   const before = runDirs(root);
-  const child = spawn(join(root, entry.runner), args, { cwd: root, stdio: 'inherit' });
+  const followed = args.map((arg, index) => (args[index - 1] === '--winner' ? currentPath(root, arg) ?? arg : arg));
+  const child = spawn(join(root, entry.runner), followed, { cwd: root, stdio: 'inherit' });
   // Ctrl-C reaches the runner through the terminal's process group; this waits
   // for it to finish its own abort and reset, then packs what it left.
   const ignore = () => {};

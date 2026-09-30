@@ -15,11 +15,11 @@
 //
 // It reads and never writes; `--write` in the CLI retains its output as an evidence record.
 import { createHash } from 'node:crypto';
-import { readFileSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { basename, join } from 'node:path';
 import { canonicalJson, stableHash } from '@sixam/kernel/contracts';
-import { isUnknown, validateAnnotation, validateClaimLevel } from '@sixam/kernel';
-import { ATTESTATION_FILE, PACKS_DIR, WINNER_HASHES, packPromotionChecks, trackedWinners } from './evidence-pack.mjs';
+import { BINDINGS_DIR, isUnknown, validateAnnotation, validateClaimLevel } from '@sixam/kernel';
+import { ATTESTATION_FILE, PACKS_DIR, WINNER_HASHES, packPromotionChecks, trackedWinners, winnerFiles } from './evidence-pack.mjs';
 import { GRAPH_FILE, PROMOTION_EDGE, derivePromotion, readGraph, recordPromotion } from './evidence-promotion.mjs';
 import { liftPack, packIds } from './pack-lift.mjs';
 
@@ -29,7 +29,6 @@ export const ANCHOR_AIMS_FILE = 'docs/architecture/generated/anchor-aims.json';
 export const QUERY_COMMAND = 'npm run review -- query promotions';
 /** The instrument whose classification each promotion annotation records. */
 export const PROMOTION_INSTRUMENT = 'plan12-promotion@plan12-attestation-v2';
-const WINNERS_DIR = 'tools/device';
 
 const sha256 = data => createHash('sha256').update(data).digest('hex');
 const tally = (counts, key) => { counts[key] = (counts[key] ?? 0) + 1; return counts; };
@@ -41,10 +40,10 @@ const EMPTY_GRAPH = { schema: 'claim-evidence-v1', version: 1, nodes: [], edges:
 function committedWinners(root, winners) {
   const byName = new Map();
   for (const [hash, name] of winners) byName.set(name, [...(byName.get(name) ?? []), hash]);
-  return readdirSync(join(root, WINNERS_DIR)).filter(name => name.endsWith('-winner.json')).sort().map(name => {
-    const file = JSON.parse(readFileSync(join(root, WINNERS_DIR, name), 'utf8'));
-    return { file: `${WINNERS_DIR}/${name}`, schema: file.schema ?? null, fileHash: stableHash(file),
-      hashes: [...new Set(byName.get(name) ?? [stableHash(file)])].sort() };
+  return winnerFiles(root).map(path => {
+    const file = JSON.parse(readFileSync(join(root, path), 'utf8'));
+    return { file: path, schema: file.schema ?? null, fileHash: stableHash(file),
+      hashes: [...new Set(byName.get(basename(path)) ?? [stableHash(file)])].sort() };
   });
 }
 
@@ -138,8 +137,8 @@ export function queryPromotions(root, { winners = trackedWinners(root) } = {}) {
   return {
     schema: QUERY_SCHEMA, query: 'promotions', command: QUERY_COMMAND,
     authority: 'plans/12-end-to-end-evidence-campaign.md; docs/decisions/0002-kernel-contexts-vocabulary.md principles 4 and 11',
-    sources: { packs: PACKS_DIR, graph: GRAPH_FILE, winners: `${WINNERS_DIR}/*-winner.json`,
-      debt: `${ANCHOR_AIMS_FILE} (generated from ${WINNERS_DIR}/fact-register.mjs ANCHOR_AIMS and UNTRACKED_WINNER_DEBT)` },
+    sources: { packs: PACKS_DIR, graph: GRAPH_FILE, winners: `${BINDINGS_DIR}/<game>/*-winner.json`,
+      debt: `${ANCHOR_AIMS_FILE} (generated from ${BINDINGS_DIR}/fact-register.mjs ANCHOR_AIMS and UNTRACKED_WINNER_DEBT)` },
     rule: 'an edge is derived for a pack when every packPromotionChecks check passes, derivePromotion re-derives every check and ' +
       'names the claim, and the pack attestation lists exactly the checks, inputs, claim and custody derived now; the edge is ' +
       "recordPromotion's over that pack, and it matches when graph.json holds the same edge (canonical JSON)",
@@ -162,7 +161,7 @@ export function queryPromotions(root, { winners = trackedWinners(root) } = {}) {
         winners: unnamed.map(item => ({ file: item.file, hashes: item.hashes })),
       },
       untrackedWinnerDebt: {
-        rule: 'a registered anchor binding (ANCHOR_AIMS) with no committed tools/device/*-winner.json of the same stableHash, ' +
+        rule: `a registered anchor binding (ANCHOR_AIMS) with no committed ${BINDINGS_DIR}/<game>/*-winner.json of the same stableHash, ` +
           'against the closed UNTRACKED_WINNER_DEBT list',
         summary: `${stillUntracked.length} of ${declared.length}`,
         declared: declared.length, untracked: stillUntracked.length, derived: derivedDebt, agrees: canonicalJson(derivedDebt) === canonicalJson(declared),
@@ -203,4 +202,4 @@ export function promotionsRecord(result, { date, command, commit, dirtyInputs })
 
 /** The paths the query reads, for a record's dirty-input list. */
 export const QUERY_INPUTS = Object.freeze(['packages/review', 'packages/kernel', 'packages/source', 'packages/core', 'packages/propose', WINNER_HASHES,
-  ANCHOR_AIMS_FILE, 'tools/device/*-winner.json', PACKS_DIR, GRAPH_FILE]);
+  ANCHOR_AIMS_FILE, BINDINGS_DIR, PACKS_DIR, GRAPH_FILE]);

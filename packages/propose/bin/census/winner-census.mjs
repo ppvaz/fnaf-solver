@@ -10,7 +10,7 @@
 // population rate, not a sample of it.
 //
 //   node packages/propose/bin/census/winner-census.mjs --jobs 8 --out docs/evidence/fnaf2-winner-census-YYYYMMDD.json
-//   node packages/propose/bin/census/winner-census.mjs --winner tools/device/campaign-night7-k3-winner.json --count 3000
+//   node packages/propose/bin/census/winner-census.mjs --winner packages/propose/bindings/fnaf2/campaign-night7-k3-winner.json --count 3000
 //
 // The lane is the binding's own emitter replay -- `STRATEGY_REGISTRY[s].emit`,
 // at the binding's anchorEpochMs + phaseOffsetMs -- which is exactly what
@@ -33,10 +33,11 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { RNG_MODULUS, Sim } from '@sixam/source/fnaf2';
 import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort } from '@sixam/propose/seeds';
 import { STRATEGY_REGISTRY, WINNER_SCHEMA, compileBundle, validateWinner } from '../plans/bundle.mjs';
+import { winnerTag } from '@sixam/kernel';
+import { winnerFiles } from '@sixam/review/evidence-pack';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '../../../..');
-const WINNER_DIR = join(ROOT, 'tools/device');
 const EVIDENCE_DIR = join(ROOT, 'docs/evidence');
 export const RECORD_SCHEMA = 'evidence-record-v1';
 export const CENSUS_KIND = 'fnaf2-winner-census-v1';
@@ -74,8 +75,7 @@ export function applySimOpts(names) {
 
 /** The committed winner-v1 files, repository-relative and sorted. */
 export function committedWinners() {
-  return readdirSync(WINNER_DIR).filter((name) => name.endsWith('-winner.json')).sort()
-    .map((name) => join('tools/device', name))
+  return winnerFiles(ROOT)
     .filter((path) => JSON.parse(readFileSync(join(ROOT, path), 'utf8')).schema === WINNER_SCHEMA);
 }
 
@@ -172,7 +172,7 @@ export async function forkBlocks({ script, args, start, count, jobs, childFlag =
   }));
 }
 
-export function gitState(enginePaths = ['packages/core', 'packages/source', 'packages/kernel', 'packages/propose', 'tools/device']) {
+export function gitState(enginePaths = ['packages/core', 'packages/source', 'packages/kernel', 'packages/propose']) {
   const git = (...args) => execFileSync('git', ['-C', ROOT, ...args], { encoding: 'utf8' }).trim();
   return { commit: git('rev-parse', 'HEAD'),
     dirtyEnginePaths: git('status', '--porcelain', '--', ...enginePaths).split('\n').filter(Boolean) };
@@ -217,7 +217,7 @@ export function buildRecord({ rows, start, count, design, git, date, command, wi
   // for a reason this lane cannot see.
   const saturated = population && Object.values(nights).every((e) => e.wins === e.n);
   const short = bindings.flatMap((row) => row.phone.filter((c) => c.wins < c.counted)
-    .map((c) => `${row.binding.replace(/^tools\/device\/|-winner\.json$/g, '')} ${row.wins}/${row.n} here, ` +
+    .map((c) => `${winnerTag(row.binding)} ${row.wins}/${row.n} here, ` +
       `${c.wins}/${c.counted} on the phone (${c.record})`));
   const consequence = !saturated ? null
     : 'Every story night has a committed binding that wins every night the model can deal in the exact lane, so ' +
@@ -228,7 +228,7 @@ export function buildRecord({ rows, start, count, design, git, date, command, wi
   const answer = Object.entries(nights).map(([night, e]) => `Night ${night}: ${e.wins}/${e.n}` +
     (!population ? ' (a block, not the population)'
       : e.pMaxExactLane === 1 ? ' (P_max = 1 in the exact lane)' : ` (P_max >= ${e.lowerBound.toFixed(6)})`) +
-    ` by ${e.binding.replace(/^tools\/device\/|-winner\.json$/g, '')}`).join('; ');
+    ` by ${winnerTag(e.binding)}`).join('; ');
   return {
     schema: RECORD_SCHEMA, kind: CENSUS_KIND,
     id: `fnaf2-winner-census-${date.replace(/-/g, '')}`,
@@ -310,7 +310,7 @@ async function main(argv) {
   const text = `${JSON.stringify(record, null, 2)}\n`;
   if (args.out) writeFileSync(args.out, text); else process.stdout.write(text);
   for (const row of record.bindings) {
-    const tag = row.binding.replace(/^tools\/device\/|-winner\.json$/g, '');
+    const tag = winnerTag(row.binding);
     console.error(`  ${tag.padEnd(36)} n${row.night} ${String(row.wins).padStart(6)}/${row.n}` +
       `  held-out ${row.heldOut.wins}/${row.heldOut.n}` +
       (row.wins === row.n ? '' : `  | ${Object.entries(row.deaths).map(([c, k]) => `${c} ${k}`).join(', ')}`));

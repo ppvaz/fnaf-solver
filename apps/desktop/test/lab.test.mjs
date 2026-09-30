@@ -49,7 +49,7 @@ function fixture(name) {
   write(root, 'docs/architecture/generated/x.json', '{"v": 1}\n');
   write(root, '.gitignore', 'artifacts/\nnode_modules/\n');
   write(root, 'docs/decisions/0009-lab-test.md', '# ADR 0009: a test\n\n**Status:** proposed 2026-09-30; accepted by the commit that carries the override.\n');
-  write(root, 'tools/device/campaign-night1-x-winner.json', `${JSON.stringify({ schema: 'winner-v1', nights: [1] })}\n`);
+  write(root, 'packages/propose/bindings/fnaf2/campaign-night1-x-winner.json', `${JSON.stringify({ schema: 'winner-v1', nights: [1] })}\n`);
   write(root, 'docs/evidence/prior-record-20260929.json', '{"schema": "evidence-record-v1"}\n');
   commitAll(root, 'Fixture');
   return root;
@@ -64,7 +64,7 @@ const NOW = new Date('2026-09-30T09:00:00Z');
 const quietHost = { availableMb: () => 4000, processes: () => [{ pid: 1, name: 'init', rssMb: 10 }], cwds: () => [] };
 
 /** A lab over the fixture, every host path inside the test's own temp directory. */
-function labFor(root, { jobs = [], host = quietHost, modelOnly = ['tools/device/campaign-night1-x-winner.json'] } = {}) {
+function labFor(root, { jobs = [], host = quietHost, modelOnly = ['packages/propose/bindings/fnaf2/campaign-night1-x-winner.json'] } = {}) {
   const env = { ...cleanEnv, FNAF_LAB_DIR: join(root, '..', `${root.split('/').pop()}-lab`), CUE_HELPER_STATE_DIR: join(root, '..', 'state'),
     FNAF_WINDOW_DIR: join(root, '..', `${root.split('/').pop()}-windows`), FNAF2_PUSH_GATE_TMP: join(root, '..', 'pushgate'),
     FNAF_LOCAL_PROFILE: join(root, '..', `${root.split('/').pop()}-profile.json`) };
@@ -190,7 +190,7 @@ try {
   assert.equal(ranked.actions[0].kind, 'fix', 'a hooks path that is unset comes first');
   assert.equal(ranked.actions[0].command, 'git config core.hooksPath .githooks');
   const s1 = ranked.actions.find(item => item.step === 'S1');
-  assert.equal(s1.command, 'apps/lab/companion-queue.sh enqueue night --game fnaf2 --winner tools/device/campaign-night1-x-winner.json --night 1');
+  assert.equal(s1.command, 'apps/lab/companion-queue.sh enqueue night --game fnaf2 --winner packages/propose/bindings/fnaf2/campaign-night1-x-winner.json --night 1');
   assert.ok(ranked.blocked.some(row => row.step === 'S3' && row.needs[0].startsWith('S2')), 'S3 waits on S2');
   assert.ok(ranked.actions.findIndex(item => item.step === 'S1') < ranked.actions.findIndex(item => item.step === 'S2'), 'S1 before S2');
   git(root, 'config', 'core.hooksPath', '.githooks');
@@ -211,7 +211,7 @@ try {
   const admin = resolve(agent, readFileSync(join(agent, '.git'), 'utf8').trim().replace(/^gitdir:\s*/, ''));
   for (const path of [agent, join(admin, 'HEAD'), join(admin, 'index'), join(admin, 'logs/HEAD')])
     if (existsSync(path)) utimesSync(path, old, old);
-  write(sick, 'tools/device/loose-winner.json', '{}\n');
+  write(sick, 'packages/propose/bindings/fnaf2/loose-winner.json', '{}\n');
   write(sick, 'artifacts/runs/k9/campaign-night7-k9-winner.json', '{}\n');
   mkdirSync(join(sick, 'node_modules/@fnaf2-1020'), { recursive: true });
   const staleJob = { id: 'cue-1-stale', kind: 'setup', state: 'PENDING', createdAt: new Date(NOW.getTime() - (STALE_PENDING_HOURS + 28) * HOUR).toISOString() };
@@ -231,7 +231,7 @@ try {
   assert.match(found('catalog-drift')[0].finding, /docs\/architecture\/generated\/x\.json/);
   assert.match(found('memory')[0].finding, /1000 MB available while Chowdren \(pid 4242, 1500 MB\)/);
   assert.deepEqual(found('untracked-winner').map(item => item.finding.split(' ')[0]).sort(),
-    ['artifacts/runs/k9/campaign-night7-k9-winner.json', 'tools/device/loose-winner.json']);
+    ['artifacts/runs/k9/campaign-night7-k9-winner.json', 'packages/propose/bindings/fnaf2/loose-winner.json']);
   assert.equal(report.findings.length, 11, JSON.stringify(report.findings, null, 2));
   assert.ok(existsSync(pushgate) && existsSync(agent), 'doctor deleted nothing');
   assert.equal(parseWorktrees(git(sick, 'worktree', 'list', '--porcelain')).length, 2, 'the catalog worktree is gone again');
@@ -242,7 +242,7 @@ try {
   rmSync(join(sick, 'node_modules/@fnaf2-1020'), { recursive: true });
   mkdirSync(join(sick, 'node_modules/@sixam'), { recursive: true });
   writeFileSync(sickLab.env.FNAF_LOCAL_PROFILE, '{}\n');
-  rmSync(join(sick, 'tools/device/loose-winner.json'));
+  rmSync(join(sick, 'packages/propose/bindings/fnaf2/loose-winner.json'));
   rmSync(join(sick, 'artifacts'), { recursive: true });
   write(sick, 'docs/architecture/generated/x.json', '{"v": 2}\n');
   // The fixture's hooks now run, so a docs-only commit rides a reference to prior evidence.
@@ -258,7 +258,7 @@ try {
   // --- morning: the queue and the packs since the last evening ------------------------------------
   const night = fixture('morning');
   const jobs = [
-    { id: 'cue-2-night', kind: 'night', state: 'FAILED', night: 7, winner: 'tools/device/campaign-night7-k3-winner.json',
+    { id: 'cue-2-night', kind: 'night', state: 'FAILED', night: 7, winner: 'packages/propose/bindings/fnaf2/campaign-night7-k3-winner.json',
       createdAt: '2026-09-29T20:00:00Z', startedAt: '2026-09-30T04:31:00Z', finishedAt: '2026-09-30T04:40:00Z', result: 'stopped mid-job: window-end' },
     { id: 'cue-3-old', kind: 'menu-check', state: 'DONE', createdAt: '2026-09-20T01:00:00Z', finishedAt: '2026-09-20T02:00:00Z' },
   ];

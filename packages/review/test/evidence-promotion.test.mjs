@@ -23,7 +23,7 @@ const agent = { by: 'agent', note: 'test-evidence-promotion.mjs', date: '2026-09
 
 try {
   const winner = { schema: 'winner-v1', strategy: 'minus-toys', knobs: { hallOffsetMs: 7400 } };
-  put('tools/device/campaign-night5-test-winner.json', JSON.stringify(winner));
+  put('packages/propose/bindings/fnaf2/campaign-night5-test-winner.json', JSON.stringify(winner));
   put('artifacts/b1/manifest.json', JSON.stringify({ schema: 'device-bundle-v1', winnerHash: stableHash(winner) }));
   const winners = new Map([[stableHash(winner), 'campaign-night5-test-winner.json']]);
   put(RECOVERY_RECORD, JSON.stringify({ schema: 'custody-recovery-check-v1',

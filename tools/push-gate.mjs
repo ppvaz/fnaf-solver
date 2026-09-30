@@ -48,7 +48,7 @@ export const LANES = [
   { name: 'Slow census gates', run: 'npm run test:unit:slow', heavy: true },
   { name: 'Clean-checkout model lane', run: 'npm run test:core' },
   { name: 'Trainer build', run: 'npm run build:trainer' },
-  { name: 'Campaign dry-run over a committed winner', run: 'd=$(mktemp -d) && trap \'rm -rf "$d"\' EXIT && npm run --silent device:emit -- --winner tools/device/campaign-night7-k3-winner.json --out "$d/k3" && npm run --silent device:campaign -- --bundle "$d/k3" --nights 7 --profile hid-mediaprojection' },
+  { name: 'Campaign dry-run over a committed winner', run: 'd=$(mktemp -d) && trap \'rm -rf "$d"\' EXIT && npm run --silent device:emit -- --winner packages/propose/bindings/fnaf2/campaign-night7-k3-winner.json --out "$d/k3" && npm run --silent device:campaign -- --bundle "$d/k3" --nights 7 --profile hid-mediaprojection' },
   { name: 'Documentation and catalog links', run: 'npm run catalog && npm run chronicle && git diff --exit-code -- docs/architecture/generated docs/portal && node tools/test-docs.mjs' },
   { name: 'ShellCheck critical diagnostics', needs: 'docker', multiline: true },
   { name: 'Shell footgun regressions', run: 'packages/play/bin/phone/test-shell-footguns.sh' },

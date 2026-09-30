@@ -87,6 +87,7 @@
     {
       "file": "apps/desktop/src/mcp.js",
       "imports": [
+        "@sixam/kernel",
         "node:child_process",
         "node:url",
         "node:util"
@@ -95,6 +96,7 @@
     {
       "file": "apps/desktop/src/night.js",
       "imports": [
+        "@sixam/review/renamed-path",
         "node:child_process",
         "node:fs",
         "node:path",
@@ -179,6 +181,7 @@
         "../../../packages/propose/bin/census/winner-census.mjs",
         "../bin/fnaf1-custom-run.mjs",
         "../src/night.js",
+        "@sixam/review/renamed-path",
         "node:child_process",
         "node:fs",
         "node:module",
@@ -526,6 +529,7 @@
       "file": "packages/kernel/src/index.js",
       "imports": [
         "./annotation.js",
+        "./bindings.js",
         "./claim-envelope.js",
         "./game-run.js",
         "./labels.js",
@@ -903,6 +907,7 @@
       "file": "packages/play/games/fnaf1/fnaf1-winner.mjs",
       "imports": [
         "../../bin/phone/local-profile.mjs",
+        "@sixam/kernel",
         "node:child_process",
         "node:crypto",
         "node:fs",
@@ -1639,6 +1644,7 @@
         "../plans/bundle.mjs",
         "./winner-census.mjs",
         "@sixam/kernel/contracts",
+        "@sixam/review/renamed-path",
         "@sixam/source/fnaf2",
         "node:assert/strict",
         "node:crypto",
@@ -1651,7 +1657,9 @@
       "file": "packages/propose/bin/census/winner-census.mjs",
       "imports": [
         "../plans/bundle.mjs",
+        "@sixam/kernel",
         "@sixam/propose/seeds",
+        "@sixam/review/evidence-pack",
         "@sixam/source/fnaf2",
         "node:child_process",
         "node:crypto",
@@ -1667,6 +1675,7 @@
         "../plans/bundle.mjs",
         "../plans/minus-toys-plan.mjs",
         "./winner-census.mjs",
+        "@sixam/kernel",
         "@sixam/source/fnaf2",
         "node:crypto",
         "node:fs",
@@ -1884,6 +1893,7 @@
         "./artifact-commands.mjs",
         "./minus-toys-plan.mjs",
         "./night7-presets.mjs",
+        "@sixam/kernel",
         "@sixam/source",
         "@sixam/source/fnaf2",
         "node:child_process",
@@ -1900,6 +1910,7 @@
         "../census/winner-phase-census.mjs",
         "./bundle.mjs",
         "./night7-presets.mjs",
+        "@sixam/kernel",
         "@sixam/source/fnaf2",
         "node:crypto",
         "node:fs",
@@ -2257,6 +2268,7 @@
         "../census/winner-phase-census.mjs",
         "../plans/bundle.mjs",
         "../plans/night7-presets.mjs",
+        "@sixam/kernel",
         "@sixam/source/fnaf2",
         "node:crypto",
         "node:fs",
@@ -2395,6 +2407,39 @@
         "@sixam/play/sim",
         "@sixam/propose/fnaf2",
         "@sixam/source/fnaf2",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/bindings/fact-register.mjs",
+      "imports": [
+        "@sixam/kernel/contracts",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/bindings/test-anchor-aim-band.mjs",
+      "imports": [
+        "./fact-register.mjs",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/bindings/test-fact-register.mjs",
+      "imports": [
+        "../bin/plans/bundle.mjs",
+        "./fact-register.mjs",
+        "@sixam/kernel",
+        "@sixam/kernel/contracts",
+        "@sixam/review/evidence-pack",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path",
         "node:url"
       ]
     },
@@ -3026,10 +3071,12 @@
         "../../review/venue-grid/encounter-replay.mjs",
         "../bin/census/winner-census.mjs",
         "../bin/plans/bundle.mjs",
+        "@sixam/review/renamed-path",
         "@sixam/source/fnaf2",
         "node:assert/strict",
         "node:crypto",
-        "node:fs"
+        "node:fs",
+        "node:url"
       ]
     },
     {
@@ -3238,6 +3285,7 @@
       "file": "packages/review/src/evidence-pack.mjs",
       "imports": [
         "./evidence-campaign.mjs",
+        "@sixam/kernel",
         "@sixam/kernel/contracts",
         "node:crypto",
         "node:fs",
@@ -4206,40 +4254,9 @@
       ]
     },
     {
-      "file": "tools/device/fact-register.mjs",
-      "imports": [
-        "@sixam/kernel/contracts",
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/device/test-anchor-aim-band.mjs",
-      "imports": [
-        "./fact-register.mjs",
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
       "file": "tools/device/test-deathchart.mjs",
       "imports": [
         "./deathchart.mjs",
-        "node:fs",
-        "node:os",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/device/test-fact-register.mjs",
-      "imports": [
-        "../../packages/propose/bin/plans/bundle.mjs",
-        "./fact-register.mjs",
-        "@sixam/kernel/contracts",
-        "node:child_process",
         "node:fs",
         "node:os",
         "node:path",

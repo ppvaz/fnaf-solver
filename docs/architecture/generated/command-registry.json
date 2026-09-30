@@ -55,7 +55,7 @@
     },
     {
       "id": "test:unit",
-      "command": "node tools/architecture-test.js && node tools/validate-references.js && node packages/review/bin/grade/test-grade-run-coverage.mjs && node tools/test-mistake-register.mjs && node tools/test-dump-text-check.mjs && node tools/test-media.mjs && node packages/review/bin/recompile/test-compare-draw-trace.mjs && node packages/propose/bin/recompile/test-schedule-replay.mjs && node packages/propose/bin/recompile/test-phone-encounter-replay.mjs && node packages/propose/bin/recompile/test-phone-clock-sweep.mjs && node packages/propose/bin/recompile/test-hour-grid-fit.mjs && node packages/propose/bin/recompile/test-phone-input-bracket-sweep.mjs && python3 packages/review/bin/recompile/test-phone-input-ledger.py && node packages/review/bin/recompile/test-child-diagnosis.mjs && node packages/propose/test/policyequivalencetest.mjs && node packages/propose/test/test-seam-slack.mjs && node packages/review/bin/grade/test-static-terminal-window.mjs && node packages/review/bin/grade/test-post-night-static.mjs && node packages/play/bin/phone/test-control-anchor.mjs && node packages/propose/test/test-schedule-economy.mjs && node tools/device/test-anchor-aim-band.mjs && node packages/play/bin/probe/seedpin/test-seedpin.mjs && node packages/review/test/evidence-campaign.test.mjs && node packages/review/test/evidence-pack.test.mjs && node packages/review/test/evidence-cohort.test.mjs && node packages/review/test/evidence-promotion.test.mjs && node packages/propose/test/test-encounter-fidelity.mjs && node packages/propose/bin/census/test-winner-census.mjs && node packages/propose/bin/recompile/test-rebuild-options-census.mjs && node apps/desktop/test/night.test.js && node packages/play/bin/phone/test-night-run-dry.mjs && node tools/device/test-fact-register.mjs && node apps/desktop/test/test-fnaf1-winner.mjs && node packages/play/bin/phone/test-event-clocks.mjs && python3 packages/source/decompile/test-instances.py && python3 packages/source/decompile/test-nightmap.py && node packages/source/test/test-night-models.mjs && node packages/play/games/fnaf1/test-fnaf1-menu-probe.mjs && python3 packages/play/games/fnaf1/test-fnaf1-menus.py && node packages/play/games/fnaf1/test-fnaf1-night-run.mjs && python3 packages/play/games/fnaf1/test-fnaf1-door-light.py && python3 packages/play/bin/audio/test-bt-audio-collector.py && python3 packages/play/games/fnaf1/test-fnaf1-teach-overlay.py && python3 packages/play/src/sensors/screencap/test-sensor.py && node packages/propose/bin/census/test-fnaf1-device-lane.mjs && node packages/propose/bin/census/test-fnaf1-population-checkpoints.mjs && node apps/desktop/test/test-native-regions.mjs && node packages/play/games/fnaf3/test-fnaf3-run.mjs && node packages/propose/bin/census/test-fnaf4-census.mjs && npm run test:chronicle && node packages/play/games/fnaf4/test-fnaf4-fredbear.mjs && node packages/play/bin/companion/test-audio-players.mjs && node tools/test-evidence-cli.mjs && node tools/test-push-gate.mjs && python3 apps/trainer/test/serve_test.py && node apps/desktop/test/probe.test.js && node tools/test-no-serial.mjs && node tools/test-companion-name.mjs && node tools/test-sibling-paths.js && node packages/kernel/test/kernel.test.js && node packages/review/test/pack-lift.test.js && node packages/review/test/promotions-query.test.js && python3 packages/review/bin/recompile/test-audio-records.py && node packages/propose/bin/recompile/pilot/test-pilot.mjs && node packages/propose/bin/recompile/test-calib-replay.mjs && node packages/play/bin/recompile/test-practice-audit.mjs && node packages/play/bin/recompile/test-rebuild-night.mjs && node packages/review/test/refusals.test.mjs && node packages/review/test/solver.test.mjs && node packages/review/test/lab-queries.test.mjs && node apps/desktop/test/lab.test.mjs",
+      "command": "node tools/architecture-test.js && node tools/validate-references.js && node packages/review/bin/grade/test-grade-run-coverage.mjs && node tools/test-mistake-register.mjs && node tools/test-dump-text-check.mjs && node tools/test-media.mjs && node packages/review/bin/recompile/test-compare-draw-trace.mjs && node packages/propose/bin/recompile/test-schedule-replay.mjs && node packages/propose/bin/recompile/test-phone-encounter-replay.mjs && node packages/propose/bin/recompile/test-phone-clock-sweep.mjs && node packages/propose/bin/recompile/test-hour-grid-fit.mjs && node packages/propose/bin/recompile/test-phone-input-bracket-sweep.mjs && python3 packages/review/bin/recompile/test-phone-input-ledger.py && node packages/review/bin/recompile/test-child-diagnosis.mjs && node packages/propose/test/policyequivalencetest.mjs && node packages/propose/test/test-seam-slack.mjs && node packages/review/bin/grade/test-static-terminal-window.mjs && node packages/review/bin/grade/test-post-night-static.mjs && node packages/play/bin/phone/test-control-anchor.mjs && node packages/propose/test/test-schedule-economy.mjs && node packages/propose/bindings/test-anchor-aim-band.mjs && node packages/play/bin/probe/seedpin/test-seedpin.mjs && node packages/review/test/evidence-campaign.test.mjs && node packages/review/test/evidence-pack.test.mjs && node packages/review/test/evidence-cohort.test.mjs && node packages/review/test/evidence-promotion.test.mjs && node packages/propose/test/test-encounter-fidelity.mjs && node packages/propose/bin/census/test-winner-census.mjs && node packages/propose/bin/recompile/test-rebuild-options-census.mjs && node apps/desktop/test/night.test.js && node packages/play/bin/phone/test-night-run-dry.mjs && node packages/propose/bindings/test-fact-register.mjs && node apps/desktop/test/test-fnaf1-winner.mjs && node packages/play/bin/phone/test-event-clocks.mjs && python3 packages/source/decompile/test-instances.py && python3 packages/source/decompile/test-nightmap.py && node packages/source/test/test-night-models.mjs && node packages/play/games/fnaf1/test-fnaf1-menu-probe.mjs && python3 packages/play/games/fnaf1/test-fnaf1-menus.py && node packages/play/games/fnaf1/test-fnaf1-night-run.mjs && python3 packages/play/games/fnaf1/test-fnaf1-door-light.py && python3 packages/play/bin/audio/test-bt-audio-collector.py && python3 packages/play/games/fnaf1/test-fnaf1-teach-overlay.py && python3 packages/play/src/sensors/screencap/test-sensor.py && node packages/propose/bin/census/test-fnaf1-device-lane.mjs && node packages/propose/bin/census/test-fnaf1-population-checkpoints.mjs && node apps/desktop/test/test-native-regions.mjs && node packages/play/games/fnaf3/test-fnaf3-run.mjs && node packages/propose/bin/census/test-fnaf4-census.mjs && npm run test:chronicle && node packages/play/games/fnaf4/test-fnaf4-fredbear.mjs && node packages/play/bin/companion/test-audio-players.mjs && node tools/test-evidence-cli.mjs && node tools/test-push-gate.mjs && python3 apps/trainer/test/serve_test.py && node apps/desktop/test/probe.test.js && node tools/test-no-serial.mjs && node tools/test-companion-name.mjs && node tools/test-sibling-paths.js && node packages/kernel/test/kernel.test.js && node packages/review/test/pack-lift.test.js && node packages/review/test/promotions-query.test.js && python3 packages/review/bin/recompile/test-audio-records.py && node packages/propose/bin/recompile/pilot/test-pilot.mjs && node packages/propose/bin/recompile/test-calib-replay.mjs && node packages/play/bin/recompile/test-practice-audit.mjs && node packages/play/bin/recompile/test-rebuild-night.mjs && node packages/review/test/refusals.test.mjs && node packages/review/test/solver.test.mjs && node packages/review/test/lab-queries.test.mjs && node apps/desktop/test/lab.test.mjs",
       "lifecycle": "supported"
     },
     {
@@ -200,7 +200,7 @@
     },
     {
       "id": "device:facts",
-      "command": "node tools/device/fact-register.mjs",
+      "command": "node packages/propose/bindings/fact-register.mjs",
       "lifecycle": "supported"
     },
     {
@@ -345,18 +345,6 @@
       "id": "npm",
       "invocation": "npm run device:campaign -- --live --confirm-live --bundle DIR --calibration FILE --qualification FILE",
       "kind": "supported-live gate",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-fact-register.mjs",
-      "invocation": "tools/device/test-fact-register.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-anchor-aim-band.mjs",
-      "invocation": "tools/device/test-anchor-aim-band.mjs",
-      "kind": "check",
       "lifecycle": "supported"
     },
     {
@@ -2336,6 +2324,18 @@
     {
       "id": "packages/propose/bin/recompile/test-rebuild-options-census.mjs",
       "invocation": "packages/propose/bin/recompile/test-rebuild-options-census.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bindings/test-fact-register.mjs",
+      "invocation": "packages/propose/bindings/test-fact-register.mjs",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bindings/test-anchor-aim-band.mjs",
+      "invocation": "packages/propose/bindings/test-anchor-aim-band.mjs",
       "kind": "check",
       "lifecycle": "supported"
     },

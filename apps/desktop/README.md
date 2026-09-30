@@ -67,7 +67,7 @@ present; it never guesses a Custom Night coordinate or treats a completed
 executor as a win. The lease, abort and release rules are DEVICE-SAFETY's.
 
 ```sh
-npm run device:emit -- --winner tools/device/campaign-night7-k3-winner.json --out /tmp/k3
+npm run device:emit -- --winner packages/propose/bindings/fnaf2/campaign-night7-k3-winner.json --out /tmp/k3
 npm run device:campaign -- --bundle /tmp/k3 --nights 7 --profile hid-mediaprojection
 ```
 

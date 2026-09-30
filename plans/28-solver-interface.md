@@ -64,7 +64,7 @@ CLAUDE.md records, from 2026-09-17, "79 runs on this machine and **zero**
 ```sh
 npm run evidence -- list
 node -e "const g=require('./docs/evidence/graph.json');console.log(g.nodes.length,g.edges.length)"
-node -e "import('./tools/device/fact-register.mjs').then(m=>console.log(Object.keys(m.UNTRACKED_WINNER_DEBT).length))"
+node -e "import('./packages/propose/bindings/fact-register.mjs').then(m=>console.log(Object.keys(m.UNTRACKED_WINNER_DEBT).length))"
 ```
 
 | Quantity | 2026-09-17 | 2026-09-20 |

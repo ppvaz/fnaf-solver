@@ -68,7 +68,7 @@ const sha256 = (value) => createHash('sha256').update(value).digest('hex');
 
 // --- the schedule at a measured release reproduces a press file; a changed action is refused
 {
-  const winner = JSON.parse(read('tools/device/campaign-night6-h-winner.json'));
+  const winner = JSON.parse(read('packages/propose/bindings/fnaf2/campaign-night6-h-winner.json'));
   const sched = phoneSchedule(winner, 6, 4963.6);
   assert.equal(sched.queueMs.length, 517);
   assert.deepEqual(sched.queueMs[0], [4963.6, 'press', 'monitor']);

@@ -37,6 +37,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { canonicalJson, stableHash } from '@sixam/kernel/contracts';
+import { BINDINGS_DIR } from '@sixam/kernel';
 import { isCampaignResult, campaignEntry, campaignPromotionChecks } from './evidence-campaign.mjs';
 
 export const RUN_PACK_SCHEMA = 'run-pack-v1';
@@ -539,6 +540,18 @@ export function packEntry(id, { pack, wrapper }) {
 export const WINNER_HASHES = 'docs/architecture/generated/winner-hashes.json';
 
 /**
+ * Every committed winner, repository-relative and sorted by file name: `<BINDINGS_DIR>/<game>/*-winner.json`.
+ * @param {string} root
+ * @returns {string[]}
+ */
+export function winnerFiles(root) {
+  const games = existsSync(join(root, BINDINGS_DIR)) ? readdirSync(join(root, BINDINGS_DIR), { withFileTypes: true })
+    .filter(entry => entry.isDirectory()).map(entry => entry.name) : [];
+  return games.flatMap(game => readdirSync(join(root, BINDINGS_DIR, game)).filter(file => file.endsWith('-winner.json'))
+    .map(file => `${BINDINGS_DIR}/${game}/${file}`)).sort((a, b) => basename(a).localeCompare(basename(b)));
+}
+
+/**
  * Committed winners by the hash a bundle compiled from them records as `winnerHash`. That is
  * not always the file's own stableHash: compileBundle normalises a winner (it stamps the gate
  * with the replay hash), so night1-minimal, night1-minus7 and night6 compile to a different
@@ -550,14 +563,14 @@ export const WINNER_HASHES = 'docs/architecture/generated/winner-hashes.json';
  * @returns {Map<string, string>}
  */
 export function trackedWinners(root) {
-  const dir = join(root, 'tools', 'device');
   const register = new Map(readJson(join(root, WINNER_HASHES)).winners.map(row => [basename(row.file), row]));
   const winners = new Map();
-  for (const name of readdirSync(dir).filter(file => file.endsWith('-winner.json')).sort()) {
-    const bytes = readFileSync(join(dir, name));
+  for (const file of winnerFiles(root)) {
+    const name = basename(file);
+    const bytes = readFileSync(join(root, file));
     const row = register.get(name);
     if (!row || row.sha256 !== sha256(bytes))
-      throw new Error(`${WINNER_HASHES} is stale for tools/device/${name}: run \`npm run catalog\``);
+      throw new Error(`${WINNER_HASHES} is stale for ${file}: run \`npm run catalog\``);
     winners.set(stableHash(JSON.parse(bytes.toString('utf8'))), name);
     if (row.compiledWinnerHash) winners.set(row.compiledWinnerHash, name);
   }

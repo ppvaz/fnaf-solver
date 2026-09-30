@@ -51,7 +51,7 @@ jobs:
       # The chain night-run.sh drives, minus the phone: a committed winner
       # compiled into a bundle, then the campaign CLI's own dry run over it.
       - name: Campaign dry-run over a committed winner
-        run: d=$(mktemp -d) && trap 'rm -rf "$d"' EXIT && npm run --silent device:emit -- --winner tools/device/campaign-night7-k3-winner.json --out "$d/k3" && npm run --silent device:campaign -- --bundle "$d/k3" --nights 7 --profile hid-mediaprojection
+        run: d=$(mktemp -d) && trap 'rm -rf "$d"' EXIT && npm run --silent device:emit -- --winner packages/propose/bindings/fnaf2/campaign-night7-k3-winner.json --out "$d/k3" && npm run --silent device:campaign -- --bundle "$d/k3" --nights 7 --profile hid-mediaprojection
       - name: Documentation and catalog links
         run: npm run catalog && npm run chronicle && git diff --exit-code -- docs/architecture/generated docs/portal && node tools/test-docs.mjs
       # The repository has sourced mksh fragments as well as executable bash

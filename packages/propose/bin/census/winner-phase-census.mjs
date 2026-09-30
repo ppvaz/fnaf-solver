@@ -28,9 +28,10 @@ import { FPS } from '@sixam/source/fnaf2';
 import { STRATEGY_REGISTRY, compileBundle, validateWinner } from '../plans/bundle.mjs';
 import { replay as replayToys } from '../plans/minus-toys-plan.mjs';
 import { committedWinners, designBlock, forkBlocks, gitState } from './winner-census.mjs';
+import { winnerTag } from '@sixam/kernel';
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '../../../..');
-// The anchor aims tools/device/fact-register.mjs declares, as `npm run catalog` writes them out
+// The anchor aims packages/propose/bindings/fact-register.mjs declares, as `npm run catalog` writes them out
 // (CI refuses a stale register), so a census never imports the device tools.
 const { anchorAims: ANCHOR_AIMS } = JSON.parse(readFileSync(join(ROOT, 'docs/architecture/generated/anchor-aims.json'), 'utf8'));
 export const PHASE_KIND = 'fnaf2-winner-phase-census-v1';
@@ -143,7 +144,7 @@ export function buildPhaseRecord({ rows, night, frames, count, bindings, winnerH
     const at = out[x].wins.map((w, i) => (w !== out[y].wins[i] ? i - frames : null)).filter((f) => f !== null);
     differ.push({ a: out[x].binding, b: out[y].binding, epochMs: out[x].declaredEpochMs, phasesThatDiffer: at });
   }
-  const tag = (p) => p.replace(/^tools\/device\/|-winner\.json$/g, '');
+  const tag = winnerTag;
   const answer = `Over ${n} held-out seeds at ${width} frame phases (+-${Math.round(frames * STEP_MS)} ms) per binding, ` +
     `${decided} of ${cells.length} (binding, phase) cells are decided by the phase alone (every seed wins or every ` +
     `seed loses). Knowing the seed and choosing among the ${out.length} bindings beats the best single binding at ` +
@@ -208,7 +209,7 @@ async function main(argv) {
   const text = `${JSON.stringify(record, null, 2)}\n`;
   const out = flag('out', null);
   if (out) writeFileSync(out, text); else process.stdout.write(text);
-  for (const b of record.bindings) console.error(`  ${b.binding.replace(/^tools\/device\/|-winner\.json$/g, '').padEnd(24)} ${b.map}`);
+  for (const b of record.bindings) console.error(`  ${winnerTag(b.binding).padEnd(24)} ${b.map}`);
   console.error(`winner phase census: ${record.answer}`);
 }
 

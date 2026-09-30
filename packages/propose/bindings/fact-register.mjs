@@ -22,10 +22,10 @@
 // then refuses a fact whose consumers disagree about which producer to trust.
 // That disagreement is the signature of gold sitting under the project's nose.
 //
-//   node tools/device/fact-register.mjs [--json] [--out FILE]
-//   node tools/device/fact-register.mjs --anchor-aim WINNER_HASH   (prints the aim, exit 3 if none)
-//   node tools/device/fact-register.mjs --anchor-max-k WINNER_HASH (prints maxK, exit 3 if none)
-//   node tools/device/fact-register.mjs --anchor-period-ms WINNER_HASH (prints the aim's timer period, exit 3 if none)
+//   node packages/propose/bindings/fact-register.mjs [--json] [--out FILE]
+//   node packages/propose/bindings/fact-register.mjs --anchor-aim WINNER_HASH   (prints the aim, exit 3 if none)
+//   node packages/propose/bindings/fact-register.mjs --anchor-max-k WINNER_HASH (prints maxK, exit 3 if none)
+//   node packages/propose/bindings/fact-register.mjs --anchor-period-ms WINNER_HASH (prints the aim's timer period, exit 3 if none)
 import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -33,7 +33,7 @@ import { stableHash } from '@sixam/kernel/contracts';
 
 export const SCHEMA = 'device-fact-register-v1';
 
-const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '../..'));
+const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '../../..'));
 
 // A fact is a semantic state some part of the system decides. `evidence` names
 // what a producer actually looks at, because that is what separates a strong
@@ -283,7 +283,7 @@ export const ANCHOR_AIMS = Object.freeze({
     // released UNANCHORED because that hand-feeding was silently discarded.
     replayHash: 'fnv1a-c651e2ff',
     alsoBinds: Object.freeze({
-      'fnv1a-3d5b2167': 'tools/device/campaign-night6-h-winner.json',
+      'fnv1a-3d5b2167': 'packages/propose/bindings/fnaf2/campaign-night6-h-winner.json',
     }),
   }),
   // h2: h with the mask coming off 300 ms later, and nothing else. Same aim,
@@ -388,9 +388,9 @@ export const ANCHOR_AIMS = Object.freeze({
 // chain did not reproduce k2's plan hash on 2026-09-15. Pedro, that day:
 // "the run that wins on the device, the repository's most precious product,
 // is not even part of it." This set is CLOSED: test-fact-register.mjs refuses
-// any other ANCHOR_AIMS entry without a tracked tools/device/*-winner.json of
-// the same hash, and refuses additions here. Remove an entry by committing
-// its winner (tools/device/campaign-night<N>-<name>-winner.json) from the
+// any other ANCHOR_AIMS entry without a tracked packages/propose/bindings/<game>/*-winner.json
+// of the same hash, and refuses additions here. Remove an entry by committing
+// its winner (packages/propose/bindings/fnaf2/campaign-night<N>-<name>-winner.json) from the
 // path each line names.
 export const UNTRACKED_WINNER_DEBT = Object.freeze({
   'fnv1a-bc5e044c': 'night 6 a: found 2026-09-25 at artifacts/night6-anchored/bundle/winner.json with this ' +
@@ -497,7 +497,9 @@ export function anchorAimFor(winnerHash) {
     migratedFrom: migration ? { hash: asked, winner: migration.file } : null };
 }
 
-const SEARCH_DIRS = ['tools/device', 'apps/desktop/src', 'packages/play/src'];
+// Where the facts' producers live: the phone's code in Play and the desktop's runners. Until the ADR
+// 0002 moves most of them sat in tools/device, and a directory a producer leaves must be followed here.
+const SEARCH_DIRS = ['packages/play/src', 'packages/play/bin', 'packages/play/games', 'apps/desktop/src', 'apps/desktop/bin'];
 const SKIP = /^(test-|_)|\.test\.js$|fact-register/;
 
 function sources() {

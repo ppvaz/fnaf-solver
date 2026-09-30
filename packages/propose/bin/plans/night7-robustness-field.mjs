@@ -42,6 +42,7 @@ import { build } from './minus-toys-plan.mjs';
 import { loadPresets, PRESET_KNOBS } from './night7-presets.mjs';
 import { forkBlocks, gitState } from '../census/winner-census.mjs';
 import { heldOutSeeds, nightBindings } from '../../../../packages/propose/bin/census/winner-phase-census.mjs';
+import { winnerTag } from '@sixam/kernel';
 
 export const FIELD_KIND = 'night7-robustness-field-v1';
 export const FIELD_FRAMES = 20;
@@ -76,7 +77,7 @@ export function retimedPreset(epochMs = RETIME_EPOCH_MS) {
   return knobs;
 }
 
-const tag = (path) => path.replace(/^tools\/device\/campaign-night7-|-winner\.json$/g, '');
+const tag = (path) => winnerTag(path).replace(/^campaign-night7-/, '');
 export function fieldSchedules() {
   return [
     { id: 'preset', knobs: PRESET_KNOBS, epochMs: 0 },

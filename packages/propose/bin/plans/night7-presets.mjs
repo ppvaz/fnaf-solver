@@ -278,7 +278,7 @@ async function population(argv) {
 // distinct cells of 441. Check 5 of `test-night7-presets.mjs` replays the
 // (20, 20) corner through the raw vector, which holds the copy to the engine.
 export const PLANE_KIND = 'night7-dial-plane-v1';
-const K3_WINNER = new URL('../../../../tools/device/campaign-night7-k3-winner.json', import.meta.url);
+const K3_WINNER = new URL('../../../../packages/propose/bindings/fnaf2/campaign-night7-k3-winner.json', import.meta.url);
 
 export function planeSchedules() {
   const k3 = validateWinner(JSON.parse(readFileSync(K3_WINNER, 'utf8')));

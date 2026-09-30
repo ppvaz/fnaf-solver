@@ -207,7 +207,7 @@ The won set is a comb. Across all four bindings it is three teeth, [2216, 2300],
 [2566, 2650] ms, separated by two three-frame gaps 200 ms apart that every binding shares; no other
 cell in the scan is won by every seed. The aim register names Puppet at the early edge (2350 ms)
 and Foxy at the late edge (2517 ms) of the middle tooth, at 60 seeds
-([`fact-register.mjs`](../../tools/device/fact-register.mjs)). k3's effective interval,
+([`fact-register.mjs`](../../packages/propose/bindings/fact-register.mjs)). k3's effective interval,
 [2410, 2445] ms, sits in the middle tooth with about 44 ms to spare early and 55 ms late, to within
 a frame; binding i's, [2487, 2522], runs into the late gap.
 

@@ -673,7 +673,7 @@ export const DEVICE_POLICIES = { flick4b, grid420 };
 // the options its runner passed, under this file's harness.
 export const POPULATION_KIND = 'fnaf1-device-lane-population-v1';
 export const POPULATION_LANES = Object.freeze(['typical', 'worst', 'starved']);
-export const WINNER_PATH = `${HERE}../../../../tools/device/fnaf1-custom-night7-420-grid420-winner.json`;
+export const WINNER_PATH = `${HERE}../../../../packages/propose/bindings/fnaf1/fnaf1-custom-night7-420-grid420-winner.json`;
 /**
  * The options fnaf1-custom-run.mjs hands grid420 on the phone. The runner
  * reads them from here, so the tree's census and the tree's night cannot
@@ -818,7 +818,7 @@ export function populationRecord({ rows, start, count, design, git, date, comman
       policy: `grid420 with ${JSON.stringify(options)}, the options fnaf1-custom-run.mjs hands it (PHONE_OPTIONS); ` +
         'night 7 at 20/20/20/20',
       laneSha256,
-      winner: { path: 'tools/device/fnaf1-custom-night7-420-grid420-winner.json', pinnedLaneSha256: pinned,
+      winner: { path: 'packages/propose/bindings/fnaf1/fnaf1-custom-night7-420-grid420-winner.json', pinnedLaneSha256: pinned,
         fileMatchesWinner: pinned === laneSha256, ...history },
     },
     lanes,
@@ -850,7 +850,7 @@ async function population(argv) {
   const { loadWinner, materialize, removeTree } = await import('../../../play/games/fnaf1/fnaf1-winner.mjs');
   try {
     if (kind === 'winner') {
-      const path = 'tools/device/fnaf1-custom-night7-420-grid420-winner.json';
+      const path = 'packages/propose/bindings/fnaf1/fnaf1-custom-night7-420-grid420-winner.json';
       const winner = loadWinner(path);
       if (winner.resolvedOptions?.policy !== 'grid420' || JSON.stringify(winner.night?.dials) !== JSON.stringify(FOUR_TWENTY))
         throw new Error(`${path} is not a 4/20 grid420 winner`);

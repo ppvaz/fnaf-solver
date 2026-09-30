@@ -108,7 +108,7 @@ async function main(argv) {
   if (!['tree', 'winner'].includes(kind)) throw new Error('--route is tree or winner');
   const start = Number(args.start ?? 0), count = Number(args.count ?? 65536);
   const jobs = Number(args.jobs ?? 3), blockSize = Number(args['block-size'] ?? 1024);
-  const paths = ['packages/core', 'packages/source', 'packages/kernel', 'tools/device', LANE_FILE, 'packages/propose/bin/census/winner-census.mjs', 'packages/propose/bin/census/fnaf1-population-checkpoints.mjs'];
+  const paths = ['packages/core', 'packages/source', 'packages/kernel', 'packages/propose/bindings', LANE_FILE, 'packages/propose/bin/census/winner-census.mjs', 'packages/propose/bin/census/fnaf1-population-checkpoints.mjs'];
   const git = gitState(paths);
   if (git.dirtyEnginePaths.length) throw new Error('checkpoint census needs committed sources; commit source edits first');
   const started = Date.now();
@@ -116,7 +116,7 @@ async function main(argv) {
   let options = { ...PHONE_OPTIONS };
   try {
     if (kind === 'winner') {
-      const path = 'tools/device/fnaf1-custom-night7-420-grid420-winner.json';
+      const path = 'packages/propose/bindings/fnaf1/fnaf1-custom-night7-420-grid420-winner.json';
       const winner = loadWinner(path);
       if (winner.resolvedOptions?.policy !== 'grid420' || JSON.stringify(winner.night?.dials) !== JSON.stringify(FOUR_TWENTY))
         throw new Error('the committed winner is not grid420 at 4/20');

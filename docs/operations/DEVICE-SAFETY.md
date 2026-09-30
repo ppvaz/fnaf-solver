@@ -248,7 +248,7 @@ game-playing word:
 
 ```sh
 apps/lab/companion-queue.sh enqueue night --game fnaf2 \
-  --winner tools/device/campaign-night7-k3-winner.json --night 7 [--label k3a] [--audio]
+  --winner packages/propose/bindings/fnaf2/campaign-night7-k3-winner.json --night 7 [--label k3a] [--audio]
 ```
 
 - **What it can name.** It names one night of a committed winner file, and

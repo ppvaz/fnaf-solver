@@ -44,7 +44,7 @@ export const STORED = [
 
 // Paths not scanned, each with its reason.
 export const UNSCANNED = [
-  [/^docs\/evidence\/|^docs\/chronicle\/|^tools\/recompile\/results\/|^plans\/archive\/|^tools\/device\/[^/]+-winner\.json$|^docs\/research\/ROOT-README-HISTORY\.txt$/,
+  [/^docs\/evidence\/|^docs\/chronicle\/|^tools\/recompile\/results\/|^plans\/archive\/|^packages\/propose\/bindings\/[^/]+\/[^/]+-winner\.json$|^docs\/research\/ROOT-README-HISTORY\.txt$/,
     'frozen byte for byte (CLAUDE.md, ADR 0002)'],
   [/^apps\/device\/profiles\/|^android\/companion\/assets\/runners\//, 'device profiles, bound by profileSha256'],
   [/^models\/[^/]+\.json$/, 'fitted rules and calibration records pinned by sha256'],

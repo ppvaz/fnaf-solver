@@ -11,14 +11,14 @@
 // registers registers.mjs reads, and each of Plan 28's four gaps is a query. `truth` (step 5) is
 // Source's reading of the caller's own local dump (@sixam/source/truth): it ships the decoder, not
 // the decoded data, and refuses, naming the decode, where no dump is configured.
-import { readdirSync, statSync } from 'node:fs';
+import { statSync } from 'node:fs';
 import { join } from 'node:path';
 import { CONTROL_CATALOGS } from '@sixam/source';
 import { NO_LOCAL_DUMP, VAULT_ENV, VAULT_FILE, createTruth } from '@sixam/source/truth';
 import { canonicalJson } from '@sixam/kernel/contracts';
 import { REPOSITORY_TARGET, claimEnvelope, isRefusal, isUnknown, refusalEnvelope, unknown, validateClaimEnvelope } from '@sixam/kernel';
 import { videoTerminal } from './evidence-cohort.mjs';
-import { ATTESTATION_FILE, PACKS_DIR, packPromotionChecks, readPack, trackedWinners } from './evidence-pack.mjs';
+import { ATTESTATION_FILE, PACKS_DIR, packPromotionChecks, readPack, trackedWinners, winnerFiles } from './evidence-pack.mjs';
 import { GRAPH_FILE, PROMOTION_EDGE, derivePromotion, readGraph, recordPromotion } from './evidence-promotion.mjs';
 import { FNAF2, ONE_CLEAR, PLAN12, levelLabel, promotionsQueryEnvelope } from './envelopes.mjs';
 import { liftPack } from './pack-lift.mjs';
@@ -76,9 +76,8 @@ function sharedLabel(labels, what) {
 
 /** Stat fingerprint of the committed winners, to know when a cached compile is stale. */
 function winnersKey(root) {
-  const dir = join(root, 'tools', 'device');
-  return readdirSync(dir).filter(name => name.endsWith('-winner.json')).sort()
-    .map(name => { const stat = statSync(join(dir, name)); return `${name}:${stat.size}:${stat.mtimeMs}`; }).join('|');
+  return winnerFiles(root)
+    .map(file => { const stat = statSync(join(root, file)); return `${file}:${stat.size}:${stat.mtimeMs}`; }).join('|');
 }
 
 /**

@@ -7,6 +7,7 @@
 import { execFile as execFileCallback } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
+import { BINDINGS_DIR, WINNER_FILE } from '@sixam/kernel';
 
 const CUE_TOOLS = Object.freeze(['cue.setup', 'cue.queue.enqueue', 'cue.queue.list', 'cue.queue.run']);
 
@@ -54,7 +55,6 @@ function cueSetupCommand(options) {
 }
 
 const NIGHT_GAMES = Object.freeze(['fnaf2', 'fnaf1', 'fnaf4']);
-const WINNER_PATH = /^tools\/device\/[a-z0-9][a-z0-9.-]{0,80}-winner\.json$/;
 const NIGHT_LABEL = /^[a-z0-9][a-z0-9-]{0,24}$/;
 
 /**
@@ -67,8 +67,8 @@ function cueNightArgs(args) {
   for (const name of ['screen', 'install', 'probe'])
     if (args[name] !== undefined) return error('INVALID_ARGUMENT', `a night job takes no ${name}`);
   if (!NIGHT_GAMES.includes(args.game)) return error('INVALID_ARGUMENT', `game must be one of ${NIGHT_GAMES.join(', ')}`);
-  if (typeof args.winner !== 'string' || !WINNER_PATH.test(args.winner))
-    return error('INVALID_ARGUMENT', 'winner must name a tools/device/*-winner.json file');
+  if (typeof args.winner !== 'string' || !WINNER_FILE.test(args.winner))
+    return error('INVALID_ARGUMENT', `winner must name a ${BINDINGS_DIR}/<game>/*-winner.json file`);
   if (!Number.isInteger(args.night) || args.night < 1 || args.night > 8)
     return error('INVALID_ARGUMENT', 'night must be an integer 1..8');
   if (args.label !== undefined && (typeof args.label !== 'string' || !NIGHT_LABEL.test(args.label)))

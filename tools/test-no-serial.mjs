@@ -35,7 +35,7 @@ export const FROZEN = [
   /^docs\/chronicle\//,
   /^tools\/recompile\/results\//,
   /^plans\/archive\//,
-  /^tools\/device\/[^/]+-winner\.json$/,
+  /^packages\/propose\/bindings\/[^/]+\/[^/]+-winner\.json$/,
 ];
 
 const HASH_BOUND = 'calibration record pinned by sha256';

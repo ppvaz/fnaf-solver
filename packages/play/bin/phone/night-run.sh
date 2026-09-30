@@ -608,7 +608,7 @@ CAMPAIGN=(node apps/desktop/src/device-cli.js campaign
 # Place the schedule release at the helper's latched night onset + an epoch
 # (mod one game second) instead of wherever the ~1 Hz office classifier fires.
 # The aim is NOT a literal here: it is registered per binding in
-# tools/device/fact-register.mjs (ANCHOR_AIMS) next to the evidence that
+# packages/propose/bindings/fact-register.mjs (ANCHOR_AIMS) next to the evidence that
 # derived it, and looked up by the bundle's own winner hash, so a rebinding
 # cannot inherit a number priced for another policy. No entry, or an entry
 # whose evidence fails its checks, means no anchor: the release happens the
@@ -636,7 +636,7 @@ for (const k of p.killers) console.log(`predict  ${k.killer} ${(100 * k.share).t
   printf 'predict  retained %s/prediction.json\n' "$OUTDIR"
 fi
 if [ -z "${NIGHT_ANCHOR_AIM_MS:-}" ]; then
-  if aim="$(node tools/device/fact-register.mjs --anchor-aim "$BUNDLE_WINNER_HASH" 2>"$OUTDIR/anchor-aim.err")"; then
+  if aim="$(node packages/propose/bindings/fact-register.mjs --anchor-aim "$BUNDLE_WINNER_HASH" 2>"$OUTDIR/anchor-aim.err")"; then
     NIGHT_ANCHOR_AIM_MS="$aim"
     printf 'anchor   aim %s ms from the fact register for binding %s\n' "$aim" "$BUNDLE_WINNER_HASH"
   else
@@ -655,7 +655,7 @@ fi
 ANCHOR_AIM_EXPLICIT=0
 [ -n "${NIGHT_ANCHOR_AIM_MS:-}" ] && [ "${NIGHT_ANCHOR_AIM_MS:-}" != off ] && ANCHOR_AIM_EXPLICIT=1
 if [ "$NIGHT_ANCHOR_AIM_MS" != off ] && [ -z "${NIGHT_ANCHOR_MAX_K:-}" ]; then
-  if max_k="$(node tools/device/fact-register.mjs --anchor-max-k "$BUNDLE_WINNER_HASH" 2>"$OUTDIR/anchor-max-k.err")"; then
+  if max_k="$(node packages/propose/bindings/fact-register.mjs --anchor-max-k "$BUNDLE_WINNER_HASH" 2>"$OUTDIR/anchor-max-k.err")"; then
     NIGHT_ANCHOR_MAX_K="$max_k"
   elif [ "$ANCHOR_AIM_EXPLICIT" = 1 ]; then
     die "NIGHT_ANCHOR_AIM_MS=$NIGHT_ANCHOR_AIM_MS was given but no maxK is registered for $BUNDLE_WINNER_HASH; state NIGHT_ANCHOR_MAX_K too rather than releasing unanchored"
@@ -669,7 +669,7 @@ fi
 # (g337). The period is registered beside the aim; an override must state it
 # (NIGHT_ANCHOR_PERIOD_MS=<ms>).
 if [ "$NIGHT_ANCHOR_AIM_MS" != off ] && [ -z "${NIGHT_ANCHOR_PERIOD_MS:-}" ]; then
-  if period="$(node tools/device/fact-register.mjs --anchor-period-ms "$BUNDLE_WINNER_HASH" 2>"$OUTDIR/anchor-period.err")"; then
+  if period="$(node packages/propose/bindings/fact-register.mjs --anchor-period-ms "$BUNDLE_WINNER_HASH" 2>"$OUTDIR/anchor-period.err")"; then
     NIGHT_ANCHOR_PERIOD_MS="$period"
   elif [ "$ANCHOR_AIM_EXPLICIT" = 1 ]; then
     die "NIGHT_ANCHOR_AIM_MS=$NIGHT_ANCHOR_AIM_MS was given but no period is registered for $BUNDLE_WINNER_HASH; state NIGHT_ANCHOR_PERIOD_MS too (Night 5 is 1000, Night 6/7 the 5000 ms Foxy roll) rather than releasing unanchored"

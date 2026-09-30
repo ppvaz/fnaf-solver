@@ -39,7 +39,7 @@ npm run typecheck
 npm run test:affected
 npm run catalog
 node tools/test-docs.mjs
-npm run device:emit -- --winner tools/device/campaign-night7-k3-winner.json --out /tmp/k3
+npm run device:emit -- --winner packages/propose/bindings/fnaf2/campaign-night7-k3-winner.json --out /tmp/k3
 npm run device:campaign -- --bundle /tmp/k3 --nights 7 --profile hid-mediaprojection
 npm run research -- model-smoke
 npm run evidence -- list

@@ -4,7 +4,7 @@
 // checkout on any machine: on 2026-09-15 the k3 Night 7 bundle could not be
 // rebuilt from the evidence records' knob deltas, and a run pack's
 // winnerCommitted check means nothing unless the committed file still builds.
-// So this compiles each tools/device/*-winner.json of schema winner-v1 exactly
+// So this compiles each packages/propose/bindings/fnaf2/*-winner.json of schema winner-v1 exactly
 // as `npm run device:emit` does, then runs it through the acceptance
 // `cli.js campaign --bundle` applies before it opens a phone: the campaign
 // spec for the bundle's nights and profile, and one compiled plan per night.
@@ -23,8 +23,8 @@ import { validateCampaignBundle } from '../../play/src/campaign/campaign-bundle.
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '../../..');
-// The committed winners stay in tools/device (tools/device/*-winner.json is frozen).
-const WINNERS = join(HERE, '../../../tools/device');
+// The committed FNaF 2 winners (winner-v1): packages/propose/bindings/fnaf2.
+const WINNERS = join(HERE, '../bindings/fnaf2');
 let failed = 0;
 const rows = [];
 const scratch = mkdtempSync(join(tmpdir(), 'winners-rebuild-'));

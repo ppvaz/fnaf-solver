@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // A committed winner binding's own tap schedule as recompile-harness input.
 //
-//   node packages/propose/bin/recompile/schedule-to-input.mjs --winner tools/device/campaign-night1-minimal-winner.json
+//   node packages/propose/bin/recompile/schedule-to-input.mjs --winner packages/propose/bindings/fnaf2/campaign-night1-minimal-winner.json
 //        --night 1 --out FILE [--navigation packages/source/recompile/fixtures/night1-newgame.input]
 //        [--profile apps/device/profiles/hid-mediaprojection.json] [--frame 3]
 //

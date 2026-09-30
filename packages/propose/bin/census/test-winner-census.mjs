@@ -25,9 +25,12 @@ import { stableHash } from '@sixam/kernel/contracts';
 import { RNG_MODULUS } from '@sixam/source/fnaf2';
 import { STRATEGY_REGISTRY, validateWinner } from '../plans/bundle.mjs';
 import { CENSUS_KIND, committedWinners, designBlock } from './winner-census.mjs';
+import { currentPath } from '@sixam/review/renamed-path';
 import { PHASE_KIND, heldOutSeeds, nightBindings, phaseWins } from '../../../../packages/propose/bin/census/winner-phase-census.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
+// A binding as a committed record names it, where the file lives now (records keep their paths).
+const current = (path) => currentPath(ROOT, path) ?? path;
 const EVIDENCE = join(ROOT, 'docs/evidence');
 const HELD_OUT_SAMPLE = 4;
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
@@ -41,7 +44,7 @@ assert.equal(record.claimLevel, 'MODEL_ONLY');
 // The population claim rests on the RNG keeping 16 bits: a seed and the same
 // seed plus 2^16 must deal the same night, event for event.
 {
-  const winner = validateWinner(JSON.parse(readFileSync(join(ROOT, 'tools/device/campaign-night7-k3-winner.json'), 'utf8')));
+  const winner = validateWinner(JSON.parse(readFileSync(join(ROOT, 'packages/propose/bindings/fnaf2/campaign-night7-k3-winner.json'), 'utf8')));
   const { replay } = STRATEGY_REGISTRY[winner.strategy].emit(winner, 7);
   for (const seed of [5, 40961]) {
     const a = replay(seed).sim;
@@ -61,7 +64,7 @@ const inDesign = new Set(design.seeds);
 let replays = 0;
 for (const row of record.bindings) {
   const tag = `${row.binding} night ${row.night}`;
-  const bytes = readFileSync(join(ROOT, row.binding));
+  const bytes = readFileSync(join(ROOT, current(row.binding)));
   assert.equal(sha256(bytes), row.winnerSha256, `${tag} changed since the census; re-run packages/propose/bin/census/winner-census.mjs --winner ${row.binding}`);
   const winner = validateWinner(JSON.parse(bytes.toString('utf8')));
   const emitted = STRATEGY_REGISTRY[winner.strategy].emit(winner, row.night);
@@ -104,7 +107,7 @@ let phaseReplays = 0;
   const frames = (phase.method.phases.frames - 1) / 2;
   const bindings = nightBindings(night);
   for (const row of phase.bindings) {
-    const binding = bindings.find((b) => b.path === row.binding);
+    const binding = bindings.find((b) => b.path === current(row.binding));
     assert.ok(binding, `${phaseName} names ${row.binding}, which no longer plays night ${night}`);
     assert.equal(binding.winnerSha256, row.winnerSha256, `${row.binding} changed since ${phaseName}; re-run winner-phase-census.mjs`);
     assert.equal(binding.planSha256, row.planSha256, `${row.binding} emits a different plan than ${phaseName} scored`);
@@ -121,7 +124,7 @@ let phaseReplays = 0;
   }
 }
 
-const censused = new Set(record.bindings.map((row) => row.binding));
+const censused = new Set(record.bindings.map((row) => current(row.binding)));
 const uncensused = committedWinners().filter((path) => !censused.has(path));
 console.log(`winner census ${recordName}: ${record.bindings.length} night-bindings still match the tree ` +
   `(${replays} replays), ${phaseName} still maps the phases (${phaseReplays} replays); ` +

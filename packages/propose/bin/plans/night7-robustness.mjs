@@ -43,9 +43,10 @@ import { runNight, loadPresets, PRESET_KNOBS } from './night7-presets.mjs';
 import { forkBlocks, gitState } from '../census/winner-census.mjs';
 import { DEFAULT_LATCH_HOLD_MS, DEFAULT_MIN_LEAD_MS } from '../../../play/src/campaign/night-anchor.js';
 import { heldOutSeeds, nightBindings } from '../census/winner-phase-census.mjs';
+import { winnerTag } from '@sixam/kernel';
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '../../../..');
-// The anchor aims tools/device/fact-register.mjs declares, as `npm run catalog` writes them out
+// The anchor aims packages/propose/bindings/fact-register.mjs declares, as `npm run catalog` writes them out
 // (CI refuses a stale register), so a census never imports the device tools.
 const { anchorAims: ANCHOR_AIMS } = JSON.parse(readFileSync(join(ROOT, 'docs/architecture/generated/anchor-aims.json'), 'utf8'));
 export const ROBUSTNESS_KIND = 'night7-robustness-v1';
@@ -56,7 +57,7 @@ export const SPAN_FRAMES = 600;
 export const SPAN_SEEDS = 16;
 const STEP_MS = 1000 / FPS;
 const sha256 = (text) => createHash('sha256').update(text).digest('hex');
-const tag = (path) => path.replace(/^tools\/device\/campaign-night7-|-winner\.json$/g, '');
+const tag = (path) => winnerTag(path).replace(/^campaign-night7-/, '');
 
 /** The preset schedule and every committed phase-aware Night 7 binding. */
 export function schedules() {

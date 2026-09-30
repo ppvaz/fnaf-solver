@@ -68,12 +68,13 @@ import { PRESET_KNOBS, loadPresets, runNight } from '../plans/night7-presets.mjs
 import { simOptionsFrom } from '../../../source/recompile/model-draw-trace.mjs';
 import { committedWinners, designBlock, forkBlocks, gitState, phoneCohorts } from '../census/winner-census.mjs';
 import { heldOutSeeds } from '../census/winner-phase-census.mjs';
+import { winnerTag } from '@sixam/kernel';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
 export const KIND = 'fnaf2-rebuild-options-census-v1';
 export const OPTIONS_FILE = 'packages/source/recompile/sourced-rebuild-model-options.json';
 export const DISPUTED_OPTION = 'footstepCamMarkers';
-export const K3_BINDING = 'tools/device/campaign-night7-k3-winner.json';
+export const K3_BINDING = 'packages/propose/bindings/fnaf2/campaign-night7-k3-winner.json';
 export const PRESET_ID = 'golden-freddy';
 export const ALPHA = 0.05;
 // A listing longer than this is kept as a count and a hash of the full list.
@@ -161,7 +162,7 @@ export function subjects() {
       const emitted = STRATEGY_REGISTRY[winner.strategy].emit(winner, night);
       const epochMs = (winner.anchorEpochMs ?? 0) + (winner.phaseOffsetMs ?? 0);
       out.push({
-        id: `${path.replace(/^tools\/device\/|-winner\.json$/g, '')}@${night}`, binding: path, night,
+        id: `${winnerTag(path)}@${night}`, binding: path, night,
         strategy: winner.strategy, epochMs, winnerSha256: sha256(text), planSha256: sha256(emitted.text),
         replayKey: sha256(JSON.stringify({ strategy: winner.strategy, night, epochMs, knobs: emitted.knobs, plan: emitted.text })),
         play: (seed) => {

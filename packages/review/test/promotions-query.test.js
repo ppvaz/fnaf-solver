@@ -9,11 +9,11 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { readFileSync, readdirSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { canonicalJson, stableHash } from '@sixam/kernel/contracts';
 import { CUSTODY_CLASSES, isUnknown, validateAnnotation } from '@sixam/kernel';
-import { PACKS_DIR, trackedWinners } from '../src/evidence-pack.mjs';
+import { PACKS_DIR, trackedWinners, winnerFiles } from '../src/evidence-pack.mjs';
 import { GRAPH_FILE, PROMOTION_EDGE } from '../src/evidence-promotion.mjs';
 import { compareEdges, promotionsRecord, queryPromotions } from '../src/promotions-query.mjs';
 
@@ -88,9 +88,9 @@ for (const id of readdirSync(join(ROOT, PACKS_DIR))) {
   if (hash) packHashes.add(hash);
 }
 const hashesOf = new Map();
-for (const [hash, name] of winners) hashesOf.set(`tools/device/${name}`, [...(hashesOf.get(`tools/device/${name}`) ?? []), hash]);
-const winnerV1 = readdirSync(join(ROOT, 'tools/device')).filter(name => name.endsWith('-winner.json'))
-  .map(name => `tools/device/${name}`).filter(file => JSON.parse(readFileSync(join(ROOT, file), 'utf8')).schema === 'winner-v1');
+const pathOf = new Map(winnerFiles(ROOT).map(file => [basename(file), file]));
+for (const [hash, name] of winners) hashesOf.set(pathOf.get(name), [...(hashesOf.get(pathOf.get(name)) ?? []), hash]);
+const winnerV1 = winnerFiles(ROOT).filter(file => JSON.parse(readFileSync(join(ROOT, file), 'utf8')).schema === 'winner-v1');
 const open = result.open.modelOnlyWinners;
 assert.equal(open.of, winnerV1.length);
 assert.equal(open.claimLevel, 'MODEL_ONLY');
@@ -103,8 +103,8 @@ const debt = result.open.untrackedWinnerDebt;
 assert.equal(debt.agrees, true, 'the registered bindings without a committed winner are exactly the declared debt');
 assert.equal(debt.summary, `${debt.untracked} of ${debt.declared}`);
 for (const entry of debt.entries) {
-  const committed = readdirSync(join(ROOT, 'tools/device')).filter(name => name.endsWith('-winner.json'))
-    .some(name => stableHash(JSON.parse(readFileSync(join(ROOT, 'tools/device', name), 'utf8'))) === entry.hash);
+  const committed = winnerFiles(ROOT)
+    .some(file => stableHash(JSON.parse(readFileSync(join(ROOT, file), 'utf8'))) === entry.hash);
   assert.equal(entry.committed, committed, `${entry.hash}: committed is read from the tree`);
 }
 

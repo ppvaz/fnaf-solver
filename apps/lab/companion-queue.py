@@ -686,7 +686,7 @@ def main(argv: list[str] | None = None) -> int:
     add.add_argument("--probe", action="store_true")
     add.add_argument("--game", choices=tuple(night_jobs.GAMES), default=None,
                      help="night: the game whose committed winner this is")
-    add.add_argument("--winner", default=None, help="night: tools/device/*-winner.json, committed")
+    add.add_argument("--winner", default=None, help="night: packages/propose/bindings/<game>/*-winner.json, committed")
     add.add_argument("--night", type=int, default=None, help="night: the one night to play (7 = Custom Night)")
     add.add_argument("--label", default=None, help="night: run label (lowercase, digits, hyphens)")
     add.add_argument("--audio", action="store_true", help="night (FNaF 2): retain the A2DP mix")

@@ -86,8 +86,11 @@ labels still do not promote one another.
   of the refutation.
 - End every session by reporting the consequential:bookkeeping commit ratio.
 - A binding that wins on the phone, or that gets an `ANCHOR_AIMS` entry, is
-  committed as `tools/device/campaign-night<N>-<name>-winner.json` in the same
-  commit (`test-fact-register.mjs` refuses otherwise). `artifacts/` is
+  committed as `packages/propose/bindings/<game>/campaign-night<N>-<name>-winner.json`
+  in the same commit (`test-fact-register.mjs` refuses otherwise). Winners lived in
+  `tools/device/` until 2026-09-30 (Pedro: "Move to propose/bindings"); records
+  written before then keep that path, and their readers follow the file through
+  git's renames. `artifacts/` is
   gitignored: a winner that lives only there cannot be re-run on another
   machine, and on 2026-09-15 the k3 Night 7 bundle could not be rebuilt from
   the evidence records' knob deltas.

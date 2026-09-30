@@ -31,8 +31,8 @@ import { KNOBS0 as TOYS_KNOBS } from '../bin/plans/minus-toys-plan.mjs';
 import { parsePlan, validateWinner, STRATEGY_REGISTRY } from '../bin/plans/bundle.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-// The committed winners stay in tools/device (tools/device/*-winner.json is frozen).
-const WINNERS = join(HERE, '../../../tools/device');
+// The committed FNaF 2 winners (winner-v1): packages/propose/bindings/fnaf2.
+const WINNERS = join(HERE, '../bindings/fnaf2');
 let failed = 0;
 const fail = message => { failed += 1; process.stdout.write(`  FAIL ${message}\n`); };
 

@@ -501,7 +501,7 @@ none in the starved (screenrecord) lane
 
 On the phone it **reached 6 AM on the first 4/20 attempt** and the title gained
 its third star ([`fnaf1-420-first-6am-20260925`](../evidence/fnaf1-420-first-6am-20260925.json);
-binding [`fnaf1-custom-night7-420-grid420-winner.json`](../../tools/device/fnaf1-custom-night7-420-grid420-winner.json)).
+binding [`fnaf1-custom-night7-420-grid420-winner.json`](../../packages/propose/bindings/fnaf1/fnaf1-custom-night7-420-grid420-winner.json)).
 One night, not a cohort.
 
 ### FNaF 1 — the idealised 3000/3000 (superseded as a device claim)

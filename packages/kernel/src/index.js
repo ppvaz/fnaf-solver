@@ -7,6 +7,7 @@
 export { CLAIM_LEVELS, SOURCE_LABELS, isClaimLevel, isSourceLabel, isUnknown, unknown, validateClaimLevel,
   validateSourceLabel } from './labels.js';
 export { interval, validateInterval } from './time/interval.js';
+export { BINDINGS_DIR, WINNER_FILE, winnerTag } from './bindings.js';
 export { OUTCOME_KINDS, aborted, death, invalid, sixAm, timeout, validateOutcome } from './outcome.js';
 export { CUSTODY_CLASSES, GAME_RUN_FIELDS, RUN_MODES, validateGameRun } from './game-run.js';
 export { ANNOTATION_KINDS, ANNOTATION_STATUSES, SUBJECT_KINDS, validateAnnotation } from './annotation.js';

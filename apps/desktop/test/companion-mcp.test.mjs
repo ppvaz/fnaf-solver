@@ -149,7 +149,7 @@ try {
   // A night job: one night of a committed winner, validated and bound by hash.
   send({ jsonrpc: '2.0', id: 51, method: 'tools/call', params: {
     name: 'cue.queue.enqueue', arguments: {
-      kind: 'night', game: 'fnaf2', winner: 'tools/device/campaign-night7-k3-winner.json', night: 7,
+      kind: 'night', game: 'fnaf2', winner: 'packages/propose/bindings/fnaf2/campaign-night7-k3-winner.json', night: 7,
     },
   } });
   const night = JSON.parse((await next()).result.content[0].text);
@@ -158,9 +158,9 @@ try {
   assert.match(night.job.planSha256, /^[0-9a-f]{64}$/);
   assert.ok(night.job.budgetS > 425, 'the budget spans the emitted plan\'s night');
   for (const [requestId, args, why] of [
-    [52, { kind: 'night', game: 'fnaf2', winner: 'tools/device/campaign-night7-k3-winner.json', night: 5 }, 'not the winner\'s night'],
+    [52, { kind: 'night', game: 'fnaf2', winner: 'packages/propose/bindings/fnaf2/campaign-night7-k3-winner.json', night: 5 }, 'not the winner\'s night'],
     [53, { kind: 'night', game: 'fnaf2', winner: '/etc/passwd', night: 7 }, 'not a winner path'],
-    [54, { kind: 'menu-check', winner: 'tools/device/campaign-night7-k3-winner.json' }, 'a night field on a check'],
+    [54, { kind: 'menu-check', winner: 'packages/propose/bindings/fnaf2/campaign-night7-k3-winner.json' }, 'a night field on a check'],
   ]) {
     send({ jsonrpc: '2.0', id: requestId, method: 'tools/call', params: { name: 'cue.queue.enqueue', arguments: args } });
     const refusedJob = await next();

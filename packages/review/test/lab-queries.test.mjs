@@ -23,7 +23,7 @@ const cases = [
   [['docs/evidence/night7-new-record-20260930.json'], 'consequential', 'an evidence record'],
   [['docs/evidence/runs/night1-x-20260930T020000Z/pack.json', 'docs/evidence/graph.json'], 'consequential', 'a run pack and a promotion'],
   [['tools/recompile/results/k3-replay-20260930.json', 'tools/recompile/replay.mjs'], 'consequential', 'a host-side record with its code'],
-  [['tools/device/campaign-night9-z-winner.json'], 'consequential', 'a committed winner'],
+  [['packages/propose/bindings/fnaf2/campaign-night9-z-winner.json'], 'consequential', 'a committed winner'],
   [['packages/review/src/lab-x.mjs', 'packages/review/test/lab-x.test.mjs'], 'consequential', 'solver-interface code with its gate'],
   [['android/companion/src/main/java/X.java', 'android/companion/src/test/java/XTest.java'], 'consequential', 'Companion code with its gate'],
   [['packages/play/src/campaign/campaign.js'], 'UNKNOWN', 'controller code with no gate beside it'],
@@ -117,9 +117,9 @@ const packs = [
   { id: 'fnaf3-a', game: 'com.scottgames.fnaf3', promoted: null },
 ];
 const byId = rows => Object.fromEntries(rows.map(row => [row.id, row]));
-let rows = byId(stepStatus(ROOT, { promotions: promotions({ modelOnly: ['tools/device/a-winner.json'] }), packs }));
+let rows = byId(stepStatus(ROOT, { promotions: promotions({ modelOnly: ['packages/propose/bindings/fnaf2/a-winner.json'] }), packs }));
 assert.equal(rows.S1.state, 'open');
-assert.deepEqual(rows.S1.unmet, ['tools/device/a-winner.json stands MODEL_ONLY: no run pack names it']);
+assert.deepEqual(rows.S1.unmet, ['packages/propose/bindings/fnaf2/a-winner.json stands MODEL_ONLY: no run pack names it']);
 assert.equal(rows.S1.alsoOpen.length, 1, 'the untracked-winner debt is kept beside the state');
 assert.ok(isUnknown(rows.S2.state), 'S2 has no registered closing record kind');
 assert.ok(isUnknown(rows.S3.state) && /needs S2/.test(rows.S3.state.reason));

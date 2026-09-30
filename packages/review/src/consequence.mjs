@@ -22,7 +22,7 @@
 // does the human override. This is not the hook: `.githooks/commit-msg` decides acceptance, and
 // the lab runs the hook itself for that. It reads no file and runs nothing, so `lab commit --dry`
 // classifies the staged set with it and `lab end` every commit since the session began.
-import { unknown } from '@sixam/kernel';
+import { WINNER_FILE, unknown } from '@sixam/kernel';
 
 /** Where the definition is written. */
 export const CONSEQUENCE_CITES = Object.freeze(['CLAUDE.md#consequence-lock-active-2026-09-06-loosened-2026-09-25',
@@ -36,7 +36,7 @@ export const RECORD_RULES = Object.freeze([
   { id: 'promotion', what: 'the evidence graph (promotion edges)', test: path => path === 'docs/evidence/graph.json' },
   { id: 'evidence-record', what: 'an evidence record', test: path => path.startsWith('docs/evidence/') && !README.test(path) },
   { id: 'host-record', what: 'a host-side record', test: path => path.startsWith('tools/recompile/results/') && !README.test(path) },
-  { id: 'winner', what: 'a committed winner', test: path => /^tools\/device\/[^/]+-winner\.json$/.test(path) },
+  { id: 'winner', what: 'a committed winner', test: path => WINNER_FILE.test(path) },
   { id: 'staged-artifact', what: 'evidence staged under artifacts/', test: path => path.startsWith('artifacts/') },
 ].map(rule => Object.freeze(rule)));
 

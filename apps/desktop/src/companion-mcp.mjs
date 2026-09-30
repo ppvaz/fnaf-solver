@@ -21,7 +21,7 @@
  * newline-delimited JSON-RPC transport.
  */
 import { fileURLToPath } from 'node:url';
-import { REPOSITORY_TARGET, claimEnvelope, refusalEnvelope, unknown } from '@sixam/kernel';
+import { BINDINGS_DIR, REPOSITORY_TARGET, WINNER_FILE, claimEnvelope, refusalEnvelope, unknown } from '@sixam/kernel';
 import { CHECKS } from '@sixam/review/refusals';
 import { GAMES, resolveGame } from '@sixam/review/registers';
 import { INSTRUMENTS, QUERIES, SURFACE_DOC, createSolver } from '@sixam/review/solver';
@@ -50,7 +50,7 @@ const CUE_ENQUEUE_SCHEMA = { type: 'object', additionalProperties: false, requir
   install: { type: 'boolean', description: 'For setup only: install the checked-in helper APK.' },
   probe: { type: 'boolean', description: 'For setup only: start the debug-only sensor probe.' },
   game: { type: 'string', enum: ['fnaf2', 'fnaf1', 'fnaf4'], description: 'For night only: the winner\'s game.' },
-  winner: { type: 'string', pattern: '^tools/device/[a-z0-9][a-z0-9.-]{0,80}-winner\\.json$',
+  winner: { type: 'string', pattern: WINNER_FILE.source,
     description: 'For night only: the committed winner file.' },
   night: { type: 'integer', minimum: 1, maximum: 8, description: 'For night only: the one night (7 = Custom Night).' },
   label: { type: 'string', pattern: '^[a-z0-9][a-z0-9-]{0,24}$', description: 'For night only: the run label.' },
@@ -108,7 +108,7 @@ const TOOL_DEFINITIONS = Object.freeze([
   {
     name: 'cue.queue.enqueue',
     description: 'Persist one safe setup or screen-check job, or one night job: a single night of a COMMITTED '
-      + 'tools/device/*-winner.json, played only inside Pedro\'s overnight window (never by cue.queue.run), after '
+      + `${BINDINGS_DIR}/<game>/*-winner.json, played only inside Pedro's overnight window (never by cue.queue.run), after `
       + 'the title is observed to offer that night. Enqueuing works while the phone is absent or locked and sends no input.',
     inputSchema: CUE_ENQUEUE_SCHEMA,
     annotations: SAFE,

@@ -137,7 +137,8 @@ const TOOL_ROOTS = ['tools', 'packages/source/decompile', 'packages/source/recom
 // propose's parked work are held to the Scripts table of the nearest README
 // (ADR 0002 layout, LEG-008).
 const underToolRoot = (f) => TOOL_ROOTS.some((root) => f.startsWith(`${root}/`)) ||
-  /^(?:packages|apps)\/[^/]+\/bin\//.test(f) || f.startsWith('packages/propose/parked/');
+  /^(?:packages|apps)\/[^/]+\/bin\//.test(f) || f.startsWith('packages/propose/parked/') ||
+  f.startsWith('packages/propose/bindings/');
 const SCRIPTS_HEADING = '\n## Scripts\n';
 const scriptsIndex = (f) => /^(?:packages|apps)\/[^/]+\/README\.md$/.test(f) &&
   readFileSync(join(ROOT, f), 'utf8').includes(SCRIPTS_HEADING);

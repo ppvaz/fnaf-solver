@@ -28,7 +28,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ANCHOR_AIMS } from './fact-register.mjs';
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../..');
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../..');
 let failed = 0;
 const fail = message => { failed += 1; process.stdout.write(`  FAIL ${message}\n`); };
 

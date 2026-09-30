@@ -3,7 +3,7 @@
 // each, and the per-update draw/LCG trace up to the first difference.
 //
 //   node packages/propose/bin/recompile/compare-schedule-replay.mjs --trace FILE --input FILE --navigation FILE
-//        --winner tools/device/campaign-night1-minimal-winner.json --night 1 --seed 24850
+//        --winner packages/propose/bindings/fnaf2/campaign-night1-minimal-winner.json --night 1 --seed 24850
 //        --model-options packages/source/recompile/sourced-rebuild-model-options.json --out FILE
 //        [--frame 3] [--frames 30000] [--profile FILE] [--custom-night FILE]
 //        [--binary FILE] [--save FILE] [--repeat-trace FILE] [--ledger monitor|mask[=TRACE]]...

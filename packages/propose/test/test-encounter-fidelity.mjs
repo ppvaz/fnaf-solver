@@ -7,6 +7,12 @@ import { score, windowCode } from '../../review/venue-grid/encounter-replay.mjs'
 import { Sim } from '@sixam/source/fnaf2';
 import { applySimOpts } from '../bin/census/winner-census.mjs';
 import { STRATEGY_REGISTRY, validateWinner } from '../bin/plans/bundle.mjs';
+import { fileURLToPath } from 'node:url';
+import { currentPath } from '@sixam/review/renamed-path';
+
+// A binding as the committed record names it, where the file lives now (records keep their paths).
+const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
+const current = (path) => currentPath(ROOT, path) ?? path;
 
 assert.deepEqual(score('..CB?', '.'), {
   hits: 0, occ: 2, read: 4, agreeRead: 1, comparedRead: 1, unknownModel: 3,
@@ -38,7 +44,7 @@ assert.deepEqual(record.census.method.simOpts, ['sourcedGatedEvery']);
 assert.equal(record.census.method.heldOutBlock.n, 0);
 assert.equal(record.census.method.population.count, 3000);
 for (const row of record.census.bindings) {
-  const bytes = readFileSync(new URL(`../../../${row.binding}`, import.meta.url));
+  const bytes = readFileSync(new URL(`../../../${current(row.binding)}`, import.meta.url));
   assert.equal(createHash('sha256').update(bytes).digest('hex'), row.winnerSha256,
     `${row.binding} must still be the binding censused`);
   assert.equal(row.design.n, 3000);
@@ -69,7 +75,7 @@ assert.throws(() => applySimOpts(['sourcedGatedEvery']), /already applied/);
 // bounded gate does not pretend to rerun the full 84,000-night comparison.
 let replays = 0;
 for (const row of record.census.bindings) {
-  const winner = validateWinner(JSON.parse(readFileSync(new URL(`../../../${row.binding}`, import.meta.url))));
+  const winner = validateWinner(JSON.parse(readFileSync(new URL(`../../../${current(row.binding)}`, import.meta.url))));
   const { replay } = STRATEGY_REGISTRY[winner.strategy].emit(winner, row.night);
   if (row.wins === row.n) {
     for (const seed of [1, 1777]) {

@@ -96,7 +96,7 @@ if (changed.some(path => ['packages/propose/src/experiment/', 'packages/propose/
 // packages created on 2026-09-29.
 if (changed.some(path => path.startsWith('packages/review/') || path.startsWith('packages/kernel/') || path === 'tools/evidence.js' ||
     path === 'tools/evidence-pack.mjs' || path.startsWith('docs/evidence/runs/') || path === 'docs/evidence/graph.json' ||
-    path === 'tools/device/fact-register.mjs' || /^tools\/device\/[^/]+-winner\.json$/.test(path))) {
+    path === 'packages/propose/bindings/fact-register.mjs' || /^packages\/propose\/bindings\/[^/]+\/[^/]+-winner\.json$/.test(path))) {
   for (const test of ['evidence-campaign', 'evidence-pack', 'evidence-cohort', 'evidence-promotion'])
     add(`test:packages/review/test/${test}.test.mjs`, 'node', [`packages/review/test/${test}.test.mjs`]);
   for (const test of ['pack-lift', 'promotions-query'])

@@ -54,6 +54,7 @@ const SIBLINGS = ['../../../../tools/device', '../../../../packages/source/decom
 // Where tools/device's tests went beside models, censuses and searches over the simulator, none of
 // which reads a run: only the tests there are checked, and in a test/ directory every script is one.
 const TEST_DIRS = ['../../../../packages/propose/test', '../../../../packages/propose/bin/census', '../../../../packages/propose/parked/minus7',
+  '../../../../packages/propose/bindings',
   '../../../../apps/desktop/test'];
 const SIBLING_EXCLUDED = new Map([
   ['aimap.py', 'AI-table extractor from the event-sheet dump, gated by test-aimap.py'],
@@ -183,8 +184,6 @@ const SIBLING_EXCLUDED = new Map([
   // apps/wiki
   ['fnaf1-teach-media.py', 'cuts a FNaF 1 run video into a README GIF and phone videos; a presentation tool, not a grader'],
   // tools/device
-  ['fact-register.mjs', 'a generated register of which producer answers each semantic fact and on what evidence; it reads source, not a run, and test-fact-register.mjs is the gate over it'],
-  ['test-anchor-aim-band.mjs', 'a gate, not an instrument: it multiplies each ANCHOR_AIMS entry out through its own onset bias and input latency and checks the effective epoch lands in a confirmed winning band. It reads the register and evidence records, never a run; registered in npm run test:unit'],
   ['deathchart.mjs', 'charts the model gate\'s death census for a PLAN under modeled human slack -- a simulator result with no run artifact to read; gated by test-deathchart.mjs'],
   ['overnight-window.py', 'a forwarder to apps/lab/overnight-window.py, kept while a host\'s installed systemd units name this path (legacy-paths.json lab.overnight-window-path); the window itself is gated in apps/lab'],
   // packages/review/bin/report
