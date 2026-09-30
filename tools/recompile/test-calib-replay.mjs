@@ -2,7 +2,7 @@
 // session, polled edges become harness rows on their own update at the point
 // the runtime maps the SDL mouse event to, and the comparison names the first
 // update whose draw count or RNG state differs. No device, no harness.
-import { compare, delivery, inputRows, outcome, rows, toGame, visit } from './calib-replay.mjs';
+import { compare, compareModel, delivery, inputRows, landedQueue, outcome, rows, toGame, visit } from './calib-replay.mjs';
 
 const check = (ok, message) => { if (!ok) throw new Error(message); };
 
@@ -58,4 +58,18 @@ const d = delivery(v.rows, input, ['3 1 down 0 384 384', '3 4 up 0', '3 5 down 0
 check(d.plannedDue === 4 && d.missing === 0 && JSON.stringify(d.landedMinusPlanned) === '{"0":2,"1":2}',
   `delivery pairs planned edges with landings in order: ${JSON.stringify(d)}`);
 
-console.log('calib-replay: session, visit, input rows, comparison, outcome and delivery hold');
+// The model's queue at the phone's landings: a queue row follows its harness edge; a tap's release has none.
+const sched = { contacts: [{ control: 'monitor', downFrame: 1, upFrame: 4 }, { control: 'mask', downFrame: 5, upFrame: 7 }],
+  queue: [[1, 'press', 'monitor'], [5, 'press', 'mask']] };
+const points = { monitor: [1780, 1015], mask: [150, 1015] };
+const planned = ['3 1 down 0 1780 1015', '3 4 up 0', '3 5 down 0 150 1015', '3 7 up 0'].join('\n');
+const q = landedQueue({ sched, points, office: v.rows, input, plannedText: planned });
+check(JSON.stringify(q.rows) === JSON.stringify([[2, 'press', 'monitor'], [6, 'press', 'mask']]) && q.moved.length === 2,
+  `queue rows move to the ticks their edges landed on: ${JSON.stringify(q)}`);
+let refused = null;
+try { landedQueue({ sched, points, office: v.rows, input, plannedText: '3 1 down 0 1 1\n3 9 up 0' }); } catch (e) { refused = e.message; }
+check(refused && refused.includes('not this winner'), 'a planned file that is not the winner\'s rows is refused');
+const cm = compareModel(v.rows, [{ draws: 0, state: 0 }, ...v.rows.map((r, i) => ({ draws: r.rd + (i >= 3 ? 1 : 0), state: r.rs }))]);
+check(cm.agree === 3 && cm.firstDivergence.update === 4, 'model frame f is compared with the phone\'s update f');
+
+console.log('calib-replay: session, visit, input rows, comparison, outcome, delivery and the model queue hold');

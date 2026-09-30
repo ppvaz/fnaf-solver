@@ -59,7 +59,7 @@ export function controlPoints(profile) {
 
 // A plan control's profile key (cam9 -> cam:9) and its Sim action (as minus-toys-plan.mjs actionFor).
 const profileKey = (control) => (/^cam\d+$/.test(control) ? `cam:${control.slice(3)}` : control);
-const simAction = (control) => (/^cam\d+$/.test(control) ? `cam:${control.slice(3)}`
+export const simAction = (control) => (/^cam\d+$/.test(control) ? `cam:${control.slice(3)}`
   : control === 'cameraFeedLight' || control === 'hallLight' ? MODEL_CONTEXT_LIGHT : control);
 
 /**

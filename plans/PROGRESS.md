@@ -3013,3 +3013,32 @@ Nothing is measured or promoted. Open: Plan 28 steps 5 and 6 (`truth.*`,
 `sim.*`, `device.*`). The chronicle ends on 2026-09-09, so `fnaf://refuted` holds
 no negative result recorded after that date. Which commands besides the listed
 emitters should carry the envelope is not recorded anywhere.
+
+## 2026-09-30 — The model's first difference on k3 is Foxy's move writing value 2 (S2)
+
+Driven by k3's own Sim queue at the updates the phone landed each edge on, with the phone's seed
+(27656) and clock (`calib-replay.mjs model`), the model left the phone's night at update 363 and
+the rebuild's, on identical inputs, at 362: one draw short. A gdb breakpoint on the rebuild's LCG
+step names it: W. Foxy's footstep cue (g698, generated e612). g389 (e317) moves Foxy from CAM 08 to
+hall stage 1 and sets his value 2 = 10 itself, so the cue draws on every move; the model had value 2
+only from g349's acceptance, and Foxy, accepted on loop 300, was held by the latch until 361.
+`sourcedFoxyMoveValue2` (default off, `packages/core/test/foxy-move-value2.test.js`) is adopted into
+the rebuild set; its old bytes are `sourced-rebuild-model-options-20260929a.json`.
+
+- k3 at seed 27656 as planned, 60 Hz: the model matches the rebuild on 25,201 of 25,201 updates
+  (was 1,546, first difference 362). On the phone's clock the first difference moves 363 -> 2,415,
+  and against the phone's own night 363 -> 2,725 (`calib-model-6559f8f66e0f574e`).
+- The four clock-seeded retail nights re-scored (`recompile-phone-encounters-29d9dd090d08ee91`): on
+  the constant clock the model now reproduces the rebuild's mask windows on twin-01, full-04 and
+  full-06 (full-04's draw stream matches the whole night, full-06 to update 23,400). Against the
+  retail phone neither program matches (the rebuild 14 of 38 windows on full-06 landed). full-06
+  `sched` and tw-12 `raw` now split earlier (300, 1,061): there the rebuild never accepts Foxy at the
+  roll the model accepts him on, which the silent move used to hide.
+- `phone-input-bracket-sweep.mjs` froze the model's bytes for its 09-28 record; it now requires the
+  record's model and tool bytes to be committed versions (working file or history; CI has full history).
+
+Open:
+- the measured-clock difference (model vs rebuild at 2,415 on k3);
+- the Foxy roll the model accepts and the rebuild does not on `sched`/`raw` clocks;
+- the rebuild's own gap to the retail phone (full-06's 40.0 s roll).
+

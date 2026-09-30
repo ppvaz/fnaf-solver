@@ -23,6 +23,10 @@
 //   node tools/recompile/calib-replay.mjs summary --out FILE --host-binary ID --phone-apk SHA
 //        [--delivery CALIBDIR:PLANNED.input] [--question TEXT] LABEL=RUNDIR ...
 //     (one results record composed from each run's own record.json or trace, never retyped)
+//   node tools/recompile/calib-replay.mjs model --calib DIR --planned FILE --winner FILE --night N
+//        [--custom-night FILE] [--model-options FILE] [--options-before FILE] [--landings phone|planned]
+//        [--clock phone|fixed] [--vs phone|trace:RUNDIR] [--record FILE [--append]]
+//     (the model on the phone's night: the winner's Sim queue at the phone's landings, seed and clock)
 //
 // Content-free: it reads and writes timings, counters and coordinates only;
 // the run directory lives outside the repository beside the harness.
@@ -32,6 +36,8 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { drawTrace } from './model-draw-trace.mjs';
+import { DEFAULT_PROFILE, controlPoints, harnessRows, simAction, winnerSchedule } from './schedule-to-input.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const SCHEMA = 'recompile-calib-replay-v1';
@@ -239,6 +245,120 @@ export function delivery(office, input, plannedText) {
     rows: rows.sort((a, b) => a.planned - b.planned) };
 }
 
+/**
+ * The model's Sim queue for a night the phone played: each row of the winner's
+ * queue moved to the update the phone landed its harness edge on. A queue row
+ * is one harness edge of the same control, frame and direction (a press is a
+ * down, a release an up); a tap's release and a camdrop's monitor release have
+ * no queue row, because the Sim takes a tap as a press. Rows past the phone's
+ * office keep their planned frame. Model frame F is harness update F - 1, so a
+ * row applied before tick F is the harness row on tick F.
+ */
+export function landedQueue({ sched, points, office, input, plannedText }) {
+  const planned = harnessRows(sched.contacts, points).rows.map(e => ({ ...e }));
+  const plannedRows = plannedText.split('\n').filter(l => /^3\s/.test(l)).map(l => l.trim().split(/\s+/));
+  if (planned.length !== plannedRows.length || planned.some((e, i) => e.tick !== Number(plannedRows[i][1]) || e.op !== plannedRows[i][2]))
+    throw new Error('the planned input is not this winner\'s harness rows (schedule-to-input.mjs)');
+  const d = delivery(office, input, plannedText);
+  const landed = new Map(d.rows.map(r => [`${r.pointer}/${r.op}/${r.planned}`, r.landed]));
+  const moved = [];
+  let unmatched = 0;
+  const rows = sched.queue.map(([frame, op, action]) => {
+    const edge = planned.find(e => !e.used && e.tick === frame && e.op === (op === 'press' ? 'down' : 'up') && simAction(e.control) === action);
+    if (!edge) { unmatched++; return [frame, op, action]; }
+    edge.used = true;
+    const at = landed.get(`${edge.pointer}/${edge.op}/${edge.tick}`);
+    if (at === undefined) return [frame, op, action];
+    if (at !== frame) moved.push({ action, op, planned: frame, landed: at });
+    return [at, op, action];
+  }).sort((a, b) => a[0] - b[0]);
+  if (unmatched) throw new Error(`${unmatched} queue rows have no harness edge`);
+  return { rows, moved };
+}
+
+/** The model on the phone's night: per update, the same draws and RNG state as the phone? */
+export function compareModel(office, out) {
+  let agree = 0, first = null;
+  const n = Math.min(office.length, out.length - 1);
+  for (let f = 1; f <= n; f++) {
+    const p = office[f - 1], m = out[f];
+    if (m.draws === p.rd && m.state === p.rs) agree++;
+    else if (first === null) first = { update: f, phone: { draws: p.rd, state: p.rs }, model: { draws: m.draws, state: m.state } };
+  }
+  return { compared: n, agree, firstDivergence: first };
+}
+
+/** A harness run's first office visit as rows the model is compared with (draws, state). */
+function traceOffice(traceText) {
+  const out = []; let visits = 0, on = false;
+  for (const l of traceText.split('\n')) {
+    if (l.startsWith('# frame 3 seeded')) { visits++; on = visits === 1; continue; }
+    if (l.startsWith('# frame ') && l.includes(' seeded')) { if (on) break; continue; }
+    if (on && l.startsWith('3 ')) { const [, , d, g] = l.split(' '); out.push({ rd: Number(d), rs: Number(g) }); }
+  }
+  return out;
+}
+
+function modelCmd(args) {
+  const calib = resolve(opt(args, '--calib') ?? fail('--calib DIR'));
+  const plannedFile = resolve(opt(args, '--planned') ?? fail('--planned FILE (the harness input the phone was driven from)'));
+  const winnerFile = resolve(opt(args, '--winner') ?? fail('--winner FILE'));
+  const night = Number(opt(args, '--night') ?? fail('--night N'));
+  const optionsFile = resolve(opt(args, '--model-options') ?? join(ROOT, 'tools/recompile/sourced-rebuild-model-options.json'));
+  const customNightFile = opt(args, '--custom-night');
+  const landings = opt(args, '--landings') ?? 'phone';
+  const clock = opt(args, '--clock') ?? 'phone';
+  const vs = opt(args, '--vs') ?? 'phone';
+  if (!['phone', 'planned'].includes(landings) || !['phone', 'fixed'].includes(clock)) fail('--landings phone|planned, --clock phone|fixed');
+  if (vs !== 'phone' && !vs.startsWith('trace:')) fail('--vs phone | trace:RUNDIR');
+  const updatesText = readFileSync(join(calib, 'calib-updates.jsonl'), 'utf8');
+  const inputText = readFileSync(join(calib, 'calib-input.jsonl'), 'utf8');
+  const plannedText = readFileSync(plannedFile, 'utf8');
+  const { seed, rows: office } = visit(rows(updatesText), 3);
+  const winner = JSON.parse(readFileSync(winnerFile, 'utf8'));
+  const sched = winnerSchedule(winner, night);
+  const points = controlPoints(JSON.parse(readFileSync(join(ROOT, DEFAULT_PROFILE), 'utf8')));
+  const { rows: queue, moved } = landings === 'phone'
+    ? landedQueue({ sched, points, office, input: rows(inputText), plannedText })
+    : { rows: sched.queue, moved: [] };
+  // The reference: the phone's office rows, or a harness run's (the rebuild on the same inputs).
+  const traceDir = vs.startsWith('trace:') ? resolve(vs.slice(6)) : null;
+  const traceText = traceDir ? readFileSync(join(traceDir, 'trace'), 'utf8') : null;
+  const reference = traceText ? traceOffice(traceText) : office;
+  const customNight = customNightFile ? JSON.parse(readFileSync(resolve(customNightFile), 'utf8')) : undefined;
+  const run = (file) => {
+    const modelOptions = JSON.parse(readFileSync(file, 'utf8'));
+    const { out, death, won } = drawTrace({ night, seed, frames: reference.length + 30000, rows: queue, customNight, modelOptions,
+      ...(clock === 'phone' ? { frameTimes: office.map(r => r.dt * 1000) } : {}) });
+    return { modelOptions: { path: relative(ROOT, file), sha256: sha256(readFileSync(file, 'utf8')) },
+      ...compareModel(reference, out),
+      model: { frames: out.length - 1, won, death: death ? { reason: death.reason ?? String(death), frame: out.length - 1 } : null } };
+  };
+  const before = opt(args, '--options-before');
+  const comparison = {
+    variant: { landings, clock, vs: traceDir ? `trace:${relative(dirname(calib), traceDir)}` : 'phone', seed, night },
+    reference: { officeUpdates: reference.length, ...(traceText ? { traceSha256: sha256(traceText) } : {}) },
+    movedRows: moved.length,
+    ...(before ? { before: run(resolve(before)) } : {}),
+    after: run(optionsFile),
+  };
+  const inputs = { calibUpdates: sha256(updatesText), calibInput: sha256(inputText), planned: sha256(plannedText),
+    winner: sha256(readFileSync(winnerFile, 'utf8')),
+    ...(customNightFile ? { customNight: sha256(readFileSync(resolve(customNightFile), 'utf8')) } : {}) };
+  const out_ = opt(args, '--record');
+  // --append collects comparisons into one record; its id covers every comparison's inputs.
+  const record = out_ && args.includes('--append') && existsSync(out_) ? JSON.parse(readFileSync(out_, 'utf8')) : {
+    schema: 'recompile-calib-model-v1', step: 'ROADMAP S2', claimLevel: 'MODEL_ONLY',
+    question: opt(args, '--question') ?? 'Does the model, on the winner\'s queue at the phone\'s landings (or as planned), with the phone\'s seed and clock, play the reference night draw for draw?',
+    inputsSha256: inputs, comparisons: [],
+  };
+  record.comparisons.push(comparison);
+  record.evidenceId = `calib-model-${sha256(JSON.stringify(record.comparisons.map(c => [c.variant, c.reference, c.after.modelOptions, c.before?.modelOptions ?? null]))).slice(0, 16)}`;
+  if (out_) writeFileSync(out_, JSON.stringify(record, null, 1) + '\n');
+  const brief = r => r && `${r.agree}/${r.compared} first ${r.firstDivergence?.update ?? '-'} ${r.model.won ? 'won' : 'dead'}`;
+  console.log(JSON.stringify({ evidenceId: record.evidenceId, variant: comparison.variant, before: brief(comparison.before), after: brief(comparison.after) }));
+}
+
 function summary(args) {
   const out = opt(args, '--out') ?? fail('--out FILE');
   const hostBinary = opt(args, '--host-binary') ?? fail('--host-binary ID (the pinned harness binary)');
@@ -283,5 +403,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   if (cmd === 'build') build(args);
   else if (cmd === 'compare') compareCmd(args);
   else if (cmd === 'summary') summary(args);
+  else if (cmd === 'model') modelCmd(args);
   else fail('usage: build --calib DIR --run DIR | compare --calib DIR --run DIR [--record FILE] | summary --out FILE ...');
 }

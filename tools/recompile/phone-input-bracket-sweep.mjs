@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Exhaust the measured visual-response update brackets before full-06's first divergent window.
 // This is a host-model sensitivity analysis, not a claim about device input dispatch.
+import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -239,6 +240,17 @@ function simulateFamily() {
   return candidate;
 }
 
+/** 'working tree', the first revision whose committed `path` has `expected` as its sha256, or null. */
+export function committedVersion(path, expected) {
+  if (sha256(readFileSync(resolve(ROOT, path))) === expected) return 'working tree';
+  const revisions = execFileSync('git', ['-C', ROOT, 'log', '--format=%H', '--', path], { encoding: 'utf8' }).split('\n').filter(Boolean);
+  for (const revision of revisions) {
+    const bytes = execFileSync('git', ['-C', ROOT, 'show', `${revision}:${path}`], { maxBuffer: 64 << 20 });
+    if (sha256(bytes) === expected) return revision;
+  }
+  return null;
+}
+
 export function check(result) {
   if (result.schema !== SCHEMA || result.claimLevel !== 'MODEL_ONLY') throw new Error('wrong input-bracket result schema or claim ceiling');
   const config = json(CONFIG);
@@ -250,9 +262,13 @@ export function check(result) {
   for (const [key, sourcePath] of [['config', CONFIG], ['responseResult', RESPONSE_RESULT], ['modelOptions', config.modelOptions]]) {
     if (result.source[key].path !== sourcePath || result.source[key].sha256 !== sourceHash(sourcePath)) throw new Error(`${key} bytes differ`);
   }
-  if (result.source.toolSha256 !== sourceHash('tools/recompile/phone-input-bracket-sweep.mjs')) throw new Error('tool bytes differ');
+  if (committedVersion('tools/recompile/phone-input-bracket-sweep.mjs', result.source.toolSha256) === null)
+    throw new Error('tool bytes are no committed version of this tool');
+  // The record is about the model it was computed with, and the model moves on. Its bytes must be a
+  // committed version of each source: the working file, or a revision in the file's history (CI checks
+  // out full history). A re-run on the current model is a new record.
   for (const [path, expected] of Object.entries(result.source.modelSources)) {
-    if (sha256(readFileSync(resolve(ROOT, path))) !== expected) throw new Error(`model source bytes differ: ${path}`);
+    if (committedVersion(path, expected) === null) throw new Error(`model source bytes are no committed version: ${path}`);
   }
   const night = config.nights.find((row) => row.name === 'full-06');
   const responseNight = responseResult.nights.find((row) => row.name === 'full-06');
@@ -300,8 +316,9 @@ export function check(result) {
       minTick: row.earlyTick, maxTick: row.lateTick,
       possibleTicks: Array.from({ length: row.lateTick - row.earlyTick + 1 }, (_, offset) => row.earlyTick + offset) }));
   if (JSON.stringify(dimensions) !== JSON.stringify(expectedDimensions)) throw new Error('ambiguous response brackets were omitted or changed');
-  const expectedModelSources = Object.fromEntries(MODEL_SOURCES.map((path) => [path.slice(ROOT.length + 1), sha256(readFileSync(path))]));
-  if (JSON.stringify(result.source.modelSources) !== JSON.stringify(expectedModelSources) || result.source.winner.path !== night.winner)
+  // The model's files by path; their bytes were checked above to be committed versions.
+  const modelPaths = MODEL_SOURCES.map((path) => path.slice(ROOT.length + 1));
+  if (JSON.stringify(Object.keys(result.source.modelSources)) !== JSON.stringify(modelPaths) || result.source.winner.path !== night.winner)
     throw new Error('model or winner provenance differs');
   let combinations = 1;
   for (const dimension of dimensions) combinations *= dimension.possibleTicks.length;

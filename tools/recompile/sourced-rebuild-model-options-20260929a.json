@@ -43,6 +43,5 @@
   "sourcedGatedEvery": true,
   "sourcedBBMoves": true,
   "sourcedExposureValue5": true,
-  "sourcedRouteViewDraws": true,
-  "sourcedFoxyMoveValue2": true
+  "sourcedRouteViewDraws": true
 }

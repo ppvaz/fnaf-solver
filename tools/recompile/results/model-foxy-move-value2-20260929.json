@@ -1,0 +1,191 @@
+{
+ "schema": "recompile-calib-model-v1",
+ "step": "ROADMAP S2",
+ "claimLevel": "MODEL_ONLY",
+ "question": "Does g389 writing Foxy's value 2 (sourcedFoxyMoveValue2) close the model's first difference from the rebuild and the phone on Night 7 10/20 k3 at seed 27656?",
+ "inputsSha256": {
+  "calibUpdates": "6ce602bb663c66b5ac482ed16ad5dae46f01964d4dbb26e248def0029ffe10c3",
+  "calibInput": "e0bf1c784899656450f5abf39b4a8c0774b346d07488893064b5dcd8ca12851a",
+  "planned": "21eedb5824846d4d6b896be0a24fc99b8e35e92c026fc365c6c5c8ae5917c438",
+  "winner": "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78",
+  "customNight": "eef47cae2405141567ee15ae3216662c8d5c78edbd6fb8c2d1ce8cc1a5ee588c"
+ },
+ "comparisons": [
+  {
+   "variant": {
+    "landings": "planned",
+    "clock": "fixed",
+    "vs": "trace:replay-k3-planned-fixed",
+    "seed": 27656,
+    "night": 7
+   },
+   "reference": {
+    "officeUpdates": 25201,
+    "traceSha256": "9238870a5e09125391cf75b0d812ff9a20addd3f207e664d2d9609afd2f87b1f"
+   },
+   "movedRows": 0,
+   "before": {
+    "modelOptions": {
+     "path": "tools/recompile/sourced-rebuild-model-options-20260929a.json",
+     "sha256": "baf090cd3dc6769d5d337178fa07a827f574c64e43e2fbe599204a9ad7aa4139"
+    },
+    "compared": 25201,
+    "agree": 1546,
+    "firstDivergence": {
+     "update": 362,
+     "phone": {
+      "draws": 175,
+      "state": 2545
+     },
+     "model": {
+      "draws": 174,
+      "state": 5520
+     }
+    },
+    "model": {
+     "frames": 25201,
+     "won": true,
+     "death": null
+    }
+   },
+   "after": {
+    "modelOptions": {
+     "path": "tools/recompile/sourced-rebuild-model-options.json",
+     "sha256": "02172a8a2810fdfac38bcdb886b29bb65012895a527e2a1b633718cae9a57aef"
+    },
+    "compared": 25201,
+    "agree": 25201,
+    "firstDivergence": null,
+    "model": {
+     "frames": 25201,
+     "won": true,
+     "death": null
+    }
+   }
+  },
+  {
+   "variant": {
+    "landings": "planned",
+    "clock": "phone",
+    "vs": "trace:replay-k3-planned-phonedt",
+    "seed": 27656,
+    "night": 7
+   },
+   "reference": {
+    "officeUpdates": 25202,
+    "traceSha256": "47e17b65c04350c8c9863ecdf1b0a57ddb3c97996774596825c6eecb5d670ee5"
+   },
+   "movedRows": 0,
+   "before": {
+    "modelOptions": {
+     "path": "tools/recompile/sourced-rebuild-model-options-20260929a.json",
+     "sha256": "baf090cd3dc6769d5d337178fa07a827f574c64e43e2fbe599204a9ad7aa4139"
+    },
+    "compared": 25202,
+    "agree": 1555,
+    "firstDivergence": {
+     "update": 363,
+     "phone": {
+      "draws": 175,
+      "state": 2545
+     },
+     "model": {
+      "draws": 174,
+      "state": 5520
+     }
+    },
+    "model": {
+     "frames": 25202,
+     "won": true,
+     "death": null
+    }
+   },
+   "after": {
+    "modelOptions": {
+     "path": "tools/recompile/sourced-rebuild-model-options.json",
+     "sha256": "02172a8a2810fdfac38bcdb886b29bb65012895a527e2a1b633718cae9a57aef"
+    },
+    "compared": 25202,
+    "agree": 3684,
+    "firstDivergence": {
+     "update": 2415,
+     "phone": {
+      "draws": 1348,
+      "state": 14072
+     },
+     "model": {
+      "draws": 1349,
+      "state": 31561
+     }
+    },
+    "model": {
+     "frames": 25202,
+     "won": true,
+     "death": null
+    }
+   }
+  },
+  {
+   "variant": {
+    "landings": "phone",
+    "clock": "phone",
+    "vs": "phone",
+    "seed": 27656,
+    "night": 7
+   },
+   "reference": {
+    "officeUpdates": 5934
+   },
+   "movedRows": 107,
+   "before": {
+    "modelOptions": {
+     "path": "tools/recompile/sourced-rebuild-model-options-20260929a.json",
+     "sha256": "baf090cd3dc6769d5d337178fa07a827f574c64e43e2fbe599204a9ad7aa4139"
+    },
+    "compared": 5934,
+    "agree": 1002,
+    "firstDivergence": {
+     "update": 363,
+     "phone": {
+      "draws": 175,
+      "state": 2545
+     },
+     "model": {
+      "draws": 174,
+      "state": 5520
+     }
+    },
+    "model": {
+     "frames": 25202,
+     "won": true,
+     "death": null
+    }
+   },
+   "after": {
+    "modelOptions": {
+     "path": "tools/recompile/sourced-rebuild-model-options.json",
+     "sha256": "02172a8a2810fdfac38bcdb886b29bb65012895a527e2a1b633718cae9a57aef"
+    },
+    "compared": 5934,
+    "agree": 4429,
+    "firstDivergence": {
+     "update": 2725,
+     "phone": {
+      "draws": 1576,
+      "state": 37224
+     },
+     "model": {
+      "draws": 1577,
+      "state": 33113
+     }
+    },
+    "model": {
+     "frames": 25202,
+     "won": true,
+     "death": null
+    }
+   }
+  }
+ ],
+ "evidenceId": "calib-model-6559f8f66e0f574e"
+}

@@ -248,6 +248,14 @@ export class Sim {
       // Research knob under sourcedFootstepDraws: Foxy's hall-stage entry draw (g698 via g389), the least
       // sourced part of the trigger. Off leaves the other eight characters' draws in place.
       footstepFoxy: true,
+      // Foxy's move writes his value 2 (requires sourcedFootstepDraws and sourcedFoxyChain). g389 (generated
+      // e317: A == 2, on CAM 08, viewing hall light == 0) sets A = 0, moves him to hall stage 1 and sets
+      // value 2 = 10 itself, as g349 did at the acceptance (e277). Hall stage 1 is under `hear footsteps`,
+      // so g698 draws on every move, however long the latch held it after g349; off, the draw needs the
+      // move within ten loops of the acceptance. Night 7 10/20 k3 at seed 27656: Foxy accepted on loop 300,
+      // value 2 drained to 0 by 309, moved on 361 with value 2 = 10 again, and the rebuilt runtime drew
+      // Random(5) there (tools/recompile/results/model-foxy-move-value2-20260929.json).
+      sourcedFoxyMoveValue2: false,
       // Research knob under sourcedFootstepDraws: also draw on hops onto CAM 01, 02, 03 and 04. The
       // CCN puts them under `hear footsteps` (149): its 264 x 151 image is opaque at every pixel, every
       // character is an opaque 24 x 24 fine-collision sprite whose hotspot lands inside it on those
@@ -708,6 +716,8 @@ export class Sim {
       throw new Error('sourcedOfficeRolls retries the promotions at 122 in the route pass: it requires sourcedOfficeFootsteps and sourcedRoutePass');
     if (this.opts.sourcedFootstepValue2 && !this.opts.sourcedFootstepDraws)
       throw new Error('sourcedFootstepValue2 changes when the footstep cue draws: it requires sourcedFootstepDraws');
+    if (this.opts.sourcedFoxyMoveValue2 && !(this.opts.sourcedFootstepDraws && this.opts.sourcedFoxyChain))
+      throw new Error('sourcedFoxyMoveValue2 is g389 writing value 2 for g698: it requires sourcedFootstepDraws and sourcedFoxyChain');
     if (this.opts.sourcedHallLatchOrder && !this.opts.frameMs)
       throw new Error('sourcedHallLatchOrder moves the hooked one-second latch reset: it requires frameMs');
     if (this.opts.sourcedBlackoutClockEnd && !(this.opts.sourcedBlackoutDraws && this.opts.frameMs))
@@ -1916,7 +1926,9 @@ export class Sim {
     if (fx.A !== 2 || this.hallLatch) return;       // the latch g489 left on the previous frame
     if (fx.loc === 'parts') {                        // g389
       fx.A = 0; fx.loc = 'hall'; fx.D = 0;
-      if (this.opts.sourcedFootstepDraws && this.opts.footstepFoxy && this.frame - (fx.acceptedAt ?? -100) < 10) fx.footstep = true;   // hall stage 1, value 2 still > 0
+      // hall stage 1 with value 2 > 0: g389 sets it to 10 (sourcedFoxyMoveValue2), else what is left of g349's
+      if (this.opts.sourcedFootstepDraws && this.opts.footstepFoxy &&
+          (this.opts.sourcedFoxyMoveValue2 || this.frame - (fx.acceptedAt ?? -100) < 10)) fx.footstep = true;
       this.emit('foxy-arrive');
     } else if (fx.loc === 'hall' && !fx.gotYou) {    // g390
       fx.A = 0; fx.gotYou = true;
