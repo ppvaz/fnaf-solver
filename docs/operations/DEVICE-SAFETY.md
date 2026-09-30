@@ -130,12 +130,19 @@ moved from what the run is bound to.
   - a `venue-binding-v1` that names the run's profile or winner, passed with
     `--venue-binding FILE`.
 
-  No committed profile, winner or qualification is bound yet, so today preflight
-  records the identity and says so, and does not refuse:
+- **Unbound refuses a live run (2026-09-30).** With nothing bound, drift is
+  unknown, which is the 09-27 reinstall again. A live campaign (the CLI's
+  `--live` preflight and the runner's own) therefore fails `venue-identity`
+  with reason `venue-identity-unbound`, and the remedy names the command that
+  records a binding from the phone. `device:preflight` without `--bind-venue`
+  only inspects: it records the identity and passes, saying a live run would
+  refuse. A dry run opens no phone: it reports the venue `UNKNOWN` with that
+  reason, and says what a live run would compare it with, or that it would
+  refuse. No committed profile, winner or qualification is bound yet, so every
+  live run refuses until one is:
 
   ```text
-  PASS    venue-identity: unbound: the observed venue identity is recorded; no profile, winner or qualification binds one, so drift is not checked
-  venue UNBOUND: the observed venue identity is recorded; no profile, winner or qualification binds one, so drift is not checked
+  FAIL    venue-identity: unbound: the observed venue identity is recorded; no profile, winner or qualification binds one, so drift is not checked; drift is UNKNOWN, so a live run refuses. Remedy: ...
   ```
 
 - **Drift refuses.** A change in any of these from any binding is a `FAIL`
@@ -159,7 +166,11 @@ moved from what the run is bound to.
 - **Binding is a deliberate act.** Bind the identity that the qualifying run's
   own preflight recorded (`bindQualificationVenue`, or a `venue-binding-v1`
   over it). Never bind the identity observed after a drift: that would bless
-  the change the refusal exists to catch.
+  the change the refusal exists to catch. `npm run device:preflight --
+  --profile ID --bind-venue FILE --by NAME` writes a `venue-binding-v1` for the
+  profile over the identity that preflight read, only on the phone and build
+  the qualification was measured on. It refuses a drifted identity, an unread
+  drift field and a build other than the profile's.
 
 ## Overnight windows (Pedro, 2026-09-27)
 

@@ -132,8 +132,11 @@
     {
       "file": "apps/desktop/test/device-cli.test.js",
       "imports": [
+        "@sixam/kernel/contracts",
         "node:assert/strict",
         "node:child_process",
+        "node:fs",
+        "node:os",
         "node:path",
         "node:url"
       ]
@@ -1167,6 +1170,7 @@
     {
       "file": "packages/play/src/campaign/venue.js",
       "imports": [
+        "./adb-bridge.js",
         "@sixam/kernel/contracts",
         "node:fs/promises",
         "node:path"

@@ -55,8 +55,9 @@ Companion's version and a hash of the serial. Play parses it
 (`@sixam/play`, `phone/android-venue`) and the kernel compares it
 (`compareVenueIdentity`) with a `qualification-v2` passed with
 `--qualification` and any `venue-binding-v1` passed with `--venue-binding
-FILE`: `UNBOUND` and `MATCH` pass, `DRIFT` fails and names each field and the
-remedy, `UNKNOWN` holds. The rules are in
+FILE`: `MATCH` passes, `DRIFT` fails and names each field and the remedy,
+`UNKNOWN` holds, and `UNBOUND` passes an inspection but fails a live campaign.
+`--bind-venue FILE --by NAME` records a binding from the phone. The rules are in
 [`docs/operations/DEVICE-SAFETY.md`](../../docs/operations/DEVICE-SAFETY.md#venue-identity-pedro-2026-09-29).
 
 A live campaign also requires `--bundle DIR` with one full-night plan per

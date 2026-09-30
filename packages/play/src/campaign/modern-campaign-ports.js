@@ -948,8 +948,9 @@ export async function createCampaignPorts(options = {}) {
     return configured;
   };
 
+  // A composition of these ports is always a live run, so an unbound venue refuses here too.
   const devicePreflight = args => bridge.preflight({ targetBuild: spec.target.build,
-    restartCapture: false, venueBindings, ...args });
+    restartCapture: false, venueBindings, ...args, requireVenueBinding: true, profileId: profile.id });
   const restartAfterAbort = async reason => {
     // The HID release stops input delivery; it does not rewind the game state.
     // Close the shared title process before restarting the target so no stale

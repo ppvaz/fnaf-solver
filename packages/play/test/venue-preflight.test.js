@@ -12,7 +12,7 @@ import { bindQualificationVenue } from '@sixam/kernel/contracts';
 import { AdbDeviceBridge, preflightVenue } from '../src/campaign/adb-bridge.js';
 import { CampaignStateMachine, campaignVenue, makeCampaignSpec } from '../src/campaign/campaign.js';
 import { evaluateCampaignPreflight } from '../src/campaign/campaign-preflight.js';
-import { loadVenueBindings, renderVenueCheck } from '../src/campaign/venue.js';
+import { bindVenueFromPreflight, dryRunVenue, loadVenueBindings, renderVenueCheck } from '../src/campaign/venue.js';
 
 const SERIAL = 'FAKE0SERIAL1';
 const TARGET = 'com.scottgames.fnaf2:2.0.7+26';
@@ -22,10 +22,10 @@ const FINGERPRINT = 'motorola/fake/fake:15/V1FAKE.1/abc:user/release-keys';
 
 /** A phone whose venue answers can be changed between preflights. */
 function phone(overrides = {}) {
-  const state = { dumpsys: DUMPSYS, fingerprint: FINGERPRINT, patch: '2026-08-01', patchFails: false, ...overrides };
+  const state = { serial: SERIAL, dumpsys: DUMPSYS, fingerprint: FINGERPRINT, patch: '2026-08-01', patchFails: false, ...overrides };
   const run = async args => {
     const ok = stdout => ({ ok: true, stdout, stderr: '' });
-    if (args[0] === 'devices') return ok(`List of devices attached\n${SERIAL}\tdevice usb:1-1\n`);
+    if (args[0] === 'devices') return ok(`List of devices attached\n${state.serial}\tdevice usb:1-1\n`);
     if (args.at(-1) === 'get-state') return ok('device\n');
     if (args.includes('pm')) return ok('package:/data/app/com.scottgames.fnaf2/base.apk\n');
     if (args.includes('dumpsys') && args.includes('com.scottgames.fnaf2')) return ok(state.dumpsys);
@@ -43,9 +43,12 @@ function phone(overrides = {}) {
     if (args.includes('logcat')) return ok('I/FnafCueHelper: control=READY port=49707 token=0123456789abcdef0123456789abcdef\n');
     throw new Error(`unexpected adb ${args.join(' ')}`);
   };
-  return new AdbDeviceBridge({ serial: SERIAL, run });
+  return new AdbDeviceBridge({ serial: state.serial, run });
 }
 const preflight = (bridge, venueBindings = []) => bridge.preflight({ targetBuild: TARGET, venueBindings });
+// A live run's preflight: the campaign CLI and the modern ports both require a binding.
+const livePreflight = (bridge, venueBindings = []) => bridge.preflight({ targetBuild: TARGET, venueBindings,
+  requireVenueBinding: true, profileId: 'hid-mediaprojection' });
 const venueCheck = record => record.checks.find(item => item.id === 'venue-identity');
 
 // 1. Unbound (every committed profile today): the identity is recorded and
@@ -57,6 +60,18 @@ assert.equal(unbound.reason, null);
 assert.equal(unbound.venue.status, 'UNBOUND');
 assert.equal(venueCheck(unbound).status, 'PASS');
 assert.match(venueCheck(unbound).detail, /^unbound: the observed venue identity is recorded; no profile, winner or qualification binds one/);
+assert.match(venueCheck(unbound).detail, /a live run refuses an unbound venue\. Remedy: .*--bind-venue FILE --by NAME/);
+
+// 1b. The same phone, for a live run: nothing binds the venue, so drift is
+// UNKNOWN and the run is refused, with the command that records a binding.
+const unboundLive = await livePreflight(phone());
+assert.equal(unboundLive.status, 'FAIL');
+assert.equal(unboundLive.reason, 'venue-identity-unbound');
+assert.equal(unboundLive.venue.status, 'UNBOUND');
+assert.equal(venueCheck(unboundLive).status, 'FAIL');
+assert.match(venueCheck(unboundLive).detail, /drift is UNKNOWN, so a live run refuses\. Remedy: /);
+assert.match(venueCheck(unboundLive).detail,
+  /`npm run device:preflight -- --profile hid-mediaprojection --bind-venue FILE --by NAME`.*`--venue-binding FILE`/);
 const seen = unbound.venue.observed;
 assert.deepEqual([seen.versionCode, seen.lastUpdateTime, seen.firstInstallTime, seen.buildFingerprint, seen.securityPatch, seen.companionVersion],
   ['26', '2026-09-27 01:34:10', '2026-08-20 11:02:13', FINGERPRINT, '2026-08-01', '0.2.0+16']);
@@ -77,11 +92,15 @@ const v2 = bindQualificationVenue(v1, seen);
 const bindings = await loadVenueBindings({ profileId: 'hid-mediaprojection', qualification: v2 });
 assert.deepEqual(bindings.map(item => [item.source, item.id]), [['qualification', 'qualification-fixture']]);
 
-// 2. No drift: READY, MATCH.
+// 2. No drift: READY, MATCH, for an inspection and for a live run alike.
 const same = await preflight(phone(), bindings);
 assert.equal(same.status, 'READY');
 assert.equal(same.venue.status, 'MATCH');
 assert.equal(venueCheck(same).status, 'PASS');
+const sameLive = await livePreflight(phone(), bindings);
+assert.equal(sameLive.status, 'READY');
+assert.equal(sameLive.reason, null);
+assert.equal(venueCheck(sameLive).status, 'PASS');
 
 // 3. versionCode moved: refused, the field named from and to, with a remedy.
 const upgraded = await preflight(phone({ dumpsys: DUMPSYS.replace('versionCode=26 minSdk=21 targetSdk=34', 'versionCode=27 minSdk=21 targetSdk=34') }), bindings);
@@ -123,6 +142,9 @@ const spec = makeCampaignSpec({ profile: liveProfile.id, targetBuild: liveProfil
 const campaign = (device, qualification) => evaluateCampaignPreflight({ spec, device, profile: liveProfile, qualification,
   executor: { terminal: true, save: true, portsReady: true, deviceLocal: true } });
 const standing = result => result.checks.find(item => item.id === 'qualification-venue');
+const unboundCampaign = campaign(unboundLive, v1);
+assert.equal(unboundCampaign.status, 'FAIL', 'a live campaign refuses an unbound venue even with a passing qualification-v1');
+assert.equal(unboundCampaign.checks.find(item => item.id === 'venue-identity').status, 'FAIL');
 const demotedPreflight = campaign(reinstalled, v2);
 assert.equal(demotedPreflight.status, 'FAIL');
 assert.equal(demotedPreflight.checks.find(item => item.id === 'venue-identity').status, 'FAIL',
@@ -133,6 +155,23 @@ assert.equal(standing(demotedPreflight).detail.demotedFrom, 'QUALIFIED');
 assert.match(standing(demotedPreflight).detail.message, /^demoted QUALIFIED -> CANDIDATE: /);
 assert.equal(standing(campaign(same, v2)).status, 'PASS');
 assert.match(standing(campaign(same, v2)).detail, /^venue matches qualification qualification-fixture/);
+// The qualification binds the handset and the build: a qualification-v2
+// measured on another handset, or on another OS build, refuses, and is
+// demoted, even when every game field matches.
+const otherHandset = await livePreflight(phone({ serial: 'FAKE0SERIAL2' }), bindings);
+assert.equal(otherHandset.status, 'FAIL');
+assert.equal(otherHandset.reason, 'venue-identity-drift');
+assert.deepEqual(otherHandset.venue.drift.map(item => item.field), ['handsetHash']);
+const otherHandsetCampaign = campaign(otherHandset, v2);
+assert.equal(otherHandsetCampaign.status, 'FAIL');
+assert.equal(standing(otherHandsetCampaign).status, 'FAIL');
+assert.equal(standing(otherHandsetCampaign).detail.lifecycle, 'CANDIDATE');
+assert.deepEqual(standing(otherHandsetCampaign).detail.drift.map(item => item.field), ['handsetHash']);
+assert.match(standing(otherHandsetCampaign).detail.remedy, /a different handset/);
+const otherBuild = campaign(await livePreflight(phone({ fingerprint: 'motorola/fake/fake:15/V1FAKE.2/def:user/release-keys' }), bindings), v2);
+assert.equal(otherBuild.status, 'FAIL');
+assert.deepEqual(standing(otherBuild).detail.drift.map(item => item.field), ['buildFingerprint']);
+assert.match(standing(otherBuild).detail.remedy, /cannot be rolled back/);
 // A qualification-v1 is still read: unbound, recorded, not refused.
 const v1Preflight = campaign(unbound, v1);
 assert.equal(standing(v1Preflight).status, 'PASS');
@@ -176,7 +215,44 @@ try {
     /names profile hid-mediaprojection; this run uses profile hid-mediaprojection-17ms/);
   // An invalid qualification binds nothing here; the campaign preflight refuses it itself.
   assert.deepEqual(await loadVenueBindings({ profileId: 'hid-mediaprojection', qualification: { schema: 'qualification-v2' } }), []);
+
+  // 10. Recording a binding from the phone (`device:preflight --bind-venue`):
+  // it holds exactly what the preflight read, and a live run then compares.
+  const recorded = bindVenueFromPreflight({ preflight: unbound, profileId: 'hid-mediaprojection',
+    boundBy: 'fixture', boundAt: '2026-09-30' });
+  assert.equal(recorded.schema, 'venue-binding-v1');
+  assert.deepEqual(recorded.subject, { kind: 'profile', id: 'hid-mediaprojection' });
+  assert.equal(recorded.identity, unbound.venue.observed);
+  assert.match(recorded.evidenceId, /^venue-binding-hid-mediaprojection-fnv1a-[0-9a-f]{8}$/);
+  assert.ok(!JSON.stringify(recorded).includes(SERIAL), 'a binding never carries the raw serial');
+  const recordedPath = join(scratch, 'recorded.json');
+  writeFileSync(recordedPath, JSON.stringify(recorded));
+  const recordedBindings = await loadVenueBindings({ profileId: 'hid-mediaprojection', paths: [recordedPath] });
+  const boundLive = await livePreflight(phone(), recordedBindings);
+  assert.equal(boundLive.status, 'READY');
+  assert.equal(boundLive.venue.status, 'MATCH');
+  // Never bind a drifted identity, an unread field, or another build.
+  assert.throws(() => bindVenueFromPreflight({ preflight: reinstalled, profileId: 'hid-mediaprojection',
+    boundBy: 'fixture', boundAt: '2026-09-30' }), /venue binding refused: venue drifted from .*re-qualify on this venue rather than bind it/);
+  const unreadUnbound = await preflight(phone({ patchFails: true }));
+  assert.throws(() => bindVenueFromPreflight({ preflight: unreadUnbound, profileId: 'hid-mediaprojection',
+    boundBy: 'fixture', boundAt: '2026-09-30' }), /securityPatch is unknown .*a binding needs every drift field read/);
+  assert.throws(() => bindVenueFromPreflight({ preflight: upgraded, profileId: 'hid-mediaprojection',
+    boundBy: 'fixture', boundAt: '2026-09-30' }), /the installed build is not profile hid-mediaprojection's/);
+  assert.throws(() => bindVenueFromPreflight({ preflight: oldDevice, profileId: 'hid-mediaprojection',
+    boundBy: 'fixture', boundAt: '2026-09-30' }), /observed no venue identity/);
 } finally { rmSync(scratch, { recursive: true, force: true }); }
 
-console.log('venue preflight: unbound record, match, versionCode / lastUpdateTime / fingerprint refusals, unreadable hold, ' +
-  'qualification demotion, and the campaign result venue pass');
+// 11. A dry run opens no phone: the venue is UNKNOWN with that reason, and it
+// says what a live run would compare with, or that a live run would refuse.
+const dryUnbound = dryRunVenue({ profileId: 'hid-mediaprojection', bindings: [] });
+assert.equal(dryUnbound.status, 'UNKNOWN');
+assert.match(dryUnbound.reason, /^dry run: no phone is opened/);
+assert.match(dryUnbound.live, /^a live run refuses: no profile, winner or qualification binds a venue identity\. Remedy: .*--bind-venue FILE/);
+const dryBound = dryRunVenue({ profileId: 'hid-mediaprojection', bindings });
+assert.deepEqual(dryBound.bound, ['qualification qualification-fixture']);
+assert.match(dryBound.live, /^a live run compares the phone with qualification qualification-fixture and refuses on drift$/);
+
+console.log('venue preflight: unbound record and live refusal, match, versionCode / lastUpdateTime / fingerprint refusals, ' +
+  'unreadable hold, qualification demotion on another handset or build, the campaign result venue, recording a binding, ' +
+  'and the dry run\'s unchecked venue pass');

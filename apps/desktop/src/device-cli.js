@@ -11,7 +11,7 @@ import { evaluateCampaignPreflight } from '@sixam/play/campaign/campaign-preflig
 import { validateCampaignBundle } from '@sixam/play/campaign/campaign-bundle';
 import { AdbCompanionPort } from '@sixam/play/campaign/physical-ports';
 import { installCampaignSignalHandlers } from '@sixam/play/campaign/campaign-signal';
-import { loadVenueBindings, renderVenueCheck } from '@sixam/play/campaign/venue';
+import { bindVenueFromPreflight, dryRunVenue, loadVenueBindings, renderVenueCheck } from '@sixam/play/campaign/venue';
 import { fitClockMap, CompanionControlTransport } from '@sixam/play';
 import { resolveDeviceProfile } from '@sixam/source';
 import { stableHash } from '@sixam/kernel/contracts';
@@ -26,6 +26,7 @@ Usage:
   npm run device:campaign -- --bundle DIR --nights N --profile hid-mediaprojection   (dry run)
   npm run device:campaign -- --bundle DIR --nights N --profile hid-mediaprojection --live --confirm-live
   npm run device:preflight -- --profile hid-mediaprojection [--qualification FILE] [--venue-binding FILE]
+  npm run device:preflight -- --profile hid-mediaprojection --bind-venue FILE --by NAME
   npm run device:campaign -- --guided
   npm run device:clockmap -- --count 12 --span-ms 30000 --out FILE
 
@@ -46,7 +47,11 @@ Options:
   --bundle DIR  validated device bundle containing the requested plans
   --qualification FILE  DEVICE_MEASURED qualification artifact (a qualification-v2 also binds its venue)
   --venue-binding FILE  venue-binding-v1 naming this profile or winner; repeatable. Preflight
-                refuses when the observed venue identity drifted from any binding
+                refuses when the observed venue identity drifted from any binding, and a live
+                campaign refuses when neither this nor a qualification-v2 binds the venue
+  --bind-venue FILE  preflight only: write a venue-binding-v1 for --profile over the identity
+                this preflight read (refused on drift, on an unread field or on another build)
+  --by NAME     who binds the venue (required with --bind-venue)
   --ports MODULE  explicit campaign-port composition module
   --machine-only  run an explicit MODEL_ONLY machine-input experiment; no claim promotion
   --arm-observe-once  run the double-camera check once without blocking the schedule; abort only on a definite mismatch
@@ -81,8 +86,8 @@ function parse(argv) {
     json: false, serial: undefined, nights: [...DEFAULT_CAMPAIGN_NIGHTS], maxAttempts: 3, storyStart: undefined, saveCursor: undefined,
     requireHelper: true, requireHid: true,
     guided: false, machineOnly: false, armMode: 'blocking', allowSaveReset: false, nightAnchorAimMs: null, nightAnchorMaxK: null, nightAnchorPeriodMs: 1000, nightAnchorStrict: false, nightAnchorAuthorizeOnLatch: false, teachOverlay: false, calibration: undefined, bundle: undefined,
-    qualification: undefined, venueBindings: [], ports: undefined, count: 12, spanMs: 30000, out: undefined,
-    source: 'uptime' };
+    qualification: undefined, venueBindings: [], bindVenue: undefined, by: undefined, ports: undefined,
+    count: 12, spanMs: 30000, out: undefined, source: 'uptime' };
   for (let index = 0; index < rest.length; index += 1) {
     const item = rest[index];
     if (item === '--help' || item === '-h') options.command = 'help';
@@ -133,6 +138,14 @@ function parse(argv) {
       options.venueBindings.push(path);
     }
     else if (item.startsWith('--venue-binding=')) options.venueBindings.push(item.slice('--venue-binding='.length));
+    else if (item === '--bind-venue') {
+      options.bindVenue = rest[++index];
+      if (!options.bindVenue || options.bindVenue.startsWith('--')) throw new Error('--bind-venue requires a file');
+    }
+    else if (item === '--by') {
+      options.by = rest[++index];
+      if (!options.by || options.by.startsWith('--')) throw new Error('--by requires a name');
+    }
     else if (item === '--count') options.count = Number(rest[++index]);
     else if (item.startsWith('--count=')) options.count = Number(item.slice('--count='.length));
     else if (item === '--span-ms') options.spanMs = Number(rest[++index]);
@@ -151,6 +164,11 @@ function parse(argv) {
     else if (item.startsWith('--ports=')) options.ports = item.slice('--ports='.length);
     else throw new Error(`unknown option: ${item}`);
   }
+  // Refused before any phone is queried: a binding names who made it.
+  if (options.bindVenue !== undefined && options.command !== 'preflight')
+    throw new Error('--bind-venue belongs to preflight');
+  if (options.bindVenue !== undefined && options.by === undefined)
+    throw new Error('--bind-venue requires --by NAME, who binds the venue');
   return options;
 }
 
@@ -297,11 +315,18 @@ async function main(argv = process.argv.slice(2)) {
     const bridge = new AdbDeviceBridge({ serial: options.serial });
     const result = await bridge.preflight({ targetBuild: selected.targetBuild,
       requireHelper: options.requireHelper, requireHid: options.requireHid,
-      restartCapture: true, venueBindings });
+      restartCapture: true, venueBindings, profileId: selected.id });
     console.log(options.json ? JSON.stringify(result, null, 2) :
       `${result.status} ${result.serial ?? ''} ${result.reason ?? ''}\n` +
       result.checks.map(item => `  ${item.status.padEnd(7)} ${item.id}: ${typeof item.detail === 'string' ? item.detail : JSON.stringify(item.detail)}`).join('\n') +
       `\n${renderVenueCheck(result.venue)}`);
+    if (options.bindVenue) {
+      const binding = bindVenueFromPreflight({ preflight: result, profileId: selected.id, boundBy: options.by,
+        boundAt: new Date().toISOString().slice(0, 10) });
+      const path = resolve(options.bindVenue);
+      await writeFile(path, JSON.stringify(binding, null, 2) + '\n');
+      console.error(`venue binding ${binding.evidenceId} written to ${path}; pass --venue-binding ${path} to a live campaign`);
+    }
     if (result.status === 'FAIL') process.exitCode = 1;
     return;
   }
@@ -325,12 +350,17 @@ async function main(argv = process.argv.slice(2)) {
     }
     if (!options.live) {
       const bundle = await campaignBundle(options.bundle, spec, selected.id);
-      const output = { status: 'READY', mode: 'dry-run', spec, state: machine.snapshot(), bundle,
+      // Host files only: what a live run would bind the venue to, and what the dry run could not check.
+      const venue = dryRunVenue({ profileId: selected.id, bindings: await loadVenueBindings({ profileId: selected.id,
+        winnerHash: bundle?.artifact?.winnerHash ?? null, qualification: await jsonFile(options.qualification, 'qualification'),
+        paths: options.venueBindings }) });
+      const output = { status: 'READY', mode: 'dry-run', spec, state: machine.snapshot(), bundle, venue,
         note: 'configuration and proof gates validated; no phone or input transport opened',
         next: 'run this command with --live --confirm-live after the guided calibration and qualification gates pass' };
       console.log(options.json ? JSON.stringify(output, null, 2) :
         `campaign READY (dry-run): ${spec.nights.map(entry => `Night ${entry.night} ${entry.mode}`).join(' -> ')}\n` +
-        'proof gates: positive 6 AM plus save/menu advancement; retries: 3');
+        'proof gates: positive 6 AM plus save/menu advancement; retries: 3\n' +
+        `venue ${venue.status} (${venue.reason}): ${venue.live}`);
       return;
     }
     if (!options.confirmLive) throw new Error('live campaign requires --confirm-live');
@@ -344,7 +374,7 @@ async function main(argv = process.argv.slice(2)) {
     machine.startPreflight();
     const device = await bridge.preflight({ targetBuild: selected.targetBuild,
       requireHelper: options.requireHelper, requireHid: options.requireHid,
-      restartCapture: true, venueBindings });
+      restartCapture: true, venueBindings, requireVenueBinding: true, profileId: selected.id });
     machine.acceptPreflight(device);
     let composition = null;
     const useDefaultModernPorts = bundle && selected.actuator === 'hid-multi' && selected.visualSensor === 'mediaprojection';

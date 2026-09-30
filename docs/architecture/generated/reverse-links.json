@@ -293,7 +293,7 @@
       "id": "contract.device-adb-preflight-v1",
       "kind": "CONTRACT",
       "path": "packages/play/src/campaign/adb-bridge.js",
-      "line": 17,
+      "line": 19,
       "relation": "REFERENCES"
     },
     {
@@ -866,7 +866,7 @@
       "id": "contract.venue-binding-v1",
       "kind": "CONTRACT",
       "path": "packages/play/src/campaign/venue.js",
-      "line": 6,
+      "line": 13,
       "relation": "REFERENCES"
     },
     {
@@ -892,7 +892,7 @@
       "id": "contract.venue-check-v1",
       "kind": "CONTRACT",
       "path": "packages/play/src/campaign/adb-bridge.js",
-      "line": 17,
+      "line": 19,
       "relation": "REFERENCES"
     },
     {

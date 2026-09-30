@@ -12,7 +12,9 @@
  * and security patch, the Companion version and a hash of the serial, read by
  * four more fixed read-only queries. It is compared with whatever the run is
  * bound to (a qualification-v2, or a venue-binding-v1 naming the profile or
- * winner). Drift refuses; an unbound run records the identity and says so.
+ * winner). Drift refuses. An unbound venue is recorded, and a live run
+ * (`requireVenueBinding`) refuses it, because drift cannot be checked against
+ * nothing (ADR 0002, decision 1). An inspection records it and says so.
  * The record is `device-preflight-v2` (v1 plus `venue`); readers take both.
  * CONTRACT:device-adb-preflight-v1. CONTRACT:venue-check-v1.
  */
@@ -67,9 +69,31 @@ function awakeAndUnlocked(text) {
 }
 
 // A venue check becomes a preflight check: drift refuses, an unreadable bound
-// field holds, and an unbound venue is recorded without holding the run.
-const VENUE_CHECK_STATUS = Object.freeze({ UNBOUND: 'PASS', MATCH: 'PASS', DRIFT: 'FAIL', UNKNOWN: 'HOLD' });
-const venueCheckDetail = venue => (venue.remedy ? `${venue.message}. Remedy: ${venue.remedy}` : venue.message);
+// field holds, and an unbound venue refuses a live run and passes an inspection.
+const VENUE_CHECK_STATUS = Object.freeze({ MATCH: 'PASS', DRIFT: 'FAIL', UNKNOWN: 'HOLD' });
+
+/**
+ * The command that records a binding from the phone, as a remedy line.
+ * @param {string | null} profileId
+ */
+export function unboundVenueRemedy(profileId) {
+  const profile = profileId ?? '<profile>';
+  return 'on the phone and game build the qualification was measured on, record the identity with ' +
+    `\`npm run device:preflight -- --profile ${profile} --bind-venue FILE --by NAME\` and pass ` +
+    '`--venue-binding FILE` to the campaign, or pass a qualification-v2 with `--qualification`';
+}
+
+/** @param {any} venue @param {boolean} requireVenueBinding @param {string | null} profileId */
+function venueIdentityCheck(venue, requireVenueBinding, profileId) {
+  if (venue.status === 'UNBOUND') {
+    const remedy = unboundVenueRemedy(profileId);
+    return requireVenueBinding
+      ? check('venue-identity', 'FAIL', `${venue.message}; drift is UNKNOWN, so a live run refuses. Remedy: ${remedy}`)
+      : check('venue-identity', 'PASS', `${venue.message}; a live run refuses an unbound venue. Remedy: ${remedy}`);
+  }
+  return check('venue-identity', VENUE_CHECK_STATUS[venue.status],
+    venue.remedy ? `${venue.message}. Remedy: ${venue.remedy}` : venue.message);
+}
 
 /**
  * The venue a device preflight recorded, or null for a v1 record (which
@@ -149,9 +173,11 @@ export class AdbDeviceBridge {
   }
 
   /** @param {{targetPackage?: string, targetBuild?: string, requireHelper?: boolean, requireHid?: boolean,
-   *   restartCapture?: boolean, venueBindings?: {source: string, id: string, identity: any}[]}} options */
+   *   restartCapture?: boolean, venueBindings?: {source: string, id: string, identity: any}[],
+   *   requireVenueBinding?: boolean, profileId?: string | null}} options */
   async preflight({ targetPackage = GAME_PACKAGE, targetBuild, requireHelper = true,
-    requireHid = true, restartCapture = false, venueBindings = [] } = {}) {
+    requireHid = true, restartCapture = false, venueBindings = [], requireVenueBinding = false,
+    profileId = null } = {}) {
     const selected = await this.selectDevice();
     if (selected.status !== 'READY') return {
       schema: PRELIGHT_SCHEMA, version: PRELIGHT_VERSION, status: 'HOLD', reason: selected.reason,
@@ -171,7 +197,8 @@ export class AdbDeviceBridge {
     checks.push(check('target-build', installedBuild && expectedBuild && installedBuild === expectedBuild ? 'PASS' : 'FAIL', { expected: expectedBuild, installed: installedBuild }));
     const venue = compareVenueIdentity({
       observed: await this.#venueIdentity(serial, targetPackage, dump, requireHelper), bindings: venueBindings });
-    checks.push(check('venue-identity', VENUE_CHECK_STATUS[venue.status], venueCheckDetail(venue)));
+    checks.push(venueIdentityCheck(venue, requireVenueBinding, profileId));
+    const unboundRefused = requireVenueBinding && venue.status === 'UNBOUND';
 
     const power = await this.#shell(serial, ['dumpsys', 'power']);
     const windows = await this.#shell(serial, ['dumpsys', 'window']);
@@ -213,7 +240,7 @@ export class AdbDeviceBridge {
       }
     }
     return { schema: PRELIGHT_SCHEMA, version: PRELIGHT_VERSION, status: readyStatus(checks), serial, checks,
-      reason: venue.refuses ? 'venue-identity-drift' : null, venue };
+      reason: venue.refuses ? 'venue-identity-drift' : unboundRefused ? 'venue-identity-unbound' : null, venue };
   }
 
   /**
