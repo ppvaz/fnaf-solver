@@ -43,6 +43,33 @@
       }
     },
     {
+      "id": "apps/desktop/test/lab.test.mjs",
+      "lane": "test:unit",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": false,
+      "determinismSignals": [
+        "new Date(",
+        "new Date(",
+        "new Date(",
+        "new Date(",
+        "new Date(",
+        "new Date("
+      ],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "device-transport"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "apps/device/test/adb-bridge.test.js",
       "lane": "test:contracts",
       "owner": "legacy migration",
@@ -829,6 +856,24 @@
       "sharedResources": [
         "device-transport"
       ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/review/test/lab-queries.test.mjs",
+      "lane": "test:unit",
+      "owner": "package boundary",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
       "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",
@@ -4882,7 +4927,7 @@
       "determinismSignals": [],
       "fixedSleeps": [],
       "sharedResources": [],
-      "subprocesses": false,
+      "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",
         "runs": 0,

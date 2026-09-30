@@ -2,7 +2,8 @@
 /**
  * Stdio MCP contract test for the fnaf-solver server: the safe Cue Helper
  * queue as it always answered, and the solver interface's verbs, the `jobs`
- * queue tool, `truth` and the fnaf:// resources, every one of which answers in
+ * queue tool, `truth`, the lab's read-only `lab.status`, `lab.next` and
+ * `lab.doctor`, and the fnaf:// resources, every one of which answers in
  * claim-envelope-v1 (Plan 28 steps 1-5). It checks that no tool takes a tap, a
  * coordinate, a shell command or a rebuild; that a refused promote is a
  * refusal envelope; that truth reads only a local dump (here a synthetic one)
@@ -105,8 +106,9 @@ try {
   const names = listed.result.tools.map(tool => tool.name);
   assert.deepEqual(names.slice(0, 4), ['cue.setup', 'cue.queue.enqueue', 'cue.queue.list', 'cue.queue.run'],
     'every existing tool name still answers, first and in order');
-  assert.deepEqual(names.slice(4), ['describe', 'query', 'review', 'promote', 'check', 'jobs', 'truth']);
-  assert.equal(names.length, 11, 'eleven tools: the lab tools, due next, bring it to fourteen');
+  assert.deepEqual(names.slice(4), ['describe', 'query', 'review', 'promote', 'check', 'jobs', 'truth',
+    'lab.status', 'lab.next', 'lab.doctor']);
+  assert.equal(names.length, 14, 'fourteen tools: the four cue.*, the six solver verbs, jobs and the three lab tools');
   assert.ok(names.length <= 15, 'Plan 28: agents degrade past about fifteen tools');
   for (const name of names) assert.doesNotMatch(name, /shell|exec|tap|coord|hid|touch|rebuild|build|attest/i, `${name} is not an actuator`);
   for (const tool of listed.result.tools) {
@@ -114,8 +116,10 @@ try {
     for (const key of properties) assert.doesNotMatch(key, /^(x|y|coords?|command|shell|argv|script|tap)$/i, `${tool.name}.${key}`);
     assert.equal(tool.inputSchema.additionalProperties, false, `${tool.name} refuses arguments it does not name`);
   }
-  for (const name of ['describe', 'query', 'review', 'promote', 'check'])
+  for (const name of ['describe', 'query', 'review', 'promote', 'check', 'lab.status', 'lab.next', 'lab.doctor'])
     assert.equal(listed.result.tools.find(tool => tool.name === name).annotations.readOnlyHint, true, `${name} is read-only`);
+  for (const name of ['start', 'commit', 'end', 'morning'])
+    assert.ok(!names.includes(`lab.${name}`), `lab ${name} is not served over MCP: only status, next and doctor are`);
 
   // --- the Cue Helper queue, unchanged ---------------------------------------------------------
   send({ jsonrpc: '2.0', id: 3, method: 'tools/call', params: {
@@ -232,6 +236,28 @@ try {
   assert.deepEqual(contracts.claim.contracts.map(item => item.id), ['claim-envelope-v1']);
   refused(await call('query', { what: 'truth' }), 'invalid-argument', 'a query that does not exist');
 
+  // --- lab.*: the operator's read-only verbs, the functions `npm run lab` calls -------------------
+  const labStatus = claimed(await call('lab.status', {}), 'lab.status');
+  assert.equal(labStatus.reproducer, 'npm run lab -- status');
+  assert.deepEqual(labStatus.claim.steps.map(row => row.id), ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7'], 'every ROADMAP step has a row');
+  for (const row of labStatus.claim.steps)
+    assert.ok(['open', 'closed'].includes(row.state) || isUnknown(row.state), `${row.id} is open, closed or UNKNOWN(reason)`);
+  const s1 = labStatus.claim.steps[0];
+  assert.equal(s1.state, promotions.claim.open.modelOnlyWinners.count === 0 && promotions.claim.edges.matched > 0 ? 'closed' : 'open',
+    'S1 is computed from the promotions query');
+  assert.equal(labStatus.claim.promotions.edges, promotions.claim.edges.matched, 'lab.status carries the promotions query');
+  assert.ok(labStatus.claim.phone.queue.jobs >= 4, 'lab.status reads the queue the jobs above were written to');
+  assert.equal(typeof labStatus.claim.doctor.findings, 'number');
+  const labNext = claimed(await call('lab.next', {}), 'lab.next');
+  assert.deepEqual(labNext.claim.actions.map(item => item.rank), labNext.claim.actions.map((_, index) => index + 1), 'actions are ranked');
+  if (s1.state === 'open') assert.ok(labNext.claim.actions.some(item => item.step === 'S1'), 'an open S1 is ranked');
+  assert.ok(labNext.claim.blocked.some(row => row.step === 'S3'), 'S3 waits on S2');
+  const labDoctor = claimed(await call('lab.doctor', {}), 'lab.doctor');
+  assert.deepEqual(labDoctor.claim.checks.map(item => item.id), ['hooks-path', 'stale-pending', 'push-gate-worktrees', 'agent-worktrees',
+    'node-modules', 'local-profile', 'catalog-drift', 'memory', 'untracked-winner']);
+  assert.ok(isUnknown(labDoctor.claim.checks.find(item => item.id === 'catalog-drift').ok), 'the MCP doctor builds no worktree');
+  refused(await call('lab.status', { verbose: true }), 'invalid-argument', 'an argument lab.status does not name');
+
   // --- review --------------------------------------------------------------------------------
   const custody = claimed(await call('review', { pack: HELD_BACK, instrument: 'custody' }), 'review custody');
   assert.equal(custody.claim.custody.kind, 'recovered-from-run-log');
@@ -315,5 +341,5 @@ try {
   await rm(temp, { recursive: true, force: true });
 }
 
-console.log('fnaf-solver stdio MCP: 11 tools; the Cue Helper queue unchanged, jobs and every verb and resource in claim-envelope-v1, ' +
+console.log('fnaf-solver stdio MCP: 14 tools; the Cue Helper queue unchanged, jobs, lab.* and every verb and resource in claim-envelope-v1, ' +
   'truth over a synthetic local dump and refused without one, a refused promote, the four refusals, and no write under docs/evidence');

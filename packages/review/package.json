@@ -11,15 +11,18 @@
     "fnaf2-review": "src/cli.mjs"
   },
   "exports": {
+    "./consequence": "./src/consequence.mjs",
+    "./envelopes": "./src/envelopes.mjs",
     "./evidence-campaign": "./src/evidence-campaign.mjs",
     "./evidence-cohort": "./src/evidence-cohort.mjs",
     "./evidence-pack": "./src/evidence-pack.mjs",
     "./evidence-promotion": "./src/evidence-promotion.mjs",
-    "./envelopes": "./src/envelopes.mjs",
+    "./mistakes": "./src/mistakes.mjs",
     "./pack-lift": "./src/pack-lift.mjs",
     "./promotions-query": "./src/promotions-query.mjs",
     "./refusals": "./src/refusals.mjs",
     "./registers": "./src/registers.mjs",
+    "./roadmap": "./src/roadmap.mjs",
     "./solver": "./src/solver.mjs"
   }
 }

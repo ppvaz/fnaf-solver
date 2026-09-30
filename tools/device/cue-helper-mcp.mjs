@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * The fnaf-solver stdio MCP server: the safe Cue Helper setup/queue boundary,
- * and the solver interface's verbs and resources (Plan 28 steps 1-5).
+ * the solver interface's verbs and resources (Plan 28 steps 1-5), and the
+ * operator's read-only verbs `lab.status`, `lab.next` and `lab.doctor`.
  *
  * The server deliberately exposes no actuator, shell, coordinate, HID, rebuild
  * or game-control tool. The Cue Helper tools keep their names and their
@@ -13,7 +14,10 @@
  * answer they give is a claim-envelope-v1, and `promote` only ever proposes or
  * refuses. `truth` (op decode | events | object) reads the caller's own local
  * dump and decodes only a local APK or CCN: it ships the decoder, never the
- * decoded data, and never touches a phone. Messages use MCP's
+ * decoded data, and never touches a phone. `lab.*` are
+ * apps/desktop/src/lab.mjs, the same functions `npm run lab` calls, over this
+ * checkout; `lab.doctor` leaves out the catalog-drift check, which builds a
+ * temporary worktree. Messages use MCP's
  * newline-delimited JSON-RPC transport.
  */
 import { fileURLToPath } from 'node:url';
@@ -23,10 +27,12 @@ import { GAMES, resolveGame } from '@sixam/review/registers';
 import { INSTRUMENTS, QUERIES, SURFACE_DOC, createSolver } from '@sixam/review/solver';
 import { KINDS } from '../chronicle-schema.mjs';
 import { createCueHelperMcp } from '../../apps/device/src/mcp.js';
+import { createLab } from '../../apps/desktop/src/lab.mjs';
 
 const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const cue = createCueHelperMcp();
 const solver = createSolver({ root: ROOT });
+const lab = createLab({ root: ROOT, winners: solver.winners });
 const SERVER = Object.freeze({ name: 'fnaf-solver', version: '0.2.0' });
 const NO_ARGS = Object.freeze({ type: 'object', additionalProperties: false, properties: {} });
 const SAFE = Object.freeze({ readOnlyHint: false, destructiveHint: false, openWorldHint: false });
@@ -200,11 +206,34 @@ const TOOL_DEFINITIONS = Object.freeze([
     inputSchema: TRUTH_SCHEMA,
     annotations: SAFE,
   },
+  {
+    name: 'lab.status',
+    description: 'Where everything stands, derived from the repository, the committed evidence and this host: HEAD and whether '
+      + 'push-gate ran on it, sync with origin, each ROADMAP step S1-S7 open, closed or UNKNOWN with its reason, the promotions '
+      + 'summary, the phone lease and queue, pending decisions and the doctor\'s finding count. Read-only; answers in claim-envelope-v1.',
+    inputSchema: NO_ARGS,
+    annotations: READ_ONLY,
+  },
+  {
+    name: 'lab.next',
+    description: 'The next step or action, ranked by the ROADMAP order over what lab.status finds: an open session, doctor findings '
+      + 'that stop every commit, each open step whose needs are closed, pending decisions, the push gate. Read-only; claim-envelope-v1.',
+    inputSchema: NO_ARGS,
+    annotations: READ_ONLY,
+  },
+  {
+    name: 'lab.doctor',
+    description: 'What is broken on this host and checkout, each finding with the command that fixes it; it runs none of them. '
+      + 'The catalog-drift check, which builds a temporary worktree, is left to `npm run lab -- doctor`. Read-only; claim-envelope-v1.',
+    inputSchema: NO_ARGS,
+    annotations: READ_ONLY,
+  },
 ]);
 
 const SCHEMAS = new Map(TOOL_DEFINITIONS.map(tool => [tool.name, tool.inputSchema]));
 const VERB_TOOLS = Object.freeze({ describe: solver.describe, query: solver.query, review: solver.review,
-  promote: solver.promote, check: solver.check, truth: solver.truth });
+  promote: solver.promote, check: solver.check, truth: solver.truth,
+  'lab.status': () => lab.status(), 'lab.next': () => lab.next(), 'lab.doctor': () => lab.doctor({ catalog: false }) });
 /** Tools whose op picks the arguments they take. */
 const OP_ARGUMENTS = Object.freeze({ jobs: JOB_ARGUMENTS, truth: TRUTH_ARGUMENTS });
 const QUEUE_CITE = Object.freeze(['tools/device/cue-helper-queue.sh', SURFACE_DOC]);
@@ -274,7 +303,8 @@ async function handle(request) {
       serverInfo: SERVER,
       instructions: 'Start with describe({game}); describe, query, review, promote, check, truth, jobs and the fnaf:// resources answer in '
         + 'claim-envelope-v1, and promote only proposes. truth reads your own local dump of the game\'s event sheet and refuses, '
-        + 'naming the decode, where none is configured. Use cue.queue.enqueue while the device is absent or locked; '
+        + 'naming the decode, where none is configured. lab.status, lab.next and lab.doctor say where the work stands and '
+        + 'what to do next, read-only. Use cue.queue.enqueue while the device is absent or locked; '
         + 'cue.queue.run holds safely until the device is awake and unlocked.',
     } };
   }

@@ -9,10 +9,12 @@
 // the reader to use it.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { DEFAULT_MEMORY_MAX, LANES, failureReport, laneCommand, reproduceCommand } from './push-gate.mjs';
+import { mainCheckout } from './device/local-profile.mjs';
+import { DEFAULT_MEMORY_MAX, LANES, RUN_RECORD_SCHEMA, failureReport, laneCommand, recordRun, reproduceCommand, runRecordPath } from './push-gate.mjs';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));
 const BYPASS = /--no-verify|\bcommit\s+-n\b/;
@@ -43,8 +45,8 @@ assert.equal(bypassSuggestions('hook', 'exec git push --no-verify').length, 1);
 assert.deepEqual(bypassSuggestions('hook', '# the key and never bypass this hook (--no-verify, commit -n).'), [],
   'a comment stating the rule is not a suggestion');
 
-// The gate and the hooks it installs.
-for (const file of ['tools/push-gate.mjs', '.githooks/pre-push', '.githooks/commit-msg'])
+// The gate, the hooks it installs, and the lab that predicts the hook and reads the gate's record.
+for (const file of ['tools/push-gate.mjs', '.githooks/pre-push', '.githooks/commit-msg', 'apps/desktop/src/lab.mjs', 'apps/desktop/src/cli.mjs'])
   assert.deepEqual(bypassSuggestions(file, readFileSync(join(ROOT, file), 'utf8')), [], `${file} suggests bypassing a hook`);
 
 // Every lane has a command that reproduces it.
@@ -91,5 +93,21 @@ if (spawnSync('systemd-run', ['--user', '--scope', '-q', '--', 'true'], { stdio:
   scopedRun = 'a scoped command ran and kept its output';
 }
 
+// Each validated commit leaves a record `npm run lab -- status` reads: host-wide by default,
+// FNAF_LAB_DIR names another directory, and lines append.
+const labDir = mkdtempSync(join(tmpdir(), 'push-gate-record-'));
+try {
+  const path = runRecordPath({ FNAF_LAB_DIR: labDir });
+  assert.equal(path, join(labDir, 'push-gate.jsonl'));
+  assert.equal(runRecordPath({}), join(mainCheckout(ROOT), 'artifacts/lab/push-gate.jsonl'), 'by default, the main checkout\'s artifacts/lab');
+  recordRun({ sha, full: false, failed: [], skipped: ['Slow census gates'], at: new Date('2026-09-30T00:00:00Z') }, path);
+  recordRun({ sha: other, full: true, failed: [contracts.name], skipped: [] }, path);
+  const rows = readFileSync(path, 'utf8').trim().split('\n').map(line => JSON.parse(line));
+  assert.deepEqual(rows.map(row => [row.schema, row.sha, row.full, row.failed]), [
+    [RUN_RECORD_SCHEMA, sha, false, []], [RUN_RECORD_SCHEMA, other, true, [contracts.name]]]);
+  assert.equal(rows[0].at, '2026-09-30T00:00:00.000Z');
+} finally { rmSync(labDir, { recursive: true, force: true }); }
+
 console.log(`push gate: ${LANES.length} lanes each name the command that reproduces them, and neither the gate nor its hooks `
-  + `suggest bypassing a hook (the scan catches a planted suggestion first); lanes run under MemoryMax=${DEFAULT_MEMORY_MAX} (${scopedRun})`);
+  + `nor the lab suggest bypassing a hook (the scan catches a planted suggestion first); lanes run under MemoryMax=${DEFAULT_MEMORY_MAX} `
+  + `(${scopedRun}); each validated commit appends a ${RUN_RECORD_SCHEMA} record`);

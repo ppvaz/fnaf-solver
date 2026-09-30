@@ -558,6 +558,8 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
     /** @param {string} uri */
     readResource: uri => { const value = readResource(uri); return value === null ? null : validateClaimEnvelope(value); },
     listResources, resourceTemplates: () => [...RESOURCE_TEMPLATES],
+    /** The committed-winner compile this surface caches, for another door on the same checkout (the lab). */
+    winners,
   };
 }
 

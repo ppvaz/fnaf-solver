@@ -12,6 +12,10 @@ one charter layer, over a shared kernel:
 | Review | Proof | `@sixam/review` (run packs, Plan 12 attestation and promotion, cohorts, the pack lift to `GameRun`, and `npm run review` queries); the grade pipeline in `tools/device` |
 | Teach | Understanding | `apps/trainer` |
 
+`apps/desktop`, a plain folder for now, is the final layout's composition root.
+Today it holds the operator verbs (`npm run lab`, [`../operations/LAB.md`](../operations/LAB.md)),
+which join Review's queries with git and this host and belong to no context.
+
 `@sixam/kernel` holds the kernel types that have a consumer today --
 `Interval`, `ClaimLevel`, `SourceLabel`, `Outcome`, `GameRun` with custody, and
 `Annotation` -- with the contracts, the contract register and Time (the event

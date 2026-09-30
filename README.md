@@ -105,7 +105,7 @@ on Node 22. No phone is involved.
 | Understand how the rebuild works | nothing to read; your own APK and Docker to run it | [Recompile toolchain](tools/recompile/README.md) |
 | Run the bot on my own phone | research only: a Moto g56 and the game | [Device safety](docs/operations/DEVICE-SAFETY.md), then the [device app](apps/device/README.md) |
 | Give a fix back upstream | nothing | [Upstream ledger](UPSTREAM-LEDGER.md) |
-| Work on this repository | a checkout | [Contributing](CONTRIBUTING.md), then [CLAUDE.md](CLAUDE.md) |
+| Work on this repository | a checkout | [Contributing](CONTRIBUTING.md), then [CLAUDE.md](CLAUDE.md); `npm run lab -- status` ([lab](docs/operations/LAB.md)) |
 
 Everything else is in the [documentation index](docs/README.md), routed by question.
 

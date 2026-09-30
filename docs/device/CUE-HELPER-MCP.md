@@ -3,8 +3,9 @@
 The repository includes a project-local stdio MCP server, `fnaf-solver`, at
 `tools/device/cue-helper-mcp.mjs`. It carries two surfaces: the safe Cue Helper
 operations, and steps 1-5 of the solver interface of
-[Plan 28](../../plans/28-solver-interface.md), eleven tools in all. Neither
-exposes a tap, a coordinate, HID input, a shell command or a rebuild.
+[Plan 28](../../plans/28-solver-interface.md), with the operator's read-only
+`lab.*` verbs beside them: fourteen tools in all. Neither exposes a tap, a
+coordinate, HID input, a shell command or a rebuild.
 
 ## The solver interface
 
@@ -46,6 +47,7 @@ generated command registry, and every verb runs from a shell as
 | `check` | The four refusals, run on a statement before it is made: `seed-floor` (a win rate under 3000 seeds), `directional-reuse` (a constant used in another order than it was measured; CLAUDE.md mistake 10), `capabilities-first` (an instrument proposed without the phone's `device-capabilities-v1` report; mistake 8), `unknown-as-number` (an UNKNOWN consumed as a number). | read-only |
 | `truth` | The game's own event sheet, read from **your** local dump (Plan 28 step 5). `op: "events"` with `{game, query}`: the event groups that read or write one target -- an object (`object` by name, or `handle`), optionally one of its alterable values (`value`) or flags (`flag`); a global value (`global`); or one group (`frame` and `group`) -- narrowed by `frame`, `access` (`read`, `write`, `any`) and `limit`. Each match is its frame, its group id (`g###`) and every condition and action as parsed fields (object type and number, the object resolved through the handle scramble K, each parameter), never the dump's text; a hit the dump does not pin down (an indexed read, a flag number computed at run time) says `certain: false`. `op: "object"` with `{game, name \| handle}`: type, the frames whose events reference it, created-by and destroyed-by. `op: "decode"` with `{path, game}`: runs the local CTFAK event-text dumper on an APK or CCN on this host, estimates K by object-type agreement, caches the dump outside the repository and binds it to the game named. Every answer is `SOURCED` and cites `fnaf://truth/<game>/frame/<n>/group/<g>`; `npm run review -- truth events\|object\|decode` is the same call from a shell. | reads; `decode` writes only the local cache and vault |
 | `jobs` | The queue tools below, answering in the envelope: `op` `enqueue` (with `cue.queue.enqueue`'s arguments), `list`, or `run` (`waitSeconds`, `intervalSeconds`). Each op refuses an argument it does not take. | as `cue.queue.*` |
+| `lab.status`, `lab.next`, `lab.doctor` | The operator's verbs ([`../operations/LAB.md`](../operations/LAB.md)), the same functions `npm run lab -- status\|next\|doctor` calls: where the work stands (HEAD and its push-gate record, each ROADMAP step's state, promotions, the phone lease and queue, pending decisions), what to take next in the ROADMAP order, and what is broken on this host with each remedy. `lab.doctor` leaves out the catalog-drift check, which builds a worktree. | read-only |
 
 **Where the dump comes from.** The server ships the decoder, not the decoded
 data (Plan 28): no dump, decoded text or game asset is tracked, and the tests

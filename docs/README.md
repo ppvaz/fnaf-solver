@@ -42,6 +42,7 @@ controller research, and device evidence form one program.
 | Inspect evidence retention and claim ceilings | [`evidence/README.md`](evidence/README.md) |
 | Re-derive every promotion edge and S1's open items from the committed packs | `npm run review -- query promotions` ([`../packages/review/README.md`](../packages/review/README.md)); the kernel types it reads in are in [`../packages/kernel/README.md`](../packages/kernel/README.md) |
 | Run device work safely | [`operations/DEVICE-SAFETY.md`](operations/DEVICE-SAFETY.md) |
+| Start and end a session: where things stand, what to take next, whether the hook will accept a commit, the session's ratio, the morning report, and what is broken on this host | `npm run lab -- status` ([`operations/LAB.md`](operations/LAB.md)) |
 | See what each grade-run.sh video step feeds, which a frame trace can replace, and how the recording is decoded once | [`operations/GRADE-PIPELINE-STEPS.md`](operations/GRADE-PIPELINE-STEPS.md) |
 | Understand research operations | [`research/ARCHITECTURE.md`](research/ARCHITECTURE.md) |
 

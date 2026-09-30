@@ -2,6 +2,48 @@
   "schema": "import-graph-v1",
   "files": [
     {
+      "file": "apps/desktop/src/cli.mjs",
+      "imports": [
+        "./lab.mjs",
+        "@sixam/kernel",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "apps/desktop/src/lab.mjs",
+      "imports": [
+        "../../../tools/device/local-profile.mjs",
+        "../../../tools/push-gate.mjs",
+        "@sixam/kernel",
+        "@sixam/review/consequence",
+        "@sixam/review/evidence-pack",
+        "@sixam/review/mistakes",
+        "@sixam/review/promotions-query",
+        "@sixam/review/registers",
+        "@sixam/review/roadmap",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path"
+      ]
+    },
+    {
+      "file": "apps/desktop/test/lab.test.mjs",
+      "imports": [
+        "../../../tools/push-gate.mjs",
+        "../src/cli.mjs",
+        "../src/lab.mjs",
+        "@sixam/kernel",
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path"
+      ]
+    },
+    {
       "file": "apps/device/src/adb-bridge.js",
       "imports": [
         "./cue-helper-capture.js",
@@ -1063,6 +1105,12 @@
       ]
     },
     {
+      "file": "packages/review/src/consequence.mjs",
+      "imports": [
+        "@sixam/kernel"
+      ]
+    },
+    {
       "file": "packages/review/src/envelopes.mjs",
       "imports": [
         "./evidence-pack.mjs",
@@ -1111,6 +1159,13 @@
       ]
     },
     {
+      "file": "packages/review/src/mistakes.mjs",
+      "imports": [
+        "node:fs",
+        "node:path"
+      ]
+    },
+    {
       "file": "packages/review/src/pack-lift.mjs",
       "imports": [
         "./evidence-pack.mjs",
@@ -1147,6 +1202,18 @@
         "./evidence-promotion.mjs",
         "@sixam/kernel",
         "@sixam/source",
+        "node:fs",
+        "node:path"
+      ]
+    },
+    {
+      "file": "packages/review/src/roadmap.mjs",
+      "imports": [
+        "./mistakes.mjs",
+        "./refusals.mjs",
+        "./registers.mjs",
+        "./solver.mjs",
+        "@sixam/kernel",
         "node:fs",
         "node:path"
       ]
@@ -1211,6 +1278,20 @@
         "@sixam/kernel/contracts",
         "node:assert/strict",
         "node:crypto",
+        "node:fs",
+        "node:os",
+        "node:path"
+      ]
+    },
+    {
+      "file": "packages/review/test/lab-queries.test.mjs",
+      "imports": [
+        "../src/consequence.mjs",
+        "../src/mistakes.mjs",
+        "../src/refusals.mjs",
+        "../src/roadmap.mjs",
+        "@sixam/kernel",
+        "node:assert/strict",
         "node:fs",
         "node:os",
         "node:path"
@@ -2071,6 +2152,7 @@
     {
       "file": "tools/device/cue-helper-mcp.mjs",
       "imports": [
+        "../../apps/desktop/src/lab.mjs",
         "../../apps/device/src/mcp.js",
         "../chronicle-schema.mjs",
         "@sixam/kernel",
@@ -3572,6 +3654,7 @@
     {
       "file": "tools/push-gate.mjs",
       "imports": [
+        "./device/local-profile.mjs",
         "node:child_process",
         "node:fs",
         "node:os",
@@ -4146,10 +4229,12 @@
     {
       "file": "tools/test-push-gate.mjs",
       "imports": [
+        "./device/local-profile.mjs",
         "./push-gate.mjs",
         "node:assert/strict",
         "node:child_process",
         "node:fs",
+        "node:os",
         "node:path",
         "node:url"
       ]
