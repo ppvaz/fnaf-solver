@@ -3,7 +3,7 @@ export const TRAINER_SCHEMA = 'trainer-trace-v1';
 export const trainerInfo = Object.freeze({
   package: '@sixam/trainer',
   responsibility: 'touch presentation, curriculum, audio, and trainer traces',
-  canonicalModel: '@sixam/core',
+  canonicalModel: '@sixam/source',
 });
 
 export { Coach } from './coach.js';

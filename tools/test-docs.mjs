@@ -95,6 +95,18 @@ for (const file of pages) {
       complain(`${file} links to ${raw}, which does not exist. If a generator writes this page ` +
         '(tools/chronicle.mjs writes docs/portal/chronicle.html), fix the generator and regenerate; otherwise fix the page');
   }
+  // An import map address the browser can use: it must start with ./ or ../
+  // (a bare "packages/..." is ignored, and the specifier then resolves to
+  // nothing), and it must name a file. From d3b5fc93 until 2026-09-30 the
+  // Pages trainer failed on "@sixam/source/fnaf2 ... blocked by a null value"
+  // because every address in index.html's map was bare.
+  for (const m of text.matchAll(/<script type="importmap">([\s\S]*?)<\/script>/gi)) {
+    for (const [specifier, address] of Object.entries(JSON.parse(m[1]).imports ?? {})) {
+      htmlLinks += 1;
+      if (!/^\.\.?\//.test(address)) complain(`${file} maps ${specifier} to "${address}": an import map address must start with ./ or ../`);
+      else if (!existsSync(resolve(here, address))) complain(`${file} maps ${specifier} to ${address}, which does not exist`);
+    }
+  }
 }
 
 // --- 2. docs/README.md lists every page under docs/.
