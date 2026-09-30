@@ -217,7 +217,7 @@ check(estimator.exactChecks > 0 && estimator.decisions > 0,
 check(stress.won > disabled.won && stress.won < oracle.won,
   `stress result did not remain between disabled and oracle (${stress.won})`);
 check(!/\bSim\b|engine\.js/.test(
-  readFileSync(new URL('../src/games/fnaf2/cycle-controller.js', import.meta.url), 'utf8')),
+  readFileSync(new URL('../src/games/fnaf2/cycle-controller.ts', import.meta.url), 'utf8')),
   'production cycle controller contains a privileged exact-engine read');
 
 console.log(`cycle controller: disabled ${disabled.won}/${RUNS}, ` +

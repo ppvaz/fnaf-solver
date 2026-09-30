@@ -32,6 +32,11 @@ export function guardIntents(intents, scheduled) {
 export const PRESS_COOLDOWN = GUARD_FRAMES + C.s(0.15);
 
 export class ReactiveController {
+  declare opts: {};
+  declare log: any[];
+  declare lastAnimPress: { action: any; at: number; };
+  declare _decisionSnapshot: { state: {}; logLength: number; };
+  declare _pendingIntents: any;
   constructor(opts = {}) {
     this.opts = opts;
     this.log = [];
@@ -117,7 +122,11 @@ export class ReactiveController {
 // published Minus Toys blackout branch need, and nothing more -- blackout is a
 // whole-screen luma read the coarse sensor never misses.
 export class BlackoutReactive extends ReactiveController {
-  constructor(opts = {}) {
+  declare maxMaskFrames: any;
+  declare state: string;
+  declare since: number;
+  declare loweredMonitor: boolean;
+  constructor(opts: any = {}) {
     super(opts);
     // Never stay masked longer than this waiting for a clear opening: Withered
     // Foxy accelerates while the mask is up with nobody at the vent (g825).
@@ -234,7 +243,33 @@ export const CONTROLLERS = { blackoutReactive: BlackoutReactive,
 // opening read is UNKNOWN while the mask animates), then verified after the
 // drop.
 export class VentThreatReactive extends ReactiveController {
-  constructor(opts = {}) {
+  declare openingFact: any;
+  declare threatValue: any;
+  declare clearValue: any;
+  declare hardCapFrames: any;
+  declare maskWindowFrames: any;
+  declare maskOnAt: number;
+  declare firstTick: number;
+  declare phaseUncertaintyFrames: any;
+  declare maskEndUncertaintyFrames: any;
+  declare maskWindow: any;
+  declare phaseClock: any;
+  declare maxFailedHolds: any;
+  declare failedHolds: number;
+  declare dead: boolean;
+  declare bankingEnabled: any;
+  declare bankCapFrames: any;
+  declare bankTarget: any;
+  declare bankStart: number;
+  declare prevVentCue: boolean;
+  declare consumedAudioCueId: any;
+  declare usesDefaultThreat: boolean;
+  declare state: string;
+  declare since: number;
+  declare loweredMonitor: boolean;
+  declare flashed: boolean;
+  declare threat: any;
+  constructor(opts: any = {}) {
     super(opts);
     this.openingFact = opts.openingFact ?? 'leftOpening';
     this.threatValue = opts.threatValue ?? 'threat';
@@ -404,8 +439,8 @@ export class VentThreatReactive extends ReactiveController {
     const out = [];
     // Edge bookkeeping for the audio 'pending' cue (first thud): the fact is
     // level for ~20 s, banking must fire once per cue.
-    const ventVal = /** @type {any} */ (this.openingFact === 'leftOpening' ? val(obs.bbVent, false) : false);
-    const pendingEdge = /** @type {any} */ (ventVal) === 'pending' && /** @type {any} */ (this.prevVentCue) !== 'pending';
+    const ventVal = ((this.openingFact === 'leftOpening' ? val(obs.bbVent, false) : false) as any);
+    const pendingEdge = (ventVal as any) === 'pending' && (this.prevVentCue as any) !== 'pending';
     this.prevVentCue = ventVal;
     // Coverage bookkeeping: the first frame the mask was observed fully on.
     // (Observation quantization is +-4 frames against a ~48-frame coverage
@@ -619,7 +654,7 @@ CONTROLLERS.ventThreatReactive = VentThreatReactive;
 // cleared before any raise. The named class prevents CAM 11 static, a BB audio
 // cue, or a left-opening fact from silently becoming a Mangle decision.
 export class MangleThreatReactive extends VentThreatReactive {
-  constructor(opts = {}) {
+  constructor(opts: any = {}) {
     const predicate = opts.threatPred ?? (obs => {
       const o = obs.mangleStatic;
       return !!o && o.state === 'OBSERVED' && o.value === true;

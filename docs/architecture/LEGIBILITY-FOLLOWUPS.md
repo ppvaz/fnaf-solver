@@ -208,7 +208,7 @@ regression is `packages/propose/test/census.test.js` (three evaluations whose fi
 is not the latest, reordered) and every named case in
 `packages/propose/test/experiment.test.js`, both in `test:contracts`.
 **Owner:** `packages/propose` (was `packages/research`)
-**Evidence:** [`experiment.js`](../../packages/propose/src/experiment/experiment.js), [`cli.js`](../../packages/propose/src/experiment/cli.js)
+**Evidence:** [`experiment.js`](../../packages/propose/src/experiment/experiment.ts), [`cli.js`](../../packages/propose/src/experiment/cli.ts)
 
 `makeResultPayload()` promotes the terminal state of the first evaluation to
 the whole experiment, and the CLI uses that value as the result event time.
@@ -237,7 +237,7 @@ refused by review's `seed-floor` rule (`resolveCensusCohort`). Focused tests:
 beside an explicit list; its bytes are hashed into every Minus 3 bundle, so it is
 not edited, and the descriptor now records such a list by what it is.
 **Owner:** `packages/propose` (was `packages/research`), device plan consumers
-**Evidence:** current-tree path `packages/propose/src/experiment/seeds.js:64` (not yet
+**Evidence:** current-tree path `packages/propose/src/experiment/seeds.ts:64` (not yet
 versioned in this audit commit), [`minus-3-plan.mjs` (line 211)](../../packages/propose/bin/plans/minus-3-plan.mjs)
 
 The current working tree fails JavaScript typecheck because the explicit
@@ -297,6 +297,6 @@ The following checks passed during the audit but do not close the findings:
 - `node tools/validate-references.js`
 - `npm run test:affected`
 
-`npm run typecheck` currently fails in `packages/propose/src/experiment/seeds.js`; that
+`npm run typecheck` currently fails in `packages/propose/src/experiment/seeds.ts`; that
 failure belongs to the current working tree and should be rechecked after the
 pending seed changes are finalized.

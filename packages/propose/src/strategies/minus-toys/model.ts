@@ -1,8 +1,8 @@
 import * as C from '@sixam/source/fnaf2';
 import { Sim, Rng } from '@sixam/source/fnaf2';
 import { stableHash } from '@sixam/kernel/contracts';
-import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '../../experiment/seeds.js';
-import { CYCLE, LEGACY_LOOP, LEGACY_SETUP, fifthBoundary, routeFor } from './route.js';
+import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '../../experiment/seeds.ts';
+import { CYCLE, LEGACY_LOOP, LEGACY_SETUP, fifthBoundary, routeFor } from './route.ts';
 
 const JITTER_SALT = 0x6d32746f; // "m2to"; separate from the simulator RNG.
 const ROW = Object.freeze({ raise: 1, flashOn: 2, flashOff: 3, wind: 4,
@@ -17,9 +17,9 @@ function jitterer(seed, slackMs) {
   };
 }
 
-export function runMinusToys7(seed, opts = {}) {
+export function runMinusToys7(seed, opts: any = {}) {
   const { night = 7, slackMs = 0, openLoop = false,
-          cycle = CYCLE, simOpts = {} } = opts;
+          cycle = CYCLE, simOpts = {} } = (opts as any);
   routeFor(night, cycle);
   const sim = new Sim({ seed, night, ...simOpts });
   const shift = opts.shift ?? jitterer(seed, slackMs);
@@ -42,8 +42,7 @@ export function runMinusToys7(seed, opts = {}) {
     }
   };
 
-  /** @type {{w0: number, fullOn: number}|null} */
-  let poll = null;
+  let poll: {w0: number, fullOn: number}|null = null;
   const pressMask = w0 => {
     sim.press('mask');
     if (sim.maskOn) poll = { w0, fullOn: sim.frame + C.MASK_ANIM_ON };
@@ -146,11 +145,8 @@ export function runMinusToys7(seed, opts = {}) {
   };
 }
 
-/**
- * @param {{night?: number, from?: number, to?: number, seeds?: number[], count?: number, slackMs?: number, openLoop?: boolean, worst?: boolean}} options
- */
 export function cohort({ night = 7, from, to, seeds, count = 3000,
-                          slackMs = 0, openLoop = false, worst = false } = {}) {
+                          slackMs = 0, openLoop = false, worst = false }: {night?: number, from?: number, to?: number, seeds?: number[], count?: number, slackMs?: number, openLoop?: boolean, worst?: boolean} = {}) {
   const population = seeds ?? (from !== undefined && to !== undefined
     ? Array.from({ length: Math.max(0, to - from + 1) }, (_, i) => (from + i) >>> 0)
     : randomSeedCohort({ count }));
@@ -178,7 +174,7 @@ export function cohort({ night = 7, from, to, seeds, count = 3000,
 }
 
 /** Compatibility evaluator for the package's original structured API. */
-export function runLegacyMinusToys(opts = {}) {
+export function runLegacyMinusToys(opts: any = {}) {
   const sim = new Sim(Object.assign({ seed: 1 }, opts));
   let minBox = 1, minPower = sim.power, splitAt = -1;
   let blackouts = 0, ventArrivals = 0, eventIndex = 0;
@@ -206,7 +202,7 @@ export function runLegacyMinusToys(opts = {}) {
   return { sim, minBox, minPower, splitAt, blackouts, ventArrivals };
 }
 
-export function summarizeLegacyMinusToys(opts = {}) {
+export function summarizeLegacyMinusToys(opts: any = {}) {
   const result = runLegacyMinusToys(opts);
   return {
     family: 'minus-toys', seed: opts.seed ?? 1, won: result.sim.won,

@@ -20,9 +20,8 @@ import { validateSeedDerivation, validateSeedSet } from '@sixam/kernel/contracts
 
 /**
  * A kernel seed set (experiment-spec-v2; shape in packages/kernel/src/contracts/types.ts).
- * @typedef {{name: string, derivation: any, provenance: 'natural' | 'pinned' | 'identified',
- *   bracket?: {lo: number, hi: number}, count: number, sha256?: string, definition?: string}} SeedSet
  */
+export type SeedSet = {name: string, derivation: any, provenance: 'natural' | 'pinned' | 'identified', bracket?: {lo: number, hi: number}, count: number, sha256?: string, definition?: string};
 
 export const MODEL_SEED_COHORT_SCHEMA = 'model-seed-cohort-v1';
 export const GOLDEN_MODEL_SEEDS = 3000;
@@ -65,10 +64,8 @@ const sha256Of = seeds => createHash('sha256').update(Buffer.from(JSON.stringify
 /**
  * Refuse a seed list that is not a non-empty list of distinct uint32 seeds:
  * the canonical generator never repeats a seed, so an explicit cohort may not.
- * @param {unknown} seeds @param {string} [label]
- * @returns {number[]}
  */
-export function validateSeedList(seeds, label = 'seed cohort') {
+export function validateSeedList(seeds: unknown, label: string = 'seed cohort'): number[] {
   if (!Array.isArray(seeds) || seeds.length < 1 || !seeds.every(isUint32))
     throw new TypeError(`${label} must be a non-empty array of uint32 seeds`);
   if (new Set(seeds).size !== seeds.length) throw new TypeError(`${label} repeats a seed`);
@@ -81,10 +78,8 @@ export function validateSeedList(seeds, label = 'seed cohort') {
  * caller names -- a salt passed beside an explicit list is not recorded, since
  * it would misstate the list's provenance -- `explicit-range` when it is every
  * integer from its first to its last in order, and `explicit` otherwise.
- * @param {number[]} seeds @param {{salt?: number | null}} [options]
- * @returns {{kind: 'golden', count: number, salt: number} | {kind: 'explicit-range', from: number, to: number} | {kind: 'explicit'}}
  */
-export function seedDerivation(seeds, { salt = null } = {}) {
+export function seedDerivation(seeds: number[], { salt = null }: {salt?: number | null} = {}): {kind: 'golden', count: number, salt: number} | {kind: 'explicit-range', from: number, to: number} | {kind: 'explicit'} {
   validateSeedList(seeds);
   if (salt !== null) {
     const golden = randomSeedCohort({ count: seeds.length, salt: salt >>> 0 });
@@ -99,10 +94,8 @@ export function seedDerivation(seeds, { salt = null } = {}) {
  * Stable identity for the exact population used by a model result. It records
  * the derivation read from the seeds (`seedDerivation`) and the kernel Seed
  * provenance its members stand for; `salt` appears only for a golden cohort.
- * @param {number[]} seeds
- * @param {{salt?: number | null, label?: string, provenance?: 'natural' | 'pinned' | 'identified'}} [options]
  */
-export function seedCohortDescriptor(seeds, { salt = null, label = 'random', provenance = 'natural' } = {}) {
+export function seedCohortDescriptor(seeds: number[], { salt = null, label = 'random', provenance = 'natural' }: {salt?: number | null, label?: string, provenance?: 'natural' | 'pinned' | 'identified'} = {}) {
   validateSeedProvenance(provenance, undefined);
   const derivation = seedDerivation(seeds, { salt });
   return {
@@ -120,11 +113,9 @@ export function seedCohortDescriptor(seeds, { salt = null, label = 'random', pro
 /**
  * Resolve the canonical random population, or an explicit one a caller
  * supplies, validated like the generator's own output.
- * @param {{seeds?: number[], count?: number, salt?: number}} [options]
- * @returns {number[]}
  */
 export function resolveSeedCohort({ seeds, count = GOLDEN_MODEL_SEEDS,
-                                    salt = GOLDEN_MODEL_SEED_SALT } = {}) {
+                                    salt = GOLDEN_MODEL_SEED_SALT }: {seeds?: number[], count?: number, salt?: number} = {}): number[] {
   if (seeds !== undefined) return validateSeedList(seeds, 'an explicit seed population');
   return randomSeedCohort({ count, salt });
 }
@@ -133,10 +124,8 @@ export function resolveSeedCohort({ seeds, count = GOLDEN_MODEL_SEEDS,
  * The seeds of a kernel seed set (experiment-spec-v2), checked against the
  * count and, when the set names one, the sha256 it declares. A golden
  * derivation with a modulus keeps each night's first occurrence.
- * @param {SeedSet} set
- * @returns {number[]}
  */
-export function expandSeedSet(set) {
+export function expandSeedSet(set: SeedSet): number[] {
   validateSeedSet(set, `seed set ${set?.name ?? '?'}`);
   const seeds = seedsOf(set.derivation);
   if (seeds.length !== set.count) throw new TypeError(`seed set ${set.name}: ${seeds.length} seeds, not the ${set.count} it declares`);
@@ -145,8 +134,7 @@ export function expandSeedSet(set) {
   return seeds;
 }
 
-/** @param {any} derivation @returns {number[]} */
-function seedsOf(derivation) {
+function seedsOf(derivation: any): number[] {
   if (derivation.kind === 'explicit') return [...derivation.seeds];
   if (derivation.kind === 'explicit-range')
     return Array.from({ length: derivation.to - derivation.from + 1 }, (_, index) => derivation.from + index);
@@ -156,10 +144,8 @@ function seedsOf(derivation) {
 
 /**
  * A complete seed set for a spec: the count and sha256 computed from its derivation.
- * @param {{name: string, derivation: any, provenance?: 'natural' | 'pinned' | 'identified', bracket?: {lo: number, hi: number}, definition?: string}} input
- * @returns {SeedSet}
  */
-export function describeSeedSet({ name, derivation, provenance = 'natural', bracket, definition }) {
+export function describeSeedSet({ name, derivation, provenance = 'natural', bracket, definition }: {name: string, derivation: any, provenance?: 'natural' | 'pinned' | 'identified', bracket?: {lo: number, hi: number}, definition?: string}): SeedSet {
   validateSeedDerivation(derivation, `seed set ${name}`);
   const seeds = seedsOf(derivation);
   return validateSeedSet({ name, derivation, provenance, ...(bracket ? { bracket } : {}), count: seeds.length,

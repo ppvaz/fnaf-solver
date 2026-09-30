@@ -157,13 +157,13 @@ export const OBSERVATION_BUDGET = Object.freeze(Object.fromEntries(
 /** Facts a branch may condition on: read cost measured, so the cost is known. */
 export function admissibleFacts() {
   return Object.values(OBSERVATION_BUDGET)
-    .filter(entry => entry.admissible).map(entry => entry.fact).sort();
+    .filter((entry: any) => entry.admissible).map((entry: any) => entry.fact).sort();
 }
 
 /** Facts excluded from the language, with the reason each is excluded. */
 export function excludedFacts() {
-  return Object.values(OBSERVATION_BUDGET).filter(entry => !entry.admissible)
-    .map(entry => ({ fact: entry.fact, exclusion: entry.exclusion }))
+  return Object.values(OBSERVATION_BUDGET).filter((entry: any) => !entry.admissible)
+    .map((entry: any) => ({ fact: entry.fact, exclusion: entry.exclusion }))
     .sort((a, b) => a.fact.localeCompare(b.fact));
 }
 
@@ -174,8 +174,8 @@ export function excludedFacts() {
  */
 export function deviceAdmissibleFacts() {
   return Object.values(OBSERVATION_BUDGET)
-    .filter(entry => entry.admissible && entry.classifier !== UNCALIBRATED)
-    .map(entry => entry.fact).sort();
+    .filter((entry: any) => entry.admissible && entry.classifier !== UNCALIBRATED)
+    .map((entry: any) => entry.fact).sort();
 }
 
 /**

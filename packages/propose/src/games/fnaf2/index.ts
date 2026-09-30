@@ -4,8 +4,8 @@
  * the belief-backed cycle controller and the sourced night policy. Moved from
  * `@sixam/core/control` in migration M8; that subpath re-exports it.
  */
-export * from './controller.js';
-export * from './cycle-library.js';
-export * from './cycle-planner.js';
-export * from './cycle-controller.js';
-export * from './night-policy.js';
+export * from './controller.ts';
+export * from './cycle-library.ts';
+export * from './cycle-planner.ts';
+export * from './cycle-controller.ts';
+export * from './night-policy.ts';

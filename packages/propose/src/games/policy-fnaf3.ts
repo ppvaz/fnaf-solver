@@ -36,13 +36,12 @@ export const SEAL_PRIORITY = [14, 15, 11, 12, 13];
 /**
  * The published line, with the knobs it leaves implicit.
  *
- * @param {object} [knobs]
- * @param {number} [knobs.rebootAt]    ventilation level that triggers a reboot
- * @param {number} [knobs.dwellFrames] frames spent on each camera while sweeping
- * @param {number[]} [knobs.sweep]     the camera order a player sweeps in
+ * @param knobs.rebootAt ventilation level that triggers a reboot
+ * @param knobs.dwellFrames frames spent on each camera while sweeping
+ * @param knobs.sweep the camera order a player sweeps in
  */
 export function communityLine({ rebootAt = -4, dwellFrames = 12,
-                                sweep = [10, 9, 8, 7, 6, 5, 2, 4, 3, 1] } = {}) {
+                                sweep = [10, 9, 8, 7, 6, 5, 2, 4, 3, 1] }: { rebootAt?: number; dwellFrames?: number; sweep?: number[]; } = {}) {
   // **Belief, not truth.** The policy learns where Springtrap is only by
   // looking at the camera he is on; every other frame it is working from a
   // stale reading. That is the difference this repository insists on between

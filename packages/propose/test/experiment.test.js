@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { generateCandidates, replayModelResult, runModelExperiment } from '../src/experiment/experiment.js';
+import { generateCandidates, replayModelResult, runModelExperiment } from '../src/experiment/experiment.ts';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const cases = ['model-smoke', 'controller-synthesis', 'cycle-optimization',

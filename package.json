@@ -26,7 +26,7 @@
     "test:browser:realtime": "node tools/test.mjs --browser",
     "build:trainer": "python3 apps/trainer/test/build.py",
     "serve:trainer": "python3 apps/trainer/test/serve.py 8731",
-    "research": "node packages/propose/src/experiment/cli.js",
+    "research": "node packages/propose/src/experiment/cli.ts",
     "policy": "node packages/propose/bin/policy/policy-inspect.js",
     "evidence": "node apps/desktop/src/evidence.js",
     "review": "node packages/review/src/cli.mjs",

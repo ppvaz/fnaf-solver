@@ -50,12 +50,11 @@ export const CAM = { showStage: 1, dining: 2, westHall: 3, eastHall: 4,
  * flick the camera, idle. A door that a flash finds occupied shuts for
  * `doorFrames` and is then re-checked by the next flash on that side.
  *
- * @param {object} knobs
- * @param {number} knobs.lightFrames  frames a door-light flash lasts
- * @param {number} knobs.camFrames    frames a camera flick lasts
- * @param {number} knobs.doorFrames   frames a door stays shut before re-check
- * @param {number} knobs.idleFrames   frames of nothing at the end of a cycle
- * @param {number} knobs.park         which camera the flick selects
+ * @param knobs.lightFrames frames a door-light flash lasts
+ * @param knobs.camFrames frames a camera flick lasts
+ * @param knobs.doorFrames frames a door stays shut before re-check
+ * @param knobs.idleFrames frames of nothing at the end of a cycle
+ * @param knobs.park which camera the flick selects
  */
 /**
  * Is the reserve ahead of a straight-line burn to 6 AM?

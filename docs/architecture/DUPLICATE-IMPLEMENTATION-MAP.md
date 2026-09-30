@@ -243,7 +243,7 @@ Host-side schedulers and their simulator twins:
 
 Twelve modules spell "policy", in at least three unrelated vocabularies.
 
-- **policy-v1 IR (gated).** `packages/propose/src/policy/policy-ir.js` (86) owns
+- **policy-v1 IR (gated).** `packages/propose/src/policy/policy-ir.ts` (86) owns
   the schema with `observation-language.js`; `packages/propose/bin/policy/policy-grammar.mjs`
   (387), `policy-interpreter.mjs` (77), `policy-search.mjs` (169),
   `policy-artifact.mjs` (142) build on it, and `policy-equivalence.mjs` (214)
@@ -284,7 +284,7 @@ is not, which is why a fourth route means a fourth hand-written module.
   seeded `Sim` replays by `packages/propose/test/reducedmodeltest.mjs`.
 - `packages/propose/parked/minus7/sim.mjs` (149) — searchable wrapper: clone, semantic actions,
   privileged view.
-- `packages/propose/src/experiment/families/minus-toys.js`, `minus-two.js` — exact
+- `packages/propose/src/experiment/families/minus-toys.ts`, `minus-two.js` — exact
   evaluators, with `packages/propose/test/legacy-equivalence.test.js`.
 
 This is the family a cleanup should imitate: four things named like engines,
@@ -304,7 +304,7 @@ globs in the generated register; named here so they can be triaged:
   `latenesssweep.mjs` (185), `phasesweep.mjs` (47), `periodicsweep.mjs` (40),
   `flicksweep.mjs` (39), `phase-tolerance.mjs` (198).
 - `packages/propose/bin/policy/policy-search.mjs` (169), `gate-worker.mjs` (42).
-- Owner per the charter: `packages/propose/src/experiment/experiment.js` with specs under
+- Owner per the charter: `packages/propose/src/experiment/experiment.ts` with specs under
   `packages/propose/experiments/`.
 - Shared execution machinery that already exists: `packages/propose/bin/census/pool.mjs` (129) +
   `pool-worker.mjs`.
@@ -434,7 +434,7 @@ green.
 | `packages/propose/bin/policy/closed-families.mjs` / `tools/invent/closed-families.mjs` | 70 / 134 | Two registers of closed policy families — device-plan surface vs privileged genome surface. Same register, two classifiers. |
 | `tools/invent/search.mjs` / `packages/propose/parked/minus7/search.mjs` | 248 / 189 | Two constrained searches; see §12. |
 | `packages/propose/parked/minus7/cycle.mjs` / `packages/propose/bin/minus-toys/cycle.mjs` | 244 / 263 | Same shape, different route. `tools/minustoys/` holds **exactly one file**. **Decided 2026-09-08: keep.** One directory per route is the convention; a move would touch importers, the `TOOLS.md` row and the generated catalogs for no behaviour change, and Minus Toys is the live Night 5/6 route. |
-| `packages/propose/src/policy/policy-ir.js` / `packages/propose/bin/policy/policy-ir.mjs` | 86 / 51 | Name collision only; see §9. |
+| `packages/propose/src/policy/policy-ir.ts` / `packages/propose/bin/policy/policy-ir.mjs` | 86 / 51 | Name collision only; see §9. |
 
 ## 18. Not duplication (checked, so a cleanup does not "fix" them)
 

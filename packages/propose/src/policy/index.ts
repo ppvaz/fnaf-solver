@@ -4,6 +4,6 @@
  * and the controller and supervisor ports (`CONTRACT:controller-v1`). Moved
  * from `@sixam/core/control` in migration M8; that subpath re-exports it.
  */
-export * from './policy-ir.js';
-export * from './observation-language.js';
-export * from './ports.js';
+export * from './policy-ir.ts';
+export * from './observation-language.ts';
+export * from './ports.ts';

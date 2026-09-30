@@ -8,8 +8,8 @@
 import * as C from '@sixam/source/games/fnaf2/config.ts';
 import { initialEstimator, update, reconcile, send, needsVerification } from '@sixam/play/player';
 import { initialReducedState, observeReduced, applyReduced, advanceReduced, REDUCED_SCHEMA } from '@sixam/source/games/fnaf2/reduced-model.ts';
-import { getCycle } from './cycle-library.js';
-import { selectCycle } from './cycle-planner.js';
+import { getCycle } from './cycle-library.ts';
+import { selectCycle } from './cycle-planner.ts';
 
 export const CYCLE_CONTROLLER_SCHEMA = 'cycle-controller-v1';
 
@@ -41,14 +41,14 @@ function timedFacts(facts, frame, receivedAtMs) {
     ? facts.frame : frame;
   const observedAtMs = sampleFrame * 1000 / C.FPS;
   const result = {};
-  for (const [name, fact] of Object.entries(stripFrame(facts))) {
+  for (const [name, fact] of Object.entries(stripFrame(facts) as Record<string, any>)) {
     if (!fact || typeof fact !== 'object' || Array.isArray(fact))
       fail(`fact ${name} is not an envelope`);
     result[name] = {
       ...fact,
-      source: fact.source ?? 'observer',
-      observedAtMs: fact.observedAtMs ?? observedAtMs,
-      receivedAtMs: fact.receivedAtMs ?? receivedAtMs,
+      source: (fact as any).source ?? 'observer',
+      observedAtMs: (fact as any).observedAtMs ?? observedAtMs,
+      receivedAtMs: (fact as any).receivedAtMs ?? receivedAtMs,
     };
   }
   return result;
@@ -75,6 +75,17 @@ function observedBoolean(facts, name) {
  * private state; snapshots are plain JSON-compatible values for replay.
  */
 export class CycleController {
+  declare reduced: any;
+  declare estimator: any;
+  declare cycles: any;
+  declare facts: {};
+  declare activeCycleId: any;
+  declare activeCycleRunId: string;
+  declare activeUntilFrame: number;
+  declare decisions: any[];
+  declare nextToken: number;
+  declare nextCycleRun: number;
+  declare heldContacts: {};
   constructor({ reduced = null, estimator = null, cycles = null } = {}) {
     this.reduced = clone(reduced ?? initialReducedState({ night: 1 }));
     if (!this.reduced || this.reduced.schema !== REDUCED_SCHEMA)
@@ -122,7 +133,7 @@ export class CycleController {
     this.reduced = observeReduced(this.reduced, physicalFacts, { frame });
     this.facts = clone(facts);
 
-    const pending = /** @type {any} */ (this.estimator.belief.pendingAction);
+    const pending = (this.estimator.belief.pendingAction as any);
     if (pending) {
       for (const [factName, control] of Object.entries(CONTROL_FACTS)) {
         if (pending.action !== control) continue;
@@ -150,8 +161,7 @@ export class CycleController {
    * UNKNOWN hazard is not silently promoted to clear or threat; the caller can
    * continue observing and replan at the next boundary.
    */
-  /** @param {any} options */
-  plan(options = {}) {
+  plan(options: any = {}) {
     const { exactGate, score } = options;
     if (typeof exactGate !== 'function' || typeof score !== 'function')
       fail('exactGate and score callbacks are required');
@@ -187,7 +197,7 @@ export class CycleController {
         needsVerification(this.estimator, 'mask'))
       return noDecision(this, 'control-verification-required');
 
-    const blackout = this.facts.blackout;
+    const blackout = (this.facts as any).blackout;
     if (!blackout || blackout.state !== 'OBSERVED' ||
         typeof blackout.value !== 'boolean')
       return noDecision(this, 'blackout-unknown');
@@ -204,7 +214,7 @@ export class CycleController {
       hazard: blackout.value ? 'active' : 'clear',
       plausible: true,
     };
-    const decision = selectCycle(this.cycles, [hypothesis], {
+    const decision: any = selectCycle(this.cycles, [hypothesis], {
       exactGate: (cycle, h) => exactGate(cycle, h, this),
       score: (cycle, h, gate) => score(cycle, h, gate, this),
     });
@@ -327,7 +337,7 @@ export class CycleController {
   /** Plain-data census used by callers to prove shutdown released every touch. */
   outstandingHolds() {
     return Object.entries(this.heldContacts).flatMap(([cycleRunId, actions]) =>
-      actions.map(action => ({ cycleRunId, action })));
+      (actions as any).map(action => ({ cycleRunId, action })));
   }
 
   snapshot() {

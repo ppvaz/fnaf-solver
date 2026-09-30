@@ -17,11 +17,11 @@
 // promoted as one.
 
 import { Fnaf1Sim } from '@sixam/source/fnaf1';
-import { POLICIES as FNAF1_POLICIES } from '@sixam/propose/games/policy-fnaf1.js';
+import { POLICIES as FNAF1_POLICIES } from '@sixam/propose/games/policy-fnaf1.ts';
 import { Fnaf3Sim } from '@sixam/source/fnaf3';
-import { POLICIES as FNAF3_POLICIES } from '@sixam/propose/games/policy-fnaf3.js';
+import { POLICIES as FNAF3_POLICIES } from '@sixam/propose/games/policy-fnaf3.ts';
 import { Fnaf4Sim } from '@sixam/source/fnaf4';
-import { POLICIES as FNAF4_POLICIES } from '@sixam/propose/games/policy-fnaf4.js';
+import { POLICIES as FNAF4_POLICIES } from '@sixam/propose/games/policy-fnaf4.ts';
 
 const SIMS = {
   fnaf1: { Sim: Fnaf1Sim, policies: FNAF1_POLICIES, nights: [1, 2, 3, 4, 5, 6],

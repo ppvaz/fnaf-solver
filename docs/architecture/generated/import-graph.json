@@ -1666,9 +1666,9 @@
       "imports": [
         "../../parked/minus7/policy.mjs",
         "../../parked/minus7/policybaselines.mjs",
-        "@sixam/propose/games/policy-fnaf1.js",
-        "@sixam/propose/games/policy-fnaf3.js",
-        "@sixam/propose/games/policy-fnaf4.js",
+        "@sixam/propose/games/policy-fnaf1.ts",
+        "@sixam/propose/games/policy-fnaf3.ts",
+        "@sixam/propose/games/policy-fnaf4.ts",
         "@sixam/source/fnaf1",
         "@sixam/source/fnaf3",
         "@sixam/source/fnaf4"
@@ -1737,7 +1737,7 @@
     {
       "file": "packages/propose/bin/census/test-fnaf1-census.mjs",
       "imports": [
-        "@sixam/propose/games/policy-fnaf1.js",
+        "@sixam/propose/games/policy-fnaf1.ts",
         "@sixam/source/fnaf1"
       ]
     },
@@ -1766,14 +1766,14 @@
       "file": "packages/propose/bin/census/test-fnaf3-census.mjs",
       "imports": [
         "../../../play/games/fnaf3/fnaf3-run.mjs",
-        "@sixam/propose/games/policy-fnaf3.js",
+        "@sixam/propose/games/policy-fnaf3.ts",
         "@sixam/source/fnaf3"
       ]
     },
     {
       "file": "packages/propose/bin/census/test-fnaf4-census.mjs",
       "imports": [
-        "@sixam/propose/games/policy-fnaf4.js",
+        "@sixam/propose/games/policy-fnaf4.ts",
         "@sixam/source",
         "@sixam/source/fnaf4"
       ]
@@ -2716,7 +2716,7 @@
     {
       "file": "packages/propose/parked/minus7/model.js",
       "imports": [
-        "../../src/experiment/seeds.js",
+        "../../src/experiment/seeds.ts",
         "./route.js",
         "@sixam/source/fnaf2"
       ]
@@ -2873,18 +2873,18 @@
       ]
     },
     {
-      "file": "packages/propose/src/experiment/census.js",
+      "file": "packages/propose/src/experiment/census.ts",
       "imports": [
-        "./seeds.js",
+        "./seeds.ts",
         "@sixam/kernel",
         "@sixam/kernel/contracts",
         "@sixam/review/refusals"
       ]
     },
     {
-      "file": "packages/propose/src/experiment/cli.js",
+      "file": "packages/propose/src/experiment/cli.ts",
       "imports": [
-        "./experiment.js",
+        "./experiment.ts",
         "@sixam/kernel",
         "@sixam/kernel/contracts",
         "node:fs/promises",
@@ -2893,10 +2893,10 @@
       ]
     },
     {
-      "file": "packages/propose/src/experiment/experiment.js",
+      "file": "packages/propose/src/experiment/experiment.ts",
       "imports": [
-        "./families/minus-toys.js",
-        "./families/minus-two.js",
+        "./families/minus-toys.ts",
+        "./families/minus-two.ts",
         "@sixam/kernel",
         "@sixam/kernel/contracts",
         "@sixam/source",
@@ -2904,20 +2904,20 @@
       ]
     },
     {
-      "file": "packages/propose/src/experiment/families/minus-toys.js",
+      "file": "packages/propose/src/experiment/families/minus-toys.ts",
       "imports": [
-        "../../strategies/minus-toys/model.js"
+        "../../strategies/minus-toys/model.ts"
       ]
     },
     {
-      "file": "packages/propose/src/experiment/families/minus-two.js",
+      "file": "packages/propose/src/experiment/families/minus-two.ts",
       "imports": [
         "@sixam/kernel/contracts",
         "@sixam/source/fnaf2"
       ]
     },
     {
-      "file": "packages/propose/src/experiment/seeds.js",
+      "file": "packages/propose/src/experiment/seeds.ts",
       "imports": [
         "@sixam/kernel",
         "@sixam/kernel/contracts",
@@ -2925,167 +2925,167 @@
       ]
     },
     {
-      "file": "packages/propose/src/games/fnaf2/controller.js",
+      "file": "packages/propose/src/games/fnaf2/controller.ts",
       "imports": [
         "@sixam/play/sim",
         "@sixam/source/games/fnaf2/config.ts"
       ]
     },
     {
-      "file": "packages/propose/src/games/fnaf2/cycle-controller.js",
+      "file": "packages/propose/src/games/fnaf2/cycle-controller.ts",
       "imports": [
-        "./cycle-library.js",
-        "./cycle-planner.js",
+        "./cycle-library.ts",
+        "./cycle-planner.ts",
         "@sixam/play/player",
         "@sixam/source/games/fnaf2/config.ts",
         "@sixam/source/games/fnaf2/reduced-model.ts"
       ]
     },
     {
-      "file": "packages/propose/src/games/fnaf2/cycle-library.js",
+      "file": "packages/propose/src/games/fnaf2/cycle-library.ts",
       "imports": [
         "@sixam/source/games/fnaf2/config.ts",
         "@sixam/source/games/fnaf2/reduced-model.ts"
       ]
     },
     {
-      "file": "packages/propose/src/games/fnaf2/cycle-planner.js",
+      "file": "packages/propose/src/games/fnaf2/cycle-planner.ts",
       "imports": [
-        "./cycle-library.js"
+        "./cycle-library.ts"
       ]
     },
     {
-      "file": "packages/propose/src/games/fnaf2/index.js",
+      "file": "packages/propose/src/games/fnaf2/index.ts",
       "imports": [
-        "./controller.js",
-        "./cycle-controller.js",
-        "./cycle-library.js",
-        "./cycle-planner.js",
-        "./night-policy.js"
+        "./controller.ts",
+        "./cycle-controller.ts",
+        "./cycle-library.ts",
+        "./cycle-planner.ts",
+        "./night-policy.ts"
       ]
     },
     {
-      "file": "packages/propose/src/games/fnaf2/night-policy.js",
+      "file": "packages/propose/src/games/fnaf2/night-policy.ts",
       "imports": [
         "@sixam/source/games/fnaf2/config.ts"
       ]
     },
     {
-      "file": "packages/propose/src/games/policy-fnaf1.js",
+      "file": "packages/propose/src/games/policy-fnaf1.ts",
       "imports": [
         "@sixam/source/games/fnaf1/sim-fnaf1.ts"
       ]
     },
     {
-      "file": "packages/propose/src/games/policy-fnaf4.js",
+      "file": "packages/propose/src/games/policy-fnaf4.ts",
       "imports": [
         "@sixam/source/games/fnaf4/fnaf4.ts"
       ]
     },
     {
-      "file": "packages/propose/src/index.js",
+      "file": "packages/propose/src/index.ts",
       "imports": [
-        "./games/fnaf2/index.js",
-        "./policy/index.js"
+        "./games/fnaf2/index.ts",
+        "./policy/index.ts"
       ]
     },
     {
-      "file": "packages/propose/src/policy/index.js",
+      "file": "packages/propose/src/policy/index.ts",
       "imports": [
-        "./observation-language.js",
-        "./policy-ir.js",
-        "./ports.js"
+        "./observation-language.ts",
+        "./policy-ir.ts",
+        "./ports.ts"
       ]
     },
     {
-      "file": "packages/propose/src/policy/observation-language.js",
+      "file": "packages/propose/src/policy/observation-language.ts",
       "imports": [
         "@sixam/play/sim",
         "@sixam/source/games/fnaf2/config.ts"
       ]
     },
     {
-      "file": "packages/propose/src/policy/policy-ir.js",
+      "file": "packages/propose/src/policy/policy-ir.ts",
       "imports": [
-        "./observation-language.js",
+        "./observation-language.ts",
         "@sixam/source"
       ]
     },
     {
-      "file": "packages/propose/src/strategies/minus-3/index.js",
+      "file": "packages/propose/src/strategies/minus-3/index.ts",
       "imports": [
-        "./manifest.js",
-        "./model.js",
-        "./route.js"
+        "./manifest.ts",
+        "./model.ts",
+        "./route.ts"
       ]
     },
     {
-      "file": "packages/propose/src/strategies/minus-3/manifest.js",
+      "file": "packages/propose/src/strategies/minus-3/manifest.ts",
       "imports": [
         "@sixam/source/games/fnaf2/mechanics.ts"
       ]
     },
     {
-      "file": "packages/propose/src/strategies/minus-3/model.js",
+      "file": "packages/propose/src/strategies/minus-3/model.ts",
       "imports": [
-        "../../experiment/seeds.js",
-        "./route.js",
+        "../../experiment/seeds.ts",
+        "./route.ts",
         "@sixam/source/fnaf2"
       ]
     },
     {
-      "file": "packages/propose/src/strategies/minus-3/route.js",
+      "file": "packages/propose/src/strategies/minus-3/route.ts",
       "imports": [
         "@sixam/source/fnaf2"
       ]
     },
     {
-      "file": "packages/propose/src/strategies/minus-toys/index.js",
+      "file": "packages/propose/src/strategies/minus-toys/index.ts",
       "imports": [
-        "./manifest.js",
-        "./model.js",
-        "./route.js"
+        "./manifest.ts",
+        "./model.ts",
+        "./route.ts"
       ]
     },
     {
-      "file": "packages/propose/src/strategies/minus-toys/manifest.js",
+      "file": "packages/propose/src/strategies/minus-toys/manifest.ts",
       "imports": [
         "@sixam/source/games/fnaf2/mechanics.ts"
       ]
     },
     {
-      "file": "packages/propose/src/strategies/minus-toys/model.js",
+      "file": "packages/propose/src/strategies/minus-toys/model.ts",
       "imports": [
-        "../../experiment/seeds.js",
-        "./route.js",
+        "../../experiment/seeds.ts",
+        "./route.ts",
         "@sixam/kernel/contracts",
         "@sixam/source/fnaf2"
       ]
     },
     {
-      "file": "packages/propose/src/strategies/minus-toys/route.js",
+      "file": "packages/propose/src/strategies/minus-toys/route.ts",
       "imports": [
         "@sixam/source/fnaf2"
       ]
     },
     {
-      "file": "packages/propose/src/strategies/right-vent-camp/index.js",
+      "file": "packages/propose/src/strategies/right-vent-camp/index.ts",
       "imports": [
-        "./manifest.js",
-        "./model.js",
-        "./route.js"
+        "./manifest.ts",
+        "./model.ts",
+        "./route.ts"
       ]
     },
     {
-      "file": "packages/propose/src/strategies/right-vent-camp/model.js",
+      "file": "packages/propose/src/strategies/right-vent-camp/model.ts",
       "imports": [
-        "../../experiment/seeds.js",
-        "./route.js",
+        "../../experiment/seeds.ts",
+        "./route.ts",
         "@sixam/source/fnaf2"
       ]
     },
     {
-      "file": "packages/propose/src/strategies/right-vent-camp/route.js",
+      "file": "packages/propose/src/strategies/right-vent-camp/route.ts",
       "imports": [
         "@sixam/source/fnaf2"
       ]
@@ -3099,9 +3099,9 @@
     {
       "file": "packages/propose/test/census.test.js",
       "imports": [
-        "../src/experiment/census.js",
-        "../src/experiment/experiment.js",
-        "../src/experiment/seeds.js",
+        "../src/experiment/census.ts",
+        "../src/experiment/experiment.ts",
+        "../src/experiment/seeds.ts",
         "@sixam/kernel",
         "node:assert/strict"
       ]
@@ -3132,7 +3132,7 @@
     {
       "file": "packages/propose/test/experiment.test.js",
       "imports": [
-        "../src/experiment/experiment.js",
+        "../src/experiment/experiment.ts",
         "node:assert/strict",
         "node:fs/promises",
         "node:path",
@@ -3142,8 +3142,8 @@
     {
       "file": "packages/propose/test/legacy-equivalence.test.js",
       "imports": [
-        "../src/experiment/families/minus-toys.js",
-        "../src/experiment/families/minus-two.js",
+        "../src/experiment/families/minus-toys.ts",
+        "../src/experiment/families/minus-two.ts",
         "node:assert/strict",
         "node:child_process",
         "node:path",

@@ -43,26 +43,25 @@ const FRAME_MS = 1000 / 60;
  * The published audio line: listen at each door, hold on breathing, flash on
  * silence, then the closet, then the bed.
  *
- * @param {object} [knobs]
- * @param {number} [knobs.listenMs]   dwell listening at each door
- * @param {number} [knobs.holdMs]     each close of the two-close cycle; the
- *                                    dismiss tick is 3000 ms (g342) and the
- *                                    repel tick is 3000 ms (g502/g503)
- * @param {number} [knobs.rearmMs]    both doors open between the closes,
- *                                    which is the only re-arm (g352)
- * @param {number} [knobs.flashMs]    the silence flash, which resets the
- *                                    bedroom dwell (g485/g481)
- * @param {number} [knobs.closetMs]   holding the closet shut, which decays
- *                                    Foxy (g273) and ejects Fredbear
- *                                    (g522/g523, both 3000 ms ticks)
- * @param {number} [knobs.bedMs]      viewing the bed, which drains at 20/s
- *                                    (g401) and must stay under the 15 s
- *                                    bed-watch (g594/g595)
- * @param {number} [knobs.doorCycles] number of left/right passes per detour
+ * @param knobs.listenMs dwell listening at each door
+ * @param knobs.holdMs each close of the two-close cycle; the
+ * dismiss tick is 3000 ms (g342) and the
+ * repel tick is 3000 ms (g502/g503)
+ * @param knobs.rearmMs both doors open between the closes,
+ * which is the only re-arm (g352)
+ * @param knobs.flashMs the silence flash, which resets the
+ * bedroom dwell (g485/g481)
+ * @param knobs.closetMs holding the closet shut, which decays
+ * Foxy (g273) and ejects Fredbear
+ * (g522/g523, both 3000 ms ticks)
+ * @param knobs.bedMs viewing the bed, which drains at 20/s
+ * (g401) and must stay under the 15 s
+ * bed-watch (g594/g595)
+ * @param knobs.doorCycles number of left/right passes per detour
  */
 export function communityLoop({ listenMs = 600, holdMs = 3400, rearmMs = 200,
                                 flashMs = 120, closetMs = 12000, bedMs = 1500,
-                                doorCycles = 1 } = {}) {
+                                doorCycles = 1 }: { listenMs?: number; holdMs?: number; rearmMs?: number; flashMs?: number; closetMs?: number; bedMs?: number; doorCycles?: number; } = {}) {
   // Doors, then the closet, then the bed -- with `doorCycles` L/R passes per
   // detour on the Fredbear nights, where the halls' 15 s unattended fuse
   // (g644/g646) is the binding constraint and a four-station tour cannot
@@ -179,17 +178,16 @@ export function communityLoop({ listenMs = 600, holdMs = 3400, rearmMs = 200,
 /**
  * The no-audio rotation: force each door, then pay the bed and the closet.
  *
- * @param {object} [knobs]
- * @param {number} [knobs.holdMs]   each of the two closes; g342's dismiss
- *                                  tick is every 3000 ms
- * @param {number} [knobs.rearmMs]  both doors open between them, which is the
- *                                  only thing that clears the interlock (g352)
- * @param {number} [knobs.bedMs]    dwell at the bed, which drains Freddy at
- *                                  20/s against a fill of `AI / 4` per second
- * @param {number} [knobs.closetMs] dwell at the closet, which resets Foxy
+ * @param knobs.holdMs each of the two closes; g342's dismiss
+ * tick is every 3000 ms
+ * @param knobs.rearmMs both doors open between them, which is the
+ * only thing that clears the interlock (g352)
+ * @param knobs.bedMs dwell at the bed, which drains Freddy at
+ * 20/s against a fill of `AI / 4` per second
+ * @param knobs.closetMs dwell at the closet, which resets Foxy
  */
 export function noAudioRotation({ holdMs = 3200, rearmMs = 200, bedMs = 700,
-                                  closetMs = 400 } = {}) {
+                                  closetMs = 400 }: { holdMs?: number; rearmMs?: number; bedMs?: number; closetMs?: number; } = {}) {
   const TOUR = [S.leftDoor, S.rightDoor, S.bed, S.closet];
   let leg = 0;
   let dwell = 0;
@@ -244,8 +242,7 @@ export const doNothing = () => () => {};
  * The control that must die of the rule the audio cue exists to prevent:
  * flash the hall on every visit, with no idea whether they are near.
  */
-/** @param {{ holdMs?: number }} [knobs] */
-export function flashBlind({ holdMs = 600 } = {}) {
+export function flashBlind({ holdMs = 600 }: { holdMs?: number } = {}) {
   const TOUR = [S.leftDoor, S.rightDoor];
   let leg = 0; let dwell = 0;
   return (sim) => {

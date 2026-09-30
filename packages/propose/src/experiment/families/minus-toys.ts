@@ -3,4 +3,4 @@
 export {
   runLegacyMinusToys as runMinusToys,
   summarizeLegacyMinusToys as summarizeMinusToys,
-} from '../../strategies/minus-toys/model.js';
+} from '../../strategies/minus-toys/model.ts';

@@ -9,7 +9,7 @@ const PH = {
   holdUnmask: 274, holdLight: 290, holdLightOff: 298, holdRemask: 299,
 };
 
-export function runMinusTwo(opts = {}) {
+export function runMinusTwo(opts: any = {}) {
   const boxFloor = opts.boxFloor ?? 0.35;
   const cams = opts.flashCams ?? [3];
   const sim = new Sim(Object.assign({ seed: 1 }, opts));
@@ -63,7 +63,7 @@ export function runMinusTwo(opts = {}) {
   return { sim, minBox, holds, maxConsecutiveHolds, maxD };
 }
 
-export function summarizeMinusTwo(opts = {}) {
+export function summarizeMinusTwo(opts: any = {}) {
   const result = runMinusTwo(opts);
   return {
     family: 'minus-two', seed: opts.seed ?? 1, won: result.sim.won,

@@ -102,8 +102,34 @@ const observedValue = (facts, name) => {
  * repository keeps finding on the phone -- and this one structurally cannot.
  */
 export class NightPolicy {
-  /** @param {any} options */
-  constructor(options = {}) {
+  declare schema: string;
+  declare night: any;
+  declare customNight: any;
+  declare campFrames: any;
+  declare repelFrames: number;
+  declare minMaskFrames: any;
+  declare windMarginFrames: any;
+  declare flashMarginFrames: any;
+  declare actWithinFrames: any;
+  declare powerFloorFrames: any;
+  declare sweepOnTrip: any;
+  declare topUpBelow: any;
+  declare sweepPeriodFrames: any;
+  declare sweepRideFrames: any;
+  declare idleStall: any;
+  declare campMinTicks: any;
+  declare useThud: any;
+  declare rollGrid: any;
+  declare rollGuardTicks: any;
+  declare sweepFrames: number;
+  declare foxyAi: number;
+  declare safeD: number;
+  declare goldenAi: number;
+  declare boxDrainFrames: number;
+  declare lastDecision: any;
+  declare _cacheFrame: number;
+  declare _cacheWant: any;
+  constructor(options: any = {}) {
     const {
       night = 1, customNight = null,
       // How long the mask must stay on to be worth wearing: the sourced
@@ -241,7 +267,7 @@ export class NightPolicy {
     // "rare" reads as possible rather than as zero.
     this.goldenAi = C.peakAi(night, 'golden', customNight);
     this.boxDrainFrames = C.boxDrainFrames(night);
-    /** @type {any} */ this.lastDecision = null;
+    this.lastDecision = null;
     this._cacheFrame = -1;
     this._cacheWant = null;
   }

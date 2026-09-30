@@ -200,14 +200,14 @@
     {
       "id": "contract.controller-v1",
       "kind": "CONTRACT",
-      "path": "packages/propose/src/policy/index.js",
+      "path": "packages/propose/src/policy/index.ts",
       "line": 4,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.controller-v1",
       "kind": "CONTRACT",
-      "path": "packages/propose/src/policy/ports.js",
+      "path": "packages/propose/src/policy/ports.ts",
       "line": 1,
       "relation": "REFERENCES"
     },
@@ -659,7 +659,7 @@
     {
       "id": "contract.policy-program-v1",
       "kind": "CONTRACT",
-      "path": "packages/propose/src/policy/index.js",
+      "path": "packages/propose/src/policy/index.ts",
       "line": 3,
       "relation": "REFERENCES"
     },

@@ -12,7 +12,7 @@
 import { interval } from '@sixam/kernel';
 import { validateExperimentResultV2, validateExperimentSpecV2, validateRate } from '@sixam/kernel/contracts';
 import { SEED_FLOOR, checkSeedFloor } from '@sixam/review/refusals';
-import { expandSeedSet } from './seeds.js';
+import { expandSeedSet } from './seeds.ts';
 
 export { SEED_FLOOR };
 
@@ -26,8 +26,8 @@ const C = [-7.784894002430293e-03, -3.223964580411365e-01, -2.400758277161838e+0
   4.374664141464968e+00, 2.938163982698783e+00];
 const D = [7.784695709041462e-03, 3.224671290700398e-01, 2.445134137142996e+00, 3.754408661907416e+00];
 
-/** The standard normal quantile. @param {number} p in (0, 1) */
-export function probit(p) {
+/** The standard normal quantile. @param p in (0, 1) */
+export function probit(p: number) {
   if (!(p > 0 && p < 1)) throw new RangeError(`probit needs 0 < p < 1, not ${p}`);
   const tail = q => (((((C[0] * q + C[1]) * q + C[2]) * q + C[3]) * q + C[4]) * q + C[5]) /
     ((((D[0] * q + D[1]) * q + D[2]) * q + D[3]) * q + 1);
@@ -57,10 +57,8 @@ export function wilsonInterval(successes, n, z) {
  * - `wilson`: the Wilson score interval at `confidence` (default 0.95).
  * - `wilson-bonferroni`: the same at a per-rate confidence of 1 - (1 - confidence) / comparisons,
  *   so `comparisons` rates taken jointly (a minimum over a band, say) hold together at `confidence`.
- * @param {string} name @param {number} successes @param {number} n
- * @param {{method?: 'wilson' | 'wilson-bonferroni' | 'exhaustive', confidence?: number, comparisons?: number, population?: number}} [options]
  */
-export function rateOf(name, successes, n, { method = 'wilson', confidence = 0.95, comparisons = 1, population } = {}) {
+export function rateOf(name: string, successes: number, n: number, { method = 'wilson', confidence = 0.95, comparisons = 1, population }: {method?: 'wilson' | 'wilson-bonferroni' | 'exhaustive', confidence?: number, comparisons?: number, population?: number} = {}) {
   if (!Number.isInteger(n) || n < 1 || !Number.isInteger(successes) || successes < 0 || successes > n)
     throw new RangeError(`${name}: ${successes} of ${n} is not a count`);
   const rate = successes / n;
@@ -85,10 +83,9 @@ export function rateOf(name, successes, n, { method = 'wilson', confidence = 0.9
  * The seeds of a spec's two blocks. They must be disjoint and lie in the
  * population; a census (not a diagnostic sweep) is refused on any block under
  * the seed floor, by Review's own `seed-floor` rule.
- * @param {any} spec an experiment-spec-v2
- * @returns {{development: number[], heldOut: number[]}}
+ * @param spec an experiment-spec-v2
  */
-export function resolveCensusCohort(spec) {
+export function resolveCensusCohort(spec: any): {development: number[], heldOut: number[]} {
   validateExperimentSpecV2(spec);
   const development = expandSeedSet(spec.cohort.development);
   const heldOut = expandSeedSet(spec.cohort.heldOut);
@@ -106,10 +103,10 @@ export function resolveCensusCohort(spec) {
   return { development, heldOut };
 }
 
-/** The measures a predicate reads. @param {any} predicate @returns {string[]} */
-export function predicateMeasures(predicate) {
-  if ('all' in predicate) return [...new Set(predicate.all.flatMap(predicateMeasures))];
-  if ('any' in predicate) return [...new Set(predicate.any.flatMap(predicateMeasures))];
+/** The measures a predicate reads. */
+export function predicateMeasures(predicate: any): string[] {
+  if ('all' in predicate) return [...new Set<string>(predicate.all.flatMap(predicateMeasures))];
+  if ('any' in predicate) return [...new Set<string>(predicate.any.flatMap(predicateMeasures))];
   if ('not' in predicate) return predicateMeasures(predicate.not);
   return [predicate.measure];
 }
@@ -117,10 +114,8 @@ export function predicateMeasures(predicate) {
 /**
  * Whether a predicate holds of the observed measures. A measure the census
  * did not observe as a number is refused, never read as zero.
- * @param {any} predicate @param {Record<string, number>} values
- * @returns {boolean}
  */
-export function evaluatePredicate(predicate, values) {
+export function evaluatePredicate(predicate: any, values: Record<string, number>): boolean {
   if ('all' in predicate) return predicate.all.every(item => evaluatePredicate(item, values));
   if ('any' in predicate) return predicate.any.some(item => evaluatePredicate(item, values));
   if ('not' in predicate) return !evaluatePredicate(predicate.not, values);
@@ -141,11 +136,9 @@ export function evaluatePredicate(predicate, values) {
  * The experiment-result-v2 a spec's observation decides: each explanation
  * `surviving` exactly when the observation it predicted holds on the deciding
  * block, with the values that decided it.
- * @param {any} spec an experiment-spec-v2
- * @param {{specSha256: string, observations: Record<string, number>, rates?: any[], stopped: {rule: string, reached: string},
- *   evidence?: Record<string, Record<string, unknown>>}} input
+ * @param spec an experiment-spec-v2
  */
-export function decideExperiment(spec, { specSha256, observations, rates = [], stopped, evidence = {} }) {
+export function decideExperiment(spec: any, { specSha256, observations, rates = [], stopped, evidence = {} }: {specSha256: string, observations: Record<string, number>, rates?: any[], stopped: {rule: string, reached: string}, evidence?: Record<string, Record<string, unknown>>}) {
   validateExperimentSpecV2(spec);
   const explanations = spec.explanations.map(item => {
     const holds = evaluatePredicate(item.predicts.when, observations);

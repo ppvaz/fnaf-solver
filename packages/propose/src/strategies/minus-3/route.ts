@@ -81,10 +81,7 @@ export function build(overrides = {}) {
   return { opening, clear, knobs: k };
 }
 
-/**
- * @param {{opening?: any[], clear?: any[], knobs?: Record<string, any>, untilMs?: number}} options
- */
-export function schedule({ opening, clear, knobs, untilMs } = {}) {
+export function schedule({ opening, clear, knobs, untilMs }: {opening?: any[], clear?: any[], knobs?: Record<string, any>, untilMs?: number} = {}) {
   const k = clone(knobs);
   const built = opening && clear ? { opening, clear } : build(k);
   const queue = [];

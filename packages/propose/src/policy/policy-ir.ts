@@ -3,7 +3,7 @@
 // and observations, never shell commands or arbitrary callbacks.
 
 import { PACKAGES, catalogAcceptsControl, controlCatalogFor } from '@sixam/source';
-import { validateBranch } from './observation-language.js';
+import { validateBranch } from './observation-language.ts';
 
 export const POLICY_SCHEMA = 'policy-v1';
 export const PHASE_KINDS = Object.freeze(['idle', 'setup', 'repeat', 'finish', 'observe']);

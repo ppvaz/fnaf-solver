@@ -1,7 +1,7 @@
 import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
-import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '../../experiment/seeds.js';
-import { CYCLE, routeFor } from './route.js';
+import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '../../experiment/seeds.ts';
+import { CYCLE, routeFor } from './route.ts';
 
 const at = seconds => Math.round(seconds * C.FPS);
 
@@ -11,8 +11,7 @@ function add(queue, frame, fn) {
   queue.set(frame, rows);
 }
 
-/** @param {(sim: any) => boolean} guard */
-function press(queue, frame, action, guard = () => true) {
+function press(queue, frame, action, guard: (sim: any) => boolean = () => true) {
   add(queue, frame, sim => { if (guard(sim)) sim.press(action); });
 }
 
@@ -65,7 +64,7 @@ function mainCycle(queue, base, cycle = CYCLE) {
 
 /** Faithful published timer skeleton, evaluated only on the Android plant model. */
 export function run(seed, opts = {}) {
-  const { night = 7, ventStall = true, simOpts = {}, cycle = CYCLE } = opts;
+  const { night = 7, ventStall = true, simOpts = {}, cycle = CYCLE } = (opts as any);
   routeFor(night, cycle);
   const sim = new Sim({ seed, night, ...simOpts });
   const queue = new Map();
@@ -93,11 +92,8 @@ export function run(seed, opts = {}) {
   };
 }
 
-/**
- * @param {{night?: number, from?: number, to?: number, seeds?: number[], count?: number, ventStall?: boolean, worst?: boolean}} options
- */
 export function cohort({ night = 7, from, to, seeds, count = 3000,
-                          ventStall = true, worst = false } = {}) {
+                          ventStall = true, worst = false }: {night?: number, from?: number, to?: number, seeds?: number[], count?: number, ventStall?: boolean, worst?: boolean} = {}) {
   const population = seeds ?? (from !== undefined && to !== undefined
     ? Array.from({ length: Math.max(0, to - from + 1) }, (_, i) => (from + i) >>> 0)
     : randomSeedCohort({ count }));

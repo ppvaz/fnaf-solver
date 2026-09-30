@@ -1,7 +1,7 @@
 // Receding-horizon selection over the finite cycle library (Plan 20 P5
 // foundation). The selector never averages away a plausible unsafe state:
 // every candidate must pass the local/exact gate for every active hypothesis.
-import { gateCycle } from './cycle-library.js';
+import { gateCycle } from './cycle-library.ts';
 
 const clone = value => structuredClone(value);
 
@@ -20,8 +20,7 @@ function scoreOne(score, cycle, hypothesis, gate) {
  * model; no hidden simulator state is consulted here. The returned decisions
  * form an auditable record of both rejected and selected candidates.
  */
-/** @param {any} options */
-export function selectCycle(cycles, hypotheses, options = {}) {
+export function selectCycle(cycles, hypotheses, options: any = {}) {
   const { constraints, exactGate, score } = options;
   if (!Array.isArray(cycles) || !cycles.length) invalid('cycles are required');
   if (!Array.isArray(hypotheses) || !hypotheses.length) invalid('hypotheses are required');

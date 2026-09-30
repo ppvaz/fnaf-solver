@@ -109,7 +109,7 @@
     },
     {
       "id": "research",
-      "command": "node packages/propose/src/experiment/cli.js",
+      "command": "node packages/propose/src/experiment/cli.ts",
       "lifecycle": "supported"
     },
     {

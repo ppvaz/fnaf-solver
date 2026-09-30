@@ -1,13 +1,9 @@
 import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
-import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '../../experiment/seeds.js';
-import { build, schedule, REACTIVE_KNOBS, MINUS3_STORY_NIGHTS } from './route.js';
+import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '../../experiment/seeds.ts';
+import { build, schedule, REACTIVE_KNOBS, MINUS3_STORY_NIGHTS } from './route.ts';
 
-/**
- * @param {{night?: number, seed?: number, worst?: boolean, splitCamera?: boolean, knobs?: Record<string, any>,
- *   customNight?: Record<string, number>}} options
- */
-export function replay({ night, seed = 1, worst = false, splitCamera = true, knobs, customNight } = {}) {
+export function replay({ night, seed = 1, worst = false, splitCamera = true, knobs, customNight }: {night?: number, seed?: number, worst?: boolean, splitCamera?: boolean, knobs?: Record<string, any>, customNight?: Record<string, number>} = {}) {
   const storyNight = Number.isInteger(night) && night >= 3 && night <= 6;
   const customNightOk = night === 7 && customNight !== null && typeof customNight === 'object';
   if (!storyNight && !customNightOk)
@@ -94,11 +90,8 @@ function scheduleReactiveCycle(queue, anchor, knobs) {
  * a stand-in for the future observer: blackout, BB left opening, Mangle
  * static/right opening, and elapsed time since Toy Bonnie's right-vent cue.
  */
-/**
- * @param {{night?: number, seed?: number, worst?: boolean, splitCamera?: boolean, knobs?: Record<string, any>}} options
- */
 export function reactiveReplay({ night, seed = 1, worst = false,
-                                  splitCamera = true, knobs } = {}) {
+                                  splitCamera = true, knobs }: {night?: number, seed?: number, worst?: boolean, splitCamera?: boolean, knobs?: Record<string, any>} = {}) {
   if (!Number.isInteger(night) || !MINUS3_STORY_NIGHTS.includes(night))
     throw new Error('Minus 3 reactive replay requires story night 3..5');
   const k = { ...REACTIVE_KNOBS, ...(knobs ?? {}) };
@@ -109,8 +102,7 @@ export function reactiveReplay({ night, seed = 1, worst = false,
     if (!splitCamera && action === 'cam:8') continue;
     add(queue, at, kind, action, 'opening');
   }
-  /** @type {{eventCursor: number, toyBonnieCueAt: number, bbOpening: boolean, mangleOpening: boolean, phase: string, anchor: number, cycles: number, deferrals: number}} */
-  const state = {
+  const state: {eventCursor: number, toyBonnieCueAt: number, bbOpening: boolean, mangleOpening: boolean, phase: string, anchor: number, cycles: number, deferrals: number} = {
     eventCursor: 0, toyBonnieCueAt: -1, bbOpening: false, mangleOpening: false,
     phase: 'normal', anchor: k.firstAnchorFrames, cycles: 0, deferrals: 0,
   };
@@ -154,11 +146,7 @@ export function reactiveReplay({ night, seed = 1, worst = false,
   return { sim, splitAt, minBox, minPower, state };
 }
 
-/**
- * @param {number} night
- * @param {{worst?: boolean, splitCamera?: boolean, runs?: number, seeds?: number[], knobs?: Record<string, any>}} options
- */
-function count(night, { worst = false, splitCamera = true, runs = 3000, seeds, knobs } = {}) {
+function count(night: number, { worst = false, splitCamera = true, runs = 3000, seeds, knobs }: {worst?: boolean, splitCamera?: boolean, runs?: number, seeds?: number[], knobs?: Record<string, any>} = {}) {
   const population = seeds ?? randomSeedCohort({ count: runs });
   let wins = 0, split = 0, minBox = 1, minPower = Infinity;
   const losses = new Map();

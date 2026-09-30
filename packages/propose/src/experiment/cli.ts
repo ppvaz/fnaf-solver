@@ -2,7 +2,7 @@
 /** Experiment composition root; evaluators remain pure core consumers. */
 import { isUnknown } from '@sixam/kernel';
 import { stableHash, validateArtifactRef } from '@sixam/kernel/contracts';
-import { makeResultPayload, runModelExperiment } from './experiment.js';
+import { makeResultPayload, runModelExperiment } from './experiment.ts';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';

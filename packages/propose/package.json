@@ -10,17 +10,17 @@
     "@sixam/source": "file:../source"
   },
   "bin": {
-    "fnaf2-research": "src/experiment/cli.js"
+    "fnaf2-research": "src/experiment/cli.ts"
   },
   "exports": {
-    ".": "./src/index.js",
-    "./policy": "./src/policy/index.js",
-    "./fnaf2": "./src/games/fnaf2/index.js",
+    ".": "./src/index.ts",
+    "./policy": "./src/policy/index.ts",
+    "./fnaf2": "./src/games/fnaf2/index.ts",
     "./games/*": "./src/games/*",
-    "./experiment": "./src/experiment/experiment.js",
-    "./seeds": "./src/experiment/seeds.js",
-    "./census": "./src/experiment/census.js",
-    "./strategies/*": "./src/strategies/*/index.js",
+    "./experiment": "./src/experiment/experiment.ts",
+    "./seeds": "./src/experiment/seeds.ts",
+    "./census": "./src/experiment/census.ts",
+    "./strategies/*": "./src/strategies/*/index.ts",
     "./parked/minus7": "./parked/minus7/index.js"
   }
 }

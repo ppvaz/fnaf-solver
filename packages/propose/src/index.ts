@@ -4,5 +4,5 @@
  * (`@sixam/propose/games/policy-fnaf1.js`), because every one of them exports
  * its own `POLICIES`.
  */
-export * from './policy/index.js';
-export * from './games/fnaf2/index.js';
+export * from './policy/index.ts';
+export * from './games/fnaf2/index.ts';

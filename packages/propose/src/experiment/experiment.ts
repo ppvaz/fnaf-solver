@@ -3,11 +3,11 @@ import { PlantModel } from '@sixam/source/fnaf2';
 import { interval, unknown } from '@sixam/kernel';
 import { stableHash, validateExperiment, validateExperimentResult } from '@sixam/kernel/contracts';
 import { validateControlCommand } from '@sixam/source';
-import { summarizeMinusToys } from './families/minus-toys.js';
-import { summarizeMinusTwo } from './families/minus-two.js';
+import { summarizeMinusToys } from './families/minus-toys.ts';
+import { summarizeMinusTwo } from './families/minus-two.ts';
 
-export { runMinusToys } from './families/minus-toys.js';
-export { runMinusTwo } from './families/minus-two.js';
+export { runMinusToys } from './families/minus-toys.ts';
+export { runMinusTwo } from './families/minus-two.ts';
 
 const FAMILY_EVALUATORS = Object.freeze({
   'minus-toys-v1': summarizeMinusToys,
@@ -22,7 +22,7 @@ function expandCandidateParameters(spec) {
     .filter(([, values]) => Array.isArray(values) && values.length);
   if (!dimensions.length) throw new TypeError(`${spec.id}: cartesian candidate space has no dimensions`);
   return dimensions.reduce((combinations, [key, values]) =>
-    combinations.flatMap(partial => values.map(value => ({ ...partial, [key]: value }))), [{}]);
+    combinations.flatMap(partial => (values as any).map(value => ({ ...partial, [key]: value }))), [{}]);
 }
 
 export function generateCandidates(spec) {
@@ -166,9 +166,8 @@ export function runModelExperiment(spec) {
  * evaluation, in the simulator's frame clock, with how many evaluations it
  * spans. Each evaluation keeps its own terminal state. When no evaluation
  * reports a terminal frame the aggregate is UNKNOWN with its reason, never 0.
- * @param {{terminal?: {frame?: number}}[]} evaluations
  */
-export function aggregateTerminal(evaluations) {
+export function aggregateTerminal(evaluations: {terminal?: {frame?: number}}[]) {
   const frames = evaluations.map(item => item.terminal?.frame).filter(Number.isFinite);
   if (!frames.length) return unknown('no evaluation reported a terminal frame');
   return {

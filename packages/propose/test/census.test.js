@@ -6,9 +6,9 @@ import { isUnknown } from '@sixam/kernel';
 import {
   GOLDEN_MODEL_SEED_SALT, describeSeedSet, expandSeedSet, randomSeedCohort, resolveSeedCohort, seedCohortDescriptor,
   seedDerivation, validateSeedList,
-} from '../src/experiment/seeds.js';
-import { SEED_FLOOR, decideExperiment, evaluatePredicate, probit, rateOf, resolveCensusCohort } from '../src/experiment/census.js';
-import { aggregateTerminal, makeResultPayload } from '../src/experiment/experiment.js';
+} from '../src/experiment/seeds.ts';
+import { SEED_FLOOR, decideExperiment, evaluatePredicate, probit, rateOf, resolveCensusCohort } from '../src/experiment/census.ts';
+import { aggregateTerminal, makeResultPayload } from '../src/experiment/experiment.ts';
 
 // LEG-010: the derivation is read from the seeds, never inferred from a salt a caller passes.
 const golden = randomSeedCohort({ count: 3000 });
