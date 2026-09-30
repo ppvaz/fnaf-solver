@@ -14,7 +14,7 @@
  */
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { stableHash, validateQualification, validateVenueBinding, venueBindingsFor } from '@sixam/kernel/contracts';
+import { VENUE_DRIFT_FIELDS, stableHash, validateQualification, validateVenueBinding, venueBindingsFor } from '@sixam/kernel/contracts';
 import { preflightVenue, unboundVenueRemedy } from './adb-bridge.js';
 
 /**
@@ -43,6 +43,21 @@ export async function loadVenueBindings({ profileId, winnerHash = null, qualific
  * phone with, or that a live run would refuse because nothing binds it.
  * @param {{bindings: {source: string, id: string}[], profileId: string}} options
  */
+/**
+ * The venue fields that moved between the identity preflight read and the one
+ * read at a night's terminal. Pedro, 2026-09-30: drift during a run makes it
+ * an Invalid run, whatever the night showed. Only drift fields both readings
+ * know count; an unread field is not drift. Empty when nothing moved.
+ * @param {any} before @param {any} after
+ * @returns {{field: string, from: string, to: string}[]}
+ */
+export function venueDriftDuringRun(before, after) {
+  if (!before || !after) return [];
+  return VENUE_DRIFT_FIELDS
+    .filter(field => before[field] !== null && after[field] !== null && before[field] !== after[field])
+    .map(field => ({ field, from: before[field], to: after[field] }));
+}
+
 export function dryRunVenue({ bindings, profileId }) {
   const bound = bindings.map(item => `${item.source} ${item.id}`);
   return Object.freeze({

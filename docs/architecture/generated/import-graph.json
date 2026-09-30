@@ -1248,6 +1248,7 @@
         "./night-anchor.js",
         "./physical-ports.js",
         "./timed-start.js",
+        "./venue.js",
         "@sixam/play",
         "node:child_process",
         "node:fs",
@@ -1556,6 +1557,8 @@
       "file": "packages/play/test/modern-campaign-terminal.test.js",
       "imports": [
         "../src/campaign/modern-campaign-ports.js",
+        "../src/campaign/venue.js",
+        "@sixam/kernel/contracts",
         "node:assert/strict",
         "node:test"
       ]

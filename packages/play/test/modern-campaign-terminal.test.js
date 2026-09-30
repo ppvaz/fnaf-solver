@@ -54,3 +54,48 @@ test('the resolved terminal carries the night and mode the machine checks', () =
   assert.equal(resolved.night, 6);
   assert.equal(resolved.identity, 'sixth');
 });
+
+// Pedro, 2026-09-30: a late handoff or arm release, a camera pair that never
+// matched and a camera that never showed one end the attempt without testing
+// its policy. The executor tags them (invalidRun), executeAttempt turns the
+// tagged rejection into an INVALID execution, and this makes it the Invalid
+// terminal the state machine replays without spending an attempt.
+test('an Invalid execution is an Invalid terminal with its why', () => {
+  const resolved = terminalFromExecution({ target, execution: { status: 'INVALID', why: 'late-night-handoff',
+    detail: 'night handoff was 480ms late (budget 250ms)' } });
+  assert.equal(resolved.outcome, 'invalid');
+  assert.equal(resolved.why, 'late-night-handoff');
+  assert.equal(resolved.sixAm, false);
+  assert.equal(resolved.positive, false);
+  assert.equal(resolved.night, 5, 'the machine checks the night before it reads the outcome');
+  // campaign.test.js holds what the state machine does with it: a retry that
+  // spends no attempt, and a hold after the second in a row.
+});
+
+test('a venue that moved during the night makes the run Invalid, whatever it showed', async () => {
+  const { venueCheckedTerminal } = await import('../src/campaign/modern-campaign-ports.js');
+  const sixAm = { night: 7, identity: 'custom', outcome: 'sixam', sixAm: true, positive: true, state: 'sixam' };
+  const drift = [{ field: 'versionCode', from: '26', to: '27' }];
+  const checked = venueCheckedTerminal(sixAm, drift);
+  assert.equal(checked.outcome, 'invalid');
+  assert.equal(checked.observedOutcome, 'sixam');
+  assert.equal(checked.sixAm, false);
+  assert.equal(checked.positive, false);
+  assert.equal(checked.why, 'venue-drift: versionCode 26 -> 27');
+  assert.equal(venueCheckedTerminal(sixAm, []), sixAm, 'no drift leaves the terminal as observed');
+  const invalid = { ...sixAm, outcome: 'invalid', why: 'late-arm-release' };
+  assert.equal(venueCheckedTerminal(invalid, drift), invalid, 'an Invalid terminal keeps its first why');
+});
+
+test('venue drift during a run counts only drift fields both readings know', async () => {
+  const { venueDriftDuringRun } = await import('../src/campaign/venue.js');
+  const { VENUE_DRIFT_FIELDS } = await import('@sixam/kernel/contracts');
+  const [first, second] = VENUE_DRIFT_FIELDS;
+  const before = { [first]: 'a', [second]: 'b', timeZone: 'America/Sao_Paulo', companionVersion: '1' };
+  assert.deepEqual(venueDriftDuringRun(before, { ...before }), []);
+  assert.deepEqual(venueDriftDuringRun(before, { ...before, [first]: 'c' }), [{ field: first, from: 'a', to: 'c' }]);
+  assert.deepEqual(venueDriftDuringRun(before, { ...before, [second]: null }), [], 'an unread field is not drift');
+  assert.deepEqual(venueDriftDuringRun(before, { ...before, timeZone: 'UTC', companionVersion: '2' }), [],
+    'the note fields are recorded at preflight, never drift');
+  assert.deepEqual(venueDriftDuringRun(null, before), [], 'no preflight reading, nothing to compare');
+});

@@ -429,8 +429,9 @@ try {
     readyDelayMs: 1, pollMs: 250, timing: { pollMs: 1 }, sharedHid: () => lateHid, observe: async () => 'night',
     onEvent: event => lateEvents.push(event) });
   const lateRelease = setTimeout(() => late.releaseNight(), 10);
-  await assert.rejects(() => late.execute(request), /night handoff was \d+ms late/,
-    'a delayed first HID action must invalidate the run');
+  await assert.rejects(() => late.execute(request),
+    error => /night handoff was \d+ms late/.test(error.message) && error.invalid === 'late-night-handoff',
+    'a delayed first HID action must invalidate the run: an Invalid run, not a campaign failure (Pedro, 2026-09-30)');
   clearTimeout(lateRelease);
   const lateHandoff = lateEvents.find(event => event.type === 'hid.handoff');
   assert.ok(lateHandoff && lateHandoff.delayMs > lateHandoff.budgetMs,
@@ -706,8 +707,9 @@ try {
     observe: async () => 'night',
     onEvent: event => observeOnceFailLog.push(event),
     observeArm: async () => ({ sequence: 1, highlights: ['cam:9'], viewing: null }) });
-  await assert.rejects(() => observeOnceFail.execute(runtimeObserveOnceRequest), /identified a mismatch/,
-    'one-shot arm verification must abort on a definitive wrong pair');
+  await assert.rejects(() => observeOnceFail.execute(runtimeObserveOnceRequest),
+    error => /identified a mismatch/.test(error.message) && error.invalid === 'camera-pair-mismatch',
+    'one-shot arm verification must abort on a definitive wrong pair, as an Invalid run');
   assert.ok(observeOnceFailLog.some(event => event.type === 'arm.failed'),
     'a definitive wrong pair must leave an arm.failed event');
   assert.equal(observeOnceFailLog.filter(event => event.type === 'arm.sample').length, 1,
@@ -749,8 +751,9 @@ try {
         ? { sequence, highlights: ['cam:8', 'cam:11'], viewing: null }
         : { sequence, highlights: null, viewing: null, reason: 'ambiguous-threshold' };
     } });
-  await assert.rejects(() => unknownThenPass.execute(lateRuntimeArmRequest), /phase-invalid/,
-    'an indeterminate arm window must refuse a late phase release');
+  await assert.rejects(() => unknownThenPass.execute(lateRuntimeArmRequest),
+    error => /phase-invalid/.test(error.message) && error.invalid === 'late-arm-release',
+    'an indeterminate arm window must refuse a late phase release, as an Invalid run');
   const unknownRetry = unknownRetryLog.filter(event => event.type === 'arm.retry');
   assert.equal(unknownRetry.length, 1,
     'an unavailable camera window must consume one retry before fresh evidence');
@@ -765,8 +768,9 @@ try {
     timing: { pollMs: 1, armSettleMs: 0, armObservationWindowMs: 0, gateRetryGapMs: 0, maskSettleMs: 0 },
     observe: async () => 'night',
     observeArm: async () => ({ sequence: ++armSequence, highlights: ['cam:9', 'cam:11'], viewing: null }) });
-  await assert.rejects(() => armFail.execute(runtimeArmRequest), /camera arm verification missed/,
-    'a CAM09 + CAM11 observation must never be accepted for a CAM08 arm');
+  await assert.rejects(() => armFail.execute(runtimeArmRequest),
+    error => /camera arm verification missed/.test(error.message) && error.invalid === 'camera-pair-mismatch',
+    'a CAM09 + CAM11 observation must never be accepted for a CAM08 arm; every attempt a wrong pair is an Invalid run');
 } finally {
   rmSync(fakeRoot, { recursive: true, force: true });
 }

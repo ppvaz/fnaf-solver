@@ -24,6 +24,7 @@ import { anchorNightRelease } from './night-anchor.js';
 import { LESSON_LINE, lessonForNight, lessonLines, lessonOriginLine } from '../coach/cycle-lesson.js';
 import { phoneWallAt, planTimedStart, waitUntilHostMs } from './timed-start.js';
 import { DeviceCampaignRunner } from './campaign-runner.js';
+import { venueDriftDuringRun } from './venue.js';
 
 const TITLE_MODEL = new URL('../../../../packages/play/profiles/fnaf2/moto-g56/title-moto-g56-v207.json', import.meta.url);
 const CAMERA_RULE = new URL('../../../../packages/play/profiles/fnaf2/moto-g56/camera-rule-moto-g56-v207.json', import.meta.url);
@@ -155,15 +156,32 @@ async function waitFor(bridge, serial, predicate, timeoutMs, label) {
  * published and the caller must observe for itself.
  *
  * @param {{target: {night: number, mode: string},
- *   execution?: {terminal?: string} | null}} args
+ *   execution?: {terminal?: string, status?: string, why?: string, detail?: string} | null}} args
  */
 export function terminalFromExecution({ target, execution }) {
+  // The executor ended the attempt without testing its policy (invalidRun):
+  // an Invalid run, which the campaign replays without spending an attempt.
+  if (execution?.status === 'INVALID') return { night: target.night, identity: target.mode,
+    outcome: 'invalid', why: execution.why, detail: execution.detail, sixAm: false, positive: false,
+    state: 'invalid', source: 'executor' };
   const observed = execution?.terminal;
   if (observed !== 'sixam' && observed !== 'gameover') return null;
   const sixAm = observed === 'sixam';
   return { night: target.night, identity: target.mode,
     outcome: sixAm ? 'sixam' : 'death', sixAm, positive: sixAm,
     state: observed, source: 'executor' };
+}
+
+/**
+ * A terminal, or the Invalid run it becomes when the venue identity moved
+ * during the night (venueDriftDuringRun): a 6 AM on a venue that changed under
+ * it did not test the qualified venue.
+ * @param {any} terminal @param {{field: string, from: string, to: string}[]} drift
+ */
+export function venueCheckedTerminal(terminal, drift) {
+  if (!drift.length || terminal.outcome === 'invalid') return terminal;
+  return { ...terminal, outcome: 'invalid', sixAm: false, positive: false, observedOutcome: terminal.outcome,
+    why: `venue-drift: ${drift.map(item => `${item.field} ${item.from} -> ${item.to}`).join('; ')}` };
 }
 
 function point(value, label) {
@@ -828,7 +846,26 @@ export async function createCampaignPorts(options = {}) {
     return { night: target.night, identity: identified ? target.mode : 'unknown', observed: identified, state };
   };
 
+  // What preflight read, for the terminal's venue check.
+  let preflightIdentity = null;
   const terminal = async ({ target, execution }) => {
+    const observed = await observedTerminal({ target, execution });
+    if (observed.outcome === 'unknown' || observed.outcome === 'invalid' || preflightIdentity === null ||
+        typeof bridge.venueIdentity !== 'function') return observed;
+    // Input stops before the read: a terminal ends the attempt's ownership of
+    // the screen, and the read takes a few adb round trips.
+    await localExecutor.abort('campaign-terminal-venue-check');
+    let drift = [];
+    try {
+      drift = venueDriftDuringRun(preflightIdentity, await bridge.venueIdentity());
+      onEvent({ type: 'campaign.terminal.venue', drift });
+    } catch (error) {
+      // An unreadable venue is not drift; the terminal stands as observed.
+      onEvent({ type: 'campaign.terminal.venue', drift: null, error: error.message });
+    }
+    return venueCheckedTerminal(observed, drift);
+  };
+  const observedTerminal = async ({ target, execution }) => {
     const published = terminalFromExecution({ target, execution });
     if (published) {
       onEvent({ type: 'campaign.terminal.from-executor',
@@ -949,8 +986,12 @@ export async function createCampaignPorts(options = {}) {
   };
 
   // A composition of these ports is always a live run, so an unbound venue refuses here too.
-  const devicePreflight = args => bridge.preflight({ targetBuild: spec.target.build,
-    restartCapture: false, venueBindings, ...args, requireVenueBinding: true, profileId: profile.id });
+  const devicePreflight = async args => {
+    const result = await bridge.preflight({ targetBuild: spec.target.build,
+      restartCapture: false, venueBindings, ...args, requireVenueBinding: true, profileId: profile.id });
+    preflightIdentity = result?.venue?.observed ?? null;
+    return result;
+  };
   const restartAfterAbort = async reason => {
     // The HID release stops input delivery; it does not rewind the game state.
     // Close the shared title process before restarting the target so no stale
@@ -994,20 +1035,32 @@ export async function createCampaignPorts(options = {}) {
       await closeMenuHid();
       onEvent({ type: 'campaign.terminal.actuator-stopped',
         outcome: terminal?.outcome ?? null, reason: reason ?? null, hidClosed: true });
+      // An Invalid attempt leaves the game mid-night: restart it to the title,
+      // which a retry waits for and a hold after two in a row leaves the phone
+      // at (a death reaches the title by itself).
+      if (terminal?.outcome === 'invalid')
+        await restartAfterAbort(new Error(`invalid run: ${terminal.why}`));
     },
     executeAttempt: async ({ target }) => {
       // intro() pre-armed the schedule during the intro card; the attempt
       // owns that execution. A retry (or any path that skipped intro)
       // falls back to composing the request here.
+      // An executor failure tagged Invalid (invalidRun) ends the attempt as an
+      // Invalid run instead of failing the campaign's port.
+      const settle = execution => execution.catch(error => {
+        if (typeof error?.invalid !== 'string') throw error;
+        onEvent({ type: 'campaign.attempt.invalid', why: error.invalid, detail: error.message });
+        return { status: 'INVALID', why: error.invalid, detail: error.message };
+      });
       if (pendingExecution) {
         const pending = pendingExecution;
         pendingExecution = null;
-        return pending;
+        return settle(pending);
       }
       // A retry can reach the attempt port after intro has already returned;
       // grant the shared HID handoff before starting a fresh executor.
       localExecutor.releaseNight();
-      return localExecutor.execute(artifactRequestFor(target));
+      return settle(localExecutor.execute(artifactRequestFor(target)));
     },
     releaseAll: async () => {
       const hadPendingExecution = pendingExecution !== null;

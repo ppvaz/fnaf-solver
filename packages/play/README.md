@@ -32,7 +32,14 @@ identity, records bounded attempts, treats unknown observations as `HOLD`,
 advances story Nights 1 through 5 through their night-specific save/roll-through
 proof, advances Night 6 after a verified save cursor or newly visible Custom
 Night item, and advances Night 7 after all ten 20 dials plus Puppet 15 are read
-back and the return to the menu is observed. `AdbDeviceBridge` supplies the
+back and the return to the menu is observed. An Invalid run (ADR 0002 decision
+3: the attempt ended without testing its policy) is replayed without spending
+an attempt, and the second in a row holds. Since 2026-09-30 (Pedro's decision)
+the physical executor tags as Invalid a night handoff or arm release past its
+budget, a camera pair that never matched and an arm no camera frame ever
+confirmed, and the terminal re-reads the venue identity and makes a run whose
+venue moved since preflight Invalid; an Invalid attempt restarts the game to
+its title. `AdbDeviceBridge` supplies the
 read-only discovery/preflight port; it exposes no arbitrary shell or game-input
 method. `DeviceLocalArtifactExecutor` is the deterministic test/local executor;
 `AdbDeviceLocalArtifactExecutor` is the physical one: it expands the declared

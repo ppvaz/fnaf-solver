@@ -172,6 +172,19 @@ export class AdbDeviceBridge {
       timeZone, companion, companionPackage: HELPER_PACKAGE });
   }
 
+  /**
+   * The venue identity, read as preflight reads it, for the check at a night's
+   * terminal (a drift during the run makes it an Invalid run); null when no
+   * device is ready to read.
+   * @param {{targetPackage?: string, requireHelper?: boolean}} [options]
+   */
+  async venueIdentity({ targetPackage = GAME_PACKAGE, requireHelper = true } = {}) {
+    const selected = await this.selectDevice();
+    if (selected.status !== 'READY') return null;
+    const dump = await this.#shell(selected.serial, ['dumpsys', 'package', targetPackage]);
+    return this.#venueIdentity(selected.serial, targetPackage, dump, requireHelper);
+  }
+
   /** @param {{targetPackage?: string, targetBuild?: string, requireHelper?: boolean, requireHid?: boolean,
    *   restartCapture?: boolean, venueBindings?: {source: string, id: string, identity: any}[],
    *   requireVenueBinding?: boolean, profileId?: string | null}} options */

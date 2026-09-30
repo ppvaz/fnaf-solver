@@ -23,6 +23,21 @@ import { compactControlSample, controlEffectVerdict, effectTransitions } from '.
 import { boundedRemotePath, renderDeviceLocalScript } from './device-shell.js';
 
 const MAX_ARM_ATTEMPTS = 3;
+
+/**
+ * A failure that ends an attempt without testing its policy: the plan did not
+ * reach the phone as compiled (a late handoff or arm release), or the
+ * double-camera split it depends on was never confirmed armed (a camera-pair
+ * mismatch, or no definitive camera frame through every arm attempt). Pedro,
+ * 2026-09-30: these are Invalid runs (ADR 0002 decision 3), which the campaign
+ * replays without spending an attempt and holds after two in a row. `why` is
+ * the executor's own reason; the error still rejects, and the campaign's ports
+ * read the tag.
+ * @param {string} message @param {string} why
+ */
+function invalidRun(message, why) {
+  return Object.assign(new Error(message), { invalid: why });
+}
 const ARM_SETTLE_MS = 600;
 // The native screen identity the Companion reports for the office HUD, and
 // how often the origin anchor asks for it. The helper's own detector latency
@@ -610,9 +625,9 @@ export class AdbDeviceLocalArtifactExecutor {
               this.onEvent({ type: 'hid.handoff', requestedAt, firstWriteAt: at,
                 delayMs: handoffDelayMs, budgetMs: NIGHT_HANDOFF_BUDGET_MS });
               if (handoffDelayMs > NIGHT_HANDOFF_BUDGET_MS) {
-                handoffFailure = new Error(
+                handoffFailure = invalidRun(
                   `night handoff was ${handoffDelayMs}ms late ` +
-                  `(budget ${NIGHT_HANDOFF_BUDGET_MS}ms)`);
+                  `(budget ${NIGHT_HANDOFF_BUDGET_MS}ms)`, 'late-night-handoff');
                 this.onEvent({ type: 'hid.handoff.abort', delayMs: handoffDelayMs,
                   budgetMs: NIGHT_HANDOFF_BUDGET_MS, reason: 'late-night-handoff' });
                 throw handoffFailure;
@@ -1059,8 +1074,8 @@ export class AdbDeviceLocalArtifactExecutor {
           return;
         }
         armObservationStatus = 'FAILED';
-        armFailure = new Error(`camera arm verification identified a mismatch ` +
-          `(expected=${expected} observed=${key})`);
+        armFailure = invalidRun(`camera arm verification identified a mismatch ` +
+          `(expected=${expected} observed=${key})`, 'camera-pair-mismatch');
         this.onEvent({ type: 'arm.failed', mode: 'observe-once', attempt: 1, elapsedMs,
           reason: 'camera-pair-mismatch', expected: JSON.parse(expected), observed: JSON.parse(key) });
         await this.stopProcess();
@@ -1148,9 +1163,9 @@ export class AdbDeviceLocalArtifactExecutor {
                       this.onEvent({ type: 'phase.invalid', reason: 'late-arm-release',
                         phaseLagMs, phaseBudgetMs: gate.phaseBudgetMs,
                         armAttempt, nightReleasedAt, armGoAt });
-                      armFailure = new Error(
+                      armFailure = invalidRun(
                         'phase-invalid: arm release lag ' + phaseLagMs +
-                        'ms exceeds budget ' + gate.phaseBudgetMs + 'ms');
+                        'ms exceeds budget ' + gate.phaseBudgetMs + 'ms', 'late-arm-release');
                       await this.stopProcess();
                       break;
                     }
@@ -1191,9 +1206,14 @@ export class AdbDeviceLocalArtifactExecutor {
                 await retryArm('camera-observation-unavailable');
                 continue;
               }
-              armFailure = new Error(`camera arm verification missed after ${armAttempt} attempt(s) ` +
+              armFailure = invalidRun(`camera arm verification missed after ${armAttempt} attempt(s) ` +
                 `(expected=${JSON.stringify(armVerification.cameras)} ` +
-                `viewing=${armVerification.viewing} last=${JSON.stringify(lastArmObservation)})`);
+                `viewing=${armVerification.viewing} last=${JSON.stringify(lastArmObservation)})`,
+                // Why, from what the camera last showed: a definitive set is a
+                // wrong pair; anything else never showed one.
+                Array.isArray(lastArmObservation?.highlights ?? lastArmObservation?.cameraHighlights) &&
+                  lastArmObservation?.sequence !== undefined && lastArmObservation?.sequence !== null
+                  ? 'camera-pair-mismatch' : 'camera-observation-unavailable');
               await this.stopProcess();
               break;
           }
