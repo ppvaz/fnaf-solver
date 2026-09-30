@@ -999,6 +999,13 @@
       ]
     },
     {
+      "file": "packages/core/test/foxy-move-value2.test.js",
+      "imports": [
+        "../src/mechanics/plant-model.js",
+        "node:assert/strict"
+      ]
+    },
+    {
       "file": "packages/core/test/frame-time-hook.test.js",
       "imports": [
         "../src/mechanics/config.js",
@@ -3451,6 +3458,8 @@
     {
       "file": "tools/recompile/calib-replay.mjs",
       "imports": [
+        "./model-draw-trace.mjs",
+        "./schedule-to-input.mjs",
         "node:crypto",
         "node:fs",
         "node:path",
@@ -3544,6 +3553,17 @@
         "./model-draw-trace.mjs",
         "./phone-encounter-replay.mjs",
         "./schedule-to-input.mjs",
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "tools/recompile/pilot/batch.mjs",
+      "imports": [
+        "node:child_process",
         "node:crypto",
         "node:fs",
         "node:path",
@@ -3586,11 +3606,22 @@
     {
       "file": "tools/recompile/pilot/replay.mjs",
       "imports": [
+        "./pilot.mjs",
         "node:child_process",
         "node:crypto",
         "node:fs",
         "node:path",
         "node:readline",
+        "node:url"
+      ]
+    },
+    {
+      "file": "tools/recompile/pilot/search.mjs",
+      "imports": [
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:path",
         "node:url"
       ]
     },
@@ -3601,6 +3632,7 @@
         "./fnaf3.mjs",
         "./fnaf4.mjs",
         "./record.mjs",
+        "./search.mjs",
         "node:assert/strict",
         "node:fs",
         "node:path",

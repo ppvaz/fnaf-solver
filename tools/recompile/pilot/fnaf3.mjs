@@ -23,7 +23,7 @@ export const WATCH = [
   'play counter', 'play button', 'toggle button', 'flip it out', 'screen two flipper', 'olivier_FlipHitbox.Active',
   'scroll', 'screen2', 'monitor', 'pic random', 'time limit', 'hyper on?', 'office illusion', 'frozen',
   'phantom head', 'golden freddy', 'mangle', 'puppet', 'chica', 'BB', 'forced BB', 'forced chica',
-  'forced Marionette', 'forced Golden Freddy', 'forced Mangle', 'scare cooldown',
+  'forced Marionette', 'forced Golden Freddy', 'forced Mangle', 'scare cooldown', 'force move', 'force to',
   'olivier_cameraHitboxA.Active', 'olivier_cameraHitboxB.Active', 'olivier_btnTouchzone.Active',
   'Multiple Touch', 'olivier_touchDect4.Active', 'olivier_touchDect5.Active', 'olivier_MuteHitbox.Active', 'nose honk',
 ];
@@ -283,18 +283,83 @@ const facts = (v) => ({
   vent: v.al('ventilation text', 0), dwell: v.al('ventilation text', 1), audio: v.al('audio text', 0),
   rebooting: v.cv('rebooting'), scroll: v.al('scroll', 0), maint: v.al('screen two flipper', 0),
   hour: v.cv('time of night'), blackout: v.al('blackout', 1),
+  // A phantom scare sets `frozen`, and from Night 3 that forces a move: CAM 05
+  // to 02, CAM 02 to stage 1, CAM 06-10 to 05, 04 or 10 (g895-g902, g918-g920).
+  frozen: v.cv('frozen'), force: v.cv('force move'),
 });
+
+/**
+ * Whether the what-day screen routes this seed to a rare screen: its first
+ * draw is `rare random` = Random(1000) + 1 (02-03-what_day g2), and 1 sends it
+ * to a rare screen that jumps back to what-day (g12, rare3 g1). The draw is
+ * the runtime's (harness.h: graine = graine * 31415 + 1, value = graine *
+ * range >> 16) from the frame's seed. The harness seeds every visit with the
+ * one seed, so such a seed never reaches the office (batch.mjs: NO_NIGHT).
+ */
+export function whatDayRare(seed) {
+  const g = (((seed & 0xFFFF) * 31415) + 1) & 0xFFFF;
+  return ((g * 1000) >>> 16) === 0;
+}
+
+/**
+ * Where a lost night's chain began, for search.mjs: the first logged update
+ * with Springtrap on an attack stage or a GOT YOU marker, or inside vent 14
+ * or 15, whose far ends kill outright (g611, g613). A branch after it is
+ * already lost. `records` are the policy log's lines, parsed.
+ */
+export function doomStart(records) {
+  const r = records.find((x) => typeof x.where === 'string'
+    && (/^attack stage|^GOT YOU/.test(x.where) || x.where === 'cam 14' || x.where === 'cam 15'));
+  return r ? r.t : null;
+}
+
+// guard2's zones. From CAM 04 and CAM 03 two moves in three go toward the
+// office (g249, g251), and a roll above 2 at stage 1 marks him for stage 2
+// (g252/g275), so those three are lured back to CAM 02 at once. CAM 08-10 are
+// three or more moves from stage 1, the only places a 10 s reboot is spent.
+const NEAR = new Set(['cam 04', 'cam 03', 'attack stage 1']);
+const FAR = new Set(['cam 08', 'cam 09', 'cam 10']);
+
+/**
+ * Plays left before audio errors: a play needs `audio text` > -10 and takes
+ * AI from it (g301/g308), so from 0 at AI 7 there are two and the second
+ * breaks audio.
+ */
+export function playsLeft(audio, ai) {
+  if (!(audio > -10) || !(ai > 0)) return 0;
+  return Math.floor((audio + 9) / ai) + 1;
+}
 
 /**
  * guard: live on the vent map (no camera selected, so no camera phantom can
  * arm), seal the vent beside Springtrap's place, and reboot ventilation when
  * it errors. Reads the rebuilt runtime's own objects -- an oracle, not a
  * player's view -- and acts only through in-window touches.
+ *
+ * `rev` 1 is the guard the committed record names. `guard2` (rev 2) is built
+ * on the losses of rev 1's development block (seeds 0-53: 30 of 42 office
+ * deaths entered stage 1 from CAM 02 or 03 with audio already at -10, and 8
+ * were vent kills through 14 or 15 during a reboot). It spends a lure only on
+ * CAM 04, CAM 03 and an unmarked stage 1, keeps the camera parked on CAM 02
+ * while he is there so the lure is one tap, and reboots audio or ventilation
+ * only while he is at CAM 08-10 with the vent beside him sealed, abandoning a
+ * reboot the moment he reaches CAM 05 or nearer. A ventilation error can wait:
+ * the blackout it brings advances only a Springtrap already in the attack
+ * chain (g486, g487, g256, g259, g262, g483, g661), and aggression is on all
+ * night on Nightmare anyway (g220/g662 with AI 7).
  */
-function guard({ run, knobs }) {
+function guard({ run, knobs }, rev = 1) {
   const out = join(run, 'guard.jsonl');
   writeFileSync(out, '');
-  const ctx = { v: null, log: (o) => appendFileSync(out, JSON.stringify({ t: ctx.v?.tick, ...o }) + '\n') };
+  // knobs.quiet keeps the last 200 records in memory and writes them when the
+  // night ends, for batch runs over many seeds.
+  const ring = [];
+  const ctx = { v: null, log: (o) => {
+    const line = JSON.stringify({ t: ctx.v?.tick, ...o });
+    if (!knobs.quiet) appendFileSync(out, line + '\n');
+    else { ring.push(line); if (ring.length > 200) ring.shift(); }
+  } };
+  const flush = () => { if (knobs.quiet && ring.length) { appendFileSync(out, ring.join('\n') + '\n'); ring.length = 0; } };
   let task = null, taskName = null, last = null, outcome = null;
   const rebootAt = knobs.rebootAt ?? -10;
 
@@ -344,7 +409,7 @@ function guard({ run, knobs }) {
     yield* tapNamed(ctx, 'play button');
     yield* until(ctx, (v) => v.cv('play counter') !== 7, 10);
   }
-  function* reboot(system = 'ventilation text') {
+  function* reboot(system = 'ventilation text', abort = () => false) {
     yield* tapProxyTask(ctx, 'olivier_FlipHitbox.Active', 'flip it out');
     yield* until(ctx, (v) => v.cv('viewing') === 0, 60);
     yield* panTo(ctx, false);
@@ -352,12 +417,82 @@ function guard({ run, knobs }) {
     yield* until(ctx, (v) => v.al('screen two flipper', 0) === 3, 60);
     yield* tapNamed(ctx, system);
     yield* until(ctx, (v) => v.cv('rebooting') !== 0, 10);
-    yield* until(ctx, (v) => v.cv('rebooting') === 0, 1200);
+    yield* until(ctx, (v) => v.cv('rebooting') === 0 || abort(v), 1200);
+    if (ctx.v.cv('rebooting') !== 0) ctx.log({ abandon: system, where: whereIs(ctx.v) });
     yield* tapNamed(ctx, 'exit text');
     yield* until(ctx, (v) => v.al('screen two flipper', 0) === 0 && v.cv('viewing a screen') === 0, 60);
   }
 
+  // A reboot is abandoned once he reaches CAM 05 or nearer, or a vent.
+  const closeIn = (v) => { const w = whereIs(v); return NEAR.has(w) || w === 'cam 05' || w === 'cam 02' || Boolean(IN_VENT[w]); };
+
+  function decide2() {
+    const f = facts(ctx.v);
+    const ai = ctx.v.cv('AI') ?? 7;
+    const ready = ctx.v.cv('play counter') === 7;
+    const plays = playsLeft(f.audio, ai);
+    if (f.maint !== 0 && f.rebooting === 0) return ['exit', (function* () { yield* tapNamed(ctx, 'exit text'); yield* hold(20); })()];
+    if (f.viewing === 0) return ['raise', raise()];
+    const where = f.where;
+    const pic = ctx.v.cv('pic random');
+    // 1. CAM 04, CAM 03, stage 1: pull him back to CAM 02 (g320-g322). Parked
+    // on CAM 02 while he is elsewhere, `pic random` still re-rolls (g459).
+    // With no play left the only move is a reboot: the mark still needs a
+    // roll above 2 at stage 1, and the lure then needs the audio.
+    const cam = ctx.v.cv('mon in');
+    if (NEAR.has(where)) {
+      if (ready && plays > 0) return [`lure 2 from ${where}`, lure(2)];
+      if (plays === 0 && f.rebooting === 0) return ['reboot audio', reboot('audio text')];
+      // Waiting out the play counter (g299): with `pic random` at 1, watch his
+      // own camera so it stays 1 for when the lure lands him on CAM 02
+      // (g246/g247, g459); at 0, stay off it so the 10 s tick can re-roll it.
+      if (pic === 1 && cam >= 1 && cam <= 10 && phantomSafe(ctx.v, cam)) {
+        if (f.toggle !== 0 || f.youIn !== cam) return [`hold coin ${cam}`, watch(cam)];
+        return null;
+      }
+      if (f.toggle !== 0 || f.youIn !== 2) return ['park 2', watch(2)];
+      return null;
+    }
+    // 2. Inside a vent: seal it and he goes back the way he came (g604-g613).
+    const inVent = IN_VENT[where];
+    const canSeal = f.going === 0 && f.charge === 0;
+    if (inVent && f.sealed !== inVent && canSeal) return [`seal ${inVent}`, seal(inVent)];
+    // 3. The vent beside him.
+    const want = SEAL_FOR[where];
+    if (want && f.sealed !== want && canSeal) return [`seal ${want}`, seal(want)];
+    if (!canSeal) return null;
+    // 4. No play left: reboot audio now, from anywhere short of CAM 04.
+    if (plays === 0 && f.rebooting === 0) return ['reboot audio', reboot('audio text')];
+    // 5. Other reboots only from CAM 08-10 with the vent beside him sealed,
+    // abandoned if he closes in while a play is still in hand.
+    const safe = FAR.has(where) && (!want || f.sealed === want);
+    if (safe && plays < 2 && f.rebooting === 0) return ['reboot audio', reboot('audio text', closeIn)];
+    if (safe && f.vent <= rebootAt && f.rebooting === 0) return ['reboot', reboot('ventilation text', closeIn)];
+    // 6. At CAM 02 with `pic random` at 1, park on him: that freezes the coin
+    // that sends his action 4 into sealed vent 15 (g246/g247, g459). At 0 his
+    // action 4 goes straight to stage 1: pull him to CAM 05 while a play stays
+    // in reserve, else stay off his camera so the coin can re-roll.
+    if (where === 'cam 02') {
+      if (pic === 1) {
+        if (f.toggle !== 0 || f.youIn !== 2) return ['park 2', watch(2)];
+        return null;
+      }
+      if (ready && plays >= 2) return ['lure 5 from cam 02', lure(5)];
+      if (f.toggle !== 1 || f.youIn < 11) return ['rest', rest()];
+      return null;
+    }
+    // 7. Otherwise as rev 1: hold `pic random` at 1 by watching his camera
+    // when that is phantom-safe, or rest on the vent map.
+    if (pic === 1 && !inVent && cam >= 1 && cam <= 10 && phantomSafe(ctx.v, cam)) {
+      if (f.toggle !== 0 || f.youIn !== cam) return [`watch ${cam}`, watch(cam)];
+      return null;
+    }
+    if (f.toggle !== 1 || f.youIn < 11) return ['rest', rest()];
+    return null;
+  }
+
   function decide() {
+    if (rev >= 2) return decide2();
     const f = facts(ctx.v);
     const pic = ctx.v.cv('pic random');
     if (f.maint !== 0 && f.rebooting === 0) return ['exit', (function* () { yield* tapNamed(ctx, 'exit text'); yield* hold(20); })()];
@@ -392,7 +527,7 @@ function guard({ run, knobs }) {
       if (s.f !== OFFICE) return [];
       ctx.v = view(s);
       const f = facts(ctx.v);
-      const key = JSON.stringify([f.where, f.sealed, f.going, f.viewing, f.toggle, f.vent, f.rebooting, f.hour, f.maint]);
+      const key = JSON.stringify([f.where, f.sealed, f.going, f.viewing, f.toggle, f.vent, f.rebooting, f.hour, f.maint, f.frozen, f.force]);
       if (key !== last || s.t % 600 === 0) { ctx.log({ ...f, task: taskName }); last = key; }
       if (!task) {
         const d = decide();
@@ -403,8 +538,8 @@ function guard({ run, knobs }) {
       if (r.done) { task = null; taskName = null; return r.value === true || r.value === false ? [] : (r.value ?? []); }
       return r.value ?? [];
     },
-    summary: () => ({ outcome }),
+    summary: () => { flush(); return { outcome }; },
   };
 }
 
-export const POLICIES = { survey, survey2, probe, guard };
+export const POLICIES = { survey, survey2, probe, guard, guard2: (o) => guard(o, 2) };

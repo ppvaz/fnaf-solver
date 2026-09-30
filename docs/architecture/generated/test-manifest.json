@@ -919,6 +919,24 @@
       }
     },
     {
+      "id": "packages/core/test/foxy-move-value2.test.js",
+      "lane": "test:unit",
+      "owner": "@sixam/core",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "packages/core/test/frame-time-hook.test.js",
       "lane": "test:unit",
       "owner": "@sixam/core",

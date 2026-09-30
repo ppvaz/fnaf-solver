@@ -181,10 +181,10 @@ index 950da8d..eb20377 100644
  inline int FrameObject::get_x()
 diff --git a/Chowdren/base/harness.h b/Chowdren/base/harness.h
 new file mode 100644
-index 0000000..2c07c96
+index 0000000..018d435
 --- /dev/null
 +++ b/Chowdren/base/harness.h
-@@ -0,0 +1,112 @@
+@@ -0,0 +1,116 @@
 +#ifndef CHOWDREN_HARNESS_H
 +#define CHOWDREN_HARNESS_H
 +
@@ -253,6 +253,10 @@ index 0000000..2c07c96
 +bool harness_active();
 +bool harness_fixed_step();
 +bool harness_skip_draw();
++// CHOWDREN_NO_DRAW for the whole run (not CHOWDREN_DRAW_FROM): nothing is ever
++// drawn, so image.cpp keeps a decoded image's alpha mask and frees its pixels
++// at load, as a drawn image's first upload does (harness_headless_images()).
++bool harness_headless_images();
 +bool harness_realtime();
 +// CHOWDREN_FRAME_TIMES=<file>: one timer delta in ms per line ('#' comments),
 +// line k for update k of the first visit to frame CHOWDREN_FRAME_TIMES_FRAME.
@@ -3588,10 +3592,10 @@ index 30eb23e..fbd2156 100644
          platform_sleep(t);
 diff --git a/Chowdren/base/harness.cpp b/Chowdren/base/harness.cpp
 new file mode 100644
-index 0000000..6d77b21
+index 0000000..d3f9e04
 --- /dev/null
 +++ b/Chowdren/base/harness.cpp
-@@ -0,0 +1,933 @@
+@@ -0,0 +1,967 @@
 +// Deterministic research harness for the build-296 recompile. See harness.h.
 +// Compiled once, included from run.cpp next to crashdump.cpp.
 +
@@ -3604,6 +3608,8 @@ index 0000000..6d77b21
 +#include <math.h>
 +#include <time.h>
 +#include <string>
++#include <map>
++#include <stdarg.h>
 +#ifndef _WIN32
 +#include <sys/types.h>
 +#include <sys/socket.h>
@@ -3840,6 +3846,7 @@ index 0000000..6d77b21
 +    return !h_drawing;
 +}
 +bool harness_realtime() { return h_realtime && h_drawing; }
++bool harness_headless_images() { return h_active && h_no_draw; }
 +
 +void harness_init()
 +{
@@ -4284,34 +4291,44 @@ index 0000000..6d77b21
 +    fputc('"', f);
 +}
 +
-+static void pilot_instance(FILE * f, FrameObject & obj, Layer & layer, Frame * fr)
++static void pilot_appendf(std::string & out, const char * fmt, ...)
 +{
-+    fprintf(f, "{\"x\":%d,\"y\":%d,\"v\":%d,\"fl\":%d", obj.x, obj.y, (obj.flags & VISIBLE) ? 1 : 0, obj.flags);
++    char buf[256];
++    va_list ap;
++    va_start(ap, fmt);
++    int n = vsnprintf(buf, sizeof buf, fmt, ap);
++    va_end(ap);
++    if (n > 0) out.append(buf, n < int(sizeof buf) ? n : int(sizeof buf) - 1);
++}
++
++static void pilot_instance(std::string & f, FrameObject & obj, Layer & layer, Frame * fr)
++{
++    pilot_appendf(f, "{\"x\":%d,\"y\":%d,\"v\":%d,\"fl\":%d", obj.x, obj.y, (obj.flags & VISIBLE) ? 1 : 0, obj.flags);
 +    // The instance's FixedValue as the event sheet stores it in an alterable
 +    // (a hitbox's value 0 names its target this way).
-+    fprintf(f, ",\"fx\":%.17g", double(obj.get_fixed()));
++    pilot_appendf(f, ",\"fx\":%.17g", double(obj.get_fixed()));
 +    if (obj.collision != NULL) {
 +        int * b = obj.collision->aabb;
-+        fprintf(f, ",\"c\":[%.1f,%.1f],\"box\":[%d,%d,%d,%d]",
++        pilot_appendf(f, ",\"c\":[%.1f,%.1f],\"box\":[%d,%d,%d,%d]",
 +                (b[0] + b[2]) * 0.5f + layer.off_x - fr->off_x, (b[1] + b[3]) * 0.5f + layer.off_y - fr->off_y,
 +                b[0], b[1], b[2], b[3]);
 +    }
 +    if (obj.id >= 0 && obj.id < int(sizeof h_active_types) && h_active_types[obj.id]) {
 +        Active * a = (Active *)&obj;
-+        fprintf(f, ",\"an\":%d,\"af\":%d,\"ad\":%d", a->current_animation, a->animation_frame, a->animation_direction);
++        pilot_appendf(f, ",\"an\":%d,\"af\":%d,\"ad\":%d", a->current_animation, a->animation_frame, a->animation_direction);
 +    }
 +    if (obj.id >= 0 && obj.id < int(sizeof h_counter_types) && h_counter_types[obj.id])
-+        fprintf(f, ",\"cv\":%.17g", ((Counter *)&obj)->value);
++        pilot_appendf(f, ",\"cv\":%.17g", ((Counter *)&obj)->value);
 +    if (obj.alterables) {
 +        int last = -1;
 +        for (int v = 0; v < ALT_VALUES; v++) if (double(obj.alterables->values.get(v)) != 0.0) last = v;
-+        fputs(",\"al\":[", f);
-+        for (int v = 0; v <= last; v++) fprintf(f, v ? ",%.17g" : "%.17g", double(obj.alterables->values.get(v)));
++        f += ",\"al\":[";
++        for (int v = 0; v <= last; v++) pilot_appendf(f, v ? ",%.17g" : "%.17g", double(obj.alterables->values.get(v)));
 +        int bits = 0;
 +        for (int b = 0; b < 32; b++) if (obj.alterables->flags.is_on(b)) bits |= (1 << b);
-+        fprintf(f, "],\"af32\":%d", bits);
++        pilot_appendf(f, "],\"af32\":%d", bits);
 +    }
-+    fputc('}', f);
++    f += '}';
 +}
 +
 +static void pilot_exchange(int frame_index)
@@ -4324,25 +4341,46 @@ index 0000000..6d77b21
 +            fusion_draws, fusion_graine, fr->off_x, fr->off_y);
 +    GlobalValues * g = manager.values;
 +    if (g) for (size_t i = 0; i < g->values.size(); i++) fprintf(f, i ? ",%.17g" : "%.17g", double(g->values[i]));
-+    fputs("],\"o\":{", f);
-+    for (size_t n = 0; n < h_pilot_names.size(); n++) {
-+        if (n) fputc(',', f);
-+        pilot_json_string(f, h_pilot_names[n]);
-+        fputs(":[", f);
-+        int count = 0;
-+        for (size_t li = 0; li < fr->layers.size(); li++) {
-+            Layer & layer = fr->layers[li];
-+            for (LayerInstances::iterator it = layer.instances.begin(); it != layer.instances.end(); ++it) {
-+                FrameObject & obj = *it;
-+                if (obj.flags & DESTROYING) continue;
-+                if (obj.get_name() != h_pilot_names[n]) continue;
-+                if (count >= h_pilot_max_instances) { count++; continue; }
-+                if (count) fputc(',', f);
-+                pilot_instance(f, obj, layer, fr);
-+                count++;
-+            }
++    // One pass over the instances, bucketed by watched name (the name index is
++    // built once). With CHOWDREN_PILOT_DELTA=1 a name is sent only when its
++    // serialisation changed since the last update, and in full on the first
++    // update of every frame visit; the controller keeps the rest.
++    static std::map<std::string, int> index;
++    static std::vector<std::string> prev;
++    static int prev_frame = -1, prev_visit_tick = -1;
++    static bool delta = env_int("CHOWDREN_PILOT_DELTA", 0) != 0;
++    if (index.empty()) for (size_t n = 0; n < h_pilot_names.size(); n++) index[h_pilot_names[n]] = int(n);
++    if (prev.size() != h_pilot_names.size()) prev.assign(h_pilot_names.size(), std::string("\x01"));
++    std::vector<std::string> cur(h_pilot_names.size());
++    std::vector<int> counts(h_pilot_names.size(), 0);
++    for (size_t li = 0; li < fr->layers.size(); li++) {
++        Layer & layer = fr->layers[li];
++        for (LayerInstances::iterator it = layer.instances.begin(); it != layer.instances.end(); ++it) {
++            FrameObject & obj = *it;
++            if (obj.flags & DESTROYING) continue;
++            std::map<std::string, int>::iterator hit = index.find(obj.get_name());
++            if (hit == index.end()) continue;
++            int n = hit->second;
++            if (counts[n] >= h_pilot_max_instances) { counts[n]++; continue; }
++            if (counts[n]) cur[n] += ',';
++            pilot_instance(cur[n], obj, layer, fr);
++            counts[n]++;
 +        }
++    }
++    bool full = !delta || frame_index != prev_frame || h_tick <= prev_visit_tick;
++    prev_frame = frame_index;
++    prev_visit_tick = h_tick;
++    fputs(delta ? (full ? "],\"full\":1,\"o\":{" : "],\"delta\":1,\"o\":{") : "],\"o\":{", f);
++    bool first = true;
++    for (size_t n = 0; n < h_pilot_names.size(); n++) {
++        if (!full && cur[n] == prev[n]) continue;
++        if (!first) fputc(',', f);
++        first = false;
++        pilot_json_string(f, h_pilot_names[n]);
++        fputc(':', f); fputc('[', f);
++        fputs(cur[n].c_str(), f);
 +        fputc(']', f);
++        prev[n].swap(cur[n]);
 +    }
 +    fputs("}}\n", f);
 +    fflush(f);
@@ -6389,3 +6427,71 @@ index a17e040..75dbc52 100644
 +        temp_path = cache_path + '.part'
 +        open(temp_path, 'wb').write(data)
 +        os.rename(temp_path, cache_path)
+diff --git a/Chowdren/base/image.cpp b/Chowdren/base/image.cpp
+index 42b29aa..23e0546 100644
+--- a/Chowdren/base/image.cpp
++++ b/Chowdren/base/image.cpp
+@@ -8,6 +8,7 @@
+ #include "chowconfig.h"
+ #include "types.h"
+ #include "mathcommon.h"
++#include "harness.h"
+ #include "assetfile.h"
+ #include "render.h"
+ 
+@@ -145,6 +146,43 @@ void Image::load()
+         image = NULL;
+     }
+     delete[] buf;
++    if (image != NULL && !(flags & KEEP) && harness_headless_images())
++        keep_alpha_only();
++}
++
++// A headless harness run (harness_headless_images) never draws, so the upload
++// that frees the decoded pixels never comes and every frame the night shows
++// stays resident: FNaF 4's Night 8 reached 1.57 GB. Keep what logic reads
++// -- the alpha mask upload_texture builds, which collisions and get_alpha
++// prefer over the pixels -- and free the rest. `tex` takes a sentinel, never a
++// GL name, so load() does not decode the image again; nothing draws it, and
++// deleting an unused name is a no-op in GL.
++void Image::keep_alpha_only()
++{
++#ifndef CHOWDREN_IS_WIIU
++    int size = width * height;
++    BaseBitArray::word_t * data;
++    data = (BaseBitArray::word_t*)malloc(GET_BITARRAY_SIZE(size));
++    int i = 0;
++    int ii = 0;
++    unsigned char c;
++    while (i < size) {
++        BaseBitArray::word_t word = 0;
++        for (BaseBitArray::word_t m = 1UL; m != 0UL; m <<= 1UL) {
++            c = ((unsigned char*)(((unsigned int*)image) + i))[3];
++            if (c != 0)
++                word |= m;
++            ++i;
++            if (i >= size)
++                break;
++        }
++        data[ii++] = word;
++    }
++    alpha.data = data;
++    stbi_image_free(image);
++    image = NULL;
++    tex = (Texture)-1;
++#endif
+ }
+ 
+ void Image::unload()
+diff --git a/Chowdren/base/image.h b/Chowdren/base/image.h
+index b4fb00c..3528ab4 100644
+--- a/Chowdren/base/image.h
++++ b/Chowdren/base/image.h
+@@ -58,6 +58,7 @@ public:
+     void draw(int x, int y, int src_x, int src_y, int w, int h, Color color);
+     bool is_valid();
+     void unload();
++    void keep_alpha_only();
+     void set_filter(bool linear);
+     void set_transparent_color(TransparentColor color);
+ 

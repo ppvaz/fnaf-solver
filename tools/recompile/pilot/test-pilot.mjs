@@ -10,7 +10,8 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SCHEMA, check, evidenceId, iniKeys, verdict } from './record.mjs';
-import { SEAL_FOR, LURE_TO, proxyOf, whereIs } from './fnaf3.mjs';
+import { SEAL_FOR, LURE_TO, proxyOf, whereIs, playsLeft, whatDayRare, doomStart } from './fnaf3.mjs';
+import { branchPoints, parseSeeds, progress, LEAD, BACKOFF } from './search.mjs';
 import { MARKERS, ACTORS, WATCH as WATCH4, places } from './fnaf4.mjs';
 import { GRAPH, LURE_FROM } from '../../../packages/core/src/mechanics/games/sim-fnaf3.js';
 
@@ -84,6 +85,32 @@ assert.equal(whereIs(v), 'cam 10');
 assert.equal(proxyOf(v, 'olivier_cameraHitboxA.Active', 'cam 10').index, 0);
 assert.equal(proxyOf(v, 'olivier_cameraHitboxA.Active', 'cam 09'), null, 'an off-window proxy is refused');
 ok('whereIs reads the radar dot; proxyOf matches FixedValue and refuses off-window proxies');
+
+// 4b. FNaF 3's audio budget (g301/g308: a play needs audio > -10 and takes
+// AI) and the what-day rare screen (its g2/g12). Seeds 0 and 557 were
+// observed NO_NIGHT in the harness on 2026-09-30 and seed 2 reached 6 AM.
+assert.deepEqual([playsLeft(0, 7), playsLeft(-7, 7), playsLeft(-3, 7), playsLeft(-10, 7), playsLeft(0, 4)], [2, 1, 1, 0, 3]);
+ok('playsLeft: two plays from a fresh audio at AI 7, the second breaking it');
+let rare = 0;
+for (let seed = 0; seed < 65536; seed += 1) if (whatDayRare(seed)) rare += 1;
+assert.equal(rare, 66);
+assert.ok(whatDayRare(0) && whatDayRare(557) && !whatDayRare(2) && !whatDayRare(24850));
+ok('whatDayRare: 66 of 65,536 seeds send what-day to the rare screen, 0 and 557 among them');
+
+// 4c. The search's branch points: task starts before the chain, latest first,
+// never inside it or before the base's own branch; FNaF 3's chain starts on an
+// attack stage, a GOT YOU marker, or inside vent 14 or 15.
+assert.deepEqual(parseSeeds('1-3,7'), [1, 2, 3, 7]);
+assert.throws(() => parseSeeds('5-2'));
+assert.equal(doomStart([{ t: 10, where: 'cam 05' }, { t: 20, where: 'cam 15' }, { t: 30, where: 'attack stage 1' }]), 20);
+assert.equal(doomStart([{ t: 10, where: 'cam 04' }, { t: 12, start: 'lure' }]), null);
+const pts = branchPoints(9000, [5000, 6600, 6700, 8990], 1000, 6705);
+assert.ok(pts.every((t) => t <= 6705 - LEAD && t > 1000), 'no branch inside the chain or before the floor');
+assert.deepEqual(pts, [6600, 6345, 6045, 5445, 5000, 4245, 1845], 'task starts and backoff steps, merged, latest first');
+assert.equal(branchPoints(9000, [], 0, null)[0], 9000 - 30 - BACKOFF[0]);
+assert.equal(progress({ doom: 6705, death: 7725 }), 6705);
+assert.equal(progress({ doom: null, death: 7725 }), 7725);
+ok('search: branch points precede the chain; doomStart finds the chain; progress is the chain start');
 
 // 5. FNaF 4's map reader: every marker and actor it reads is watched, and an
 // actor is placed on the marker its box overlaps.

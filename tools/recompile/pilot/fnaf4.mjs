@@ -296,14 +296,37 @@ export function facts4(v) {
     bTag: al('Bonnie', 5), cTag: al('Chica', 5), bDwell: al('Bonnie', 6), cDwell: al('Chica', 6),
     bBed: al('Bonnie', 7), cBed: al('Chica', 7), foxy: al('foxy', 2), foxyGot: v.cv('foxy got you'),
     fbHall: al('Fredbear', 19), fbBed: al('Fredbear', 6), fbIdle: al('Fredbear', 12), fbView: Math.max(al('Fredbear', 8), al('Fredbear', 9)),
-    idle: al('Fredbear', 13), flash: al('black flash', 3), fbAV4: al('Fredbear', 4), fbAV7: al('Fredbear', 7), lds: v.cv('left door shut'), rds: v.cv('right door shut'), gameover: v.cv('gameover'),
+    idle: al('Fredbear', 13), freddyAI: v.cv('Freddy AI') ?? 0, flash: al('black flash', 3), fbAV4: al('Fredbear', 4), fbAV7: al('Fredbear', 7), lds: v.cv('left door shut'), rds: v.cv('right door shut'), gameover: v.cv('gameover'),
   };
 }
 
-function warden({ run, knobs }) {
+/**
+ * `rev` 1 is the warden the committed records name; `warden2` (rev 2) fixes
+ * the two deaths of its 300-seed development block (seeds 0-299, 57 lost):
+ * - 53 were a near occupant never shut out: with Foxy far in the same hall the
+ *   flash branch came first, and a flash with the occupant near returns at
+ *   once, so the door was never shut and the dwell ran to the black flash
+ *   (g468). Rev 2 shuts the door on a near occupant first.
+ * - 4 walked to the bed with the Freddy counter at 60 or more, which ends the
+ *   night at the bed (g427/g428). The bed was blocked because Chica's dwell,
+ *   once 20 or more, survives her leaving the hall (g478 resets only below 20)
+ *   and clears only while her hall is viewed (g481). Rev 2 views a hall whose
+ *   occupant has gone but whose dwell stands, unblocks the bed before Freddy
+ *   gets close, and never starts the walk to the bed at a count one Freddy
+ *   tick (g397) could carry past 59.
+ */
+function warden({ run, knobs }, rev = 1) {
   const out = join(run, 'warden.jsonl');
   writeFileSync(out, '');
-  const ctx = { v: null, log: (o) => appendFileSync(out, JSON.stringify({ t: ctx.v?.tick, ...o }) + '\n') };
+  // knobs.quiet keeps the last 200 records in memory and writes them when the
+  // night ends, for batch runs over many seeds.
+  const ring = [];
+  const ctx = { v: null, log: (o) => {
+    const line = JSON.stringify({ t: ctx.v?.tick, ...o });
+    if (!knobs.quiet) appendFileSync(out, line + '\n');
+    else { ring.push(line); if (ring.length > 200) ring.shift(); }
+  } };
+  const flush = () => { if (knobs.quiet && ring.length) { appendFileSync(out, ring.join('\n') + '\n'); ring.length = 0; } };
   const menu = knobs.challenges ? menuChallenges(knobs.challenges) : menuNight8();
   let loggedLevel = false;
   let task = null, taskName = null, last = null, outcome = null;
@@ -390,6 +413,16 @@ function warden({ run, knobs }) {
       && (v.cv('Freddy counter') ?? 0) < (knobs.bedUrgent ?? 42) + 2, 600);
   }
   function* listen(side) { yield* door(side); yield* hold(10); }
+  // View a hall whose occupant has left while its dwell stands (g481/g485
+  // zero it while the hall is viewed); a near occupant ends the hold, since
+  // a light on a near occupant is a jumpscare (g345/g346).
+  function* clearHall(side) {
+    yield* door(side);
+    const who = side === 'left' ? 'Bonnie' : 'Chica';
+    const near = side === 'left' ? 'left hall near' : 'right hall near';
+    const dwell = (v) => (side === 'left' ? facts4(v).bDwell : facts4(v).cDwell);
+    yield* holdZone(ctx, FLASH, (v) => dwell(v) > 0 && places(v)[who] !== near && !Object.values(places(v)).includes(near), 12);
+  }
 
   function decide() {
     const f = facts4(ctx.v);
@@ -411,6 +444,35 @@ function warden({ run, knobs }) {
       if (p === `living room ${side}`) return 1;
       return 0;
     };
+    const dwell = { left: f.bDwell, right: f.cDwell };
+    if (rev >= 2) {
+      // Local work first, at the door we stand at: shut out a near occupant
+      // (g342/g344), flash a far one (g84/g135, g83/g134), and view a hall
+      // whose dwell outlived its occupant (g478/g481).
+      if (here) {
+        const w = at[who[here]];
+        const nearHere = Object.values(at).includes(`${here} hall near`);
+        if (w === `${here} hall near`) { if (nearOK(here)) return [`dismiss ${here}`, dismiss(here)]; }
+        else if (!nearHere && (w === `${here} hall far` || at.foxy === `${here} hall far`)) return [`flash ${here}`, flashAt(here)];
+        else if (!nearHere && dwell[here] > 0 && w !== `${here} hall far`) return [`clear ${here}`, clearHall(here)];
+      }
+      const foxyIn2 = at.foxy === 'in closet';
+      // g397 adds Freddy AI every 4 s off the bed, and the walk to the bed is
+      // under 4 s, so at most one tick lands before arrival.
+      const bedMax = 59 - Math.max(f.freddyAI, 1);
+      const walkable = f.freddy <= bedMax;
+      if (f.freddy >= (knobs.bedUrgent ?? 42) && bedSafe && walkable) return ['bed', drainFreddy()];
+      if (f.foxy >= (knobs.foxyUrgent ?? 8) && foxyIn2) return ['closet', serviceCloset()];
+      if (f.freddy >= bedAt && bedSafe && walkable) return ['bed', drainFreddy()];
+      // The bed is blocked by a dwell: go and clear the side that blocks it.
+      if (f.freddy >= bedAt && !bedSafe && walkable) {
+        const side = f.cDwell > 9 ? 'right' : 'left';
+        if (here !== side) return [`unblock ${side}`, door(side)];
+      }
+      if (f.foxy >= foxyAt && foxyIn2) return ['closet', serviceCloset()];
+      const target2 = here ? other(here) : (threat('right') > threat('left') ? 'right' : 'left');
+      return [`go ${target2}`, door(target2)];
+    }
     // Local work first, at the door we stand at: flash a far occupant
     // (g84/g135, g83/g134), dismiss a near one (g342/g344).
     if (here) {
@@ -483,8 +545,8 @@ function warden({ run, knobs }) {
       if (r.done) { task = null; taskName = null; return []; }
       return r.value ?? [];
     },
-    summary: () => ({ outcome }),
+    summary: () => { flush(); return { outcome }; },
   };
 }
 
-export const POLICIES = { nav, survey, survey2, warden };
+export const POLICIES = { nav, survey, survey2, warden, warden2: (o) => warden(o, 2) };
