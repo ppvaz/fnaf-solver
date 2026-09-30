@@ -7,6 +7,13 @@ import * as C from '@sixam/source/fnaf2';
 // at 0.8x would teach the wrong intervals. Difficulty is reduced by removing
 // controls and threats instead, never by distorting the clock.
 
+/**
+ * One step of a lesson's pattern, `at` seconds after its anchor.
+ * @typedef {{id: string, at: number, label: string, action: string, want?: string, cam?: number,
+ *   hold?: number, win?: {early: number, late: number}}} Step
+ */
+/** @param {string} id @param {number} at @param {string} label @param {string} action
+ *  @param {Partial<Step>} [extra] @returns {Step} */
 const S = (id, at, label, action, extra = {}) => ({ id, at, label, action, ...extra });
 
 // the three-camera sweep, offset from wherever it starts
@@ -16,18 +23,54 @@ const sweep = (t0) => [
   S('cam-7', t0 + 0.40, 'CAM 07, then LIGHT', 'camflash', { cam: 7 }),
 ];
 
-// A step's measured window belongs to the canonical geometry, so only scripts
-// that reproduce it may carry one. Lesson 4's office half is CYCLE_SCRIPT's
-// office half at the same offsets, so it does; the sweep drills sit at a
-// different point in the 5 s interval and Phase A has no mask before its hall
-// flash, so neither does.
-const withWindows = (steps) => steps.map(st =>
-  C.STEP_WINDOWS[st.id] ? { ...st, win: C.STEP_WINDOWS[st.id] } : st);
+// The Minus 7 pass this trainer teaches, in seconds from the :X2 / :X7 anchor.
+//
+// Until 2026-09-30 the trainer taught Source's CYCLE_SCRIPT, whose mask-off
+// came 9 frames after mask-on and whose hall flash 4 frames after that. Since
+// 3d5c5f7 (2026-09-27) the Sim answers the mask only at rest and every other
+// control only once the mask is fully off, so a player who hit both on time
+// had both refused, the mask stayed on, and the rest of the pass was refused
+// behind it (the same gap broke the Minus 7 policy baseline:
+// docs/evidence/policy-baseline-mask-animation-20260927.json, MODEL_ONLY).
+//
+// So each gap the Sim gates on an animation is that animation's SOURCED length
+// plus two frames (33 ms), the least margin test-seam-slack.mjs lets a device
+// plan clear a floor by: a cue on the floor itself is refused one frame early.
+// The ungated gaps keep CYCLE_SCRIPT's spacing. apps/trainer/test/
+// lessons.test.mjs plays every lesson through the Sim and fails on a refusal.
+//
+// CYCLE_SCRIPT's per-step windows (C.STEP_WINDOWS) were measured on the old
+// geometry, so no step here carries one: how late each step can be before the
+// night is lost is UNKNOWN for this timing, and grading uses the lesson's own
+// tolerance.
+const frames = n => n / C.FPS;
+const SLACK = 2;
+const MASK_ON = 0.20;
+const MASK_OFF = MASK_ON + frames(C.MASK_ANIM_ON + SLACK);   // the mask is fully on
+const HALL = MASK_OFF + frames(C.MASK_ANIM_OFF + SLACK);     // the mask is fully off
+const RAISE = HALL + frames(11);                              // CYCLE_SCRIPT's 0.18 s
+const SWEEP = RAISE + frames(C.MONITOR_ANIM_UP + SLACK);     // the monitor is fully up
+const HOME = SWEEP + 0.60;                                    // three cameras, 0.2 s apart
+const WIND = HOME + 0.10;
+const ms3 = x => Math.round(x * 1000) / 1000;
+
+/** @param {Parameters<typeof S>} args */
+const F = (...args) => Object.freeze(S(...args));
+export const MINUS7_CYCLE = Object.freeze([
+  F('monitor-down', 0, 'Cams down', 'monitor', { want: 'down' }),
+  F('mask-on', ms3(MASK_ON), 'Mask on', 'mask', { want: 'on' }),
+  F('mask-off', ms3(MASK_OFF), 'Mask off', 'mask', { want: 'off' }),
+  F('flash-hall', ms3(HALL), 'Flash hall', 'light', { want: 'tap' }),
+  F('monitor-up', ms3(RAISE), 'Cams up', 'monitor', { want: 'up' }),
+  F('cam-10', ms3(SWEEP), 'CAM 10 + light', 'camflash', { cam: 10 }),
+  F('cam-4', ms3(SWEEP + 0.2), 'CAM 04 + light', 'camflash', { cam: 4 }),
+  F('cam-7', ms3(SWEEP + 0.4), 'CAM 07 + light', 'camflash', { cam: 7 }),
+  F('cam-11', ms3(HOME), 'CAM 11', 'cam', { cam: 11 }),
+  F('wind', ms3(WIND), 'Hold WIND', 'wind', { want: 'on', hold: ms3(5 - WIND) }),
+]);
 
 // Early lessons are graded loosely: you are learning where the buttons are,
-// not shaving milliseconds. The last lessons use the real tolerances. A window
-// still caps that looseness -- a drill may forgive, but never past the point
-// where the model says the night ends.
+// not shaving milliseconds. The last lessons use firmer tolerances.
 const EASY = { tolGood: 0.30, tolOk: 0.55 };
 const FIRM = { tolGood: 0.22, tolOk: 0.45 };
 
@@ -48,6 +91,9 @@ const PHASE_A_SCRIPT = [
   S('drop-for-bb', 2.60, 'Cams DOWN for BB', 'monitor', { want: 'down' }),
   S('back-up', 3.30, 'Cams back up', 'monitor', { want: 'up' }),
 ];
+
+// Long enough that a drill never ends by reaching 6 AM.
+export const LESSON_FRAMES = C.NIGHT_FRAMES * 10;
 
 const INERT = {
   bbEnabled: false, foxyEnabled: false, gfEnabled: false, boxEnabled: false,
@@ -107,15 +153,10 @@ export const LESSONS = [
     teach: 'The other half of the cycle, and the OTHER light — the office flashlight. Golden Freddy ' +
            'gets a coin flip every 5 seconds while your cams are up, so the mask flick is not optional, ' +
            'and it must come BEFORE the flash: flashing the hall with him in the office kills you. ' +
-           'The flash then resets Foxy.',
+           'The flash then resets Foxy. The mask answers only when it has stopped moving: take it off ' +
+           'once it is fully on, and flash once it is fully off. A touch while it moves is refused.',
     controls: ['light', 'mask', 'monitor'],
-    script: withWindows([
-      S('monitor-down', 0.00, 'Cams down', 'monitor', { want: 'down' }),
-      S('mask-on', 0.20, 'Mask on', 'mask'),
-      S('mask-off', 0.35, 'Mask off', 'mask'),
-      S('flash-hall', 0.42, 'Flash the hall', 'light'),
-      S('monitor-up', 0.60, 'Cams up', 'monitor', { want: 'up' }),
-    ]),
+    script: MINUS7_CYCLE.slice(0, 5),
     sim: { ...INERT, foxyEnabled: true, gfEnabled: true },
     start: { monitor: 'up' },
     tol: EASY, target: 8,
@@ -125,10 +166,10 @@ export const LESSONS = [
     when: 'The whole thing repeats on :X2 and :X7 — one pass every 5 seconds.',
     title: 'The whole cycle',
     goal: 'Both halves together, every 5 seconds.',
-    teach: 'Now assemble it: down, mask, flash, up, sweep, home, wind. Ten inputs in about 1.5 seconds, ' +
-           'then three and a half seconds of winding to breathe. Nothing here can kill you yet.',
+    teach: 'Now assemble it: down, mask, flash, up, sweep, home, wind. Ten inputs in under two seconds, ' +
+           'then about three seconds of winding to breathe. Nothing here can kill you yet.',
     controls: ['light', 'camlight', 'mask', 'monitor', 'cams', 'wind'],
-    script: C.CYCLE_SCRIPT,
+    script: MINUS7_CYCLE,
     sim: { bbEnabled: false, lethal: false },
     start: { monitor: 'up', cam: 11 },
     tol: FIRM, target: 10,
@@ -141,7 +182,7 @@ export const LESSONS = [
     teach: 'Identical inputs, real consequences. If the STUN bars lapse the animatronics walk. ' +
            'If Foxy’s D climbs past 3 at a 5-second check he locks on. Still no Balloon Boy.',
     controls: ['light', 'camlight', 'mask', 'monitor', 'cams', 'wind'],
-    script: C.CYCLE_SCRIPT,
+    script: MINUS7_CYCLE,
     sim: { bbEnabled: false },
     start: { monitor: 'up', cam: 11 },
     tol: FIRM, target: 12,
@@ -189,7 +230,7 @@ export const LESSONS = [
     teach: 'Everything you have drilled, for 420 seconds. The report afterwards shows exactly which ' +
            'camera lapsed and when.',
     controls: ['light', 'camlight', 'mask', 'monitor', 'cams', 'wind', 'vents'],
-    script: C.CYCLE_SCRIPT,
+    script: MINUS7_CYCLE,
     sim: {},
     start: { monitor: 'up', cam: 11 },
     target: 1,
@@ -203,7 +244,7 @@ export const LESSONS = [
     teach: 'BB moves every time and never leaves early. If you can clear this you can clear anything — ' +
            'this is the run that proves Minus 7 has no unwinnable RNG.',
     controls: ['light', 'camlight', 'mask', 'monitor', 'cams', 'wind', 'vents'],
-    script: C.CYCLE_SCRIPT,
+    script: MINUS7_CYCLE,
     sim: { worst: true },
     start: { monitor: 'up', cam: 11 },
     target: 1,
@@ -212,6 +253,26 @@ export const LESSONS = [
 ];
 
 export const byId = (id) => LESSONS.find(l => l.id === id);
+
+/**
+ * The Sim a lesson starts on: its options, and its opening state. The app and
+ * the lesson tests both start lessons here.
+ * @param {typeof LESSONS[number]} lesson @param {object} [options] extra Sim options
+ */
+export function lessonSim(lesson, options = {}) {
+  const sim = new C.Sim({ android: true, record: true, ...lesson.sim,
+    ...(lesson.fullNight ? {} : { durationFrames: LESSON_FRAMES }), ...options });
+  if (lesson.start) {
+    Object.assign(sim, lesson.start);
+    // Lesson fixtures predate the sourced viewing/marker split. Their one
+    // `cam` value describes a normal, synchronized cameras-up state.
+    if (lesson.start.cam && lesson.start.monitor === 'up') {
+      sim.viewing = sim.lastViewed = lesson.start.cam;
+      sim.hasViewedCamera = true;
+    }
+  }
+  return sim;
+}
 
 const KEY = 'm7.progress';
 

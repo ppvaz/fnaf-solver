@@ -168,6 +168,7 @@
     {
       "file": "apps/trainer/src/coach.js",
       "imports": [
+        "./curriculum.js",
         "@sixam/source/fnaf2"
       ]
     },
@@ -302,6 +303,15 @@
         "node:fs",
         "node:os",
         "node:path"
+      ]
+    },
+    {
+      "file": "apps/trainer/test/lessons.test.mjs",
+      "imports": [
+        "../src/coach.js",
+        "../src/curriculum.js",
+        "@sixam/source/fnaf2",
+        "node:assert/strict"
       ]
     },
     {

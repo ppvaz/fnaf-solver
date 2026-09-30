@@ -7,10 +7,9 @@ import { bindInputs, keepAwake, goFullscreen, isFullscreen, buzz } from './input
 import { drawTimeline, buildSummary, fmtTime } from './report.js';
 import { sweepPattern } from './lane.js';
 import * as Assets from './assets.js';
-import { LESSONS, byId, loadProgress, saveProgress, markPassed, recordCombo, unlockedIndex } from './curriculum.js';
+import { LESSONS, LESSON_FRAMES, MINUS7_CYCLE, byId, lessonSim, loadProgress, saveProgress, markPassed,
+  recordCombo, unlockedIndex } from './curriculum.js';
 import { ArcadeLab } from './arcade-ui.js';
-
-const HUGE = C.NIGHT_FRAMES * 10;
 
 // The brief's "ON SCREEN" row: what a lesson's `controls` list looks like to
 // the player, colour-coded the same way the rhythm lane codes those inputs.
@@ -171,7 +170,7 @@ class App {
     this.sim = new Sim({
       bbEnabled: false, foxyEnabled: false, gfEnabled: false, boxEnabled: false,
       stalledEnabled: false, powerEnabled: false, lethal: false, record: false,
-      durationFrames: HUGE,
+      durationFrames: LESSON_FRAMES,
     });
     this.coach = null;
     this.sim.monitor = 'up';
@@ -206,14 +205,13 @@ class App {
       : l.drill === 'phaseB' ? `beat ${l.duelTarget * 1000 | 0} ms on ${l.target} attacks`
       : `${l.target} clean passes in a row`;
     const tol = l.tol ? ` · graded ±${l.tol.tolGood * 1000 | 0} ms GOOD / ±${l.tol.tolOk * 1000 | 0} ms OK` : '';
-    // A lesson's tolerance is a ceiling: steps with a measured window are held
-    // to it instead, so say so rather than letting the header read as a promise.
-    const tight = (l.script || []).some(st => st.win &&
-      (C.stepTol(st, l.tol?.tolGood, l.tol?.tolOk).okLate < (l.tol?.tolOk ?? C.TOL_OK) ||
-       C.stepTol(st, l.tol?.tolGood, l.tol?.tolOk).okEarly < (l.tol?.tolOk ?? C.TOL_OK)));
-    const tightNote = tight ? ' · tighter on the steps that need it' : '';
+    // The tolerance is a practice tolerance. For a lesson that can end the
+    // night, say that the model's own per-step margin is not known for this
+    // timing, rather than let the header read as a promise.
+    const margins = l.script && l.sim.lethal !== false
+      ? ' · how late each step can be before the night is lost: UNKNOWN, unmeasured for this timing' : '';
     document.getElementById('brief-pass').textContent =
-      `PASS — ${need}${tol}${tightNote} · never slowed down`;
+      `PASS — ${need}${tol} · never slowed down${margins}`;
     document.getElementById('brief-controls').innerHTML =
       (l.controls || ALL_CONTROLS).map(c => {
         const d = CONTROL_CHIPS[c];
@@ -239,17 +237,7 @@ class App {
     this.audio.unlock();
     this.audio.enabled = this.settings.sound;
     await Assets.loadInto(this.audio).catch(() => {});
-    this.sim = new Sim(Object.assign({ android: true, record: true }, mode.sim,
-      mode.fullNight ? {} : { durationFrames: HUGE }));
-    if (mode.start) {
-      Object.assign(this.sim, mode.start);
-      // Lesson fixtures predate the sourced viewing/marker split. Their one
-      // `cam` value describes a normal, synchronized cameras-up state.
-      if (mode.start.cam && mode.start.monitor === 'up') {
-        this.sim.viewing = this.sim.lastViewed = mode.start.cam;
-        this.sim.hasViewedCamera = true;
-      }
-    }
+    this.sim = lessonSim(mode);
     const coached = !!mode.script;
     this.coach = new Coach(this.sim, {
       enabled: coached,
@@ -592,6 +580,30 @@ function renderReport(sum, sim, duel, modeKey) {
   requestAnimationFrame(() => drawTimeline(document.getElementById('rep-canvas'), sim));
 }
 
+// The strategy board's pass, drawn from the cycle the lessons teach so the two
+// cannot disagree (until 2026-09-30 the board was typed out by hand).
+const PASS_KIND = { monitor: '', mask: 'k-mask', light: 'k-light', camflash: 'k-cam', cam: 'k-wind', wind: 'k-hold' };
+function passWhat(st) {
+  const cam = String(st.cam).padStart(2, '0');
+  switch (st.action) {
+    case 'monitor': return `CAMS ${st.want === 'down' ? '▼' : '▲'}`;
+    case 'mask': return `MASK ${st.want === 'on' ? '▲' : '▼'}`;
+    case 'light': return 'FLASH HALL';
+    case 'camflash': return `CAM ${cam} + LIGHT`;
+    case 'cam': return `CAM ${cam}`;
+    default: return 'HOLD WIND';
+  }
+}
+function renderPassBoard() {
+  const wind = MINUS7_CYCLE[MINUS7_CYCLE.length - 1];
+  document.getElementById('pass-title').textContent =
+    `THE PASS — TEN INPUTS IN ${wind.at.toFixed(1)} S, THEN WIND`;
+  document.getElementById('pass-steps').innerHTML = MINUS7_CYCLE.map((st, i) =>
+    `<div class="pass-step ${PASS_KIND[st.action]}"><span class="at">+${st.at.toFixed(2)}${
+      st.hold ? ` &rarr; +${(st.at + st.hold).toFixed(1)}` : ''}</span><span class="what">${i + 1} &middot; ${
+      passWhat(st)}</span></div>`).join('');
+}
+
 // ------------------------------------------------------------------- shell
 function showPanel(id) {
   for (const p of document.querySelectorAll('.panel')) p.classList.toggle('shown', p.id === id);
@@ -638,5 +650,6 @@ function buildMenu() {
 }
 
 buildMenu();
+renderPassBoard();
 window.app = new App();
 showPanel('menu');

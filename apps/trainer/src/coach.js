@@ -1,4 +1,5 @@
 import * as C from '@sixam/source/fnaf2';
+import { MINUS7_CYCLE } from './curriculum.js';
 
 // Whether the game took a press. A send is not game acceptance (CLAUDE.md):
 // the Sim refuses a press without a word -- the mask while it is still
@@ -59,7 +60,7 @@ export function playPress(sim, coach, act) {
 export class Coach {
   constructor(sim, opts = {}) {
     this.sim = sim;
-    this.script = opts.script || C.CYCLE_SCRIPT;
+    this.script = opts.script || MINUS7_CYCLE;
     this.enabled = opts.enabled !== false;
     this.anchorDigits = opts.anchorDigits || [2, 7];
     this.tolGood = opts.tolGood ?? C.TOL_GOOD;
