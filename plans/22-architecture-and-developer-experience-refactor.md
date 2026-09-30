@@ -251,10 +251,14 @@ fnaf2-1020/                     (amended 2026-09-29: ADR 0002 contexts in bracke
     propose/                    @sixam/propose   [propose] since 2026-09-30 (migration M8)
       src/policy/              the policy IR, observation language and ports
       src/games/               FNaF 2's controllers and cycle machinery; FNaF 1/3/4 policies
-      test/                    the cycle library, planner, controller and night policy
+      src/strategies/          Minus 3, Minus Toys, right-vent camp
+      src/experiment/          experiment.js, seeds.js, families/, cli.js (npm run research)
+      experiments/             the named experiment specs
+      parked/minus7/           Minus 7, kept on purpose
+      test/                    cycle, night-policy, experiment and alias tests
 
-    research/                   @sixam/research  [propose]
-      src/                      experiment.js, seeds.js, families/, strategies/, cli.js
+    research/                   @sixam/research  compatibility shim: seeds.js and
+                                strategies/minus-3.js re-export propose for hash-bound tools
 
     review/                     @sixam/review    [review]
       src/                      run packs, Plan 12 attestation and promotion, cohorts,
@@ -310,10 +314,11 @@ kernel <- source <- play <- propose -> review -> source
   `/control` subpath is a registered shim that may re-export propose.
 - `adapters` depend on core. `apps/device` is the one composition root that
   plays a night; it composes the adapters and a resolved profile.
-- `propose` imports the kernel, source, core's Play modules and review, never
-  the device shell. `research` may use source and explicit simulation and
-  error models, but never `apps/device`, `tools/device` or a live shell
-  (`child_process`, `net`, `dgram`).
+- `propose` imports the kernel, source, core's Play modules and review, and
+  explicit simulation and error models, but never `apps/device`,
+  `packages/adapters`, `tools/` or a live shell (`child_process`, `net`,
+  `dgram`). `research` is its compatibility shim: its registered modules only
+  re-export propose.
 - `review` imports core and the kernel and never `apps/device`,
   `packages/adapters`, `packages/propose` or `packages/research`. It still reaches
   `tools/device/bundle.mjs` to compile a committed winner to its bundle hash;

@@ -1,6 +1,6 @@
 import * as C from '@sixam/source/fnaf2';
 import { Sim, Rng } from '@sixam/source/fnaf2';
-import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '../../seeds.js';
+import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '../../src/experiment/seeds.js';
 import { CYCLE, routeFor } from './route.js';
 
 const W = C.MO_FRAMES;

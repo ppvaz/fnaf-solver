@@ -1,7 +1,7 @@
 import * as C from '@sixam/source/fnaf2';
 import { Sim, Rng } from '@sixam/source/fnaf2';
 import { stableHash } from '@sixam/kernel/contracts';
-import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '../../seeds.js';
+import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '../../experiment/seeds.js';
 import { CYCLE, LEGACY_LOOP, LEGACY_SETUP, fifthBoundary, routeFor } from './route.js';
 
 const JITTER_SALT = 0x6d32746f; // "m2to"; separate from the simulator RNG.

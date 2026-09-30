@@ -4,7 +4,7 @@ ADR 0002's rule, `kernel <- source <- play <- propose -> review -> source`, in
 today's package names:
 
 ```text
-kernel <-- source <-- core, adapters, apps/device (play) <-- propose (+ research)
+kernel <-- source <-- core, adapters, apps/device (play) <-- propose (research: its shim)
               ^                                                   |
               |                                                   v
               +------------------------------------------- review (review)
@@ -28,8 +28,9 @@ an arrow points at what a package imports; review never imports play or propose
 - **propose** imports the kernel, source, core's Play modules and review, and
   never the device shell (`apps/device`, `packages/adapters`, `tools/`,
   `child_process`, `net`, `dgram`). Nothing imports propose except the
-  applications and the registered shims. **research** uses source and explicit
-  simulation models, never the device shell.
+  applications and the registered shims. **research** is an empty
+  compatibility shim: its two registered modules only re-export propose, for
+  the engine-source files a bundle hashes.
 - **review** uses the kernel, source and core and never `apps/device`,
   `packages/adapters`, `packages/propose` or `packages/research`. One edge is
   still open: it compiles a committed winner through `tools/device/bundle.mjs`

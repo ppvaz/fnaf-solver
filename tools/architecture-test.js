@@ -188,7 +188,8 @@ function landing(from, specifier) {
  * One rule per guarded area. `scope` picks the files, `refuse(reference, path)`
  * a reference that crosses the boundary. ADR 0002: `kernel <- source <- play <-
  * propose -> review -> source`; in today's names review is packages/review,
- * propose is packages/propose, source is packages/source, and play is
+ * propose is packages/propose (packages/research is an empty compatibility
+ * shim over it), source is packages/source, and play is
  * apps/device, packages/adapters and what is left of packages/core (sensing,
  * estimation, the phase clock and training, which import source and the
  * kernel).
@@ -202,7 +203,7 @@ function landing(from, specifier) {
 const legacyCatalog = JSON.parse(await readFile(join(ROOT, 'docs/architecture/generated/legacy-paths.json'), 'utf8'));
 const PROPOSE_SHIMS = new Set((legacyCatalog.entries ?? [])
   .filter(entry => entry.lifecycle === 'compatibility' && entry.owner === '@sixam/propose')
-  .map(entry => entry.path.split('#', 1)[0]));
+  .map(entry => entry.path.split('#', 1)[0]).filter(path => path.startsWith('packages/')));
 /** A registered propose shim re-exporting propose. @param {{unit: string, form: string}} ref @param {string} path */
 const shimReexport = (ref, path) => PROPOSE_SHIMS.has(path) && ref.form === 're-export' && ref.unit === 'packages/propose';
 // Core's play modules, which propose may read. `@sixam/core` and its control
@@ -254,10 +255,9 @@ const RULES = [
     why: 'nothing imports propose except the applications (ADR 0002); a compatibility shim owned by @sixam/propose in legacy-paths.json may re-export it',
   },
   {
-    id: 'research', scope: path => path.startsWith('packages/research/src/'),
-    refuse: ref => ref.unit === 'UNRESOLVED' || ref.unit === 'apps/device' || Boolean(ref.target?.startsWith('tools/device/')) ||
-      DEVICE_SHELL.includes(ref.target ?? ''),
-    why: 'research never reaches the device shell: no apps/device, tools/device, child_process, net or dgram',
+    id: 'research', scope: path => path.startsWith('packages/research/'),
+    refuse: (ref, path) => !shimReexport(ref, path),
+    why: 'research is a compatibility shim since M8: each of its modules is registered in legacy-paths.json and only re-exports @sixam/propose',
   },
   {
     id: 'review', scope: path => path.startsWith('packages/review/'),
@@ -365,6 +365,12 @@ assert.deepEqual(planted('packages/core/src/control/index.js', "export * from '@
   'the registered @sixam/core/control shim may re-export propose');
 assert.deepEqual(planted('packages/core/src/control/index.js', "import { NightPolicy } from '@sixam/propose/fnaf2';"),
   ['core', 'propose-importers'], 'a registered shim may re-export propose, not import it');
+assert.deepEqual(planted('packages/research/seeds.js', "export * from '@sixam/propose/seeds';"), [],
+  'the registered @sixam/research/seeds shim may re-export propose');
+assert.deepEqual(planted('packages/research/planted.js', "export * from '@sixam/propose/seeds';"),
+  ['propose-importers', 'research'], 'an unregistered research module must not re-export propose');
+assert.deepEqual(planted('packages/research/seeds.js', "import { GOLDEN_MODEL_SEEDS } from '@sixam/propose/seeds';"),
+  ['propose-importers', 'research'], 'the research shim may re-export propose, not import it');
 assert.deepEqual(planted('packages/adapters/src/planted.js', "import { NightPolicy } from '@sixam/propose';"),
   ['propose-importers'], 'play must not import propose');
 assert.deepEqual(planted(REVIEW, "import { NightPolicy } from '@sixam/propose';"), ['propose-importers', 'review'],

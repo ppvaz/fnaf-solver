@@ -5,12 +5,20 @@
   "type": "module",
   "dependencies": {
     "@sixam/core": "file:../core",
+    "@sixam/kernel": "file:../kernel",
     "@sixam/source": "file:../source"
+  },
+  "bin": {
+    "fnaf2-research": "src/experiment/cli.js"
   },
   "exports": {
     ".": "./src/index.js",
     "./policy": "./src/policy/index.js",
     "./fnaf2": "./src/games/fnaf2/index.js",
-    "./games/*": "./src/games/*"
+    "./games/*": "./src/games/*",
+    "./experiment": "./src/experiment/experiment.js",
+    "./seeds": "./src/experiment/seeds.js",
+    "./strategies/*": "./src/strategies/*/index.js",
+    "./parked/minus7": "./parked/minus7/index.js"
   }
 }

@@ -284,8 +284,8 @@ is not, which is why a fourth route means a fourth hand-written module.
   seeded `Sim` replays by `tools/reducedmodeltest.mjs`.
 - `tools/minus7/sim.mjs` (149) — searchable wrapper: clone, semantic actions,
   privileged view.
-- `packages/research/src/families/minus-toys.js`, `minus-two.js` — exact
-  evaluators, with `packages/research/test/legacy-equivalence.test.js`.
+- `packages/propose/src/experiment/families/minus-toys.js`, `minus-two.js` — exact
+  evaluators, with `packages/propose/test/legacy-equivalence.test.js`.
 
 This is the family a cleanup should imitate: four things named like engines,
 one authority, an equivalence gate for each derived model.
@@ -304,8 +304,8 @@ globs in the generated register; named here so they can be triaged:
   `latenesssweep.mjs` (185), `phasesweep.mjs` (47), `periodicsweep.mjs` (40),
   `flicksweep.mjs` (39), `phase-tolerance.mjs` (198).
 - `tools/device/policy-search.mjs` (169), `gate-worker.mjs` (42).
-- Owner per the charter: `packages/research/src/experiment.js` with specs under
-  `packages/research/specs/`.
+- Owner per the charter: `packages/propose/src/experiment/experiment.js` with specs under
+  `packages/propose/experiments/`.
 - Shared execution machinery that already exists: `tools/pool.mjs` (129) +
   `pool-worker.mjs`.
 
@@ -476,7 +476,7 @@ A cleanup should reuse one of these five rather than invent a sixth:
 4. **Equivalence gate between a model and its authority.**
    `tools/reducedmodeltest.mjs` (reduced model vs seeded `Sim`),
    `tools/device/policy-equivalence.mjs` (two compilers of one plan format),
-   `packages/research/test/legacy-equivalence.test.js`.
+   `packages/propose/test/legacy-equivalence.test.js`.
 5. **Enforced census with written exclusions** — the pattern that keeps an
    inventory from rotting into prose. `tools/device/test-grade-run-coverage.mjs`
    (every script is wired, gated, or excluded *with a reason*) and

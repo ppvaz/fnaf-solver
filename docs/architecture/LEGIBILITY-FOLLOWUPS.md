@@ -197,8 +197,8 @@ one canonical invocation per group; keep compatibility wrappers visibly thin.
 ### LEG-009 — Make research result timing and terminal semantics explicit (P2)
 
 **Status:** OPEN
-**Owner:** `packages/research`
-**Evidence:** [`experiment.js` (line 160)](../../packages/research/src/experiment.js), [`cli.js` (line 44)](../../packages/research/src/cli.js)
+**Owner:** `packages/propose` (was `packages/research`)
+**Evidence:** [`experiment.js` (line 160)](../../packages/propose/src/experiment/experiment.js), [`cli.js` (line 44)](../../packages/propose/src/experiment/cli.js)
 
 `makeResultPayload()` promotes the terminal state of the first evaluation to
 the whole experiment, and the CLI uses that value as the result event time.
@@ -212,8 +212,8 @@ aggregate field and add a multi-evaluation regression test.
 ### LEG-010 — Finish and verify the seed-cohort boundary (P1, current-tree item)
 
 **Status:** OPEN — confirm after the current dirty research changes settle
-**Owner:** `packages/research`, device plan consumers
-**Evidence:** current-tree path `packages/research/src/seeds.js:64` (not yet
+**Owner:** `packages/propose` (was `packages/research`), device plan consumers
+**Evidence:** current-tree path `packages/propose/src/experiment/seeds.js:64` (not yet
 versioned in this audit commit), [`minus-3-plan.mjs` (line 211)](../../tools/device/minus-3-plan.mjs)
 
 The current working tree fails JavaScript typecheck because the explicit
@@ -273,6 +273,6 @@ The following checks passed during the audit but do not close the findings:
 - `node tools/validate-references.js`
 - `npm run test:affected`
 
-`npm run typecheck` currently fails in `packages/research/src/seeds.js`; that
+`npm run typecheck` currently fails in `packages/propose/src/experiment/seeds.js`; that
 failure belongs to the current working tree and should be rechecked after the
 pending seed changes are finalized.

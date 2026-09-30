@@ -7,7 +7,7 @@ one charter layer, over a shared kernel:
 | Context | Layer | In today's code |
 |---|---|---|
 | Source | Truth | `@sixam/source` (each game's Rulebook data, Sim and controls; the nights registry, night model, RNG, control vocabulary and the validators generated from the catalogs); `packages/source/decompile`, `tools/recompile` |
-| Propose | Decision | `@sixam/propose` (the policy language, FNaF 2's controllers and cycle machinery, FNaF 1, 3 and 4's policies); `@sixam/research`; the winner bindings and plan generators in `tools/device` |
+| Propose | Decision | `@sixam/propose` (the policy language, FNaF 2's controllers and cycle machinery, FNaF 1, 3 and 4's policies, the strategies, the experiments and their specs, parked Minus 7; `@sixam/research` is a compatibility shim over it); the winner bindings and plan generators in `tools/device` |
 | Play | Embodiment | `apps/device` (the campaign, the one composition root that plays a night), `@sixam/adapters` (transports, clocks, fitted rules), the Companion (`android/companion`); `@sixam/core` keeps Play's host-free half (sensing, estimation, the phase clock), the bench trace and training until they move |
 | Review | Proof | `@sixam/review` (run packs, Plan 12 attestation and promotion, cohorts, the pack lift to `GameRun`, and `npm run review` queries); the grade pipeline in `tools/device` |
 | Teach | Understanding | `apps/trainer` |

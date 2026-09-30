@@ -69,8 +69,13 @@ if (changed.some(path => path.startsWith('packages/propose/src/policy/') || path
 for (const game of [1, 3, 4])
   if (changed.includes(`packages/propose/src/games/policy-fnaf${game}.js`))
     add(`census-fnaf${game}`, 'node', [`tools/test-fnaf${game}-census.mjs`]);
-if (changed.some(path => path.startsWith('packages/research/')))
-  add('research-contracts', 'node', ['packages/research/test/experiment.test.js']);
+// Experiments, strategies, seed cohorts, specs and parked Minus 7 (were
+// packages/research, now its compatibility shim).
+if (changed.some(path => ['packages/propose/src/experiment/', 'packages/propose/src/strategies/', 'packages/propose/parked/',
+  'packages/propose/experiments/', 'packages/research/'].some(prefix => path.startsWith(prefix)))) {
+  add('research-contracts', 'node', ['packages/propose/test/experiment.test.js']);
+  add('research-aliases', 'node', ['packages/propose/test/legacy-equivalence.test.js']);
+}
 // Review reads the committed evidence (packs, graph, winners, the anchor
 // register): a change to it or to what it reads runs its own tests and the
 // evidence CLI that composes it (`npm run evidence`). Review imports the

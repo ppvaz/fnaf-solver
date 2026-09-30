@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { runMinusToys } from '../src/families/minus-toys.js';
-import { runMinusTwo } from '../src/families/minus-two.js';
+import { runMinusToys } from '../src/experiment/families/minus-toys.js';
+import { runMinusTwo } from '../src/experiment/families/minus-two.js';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const seeds = [0, 2654435761, 1013904226, 3668339987];

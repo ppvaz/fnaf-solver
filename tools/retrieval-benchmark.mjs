@@ -36,7 +36,7 @@ const queries = [
   { id: 'safe-device-run', terms: 'device live lease abort qualification', expected: 'apps/device/README.md' },
   { id: 'evidence-replay', terms: 'evidence replay result hash manifest', expected: 'docs/evidence/README.md' },
   { id: 'architecture-ownership', terms: 'architecture dependency direction package', expected: 'docs/architecture/DEPENDENCY-GRAPH.md' },
-  { id: 'research-operation', terms: 'research experiment candidate evaluator statistics', expected: 'packages/research/README.md' },
+  { id: 'research-operation', terms: 'research experiment candidate evaluator statistics', expected: 'packages/propose/README.md' },
 ];
 
 const search = query => {

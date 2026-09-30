@@ -64,19 +64,19 @@
     },
     {
       "id": "experiment-spec-v1",
-      "owner": "research",
+      "owner": "propose/experiment",
       "kind": "data",
       "validator": "validateExperiment"
     },
     {
       "id": "experiment-result-v1",
-      "owner": "research",
+      "owner": "propose/experiment",
       "kind": "artifact",
       "validator": "validateExperimentResult"
     },
     {
       "id": "winner-v1",
-      "owner": "research/device",
+      "owner": "propose/device",
       "kind": "artifact",
       "validator": "tools/device/bundle.mjs validateWinner"
     },

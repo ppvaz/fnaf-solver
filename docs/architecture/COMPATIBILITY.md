@@ -70,9 +70,11 @@ The contracts, the register and Time moved out of `@sixam/core` into
 controls, and the cross-game clockwork, into
 [`@sixam/source`](../../packages/source/README.md); the policy language, FNaF
 2's controllers and cycle machinery and FNaF 1, 3 and 4's policies into
-[`@sixam/propose`](../../packages/propose/README.md). The core subpaths that
-named them stay as re-export shims with their export sets unchanged, so an
-importer the move did not repoint keeps working. `tools/architecture-test.js`
+[`@sixam/propose`](../../packages/propose/README.md), which also absorbed
+`@sixam/research`. The core subpaths that named them stay as re-export shims
+with their export sets unchanged, and research keeps, with unchanged export
+sets, the two subpaths that hash-bound files import, so an importer the move
+did not repoint keeps working. `tools/architecture-test.js`
 lets a shim registered as owned by `@sixam/propose` re-export propose, and
 nothing else in a package import it.
 
@@ -82,6 +84,9 @@ nothing else in a package import it.
 | `@sixam/core/mechanics` (`packages/core/src/mechanics/index.js`) | compatibility | `@sixam/source/fnaf2` (the same export set) | no tracked module imports it: tools/recompile's importers are repointed by their owner, and the engine-source files a bundle manifest hashes in a commit that re-derives every bundle |
 | `packages/core/src/mechanics/{plant-model,config,rng}.js` (symbolic links) | compatibility | `packages/source/src/games/fnaf2/` (the same bytes) | `tools/recompile/model-draw-trace.mjs` finds the model it hashes through `@sixam/source`; the bracket check already reads a record's old paths through their history |
 | `@sixam/core/control` (`packages/core/src/control/index.js`) | compatibility | `@sixam/source` for the vocabulary and the catalogs; `@sixam/propose/policy` and `@sixam/propose/fnaf2` for the policy language, FNaF 2's controllers and the cycle machinery (migration M8) | no tracked module imports it: tools/recompile's two importers are repointed by their owner, and `tools/device/minus-toys-plan.mjs`, whose bytes every Minus Toys bundle hashes, in a commit that re-derives every bundle |
+| `@sixam/research` (`packages/research/package.json`) | compatibility | `@sixam/propose` (experiments, strategies, seed cohorts, specs, parked Minus 7); `npm run research` runs `packages/propose/src/experiment/cli.js` | both subpath shims below are removed; then the workspace goes |
+| `@sixam/research/seeds` (`packages/research/seeds.js`) | compatibility | `@sixam/propose/seeds` | `tools/device/minus-toys-plan.mjs` and `minus-3-plan.mjs`, whose bytes every Minus Toys and Minus 3 bundle hashes, are repointed in a commit that re-derives every bundle |
+| `@sixam/research/strategies/minus-3` (`packages/research/strategies/minus-3.js`) | compatibility | `@sixam/propose/strategies/minus-3` | `tools/device/minus-3-plan.mjs` is repointed in a commit that re-derives every bundle |
 | `@sixam/core/telemetry` (`packages/core/src/telemetry/index.js`) | compatibility | `@sixam/kernel/time` for the fact link and event clocks | no importer reads them here, and the bench trace has its Review home |
 | `@sixam/core/timing` (`packages/core/src/timing/index.js`) | compatibility | `@sixam/kernel/time` for `ClockPort` | no importer reads it here, and the phase clock has its Play home |
 

@@ -2,13 +2,13 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { generateCandidates, replayModelResult, runModelExperiment } from '../src/experiment.js';
+import { generateCandidates, replayModelResult, runModelExperiment } from '../src/experiment/experiment.js';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const cases = ['model-smoke', 'controller-synthesis', 'cycle-optimization',
   'robustness-sweep', 'model-probe', 'device-characterization', 'minus-toys', 'minus-two'];
 for (const id of cases) {
-  const spec = JSON.parse(await readFile(join(ROOT, 'specs', `${id}.json`), 'utf8'));
+  const spec = JSON.parse(await readFile(join(ROOT, 'experiments', `${id}.json`), 'utf8'));
   const candidates = generateCandidates(spec);
   const result = runModelExperiment(spec);
   const dimensions = Object.values(spec.candidateSpace?.dimensions ?? {})
@@ -26,12 +26,12 @@ for (const id of cases) {
   const replay = replayModelResult(spec, { evidenceId: `replay-${id}` });
   assert.equal(replay.resultHash, replayModelResult(spec, { evidenceId: `replay-${id}` }).resultHash, `${id}: replay hash`);
 }
-const synthesis = JSON.parse(await readFile(join(ROOT, 'specs', 'controller-synthesis.json'), 'utf8'));
+const synthesis = JSON.parse(await readFile(join(ROOT, 'experiments', 'controller-synthesis.json'), 'utf8'));
 assert.equal(generateCandidates(synthesis).length, 18, 'controller synthesis expands its cartesian candidate space');
 assert.equal(runModelExperiment(synthesis).campaign.method, 'exhaustive-enumeration');
-const toys = JSON.parse(await readFile(join(ROOT, 'specs', 'minus-toys.json'), 'utf8'));
+const toys = JSON.parse(await readFile(join(ROOT, 'experiments', 'minus-toys.json'), 'utf8'));
 const toysResult = runModelExperiment(toys);
 assert.deepEqual(toysResult.campaign.ranking.map(item => item.candidate), ['split', 'no-split-control']);
-const two = JSON.parse(await readFile(join(ROOT, 'specs', 'minus-two.json'), 'utf8'));
+const two = JSON.parse(await readFile(join(ROOT, 'experiments', 'minus-two.json'), 'utf8'));
 assert.ok(runModelExperiment(two).evaluations.every(item => item.family === 'minus-two'));
 console.log(`research reference cases: ${cases.length} shared experiment paths pass, including Minus Toys/Two family evaluators`);

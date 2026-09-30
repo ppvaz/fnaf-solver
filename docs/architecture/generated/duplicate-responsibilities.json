@@ -29,7 +29,7 @@
     },
     {
       "responsibility": "research execution",
-      "owner": "@sixam/research",
+      "owner": "@sixam/propose",
       "legacy": [
         "tools/*search*",
         "tools/*sweep*",

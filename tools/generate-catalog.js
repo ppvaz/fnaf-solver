@@ -62,8 +62,8 @@ const contractEvidence = {
   'device-profile-v1': ['tools/device/test-bundle.mjs', 'apps/device/test/profile-game.test.js'],
   'telemetry-event-v1': ['tools/factlinktest.mjs'],
   'session-manifest-v1': ['tools/device/test-session-manifest.sh'],
-  'experiment-spec-v1': ['packages/research/test/experiment.test.js'],
-  'experiment-result-v1': ['packages/research/test/experiment.test.js'],
+  'experiment-spec-v1': ['packages/propose/test/experiment.test.js'],
+  'experiment-result-v1': ['packages/propose/test/experiment.test.js'],
   'winner-v1': ['tools/device/test-bundle.mjs'],
   'device-bundle-v1': ['tools/device/test-bundle.mjs'],
   'device-artifact-v1': ['tools/device/test-bundle.mjs'],
@@ -205,7 +205,7 @@ const duplicateResponsibilities = [
   { responsibility: 'semantic policy IR', owner: '@sixam/propose', legacy: ['tools/device/policy-ir.mjs'] },
   { responsibility: 'physical actuation', owner: '@sixam/adapters', legacy: ['tools/device/actuator.mjs'] },
   { responsibility: 'device composition', owner: '@sixam/device', legacy: ['tools/device/recipe.mjs'] },
-  { responsibility: 'research execution', owner: '@sixam/research', legacy: ['tools/*search*', 'tools/*sweep*', 'tools/*probe*'] },
+  { responsibility: 'research execution', owner: '@sixam/propose', legacy: ['tools/*search*', 'tools/*sweep*', 'tools/*probe*'] },
 ];
 
 // The compatibility page is the human view; this register is the machine view
@@ -293,24 +293,24 @@ const legacyPaths = [
   },
   {
     id: 'research.stock-device-pilot', path: 'tools/model/stock-device-pilot.mjs', category: 'research',
-    lifecycle: 'legacy', owner: '@sixam/research',
+    lifecycle: 'legacy', owner: '@sixam/propose',
     replacement: 'experiment spec/runner with an explicit historical actuator model',
     removalGate: 'Historical sweeps have structured, replayable experiment artifacts',
     notes: 'Retired swipe-era schedule report; it is not a selectable device route.',
   },
   {
     id: 'research.minus-toys-alias', path: 'tools/minustoystest.mjs', category: 'research-alias',
-    lifecycle: 'compatibility', owner: '@sixam/research',
+    lifecycle: 'compatibility', owner: '@sixam/propose',
     replacement: 'npm run research -- minus-toys',
     removalGate: 'Package structured artifacts and fixed-seed output are equivalent',
-    notes: 'Compatibility alias for the research package family evaluator.',
+    notes: 'Compatibility alias for the propose package family evaluator (packages/propose/src/experiment/families/).',
   },
   {
     id: 'research.minus-two-alias', path: 'tools/minus2test.mjs', category: 'research-alias',
-    lifecycle: 'compatibility', owner: '@sixam/research',
+    lifecycle: 'compatibility', owner: '@sixam/propose',
     replacement: 'npm run research -- minus-two',
     removalGate: 'Package structured artifacts and fixed-seed output are equivalent',
-    notes: 'Compatibility alias for the research package family evaluator.',
+    notes: 'Compatibility alias for the propose package family evaluator (packages/propose/src/experiment/families/).',
   },
   {
     id: 'review.evidence-pack-shim', path: 'tools/evidence-pack.mjs', category: 'evidence',
@@ -358,6 +358,29 @@ const legacyPaths = [
     replacement: '`@sixam/propose/policy` (policy IR, observation language, ports) and `@sixam/propose/fnaf2` (FNaF 2\'s controllers, cycle library, planner, cycle controller, night policy)',
     removalGate: 'No tracked module imports a policy, controller or cycle name from `@sixam/core/control` or `@sixam/core`. Once M8 has repointed the tools, the one left is tools/device/minus-toys-plan.mjs, an engine-source file every Minus Toys bundle hashes into engine.sourceSha256, repointed only in a commit that re-derives every emitted bundle',
     notes: 'Two `export *` lines of propose\'s barrels. The only re-export of propose outside propose that tools/architecture-test.js admits besides the research shims: a registered shim may re-export propose, never import it.',
+  },
+  // packages/research moved into @sixam/propose in the same migration and is
+  // left as an empty workspace with the two subpaths hash-bound files import.
+  {
+    id: 'research.package-shim', path: 'packages/research/package.json', category: 'package',
+    lifecycle: 'compatibility', owner: '@sixam/propose',
+    replacement: '`@sixam/propose` (experiments, strategies, seed cohorts, specs under packages/propose/experiments/, parked Minus 7); `npm run research` runs packages/propose/src/experiment/cli.js',
+    removalGate: 'Both subpath shims below are removed; then the workspace, its lockfile entry and the `research` rule in tools/architecture-test.js go',
+    notes: 'Declares only `./seeds` and `./strategies/minus-3`, each a one-line re-export of propose.',
+  },
+  {
+    id: 'research.seeds-shim', path: 'packages/research/seeds.js', category: 'package-subpath',
+    lifecycle: 'compatibility', owner: '@sixam/propose',
+    replacement: '`@sixam/propose/seeds` (packages/propose/src/experiment/seeds.js)',
+    removalGate: 'tools/device/minus-toys-plan.mjs and minus-3-plan.mjs, engine-source files every Minus Toys and Minus 3 bundle hashes into engine.sourceSha256, import `@sixam/propose/seeds` in a commit that re-derives every emitted bundle',
+    notes: 'Serves `@sixam/research/seeds`; every other importer was repointed to propose in M8 (2026-09-30).',
+  },
+  {
+    id: 'research.minus-3-shim', path: 'packages/research/strategies/minus-3.js', category: 'package-subpath',
+    lifecycle: 'compatibility', owner: '@sixam/propose',
+    replacement: '`@sixam/propose/strategies/minus-3` (packages/propose/src/strategies/minus-3/)',
+    removalGate: 'tools/device/minus-3-plan.mjs, an engine-source file every Minus 3 bundle hashes into engine.sourceSha256, imports `@sixam/propose/strategies/minus-3` in a commit that re-derives every emitted bundle',
+    notes: 'Serves `@sixam/research/strategies/minus-3`; minus-3-plan.mjs is its only importer.',
   },
   {
     id: 'core.telemetry-shim', path: 'packages/core/src/telemetry/index.js', category: 'package-subpath',

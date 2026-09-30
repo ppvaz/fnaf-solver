@@ -6,7 +6,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '../../..'));
+const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '../../../..'));
 
 const CASES = Object.freeze([
   'model-smoke', 'controller-synthesis', 'cycle-optimization',
@@ -18,7 +18,7 @@ const help = () => console.log(`fnaf2-research — explicit experiment operation
 
 async function runCase(id) {
   if (!CASES.includes(id)) throw new Error(`unknown experiment case: ${id}`);
-  const spec = JSON.parse(await readFile(join(ROOT, 'packages/research/specs', `${id}.json`), 'utf8'));
+  const spec = JSON.parse(await readFile(join(ROOT, 'packages/propose/experiments', `${id}.json`), 'utf8'));
   const evaluation = runModelExperiment(spec);
   const evidenceId = `research-${id}-${stableHash({ specHash: evaluation.specHash, evaluations: evaluation.evaluations }).slice(-10)}`;
   const resultPayload = makeResultPayload(evaluation, evidenceId);

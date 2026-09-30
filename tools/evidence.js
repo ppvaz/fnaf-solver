@@ -8,7 +8,7 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { canonicalJson, stableHash, validateArtifactRef } from '@sixam/kernel/contracts';
 import { validateManifest } from '@sixam/kernel/contracts';
-import { replayModelResult } from '@sixam/research';
+import { replayModelResult } from '@sixam/propose/experiment';
 import { BUNDLE_SCHEMA, validateBundle } from './device/bundle.mjs';
 import { isCampaignResult, campaignEntry, campaignPromotionChecks } from '@sixam/review/evidence-campaign';
 import { PACKS_DIR, resolvePackTargets, buildPack, buildFnaf1Pack, writePack, readPack, packPromotionChecks,

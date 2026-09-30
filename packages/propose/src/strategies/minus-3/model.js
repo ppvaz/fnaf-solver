@@ -1,6 +1,6 @@
 import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
-import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '../../seeds.js';
+import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '../../experiment/seeds.js';
 import { build, schedule, REACTIVE_KNOBS, MINUS3_STORY_NIGHTS } from './route.js';
 
 /**

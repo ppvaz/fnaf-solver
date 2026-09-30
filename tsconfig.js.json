@@ -10,6 +10,7 @@
   },
   "include": [
     "packages/*/src/**/*.js",
+    "packages/propose/parked/**/*.js",
     "apps/device/src/**/*.js",
     "apps/trainer/src/**/*.js",
     "apps/trainer/src/**/*.d.ts"

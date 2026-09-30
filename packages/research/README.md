@@ -1,34 +1,22 @@
-# `@sixam/research`
+# `@sixam/research` (compatibility shim)
 
-Named experiments use the shared `generateCandidates` → pure evaluator →
-aggregator path in `src/experiment.js`. The checked-in reference cases are
-`model-smoke`, `controller-synthesis`, `cycle-optimization`,
-`robustness-sweep`, `model-probe`, `device-characterization`, `minus-toys`,
-and `minus-two`. The last two use family-specific evaluators for the actual
-Android-model policies, including the split-camera control and the distinct
-glitchless Minus Two path; they do not route through the generic monitor/camera
-smoke evaluator. Each claim-producing operation retains its input spec,
-structured result, and session manifest; console output is a view of that
-bundle.
+Empty since ADR 0002 migration M8 (2026-09-30). Its experiments, strategies,
+seed cohorts, experiment specs and parked Minus 7 live in
+[`@sixam/propose`](../propose/README.md), and `npm run research` runs
+`packages/propose/src/experiment/cli.js`.
 
-Research owns experiment specifications, candidate generation, pure model
-evaluation, statistics, and structured result artifacts. It consumes core and
-declared fault/adapter models; it never imports trainer presentation or live
-device shell internals. There is no sandbox beside it (ADR 0002 principle 7,
-2026-09-29): a claim-bearing cohort or census is pre-registered, and a
-diagnostic sweep names the explanation it tests.
+Two subpaths remain, each a one-line re-export of propose, because files
+whose bytes a bundle hashes still import them:
 
-Public API: experiment primitives from the package root and the explicit CLI
-entry point. Dependency: core only. Commands: `npm run research -- --help` and
-named operations such as `model-smoke`. Artifacts: versioned specs, result
-bundles, manifests, and evidence IDs. It does not own device execution,
-trainer presentation, or Plan 12 promotion.
+| Subpath | Re-exports | Imported by |
+|---|---|---|
+| `@sixam/research/seeds` (`seeds.js`) | `@sixam/propose/seeds` | `tools/device/minus-toys-plan.mjs`, `tools/device/minus-3-plan.mjs` |
+| `@sixam/research/strategies/minus-3` (`strategies/minus-3.js`) | `@sixam/propose/strategies/minus-3` | `tools/device/minus-3-plan.mjs` |
 
-Every claim-producing operation reports model/profile/hash/sample context and a
-claim ceiling. Candidate-family statistics include a fixed-sample Wilson
-interval, terminal causes, and a trace hash. Simulation results remain model
-candidates until Plan 12's promotion ladder supplies the required evidence.
-
-The legacy `tools/minustoystest.mjs` and `tools/minus2test.mjs` commands are
-compatibility aliases covered by `test/legacy-equivalence.test.js`; they do not
-contain another copy of either family model.
+Both importers are engine sources: `tools/device/bundle.mjs` hashes their bytes
+into every Minus Toys and Minus 3 bundle's `engine.sourceSha256`, so they are
+repointed only in a commit that re-derives every emitted bundle. Each shim is
+registered in
+[`legacy-paths.json`](../../docs/architecture/generated/legacy-paths.json) with
+that removal gate, and `tools/architecture-test.js` refuses anything here but a
+re-export of propose. New code imports `@sixam/propose`.

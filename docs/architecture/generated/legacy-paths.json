@@ -117,7 +117,7 @@
       "path": "tools/model/stock-device-pilot.mjs",
       "category": "research",
       "lifecycle": "legacy",
-      "owner": "@sixam/research",
+      "owner": "@sixam/propose",
       "replacement": "experiment spec/runner with an explicit historical actuator model",
       "removalGate": "Historical sweeps have structured, replayable experiment artifacts",
       "notes": "Retired swipe-era schedule report; it is not a selectable device route."
@@ -127,20 +127,20 @@
       "path": "tools/minustoystest.mjs",
       "category": "research-alias",
       "lifecycle": "compatibility",
-      "owner": "@sixam/research",
+      "owner": "@sixam/propose",
       "replacement": "npm run research -- minus-toys",
       "removalGate": "Package structured artifacts and fixed-seed output are equivalent",
-      "notes": "Compatibility alias for the research package family evaluator."
+      "notes": "Compatibility alias for the propose package family evaluator (packages/propose/src/experiment/families/)."
     },
     {
       "id": "research.minus-two-alias",
       "path": "tools/minus2test.mjs",
       "category": "research-alias",
       "lifecycle": "compatibility",
-      "owner": "@sixam/research",
+      "owner": "@sixam/propose",
       "replacement": "npm run research -- minus-two",
       "removalGate": "Package structured artifacts and fixed-seed output are equivalent",
-      "notes": "Compatibility alias for the research package family evaluator."
+      "notes": "Compatibility alias for the propose package family evaluator (packages/propose/src/experiment/families/)."
     },
     {
       "id": "review.evidence-pack-shim",
@@ -221,6 +221,36 @@
       "replacement": "`@sixam/propose/policy` (policy IR, observation language, ports) and `@sixam/propose/fnaf2` (FNaF 2's controllers, cycle library, planner, cycle controller, night policy)",
       "removalGate": "No tracked module imports a policy, controller or cycle name from `@sixam/core/control` or `@sixam/core`. Once M8 has repointed the tools, the one left is tools/device/minus-toys-plan.mjs, an engine-source file every Minus Toys bundle hashes into engine.sourceSha256, repointed only in a commit that re-derives every emitted bundle",
       "notes": "Two `export *` lines of propose's barrels. The only re-export of propose outside propose that tools/architecture-test.js admits besides the research shims: a registered shim may re-export propose, never import it."
+    },
+    {
+      "id": "research.package-shim",
+      "path": "packages/research/package.json",
+      "category": "package",
+      "lifecycle": "compatibility",
+      "owner": "@sixam/propose",
+      "replacement": "`@sixam/propose` (experiments, strategies, seed cohorts, specs under packages/propose/experiments/, parked Minus 7); `npm run research` runs packages/propose/src/experiment/cli.js",
+      "removalGate": "Both subpath shims below are removed; then the workspace, its lockfile entry and the `research` rule in tools/architecture-test.js go",
+      "notes": "Declares only `./seeds` and `./strategies/minus-3`, each a one-line re-export of propose."
+    },
+    {
+      "id": "research.seeds-shim",
+      "path": "packages/research/seeds.js",
+      "category": "package-subpath",
+      "lifecycle": "compatibility",
+      "owner": "@sixam/propose",
+      "replacement": "`@sixam/propose/seeds` (packages/propose/src/experiment/seeds.js)",
+      "removalGate": "tools/device/minus-toys-plan.mjs and minus-3-plan.mjs, engine-source files every Minus Toys and Minus 3 bundle hashes into engine.sourceSha256, import `@sixam/propose/seeds` in a commit that re-derives every emitted bundle",
+      "notes": "Serves `@sixam/research/seeds`; every other importer was repointed to propose in M8 (2026-09-30)."
+    },
+    {
+      "id": "research.minus-3-shim",
+      "path": "packages/research/strategies/minus-3.js",
+      "category": "package-subpath",
+      "lifecycle": "compatibility",
+      "owner": "@sixam/propose",
+      "replacement": "`@sixam/propose/strategies/minus-3` (packages/propose/src/strategies/minus-3/)",
+      "removalGate": "tools/device/minus-3-plan.mjs, an engine-source file every Minus 3 bundle hashes into engine.sourceSha256, imports `@sixam/propose/strategies/minus-3` in a commit that re-derives every emitted bundle",
+      "notes": "Serves `@sixam/research/strategies/minus-3`; minus-3-plan.mjs is its only importer."
     },
     {
       "id": "core.telemetry-shim",

@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 // Compatibility command for the real Minus Toys evaluator now owned by
-// @sixam/research. Keep this command until its structured artifacts and
+// @sixam/propose. Keep this command until its structured artifacts and
 // the package campaign remain equivalent on fixed seeds.
 import { pathToFileURL } from 'node:url';
-import { runMinusToys } from '@sixam/research';
-import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '@sixam/research/seeds';
+import { runMinusToys } from '@sixam/propose/experiment';
+import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '@sixam/propose/seeds';
 import { formatRate } from './stat.mjs';
 
 const main = () => {

@@ -33,7 +33,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
 import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor }
-  from '@sixam/research/seeds';
+  from '@sixam/propose/seeds';
 import { KNOBS0, build, schedule } from './minus-toys-plan.mjs';
 import { DeviceActuator } from './actuator.mjs';
 import { designBlock, forkBlocks, gitState } from '../winner-census.mjs';

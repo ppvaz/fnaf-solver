@@ -100,7 +100,7 @@ on Node 22. No phone is involved.
 | Know where the strategies came from | nothing | [Strategy history](docs/strategy/STRATEGY-HISTORY.md) |
 | Look up how a mechanic really works | nothing (your own APK to re-derive it) | [Engine fact index](docs/android/UNIFIED-SOURCED-ENGINE-FACT-INDEX.md) |
 | Check a claim myself | a checkout, Node 20+ | [Evidence policy](docs/evidence/README.md), then `npm run evidence -- list` |
-| Find or tune a strategy | a checkout, Node 20+ | [Research lab](packages/research/README.md) |
+| Find or tune a strategy | a checkout, Node 20+ | [Strategies, policies and experiments](packages/propose/README.md) |
 | Ask it from my AI agent | a checkout, an MCP client | not built yet: [Plan 28](plans/28-solver-interface.md) |
 | Understand how the rebuild works | nothing to read; your own APK and Docker to run it | [Recompile toolchain](tools/recompile/README.md) |
 | Run the bot on my own phone | research only: a Moto g56 and the game | [Device safety](docs/operations/DEVICE-SAFETY.md), then the [device app](apps/device/README.md) |

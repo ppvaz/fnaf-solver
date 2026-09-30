@@ -703,7 +703,7 @@
       }
     },
     {
-      "id": "packages/propose/test/night-policy.test.js",
+      "id": "packages/propose/test/experiment.test.js",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -721,16 +721,16 @@
       }
     },
     {
-      "id": "packages/research/test/experiment.test.js",
+      "id": "packages/propose/test/legacy-equivalence.test.js",
       "lane": "test:unit",
-      "owner": "package boundary",
+      "owner": "@sixam/propose",
       "timeoutMs": 180000,
       "timeoutSource": "tools/test.mjs per-test watchdog",
       "deterministic": true,
       "determinismSignals": [],
       "fixedSleeps": [],
       "sharedResources": [],
-      "subprocesses": false,
+      "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",
         "runs": 0,
@@ -739,16 +739,16 @@
       }
     },
     {
-      "id": "packages/research/test/legacy-equivalence.test.js",
+      "id": "packages/propose/test/night-policy.test.js",
       "lane": "test:unit",
-      "owner": "package boundary",
+      "owner": "@sixam/propose",
       "timeoutMs": 180000,
       "timeoutSource": "tools/test.mjs per-test watchdog",
       "deterministic": true,
       "determinismSignals": [],
       "fixedSleeps": [],
       "sharedResources": [],
-      "subprocesses": true,
+      "subprocesses": false,
       "measurement": {
         "status": "NOT_MEASURED",
         "runs": 0,

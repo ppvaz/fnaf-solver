@@ -774,6 +774,67 @@
       ]
     },
     {
+      "file": "packages/propose/parked/minus7/index.js",
+      "imports": [
+        "./manifest.js",
+        "./model.js",
+        "./route.js"
+      ]
+    },
+    {
+      "file": "packages/propose/parked/minus7/model.js",
+      "imports": [
+        "../../src/experiment/seeds.js",
+        "./route.js",
+        "@sixam/source/fnaf2"
+      ]
+    },
+    {
+      "file": "packages/propose/parked/minus7/route.js",
+      "imports": [
+        "@sixam/source/fnaf2"
+      ]
+    },
+    {
+      "file": "packages/propose/src/experiment/cli.js",
+      "imports": [
+        "./experiment.js",
+        "@sixam/kernel/contracts",
+        "node:fs/promises",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/src/experiment/experiment.js",
+      "imports": [
+        "./families/minus-toys.js",
+        "./families/minus-two.js",
+        "@sixam/kernel/contracts",
+        "@sixam/source",
+        "@sixam/source/fnaf2"
+      ]
+    },
+    {
+      "file": "packages/propose/src/experiment/families/minus-toys.js",
+      "imports": [
+        "../../strategies/minus-toys/model.js"
+      ]
+    },
+    {
+      "file": "packages/propose/src/experiment/families/minus-two.js",
+      "imports": [
+        "@sixam/kernel/contracts",
+        "@sixam/source/fnaf2"
+      ]
+    },
+    {
+      "file": "packages/propose/src/experiment/seeds.js",
+      "imports": [
+        "node:crypto"
+      ]
+    },
+    {
       "file": "packages/propose/src/games/fnaf2/controller.js",
       "imports": [
         "@sixam/core/sensing",
@@ -860,6 +921,73 @@
       ]
     },
     {
+      "file": "packages/propose/src/strategies/minus-3/index.js",
+      "imports": [
+        "./manifest.js",
+        "./model.js",
+        "./route.js"
+      ]
+    },
+    {
+      "file": "packages/propose/src/strategies/minus-3/model.js",
+      "imports": [
+        "../../experiment/seeds.js",
+        "./route.js",
+        "@sixam/source/fnaf2"
+      ]
+    },
+    {
+      "file": "packages/propose/src/strategies/minus-3/route.js",
+      "imports": [
+        "@sixam/source/fnaf2"
+      ]
+    },
+    {
+      "file": "packages/propose/src/strategies/minus-toys/index.js",
+      "imports": [
+        "./manifest.js",
+        "./model.js",
+        "./route.js"
+      ]
+    },
+    {
+      "file": "packages/propose/src/strategies/minus-toys/model.js",
+      "imports": [
+        "../../experiment/seeds.js",
+        "./route.js",
+        "@sixam/kernel/contracts",
+        "@sixam/source/fnaf2"
+      ]
+    },
+    {
+      "file": "packages/propose/src/strategies/minus-toys/route.js",
+      "imports": [
+        "@sixam/source/fnaf2"
+      ]
+    },
+    {
+      "file": "packages/propose/src/strategies/right-vent-camp/index.js",
+      "imports": [
+        "./manifest.js",
+        "./model.js",
+        "./route.js"
+      ]
+    },
+    {
+      "file": "packages/propose/src/strategies/right-vent-camp/model.js",
+      "imports": [
+        "../../experiment/seeds.js",
+        "./route.js",
+        "@sixam/source/fnaf2"
+      ]
+    },
+    {
+      "file": "packages/propose/src/strategies/right-vent-camp/route.js",
+      "imports": [
+        "@sixam/source/fnaf2"
+      ]
+    },
+    {
       "file": "packages/propose/test/cycle-controller.test.js",
       "imports": [
         "@sixam/core/sensing",
@@ -883,6 +1011,27 @@
       ]
     },
     {
+      "file": "packages/propose/test/experiment.test.js",
+      "imports": [
+        "../src/experiment/experiment.js",
+        "node:assert/strict",
+        "node:fs/promises",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/test/legacy-equivalence.test.js",
+      "imports": [
+        "../src/experiment/families/minus-toys.js",
+        "../src/experiment/families/minus-two.js",
+        "node:assert/strict",
+        "node:child_process",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/propose/test/night-policy.test.js",
       "imports": [
         "@sixam/propose/fnaf2",
@@ -890,152 +1039,15 @@
       ]
     },
     {
-      "file": "packages/research/src/cli.js",
+      "file": "packages/research/seeds.js",
       "imports": [
-        "./experiment.js",
-        "@sixam/kernel/contracts",
-        "node:fs/promises",
-        "node:path",
-        "node:url"
+        "@sixam/propose/seeds"
       ]
     },
     {
-      "file": "packages/research/src/experiment.js",
+      "file": "packages/research/strategies/minus-3.js",
       "imports": [
-        "./families/minus-toys.js",
-        "./families/minus-two.js",
-        "@sixam/kernel/contracts",
-        "@sixam/source",
-        "@sixam/source/fnaf2"
-      ]
-    },
-    {
-      "file": "packages/research/src/families/minus-toys.js",
-      "imports": [
-        "../strategies/minus-toys/model.js"
-      ]
-    },
-    {
-      "file": "packages/research/src/families/minus-two.js",
-      "imports": [
-        "@sixam/kernel/contracts",
-        "@sixam/source/fnaf2"
-      ]
-    },
-    {
-      "file": "packages/research/src/seeds.js",
-      "imports": [
-        "node:crypto"
-      ]
-    },
-    {
-      "file": "packages/research/src/strategies/minus-3/index.js",
-      "imports": [
-        "./manifest.js",
-        "./model.js",
-        "./route.js"
-      ]
-    },
-    {
-      "file": "packages/research/src/strategies/minus-3/model.js",
-      "imports": [
-        "../../seeds.js",
-        "./route.js",
-        "@sixam/source/fnaf2"
-      ]
-    },
-    {
-      "file": "packages/research/src/strategies/minus-3/route.js",
-      "imports": [
-        "@sixam/source/fnaf2"
-      ]
-    },
-    {
-      "file": "packages/research/src/strategies/minus-7/index.js",
-      "imports": [
-        "./manifest.js",
-        "./model.js",
-        "./route.js"
-      ]
-    },
-    {
-      "file": "packages/research/src/strategies/minus-7/model.js",
-      "imports": [
-        "../../seeds.js",
-        "./route.js",
-        "@sixam/source/fnaf2"
-      ]
-    },
-    {
-      "file": "packages/research/src/strategies/minus-7/route.js",
-      "imports": [
-        "@sixam/source/fnaf2"
-      ]
-    },
-    {
-      "file": "packages/research/src/strategies/minus-toys/index.js",
-      "imports": [
-        "./manifest.js",
-        "./model.js",
-        "./route.js"
-      ]
-    },
-    {
-      "file": "packages/research/src/strategies/minus-toys/model.js",
-      "imports": [
-        "../../seeds.js",
-        "./route.js",
-        "@sixam/kernel/contracts",
-        "@sixam/source/fnaf2"
-      ]
-    },
-    {
-      "file": "packages/research/src/strategies/minus-toys/route.js",
-      "imports": [
-        "@sixam/source/fnaf2"
-      ]
-    },
-    {
-      "file": "packages/research/src/strategies/right-vent-camp/index.js",
-      "imports": [
-        "./manifest.js",
-        "./model.js",
-        "./route.js"
-      ]
-    },
-    {
-      "file": "packages/research/src/strategies/right-vent-camp/model.js",
-      "imports": [
-        "../../seeds.js",
-        "./route.js",
-        "@sixam/source/fnaf2"
-      ]
-    },
-    {
-      "file": "packages/research/src/strategies/right-vent-camp/route.js",
-      "imports": [
-        "@sixam/source/fnaf2"
-      ]
-    },
-    {
-      "file": "packages/research/test/experiment.test.js",
-      "imports": [
-        "../src/experiment.js",
-        "node:assert/strict",
-        "node:fs/promises",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "packages/research/test/legacy-equivalence.test.js",
-      "imports": [
-        "../src/families/minus-toys.js",
-        "../src/families/minus-two.js",
-        "node:assert/strict",
-        "node:child_process",
-        "node:path",
-        "node:url"
+        "@sixam/propose/strategies/minus-3"
       ]
     },
     {
@@ -1799,6 +1811,7 @@
         "@sixam/kernel/contracts",
         "@sixam/propose",
         "@sixam/propose/fnaf2",
+        "@sixam/propose/seeds",
         "@sixam/research",
         "@sixam/research/seeds",
         "@sixam/review/evidence-pack",
@@ -2310,7 +2323,7 @@
       "file": "tools/device/minus3-frame-light.mjs",
       "imports": [
         "./minus-3-plan.mjs",
-        "@sixam/research/seeds",
+        "@sixam/propose/seeds",
         "@sixam/source",
         "@sixam/source/fnaf2",
         "node:crypto",
@@ -2354,7 +2367,7 @@
         "./actuator.mjs",
         "./bundle.mjs",
         "./minus-toys-plan.mjs",
-        "@sixam/research/seeds",
+        "@sixam/propose/seeds",
         "@sixam/source/fnaf2",
         "node:crypto",
         "node:fs",
@@ -2985,7 +2998,7 @@
       "imports": [
         "./device/bundle.mjs",
         "@sixam/kernel/contracts",
-        "@sixam/research",
+        "@sixam/propose/experiment",
         "@sixam/review/envelopes",
         "@sixam/review/evidence-campaign",
         "@sixam/review/evidence-cohort",
@@ -3123,7 +3136,7 @@
     {
       "file": "tools/minus2test.mjs",
       "imports": [
-        "@sixam/research",
+        "@sixam/propose/experiment",
         "node:url"
       ]
     },
@@ -3144,7 +3157,7 @@
     {
       "file": "tools/minus7/cycle.mjs",
       "imports": [
-        "@sixam/research/strategies/minus-7",
+        "@sixam/propose/parked/minus7",
         "node:url"
       ]
     },
@@ -3249,7 +3262,7 @@
     {
       "file": "tools/minustoys/cycle.mjs",
       "imports": [
-        "@sixam/research/strategies/minus-toys",
+        "@sixam/propose/strategies/minus-toys",
         "node:url"
       ]
     },
@@ -3257,8 +3270,8 @@
       "file": "tools/minustoystest.mjs",
       "imports": [
         "./stat.mjs",
-        "@sixam/research",
-        "@sixam/research/seeds",
+        "@sixam/propose/experiment",
+        "@sixam/propose/seeds",
         "node:url"
       ]
     },
@@ -3868,7 +3881,7 @@
     {
       "file": "tools/rvctest.mjs",
       "imports": [
-        "@sixam/research/strategies/right-vent-camp",
+        "@sixam/propose/strategies/right-vent-camp",
         "node:url"
       ]
     },
@@ -4186,7 +4199,7 @@
       "file": "tools/winner-census.mjs",
       "imports": [
         "./device/bundle.mjs",
-        "@sixam/research/seeds",
+        "@sixam/propose/seeds",
         "@sixam/source/fnaf2",
         "node:child_process",
         "node:crypto",
