@@ -1,0 +1,47 @@
+{
+ "schema": "evidence-record-v1",
+ "id": "fnaf3-search-block-predeclaration-20260930",
+ "claimLevel": "PREDECLARATION (fixed before any seed of the block is run)",
+ "fidelity": "rebuilt-runtime",
+ "date": "2026-09-30",
+ "question": "Does every FNaF 3 Aggressive Nightmare seed of a block the search was not developed on have a sequence of in-window touches that wins it in the rebuilt runtime?",
+ "binding": {
+  "game": "fnaf3",
+  "night": "Aggressive Nightmare (fnaf3-aggressive-nightmare.ini: beat6, hyper=1, the easing cheats off)",
+  "policy": "guard2",
+  "search": "tools/recompile/pilot/search.mjs",
+  "budget": 60,
+  "sourcesSha256": "fa0401ad0889d1551b46ab07935f117c6ea9ea16624de74c99edd8ea60364a1d",
+  "sources": [
+   "tools/recompile/pilot/pilot.mjs",
+   "tools/recompile/pilot/fnaf3.mjs",
+   "tools/recompile/pilot/search.mjs",
+   "tools/recompile/pilot/replay.mjs"
+  ],
+  "sourcesCommit": "3d2c909",
+  "binarySha256": "0f6a825fa24b7e56ac1e68f1992480210a190b4f6ee0587a63854d3268e18b37",
+  "assetsSha256": "c5e092a33a3f02edc9f306ae8e2bc57160e865ec6bf2aa34962838b4c7c4897c",
+  "saveBefore": {
+   "fixture": "tools/recompile/fixtures/fnaf3-aggressive-nightmare.ini",
+   "sha256": "a3fad9efee8285676e77ace130dfad0568dc60e0df7183f568b6c6f4864317a4"
+  },
+  "winKey": "freddy3.4thstar=1"
+ },
+ "development": "the search was shaped on guard2's lost seeds among 1-60 (docs/evidence/rebuild-fnaf3-search-dev-20260930.json); the controller on seeds 0-60",
+ "block": {
+  "seeds": "40000-40099",
+  "count": 100,
+  "rareScreenSeeds": "none (whatDayRare)",
+  "why": "disjoint from development"
+ },
+ "command": "systemd-run --user --scope -p MemoryMax=900M -p MemorySwapMax=512M -- node tools/recompile/pilot/search.mjs --game fnaf3 --policy guard2 --binary <pinned 0f6a825f-c5e092a3>/Chowdren --assets <same>/Assets.dat --save tools/recompile/fixtures/fnaf3-aggressive-nightmare.ini --seeds 40000-40099 --budget 60 --jobs 2 --out <outside the repository> --win-key freddy3.4thstar=1",
+ "rules": [
+  "Every row's sourcesSha256 must equal the one above; search.mjs stops if a source changes.",
+  "A seed is winnable only if its row is WON and replayWon is true: the touches, replayed with no pilot, win.",
+  "Each seed is reported: WON (with its winning input's sha256 and the attempt that found it), EXHAUSTED, NO_NIGHT or ERROR. An EXHAUSTED seed is open, not shown unwinnable.",
+  "The claim \"every seed of the block is winnable by touches\" is made only if all 100 are winnable. Counts are reported as counts; 100 seeds is below the 3000-seed floor for quoting a rate, and none is quoted.",
+  "Nothing is tuned on this block."
+ ],
+ "resultRecord": "docs/evidence/fnaf3-search-block-20260930.json",
+ "rung": "None. MODEL_ONLY, rebuilt-runtime; not a device claim."
+}
