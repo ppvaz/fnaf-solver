@@ -124,6 +124,41 @@ function hostGlobals(file) {
     isReference(node)).map(node => node.text))];
 }
 
+/**
+ * Ambient entropy a core module reads: `Math.random()`, `Date.now()` and an
+ * argument-less `new Date()`. A model, a policy or an estimator that draws one
+ * gives two runs of the same input two answers, and a replay cannot reproduce
+ * it; time comes from the kernel's clocks and randomness from the game's seeded
+ * generator. `new Date(x)` is a pure conversion and passes.
+ * @param {ts.SourceFile} file
+ */
+function ambientEntropy(file) {
+  const found = [];
+  const named = (node, object, property) => ts.isPropertyAccessExpression(node) &&
+    ts.isIdentifier(node.expression) && node.expression.text === object && node.name.text === property;
+  const visit = node => {
+    if (ts.isCallExpression(node) && named(node.expression, 'Math', 'random')) found.push('Math.random()');
+    else if (ts.isCallExpression(node) && named(node.expression, 'Date', 'now')) found.push('Date.now()');
+    else if (ts.isNewExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'Date' &&
+      !(node.arguments?.length)) found.push('new Date()');
+    ts.forEachChild(node, visit);
+  };
+  visit(file);
+  return found;
+}
+
+// Each tolerated draw, with its count so a tolerated file cannot gain another.
+// These are defaults for a caller that passes nothing; the fix is to make the
+// caller say where its seed or clock comes from.
+const AMBIENT_ENTROPY_TOLERATED = new Map([
+  ['packages/source/src/games/fnaf2/plant-model.js', { count: 1,
+    why: 'an unseeded Sim draws a natural seed; every census and gate passes its seed' }],
+  ['packages/source/src/games/fnaf2/rng.js', { count: 1,
+    why: 'the generator\'s default seed for an unseeded Sim; the same default as plant-model.js' }],
+  ['packages/play/src/venues/sim/observer.js', { count: 2,
+    why: 'the Sim observer\'s noise falls back to Math.random() when no generator is given: a silent fallback to remove' }],
+]);
+
 /** Writes into the process-global search knobs. @param {ts.SourceFile} file */
 function searchKnobWrites(file) {
   let writes = 0;
@@ -412,6 +447,13 @@ assert.deepEqual(globalsOf('const host = `${window}`;'), ['window'],
   'architecture guard must inspect template interpolations');
 assert.deepEqual(globalsOf('export const read = state => state.window + state.process;'), [],
   'architecture guard must not mistake a property for a host global');
+const entropyOf = source => ambientEntropy(parse('packages/source/src/planted.js', source));
+assert.deepEqual(entropyOf('export const roll = () => Math.random() < 0.5;'), ['Math.random()'],
+  'architecture guard must catch Math.random() in a core module');
+assert.deepEqual(entropyOf('export const stamp = () => [Date.now(), new Date()];'), ['Date.now()', 'new Date()'],
+  'architecture guard must catch the wall clock in a core module');
+assert.deepEqual(entropyOf('// Math.random()\nexport const at = ms => new Date(ms); const r = rng.random();'), [],
+  'architecture guard must pass comments, a converted timestamp and a seeded generator');
 assert.equal(searchKnobWrites(parse('tools/planted.mjs', 'SEARCH_KNOBS.maskMs = 3; SEARCH_KNOBS[key] += 1;')), 2);
 assert.equal(searchKnobWrites(parse('tools/planted.mjs', '// SEARCH_KNOBS.maskMs = 3\nconst copy = { ...SEARCH_KNOBS };')), 0);
 
@@ -500,7 +542,16 @@ for (const path of production) {
 for (const path of hostFree) {
   const globals = hostGlobals(await tree(path));
   assert.equal(globals.length, 0, `${path} uses a host/browser global in core, source, the kernel or propose's policy and game modules: ${globals.join(', ')}`);
+  const entropy = ambientEntropy(await tree(path));
+  const tolerated = AMBIENT_ENTROPY_TOLERATED.get(repoPath(path));
+  assert.equal(entropy.length, tolerated?.count ?? 0, tolerated
+    ? `${repoPath(path)} is tolerated ${tolerated.count} ambient draw(s) (${tolerated.why}) and has ${entropy.length}: ` +
+      'update AMBIENT_ENTROPY_TOLERATED only to lower the count'
+    : `${repoPath(path)} reads ambient entropy in a module that must be replayable: ${entropy.join(', ')}. ` +
+      'Take time from the kernel clocks and randomness from a seeded generator the caller passes');
 }
+for (const path of AMBIENT_ENTROPY_TOLERATED.keys())
+  assert.ok(hostFree.some(file => repoPath(file) === path), `AMBIENT_ENTROPY_TOLERATED names ${path}, which is not a host-free module`);
 // A test is a test-named file, or a `*.test.*` file in a package's or an
 // application's test folder (apps/desktop/test loads package fixtures).
 const testNamed = path => /(?:^|\/)test[^/]*\.(?:js|mjs|ts)$/.test(path) || /\/test\/[^/]+\.test\.m?js$/.test(path);

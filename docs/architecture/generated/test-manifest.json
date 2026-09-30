@@ -4921,8 +4921,22 @@
       "owner": "legacy migration",
       "timeoutMs": 180000,
       "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
+      "deterministic": false,
+      "determinismSignals": [
+        "Math.random",
+        "Date.now",
+        "new Date(",
+        "Math.random",
+        "Date.now",
+        "Math.random",
+        "Math.random",
+        "Math.random",
+        "Math.random",
+        "Date.now",
+        "Date.now",
+        "Math.random",
+        "new Date("
+      ],
       "fixedSleeps": [],
       "sharedResources": [
         "device-transport"
