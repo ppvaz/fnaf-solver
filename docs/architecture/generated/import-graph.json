@@ -4365,6 +4365,20 @@
       ]
     },
     {
+      "file": "tools/test-dead-code.mjs",
+      "imports": [
+        "./a.js",
+        "./b.js",
+        "./gate-kit.mjs",
+        "@x/lib",
+        "@x/lib/games/g.js",
+        "node:assert/strict",
+        "node:fs",
+        "node:path",
+        "typescript"
+      ]
+    },
+    {
       "file": "tools/test-docs.mjs",
       "imports": [
         "@sixam/review/renamed-path",
