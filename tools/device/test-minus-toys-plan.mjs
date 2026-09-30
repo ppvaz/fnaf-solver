@@ -22,7 +22,7 @@ import { OPENING, LOOP, KNOBS0, build, replay, emitPlan, schedule, maskWindows, 
 import { DOUBLE_GLITCH_CAMERA_PAIRS } from './arm-verification.mjs';
 import { parsePlan } from './bundle.mjs';
 import { compileArtifactPlans } from './artifact-commands.mjs';
-import * as C from '@sixam/core/mechanics';
+import * as C from '@sixam/source/fnaf2';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const check = (ok, message) => { if (!ok) throw new Error(message); };

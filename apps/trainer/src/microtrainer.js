@@ -17,7 +17,7 @@ import {
   validateResolution,
   validateCommitment,
 } from '@sixam/core/training';
-import { stableHash } from '@sixam/core/contracts';
+import { stableHash } from '@sixam/kernel/contracts';
 import { finite, freeze, isRecord, validatorsFor } from './validate.js';
 const { fail, object, text } = validatorsFor('microtrainer', { textMax: 160 });
 

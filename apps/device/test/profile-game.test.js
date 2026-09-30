@@ -4,7 +4,8 @@
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { deviceProfileGame, resolveDeviceProfile, stableHash } from '@sixam/core/contracts';
+import { deviceProfileGame, resolveDeviceProfile } from '@sixam/source';
+import { stableHash } from '@sixam/kernel/contracts';
 import { validateExecutorRequest } from '../src/artifact-executor.js';
 import { compileDeviceLocalHidSchedule } from '../src/hid-schedule.js';
 

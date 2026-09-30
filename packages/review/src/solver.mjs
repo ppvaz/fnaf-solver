@@ -11,8 +11,8 @@
 // registers registers.mjs reads, and each of Plan 28's four gaps is a query.
 import { readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { CONTROL_CATALOGS } from '@sixam/core/control';
-import { canonicalJson } from '@sixam/core/contracts';
+import { CONTROL_CATALOGS } from '@sixam/source';
+import { canonicalJson } from '@sixam/kernel/contracts';
 import { REPOSITORY_TARGET, claimEnvelope, isRefusal, isUnknown, refusalEnvelope, unknown, validateClaimEnvelope } from '@sixam/kernel';
 import { videoTerminal } from './evidence-cohort.mjs';
 import { ATTESTATION_FILE, PACKS_DIR, packPromotionChecks, readPack, trackedWinners } from './evidence-pack.mjs';

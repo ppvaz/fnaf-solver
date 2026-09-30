@@ -10,8 +10,8 @@
 // actually uses -- lower/raise, mask on/off, select+flash a camera, hold the
 // hall light, hold a vent light, wind. Physical touch coordinates never enter
 // the search; they belong to the controller layer (tools/device/recipe.mjs).
-import * as C from '@sixam/core/mechanics';
-import { Sim } from '@sixam/core/mechanics';
+import * as C from '@sixam/source/fnaf2';
+import { Sim } from '@sixam/source/fnaf2';
 
 // ---------------------------------------------------------------- cloning
 // Verified: a JSON round-trip plus a prototype/RNG fix-up reproduces the

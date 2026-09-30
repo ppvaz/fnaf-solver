@@ -54,8 +54,8 @@
 // readable, a geometry the runner no longer schedules), and the vent-light
 // press drop ("dropped often enough to matter" -- no denominator yet). Add
 // them here when a run census gives them numbers, not before.
-import * as C from '@sixam/core/mechanics';
-import { Rng } from '@sixam/core/mechanics';
+import * as C from '@sixam/source/fnaf2';
+import { Rng } from '@sixam/source/fnaf2';
 
 // docs/device/ON-DEVICE-VALIDATION.md, the mask-seam band table. The bands are
 // measurements, not knobs; a future edit has to argue with the census.

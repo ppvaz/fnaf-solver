@@ -7,7 +7,7 @@
  */
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { validateQualification, venueBindingsFor } from '@sixam/core/contracts';
+import { validateQualification, venueBindingsFor } from '@sixam/kernel/contracts';
 
 /**
  * The bindings for one run: a qualification-v2's own venue, plus every

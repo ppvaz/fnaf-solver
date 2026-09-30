@@ -1,15 +1,6 @@
 // Phone-free checks for the stock-APK seed recovery helpers.
 import assert from 'node:assert/strict';
-import {
-  Rng,
-  SEED_SPACE,
-  filterSeedCandidatesByEvents,
-  filterSeedCandidatesByRolls,
-  nextRngState,
-  seedCandidatesFromTimeWindow,
-  seedCandidatesFromHostMarker,
-  seedFromDeviceTimeMs,
-} from '@sixam/core/mechanics';
+import { Rng, SEED_SPACE, filterSeedCandidatesByEvents, filterSeedCandidatesByRolls, nextRngState, seedCandidatesFromTimeWindow, seedCandidatesFromHostMarker, seedFromDeviceTimeMs } from '@sixam/source/fnaf2';
 
 assert.equal(seedFromDeviceTimeMs(0), 0);
 assert.equal(seedFromDeviceTimeMs(65535), 65535);

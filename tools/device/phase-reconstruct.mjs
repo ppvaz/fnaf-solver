@@ -320,7 +320,7 @@ export function reconstruct(events, observations, frameTrace = null) {
 async function phaseResponse(night, seeds) {
   const here = new URL('.', import.meta.url);
   const plan = await import(new URL('minus-toys-plan.mjs', here).href);
-  const C = await import('@sixam/core/mechanics');
+  const C = await import('@sixam/source/fnaf2');
   const stepMs = 1000 / C.FPS;
   const ticksIn = window => {
     let ticks = 0;
@@ -359,7 +359,7 @@ async function phaseResponse(night, seeds) {
 async function uncontrolledPhase(night, runs) {
   const here = new URL('.', import.meta.url);
   const plan = await import(new URL('minus-toys-plan.mjs', here).href);
-  const C = await import('@sixam/core/mechanics');
+  const C = await import('@sixam/source/fnaf2');
   const frames = Math.round(C.FPS);
   let wins = 0, armed = 0;
   const deaths = {};

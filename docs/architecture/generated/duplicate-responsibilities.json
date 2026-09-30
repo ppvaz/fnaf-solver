@@ -3,7 +3,7 @@
   "entries": [
     {
       "responsibility": "canonical mechanics",
-      "owner": "@sixam/core",
+      "owner": "@sixam/source",
       "legacy": []
     },
     {

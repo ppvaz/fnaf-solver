@@ -1,4 +1,4 @@
-import * as C from '@sixam/core/mechanics';
+import * as C from '@sixam/source/fnaf2';
 
 // The published brayden/Shooter25 timing, expressed in frames. The plant model
 // and the eventual device compiler consume this semantic route separately.

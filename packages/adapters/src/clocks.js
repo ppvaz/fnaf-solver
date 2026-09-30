@@ -1,5 +1,5 @@
 /** Injected monotonic/logical clocks; scheduling never calls wall time directly. */
-import { ClockPort } from '@sixam/core/timing';
+import { ClockPort } from '@sixam/kernel/time';
 
 export class Clock extends ClockPort {
   constructor({ name, read }) {

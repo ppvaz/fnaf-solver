@@ -11,12 +11,12 @@
 //
 //   node tools/test-fnaf3-census.mjs
 
-import { Fnaf3Sim } from '../packages/source/src/games/fnaf3/sim-fnaf3.js';
+import { Fnaf3Sim } from '@sixam/source/fnaf3';
 import { communityLine, doNothing, officeCamp, trackingLoop, searchOrder, VENT_FROM }
   from '../packages/core/src/mechanics/games/policy-fnaf3.js';
-import { GRAPH } from '../packages/source/src/games/fnaf3/sim-fnaf3.js';
+import { GRAPH } from '@sixam/source/fnaf3';
 import { searchOrder as deviceSearchOrder } from './device/fnaf3-run.mjs';
-import { CLOCK, VENTILATION, SPRINGTRAP } from '../packages/source/src/games/fnaf3/fnaf3.js';
+import { CLOCK, VENTILATION, SPRINGTRAP } from '@sixam/source/fnaf3';
 
 const failures = [];
 let checks = 0;

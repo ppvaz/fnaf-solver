@@ -4,8 +4,9 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@sixam/core": "file:../../packages/core",
-    "@sixam/adapters": "file:../../packages/adapters"
+    "@sixam/adapters": "file:../../packages/adapters",
+    "@sixam/kernel": "file:../../packages/kernel",
+    "@sixam/source": "file:../../packages/source"
   },
   "bin": {"fnaf2-device": "src/cli.js"}
 }

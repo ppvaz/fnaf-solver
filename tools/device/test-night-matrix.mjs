@@ -27,7 +27,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import * as C from '@sixam/core/mechanics';
+import * as C from '@sixam/source/fnaf2';
 import { build, capture, devicePlan, replay, resolveAttack, TEMPLATE_NIGHT,
          idleUntilMs } from './recipe.mjs';
 import { modelGate, GATE_MIN_SURVIVAL, HUMAN_SLACK_MS, GATE_RUNS } from './human-gate.mjs';

@@ -5,7 +5,7 @@
 // lost that mask-on press on about half of a Night 1 minus7 run's cycles.
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { stableHash } from '@sixam/core/contracts';
+import { stableHash } from '@sixam/kernel/contracts';
 import { compileDeviceLocalHidSchedule } from '../src/hid-schedule.js';
 
 const profile = JSON.parse(await readFile(new URL('../profiles/hid-mediaprojection.json', import.meta.url), 'utf8'));

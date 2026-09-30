@@ -16,9 +16,9 @@
 //
 //   node tools/sourcetest.mjs
 import { pathToFileURL } from 'node:url';
-import * as C from '@sixam/core/mechanics';
-import { Sim } from '@sixam/core/mechanics';
-import { Rng } from '@sixam/core/mechanics';
+import * as C from '@sixam/source/fnaf2';
+import { Sim } from '@sixam/source/fnaf2';
+import { Rng } from '@sixam/source/fnaf2';
 
 let pass = 0;
 const fails = [];

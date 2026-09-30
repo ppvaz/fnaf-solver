@@ -11,8 +11,8 @@
  * The demotion is reported, not persisted: it is re-derived every preflight.
  * CONTRACT:device-campaign-preflight-v1. CONTRACT:qualification-v2.
  */
-import { validateQualification, qualificationStanding } from '@sixam/core/contracts';
-import { stableHash } from '@sixam/core/contracts';
+import { validateQualification, qualificationStanding } from '@sixam/kernel/contracts';
+import { stableHash } from '@sixam/kernel/contracts';
 import { preflightVenue } from './adb-bridge.js';
 import { validateCustomNightCalibration } from './custom-night.js';
 import { validateCampaignSpec } from './campaign.js';

@@ -1,8 +1,8 @@
 // Plan 16 package 1/3 gates: snapshot/restore fidelity, the semantic action
 // layer's clone, and the harness reproducing the 803feb3 ladder on a zero
 // perturbation.
-import * as C from '@sixam/core/mechanics';
-import { Sim } from '@sixam/core/mechanics';
+import * as C from '@sixam/source/fnaf2';
+import { Sim } from '@sixam/source/fnaf2';
 import { cloneSim, view, ACTIONS, run } from './sim.mjs';
 import { searchParams, baselineLadder, evalParams, SHIPPED_GEOM } from './paramsearch.mjs';
 import { enumeratePackage4 } from '../constrainedsearch.mjs';

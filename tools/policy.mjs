@@ -56,9 +56,9 @@
 //
 // Nothing here prices a press. See CLAUDE.md, "The simulator prices nothing":
 // every number this file produces is a statement about the model.
-import * as C from '@sixam/core/mechanics';
-import { Sim } from '@sixam/core/mechanics';
-import { Rng } from '@sixam/core/mechanics';
+import * as C from '@sixam/source/fnaf2';
+import { Sim } from '@sixam/source/fnaf2';
+import { Rng } from '@sixam/source/fnaf2';
 import { DeviceActuator } from './device/actuator.mjs';
 
 export const ADAPTER_VERSION = 1;

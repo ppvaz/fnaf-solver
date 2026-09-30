@@ -11,14 +11,7 @@
 // event replay intentionally has a smaller default bound because it invokes
 // the full simulator once per candidate.
 import { readFileSync } from 'node:fs';
-import {
-  SEED_SPACE,
-  filterSeedCandidatesByEvents,
-  filterSeedCandidatesByRolls,
-  normalizeSeedCandidates,
-  seedCandidatesFromHostMarker,
-  seedCandidatesFromTimeWindow,
-} from '@sixam/core/mechanics';
+import { SEED_SPACE, filterSeedCandidatesByEvents, filterSeedCandidatesByRolls, normalizeSeedCandidates, seedCandidatesFromHostMarker, seedCandidatesFromTimeWindow } from '@sixam/source/fnaf2';
 
 const args = process.argv.slice(2);
 const command = args[0];

@@ -3,8 +3,8 @@
 //   node tools/reactivetest.mjs            # all checks
 //   node tools/reactivetest.mjs --assert   # exit 1 on any failure (suite mode)
 import { pathToFileURL } from 'node:url';
-import * as C from '@sixam/core/mechanics';
-import { Sim } from '@sixam/core/mechanics';
+import * as C from '@sixam/source/fnaf2';
+import { Sim } from '@sixam/source/fnaf2';
 import { Observer, OBSERVE_INTERVAL, val } from '@sixam/core/sensing';
 import { BlackoutReactive, guardIntents, GUARD_FRAMES } from '@sixam/core/control';
 import { formatRate } from './stat.mjs';
@@ -216,7 +216,7 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
 // a mask is fully on within the night's grace window. The monitor is up, so the
 // reactive layer must lower it, mask, verify the opening, then raise it back --
 // the full BlackoutReactive path.
-import { Rng } from '@sixam/core/mechanics';
+import { Rng } from '@sixam/source/fnaf2';
 import { build, schedule } from '../tools/device/minus-toys-plan.mjs';
 
 const NIGHT = 1;

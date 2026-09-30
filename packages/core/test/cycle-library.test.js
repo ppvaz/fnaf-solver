@@ -1,7 +1,7 @@
 // Plan 20 package 4: finite cycle primitives and fail-closed constraint gate.
 import { DEVICE_CONSTRAINTS, gateCycle, getCycle } from '@sixam/core/control';
-import { initialReducedState, advanceReduced, applyReduced } from '@sixam/core/mechanics';
-import * as C from '@sixam/core/mechanics';
+import { initialReducedState, advanceReduced, applyReduced } from '@sixam/source/fnaf2';
+import * as C from '@sixam/source/fnaf2';
 
 const check = (condition, message) => { if (!condition) throw new Error(message); };
 

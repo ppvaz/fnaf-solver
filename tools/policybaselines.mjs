@@ -26,8 +26,8 @@
 // The local Minus 7 control is not reimplemented at all: it is
 // `tools/model/reactive-pilot.mjs`'s `Bot`, driven through the adapter, so the control and
 // the published reactive Minus 7 figure are the same code.
-import * as C from '@sixam/core/mechanics';
-import { Rng } from '@sixam/core/mechanics';
+import * as C from '@sixam/source/fnaf2';
+import { Rng } from '@sixam/source/fnaf2';
 import { Bot, DEFAULT_CYCLE } from './model/reactive-pilot.mjs';
 
 const ms = (v) => Math.round(v * C.FPS / 1000);

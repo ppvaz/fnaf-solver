@@ -23,9 +23,9 @@
 import {
   GAMES, GAME_IDS, PACKAGES, scheduleFor, peakFor, canActIn, nightsOf,
   rollChance, rollsInHour, opportunities, modelFor, fnaf1, fnaf2, fnaf3, fnaf4,
-} from '../packages/source/src/clockwork/games.js';
-import { AI_BY_NIGHT, aiCap } from '../packages/source/src/games/fnaf2/config.js';
-import * as FPS_C from '../packages/source/src/games/fnaf2/config.js';
+} from '@sixam/source';
+import { AI_BY_NIGHT, aiCap } from '@sixam/source/fnaf2';
+import * as FPS_C from '@sixam/source/games/fnaf2/config.js';
 
 const failures = [];
 let checks = 0;

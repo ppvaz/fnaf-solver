@@ -21,7 +21,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import { Fnaf1Sim, DOOR_OPEN, DOOR_SHUT, DOOR_CLOSING, DOOR_OPENING, INPUT }
-  from '../packages/source/src/games/fnaf1/sim-fnaf1.js';
+  from '@sixam/source/fnaf1';
 import { runDeviceNight, loadTiming, grid420, FOUR_TWENTY, TIMING_PATH, POPULATION_KIND, POPULATION_LANES }
   from './fnaf1-device-lane.mjs';
 import { designBlock } from './winner-census.mjs';

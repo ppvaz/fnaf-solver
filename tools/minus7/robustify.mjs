@@ -17,7 +17,7 @@
 import { execFileSync } from 'node:child_process';
 import { replay } from '../device/recipe.mjs';
 import { jitterPlan, parsePlanText } from '../device/human-gate.mjs';
-import { Rng } from '@sixam/core/mechanics';
+import { Rng } from '@sixam/source/fnaf2';
 
 const arg = (k, d) => {
   const m = process.argv.find(a => a.startsWith(`--${k}=`));

@@ -3,7 +3,7 @@ import { chmodSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { stableHash } from '@sixam/core/contracts';
+import { stableHash } from '@sixam/kernel/contracts';
 import { AdbDeviceLocalArtifactExecutor } from '../src/adb-device-local-executor.js';
 import { compileDeviceLocalHidSchedule, sharedScheduleBody } from '../src/hid-schedule.js';
 import { renderDeviceLocalScript } from '../src/device-shell.js';

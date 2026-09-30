@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "dependencies": {"@sixam/core": "file:../core"},
+  "dependencies": {"@sixam/kernel": "file:../kernel", "@sixam/source": "file:../source"},
   "bin": {"fnaf2-research": "src/cli.js"},
   "exports": {".": "./src/experiment.js", "./cli": "./src/cli.js", "./seeds": "./src/seeds.js", "./families/minus-toys": "./src/families/minus-toys.js", "./families/minus-two": "./src/families/minus-two.js", "./strategies/minus-3": "./src/strategies/minus-3/index.js", "./strategies/minus-7": "./src/strategies/minus-7/index.js", "./strategies/minus-toys": "./src/strategies/minus-toys/index.js", "./strategies/right-vent-camp": "./src/strategies/right-vent-camp/index.js"}
 }

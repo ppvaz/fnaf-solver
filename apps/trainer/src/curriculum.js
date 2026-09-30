@@ -1,4 +1,4 @@
-import * as C from '@sixam/core/mechanics';
+import * as C from '@sixam/source/fnaf2';
 
 // A ladder of lessons. Each one adds exactly one new thing, hides every control
 // it doesn't need, and will not let you move on until the motion is reliable.

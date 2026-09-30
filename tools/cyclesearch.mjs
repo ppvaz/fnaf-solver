@@ -22,7 +22,7 @@
 //   --profile asks whether a cycle survives a *player* whose error is
 //     distributed unevenly across the steps. The weights are inferred, not
 //     sourced (see PROFILES in model/reactive-pilot.mjs); this is a sensitivity analysis.
-import * as C from '@sixam/core/mechanics';
+import * as C from '@sixam/source/fnaf2';
 import { DEFAULT_CYCLE, labelCycle } from './model/reactive-pilot.mjs';
 import { pool, closePool } from './pool.mjs';
 

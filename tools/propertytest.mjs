@@ -5,8 +5,8 @@
 // package: the seed campaign is reproducible, and a failing seed is shrunk
 // against the same bounded campaign before it is printed.
 import assert from 'node:assert/strict';
-import { Sim } from '@sixam/core/mechanics';
-import * as C from '@sixam/core/mechanics';
+import { Sim } from '@sixam/source/fnaf2';
+import * as C from '@sixam/source/fnaf2';
 
 const SEEDS = Array.from({ length: 64 }, (_, seed) => seed);
 const HOLD_ACTIONS = new Set(['light', 'wind', 'ventL', 'ventR']);

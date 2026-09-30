@@ -4,7 +4,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import { join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { CONTROL_CATALOGS } from '@sixam/core/control';
+import { CONTROL_CATALOGS } from '@sixam/source';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));
 const OUT = join(ROOT, 'docs/architecture/generated');
@@ -201,7 +201,7 @@ for (const path of sourceFiles.filter(path => /(?:test|check|spec)[^/]*\.(?:mjs|
   });
 }
 const duplicateResponsibilities = [
-  { responsibility: 'canonical mechanics', owner: '@sixam/core', legacy: [] },
+  { responsibility: 'canonical mechanics', owner: '@sixam/source', legacy: [] },
   { responsibility: 'semantic policy IR', owner: '@sixam/core', legacy: ['tools/device/policy-ir.mjs'] },
   { responsibility: 'physical actuation', owner: '@sixam/adapters', legacy: ['tools/device/actuator.mjs'] },
   { responsibility: 'device composition', owner: '@sixam/device', legacy: ['tools/device/recipe.mjs'] },
@@ -326,7 +326,7 @@ const legacyPaths = [
     id: 'core.contracts-shim', path: 'packages/core/src/contracts/index.js', category: 'package-subpath',
     lifecycle: 'compatibility', owner: '@sixam/kernel',
     replacement: '`@sixam/kernel/contracts` (packages/kernel/src/contracts/); the three catalog-generated validators from `@sixam/source`',
-    removalGate: 'No tracked module imports `@sixam/core/contracts` or `@sixam/core` for a contract, and core\'s own modules import the kernel directly',
+    removalGate: 'No tracked module imports a contract from `@sixam/core/contracts` or `@sixam/core` (true since D3, 2026-09-30), and the docs and hand-run commands that still name the subpath are updated',
     notes: 'Re-exports `@sixam/kernel/contracts` and the three catalog-generated validators (validateControlCommand, deviceProfileGame, resolveDeviceProfile); its export set is the one it had before the move.',
   },
   {
@@ -347,21 +347,21 @@ const legacyPaths = [
     id: 'core.control-vocabulary-shim', path: 'packages/core/src/control/index.js', category: 'package-subpath',
     lifecycle: 'compatibility', owner: '@sixam/source',
     replacement: '`@sixam/source` for the control vocabulary and the per-game catalogs; the policy language, controllers and cycle machinery stay here until they move to Propose',
-    removalGate: 'No tracked module imports a vocabulary or catalog name from `@sixam/core/control`, and the rest of the barrel has its Propose home',
+    removalGate: 'No tracked module imports a vocabulary or catalog name from `@sixam/core/control` (true since D3, 2026-09-30, outside tools/recompile, whose owner repoints two), and the rest of the barrel has its Propose home',
     notes: 'Re-exports the 37 vocabulary and catalog names by name from `@sixam/source` beside the modules that still live in core; its export set is the one it had before the move.',
   },
   {
     id: 'core.telemetry-shim', path: 'packages/core/src/telemetry/index.js', category: 'package-subpath',
     lifecycle: 'compatibility', owner: '@sixam/kernel',
     replacement: '`@sixam/kernel/time` for the fact link and the event clocks; the bench transport trace stays here until it moves to Review',
-    removalGate: 'No tracked module imports the fact link or the event clocks from `@sixam/core/telemetry`, and bench-trace.js has its Review home',
+    removalGate: 'No tracked module imports the fact link or the event clocks from `@sixam/core/telemetry` (true since D3, 2026-09-30), and bench-trace.js has its Review home',
     notes: 'Re-exports fact-link.js and event-clocks.js by name from the kernel beside bench-trace.js, which still lives here.',
   },
   {
     id: 'core.timing-shim', path: 'packages/core/src/timing/index.js', category: 'package-subpath',
     lifecycle: 'compatibility', owner: '@sixam/kernel',
     replacement: '`@sixam/kernel/time` for `ClockPort`; the phase clock stays here until it moves to Play',
-    removalGate: 'No tracked module imports `ClockPort` from `@sixam/core/timing`, and phase-clock.js has its Play home',
+    removalGate: 'No tracked module imports `ClockPort` from `@sixam/core/timing` (true since D3, 2026-09-30), and phase-clock.js has its Play home',
     notes: 'Re-exports the kernel clock port by name beside phase-clock.js, which still lives here.',
   },
   {

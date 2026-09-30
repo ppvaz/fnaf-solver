@@ -12,8 +12,8 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validateControlAnchor, resolveControlPoint, worldX, unstatedPanDependentControls, ANCHOR_KINDS, PAN_UNKNOWN }
   from '../../packages/adapters/src/control-anchor.js';
-import { GAME_CONTROLS } from '../../packages/source/src/clockwork/vocabulary.js';
-import { validateControlCommand } from '../../packages/core/src/contracts/index.js';
+import { GAME_CONTROLS } from '@sixam/source';
+import { validateControlCommand } from '@sixam/source';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '../..');

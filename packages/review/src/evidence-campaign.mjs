@@ -6,7 +6,7 @@
 // did not read that shape, so it reported 132 campaign directories as UNRECOGNIZED_ARTIFACT and
 // zero DEVICE_MEASURED runs -- every Night 1-7 win on the phone was invisible to the index and to
 // the Plan 12 gate. These functions are pure so the CLI and its test share them.
-import { validateCampaignResult } from '@sixam/core/contracts';
+import { validateCampaignResult } from '@sixam/kernel/contracts';
 
 export const CAMPAIGN_RESULT_SCHEMA = 'device-campaign-result-v1';
 

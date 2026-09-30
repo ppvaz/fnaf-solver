@@ -42,9 +42,9 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { FPS, Sim, Rng } from '@sixam/core/mechanics';
-import { stableHash } from '@sixam/core/contracts';
-import { MODEL_CONTEXT_LIGHT } from '@sixam/core/control';
+import { FPS, Sim, Rng } from '@sixam/source/fnaf2';
+import { stableHash } from '@sixam/kernel/contracts';
+import { MODEL_CONTEXT_LIGHT } from '@sixam/source';
 import { validateExecutorRequest } from '../../apps/device/src/artifact-executor.js';
 import { compileDeviceLocalHidSchedule } from '../../apps/device/src/hid-schedule.js';
 import { DeviceActuator } from './actuator.mjs';

@@ -7,12 +7,12 @@
  * COMPLETE after positive 6 AM and save/menu evidence.
  * CONTRACT:device-campaign-v1.
  */
-import { AI_10_20, AI_DIALS, PUPPET_AI } from '@sixam/core/mechanics';
-import { CAMPAIGN_STATES, stableHash, validateCampaignResult } from '@sixam/core/contracts';
+import { AI_10_20, AI_DIALS, PUPPET_AI } from '@sixam/source/fnaf2';
+import { CAMPAIGN_STATES, stableHash, validateCampaignResult } from '@sixam/kernel/contracts';
 import { makeCustomNightConfig, validateCustomNightConfig } from './custom-night.js';
 
 export const CAMPAIGN_SCHEMA = 'device-campaign-v1';
-// The result validator and its state list live in core/contracts since
+// The result validator and its state list live in kernel/contracts (core/contracts until 2026-09-30) since
 // 2026-09-29, so the evidence index reads a retained result without importing
 // this app; they are re-exported here unchanged.
 export { CAMPAIGN_STATES, validateCampaignResult };

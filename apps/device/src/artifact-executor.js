@@ -7,8 +7,9 @@
  * legacy transport fallback.
  * CONTRACT:device-executor-v1.
  */
-import { deviceProfileGame, stableHash } from '@sixam/core/contracts';
-import { artifactActionTableFor } from '@sixam/core/control';
+import { deviceProfileGame } from '@sixam/source';
+import { stableHash } from '@sixam/kernel/contracts';
+import { artifactActionTableFor } from '@sixam/source';
 
 export const DEVICE_EXECUTOR_SCHEMA = 'device-executor-v1';
 export const ARTIFACT_ACTION_SCHEMA = 'artifact-action-v1';

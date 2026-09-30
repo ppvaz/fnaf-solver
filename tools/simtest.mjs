@@ -1,7 +1,7 @@
 // Headless check: drive a "perfect player" through the Minus 7 cycle and see
 // whether the simulation's economics actually work out over a full night.
-import * as C from '@sixam/core/mechanics';
-import { Sim } from '@sixam/core/mechanics';
+import * as C from '@sixam/source/fnaf2';
+import { Sim } from '@sixam/source/fnaf2';
 import { Coach } from '@sixam/trainer';
 
 // The coach must not call an input safe when the model says it ends the night.

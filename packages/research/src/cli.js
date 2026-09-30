@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /** Experiment composition root; evaluators remain pure core consumers. */
-import { stableHash, validateArtifactRef } from '@sixam/core';
+import { stableHash, validateArtifactRef } from '@sixam/kernel/contracts';
 import { makeResultPayload, runModelExperiment } from './experiment.js';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';

@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { compileBundle, parsePlan, validateBundle } from './bundle.mjs';
-import { stableHash } from '@sixam/core/contracts';
+import { stableHash } from '@sixam/kernel/contracts';
 import { compileArtifactPlans } from './artifact-commands.mjs';
 import { makeExecutorRequest } from '../../apps/device/src/artifact-executor.js';
 

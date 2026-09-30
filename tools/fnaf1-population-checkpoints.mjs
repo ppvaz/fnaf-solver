@@ -108,7 +108,7 @@ async function main(argv) {
   if (!['tree', 'winner'].includes(kind)) throw new Error('--route is tree or winner');
   const start = Number(args.start ?? 0), count = Number(args.count ?? 65536);
   const jobs = Number(args.jobs ?? 3), blockSize = Number(args['block-size'] ?? 1024);
-  const paths = ['packages/core', 'tools/device', LANE_FILE, 'tools/winner-census.mjs', 'tools/fnaf1-population-checkpoints.mjs'];
+  const paths = ['packages/core', 'packages/source', 'packages/kernel', 'tools/device', LANE_FILE, 'tools/winner-census.mjs', 'tools/fnaf1-population-checkpoints.mjs'];
   const git = gitState(paths);
   if (git.dirtyEnginePaths.length) throw new Error('checkpoint census needs committed sources; commit source edits first');
   const started = Date.now();

@@ -62,7 +62,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { Sim } from '@sixam/core/mechanics';
+import { Sim } from '@sixam/source/fnaf2';
 import { STRATEGY_REGISTRY, compileBundle, validateWinner } from './device/bundle.mjs';
 import { PRESET_KNOBS, loadPresets, runNight } from './device/night7-presets.mjs';
 import { simOptionsFrom } from './recompile/model-draw-trace.mjs';
@@ -524,7 +524,7 @@ async function main(argv) {
       start: 0, count: 2 * args.count, jobs: args.jobs });
   }
   const record = buildRecord({ merged, count: args.count, all, winnerHashes, cohorts: phoneCohorts(),
-    git: gitState(['packages/core', 'tools/device', 'tools/recompile']), date: args.date,
+    git: gitState(['packages/core', 'packages/source', 'packages/kernel', 'tools/device', 'tools/recompile']), date: args.date,
     command: args.assemble ? `${command} --checkpoint DIR` : command,
     wallSeconds: args.assemble ? null : Math.round((Date.now() - started) / 1000), run, suffix: args.suffix });
   const text = `${formatRecord(record)}\n`;

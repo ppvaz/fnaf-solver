@@ -36,7 +36,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, join } from 'node:path';
-import { canonicalJson, stableHash } from '@sixam/core/contracts';
+import { canonicalJson, stableHash } from '@sixam/kernel/contracts';
 import { isCampaignResult, campaignEntry, campaignPromotionChecks } from './evidence-campaign.mjs';
 import { compileBundle } from '../../../tools/device/bundle.mjs';
 

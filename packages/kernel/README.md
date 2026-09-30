@@ -13,7 +13,7 @@ and they change only by a later ADR.
 | `Outcome` | `SixAM \| Death{by, how, rule, at} \| Timeout \| Aborted(why) \| Invalid(why) \| UNKNOWN`, plus `wouldDie[]` | `GameRun.reportedOutcome` |
 | `GameRun` | one night played once: spec, venue, runMode, clocks, before/night/after events, reported outcome, witnesses, custody `{class: complete \| recovered, lost[]}` | `packages/review` lifts every committed run pack into one |
 | `Annotation` | `{subject, instrument@version, class \| measure \| tag, value, inputs, by, status: standing \| superseded \| retracted}`, with a wide subject | the promotions query writes one per `PROMOTED_BY` edge |
-| `ClaimEnvelope` (`claim-envelope-v1`) | an answer: `{claim, label, target, cite[], status, supersededBy, notMeasured[], reproducer}`, or a refusal `{refused: true, rule, because, cite[], remedy}`. `label` is a `ClaimLevel`, a named `SourceLabel` or `UNKNOWN(reason)`, never missing or bare; a claim holding any UNKNOWN value must name what it does not measure. v1 under ADR 0002 ("the claim envelope until Plan 28 lands"), registered in `packages/core/contracts/register.json` | the fnaf-solver MCP verbs and resources, `npm run review`, and `npm run evidence -- show\|promotions --envelope` |
+| `ClaimEnvelope` (`claim-envelope-v1`) | an answer: `{claim, label, target, cite[], status, supersededBy, notMeasured[], reproducer}`, or a refusal `{refused: true, rule, because, cite[], remedy}`. `label` is a `ClaimLevel`, a named `SourceLabel` or `UNKNOWN(reason)`, never missing or bare; a claim holding any UNKNOWN value must name what it does not measure. v1 under ADR 0002 ("the claim envelope until Plan 28 lands"), registered in `contracts/register.json` | the fnaf-solver MCP verbs and resources, `npm run review`, and `npm run evidence -- show\|promotions --envelope` |
 
 The two label enums never promote one another. `GameRun.spec`, `venue` and
 `clocks` carry the source record's own fields, or `UNKNOWN(reason)`, until
@@ -39,7 +39,8 @@ The validators generated from the per-game control catalogs
 (`validateControlCommand`, `deviceProfileGame`, `resolveDeviceProfile`) stay
 beside the catalogs, outside the kernel, because the kernel imports nothing.
 `@sixam/core/contracts`, `/telemetry` and `/timing` re-export all of this as
-compatibility shims until their removal gates
+compatibility shims, which no tracked module imports since migration D3, until
+their removal gates
 ([`legacy-paths.json`](../../docs/architecture/generated/legacy-paths.json)).
 
 Public API: the package root, `./contracts` and `./time`. Dependencies: none,

@@ -22,8 +22,8 @@ import { replay } from './recipe.mjs';
 import { jitterPlan, parsePlanText } from './human-gate.mjs';
 import { execSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
-import * as E from '@sixam/core/mechanics';
-import * as C from '@sixam/core/mechanics';
+import * as E from '@sixam/source/fnaf2';
+import * as C from '@sixam/source/fnaf2';
 
 const arg = (name, def) => {
   const v = (process.argv.find(a => a.startsWith(`--${name}=`)) || '').split('=')[1];

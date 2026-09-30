@@ -5,7 +5,7 @@
 // minimal missed its double-camera arm on every attempt on 2026-09-27.
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { stableHash } from '@sixam/core/contracts';
+import { stableHash } from '@sixam/kernel/contracts';
 import { compileDeviceLocalHidSchedule, SECOND_CONTACT_UNDER_MS } from '../src/hid-schedule.js';
 
 const profile = JSON.parse(await readFile(new URL('../profiles/hid-mediaprojection.json', import.meta.url), 'utf8'));

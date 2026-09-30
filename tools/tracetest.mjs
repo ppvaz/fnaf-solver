@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Coach } from '@sixam/trainer';
-import * as C from '@sixam/core/mechanics';
+import * as C from '@sixam/source/fnaf2';
 import { summarize } from './tracereport.mjs';
 
 const TOOLS = dirname(fileURLToPath(import.meta.url));

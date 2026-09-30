@@ -14,8 +14,8 @@
 // It is NOT the shipped controller and does not pretend to be robust: it plays
 // each seed with foreknowledge of that seed's rolls. A robust policy is the
 // next layer (learn observation->action rules from the winning traces).
-import * as C from '@sixam/core/mechanics';
-import { Sim } from '@sixam/core/mechanics';
+import * as C from '@sixam/source/fnaf2';
+import { Sim } from '@sixam/source/fnaf2';
 import { cloneSim, view, ACTIONS, run } from './sim.mjs';
 import { decide } from './policy.mjs';
 

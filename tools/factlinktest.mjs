@@ -3,11 +3,7 @@
 // This tests the bounded data contract and the local drain semantics only.
 // It does not claim USB-CDC timing, MCU firmware behavior, or external-HID
 // acceptance; those remain bench obligations.
-import {
-  FACT_MESSAGE_SCHEMA, MAX_FACT_MESSAGE_BYTES, MAX_CYCLE_ACTIONS,
-  encodeFactMessage, decodeFactMessage, messageToFact,
-  FactLinkReceiver, SafeCycleHandoff,
-} from '@sixam/core/telemetry';
+import { FACT_MESSAGE_SCHEMA, MAX_FACT_MESSAGE_BYTES, MAX_CYCLE_ACTIONS, encodeFactMessage, decodeFactMessage, messageToFact, FactLinkReceiver, SafeCycleHandoff } from '@sixam/kernel/time';
 
 const check = (condition, message) => { if (!condition) throw new Error(message); };
 const expectThrow = (fn, message) => {

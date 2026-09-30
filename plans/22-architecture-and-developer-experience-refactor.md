@@ -72,7 +72,7 @@ The refactor is complete only when both statements are true:
 
 | Question | Decision |
 |---|---|
-| Canonical source | The Source: the game's compiled logic, read through the dump into one Rulebook per game (in code `@sixam/core` until `packages/source`); every other context consumes it (amended 2026-09-29) |
+| Canonical source | The Source: the game's compiled logic, read through the dump into one Rulebook per game (in code `@sixam/source` since 2026-09-30); every other context consumes it (amended 2026-09-29) |
 | Repository | private npm-workspaces `@sixam/*` monorepo |
 | Main implementation language | strict TypeScript for new/extracted long-lived host/core code; gradual JS migration |
 | Other languages | Python analysis, thin shell boundaries, Android Java, firmware/native C, entry assembly, toolchain-only C# |
@@ -133,9 +133,11 @@ and recompiles it into a runnable binary, along the identity chain APK -> CCN ->
 dump -> Rulebook and CCN + patch -> binary. Where the model and the dump
 disagree, the dump is right and the model is fixed. In code the derived
 mechanics, semantic actions, observations, policies and evidence-labelled
-constants live in `@sixam/core` until `packages/source` takes the Source's
-share of it (migration M6). Propose, Play, Review and Teach consume it; it
-imports only itself and the kernel, and never an application, adapter, shell
+constants lived in `@sixam/core`; since 2026-09-30 each game's Rulebook data,
+Sim and controls live in `@sixam/source` (migration D1/D4), the contracts and
+Time in `@sixam/kernel`, and core keeps the policy language, sensing and
+estimation until they move. Propose, Play, Review and Teach consume Source; it
+imports only the kernel, and never an application, adapter, shell
 command, DOM API, or device implementation.
 
 ### 2. (Dropped 2026-09-29)
@@ -225,19 +227,22 @@ fnaf2-1020/                     (amended 2026-09-29: ADR 0002 contexts in bracke
       src/                      consumer today (Interval, ClaimLevel, SourceLabel, Outcome,
                                 GameRun, Annotation): types.ts + validators; imports nothing
 
-    core/                       @sixam/core      [source, until packages/source]
+    source/                     @sixam/source    [source] since 2026-09-30 (migration D1/D4)
+      src/games/fnaf1..4/      Rulebook data, Sim, controls, movement graph
+      src/clockwork/           nights registry, night model, RNG, control catalogs and vocabulary
+      decompile/               the decompile and read chain (was tools/dump)
+      test/                    the sourced draw-order and Sim contract tests
+                                (later: acquire, derive, recompile; the identity chain, M6)
+
+    core/                       @sixam/core      what is left: moving to propose, play, review, teach
       src/
-        mechanics/             sourced model, plant simulation, RNG
-        control/               policies, supervisors, policy IR
+        control/               policies, supervisors, policy IR (+ shim over source's vocabulary)
         sensing/               measurement and observation semantics
         estimation/            belief and state estimation
-        timing/                frames, clocks, deadlines
-        telemetry/             events and run-record schemas
-        contracts/             the contract register's validators
+        timing/                the phase clock (+ shim over the kernel's clock port)
+        telemetry/             the bench transport trace (+ shim over the kernel's Time)
         training/              the trainer's exercise contracts
-
-    source/                     (future, migration M6) @sixam/source [source]
-                                acquire, decompile, derive, recompile; the identity chain
+        mechanics/, contracts/ compatibility shims over source and the kernel
 
     adapters/                   @sixam/adapters  [play]
       src/                      HID and Cue Helper transports, clocks, night onset,
@@ -286,7 +291,7 @@ toolchain, or dependency boundary.
 kernel <- source <- play <- propose -> review -> source
 
   kernel   @sixam/kernel     imports nothing; every package may import it
-  source   @sixam/core       imports only itself and the kernel
+  source   @sixam/source     imports only itself and the kernel
   play     packages/adapters, apps/device
   propose  packages/research
   review   packages/review        never imports play or propose

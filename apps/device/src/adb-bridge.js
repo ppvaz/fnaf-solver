@@ -21,7 +21,7 @@ import { promisify } from 'node:util';
 import { parseCueHelperEndpoint } from './physical-ports.js';
 import { restartCueHelperCapture as defaultRestartCueHelperCapture } from './cue-helper-capture.js';
 import { readVenueIdentity } from '@sixam/adapters';
-import { compareVenueIdentity } from '@sixam/core/contracts';
+import { compareVenueIdentity } from '@sixam/kernel/contracts';
 
 const execFile = promisify(execFileCallback);
 const GAME_PACKAGE = 'com.scottgames.fnaf2';

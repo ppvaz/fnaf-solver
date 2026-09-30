@@ -44,7 +44,7 @@
 //     lateness lanes at their last all-win value and first recorded loss.
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
-import * as C from '@sixam/core/mechanics';
+import * as C from '@sixam/source/fnaf2';
 import { KNOBS0 } from './minus-toys-plan.mjs';
 import { loadPresets, cohort, runNight, PRESET_KNOBS, MEASURED_SPREAD_MS, HALL_PLATEAU_MS, BANDS,
   POPULATION_KIND, PLANE_KIND, planeSchedules, planeVector, planeWins } from './night7-presets.mjs';

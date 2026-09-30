@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@sixam/core": "file:../core",
-    "@sixam/kernel": "file:../kernel"
+    "@sixam/kernel": "file:../kernel",
+    "@sixam/source": "file:../source"
   },
   "bin": {
     "fnaf2-review": "src/cli.mjs"

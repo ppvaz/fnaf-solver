@@ -11,7 +11,7 @@ import { spawn } from 'node:child_process';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { canonicalJson, stableHash } from '@sixam/core/contracts';
+import { canonicalJson, stableHash } from '@sixam/kernel/contracts';
 import { CUSTODY_CLASSES, isUnknown, validateAnnotation } from '@sixam/kernel';
 import { PACKS_DIR, trackedWinners } from '../src/evidence-pack.mjs';
 import { GRAPH_FILE, PROMOTION_EDGE } from '../src/evidence-promotion.mjs';

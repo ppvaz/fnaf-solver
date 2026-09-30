@@ -7,7 +7,7 @@
         "./cue-helper-capture.js",
         "./physical-ports.js",
         "@sixam/adapters",
-        "@sixam/core/contracts",
+        "@sixam/kernel/contracts",
         "node:child_process",
         "node:util"
       ]
@@ -27,8 +27,8 @@
     {
       "file": "apps/device/src/artifact-executor.js",
       "imports": [
-        "@sixam/core/contracts",
-        "@sixam/core/control"
+        "@sixam/kernel/contracts",
+        "@sixam/source"
       ]
     },
     {
@@ -36,7 +36,7 @@
       "imports": [
         "./artifact-executor.js",
         "./campaign.js",
-        "@sixam/core/contracts",
+        "@sixam/kernel/contracts",
         "node:crypto"
       ]
     },
@@ -53,15 +53,15 @@
         "./adb-bridge.js",
         "./campaign.js",
         "./custom-night.js",
-        "@sixam/core/contracts"
+        "@sixam/kernel/contracts"
       ]
     },
     {
       "file": "apps/device/src/campaign-proof.js",
       "imports": [
         "./custom-night.js",
-        "@sixam/core/contracts",
-        "@sixam/core/mechanics"
+        "@sixam/kernel/contracts",
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -75,8 +75,8 @@
       "file": "apps/device/src/campaign.js",
       "imports": [
         "./custom-night.js",
-        "@sixam/core/contracts",
-        "@sixam/core/mechanics"
+        "@sixam/kernel/contracts",
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -92,7 +92,8 @@
         "./physical-ports.js",
         "./venue.js",
         "@sixam/adapters",
-        "@sixam/core/contracts",
+        "@sixam/kernel/contracts",
+        "@sixam/source",
         "node:fs/promises",
         "node:path",
         "node:url"
@@ -109,7 +110,7 @@
     {
       "file": "apps/device/src/custom-night.js",
       "imports": [
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -130,8 +131,7 @@
         "./artifact-executor.js",
         "./device-local-executor.js",
         "@sixam/adapters",
-        "@sixam/core/contracts",
-        "@sixam/core/control"
+        "@sixam/source"
       ]
     },
     {
@@ -182,7 +182,7 @@
     {
       "file": "apps/device/src/venue.js",
       "imports": [
-        "@sixam/core/contracts",
+        "@sixam/kernel/contracts",
         "node:fs/promises",
         "node:path"
       ]
@@ -206,7 +206,7 @@
         "../src/device-local-executor.js",
         "../src/device-shell.js",
         "../src/hid-schedule.js",
-        "@sixam/core/contracts",
+        "@sixam/kernel/contracts",
         "node:assert/strict",
         "node:fs",
         "node:fs/promises",
@@ -266,7 +266,7 @@
       "imports": [
         "../src/campaign-proof.js",
         "../src/campaign.js",
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "node:assert/strict"
       ]
     },
@@ -299,7 +299,7 @@
       "file": "apps/device/test/hid-read-gap.test.js",
       "imports": [
         "../src/hid-schedule.js",
-        "@sixam/core/contracts",
+        "@sixam/kernel/contracts",
         "node:assert/strict",
         "node:fs/promises"
       ]
@@ -308,7 +308,7 @@
       "file": "apps/device/test/hid-second-contact.test.js",
       "imports": [
         "../src/hid-schedule.js",
-        "@sixam/core/contracts",
+        "@sixam/kernel/contracts",
         "node:assert/strict",
         "node:fs/promises"
       ]
@@ -333,7 +333,7 @@
       "imports": [
         "../src/adb-device-local-executor.js",
         "../src/hid-schedule.js",
-        "@sixam/core/contracts",
+        "@sixam/kernel/contracts",
         "node:assert/strict",
         "node:fs",
         "node:fs/promises",
@@ -346,7 +346,8 @@
       "imports": [
         "../src/artifact-executor.js",
         "../src/hid-schedule.js",
-        "@sixam/core/contracts",
+        "@sixam/kernel/contracts",
+        "@sixam/source",
         "node:assert/strict",
         "node:fs",
         "node:url"
@@ -357,7 +358,7 @@
       "imports": [
         "../src/adb-device-local-executor.js",
         "../src/hid-schedule.js",
-        "@sixam/core/contracts",
+        "@sixam/kernel/contracts",
         "node:assert/strict",
         "node:fs",
         "node:fs/promises",
@@ -380,7 +381,7 @@
         "../src/campaign-preflight.js",
         "../src/campaign.js",
         "../src/venue.js",
-        "@sixam/core/contracts",
+        "@sixam/kernel/contracts",
         "node:assert/strict",
         "node:fs",
         "node:os",
@@ -392,8 +393,8 @@
       "file": "apps/trainer/src/arcade-lab.js",
       "imports": [
         "./validate.js",
-        "@sixam/core/contracts",
-        "@sixam/core/training"
+        "@sixam/core/training",
+        "@sixam/kernel/contracts"
       ]
     },
     {
@@ -407,13 +408,13 @@
     {
       "file": "apps/trainer/src/coach.js",
       "imports": [
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
       "file": "apps/trainer/src/curriculum.js",
       "imports": [
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -428,7 +429,7 @@
     {
       "file": "apps/trainer/src/lane.js",
       "imports": [
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -443,15 +444,15 @@
         "./lane.js",
         "./report.js",
         "./ui.js",
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
       "file": "apps/trainer/src/microtrainer.js",
       "imports": [
         "./validate.js",
-        "@sixam/core/contracts",
-        "@sixam/core/training"
+        "@sixam/core/training",
+        "@sixam/kernel/contracts"
       ]
     },
     {
@@ -465,7 +466,7 @@
     {
       "file": "apps/trainer/src/report.js",
       "imports": [
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -473,7 +474,7 @@
       "imports": [
         "./lane.js",
         "./report.js",
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -492,7 +493,7 @@
     {
       "file": "packages/adapters/src/clocks.js",
       "imports": [
-        "@sixam/core/timing"
+        "@sixam/kernel/time"
       ]
     },
     {
@@ -520,7 +521,7 @@
     {
       "file": "packages/adapters/src/transports/android-venue.js",
       "imports": [
-        "@sixam/core/contracts",
+        "@sixam/kernel/contracts",
         "node:crypto"
       ]
     },
@@ -528,7 +529,7 @@
       "file": "packages/adapters/test/android-venue.test.js",
       "imports": [
         "../src/transports/android-venue.js",
-        "@sixam/core/contracts",
+        "@sixam/kernel/contracts",
         "node:assert/strict",
         "node:crypto",
         "node:fs",
@@ -745,8 +746,8 @@
       "file": "packages/core/test/cycle-controller.test.js",
       "imports": [
         "@sixam/core/control",
-        "@sixam/core/mechanics",
         "@sixam/core/sensing",
+        "@sixam/source/fnaf2",
         "node:fs"
       ]
     },
@@ -754,21 +755,21 @@
       "file": "packages/core/test/cycle-library.test.js",
       "imports": [
         "@sixam/core/control",
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
       "file": "packages/core/test/cycle-planner.test.js",
       "imports": [
         "@sixam/core/control",
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
       "file": "packages/core/test/night-policy.test.js",
       "imports": [
         "@sixam/core/control",
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -873,7 +874,7 @@
       "file": "packages/research/src/cli.js",
       "imports": [
         "./experiment.js",
-        "@sixam/core",
+        "@sixam/kernel/contracts",
         "node:fs/promises",
         "node:path",
         "node:url"
@@ -884,7 +885,9 @@
       "imports": [
         "./families/minus-toys.js",
         "./families/minus-two.js",
-        "@sixam/core"
+        "@sixam/kernel/contracts",
+        "@sixam/source",
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -896,8 +899,8 @@
     {
       "file": "packages/research/src/families/minus-two.js",
       "imports": [
-        "@sixam/core/contracts",
-        "@sixam/core/mechanics"
+        "@sixam/kernel/contracts",
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -919,13 +922,13 @@
       "imports": [
         "../../seeds.js",
         "./route.js",
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
       "file": "packages/research/src/strategies/minus-3/route.js",
       "imports": [
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -941,13 +944,13 @@
       "imports": [
         "../../seeds.js",
         "./route.js",
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
       "file": "packages/research/src/strategies/minus-7/route.js",
       "imports": [
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -963,14 +966,14 @@
       "imports": [
         "../../seeds.js",
         "./route.js",
-        "@sixam/core/contracts",
-        "@sixam/core/mechanics"
+        "@sixam/kernel/contracts",
+        "@sixam/source/fnaf2"
       ]
     },
     {
       "file": "packages/research/src/strategies/minus-toys/route.js",
       "imports": [
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -986,13 +989,13 @@
       "imports": [
         "../../seeds.js",
         "./route.js",
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
       "file": "packages/research/src/strategies/right-vent-camp/route.js",
       "imports": [
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -1040,14 +1043,14 @@
     {
       "file": "packages/review/src/evidence-campaign.mjs",
       "imports": [
-        "@sixam/core/contracts"
+        "@sixam/kernel/contracts"
       ]
     },
     {
       "file": "packages/review/src/evidence-cohort.mjs",
       "imports": [
         "./evidence-pack.mjs",
-        "@sixam/core/contracts",
+        "@sixam/kernel/contracts",
         "node:fs",
         "node:path"
       ]
@@ -1057,7 +1060,7 @@
       "imports": [
         "../../../tools/device/bundle.mjs",
         "./evidence-campaign.mjs",
-        "@sixam/core/contracts",
+        "@sixam/kernel/contracts",
         "node:crypto",
         "node:fs",
         "node:os",
@@ -1069,8 +1072,8 @@
       "imports": [
         "./evidence-campaign.mjs",
         "./evidence-pack.mjs",
-        "@sixam/core/contracts",
-        "@sixam/core/mechanics",
+        "@sixam/kernel/contracts",
+        "@sixam/source/fnaf2",
         "node:crypto",
         "node:fs",
         "node:path"
@@ -1092,8 +1095,8 @@
         "./evidence-pack.mjs",
         "./evidence-promotion.mjs",
         "./pack-lift.mjs",
-        "@sixam/core/contracts",
         "@sixam/kernel",
+        "@sixam/kernel/contracts",
         "node:crypto",
         "node:fs",
         "node:path"
@@ -1111,8 +1114,8 @@
         "../../../tools/chronicle-schema.mjs",
         "./evidence-pack.mjs",
         "./evidence-promotion.mjs",
-        "@sixam/core/control",
         "@sixam/kernel",
+        "@sixam/source",
         "node:fs",
         "node:path"
       ]
@@ -1128,9 +1131,9 @@
         "./promotions-query.mjs",
         "./refusals.mjs",
         "./registers.mjs",
-        "@sixam/core/contracts",
-        "@sixam/core/control",
         "@sixam/kernel",
+        "@sixam/kernel/contracts",
+        "@sixam/source",
         "node:fs",
         "node:path"
       ]
@@ -1159,7 +1162,7 @@
       "imports": [
         "../src/evidence-campaign.mjs",
         "../src/evidence-pack.mjs",
-        "@sixam/core/contracts",
+        "@sixam/kernel/contracts",
         "node:assert/strict",
         "node:crypto",
         "node:fs",
@@ -1173,7 +1176,7 @@
         "../src/evidence-campaign.mjs",
         "../src/evidence-pack.mjs",
         "../src/evidence-promotion.mjs",
-        "@sixam/core/contracts",
+        "@sixam/kernel/contracts",
         "node:assert/strict",
         "node:crypto",
         "node:fs",
@@ -1200,8 +1203,8 @@
         "../src/evidence-pack.mjs",
         "../src/evidence-promotion.mjs",
         "../src/promotions-query.mjs",
-        "@sixam/core/contracts",
         "@sixam/kernel",
+        "@sixam/kernel/contracts",
         "node:assert/strict",
         "node:child_process",
         "node:fs",
@@ -1228,9 +1231,9 @@
         "../src/promotions-query.mjs",
         "../src/registers.mjs",
         "../src/solver.mjs",
-        "@sixam/core/contracts",
-        "@sixam/core/control",
         "@sixam/kernel",
+        "@sixam/kernel/contracts",
+        "@sixam/source",
         "node:assert/strict",
         "node:child_process",
         "node:crypto",
@@ -1838,11 +1841,11 @@
         "../packages/core/src/mechanics/games/policy-fnaf1.js",
         "../packages/core/src/mechanics/games/policy-fnaf3.js",
         "../packages/core/src/mechanics/games/policy-fnaf4.js",
-        "../packages/source/src/games/fnaf1/sim-fnaf1.js",
-        "../packages/source/src/games/fnaf3/sim-fnaf3.js",
-        "../packages/source/src/games/fnaf4/sim-fnaf4.js",
         "./policy.mjs",
-        "./policybaselines.mjs"
+        "./policybaselines.mjs",
+        "@sixam/source/fnaf1",
+        "@sixam/source/fnaf3",
+        "@sixam/source/fnaf4"
       ]
     },
     {
@@ -1884,22 +1887,22 @@
       "imports": [
         "./model/reactive-pilot.mjs",
         "./pool.mjs",
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "node:url"
       ]
     },
     {
       "file": "tools/device/actuator.mjs",
       "imports": [
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
       "file": "tools/device/artifact-commands.mjs",
       "imports": [
         "./recipe.mjs",
-        "@sixam/core/control",
-        "@sixam/core/mechanics"
+        "@sixam/source",
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -1926,9 +1929,9 @@
         "./minus-3-plan.mjs",
         "./minus-toys-plan.mjs",
         "./recipe.mjs",
-        "@sixam/core/contracts",
-        "@sixam/core/control",
-        "@sixam/core/mechanics",
+        "@sixam/kernel/contracts",
+        "@sixam/source",
+        "@sixam/source/fnaf2",
         "node:crypto",
         "node:fs",
         "node:path",
@@ -1985,7 +1988,7 @@
         "../chrome.mjs",
         "../stat.mjs",
         "./human-gate.mjs",
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "node:child_process",
         "node:fs",
         "node:url"
@@ -1998,9 +2001,9 @@
         "../../apps/device/src/hid-schedule.js",
         "./actuator.mjs",
         "./artifact-commands.mjs",
-        "@sixam/core/contracts",
-        "@sixam/core/control",
-        "@sixam/core/mechanics",
+        "@sixam/kernel/contracts",
+        "@sixam/source",
+        "@sixam/source/fnaf2",
         "node:fs",
         "node:path",
         "node:url"
@@ -2038,7 +2041,7 @@
     {
       "file": "tools/device/fact-register.mjs",
       "imports": [
-        "@sixam/core/contracts",
+        "@sixam/kernel/contracts",
         "node:fs",
         "node:path",
         "node:url"
@@ -2221,7 +2224,7 @@
       "imports": [
         "../stat.mjs",
         "./recipe.mjs",
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "node:fs",
         "node:url"
       ]
@@ -2264,7 +2267,7 @@
       "file": "tools/device/minus-toys-margin.mjs",
       "imports": [
         "./minus-toys-plan.mjs",
-        "@sixam/core/control"
+        "@sixam/source"
       ]
     },
     {
@@ -2282,9 +2285,9 @@
       "file": "tools/device/minus3-frame-light.mjs",
       "imports": [
         "./minus-3-plan.mjs",
-        "@sixam/core/control",
-        "@sixam/core/mechanics",
         "@sixam/research/seeds",
+        "@sixam/source",
+        "@sixam/source/fnaf2",
         "node:crypto",
         "node:url"
       ]
@@ -2326,8 +2329,8 @@
         "./actuator.mjs",
         "./bundle.mjs",
         "./minus-toys-plan.mjs",
-        "@sixam/core/mechanics",
         "@sixam/research/seeds",
+        "@sixam/source/fnaf2",
         "node:crypto",
         "node:fs",
         "node:url"
@@ -2342,8 +2345,8 @@
         "./artifact-commands.mjs",
         "./minus-toys-plan.mjs",
         "./night7-presets.mjs",
-        "@sixam/core/control",
-        "@sixam/core/mechanics",
+        "@sixam/source",
+        "@sixam/source/fnaf2",
         "node:child_process",
         "node:crypto",
         "node:fs",
@@ -2359,7 +2362,7 @@
         "./bundle.mjs",
         "./fact-register.mjs",
         "./night7-presets.mjs",
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "node:crypto",
         "node:fs",
         "node:os",
@@ -2371,7 +2374,7 @@
       "file": "tools/device/phase-reconstruct.mjs",
       "imports": [
         "@sixam/adapters/night-onset",
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "node:fs",
         "node:path",
         "node:url"
@@ -2394,6 +2397,7 @@
       "imports": [
         "./policy-interpreter.mjs",
         "@sixam/core/control",
+        "@sixam/source",
         "node:crypto"
       ]
     },
@@ -2408,7 +2412,7 @@
       "file": "tools/device/policy-interpreter.mjs",
       "imports": [
         "@sixam/core/control",
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -2416,7 +2420,8 @@
       "imports": [
         "./arm-verification.mjs",
         "./minus-toys-plan.mjs",
-        "@sixam/core/control"
+        "@sixam/core/control",
+        "@sixam/source"
       ]
     },
     {
@@ -2470,7 +2475,7 @@
       "imports": [
         "./artifact-commands.mjs",
         "./bundle.mjs",
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "node:fs",
         "node:path",
         "node:url"
@@ -2491,7 +2496,7 @@
         "../model/closed-loop-reclaim.mjs",
         "../model/stock-device-pilot.mjs",
         "./actuator.mjs",
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "node:url"
       ]
     },
@@ -2509,7 +2514,7 @@
       "imports": [
         "./artifact-commands.mjs",
         "./recipe.mjs",
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -2538,7 +2543,7 @@
         "../../apps/device/src/artifact-executor.js",
         "./artifact-commands.mjs",
         "./bundle.mjs",
-        "@sixam/core/contracts",
+        "@sixam/kernel/contracts",
         "node:child_process",
         "node:fs",
         "node:os",
@@ -2549,8 +2554,7 @@
       "file": "tools/device/test-control-anchor.mjs",
       "imports": [
         "../../packages/adapters/src/control-anchor.js",
-        "../../packages/core/src/contracts/index.js",
-        "../../packages/source/src/clockwork/vocabulary.js",
+        "@sixam/source",
         "node:assert/strict",
         "node:fs",
         "node:path",
@@ -2586,14 +2590,14 @@
       "file": "tools/device/test-device-input-gaps.mjs",
       "imports": [
         "./recipe.mjs",
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "node:url"
       ]
     },
     {
       "file": "tools/device/test-event-clocks.mjs",
       "imports": [
-        "@sixam/core/telemetry",
+        "@sixam/kernel/time",
         "node:assert/strict",
         "node:child_process",
         "node:fs",
@@ -2606,7 +2610,7 @@
       "imports": [
         "./bundle.mjs",
         "./fact-register.mjs",
-        "@sixam/core/contracts",
+        "@sixam/kernel/contracts",
         "node:child_process",
         "node:fs",
         "node:os",
@@ -2734,7 +2738,7 @@
         "./artifact-commands.mjs",
         "./bundle.mjs",
         "./minus-toys-plan.mjs",
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "node:child_process",
         "node:fs",
         "node:path",
@@ -2768,7 +2772,7 @@
         "../stat.mjs",
         "./human-gate.mjs",
         "./recipe.mjs",
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "node:fs",
         "node:path",
         "node:url"
@@ -2796,7 +2800,7 @@
         "./night7-presets.mjs",
         "./night7-robustness-field.mjs",
         "./night7-robustness.mjs",
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "node:crypto",
         "node:fs"
       ]
@@ -2813,7 +2817,7 @@
         "./minus-toys-plan.mjs",
         "./policy-interpreter.mjs",
         "./policy-ir.mjs",
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -2915,7 +2919,7 @@
       "imports": [
         "./human-gate.mjs",
         "./recipe.mjs",
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "node:child_process",
         "node:fs"
       ]
@@ -2932,8 +2936,8 @@
     {
       "file": "tools/encounter-replay.mjs",
       "imports": [
-        "../packages/source/src/clockwork/vocabulary.js",
-        "../packages/source/src/games/fnaf2/plant-model.js",
+        "@sixam/source",
+        "@sixam/source/fnaf2",
         "node:crypto",
         "node:fs",
         "node:url"
@@ -2955,7 +2959,7 @@
       "file": "tools/evidence.js",
       "imports": [
         "./device/bundle.mjs",
-        "@sixam/core/contracts",
+        "@sixam/kernel/contracts",
         "@sixam/research",
         "@sixam/review/envelopes",
         "@sixam/review/evidence-campaign",
@@ -2980,16 +2984,16 @@
     {
       "file": "tools/factlinktest.mjs",
       "imports": [
-        "@sixam/core/telemetry"
+        "@sixam/kernel/time"
       ]
     },
     {
       "file": "tools/factreplay.mjs",
       "imports": [
-        "@sixam/core/contracts",
         "@sixam/core/control",
-        "@sixam/core/mechanics",
         "@sixam/core/sensing",
+        "@sixam/kernel/contracts",
+        "@sixam/source/fnaf2",
         "node:child_process",
         "node:fs",
         "node:path"
@@ -2999,15 +3003,15 @@
       "file": "tools/flicksweep.mjs",
       "imports": [
         "./model/stock-device-pilot.mjs",
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
       "file": "tools/fnaf1-device-lane.mjs",
       "imports": [
-        "../packages/source/src/games/fnaf1/sim-fnaf1.js",
         "./device/fnaf1-winner.mjs",
         "./winner-census.mjs",
+        "@sixam/source/fnaf1",
         "node:child_process",
         "node:crypto",
         "node:fs",
@@ -3032,7 +3036,7 @@
     {
       "file": "tools/generate-catalog.js",
       "imports": [
-        "@sixam/core/control",
+        "@sixam/source",
         "node:child_process",
         "node:fs/promises",
         "node:path",
@@ -3052,7 +3056,7 @@
       "imports": [
         "./model/closed-loop-reclaim.mjs",
         "./model/hid-device-pilot.mjs",
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "node:url"
       ]
     },
@@ -3080,8 +3084,8 @@
       "file": "tools/mangletest.mjs",
       "imports": [
         "@sixam/core/control",
-        "@sixam/core/mechanics",
-        "@sixam/core/sensing"
+        "@sixam/core/sensing",
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -3102,7 +3106,7 @@
       "file": "tools/minus6test.mjs",
       "imports": [
         "./model/reactive-pilot.mjs",
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "node:url"
       ]
     },
@@ -3125,7 +3129,7 @@
         "../device/human-gate.mjs",
         "../device/recipe.mjs",
         "../model/hid-device-pilot.mjs",
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -3141,7 +3145,7 @@
       "imports": [
         "../device/human-gate.mjs",
         "../device/recipe.mjs",
-        "@sixam/core/contracts",
+        "@sixam/kernel/contracts",
         "node:fs",
         "node:path"
       ]
@@ -3159,7 +3163,7 @@
       "imports": [
         "../device/human-gate.mjs",
         "../device/recipe.mjs",
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -3168,8 +3172,8 @@
         "../device/human-gate.mjs",
         "../device/recipe.mjs",
         "../model/hid-device-pilot.mjs",
-        "@sixam/core/contracts",
-        "@sixam/core/mechanics",
+        "@sixam/kernel/contracts",
+        "@sixam/source/fnaf2",
         "node:child_process",
         "node:fs",
         "node:path"
@@ -3179,7 +3183,7 @@
       "file": "tools/minus7/policy.mjs",
       "imports": [
         "./sim.mjs",
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -3187,7 +3191,7 @@
       "imports": [
         "../device/human-gate.mjs",
         "../device/recipe.mjs",
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "node:child_process"
       ]
     },
@@ -3196,13 +3200,13 @@
       "imports": [
         "./policy.mjs",
         "./sim.mjs",
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
       "file": "tools/minus7/sim.mjs",
       "imports": [
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -3214,7 +3218,7 @@
         "../model/hid-device-pilot.mjs",
         "./paramsearch.mjs",
         "./sim.mjs",
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -3264,7 +3268,7 @@
       "file": "tools/model/reactive-pilot.mjs",
       "imports": [
         "../stat.mjs",
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "node:url",
         "node:worker_threads"
       ]
@@ -3274,7 +3278,7 @@
       "imports": [
         "../device/actuator.mjs",
         "../stat.mjs",
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "node:url"
       ]
     },
@@ -3291,8 +3295,8 @@
       "file": "tools/nightloop-run.mjs",
       "imports": [
         "@sixam/core/control",
-        "@sixam/core/mechanics",
-        "@sixam/core/sensing"
+        "@sixam/core/sensing",
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -3301,7 +3305,7 @@
         "./nightloop-run.mjs",
         "./pool.mjs",
         "./stat.mjs",
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -3320,7 +3324,7 @@
       "file": "tools/periodicsweep.mjs",
       "imports": [
         "./model/stock-device-pilot.mjs",
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -3333,15 +3337,15 @@
     {
       "file": "tools/phaseclocktest.mjs",
       "imports": [
-        "@sixam/core/telemetry",
-        "@sixam/core/timing"
+        "@sixam/core/timing",
+        "@sixam/kernel/time"
       ]
     },
     {
       "file": "tools/phasesweep.mjs",
       "imports": [
         "./model/stock-device-pilot.mjs",
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -3365,7 +3369,7 @@
       "file": "tools/policy.mjs",
       "imports": [
         "./device/actuator.mjs",
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -3384,7 +3388,7 @@
       "file": "tools/policybaselines.mjs",
       "imports": [
         "./model/reactive-pilot.mjs",
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -3421,7 +3425,7 @@
         "./policy.mjs",
         "./policybaselines.mjs",
         "./stat.mjs",
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "node:crypto",
         "node:fs",
         "node:url"
@@ -3452,7 +3456,7 @@
     {
       "file": "tools/propertytest.mjs",
       "imports": [
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "node:assert/strict"
       ]
     },
@@ -3472,8 +3476,8 @@
         "../tools/device/minus-toys-plan.mjs",
         "./stat.mjs",
         "@sixam/core/control",
-        "@sixam/core/mechanics",
         "@sixam/core/sensing",
+        "@sixam/source/fnaf2",
         "node:url"
       ]
     },
@@ -3485,7 +3489,7 @@
         "./recompile/model-draw-trace.mjs",
         "./winner-census.mjs",
         "./winner-phase-census.mjs",
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "node:crypto",
         "node:fs",
         "node:os",
@@ -3816,7 +3820,7 @@
       "file": "tools/reducedmodeltest.mjs",
       "imports": [
         "./device/minus-toys-plan.mjs",
-        "@sixam/core/mechanics"
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -3846,28 +3850,28 @@
     {
       "file": "tools/seed-recovery.mjs",
       "imports": [
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "node:fs"
       ]
     },
     {
       "file": "tools/seed-recoverytest.mjs",
       "imports": [
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "node:assert/strict"
       ]
     },
     {
       "file": "tools/simtest.mjs",
       "imports": [
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "@sixam/trainer"
       ]
     },
     {
       "file": "tools/sourcetest.mjs",
       "imports": [
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "node:url"
       ]
     },
@@ -3909,7 +3913,7 @@
         "./device/bundle.mjs",
         "./encounter-replay.mjs",
         "./winner-census.mjs",
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "node:assert/strict",
         "node:crypto",
         "node:fs"
@@ -3932,16 +3936,15 @@
       "file": "tools/test-fnaf1-census.mjs",
       "imports": [
         "../packages/core/src/mechanics/games/policy-fnaf1.js",
-        "../packages/source/src/games/fnaf1/fnaf1.js",
-        "../packages/source/src/games/fnaf1/sim-fnaf1.js"
+        "@sixam/source/fnaf1"
       ]
     },
     {
       "file": "tools/test-fnaf1-device-lane.mjs",
       "imports": [
-        "../packages/source/src/games/fnaf1/sim-fnaf1.js",
         "./fnaf1-device-lane.mjs",
         "./winner-census.mjs",
+        "@sixam/source/fnaf1",
         "node:crypto",
         "node:fs"
       ]
@@ -3961,18 +3964,16 @@
       "file": "tools/test-fnaf3-census.mjs",
       "imports": [
         "../packages/core/src/mechanics/games/policy-fnaf3.js",
-        "../packages/source/src/games/fnaf3/fnaf3.js",
-        "../packages/source/src/games/fnaf3/sim-fnaf3.js",
-        "./device/fnaf3-run.mjs"
+        "./device/fnaf3-run.mjs",
+        "@sixam/source/fnaf3"
       ]
     },
     {
       "file": "tools/test-fnaf4-census.mjs",
       "imports": [
         "../packages/core/src/mechanics/games/policy-fnaf4.js",
-        "../packages/source/src/clockwork/night-model.js",
-        "../packages/source/src/games/fnaf4/fnaf4.js",
-        "../packages/source/src/games/fnaf4/sim-fnaf4.js"
+        "@sixam/source",
+        "@sixam/source/fnaf4"
       ]
     },
     {
@@ -3998,8 +3999,9 @@
     {
       "file": "tools/test-night-models.mjs",
       "imports": [
-        "../packages/source/src/clockwork/games.js",
-        "../packages/source/src/games/fnaf2/config.js"
+        "@sixam/source",
+        "@sixam/source/fnaf2",
+        "@sixam/source/games/fnaf2/config.js"
       ]
     },
     {
@@ -4049,7 +4051,7 @@
         "./rebuild-options-census.mjs",
         "./recompile/model-draw-trace.mjs",
         "./winner-census.mjs",
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "node:assert/strict",
         "node:crypto",
         "node:fs",
@@ -4073,8 +4075,8 @@
         "./device/bundle.mjs",
         "./winner-census.mjs",
         "./winner-phase-census.mjs",
-        "@sixam/core/contracts",
-        "@sixam/core/mechanics",
+        "@sixam/kernel/contracts",
+        "@sixam/source/fnaf2",
         "node:assert/strict",
         "node:crypto",
         "node:fs",
@@ -4103,7 +4105,7 @@
       "file": "tools/tracetest.mjs",
       "imports": [
         "./tracereport.mjs",
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "@sixam/trainer",
         "node:child_process",
         "node:fs",
@@ -4124,7 +4126,7 @@
     {
       "file": "tools/vault.mjs",
       "imports": [
-        "@sixam/core/contracts",
+        "@sixam/kernel/contracts",
         "node:child_process",
         "node:crypto",
         "node:fs",
@@ -4150,8 +4152,8 @@
         "./device/minus-toys-plan.mjs",
         "./stat.mjs",
         "@sixam/core/control",
-        "@sixam/core/mechanics",
         "@sixam/core/sensing",
+        "@sixam/source/fnaf2",
         "node:url"
       ]
     },
@@ -4159,8 +4161,8 @@
       "file": "tools/winner-census.mjs",
       "imports": [
         "./device/bundle.mjs",
-        "@sixam/core/mechanics",
         "@sixam/research/seeds",
+        "@sixam/source/fnaf2",
         "node:child_process",
         "node:crypto",
         "node:fs",
@@ -4176,7 +4178,7 @@
         "./device/fact-register.mjs",
         "./device/minus-toys-plan.mjs",
         "./winner-census.mjs",
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "node:crypto",
         "node:fs",
         "node:os",

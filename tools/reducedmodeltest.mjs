@@ -1,11 +1,10 @@
 // Plan 20 package 2: reduced transition model against a seeded exact-engine
 // replay. The comparison is intentionally limited to controller-visible
 // control/resource state; hidden RNG routes remain risk buckets.
-import * as C from '@sixam/core/mechanics';
-import { Sim } from '@sixam/core/mechanics';
+import * as C from '@sixam/source/fnaf2';
+import { Sim } from '@sixam/source/fnaf2';
 import { build, schedule } from './device/minus-toys-plan.mjs';
-import { advanceReduced, applyReduced, initialReducedState,
-         observeReduced, isMaskFullyOn, isMaskFullyOff } from '@sixam/core/mechanics';
+import { advanceReduced, applyReduced, initialReducedState, observeReduced, isMaskFullyOn, isMaskFullyOff } from '@sixam/source/fnaf2';
 
 const check = (condition, message) => { if (!condition) throw new Error(message); };
 const seed = (i) => (i * 2654435761) >>> 0;

@@ -1,7 +1,8 @@
 // Convert the current Night 1 Minimal Minus Toys plan into Plan 21's policy IR.
 import { build, KNOBS0 } from './minus-toys-plan.mjs';
 import { DOUBLE_GLITCH_CAMERA_PAIRS } from './arm-verification.mjs';
-import { FNAF2_CONTROL_VOCABULARY as V, POLICY_SCHEMA, validatePolicy } from '@sixam/core/control';
+import { FNAF2_CONTROL_VOCABULARY as V } from '@sixam/source';
+import { POLICY_SCHEMA, validatePolicy } from '@sixam/core/control';
 
 const rowAction = (row, defaultContactMs = 33) => {
   const [at, kind, action, duration] = row;

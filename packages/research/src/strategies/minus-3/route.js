@@ -1,4 +1,4 @@
-import * as C from '@sixam/core/mechanics';
+import * as C from '@sixam/source/fnaf2';
 
 // Device/contact calibration belongs to the device adapter. These values are
 // the strategy's semantic route: camera split, ten-second cadence, hall flash,

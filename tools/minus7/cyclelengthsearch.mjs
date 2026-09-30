@@ -18,7 +18,7 @@
 import { build, devicePlan, idleUntilMs } from '../device/recipe.mjs';
 import { modelGate } from '../device/human-gate.mjs';
 import { run } from '../model/hid-device-pilot.mjs';
-import * as C from '@sixam/core/mechanics';
+import * as C from '@sixam/source/fnaf2';
 
 const arg = (k, d) => {
   const m = process.argv.find(a => a.startsWith(`--${k}=`));

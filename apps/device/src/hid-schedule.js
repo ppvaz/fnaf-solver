@@ -8,8 +8,8 @@
 import { HID_DESCRIPTOR, HID_FEATURE_REPORTS, report } from '@sixam/adapters';
 import { validateExecutorRequest } from './artifact-executor.js';
 import { expandNightBlocks } from './device-local-executor.js';
-import { deviceProfileGame } from '@sixam/core/contracts';
-import { FNAF2_CONTROL_VOCABULARY as V, FNAF2_PACKAGE } from '@sixam/core/control';
+import { deviceProfileGame } from '@sixam/source';
+import { FNAF2_CONTROL_VOCABULARY as V, FNAF2_PACKAGE } from '@sixam/source';
 
 const HID_ID = 92;
 const HID_NAME = 'FNAF Timed Touch';

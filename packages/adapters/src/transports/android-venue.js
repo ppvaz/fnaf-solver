@@ -17,7 +17,7 @@
  * CONTRACT:venue-identity-v1.
  */
 import { createHash } from 'node:crypto';
-import { makeVenueIdentity, VENUE_FIELD_PATTERNS } from '@sixam/core/contracts';
+import { makeVenueIdentity, VENUE_FIELD_PATTERNS } from '@sixam/kernel/contracts';
 
 const TIME = '(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2})';
 

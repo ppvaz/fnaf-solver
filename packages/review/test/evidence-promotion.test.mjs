@@ -8,7 +8,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { stableHash } from '@sixam/core/contracts';
+import { stableHash } from '@sixam/kernel/contracts';
 import { CAMPAIGN_RESULT_SCHEMA } from '../src/evidence-campaign.mjs';
 import { AGENT_DELEGATION, ATTESTATION_FILE, ATTESTATION_SCHEMA, ATTESTATION_SCHEMA_V1, ATTESTED_CHECKS, RECOVERY_RECORD,
   attestationStatus, buildPack, packManifestComplete, packPromotionChecks, readPack, resolvePackTargets, writePack } from '../src/evidence-pack.mjs';

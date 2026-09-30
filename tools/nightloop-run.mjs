@@ -8,8 +8,8 @@
 // is a bounded primitive selected at its own decision boundary and committed
 // only as an immediate prefix; deferred actions are released at their own
 // frame by the caller-owned queue below.
-import * as C from '@sixam/core/mechanics';
-import { Sim, Rng } from '@sixam/core/mechanics';
+import * as C from '@sixam/source/fnaf2';
+import { Sim, Rng } from '@sixam/source/fnaf2';
 import { Observer } from '@sixam/core/sensing';
 import { CycleController, makeUnknownFacts, getCycle, NightPolicy,
          NIGHT_POLICY_CYCLES } from '@sixam/core/control';

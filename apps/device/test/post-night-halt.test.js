@@ -15,7 +15,7 @@ import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { stableHash } from '@sixam/core/contracts';
+import { stableHash } from '@sixam/kernel/contracts';
 import {
   AdbDeviceLocalArtifactExecutor, OBSERVER_INTERVAL_BOUND_MS, POST_NIGHT_STATIC_HALT, STATIC_TERMINAL_WAIT_MS,
 } from '../src/adb-device-local-executor.js';

@@ -17,7 +17,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { canonicalJson, stableHash } from '@sixam/core/contracts';
+import { canonicalJson, stableHash } from '@sixam/kernel/contracts';
 import { isUnknown, validateAnnotation, validateClaimLevel } from '@sixam/kernel';
 import { ATTESTATION_FILE, PACKS_DIR, packPromotionChecks, trackedWinners } from './evidence-pack.mjs';
 import { GRAPH_FILE, PROMOTION_EDGE, derivePromotion, readGraph, recordPromotion } from './evidence-promotion.mjs';
@@ -200,5 +200,5 @@ export function promotionsRecord(result, { date, command, commit, dirtyInputs })
 }
 
 /** The paths the query reads, for a record's dirty-input list. */
-export const QUERY_INPUTS = Object.freeze(['packages/review', 'packages/kernel', 'packages/core', 'tools/device/bundle.mjs',
+export const QUERY_INPUTS = Object.freeze(['packages/review', 'packages/kernel', 'packages/source', 'packages/core', 'tools/device/bundle.mjs',
   'tools/device/fact-register.mjs', 'tools/device/*-winner.json', PACKS_DIR, GRAPH_FILE]);

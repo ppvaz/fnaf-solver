@@ -7,7 +7,7 @@
 // guessing, and the rule that attributes a record to a game is named beside the attribution.
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { CONTROL_CATALOGS, GAME_PACKAGES } from '@sixam/core/control';
+import { CONTROL_CATALOGS, GAME_PACKAGES } from '@sixam/source';
 import { isUnknown, unknown } from '@sixam/kernel';
 import { ENTRIES_SCHEMA, KINDS, ROUTES, RUNGS, checkCorpus } from '../../../tools/chronicle-schema.mjs';
 import { PACKS_DIR, attestationStatus, packCustody, packEntry, readPack } from './evidence-pack.mjs';

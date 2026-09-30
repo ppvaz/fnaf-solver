@@ -31,7 +31,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compileArtifactPlans } from './artifact-commands.mjs';
 import { parsePlan, validateWinner, STRATEGY_REGISTRY } from './bundle.mjs';
-import * as C from '@sixam/core/mechanics';
+import * as C from '@sixam/source/fnaf2';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const NIGHTS = [1, 2, 3, 4, 5, 6, 7];

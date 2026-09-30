@@ -29,7 +29,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { Sim } from '@sixam/core/mechanics';
+import { Sim } from '@sixam/source/fnaf2';
 import { simOptionsFrom } from './recompile/model-draw-trace.mjs';
 import { KIND, OPTIONS_FILE, mcnemarExact, optionSets, seedBlocks, subjects, verdict, wilson95, withModelOptions }
   from './rebuild-options-census.mjs';

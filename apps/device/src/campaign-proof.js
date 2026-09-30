@@ -2,8 +2,8 @@
  * Positive lifecycle and save proof for an unattended campaign.
  * CONTRACT:campaign-proof-v1.
  */
-import { AI_DIALS, PUPPET_AI } from '@sixam/core/mechanics';
-import { stableHash, validateSaveProof } from '@sixam/core/contracts';
+import { AI_DIALS, PUPPET_AI } from '@sixam/source/fnaf2';
+import { stableHash, validateSaveProof } from '@sixam/kernel/contracts';
 import { makeCustomNightConfig, validateCustomNightConfig } from './custom-night.js';
 
 export const CAMPAIGN_PROOF_SCHEMA = 'campaign-proof-v1';
@@ -26,7 +26,7 @@ export function validateSixAmProof(value, target) {
   return value;
 }
 
-// The save-proof validator lives in core/contracts since 2026-09-29, so the
+// The save-proof validator lives in kernel/contracts (core/contracts from 2026-09-29), so the
 // evidence index re-derives a promotion without importing this app; it is
 // re-exported here unchanged.
 export { validateSaveProof };

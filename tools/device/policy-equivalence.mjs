@@ -5,7 +5,8 @@
 // be compared to the mocked phone trace before an adb action is allowed.
 import { createHash } from 'node:crypto';
 import { compilePolicy } from './policy-interpreter.mjs';
-import { canonicalPolicy, validatePolicy, DEVICE_CONTROL_NAMES } from '@sixam/core/control';
+import { canonicalPolicy, validatePolicy } from '@sixam/core/control';
+import { DEVICE_CONTROL_NAMES } from '@sixam/source';
 
 // The plan text's own short forms, plus the canonical control names taken from
 // the vocabulary rather than copied. This set was a hand copy until 2026-09-20

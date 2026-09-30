@@ -16,8 +16,8 @@
 //   node tools/model/stock-device-pilot.mjs 200 --vent --cycles=80
 //   node tools/model/stock-device-pilot.mjs 200 --night=6  # 6th Night, the night the phone runs
 import { pathToFileURL } from 'node:url';
-import * as C from '@sixam/core/mechanics';
-import { Sim } from '@sixam/core/mechanics';
+import * as C from '@sixam/source/fnaf2';
+import { Sim } from '@sixam/source/fnaf2';
 import { DeviceActuator } from '../device/actuator.mjs';
 import { formatRate } from '../stat.mjs';
 

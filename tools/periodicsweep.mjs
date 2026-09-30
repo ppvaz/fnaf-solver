@@ -5,7 +5,7 @@
 //
 //   node tools/periodicsweep.mjs [nights]
 import { run } from './model/stock-device-pilot.mjs';
-import * as C from '@sixam/core/mechanics';
+import * as C from '@sixam/source/fnaf2';
 
 const N = +(process.argv[2] || 200);
 console.log(`${N} nights per row. "every" is the response cadence in cycles;`);

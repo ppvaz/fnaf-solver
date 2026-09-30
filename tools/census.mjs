@@ -16,11 +16,11 @@
 // rules read out of the dump; it is not a device measurement and cannot be
 // promoted as one.
 
-import { Fnaf1Sim } from '../packages/source/src/games/fnaf1/sim-fnaf1.js';
+import { Fnaf1Sim } from '@sixam/source/fnaf1';
 import { POLICIES as FNAF1_POLICIES } from '../packages/core/src/mechanics/games/policy-fnaf1.js';
-import { Fnaf3Sim } from '../packages/source/src/games/fnaf3/sim-fnaf3.js';
+import { Fnaf3Sim } from '@sixam/source/fnaf3';
 import { POLICIES as FNAF3_POLICIES } from '../packages/core/src/mechanics/games/policy-fnaf3.js';
-import { Fnaf4Sim } from '../packages/source/src/games/fnaf4/sim-fnaf4.js';
+import { Fnaf4Sim } from '@sixam/source/fnaf4';
 import { POLICIES as FNAF4_POLICIES } from '../packages/core/src/mechanics/games/policy-fnaf4.js';
 
 const SIMS = {

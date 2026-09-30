@@ -38,7 +38,7 @@ import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'n
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { Fnaf1Sim, DOOR_OPEN, DOOR_SHUT, MS_PER_FRAME } from '../packages/source/src/games/fnaf1/sim-fnaf1.js';
+import { Fnaf1Sim, DOOR_OPEN, DOOR_SHUT, MS_PER_FRAME } from '@sixam/source/fnaf1';
 
 const HERE = fileURLToPath(new URL('.', import.meta.url));
 export const TIMING_PATH = `${HERE}device/models/fnaf1-device-timing-moto-g56-v207.json`;
@@ -855,7 +855,7 @@ async function population(argv) {
       args: [source, JSON.stringify(options), ...POPULATION_LANES], start, count, jobs });
     const record = populationRecord({ rows, start, count, design: designBlock(), route,
       treeRecord: route ? newestTreeRecord() : null,
-      git: gitState(['packages/core', 'tools/device', LANE_FILE]),
+      git: gitState(['packages/core', 'packages/source', 'packages/kernel', 'tools/device', LANE_FILE]),
       date: flag('date', new Date().toISOString().slice(0, 10)),
       command: `node tools/fnaf1-device-lane.mjs --population${route ? ' --route winner' : ''} --start ${start} ` +
         `--count ${count} --jobs ${jobs}` });

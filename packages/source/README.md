@@ -31,6 +31,9 @@ for the model it hashes into new records beside the `@sixam/core/mechanics`
 barrel. `src/clockwork/rng.js` is the cross-game name for the RNG and
 re-exports FNaF 2's file until migration step D2 splits the plant model.
 
-Every `@sixam/core/mechanics` and `@sixam/core/control` import that this step
-did not repoint reaches this package through core's compatibility shims
+Importers repointed in migration D3 name this package directly. Five
+`tools/recompile` modules (another session's) and the three engine-source files
+a bundle manifest hashes byte for byte (`tools/device/minus-toys-plan.mjs`,
+`tools/device/recipe.mjs`, `tools/model/hid-device-pilot.mjs`) still reach it
+through core's compatibility shims
 ([`legacy-paths.json`](../../docs/architecture/generated/legacy-paths.json)).

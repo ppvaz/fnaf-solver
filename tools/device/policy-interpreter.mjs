@@ -2,8 +2,8 @@
 // It expands only the reviewed action modes in the IR; it has no shell or
 // callback escape hatch. A later Sim adapter can consume this event stream.
 import { validatePolicy } from '@sixam/core/control';
-import { Sim } from '@sixam/core/mechanics';
-import * as C from '@sixam/core/mechanics';
+import { Sim } from '@sixam/source/fnaf2';
+import * as C from '@sixam/source/fnaf2';
 
 const control = action => action.startsWith('cam') ? `cam:${action.slice(3)}`
   : action === 'ventl' ? 'light' : action;

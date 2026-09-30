@@ -21,8 +21,8 @@
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { canonicalJson, stableHash, validateSaveProof } from '@sixam/core/contracts';
-import { AI_DIALS, PUPPET_AI } from '@sixam/core/mechanics';
+import { canonicalJson, stableHash, validateSaveProof } from '@sixam/kernel/contracts';
+import { AI_DIALS, PUPPET_AI } from '@sixam/source/fnaf2';
 import { campaignEntry } from './evidence-campaign.mjs';
 import { AGENT_DELEGATION, ATTESTATION_FILE, ATTESTATION_SCHEMA, PACKS_DIR, RECOVERY_RECORD, attestationStatus,
   packCustody, packManifestComplete, packPromotionChecks, readPack } from './evidence-pack.mjs';

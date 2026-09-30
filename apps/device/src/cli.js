@@ -13,7 +13,8 @@ import { AdbCueHelperPort } from './physical-ports.js';
 import { installCampaignSignalHandlers } from './campaign-signal.js';
 import { loadVenueBindings, renderVenueCheck } from './venue.js';
 import { fitClockMap, CueHelperControlTransport } from '@sixam/adapters';
-import { resolveDeviceProfile, stableHash } from '@sixam/core/contracts';
+import { resolveDeviceProfile } from '@sixam/source';
+import { stableHash } from '@sixam/kernel/contracts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 const PROFILES = join(ROOT, 'apps/device/profiles');

@@ -1,4 +1,4 @@
-import * as C from '@sixam/core/mechanics';
+import * as C from '@sixam/source/fnaf2';
 
 // Interval-relative semantic route. Contact timing is compiled by the device
 // adapter; the plant model consumes these frame offsets directly.

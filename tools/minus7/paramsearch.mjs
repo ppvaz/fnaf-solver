@@ -16,8 +16,8 @@ import { dirname } from 'node:path';
 import { build, devicePlan, idleUntilMs } from '../device/recipe.mjs';
 import { modelGate } from '../device/human-gate.mjs';
 import { makeSearchKnobs } from '../model/hid-device-pilot.mjs';
-import { canonicalJson } from '@sixam/core/contracts';
-import * as C from '@sixam/core/mechanics';
+import { canonicalJson } from '@sixam/kernel/contracts';
+import * as C from '@sixam/source/fnaf2';
 
 const arg = (k, d) => {
   const m = process.argv.find(a => a.startsWith(`--${k}=`));

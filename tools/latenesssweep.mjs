@@ -35,7 +35,7 @@
 //   node tools/latenesssweep.mjs --ablate         # which press's lateness costs it
 //   node tools/latenesssweep.mjs --runs=200 --assert
 import { pathToFileURL } from 'node:url';
-import * as C from '@sixam/core/mechanics';
+import * as C from '@sixam/source/fnaf2';
 import { run as hidRun } from './model/hid-device-pilot.mjs';
 import { N6_TARGET, NIGHTS } from './model/closed-loop-reclaim.mjs';
 

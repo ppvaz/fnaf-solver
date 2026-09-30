@@ -3,6 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "dependencies": {"@sixam/core": "file:../../packages/core"},
+  "dependencies": {"@sixam/core": "file:../../packages/core", "@sixam/kernel": "file:../../packages/kernel", "@sixam/source": "file:../../packages/source"},
   "exports": {".": "./src/index.js"}
 }

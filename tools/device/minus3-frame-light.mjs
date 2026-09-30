@@ -20,8 +20,8 @@
 // evidence record; this module only proves the bytes still reproduce.
 import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
-import { Sim } from '@sixam/core/mechanics';
-import { FNAF2_CONTROL_VOCABULARY as V } from '@sixam/core/control';
+import { Sim } from '@sixam/source/fnaf2';
+import { FNAF2_CONTROL_VOCABULARY as V } from '@sixam/source';
 import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '@sixam/research/seeds';
 import { KNOBS0, schedule } from './minus-3-plan.mjs';
 

@@ -30,7 +30,7 @@ import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'n
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { RNG_MODULUS, Sim } from '@sixam/core/mechanics';
+import { RNG_MODULUS, Sim } from '@sixam/source/fnaf2';
 import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort } from '@sixam/research/seeds';
 import { STRATEGY_REGISTRY, WINNER_SCHEMA, compileBundle, validateWinner } from './device/bundle.mjs';
 
@@ -172,7 +172,7 @@ export async function forkBlocks({ script, args, start, count, jobs, childFlag =
   }));
 }
 
-export function gitState(enginePaths = ['packages/core', 'tools/device']) {
+export function gitState(enginePaths = ['packages/core', 'packages/source', 'packages/kernel', 'tools/device']) {
   const git = (...args) => execFileSync('git', ['-C', ROOT, ...args], { encoding: 'utf8' }).trim();
   return { commit: git('rev-parse', 'HEAD'),
     dirtyEnginePaths: git('status', '--porcelain', '--', ...enginePaths).split('\n').filter(Boolean) };
