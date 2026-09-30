@@ -1,8 +1,8 @@
 /**
  * The Cue Helper's MCP surface (tools/device/cue-helper-mcp.mjs): setup and
  * the device-work queue, as a closed vocabulary. Raw coordinates, HID input
- * and arbitrary shell are absent. The actuation half that sat over the fixture
- * DeviceControlService left with it on 2026-09-25.
+ * and arbitrary shell are absent. It queues bounded jobs and never runs a
+ * control loop; the campaign executor is the one path onto a phone.
  */
 import { execFile as execFileCallback } from 'node:child_process';
 import { fileURLToPath } from 'node:url';

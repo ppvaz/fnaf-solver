@@ -3,7 +3,7 @@
 > Historical record. Nights now run through `tools/device/night-run.sh` and the
 > campaign executor (`npm run device:campaign`). The shell procedure below ran
 > under `tools/device/legacy-trial.sh`, archived on 2026-09-25 with the fixture
-> `DeviceControlService` (`docs/ARCHIVED-ROUTES.md`); it is kept as
+> service path (`docs/ARCHIVED-ROUTES.md`); it is kept as
 > characterization, not as a source of new architecture or claim promotion.
 
 Started 2026-08-20 with the Moto g56 5G plugged in over USB. Goal: test the
@@ -15,7 +15,7 @@ Target build confirmed on device: **v2.0.7** (versionCode 26, updated
 ## Service-owned seam calibration (2026-09-05)
 
 Retired 2026-09-25 with the fixture service path. `npm run device:calibrate
--- --json` exercised the bounded runner through `DeviceControlService`, with the explicit
+-- --json` exercised the bounded runner through the fixture service, with the explicit
 `apps/device/fixtures/seam-calibration.json` protocol and synthetic state.
 The CLI opens no phone; `--live` refuses, and physical profiles cannot silently
 select this fixture. `--spec FILE` accepts only the versioned, bounded semantic

@@ -1136,6 +1136,59 @@
       ]
     },
     {
+      "file": "packages/kernel/src/annotation.js",
+      "imports": [
+        "./labels.js",
+        "./types.js"
+      ]
+    },
+    {
+      "file": "packages/kernel/src/game-run.js",
+      "imports": [
+        "./labels.js",
+        "./outcome.js",
+        "./types.js"
+      ]
+    },
+    {
+      "file": "packages/kernel/src/index.js",
+      "imports": [
+        "./annotation.js",
+        "./game-run.js",
+        "./labels.js",
+        "./outcome.js",
+        "./time.js"
+      ]
+    },
+    {
+      "file": "packages/kernel/src/labels.js",
+      "imports": [
+        "./types.js"
+      ]
+    },
+    {
+      "file": "packages/kernel/src/outcome.js",
+      "imports": [
+        "./labels.js",
+        "./time.js",
+        "./types.js"
+      ]
+    },
+    {
+      "file": "packages/kernel/src/time.js",
+      "imports": [
+        "./labels.js",
+        "./types.js"
+      ]
+    },
+    {
+      "file": "packages/kernel/test/kernel.test.js",
+      "imports": [
+        "../src/index.js",
+        "node:assert/strict"
+      ]
+    },
+    {
       "file": "packages/research/src/cli.js",
       "imports": [
         "./experiment.js",
@@ -1283,6 +1336,16 @@
       ]
     },
     {
+      "file": "packages/review/src/cli.mjs",
+      "imports": [
+        "./promotions-query.mjs",
+        "node:child_process",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/review/src/evidence-campaign.mjs",
       "imports": [
         "@sixam/core/contracts"
@@ -1316,6 +1379,29 @@
         "./evidence-pack.mjs",
         "@sixam/core/contracts",
         "@sixam/core/mechanics",
+        "node:crypto",
+        "node:fs",
+        "node:path"
+      ]
+    },
+    {
+      "file": "packages/review/src/pack-lift.mjs",
+      "imports": [
+        "./evidence-pack.mjs",
+        "@sixam/kernel",
+        "node:fs",
+        "node:path"
+      ]
+    },
+    {
+      "file": "packages/review/src/promotions-query.mjs",
+      "imports": [
+        "../../../tools/device/fact-register.mjs",
+        "./evidence-pack.mjs",
+        "./evidence-promotion.mjs",
+        "./pack-lift.mjs",
+        "@sixam/core/contracts",
+        "@sixam/kernel",
         "node:crypto",
         "node:fs",
         "node:path"
@@ -1368,6 +1454,34 @@
       ]
     },
     {
+      "file": "packages/review/test/pack-lift.test.js",
+      "imports": [
+        "../src/evidence-pack.mjs",
+        "../src/pack-lift.mjs",
+        "@sixam/kernel",
+        "node:assert/strict",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/review/test/promotions-query.test.js",
+      "imports": [
+        "../src/evidence-pack.mjs",
+        "../src/evidence-promotion.mjs",
+        "../src/promotions-query.mjs",
+        "@sixam/core/contracts",
+        "@sixam/kernel",
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/activitygatetest.mjs",
       "imports": [
         "@sixam/core/training",
@@ -1402,13 +1516,19 @@
       "imports": [
         "../../../apps/device/src/campaign.js",
         "../../../apps/device/src/cli.js",
+        "../../review/src/pack-lift.mjs",
+        "../src/index.js",
+        "./labels.js",
         "@sixam/adapters/night-onset",
         "@sixam/core/contracts",
         "@sixam/device",
+        "@sixam/kernel",
         "@sixam/research",
         "@sixam/research/seeds",
+        "@sixam/review/evidence-pack",
         "node:assert/strict",
         "node:child_process",
+        "node:fs",
         "node:fs/promises",
         "node:module",
         "node:path",
@@ -1534,6 +1654,7 @@
     {
       "file": "tools/device/audio-players.mjs",
       "imports": [
+        "./local-profile.mjs",
         "node:child_process",
         "node:path",
         "node:url"
@@ -1543,6 +1664,7 @@
       "file": "tools/device/audio-probe.mjs",
       "imports": [
         "../../apps/device/src/physical-ports.js",
+        "./local-profile.mjs",
         "node:fs"
       ]
     },
@@ -1646,6 +1768,7 @@
       "imports": [
         "../../apps/device/src/physical-ports.js",
         "../../packages/adapters/src/transports/hid.js",
+        "./local-profile.mjs",
         "node:child_process",
         "node:fs",
         "node:fs/promises",
@@ -1682,6 +1805,7 @@
         "./fnaf1-detectors.mjs",
         "./fnaf1-menu-probe.mjs",
         "./fnaf1-winner.mjs",
+        "./local-profile.mjs",
         "./native-regions.mjs",
         "./night-kit.mjs",
         "node:crypto",
@@ -1707,6 +1831,7 @@
         "../../apps/device/src/adb-bridge.js",
         "../../apps/device/src/physical-ports.js",
         "../../packages/adapters/src/transports/hid.js",
+        "./local-profile.mjs",
         "node:child_process",
         "node:crypto",
         "node:fs",
@@ -1723,6 +1848,7 @@
         "../../apps/device/src/adb-bridge.js",
         "../../apps/device/src/physical-ports.js",
         "../../packages/adapters/src/transports/hid.js",
+        "./local-profile.mjs",
         "node:child_process",
         "node:crypto",
         "node:fs",
@@ -1736,6 +1862,7 @@
     {
       "file": "tools/device/fnaf1-winner.mjs",
       "imports": [
+        "./local-profile.mjs",
         "node:child_process",
         "node:crypto",
         "node:fs",
@@ -1760,6 +1887,7 @@
         "../../apps/device/src/physical-ports.js",
         "../../packages/adapters/src/transports/hid.js",
         "./fnaf3-detectors.mjs",
+        "./local-profile.mjs",
         "./native-regions.mjs",
         "./night-kit.mjs",
         "node:child_process",
@@ -1796,6 +1924,7 @@
         "../../packages/adapters/src/transports/hid.js",
         "./audio-players.mjs",
         "./fnaf4-fredbear.mjs",
+        "./local-profile.mjs",
         "./native-regions.mjs",
         "./night-kit.mjs",
         "node:child_process",
@@ -1851,6 +1980,14 @@
       ]
     },
     {
+      "file": "tools/device/local-profile.mjs",
+      "imports": [
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/device/minus-3-plan.mjs",
       "imports": [
         "./arm-verification.mjs",
@@ -1898,13 +2035,15 @@
     {
       "file": "tools/device/native-frame.mjs",
       "imports": [
-        "../../apps/device/src/physical-ports.js"
+        "../../apps/device/src/physical-ports.js",
+        "./local-profile.mjs"
       ]
     },
     {
       "file": "tools/device/native-regions.mjs",
       "imports": [
         "../../apps/device/src/physical-ports.js",
+        "./local-profile.mjs",
         "node:fs",
         "node:path",
         "node:zlib"
@@ -2378,6 +2517,7 @@
     {
       "file": "tools/device/test-night-run-dry.mjs",
       "imports": [
+        "./local-profile.mjs",
         "node:assert/strict",
         "node:child_process",
         "node:fs",
@@ -2837,7 +2977,8 @@
         "./encounter-replay.mjs",
         "node:crypto",
         "node:fs",
-        "node:path"
+        "node:path",
+        "node:url"
       ]
     },
     {
@@ -3459,6 +3600,15 @@
         "node:fs",
         "node:os",
         "node:path"
+      ]
+    },
+    {
+      "file": "tools/test-no-serial.mjs",
+      "imports": [
+        "node:child_process",
+        "node:fs",
+        "node:path",
+        "node:url"
       ]
     },
     {

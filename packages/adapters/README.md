@@ -28,5 +28,5 @@ composes the ports at the edge, and `tools/architecture-test.js` confines the
 HID transport to the device runners.
 
 The capability registry, the actuator and sensor classes and the fixture
-adapters that served the retired `DeviceControlService` were removed on
+adapters that served the retired fixture service path were removed on
 2026-09-25 (`docs/ARCHIVED-ROUTES.md`).

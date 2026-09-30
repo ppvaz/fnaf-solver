@@ -8,8 +8,11 @@ known negatives and retractions remain discoverable.
 Ownership is directional: `@sixam/core` owns mechanics and semantic
 contracts; adapters own transport, detection rules and calibration; the device
 app composes and supervises the campaign; trainer, research, and device are
-leaves.
-`research/sandbox` may depend inward, never vice versa. Production never
+leaves. `@sixam/kernel` holds the ADR 0002 kernel types and imports
+nothing; `@sixam/review` reads the evidence and never imports the device
+app, adapters or research (`tools/architecture-test.js`). There is no sandbox
+(ADR 0002 principle 7): claim-bearing cohorts and censuses are pre-registered,
+and diagnostic sweeps name the explanation they test. Production never
 imports tests, reports, mutable search knobs, DOM, shell, or device details
 into core.
 
@@ -114,8 +117,10 @@ were attested by an agent under the delegation. Refused: the Night 7 4/20 Minus
 (`test-seam-slack.mjs` refuses its 0 ms margin) and its pack holds no dial
 readback. Every death, lost result and FNaF 1 run is refused too, and the
 video-only 6 AMs `night5-anchor4` and `night5-perfetto1` fail `terminalPass`.
-A promotion is one clear, not a reliability claim. Open for S1: two committed
-MODEL_ONLY winners (`campaign-night1-minus7-winner.json`,
+A promotion is one clear, not a reliability claim. `npm run review -- query
+promotions` re-derives every edge and S1's open items below from the packs, the
+attestations and the winners, and checks them against `graph.json`. Open for
+S1: two committed MODEL_ONLY winners (`campaign-night1-minus7-winner.json`,
 `campaign-toys-night5-winner.json`) have no pack naming their hash. No k2 or k3
 video exists on this machine by name or by content hash. The 26 committed
 `winner-v1` bindings rebuild (`test-winners-rebuild.mjs`).

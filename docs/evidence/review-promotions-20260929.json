@@ -1,0 +1,2341 @@
+{
+  "schema": "evidence-record-v1",
+  "kind": "review-promotions-query-v1",
+  "id": "review-promotions-20260929",
+  "date": "2026-09-29",
+  "question": "Do the committed run packs, their attestations and the committed winners re-derive every PROMOTED_BY edge in docs/evidence/graph.json, and what does S1 still hold open?",
+  "answer": "47 of 47 PROMOTED_BY edges re-derive byte for byte from 184 packs (184 GameRuns, 0 lift failures); attested by agent:pedro-2026-09-27 47; custody complete 11, recovered 36. Open: 2 committed MODEL_ONLY winners no pack names (campaign-night1-minus7-winner.json, campaign-toys-night5-winner.json); UNTRACKED_WINNER_DEBT 1 of 1.",
+  "labels": "A query over committed evidence: it measures nothing and promotes nothing. The edges it re-derives carry DEVICE_MEASURED claims already promoted; the open winners are MODEL_ONLY.",
+  "method": {
+    "tool": "packages/review/src/cli.mjs",
+    "command": "npm run review -- query promotions --write docs/evidence/review-promotions-20260929.json --date 2026-09-29",
+    "git": {
+      "commit": "861eac95d4229c6d67bc1818cd362f360416516f",
+      "dirtyInputs": [
+        " M packages/review/README.md",
+        " M packages/review/package.json",
+        "?? packages/kernel/",
+        "?? packages/review/src/cli.mjs",
+        "?? packages/review/src/pack-lift.mjs",
+        "?? packages/review/src/promotions-query.mjs",
+        "?? packages/review/test/pack-lift.test.js",
+        "?? packages/review/test/promotions-query.test.js"
+      ],
+      "note": "the query code is in the commit that adds this record"
+    }
+  },
+  "query": {
+    "schema": "review-promotions-query-v1",
+    "query": "promotions",
+    "command": "npm run review -- query promotions",
+    "authority": "plans/12-end-to-end-evidence-campaign.md; docs/decisions/0002-kernel-contexts-vocabulary.md principles 4 and 11",
+    "sources": {
+      "packs": "docs/evidence/runs",
+      "graph": "docs/evidence/graph.json",
+      "winners": "tools/device/*-winner.json",
+      "debt": "tools/device/fact-register.mjs ANCHOR_AIMS and UNTRACKED_WINNER_DEBT"
+    },
+    "rule": "an edge is derived for a pack when every packPromotionChecks check passes, derivePromotion re-derives every check and names the claim, and the pack attestation lists exactly the checks, inputs, claim and custody derived now; the edge is recordPromotion's over that pack, and it matches when graph.json holds the same edge (canonical JSON)",
+    "lift": {
+      "packs": 184,
+      "gameRuns": 184,
+      "failures": [],
+      "reportedOutcomes": {
+        "Aborted": 2,
+        "Death": 31,
+        "SixAM": 48,
+        "Timeout": 1,
+        "UNKNOWN": 102
+      },
+      "custody": {
+        "complete": 24,
+        "recovered": 154,
+        "UNKNOWN": 6
+      }
+    },
+    "edges": {
+      "graph": 47,
+      "derived": 47,
+      "matched": 47,
+      "differing": [],
+      "notInGraph": [],
+      "onlyInGraph": [],
+      "duplicatedInGraph": 0,
+      "refused": [],
+      "notSixAm": [],
+      "byAttester": {
+        "agent:pedro-2026-09-27": 47
+      },
+      "byCustody": {
+        "complete": 11,
+        "recovered": 36
+      },
+      "byClaim": {
+        "claim.fnaf2.night1.device-6am": 2,
+        "claim.fnaf2.night2.device-6am": 2,
+        "claim.fnaf2.night3.device-6am": 2,
+        "claim.fnaf2.night4.device-6am": 2,
+        "claim.fnaf2.night5.device-6am": 7,
+        "claim.fnaf2.night6.device-6am": 8,
+        "claim.fnaf2.night7.10-20.device-6am": 21,
+        "claim.fnaf2.night7.bb20-golden20.device-6am": 2,
+        "claim.fnaf2.night7.foxy20-bb20.device-6am": 1
+      }
+    },
+    "promoted": [
+      {
+        "run": "night1-ladder-n1e-20260927T055611Z",
+        "night": 1,
+        "claim": "claim.fnaf2.night1.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "complete",
+          "lost": []
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night1.device-6am",
+          "to": "run.night1-ladder-n1e-20260927T055611Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night1-ladder-n1e-20260927T055611Z/plan12-attestation.json",
+          "packSha256": "3b295af36ca286a09ca13d913c967f367a7be2be5100b76749f6f2cf333617b4",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "original",
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night1-ladder-n1e-20260927T055611Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night1.device-6am",
+          "inputs": [
+            "3b295af36ca286a09ca13d913c967f367a7be2be5100b76749f6f2cf333617b4",
+            "86a361f2b40b9c67f5e12a8c8b86b6af93db4b7821d55fdc03958b53f1fcd314",
+            "efc64897bc2e6fe8e4be8955ee7b76cccbc0ed2cf298c41c4ab468f76dba8c48"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night1-minus7-n1-first-20260919T215533Z",
+        "night": 1,
+        "claim": "claim.fnaf2.night1.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night1.device-6am",
+          "to": "run.night1-minus7-n1-first-20260919T215533Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night1-minus7-n1-first-20260919T215533Z/plan12-attestation.json",
+          "packSha256": "7cba9811d5e4e93849524a796112fd56fb69589853d91abd21370b6226e873b2",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night1-minus7-n1-first-20260919T215533Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night1.device-6am",
+          "inputs": [
+            "7cba9811d5e4e93849524a796112fd56fb69589853d91abd21370b6226e873b2",
+            "cd8ad614d9087bc51b2fb1fc34acc0ccc2d1869b7817c9b2a55c0d6b7cbe7c84",
+            "ac4cbbb25f73bae0e5a09772b5ccb226e01a8a46a831b9ed9b5c37849dd2a11a"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night2-ladder-n2a-20260927T060809Z",
+        "night": 2,
+        "claim": "claim.fnaf2.night2.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "complete",
+          "lost": []
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night2.device-6am",
+          "to": "run.night2-ladder-n2a-20260927T060809Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night2-ladder-n2a-20260927T060809Z/plan12-attestation.json",
+          "packSha256": "9bb916d70a61de4e92d92ad8d73fdf9e3299988c903586d1d30de4b7ae552d16",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "original",
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night2-ladder-n2a-20260927T060809Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night2.device-6am",
+          "inputs": [
+            "9bb916d70a61de4e92d92ad8d73fdf9e3299988c903586d1d30de4b7ae552d16",
+            "9141cb15a9c654299eb10d473f1ab802c8272ff5b8632cd91c9ae6aa83b0b379",
+            "7e67e7085fd563cd441a3e99d33be1dc11b4d9690e117e2559ab6b205fe6cb83"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night2-toys-n2-ladder-20260919T223654Z",
+        "night": 2,
+        "claim": "claim.fnaf2.night2.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night2.device-6am",
+          "to": "run.night2-toys-n2-ladder-20260919T223654Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night2-toys-n2-ladder-20260919T223654Z/plan12-attestation.json",
+          "packSha256": "037153437278191f0989563320b53aa63dd312e74aac3a9a5853a6f19a7c1386",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night2-toys-n2-ladder-20260919T223654Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night2.device-6am",
+          "inputs": [
+            "037153437278191f0989563320b53aa63dd312e74aac3a9a5853a6f19a7c1386",
+            "06bb3a493a4e19b70345204192d1efac715e2a57a215df95877a9afa6be6331c",
+            "7e67e7085fd563cd441a3e99d33be1dc11b4d9690e117e2559ab6b205fe6cb83"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night3-ladder-n3a-20260927T062001Z",
+        "night": 3,
+        "claim": "claim.fnaf2.night3.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "complete",
+          "lost": []
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night3.device-6am",
+          "to": "run.night3-ladder-n3a-20260927T062001Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night3-ladder-n3a-20260927T062001Z/plan12-attestation.json",
+          "packSha256": "c79852401217dbd512d62ef11d243d8b2dda8f9eb3c85a3577d15245e8d451ec",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "original",
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night3-ladder-n3a-20260927T062001Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night3.device-6am",
+          "inputs": [
+            "c79852401217dbd512d62ef11d243d8b2dda8f9eb3c85a3577d15245e8d451ec",
+            "06a055327a274f0de05b76cf3a3cc677d985c43451f14ec7cfd008b00a501470",
+            "425826ae44d77e77137b6ba24a1e371cbc4ee9729ec21cdd40ed339dd7a7ec7b"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night3-n3-bbfix-run-20260920T001903Z",
+        "night": 3,
+        "claim": "claim.fnaf2.night3.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night3.device-6am",
+          "to": "run.night3-n3-bbfix-run-20260920T001903Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night3-n3-bbfix-run-20260920T001903Z/plan12-attestation.json",
+          "packSha256": "4ddb8f85bcf959d1d3be2b2050caff5a2363d8a75c12e90702b12dfe0e2d4dcd",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night3-n3-bbfix-run-20260920T001903Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night3.device-6am",
+          "inputs": [
+            "4ddb8f85bcf959d1d3be2b2050caff5a2363d8a75c12e90702b12dfe0e2d4dcd",
+            "86f3a3d925e86bf04d403218d60f7bee9bef4cb1b5640124e2d12fba063590c1",
+            "425826ae44d77e77137b6ba24a1e371cbc4ee9729ec21cdd40ed339dd7a7ec7b"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night4-ladder-n4a-20260927T063208Z",
+        "night": 4,
+        "claim": "claim.fnaf2.night4.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "complete",
+          "lost": []
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night4.device-6am",
+          "to": "run.night4-ladder-n4a-20260927T063208Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night4-ladder-n4a-20260927T063208Z/plan12-attestation.json",
+          "packSha256": "e2cb0c0c3f40cbd30499a65cf4b4f7c518d46499e2e043e7d02085e002cc99ea",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "original",
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night4-ladder-n4a-20260927T063208Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night4.device-6am",
+          "inputs": [
+            "e2cb0c0c3f40cbd30499a65cf4b4f7c518d46499e2e043e7d02085e002cc99ea",
+            "f4b56cbc3706202776ac9667eca04110dcd2ed6a6124b3b57cae8e92e6773a1d",
+            "425826ae44d77e77137b6ba24a1e371cbc4ee9729ec21cdd40ed339dd7a7ec7b"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night4-n4-bbfix-20260920T002911Z",
+        "night": 4,
+        "claim": "claim.fnaf2.night4.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night4.device-6am",
+          "to": "run.night4-n4-bbfix-20260920T002911Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night4-n4-bbfix-20260920T002911Z/plan12-attestation.json",
+          "packSha256": "4e09666a471b2bd0de8a52a4a4db582fd2e291f8b0d04363a8f6c43ed1336723",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night4-n4-bbfix-20260920T002911Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night4.device-6am",
+          "inputs": [
+            "4e09666a471b2bd0de8a52a4a4db582fd2e291f8b0d04363a8f6c43ed1336723",
+            "7fdc356d972ec3a2b09dbe5efbf3b9195df11d5fb6064d09ecc4dd393dcd141f",
+            "425826ae44d77e77137b6ba24a1e371cbc4ee9729ec21cdd40ed339dd7a7ec7b"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night5-anchor2-20260912T204002Z",
+        "night": 5,
+        "claim": "claim.fnaf2.night5.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night5.device-6am",
+          "to": "run.night5-anchor2-20260912T204002Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night5-anchor2-20260912T204002Z/plan12-attestation.json",
+          "packSha256": "a31e0d6944fe8138df9600f5c9286e9a20cceb1e37182a6473ddbfde162ba3f8",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night5-anchor2-20260912T204002Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night5.device-6am",
+          "inputs": [
+            "a31e0d6944fe8138df9600f5c9286e9a20cceb1e37182a6473ddbfde162ba3f8",
+            "817f7030497f3b4ce000bf928e35d963e1a2ba9a204f5af4b565064d8100785e",
+            "9441622efda32b0834d1221628415d3ef933e0126830bfcb198d71ac29937d7c"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night5-hallfix-20260912T230319Z",
+        "night": 5,
+        "claim": "claim.fnaf2.night5.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night5.device-6am",
+          "to": "run.night5-hallfix-20260912T230319Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night5-hallfix-20260912T230319Z/plan12-attestation.json",
+          "packSha256": "7d32b373585f519a3ec33e94768ac48363088e74349c3e7de09dc051983206a6",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night5-hallfix-20260912T230319Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night5.device-6am",
+          "inputs": [
+            "7d32b373585f519a3ec33e94768ac48363088e74349c3e7de09dc051983206a6",
+            "e2fd809141fc2fa7c2572a1789ea9508de4650fc5daf10092f0c602e36731233",
+            "1634a184f56e65be109c886bb7d9440ac9f4f715adee7e43b37df0a671a2ce0d"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night5-ladder-n5c-20260927T065942Z",
+        "night": 5,
+        "claim": "claim.fnaf2.night5.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "complete",
+          "lost": []
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night5.device-6am",
+          "to": "run.night5-ladder-n5c-20260927T065942Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night5-ladder-n5c-20260927T065942Z/plan12-attestation.json",
+          "packSha256": "bb178aa5c6dec33831b5b20ff6c5ffa5bd76ccb1732c1765ada71307859ef0cc",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "original",
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night5-ladder-n5c-20260927T065942Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night5.device-6am",
+          "inputs": [
+            "bb178aa5c6dec33831b5b20ff6c5ffa5bd76ccb1732c1765ada71307859ef0cc",
+            "7bc9dea49acdd00be59b32b91c6327164505faa898d3d276e883e27528ff6cea",
+            "637e1f2d4a3844816ea4467dd7fa384358865b29e9267405541c2063b479a8f5"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night5-mask5plus-aim172-20260912T220100Z",
+        "night": 5,
+        "claim": "claim.fnaf2.night5.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night5.device-6am",
+          "to": "run.night5-mask5plus-aim172-20260912T220100Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night5-mask5plus-aim172-20260912T220100Z/plan12-attestation.json",
+          "packSha256": "55e4627b7d89852f5e244226b29c3a5ab3833e48bd5da30ff28f25ca232cfa54",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night5-mask5plus-aim172-20260912T220100Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night5.device-6am",
+          "inputs": [
+            "55e4627b7d89852f5e244226b29c3a5ab3833e48bd5da30ff28f25ca232cfa54",
+            "f6938d07570b02202689db3e62a7da5ce1b5f1af86ef033247736555b2874b49",
+            "637e1f2d4a3844816ea4467dd7fa384358865b29e9267405541c2063b479a8f5"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night5-n5-armblock-20260920T004056Z",
+        "night": 5,
+        "claim": "claim.fnaf2.night5.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "complete",
+          "lost": []
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night5.device-6am",
+          "to": "run.night5-n5-armblock-20260920T004056Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night5-n5-armblock-20260920T004056Z/plan12-attestation.json",
+          "packSha256": "4c9ea13aa5f0501111e03cfca7445cba5644ebe449f38168a1869e4f6a667ee0",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "original",
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night5-n5-armblock-20260920T004056Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night5.device-6am",
+          "inputs": [
+            "4c9ea13aa5f0501111e03cfca7445cba5644ebe449f38168a1869e4f6a667ee0",
+            "413c68b1837ab9728425462ed1829f3385dfe59de89c8396b2f5872a3bfffd10",
+            "b1654fcd16551381f92c90b5a250dc8d9ed625223c412f65a933ac17306c3862"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night5-n5-carry-aim172-20260918T012153Z",
+        "night": 5,
+        "claim": "claim.fnaf2.night5.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night5.device-6am",
+          "to": "run.night5-n5-carry-aim172-20260918T012153Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night5-n5-carry-aim172-20260918T012153Z/plan12-attestation.json",
+          "packSha256": "ee2d8a49931bb46173770cd4503e8ab4bcda05a4d22d05a18107aab5a0ba9da4",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night5-n5-carry-aim172-20260918T012153Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night5.device-6am",
+          "inputs": [
+            "ee2d8a49931bb46173770cd4503e8ab4bcda05a4d22d05a18107aab5a0ba9da4",
+            "d51f0ffc5eaedf455969ff6fc422fd8a6173fd0630c4c2970fcae557b7dd6e0c",
+            "255a0d78dcbc62343c8706f1d716ae839c7d995344c54996ab1fd4d953ecdd5e"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night5-noflash-20260913T003456Z",
+        "night": 5,
+        "claim": "claim.fnaf2.night5.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night5.device-6am",
+          "to": "run.night5-noflash-20260913T003456Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night5-noflash-20260913T003456Z/plan12-attestation.json",
+          "packSha256": "3560555766572f75df4b952edebe64c04370873f301db22090cc096b1d4ec27a",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night5-noflash-20260913T003456Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night5.device-6am",
+          "inputs": [
+            "3560555766572f75df4b952edebe64c04370873f301db22090cc096b1d4ec27a",
+            "93797052e395695c9634b05a0e4071476d5aa166cf3a5a5063401463ade51278",
+            "4f318495b8da385760aadea90fcacc7f1eaa3d4c636b9ba75c1f7e1295b76ac8"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night6-anchoredh1-20260913T180208Z",
+        "night": 6,
+        "claim": "claim.fnaf2.night6.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night6.device-6am",
+          "to": "run.night6-anchoredh1-20260913T180208Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night6-anchoredh1-20260913T180208Z/plan12-attestation.json",
+          "packSha256": "9a3bc25acf99bc407e62b3ae27fe3125faaed7157a98b83eb51f4c71be81afbf",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night6-anchoredh1-20260913T180208Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night6.device-6am",
+          "inputs": [
+            "9a3bc25acf99bc407e62b3ae27fe3125faaed7157a98b83eb51f4c71be81afbf",
+            "1b356e9e147a38e20d3677b9940f3109a5793a221f855df6ffc8208a83c8037d",
+            "fb8f0dffa24385cfbd8ac1d8179a804015fe199dfc78ce602a7ab097eaef4ef8"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night6-c2-01-20260917T021417Z",
+        "night": 6,
+        "claim": "claim.fnaf2.night6.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night6.device-6am",
+          "to": "run.night6-c2-01-20260917T021417Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night6-c2-01-20260917T021417Z/plan12-attestation.json",
+          "packSha256": "a0f14475c070b2ade81eef2f46e987219f592642a434a6449f203392acd9b4a8",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night6-c2-01-20260917T021417Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night6.device-6am",
+          "inputs": [
+            "a0f14475c070b2ade81eef2f46e987219f592642a434a6449f203392acd9b4a8",
+            "e616fb54ab0bc7fc11973316c8703ed53ac74a0fdccdca488c4742ceac9978df",
+            "b466b7a81b71e08845e475258463ec13cfd583a5c6f2b090395ca64d3def645c"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night6-ladder-n6a-20260927T071107Z",
+        "night": 6,
+        "claim": "claim.fnaf2.night6.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "complete",
+          "lost": []
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night6.device-6am",
+          "to": "run.night6-ladder-n6a-20260927T071107Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night6-ladder-n6a-20260927T071107Z/plan12-attestation.json",
+          "packSha256": "46a9667855b80f5f98ac5fc125a6aa50252718b29b1d857a1f80ffd5d4cd55bf",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "original",
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night6-ladder-n6a-20260927T071107Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night6.device-6am",
+          "inputs": [
+            "46a9667855b80f5f98ac5fc125a6aa50252718b29b1d857a1f80ffd5d4cd55bf",
+            "ead8526acdd7dbf2a34127185426c461a0a5b4b7c597952f6f062c7026feff6a",
+            "59686dbb2182c7545ab27efae79390c48ebfab2961e30cb1e966e32e0a34a5f0"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night6-n6h2-01-20260920T024030Z",
+        "night": 6,
+        "claim": "claim.fnaf2.night6.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "complete",
+          "lost": []
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night6.device-6am",
+          "to": "run.night6-n6h2-01-20260920T024030Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night6-n6h2-01-20260920T024030Z/plan12-attestation.json",
+          "packSha256": "20c626f9112063089fbd335ebe42af97bd31ce0973f814e277013956def6fdcc",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "original",
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night6-n6h2-01-20260920T024030Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night6.device-6am",
+          "inputs": [
+            "20c626f9112063089fbd335ebe42af97bd31ce0973f814e277013956def6fdcc",
+            "14a5cd5708b13b6607b694e44017b1ef73aca8a22b37b766d7e4e87879dcc52b",
+            "59686dbb2182c7545ab27efae79390c48ebfab2961e30cb1e966e32e0a34a5f0"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night6-p-02-20260917T023518Z",
+        "night": 6,
+        "claim": "claim.fnaf2.night6.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night6.device-6am",
+          "to": "run.night6-p-02-20260917T023518Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night6-p-02-20260917T023518Z/plan12-attestation.json",
+          "packSha256": "cf0ed1b3d9acf0ba8eab7212fdecdbcda5ea92b8fd8562273b63ecdf94d92f0d",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night6-p-02-20260917T023518Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night6.device-6am",
+          "inputs": [
+            "cf0ed1b3d9acf0ba8eab7212fdecdbcda5ea92b8fd8562273b63ecdf94d92f0d",
+            "21dc681bc6ccff26924feed945f14867ba04329f3fe7cc39d88dcce5378a8ee4",
+            "b466b7a81b71e08845e475258463ec13cfd583a5c6f2b090395ca64d3def645c"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night6-p-06-20260917T025208Z",
+        "night": 6,
+        "claim": "claim.fnaf2.night6.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night6.device-6am",
+          "to": "run.night6-p-06-20260917T025208Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night6-p-06-20260917T025208Z/plan12-attestation.json",
+          "packSha256": "2f5ac678f2e6970aedb47544a7b8e683ea8700fc75997f08fa641ed77955f38b",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night6-p-06-20260917T025208Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night6.device-6am",
+          "inputs": [
+            "2f5ac678f2e6970aedb47544a7b8e683ea8700fc75997f08fa641ed77955f38b",
+            "93dd7ad44e4ae5a4954905f29f0f212329a02437f149b09e286c7a2450a89d0b",
+            "b466b7a81b71e08845e475258463ec13cfd583a5c6f2b090395ca64d3def645c"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night6-seedlock-h-20260916T223633Z",
+        "night": 6,
+        "claim": "claim.fnaf2.night6.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night6.device-6am",
+          "to": "run.night6-seedlock-h-20260916T223633Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night6-seedlock-h-20260916T223633Z/plan12-attestation.json",
+          "packSha256": "76c5d35b76a891294b8e47725c2e2afde79856fea60a744c029d0af6190482a8",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night6-seedlock-h-20260916T223633Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night6.device-6am",
+          "inputs": [
+            "76c5d35b76a891294b8e47725c2e2afde79856fea60a744c029d0af6190482a8",
+            "c756c89da21c3d1844118e292d92361fd57b770d8809b199933a5e6934f436b5",
+            "b466b7a81b71e08845e475258463ec13cfd583a5c6f2b090395ca64d3def645c"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night6-tw-04-20260918T014915Z",
+        "night": 6,
+        "claim": "claim.fnaf2.night6.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night6.device-6am",
+          "to": "run.night6-tw-04-20260918T014915Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night6-tw-04-20260918T014915Z/plan12-attestation.json",
+          "packSha256": "2624858f3910851abf1aef26b59eb39d0c1ac12bc140e7a70fc5450a1c509edf",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night6-tw-04-20260918T014915Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night6.device-6am",
+          "inputs": [
+            "2624858f3910851abf1aef26b59eb39d0c1ac12bc140e7a70fc5450a1c509edf",
+            "26dadee920165e13d992e04b006c0f7d63d94a0a16e6691cc7c350c4340191f1",
+            "b466b7a81b71e08845e475258463ec13cfd583a5c6f2b090395ca64d3def645c"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night7-corner-bbfoxy-r02-20260927T073711Z",
+        "night": 7,
+        "claim": "claim.fnaf2.night7.foxy20-bb20.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "complete",
+          "lost": []
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night7.foxy20-bb20.device-6am",
+          "to": "run.night7-corner-bbfoxy-r02-20260927T073711Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night7-corner-bbfoxy-r02-20260927T073711Z/plan12-attestation.json",
+          "packSha256": "5ffefef93763223f04380438ea4a364ffc974828e02e771d092b22f173579666",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "original",
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night7-corner-bbfoxy-r02-20260927T073711Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night7.foxy20-bb20.device-6am",
+          "inputs": [
+            "5ffefef93763223f04380438ea4a364ffc974828e02e771d092b22f173579666",
+            "32af8ae3d4c816ee964f603417db536b425f2fbe53337b822da10f6ea0708055",
+            "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night7-corner-bbgolden-r01-20260927T072630Z",
+        "night": 7,
+        "claim": "claim.fnaf2.night7.bb20-golden20.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "complete",
+          "lost": []
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night7.bb20-golden20.device-6am",
+          "to": "run.night7-corner-bbgolden-r01-20260927T072630Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night7-corner-bbgolden-r01-20260927T072630Z/plan12-attestation.json",
+          "packSha256": "c7659d9d8f18cea9cf8bdd5c37fbeab1c744faec79143f880509a0e4b29ebc5d",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "original",
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night7-corner-bbgolden-r01-20260927T072630Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night7.bb20-golden20.device-6am",
+          "inputs": [
+            "c7659d9d8f18cea9cf8bdd5c37fbeab1c744faec79143f880509a0e4b29ebc5d",
+            "12e37e8004fb01b0b22e96b14e7b63036d1f65a9e72de6d41f7b18144cc74dc2",
+            "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night7-corner-bbgolden-r02-20260927T074756Z",
+        "night": 7,
+        "claim": "claim.fnaf2.night7.bb20-golden20.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "complete",
+          "lost": []
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night7.bb20-golden20.device-6am",
+          "to": "run.night7-corner-bbgolden-r02-20260927T074756Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night7-corner-bbgolden-r02-20260927T074756Z/plan12-attestation.json",
+          "packSha256": "b7338c450b33f14acfd98477bc7376d976b988a71e40af880df946254b7a1d50",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "original",
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night7-corner-bbgolden-r02-20260927T074756Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night7.bb20-golden20.device-6am",
+          "inputs": [
+            "b7338c450b33f14acfd98477bc7376d976b988a71e40af880df946254b7a1d50",
+            "1a65342c0305184fee0d400268914726ab13fa8923e1776dfcd4d8385faf57d7",
+            "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night7-k2-aim2433-maskoff7000-20260914T004106Z",
+        "night": 7,
+        "claim": "claim.fnaf2.night7.10-20.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night7.10-20.device-6am",
+          "to": "run.night7-k2-aim2433-maskoff7000-20260914T004106Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night7-k2-aim2433-maskoff7000-20260914T004106Z/plan12-attestation.json",
+          "packSha256": "4e71398ffa8a7c854f6fffd94c98b2e4481c7f4fa3dd07fa620e8a630155159e",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night7-k2-aim2433-maskoff7000-20260914T004106Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night7.10-20.device-6am",
+          "inputs": [
+            "4e71398ffa8a7c854f6fffd94c98b2e4481c7f4fa3dd07fa620e8a630155159e",
+            "6f5962493953ae216288fd74bd71cd87f9b97b06fdbff08a89f4c25fc4a0477c",
+            "6d7af32fd7377156c6a33c2f64f6be6ca5eb0d35e6b1702e9e5a9d1d5079e64f"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night7-night7-k2-cohort-r01b-20260914T220233Z",
+        "night": 7,
+        "claim": "claim.fnaf2.night7.10-20.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night7.10-20.device-6am",
+          "to": "run.night7-night7-k2-cohort-r01b-20260914T220233Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night7-night7-k2-cohort-r01b-20260914T220233Z/plan12-attestation.json",
+          "packSha256": "e350e23b36057de08e1ad40f6a46a268d2627fedf27554d9655b73fe24f97e47",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night7-night7-k2-cohort-r01b-20260914T220233Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night7.10-20.device-6am",
+          "inputs": [
+            "e350e23b36057de08e1ad40f6a46a268d2627fedf27554d9655b73fe24f97e47",
+            "50e89550d1719480538ca1e5f3600f7a58c603a987b770fafc48be9d5fad69e8",
+            "6d7af32fd7377156c6a33c2f64f6be6ca5eb0d35e6b1702e9e5a9d1d5079e64f"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night7-night7-k2-cohort-r03-20260914T223207Z",
+        "night": 7,
+        "claim": "claim.fnaf2.night7.10-20.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night7.10-20.device-6am",
+          "to": "run.night7-night7-k2-cohort-r03-20260914T223207Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night7-night7-k2-cohort-r03-20260914T223207Z/plan12-attestation.json",
+          "packSha256": "a9403cfa155743a6bf50fb10ec1c876904d23a7f16ef7879b15d765515bc03a4",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night7-night7-k2-cohort-r03-20260914T223207Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night7.10-20.device-6am",
+          "inputs": [
+            "a9403cfa155743a6bf50fb10ec1c876904d23a7f16ef7879b15d765515bc03a4",
+            "ac2e131580bac8ad83eeab639f05b48e6d958becb3dd2f739a4e3fead052977c",
+            "6d7af32fd7377156c6a33c2f64f6be6ca5eb0d35e6b1702e9e5a9d1d5079e64f"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night7-night7-k2-cohort-r05-20260914T225440Z",
+        "night": 7,
+        "claim": "claim.fnaf2.night7.10-20.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night7.10-20.device-6am",
+          "to": "run.night7-night7-k2-cohort-r05-20260914T225440Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night7-night7-k2-cohort-r05-20260914T225440Z/plan12-attestation.json",
+          "packSha256": "6ebaeed50cdc6a70f5b9c9ae860960b0cf955f0873de839f375e3baecc89fba1",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night7-night7-k2-cohort-r05-20260914T225440Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night7.10-20.device-6am",
+          "inputs": [
+            "6ebaeed50cdc6a70f5b9c9ae860960b0cf955f0873de839f375e3baecc89fba1",
+            "0c002ae793973ca4f6df242e7f76c7b22f72bd6b4fcdbc62c2614df860ef6063",
+            "6d7af32fd7377156c6a33c2f64f6be6ca5eb0d35e6b1702e9e5a9d1d5079e64f"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night7-night7-k3-cohort-r01-20260918T030258Z",
+        "night": 7,
+        "claim": "claim.fnaf2.night7.10-20.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night7.10-20.device-6am",
+          "to": "run.night7-night7-k3-cohort-r01-20260918T030258Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night7-night7-k3-cohort-r01-20260918T030258Z/plan12-attestation.json",
+          "packSha256": "594ac90370fc6113d784cf01df3e25cc6eb30a20884065cd2fbe742dcc2723ad",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night7-night7-k3-cohort-r01-20260918T030258Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night7.10-20.device-6am",
+          "inputs": [
+            "594ac90370fc6113d784cf01df3e25cc6eb30a20884065cd2fbe742dcc2723ad",
+            "db8922d0f25a027120332f8b37eb635890ee749061edeebe1d0cc2a7ba90b4f6",
+            "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night7-night7-k3-cohort-r02-20260918T031201Z",
+        "night": 7,
+        "claim": "claim.fnaf2.night7.10-20.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night7.10-20.device-6am",
+          "to": "run.night7-night7-k3-cohort-r02-20260918T031201Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night7-night7-k3-cohort-r02-20260918T031201Z/plan12-attestation.json",
+          "packSha256": "c83dabeb847c916c0f4973b88fa9c30d1f3f602b98cad71997c94c5575df7da6",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night7-night7-k3-cohort-r02-20260918T031201Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night7.10-20.device-6am",
+          "inputs": [
+            "c83dabeb847c916c0f4973b88fa9c30d1f3f602b98cad71997c94c5575df7da6",
+            "7d1c6a0292f4e377a8b08644e1da703fa8cd39ac8391265b96d18d3a20f3fbac",
+            "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night7-night7-k3-cohort-r05-20260918T032827Z",
+        "night": 7,
+        "claim": "claim.fnaf2.night7.10-20.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night7.10-20.device-6am",
+          "to": "run.night7-night7-k3-cohort-r05-20260918T032827Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night7-night7-k3-cohort-r05-20260918T032827Z/plan12-attestation.json",
+          "packSha256": "925713ab1c570b4e5c3162eb9d6bd35447d71af947cb3f083e1be5c60b60f217",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night7-night7-k3-cohort-r05-20260918T032827Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night7.10-20.device-6am",
+          "inputs": [
+            "925713ab1c570b4e5c3162eb9d6bd35447d71af947cb3f083e1be5c60b60f217",
+            "cf099bc24021a16cc3c2a02dabe81a1bd9fc649497ac858b7b21e55297880eeb",
+            "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night7-night7-k3-cohort-r06-20260918T033730Z",
+        "night": 7,
+        "claim": "claim.fnaf2.night7.10-20.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night7.10-20.device-6am",
+          "to": "run.night7-night7-k3-cohort-r06-20260918T033730Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night7-night7-k3-cohort-r06-20260918T033730Z/plan12-attestation.json",
+          "packSha256": "38e6903ee50c176a7d2526c7d063c49aa6a4174a6757ca8739ec11ac8326df86",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night7-night7-k3-cohort-r06-20260918T033730Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night7.10-20.device-6am",
+          "inputs": [
+            "38e6903ee50c176a7d2526c7d063c49aa6a4174a6757ca8739ec11ac8326df86",
+            "aa463d8dc0e38ff52b050916aee08915f13e62e2660e641525783b7483e580ae",
+            "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night7-night7-k3-cohort-r07-20260918T034636Z",
+        "night": 7,
+        "claim": "claim.fnaf2.night7.10-20.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night7.10-20.device-6am",
+          "to": "run.night7-night7-k3-cohort-r07-20260918T034636Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night7-night7-k3-cohort-r07-20260918T034636Z/plan12-attestation.json",
+          "packSha256": "07ec9d587425d9e79acfd4b97f900a31aea8514fcb4c19a248e70f0b87e5ed9a",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night7-night7-k3-cohort-r07-20260918T034636Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night7.10-20.device-6am",
+          "inputs": [
+            "07ec9d587425d9e79acfd4b97f900a31aea8514fcb4c19a248e70f0b87e5ed9a",
+            "28efec450ca3fe3d15c71518f3c2168b11d018061c5916e3cd3e626aab901c41",
+            "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night7-night7-k3-cohort-r08-20260918T035537Z",
+        "night": 7,
+        "claim": "claim.fnaf2.night7.10-20.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night7.10-20.device-6am",
+          "to": "run.night7-night7-k3-cohort-r08-20260918T035537Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night7-night7-k3-cohort-r08-20260918T035537Z/plan12-attestation.json",
+          "packSha256": "1ccfaa167381159cf9ec6b4c5172ac9f68fccb2f6a4388d020682043dfbeaf1b",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night7-night7-k3-cohort-r08-20260918T035537Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night7.10-20.device-6am",
+          "inputs": [
+            "1ccfaa167381159cf9ec6b4c5172ac9f68fccb2f6a4388d020682043dfbeaf1b",
+            "b93acd1fcbaea06156493b31ea6c0bfcdb4f6bfc64be9e58f5c96c24bf778d41",
+            "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night7-night7-k3-cohort-r09-20260918T040438Z",
+        "night": 7,
+        "claim": "claim.fnaf2.night7.10-20.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night7.10-20.device-6am",
+          "to": "run.night7-night7-k3-cohort-r09-20260918T040438Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night7-night7-k3-cohort-r09-20260918T040438Z/plan12-attestation.json",
+          "packSha256": "39dd85c82e61739a64f73008378b2c60991598d1862547c7bb2e0ca021ee7d01",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night7-night7-k3-cohort-r09-20260918T040438Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night7.10-20.device-6am",
+          "inputs": [
+            "39dd85c82e61739a64f73008378b2c60991598d1862547c7bb2e0ca021ee7d01",
+            "2427512fc09d385ec5f3fb26ec4e7e6cd736b09432d8646cfb7d913d6ec91cd7",
+            "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night7-night7-k3-cohort-r10-20260918T041340Z",
+        "night": 7,
+        "claim": "claim.fnaf2.night7.10-20.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night7.10-20.device-6am",
+          "to": "run.night7-night7-k3-cohort-r10-20260918T041340Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night7-night7-k3-cohort-r10-20260918T041340Z/plan12-attestation.json",
+          "packSha256": "a5d6c2de5c8f66f33cd51dd3ffb87741d77ae1e893dfbc1d65e9e2140d8556b7",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night7-night7-k3-cohort-r10-20260918T041340Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night7.10-20.device-6am",
+          "inputs": [
+            "a5d6c2de5c8f66f33cd51dd3ffb87741d77ae1e893dfbc1d65e9e2140d8556b7",
+            "438f738853009c810817f2d1c4376a565c8b2950540dc627f2eed824e9520090",
+            "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night7-night7-k3-full-02-20260915T033615Z",
+        "night": 7,
+        "claim": "claim.fnaf2.night7.10-20.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night7.10-20.device-6am",
+          "to": "run.night7-night7-k3-full-02-20260915T033615Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night7-night7-k3-full-02-20260915T033615Z/plan12-attestation.json",
+          "packSha256": "58b2402a65b262e8402ff61a4dc18fc1b9c9a1fadad528e03f25b2811b1aad1b",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night7-night7-k3-full-02-20260915T033615Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night7.10-20.device-6am",
+          "inputs": [
+            "58b2402a65b262e8402ff61a4dc18fc1b9c9a1fadad528e03f25b2811b1aad1b",
+            "8811f1f4b0bbfa77e9e8cc7bf988593b7f177bd74d696494639b1b9d9ccdd64d",
+            "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night7-night7-k3-full-06-20260915T225056Z",
+        "night": 7,
+        "claim": "claim.fnaf2.night7.10-20.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night7.10-20.device-6am",
+          "to": "run.night7-night7-k3-full-06-20260915T225056Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night7-night7-k3-full-06-20260915T225056Z/plan12-attestation.json",
+          "packSha256": "9a9f8c100bddfbe150e83c05672205ba1b1931757ae18b3f50a9995acec17e90",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night7-night7-k3-full-06-20260915T225056Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night7.10-20.device-6am",
+          "inputs": [
+            "9a9f8c100bddfbe150e83c05672205ba1b1931757ae18b3f50a9995acec17e90",
+            "c8a8b167e3c8fb8e6928122906f29a9c751467ab6445fd35dd21c0e5aada37fd",
+            "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night7-night7-k3-seedlog-full-01-20260915T032213Z",
+        "night": 7,
+        "claim": "claim.fnaf2.night7.10-20.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night7.10-20.device-6am",
+          "to": "run.night7-night7-k3-seedlog-full-01-20260915T032213Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night7-night7-k3-seedlog-full-01-20260915T032213Z/plan12-attestation.json",
+          "packSha256": "3c0b52d1708b6740bb8c72b77c777183ace8757251ab00feac1d8fd798e17163",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night7-night7-k3-seedlog-full-01-20260915T032213Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night7.10-20.device-6am",
+          "inputs": [
+            "3c0b52d1708b6740bb8c72b77c777183ace8757251ab00feac1d8fd798e17163",
+            "62ff03542b7dcb8c2e6b5bde21954552ac39fa1b782e1bd903e04d92bf8dd461",
+            "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night7-night7-k3-teach-01-20260918T042710Z",
+        "night": 7,
+        "claim": "claim.fnaf2.night7.10-20.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night7.10-20.device-6am",
+          "to": "run.night7-night7-k3-teach-01-20260918T042710Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night7-night7-k3-teach-01-20260918T042710Z/plan12-attestation.json",
+          "packSha256": "309a8aba1cf0ac0d20b100c0123600ade36bd653dfcd942bee0fd99760ea9a24",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night7-night7-k3-teach-01-20260918T042710Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night7.10-20.device-6am",
+          "inputs": [
+            "309a8aba1cf0ac0d20b100c0123600ade36bd653dfcd942bee0fd99760ea9a24",
+            "dfe5c136af62e0bbe1d37343a84ec56be025c8a6c80604453aabb2f7f7ead31c",
+            "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night7-night7-k3-teach-02-20260918T043627Z",
+        "night": 7,
+        "claim": "claim.fnaf2.night7.10-20.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night7.10-20.device-6am",
+          "to": "run.night7-night7-k3-teach-02-20260918T043627Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night7-night7-k3-teach-02-20260918T043627Z/plan12-attestation.json",
+          "packSha256": "0633b56ff267c2da23c546f211a408a420af8f5462ac6b11ed947b0d46c59f15",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night7-night7-k3-teach-02-20260918T043627Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night7.10-20.device-6am",
+          "inputs": [
+            "0633b56ff267c2da23c546f211a408a420af8f5462ac6b11ed947b0d46c59f15",
+            "66a1a689efce1286f5e7758f22519293dea443c024bc2c44d1b076312f9f406b",
+            "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night7-night7-k3-twin-a2-20260915T022337Z",
+        "night": 7,
+        "claim": "claim.fnaf2.night7.10-20.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night7.10-20.device-6am",
+          "to": "run.night7-night7-k3-twin-a2-20260915T022337Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night7-night7-k3-twin-a2-20260915T022337Z/plan12-attestation.json",
+          "packSha256": "4b3e77ca54a847daf23c5186a132fec5221579eb838737685bfd1fa33dc7f568",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night7-night7-k3-twin-a2-20260915T022337Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night7.10-20.device-6am",
+          "inputs": [
+            "4b3e77ca54a847daf23c5186a132fec5221579eb838737685bfd1fa33dc7f568",
+            "203f8b5c563875da06714ede6e2a6997a6bf0d0abf0a1b21f551943d725846b4",
+            "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night7-night7-k3-twin-b-20260915T023828Z",
+        "night": 7,
+        "claim": "claim.fnaf2.night7.10-20.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night7.10-20.device-6am",
+          "to": "run.night7-night7-k3-twin-b-20260915T023828Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night7-night7-k3-twin-b-20260915T023828Z/plan12-attestation.json",
+          "packSha256": "4885aea63f1785271a16b8f2d26f4101d57eab01caab150243b7849d1fe701a9",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night7-night7-k3-twin-b-20260915T023828Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night7.10-20.device-6am",
+          "inputs": [
+            "4885aea63f1785271a16b8f2d26f4101d57eab01caab150243b7849d1fe701a9",
+            "8e39a824ac507cbd5fe307f4fc020090def8bfe29d0da805e7abb69edf03e74c",
+            "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night7-night7-k3-twin-c-20260915T025403Z",
+        "night": 7,
+        "claim": "claim.fnaf2.night7.10-20.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night7.10-20.device-6am",
+          "to": "run.night7-night7-k3-twin-c-20260915T025403Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night7-night7-k3-twin-c-20260915T025403Z/plan12-attestation.json",
+          "packSha256": "ec9a3e17cb6112394735d5ff2e2030a5f445359c174fd88788d4ac264f30d865",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night7-night7-k3-twin-c-20260915T025403Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night7.10-20.device-6am",
+          "inputs": [
+            "ec9a3e17cb6112394735d5ff2e2030a5f445359c174fd88788d4ac264f30d865",
+            "65ce40e6eb5dcf623bd1c513477c8a24fbfa25621f243d5d45be235c5122081d",
+            "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      },
+      {
+        "run": "night7-night7-k3-wallclock-r1-20260915T002238Z",
+        "night": 7,
+        "claim": "claim.fnaf2.night7.10-20.device-6am",
+        "claimLevel": "DEVICE_MEASURED",
+        "reportedOutcome": "SixAM",
+        "attestedBy": "agent:pedro-2026-09-27",
+        "custody": {
+          "class": "recovered",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ]
+        },
+        "graph": "MATCHED",
+        "edge": {
+          "from": "claim.fnaf2.night7.10-20.device-6am",
+          "to": "run.night7-night7-k3-wallclock-r1-20260915T002238Z",
+          "type": "PROMOTED_BY",
+          "source": "docs/evidence/runs/night7-night7-k3-wallclock-r1-20260915T002238Z/plan12-attestation.json",
+          "packSha256": "f3e2516bb99308c6380f9e477a62f86f3573358df1518e2ba0d2f13ab3fcdd80",
+          "attestedBy": "agent:pedro-2026-09-27",
+          "attestedOn": "2026-09-27",
+          "custody": "recovered-from-run-log",
+          "lost": [
+            "observations.jsonl",
+            "observer frames",
+            "request.json"
+          ],
+          "authority": "plans/12-end-to-end-evidence-campaign.md"
+        },
+        "annotation": {
+          "subject": {
+            "kind": "GameRun",
+            "id": "night7-night7-k3-wallclock-r1-20260915T002238Z"
+          },
+          "instrument": "plan12-promotion@plan12-attestation-v2",
+          "class": "plan12-promotion",
+          "value": "claim.fnaf2.night7.10-20.device-6am",
+          "inputs": [
+            "f3e2516bb99308c6380f9e477a62f86f3573358df1518e2ba0d2f13ab3fcdd80",
+            "f14e5fc550430be19ea4366a73f301846d4c19f03e2bee08a09329fb4775e3fa",
+            "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78"
+          ],
+          "by": "agent:pedro-2026-09-27",
+          "status": "standing"
+        }
+      }
+    ],
+    "open": {
+      "modelOnlyWinners": {
+        "rule": "a committed winner-v1 binding none of whose hashes (its stableHash, and the winnerHash a bundle compiled from it records) any run pack names: it has never been shown on the phone by a pack, so it stands MODEL_ONLY",
+        "claimLevel": "MODEL_ONLY",
+        "count": 2,
+        "of": 26,
+        "winners": [
+          {
+            "file": "tools/device/campaign-night1-minus7-winner.json",
+            "hashes": [
+              "fnv1a-276a219b",
+              "fnv1a-58e73bd5"
+            ]
+          },
+          {
+            "file": "tools/device/campaign-toys-night5-winner.json",
+            "hashes": [
+              "fnv1a-959f7cb5",
+              "fnv1a-f3e5facd"
+            ]
+          }
+        ]
+      },
+      "untrackedWinnerDebt": {
+        "rule": "a registered anchor binding (ANCHOR_AIMS) with no committed tools/device/*-winner.json of the same stableHash, against the closed UNTRACKED_WINNER_DEBT list",
+        "summary": "1 of 1",
+        "declared": 1,
+        "untracked": 1,
+        "derived": [
+          "fnv1a-bc5e044c"
+        ],
+        "agrees": true,
+        "entries": [
+          {
+            "hash": "fnv1a-bc5e044c",
+            "night": 6,
+            "committed": false,
+            "packs": [
+              "night6-anchored1-20260913T015302Z",
+              "night6-anchored2-20260913T015520Z",
+              "night6-anchored3-20260913T020127Z"
+            ],
+            "note": "night 6 a: found 2026-09-25 at artifacts/night6-anchored/bundle/winner.json with this stableHash, but not committable: it no longer rebuilds (winner.gate.replayHash does not match the candidate replay under the current engine), which test-winners-rebuild.mjs refuses by design"
+          }
+        ]
+      }
+    },
+    "consistent": true
+  },
+  "evidenceId": "review-promotions-sha256-cbf62f0155a59b83"
+}

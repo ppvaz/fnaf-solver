@@ -12,9 +12,9 @@ Public surface: the CLI and the Cue Helper MCP (`mcp.js`). Dependencies: core
 and adapters. Commands: `device:campaign`, `device:preflight`,
 `device:clockmap` and `device:grade`. Artifacts: campaign
 directories under ignored `artifacts/`, which `npm run evidence -- pack` turns
-into committed run packs. The fixture `DeviceControlService`, `composeDevice`,
-`composeModernDevice`, the seam-calibration fixture and the `dry-run`, `live`
-and `calibrate` commands were retired on 2026-09-25 (`docs/ARCHIVED-ROUTES.md`).
+into committed run packs. The fixture service path, its composition roots, the
+seam-calibration fixture and the `dry-run`, `live` and `calibrate` commands were
+retired on 2026-09-25 (`docs/ARCHIVED-ROUTES.md`).
 
 The campaign control plane is available through safe dry-run, guided, and
 read-only preflight entry points:

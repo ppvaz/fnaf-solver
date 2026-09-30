@@ -28,7 +28,7 @@ Lifecycle meanings:
 | `tools/device/menu.sh` | transitional | calibrated title/menu detector and the campaign state gate | detector evidence and a dry-run fixture cover the menu states |
 
 The historical shell runner, its launcher facade, the artifact runner and the
-fixture `DeviceControlService` were archived on 2026-09-25
+fixture service path were archived on 2026-09-25
 ([`../ARCHIVED-ROUTES.md`](../ARCHIVED-ROUTES.md)); `apps/device/src/cli.js`
 `campaign` is the one path onto a phone.
 

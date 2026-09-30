@@ -192,6 +192,16 @@ function landing(from, specifier) {
  */
 const RULES = [
   {
+    id: 'kernel', scope: path => path.startsWith('packages/kernel/src/'),
+    refuse: ref => ref.unit !== 'packages/kernel',
+    why: 'the kernel imports nothing: no workspace, no repository path, no Node built-in, no dependency (ADR 0002); every package may import it',
+  },
+  {
+    id: 'kernel-test', scope: path => path.startsWith('packages/kernel/') && !path.startsWith('packages/kernel/src/'),
+    refuse: ref => !['packages/kernel', 'builtin'].includes(ref.unit),
+    why: 'kernel tests import only the kernel and Node built-ins',
+  },
+  {
     id: 'core', scope: path => path.startsWith('packages/core/src/'),
     refuse: ref => !['packages/core', 'packages/kernel'].includes(ref.unit),
     why: 'core imports only itself and the kernel: no application, adapter, research, review, tools module, host API or dependency',
@@ -252,6 +262,21 @@ assert.deepEqual(planted(REVIEW, "// import('../../../apps/device/src/cli.js')\n
   'the guard must not read comments or strings as imports');
 assert.deepEqual(planted(REVIEW, "import { stableHash } from '@sixam/core/contracts';\nexport const h = stableHash;"), [],
   'review may import core');
+// The kernel imports nothing, and everything may import it.
+const KERNEL = 'packages/kernel/src/planted.js';
+assert.deepEqual(planted(KERNEL, "import { stableHash } from '@sixam/core/contracts';"), ['kernel'],
+  'the kernel must not import core');
+assert.deepEqual(planted(KERNEL, "import { readFileSync } from 'node:fs';"), ['kernel'],
+  'the kernel must not import a Node built-in');
+assert.deepEqual(planted(KERNEL, "export const load = () => import('../../review/src/pack-lift.mjs');"), ['kernel'],
+  'the kernel must not reach another package by a relative dynamic import');
+assert.deepEqual(planted(KERNEL, "export * from './labels.js';"), [], 'the kernel may import itself');
+assert.deepEqual(planted('packages/kernel/test/planted.test.js',
+  "import assert from 'node:assert/strict';\nimport { unknown } from '../src/index.js';"), [], 'a kernel test may import the kernel and node:');
+assert.deepEqual(planted('packages/kernel/test/planted.test.js', "import { readPack } from '@sixam/review/evidence-pack';"),
+  ['kernel-test'], 'a kernel test must not import review');
+assert.deepEqual(planted(REVIEW, "import { unknown } from '@sixam/kernel';"), [], 'review may import the kernel');
+assert.deepEqual(planted('packages/core/src/planted.js', "import { unknown } from '@sixam/kernel';"), [], 'core may import the kernel');
 // The rules the regex guard held keep holding.
 assert.deepEqual(planted('packages/core/src/planted.js', "import { spawn } from 'node:child_process';"), ['core']);
 assert.deepEqual(planted('packages/core/src/planted.js', "export { cli } from '@sixam/device';"), ['core']);

@@ -10,13 +10,13 @@ glitchless Minus Two path; they do not route through the generic monitor/camera
 smoke evaluator. Each claim-producing operation retains its input spec,
 structured result, and session manifest; console output is a view of that
 bundle.
-`research/sandbox/` is deliberately outside this package.
 
 Research owns experiment specifications, candidate generation, pure model
 evaluation, statistics, and structured result artifacts. It consumes core and
 declared fault/adapter models; it never imports trainer presentation or live
-device shell internals. `research/sandbox/` is intentionally permissive and
-has a one-way dependency inward toward published contracts.
+device shell internals. There is no sandbox beside it (ADR 0002 principle 7,
+2026-09-29): a claim-bearing cohort or census is pre-registered, and a
+diagnostic sweep names the explanation it tests.
 
 Public API: experiment primitives from the package root and the explicit CLI
 entry point. Dependency: core only. Commands: `npm run research -- --help` and

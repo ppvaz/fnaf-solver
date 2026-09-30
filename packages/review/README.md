@@ -7,7 +7,11 @@ over what it reads. It holds the evidence tools that read committed run packs:
 the campaign reader, the run-pack writer and reader, Plan 12 attestation and
 promotion, and the cohort computation. They moved here from `tools/` on
 2026-09-29, unchanged; `npm run evidence` (`tools/evidence.js`) composes them,
-and its output did not change by a byte.
+and its output did not change by a byte. Beside them, the first reader in
+kernel words: a read-only lift of every committed pack to a kernel `GameRun`,
+and `npm run review -- query promotions`, which re-derives the `PROMOTED_BY`
+edges of `docs/evidence/graph.json` and S1's open items from the packs, the
+attestations and the winners.
 
 **Boundary.** Review never imports Play or Propose. In today's names it never
 imports `apps/device`, `packages/adapters` or `packages/research`, and
@@ -15,21 +19,25 @@ imports `apps/device`, `packages/adapters` or `packages/research`, and
 import, a re-export, a dynamic `import()` or a `require()`. The two campaign
 validators it needs (`validateCampaignResult`, `validateSaveProof`) moved to
 `@sixam/core/contracts` for that reason; `apps/device` re-exports them.
-It still reaches `tools/device/bundle.mjs` to compile a committed winner to the
-hash a bundle records (`trackedWinners`), and through it the research seed
-helpers: that edge closes when `tools/device` is sorted by context (migration
-M9).
+It still reaches two `tools/device` modules: `bundle.mjs`, to compile a
+committed winner to the hash a bundle records (`trackedWinners`, and through it
+the research seed helpers), and `fact-register.mjs`, whose `ANCHOR_AIMS` and
+`UNTRACKED_WINNER_DEBT` the promotions query reads. Those edges close when
+`tools/device` is sorted by context (migration M9).
 
 **Stored names.** Every pack records `packer: tools/evidence-pack.mjs`, and the
 pack digest an attestation binds covers it, so the value never changes. The old
 path is a one-line re-export (`tools/evidence-pack.mjs`, registered in
 `legacy-paths.json` as `review.evidence-pack-shim`).
 
-Public API: the `./evidence-campaign`, `./evidence-pack`, `./evidence-promotion`
-and `./evidence-cohort` subpaths. Dependency: core. Commands: `npm run
+Public API: the `./evidence-campaign`, `./evidence-pack`, `./evidence-promotion`,
+`./evidence-cohort`, `./pack-lift` and `./promotions-query` subpaths, and the
+`fnaf2-review` bin. Dependencies: core and the kernel. Commands: `npm run
 evidence` (verbs `list`, `show`, `diff`, `replay`, `why`, `pack`, `attest`,
-`promote`, `promotions`, `recovery-check`, `cohort`). Tests: the root
-`test:unit` lane runs `test/`.
+`promote`, `promotions`, `recovery-check`, `cohort`) and `npm run review --
+query promotions [--write FILE --date YYYY-MM-DD]`. Tests: the root `test:unit`
+lane runs `test/`. The modules are `.mjs`, outside the JS typecheck lane, because
+checking them would pull in the untyped `tools/device` modules they import.
 
 The campaign reader and packer also preserve the CLI's retained `ERROR`
 envelope when no validated result was returned. That row has an `UNKNOWN`
@@ -50,3 +58,8 @@ verdict does not lose the run identity carried by its `evidence.started` log.
 | `test/evidence-promotion.test.mjs` | check | Throwaway tree: an agent attestation over a re-derived win is accepted; a mismatched digest, an author without the delegation or a note, an unlisted check, an edited pack, a death, an uncommitted winner, a contradicting video grade and an unnamed Custom Night vector are refused; a recovered 10/20 win passes custody while its attestation and edge keep its `lost` list; the edge is recorded once and a stale one is reported. `test:unit`. |
 | `src/evidence-cohort.mjs` | module | A cohort result computed from its run packs: reads a `cohort-predeclaration-v1`, finds each slot's packs by label (`<night>-<prefix>-rNN[b..z]-<stamp>`), and applies the predeclared rule -- executor terminal sixam AND video terminal clear, the video read from the pack's `grade.log` `TERMINAL:` line or `timeline.json` (`terminal.outcome`, run-timeline.py's shape). A run that never reached the night is excluded, the last of several is counted and the rest superseded, a sixam without a video grade is `UNGRADED`, and runs on another binding are named. A `RESULT_LOST` slot is decided by the video if it saw a death and is otherwise `UNKNOWN`, with the executor's last abort reason beside it. A declaration with `corners` computes each explicitly labelled corner separately, checks requested and observed dials against its vector, and emits a content-derived evidence ID; missing or mismatched dial evidence leaves it incomplete. Used by `npm run evidence -- cohort`. |
 | `test/evidence-cohort.test.mjs` | check | Four-slot synthetic cohort of real packs: a win, a death, an ungraded sixam and an excluded-then-rerun slot, plus a superseding re-run on the wrong binding, a slot graded by run-timeline.py's own `timeline.json`, and a result-lost slot left `UNKNOWN` with its abort reason. Also checks multi-corner slot counts, missing runs, separate dial vectors, mismatched readback, exclusions, and stable result IDs. `test:unit`. |
+| `src/pack-lift.mjs` | module | A read-only lift from `run-pack-v1` to the kernel's `GameRun`: `liftPack(root, id)` reads a committed pack through `readPack` (which refuses a pack whose files no longer match their sha256), cuts its event rows at the executor's own reads (`state=night`, then its `campaign.terminal.*` row; `night-origin` and `night-ended` for a FNaF 1 run), and lifts the venue's reported outcome -- the executor terminal, or a FNaF 1 runner's end (`STOP_AFTER` is `Timeout`) -- and custody (`complete` or `recovered` with the pack's `lost` list). Every value the pack does not hold is `UNKNOWN(reason)`, never a default: a death's character, mechanism, rule and time; the spec of a pack that lost `request.json`; the venue before venue identity (2026-09-29); the clock trace; the class of an `incomplete-campaign`. Each run is checked by `validateGameRun`. It never writes. |
+| `test/pack-lift.test.js` | check | Lifts every committed pack (184 on 2026-09-29) with no throw, validates every `GameRun`, hashes `docs/evidence/runs` before and after to show nothing was written, and pins the reading on an original, a recovered, a result-lost, an incomplete, a held and a FNaF 1 pack. `test:unit`. |
+| `src/promotions-query.mjs` | module | `queryPromotions(root)`: re-derives every `PROMOTED_BY` edge from the committed packs (lifted), their `plan12-attestation.json` and the committed winners -- an edge is derived when every `packPromotionChecks` check passes, `derivePromotion` re-derives every check and names the claim, and the attestation lists exactly the checks, inputs, claim and custody derived now; the edge is `recordPromotion`'s -- and compares it with `graph.json` edge for edge (`compareEdges`, canonical JSON). Beside each edge: the attester and the custody class (ADR 0002 principle 11), and a kernel `Annotation`. It derives S1's open items: committed `winner-v1` bindings no pack names by either hash (MODEL_ONLY), and `UNTRACKED_WINNER_DEBT` (`ANCHOR_AIMS` bindings with no committed winner, against the declared list). `promotionsRecord` wraps the output as an `evidence-record-v1` with the command, the commit, the dirty inputs and a content-hash `evidenceId`. |
+| `test/promotions-query.test.js` | check | The re-derived edges equal `graph.json`'s `PROMOTED_BY` edges byte for byte (47 on 2026-09-29, and never fewer); each carries its attester, a kernel custody class matching its pack, a `SixAM` reported outcome and a valid annotation; `compareEdges` catches a dropped, an altered, an extra and a duplicated edge; the open items are re-checked against the packs and the tree; and the CLI prints the in-process query byte for byte and exits 0. `test:unit`. |
+| `src/cli.mjs` | report | `npm run review -- query promotions [--write FILE] [--date YYYY-MM-DD]` (bin `fnaf2-review`): prints the query as JSON; exits 0 when the graph and the derivation agree, 1 when they do not, 2 on a usage error. `--write` retains it as an evidence record, e.g. `docs/evidence/review-promotions-20260929.json`. |

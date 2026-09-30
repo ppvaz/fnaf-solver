@@ -20,7 +20,7 @@ them. A route listed here is **parked, not refuted**, unless its row says so.
 | In-engine recompile (Plan 17, route 5): owned CCN → Chowdren → arm64 research APK. **Restored 2026-09-27** for ROADMAP S2b (desktop, deterministic harness): see [`../tools/recompile/README.md`](../tools/recompile/README.md) | `tools/recompile/` (build-296 `mmfparser` patch, Chowdren config, two probes, Android CMake draft) | 2026-08-28 | [`in-engine/IN-ENGINE-PILOT-RECOMPILE.md`](in-engine/IN-ENGINE-PILOT-RECOMPILE.md), Plan 17 |
 | ESP32 audio bridge: A2DP sink on an ESP32-WROOM-32 forwarding PCM to the APK over Wi-Fi | `firmware/esp32-audio-consumer/`, `tools/cue/esp32-audio-authority.py`, `tools/cue/test-esp32-audio-authority.py`, `tools/cue/pack-esp32-cues.py` | 2026-08-31 | [`device/ANDROID-AUDIO-CAPTURE.md`](device/ANDROID-AUDIO-CAPTURE.md), [`device/AUDIO-WITNESS-MAP.md`](device/AUDIO-WITNESS-MAP.md), Plan 08 |
 | Custom Night invention engine (Plans 05 and 21): rule-list policy language, genetic search, ablation and anatomy reports | `tools/invent/` | 2026-09-02 | Plan 05, Plan 21, [`../plans/PROGRESS.md`](../plans/PROGRESS.md) |
-| HUD-signature down/mask/up probe (parked 2026-09-01) | `research/sandbox/hud-signature-probe.py`, `research/sandbox/hud-signature-n1-minustoys-calib-01.json` | 2026-09-01 | [`../research/sandbox/README.md`](../research/sandbox/README.md) |
+| HUD-signature down/mask/up probe (parked 2026-09-01) | `research/sandbox/hud-signature-probe.py`, `research/sandbox/hud-signature-n1-minustoys-calib-01.json` | 2026-09-01 | [The research sandbox](#the-research-sandbox-2026-09-29-adr-0002), below (its notes left `research/sandbox/README.md` when the directory retired) |
 
 The ESP32 route superseded: rendered audio now reaches the host over A2DP
 directly (`tools/cue/bt-audio-link.sh`, `tools/cue/bt-audio-collector.py`).
@@ -180,6 +180,50 @@ The artifact executor it sat beside is the one the campaign runs. It left when
 the executor was split into `hid-schedule.js`, `device-shell.js` and
 `control-effect.js`. Restore with
 `git show 18684d8:apps/device/src/adb-device-local-executor.js`.
+
+## The research sandbox (2026-09-29, ADR 0002)
+
+`research/sandbox/` was Plan 22 principle 8's "permissive edge": probes that
+production could not import. ADR 0002 drops that principle for its own
+principle 7 -- no sandbox; claim-bearing cohorts and censuses are
+pre-registered, and diagnostic sweeps name the explanation they test -- and the
+directory retired in migration M5b. It held one file, the notes of the
+HUD-signature probe archived on 2026-09-24 (row above); nothing imported it.
+Restore the notes with `git show 861eac9:research/sandbox/README.md`, and the
+probe itself from the `archive/2026-09-24` tag. The notes, as they stood:
+
+### HUD-signature down/mask/up rule (parked 2026-09-01, archived 2026-09-24)
+
+`hud-signature-probe.py` (self-test green) fitted the HUD-chrome hypothesis on
+`captures/n1-minustoys-calib-01-aborted.mp4`; retained report:
+`hud-signature-n1-minustoys-calib-01.json`. One night-1 story run, 90/90
+corpus reads: mask uniquely zeroes the clock cell 1 (180,60), right-button
+cell 174 (1740,1020) and chrome cell 172 (1500,1020) — margins 172–221;
+bottom chrome cell 167 (900,1020) reads identically in down and mask
+(175–182) and only dies when the monitor is up; grid luma down 27 / mask
+4–6 / up 32–48; anim refuses 32/40, 8 firm votes unaudited. No evidence ID —
+sandbox probes do not mint one; the report file is the observation.
+
+It was not promotable as measured: the recording is an upscaled 1280x576 transcode
+(a different sensor than the helper's native 2400x1080 grid), labels come
+from grade-minus7, and the reads are in-sample. Open before any Plan 12
+promotion:
+
+1. Native re-fit of signature B ({down,up}|{mask}) on the 42-frame labelled
+   corpus — frames live on Pedro's other machine. Copy them here as
+   `down=… up=… mask=…` sources and extend `tools/device/monitor-calibrate.py`
+   for the second signature; zero device cost.
+2. Blackout frames — the mask-vs-blackout discriminator (left button present
+   + luma band) has never seen a blackout; `blackout-unproven` stands.
+3. Pressed-button and full-night frames (battery drain, clock hour changes).
+4. Anim-vote audit against HID press timing (desync-scan alignment).
+5. Held-out evaluation, then the schema decision: `monitor-rule-v2` with
+   per-signature anchor sets vs a separate `maskOn` fact (core owns the fact
+   vocabulary; Plan 12 owns promotion).
+
+To re-run the probe, restore it from the archive tag first; it then takes
+`python3 research/sandbox/hud-signature-probe.py captures/<run>.mp4 --out
+<report>.json`, or `--self-test` for the logic only.
 
 ## Kept on purpose
 

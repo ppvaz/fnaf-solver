@@ -1,9 +1,43 @@
 # Architecture and developer-experience refactor
 
-**Status:** proposed 2026-08-31. Architectural umbrella over Plans 07, 09–16,
-18, and 20–21. This plan changes ownership, interfaces, naming, navigation, and
-tooling without changing the canonical Android target or weakening any evidence
-or promotion gate.
+**Status:** proposed 2026-08-31; amended 2026-09-29 by
+[ADR 0002](../docs/decisions/0002-kernel-contexts-vocabulary.md) (below).
+Architectural umbrella over Plans 07, 09–16, 18, and 20–21. This plan changes
+ownership, interfaces, naming, navigation, and tooling without changing the
+canonical Android target or weakening any evidence or promotion gate.
+[`22-STATUS.md`](22-STATUS.md) holds the per-package status.
+
+## Amendment (2026-09-29, ADR 0002, migration M5b)
+
+ADR 0002 froze a kernel, five contexts (Source, Propose, Play, Review, Teach)
+and a vocabulary, and settled this plan's principles. What changes here:
+
+- **Principle 1 is rewritten: the Source is canonical.** The game's compiled
+  logic is the authority, and the model derived from it serves it.
+- **Principles 2 and 5 are dropped** (Pedro, 2026-09-29, ADR 0002 decision 14),
+  and **principle 8 is dropped**, replaced by ADR 0002 principle 7: no sandbox;
+  claim-bearing cohorts and censuses are pre-registered, and diagnostic sweeps
+  name the explanation they test. `research/sandbox/` is deleted in the same
+  change. Principles 3, 4, 6, 7 and 9 are kept. The original text of all nine
+  is in `git show 861eac9:plans/22-architecture-and-developer-experience-refactor.md`.
+- **The runtime and `DeviceControlService` are retired.** The composition this
+  plan designed first -- a `DeviceControlService` over `packages/runtime`'s
+  scheduler and supervisor, built by the device composition roots -- never
+  played a night and was removed on 2026-09-25 (`6d78c7e`), and the adapter
+  capability registry, the actuator/sensor/detector ports and `packages/screencheck`
+  that only it used went the same day (`903ffab`). The campaign executor
+  (`apps/device/src/cli.js campaign`) is the one path onto a phone.
+  `docs/ARCHIVED-ROUTES.md` says how to restore any of it.
+- **The package layout gains `kernel` and `review`, and a future `source`.**
+  `@sixam/kernel` holds the ADR 0002 kernel types that have a consumer
+  today and imports nothing; `@sixam/review` holds the evidence tools
+  (moved from `tools/` in M5a) and the queries over them; `packages/source`
+  (migration M6) will take the Source's code out of `core`. The dependency
+  rule below is ADR 0002's, enforced by `tools/architecture-test.js`.
+
+The sections below keep their original text where it still holds and say where
+it does not; the work packages keep theirs, with a dated note where they name
+something retired.
 
 ## Outcome
 
@@ -38,15 +72,15 @@ The refactor is complete only when both statements are true:
 
 | Question | Decision |
 |---|---|
-| Canonical source | `@sixam/core`; trainer, research, and device are consumers |
+| Canonical source | The Source: the game's compiled logic, read through the dump into one Rulebook per game (in code `@sixam/core` until `packages/source`); every other context consumes it (amended 2026-09-29) |
 | Repository | private npm-workspaces `@sixam/*` monorepo |
 | Main implementation language | strict TypeScript for new/extracted long-lived host/core code; gradual JS migration |
 | Other languages | Python analysis, thin shell boundaries, Android Java, firmware/native C, entry assembly, toolchain-only C# |
 | Duplicate implementations | common semantic ports + capability-specific adapters + conformance suites |
-| Device piloting | versioned profiles and run bundles through `DeviceControlService`; no inferred modes/coordinates |
+| Device piloting | versioned profiles and run bundles through the campaign executor (`device:campaign`); no inferred modes/coordinates. The `DeviceControlService` first planned here was retired on 2026-09-25 (`6d78c7e`) |
 | Agent actuation | optional bounded MCP adapter over the service; never the real-time control loop |
 | Testing | fast deterministic unit/contract/affected lanes; slow simulation, real-time, and live-device lanes explicit |
-| Exploration | permissive sandbox with one-way dependencies and graduated promotion gates |
+| Exploration | no sandbox (ADR 0002 principle 7, 2026-09-29): claim-bearing cohorts and censuses are pre-registered; diagnostic sweeps name the explanation they test |
 | Documentation | repo-owned narrative plus generated catalogs, reverse source links, and static wiki-like portal |
 | Knowledge retrieval | lexical/generated indexes + lightweight typed claim/evidence graph; optional benchmarked RAG later |
 | Change locality | implementation + one registry + conformance tests; scattered backend branches are a design failure |
@@ -90,19 +124,24 @@ JavaScript.
 
 ## Architectural principles
 
-### 1. The model is canonical; applications are leaves
+### 1. The Source is canonical; applications are leaves
 
-`@sixam/core` owns mechanics, semantic actions, observations, policies,
-and evidence-labelled constants. Browser, research, and device packages depend
-on it. Core never imports an application, adapter, shell command, DOM API, or
-device implementation.
+*Rewritten 2026-09-29 (ADR 0002).* The game's own compiled logic is the
+authority. The Source context acquires it, decompiles it, reads it and derives
+one Rulebook per game -- the night model and the Sim's `[SOURCED gN]` rules --
+and recompiles it into a runnable binary, along the identity chain APK -> CCN ->
+dump -> Rulebook and CCN + patch -> binary. Where the model and the dump
+disagree, the dump is right and the model is fixed. In code the derived
+mechanics, semantic actions, observations, policies and evidence-labelled
+constants live in `@sixam/core` until `packages/source` takes the Source's
+share of it (migration M6). Propose, Play, Review and Teach consume it; it
+imports only itself and the kernel, and never an application, adapter, shell
+command, DOM API, or device implementation.
 
-### 2. One program, several embodiments
+### 2. (Dropped 2026-09-29)
 
-The trainer, simulator experiments, stock-device controller, and future in-APK
-controller are consumers of one evidence base. None is silently privileged as
-the repository's identity. A shared policy artifact must retain its meaning
-when interpreted by the simulator or compiled for an actuator.
+*Dropped by Pedro (ADR 0002, decision 14).* It was "One program, several
+embodiments". ADR 0002's five contexts and its venue grid take its place.
 
 ### 3. Alternatives implement ports; capability differences remain visible
 
@@ -119,11 +158,12 @@ not emit coordinates, `adb` commands, HID report bytes, or shell callbacks.
 Sensors produce timestamped measurements or explicit unknowns. They do not
 silently answer policy questions.
 
-### 5. Research may remain plural; its method is shared
+### 5. (Dropped 2026-09-29)
 
-Searches may encode distinct candidate spaces and hypotheses. They share
-experiment specifications, evaluators, provenance, statistical contracts, and
-result artifacts. A negative frontier remains a first-class result.
+*Dropped by Pedro (ADR 0002, decision 14).* It was "Research may remain
+plural; its method is shared". Declared work in ADR 0002 is an Experiment,
+which names its competing explanations, or a Census over a named population;
+a negative result stays a first-class result under the charter.
 
 ### 6. Executable contracts own current behavior
 
@@ -139,17 +179,14 @@ commands temporarily through explicit compatibility shims, compare semantic
 traces, then delete the shims at a named gate. No evidence claim changes merely
 because a file moved.
 
-### 8. Structured core, permissive edge
+### 8. (Dropped 2026-09-29)
 
-Wild exploration is part of the mission. `research/sandbox/` may contain
-short-lived probes, notebooks, one-off scripts, alternative models, and
-deliberately incompatible hypotheses with minimal ceremony. Sandbox work may
-depend inward on published contracts but nothing production-like may depend on
-it. Crossing from sandbox to a named experiment or shared package requires an
-owner, a stable input/output contract, fixed seeds or retained observations,
-a machine-readable result, and the appropriate evidence label. Crossing into
-runtime requires conformance, safety, and promotion gates. This creates
-graduated rigor instead of choosing between bureaucracy and chaos.
+*Dropped, replaced by ADR 0002 principle 7:* no sandbox. Claim-bearing cohorts
+and censuses are pre-registered; diagnostic sweeps name the explanation they
+test. It was "Structured core, permissive edge", with a `research/sandbox/`
+tree that production could not import; that directory held one archived
+probe's notes and was deleted on 2026-09-29, the notes moving to
+`docs/ARCHIVED-ROUTES.md`.
 
 ### 9. Optimize for change locality
 
@@ -177,57 +214,48 @@ migration for offline diagnosis, but do not invent a custom resolver merely to
 avoid the conventional workspace bootstrap.
 
 ```text
-fnaf2-1020/
+fnaf2-1020/                     (amended 2026-09-29: ADR 0002 contexts in brackets)
   package.json
   README.md
   CONTRIBUTING.md
   CLAUDE.md
 
   packages/
-    core/                       @sixam/core
+    kernel/                     @sixam/kernel    [kernel] ADR 0002 kernel types with a
+      src/                      consumer today (Interval, ClaimLevel, SourceLabel, Outcome,
+                                GameRun, Annotation): types.ts + validators; imports nothing
+
+    core/                       @sixam/core      [source, until packages/source]
       src/
         mechanics/             sourced model, plant simulation, RNG
         control/               policies, supervisors, policy IR
         sensing/               measurement and observation semantics
         estimation/            belief and state estimation
-        actuation/             semantic commands and actuator port
-        timing/                frames, clocks, deadlines, calibration
+        timing/                frames, clocks, deadlines
         telemetry/             events and run-record schemas
+        contracts/             the contract register's validators
+        training/              the trainer's exercise contracts
 
-    runtime/                    @sixam/runtime
-      src/
-        scheduler/
-        control-loop/
-        experiment-executor/
-        safety/
+    source/                     (future, migration M6) @sixam/source [source]
+                                acquire, decompile, derive, recompile; the identity chain
 
-    adapters/                   @sixam/adapters
-      src/
-        actuators/             ADB, HID, simulator, future in-APK
-        sensors/               screencap, MediaProjection, A2DP, cue-helper
-        detectors/             SCM1, pixel grid, audio cue classifiers
-        clocks/                host, device monotonic, simulator
-        transports/            adb, local socket, fact/measurement link
+    adapters/                   @sixam/adapters  [play]
+      src/                      HID and Cue Helper transports, clocks, night onset,
+                                the fitted detection rules the campaign reads
 
-    research/                   @sixam/research
-      src/
-        experiment/
-        synthesis/
-        optimization/
-        analysis/
-        characterization/
+    research/                   @sixam/research  [propose]
+      src/                      experiment.js, seeds.js, families/, strategies/, cli.js
 
-    screencheck/                @sixam/screencheck
-      src/                      C and AArch64 entry shim
-      scripts/                  cross-build, benchmark, host contract test
+    review/                     @sixam/review    [review]
+      src/                      run packs, Plan 12 attestation and promotion, cohorts,
+                                the pack lift to GameRun, and queries (npm run review)
 
   apps/
-    trainer/                    @sixam/trainer
+    trainer/                    @sixam/trainer   [teach]
       src/                      UI, audio, input, lane, curriculum
 
-    device/                     @sixam/device
-      src/                      composition root and host CLI
-      remote/                   bounded phone-side shell executor
+    device/                     @sixam/device    [play]
+      src/                      the campaign: the one composition root that plays a night
       profiles/                 versioned device/run profiles
 
   docs/
@@ -240,6 +268,11 @@ fnaf2-1020/
   plans/
 ```
 
+Retired on 2026-09-25 and not part of the layout: `packages/runtime` (the
+fixture scheduler and supervisor, `6d78c7e`) and `packages/screencheck` (the
+on-device classifier, `903ffab`), with the `apps/device/remote/` shell executor
+this plan first drew.
+
 Do not make every adapter a workspace. Subpath exports such as
 `@sixam/adapters/actuator-hid` preserve boundaries without producing dozens
 of packages. Split a subpackage only when it has an independent release,
@@ -247,31 +280,37 @@ toolchain, or dependency boundary.
 
 ### Dependency rule
 
+*Amended 2026-09-29: ADR 0002's rule, in today's names.*
+
 ```text
-                         +---------------------+
-                         | @sixam/core    |
-                         +---------------------+
-                           ^       ^       ^
-                           |       |       |
-             +-------------+       |       +-------------+
-             |                     |                     |
-       runtime/adapters         research              trainer
-             ^
-             |
-         device app
+kernel <- source <- play <- propose -> review -> source
+
+  kernel   @sixam/kernel     imports nothing; every package may import it
+  source   @sixam/core       imports only itself and the kernel
+  play     packages/adapters, apps/device
+  propose  packages/research
+  review   packages/review        never imports play or propose
+  teach    apps/trainer           core only
 ```
 
-- `core` has no workspace dependencies.
-- `runtime` and `adapters` depend on `core`, not on each other unless a narrow
-  public contract requires it.
-- `research` may use core, runtime, and explicit simulation/error-model
-  adapters, but never trainer or live shell internals.
+- `kernel` has no dependency and imports nothing in the repository: no
+  workspace, no relative path out of itself, no Node built-in.
+- `core` imports only itself and the kernel: no application, adapter,
+  research, review, tools module, host API or dependency.
+- `adapters` depend on core. `apps/device` is the one composition root that
+  plays a night; it composes the adapters and a resolved profile.
+- `research` may use core and explicit simulation and error models, but never
+  `apps/device`, `tools/device` or a live shell (`child_process`, `net`,
+  `dgram`).
+- `review` imports core and the kernel and never `apps/device`,
+  `packages/adapters` or `packages/research`. It still reaches
+  `tools/device/bundle.mjs` to compile a committed winner to its bundle hash;
+  that edge closes when `tools/device` is sorted by context (migration M9).
 - `trainer` depends on core and browser-local presentation only.
-- `device` is the composition root allowed to select runtime and adapters.
-- `screencheck` is independently buildable native machinery consumed by the
-  screencheck adapter; core has no knowledge of it.
 
-Enforce the rule with an import-boundary test before deleting the old layout.
+`tools/architecture-test.js` enforces the rule over each module's syntax tree
+(the pinned `typescript` parser): static imports, re-exports, dynamic
+`import()`, `require()`, with planted violations that must be caught.
 
 ## Reconnaissance baseline
 
@@ -733,6 +772,12 @@ timestamps, and capability honesty; it does not impose the lowest common
 physical denominator.
 
 ### Device control service and actuator MCP
+
+*Retired 2026-09-25 (`6d78c7e`).* The service below was built as a fixture
+path, never played a night, and was removed with `packages/runtime`; the
+campaign executor is the one path onto a phone, and the Cue Helper MCP
+(`tools/device/cue-helper-mcp.mjs`) is the agent surface that stays. The
+section is kept as the design that was tried.
 
 Introduce one local `DeviceControlService` over the actuator, sensor,
 scheduler, profile, session, and safety contracts. It owns device selection,
@@ -1330,7 +1375,8 @@ names; a mismatched detector/sensor calibration is refused.
   contracts as scheduled actions and price them explicitly.
 - Turn `trial.sh` into a short compatibility launcher, then remove it after
   command and trace equivalence.
-- Introduce `DeviceControlService`; make CLI and dry-run clients of it. Replace
+- Introduce `DeviceControlService`; make CLI and dry-run clients of it (done, then
+  retired on 2026-09-25 in `6d78c7e`: it never played a night). Replace
   inferred coordinates/modes and positional shell arguments with resolved,
   validated, hashed run bundles.
 - Make dry and live execution emit their result/evidence ID automatically;
@@ -1362,7 +1408,8 @@ an approved command and retained result.
   match on fixed seeds.
 - Establish the graduated `research/sandbox` -> named experiment -> shared
   library -> runtime promotion path so probes remain cheap without becoming
-  accidental infrastructure.
+  accidental infrastructure. (Superseded 2026-09-29: no sandbox, ADR 0002
+  principle 7; `research/sandbox/` is deleted.)
 
 **Done when:** a search algorithm can be changed without rewriting evaluation;
 all promoted findings name model/profile/hash/sample/confidence/control; a
@@ -1514,9 +1561,9 @@ future evidence work cannot audit a semantic rewrite hidden inside one.
 | Research framework homogenizes distinct hypotheses | Share execution/provenance contracts, not candidate semantics; retain per-experiment candidate spaces and controls. |
 | Profiles become another unvalidated configuration layer | Runtime schema validation, printed resolved profile, artifact hashes, capability/interlock checks, retained manifest. |
 | TypeScript creates a build/tooling tax before clarifying ownership | Types/contracts first, `allowJs` migration, one pinned toolchain, no bulk conversion, fast type-check budget. |
-| A permissive research sandbox leaks into runtime | One-way dependency rule and explicit experiment/shared/runtime promotion gates. |
+| A permissive research sandbox leaks into runtime | Retired with the sandbox (2026-09-29, ADR 0002 principle 7). |
 | Test sharding hides shared-state failures | Fresh immutable inputs, isolated resources, deterministic reruns, and a separate bounded integration lane. |
-| MCP is mistaken for a real-time or trusted actuator | MCP only wraps `DeviceControlService`; local executor owns deadlines/safety; semantic bounded tools, leases, telemetry, abort. |
+| MCP is mistaken for a real-time or trusted actuator | The service MCP left with `DeviceControlService` on 2026-09-25; the Cue Helper MCP queues bounded jobs and never runs the control loop; the executor owns deadlines and safety. |
 | Wiki/RAG becomes another authority | Static portal and indexes are generated from Git truth; semantic retrieval remains optional, cited, benchmarked, and non-authoritative. |
 | `CLAUDE.md` becomes another stale manual or loses hard-won discipline | Keep it concise and curated, link to canonical registries, validate stable IDs, and move chronology without deleting its evidence or retractions. |
 | Registries become scattered edit points | Each concept has one owning registry; other catalogs and documentation are generated views. |
@@ -1539,8 +1586,9 @@ future evidence work cannot audit a semantic rewrite hidden inside one.
 
 - After the single documented `npm ci` bootstrap, a clean checkout can run
   `npm test`, build/serve the trainer, execute a representative model
-  experiment, and complete `device:dry-run` without proprietary assets or a
-  phone.
+  experiment, and complete the campaign dry run over a committed winner
+  (`device:dry-run` was retired with the fixture path on 2026-09-25) without
+  proprietary assets or a phone.
 - Root commands and CLI help are authoritative; command discovery does not
   require reading a giant Markdown inventory.
 - Failures identify the package, contract, missing capability/artifact, and
@@ -1554,7 +1602,8 @@ future evidence work cannot audit a semantic rewrite hidden inside one.
 ### Architecture
 
 - `@sixam/core` imports no trainer, adapter, device, DOM, shell, or host
-  process API.
+  process API; `@sixam/kernel` imports nothing; `@sixam/review`
+  imports no Play or Propose package.
 - Trainer, research, and device code import core through package exports.
 - All live/simulated sensors and actuators are selected through registered
   adapters with honest capabilities and calibration scope.
@@ -1581,8 +1630,9 @@ future evidence work cannot audit a semantic rewrite hidden inside one.
   commands, actuation results, lifecycle events, and grading references.
 - Existing sourced claims, negative controls, and known-negative results remain
   reproducible after the move.
-- Sandbox exploration remains possible without registration, but no shared
-  package or runtime path depends on sandbox code.
+- (Superseded 2026-09-29, ADR 0002 principle 7.) There is no sandbox:
+  claim-bearing cohorts and censuses are pre-registered, and diagnostic sweeps
+  name the explanation they test.
 - Comments containing cross-cutting knowledge resolve to stable documentation,
   contract, claim, ADR, or evidence IDs; the generated portal provides reverse
   links to implementations and tests.

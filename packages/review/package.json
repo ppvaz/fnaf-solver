@@ -4,12 +4,18 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@sixam/core": "file:../core"
+    "@sixam/core": "file:../core",
+    "@sixam/kernel": "file:../kernel"
+  },
+  "bin": {
+    "fnaf2-review": "src/cli.mjs"
   },
   "exports": {
     "./evidence-campaign": "./src/evidence-campaign.mjs",
     "./evidence-cohort": "./src/evidence-cohort.mjs",
     "./evidence-pack": "./src/evidence-pack.mjs",
-    "./evidence-promotion": "./src/evidence-promotion.mjs"
+    "./evidence-promotion": "./src/evidence-promotion.mjs",
+    "./pack-lift": "./src/pack-lift.mjs",
+    "./promotions-query": "./src/promotions-query.mjs"
   }
 }

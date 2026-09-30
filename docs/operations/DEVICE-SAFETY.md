@@ -6,7 +6,7 @@ committed winner (`tools/device/campaign-night<N>-<name>-winner.json`) that
 --bundle DIR --nights N --profile hid-mediaprojection` runs it.
 `tools/device/night-run.sh` (`npm run night -- fnaf2`) wraps that one command
 with recording, grading, packing and the reset to the title. The fixture
-`DeviceControlService`, its adapter layer and the artifact lane never played a
+service path, its adapter layer and the artifact lane never played a
 night and were retired on 2026-09-25 (`6d78c7e`, `903ffab`;
 [archived routes](../ARCHIVED-ROUTES.md)).
 

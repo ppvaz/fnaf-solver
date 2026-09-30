@@ -2847,3 +2847,46 @@ FNaF 3 70/70 non-silent (`recompile-audio-504960804b93b30d`), FNaF 4 72/73
 `SILENCE`). APKs (`org.fnaf{1,3,4}rebuild.play`) are built from the
 phone-proven `chowdren-audio2` base with the static OpenSL ES openal; none has
 been installed or run on any phone. MODEL_ONLY, rebuilt-runtime throughout.
+
+## 2026-09-29 — Review becomes a package; the promotion edges are a query (S1, S6; migrations M5a, M5b)
+
+ADR 0002's Review context now has a home. The four evidence modules and their
+tests moved from `tools/` into `@fnaf2-1020/review` (`861eac9`), unchanged:
+`npm run evidence -- promotions`, `list` and `--help` print the same bytes as
+before. Two campaign validators moved to `core/contracts` so review imports no
+Play or Propose package; `tools/evidence-pack.mjs` stays as a one-line
+re-export because every pack records it as its `packer`. The architecture guard
+reads each module's syntax tree (LEG-011 resolved) and refuses review imports
+of `apps/device`, `packages/adapters` or `packages/research`.
+
+`@fnaf2-1020/kernel` holds the kernel types with a consumer today (`Interval`,
+`ClaimLevel`, `SourceLabel`, `Outcome`, `GameRun` with custody, `Annotation`)
+and imports nothing. All 184 committed packs lift to `GameRun`s with no throw
+and no write: 48 report a 6 AM, 31 a death (character, mechanism, rule and time
+UNKNOWN: the executor never reads them), 2 an abort, 1 a timeout and 102 are
+UNKNOWN (99 lost or never-written results, 3 thrown campaigns); custody is 24
+complete, 154 recovered, 6 UNKNOWN (`incomplete-campaign`).
+
+`npm run review -- query promotions` re-derives the `PROMOTED_BY` edges from
+the packs, attestations and winners: 47 of 47 match `graph.json` byte for
+byte, all attested by `agent:pedro-2026-09-27`, custody 11 complete and 36
+recovered. It derives S1's open items rather than copying them: the two
+committed MODEL_ONLY winners no pack names
+(`campaign-night1-minus7-winner.json`, `campaign-toys-night5-winner.json`),
+and `UNTRACKED_WINNER_DEBT` 1 of 1 (Night 6 `a`, `fnv1a-bc5e044c`, named by
+three `night6-anchored` packs). Record:
+[`review-promotions-20260929.json`](../docs/evidence/review-promotions-20260929.json)
+(`review-promotions-sha256-cbf62f0155a59b83`). A query over committed
+evidence: nothing measured, nothing promoted.
+
+Plan 22 is amended (principle 1 "the Source is canonical"; 2, 5 and 8 dropped;
+the runtime and the fixture service recorded as retired; `kernel`, `review` and
+a future `source` in the layout and the dependency rule), `22-STATUS` rows P3,
+P4 and P7 no longer cite removed things, and `research/sandbox/` is deleted, its
+one archived probe's notes moved to `docs/ARCHIVED-ROUTES.md`.
+
+Open: S1's two MODEL_ONLY winners and the Night 6 `a` debt stand. Review still
+reaches `tools/device/bundle.mjs` (and through it the research seed helpers)
+and `tools/device/fact-register.mjs`; those edges close with M9. The review
+modules are `.mjs`, outside the JS typecheck lane, because checking them pulls
+in untyped `tools/device` modules. `npm run push-gate` was not run.

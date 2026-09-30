@@ -48,13 +48,20 @@ if (changed.some(path => path.startsWith('packages/core/src/control/') ||
 }
 if (changed.some(path => path.startsWith('packages/research/')))
   add('research-contracts', 'node', ['packages/research/test/experiment.test.js']);
-// Review reads the committed evidence: its own tests, the evidence CLI that
-// composes it (`npm run evidence`), and the night-job packer that loads it.
-// LEG-003's interim mapping for the package created on 2026-09-29.
-if (changed.some(path => path.startsWith('packages/review/') || path === 'tools/evidence.js' ||
-    path === 'tools/evidence-pack.mjs' || path.startsWith('docs/evidence/runs/') || path === 'docs/evidence/graph.json')) {
+// Review reads the committed evidence (packs, graph, winners, the anchor
+// register): a change to it or to what it reads runs its own tests and the
+// evidence CLI that composes it (`npm run evidence`). Review imports the
+// kernel, so a kernel change runs both. LEG-003's interim mapping for the two
+// packages created on 2026-09-29.
+if (changed.some(path => path.startsWith('packages/kernel/')))
+  add('test:packages/kernel/test/kernel.test.js', 'node', ['packages/kernel/test/kernel.test.js']);
+if (changed.some(path => path.startsWith('packages/review/') || path.startsWith('packages/kernel/') || path === 'tools/evidence.js' ||
+    path === 'tools/evidence-pack.mjs' || path.startsWith('docs/evidence/runs/') || path === 'docs/evidence/graph.json' ||
+    path === 'tools/device/fact-register.mjs' || /^tools\/device\/[^/]+-winner\.json$/.test(path))) {
   for (const test of ['evidence-campaign', 'evidence-pack', 'evidence-cohort', 'evidence-promotion'])
     add(`test:packages/review/test/${test}.test.mjs`, 'node', [`packages/review/test/${test}.test.mjs`]);
+  for (const test of ['pack-lift', 'promotions-query'])
+    add(`test:packages/review/test/${test}.test.js`, 'node', [`packages/review/test/${test}.test.js`]);
   add('evidence-cli', 'node', ['tools/test-evidence-cli.mjs']);
 }
 if (changed.some(path => path.startsWith('apps/trainer/')))

@@ -1,6 +1,7 @@
 # Architecture legibility follow-up register
 
-Status: findings recorded on 2026-09-11; statuses updated 2026-09-25. This register
+Status: findings recorded on 2026-09-11; statuses updated 2026-09-29 (LEG-001, 002 and 005
+resolved by removal on 2026-09-25; LEG-011 resolved on 2026-09-29). This register
 is a backlog for implementation work; an item is only marked resolved with the change that did it.
 
 The scope is human and agent legibility: a contributor should be able to find
@@ -8,12 +9,15 @@ the canonical owner, understand the state and safety invariants, and select the
 smallest trustworthy validation command without reconstructing the architecture
 from history, aliases, and unrelated tools.
 
-The architecture direction: `core` owns the model and semantic contracts,
-`adapters` own physical boundaries, and `apps/device` owns composition and the
-campaign's supervision. (`packages/runtime`, which owned a fixture temporal
-dispatcher and supervisor, was removed on 2026-09-25 with the fixture service
-path; its retained-run validators moved to `core/contracts`.) These findings concern
-the distance between that declared architecture and its executable surface.
+The architecture direction ([ADR 0002](../decisions/0002-kernel-contexts-vocabulary.md)):
+`kernel` holds the shared kernel types and imports nothing, `core` owns the
+Source's model and semantic contracts, `adapters` own physical boundaries,
+`apps/device` owns composition and the campaign's supervision, and `review` reads
+the evidence and never imports Play or Propose. (`packages/runtime`, which owned
+a fixture temporal dispatcher and supervisor, was removed on 2026-09-25 with the
+fixture service path; its retained-run validators moved to `core/contracts`.)
+These findings concern the distance between that declared architecture and its
+executable surface.
 
 ## Triage rules
 
@@ -98,8 +102,9 @@ executor class (~1100 lines: adb lifecycle, gates, arm, origin) and `modern-camp
 The local executor combines artifact compilation, shell rendering, ADB process
 lifecycle, HID execution, observation, cleanup, and a machine compatibility
 executor. Campaign ports combine evidence persistence, menu navigation,
-pre-arm promises, lifecycle, and execution. `DeviceControlService` combines
-leases, profiles, sessions, safety, telemetry, persistence, and dispatch.
+pre-arm promises, lifecycle, and execution. (The fixture service that also
+combined leases, profiles, sessions, safety, telemetry, persistence and dispatch
+was retired on 2026-09-25.)
 
 **Acceptance:** separate modules for use cases, ports, executors, evidence,
 and legacy compatibility. No module should own policy decisions, physical
@@ -125,7 +130,11 @@ test that rejects new code importing legacy paths.
 
 ### LEG-006 — Establish one source of truth for contracts and resolved profiles (P1)
 
-**Status:** OPEN
+**Status:** OPEN -- 2026-09-29: the ADR 0002 kernel types are defined once,
+`packages/kernel/src/types.ts` beside the validators that check them
+(`kernel.test.js`), and `packages/review` validates every lifted `GameRun` and
+every promotion `Annotation` against them. The register's contracts and the
+resolved profile (migration D5) are still open.
 **Owner:** `packages/core`, `packages/adapters`
 **Evidence:** [`types.ts` (line 73)](../../packages/core/src/contracts/types.ts), `registry.js` line 69 (removed 2026-09-25), [`index.js` (line 156)](../../packages/core/src/contracts/index.js)
 

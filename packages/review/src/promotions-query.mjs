@@ -1,0 +1,204 @@
+// `npm run review -- query promotions`: S1's promotion edges and open items, as a query.
+//
+// ADR 0002 principle 4: nothing about current state is written as prose; status is a query. The
+// PROMOTED_BY edges in docs/evidence/graph.json were written by `npm run evidence -- promote`; this
+// re-derives every one of them from what the repository holds -- each committed run pack (lifted to
+// a GameRun, integrity checked), its plan12-attestation.json, and the committed winners -- and
+// checks the graph against the derivation byte for byte. An edge is derived for a pack when every
+// Plan 12 check passes (packPromotionChecks), derivePromotion re-derives every check and names the
+// claim, and the pack's attestation lists exactly the checks and inputs derived now; its shape is
+// recordPromotion's. Principle 11: the attester and the custody class stand beside every edge.
+//
+// It also derives what S1 still holds open, rather than reading it from prose: the committed
+// winner-v1 bindings no pack names (MODEL_ONLY: never shown on the phone by a pack), and
+// UNTRACKED_WINNER_DEBT, the registered anchor bindings with no committed winner.
+//
+// It reads and never writes; `--write` in the CLI retains its output as an evidence record.
+import { createHash } from 'node:crypto';
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { canonicalJson, stableHash } from '@sixam/core/contracts';
+import { isUnknown, validateAnnotation, validateClaimLevel } from '@sixam/kernel';
+import { ATTESTATION_FILE, PACKS_DIR, packPromotionChecks, trackedWinners } from './evidence-pack.mjs';
+import { GRAPH_FILE, PROMOTION_EDGE, derivePromotion, readGraph, recordPromotion } from './evidence-promotion.mjs';
+import { liftPack, packIds } from './pack-lift.mjs';
+import { ANCHOR_AIMS, UNTRACKED_WINNER_DEBT } from '../../../tools/device/fact-register.mjs';
+
+export const QUERY_SCHEMA = 'review-promotions-query-v1';
+export const QUERY_COMMAND = 'npm run review -- query promotions';
+/** The instrument whose classification each promotion annotation records. */
+export const PROMOTION_INSTRUMENT = 'plan12-promotion@plan12-attestation-v2';
+const WINNERS_DIR = 'tools/device';
+
+const sha256 = data => createHash('sha256').update(data).digest('hex');
+const tally = (counts, key) => { counts[key] = (counts[key] ?? 0) + 1; return counts; };
+const sorted = counts => Object.fromEntries(Object.entries(counts).sort(([a], [b]) => a.localeCompare(b)));
+const classOf = custody => (isUnknown(custody.class) ? 'UNKNOWN' : custody.class);
+const EMPTY_GRAPH = { schema: 'claim-evidence-v1', version: 1, nodes: [], edges: [] };
+
+/** Committed winner files, each with every hash it is known by (its stableHash, and the compiled winnerHash). */
+function committedWinners(root, winners) {
+  const byName = new Map();
+  for (const [hash, name] of winners) byName.set(name, [...(byName.get(name) ?? []), hash]);
+  return readdirSync(join(root, WINNERS_DIR)).filter(name => name.endsWith('-winner.json')).sort().map(name => {
+    const file = JSON.parse(readFileSync(join(root, WINNERS_DIR, name), 'utf8'));
+    return { file: `${WINNERS_DIR}/${name}`, schema: file.schema ?? null, fileHash: stableHash(file),
+      hashes: [...new Set(byName.get(name) ?? [stableHash(file)])].sort() };
+  });
+}
+
+/**
+ * Re-derived PROMOTED_BY edges against the graph's, keyed by the run each promotes: MATCHED when
+ * the graph holds the same edge (canonical JSON), DIFFERS when it holds another for that run,
+ * NOT_IN_GRAPH when it holds none; and every graph edge nothing re-derives.
+ * @param {any[]} derivedEdges @param {any[]} graphEdges
+ */
+export function compareEdges(derivedEdges, graphEdges) {
+  const graphByRun = new Map(graphEdges.map(edge => [edge.to, edge]));
+  const derivedRuns = new Set(derivedEdges.map(edge => edge.to));
+  const status = new Map(derivedEdges.map(edge => {
+    const recorded = graphByRun.get(edge.to);
+    return [edge.to, !recorded ? 'NOT_IN_GRAPH' : canonicalJson(recorded) === canonicalJson(edge) ? 'MATCHED' : 'DIFFERS'];
+  }));
+  const runsWith = value => [...status].filter(([, item]) => item === value).map(([run]) => run).sort();
+  const onlyInGraph = graphEdges.filter(edge => !derivedRuns.has(edge.to)).map(edge => ({ run: edge.to, claim: edge.from }));
+  const differing = runsWith('DIFFERS');
+  const notInGraph = runsWith('NOT_IN_GRAPH');
+  const duplicated = graphEdges.length - graphByRun.size;
+  return { status, matched: runsWith('MATCHED').length, differing, notInGraph, onlyInGraph, duplicated,
+    agree: !differing.length && !notInGraph.length && !onlyInGraph.length && !duplicated };
+}
+
+/**
+ * The query. `winners` is trackedWinners(root) (it compiles every committed winner; a caller that
+ * already holds it may pass it).
+ * @param {string} root repository root
+ * @param {{winners?: Map<string, string>}} [options]
+ */
+export function queryPromotions(root, { winners = trackedWinners(root) } = {}) {
+  const graph = readGraph(root);
+  const graphEdges = graph.edges.filter(edge => edge.type === PROMOTION_EDGE);
+  const ids = packIds(root);
+  const lift = { packs: ids.length, gameRuns: 0, failures: [], reportedOutcomes: {}, custody: {} };
+  const packsByWinnerHash = new Map();
+  const derived = [];
+  const refused = [];
+  for (const id of ids) {
+    let lifted;
+    try { lifted = liftPack(root, id); } catch (error) { lift.failures.push({ id, error: error.message }); continue; }
+    lift.gameRuns += lifted.runs.length;
+    for (const run of lifted.runs) { tally(lift.reportedOutcomes, run.reportedOutcome.kind); tally(lift.custody, classOf(run.custody)); }
+    const { loaded } = lifted;
+    const hash = loaded.pack.bundle?.winnerHash;
+    if (hash) packsByWinnerHash.set(hash, [...(packsByWinnerHash.get(hash) ?? []), id]);
+    if (loaded.pack.kind === 'fnaf1-run') continue;
+    if (!Object.values(packPromotionChecks(loaded, winners)).every(Boolean)) continue;
+    const derivation = derivePromotion(root, id, winners);
+    const attestation = loaded.attestation;
+    const drift = [
+      ...(derivation.pass ? [] : [`derivePromotion fails ${derivation.verified.filter(item => !item.pass).map(item => item.check).join(', ')}`]),
+      ...(canonicalJson(attestation.verified) === canonicalJson(derivation.verified) ? [] : ['the attestation lists other checks or inputs than those derived now']),
+      ...(canonicalJson(attestation.claim) === canonicalJson(derivation.claim) ? [] : ['the attestation names another claim than the one derived now']),
+      ...(canonicalJson(attestation.custody) === canonicalJson(derivation.custody) ? [] : ['the attestation records other custody than the pack holds']),
+    ];
+    if (drift.length || !derivation.claim) { refused.push({ id, why: drift.length ? drift : ['no claim derived'] }); continue; }
+    const { edge } = recordPromotion(EMPTY_GRAPH, { id, claim: derivation.claim, digest: loaded.digest, attestation,
+      custody: derivation.custody, nights: loaded.pack.nights ?? [] });
+    const run = lifted.runs[0];
+    const winnerInput = derivation.verified.find(item => item.check === 'winnerCommitted')?.inputs?.[0]?.sha256;
+    derived.push({ id, edge, run, attestationSha256: sha256(readFileSync(join(root, PACKS_DIR, id, ATTESTATION_FILE))), winnerInput });
+  }
+
+  // Against the graph, edge for edge.
+  const compared = compareEdges(derived.map(item => item.edge), graphEdges);
+  const rows = derived.map(({ id, edge, run, attestationSha256, winnerInput }) => {
+    const annotation = validateAnnotation({
+      subject: { kind: 'GameRun', id: run.id }, instrument: PROMOTION_INSTRUMENT, class: 'plan12-promotion', value: edge.from,
+      inputs: [edge.packSha256, attestationSha256, ...(winnerInput ? [winnerInput] : [])], by: edge.attestedBy, status: 'standing',
+    });
+    return {
+      run: id, night: run.spec?.night ?? null, claim: edge.from, claimLevel: validateClaimLevel('DEVICE_MEASURED'),
+      reportedOutcome: run.reportedOutcome.kind, attestedBy: edge.attestedBy,
+      custody: { class: run.custody.class, lost: run.custody.lost }, graph: compared.status.get(edge.to), edge, annotation,
+    };
+  });
+  const notSixAm = rows.filter(row => row.reportedOutcome !== 'SixAM').map(row => row.run);
+
+  // S1's open items, derived.
+  const committed = committedWinners(root, winners);
+  const unnamed = committed.filter(item => item.schema === 'winner-v1' && !item.hashes.some(hash => packsByWinnerHash.has(hash)));
+  const trackedFileHashes = new Set(committed.map(item => item.fileHash));
+  const declared = Object.keys(UNTRACKED_WINNER_DEBT).sort();
+  const derivedDebt = Object.keys(ANCHOR_AIMS).filter(hash => !trackedFileHashes.has(hash)).sort();
+  const stillUntracked = declared.filter(hash => !trackedFileHashes.has(hash));
+
+  const consistent = lift.failures.length === 0 && refused.length === 0 && compared.agree && notSixAm.length === 0;
+  return {
+    schema: QUERY_SCHEMA, query: 'promotions', command: QUERY_COMMAND,
+    authority: 'plans/12-end-to-end-evidence-campaign.md; docs/decisions/0002-kernel-contexts-vocabulary.md principles 4 and 11',
+    sources: { packs: PACKS_DIR, graph: GRAPH_FILE, winners: `${WINNERS_DIR}/*-winner.json`,
+      debt: `${WINNERS_DIR}/fact-register.mjs ANCHOR_AIMS and UNTRACKED_WINNER_DEBT` },
+    rule: 'an edge is derived for a pack when every packPromotionChecks check passes, derivePromotion re-derives every check and ' +
+      'names the claim, and the pack attestation lists exactly the checks, inputs, claim and custody derived now; the edge is ' +
+      "recordPromotion's over that pack, and it matches when graph.json holds the same edge (canonical JSON)",
+    lift: { ...lift, reportedOutcomes: sorted(lift.reportedOutcomes), custody: sorted(lift.custody) },
+    edges: {
+      graph: graphEdges.length, derived: derived.length, matched: compared.matched,
+      differing: compared.differing, notInGraph: compared.notInGraph, onlyInGraph: compared.onlyInGraph,
+      duplicatedInGraph: compared.duplicated, refused, notSixAm,
+      byAttester: sorted(rows.reduce((counts, row) => tally(counts, row.attestedBy), {})),
+      byCustody: sorted(rows.reduce((counts, row) => tally(counts, classOf(row.custody)), {})),
+      byClaim: sorted(rows.reduce((counts, row) => tally(counts, row.claim), {})),
+    },
+    promoted: rows,
+    open: {
+      modelOnlyWinners: {
+        rule: 'a committed winner-v1 binding none of whose hashes (its stableHash, and the winnerHash a bundle compiled from it records) ' +
+          'any run pack names: it has never been shown on the phone by a pack, so it stands MODEL_ONLY',
+        claimLevel: validateClaimLevel('MODEL_ONLY'),
+        count: unnamed.length, of: committed.filter(item => item.schema === 'winner-v1').length,
+        winners: unnamed.map(item => ({ file: item.file, hashes: item.hashes })),
+      },
+      untrackedWinnerDebt: {
+        rule: 'a registered anchor binding (ANCHOR_AIMS) with no committed tools/device/*-winner.json of the same stableHash, ' +
+          'against the closed UNTRACKED_WINNER_DEBT list',
+        summary: `${stillUntracked.length} of ${declared.length}`,
+        declared: declared.length, untracked: stillUntracked.length, derived: derivedDebt, agrees: canonicalJson(derivedDebt) === canonicalJson(declared),
+        entries: declared.map(hash => ({ hash, night: ANCHOR_AIMS[hash]?.night ?? null, committed: trackedFileHashes.has(hash),
+          packs: packsByWinnerHash.get(hash) ?? [], note: UNTRACKED_WINNER_DEBT[hash] })),
+      },
+    },
+    consistent,
+  };
+}
+
+/**
+ * The evidence record a `--write` retains: the query, the command, the commit it ran at, and a
+ * content hash in the style of the records beside it.
+ * @param {ReturnType<typeof queryPromotions>} result
+ * @param {{date: string, command: string, commit: string, dirtyInputs: string[]}} context
+ */
+export function promotionsRecord(result, { date, command, commit, dirtyInputs }) {
+  const record = {
+    schema: 'evidence-record-v1', kind: QUERY_SCHEMA, id: `review-promotions-${date.replaceAll('-', '')}`, date,
+    question: 'Do the committed run packs, their attestations and the committed winners re-derive every PROMOTED_BY edge in ' +
+      'docs/evidence/graph.json, and what does S1 still hold open?',
+    answer: `${result.edges.matched} of ${result.edges.graph} PROMOTED_BY edges re-derive byte for byte from ${result.lift.packs} packs ` +
+      `(${result.lift.gameRuns} GameRuns, ${result.lift.failures.length} lift failures); attested by ` +
+      `${Object.entries(result.edges.byAttester).map(([by, n]) => `${by} ${n}`).join(', ')}; custody ` +
+      `${Object.entries(result.edges.byCustody).map(([kind, n]) => `${kind} ${n}`).join(', ')}. Open: ` +
+      `${result.open.modelOnlyWinners.count} committed MODEL_ONLY winners no pack names ` +
+      `(${result.open.modelOnlyWinners.winners.map(item => item.file.split('/').pop()).join(', ')}); ` +
+      `UNTRACKED_WINNER_DEBT ${result.open.untrackedWinnerDebt.summary}.`,
+    labels: 'A query over committed evidence: it measures nothing and promotes nothing. The edges it re-derives carry ' +
+      'DEVICE_MEASURED claims already promoted; the open winners are MODEL_ONLY.',
+    method: { tool: 'packages/review/src/cli.mjs', command,
+      git: { commit, dirtyInputs, note: 'the query code is in the commit that adds this record' } },
+    query: result,
+  };
+  return { ...record, evidenceId: `review-promotions-sha256-${sha256(canonicalJson(record)).slice(0, 16)}` };
+}
+
+/** The paths the query reads, for a record's dirty-input list. */
+export const QUERY_INPUTS = Object.freeze(['packages/review', 'packages/kernel', 'packages/core', 'tools/device/bundle.mjs',
+  'tools/device/fact-register.mjs', 'tools/device/*-winner.json', PACKS_DIR, GRAPH_FILE]);

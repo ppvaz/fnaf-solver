@@ -40,6 +40,7 @@ controller research, and device evidence form one program.
 | Read the workspace/core decision | [`decisions/0001-workspaces-and-core.md`](decisions/0001-workspaces-and-core.md) |
 | Read the kernel, contexts and vocabulary decision, and Pedro's 2026-09-29 answers | [`decisions/0002-kernel-contexts-vocabulary.md`](decisions/0002-kernel-contexts-vocabulary.md) |
 | Inspect evidence retention and claim ceilings | [`evidence/README.md`](evidence/README.md) |
+| Re-derive every promotion edge and S1's open items from the committed packs | `npm run review -- query promotions` ([`../packages/review/README.md`](../packages/review/README.md)); the kernel types it reads in are in [`../packages/kernel/README.md`](../packages/kernel/README.md) |
 | Run device work safely | [`operations/DEVICE-SAFETY.md`](operations/DEVICE-SAFETY.md) |
 | See what each grade-run.sh video step feeds, which a frame trace can replace, and how the recording is decoded once | [`operations/GRADE-PIPELINE-STEPS.md`](operations/GRADE-PIPELINE-STEPS.md) |
 | Understand research operations | [`research/ARCHITECTURE.md`](research/ARCHITECTURE.md) |
@@ -73,6 +74,7 @@ that governs them.
 
 | What it shows | Record |
 |---|---|
+| See all 47 `PROMOTED_BY` edges re-derived byte for byte from the committed packs, attestations and winners, each with its attester and custody class, and S1's open items derived: two MODEL_ONLY winners no pack names, `UNTRACKED_WINNER_DEBT` 1 of 1 | [`evidence/review-promotions-20260929.json`](evidence/review-promotions-20260929.json) |
 | See why Withered Freddy never reaches the office on Night 7 routes: the dump's return edge, branch and per-second random draw the model lacks | [`evidence/withered-freddy-route-night7-20260915.json`](evidence/withered-freddy-route-night7-20260915.json) |
 | See Foxy's dump A/B chain, why the literal chain still does not reproduce the phone's k2 Foxy deaths (they come in encounter-free cycles), and how Foxy's skipped draws scramble seed-specific encounter predictions | [`evidence/foxy-chain-night7-20260915.json`](evidence/foxy-chain-night7-20260915.json) |
 | See the rules fixed before the k3 twin nights (two Start taps at one phone wall-clock residue, one control) that test clock seeding | [`evidence/night7-k3-twin-nights-predeclaration-20260915.json`](evidence/night7-k3-twin-nights-predeclaration-20260915.json) |
