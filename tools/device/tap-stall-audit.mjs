@@ -50,7 +50,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { buttonStrokeState } from '@fnaf2-1020/adapters';
+import { buttonStrokeState } from '@sixam/adapters';
 
 export const SCHEMA = 'device-tap-stall-audit-v1';
 

@@ -1,4 +1,4 @@
-# `@fnaf2-1020/device`
+# `@sixam/device`
 
 The device app is the campaign executor and the only composition root that
 reaches a phone: `cli.js campaign` chooses the profile, composes the ports in
@@ -44,7 +44,7 @@ Preflight also records the venue identity (ADR 0002, decision 1). Its
 - the Companion's version;
 - a hash of the serial, never the serial.
 
-The adapter parses the record (`@fnaf2-1020/adapters`, `transports/android-venue`)
+The adapter parses the record (`@sixam/adapters`, `transports/android-venue`)
 from fixed read-only `dumpsys package` and `getprop` queries. Core compares it
 (`compareVenueIdentity`) with what the run is bound to: a `qualification-v2`
 passed with `--qualification`, and any `venue-binding-v1` that names this

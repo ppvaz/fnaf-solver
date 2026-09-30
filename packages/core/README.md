@@ -1,4 +1,4 @@
-# `@fnaf2-1020/core`
+# `@sixam/core`
 
 Canonical, evidence-labelled Android mechanics and semantic control contracts.
 The package owns the deterministic plant model, policy IR, reduced model,

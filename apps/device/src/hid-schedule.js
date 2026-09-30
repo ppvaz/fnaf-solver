@@ -5,10 +5,10 @@
  * adb-device-local-executor.js on 2026-09-25; nothing here touches adb.
  * CONTRACT:hid-executor-v1.
  */
-import { HID_DESCRIPTOR, HID_FEATURE_REPORTS, report } from '@fnaf2-1020/adapters';
+import { HID_DESCRIPTOR, HID_FEATURE_REPORTS, report } from '@sixam/adapters';
 import { validateExecutorRequest } from './artifact-executor.js';
 import { expandNightBlocks } from './device-local-executor.js';
-import { CONTROL_VOCABULARY as V } from '@fnaf2-1020/core/control';
+import { CONTROL_VOCABULARY as V } from '@sixam/core/control';
 
 const HID_ID = 92;
 const HID_NAME = 'FNAF Timed Touch';

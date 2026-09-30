@@ -1,8 +1,8 @@
 // Plan 20 package 5 foundation: worst-case finite-cycle selection.
-import { getCycle } from '@fnaf2-1020/core/control';
-import { selectCycle } from '@fnaf2-1020/core/control';
-import { initialReducedState, advanceReduced, applyReduced } from '@fnaf2-1020/core/mechanics';
-import * as C from '@fnaf2-1020/core/mechanics';
+import { getCycle } from '@sixam/core/control';
+import { selectCycle } from '@sixam/core/control';
+import { initialReducedState, advanceReduced, applyReduced } from '@sixam/core/mechanics';
+import * as C from '@sixam/core/mechanics';
 
 const check = (condition, message) => { if (!condition) throw new Error(message); };
 const exactPass = (cycle, hypothesis) => ({ accepted: true, cycleId: `${cycle.id}/${hypothesis.id}` });

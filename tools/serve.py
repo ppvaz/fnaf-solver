@@ -7,7 +7,7 @@ core config as the new DEFAULT_MAP; it rebuilds dist/ afterwards so a reload
 picks it up. POST /save-trace records a coached run under captures/traces/.
 
 Both POSTs write to this machine, and /save-layout rewrites a source file of
-@fnaf2-1020/core. So until 2026-09-29, when this bound 0.0.0.0, anyone on the
+@sixam/core. So until 2026-09-29, when this bound 0.0.0.0, anyone on the
 network could rewrite packages/core/src/mechanics/config.js. Now the socket is
 loopback only, and a write is refused unless its client is loopback, its Host
 names this machine, and any Origin is the page's own (write_refusal): a web

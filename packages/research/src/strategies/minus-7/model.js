@@ -1,5 +1,5 @@
-import * as C from '@fnaf2-1020/core/mechanics';
-import { Sim, Rng } from '@fnaf2-1020/core/mechanics';
+import * as C from '@sixam/core/mechanics';
+import { Sim, Rng } from '@sixam/core/mechanics';
 import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '../../seeds.js';
 import { CYCLE, routeFor } from './route.js';
 

@@ -273,7 +273,7 @@ counts and show uncertainty; a handful of prompts cannot name a stable
 - Add deterministic replay tests for completed, cancelled, expired, ambiguous,
   and unobserved outcomes.
 
-`@fnaf2-1020/core/training` now owns frozen `exercise-v1`, `commitment-v1`,
+`@sixam/core/training` now owns frozen `exercise-v1`, `commitment-v1`,
 `resolution-v1`, `exercise-cancellation-v1`, `exercise-event-v1`, and
 `exercise-attempt-v1` records. `replayExercise()` requires a prompt-first,
 monotonic event stream, freezes the question and deadlines, checks declared

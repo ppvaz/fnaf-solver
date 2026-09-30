@@ -3,7 +3,7 @@
 //
 // Ask any of them the same question:
 //
-//   import { nightsOf, scheduleFor } from '@fnaf2-1020/core/mechanics/games';
+//   import { nightsOf, scheduleFor } from '@sixam/core/mechanics/games';
 //   scheduleFor('fnaf3', 1).lengthMs      // 240000
 //   scheduleFor('fnaf1', 4).hours[4].levels.bonnie
 //

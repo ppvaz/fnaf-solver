@@ -12,8 +12,8 @@ import { validateCampaignBundle } from './campaign-bundle.js';
 import { AdbCueHelperPort } from './physical-ports.js';
 import { installCampaignSignalHandlers } from './campaign-signal.js';
 import { loadVenueBindings, renderVenueCheck } from './venue.js';
-import { fitClockMap, CueHelperControlTransport } from '@fnaf2-1020/adapters';
-import { stableHash } from '@fnaf2-1020/core/contracts';
+import { fitClockMap, CueHelperControlTransport } from '@sixam/adapters';
+import { stableHash } from '@sixam/core/contracts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 const PROFILES = join(ROOT, 'apps/device/profiles');
@@ -267,7 +267,7 @@ async function main(argv = process.argv.slice(2)) {
       sourceClock: 'device-monotonic-ms', targetClock: 'host-monotonic-ms',
       sourceSession, targetSession: hostBoot,
       id, evidenceId: id, sourceUncertaintyMs: quantizationMs + (options.source === 'helper' ? 0 : 1) });
-    const { mapClockInterval } = await import('@fnaf2-1020/adapters');
+    const { mapClockInterval } = await import('@sixam/adapters');
     const check = anchors[anchors.length - 2];
     const mapped = mapClockInterval({ clock: 'device-monotonic-ms', value: check.sourceMs }, {
       targetClock: 'host-monotonic-ms', targetSession: hostBoot, sourceSession,

@@ -1,7 +1,7 @@
 // Compatibility adapter. The canonical Right Vent Camp route lives in the
 // research package; this command remains the model-only diagnostic entrypoint.
 import { pathToFileURL } from 'node:url';
-import { run, cohort, emitPlan } from '@fnaf2-1020/research/strategies/right-vent-camp';
+import { run, cohort, emitPlan } from '@sixam/research/strategies/right-vent-camp';
 
 export { run, cohort, emitPlan };
 

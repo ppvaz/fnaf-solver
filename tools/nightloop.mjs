@@ -24,7 +24,7 @@
 //           that dies inside its own duration. That is a privileged lookahead
 //           into the true future of the same RNG stream; it is an upper bound
 //           and a diagnostic, never a device-realistic result.
-import * as C from '@fnaf2-1020/core/mechanics';
+import * as C from '@sixam/core/mechanics';
 import { wilsonInterval } from './stat.mjs';
 import { runNight } from './nightloop-run.mjs';
 import { SimPool } from './pool.mjs';

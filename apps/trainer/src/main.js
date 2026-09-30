@@ -1,5 +1,5 @@
-import * as C from '@fnaf2-1020/core/mechanics';
-import { Sim } from '@fnaf2-1020/core/mechanics';
+import * as C from '@sixam/core/mechanics';
+import { Sim } from '@sixam/core/mechanics';
 import { Coach, DuelTimer } from './coach.js';
 import { Audio } from './audio.js';
 import { UI } from './ui.js';

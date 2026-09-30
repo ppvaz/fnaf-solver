@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { classifyFrame, bottomButtons, BUTTON_THRESHOLDS } from './intersection-state-gate.mjs';
-import { parseMaskRule, parseMonitorRule } from '@fnaf2-1020/adapters';
+import { parseMaskRule, parseMonitorRule } from '@sixam/adapters';
 
 const monitorRule = parseMonitorRule(JSON.parse(await readFile(
   new URL('../../models/monitor-rule-moto-g56-v207.json', import.meta.url), 'utf8')));

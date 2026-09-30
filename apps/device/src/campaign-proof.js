@@ -2,8 +2,8 @@
  * Positive lifecycle and save proof for an unattended campaign.
  * CONTRACT:campaign-proof-v1.
  */
-import { AI_DIALS, PUPPET_AI } from '@fnaf2-1020/core/mechanics';
-import { stableHash } from '@fnaf2-1020/core/contracts';
+import { AI_DIALS, PUPPET_AI } from '@sixam/core/mechanics';
+import { stableHash } from '@sixam/core/contracts';
 import { makeCustomNightConfig, validateCustomNightConfig } from './custom-night.js';
 
 export const CAMPAIGN_PROOF_SCHEMA = 'campaign-proof-v1';

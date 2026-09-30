@@ -181,7 +181,7 @@ for (const path of sourceFiles.filter(path => /(?:test|check|spec)[^/]*\.(?:mjs|
   ])];
   tests.push({
     id, lane,
-    owner: path.includes('packages/core') ? '@fnaf2-1020/core' : path.includes('packages') ? 'package boundary' : 'legacy migration',
+    owner: path.includes('packages/core') ? '@sixam/core' : path.includes('packages') ? 'package boundary' : 'legacy migration',
     timeoutMs: lane === 'test:browser:realtime' ? 360000
       : id === 'tools/ventreacttest.mjs' ? 900000
         : id === 'tools/minus7/test-search.mjs' ? 600000
@@ -197,11 +197,11 @@ for (const path of sourceFiles.filter(path => /(?:test|check|spec)[^/]*\.(?:mjs|
   });
 }
 const duplicateResponsibilities = [
-  { responsibility: 'canonical mechanics', owner: '@fnaf2-1020/core', legacy: [] },
-  { responsibility: 'semantic policy IR', owner: '@fnaf2-1020/core', legacy: ['tools/device/policy-ir.mjs'] },
-  { responsibility: 'physical actuation', owner: '@fnaf2-1020/adapters', legacy: ['tools/device/actuator.mjs'] },
-  { responsibility: 'device composition', owner: '@fnaf2-1020/device', legacy: ['tools/device/recipe.mjs'] },
-  { responsibility: 'research execution', owner: '@fnaf2-1020/research', legacy: ['tools/*search*', 'tools/*sweep*', 'tools/*probe*'] },
+  { responsibility: 'canonical mechanics', owner: '@sixam/core', legacy: [] },
+  { responsibility: 'semantic policy IR', owner: '@sixam/core', legacy: ['tools/device/policy-ir.mjs'] },
+  { responsibility: 'physical actuation', owner: '@sixam/adapters', legacy: ['tools/device/actuator.mjs'] },
+  { responsibility: 'device composition', owner: '@sixam/device', legacy: ['tools/device/recipe.mjs'] },
+  { responsibility: 'research execution', owner: '@sixam/research', legacy: ['tools/*search*', 'tools/*sweep*', 'tools/*probe*'] },
 ];
 
 // The compatibility page is the human view; this register is the machine view
@@ -212,105 +212,105 @@ const duplicateResponsibilities = [
 const legacyPaths = [
   {
     id: 'device.shell-session', path: 'tools/device/session.sh', category: 'device',
-    lifecycle: 'compatibility', owner: '@fnaf2-1020/device',
+    lifecycle: 'compatibility', owner: '@sixam/device',
     replacement: 'run packs (docs/evidence/runs/) for nights; this bridge stays for collect-cue-audio.sh and capture-screen-sample.sh',
     removalGate: 'The cue-audio and screen-sample collectors write run packs or retire',
     notes: 'Sourced manifest bridge; the historical shell runner that also used it was archived 2026-09-25.',
   },
   {
     id: 'device.session-manifest-producer', path: 'tools/device/session-manifest.py', category: 'device',
-    lifecycle: 'legacy', owner: '@fnaf2-1020/device',
+    lifecycle: 'legacy', owner: '@sixam/device',
     replacement: 'run packs for nights; `session-manifest-v1` (core/contracts) for research sessions',
     removalGate: 'Historical manifests are indexed/replayable and the shell runner is removed',
     notes: 'Plan 09 producer for the shell-specific `fnaf2.session-manifest` dialect.',
   },
   {
     id: 'device.session-manifest-validator', path: 'tools/device/validate-session.py', category: 'device',
-    lifecycle: 'transitional', owner: '@fnaf2-1020/evidence',
+    lifecycle: 'transitional', owner: '@sixam/evidence',
     replacement: 'core/contracts validateManifest + evidence CLI',
     removalGate: 'Historical shell manifests remain inspectable through the evidence boundary',
     notes: 'Validator for the legacy shell manifest; its filename must not be confused with the core `session-manifest-v1` contract.',
   },
   {
     id: 'device.session-manifest-schema', path: 'tools/device/schema/session-manifest-v1.json', category: 'device',
-    lifecycle: 'legacy', owner: '@fnaf2-1020/device',
+    lifecycle: 'legacy', owner: '@sixam/device',
     replacement: 'core/contracts `session-manifest-v1` contract',
     removalGate: 'Legacy `fnaf2.session-manifest` fixtures and consumers are archived',
     notes: 'Legacy schema whose internal id is `fnaf2.session-manifest`; it is not the core JSON contract.',
   },
   {
     id: 'device.legacy-grader', path: 'tools/device/grade-run.sh', category: 'device-evidence',
-    lifecycle: 'transitional', owner: '@fnaf2-1020/evidence',
+    lifecycle: 'transitional', owner: '@sixam/evidence',
     replacement: 'evidence CLI over content-addressed device bundles',
     removalGate: 'Historical video/HID/session artifacts have an equivalent structured grader',
     notes: 'The night grader. Since 2026-09-25 it reads what night-run.sh retains -- recording, campaign directory, input and frame traces; the shell runner inputs left with that runner.',
   },
   {
     id: 'device.shell-adb-selector', path: 'tools/device/select-adb.sh', category: 'transport',
-    lifecycle: 'transitional', owner: '@fnaf2-1020/adapters',
+    lifecycle: 'transitional', owner: '@sixam/adapters',
     replacement: 'explicit injected transport selected by the device composition root',
     removalGate: 'All direct-ADB probes either become adapters or are explicitly archived',
     notes: 'Useful characterization guard, but it must not select a canonical live strategy.',
   },
   {
     id: 'device.shell-coordinates', path: 'tools/device/coords.sh', category: 'transport',
-    lifecycle: 'transitional', owner: '@fnaf2-1020/adapters',
+    lifecycle: 'transitional', owner: '@sixam/adapters',
     replacement: 'resolved device profile controlMap',
     removalGate: 'All device actions consume profile geometry; probe-only users are archived',
     notes: 'Legacy shell coordinate authority; modern semantic commands carry no coordinates.',
   },
   {
     id: 'device.shell-menu', path: 'tools/device/menu.sh', category: 'device',
-    lifecycle: 'transitional', owner: '@fnaf2-1020/device',
+    lifecycle: 'transitional', owner: '@sixam/device',
     replacement: 'title/menu detector and the campaign executor state gate',
     removalGate: 'Automated menu-state detector has calibrated evidence and a dry-run fixture',
     notes: 'Human-safe selector retained because the current phone cursor is not machine-qualified.',
   },
   {
     id: 'device.simulated-actuator', path: 'tools/device/actuator.mjs', category: 'simulation',
-    lifecycle: 'transitional', owner: '@fnaf2-1020/adapters',
+    lifecycle: 'transitional', owner: '@sixam/adapters',
     replacement: 'adapter actuator/error model with conformance fixtures',
     removalGate: 'Pilot/model consumers migrate without changing measured error semantics',
     notes: 'Historical device-lateness model; not a physical transport.',
   },
   {
     id: 'device.recipe-emitter', path: 'tools/device/recipe.mjs', category: 'device-artifact',
-    lifecycle: 'transitional', owner: '@fnaf2-1020/device',
+    lifecycle: 'transitional', owner: '@sixam/device',
     replacement: 'package-owned winner/device-bundle emitter',
     removalGate: 'Bundle emitter no longer imports the tools tree and replay hashes match',
     notes: 'Still used by the bundle compiler, so removal is blocked until extraction.',
   },
   {
     id: 'device.policy-ir-module', path: 'tools/device/policy-ir.mjs', category: 'policy',
-    lifecycle: 'transitional', owner: '@fnaf2-1020/core',
+    lifecycle: 'transitional', owner: '@sixam/core',
     replacement: 'core policy-program contract and research package emitter',
     removalGate: 'P3 policy vocabulary migration and fixed-seed artifact equivalence',
     notes: 'Compatibility policy builder retained while policy ownership moves out of tools.',
   },
   {
     id: 'research.stock-device-pilot', path: 'tools/model/stock-device-pilot.mjs', category: 'research',
-    lifecycle: 'legacy', owner: '@fnaf2-1020/research',
+    lifecycle: 'legacy', owner: '@sixam/research',
     replacement: 'experiment spec/runner with an explicit historical actuator model',
     removalGate: 'Historical sweeps have structured, replayable experiment artifacts',
     notes: 'Retired swipe-era schedule report; it is not a selectable device route.',
   },
   {
     id: 'research.minus-toys-alias', path: 'tools/minustoystest.mjs', category: 'research-alias',
-    lifecycle: 'compatibility', owner: '@fnaf2-1020/research',
+    lifecycle: 'compatibility', owner: '@sixam/research',
     replacement: 'npm run research -- minus-toys',
     removalGate: 'Package structured artifacts and fixed-seed output are equivalent',
     notes: 'Compatibility alias for the research package family evaluator.',
   },
   {
     id: 'research.minus-two-alias', path: 'tools/minus2test.mjs', category: 'research-alias',
-    lifecycle: 'compatibility', owner: '@fnaf2-1020/research',
+    lifecycle: 'compatibility', owner: '@sixam/research',
     replacement: 'npm run research -- minus-two',
     removalGate: 'Package structured artifacts and fixed-seed output are equivalent',
     notes: 'Compatibility alias for the research package family evaluator.',
   },
   {
     id: 'package.legacy-engine-command', path: 'package.json#scripts.test:legacy:engine', category: 'command',
-    lifecycle: 'compatibility', owner: '@fnaf2-1020/core',
+    lifecycle: 'compatibility', owner: '@sixam/core',
     replacement: 'node tools/test.mjs --engine (canonical engine fixture lane)',
     removalGate: 'Bare-Node compatibility lane is no longer needed and P9 audit is green',
     notes: 'Retained package command for the old engine test entry point.',

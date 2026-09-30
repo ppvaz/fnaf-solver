@@ -15,7 +15,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { toRaw } from '@fnaf2-1020/adapters/transports/hid';
+import { toRaw } from '@sixam/adapters/transports/hid';
 import { toRaw as probeToRaw, COORDS } from './hid-sweep-probe.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));

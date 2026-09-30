@@ -6,9 +6,9 @@ import { readdir, readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { canonicalJson, stableHash, validateArtifactRef } from '@fnaf2-1020/core/contracts';
-import { validateManifest } from '@fnaf2-1020/core/contracts';
-import { replayModelResult } from '@fnaf2-1020/research';
+import { canonicalJson, stableHash, validateArtifactRef } from '@sixam/core/contracts';
+import { validateManifest } from '@sixam/core/contracts';
+import { replayModelResult } from '@sixam/research';
 import { BUNDLE_SCHEMA, validateBundle } from './device/bundle.mjs';
 import { isCampaignResult, campaignEntry, campaignPromotionChecks } from './evidence-campaign.mjs';
 import { PACKS_DIR, resolvePackTargets, buildPack, buildFnaf1Pack, writePack, readPack, packPromotionChecks,

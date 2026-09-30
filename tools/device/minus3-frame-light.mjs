@@ -20,9 +20,9 @@
 // evidence record; this module only proves the bytes still reproduce.
 import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
-import { Sim } from '@fnaf2-1020/core/mechanics';
-import { CONTROL_VOCABULARY as V } from '@fnaf2-1020/core/control';
-import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '@fnaf2-1020/research/seeds';
+import { Sim } from '@sixam/core/mechanics';
+import { CONTROL_VOCABULARY as V } from '@sixam/core/control';
+import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '@sixam/research/seeds';
 import { KNOBS0, schedule } from './minus-3-plan.mjs';
 
 /** Measured monitor DOWN -> mask DOWN gap on the winning runs. */

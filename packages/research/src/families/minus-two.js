@@ -1,7 +1,7 @@
 /** Exact Android-model evaluator for the glitchless Minus Two family. */
-import * as C from '@fnaf2-1020/core/mechanics';
-import { Sim } from '@fnaf2-1020/core/mechanics';
-import { stableHash } from '@fnaf2-1020/core/contracts';
+import * as C from '@sixam/core/mechanics';
+import { Sim } from '@sixam/core/mechanics';
+import { stableHash } from '@sixam/core/contracts';
 
 const PH = {
   maskOff: 1, raise: 17, camBox: 31, windOn: 33, windOff: 174,

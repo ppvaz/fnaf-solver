@@ -14,11 +14,11 @@
 import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { execFileSync } from 'node:child_process';
-import * as C from '@fnaf2-1020/core/mechanics';
-import { Sim, Rng } from '@fnaf2-1020/core/mechanics';
-import { Observer } from '@fnaf2-1020/core/sensing';
-import { CycleController, getCycle } from '@fnaf2-1020/core/control';
-import { canonicalJson, stableHash } from '@fnaf2-1020/core/contracts';
+import * as C from '@sixam/core/mechanics';
+import { Sim, Rng } from '@sixam/core/mechanics';
+import { Observer } from '@sixam/core/sensing';
+import { CycleController, getCycle } from '@sixam/core/control';
+import { canonicalJson, stableHash } from '@sixam/core/contracts';
 
 export const FACT_STREAM_SCHEMA = 'offline-fact-stream-v1';
 

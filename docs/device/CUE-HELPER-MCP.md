@@ -51,7 +51,7 @@ Register this project once from the repository root; after that the server is
 available to Codex sessions:
 
 ```sh
-codex mcp add fnaf2-cue-helper -- node "$PWD/tools/device/cue-helper-mcp.mjs"
+codex mcp add fnaf-solver -- node "$PWD/tools/device/cue-helper-mcp.mjs"
 ```
 
 The registration stores the absolute path, so repeat it after moving or

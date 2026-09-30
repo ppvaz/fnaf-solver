@@ -14,7 +14,7 @@
 import { pathToFileURL } from 'node:url';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import * as C from '@fnaf2-1020/core/mechanics';
+import * as C from '@sixam/core/mechanics';
 import { sweep, runPolicy } from './policy.mjs';
 import { POLICIES } from './policybaselines.mjs';
 import { run as bbRun, DEFAULT_CYCLE, LEGACY_ANIMATION_INVALID_CYCLE } from './model/reactive-pilot.mjs';

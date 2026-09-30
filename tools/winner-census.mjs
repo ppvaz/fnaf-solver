@@ -30,8 +30,8 @@ import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'n
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { RNG_MODULUS, Sim } from '@fnaf2-1020/core/mechanics';
-import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort } from '@fnaf2-1020/research/seeds';
+import { RNG_MODULUS, Sim } from '@sixam/core/mechanics';
+import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort } from '@sixam/research/seeds';
 import { STRATEGY_REGISTRY, WINNER_SCHEMA, compileBundle, validateWinner } from './device/bundle.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));

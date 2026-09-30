@@ -8,8 +8,8 @@ import { pathToFileURL } from 'node:url';
 import {
   KNOBS0, MINUS3_STORY_NIGHTS, build, schedule, replay,
   reactiveReplay, reactiveGate, countReactive, emitReactivePlan,
-} from '@fnaf2-1020/research/strategies/minus-3';
-import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '@fnaf2-1020/research/seeds';
+} from '@sixam/research/strategies/minus-3';
+import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '@sixam/research/seeds';
 import { DOUBLE_GLITCH_CAMERA_PAIRS, cameraPairHeader } from './arm-verification.mjs';
 
 export {

@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "fnaf2-cue-helper": {
+    "fnaf-solver": {
       "command": "node",
       "args": ["${CLAUDE_PROJECT_DIR:-.}/tools/device/cue-helper-mcp.mjs"]
     }

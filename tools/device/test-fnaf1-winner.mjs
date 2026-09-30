@@ -137,6 +137,8 @@ try {
     eq(`${path}: the replay passes the won command's arguments, only the label changed`,
       plan.runnerArgs.filter((_, i) => i !== labelAt + 1), won.filter((_, i) => i !== labelAt + 1));
     // The workspace packages the pinned runner imports resolve inside the pinned tree.
+    // The pinned tree predates the @sixam scope (Plan 27 commit A), so it links its own
+    // @fnaf2-1020 workspace names; these strings name that tree's packages, not this checkout's.
     const cueHelper = createRequire(join(tree, 'apps/device/src/physical-ports.js')).resolve('@fnaf2-1020/adapters/transports/cue-helper');
     ok(`${path}: @fnaf2-1020/adapters resolves inside the pinned tree, not this checkout (${cueHelper})`,
       !relative(tree, cueHelper).startsWith('..'));

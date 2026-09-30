@@ -16,7 +16,7 @@
 // frames from nights 6-22 to 6-25 show exactly that: CAM 11 with the music box gauge,
 // captured at a moment the schedule believed was the office.
 import { pathToFileURL } from 'node:url';
-import * as C from '@fnaf2-1020/core/mechanics';
+import * as C from '@sixam/core/mechanics';
 import { build, devicePlan, MONITOR_ANIM_UP_MS, RAISE_MARGIN_MS, DEVICE_SPACING_MS, MODEL_SLOT_MS, MIN_CONTACT_MS } from './recipe.mjs';
 
 // The sourced constant, not the swipe-era one.

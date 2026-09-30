@@ -22,7 +22,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { nightOnsetFromFrames } from '@fnaf2-1020/adapters/night-onset';
+import { nightOnsetFromFrames } from '@sixam/adapters/night-onset';
 
 export const SCHEMA = 'device-phase-reconstruction-v1';
 
@@ -76,11 +76,11 @@ export function phoneWallFrom(anchor, { released, nightGoAt }) {
 // bracketed it by 2358-3261 ms across the 2026-09-12 runs -- wider than the
 // 1000 ms phase period the model's loss bands live in.
 
-// The night's onset is defined ONCE, in @fnaf2-1020/adapters/night-onset, and
+// The night's onset is defined ONCE, in @sixam/adapters/night-onset, and
 // used on both sides: live by the executor's anchored release (the helper's
 // NightOnsetLatch) and post hoc here over the frame trace. `firstNightFrame`
 // stays as the name this tool's callers use; it is that rule.
-export { SCREEN_FNAF2_NIGHT, NIGHT_ONSET_HOLD_MS } from '@fnaf2-1020/adapters/night-onset';
+export { SCREEN_FNAF2_NIGHT, NIGHT_ONSET_HOLD_MS } from '@sixam/adapters/night-onset';
 
 /** Rows of a `fnaf2-frame-trace-v3` TSV, in helper-monotonic milliseconds. */
 export function parseFrameTrace(text) {
@@ -320,7 +320,7 @@ export function reconstruct(events, observations, frameTrace = null) {
 async function phaseResponse(night, seeds) {
   const here = new URL('.', import.meta.url);
   const plan = await import(new URL('minus-toys-plan.mjs', here).href);
-  const C = await import('@fnaf2-1020/core/mechanics');
+  const C = await import('@sixam/core/mechanics');
   const stepMs = 1000 / C.FPS;
   const ticksIn = window => {
     let ticks = 0;
@@ -359,7 +359,7 @@ async function phaseResponse(night, seeds) {
 async function uncontrolledPhase(night, runs) {
   const here = new URL('.', import.meta.url);
   const plan = await import(new URL('minus-toys-plan.mjs', here).href);
-  const C = await import('@fnaf2-1020/core/mechanics');
+  const C = await import('@sixam/core/mechanics');
   const frames = Math.round(C.FPS);
   let wins = 0, armed = 0;
   const deaths = {};

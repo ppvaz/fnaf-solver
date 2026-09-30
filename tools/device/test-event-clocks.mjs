@@ -13,7 +13,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { EVENT_CLOCKS as C, clockOfField, eventTimestamps, plausibleForClock } from '@fnaf2-1020/core/telemetry';
+import { EVENT_CLOCKS as C, clockOfField, eventTimestamps, plausibleForClock } from '@sixam/core/telemetry';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const PACKS = join(ROOT, 'docs/evidence/runs');

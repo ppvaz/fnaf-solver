@@ -8,7 +8,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { bindQualificationVenue } from '@fnaf2-1020/core/contracts';
+import { bindQualificationVenue } from '@sixam/core/contracts';
 import { AdbDeviceBridge, preflightVenue } from '../src/adb-bridge.js';
 import { CampaignStateMachine, campaignVenue, makeCampaignSpec } from '../src/campaign.js';
 import { evaluateCampaignPreflight } from '../src/campaign-preflight.js';

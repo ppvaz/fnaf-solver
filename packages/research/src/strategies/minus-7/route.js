@@ -1,4 +1,4 @@
-import * as C from '@fnaf2-1020/core/mechanics';
+import * as C from '@sixam/core/mechanics';
 
 // Frame-relative route constants. Device timing and contacts belong to the
 // device adapter; this file is the readable strategy route.

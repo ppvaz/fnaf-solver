@@ -11,7 +11,7 @@ import { chmodSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { stableHash } from '@fnaf2-1020/core/contracts';
+import { stableHash } from '@sixam/core/contracts';
 import {
   AdbDeviceLocalArtifactExecutor, OBSERVER_INTERVAL_BOUND_MS, STATIC_TERMINAL_MAX_MS, STATIC_TERMINAL_WAIT_MS,
 } from '../src/adb-device-local-executor.js';

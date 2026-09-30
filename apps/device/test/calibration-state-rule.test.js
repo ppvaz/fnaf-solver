@@ -3,8 +3,8 @@
  * never become an OBSERVED state. */
 import assert from 'node:assert/strict';
 import { calibrationStateRuleDigest, maskRuleDigest, parseMaskRule,
-  parseCalibrationStateRule, measureCalibrationState, measureMaskOn } from '@fnaf2-1020/adapters';
-import { monitorRuleDigest } from '@fnaf2-1020/adapters';
+  parseCalibrationStateRule, measureCalibrationState, measureMaskOn } from '@sixam/adapters';
+import { monitorRuleDigest } from '@sixam/adapters';
 
 const cell = (red, green, blue) => (red << 16) | (green << 8) | blue;
 const grid = new Array(180).fill(cell(40, 40, 40));

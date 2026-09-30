@@ -21,8 +21,8 @@ import { pathToFileURL } from 'node:url';
 // here). Both other copies are archived and this one re-exports the
 // transport's, so test-screen-map.mjs is left comparing the transport with the
 // Companion's Java copy.
-export { toRaw } from '@fnaf2-1020/adapters/transports/hid';
-import { toRaw } from '@fnaf2-1020/adapters/transports/hid';
+export { toRaw } from '@sixam/adapters/transports/hid';
+import { toRaw } from '@sixam/adapters/transports/hid';
 
 // No title coordinate lives here. Selecting a night is menu.sh's job, and it
 // is the only place that looks at the screen before pressing: it refuses when

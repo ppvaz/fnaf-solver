@@ -1,9 +1,9 @@
 // Finite semantic interpreter for policy-v1 (Plan 21 package 2 foundation).
 // It expands only the reviewed action modes in the IR; it has no shell or
 // callback escape hatch. A later Sim adapter can consume this event stream.
-import { validatePolicy } from '@fnaf2-1020/core/control';
-import { Sim } from '@fnaf2-1020/core/mechanics';
-import * as C from '@fnaf2-1020/core/mechanics';
+import { validatePolicy } from '@sixam/core/control';
+import { Sim } from '@sixam/core/mechanics';
+import * as C from '@sixam/core/mechanics';
 
 const control = action => action.startsWith('cam') ? `cam:${action.slice(3)}`
   : action === 'ventl' ? 'light' : action;

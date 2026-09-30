@@ -20,8 +20,8 @@ import { execFile as execFileCallback } from 'node:child_process';
 import { promisify } from 'node:util';
 import { parseCueHelperEndpoint } from './physical-ports.js';
 import { restartCueHelperCapture as defaultRestartCueHelperCapture } from './cue-helper-capture.js';
-import { readVenueIdentity } from '@fnaf2-1020/adapters';
-import { compareVenueIdentity } from '@fnaf2-1020/core/contracts';
+import { readVenueIdentity } from '@sixam/adapters';
+import { compareVenueIdentity } from '@sixam/core/contracts';
 
 const execFile = promisify(execFileCallback);
 const GAME_PACKAGE = 'com.scottgames.fnaf2';

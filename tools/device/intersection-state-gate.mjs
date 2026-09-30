@@ -18,7 +18,7 @@ import { appendFileSync, mkdirSync, openSync, closeSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { CueHelperControlTransport, measureMaskOn, measureMonitorUp,
-  parseMaskRule, parseMonitorRule } from '@fnaf2-1020/adapters';
+  parseMaskRule, parseMonitorRule } from '@sixam/adapters';
 import { AdbCueHelperPort } from '../../apps/device/src/physical-ports.js';
 
 export const BUTTON_THRESHOLDS = Object.freeze({

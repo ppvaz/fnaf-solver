@@ -30,10 +30,10 @@
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import * as C from '@fnaf2-1020/core/mechanics';
-import { Sim } from '@fnaf2-1020/core/mechanics';
+import * as C from '@sixam/core/mechanics';
+import { Sim } from '@sixam/core/mechanics';
 import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor }
-  from '@fnaf2-1020/research/seeds';
+  from '@sixam/research/seeds';
 import { KNOBS0, build, schedule } from './minus-toys-plan.mjs';
 import { DeviceActuator } from './actuator.mjs';
 import { designBlock, forkBlocks, gitState } from '../winner-census.mjs';

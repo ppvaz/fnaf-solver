@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { score, windowCode } from './encounter-replay.mjs';
-import { Sim } from '@fnaf2-1020/core/mechanics';
+import { Sim } from '@sixam/core/mechanics';
 import { applySimOpts } from './winner-census.mjs';
 import { STRATEGY_REGISTRY, validateWinner } from './device/bundle.mjs';
 

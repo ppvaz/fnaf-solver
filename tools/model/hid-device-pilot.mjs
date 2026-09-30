@@ -11,8 +11,8 @@
 // validated lit-left-opening classifier. Likewise, `--no-cam5` removes all BB
 // handling; it is a negative control, not a model of that left-opening route.
 import { pathToFileURL } from 'node:url';
-import * as C from '@fnaf2-1020/core/mechanics';
-import { Sim } from '@fnaf2-1020/core/mechanics';
+import * as C from '@sixam/core/mechanics';
+import { Sim } from '@sixam/core/mechanics';
 import { DeviceActuator } from '../device/actuator.mjs';
 import { formatRate } from '../stat.mjs';
 

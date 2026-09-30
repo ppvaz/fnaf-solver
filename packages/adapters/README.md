@@ -1,4 +1,4 @@
-# `@fnaf2-1020/adapters`
+# `@sixam/adapters`
 
 What the campaign executor sends and reads through: the HID wire
 (`transports/hid`), the Cue Helper control protocol (`transports/cue-helper`),

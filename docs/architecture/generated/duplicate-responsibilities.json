@@ -3,33 +3,33 @@
   "entries": [
     {
       "responsibility": "canonical mechanics",
-      "owner": "@fnaf2-1020/core",
+      "owner": "@sixam/core",
       "legacy": []
     },
     {
       "responsibility": "semantic policy IR",
-      "owner": "@fnaf2-1020/core",
+      "owner": "@sixam/core",
       "legacy": [
         "tools/device/policy-ir.mjs"
       ]
     },
     {
       "responsibility": "physical actuation",
-      "owner": "@fnaf2-1020/adapters",
+      "owner": "@sixam/adapters",
       "legacy": [
         "tools/device/actuator.mjs"
       ]
     },
     {
       "responsibility": "device composition",
-      "owner": "@fnaf2-1020/device",
+      "owner": "@sixam/device",
       "legacy": [
         "tools/device/recipe.mjs"
       ]
     },
     {
       "responsibility": "research execution",
-      "owner": "@fnaf2-1020/research",
+      "owner": "@sixam/research",
       "legacy": [
         "tools/*search*",
         "tools/*sweep*",

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {
   SCREEN_FNAF2_NIGHT, NIGHT_ONSET_HOLD_MS, NIGHT5_ANCHOR_AIM_MS,
   nightOnsetFromFrames, latchedNightOnsetMs, anchoredReleaseAt,
-} from '@fnaf2-1020/adapters/night-onset';
+} from '@sixam/adapters/night-onset';
 
 const frames = (startMs, count, identity, stepMs = 1000 / 60) =>
   Array.from({ length: count }, (_, i) => ({ imageMs: startMs + i * stepMs, screenIdentity: identity }));

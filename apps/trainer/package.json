@@ -1,8 +1,8 @@
 {
-  "name": "@fnaf2-1020/trainer",
+  "name": "@sixam/trainer",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "dependencies": {"@fnaf2-1020/core": "file:../../packages/core"},
+  "dependencies": {"@sixam/core": "file:../../packages/core"},
   "exports": {".": "./src/index.js"}
 }

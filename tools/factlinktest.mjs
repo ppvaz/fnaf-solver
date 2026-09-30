@@ -7,7 +7,7 @@ import {
   FACT_MESSAGE_SCHEMA, MAX_FACT_MESSAGE_BYTES, MAX_CYCLE_ACTIONS,
   encodeFactMessage, decodeFactMessage, messageToFact,
   FactLinkReceiver, SafeCycleHandoff,
-} from '@fnaf2-1020/core/telemetry';
+} from '@sixam/core/telemetry';
 
 const check = (condition, message) => { if (!condition) throw new Error(message); };
 const expectThrow = (fn, message) => {

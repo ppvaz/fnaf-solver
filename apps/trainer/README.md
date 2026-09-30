@@ -1,9 +1,9 @@
-# `@fnaf2-1020/trainer`
+# `@sixam/trainer`
 
 The trainer is the public browser application under the Understanding layer.
 It owns UI, touch input, audio, assets, curriculum, coaching, and trainer
 traces. It does not own sourced mechanics, device profiles, policy authority,
-or live actuation; those come from `@fnaf2-1020/core` and explicit device
+or live actuation; those come from `@sixam/core` and explicit device
 services. The static HTML entry remains at the repository root for publishing,
 while its browser modules live under this application.
 

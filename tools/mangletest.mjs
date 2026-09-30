@@ -7,10 +7,10 @@
 // sourced s0020 static transition; Observer applies independent audio
 // latency/drop/error modelling; MangleThreatReactive consumes only the office
 // context, never the same static raised on CAM 11.
-import * as C from '@fnaf2-1020/core/mechanics';
-import { Sim } from '@fnaf2-1020/core/mechanics';
-import { Observer } from '@fnaf2-1020/core/sensing';
-import { MangleThreatReactive } from '@fnaf2-1020/core/control';
+import * as C from '@sixam/core/mechanics';
+import { Sim } from '@sixam/core/mechanics';
+import { Observer } from '@sixam/core/sensing';
+import { MangleThreatReactive } from '@sixam/core/control';
 
 let failures = 0;
 const ok = (what, condition) => {

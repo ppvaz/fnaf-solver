@@ -16,8 +16,8 @@ import {
   validateExerciseAttempt,
   validateResolution,
   validateCommitment,
-} from '@fnaf2-1020/core/training';
-import { stableHash } from '@fnaf2-1020/core/contracts';
+} from '@sixam/core/training';
+import { stableHash } from '@sixam/core/contracts';
 import { finite, freeze, isRecord, validatorsFor } from './validate.js';
 const { fail, object, text } = validatorsFor('microtrainer', { textMax: 160 });
 

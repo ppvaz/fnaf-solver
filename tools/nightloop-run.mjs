@@ -8,11 +8,11 @@
 // is a bounded primitive selected at its own decision boundary and committed
 // only as an immediate prefix; deferred actions are released at their own
 // frame by the caller-owned queue below.
-import * as C from '@fnaf2-1020/core/mechanics';
-import { Sim, Rng } from '@fnaf2-1020/core/mechanics';
-import { Observer } from '@fnaf2-1020/core/sensing';
+import * as C from '@sixam/core/mechanics';
+import { Sim, Rng } from '@sixam/core/mechanics';
+import { Observer } from '@sixam/core/sensing';
 import { CycleController, makeUnknownFacts, getCycle, NightPolicy,
-         NIGHT_POLICY_CYCLES } from '@fnaf2-1020/core/control';
+         NIGHT_POLICY_CYCLES } from '@sixam/core/control';
 
 export const LIBRARY_IDS = NIGHT_POLICY_CYCLES;
 const REVIEWED = new Set(LIBRARY_IDS);

@@ -8,7 +8,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { handsetHash, parseDumpsysPackage, parseGetprop, readVenueIdentity } from '../src/transports/android-venue.js';
-import { validateVenueIdentity } from '@fnaf2-1020/core/contracts';
+import { validateVenueIdentity } from '@sixam/core/contracts';
 
 const fixture = name => readFileSync(fileURLToPath(new URL(`./fixtures/${name}`, import.meta.url)), 'utf8');
 const GAME = 'com.scottgames.fnaf2';

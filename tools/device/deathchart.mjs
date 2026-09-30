@@ -31,7 +31,7 @@ import { chromeBinary, chromeAvailable } from '../chrome.mjs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { modelGate, GATE_RUNS, HUMAN_SLACK_MS } from './human-gate.mjs';
 import { formatRate } from '../stat.mjs';
-import * as C from '@fnaf2-1020/core/mechanics';
+import * as C from '@sixam/core/mechanics';
 
 const arg = (name, def) => {
   const v = (process.argv.find(a => a.startsWith(`--${name}=`)) || '').split('=')[1];

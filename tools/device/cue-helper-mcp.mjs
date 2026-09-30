@@ -8,7 +8,7 @@
 import { createCueHelperMcp } from '../../apps/device/src/mcp.js';
 
 const cue = createCueHelperMcp();
-const SERVER = Object.freeze({ name: 'fnaf2-cue-helper', version: '0.1.0' });
+const SERVER = Object.freeze({ name: 'fnaf-solver', version: '0.1.0' });
 const NO_ARGS = Object.freeze({ type: 'object', additionalProperties: false, properties: {} });
 const SAFE = Object.freeze({ readOnlyHint: false, destructiveHint: false, openWorldHint: false });
 

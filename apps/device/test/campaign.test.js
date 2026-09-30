@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { AI_10_20, AI_DIALS, PUPPET_AI } from '@fnaf2-1020/core/mechanics';
+import { AI_10_20, AI_DIALS, PUPPET_AI } from '@sixam/core/mechanics';
 import {
   CAMPAIGN_STATES, CampaignStateMachine, makeCampaignSpec, validateCampaignSpec,
 } from '../src/campaign.js';

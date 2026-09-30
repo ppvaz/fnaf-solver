@@ -15,9 +15,9 @@ import { emitPlan as emitMinus3Plan, KNOBS0 as MINUS3_KNOBS,
 import { build as buildMinus7, devicePlan as emitMinus7Plan,
   idleUntilMs, replay as replayMinus7, MASK_RAISE_GAP_MS } from './recipe.mjs';
 import { compileArtifactPlans, persistArtifactPlans } from './artifact-commands.mjs';
-import { canonicalJson, stableHash, validateProfile } from '@fnaf2-1020/core/contracts';
-import { CONTROL_VOCABULARY as V } from '@fnaf2-1020/core/control';
-import * as C from '@fnaf2-1020/core/mechanics';
+import { canonicalJson, stableHash, validateProfile } from '@sixam/core/contracts';
+import { CONTROL_VOCABULARY as V } from '@sixam/core/control';
+import * as C from '@sixam/core/mechanics';
 
 export const WINNER_SCHEMA = 'winner-v1';
 export const BUNDLE_SCHEMA = 'device-bundle-v1';

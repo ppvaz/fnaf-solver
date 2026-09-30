@@ -23,7 +23,7 @@ import {
 import { homedir } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { canonicalJson } from '@fnaf2-1020/core/contracts';
+import { canonicalJson } from '@sixam/core/contracts';
 
 const HERE = fileURLToPath(new URL('.', import.meta.url));
 // FNAF2_REPO relocates the tree under test, as FNAF2_CAPTURES does for session-manifest.py.

@@ -24,7 +24,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { FPS } from '@fnaf2-1020/core/mechanics';
+import { FPS } from '@sixam/core/mechanics';
 import { STRATEGY_REGISTRY, compileBundle, validateWinner } from './device/bundle.mjs';
 import { ANCHOR_AIMS } from './device/fact-register.mjs';
 import { replay as replayToys } from './device/minus-toys-plan.mjs';

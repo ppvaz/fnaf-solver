@@ -1,7 +1,7 @@
 # Dependency direction
 
 ```text
-                         @fnaf2-1020/core
+                         @sixam/core
                          /       |       \
              runtime / adapters  research  trainer
                          ^          ^        ^

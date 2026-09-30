@@ -41,7 +41,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { replay } from './recipe.mjs';
-import { Rng } from '@fnaf2-1020/core/mechanics';
+import { Rng } from '@sixam/core/mechanics';
 import { contractVerdict, formatRate } from '../stat.mjs';
 
 export const HUMAN_SLACK_MS = 60;

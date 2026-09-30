@@ -1,8 +1,8 @@
 // Plan 20 package 3: estimator timing, uncertainty, and reconciliation.
 import {
   initialEstimator, predict, update, send, reconcile, needsVerification,
-} from '@fnaf2-1020/core/estimation';
-import { initialBelief, observed, unknown } from '@fnaf2-1020/core/estimation';
+} from '@sixam/core/estimation';
+import { initialBelief, observed, unknown } from '@sixam/core/estimation';
 
 const check = (condition, message) => { if (!condition) throw new Error(message); };
 const O = (value, extra = {}) => observed(value, {

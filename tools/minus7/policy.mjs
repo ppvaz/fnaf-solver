@@ -5,8 +5,8 @@
 // timing is fitted, and to serve as the rollout policy the search leans on.
 //
 //   node tools/minus7/policy.mjs --night=7 --seeds=50 [--verbose]
-import * as C from '@fnaf2-1020/core/mechanics';
-import { Sim } from '@fnaf2-1020/core/mechanics';
+import * as C from '@sixam/core/mechanics';
+import { Sim } from '@sixam/core/mechanics';
 import { view, ACTIONS, run } from './sim.mjs';
 
 const arg = (k, d) => {

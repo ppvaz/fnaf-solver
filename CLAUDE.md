@@ -5,7 +5,7 @@ the five charter layers—Truth, Understanding, Decision, Embodiment, Proof—an
 never silently promote a model or fixture result. Plan 12 owns promotion;
 known negatives and retractions remain discoverable.
 
-Ownership is directional: `@fnaf2-1020/core` owns mechanics and semantic
+Ownership is directional: `@sixam/core` owns mechanics and semantic
 contracts; adapters own transport, detection rules and calibration; the device
 app composes and supervises the campaign; trainer, research, and device are
 leaves.

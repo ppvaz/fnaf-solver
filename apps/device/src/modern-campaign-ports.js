@@ -13,7 +13,7 @@ import { appendFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CueHelperControlTransport, HidWireTransport, measureMaskOn, measureMonitorUp,
-  parseCameraRule, parseMaskRule, parseMonitorRule, reconcileExclusiveControls } from '@fnaf2-1020/adapters';
+  parseCameraRule, parseMaskRule, parseMonitorRule, reconcileExclusiveControls } from '@sixam/adapters';
 import { configureCustomNight, selectCustomNightPreset, validateCustomNightCalibration, CUSTOM_NIGHT_CONTACT_MS } from './custom-night.js';
 import { AdbDeviceBridge } from './adb-bridge.js';
 import { composeCampaignPorts } from './campaign-composition.js';

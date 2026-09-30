@@ -1,6 +1,6 @@
 {
   "schema": "contract-register-v1",
-  "owner": "@fnaf2-1020/core",
+  "owner": "@sixam/core",
   "contracts": [
     {"id":"plant-model-v1","owner":"core/mechanics","kind":"port","validator":"PlantModel"},
     {"id":"semantic-control-v1","owner":"core/contracts","kind":"data","validator":"validateControlCommand"},

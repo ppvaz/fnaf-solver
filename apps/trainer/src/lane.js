@@ -1,4 +1,4 @@
-import * as C from '@fnaf2-1020/core/mechanics';
+import * as C from '@sixam/core/mechanics';
 
 // A rhythm lane. The routine is a timing pattern, so show it as one: upcoming
 // inputs scroll toward a hit line, each with its tolerance window drawn around

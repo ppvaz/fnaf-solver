@@ -5,7 +5,7 @@
 //
 //   node tools/flicksweep.mjs [nights]
 import { run } from './model/stock-device-pilot.mjs';
-import * as C from '@fnaf2-1020/core/mechanics';
+import * as C from '@sixam/core/mechanics';
 
 const N = +(process.argv[2] || 200);
 const variants = [

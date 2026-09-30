@@ -6,7 +6,7 @@
 // gate; device-plan equivalence and contact floors are separate gates.
 import { createHash } from 'node:crypto';
 import { writeFileSync } from 'node:fs';
-import { canonicalPolicy, observationLanguage } from '@fnaf2-1020/core/control';
+import { canonicalPolicy, observationLanguage } from '@sixam/core/control';
 import { closedFamilyMatches } from './closed-families.mjs';
 import { classifyPolicy, validateGrammarPolicy } from './policy-grammar.mjs';
 import { compilePolicy, replayPolicy } from './policy-interpreter.mjs';

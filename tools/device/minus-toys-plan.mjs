@@ -10,13 +10,13 @@
 // per cycle (docs/strategy/MINUS-3-STRATEGY.md sec.3). `minus-toys-margin.mjs`
 // maps where the slack is; a jitter/clock-error search sits on `schedule({shift})`.
 import { pathToFileURL } from 'node:url';
-import * as C from '@fnaf2-1020/core/mechanics';
-import { Sim } from '@fnaf2-1020/core/mechanics';
-import { Observer } from '@fnaf2-1020/core/sensing';
+import * as C from '@sixam/core/mechanics';
+import { Sim } from '@sixam/core/mechanics';
+import { Observer } from '@sixam/core/sensing';
 import { CONTROL_VOCABULARY as V, MODEL_CONTEXT_LIGHT,
-  VentThreatReactive, guardIntents, GUARD_FRAMES } from '@fnaf2-1020/core/control';
-import { Rng } from '@fnaf2-1020/core/mechanics';
-import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '@fnaf2-1020/research/seeds';
+  VentThreatReactive, guardIntents, GUARD_FRAMES } from '@sixam/core/control';
+import { Rng } from '@sixam/core/mechanics';
+import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '@sixam/research/seeds';
 import { DOUBLE_GLITCH_CAMERA_PAIRS, cameraPairHeader } from './arm-verification.mjs';
 
 // Every tunable number in the schedule. build(KNOBS0) reproduces the shipped

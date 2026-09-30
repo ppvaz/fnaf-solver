@@ -1,6 +1,6 @@
 // Compatibility adapter. Strategy semantics live in the research package.
 import { pathToFileURL } from 'node:url';
-import { CYCLE, runCycle, cohort } from '@fnaf2-1020/research/strategies/minus-7';
+import { CYCLE, runCycle, cohort } from '@sixam/research/strategies/minus-7';
 
 export { CYCLE, runCycle, cohort };
 

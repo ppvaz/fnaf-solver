@@ -3,8 +3,8 @@
 // model. Censored outcomes do not count as misses, break a streak, or award a
 // correctness score.
 
-import { stableHash } from '@fnaf2-1020/core/contracts';
-import { validateExercise } from '@fnaf2-1020/core/training';
+import { stableHash } from '@sixam/core/contracts';
+import { validateExercise } from '@sixam/core/training';
 import { freeze, validatorsFor } from './validate.js';
 const { fail, object, text } = validatorsFor('arcade lab');
 

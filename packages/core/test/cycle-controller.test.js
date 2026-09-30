@@ -3,11 +3,11 @@
 // The scenario injects a sourced five-second blackout at a bounded decision
 // boundary; it does not claim a full-night strategy or a device result.
 import { readFileSync } from 'node:fs';
-import * as C from '@fnaf2-1020/core/mechanics';
-import { Sim } from '@fnaf2-1020/core/mechanics';
-import { Observer } from '@fnaf2-1020/core/sensing';
-import { Rng } from '@fnaf2-1020/core/mechanics';
-import { CycleController, getCycle, makeUnknownFacts } from '@fnaf2-1020/core/control';
+import * as C from '@sixam/core/mechanics';
+import { Sim } from '@sixam/core/mechanics';
+import { Observer } from '@sixam/core/sensing';
+import { Rng } from '@sixam/core/mechanics';
+import { CycleController, getCycle, makeUnknownFacts } from '@sixam/core/control';
 
 const check = (condition, message) => { if (!condition) throw new Error(message); };
 const RUNS = 80;

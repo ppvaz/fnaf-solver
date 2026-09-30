@@ -20,10 +20,10 @@ EXPORT_LIST = re.compile(r"^export \{([^}]*)\};\s*$", re.M)
 
 def resolve_path(path, spec):
     """Resolve a relative ESM edge without inventing a package resolver."""
-    if spec == '@fnaf2-1020/core':
+    if spec == '@sixam/core':
         target = ROOT / 'packages/core/src/index.js'
-    elif spec.startswith('@fnaf2-1020/core/'):
-        suffix = spec.removeprefix('@fnaf2-1020/core/')
+    elif spec.startswith('@sixam/core/'):
+        suffix = spec.removeprefix('@sixam/core/')
         target = ROOT / 'packages/core/src' / suffix
         if target.suffix != '.js':
             target = target / 'index.js'

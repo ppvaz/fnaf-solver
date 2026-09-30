@@ -9,7 +9,7 @@ import {
   seedCandidatesFromTimeWindow,
   seedCandidatesFromHostMarker,
   seedFromDeviceTimeMs,
-} from '@fnaf2-1020/core/mechanics';
+} from '@sixam/core/mechanics';
 
 assert.equal(seedFromDeviceTimeMs(0), 0);
 assert.equal(seedFromDeviceTimeMs(65535), 65535);

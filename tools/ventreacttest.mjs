@@ -12,10 +12,10 @@
 // live at AI 3 on the story Night 2 table from 1 AM (g676). Mangle occupancy is
 // intentionally not claimed until Observer has a separately calibrated fact.
 import { pathToFileURL } from 'node:url';
-import * as C from '@fnaf2-1020/core/mechanics';
-import { Rng } from '@fnaf2-1020/core/mechanics';
-import { Observer } from '@fnaf2-1020/core/sensing';
-import { VentThreatReactive } from '@fnaf2-1020/core/control';
+import * as C from '@sixam/core/mechanics';
+import { Rng } from '@sixam/core/mechanics';
+import { Observer } from '@sixam/core/sensing';
+import { VentThreatReactive } from '@sixam/core/control';
 import { replay, KNOBS0, ENGINE_PHASE_ORACLE } from './device/minus-toys-plan.mjs';
 import { evalEnsemble } from './device/minus-toys-jitter.mjs';
 import { formatRate } from './stat.mjs';

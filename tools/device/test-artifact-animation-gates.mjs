@@ -9,7 +9,7 @@
 // not on screen, the contact hit the office underneath, and the cycle wound
 // nothing. The simulator latches presses; the device needs the control to
 // exist at contact time, and only the compiler can see the difference.
-import * as C from '@fnaf2-1020/core/mechanics';
+import * as C from '@sixam/core/mechanics';
 import { compileCycle, SEAM_FLOORS } from './artifact-commands.mjs';
 import { MIN_CONTACT_MS } from './recipe.mjs';
 

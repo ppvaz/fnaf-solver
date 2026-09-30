@@ -7,8 +7,8 @@
  * COMPLETE after positive 6 AM and save/menu evidence.
  * CONTRACT:device-campaign-v1.
  */
-import { AI_10_20, AI_DIALS, PUPPET_AI } from '@fnaf2-1020/core/mechanics';
-import { stableHash } from '@fnaf2-1020/core/contracts';
+import { AI_10_20, AI_DIALS, PUPPET_AI } from '@sixam/core/mechanics';
+import { stableHash } from '@sixam/core/contracts';
 import { makeCustomNightConfig, validateCustomNightConfig } from './custom-night.js';
 
 export const CAMPAIGN_SCHEMA = 'device-campaign-v1';

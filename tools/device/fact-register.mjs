@@ -29,7 +29,7 @@
 import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { stableHash } from '@fnaf2-1020/core/contracts';
+import { stableHash } from '@sixam/core/contracts';
 
 export const SCHEMA = 'device-fact-register-v1';
 

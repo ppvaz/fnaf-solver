@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { compareTrace } from './compare-draw-trace.mjs';
 import { drawTrace } from './model-draw-trace.mjs';
-import { AI_DIALS, Rng } from '@fnaf2-1020/core/mechanics';
+import { AI_DIALS, Rng } from '@sixam/core/mechanics';
 
 const settings = { night: 1, seed: 24850, frame: 3, frames: 20 };
 const originalNext = Rng.prototype.next;

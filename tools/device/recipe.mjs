@@ -10,8 +10,8 @@
 //
 // Usage: node tools/device/recipe.mjs [--night=6] [--slot-ms=120] ... [--json]
 import { pathToFileURL } from 'node:url';
-import * as C from '@fnaf2-1020/core/mechanics';
-import { Sim } from '@fnaf2-1020/core/mechanics';
+import * as C from '@sixam/core/mechanics';
+import { Sim } from '@sixam/core/mechanics';
 import { run, DEFAULT_SEARCH_KNOBS, makeSearchKnobs, MASK_OFF_INPUT_FRAMES } from '../model/hid-device-pilot.mjs';
 
 // The phone's measured contact floor. The Moto g56 accepted 33 ms contacts

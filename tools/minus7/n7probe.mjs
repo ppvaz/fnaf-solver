@@ -27,8 +27,8 @@
 // entries. Neither is an opener change.
 //
 //   node tools/minus7/n7probe.mjs [--runs=800]
-import { Sim } from '@fnaf2-1020/core/mechanics';
-import * as C from '@fnaf2-1020/core/mechanics';
+import { Sim } from '@sixam/core/mechanics';
+import * as C from '@sixam/core/mechanics';
 import { build, devicePlan, idleUntilMs } from '../device/recipe.mjs';
 import { modelGate } from '../device/human-gate.mjs';
 

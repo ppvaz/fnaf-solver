@@ -1,6 +1,6 @@
 /** Bind compiled, full-night plans to the reviewed story/custom campaign chain. */
 import { createHash } from 'node:crypto';
-import { canonicalJson, stableHash } from '@fnaf2-1020/core/contracts';
+import { canonicalJson, stableHash } from '@sixam/core/contracts';
 import { validateCampaignSpec } from './campaign.js';
 import { validateExecutorRequest } from './artifact-executor.js';
 

@@ -55,7 +55,7 @@ function probe() {
   set('node', 'Node', nodeMajor >= MIN_NODE ? 'ok' : 'missing', `${process.versions.node} (${MIN_NODE}+ needed; CI uses ${CI.node})`,
     `install Node ${MIN_NODE} or newer (CI uses ${CI.node})`);
 
-  const installed = existsSync(join(ROOT, 'node_modules/@fnaf2-1020/core'));
+  const installed = existsSync(join(ROOT, 'node_modules/@sixam/core'));
   set('deps', 'npm ci', installed ? 'ok' : 'missing', installed ? 'workspace dependencies installed' : 'not run in this checkout',
     'run `npm ci`');
 

@@ -4,9 +4,9 @@
 // policy's PRIORITIES are the sourced ones, and that it reads nothing it is
 // not allowed to read. Survival belongs to `tools/nightloop.mjs`, which runs
 // whole nights against the exact engine and its controls.
-import { STUN_FRAMES } from '@fnaf2-1020/core/mechanics';
-import { initialReducedState, advanceReduced, observeReduced } from '@fnaf2-1020/core/mechanics';
-import { CYCLE_LIBRARY, NightPolicy, NIGHT_POLICY_CYCLES } from '@fnaf2-1020/core/control';
+import { STUN_FRAMES } from '@sixam/core/mechanics';
+import { initialReducedState, advanceReduced, observeReduced } from '@sixam/core/mechanics';
+import { CYCLE_LIBRARY, NightPolicy, NIGHT_POLICY_CYCLES } from '@sixam/core/control';
 
 let failures = 0;
 const check = (condition, message) => {

@@ -8,7 +8,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { drawTrace } from './model-draw-trace.mjs';
-import { AI_DIALS } from '@fnaf2-1020/core/mechanics';
+import { AI_DIALS } from '@sixam/core/mechanics';
 
 const hash = (value) => createHash('sha256').update(value).digest('hex');
 const fileHash = (path) => hash(readFileSync(path));

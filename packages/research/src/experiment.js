@@ -1,5 +1,5 @@
 /** Pure experiment primitives shared by named research cases. */
-import { PlantModel, stableHash, validateControlCommand, validateExperiment, validateExperimentResult } from '@fnaf2-1020/core';
+import { PlantModel, stableHash, validateControlCommand, validateExperiment, validateExperimentResult } from '@sixam/core';
 import { summarizeMinusToys } from './families/minus-toys.js';
 import { summarizeMinusTwo } from './families/minus-two.js';
 

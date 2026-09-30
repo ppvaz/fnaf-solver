@@ -1,6 +1,6 @@
 // Plan 21 package 1 contract: finite policy IR round-trip and source mapping.
 import { createHash } from 'node:crypto';
-import { canonicalPolicy, roundTripPolicy } from '@fnaf2-1020/core/control';
+import { canonicalPolicy, roundTripPolicy } from '@sixam/core/control';
 import { minimalPolicy } from './policy-ir.mjs';
 
 const check = (condition, message) => { if (!condition) throw new Error(message); };

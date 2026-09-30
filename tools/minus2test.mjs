@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Compatibility command for the real Minus Two family evaluator in research.
 import { pathToFileURL } from 'node:url';
-import { runMinusTwo } from '@fnaf2-1020/research';
+import { runMinusTwo } from '@sixam/research';
 
 const main = () => {
   const n = +(process.argv[2] || 200);

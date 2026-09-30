@@ -28,7 +28,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { MODEL_CONTEXT_LIGHT } from '@fnaf2-1020/core/control';
+import { MODEL_CONTEXT_LIGHT } from '@sixam/core/control';
 import { STRATEGY_REGISTRY, validateWinner } from '../device/bundle.mjs';
 import { KNOBS0, build, schedule } from '../device/minus-toys-plan.mjs';
 

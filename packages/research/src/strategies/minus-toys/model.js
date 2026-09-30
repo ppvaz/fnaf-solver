@@ -1,6 +1,6 @@
-import * as C from '@fnaf2-1020/core/mechanics';
-import { Sim, Rng } from '@fnaf2-1020/core/mechanics';
-import { stableHash } from '@fnaf2-1020/core/contracts';
+import * as C from '@sixam/core/mechanics';
+import { Sim, Rng } from '@sixam/core/mechanics';
+import { stableHash } from '@sixam/core/contracts';
 import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '../../seeds.js';
 import { CYCLE, LEGACY_LOOP, LEGACY_SETUP, fifthBoundary, routeFor } from './route.js';
 

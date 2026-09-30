@@ -1,6 +1,6 @@
 # Current architecture
 
-The repository is a private npm-workspaces monorepo. `@fnaf2-1020/core` is the
+The repository is a private npm-workspaces monorepo. `@sixam/core` is the
 canonical model and semantic contract owner. Runtime and adapters consume it;
 research and trainer consume core; the device app is the only composition root
 that selects runtime, adapters, profiles, storage, and clocks.

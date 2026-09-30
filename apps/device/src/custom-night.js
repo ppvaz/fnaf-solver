@@ -6,7 +6,7 @@
  * session.  This module intentionally contains no guessed coordinates.
  * CONTRACT:custom-night-config-v1.
  */
-import { AI_DIALS, AI_10_20, PUPPET_AI } from '@fnaf2-1020/core/mechanics';
+import { AI_DIALS, AI_10_20, PUPPET_AI } from '@sixam/core/mechanics';
 
 export const CUSTOM_NIGHT_SCHEMA = 'custom-night-config-v1';
 export const CUSTOM_NIGHT_CALIBRATION_SCHEMA = 'custom-night-calibration-v1';

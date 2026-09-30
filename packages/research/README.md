@@ -1,4 +1,4 @@
-# `@fnaf2-1020/research`
+# `@sixam/research`
 
 Named experiments use the shared `generateCandidates` → pure evaluator →
 aggregator path in `src/experiment.js`. The checked-in reference cases are

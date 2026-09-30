@@ -1,4 +1,4 @@
-import * as C from '@fnaf2-1020/core/mechanics';
+import * as C from '@sixam/core/mechanics';
 
 const MONO = "'IBM Plex Mono', ui-monospace, monospace";
 

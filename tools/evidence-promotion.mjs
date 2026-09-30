@@ -21,8 +21,8 @@
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { canonicalJson, stableHash } from '@fnaf2-1020/core/contracts';
-import { AI_DIALS, PUPPET_AI } from '@fnaf2-1020/core/mechanics';
+import { canonicalJson, stableHash } from '@sixam/core/contracts';
+import { AI_DIALS, PUPPET_AI } from '@sixam/core/mechanics';
 import { validateSaveProof } from '../apps/device/src/campaign-proof.js';
 import { campaignEntry } from './evidence-campaign.mjs';
 import { AGENT_DELEGATION, ATTESTATION_FILE, ATTESTATION_SCHEMA, PACKS_DIR, RECOVERY_RECORD, attestationStatus,

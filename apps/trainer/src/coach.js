@@ -1,4 +1,4 @@
-import * as C from '@fnaf2-1020/core/mechanics';
+import * as C from '@sixam/core/mechanics';
 
 // Watches the routine rather than the game: which input was due, when it
 // actually landed, and by how much it was off.

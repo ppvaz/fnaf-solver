@@ -9,8 +9,8 @@ import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { Coach } from '@fnaf2-1020/trainer';
-import * as C from '@fnaf2-1020/core/mechanics';
+import { Coach } from '@sixam/trainer';
+import * as C from '@sixam/core/mechanics';
 import { summarize } from './tracereport.mjs';
 
 const TOOLS = dirname(fileURLToPath(import.meta.url));

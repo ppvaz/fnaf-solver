@@ -37,7 +37,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { FPS } from '@fnaf2-1020/core/mechanics';
+import { FPS } from '@sixam/core/mechanics';
 import { compileBundle } from './bundle.mjs';
 import { ANCHOR_AIMS } from './fact-register.mjs';
 import { runNight, loadPresets, PRESET_KNOBS } from './night7-presets.mjs';

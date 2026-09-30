@@ -48,7 +48,7 @@ import { build, devicePlan, replay, idleUntilMs } from '../device/recipe.mjs';
 import { modelGate, jitterPlan } from '../device/human-gate.mjs';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { canonicalJson } from '@fnaf2-1020/core/contracts';
+import { canonicalJson } from '@sixam/core/contracts';
 
 const arg = (k, d) => {
   const m = process.argv.find(a => a.startsWith(`--${k}=`));

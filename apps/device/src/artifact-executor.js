@@ -7,8 +7,8 @@
  * legacy transport fallback.
  * CONTRACT:device-executor-v1.
  */
-import { stableHash } from '@fnaf2-1020/core/contracts';
-import { CONTROL_VOCABULARY as V, DEVICE_CONTROL_NAMES } from '@fnaf2-1020/core/control';
+import { stableHash } from '@sixam/core/contracts';
+import { CONTROL_VOCABULARY as V, DEVICE_CONTROL_NAMES } from '@sixam/core/control';
 
 export const DEVICE_EXECUTOR_SCHEMA = 'device-executor-v1';
 export const ARTIFACT_ACTION_SCHEMA = 'artifact-action-v1';

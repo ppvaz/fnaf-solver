@@ -107,7 +107,7 @@ function shellcheckScript(dir) {
 /**
  * Wire `node_modules` in a fresh worktree. The workspace links must point at
  * the WORKTREE's packages: symlinking the main repository's `node_modules`
- * wholesale makes `@fnaf2-1020/core` resolve back to the working tree, so the
+ * wholesale makes `@sixam/core` resolve back to the working tree, so the
  * gate would type-check and test the code it was built to ignore.
  */
 function linkDependencies(worktree) {

@@ -116,7 +116,7 @@ for (const path of core) {
   const source = await readFile(path, 'utf8');
   const imports = importSpecifiers(source);
   assert.ok(!imports.some(spec => spec.startsWith('node:') ||
-    /^@fnaf2-1020\/(?:adapters|device|trainer)/.test(spec)),
+    /^@sixam\/(?:adapters|device|trainer)/.test(spec)),
   `${path} crosses the core package boundary`);
   assert.doesNotMatch(unboundCoreCode(source), forbiddenCoreGlobal,
     `${path} uses a host/browser global in core`);
@@ -126,7 +126,7 @@ for (const path of research) {
   const source = await readFile(path, 'utf8');
   const imports = importSpecifiers(source);
   assert.ok(!imports.some(spec => spec.includes('tools/device') || spec.includes('apps/device') ||
-    spec === '@fnaf2-1020/device' ||
+    spec === '@sixam/device' ||
     spec === 'node:child_process' || spec === 'node:net' || spec === 'node:dgram'),
   `${path} imports a device-shell boundary directly`);
 }

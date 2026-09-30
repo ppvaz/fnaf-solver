@@ -18,7 +18,7 @@ owned Android evidence -> canonical mechanics model -> policy research
 ```
 
 The repository becomes a small npm-workspaces monorepo whose canonical package
-is `@fnaf2-1020/core`. The trainer is one application of the model, not the
+is `@sixam/core`. The trainer is one application of the model, not the
 owner of it. Search is a first-class research method. Sensors, estimators,
 controllers, actuators, clocks, transports, and experiment artifacts have
 explicit contracts and conventional automation names. A device run is composed
@@ -38,8 +38,8 @@ The refactor is complete only when both statements are true:
 
 | Question | Decision |
 |---|---|
-| Canonical source | `@fnaf2-1020/core`; trainer, research, and device are consumers |
-| Repository | private npm-workspaces `@fnaf2-1020/*` monorepo |
+| Canonical source | `@sixam/core`; trainer, research, and device are consumers |
+| Repository | private npm-workspaces `@sixam/*` monorepo |
 | Main implementation language | strict TypeScript for new/extracted long-lived host/core code; gradual JS migration |
 | Other languages | Python analysis, thin shell boundaries, Android Java, firmware/native C, entry assembly, toolchain-only C# |
 | Duplicate implementations | common semantic ports + capability-specific adapters + conformance suites |
@@ -92,7 +92,7 @@ JavaScript.
 
 ### 1. The model is canonical; applications are leaves
 
-`@fnaf2-1020/core` owns mechanics, semantic actions, observations, policies,
+`@sixam/core` owns mechanics, semantic actions, observations, policies,
 and evidence-labelled constants. Browser, research, and device packages depend
 on it. Core never imports an application, adapter, shell command, DOM API, or
 device implementation.
@@ -169,7 +169,7 @@ Use npm workspaces because the JavaScript already runs as ES modules and the
 packages must change atomically. This does not require publishing packages or
 adding runtime dependencies. Commit `package-lock.json` and make `npm ci` the
 single clean-checkout bootstrap: it creates the workspace links required for
-bare `@fnaf2-1020/*` imports and installs a pinned TypeScript/tooling set. Core
+bare `@sixam/*` imports and installs a pinned TypeScript/tooling set. Core
 and trainer retain zero runtime dependencies unless a later ADR changes that;
 the root development install is disposable and is never shipped with either
 application. Preserve a documented bare-Node core/legacy test path during the
@@ -184,7 +184,7 @@ fnaf2-1020/
   CLAUDE.md
 
   packages/
-    core/                       @fnaf2-1020/core
+    core/                       @sixam/core
       src/
         mechanics/             sourced model, plant simulation, RNG
         control/               policies, supervisors, policy IR
@@ -194,14 +194,14 @@ fnaf2-1020/
         timing/                frames, clocks, deadlines, calibration
         telemetry/             events and run-record schemas
 
-    runtime/                    @fnaf2-1020/runtime
+    runtime/                    @sixam/runtime
       src/
         scheduler/
         control-loop/
         experiment-executor/
         safety/
 
-    adapters/                   @fnaf2-1020/adapters
+    adapters/                   @sixam/adapters
       src/
         actuators/             ADB, HID, simulator, future in-APK
         sensors/               screencap, MediaProjection, A2DP, cue-helper
@@ -209,7 +209,7 @@ fnaf2-1020/
         clocks/                host, device monotonic, simulator
         transports/            adb, local socket, fact/measurement link
 
-    research/                   @fnaf2-1020/research
+    research/                   @sixam/research
       src/
         experiment/
         synthesis/
@@ -217,15 +217,15 @@ fnaf2-1020/
         analysis/
         characterization/
 
-    screencheck/                @fnaf2-1020/screencheck
+    screencheck/                @sixam/screencheck
       src/                      C and AArch64 entry shim
       scripts/                  cross-build, benchmark, host contract test
 
   apps/
-    trainer/                    @fnaf2-1020/trainer
+    trainer/                    @sixam/trainer
       src/                      UI, audio, input, lane, curriculum
 
-    device/                     @fnaf2-1020/device
+    device/                     @sixam/device
       src/                      composition root and host CLI
       remote/                   bounded phone-side shell executor
       profiles/                 versioned device/run profiles
@@ -241,7 +241,7 @@ fnaf2-1020/
 ```
 
 Do not make every adapter a workspace. Subpath exports such as
-`@fnaf2-1020/adapters/actuator-hid` preserve boundaries without producing dozens
+`@sixam/adapters/actuator-hid` preserve boundaries without producing dozens
 of packages. Split a subpackage only when it has an independent release,
 toolchain, or dependency boundary.
 
@@ -249,7 +249,7 @@ toolchain, or dependency boundary.
 
 ```text
                          +---------------------+
-                         | @fnaf2-1020/core    |
+                         | @sixam/core    |
                          +---------------------+
                            ^       ^       ^
                            |       |       |
@@ -1260,7 +1260,7 @@ testable: a committed lockfile, pinned development-only tools, no shipped
 `node_modules`, no runtime dependency in trainer/core without an ADR, and no
 trainer build-system tax merely because workspaces exist.
 
-### P2 — Extract `@fnaf2-1020/core` and make the trainer a leaf
+### P2 — Extract `@sixam/core` and make the trainer a leaf
 
 - Move mechanics, RNG, evidence-labelled configuration, policy IR, reduced
   model, belief/estimation, cycle planning, and semantic controller contracts
@@ -1278,7 +1278,7 @@ trainer build-system tax merely because workspaces exist.
 
 **Done when:** core imports and tests under Node with no DOM stubs; the trainer
 build and browser suite remain equivalent; no research/device module imports
-`@fnaf2-1020/trainer`; every old `src` shim has a named removal owner.
+`@sixam/trainer`; every old `src` shim has a named removal owner.
 
 ### P3 — Land automation contracts and vocabulary
 
@@ -1320,7 +1320,7 @@ names; a mismatched detector/sensor calibration is refused.
 
 - Move host-side argument parsing, resolved configuration, qualification,
   building, deployment, session manifest, lifecycle, cleanup, and error
-  reporting into `@fnaf2-1020/device` and runtime services.
+  reporting into `@sixam/device` and runtime services.
 - Keep phone-side shell only for operations that must execute near Android:
   device monotonic scheduling, HID writes, local screencap/classification, and
   bounded cleanup.
@@ -1553,7 +1553,7 @@ future evidence work cannot audit a semantic rewrite hidden inside one.
 
 ### Architecture
 
-- `@fnaf2-1020/core` imports no trainer, adapter, device, DOM, shell, or host
+- `@sixam/core` imports no trainer, adapter, device, DOM, shell, or host
   process API.
 - Trainer, research, and device code import core through package exports.
 - All live/simulated sensors and actuators are selected through registered

@@ -1,7 +1,7 @@
 // Convert the current Night 1 Minimal Minus Toys plan into Plan 21's policy IR.
 import { build, KNOBS0 } from './minus-toys-plan.mjs';
 import { DOUBLE_GLITCH_CAMERA_PAIRS } from './arm-verification.mjs';
-import { CONTROL_VOCABULARY as V, POLICY_SCHEMA, validatePolicy } from '@fnaf2-1020/core/control';
+import { CONTROL_VOCABULARY as V, POLICY_SCHEMA, validatePolicy } from '@sixam/core/control';
 
 const rowAction = (row, defaultContactMs = 33) => {
   const [at, kind, action, duration] = row;
@@ -35,7 +35,7 @@ export function minimalPolicy(knobs = {}) {
       setupTarget: 'minus-toys-split',
       armVerify: true,
       armVerifyCameras: [...DOUBLE_GLITCH_CAMERA_PAIRS.minusToys],
-      sourceDependencies: ['@fnaf2-1020/core/mechanics', 'tools/device/minus-toys-plan.mjs'],
+      sourceDependencies: ['@sixam/core/mechanics', 'tools/device/minus-toys-plan.mjs'],
       calibrationProfile: 'moto-g56-v207-landscape',
     },
     phases: [

@@ -18,7 +18,7 @@ import {
   normalizeSeedCandidates,
   seedCandidatesFromHostMarker,
   seedCandidatesFromTimeWindow,
-} from '@fnaf2-1020/core/mechanics';
+} from '@sixam/core/mechanics';
 
 const args = process.argv.slice(2);
 const command = args[0];

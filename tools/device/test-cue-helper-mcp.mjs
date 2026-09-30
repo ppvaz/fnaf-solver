@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 const root = resolve(import.meta.dirname, '../..');
-const temp = await mkdtemp(join(tmpdir(), 'fnaf2-cue-helper-mcp-'));
+const temp = await mkdtemp(join(tmpdir(), 'fnaf-solver-mcp-'));
 const child = spawn(process.execPath, [join(root, 'tools/device/cue-helper-mcp.mjs')], {
   cwd: root,
   env: { ...process.env, CUE_HELPER_QUEUE_FILE: join(temp, 'jobs.json'), ANDROID_SERIAL: 'missing-device' },
@@ -25,7 +25,7 @@ const send = request => child.stdin.write(`${JSON.stringify(request)}\n`);
 try {
   send({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2024-11-05' } });
   const initialized = await next();
-  assert.equal(initialized.result.serverInfo.name, 'fnaf2-cue-helper');
+  assert.equal(initialized.result.serverInfo.name, 'fnaf-solver');
 
   send({ jsonrpc: '2.0', id: 2, method: 'tools/list' });
   const listed = await next();

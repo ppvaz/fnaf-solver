@@ -56,7 +56,7 @@ import { controlPoints, expandRows, frameOf, formatRows, harnessRows } from './s
 import { STRATEGY_REGISTRY, validateWinner } from '../device/bundle.mjs';
 import { KNOBS0, build } from '../device/minus-toys-plan.mjs';
 import { windowCode } from '../encounter-replay.mjs';
-import { MODEL_CONTEXT_LIGHT } from '@fnaf2-1020/core/control';
+import { MODEL_CONTEXT_LIGHT } from '@sixam/core/control';
 import { buttonStrokeState, BUTTON_STROKE_THRESHOLDS } from '../../packages/adapters/src/button-strokes.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../..');

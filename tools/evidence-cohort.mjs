@@ -21,7 +21,7 @@
 // it -- this does not promote an abort to a death on the rule's behalf.
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { stableHash } from '@fnaf2-1020/core/contracts';
+import { stableHash } from '@sixam/core/contracts';
 import { packEntry, readPack } from './evidence-pack.mjs';
 
 export const COHORT_RESULT_SCHEMA = 'cohort-result-v2';

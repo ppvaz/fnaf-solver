@@ -14,7 +14,7 @@
 import { execFile as execFileCallback, spawn } from 'node:child_process';
 import { promisify } from 'node:util';
 import { validateExecutorRequest } from './artifact-executor.js';
-import { buttonStrokeState } from '@fnaf2-1020/adapters';
+import { buttonStrokeState } from '@sixam/adapters';
 import {
   DEFAULT_READY_DELAY_MS, GATE_BUDGET_MAX_MS, GATE_BUDGET_MIN_MS, GATE_BUDGET_RESERVE_MS, GATE_MIN_SLACK_MS,
   SHARED_HID_RELEASE, compileDeviceLocalHidSchedule, line, sharedScheduleBody,
