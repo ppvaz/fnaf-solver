@@ -1,15 +1,15 @@
-// Contract test for experiment-spec-v2 and experiment-result-v2 (packages/kernel/src/contracts/experiment.js)
+// Contract test for experiment-spec-v2 and experiment-result-v2 (packages/kernel/src/contracts/experiment.ts)
 // and the kernel Seed (src/seed.js): a spec names at least two competing explanations, each predicting
 // an observation over measures the separating observation names; its cohort is a development block and
 // a named, disjoint held-out block, each saying how it was derived and what provenance its seeds stand
 // for; a result tags every explanation once, surviving exactly when its prediction held, and reports
 // every rate with an Interval and its method. v1 is still read.
 import assert from 'node:assert/strict';
-import { SEED_BELIEFS, SEED_PROVENANCES, validateSeed, validateSeedProvenance } from '../src/index.js';
+import { SEED_BELIEFS, SEED_PROVENANCES, validateSeed, validateSeedProvenance } from '../src/index.ts';
 import {
   CONTRACTS, EXPERIMENT_PURPOSES, RATE_METHODS, SEED_DERIVATIONS, derivedCount, knownOverlap, validateExperiment,
   validateExperimentResultV2, validateExperimentSpecV2, validateRate, validateSeedSet,
-} from '../src/contracts/index.js';
+} from '../src/contracts/index.ts';
 
 const refuses = (fn, pattern, what) => assert.throws(fn, error => error instanceof TypeError && pattern.test(error.message), what);
 const clone = value => JSON.parse(JSON.stringify(value));

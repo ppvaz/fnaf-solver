@@ -121,7 +121,7 @@ export function decodeFactMessage(line) {
 
 /** Convert a valid wire message to the estimator's fact-envelope shape. */
 export function messageToFact(message, receivedAtMs) {
-  const valid = /** @type {any} */ (validateMessage(message));
+  const valid = (validateMessage(message) as any);
   const received = timestamp('link receipt time', receivedAtMs);
   const fact = valid.state === 'OBSERVED'
     ? { state: 'OBSERVED', value: valid.value }
@@ -150,6 +150,14 @@ function serialDistance(next, previous) {
  * choose UNKNOWN/recovery instead of silently treating the line as complete.
  */
 export class FactLinkReceiver {
+  staleAfterMs: number;
+  lastSeq: any;
+  lastSenderReceivedMs: any;
+  lastLinkReceiptMs: any;
+  gapCount: number;
+  lastGap: { after: any; before: any; missing: number; };
+  accepted: number;
+  rejected: number;
   constructor({ staleAfterMs = 1000, initialSeq = null } = {}) {
     if (!finite(staleAfterMs) || staleAfterMs <= 0)
       throw new RangeError('staleAfterMs must be positive');
@@ -164,8 +172,7 @@ export class FactLinkReceiver {
     this.rejected = 0;
   }
 
-  /** @param {any} options */
-  receive(line, options = {}) {
+  receive(line, options: any = {}) {
     const { receivedAtMs } = options;
     const receipt = timestamp('link receipt time', receivedAtMs);
     let message;
@@ -266,6 +273,11 @@ function validateCycleApproval({ cycleId, validFromMs, validUntilMs, actions }) 
  * from the bounded approval until its validity window expires.
  */
 export class SafeCycleHandoff {
+  linkTimeoutMs: number;
+  maxActions: number;
+  approval: { cycleId: any; validFromMs: any; validUntilMs: any; actions: any[]; };
+  emitted: Set<any>;
+  lastLinkMs: any;
   constructor({ linkTimeoutMs = 500, maxActions = MAX_CYCLE_ACTIONS } = {}) {
     if (!finite(linkTimeoutMs) || linkTimeoutMs <= 0)
       throw new RangeError('linkTimeoutMs must be positive');

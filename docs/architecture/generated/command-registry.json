@@ -251,6 +251,12 @@
       "lifecycle": "supported"
     },
     {
+      "id": "tools/ts-migrate.mjs",
+      "invocation": "tools/ts-migrate.mjs DIR [--dry]",
+      "kind": "migration",
+      "lifecycle": "supported"
+    },
+    {
       "id": "tools/test-docs.mjs",
       "invocation": "tools/test-docs.mjs",
       "kind": "check",

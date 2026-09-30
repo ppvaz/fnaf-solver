@@ -1,6 +1,6 @@
 // Every timestamp in a packed campaign night must name its clock.
 //
-// packages/kernel/src/time/event-clocks.js declares, field by field, which of
+// packages/kernel/src/time/event-clocks.ts declares, field by field, which of
 // the host wall, host monotonic, phone monotonic and phone wall clocks (or the
 // plan, or a duration) each events.jsonl field was read from. This reads every
 // committed campaign pack (docs/evidence/runs/*) and refuses a timestamp-like

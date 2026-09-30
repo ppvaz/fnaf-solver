@@ -20,9 +20,10 @@
  * Plain data only: expanding a golden cohort and hashing a seed list need the
  * generator and a digest, which live in Propose (`@sixam/propose/seeds`).
  */
-import { fail, isRecord, isText, validateClaimLevel } from '../labels.js';
-import { validateSeedProvenance } from '../seed.js';
-import { validateInterval } from '../time/interval.js';
+import { fail, isRecord, isText, validateClaimLevel } from '../labels.ts';
+import { validateSeedProvenance } from '../seed.ts';
+import { validateInterval } from '../time/interval.ts';
+import type { ExperimentSpecV2 } from './types.ts';
 
 const EXPERIMENT_SPEC_V2 = 'experiment-spec-v2';
 const EXPERIMENT_RESULT_V2 = 'experiment-result-v2';
@@ -54,9 +55,8 @@ const texts = (value, label, { min = 1 } = {}) => {
  * How a seed set was derived. `golden` is the SplitMix32 cohort of `count` distinct uint32 seeds
  * from `salt`, optionally reduced `mod modulus` (distinct nights, first occurrence kept);
  * `explicit` lists its seeds; `explicit-range` is every integer from `from` to `to`, both included.
- * @param {any} derivation @param {string} label
  */
-export function validateSeedDerivation(derivation, label = 'seed set') {
+export function validateSeedDerivation(derivation: any, label: string = 'seed set') {
   if (!isRecord(derivation) || !SEED_DERIVATIONS.includes(derivation.kind))
     fail(`${label}: derivation.kind must be one of ${SEED_DERIVATIONS.join(', ')}`);
   const only = keys => { if (Object.keys(derivation).some(key => !keys.includes(key))) fail(`${label}: a ${derivation.kind} derivation is {${keys.join(', ')}}`); };
@@ -89,9 +89,8 @@ export function derivedCount(derivation) {
 /**
  * A seed set: {name, derivation, provenance, bracket? (pinned), count, sha256?, definition?}.
  * `sha256` is over JSON.stringify of the expanded seed list, as `seedCohortDescriptor` writes it.
- * @param {any} value @param {string} [label]
  */
-export function validateSeedSet(value, label = 'seed set') {
+export function validateSeedSet(value: any, label: string = 'seed set') {
   if (!isRecord(value) || Object.keys(value).some(key => !SEED_SET_FIELDS.includes(key)))
     fail(`${label} is {${SEED_SET_FIELDS.join(', ')}} and nothing else`);
   if (!isText(value.name)) fail(`${label} is named`);
@@ -118,8 +117,7 @@ export function knownOverlap(a, b) {
   return null;
 }
 
-/** @param {any} predicate @param {Set<string>} measures @param {string} label */
-function validatePredicate(predicate, measures, label) {
+function validatePredicate(predicate: any, measures: Set<string>, label: string) {
   if (!isRecord(predicate)) fail(`${label}: a predicate is a record`);
   const keys = Object.keys(predicate);
   if ('all' in predicate || 'any' in predicate) {
@@ -140,11 +138,7 @@ function validatePredicate(predicate, measures, label) {
   if (!Number.isFinite(predicate.value)) fail(`${label}: a comparison's value is a finite number`);
 }
 
-/**
- * @param {any} input
- * @returns {import('./types.js').ExperimentSpecV2}
- */
-export function validateExperimentSpecV2(input) {
+export function validateExperimentSpecV2(input: any): ExperimentSpecV2 {
   if (!isRecord(input) || input.schema !== EXPERIMENT_SPEC_V2) fail('experiment spec v2: schema must be experiment-spec-v2');
   if (!ID.test(input.id ?? '')) fail('experiment spec v2: id is a short identifier');
   if (!EXPERIMENT_PURPOSES.includes(input.purpose)) fail(`experiment spec v2: purpose must be one of ${EXPERIMENT_PURPOSES.join(', ')}`);
@@ -152,7 +146,7 @@ export function validateExperimentSpecV2(input) {
   validateClaimLevel(input.claimLevel);
   const observation = input.separatingObservation;
   if (!isRecord(observation) || !isText(observation.description)) fail('experiment spec v2: the separating observation is described');
-  const measures = new Set(texts(observation.measures, 'experiment spec v2: separatingObservation.measures'));
+  const measures = new Set<string>(texts(observation.measures, 'experiment spec v2: separatingObservation.measures'));
   if (measures.size !== observation.measures.length) fail('experiment spec v2: a measure is named twice');
   if (!Array.isArray(input.explanations) || input.explanations.length < 2)
     fail('experiment spec v2: an experiment names at least two competing explanations');
@@ -194,14 +188,13 @@ export function validateExperimentSpecV2(input) {
   const rule = input.stoppingRule;
   if (!isRecord(rule) || !STOPPING_KINDS.includes(rule.kind) || !isText(rule.text))
     fail(`experiment spec v2: the stopping rule is {kind: ${STOPPING_KINDS.join(' | ')}, text}`);
-  return /** @type {import('./types.js').ExperimentSpecV2} */ (input);
+  return (input as ExperimentSpecV2);
 }
 
 /**
  * A reported rate: successes of n, with an Interval and the method (and confidence) behind it.
- * @param {any} rate @param {string} [label]
  */
-export function validateRate(rate, label = 'rate') {
+export function validateRate(rate: any, label: string = 'rate') {
   if (!isRecord(rate) || !isText(rate.name)) fail(`${label} is a named record`);
   if (!isCount(rate.n) || !Number.isInteger(rate.successes) || rate.successes < 0 || rate.successes > rate.n)
     fail(`${label}: successes is a count in 0..n`);
@@ -220,10 +213,10 @@ export function validateRate(rate, label = 'rate') {
 }
 
 /**
- * @param {any} input
- * @param {import('./types.js').ExperimentSpecV2} [spec] when given, every one of its explanations must be tagged once
+ * 
+ * @param spec when given, every one of its explanations must be tagged once
  */
-export function validateExperimentResultV2(input, spec) {
+export function validateExperimentResultV2(input: any, spec?: ExperimentSpecV2) {
   if (!isRecord(input) || input.schema !== EXPERIMENT_RESULT_V2) fail('experiment result v2: schema must be experiment-result-v2');
   if (!ID.test(input.specId ?? '')) fail('experiment result v2: specId names the spec it answers');
   if (!SHA256.test(input.specSha256 ?? '')) fail('experiment result v2: specSha256 is the sha256 of the spec file it answers');

@@ -5,9 +5,8 @@
  * chronicle entry. Status is standing, superseded (by another) or retracted;
  * a retraction stays discoverable.
  */
-import { fail, isRecord, isText } from './labels.js';
-
-/** @typedef {import('./types.js').Annotation} Annotation */
+import { fail, isRecord, isText } from './labels.ts';
+import type { Annotation } from './types.ts';
 
 export const ANNOTATION_KINDS = Object.freeze(['class', 'measure', 'tag']);
 export const ANNOTATION_STATUSES = Object.freeze(['standing', 'superseded', 'retracted']);
@@ -16,8 +15,7 @@ const FIELDS = Object.freeze(['subject', 'instrument', 'value', 'inputs', 'by', 
 /** A content hash as the repository writes them: sha256 hex, or the fnv1a stableHash of kernel/contracts. */
 const HASH = /^(?:[0-9a-f]{64}|fnv1a-[0-9a-f]{8})$/;
 
-/** @param {any} subject */
-function validateSubject(subject) {
+function validateSubject(subject: any) {
   if (!isRecord(subject) || !SUBJECT_KINDS.includes(subject.kind)) fail(`an annotation's subject kind must be one of ${SUBJECT_KINDS.join(', ')}`);
   if (subject.kind === 'GameRuns') {
     if (Object.keys(subject).some(key => key !== 'kind' && key !== 'ids') || !Array.isArray(subject.ids) ||
@@ -29,8 +27,7 @@ function validateSubject(subject) {
   if (subject.kind === 'Rule' && !/^g\d+$/.test(subject.id)) fail('a Rule subject names an event group g###');
 }
 
-/** @param {any} value @returns {Annotation} */
-export function validateAnnotation(value) {
+export function validateAnnotation(value: any): Annotation {
   if (!isRecord(value)) fail('an annotation is an object');
   const extra = Object.keys(value).filter(key => !FIELDS.includes(key));
   if (extra.length) fail(`an annotation has no ${extra.join(', ')}`);

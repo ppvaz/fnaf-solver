@@ -96,18 +96,18 @@ export function validateClaimEvidence(input) {
 export {
   QUALIFICATION_SCHEMAS, QUALIFICATION_LIFECYCLES, validateQualification,
   bindQualificationVenue, qualificationStanding,
-} from './qualification.js';
-export * from './venue-identity.js';
+} from './qualification.ts';
+export * from './venue-identity.ts';
 // Experiments and censuses, v2: competing explanations, a named held-out block,
 // seed sets that say how they were derived, and rates with their intervals
 // (experiment.js). The v1 validators above are still read.
 export {
   EXPERIMENT_PURPOSES, RATE_METHODS, SEED_DERIVATIONS, derivedCount, knownOverlap, validateExperimentResultV2,
   validateExperimentSpecV2, validateRate, validateSeedDerivation, validateSeedSet,
-} from './experiment.js';
+} from './experiment.ts';
 // The campaign result and save proof a device campaign retains, read back by
 // the evidence index (campaign-records.js).
-export { CAMPAIGN_STATES, validateCampaignResult, validateSaveProof } from './campaign-records.js';
+export { CAMPAIGN_STATES, validateCampaignResult, validateSaveProof } from './campaign-records.ts';
 
 export function validateTelemetry(value) {
   if (!value || value.schema !== 'telemetry-event-v1' || typeof value.sessionId !== 'string' ||

@@ -141,7 +141,7 @@ before. `profile-game.test.js` and `control-catalog.test.js` print it in `npm ru
 Open: one canonical schema source for the register's other contracts, deep experiment validation
 (seeds, claim levels, nested samples), capability relationships, and the lax JS check.
 **Owner:** `packages/kernel` (the contracts), `packages/source` (the catalog-generated validators), `packages/play`
-**Evidence:** [`types.ts` (line 152)](../../packages/kernel/src/contracts/types.ts), [`index.js`](../../packages/kernel/src/contracts/index.js), `registry.js` line 69 (removed 2026-09-25)
+**Evidence:** [`types.ts` (line 152)](../../packages/kernel/src/contracts/types.ts), [`index.ts`](../../packages/kernel/src/contracts/index.ts), `registry.js` line 69 (removed 2026-09-25)
 
 Compile-time types, JavaScript validators, the contract register, and generated
 catalogs do not fully describe the same shapes. `DeviceProfile` omits fields
@@ -227,7 +227,7 @@ options object and validates an explicit cohort by the generator's own rules
 derivation from the seeds (`seedDerivation`: `golden` only when the list IS the
 stream for the salt named, else `explicit-range` or `explicit`), drops a salt passed
 beside an explicit list, and records the kernel Seed provenance its members stand
-for (`natural | pinned | identified`, `packages/kernel/src/seed.js`); its `sha256`
+for (`natural | pinned | identified`, `packages/kernel/src/seed.ts`); its `sha256`
 is unchanged, so every figure keyed by it stands. The experiment-spec-v2 seed set
 (`describeSeedSet`, `expandSeedSet`, validated by the kernel's `validateSeedSet`)
 carries derivation, provenance, count and sha256, and a census under 3000 seeds is

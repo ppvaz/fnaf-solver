@@ -9,7 +9,7 @@
  * by `qualificationStanding` every time the venue is observed.
  * CONTRACT:qualification-v1. CONTRACT:qualification-v2.
  */
-import { compareVenueIdentity, validateVenueIdentity } from './venue-identity.js';
+import { compareVenueIdentity, validateVenueIdentity } from './venue-identity.ts';
 
 export const QUALIFICATION_SCHEMAS = Object.freeze(['qualification-v1', 'qualification-v2']);
 export const QUALIFICATION_LIFECYCLES = Object.freeze(['QUALIFIED', 'CANDIDATE']);
@@ -37,10 +37,10 @@ export function validateQualification(value) {
  * Write a qualification-v2 from a v1 and the venue it was measured on. Only a
  * v1 is accepted: a v2 already names its venue, and a new venue is a new
  * qualification, not an edit of the old one.
- * @param {any} qualification a qualification-v1
- * @param {any} venue the venue-identity-v1 recorded by that run's preflight
+ * @param qualification a qualification-v1
+ * @param venue the venue-identity-v1 recorded by that run's preflight
  */
-export function bindQualificationVenue(qualification, venue) {
+export function bindQualificationVenue(qualification: any, venue: any) {
   validateQualification(qualification);
   if (qualification.schema !== 'qualification-v1')
     throw new TypeError(`qualification ${qualification.evidenceId} already binds a venue; re-qualify to bind another`);
@@ -50,9 +50,8 @@ export function bindQualificationVenue(qualification, venue) {
 
 /**
  * Where a qualification stands on the observed venue.
- * @param {{qualification: any, observed?: any}} options
  */
-export function qualificationStanding({ qualification, observed = null }) {
+export function qualificationStanding({ qualification, observed = null }: {qualification: any, observed?: any}) {
   validateQualification(qualification);
   const earned = qualification.verdict === 'PASS' && qualification.claimLevel === 'DEVICE_MEASURED';
   if (qualification.schema === 'qualification-v1') {

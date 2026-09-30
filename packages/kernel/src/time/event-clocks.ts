@@ -86,10 +86,9 @@ export function clockOfField(path) {
 /**
  * Every timestamp-like leaf of one event, with its declared clock (`UNKNOWN`
  * when undeclared). Null values are skipped: an unmeasured read is not a time.
- * @param {object} event one parsed events.jsonl row
- * @returns {{path: string, clock: string, value: number | string}[]}
+ * @param event one parsed events.jsonl row
  */
-export function eventTimestamps(event) {
+export function eventTimestamps(event: object): {path: string, clock: string, value: number | string}[] {
   const out = [];
   const walk = (prefix, value) => {
     if (value === null || value === undefined) return;

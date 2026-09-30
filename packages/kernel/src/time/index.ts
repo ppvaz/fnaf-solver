@@ -3,7 +3,7 @@
  * timestamp (`event-clocks.js`), the bounded fact link's measurement transport
  * (`fact-link.js`) and the clock port (`ports.js`). `@sixam/kernel/time`.
  */
-export * from './interval.js';
-export * from './fact-link.js';
-export * from './event-clocks.js';
-export * from './ports.js';
+export * from './interval.ts';
+export * from './fact-link.ts';
+export * from './event-clocks.ts';
+export * from './ports.ts';

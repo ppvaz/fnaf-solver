@@ -37,7 +37,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 
 SCHEMA = "night-job-v1"
-# The kernel's WINNER_FILE (packages/kernel/src/bindings.js), which JavaScript reads; mirrored here.
+# The kernel's WINNER_FILE (packages/kernel/src/bindings.ts), which JavaScript reads; mirrored here.
 WINNER_PATH = re.compile(r"^packages/propose/bindings/fnaf[1-4]/[a-z0-9][a-z0-9.-]{0,80}-winner\.json$")
 LABEL = re.compile(r"^[a-z0-9][a-z0-9-]{0,24}$")
 STATIC_HALT_SOURCE = ROOT / "packages/play/src/campaign/adb-device-local-executor.js"

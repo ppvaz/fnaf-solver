@@ -11,7 +11,7 @@ and they change only by a later ADR.
 | `ClaimLevel` | `MODEL_ONLY \| FIXTURE \| DEVICE_MEASURED`, closed | the promotions query (promoted claims, MODEL_ONLY winners) |
 | `SourceLabel` | `SOURCED \| CALIBRATED \| MEASURED \| INFERRED \| MODEL \| UNKNOWN(reason)`, closed | the `UNKNOWN(reason)` value the lift writes |
 | `Outcome` | `SixAM \| Death{by, how, rule, at} \| Timeout \| Aborted(why) \| Invalid(why) \| UNKNOWN`, plus `wouldDie[]` | `GameRun.reportedOutcome` |
-| `Seed` | provenance `natural \| pinned(bracket) \| identified` and belief `known \| candidates(set) \| unknown` (`src/seed.js`; not "origin", which is a night's time zero) | the experiment-spec-v2 seed set: which kind of night a census population stands for |
+| `Seed` | provenance `natural \| pinned(bracket) \| identified` and belief `known \| candidates(set) \| unknown` (`src/seed.ts`; not "origin", which is a night's time zero) | the experiment-spec-v2 seed set: which kind of night a census population stands for |
 | `GameRun` | one night played once: spec, venue, runMode, clocks, before/night/after events, reported outcome, witnesses, custody `{class: complete \| recovered, lost[]}` | `packages/review` lifts every committed run pack into one |
 | `VenueIdentity` (`venue-identity-v1`) | the world under a phone venue, read at preflight: game package, `versionName`/`versionCode`, first-install and last-update time, build fingerprint, security patch, `handsetHash` (never the serial), Companion version, time zone; an unread field is null with its reason. v1 does not yet carry the ADR's runtime, placement and instrumentation | the adb bridge's preflight, `venue-binding-v1`, `qualification-v2` and the campaign result's venue check |
 | `Annotation` | `{subject, instrument@version, class \| measure \| tag, value, inputs, by, status: standing \| superseded \| retracted}`, with a wide subject | the promotions query writes one per `PROMOTED_BY` edge |
@@ -22,21 +22,25 @@ carry the source record's own fields, or `UNKNOWN(reason)`, until RunSpec and
 ClockTrace enter the kernel; `GameRun.venue` carries the preflight's
 `venue-check-v1`, whose `observed` is a `VenueIdentity`, or `UNKNOWN(reason)`.
 
-Compile-time shapes are in `src/types.ts` (the strict `typecheck:ts` lane);
+The sources are TypeScript that Node runs by type stripping (Pedro,
+2026-09-30: "runtime .ts"; the kernel moved first, on that day). Shapes other
+contexts read are in `src/types.ts` and `src/contracts/types.ts`, checked by the
+strict `typecheck:ts` lane; the modules are checked at the strictness they had
+as JavaScript (`typecheck:js`), to be tightened later;
 the frozen enums, constructors (`unknown`, `interval`, `sixAm`, `death`,
 `timeout`, `aborted`, `invalid`) and validators (`validateClaimLevel`,
 `validateSourceLabel`, `validateInterval`, `validateOutcome`,
 `validateGameRun`, `validateAnnotation`), and the claim envelope's constructors and validator
-(`claimEnvelope`, `refusalEnvelope`, `validateClaimEnvelope`, `unknownsIn`, `src/claim-envelope.js`) are
-in `src/index.js`.
+(`claimEnvelope`, `refusalEnvelope`, `validateClaimEnvelope`, `unknownsIn`, `src/claim-envelope.ts`) are
+in `src/index.ts`.
 
 ## Contracts and Time (from `@sixam/core`, ADR 0002 migration D1)
 
 | Path | What it is |
 |---|---|
-| `src/contracts/` (`@sixam/kernel/contracts`) | the runtime validators of the versioned plain-data contracts every context shares: clock refs, profiles, qualification v1/v2, venue identity, check and binding, the campaign result and save proof, telemetry, session manifest, artifact refs, experiment spec and result v1 and v2 (`experiment.js`: competing explanations, seed sets with their derivation and provenance, a named held-out block, rates with an `Interval` and their method), `canonicalJson` and `stableHash`; compile-time shapes in `src/contracts/types.ts` |
+| `src/contracts/` (`@sixam/kernel/contracts`) | the runtime validators of the versioned plain-data contracts every context shares: clock refs, profiles, qualification v1/v2, venue identity, check and binding, the campaign result and save proof, telemetry, session manifest, artifact refs, experiment spec and result v1 and v2 (`experiment.ts`: competing explanations, seed sets with their derivation and provenance, a named held-out block, rates with an `Interval` and their method), `canonicalJson` and `stableHash`; compile-time shapes in `src/contracts/types.ts` |
 | `contracts/register.json` | the contract register: every contract id, its owner, kind and validator ([`contracts/README.md`](contracts/README.md)) |
-| `src/time/` (`@sixam/kernel/time`) | `Interval`, the declared clock of every campaign timestamp (`event-clocks.js`), the bounded fact link (`fact-link.js`, `fact-message-v1`) and the clock port (`ports.js`) |
+| `src/time/` (`@sixam/kernel/time`) | `Interval`, the declared clock of every campaign timestamp (`event-clocks.ts`), the bounded fact link (`fact-link.ts`, `fact-message-v1`) and the clock port (`ports.ts`) |
 
 The validators generated from the per-game control catalogs
 (`validateControlCommand`, `deviceProfileGame`, `resolveDeviceProfile`) stay

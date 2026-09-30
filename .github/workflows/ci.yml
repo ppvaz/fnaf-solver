@@ -21,9 +21,12 @@ jobs:
           # Full history: a committed FNaF 1 route winner pins its route at a
           # past commit, and test-fnaf1-winner.mjs materializes that commit.
           fetch-depth: 0
+      # The sources are TypeScript run by Node's type stripping, on by default
+      # from 22.18 (Pedro, 2026-09-30: "runtime .ts"); pinned to the version
+      # this was built and measured on, as pages.yml is.
       - uses: actions/setup-node@v5
         with:
-          node-version: 22
+          node-version: '22.23.2'
       # Pin boundary toolchains before any contract lane can invoke them. The
       # Companion tests compile Java and the fixture classifiers use Pillow;
       # neither may depend on whatever happens to be preinstalled on the image.

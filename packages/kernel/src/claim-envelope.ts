@@ -19,11 +19,8 @@
  * they are: a label is never read as the other enum's value.
  * CONTRACT:claim-envelope-v1.
  */
-import { fail, isClaimLevel, isRecord, isSourceLabel, isText, isUnknown } from './labels.js';
-
-/** @typedef {import('./types.js').ClaimEnvelope} ClaimEnvelope */
-/** @typedef {import('./types.js').RefusalEnvelope} RefusalEnvelope */
-/** @typedef {import('./types.js').EnvelopeLabel} EnvelopeLabel */
+import { fail, isClaimLevel, isRecord, isSourceLabel, isText, isUnknown } from './labels.ts';
+import type { ClaimEnvelope, EnvelopeLabel, RefusalEnvelope } from './types.ts';
 
 export const CLAIM_ENVELOPE_SCHEMA = 'claim-envelope-v1';
 export const ENVELOPE_STATUSES = Object.freeze(['standing', 'superseded', 'retracted']);
@@ -40,11 +37,9 @@ const UNKNOWN_TEXT = /^UNKNOWN(?:\(.*\))?$/s;
 const CITE = /^\S+$/;
 const RULE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-/** @param {any} value @returns {value is EnvelopeLabel} */
-export const isEnvelopeLabel = value => isClaimLevel(value) || isSourceLabel(value);
+export const isEnvelopeLabel = (value: any): value is EnvelopeLabel => isClaimLevel(value) || isSourceLabel(value);
 
-/** @param {any} value @returns {EnvelopeLabel} */
-export function validateEnvelopeLabel(value) {
+export function validateEnvelopeLabel(value: any): EnvelopeLabel {
   if (value === undefined || value === null) fail('an envelope needs a label: a ClaimLevel, a SourceLabel, or UNKNOWN(reason)');
   if (value === 'UNKNOWN') fail('an envelope label UNKNOWN needs its reason: write unknown(reason)');
   if (!isEnvelopeLabel(value))
@@ -55,10 +50,8 @@ export function validateEnvelopeLabel(value) {
 /**
  * Every UNKNOWN value inside `value`: a kernel UNKNOWN(reason), and text written `UNKNOWN` or
  * `UNKNOWN(reason)`, each with the path it sits at.
- * @param {any} value @param {string} [path]
- * @returns {{path: string, reason: string | null}[]}
  */
-export function unknownsIn(value, path = '') {
+export function unknownsIn(value: any, path: string = ''): {path: string, reason: string | null}[] {
   if (isUnknown(value)) return [{ path, reason: value.reason }];
   if (typeof value === 'string') {
     if (!UNKNOWN_TEXT.test(value)) return [];
@@ -70,17 +63,14 @@ export function unknownsIn(value, path = '') {
   return [];
 }
 
-/** @param {any} value @returns {value is RefusalEnvelope} */
-export const isRefusal = value => isRecord(value) && value.refused === true;
+export const isRefusal = (value: any): value is RefusalEnvelope => isRecord(value) && value.refused === true;
 
-/** @param {any} value @param {string} label */
-function validateCite(value, label) {
+function validateCite(value: any, label: string) {
   if (!Array.isArray(value) || !value.length || !value.every(item => typeof item === 'string' && CITE.test(item)))
     fail(`${label}.cite lists at least one path, URI, commit or register entry, each without whitespace`);
 }
 
-/** @param {any} value @returns {RefusalEnvelope} */
-function validateRefusal(value) {
+function validateRefusal(value: any): RefusalEnvelope {
   const extra = Object.keys(value).filter(key => !REFUSAL_FIELDS.includes(key));
   const missing = REFUSAL_FIELDS.filter(key => !(key in value));
   if (extra.length || missing.length)
@@ -93,8 +83,7 @@ function validateRefusal(value) {
   return value;
 }
 
-/** @param {any} value @returns {ClaimEnvelope} */
-function validateClaim(value) {
+function validateClaim(value: any): ClaimEnvelope {
   const extra = Object.keys(value).filter(key => !CLAIM_FIELDS.includes(key));
   const missing = CLAIM_FIELDS.filter(key => !(key in value));
   if (extra.length || missing.length)
@@ -120,9 +109,8 @@ function validateClaim(value) {
 
 /**
  * A claim or a refusal, checked; anything else is refused.
- * @param {any} value @returns {ClaimEnvelope | RefusalEnvelope}
  */
-export function validateClaimEnvelope(value) {
+export function validateClaimEnvelope(value: any): ClaimEnvelope | RefusalEnvelope {
   if (!isRecord(value)) fail('a claim envelope is an object');
   if (value.schema !== CLAIM_ENVELOPE_SCHEMA) fail(`a claim envelope's schema is ${CLAIM_ENVELOPE_SCHEMA}`);
   if ('refused' in value) {
@@ -134,13 +122,11 @@ export function validateClaimEnvelope(value) {
 
 /**
  * A claim envelope from its eight fields, every one given; nothing is defaulted.
- * @param {Omit<ClaimEnvelope, 'schema'>} fields @returns {ClaimEnvelope}
  */
-export const claimEnvelope = fields => /** @type {ClaimEnvelope} */ (validateClaimEnvelope({ schema: CLAIM_ENVELOPE_SCHEMA, ...fields }));
+export const claimEnvelope = (fields: Omit<ClaimEnvelope, 'schema'>): ClaimEnvelope => (validateClaimEnvelope({ schema: CLAIM_ENVELOPE_SCHEMA, ...fields }) as ClaimEnvelope);
 
 /**
  * A refusal: the rule, because what, where the rule is written, and the remedy.
- * @param {{rule: string, because: string, cite: string[], remedy: string}} fields @returns {RefusalEnvelope}
  */
-export const refusalEnvelope = ({ rule, because, cite, remedy }) =>
-  /** @type {RefusalEnvelope} */ (validateClaimEnvelope({ schema: CLAIM_ENVELOPE_SCHEMA, refused: true, rule, because, cite, remedy }));
+export const refusalEnvelope = ({ rule, because, cite, remedy }: {rule: string, because: string, cite: string[], remedy: string}): RefusalEnvelope =>
+  (validateClaimEnvelope({ schema: CLAIM_ENVELOPE_SCHEMA, refused: true, rule, because, cite, remedy }) as RefusalEnvelope);

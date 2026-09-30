@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import {
   CLAIM_ENVELOPE_SCHEMA, CLAIM_FIELDS, ENVELOPE_STATUSES, REFUSAL_FIELDS, REPOSITORY_TARGET, claimEnvelope, isEnvelopeLabel,
   isRefusal, refusalEnvelope, unknown, unknownsIn, validateClaimEnvelope, validateEnvelopeLabel,
-} from '../src/index.js';
+} from '../src/index.ts';
 
 const refuses = (fn, pattern, what) => assert.throws(fn, error => error instanceof TypeError && pattern.test(error.message), what);
 

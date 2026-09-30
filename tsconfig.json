@@ -7,9 +7,13 @@
     "allowJs": true,
     "checkJs": true,
     "noEmit": true,
+    "erasableSyntaxOnly": true,
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
   "include": ["packages/**/*.ts", "apps/**/*.ts"],
-  "exclude": ["node_modules", "dist", "artifacts"]
+  "files": ["packages/kernel/src/types.ts", "packages/kernel/src/contracts/types.ts"],
+  "exclude": ["node_modules", "dist", "artifacts", "packages/kernel/src/**/*.ts"]
 }

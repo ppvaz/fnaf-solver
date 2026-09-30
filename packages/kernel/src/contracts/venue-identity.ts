@@ -17,8 +17,7 @@
  * handset is named by `handsetHash`, the first 16 hex of sha256(serial).
  * CONTRACT:venue-identity-v1. CONTRACT:venue-check-v1. CONTRACT:venue-binding-v1.
  */
-
-/** @typedef {import('../types.js').VenueIdentity} VenueIdentity */
+import type { VenueIdentity } from '../types.ts';
 
 export const VENUE_IDENTITY_SCHEMA = 'venue-identity-v1';
 export const VENUE_CHECK_SCHEMA = 'venue-check-v1';
@@ -70,11 +69,8 @@ const bounded = (value, label, max = 256) => {
  * Validate a venue-identity-v1 record. It is closed: any other key, and in
  * particular a raw `serial`, is refused. With `requireKnown`, every drift
  * field must be read (a binding cannot bind to an unknown).
- * @param {any} value
- * @param {{requireKnown?: boolean, label?: string}} [options]
- * @returns {VenueIdentity}
  */
-export function validateVenueIdentity(value, { requireKnown = false, label = 'identity' } = {}) {
+export function validateVenueIdentity(value: any, { requireKnown = false, label = 'identity' }: {requireKnown?: boolean, label?: string} = {}): VenueIdentity {
   if (!isRecord(value) || value.schema !== VENUE_IDENTITY_SCHEMA) fail(`${label} is not ${VENUE_IDENTITY_SCHEMA}`);
   if (Object.hasOwn(value, 'serial'))
     fail(`${label} carries a raw serial; a venue names its handset only by handsetHash`);
@@ -105,13 +101,10 @@ export function validateVenueIdentity(value, { requireKnown = false, label = 'id
 /**
  * Build a venue-identity-v1 from readings. Each field is a string or null; a
  * null field takes its reason from `reasons` (a missing reason is refused).
- * @param {Record<string, string | null>} readings
- * @param {Record<string, string>} [reasons]
- * @returns {VenueIdentity}
  */
-export function makeVenueIdentity(readings, reasons = {}) {
-  const record = { schema: VENUE_IDENTITY_SCHEMA };
-  const unknown = {};
+export function makeVenueIdentity(readings: Record<string, string | null>, reasons: Record<string, string> = {}): VenueIdentity {
+  const record: Record<string, unknown> = { schema: VENUE_IDENTITY_SCHEMA };
+  const unknown: Record<string, string> = {};
   for (const field of VENUE_IDENTITY_FIELDS) {
     const reading = readings?.[field] ?? null;
     record[field] = reading;
@@ -126,9 +119,8 @@ export function makeVenueIdentity(readings, reasons = {}) {
  * winner. It is a separate record so that binding a venue changes neither a
  * profile's sha256 nor a committed winner. A qualification binds its venue
  * itself (qualification-v2).
- * @param {any} value
  */
-export function validateVenueBinding(value) {
+export function validateVenueBinding(value: any) {
   if (!isRecord(value) || value.schema !== VENUE_BINDING_SCHEMA) fail(`binding is not ${VENUE_BINDING_SCHEMA}`);
   if (!isRecord(value.subject) || !['profile', 'winner'].includes(value.subject.kind))
     fail('binding.subject.kind must be profile or winner');
@@ -147,11 +139,8 @@ export function validateVenueBinding(value) {
  * profile or winner, and one that names another subject is refused rather
  * than ignored. The qualification's schema is checked by validateQualification,
  * which callers run first.
- * @param {{profileId?: string | null, winnerHash?: string | null, qualification?: any,
- *   bindings?: any[]}} options
- * @returns {{source: string, id: string, identity: any}[]}
  */
-export function venueBindingsFor({ profileId = null, winnerHash = null, qualification = null, bindings = [] } = {}) {
+export function venueBindingsFor({ profileId = null, winnerHash = null, qualification = null, bindings = [] }: {profileId?: string | null, winnerHash?: string | null, qualification?: any, bindings?: any[]} = {}): {source: string, id: string, identity: any}[] {
   if (!Array.isArray(bindings)) fail('bindings must be an array of venue-binding-v1 records');
   const selected = [];
   if (qualification?.schema === 'qualification-v2') {
@@ -174,7 +163,7 @@ export function venueBindingsFor({ profileId = null, winnerHash = null, qualific
 const describe = value => (value === null ? 'UNKNOWN' : value);
 
 function remedyFor(drift) {
-  const fields = new Set(drift.map(item => item.field));
+  const fields = new Set<string>(drift.map(item => item.field));
   const parts = ['re-qualify on the observed venue (a new qualification-v2, or a venue-binding-v1 ' +
     'over the identity this preflight recorded, from a measured run)'];
   if ([...fields].some(field => GAME_FIELDS.has(field))) {
@@ -197,9 +186,8 @@ function remedyFor(drift) {
  * message names each field, from what to what. UNKNOWN: bound, but a drift
  * field could not be read, so it cannot be cleared. MATCH: every bound drift
  * field is equal. Note fields that move are reported under `notes`.
- * @param {{observed?: any, bindings?: {source: string, id: string, identity: any}[]}} options
  */
-export function compareVenueIdentity({ observed = null, bindings = [] } = {}) {
+export function compareVenueIdentity({ observed = null, bindings = [] }: {observed?: any, bindings?: {source: string, id: string, identity: any}[]} = {}) {
   if (observed !== null) validateVenueIdentity(observed, { label: 'observed' });
   if (!Array.isArray(bindings)) fail('bindings must be an array');
   const drift = [];
@@ -252,9 +240,8 @@ export function compareVenueIdentity({ observed = null, bindings = [] } = {}) {
 
 /**
  * Validate a stored venue-check-v1 (for readers of preflight records).
- * @param {any} value
  */
-export function validateVenueCheck(value) {
+export function validateVenueCheck(value: any) {
   if (!isRecord(value) || value.schema !== VENUE_CHECK_SCHEMA) fail(`check is not ${VENUE_CHECK_SCHEMA}`);
   if (!VENUE_CHECK_STATUSES.includes(value.status)) fail('check.status is not a venue check status');
   if (value.refuses !== (value.status === 'DRIFT')) fail('check.refuses must be true exactly when status is DRIFT');

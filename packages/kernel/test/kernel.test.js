@@ -7,7 +7,7 @@ import {
   ANNOTATION_KINDS, ANNOTATION_STATUSES, CLAIM_LEVELS, CUSTODY_CLASSES, GAME_RUN_FIELDS, OUTCOME_KINDS, RUN_MODES,
   SOURCE_LABELS, SUBJECT_KINDS, aborted, death, interval, invalid, isClaimLevel, isSourceLabel, isUnknown, sixAm, timeout,
   unknown, validateAnnotation, validateClaimLevel, validateGameRun, validateInterval, validateOutcome, validateSourceLabel,
-} from '../src/index.js';
+} from '../src/index.ts';
 
 const refuses = (fn, pattern, what) => assert.throws(fn, error => error instanceof TypeError && pattern.test(error.message), what);
 

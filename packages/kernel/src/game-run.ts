@@ -6,23 +6,20 @@
  * the kernel; `venue` carries the preflight's venue-check-v1, whose `observed`
  * is a VenueIdentity, or UNKNOWN(reason).
  */
-import { fail, isRecord, isText, isUnknown } from './labels.js';
-import { validateOutcome } from './outcome.js';
-
-/** @typedef {import('./types.js').GameRun} GameRun */
+import { fail, isRecord, isText, isUnknown } from './labels.ts';
+import { validateOutcome } from './outcome.ts';
+import type { GameRun } from './types.ts';
 
 export const RUN_MODES = Object.freeze(['dry', 'shadow', 'replay', 'live']);
 export const CUSTODY_CLASSES = Object.freeze(['complete', 'recovered']);
 export const GAME_RUN_FIELDS = Object.freeze(['id', 'spec', 'venue', 'runMode', 'clocks', 'before', 'night', 'after',
   'reportedOutcome', 'witnesses', 'custody']);
 
-/** @param {unknown} value @param {string} label @param {(value: any) => boolean} known */
-const knownOr = (value, label, known) => {
+const knownOr = (value: unknown, label: string, known: (value: any) => boolean) => {
   if (!known(value) && !isUnknown(value)) fail(`GameRun.${label} is neither known nor UNKNOWN(reason)`);
 };
 
-/** @param {any} value @returns {GameRun} */
-export function validateGameRun(value) {
+export function validateGameRun(value: any): GameRun {
   if (!isRecord(value)) fail('a GameRun is an object');
   const keys = Object.keys(value);
   const missing = GAME_RUN_FIELDS.filter(field => !keys.includes(field));

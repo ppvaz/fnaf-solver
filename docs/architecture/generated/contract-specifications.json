@@ -1090,7 +1090,7 @@
       "version": 1,
       "owner": "packages/kernel",
       "kind": "data",
-      "purpose": "Stable claim-envelope-v1 boundary for packages/kernel; its validator is packages/kernel/src/claim-envelope.js validateClaimEnvelope.",
+      "purpose": "Stable claim-envelope-v1 boundary for packages/kernel; its validator is packages/kernel/src/claim-envelope.ts validateClaimEnvelope.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -1099,7 +1099,7 @@
       "unknownBehavior": "Invalid or unavailable data is rejected or represented as an explicit UNKNOWN state; it is never silently promoted.",
       "errorBehavior": "Reject malformed, incompatible, uncalibrated, or out-of-budget values at the boundary.",
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
-      "runtimeValidation": "packages/kernel/src/claim-envelope.js validateClaimEnvelope",
+      "runtimeValidation": "packages/kernel/src/claim-envelope.ts validateClaimEnvelope",
       "conformanceFixtures": [
         "packages/kernel/test/claim-envelope.test.js",
         "apps/desktop/test/companion-mcp.test.mjs"

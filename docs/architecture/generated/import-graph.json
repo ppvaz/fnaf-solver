@@ -555,120 +555,120 @@
       ]
     },
     {
-      "file": "packages/kernel/src/annotation.js",
+      "file": "packages/kernel/src/annotation.ts",
       "imports": [
-        "./labels.js",
-        "./types.js"
+        "./labels.ts",
+        "./types.ts"
       ]
     },
     {
-      "file": "packages/kernel/src/claim-envelope.js",
+      "file": "packages/kernel/src/claim-envelope.ts",
       "imports": [
-        "./labels.js",
-        "./types.js"
+        "./labels.ts",
+        "./types.ts"
       ]
     },
     {
-      "file": "packages/kernel/src/contracts/experiment.js",
+      "file": "packages/kernel/src/contracts/experiment.ts",
       "imports": [
-        "../labels.js",
-        "../seed.js",
-        "../time/interval.js",
-        "./types.js"
+        "../labels.ts",
+        "../seed.ts",
+        "../time/interval.ts",
+        "./types.ts"
       ]
     },
     {
-      "file": "packages/kernel/src/contracts/index.js",
+      "file": "packages/kernel/src/contracts/index.ts",
       "imports": [
-        "./campaign-records.js",
-        "./experiment.js",
-        "./qualification.js",
-        "./venue-identity.js"
+        "./campaign-records.ts",
+        "./experiment.ts",
+        "./qualification.ts",
+        "./venue-identity.ts"
       ]
     },
     {
-      "file": "packages/kernel/src/contracts/qualification.js",
+      "file": "packages/kernel/src/contracts/qualification.ts",
       "imports": [
-        "./venue-identity.js"
+        "./venue-identity.ts"
       ]
     },
     {
-      "file": "packages/kernel/src/contracts/venue-identity.js",
+      "file": "packages/kernel/src/contracts/venue-identity.ts",
       "imports": [
-        "../types.js"
+        "../types.ts"
       ]
     },
     {
-      "file": "packages/kernel/src/game-run.js",
+      "file": "packages/kernel/src/game-run.ts",
       "imports": [
-        "./labels.js",
-        "./outcome.js",
-        "./types.js"
+        "./labels.ts",
+        "./outcome.ts",
+        "./types.ts"
       ]
     },
     {
-      "file": "packages/kernel/src/index.js",
+      "file": "packages/kernel/src/index.ts",
       "imports": [
-        "./annotation.js",
-        "./bindings.js",
-        "./claim-envelope.js",
-        "./game-run.js",
-        "./labels.js",
-        "./outcome.js",
-        "./seed.js",
-        "./time/interval.js"
+        "./annotation.ts",
+        "./bindings.ts",
+        "./claim-envelope.ts",
+        "./game-run.ts",
+        "./labels.ts",
+        "./outcome.ts",
+        "./seed.ts",
+        "./time/interval.ts"
       ]
     },
     {
-      "file": "packages/kernel/src/labels.js",
+      "file": "packages/kernel/src/labels.ts",
       "imports": [
-        "./types.js"
+        "./types.ts"
       ]
     },
     {
-      "file": "packages/kernel/src/outcome.js",
+      "file": "packages/kernel/src/outcome.ts",
       "imports": [
-        "./labels.js",
-        "./time/interval.js",
-        "./types.js"
+        "./labels.ts",
+        "./time/interval.ts",
+        "./types.ts"
       ]
     },
     {
-      "file": "packages/kernel/src/seed.js",
+      "file": "packages/kernel/src/seed.ts",
       "imports": [
-        "./labels.js",
-        "./time/interval.js",
-        "./types.js"
+        "./labels.ts",
+        "./time/interval.ts",
+        "./types.ts"
       ]
     },
     {
-      "file": "packages/kernel/src/time/index.js",
+      "file": "packages/kernel/src/time/index.ts",
       "imports": [
-        "./event-clocks.js",
-        "./fact-link.js",
-        "./interval.js",
-        "./ports.js"
+        "./event-clocks.ts",
+        "./fact-link.ts",
+        "./interval.ts",
+        "./ports.ts"
       ]
     },
     {
-      "file": "packages/kernel/src/time/interval.js",
+      "file": "packages/kernel/src/time/interval.ts",
       "imports": [
-        "../labels.js",
-        "../types.js"
+        "../labels.ts",
+        "../types.ts"
       ]
     },
     {
       "file": "packages/kernel/test/claim-envelope.test.js",
       "imports": [
-        "../src/index.js",
+        "../src/index.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/kernel/test/experiment-v2.test.js",
       "imports": [
-        "../src/contracts/index.js",
-        "../src/index.js",
+        "../src/contracts/index.ts",
+        "../src/index.ts",
         "node:assert/strict"
       ]
     },
@@ -681,14 +681,14 @@
     {
       "file": "packages/kernel/test/kernel.test.js",
       "imports": [
-        "../src/index.js",
+        "../src/index.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/kernel/test/venue-identity.test.js",
       "imports": [
-        "../src/contracts/index.js",
+        "../src/contracts/index.ts",
         "node:assert/strict"
       ]
     },
@@ -4726,6 +4726,19 @@
         "node:child_process",
         "node:path",
         "node:url"
+      ]
+    },
+    {
+      "file": "tools/ts-migrate.mjs",
+      "imports": [
+        "${spec}",
+        "...",
+        "m",
+        "node:child_process",
+        "node:fs",
+        "node:path",
+        "node:url",
+        "typescript"
       ]
     },
     {

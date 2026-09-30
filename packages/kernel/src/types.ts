@@ -2,7 +2,7 @@
  * Compile-time shapes of the ADR 0002 kernel
  * (docs/decisions/0002-kernel-contexts-vocabulary.md), holding only the types
  * that have a consumer today. Runtime values and validators live beside these
- * types (index.js). The kernel imports nothing, everything may import it, and
+ * types (index.ts). The kernel imports nothing, everything may import it, and
  * it changes only by a later ADR.
  */
 
@@ -22,7 +22,7 @@ export interface Interval {
 export type ClaimLevel = 'MODEL_ONLY' | 'FIXTURE' | 'DEVICE_MEASURED';
 
 /** Where a number came from. A closed enum; UNKNOWN carries its reason. */
-export type NamedSourceLabel = 'SOURCED' | 'CALIBRATED' | 'MEASURED' | 'INFERRED' | 'MODEL';
+type NamedSourceLabel = 'SOURCED' | 'CALIBRATED' | 'MEASURED' | 'INFERRED' | 'MODEL';
 export type SourceLabel = NamedSourceLabel | Unknown;
 
 /** A death: who, by which mechanism, under which rule (`g###`), and when (Ms from the night's origin). */
@@ -33,30 +33,30 @@ export interface DeathCause {
   readonly at: Interval | Unknown;
 }
 
-export interface SixAM {
+interface SixAM {
   readonly kind: 'SixAM';
   /** Deaths the run survived, for a non-lethal run. */
   readonly wouldDie?: readonly DeathCause[];
 }
-export interface Death extends DeathCause {
+interface Death extends DeathCause {
   readonly kind: 'Death';
 }
-export interface Timeout {
+interface Timeout {
   readonly kind: 'Timeout';
   readonly wouldDie?: readonly DeathCause[];
 }
-export interface Aborted {
+interface Aborted {
   readonly kind: 'Aborted';
   readonly why: string;
 }
-export interface Invalid {
+interface Invalid {
   readonly kind: 'Invalid';
   readonly why: string;
 }
 /** How a night ended. A venue reports one; Review decides it (principle 3). */
 export type Outcome = SixAM | Death | Timeout | Aborted | Invalid | Unknown;
 
-export type RunMode = 'dry' | 'shadow' | 'replay' | 'live';
+type RunMode = 'dry' | 'shadow' | 'replay' | 'live';
 
 /**
  * A seed's provenance: the game drew it, it was forced into a bracket, or it was recovered after
@@ -76,26 +76,26 @@ export interface Seed {
 }
 
 /** How a run's record reached the repository, and what did not. */
-export type CustodyClass = 'complete' | 'recovered';
-export interface Custody {
+type CustodyClass = 'complete' | 'recovered';
+interface Custody {
   readonly class: CustodyClass | Unknown;
   readonly lost: readonly string[];
 }
 
 /** A record of the run named by content hash: a retained text file, a recording, a frame. */
-export interface Witness {
+interface Witness {
   readonly name: string;
   readonly sha256: string;
   readonly kind: string;
 }
 
 /** A VenueIdentity field whose move refuses a bound run and demotes a qualification (principle 12). */
-export type VenueDriftField =
+type VenueDriftField =
   | 'package' | 'versionName' | 'versionCode' | 'firstInstallTime' | 'lastUpdateTime'
   | 'buildFingerprint' | 'securityPatch' | 'handsetHash';
 /** Recorded and compared, reported when it moves, never refused. */
-export type VenueNoteField = 'companionVersion' | 'timeZone';
-export type VenueField = VenueDriftField | VenueNoteField;
+type VenueNoteField = 'companionVersion' | 'timeZone';
+type VenueField = VenueDriftField | VenueNoteField;
 
 /**
  * VenueIdentity: the world under a phone venue, measured at preflight and
@@ -146,7 +146,7 @@ export interface GameRun {
 }
 
 /** What an annotation is about: a run, a set of runs, a census, a rule `g###`, a policy, a calibration or a chronicle entry. */
-export type AnnotationSubject =
+type AnnotationSubject =
   | { readonly kind: 'GameRun'; readonly id: string }
   | { readonly kind: 'GameRuns'; readonly ids: readonly string[] }
   | { readonly kind: 'Census'; readonly id: string }
@@ -155,7 +155,7 @@ export type AnnotationSubject =
   | { readonly kind: 'Calibration'; readonly id: string }
   | { readonly kind: 'ChronicleEntry'; readonly id: string };
 
-export type AnnotationStatus = 'standing' | 'superseded' | 'retracted';
+type AnnotationStatus = 'standing' | 'superseded' | 'retracted';
 
 interface AnnotationBase {
   readonly subject: AnnotationSubject;
@@ -180,7 +180,7 @@ export type Annotation =
  * a label is never read as the other enum's value.
  */
 export type EnvelopeLabel = ClaimLevel | SourceLabel;
-export type EnvelopeStatus = 'standing' | 'superseded' | 'retracted';
+type EnvelopeStatus = 'standing' | 'superseded' | 'retracted';
 
 /**
  * claim-envelope-v1 (Plan 28; v1 under ADR 0002): an answer with what it is worth, what it is

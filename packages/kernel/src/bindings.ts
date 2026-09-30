@@ -14,6 +14,5 @@ export const WINNER_FILE = /^packages\/propose\/bindings\/fnaf[1-4]\/[a-z0-9][a-
 
 /**
  * A binding's short tag: its file's name without `-winner.json`, whichever path a record named it by.
- * @param {string} path
  */
-export const winnerTag = (path) => String(path).split('/').pop().replace(/-winner\.json$/, '');
+export const winnerTag = (path: string) => String(path).split('/').pop().replace(/-winner\.json$/, '');

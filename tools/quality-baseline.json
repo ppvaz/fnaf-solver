@@ -76,11 +76,11 @@
       "export:apps/trainer/src/training/exercise.js#EXERCISE_KINDS": 1,
       "export:apps/trainer/src/training/exercise.js#validateCancellation": 1,
       "export:apps/trainer/src/ui.js#fmtTime": 1,
-      "export:packages/kernel/src/time/event-clocks.js#TIMESTAMP_LEAF": 1,
-      "export:packages/kernel/src/time/fact-link.js#MAX_CALIBRATION_PROFILE_LENGTH": 1,
-      "export:packages/kernel/src/time/fact-link.js#MAX_CYCLE_HORIZON_MS": 1,
-      "export:packages/kernel/src/time/fact-link.js#MAX_FACT_SOURCE_LENGTH": 1,
-      "export:packages/kernel/src/time/fact-link.js#MAX_FACT_TYPE_LENGTH": 1,
+      "export:packages/kernel/src/time/event-clocks.ts#TIMESTAMP_LEAF": 1,
+      "export:packages/kernel/src/time/fact-link.ts#MAX_CALIBRATION_PROFILE_LENGTH": 1,
+      "export:packages/kernel/src/time/fact-link.ts#MAX_CYCLE_HORIZON_MS": 1,
+      "export:packages/kernel/src/time/fact-link.ts#MAX_FACT_SOURCE_LENGTH": 1,
+      "export:packages/kernel/src/time/fact-link.ts#MAX_FACT_TYPE_LENGTH": 1,
       "export:packages/play/src/campaign/adb-bridge.js#deviceClockSampleSchema": 1,
       "export:packages/play/src/campaign/adb-bridge.js#devicePreflightSchema": 1,
       "export:packages/play/src/campaign/adb-bridge.js#devicePreflightSchemas": 1,
@@ -145,7 +145,6 @@
       "export:packages/source/src/clockwork/vocabulary.js#FNAF3_CONTROL_VOCABULARY": 1,
       "export:packages/source/src/clockwork/vocabulary.js#FNAF4_CONTROL_VOCABULARY": 1,
       "export:packages/source/src/clockwork/vocabulary.js#MAX_GAME_CAMERA_INDEX": 1,
-      "orphan:packages/kernel/src/types.ts": 1,
       "orphan:packages/propose/src/index.js": 1
     }
   },
@@ -155,7 +154,7 @@
     "entries": {
       "clone:apps/desktop/bin/fnaf1-custom-run.mjs <> packages/play/games/fnaf3/fnaf3-run.mjs": 14,
       "clone:apps/desktop/bin/fnaf1-custom-run.mjs <> packages/play/games/fnaf4/fnaf4-run.mjs": 18,
-      "clone:packages/kernel/src/contracts/index.js <> packages/source/src/clockwork/control-contracts.js": 7,
+      "clone:packages/kernel/src/contracts/index.ts <> packages/source/src/clockwork/control-contracts.js": 7,
       "clone:packages/play/bin/grade/tap-stall-audit.mjs <> packages/propose/bin/report/phase-reconstruct.mjs": 8,
       "clone:packages/play/bin/phone/night-kit.mjs <> packages/play/games/fnaf1/fnaf1-menu-probe.mjs": 12,
       "clone:packages/play/bin/phone/night-kit.mjs <> packages/play/games/fnaf1/fnaf1-night-run.mjs": 6,

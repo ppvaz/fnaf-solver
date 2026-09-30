@@ -1,5 +1,5 @@
 // venue-identity-v1, venue-check-v1, venue-binding-v1 and qualification-v2
-// (packages/kernel/src/contracts/venue-identity.js, qualification.js). The
+// (packages/kernel/src/contracts/venue-identity.ts, qualification.js). The
 // 2026-09-27 case is a Play Store reinstall of the same build: only
 // lastUpdateTime moved, and it must refuse.
 import assert from 'node:assert/strict';
@@ -7,7 +7,7 @@ import {
   VENUE_DRIFT_FIELDS, makeVenueIdentity, validateVenueIdentity, validateVenueBinding,
   validateVenueCheck, compareVenueIdentity, venueBindingsFor,
   validateQualification, bindQualificationVenue, qualificationStanding,
-} from '../src/contracts/index.js';
+} from '../src/contracts/index.ts';
 
 const readings = {
   package: 'com.scottgames.fnaf2', versionName: '2.0.7', versionCode: '26',

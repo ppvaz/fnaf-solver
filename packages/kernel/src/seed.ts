@@ -11,12 +11,9 @@
  * member stands for (a census over the pinned window is `pinned`, with the
  * window as its bracket).
  */
-import { fail, isRecord } from './labels.js';
-import { validateInterval } from './time/interval.js';
-
-/** @typedef {import('./types.js').SeedProvenance} SeedProvenance */
-/** @typedef {import('./types.js').SeedBelief} SeedBelief */
-/** @typedef {import('./types.js').Seed} Seed */
+import { fail, isRecord } from './labels.ts';
+import { validateInterval } from './time/interval.ts';
+import type { Seed, SeedBelief, SeedProvenance } from './types.ts';
 
 export const SEED_PROVENANCES = Object.freeze(['natural', 'pinned', 'identified']);
 export const SEED_BELIEFS = Object.freeze(['known', 'candidates', 'unknown']);
@@ -25,10 +22,8 @@ const isSeedValue = value => Number.isInteger(value) && value >= 0 && value <= 0
 
 /**
  * A provenance, with the bracket a pinned seed carries and no other does.
- * @param {any} provenance @param {any} [bracket]
- * @returns {SeedProvenance}
  */
-export function validateSeedProvenance(provenance, bracket) {
+export function validateSeedProvenance(provenance: any, bracket?: any): SeedProvenance {
   if (!SEED_PROVENANCES.includes(provenance))
     fail(`seed provenance must be one of ${SEED_PROVENANCES.join(', ')}, not ${JSON.stringify(provenance)}`);
   if (provenance === 'pinned') {
@@ -40,9 +35,8 @@ export function validateSeedProvenance(provenance, bracket) {
 
 /**
  * One seed: {provenance, bracket? (pinned only), belief, value? (known only), candidates? (candidates only)}.
- * @param {any} value @returns {Seed}
  */
-export function validateSeed(value) {
+export function validateSeed(value: any): Seed {
   if (!isRecord(value) || Object.keys(value).some(key => !FIELDS.includes(key)))
     fail(`a seed is {${FIELDS.join(', ')}} and nothing else`);
   validateSeedProvenance(value.provenance, value.bracket);
@@ -54,5 +48,5 @@ export function validateSeed(value) {
   if (value.candidates !== undefined && (!Array.isArray(value.candidates) || value.candidates.length < 2 ||
       !value.candidates.every(isSeedValue) || new Set(value.candidates).size !== value.candidates.length))
     fail('a candidate set holds at least two distinct unsigned 32-bit seeds');
-  return /** @type {Seed} */ (value);
+  return (value as Seed);
 }

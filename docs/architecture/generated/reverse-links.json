@@ -90,7 +90,7 @@
     {
       "id": "contract.campaign-proof-v1",
       "kind": "CONTRACT",
-      "path": "packages/kernel/src/contracts/campaign-records.js",
+      "path": "packages/kernel/src/contracts/campaign-records.ts",
       "line": 10,
       "relation": "REFERENCES"
     },
@@ -116,7 +116,7 @@
     {
       "id": "contract.claim-envelope-v1",
       "kind": "CONTRACT",
-      "path": "packages/kernel/src/claim-envelope.js",
+      "path": "packages/kernel/src/claim-envelope.ts",
       "line": 20,
       "relation": "REFERENCES"
     },
@@ -337,7 +337,7 @@
     {
       "id": "contract.device-campaign-result-v1",
       "kind": "CONTRACT",
-      "path": "packages/kernel/src/contracts/campaign-records.js",
+      "path": "packages/kernel/src/contracts/campaign-records.ts",
       "line": 10,
       "relation": "REFERENCES"
     },
@@ -685,7 +685,7 @@
     {
       "id": "contract.qualification-v1",
       "kind": "CONTRACT",
-      "path": "packages/kernel/src/contracts/qualification.js",
+      "path": "packages/kernel/src/contracts/qualification.ts",
       "line": 10,
       "relation": "REFERENCES"
     },
@@ -704,7 +704,7 @@
     {
       "id": "contract.qualification-v2",
       "kind": "CONTRACT",
-      "path": "packages/kernel/src/contracts/qualification.js",
+      "path": "packages/kernel/src/contracts/qualification.ts",
       "line": 10,
       "relation": "REFERENCES"
     },
@@ -736,7 +736,7 @@
     {
       "id": "contract.semantic-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/kernel/src/contracts/index.js",
+      "path": "packages/kernel/src/contracts/index.ts",
       "line": 8,
       "relation": "REFERENCES"
     },
@@ -876,7 +876,7 @@
     {
       "id": "contract.venue-binding-v1",
       "kind": "CONTRACT",
-      "path": "packages/kernel/src/contracts/venue-identity.js",
+      "path": "packages/kernel/src/contracts/venue-identity.ts",
       "line": 18,
       "relation": "REFERENCES"
     },
@@ -902,7 +902,7 @@
     {
       "id": "contract.venue-check-v1",
       "kind": "CONTRACT",
-      "path": "packages/kernel/src/contracts/venue-identity.js",
+      "path": "packages/kernel/src/contracts/venue-identity.ts",
       "line": 18,
       "relation": "REFERENCES"
     },
@@ -928,7 +928,7 @@
     {
       "id": "contract.venue-identity-v1",
       "kind": "CONTRACT",
-      "path": "packages/kernel/src/contracts/venue-identity.js",
+      "path": "packages/kernel/src/contracts/venue-identity.ts",
       "line": 18,
       "relation": "REFERENCES"
     },

@@ -11,7 +11,7 @@ coordinate, HID input, a shell command or a rebuild.
 ## The solver interface
 
 Start with `describe({game})`. Every answer below is a
-`claim-envelope-v1` ([`packages/kernel/src/claim-envelope.js`](../../packages/kernel/src/claim-envelope.js),
+`claim-envelope-v1` ([`packages/kernel/src/claim-envelope.ts`](../../packages/kernel/src/claim-envelope.ts),
 registered in the contract register):
 
 ```json
