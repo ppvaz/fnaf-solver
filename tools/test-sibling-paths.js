@@ -28,7 +28,7 @@ const SELF = 'tools/test-sibling-paths.js';
 const FROZEN = /^(docs\/evidence\/|docs\/chronicle\/|plans\/archive\/|tools\/recompile\/results\/)/;
 const CODE = /\.(m?js|cjs|ts|py|sh)$/;
 const INTENTIONAL = new Map([
-  ['tools/device/test-deathchart.mjs -> tools/device/no-such-chrome-binary',
+  ['apps/desktop/test/test-deathchart.mjs -> apps/desktop/test/no-such-chrome-binary',
     'the planted missing browser the chart must refuse'],
 ]);
 

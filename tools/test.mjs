@@ -235,7 +235,7 @@ const ENGINE = [
   // part that can go wrong silently: a new engine death cause with no slice,
   // and slices ordered by count rather than by character (which would repaint
   // Foxy between two panels meant to be compared).
-  ['deathchart', ['device/test-deathchart.mjs']],
+  ['deathchart', ['../apps/desktop/test/test-deathchart.mjs']],
   // Plan 13 package 3 foundation: a labelled, nearest-centroid visual Foxy
   // cause envelope can add attribution after the last office segment, but it
   // is hard-bound to shadow mode and cannot replace lifecycle authority.

@@ -27,10 +27,10 @@
 // it says what the MODEL kills the plan with. Say "in the gate" when quoting it.
 import { execFileSync, spawnSync } from 'node:child_process';
 import { writeFileSync, existsSync } from 'node:fs';
-import { chromeBinary, chromeAvailable } from '../chrome.mjs';
+import { chromeBinary, chromeAvailable } from '../../../tools/chrome.mjs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { modelGate, GATE_RUNS, HUMAN_SLACK_MS } from '../../packages/propose/bin/plans/human-gate.mjs';
-import { formatRate } from '../../packages/review/src/stat.mjs';
+import { modelGate, GATE_RUNS, HUMAN_SLACK_MS } from '../../../packages/propose/bin/plans/human-gate.mjs';
+import { formatRate } from '../../../packages/review/src/stat.mjs';
 import * as C from '@sixam/source/fnaf2';
 
 const arg = (name, def) => {
@@ -224,12 +224,12 @@ function main() {
   let build;
   try { build = execFileSync('git', ['rev-parse', '--short', 'HEAD']).toString().trim(); }
   catch { build = 'UNKNOWN(not a git checkout)'; }
-  try { if (execFileSync('git', ['status', '--porcelain', '--', 'src', 'tools']).toString().trim()) build += '-dirty'; }
+  try { if (execFileSync('git', ['status', '--porcelain', '--', ':(top)packages/source', ':(top)packages/propose']).toString().trim()) build += '-dirty'; }
   catch { /* build already carries its own UNKNOWN */ }
 
   const gates = nights.map(night => {
     const text = execFileSync(process.execPath,
-      [fileURLToPath(new URL('../../packages/propose/bin/plans/recipe.mjs', import.meta.url)), '--device-plan', `--night=${night}`]).toString();
+      [fileURLToPath(new URL('../../../packages/propose/bin/plans/recipe.mjs', import.meta.url)), '--device-plan', `--night=${night}`]).toString();
     const g = modelGate(text, { runs });
     const rows = census(g.deaths, g.deathTimes);
     const total = rows.reduce((s, r) => s + r.n, 0);

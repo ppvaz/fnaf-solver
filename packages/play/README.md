@@ -94,6 +94,46 @@ The capability registry, the actuator and sensor classes and the fixture
 adapters that served the retired fixture service path were removed on
 2026-09-25 (`docs/ARCHIVED-ROUTES.md`).
 
+## Running a night
+
+Nights run through `packages/play/bin/phone/night-run.sh`, which drives `npm run
+device:campaign`; `npm run device:campaign` without `--live` is the phone-free
+dry run. The legacy shell route was archived on 2026-09-25
+(`docs/ARCHIVED-ROUTES.md`).
+
+**Every runner is dry unless it is given `--live --confirm-live`** (Pedro,
+2026-09-29; ADR 0002): `night-run.sh`, `fnaf1-night-run.sh`,
+`fnaf1-custom-run.sh`, `fnaf1-menu-probe.sh`, `fnaf3-run.sh`, `fnaf4-run.sh` and
+`fnaf1-winner.mjs` alike. Without the pair a runner prints what it would run and
+makes no adb call. Until that day `night-run.sh` went live unless `--dry-run` was
+passed; the queue's night jobs now pass the pair themselves.
+
+**The handset serial lives in an untracked local profile** (ADR 0002, decision
+8): `--serial` where a tool takes it, else `FNAF_SERIAL`, else
+`tools/device/local-profile.json` (gitignored), else a live run refuses and says
+how to set it. Set it once per host with `node packages/play/bin/phone/local-profile.mjs set
+<serial>` (`adb devices -l` lists it); a worktree without its own profile reads
+the main checkout's. No tracked script carries a default, and
+`tools/test-no-serial.mjs` (in `test:unit`) refuses any file outside the frozen
+set and its allowlist that names one.
+
+Seed-pin caveat (2026-09-27): wall-clock resets can occur between the seed
+bracket's log calls, including when its endpoints appear to increase. Read a
+pinned run with `office-seed-bracket.py --clock-pinned`; it reports `UNKNOWN`
+and no candidates. A visible backwards step is refused even without that flag.
+The five `night6-tw27` attempts retained this failure, not a verified twin.
+
+`device-lock-exec.py` holds the exclusive lease through child cleanup. A nested
+capture tool may borrow it only when its declared owner matches the live
+ancestor and serial in the kernel-locked file; an unrelated agent cannot join
+by copying the environment value. `night-run.sh` ignores repeated interrupts
+during physical cleanup and restores signal handling before host analysis.
+Since 2026-09-27 a live `night-run.sh` takes that lease itself (or trusts
+`FNAF_LEASE_HELD=1` from a holder, as `fnaf4-run.sh` trusts `FNAF4_LEASE_HELD`),
+and the lease files, the Companion queue and the overnight window's pending
+restore live under the main checkout's `captures/cue-helper/`, seen from every
+worktree (`companion_device_lock.state_dir()`; `CUE_HELPER_STATE_DIR` overrides).
+
 ## Scripts
 
 Entry points and checks that lived in `tools/` until the ADR 0002 layout

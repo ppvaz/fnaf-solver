@@ -2,6 +2,18 @@
   "schema": "import-graph-v1",
   "files": [
     {
+      "file": "apps/desktop/bin/deathchart.mjs",
+      "imports": [
+        "../../../packages/propose/bin/plans/human-gate.mjs",
+        "../../../packages/review/src/stat.mjs",
+        "../../../tools/chrome.mjs",
+        "@sixam/source/fnaf2",
+        "node:child_process",
+        "node:fs",
+        "node:url"
+      ]
+    },
+    {
       "file": "apps/desktop/bin/fnaf1-custom-run.mjs",
       "imports": [
         "../../../packages/play/bin/phone/local-profile.mjs",
@@ -170,6 +182,39 @@
       "imports": [
         "node:assert/strict",
         "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "apps/desktop/test/test-deathchart.mjs",
+      "imports": [
+        "../bin/deathchart.mjs",
+        "\\.\\/(plant-[\\w-]+\\.js)",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "apps/desktop/test/test-deathchart.mjs",
+      "imports": [
+        "../bin/deathchart.mjs",
+        "\\.\\/(plant-[\\w-]+\\.js)",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "apps/desktop/test/test-deathchart.mjs",
+      "imports": [
+        "../bin/deathchart.mjs",
+        "\\.\\/(plant-[\\w-]+\\.js)",
         "node:fs",
         "node:os",
         "node:path",
@@ -4375,29 +4420,6 @@
       "imports": [
         "node:child_process",
         "node:fs"
-      ]
-    },
-    {
-      "file": "tools/device/deathchart.mjs",
-      "imports": [
-        "../../packages/propose/bin/plans/human-gate.mjs",
-        "../../packages/review/src/stat.mjs",
-        "../chrome.mjs",
-        "@sixam/source/fnaf2",
-        "node:child_process",
-        "node:fs",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/device/test-deathchart.mjs",
-      "imports": [
-        "./deathchart.mjs",
-        "\\.\\/(plant-[\\w-]+\\.js)",
-        "node:fs",
-        "node:os",
-        "node:path",
-        "node:url"
       ]
     },
     {

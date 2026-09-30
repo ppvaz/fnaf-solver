@@ -181,10 +181,10 @@ const SIBLING_EXCLUDED = new Map([
   // apps/desktop/bin
   ['fnaf1-custom-run.mjs', 'FNaF 1 Custom Night runner (calibrate-empty, grid420) behind fnaf1-custom-run.sh; an executor, gated by test-native-regions.mjs'],
   ['fnaf1-custom-run.sh', 'lease wrapper for the FNaF 1 Custom Night runner; a live route/calibration executor, not a post-run grader'],
+  ['deathchart.mjs', 'charts the model gate\'s death census for a PLAN under modeled human slack -- a simulator result with no run artifact to read; gated by test-deathchart.mjs'],
   // apps/wiki
   ['fnaf1-teach-media.py', 'cuts a FNaF 1 run video into a README GIF and phone videos; a presentation tool, not a grader'],
   // tools/device
-  ['deathchart.mjs', 'charts the model gate\'s death census for a PLAN under modeled human slack -- a simulator result with no run artifact to read; gated by test-deathchart.mjs'],
   ['overnight-window.py', 'a forwarder to apps/lab/overnight-window.py, kept while a host\'s installed systemd units name this path (legacy-paths.json lab.overnight-window-path); the window itself is gated in apps/lab'],
   // packages/review/bin/report
   ['bench-trace.mjs', 'a read-only report over a retained Plan 20 bench trace, not a run: it summarizes a trace the bench wrote and upgrades no claim level'],

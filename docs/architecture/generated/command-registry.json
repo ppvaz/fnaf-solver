@@ -378,36 +378,6 @@
       "lifecycle": "supported"
     },
     {
-      "id": "npm",
-      "invocation": "npm run device:emit -- --winner winner.json --out artifacts/run-001 [--forbid-mechanic ID ...]",
-      "kind": "compiler/check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "npm",
-      "invocation": "npm run device:campaign -- --guided [--json]",
-      "kind": "guided preflight",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "npm",
-      "invocation": "npm run device:campaign -- --live --confirm-live --bundle DIR --calibration FILE --qualification FILE",
-      "kind": "supported-live gate",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/deathchart.mjs",
-      "invocation": "tools/device/deathchart.mjs --night=N[,N...] [--runs=1200] [--cols=2] [--out=F.png]",
-      "kind": "report",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/device/test-deathchart.mjs",
-      "invocation": "tools/device/test-deathchart.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
       "id": "packages/source/decompile/regen-dump.sh",
       "invocation": "packages/source/decompile/regen-dump.sh APPLICATION.CCN [outfile]",
       "kind": "extraction",
@@ -648,6 +618,24 @@
       "lifecycle": "supported"
     },
     {
+      "id": "npm",
+      "invocation": "npm run device:emit -- --winner winner.json --out artifacts/run-001 [--forbid-mechanic ID ...]",
+      "kind": "compiler/check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "npm",
+      "invocation": "npm run device:campaign -- --guided [--json]",
+      "kind": "guided preflight",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "npm",
+      "invocation": "npm run device:campaign -- --live --confirm-live --bundle DIR --calibration FILE --qualification FILE",
+      "kind": "supported-live gate",
+      "lifecycle": "supported"
+    },
+    {
       "id": "apps/desktop/test/night.test.js",
       "invocation": "apps/desktop/test/night.test.js",
       "kind": "check",
@@ -687,6 +675,18 @@
       "id": "apps/desktop/bin/fnaf1-custom-run.sh",
       "invocation": "apps/desktop/bin/fnaf1-custom-run.sh [--dry-run] \\| --live --confirm-live --dials F,B,C,X --mode calibrate-empty\\|grid420 [--detectors FILE] [--winner FILE \\| --route tree] [--teach] [--video] [--stop-after-ms MS] [--label NAME]",
       "kind": "**device action**",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "apps/desktop/bin/deathchart.mjs",
+      "invocation": "apps/desktop/bin/deathchart.mjs --night=N[,N...] [--runs=1200] [--cols=2] [--out=F.png]",
+      "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "apps/desktop/test/test-deathchart.mjs",
+      "invocation": "apps/desktop/test/test-deathchart.mjs",
+      "kind": "check",
       "lifecycle": "supported"
     },
     {

@@ -15,7 +15,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
-import { census, chart, clock, median, renderPng, REASON_ORDER } from './deathchart.mjs';
+import { census, chart, clock, median, renderPng, REASON_ORDER } from '../bin/deathchart.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 let failed = 0;
@@ -28,7 +28,7 @@ const check = (name, cond, detail = '') => {
 // second copy that goes stale the day someone adds a cause. The engine is
 // plant-model.js and the mechanism modules it imports, and kill() is called
 // from several of them.
-const MODEL = join(HERE, '../../packages/source/src/games/fnaf2');
+const MODEL = join(HERE, '../../../packages/source/src/games/fnaf2');
 const entry = readFileSync(join(MODEL, 'plant-model.js'), 'utf8');
 const parts = [...entry.matchAll(/^import .* from '\.\/(plant-[\w-]+\.js)';$/gm)].map(m => m[1]);
 check('the engine\'s mechanism modules are read', parts.length >= 5, parts.join());
