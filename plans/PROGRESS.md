@@ -2918,7 +2918,20 @@ no controller give the same 30,000-update trace
 
 MODEL_ONLY, rebuilt-runtime; no device run, nothing promoted.
 
-Open: FNaF 4 Night 8 (20/20/20/20, `beat8`) is re-converted, built with the
-pilot channel, and its menu path and controls are surveyed; its controller is
-next. The FNaF 3 controller's rate over seeds, and the model's missing
-group 275, remain open.
+**FNaF 4 Night 8 won the same way.** Night 8 is the 20/20/20/20
+Nightmare, reached from Extras with eight Nightmare taps, which need
+`beat8=0`. The `warden` controller reaches 6 AM at seed 24850 and the game
+writes `beat8=1`; the 584 rows replay to an equal trace
+([record](../tools/recompile/results/fnaf4-night8-20260929.json),
+`recompile-pilot-night-4a296d97011c3ae2`). It wins 5 of 6 other seeds.
+
+Beating Night 8 unlocks the challenges, but the menus then pair them only
+with Night 7 (groups 104/105 against 197-200). So Night 8 is the hardest night
+the game offers. MODEL_ONLY, rebuilt-runtime; no device run, nothing promoted.
+
+Open:
+- the FNaF 3 controller's rate over seeds (1 of 6) and the model's missing
+  group 275;
+- FNaF 4's Night 7 challenge stars (`s1`-`s6`), which were not attempted;
+- neither rebuilt APK has been run on the phone, and neither win is a device
+  claim.

@@ -372,6 +372,15 @@ and the solver MCP with its claim envelope (Plan 28).
   - **FNaF 3:** 65,536/65,536 in the model on all six nights, and Night 1 on the
     phone.
   - **FNaF 4:** model only ([four games](../docs/research/FOUR-GAME-NIGHTS.md)).
+  - **In the rebuild (2026-09-29, MODEL_ONLY, rebuilt-runtime).** A lockstep
+    pilot wins each game's hardest night in the rebuilt runtime, and the game
+    writes its own mark: FNaF 3 Aggressive Nightmare (`4thstar=1`,
+    [`recompile-pilot-night-9bba02f11189549a`](../tools/recompile/results/fnaf3-aggressive-nightmare-20260929.json))
+    and FNaF 4 Night 8, 20/20/20/20 (`beat8=1`,
+    [`recompile-pilot-night-4a296d97011c3ae2`](../tools/recompile/results/fnaf4-night8-20260929.json)).
+    The recorded touches replay to an equal trace with no pilot. The
+    controllers read the runtime's objects, so neither is a device route or a
+    census. The FNaF 3 controller wins 1 of 6 other seeds, the FNaF 4 one 5 of 6.
 - **Absorbs** Plan 25 horizon 5 and Plans 26, 27 and 28.
 
 ### S7: The lab runs itself

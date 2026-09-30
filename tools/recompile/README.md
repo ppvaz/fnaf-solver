@@ -79,12 +79,13 @@ directory (`/private/tmp/fnaf2-recompile.*` on the dev machine).
 | `results/phone-input-ledger-full-06-20260928.json`, `results/phone-audio-cues-full-06-20260928.json`, `results/rebuild-audio-full-06-landed-20260928.json`, `results/hall-shift-sensitivity-full-06-20260928.json`, `docs/evidence/full06-input-registration-20260928.json` | full-06 landed: the phone's hall flash ends 3-5 updates before the replayed hall release in every flashed cycle (monitor raises -2..+1, mask presses 0..-1); the eyehole confirms B, C, empty, empty in windows 3-6; audio aligned at -0.246 s has Balloon Boy hopping at 40.0/45.1/50.0 s and at the office at 60.38 s while the rebuild (audio-trace build 66d6e2f6, same draws as the retained replay) holds him at CAM 10 through the 40 and 45 s rolls and brings him at 70.3 s; moving every hall contact 2-5 updates earlier never empties window 6. |
 | `test-phone-input-ledger.py` | The frame classifiers and the catch-up clock on synthetic cells, then every difference, alignment, hash and id of the input-registration record re-derived from its retained rows; no trace, capture, numpy or binary. In `npm run test:unit`. |
 | `pilot/pilot.mjs --game fnaf3\|fnaf4 --run DIR --binary FILE --assets FILE --save FILE --policy NAME [--seed N] [--knobs JSON]` | Lockstep controller for a rebuilt night. The harness (`CHOWDREN_PILOT_CONNECT=host:port`, in the patch) sends one JSON line per update over TCP, with the frame, tick, graine and globals, and for each object in `CHOWDREN_PILOT_WATCH` its position, window centre, `FixedValue`, alterables, animation or counter value. It then waits for touches. TCP rather than a FIFO because Docker Desktop's bind mounts do not carry a FIFO out of its VM. Every applied touch is written to `DIR/pilot.input` as a plain `CHOWDREN_INPUT` row. Host-only; DIR stays outside the repository. |
-| `pilot/fnaf3.mjs`, `pilot/fnaf4.mjs` | The games' pilot modules: the watched object names, the state readers (`whereIs` from the radar dot `dhfgh`; `proxyOf` maps a port hitbox to its target by the `FixedValue` in its value 0) and the policies. FNaF 3 `guard` stays on the vent map, seals the vent beside Springtrap or the one he is in, lures him outward from CAM 05/02/03/04 and stage 1, freezes `pic random` by watching his camera when that is phantom-safe, and reboots ventilation on error and audio only in the far corner. It reads the rebuilt runtime's objects, an oracle rather than a player's view, and acts only by in-window touches. |
+| `pilot/fnaf3.mjs`, `pilot/fnaf4.mjs` | The games' pilot modules: the watched object names, the state readers (`whereIs` from the radar dot `dhfgh`; `proxyOf` maps a port hitbox to its target by the `FixedValue` in its value 0; FNaF 4's `places` reads each actor's marker on the hidden map) and the policies. FNaF 4 `warden` ping-pongs between the doors: it flashes a far occupant, dismisses a near one through the door, drains the Freddy meter at the bed before 42, holds the closet for Foxy, and from 4 AM waits at the hub facing Fredbear's side, shutting the door of the far hall he enters. FNaF 3 `guard` stays on the vent map, seals the vent beside Springtrap or the one he is in, lures him outward from CAM 05/02/03/04 and stage 1, freezes `pic random` by watching his camera when that is phantom-safe, and reboots ventilation on error and audio only in the far corner. It reads the rebuilt runtime's objects, an oracle rather than a player's view, and acts only by in-window touches. |
 | `pilot/replay.mjs --game G --from PILOT_RUN --run DIR --binary FILE --assets FILE` | Replays a pilot run's `pilot.input` with no pilot and compares the two traces update for update (frame, tick, draws, graine, every global). Writes `replay-summary.json` with the save the game wrote. |
 | `pilot/record.mjs record ... \| check RESULT.json` | `recompile-pilot-night-v1`: hashes of the binary, assets, save and input, the two trace digests, the frames visited, and the save keys the game wrote. It is WON only if the replay's trace equals the pilot's and every `--win-key` is absent before the night and written by it. `check` re-derives the verdict and evidenceId. |
 | `pilot/test-pilot.mjs` | Re-derives every committed pilot record and refuses a fixture touch outside the 1024 x 768 window. Its negative controls must fail: a diverged replay, a win key already in the save, a missing win key, a changed seed. It pins `SEAL_FOR`/`LURE_TO` to the core FNaF 3 graph and lure table (`sim-fnaf3.js`). In `npm run test:unit`; no binary. |
 | `fixtures/fnaf3-aggressive-nightmare.ini`, `fixtures/fnaf3-aggressive-nightmare-win.input`, `results/fnaf3-aggressive-nightmare-20260929.json` | The unlocked FNaF 3 save (`beatgame`, `beat6`, `goodend`, `hyper=1`; the three easing cheats off), the 332 touch rows the guard applied, and the record: the rebuilt FNaF 3 (pinned `239c59cb-c5e092a3`) reaches 6 AM on Aggressive Nightmare at seed 24850 and writes `4thstar=1`, and the rows replayed with no pilot give the same 30,000-update trace. MODEL_ONLY, rebuilt-runtime. |
 | `fixtures/fnaf4-night8-before.ini` | The FNaF 4 save for Night 8 (`beat5`-`beat7`, `beat8=0`, `test=1`): the Extras Nightmare button then takes eight taps to arm 20/20/20/20 (`shadow` 2). |
+| `fixtures/fnaf4-night8-win.input`, `results/fnaf4-night8-20260929.json` | The 584 touch rows the FNaF 4 `warden` applied, and the record: the rebuilt FNaF 4 (pinned `6d3a6667-615f2ea0`) reaches 6 AM on Night 8, the 20/20/20/20 Nightmare, at seed 24850, and writes `beat8=1`; the rows replayed with no pilot give the same 30,000-update trace. MODEL_ONLY, rebuilt-runtime. |
 
 ## Environment
 
@@ -1717,3 +1718,28 @@ pilot run's on all 30,000 updates. The same controller at seeds 1-6 wins 1 of
 6 (seed 2); the others die to a vent entered during an audio-reboot trip, or to
 stage 1 with the audio spent. A win is one clear, not a rate. MODEL_ONLY,
 rebuilt-runtime: nothing here was run on the phone.
+
+**FNaF 4, Night 8.** `results/fnaf4-night8-20260929.json`
+(`recompile-pilot-night-4a296d97011c3ae2`): at seed 24850 the `warden`
+controller reaches 6 AM after the level's full 21,601 updates, and the game
+writes `beat8=1`. The 584 applied rows, replayed with no pilot, give an equal
+30,000-update trace. At seeds 1-6 it wins 5 of 6; seed 3 dies at update 10,531.
+The port's own touch paths drive the night:
+
+- a double tap on a door or closet hitzone walks there (groups 43-48, 172-174);
+- the hub view pans only while a touch is held (groups 21-25);
+- the light and the door are holds.
+
+The sheet's rules the controller relies on:
+
+- Listening at a door suspends that side's rolls (g284/g285).
+- A light on a far occupant sends it to the living-room centre (g83/g84, g134/g135).
+- A light on a near occupant is a jumpscare (g345/g346).
+- A door shut on a near occupant dismisses it on the 3 s tick, but only with the interlock clear (g342/g344, g352).
+- From 4 AM a door shut on Fredbear at a far hall pushes him to the opposite living room (g502/g503) inside his 8 s hall fuse.
+
+Once `beat8=1` the Extras challenges unlock (groups 197-200 need
+`beat 8` = 1), but the 20/20/20/20 selection needs `beat 8` = 0 (groups
+104/105). So the menus pair the challenges with Night 7 only, and Night 8 is
+the hardest night the menus offer. MODEL_ONLY, rebuilt-runtime: nothing here
+was run on the phone.

@@ -3439,6 +3439,7 @@
       "imports": [
         "../../../packages/core/src/mechanics/games/sim-fnaf3.js",
         "./fnaf3.mjs",
+        "./fnaf4.mjs",
         "./record.mjs",
         "node:assert/strict",
         "node:fs",

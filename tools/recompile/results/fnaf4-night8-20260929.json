@@ -1,0 +1,96 @@
+{
+ "schema": "recompile-pilot-night-v1",
+ "evidenceId": "recompile-pilot-night-4a296d97011c3ae2",
+ "claimLevel": "MODEL_ONLY",
+ "fidelity": "rebuilt-runtime",
+ "game": "fnaf4",
+ "night": "Night 8, the 20/20/20/20 Nightmare (shadow 2): Bonnie, Chica and Foxy at 20 and Freddy at 6 to 4 AM, then Fredbear alone at 20; no cheats",
+ "recordedAt": "2026-09-30",
+ "question": "Does the rebuilt fnaf4 reach 6 AM on its hardest night from the recorded touches alone?",
+ "controller": {
+  "policy": "warden",
+  "knobs": {},
+  "source": "tools/recompile/pilot/fnaf4.mjs",
+  "reads": "the rebuilt runtime's own objects each update (an oracle, not a player's view)",
+  "acts": "in-window touches only, through the harness input path",
+  "pilotOutcome": "6AM"
+ },
+ "binarySha256": "6d3a66673ae1fe1be93217aafdea4113bc0753958b1e805068105e6f36247e1d",
+ "assetsSha256": "615f2ea01b9546709e8d9bc2b15cd9616aeda403a317c4db4bcde9f4d87f0049",
+ "seed": 24850,
+ "saveBefore": {
+  "sha256": "a58acc2d42e40653a3797dc783d54daef47f6f726140eccc36a905b261e95231",
+  "keys": {
+   "fn4.test": "1",
+   "fn4.night": "5",
+   "fn4.beat5": "1",
+   "fn4.beat6": "1",
+   "fn4.beat7": "1",
+   "fn4.beat8": "0",
+   "fn4.scene": "1",
+   "options.joystickSize": "120"
+  }
+ },
+ "input": {
+  "fixture": "tools/recompile/fixtures/fnaf4-night8-win.input",
+  "sha256": "07b08b0af93bfb149104359df4e60e6ee2cc5863463fa852b6f0d878f470e9a2",
+  "rows": 584
+ },
+ "pilotTrace": {
+  "rows": 30000,
+  "sha256": "da069bd83e7ef7532af05800273dd5e8f10e5e83035391628a15b3def5f8483a"
+ },
+ "replay": {
+  "rows": 30000,
+  "sha256": "da069bd83e7ef7532af05800273dd5e8f10e5e83035391628a15b3def5f8483a",
+  "traceEqual": true,
+  "visits": [
+   {
+    "frame": 0,
+    "updates": 180
+   },
+   {
+    "frame": 1,
+    "updates": 364
+   },
+   {
+    "frame": 11,
+    "updates": 1
+   },
+   {
+    "frame": 10,
+    "updates": 570
+   },
+   {
+    "frame": 2,
+    "updates": 126
+   },
+   {
+    "frame": 3,
+    "updates": 21601
+   },
+   {
+    "frame": 5,
+    "updates": 719
+   },
+   {
+    "frame": 1,
+    "updates": 6439
+   }
+  ]
+ },
+ "saveAfter": {
+  "fn4.test": "1",
+  "fn4.beat7": "1",
+  "fn4.night": "5",
+  "fn4.scene": "1",
+  "fn4.beat5": "1",
+  "fn4.beat6": "1",
+  "fn4.beat8": "1",
+  "options.joystickSize": "120"
+ },
+ "winKeys": [
+  "fn4.beat8=1"
+ ],
+ "status": "WON"
+}

@@ -223,4 +223,231 @@ function survey2({ run }) {
   };
 }
 
-export const POLICIES = { nav, survey, survey2 };
+// --- warden: the controller -----------------------------------------------
+
+const LEFT_DOOR = 10, RIGHT_DOOR = 17, CLOSET = 29, BED = 43;
+const HUB = new Set([0, 2, 5]);
+const FLASH = 'HUDFlashlightHitzone.Active', CLOSE = 'HUDCloseDoorHitzone.Active', BACK = 'HUDGoBackHitzone.Active';
+
+function* hold(n) { for (let i = 0; i < n; i += 1) yield []; }
+function* until(ctx, pred, max) { for (let i = 0; i < max && !pred(ctx.v); i += 1) yield []; }
+const centre = (v, name) => { const o = v.one(name); return o && inWindow(o.c) ? o.c : null; };
+function* tapName(ctx, name, ticks = 3) {
+  const c = centre(ctx.v, name);
+  if (!c) { ctx.log({ miss: name }); return false; }
+  yield [`down 0 ${c[0]} ${c[1]}`]; yield* hold(ticks - 1); yield ['up 0'];
+  return true;
+}
+function* doubleTap(ctx, name) {
+  const c = centre(ctx.v, name);
+  if (!c) { ctx.log({ miss: name }); return false; }
+  yield [`down 0 ${c[0]} ${c[1]}`]; yield* hold(2); yield ['up 0']; yield* hold(4);
+  const c2 = centre(ctx.v, name) ?? c;
+  yield [`down 0 ${c2[0]} ${c2[1]}`]; yield* hold(2); yield ['up 0'];
+  return true;
+}
+/** Hold a HUD zone while `keep` holds, up to `max` updates. */
+function* holdZone(ctx, name, keep, max) {
+  const c = centre(ctx.v, name);
+  if (!c) { ctx.log({ miss: name }); return; }
+  yield [`down 0 ${c[0]} ${c[1]}`];
+  for (let i = 0; i < max && keep(ctx.v); i += 1) yield [];
+  yield ['up 0'];
+  yield* hold(2);
+}
+
+export function facts4(v) {
+  const at = places(v);
+  const al = (n, i) => v.one(n)?.al?.[i] ?? 0;
+  return {
+    at, follow: v.al('follow', 0), freddy: v.cv('Freddy counter') ?? 0, hour: v.cv('hour'),
+    fredbearAI: v.cv('Fredbear AI') ?? 0, interlock: al('in closet', 5),
+    bTag: al('Bonnie', 5), cTag: al('Chica', 5), bDwell: al('Bonnie', 6), cDwell: al('Chica', 6),
+    bBed: al('Bonnie', 7), cBed: al('Chica', 7), foxy: al('foxy', 2), foxyGot: v.cv('foxy got you'),
+    fbHall: al('Fredbear', 19), fbBed: al('Fredbear', 6), fbIdle: al('Fredbear', 12), fbView: Math.max(al('Fredbear', 8), al('Fredbear', 9)),
+    idle: al('Fredbear', 13), flash: al('black flash', 3), fbAV4: al('Fredbear', 4), fbAV7: al('Fredbear', 7), lds: v.cv('left door shut'), rds: v.cv('right door shut'), gameover: v.cv('gameover'),
+  };
+}
+
+function warden({ run, knobs }) {
+  const out = join(run, 'warden.jsonl');
+  writeFileSync(out, '');
+  const ctx = { v: null, log: (o) => appendFileSync(out, JSON.stringify({ t: ctx.v?.tick, ...o }) + '\n') };
+  const menu = menuNight8();
+  let task = null, taskName = null, last = null, outcome = null;
+  const bedAt = knobs.bedAt ?? 32, foxyAt = knobs.foxyAt ?? 6;
+
+  const STATIONS = [LEFT_DOOR, RIGHT_DOOR, CLOSET, BED];
+  function* toHub() {
+    // Let a station action (door close 20-25, flash 35-41, closet 32-34)
+    // finish first: only a station or the hub takes the next control.
+    yield* until(ctx, (v) => HUB.has(v.al('follow', 0)) || STATIONS.includes(v.al('follow', 0)), 90);
+    for (let attempt = 0; attempt < 3 && !HUB.has(ctx.v.al('follow', 0)); attempt += 1) {
+      if (STATIONS.includes(ctx.v.al('follow', 0))) yield* tapName(ctx, BACK);
+      yield* until(ctx, (v) => HUB.has(v.al('follow', 0)), 150);
+    }
+  }
+  function* face(side) {
+    yield* toHub();
+    const want = side === 'left' ? 2 : 5;
+    const endX = side === 'left' ? 512 : 788;
+    const done = (v) => v.al('follow', 0) === want && v.one('follow')?.x === endX;
+    if (done(ctx.v)) return;
+    // A held touch pans the hub view only while it is held (g21-g25: x < 205
+    // at -12, x > 819 at +12 a frame, clamped to 512..788); y 120 is above
+    // every hitzone. Hold to the clamp, then let the turn animation settle.
+    const x = side === 'left' ? 60 : 980;
+    yield [`down 0 ${x} 120`];
+    yield* until(ctx, (v) => v.one('follow')?.x === endX, 60);
+    yield ['up 0'];
+    yield* until(ctx, done, 40);
+  }
+  function* door(side) {
+    const target = side === 'left' ? LEFT_DOOR : RIGHT_DOOR;
+    if (ctx.v.al('follow', 0) === target) return;
+    for (let attempt = 0; attempt < 3 && ctx.v.al('follow', 0) !== target; attempt += 1) {
+      yield* face(side);
+      yield* hold(4);
+      yield* doubleTap(ctx, side === 'left' ? 'HUDDoorLeftHitzone.Active' : 'HUDDoorRightHitzone.Active');
+      yield* until(ctx, (v) => v.al('follow', 0) === target || v.al('follow', 0) === (side === 'left' ? 7 : 14), 30);
+      yield* until(ctx, (v) => v.al('follow', 0) === target, 240);
+    }
+  }
+  function* closet() {
+    if (ctx.v.al('follow', 0) === CLOSET) return;
+    yield* toHub();
+    if (ctx.v.al('follow', 0) !== 0) {
+      // The closet walk needs the centre facing (g172): catch it mid-turn.
+      // Hold the pan until the turn passes through the centre state 0.
+      const x = ctx.v.al('follow', 0) === 2 ? 980 : 60;
+      yield [`down 0 ${x} 120`];
+      yield* until(ctx, (v) => v.al('follow', 0) === 0, 30);
+      yield ['up 0'];
+    }
+    yield* doubleTap(ctx, 'HUDDoorClosetHitzone.Active');
+    yield* until(ctx, (v) => v.al('follow', 0) === CLOSET, 240);
+  }
+  function* bed() {
+    if (ctx.v.al('follow', 0) === BED) return;
+    yield* toHub();
+    yield* tapName(ctx, BACK);
+    yield* until(ctx, (v) => v.al('follow', 0) === BED, 90);
+  }
+
+  function* flashAt(side) {
+    yield* door(side);
+    const hallFar = side === 'left' ? 'left hall far' : 'right hall far';
+    const near = side === 'left' ? 'left hall near' : 'right hall near';
+    const occupantNear = (v) => Object.values(places(v)).includes(near);
+    if (occupantNear(ctx.v)) return;
+    yield* holdZone(ctx, FLASH, (v) => Object.values(places(v)).includes(hallFar) && !occupantNear(v), 20);
+  }
+  function* dismiss(side) {
+    yield* door(side);
+    const who = side === 'left' ? 'Bonnie' : 'Chica';
+    const near = side === 'left' ? 'left hall near' : 'right hall near';
+    yield* holdZone(ctx, CLOSE, (v) => places(v)[who] === near, 400);
+  }
+  function* drainFreddy() {
+    yield* bed();
+    yield* holdZone(ctx, FLASH, (v) => (v.cv('Freddy counter') ?? 0) > 1 && facts4(v).bDwell <= 11 && facts4(v).cDwell <= 10, 240);
+  }
+  function* serviceCloset() {
+    yield* closet();
+    yield* holdZone(ctx, CLOSE, (v) => (v.one('foxy')?.al?.[2] ?? 0) > (knobs.foxyTo ?? 1) && places(v).foxy === 'in closet'
+      && (v.cv('Freddy counter') ?? 0) < (knobs.bedUrgent ?? 42) + 2, 600);
+  }
+  function* listen(side) { yield* door(side); yield* hold(10); }
+
+  function decide() {
+    const f = facts4(ctx.v);
+    if (knobs.probe) {
+      const n = (ctx.probeN = (ctx.probeN ?? 0) + 1);
+      return n % 2 ? [`probe left ${n}`, door('left')] : [`probe right ${n}`, door('right')];
+    }
+    const at = f.at;
+    if (f.fredbearAI > 0) return decideFredbear(f);
+    const here = f.follow === LEFT_DOOR ? 'left' : f.follow === RIGHT_DOOR ? 'right' : null;
+    const other = (side) => (side === 'left' ? 'right' : 'left');
+    const bedSafe = f.bDwell <= 10 && f.cDwell <= 9;
+    const nearOK = (side) => (side === 'left' ? f.bTag : f.cTag) === 2 && f.interlock === 0;
+    const who = { left: 'Bonnie', right: 'Chica' };
+    const threat = (side) => {
+      const p = at[who[side]];
+      if (p === `${side} hall near`) return 3;
+      if (p === `${side} hall far` || at.foxy === `${side} hall far`) return 2;
+      if (p === `living room ${side}`) return 1;
+      return 0;
+    };
+    // Local work first, at the door we stand at: flash a far occupant
+    // (g84/g135, g83/g134), dismiss a near one (g342/g344).
+    if (here) {
+      const w = at[who[here]];
+      if (w === `${here} hall far` || (at.foxy === `${here} hall far`)) return [`flash ${here}`, flashAt(here)];
+      if (w === `${here} hall near` && nearOK(here)) return [`dismiss ${here}`, dismiss(here)];
+    }
+    const foxyIn = at.foxy === 'in closet';
+    if (f.freddy >= (knobs.bedUrgent ?? 42) && bedSafe) return ['bed', drainFreddy()];
+    if (f.foxy >= (knobs.foxyUrgent ?? 8) && foxyIn) return ['closet', serviceCloset()];
+    if (f.freddy >= bedAt && bedSafe) return ['bed', drainFreddy()];
+    if (f.foxy >= foxyAt && foxyIn) return ['closet', serviceCloset()];
+    // Ping-pong: go to the other door when its side needs a visit, or before
+    // the idle accelerant (g593, AV13 >= 30) starts.
+    const target = here ? other(here) : (threat('right') > threat('left') ? 'right' : 'left');
+    return [`go ${target}`, door(target)];
+  }
+
+  function decideFredbear(f) {
+    const at = f.at.Fredbear;
+    const sideOf = (p) => (p && p.includes('left') ? 'left' : p && p.includes('right') ? 'right' : null);
+    // On the bed: look at him until he leaves (g525-g527, AV7 > 1).
+    if (at === 'on bed') return ['fredbear bed', (function* () {
+      yield* bed(); yield* holdZone(ctx, FLASH, (v) => places(v).Fredbear === 'on bed', 300); })()];
+    // In the closet: hold its door until the 3 s tick walks him out (g522/g523).
+    if (at === 'in closet') return ['fredbear closet', (function* () {
+      yield* closet(); yield* holdZone(ctx, CLOSE, (v) => places(v).Fredbear === 'in closet', 400); })()];
+    const side = sideOf(at);
+    const far = at === 'left hall far' ? 'left' : at === 'right hall far' ? 'right' : null;
+    // At a far hall: shut that door; the 3 s tick pushes him off (g502/g503)
+    // inside the 8 s hall fuse (g646-g648).
+    if (far) return [`fredbear ${far}`, (function* () {
+      yield* door(far);
+      yield* holdZone(ctx, CLOSE, (v) => places(v).Fredbear === `${far} hall far`, 600);
+    })()];
+    // Walk before the idle flash (g564, AV12 >= 25): a door walk is a carpet run.
+    if (f.fbIdle >= (knobs.fbWalkAt ?? 18)) return [`walk ${side ?? 'left'}`, door(side ?? 'left')];
+    // Otherwise wait at the hub facing his side: one door is 2.3 s away, the
+    // other a turn and 2.3 s.
+    if (!HUB.has(f.follow)) return ['to hub', toHub()];
+    if (side && f.follow !== (side === 'left' ? 2 : 5)) return [`face ${side}`, face(side)];
+    return ['fredbear wait', (function* () { yield* hold(6); })()];
+  }
+
+  return {
+    step(s) {
+      const v = view(s);
+      if (s.f !== LEVEL) {
+        if (s.f === 5) { outcome = outcome ?? '6AM'; this.done = true; return []; }
+        if (s.f === 4 || s.f === 15) { outcome = outcome ?? `dead in frame ${s.f}`; this.done = true; return []; }
+        if (outcome) { this.done = true; return []; }
+        return menu(s, v);
+      }
+      ctx.v = v;
+      const f = facts4(v);
+      const key = JSON.stringify([f.at, f.follow, Math.floor(f.freddy / 10), f.foxy, f.bTag, f.cTag, f.interlock, f.hour, f.gameover, f.fredbearAI, f.flash > 0, f.fbHall, f.fbBed, f.fbView > 0]);
+      if (key !== last || knobs.probe) { ctx.log({ ...f, freddy: Math.round(f.freddy), task: taskName, x: v.one('follow')?.x, mt: v.one('Multiple Touch')?.al }); last = key; }
+      if (f.gameover) { outcome = outcome ?? `gameover at ${s.t}`; }
+      if (!task) {
+        const d = decide();
+        if (d) { [taskName, task] = d; ctx.log({ start: taskName }); }
+      }
+      if (!task) return [];
+      const r = task.next();
+      if (r.done) { task = null; taskName = null; return []; }
+      return r.value ?? [];
+    },
+    summary: () => ({ outcome }),
+  };
+}
+
+export const POLICIES = { nav, survey, survey2, warden };

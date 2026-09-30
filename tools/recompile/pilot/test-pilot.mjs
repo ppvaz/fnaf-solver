@@ -11,6 +11,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SCHEMA, check, evidenceId, iniKeys, verdict } from './record.mjs';
 import { SEAL_FOR, LURE_TO, proxyOf, whereIs } from './fnaf3.mjs';
+import { MARKERS, ACTORS, WATCH as WATCH4, places } from './fnaf4.mjs';
 import { GRAPH, LURE_FROM } from '../../../packages/core/src/mechanics/games/sim-fnaf3.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -83,5 +84,13 @@ assert.equal(whereIs(v), 'cam 10');
 assert.equal(proxyOf(v, 'olivier_cameraHitboxA.Active', 'cam 10').index, 0);
 assert.equal(proxyOf(v, 'olivier_cameraHitboxA.Active', 'cam 09'), null, 'an off-window proxy is refused');
 ok('whereIs reads the radar dot; proxyOf matches FixedValue and refuses off-window proxies');
+
+// 5. FNaF 4's map reader: every marker and actor it reads is watched, and an
+// actor is placed on the marker its box overlaps.
+for (const n of [...MARKERS, ...ACTORS, 'follow', 'Freddy counter', 'in closet']) assert.ok(WATCH4.includes(n), `fnaf4 WATCH lacks ${n}`);
+const s4 = { f: 3, t: 0, o: { 'left hall near': [box(788, 130)], 'kitchen': [box(954, 20)], Bonnie: [box(790, 132)], Chica: [box(2000, 2000)] } };
+const v4 = { s: s4, all: (n) => s4.o[n] ?? [], one: (n) => (s4.o[n] ?? [])[0] ?? null };
+assert.deepEqual(places(v4), { foxy: null, Bonnie: 'left hall near', Chica: 'away', Fredbear: null });
+ok('fnaf4 places() reads the hidden map markers; WATCH covers them');
 
 console.log(`# pilot records: ${passed} passed`);
