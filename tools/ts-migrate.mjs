@@ -676,11 +676,15 @@ if (manifest) {
   const text = read(manifest);
   const next = text.replace(/"(\.\/[^"]+)\.js"/g, (match, stem) => {
     if (movedAbs.has(join(ROOT, dirname(manifest), `${stem}.js`))) return `"${stem}.ts"`;
-    // A wildcard target (`./src/campaign/*.js`) names the .ts once no .js is left in its directory.
-    if (stem.endsWith('/*')) {
-      const directory = join(ROOT, dirname(manifest), stem.slice(0, -2));
-      if (existsSync(directory) && readdirSync(directory).some(file => file.endsWith('.ts')) &&
-          !readdirSync(directory).some(file => file.endsWith('.js'))) return `"${stem}.ts"`;
+    // A wildcard target (`./src/campaign/*.js`, `./src/strategies/*/index.js`) names the .ts
+    // once every file it matches is a .ts and none a .js.
+    if (stem.includes('*')) {
+      const [before, after] = stem.split('*');
+      const directory = join(ROOT, dirname(manifest), before);
+      if (existsSync(directory)) {
+        const hits = readdirSync(directory).map(entry => join(directory, `${entry}${after}`));
+        if (hits.some(hit => existsSync(`${hit}.ts`)) && !hits.some(hit => existsSync(`${hit}.js`))) return `"${stem}.ts"`;
+      }
     }
     return match;
   });
