@@ -58,15 +58,15 @@
     {
       "id": "contract.calibration-state-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/test/calibration-state-rule.test.js",
-      "relation": "CONFORMANCE_FIXTURE"
+      "path": "packages/play/src/sensors/fnaf2/calibration-state-rule.js",
+      "line": 14,
+      "relation": "REFERENCES"
     },
     {
       "id": "contract.calibration-state-v1",
       "kind": "CONTRACT",
-      "path": "packages/play/src/sensors/fnaf2/calibration-state-rule.js",
-      "line": 14,
-      "relation": "REFERENCES"
+      "path": "packages/play/test/calibration-state-rule.test.js",
+      "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.camera-rule-v1",
@@ -90,22 +90,22 @@
     {
       "id": "contract.campaign-proof-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/src/campaign-proof.js",
+      "path": "packages/kernel/src/contracts/campaign-records.js",
+      "line": 10,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.campaign-proof-v1",
+      "kind": "CONTRACT",
+      "path": "packages/play/src/campaign/campaign-proof.js",
       "line": 3,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.campaign-proof-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/test/campaign-runner.test.js",
+      "path": "packages/play/test/campaign-runner.test.js",
       "relation": "CONFORMANCE_FIXTURE"
-    },
-    {
-      "id": "contract.campaign-proof-v1",
-      "kind": "CONTRACT",
-      "path": "packages/kernel/src/contracts/campaign-records.js",
-      "line": 9,
-      "relation": "REFERENCES"
     },
     {
       "id": "contract.claim-envelope-v1",
@@ -226,15 +226,15 @@
     {
       "id": "contract.cue-helper-control-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/src/cycle-lesson.js",
-      "line": 8,
+      "path": "packages/play/src/campaign/physical-ports.js",
+      "line": 9,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.cue-helper-control-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/src/physical-ports.js",
-      "line": 9,
+      "path": "packages/play/src/coach/cycle-lesson.js",
+      "line": 8,
       "relation": "REFERENCES"
     },
     {
@@ -267,46 +267,46 @@
     {
       "id": "contract.custom-night-calibration-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/test/campaign-infrastructure.test.js",
+      "path": "packages/play/test/campaign-infrastructure.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.custom-night-config-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/src/custom-night.js",
+      "path": "packages/play/src/campaign/custom-night.js",
       "line": 7,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.custom-night-config-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/test/campaign-infrastructure.test.js",
+      "path": "packages/play/test/campaign-infrastructure.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.custom-night-config-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/test/campaign.test.js",
+      "path": "packages/play/test/campaign.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.device-adb-preflight-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/src/adb-bridge.js",
+      "path": "packages/play/src/campaign/adb-bridge.js",
       "line": 17,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.device-adb-preflight-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/src/cue-helper-capture.js",
+      "path": "packages/play/src/campaign/cue-helper-capture.js",
       "line": 5,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.device-adb-preflight-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/test/adb-bridge.test.js",
+      "path": "packages/play/test/adb-bridge.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -324,112 +324,112 @@
     {
       "id": "contract.device-campaign-preflight-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/src/campaign-preflight.js",
+      "path": "packages/play/src/campaign/campaign-preflight.js",
       "line": 12,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.device-campaign-preflight-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/test/campaign-infrastructure.test.js",
-      "relation": "CONFORMANCE_FIXTURE"
-    },
-    {
-      "id": "contract.device-campaign-result-v1",
-      "kind": "CONTRACT",
-      "path": "apps/device/test/campaign-runner.test.js",
-      "relation": "CONFORMANCE_FIXTURE"
-    },
-    {
-      "id": "contract.device-campaign-result-v1",
-      "kind": "CONTRACT",
-      "path": "apps/device/test/campaign.test.js",
+      "path": "packages/play/test/campaign-infrastructure.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.device-campaign-result-v1",
       "kind": "CONTRACT",
       "path": "packages/kernel/src/contracts/campaign-records.js",
-      "line": 9,
+      "line": 10,
       "relation": "REFERENCES"
     },
     {
-      "id": "contract.device-campaign-v1",
+      "id": "contract.device-campaign-result-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/src/campaign-runner.js",
-      "line": 8,
-      "relation": "REFERENCES"
+      "path": "packages/play/test/campaign-runner.test.js",
+      "relation": "CONFORMANCE_FIXTURE"
     },
     {
-      "id": "contract.device-campaign-v1",
+      "id": "contract.device-campaign-result-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/src/campaign.js",
-      "line": 8,
-      "relation": "REFERENCES"
-    },
-    {
-      "id": "contract.device-campaign-v1",
-      "kind": "CONTRACT",
-      "path": "apps/device/src/modern-campaign-ports.js",
-      "line": 8,
-      "relation": "REFERENCES"
-    },
-    {
-      "id": "contract.device-campaign-v1",
-      "kind": "CONTRACT",
-      "path": "apps/device/test/campaign-runner.test.js",
+      "path": "packages/play/test/campaign.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.device-campaign-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/test/campaign.test.js",
+      "path": "packages/play/src/campaign/campaign-runner.js",
+      "line": 8,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.device-campaign-v1",
+      "kind": "CONTRACT",
+      "path": "packages/play/src/campaign/campaign.js",
+      "line": 8,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.device-campaign-v1",
+      "kind": "CONTRACT",
+      "path": "packages/play/src/campaign/modern-campaign-ports.js",
+      "line": 8,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.device-campaign-v1",
+      "kind": "CONTRACT",
+      "path": "packages/play/test/campaign-runner.test.js",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.device-campaign-v1",
+      "kind": "CONTRACT",
+      "path": "packages/play/test/campaign.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.device-executor-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/src/adb-device-local-executor.js",
+      "path": "packages/play/src/campaign/adb-device-local-executor.js",
       "line": 12,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.device-executor-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/src/artifact-executor.js",
+      "path": "packages/play/src/campaign/artifact-executor.js",
       "line": 8,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.device-executor-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/src/device-local-executor.js",
+      "path": "packages/play/src/campaign/device-local-executor.js",
       "line": 9,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.device-executor-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/src/modern-campaign-ports.js",
+      "path": "packages/play/src/campaign/modern-campaign-ports.js",
       "line": 8,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.device-executor-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/test/adb-device-local-executor.test.js",
+      "path": "packages/play/test/adb-device-local-executor.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.device-executor-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/test/profile-game.test.js",
+      "path": "packages/play/test/profile-game.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.device-executor-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/test/profile-game.test.js",
+      "path": "packages/play/test/profile-game.test.js",
       "line": 3,
       "relation": "REFERENCES"
     },
@@ -443,13 +443,13 @@
     {
       "id": "contract.device-profile-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/test/profile-game.test.js",
+      "path": "packages/play/test/profile-game.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.device-profile-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/test/profile-game.test.js",
+      "path": "packages/play/test/profile-game.test.js",
       "line": 3,
       "relation": "REFERENCES"
     },
@@ -531,29 +531,23 @@
     {
       "id": "contract.hid-executor-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/src/adb-device-local-executor.js",
+      "path": "packages/play/src/campaign/adb-device-local-executor.js",
       "line": 12,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.hid-executor-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/src/hid-schedule.js",
+      "path": "packages/play/src/campaign/hid-schedule.js",
       "line": 6,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.hid-executor-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/src/physical-ports.js",
+      "path": "packages/play/src/campaign/physical-ports.js",
       "line": 9,
       "relation": "REFERENCES"
-    },
-    {
-      "id": "contract.hid-executor-v1",
-      "kind": "CONTRACT",
-      "path": "apps/device/test/adb-device-local-executor.test.js",
-      "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.hid-executor-v1",
@@ -561,6 +555,12 @@
       "path": "packages/play/src/venues/phone/hid.js",
       "line": 6,
       "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.hid-executor-v1",
+      "kind": "CONTRACT",
+      "path": "packages/play/test/adb-device-local-executor.test.js",
+      "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.hid-executor-v1",
@@ -667,19 +667,6 @@
     {
       "id": "contract.qualification-v2",
       "kind": "CONTRACT",
-      "path": "apps/device/src/campaign-preflight.js",
-      "line": 12,
-      "relation": "REFERENCES"
-    },
-    {
-      "id": "contract.qualification-v2",
-      "kind": "CONTRACT",
-      "path": "apps/device/test/venue-preflight.test.js",
-      "relation": "CONFORMANCE_FIXTURE"
-    },
-    {
-      "id": "contract.qualification-v2",
-      "kind": "CONTRACT",
       "path": "packages/kernel/src/contracts/qualification.js",
       "line": 10,
       "relation": "REFERENCES"
@@ -688,6 +675,19 @@
       "id": "contract.qualification-v2",
       "kind": "CONTRACT",
       "path": "packages/kernel/test/venue-identity.test.js",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.qualification-v2",
+      "kind": "CONTRACT",
+      "path": "packages/play/src/campaign/campaign-preflight.js",
+      "line": 12,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.qualification-v2",
+      "kind": "CONTRACT",
+      "path": "packages/play/test/venue-preflight.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -846,25 +846,38 @@
     {
       "id": "contract.venue-binding-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/src/venue.js",
+      "path": "packages/kernel/src/contracts/venue-identity.js",
+      "line": 18,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.venue-binding-v1",
+      "kind": "CONTRACT",
+      "path": "packages/kernel/test/venue-identity.test.js",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.venue-binding-v1",
+      "kind": "CONTRACT",
+      "path": "packages/play/src/campaign/venue.js",
       "line": 6,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.venue-binding-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/test/venue-preflight.test.js",
+      "path": "packages/play/test/venue-preflight.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
-      "id": "contract.venue-binding-v1",
+      "id": "contract.venue-check-v1",
       "kind": "CONTRACT",
       "path": "packages/kernel/src/contracts/venue-identity.js",
       "line": 18,
       "relation": "REFERENCES"
     },
     {
-      "id": "contract.venue-binding-v1",
+      "id": "contract.venue-check-v1",
       "kind": "CONTRACT",
       "path": "packages/kernel/test/venue-identity.test.js",
       "relation": "CONFORMANCE_FIXTURE"
@@ -872,27 +885,14 @@
     {
       "id": "contract.venue-check-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/src/adb-bridge.js",
+      "path": "packages/play/src/campaign/adb-bridge.js",
       "line": 17,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.venue-check-v1",
       "kind": "CONTRACT",
-      "path": "apps/device/test/venue-preflight.test.js",
-      "relation": "CONFORMANCE_FIXTURE"
-    },
-    {
-      "id": "contract.venue-check-v1",
-      "kind": "CONTRACT",
-      "path": "packages/kernel/src/contracts/venue-identity.js",
-      "line": 18,
-      "relation": "REFERENCES"
-    },
-    {
-      "id": "contract.venue-check-v1",
-      "kind": "CONTRACT",
-      "path": "packages/kernel/test/venue-identity.test.js",
+      "path": "packages/play/test/venue-preflight.test.js",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {

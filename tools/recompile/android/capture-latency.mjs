@@ -22,7 +22,7 @@ import { execFileSync } from 'node:child_process';
 import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { AdbCueHelperPort } from '../../../apps/device/src/physical-ports.js';
+import { AdbCueHelperPort } from '../../../packages/play/src/campaign/physical-ports.js';
 import { resolveSerial } from '../../device/local-profile.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');

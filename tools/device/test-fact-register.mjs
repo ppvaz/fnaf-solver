@@ -12,7 +12,7 @@
 // weeks. Nothing compared them, because nothing was looking at FACTS.
 //
 // The rule is narrow on purpose. It fires only where the weakness can actuate:
-// a producer under `apps/device/src`, the lane that presses buttons, using
+// a producer under `packages/play/src/campaign`, the lane that presses buttons, using
 // evidence ranked below the best the tree offers for that fact. Facts whose
 // authority the charter fixes -- screen identity and the night origin, where
 // the Python classifier is authoritative BECAUSE a detector that knows one way
@@ -29,7 +29,7 @@ import { stableHash } from '@sixam/kernel/contracts';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '../..'));
 
-const ACTUATING = 'apps/device/src';
+const ACTUATING = 'packages/play/src/campaign';
 let failed = 0;
 const fail = message => { failed += 1; process.stdout.write(`  FAIL ${message}\n`); };
 

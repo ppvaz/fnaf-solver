@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { anchorNightRelease, phoneWallOnset } from '../src/night-anchor.js';
+import { anchorNightRelease, phoneWallOnset } from '../src/campaign/night-anchor.js';
 
 // Fake host clock in ms. The helper's device clock is host - 5000; the night's
 // onset is at host 10000 (device 5000). The latch reads -1 until host 10500

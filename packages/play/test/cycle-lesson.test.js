@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { LESSON_LINE, lessonForNight, lessonFromArtifactPlan, lessonLines, lessonOriginLine, lessonVerb } from '../src/cycle-lesson.js';
+import { LESSON_LINE, lessonForNight, lessonFromArtifactPlan, lessonLines, lessonOriginLine, lessonVerb } from '../src/coach/cycle-lesson.js';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const TOKEN = '0123456789abcdef0123456789abcdef';

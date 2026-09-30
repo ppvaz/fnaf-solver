@@ -7,7 +7,7 @@
 // and the phone's wall clock, plus times relative to the plan. Mixing two of them
 // cost a session on 2026-09-17: host and phone stamps stood 1374.8 ms apart and a
 // Foxy rule that was fine looked broken. So the clock of every timestamp field is
-// declared here, read off the code that writes it (apps/device/src/
+// declared here, read off the code that writes it (packages/play/src/campaign/
 // adb-device-local-executor.js, modern-campaign-ports.js, night-anchor.js), and
 // tools/device/test-event-clocks.mjs refuses a packed event whose timestamp field
 // is not declared or whose value is implausible for its clock. The executor's

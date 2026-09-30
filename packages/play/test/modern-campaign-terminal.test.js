@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { terminalFromExecution } from '../src/modern-campaign-ports.js';
+import { terminalFromExecution } from '../src/campaign/modern-campaign-ports.js';
 
 const target = { night: 5, mode: 'story' };
 

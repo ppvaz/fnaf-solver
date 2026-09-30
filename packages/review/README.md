@@ -18,7 +18,8 @@ imports `packages/play`, an application (`apps/*`), `packages/adapters`, `packag
 `tools/architecture-test.js` refuses any module here that does, by a static
 import, a re-export, a dynamic `import()` or a `require()`. The two campaign
 validators it needs (`validateCampaignResult`, `validateSaveProof`) moved to
-`@sixam/kernel/contracts` for that reason; `apps/device` re-exports them.
+`@sixam/kernel/contracts` for that reason; play's campaign
+(`packages/play/src/campaign/`) re-exports them.
 It still reaches two `tools/device` modules: `bundle.mjs`, to compile a
 committed winner to the hash a bundle records (`trackedWinners`, and through it
 the research seed helpers), and `fact-register.mjs`, whose `ANCHOR_AIMS` and

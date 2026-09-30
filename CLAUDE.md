@@ -14,9 +14,10 @@ source, play and review, and is imported by nothing but the applications
 (`@sixam/research` is only a compatibility shim over it); `@sixam/core` keeps
 play's host-free half (sensing, estimation, the phase clock) and training
 until they move; `@sixam/play` owns the phone's transports, clocks, night
-onset and detection rules (the FNaF 2 grid/luma rules deprecated) and imports
-only the kernel and source; the device app composes and supervises the
-campaign; trainer and device are leaves; `@sixam/review` reads the evidence
+onset and detection rules (the FNaF 2 grid/luma rules deprecated), the
+campaign executor and its supervision, and imports only the kernel and source;
+the device app is the command line that composes it; trainer and device are
+leaves; `@sixam/review` reads the evidence
 and never imports play, the device app, propose or research
 (`tools/architecture-test.js`). There is no sandbox
 (ADR 0002 principle 7): claim-bearing cohorts and censuses are pre-registered,

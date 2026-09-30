@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
-import { DeviceCampaignRunner } from '../src/campaign-runner.js';
-import { makeCampaignSpec } from '../src/campaign.js';
+import { DeviceCampaignRunner } from '../src/campaign/campaign-runner.js';
+import { makeCampaignSpec } from '../src/campaign/campaign.js';
 
 const full = makeCampaignSpec({
   profile: 'fixture-hid-screencap',

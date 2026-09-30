@@ -27,8 +27,8 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { spawn } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { performance } from 'node:perf_hooks';
-import { AdbDeviceBridge } from '../../apps/device/src/adb-bridge.js';
-import { AdbHidProcess } from '../../apps/device/src/physical-ports.js';
+import { AdbDeviceBridge } from '../../packages/play/src/campaign/adb-bridge.js';
+import { AdbHidProcess } from '../../packages/play/src/campaign/physical-ports.js';
 import { HidWireTransport } from '../../packages/play/src/venues/phone/hid.js';
 import { resolveSerial } from './local-profile.mjs';
 

@@ -11,7 +11,7 @@
 // `tools/device/intersection-state-gate.mjs` consumes the Cue Helper's native
 // button downstroke scores and states its discipline plainly: "fitted grid
 // anchors are a diagnostic fallback only" and "a missing stroke score is a
-// refusal, never a luma fallback". `apps/device/src/modern-campaign-ports.js`
+// refusal, never a luma fallback". `packages/play/src/campaign/modern-campaign-ports.js`
 // answers the same maskOn question from the 20x9 grid and, when that returns
 // null, falls back to exactly the luma refutation the other file forbids. Both
 // were in the tree for weeks. Nothing compared them, because nothing was

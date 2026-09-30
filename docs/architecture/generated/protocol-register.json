@@ -21,7 +21,7 @@
     },
     {
       "id": "hid-executor-v1",
-      "owner": "apps/device",
+      "owner": "packages/play",
       "kind": "wire",
       "validator": "trajectory JSONL"
     }

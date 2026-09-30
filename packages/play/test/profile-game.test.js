@@ -6,10 +6,10 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { deviceProfileGame, resolveDeviceProfile } from '@sixam/source';
 import { stableHash } from '@sixam/kernel/contracts';
-import { validateExecutorRequest } from '../src/artifact-executor.js';
-import { compileDeviceLocalHidSchedule } from '../src/hid-schedule.js';
+import { validateExecutorRequest } from '../src/campaign/artifact-executor.js';
+import { compileDeviceLocalHidSchedule } from '../src/campaign/hid-schedule.js';
 
-const PROFILES = fileURLToPath(new URL('../profiles/', import.meta.url));
+const PROFILES = fileURLToPath(new URL('../../../apps/device/profiles/', import.meta.url));
 const read = name => JSON.parse(readFileSync(`${PROFILES}${name}`, 'utf8'));
 
 // -- every committed profile still loads, unchanged: resolution derives the
@@ -82,7 +82,7 @@ assert.throws(() => compileDeviceLocalHidSchedule(requestWith(ok.blocks[0].actio
   /no artifact action table/);
 
 // -- the leak does not come back: no FNaF 2 control id is a literal in the executor.
-const executor = readFileSync(fileURLToPath(new URL('../src/artifact-executor.js', import.meta.url)), 'utf8');
+const executor = readFileSync(fileURLToPath(new URL('../src/campaign/artifact-executor.js', import.meta.url)), 'utf8');
 assert.doesNotMatch(executor,
   /['"`](?:monitor|mask|cameraFeedLight|hallLight|leftVentLight|rightVentLight|wind|cam:\d+)['"`]/,
   'artifact-executor.js names a FNaF 2 control; the rule belongs in the game\'s action table');

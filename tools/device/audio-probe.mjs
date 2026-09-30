@@ -20,7 +20,7 @@
  * `--out` appends one JSON row per probe for a retained comparison.
  */
 import { appendFileSync } from 'node:fs';
-import { AdbCueHelperPort } from '../../apps/device/src/physical-ports.js';
+import { AdbCueHelperPort } from '../../packages/play/src/campaign/physical-ports.js';
 import { resolveSerial } from './local-profile.mjs';
 
 function fail(message) { console.error(`audio-probe: ${message}`); process.exit(2); }

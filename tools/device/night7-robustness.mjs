@@ -42,7 +42,7 @@ import { compileBundle } from './bundle.mjs';
 import { ANCHOR_AIMS } from './fact-register.mjs';
 import { runNight, loadPresets, PRESET_KNOBS } from './night7-presets.mjs';
 import { forkBlocks, gitState } from '../winner-census.mjs';
-import { DEFAULT_LATCH_HOLD_MS, DEFAULT_MIN_LEAD_MS } from '../../apps/device/src/night-anchor.js';
+import { DEFAULT_LATCH_HOLD_MS, DEFAULT_MIN_LEAD_MS } from '../../packages/play/src/campaign/night-anchor.js';
 import { heldOutSeeds, nightBindings } from '../winner-phase-census.mjs';
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '../..');

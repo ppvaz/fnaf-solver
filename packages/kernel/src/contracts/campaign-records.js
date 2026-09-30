@@ -4,7 +4,8 @@
  * moved here from apps/device (campaign.js, campaign-proof.js) on 2026-09-29,
  * verbatim, so that `@sixam/review` can read a retained campaign without
  * importing the app that played it (ADR 0002: Review never imports Play).
- * apps/device re-exports them unchanged; the messages are the ones the app
+ * Play's campaign (packages/play/src/campaign) re-exports them unchanged; the
+ * messages are the ones the app
  * threw, because evidence and attestations quote them.
  * CONTRACT:device-campaign-result-v1 CONTRACT:campaign-proof-v1
  */

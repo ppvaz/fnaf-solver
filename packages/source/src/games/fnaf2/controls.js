@@ -18,7 +18,7 @@
  *   not traced.
  * - `observes`: the fact that confirms the control's effect on the phone --
  *   `monitorUp` (monitor-rule-v1), `maskOn` (the effect grader in
- *   apps/device/src/control-effect.js) and `cameraSelected` (camera-rule-v1).
+ *   packages/play/src/campaign/control-effect.js) and `cameraSelected` (camera-rule-v1).
  * - `model`: the simulator action the control drives. Both lights drive the
  *   one context-dependent `light` (tools/device/device-lane.mjs SIM_ACTION).
  * CONTRACT:semantic-control-v1 CONTRACT:device-executor-v1.
@@ -107,7 +107,7 @@ export const FNAF2_CONTROL_CATALOG = defineControlCatalog({
   sources: [
     'tools/device/artifact-commands.mjs (preconditions)',
     'apps/device/profiles/hid-mediaprojection.json viewScroll (anchors)',
-    'packages/play/src/sensors/fnaf2/monitor-rule.js, camera-rule.js; apps/device/src/control-effect.js (observations)',
+    'packages/play/src/sensors/fnaf2/monitor-rule.js, camera-rule.js; packages/play/src/campaign/control-effect.js (observations)',
   ],
 });
 

@@ -22,7 +22,7 @@ import java.util.Locale;
  * <li>{@code GET}/{@code FRAME}: freshness, the grid-fitted
  *     {@link ScreenIdentity} label, the stroke-derived {@code monitorUp}, the
  *     two control stroke scores, the latched night onset and the phone's wall
- *     clock ({@code apps/device/src/modern-campaign-ports.js},
+ *     clock ({@code packages/play/src/campaign/modern-campaign-ports.js},
  *     {@code night-anchor.js}, {@code intersection-state-gate.mjs}); FRAME
  *     adds the 180 grid cells the grid-fitted monitor and mask rules read;</li>
  * <li>{@code WATCH}/{@code READ}: the twelve camera-button pixels behind the

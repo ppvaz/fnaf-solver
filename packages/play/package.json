@@ -11,6 +11,8 @@
     ".": "./src/index.js",
     "./phone/*": "./src/phone/*.js",
     "./venues/phone/*": "./src/venues/phone/*.js",
-    "./sensors/fnaf2/*": "./src/sensors/fnaf2/*.js"
+    "./sensors/fnaf2/*": "./src/sensors/fnaf2/*.js",
+    "./campaign/*": "./src/campaign/*.js",
+    "./coach/*": "./src/coach/*.js"
   }
 }

@@ -18,12 +18,12 @@ import { tmpdir } from 'node:os';
 import { stableHash } from '@sixam/kernel/contracts';
 import {
   AdbDeviceLocalArtifactExecutor, OBSERVER_INTERVAL_BOUND_MS, POST_NIGHT_STATIC_HALT, STATIC_TERMINAL_WAIT_MS,
-} from '../src/adb-device-local-executor.js';
-import { SHARED_HID_RELEASE, compileDeviceLocalHidSchedule } from '../src/hid-schedule.js';
+} from '../src/campaign/adb-device-local-executor.js';
+import { SHARED_HID_RELEASE, compileDeviceLocalHidSchedule } from '../src/campaign/hid-schedule.js';
 
 const RECORD_PATH = 'docs/evidence/post-night-static-halt-20260927.json';
 const record = JSON.parse(await readFile(new URL(`../../../${RECORD_PATH}`, import.meta.url), 'utf8'));
-const executorSource = await readFile(new URL('../src/adb-device-local-executor.js', import.meta.url), 'utf8');
+const executorSource = await readFile(new URL('../src/campaign/adb-device-local-executor.js', import.meta.url), 'utf8');
 
 // --- The rule is the record's, and the comment's numbers are the record's ----
 assert.equal(record.schema, 'post-night-static-halt-v1');
@@ -74,7 +74,7 @@ assert.ok(r02.secondReadMs > OBSERVER_INTERVAL_BOUND_MS && r02.gapBeforeMs > OBS
   'r02 is the measured violation of the observer-interval bound');
 
 // --- Fixtures ---------------------------------------------------------------
-const profile = JSON.parse(await readFile(new URL('../profiles/hid-mediaprojection.json', import.meta.url), 'utf8'));
+const profile = JSON.parse(await readFile(new URL('../../../apps/device/profiles/hid-mediaprojection.json', import.meta.url), 'utf8'));
 const action = (id, kind, control, atMs, extra = {}) => ({ schema: 'artifact-action-v1', id, cycle: 'toys', atMs,
   kind, control, ...extra });
 const block = (id, atMs, actions) => ({ schema: 'artifact-action-block-v1', id, cycle: 'toys', night: 6, atMs, actions });

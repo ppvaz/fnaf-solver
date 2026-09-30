@@ -26,7 +26,7 @@ const cases = [
   [['tools/device/campaign-night9-z-winner.json'], 'consequential', 'a committed winner'],
   [['packages/review/src/lab-x.mjs', 'packages/review/test/lab-x.test.mjs'], 'consequential', 'solver-interface code with its gate'],
   [['android/companion/src/main/java/X.java', 'android/companion/src/test/java/XTest.java'], 'consequential', 'Companion code with its gate'],
-  [['apps/device/src/campaign.js'], 'UNKNOWN', 'controller code with no gate beside it'],
+  [['packages/play/src/campaign/campaign.js'], 'UNKNOWN', 'controller code with no gate beside it'],
   [['apps/trainer/src/app.js', 'docs/x.md'], 'UNKNOWN', 'trainer code with no gate beside it'],
   [['packages/core/src/mechanics/plant-model.js', 'packages/core/test/foxy.test.js'], 'bookkeeping', 'model code and a test, no record'],
   [['tools/device/test-seam-slack.mjs', '.githooks/commit-msg'], 'bookkeeping', 'gates alone'],

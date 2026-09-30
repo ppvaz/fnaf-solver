@@ -2,7 +2,7 @@
 // The device lane: the model scored on exactly what the phone is sent.
 //
 // Every census here scores a plan's MODEL replay. The phone never sees that:
-// it receives the HID schedule apps/device/src/hid-schedule.js compiles from
+// it receives the HID schedule packages/play/src/campaign/hid-schedule.js compiles from
 // the bundle's artifact, with its own macro timings (a read's mask press, a
 // maskraise's gap, a camdrop's light tail) and the phone's own constraints on
 // top. On 2026-09-27 a Night 1 plan the model scored 65,536/65,536 lost a
@@ -45,8 +45,8 @@ import { pathToFileURL } from 'node:url';
 import { FPS, Sim, Rng } from '@sixam/source/fnaf2';
 import { stableHash } from '@sixam/kernel/contracts';
 import { MODEL_CONTEXT_LIGHT } from '@sixam/source';
-import { validateExecutorRequest } from '../../apps/device/src/artifact-executor.js';
-import { compileDeviceLocalHidSchedule } from '../../apps/device/src/hid-schedule.js';
+import { validateExecutorRequest } from '../../packages/play/src/campaign/artifact-executor.js';
+import { compileDeviceLocalHidSchedule } from '../../packages/play/src/campaign/hid-schedule.js';
 import { DeviceActuator } from './actuator.mjs';
 import { SEAM_FLOORS } from './artifact-commands.mjs';
 

@@ -21,7 +21,7 @@ import { homedir, tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { performance } from 'node:perf_hooks';
-import { AdbCueHelperPort, AdbHidProcess } from '../../apps/device/src/physical-ports.js';
+import { AdbCueHelperPort, AdbHidProcess } from '../../packages/play/src/campaign/physical-ports.js';
 import { HidWireTransport } from '../../packages/play/src/venues/phone/hid.js';
 import { loadRegionSet, registerSet } from './native-regions.mjs';
 import { Actor, RegionRecorder, RunRecord, startVideo } from './night-kit.mjs';

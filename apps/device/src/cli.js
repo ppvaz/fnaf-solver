@@ -3,15 +3,15 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { AdbDeviceBridge } from './adb-bridge.js';
-import { CampaignStateMachine, DEFAULT_CAMPAIGN_NIGHTS, makeCampaignSpec } from './campaign.js';
-import { DeviceCampaignRunner } from './campaign-runner.js';
-import { guidedCalibrationSteps, validateCustomNightCalibration } from './custom-night.js';
-import { evaluateCampaignPreflight } from './campaign-preflight.js';
-import { validateCampaignBundle } from './campaign-bundle.js';
-import { AdbCueHelperPort } from './physical-ports.js';
-import { installCampaignSignalHandlers } from './campaign-signal.js';
-import { loadVenueBindings, renderVenueCheck } from './venue.js';
+import { AdbDeviceBridge } from '@sixam/play/campaign/adb-bridge';
+import { CampaignStateMachine, DEFAULT_CAMPAIGN_NIGHTS, makeCampaignSpec } from '@sixam/play/campaign/campaign';
+import { DeviceCampaignRunner } from '@sixam/play/campaign/campaign-runner';
+import { guidedCalibrationSteps, validateCustomNightCalibration } from '@sixam/play/campaign/custom-night';
+import { evaluateCampaignPreflight } from '@sixam/play/campaign/campaign-preflight';
+import { validateCampaignBundle } from '@sixam/play/campaign/campaign-bundle';
+import { AdbCueHelperPort } from '@sixam/play/campaign/physical-ports';
+import { installCampaignSignalHandlers } from '@sixam/play/campaign/campaign-signal';
+import { loadVenueBindings, renderVenueCheck } from '@sixam/play/campaign/venue';
 import { fitClockMap, CueHelperControlTransport } from '@sixam/play';
 import { resolveDeviceProfile } from '@sixam/source';
 import { stableHash } from '@sixam/kernel/contracts';
@@ -351,7 +351,7 @@ async function main(argv = process.argv.slice(2)) {
     if (options.ports || useDefaultModernPorts) {
       const modulePath = options.ports
         ? resolve(options.ports)
-        : join(ROOT, 'apps/device/src/modern-campaign-ports.js');
+        : join(ROOT, 'packages/play/src/campaign/modern-campaign-ports.js');
       const module = await import(pathToFileURL(modulePath).href);
       const factory = module.createCampaignPorts ?? module.default;
       if (typeof factory !== 'function') throw new Error('ports module must export createCampaignPorts()');

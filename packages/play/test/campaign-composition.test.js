@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { makeCampaignSpec } from '../src/campaign.js';
-import { validateCampaignBundle } from '../src/campaign-bundle.js';
-import { composeCampaignPorts } from '../src/campaign-composition.js';
+import { makeCampaignSpec } from '../src/campaign/campaign.js';
+import { validateCampaignBundle } from '../src/campaign/campaign-bundle.js';
+import { composeCampaignPorts } from '../src/campaign/campaign-composition.js';
 
-const profile = JSON.parse(await readFile(fileURLToPath(new URL('../profiles/fixture-hid-screencap.json', import.meta.url)), 'utf8'));
+const profile = JSON.parse(await readFile(fileURLToPath(new URL('../../../apps/device/profiles/fixture-hid-screencap.json', import.meta.url)), 'utf8'));
 const full = makeCampaignSpec({ profile: profile.id, targetBuild: profile.targetBuild, nights: [6, 7] });
 const spec = { ...full, nights: [full.nights[0]] };
 const block = { schema: 'artifact-action-block-v1', id: 'opening', cycle: 'opening', atMs: 0,

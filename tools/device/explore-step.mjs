@@ -27,7 +27,7 @@ import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { performance } from 'node:perf_hooks';
-import { AdbCueHelperPort, AdbHidProcess } from '../../apps/device/src/physical-ports.js';
+import { AdbCueHelperPort, AdbHidProcess } from '../../packages/play/src/campaign/physical-ports.js';
 import { HidWireTransport } from '../../packages/play/src/venues/phone/hid.js';
 import { resolveSerial } from './local-profile.mjs';
 

@@ -167,7 +167,7 @@ controls. `seen` is the only observation on the panel; everything else is the
 schedule.
 
 `night-run.sh --live --confirm-live --teach-overlay` drives it. At the attempt's menu the host sends
-the compiled artifact's semantic actions (`apps/device/src/cycle-lesson.js`),
+the compiled artifact's semantic actions (`packages/play/src/coach/cycle-lesson.js`),
 which `CycleLesson.java` re-expands with the executor's own repeat rule and
 refuses unless the rows hash to the id the host sent. After the anchored
 release the host sends `origin <onsetNs> <afterOnsetUs>`, and the helper

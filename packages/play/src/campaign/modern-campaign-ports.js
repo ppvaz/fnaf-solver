@@ -21,17 +21,17 @@ import { AdbDeviceLocalArtifactExecutor } from './adb-device-local-executor.js';
 import { makeCampaignExecutionRequest } from './campaign-bundle.js';
 import { AdbCueHelperPort, AdbHidProcess } from './physical-ports.js';
 import { anchorNightRelease } from './night-anchor.js';
-import { LESSON_LINE, lessonForNight, lessonLines, lessonOriginLine } from './cycle-lesson.js';
+import { LESSON_LINE, lessonForNight, lessonLines, lessonOriginLine } from '../coach/cycle-lesson.js';
 import { phoneWallAt, planTimedStart, waitUntilHostMs } from './timed-start.js';
 import { DeviceCampaignRunner } from './campaign-runner.js';
 
-const TITLE_MODEL = new URL('../../../tools/device/models/title-moto-g56-v207.json', import.meta.url);
-const CAMERA_RULE = new URL('../../../models/camera-rule-moto-g56-v207.json', import.meta.url);
-const MONITOR_RULE = new URL('../../../models/monitor-rule-moto-g56-v207.json', import.meta.url);
-const MASK_RULE = new URL('../../../models/mask-rule-moto-g56-v207.json', import.meta.url);
-const LIFECYCLE_OBSERVER = new URL('../../../tools/device/lifecycle-observe.py', import.meta.url);
-const TITLE_OBSERVER = new URL('../../../tools/device/title-observe.py', import.meta.url);
-const CUSTOM_NIGHT_READBACK = new URL('../../../tools/device/custom-night-readback.py', import.meta.url);
+const TITLE_MODEL = new URL('../../../../tools/device/models/title-moto-g56-v207.json', import.meta.url);
+const CAMERA_RULE = new URL('../../../../models/camera-rule-moto-g56-v207.json', import.meta.url);
+const MONITOR_RULE = new URL('../../../../models/monitor-rule-moto-g56-v207.json', import.meta.url);
+const MASK_RULE = new URL('../../../../models/mask-rule-moto-g56-v207.json', import.meta.url);
+const LIFECYCLE_OBSERVER = new URL('../../../../tools/device/lifecycle-observe.py', import.meta.url);
+const TITLE_OBSERVER = new URL('../../../../tools/device/title-observe.py', import.meta.url);
+const CUSTOM_NIGHT_READBACK = new URL('../../../../tools/device/custom-night-readback.py', import.meta.url);
 const AI_DIALS_ALL = ['withfreddy', 'withbonnie', 'withchica', 'foxy', 'toyfreddy', 'toybonnie', 'toychica', 'mangle', 'bb', 'golden'];
 const sleep = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
 const isRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -940,7 +940,7 @@ export async function createCampaignPorts(options = {}) {
     });
     // Twin-nights test of clock seeding (docs/evidence/night7-k3-wallclock-r1-20260915.json):
     // FNAF_START_PHONE_WALL_RESIDUE_MS places the Start tap when the phone's wall clock
-    // reaches that residue modulo 65 536 ms (apps/device/src/timed-start.js). The tap's
+    // reaches that residue modulo 65 536 ms (packages/play/src/campaign/timed-start.js). The tap's
     // phone wall time is logged either way; a requested timed start never falls back to
     // an untimed tap.
     await stampedStartTap({ point: calibration.start.point, holdMs: calibration.start.holdMs,

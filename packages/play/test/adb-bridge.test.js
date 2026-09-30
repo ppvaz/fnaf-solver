@@ -2,9 +2,9 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { AdbDeviceBridge, parseAdbDevices } from '../src/adb-bridge.js';
-import { restartCueHelperCapture } from '../src/cue-helper-capture.js';
-import { AdbCueHelperPort, parseCueHelperEndpoint } from '../src/physical-ports.js';
+import { AdbDeviceBridge, parseAdbDevices } from '../src/campaign/adb-bridge.js';
+import { restartCueHelperCapture } from '../src/campaign/cue-helper-capture.js';
+import { AdbCueHelperPort, parseCueHelperEndpoint } from '../src/campaign/physical-ports.js';
 
 assert.deepEqual(parseAdbDevices('List of devices attached\nusb-1\tdevice product/foo transport_id:1\noffline\toffline\n'), [
   { serial: 'usb-1', status: 'device', details: ['product/foo', 'transport_id:1'] },

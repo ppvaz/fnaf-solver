@@ -9,8 +9,8 @@ import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
 const execFile = promisify(execFileCallback);
-const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
-const SETUP = fileURLToPath(new URL('../../../tools/device/cue-helper-setup.sh', import.meta.url));
+const ROOT = fileURLToPath(new URL('../../../../', import.meta.url));
+const SETUP = fileURLToPath(new URL('../../../../tools/device/cue-helper-setup.sh', import.meta.url));
 
 async function runSetup(file, args, options) {
   try {

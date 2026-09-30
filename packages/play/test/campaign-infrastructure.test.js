@@ -1,14 +1,14 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { makeCampaignSpec } from '../src/campaign.js';
+import { makeCampaignSpec } from '../src/campaign/campaign.js';
 import { configureCustomNight, makeCustomNightConfig, selectCustomNightPreset,
-  validateCustomNightCalibration, validateCustomNightModel } from '../src/custom-night.js';
-import { evaluateCampaignPreflight } from '../src/campaign-preflight.js';
-import { validateCampaignBundle, makeCampaignExecutionRequest } from '../src/campaign-bundle.js';
-import { DeviceLocalArtifactExecutor, expandNightBlocks } from '../src/device-local-executor.js';
+  validateCustomNightCalibration, validateCustomNightModel } from '../src/campaign/custom-night.js';
+import { evaluateCampaignPreflight } from '../src/campaign/campaign-preflight.js';
+import { validateCampaignBundle, makeCampaignExecutionRequest } from '../src/campaign/campaign-bundle.js';
+import { DeviceLocalArtifactExecutor, expandNightBlocks } from '../src/campaign/device-local-executor.js';
 
-const profile = JSON.parse(await readFile(fileURLToPath(new URL('../profiles/fixture-hid-screencap.json', import.meta.url)), 'utf8'));
+const profile = JSON.parse(await readFile(fileURLToPath(new URL('../../../apps/device/profiles/fixture-hid-screencap.json', import.meta.url)), 'utf8'));
 const spec = makeCampaignSpec({ profile: profile.id, targetBuild: profile.targetBuild, nights: [6, 7] });
 const block = (id, cycle, atMs) => ({ schema: 'artifact-action-block-v1', id, cycle, atMs,
   actions: [{ schema: 'artifact-action-v1', id: `${id}-action`, cycle, atMs,

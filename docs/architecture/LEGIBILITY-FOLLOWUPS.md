@@ -90,14 +90,14 @@ the affected runner from one machine-readable test manifest.
 
 **Status:** PARTIAL (2026-09-25) -- the service is gone with the fixture path; the executor's
 schedule compiler, shell renderer and effect grading are their own modules
-([`hid-schedule.js`](../../apps/device/src/hid-schedule.js),
-[`device-shell.js`](../../apps/device/src/device-shell.js),
-[`control-effect.js`](../../apps/device/src/control-effect.js)), moved verbatim: the compiled
+([`hid-schedule.js`](../../packages/play/src/campaign/hid-schedule.js),
+[`device-shell.js`](../../packages/play/src/campaign/device-shell.js),
+[`control-effect.js`](../../packages/play/src/campaign/control-effect.js)), moved verbatim: the compiled
 schedule, body and script of every committed winner night hash the same before and after (24
 characterizations); the uncalled machine compatibility executor was removed. Open: the artifact
 executor class (~1100 lines: adb lifecycle, gates, arm, origin) and `modern-campaign-ports.js`.
-**Owner:** `apps/device`
-**Evidence:** [`adb-device-local-executor.js`](../../apps/device/src/adb-device-local-executor.js), [`modern-campaign-ports.js` (line 172)](../../apps/device/src/modern-campaign-ports.js), `service.js` line 1 (removed 2026-09-25)
+**Owner:** `packages/play`
+**Evidence:** [`adb-device-local-executor.js`](../../packages/play/src/campaign/adb-device-local-executor.js), [`modern-campaign-ports.js` (line 172)](../../packages/play/src/campaign/modern-campaign-ports.js), `service.js` line 1 (removed 2026-09-25)
 
 The local executor combines artifact compilation, shell rendering, ADB process
 lifecycle, HID execution, observation, cleanup, and a machine compatibility
@@ -168,7 +168,7 @@ capabilities are not generated from it (`control-exclusion.js`, `button-strokes.
 `calibration-state-rule.js` still name FNaF 2 controls), and `hid-schedule.js`'s macros are FNaF 2's,
 guarded to that game rather than read from the table.
 **Owner:** `packages/source` (the catalogs, since ADR 0002 migration D4)
-**Evidence:** [`define.js` (line 135)](../../packages/source/src/clockwork/control-catalog.js), [`fnaf2.js` (line 40)](../../packages/source/src/games/fnaf2/controls.js), [`artifact-executor.js` (line 42)](../../apps/device/src/artifact-executor.js), `service.js` line 17 (removed 2026-09-25)
+**Evidence:** [`define.js` (line 135)](../../packages/source/src/clockwork/control-catalog.js), [`fnaf2.js` (line 40)](../../packages/source/src/games/fnaf2/controls.js), [`artifact-executor.js` (line 42)](../../packages/play/src/campaign/artifact-executor.js), `service.js` line 17 (removed 2026-09-25)
 
 The canonical vocabulary coexists with legacy aliases and repeated camera
 lists. `service.js`, the artifact executor, the adapter registry, and the

@@ -170,11 +170,11 @@ small result type first.
 ## 5. ADB transport — binding: `NONE`, against a stated owner
 
 `CLAUDE.md` gives adapters ownership of transport, and
-`apps/device/src/adb-bridge.js` (251) is the closed, reviewable port. In
+`packages/play/src/campaign/adb-bridge.js` (251) is the closed, reviewable port. In
 practice **28 tracked files invoke `adb` directly**, led by
 `tools/device/legacy-trial.sh` (55 call sites), `trial-maskcamp.sh` (19),
 `hid-sweep-probe.sh` (16), `query-cue-helper.sh` and `capture-screen-sample.sh`
-(10 each). `apps/device/src/adb-device-local-executor.js` (974) holds the
+(10 each). `packages/play/src/campaign/adb-device-local-executor.js` (974) holds the
 sanctioned device-local path; `packages/play/src/venues/phone/hid.js` and
 `transports/cue-helper.js` hold the codecs and deliberately open nothing.
 

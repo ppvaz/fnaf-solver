@@ -152,9 +152,9 @@
       "contractId": "device-profile-v1",
       "id": "device-profile-v1",
       "version": 1,
-      "owner": "apps/device",
+      "owner": "packages/play",
       "kind": "data",
-      "purpose": "Stable device-profile-v1 boundary for apps/device; its validator is validateProfile.",
+      "purpose": "Stable device-profile-v1 boundary for packages/play; its validator is validateProfile.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -166,7 +166,7 @@
       "runtimeValidation": "validateProfile",
       "conformanceFixtures": [
         "tools/device/test-bundle.mjs",
-        "apps/device/test/profile-game.test.js"
+        "packages/play/test/profile-game.test.js"
       ]
     },
     {
@@ -273,9 +273,9 @@
       "contractId": "device-bundle-v1",
       "id": "device-bundle-v1",
       "version": 1,
-      "owner": "apps/device",
+      "owner": "packages/play",
       "kind": "artifact",
-      "purpose": "Stable device-bundle-v1 boundary for apps/device; its validator is tools/device/bundle.mjs validateBundle.",
+      "purpose": "Stable device-bundle-v1 boundary for packages/play; its validator is tools/device/bundle.mjs validateBundle.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -414,9 +414,9 @@
       "contractId": "hid-executor-v1",
       "id": "hid-executor-v1",
       "version": 1,
-      "owner": "apps/device",
+      "owner": "packages/play",
       "kind": "wire",
-      "purpose": "Stable hid-executor-v1 boundary for apps/device; its validator is trajectory JSONL.",
+      "purpose": "Stable hid-executor-v1 boundary for packages/play; its validator is trajectory JSONL.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -428,7 +428,7 @@
       "runtimeValidation": "trajectory JSONL",
       "conformanceFixtures": [
         "packages/play/test/conformance.test.js",
-        "apps/device/test/adb-device-local-executor.test.js"
+        "packages/play/test/adb-device-local-executor.test.js"
       ]
     },
     {
@@ -455,9 +455,9 @@
       "contractId": "device-executor-v1",
       "id": "device-executor-v1",
       "version": 1,
-      "owner": "apps/device",
+      "owner": "packages/play",
       "kind": "artifact",
-      "purpose": "Stable device-executor-v1 boundary for apps/device; its validator is apps/device/src/artifact-executor.js validateExecutorRequest.",
+      "purpose": "Stable device-executor-v1 boundary for packages/play; its validator is packages/play/src/campaign/artifact-executor.js validateExecutorRequest.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -466,10 +466,10 @@
       "unknownBehavior": "Invalid or unavailable data is rejected or represented as an explicit UNKNOWN state; it is never silently promoted.",
       "errorBehavior": "Reject malformed, incompatible, uncalibrated, or out-of-budget values at the boundary.",
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
-      "runtimeValidation": "apps/device/src/artifact-executor.js validateExecutorRequest",
+      "runtimeValidation": "packages/play/src/campaign/artifact-executor.js validateExecutorRequest",
       "conformanceFixtures": [
-        "apps/device/test/adb-device-local-executor.test.js",
-        "apps/device/test/profile-game.test.js"
+        "packages/play/test/adb-device-local-executor.test.js",
+        "packages/play/test/profile-game.test.js"
       ]
     },
     {
@@ -531,7 +531,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "packages/play/src/sensors/fnaf2/calibration-state-rule.js parseCalibrationStateRule",
       "conformanceFixtures": [
-        "apps/device/test/calibration-state-rule.test.js"
+        "packages/play/test/calibration-state-rule.test.js"
       ]
     },
     {
@@ -558,9 +558,9 @@
       "contractId": "device-campaign-v1",
       "id": "device-campaign-v1",
       "version": 1,
-      "owner": "apps/device",
+      "owner": "packages/play",
       "kind": "data",
-      "purpose": "Stable device-campaign-v1 boundary for apps/device; its validator is apps/device/src/campaign.js CampaignStateMachine.",
+      "purpose": "Stable device-campaign-v1 boundary for packages/play; its validator is packages/play/src/campaign/campaign.js CampaignStateMachine.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -569,19 +569,19 @@
       "unknownBehavior": "Invalid or unavailable data is rejected or represented as an explicit UNKNOWN state; it is never silently promoted.",
       "errorBehavior": "Reject malformed, incompatible, uncalibrated, or out-of-budget values at the boundary.",
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
-      "runtimeValidation": "apps/device/src/campaign.js CampaignStateMachine",
+      "runtimeValidation": "packages/play/src/campaign/campaign.js CampaignStateMachine",
       "conformanceFixtures": [
-        "apps/device/test/campaign.test.js",
-        "apps/device/test/campaign-runner.test.js"
+        "packages/play/test/campaign.test.js",
+        "packages/play/test/campaign-runner.test.js"
       ]
     },
     {
       "contractId": "device-adb-preflight-v1",
       "id": "device-adb-preflight-v1",
       "version": 1,
-      "owner": "apps/device",
+      "owner": "packages/play",
       "kind": "port",
-      "purpose": "Stable device-adb-preflight-v1 boundary for apps/device; its validator is apps/device/src/adb-bridge.js AdbDeviceBridge.",
+      "purpose": "Stable device-adb-preflight-v1 boundary for packages/play; its validator is packages/play/src/campaign/adb-bridge.js AdbDeviceBridge.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -590,18 +590,18 @@
       "unknownBehavior": "Invalid or unavailable data is rejected or represented as an explicit UNKNOWN state; it is never silently promoted.",
       "errorBehavior": "Reject malformed, incompatible, uncalibrated, or out-of-budget values at the boundary.",
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
-      "runtimeValidation": "apps/device/src/adb-bridge.js AdbDeviceBridge",
+      "runtimeValidation": "packages/play/src/campaign/adb-bridge.js AdbDeviceBridge",
       "conformanceFixtures": [
-        "apps/device/test/adb-bridge.test.js"
+        "packages/play/test/adb-bridge.test.js"
       ]
     },
     {
       "contractId": "device-campaign-result-v1",
       "id": "device-campaign-result-v1",
       "version": 1,
-      "owner": "apps/device",
+      "owner": "packages/play",
       "kind": "artifact",
-      "purpose": "Stable device-campaign-result-v1 boundary for apps/device; its validator is apps/device/src/campaign.js CampaignStateMachine.result.",
+      "purpose": "Stable device-campaign-result-v1 boundary for packages/play; its validator is packages/play/src/campaign/campaign.js CampaignStateMachine.result.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -610,19 +610,19 @@
       "unknownBehavior": "Invalid or unavailable data is rejected or represented as an explicit UNKNOWN state; it is never silently promoted.",
       "errorBehavior": "Reject malformed, incompatible, uncalibrated, or out-of-budget values at the boundary.",
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
-      "runtimeValidation": "apps/device/src/campaign.js CampaignStateMachine.result",
+      "runtimeValidation": "packages/play/src/campaign/campaign.js CampaignStateMachine.result",
       "conformanceFixtures": [
-        "apps/device/test/campaign.test.js",
-        "apps/device/test/campaign-runner.test.js"
+        "packages/play/test/campaign.test.js",
+        "packages/play/test/campaign-runner.test.js"
       ]
     },
     {
       "contractId": "campaign-proof-v1",
       "id": "campaign-proof-v1",
       "version": 1,
-      "owner": "apps/device",
+      "owner": "packages/play",
       "kind": "artifact",
-      "purpose": "Stable campaign-proof-v1 boundary for apps/device; its validator is apps/device/src/campaign-proof.js makeAttemptProof.",
+      "purpose": "Stable campaign-proof-v1 boundary for packages/play; its validator is packages/play/src/campaign/campaign-proof.js makeAttemptProof.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -631,18 +631,18 @@
       "unknownBehavior": "Invalid or unavailable data is rejected or represented as an explicit UNKNOWN state; it is never silently promoted.",
       "errorBehavior": "Reject malformed, incompatible, uncalibrated, or out-of-budget values at the boundary.",
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
-      "runtimeValidation": "apps/device/src/campaign-proof.js makeAttemptProof",
+      "runtimeValidation": "packages/play/src/campaign/campaign-proof.js makeAttemptProof",
       "conformanceFixtures": [
-        "apps/device/test/campaign-runner.test.js"
+        "packages/play/test/campaign-runner.test.js"
       ]
     },
     {
       "contractId": "custom-night-config-v1",
       "id": "custom-night-config-v1",
       "version": 1,
-      "owner": "apps/device",
+      "owner": "packages/play",
       "kind": "data",
-      "purpose": "Stable custom-night-config-v1 boundary for apps/device; its validator is apps/device/src/custom-night.js validateCustomNightConfig.",
+      "purpose": "Stable custom-night-config-v1 boundary for packages/play; its validator is packages/play/src/campaign/custom-night.js validateCustomNightConfig.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -651,19 +651,19 @@
       "unknownBehavior": "Invalid or unavailable data is rejected or represented as an explicit UNKNOWN state; it is never silently promoted.",
       "errorBehavior": "Reject malformed, incompatible, uncalibrated, or out-of-budget values at the boundary.",
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
-      "runtimeValidation": "apps/device/src/custom-night.js validateCustomNightConfig",
+      "runtimeValidation": "packages/play/src/campaign/custom-night.js validateCustomNightConfig",
       "conformanceFixtures": [
-        "apps/device/test/campaign.test.js",
-        "apps/device/test/campaign-infrastructure.test.js"
+        "packages/play/test/campaign.test.js",
+        "packages/play/test/campaign-infrastructure.test.js"
       ]
     },
     {
       "contractId": "custom-night-calibration-v1",
       "id": "custom-night-calibration-v1",
       "version": 1,
-      "owner": "apps/device",
+      "owner": "packages/play",
       "kind": "artifact",
-      "purpose": "Stable custom-night-calibration-v1 boundary for apps/device; its validator is apps/device/src/custom-night.js validateCustomNightCalibration.",
+      "purpose": "Stable custom-night-calibration-v1 boundary for packages/play; its validator is packages/play/src/campaign/custom-night.js validateCustomNightCalibration.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -672,18 +672,18 @@
       "unknownBehavior": "Invalid or unavailable data is rejected or represented as an explicit UNKNOWN state; it is never silently promoted.",
       "errorBehavior": "Reject malformed, incompatible, uncalibrated, or out-of-budget values at the boundary.",
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
-      "runtimeValidation": "apps/device/src/custom-night.js validateCustomNightCalibration",
+      "runtimeValidation": "packages/play/src/campaign/custom-night.js validateCustomNightCalibration",
       "conformanceFixtures": [
-        "apps/device/test/campaign-infrastructure.test.js"
+        "packages/play/test/campaign-infrastructure.test.js"
       ]
     },
     {
       "contractId": "device-campaign-preflight-v1",
       "id": "device-campaign-preflight-v1",
       "version": 1,
-      "owner": "apps/device",
+      "owner": "packages/play",
       "kind": "artifact",
-      "purpose": "Stable device-campaign-preflight-v1 boundary for apps/device; its validator is apps/device/src/campaign-preflight.js evaluateCampaignPreflight.",
+      "purpose": "Stable device-campaign-preflight-v1 boundary for packages/play; its validator is packages/play/src/campaign/campaign-preflight.js evaluateCampaignPreflight.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -692,9 +692,9 @@
       "unknownBehavior": "Invalid or unavailable data is rejected or represented as an explicit UNKNOWN state; it is never silently promoted.",
       "errorBehavior": "Reject malformed, incompatible, uncalibrated, or out-of-budget values at the boundary.",
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
-      "runtimeValidation": "apps/device/src/campaign-preflight.js evaluateCampaignPreflight",
+      "runtimeValidation": "packages/play/src/campaign/campaign-preflight.js evaluateCampaignPreflight",
       "conformanceFixtures": [
-        "apps/device/test/campaign-infrastructure.test.js"
+        "packages/play/test/campaign-infrastructure.test.js"
       ]
     },
     {
@@ -996,7 +996,7 @@
       "runtimeValidation": "validateVenueCheck",
       "conformanceFixtures": [
         "packages/kernel/test/venue-identity.test.js",
-        "apps/device/test/venue-preflight.test.js"
+        "packages/play/test/venue-preflight.test.js"
       ]
     },
     {
@@ -1017,7 +1017,7 @@
       "runtimeValidation": "validateVenueBinding",
       "conformanceFixtures": [
         "packages/kernel/test/venue-identity.test.js",
-        "apps/device/test/venue-preflight.test.js"
+        "packages/play/test/venue-preflight.test.js"
       ]
     },
     {
@@ -1038,7 +1038,7 @@
       "runtimeValidation": "validateQualification",
       "conformanceFixtures": [
         "packages/kernel/test/venue-identity.test.js",
-        "apps/device/test/venue-preflight.test.js"
+        "packages/play/test/venue-preflight.test.js"
       ]
     },
     {

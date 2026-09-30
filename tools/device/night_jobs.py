@@ -39,7 +39,7 @@ ROOT = HERE.parents[1]
 SCHEMA = "night-job-v1"
 WINNER_PATH = re.compile(r"^tools/device/[a-z0-9][a-z0-9.-]{0,80}-winner\.json$")
 LABEL = re.compile(r"^[a-z0-9][a-z0-9-]{0,24}$")
-STATIC_HALT_SOURCE = ROOT / "apps/device/src/adb-device-local-executor.js"
+STATIC_HALT_SOURCE = ROOT / "packages/play/src/campaign/adb-device-local-executor.js"
 STATIC_HALT_EXPORT = "export const POST_NIGHT_STATIC_HALT"
 
 GAMES = {

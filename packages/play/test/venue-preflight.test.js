@@ -9,10 +9,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { bindQualificationVenue } from '@sixam/kernel/contracts';
-import { AdbDeviceBridge, preflightVenue } from '../src/adb-bridge.js';
-import { CampaignStateMachine, campaignVenue, makeCampaignSpec } from '../src/campaign.js';
-import { evaluateCampaignPreflight } from '../src/campaign-preflight.js';
-import { loadVenueBindings, renderVenueCheck } from '../src/venue.js';
+import { AdbDeviceBridge, preflightVenue } from '../src/campaign/adb-bridge.js';
+import { CampaignStateMachine, campaignVenue, makeCampaignSpec } from '../src/campaign/campaign.js';
+import { evaluateCampaignPreflight } from '../src/campaign/campaign-preflight.js';
+import { loadVenueBindings, renderVenueCheck } from '../src/campaign/venue.js';
 
 const SERIAL = 'FAKE0SERIAL1';
 const TARGET = 'com.scottgames.fnaf2:2.0.7+26';
@@ -117,7 +117,7 @@ assert.equal(venueCheck(unreadable).status, 'HOLD');
 assert.match(venueCheck(unreadable).detail, /securityPatch unread \(getprop ro\.build\.version\.security_patch failed: getprop: closed\)/);
 
 // 7. Campaign preflight: the qualification's standing on the observed venue.
-const fixtureProfile = JSON.parse(readFileSync(fileURLToPath(new URL('../profiles/fixture-hid-screencap.json', import.meta.url)), 'utf8'));
+const fixtureProfile = JSON.parse(readFileSync(fileURLToPath(new URL('../../../apps/device/profiles/fixture-hid-screencap.json', import.meta.url)), 'utf8'));
 const liveProfile = { ...fixtureProfile, limits: { ...fixtureProfile.limits, dryRunOnly: false } };
 const spec = makeCampaignSpec({ profile: liveProfile.id, targetBuild: liveProfile.targetBuild, nights: [2] });
 const campaign = (device, qualification) => evaluateCampaignPreflight({ spec, device, profile: liveProfile, qualification,

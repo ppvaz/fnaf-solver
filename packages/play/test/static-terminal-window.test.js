@@ -14,12 +14,12 @@ import { tmpdir } from 'node:os';
 import { stableHash } from '@sixam/kernel/contracts';
 import {
   AdbDeviceLocalArtifactExecutor, OBSERVER_INTERVAL_BOUND_MS, STATIC_TERMINAL_MAX_MS, STATIC_TERMINAL_WAIT_MS,
-} from '../src/adb-device-local-executor.js';
-import { SHARED_HID_RELEASE } from '../src/hid-schedule.js';
+} from '../src/campaign/adb-device-local-executor.js';
+import { SHARED_HID_RELEASE } from '../src/campaign/hid-schedule.js';
 
 const RECORD_PATH = 'docs/evidence/static-terminal-window-20260927.json';
 const record = JSON.parse(await readFile(new URL(`../../../${RECORD_PATH}`, import.meta.url), 'utf8'));
-const executorSource = await readFile(new URL('../src/adb-device-local-executor.js', import.meta.url), 'utf8');
+const executorSource = await readFile(new URL('../src/campaign/adb-device-local-executor.js', import.meta.url), 'utf8');
 
 // --- The constant is the record's measurement plus its named margin ---------
 assert.equal(record.schema, 'static-terminal-window-v1');
@@ -57,7 +57,7 @@ assert.ok(executorSource.includes(RECORD_PATH) && executorSource.includes(record
   'the executor must cite the record and evidence id its window is derived from');
 
 // --- The rule on a fake lifecycle observer ----------------------------------
-const profile = JSON.parse(await readFile(new URL('../profiles/hid-mediaprojection.json', import.meta.url), 'utf8'));
+const profile = JSON.parse(await readFile(new URL('../../../apps/device/profiles/hid-mediaprojection.json', import.meta.url), 'utf8'));
 const request = {
   schema: 'device-executor-v1', version: 1, mode: 'live',
   artifact: { winnerHash: 'a'.repeat(64), engineHash: 'b'.repeat(64), profileHash: 'c'.repeat(64),

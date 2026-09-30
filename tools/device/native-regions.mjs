@@ -21,7 +21,7 @@
 import { writeFileSync, mkdirSync, readFileSync, appendFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { deflateSync } from 'node:zlib';
-import { AdbCueHelperPort } from '../../apps/device/src/physical-ports.js';
+import { AdbCueHelperPort } from '../../packages/play/src/campaign/physical-ports.js';
 import { resolveSerial } from './local-profile.mjs';
 
 function fail(message) { console.error(`native-regions: ${message}`); process.exit(2); }

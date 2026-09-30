@@ -27,8 +27,10 @@ an arrow points at what a package imports; review never imports play or propose
   built-ins. It holds the phone's transports, clocks and night onset, and the
   deprecated FNaF 2 grid/luma rules; nothing in a package imports it but
   propose and a compatibility path registered as owned by `@sixam/play`
-  (`packages/adapters` keeps one link). **apps/device** composes it with a
-  resolved, immutable profile that each run retains.
+  (`packages/adapters` keeps one link). It also holds the campaign: the
+  executor, the state machine, the runner and its ports. **apps/device** is
+  the command line that composes it with a resolved, immutable profile that
+  each run retains.
 - **propose** imports the kernel, source, play, core's Play modules and review,
   and never the device shell (the applications, `tools/`,
   `child_process`, `net`, `dgram`). Nothing imports propose except the

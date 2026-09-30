@@ -6,9 +6,9 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { stableHash } from '@sixam/kernel/contracts';
-import { compileDeviceLocalHidSchedule, SECOND_CONTACT_UNDER_MS } from '../src/hid-schedule.js';
+import { compileDeviceLocalHidSchedule, SECOND_CONTACT_UNDER_MS } from '../src/campaign/hid-schedule.js';
 
-const profile = JSON.parse(await readFile(new URL('../profiles/hid-mediaprojection.json', import.meta.url), 'utf8'));
+const profile = JSON.parse(await readFile(new URL('../../../apps/device/profiles/hid-mediaprojection.json', import.meta.url), 'utf8'));
 const timing = { periodMs: 5000, loopStartMs: 0, stopAtMs: 5000, observeUntilMs: 5000, idleUntilMs: 0 };
 const act = (id, atMs, kind, control, extra = {}) => ({ schema: 'artifact-action-v1', id, cycle: 'opening', atMs, kind, control,
   requiresMonitorUp: false, durationMs: 33, ...extra });

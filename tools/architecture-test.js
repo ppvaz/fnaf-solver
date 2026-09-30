@@ -528,6 +528,10 @@ for (const path of production) {
   const file = await tree(path);
   const found = violations(repoPath(path), file);
   assert.equal(found.length, 0, describe(repoPath(path), found));
+  // A package's own test folder is not production: its tests may load
+  // `node:test` and their fixtures (the device app's tests moved into
+  // packages/play/test with ADR 0002's Play move). Its boundary rules still hold.
+  if (/^packages\/[^/]+\/test\//.test(repoPath(path))) continue;
   const reports = moduleReferences(file).filter(ref => ref.specifier !== null && /(?:test|report)/.test(ref.specifier));
   assert.equal(reports.length, 0, `${path} imports a test/report module: ${reports.map(ref => ref.specifier).join(', ')}`);
 }
@@ -556,12 +560,15 @@ for (const path of operational) {
 // --confirm-live. A
 // new composer is a new way onto the phone and has to be named here in the
 // diff that adds it.
-const physicalActuatorOwners = new Set(['apps/device/src/modern-campaign-ports.js',
+const physicalActuatorOwners = new Set(['packages/play/src/campaign/modern-campaign-ports.js',
   'tools/device/fnaf1-night-run.mjs', 'tools/device/fnaf1-custom-run.mjs', 'tools/device/fnaf1-menu-probe.mjs',
   'tools/device/fnaf3-run.mjs', 'tools/device/fnaf4-run.mjs', 'tools/device/explore-step.mjs']
   .map(path => join(ROOT, path)));
-for (const path of [...await files(join(ROOT, 'apps')), ...await files(join(ROOT, 'tools'))]
-  .filter(path => !testNamed(path) && !reportNamed(path) && path !== fileURLToPath(import.meta.url))) {
+// The transport's own module defines the class; every other module in apps,
+// tools and play's source is checked.
+const HID_TRANSPORT = join(ROOT, 'packages/play/src/venues/phone/hid.js');
+for (const path of [...await files(join(ROOT, 'apps')), ...await files(join(ROOT, 'tools')), ...await files(join(ROOT, 'packages/play/src'))]
+  .filter(path => !testNamed(path) && !reportNamed(path) && path !== fileURLToPath(import.meta.url) && path !== HID_TRANSPORT)) {
   if (!physicalActuatorOwners.has(path) && identifiers(await tree(path), node => node.text === 'HidWireTransport').length)
     assert.fail(`${path} reaches the HID transport outside the device runners`);
 }

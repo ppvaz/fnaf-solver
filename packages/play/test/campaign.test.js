@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import { AI_10_20, AI_DIALS, PUPPET_AI } from '@sixam/source/fnaf2';
 import {
   CAMPAIGN_STATES, CampaignStateMachine, makeCampaignSpec, validateCampaignSpec,
-} from '../src/campaign.js';
-import { makeAttemptProof } from '../src/campaign-proof.js';
+} from '../src/campaign/campaign.js';
+import { makeAttemptProof } from '../src/campaign/campaign-proof.js';
 
 const defaultSpec = makeCampaignSpec({ profile: 'hid-mediaprojection', targetBuild: 'com.scottgames.fnaf2:2.0.7+26' });
 assert.deepEqual(defaultSpec.nights.map(target => target.night), [1, 2, 3, 4, 5, 6, 7]);

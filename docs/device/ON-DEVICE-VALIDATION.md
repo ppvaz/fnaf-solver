@@ -104,7 +104,7 @@ the `seam-block-v1` protocol, a resolved `fnv1a` profile hash, and named
 completion/cancellation mechanisms with evidence IDs, bound to the actuator's
 `seamQualification` beside the transport-level `qualification-v1`. Both are
 exercised end-to-end over synthetic live ports by
-`apps/device/test/calibration-state-rule.test.js`
+`packages/play/test/calibration-state-rule.test.js`
 (`live-seam-composition.js` is gate-conformance scaffolding, not a CLI path).
 Still OPEN: a fitted mask rule, a physically qualified seam-block transport
 (device-local executor with positive completion and cancellation), and the

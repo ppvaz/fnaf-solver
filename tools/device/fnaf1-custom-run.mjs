@@ -36,8 +36,8 @@ import { homedir, tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { performance } from 'node:perf_hooks';
-import { AdbDeviceBridge } from '../../apps/device/src/adb-bridge.js';
-import { AdbCueHelperPort, AdbHidProcess } from '../../apps/device/src/physical-ports.js';
+import { AdbDeviceBridge } from '../../packages/play/src/campaign/adb-bridge.js';
+import { AdbCueHelperPort, AdbHidProcess } from '../../packages/play/src/campaign/physical-ports.js';
 import { HidWireTransport } from '../../packages/play/src/venues/phone/hid.js';
 import { ProbeRecord, ensureTitle, titleRead, titleConsensus, settleCustomNight, setDials, restartToTitle,
   DIALS, PACKAGE, BUILD, LEAVE_WAIT_MS } from './fnaf1-menu-probe.mjs';

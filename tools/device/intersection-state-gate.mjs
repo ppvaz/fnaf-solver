@@ -19,7 +19,7 @@ import { readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { CueHelperControlTransport, measureMaskOn, measureMonitorUp,
   parseMaskRule, parseMonitorRule } from '@sixam/play';
-import { AdbCueHelperPort } from '../../apps/device/src/physical-ports.js';
+import { AdbCueHelperPort } from '../../packages/play/src/campaign/physical-ports.js';
 
 export const BUTTON_THRESHOLDS = Object.freeze({
   /** 100 of roughly 142 sampled stroke columns is a full glyph. */
