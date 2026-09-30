@@ -1,1 +1,0 @@
-../../play/src/sensors/fnaf2/button-strokes.js

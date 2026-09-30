@@ -27,18 +27,14 @@ imports the other two by `./`. A retained bracket-sweep result names them by
 their old paths and sha256; its check
 (`tools/recompile/test-phone-input-bracket-sweep.mjs`) finds each old path's
 bytes in that path's git history and matches the files by name, so it no
-longer depends on where they live. `packages/core/src/mechanics/` still keeps a
-symbolic link for each, because `tools/recompile/model-draw-trace.mjs` looks
-for the model it hashes into new records beside the `@sixam/core/mechanics`
-barrel. `src/clockwork/rng.js` is the cross-game name for the RNG and
+longer depends on where they live; `tools/recompile/model-draw-trace.mjs`
+hashes the model beside the `@sixam/source/fnaf2` barrel into new records.
+`src/clockwork/rng.js` is the cross-game name for the RNG and
 re-exports FNaF 2's file until migration step D2 splits the plant model.
 
-Importers repointed in migration D3 name this package directly. Five
-`tools/recompile` modules (another session's) and the three engine-source files
-a bundle manifest hashes byte for byte (`packages/propose/bin/plans/minus-toys-plan.mjs`,
-`packages/propose/bin/plans/recipe.mjs`, `packages/propose/parked/minus7/hid-device-pilot.mjs`) still reach it
-through core's compatibility shims
-([`legacy-paths.json`](../../docs/architecture/generated/legacy-paths.json)).
+Every importer names this package directly: the last ones, five
+`tools/recompile` modules and the engine sources a bundle hashes, were
+repointed on 2026-09-30, and `@sixam/core`'s shims were removed with them.
 
 ## Scripts
 

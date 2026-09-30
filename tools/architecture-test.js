@@ -188,31 +188,15 @@ function landing(from, specifier) {
  * One rule per guarded area. `scope` picks the files, `refuse(reference, path)`
  * a reference that crosses the boundary. ADR 0002: `kernel <- source <- play <-
  * propose -> review -> source`; in today's names review is packages/review,
- * propose is packages/propose (packages/research is an empty compatibility
- * shim over it), source is packages/source, and play is packages/play
- * (@sixam/play: the phone, its venues and the deprecated FNaF 2 sensors, with
- * packages/adapters left as registered links into it), with the campaign,
- * the Sim observer, the player's estimator and the phase clock. Play imports
- * only the kernel and source. packages/core keeps only registered shims.
- *
- * Nothing imports propose but the applications, and nothing imports play but
- * propose and the applications. The one exception is a compatibility shim
- * registered in docs/architecture/generated/legacy-paths.json with that
- * package as its owner: it may RE-EXPORT it, and nothing else, until its
- * removal gate. The shims exist because files whose bytes a bundle or a
- * retained record hashes still name the old paths (the removal gates say
- * which).
+ * propose is packages/propose, source is packages/source, and play is
+ * packages/play (@sixam/play: the phone, its venues, the campaign, the Sim
+ * observer, the player's estimator, the phase clock and the deprecated FNaF 2
+ * sensors). Play imports only the kernel and source. Nothing imports propose
+ * but the applications, and nothing imports play but propose and the
+ * applications. The compatibility shims packages/core, packages/research and
+ * packages/adapters were removed on 2026-09-30, when their removal gates held.
  */
 const legacyCatalog = JSON.parse(await readFile(join(ROOT, 'docs/architecture/generated/legacy-paths.json'), 'utf8'));
-const shimsOwnedBy = owner => new Set((legacyCatalog.entries ?? [])
-  .filter(entry => entry.lifecycle === 'compatibility' && entry.owner === owner)
-  .map(entry => entry.path.split('#', 1)[0]).filter(path => path.startsWith('packages/') || path.startsWith('apps/')));
-const PROPOSE_SHIMS = shimsOwnedBy('@sixam/propose');
-const PLAY_SHIMS = shimsOwnedBy('@sixam/play');
-/** A registered propose shim re-exporting propose. @param {{unit: string, form: string}} ref @param {string} path */
-const shimReexport = (ref, path) => PROPOSE_SHIMS.has(path) && ref.form === 're-export' && ref.unit === 'packages/propose';
-/** A registered play shim re-exporting play. @param {{unit: string, form: string}} ref @param {string} path */
-const playShimReexport = (ref, path) => PLAY_SHIMS.has(path) && ref.form === 're-export' && ref.unit === 'packages/play';
 const PLAY_READS = ['packages/play', 'packages/kernel', 'packages/source', 'builtin'];
 const DEVICE_SHELL = ['node:child_process', 'node:net', 'node:dgram'];
 const PROPOSE_READS = ['packages/propose', 'packages/kernel', 'packages/source', 'packages/play', 'packages/review', 'builtin'];
@@ -238,12 +222,6 @@ const RULES = [
     why: 'source tests import only source, the kernel and Node built-ins',
   },
   {
-    id: 'core', scope: path => path.startsWith('packages/core/src/'),
-    refuse: (ref, path) => !['packages/core', 'packages/source', 'packages/kernel'].includes(ref.unit) &&
-      !shimReexport(ref, path) && !playShimReexport(ref, path),
-    why: 'core imports only itself, source and the kernel: no application, play, propose, research, review, tools module, host API or dependency (a registered propose or play shim may re-export its owner)',
-  },
-  {
     id: 'play', scope: path => path.startsWith('packages/play/src/'),
     refuse: ref => !PLAY_READS.includes(ref.unit),
     why: 'play imports only itself, the kernel, source and Node built-ins (ADR 0002): no core, propose, review, research, application, tools module, dependency or computed import',
@@ -257,7 +235,7 @@ const RULES = [
     id: 'propose', scope: path => path.startsWith('packages/propose/') && !path.startsWith('packages/propose/test/'),
     refuse: ref => !PROPOSE_READS.includes(ref.unit) || DEVICE_SHELL.includes(ref.target ?? ''),
     why: 'propose imports itself, the kernel, source, play and review (ADR 0002), ' +
-      'never the device shell (apps, tools, child_process, net, dgram), and never core, which holds only compatibility shims (its control subpath re-exports propose)',
+      'never the device shell (apps, tools, child_process, net, dgram)',
   },
   {
     id: 'propose-test', scope: path => path.startsWith('packages/propose/test/'),
@@ -266,29 +244,19 @@ const RULES = [
   },
   {
     id: 'propose-importers', scope: path => path.startsWith('packages/') && !path.startsWith('packages/propose/'),
-    refuse: (ref, path) => ref.unit === 'packages/propose' && !shimReexport(ref, path),
-    why: 'nothing imports propose except the applications (ADR 0002); a compatibility shim owned by @sixam/propose in legacy-paths.json may re-export it',
+    refuse: ref => ref.unit === 'packages/propose',
+    why: 'nothing imports propose except the applications (ADR 0002)',
   },
   {
     id: 'play-importers', scope: path => path.startsWith('packages/') && !path.startsWith('packages/play/') && !path.startsWith('packages/propose/'),
-    refuse: (ref, path) => ref.unit === 'packages/play' && !playShimReexport(ref, path),
-    why: 'nothing imports play except propose and the applications (ADR 0002); a compatibility shim owned by @sixam/play in legacy-paths.json may re-export it',
-  },
-  {
-    id: 'research', scope: path => path.startsWith('packages/research/'),
-    refuse: (ref, path) => !shimReexport(ref, path),
-    why: 'research is a compatibility shim since M8: each of its modules is registered in legacy-paths.json and only re-exports @sixam/propose',
-  },
-  {
-    id: 'adapters', scope: path => path.startsWith('packages/adapters/'),
-    refuse: (ref, path) => !PLAY_SHIMS.has(path) || (ref.unit !== 'builtin' && !playShimReexport(ref, path)),
-    why: 'adapters moved into @sixam/play: what is left is only registered compatibility paths owned by @sixam/play in legacy-paths.json, which re-export play or are links to it',
+    refuse: ref => ref.unit === 'packages/play',
+    why: 'nothing imports play except propose and the applications (ADR 0002)',
   },
   {
     id: 'review', scope: path => path.startsWith('packages/review/'),
-    refuse: ref => ['UNRESOLVED', 'packages/play', 'packages/adapters', 'packages/research', 'packages/propose'].includes(ref.unit) ||
+    refuse: ref => ['UNRESOLVED', 'packages/play', 'packages/propose'].includes(ref.unit) ||
       ref.unit.startsWith('apps/'),
-    why: 'review never imports play or propose (ADR 0002): no packages/play, packages/adapters, application, packages/propose or packages/research',
+    why: 'review never imports play or propose (ADR 0002): no packages/play, packages/propose or application',
   },
 ];
 
@@ -316,7 +284,7 @@ const REVIEW = 'packages/review/src/planted.mjs';
 // A dynamic import() is an import, however its specifier is written.
 assert.deepEqual(planted(REVIEW, "export const load = () => import('../../../apps/device/src/campaign.js');"), ['review'],
   'the guard must catch a dynamic import() of the device app');
-assert.deepEqual(planted(REVIEW, 'export const load = () => import(`@sixam/research`);'), ['review'],
+assert.deepEqual(planted(REVIEW, 'export const load = () => import(`@sixam/propose`);'), ['propose-importers', 'review'],
   'the guard must catch a dynamic import() written with a template literal');
 assert.deepEqual(planted(REVIEW, "const where = '@sixam/play';\nexport const load = () => import(where);"), ['review'],
   'the guard must refuse a dynamic import() it cannot resolve');
@@ -325,7 +293,7 @@ assert.deepEqual(planted(REVIEW, "export { validateCampaignResult as validate } 
   ['review'], 'the guard must catch an aliased re-export');
 assert.deepEqual(planted(REVIEW, "export * as phone from '@sixam/play/phone/night-onset';"), ['play-importers', 'review'],
   'the guard must catch a namespace re-export');
-assert.deepEqual(planted(REVIEW, "import * as seeds from '@sixam/research/seeds';\nexport const s = seeds;"), ['review'],
+assert.deepEqual(planted(REVIEW, "import * as seeds from '@sixam/propose/seeds';\nexport const s = seeds;"), ['propose-importers', 'review'],
   'the guard must catch a namespace import');
 assert.deepEqual(planted(REVIEW, "import { createRequire } from 'node:module';\nconst load = createRequire(import.meta.url);\n" +
   "const require = load;\nexport const device = require('@sixam/desktop/package.json');"), ['review'],
@@ -333,8 +301,8 @@ assert.deepEqual(planted(REVIEW, "import { createRequire } from 'node:module';\n
 // Text that only looks like an import is not one.
 assert.deepEqual(planted(REVIEW, "// import('../../../apps/device/src/cli.js')\nexport const text = \"from '@sixam/research'\";"), [],
   'the guard must not read comments or strings as imports');
-assert.deepEqual(planted(REVIEW, "import { stableHash } from '@sixam/core/contracts';\nexport const h = stableHash;"), [],
-  'review may import core');
+assert.deepEqual(planted(REVIEW, "import { stableHash } from '@sixam/kernel/contracts';\nexport const h = stableHash;"), [],
+  'review may import the kernel');
 // The kernel imports nothing, and everything may import it.
 const KERNEL = 'packages/kernel/src/planted.js';
 assert.deepEqual(planted(KERNEL, "import { stableHash } from '@sixam/core/contracts';"), ['kernel'],
@@ -349,7 +317,6 @@ assert.deepEqual(planted('packages/kernel/test/planted.test.js',
 assert.deepEqual(planted('packages/kernel/test/planted.test.js', "import { readPack } from '@sixam/review/evidence-pack';"),
   ['kernel-test'], 'a kernel test must not import review');
 assert.deepEqual(planted(REVIEW, "import { unknown } from '@sixam/kernel';"), [], 'review may import the kernel');
-assert.deepEqual(planted('packages/core/src/planted.js', "import { unknown } from '@sixam/kernel';"), [], 'core may import the kernel');
 // Source imports only the kernel (ADR 0002), and core may import source.
 const SOURCE = 'packages/source/src/planted.js';
 assert.deepEqual(planted(SOURCE, "import { stableHash } from '@sixam/kernel/contracts';"), [], 'source may import the kernel');
@@ -361,12 +328,6 @@ assert.deepEqual(planted(SOURCE, "export const load = () => import('../../core/s
 assert.deepEqual(planted(SOURCE, "import { readFileSync } from 'node:fs';"), ['source'], 'source must not import a Node built-in');
 assert.deepEqual(planted('packages/source/test/planted.test.js', "import { Sim } from '@sixam/core/mechanics';"), ['source-test'],
   'a source test must not import core');
-assert.deepEqual(planted('packages/core/src/planted.js', "import * as C from '@sixam/source/games/fnaf2/config.js';"), [],
-  'core may import source');
-// The rules the regex guard held keep holding.
-assert.deepEqual(planted('packages/core/src/planted.js', "import { spawn } from 'node:child_process';"), ['core']);
-assert.deepEqual(planted('packages/core/src/planted.js', "export { cli } from '@sixam/desktop';"), ['core']);
-assert.deepEqual(planted('packages/research/src/planted.js', "import '../../../tools/device/bundle.mjs';"), ['research']);
 // Propose (ADR 0002) imports the kernel, source, play's host-free half in core
 // and review, never the device shell; nothing imports it but the applications
 // and the registered compatibility shims, which may only re-export it.
@@ -387,20 +348,6 @@ assert.deepEqual(planted(PROPOSE, "import { NightPolicy } from '@sixam/core/cont
 assert.deepEqual(planted('packages/propose/test/planted.test.js',
   "import { spawn } from 'node:child_process';\nimport { NightPolicy } from '@sixam/propose/fnaf2';"), [],
 'a propose test may import propose and node:');
-assert.deepEqual(planted('packages/core/src/planted.js', "import { NightPolicy } from '@sixam/propose/fnaf2';"),
-  ['core', 'propose-importers'], 'core must not import propose');
-assert.deepEqual(planted('packages/core/src/planted.js', "export * from '@sixam/propose/fnaf2';"),
-  ['core', 'propose-importers'], 'a core module that is not a registered shim must not re-export propose');
-assert.deepEqual(planted('packages/core/src/control/index.js', "export * from '@sixam/propose/fnaf2';"), [],
-  'the registered @sixam/core/control shim may re-export propose');
-assert.deepEqual(planted('packages/core/src/control/index.js', "import { NightPolicy } from '@sixam/propose/fnaf2';"),
-  ['core', 'propose-importers'], 'a registered shim may re-export propose, not import it');
-assert.deepEqual(planted('packages/research/seeds.js', "export * from '@sixam/propose/seeds';"), [],
-  'the registered @sixam/research/seeds shim may re-export propose');
-assert.deepEqual(planted('packages/research/planted.js', "export * from '@sixam/propose/seeds';"),
-  ['propose-importers', 'research'], 'an unregistered research module must not re-export propose');
-assert.deepEqual(planted('packages/research/seeds.js', "import { GOLDEN_MODEL_SEEDS } from '@sixam/propose/seeds';"),
-  ['propose-importers', 'research'], 'the research shim may re-export propose, not import it');
 assert.deepEqual(planted('packages/play/src/planted.js', "import { NightPolicy } from '@sixam/propose';"),
   ['play', 'propose-importers'], 'play must not import propose');
 // Play (ADR 0002) imports itself, the kernel, source and Node built-ins; nothing
@@ -423,30 +370,15 @@ assert.deepEqual(planted('packages/play/test/planted.test.js', "import assert fr
 assert.deepEqual(planted('packages/play/test/planted.test.js', "import { NightPolicy } from '@sixam/propose/fnaf2';"),
   ['play-test', 'propose-importers'], 'a play test must not import propose');
 assert.deepEqual(planted(PROPOSE, "import { HID_DESCRIPTOR } from '@sixam/play';"), [], 'propose may import play');
-assert.deepEqual(planted('packages/core/src/planted.js', "import { HID_DESCRIPTOR } from '@sixam/play';"),
-  ['core', 'play-importers'], 'core must not import play');
-assert.deepEqual(planted('packages/core/src/planted.js', "export * from '@sixam/play';"),
-  ['core', 'play-importers'], 'a core module that is not a registered play shim must not re-export play');
-assert.deepEqual(planted('packages/core/src/sensing/index.js', "export * from '@sixam/play/sim';"), [],
-  'the registered @sixam/core/sensing shim may re-export play');
-assert.deepEqual(planted('packages/core/src/sensing/index.js', "import { Observer } from '@sixam/play/sim';"),
-  ['core', 'play-importers'], 'a registered play shim may re-export play, not import it');
 assert.deepEqual(planted(SOURCE, "import { HID_DESCRIPTOR } from '@sixam/play';"), ['source', 'play-importers'],
   'source must not import play');
 assert.deepEqual(planted(REVIEW, "import { HID_DESCRIPTOR } from '@sixam/play';"), ['play-importers', 'review'],
   'review must not import play');
 assert.deepEqual(planted(REVIEW, "export const load = () => import('../../../apps/desktop/src/lab.mjs');"), ['review'],
   'review must not import an application');
-// What is left of packages/adapters is registered links into play.
-assert.deepEqual(planted('packages/adapters/src/button-strokes.js', 'export const BUTTON_STROKE_THRESHOLDS = {};'), [],
-  'the registered button-strokes link may stand in packages/adapters');
-assert.deepEqual(planted('packages/adapters/src/button-strokes.js', "import { Sim } from '@sixam/source/fnaf2';"), ['adapters'],
-  'a registered adapters path may not import anything but re-export play');
-assert.deepEqual(planted('packages/adapters/src/planted.js', "export * from '@sixam/play';"), ['play-importers', 'adapters'],
-  'an unregistered adapters module must not re-export play');
 assert.deepEqual(planted(REVIEW, "import { NightPolicy } from '@sixam/propose';"), ['propose-importers', 'review'],
   'review must not import propose');
-const globalsOf = source => hostGlobals(parse('packages/core/src/planted.js', source));
+const globalsOf = source => hostGlobals(parse('packages/source/src/planted.js', source));
 assert.deepEqual(globalsOf('const host = window;'), ['window'],
   'architecture guard must recognize host-global access in module bodies');
 assert.deepEqual(globalsOf('const window = 1; export const again = window;'), [],
@@ -467,13 +399,12 @@ const tree = async path => {
 };
 const repoPath = path => relative(ROOT, path).split(sep).join('/');
 
-const core = await files(join(ROOT, 'packages/core/src'));
 // Source, the kernel and propose's policy language and game policies came out
-// of core and keep its host-global rule.
-// and so do the modules that left core for play (the Sim observer, the
+// of the retired packages/core and keep its host-global rule, and so do the
+// modules that left it for play (the Sim observer, the
 // player's estimator, the phase clock), review (the bench trace) and the
 // trainer (training).
-const hostFree = [...core, ...await files(join(ROOT, 'packages/source/src')), ...await files(join(ROOT, 'packages/kernel/src')),
+const hostFree = [...await files(join(ROOT, 'packages/source/src')), ...await files(join(ROOT, 'packages/kernel/src')),
   ...await files(join(ROOT, 'packages/propose/src/policy')), ...await files(join(ROOT, 'packages/propose/src/games')),
   ...await files(join(ROOT, 'packages/play/src/venues/sim')), ...await files(join(ROOT, 'packages/play/src/player')),
   ...await files(join(ROOT, 'packages/play/src/clocks')), ...await files(join(ROOT, 'packages/review/src/measure')),
@@ -529,9 +460,6 @@ try {
 } catch (error) {
   assert.equal(error.code, 'ENOENT');
 }
-for (const path of await files(join(ROOT, 'packages/adapters')))
-  assert.ok(PLAY_SHIMS.has(repoPath(path)), `${repoPath(path)} stands in packages/adapters without a compatibility entry owned by ` +
-    '@sixam/play in legacy-paths.json: adapters moved into @sixam/play, and only registered links or shims are left');
 const production = await files(join(ROOT, 'packages'));
 for (const path of production) {
   const file = await tree(path);

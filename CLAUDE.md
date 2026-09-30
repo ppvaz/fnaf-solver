@@ -10,12 +10,12 @@ data, Sim, controls) and imports only the kernel; `@sixam/kernel` holds the ADR
 0002 kernel types, the semantic contracts and Time, and imports nothing;
 `@sixam/propose` owns the policy language, the controllers and the cycle
 machinery over them, the strategies and the experiments, imports the kernel,
-source, play and review, and is imported by nothing but the applications
-(`@sixam/research` is only a compatibility shim over it); `@sixam/play` owns
+source, play and review, and is imported by nothing but the applications;
+`@sixam/play` owns
 the phone's transports, clocks, night onset and detection rules (the FNaF 2
 grid/luma rules deprecated), the campaign executor and its supervision, the Sim
 observer, the player's estimator and the phase clock, and imports only the
-kernel and source; `@sixam/core` holds only registered compatibility shims;
+kernel and source;
 `apps/desktop` is the one composition root (the device command line, the
 `fnaf-solver` MCP server and the lab verbs) and, with the trainer, a leaf;
 `@sixam/review` reads the evidence and never imports play, an application,

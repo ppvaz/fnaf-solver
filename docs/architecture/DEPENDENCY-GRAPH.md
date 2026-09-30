@@ -26,32 +26,24 @@ an arrow points at what a package imports; review never imports play or propose
 - **play** (`@sixam/play`) imports only itself, the kernel, source and Node
   built-ins. It holds the phone's transports, clocks and night onset, and the
   deprecated FNaF 2 grid/luma rules; nothing in a package imports it but
-  propose and a compatibility path registered as owned by `@sixam/play`
-  (`packages/adapters` keeps one link). It also holds the campaign: the
+  propose. It also holds the campaign: the
   executor, the state machine, the runner and its ports. **apps/desktop** is
   the composition root: its command line composes play with a resolved,
   immutable profile (`apps/device/profiles/`) that each run retains, and it
   serves the `fnaf-solver` MCP server. Applications may import any package.
-- **propose** imports the kernel, source, play and review, and never core or
-  the device shell (the applications, `tools/`,
-  `child_process`, `net`, `dgram`). Nothing imports propose except the
-  applications and the registered shims. **research** is an empty
-  compatibility shim: its two registered modules only re-export propose, for
-  the engine-source files a bundle hashes.
-- **review** uses the kernel, source and core and never `packages/play`, an
-  application, `packages/adapters`, `packages/propose` or `packages/research`.
-  It holds the bench trace (`src/measure/`). One edge is
-  still open: it compiles a committed winner through `packages/propose/bin/plans/bundle.mjs`
-  (and so, transitively, the research seed helpers and propose's controllers)
-  to learn the hash a bundle records; it closes when `tools/device` is sorted by
-  context (migration M9).
+- **propose** imports the kernel, source, play and review, and never the
+  device shell (the applications, `tools/`, `child_process`, `net`, `dgram`).
+  Nothing imports propose except the applications.
+- **review** uses the kernel and source and never `packages/play`, an
+  application or `packages/propose`. It holds the bench trace
+  (`src/measure/`). The compiled winner hashes it needs come from the generated
+  `winner-hashes.json`, not from compiling a winner (compiling is Propose's).
 - **trainer** uses source and the kernel, and holds its own training records.
 
 `tools/architecture-test.js` enforces every rule above over each module's
 syntax tree (the pinned `typescript` parser), with planted violations -- a
-dynamic `import()`, an aliased re-export, a `require()`, a core module
-importing propose, a registered shim importing rather than re-exporting it --
-that must be caught before it reads the tree. The runtime package and the
+dynamic `import()`, an aliased re-export, a `require()`, play or review
+importing propose -- that must be caught before it reads the tree. The runtime package and the
 `screencheck` facade this page used to show were retired on 2026-09-25
 ([archived routes](../ARCHIVED-ROUTES.md)); the root `src` compatibility imports
 were removed after their equivalence gate.

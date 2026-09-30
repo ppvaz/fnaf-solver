@@ -23,9 +23,8 @@ subpaths `@sixam/play/venues/phone/<name>`, `@sixam/play/phone/<name>`,
 `@sixam/play/clocks`. The Sim observer, the player and the clocks keep core's
 host-global rule (no DOM, process or wall clock); `packages/play/test/belief.test.js`,
 `estimatortest.mjs`, `phaseclocktest.mjs` and `reactivetest.mjs` test them.
-`packages/core/src/sensing/index.js` stays as a shim over `@sixam/play/sim`
-for `packages/propose/bin/plans/minus-toys-plan.mjs`, whose bytes every Minus Toys bundle
-hashes (`core.sensing-shim`).
+`packages/propose/bin/plans/minus-toys-plan.mjs` imports the observer from `@sixam/play/sim`
+directly; the `@sixam/core/sensing` shim that stood in for it was removed on 2026-09-30.
 
 **The campaign.** `CampaignStateMachine` (`src/campaign/campaign.js`) is the
 lifecycle seam above the executor. It requires positive menu and intro
@@ -84,12 +83,12 @@ the game: a legal HID send is not evidence of acceptance. The composition root
 wires the ports at the edge, and `tools/architecture-test.js` confines the HID
 transport to the device runners.
 
-**Moved from `packages/adapters` (ADR 0002).** One path stays there:
-`packages/adapters/src/button-strokes.js`, a symbolic link to
-`src/sensors/fnaf2/button-strokes.js`, because the retained
-`full06-responses-20260928` result records that path with the file's sha256 and
-`tools/recompile/test-phone-encounter-replay.mjs` compares them
-(`adapters.button-strokes-link`).
+**Moved from `packages/adapters` (ADR 0002).** The retained
+`full06-responses-20260928` result records `packages/adapters/src/button-strokes.js`
+with the file's sha256; `tools/recompile/test-phone-encounter-replay.mjs` finds
+those bytes in that path's git history (ADR 0002 principle 9), so the link that
+kept the path alive was removed on 2026-09-30, and new records name
+`src/sensors/fnaf2/button-strokes.js`.
 
 The capability registry, the actuator and sensor classes and the fixture
 adapters that served the retired fixture service path were removed on

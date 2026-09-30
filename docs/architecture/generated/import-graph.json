@@ -289,40 +289,6 @@
       ]
     },
     {
-      "file": "packages/core/src/contracts/index.js",
-      "imports": [
-        "@sixam/kernel/contracts",
-        "@sixam/source"
-      ]
-    },
-    {
-      "file": "packages/core/src/control/index.js",
-      "imports": [
-        "@sixam/propose/fnaf2",
-        "@sixam/propose/policy",
-        "@sixam/source"
-      ]
-    },
-    {
-      "file": "packages/core/src/mechanics/index.js",
-      "imports": [
-        "@sixam/source/fnaf2"
-      ]
-    },
-    {
-      "file": "packages/core/src/mechanics/plant-model.js",
-      "imports": [
-        "./config.js",
-        "./rng.js"
-      ]
-    },
-    {
-      "file": "packages/core/src/sensing/index.js",
-      "imports": [
-        "@sixam/play/sim"
-      ]
-    },
-    {
       "file": "packages/kernel/src/annotation.js",
       "imports": [
         "./labels.js",
@@ -1284,18 +1250,6 @@
       "imports": [
         "@sixam/propose/fnaf2",
         "@sixam/source/fnaf2"
-      ]
-    },
-    {
-      "file": "packages/research/seeds.js",
-      "imports": [
-        "@sixam/propose/seeds"
-      ]
-    },
-    {
-      "file": "packages/research/strategies/minus-3.js",
-      "imports": [
-        "@sixam/propose/strategies/minus-3"
       ]
     },
     {
@@ -2299,10 +2253,8 @@
         "@sixam/propose/fnaf2",
         "@sixam/propose/seeds",
         "@sixam/research",
-        "@sixam/research/seeds",
         "@sixam/review/evidence-pack",
         "@sixam/source/fnaf2",
-        "@sixam/source/games/fnaf2/config.js",
         "node:assert/strict",
         "node:child_process",
         "node:crypto",
@@ -3867,7 +3819,7 @@
       "file": "tools/recompile/compare-draw-trace.mjs",
       "imports": [
         "./model-draw-trace.mjs",
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "node:crypto",
         "node:fs",
         "node:url"
@@ -3907,7 +3859,7 @@
     {
       "file": "tools/recompile/model-draw-trace.mjs",
       "imports": [
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "node:fs",
         "node:path",
         "node:url"
@@ -3936,7 +3888,7 @@
         "./compare-schedule-replay.mjs",
         "./model-draw-trace.mjs",
         "./schedule-to-input.mjs",
-        "@sixam/core/control",
+        "@sixam/source",
         "node:crypto",
         "node:fs",
         "node:path",
@@ -4042,7 +3994,7 @@
       "imports": [
         "../../packages/propose/bin/plans/bundle.mjs",
         "../../packages/propose/bin/plans/minus-toys-plan.mjs",
-        "@sixam/core/control",
+        "@sixam/source",
         "node:crypto",
         "node:fs",
         "node:path",
@@ -4067,7 +4019,7 @@
       "imports": [
         "./compare-draw-trace.mjs",
         "./model-draw-trace.mjs",
-        "@sixam/core/mechanics",
+        "@sixam/source/fnaf2",
         "node:assert/strict"
       ]
     },
@@ -4095,6 +4047,7 @@
       "imports": [
         "./model-draw-trace.mjs",
         "./phone-encounter-replay.mjs",
+        "./phone-input-bracket-sweep.mjs",
         "node:assert/strict",
         "node:crypto",
         "node:fs"

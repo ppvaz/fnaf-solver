@@ -49,29 +49,18 @@ evidence ids, the `research-cli` producer and the `research` event component.
 Moved here byte for byte but for their imports in migration M8 (2026-09-30):
 the policy language, controllers and cycle machinery from `@sixam/core`
 (`src/control/`, `src/mechanics/games/policy-fnaf*.js`), and the experiments,
-strategies, specs and Minus 7 from `@sixam/research`. Two compatibility shims,
-registered in
-[`legacy-paths.json`](../../docs/architecture/generated/legacy-paths.json),
-keep the old import paths for the files whose bytes a bundle hashes into its
-`engine.sourceSha256`:
-
-- `@sixam/core/control` (`core.control-policy-shim`) for
-  `packages/propose/bin/plans/minus-toys-plan.mjs` (and two `tools/recompile` modules);
-- `@sixam/research/seeds` and `@sixam/research/strategies/minus-3`
-  ([`packages/research`](../research/README.md)) for
-  `packages/propose/bin/plans/minus-toys-plan.mjs` and `minus-3-plan.mjs`.
-
-New code imports `@sixam/propose/*`.
+strategies, specs and Minus 7 from `@sixam/research`. The engine sources a
+bundle hashes into its `engine.sourceSha256` (`bin/plans/`) import
+`@sixam/propose/*` directly since the commit that moved them here, and the
+`@sixam/core` and `@sixam/research` shims were removed on 2026-09-30.
 
 ## Dependencies
 
 `tools/architecture-test.js` (rules `propose`, `propose-test` and
 `propose-importers`): propose imports the kernel, source, play (`@sixam/play/sim` for the Sim
 observer, `@sixam/play/player` for the estimator), review, and Node built-ins. It never reaches the device shell -- the
-applications, `tools/`, `child_process`, `net`, `dgram` -- and never
-imports `@sixam/core` or `@sixam/core/control`, which re-export it. Nothing
-imports propose except the applications and the registered shims, which may
-only re-export it. It does not own device execution, trainer presentation or
+applications, `tools/`, `child_process`, `net`, `dgram`. Nothing imports
+propose except the applications. It does not own device execution, trainer presentation or
 Plan 12 promotion.
 
 ## Scripts

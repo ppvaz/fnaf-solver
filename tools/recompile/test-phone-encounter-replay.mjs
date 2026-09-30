@@ -12,6 +12,7 @@ import {
   responseEvidence, deriveResponseExperiment,
 } from './phone-encounter-replay.mjs';
 import { drawTrace, measuredClock } from './model-draw-trace.mjs';
+import { committedVersion } from './phone-input-bracket-sweep.mjs';
 
 const read = (rel) => readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8');
 const sha256 = (value) => createHash('sha256').update(value).digest('hex');
@@ -281,7 +282,10 @@ assert.equal(responseResult.method.modelOptionsSha256, sha256(read(responseResul
 assert.equal(responseResult.nights[0].winnerSha256, sha256(read(responseResult.nights[0].winner)));
 for (const v of responseResult.nights[0].variants) {
   if (!v.responses) continue;
-  assert.equal(v.responses.ruleSourceSha256, sha256(read(v.responses.rule.source)));
+  // The record keeps the path its rule source had (ADR 0002 principle 9); the bytes it hashed must be
+  // a committed version of that path, read through git history now that the file lives in Play.
+  assert.ok(committedVersion(v.responses.rule.source, v.responses.ruleSourceSha256),
+    `${v.responses.rule.source}: the hashed rule source is a committed version of its recorded path`);
   assert.equal(v.responses.rule.source, 'packages/adapters/src/button-strokes.js');
   for (const row of v.responses.rows.filter((r) => r.status === 'OBSERVED_RESPONSE')) {
     assert.ok(row.lowerImageMs >= row.sendImageMs && row.lowerImageMs < row.upperImageMs);

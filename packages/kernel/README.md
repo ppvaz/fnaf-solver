@@ -38,10 +38,8 @@ in `src/index.js`.
 The validators generated from the per-game control catalogs
 (`validateControlCommand`, `deviceProfileGame`, `resolveDeviceProfile`) stay
 beside the catalogs, outside the kernel, because the kernel imports nothing.
-`@sixam/core/contracts`, `/telemetry` and `/timing` re-export all of this as
-compatibility shims, which no tracked module imports since migration D3, until
-their removal gates
-([`legacy-paths.json`](../../docs/architecture/generated/legacy-paths.json)).
+The `@sixam/core` subpaths that re-exported all of this were removed on
+2026-09-30, when nothing imported them any more.
 
 Public API: the package root, `./contracts` and `./time`. Dependencies: none,
 and it imports nothing in the repository -- no workspace, no relative path out

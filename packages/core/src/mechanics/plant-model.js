@@ -1,1 +1,0 @@
-../../../source/src/games/fnaf2/plant-model.js

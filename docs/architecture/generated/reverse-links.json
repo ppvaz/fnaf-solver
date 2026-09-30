@@ -9,7 +9,7 @@
       "id": "claim.android.g779.empty-hall",
       "kind": "CLAIM",
       "path": "plans/22-architecture-and-developer-experience-refactor.md",
-      "line": 1158,
+      "line": 1147,
       "relation": "REFERENCES"
     },
     {
@@ -572,7 +572,7 @@
       "id": "contract.hid-executor-v1",
       "kind": "CONTRACT",
       "path": "plans/22-architecture-and-developer-experience-refactor.md",
-      "line": 1157,
+      "line": 1146,
       "relation": "REFERENCES"
     },
     {
@@ -695,13 +695,6 @@
       "kind": "CONTRACT",
       "path": "tools/exercisetest.mjs",
       "relation": "CONFORMANCE_FIXTURE"
-    },
-    {
-      "id": "contract.semantic-control-v1",
-      "kind": "CONTRACT",
-      "path": "packages/adapters/src/button-strokes.js",
-      "line": 18,
-      "relation": "REFERENCES"
     },
     {
       "id": "contract.semantic-control-v1",
@@ -931,7 +924,7 @@
       "id": "evidence.runtime-gh",
       "kind": "EVIDENCE",
       "path": "plans/22-architecture-and-developer-experience-refactor.md",
-      "line": 1158,
+      "line": 1147,
       "relation": "REFERENCES"
     }
   ]

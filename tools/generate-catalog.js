@@ -316,95 +316,12 @@ const legacyPaths = [
     removalGate: 'Package structured artifacts and fixed-seed output are equivalent',
     notes: 'Compatibility alias for the propose package family evaluator (packages/propose/src/experiment/families/).',
   },
-  // ADR 0002 migration D1/D3/D4 (Plan 27's move map): the contracts, the
-  // register and Time moved into @sixam/kernel. The core subpaths that named
-  // them keep every export as re-exports, so no importer breaks mid-migration.
-  {
-    id: 'core.contracts-shim', path: 'packages/core/src/contracts/index.js', category: 'package-subpath',
-    lifecycle: 'compatibility', owner: '@sixam/kernel',
-    replacement: '`@sixam/kernel/contracts` (packages/kernel/src/contracts/); the three catalog-generated validators from `@sixam/source`',
-    removalGate: 'No tracked module imports a contract from `@sixam/core/contracts` or `@sixam/core` (true since D3, 2026-09-30), and the docs and hand-run commands that still name the subpath are updated',
-    notes: 'Re-exports `@sixam/kernel/contracts` and the three catalog-generated validators (validateControlCommand, deviceProfileGame, resolveDeviceProfile); its export set is the one it had before the move.',
-  },
-  {
-    id: 'core.mechanics-shim', path: 'packages/core/src/mechanics/index.js', category: 'package-subpath',
-    lifecycle: 'compatibility', owner: '@sixam/source',
-    replacement: '`@sixam/source/fnaf2` (packages/source/src/games/fnaf2/), whose export set is exactly this barrel\'s',
-    removalGate: 'No tracked module imports `@sixam/core/mechanics`: the tools/recompile importers (their owner repoints them) and the engine-source files a bundle manifest hashes (packages/propose/bin/plans/minus-toys-plan.mjs, recipe.mjs, packages/propose/parked/minus7/hid-device-pilot.mjs) are repointed in a commit that re-derives every emitted bundle',
-    notes: 'One `export *` of `@sixam/source/fnaf2`. tools/recompile/model-draw-trace.mjs resolves this barrel to find the model sources it hashes beside it, which is why the three links below live in this directory.',
-  },
-  ...['plant-model', 'config', 'rng'].map(name => ({
-    id: `core.model-source-link.${name}`, path: `packages/core/src/mechanics/${name}.js`, category: 'model-source',
-    lifecycle: 'compatibility', owner: '@sixam/source',
-    replacement: `packages/source/src/games/fnaf2/${name}.js (the same bytes; this path is a symbolic link to it)`,
-    removalGate: 'tools/recompile/model-draw-trace.mjs (the recompile session\'s) finds the model sources it hashes into new records through @sixam/source instead of beside the @sixam/core/mechanics barrel',
-    notes: 'The frozen phone-input-bracket-full-06-20260928 result names these paths; since 2026-09-30 its check resolves each through that path\'s git history and matches the model files by name, so it passes without the links (pinned in test-phone-input-bracket-sweep.mjs). Record producers still hash MODEL_SOURCES at these paths; the link keeps them reading the moved file.',
-  })),
-  {
-    id: 'core.control-vocabulary-shim', path: 'packages/core/src/control/index.js', category: 'package-subpath',
-    lifecycle: 'compatibility', owner: '@sixam/source',
-    replacement: '`@sixam/source` for the control vocabulary and the per-game catalogs; `@sixam/propose` for the rest of the barrel (`core.control-policy-shim`)',
-    removalGate: 'No tracked module imports a vocabulary or catalog name from `@sixam/core/control`: true since D3, 2026-09-30, except packages/propose/bin/plans/minus-toys-plan.mjs (an engine-source file every Minus Toys bundle hashes into engine.sourceSha256, repointed only in a commit that re-derives every emitted bundle) and two tools/recompile modules (their owner repoints them)',
-    notes: 'Re-exports the 37 vocabulary and catalog names by name from `@sixam/source`, beside the propose re-exports; its export set is the one it had before either move.',
-  },
-  // ADR 0002 migration M8: the policy language, FNaF 2's controllers and cycle
-  // machinery and the other games' policies moved into @sixam/propose.
-  {
-    id: 'core.control-policy-shim', path: 'packages/core/src/control/index.js', category: 'package-subpath',
-    lifecycle: 'compatibility', owner: '@sixam/propose',
-    replacement: '`@sixam/propose/policy` (policy IR, observation language, ports) and `@sixam/propose/fnaf2` (FNaF 2\'s controllers, cycle library, planner, cycle controller, night policy)',
-    removalGate: 'No tracked module imports a policy, controller or cycle name from `@sixam/core/control` or `@sixam/core`. Once M8 has repointed the tools, the one left is packages/propose/bin/plans/minus-toys-plan.mjs, an engine-source file every Minus Toys bundle hashes into engine.sourceSha256, repointed only in a commit that re-derives every emitted bundle',
-    notes: 'Two `export *` lines of propose\'s barrels. The only re-export of propose outside propose that tools/architecture-test.js admits besides the research shims: a registered shim may re-export propose, never import it.',
-  },
-  // packages/research moved into @sixam/propose in the same migration and is
-  // left as an empty workspace with the two subpaths hash-bound files import.
-  {
-    id: 'research.package-shim', path: 'packages/research/package.json', category: 'package',
-    lifecycle: 'compatibility', owner: '@sixam/propose',
-    replacement: '`@sixam/propose` (experiments, strategies, seed cohorts, specs under packages/propose/experiments/, parked Minus 7); `npm run research` runs packages/propose/src/experiment/cli.js',
-    removalGate: 'Both subpath shims below are removed; then the workspace, its lockfile entry and the `research` rule in tools/architecture-test.js go',
-    notes: 'Declares only `./seeds` and `./strategies/minus-3`, each a one-line re-export of propose.',
-  },
-  {
-    id: 'research.seeds-shim', path: 'packages/research/seeds.js', category: 'package-subpath',
-    lifecycle: 'compatibility', owner: '@sixam/propose',
-    replacement: '`@sixam/propose/seeds` (packages/propose/src/experiment/seeds.js)',
-    removalGate: 'packages/propose/bin/plans/minus-toys-plan.mjs and minus-3-plan.mjs, engine-source files every Minus Toys and Minus 3 bundle hashes into engine.sourceSha256, import `@sixam/propose/seeds` in a commit that re-derives every emitted bundle',
-    notes: 'Serves `@sixam/research/seeds`; every other importer was repointed to propose in M8 (2026-09-30).',
-  },
-  {
-    id: 'research.minus-3-shim', path: 'packages/research/strategies/minus-3.js', category: 'package-subpath',
-    lifecycle: 'compatibility', owner: '@sixam/propose',
-    replacement: '`@sixam/propose/strategies/minus-3` (packages/propose/src/strategies/minus-3/)',
-    removalGate: 'packages/propose/bin/plans/minus-3-plan.mjs, an engine-source file every Minus 3 bundle hashes into engine.sourceSha256, imports `@sixam/propose/strategies/minus-3` in a commit that re-derives every emitted bundle',
-    notes: 'Serves `@sixam/research/strategies/minus-3`; minus-3-plan.mjs is its only importer.',
-  },
-  // ADR 0002's Play move took core's last modules: the Sim observer to
-  // @sixam/play/sim, the estimator to @sixam/play/player, the phase clock to
-  // @sixam/play/clocks, the bench trace to @sixam/review/measure and training
-  // to the trainer. `/telemetry`, `/timing`, `/estimation`, `/training` and
-  // the `.` barrel were removed (their removal gates held: nothing imported
-  // them once their importers were repointed); `/sensing` stays for a
-  // hash-bound importer.
-  {
-    id: 'core.sensing-shim', path: 'packages/core/src/sensing/index.js', category: 'package-subpath',
-    lifecycle: 'compatibility', owner: '@sixam/play',
-    replacement: '`@sixam/play/sim` (packages/play/src/venues/sim/), whose export set is exactly this subpath\'s',
-    removalGate: 'packages/propose/bin/plans/minus-toys-plan.mjs, an engine-source file every Minus Toys bundle hashes into engine.sourceSha256, imports `@sixam/play/sim` in a commit that re-derives every emitted bundle',
-    notes: 'One `export *` of `@sixam/play/sim`; minus-toys-plan.mjs is its only importer.',
-  },
-  // ADR 0002: packages/adapters moved into @sixam/play (the phone's transports
-  // to src/venues/phone, clocks, night onset, the control anchor and exclusion
-  // and the venue parser to src/phone, the FNaF 2 grid/luma rules to
-  // src/sensors/fnaf2). One path stays, as a link, because a retained record
-  // hashes the file at it.
-  {
-    id: 'adapters.button-strokes-link', path: 'packages/adapters/src/button-strokes.js', category: 'record-source',
-    lifecycle: 'compatibility', owner: '@sixam/play',
-    replacement: 'packages/play/src/sensors/fnaf2/button-strokes.js (the same bytes; this path is a symbolic link to it)',
-    removalGate: 'tools/recompile/phone-encounter-replay.mjs (the recompile session\'s) names the response rule\'s source through @sixam/play, and the frozen full06-responses-20260928 result is checked through the path\'s history at its commit instead of the working tree',
-    notes: 'tools/recompile/results/full06-responses-20260928.json records `rule.source: packages/adapters/src/button-strokes.js` with its sha256, and test-phone-encounter-replay.mjs (test:unit) reads that path and compares; phone-encounter-replay.mjs writes the same path into new records. Nothing imports it: every importer names the play module.',
-  },
+  // ADR 0002's migration moved the contracts and Time into @sixam/kernel, each
+  // game's mechanics into @sixam/source, the policy language and strategies into
+  // @sixam/propose and the phone into @sixam/play. The compatibility shims left
+  // in packages/core, packages/research and packages/adapters were removed on
+  // 2026-09-30, when their removal gates held: no tracked module imported them,
+  // and the records that name their paths are read through git history.
   // The FNaF 2 sensors CLAUDE.md discontinued on 2026-09-24/25 (the 20x9 grid,
   // grid-fitted rules, luma reducers) moved as they are: they are to be
   // converted to native-region rules, never extended.

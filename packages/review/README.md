@@ -17,7 +17,7 @@ instrument that moved from `@sixam/core/telemetry` in ADR 0002's Play move;
 `packages/review/bin/report/bench-trace.mjs` reports over it and `packages/review/test/bench-trace.test.mjs` tests it.
 
 **Boundary.** Review never imports Play or Propose. In today's names it never
-imports `packages/play`, an application (`apps/*`), `packages/adapters`, `packages/propose` or `packages/research`, and
+imports `packages/play`, an application (`apps/*`) or `packages/propose`, and
 `tools/architecture-test.js` refuses any module here that does, by a static
 import, a re-export, a dynamic `import()` or a `require()`. The two campaign
 validators it needs (`validateCampaignResult`, `validateSaveProof`) moved to

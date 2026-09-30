@@ -56,7 +56,7 @@ import { controlPoints, expandRows, frameOf, formatRows, harnessRows } from './s
 import { STRATEGY_REGISTRY, validateWinner } from '../../packages/propose/bin/plans/bundle.mjs';
 import { KNOBS0, build } from '../../packages/propose/bin/plans/minus-toys-plan.mjs';
 import { windowCode } from '../../packages/review/venue-grid/encounter-replay.mjs';
-import { MODEL_CONTEXT_LIGHT } from '@sixam/core/control';
+import { MODEL_CONTEXT_LIGHT } from '@sixam/source';
 import { buttonStrokeState, BUTTON_STROKE_THRESHOLDS } from '../../packages/play/src/sensors/fnaf2/button-strokes.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -135,7 +135,7 @@ export function landingLatency(columns, first, sends) {
 
 // These are bounded analysis searches, not measured input/animation floors.
 export const RESPONSE_RULE = Object.freeze({ searchMs: 200, confirmMs: 600, stableFrames: 2,
-  thresholds: BUTTON_STROKE_THRESHOLDS, source: 'packages/adapters/src/button-strokes.js' });
+  thresholds: BUTTON_STROKE_THRESHOLDS, source: 'packages/play/src/sensors/fnaf2/button-strokes.js' });
 
 /**
  * Per-contact visual response brackets from retained native strokes. Scheduled alternation supplies the

@@ -202,7 +202,7 @@ try {
       chmodSync(sh, 0o755);
       const link = join(tree, 'node_modules/@fnaf2-1020/adapters');
       unlinkSync(link);
-      symlinkSync(join(ROOT, 'packages/adapters'), link);
+      symlinkSync(join(ROOT, 'packages/play'), link);
       ok('control -- a workspace link into this checkout is named', treeProblems(tree, commit)
         .some((p) => p.startsWith('node_modules/@fnaf2-1020/adapters resolves outside the tree')));
       eq('control -- the tree is whole again once the tampering is undone', (() => {

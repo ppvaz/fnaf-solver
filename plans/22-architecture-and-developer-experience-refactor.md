@@ -235,12 +235,6 @@ fnaf2-1020/                     (amended 2026-09-29: ADR 0002 contexts in bracke
       test/                    the sourced draw-order and Sim contract tests
                                 (later: acquire, derive, recompile; the identity chain, M6)
 
-    core/                       @sixam/core      registered compatibility shims only
-      src/
-        control/               shim over source's vocabulary and propose's policy language
-        sensing/               shim over @sixam/play/sim
-        mechanics/, contracts/ compatibility shims over source and the kernel
-
     play/                       @sixam/play      [play] since 2026-09-30 (the Play move)
       src/campaign/            the executor, campaign state machine, runner, ports,
                                 HID schedule, device shell, night anchor
@@ -252,8 +246,6 @@ fnaf2-1020/                     (amended 2026-09-29: ADR 0002 contexts in bracke
       src/player/, src/clocks/ the estimator; the phase clock
       test/                    the transport, rule and campaign tests
 
-    adapters/                   (moved into play) one registered link, button-strokes.js
-
     propose/                    @sixam/propose   [propose] since 2026-09-30 (migration M8)
       src/policy/              the policy IR, observation language and ports
       src/games/               FNaF 2's controllers and cycle machinery; FNaF 1/3/4 policies
@@ -262,9 +254,6 @@ fnaf2-1020/                     (amended 2026-09-29: ADR 0002 contexts in bracke
       experiments/             the named experiment specs
       parked/minus7/           Minus 7, kept on purpose
       test/                    cycle, night-policy, experiment and alias tests
-
-    research/                   @sixam/research  compatibility shim: seeds.js and
-                                strategies/minus-3.js re-export propose for hash-bound tools
 
     review/                     @sixam/review    [review]
       src/                      run packs, Plan 12 attestation and promotion, cohorts,

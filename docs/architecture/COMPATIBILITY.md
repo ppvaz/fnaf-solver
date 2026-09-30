@@ -63,7 +63,7 @@ schema (`fnaf2.session-manifest`) from the runtime `session-manifest-v1`
 contract. That distinction is recorded in the generated map so removal cannot
 silently strand old manifests or merge two incompatible validators.
 
-## ADR 0002 context moves (Plan 27, migrations D1, D3, D4, M8)
+## ADR 0002 context moves (Plan 27, migrations D1, D3, D4, M8, M9)
 
 The contracts, the register and Time moved out of `@sixam/core` into
 [`@sixam/kernel`](../../packages/kernel/README.md); each game's mechanics and
@@ -71,31 +71,23 @@ controls, and the cross-game clockwork, into
 [`@sixam/source`](../../packages/source/README.md); the policy language, FNaF
 2's controllers and cycle machinery and FNaF 1, 3 and 4's policies into
 [`@sixam/propose`](../../packages/propose/README.md), which also absorbed
-`@sixam/research`. The core subpaths that named them stay as re-export shims
-with their export sets unchanged, and research keeps, with unchanged export
-sets, the two subpaths that hash-bound files import, so an importer the move
-did not repoint keeps working. `tools/architecture-test.js`
-lets a shim registered as owned by `@sixam/propose` re-export propose, and
-nothing else in a package import it; the Play move (packages/adapters, the
-device campaign and core's last modules into `@sixam/play`) does the same for
-a shim owned by `@sixam/play`. `@sixam/core/telemetry`, `/timing`,
-`/estimation`, `/training` and the `.` barrel were removed in that move:
-their removal gates held once their importers were repointed.
+`@sixam/research`; the phone, the campaign and core's last modules into
+[`@sixam/play`](../../packages/play/README.md). One compatibility path is left:
 
 | Surface | Lifecycle | Canonical replacement | Removal gate |
 |---|---|---|---|
-| `@sixam/core/contracts` (`packages/core/src/contracts/index.js`) | compatibility | `@sixam/kernel/contracts`; the three catalog-generated validators from `@sixam/source` | no tracked module imports a contract from `@sixam/core` |
-| `@sixam/core/mechanics` (`packages/core/src/mechanics/index.js`) | compatibility | `@sixam/source/fnaf2` (the same export set) | no tracked module imports it: tools/recompile's importers are repointed by their owner, and the engine-source files a bundle manifest hashes in a commit that re-derives every bundle |
-| `packages/core/src/mechanics/{plant-model,config,rng}.js` (symbolic links) | compatibility | `packages/source/src/games/fnaf2/` (the same bytes) | `tools/recompile/model-draw-trace.mjs` finds the model it hashes through `@sixam/source`; the bracket check already reads a record's old paths through their history |
-| `@sixam/core/control` (`packages/core/src/control/index.js`) | compatibility | `@sixam/source` for the vocabulary and the catalogs; `@sixam/propose/policy` and `@sixam/propose/fnaf2` for the policy language, FNaF 2's controllers and the cycle machinery (migration M8) | no tracked module imports it: tools/recompile's two importers are repointed by their owner, and `packages/propose/bin/plans/minus-toys-plan.mjs`, whose bytes every Minus Toys bundle hashes, in a commit that re-derives every bundle |
-| `@sixam/research` (`packages/research/package.json`) | compatibility | `@sixam/propose` (experiments, strategies, seed cohorts, specs, parked Minus 7); `npm run research` runs `packages/propose/src/experiment/cli.js` | both subpath shims below are removed; then the workspace goes |
-| `@sixam/research/seeds` (`packages/research/seeds.js`) | compatibility | `@sixam/propose/seeds` | `packages/propose/bin/plans/minus-toys-plan.mjs` and `minus-3-plan.mjs`, whose bytes every Minus Toys and Minus 3 bundle hashes, are repointed in a commit that re-derives every bundle |
-| `@sixam/research/strategies/minus-3` (`packages/research/strategies/minus-3.js`) | compatibility | `@sixam/propose/strategies/minus-3` | `packages/propose/bin/plans/minus-3-plan.mjs` is repointed in a commit that re-derives every bundle |
-| `@sixam/core/sensing` (`packages/core/src/sensing/index.js`) | compatibility | `@sixam/play/sim` (the same export set) | `packages/propose/bin/plans/minus-toys-plan.mjs`, whose bytes every Minus Toys bundle hashes, is repointed in a commit that re-derives every bundle |
 | `apps/device/profiles/*.json` (the three device profiles, unmoved) | compatibility | `packages/play/profiles/fnaf2/moto-g56/`, the layout's home, once the path is free | every stored citation of the path (55 recompile results with `profileSha256`, two hash-bound recompile configs, `schedule-to-input.mjs`'s default, `graph.json`) is read through its history; the device CLI and `bundle.mjs` then resolve profiles from the new home |
-| `packages/adapters/src/button-strokes.js` (symbolic link) | compatibility | `packages/play/src/sensors/fnaf2/button-strokes.js` (the same bytes) | `tools/recompile/phone-encounter-replay.mjs` names the rule source through play, and the retained full06-responses result is checked through the path's history |
 
 ## Already removed
+
+`packages/core`, `packages/research` and `packages/adapters` were removed on
+2026-09-30, once each registered removal gate held: no tracked module imported
+them (the engine sources a bundle hashes were repointed in the commit that moved
+them to `packages/propose/bin/plans`, changing `engine.sourceSha256` once while
+every compiled plan stayed byte-identical, and the five `tools/recompile`
+importers were repointed with the removal), and the retained records that name
+their paths (`packages/core/src/mechanics/*.js`, `packages/adapters/src/button-strokes.js`)
+are read through those paths' git history (ADR 0002 principle 9).
 
 The root `src/` compatibility re-exports were removed after the import
 equivalence gate. Package and application imports are canonical. Historical

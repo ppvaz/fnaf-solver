@@ -1,1 +1,0 @@
-../../../source/src/games/fnaf2/config.js
