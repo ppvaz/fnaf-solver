@@ -3042,3 +3042,62 @@ Open:
 - the Foxy roll the model accepts and the rebuild does not on `sched`/`raw` clocks;
 - the rebuild's own gap to the retail phone (full-06's 40.0 s roll).
 
+
+## 2026-09-30 — FNaF 3's stage-1 exit, the rebuild pilots over seed blocks, and "is 100% possible" (S6)
+
+Asked: is a 100% win possible on the hardest nights, and implement group 275.
+
+**Group 275** (`2bc1d15`, `fnaf3-stage1-g275-census-20260930`). At attack stage
+1 a roll above 2 marks Springtrap (g252), and the next update with any screen
+up moves him to stage 2 (g275); the model left stage 1 only on the blackout.
+With it, exhaustively, the community line reaches 60,081 (Night 1) down to
+20,489 (Night 6) of 65,536, and 7,226 on Aggressive Nightmare; switched off,
+Night 6 returns 65,536 exactly. The 65,536/65,536 and 65,511 figures are
+retracted in FOUR-GAME-NIGHTS.md and ROADMAP S6 (the Aggressive one was stale
+since the 2026-09-25 corrections: 65,437 without g275). No model policy takes
+every seed.
+
+**The pilots over seed blocks** (`c1a2ed1`, `rebuild-pilot-dev-blocks-20260930`).
+Native runs, delta lines, headless images (FNaF 4 Night 8 from 1.57 GB to about
+260 MB); the four committed wins replay equal on the new pinned binaries.
+`batch.mjs` stamps and guards its sources, and reports FNaF 3's what-day rare
+screen under the per-visit seed (66 of 65,536) as NO_NIGHT. Development blocks:
+FNaF 4 `warden` 243/300, `warden2` 300/300; FNaF 3 `guard` 11/53, `guard2`
+30/60, bounded by the sheet's audio budget (two plays per reboot at AI 7, one
+per 10.5 s, a lure failing one time in 7, no exit from a marked stage 1).
+
+**FNaF 4 held-out** (`3ef3659` predeclared, `51cf7ef`,
+`fnaf4-night8-warden2-holdout-20260930`): `warden2` wins 2,996 of 3,000 seeds
+30000-32999. Three losses are Chica's dwell standing at 20 into the Fredbear
+phase (g478/g481), which makes the forced bed visit fatal (g480, g375); one is
+the Freddy counter passing the bed during a long closet hold. `warden3`
+(`ffea7bd`, `rebuild-fnaf4-warden3-dev-20260930`) clears the dwell after 4 AM:
+300/300 on development, three of the four losses won, and search wins the
+fourth. A first form that also cut closet holds short was rejected (259/300,
+Foxy at 10).
+
+**Per-seed search** (`3d2c909`, `0788246`). Delay a task the controller started
+before the lost chain, so the touches that draw from the shared generator draw
+at other updates; every win is replayed with no pilot. Found on the way: the
+harness logs a touch that lands across a frame change with the old frame and
+update 0 (`withoutStrays` drops it; the harness is unchanged), and the search
+read summaries on the child's 'exit' event, which cut off long ones (`684f9a8`).
+Predeclared FNaF 3 Aggressive Nightmare blocks: 91 of 100
+(`fnaf3-search-block-20260930`) and, with the search branching at every task
+start and backing up, 97 of 100 (`fnaf3-search-v2-block-20260930`) have a
+touch sequence that wins replayed with no pilot. The first FNaF 4 search block
+was abandoned for the reading defect (`fnaf4-search-block-20260930`).
+
+Answer, as it stands: neither night is shown winnable on every seed. FNaF 4
+Night 8 is within a few seeds in a thousand of it for a reactive controller;
+FNaF 3 Aggressive Nightmare needs the search, and three seeds of the second
+block stay open.
+
+Open:
+- the replacement FNaF 4 search block, `warden3` plus search over seeds
+  53000-55999 (`4cd220b` predeclared), running; its record is
+  `docs/evidence/fnaf4-search-block-2-20260930.json`;
+- FNaF 3 seeds 41017, 41076, 41080 (and the development seeds the search has
+  not cracked): winnable or not is unknown;
+- everything here reads the rebuilt runtime's objects; nothing is a device
+  claim, and the touches are not a player's route.

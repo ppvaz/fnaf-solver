@@ -389,6 +389,17 @@ and the solver MCP with its claim envelope (Plan 28).
     controllers read the runtime's objects, so none of these is a device route
     or a census. The FNaF 3 controller wins 1 of 6 other seeds, the FNaF 4 one
     5 of 6.
+  - **Over seed blocks (2026-09-30, MODEL_ONLY, rebuilt-runtime).** FNaF 4
+    Night 8: `warden2` wins 2,996 of 3,000 predeclared held-out seeds
+    ([`fnaf4-night8-warden2-holdout-20260930`](../docs/evidence/fnaf4-night8-warden2-holdout-20260930.json));
+    `warden3` fixes the losses' main mechanism, and a predeclared 3,000-seed
+    block of `warden3` plus per-seed search is open. FNaF 3 Aggressive
+    Nightmare: a reactive controller wins about half, bounded by the sheet's
+    audio budget; with per-seed search, 91 and then 97 of two predeclared
+    100-seed blocks have a touch sequence that wins replayed with no pilot
+    ([`fnaf3-search-block-20260930`](../docs/evidence/fnaf3-search-block-20260930.json),
+    [`fnaf3-search-v2-block-20260930`](../docs/evidence/fnaf3-search-v2-block-20260930.json)).
+    Neither game is shown winnable on every seed.
 - **Absorbs** Plan 25 horizon 5 and Plans 26, 27 and 28.
 
 ### S7: The lab runs itself
