@@ -175,6 +175,243 @@ universe whose causal structure is fully accessible.
   much of the exact solution compresses into something a human can memorise and execute: seven
   rules, two timers, one invariant.
 
+## Phase
+
+The sections from here to the frontier table came from Pedro's questions on 2026-09-29, after the
+Night 7 phase census had shown that phase, not the seed, decides the committed bindings. Their
+numbers are dated; trust the named records over them.
+
+**Phase** is where a schedule's contacts land on the game's update grid (one update per 16.67 ms at
+60 fps), counted from the office's first update. It has four parts, which the
+[observatory](FNAF2-OBSERVATORY.md) keeps apart: the whole-schedule epoch, each contact's timing,
+each hold's duration, and the observation delay. Three clocks meet in it: the host's wall clock,
+the phone's, and the game's update count.
+
+It is not only a delivery tolerance. The random stream reads it: "some draws are per frame and many
+are tied to the frame an input lands on, so run-to-run frame jitter moves the random sequence even
+at an identical seed and schedule" ([proven twins](../evidence/night6-twin-nights-proven-20260918.json)).
+The two nights at seed 24850 differed in input phase by about 86 ms and did not replay, and in the
+model, with seed and presses fixed, changing only the frame clock changes the mask-window occupants
+from about cycle 7-8. Phase is a second seed.
+
+On Night 7 it is the first. Over 1000 held-out seeds at 121 phases (±1000 ms) per binding, 481 of
+484 (binding, phase) cells are won by every seed or lost by every seed, and a seed oracle choosing
+among the four committed bindings beats the best single binding at 0 of 121 phases
+([phase census](../evidence/fnaf2-night7-phase-census-20260925.json), MODEL_ONLY). With its epoch
+drawn uniformly over one game second, k3 won 791 of 3000 in the reconstruction each 2026-09-18
+cohort pack carries; at its declared phase it wins 65,536 of 65,536
+([winner census](../evidence/fnaf2-winner-census-20260925.json)). Controlling phase is most of
+what the controller does.
+
+The won set is a comb. Across all four bindings it is three teeth, [2216, 2300], [2366, 2500] and
+[2566, 2650] ms, separated by two three-frame gaps 200 ms apart that every binding shares; no other
+cell in the scan is won by every seed. The aim register names Puppet at the early edge (2350 ms)
+and Foxy at the late edge (2517 ms) of the middle tooth, at 60 seeds
+([`fact-register.mjs`](../../tools/device/fact-register.mjs)). k3's effective interval,
+[2410, 2445] ms, sits in the middle tooth with about 44 ms to spare early and 55 ms late, to within
+a frame; binding i's, [2487, 2522], runs into the late gap.
+
+### Where the technology stands (2026-09-29)
+
+| | Measured | Missing |
+|---|---|---|
+| Reading | Host-phone skew per run, -6.0 to +6.1 ms across the ten k3 cohort runs, anchor uncertainty 2.4-5.2 ms. The office seed moment, from the game's own log, to 1-2 ms. After the fact: full-06's hour-grid zero at first frame +3836.7 ms, 0.7 ms from the anchor firing ([hour grid](../evidence/phone-hour-grid-20260928.json)); 27 of the 29 relevant contacts in its window 6 placed on one update and two on two ([input bracket](../evidence/phone-input-bracket-20260928.json)); monitor raises within -2..+1 updates of the replayed rule and mask presses within 0..-1 ([registration](../evidence/full06-input-registration-20260928.json)). | Nothing is read live, and the cohort carries none of it: all ten k3 cohort `phase.json` records have `deliveredOffsetMs: null` and `errorVersusFirstNightFrameMs: "UNKNOWN"`, with the origin bracketed by 1.3-4.2 s. The 47-82 ms latency is one register range (the hall-lit press-to-effect median and maximum, n = 31, 2026-09-12), not a per-run measurement. The app's input dispatch has no trace source on this handset (no `android.input.inputevent`). Clock-pinned seed brackets fail closed as UNKNOWN since 2026-09-27. |
+| Writing | The anchor released 0.06-1.05 ms after its aim on all ten cohort runs. `seedpin` forces a seven-value seed window on every attempt and the exact value about one time in five, at ~6.5 ms per clock set. | The frame phase has never been written. The contact floor equals its poll (`MIN_CONTACT_MS` = `FUSION_POLL_MS` = 33 ms), so a contact's landing update has no slack. The 2026-09-27 pin protocol at 24850 did not establish the seed in five interrupted attempts. |
+| Manipulation | Aiming at a tooth, the only manipulation in use. The comb is mapped for four bindings along the epoch axis. | What places the teeth. Whether a mid-night shift equals an epoch shift (the census moves only whole schedules). Any deliberate use of the draw stream's dependence on landing frames. All of it is MODEL_ONLY while the model matches 2 of 11 mask windows. |
+| Handling | In the model k3 survives ±20 ms of per-press jitter and 50 ms of lateness; its weakest single contact, `open#2:cam9`, has a 66.67 ms early and 50 ms late window ([robustness field](../evidence/night7-robustness-field-20260927.json), 500-seed lanes). `test-seam-slack.mjs` refuses a plan that clears any floor by less than 33 ms. The belief-gated supervisor compares believed and observed mask state every cycle and aborts on disagreement. On the phone 8 of the 10 cohort slots are WIN, and the other two are RESULT_LOST in their packs ([k3 computed](../evidence/night7-cohort-k3-computed-20260925.json)). | Correction. The supervisor detects a phase error and cannot move the next contact. |
+
+### A perfect reading of phase during a run
+
+A run's phase is fully described by four sequences on one clock:
+
+1. **The game's updates:** when each ran, and so each one's duration. Per-frame draws make their
+   count matter; timers that accumulate milliseconds make their durations matter.
+2. **The origin:** the office's first update, which fixes the seed.
+3. **Each contact's press and release:** the update that consumed it, and its margin, the distance
+   between its arrival and the boundary that would have moved it to the neighbouring update.
+4. **Each captured frame's update:** which update the helper actually saw.
+
+A microdeviation is a contact's landed update minus its planned one, an integer, together with its
+margin, a duration. The integer decides the night; the margin says how close it came. A near miss
+that still landed on the right update costs nothing and is the most informative event of the night.
+
+Four channels exist or nearly exist:
+
+- **Kernel input edges.** `night-run.sh` already streams `getevent -lt` beside the frame trace, and
+  `tap-stall-audit.mjs` reads the virtual touch device's press and release edges in that clock
+  without assuming it. The k3 cohort packs carry no copy.
+- **Response frames.** The Companion's `REGION` reads see a contact's effect — a button stroke, the
+  flashlight, the mask's first frame. The limit is yield: about 75 distinct frames per 150 reads,
+  halved by a screenrecord.
+- **The game's own log,** which already brackets the first office frame to 1-2 ms.
+- **The phone's audio,** an independent witness of order. A2DP is late and variable, so it orders
+  events; it does not time them.
+
+A perfect reading is their fusion on the phone's monotonic clock. The one segment no channel sees,
+from the kernel edge to the game's input queue, is interval-censored at every contact: the kernel
+edge bounds it on one side and the landed update on the other. A night has hundreds of contacts
+(k3 has 301 actions), enough to estimate that segment's distribution within the night, and with it
+every contact's margin.
+
+Two questions for the dump come first, because either could make the reading exact rather than
+fused:
+
+- Does any on-screen element change on every update as a known function of the update count or of
+  the draw stream? If one does, every captured frame names its own update, and perhaps its position
+  in the random stream: the helper would read the stream itself.
+- Which responses are drawn on the update that consumes the input, and which one or more updates
+  later? That fixes the delay the fusion subtracts for each response.
+
+A reading is perfect when it closes replay: fed into a trace-equivalent rebuild at the night's
+seed, the read update clock and landing updates reproduce the phone's night encounter for
+encounter. Until S2 closes, the same-phase twin is the check that needs no rebuild: two phone
+nights with identical readings must be the same night. If they are not, the reading is missing a
+variable.
+
+### First measurements: the rebuilt runtime on the phone (2026-09-29)
+
+The practice rebuild became the instrument that reads its own phase
+([`apply-calib-mod.py`](../../tools/recompile/android/apply-calib-mod.py)): every update's
+pump, events and swap on `CLOCK_MONOTONIC`, its exact `dt` and `timer_units`, its RNG state and
+each frame's seed, every touch as Android and SDL saw it, and a beacon that puts the update
+index on screen. These are `rebuilt-runtime` measurements of this phone, not retail evidence.
+
+- **The reading closes replay.** Given only the phone's frame-3 seed, per-update `dt` and polled
+  input updates, the host harness reproduced two phone nights draw for draw: 18,814 of 18,814
+  and 16,113 of 16,113 office updates, each leaving the office on the phone's own update. Each
+  variable is necessary: the next reachable seed diverges at update 1, a constant 60 Hz clock at
+  update 7, and moving the monitor presses one update later at update 962
+  ([summary](../../tools/recompile/results/calib-replay-20260929.json),
+  `calib-replay-summary-492e9e289e5285e1`, MODEL_ONLY host side).
+- **Where the actuation chain loses a contact.** 126 contacts sent through the campaign's
+  `/system/bin/hid` transport: every hold of 17 ms or more was taken (105 of 105), and 7 of 15
+  holds of 8 ms were invisible because one pump drained both edges. getevent stamps equal the
+  MotionEvent's own time (`CLOCK_MONOTONIC`); kernel to `onTouch` is 2.2 ms at the median, to the
+  SDL queue 0.06 ms more, then 6.6 ms waiting for the pump, the contact's phase against the
+  update grid ([audit](../../tools/recompile/results/practice-actuation-audit-20260929.json),
+  `practice-actuation-audit-9c83886c7491fa45`). The phone's input path is not what loses a
+  33 ms contact; only a game loop that skips a poll longer than the hold can.
+- **The Companion's capture latency.** The Cue Helper's MediaProjection image of an update is
+  stamped 26.4 ms after that update's swap (22.4-30.7), is already one update stale when stamped
+  on every frame, reaches the helper's reply 12.9 ms later, and shows 47.5% of updates
+  ([capture](../../tools/recompile/results/capture-latency-20260929.json),
+  `capture-latency-79e85709947685c1`).
+- **Frame phase is a second seed, measured.** The rebuild seeds each frame from the wall clock in
+  whole seconds (`(s × 1000) & 0xFFFF`), where the retail runtime takes milliseconds, and the
+  phone's frame times reach the random stream within seven updates.
+
+Open: the same reading of a retail night, whose last input hop and seed are the Clickteam
+runtime's own; and k3 on the rebuild, which needed the second finger its camdrops use (43 of its
+346 contacts) wired into play mode first.
+
+### Solving phase, completely and robustly
+
+**Completely** means the phase response is derived, not scanned: which mechanism places each tooth
+edge (Puppet early and Foxy late on the middle tooth, at 60 seeds), in the joint space of
+per-contact landing updates rather than along the one epoch axis the census moves. The robustness
+field moves one event at a time; the phone moves all of them at once, correlated through the anchor
+and independent per contact. The won set in that joint space, and its depth around the delivered
+point, is the object. It is complete when the reading above closes replay.
+
+**Robustly** has an arithmetic. If n contacts can each kill the night and each lands outside its
+window with probability ε, phase loses about nε of nights. Were k3's two non-wins phase losses,
+they would fit one fragile contact at ε ≈ 0.2 as well as ε ≈ 7 × 10⁻⁴ spread over 301 contacts, and
+nothing in the packs separates the two. A robust solution names its critical contacts, measures
+each one's landing spread on the phone over a predeclared cohort, and shows nε below its target
+with the windows the model derived. For 99% of nights over ten critical contacts, each must miss
+less than once in a thousand. The windows must also hold on the phone, not only in the simulator,
+which is where the next property enters.
+
+### Antifragility
+
+A fragile controller loses to disorder, a robust one survives it, an antifragile one gains from it.
+Against a fixed ceiling a single night cannot gain: once `P_max = 1`, variability can at best leave
+the win rate alone. The gain is in knowledge, and it accrues to the lab rather than to the night.
+
+Without a reader, the exposure to phase is concave: a tooth absorbs small errors and a gap kills.
+With one, three mechanisms make it convex:
+
+- **Every deviation is a free experiment.** A contact that lands one update off and survives is a
+  point inside the phone's own won set; one that kills is a point outside it. Over a cohort the
+  phone maps its own kernel, which is exactly the fidelity evidence S2 lacks, gathered as a
+  by-product of play.
+- **Deliberate dither inside a tooth.** Moving non-critical contacts within their margins costs
+  nothing and identifies the latency and the update clock faster: the persistent excitation of
+  adaptive control, and the "provoke observations" question above applied to time rather than the
+  seed.
+- **Optionality.** A controller that reads its landing and holds several continuations can take the
+  one whose tooth contains the phase it got, and a choice made after the draw gains value as the
+  draw varies. The census marks the limit of today's family: all four bindings share the same two
+  gaps, so choosing among them fills neither. A continuation designed for a gap is the test of
+  whether the gaps belong to the mechanics or to the family.
+
+The antifragile lab is S7: each loss packed, placed on the comb, attributed to delivery, model or
+seed, and turned into a gate or a model correction without a human in the loop — the mistake
+register, automated.
+
+## The ultimate achievement
+
+**The predicted night.** A seed is pinned, the landing updates are planned, and the rebuild emits
+the night's whole encounter ledger — who is where on which update — whose hash is published before
+the run. The phone then plays that night, and its frames and audio match the ledger update for
+update.
+
+Everything else follows from it. S3's `P_max` becomes a fact about the phone rather than the model;
+the controller's gap to it measures delivery alone; every loss has one cause; the tablebase, the
+robustness field and the human route are computed on the real game. It needs the two halves this
+page has kept apart: Truth, a rebuild trace-equivalent to the phone (S2), and phase solved, a
+reading and a writing of every landing update (S4). It stands at outcomes predicted and encounters
+not: the model matches 2 of 11 mask windows, the rebuild first disagrees with the phone at windows
+9, 10, 3 and 6 on four clock-seeded nights, the twins did not replay, and every cohort run has
+`deliveredOffsetMs: null`.
+
+## Each layer at its frontier
+
+Each layer beside the nearest outside field, and what a breakthrough would be here. The outside
+frontier is named from general knowledge, not from a literature review; check it before claiming
+novelty.
+
+| Layer | Nearest known frontier | Frontier here | Breakthrough |
+|---|---|---|---|
+| Truth | Matching decompilations (Super Mario 64, Ocarina of Time) rebuilt byte for byte; emulators accurate enough that tool-assisted runs verify on real consoles | S2: the rebuild trace-equivalent to the phone at the level of encounters | Trace equivalence against an unmodified phone running a closed runtime, with no emulator in the loop |
+| Decision | Solved games (checkers, 2007), endgame tablebases, POMDP solvers | `P_max` per night over all 65,536 seeds, bounded below by a policy and above by the clairvoyant relaxation | A certified ceiling for a real-time commercial game: both bounds, on a trace-equivalent game, over policies rather than schedules |
+| Embodiment | Console verification by replay devices; system identification for sim-to-real control | A tick-exact closed loop on the phone, at the ceiling | The predicted night |
+| Understanding | Concepts extracted from game engines and taught back to experts; policies distilled into small programs | S5: a route a human holds | The strategy-compression frontier measured, bits of rule against win rate, with a human cohort on it |
+| Proof | Pre-registration, provenance graphs, signed build attestations | Every claim labelled, packed and attested; negatives queryable | A lab that runs itself (S7) and cannot overclaim: every promotion re-derived by a checker, every loss attributed without a human |
+| Method | General game-playing benchmarks, built for learning rather than solving | S6: the method on four games through one runtime | A solver for the runtime: an event dump in, `P_max` and a controller out |
+
+The nearest breakthrough is the predicted night, and within it the reading: every other layer's
+breakthrough waits on it, and the phone already offers most of its channels.
+
+## What could be a discovery
+
+The questions reach past the game in four places. Each is a candidate, stated so that it can be
+false, and none has been checked against the literature.
+
+- **The phase-space structure of a real program.** The comb is a slice of the outcome basins of a
+  deterministic program over input timing, measured in a model and checkable on hardware. Dynamical
+  systems has a measure for such boundaries, the uncertainty exponent: the fraction of timings
+  within ε of a basin boundary scales as ε^α. The finding would be α for FNaF 2 over the joint
+  per-contact landing space, and whether its boundaries are smooth, like the teeth, or riddled at a
+  finer grain. Today there is one axis, four bindings and update resolution, all MODEL_ONLY.
+- **How much randomness a phone injects into a deterministic game.** The 16-bit seed is the game's
+  designed randomness; frame timing is the platform's. The twins at 24850 diverged by about cycle
+  7-8 from the frame clock alone. With the perfect reading, twin cohorts measure how fast identical
+  plans at an identical seed branch into distinct nights: the platform's entropy, as the game
+  amplifies it, in bits per minute. It needs the reading and the same-phase twin.
+- **An exactly solved real-time task as a human instrument.** Real-time, partially observable
+  tasks whose optimal policy and ceiling are known exactly are rare. A certified `P_max`, the
+  robustness field and the strategy-compression frontier would make FNaF 2 one, measuring human
+  play in bits of rule held and milliseconds of margin against an exact optimum. It needs S3 on a
+  trace-equivalent game and S5's human cohort.
+- **The reliability of science an agent conducts.** This repository is a lab run largely by agents
+  under gates, with retained negatives, retractions, a mistake register and machine-checked
+  attestations. Which gate caught which error, how often a diagnosis was retracted, and how long a
+  false claim lived before a check refuted it can be measured from its history.
+
+The first two share their instrument with the predicted night and could be reached before it; the
+third needs the whole path; the fourth needs only the history already committed.
+
 ## Where this project actually is
 
 Marked honestly, rung by rung, as of 2026-09-18. On 09-17 the model gap this page first called the

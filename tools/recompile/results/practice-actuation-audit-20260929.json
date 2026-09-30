@@ -1,0 +1,5275 @@
+{
+ "schema": "recompile-practice-actuation-audit-v1",
+ "step": "ROADMAP S2",
+ "claimLevel": "DEVICE_MEASURED",
+ "fidelity": "rebuilt-runtime",
+ "evidenceId": "practice-actuation-audit-9c83886c7491fa45",
+ "question": "Which contacts of the campaign transport does a game loop on this phone take, lose or merge, and on which update?",
+ "device": {
+  "package": "org.fnaf2practice.play",
+  "apkSha256Prefix": "34d698e50439e71f"
+ },
+ "instrument": {
+  "transport": "/system/bin/hid, HID_DESCRIPTOR and report() of @sixam/adapters",
+  "kernel": "getevent -lt, touchEdges() of tools/device/tap-stall-audit.mjs",
+  "game": "practice-input.jsonl level-polled left-button edges and practice-state.jsonl SDL ticks"
+ },
+ "inputsSha256": {
+  "plan": "41878c0006f4a59c5ec80a09a6f1bad07b87f49ef315c338eae6b0789414b295",
+  "getevent": "5b3094960e88c19ce42409557da70a1adfc342c525838339b043810e1ebe6340",
+  "practiceInput": "8932edf884827977b4f752b3fbeea3b3e38f9c36b8637b6bdf79b0e3be10c9ab",
+  "practiceState": "06f7a1acc190a7a93a0e5813e5ce296258a4fca83ee06d38298160beeae10175",
+  "calibUpdates": "a948b8413597860a420c24dc8339ca2bb13401d252e97c18382c3c63d110fa5c",
+  "calibInput": "a8a4eda563b1bfa499b44c6fac2937eef57620b8916553e7eee0dee02fe989dc"
+ },
+ "droppedFragments": 1,
+ "notClaimed": [
+  "The retail game: its last input hop is the Clickteam runtime, not SDL.",
+  "Controls that latch a new touch between updates: this grader sees the polled level only.",
+  "Absolute kernel-to-loop latency from the practice log alone: its clock constant is fitted. The chain, where present, is absolute."
+ ],
+ "verdictSource": "chain",
+ "result": {
+  "kernelNode": "/dev/input/event10",
+  "loggedEdges": {
+   "down": 119,
+   "up": 119,
+   "unpairedDown": 0,
+   "unpairedUp": 0
+  },
+  "clock": {
+   "coarseMs": -257788513.277,
+   "feasible": null,
+   "constantDelayHolds": false,
+   "bestMs": -257788526.477,
+   "violatedIntervals": 16,
+   "of": 238,
+   "jitterLowerBoundMs": 19.221
+  },
+  "contacts": 126,
+  "graded": 120,
+  "agree": 112,
+  "byHold": [
+   {
+    "holdMs": 8,
+    "contacts": 15,
+    "observed": {
+     "TAKEN": 11,
+     "INVISIBLE": 4,
+     "MERGED": 0
+    },
+    "predicted": {
+     "TAKEN": 7,
+     "INVISIBLE": 8,
+     "MERGED": 0
+    },
+    "agree": 11
+   },
+   {
+    "holdMs": 17,
+    "contacts": 15,
+    "observed": {
+     "TAKEN": 13,
+     "INVISIBLE": 2,
+     "MERGED": 0
+    },
+    "predicted": {
+     "TAKEN": 15,
+     "INVISIBLE": 0,
+     "MERGED": 0
+    },
+    "agree": 13
+   },
+   {
+    "holdMs": 25,
+    "contacts": 15,
+    "observed": {
+     "TAKEN": 15,
+     "INVISIBLE": 0,
+     "MERGED": 0
+    },
+    "predicted": {
+     "TAKEN": 15,
+     "INVISIBLE": 0,
+     "MERGED": 0
+    },
+    "agree": 15
+   },
+   {
+    "holdMs": 33,
+    "contacts": 15,
+    "observed": {
+     "TAKEN": 15,
+     "INVISIBLE": 0,
+     "MERGED": 0
+    },
+    "predicted": {
+     "TAKEN": 15,
+     "INVISIBLE": 0,
+     "MERGED": 0
+    },
+    "agree": 15
+   },
+   {
+    "holdMs": 42,
+    "contacts": 15,
+    "observed": {
+     "TAKEN": 15,
+     "INVISIBLE": 0,
+     "MERGED": 0
+    },
+    "predicted": {
+     "TAKEN": 15,
+     "INVISIBLE": 0,
+     "MERGED": 0
+    },
+    "agree": 15
+   },
+   {
+    "holdMs": 50,
+    "contacts": 15,
+    "observed": {
+     "TAKEN": 15,
+     "INVISIBLE": 0,
+     "MERGED": 0
+    },
+    "predicted": {
+     "TAKEN": 15,
+     "INVISIBLE": 0,
+     "MERGED": 0
+    },
+    "agree": 15
+   },
+   {
+    "holdMs": 67,
+    "contacts": 15,
+    "observed": {
+     "TAKEN": 15,
+     "INVISIBLE": 0,
+     "MERGED": 0
+    },
+    "predicted": {
+     "TAKEN": 15,
+     "INVISIBLE": 0,
+     "MERGED": 0
+    },
+    "agree": 15
+   },
+   {
+    "holdMs": 100,
+    "contacts": 15,
+    "observed": {
+     "TAKEN": 13,
+     "INVISIBLE": 1,
+     "MERGED": 1
+    },
+    "predicted": {
+     "TAKEN": 15,
+     "INVISIBLE": 0,
+     "MERGED": 0
+    },
+    "agree": 13
+   }
+  ],
+  "byGap": [
+   {
+    "gapMs": 17,
+    "contacts": 24,
+    "observed": {
+     "TAKEN": 23,
+     "INVISIBLE": 0,
+     "MERGED": 1
+    },
+    "predicted": {
+     "TAKEN": 21,
+     "INVISIBLE": 3,
+     "MERGED": 0
+    },
+    "agree": 20
+   },
+   {
+    "gapMs": 33,
+    "contacts": 24,
+    "observed": {
+     "TAKEN": 21,
+     "INVISIBLE": 3,
+     "MERGED": 0
+    },
+    "predicted": {
+     "TAKEN": 22,
+     "INVISIBLE": 2,
+     "MERGED": 0
+    },
+    "agree": 23
+   },
+   {
+    "gapMs": 50,
+    "contacts": 24,
+    "observed": {
+     "TAKEN": 23,
+     "INVISIBLE": 1,
+     "MERGED": 0
+    },
+    "predicted": {
+     "TAKEN": 23,
+     "INVISIBLE": 1,
+     "MERGED": 0
+    },
+    "agree": 24
+   },
+   {
+    "gapMs": 100,
+    "contacts": 24,
+    "observed": {
+     "TAKEN": 22,
+     "INVISIBLE": 2,
+     "MERGED": 0
+    },
+    "predicted": {
+     "TAKEN": 23,
+     "INVISIBLE": 1,
+     "MERGED": 0
+    },
+    "agree": 23
+   },
+   {
+    "gapMs": 250,
+    "contacts": 24,
+    "observed": {
+     "TAKEN": 23,
+     "INVISIBLE": 1,
+     "MERGED": 0
+    },
+    "predicted": {
+     "TAKEN": 23,
+     "INVISIBLE": 1,
+     "MERGED": 0
+    },
+    "agree": 22
+   }
+  ],
+  "hidTiming": {
+   "startDriftMs": {
+    "n": 126,
+    "min": -2.855,
+    "p50": -2.285,
+    "p90": -1.801,
+    "max": 2.386
+   },
+   "holdErrorMs": {
+    "n": 126,
+    "min": -4.23,
+    "p50": -0.34,
+    "p90": 0.565,
+    "max": 0.762
+   }
+  },
+  "updateDeltaMs": {
+   "6": 1,
+   "11": 1,
+   "14": 3,
+   "15": 86,
+   "16": 757,
+   "17": 1089,
+   "18": 199,
+   "19": 13,
+   "21": 1,
+   "33": 1
+  },
+  "officeUpdates": 2153,
+  "pressPointGame": {
+   "384,383": 119
+  },
+  "rows": [
+   {
+    "index": 0,
+    "sync": true,
+    "holdMs": 200,
+    "gapMs": 600,
+    "plannedAtMs": 0,
+    "kernelAtMs": 0,
+    "kernelHoldMs": 197.7,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 702
+   },
+   {
+    "index": 1,
+    "sync": true,
+    "holdMs": 200,
+    "gapMs": 600,
+    "plannedAtMs": 800,
+    "kernelAtMs": 797.913,
+    "kernelHoldMs": 199.794,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 750
+   },
+   {
+    "index": 2,
+    "sync": true,
+    "holdMs": 200,
+    "gapMs": 600,
+    "plannedAtMs": 1600,
+    "kernelAtMs": 1597.855,
+    "kernelHoldMs": 200.384,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 798
+   },
+   {
+    "index": 3,
+    "sync": false,
+    "holdMs": 100,
+    "gapMs": 33,
+    "plannedAtMs": 2400,
+    "kernelAtMs": 2398.579,
+    "kernelHoldMs": 98.701,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 846
+   },
+   {
+    "index": 4,
+    "sync": false,
+    "holdMs": 67,
+    "gapMs": 17,
+    "plannedAtMs": 2533,
+    "kernelAtMs": 2530.979,
+    "kernelHoldMs": 66.524,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 854
+   },
+   {
+    "index": 5,
+    "sync": false,
+    "holdMs": 50,
+    "gapMs": 100,
+    "plannedAtMs": 2617,
+    "kernelAtMs": 2615.071,
+    "kernelHoldMs": 49.71,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 859
+   },
+   {
+    "index": 6,
+    "sync": false,
+    "holdMs": 33,
+    "gapMs": 250,
+    "plannedAtMs": 2767,
+    "kernelAtMs": 2764.61,
+    "kernelHoldMs": 32.853,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 868
+   },
+   {
+    "index": 7,
+    "sync": false,
+    "holdMs": 100,
+    "gapMs": 100,
+    "plannedAtMs": 3050,
+    "kernelAtMs": 3048.242,
+    "kernelHoldMs": 99.861,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 885
+   },
+   {
+    "index": 8,
+    "sync": false,
+    "holdMs": 33,
+    "gapMs": 33,
+    "plannedAtMs": 3250,
+    "kernelAtMs": 3247.85,
+    "kernelHoldMs": 32.625,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 897
+   },
+   {
+    "index": 9,
+    "sync": false,
+    "holdMs": 42,
+    "gapMs": 33,
+    "plannedAtMs": 3316,
+    "kernelAtMs": 3314.199,
+    "kernelHoldMs": 41.454,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 901
+   },
+   {
+    "index": 10,
+    "sync": false,
+    "holdMs": 25,
+    "gapMs": 17,
+    "plannedAtMs": 3391,
+    "kernelAtMs": 3388.145,
+    "kernelHoldMs": 25.569,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 905
+   },
+   {
+    "index": 11,
+    "sync": false,
+    "holdMs": 42,
+    "gapMs": 50,
+    "plannedAtMs": 3433,
+    "kernelAtMs": 3430.298,
+    "kernelHoldMs": 42.588,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 908
+   },
+   {
+    "index": 12,
+    "sync": false,
+    "holdMs": 100,
+    "gapMs": 100,
+    "plannedAtMs": 3525,
+    "kernelAtMs": 3522.376,
+    "kernelHoldMs": 100.762,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 913
+   },
+   {
+    "index": 13,
+    "sync": false,
+    "holdMs": 25,
+    "gapMs": 250,
+    "plannedAtMs": 3725,
+    "kernelAtMs": 3722.634,
+    "kernelHoldMs": 24.529,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 925
+   },
+   {
+    "index": 14,
+    "sync": false,
+    "holdMs": 100,
+    "gapMs": 50,
+    "plannedAtMs": 4000,
+    "kernelAtMs": 3998.098,
+    "kernelHoldMs": 99.783,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 942
+   },
+   {
+    "index": 15,
+    "sync": false,
+    "holdMs": 100,
+    "gapMs": 17,
+    "plannedAtMs": 4150,
+    "kernelAtMs": 4147.415,
+    "kernelHoldMs": 100.632,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 951
+   },
+   {
+    "index": 16,
+    "sync": false,
+    "holdMs": 50,
+    "gapMs": 50,
+    "plannedAtMs": 4267,
+    "kernelAtMs": 4264.679,
+    "kernelHoldMs": 49.573,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 958
+   },
+   {
+    "index": 17,
+    "sync": false,
+    "holdMs": 42,
+    "gapMs": 17,
+    "plannedAtMs": 4367,
+    "kernelAtMs": 4364.775,
+    "kernelHoldMs": 42.293,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 964
+   },
+   {
+    "index": 18,
+    "sync": false,
+    "holdMs": 42,
+    "gapMs": 100,
+    "plannedAtMs": 4426,
+    "kernelAtMs": 4423.501,
+    "kernelHoldMs": 42.613,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 967
+   },
+   {
+    "index": 19,
+    "sync": false,
+    "holdMs": 50,
+    "gapMs": 17,
+    "plannedAtMs": 4568,
+    "kernelAtMs": 4565.849,
+    "kernelHoldMs": 49.676,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 976
+   },
+   {
+    "index": 20,
+    "sync": false,
+    "holdMs": 67,
+    "gapMs": 33,
+    "plannedAtMs": 4635,
+    "kernelAtMs": 4633.181,
+    "kernelHoldMs": 66.886,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 980
+   },
+   {
+    "index": 21,
+    "sync": false,
+    "holdMs": 100,
+    "gapMs": 33,
+    "plannedAtMs": 4735,
+    "kernelAtMs": 4732.646,
+    "kernelHoldMs": 99.72,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 986
+   },
+   {
+    "index": 22,
+    "sync": false,
+    "holdMs": 42,
+    "gapMs": 33,
+    "plannedAtMs": 4868,
+    "kernelAtMs": 4866.038,
+    "kernelHoldMs": 41.675,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 994
+   },
+   {
+    "index": 23,
+    "sync": false,
+    "holdMs": 17,
+    "gapMs": 33,
+    "plannedAtMs": 4943,
+    "kernelAtMs": 4940.273,
+    "kernelHoldMs": 17.558,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 998
+   },
+   {
+    "index": 24,
+    "sync": false,
+    "holdMs": 17,
+    "gapMs": 33,
+    "plannedAtMs": 4993,
+    "kernelAtMs": 4990.296,
+    "kernelHoldMs": 17.564,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1001
+   },
+   {
+    "index": 25,
+    "sync": false,
+    "holdMs": 8,
+    "gapMs": 33,
+    "plannedAtMs": 5043,
+    "kernelAtMs": 5040.345,
+    "kernelHoldMs": 8.541,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1004
+   },
+   {
+    "index": 26,
+    "sync": false,
+    "holdMs": 42,
+    "gapMs": 250,
+    "plannedAtMs": 5084,
+    "kernelAtMs": 5081.531,
+    "kernelHoldMs": 41.564,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1007
+   },
+   {
+    "index": 27,
+    "sync": false,
+    "holdMs": 67,
+    "gapMs": 50,
+    "plannedAtMs": 5376,
+    "kernelAtMs": 5373.891,
+    "kernelHoldMs": 66.991,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1024
+   },
+   {
+    "index": 28,
+    "sync": false,
+    "holdMs": 67,
+    "gapMs": 250,
+    "plannedAtMs": 5493,
+    "kernelAtMs": 5490.331,
+    "kernelHoldMs": 67.466,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1031
+   },
+   {
+    "index": 29,
+    "sync": false,
+    "holdMs": 25,
+    "gapMs": 250,
+    "plannedAtMs": 5810,
+    "kernelAtMs": 5808.058,
+    "kernelHoldMs": 24.907,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1050
+   },
+   {
+    "index": 30,
+    "sync": false,
+    "holdMs": 33,
+    "gapMs": 100,
+    "plannedAtMs": 6085,
+    "kernelAtMs": 6082.891,
+    "kernelHoldMs": 32.703,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1067
+   },
+   {
+    "index": 31,
+    "sync": false,
+    "holdMs": 33,
+    "gapMs": 50,
+    "plannedAtMs": 6218,
+    "kernelAtMs": 6220.386,
+    "kernelHoldMs": 28.77,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1075
+   },
+   {
+    "index": 32,
+    "sync": false,
+    "holdMs": 25,
+    "gapMs": 17,
+    "plannedAtMs": 6301,
+    "kernelAtMs": 6298.887,
+    "kernelHoldMs": 24.561,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1080
+   },
+   {
+    "index": 33,
+    "sync": false,
+    "holdMs": 25,
+    "gapMs": 50,
+    "plannedAtMs": 6343,
+    "kernelAtMs": 6341.015,
+    "kernelHoldMs": 24.622,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1082
+   },
+   {
+    "index": 34,
+    "sync": false,
+    "holdMs": 25,
+    "gapMs": 33,
+    "plannedAtMs": 6418,
+    "kernelAtMs": 6415.17,
+    "kernelHoldMs": 25.541,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1087
+   },
+   {
+    "index": 35,
+    "sync": false,
+    "holdMs": 67,
+    "gapMs": 17,
+    "plannedAtMs": 6476,
+    "kernelAtMs": 6473.798,
+    "kernelHoldMs": 66.478,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1090
+   },
+   {
+    "index": 36,
+    "sync": false,
+    "holdMs": 67,
+    "gapMs": 250,
+    "plannedAtMs": 6560,
+    "kernelAtMs": 6557.728,
+    "kernelHoldMs": 66.552,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1095
+   },
+   {
+    "index": 37,
+    "sync": false,
+    "holdMs": 33,
+    "gapMs": 250,
+    "plannedAtMs": 6877,
+    "kernelAtMs": 6875.008,
+    "kernelHoldMs": 32.066,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1114
+   },
+   {
+    "index": 38,
+    "sync": false,
+    "holdMs": 50,
+    "gapMs": 250,
+    "plannedAtMs": 7160,
+    "kernelAtMs": 7158.731,
+    "kernelHoldMs": 48.846,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1131
+   },
+   {
+    "index": 39,
+    "sync": false,
+    "holdMs": 17,
+    "gapMs": 50,
+    "plannedAtMs": 7460,
+    "kernelAtMs": 7458.678,
+    "kernelHoldMs": 15.623,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1149
+   },
+   {
+    "index": 40,
+    "sync": false,
+    "holdMs": 8,
+    "gapMs": 100,
+    "plannedAtMs": 7527,
+    "kernelAtMs": 7524.839,
+    "kernelHoldMs": 7.858,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1153
+   },
+   {
+    "index": 41,
+    "sync": false,
+    "holdMs": 50,
+    "gapMs": 17,
+    "plannedAtMs": 7635,
+    "kernelAtMs": 7632.559,
+    "kernelHoldMs": 49.601,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1160
+   },
+   {
+    "index": 42,
+    "sync": false,
+    "holdMs": 17,
+    "gapMs": 17,
+    "plannedAtMs": 7702,
+    "kernelAtMs": 7699.923,
+    "kernelHoldMs": 16.731,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1164
+   },
+   {
+    "index": 43,
+    "sync": false,
+    "holdMs": 25,
+    "gapMs": 100,
+    "plannedAtMs": 7736,
+    "kernelAtMs": 7733.528,
+    "kernelHoldMs": 24.657,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1166
+   },
+   {
+    "index": 44,
+    "sync": false,
+    "holdMs": 25,
+    "gapMs": 250,
+    "plannedAtMs": 7861,
+    "kernelAtMs": 7858.72,
+    "kernelHoldMs": 24.664,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1173
+   },
+   {
+    "index": 45,
+    "sync": false,
+    "holdMs": 17,
+    "gapMs": 17,
+    "plannedAtMs": 8136,
+    "kernelAtMs": 8136.072,
+    "kernelHoldMs": 14.913,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1190
+   },
+   {
+    "index": 46,
+    "sync": false,
+    "holdMs": 17,
+    "gapMs": 100,
+    "plannedAtMs": 8170,
+    "kernelAtMs": 8167.952,
+    "kernelHoldMs": 16.823,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1192
+   },
+   {
+    "index": 47,
+    "sync": false,
+    "holdMs": 17,
+    "gapMs": 50,
+    "plannedAtMs": 8287,
+    "kernelAtMs": 8284.305,
+    "kernelHoldMs": 17.608,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1199
+   },
+   {
+    "index": 48,
+    "sync": false,
+    "holdMs": 42,
+    "gapMs": 250,
+    "plannedAtMs": 8354,
+    "kernelAtMs": 8351.708,
+    "kernelHoldMs": 41.552,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1203
+   },
+   {
+    "index": 49,
+    "sync": false,
+    "holdMs": 33,
+    "gapMs": 50,
+    "plannedAtMs": 8646,
+    "kernelAtMs": 8643.994,
+    "kernelHoldMs": 32.534,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1220
+   },
+   {
+    "index": 50,
+    "sync": false,
+    "holdMs": 17,
+    "gapMs": 17,
+    "plannedAtMs": 8729,
+    "kernelAtMs": 8726.979,
+    "kernelHoldMs": 16.522,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1225
+   },
+   {
+    "index": 51,
+    "sync": false,
+    "holdMs": 100,
+    "gapMs": 250,
+    "plannedAtMs": 8763,
+    "kernelAtMs": 8760.999,
+    "kernelHoldMs": 99.68,
+    "predicted": "TAKEN",
+    "observed": "INVISIBLE"
+   },
+   {
+    "index": 52,
+    "sync": false,
+    "holdMs": 17,
+    "gapMs": 100,
+    "plannedAtMs": 9113,
+    "kernelAtMs": 9110.362,
+    "kernelHoldMs": 17.51,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1248
+   },
+   {
+    "index": 53,
+    "sync": false,
+    "holdMs": 100,
+    "gapMs": 17,
+    "plannedAtMs": 9230,
+    "kernelAtMs": 9227.353,
+    "kernelHoldMs": 100.616,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1255
+   },
+   {
+    "index": 54,
+    "sync": false,
+    "holdMs": 8,
+    "gapMs": 50,
+    "plannedAtMs": 9347,
+    "kernelAtMs": 9344.423,
+    "kernelHoldMs": 8.629,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1262
+   },
+   {
+    "index": 55,
+    "sync": false,
+    "holdMs": 25,
+    "gapMs": 100,
+    "plannedAtMs": 9405,
+    "kernelAtMs": 9402.498,
+    "kernelHoldMs": 25.469,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1266
+   },
+   {
+    "index": 56,
+    "sync": false,
+    "holdMs": 67,
+    "gapMs": 33,
+    "plannedAtMs": 9530,
+    "kernelAtMs": 9527.484,
+    "kernelHoldMs": 67.576,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1273
+   },
+   {
+    "index": 57,
+    "sync": false,
+    "holdMs": 67,
+    "gapMs": 100,
+    "plannedAtMs": 9630,
+    "kernelAtMs": 9627.553,
+    "kernelHoldMs": 66.556,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1279
+   },
+   {
+    "index": 58,
+    "sync": false,
+    "holdMs": 50,
+    "gapMs": 50,
+    "plannedAtMs": 9797,
+    "kernelAtMs": 9794.658,
+    "kernelHoldMs": 49.534,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1289
+   },
+   {
+    "index": 59,
+    "sync": false,
+    "holdMs": 8,
+    "gapMs": 50,
+    "plannedAtMs": 9897,
+    "kernelAtMs": 9894.665,
+    "kernelHoldMs": 7.521,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1295
+   },
+   {
+    "index": 60,
+    "sync": false,
+    "holdMs": 42,
+    "gapMs": 50,
+    "plannedAtMs": 9955,
+    "kernelAtMs": 9952.622,
+    "kernelHoldMs": 41.576,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1299
+   },
+   {
+    "index": 61,
+    "sync": false,
+    "holdMs": 100,
+    "gapMs": 33,
+    "plannedAtMs": 10047,
+    "kernelAtMs": 10045.564,
+    "kernelHoldMs": 98.623,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1304
+   },
+   {
+    "index": 62,
+    "sync": false,
+    "holdMs": 42,
+    "gapMs": 100,
+    "plannedAtMs": 10180,
+    "kernelAtMs": 10177.644,
+    "kernelHoldMs": 41.591,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1312
+   },
+   {
+    "index": 63,
+    "sync": false,
+    "holdMs": 33,
+    "gapMs": 17,
+    "plannedAtMs": 10322,
+    "kernelAtMs": 10319.715,
+    "kernelHoldMs": 32.472,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1321
+   },
+   {
+    "index": 64,
+    "sync": false,
+    "holdMs": 8,
+    "gapMs": 50,
+    "plannedAtMs": 10372,
+    "kernelAtMs": 10369.619,
+    "kernelHoldMs": 7.485,
+    "predicted": "INVISIBLE",
+    "observed": "INVISIBLE"
+   },
+   {
+    "index": 65,
+    "sync": false,
+    "holdMs": 33,
+    "gapMs": 100,
+    "plannedAtMs": 10430,
+    "kernelAtMs": 10427.525,
+    "kernelHoldMs": 33.553,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1327
+   },
+   {
+    "index": 66,
+    "sync": false,
+    "holdMs": 25,
+    "gapMs": 33,
+    "plannedAtMs": 10563,
+    "kernelAtMs": 10560.61,
+    "kernelHoldMs": 24.582,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1335
+   },
+   {
+    "index": 67,
+    "sync": false,
+    "holdMs": 67,
+    "gapMs": 33,
+    "plannedAtMs": 10621,
+    "kernelAtMs": 10618.664,
+    "kernelHoldMs": 66.599,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1339
+   },
+   {
+    "index": 68,
+    "sync": false,
+    "holdMs": 67,
+    "gapMs": 100,
+    "plannedAtMs": 10721,
+    "kernelAtMs": 10718.713,
+    "kernelHoldMs": 66.545,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1345
+   },
+   {
+    "index": 69,
+    "sync": false,
+    "holdMs": 8,
+    "gapMs": 17,
+    "plannedAtMs": 10888,
+    "kernelAtMs": 10885.844,
+    "kernelHoldMs": 7.427,
+    "predicted": "INVISIBLE",
+    "observed": "TAKEN",
+    "downUpdate": 1356
+   },
+   {
+    "index": 70,
+    "sync": false,
+    "holdMs": 17,
+    "gapMs": 100,
+    "plannedAtMs": 10913,
+    "kernelAtMs": 10910.705,
+    "kernelHoldMs": 16.616,
+    "predicted": "TAKEN",
+    "observed": "INVISIBLE"
+   },
+   {
+    "index": 71,
+    "sync": false,
+    "holdMs": 17,
+    "gapMs": 250,
+    "plannedAtMs": 11030,
+    "kernelAtMs": 11027.853,
+    "kernelHoldMs": 16.51,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1363
+   },
+   {
+    "index": 72,
+    "sync": false,
+    "holdMs": 42,
+    "gapMs": 250,
+    "plannedAtMs": 11297,
+    "kernelAtMs": 11295.125,
+    "kernelHoldMs": 41.536,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1379
+   },
+   {
+    "index": 73,
+    "sync": false,
+    "holdMs": 42,
+    "gapMs": 33,
+    "plannedAtMs": 11589,
+    "kernelAtMs": 11586.407,
+    "kernelHoldMs": 41.73,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1397
+   },
+   {
+    "index": 74,
+    "sync": false,
+    "holdMs": 8,
+    "gapMs": 250,
+    "plannedAtMs": 11664,
+    "kernelAtMs": 11661.605,
+    "kernelHoldMs": 7.456,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1401
+   },
+   {
+    "index": 75,
+    "sync": false,
+    "holdMs": 8,
+    "gapMs": 100,
+    "plannedAtMs": 11922,
+    "kernelAtMs": 11920.312,
+    "kernelHoldMs": 7.159,
+    "predicted": "INVISIBLE",
+    "observed": "INVISIBLE"
+   },
+   {
+    "index": 76,
+    "sync": false,
+    "holdMs": 100,
+    "gapMs": 100,
+    "plannedAtMs": 12030,
+    "kernelAtMs": 12027.969,
+    "kernelHoldMs": 99.681,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1423
+   },
+   {
+    "index": 77,
+    "sync": false,
+    "holdMs": 17,
+    "gapMs": 250,
+    "plannedAtMs": 12230,
+    "kernelAtMs": 12227.253,
+    "kernelHoldMs": 17.61,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1435
+   },
+   {
+    "index": 78,
+    "sync": false,
+    "holdMs": 50,
+    "gapMs": 33,
+    "plannedAtMs": 12497,
+    "kernelAtMs": 12494.579,
+    "kernelHoldMs": 49.644,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1451
+   },
+   {
+    "index": 79,
+    "sync": false,
+    "holdMs": 33,
+    "gapMs": 17,
+    "plannedAtMs": 12580,
+    "kernelAtMs": 12577.87,
+    "kernelHoldMs": 32.491,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1456
+   },
+   {
+    "index": 80,
+    "sync": false,
+    "holdMs": 25,
+    "gapMs": 33,
+    "plannedAtMs": 12630,
+    "kernelAtMs": 12627.905,
+    "kernelHoldMs": 24.641,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1459
+   },
+   {
+    "index": 81,
+    "sync": false,
+    "holdMs": 25,
+    "gapMs": 50,
+    "plannedAtMs": 12688,
+    "kernelAtMs": 12686.033,
+    "kernelHoldMs": 24.465,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1463
+   },
+   {
+    "index": 82,
+    "sync": false,
+    "holdMs": 67,
+    "gapMs": 100,
+    "plannedAtMs": 12763,
+    "kernelAtMs": 12761.127,
+    "kernelHoldMs": 66.501,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1467
+   },
+   {
+    "index": 83,
+    "sync": false,
+    "holdMs": 50,
+    "gapMs": 17,
+    "plannedAtMs": 12930,
+    "kernelAtMs": 12927.272,
+    "kernelHoldMs": 50.491,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1477
+   },
+   {
+    "index": 84,
+    "sync": false,
+    "holdMs": 25,
+    "gapMs": 50,
+    "plannedAtMs": 12997,
+    "kernelAtMs": 12994.281,
+    "kernelHoldMs": 25.596,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1481
+   },
+   {
+    "index": 85,
+    "sync": false,
+    "holdMs": 100,
+    "gapMs": 50,
+    "plannedAtMs": 13072,
+    "kernelAtMs": 13069.391,
+    "kernelHoldMs": 100.456,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1486
+   },
+   {
+    "index": 86,
+    "sync": false,
+    "holdMs": 42,
+    "gapMs": 17,
+    "plannedAtMs": 13222,
+    "kernelAtMs": 13219.249,
+    "kernelHoldMs": 42.494,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1495
+   },
+   {
+    "index": 87,
+    "sync": false,
+    "holdMs": 8,
+    "gapMs": 250,
+    "plannedAtMs": 13281,
+    "kernelAtMs": 13278.266,
+    "kernelHoldMs": 8.52,
+    "predicted": "INVISIBLE",
+    "observed": "TAKEN",
+    "downUpdate": 1498
+   },
+   {
+    "index": 88,
+    "sync": false,
+    "holdMs": 50,
+    "gapMs": 33,
+    "plannedAtMs": 13539,
+    "kernelAtMs": 13537.415,
+    "kernelHoldMs": 48.987,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1514
+   },
+   {
+    "index": 89,
+    "sync": false,
+    "holdMs": 100,
+    "gapMs": 250,
+    "plannedAtMs": 13622,
+    "kernelAtMs": 13619.838,
+    "kernelHoldMs": 99.47,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1519
+   },
+   {
+    "index": 90,
+    "sync": false,
+    "holdMs": 42,
+    "gapMs": 100,
+    "plannedAtMs": 13972,
+    "kernelAtMs": 13970.303,
+    "kernelHoldMs": 41.639,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1540
+   },
+   {
+    "index": 91,
+    "sync": false,
+    "holdMs": 33,
+    "gapMs": 50,
+    "plannedAtMs": 14114,
+    "kernelAtMs": 14111.48,
+    "kernelHoldMs": 33.539,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1548
+   },
+   {
+    "index": 92,
+    "sync": false,
+    "holdMs": 50,
+    "gapMs": 100,
+    "plannedAtMs": 14197,
+    "kernelAtMs": 14194.522,
+    "kernelHoldMs": 49.527,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1553
+   },
+   {
+    "index": 93,
+    "sync": false,
+    "holdMs": 17,
+    "gapMs": 250,
+    "plannedAtMs": 14347,
+    "kernelAtMs": 14344.558,
+    "kernelHoldMs": 16.836,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1562
+   },
+   {
+    "index": 94,
+    "sync": false,
+    "holdMs": 42,
+    "gapMs": 17,
+    "plannedAtMs": 14614,
+    "kernelAtMs": 14612.195,
+    "kernelHoldMs": 41.644,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1578
+   },
+   {
+    "index": 95,
+    "sync": false,
+    "holdMs": 33,
+    "gapMs": 250,
+    "plannedAtMs": 14673,
+    "kernelAtMs": 14670.275,
+    "kernelHoldMs": 33.44,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1582
+   },
+   {
+    "index": 96,
+    "sync": false,
+    "holdMs": 50,
+    "gapMs": 50,
+    "plannedAtMs": 14956,
+    "kernelAtMs": 14953.455,
+    "kernelHoldMs": 49.554,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1599
+   },
+   {
+    "index": 97,
+    "sync": false,
+    "holdMs": 100,
+    "gapMs": 250,
+    "plannedAtMs": 15056,
+    "kernelAtMs": 15053.397,
+    "kernelHoldMs": 100.422,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1605
+   },
+   {
+    "index": 98,
+    "sync": false,
+    "holdMs": 33,
+    "gapMs": 33,
+    "plannedAtMs": 15406,
+    "kernelAtMs": 15403.606,
+    "kernelHoldMs": 32.893,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1626
+   },
+   {
+    "index": 99,
+    "sync": false,
+    "holdMs": 8,
+    "gapMs": 33,
+    "plannedAtMs": 15472,
+    "kernelAtMs": 15469.884,
+    "kernelHoldMs": 7.415,
+    "predicted": "INVISIBLE",
+    "observed": "INVISIBLE"
+   },
+   {
+    "index": 100,
+    "sync": false,
+    "holdMs": 8,
+    "gapMs": 250,
+    "plannedAtMs": 15513,
+    "kernelAtMs": 15510.739,
+    "kernelHoldMs": 8.057,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1632
+   },
+   {
+    "index": 101,
+    "sync": false,
+    "holdMs": 33,
+    "gapMs": 100,
+    "plannedAtMs": 15771,
+    "kernelAtMs": 15768.714,
+    "kernelHoldMs": 32.824,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1648
+   },
+   {
+    "index": 102,
+    "sync": false,
+    "holdMs": 50,
+    "gapMs": 100,
+    "plannedAtMs": 15904,
+    "kernelAtMs": 15902.205,
+    "kernelHoldMs": 49.472,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1656
+   },
+   {
+    "index": 103,
+    "sync": false,
+    "holdMs": 100,
+    "gapMs": 50,
+    "plannedAtMs": 16054,
+    "kernelAtMs": 16051.599,
+    "kernelHoldMs": 100.192,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1665
+   },
+   {
+    "index": 104,
+    "sync": false,
+    "holdMs": 8,
+    "gapMs": 17,
+    "plannedAtMs": 16204,
+    "kernelAtMs": 16201.559,
+    "kernelHoldMs": 7.507,
+    "predicted": "INVISIBLE",
+    "observed": "TAKEN",
+    "downUpdate": 1675
+   },
+   {
+    "index": 105,
+    "sync": false,
+    "holdMs": 17,
+    "gapMs": 33,
+    "plannedAtMs": 16229,
+    "kernelAtMs": 16226.513,
+    "kernelHoldMs": 17.555,
+    "predicted": "TAKEN",
+    "observed": "INVISIBLE"
+   },
+   {
+    "index": 106,
+    "sync": false,
+    "holdMs": 50,
+    "gapMs": 250,
+    "plannedAtMs": 16279,
+    "kernelAtMs": 16276.51,
+    "kernelHoldMs": 50.524,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1678
+   },
+   {
+    "index": 107,
+    "sync": false,
+    "holdMs": 33,
+    "gapMs": 33,
+    "plannedAtMs": 16579,
+    "kernelAtMs": 16576.884,
+    "kernelHoldMs": 32.497,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1696
+   },
+   {
+    "index": 108,
+    "sync": false,
+    "holdMs": 50,
+    "gapMs": 33,
+    "plannedAtMs": 16645,
+    "kernelAtMs": 16642.855,
+    "kernelHoldMs": 49.504,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1700
+   },
+   {
+    "index": 109,
+    "sync": false,
+    "holdMs": 8,
+    "gapMs": 100,
+    "plannedAtMs": 16728,
+    "kernelAtMs": 16725.807,
+    "kernelHoldMs": 7.902,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1705
+   },
+   {
+    "index": 110,
+    "sync": false,
+    "holdMs": 33,
+    "gapMs": 17,
+    "plannedAtMs": 16836,
+    "kernelAtMs": 16833.639,
+    "kernelHoldMs": 32.866,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1712
+   },
+   {
+    "index": 111,
+    "sync": false,
+    "holdMs": 25,
+    "gapMs": 100,
+    "plannedAtMs": 16886,
+    "kernelAtMs": 16884.462,
+    "kernelHoldMs": 24.565,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1715
+   },
+   {
+    "index": 112,
+    "sync": false,
+    "holdMs": 25,
+    "gapMs": 17,
+    "plannedAtMs": 17011,
+    "kernelAtMs": 17008.457,
+    "kernelHoldMs": 25.657,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1722
+   },
+   {
+    "index": 113,
+    "sync": false,
+    "holdMs": 67,
+    "gapMs": 17,
+    "plannedAtMs": 17053,
+    "kernelAtMs": 17050.686,
+    "kernelHoldMs": 67.04,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1725
+   },
+   {
+    "index": 114,
+    "sync": false,
+    "holdMs": 17,
+    "gapMs": 50,
+    "plannedAtMs": 17137,
+    "kernelAtMs": 17134.351,
+    "kernelHoldMs": 17.565,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1730
+   },
+   {
+    "index": 115,
+    "sync": false,
+    "holdMs": 8,
+    "gapMs": 33,
+    "plannedAtMs": 17204,
+    "kernelAtMs": 17201.38,
+    "kernelHoldMs": 8.654,
+    "predicted": "INVISIBLE",
+    "observed": "INVISIBLE"
+   },
+   {
+    "index": 116,
+    "sync": false,
+    "holdMs": 50,
+    "gapMs": 250,
+    "plannedAtMs": 17245,
+    "kernelAtMs": 17242.441,
+    "kernelHoldMs": 49.623,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1736
+   },
+   {
+    "index": 117,
+    "sync": false,
+    "holdMs": 67,
+    "gapMs": 50,
+    "plannedAtMs": 17545,
+    "kernelAtMs": 17542.939,
+    "kernelHoldMs": 67.302,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1754
+   },
+   {
+    "index": 118,
+    "sync": false,
+    "holdMs": 67,
+    "gapMs": 50,
+    "plannedAtMs": 17662,
+    "kernelAtMs": 17659.927,
+    "kernelHoldMs": 66.504,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1761
+   },
+   {
+    "index": 119,
+    "sync": false,
+    "holdMs": 67,
+    "gapMs": 250,
+    "plannedAtMs": 17779,
+    "kernelAtMs": 17776.874,
+    "kernelHoldMs": 66.506,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1768
+   },
+   {
+    "index": 120,
+    "sync": false,
+    "holdMs": 42,
+    "gapMs": 50,
+    "plannedAtMs": 18096,
+    "kernelAtMs": 18094.031,
+    "kernelHoldMs": 41.497,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1787
+   },
+   {
+    "index": 121,
+    "sync": false,
+    "holdMs": 8,
+    "gapMs": 17,
+    "plannedAtMs": 18188,
+    "kernelAtMs": 18185.966,
+    "kernelHoldMs": 7.414,
+    "predicted": "INVISIBLE",
+    "observed": "TAKEN",
+    "downUpdate": 1794
+   },
+   {
+    "index": 122,
+    "sync": false,
+    "holdMs": 100,
+    "gapMs": 17,
+    "plannedAtMs": 18213,
+    "kernelAtMs": 18210.862,
+    "kernelHoldMs": 99.536,
+    "predicted": "TAKEN",
+    "observed": "MERGED"
+   },
+   {
+    "index": 123,
+    "sync": true,
+    "holdMs": 200,
+    "gapMs": 600,
+    "plannedAtMs": 18330,
+    "kernelAtMs": 18327.938,
+    "kernelHoldMs": 199.66,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1801
+   },
+   {
+    "index": 124,
+    "sync": true,
+    "holdMs": 200,
+    "gapMs": 600,
+    "plannedAtMs": 19130,
+    "kernelAtMs": 19127.936,
+    "kernelHoldMs": 199.77,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1849
+   },
+   {
+    "index": 125,
+    "sync": true,
+    "holdMs": 200,
+    "gapMs": 600,
+    "plannedAtMs": 19930,
+    "kernelAtMs": 19927.915,
+    "kernelHoldMs": 199.886,
+    "predicted": "TAKEN",
+    "observed": "TAKEN",
+    "downUpdate": 1897
+   }
+  ],
+  "chain": {
+   "getevent": {
+    "clock": "CLOCK_MONOTONIC",
+    "offsetToMotionEventMs": 0,
+    "bootMinusMonoMs": null
+   },
+   "verdicts": {
+    "TAKEN": 113,
+    "INVISIBLE": 7
+   },
+   "flagsAgree": true,
+   "byHold": [
+    {
+     "holdMs": 8,
+     "contacts": 15,
+     "TAKEN": 8,
+     "INVISIBLE": 7
+    },
+    {
+     "holdMs": 17,
+     "contacts": 15,
+     "TAKEN": 15
+    },
+    {
+     "holdMs": 25,
+     "contacts": 15,
+     "TAKEN": 15
+    },
+    {
+     "holdMs": 33,
+     "contacts": 15,
+     "TAKEN": 15
+    },
+    {
+     "holdMs": 42,
+     "contacts": 15,
+     "TAKEN": 15
+    },
+    {
+     "holdMs": 50,
+     "contacts": 15,
+     "TAKEN": 15
+    },
+    {
+     "holdMs": 67,
+     "contacts": 15,
+     "TAKEN": 15
+    },
+    {
+     "holdMs": 100,
+     "contacts": 15,
+     "TAKEN": 15
+    }
+   ],
+   "byGap": [
+    {
+     "gapMs": 17,
+     "contacts": 24,
+     "TAKEN": 21,
+     "INVISIBLE": 3
+    },
+    {
+     "gapMs": 33,
+     "contacts": 24,
+     "TAKEN": 22,
+     "INVISIBLE": 2
+    },
+    {
+     "gapMs": 50,
+     "contacts": 24,
+     "TAKEN": 23,
+     "INVISIBLE": 1
+    },
+    {
+     "gapMs": 100,
+     "contacts": 24,
+     "TAKEN": 23,
+     "INVISIBLE": 1
+    },
+    {
+     "gapMs": 250,
+     "contacts": 24,
+     "TAKEN": 24
+    }
+   ],
+   "press": {
+    "dispatchMs": {
+     "n": 119,
+     "min": 1.015,
+     "p50": 2.159,
+     "p90": 3.534,
+     "max": 4.609
+    },
+    "nativeMs": {
+     "n": 119,
+     "min": 0.041,
+     "p50": 0.063,
+     "p90": 0.179,
+     "max": 1.781
+    },
+    "pollWaitMs": {
+     "n": 119,
+     "min": 0.412,
+     "p50": 6.633,
+     "p90": 13.706,
+     "max": 15.881
+    },
+    "eventsMs": {
+     "n": 119,
+     "min": 0.314,
+     "p50": 0.494,
+     "p90": 0.94,
+     "max": 1.249
+    },
+    "swapMs": {
+     "n": 119,
+     "min": 2.056,
+     "p50": 2.841,
+     "p90": 4.042,
+     "max": 10.287
+    },
+    "kernelToPollMs": {
+     "n": 119,
+     "min": 2.706,
+     "p50": 8.481,
+     "p90": 16.865,
+     "max": 18.651
+    },
+    "kernelToSwapMs": {
+     "n": 119,
+     "min": 5.985,
+     "p50": 12.338,
+     "p90": 20.513,
+     "max": 26.747
+    }
+   },
+   "release": {
+    "dispatchMs": {
+     "n": 119,
+     "min": 1.014,
+     "p50": 1.614,
+     "p90": 2.252,
+     "max": 3.941
+    },
+    "nativeMs": {
+     "n": 119,
+     "min": 0.041,
+     "p50": 0.06,
+     "p90": 0.12,
+     "max": 1.448
+    },
+    "pollWaitMs": {
+     "n": 119,
+     "min": 0.432,
+     "p50": 7.596,
+     "p90": 14.498,
+     "max": 16.433
+    },
+    "kernelToPollMs": {
+     "n": 119,
+     "min": 2.206,
+     "p50": 8.914,
+     "p90": 16.718,
+     "max": 18.559
+    }
+   },
+   "office": {
+    "updates": 1980,
+    "periodMs": {
+     "n": 1979,
+     "min": 14.346,
+     "p50": 16.662,
+     "p90": 17.266,
+     "max": 19.083
+    },
+    "timerUnits": {
+     "n": 1980,
+     "min": 27,
+     "p50": 50,
+     "p90": 55,
+     "max": 72
+    },
+    "pumpMs": {
+     "n": 1980,
+     "min": 0.016,
+     "p50": 0.044,
+     "p90": 0.078,
+     "max": 5.008
+    },
+    "eventsMs": {
+     "n": 1980,
+     "min": 0.164,
+     "p50": 0.603,
+     "p90": 1.336,
+     "max": 3.167
+    },
+    "swapMs": {
+     "n": 1980,
+     "min": 1.536,
+     "p50": 4.961,
+     "p90": 8.01,
+     "max": 11.582
+    },
+    "periodsOver25Ms": 0
+   },
+   "seeds": [],
+   "rows": [
+    {
+     "index": 0,
+     "sync": true,
+     "holdMs": 200,
+     "gapMs": 600,
+     "verdict": "TAKEN",
+     "pressPump": 6168,
+     "releasePump": 6179,
+     "polledDown": 11,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 3476174,
+      "nativeNs": 150539,
+      "pollWaitNs": 11885538,
+      "eventsNs": 947308,
+      "swapNs": 10287077,
+      "kernelToPollNs": 15512251,
+      "kernelToSwapNs": 26746636
+     },
+     "release": {
+      "dispatchNs": 1662021,
+      "nativeNs": 65230,
+      "pollWaitNs": 478539,
+      "kernelToPollNs": 2205790
+     }
+    },
+    {
+     "index": 1,
+     "sync": true,
+     "holdMs": 200,
+     "gapMs": 600,
+     "verdict": "TAKEN",
+     "pressPump": 6216,
+     "releasePump": 6228,
+     "polledDown": 12,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 4354021,
+      "nativeNs": 187000,
+      "pollWaitNs": 12880000,
+      "eventsNs": 657846,
+      "swapNs": 2950538,
+      "kernelToPollNs": 17421021,
+      "kernelToSwapNs": 21029405
+     },
+     "release": {
+      "dispatchNs": 2470405,
+      "nativeNs": 64000,
+      "pollWaitNs": 14817231,
+      "kernelToPollNs": 17351636
+     }
+    },
+    {
+     "index": 2,
+     "sync": true,
+     "holdMs": 200,
+     "gapMs": 600,
+     "verdict": "TAKEN",
+     "pressPump": 6264,
+     "releasePump": 6276,
+     "polledDown": 12,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 3599021,
+      "nativeNs": 95384,
+      "pollWaitNs": 13428616,
+      "eventsNs": 493923,
+      "swapNs": 2839923,
+      "kernelToPollNs": 17123021,
+      "kernelToSwapNs": 20456867
+     },
+     "release": {
+      "dispatchNs": 2010405,
+      "nativeNs": 65616,
+      "pollWaitNs": 15130077,
+      "kernelToPollNs": 17206098
+     }
+    },
+    {
+     "index": 3,
+     "sync": false,
+     "holdMs": 100,
+     "gapMs": 33,
+     "verdict": "TAKEN",
+     "pressPump": 6312,
+     "releasePump": 6318,
+     "polledDown": 6,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 3202482,
+      "nativeNs": 51077,
+      "pollWaitNs": 13562077,
+      "eventsNs": 666846,
+      "swapNs": 3628846,
+      "kernelToPollNs": 16815636,
+      "kernelToSwapNs": 21111328
+     },
+     "release": {
+      "dispatchNs": 2739252,
+      "nativeNs": 77923,
+      "pollWaitNs": 15616846,
+      "kernelToPollNs": 18434021
+     }
+    },
+    {
+     "index": 4,
+     "sync": false,
+     "holdMs": 67,
+     "gapMs": 17,
+     "verdict": "TAKEN",
+     "pressPump": 6320,
+     "releasePump": 6324,
+     "polledDown": 4,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2158790,
+      "nativeNs": 58462,
+      "pollWaitNs": 15880615,
+      "eventsNs": 460308,
+      "swapNs": 3180923,
+      "kernelToPollNs": 18097867,
+      "kernelToSwapNs": 21739098
+     },
+     "release": {
+      "dispatchNs": 1697175,
+      "nativeNs": 63077,
+      "pollWaitNs": 16432923,
+      "kernelToPollNs": 18193175
+     }
+    },
+    {
+     "index": 5,
+     "sync": false,
+     "holdMs": 50,
+     "gapMs": 100,
+     "verdict": "TAKEN",
+     "pressPump": 6325,
+     "releasePump": 6328,
+     "polledDown": 3,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2512944,
+      "nativeNs": 90077,
+      "pollWaitNs": 14141615,
+      "eventsNs": 738462,
+      "swapNs": 2653154,
+      "kernelToPollNs": 16744636,
+      "kernelToSwapNs": 20136252
+     },
+     "release": {
+      "dispatchNs": 2276482,
+      "nativeNs": 93462,
+      "pollWaitNs": 14530461,
+      "kernelToPollNs": 16900405
+     }
+    },
+    {
+     "index": 6,
+     "sync": false,
+     "holdMs": 33,
+     "gapMs": 250,
+     "verdict": "TAKEN",
+     "pressPump": 6334,
+     "releasePump": 6336,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2484713,
+      "nativeNs": 178769,
+      "pollWaitNs": 15133231,
+      "eventsNs": 483000,
+      "swapNs": 2831462,
+      "kernelToPollNs": 17796713,
+      "kernelToSwapNs": 21111175
+     },
+     "release": {
+      "dispatchNs": 2250790,
+      "nativeNs": 149154,
+      "pollWaitNs": 15297308,
+      "kernelToPollNs": 17697252
+     }
+    },
+    {
+     "index": 7,
+     "sync": false,
+     "holdMs": 100,
+     "gapMs": 100,
+     "verdict": "TAKEN",
+     "pressPump": 6351,
+     "releasePump": 6357,
+     "polledDown": 6,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 3299405,
+      "nativeNs": 103154,
+      "pollWaitNs": 13705539,
+      "eventsNs": 467000,
+      "swapNs": 2592923,
+      "kernelToPollNs": 17108098,
+      "kernelToSwapNs": 20168021
+     },
+     "release": {
+      "dispatchNs": 2147405,
+      "nativeNs": 123616,
+      "pollWaitNs": 15319769,
+      "kernelToPollNs": 17590790
+     }
+    },
+    {
+     "index": 8,
+     "sync": false,
+     "holdMs": 33,
+     "gapMs": 33,
+     "verdict": "TAKEN",
+     "pressPump": 6363,
+     "releasePump": 6365,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 3159713,
+      "nativeNs": 99154,
+      "pollWaitNs": 14655615,
+      "eventsNs": 561616,
+      "swapNs": 3162692,
+      "kernelToPollNs": 17914482,
+      "kernelToSwapNs": 21638790
+     },
+     "release": {
+      "dispatchNs": 2594175,
+      "nativeNs": 57538,
+      "pollWaitNs": 15822385,
+      "kernelToPollNs": 18474098
+     }
+    },
+    {
+     "index": 9,
+     "sync": false,
+     "holdMs": 42,
+     "gapMs": 33,
+     "verdict": "TAKEN",
+     "pressPump": 6367,
+     "releasePump": 6369,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2652021,
+      "nativeNs": 62461,
+      "pollWaitNs": 15145154,
+      "eventsNs": 693923,
+      "swapNs": 2970462,
+      "kernelToPollNs": 17859636,
+      "kernelToSwapNs": 21524021
+     },
+     "release": {
+      "dispatchNs": 1420175,
+      "nativeNs": 50461,
+      "pollWaitNs": 8385769,
+      "kernelToPollNs": 9856405
+     }
+    },
+    {
+     "index": 10,
+     "sync": false,
+     "holdMs": 25,
+     "gapMs": 17,
+     "verdict": "TAKEN",
+     "pressPump": 6371,
+     "releasePump": 6372,
+     "polledDown": 1,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2578867,
+      "nativeNs": 67692,
+      "pollWaitNs": 7909308,
+      "eventsNs": 439923,
+      "swapNs": 3442154,
+      "kernelToPollNs": 10555867,
+      "kernelToSwapNs": 14437944
+     },
+     "release": {
+      "dispatchNs": 1903098,
+      "nativeNs": 196692,
+      "pollWaitNs": 432308,
+      "kernelToPollNs": 2532098
+     }
+    },
+    {
+     "index": 11,
+     "sync": false,
+     "holdMs": 42,
+     "gapMs": 50,
+     "verdict": "TAKEN",
+     "pressPump": 6374,
+     "releasePump": 6376,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 3144098,
+      "nativeNs": 60923,
+      "pollWaitNs": 15445769,
+      "eventsNs": 691769,
+      "swapNs": 3328308,
+      "kernelToPollNs": 18650790,
+      "kernelToSwapNs": 22670867
+     },
+     "release": {
+      "dispatchNs": 1715405,
+      "nativeNs": 61924,
+      "pollWaitNs": 7615000,
+      "kernelToPollNs": 9392329
+     }
+    },
+    {
+     "index": 12,
+     "sync": false,
+     "holdMs": 100,
+     "gapMs": 100,
+     "verdict": "TAKEN",
+     "pressPump": 6379,
+     "releasePump": 6385,
+     "polledDown": 6,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1818944,
+      "nativeNs": 62461,
+      "pollWaitNs": 7680000,
+      "eventsNs": 545539,
+      "swapNs": 2698154,
+      "kernelToPollNs": 9561405,
+      "kernelToSwapNs": 12805098
+     },
+     "release": {
+      "dispatchNs": 1048329,
+      "nativeNs": 41230,
+      "pollWaitNs": 7595770,
+      "kernelToPollNs": 8685329
+     }
+    },
+    {
+     "index": 13,
+     "sync": false,
+     "holdMs": 25,
+     "gapMs": 250,
+     "verdict": "TAKEN",
+     "pressPump": 6391,
+     "releasePump": 6393,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1768329,
+      "nativeNs": 51461,
+      "pollWaitNs": 8110385,
+      "eventsNs": 890154,
+      "swapNs": 5312615,
+      "kernelToPollNs": 9930175,
+      "kernelToSwapNs": 16132944
+     },
+     "release": {
+      "dispatchNs": 3941175,
+      "nativeNs": 119769,
+      "pollWaitNs": 14498077,
+      "kernelToPollNs": 18559021
+     }
+    },
+    {
+     "index": 14,
+     "sync": false,
+     "holdMs": 100,
+     "gapMs": 50,
+     "verdict": "TAKEN",
+     "pressPump": 6408,
+     "releasePump": 6414,
+     "polledDown": 6,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 4347482,
+      "nativeNs": 158462,
+      "pollWaitNs": 12733846,
+      "eventsNs": 580000,
+      "swapNs": 3156923,
+      "kernelToPollNs": 17239790,
+      "kernelToSwapNs": 20976713
+     },
+     "release": {
+      "dispatchNs": 1474021,
+      "nativeNs": 55615,
+      "pollWaitNs": 15733923,
+      "kernelToPollNs": 17263559
+     }
+    },
+    {
+     "index": 15,
+     "sync": false,
+     "holdMs": 100,
+     "gapMs": 17,
+     "verdict": "TAKEN",
+     "pressPump": 6417,
+     "releasePump": 6423,
+     "polledDown": 6,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2376021,
+      "nativeNs": 56000,
+      "pollWaitNs": 15223077,
+      "eventsNs": 640000,
+      "swapNs": 3142692,
+      "kernelToPollNs": 17655098,
+      "kernelToSwapNs": 21437790
+     },
+     "release": {
+      "dispatchNs": 2099713,
+      "nativeNs": 56308,
+      "pollWaitNs": 14990692,
+      "kernelToPollNs": 17146713
+     }
+    },
+    {
+     "index": 16,
+     "sync": false,
+     "holdMs": 50,
+     "gapMs": 50,
+     "verdict": "TAKEN",
+     "pressPump": 6424,
+     "releasePump": 6426,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2372636,
+      "nativeNs": 105462,
+      "pollWaitNs": 15025307,
+      "eventsNs": 646693,
+      "swapNs": 3261615,
+      "kernelToPollNs": 17503405,
+      "kernelToSwapNs": 21411713
+     },
+     "release": {
+      "dispatchNs": 1800252,
+      "nativeNs": 64538,
+      "pollWaitNs": 433846,
+      "kernelToPollNs": 2298636
+     }
+    },
+    {
+     "index": 17,
+     "sync": false,
+     "holdMs": 42,
+     "gapMs": 17,
+     "verdict": "TAKEN",
+     "pressPump": 6430,
+     "releasePump": 6432,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2239329,
+      "nativeNs": 90230,
+      "pollWaitNs": 14872846,
+      "eventsNs": 561924,
+      "swapNs": 2748230,
+      "kernelToPollNs": 17202405,
+      "kernelToSwapNs": 20512559
+     },
+     "release": {
+      "dispatchNs": 1487252,
+      "nativeNs": 48000,
+      "pollWaitNs": 7252692,
+      "kernelToPollNs": 8787944
+     }
+    },
+    {
+     "index": 18,
+     "sync": false,
+     "holdMs": 42,
+     "gapMs": 100,
+     "verdict": "TAKEN",
+     "pressPump": 6433,
+     "releasePump": 6436,
+     "polledDown": 3,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1014944,
+      "nativeNs": 41231,
+      "pollWaitNs": 7857769,
+      "eventsNs": 492615,
+      "swapNs": 3392923,
+      "kernelToPollNs": 8913944,
+      "kernelToSwapNs": 12799482
+     },
+     "release": {
+      "dispatchNs": 2379482,
+      "nativeNs": 48231,
+      "pollWaitNs": 12945616,
+      "kernelToPollNs": 15373329
+     }
+    },
+    {
+     "index": 19,
+     "sync": false,
+     "holdMs": 50,
+     "gapMs": 17,
+     "verdict": "TAKEN",
+     "pressPump": 6442,
+     "releasePump": 6445,
+     "polledDown": 3,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 3041944,
+      "nativeNs": 48385,
+      "pollWaitNs": 13023384,
+      "eventsNs": 549462,
+      "swapNs": 3796615,
+      "kernelToPollNs": 16113713,
+      "kernelToSwapNs": 20459790
+     },
+     "release": {
+      "dispatchNs": 2580098,
+      "nativeNs": 53615,
+      "pollWaitNs": 14191385,
+      "kernelToPollNs": 16825098
+     }
+    },
+    {
+     "index": 20,
+     "sync": false,
+     "holdMs": 67,
+     "gapMs": 33,
+     "verdict": "TAKEN",
+     "pressPump": 6446,
+     "releasePump": 6450,
+     "polledDown": 4,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2347559,
+      "nativeNs": 85154,
+      "pollWaitNs": 12865616,
+      "eventsNs": 624923,
+      "swapNs": 3398077,
+      "kernelToPollNs": 15298329,
+      "kernelToSwapNs": 19321329
+     },
+     "release": {
+      "dispatchNs": 1477790,
+      "nativeNs": 1448000,
+      "pollWaitNs": 12024923,
+      "kernelToPollNs": 14950713
+     }
+    },
+    {
+     "index": 21,
+     "sync": false,
+     "holdMs": 100,
+     "gapMs": 33,
+     "verdict": "TAKEN",
+     "pressPump": 6452,
+     "releasePump": 6458,
+     "polledDown": 6,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2503790,
+      "nativeNs": 52000,
+      "pollWaitNs": 12987616,
+      "eventsNs": 479461,
+      "swapNs": 2612923,
+      "kernelToPollNs": 15543406,
+      "kernelToSwapNs": 18635790
+     },
+     "release": {
+      "dispatchNs": 1732098,
+      "nativeNs": 101461,
+      "pollWaitNs": 14884693,
+      "kernelToPollNs": 16718252
+     }
+    },
+    {
+     "index": 22,
+     "sync": false,
+     "holdMs": 42,
+     "gapMs": 33,
+     "verdict": "TAKEN",
+     "pressPump": 6460,
+     "releasePump": 6462,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2553559,
+      "nativeNs": 51154,
+      "pollWaitNs": 13214693,
+      "eventsNs": 642538,
+      "swapNs": 3825769,
+      "kernelToPollNs": 15819406,
+      "kernelToSwapNs": 20287713
+     },
+     "release": {
+      "dispatchNs": 1308790,
+      "nativeNs": 48231,
+      "pollWaitNs": 6836000,
+      "kernelToPollNs": 8193021
+     }
+    },
+    {
+     "index": 23,
+     "sync": false,
+     "holdMs": 17,
+     "gapMs": 33,
+     "verdict": "TAKEN",
+     "pressPump": 6464,
+     "releasePump": 6465,
+     "polledDown": 1,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2560482,
+      "nativeNs": 51000,
+      "pollWaitNs": 5911770,
+      "eventsNs": 569154,
+      "swapNs": 3030461,
+      "kernelToPollNs": 8523252,
+      "kernelToSwapNs": 12122867
+     },
+     "release": {
+      "dispatchNs": 1068559,
+      "nativeNs": 56385,
+      "pollWaitNs": 6578077,
+      "kernelToPollNs": 7703021
+     }
+    },
+    {
+     "index": 24,
+     "sync": false,
+     "holdMs": 17,
+     "gapMs": 33,
+     "verdict": "TAKEN",
+     "pressPump": 6467,
+     "releasePump": 6468,
+     "polledDown": 1,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1310636,
+      "nativeNs": 42154,
+      "pollWaitNs": 6862231,
+      "eventsNs": 461231,
+      "swapNs": 2140615,
+      "kernelToPollNs": 8215021,
+      "kernelToSwapNs": 10816867
+     },
+     "release": {
+      "dispatchNs": 1234636,
+      "nativeNs": 64923,
+      "pollWaitNs": 6210770,
+      "kernelToPollNs": 7510329
+     }
+    },
+    {
+     "index": 25,
+     "sync": false,
+     "holdMs": 8,
+     "gapMs": 33,
+     "verdict": "TAKEN",
+     "pressPump": 6470,
+     "releasePump": 6471,
+     "polledDown": 1,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1665329,
+      "nativeNs": 48384,
+      "pollWaitNs": 6289539,
+      "eventsNs": 553846,
+      "swapNs": 4041846,
+      "kernelToPollNs": 8003252,
+      "kernelToSwapNs": 12598944
+     },
+     "release": {
+      "dispatchNs": 1828329,
+      "nativeNs": 67692,
+      "pollWaitNs": 14309538,
+      "kernelToPollNs": 16205559
+     }
+    },
+    {
+     "index": 26,
+     "sync": false,
+     "holdMs": 42,
+     "gapMs": 250,
+     "verdict": "TAKEN",
+     "pressPump": 6473,
+     "releasePump": 6475,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2002482,
+      "nativeNs": 90693,
+      "pollWaitNs": 14771384,
+      "eventsNs": 702231,
+      "swapNs": 3773769,
+      "kernelToPollNs": 16864559,
+      "kernelToSwapNs": 21340559
+     },
+     "release": {
+      "dispatchNs": 1678098,
+      "nativeNs": 50538,
+      "pollWaitNs": 7185539,
+      "kernelToPollNs": 8914175
+     }
+    },
+    {
+     "index": 27,
+     "sync": false,
+     "holdMs": 67,
+     "gapMs": 50,
+     "verdict": "TAKEN",
+     "pressPump": 6490,
+     "releasePump": 6494,
+     "polledDown": 4,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2904636,
+      "nativeNs": 52231,
+      "pollWaitNs": 5524000,
+      "eventsNs": 483692,
+      "swapNs": 2686770,
+      "kernelToPollNs": 8480867,
+      "kernelToSwapNs": 11651329
+     },
+     "release": {
+      "dispatchNs": 1448713,
+      "nativeNs": 50154,
+      "pollWaitNs": 6259308,
+      "kernelToPollNs": 7758175
+     }
+    },
+    {
+     "index": 28,
+     "sync": false,
+     "holdMs": 67,
+     "gapMs": 250,
+     "verdict": "TAKEN",
+     "pressPump": 6497,
+     "releasePump": 6501,
+     "polledDown": 4,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1504636,
+      "nativeNs": 62770,
+      "pollWaitNs": 6632538,
+      "eventsNs": 366462,
+      "swapNs": 2364692,
+      "kernelToPollNs": 8199944,
+      "kernelToSwapNs": 10931098
+     },
+     "release": {
+      "dispatchNs": 1245944,
+      "nativeNs": 60615,
+      "pollWaitNs": 6018770,
+      "kernelToPollNs": 7325329
+     }
+    },
+    {
+     "index": 29,
+     "sync": false,
+     "holdMs": 25,
+     "gapMs": 250,
+     "verdict": "TAKEN",
+     "pressPump": 6516,
+     "releasePump": 6518,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 4082559,
+      "nativeNs": 102770,
+      "pollWaitNs": 3302384,
+      "eventsNs": 1163154,
+      "swapNs": 3687308,
+      "kernelToPollNs": 7487713,
+      "kernelToSwapNs": 12338175
+     },
+     "release": {
+      "dispatchNs": 1690867,
+      "nativeNs": 1253846,
+      "pollWaitNs": 13086539,
+      "kernelToPollNs": 16031252
+     }
+    },
+    {
+     "index": 30,
+     "sync": false,
+     "holdMs": 33,
+     "gapMs": 100,
+     "verdict": "TAKEN",
+     "pressPump": 6533,
+     "releasePump": 6535,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 4608559,
+      "nativeNs": 69924,
+      "pollWaitNs": 11580000,
+      "eventsNs": 758076,
+      "swapNs": 2724077,
+      "kernelToPollNs": 16258483,
+      "kernelToSwapNs": 19740636
+     },
+     "release": {
+      "dispatchNs": 1581944,
+      "nativeNs": 57769,
+      "pollWaitNs": 14745846,
+      "kernelToPollNs": 16385559
+     }
+    },
+    {
+     "index": 31,
+     "sync": false,
+     "holdMs": 33,
+     "gapMs": 50,
+     "verdict": "TAKEN",
+     "pressPump": 6541,
+     "releasePump": 6543,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2016944,
+      "nativeNs": 58846,
+      "pollWaitNs": 9926154,
+      "eventsNs": 511077,
+      "swapNs": 2949231,
+      "kernelToPollNs": 12001944,
+      "kernelToSwapNs": 15462252
+     },
+     "release": {
+      "dispatchNs": 1930021,
+      "nativeNs": 52000,
+      "pollWaitNs": 13704077,
+      "kernelToPollNs": 15686098
+     }
+    },
+    {
+     "index": 32,
+     "sync": false,
+     "holdMs": 25,
+     "gapMs": 17,
+     "verdict": "TAKEN",
+     "pressPump": 6546,
+     "releasePump": 6547,
+     "polledDown": 1,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 3005867,
+      "nativeNs": 52539,
+      "pollWaitNs": 13332923,
+      "eventsNs": 616692,
+      "swapNs": 2756231,
+      "kernelToPollNs": 16391329,
+      "kernelToSwapNs": 19764252
+     },
+     "release": {
+      "dispatchNs": 1239252,
+      "nativeNs": 59154,
+      "pollWaitNs": 7041769,
+      "kernelToPollNs": 8340175
+     }
+    },
+    {
+     "index": 33,
+     "sync": false,
+     "holdMs": 25,
+     "gapMs": 50,
+     "verdict": "TAKEN",
+     "pressPump": 6548,
+     "releasePump": 6550,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1519944,
+      "nativeNs": 61308,
+      "pollWaitNs": 6244231,
+      "eventsNs": 490846,
+      "swapNs": 2272615,
+      "kernelToPollNs": 7825483,
+      "kernelToSwapNs": 10588944
+     },
+     "release": {
+      "dispatchNs": 1514944,
+      "nativeNs": 57769,
+      "pollWaitNs": 14338539,
+      "kernelToPollNs": 15911252
+     }
+    },
+    {
+     "index": 34,
+     "sync": false,
+     "holdMs": 25,
+     "gapMs": 33,
+     "verdict": "TAKEN",
+     "pressPump": 6553,
+     "releasePump": 6554,
+     "polledDown": 1,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2312944,
+      "nativeNs": 56692,
+      "pollWaitNs": 14112231,
+      "eventsNs": 602846,
+      "swapNs": 2209539,
+      "kernelToPollNs": 16481867,
+      "kernelToSwapNs": 19294252
+     },
+     "release": {
+      "dispatchNs": 1990483,
+      "nativeNs": 61846,
+      "pollWaitNs": 5837230,
+      "kernelToPollNs": 7889559
+     }
+    },
+    {
+     "index": 35,
+     "sync": false,
+     "holdMs": 67,
+     "gapMs": 17,
+     "verdict": "TAKEN",
+     "pressPump": 6556,
+     "releasePump": 6560,
+     "polledDown": 4,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1483790,
+      "nativeNs": 43693,
+      "pollWaitNs": 6601846,
+      "eventsNs": 502077,
+      "swapNs": 2654769,
+      "kernelToPollNs": 8129329,
+      "kernelToSwapNs": 11286175
+     },
+     "release": {
+      "dispatchNs": 1110713,
+      "nativeNs": 45231,
+      "pollWaitNs": 7405154,
+      "kernelToPollNs": 8561098
+     }
+    },
+    {
+     "index": 36,
+     "sync": false,
+     "holdMs": 67,
+     "gapMs": 250,
+     "verdict": "TAKEN",
+     "pressPump": 6561,
+     "releasePump": 6565,
+     "polledDown": 4,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1835252,
+      "nativeNs": 56615,
+      "pollWaitNs": 5336923,
+      "eventsNs": 395462,
+      "swapNs": 2840615,
+      "kernelToPollNs": 7228790,
+      "kernelToSwapNs": 10464867
+     },
+     "release": {
+      "dispatchNs": 1452483,
+      "nativeNs": 60615,
+      "pollWaitNs": 6158538,
+      "kernelToPollNs": 7671636
+     }
+    },
+    {
+     "index": 37,
+     "sync": false,
+     "holdMs": 33,
+     "gapMs": 250,
+     "verdict": "TAKEN",
+     "pressPump": 6580,
+     "releasePump": 6582,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 3584483,
+      "nativeNs": 109538,
+      "pollWaitNs": 3766769,
+      "eventsNs": 470539,
+      "swapNs": 3368000,
+      "kernelToPollNs": 7460790,
+      "kernelToSwapNs": 11299329
+     },
+     "release": {
+      "dispatchNs": 1361021,
+      "nativeNs": 61769,
+      "pollWaitNs": 7394539,
+      "kernelToPollNs": 8817329
+     }
+    },
+    {
+     "index": 38,
+     "sync": false,
+     "holdMs": 50,
+     "gapMs": 250,
+     "verdict": "TAKEN",
+     "pressPump": 6597,
+     "releasePump": 6600,
+     "polledDown": 3,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 3013559,
+      "nativeNs": 88000,
+      "pollWaitNs": 3621462,
+      "eventsNs": 1022462,
+      "swapNs": 4137307,
+      "kernelToPollNs": 6723021,
+      "kernelToSwapNs": 11882790
+     },
+     "release": {
+      "dispatchNs": 1403790,
+      "nativeNs": 59693,
+      "pollWaitNs": 6621000,
+      "kernelToPollNs": 8084483
+     }
+    },
+    {
+     "index": 39,
+     "sync": false,
+     "holdMs": 17,
+     "gapMs": 50,
+     "verdict": "TAKEN",
+     "pressPump": 6615,
+     "releasePump": 6616,
+     "polledDown": 1,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2693867,
+      "nativeNs": 115385,
+      "pollWaitNs": 3483154,
+      "eventsNs": 1040307,
+      "swapNs": 4453231,
+      "kernelToPollNs": 6292406,
+      "kernelToSwapNs": 11785944
+     },
+     "release": {
+      "dispatchNs": 1503175,
+      "nativeNs": 62538,
+      "pollWaitNs": 5735000,
+      "kernelToPollNs": 7300713
+     }
+    },
+    {
+     "index": 40,
+     "sync": false,
+     "holdMs": 8,
+     "gapMs": 100,
+     "verdict": "TAKEN",
+     "pressPump": 6619,
+     "releasePump": 6620,
+     "polledDown": 1,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1910483,
+      "nativeNs": 48923,
+      "pollWaitNs": 4981538,
+      "eventsNs": 513846,
+      "swapNs": 4408846,
+      "kernelToPollNs": 6940944,
+      "kernelToSwapNs": 11863636
+     },
+     "release": {
+      "dispatchNs": 2435790,
+      "nativeNs": 54154,
+      "pollWaitNs": 13686539,
+      "kernelToPollNs": 16176483
+     }
+    },
+    {
+     "index": 41,
+     "sync": false,
+     "holdMs": 50,
+     "gapMs": 17,
+     "verdict": "TAKEN",
+     "pressPump": 6626,
+     "releasePump": 6629,
+     "polledDown": 3,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2944636,
+      "nativeNs": 66077,
+      "pollWaitNs": 13600308,
+      "eventsNs": 705846,
+      "swapNs": 3188000,
+      "kernelToPollNs": 16611021,
+      "kernelToSwapNs": 20504867
+     },
+     "release": {
+      "dispatchNs": 2044252,
+      "nativeNs": 51308,
+      "pollWaitNs": 14397307,
+      "kernelToPollNs": 16492867
+     }
+    },
+    {
+     "index": 42,
+     "sync": false,
+     "holdMs": 17,
+     "gapMs": 17,
+     "verdict": "TAKEN",
+     "pressPump": 6630,
+     "releasePump": 6631,
+     "polledDown": 1,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2048252,
+      "nativeNs": 88384,
+      "pollWaitNs": 13734693,
+      "eventsNs": 449538,
+      "swapNs": 4093308,
+      "kernelToPollNs": 15871329,
+      "kernelToSwapNs": 20414175
+     },
+     "release": {
+      "dispatchNs": 1891098,
+      "nativeNs": 83385,
+      "pollWaitNs": 12977307,
+      "kernelToPollNs": 14951790
+     }
+    },
+    {
+     "index": 43,
+     "sync": false,
+     "holdMs": 25,
+     "gapMs": 100,
+     "verdict": "TAKEN",
+     "pressPump": 6632,
+     "releasePump": 6633,
+     "polledDown": 1,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1646713,
+      "nativeNs": 874385,
+      "pollWaitNs": 12367154,
+      "eventsNs": 448615,
+      "swapNs": 3082077,
+      "kernelToPollNs": 14888252,
+      "kernelToSwapNs": 18418944
+     },
+     "release": {
+      "dispatchNs": 1127560,
+      "nativeNs": 63384,
+      "pollWaitNs": 5705462,
+      "kernelToPollNs": 6896406
+     }
+    },
+    {
+     "index": 44,
+     "sync": false,
+     "holdMs": 25,
+     "gapMs": 250,
+     "verdict": "TAKEN",
+     "pressPump": 6639,
+     "releasePump": 6641,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1902098,
+      "nativeNs": 63000,
+      "pollWaitNs": 4276692,
+      "eventsNs": 346154,
+      "swapNs": 2133769,
+      "kernelToPollNs": 6241790,
+      "kernelToSwapNs": 8721713
+     },
+     "release": {
+      "dispatchNs": 2125790,
+      "nativeNs": 856616,
+      "pollWaitNs": 11998769,
+      "kernelToPollNs": 14981175
+     }
+    },
+    {
+     "index": 45,
+     "sync": false,
+     "holdMs": 17,
+     "gapMs": 17,
+     "verdict": "TAKEN",
+     "pressPump": 6656,
+     "releasePump": 6657,
+     "polledDown": 1,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 4216560,
+      "nativeNs": 809538,
+      "pollWaitNs": 8133538,
+      "eventsNs": 468616,
+      "swapNs": 2734692,
+      "kernelToPollNs": 13159636,
+      "kernelToSwapNs": 16362944
+     },
+     "release": {
+      "dispatchNs": 2094944,
+      "nativeNs": 48231,
+      "pollWaitNs": 12443769,
+      "kernelToPollNs": 14586944
+     }
+    },
+    {
+     "index": 46,
+     "sync": false,
+     "holdMs": 17,
+     "gapMs": 100,
+     "verdict": "TAKEN",
+     "pressPump": 6658,
+     "releasePump": 6659,
+     "polledDown": 1,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2110098,
+      "nativeNs": 633462,
+      "pollWaitNs": 11056923,
+      "eventsNs": 489230,
+      "swapNs": 4444693,
+      "kernelToPollNs": 13800483,
+      "kernelToSwapNs": 18734406
+     },
+     "release": {
+      "dispatchNs": 1587098,
+      "nativeNs": 342769,
+      "pollWaitNs": 12244923,
+      "kernelToPollNs": 14174790
+     }
+    },
+    {
+     "index": 47,
+     "sync": false,
+     "holdMs": 17,
+     "gapMs": 50,
+     "verdict": "TAKEN",
+     "pressPump": 6665,
+     "releasePump": 6666,
+     "polledDown": 1,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2333021,
+      "nativeNs": 50769,
+      "pollWaitNs": 12291077,
+      "eventsNs": 519769,
+      "swapNs": 4471924,
+      "kernelToPollNs": 14674867,
+      "kernelToSwapNs": 19666560
+     },
+     "release": {
+      "dispatchNs": 1339252,
+      "nativeNs": 780846,
+      "pollWaitNs": 11064923,
+      "kernelToPollNs": 13185021
+     }
+    },
+    {
+     "index": 48,
+     "sync": false,
+     "holdMs": 42,
+     "gapMs": 250,
+     "verdict": "TAKEN",
+     "pressPump": 6669,
+     "releasePump": 6671,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1831944,
+      "nativeNs": 53231,
+      "pollWaitNs": 11951077,
+      "eventsNs": 416538,
+      "swapNs": 2701846,
+      "kernelToPollNs": 13836252,
+      "kernelToSwapNs": 16954636
+     },
+     "release": {
+      "dispatchNs": 1921406,
+      "nativeNs": 55077,
+      "pollWaitNs": 3215077,
+      "kernelToPollNs": 5191560
+     }
+    },
+    {
+     "index": 49,
+     "sync": false,
+     "holdMs": 33,
+     "gapMs": 50,
+     "verdict": "TAKEN",
+     "pressPump": 6686,
+     "releasePump": 6688,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2736098,
+      "nativeNs": 474692,
+      "pollWaitNs": 1257923,
+      "eventsNs": 1018154,
+      "swapNs": 3999308,
+      "kernelToPollNs": 4468713,
+      "kernelToSwapNs": 9486175
+     },
+     "release": {
+      "dispatchNs": 1029790,
+      "nativeNs": 52923,
+      "pollWaitNs": 4800539,
+      "kernelToPollNs": 5883252
+     }
+    },
+    {
+     "index": 50,
+     "sync": false,
+     "holdMs": 17,
+     "gapMs": 17,
+     "verdict": "TAKEN",
+     "pressPump": 6691,
+     "releasePump": 6692,
+     "polledDown": 1,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2430406,
+      "nativeNs": 582231,
+      "pollWaitNs": 1816923,
+      "eventsNs": 422153,
+      "swapNs": 2248000,
+      "kernelToPollNs": 4829560,
+      "kernelToSwapNs": 7499713
+     },
+     "release": {
+      "dispatchNs": 1319252,
+      "nativeNs": 61154,
+      "pollWaitNs": 3716923,
+      "kernelToPollNs": 5097329
+     }
+    },
+    {
+     "index": 51,
+     "sync": false,
+     "holdMs": 100,
+     "gapMs": 250,
+     "verdict": "TAKEN",
+     "pressPump": 6693,
+     "releasePump": 6699,
+     "polledDown": 6,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1803944,
+      "nativeNs": 76693,
+      "pollWaitNs": 2672307,
+      "eventsNs": 338154,
+      "swapNs": 2504308,
+      "kernelToPollNs": 4552944,
+      "kernelToSwapNs": 7395406
+     },
+     "release": {
+      "dispatchNs": 1420637,
+      "nativeNs": 59692,
+      "pollWaitNs": 3310461,
+      "kernelToPollNs": 4790790
+     }
+    },
+    {
+     "index": 52,
+     "sync": false,
+     "holdMs": 17,
+     "gapMs": 100,
+     "verdict": "TAKEN",
+     "pressPump": 6714,
+     "releasePump": 6715,
+     "polledDown": 1,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2639790,
+      "nativeNs": 94693,
+      "pollWaitNs": 2290846,
+      "eventsNs": 1126692,
+      "swapNs": 5534539,
+      "kernelToPollNs": 5025329,
+      "kernelToSwapNs": 11686560
+     },
+     "release": {
+      "dispatchNs": 1126637,
+      "nativeNs": 62846,
+      "pollWaitNs": 3118154,
+      "kernelToPollNs": 4307637
+     }
+    },
+    {
+     "index": 53,
+     "sync": false,
+     "holdMs": 100,
+     "gapMs": 17,
+     "verdict": "TAKEN",
+     "pressPump": 6721,
+     "releasePump": 6727,
+     "polledDown": 6,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1694637,
+      "nativeNs": 53769,
+      "pollWaitNs": 2896692,
+      "eventsNs": 345231,
+      "swapNs": 2184923,
+      "kernelToPollNs": 4645098,
+      "kernelToSwapNs": 7175252
+     },
+     "release": {
+      "dispatchNs": 2174944,
+      "nativeNs": 68308,
+      "pollWaitNs": 1946769,
+      "kernelToPollNs": 4190021
+     }
+    },
+    {
+     "index": 54,
+     "sync": false,
+     "holdMs": 8,
+     "gapMs": 50,
+     "verdict": "TAKEN",
+     "pressPump": 6728,
+     "releasePump": 6729,
+     "polledDown": 1,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1804021,
+      "nativeNs": 51385,
+      "pollWaitNs": 2861538,
+      "eventsNs": 332231,
+      "swapNs": 2343385,
+      "kernelToPollNs": 4716944,
+      "kernelToSwapNs": 7392560
+     },
+     "release": {
+      "dispatchNs": 1079329,
+      "nativeNs": 51308,
+      "pollWaitNs": 10777230,
+      "kernelToPollNs": 11907867
+     }
+    },
+    {
+     "index": 55,
+     "sync": false,
+     "holdMs": 25,
+     "gapMs": 100,
+     "verdict": "TAKEN",
+     "pressPump": 6732,
+     "releasePump": 6733,
+     "polledDown": 1,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1779175,
+      "nativeNs": 57538,
+      "pollWaitNs": 11070077,
+      "eventsNs": 510154,
+      "swapNs": 2635385,
+      "kernelToPollNs": 12906790,
+      "kernelToSwapNs": 16052329
+     },
+     "release": {
+      "dispatchNs": 1436329,
+      "nativeNs": 61231,
+      "pollWaitNs": 2225461,
+      "kernelToPollNs": 3723021
+     }
+    },
+    {
+     "index": 56,
+     "sync": false,
+     "holdMs": 67,
+     "gapMs": 33,
+     "verdict": "TAKEN",
+     "pressPump": 6739,
+     "releasePump": 6743,
+     "polledDown": 4,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1556867,
+      "nativeNs": 55308,
+      "pollWaitNs": 2830154,
+      "eventsNs": 386154,
+      "swapNs": 2168692,
+      "kernelToPollNs": 4442329,
+      "kernelToSwapNs": 6997175
+     },
+     "release": {
+      "dispatchNs": 2170098,
+      "nativeNs": 86154,
+      "pollWaitNs": 1263692,
+      "kernelToPollNs": 3519944
+     }
+    },
+    {
+     "index": 57,
+     "sync": false,
+     "holdMs": 67,
+     "gapMs": 100,
+     "verdict": "TAKEN",
+     "pressPump": 6745,
+     "releasePump": 6749,
+     "polledDown": 4,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2278560,
+      "nativeNs": 65615,
+      "pollWaitNs": 1707077,
+      "eventsNs": 468308,
+      "swapNs": 2937538,
+      "kernelToPollNs": 4051252,
+      "kernelToSwapNs": 7457098
+     },
+     "release": {
+      "dispatchNs": 1194252,
+      "nativeNs": 52000,
+      "pollWaitNs": 3149538,
+      "kernelToPollNs": 4395790
+     }
+    },
+    {
+     "index": 58,
+     "sync": false,
+     "holdMs": 50,
+     "gapMs": 50,
+     "verdict": "TAKEN",
+     "pressPump": 6755,
+     "releasePump": 6758,
+     "polledDown": 3,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1880944,
+      "nativeNs": 65923,
+      "pollWaitNs": 1848923,
+      "eventsNs": 361847,
+      "swapNs": 2725461,
+      "kernelToPollNs": 3795790,
+      "kernelToSwapNs": 6883098
+     },
+     "release": {
+      "dispatchNs": 1647944,
+      "nativeNs": 59923,
+      "pollWaitNs": 2389000,
+      "kernelToPollNs": 4096867
+     }
+    },
+    {
+     "index": 59,
+     "sync": false,
+     "holdMs": 8,
+     "gapMs": 50,
+     "verdict": "TAKEN",
+     "pressPump": 6761,
+     "releasePump": 6762,
+     "polledDown": 1,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1622329,
+      "nativeNs": 67077,
+      "pollWaitNs": 2060231,
+      "eventsNs": 393538,
+      "swapNs": 2386769,
+      "kernelToPollNs": 3749637,
+      "kernelToSwapNs": 6529944
+     },
+     "release": {
+      "dispatchNs": 1269637,
+      "nativeNs": 55307,
+      "pollWaitNs": 11834154,
+      "kernelToPollNs": 13159098
+     }
+    },
+    {
+     "index": 60,
+     "sync": false,
+     "holdMs": 42,
+     "gapMs": 50,
+     "verdict": "TAKEN",
+     "pressPump": 6765,
+     "releasePump": 6767,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2122790,
+      "nativeNs": 57924,
+      "pollWaitNs": 10791615,
+      "eventsNs": 470846,
+      "swapNs": 2846154,
+      "kernelToPollNs": 12972329,
+      "kernelToSwapNs": 16289329
+     },
+     "release": {
+      "dispatchNs": 1658175,
+      "nativeNs": 60615,
+      "pollWaitNs": 2279385,
+      "kernelToPollNs": 3998175
+     }
+    },
+    {
+     "index": 61,
+     "sync": false,
+     "holdMs": 100,
+     "gapMs": 33,
+     "verdict": "TAKEN",
+     "pressPump": 6770,
+     "releasePump": 6776,
+     "polledDown": 6,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1649483,
+      "nativeNs": 62461,
+      "pollWaitNs": 993846,
+      "eventsNs": 420231,
+      "swapNs": 2858769,
+      "kernelToPollNs": 2705790,
+      "kernelToSwapNs": 5984790
+     },
+     "release": {
+      "dispatchNs": 1692944,
+      "nativeNs": 60308,
+      "pollWaitNs": 2324923,
+      "kernelToPollNs": 4078175
+     }
+    },
+    {
+     "index": 62,
+     "sync": false,
+     "holdMs": 42,
+     "gapMs": 100,
+     "verdict": "TAKEN",
+     "pressPump": 6778,
+     "releasePump": 6781,
+     "polledDown": 3,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1867021,
+      "nativeNs": 52539,
+      "pollWaitNs": 2026538,
+      "eventsNs": 342077,
+      "swapNs": 2416615,
+      "kernelToPollNs": 3946098,
+      "kernelToSwapNs": 6704790
+     },
+     "release": {
+      "dispatchNs": 1381560,
+      "nativeNs": 216230,
+      "pollWaitNs": 11209847,
+      "kernelToPollNs": 12807637
+     }
+    },
+    {
+     "index": 63,
+     "sync": false,
+     "holdMs": 33,
+     "gapMs": 17,
+     "verdict": "TAKEN",
+     "pressPump": 6787,
+     "releasePump": 6789,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1294483,
+      "nativeNs": 50154,
+      "pollWaitNs": 11351384,
+      "eventsNs": 504308,
+      "swapNs": 2982461,
+      "kernelToPollNs": 12696021,
+      "kernelToSwapNs": 16182790
+     },
+     "release": {
+      "dispatchNs": 1100021,
+      "nativeNs": 45231,
+      "pollWaitNs": 11916923,
+      "kernelToPollNs": 13062175
+     }
+    },
+    {
+     "index": 64,
+     "sync": false,
+     "holdMs": 8,
+     "gapMs": 50,
+     "verdict": "INVISIBLE",
+     "pressPump": 6790,
+     "releasePump": 6790,
+     "polledDown": 0,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1721790,
+      "nativeNs": 43154,
+      "pollWaitNs": 10109231,
+      "eventsNs": 288308,
+      "swapNs": 2513154,
+      "kernelToPollNs": 11874175,
+      "kernelToSwapNs": 14675637
+     },
+     "release": {
+      "dispatchNs": 1431560,
+      "nativeNs": 63461,
+      "pollWaitNs": 2894154,
+      "kernelToPollNs": 4389175
+     }
+    },
+    {
+     "index": 65,
+     "sync": false,
+     "holdMs": 33,
+     "gapMs": 100,
+     "verdict": "TAKEN",
+     "pressPump": 6793,
+     "releasePump": 6795,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1668790,
+      "nativeNs": 59077,
+      "pollWaitNs": 2350693,
+      "eventsNs": 456307,
+      "swapNs": 3033539,
+      "kernelToPollNs": 4078560,
+      "kernelToSwapNs": 7568406
+     },
+     "release": {
+      "dispatchNs": 1636021,
+      "nativeNs": 58462,
+      "pollWaitNs": 2393000,
+      "kernelToPollNs": 4087483
+     }
+    },
+    {
+     "index": 66,
+     "sync": false,
+     "holdMs": 25,
+     "gapMs": 33,
+     "verdict": "TAKEN",
+     "pressPump": 6801,
+     "releasePump": 6803,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2057252,
+      "nativeNs": 49231,
+      "pollWaitNs": 2404384,
+      "eventsNs": 499000,
+      "swapNs": 2479154,
+      "kernelToPollNs": 4510867,
+      "kernelToSwapNs": 7489021
+     },
+     "release": {
+      "dispatchNs": 1769714,
+      "nativeNs": 42846,
+      "pollWaitNs": 11969538,
+      "kernelToPollNs": 13782098
+     }
+    },
+    {
+     "index": 67,
+     "sync": false,
+     "holdMs": 67,
+     "gapMs": 33,
+     "verdict": "TAKEN",
+     "pressPump": 6805,
+     "releasePump": 6809,
+     "polledDown": 4,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1186329,
+      "nativeNs": 63385,
+      "pollWaitNs": 12006153,
+      "eventsNs": 508077,
+      "swapNs": 2397539,
+      "kernelToPollNs": 13255867,
+      "kernelToSwapNs": 16161483
+     },
+     "release": {
+      "dispatchNs": 1557790,
+      "nativeNs": 54462,
+      "pollWaitNs": 12378231,
+      "kernelToPollNs": 13990483
+     }
+    },
+    {
+     "index": 68,
+     "sync": false,
+     "holdMs": 67,
+     "gapMs": 100,
+     "verdict": "TAKEN",
+     "pressPump": 6811,
+     "releasePump": 6815,
+     "polledDown": 4,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1512714,
+      "nativeNs": 88923,
+      "pollWaitNs": 11757538,
+      "eventsNs": 579769,
+      "swapNs": 2991000,
+      "kernelToPollNs": 13359175,
+      "kernelToSwapNs": 16929944
+     },
+     "release": {
+      "dispatchNs": 1510560,
+      "nativeNs": 72538,
+      "pollWaitNs": 11567385,
+      "kernelToPollNs": 13150483
+     }
+    },
+    {
+     "index": 69,
+     "sync": false,
+     "holdMs": 8,
+     "gapMs": 17,
+     "verdict": "INVISIBLE",
+     "pressPump": 6821,
+     "releasePump": 6821,
+     "polledDown": 0,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2177406,
+      "nativeNs": 55077,
+      "pollWaitNs": 11124615,
+      "eventsNs": 351077,
+      "swapNs": 2402769,
+      "kernelToPollNs": 13357098,
+      "kernelToSwapNs": 16110944
+     },
+     "release": {
+      "dispatchNs": 947021,
+      "nativeNs": 53616,
+      "pollWaitNs": 4929461,
+      "kernelToPollNs": 5930098
+     }
+    },
+    {
+     "index": 70,
+     "sync": false,
+     "holdMs": 17,
+     "gapMs": 100,
+     "verdict": "TAKEN",
+     "pressPump": 6822,
+     "releasePump": 6823,
+     "polledDown": 1,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2309406,
+      "nativeNs": 89846,
+      "pollWaitNs": 1974154,
+      "eventsNs": 352538,
+      "swapNs": 2459693,
+      "kernelToPollNs": 4373406,
+      "kernelToSwapNs": 7185637
+     },
+     "release": {
+      "dispatchNs": 1416406,
+      "nativeNs": 62846,
+      "pollWaitNs": 3336615,
+      "kernelToPollNs": 4815867
+     }
+    },
+    {
+     "index": 71,
+     "sync": false,
+     "holdMs": 17,
+     "gapMs": 250,
+     "verdict": "TAKEN",
+     "pressPump": 6829,
+     "releasePump": 6830,
+     "polledDown": 1,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1780175,
+      "nativeNs": 92308,
+      "pollWaitNs": 1920231,
+      "eventsNs": 422538,
+      "swapNs": 2561231,
+      "kernelToPollNs": 3792714,
+      "kernelToSwapNs": 6776483
+     },
+     "release": {
+      "dispatchNs": 1279098,
+      "nativeNs": 54154,
+      "pollWaitNs": 3056615,
+      "kernelToPollNs": 4389867
+     }
+    },
+    {
+     "index": 72,
+     "sync": false,
+     "holdMs": 42,
+     "gapMs": 250,
+     "verdict": "TAKEN",
+     "pressPump": 6845,
+     "releasePump": 6848,
+     "polledDown": 3,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2918944,
+      "nativeNs": 93231,
+      "pollWaitNs": 742769,
+      "eventsNs": 829770,
+      "swapNs": 3475692,
+      "kernelToPollNs": 3754944,
+      "kernelToSwapNs": 8060406
+     },
+     "release": {
+      "dispatchNs": 1346021,
+      "nativeNs": 50385,
+      "pollWaitNs": 10793231,
+      "kernelToPollNs": 12189637
+     }
+    },
+    {
+     "index": 73,
+     "sync": false,
+     "holdMs": 42,
+     "gapMs": 33,
+     "verdict": "TAKEN",
+     "pressPump": 6863,
+     "releasePump": 6865,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 4437791,
+      "nativeNs": 137923,
+      "pollWaitNs": 7841846,
+      "eventsNs": 374769,
+      "swapNs": 3015000,
+      "kernelToPollNs": 12417560,
+      "kernelToSwapNs": 15807329
+     },
+     "release": {
+      "dispatchNs": 1613637,
+      "nativeNs": 62769,
+      "pollWaitNs": 1978538,
+      "kernelToPollNs": 3654944
+     }
+    },
+    {
+     "index": 74,
+     "sync": false,
+     "holdMs": 8,
+     "gapMs": 250,
+     "verdict": "TAKEN",
+     "pressPump": 6867,
+     "releasePump": 6868,
+     "polledDown": 1,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2522637,
+      "nativeNs": 50154,
+      "pollWaitNs": 1292923,
+      "eventsNs": 381538,
+      "swapNs": 2220231,
+      "kernelToPollNs": 3865714,
+      "kernelToSwapNs": 6467483
+     },
+     "release": {
+      "dispatchNs": 1027483,
+      "nativeNs": 45231,
+      "pollWaitNs": 12067384,
+      "kernelToPollNs": 13140098
+     }
+    },
+    {
+     "index": 75,
+     "sync": false,
+     "holdMs": 8,
+     "gapMs": 100,
+     "verdict": "INVISIBLE",
+     "pressPump": 6883,
+     "releasePump": 6883,
+     "polledDown": 0,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 4165175,
+      "nativeNs": 142769,
+      "pollWaitNs": 7249462,
+      "eventsNs": 211769,
+      "swapNs": 2223308,
+      "kernelToPollNs": 11557406,
+      "kernelToSwapNs": 13992483
+     },
+     "release": {
+      "dispatchNs": 808637,
+      "nativeNs": 41538,
+      "pollWaitNs": 3548231,
+      "kernelToPollNs": 4398406
+     }
+    },
+    {
+     "index": 76,
+     "sync": false,
+     "holdMs": 100,
+     "gapMs": 100,
+     "verdict": "TAKEN",
+     "pressPump": 6889,
+     "releasePump": 6895,
+     "polledDown": 6,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1574329,
+      "nativeNs": 64923,
+      "pollWaitNs": 1917539,
+      "eventsNs": 553230,
+      "swapNs": 2146693,
+      "kernelToPollNs": 3556791,
+      "kernelToSwapNs": 6256714
+     },
+     "release": {
+      "dispatchNs": 1396944,
+      "nativeNs": 52923,
+      "pollWaitNs": 3178462,
+      "kernelToPollNs": 4628329
+     }
+    },
+    {
+     "index": 77,
+     "sync": false,
+     "holdMs": 17,
+     "gapMs": 250,
+     "verdict": "TAKEN",
+     "pressPump": 6901,
+     "releasePump": 6902,
+     "polledDown": 1,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1796791,
+      "nativeNs": 62384,
+      "pollWaitNs": 3185231,
+      "eventsNs": 890231,
+      "swapNs": 2462461,
+      "kernelToPollNs": 5044406,
+      "kernelToSwapNs": 8397098
+     },
+     "release": {
+      "dispatchNs": 1690406,
+      "nativeNs": 72692,
+      "pollWaitNs": 2146693,
+      "kernelToPollNs": 3909791
+     }
+    },
+    {
+     "index": 78,
+     "sync": false,
+     "holdMs": 50,
+     "gapMs": 33,
+     "verdict": "TAKEN",
+     "pressPump": 6917,
+     "releasePump": 6920,
+     "polledDown": 3,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2279714,
+      "nativeNs": 56307,
+      "pollWaitNs": 1869539,
+      "eventsNs": 760231,
+      "swapNs": 3564923,
+      "kernelToPollNs": 4205560,
+      "kernelToSwapNs": 8530714
+     },
+     "release": {
+      "dispatchNs": 1734098,
+      "nativeNs": 62154,
+      "pollWaitNs": 2322462,
+      "kernelToPollNs": 4118714
+     }
+    },
+    {
+     "index": 79,
+     "sync": false,
+     "holdMs": 33,
+     "gapMs": 17,
+     "verdict": "TAKEN",
+     "pressPump": 6922,
+     "releasePump": 6924,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2094175,
+      "nativeNs": 54231,
+      "pollWaitNs": 1884538,
+      "eventsNs": 417616,
+      "swapNs": 2897154,
+      "kernelToPollNs": 4032944,
+      "kernelToSwapNs": 7347714
+     },
+     "release": {
+      "dispatchNs": 1764175,
+      "nativeNs": 52923,
+      "pollWaitNs": 2612923,
+      "kernelToPollNs": 4430021
+     }
+    },
+    {
+     "index": 80,
+     "sync": false,
+     "holdMs": 25,
+     "gapMs": 33,
+     "verdict": "TAKEN",
+     "pressPump": 6925,
+     "releasePump": 6927,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2062868,
+      "nativeNs": 445846,
+      "pollWaitNs": 1875769,
+      "eventsNs": 391308,
+      "swapNs": 2193000,
+      "kernelToPollNs": 4384483,
+      "kernelToSwapNs": 6968791
+     },
+     "release": {
+      "dispatchNs": 1456714,
+      "nativeNs": 47077,
+      "pollWaitNs": 11468615,
+      "kernelToPollNs": 12972406
+     }
+    },
+    {
+     "index": 81,
+     "sync": false,
+     "holdMs": 25,
+     "gapMs": 50,
+     "verdict": "TAKEN",
+     "pressPump": 6929,
+     "releasePump": 6930,
+     "polledDown": 1,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2100483,
+      "nativeNs": 122077,
+      "pollWaitNs": 10595077,
+      "eventsNs": 525307,
+      "swapNs": 2927616,
+      "kernelToPollNs": 12817637,
+      "kernelToSwapNs": 16270560
+     },
+     "release": {
+      "dispatchNs": 1956637,
+      "nativeNs": 51769,
+      "pollWaitNs": 2911615,
+      "kernelToPollNs": 4920021
+     }
+    },
+    {
+     "index": 82,
+     "sync": false,
+     "holdMs": 67,
+     "gapMs": 100,
+     "verdict": "TAKEN",
+     "pressPump": 6933,
+     "releasePump": 6937,
+     "polledDown": 4,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2418483,
+      "nativeNs": 58077,
+      "pollWaitNs": 1712384,
+      "eventsNs": 370462,
+      "swapNs": 2309538,
+      "kernelToPollNs": 4188944,
+      "kernelToSwapNs": 6868944
+     },
+     "release": {
+      "dispatchNs": 2075637,
+      "nativeNs": 61769,
+      "pollWaitNs": 2488615,
+      "kernelToPollNs": 4626021
+     }
+    },
+    {
+     "index": 83,
+     "sync": false,
+     "holdMs": 50,
+     "gapMs": 17,
+     "verdict": "TAKEN",
+     "pressPump": 6943,
+     "releasePump": 6946,
+     "polledDown": 3,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1672791,
+      "nativeNs": 60307,
+      "pollWaitNs": 2973846,
+      "eventsNs": 354539,
+      "swapNs": 2395308,
+      "kernelToPollNs": 4706944,
+      "kernelToSwapNs": 7456791
+     },
+     "release": {
+      "dispatchNs": 1919944,
+      "nativeNs": 125308,
+      "pollWaitNs": 2540923,
+      "kernelToPollNs": 4586175
+     }
+    },
+    {
+     "index": 84,
+     "sync": false,
+     "holdMs": 25,
+     "gapMs": 50,
+     "verdict": "TAKEN",
+     "pressPump": 6947,
+     "releasePump": 6949,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2424483,
+      "nativeNs": 104231,
+      "pollWaitNs": 1368384,
+      "eventsNs": 419077,
+      "swapNs": 2428616,
+      "kernelToPollNs": 3897098,
+      "kernelToSwapNs": 6744791
+     },
+     "release": {
+      "dispatchNs": 1600791,
+      "nativeNs": 57769,
+      "pollWaitNs": 10245538,
+      "kernelToPollNs": 11904098
+     }
+    },
+    {
+     "index": 85,
+     "sync": false,
+     "holdMs": 100,
+     "gapMs": 50,
+     "verdict": "TAKEN",
+     "pressPump": 6952,
+     "releasePump": 6958,
+     "polledDown": 6,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2276329,
+      "nativeNs": 103000,
+      "pollWaitNs": 10749308,
+      "eventsNs": 443923,
+      "swapNs": 2723692,
+      "kernelToPollNs": 13128637,
+      "kernelToSwapNs": 16296252
+     },
+     "release": {
+      "dispatchNs": 1297252,
+      "nativeNs": 47923,
+      "pollWaitNs": 10901616,
+      "kernelToPollNs": 12246791
+     }
+    },
+    {
+     "index": 86,
+     "sync": false,
+     "holdMs": 42,
+     "gapMs": 17,
+     "verdict": "TAKEN",
+     "pressPump": 6961,
+     "releasePump": 6963,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1666021,
+      "nativeNs": 59385,
+      "pollWaitNs": 11495692,
+      "eventsNs": 477231,
+      "swapNs": 3179385,
+      "kernelToPollNs": 13221098,
+      "kernelToSwapNs": 16877714
+     },
+     "release": {
+      "dispatchNs": 1245560,
+      "nativeNs": 63384,
+      "pollWaitNs": 2185539,
+      "kernelToPollNs": 3494483
+     }
+    },
+    {
+     "index": 87,
+     "sync": false,
+     "holdMs": 8,
+     "gapMs": 250,
+     "verdict": "TAKEN",
+     "pressPump": 6964,
+     "releasePump": 6965,
+     "polledDown": 1,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1800714,
+      "nativeNs": 64000,
+      "pollWaitNs": 1424230,
+      "eventsNs": 699385,
+      "swapNs": 2117231,
+      "kernelToPollNs": 3288944,
+      "kernelToSwapNs": 6105560
+     },
+     "release": {
+      "dispatchNs": 1266175,
+      "nativeNs": 47769,
+      "pollWaitNs": 10597539,
+      "kernelToPollNs": 11911483
+     }
+    },
+    {
+     "index": 88,
+     "sync": false,
+     "holdMs": 50,
+     "gapMs": 33,
+     "verdict": "TAKEN",
+     "pressPump": 6980,
+     "releasePump": 6983,
+     "polledDown": 3,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 3789868,
+      "nativeNs": 97230,
+      "pollWaitNs": 7103385,
+      "eventsNs": 435923,
+      "swapNs": 2608923,
+      "kernelToPollNs": 10990483,
+      "kernelToSwapNs": 14035329
+     },
+     "release": {
+      "dispatchNs": 1171714,
+      "nativeNs": 61230,
+      "pollWaitNs": 10982154,
+      "kernelToPollNs": 12215098
+     }
+    },
+    {
+     "index": 89,
+     "sync": false,
+     "holdMs": 100,
+     "gapMs": 250,
+     "verdict": "TAKEN",
+     "pressPump": 6985,
+     "releasePump": 6991,
+     "polledDown": 6,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1908637,
+      "nativeNs": 91692,
+      "pollWaitNs": 9724923,
+      "eventsNs": 611154,
+      "swapNs": 2787077,
+      "kernelToPollNs": 11725252,
+      "kernelToSwapNs": 15123483
+     },
+     "release": {
+      "dispatchNs": 1412560,
+      "nativeNs": 40615,
+      "pollWaitNs": 12079308,
+      "kernelToPollNs": 13532483
+     }
+    },
+    {
+     "index": 90,
+     "sync": false,
+     "holdMs": 42,
+     "gapMs": 100,
+     "verdict": "TAKEN",
+     "pressPump": 7006,
+     "releasePump": 7008,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 3986175,
+      "nativeNs": 169231,
+      "pollWaitNs": 7116539,
+      "eventsNs": 361230,
+      "swapNs": 2327693,
+      "kernelToPollNs": 11271945,
+      "kernelToSwapNs": 13960868
+     },
+     "release": {
+      "dispatchNs": 1879175,
+      "nativeNs": 87616,
+      "pollWaitNs": 1861615,
+      "kernelToPollNs": 3828406
+     }
+    },
+    {
+     "index": 91,
+     "sync": false,
+     "holdMs": 33,
+     "gapMs": 50,
+     "verdict": "TAKEN",
+     "pressPump": 7014,
+     "releasePump": 7016,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2981406,
+      "nativeNs": 78846,
+      "pollWaitNs": 720308,
+      "eventsNs": 600000,
+      "swapNs": 3612308,
+      "kernelToPollNs": 3780560,
+      "kernelToSwapNs": 7992868
+     },
+     "release": {
+      "dispatchNs": 1951637,
+      "nativeNs": 68692,
+      "pollWaitNs": 1379385,
+      "kernelToPollNs": 3399714
+     }
+    },
+    {
+     "index": 92,
+     "sync": false,
+     "holdMs": 50,
+     "gapMs": 100,
+     "verdict": "TAKEN",
+     "pressPump": 7019,
+     "releasePump": 7022,
+     "polledDown": 3,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1745945,
+      "nativeNs": 60846,
+      "pollWaitNs": 1968307,
+      "eventsNs": 397923,
+      "swapNs": 2108231,
+      "kernelToPollNs": 3775098,
+      "kernelToSwapNs": 6281252
+     },
+     "release": {
+      "dispatchNs": 1840483,
+      "nativeNs": 56000,
+      "pollWaitNs": 2754385,
+      "kernelToPollNs": 4650868
+     }
+    },
+    {
+     "index": 93,
+     "sync": false,
+     "holdMs": 17,
+     "gapMs": 250,
+     "verdict": "TAKEN",
+     "pressPump": 7028,
+     "releasePump": 7029,
+     "polledDown": 1,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1664714,
+      "nativeNs": 69846,
+      "pollWaitNs": 2624923,
+      "eventsNs": 367692,
+      "swapNs": 2350385,
+      "kernelToPollNs": 4359483,
+      "kernelToSwapNs": 7077560
+     },
+     "release": {
+      "dispatchNs": 1504329,
+      "nativeNs": 57923,
+      "pollWaitNs": 2798693,
+      "kernelToPollNs": 4360945
+     }
+    },
+    {
+     "index": 94,
+     "sync": false,
+     "holdMs": 42,
+     "gapMs": 17,
+     "verdict": "TAKEN",
+     "pressPump": 7044,
+     "releasePump": 7047,
+     "polledDown": 3,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 3098175,
+      "nativeNs": 109231,
+      "pollWaitNs": 2072000,
+      "eventsNs": 437539,
+      "swapNs": 2176615,
+      "kernelToPollNs": 5279406,
+      "kernelToSwapNs": 7893560
+     },
+     "release": {
+      "dispatchNs": 2023714,
+      "nativeNs": 60538,
+      "pollWaitNs": 9630846,
+      "kernelToPollNs": 11715098
+     }
+    },
+    {
+     "index": 95,
+     "sync": false,
+     "holdMs": 33,
+     "gapMs": 250,
+     "verdict": "TAKEN",
+     "pressPump": 7048,
+     "releasePump": 7050,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2139329,
+      "nativeNs": 41231,
+      "pollWaitNs": 9242461,
+      "eventsNs": 529616,
+      "swapNs": 2741461,
+      "kernelToPollNs": 11423021,
+      "kernelToSwapNs": 14694098
+     },
+     "release": {
+      "dispatchNs": 1299714,
+      "nativeNs": 52846,
+      "pollWaitNs": 10933615,
+      "kernelToPollNs": 12286175
+     }
+    },
+    {
+     "index": 96,
+     "sync": false,
+     "holdMs": 50,
+     "gapMs": 50,
+     "verdict": "TAKEN",
+     "pressPump": 7065,
+     "releasePump": 7068,
+     "polledDown": 3,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 3082098,
+      "nativeNs": 944077,
+      "pollWaitNs": 7853462,
+      "eventsNs": 437923,
+      "swapNs": 3139077,
+      "kernelToPollNs": 11879637,
+      "kernelToSwapNs": 15456637
+     },
+     "release": {
+      "dispatchNs": 1992175,
+      "nativeNs": 77154,
+      "pollWaitNs": 10525616,
+      "kernelToPollNs": 12594945
+     }
+    },
+    {
+     "index": 97,
+     "sync": false,
+     "holdMs": 100,
+     "gapMs": 250,
+     "verdict": "TAKEN",
+     "pressPump": 7071,
+     "releasePump": 7077,
+     "polledDown": 6,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2402252,
+      "nativeNs": 60308,
+      "pollWaitNs": 9329615,
+      "eventsNs": 432847,
+      "swapNs": 2401307,
+      "kernelToPollNs": 11792175,
+      "kernelToSwapNs": 14626329
+     },
+     "release": {
+      "dispatchNs": 1551945,
+      "nativeNs": 47461,
+      "pollWaitNs": 9522385,
+      "kernelToPollNs": 11121791
+     }
+    },
+    {
+     "index": 98,
+     "sync": false,
+     "holdMs": 33,
+     "gapMs": 33,
+     "verdict": "TAKEN",
+     "pressPump": 7092,
+     "releasePump": 7094,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 3997868,
+      "nativeNs": 108307,
+      "pollWaitNs": 7894770,
+      "eventsNs": 447461,
+      "swapNs": 2708539,
+      "kernelToPollNs": 12000945,
+      "kernelToSwapNs": 15156945
+     },
+     "release": {
+      "dispatchNs": 1853560,
+      "nativeNs": 44615,
+      "pollWaitNs": 9976231,
+      "kernelToPollNs": 11874406
+     }
+    },
+    {
+     "index": 99,
+     "sync": false,
+     "holdMs": 8,
+     "gapMs": 33,
+     "verdict": "INVISIBLE",
+     "pressPump": 7096,
+     "releasePump": 7096,
+     "polledDown": 0,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1818406,
+      "nativeNs": 120846,
+      "pollWaitNs": 10520616,
+      "eventsNs": 300615,
+      "swapNs": 2493615,
+      "kernelToPollNs": 12459868,
+      "kernelToSwapNs": 15254098
+     },
+     "release": {
+      "dispatchNs": 1282175,
+      "nativeNs": 124923,
+      "pollWaitNs": 3637770,
+      "kernelToPollNs": 5044868
+     }
+    },
+    {
+     "index": 100,
+     "sync": false,
+     "holdMs": 8,
+     "gapMs": 250,
+     "verdict": "TAKEN",
+     "pressPump": 7098,
+     "releasePump": 7099,
+     "polledDown": 1,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1375098,
+      "nativeNs": 57770,
+      "pollWaitNs": 3320077,
+      "eventsNs": 1248615,
+      "swapNs": 3764000,
+      "kernelToPollNs": 4752945,
+      "kernelToSwapNs": 9765560
+     },
+     "release": {
+      "dispatchNs": 1299252,
+      "nativeNs": 577539,
+      "pollWaitNs": 10982231,
+      "kernelToPollNs": 12859022
+     }
+    },
+    {
+     "index": 101,
+     "sync": false,
+     "holdMs": 33,
+     "gapMs": 100,
+     "verdict": "TAKEN",
+     "pressPump": 7114,
+     "releasePump": 7116,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 3810868,
+      "nativeNs": 119307,
+      "pollWaitNs": 9811077,
+      "eventsNs": 444000,
+      "swapNs": 2710846,
+      "kernelToPollNs": 13741252,
+      "kernelToSwapNs": 16896098
+     },
+     "release": {
+      "dispatchNs": 1471098,
+      "nativeNs": 44693,
+      "pollWaitNs": 12149846,
+      "kernelToPollNs": 13665637
+     }
+    },
+    {
+     "index": 102,
+     "sync": false,
+     "holdMs": 50,
+     "gapMs": 100,
+     "verdict": "TAKEN",
+     "pressPump": 7122,
+     "releasePump": 7125,
+     "polledDown": 3,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1621945,
+      "nativeNs": 824000,
+      "pollWaitNs": 11166153,
+      "eventsNs": 615385,
+      "swapNs": 3092692,
+      "kernelToPollNs": 13612098,
+      "kernelToSwapNs": 17320175
+     },
+     "release": {
+      "dispatchNs": 1328098,
+      "nativeNs": 57847,
+      "pollWaitNs": 11985000,
+      "kernelToPollNs": 13370945
+     }
+    },
+    {
+     "index": 103,
+     "sync": false,
+     "holdMs": 100,
+     "gapMs": 50,
+     "verdict": "TAKEN",
+     "pressPump": 7131,
+     "releasePump": 7137,
+     "polledDown": 6,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 3052252,
+      "nativeNs": 42539,
+      "pollWaitNs": 10698769,
+      "eventsNs": 606077,
+      "swapNs": 3445231,
+      "kernelToPollNs": 13793560,
+      "kernelToSwapNs": 17844868
+     },
+     "release": {
+      "dispatchNs": 2252022,
+      "nativeNs": 47307,
+      "pollWaitNs": 11203077,
+      "kernelToPollNs": 13502406
+     }
+    },
+    {
+     "index": 104,
+     "sync": false,
+     "holdMs": 8,
+     "gapMs": 17,
+     "verdict": "INVISIBLE",
+     "pressPump": 7140,
+     "releasePump": 7140,
+     "polledDown": 0,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1845483,
+      "nativeNs": 53231,
+      "pollWaitNs": 11965308,
+      "eventsNs": 299615,
+      "swapNs": 2715385,
+      "kernelToPollNs": 13864022,
+      "kernelToSwapNs": 16879022
+     },
+     "release": {
+      "dispatchNs": 1255098,
+      "nativeNs": 45616,
+      "pollWaitNs": 5056308,
+      "kernelToPollNs": 6357022
+     }
+    },
+    {
+     "index": 105,
+     "sync": false,
+     "holdMs": 17,
+     "gapMs": 33,
+     "verdict": "TAKEN",
+     "pressPump": 7141,
+     "releasePump": 7142,
+     "polledDown": 1,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2119252,
+      "nativeNs": 54385,
+      "pollWaitNs": 2975077,
+      "eventsNs": 415769,
+      "swapNs": 2583077,
+      "kernelToPollNs": 5148714,
+      "kernelToSwapNs": 8147560
+     },
+     "release": {
+      "dispatchNs": 1566329,
+      "nativeNs": 59154,
+      "pollWaitNs": 3102462,
+      "kernelToPollNs": 4727945
+     }
+    },
+    {
+     "index": 106,
+     "sync": false,
+     "holdMs": 50,
+     "gapMs": 250,
+     "verdict": "TAKEN",
+     "pressPump": 7144,
+     "releasePump": 7147,
+     "polledDown": 3,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2006868,
+      "nativeNs": 51384,
+      "pollWaitNs": 3753539,
+      "eventsNs": 320538,
+      "swapNs": 2224923,
+      "kernelToPollNs": 5811791,
+      "kernelToSwapNs": 8357252
+     },
+     "release": {
+      "dispatchNs": 1489637,
+      "nativeNs": 60538,
+      "pollWaitNs": 2957308,
+      "kernelToPollNs": 4507483
+     }
+    },
+    {
+     "index": 107,
+     "sync": false,
+     "holdMs": 33,
+     "gapMs": 33,
+     "verdict": "TAKEN",
+     "pressPump": 7162,
+     "releasePump": 7164,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2764868,
+      "nativeNs": 64231,
+      "pollWaitNs": 2417846,
+      "eventsNs": 1127461,
+      "swapNs": 3861462,
+      "kernelToPollNs": 5246945,
+      "kernelToSwapNs": 10235868
+     },
+     "release": {
+      "dispatchNs": 1577714,
+      "nativeNs": 54769,
+      "pollWaitNs": 4932231,
+      "kernelToPollNs": 6564714
+     }
+    },
+    {
+     "index": 108,
+     "sync": false,
+     "holdMs": 50,
+     "gapMs": 33,
+     "verdict": "TAKEN",
+     "pressPump": 7166,
+     "releasePump": 7169,
+     "polledDown": 3,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1997483,
+      "nativeNs": 50462,
+      "pollWaitNs": 3842846,
+      "eventsNs": 438769,
+      "swapNs": 2506769,
+      "kernelToPollNs": 5890791,
+      "kernelToSwapNs": 8836329
+     },
+     "release": {
+      "dispatchNs": 2012560,
+      "nativeNs": 62462,
+      "pollWaitNs": 3956692,
+      "kernelToPollNs": 6031714
+     }
+    },
+    {
+     "index": 109,
+     "sync": false,
+     "holdMs": 8,
+     "gapMs": 100,
+     "verdict": "TAKEN",
+     "pressPump": 7171,
+     "releasePump": 7172,
+     "polledDown": 1,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1330714,
+      "nativeNs": 61846,
+      "pollWaitNs": 4721923,
+      "eventsNs": 520308,
+      "swapNs": 3130154,
+      "kernelToPollNs": 6114483,
+      "kernelToSwapNs": 9764945
+     },
+     "release": {
+      "dispatchNs": 1918945,
+      "nativeNs": 163923,
+      "pollWaitNs": 13248384,
+      "kernelToPollNs": 15331252
+     }
+    },
+    {
+     "index": 110,
+     "sync": false,
+     "holdMs": 33,
+     "gapMs": 17,
+     "verdict": "TAKEN",
+     "pressPump": 7178,
+     "releasePump": 7180,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2044637,
+      "nativeNs": 1780923,
+      "pollWaitNs": 11188308,
+      "eventsNs": 750692,
+      "swapNs": 2778462,
+      "kernelToPollNs": 15013868,
+      "kernelToSwapNs": 18543022
+     },
+     "release": {
+      "dispatchNs": 2367483,
+      "nativeNs": 42539,
+      "pollWaitNs": 13237153,
+      "kernelToPollNs": 15647175
+     }
+    },
+    {
+     "index": 111,
+     "sync": false,
+     "holdMs": 25,
+     "gapMs": 100,
+     "verdict": "TAKEN",
+     "pressPump": 7181,
+     "releasePump": 7182,
+     "polledDown": 1,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2430483,
+      "nativeNs": 740077,
+      "pollWaitNs": 11226462,
+      "eventsNs": 739615,
+      "swapNs": 2957923,
+      "kernelToPollNs": 14397022,
+      "kernelToSwapNs": 18094560
+     },
+     "release": {
+      "dispatchNs": 1346714,
+      "nativeNs": 60000,
+      "pollWaitNs": 5387154,
+      "kernelToPollNs": 6793868
+     }
+    },
+    {
+     "index": 112,
+     "sync": false,
+     "holdMs": 25,
+     "gapMs": 17,
+     "verdict": "TAKEN",
+     "pressPump": 7188,
+     "releasePump": 7190,
+     "polledDown": 2,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1694868,
+      "nativeNs": 61307,
+      "pollWaitNs": 5185539,
+      "eventsNs": 372231,
+      "swapNs": 2288307,
+      "kernelToPollNs": 6941714,
+      "kernelToSwapNs": 9602252
+     },
+     "release": {
+      "dispatchNs": 2324022,
+      "nativeNs": 49000,
+      "pollWaitNs": 11940538,
+      "kernelToPollNs": 14313560
+     }
+    },
+    {
+     "index": 113,
+     "sync": false,
+     "holdMs": 67,
+     "gapMs": 17,
+     "verdict": "TAKEN",
+     "pressPump": 7191,
+     "releasePump": 7195,
+     "polledDown": 4,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1728637,
+      "nativeNs": 815769,
+      "pollWaitNs": 12239693,
+      "eventsNs": 448923,
+      "swapNs": 3006692,
+      "kernelToPollNs": 14784099,
+      "kernelToSwapNs": 18239714
+     },
+     "release": {
+      "dispatchNs": 1856945,
+      "nativeNs": 58769,
+      "pollWaitNs": 12305308,
+      "kernelToPollNs": 14221022
+     }
+    },
+    {
+     "index": 114,
+     "sync": false,
+     "holdMs": 17,
+     "gapMs": 50,
+     "verdict": "TAKEN",
+     "pressPump": 7196,
+     "releasePump": 7197,
+     "polledDown": 1,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1713560,
+      "nativeNs": 50077,
+      "pollWaitNs": 12095462,
+      "eventsNs": 555000,
+      "swapNs": 2618769,
+      "kernelToPollNs": 13859099,
+      "kernelToSwapNs": 17032868
+     },
+     "release": {
+      "dispatchNs": 1014099,
+      "nativeNs": 44307,
+      "pollWaitNs": 12679000,
+      "kernelToPollNs": 13737406
+     }
+    },
+    {
+     "index": 115,
+     "sync": false,
+     "holdMs": 8,
+     "gapMs": 33,
+     "verdict": "INVISIBLE",
+     "pressPump": 7200,
+     "releasePump": 7200,
+     "polledDown": 0,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1769714,
+      "nativeNs": 117231,
+      "pollWaitNs": 12109846,
+      "eventsNs": 252692,
+      "swapNs": 2783616,
+      "kernelToPollNs": 13996791,
+      "kernelToSwapNs": 17033099
+     },
+     "release": {
+      "dispatchNs": 1259099,
+      "nativeNs": 55461,
+      "pollWaitNs": 4028231,
+      "kernelToPollNs": 5342791
+     }
+    },
+    {
+     "index": 116,
+     "sync": false,
+     "holdMs": 50,
+     "gapMs": 250,
+     "verdict": "TAKEN",
+     "pressPump": 7202,
+     "releasePump": 7205,
+     "polledDown": 3,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1913406,
+      "nativeNs": 61154,
+      "pollWaitNs": 3766539,
+      "eventsNs": 314461,
+      "swapNs": 2055692,
+      "kernelToPollNs": 5741099,
+      "kernelToSwapNs": 8111252
+     },
+     "release": {
+      "dispatchNs": 1489483,
+      "nativeNs": 59616,
+      "pollWaitNs": 4550846,
+      "kernelToPollNs": 6099945
+     }
+    },
+    {
+     "index": 117,
+     "sync": false,
+     "holdMs": 67,
+     "gapMs": 50,
+     "verdict": "TAKEN",
+     "pressPump": 7220,
+     "releasePump": 7224,
+     "polledDown": 4,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2512560,
+      "nativeNs": 59769,
+      "pollWaitNs": 3536539,
+      "eventsNs": 1019769,
+      "swapNs": 4451308,
+      "kernelToPollNs": 6108868,
+      "kernelToSwapNs": 11579945
+     },
+     "release": {
+      "dispatchNs": 1264483,
+      "nativeNs": 62154,
+      "pollWaitNs": 4079923,
+      "kernelToPollNs": 5406560
+     }
+    },
+    {
+     "index": 118,
+     "sync": false,
+     "holdMs": 67,
+     "gapMs": 50,
+     "verdict": "TAKEN",
+     "pressPump": 7227,
+     "releasePump": 7231,
+     "polledDown": 4,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1654406,
+      "nativeNs": 52923,
+      "pollWaitNs": 3770770,
+      "eventsNs": 325538,
+      "swapNs": 2307692,
+      "kernelToPollNs": 5478099,
+      "kernelToSwapNs": 8111329
+     },
+     "release": {
+      "dispatchNs": 1694791,
+      "nativeNs": 62154,
+      "pollWaitNs": 3913538,
+      "kernelToPollNs": 5670483
+     }
+    },
+    {
+     "index": 119,
+     "sync": false,
+     "holdMs": 67,
+     "gapMs": 250,
+     "verdict": "TAKEN",
+     "pressPump": 7234,
+     "releasePump": 7238,
+     "polledDown": 4,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 1644406,
+      "nativeNs": 63693,
+      "pollWaitNs": 3242384,
+      "eventsNs": 327154,
+      "swapNs": 2279615,
+      "kernelToPollNs": 4950483,
+      "kernelToSwapNs": 7557252
+     },
+     "release": {
+      "dispatchNs": 1648560,
+      "nativeNs": 57231,
+      "pollWaitNs": 3630692,
+      "kernelToPollNs": 5336483
+     }
+    },
+    {
+     "index": 120,
+     "sync": false,
+     "holdMs": 42,
+     "gapMs": 50,
+     "verdict": "TAKEN",
+     "pressPump": 7253,
+     "releasePump": 7256,
+     "polledDown": 3,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2909176,
+      "nativeNs": 97615,
+      "pollWaitNs": 1878154,
+      "eventsNs": 940231,
+      "swapNs": 4877615,
+      "kernelToPollNs": 4884945,
+      "kernelToSwapNs": 10702791
+     },
+     "release": {
+      "dispatchNs": 1507560,
+      "nativeNs": 46846,
+      "pollWaitNs": 11472923,
+      "kernelToPollNs": 13027329
+     }
+    },
+    {
+     "index": 121,
+     "sync": false,
+     "holdMs": 8,
+     "gapMs": 17,
+     "verdict": "INVISIBLE",
+     "pressPump": 7259,
+     "releasePump": 7259,
+     "polledDown": 0,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 3019406,
+      "nativeNs": 48693,
+      "pollWaitNs": 9727000,
+      "eventsNs": 396692,
+      "swapNs": 3074692,
+      "kernelToPollNs": 12795099,
+      "kernelToSwapNs": 16266483
+     },
+     "release": {
+      "dispatchNs": 1103560,
+      "nativeNs": 53231,
+      "pollWaitNs": 4224308,
+      "kernelToPollNs": 5381099
+     }
+    },
+    {
+     "index": 122,
+     "sync": false,
+     "holdMs": 100,
+     "gapMs": 17,
+     "verdict": "TAKEN",
+     "pressPump": 7260,
+     "releasePump": 7266,
+     "polledDown": 6,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2131483,
+      "nativeNs": 59616,
+      "pollWaitNs": 2349230,
+      "eventsNs": 1108693,
+      "swapNs": 2858461,
+      "kernelToPollNs": 4540329,
+      "kernelToSwapNs": 8507483
+     },
+     "release": {
+      "dispatchNs": 1662560,
+      "nativeNs": 63616,
+      "pollWaitNs": 3459769,
+      "kernelToPollNs": 5185945
+     }
+    },
+    {
+     "index": 123,
+     "sync": true,
+     "holdMs": 200,
+     "gapMs": 600,
+     "verdict": "TAKEN",
+     "pressPump": 7267,
+     "releasePump": 7279,
+     "polledDown": 12,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2275099,
+      "nativeNs": 65846,
+      "pollWaitNs": 2078231,
+      "eventsNs": 383692,
+      "swapNs": 3105769,
+      "kernelToPollNs": 4419176,
+      "kernelToSwapNs": 7908637
+     },
+     "release": {
+      "dispatchNs": 1964329,
+      "nativeNs": 66462,
+      "pollWaitNs": 1875461,
+      "kernelToPollNs": 3906252
+     }
+    },
+    {
+     "index": 124,
+     "sync": true,
+     "holdMs": 200,
+     "gapMs": 600,
+     "verdict": "TAKEN",
+     "pressPump": 7315,
+     "releasePump": 7327,
+     "polledDown": 12,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 3533714,
+      "nativeNs": 126462,
+      "pollWaitNs": 412077,
+      "eventsNs": 1030153,
+      "swapNs": 3977462,
+      "kernelToPollNs": 4072253,
+      "kernelToSwapNs": 9079868
+     },
+     "release": {
+      "dispatchNs": 2344022,
+      "nativeNs": 60307,
+      "pollWaitNs": 2207385,
+      "kernelToPollNs": 4611714
+     }
+    },
+    {
+     "index": 125,
+     "sync": true,
+     "holdMs": 200,
+     "gapMs": 600,
+     "verdict": "TAKEN",
+     "pressPump": 7363,
+     "releasePump": 7375,
+     "polledDown": 12,
+     "flagsAgree": true,
+     "press": {
+      "dispatchNs": 2971714,
+      "nativeNs": 48923,
+      "pollWaitNs": 2047692,
+      "eventsNs": 991077,
+      "swapNs": 4643385,
+      "kernelToPollNs": 5068329,
+      "kernelToSwapNs": 10702791
+     },
+     "release": {
+      "dispatchNs": 2281406,
+      "nativeNs": 63693,
+      "pollWaitNs": 1471923,
+      "kernelToPollNs": 3817022
+     }
+    }
+   ]
+  }
+ }
+}

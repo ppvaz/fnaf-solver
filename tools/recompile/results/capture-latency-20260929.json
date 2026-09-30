@@ -1,0 +1,4619 @@
+{
+ "schema": "recompile-capture-latency-v1",
+ "step": "ROADMAP S4",
+ "claimLevel": "DEVICE_MEASURED",
+ "fidelity": "rebuilt-runtime display, Companion capture",
+ "evidenceId": "capture-latency-79e85709947685c1",
+ "question": "How long after the game swaps a frame does the Cue Helper's MediaProjection image of it carry, and which updates does the capture never show?",
+ "instrument": {
+  "region": {
+   "x": 75,
+   "y": 5,
+   "width": 2251,
+   "height": 1,
+   "step": 50
+  },
+  "beacon": "16-cell Gray code of the update index, top 8 frame rows (apply-calib-mod.py)"
+ },
+ "inputsSha256": {
+  "frames": "24c3a40524f69e737c801960d53385e83c237db319feac6ad059a55b70ca1c7b",
+  "calibUpdates": "b84ca86106a780b6e89473362025aaa202a58b7bed538263936a69c9574de42f"
+ },
+ "notClaimed": [
+  "The retail runtime's own swap-to-display path; the capture side (SurfaceFlinger, MediaProjection, the helper) is the phone's.",
+  "Photon time: the image timestamp is the compositor's, not the panel's."
+ ],
+ "result": {
+  "capturedFrames": 569,
+  "decoded": 569,
+  "undecodable": 0,
+  "joined": 569,
+  "clock": "CLOCK_MONOTONIC (image stamps within 1 s of the swaps)",
+  "afterSwapMs": {
+   "n": 569,
+   "min": 22.431,
+   "p50": 26.444,
+   "p90": 28.164,
+   "max": 30.675
+  },
+  "afterEventsMs": {
+   "n": 569,
+   "min": 27.498,
+   "p50": 29.791,
+   "p90": 30.553,
+   "max": 32.354
+  },
+  "staleFrames": 569,
+  "replyAgeMs": {
+   "n": 569,
+   "min": 3.127,
+   "p50": 12.86,
+   "p90": 19.581,
+   "max": 26.996
+  },
+  "updates": {
+   "span": 1198,
+   "shown": 569,
+   "neverShown": 629
+  },
+  "helperFrames": {
+   "seqSpan": 569,
+   "read": 569,
+   "missedByReader": 0
+  },
+  "rows": [
+   {
+    "seq": 6179,
+    "u": 15892,
+    "afterSwapMs": 24.534077,
+    "afterEventsMs": 30.255923,
+    "staleByMs": 9.116923,
+    "replyAgeMs": 12.826769
+   },
+   {
+    "seq": 6180,
+    "u": 15894,
+    "afterSwapMs": 23.85177,
+    "afterEventsMs": 29.228,
+    "staleByMs": 11.253,
+    "replyAgeMs": 12.236
+   },
+   {
+    "seq": 6181,
+    "u": 15896,
+    "afterSwapMs": 25.481231,
+    "afterEventsMs": 30.196692,
+    "staleByMs": 10.830539,
+    "replyAgeMs": 5.987692
+   },
+   {
+    "seq": 6182,
+    "u": 15898,
+    "afterSwapMs": 26.415462,
+    "afterEventsMs": 29.397615,
+    "staleByMs": 10.742538,
+    "replyAgeMs": 8.960231
+   },
+   {
+    "seq": 6183,
+    "u": 15899,
+    "afterSwapMs": 27.799461,
+    "afterEventsMs": 30.014538,
+    "staleByMs": 11.366846,
+    "replyAgeMs": 23.099
+   },
+   {
+    "seq": 6184,
+    "u": 15901,
+    "afterSwapMs": 27.643461,
+    "afterEventsMs": 29.763384,
+    "staleByMs": 11.287461,
+    "replyAgeMs": 17.568
+   },
+   {
+    "seq": 6185,
+    "u": 15903,
+    "afterSwapMs": 28.921307,
+    "afterEventsMs": 30.899077,
+    "staleByMs": 10.419692,
+    "replyAgeMs": 13.784923
+   },
+   {
+    "seq": 6186,
+    "u": 15905,
+    "afterSwapMs": 27.293616,
+    "afterEventsMs": 29.178154,
+    "staleByMs": 9.947077,
+    "replyAgeMs": 17.507
+   },
+   {
+    "seq": 6187,
+    "u": 15907,
+    "afterSwapMs": 26.257846,
+    "afterEventsMs": 30.145154,
+    "staleByMs": 11.579692,
+    "replyAgeMs": 22.095154
+   },
+   {
+    "seq": 6188,
+    "u": 15909,
+    "afterSwapMs": 23.786769,
+    "afterEventsMs": 29.528308,
+    "staleByMs": 7.895692,
+    "replyAgeMs": 11.533539
+   },
+   {
+    "seq": 6189,
+    "u": 15911,
+    "afterSwapMs": 26.694231,
+    "afterEventsMs": 30.769308,
+    "staleByMs": 8.455461,
+    "replyAgeMs": 6.136846
+   },
+   {
+    "seq": 6190,
+    "u": 15913,
+    "afterSwapMs": 25.288615,
+    "afterEventsMs": 29.783692,
+    "staleByMs": 10.247077,
+    "replyAgeMs": 11.674462
+   },
+   {
+    "seq": 6191,
+    "u": 15915,
+    "afterSwapMs": 25.615616,
+    "afterEventsMs": 29.534154,
+    "staleByMs": 8.386385,
+    "replyAgeMs": 7.097538
+   },
+   {
+    "seq": 6192,
+    "u": 15917,
+    "afterSwapMs": 27.185231,
+    "afterEventsMs": 29.955308,
+    "staleByMs": 10.584231,
+    "replyAgeMs": 7.711385
+   },
+   {
+    "seq": 6193,
+    "u": 15919,
+    "afterSwapMs": 27.614769,
+    "afterEventsMs": 29.304693,
+    "staleByMs": 10.869616,
+    "replyAgeMs": 13.140307
+   },
+   {
+    "seq": 6194,
+    "u": 15921,
+    "afterSwapMs": 27.888307,
+    "afterEventsMs": 29.485461,
+    "staleByMs": 10.671615,
+    "replyAgeMs": 16.844923
+   },
+   {
+    "seq": 6195,
+    "u": 15923,
+    "afterSwapMs": 25.076307,
+    "afterEventsMs": 29.471692,
+    "staleByMs": 11.008615,
+    "replyAgeMs": 16.097539
+   },
+   {
+    "seq": 6196,
+    "u": 15925,
+    "afterSwapMs": 26.039154,
+    "afterEventsMs": 29.845538,
+    "staleByMs": 8.720692,
+    "replyAgeMs": 12.418385
+   },
+   {
+    "seq": 6197,
+    "u": 15927,
+    "afterSwapMs": 25.281923,
+    "afterEventsMs": 29.290462,
+    "staleByMs": 7.990846,
+    "replyAgeMs": 9.559923
+   },
+   {
+    "seq": 6198,
+    "u": 15929,
+    "afterSwapMs": 23.737539,
+    "afterEventsMs": 28.974231,
+    "staleByMs": 7.770462,
+    "replyAgeMs": 12.193231
+   },
+   {
+    "seq": 6199,
+    "u": 15931,
+    "afterSwapMs": 27.775077,
+    "afterEventsMs": 29.957231,
+    "staleByMs": 11.191077,
+    "replyAgeMs": 16.106692
+   },
+   {
+    "seq": 6200,
+    "u": 15933,
+    "afterSwapMs": 24.247,
+    "afterEventsMs": 28.084616,
+    "staleByMs": 7.816231,
+    "replyAgeMs": 14.464
+   },
+   {
+    "seq": 6201,
+    "u": 15936,
+    "afterSwapMs": 26.098769,
+    "afterEventsMs": 29.375077,
+    "staleByMs": 11.025538,
+    "replyAgeMs": 10.725539
+   },
+   {
+    "seq": 6202,
+    "u": 15938,
+    "afterSwapMs": 27.205539,
+    "afterEventsMs": 29.175385,
+    "staleByMs": 9.345,
+    "replyAgeMs": 12.257461
+   },
+   {
+    "seq": 6203,
+    "u": 15940,
+    "afterSwapMs": 27.960538,
+    "afterEventsMs": 29.824307,
+    "staleByMs": 11.609461,
+    "replyAgeMs": 13.276077
+   },
+   {
+    "seq": 6204,
+    "u": 15942,
+    "afterSwapMs": 28.597615,
+    "afterEventsMs": 30.220077,
+    "staleByMs": 11.674769,
+    "replyAgeMs": 19.904846
+   },
+   {
+    "seq": 6205,
+    "u": 15945,
+    "afterSwapMs": 27.088615,
+    "afterEventsMs": 29.113231,
+    "staleByMs": 9.721846,
+    "replyAgeMs": 8.786769
+   },
+   {
+    "seq": 6206,
+    "u": 15947,
+    "afterSwapMs": 27.653461,
+    "afterEventsMs": 30.04423,
+    "staleByMs": 9.964538,
+    "replyAgeMs": 14.361616
+   },
+   {
+    "seq": 6207,
+    "u": 15949,
+    "afterSwapMs": 23.806384,
+    "afterEventsMs": 27.988923,
+    "staleByMs": 7.388846,
+    "replyAgeMs": 20.569308
+   },
+   {
+    "seq": 6208,
+    "u": 15952,
+    "afterSwapMs": 28.082846,
+    "afterEventsMs": 29.912693,
+    "staleByMs": 9.641231,
+    "replyAgeMs": 9.818154
+   },
+   {
+    "seq": 6209,
+    "u": 15954,
+    "afterSwapMs": 24.743615,
+    "afterEventsMs": 28.839077,
+    "staleByMs": 8.292846,
+    "replyAgeMs": 10.889923
+   },
+   {
+    "seq": 6210,
+    "u": 15956,
+    "afterSwapMs": 25.904,
+    "afterEventsMs": 29.240615,
+    "staleByMs": 10.376615,
+    "replyAgeMs": 10.22
+   },
+   {
+    "seq": 6211,
+    "u": 15958,
+    "afterSwapMs": 24.592616,
+    "afterEventsMs": 28.878846,
+    "staleByMs": 9.963462,
+    "replyAgeMs": 12.749538
+   },
+   {
+    "seq": 6212,
+    "u": 15960,
+    "afterSwapMs": 26.726846,
+    "afterEventsMs": 29.086231,
+    "staleByMs": 10.843154,
+    "replyAgeMs": 14.238154
+   },
+   {
+    "seq": 6213,
+    "u": 15962,
+    "afterSwapMs": 28.227153,
+    "afterEventsMs": 30.02123,
+    "staleByMs": 9.96923,
+    "replyAgeMs": 15.704
+   },
+   {
+    "seq": 6214,
+    "u": 15964,
+    "afterSwapMs": 25.858461,
+    "afterEventsMs": 29.707077,
+    "staleByMs": 7.662077,
+    "replyAgeMs": 15.309616
+   },
+   {
+    "seq": 6215,
+    "u": 15967,
+    "afterSwapMs": 24.939692,
+    "afterEventsMs": 29.098769,
+    "staleByMs": 10.091154,
+    "replyAgeMs": 8.782385
+   },
+   {
+    "seq": 6216,
+    "u": 15969,
+    "afterSwapMs": 25.137461,
+    "afterEventsMs": 29.351,
+    "staleByMs": 9.360538,
+    "replyAgeMs": 7.135693
+   },
+   {
+    "seq": 6217,
+    "u": 15971,
+    "afterSwapMs": 25.877539,
+    "afterEventsMs": 29.676077,
+    "staleByMs": 9.631154,
+    "replyAgeMs": 8.580307
+   },
+   {
+    "seq": 6218,
+    "u": 15973,
+    "afterSwapMs": 26.288308,
+    "afterEventsMs": 28.988538,
+    "staleByMs": 10.867,
+    "replyAgeMs": 10.955692
+   },
+   {
+    "seq": 6219,
+    "u": 15975,
+    "afterSwapMs": 25.976616,
+    "afterEventsMs": 29.560923,
+    "staleByMs": 10.371077,
+    "replyAgeMs": 8.656077
+   },
+   {
+    "seq": 6220,
+    "u": 15977,
+    "afterSwapMs": 26.89723,
+    "afterEventsMs": 29.131,
+    "staleByMs": 9.738692,
+    "replyAgeMs": 8.549616
+   },
+   {
+    "seq": 6221,
+    "u": 15979,
+    "afterSwapMs": 26.367462,
+    "afterEventsMs": 30.152616,
+    "staleByMs": 7.382154,
+    "replyAgeMs": 11.050154
+   },
+   {
+    "seq": 6222,
+    "u": 15981,
+    "afterSwapMs": 27.056307,
+    "afterEventsMs": 29.926538,
+    "staleByMs": 8.092384,
+    "replyAgeMs": 10.284231
+   },
+   {
+    "seq": 6223,
+    "u": 15983,
+    "afterSwapMs": 25.755307,
+    "afterEventsMs": 29.479307,
+    "staleByMs": 10.881538,
+    "replyAgeMs": 8.174846
+   },
+   {
+    "seq": 6224,
+    "u": 15985,
+    "afterSwapMs": 25.963384,
+    "afterEventsMs": 29.613153,
+    "staleByMs": 9.395384,
+    "replyAgeMs": 9.567693
+   },
+   {
+    "seq": 6225,
+    "u": 15987,
+    "afterSwapMs": 26.387154,
+    "afterEventsMs": 28.728616,
+    "staleByMs": 9.965308,
+    "replyAgeMs": 10.097461
+   },
+   {
+    "seq": 6226,
+    "u": 15989,
+    "afterSwapMs": 27.098154,
+    "afterEventsMs": 29.772538,
+    "staleByMs": 10.075692,
+    "replyAgeMs": 11.907154
+   },
+   {
+    "seq": 6227,
+    "u": 15991,
+    "afterSwapMs": 28.662769,
+    "afterEventsMs": 30.171077,
+    "staleByMs": 10.558846,
+    "replyAgeMs": 15.130154
+   },
+   {
+    "seq": 6228,
+    "u": 15994,
+    "afterSwapMs": 25.333615,
+    "afterEventsMs": 29.343384,
+    "staleByMs": 7.984384,
+    "replyAgeMs": 8.908308
+   },
+   {
+    "seq": 6229,
+    "u": 15996,
+    "afterSwapMs": 25.590384,
+    "afterEventsMs": 29.643384,
+    "staleByMs": 10.888615,
+    "replyAgeMs": 10.247077
+   },
+   {
+    "seq": 6230,
+    "u": 15998,
+    "afterSwapMs": 28.066769,
+    "afterEventsMs": 29.763,
+    "staleByMs": 11.192846,
+    "replyAgeMs": 8.841847
+   },
+   {
+    "seq": 6231,
+    "u": 16000,
+    "afterSwapMs": 26.966462,
+    "afterEventsMs": 28.959616,
+    "staleByMs": 9.348539,
+    "replyAgeMs": 11.738154
+   },
+   {
+    "seq": 6232,
+    "u": 16002,
+    "afterSwapMs": 27.884615,
+    "afterEventsMs": 29.682538,
+    "staleByMs": 12.095692,
+    "replyAgeMs": 13.391616
+   },
+   {
+    "seq": 6233,
+    "u": 16004,
+    "afterSwapMs": 27.238692,
+    "afterEventsMs": 29.524615,
+    "staleByMs": 8.02123,
+    "replyAgeMs": 17.532693
+   },
+   {
+    "seq": 6234,
+    "u": 16006,
+    "afterSwapMs": 25.718693,
+    "afterEventsMs": 29.610154,
+    "staleByMs": 10.096616,
+    "replyAgeMs": 15.63423
+   },
+   {
+    "seq": 6235,
+    "u": 16008,
+    "afterSwapMs": 26.681231,
+    "afterEventsMs": 29.940539,
+    "staleByMs": 8.751308,
+    "replyAgeMs": 13.114846
+   },
+   {
+    "seq": 6236,
+    "u": 16010,
+    "afterSwapMs": 26.207692,
+    "afterEventsMs": 30.093308,
+    "staleByMs": 9.258769,
+    "replyAgeMs": 19.117769
+   },
+   {
+    "seq": 6237,
+    "u": 16013,
+    "afterSwapMs": 27.027924,
+    "afterEventsMs": 29.584847,
+    "staleByMs": 10.766385,
+    "replyAgeMs": 9.71823
+   },
+   {
+    "seq": 6238,
+    "u": 16015,
+    "afterSwapMs": 26.299,
+    "afterEventsMs": 29.479923,
+    "staleByMs": 8.451,
+    "replyAgeMs": 10.167077
+   },
+   {
+    "seq": 6239,
+    "u": 16017,
+    "afterSwapMs": 25.762462,
+    "afterEventsMs": 29.251616,
+    "staleByMs": 10.081539,
+    "replyAgeMs": 8.605846
+   },
+   {
+    "seq": 6240,
+    "u": 16019,
+    "afterSwapMs": 28.643154,
+    "afterEventsMs": 30.247461,
+    "staleByMs": 10.516923,
+    "replyAgeMs": 11.086154
+   },
+   {
+    "seq": 6241,
+    "u": 16021,
+    "afterSwapMs": 27.478539,
+    "afterEventsMs": 29.904616,
+    "staleByMs": 8.876385,
+    "replyAgeMs": 14.941153
+   },
+   {
+    "seq": 6242,
+    "u": 16023,
+    "afterSwapMs": 26.664846,
+    "afterEventsMs": 29.90523,
+    "staleByMs": 9.52523,
+    "replyAgeMs": 18.658462
+   },
+   {
+    "seq": 6243,
+    "u": 16026,
+    "afterSwapMs": 27.609231,
+    "afterEventsMs": 30.208308,
+    "staleByMs": 9.323923,
+    "replyAgeMs": 11.519154
+   },
+   {
+    "seq": 6244,
+    "u": 16028,
+    "afterSwapMs": 27.591384,
+    "afterEventsMs": 29.957846,
+    "staleByMs": 10.936615,
+    "replyAgeMs": 15.295385
+   },
+   {
+    "seq": 6245,
+    "u": 16030,
+    "afterSwapMs": 27.895462,
+    "afterEventsMs": 29.886231,
+    "staleByMs": 9.275462,
+    "replyAgeMs": 12.967308
+   },
+   {
+    "seq": 6246,
+    "u": 16032,
+    "afterSwapMs": 25.786077,
+    "afterEventsMs": 29.42677,
+    "staleByMs": 9.304924,
+    "replyAgeMs": 16.901615
+   },
+   {
+    "seq": 6247,
+    "u": 16035,
+    "afterSwapMs": 26.587385,
+    "afterEventsMs": 29.911692,
+    "staleByMs": 9.839692,
+    "replyAgeMs": 9.723
+   },
+   {
+    "seq": 6248,
+    "u": 16037,
+    "afterSwapMs": 24.874077,
+    "afterEventsMs": 28.986077,
+    "staleByMs": 8.580615,
+    "replyAgeMs": 5.951769
+   },
+   {
+    "seq": 6249,
+    "u": 16038,
+    "afterSwapMs": 25.149307,
+    "afterEventsMs": 28.740384,
+    "staleByMs": 8.312,
+    "replyAgeMs": 21.676923
+   },
+   {
+    "seq": 6250,
+    "u": 16041,
+    "afterSwapMs": 28.047923,
+    "afterEventsMs": 29.584539,
+    "staleByMs": 8.626693,
+    "replyAgeMs": 11.662538
+   },
+   {
+    "seq": 6251,
+    "u": 16043,
+    "afterSwapMs": 25.929462,
+    "afterEventsMs": 29.66177,
+    "staleByMs": 9.204,
+    "replyAgeMs": 8.154846
+   },
+   {
+    "seq": 6252,
+    "u": 16045,
+    "afterSwapMs": 26.262539,
+    "afterEventsMs": 29.189231,
+    "staleByMs": 10.710847,
+    "replyAgeMs": 7.670461
+   },
+   {
+    "seq": 6253,
+    "u": 16046,
+    "afterSwapMs": 27.988385,
+    "afterEventsMs": 29.968923,
+    "staleByMs": 11.431769,
+    "replyAgeMs": 20.545846
+   },
+   {
+    "seq": 6254,
+    "u": 16049,
+    "afterSwapMs": 24.943385,
+    "afterEventsMs": 29.108616,
+    "staleByMs": 8.731693,
+    "replyAgeMs": 9.712076
+   },
+   {
+    "seq": 6255,
+    "u": 16051,
+    "afterSwapMs": 28.605,
+    "afterEventsMs": 30.481,
+    "staleByMs": 8.052077,
+    "replyAgeMs": 15.720615
+   },
+   {
+    "seq": 6256,
+    "u": 16053,
+    "afterSwapMs": 24.851308,
+    "afterEventsMs": 28.810692,
+    "staleByMs": 11.402462,
+    "replyAgeMs": 18.238769
+   },
+   {
+    "seq": 6257,
+    "u": 16056,
+    "afterSwapMs": 26.772,
+    "afterEventsMs": 30.088923,
+    "staleByMs": 10.088308,
+    "replyAgeMs": 9.699154
+   },
+   {
+    "seq": 6258,
+    "u": 16058,
+    "afterSwapMs": 25.682846,
+    "afterEventsMs": 30.132923,
+    "staleByMs": 9.196384,
+    "replyAgeMs": 8.590154
+   },
+   {
+    "seq": 6259,
+    "u": 16060,
+    "afterSwapMs": 24.518154,
+    "afterEventsMs": 29.586077,
+    "staleByMs": 8.767077,
+    "replyAgeMs": 10.512692
+   },
+   {
+    "seq": 6260,
+    "u": 16062,
+    "afterSwapMs": 25.539,
+    "afterEventsMs": 29.885462,
+    "staleByMs": 9.131385,
+    "replyAgeMs": 6.165923
+   },
+   {
+    "seq": 6261,
+    "u": 16063,
+    "afterSwapMs": 25.445539,
+    "afterEventsMs": 29.144,
+    "staleByMs": 8.331077,
+    "replyAgeMs": 21.004308
+   },
+   {
+    "seq": 6262,
+    "u": 16066,
+    "afterSwapMs": 25.466846,
+    "afterEventsMs": 29.548077,
+    "staleByMs": 9.807077,
+    "replyAgeMs": 13.192231
+   },
+   {
+    "seq": 6263,
+    "u": 16068,
+    "afterSwapMs": 26.503,
+    "afterEventsMs": 30.068538,
+    "staleByMs": 8.774461,
+    "replyAgeMs": 10.603154
+   },
+   {
+    "seq": 6264,
+    "u": 16070,
+    "afterSwapMs": 27.244615,
+    "afterEventsMs": 30.552846,
+    "staleByMs": 9.857538,
+    "replyAgeMs": 8.532077
+   },
+   {
+    "seq": 6265,
+    "u": 16072,
+    "afterSwapMs": 25.932615,
+    "afterEventsMs": 30.054769,
+    "staleByMs": 11.242462,
+    "replyAgeMs": 9.046462
+   },
+   {
+    "seq": 6266,
+    "u": 16074,
+    "afterSwapMs": 29.39877,
+    "afterEventsMs": 31.464077,
+    "staleByMs": 13.148077,
+    "replyAgeMs": 9.095692
+   },
+   {
+    "seq": 6267,
+    "u": 16076,
+    "afterSwapMs": 27.987385,
+    "afterEventsMs": 30.456539,
+    "staleByMs": 11.622769,
+    "replyAgeMs": 10.104
+   },
+   {
+    "seq": 6268,
+    "u": 16078,
+    "afterSwapMs": 24.686462,
+    "afterEventsMs": 29.086231,
+    "staleByMs": 11.438231,
+    "replyAgeMs": 10.934077
+   },
+   {
+    "seq": 6269,
+    "u": 16080,
+    "afterSwapMs": 25.596616,
+    "afterEventsMs": 29.861616,
+    "staleByMs": 7.414539,
+    "replyAgeMs": 9.191077
+   },
+   {
+    "seq": 6270,
+    "u": 16082,
+    "afterSwapMs": 26.618692,
+    "afterEventsMs": 30.206384,
+    "staleByMs": 7.973461,
+    "replyAgeMs": 18.290231
+   },
+   {
+    "seq": 6271,
+    "u": 16085,
+    "afterSwapMs": 26.541846,
+    "afterEventsMs": 29.675692,
+    "staleByMs": 11.234153,
+    "replyAgeMs": 9.425847
+   },
+   {
+    "seq": 6272,
+    "u": 16086,
+    "afterSwapMs": 28.97623,
+    "afterEventsMs": 30.973461,
+    "staleByMs": 11.619,
+    "replyAgeMs": 24.498462
+   },
+   {
+    "seq": 6273,
+    "u": 16088,
+    "afterSwapMs": 26.357461,
+    "afterEventsMs": 30.484,
+    "staleByMs": 11.846769,
+    "replyAgeMs": 18.556693
+   },
+   {
+    "seq": 6274,
+    "u": 16090,
+    "afterSwapMs": 28.203077,
+    "afterEventsMs": 30.204616,
+    "staleByMs": 9.175385,
+    "replyAgeMs": 21.058461
+   },
+   {
+    "seq": 6275,
+    "u": 16092,
+    "afterSwapMs": 24.790154,
+    "afterEventsMs": 29.726769,
+    "staleByMs": 9.866231,
+    "replyAgeMs": 18.667693
+   },
+   {
+    "seq": 6276,
+    "u": 16094,
+    "afterSwapMs": 28.227923,
+    "afterEventsMs": 29.796846,
+    "staleByMs": 10.325538,
+    "replyAgeMs": 19.978539
+   },
+   {
+    "seq": 6277,
+    "u": 16096,
+    "afterSwapMs": 27.692231,
+    "afterEventsMs": 29.447693,
+    "staleByMs": 11.703385,
+    "replyAgeMs": 20.186153
+   },
+   {
+    "seq": 6278,
+    "u": 16098,
+    "afterSwapMs": 25.919077,
+    "afterEventsMs": 28.763692,
+    "staleByMs": 10.459077,
+    "replyAgeMs": 19.834539
+   },
+   {
+    "seq": 6279,
+    "u": 16100,
+    "afterSwapMs": 25.475461,
+    "afterEventsMs": 29.065923,
+    "staleByMs": 9.866769,
+    "replyAgeMs": 23.733847
+   },
+   {
+    "seq": 6280,
+    "u": 16103,
+    "afterSwapMs": 27.755,
+    "afterEventsMs": 30.168538,
+    "staleByMs": 10.677462,
+    "replyAgeMs": 9.431692
+   },
+   {
+    "seq": 6281,
+    "u": 16104,
+    "afterSwapMs": 27.652308,
+    "afterEventsMs": 30.434154,
+    "staleByMs": 10.787692,
+    "replyAgeMs": 23.749846
+   },
+   {
+    "seq": 6282,
+    "u": 16106,
+    "afterSwapMs": 25.915154,
+    "afterEventsMs": 29.904384,
+    "staleByMs": 12.388077,
+    "replyAgeMs": 19.795693
+   },
+   {
+    "seq": 6283,
+    "u": 16108,
+    "afterSwapMs": 25.743077,
+    "afterEventsMs": 29.408308,
+    "staleByMs": 7.758693,
+    "replyAgeMs": 13.848077
+   },
+   {
+    "seq": 6284,
+    "u": 16110,
+    "afterSwapMs": 24.017,
+    "afterEventsMs": 28.357923,
+    "staleByMs": 6.88923,
+    "replyAgeMs": 20.545539
+   },
+   {
+    "seq": 6285,
+    "u": 16113,
+    "afterSwapMs": 25.031693,
+    "afterEventsMs": 29.085616,
+    "staleByMs": 9.488616,
+    "replyAgeMs": 6.031076
+   },
+   {
+    "seq": 6286,
+    "u": 16115,
+    "afterSwapMs": 25.996615,
+    "afterEventsMs": 29.917461,
+    "staleByMs": 9.402154,
+    "replyAgeMs": 10.921615
+   },
+   {
+    "seq": 6287,
+    "u": 16118,
+    "afterSwapMs": 25.588616,
+    "afterEventsMs": 29.443154,
+    "staleByMs": 7.411462,
+    "replyAgeMs": 5.049538
+   },
+   {
+    "seq": 6288,
+    "u": 16119,
+    "afterSwapMs": 24.028077,
+    "afterEventsMs": 29.176077,
+    "staleByMs": 8.040923,
+    "replyAgeMs": 18.436846
+   },
+   {
+    "seq": 6289,
+    "u": 16121,
+    "afterSwapMs": 23.932,
+    "afterEventsMs": 29.089846,
+    "staleByMs": 7.823154,
+    "replyAgeMs": 15.776539
+   },
+   {
+    "seq": 6290,
+    "u": 16123,
+    "afterSwapMs": 25.369538,
+    "afterEventsMs": 28.51023,
+    "staleByMs": 7.970846,
+    "replyAgeMs": 20.722077
+   },
+   {
+    "seq": 6291,
+    "u": 16126,
+    "afterSwapMs": 26.191307,
+    "afterEventsMs": 29.458461,
+    "staleByMs": 10.663076,
+    "replyAgeMs": 9.388
+   },
+   {
+    "seq": 6292,
+    "u": 16128,
+    "afterSwapMs": 27.087077,
+    "afterEventsMs": 29.129846,
+    "staleByMs": 10.444308,
+    "replyAgeMs": 9.711692
+   },
+   {
+    "seq": 6293,
+    "u": 16130,
+    "afterSwapMs": 28.195692,
+    "afterEventsMs": 30.145538,
+    "staleByMs": 10.547923,
+    "replyAgeMs": 15.019385
+   },
+   {
+    "seq": 6294,
+    "u": 16133,
+    "afterSwapMs": 27.530692,
+    "afterEventsMs": 29.235,
+    "staleByMs": 8.503692,
+    "replyAgeMs": 9.604385
+   },
+   {
+    "seq": 6295,
+    "u": 16135,
+    "afterSwapMs": 25.549154,
+    "afterEventsMs": 29.549461,
+    "staleByMs": 11.049769,
+    "replyAgeMs": 9.488385
+   },
+   {
+    "seq": 6296,
+    "u": 16137,
+    "afterSwapMs": 26.786154,
+    "afterEventsMs": 29.267385,
+    "staleByMs": 8.421,
+    "replyAgeMs": 10.838462
+   },
+   {
+    "seq": 6297,
+    "u": 16139,
+    "afterSwapMs": 25.404308,
+    "afterEventsMs": 29.645923,
+    "staleByMs": 7.313308,
+    "replyAgeMs": 11.251384
+   },
+   {
+    "seq": 6298,
+    "u": 16141,
+    "afterSwapMs": 25.717769,
+    "afterEventsMs": 29.476846,
+    "staleByMs": 8.974385,
+    "replyAgeMs": 15.471077
+   },
+   {
+    "seq": 6299,
+    "u": 16143,
+    "afterSwapMs": 27.001308,
+    "afterEventsMs": 30.489538,
+    "staleByMs": 9.399769,
+    "replyAgeMs": 10.467692
+   },
+   {
+    "seq": 6300,
+    "u": 16144,
+    "afterSwapMs": 25.206769,
+    "afterEventsMs": 28.989538,
+    "staleByMs": 8.446385,
+    "replyAgeMs": 23.422462
+   },
+   {
+    "seq": 6301,
+    "u": 16147,
+    "afterSwapMs": 25.256615,
+    "afterEventsMs": 28.951077,
+    "staleByMs": 10.885846,
+    "replyAgeMs": 11.308077
+   },
+   {
+    "seq": 6302,
+    "u": 16149,
+    "afterSwapMs": 22.430539,
+    "afterEventsMs": 28.330231,
+    "staleByMs": 7.674462,
+    "replyAgeMs": 16.173231
+   },
+   {
+    "seq": 6303,
+    "u": 16151,
+    "afterSwapMs": 25.189846,
+    "afterEventsMs": 29.079077,
+    "staleByMs": 8.017769,
+    "replyAgeMs": 13.801308
+   },
+   {
+    "seq": 6304,
+    "u": 16153,
+    "afterSwapMs": 25.518539,
+    "afterEventsMs": 29.702231,
+    "staleByMs": 8.648077,
+    "replyAgeMs": 7.937846
+   },
+   {
+    "seq": 6305,
+    "u": 16155,
+    "afterSwapMs": 25.878539,
+    "afterEventsMs": 29.282231,
+    "staleByMs": 9.141308,
+    "replyAgeMs": 11.194384
+   },
+   {
+    "seq": 6306,
+    "u": 16157,
+    "afterSwapMs": 27.138769,
+    "afterEventsMs": 30.208846,
+    "staleByMs": 10.754461,
+    "replyAgeMs": 14.425308
+   },
+   {
+    "seq": 6307,
+    "u": 16159,
+    "afterSwapMs": 27.234153,
+    "afterEventsMs": 29.767769,
+    "staleByMs": 11.372615,
+    "replyAgeMs": 14.551924
+   },
+   {
+    "seq": 6308,
+    "u": 16161,
+    "afterSwapMs": 25.839077,
+    "afterEventsMs": 29.451308,
+    "staleByMs": 8.028846,
+    "replyAgeMs": 14.830154
+   },
+   {
+    "seq": 6309,
+    "u": 16163,
+    "afterSwapMs": 26.516615,
+    "afterEventsMs": 29.227385,
+    "staleByMs": 10.753769,
+    "replyAgeMs": 17.496385
+   },
+   {
+    "seq": 6310,
+    "u": 16166,
+    "afterSwapMs": 26.04177,
+    "afterEventsMs": 30.279,
+    "staleByMs": 10.647308,
+    "replyAgeMs": 8.636615
+   },
+   {
+    "seq": 6311,
+    "u": 16168,
+    "afterSwapMs": 27.558539,
+    "afterEventsMs": 30.432,
+    "staleByMs": 8.470539,
+    "replyAgeMs": 6.206077
+   },
+   {
+    "seq": 6312,
+    "u": 16170,
+    "afterSwapMs": 26.864615,
+    "afterEventsMs": 29.967077,
+    "staleByMs": 11.090154,
+    "replyAgeMs": 15.008
+   },
+   {
+    "seq": 6313,
+    "u": 16172,
+    "afterSwapMs": 27.750077,
+    "afterEventsMs": 30.083385,
+    "staleByMs": 9.854385,
+    "replyAgeMs": 14.174846
+   },
+   {
+    "seq": 6314,
+    "u": 16174,
+    "afterSwapMs": 29.196693,
+    "afterEventsMs": 30.676077,
+    "staleByMs": 10.667154,
+    "replyAgeMs": 14.293154
+   },
+   {
+    "seq": 6315,
+    "u": 16176,
+    "afterSwapMs": 25.064615,
+    "afterEventsMs": 28.989,
+    "staleByMs": 9.542769,
+    "replyAgeMs": 13.42577
+   },
+   {
+    "seq": 6316,
+    "u": 16178,
+    "afterSwapMs": 28.394077,
+    "afterEventsMs": 30.051308,
+    "staleByMs": 9.535385,
+    "replyAgeMs": 18.855692
+   },
+   {
+    "seq": 6317,
+    "u": 16180,
+    "afterSwapMs": 27.916692,
+    "afterEventsMs": 29.849308,
+    "staleByMs": 8.520692,
+    "replyAgeMs": 22.256538
+   },
+   {
+    "seq": 6318,
+    "u": 16182,
+    "afterSwapMs": 24.734769,
+    "afterEventsMs": 28.890462,
+    "staleByMs": 9.081539,
+    "replyAgeMs": 19.208615
+   },
+   {
+    "seq": 6319,
+    "u": 16184,
+    "afterSwapMs": 24.851,
+    "afterEventsMs": 29.410154,
+    "staleByMs": 9.718769,
+    "replyAgeMs": 18.933923
+   },
+   {
+    "seq": 6320,
+    "u": 16186,
+    "afterSwapMs": 25.691693,
+    "afterEventsMs": 29.684308,
+    "staleByMs": 9.110693,
+    "replyAgeMs": 20.944307
+   },
+   {
+    "seq": 6321,
+    "u": 16188,
+    "afterSwapMs": 24.217923,
+    "afterEventsMs": 29.770461,
+    "staleByMs": 12.341307,
+    "replyAgeMs": 17.537154
+   },
+   {
+    "seq": 6322,
+    "u": 16190,
+    "afterSwapMs": 26.685539,
+    "afterEventsMs": 30.668692,
+    "staleByMs": 11.756385,
+    "replyAgeMs": 17.284308
+   },
+   {
+    "seq": 6323,
+    "u": 16193,
+    "afterSwapMs": 24.87577,
+    "afterEventsMs": 29.452,
+    "staleByMs": 9.115077,
+    "replyAgeMs": 7.802154
+   },
+   {
+    "seq": 6324,
+    "u": 16195,
+    "afterSwapMs": 27.92,
+    "afterEventsMs": 30.145538,
+    "staleByMs": 9.483077,
+    "replyAgeMs": 13.816231
+   },
+   {
+    "seq": 6325,
+    "u": 16197,
+    "afterSwapMs": 25.322769,
+    "afterEventsMs": 28.884846,
+    "staleByMs": 11.280846,
+    "replyAgeMs": 18.451462
+   },
+   {
+    "seq": 6326,
+    "u": 16200,
+    "afterSwapMs": 27.864923,
+    "afterEventsMs": 30.433308,
+    "staleByMs": 11.382538,
+    "replyAgeMs": 6.029539
+   },
+   {
+    "seq": 6327,
+    "u": 16202,
+    "afterSwapMs": 27.306692,
+    "afterEventsMs": 30.222385,
+    "staleByMs": 10.293538,
+    "replyAgeMs": 11.231769
+   },
+   {
+    "seq": 6328,
+    "u": 16204,
+    "afterSwapMs": 26.321923,
+    "afterEventsMs": 29.897615,
+    "staleByMs": 8.817307,
+    "replyAgeMs": 8.006154
+   },
+   {
+    "seq": 6329,
+    "u": 16206,
+    "afterSwapMs": 24.640693,
+    "afterEventsMs": 29.043462,
+    "staleByMs": 8.260616,
+    "replyAgeMs": 14.450692
+   },
+   {
+    "seq": 6330,
+    "u": 16208,
+    "afterSwapMs": 27.463077,
+    "afterEventsMs": 30.844231,
+    "staleByMs": 11.727077,
+    "replyAgeMs": 16.941308
+   },
+   {
+    "seq": 6331,
+    "u": 16210,
+    "afterSwapMs": 28.675692,
+    "afterEventsMs": 30.378153,
+    "staleByMs": 8.937,
+    "replyAgeMs": 17.644231
+   },
+   {
+    "seq": 6332,
+    "u": 16212,
+    "afterSwapMs": 25.445847,
+    "afterEventsMs": 29.185231,
+    "staleByMs": 8.675077,
+    "replyAgeMs": 16.144538
+   },
+   {
+    "seq": 6333,
+    "u": 16214,
+    "afterSwapMs": 25.459077,
+    "afterEventsMs": 29.101308,
+    "staleByMs": 9.463693,
+    "replyAgeMs": 17.76123
+   },
+   {
+    "seq": 6334,
+    "u": 16216,
+    "afterSwapMs": 28.066692,
+    "afterEventsMs": 30.499077,
+    "staleByMs": 9.436231,
+    "replyAgeMs": 17.246462
+   },
+   {
+    "seq": 6335,
+    "u": 16218,
+    "afterSwapMs": 26.739769,
+    "afterEventsMs": 30.666153,
+    "staleByMs": 12.708692,
+    "replyAgeMs": 15.566154
+   },
+   {
+    "seq": 6336,
+    "u": 16220,
+    "afterSwapMs": 27.398462,
+    "afterEventsMs": 29.976616,
+    "staleByMs": 11.553154,
+    "replyAgeMs": 16.566846
+   },
+   {
+    "seq": 6337,
+    "u": 16222,
+    "afterSwapMs": 27.265847,
+    "afterEventsMs": 29.403616,
+    "staleByMs": 11.135385,
+    "replyAgeMs": 15.318153
+   },
+   {
+    "seq": 6338,
+    "u": 16224,
+    "afterSwapMs": 27.493154,
+    "afterEventsMs": 29.839385,
+    "staleByMs": 8.899692,
+    "replyAgeMs": 20.249615
+   },
+   {
+    "seq": 6339,
+    "u": 16226,
+    "afterSwapMs": 26.070461,
+    "afterEventsMs": 29.683461,
+    "staleByMs": 9.13823,
+    "replyAgeMs": 16.127693
+   },
+   {
+    "seq": 6340,
+    "u": 16228,
+    "afterSwapMs": 25.431077,
+    "afterEventsMs": 29.710846,
+    "staleByMs": 8.094461,
+    "replyAgeMs": 14.505231
+   },
+   {
+    "seq": 6341,
+    "u": 16230,
+    "afterSwapMs": 25.489462,
+    "afterEventsMs": 29.459308,
+    "staleByMs": 9.033846,
+    "replyAgeMs": 18.013846
+   },
+   {
+    "seq": 6342,
+    "u": 16232,
+    "afterSwapMs": 27.171308,
+    "afterEventsMs": 29.701539,
+    "staleByMs": 8.741846,
+    "replyAgeMs": 20.442231
+   },
+   {
+    "seq": 6343,
+    "u": 16234,
+    "afterSwapMs": 24.985847,
+    "afterEventsMs": 29.317231,
+    "staleByMs": 8.185847,
+    "replyAgeMs": 16.287384
+   },
+   {
+    "seq": 6344,
+    "u": 16236,
+    "afterSwapMs": 26.983692,
+    "afterEventsMs": 29.286462,
+    "staleByMs": 9.239308,
+    "replyAgeMs": 23.064
+   },
+   {
+    "seq": 6345,
+    "u": 16239,
+    "afterSwapMs": 26.020615,
+    "afterEventsMs": 30.158769,
+    "staleByMs": 9.530461,
+    "replyAgeMs": 5.907692
+   },
+   {
+    "seq": 6346,
+    "u": 16241,
+    "afterSwapMs": 24.662077,
+    "afterEventsMs": 29.121231,
+    "staleByMs": 9.079923,
+    "replyAgeMs": 6.932308
+   },
+   {
+    "seq": 6347,
+    "u": 16242,
+    "afterSwapMs": 26.424231,
+    "afterEventsMs": 30.074693,
+    "staleByMs": 9.824923,
+    "replyAgeMs": 21.360307
+   },
+   {
+    "seq": 6348,
+    "u": 16244,
+    "afterSwapMs": 24.201923,
+    "afterEventsMs": 30.036,
+    "staleByMs": 12.177538,
+    "replyAgeMs": 21.636308
+   },
+   {
+    "seq": 6349,
+    "u": 16246,
+    "afterSwapMs": 26.174539,
+    "afterEventsMs": 29.702154,
+    "staleByMs": 7.757308,
+    "replyAgeMs": 16.418153
+   },
+   {
+    "seq": 6350,
+    "u": 16249,
+    "afterSwapMs": 27.792846,
+    "afterEventsMs": 29.977461,
+    "staleByMs": 11.857461,
+    "replyAgeMs": 10.738154
+   },
+   {
+    "seq": 6351,
+    "u": 16251,
+    "afterSwapMs": 28.132384,
+    "afterEventsMs": 29.888615,
+    "staleByMs": 7.526846,
+    "replyAgeMs": 9.276847
+   },
+   {
+    "seq": 6352,
+    "u": 16253,
+    "afterSwapMs": 25.121846,
+    "afterEventsMs": 29.150692,
+    "staleByMs": 9.802077,
+    "replyAgeMs": 16.073615
+   },
+   {
+    "seq": 6353,
+    "u": 16255,
+    "afterSwapMs": 26.708538,
+    "afterEventsMs": 30.286153,
+    "staleByMs": 10.83323,
+    "replyAgeMs": 16.757308
+   },
+   {
+    "seq": 6354,
+    "u": 16258,
+    "afterSwapMs": 26.459769,
+    "afterEventsMs": 29.992308,
+    "staleByMs": 9.573,
+    "replyAgeMs": 8.752231
+   },
+   {
+    "seq": 6355,
+    "u": 16260,
+    "afterSwapMs": 27.293231,
+    "afterEventsMs": 29.538769,
+    "staleByMs": 10.194846,
+    "replyAgeMs": 10.994462
+   },
+   {
+    "seq": 6356,
+    "u": 16262,
+    "afterSwapMs": 25.908846,
+    "afterEventsMs": 29.997538,
+    "staleByMs": 9.136538,
+    "replyAgeMs": 14.662462
+   },
+   {
+    "seq": 6357,
+    "u": 16264,
+    "afterSwapMs": 26.876307,
+    "afterEventsMs": 30.161538,
+    "staleByMs": 9.952846,
+    "replyAgeMs": 12.308
+   },
+   {
+    "seq": 6358,
+    "u": 16266,
+    "afterSwapMs": 25.244923,
+    "afterEventsMs": 29.037154,
+    "staleByMs": 11.010384,
+    "replyAgeMs": 10.777923
+   },
+   {
+    "seq": 6359,
+    "u": 16268,
+    "afterSwapMs": 26.355693,
+    "afterEventsMs": 29.917539,
+    "staleByMs": 10.240923,
+    "replyAgeMs": 10.700307
+   },
+   {
+    "seq": 6360,
+    "u": 16270,
+    "afterSwapMs": 28.171461,
+    "afterEventsMs": 29.943692,
+    "staleByMs": 10.669615,
+    "replyAgeMs": 15.357769
+   },
+   {
+    "seq": 6361,
+    "u": 16272,
+    "afterSwapMs": 27.702538,
+    "afterEventsMs": 29.464307,
+    "staleByMs": 10.127769,
+    "replyAgeMs": 17.966693
+   },
+   {
+    "seq": 6362,
+    "u": 16274,
+    "afterSwapMs": 27.878154,
+    "afterEventsMs": 29.567385,
+    "staleByMs": 10.205616,
+    "replyAgeMs": 17.801769
+   },
+   {
+    "seq": 6363,
+    "u": 16276,
+    "afterSwapMs": 27.736,
+    "afterEventsMs": 30.169231,
+    "staleByMs": 11.023923,
+    "replyAgeMs": 16.185538
+   },
+   {
+    "seq": 6364,
+    "u": 16278,
+    "afterSwapMs": 26.350385,
+    "afterEventsMs": 30.184231,
+    "staleByMs": 9.690693,
+    "replyAgeMs": 13.452077
+   },
+   {
+    "seq": 6365,
+    "u": 16280,
+    "afterSwapMs": 24.183692,
+    "afterEventsMs": 29.046154,
+    "staleByMs": 8.542154,
+    "replyAgeMs": 14.118461
+   },
+   {
+    "seq": 6366,
+    "u": 16282,
+    "afterSwapMs": 25.778385,
+    "afterEventsMs": 29.653231,
+    "staleByMs": 9.346077,
+    "replyAgeMs": 16.276923
+   },
+   {
+    "seq": 6367,
+    "u": 16284,
+    "afterSwapMs": 26.628,
+    "afterEventsMs": 30.320231,
+    "staleByMs": 8.743923,
+    "replyAgeMs": 14.433846
+   },
+   {
+    "seq": 6368,
+    "u": 16286,
+    "afterSwapMs": 26.245,
+    "afterEventsMs": 29.778153,
+    "staleByMs": 10.25423,
+    "replyAgeMs": 14.539923
+   },
+   {
+    "seq": 6369,
+    "u": 16288,
+    "afterSwapMs": 26.116308,
+    "afterEventsMs": 29.791077,
+    "staleByMs": 8.248923,
+    "replyAgeMs": 11.928307
+   },
+   {
+    "seq": 6370,
+    "u": 16290,
+    "afterSwapMs": 26.221615,
+    "afterEventsMs": 30.075769,
+    "staleByMs": 8.81723,
+    "replyAgeMs": 21.027616
+   },
+   {
+    "seq": 6371,
+    "u": 16293,
+    "afterSwapMs": 25.415,
+    "afterEventsMs": 28.56177,
+    "staleByMs": 6.943693,
+    "replyAgeMs": 10.045615
+   },
+   {
+    "seq": 6372,
+    "u": 16295,
+    "afterSwapMs": 27.355923,
+    "afterEventsMs": 31.013769,
+    "staleByMs": 10.441231,
+    "replyAgeMs": 7.12
+   },
+   {
+    "seq": 6373,
+    "u": 16298,
+    "afterSwapMs": 23.91723,
+    "afterEventsMs": 28.37323,
+    "staleByMs": 9.560077,
+    "replyAgeMs": 9.638077
+   },
+   {
+    "seq": 6374,
+    "u": 16300,
+    "afterSwapMs": 25.560615,
+    "afterEventsMs": 29.968923,
+    "staleByMs": 10.968615,
+    "replyAgeMs": 11.696923
+   },
+   {
+    "seq": 6375,
+    "u": 16302,
+    "afterSwapMs": 24.513461,
+    "afterEventsMs": 28.160307,
+    "staleByMs": 10.347692,
+    "replyAgeMs": 15.123385
+   },
+   {
+    "seq": 6376,
+    "u": 16304,
+    "afterSwapMs": 27.794538,
+    "afterEventsMs": 30.074769,
+    "staleByMs": 7.892308,
+    "replyAgeMs": 18.691308
+   },
+   {
+    "seq": 6377,
+    "u": 16307,
+    "afterSwapMs": 26.366231,
+    "afterEventsMs": 29.549923,
+    "staleByMs": 9.283077,
+    "replyAgeMs": 6.561461
+   },
+   {
+    "seq": 6378,
+    "u": 16309,
+    "afterSwapMs": 27.713923,
+    "afterEventsMs": 29.960077,
+    "staleByMs": 11.324308,
+    "replyAgeMs": 10.282692
+   },
+   {
+    "seq": 6379,
+    "u": 16311,
+    "afterSwapMs": 27.721615,
+    "afterEventsMs": 29.923461,
+    "staleByMs": 12.486461,
+    "replyAgeMs": 8.239924
+   },
+   {
+    "seq": 6380,
+    "u": 16313,
+    "afterSwapMs": 27.378385,
+    "afterEventsMs": 29.854462,
+    "staleByMs": 10.836846,
+    "replyAgeMs": 3.385538
+   },
+   {
+    "seq": 6381,
+    "u": 16315,
+    "afterSwapMs": 28.100231,
+    "afterEventsMs": 29.984616,
+    "staleByMs": 8.904847,
+    "replyAgeMs": 4.380307
+   },
+   {
+    "seq": 6382,
+    "u": 16317,
+    "afterSwapMs": 27.989307,
+    "afterEventsMs": 29.899077,
+    "staleByMs": 12.112077,
+    "replyAgeMs": 3.521154
+   },
+   {
+    "seq": 6383,
+    "u": 16318,
+    "afterSwapMs": 28.622231,
+    "afterEventsMs": 30.144077,
+    "staleByMs": 8.755769,
+    "replyAgeMs": 18.295
+   },
+   {
+    "seq": 6384,
+    "u": 16320,
+    "afterSwapMs": 25.323077,
+    "afterEventsMs": 29.914231,
+    "staleByMs": 9.390769,
+    "replyAgeMs": 15.005539
+   },
+   {
+    "seq": 6385,
+    "u": 16323,
+    "afterSwapMs": 28.235384,
+    "afterEventsMs": 29.962461,
+    "staleByMs": 9.04423,
+    "replyAgeMs": 8.445308
+   },
+   {
+    "seq": 6386,
+    "u": 16325,
+    "afterSwapMs": 26.467769,
+    "afterEventsMs": 29.266538,
+    "staleByMs": 11.342461,
+    "replyAgeMs": 9.462154
+   },
+   {
+    "seq": 6387,
+    "u": 16327,
+    "afterSwapMs": 26.415615,
+    "afterEventsMs": 30.003923,
+    "staleByMs": 9.289153,
+    "replyAgeMs": 11.39577
+   },
+   {
+    "seq": 6388,
+    "u": 16329,
+    "afterSwapMs": 28.450693,
+    "afterEventsMs": 30.088616,
+    "staleByMs": 8.330385,
+    "replyAgeMs": 9.502461
+   },
+   {
+    "seq": 6389,
+    "u": 16331,
+    "afterSwapMs": 25.26677,
+    "afterEventsMs": 29.339,
+    "staleByMs": 9.472,
+    "replyAgeMs": 8.653538
+   },
+   {
+    "seq": 6390,
+    "u": 16333,
+    "afterSwapMs": 25.532692,
+    "afterEventsMs": 29.697538,
+    "staleByMs": 11.243769,
+    "replyAgeMs": 8.865847
+   },
+   {
+    "seq": 6391,
+    "u": 16335,
+    "afterSwapMs": 25.274461,
+    "afterEventsMs": 29.547769,
+    "staleByMs": 10.489307,
+    "replyAgeMs": 8.771616
+   },
+   {
+    "seq": 6392,
+    "u": 16337,
+    "afterSwapMs": 24.799923,
+    "afterEventsMs": 28.573769,
+    "staleByMs": 9.263077,
+    "replyAgeMs": 11.726154
+   },
+   {
+    "seq": 6393,
+    "u": 16338,
+    "afterSwapMs": 25.991385,
+    "afterEventsMs": 29.125462,
+    "staleByMs": 8.026154,
+    "replyAgeMs": 20.376923
+   },
+   {
+    "seq": 6394,
+    "u": 16340,
+    "afterSwapMs": 23.418461,
+    "afterEventsMs": 28.779615,
+    "staleByMs": 8.249846,
+    "replyAgeMs": 22.402539
+   },
+   {
+    "seq": 6395,
+    "u": 16342,
+    "afterSwapMs": 27.485,
+    "afterEventsMs": 30.027692,
+    "staleByMs": 8.945615,
+    "replyAgeMs": 18.496923
+   },
+   {
+    "seq": 6396,
+    "u": 16344,
+    "afterSwapMs": 26.865231,
+    "afterEventsMs": 29.959,
+    "staleByMs": 9.478462,
+    "replyAgeMs": 15.471384
+   },
+   {
+    "seq": 6397,
+    "u": 16346,
+    "afterSwapMs": 27.756308,
+    "afterEventsMs": 29.602693,
+    "staleByMs": 10.552616,
+    "replyAgeMs": 19.097
+   },
+   {
+    "seq": 6398,
+    "u": 16349,
+    "afterSwapMs": 26.399,
+    "afterEventsMs": 29.005231,
+    "staleByMs": 9.957461,
+    "replyAgeMs": 13.442154
+   },
+   {
+    "seq": 6399,
+    "u": 16351,
+    "afterSwapMs": 28.184308,
+    "afterEventsMs": 30.161231,
+    "staleByMs": 9.281539,
+    "replyAgeMs": 15.255769
+   },
+   {
+    "seq": 6400,
+    "u": 16353,
+    "afterSwapMs": 27.350692,
+    "afterEventsMs": 29.313769,
+    "staleByMs": 7.868308,
+    "replyAgeMs": 17.814154
+   },
+   {
+    "seq": 6401,
+    "u": 16356,
+    "afterSwapMs": 26.661923,
+    "afterEventsMs": 28.608692,
+    "staleByMs": 7.035462,
+    "replyAgeMs": 9.684231
+   },
+   {
+    "seq": 6402,
+    "u": 16358,
+    "afterSwapMs": 25.803077,
+    "afterEventsMs": 29.293846,
+    "staleByMs": 10.261769,
+    "replyAgeMs": 12.035461
+   },
+   {
+    "seq": 6403,
+    "u": 16360,
+    "afterSwapMs": 26.256923,
+    "afterEventsMs": 29.111,
+    "staleByMs": 12.189846,
+    "replyAgeMs": 9.513308
+   },
+   {
+    "seq": 6404,
+    "u": 16362,
+    "afterSwapMs": 28.223462,
+    "afterEventsMs": 29.695154,
+    "staleByMs": 9.853538,
+    "replyAgeMs": 15.942154
+   },
+   {
+    "seq": 6405,
+    "u": 16364,
+    "afterSwapMs": 25.687692,
+    "afterEventsMs": 29.356923,
+    "staleByMs": 8.886462,
+    "replyAgeMs": 8.331692
+   },
+   {
+    "seq": 6406,
+    "u": 16366,
+    "afterSwapMs": 25.334077,
+    "afterEventsMs": 29.152231,
+    "staleByMs": 8.689539,
+    "replyAgeMs": 5.767077
+   },
+   {
+    "seq": 6407,
+    "u": 16368,
+    "afterSwapMs": 24.471769,
+    "afterEventsMs": 28.921846,
+    "staleByMs": 8.315153,
+    "replyAgeMs": 8.051385
+   },
+   {
+    "seq": 6408,
+    "u": 16370,
+    "afterSwapMs": 26.224077,
+    "afterEventsMs": 30.071154,
+    "staleByMs": 11.332923,
+    "replyAgeMs": 8.319692
+   },
+   {
+    "seq": 6409,
+    "u": 16372,
+    "afterSwapMs": 25.633539,
+    "afterEventsMs": 29.992923,
+    "staleByMs": 8.923769,
+    "replyAgeMs": 3.126769
+   },
+   {
+    "seq": 6410,
+    "u": 16373,
+    "afterSwapMs": 25.363153,
+    "afterEventsMs": 29.240692,
+    "staleByMs": 8.943461,
+    "replyAgeMs": 22.023616
+   },
+   {
+    "seq": 6411,
+    "u": 16376,
+    "afterSwapMs": 25.508924,
+    "afterEventsMs": 30.166385,
+    "staleByMs": 7.583924,
+    "replyAgeMs": 7.951153
+   },
+   {
+    "seq": 6412,
+    "u": 16378,
+    "afterSwapMs": 27.57323,
+    "afterEventsMs": 30.774461,
+    "staleByMs": 9.842692,
+    "replyAgeMs": 7.949923
+   },
+   {
+    "seq": 6413,
+    "u": 16380,
+    "afterSwapMs": 26.942154,
+    "afterEventsMs": 29.902462,
+    "staleByMs": 8.610077,
+    "replyAgeMs": 10.308615
+   },
+   {
+    "seq": 6414,
+    "u": 16382,
+    "afterSwapMs": 26.613846,
+    "afterEventsMs": 29.733,
+    "staleByMs": 8.652308,
+    "replyAgeMs": 13.234461
+   },
+   {
+    "seq": 6415,
+    "u": 16385,
+    "afterSwapMs": 25.005923,
+    "afterEventsMs": 29.329923,
+    "staleByMs": 7.572,
+    "replyAgeMs": 7.261462
+   },
+   {
+    "seq": 6416,
+    "u": 16387,
+    "afterSwapMs": 27.551077,
+    "afterEventsMs": 29.564077,
+    "staleByMs": 9.711077,
+    "replyAgeMs": 6.031
+   },
+   {
+    "seq": 6417,
+    "u": 16389,
+    "afterSwapMs": 24.570462,
+    "afterEventsMs": 29.445462,
+    "staleByMs": 10.987,
+    "replyAgeMs": 11.403769
+   },
+   {
+    "seq": 6418,
+    "u": 16391,
+    "afterSwapMs": 25.917923,
+    "afterEventsMs": 29.658769,
+    "staleByMs": 8.607769,
+    "replyAgeMs": 22.893539
+   },
+   {
+    "seq": 6419,
+    "u": 16394,
+    "afterSwapMs": 28.431077,
+    "afterEventsMs": 30.473307,
+    "staleByMs": 9.352692,
+    "replyAgeMs": 10.855
+   },
+   {
+    "seq": 6420,
+    "u": 16396,
+    "afterSwapMs": 27.302231,
+    "afterEventsMs": 30.173923,
+    "staleByMs": 12.409,
+    "replyAgeMs": 9.617461
+   },
+   {
+    "seq": 6421,
+    "u": 16398,
+    "afterSwapMs": 28.391,
+    "afterEventsMs": 29.935,
+    "staleByMs": 8.179,
+    "replyAgeMs": 11.088385
+   },
+   {
+    "seq": 6422,
+    "u": 16400,
+    "afterSwapMs": 25.642693,
+    "afterEventsMs": 30.071693,
+    "staleByMs": 9.642693,
+    "replyAgeMs": 6.892307
+   },
+   {
+    "seq": 6423,
+    "u": 16401,
+    "afterSwapMs": 26.034077,
+    "afterEventsMs": 29.049769,
+    "staleByMs": 8.285846,
+    "replyAgeMs": 18.390539
+   },
+   {
+    "seq": 6424,
+    "u": 16404,
+    "afterSwapMs": 25.382077,
+    "afterEventsMs": 29.081538,
+    "staleByMs": 8.735308,
+    "replyAgeMs": 9.469231
+   },
+   {
+    "seq": 6425,
+    "u": 16406,
+    "afterSwapMs": 25.662847,
+    "afterEventsMs": 29.268308,
+    "staleByMs": 11.497924,
+    "replyAgeMs": 11.503615
+   },
+   {
+    "seq": 6426,
+    "u": 16408,
+    "afterSwapMs": 27.65077,
+    "afterEventsMs": 30.211077,
+    "staleByMs": 11.577847,
+    "replyAgeMs": 16.26
+   },
+   {
+    "seq": 6427,
+    "u": 16410,
+    "afterSwapMs": 24.965539,
+    "afterEventsMs": 28.974769,
+    "staleByMs": 9.609231,
+    "replyAgeMs": 14.455461
+   },
+   {
+    "seq": 6428,
+    "u": 16413,
+    "afterSwapMs": 28.364308,
+    "afterEventsMs": 30.164,
+    "staleByMs": 8.925462,
+    "replyAgeMs": 10.282769
+   },
+   {
+    "seq": 6429,
+    "u": 16415,
+    "afterSwapMs": 25.899616,
+    "afterEventsMs": 30.119693,
+    "staleByMs": 10.564231,
+    "replyAgeMs": 12.711384
+   },
+   {
+    "seq": 6430,
+    "u": 16417,
+    "afterSwapMs": 26.757616,
+    "afterEventsMs": 29.441616,
+    "staleByMs": 10.435154,
+    "replyAgeMs": 18.231076
+   },
+   {
+    "seq": 6431,
+    "u": 16420,
+    "afterSwapMs": 27.375923,
+    "afterEventsMs": 29.520923,
+    "staleByMs": 10.150462,
+    "replyAgeMs": 9.656385
+   },
+   {
+    "seq": 6432,
+    "u": 16422,
+    "afterSwapMs": 27.118692,
+    "afterEventsMs": 30.482461,
+    "staleByMs": 11.867,
+    "replyAgeMs": 9.709539
+   },
+   {
+    "seq": 6433,
+    "u": 16424,
+    "afterSwapMs": 28.091924,
+    "afterEventsMs": 29.671385,
+    "staleByMs": 9.137231,
+    "replyAgeMs": 14.295153
+   },
+   {
+    "seq": 6434,
+    "u": 16426,
+    "afterSwapMs": 27.491692,
+    "afterEventsMs": 30.200538,
+    "staleByMs": 11.563308,
+    "replyAgeMs": 11.032923
+   },
+   {
+    "seq": 6435,
+    "u": 16428,
+    "afterSwapMs": 27.663385,
+    "afterEventsMs": 29.320538,
+    "staleByMs": 11.558154,
+    "replyAgeMs": 14.439154
+   },
+   {
+    "seq": 6436,
+    "u": 16430,
+    "afterSwapMs": 27.866154,
+    "afterEventsMs": 30.381461,
+    "staleByMs": 10.295615,
+    "replyAgeMs": 12.508308
+   },
+   {
+    "seq": 6437,
+    "u": 16432,
+    "afterSwapMs": 24.979,
+    "afterEventsMs": 29.015308,
+    "staleByMs": 9.375077,
+    "replyAgeMs": 12.384385
+   },
+   {
+    "seq": 6438,
+    "u": 16434,
+    "afterSwapMs": 24.482384,
+    "afterEventsMs": 28.167076,
+    "staleByMs": 8.899,
+    "replyAgeMs": 19.522231
+   },
+   {
+    "seq": 6439,
+    "u": 16437,
+    "afterSwapMs": 27.333615,
+    "afterEventsMs": 30.31823,
+    "staleByMs": 9.460384,
+    "replyAgeMs": 9.426385
+   },
+   {
+    "seq": 6440,
+    "u": 16439,
+    "afterSwapMs": 24.744923,
+    "afterEventsMs": 28.954231,
+    "staleByMs": 9.920077,
+    "replyAgeMs": 12.913769
+   },
+   {
+    "seq": 6441,
+    "u": 16442,
+    "afterSwapMs": 27.406385,
+    "afterEventsMs": 29.830693,
+    "staleByMs": 9.51877,
+    "replyAgeMs": 11.347384
+   },
+   {
+    "seq": 6442,
+    "u": 16444,
+    "afterSwapMs": 24.77877,
+    "afterEventsMs": 28.545539,
+    "staleByMs": 10.525231,
+    "replyAgeMs": 13.369307
+   },
+   {
+    "seq": 6443,
+    "u": 16446,
+    "afterSwapMs": 26.411077,
+    "afterEventsMs": 29.266462,
+    "staleByMs": 11.075385,
+    "replyAgeMs": 19.286461
+   },
+   {
+    "seq": 6444,
+    "u": 16449,
+    "afterSwapMs": 26.899077,
+    "afterEventsMs": 29.564923,
+    "staleByMs": 9.575616,
+    "replyAgeMs": 11.837538
+   },
+   {
+    "seq": 6445,
+    "u": 16451,
+    "afterSwapMs": 26.918538,
+    "afterEventsMs": 29.681308,
+    "staleByMs": 10.565308,
+    "replyAgeMs": 11.552308
+   },
+   {
+    "seq": 6446,
+    "u": 16453,
+    "afterSwapMs": 26.634462,
+    "afterEventsMs": 28.352693,
+    "staleByMs": 10.362539,
+    "replyAgeMs": 20.550077
+   },
+   {
+    "seq": 6447,
+    "u": 16455,
+    "afterSwapMs": 25.559077,
+    "afterEventsMs": 29.532539,
+    "staleByMs": 8.572308,
+    "replyAgeMs": 17.139692
+   },
+   {
+    "seq": 6448,
+    "u": 16457,
+    "afterSwapMs": 24.806461,
+    "afterEventsMs": 29.353231,
+    "staleByMs": 10.376,
+    "replyAgeMs": 18.991308
+   },
+   {
+    "seq": 6449,
+    "u": 16460,
+    "afterSwapMs": 24.028,
+    "afterEventsMs": 29.017846,
+    "staleByMs": 11.369846,
+    "replyAgeMs": 12.902077
+   },
+   {
+    "seq": 6450,
+    "u": 16462,
+    "afterSwapMs": 27.483692,
+    "afterEventsMs": 30.052616,
+    "staleByMs": 9.675692,
+    "replyAgeMs": 15.549615
+   },
+   {
+    "seq": 6451,
+    "u": 16464,
+    "afterSwapMs": 25.608616,
+    "afterEventsMs": 29.232,
+    "staleByMs": 9.190539,
+    "replyAgeMs": 17.647
+   },
+   {
+    "seq": 6452,
+    "u": 16466,
+    "afterSwapMs": 27.838154,
+    "afterEventsMs": 29.532616,
+    "staleByMs": 9.607077,
+    "replyAgeMs": 20.534461
+   },
+   {
+    "seq": 6453,
+    "u": 16469,
+    "afterSwapMs": 25.680077,
+    "afterEventsMs": 29.686538,
+    "staleByMs": 8.838154,
+    "replyAgeMs": 11.054462
+   },
+   {
+    "seq": 6454,
+    "u": 16471,
+    "afterSwapMs": 25.275692,
+    "afterEventsMs": 29.415692,
+    "staleByMs": 8.961231,
+    "replyAgeMs": 11.983692
+   },
+   {
+    "seq": 6455,
+    "u": 16473,
+    "afterSwapMs": 24.356615,
+    "afterEventsMs": 28.848923,
+    "staleByMs": 9.501923,
+    "replyAgeMs": 15.487385
+   },
+   {
+    "seq": 6456,
+    "u": 16475,
+    "afterSwapMs": 28.493154,
+    "afterEventsMs": 30.768616,
+    "staleByMs": 10.614692,
+    "replyAgeMs": 14.626154
+   },
+   {
+    "seq": 6457,
+    "u": 16478,
+    "afterSwapMs": 26.01777,
+    "afterEventsMs": 29.594154,
+    "staleByMs": 9.936847,
+    "replyAgeMs": 7.053615
+   },
+   {
+    "seq": 6458,
+    "u": 16480,
+    "afterSwapMs": 26.203692,
+    "afterEventsMs": 29.373307,
+    "staleByMs": 10.134769,
+    "replyAgeMs": 6.198385
+   },
+   {
+    "seq": 6459,
+    "u": 16482,
+    "afterSwapMs": 26.331384,
+    "afterEventsMs": 29.608,
+    "staleByMs": 10.206154,
+    "replyAgeMs": 12.819693
+   },
+   {
+    "seq": 6460,
+    "u": 16484,
+    "afterSwapMs": 26.634462,
+    "afterEventsMs": 28.856615,
+    "staleByMs": 9.238461,
+    "replyAgeMs": 18.255923
+   },
+   {
+    "seq": 6461,
+    "u": 16486,
+    "afterSwapMs": 25.933461,
+    "afterEventsMs": 29.874077,
+    "staleByMs": 9.211923,
+    "replyAgeMs": 15.124077
+   },
+   {
+    "seq": 6462,
+    "u": 16488,
+    "afterSwapMs": 25.627,
+    "afterEventsMs": 29.476847,
+    "staleByMs": 8.480308,
+    "replyAgeMs": 14.428307
+   },
+   {
+    "seq": 6463,
+    "u": 16490,
+    "afterSwapMs": 26.269154,
+    "afterEventsMs": 30.602154,
+    "staleByMs": 9.472308,
+    "replyAgeMs": 11.725538
+   },
+   {
+    "seq": 6464,
+    "u": 16492,
+    "afterSwapMs": 26.354154,
+    "afterEventsMs": 30.201154,
+    "staleByMs": 10.187,
+    "replyAgeMs": 8.784923
+   },
+   {
+    "seq": 6465,
+    "u": 16494,
+    "afterSwapMs": 27.479923,
+    "afterEventsMs": 29.887923,
+    "staleByMs": 8.478769,
+    "replyAgeMs": 9.135384
+   },
+   {
+    "seq": 6466,
+    "u": 16495,
+    "afterSwapMs": 24.971077,
+    "afterEventsMs": 29.087077,
+    "staleByMs": 11.357231,
+    "replyAgeMs": 18.684615
+   },
+   {
+    "seq": 6467,
+    "u": 16498,
+    "afterSwapMs": 25.574076,
+    "afterEventsMs": 29.428538,
+    "staleByMs": 9.618153,
+    "replyAgeMs": 12.977924
+   },
+   {
+    "seq": 6468,
+    "u": 16500,
+    "afterSwapMs": 24.819615,
+    "afterEventsMs": 29.112539,
+    "staleByMs": 11.421154,
+    "replyAgeMs": 9.518461
+   },
+   {
+    "seq": 6469,
+    "u": 16502,
+    "afterSwapMs": 27.363693,
+    "afterEventsMs": 30.657846,
+    "staleByMs": 8.504385,
+    "replyAgeMs": 8.460231
+   },
+   {
+    "seq": 6470,
+    "u": 16504,
+    "afterSwapMs": 24.952923,
+    "afterEventsMs": 29.368308,
+    "staleByMs": 10.994539,
+    "replyAgeMs": 17.685461
+   },
+   {
+    "seq": 6471,
+    "u": 16507,
+    "afterSwapMs": 27.793308,
+    "afterEventsMs": 29.994538,
+    "staleByMs": 11.090461,
+    "replyAgeMs": 7.376846
+   },
+   {
+    "seq": 6472,
+    "u": 16509,
+    "afterSwapMs": 26.015,
+    "afterEventsMs": 29.375693,
+    "staleByMs": 10.907077,
+    "replyAgeMs": 14.764
+   },
+   {
+    "seq": 6473,
+    "u": 16512,
+    "afterSwapMs": 27.517538,
+    "afterEventsMs": 29.824615,
+    "staleByMs": 10.084,
+    "replyAgeMs": 7.560385
+   },
+   {
+    "seq": 6474,
+    "u": 16514,
+    "afterSwapMs": 27.795462,
+    "afterEventsMs": 30.074846,
+    "staleByMs": 10.74,
+    "replyAgeMs": 12.267615
+   },
+   {
+    "seq": 6475,
+    "u": 16517,
+    "afterSwapMs": 25.721769,
+    "afterEventsMs": 28.466154,
+    "staleByMs": 8.479077,
+    "replyAgeMs": 6.297616
+   },
+   {
+    "seq": 6476,
+    "u": 16519,
+    "afterSwapMs": 25.659384,
+    "afterEventsMs": 29.511692,
+    "staleByMs": 8.202461,
+    "replyAgeMs": 9.292923
+   },
+   {
+    "seq": 6477,
+    "u": 16521,
+    "afterSwapMs": 26.058077,
+    "afterEventsMs": 30.001231,
+    "staleByMs": 9.782769,
+    "replyAgeMs": 10.734154
+   },
+   {
+    "seq": 6478,
+    "u": 16523,
+    "afterSwapMs": 26.173231,
+    "afterEventsMs": 29.727077,
+    "staleByMs": 8.627461,
+    "replyAgeMs": 11.615077
+   },
+   {
+    "seq": 6479,
+    "u": 16525,
+    "afterSwapMs": 26.694154,
+    "afterEventsMs": 29.432924,
+    "staleByMs": 9.09777,
+    "replyAgeMs": 12.695153
+   },
+   {
+    "seq": 6480,
+    "u": 16527,
+    "afterSwapMs": 28.132538,
+    "afterEventsMs": 30.383077,
+    "staleByMs": 9.58,
+    "replyAgeMs": 15.93577
+   },
+   {
+    "seq": 6481,
+    "u": 16529,
+    "afterSwapMs": 23.905615,
+    "afterEventsMs": 28.625,
+    "staleByMs": 9.327154,
+    "replyAgeMs": 10.092538
+   },
+   {
+    "seq": 6482,
+    "u": 16532,
+    "afterSwapMs": 25.655615,
+    "afterEventsMs": 28.227385,
+    "staleByMs": 10.416231,
+    "replyAgeMs": 18.164385
+   },
+   {
+    "seq": 6483,
+    "u": 16534,
+    "afterSwapMs": 27.382384,
+    "afterEventsMs": 30.033231,
+    "staleByMs": 12.527615,
+    "replyAgeMs": 17.526154
+   },
+   {
+    "seq": 6484,
+    "u": 16536,
+    "afterSwapMs": 27.756846,
+    "afterEventsMs": 29.960231,
+    "staleByMs": 10.746384,
+    "replyAgeMs": 24.045539
+   },
+   {
+    "seq": 6485,
+    "u": 16539,
+    "afterSwapMs": 27.908923,
+    "afterEventsMs": 29.855693,
+    "staleByMs": 11.745462,
+    "replyAgeMs": 8.937538
+   },
+   {
+    "seq": 6486,
+    "u": 16541,
+    "afterSwapMs": 27.890846,
+    "afterEventsMs": 29.631384,
+    "staleByMs": 8.91323,
+    "replyAgeMs": 15.672231
+   },
+   {
+    "seq": 6487,
+    "u": 16543,
+    "afterSwapMs": 27.423077,
+    "afterEventsMs": 30.146461,
+    "staleByMs": 8.43723,
+    "replyAgeMs": 19.194154
+   },
+   {
+    "seq": 6488,
+    "u": 16546,
+    "afterSwapMs": 25.489923,
+    "afterEventsMs": 29.368308,
+    "staleByMs": 10.05177,
+    "replyAgeMs": 8.298769
+   },
+   {
+    "seq": 6489,
+    "u": 16548,
+    "afterSwapMs": 26.442154,
+    "afterEventsMs": 29.457539,
+    "staleByMs": 10.389231,
+    "replyAgeMs": 19.925538
+   },
+   {
+    "seq": 6490,
+    "u": 16550,
+    "afterSwapMs": 28.350462,
+    "afterEventsMs": 31.265,
+    "staleByMs": 8.697616,
+    "replyAgeMs": 12.265461
+   },
+   {
+    "seq": 6491,
+    "u": 16552,
+    "afterSwapMs": 25.762154,
+    "afterEventsMs": 29.604308,
+    "staleByMs": 10.456385,
+    "replyAgeMs": 18.626769
+   },
+   {
+    "seq": 6492,
+    "u": 16555,
+    "afterSwapMs": 28.497846,
+    "afterEventsMs": 30.224,
+    "staleByMs": 9.574231,
+    "replyAgeMs": 12.330154
+   },
+   {
+    "seq": 6493,
+    "u": 16557,
+    "afterSwapMs": 26.870538,
+    "afterEventsMs": 29.352615,
+    "staleByMs": 9.556385,
+    "replyAgeMs": 17.636
+   },
+   {
+    "seq": 6494,
+    "u": 16559,
+    "afterSwapMs": 26.737153,
+    "afterEventsMs": 29.474769,
+    "staleByMs": 11.168923,
+    "replyAgeMs": 19.367154
+   },
+   {
+    "seq": 6495,
+    "u": 16562,
+    "afterSwapMs": 26.609846,
+    "afterEventsMs": 29.057923,
+    "staleByMs": 9.853,
+    "replyAgeMs": 9.71877
+   },
+   {
+    "seq": 6496,
+    "u": 16564,
+    "afterSwapMs": 27.232923,
+    "afterEventsMs": 30.288,
+    "staleByMs": 9.818539,
+    "replyAgeMs": 8.799384
+   },
+   {
+    "seq": 6497,
+    "u": 16566,
+    "afterSwapMs": 26.498462,
+    "afterEventsMs": 28.991462,
+    "staleByMs": 8.183462,
+    "replyAgeMs": 13.683077
+   },
+   {
+    "seq": 6498,
+    "u": 16568,
+    "afterSwapMs": 25.289307,
+    "afterEventsMs": 29.336615,
+    "staleByMs": 8.969,
+    "replyAgeMs": 12.000846
+   },
+   {
+    "seq": 6499,
+    "u": 16570,
+    "afterSwapMs": 25.518769,
+    "afterEventsMs": 29.65823,
+    "staleByMs": 9.285923,
+    "replyAgeMs": 11.833231
+   },
+   {
+    "seq": 6500,
+    "u": 16572,
+    "afterSwapMs": 24.945231,
+    "afterEventsMs": 29.296,
+    "staleByMs": 9.197847,
+    "replyAgeMs": 9.632077
+   },
+   {
+    "seq": 6501,
+    "u": 16574,
+    "afterSwapMs": 26.324077,
+    "afterEventsMs": 29.906461,
+    "staleByMs": 9.204384,
+    "replyAgeMs": 8.527923
+   },
+   {
+    "seq": 6502,
+    "u": 16576,
+    "afterSwapMs": 27.783385,
+    "afterEventsMs": 29.580231,
+    "staleByMs": 10.467616,
+    "replyAgeMs": 8.305
+   },
+   {
+    "seq": 6503,
+    "u": 16578,
+    "afterSwapMs": 24.859692,
+    "afterEventsMs": 28.664231,
+    "staleByMs": 9.692308,
+    "replyAgeMs": 20.097923
+   },
+   {
+    "seq": 6504,
+    "u": 16581,
+    "afterSwapMs": 27.691769,
+    "afterEventsMs": 30.112615,
+    "staleByMs": 11.408384,
+    "replyAgeMs": 5.826077
+   },
+   {
+    "seq": 6505,
+    "u": 16583,
+    "afterSwapMs": 27.539077,
+    "afterEventsMs": 30.345153,
+    "staleByMs": 11.511615,
+    "replyAgeMs": 17.20277
+   },
+   {
+    "seq": 6506,
+    "u": 16585,
+    "afterSwapMs": 27.989231,
+    "afterEventsMs": 29.88,
+    "staleByMs": 10.967308,
+    "replyAgeMs": 19.985308
+   },
+   {
+    "seq": 6507,
+    "u": 16587,
+    "afterSwapMs": 28.369231,
+    "afterEventsMs": 30.278154,
+    "staleByMs": 8.924615,
+    "replyAgeMs": 23.570154
+   },
+   {
+    "seq": 6508,
+    "u": 16589,
+    "afterSwapMs": 26.010538,
+    "afterEventsMs": 29.407692,
+    "staleByMs": 9.865846,
+    "replyAgeMs": 20.544231
+   },
+   {
+    "seq": 6509,
+    "u": 16591,
+    "afterSwapMs": 26.433154,
+    "afterEventsMs": 30.475692,
+    "staleByMs": 9.449769,
+    "replyAgeMs": 16.237231
+   },
+   {
+    "seq": 6510,
+    "u": 16593,
+    "afterSwapMs": 24.646846,
+    "afterEventsMs": 28.384692,
+    "staleByMs": 8.283154,
+    "replyAgeMs": 18.093846
+   },
+   {
+    "seq": 6511,
+    "u": 16595,
+    "afterSwapMs": 28.605769,
+    "afterEventsMs": 30.352539,
+    "staleByMs": 9.494769,
+    "replyAgeMs": 23.266461
+   },
+   {
+    "seq": 6512,
+    "u": 16597,
+    "afterSwapMs": 27.815615,
+    "afterEventsMs": 30.133769,
+    "staleByMs": 10.762461,
+    "replyAgeMs": 21.952692
+   },
+   {
+    "seq": 6513,
+    "u": 16599,
+    "afterSwapMs": 27.325769,
+    "afterEventsMs": 30.102154,
+    "staleByMs": 10.479923,
+    "replyAgeMs": 11.870154
+   },
+   {
+    "seq": 6514,
+    "u": 16602,
+    "afterSwapMs": 24.122769,
+    "afterEventsMs": 27.986462,
+    "staleByMs": 8.919385,
+    "replyAgeMs": 11.295692
+   },
+   {
+    "seq": 6515,
+    "u": 16604,
+    "afterSwapMs": 28.149308,
+    "afterEventsMs": 30.297,
+    "staleByMs": 10.964,
+    "replyAgeMs": 13.470769
+   },
+   {
+    "seq": 6516,
+    "u": 16606,
+    "afterSwapMs": 26.190769,
+    "afterEventsMs": 29.903,
+    "staleByMs": 12.278462,
+    "replyAgeMs": 12.913
+   },
+   {
+    "seq": 6517,
+    "u": 16608,
+    "afterSwapMs": 24.926461,
+    "afterEventsMs": 29.087692,
+    "staleByMs": 9.437538,
+    "replyAgeMs": 9.160539
+   },
+   {
+    "seq": 6518,
+    "u": 16609,
+    "afterSwapMs": 26.269538,
+    "afterEventsMs": 30.137307,
+    "staleByMs": 8.438769,
+    "replyAgeMs": 18.146154
+   },
+   {
+    "seq": 6519,
+    "u": 16612,
+    "afterSwapMs": 27.93977,
+    "afterEventsMs": 30.106539,
+    "staleByMs": 9.809847,
+    "replyAgeMs": 14.417461
+   },
+   {
+    "seq": 6520,
+    "u": 16614,
+    "afterSwapMs": 25.955077,
+    "afterEventsMs": 29.810847,
+    "staleByMs": 9.055154,
+    "replyAgeMs": 18.202461
+   },
+   {
+    "seq": 6521,
+    "u": 16616,
+    "afterSwapMs": 25.968692,
+    "afterEventsMs": 29.639462,
+    "staleByMs": 9.204385,
+    "replyAgeMs": 14.979923
+   },
+   {
+    "seq": 6522,
+    "u": 16619,
+    "afterSwapMs": 27.879616,
+    "afterEventsMs": 29.853847,
+    "staleByMs": 10.361462,
+    "replyAgeMs": 16.405846
+   },
+   {
+    "seq": 6523,
+    "u": 16621,
+    "afterSwapMs": 27.170769,
+    "afterEventsMs": 30.003077,
+    "staleByMs": 11.208923,
+    "replyAgeMs": 14.403462
+   },
+   {
+    "seq": 6524,
+    "u": 16623,
+    "afterSwapMs": 24.405,
+    "afterEventsMs": 29.207693,
+    "staleByMs": 9.89077,
+    "replyAgeMs": 18.326769
+   },
+   {
+    "seq": 6525,
+    "u": 16625,
+    "afterSwapMs": 27.658154,
+    "afterEventsMs": 29.452615,
+    "staleByMs": 10.019385,
+    "replyAgeMs": 15.064846
+   },
+   {
+    "seq": 6526,
+    "u": 16628,
+    "afterSwapMs": 26.463077,
+    "afterEventsMs": 29.989615,
+    "staleByMs": 9.643692,
+    "replyAgeMs": 7.310692
+   },
+   {
+    "seq": 6527,
+    "u": 16630,
+    "afterSwapMs": 25.813231,
+    "afterEventsMs": 29.145923,
+    "staleByMs": 11.872,
+    "replyAgeMs": 8.779692
+   },
+   {
+    "seq": 6528,
+    "u": 16631,
+    "afterSwapMs": 29.017154,
+    "afterEventsMs": 30.653462,
+    "staleByMs": 10.34277,
+    "replyAgeMs": 21.754538
+   },
+   {
+    "seq": 6529,
+    "u": 16634,
+    "afterSwapMs": 25.945769,
+    "afterEventsMs": 29.550461,
+    "staleByMs": 8.416615,
+    "replyAgeMs": 11.041
+   },
+   {
+    "seq": 6530,
+    "u": 16636,
+    "afterSwapMs": 26.912538,
+    "afterEventsMs": 29.699923,
+    "staleByMs": 10.364307,
+    "replyAgeMs": 9.746154
+   },
+   {
+    "seq": 6531,
+    "u": 16638,
+    "afterSwapMs": 25.552923,
+    "afterEventsMs": 29.488308,
+    "staleByMs": 9.173769,
+    "replyAgeMs": 13.371692
+   },
+   {
+    "seq": 6532,
+    "u": 16640,
+    "afterSwapMs": 25.248077,
+    "afterEventsMs": 29.704,
+    "staleByMs": 9.149924,
+    "replyAgeMs": 13.276846
+   },
+   {
+    "seq": 6533,
+    "u": 16643,
+    "afterSwapMs": 29.176385,
+    "afterEventsMs": 31.048385,
+    "staleByMs": 9.234462,
+    "replyAgeMs": 9.758076
+   },
+   {
+    "seq": 6534,
+    "u": 16645,
+    "afterSwapMs": 26.700924,
+    "afterEventsMs": 29.115462,
+    "staleByMs": 8.308,
+    "replyAgeMs": 9.539615
+   },
+   {
+    "seq": 6535,
+    "u": 16646,
+    "afterSwapMs": 25.23623,
+    "afterEventsMs": 29.943077,
+    "staleByMs": 8.885461,
+    "replyAgeMs": 21.378154
+   },
+   {
+    "seq": 6536,
+    "u": 16648,
+    "afterSwapMs": 26.324692,
+    "afterEventsMs": 30.241307,
+    "staleByMs": 8.334846,
+    "replyAgeMs": 18.825231
+   },
+   {
+    "seq": 6537,
+    "u": 16651,
+    "afterSwapMs": 26.986077,
+    "afterEventsMs": 30.361539,
+    "staleByMs": 9.330154,
+    "replyAgeMs": 7.090769
+   },
+   {
+    "seq": 6538,
+    "u": 16653,
+    "afterSwapMs": 24.92777,
+    "afterEventsMs": 29.46777,
+    "staleByMs": 9.231385,
+    "replyAgeMs": 5.316846
+   },
+   {
+    "seq": 6539,
+    "u": 16654,
+    "afterSwapMs": 25.839077,
+    "afterEventsMs": 29.827385,
+    "staleByMs": 9.504615,
+    "replyAgeMs": 19.564
+   },
+   {
+    "seq": 6540,
+    "u": 16656,
+    "afterSwapMs": 26.546538,
+    "afterEventsMs": 29.931692,
+    "staleByMs": 9.177307,
+    "replyAgeMs": 18.313539
+   },
+   {
+    "seq": 6541,
+    "u": 16659,
+    "afterSwapMs": 25.963384,
+    "afterEventsMs": 29.843461,
+    "staleByMs": 11.747769,
+    "replyAgeMs": 7.488539
+   },
+   {
+    "seq": 6542,
+    "u": 16660,
+    "afterSwapMs": 28.048077,
+    "afterEventsMs": 29.937538,
+    "staleByMs": 9.402538,
+    "replyAgeMs": 18.476539
+   },
+   {
+    "seq": 6543,
+    "u": 16662,
+    "afterSwapMs": 26.503385,
+    "afterEventsMs": 30.363,
+    "staleByMs": 9.818769,
+    "replyAgeMs": 12.547077
+   },
+   {
+    "seq": 6544,
+    "u": 16664,
+    "afterSwapMs": 25.515384,
+    "afterEventsMs": 29.808615,
+    "staleByMs": 8.32823,
+    "replyAgeMs": 14.536
+   },
+   {
+    "seq": 6545,
+    "u": 16666,
+    "afterSwapMs": 26.349615,
+    "afterEventsMs": 30.299692,
+    "staleByMs": 11.098154,
+    "replyAgeMs": 18.095693
+   },
+   {
+    "seq": 6546,
+    "u": 16668,
+    "afterSwapMs": 24.679385,
+    "afterEventsMs": 29.240615,
+    "staleByMs": 8.897538,
+    "replyAgeMs": 14.205846
+   },
+   {
+    "seq": 6547,
+    "u": 16670,
+    "afterSwapMs": 26.020307,
+    "afterEventsMs": 30.186153,
+    "staleByMs": 10.944307,
+    "replyAgeMs": 13.133539
+   },
+   {
+    "seq": 6548,
+    "u": 16673,
+    "afterSwapMs": 25.247384,
+    "afterEventsMs": 29.609307,
+    "staleByMs": 8.781615,
+    "replyAgeMs": 9.287385
+   },
+   {
+    "seq": 6549,
+    "u": 16675,
+    "afterSwapMs": 29.006077,
+    "afterEventsMs": 31.293154,
+    "staleByMs": 11.539308,
+    "replyAgeMs": 6.054539
+   },
+   {
+    "seq": 6550,
+    "u": 16677,
+    "afterSwapMs": 28.699,
+    "afterEventsMs": 30.873462,
+    "staleByMs": 11.695924,
+    "replyAgeMs": 9.66
+   },
+   {
+    "seq": 6551,
+    "u": 16679,
+    "afterSwapMs": 26.419692,
+    "afterEventsMs": 29.977231,
+    "staleByMs": 12.228231,
+    "replyAgeMs": 6.002846
+   },
+   {
+    "seq": 6552,
+    "u": 16681,
+    "afterSwapMs": 28.163692,
+    "afterEventsMs": 30.616538,
+    "staleByMs": 12.120923,
+    "replyAgeMs": 8.926846
+   },
+   {
+    "seq": 6553,
+    "u": 16683,
+    "afterSwapMs": 27.57477,
+    "afterEventsMs": 30.901462,
+    "staleByMs": 11.622693,
+    "replyAgeMs": 12.602153
+   },
+   {
+    "seq": 6554,
+    "u": 16685,
+    "afterSwapMs": 29.639461,
+    "afterEventsMs": 31.58223,
+    "staleByMs": 12.20123,
+    "replyAgeMs": 8.024616
+   },
+   {
+    "seq": 6555,
+    "u": 16687,
+    "afterSwapMs": 27.661231,
+    "afterEventsMs": 30.121923,
+    "staleByMs": 11.092,
+    "replyAgeMs": 8.836538
+   },
+   {
+    "seq": 6556,
+    "u": 16689,
+    "afterSwapMs": 26.488,
+    "afterEventsMs": 30.644077,
+    "staleByMs": 10.282231,
+    "replyAgeMs": 7.085846
+   },
+   {
+    "seq": 6557,
+    "u": 16691,
+    "afterSwapMs": 26.804846,
+    "afterEventsMs": 29.562462,
+    "staleByMs": 9.947616,
+    "replyAgeMs": 12.823692
+   },
+   {
+    "seq": 6558,
+    "u": 16693,
+    "afterSwapMs": 27.392538,
+    "afterEventsMs": 30.120923,
+    "staleByMs": 10.855308,
+    "replyAgeMs": 13.033846
+   },
+   {
+    "seq": 6559,
+    "u": 16695,
+    "afterSwapMs": 28.204,
+    "afterEventsMs": 30.431384,
+    "staleByMs": 11.498077,
+    "replyAgeMs": 9.264077
+   },
+   {
+    "seq": 6560,
+    "u": 16697,
+    "afterSwapMs": 30.674846,
+    "afterEventsMs": 32.353538,
+    "staleByMs": 12.370769,
+    "replyAgeMs": 11.238769
+   },
+   {
+    "seq": 6561,
+    "u": 16699,
+    "afterSwapMs": 28.26623,
+    "afterEventsMs": 30.773846,
+    "staleByMs": 11.969923,
+    "replyAgeMs": 19.507693
+   },
+   {
+    "seq": 6562,
+    "u": 16701,
+    "afterSwapMs": 24.847693,
+    "afterEventsMs": 29.497154,
+    "staleByMs": 8.636308,
+    "replyAgeMs": 22.302461
+   },
+   {
+    "seq": 6563,
+    "u": 16703,
+    "afterSwapMs": 24.364308,
+    "afterEventsMs": 29.338462,
+    "staleByMs": 10.772077,
+    "replyAgeMs": 21.920615
+   },
+   {
+    "seq": 6564,
+    "u": 16706,
+    "afterSwapMs": 27.109846,
+    "afterEventsMs": 29.483307,
+    "staleByMs": 11.609461,
+    "replyAgeMs": 13.168693
+   },
+   {
+    "seq": 6565,
+    "u": 16708,
+    "afterSwapMs": 27.700385,
+    "afterEventsMs": 29.819385,
+    "staleByMs": 10.446462,
+    "replyAgeMs": 16.987385
+   },
+   {
+    "seq": 6566,
+    "u": 16710,
+    "afterSwapMs": 27.859769,
+    "afterEventsMs": 29.943385,
+    "staleByMs": 12.013539,
+    "replyAgeMs": 19.952615
+   },
+   {
+    "seq": 6567,
+    "u": 16712,
+    "afterSwapMs": 26.679077,
+    "afterEventsMs": 29.978769,
+    "staleByMs": 11.245846,
+    "replyAgeMs": 15.126154
+   },
+   {
+    "seq": 6568,
+    "u": 16714,
+    "afterSwapMs": 28.071384,
+    "afterEventsMs": 30.295923,
+    "staleByMs": 8.683692,
+    "replyAgeMs": 13.050231
+   },
+   {
+    "seq": 6569,
+    "u": 16716,
+    "afterSwapMs": 26.162461,
+    "afterEventsMs": 29.816,
+    "staleByMs": 9.391154,
+    "replyAgeMs": 16.721154
+   },
+   {
+    "seq": 6570,
+    "u": 16718,
+    "afterSwapMs": 25.073462,
+    "afterEventsMs": 29.243693,
+    "staleByMs": 11.172539,
+    "replyAgeMs": 17.852384
+   },
+   {
+    "seq": 6571,
+    "u": 16720,
+    "afterSwapMs": 28.271384,
+    "afterEventsMs": 30.665461,
+    "staleByMs": 11.857769,
+    "replyAgeMs": 20.896308
+   },
+   {
+    "seq": 6572,
+    "u": 16723,
+    "afterSwapMs": 26.135616,
+    "afterEventsMs": 29.448539,
+    "staleByMs": 10.908616,
+    "replyAgeMs": 10.608923
+   },
+   {
+    "seq": 6573,
+    "u": 16725,
+    "afterSwapMs": 24.789154,
+    "afterEventsMs": 29.578462,
+    "staleByMs": 11.138077,
+    "replyAgeMs": 13.004077
+   },
+   {
+    "seq": 6574,
+    "u": 16727,
+    "afterSwapMs": 26.696538,
+    "afterEventsMs": 30.357154,
+    "staleByMs": 9.945231,
+    "replyAgeMs": 6.708077
+   },
+   {
+    "seq": 6575,
+    "u": 16729,
+    "afterSwapMs": 28.577154,
+    "afterEventsMs": 30.326693,
+    "staleByMs": 8.721231,
+    "replyAgeMs": 11.875461
+   },
+   {
+    "seq": 6576,
+    "u": 16731,
+    "afterSwapMs": 23.347153,
+    "afterEventsMs": 28.929846,
+    "staleByMs": 8.03423,
+    "replyAgeMs": 14.584616
+   },
+   {
+    "seq": 6577,
+    "u": 16733,
+    "afterSwapMs": 25.980692,
+    "afterEventsMs": 29.724923,
+    "staleByMs": 10.683077,
+    "replyAgeMs": 21.204539
+   },
+   {
+    "seq": 6578,
+    "u": 16736,
+    "afterSwapMs": 26.190385,
+    "afterEventsMs": 29.528923,
+    "staleByMs": 9.323,
+    "replyAgeMs": 12.169539
+   },
+   {
+    "seq": 6579,
+    "u": 16738,
+    "afterSwapMs": 24.150693,
+    "afterEventsMs": 29.340308,
+    "staleByMs": 9.036539,
+    "replyAgeMs": 13.936384
+   },
+   {
+    "seq": 6580,
+    "u": 16740,
+    "afterSwapMs": 26.010846,
+    "afterEventsMs": 29.521,
+    "staleByMs": 10.834846,
+    "replyAgeMs": 11.943692
+   },
+   {
+    "seq": 6581,
+    "u": 16742,
+    "afterSwapMs": 25.448308,
+    "afterEventsMs": 29.252615,
+    "staleByMs": 9.545231,
+    "replyAgeMs": 11.335923
+   },
+   {
+    "seq": 6582,
+    "u": 16744,
+    "afterSwapMs": 27.235077,
+    "afterEventsMs": 30.552615,
+    "staleByMs": 11.959,
+    "replyAgeMs": 16.739385
+   },
+   {
+    "seq": 6583,
+    "u": 16747,
+    "afterSwapMs": 26.652308,
+    "afterEventsMs": 30.174462,
+    "staleByMs": 10.486846,
+    "replyAgeMs": 6.588308
+   },
+   {
+    "seq": 6584,
+    "u": 16749,
+    "afterSwapMs": 25.272308,
+    "afterEventsMs": 29.080308,
+    "staleByMs": 8.216308,
+    "replyAgeMs": 5.011384
+   },
+   {
+    "seq": 6585,
+    "u": 16751,
+    "afterSwapMs": 25.623462,
+    "afterEventsMs": 29.611077,
+    "staleByMs": 10.975385,
+    "replyAgeMs": 5.912846
+   },
+   {
+    "seq": 6586,
+    "u": 16753,
+    "afterSwapMs": 24.704615,
+    "afterEventsMs": 28.791692,
+    "staleByMs": 7.680846,
+    "replyAgeMs": 9.12677
+   },
+   {
+    "seq": 6587,
+    "u": 16755,
+    "afterSwapMs": 25.907385,
+    "afterEventsMs": 29.728846,
+    "staleByMs": 9.549461,
+    "replyAgeMs": 12.190539
+   },
+   {
+    "seq": 6588,
+    "u": 16757,
+    "afterSwapMs": 25.320616,
+    "afterEventsMs": 29.106462,
+    "staleByMs": 8.409,
+    "replyAgeMs": 9.019384
+   },
+   {
+    "seq": 6589,
+    "u": 16759,
+    "afterSwapMs": 26.382077,
+    "afterEventsMs": 30.124539,
+    "staleByMs": 8.786077,
+    "replyAgeMs": 9.968692
+   },
+   {
+    "seq": 6590,
+    "u": 16761,
+    "afterSwapMs": 25.913154,
+    "afterEventsMs": 30.123077,
+    "staleByMs": 10.964308,
+    "replyAgeMs": 19.234231
+   },
+   {
+    "seq": 6591,
+    "u": 16763,
+    "afterSwapMs": 28.873846,
+    "afterEventsMs": 31.473846,
+    "staleByMs": 12.285462,
+    "replyAgeMs": 15.326538
+   },
+   {
+    "seq": 6592,
+    "u": 16765,
+    "afterSwapMs": 23.991923,
+    "afterEventsMs": 29.408846,
+    "staleByMs": 9.018154,
+    "replyAgeMs": 11.324308
+   },
+   {
+    "seq": 6593,
+    "u": 16767,
+    "afterSwapMs": 25.399308,
+    "afterEventsMs": 29.884539,
+    "staleByMs": 10.279616,
+    "replyAgeMs": 17.749615
+   },
+   {
+    "seq": 6594,
+    "u": 16769,
+    "afterSwapMs": 29.486231,
+    "afterEventsMs": 31.082154,
+    "staleByMs": 10.905615,
+    "replyAgeMs": 13.073846
+   },
+   {
+    "seq": 6595,
+    "u": 16771,
+    "afterSwapMs": 24.899385,
+    "afterEventsMs": 30.063385,
+    "staleByMs": 8.931,
+    "replyAgeMs": 11.398538
+   },
+   {
+    "seq": 6596,
+    "u": 16773,
+    "afterSwapMs": 26.517846,
+    "afterEventsMs": 30.462846,
+    "staleByMs": 9.144077,
+    "replyAgeMs": 9.229769
+   },
+   {
+    "seq": 6597,
+    "u": 16774,
+    "afterSwapMs": 26.592615,
+    "afterEventsMs": 31.163923,
+    "staleByMs": 10.664846,
+    "replyAgeMs": 20.903462
+   },
+   {
+    "seq": 6598,
+    "u": 16776,
+    "afterSwapMs": 28.523385,
+    "afterEventsMs": 30.527154,
+    "staleByMs": 9.099385,
+    "replyAgeMs": 17.042461
+   },
+   {
+    "seq": 6599,
+    "u": 16778,
+    "afterSwapMs": 27.136,
+    "afterEventsMs": 31.580538,
+    "staleByMs": 12.815615,
+    "replyAgeMs": 11.044
+   },
+   {
+    "seq": 6600,
+    "u": 16780,
+    "afterSwapMs": 28.373461,
+    "afterEventsMs": 30.425231,
+    "staleByMs": 11.027077,
+    "replyAgeMs": 19.143077
+   },
+   {
+    "seq": 6601,
+    "u": 16783,
+    "afterSwapMs": 27.816307,
+    "afterEventsMs": 30.273461,
+    "staleByMs": 10.112,
+    "replyAgeMs": 7.072693
+   },
+   {
+    "seq": 6602,
+    "u": 16784,
+    "afterSwapMs": 26.566769,
+    "afterEventsMs": 29.945538,
+    "staleByMs": 11.459615,
+    "replyAgeMs": 22.294154
+   },
+   {
+    "seq": 6603,
+    "u": 16786,
+    "afterSwapMs": 26.678154,
+    "afterEventsMs": 31.470538,
+    "staleByMs": 9.600923,
+    "replyAgeMs": 17.540231
+   },
+   {
+    "seq": 6604,
+    "u": 16789,
+    "afterSwapMs": 25.696385,
+    "afterEventsMs": 30.163692,
+    "staleByMs": 10.218846,
+    "replyAgeMs": 4.143077
+   },
+   {
+    "seq": 6605,
+    "u": 16791,
+    "afterSwapMs": 24.042462,
+    "afterEventsMs": 27.498462,
+    "staleByMs": 10.994846,
+    "replyAgeMs": 14.507
+   },
+   {
+    "seq": 6606,
+    "u": 16794,
+    "afterSwapMs": 27.264846,
+    "afterEventsMs": 30.299,
+    "staleByMs": 11.192923,
+    "replyAgeMs": 10.491154
+   },
+   {
+    "seq": 6607,
+    "u": 16796,
+    "afterSwapMs": 27.044,
+    "afterEventsMs": 30.552692,
+    "staleByMs": 9.023154,
+    "replyAgeMs": 7.674154
+   },
+   {
+    "seq": 6608,
+    "u": 16798,
+    "afterSwapMs": 27.172231,
+    "afterEventsMs": 30.255077,
+    "staleByMs": 8.831923,
+    "replyAgeMs": 6.698769
+   },
+   {
+    "seq": 6609,
+    "u": 16800,
+    "afterSwapMs": 26.398538,
+    "afterEventsMs": 30.101308,
+    "staleByMs": 9.171384,
+    "replyAgeMs": 8.441154
+   },
+   {
+    "seq": 6610,
+    "u": 16802,
+    "afterSwapMs": 28.780308,
+    "afterEventsMs": 31.050692,
+    "staleByMs": 12.786077,
+    "replyAgeMs": 14.758769
+   },
+   {
+    "seq": 6611,
+    "u": 16805,
+    "afterSwapMs": 27.762769,
+    "afterEventsMs": 30.837231,
+    "staleByMs": 10.603461,
+    "replyAgeMs": 14.753539
+   },
+   {
+    "seq": 6612,
+    "u": 16807,
+    "afterSwapMs": 28.486769,
+    "afterEventsMs": 30.479,
+    "staleByMs": 11.848307,
+    "replyAgeMs": 13.481923
+   },
+   {
+    "seq": 6613,
+    "u": 16809,
+    "afterSwapMs": 27.293846,
+    "afterEventsMs": 31.204923,
+    "staleByMs": 9.149538,
+    "replyAgeMs": 8.527693
+   },
+   {
+    "seq": 6614,
+    "u": 16811,
+    "afterSwapMs": 26.232384,
+    "afterEventsMs": 30.969615,
+    "staleByMs": 10.999769,
+    "replyAgeMs": 11.600231
+   },
+   {
+    "seq": 6615,
+    "u": 16813,
+    "afterSwapMs": 27.045846,
+    "afterEventsMs": 30.399,
+    "staleByMs": 7.965538,
+    "replyAgeMs": 12.133231
+   },
+   {
+    "seq": 6616,
+    "u": 16815,
+    "afterSwapMs": 27.042462,
+    "afterEventsMs": 29.703,
+    "staleByMs": 10.859385,
+    "replyAgeMs": 17.181923
+   },
+   {
+    "seq": 6617,
+    "u": 16817,
+    "afterSwapMs": 26.610384,
+    "afterEventsMs": 29.954153,
+    "staleByMs": 11.867692,
+    "replyAgeMs": 17.684
+   },
+   {
+    "seq": 6618,
+    "u": 16819,
+    "afterSwapMs": 26.909,
+    "afterEventsMs": 29.549846,
+    "staleByMs": 9.128308,
+    "replyAgeMs": 20.388
+   },
+   {
+    "seq": 6619,
+    "u": 16822,
+    "afterSwapMs": 26.446847,
+    "afterEventsMs": 30.064693,
+    "staleByMs": 10.691462,
+    "replyAgeMs": 9.970692
+   },
+   {
+    "seq": 6620,
+    "u": 16824,
+    "afterSwapMs": 27.088077,
+    "afterEventsMs": 30.174538,
+    "staleByMs": 12.05023,
+    "replyAgeMs": 8.875923
+   },
+   {
+    "seq": 6621,
+    "u": 16826,
+    "afterSwapMs": 25.879923,
+    "afterEventsMs": 29.758769,
+    "staleByMs": 10.821154,
+    "replyAgeMs": 11.436692
+   },
+   {
+    "seq": 6622,
+    "u": 16828,
+    "afterSwapMs": 27.770769,
+    "afterEventsMs": 29.353846,
+    "staleByMs": 8.572231,
+    "replyAgeMs": 12.571769
+   },
+   {
+    "seq": 6623,
+    "u": 16830,
+    "afterSwapMs": 25.413462,
+    "afterEventsMs": 29.567693,
+    "staleByMs": 8.768846,
+    "replyAgeMs": 11.844077
+   },
+   {
+    "seq": 6624,
+    "u": 16832,
+    "afterSwapMs": 25.751693,
+    "afterEventsMs": 29.736693,
+    "staleByMs": 8.823385,
+    "replyAgeMs": 9.392846
+   },
+   {
+    "seq": 6625,
+    "u": 16834,
+    "afterSwapMs": 25.354462,
+    "afterEventsMs": 29.294769,
+    "staleByMs": 10.472846,
+    "replyAgeMs": 13.906461
+   },
+   {
+    "seq": 6626,
+    "u": 16837,
+    "afterSwapMs": 26.355077,
+    "afterEventsMs": 29.534077,
+    "staleByMs": 10.377462,
+    "replyAgeMs": 7.669231
+   },
+   {
+    "seq": 6627,
+    "u": 16839,
+    "afterSwapMs": 27.275385,
+    "afterEventsMs": 29.435693,
+    "staleByMs": 10.790154,
+    "replyAgeMs": 10.006846
+   },
+   {
+    "seq": 6628,
+    "u": 16841,
+    "afterSwapMs": 25.987769,
+    "afterEventsMs": 29.493308,
+    "staleByMs": 8.628693,
+    "replyAgeMs": 19.795307
+   },
+   {
+    "seq": 6629,
+    "u": 16844,
+    "afterSwapMs": 26.215769,
+    "afterEventsMs": 29.657307,
+    "staleByMs": 11.11423,
+    "replyAgeMs": 5.693847
+   },
+   {
+    "seq": 6630,
+    "u": 16845,
+    "afterSwapMs": 28.272077,
+    "afterEventsMs": 29.992077,
+    "staleByMs": 10.372077,
+    "replyAgeMs": 16.500307
+   },
+   {
+    "seq": 6631,
+    "u": 16847,
+    "afterSwapMs": 25.883077,
+    "afterEventsMs": 29.853462,
+    "staleByMs": 9.818385,
+    "replyAgeMs": 26.996
+   },
+   {
+    "seq": 6632,
+    "u": 16850,
+    "afterSwapMs": 26.317616,
+    "afterEventsMs": 30.697231,
+    "staleByMs": 8.201308,
+    "replyAgeMs": 6.094692
+   },
+   {
+    "seq": 6633,
+    "u": 16852,
+    "afterSwapMs": 25.976231,
+    "afterEventsMs": 29.993539,
+    "staleByMs": 11.988539,
+    "replyAgeMs": 10.645615
+   },
+   {
+    "seq": 6634,
+    "u": 16854,
+    "afterSwapMs": 26.910461,
+    "afterEventsMs": 29.806077,
+    "staleByMs": 11.712846,
+    "replyAgeMs": 12.150462
+   },
+   {
+    "seq": 6635,
+    "u": 16856,
+    "afterSwapMs": 27.211077,
+    "afterEventsMs": 29.758154,
+    "staleByMs": 11.825616,
+    "replyAgeMs": 16.284615
+   },
+   {
+    "seq": 6636,
+    "u": 16858,
+    "afterSwapMs": 27.607077,
+    "afterEventsMs": 30.144308,
+    "staleByMs": 9.573539,
+    "replyAgeMs": 12.860307
+   },
+   {
+    "seq": 6637,
+    "u": 16860,
+    "afterSwapMs": 25.935769,
+    "afterEventsMs": 29.739462,
+    "staleByMs": 9.315385,
+    "replyAgeMs": 14.572923
+   },
+   {
+    "seq": 6638,
+    "u": 16863,
+    "afterSwapMs": 27.818693,
+    "afterEventsMs": 30.123,
+    "staleByMs": 8.89877,
+    "replyAgeMs": 9.94223
+   },
+   {
+    "seq": 6639,
+    "u": 16865,
+    "afterSwapMs": 25.927307,
+    "afterEventsMs": 30.119,
+    "staleByMs": 8.85623,
+    "replyAgeMs": 9.333231
+   },
+   {
+    "seq": 6640,
+    "u": 16867,
+    "afterSwapMs": 26.180538,
+    "afterEventsMs": 29.479077,
+    "staleByMs": 10.429538,
+    "replyAgeMs": 8.801231
+   },
+   {
+    "seq": 6641,
+    "u": 16869,
+    "afterSwapMs": 25.823692,
+    "afterEventsMs": 29.617615,
+    "staleByMs": 11.257231,
+    "replyAgeMs": 17.238077
+   },
+   {
+    "seq": 6642,
+    "u": 16871,
+    "afterSwapMs": 27.874462,
+    "afterEventsMs": 30.478539,
+    "staleByMs": 9.290462,
+    "replyAgeMs": 19.396615
+   },
+   {
+    "seq": 6643,
+    "u": 16873,
+    "afterSwapMs": 26.794154,
+    "afterEventsMs": 29.544385,
+    "staleByMs": 9.721,
+    "replyAgeMs": 18.531
+   },
+   {
+    "seq": 6644,
+    "u": 16876,
+    "afterSwapMs": 27.889539,
+    "afterEventsMs": 29.843,
+    "staleByMs": 9.531693,
+    "replyAgeMs": 4.941846
+   },
+   {
+    "seq": 6645,
+    "u": 16877,
+    "afterSwapMs": 26.083154,
+    "afterEventsMs": 30.145846,
+    "staleByMs": 9.314538,
+    "replyAgeMs": 17.380846
+   },
+   {
+    "seq": 6646,
+    "u": 16879,
+    "afterSwapMs": 26.556,
+    "afterEventsMs": 30.072923,
+    "staleByMs": 9.544923,
+    "replyAgeMs": 17.244
+   },
+   {
+    "seq": 6647,
+    "u": 16882,
+    "afterSwapMs": 28.203077,
+    "afterEventsMs": 30.645308,
+    "staleByMs": 10.140693,
+    "replyAgeMs": 5.335076
+   },
+   {
+    "seq": 6648,
+    "u": 16884,
+    "afterSwapMs": 24.921846,
+    "afterEventsMs": 29.641154,
+    "staleByMs": 9.788923,
+    "replyAgeMs": 11.727077
+   },
+   {
+    "seq": 6649,
+    "u": 16886,
+    "afterSwapMs": 26.430231,
+    "afterEventsMs": 29.810154,
+    "staleByMs": 10.155154,
+    "replyAgeMs": 17.341462
+   },
+   {
+    "seq": 6650,
+    "u": 16888,
+    "afterSwapMs": 27.781462,
+    "afterEventsMs": 30.302692,
+    "staleByMs": 11.860308,
+    "replyAgeMs": 17.489231
+   },
+   {
+    "seq": 6651,
+    "u": 16890,
+    "afterSwapMs": 26.394769,
+    "afterEventsMs": 30.081846,
+    "staleByMs": 10.301539,
+    "replyAgeMs": 19.709769
+   },
+   {
+    "seq": 6652,
+    "u": 16892,
+    "afterSwapMs": 25.701,
+    "afterEventsMs": 30.569616,
+    "staleByMs": 12.115077,
+    "replyAgeMs": 21.768231
+   },
+   {
+    "seq": 6653,
+    "u": 16894,
+    "afterSwapMs": 25.924923,
+    "afterEventsMs": 30.102231,
+    "staleByMs": 9.445615,
+    "replyAgeMs": 13.517846
+   },
+   {
+    "seq": 6654,
+    "u": 16896,
+    "afterSwapMs": 25.581231,
+    "afterEventsMs": 29.369308,
+    "staleByMs": 8.478231,
+    "replyAgeMs": 18.353231
+   },
+   {
+    "seq": 6655,
+    "u": 16898,
+    "afterSwapMs": 27.140231,
+    "afterEventsMs": 30.873538,
+    "staleByMs": 9.121846,
+    "replyAgeMs": 17.625846
+   },
+   {
+    "seq": 6656,
+    "u": 16900,
+    "afterSwapMs": 25.196077,
+    "afterEventsMs": 29.468693,
+    "staleByMs": 9.58677,
+    "replyAgeMs": 18.874384
+   },
+   {
+    "seq": 6657,
+    "u": 16902,
+    "afterSwapMs": 26.422846,
+    "afterEventsMs": 29.98,
+    "staleByMs": 9.489231,
+    "replyAgeMs": 17.991615
+   },
+   {
+    "seq": 6658,
+    "u": 16904,
+    "afterSwapMs": 25.106769,
+    "afterEventsMs": 29.600385,
+    "staleByMs": 8.722846,
+    "replyAgeMs": 15.818154
+   },
+   {
+    "seq": 6659,
+    "u": 16906,
+    "afterSwapMs": 28.148923,
+    "afterEventsMs": 31.457539,
+    "staleByMs": 9.870462,
+    "replyAgeMs": 11.017538
+   },
+   {
+    "seq": 6660,
+    "u": 16908,
+    "afterSwapMs": 25.997615,
+    "afterEventsMs": 30.985539,
+    "staleByMs": 8.884923,
+    "replyAgeMs": 11.203692
+   },
+   {
+    "seq": 6661,
+    "u": 16909,
+    "afterSwapMs": 26.211923,
+    "afterEventsMs": 30.746462,
+    "staleByMs": 9.650385,
+    "replyAgeMs": 18.914154
+   },
+   {
+    "seq": 6662,
+    "u": 16911,
+    "afterSwapMs": 25.417154,
+    "afterEventsMs": 29.584923,
+    "staleByMs": 9.103615,
+    "replyAgeMs": 19.580923
+   },
+   {
+    "seq": 6663,
+    "u": 16914,
+    "afterSwapMs": 25.046077,
+    "afterEventsMs": 29.105231,
+    "staleByMs": 10.375923,
+    "replyAgeMs": 7.629923
+   },
+   {
+    "seq": 6664,
+    "u": 16915,
+    "afterSwapMs": 27.448231,
+    "afterEventsMs": 30.686693,
+    "staleByMs": 9.946154,
+    "replyAgeMs": 21.853846
+   },
+   {
+    "seq": 6665,
+    "u": 16918,
+    "afterSwapMs": 25.261538,
+    "afterEventsMs": 29.548923,
+    "staleByMs": 10.648,
+    "replyAgeMs": 9.531308
+   },
+   {
+    "seq": 6666,
+    "u": 16920,
+    "afterSwapMs": 26.753538,
+    "afterEventsMs": 30.057846,
+    "staleByMs": 11.254154,
+    "replyAgeMs": 6.02
+   },
+   {
+    "seq": 6667,
+    "u": 16922,
+    "afterSwapMs": 25.331,
+    "afterEventsMs": 29.146461,
+    "staleByMs": 11.325769,
+    "replyAgeMs": 8.606462
+   },
+   {
+    "seq": 6668,
+    "u": 16924,
+    "afterSwapMs": 27.219077,
+    "afterEventsMs": 30.164,
+    "staleByMs": 11.956077,
+    "replyAgeMs": 18.561461
+   },
+   {
+    "seq": 6669,
+    "u": 16926,
+    "afterSwapMs": 26.970384,
+    "afterEventsMs": 30.166154,
+    "staleByMs": 11.177154,
+    "replyAgeMs": 15.427462
+   },
+   {
+    "seq": 6670,
+    "u": 16928,
+    "afterSwapMs": 25.745538,
+    "afterEventsMs": 30.347769,
+    "staleByMs": 7.945538,
+    "replyAgeMs": 16.844923
+   },
+   {
+    "seq": 6671,
+    "u": 16931,
+    "afterSwapMs": 26.179077,
+    "afterEventsMs": 29.298692,
+    "staleByMs": 10.521538,
+    "replyAgeMs": 8.738538
+   },
+   {
+    "seq": 6672,
+    "u": 16933,
+    "afterSwapMs": 28.666077,
+    "afterEventsMs": 30.815077,
+    "staleByMs": 11.387615,
+    "replyAgeMs": 9.109
+   },
+   {
+    "seq": 6673,
+    "u": 16935,
+    "afterSwapMs": 27.354462,
+    "afterEventsMs": 29.598462,
+    "staleByMs": 10.782154,
+    "replyAgeMs": 8.800846
+   },
+   {
+    "seq": 6674,
+    "u": 16937,
+    "afterSwapMs": 27.607769,
+    "afterEventsMs": 30.242769,
+    "staleByMs": 12.417616,
+    "replyAgeMs": 5.345846
+   },
+   {
+    "seq": 6675,
+    "u": 16939,
+    "afterSwapMs": 27.495385,
+    "afterEventsMs": 29.650461,
+    "staleByMs": 11.360308,
+    "replyAgeMs": 8.311462
+   },
+   {
+    "seq": 6676,
+    "u": 16941,
+    "afterSwapMs": 26.443923,
+    "afterEventsMs": 29.724231,
+    "staleByMs": 11.054154,
+    "replyAgeMs": 8.819154
+   },
+   {
+    "seq": 6677,
+    "u": 16943,
+    "afterSwapMs": 28.608231,
+    "afterEventsMs": 30.408308,
+    "staleByMs": 10.342077,
+    "replyAgeMs": 9.868385
+   },
+   {
+    "seq": 6678,
+    "u": 16945,
+    "afterSwapMs": 28.227308,
+    "afterEventsMs": 30.379693,
+    "staleByMs": 9.077462,
+    "replyAgeMs": 9.230846
+   },
+   {
+    "seq": 6679,
+    "u": 16947,
+    "afterSwapMs": 24.752385,
+    "afterEventsMs": 29.142154,
+    "staleByMs": 8.401,
+    "replyAgeMs": 8.614769
+   },
+   {
+    "seq": 6680,
+    "u": 16949,
+    "afterSwapMs": 26.800616,
+    "afterEventsMs": 29.524616,
+    "staleByMs": 11.17977,
+    "replyAgeMs": 13.787
+   },
+   {
+    "seq": 6681,
+    "u": 16951,
+    "afterSwapMs": 27.511616,
+    "afterEventsMs": 30.92277,
+    "staleByMs": 8.863385,
+    "replyAgeMs": 10.176
+   },
+   {
+    "seq": 6682,
+    "u": 16953,
+    "afterSwapMs": 26.607307,
+    "afterEventsMs": 29.706154,
+    "staleByMs": 9.117461,
+    "replyAgeMs": 8.385231
+   },
+   {
+    "seq": 6683,
+    "u": 16955,
+    "afterSwapMs": 25.135923,
+    "afterEventsMs": 28.57723,
+    "staleByMs": 10.200923,
+    "replyAgeMs": 7.108693
+   },
+   {
+    "seq": 6684,
+    "u": 16957,
+    "afterSwapMs": 28.624923,
+    "afterEventsMs": 30.806462,
+    "staleByMs": 9.536923,
+    "replyAgeMs": 11.468
+   },
+   {
+    "seq": 6685,
+    "u": 16959,
+    "afterSwapMs": 27.338462,
+    "afterEventsMs": 30.492,
+    "staleByMs": 13.431154,
+    "replyAgeMs": 5.124846
+   },
+   {
+    "seq": 6686,
+    "u": 16961,
+    "afterSwapMs": 25.424615,
+    "afterEventsMs": 29.373615,
+    "staleByMs": 8.270846,
+    "replyAgeMs": 11.948923
+   },
+   {
+    "seq": 6687,
+    "u": 16963,
+    "afterSwapMs": 27.725154,
+    "afterEventsMs": 31.338769,
+    "staleByMs": 11.647307,
+    "replyAgeMs": 8.255385
+   },
+   {
+    "seq": 6688,
+    "u": 16965,
+    "afterSwapMs": 26.931615,
+    "afterEventsMs": 28.856615,
+    "staleByMs": 10.788615,
+    "replyAgeMs": 9.871077
+   },
+   {
+    "seq": 6689,
+    "u": 16967,
+    "afterSwapMs": 29.049231,
+    "afterEventsMs": 30.725308,
+    "staleByMs": 9.113846,
+    "replyAgeMs": 7.140538
+   },
+   {
+    "seq": 6690,
+    "u": 16969,
+    "afterSwapMs": 25.903076,
+    "afterEventsMs": 29.717,
+    "staleByMs": 9.770461,
+    "replyAgeMs": 6.798693
+   },
+   {
+    "seq": 6691,
+    "u": 16970,
+    "afterSwapMs": 27.108,
+    "afterEventsMs": 30.411769,
+    "staleByMs": 11.292,
+    "replyAgeMs": 24.407615
+   },
+   {
+    "seq": 6692,
+    "u": 16972,
+    "afterSwapMs": 27.765,
+    "afterEventsMs": 31.417615,
+    "staleByMs": 9.670154,
+    "replyAgeMs": 16.4
+   },
+   {
+    "seq": 6693,
+    "u": 16974,
+    "afterSwapMs": 25.593846,
+    "afterEventsMs": 29.602154,
+    "staleByMs": 8.97577,
+    "replyAgeMs": 15.711923
+   },
+   {
+    "seq": 6694,
+    "u": 16976,
+    "afterSwapMs": 25.277231,
+    "afterEventsMs": 29.067923,
+    "staleByMs": 7.707384,
+    "replyAgeMs": 19.106154
+   },
+   {
+    "seq": 6695,
+    "u": 16979,
+    "afterSwapMs": 25.449231,
+    "afterEventsMs": 29.305923,
+    "staleByMs": 9.700385,
+    "replyAgeMs": 8.030154
+   },
+   {
+    "seq": 6696,
+    "u": 16981,
+    "afterSwapMs": 24.941846,
+    "afterEventsMs": 28.807154,
+    "staleByMs": 11.712,
+    "replyAgeMs": 8.945769
+   },
+   {
+    "seq": 6697,
+    "u": 16983,
+    "afterSwapMs": 27.459462,
+    "afterEventsMs": 29.762539,
+    "staleByMs": 9.252308,
+    "replyAgeMs": 4.454769
+   },
+   {
+    "seq": 6698,
+    "u": 16985,
+    "afterSwapMs": 28.839692,
+    "afterEventsMs": 30.347461,
+    "staleByMs": 9.902231,
+    "replyAgeMs": 7.495616
+   },
+   {
+    "seq": 6699,
+    "u": 16987,
+    "afterSwapMs": 27.004846,
+    "afterEventsMs": 29.684923,
+    "staleByMs": 11.441539,
+    "replyAgeMs": 9.521615
+   },
+   {
+    "seq": 6700,
+    "u": 16989,
+    "afterSwapMs": 28.032846,
+    "afterEventsMs": 30.695308,
+    "staleByMs": 7.347077,
+    "replyAgeMs": 12.785231
+   },
+   {
+    "seq": 6701,
+    "u": 16991,
+    "afterSwapMs": 24.990769,
+    "afterEventsMs": 29.049538,
+    "staleByMs": 9.741923,
+    "replyAgeMs": 16.36
+   },
+   {
+    "seq": 6702,
+    "u": 16993,
+    "afterSwapMs": 25.935385,
+    "afterEventsMs": 29.755154,
+    "staleByMs": 9.866846,
+    "replyAgeMs": 13.447077
+   },
+   {
+    "seq": 6703,
+    "u": 16995,
+    "afterSwapMs": 28.144077,
+    "afterEventsMs": 29.781923,
+    "staleByMs": 9.136,
+    "replyAgeMs": 15.613154
+   },
+   {
+    "seq": 6704,
+    "u": 16998,
+    "afterSwapMs": 27.468692,
+    "afterEventsMs": 30.335154,
+    "staleByMs": 10.088077,
+    "replyAgeMs": 7.189538
+   },
+   {
+    "seq": 6705,
+    "u": 17000,
+    "afterSwapMs": 27.577769,
+    "afterEventsMs": 29.793231,
+    "staleByMs": 11.728308,
+    "replyAgeMs": 10.515385
+   },
+   {
+    "seq": 6706,
+    "u": 17002,
+    "afterSwapMs": 26.574153,
+    "afterEventsMs": 29.816077,
+    "staleByMs": 10.333923,
+    "replyAgeMs": 18.849462
+   },
+   {
+    "seq": 6707,
+    "u": 17005,
+    "afterSwapMs": 28.346692,
+    "afterEventsMs": 30.915077,
+    "staleByMs": 11.037154,
+    "replyAgeMs": 10.819077
+   },
+   {
+    "seq": 6708,
+    "u": 17007,
+    "afterSwapMs": 26.196923,
+    "afterEventsMs": 30.094077,
+    "staleByMs": 12.142077,
+    "replyAgeMs": 8.977615
+   },
+   {
+    "seq": 6709,
+    "u": 17009,
+    "afterSwapMs": 27.303,
+    "afterEventsMs": 29.083692,
+    "staleByMs": 10.048308,
+    "replyAgeMs": 14.077
+   },
+   {
+    "seq": 6710,
+    "u": 17011,
+    "afterSwapMs": 26.708846,
+    "afterEventsMs": 29.632923,
+    "staleByMs": 12.027,
+    "replyAgeMs": 16.235154
+   },
+   {
+    "seq": 6711,
+    "u": 17014,
+    "afterSwapMs": 27.896307,
+    "afterEventsMs": 30.139692,
+    "staleByMs": 10.575077,
+    "replyAgeMs": 7.402385
+   },
+   {
+    "seq": 6712,
+    "u": 17016,
+    "afterSwapMs": 28.449231,
+    "afterEventsMs": 30.102154,
+    "staleByMs": 12.124308,
+    "replyAgeMs": 16.142461
+   },
+   {
+    "seq": 6713,
+    "u": 17018,
+    "afterSwapMs": 28.070461,
+    "afterEventsMs": 30.589615,
+    "staleByMs": 10.220076,
+    "replyAgeMs": 18.559693
+   },
+   {
+    "seq": 6714,
+    "u": 17020,
+    "afterSwapMs": 25.818154,
+    "afterEventsMs": 29.403769,
+    "staleByMs": 9.138231,
+    "replyAgeMs": 13.936923
+   },
+   {
+    "seq": 6715,
+    "u": 17022,
+    "afterSwapMs": 25.788923,
+    "afterEventsMs": 29.458846,
+    "staleByMs": 10.266538,
+    "replyAgeMs": 18.335385
+   },
+   {
+    "seq": 6716,
+    "u": 17024,
+    "afterSwapMs": 26.286692,
+    "afterEventsMs": 29.980923,
+    "staleByMs": 8.442384,
+    "replyAgeMs": 14.318846
+   },
+   {
+    "seq": 6717,
+    "u": 17026,
+    "afterSwapMs": 26.962769,
+    "afterEventsMs": 30.754154,
+    "staleByMs": 8.682769,
+    "replyAgeMs": 15.008846
+   },
+   {
+    "seq": 6718,
+    "u": 17028,
+    "afterSwapMs": 26.06277,
+    "afterEventsMs": 29.439385,
+    "staleByMs": 9.172616,
+    "replyAgeMs": 15.464307
+   },
+   {
+    "seq": 6719,
+    "u": 17030,
+    "afterSwapMs": 28.654769,
+    "afterEventsMs": 31.506077,
+    "staleByMs": 10.958692,
+    "replyAgeMs": 6.245846
+   },
+   {
+    "seq": 6720,
+    "u": 17032,
+    "afterSwapMs": 25.158538,
+    "afterEventsMs": 30.537231,
+    "staleByMs": 9.510538,
+    "replyAgeMs": 6.483
+   },
+   {
+    "seq": 6721,
+    "u": 17034,
+    "afterSwapMs": 26.036616,
+    "afterEventsMs": 29.871077,
+    "staleByMs": 9.368308,
+    "replyAgeMs": 13.329
+   },
+   {
+    "seq": 6722,
+    "u": 17036,
+    "afterSwapMs": 26.76,
+    "afterEventsMs": 29.222385,
+    "staleByMs": 8.599385,
+    "replyAgeMs": 12.020077
+   },
+   {
+    "seq": 6723,
+    "u": 17038,
+    "afterSwapMs": 27.006462,
+    "afterEventsMs": 29.906231,
+    "staleByMs": 10.891692,
+    "replyAgeMs": 19.046769
+   },
+   {
+    "seq": 6724,
+    "u": 17040,
+    "afterSwapMs": 27.706462,
+    "afterEventsMs": 30.033308,
+    "staleByMs": 11.735154,
+    "replyAgeMs": 18.855
+   },
+   {
+    "seq": 6725,
+    "u": 17042,
+    "afterSwapMs": 28.080077,
+    "afterEventsMs": 30.47723,
+    "staleByMs": 12.195077,
+    "replyAgeMs": 18.130154
+   },
+   {
+    "seq": 6726,
+    "u": 17045,
+    "afterSwapMs": 26.598077,
+    "afterEventsMs": 30.337846,
+    "staleByMs": 8.970384,
+    "replyAgeMs": 12.733
+   },
+   {
+    "seq": 6727,
+    "u": 17047,
+    "afterSwapMs": 26.757231,
+    "afterEventsMs": 29.936692,
+    "staleByMs": 11.740077,
+    "replyAgeMs": 16.033769
+   },
+   {
+    "seq": 6728,
+    "u": 17049,
+    "afterSwapMs": 29.274154,
+    "afterEventsMs": 31.013615,
+    "staleByMs": 9.732308,
+    "replyAgeMs": 13.594385
+   },
+   {
+    "seq": 6729,
+    "u": 17051,
+    "afterSwapMs": 27.071307,
+    "afterEventsMs": 30.851692,
+    "staleByMs": 9.96923,
+    "replyAgeMs": 13.540693
+   },
+   {
+    "seq": 6730,
+    "u": 17054,
+    "afterSwapMs": 26.652923,
+    "afterEventsMs": 29.884308,
+    "staleByMs": 9.716923,
+    "replyAgeMs": 10.513538
+   },
+   {
+    "seq": 6731,
+    "u": 17056,
+    "afterSwapMs": 26.432307,
+    "afterEventsMs": 29.872923,
+    "staleByMs": 11.816,
+    "replyAgeMs": 8.157539
+   },
+   {
+    "seq": 6732,
+    "u": 17058,
+    "afterSwapMs": 26.195384,
+    "afterEventsMs": 29.219154,
+    "staleByMs": 8.524384,
+    "replyAgeMs": 18.057462
+   },
+   {
+    "seq": 6733,
+    "u": 17060,
+    "afterSwapMs": 25.310692,
+    "afterEventsMs": 29.082384,
+    "staleByMs": 9.432615,
+    "replyAgeMs": 11.983693
+   },
+   {
+    "seq": 6734,
+    "u": 17062,
+    "afterSwapMs": 26.033307,
+    "afterEventsMs": 29.945923,
+    "staleByMs": 11.881307,
+    "replyAgeMs": 15.942693
+   },
+   {
+    "seq": 6735,
+    "u": 17064,
+    "afterSwapMs": 27.033,
+    "afterEventsMs": 29.725307,
+    "staleByMs": 10.667461,
+    "replyAgeMs": 13.887924
+   },
+   {
+    "seq": 6736,
+    "u": 17066,
+    "afterSwapMs": 26.511615,
+    "afterEventsMs": 30.304615,
+    "staleByMs": 10.032846,
+    "replyAgeMs": 16.540693
+   },
+   {
+    "seq": 6737,
+    "u": 17068,
+    "afterSwapMs": 25.140616,
+    "afterEventsMs": 29.075,
+    "staleByMs": 8.293846,
+    "replyAgeMs": 16.192077
+   },
+   {
+    "seq": 6738,
+    "u": 17070,
+    "afterSwapMs": 25.887462,
+    "afterEventsMs": 29.525923,
+    "staleByMs": 8.796385,
+    "replyAgeMs": 14.038692
+   },
+   {
+    "seq": 6739,
+    "u": 17073,
+    "afterSwapMs": 26.104692,
+    "afterEventsMs": 30.023154,
+    "staleByMs": 10.100923,
+    "replyAgeMs": 11.779385
+   },
+   {
+    "seq": 6740,
+    "u": 17075,
+    "afterSwapMs": 27.572846,
+    "afterEventsMs": 30.511692,
+    "staleByMs": 9.527308,
+    "replyAgeMs": 9.818231
+   },
+   {
+    "seq": 6741,
+    "u": 17077,
+    "afterSwapMs": 25.721462,
+    "afterEventsMs": 29.454462,
+    "staleByMs": 8.160539,
+    "replyAgeMs": 13.233307
+   },
+   {
+    "seq": 6742,
+    "u": 17079,
+    "afterSwapMs": 27.882539,
+    "afterEventsMs": 29.658846,
+    "staleByMs": 11.976308,
+    "replyAgeMs": 12.735077
+   },
+   {
+    "seq": 6743,
+    "u": 17081,
+    "afterSwapMs": 25.131385,
+    "afterEventsMs": 29.122693,
+    "staleByMs": 7.728308,
+    "replyAgeMs": 18.089923
+   },
+   {
+    "seq": 6744,
+    "u": 17084,
+    "afterSwapMs": 29.002461,
+    "afterEventsMs": 30.782461,
+    "staleByMs": 10.156538,
+    "replyAgeMs": 5.807693
+   },
+   {
+    "seq": 6745,
+    "u": 17085,
+    "afterSwapMs": 26.683923,
+    "afterEventsMs": 30.134385,
+    "staleByMs": 10.427,
+    "replyAgeMs": 21.361231
+   },
+   {
+    "seq": 6746,
+    "u": 17087,
+    "afterSwapMs": 25.797923,
+    "afterEventsMs": 29.932385,
+    "staleByMs": 9.142846,
+    "replyAgeMs": 18.359615
+   },
+   {
+    "seq": 6747,
+    "u": 17089,
+    "afterSwapMs": 26.859692,
+    "afterEventsMs": 29.467,
+    "staleByMs": 8.914769,
+    "replyAgeMs": 19.091154
+   }
+  ]
+ }
+}

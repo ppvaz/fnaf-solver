@@ -1,0 +1,204 @@
+{
+ "schema": "recompile-calib-replay-summary-v1",
+ "step": "ROADMAP S2",
+ "claimLevel": "MODEL_ONLY",
+ "fidelity": "rebuilt-runtime",
+ "question": "Does the host harness, given only the phone's seed, per-update dt and polled input updates, reproduce a night the calibration build played on the phone, and does each of the three matter?",
+ "hostBinary": "66d6e2f6-d9cc45ff",
+ "phoneApkSha256": "34d698e50439e71f212cc7d8a6b54dc99b5df627a4117a4914f0a4be3aa4228f",
+ "runs": [
+  {
+   "label": "night1-exact",
+   "variant": {
+    "seed": 24952,
+    "phoneFrameTimes": true
+   },
+   "schema": "recompile-calib-replay-v1",
+   "step": "ROADMAP S2",
+   "claimLevel": "MODEL_ONLY",
+   "fidelity": "rebuilt-runtime",
+   "question": "Given the phone's seed, per-update dt and polled input updates, does the host harness reproduce the calibration build's office night draw for draw?",
+   "seed": 24952,
+   "inputsSha256": {
+    "calibUpdates": "e63b67305ae22ed58766f3908a3a366b2599e6e295b172090e853fab78e85bf1",
+    "frametimes": "b07bfe96398cbb27329010564c778c4f5e4c6c8035639f5c3e7cab09e383efc8",
+    "runInput": "7d7857f6d8224ed8bf08f749ed90645f89b04b8c13e6f196f319e7c9e9785cce",
+    "trace": "c94e1a39e582fc9ab895ce11b0833697ef03a60efe3fb0b71e0616ba35e55202"
+   },
+   "result": {
+    "compared": 18814,
+    "phoneUpdates": 18814,
+    "hostUpdates": 18814,
+    "agree": 18814,
+    "firstDivergence": null
+   },
+   "evidenceId": "calib-replay-d5745038bdd37c30"
+  },
+  {
+   "label": "night1-constant-dt",
+   "variant": {
+    "seed": 24952,
+    "phoneFrameTimes": false
+   },
+   "schema": "recompile-calib-replay-v1",
+   "step": "ROADMAP S2",
+   "claimLevel": "MODEL_ONLY",
+   "fidelity": "rebuilt-runtime",
+   "question": "Given the phone's seed, per-update dt and polled input updates, does the host harness reproduce the calibration build's office night draw for draw?",
+   "seed": 24952,
+   "inputsSha256": {
+    "calibUpdates": "e63b67305ae22ed58766f3908a3a366b2599e6e295b172090e853fab78e85bf1",
+    "frametimes": "b07bfe96398cbb27329010564c778c4f5e4c6c8035639f5c3e7cab09e383efc8",
+    "runInput": "7d7857f6d8224ed8bf08f749ed90645f89b04b8c13e6f196f319e7c9e9785cce",
+    "trace": "9ac31436ad6f5101ba727e4b7f463cae4194993c5cbf1124f1a6bbe2428d8e4a"
+   },
+   "result": {
+    "compared": 18812,
+    "phoneUpdates": 18814,
+    "hostUpdates": 18812,
+    "agree": 15402,
+    "firstDivergence": {
+     "update": 7,
+     "phone": {
+      "draws": 2,
+      "state": 40368
+     },
+     "host": {
+      "draws": 4,
+      "state": 55144
+     }
+    }
+   },
+   "evidenceId": "calib-replay-02be61aa038eabde"
+  },
+  {
+   "label": "night1-seed-plus8",
+   "variant": {
+    "seed": 24960,
+    "phoneFrameTimes": true
+   },
+   "schema": "recompile-calib-replay-v1",
+   "step": "ROADMAP S2",
+   "claimLevel": "MODEL_ONLY",
+   "fidelity": "rebuilt-runtime",
+   "question": "Given the phone's seed, per-update dt and polled input updates, does the host harness reproduce the calibration build's office night draw for draw?",
+   "seed": 24952,
+   "inputsSha256": {
+    "calibUpdates": "e63b67305ae22ed58766f3908a3a366b2599e6e295b172090e853fab78e85bf1",
+    "frametimes": "b07bfe96398cbb27329010564c778c4f5e4c6c8035639f5c3e7cab09e383efc8",
+    "runInput": "7d7857f6d8224ed8bf08f749ed90645f89b04b8c13e6f196f319e7c9e9785cce",
+    "trace": "367908cffdbdc66487bc6b699f8c0851ffc60cf50cc99cb3b58d46e461c841c9"
+   },
+   "result": {
+    "compared": 16354,
+    "phoneUpdates": 18814,
+    "hostUpdates": 16354,
+    "agree": 0,
+    "firstDivergence": {
+     "update": 1,
+     "phone": {
+      "draws": 2,
+      "state": 40368
+     },
+     "host": {
+      "draws": 2,
+      "state": 5176
+     }
+    }
+   },
+   "evidenceId": "calib-replay-aef83c193dd66782"
+  },
+  {
+   "label": "night1-inputs-plus1",
+   "variant": {
+    "seed": 24952,
+    "phoneFrameTimes": true
+   },
+   "schema": "recompile-calib-replay-v1",
+   "step": "ROADMAP S2",
+   "claimLevel": "MODEL_ONLY",
+   "fidelity": "rebuilt-runtime",
+   "question": "Given the phone's seed, per-update dt and polled input updates, does the host harness reproduce the calibration build's office night draw for draw?",
+   "seed": 24952,
+   "inputsSha256": {
+    "calibUpdates": "e63b67305ae22ed58766f3908a3a366b2599e6e295b172090e853fab78e85bf1",
+    "frametimes": "b07bfe96398cbb27329010564c778c4f5e4c6c8035639f5c3e7cab09e383efc8",
+    "runInput": "5664440791b2ed6995a90d385dc3603e5acd5c285be78c89e780f09e2a93ddc3",
+    "trace": "3c01928cd55bf05cbe84234d0076edd031998fdcd2130de5957d8ab63b49cd5f"
+   },
+   "result": {
+    "compared": 18814,
+    "phoneUpdates": 18814,
+    "hostUpdates": 18814,
+    "agree": 18814,
+    "firstDivergence": null
+   },
+   "evidenceId": "calib-replay-d765f7506bad0738"
+  },
+  {
+   "label": "night2-monitor-exact",
+   "variant": {
+    "seed": 9200,
+    "phoneFrameTimes": true
+   },
+   "schema": "recompile-calib-replay-v1",
+   "step": "ROADMAP S2",
+   "claimLevel": "MODEL_ONLY",
+   "fidelity": "rebuilt-runtime",
+   "question": "Given the phone's seed, per-update dt and polled input updates, does the host harness reproduce the calibration build's office night draw for draw?",
+   "seed": 9200,
+   "inputsSha256": {
+    "calibUpdates": "9265866f8a52d24dcdc3cb88b9905bf9de9c8253f111ddd55a55d0ffea453c8f",
+    "frametimes": "5d8b16bc0539d4cdaae426d962de81dfc1ebb94b95b74bc3ff23e257e584519a",
+    "runInput": "662b3534420fe1bfa42c0b607368062de9676b0db6c036ed3c01b535f79bd47a",
+    "trace": "a8aed8ad7ffcbd34595df20f21c7ab17bcc8d91d0a597335cd88bdb2e589ebf7"
+   },
+   "result": {
+    "compared": 16113,
+    "phoneUpdates": 16113,
+    "hostUpdates": 16113,
+    "agree": 16113,
+    "firstDivergence": null
+   },
+   "evidenceId": "calib-replay-552fd863e50666ca"
+  },
+  {
+   "label": "night2-monitor-inputs-plus1",
+   "variant": {
+    "seed": 9200,
+    "phoneFrameTimes": true
+   },
+   "schema": "recompile-calib-replay-v1",
+   "step": "ROADMAP S2",
+   "claimLevel": "MODEL_ONLY",
+   "fidelity": "rebuilt-runtime",
+   "question": "Given the phone's seed, per-update dt and polled input updates, does the host harness reproduce the calibration build's office night draw for draw?",
+   "seed": 9200,
+   "inputsSha256": {
+    "calibUpdates": "9265866f8a52d24dcdc3cb88b9905bf9de9c8253f111ddd55a55d0ffea453c8f",
+    "frametimes": "5d8b16bc0539d4cdaae426d962de81dfc1ebb94b95b74bc3ff23e257e584519a",
+    "runInput": "04bc4ff1daa097db7a8bcf2d52ca3cb007d00a61798cae93f8013fc43a78fc39",
+    "trace": "79535308f80bd7830ead2bb316f37b3545addf313c14ed5e68634a68d88be802"
+   },
+   "result": {
+    "compared": 16113,
+    "phoneUpdates": 16113,
+    "hostUpdates": 16113,
+    "agree": 16098,
+    "firstDivergence": {
+     "update": 962,
+     "phone": {
+      "draws": 437,
+      "state": 14561
+     },
+     "host": {
+      "draws": 435,
+      "state": 8153
+     }
+    }
+   },
+   "evidenceId": "calib-replay-862625e19ef703df"
+  }
+ ],
+ "evidenceId": "calib-replay-summary-492e9e289e5285e1"
+}
