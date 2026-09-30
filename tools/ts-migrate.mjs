@@ -9,8 +9,9 @@
 //      @param, a function's @returns and @template, a variable's or a class
 //      property's @type, a cast `/** @type {T} */ (e)` as `(e as T)`, a
 //      @typedef (with its @property tags) as an exported `type`, and each field
-//      a constructor or method assigns (`this.x = ...`) is declared with the
-//      type the JavaScript checker already gave it. A JSDoc type is copied as
+//      a constructor or method assigns (`this.x = ...`), or the module installs
+//      on the prototype, is declared (`declare`, so no runtime field appears)
+//      with the type the JavaScript checker already gave it. A JSDoc type is copied as
 //      written unless it uses syntax TypeScript does not accept (`*`, `?T`,
 //      `T=`, `Array.<T>`, `Object`, `function(...)`, nested `opts.x` tags), in
 //      which case the checker's own reading of it is written instead;
@@ -38,17 +39,94 @@
 //   node tools/ts-migrate.mjs DIR        migrate every tracked .js under DIR
 //   node tools/ts-migrate.mjs DIR --dry  print what would move and change nothing
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '..');
 const git = (...args) => execFileSync('git', args, { cwd: ROOT, encoding: 'utf8', maxBuffer: 1 << 26 });
-const [dirArg, ...flags] = process.argv.slice(2);
-if (!dirArg) { console.error('usage: node tools/ts-migrate.mjs DIR [--dry]'); process.exit(2); }
+const ARITY_ONLY = process.argv.includes('--arity');
+const [dirArg, ...flags] = process.argv.slice(2).filter(arg => arg !== '--arity');
+if (!dirArg) { console.error('usage: node tools/ts-migrate.mjs DIR [--dry | --arity]'); process.exit(2); }
 const DRY = flags.includes('--dry');
 const DIR = relative(ROOT, resolve(dirArg));
+
+/**
+ * In a .js file every parameter is optional to a caller; in a .ts file one
+ * without `?` or a default is required. So a call that passed fewer arguments
+ * than its callee declares -- legal as JavaScript -- is TS2554 once both are
+ * TypeScript. This marks exactly those callees' missing parameters optional
+ * (`?`, erased like any type), from TypeScript's own diagnostics over the
+ * migrated files under the checked options, until none is left.
+ * @param {string[]} paths repository-relative .ts files
+ */
+function relaxArity(paths) {
+  const parsedJs = ts.getParsedCommandLineOfConfigFile(join(ROOT, 'tsconfig.js.json'), {},
+    { ...ts.sys, onUnRecoverableConfigFileDiagnostic: d => { throw new Error(ts.flattenDiagnosticMessageText(d.messageText, '\n')); } });
+  const absolute = new Set(paths.map(path => join(ROOT, path)));
+  let marked = 0;
+  for (let round = 0; round < 12; round += 1) {
+    const program = ts.createProgram([...absolute], { ...parsedJs.options, noEmit: true });
+    const checker = program.getTypeChecker();
+    const edits = new Map(); // file -> Set of insert positions
+    for (const name of absolute) {
+      const sf = program.getSourceFile(name);
+      for (const diagnostic of program.getSemanticDiagnostics(sf)) {
+        if (diagnostic.code !== 2554 && diagnostic.code !== 2555) continue;
+        let call = null;
+        const find = node => {
+          if (call) return;
+          if ((ts.isCallExpression(node) || ts.isNewExpression(node)) && node.getStart() <= diagnostic.start &&
+              diagnostic.start < node.getEnd()) {
+            call = node;
+            ts.forEachChild(node, find);
+            return;
+          }
+          if (node.getStart() <= diagnostic.start && diagnostic.start < node.getEnd()) ts.forEachChild(node, find);
+        };
+        ts.forEachChild(sf, find);
+        // The innermost call spanning the diagnostic.
+        const innermost = node => {
+          let best = node;
+          const walk = n => {
+            if ((ts.isCallExpression(n) || ts.isNewExpression(n)) && n.getStart() <= diagnostic.start && diagnostic.start < n.getEnd())
+              best = n;
+            if (n.getStart() <= diagnostic.start && diagnostic.start < n.getEnd()) ts.forEachChild(n, walk);
+          };
+          ts.forEachChild(node, walk);
+          return best;
+        };
+        if (!call) continue;
+        call = innermost(call);
+        const declaration = checker.getResolvedSignature(call)?.declaration;
+        if (!declaration || !declaration.parameters || !absolute.has(declaration.getSourceFile().fileName)) continue;
+        const given = call.arguments?.length ?? 0;
+        declaration.parameters.forEach((param, index) => {
+          if (index < given || param.questionToken || param.initializer || param.dotDotDotToken) return;
+          if (param.name.getText() === 'this') return;
+          const file = declaration.getSourceFile().fileName;
+          if (!edits.has(file)) edits.set(file, new Set());
+          edits.get(file).add(param.name.getEnd());
+        });
+      }
+    }
+    if (!edits.size) break;
+    for (const [file, positions] of edits) {
+      let text = readFileSync(file, 'utf8');
+      for (const at of [...positions].sort((a, b) => b - a)) { text = text.slice(0, at) + '?' + text.slice(at); marked += 1; }
+      writeFileSync(file, text);
+    }
+  }
+  return marked;
+}
+
+if (ARITY_ONLY) {
+  const paths = git('ls-files', '-z', '--', `${DIR}/**/*.ts`, `${DIR}/*.ts`).split('\0').filter(Boolean)
+    .filter(path => !path.endsWith('.d.ts'));
+  console.log(`ts-migrate --arity: ${relaxArity(paths)} parameters marked optional under ${DIR}`);
+  process.exit(0);
+}
 const moving = git('ls-files', '-z', '--', `${DIR}/**/*.js`, `${DIR}/*.js`).split('\0').filter(Boolean).sort();
 if (!moving.length) { console.error(`ts-migrate: no tracked .js under ${DIR}`); process.exit(1); }
 console.log(`ts-migrate: ${moving.length} modules under ${DIR}`);
@@ -130,6 +208,30 @@ for (const path of moving) {
   const text = file.text;
   const edits = [];
   const insert = (at, value) => edits.push({ start: at, end: at, text: value });
+  // `Object.defineProperty(C.prototype, 'name', { value: v, ... })` and
+  // `C.prototype.name = v` for a class C of this file: the member name and v.
+  const installed = new Map();
+  for (const statement of file.statements) {
+    if (!ts.isExpressionStatement(statement)) continue;
+    const e = statement.expression;
+    let owner = null, name = null, value = null;
+    if (ts.isCallExpression(e) && e.expression.getText() === 'Object.defineProperty' && e.arguments.length === 3 &&
+        ts.isPropertyAccessExpression(e.arguments[0]) && e.arguments[0].name.text === 'prototype' &&
+        ts.isStringLiteral(e.arguments[1]) && ts.isObjectLiteralExpression(e.arguments[2])) {
+      const valueProp = e.arguments[2].properties.find(p => ts.isPropertyAssignment(p) && p.name.getText() === 'value');
+      if (valueProp && (ts.isIdentifier(valueProp.initializer) || ts.isPropertyAccessExpression(valueProp.initializer))) {
+        owner = e.arguments[0].expression.getText(); name = e.arguments[1].text; value = valueProp.initializer.getText();
+      }
+    } else if (ts.isBinaryExpression(e) && e.operatorToken.kind === K.EqualsToken && ts.isPropertyAccessExpression(e.left) &&
+        ts.isPropertyAccessExpression(e.left.expression) && e.left.expression.name.text === 'prototype' &&
+        (ts.isIdentifier(e.right) || ts.isPropertyAccessExpression(e.right))) {
+      owner = e.left.expression.expression.getText(); name = e.left.name.text; value = e.right.getText();
+    }
+    if (owner && name && value) {
+      if (!installed.has(owner)) installed.set(owner, []);
+      installed.get(owner).push({ name, value });
+    }
+  }
   const functionLike = node => ts.isFunctionDeclaration(node) || ts.isFunctionExpression(node) || ts.isArrowFunction(node) ||
     ts.isMethodDeclaration(node) || ts.isConstructorDeclaration(node) || ts.isGetAccessorDeclaration(node) || ts.isSetAccessorDeclaration(node);
   const visit = node => {
@@ -163,6 +265,10 @@ for (const path of moving) {
         const open = single ? node.parameters[0].getStart() : text.lastIndexOf('(', node.parameters.pos);
         insert(open, `<${params.join(', ')}${ts.isArrowFunction(node) && params.length === 1 ? ',' : ''}>`);
       }
+      // `@this {T}` is TypeScript's `this: T` parameter, erased like any type.
+      const thisTag = ts.getJSDocTags(node).find(ts.isJSDocThisTag);
+      if (thisTag?.typeExpression && !ts.isArrowFunction(node) && node.parameters[0]?.name.getText() !== 'this')
+        insert(node.parameters.pos, `this: ${clean(thisTag.typeExpression.type.getText())}${node.parameters.length ? ', ' : ''}`);
       const paramTags = ts.getJSDocTags(node).filter(ts.isJSDocParameterTag);
       const returns = ts.getJSDocReturnType(node);
       const typedReturn = returns && !node.type && !ts.isConstructorDeclaration(node) && !ts.isSetAccessorDeclaration(node);
@@ -206,9 +312,11 @@ for (const path of moving) {
         insert(node.name.getEnd(), `: ${typeText}`);
       }
     }
-    // Fields a class assigns and never declares.
+    // Fields a class assigns and never declares, and members the module
+    // installs on its prototype (declared, since TypeScript infers neither).
     if (ts.isClassDeclaration(node) || ts.isClassExpression(node)) {
       const declared = new Set(node.members.map(member => member.name?.getText()).filter(Boolean));
+      const installedHere = (node.name && installed.get(node.name.text) || []).filter(item => !declared.has(item.name));
       const assigned = [];
       const scan = n => {
         if (ts.isFunctionDeclaration(n) || ts.isFunctionExpression(n) || ts.isClassLike(n)) return;
@@ -224,14 +332,18 @@ for (const path of moving) {
              ts.isSetAccessorDeclaration(member)) && !member.modifiers?.some(m => m.kind === K.StaticKeyword) && member.body)
           ts.forEachChild(member.body, scan);
       }
-      if (assigned.length) {
+      if (assigned.length || installedHere.length) {
         const instance = checker.getDeclaredTypeOfSymbol(node.name ? checker.getSymbolAtLocation(node.name) : node.symbol);
         const first = node.members[0];
         const indent = first ? (text.slice(text.lastIndexOf('\n', first.getStart()) + 1, first.getStart()).match(/^\s*/)[0]) : '  ';
-        const lines = assigned.map(name => {
+        const lines = installedHere.map(({ name, value }) => `${indent}declare ${name}: typeof ${value};\n`).join('') +
+          assigned.filter(name => !installedHere.some(item => item.name === name)).map(name => {
           const prop = instance.getProperty(name);
           const typeText = prop ? checkerText(checker.getTypeOfSymbolAtLocation(prop, node), path, `field ${name}`) : 'any';
-          return `${indent}${name}: ${typeText};\n`;
+          // `declare`: a class field without it is a runtime field under ES2022 -- an own property set to
+          // undefined before the constructor runs, which shadows a prototype accessor (the model-options
+          // setter on Sim.prototype.opts) -- and this pass adds types, never fields.
+          return `${indent}declare ${name}: ${typeText};\n`;
         }).join('');
         insert(first ? text.lastIndexOf('\n', first.getStart()) + 1 : node.members.pos, first ? lines : `\n${lines}`);
       }
@@ -376,12 +488,41 @@ for (const path of targets) {
 const movedAbs = new Map([...renamed].map(([from, to]) => [join(ROOT, from), join(ROOT, to)]));
 const scripts = git('ls-files', '-z', '--', '*.js', '*.mjs', '*.cjs', '*.ts', '*.mts').split('\0').filter(Boolean);
 const SPEC = /((?:\bfrom|\bimport)\s*\(?\s*['"])(\.{1,2}\/[^'"\n]+\.js)(['"])/g;
+// A workspace specifier that names a file through a wildcard export
+// (`@sixam/source/games/fnaf2/mechanics.js` through "./games/*") names the
+// .ts after the move; an exact export follows the manifest instead.
+const BARE = /((?:\bfrom|\bimport)\s*\(?\s*['"])(@[\w-]+\/[\w-]+\/[^'"\n]+\.js)(['"])/g;
+const workspaces = new Map();
+for (const group of ['packages', 'apps']) {
+  for (const dir of readdirSync(join(ROOT, group))) {
+    const manifestPath = join(ROOT, group, dir, 'package.json');
+    if (!existsSync(manifestPath)) continue;
+    const manifestJson = JSON.parse(readFileSync(manifestPath, 'utf8'));
+    workspaces.set(manifestJson.name, { dir: join(ROOT, group, dir), exports: manifestJson.exports ?? {} });
+  }
+}
+const wildcardTarget = spec => {
+  const [scope, name, ...rest] = spec.split('/');
+  const workspace = workspaces.get(`${scope}/${name}`);
+  if (!workspace || typeof workspace.exports !== 'object') return null;
+  const subpath = `./${rest.join('/')}`;
+  for (const [key, value] of Object.entries(workspace.exports)) {
+    if (!key.endsWith('*') || typeof value !== 'string' || !subpath.startsWith(key.slice(0, -1))) continue;
+    return join(workspace.dir, value.replace('*', subpath.slice(key.length - 1)));
+  }
+  return null;
+};
 let rewritten = 0;
 for (const path of scripts) {
   if (!existsSync(join(ROOT, path))) continue;
   const text = read(path);
   const next = text.replace(SPEC, (match, head, spec, tail) => {
     if (!movedAbs.has(resolve(ROOT, dirname(path), spec))) return match;
+    rewritten += 1;
+    return `${head}${spec.replace(/\.js$/, '.ts')}${tail}`;
+  }).replace(BARE, (match, head, spec, tail) => {
+    const target = wildcardTarget(spec);
+    if (!target || !movedAbs.has(target)) return match;
     rewritten += 1;
     return `${head}${spec.replace(/\.js$/, '.ts')}${tail}`;
   });
@@ -398,6 +539,9 @@ if (manifest) {
   if (next !== text) { write(manifest, next); console.log(`  ${manifest}: exports name the .ts modules`); }
 }
 console.log(`  ${rewritten} relative specifiers now name a .ts module`);
+
+// ---- 6. parameters JavaScript left optional ------------------------------------------
+console.log(`  ${relaxArity(targets)} parameters marked optional where a call passed fewer arguments`);
 
 // ---- what a person has to look at ------------------------------------------------------
 for (const note of notes) console.log(`  note: ${note}`);

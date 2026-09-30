@@ -150,14 +150,14 @@ function serialDistance(next, previous) {
  * choose UNKNOWN/recovery instead of silently treating the line as complete.
  */
 export class FactLinkReceiver {
-  staleAfterMs: number;
-  lastSeq: any;
-  lastSenderReceivedMs: any;
-  lastLinkReceiptMs: any;
-  gapCount: number;
-  lastGap: { after: any; before: any; missing: number; };
-  accepted: number;
-  rejected: number;
+  declare staleAfterMs: number;
+  declare lastSeq: any;
+  declare lastSenderReceivedMs: any;
+  declare lastLinkReceiptMs: any;
+  declare gapCount: number;
+  declare lastGap: { after: any; before: any; missing: number; };
+  declare accepted: number;
+  declare rejected: number;
   constructor({ staleAfterMs = 1000, initialSeq = null } = {}) {
     if (!finite(staleAfterMs) || staleAfterMs <= 0)
       throw new RangeError('staleAfterMs must be positive');
@@ -273,11 +273,11 @@ function validateCycleApproval({ cycleId, validFromMs, validUntilMs, actions }) 
  * from the bounded approval until its validity window expires.
  */
 export class SafeCycleHandoff {
-  linkTimeoutMs: number;
-  maxActions: number;
-  approval: { cycleId: any; validFromMs: any; validUntilMs: any; actions: any[]; };
-  emitted: Set<any>;
-  lastLinkMs: any;
+  declare linkTimeoutMs: number;
+  declare maxActions: number;
+  declare approval: { cycleId: any; validFromMs: any; validUntilMs: any; actions: any[]; };
+  declare emitted: Set<any>;
+  declare lastLinkMs: any;
   constructor({ linkTimeoutMs = 500, maxActions = MAX_CYCLE_ACTIONS } = {}) {
     if (!finite(linkTimeoutMs) || linkTimeoutMs <= 0)
       throw new RangeError('linkTimeoutMs must be positive');
