@@ -29,3 +29,11 @@ device executor enforces. It is serialized from
 each game's `packages/source/src/games/<game>/controls.js`, registered in
 `packages/source/src/clockwork/control-registry.js`, the same objects `semantic-control-v1`,
 the profile resolver and the executor generate their checks from.
+
+`winner-hashes.json` is each committed `tools/device/*-winner.json` with its
+sha256 and the `winnerHash` a bundle compiled from it records (`compileBundle`
+normalises a winner, so a pack can name a hash that is not the file's own
+`stableHash`); a winner that does not compile carries `compiledWinnerHash: null`
+and why. Compiling is Propose's, and Review never imports Propose (ADR 0002), so
+Review's `trackedWinners()` reads this register instead, and refuses it when a
+winner file's bytes differ from the sha256 recorded here.

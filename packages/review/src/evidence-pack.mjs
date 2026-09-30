@@ -34,12 +34,10 @@
 // recovered pack fully, the same as one whose directory survived, so its manifest is complete
 // when its result and events came back; `custody.lost` stays in the pack and in every reading.
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { canonicalJson, stableHash } from '@sixam/kernel/contracts';
 import { isCampaignResult, campaignEntry, campaignPromotionChecks } from './evidence-campaign.mjs';
-import { compileBundle } from '../../../tools/device/bundle.mjs';
 
 export const RUN_PACK_SCHEMA = 'run-pack-v1';
 /**
@@ -537,25 +535,31 @@ export function packEntry(id, { pack, wrapper }) {
     : { id, kind: 'device-campaign', outcome: pack.outcome, claimLevel: pack.claimLevel, nights: pack.nights, attempts: [] };
 }
 
+/** The generated register of each committed winner's compiled winnerHash (tools/generate-catalog.js). */
+export const WINNER_HASHES = 'docs/architecture/generated/winner-hashes.json';
+
 /**
  * Committed winners by the hash a bundle compiled from them records as `winnerHash`. That is
  * not always the file's own stableHash: compileBundle normalises a winner (it stamps the gate
  * with the replay hash), so night1-minimal, night1-minus7 and night6 compile to a different
- * hash than the file has. Both are mapped, and a winner that no longer compiles keeps only its
- * file hash.
+ * hash than the file has. Both are mapped, and a winner that does not compile keeps only its
+ * file hash. Compiling is Propose's, and Review never imports Propose (ADR 0002), so the
+ * compiled hashes come from the generated register; a winner file whose bytes differ from the
+ * register's sha256, or that the register does not list, is refused as a stale register.
  * @param {string} root
  * @returns {Map<string, string>}
  */
 export function trackedWinners(root) {
   const dir = join(root, 'tools', 'device');
+  const register = new Map(readJson(join(root, WINNER_HASHES)).winners.map(row => [basename(row.file), row]));
   const winners = new Map();
   for (const name of readdirSync(dir).filter(file => file.endsWith('-winner.json')).sort()) {
-    const winner = readJson(join(dir, name));
-    winners.set(stableHash(winner), name);
-    const scratch = mkdtempSync(join(tmpdir(), 'winner-compile-'));
-    try { winners.set(compileBundle(winner, join(scratch, 'bundle')).manifest.winnerHash, name); }
-    catch { /* not compilable under this engine: only its file hash identifies it */ }
-    finally { rmSync(scratch, { recursive: true, force: true }); }
+    const bytes = readFileSync(join(dir, name));
+    const row = register.get(name);
+    if (!row || row.sha256 !== sha256(bytes))
+      throw new Error(`${WINNER_HASHES} is stale for tools/device/${name}: run \`npm run catalog\``);
+    winners.set(stableHash(JSON.parse(bytes.toString('utf8'))), name);
+    if (row.compiledWinnerHash) winners.set(row.compiledWinnerHash, name);
   }
   return winners;
 }

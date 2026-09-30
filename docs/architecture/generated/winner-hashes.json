@@ -1,0 +1,148 @@
+{
+  "schema": "winner-hashes-v1",
+  "generatedFrom": "tools/generate-catalog.js (compileBundle over tools/device/*-winner.json)",
+  "winners": [
+    {
+      "file": "tools/device/campaign-night1-minimal-winner.json",
+      "sha256": "efc64897bc2e6fe8e4be8955ee7b76cccbc0ed2cf298c41c4ab468f76dba8c48",
+      "compiledWinnerHash": "fnv1a-537a1bbf"
+    },
+    {
+      "file": "tools/device/campaign-night1-minus7-n1-first-winner.json",
+      "sha256": "ac4cbbb25f73bae0e5a09772b5ccb226e01a8a46a831b9ed9b5c37849dd2a11a",
+      "compiledWinnerHash": "fnv1a-2e6a42e3"
+    },
+    {
+      "file": "tools/device/campaign-night1-minus7-winner.json",
+      "sha256": "23d017e9241dddd5fb50564d7a4718484bc7ede410eb7dd2e9bbbb8802dafa8d",
+      "compiledWinnerHash": "fnv1a-58e73bd5"
+    },
+    {
+      "file": "tools/device/campaign-night5-contact-final-20260912-winner.json",
+      "sha256": "9441622efda32b0834d1221628415d3ef933e0126830bfcb198d71ac29937d7c",
+      "compiledWinnerHash": "fnv1a-f430f190"
+    },
+    {
+      "file": "tools/device/campaign-night5-contact-final-winner.json",
+      "sha256": "255a0d78dcbc62343c8706f1d716ae839c7d995344c54996ab1fd4d953ecdd5e",
+      "compiledWinnerHash": "fnv1a-f430f190"
+    },
+    {
+      "file": "tools/device/campaign-night5-hallfix-winner.json",
+      "sha256": "1634a184f56e65be109c886bb7d9440ac9f4f715adee7e43b37df0a671a2ce0d",
+      "compiledWinnerHash": "fnv1a-148bab0b"
+    },
+    {
+      "file": "tools/device/campaign-night5-mask5plus-winner.json",
+      "sha256": "637e1f2d4a3844816ea4467dd7fa384358865b29e9267405541c2063b479a8f5",
+      "compiledWinnerHash": "fnv1a-4a7ea155"
+    },
+    {
+      "file": "tools/device/campaign-night5-noflash-winner.json",
+      "sha256": "4f318495b8da385760aadea90fcacc7f1eaa3d4c636b9ba75c1f7e1295b76ac8",
+      "compiledWinnerHash": "fnv1a-1a0e32b7"
+    },
+    {
+      "file": "tools/device/campaign-night5-toys-n5-winner.json",
+      "sha256": "b1654fcd16551381f92c90b5a250dc8d9ed625223c412f65a933ac17306c3862",
+      "compiledWinnerHash": "fnv1a-9ca64157"
+    },
+    {
+      "file": "tools/device/campaign-night6-b-winner.json",
+      "sha256": "d0ae423aeb2688b65ad3f57266ddd7d81c8d6fdfe0c8d41c730d19b26c1c263a",
+      "compiledWinnerHash": "fnv1a-3c7ba773"
+    },
+    {
+      "file": "tools/device/campaign-night6-c-winner.json",
+      "sha256": "6be6ea922ead7e402b972bcd77a947614d0ecb95a8872a54e0b40e378c011ea0",
+      "compiledWinnerHash": "fnv1a-cf41e97e"
+    },
+    {
+      "file": "tools/device/campaign-night6-d-winner.json",
+      "sha256": "3c80739f4c9bbdc871530822ad5ac156625de5f33ea5e74ad67b13223edff8ab",
+      "compiledWinnerHash": "fnv1a-e3a68491"
+    },
+    {
+      "file": "tools/device/campaign-night6-e-winner.json",
+      "sha256": "b0619a3fd71576881481249b849fe2fde4949e6f3265b811e09de64081998f66",
+      "compiledWinnerHash": "fnv1a-ad6993c7"
+    },
+    {
+      "file": "tools/device/campaign-night6-f-winner.json",
+      "sha256": "ffea908c51e5213c5f463152b0718b534f4321c782017d6c832c88d56fbc3684",
+      "compiledWinnerHash": "fnv1a-b6c36d77"
+    },
+    {
+      "file": "tools/device/campaign-night6-g-winner.json",
+      "sha256": "61ff3d0845ca3c26b12855b1113d9b4118b60e43b59e5b41d7ecff209a0e9a4c",
+      "compiledWinnerHash": "fnv1a-1b43db92"
+    },
+    {
+      "file": "tools/device/campaign-night6-h-registered-winner.json",
+      "sha256": "fb8f0dffa24385cfbd8ac1d8179a804015fe199dfc78ce602a7ab097eaef4ef8",
+      "compiledWinnerHash": "fnv1a-3d5b2167"
+    },
+    {
+      "file": "tools/device/campaign-night6-h-winner.json",
+      "sha256": "b466b7a81b71e08845e475258463ec13cfd583a5c6f2b090395ca64d3def645c",
+      "compiledWinnerHash": "fnv1a-3d5b2167"
+    },
+    {
+      "file": "tools/device/campaign-night6-h2-winner.json",
+      "sha256": "59686dbb2182c7545ab27efae79390c48ebfab2961e30cb1e966e32e0a34a5f0",
+      "compiledWinnerHash": "fnv1a-c27182da"
+    },
+    {
+      "file": "tools/device/campaign-night6-winner.json",
+      "sha256": "dbfe73ad4db16f1678fca2a2cc15dd9b2f1659cf1e2f853fe60a8525a9263d4b",
+      "compiledWinnerHash": "fnv1a-59908edd"
+    },
+    {
+      "file": "tools/device/campaign-night7-i-winner.json",
+      "sha256": "eb9c0c306f86d2ce15af30ae408dc1d1c95b3d9a249f05ca4ec2a08e622bd47d",
+      "compiledWinnerHash": "fnv1a-651ed623"
+    },
+    {
+      "file": "tools/device/campaign-night7-j-winner.json",
+      "sha256": "7cadf889042d6a41e93ddef54b370de11d2654a38d163112b730590acae63423",
+      "compiledWinnerHash": "fnv1a-f337717a"
+    },
+    {
+      "file": "tools/device/campaign-night7-k2-winner.json",
+      "sha256": "6d7af32fd7377156c6a33c2f64f6be6ca5eb0d35e6b1702e9e5a9d1d5079e64f",
+      "compiledWinnerHash": "fnv1a-7e4bf3e8"
+    },
+    {
+      "file": "tools/device/campaign-night7-k3-winner.json",
+      "sha256": "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78",
+      "compiledWinnerHash": "fnv1a-5c8dcb5f"
+    },
+    {
+      "file": "tools/device/campaign-toys-night5-winner.json",
+      "sha256": "e98b0dc23e2b1571127addcc626db19e5f4775f8ec0ab326137d14ef64c11de8",
+      "compiledWinnerHash": "fnv1a-959f7cb5"
+    },
+    {
+      "file": "tools/device/campaign-toys-nights1-2-winner.json",
+      "sha256": "7e67e7085fd563cd441a3e99d33be1dc11b4d9690e117e2559ab6b205fe6cb83",
+      "compiledWinnerHash": "fnv1a-e75e1b68"
+    },
+    {
+      "file": "tools/device/campaign-toys-nights3-4-winner.json",
+      "sha256": "425826ae44d77e77137b6ba24a1e371cbc4ee9729ec21cdd40ed339dd7a7ec7b",
+      "compiledWinnerHash": "fnv1a-ce4aa3d8"
+    },
+    {
+      "file": "tools/device/fnaf1-custom-night7-420-grid420-winner.json",
+      "sha256": "a3f69cc2909b38e80ac5a6e691843052c98d06f00da34992dd0f8d2203e35f3f",
+      "compiledWinnerHash": null,
+      "notCompiled": "device bundle: winner schema mismatch"
+    },
+    {
+      "file": "tools/device/fnaf4-night3-loop-winner.json",
+      "sha256": "df30fece4995a53f5b88cd69d63b6562943c1af3a143c64805c06149da7aa700",
+      "compiledWinnerHash": null,
+      "notCompiled": "device bundle: winner schema mismatch"
+    }
+  ]
+}

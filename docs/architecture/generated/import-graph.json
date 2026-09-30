@@ -1281,12 +1281,10 @@
     {
       "file": "packages/review/src/evidence-pack.mjs",
       "imports": [
-        "../../../tools/device/bundle.mjs",
         "./evidence-campaign.mjs",
         "@sixam/kernel/contracts",
         "node:crypto",
         "node:fs",
-        "node:os",
         "node:path"
       ]
     },
@@ -3381,7 +3379,10 @@
       "imports": [
         "@sixam/source",
         "node:child_process",
+        "node:crypto",
+        "node:fs",
         "node:fs/promises",
+        "node:os",
         "node:path",
         "node:url"
       ]

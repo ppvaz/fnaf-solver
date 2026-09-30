@@ -1,9 +1,12 @@
 #!/usr/bin/env node
 /** Generate checked-in inventories from executable repository truth. */
 import { readFile, writeFile } from 'node:fs/promises';
+import { mkdtempSync, readdirSync, rmSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { join, relative, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { CONTROL_CATALOGS } from '@sixam/source';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));
@@ -435,6 +438,27 @@ const legacyPaths = [
   },
 ];
 
+// Every committed winner's compiled winnerHash. compileBundle normalises a
+// winner (it stamps the gate with the replay hash), so a pack can name a hash
+// that is not the file's own stableHash; only Propose can compile, and Review
+// never imports Propose (ADR 0002). So the catalog records the answer, CI's
+// catalog diff keeps it current, and Review's trackedWinners() reads it, refusing
+// when a winner file's bytes differ from the sha256 recorded here.
+const WINNERS_DIR = 'tools/device';
+const { compileBundle } = await import(pathToFileURL(join(ROOT, WINNERS_DIR, 'bundle.mjs')).href);
+const winnerHashes = [];
+for (const name of readdirSync(join(ROOT, WINNERS_DIR)).filter(file => file.endsWith('-winner.json')).sort()) {
+  const bytes = await readFile(join(ROOT, WINNERS_DIR, name));
+  const scratch = mkdtempSync(join(tmpdir(), 'winner-hashes-'));
+  let compiledWinnerHash = null;
+  let notCompiled;
+  try { compiledWinnerHash = compileBundle(JSON.parse(bytes.toString('utf8')), join(scratch, 'bundle')).manifest.winnerHash; }
+  catch (error) { notCompiled = error.message; }
+  finally { rmSync(scratch, { recursive: true, force: true }); }
+  winnerHashes.push({ file: `${WINNERS_DIR}/${name}`, sha256: createHash('sha256').update(bytes).digest('hex'),
+    compiledWinnerHash, ...(notCompiled ? { notCompiled } : {}) });
+}
+
 const outputs = {
   'import-graph.json': { schema: 'import-graph-v1', files: importGraph },
   'command-registry.json': { schema: 'command-registry-v1', source: ['package.json', ...toolIndexes], commands: commandRegistry, tools: toolCommands },
@@ -445,6 +469,8 @@ const outputs = {
   'duplicate-responsibilities.json': { schema: 'duplicate-responsibility-map-v1', entries: duplicateResponsibilities },
   'legacy-paths.json': { schema: 'legacy-path-map-v1', generatedFrom: 'tools/generate-catalog.js', entries: legacyPaths },
   'reverse-links.json': reverseLinks,
+  'winner-hashes.json': { schema: 'winner-hashes-v1', generatedFrom: 'tools/generate-catalog.js (compileBundle over tools/device/*-winner.json)',
+    winners: winnerHashes },
   // The per-game control catalogs as data (LEG-007): every descriptor with its
   // aliases, action kinds, binding, preconditions and observation, and FNaF 2's
   // artifact action table. The validators are generated from the same objects.

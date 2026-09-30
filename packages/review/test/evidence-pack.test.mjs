@@ -11,7 +11,7 @@ import { stableHash } from '@sixam/kernel/contracts';
 import { CAMPAIGN_RESULT_SCHEMA } from '../src/evidence-campaign.mjs';
 import { ATTESTATION_FILE, ATTESTATION_SCHEMA, ATTESTATION_SCHEMA_V1, buildFnaf1Pack, buildPack, packCustody, packDigest, packEntry,
   packPromotionChecks, readPack, recoverFromRunLog, recoveryCheck, refuseFrames, resolvePackTargets, trackedWinners,
-  writePack } from '../src/evidence-pack.mjs';
+  writePack, WINNER_HASHES } from '../src/evidence-pack.mjs';
 
 const sha256 = data => createHash('sha256').update(data).digest('hex');
 const root = mkdtempSync(join(tmpdir(), 'evidence-pack-test-'));
@@ -20,6 +20,11 @@ const put = (path, content) => { mkdirSync(join(root, path, '..'), { recursive: 
 try {
   const winner = { schema: 'winner-v1', strategy: 'minus-toys', knobs: { hallOffsetMs: 7400 } };
   put('tools/device/campaign-night5-test-winner.json', JSON.stringify(winner));
+  // The generated register trackedWinners reads (tools/generate-catalog.js): this synthetic
+  // winner does not compile, so only its file hash identifies it.
+  const registerRows = [{ file: 'tools/device/campaign-night5-test-winner.json', sha256: sha256(JSON.stringify(winner)), compiledWinnerHash: null }];
+  const writeRegister = () => put(WINNER_HASHES, JSON.stringify({ schema: 'winner-hashes-v1', winners: registerRows }));
+  writeRegister();
   put('artifacts/b1/manifest.json', JSON.stringify({ schema: 'device-bundle-v1', winnerHash: stableHash(winner) }));
 
   const campaign = 'campaign-2026-09-20T00-41-12.166Z';
@@ -122,6 +127,10 @@ try {
   // that bundle must still find its winner.
   const night6 = readFileSync(new URL('../../../tools/device/campaign-night6-winner.json', import.meta.url), 'utf8');
   put('tools/device/campaign-night6-winner.json', night6);
+  // Its compiled hash comes from the committed register, which must hold it.
+  const committed = JSON.parse(readFileSync(new URL(`../../../${WINNER_HASHES}`, import.meta.url), 'utf8'));
+  registerRows.push(committed.winners.find(row => row.file === 'tools/device/campaign-night6-winner.json'));
+  writeRegister();
   const withNight6 = trackedWinners(root);
   assert.equal(withNight6.get(stableHash(JSON.parse(night6))), 'campaign-night6-winner.json');
   assert.equal(withNight6.get('fnv1a-59908edd'), 'campaign-night6-winner.json', 'the compiled hash maps to the file too');
@@ -300,5 +309,28 @@ try {
     resultsNotPrinted: [`${campaign} (COMPLETE)`] }, 'a result logged in another shape is counted as not printed, not as recovered');
 } finally {
   rmSync(root, { recursive: true, force: true });
+}
+// trackedWinners reads the compiled hashes from the generated register (Review never compiles:
+// that is Propose's) and refuses a register that no longer matches the committed winner files.
+{
+  const root = mkdtempSync(join(tmpdir(), 'winner-hashes-'));
+  mkdirSync(join(root, 'tools/device'), { recursive: true });
+  mkdirSync(join(root, 'docs/architecture/generated'), { recursive: true });
+  const bytes = JSON.stringify({ schema: 'winner-v1', strategy: 'minus-toys' });
+  writeFileSync(join(root, 'tools/device/a-winner.json'), bytes);
+  const register = rows => writeFileSync(join(root, WINNER_HASHES), JSON.stringify({ schema: 'winner-hashes-v1', winners: rows }));
+  const digest = createHash('sha256').update(bytes).digest('hex');
+  try {
+    register([{ file: 'tools/device/a-winner.json', sha256: digest, compiledWinnerHash: 'fnv1a-00c0ffee' }]);
+    const winners = trackedWinners(root);
+    assert.equal(winners.get('fnv1a-00c0ffee'), 'a-winner.json', 'the compiled hash maps to its file');
+    assert.equal(winners.get(stableHash(JSON.parse(bytes))), 'a-winner.json', "the file's own stableHash maps too");
+    register([{ file: 'tools/device/a-winner.json', sha256: digest, compiledWinnerHash: null, notCompiled: 'device bundle: winner schema mismatch' }]);
+    assert.equal(trackedWinners(root).size, 1, 'a winner that does not compile keeps only its file hash');
+    register([{ file: 'tools/device/a-winner.json', sha256: 'e'.repeat(64), compiledWinnerHash: 'fnv1a-00c0ffee' }]);
+    assert.throws(() => trackedWinners(root), /stale.*npm run catalog/, 'changed winner bytes make the register stale');
+    register([]);
+    assert.throws(() => trackedWinners(root), /stale/, 'an unlisted winner makes the register stale');
+  } finally { rmSync(root, { recursive: true, force: true }); }
 }
 console.log('evidence pack: text crosses, frames and pixel grids stay behind by hash, paths are portable, tampering and unknown pixel fields are refused, the gate reads the pack, and a lost campaign recovered from its run log passes custody while saying what is lost');
