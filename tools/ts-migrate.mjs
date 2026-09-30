@@ -44,11 +44,14 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 
-const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '..');
+// TS_MIGRATE_ROOT points the tool at another repository (tools/test-ts-migrate.mjs's fixture).
+const ROOT = process.env.TS_MIGRATE_ROOT ? resolve(process.env.TS_MIGRATE_ROOT)
+  : resolve(fileURLToPath(new URL('.', import.meta.url)), '..');
 const git = (...args) => execFileSync('git', args, { cwd: ROOT, encoding: 'utf8', maxBuffer: 1 << 26 });
 const ARITY_ONLY = process.argv.includes('--arity');
-const [dirArg, ...flags] = process.argv.slice(2).filter(arg => arg !== '--arity');
-if (!dirArg) { console.error('usage: node tools/ts-migrate.mjs DIR [--dry | --arity]'); process.exit(2); }
+const RELAX_ONLY = process.argv.includes('--relax');
+const [dirArg, ...flags] = process.argv.slice(2).filter(arg => arg !== '--arity' && arg !== '--relax');
+if (!dirArg) { console.error('usage: node tools/ts-migrate.mjs DIR [--dry | --arity | --relax]'); process.exit(2); }
 const DRY = flags.includes('--dry');
 const DIR = relative(ROOT, resolve(dirArg));
 
@@ -119,6 +122,134 @@ function relaxArity(paths) {
     }
   }
   return marked;
+}
+
+/**
+ * In a .js file an object literal's type is open: reading a property it does
+ * not name is `any`, and `new Promise(...)` resolves to `any`. In a .ts file
+ * the literal is closed and the promise resolves to `unknown`, so code that
+ * checked as JavaScript fails with TS2339. Keeping the strictness the file had
+ * (Pedro, 2026-09-30: tighten later), this writes `new Promise<any>` where no
+ * type argument was given, and for each refused property types the local
+ * variable or parameter it was read from `any` (or, for any other object,
+ * casts it `as any` where it is read), from TypeScript's own diagnostics,
+ * until none is left. Every such `any` is the debt the tightening pays.
+ * @param {string[]} paths repository-relative .ts files
+ */
+function relaxOpenLiterals(paths) {
+  const parsedJs = ts.getParsedCommandLineOfConfigFile(join(ROOT, 'tsconfig.js.json'), {},
+    { ...ts.sys, onUnRecoverableConfigFileDiagnostic: d => { throw new Error(ts.flattenDiagnosticMessageText(d.messageText, '\n')); } });
+  const absolute = new Set(paths.map(path => join(ROOT, path)));
+  let promises = 0, typed = 0, cast = 0;
+  // new Promise(...) -> new Promise<any>(...)
+  for (const name of absolute) {
+    const text = readFileSync(name, 'utf8');
+    const sf = ts.createSourceFile(name, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    const at = [];
+    const visit = node => {
+      if (ts.isNewExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'Promise' && !node.typeArguments)
+        at.push(node.expression.getEnd());
+      ts.forEachChild(node, visit);
+    };
+    visit(sf);
+    if (!at.length) continue;
+    let next = text;
+    for (const pos of at.sort((a, b) => b - a)) next = next.slice(0, pos) + '<any>' + next.slice(pos);
+    writeFileSync(name, next);
+    promises += at.length;
+  }
+  for (let round = 0; round < 12; round += 1) {
+    const program = ts.createProgram([...absolute], { ...parsedJs.options, noEmit: true });
+    const checker = program.getTypeChecker();
+    const edits = new Map(); // file -> Map(position -> text)
+    const add = (file, pos, textToInsert) => {
+      if (!edits.has(file)) edits.set(file, new Map());
+      if (!edits.get(file).has(pos)) edits.get(file).set(pos, textToInsert);
+    };
+    for (const name of absolute) {
+      const sf = program.getSourceFile(name);
+      for (const diagnostic of program.getSemanticDiagnostics(sf)) {
+        // `resolve()` with no value under Promise<any> (TS2794): the promise resolves to nothing.
+        if (diagnostic.code === 2794) {
+          let promise = null;
+          const findPromise = node => {
+            if (ts.isNewExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'Promise' &&
+                node.getStart() <= diagnostic.start && diagnostic.start < node.getEnd()) promise = node;
+            if (node.getStart() <= diagnostic.start && diagnostic.start < node.getEnd()) ts.forEachChild(node, findPromise);
+          };
+          ts.forEachChild(sf, findPromise);
+          const arg = promise?.typeArguments?.[0];
+          if (arg && arg.getText() === 'any') add(name, arg.getStart(), `void\u0000${arg.getText().length}`);
+          continue;
+        }
+        if (diagnostic.code !== 2339 && diagnostic.code !== 2551) continue;
+        let access = null;
+        const find = node => {
+          if (access) return;
+          if ((ts.isPropertyAccessExpression(node)) && node.name.getStart() === diagnostic.start) { access = node; return; }
+          if (node.getStart() <= diagnostic.start && diagnostic.start < node.getEnd()) ts.forEachChild(node, find);
+        };
+        ts.forEachChild(sf, find);
+        // A destructuring `const { a } = obj` reports on the binding name; type the source object instead.
+        if (!access) {
+          let binding = null;
+          const findBinding = node => {
+            if (binding) return;
+            if (ts.isBindingElement(node) && (node.propertyName ?? node.name).getStart() === diagnostic.start) { binding = node; return; }
+            if (node.getStart() <= diagnostic.start && diagnostic.start < node.getEnd()) ts.forEachChild(node, findBinding);
+          };
+          ts.forEachChild(sf, findBinding);
+          const holder = binding?.parent?.parent;
+          if (holder && (ts.isParameter(holder) || ts.isVariableDeclaration(holder)) && !holder.type) {
+            const initializerObject = ts.isVariableDeclaration(holder) && holder.initializer;
+            if (ts.isParameter(holder)) add(name, holder.name.getEnd() + (holder.questionToken ? 1 : 0), ': any');
+            else if (initializerObject) {
+              add(name, initializerObject.getStart(), '(');
+              add(name, initializerObject.getEnd(), ' as any)');
+            }
+          }
+          continue;
+        }
+        const object = access.expression;
+        const symbol = ts.isIdentifier(object) ? checker.getSymbolAtLocation(object) : null;
+        const declaration = symbol?.valueDeclaration;
+        if (declaration && (ts.isParameter(declaration) || ts.isVariableDeclaration(declaration)) && !declaration.type &&
+            ts.isIdentifier(declaration.name) && absolute.has(declaration.getSourceFile().fileName) &&
+            !(ts.isVariableDeclaration(declaration) && ts.isForOfStatement(declaration.parent?.parent))) {
+          const file = declaration.getSourceFile().fileName;
+          // A lone arrow parameter without parentheses gains them: `x => ...` is `(x: any) => ...`.
+          const bare = ts.isParameter(declaration) && ts.isArrowFunction(declaration.parent) &&
+            declaration.getSourceFile().text.slice(declaration.parent.getStart(), declaration.getStart()).trim() === '';
+          if (bare) add(file, declaration.getStart(), '(');
+          add(file, declaration.name.getEnd() + (declaration.questionToken ? 1 : 0), bare ? ': any)' : ': any');
+          typed += 1;
+        } else {
+          add(name, object.getStart(), '(');
+          add(name, object.getEnd(), ' as any)');
+          cast += 1;
+        }
+      }
+    }
+    if (!edits.size) break;
+    for (const [file, positions] of edits) {
+      let text = readFileSync(file, 'utf8');
+      for (const [at, insert] of [...positions].sort((a, b) => b[0] - a[0])) {
+        // A replacement is written as its text plus a NUL and the length it replaces.
+        const [value, replaced] = insert.includes('\u0000') ? insert.split('\u0000') : [insert, '0'];
+        text = text.slice(0, at) + value + text.slice(at + Number(replaced));
+      }
+      writeFileSync(file, text);
+    }
+  }
+  return { promises, typed, cast };
+}
+
+if (RELAX_ONLY) {
+  const paths = git('ls-files', '-z', '--', `${DIR}/**/*.ts`, `${DIR}/*.ts`).split('\0').filter(Boolean)
+    .filter(path => !path.endsWith('.d.ts'));
+  const done = relaxOpenLiterals(paths);
+  console.log(`ts-migrate --relax: ${done.promises} promises typed <any>, ${done.typed} declarations typed any, ${done.cast} reads cast as any under ${DIR}`);
+  process.exit(0);
 }
 
 if (ARITY_ONLY) {
@@ -251,7 +382,15 @@ for (const path of moving) {
         innerEdits.push(...edits.splice(collect));
         const innerText = applyEdits(text.slice(inner.start, inner.end),
           innerEdits.map(e => ({ start: e.start - inner.start, end: e.end - inner.start, text: e.text })));
-        edits.push({ start: at, end: node.getEnd(), text: `(${innerText} as ${typeText})` });
+        // `as` binds tighter than an arrow, a conditional, an assignment or a
+        // comma, so such an operand keeps parentheses of its own:
+        // `/** @type {F} */ (() => {})` is `((() => {}) as F)`.
+        const tight = ts.isIdentifier(node.expression) || ts.isPropertyAccessExpression(node.expression) ||
+          ts.isElementAccessExpression(node.expression) || ts.isCallExpression(node.expression) ||
+          ts.isNewExpression(node.expression) || ts.isLiteralExpression(node.expression) ||
+          ts.isParenthesizedExpression(node.expression) || ts.isArrayLiteralExpression(node.expression) ||
+          ts.isObjectLiteralExpression(node.expression) || node.expression.kind === K.ThisKeyword;
+        edits.push({ start: at, end: node.getEnd(), text: `(${tight ? innerText : `(${innerText})`} as ${typeText})` });
         return;
       }
     }
@@ -494,6 +633,7 @@ const SPEC = /((?:\bfrom|\bimport)\s*\(?\s*['"])(\.{1,2}\/[^'"\n]+\.js)(['"])/g;
 const BARE = /((?:\bfrom|\bimport)\s*\(?\s*['"])(@[\w-]+\/[\w-]+\/[^'"\n]+\.js)(['"])/g;
 const workspaces = new Map();
 for (const group of ['packages', 'apps']) {
+  if (!existsSync(join(ROOT, group))) continue;
   for (const dir of readdirSync(join(ROOT, group))) {
     const manifestPath = join(ROOT, group, dir, 'package.json');
     if (!existsSync(manifestPath)) continue;
@@ -534,19 +674,37 @@ const manifest = (() => {
 })();
 if (manifest) {
   const text = read(manifest);
-  const next = text.replace(/"(\.\/[^"]+)\.js"/g, (match, stem) =>
-    movedAbs.has(join(ROOT, dirname(manifest), `${stem}.js`)) ? `"${stem}.ts"` : match);
+  const next = text.replace(/"(\.\/[^"]+)\.js"/g, (match, stem) => {
+    if (movedAbs.has(join(ROOT, dirname(manifest), `${stem}.js`))) return `"${stem}.ts"`;
+    // A wildcard target (`./src/campaign/*.js`) names the .ts once no .js is left in its directory.
+    if (stem.endsWith('/*')) {
+      const directory = join(ROOT, dirname(manifest), stem.slice(0, -2));
+      if (existsSync(directory) && readdirSync(directory).some(file => file.endsWith('.ts')) &&
+          !readdirSync(directory).some(file => file.endsWith('.js'))) return `"${stem}.ts"`;
+    }
+    return match;
+  });
   if (next !== text) { write(manifest, next); console.log(`  ${manifest}: exports name the .ts modules`); }
 }
 console.log(`  ${rewritten} relative specifiers now name a .ts module`);
 
-// ---- 6. parameters JavaScript left optional ------------------------------------------
+// ---- 6. parameters JavaScript left optional, and literals JavaScript left open --------
 console.log(`  ${relaxArity(targets)} parameters marked optional where a call passed fewer arguments`);
+{
+  const done = relaxOpenLiterals(targets);
+  console.log(`  ${done.promises} promises typed <any>, ${done.typed} declarations typed any and ${done.cast} reads cast as any ` +
+    'where JavaScript read an open literal');
+}
 
 // ---- what a person has to look at ------------------------------------------------------
 for (const note of notes) console.log(`  note: ${note}`);
-const mentions = git('grep', '-l', '-F', ...moving.flatMap(name => ['-e', name]), '--', '.', ':!docs/evidence', ':!*.md')
-  .split('\n').filter(Boolean);
+let mentions = [];
+try {
+  mentions = git('grep', '-l', '-F', ...moving.flatMap(name => ['-e', name]), '--', '.', ':!docs/evidence', ':!*.md')
+    .split('\n').filter(Boolean);
+} catch (error) {
+  if (error.status !== 1) throw error; // 1: nothing names an old path
+}
 if (mentions.length) {
   console.log('  still naming an old path (a string, not an import; change it by hand, or leave a frozen record as it is):');
   for (const path of mentions) console.log(`    ${path}`);
