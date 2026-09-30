@@ -5,7 +5,7 @@
 // under a webdriver or off-speed are counted and excluded -- a bot's perfect
 // presses and a slowed clock are exactly the runs the census must not contain.
 //
-//   node tools/tracereport.mjs [dir]      # default captures/traces
+//   node apps/trainer/test/tracereport.mjs [dir]      # default captures/traces
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -76,13 +76,13 @@ export function summarize(traces) {
 
 function main() {
   const HERE = dirname(fileURLToPath(import.meta.url));
-  const dir = process.argv[2] || join(HERE, '..', 'captures', 'traces');
+  const dir = process.argv[2] || join(HERE, '..', '..', '..', 'captures', 'traces');
   let files = [];
   try { files = readdirSync(dir).filter(f => f.endsWith('.json')); } catch { /* no dir yet */ }
   if (!files.length) {
     // Say so, loudly: a report that prints nothing reads as coverage.
     console.log(`no trace files under ${dir}`);
-    console.log('play a coached lesson with tools/serve.py running to record one');
+    console.log('play a coached lesson with `npm run serve:trainer` running to record one');
     return;
   }
   const traces = [];

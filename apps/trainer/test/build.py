@@ -7,7 +7,7 @@ a single file.
 """
 import base64, json, re, pathlib, sys
 
-ROOT = pathlib.Path(__file__).resolve().parent.parent
+ROOT = pathlib.Path(__file__).resolve().parents[3]
 SRC = ROOT / 'apps' / 'trainer' / 'src'
 ENTRY = 'apps/trainer/src/main.js'
 

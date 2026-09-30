@@ -31,6 +31,7 @@ import { chromeBinary, chromeAvailable } from './chrome.mjs';
 
 const TOOLS = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(TOOLS, '..');
+const TRAINER_TOOLS = join(ROOT, 'apps', 'trainer', 'test');
 const PORT = 8731;
 const PAGE = `http://localhost:${PORT}/dist/index.html`;
 
@@ -297,7 +298,7 @@ const ENGINE = [
   // HumanActuator's measured bands (plans/04). Checks the Coach's trace rows
   // against known lateness and the /save-trace endpoint against a temp dir,
   // no browser involved.
-  ['trainer trace', ['tracetest.mjs']],
+  ['trainer trace', ['../apps/trainer/test/trace.test.mjs']],
   // Plan 11's exact-engine policy adapter and the independently reimplemented
   // Jason/Shooter25/Couraeel baselines, with their controls: a null policy, a
   // wind-only policy, an inverted ladder and a flash-deleted Minus 7 must all
@@ -424,11 +425,11 @@ const BACKLOG = new Map([
   ['docs', 'run by the CI documentation step'],
 ]);
 const BROWSER = [
-  ['browsertest', ['browsertest.mjs']],
-  ['caltest', ['caltest.mjs']],
-  ['lightcheck', ['lightcheck.mjs']],
-  ['phasetest', ['phasetest.mjs']],
-  ['lessontest', ['lessontest.mjs']],
+  ['browsertest', ['../apps/trainer/test/browser.test.mjs']],
+  ['caltest', ['../apps/trainer/test/calibration.test.mjs']],
+  ['lightcheck', ['../apps/trainer/test/light.test.mjs']],
+  ['phasetest', ['../apps/trainer/test/phase.test.mjs']],
+  ['lessontest', ['../apps/trainer/test/lesson.test.mjs']],
 ];
 const REPORTS = [
   ['minus2test', ['minus2test.mjs']],
@@ -474,7 +475,7 @@ const REPORTS = [
   ['lateness sweep', ['latenesssweep.mjs', '--runs=200', '--assert']],
   // The measured human bands, from whatever trainer runs have been recorded.
   // Empty until practice sessions accumulate under /save-trace.
-  ['tracereport', ['tracereport.mjs']],
+  ['tracereport', ['../apps/trainer/test/tracereport.mjs']],
 ];
 
 const secs = (ms) => `${(ms / 1000).toFixed(1)}s`;
@@ -569,7 +570,7 @@ async function runGroup(group, judge, { progress = false, concurrent = true, con
 // test the last build rather than the working tree.
 function build() {
   return new Promise((resolve, reject) => {
-    spawn('python3', [join(TOOLS, 'build.py')], { cwd: ROOT, stdio: 'ignore' })
+    spawn('python3', [join(TRAINER_TOOLS, 'build.py')], { cwd: ROOT, stdio: 'ignore' })
       .on('close', c => c === 0 ? resolve() : reject(new Error(`build.py exited ${c}`)));
   });
 }
@@ -580,14 +581,14 @@ const reachable = async () => {
 
 async function serve() {
   if (await reachable()) return null;   // the user already has one running
-  const child = spawn('python3', [join(TOOLS, 'serve.py'), String(PORT)],
+  const child = spawn('python3', [join(TRAINER_TOOLS, 'serve.py'), String(PORT)],
     { cwd: ROOT, stdio: 'ignore' });
   for (let i = 0; i < 40; i++) {
     if (await reachable()) return child;
     await new Promise(r => setTimeout(r, 25));
   }
   child.kill();
-  throw new Error(`tools/serve.py never answered on ${PORT}`);
+  throw new Error(`apps/trainer/test/serve.py never answered on ${PORT}`);
 }
 
 const gates = process.argv.includes('--gates');

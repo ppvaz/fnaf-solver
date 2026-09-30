@@ -1,7 +1,7 @@
 // Calibration smoke test: dragging a control must reposition it and must NOT
 // register as a game input, and the saved layout must reach canonical core config.
 import { spawn } from 'node:child_process';
-import { chromeBinary, chromeArgs } from './chrome.mjs';
+import { chromeBinary, chromeArgs } from '../../../tools/chrome.mjs';
 import { mkdtempSync, writeFileSync, readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
@@ -11,7 +11,7 @@ const BASE = process.argv[2] || 'http://localhost:8731/dist/index.html';
 
 // This test exercises the save-to-config path, which really does rewrite
 // core config. Snapshot it so a test run never leaves the repo edited.
-const CONFIG = new URL('../packages/source/src/games/fnaf2/config.js', import.meta.url).pathname;
+const CONFIG = new URL('../../../packages/source/src/games/fnaf2/config.js', import.meta.url).pathname;
 const SNAPSHOT = readFileSync(CONFIG, 'utf8');
 const restore = () => {
   try {

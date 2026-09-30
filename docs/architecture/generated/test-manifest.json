@@ -146,6 +146,311 @@
       }
     },
     {
+      "id": "apps/trainer/test/activity-gate.test.mjs",
+      "lane": "test:unit",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "apps/trainer/test/arcade-lab.test.mjs",
+      "lane": "test:unit",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "apps/trainer/test/browser.test.mjs",
+      "lane": "test:browser:realtime",
+      "owner": "legacy migration",
+      "timeoutMs": 360000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [
+        "setTimeout(r, ms",
+        "sleep(250",
+        "sleep(1500",
+        "sleep(250",
+        "sleep(100",
+        "sleep(150",
+        "sleep(250",
+        "sleep(600",
+        "sleep(1200",
+        "sleep(400",
+        "sleep(200",
+        "sleep(120"
+      ],
+      "sharedResources": [
+        "browser",
+        "device-transport",
+        "local-http-port"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "apps/trainer/test/calibration.test.mjs",
+      "lane": "test:unit",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [
+        "setTimeout(r, ms",
+        "sleep(250",
+        "sleep(1500",
+        "sleep(200",
+        "sleep(500",
+        "sleep(150",
+        "sleep(150",
+        "sleep(150",
+        "sleep(200",
+        "sleep(200",
+        "sleep(150",
+        "sleep(250"
+      ],
+      "sharedResources": [
+        "browser",
+        "local-http-port"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "apps/trainer/test/exercise.test.mjs",
+      "lane": "test:unit",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "apps/trainer/test/lesson.test.mjs",
+      "lane": "test:unit",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [
+        "setTimeout(r, ms",
+        "sleep(200",
+        "sleep(1500",
+        "sleep(1200",
+        "sleep(200",
+        "sleep(500",
+        "sleep(16000",
+        "sleep(500",
+        "sleep(24000",
+        "sleep(250",
+        "sleep(500",
+        "sleep(47000"
+      ],
+      "sharedResources": [
+        "browser",
+        "device-transport",
+        "local-http-port"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "apps/trainer/test/light.test.mjs",
+      "lane": "test:unit",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [
+        "setTimeout(r, ms",
+        "sleep(200",
+        "sleep(1500",
+        "sleep(120",
+        "sleep(200",
+        "sleep(500",
+        "sleep(1300",
+        "sleep(150",
+        "sleep(150",
+        "sleep(120",
+        "sleep(120",
+        "sleep(150"
+      ],
+      "sharedResources": [
+        "browser",
+        "device-transport",
+        "local-http-port"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "apps/trainer/test/microtrainer.test.mjs",
+      "lane": "test:unit",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "apps/trainer/test/phase.test.mjs",
+      "lane": "test:unit",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [
+        "setTimeout(r, ms",
+        "setTimeout((",
+        "setTimeout((",
+        "sleep(200",
+        "sleep(1500",
+        "sleep(150",
+        "sleep(200",
+        "sleep(600",
+        "sleep(1300",
+        "sleep(22000",
+        "setTimeout(r, 6",
+        "sleep(400"
+      ],
+      "sharedResources": [
+        "browser",
+        "local-http-port"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "apps/trainer/test/renderer.test.mjs",
+      "lane": "test:unit",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "apps/trainer/test/serve_test.py",
+      "lane": "test:unit",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "local-http-port"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "apps/trainer/test/trace.test.mjs",
+      "lane": "test:unit",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [
+        "setTimeout(r, 25"
+      ],
+      "sharedResources": [
+        "local-http-port"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "apps/wiki/test/chronicle.test.js",
       "lane": "test:unit",
       "owner": "legacy migration",
@@ -2087,24 +2392,6 @@
       }
     },
     {
-      "id": "tools/activitygatetest.mjs",
-      "lane": "test:unit",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
       "id": "tools/affected-test.js",
       "lane": "test:unit",
       "owner": "legacy migration",
@@ -2143,24 +2430,6 @@
       }
     },
     {
-      "id": "tools/arcadelabtest.mjs",
-      "lane": "test:unit",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
       "id": "tools/architecture-test.js",
       "lane": "test:unit",
       "owner": "legacy migration",
@@ -2171,75 +2440,6 @@
       "fixedSleeps": [],
       "sharedResources": [
         "device-transport"
-      ],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/browsertest.mjs",
-      "lane": "test:browser:realtime",
-      "owner": "legacy migration",
-      "timeoutMs": 360000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [
-        "setTimeout(r, ms",
-        "sleep(250",
-        "sleep(1500",
-        "sleep(250",
-        "sleep(100",
-        "sleep(150",
-        "sleep(250",
-        "sleep(600",
-        "sleep(1200",
-        "sleep(400",
-        "sleep(200",
-        "sleep(120"
-      ],
-      "sharedResources": [
-        "browser",
-        "device-transport",
-        "local-http-port"
-      ],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/caltest.mjs",
-      "lane": "test:unit",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [
-        "setTimeout(r, ms",
-        "sleep(250",
-        "sleep(1500",
-        "sleep(200",
-        "sleep(500",
-        "sleep(150",
-        "sleep(150",
-        "sleep(150",
-        "sleep(200",
-        "sleep(200",
-        "sleep(150",
-        "sleep(250"
-      ],
-      "sharedResources": [
-        "browser",
-        "local-http-port"
       ],
       "subprocesses": true,
       "measurement": {
@@ -3933,24 +4133,6 @@
       }
     },
     {
-      "id": "tools/exercisetest.mjs",
-      "lane": "test:unit",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
       "id": "tools/fnaf1-population-checkpoints.mjs",
       "lane": "test:unit",
       "owner": "legacy migration",
@@ -3972,95 +4154,7 @@
       }
     },
     {
-      "id": "tools/lessontest.mjs",
-      "lane": "test:unit",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [
-        "setTimeout(r, ms",
-        "sleep(200",
-        "sleep(1500",
-        "sleep(1200",
-        "sleep(200",
-        "sleep(500",
-        "sleep(16000",
-        "sleep(500",
-        "sleep(24000",
-        "sleep(250",
-        "sleep(500",
-        "sleep(47000"
-      ],
-      "sharedResources": [
-        "browser",
-        "device-transport",
-        "local-http-port"
-      ],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/lightcheck.mjs",
-      "lane": "test:unit",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [
-        "setTimeout(r, ms",
-        "sleep(200",
-        "sleep(1500",
-        "sleep(120",
-        "sleep(200",
-        "sleep(500",
-        "sleep(1300",
-        "sleep(150",
-        "sleep(150",
-        "sleep(120",
-        "sleep(120",
-        "sleep(150"
-      ],
-      "sharedResources": [
-        "browser",
-        "device-transport",
-        "local-http-port"
-      ],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
       "id": "tools/mangletest.mjs",
-      "lane": "test:unit",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/microtrainertest.mjs",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,
@@ -4162,40 +4256,6 @@
       "fixedSleeps": [],
       "sharedResources": [],
       "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/phasetest.mjs",
-      "lane": "test:unit",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [
-        "setTimeout(r, ms",
-        "setTimeout((",
-        "setTimeout((",
-        "sleep(200",
-        "sleep(1500",
-        "sleep(150",
-        "sleep(200",
-        "sleep(600",
-        "sleep(1300",
-        "sleep(22000",
-        "setTimeout(r, 6",
-        "sleep(400"
-      ],
-      "sharedResources": [
-        "browser",
-        "local-http-port"
-      ],
-      "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",
         "runs": 0,
@@ -4630,24 +4690,6 @@
       }
     },
     {
-      "id": "tools/renderertest.mjs",
-      "lane": "test:unit",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
       "id": "tools/rvctest.mjs",
       "lane": "test:unit",
       "owner": "legacy migration",
@@ -4960,26 +5002,6 @@
       }
     },
     {
-      "id": "tools/test-serve.py",
-      "lane": "test:unit",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "local-http-port"
-      ],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
       "id": "tools/test-winner-census.mjs",
       "lane": "test:unit",
       "owner": "legacy migration",
@@ -5016,28 +5038,6 @@
       "sharedResources": [
         "browser",
         "device-transport",
-        "local-http-port"
-      ],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/tracetest.mjs",
-      "lane": "test:unit",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [
-        "setTimeout(r, 25"
-      ],
-      "sharedResources": [
         "local-http-port"
       ],
       "subprocesses": true,

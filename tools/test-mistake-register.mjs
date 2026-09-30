@@ -56,10 +56,11 @@ const EXEMPT = new Map([
   // tools/test.mjs's BROWSER group. ci.yml's header gives the reason: a
   // trainer graded in real-time milliseconds on a shared runner says nothing
   // about the code when it fails.
-  ['tools/browsertest.mjs', 'browser group: real-time graded in Chrome; ci.yml excludes it on purpose (npm run test:browser:realtime)'],
-  ['tools/caltest.mjs', 'browser group: real-time graded in Chrome; ci.yml excludes it on purpose (npm run test:browser:realtime)'],
-  ['tools/phasetest.mjs', 'browser group: real-time graded in Chrome; ci.yml excludes it on purpose (npm run test:browser:realtime)'],
-  ['tools/lessontest.mjs', 'browser group: real-time graded in Chrome; ci.yml excludes it on purpose (npm run test:browser:realtime)'],
+  ['apps/trainer/test/browser.test.mjs', 'browser group: real-time graded in Chrome; ci.yml excludes it on purpose (npm run test:browser:realtime)'],
+  ['apps/trainer/test/calibration.test.mjs', 'browser group: real-time graded in Chrome; ci.yml excludes it on purpose (npm run test:browser:realtime)'],
+  ['apps/trainer/test/phase.test.mjs', 'browser group: real-time graded in Chrome; ci.yml excludes it on purpose (npm run test:browser:realtime)'],
+  ['apps/trainer/test/lesson.test.mjs', 'browser group: real-time graded in Chrome; ci.yml excludes it on purpose (npm run test:browser:realtime)'],
+  ['apps/trainer/test/light.test.mjs', 'browser group: real-time graded in Chrome; ci.yml excludes it on purpose (npm run test:browser:realtime)'],
   // tools/test.mjs's REPORTS group: named like tests, but they print numbers
   // and always exit 0, so a lane would count a verdict that does not exist.
   ['tools/minus2test.mjs', 'report, not a check: tools/test.mjs --reports prints it and never judges it'],

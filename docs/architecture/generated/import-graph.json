@@ -245,6 +245,114 @@
       ]
     },
     {
+      "file": "apps/trainer/test/activity-gate.test.mjs",
+      "imports": [
+        "@sixam/trainer/training",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "apps/trainer/test/arcade-lab.test.mjs",
+      "imports": [
+        "../src/arcade-lab.js",
+        "../src/microtrainer.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "apps/trainer/test/browser.test.mjs",
+      "imports": [
+        "../../../tools/chrome.mjs",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path"
+      ]
+    },
+    {
+      "file": "apps/trainer/test/calibration.test.mjs",
+      "imports": [
+        "../../../tools/chrome.mjs",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path"
+      ]
+    },
+    {
+      "file": "apps/trainer/test/exercise.test.mjs",
+      "imports": [
+        "@sixam/trainer/training",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "apps/trainer/test/lesson.test.mjs",
+      "imports": [
+        "../../../tools/chrome.mjs",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path"
+      ]
+    },
+    {
+      "file": "apps/trainer/test/light.test.mjs",
+      "imports": [
+        "../../../tools/chrome.mjs",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path"
+      ]
+    },
+    {
+      "file": "apps/trainer/test/microtrainer.test.mjs",
+      "imports": [
+        "../src/microtrainer.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "apps/trainer/test/phase.test.mjs",
+      "imports": [
+        "../../../tools/chrome.mjs",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path"
+      ]
+    },
+    {
+      "file": "apps/trainer/test/renderer.test.mjs",
+      "imports": [
+        "../src/microtrainer.js",
+        "../src/renderers.js",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "apps/trainer/test/trace.test.mjs",
+      "imports": [
+        "./tracereport.mjs",
+        "@sixam/source/fnaf2",
+        "@sixam/trainer",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "apps/trainer/test/tracereport.mjs",
+      "imports": [
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "apps/wiki/chronicle-harvest.js",
       "imports": [
         "node:child_process",
@@ -2195,13 +2303,6 @@
       ]
     },
     {
-      "file": "tools/activitygatetest.mjs",
-      "imports": [
-        "@sixam/trainer/training",
-        "node:assert/strict"
-      ]
-    },
-    {
       "file": "tools/affected-test.js",
       "imports": [
         "node:assert/strict",
@@ -2214,14 +2315,6 @@
       "file": "tools/androidstalltest.mjs",
       "imports": [
         "./model/reactive-pilot.mjs"
-      ]
-    },
-    {
-      "file": "tools/arcadelabtest.mjs",
-      "imports": [
-        "../apps/trainer/src/arcade-lab.js",
-        "../apps/trainer/src/microtrainer.js",
-        "node:assert/strict"
       ]
     },
     {
@@ -2263,26 +2356,6 @@
         "node:path",
         "node:url",
         "typescript"
-      ]
-    },
-    {
-      "file": "tools/browsertest.mjs",
-      "imports": [
-        "./chrome.mjs",
-        "node:child_process",
-        "node:fs",
-        "node:os",
-        "node:path"
-      ]
-    },
-    {
-      "file": "tools/caltest.mjs",
-      "imports": [
-        "./chrome.mjs",
-        "node:child_process",
-        "node:fs",
-        "node:os",
-        "node:path"
       ]
     },
     {
@@ -3293,13 +3366,6 @@
       ]
     },
     {
-      "file": "tools/exercisetest.mjs",
-      "imports": [
-        "@sixam/trainer/training",
-        "node:assert/strict"
-      ]
-    },
-    {
       "file": "tools/factreplay.mjs",
       "imports": [
         "@sixam/kernel/contracts",
@@ -3368,38 +3434,11 @@
       ]
     },
     {
-      "file": "tools/lessontest.mjs",
-      "imports": [
-        "./chrome.mjs",
-        "node:child_process",
-        "node:fs",
-        "node:os",
-        "node:path"
-      ]
-    },
-    {
-      "file": "tools/lightcheck.mjs",
-      "imports": [
-        "./chrome.mjs",
-        "node:child_process",
-        "node:fs",
-        "node:os",
-        "node:path"
-      ]
-    },
-    {
       "file": "tools/mangletest.mjs",
       "imports": [
         "@sixam/play/sim",
         "@sixam/propose/fnaf2",
         "@sixam/source/fnaf2"
-      ]
-    },
-    {
-      "file": "tools/microtrainertest.mjs",
-      "imports": [
-        "../apps/trainer/src/microtrainer.js",
-        "node:assert/strict"
       ]
     },
     {
@@ -3618,16 +3657,6 @@
       "imports": [
         "./model/stock-device-pilot.mjs",
         "@sixam/source/fnaf2"
-      ]
-    },
-    {
-      "file": "tools/phasetest.mjs",
-      "imports": [
-        "./chrome.mjs",
-        "node:child_process",
-        "node:fs",
-        "node:os",
-        "node:path"
       ]
     },
     {
@@ -4082,14 +4111,6 @@
       ]
     },
     {
-      "file": "tools/renderertest.mjs",
-      "imports": [
-        "../apps/trainer/src/microtrainer.js",
-        "../apps/trainer/src/renderers.js",
-        "node:assert/strict"
-      ]
-    },
-    {
       "file": "tools/retrieval-benchmark.mjs",
       "imports": [
         "node:assert/strict",
@@ -4289,27 +4310,6 @@
       "imports": [
         "./chrome.mjs",
         "node:child_process",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/tracereport.mjs",
-      "imports": [
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/tracetest.mjs",
-      "imports": [
-        "./tracereport.mjs",
-        "@sixam/source/fnaf2",
-        "@sixam/trainer",
-        "node:child_process",
-        "node:fs",
-        "node:os",
         "node:path",
         "node:url"
       ]

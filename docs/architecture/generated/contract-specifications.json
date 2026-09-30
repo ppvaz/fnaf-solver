@@ -306,7 +306,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateTrainerTrace",
       "conformanceFixtures": [
-        "tools/tracereport.mjs"
+        "apps/trainer/test/tracereport.mjs"
       ]
     },
     {
@@ -734,7 +734,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateExercise",
       "conformanceFixtures": [
-        "tools/exercisetest.mjs"
+        "apps/trainer/test/exercise.test.mjs"
       ]
     },
     {
@@ -754,7 +754,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateCommitment",
       "conformanceFixtures": [
-        "tools/exercisetest.mjs"
+        "apps/trainer/test/exercise.test.mjs"
       ]
     },
     {
@@ -774,7 +774,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateResolution",
       "conformanceFixtures": [
-        "tools/exercisetest.mjs"
+        "apps/trainer/test/exercise.test.mjs"
       ]
     },
     {
@@ -794,7 +794,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateCancellation",
       "conformanceFixtures": [
-        "tools/exercisetest.mjs"
+        "apps/trainer/test/exercise.test.mjs"
       ]
     },
     {
@@ -814,7 +814,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateExerciseEvent",
       "conformanceFixtures": [
-        "tools/exercisetest.mjs"
+        "apps/trainer/test/exercise.test.mjs"
       ]
     },
     {
@@ -834,7 +834,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateExerciseAttempt",
       "conformanceFixtures": [
-        "tools/exercisetest.mjs"
+        "apps/trainer/test/exercise.test.mjs"
       ]
     },
     {
@@ -854,7 +854,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "evaluateActivityGate",
       "conformanceFixtures": [
-        "tools/activitygatetest.mjs"
+        "apps/trainer/test/activity-gate.test.mjs"
       ]
     },
     {
@@ -874,7 +874,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateActivityGateProfile",
       "conformanceFixtures": [
-        "tools/activitygatetest.mjs"
+        "apps/trainer/test/activity-gate.test.mjs"
       ]
     },
     {
@@ -894,7 +894,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "evaluateActivityGate",
       "conformanceFixtures": [
-        "tools/activitygatetest.mjs"
+        "apps/trainer/test/activity-gate.test.mjs"
       ]
     },
     {
@@ -914,7 +914,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "apps/trainer/src/microtrainer.js validateMicrotrainerSession",
       "conformanceFixtures": [
-        "tools/microtrainertest.mjs"
+        "apps/trainer/test/microtrainer.test.mjs"
       ]
     },
     {
@@ -934,7 +934,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "apps/trainer/src/renderers.js validateRenderer",
       "conformanceFixtures": [
-        "tools/renderertest.mjs"
+        "apps/trainer/test/renderer.test.mjs"
       ]
     },
     {
@@ -954,7 +954,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "apps/trainer/src/arcade-lab.js validateArcadeProgress",
       "conformanceFixtures": [
-        "tools/arcadelabtest.mjs"
+        "apps/trainer/test/arcade-lab.test.mjs"
       ]
     },
     {

@@ -39,8 +39,8 @@ if (playModelChanged)
 if (changed.some(path => path.startsWith('packages/review/src/measure/')))
   add('bench-trace', 'node', ['packages/review/test/bench-trace.test.mjs']);
 if (changed.some(path => path.startsWith('apps/trainer/src/training/')))
-  for (const test of ['exercisetest', 'activitygatetest'])
-    add(`test:tools/${test}.mjs`, 'node', [`tools/${test}.mjs`]);
+  for (const test of ['exercise', 'activity-gate'])
+    add(`test:apps/trainer/test/${test}.test.mjs`, 'node', [`apps/trainer/test/${test}.test.mjs`]);
 if (kernelChanged)
   for (const test of ['kernel', 'venue-identity', 'claim-envelope'])
     add(`test:packages/kernel/test/${test}.test.js`, 'node', [`packages/kernel/test/${test}.test.js`]);
@@ -108,7 +108,7 @@ if (changed.some(path => path.startsWith('apps/desktop/')))
   for (const test of ['apps/desktop/test/companion-mcp.test.mjs', 'apps/desktop/test/lab.test.mjs'])
     add(`test:${test}`, 'node', [test]);
 if (changed.some(path => path.startsWith('apps/trainer/')))
-  add('trainer-build', 'python3', ['tools/build.py']);
+  add('trainer-build', 'python3', ['apps/trainer/test/build.py']);
 for (const path of changed.filter(p => /^packages\/[^/]+\/test\/.*\.test\.m?js$/.test(p)))
   add(`test:${path}`, 'node', [path]);
 if (changed.some(path => path.startsWith('docs/') || path.startsWith('plans/')))

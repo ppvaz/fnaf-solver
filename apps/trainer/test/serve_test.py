@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check that tools/serve.py writes for this machine only.
+"""Check that serve.py (the trainer's dev server) writes for this machine only.
 
 POST /save-layout rewrites packages/source/src/games/fnaf2/config.js and
 /save-trace writes under captures/traces/. Until 2026-09-29 the server bound
@@ -17,7 +17,7 @@ POST /save-layout rewrites packages/source/src/games/fnaf2/config.js and
 Everything runs as dry runs or against a temporary FNAF_TRACE_DIR; the core
 config is never written.
 
-  python3 tools/test-serve.py
+  python3 apps/trainer/test/serve_test.py
 """
 import http.client
 import importlib.util

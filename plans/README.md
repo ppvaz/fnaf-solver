@@ -43,7 +43,7 @@ Triage of 2026-09-17 (kept for its reasoning; the path above is current):
 - **Plan 04's runnable experiment is complete:** per-step model windows and an
   explicitly inferred human-error profile now exist. The next useful input is
   measured trainer timing by step — practice runs through `/save-trace` and
-  `tools/tracereport.mjs`, not another invented profile.
+  `apps/trainer/test/tracereport.mjs`, not another invented profile.
 - **Plan 05 is reopened for invention.** Its original static-cover pass remains a
   sourced negative. Do not rerun Plan 06's closed 125-schedule family or
   Plan 16's Minus 7 timing grid and call it novelty. Note that its admission

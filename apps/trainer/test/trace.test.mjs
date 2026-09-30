@@ -13,7 +13,8 @@ import { Coach } from '@sixam/trainer';
 import * as C from '@sixam/source/fnaf2';
 import { summarize } from './tracereport.mjs';
 
-const TOOLS = dirname(fileURLToPath(import.meta.url));
+const HERE = dirname(fileURLToPath(import.meta.url));
+const ROOT = join(HERE, '..', '..', '..');
 let failed = 0;
 const check = (name, cond, detail = '') => {
   if (!cond) { failed++; console.error(`FAIL ${name}${detail ? ` -- ${detail}` : ''}`); }
@@ -95,8 +96,8 @@ check('trace is not the rolling results array', coach.trace !== coach.results);
 // ------------------------------------------------------- serve.py /save-trace
 const PORT = 8747;
 const traceDir = mkdtempSync(join(tmpdir(), 'fnaf-traces-'));
-const server = spawn('python3', [join(TOOLS, 'serve.py'), String(PORT)],
-  { cwd: join(TOOLS, '..'), stdio: 'ignore', env: { ...process.env, FNAF_TRACE_DIR: traceDir } });
+const server = spawn('python3', [join(HERE, 'serve.py'), String(PORT)],
+  { cwd: ROOT, stdio: 'ignore', env: { ...process.env, FNAF_TRACE_DIR: traceDir } });
 
 const post = async (body) => {
   const res = await fetch(`http://127.0.0.1:${PORT}/save-trace`, {

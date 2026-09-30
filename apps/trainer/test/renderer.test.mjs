@@ -6,11 +6,11 @@ import {
   makeRendererAttempt,
   makeRendererView,
   validateRenderer,
-} from '../apps/trainer/src/renderers.js';
+} from '../src/renderers.js';
 import {
   makePredictionExercise,
   makeReplaySnapshot,
-} from '../apps/trainer/src/microtrainer.js';
+} from '../src/microtrainer.js';
 
 const expectThrow = (fn, pattern) => assert.throws(fn, error => !pattern || pattern.test(error.message));
 const scheduler = { policyId: 'renderer-test', policyVersion: '1', selectionProbability: 1 };

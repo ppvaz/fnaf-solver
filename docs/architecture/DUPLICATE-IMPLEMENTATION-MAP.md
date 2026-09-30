@@ -380,7 +380,7 @@ control works.
 Nine readers of overlapping run telemetry: `clocktrace.mjs` (129),
 `drifttrace.mjs` (211), `windtrace.mjs` (85), `camtrace.py` (140),
 `inputtrace.py` (484), `run-timeline.py` (478), `packages/review/bin/report/bench-trace.mjs` (36)
-over `packages/review/src/measure/bench-trace.js`, `tracereport.mjs` (115),
+over `packages/review/src/measure/bench-trace.js`, `apps/trainer/test/tracereport.mjs` (115),
 `atrace-input.sh`. `run-timeline.py` and `drifttrace.mjs` both join plan
 against phone on one clock.
 

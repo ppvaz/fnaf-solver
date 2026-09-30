@@ -18,7 +18,8 @@ the network: `adb reverse tcp:8731 tcp:8731`, then open
 http://localhost:8731/index.html on the phone. Its requests arrive from
 loopback, and localhost is a secure context, so wake lock and vibration work.
 
-    python3 tools/serve.py [port]
+    npm run serve:trainer          # port 8731
+    python3 apps/trainer/test/serve.py [port]
 """
 import datetime, ipaddress, json, os, re, subprocess, sys, pathlib
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -28,7 +29,8 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 HOST = '127.0.0.1'
 LOOPBACK_NAMES = {'localhost', '127.0.0.1', '::1'}
 
-ROOT = pathlib.Path(__file__).resolve().parent.parent
+HERE = pathlib.Path(__file__).resolve().parent
+ROOT = HERE.parents[2]
 CONFIG = ROOT / 'packages' / 'source' / 'src' / 'games' / 'fnaf2' / 'config.js'
 # Where POST /save-trace lands. captures/ is ignored, like every other run
 # artifact; the env override exists so tests can exercise the real write
@@ -204,7 +206,7 @@ class Handler(SimpleHTTPRequestHandler):
                 print('save-layout: dry run ok')
                 return self._json(200, {'ok': True, 'dry': True, 'build': '(dry run, not written)'})
             write_config(m, w)
-            build = subprocess.run([sys.executable, str(ROOT / 'tools' / 'build.py')],
+            build = subprocess.run([sys.executable, str(HERE / 'build.py')],
                                    capture_output=True, text=True)
             print(f'saved layout -> packages/source/src/games/fnaf2/config.js  ({build.stdout.strip()})')
             self._json(200, {'ok': True, 'build': build.stdout.strip()})
