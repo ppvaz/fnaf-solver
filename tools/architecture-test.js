@@ -151,10 +151,10 @@ function ambientEntropy(file) {
 // These are defaults for a caller that passes nothing; the fix is to make the
 // caller say where its seed or clock comes from.
 const AMBIENT_ENTROPY_TOLERATED = new Map([
-  ['packages/source/src/games/fnaf2/plant-model.js', { count: 1,
+  ['packages/source/src/games/fnaf2/plant-options.js', { count: 1,
     why: 'an unseeded Sim draws a natural seed; every census and gate passes its seed' }],
   ['packages/source/src/games/fnaf2/rng.js', { count: 1,
-    why: 'the generator\'s default seed for an unseeded Sim; the same default as plant-model.js' }],
+    why: 'the generator\'s default seed for an unseeded Sim; the same default as plant-options.js' }],
   ['packages/play/src/venues/sim/observer.js', { count: 2,
     why: 'the Sim observer\'s noise falls back to Math.random() when no generator is given: a silent fallback to remove' }],
 ]);

@@ -3775,10 +3775,62 @@
       ]
     },
     {
+      "file": "packages/source/src/games/fnaf2/plant-hall.js",
+      "imports": [
+        "./config.js",
+        "./plant-constants.js",
+        "./plant-model.js"
+      ]
+    },
+    {
       "file": "packages/source/src/games/fnaf2/plant-model.js",
       "imports": [
         "./config.js",
+        "./plant-constants.js",
+        "./plant-hall.js",
+        "./plant-office.js",
+        "./plant-options.js",
+        "./plant-puppet.js",
+        "./plant-sheet.js",
+        "./plant-units.js",
         "./rng.js"
+      ]
+    },
+    {
+      "file": "packages/source/src/games/fnaf2/plant-office.js",
+      "imports": [
+        "./config.js",
+        "./plant-constants.js",
+        "./plant-model.js"
+      ]
+    },
+    {
+      "file": "packages/source/src/games/fnaf2/plant-options.js",
+      "imports": [
+        "./config.js"
+      ]
+    },
+    {
+      "file": "packages/source/src/games/fnaf2/plant-puppet.js",
+      "imports": [
+        "./config.js",
+        "./plant-model.js"
+      ]
+    },
+    {
+      "file": "packages/source/src/games/fnaf2/plant-sheet.js",
+      "imports": [
+        "./config.js",
+        "./plant-constants.js",
+        "./plant-model.js"
+      ]
+    },
+    {
+      "file": "packages/source/src/games/fnaf2/plant-units.js",
+      "imports": [
+        "./config.js",
+        "./plant-constants.js",
+        "./plant-model.js"
       ]
     },
     {
@@ -4341,6 +4393,7 @@
       "file": "tools/device/test-deathchart.mjs",
       "imports": [
         "./deathchart.mjs",
+        "\\.\\/(plant-[\\w-]+\\.js)",
         "node:fs",
         "node:os",
         "node:path",

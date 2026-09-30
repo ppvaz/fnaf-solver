@@ -3,9 +3,7 @@
   "fileSize": {
     "recorded": "2026-09-30",
     "why": "Source files already over the ceiling when tools/test-file-size.mjs landed; an entry only shrinks.",
-    "entries": {
-      "packages/source/src/games/fnaf2/plant-model.js": 2719
-    }
+    "entries": {}
   },
   "deadCode": {
     "recorded": "2026-09-30",

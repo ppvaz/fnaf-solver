@@ -25,8 +25,14 @@ const check = (name, cond, detail = '') => {
 
 // ------------------------------------------- every engine death has a slice
 // Read off the engine rather than a list kept here: a list kept here is a
-// second copy that goes stale the day someone adds a cause.
-const engine = readFileSync(join(HERE, '../../packages/source/src/games/fnaf2/plant-model.js'), 'utf8');
+// second copy that goes stale the day someone adds a cause. The engine is
+// plant-model.js and the mechanism modules it imports, and kill() is called
+// from several of them.
+const MODEL = join(HERE, '../../packages/source/src/games/fnaf2');
+const entry = readFileSync(join(MODEL, 'plant-model.js'), 'utf8');
+const parts = [...entry.matchAll(/^import .* from '\.\/(plant-[\w-]+\.js)';$/gm)].map(m => m[1]);
+check('the engine\'s mechanism modules are read', parts.length >= 5, parts.join());
+const engine = [entry, ...parts.map(name => readFileSync(join(MODEL, name), 'utf8'))].join('\n');
 const emitted = [...engine.matchAll(/this\.kill\(\s*'([^']+)'/g)].map(m => m[1]);
 check('the engine emits death reasons at all', emitted.length >= 6, `${emitted.length}`);
 for (const r of new Set(emitted))
