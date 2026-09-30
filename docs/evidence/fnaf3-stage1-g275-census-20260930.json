@@ -1,0 +1,206 @@
+{
+ "schema": "evidence-record-v1",
+ "id": "fnaf3-stage1-g275-census-20260930",
+ "claimLevel": "MODEL_ONLY",
+ "date": "2026-09-30",
+ "target": {
+  "game": "FNaF 3",
+  "package": "com.scottgames.fnaf3",
+  "version": "2.0.4+18"
+ },
+ "question": "Does the FNaF 3 simulator still reach 6 AM on every seed once attack stage 1 has its own exit (g252, g275), and does removing that exit alone reproduce the figures recorded before it?",
+ "explanationTested": "The 65,536/65,536 story-night census and the 65,511/65,536 Aggressive Nightmare census were recorded on a model with no g252/g275: stage 1 advanced only on the ventilation blackout (g486), so a policy that kept ventilation up could leave him at stage 1 all night. If that missing exit is the whole difference, the same policies with it switched off (--sim.stage1Advance 0) must reproduce the old figures exactly, and with it on they must fall.",
+ "correction": {
+  "what": "packages/core/src/mechanics/games/sim-fnaf3.js: the stage1Advance option, on by default.",
+  "rule": [
+   "g252: dhfgh on attack stage 1 and `action selected` > 2 -> total turns 0, action selected 0, dhfgh value 17 = 1.",
+   "g275: dhfgh value 17 = 1 and `viewing a screen` = 1 -> dhfgh to attack stage 2, value 17 = 0. The group tests the mark and the screen, not where he stands.",
+   "`viewing a screen` is the monitor or the maintenance panel (g289-g291), so a reboot raises it too."
+  ],
+  "consequence": "Stage 1 is no longer a wait. A roll above 2 there marks him, and the next update with any screen up moves him to stage 2, from which g253 needs no screen. The only exit from stage 1 is a CAM 02 lure, which needs the monitor up, and raising the monitor with the mark set fires g275 first.",
+  "source": "The Android event dump (~/fnaf-apks/fnaf3/events/03-04-Office.txt, outside the repository), groups 252 and 275; the rebuilt runtime found it first (tools/recompile/README.md, 2026-09-29)."
+ },
+ "policies": {
+  "community-line": "policy-fnaf3.js communityLine: a camera every 0.2 s, seal the vent beside his last sighting, reboot ventilation from the HUD meter; no lures. Not actuatable.",
+  "tracking-loop": "policy-fnaf3.js trackingLoop at the phone's pace (a look 45 frames, a seal 18 frames plus the 50-100 frame charge, a reboot 280 frames). With --opt.economy 1 --opt.lures 1 it rations camera time and plays the audio lure."
+ },
+ "family": "the two fixed FNaF 3 policy families already in policy-fnaf3.js, unchanged; no policy was tuned against this rule.",
+ "blocks": {
+  "population": "seeds 0-65535, every seed the 16-bit RNG can deal, so no held-out block applies"
+ },
+ "results": {
+  "withG275": {
+   "community-line": {
+    "1": {
+     "wins": 60081,
+     "seeds": 65536,
+     "rate": 0.916763,
+     "causes": {
+      "6AM": 60081,
+      "springtrap-office": 5455
+     }
+    },
+    "2": {
+     "wins": 43545,
+     "seeds": 65536,
+     "rate": 0.664444,
+     "causes": {
+      "6AM": 43545,
+      "springtrap-office": 21991
+     }
+    },
+    "3": {
+     "wins": 39748,
+     "seeds": 65536,
+     "rate": 0.606506,
+     "causes": {
+      "6AM": 39748,
+      "springtrap-office": 25788
+     }
+    },
+    "4": {
+     "wins": 35334,
+     "seeds": 65536,
+     "rate": 0.539154,
+     "causes": {
+      "6AM": 35334,
+      "springtrap-office": 30202
+     }
+    },
+    "5": {
+     "wins": 30777,
+     "seeds": 65536,
+     "rate": 0.46962,
+     "causes": {
+      "springtrap-office": 34759,
+      "6AM": 30777
+     }
+    },
+    "6": {
+     "wins": 20489,
+     "seeds": 65536,
+     "rate": 0.312637,
+     "causes": {
+      "springtrap-office": 45047,
+      "6AM": 20489
+     }
+    },
+    "6-aggressive": {
+     "wins": 7226,
+     "seeds": 65536,
+     "rate": 0.11026,
+     "causes": {
+      "springtrap-office": 58211,
+      "6AM": 7226,
+      "springtrap-vent": 99
+     }
+    }
+   },
+   "tracking-loop": {
+    "6": {
+     "wins": 2524,
+     "seeds": 65536,
+     "rate": 0.038513,
+     "causes": {
+      "springtrap-office": 51560,
+      "springtrap-vent": 11452,
+      "6AM": 2524
+     }
+    },
+    "6-economy-lures": {
+     "wins": 9080,
+     "seeds": 65536,
+     "rate": 0.13855,
+     "causes": {
+      "springtrap-office": 45905,
+      "springtrap-vent": 9962,
+      "6AM": 9080,
+      "springtrap-blackout": 589
+     }
+    },
+    "6-aggressive-economy-lures": {
+     "wins": 484,
+     "seeds": 65536,
+     "rate": 0.007385,
+     "causes": {
+      "springtrap-office": 53173,
+      "springtrap-vent": 11565,
+      "6AM": 484,
+      "springtrap-blackout": 314
+     }
+    }
+   }
+  },
+  "historicalControl": {
+   "flag": "--sim.stage1Advance 0",
+   "community-line": {
+    "6": {
+     "wins": 65536,
+     "seeds": 65536,
+     "rate": 1,
+     "causes": {
+      "6AM": 65536
+     }
+    },
+    "6-aggressive": {
+     "wins": 65437,
+     "seeds": 65536,
+     "rate": 0.998489,
+     "causes": {
+      "6AM": 65437,
+      "springtrap-vent": 99
+     }
+    },
+    "6-aggressive-no-camera-drain": {
+     "flags": "--sim.stage1Advance 0 --sim.cameraDrain 0",
+     "wins": 65437,
+     "seeds": 65536,
+     "rate": 0.998489,
+     "causes": {
+      "6AM": 65437,
+      "springtrap-vent": 99
+     }
+    }
+   },
+   "tracking-loop": {
+    "6-economy-lures": {
+     "wins": 41324,
+     "seeds": 65536,
+     "rate": 0.630554,
+     "causes": {
+      "6AM": 41324,
+      "springtrap-office": 12273,
+      "springtrap-vent": 10106,
+      "springtrap-blackout": 1833
+     }
+    }
+   }
+  }
+ },
+ "reproduce": [
+  "node tools/census.mjs --game fnaf3 --seeds 65536 --json --night N   (N = 1..6)",
+  "node tools/census.mjs --game fnaf3 --seeds 65536 --json --night 6 --hyper",
+  "node tools/census.mjs --game fnaf3 --seeds 65536 --json --night 6 --policy tracking-loop [--hyper] [--opt.economy 1 --opt.lures 1]",
+  "the same with --sim.stage1Advance 0 for the historical control",
+  "node tools/test-fnaf3-census.mjs pins the rule and the control at 400 seeds"
+ ],
+ "findings": [
+  "With g275 the community line, which the model scored 65,536/65,536 on every night, reaches 6 AM on 60081 (Night 1) down to 20489 (Night 6) of 65,536, and 7226 on Aggressive Nightmare; the losses are springtrap-office (45047 on Night 6).",
+  "Switched off, the same policy returns 65536/65,536 on Night 6, exactly the recorded figure, so on Night 6 the missing exit is the whole difference; Nights 1-5 are checked only at 400 seeds each (tools/test-fnaf3-census.mjs, 400/400 with the exit off).",
+  "On Aggressive Nightmare it returns 65437/65,536 (99 vent losses), and 65437 with the camera drain also off, not the 65,511 recorded on 2026-09-20 (d3f42f9). That figure predates the 2026-09-25 corrections to the graph, the office drain and the lure (4123aae and the graph-correction record), which no flag reverts; it was already stale before g275, and the doc still quoted it.",
+  "The phone-paced tracking loop with lures falls from 41324 to 9080 of 65,536 on Night 6, and reaches 484 on Aggressive Nightmare.",
+  "No policy in the model reaches 6 AM on every seed under the corrected rule. That is a statement about these two families, not about the game."
+ ],
+ "retracts": [
+  "docs/research/FOUR-GAME-NIGHTS.md \"FNaF 3 -- 65,536/65,536 on all six nights, community line\" and its Aggressive table (65,536/65,536 and 65,511/65,536): true of a model without g252/g275, false of the game.",
+  "docs/research/FOUR-GAME-NIGHTS.md \"Springtrap's rule alone cannot end a night\": g252 and g275 end one without the blackout.",
+  "plans/ROADMAP.md S6 \"FNaF 3: 65,536/65,536 in the model on all six nights\"."
+ ],
+ "notMeasured": [
+  "Phantoms are still not modelled, so these remain ceilings of the family, not predictions.",
+  "Whether a policy that keeps him off stage 1 altogether reaches 6 AM on every seed: no such policy exists in policy-fnaf3.js yet.",
+  "The rebuilt runtime's own rate: the pilot's guard is measured by tools/recompile/pilot/batch.mjs, not by this census."
+ ],
+ "rung": "None. MODEL_ONLY; a correction and a retraction, not a promotion candidate.",
+ "plan": "plans/ROADMAP.md S6"
+}

@@ -275,7 +275,33 @@ Every figure is a **model** result at the project's 3000-seed floor. Controls
 are reported beside each, because a sweep with no failing control cannot tell
 a working route from a dead code path.
 
-### FNaF 3 — 65,536/65,536 on all six nights, community line
+### FNaF 3 — 65,536/65,536 on all six nights, community line (retracted 2026-09-30)
+
+**Retracted 2026-09-30: the model was missing attack stage 1's own exit.** At
+stage 1 a roll above 2 sets `dhfgh` value 17 (g252), and the first update
+with a screen up — the monitor or the maintenance panel (g289-g291) — moves
+him to stage 2 (g275), from which g253 needs no screen. The model left stage 1
+only on the blackout (g486), so it treated stage 1 as a wait, and a line that
+never lures could sit him there all night. The rebuilt runtime found the rule
+first (`tools/recompile/README.md`, 2026-09-29). With it, exhaustively
+([record](../evidence/fnaf3-stage1-g275-census-20260930.json)):
+
+| Night | `community-line` with g275 | without (`--sim.stage1Advance 0`) |
+|---|---:|---:|
+| 1 | 60,081/65,536 | 400/400 in the test |
+| 2 | 43,545/65,536 | 400/400 in the test |
+| 3 | 39,748/65,536 | 400/400 in the test |
+| 4 | 35,334/65,536 | 400/400 in the test |
+| 5 | 30,777/65,536 | 400/400 in the test |
+| 6 | 20,489/65,536 | **65,536/65,536** |
+| 6, Aggressive | 7,226/65,536 | 65,437/65,536 |
+
+Every loss added is `springtrap-office`. Switching the exit off reproduces the
+Night 6 figure exactly, so the missing exit is the whole difference there. The
+phone-paced `tracking-loop` with the lure falls from 41,324 to 9,080 on
+Night 6, and reaches 484 on Aggressive Nightmare. No policy in the model now
+takes every seed. The text below is the record as it stood, kept so the
+retraction stays readable.
 
 Run **exhaustively**: 65,536 seeds is every night the 16-bit RNG can deal, so
 this is the population, not a sample, and there is no held-out block to worry
@@ -316,7 +342,9 @@ on 2977 and 2974 of 3000, and Aggressive Nightmare on 2606 and 2611
 Two source facts do the work, and neither is in any public account:
 
 - **The attack chain advances on the ventilation blackout**, not on a move
-  (g486, g487, g256, g262). Springtrap's rule alone cannot end a night. A
+  (g486, g487, g256, g262). Springtrap's rule alone cannot end a night.
+  **Retracted 2026-09-30:** g252 and g275 advance stage 1 on his own roll
+  whenever a screen is up, and g253 then advances stage 2 on a roll alone. A
   simulator built from his movement graph and nothing else reports a night
   that never ends — which is exactly what the `test-fnaf3-census.mjs` negative
   control demonstrates: disabling the blackout ramp makes the *failing*
@@ -356,6 +384,13 @@ flag is traced.
 |---|---|---|
 | normal | **65,536/65,536** | **65,536/65,536** |
 | **Aggressive** | **65,536/65,536** | **65,511/65,536** |
+
+**Retracted 2026-09-30.** This table was recorded on 2026-09-20 (`d3f42f9`),
+before the 2026-09-25 corrections to the graph, the office drain and the lure.
+Without g275 the current model gives 65,437/65,536 on Aggressive Nightmare
+(99 vent losses, with or without the camera drain), and with it 7,226
+([record](../evidence/fnaf3-stage1-g275-census-20260930.json)). The analysis
+below is of the table as it stood.
 
 So Aggressive Nightmare is the **only** configuration in this entire study
 where a published community strategy fails, and it fails on **25 seeds in

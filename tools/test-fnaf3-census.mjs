@@ -64,9 +64,19 @@ for (const night of [2, 3, 5]) {
 }
 
 // --- 2. the census ----------------------------------------------------------
+// Before 2026-09-29 the model left attack stage 1 only on the blackout, so the
+// published line, which never lures, cleared every night: that record still
+// reproduces with `stage1Advance: false`. With g252/g275 (the default), a roll
+// above 2 at stage 1 moves him to stage 2 whenever a screen is up, and the
+// line that never lures loses on every night, to the office. The exhaustive
+// figures are docs/evidence/fnaf3-stage1-g275-census-20260930.json.
 for (const night of [1, 2, 3, 4, 5, 6]) {
+  const old = run(night, () => communityLine(), 400, { stage1Advance: false });
+  eq(`the pre-g275 model's community line clears night ${night}`, old.wins, 400);
   const r = run(night, () => communityLine(), 400);
-  eq(`the community line clears night ${night}`, r.wins, 400);
+  ok(`with g275 the community line loses on night ${night} (${r.wins}/400)`, r.wins < 400);
+  ok(`and every loss on night ${night} is the office`,
+    Object.keys(r.causes).every((c) => c === '6AM' || c === 'springtrap-office'));
 }
 
 // --- 3. the mechanics the result rests on -----------------------------------
@@ -74,8 +84,10 @@ for (const night of [1, 2, 3, 4, 5, 6]) {
 // The clock: 240 s on Night 1 and 360 s after, which is both what the clock
 // groups state and what the handset measured on 2026-09-20.
 {
-  const one = run(1, () => communityLine(), 40);
-  const two = run(2, () => communityLine(), 40);
+  // The clock does not depend on the stage-1 rule; the pre-g275 line survives
+  // every night, so its mean length is the night's length.
+  const one = run(1, () => communityLine(), 40, { stage1Advance: false });
+  const two = run(2, () => communityLine(), 40, { stage1Advance: false });
   ok('night 1 runs 240 s', Math.abs(one.meanS - 240) < 1.5);
   ok('night 2 runs 360 s', Math.abs(two.meanS - 360) < 1.5);
   eq('the win fires on the displayed hour, not the counter', CLOCK.winHour, 6);
@@ -162,8 +174,23 @@ eq('cam 03 on actions above 2 goes to attack stage 1 (g251)', [GRAPH.cam03[3], G
   eq('attack stage 2 advances on an action above 2 (g253)', sim.where, 'attack3');
   sim.where = 'cam01'; sim.viewing = 2; sim.act(4);
   eq('cam 01 advances to stage 4 while a screen is viewed (g258)', sim.where, 'attack4');
-  sim.where = 'attack1'; sim.act(4);
-  eq('attack stage 1 waits for the blackout (g486)', sim.where, 'attack1');
+  sim.where = 'attack1'; sim.viewing = 0; sim.act(4);
+  eq('a roll above 2 at stage 1 does not move him by itself (g252)', sim.where, 'attack1');
+  eq('but marks him (dhfgh value 17)', sim.stage1Flag, 1);
+  sim.step();
+  eq('with no screen up the mark waits', sim.where, 'attack1');
+  sim.viewing = 2; sim.step();
+  eq('the first update with a screen up moves him to stage 2 (g275)', sim.where, 'attack2');
+  eq('and clears the mark', sim.stage1Flag, 0);
+  const panel = new Fnaf3Sim({ night: 6, seed: 1 });
+  panel.where = 'attack1'; panel.act(3); panel.panelUp = true; panel.step();
+  eq('the maintenance panel is a screen for g275 (g290)', panel.where, 'attack2');
+  const low = new Fnaf3Sim({ night: 6, seed: 1 });
+  low.where = 'attack1'; low.viewing = 2; low.act(2); low.step();
+  eq('a roll of 2 at stage 1 leaves no mark', [low.where, low.stage1Flag], ['attack1', 0]);
+  const old = new Fnaf3Sim({ night: 6, seed: 1, stage1Advance: false });
+  old.where = 'attack1'; old.viewing = 2; old.act(4); old.step();
+  eq('the pre-g275 model waits at stage 1 for the blackout (g486)', old.where, 'attack1');
 }
 
 // --- the device loop at the device's pace -------------------------------------------
@@ -173,14 +200,17 @@ for (let from = 0; from <= 15; from += 1) {
     searchOrder(from || null), deviceSearchOrder(from || null));
 }
 {
-  // Without the camera drain: the 2026-09-25 census record's conditions.
-  const r = run(6, () => trackingLoop(), 200, { cameraDrain: false });
-  ok(`the tracking loop at device pace holds Nightmare without the camera drain (${r.wins}/200)`, r.wins >= 190);
-  const slow = run(6, () => trackingLoop({ lookFrames: 150 }), 200, { cameraDrain: false });
-  ok(`and a loop three times slower does not (${slow.wins}/200)`, slow.wins < r.wins);
-  // With it (g783/g784), video fails after 24 s of looking on Nightmare.
-  const blind = run(6, () => trackingLoop(), 200);
-  const econ = run(6, () => trackingLoop({ economy: true }), 200);
+  // Without the camera drain or g275: the 2026-09-25 census record's conditions.
+  const pre = { cameraDrain: false, stage1Advance: false };
+  const r = run(6, () => trackingLoop(), 200, pre);
+  ok(`the tracking loop at device pace held Nightmare in the 2026-09-25 model (${r.wins}/200)`, r.wins >= 190);
+  const slow = run(6, () => trackingLoop({ lookFrames: 150 }), 200, pre);
+  ok(`and a loop three times slower did not (${slow.wins}/200)`, slow.wins < r.wins);
+  const now = run(6, () => trackingLoop(), 200, { cameraDrain: false });
+  ok(`with g275 the same loop loses more of Nightmare (${now.wins}/200)`, now.wins < r.wins);
+  // With the drain (g783/g784), video fails after 24 s of looking on Nightmare.
+  const blind = run(6, () => trackingLoop(), 200, { stage1Advance: false });
+  const econ = run(6, () => trackingLoop({ economy: true }), 200, { stage1Advance: false });
   ok(`the camera drain costs a loop that never reboots it (${blind.wins}/200)`, blind.wins < r.wins);
   ok(`and a loop that reboots it wins back most of that (${econ.wins}/200)`, econ.wins > blind.wins && econ.wins >= 100);
 }

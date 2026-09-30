@@ -369,8 +369,11 @@ and the solver MCP with its claim envelope (Plan 28).
     `test-fnaf1-winner.mjs` replays it with the pinned policy. `e6de745` has
     changed the route since, so the tree's runner refuses the winner's night
     and `npm run night -- fnaf1-winner` re-runs the pinned commit.
-  - **FNaF 3:** 65,536/65,536 in the model on all six nights, and Night 1 on the
-    phone.
+  - **FNaF 3:** Night 1 on the phone. The model's 65,536/65,536 on all six
+    nights is retracted (2026-09-30): the model lacked attack stage 1's own
+    exit (g252/g275). With it the community line reaches 60,081 (Night 1) down
+    to 20,489 (Night 6) of 65,536, and 7,226 on Aggressive Nightmare
+    ([`fnaf3-stage1-g275-census-20260930`](../docs/evidence/fnaf3-stage1-g275-census-20260930.json)).
   - **FNaF 4:** model only ([four games](../docs/research/FOUR-GAME-NIGHTS.md)).
   - **In the rebuild (2026-09-29, MODEL_ONLY, rebuilt-runtime).** A lockstep
     pilot wins each game's hardest night in the rebuilt runtime, and the game

@@ -99,8 +99,14 @@ export class Fnaf3Sim {
    * @param {boolean} [options.cameraDrain] the camera losing AI points while a
    *   screen is up (g783/g784, g381); on by default, off to reproduce the
    *   censuses recorded before it was modelled.
+   * @param {boolean} [options.stage1Advance] attack stage 1's own exit (g252,
+   *   g275): a roll above 2 there sets `dhfgh` value 17, and the first update
+   *   with a screen up moves him to stage 2. On by default; off reproduces the
+   *   censuses recorded before 2026-09-29, when the model left stage 1 only on
+   *   the blackout (g486) and so treated stage 1 as a wait.
    */
-  constructor({ night = 1, seed = 0, fastNights = false, hyper = false, cameraDrain = true } = {}) {
+  constructor({ night = 1, seed = 0, fastNights = false, hyper = false, cameraDrain = true,
+    stage1Advance = true } = {}) {
     this.night = night;
     this.rng = new Rng(seed);
     this.fastNights = fastNights;
@@ -145,9 +151,12 @@ export class Fnaf3Sim {
     this.playCounter = 7;                       // g299 refills it to 7
     this.lurePending = null;                    // { to, frames } g342-g352
     this.cameraDrain = cameraDrain;
+    this.stage1Advance = stage1Advance;
+    this.stage1Flag = 0;                        // `dhfgh` value 17 [g252, g275]
 
     // Player state, driven by the policy.
     this.viewing = 0;          // 0/1 office, >=2 a camera
+    this.panelUp = false;      // the maintenance panel (`viewing little cam` = 1)
     this.ventMap = false;
     this.cameraId = 0;         // which camera is selected, 1..15
 
@@ -177,6 +186,14 @@ export class Fnaf3Sim {
 
   /** `viewing a screen` [SOURCED: g289-g291]. */
   get viewingScreen() { return this.viewing >= 2; }
+
+  /**
+   * `viewing a screen` as g289-g291 set it: the monitor (`viewing` >= 2) or the
+   * maintenance panel (`viewing little cam` = 1). Only g275 reads this form so
+   * far; the older rules keep `viewingScreen`, the monitor alone, until each
+   * is checked against its own group.
+   */
+  get screenUp() { return this.viewing >= 2 || this.panelUp; }
 
   /** Video error: the feed shows no room (g381's floor, the shared -10 threshold). */
   get videoError() { return this.camera <= -10; }
@@ -318,6 +335,14 @@ export class Fnaf3Sim {
         this.act(action);
       }
     }
+
+    // g275: the mark from g252 moves him to stage 2 on the first update with a
+    // screen up. The group tests the mark and the screen, not where he stands,
+    // so a lure that pulled him off stage 1 in the meantime does not clear it.
+    if (this.stage1Advance && this.stage1Flag && this.screenUp) {
+      this.where = 'attack2';
+      this.stage1Flag = 0;
+    }
     return this.over;
   }
 
@@ -336,7 +361,13 @@ export class Fnaf3Sim {
     // The attack chain. Stage 1 advances only on the blackout (g486); stage 2
     // also on `action selected > 2` (g253); stages 3 and 4 and cam 01 have
     // action paths while a screen is viewed [g254, g255, g257, g258, g260, g294].
-    if (this.where === 'attack1') { this.totalTurns = 0; return; }
+    if (this.where === 'attack1') {
+      // g252: a roll above 2 at stage 1 marks him (`dhfgh` value 17); g275
+      // then moves him to stage 2 on an update with a screen up (step()).
+      if (this.stage1Advance && action > 2) this.stage1Flag = 1;
+      this.totalTurns = 0;
+      return;
+    }
     if (this.where === 'attack2') {
       if (action > 2) this.where = 'attack3';                                 // g253
       this.totalTurns = 0;
