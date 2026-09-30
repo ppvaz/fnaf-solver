@@ -1,0 +1,124 @@
+{
+ "schema": "evidence-record-v1",
+ "id": "fnaf4-search-block-20260930",
+ "claimLevel": "MODEL_ONLY",
+ "fidelity": "rebuilt-runtime",
+ "date": "2026-09-30",
+ "status": "ABANDONED",
+ "predeclaration": {
+  "id": "fnaf4-search-block-predeclaration-20260930",
+  "path": "docs/evidence/fnaf4-search-block-predeclaration-20260930.json"
+ },
+ "why": "A tooling defect showed in the first seeds: search.mjs read each attempt's summary on the child's 'exit' event, and a child's last stdout chunk can arrive after it. warden3's summary lists every task start, long enough to be cut off, so two attempts (seeds 50005 and 50011) read as nights that never started. Run by hand, 50005 is an ordinary night. The block was stopped after 18 rows; its rows cannot stand as the predeclared measurement.",
+ "rowsBeforeStop": [
+  {
+   "seed": 50001,
+   "verdict": "WON",
+   "attempts": 1,
+   "replayWon": true
+  },
+  {
+   "seed": 50000,
+   "verdict": "WON",
+   "attempts": 1,
+   "replayWon": true
+  },
+  {
+   "seed": 50002,
+   "verdict": "WON",
+   "attempts": 1,
+   "replayWon": true
+  },
+  {
+   "seed": 50003,
+   "verdict": "WON",
+   "attempts": 1,
+   "replayWon": true
+  },
+  {
+   "seed": 50004,
+   "verdict": "WON",
+   "attempts": 1,
+   "replayWon": true
+  },
+  {
+   "seed": 50005,
+   "verdict": "NO_NIGHT",
+   "attempts": 1
+  },
+  {
+   "seed": 50006,
+   "verdict": "WON",
+   "attempts": 1,
+   "replayWon": true
+  },
+  {
+   "seed": 50008,
+   "verdict": "WON",
+   "attempts": 1,
+   "replayWon": true
+  },
+  {
+   "seed": 50007,
+   "verdict": "WON",
+   "attempts": 1,
+   "replayWon": true
+  },
+  {
+   "seed": 50009,
+   "verdict": "WON",
+   "attempts": 1,
+   "replayWon": true
+  },
+  {
+   "seed": 50010,
+   "verdict": "WON",
+   "attempts": 1,
+   "replayWon": true
+  },
+  {
+   "seed": 50011,
+   "verdict": "NO_NIGHT",
+   "attempts": 1
+  },
+  {
+   "seed": 50012,
+   "verdict": "WON",
+   "attempts": 1,
+   "replayWon": true
+  },
+  {
+   "seed": 50014,
+   "verdict": "WON",
+   "attempts": 1,
+   "replayWon": true
+  },
+  {
+   "seed": 50013,
+   "verdict": "WON",
+   "attempts": 1,
+   "replayWon": true
+  },
+  {
+   "seed": 50015,
+   "verdict": "WON",
+   "attempts": 1,
+   "replayWon": true
+  },
+  {
+   "seed": 50016,
+   "verdict": "WON",
+   "attempts": 1,
+   "replayWon": true
+  },
+  {
+   "seed": 50017,
+   "verdict": "WON",
+   "attempts": 1,
+   "replayWon": true
+  }
+ ],
+ "replacedBy": "docs/evidence/fnaf4-search-block-2-predeclaration-20260930.json (new seeds, the reading fixed)",
+ "checkedElsewhere": "The FNaF 3 search runs on the same code had no unreadable attempt (0 of 295 in the running block, 0 of 608 in the second-form development run): guard2 summaries are shorter.",
+ "rung": "None."
+}
