@@ -227,6 +227,15 @@ exit 7
   assert.equal(signalled, true);
   assert.match(cleanupOutput, /title-observed[\s\S]*evidence-retained/);
   console.log('night-run cleanup: repeated interrupts cannot truncate physical cleanup or retained evidence');
+
+  // The video grade is a promotion's independent witness (ADR 0002 principle
+  // 11). On 2026-09-30 night-run.sh's grade wrapper ran taskset unguarded, and
+  // on macOS, which has none, the grade of night5-s1toys5-20260930T132120Z
+  // died on "nice: taskset: No such file or directory". grade-run.sh already
+  // pins only where taskset exists; the runner must do the same.
+  const runner = readFileSync(join(ROOT, 'tools/device/night-run.sh'), 'utf8');
+  for (const line of runner.split('\n').filter((text) => /\btaskset\b/.test(text) && !/^\s*#/.test(text)))
+    ok(/command -v taskset/.test(line), `night-run.sh runs taskset only where it exists: ${line.trim()}`);
   console.log(`night runners: ${checks} checks passed`);
 } finally {
   for (const d of ours()) rmSync(join(runsDir, d), { recursive: true, force: true });

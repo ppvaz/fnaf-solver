@@ -526,7 +526,9 @@ analyze() {
     #     land every decoder on a reserved core.
     # Without systemd-run the same placement and niceness still apply.
     GRADE_ENV=(env GRADE_CPUSET="${GRADE_CPUSET:-2-9}")
-    GRADE_WRAP=(nice -n 10 taskset -c "${GRADE_CPUSET:-2-9}")
+    # grade-run.sh's rule: pin where taskset exists; macOS has none.
+    GRADE_WRAP=(nice -n 10)
+    command -v taskset >/dev/null 2>&1 && GRADE_WRAP+=(taskset -c "${GRADE_CPUSET:-2-9}")
     # ONE ceiling for all grading, not one per run. With the phone released
     # before the analysis, gradings overlap by design (and other sessions
     # regrade in parallel), so a per-run MemoryMax would multiply: two live
