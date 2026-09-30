@@ -332,6 +332,19 @@
       ]
     },
     {
+      "file": "apps/trainer/test/pages.test.mjs",
+      "imports": [
+        "../../../tools/chrome.mjs",
+        "node:child_process",
+        "node:fs",
+        "node:fs/promises",
+        "node:http",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "apps/trainer/test/phase.test.mjs",
       "imports": [
         "../../../tools/chrome.mjs",

@@ -430,6 +430,9 @@ const BROWSER = [
   ['lightcheck', ['../apps/trainer/test/light.test.mjs']],
   ['phasetest', ['../apps/trainer/test/phase.test.mjs']],
   ['lessontest', ['../apps/trainer/test/lesson.test.mjs']],
+  // The Pages entry: the root index.html, unbundled, from its own GET-only
+  // server, the way GitHub Pages serves it; the checks above load dist/.
+  ['pages entry', ['../apps/trainer/test/pages.test.mjs']],
 ];
 const REPORTS = [
   ['minus2test', ['minus2test.mjs']],

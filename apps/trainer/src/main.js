@@ -24,6 +24,13 @@ const CONTROL_CHIPS = {
 };
 const ALL_CONTROLS = Object.keys(CONTROL_CHIPS);
 
+// What this page's server can write. The trainer's dev server (serve.py) names
+// its endpoints in a meta tag it adds to the pages it serves; GitHub Pages and
+// any other static host serve the page as committed, with none, and there is
+// nothing to post a trace or a layout to.
+const DEV_SERVER = new Set((document.querySelector('meta[name="trainer-dev-server"]')
+  ?.getAttribute('content') || '').split(/\s+/).filter(Boolean));
+
 class App {
   constructor() {
     this.audio = new Audio();
@@ -87,6 +94,7 @@ class App {
     co.checked = this.settings.coach;
     co.addEventListener('change', () => { this.settings.coach = co.checked; saveSettings(this.settings); });
 
+    document.getElementById('row-savemap').hidden = !DEV_SERVER.has('save-layout');
     this.buildSoundSlots();
     document.getElementById('btn-clear-sounds').addEventListener('click', async () => {
       await Assets.clearAll(); this.audio.samples = {}; this.buildSoundSlots();
@@ -360,6 +368,7 @@ class App {
   // excludable from the human census (they post dry so test runs also never
   // land in captures/).
   postTrace() {
+    if (!DEV_SERVER.has('save-trace')) return;
     if (this.tracePosted || !this.coach?.enabled || !this.coach.trace.length) return;
     this.tracePosted = true;
     const sim = this.sim, coach = this.coach;
@@ -407,6 +416,7 @@ class App {
   }
 
   async flushTraces() {
+    if (!DEV_SERVER.has('save-trace')) return;
     let q;
     try { q = JSON.parse(localStorage.getItem('m7.pendingTraces') || '[]'); } catch { return; }
     if (!q.length) return;

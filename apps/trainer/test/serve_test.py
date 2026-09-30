@@ -85,7 +85,10 @@ def main():
         try:
             connection = http.client.HTTPConnection('127.0.0.1', port, timeout=10)
             connection.request('GET', '/index.html')
-            check('the trainer is served', connection.getresponse().status == 200)
+            response = connection.getresponse()
+            page = response.read()
+            check('the trainer is served', response.status == 200)
+            check('the page names what this server writes', serve.DEV_META in page and page.count(serve.DEV_META) == 1)
             connection.close()
 
             trace = {'v': 1, 'lesson': 'cycle', 'steps': [{'stepId': 'a', 'grade': 'ok'}], 'dry': True}

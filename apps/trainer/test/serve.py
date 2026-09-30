@@ -38,6 +38,15 @@ CONFIG = ROOT / 'packages' / 'source' / 'src' / 'games' / 'fnaf2' / 'config.js'
 TRACES = pathlib.Path(os.environ.get('FNAF_TRACE_DIR', ROOT / 'captures' / 'traces'))
 MAP_BLOCK = re.compile(r"export const DEFAULT_MAP = \{.*?\n\};\n", re.S)
 WID_BLOCK = re.compile(r"export const DEFAULT_WIDGETS = \{.*?\n\};\n", re.S)
+# The page learns what this server can write from a tag it adds to every
+# trainer page it serves. GitHub Pages, or any static host, serves index.html as
+# committed, with no such tag, and the trainer there neither posts traces nor
+# offers to save a layout: until 2026-09-30 every coached run on Pages posted
+# to a /save-trace that answers 405, and queued the trace to post again on
+# every later visit.
+DEV_META = b'<meta name="trainer-dev-server" content="save-layout save-trace">'
+PAGES = {'/': 'index.html', '/index.html': 'index.html', '/dist/': 'dist/index.html',
+         '/dist/index.html': 'dist/index.html'}
 VALID = set(range(1, 13))
 WIDGETS = {'light', 'camlight', 'mask', 'monitor', 'ventL', 'ventR', 'wind'}
 SPACES = {'light': 'stage', 'camlight': 'stage', 'mask': 'stage', 'monitor': 'stage',
@@ -182,6 +191,17 @@ class Handler(SimpleHTTPRequestHandler):
         body = json.dumps(payload).encode()
         self.send_response(code)
         self.send_header('Content-Type', 'application/json')
+        self.send_header('Content-Length', str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_GET(self):
+        page = PAGES.get(self.path.split('?', 1)[0].split('#', 1)[0])
+        if page is None or not (ROOT / page).is_file():
+            return super().do_GET()
+        body = (ROOT / page).read_bytes().replace(b'<head>', b'<head>\n' + DEV_META, 1)
+        self.send_response(200)
+        self.send_header('Content-Type', 'text/html; charset=utf-8')
         self.send_header('Content-Length', str(len(body)))
         self.end_headers()
         self.wfile.write(body)

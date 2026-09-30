@@ -41,6 +41,9 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
   font:400 14px/1.5 var(--sans);
   overscroll-behavior:none;touch-action:manipulation;user-select:none;-webkit-user-select:none}
 button,input{font:inherit;color:inherit;background:none;border:none}
+/* The hidden attribute means hidden: a class's own display (.row is flex)
+   would otherwise win over it. */
+[hidden]{display:none!important}
 code{font-family:var(--mono);font-size:.9em;color:var(--fg3)}
 
 /* Mono numerals everywhere a number is being read against the clock. */

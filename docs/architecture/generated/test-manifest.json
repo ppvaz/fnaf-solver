@@ -396,6 +396,33 @@
       }
     },
     {
+      "id": "apps/trainer/test/pages.test.mjs",
+      "lane": "test:unit",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [
+        "setTimeout(r, ms",
+        "sleep(200",
+        "sleep(2000",
+        "sleep(300",
+        "sleep(3500",
+        "sleep(800"
+      ],
+      "sharedResources": [
+        "browser"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "apps/trainer/test/phase.test.mjs",
       "lane": "test:unit",
       "owner": "legacy migration",

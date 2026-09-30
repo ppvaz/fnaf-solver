@@ -61,6 +61,7 @@ const EXEMPT = new Map([
   ['apps/trainer/test/phase.test.mjs', 'browser group: real-time graded in Chrome; ci.yml excludes it on purpose (npm run test:browser:realtime)'],
   ['apps/trainer/test/lesson.test.mjs', 'browser group: real-time graded in Chrome; ci.yml excludes it on purpose (npm run test:browser:realtime)'],
   ['apps/trainer/test/light.test.mjs', 'browser group: real-time graded in Chrome; ci.yml excludes it on purpose (npm run test:browser:realtime)'],
+  ['apps/trainer/test/pages.test.mjs', 'browser group: needs Chrome, like its siblings, and runs with them (npm run test:browser:realtime); not timing-sensitive, so a CI step could run it'],
   // tools/test.mjs's REPORTS group: named like tests, but they print numbers
   // and always exit 0, so a lane would count a verdict that does not exist.
   ['tools/minus2test.mjs', 'report, not a check: tools/test.mjs --reports prints it and never judges it'],
