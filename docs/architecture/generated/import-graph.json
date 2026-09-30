@@ -280,6 +280,14 @@
       ]
     },
     {
+      "file": "apps/trainer/test/coach.test.mjs",
+      "imports": [
+        "../src/coach.js",
+        "@sixam/source/fnaf2",
+        "node:assert/strict"
+      ]
+    },
+    {
       "file": "apps/trainer/test/exercise.test.mjs",
       "imports": [
         "@sixam/trainer/training",

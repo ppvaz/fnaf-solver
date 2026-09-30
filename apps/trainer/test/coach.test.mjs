@@ -1,0 +1,67 @@
+// The coach grades what the game did with a press, not that it was sent
+// (CLAUDE.md: a send is not game acceptance). Until 2026-09-30 it graded every
+// press on time alone, so a perfect player on the taught office half scored
+// "good" on a mask-off the Sim refused -- the mask was still animating on --
+// and on everything the mask then blocked.
+import assert from 'node:assert/strict';
+import * as C from '@sixam/source/fnaf2';
+import { Sim } from '@sixam/source/fnaf2';
+import { Coach, playPress, pressLanded, pressState } from '../src/coach.js';
+
+const QUIET = { bbEnabled: false, foxyEnabled: false, gfEnabled: false, boxEnabled: false,
+  stalledEnabled: false, powerEnabled: false, lethal: false, record: false, seed: 1 };
+
+// pressLanded, press by press, on states the Sim refuses and accepts.
+{
+  const sim = new Sim(QUIET);
+  const press = act => { const before = pressState(sim); sim.press(act); return pressLanded(before, pressState(sim), act); };
+  assert.equal(sim.monitor, 'down');
+  assert.equal(press('cam:10'), false, 'a camera with the monitor down is refused');
+  assert.equal(press('mask'), true, 'the mask goes on from rest');
+  assert.equal(press('mask'), false, 'the mask is refused while it is still animating on');
+  assert.equal(press('light'), false, 'no light while the mask is on');
+  for (let i = 0; i < C.MASK_ANIM_ON; i++) sim.tick();
+  assert.equal(press('mask'), true, 'the mask comes off once it is fully on');
+  assert.equal(press('monitor'), false, 'nothing but the mask answers while it is coming off');
+  for (let i = 0; i < C.MASK_ANIM_OFF; i++) sim.tick();
+  assert.equal(press('light'), true, 'the light answers once the mask is fully off');
+  sim.release('light');
+  assert.equal(press('monitor'), true, 'the monitor raises');
+  assert.equal(press('cam:10'), false, 'a camera is refused while the monitor is still raising');
+  for (let i = 0; sim.monitor !== 'up' && i < 60; i++) sim.tick();
+  assert.equal(press('cam:10'), true, 'a camera answers once the monitor is up');
+  assert.equal(press('cam:10'), true, 'selecting the camera already selected still lands');
+  assert.equal(press('wind'), true);
+}
+
+// The coach, fed through playPress as the app feeds it: a press on time that
+// the Sim refuses is graded `refused`, and it breaks the pass.
+{
+  const sim = new Sim(QUIET);
+  const script = [
+    { id: 'mask-on', at: 0.00, label: 'Mask on', action: 'mask' },
+    { id: 'mask-off', at: 0.10, label: 'Mask off', action: 'mask' },   // inside MASK_ANIM_ON
+    { id: 'flash-hall', at: 0.60, label: 'Flash the hall', action: 'light' },
+  ];
+  const passes = [];
+  const coach = new Coach(sim, { script, tolGood: 0.2, tolOk: 0.4, onCycle: ok => passes.push(ok) });
+  coach.start(0);
+  const due = id => coach.cycleStart + script.find(st => st.id === id).at;
+  while (sim.t < due('mask-on')) sim.tick();
+  assert.equal(playPress(sim, coach, 'mask'), true);
+  while (sim.t < due('mask-off')) sim.tick();
+  assert.equal(playPress(sim, coach, 'mask'), false, 'the Sim refuses the mask mid-animation');
+  const [on, off] = coach.trace;
+  assert.equal(on.grade, 'good');
+  assert.equal(off.grade, 'refused', 'a refused press is not graded on its timing');
+  assert.ok(Math.abs(off.delta) < 1 / C.FPS, 'the refused row keeps the press time for the lateness census');
+  assert.equal(coach.combo, 0, 'a refused press breaks the combo');
+  assert.equal(coach.summary.bad, 1);
+  // The mask is still on, so the flash is refused too, and the pass is not clean.
+  while (sim.t < due('flash-hall')) sim.tick();
+  assert.equal(playPress(sim, coach, 'light'), false);
+  assert.equal(coach.trace[2].grade, 'refused');
+  assert.deepEqual(passes, [false], 'a pass with a refused press is not a clean pass');
+}
+
+console.log('coach: a press the Sim refuses is graded refused, on its own and through the app\'s press path');

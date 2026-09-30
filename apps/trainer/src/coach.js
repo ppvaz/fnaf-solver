@@ -1,5 +1,59 @@
 import * as C from '@sixam/source/fnaf2';
 
+// Whether the game took a press. A send is not game acceptance (CLAUDE.md):
+// the Sim refuses a press without a word -- the mask while it is still
+// animating, anything but the mask while it is on or coming off, a camera
+// before the monitor is up -- so the only evidence a press landed is the state
+// it changes. Until 2026-09-30 the coach graded every press on its timing
+// alone, and a player who hit the taught mask-off on time scored PERFECT on a
+// press the game had refused.
+
+/** The Sim state a press can change. @param {any} sim */
+export function pressState(sim) {
+  return {
+    maskOn: sim.maskOn, maskAnim: sim.maskAnim, monitor: sim.monitor,
+    dropEverything: !!sim.dropEverything, dropTouch: sim.dropTouch ?? null,
+    cam: sim.cam, viewing: sim.viewing, lightHeld: sim.lightHeld, winding: sim.winding,
+    ventL: sim.ventLightL, ventR: sim.ventLightR,
+  };
+}
+
+/**
+ * Did the press of `act` land, judged from the Sim state before and after it?
+ * @param {ReturnType<typeof pressState>} before
+ * @param {ReturnType<typeof pressState>} after
+ * @param {string} act
+ */
+export function pressLanded(before, after, act) {
+  switch (act) {
+    case 'mask': return before.maskOn !== after.maskOn || before.maskAnim !== after.maskAnim ||
+      before.dropTouch !== after.dropTouch;
+    case 'monitor': return before.monitor !== after.monitor ||
+      before.dropEverything !== after.dropEverything || before.dropTouch !== after.dropTouch;
+    case 'light': return after.lightHeld;
+    case 'wind': return after.winding;
+    case 'ventL': return after.ventL;
+    case 'ventR': return after.ventR;
+    default: {
+      const cam = act.startsWith('cam:') ? +act.slice(4) : NaN;
+      return after.cam === cam && after.viewing === cam;
+    }
+  }
+}
+
+/**
+ * The one press path, shared by the app and the tests: the Sim takes the press
+ * first, then the coach grades it knowing whether it landed.
+ * @param {any} sim @param {Coach | null | undefined} coach @param {string} act
+ */
+export function playPress(sim, coach, act) {
+  const before = pressState(sim);
+  sim.press(act);
+  const landed = pressLanded(before, pressState(sim), act);
+  coach?.onInput(act, landed);
+  return landed;
+}
+
 // Watches the routine rather than the game: which input was due, when it
 // actually landed, and by how much it was off.
 export class Coach {
@@ -162,14 +216,16 @@ export class Coach {
     }
   }
 
-  // called on every player input, before the sim consumes it
-  onInput(act) {
+  // Called on every player input, after the Sim has taken or refused it. A
+  // refused press keeps its time for the lateness census but is graded
+  // `refused`, not on its timing, and it moves the pass on like a miss.
+  onInput(act, landed = true) {
     if (!this.enabled || this.suspended || this.cycleStart == null) return;
     const t = this.sim.t;
     // resolve a pending camera flash
     if (this.pendingFlash && act === 'light') {
       const p = this.pendingFlash; this.pendingFlash = null;
-      this.push(p.step, p.delta, this.grade(p.step, p.delta));
+      this.push(p.step, p.delta, landed ? this.grade(p.step, p.delta) : 'refused');
       this.advance(this.sim.t);
       return;
     }
@@ -181,9 +237,10 @@ export class Coach {
     if (!matches) {
       // an early input for the *next* step is a miss on this one
       const n = this.script[this.idx + 1];
-      if (n && this.matches(n, act)) { this.push(e, null, 'skipped'); this.advance(t); this.onInput(act); }
+      if (n && this.matches(n, act)) { this.push(e, null, 'skipped'); this.advance(t); this.onInput(act, landed); }
       return;
     }
+    if (!landed) { this.push(e, delta, 'refused'); this.advance(t); return; }
     // Hold position on a camflash until its light tap lands, so the grade is
     // attributed to this cycle rather than the next one.
     if (e.action === 'camflash') { this.pendingFlash = { step: e, t, delta }; return; }
@@ -208,7 +265,8 @@ export class Coach {
     const n = scored.length || 1;
     const good = this.results.filter(r => r.grade === 'good').length;
     const bad = this.results.filter(r => r.grade === 'missed' || r.grade === 'late' ||
-                                          r.grade === 'skipped' || r.grade === 'no-flash').length;
+                                          r.grade === 'skipped' || r.grade === 'no-flash' ||
+                                          r.grade === 'refused').length;
     const mean = scored.reduce((a, r) => a + Math.abs(r.delta), 0) / n;
     return { total: this.results.length, good, bad, meanAbs: mean, accuracy: good / (this.results.length || 1) };
   }
@@ -232,3 +290,4 @@ export class DuelTimer {
     }
   }
 }
+

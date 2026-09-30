@@ -251,6 +251,24 @@
       }
     },
     {
+      "id": "apps/trainer/test/coach.test.mjs",
+      "lane": "test:unit",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "apps/trainer/test/exercise.test.mjs",
       "lane": "test:unit",
       "owner": "legacy migration",
@@ -274,8 +292,11 @@
       "owner": "legacy migration",
       "timeoutMs": 180000,
       "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
+      "deterministic": false,
+      "determinismSignals": [
+        "performance.now",
+        "performance.now"
+      ],
       "fixedSleeps": [
         "setTimeout(r, ms",
         "sleep(200",

@@ -22,12 +22,21 @@ const errs = [], fails = [];
 // tapped as soon as each step falls due — a metronomically perfect player
 // `hold` decides whether the bot lets go: a held input stays down until the
 // next control is pressed, which is what the wind step now demands.
+//
+// Any other hold-mode control (the lights) is held for 100 ms, a finger's tap
+// and the camera-flash hold the device schedules use. A pointerdown and
+// pointerup in one task reach no Sim tick, so that flash froze nobody: the
+// stalled units walked, the monitor was forced down, and since the coach
+// grades what the game took (2026-09-30) the camera taps after it were
+// refused on a seed-dependent share of runs.
 const player = (hold) => `window.__auto && clearInterval(window.__auto);
 window.__held = null;
+window.__heldUntil = 0;
 window.__release = () => { if (window.__held) {
   window.__held.dispatchEvent(new PointerEvent('pointerup', {bubbles:true, pointerId:31}));
-  window.__held = null; } };
+  window.__held = null; window.__heldUntil = 0; } };
 window.__auto = setInterval(() => {
+  if (window.__heldUntil && performance.now() >= window.__heldUntil) window.__release();
   const app = window.app;
   if (!app || !app.running || !app.coach || !app.coach.enabled) return;
   const c = app.coach, e = c.expected;
@@ -41,6 +50,7 @@ window.__auto = setInterval(() => {
   window.__release();
   el.dispatchEvent(new PointerEvent('pointerdown', {bubbles:true, pointerId:31}));
   if (${hold ? 'true' : 'false'} && e.hold) { window.__held = el; }
+  else if (el.dataset.mode === 'hold' && !e.hold) { window.__held = el; window.__heldUntil = performance.now() + 100; }
   else el.dispatchEvent(new PointerEvent('pointerup', {bubbles:true, pointerId:31}));
 }, 8); true`;
 const AUTOPLAYER = player(true);

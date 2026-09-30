@@ -1,6 +1,6 @@
 import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
-import { Coach, DuelTimer } from './coach.js';
+import { Coach, DuelTimer, playPress } from './coach.js';
 import { Audio } from './audio.js';
 import { UI } from './ui.js';
 import { bindInputs, keepAwake, goFullscreen, isFullscreen, buzz } from './input.js';
@@ -337,7 +337,9 @@ class App {
     this.feedbackFor(act);
     const beforeCombo = this.coach?.combo ?? 0;
     const beforeLast = this.coach?.last;
-    this.coach?.onInput(act);
+    // The duel reads the mask as it was before this press.
+    if (this.mode.drill === 'phaseB') this.duelInput(act);
+    playPress(this.sim, this.coach, act);
     if (this.coach && this.coach.last !== beforeLast) {
       const g = this.coach.last.grade;
       this.ui.grade(g);
@@ -349,8 +351,6 @@ class App {
         this.buzz([10, 40, 10]);
       }
     }
-    if (this.mode.drill === 'phaseB') this.duelInput(act);
-    this.sim.press(act);
   }
   onRelease(act) {
     if (!this.running || !this.sim || this.ui.calibrating) return;
@@ -503,7 +503,7 @@ class App {
       const last = this.coach?.last;
       if (last && last !== this._popped) {
         this._popped = last;
-        const txt = last.delta == null ? last.grade.toUpperCase()
+        const txt = last.delta == null || last.grade === 'refused' ? last.grade.toUpperCase()
           : last.grade === 'good' ? 'PERFECT'
           : `${last.delta > 0 ? 'LATE ' : 'EARLY '}${Math.abs(Math.round(last.delta * 1000))}ms`;
         this.ui.lane.pop(txt, last.grade, this.sim.t);

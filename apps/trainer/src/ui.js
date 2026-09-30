@@ -6,7 +6,7 @@ const pad2 = (n) => String(n).padStart(2, '0');
 
 const GRADE_FX = {
   good: '#57DC6E', ok: '#FFB020', late: '#FF5449',
-  missed: '#FF5449', skipped: '#FF5449', 'no-flash': '#FF5449',
+  missed: '#FF5449', skipped: '#FF5449', 'no-flash': '#FF5449', refused: '#FF5449',
 };
 
 export class UI {
@@ -338,7 +338,7 @@ export class UI {
       const last = coach.last;
       if (last && last !== this._lastShown) {
         this._lastShown = last;
-        const txt = last.delta == null ? last.grade.toUpperCase()
+        const txt = last.delta == null || last.grade === 'refused' ? last.grade.toUpperCase()
           : `${last.delta > 0 ? '+' : ''}${Math.round(last.delta * 1000)}ms`;
         this.el.coachFb.textContent = `${last.label} ${txt}`;
         this.el.coachFb.className = last.grade;
