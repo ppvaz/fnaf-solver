@@ -1,14 +1,32 @@
 #!/usr/bin/env python3
 """Dev server for the trainer.
 
-Serves the project on the LAN and accepts POST /save-layout, so a layout
-calibrated by dragging on the phone can be written back into the core config as
-the new DEFAULT_MAP. Rebuilds dist/ afterwards so a reload picks it up.
+Serves the project on this machine only (127.0.0.1) and accepts POST
+/save-layout, so a layout calibrated by dragging can be written back into the
+core config as the new DEFAULT_MAP; it rebuilds dist/ afterwards so a reload
+picks it up. POST /save-trace records a coached run under captures/traces/.
+
+Both POSTs write to this machine, and /save-layout rewrites a source file of
+@fnaf2-1020/core. So until 2026-09-29, when this bound 0.0.0.0, anyone on the
+network could rewrite packages/core/src/mechanics/config.js. Now the socket is
+loopback only, and a write is refused unless its client is loopback, its Host
+names this machine, and any Origin is the page's own (write_refusal): a web
+page in the host's browser can reach 127.0.0.1 too, and must not write here.
+
+To calibrate on a phone, forward the port over USB rather than opening it to
+the network: `adb reverse tcp:8731 tcp:8731`, then open
+http://localhost:8731/index.html on the phone. Its requests arrive from
+loopback, and localhost is a secure context, so wake lock and vibration work.
 
     python3 tools/serve.py [port]
 """
-import datetime, json, os, re, subprocess, sys, pathlib
+import datetime, ipaddress, json, os, re, subprocess, sys, pathlib
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+
+# Loopback only. There is deliberately no LAN switch: the writes are this
+# machine's, and a phone reaches the server through `adb reverse` (above).
+HOST = '127.0.0.1'
+LOOPBACK_NAMES = {'localhost', '127.0.0.1', '::1'}
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 CONFIG = ROOT / 'packages' / 'core' / 'src' / 'mechanics' / 'config.js'
@@ -119,20 +137,58 @@ def write_trace(data, lesson):
     raise RuntimeError('could not find a free trace filename')
 
 
+def _is_loopback(address):
+    try:
+        ip = ipaddress.ip_address(address.split('%')[0])
+    except ValueError:
+        return False
+    return ip.is_loopback or bool(getattr(ip, 'ipv4_mapped', None) and ip.ipv4_mapped.is_loopback)
+
+
+def _host_name(host):
+    """The hostname of a Host header value: `localhost:8731`, `[::1]:8731`."""
+    if host.startswith('['):
+        return host[1:host.find(']')] if ']' in host else host
+    return host.rsplit(':', 1)[0] if host.count(':') == 1 else host
+
+
+def write_refusal(client, host, origin):
+    """Why a POST may not write here, or None when it may.
+
+    client: the peer address; host, origin: the request's Host and Origin
+    headers (None when absent). A write needs a loopback client (the socket is
+    loopback already; this holds if that ever changes), a Host naming this
+    machine (a DNS-rebound name is not), and, when the client is a browser
+    that sent an Origin, that Origin to be the page's own: http:// plus Host.
+    """
+    if not _is_loopback(client):
+        return f'writes are accepted from this machine only, not from {client}'
+    if not host or _host_name(host.strip().lower()) not in LOOPBACK_NAMES:
+        return f'Host {host!r} does not name this machine'
+    if origin is not None and origin.strip().lower() != f'http://{host.strip().lower()}':
+        return f'a page from {origin!r} may not write to http://{host}'
+    return None
+
+
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *a, **kw):
         super().__init__(*a, directory=str(ROOT), **kw)
 
     def _json(self, code, payload):
+        # No Access-Control-Allow-Origin: the writes are same-origin only, and
+        # nothing on another origin has any business reading their answers.
         body = json.dumps(payload).encode()
         self.send_response(code)
         self.send_header('Content-Type', 'application/json')
         self.send_header('Content-Length', str(len(body)))
-        self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
         self.wfile.write(body)
 
     def do_POST(self):
+        refusal = write_refusal(self.client_address[0], self.headers.get('Host'), self.headers.get('Origin'))
+        if refusal:
+            print(f'{self.path} refused: {refusal}')
+            return self._json(403, {'error': refusal})
         if self.path == '/save-trace':
             return self.save_trace()
         if self.path != '/save-layout':
@@ -185,6 +241,12 @@ class Handler(SimpleHTTPRequestHandler):
             super().log_message(fmt, *args)
 
 
+def make_server(port, host=HOST):
+    return ThreadingHTTPServer((host, port), Handler)
+
+
 if __name__ == '__main__':
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8731
-    ThreadingHTTPServer(('0.0.0.0', port), Handler).serve_forever()
+    server = make_server(port)
+    print(f'serving {ROOT} on http://{HOST}:{server.server_address[1]}/ (this machine only)')
+    server.serve_forever()
