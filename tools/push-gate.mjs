@@ -25,7 +25,7 @@
 // `laneDrift` fails the run if the two drift apart, because a mirror that has
 // stopped mirroring is worse than no mirror.
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, readlinkSync, rmSync, symlinkSync } from 'node:fs';
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, readlinkSync, realpathSync, rmSync, symlinkSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -42,7 +42,7 @@ const ZERO = /^0+$/;
 // ruled that iteration time outranks re-running censuses that no ordinary
 // commit changes. CI still runs every lane; `npm run push-gate -- --full`
 // runs them all here.
-const LANES = [
+export const LANES = [
   { name: 'Type and architecture contracts', run: 'npm run typecheck && npm run test:unit && npm run test:contracts' },
   { name: 'Slow census gates', run: 'npm run test:unit:slow', heavy: true },
   { name: 'Clean-checkout model lane', run: 'npm run test:core' },
@@ -350,6 +350,41 @@ function validate(sha, subject) {
   return { failed, skipped };
 }
 
+// --- The verdict -----------------------------------------------------------
+
+/**
+ * What reproduces a lane on this machine: the ci.yml step text itself, which
+ * is what LANES holds, or for the ShellCheck lane the step's `run: |` block.
+ * @param {string} name a lane name, or the drift failure's
+ */
+export function reproduceCommand(name) {
+  const lane = LANES.find(item => item.name === name);
+  if (!lane) return null;
+  return lane.multiline ? `the \`run: |\` script of the "${lane.name}" step in .github/workflows/ci.yml (needs docker)` : lane.run;
+}
+
+/**
+ * The closing lines for failed lanes: each lane with the command that
+ * reproduces it, then how to re-run the whole gate on that commit. A red lane
+ * is fixed, never sent past the hook: CLAUDE.md forbids bypassing a hook, so
+ * no line here offers one.
+ * @param {{sha: string, name: string}[]} broken
+ * @returns {string[]}
+ */
+export function failureReport(broken) {
+  const lines = ['', 'push-gate: these lanes would fail on GitHub:'];
+  for (const { sha, name } of broken) {
+    lines.push(`  ${sha.slice(0, 7)} ${name}`);
+    const command = reproduceCommand(name);
+    lines.push(command ? `      reproduce: ${command}`
+      : `      reproduce: npm run push-gate -- ${sha.slice(0, 7)} (update LANES in tools/push-gate.mjs to match ci.yml)`);
+  }
+  const shas = [...new Set(broken.map(item => item.sha.slice(0, 7)))];
+  lines.push(`Fix them and commit again. \`npm run push-gate -- ${shas.join(' ')}\` re-runs every lane in a clean checkout of `
+    + `${shas.length === 1 ? 'that commit' : 'those commits'}; the working tree is a different measurement.`);
+  return lines;
+}
+
 // --- Entry point -----------------------------------------------------------
 
 /** Pre-push feeds `<local ref> <local sha> <remote ref> <remote sha>` on stdin. */
@@ -364,34 +399,38 @@ function commitsFromStdin() {
   return shas;
 }
 
-const argv = process.argv.slice(2).filter(arg => arg !== '--full');
 const FULL = process.argv.includes('--full');
-const commits = argv.includes('--stdin')
-  ? commitsFromStdin()
-  : (argv.length ? argv : ['HEAD']).map(ref =>
-      execFileSync('git', ['rev-parse', ref], { cwd: ROOT, encoding: 'utf8' }).trim());
+// Run as a program (the pre-push hook, `npm run push-gate`); importing the
+// module -- tools/test-push-gate.mjs reads failureReport -- runs nothing.
+const invoked = process.argv[1] && realpathSync(resolve(process.argv[1])) === realpathSync(fileURLToPath(import.meta.url));
 
-if (!commits.length) {
-  console.log('push-gate: nothing to validate');
-  process.exit(0);
-}
+if (invoked) {
+  const argv = process.argv.slice(2).filter(arg => arg !== '--full');
+  const commits = argv.includes('--stdin')
+    ? commitsFromStdin()
+    : (argv.length ? argv : ['HEAD']).map(ref =>
+        execFileSync('git', ['rev-parse', ref], { cwd: ROOT, encoding: 'utf8' }).trim());
 
-const broken = [];
-const notRun = [];
-for (const sha of commits) {
-  const subject = execFileSync('git', ['log', '-1', '--format=%s', sha], { cwd: ROOT, encoding: 'utf8' }).trim();
-  const { failed, skipped } = validate(sha, subject);
-  broken.push(...failed.map(name => `${sha.slice(0, 7)} ${name}`));
-  notRun.push(...skipped);
-}
+  if (!commits.length) {
+    console.log('push-gate: nothing to validate');
+    process.exit(0);
+  }
 
-if (notRun.length)
-  console.log(`\npush-gate: ${notRun.length} lane(s) could not run here and are unverified: ${[...new Set(notRun)].join(', ')}`);
-if (broken.length) {
-  console.log(`\npush-gate: these lanes would fail on GitHub:`);
-  for (const lane of broken) console.log(`  ${lane}`);
-  console.log('Fix them, or push with --no-verify to send them anyway.');
-  process.exit(1);
+  const broken = [];
+  const notRun = [];
+  for (const sha of commits) {
+    const subject = execFileSync('git', ['log', '-1', '--format=%s', sha], { cwd: ROOT, encoding: 'utf8' }).trim();
+    const { failed, skipped } = validate(sha, subject);
+    broken.push(...failed.map(name => ({ sha, name })));
+    notRun.push(...skipped);
+  }
+
+  if (notRun.length)
+    console.log(`\npush-gate: ${notRun.length} lane(s) could not run here and are unverified: ${[...new Set(notRun)].join(', ')}`);
+  if (broken.length) {
+    for (const line of failureReport(broken)) console.log(line);
+    process.exit(1);
+  }
+  console.log(FULL ? '\npush-gate: every lane CI runs passes on the pushed commit'
+    : '\npush-gate: every fast lane passes on the pushed commit (heavy lanes are CI\'s; --full runs them here)');
 }
-console.log(FULL ? '\npush-gate: every lane CI runs passes on the pushed commit'
-  : '\npush-gate: every fast lane passes on the pushed commit (heavy lanes are CI\'s; --full runs them here)');

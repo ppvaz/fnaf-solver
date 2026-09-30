@@ -4573,6 +4573,24 @@
       }
     },
     {
+      "id": "tools/test-push-gate.mjs",
+      "lane": "test:unit",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "tools/test-rebuild-options-census.mjs",
       "lane": "test:unit",
       "owner": "legacy migration",

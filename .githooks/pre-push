@@ -2,5 +2,7 @@
 # Validate the pushed commits the way CI will see them: in a clean checkout.
 # The gate reads the ref lines git feeds this hook on stdin. Enable with
 #   git config core.hooksPath .githooks
-# and bypass a known-red push with `git push --no-verify`.
+# A red lane is fixed and pushed again, never sent past this hook: CLAUDE.md
+# forbids bypassing a hook, and the gate names each failed lane with the
+# command that reproduces it.
 exec node "$(dirname "$0")/../tools/push-gate.mjs" --stdin

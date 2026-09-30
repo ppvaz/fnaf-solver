@@ -3438,6 +3438,16 @@
       ]
     },
     {
+      "file": "tools/test-push-gate.mjs",
+      "imports": [
+        "./push-gate.mjs",
+        "node:assert/strict",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/test-rebuild-options-census.mjs",
       "imports": [
         "./rebuild-options-census.mjs",
