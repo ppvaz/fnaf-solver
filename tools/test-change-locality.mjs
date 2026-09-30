@@ -9,7 +9,7 @@ assert.equal(contextOf('packages/play/src/campaign/planted.js'), 'play');
 assert.equal(contextOf('apps/trainer/src/planted.js'), 'apps/trainer');
 assert.equal(contextOf('android/companion/src/com/ppvaz/fnafcompanion/NightRunner.java'), 'companion');
 assert.equal(contextOf('tools/gate-kit.mjs'), 'tools');
-for (const registration of ['package.json', 'CLAUDE.md', 'docs/architecture/generated/import-graph.json',
+for (const registration of ['package.json', 'CLAUDE.md', 'docs/architecture/generated/import-graph.json', 'tools/quality-baseline.json',
   'plans/ROADMAP.md', 'packages/play/README.md', 'docs/evidence/runs/x/pack.json'])
   assert.equal(contextOf(registration), null, `${registration} is registration, not a context`);
 

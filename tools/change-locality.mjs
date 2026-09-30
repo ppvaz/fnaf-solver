@@ -17,9 +17,14 @@ import { fileURLToPath } from 'node:url';
 export const LIMIT = 3;
 const MIN_REASON = 20;
 
+// Records every change may have to touch, whatever its context: paying a
+// ratchet's debt lowers an entry here, and that is registration, not a third
+// context (the first integration through this gate tripped on it).
+const REGISTRATION = new Set(['tools/quality-baseline.json']);
+
 /** The context a staged path belongs to, or null for registration. @param {string} path */
 export function contextOf(path) {
-  if (/^docs\/|^plans\//.test(path) || /\.md$/.test(path) || !path.includes('/')) return null;
+  if (/^docs\/|^plans\//.test(path) || /\.md$/.test(path) || !path.includes('/') || REGISTRATION.has(path)) return null;
   const pkg = path.match(/^packages\/([^/]+)\//);
   if (pkg) return pkg[1];
   const app = path.match(/^apps\/([^/]+)\//);
