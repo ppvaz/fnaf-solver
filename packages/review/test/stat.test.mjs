@@ -49,7 +49,7 @@ assert.match(formatRate(648, 1200), /^rate 54\.0% \[[0-9.]+%, [0-9.]+%\] n=1200$
 const py = spawnSync('python3', ['-c', `
 import json
 import importlib.util
-spec = importlib.util.spec_from_file_location("fnaf_stat", "stat.py")
+spec = importlib.util.spec_from_file_location("fnaf_stat", "../src/stat.py")
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 contract_verdict = module.contract_verdict
