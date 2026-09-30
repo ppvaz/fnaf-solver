@@ -130,6 +130,7 @@
         "./artifact-executor.js",
         "./device-local-executor.js",
         "@sixam/adapters",
+        "@sixam/core/contracts",
         "@sixam/core/control"
       ]
     },
@@ -338,6 +339,17 @@
         "node:fs/promises",
         "node:os",
         "node:path"
+      ]
+    },
+    {
+      "file": "apps/device/test/profile-game.test.js",
+      "imports": [
+        "../src/artifact-executor.js",
+        "../src/hid-schedule.js",
+        "@sixam/core/contracts",
+        "node:assert/strict",
+        "node:fs",
+        "node:url"
       ]
     },
     {
@@ -571,7 +583,7 @@
     {
       "file": "packages/core/src/contracts/index.js",
       "imports": [
-        "../control/vocabulary.js",
+        "../control/catalog/index.js",
         "./campaign-records.js",
         "./qualification.js",
         "./venue-identity.js"
@@ -581,6 +593,40 @@
       "file": "packages/core/src/contracts/qualification.js",
       "imports": [
         "./venue-identity.js"
+      ]
+    },
+    {
+      "file": "packages/core/src/control/catalog/fnaf1.js",
+      "imports": [
+        "./define.js"
+      ]
+    },
+    {
+      "file": "packages/core/src/control/catalog/fnaf2.js",
+      "imports": [
+        "./define.js"
+      ]
+    },
+    {
+      "file": "packages/core/src/control/catalog/fnaf3.js",
+      "imports": [
+        "./define.js"
+      ]
+    },
+    {
+      "file": "packages/core/src/control/catalog/fnaf4.js",
+      "imports": [
+        "./define.js"
+      ]
+    },
+    {
+      "file": "packages/core/src/control/catalog/index.js",
+      "imports": [
+        "./define.js",
+        "./fnaf1.js",
+        "./fnaf2.js",
+        "./fnaf3.js",
+        "./fnaf4.js"
       ]
     },
     {
@@ -616,6 +662,7 @@
     {
       "file": "packages/core/src/control/index.js",
       "imports": [
+        "./catalog/index.js",
         "./controller.js",
         "./cycle-controller.js",
         "./cycle-library.js",
@@ -644,6 +691,12 @@
       "file": "packages/core/src/control/policy-ir.js",
       "imports": [
         "./observation-language.js"
+      ]
+    },
+    {
+      "file": "packages/core/src/control/vocabulary.js",
+      "imports": [
+        "./catalog/index.js"
       ]
     },
     {
@@ -754,6 +807,7 @@
       "file": "packages/core/src/mechanics/plant.js",
       "imports": [
         "../contracts/index.js",
+        "../control/catalog/fnaf2.js",
         "./plant-model.js"
       ]
     },
@@ -845,6 +899,17 @@
         "../src/contracts/index.js",
         "../src/mechanics/plant.js",
         "../src/telemetry/fact-link.js",
+        "node:assert/strict",
+        "node:fs",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/core/test/control-catalog.test.js",
+      "imports": [
+        "../src/contracts/index.js",
+        "../src/control/index.js",
+        "../src/mechanics/plant.js",
         "node:assert/strict",
         "node:fs",
         "node:url"
@@ -2771,6 +2836,7 @@
     {
       "file": "tools/generate-catalog.js",
       "imports": [
+        "@sixam/core/control",
         "node:child_process",
         "node:fs/promises",
         "node:path",

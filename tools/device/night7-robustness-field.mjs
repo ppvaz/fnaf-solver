@@ -35,7 +35,7 @@ import { createHash } from 'node:crypto';
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { FPS, Sim } from '@sixam/core/mechanics';
-import { CONTROL_VOCABULARY as V, MODEL_CONTEXT_LIGHT } from '@sixam/core/control';
+import { FNAF2_CONTROL_VOCABULARY as V, MODEL_CONTEXT_LIGHT } from '@sixam/core/control';
 import { DeviceActuator } from './actuator.mjs';
 import { SEAM_FLOORS } from './artifact-commands.mjs';
 import { build } from './minus-toys-plan.mjs';

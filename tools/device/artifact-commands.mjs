@@ -4,7 +4,7 @@
 // a target state rather than a parity toggle.
 
 import * as C from '@sixam/core/mechanics';
-import { CONTROL_VOCABULARY as V } from '@sixam/core/control';
+import { FNAF2_CONTROL_VOCABULARY as V } from '@sixam/core/control';
 import { FUSION_POLL_MS, MASK_ANIM_ON_MS, MIN_CONTACT_MS, MONITOR_READY_WIND_MS, RAISE_MARGIN_MS, SEAM_MARGIN_MS } from './recipe.mjs';
 
 // [SOURCED] The engine animates the monitor and the mask, and drops input that

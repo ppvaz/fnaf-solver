@@ -5,13 +5,16 @@
  */
 import { Sim } from './plant-model.js';
 import { validateControlCommand } from '../contracts/index.js';
+import { FNAF2_PACKAGE } from '../control/catalog/fnaf2.js';
 
 const ACTIONS = new Set(['mask', 'monitor', 'light', 'wind', 'ventL', 'ventR']);
 const semanticToLegacy = control => control.startsWith('cam:') ? `cam:${control.slice(4)}` : control;
 
 export class PlantModel extends Sim {
   apply(command) {
-    validateControlCommand(command);
+    // The Sim is FNaF 2's plant, so its commands are checked against FNaF 2's
+    // catalog alone: no other game's control or camera reaches it.
+    validateControlCommand(command, { game: FNAF2_PACKAGE });
     const control = command?.action?.control;
     const kind = command?.action?.kind;
     if (typeof control !== 'string' || !kind) throw new TypeError('plant apply requires a semantic command');

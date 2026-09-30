@@ -1,5 +1,6 @@
 /** Semantic control laws, policy IR, and reviewed cycle primitives. */
 export * from './vocabulary.js';
+export * from './catalog/index.js';
 export * from './policy-ir.js';
 export * from './observation-language.js';
 export * from './controller.js';

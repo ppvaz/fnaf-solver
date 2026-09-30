@@ -381,6 +381,46 @@
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
+      "id": "contract.device-executor-v1",
+      "kind": "CONTRACT",
+      "path": "apps/device/test/profile-game.test.js",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.device-executor-v1",
+      "kind": "CONTRACT",
+      "path": "apps/device/test/profile-game.test.js",
+      "line": 3,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.device-executor-v1",
+      "kind": "CONTRACT",
+      "path": "packages/core/src/control/catalog/fnaf2.js",
+      "line": 24,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.device-profile-v1",
+      "kind": "CONTRACT",
+      "path": "apps/device/test/profile-game.test.js",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.device-profile-v1",
+      "kind": "CONTRACT",
+      "path": "apps/device/test/profile-game.test.js",
+      "line": 3,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.device-profile-v1",
+      "kind": "CONTRACT",
+      "path": "packages/core/test/control-catalog.test.js",
+      "line": 4,
+      "relation": "REFERENCES"
+    },
+    {
       "id": "contract.device-profile-v1",
       "kind": "CONTRACT",
       "path": "tools/device/test-bundle.mjs",
@@ -605,8 +645,50 @@
     {
       "id": "contract.semantic-control-v1",
       "kind": "CONTRACT",
+      "path": "packages/core/src/control/catalog/define.js",
+      "line": 14,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.semantic-control-v1",
+      "kind": "CONTRACT",
+      "path": "packages/core/src/control/catalog/fnaf1.js",
+      "line": 19,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.semantic-control-v1",
+      "kind": "CONTRACT",
+      "path": "packages/core/src/control/catalog/fnaf2.js",
+      "line": 24,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.semantic-control-v1",
+      "kind": "CONTRACT",
+      "path": "packages/core/src/control/catalog/fnaf3.js",
+      "line": 20,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.semantic-control-v1",
+      "kind": "CONTRACT",
+      "path": "packages/core/src/control/catalog/fnaf4.js",
+      "line": 18,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.semantic-control-v1",
+      "kind": "CONTRACT",
+      "path": "packages/core/src/control/catalog/index.js",
+      "line": 9,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.semantic-control-v1",
+      "kind": "CONTRACT",
       "path": "packages/core/src/control/vocabulary.js",
-      "line": 8,
+      "line": 15,
       "relation": "REFERENCES"
     },
     {
@@ -621,6 +703,19 @@
       "kind": "CONTRACT",
       "path": "packages/core/test/contracts.test.js",
       "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.semantic-control-v1",
+      "kind": "CONTRACT",
+      "path": "packages/core/test/control-catalog.test.js",
+      "relation": "CONFORMANCE_FIXTURE"
+    },
+    {
+      "id": "contract.semantic-control-v1",
+      "kind": "CONTRACT",
+      "path": "packages/core/test/control-catalog.test.js",
+      "line": 4,
+      "relation": "REFERENCES"
     },
     {
       "id": "contract.semantic-control-v1",

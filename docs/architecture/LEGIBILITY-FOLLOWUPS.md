@@ -130,13 +130,17 @@ test that rejects new code importing legacy paths.
 
 ### LEG-006 — Establish one source of truth for contracts and resolved profiles (P1)
 
-**Status:** OPEN -- 2026-09-29: the ADR 0002 kernel types are defined once,
-`packages/kernel/src/types.ts` beside the validators that check them
-(`kernel.test.js`), and `packages/review` validates every lifted `GameRun` and
-every promotion `Annotation` against them. The register's contracts and the
-resolved profile (migration D5) are still open.
+**Status:** PARTIAL (2026-09-29) -- the kernel types are defined once, `packages/kernel/src/types.ts`
+beside the validators that check them (`kernel.test.js`), and `packages/review` validates every lifted
+`GameRun` and every promotion `Annotation` against them (M5b). The profile half is done (D5):
+`RawDeviceProfile` is the stored `device-profile-v1`, `ResolvedDeviceProfile<G>` carries the game
+dimension in `targetBuild`, and `resolveDeviceProfile` checks the control map and limits against that
+game's control catalog; the game is derived, so no profile file changed and every bundle hashes as
+before. `profile-game.test.js` and `control-catalog.test.js` print it in `npm run test:contracts`.
+Open: one canonical schema source for the register's other contracts, deep experiment validation
+(seeds, claim levels, nested samples), capability relationships, and the lax JS check.
 **Owner:** `packages/core`, `packages/adapters`
-**Evidence:** [`types.ts` (line 73)](../../packages/core/src/contracts/types.ts), `registry.js` line 69 (removed 2026-09-25), [`index.js` (line 156)](../../packages/core/src/contracts/index.js)
+**Evidence:** [`types.ts` (line 152)](../../packages/core/src/contracts/types.ts), [`index.js` (line 138)](../../packages/core/src/contracts/index.js), `registry.js` line 69 (removed 2026-09-25)
 
 Compile-time types, JavaScript validators, the contract register, and generated
 catalogs do not fully describe the same shapes. `DeviceProfile` omits fields
@@ -152,9 +156,19 @@ capability relationships. Remove broad `any` escapes from boundary objects.
 
 ### LEG-007 — Centralize the semantic control catalog (P1)
 
-**Status:** OPEN
+**Status:** PARTIAL (2026-09-29) -- D5 made the catalog per game: `control/catalog/` holds one
+`control-catalog-v1` per game (FNaF 1-4, 26 descriptors), each control with its id, aliases, action
+kinds, touch binding, preconditions and observed fact, `UNKNOWN(reason)` where unmeasured. Generated
+from it: the vocabulary exports, `semantic-control-v1`'s per-game check (`validateControlCommand(c,
+{ game })`; the game-less form is the union it always was), the profile control-map check, and
+`docs/architecture/generated/control-catalog.json`. The FNaF 2 rules the artifact executor held
+(`camdrop`, `observe-left`, the sweep and arm cameras, the first wind) are FNaF 2's artifact action
+table in the cartridge; the executor reads the table for the profile's game. Open: adapter
+capabilities are not generated from it (`control-exclusion.js`, `button-strokes.js` and
+`calibration-state-rule.js` still name FNaF 2 controls), and `hid-schedule.js`'s macros are FNaF 2's,
+guarded to that game rather than read from the table.
 **Owner:** `packages/core/control`
-**Evidence:** [`vocabulary.js` (line 11)](../../packages/core/src/control/vocabulary.js), [`types.ts` (line 17)](../../packages/core/src/contracts/types.ts), `service.js` line 17 (removed 2026-09-25)
+**Evidence:** [`define.js` (line 135)](../../packages/core/src/control/catalog/define.js), [`fnaf2.js` (line 40)](../../packages/core/src/control/catalog/fnaf2.js), [`artifact-executor.js` (line 42)](../../apps/device/src/artifact-executor.js), `service.js` line 17 (removed 2026-09-25)
 
 The canonical vocabulary coexists with legacy aliases and repeated camera
 lists. `service.js`, the artifact executor, the adapter registry, and the

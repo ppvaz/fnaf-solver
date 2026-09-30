@@ -7,17 +7,19 @@
  * legacy transport fallback.
  * CONTRACT:device-executor-v1.
  */
-import { stableHash } from '@sixam/core/contracts';
-import { CONTROL_VOCABULARY as V, DEVICE_CONTROL_NAMES } from '@sixam/core/control';
+import { deviceProfileGame, stableHash } from '@sixam/core/contracts';
+import { artifactActionTableFor } from '@sixam/core/control';
 
 export const DEVICE_EXECUTOR_SCHEMA = 'device-executor-v1';
 export const ARTIFACT_ACTION_SCHEMA = 'artifact-action-v1';
 export const ARTIFACT_BLOCK_SCHEMA = 'artifact-action-block-v1';
 
-const controls = new Set([...DEVICE_CONTROL_NAMES,
-  'cam:4', 'cam:5', 'cam:7', 'cam:8', 'cam:9', 'cam:10', 'cam:11']);
-const compounds = new Set(['hallvent', 'hallraise', 'maskraise', 'camdrop']);
-const actionKinds = new Set(['ensure', 'tap', 'press', 'hold', 'compound', 'sweep-slot', 'observe-left']);
+// Which controls an action kind or a compound may name is the game's rule, not
+// the transport's. Until D5 FNaF 2's were literals here (`camdrop` holds the
+// feed light, `observe-left` reads the left vent, the sweep cameras, the arm's
+// CAM 01-12 and its first wind); they now live in the FNaF 2 cartridge's
+// artifact action table (@sixam/core/control, catalog/fnaf2.js), and this
+// module reads the table for the game its resolved profile targets.
 const forbidden = new Set([
   'strategy', 'policy', 'command', 'commands', 'trajectory', 'shell', 'adb',
   'transport', 'report', 'bytes', 'point', 'x', 'y', 'legacy',
@@ -36,6 +38,18 @@ const text = (value, label) => {
   return value;
 };
 
+/** The artifact action table for the game a resolved profile targets. */
+function actionTableOf(profile, label) {
+  try { return artifactActionTableFor(deviceProfileGame(profile).game); }
+  catch (error) { fail(`${label}: ${error.message}`); }
+}
+
+/** `cam:N` inside the table's arm range. */
+function armCamera(camera, [lo, hi]) {
+  const match = typeof camera === 'string' ? /^cam:(0|[1-9][0-9]*)$/.exec(camera) : null;
+  return match !== null && Number(match[1]) >= lo && Number(match[1]) <= hi;
+}
+
 function validatePlanTiming(timing, path) {
   if (!isRecord(timing)) fail(`${path} timing is missing`);
   for (const key of ['periodMs', 'loopStartMs', 'stopAtMs', 'observeUntilMs', 'idleUntilMs'])
@@ -51,18 +65,20 @@ function validatePlanTiming(timing, path) {
   return timing;
 }
 
-function validateArmVerification(value, path) {
+function validateArmVerification(value, path, table) {
   if (value === undefined) return undefined;
   if (!isRecord(value)) fail(`${path} must be an object`);
+  if (!table.armVerification) fail(`${path}: ${table.game} has no arm verification`);
+  const range = table.armVerification.cameras;
   if (!Array.isArray(value.cameras) || value.cameras.length !== 2)
     fail(`${path}.cameras must contain exactly two cameras`);
   const cameras = value.cameras.map((camera, index) => {
-    if (typeof camera !== 'string' || !/^cam:(?:[1-9]|1[0-2])$/.test(camera))
+    if (!armCamera(camera, range))
       fail(`${path}.cameras[${index}] is not a semantic camera`);
     return camera;
   });
   if (new Set(cameras).size !== cameras.length) fail(`${path}.cameras must be unique`);
-  if (typeof value.viewing !== 'string' || !/^cam:(?:[1-9]|1[0-2])$/.test(value.viewing))
+  if (!armCamera(value.viewing, range))
     fail(`${path}.viewing is not a semantic camera`);
   if (!cameras.includes(value.viewing)) fail(`${path}.viewing must be one of the highlighted cameras`);
   finite(value.untilMs, `${path}.untilMs`, { integer: true, positive: true });
@@ -85,40 +101,39 @@ function rejectForbidden(value, path) {
   }
 }
 
-function validateAction(action, path) {
+function validateAction(action, path, table) {
   if (!isRecord(action) || action.schema !== ARTIFACT_ACTION_SCHEMA) fail(`${path} schema mismatch`);
   text(action.id, `${path}.id`);
   text(action.cycle, `${path}.cycle`);
   finite(action.atMs, `${path}.atMs`);
-  if (!actionKinds.has(action.kind)) fail(`${path}.kind is unsupported`);
+  const kind = typeof action.kind === 'string' && Object.hasOwn(table.kinds, action.kind)
+    ? table.kinds[action.kind] : null;
+  if (!kind) fail(`${path}.kind is unsupported`);
   if (action.kind === 'sweep-slot') {
-    if (!/^cam:(?:4|5|7|8|9|10|11)$/.test(action.control ?? '')) fail(`${path}.control is not a semantic camera control`);
+    if (!kind.controls.includes(action.control)) fail(`${path}.control is not a semantic camera control`);
     finite(action.selectMs, `${path}.selectMs`, { positive: true });
     finite(action.settleMs, `${path}.settleMs`);
     finite(action.lightMs, `${path}.lightMs`);
   } else if (action.kind === 'compound') {
-    if (!compounds.has(action.compound)) fail(`${path}.compound is unsupported`);
-    if (!controls.has(action.control)) fail(`${path}.control is unsupported`);
+    const pins = typeof action.compound === 'string' && Object.hasOwn(table.compounds, action.compound)
+      ? table.compounds[action.compound] : null;
+    if (!pins) fail(`${path}.compound is unsupported`);
+    if (!kind.controls.includes(action.control)) fail(`${path}.control is unsupported`);
     if (typeof action.requiresMonitorUp !== 'boolean') fail(`${path}.requiresMonitorUp is required`);
-    if (action.compound === 'hallvent') {
-      if (action.control !== V.hallLight) fail(`${path}.hallvent control must be ${V.hallLight}`);
-      if (action.ventControl !== V.rightVentLight) fail(`${path}.hallvent ventControl must be ${V.rightVentLight}`);
-    }
-    if (action.compound === 'camdrop' && action.control !== V.cameraFeedLight)
-      fail(`${path}.camdrop control must be ${V.cameraFeedLight}`);
-    if (action.compound === 'hallraise' && action.control !== V.hallLight)
-      fail(`${path}.hallraise control must be ${V.hallLight}`);
+    // The fields this compound pins to one control, in the table's order.
+    for (const [field, control] of Object.entries(pins))
+      if (action[field] !== control) fail(`${path}.${action.compound} ${field} must be ${control}`);
     if (action.targetMonitorUp !== undefined && typeof action.targetMonitorUp !== 'boolean') fail(`${path}.targetMonitorUp must be boolean`);
     if (action.targetMaskOn !== undefined && typeof action.targetMaskOn !== 'boolean') fail(`${path}.targetMaskOn must be boolean`);
     for (const key of ['durationMs', 'gapMs', 'leadMs', 'tailMs'])
       if (action[key] !== undefined) finite(action[key], `${path}.${key}`);
   } else {
-    if (!controls.has(action.control)) fail(`${path}.control is unsupported`);
+    if (!table.controls.includes(action.control)) fail(`${path}.control is unsupported`);
     if (action.kind === 'ensure') {
-      if (action.control !== V.monitor || typeof action.targetMonitorUp !== 'boolean')
+      if (!kind.controls.includes(action.control) || typeof action.targetMonitorUp !== 'boolean')
         fail(`${path} must be an explicit monitor target`);
-    } else if (action.kind === 'observe-left' && action.control !== V.leftVentLight) {
-      fail(`${path}.observe-left control must be ${V.leftVentLight}`);
+    } else if (!kind.controls.includes(action.control)) {
+      fail(`${path}.${action.kind} control must be ${kind.controls.join(' or ')}`);
     }
     if (action.requiresMonitorUp !== undefined && typeof action.requiresMonitorUp !== 'boolean')
       fail(`${path}.requiresMonitorUp must be boolean`);
@@ -131,9 +146,14 @@ function validateAction(action, path) {
   return action;
 }
 
-/** Validate compiled semantic blocks before they can reach a device port. */
-/** @param {any[]} blocks @param {{maxActions?: number, maxDurationMs?: number}} options */
-export function validateArtifactBlocks(blocks, { maxActions = 64, maxDurationMs = 15000 } = {}) {
+/**
+ * Validate compiled semantic blocks before they can reach a device port.
+ * `table` is the artifact action table of the game the blocks were compiled
+ * for (`artifactActionTableFor`); there is no default game.
+ * @param {any[]} blocks @param {{maxActions?: number, maxDurationMs?: number, table?: any}} options
+ */
+export function validateArtifactBlocks(blocks, { maxActions = 64, maxDurationMs = 15000, table = undefined } = {}) {
+  if (!isRecord(table) || !isRecord(table.kinds)) fail('blocks need the artifact action table of their game');
   if (!Array.isArray(blocks) || blocks.length === 0) fail('blocks must be a non-empty array');
   finite(maxActions, 'maxActions', { integer: true, positive: true });
   finite(maxDurationMs, 'maxDurationMs', { positive: true });
@@ -153,7 +173,7 @@ export function validateArtifactBlocks(blocks, { maxActions = 64, maxDurationMs 
     actionCount += block.actions.length;
     if (actionCount > maxActions) fail(`action count exceeds maxActions ${maxActions}`);
     for (const [actionIndex, action] of block.actions.entries()) {
-      validateAction(action, `${path}.actions[${actionIndex}]`);
+      validateAction(action, `${path}.actions[${actionIndex}]`, table);
       if (action.atMs < block.atMs) fail(`${path}.actions[${actionIndex}].atMs precedes its block`);
       const duration = action.kind === 'sweep-slot'
         ? action.selectMs + action.settleMs + action.lightMs
@@ -170,7 +190,7 @@ export function validateArtifactBlocks(blocks, { maxActions = 64, maxDurationMs 
   return blocks;
 }
 
-function planReferences(manifest, compiledPlans) {
+function planReferences(manifest, compiledPlans, table) {
   if (!isRecord(manifest) || typeof manifest.winnerHash !== 'string' || typeof manifest.engineHash !== 'string' ||
       !isRecord(manifest.profile) || typeof manifest.profile.sha256 !== 'string')
     fail('validated manifest identity is incomplete');
@@ -183,7 +203,7 @@ function planReferences(manifest, compiledPlans) {
     if (typeof source.sha256 !== 'string') fail(`manifest plan ${plan.night} hash is incomplete`);
     const timing = validatePlanTiming(plan.timing, `compiled plan ${plan.night}`);
     const armVerification = validateArmVerification(plan.armVerification,
-      `compiled plan ${plan.night}.armVerification`);
+      `compiled plan ${plan.night}.armVerification`, table);
     if (armVerification && armVerification.untilMs > timing.observeUntilMs)
       fail(`compiled plan ${plan.night}.armVerification.untilMs exceeds observeUntilMs`);
     return { night: plan.night, sha256: source.sha256, timing,
@@ -196,7 +216,8 @@ function planReferences(manifest, compiledPlans) {
 export function makeExecutorRequest({ manifest, profile, compiledPlans, mode = 'live', limits = {} } = {}) {
   if (!isRecord(profile) || typeof profile.id !== 'string') fail('resolved profile is required');
   if (mode !== 'live' && mode !== 'dry-run') fail(`unsupported execution mode ${JSON.stringify(mode)}`);
-  const planRefs = planReferences(manifest, compiledPlans);
+  const table = actionTableOf(profile, 'resolved profile');
+  const planRefs = planReferences(manifest, compiledPlans, table);
   const blocks = [];
   for (const plan of compiledPlans) {
     for (const cycle of Object.values(plan.cycles ?? {})) {
@@ -212,7 +233,7 @@ export function makeExecutorRequest({ manifest, profile, compiledPlans, mode = '
     fail('maxActions exceeds the profile safety limit');
   if (profile.limits?.maxDurationMs !== undefined && resolvedLimits.maxDurationMs > profile.limits.maxDurationMs)
     fail('maxDurationMs exceeds the profile safety limit');
-  validateArtifactBlocks(blocks, resolvedLimits);
+  validateArtifactBlocks(blocks, { ...resolvedLimits, table });
   return {
     schema: DEVICE_EXECUTOR_SCHEMA, version: 1, mode,
     artifact: {
@@ -238,6 +259,7 @@ export function validateExecutorRequest(request) {
     text(request.artifact[key], `artifact.${key}`);
   if (!/^[a-f0-9]{64}$/.test(request.artifact.profileHash)) fail('artifact.profileHash must be a SHA-256 digest');
   if (!isRecord(request.profile) || typeof request.profile.id !== 'string') fail('request profile is missing');
+  const table = actionTableOf(request.profile, 'request profile');
   if (stableHash(request.profile) !== request.artifact.profileStableHash)
     fail('artifact.profileStableHash does not match the resolved profile');
   if (!Array.isArray(request.artifact.plans) || request.artifact.plans.length === 0)
@@ -247,7 +269,7 @@ export function validateExecutorRequest(request) {
         !/^[a-f0-9]{64}$/.test(plan.sha256)) fail(`artifact.plans[${index}] is invalid`);
     const timing = validatePlanTiming(plan.timing, `artifact.plans[${index}]`);
     const armVerification = validateArmVerification(plan.armVerification,
-      `artifact.plans[${index}].armVerification`);
+      `artifact.plans[${index}].armVerification`, table);
     if (armVerification && armVerification.untilMs > timing.observeUntilMs)
       fail(`artifact.plans[${index}].armVerification.untilMs exceeds observeUntilMs`);
   }
@@ -260,7 +282,9 @@ export function validateExecutorRequest(request) {
     fail('request maxActions exceeds the profile safety limit');
   if (request.profile.limits?.maxDurationMs !== undefined && request.limits.maxDurationMs > request.profile.limits.maxDurationMs)
     fail('request maxDurationMs exceeds the profile safety limit');
-  validateArtifactBlocks(request.blocks, request.limits);
+  validateArtifactBlocks(request.blocks, { ...request.limits, table });
+  // An arm on a table without one was refused by validateArmVerification.
+  const firstAction = table.armVerification?.firstAction;
   for (const plan of request.artifact.plans) {
     if (!plan.armVerification) continue;
     const loopStart = Math.max(plan.timing.loopStartMs, plan.timing.idleUntilMs);
@@ -269,13 +293,13 @@ export function validateExecutorRequest(request) {
       .flatMap(block => block.actions.map(action => ({ action,
         atMs: block.cycle === 'opening' || block.cycle === 'finish'
           ? action.atMs : loopStart + action.atMs })))
-      .filter(item => item.action.control === V.wind)
+      .filter(item => item.action.control === firstAction)
       .map(item => item.atMs)
       .sort((a, b) => a - b)[0];
     if (firstWind === undefined)
-      fail(`artifact.plans[${plan.night}].armVerification requires a wind action`);
+      fail(`artifact.plans[${plan.night}].armVerification requires a ${firstAction} action`);
     if (firstWind <= plan.armVerification.untilMs)
-      fail(`artifact.plans[${plan.night}] starts wind before the arm-verification window closes`);
+      fail(`artifact.plans[${plan.night}] starts ${firstAction} before the arm-verification window closes`);
   }
   for (const [index, block] of request.blocks.entries())
     if (!planNights.has(block.night)) fail(`blocks[${index}].night is not bound to an artifact plan`);

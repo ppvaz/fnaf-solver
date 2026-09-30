@@ -15,8 +15,8 @@ import { emitPlan as emitMinus3Plan, KNOBS0 as MINUS3_KNOBS,
 import { build as buildMinus7, devicePlan as emitMinus7Plan,
   idleUntilMs, replay as replayMinus7, MASK_RAISE_GAP_MS } from './recipe.mjs';
 import { compileArtifactPlans, persistArtifactPlans } from './artifact-commands.mjs';
-import { canonicalJson, stableHash, validateProfile } from '@sixam/core/contracts';
-import { CONTROL_VOCABULARY as V } from '@sixam/core/control';
+import { canonicalJson, resolveDeviceProfile, stableHash } from '@sixam/core/contracts';
+import { FNAF2_CONTROL_VOCABULARY as V } from '@sixam/core/control';
 import * as C from '@sixam/core/mechanics';
 
 export const WINNER_SCHEMA = 'winner-v1';
@@ -166,7 +166,7 @@ export function validateWinner(input) {
 
 function resolveProfile(spec) {
   if (isRecord(spec)) {
-    validateProfile(spec);
+    resolveDeviceProfile(spec);
     return spec;
   }
   const id = spec ?? 'fixture-hid-screencap';
@@ -176,7 +176,7 @@ function resolveProfile(spec) {
   try { profile = jsonRead(path); } catch (error) {
     fail(`cannot read profile ${JSON.stringify(id)}: ${error.message}`);
   }
-  validateProfile(profile);
+  resolveDeviceProfile(profile);
   return profile;
 }
 
@@ -731,7 +731,7 @@ export function validateBundle(directory, { night } = {}) {
     fail('manifest engine source hash mismatch');
   const profileText = readFileSync(join(out, manifest.profile.file), 'utf8');
   const profile = JSON.parse(profileText);
-  validateProfile(profile);
+  resolveDeviceProfile(profile);
   if (profile.id !== manifest.profile.id || sha256(profileText) !== manifest.profile.sha256)
     fail('profile identity or hash mismatch');
   const expected = new Map(winner.nights.map(planNight => [planNight, emitterFor(winner, planNight)]));

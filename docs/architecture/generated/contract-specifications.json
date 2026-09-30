@@ -41,6 +41,7 @@
       "runtimeValidation": "validateControlCommand",
       "conformanceFixtures": [
         "packages/core/test/contracts.test.js",
+        "packages/core/test/control-catalog.test.js",
         "tools/device/test-policy-interpreter.mjs"
       ]
     },
@@ -164,7 +165,8 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateProfile",
       "conformanceFixtures": [
-        "tools/device/test-bundle.mjs"
+        "tools/device/test-bundle.mjs",
+        "apps/device/test/profile-game.test.js"
       ]
     },
     {
@@ -466,7 +468,8 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "apps/device/src/artifact-executor.js validateExecutorRequest",
       "conformanceFixtures": [
-        "apps/device/test/adb-device-local-executor.test.js"
+        "apps/device/test/adb-device-local-executor.test.js",
+        "apps/device/test/profile-game.test.js"
       ]
     },
     {

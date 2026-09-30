@@ -13,7 +13,7 @@ import { AdbCueHelperPort } from './physical-ports.js';
 import { installCampaignSignalHandlers } from './campaign-signal.js';
 import { loadVenueBindings, renderVenueCheck } from './venue.js';
 import { fitClockMap, CueHelperControlTransport } from '@sixam/adapters';
-import { stableHash } from '@sixam/core/contracts';
+import { resolveDeviceProfile, stableHash } from '@sixam/core/contracts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 const PROFILES = join(ROOT, 'apps/device/profiles');
@@ -153,8 +153,12 @@ function parse(argv) {
   return options;
 }
 
+// A stored device-profile-v1, resolved against its game's control catalog: the
+// game is the package half of targetBuild, and the control map may name only
+// that game's controls, cameras and points. The object is returned unchanged,
+// because its bytes are hashed into every bundle bound to it.
 async function profile(id) {
-  try { return JSON.parse(await readFile(join(PROFILES, `${id}.json`), 'utf8')); }
+  try { return resolveDeviceProfile(JSON.parse(await readFile(join(PROFILES, `${id}.json`), 'utf8'))); }
   catch (error) { throw new Error(`profile ${id} is not available: ${error.message}`); }
 }
 

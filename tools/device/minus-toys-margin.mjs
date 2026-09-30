@@ -20,7 +20,7 @@
 // it inherits the engine's Golden-Freddy-interval and Toy-cam-stall gaps
 // (plans/02 sec.5) -- read it as "the model has at most this much slack here".
 import { OPENING, LOOP, replay } from './minus-toys-plan.mjs';
-import { CONTROL_VOCABULARY as V } from '@sixam/core/control';
+import { FNAF2_CONTROL_VOCABULARY as V } from '@sixam/core/control';
 
 const arg = (k, d) => {
   const v = process.argv.find(a => a.startsWith(`--${k}=`));

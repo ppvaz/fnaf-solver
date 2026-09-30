@@ -1,0 +1,640 @@
+{
+  "schema": "control-catalog-register-v1",
+  "generatedFrom": "packages/core/src/control/catalog/",
+  "games": [
+    {
+      "schema": "control-catalog-v1",
+      "game": "com.scottgames.fivenightsatfreddys",
+      "title": "FNaF 1",
+      "controls": [
+        {
+          "id": "monitor",
+          "aliases": [],
+          "binding": {
+            "adapter": "touch",
+            "contact": "tap",
+            "anchor": "screen"
+          },
+          "requires": "UNKNOWN(not-modelled)",
+          "observes": "UNKNOWN(no-effect-reader)",
+          "actions": "UNKNOWN(no-artifact-action-table)"
+        },
+        {
+          "id": "leftDoor",
+          "aliases": [],
+          "binding": {
+            "adapter": "touch",
+            "contact": "tap",
+            "anchor": "world"
+          },
+          "requires": "UNKNOWN(not-modelled)",
+          "observes": "UNKNOWN(no-effect-reader)",
+          "actions": "UNKNOWN(no-artifact-action-table)"
+        },
+        {
+          "id": "rightDoor",
+          "aliases": [],
+          "binding": {
+            "adapter": "touch",
+            "contact": "tap",
+            "anchor": "world"
+          },
+          "requires": "UNKNOWN(not-modelled)",
+          "observes": "UNKNOWN(no-effect-reader)",
+          "actions": "UNKNOWN(no-artifact-action-table)"
+        },
+        {
+          "id": "leftDoorLight",
+          "aliases": [],
+          "binding": {
+            "adapter": "touch",
+            "contact": "tap",
+            "anchor": "world"
+          },
+          "requires": "UNKNOWN(not-modelled)",
+          "observes": "UNKNOWN(no-effect-reader)",
+          "actions": "UNKNOWN(no-artifact-action-table)"
+        },
+        {
+          "id": "rightDoorLight",
+          "aliases": [],
+          "binding": {
+            "adapter": "touch",
+            "contact": "tap",
+            "anchor": "world"
+          },
+          "requires": "UNKNOWN(not-modelled)",
+          "observes": "UNKNOWN(no-effect-reader)",
+          "actions": "UNKNOWN(no-artifact-action-table)"
+        }
+      ],
+      "cameras": {
+        "range": "UNKNOWN(unmapped-view-ids)"
+      },
+      "modelControls": [],
+      "auxiliaryPoints": [],
+      "artifactActions": null,
+      "sources": [
+        "tools/device/models/controls-fnaf1-moto-g56-v207.json (anchors, contact rule)"
+      ]
+    },
+    {
+      "schema": "control-catalog-v1",
+      "game": "com.scottgames.fnaf2",
+      "title": "FNaF 2",
+      "controls": [
+        {
+          "id": "monitor",
+          "aliases": [],
+          "model": "monitor",
+          "binding": {
+            "adapter": "touch",
+            "contact": "tap",
+            "anchor": "UNKNOWN(not-traced)"
+          },
+          "requires": {
+            "mask": "off"
+          },
+          "observes": "monitorUp",
+          "actions": [
+            "ensure",
+            "tap",
+            "press",
+            "hold",
+            "compound"
+          ]
+        },
+        {
+          "id": "mask",
+          "aliases": [],
+          "model": "mask",
+          "binding": {
+            "adapter": "touch",
+            "contact": "tap",
+            "anchor": "screen"
+          },
+          "requires": {
+            "monitor": "down"
+          },
+          "observes": "maskOn",
+          "actions": [
+            "tap",
+            "press",
+            "hold",
+            "compound"
+          ]
+        },
+        {
+          "id": "cameraFeedLight",
+          "aliases": [],
+          "model": "light",
+          "binding": {
+            "adapter": "touch",
+            "contact": "hold",
+            "anchor": "world"
+          },
+          "requires": {
+            "monitor": "up",
+            "mask": "off"
+          },
+          "observes": "UNKNOWN(no-effect-reader)",
+          "actions": [
+            "tap",
+            "press",
+            "hold",
+            "compound"
+          ]
+        },
+        {
+          "id": "hallLight",
+          "aliases": [],
+          "model": "light",
+          "binding": {
+            "adapter": "touch",
+            "contact": "hold",
+            "anchor": "world"
+          },
+          "requires": {
+            "monitor": "down",
+            "mask": "off"
+          },
+          "observes": "UNKNOWN(no-effect-reader)",
+          "actions": [
+            "tap",
+            "press",
+            "hold",
+            "compound"
+          ]
+        },
+        {
+          "id": "leftVentLight",
+          "aliases": [
+            "ventL"
+          ],
+          "model": "ventL",
+          "binding": {
+            "adapter": "touch",
+            "contact": "hold",
+            "anchor": "world"
+          },
+          "requires": {
+            "monitor": "down",
+            "mask": "off"
+          },
+          "observes": "UNKNOWN(no-effect-reader)",
+          "actions": [
+            "tap",
+            "press",
+            "hold",
+            "compound",
+            "observe-left"
+          ]
+        },
+        {
+          "id": "rightVentLight",
+          "aliases": [
+            "ventR"
+          ],
+          "model": "ventR",
+          "binding": {
+            "adapter": "touch",
+            "contact": "hold",
+            "anchor": "world"
+          },
+          "requires": {
+            "monitor": "down",
+            "mask": "off"
+          },
+          "observes": "UNKNOWN(no-effect-reader)",
+          "actions": [
+            "tap",
+            "press",
+            "hold",
+            "compound"
+          ]
+        },
+        {
+          "id": "wind",
+          "aliases": [
+            "wind"
+          ],
+          "model": "wind",
+          "binding": {
+            "adapter": "touch",
+            "contact": "hold",
+            "anchor": "UNKNOWN(not-stated)"
+          },
+          "requires": {
+            "monitor": "up",
+            "mask": "off",
+            "viewing": "cam:11"
+          },
+          "observes": "UNKNOWN(no-effect-reader)",
+          "actions": [
+            "tap",
+            "press",
+            "hold",
+            "compound"
+          ]
+        }
+      ],
+      "cameras": {
+        "range": [
+          0,
+          12
+        ],
+        "binding": {
+          "adapter": "touch",
+          "contact": "tap",
+          "anchor": "UNKNOWN(not-stated)"
+        },
+        "requires": {
+          "monitor": "up",
+          "mask": "off"
+        },
+        "observes": "cameraSelected"
+      },
+      "modelControls": [
+        "light",
+        "hall",
+        "ventL",
+        "ventR"
+      ],
+      "auxiliaryPoints": [
+        "mute"
+      ],
+      "artifactActions": {
+        "schema": "artifact-action-table-v1",
+        "game": "com.scottgames.fnaf2",
+        "controls": [
+          "monitor",
+          "mask",
+          "cameraFeedLight",
+          "hallLight",
+          "leftVentLight",
+          "rightVentLight",
+          "wind",
+          "cam:4",
+          "cam:5",
+          "cam:7",
+          "cam:8",
+          "cam:9",
+          "cam:10",
+          "cam:11"
+        ],
+        "kinds": {
+          "ensure": {
+            "controls": [
+              "monitor"
+            ]
+          },
+          "tap": {
+            "controls": [
+              "monitor",
+              "mask",
+              "cameraFeedLight",
+              "hallLight",
+              "leftVentLight",
+              "rightVentLight",
+              "wind",
+              "cam:4",
+              "cam:5",
+              "cam:7",
+              "cam:8",
+              "cam:9",
+              "cam:10",
+              "cam:11"
+            ]
+          },
+          "press": {
+            "controls": [
+              "monitor",
+              "mask",
+              "cameraFeedLight",
+              "hallLight",
+              "leftVentLight",
+              "rightVentLight",
+              "wind",
+              "cam:4",
+              "cam:5",
+              "cam:7",
+              "cam:8",
+              "cam:9",
+              "cam:10",
+              "cam:11"
+            ]
+          },
+          "hold": {
+            "controls": [
+              "monitor",
+              "mask",
+              "cameraFeedLight",
+              "hallLight",
+              "leftVentLight",
+              "rightVentLight",
+              "wind",
+              "cam:4",
+              "cam:5",
+              "cam:7",
+              "cam:8",
+              "cam:9",
+              "cam:10",
+              "cam:11"
+            ]
+          },
+          "compound": {
+            "controls": [
+              "monitor",
+              "mask",
+              "cameraFeedLight",
+              "hallLight",
+              "leftVentLight",
+              "rightVentLight",
+              "wind",
+              "cam:4",
+              "cam:5",
+              "cam:7",
+              "cam:8",
+              "cam:9",
+              "cam:10",
+              "cam:11"
+            ]
+          },
+          "sweep-slot": {
+            "controls": [
+              "cam:4",
+              "cam:5",
+              "cam:7",
+              "cam:8",
+              "cam:9",
+              "cam:10",
+              "cam:11"
+            ]
+          },
+          "observe-left": {
+            "controls": [
+              "leftVentLight"
+            ]
+          }
+        },
+        "compounds": {
+          "hallvent": {
+            "control": "hallLight",
+            "ventControl": "rightVentLight"
+          },
+          "hallraise": {
+            "control": "hallLight"
+          },
+          "maskraise": {},
+          "camdrop": {
+            "control": "cameraFeedLight"
+          }
+        },
+        "armVerification": {
+          "cameras": [
+            1,
+            12
+          ],
+          "firstAction": "wind"
+        }
+      },
+      "sources": [
+        "tools/device/artifact-commands.mjs (preconditions)",
+        "apps/device/profiles/hid-mediaprojection.json viewScroll (anchors)",
+        "packages/adapters/src/monitor-rule.js, camera-rule.js; apps/device/src/control-effect.js (observations)"
+      ]
+    },
+    {
+      "schema": "control-catalog-v1",
+      "game": "com.scottgames.fnaf3",
+      "title": "FNaF 3",
+      "controls": [
+        {
+          "id": "monitor",
+          "aliases": [],
+          "binding": {
+            "adapter": "touch",
+            "contact": "UNKNOWN(not-stated)",
+            "anchor": "world"
+          },
+          "requires": "UNKNOWN(not-modelled)",
+          "observes": "UNKNOWN(no-effect-reader)",
+          "actions": "UNKNOWN(no-artifact-action-table)"
+        },
+        {
+          "id": "audioLure",
+          "aliases": [
+            "playAudio"
+          ],
+          "binding": {
+            "adapter": "touch",
+            "contact": "UNKNOWN(not-stated)",
+            "anchor": "screen"
+          },
+          "requires": {
+            "monitor": "up"
+          },
+          "observes": "UNKNOWN(no-effect-reader)",
+          "actions": "UNKNOWN(no-artifact-action-table)"
+        },
+        {
+          "id": "ventMapToggle",
+          "aliases": [
+            "mapToggle"
+          ],
+          "binding": {
+            "adapter": "touch",
+            "contact": "UNKNOWN(not-stated)",
+            "anchor": "screen"
+          },
+          "requires": {
+            "monitor": "up"
+          },
+          "observes": "UNKNOWN(no-effect-reader)",
+          "actions": "UNKNOWN(no-artifact-action-table)"
+        },
+        {
+          "id": "sealVent",
+          "aliases": [],
+          "binding": {
+            "adapter": "touch",
+            "contact": "UNKNOWN(not-stated)",
+            "anchor": "screen"
+          },
+          "requires": {
+            "monitor": "up"
+          },
+          "observes": "UNKNOWN(no-effect-reader)",
+          "actions": "UNKNOWN(no-artifact-action-table)"
+        },
+        {
+          "id": "rebootAudio",
+          "aliases": [],
+          "binding": {
+            "adapter": "touch",
+            "contact": "UNKNOWN(not-stated)",
+            "anchor": "screen"
+          },
+          "requires": "UNKNOWN(maintenance-menu-state-not-in-vocabulary)",
+          "observes": "UNKNOWN(no-effect-reader)",
+          "actions": "UNKNOWN(no-artifact-action-table)"
+        },
+        {
+          "id": "rebootCamera",
+          "aliases": [],
+          "binding": {
+            "adapter": "touch",
+            "contact": "UNKNOWN(not-stated)",
+            "anchor": "screen"
+          },
+          "requires": "UNKNOWN(maintenance-menu-state-not-in-vocabulary)",
+          "observes": "UNKNOWN(no-effect-reader)",
+          "actions": "UNKNOWN(no-artifact-action-table)"
+        },
+        {
+          "id": "rebootVentilation",
+          "aliases": [
+            "rebootVent"
+          ],
+          "binding": {
+            "adapter": "touch",
+            "contact": "UNKNOWN(not-stated)",
+            "anchor": "screen"
+          },
+          "requires": "UNKNOWN(maintenance-menu-state-not-in-vocabulary)",
+          "observes": "UNKNOWN(no-effect-reader)",
+          "actions": "UNKNOWN(no-artifact-action-table)"
+        },
+        {
+          "id": "rebootAll",
+          "aliases": [],
+          "binding": {
+            "adapter": "touch",
+            "contact": "UNKNOWN(not-stated)",
+            "anchor": "screen"
+          },
+          "requires": "UNKNOWN(maintenance-menu-state-not-in-vocabulary)",
+          "observes": "UNKNOWN(no-effect-reader)",
+          "actions": "UNKNOWN(no-artifact-action-table)"
+        }
+      ],
+      "cameras": {
+        "range": [
+          1,
+          15
+        ],
+        "binding": {
+          "adapter": "touch",
+          "contact": "UNKNOWN(not-stated)",
+          "anchor": "screen"
+        },
+        "requires": {
+          "monitor": "up"
+        },
+        "observes": "UNKNOWN(no-effect-reader)"
+      },
+      "modelControls": [],
+      "auxiliaryPoints": [],
+      "artifactActions": null,
+      "sources": [
+        "tools/device/models/controls-fnaf3-moto-g56-v204.json (anchors, frames, map keys)"
+      ]
+    },
+    {
+      "schema": "control-catalog-v1",
+      "game": "com.scottgames.fnaf4",
+      "title": "FNaF 4",
+      "controls": [
+        {
+          "id": "runLeftDoor",
+          "aliases": [
+            "leftDoor"
+          ],
+          "binding": {
+            "adapter": "touch",
+            "contact": "double",
+            "anchor": "screen"
+          },
+          "requires": "UNKNOWN(not-modelled)",
+          "observes": "UNKNOWN(no-effect-reader)",
+          "actions": "UNKNOWN(no-artifact-action-table)"
+        },
+        {
+          "id": "runRightDoor",
+          "aliases": [
+            "rightDoor"
+          ],
+          "binding": {
+            "adapter": "touch",
+            "contact": "double",
+            "anchor": "screen"
+          },
+          "requires": "UNKNOWN(not-modelled)",
+          "observes": "UNKNOWN(no-effect-reader)",
+          "actions": "UNKNOWN(no-artifact-action-table)"
+        },
+        {
+          "id": "runCloset",
+          "aliases": [
+            "closet"
+          ],
+          "binding": {
+            "adapter": "touch",
+            "contact": "double",
+            "anchor": "screen"
+          },
+          "requires": "UNKNOWN(not-modelled)",
+          "observes": "UNKNOWN(no-effect-reader)",
+          "actions": "UNKNOWN(no-artifact-action-table)"
+        },
+        {
+          "id": "goBack",
+          "aliases": [
+            "back"
+          ],
+          "binding": {
+            "adapter": "touch",
+            "contact": "UNKNOWN(not-stated)",
+            "anchor": "screen"
+          },
+          "requires": "UNKNOWN(not-modelled)",
+          "observes": "UNKNOWN(no-effect-reader)",
+          "actions": "UNKNOWN(no-artifact-action-table)"
+        },
+        {
+          "id": "flashlight",
+          "aliases": [],
+          "binding": {
+            "adapter": "touch",
+            "contact": "hold",
+            "anchor": "screen"
+          },
+          "requires": "UNKNOWN(not-modelled)",
+          "observes": "UNKNOWN(no-effect-reader)",
+          "actions": "UNKNOWN(no-artifact-action-table)"
+        },
+        {
+          "id": "closeDoor",
+          "aliases": [],
+          "binding": {
+            "adapter": "touch",
+            "contact": "hold",
+            "anchor": "screen"
+          },
+          "requires": "UNKNOWN(not-modelled)",
+          "observes": "UNKNOWN(no-effect-reader)",
+          "actions": "UNKNOWN(no-artifact-action-table)"
+        }
+      ],
+      "cameras": {
+        "range": null
+      },
+      "modelControls": [],
+      "auxiliaryPoints": [],
+      "artifactActions": null,
+      "sources": [
+        "tools/device/models/controls-fnaf4-moto-g56-v204.json (anchors, gestures, map keys)"
+      ]
+    }
+  ]
+}

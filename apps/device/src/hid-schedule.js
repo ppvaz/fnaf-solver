@@ -8,7 +8,8 @@
 import { HID_DESCRIPTOR, HID_FEATURE_REPORTS, report } from '@sixam/adapters';
 import { validateExecutorRequest } from './artifact-executor.js';
 import { expandNightBlocks } from './device-local-executor.js';
-import { CONTROL_VOCABULARY as V } from '@sixam/core/control';
+import { deviceProfileGame } from '@sixam/core/contracts';
+import { FNAF2_CONTROL_VOCABULARY as V, FNAF2_PACKAGE } from '@sixam/core/control';
 
 const HID_ID = 92;
 const HID_NAME = 'FNAF Timed Touch';
@@ -445,6 +446,11 @@ export function compileDeviceLocalHidSchedule(request, {
   readyDelayMs = DEFAULT_READY_DELAY_MS, gateTiming = {},
 } = {}) {
   validateExecutorRequest(request);
+  // The macros below (hallvent, camdrop, the vent read's mask press, the
+  // second-contact monitor) are FNaF 2's physical shapes. The request was
+  // validated against its game's action table; only FNaF 2's reaches here.
+  const { game } = deviceProfileGame(request.profile);
+  if (game !== FNAF2_PACKAGE) fail(`the HID schedule compiles ${FNAF2_PACKAGE} actions, not ${game}`);
   if (request.artifact.plans.length !== 1) fail('one night per execution is required');
   if (!Number.isInteger(readyDelayMs) || readyDelayMs < 1 || readyDelayMs > 30000)
     fail('readyDelayMs must be an integer in 1..30000');

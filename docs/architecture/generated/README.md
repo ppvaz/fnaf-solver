@@ -20,3 +20,11 @@ search service.
 names the lifecycle, canonical replacement owner, and evidence gate required
 before a path can be deleted. It is intentionally generated from the registry
 in `tools/generate-catalog.js`, not edited independently.
+
+`control-catalog.json` is the per-game control catalog (LEG-007): for each
+registered game, every semantic control with its aliases, allowed artifact
+action kinds, touch binding, state preconditions and the fact that observes
+it, plus the game's cameras and, for FNaF 2, the artifact action table the
+device executor enforces. It is serialized from
+`packages/core/src/control/catalog/`, the same objects `semantic-control-v1`,
+the profile resolver and the executor generate their checks from.

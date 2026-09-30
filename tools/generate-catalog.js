@@ -4,6 +4,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import { join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { CONTROL_CATALOGS } from '@sixam/core/control';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));
 const OUT = join(ROOT, 'docs/architecture/generated');
@@ -47,7 +48,8 @@ const contractRegister = JSON.parse(await readFile(join(ROOT, 'packages/core/con
 const protocols = contractRegister.contracts.filter(item => ['wire', 'process'].includes(item.kind));
 const contractEvidence = {
   'plant-model-v1': ['tools/sourcetest.mjs', 'tools/simtest.mjs'],
-  'semantic-control-v1': ['packages/core/test/contracts.test.js', 'tools/device/test-policy-interpreter.mjs'],
+  'semantic-control-v1': ['packages/core/test/contracts.test.js', 'packages/core/test/control-catalog.test.js',
+    'tools/device/test-policy-interpreter.mjs'],
   'policy-program-v1': ['tools/policygrammartest.mjs', 'tools/device/test-policy-ir.mjs'],
   'controller-v1': ['tools/reactivetest.mjs', 'packages/core/test/cycle-controller.test.js'],
   'qualification-v1': ['packages/core/test/contracts.test.js', 'packages/core/test/venue-identity.test.js'],
@@ -57,7 +59,7 @@ const contractEvidence = {
   'venue-binding-v1': ['packages/core/test/venue-identity.test.js', 'apps/device/test/venue-preflight.test.js'],
   'state-estimate-v1': ['tools/estimatortest.mjs'],
   'clock-v1': ['tools/phaseclocktest.mjs'],
-  'device-profile-v1': ['tools/device/test-bundle.mjs'],
+  'device-profile-v1': ['tools/device/test-bundle.mjs', 'apps/device/test/profile-game.test.js'],
   'telemetry-event-v1': ['tools/factlinktest.mjs'],
   'session-manifest-v1': ['tools/device/test-session-manifest.sh'],
   'experiment-spec-v1': ['packages/research/test/experiment.test.js'],
@@ -72,7 +74,7 @@ const contractEvidence = {
   'cue-helper-control-v1': ['tools/cue/test-cue.py'],
   'fact-message-v1': ['packages/core/test/fixtures/fact-message-v1.jsonl'],
   'hid-executor-v1': ['packages/adapters/test/conformance.test.js', 'apps/device/test/adb-device-local-executor.test.js'],
-  'device-executor-v1': ['apps/device/test/adb-device-local-executor.test.js'],
+  'device-executor-v1': ['apps/device/test/adb-device-local-executor.test.js', 'apps/device/test/profile-game.test.js'],
   'device-campaign-v1': ['apps/device/test/campaign.test.js', 'apps/device/test/campaign-runner.test.js'],
   'device-adb-preflight-v1': ['apps/device/test/adb-bridge.test.js'],
   'device-campaign-result-v1': ['apps/device/test/campaign.test.js', 'apps/device/test/campaign-runner.test.js'],
@@ -334,6 +336,11 @@ const outputs = {
   'duplicate-responsibilities.json': { schema: 'duplicate-responsibility-map-v1', entries: duplicateResponsibilities },
   'legacy-paths.json': { schema: 'legacy-path-map-v1', generatedFrom: 'tools/generate-catalog.js', entries: legacyPaths },
   'reverse-links.json': reverseLinks,
+  // The per-game control catalogs as data (LEG-007): every descriptor with its
+  // aliases, action kinds, binding, preconditions and observation, and FNaF 2's
+  // artifact action table. The validators are generated from the same objects.
+  'control-catalog.json': { schema: 'control-catalog-register-v1',
+    generatedFrom: 'packages/core/src/control/catalog/', games: Object.values(CONTROL_CATALOGS) },
 };
 for (const [name, value] of Object.entries(outputs)) await writeFile(join(OUT, name), JSON.stringify(value, null, 2) + '\n');
 console.log(`catalog: ${Object.keys(outputs).length} inventories (${sourceFiles.length} source files)`);
