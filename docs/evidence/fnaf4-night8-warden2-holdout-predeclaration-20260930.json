@@ -1,0 +1,47 @@
+{
+ "schema": "evidence-record-v1",
+ "id": "fnaf4-night8-warden2-holdout-predeclaration-20260930",
+ "claimLevel": "PREDECLARATION (fixed before any seed of the block is run)",
+ "fidelity": "rebuilt-runtime",
+ "date": "2026-09-30",
+ "question": "On seeds it was not developed on, how many Night 8 (20/20/20/20) nights does the FNaF 4 warden2 controller win in the rebuilt runtime?",
+ "binding": {
+  "game": "fnaf4",
+  "night": "Night 8, 20/20/20/20 (shadow 2)",
+  "policy": "warden2",
+  "knobs": {
+   "bedAt": 24,
+   "foxyTo": 3
+  },
+  "policySourcesSha256": "5b56ce996e8f8efa5fd17aecd27dc39b7d8ae18af0699b823082bf8e81555e25",
+  "policySources": [
+   "tools/recompile/pilot/pilot.mjs",
+   "tools/recompile/pilot/fnaf4.mjs"
+  ],
+  "binarySha256": "57b48ac1596879f8c8e8b121679f02314737107bacdcbe1af3258fe93121cd21",
+  "assetsSha256": "615f2ea01b9546709e8d9bc2b15cd9616aeda403a317c4db4bcde9f4d87f0049",
+  "saveBefore": {
+   "fixture": "tools/recompile/fixtures/fnaf4-night8-before.ini",
+   "sha256": "a58acc2d42e40653a3797dc783d54daef47f6f726140eccc36a905b261e95231"
+  },
+  "winKey": "fn4.beat8=1"
+ },
+ "development": {
+  "seeds": "seeds 0-299 and 24850 (docs/evidence/rebuild-pilot-dev-blocks-20260930.json)",
+  "choice": "bedAt 24 and foxyTo 3 were chosen on seeds 3, 9 and 86; with them the development block read 300/300"
+ },
+ "block": {
+  "seeds": "30000-32999",
+  "count": 3000,
+  "why": "disjoint from every seed used in development"
+ },
+ "command": "systemd-run --user --scope -p MemoryMax=1300M -p MemorySwapMax=512M -- node tools/recompile/pilot/batch.mjs --game fnaf4 --policy warden2 --knobs '{\"bedAt\":24,\"foxyTo\":3}' --binary <pinned 57b48ac1-615f2ea0>/Chowdren --assets <same>/Assets.dat --save tools/recompile/fixtures/fnaf4-night8-before.ini --seeds 30000-32999 --jobs 3 --out <outside the repository> --win-key fn4.beat8=1",
+ "rules": [
+  "Every row's policySha256 must equal policySourcesSha256 above; batch.mjs stops if either source changes mid-block.",
+  "The result is reported as won / 3000 with every loss's seed and outcome. A NO_NIGHT or an ERROR row is reported as such and counted against the 3000, not dropped.",
+  "Nothing is tuned on this block. A controller changed after seeing it needs a new predeclared block.",
+  "A win is one clear of that seed in the rebuilt runtime by a controller that reads the runtime's objects; the block is not a device claim and promotes nothing."
+ ],
+ "resultRecord": "docs/evidence/fnaf4-night8-warden2-holdout-20260930.json, written from the batch rows when the block is done",
+ "rung": "None. MODEL_ONLY, rebuilt-runtime."
+}
