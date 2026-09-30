@@ -361,6 +361,9 @@ function guard({ run, knobs }, rev = 1) {
   } };
   const flush = () => { if (knobs.quiet && ring.length) { appendFileSync(out, ring.join('\n') + '\n'); ring.length = 0; } };
   let task = null, taskName = null, last = null, outcome = null;
+  // Every play-frame update a task started on, for search.mjs: the quiet log
+  // keeps only its last 200 records.
+  const starts = [];
   const rebootAt = knobs.rebootAt ?? -10;
 
   function* raise() {
@@ -531,14 +534,14 @@ function guard({ run, knobs }, rev = 1) {
       if (key !== last || s.t % 600 === 0) { ctx.log({ ...f, task: taskName }); last = key; }
       if (!task) {
         const d = decide();
-        if (d) { [taskName, task] = d; ctx.log({ start: taskName }); }
+        if (d) { [taskName, task] = d; ctx.log({ start: taskName }); starts.push(s.t); }
       }
       if (!task) return [];
       const r = task.next();
       if (r.done) { task = null; taskName = null; return r.value === true || r.value === false ? [] : (r.value ?? []); }
       return r.value ?? [];
     },
-    summary: () => { flush(); return { outcome }; },
+    summary: () => { flush(); return { outcome, starts }; },
   };
 }
 

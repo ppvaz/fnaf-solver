@@ -11,8 +11,9 @@
  * losing attempt's own touches up to a branch point in the play frame
  * (pilot.mjs --prefix/--branch), holds k updates with no touch, and hands
  * the night back to the policy. The runtime is deterministic. The branch
- * points are the updates at which the policy started a task (its log's
- * `start` records) merged with `BACKOFF` steps, latest first: a hold
+ * points are the updates at which the policy started a task (its summary's
+ * `starts` when it reports them, else its log's `start` records) merged with
+ * `BACKOFF` steps, latest first: a hold
  * there delays that task, and every touch that draws from the shared
  * generator (a play's Random(7) and Random(100), a seal's charge) draws at a
  * different update, so the rolls after it are different ones. Holds are
@@ -21,7 +22,9 @@
  * other holds are skipped. A game module that exports `doomStart(records)`
  * names where a lost chain began, and no branch point is taken after it;
  * without one, the death stands in for it. An attempt whose chain begins
- * later becomes the new base: a later death inside the same chain is noise. A seed is WON
+ * later becomes the new base: a later death inside the same chain is noise.
+ * When a base's branch points are used up, the search backs up to the base
+ * it came from and goes on with that one's. A seed is WON
  * the first time an attempt's save holds every --win-key, and its touches are
  * then a plain CHOWDREN_INPUT that replay.mjs plays with no pilot: the search
  * replays them so, and the row says whether that replay's save holds every
@@ -188,8 +191,11 @@ function attempt(o, gameModule, seed, dir, extra) {
       const save = existsSync(join(dir, saveName)) ? iniKeys(readFileSync(join(dir, saveName), 'utf8')) : {};
       const won = code === 0 && summary && o.winKeys.every((k) => save[k.split('=')[0]] === k.split('=')[1]);
       const records = logRecords(dir, o.game);
+      // A policy that reports every task start in its summary gives the whole
+      // night; else the log's `start` records, as far back as the log goes.
+      const logged = records.filter((r) => r.start && Number.isInteger(r.t)).map((r) => r.t);
       res({ won, outcome: summary?.outcome ?? null, death: deathUpdate(summary),
-        starts: records.filter((r) => r.start && Number.isInteger(r.t)).map((r) => r.t),
+        starts: Array.isArray(summary?.starts) ? summary.starts : logged,
         doom: gameModule.doomStart ? gameModule.doomStart(records) : null,
         error: code === 0 ? undefined : err.trim().split('\n').slice(-2).join(' | ') });
     });
@@ -208,30 +214,31 @@ async function searchSeed(o, gameModule, seed) {
     return { ...r, dir };
   };
   let base = await run(0, [], { from: null });
-  let baseN = 0;
-  let floor = 0;
   let n = 1;
   if (!base.won && base.death === null) {
     return { seed, verdict: base.outcome === null ? 'NO_NIGHT' : 'ERROR', sourcesSha256: o.sourcesSha256, budget: o.budget, tries };
   }
-  let points = base.won ? [] : branchPoints(base.death, base.starts, floor, base.doom);
-  search: while (!base.won && points.length && n <= o.budget) {
-    const at = points.shift();
+  // Depth first: a branch whose chain begins later becomes the base, and
+  // when a base's branch points are used up the search returns to the one it
+  // came from and goes on with that one's.
+  const stack = base.won ? [] : [{ base, baseN: 0, points: branchPoints(base.death, base.starts, 0, base.doom) }];
+  search: while (stack.length && n <= o.budget) {
+    const top = stack[stack.length - 1];
+    if (!top.points.length) { stack.pop(); continue; }
+    const at = top.points.shift();
     for (const hold of HOLDS) {
       if (n > o.budget) break search;
-      const r = await run(n, ['--prefix', join(base.dir, 'pilot.input'), '--branch', String(at), '--hold', String(hold)],
-        { from: baseN, branch: at, hold });
+      const r = await run(n, ['--prefix', join(top.base.dir, 'pilot.input'), '--branch', String(at), '--hold', String(hold)],
+        { from: top.baseN, branch: at, hold });
       const thisN = n;
       n += 1;
       if (r.won) { base = r; break search; }
-      // A branch whose chain begins later becomes the base: search on from it.
-      if (progress(r) !== null && progress(r) > progress(base) + GAIN) {
-        base = r; baseN = thisN; floor = at;
-        points = branchPoints(r.death, r.starts, floor, r.doom);
+      if (progress(r) !== null && progress(r) > progress(top.base) + GAIN) {
+        stack.push({ base: r, baseN: thisN, points: branchPoints(r.death, r.starts, at, r.doom) });
         continue search;
       }
       // The same chain on the first hold: this point is inside the lost chain.
-      if (hold === HOLDS[0] && Math.abs(progress(r) - progress(base)) <= HOLDS[0]) break;
+      if (hold === HOLDS[0] && Math.abs(progress(r) - progress(top.base)) <= HOLDS[0]) break;
     }
   }
   const row = { seed, verdict: base.won ? 'WON' : 'EXHAUSTED', sourcesSha256: o.sourcesSha256, budget: o.budget,

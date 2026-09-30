@@ -1,0 +1,136 @@
+{
+ "schema": "evidence-record-v1",
+ "id": "rebuild-fnaf3-search-v2-dev-20260930",
+ "claimLevel": "MODEL_ONLY",
+ "fidelity": "rebuilt-runtime",
+ "date": "2026-09-30",
+ "kind": "diagnostic development run of a second form of the search, on seeds the first form left open; not a census",
+ "question": "Does the search win more of the seeds it exhausted once it can branch at any task start of the night and back up to earlier bases?",
+ "explanationTested": "The first form ran out of branch points on some seeds because the controller log keeps its last 200 records, and never returned to an earlier base once it had moved on. guard2 now reports every task start in its summary, and the search backtracks.",
+ "seedsFrom": [
+  "guard2 development seeds exhausted at budget 24 and again at 120: 31, 35, 53, 56",
+  "the nine open seeds of the predeclared block (docs/evidence/fnaf3-search-block-20260930.json), which stays as recorded"
+ ],
+ "binding": {
+  "policy": "guard2",
+  "budget": 60,
+  "binarySha256": "0f6a825fa24b7e56ac1e68f1992480210a190b4f6ee0587a63854d3268e18b37",
+  "save": "tools/recompile/fixtures/fnaf3-aggressive-nightmare.ini",
+  "winKey": "freddy3.4thstar=1",
+  "sourcesSha256": [
+   "2988543e0faa3c3a6870a1da8c05c004102e7828720b5b07279c36c48ac1d2c7"
+  ]
+ },
+ "result": {
+  "seeds": [
+   {
+    "seed": 31,
+    "verdict": "EXHAUSTED",
+    "attempts": 61
+   },
+   {
+    "seed": 35,
+    "verdict": "EXHAUSTED",
+    "attempts": 61
+   },
+   {
+    "seed": 53,
+    "verdict": "WON",
+    "attempts": 6,
+    "replayWon": true,
+    "winInputSha256": "b3ed14a83e1028ce7863a13dcdd9d1dbd9882406c9968cbda21851e07fb93d1d",
+    "straysDropped": 0,
+    "attempt": 5
+   },
+   {
+    "seed": 56,
+    "verdict": "EXHAUSTED",
+    "attempts": 61
+   },
+   {
+    "seed": 40001,
+    "verdict": "EXHAUSTED",
+    "attempts": 61
+   },
+   {
+    "seed": 40005,
+    "verdict": "EXHAUSTED",
+    "attempts": 61
+   },
+   {
+    "seed": 40022,
+    "verdict": "WON",
+    "attempts": 3,
+    "replayWon": true,
+    "winInputSha256": "8cfacef635e75f09c737fae2f54f6e3bc6f46924d0132e5d0e0827307f3569ed",
+    "straysDropped": 0,
+    "attempt": 2
+   },
+   {
+    "seed": 40033,
+    "verdict": "EXHAUSTED",
+    "attempts": 61
+   },
+   {
+    "seed": 40037,
+    "verdict": "EXHAUSTED",
+    "attempts": 61
+   },
+   {
+    "seed": 40056,
+    "verdict": "EXHAUSTED",
+    "attempts": 61
+   },
+   {
+    "seed": 40060,
+    "verdict": "WON",
+    "attempts": 35,
+    "replayWon": true,
+    "winInputSha256": "6129b82204d44251c0ba426a37e9c680ba2ea9f6648a4207ca98e5e6c3c11fb4",
+    "straysDropped": 0,
+    "attempt": 34
+   },
+   {
+    "seed": 40095,
+    "verdict": "WON",
+    "attempts": 15,
+    "replayWon": true,
+    "winInputSha256": "ce3af0b050d110bb539474742eaa5b76b7aa0f3763e266abcef41ac7370a0f6b",
+    "straysDropped": 1,
+    "attempt": 14
+   },
+   {
+    "seed": 40098,
+    "verdict": "EXHAUSTED",
+    "attempts": 61
+   }
+  ],
+  "won": 4,
+  "exhausted": 9,
+  "wonSeeds": [
+   53,
+   40022,
+   40060,
+   40095
+  ],
+  "exhaustedSeeds": [
+   31,
+   35,
+   56,
+   40001,
+   40005,
+   40033,
+   40037,
+   40056,
+   40098
+  ]
+ },
+ "findings": [
+  "The second form wins 4 of the 13 (53, 40022, 40060, 40095), each replayed with no pilot; the other 9 spend all 60 attempts. The block result is unchanged: a claim from this form needs a fresh predeclared block."
+ ],
+ "notMeasured": [
+  "Whether the exhausted seeds are winnable.",
+  "A predeclared block for this form."
+ ],
+ "rung": "None. MODEL_ONLY, rebuilt-runtime."
+}
