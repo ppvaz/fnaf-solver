@@ -1,6 +1,12 @@
 # Pivot and rebrand: `fnaf2-1020` -> `fnaf-solver`
 
-**Status: proposed 2026-09-19, Pedro's directive.** Names chosen this session:
+**Status: done 2026-09-30.** Commit A `1966a033` (scope and MCP server), B
+`49a20f4e` (project identity), C `a5979520` (ADR 0002, PEDRO-OK) with the
+README rewrite `a370950b`, D `6dd995cc` (per-game vocabulary, the leaked
+executor rules, the profile game dimension) with the ADR 0002 moves, and R:
+the README and docs links move to `ppvaz/fnaf-solver` in the commit that
+precedes the GitHub rename. Proposed 2026-09-19, Pedro's directive. Names
+chosen then:
 the GitHub repository becomes **`fnaf-solver`**, the npm scope becomes
 **`@sixam/*`**. The two are deliberately different: the repo name is
 human-facing and wants FNaF discoverability, while the scope appears in 719
@@ -199,7 +205,7 @@ Per the contracts lane, all three, checked by **exit status** and never piped:
 
 ```
 npm run typecheck && npm run test:unit && npm run test:contracts
-npm run device:dry-run
+npm run device:emit -- --winner WINNER --out DIR && npm run device:campaign -- --bundle DIR --nights N
 npm run push-gate            # TMPDIR=~/.cache/fnaf2-pushgate-tmp
 ```
 

@@ -1,12 +1,12 @@
-# fnaf2-1020
+# fnaf-solver
 
 **A bot that plays the first four *Five Nights at Freddy's* games on a real Android phone, working toward
 clearing every night of every game, and the reverse-engineered model of each game that tells it what to do.**
 
-[![CI](https://github.com/ppvaz/fnaf2-1020/actions/workflows/ci.yml/badge.svg)](https://github.com/ppvaz/fnaf2-1020/actions/workflows/ci.yml)
+[![CI](https://github.com/ppvaz/fnaf-solver/actions/workflows/ci.yml/badge.svg)](https://github.com/ppvaz/fnaf-solver/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**[Try the trainer in your browser](https://ppvaz.github.io/fnaf2-1020/)** · [Scoreboard](#scoreboard) ·
+**[Try the trainer in your browser](https://ppvaz.github.io/fnaf-solver/)** · [Scoreboard](#scoreboard) ·
 [What's different](#whats-different-here) · [Start here](#start-here) · [How it works](#how-it-works) ·
 [Credits](#credits-and-lineage)
 
@@ -72,7 +72,7 @@ games of one series.
 
 ## Try it
 
-**No install.** The [trainer](https://ppvaz.github.io/fnaf2-1020/) drills Niko Frost's Minus 7, the first
+**No install.** The [trainer](https://ppvaz.github.io/fnaf-solver/) drills Niko Frost's Minus 7, the first
 zero-RNG FNaF 2 10/20 route, as touch exercises in a phone browser held sideways. The trainer teaches Minus 7,
 while the bot wins 10/20 with Minus Toys; [the lineage](docs/strategy/STRATEGY-HISTORY.md) covers both.
 
@@ -96,7 +96,7 @@ on Node 22. No phone is involved.
 | Judge whether this is new research | nothing | [What's different here](#whats-different-here) · [Research frontier](docs/research/FNAF2-OBSERVATORY.md) |
 | Watch the bot play | nothing | the two clips above |
 | See how the four games compare | nothing | [Four games' nights](docs/research/FOUR-GAME-NIGHTS.md) |
-| Practise FNaF 2's 10/20 myself | a phone browser | [Trainer](https://ppvaz.github.io/fnaf2-1020/) |
+| Practise FNaF 2's 10/20 myself | a phone browser | [Trainer](https://ppvaz.github.io/fnaf-solver/) |
 | Know where the strategies came from | nothing | [Strategy history](docs/strategy/STRATEGY-HISTORY.md) |
 | Look up how a mechanic really works | nothing (your own APK to re-derive it) | [Engine fact index](docs/android/UNIFIED-SOURCED-ENGINE-FACT-INDEX.md) |
 | Check a claim myself | a checkout, Node 20+ | [Evidence policy](docs/evidence/README.md), then `npm run evidence -- list` |

@@ -1,6 +1,6 @@
 # Documentation index
 
-Research notes for [fnaf2-1020](../README.md). The repository's claims live here;
+Research notes for [fnaf-solver](../README.md). The repository's claims live here;
 the code only implements them.
 
 Two conventions run through everything below. **Evidence labels** — `[SOURCED]`,

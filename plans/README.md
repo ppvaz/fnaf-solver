@@ -197,7 +197,7 @@ progress log written before 2026-09-09.
     source-available autonomous player), and the decoupling cost
     (`CONTROL_VOCABULARY`, 113 sites). Its custody gate was lifted on
     2026-09-25 (ROADMAP S6).
-27. [27-pivot-and-rebrand.md](27-pivot-and-rebrand.md) — the rename to
+27. [27-pivot-and-rebrand.md](27-pivot-and-rebrand.md) — done 2026-09-30: the rename to
     `fnaf-solver` (repo) and `@sixam/*` (scope, 719 specifiers), split into
     four mechanical commits plus one structural pivot. Establishes that
     `com.scottgames.fnaf2` inside `docs/evidence/` is a *measurement* and must
