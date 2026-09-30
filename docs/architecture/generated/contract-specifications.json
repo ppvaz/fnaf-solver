@@ -20,7 +20,7 @@
       "runtimeValidation": "PlantModel",
       "conformanceFixtures": [
         "packages/source/test/sourcetest.mjs",
-        "tools/simtest.mjs"
+        "packages/source/test/simtest.mjs"
       ]
     },
     {

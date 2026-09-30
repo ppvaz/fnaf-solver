@@ -44,7 +44,7 @@ assets.
 | Check the built page in Chrome | `node tools/test.mjs --browser` |
 | See non-asserting policy diagnostics too | `node tools/test.mjs --reports` |
 | Serve or make the self-contained trainer | `npm run serve:trainer`, `npm run build:trainer` (the trainer's own tools and tests: [`apps/trainer/README.md`](../apps/trainer/README.md)) |
-| Test the canonical or BB-aware strategy | `tools/simtest.mjs`, `tools/model/reactive-pilot.mjs` |
+| Test the canonical or BB-aware strategy | `packages/source/test/simtest.mjs`, `tools/model/reactive-pilot.mjs` |
 | Compare policy families under execution error | `tools/policytest.mjs` |
 | Explore a strategy or cycle | `tools/cyclesearch.mjs` |
 | Run a night on the phone | `npm run night -- fnaf2\|fnaf1\|fnaf1-custom\|fnaf1-winner ... --live --confirm-live` (`apps/desktop/src/night.js`), which runs that game's runner -- for FNaF 2 [`tools/device/night-run.sh`](device/README.md): records, runs the campaign, grades, packs the evidence, resets the game -- and packs FNaF 1 runs when they end. Without `--live --confirm-live` every runner is a dry run (ADR 0002). The handset serial comes from `FNAF_SERIAL` or the untracked local profile: `node tools/device/local-profile.mjs set <serial>` once per host |
@@ -81,7 +81,6 @@ Paths in the tables are relative to the repository root.
 
 | Tool | Kind | Purpose and interface |
 |---|---|---|
-| `tools/simtest.mjs` | check | Canonical headless engine/mechanics regressions, plus the coach's per-step grading contract (a measured window may only tighten a lesson's tolerance, and must grade lopsidedly). `--sweep` also drives perfect Minus 7 over 200 seeds. |
 | `tools/model/reactive-pilot.mjs [n]` | report/check | BB-aware reactive Minus 7 bot and reusable worker task. Supports `--worst`, `--jitter=MS`, and `--assert`; only `--assert` turns the survival result into a failing check, and it also guards the step model (ids matching `CYCLE_SCRIPT`, and both per-step paths being identities when asked for nothing). As a worker task it additionally accepts `profile` (per-step error weights, see `PROFILES`) and `stepShift` (move one step by a fixed number of frames). |
 | `tools/policy.mjs` | internal module | The plans/11 exact-engine policy adapter: one observation/action contract over `packages/source/src/games/fnaf2/plant-model.js`'s `Sim`, with `truth`/`belief` observation modes, three execution-error shapes (`iid`, `correlated`, `common`), and an optional `packages/play/bin/phone/actuator.mjs` layer. It creates no second simulator and prices nothing; reuse it instead of adding another run loop. |
 | `tools/policybaselines.mjs` | internal module | The policies compared through `policy.mjs`: the local Minus 7 control (literally `model/reactive-pilot.mjs`'s `Bot`, driven through the adapter), Jason-, Shooter25- and Couraeel-style reimplementations from this repository's own reconstructions, and the five deliberate controls. Every guessed detail is marked `[GUESS]` in place. |

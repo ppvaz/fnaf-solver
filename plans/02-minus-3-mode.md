@@ -67,7 +67,7 @@ camera set/cadence. The trainer's Minus 7-specific surface is mostly data:
 - `CYCLE_SCRIPT` in `src/config.js` is a declarative timeline.
 - The lesson ladder in `src/curriculum.js` is built from it.
 - The rhythm lane, coach, and millisecond grading are script-agnostic.
-- `tools/simtest.mjs` can prove any scripted routine against seeds.
+- `packages/source/test/simtest.mjs` can prove any scripted routine against seeds.
 
 So this is "new script + new lesson ladder + strategy selection UI," not a new engine.
 

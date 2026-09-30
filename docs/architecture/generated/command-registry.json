@@ -60,7 +60,7 @@
     },
     {
       "id": "test:core",
-      "command": "node packages/source/test/sourcetest.mjs && node tools/simtest.mjs && node packages/play/test/belief.test.js && node packages/play/test/estimator.test.js && node packages/source/test/seed-recoverytest.mjs",
+      "command": "node packages/source/test/sourcetest.mjs && node packages/source/test/simtest.mjs && node packages/play/test/belief.test.js && node packages/play/test/estimator.test.js && node packages/source/test/seed-recoverytest.mjs",
       "lifecycle": "supported"
     },
     {
@@ -310,12 +310,6 @@
     {
       "id": "tools/retrieval-benchmark.mjs",
       "invocation": "tools/retrieval-benchmark.mjs",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/simtest.mjs",
-      "invocation": "tools/simtest.mjs",
       "kind": "check",
       "lifecycle": "supported"
     },

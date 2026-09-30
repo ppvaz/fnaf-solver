@@ -610,13 +610,13 @@
     {
       "id": "contract.plant-model-v1",
       "kind": "CONTRACT",
-      "path": "packages/source/test/sourcetest.mjs",
+      "path": "packages/source/test/simtest.mjs",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.plant-model-v1",
       "kind": "CONTRACT",
-      "path": "tools/simtest.mjs",
+      "path": "packages/source/test/sourcetest.mjs",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {

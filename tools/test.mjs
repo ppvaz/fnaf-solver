@@ -52,7 +52,7 @@ const ENGINE = [
   ['minus toys', ['minustoystest.mjs', '200', '--assert']],
   ['minus toys worst', ['minustoystest.mjs', '100', '--worst', '--assert']],
   ['minus toys no-split', ['minustoystest.mjs', '200', '--no-split', '--assert']],
-  ['simtest', ['simtest.mjs', '--sweep']],
+  ['simtest', ['../packages/source/test/simtest.mjs', '--sweep']],
   ['hidreporttest', ['../packages/play/test/hid-report.test.js']],
   // Plan 19 pkg 1: the stock-device observation model (OBSERVED/UNKNOWN facts,
   // sensor cadence + latency + drops) and the blackout-reactive controller

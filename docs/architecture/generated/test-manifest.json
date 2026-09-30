@@ -260,7 +260,7 @@
       "determinismSignals": [],
       "fixedSleeps": [],
       "sharedResources": [],
-      "subprocesses": false,
+      "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",
         "runs": 0,
@@ -2341,6 +2341,24 @@
       "fixedSleeps": [],
       "sharedResources": [],
       "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/test/simtest.mjs",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",
         "runs": 0,
@@ -4776,24 +4794,6 @@
     },
     {
       "id": "tools/rvctest.mjs",
-      "lane": "test:unit",
-      "owner": "legacy migration",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.mjs per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "tools/simtest.mjs",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,

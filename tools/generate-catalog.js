@@ -50,7 +50,7 @@ const toolCommands = [...toolsIndex.matchAll(/^\| `([^`]+)` \| ([^|]+) \|/gm)].m
 const contractRegister = JSON.parse(await readFile(join(ROOT, 'packages/kernel/contracts/register.json'), 'utf8'));
 const protocols = contractRegister.contracts.filter(item => ['wire', 'process'].includes(item.kind));
 const contractEvidence = {
-  'plant-model-v1': ['packages/source/test/sourcetest.mjs', 'tools/simtest.mjs'],
+  'plant-model-v1': ['packages/source/test/sourcetest.mjs', 'packages/source/test/simtest.mjs'],
   'semantic-control-v1': ['packages/source/test/contracts.test.js', 'packages/source/test/control-catalog.test.js',
     'tools/device/test-policy-interpreter.mjs'],
   'policy-program-v1': ['tools/policygrammartest.mjs', 'tools/device/test-policy-ir.mjs'],

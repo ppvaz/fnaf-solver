@@ -2286,6 +2286,12 @@
       ]
     },
     {
+      "file": "packages/source/test/simtest.mjs",
+      "imports": [
+        "@sixam/source/fnaf2"
+      ]
+    },
+    {
       "file": "packages/source/test/sourcetest.mjs",
       "imports": [
         "@sixam/source/fnaf2",
@@ -4166,13 +4172,6 @@
       "imports": [
         "@sixam/propose/strategies/right-vent-camp",
         "node:url"
-      ]
-    },
-    {
-      "file": "tools/simtest.mjs",
-      "imports": [
-        "@sixam/source/fnaf2",
-        "@sixam/trainer"
       ]
     },
     {

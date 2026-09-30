@@ -94,5 +94,41 @@ const QUIET = { bbEnabled: false, foxyEnabled: false, gfEnabled: false, boxEnabl
   assert.deepEqual(flagged.map(row => row.cycle), [1], 'no-wind lands on the pass that did not wind');
 }
 
+// The coach must not call an input safe when the model says it ends the night
+// (moved from packages/source/test/simtest.mjs, 2026-09-30: it tests the trainer's Coach, not the Sim).
+// Grading is per step and lopsided: `mask-off` has 450 ms of room early and
+// about 50 ms late, because the mask blocks the hall flash that resets Foxy.
+{
+  const stub = { t: 0, isWinding: false, camsUp: false };
+  const coach = new Coach(stub, { script: C.CYCLE_SCRIPT });
+  const maskOff = C.CYCLE_SCRIPT.find(st => st.id === 'mask-off');
+  const beat = { id: 'beat', at: 0, label: 'Tap', action: 'light' };
+
+  if (!maskOff.win) throw new Error('mask-off lost its measured window');
+  if (coach.grade(maskOff, -0.10) !== 'good')
+    throw new Error('a 100ms-early mask-off should still be good');
+  if (coach.grade(maskOff, 0.10) === 'good')
+    throw new Error('a 100ms-late mask-off was graded good, but dies in the model');
+  if (coach.grade(maskOff, 0.06) !== 'late')
+    throw new Error('a 60ms-late mask-off must not pass: the window closes at 50ms');
+
+  // The same delta, either side of zero, must not grade the same.
+  if (coach.grade(maskOff, -0.03) === coach.grade(maskOff, 0.03))
+    throw new Error('mask-off graded symmetrically despite a lopsided window');
+
+  // A step with no measured window keeps the lesson's symmetric tolerance.
+  if (coach.grade(beat, 0.14) !== 'good' || coach.grade(beat, -0.14) !== 'good')
+    throw new Error('an unwindowed step should fall back to the lesson tolerance');
+
+  // A window may only tighten a lesson, never loosen it: an easy lesson still
+  // cannot pass a late mask-off, and a strict lesson still binds elsewhere.
+  const easy = new Coach(stub, { script: C.CYCLE_SCRIPT, tolGood: 0.30, tolOk: 0.55 });
+  if (easy.grade(maskOff, 0.10) === 'ok' || easy.grade(maskOff, 0.10) === 'good')
+    throw new Error('an easy lesson loosened a step past its measured window');
+  const strict = new Coach(stub, { script: C.CYCLE_SCRIPT, tolGood: 0.01, tolOk: 0.02 });
+  if (strict.grade(maskOff, -0.10) !== 'late')
+    throw new Error('a strict lesson tolerance should still bind where it is tighter');
+}
+
 console.log('coach: a press the Sim refuses is graded refused, on its own and through the app\'s press path; ' +
   'a pass that ends on WIND is settled when its hold ends');
