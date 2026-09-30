@@ -3244,6 +3244,7 @@
       "imports": [
         "./envelopes.mjs",
         "./promotions-query.mjs",
+        "./run-audit.mjs",
         "./solver.mjs",
         "node:child_process",
         "node:fs",
@@ -3373,6 +3374,17 @@
         "./registers.mjs",
         "./solver.mjs",
         "@sixam/kernel",
+        "node:fs",
+        "node:path"
+      ]
+    },
+    {
+      "file": "packages/review/src/run-audit.mjs",
+      "imports": [
+        "./evidence-pack.mjs",
+        "@sixam/kernel",
+        "@sixam/kernel/contracts",
+        "node:crypto",
         "node:fs",
         "node:path"
       ]
@@ -3517,6 +3529,16 @@
         "node:fs",
         "node:path",
         "node:url"
+      ]
+    },
+    {
+      "file": "packages/review/test/run-audit.test.mjs",
+      "imports": [
+        "../src/run-audit.mjs",
+        "node:assert/strict",
+        "node:fs",
+        "node:os",
+        "node:path"
       ]
     },
     {

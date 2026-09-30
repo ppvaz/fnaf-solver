@@ -1,0 +1,1701 @@
+{
+  "schema": "evidence-record-v1",
+  "kind": "run-audit-v1",
+  "id": "run-audit-20260930",
+  "date": "2026-09-30",
+  "question": "For each committed night that ended in a death or an error, what failed first -- the observation, the actuation, the scheduling, the strategy or the model -- and where the packs cannot say, what is missing?",
+  "answer": "1 of 35 audited runs attributed (OBSERVATION 1); 34 UNKNOWN, undecided by effects-not-all-pass 34, delivered-phase-unmeasured 34, arm-unresolved-non-fatal 11, misses-below-the-systematic-threshold 3.",
+  "labels": "An instrument over committed packs: the run data are DEVICE_MEASURED as packed, the phase response it reads is MODEL_ONLY, and an attribution promotes nothing.",
+  "method": {
+    "tool": "packages/review/src/cli.mjs",
+    "command": "npm run review -- query audit --write docs/evidence/run-audit-20260930.json --date 2026-09-30",
+    "instrument": "run-audit@1",
+    "git": {
+      "commit": "3480b73a14c7614983d43d1c99653f16ab829331",
+      "dirtyInputs": [
+        "?? packages/review/src/run-audit.mjs"
+      ],
+      "note": "the audit code is in the commit that adds this record"
+    }
+  },
+  "audit": {
+    "packs": 186,
+    "outcomes": {
+      "OTHER": 1,
+      "WIN": 48,
+      "RESULT_LOST": 100,
+      "HOLD": 2,
+      "DEATH": 32,
+      "ERROR": 3
+    },
+    "audited": 35,
+    "byAttribution": {
+      "OBSERVATION": 1,
+      "ACTUATION": 0,
+      "SCHEDULING": 0,
+      "STRATEGY": 0,
+      "MODEL": 0,
+      "UNKNOWN": 34
+    },
+    "undecided": {
+      "effects-not-all-pass": 34,
+      "delivered-phase-unmeasured": 34,
+      "misses-below-the-systematic-threshold": 3,
+      "arm-unresolved-non-fatal": 11
+    },
+    "annotations": [
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night5-anchor1-20260912T202654Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1789245089538,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1789245091045,
+            "terminalLabel": "state=static"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "VERIFIED",
+            "effects": {
+              "UNKNOWN": 1,
+              "PASS": 1,
+              "UNSTABLE": 1
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": [
+              {
+                "kind": "gate-abort",
+                "detail": "ambiguous-threshold",
+                "afterOnsetMs": 2623
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "effects-not-all-pass (1 UNKNOWN, 1 UNSTABLE)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "9c956d39bd27e0cda3ae767864102a23c909aebfa0fdda62d4b4515253f1aed1",
+          "08609a7f4c2445e31b147166170793bf3a4dbf371c446647fed50ed10942a0c8",
+          "01a890d032a0e19a92ad61c77d815241580154a78cf060781b90bc893307e5ad",
+          "ceea282a7857ec09436e00a607cf34196456f13369c585c030e1653c99920a79"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night5-anchor4-20260912T205913Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1789247123414,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1789247125011,
+            "terminalLabel": "state=static"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "VERIFIED",
+            "effects": {
+              "UNKNOWN": 1,
+              "PASS": 1,
+              "UNSTABLE": 1
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": [
+              {
+                "kind": "gate-abort",
+                "detail": "ambiguous-threshold",
+                "afterOnsetMs": 2721
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "effects-not-all-pass (1 UNKNOWN, 1 UNSTABLE)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "b6319011cdcb59f34d2884824e4b4a9eebeed85a6c92e2a22107ba51ecf381ff",
+          "b8f3acbda3040da55a00e179cb4d88cff2de412744972d93a66034598629f9e3",
+          "7a5f2d74a3bd9d8b7870a0ecbb12bb60bf01734131ba4be35a6342fb452dc715",
+          "90a760287df8c16f31f34ea13a53c82d01c446cd22deecac657d1a08d7972429"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night5-anchor5-20260912T210704Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1789247533829,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1789247535444,
+            "terminalLabel": "state=static"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "VERIFIED",
+            "effects": {
+              "UNKNOWN": 1,
+              "PASS": 1,
+              "UNSTABLE": 1
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": [
+              {
+                "kind": "gate-abort",
+                "detail": "ambiguous-threshold",
+                "afterOnsetMs": 1614
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "effects-not-all-pass (1 UNKNOWN, 1 UNSTABLE)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "c818098fa2470134713c464962b0c6dc098b01b7fbbc5715fa62594f232f1c28",
+          "f41a03376be89576b2f7228af60f6c078c0c3cf1e38fe2880364c4d395ec8216",
+          "f8e957dc7d74b74e7d0bb7174c7c4bd068981072033a9f014a4368869ee90ccb",
+          "e7d6841c5b89ea9ca6d58174ee64d516686a6ee8c63306fd29eec1dade3b3c9c"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night5-final2-20260912T070853Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1789197148382,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1789197149995,
+            "terminalLabel": "state=static"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "VERIFIED",
+            "effects": {
+              "UNKNOWN": 1,
+              "PASS": 1,
+              "UNSTABLE": 1
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": [
+              {
+                "kind": "gate-abort",
+                "detail": "ambiguous-threshold",
+                "afterOnsetMs": 2817
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "effects-not-all-pass (1 UNKNOWN, 1 UNSTABLE)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "17425ec6cde0fb09eb7a6a1261b5223528e40c83b8263c4eab1a3a8b0f20a0ca",
+          "d711845fbf9babb68cd9708fc35601031fe6b2a0f3d6cf0e5bf7beef3267af8a",
+          "62d749975bc3d55b3afedbcb4f0658b7e94cc5b8ed57b339a7beb079fe19f16b",
+          "0e3189a3e8ac13c0215e3b425793f44143d98404fc67a4e26d53733f9f94d6c3"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night5-gatefix1-20260912T053231Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1789191233223,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1789191235479,
+            "terminalLabel": "unknown=no-signature-matched"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "VERIFIED",
+            "effects": {
+              "UNKNOWN": 1,
+              "PASS": 1,
+              "MISSING": 1
+            },
+            "unconfirmedMissesBeforeOnset": [
+              "opening-5 monitorUp->true"
+            ],
+            "faultsAfterOnset": [
+              {
+                "kind": "gate-abort",
+                "detail": "mask-state-unavailable",
+                "afterOnsetMs": 7053
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "effects-not-all-pass (1 UNKNOWN, 1 MISSING)",
+            "misses-below-the-systematic-threshold",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "90afc2125cc14821e81a9845009bed5fa00a8276523d06e2e74b0326d45346af",
+          "b2cdb9281c5e88169bee168f8d1db035fb758af9a94f543e8db9a40706741317",
+          "d987d264db9acbc425a966fc605e17a80db486f3df434c91afa4c3a315a67447",
+          "9296fc4f2ffd33461daa4a342cb2fedeaa496c7fff1705ff4a8232dd8a8acef7"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night5-ladder-n5a-20260927T064344Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1790491545395,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1790491548621,
+            "terminalLabel": "unknown=no-signature-matched"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "VERIFIED",
+            "effects": {
+              "UNKNOWN": 3
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": []
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "effects-not-all-pass (3 UNKNOWN)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "55e3a9286b05abeca1e613096842be7b2acf44313c027250c97aa4bb3e086881",
+          "2d7ab3ede42f074104331f7e648483f2e3108a3e4f0c073e4b6a4131d298ab35",
+          "ac789253e518b49a43d77c4ffc9efcfcaf66805fd1db9f3a72392649a63facbf",
+          "6284a86f0632c4680c54177f20770e1acaa5a7e35f2aaa634a0f063a94ec70f6"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night5-ladder-n5b-20260927T064920Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1790491982289,
+            "from": "last observation labelled state=night",
+            "terminalAt": null,
+            "terminalLabel": null
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "VERIFIED",
+            "effects": {
+              "UNKNOWN": 1,
+              "PASS": 1,
+              "UNSTABLE": 1
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": [
+              {
+                "kind": "gate-abort",
+                "detail": "ambiguous-threshold",
+                "afterOnsetMs": 30841
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "effects-not-all-pass (1 UNKNOWN, 1 UNSTABLE)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "0f96ee445bdbfadf508508baf4eba04cc43a6eaf1b6f54733f0532625e83e911",
+          "776d34742ab06d805f8276f11cc64c28f3c9d7471cd2ef93f78bde5e6ba4dc4f",
+          "d7f47cd610f571d7b1c8cad8f21c54e58d31233cac3c5c5e8e8b75434a779482"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night5-rep4-20260912T194156Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1789242263545,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1789242266039,
+            "terminalLabel": "unknown=office-hud-without-night (bars 0.044)"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "VERIFIED",
+            "effects": {
+              "UNKNOWN": 3
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": []
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "effects-not-all-pass (3 UNKNOWN)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "b0c21a5e0362c766ecff12d184642d40a80921c8edabad77cd054fcba137c45d",
+          "4865bcae741611eff6d9cb9bc359148ed73eb129196c9a117c3f8f91b7940ca1",
+          "b8d26765d0452b5a3c4b3c99f280a5895803872d5389918a8ad29dfe7cb13df8",
+          "5bc82cf32742a96b6c1dbddcb917b0582d922d5f5a832c808e5c413c338164c0"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night5-s1toys5-20260930T132120Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1790774659001,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1790774661348,
+            "terminalLabel": "unknown=office-hud-without-night (bars 0.044)"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "VERIFIED",
+            "effects": {
+              "UNKNOWN": 2,
+              "PASS": 1
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": []
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "effects-not-all-pass (2 UNKNOWN)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "bdde24a4a14a3cda293c7dafbadc4a72b2823d5068c226bccefdb5356b4d94f8",
+          "42f51d5194a448c19018e8533e1776a84565b79458fc804438b36693c1bba0c6",
+          "dccfbc1bd7571ef4181bbdc57172a650b463d570680ed0e95de7d5cbc97743a5",
+          "a34d83ac87c455868d30a42453144e53bde860b8eaf8f1473db98ec93deba539"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night5-strokes2-20260912T032538Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1789183810859,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1789183813183,
+            "terminalLabel": "unknown=office-hud-without-night (bars 0.080)"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "UNRESOLVED (non-fatal)",
+            "effects": {
+              "UNKNOWN": 2,
+              "MISSING": 1
+            },
+            "unconfirmedMissesBeforeOnset": [
+              "opening-5 monitorUp->true"
+            ],
+            "faultsAfterOnset": [
+              {
+                "kind": "gate-abort",
+                "detail": "mask-state-unavailable",
+                "afterOnsetMs": 7220
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "arm-unresolved-non-fatal",
+            "effects-not-all-pass (2 UNKNOWN, 1 MISSING)",
+            "misses-below-the-systematic-threshold",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "97f2c01f720842921bbc254b9c2ca58c3f54202233022cfb14d81b6b256431ac",
+          "aabee9dde37b9ad43d2e8f0b85458f79a36a0a8a8e2b0a60b95c0cebc4ed90d3",
+          "b17d9429bf27e5685150a438e02d3d92c678fe65d1dbfe701515eeba8453ad00",
+          "f8177e584d570891cf721e82d8cd2a82ef0dbc5793c7400f702e9cef25e89519"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night6-anchored2-20260913T015520Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1789264749459,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1789264751041,
+            "terminalLabel": "state=static"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "VERIFIED",
+            "effects": {
+              "UNKNOWN": 3
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": [
+              {
+                "kind": "gate-abort",
+                "detail": "ambiguous-threshold",
+                "afterOnsetMs": 2734
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "effects-not-all-pass (3 UNKNOWN)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "05bfe36b765b5871ba5029f190dd35522db77e60031eb8c254f5a1adc836fbba",
+          "044d5876f5c0b13d4f82db81b72ed745e7448ce1d1a13d4bc3c8f0a93b21a518",
+          "180895c9c0f0e40c4773fd2131e3ff51560b608eb6bcc518d52264159b2ea177",
+          "2eee4be2a843a93bd11dc84050e0e2b70ded8851e45d028c8e39c2de67875b5f"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night6-anchored3-20260913T020127Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1789265136479,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1789265138055,
+            "terminalLabel": "state=static"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "VERIFIED",
+            "effects": {
+              "UNKNOWN": 3
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": [
+              {
+                "kind": "gate-abort",
+                "detail": "ambiguous-threshold",
+                "afterOnsetMs": 2631
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "effects-not-all-pass (3 UNKNOWN)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "854554e3da27815d97dbaf1b643f1ec8b62a345d5af1f439288305cc6c96d715",
+          "418aed756be50e33d2795afd07f13d6ed1cc1584581c09bd070674dfd2e2722a",
+          "30ac31375ee080450527592a127c7234464e86a94dfe58e0b206e03951ab9432",
+          "4fe876f4e5a54619c6346efd127f70de033c610e5a1c469bb6fbe0beca7d2493"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night6-anchoredd2-20260913T024735Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1789267834344,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1789267835880,
+            "terminalLabel": "state=static"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "VERIFIED",
+            "effects": {
+              "UNKNOWN": 2,
+              "PASS": 1
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": [
+              {
+                "kind": "gate-abort",
+                "detail": "ambiguous-threshold",
+                "afterOnsetMs": 1999
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "effects-not-all-pass (2 UNKNOWN)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "2de0eba2880d2ce75fc1d400b721149c663a34d66c794d9ab0cd54889e9b5c86",
+          "23152d91c35b34ce456c64c675ae9b7695e7209d34541be1fa677407a2b48479",
+          "4e75edc24ecfa2363bf3475a329dcf50097520f6e12af2a8f677de7841f5530f",
+          "19aad0ec9d4ad70ed6e61560af2ca4faae89302ad32aaddcdc6d26c45fb979ba"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night6-c2-02-20260917T022345Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1789612091414,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1789612093000,
+            "terminalLabel": "state=static"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "VERIFIED",
+            "effects": {
+              "UNKNOWN": 3
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": [
+              {
+                "kind": "gate-abort",
+                "detail": "mask-state-unavailable",
+                "afterOnsetMs": 4972
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "effects-not-all-pass (3 UNKNOWN)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "65c45e9cb43a1c675e72869dfb9ddb19d9943af8dcd9dd3eabe840ad13a373d5",
+          "2a0ed7321164ef26020e84ad9771f1275208973c21f5b8ae47d7abf68c018fa9",
+          "bd7b0dd3410464adda21b2bffca8322075c0dcaf885f38ee03187774189b566d",
+          "dd46209a121fdb57287219cd9d27975a9081187a1f4fbe36bd5152bffbfac6c6"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night6-foxytest-20260912T223944Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1789252840419,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1789252842244,
+            "terminalLabel": "state=static"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "VERIFIED",
+            "effects": {
+              "UNKNOWN": 1,
+              "PASS": 1,
+              "UNSTABLE": 1
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": [
+              {
+                "kind": "gate-abort",
+                "detail": "ambiguous-threshold",
+                "afterOnsetMs": 4715
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "effects-not-all-pass (1 UNKNOWN, 1 UNSTABLE)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "be1e1d56bd5440c1549b63b07721c0b7f70a0a3639cf40a4bd673b02fc01fa05",
+          "e01681b1413a4d1bcb88a30cf42de7190134287094aac028fe32991dde808df1",
+          "975ef2396617382c7bb7cd3fc79becc7aaa3e6b987de1353f9d778222b909094",
+          "71d619269d1e3e796b37ff16c201032bfe84236826461bcd8cbc876a0d526f81"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night6-ft-01-20260918T010857Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1789694153673,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1789694155296,
+            "terminalLabel": "state=static"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "VERIFIED",
+            "effects": {
+              "UNKNOWN": 2,
+              "PASS": 1
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": [
+              {
+                "kind": "gate-abort",
+                "detail": "ambiguous-threshold",
+                "afterOnsetMs": 2779
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "effects-not-all-pass (2 UNKNOWN)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "934a3b34e1cbfdace4cbe965eb484911d18de1c1bcab77a17e002b9f4af9a67c",
+          "46811008f811d49748742b1f58262bba2e9926e3aca771bd7897ea8f4c7a5eb8",
+          "61090e659e74b5e4ed1a1d9d78aca3544693ac177f56ce8a236e9528bd07ae7e",
+          "cef401dde34bbe84cb548716d7b07af78925c40f919536e11b87f1710363b311"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night6-n6-aim0-derived-20260920T012539Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1789867737716,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1789867739419,
+            "terminalLabel": "state=static"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "VERIFIED",
+            "effects": {
+              "UNKNOWN": 3
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": [
+              {
+                "kind": "gate-abort",
+                "detail": "ambiguous-threshold",
+                "afterOnsetMs": 3432
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "effects-not-all-pass (3 UNKNOWN)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "ad44f251d45fd42be08291c0a048e9a9bb4a0dd57d6b5ae648119b3600c9bc15",
+          "88632643137dac8abd91f4a8360e496b7104dae8dd622fb68f5beb11a2130ab3",
+          "ff1b06e2522f3fa274297d4caac5cc904c76c1707a409059a4bb3e96d14b111e",
+          "847fe75f1cc74bdad642242c4a6f618337845ba15787d84f9c1dc603c3980f2f"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night6-n6-aim255-periodfix-20260920T014459Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1789868837151,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1789868838772,
+            "terminalLabel": "state=static"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "VERIFIED",
+            "effects": {
+              "UNKNOWN": 2,
+              "PASS": 1
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": [
+              {
+                "kind": "gate-abort",
+                "detail": "mask-state-unavailable",
+                "afterOnsetMs": 4805
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "effects-not-all-pass (2 UNKNOWN)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "8c42953265072dea677e43668976133d1e08224d2328735e74abe00222d43e60",
+          "06df51847b78cbc3f08cf4fbb0a24ab2e47c6a4089c27925e16937a4fa13d6c4",
+          "31271154dd102abc78af817f1e47a3d7003d04cf8bd5f84b0cc1977510ba2e53",
+          "4106c39ffe6324feb295c58a58dce1fcfef1ec60e2bf711a79fb89c42971fbff"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night6-n6-bbfix-20260920T010859Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1789866621191,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1789866622817,
+            "terminalLabel": "state=static"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "VERIFIED",
+            "effects": {
+              "UNKNOWN": 3
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": [
+              {
+                "kind": "gate-abort",
+                "detail": "ambiguous-threshold",
+                "afterOnsetMs": 2666
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "effects-not-all-pass (3 UNKNOWN)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "53f9a49505471f8e519b6523c4b73f5519cd6fa3a49e21d0bfe6cf3b1a7cd071",
+          "2aebb909302a0630b9c1198f5f4b9c5049fa71dcf2dd0f12e0b8b2566364d14d",
+          "321344c41335ce5521211aa87b8158e9c8c6b663b9d33fc96068a83791f204d3",
+          "efb152be6f1233e43f533f67692a4224f4dd02533d377521867b5b1a65436ccd"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night6-n6h-m1-20260920T021433Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1789870723180,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1789870724985,
+            "terminalLabel": "state=static"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "VERIFIED",
+            "effects": {
+              "UNKNOWN": 2,
+              "UNSTABLE": 1
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": [
+              {
+                "kind": "gate-abort",
+                "detail": "ambiguous-threshold",
+                "afterOnsetMs": 2935
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "effects-not-all-pass (2 UNKNOWN, 1 UNSTABLE)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "0fd45e0b06ec24c45539a91f9038943c3fc23d8ece02c60b0e68bb9fa1369dba",
+          "d58ab9a0e4c5789010cb4a017405c7d6eb3e6d77de065226550f936fc86713ab",
+          "0915c0b68c5a47cc938ac74beab6b40108628116eed0427d74c80790cebfdd1a",
+          "9b433ece6e130443bf5cdc0fbdc02d1e11ab1e242e133d93a60100c89394063f"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night6-n6h-m2-20260920T022809Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1789871624715,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1789871626150,
+            "terminalLabel": "unknown=no-signature-matched"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "VERIFIED",
+            "effects": {
+              "PASS": 1,
+              "UNKNOWN": 2
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": [
+              {
+                "kind": "gate-abort",
+                "detail": "ambiguous-threshold",
+                "afterOnsetMs": 4836
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "effects-not-all-pass (2 UNKNOWN)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "c6bfca571a4d29af7abedc96e24053f9c0db9e328b1af8240da16981e6ca00bd",
+          "f883c0c1b37b643f508003ad39793709c5c61c43c7636712514c257c5e558a34",
+          "170ec9257a9ef2f351bf36dd1ab42a733c1ba35296b1d7bfc042213b17161a34",
+          "5e48c467c6b06a348ae1531c983e0200da2feb8947f76ae731beed6f7ddb3517"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night6-tw-03-20260918T014314Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1789696075141,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1789696076780,
+            "terminalLabel": "state=static"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "VERIFIED",
+            "effects": {
+              "UNKNOWN": 2,
+              "PASS": 1
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": [
+              {
+                "kind": "gate-abort",
+                "detail": "ambiguous-threshold",
+                "afterOnsetMs": 2781
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "effects-not-all-pass (2 UNKNOWN)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "5e77a3a809691262469f3b07592866081cc782f5bd700809a9d35df2062dd373",
+          "3b65eb039d70653e771b8894cd97d551ebabbb805733cb82f8520f519e3bc51b",
+          "914cd675cddd2dd1d1f10fe89bf6bffe6b60639f691dfa66c6a6d4fa9a9ebd01",
+          "d54054614d290647035b8dd28abbaa76a2231f580e734ec3c10e7396d8a3a9c9"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night6-twin-01-20260917T014037Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1789609381496,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1789609383192,
+            "terminalLabel": "unknown=no-signature-matched"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "VERIFIED",
+            "effects": {
+              "UNKNOWN": 2,
+              "PASS": 1
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": [
+              {
+                "kind": "gate-abort",
+                "detail": "ambiguous-threshold",
+                "afterOnsetMs": 4903
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "effects-not-all-pass (2 UNKNOWN)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "2d21b94b3aa382f063957b72e5b49057d97087959f8e44059ff8feca325e7639",
+          "13f2fb9fc7ad2437b0ac107c254076b22c69c7987880c3ab4f4aa42b3836a72f",
+          "cc47f34cb7bd7b2ce5fb74ee9b2d8741fff03f880f1e490dfc2e87b0cce3482e",
+          "8021ec35908277ad91d678e743dd6e22afe103254f2c99e6c5b8a5b46e268c7f"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night6-twin-02-20260917T014520Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1789609883350,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1789609885078,
+            "terminalLabel": "state=static"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "UNRESOLVED (non-fatal)",
+            "effects": {
+              "UNKNOWN": 2,
+              "PASS": 1
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": [
+              {
+                "kind": "gate-abort",
+                "detail": "ambiguous-threshold",
+                "afterOnsetMs": 2480
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "arm-unresolved-non-fatal",
+            "effects-not-all-pass (2 UNKNOWN)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "80806620beaf0adeab58003fa6f87207e8f9b3968623029f5ba7e75486530db2",
+          "2bfe456ad792d2439691b1249528f2a1292cdd435823253190922a1ca8af1168",
+          "718a670ff13e6ffa116d002e389183587fbfd4e462c98a8bfeb15cc503130d53",
+          "048c0137768f6a13cf1dfbb205af4b9454eb4b4f14e5c76462dfbabe6d7e529c"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night6-twin-03-20260917T015248Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1789610348940,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1789610350741,
+            "terminalLabel": "state=static"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "UNRESOLVED (non-fatal)",
+            "effects": {
+              "UNKNOWN": 2,
+              "PASS": 1
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": [
+              {
+                "kind": "gate-abort",
+                "detail": "ambiguous-threshold",
+                "afterOnsetMs": 3741
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "arm-unresolved-non-fatal",
+            "effects-not-all-pass (2 UNKNOWN)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "634439f4ccc21e40424c6deef264e968c1e9da410a1ad8d210e89fe438554cf4",
+          "87f88eb47cfd346f2e1b693e7125e6899ffe373efde7e8aa7143365252fb5c11",
+          "41f0a2a8b41904572009ab9ed78dd565daa1d34fa89279fb9c5998ef5df8e80e",
+          "d3fa672e1b94ca554283b87ff0508622b2d70c129353084aa2898bc5168429d0"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night7-anchoredj4-aim2315-sbc-20260913T220914Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1789337796390,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1789337798010,
+            "terminalLabel": "state=static"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "UNRESOLVED (non-fatal)",
+            "effects": {
+              "PASS": 2,
+              "UNKNOWN": 1
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": [
+              {
+                "kind": "gate-abort",
+                "detail": "ambiguous-threshold",
+                "afterOnsetMs": 2842
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "arm-unresolved-non-fatal",
+            "effects-not-all-pass (1 UNKNOWN)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "74be46715fd9233145653efbca24e0c7a26d8308bfe2411477730495fd44d5d2",
+          "038fd4faa2cc0fe82c185540a0486616bd03a2097940e963ec7258d21830644f",
+          "a052182e4ad275e4a1102ca3d653b4cfd1c11157bb280d1c9c9151fab0cbfb4d",
+          "ce639776d8f8df54765c40491f04653f804e5947a7882134056e1dda653a74f1"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night7-corner-bbfoxy-r01-20260927T072310Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "ERROR",
+          "onset": {
+            "at": 1790493848463,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1790493850586,
+            "terminalLabel": "state=static"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "UNRESOLVED (non-fatal)",
+            "effects": {
+              "UNKNOWN": 3
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": [
+              {
+                "kind": "gate-abort",
+                "detail": "mask-state-unavailable",
+                "afterOnsetMs": 6446
+              },
+              {
+                "kind": "campaign-abort",
+                "detail": "device: lifecycle left night state (static)",
+                "afterOnsetMs": 6602
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "arm-unresolved-non-fatal",
+            "effects-not-all-pass (3 UNKNOWN)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "42d989a4fbf39377f1cfda60d9fa9d344f70f3588b93ea5357a2719eec450708",
+          "81d564cb992308055f7842c37da11fa073b6b9865eaf60b56f8cba250c186543",
+          "e7c263a06a771f97c777ed9b58a13ab28bce560a2272b241d789d5109a874df5",
+          "e40b7f890dc88778096f8531433492fb0838feb0eff417ee07d49bf0a1564ed9"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night7-corner2-bbfoxy-r01-20260927T192307Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1790537320308,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1790537322039,
+            "terminalLabel": "state=static"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "UNRESOLVED (non-fatal)",
+            "effects": {
+              "UNKNOWN": 2,
+              "PASS": 1
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": [
+              {
+                "kind": "gate-abort",
+                "detail": "mask-state-unavailable",
+                "afterOnsetMs": 6718
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "arm-unresolved-non-fatal",
+            "effects-not-all-pass (2 UNKNOWN)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "60800abe6ec6ad24758a064398f963f419e8ec43be5ef27030bba95b6de71e56",
+          "97c70914067de106155b11fbcc9aa177d18f3cdfeeceffb462e70c6440b483c0",
+          "f8f6939169f9f5e277c79b436a19bb356ddc68775ef343f50b2e178e1b9102ed",
+          "87e8a4c93b3fd37d7d7d87722238757ac3b6ffe4c0445121ee915ff426fdd1b7"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night7-corner2-bbfoxy-r02-20260927T193022Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "ERROR",
+          "onset": {
+            "at": 1790537581576,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1790537593352,
+            "terminalLabel": "state=static"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "UNRESOLVED (non-fatal)",
+            "effects": {
+              "MISSING": 1,
+              "UNKNOWN": 2
+            },
+            "unconfirmedMissesBeforeOnset": [
+              "opening-1 monitorUp->true"
+            ],
+            "faultsAfterOnset": [
+              {
+                "kind": "gate-abort",
+                "detail": "ambiguous-threshold",
+                "afterOnsetMs": 23840
+              },
+              {
+                "kind": "campaign-abort",
+                "detail": "night terminal was not observed before the 120000ms deadline (last=unknown)",
+                "afterOnsetMs": 146254
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "arm-unresolved-non-fatal",
+            "effects-not-all-pass (1 MISSING, 2 UNKNOWN)",
+            "misses-below-the-systematic-threshold",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "20b9d0f359743be7127754aa682a5ffc671094ae35a2fdcca8e4cfac06fe9797",
+          "cec6c9583a688345ed154160e138b3529d47abac224ed5460d48a8611cb9af00",
+          "13c94397218f2e0246938887e9216ab37041f341b5135bf622caef24be810b6f",
+          "74f15b6d043a1d7348b8d67beedd8a584959e3d0bb49791f349532df91ffbabf"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night7-n7-420-minimal-m1-20260914T014511Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "OBSERVATION",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1789350365851,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1789350367353,
+            "terminalLabel": "state=static"
+          },
+          "firstDivergence": {
+            "kind": "gate-abort",
+            "detail": "mask-state-unavailable",
+            "beforeOnsetMs": 13543
+          },
+          "execution": {
+            "arm": "VERIFIED",
+            "effects": {
+              "UNKNOWN": 1,
+              "PASS": 1
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": []
+          },
+          "deliveredPhase": null,
+          "undecided": [],
+          "because": "gate-abort (mask-state-unavailable) 13543 ms before the last night observation"
+        },
+        "inputs": [
+          "b431535fcd3f5310b668b6f78da165c428e362422259d6acadc2616986740cf7",
+          "efcd746567240a4234047d89958a378edf9ce36b705fa9720e90332ec79126e1",
+          "948c92d67c679d4eae57db1a3a80bd64ff67273dc34da22abf35a293682cd560",
+          "abefdf273f74ffe55174928ee72e7ae0e42502c00a528f2c53ae452a96d1343c"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night7-n7-420-minimal-m3-p1b-20260927T195732Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "ERROR",
+          "onset": {
+            "at": 1790539282185,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1790539283255,
+            "terminalLabel": "unknown=no-signature-matched"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "VERIFIED",
+            "effects": {
+              "UNKNOWN": 1,
+              "PASS": 1
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": [
+              {
+                "kind": "campaign-abort",
+                "detail": "device: lifecycle left night state (title)",
+                "afterOnsetMs": 10827
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "effects-not-all-pass (1 UNKNOWN)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "e91bddec9e8e4d74ee35ac3282487bbdba8582a80b30babda531cea9315c11d2",
+          "a0cb880e3d74681316554b1882262d77fdac59b8d4b854ac06b8bbd264556b3a",
+          "1cc0ca01669d75adc98bb5f9b2d2c16af56140e7e6a1accea88d6a92ab2dc991",
+          "734dbe6287595f24914a82ee5fb4373c2b6e4db93505f851b05bd61deb31df29"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night7-night7-anchoredj9-aim2315-tf-20260913T233252Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1789342611047,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1789342612838,
+            "terminalLabel": "state=static"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "UNRESOLVED (non-fatal)",
+            "effects": {
+              "UNSTABLE": 1,
+              "PASS": 1,
+              "UNKNOWN": 1
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": [
+              {
+                "kind": "gate-abort",
+                "detail": "ambiguous-threshold",
+                "afterOnsetMs": 4307
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "arm-unresolved-non-fatal",
+            "effects-not-all-pass (1 UNSTABLE, 1 UNKNOWN)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "1ce50dbc4075959f1b36382e7b49445fe3babc4dee1b2b387303ba5b07fe88c9",
+          "6fcebf87d2217bb99966041096bc6640f255f917d44fda99a588d3f99200ec12",
+          "fdca056213cc89141a1ea160cd42ebb034f4ec40d50670d77845f1b13f4fdcdb",
+          "43befad065a384d4f387d4b775463bf356705bfba06c8308c6a1f5dcd1fc7493"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night7-night7-k2-cohort-r06-20260914T231510Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1789427977572,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1789427979127,
+            "terminalLabel": "state=static"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "UNRESOLVED (non-fatal)",
+            "effects": {
+              "PASS": 1,
+              "UNKNOWN": 1,
+              "UNSTABLE": 1
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": [
+              {
+                "kind": "gate-abort",
+                "detail": "mask-state-unavailable",
+                "afterOnsetMs": 4680
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "arm-unresolved-non-fatal",
+            "effects-not-all-pass (1 UNKNOWN, 1 UNSTABLE)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "cbec615f0176c8c0c14f083e02dd11ce6cc893ba7303bac25651fca34ba5c96d",
+          "bdb2a63c0ca547103c2f23aa36e9ee44ef6030091f56e2f578a127b01dd792f8",
+          "75f8a50bb60540f3e6e467238395eb567f20d4efe1277be352634d992d45e2ac",
+          "0f7c67edda55b8e8288efe64ca9d9c6c57cfac041f58d96eaa8e9ed0a6941581"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night7-night7-k2-cohort-r08-20260914T233902Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1789429449375,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1789429451032,
+            "terminalLabel": "state=static"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "UNRESOLVED (non-fatal)",
+            "effects": {
+              "UNKNOWN": 3
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": [
+              {
+                "kind": "gate-abort",
+                "detail": "mask-state-unavailable",
+                "afterOnsetMs": 5243
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "arm-unresolved-non-fatal",
+            "effects-not-all-pass (3 UNKNOWN)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "88d06c7c04d741b0999d4d08f7551bbd66b0b0a1c17ddae2377a63e0cb6aaaea",
+          "36a2e269d87704a95285271ce3128fad6a88afb3edbb7a3bb1f40594fb913cf6",
+          "6b1453636e6b80aa01c049ff1ddced6949a941ed4e8211d14dbc768fb6282c26",
+          "58706d66ef8e4cba83ca216d21f825291e56119ecf2e0cf3773cbb0c53c7ad8a"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      },
+      {
+        "subject": {
+          "kind": "GameRun",
+          "id": "night7-night7-k3-full-04-20260915T051327Z"
+        },
+        "instrument": "run-audit@1",
+        "class": "UNKNOWN",
+        "value": {
+          "outcome": "DEATH",
+          "onset": {
+            "at": 1789449345726,
+            "from": "phase.json terminal.lastNightAt",
+            "terminalAt": 1789449347248,
+            "terminalLabel": "state=static"
+          },
+          "firstDivergence": null,
+          "execution": {
+            "arm": "UNRESOLVED (non-fatal)",
+            "effects": {
+              "UNKNOWN": 2,
+              "PASS": 1
+            },
+            "unconfirmedMissesBeforeOnset": [],
+            "faultsAfterOnset": [
+              {
+                "kind": "gate-abort",
+                "detail": "mask-state-unavailable",
+                "afterOnsetMs": 4703
+              }
+            ]
+          },
+          "deliveredPhase": null,
+          "undecided": [
+            "arm-unresolved-non-fatal",
+            "effects-not-all-pass (2 UNKNOWN)",
+            "delivered-phase-unmeasured"
+          ],
+          "because": "no execution fault before the onset, and the execution is not verified enough to judge the strategy"
+        },
+        "inputs": [
+          "59996f95c34b29ef87b99c4ae6c2b02d505d4bf38190e2eeb7d9360f3768dab4",
+          "aaec5a28e70b57dcf00af37b561d824b560f3692d686dc97ef98e62242f63f23",
+          "f45ff065273fadbb881e398fd4bc8a984ddfc95bc03bc6fcf3bab8aaa5466401",
+          "336559c3578b7632ff4ee9adb64a446c25226a329eecf81abf086aacab2123c4"
+        ],
+        "by": "instrument",
+        "status": "standing"
+      }
+    ]
+  },
+  "evidenceId": "run-audit-sha256-b5b5d52f524e8e45"
+}
