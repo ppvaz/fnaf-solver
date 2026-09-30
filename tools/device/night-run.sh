@@ -19,7 +19,17 @@
 # Usage:
 #   tools/device/night-run.sh --label baseline [--bundle DIR] [--night N]
 #                              [--serial ID] [--calibration FILE] [--no-video] [--no-grade]
-#                              [--bt-audio] [--teach-overlay] [--dry-run]
+#                              [--bt-audio] [--teach-overlay] [--live --confirm-live]
+#
+# Dry by default (Pedro, 2026-09-29; ADR 0002): without --live it prints the
+# campaign command it would run and touches no phone -- no adb call, no lease,
+# no serial needed. A live night needs --live and --confirm-live, the same pair
+# the campaign CLI requires, and both are forwarded to it. Until 2026-09-29 no
+# flag meant live and --dry-run was the opt-out; --dry-run is still accepted.
+#
+# The serial is --serial, else FNAF_SERIAL, else the untracked local profile
+# (tools/device/local-profile.mjs, ADR 0002 decision 8). No default: a live run
+# with none of the three refuses before it touches anything.
 set -Eeuo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -31,7 +41,7 @@ LABEL=""
 BUNDLE="artifacts/night5-moved"
 QUALIFICATION="docs/evidence/qualification-hid-mediaprojection-night5-20260911-seam-corrected.json"
 PROFILE="hid-mediaprojection"
-SERIAL="${FNAF_SERIAL:-ZF525F5BH5}"
+SERIAL=""            # --serial; else FNAF_SERIAL, else the local profile (resolved below)
 NIGHT=5
 SAVE_CURSOR=""
 # Night 7 is the Custom Night: the campaign sets the ten dials to 20 through
@@ -48,7 +58,9 @@ TRACE_SECONDS="${FNAF_TRACE_SECONDS:-900}"
 FRAME_TRACE=0
 INPUT_TRACE=1
 FORCE_TRACE=0
-DRY=0
+LIVE=0               # --live: actuate the phone (with --confirm-live)
+CONFIRM_LIVE=0
+DRY_FLAG=0           # --dry-run: the default, kept as an explicit spelling
 TEACH=0               # --teach-overlay: the helper narrates the cycle on its teach panel (a demonstration run)
 EXTRA=()
 
@@ -78,7 +90,9 @@ while [ $# -gt 0 ]; do
     --no-grade) GRADE=0; shift ;;
     --bt-audio) BT_AUDIO=1; shift ;;
     --teach-overlay) TEACH=1; shift ;;
-    --dry-run) DRY=1; shift ;;
+    --live) LIVE=1; shift ;;
+    --confirm-live) CONFIRM_LIVE=1; shift ;;
+    --dry-run) DRY_FLAG=1; shift ;;
     --) shift; EXTRA+=("$@"); break ;;
     *) EXTRA+=("$1"); shift ;;
   esac
@@ -90,6 +104,25 @@ say() { printf '\n=== %s\n' "$1"; }
 [ -n "$LABEL" ] || die "--label is required (it names the artifacts)"
 [ "${SAVE_CURSOR:-}" != "" ] || SAVE_CURSOR="$NIGHT"
 
+# ---- dry unless --live ------------------------------------------------------
+[ "$DRY_FLAG" = 1 ] && [ "$LIVE" = 1 ] && die "--dry-run and --live are mutually exclusive"
+if [ "$LIVE" = 1 ]; then
+  [ "$CONFIRM_LIVE" = 1 ] || die "a live night needs both --live and --confirm-live"
+  DRY=0
+else
+  DRY=1
+fi
+
+# ---- the serial: --serial, FNAF_SERIAL, the local profile, or a refusal ------
+# A dry run proceeds without one: it never addresses the phone.
+if [ -z "$SERIAL" ]; then
+  if serial_out="$(node "$HERE/local-profile.mjs" serial 2>&1)"; then
+    SERIAL="$serial_out"
+  elif [ "$DRY" = 0 ]; then
+    die "live night refused: ${serial_out#local-profile: }"
+  fi
+fi
+
 # ---- the serial lease --------------------------------------------------------
 # Every other live runner (fnaf1-*, fnaf3-run.sh, fnaf4-run.sh) re-executes
 # itself under device-lock-exec.py; until 2026-09-27 this one took no lease at
@@ -99,10 +132,10 @@ say() { printf '\n=== %s\n' "$1"; }
 # waits). A caller that already holds the lease -- the queue's night job inside
 # an overnight window -- passes FNAF_LEASE_HELD=1, the marker fnaf4-run.sh takes
 # as FNAF4_LEASE_HELD. A dry run touches no phone and takes no lease.
+[ "$DRY" = 1 ] || case "$SERIAL" in ''|*[!A-Za-z0-9._:-]*) die "--serial is invalid: $SERIAL" ;; esac
 if [ "$DRY" = 0 ] && [ "${FNAF_LEASE_HELD:-}" != 1 ]; then
-  case "$SERIAL" in ''|*[!A-Za-z0-9._:-]*) die "--serial is invalid: $SERIAL" ;; esac
   exec python3 "$HERE/device-lock-exec.py" "$SERIAL" -- \
-    env FNAF_LEASE_HELD=1 bash "$HERE/night-run.sh" "${ORIGINAL_ARGS[@]}"
+    env FNAF_LEASE_HELD=1 FNAF_SERIAL="$SERIAL" bash "$HERE/night-run.sh" "${ORIGINAL_ARGS[@]}"
 fi
 
 # ---- fail-fast: inputs and tools exist before the phone is touched ----------
@@ -115,8 +148,11 @@ for path in "$BUNDLE/manifest.json" "$QUALIFICATION" "$TITLE_MODEL_PATH" \
             "$TRACE_TOOL" apps/device/src/cli.js tools/evidence.js; do
   [ -e "$path" ] || die "missing required input: $path"
 done
-command -v adb >/dev/null || die "adb is not on PATH"
-adb -s "$SERIAL" get-state >/dev/null 2>&1 || die "device $SERIAL is not reachable"
+# A dry run stops short of the phone: it asks adb nothing, not even get-state.
+if [ "$DRY" = 0 ]; then
+  command -v adb >/dev/null || die "adb is not on PATH"
+  adb -s "$SERIAL" get-state >/dev/null 2>&1 || die "device $SERIAL is not reachable"
+fi
 
 # Mistake-register 8: ask the phone what it offers BEFORE paying for an
 # instrument. This handset advertises `android.inputmethod` and no
@@ -129,7 +165,7 @@ adb -s "$SERIAL" get-state >/dev/null 2>&1 || die "device $SERIAL is not reachab
 # capabilities.mjs is the one place that knows, so this asks it rather than
 # re-deriving the answer here. `--force-trace` keeps the trace anyway (a
 # different handset, or a deliberate SurfaceFlinger-only capture).
-if [ "$TRACE" = 1 ] && [ "$FORCE_TRACE" = 0 ]; then
+if [ "$DRY" = 0 ] && [ "$TRACE" = 1 ] && [ "$FORCE_TRACE" = 0 ]; then
   if FNAF_SERIAL="$SERIAL" node -e '
       import("./tools/device/capabilities.mjs").then(m => {
         const d = m.probe(process.env.FNAF_SERIAL);
@@ -176,7 +212,7 @@ DEVICE_VIDEO="/sdcard/${RUNID}.mp4"
 HOST_VIDEO="captures/${RUNID}.mp4"
 
 printf 'run      %s\nbundle   %s\nserial   %s\nnight    %s (save cursor %s)\narm      %s\nout      %s\n' \
-  "$RUNID" "$BUNDLE" "$SERIAL" "$NIGHT" "$SAVE_CURSOR" "$ARM_MODE" "$OUTDIR"
+  "$RUNID" "$BUNDLE" "${SERIAL:-UNKNOWN (a dry run needs none)}" "$NIGHT" "$SAVE_CURSOR" "$ARM_MODE" "$OUTDIR"
 
 REC_PID=""
 FRAME_TRACE_PID=""
@@ -561,7 +597,7 @@ if [ "$NIGHT" = 7 ] && [ -z "$CALIBRATION" ]; then
 fi
 [ -z "$CALIBRATION" ] || [ -f "$CALIBRATION" ] || die "calibration file not found: $CALIBRATION"
 CAMPAIGN=(node apps/device/src/cli.js campaign
-  --profile "$PROFILE" --serial "$SERIAL" --nights "$NIGHT" --max-attempts 1
+  --profile "$PROFILE" --serial "${SERIAL:-UNKNOWN}" --nights "$NIGHT" --max-attempts 1
   --bundle "$BUNDLE" --qualification "$QUALIFICATION" --json)
 # The save cursor is a STORY observation (campaign.js: storySaveCursor must
 # equal the first story night of the chain); the Custom Night has none.
@@ -681,7 +717,7 @@ fi
 [ -n "${DIALS:-}" ] && CAMPAIGN+=(--night7-dials "$DIALS")
 [ "$TEACH" = 1 ] && CAMPAIGN+=(--teach-overlay)
 if [ "$DRY" = 1 ]; then
-  printf 'DRY RUN, the phone is not actuated:\n  %s\n' "${CAMPAIGN[*]} ${EXTRA[*]:-}"
+  printf 'DRY RUN, the phone is not actuated (add --live --confirm-live for a live night):\n  %s\n' "${CAMPAIGN[*]} ${EXTRA[*]:-}"
   # Nothing was started on the phone, so nothing is stopped or reset either.
   # The EXIT trap force-stops the game, relaunches it and screencaps its title;
   # until 2026-09-27 a dry run still ran it and put FNaF 2 in front of an app

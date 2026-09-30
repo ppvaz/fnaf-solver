@@ -56,7 +56,7 @@ kept below.
 | FNaF 3 | `com.scottgames.fnaf3` | 2.0.4+18 | PAMU | 770.0 | 296 | 31 |
 | FNaF 4 | `com.scottgames.fnaf4` | 2.0.4+11 | PAMU | 770.0 | 296 | 23 |
 
-All four are installed on the campaign handset (moto g56 5G, `ZF525F5BH5`).
+All four are installed on the campaign handset (moto g56 5G, `<serial>`).
 The differing `versionName` (2.0.7 vs 2.0.4) does **not** imply a different
 Clickteam runtime: the CCN headers are identical at runtime 770.0, product
 build 296. `menu.sh`'s existing warning stands and widens — all four report

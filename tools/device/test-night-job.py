@@ -383,6 +383,10 @@ def main() -> int:
               and Path(binding.get("bundle", {}).get("dir", "/none")).is_relative_to(won.jobs_dir), binding)
         calls = won.runner_calls()
         argv = calls[0]["argv"] if calls else []
+        # night-run.sh is dry unless told otherwise (ADR 0002, 2026-09-29): a
+        # night job that left the pair out would "play" a dry run and nothing else.
+        check("success: night-run.sh was asked for a live night (--live --confirm-live)",
+              "--live" in argv and "--confirm-live" in argv, argv)
         check("success: night-run.sh got the bundle, the night and --no-grade",
               bool(argv) and argv[0].endswith("night-run.sh") and argv[argv.index("--night") + 1] == "7"
               and "--no-grade" in argv and calls[0]["bundleManifest"] is True, calls)

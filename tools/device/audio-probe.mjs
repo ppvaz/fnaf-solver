@@ -21,6 +21,7 @@
  */
 import { appendFileSync } from 'node:fs';
 import { AdbCueHelperPort } from '../../apps/device/src/physical-ports.js';
+import { resolveSerial } from './local-profile.mjs';
 
 function fail(message) { console.error(`audio-probe: ${message}`); process.exit(2); }
 
@@ -63,7 +64,9 @@ async function main(argv) {
   try { options = parseArgs(argv); } catch (error) { fail(error.message); }
   if (process.env.FNAF_LEASE_HELD !== '1' && process.env.FNAF1_LEASE_HELD !== '1' && process.env.CUE_HELPER_LEASE_OWNER_PID === undefined)
     fail('run under the serial lease (tools/device/device-lock-exec.py SERIAL -- ...)');
-  const port = new AdbCueHelperPort({ serial: process.env.FNAF_SERIAL ?? process.env.ANDROID_SERIAL ?? 'ZF525F5BH5' });
+  let serial;
+  try { ({ serial } = resolveSerial({ names: ['FNAF_SERIAL', 'ANDROID_SERIAL'] })); } catch (error) { fail(error.message); }
+  const port = new AdbCueHelperPort({ serial });
   const fields = await port.audioProbe({ seconds: options.seconds, scope: options.scope });
   const row = { at: new Date().toISOString(), ...probeRow(fields, options) };
   if (options.out) appendFileSync(options.out, `${JSON.stringify(row)}\n`);

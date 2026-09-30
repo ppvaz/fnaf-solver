@@ -13,7 +13,11 @@
 # its DUMP-protected dumpsys line.
 set -euo pipefail
 
-SERIAL="${FNAF_SERIAL:-ZF525F5BH5}"
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# FNAF_SERIAL, then ANDROID_SERIAL (fnaf1-night-run.mjs passes it), then the
+# untracked local profile; no default (ADR 0002 decision 8).
+SERIAL="${FNAF_SERIAL:-${ANDROID_SERIAL:-}}"
+[ -n "$SERIAL" ] || SERIAL="$(node "$HERE/local-profile.mjs" serial)" || exit 2
 PACKAGE="com.ppvaz.fnaf1teach"
 SERVICE="$PACKAGE/.Fnaf1TeachOverlayService"
 RECEIVER="$PACKAGE/.Fnaf1TeachCommandReceiver"

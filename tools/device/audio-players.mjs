@@ -16,6 +16,7 @@
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
+import { SerialUnset, resolveSerial } from './local-profile.mjs';
 
 export const COMPANION = 'com.ppvaz.fnafcompanion';
 const FIRST_APP_UID = 10000;          // Android: uids below are the system's own
@@ -70,7 +71,7 @@ export function audioPreflight({ serial, target, allow = [], adb = (args) => exe
 }
 
 function main(argv) {
-  let serial = process.env.FNAF_SERIAL ?? 'ZF525F5BH5'; let target = null; const allow = [];
+  let serial = null; let target = null; const allow = [];
   for (let i = 0; i < argv.length; i += 1) {
     if (argv[i] === '--serial') serial = argv[++i];
     else if (argv[i] === '--target') target = argv[++i];
@@ -78,6 +79,13 @@ function main(argv) {
     else { console.error(`audio-players: unknown argument ${argv[i]}`); process.exit(2); }
   }
   if (!target) { console.error('audio-players: --target PACKAGE is required'); process.exit(2); }
+  // --serial, else FNAF_SERIAL, else the untracked local profile (ADR 0002 decision 8).
+  if (serial === null) {
+    try { ({ serial } = resolveSerial()); } catch (error) {
+      if (!(error instanceof SerialUnset)) throw error;
+      console.error(`audio-players: ${error.message}`); process.exit(2);
+    }
+  }
   const v = audioPreflight({ serial, target, allow });
   console.log(JSON.stringify(v));
   process.exit(v.status === 'READY' ? 0 : v.status === 'REFUSED' ? 3 : 2);

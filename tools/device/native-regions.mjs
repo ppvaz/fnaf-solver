@@ -22,6 +22,7 @@ import { writeFileSync, mkdirSync, readFileSync, appendFileSync } from 'node:fs'
 import { join } from 'node:path';
 import { deflateSync } from 'node:zlib';
 import { AdbCueHelperPort } from '../../apps/device/src/physical-ports.js';
+import { resolveSerial } from './local-profile.mjs';
 
 function fail(message) { console.error(`native-regions: ${message}`); process.exit(2); }
 
@@ -92,7 +93,9 @@ async function main(argv) {
     fail('run under the serial lease (tools/device/lease.sh or the night wrapper)');
   }
   const { set } = loadRegionSet(opt.model, opt.set);
-  const port = new AdbCueHelperPort({ serial: process.env.FNAF_SERIAL ?? 'ZF525F5BH5' });
+  let serial;
+  try { ({ serial } = resolveSerial()); } catch (error) { fail(error.message); }
+  const port = new AdbCueHelperPort({ serial });
   const channel = port.openRegions({ timeoutMs: 1500 });
   try {
     await registerSet(channel, set);

@@ -40,6 +40,7 @@ import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSyn
 import { homedir, tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { mainCheckout, resolveSerial } from './local-profile.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const ROOT = resolve(HERE, '../..');
@@ -253,27 +254,11 @@ export function replayArguments(winner, { label = 'replay', home = homedir() } =
  * would take lives under its tree's `captures`, i.e. this checkout's, by link).
  */
 /**
- * The main checkout, seen from it or from any of its worktrees: a worktree's
- * `.git` file names its git dir, whose `commondir` leads to the main `.git`.
+ * The main checkout, seen from it or from any of its worktrees (it lives in
+ * local-profile.mjs since 2026-09-29, beside the profile it also locates).
  * Mirrors cue_helper_device_lock.py's main_checkout().
  */
-export function mainCheckout(root = ROOT) {
-  try {
-    const marker = join(root, '.git');
-    if (existsSync(marker) && lstatSync(marker).isFile()) {
-      const text = readFileSync(marker, 'utf8').trim();
-      if (text.startsWith('gitdir:')) {
-        const gitdir = resolve(root, text.slice('gitdir:'.length).trim());
-        const common = join(gitdir, 'commondir');
-        if (existsSync(common)) {
-          const commonDir = resolve(gitdir, readFileSync(common, 'utf8').trim());
-          if (commonDir.endsWith(`${'/'}.git`)) return dirname(commonDir);
-        }
-      }
-    }
-  } catch { /* fall through to this checkout */ }
-  return root;
-}
+export { mainCheckout };
 
 /**
  * The serial lease's directory: one for the host, shared by every checkout and
@@ -345,7 +330,11 @@ async function main(argv) {
   const o = parseArgs(argv);
   const winnerPath = relative(ROOT, resolve(o.winner));
   const winner = loadWinner(winnerPath);
-  const serial = process.env.FNAF_SERIAL ?? winner.target?.device;
+  // FNAF_SERIAL, else the untracked local profile (ADR 0002 decision 8); the
+  // winner's `target.device` records the phone it won on and is no default.
+  // A dry replay names no phone and prints UNKNOWN in the lease's place.
+  let serial = 'UNKNOWN';
+  try { ({ serial } = resolveSerial()); } catch (error) { if (o.live) fail(error.message); }
   const detectors = detectorsCheck(winner);
   const custody = winnerCustody(winnerPath);
   const drift = routeDrift(winner);

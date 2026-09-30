@@ -3,7 +3,10 @@
 The device app is the campaign executor and the only composition root that
 reaches a phone: `cli.js campaign` chooses the profile, composes the ports in
 `modern-campaign-ports.js`, and plays a validated bundle only with `--live
---confirm-live`. `tools/device/night-run.sh` drives it for every night.
+--confirm-live`. `tools/device/night-run.sh` drives it for every night, and
+forwards that pair only when it is itself given `--live --confirm-live`: it is
+dry by default (ADR 0002). The serial comes from `--serial`, `FNAF_SERIAL` or the
+untracked local profile (`tools/device/local-profile.mjs`).
 
 Public surface: the CLI and the Cue Helper MCP (`mcp.js`). Dependencies: core
 and adapters. Commands: `device:campaign`, `device:preflight`,

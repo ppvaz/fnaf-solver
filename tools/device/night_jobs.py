@@ -10,6 +10,10 @@ fixed by the winner's schema, and every runner is an existing, gated one:
     fnaf1-route-winner-v1  FNaF 1  tools/device/fnaf1-winner.mjs (the pinned tree)
     fnaf4-route-winner-v1  FNaF 4  tools/device/fnaf4-run.sh --mode loop
 
+Every runner is dry unless told otherwise (ADR 0002, 2026-09-29), so each
+command below passes `--live --confirm-live` itself: a night job is a live
+night by definition, and a runner that went dry would play nothing.
+
 The queue (cue-helper-queue.py) validates a job here when it is enqueued, and
 night-job.py runs it. The budget below is the sum of bounds each step enforces
 with its own timeout, plus the night's own length from the binding (the
@@ -294,8 +298,9 @@ def runner_command(game: str, binding: dict, winner: dict, night: int, label: st
                    audio: bool) -> tuple[list[str], dict]:
     """The one runner a game's night uses, and the lease-held marker it takes."""
     if game == "fnaf2":
-        argv = [str(HERE / "night-run.sh"), "--label", label, "--bundle", binding["bundle"]["dir"],
-                "--night", str(night), "--serial", serial, "--profile", binding["profile"], "--no-grade"]
+        argv = [str(HERE / "night-run.sh"), "--live", "--confirm-live", "--label", label,
+                "--bundle", binding["bundle"]["dir"], "--night", str(night), "--serial", serial,
+                "--profile", binding["profile"], "--no-grade"]
         if audio:
             argv.append("--bt-audio")
         return argv, {"FNAF_LEASE_HELD": "1", "FNAF_SERIAL": serial}

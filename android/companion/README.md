@@ -166,7 +166,7 @@ step, the game hour, and `seen`, the helper's own reading of the bottom
 controls. `seen` is the only observation on the panel; everything else is the
 schedule.
 
-`night-run.sh --teach-overlay` drives it. At the attempt's menu the host sends
+`night-run.sh --live --confirm-live --teach-overlay` drives it. At the attempt's menu the host sends
 the compiled artifact's semantic actions (`apps/device/src/cycle-lesson.js`),
 which `CycleLesson.java` re-expands with the executor's own repeat rule and
 refuses unless the rows hash to the id the host sent. After the anchored

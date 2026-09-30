@@ -12,9 +12,16 @@ normal end, on an abort (SIGINT to the process group, twice), on a job failure
 the hard deadline (a child that ignores SIGINT and SIGTERM). The LOCKED,
 IN_USE, POWER, LEASE_BUSY and OUTSIDE_WINDOW refusals change nothing. A killed
 window's settings are recovered. The lease is free after every window. The
-runner never writes lock-screen, airplane, Do Not Disturb or any setting
-outside its list, never taps, and never issues a command the fake does not
-know.
+runner never writes lock-screen, airplane or any setting outside its list,
+never writes Do Not Disturb except through `cmd notification set_dnd`, never
+taps, and never issues a command the fake does not know.
+
+Do Not Disturb (Pedro, 2026-09-29, ADR 0002 decision 2): every window that
+runs a job first suppresses heads-up notifications and sets DND to priority,
+reads both back, and restores both at the end, however it ends. A DND that
+cannot be set (the command fails, or zen_mode does not move) refuses the window
+(DND, exit 75) before any job, with every setting it touched put back. A DND
+the window finds already on is left on and never turned off.
 """
 
 from __future__ import annotations
@@ -111,9 +118,13 @@ PRIOR = {
     "global/stay_on_while_plugged_in": "0", "system/screen_off_timeout": "30000",
     "system/screen_brightness": "120", "system/screen_brightness_mode": "1",
     "global/airplane_mode_on": "0", "global/zen_mode": "0",
+    "global/heads_up_notifications_enabled": "1",
 }
 RESTORED = {"global/stay_on_while_plugged_in", "system/screen_off_timeout",
-            "system/screen_brightness", "system/screen_brightness_mode"}
+            "system/screen_brightness", "system/screen_brightness_mode",
+            "global/heads_up_notifications_enabled"}
+ZEN = "global/zen_mode"
+HEADS_UP = "global/heads_up_notifications_enabled"
 
 failures: list[str] = []
 passed = 0
@@ -207,6 +218,10 @@ class Case:
         return [row["args"] for row in self.calls()
                 if row["args"][1:3] in (["settings", "put"], ["settings", "delete"])]
 
+    def dnd_calls(self) -> list[str]:
+        """The words the runner passed to `cmd notification set_dnd`, in order."""
+        return [row["args"][4] for row in self.calls() if row["args"][1:4] == ["cmd", "notification", "set_dnd"]]
+
     def record(self) -> dict:
         files = sorted(self.window_dir.glob("window-*/window.json"))
         return json.loads(files[-1].read_text(encoding="utf-8")) if files else {}
@@ -246,6 +261,16 @@ def restored_to_prior(case: Case, name: str, record: dict) -> None:
     check(f"{name}: stay-awake was set to 7 and read back",
           record.get("settings", {}).get("applied", {}).get("global/stay_on_while_plugged_in")
           == {"value": "7", "readBack": "7"}, record.get("settings", {}).get("applied"))
+    applied = record.get("settings", {}).get("applied", {})
+    check(f"{name}: heads-up notifications were suppressed and read back",
+          applied.get(HEADS_UP) == {"value": "0", "readBack": "0"}, applied)
+    check(f"{name}: Do Not Disturb was set to priority through set_dnd and read back",
+          applied.get(ZEN, {}).get("readBack") == "1" and applied.get(ZEN, {}).get("exit") == 0
+          and case.dnd_calls()[:1] == ["priority"], (applied.get(ZEN), case.dnd_calls()))
+    rows = {row["setting"]: row for row in restore.get("settings", [])}
+    check(f"{name}: Do Not Disturb was turned off again through set_dnd and read back",
+          case.dnd_calls()[-1:] == ["off"] and rows.get(ZEN, {}).get("action") == "restored"
+          and rows.get(ZEN, {}).get("after") == "0", (case.dnd_calls(), rows.get(ZEN)))
     check(f"{name}: no pending-restore record is left",
           not case.pending())
 
@@ -297,9 +322,18 @@ def pure_checks() -> None:
                     "NotificationShade": "in-use", "com.android.systemui/.media.Permission": "in-use"}, kinds)
     try:
         module.put_setting(SERIAL, "global/zen_mode", "0")
-        check("pure: the window refuses to write Do Not Disturb", False)
+        check("pure: the window never writes Do Not Disturb with a raw settings put", False)
     except ValueError:
-        check("pure: the window refuses to write Do Not Disturb", True)
+        check("pure: the window never writes Do Not Disturb with a raw settings put", True)
+    try:
+        module.set_dnd(SERIAL, "7")
+        check("pure: set_dnd names only a zen_mode the command can set", False)
+    except ValueError:
+        check("pure: set_dnd names only a zen_mode the command can set", True)
+    check("pure: DND is restored only when the window found it off",
+          module.writes_on_restore(ZEN, "0") and not module.writes_on_restore(ZEN, "1")
+          and not module.writes_on_restore("global/airplane_mode_on", "0")
+          and module.writes_on_restore(HEADS_UP, "null"))
     try:
         module.put_setting(SERIAL, STAY, "7; reboot")
         check("pure: a setting value is a number or null, never shell text", False)
@@ -448,11 +482,19 @@ def main() -> int:
         check("complete: the job's brightness drift was restored and read back",
               rows.get("system/screen_brightness", {}).get("before") == "200"
               and rows.get("system/screen_brightness", {}).get("action") == "restored", rows)
-        check("complete: stay-awake went 0 -> 7 -> 0",
+        check("complete: stay-awake went 0 -> 7 -> 0 and heads-up 1 -> 0 -> 1",
               complete.writes() == [["shell", "settings", "put", "global", "stay_on_while_plugged_in", "7"],
+                                    ["shell", "settings", "put", "global", "heads_up_notifications_enabled", "0"],
                                     ["shell", "settings", "put", "global", "stay_on_while_plugged_in", "0"],
-                                    ["shell", "settings", "put", "system", "screen_brightness", "120"]],
+                                    ["shell", "settings", "put", "system", "screen_brightness", "120"],
+                                    ["shell", "settings", "put", "global", "heads_up_notifications_enabled", "1"]],
               complete.writes())
+        check("complete: Do Not Disturb went off -> priority -> off, through set_dnd only",
+              complete.dnd_calls() == ["priority", "off"], complete.dnd_calls())
+        job_calls = [row["at"] for row in complete.calls(None) if row["actor"] == "job"]
+        dnd_on = [row["at"] for row in complete.calls() if row["args"][1:5] == ["cmd", "notification", "set_dnd", "priority"]]
+        check("complete: the jobs ran after DND was on",
+              bool(job_calls) and bool(dnd_on) and min(job_calls) > dnd_on[0], (dnd_on, job_calls[:2]))
         check("complete: capture the window started is stopped", complete.phone()["projection"] is False)
         check("complete: the launcher is in front again",
               complete.phone()["focus"].startswith("com.fake.launcher/"), complete.phone()["focus"])
@@ -464,6 +506,45 @@ def main() -> int:
               [job.get("kind") for job in record.get("jobs", [])] == ["done", "done", "empty"], record.get("jobs"))
         check("complete: lease acquired and released",
               record.get("lease") == {"acquired": True, "released": True}, record.get("lease"))
+
+        # --- DND: the window refuses when Do Not Disturb cannot be set, starts
+        # no job, and puts back everything it had already changed.
+        for fault, why in (("error", "set_dnd exit 255"), ("ignored", "set_dnd exit 0, zen_mode 0")):
+            refused = case(f"dnd-{fault}", dndFault=fault)
+            refused.jobs(1)
+            result = refused.run(constants={"DND_READBACK_S": 0.5, "DND_READBACK_POLL_S": 0.1})
+            record = refused.record()
+            check(f"dnd-{fault}: exit 75 DND before any job",
+                  result.returncode == 75 and record.get("outcome") == "DND" and why in (record.get("reason") or ""),
+                  (result.returncode, record.get("outcome"), record.get("reason"), result.stdout[-1500:]))
+            check(f"dnd-{fault}: no queue child ran", not Path(f"{refused.steps}.argv").exists())
+            check(f"dnd-{fault}: the job is still pending",
+                  [job.get("state") for job in refused.queue_jobs()] == ["PENDING"], refused.queue_jobs())
+            check(f"dnd-{fault}: every setting is back at its recorded value",
+                  refused.phone()["settings"] == PRIOR, refused.phone()["settings"])
+            check(f"dnd-{fault}: the restore was verified and nothing is pending",
+                  (record.get("settings") or {}).get("restore", {}).get("verified") is True and not refused.pending(),
+                  (record.get("settings") or {}).get("restore"))
+            check(f"dnd-{fault}: the lease was released",
+                  record.get("lease") == {"acquired": True, "released": True}, record.get("lease"))
+
+        # --- DND already on (the owner's schedule): left on, never turned off
+        quiet = case("dnd-already-on", settings={**PRIOR, ZEN: "1"})
+        quiet.jobs(1, ["done"])
+        result = quiet.run()
+        record = quiet.record()
+        rows = {row["setting"]: row for row in record.get("settings", {}).get("restore", {}).get("settings", [])}
+        check("dnd-already-on: the window completes", result.returncode == 0
+              and record.get("outcome") == "COMPLETE", (result.returncode, result.stdout[-1500:]))
+        check("dnd-already-on: set_dnd was never called", quiet.dnd_calls() == [], quiet.dnd_calls())
+        check("dnd-already-on: DND is still on and was only witnessed",
+              quiet.phone()["settings"].get(ZEN) == "1" and rows.get(ZEN, {}).get("action") == "unchanged"
+              and (record.get("settings", {}).get("applied", {}).get(ZEN) or {}).get("action") == "already-on",
+              (quiet.phone()["settings"].get(ZEN), rows.get(ZEN)))
+        check("dnd-already-on: heads-up was still suppressed and restored",
+              quiet.phone()["settings"].get(HEADS_UP) == "1"
+              and (record.get("settings", {}).get("applied", {}).get(HEADS_UP) or {}).get("readBack") == "0",
+              record.get("settings", {}).get("applied"))
 
         # --- IN_USE during the window: the owner picked the phone up
         mid = case("in-use-mid")
@@ -587,10 +668,19 @@ def main() -> int:
         check("restore-barrage: the window ends ABORTED", process.returncode == 130
               and record.get("outcome") == "ABORTED", (process.returncode, output[-1500:]))
         check(f"restore-barrage: none of the restore's calls died under {sent} SIGINTs", killed == [], killed)
-        check("restore-barrage: every cleanup read ran with SIGINT blocked",
+        # The writes at window open (stay-awake 7, heads-up 0, set_dnd priority)
+        # precede the barrage; every other write is the cleanup's.
+        opened = {("stay_on_while_plugged_in", "7"), ("heads_up_notifications_enabled", "0")}
+
+        def cleanup_write(args: list[str]) -> bool:
+            if args[1:3] == ["settings", "put"]:
+                return (args[4], args[5]) not in opened
+            return args[1:4] == ["cmd", "notification", "set_dnd"] and args[4] == "off"
+
+        check("restore-barrage: every cleanup read and write ran with SIGINT blocked",
               bool(barrage.cleanup_reads()) and all(
-                  row.get("sigintBlocked") for row in barrage.calls()
-                  if row["args"][1:3] == ["settings", "put"] and row["args"][-1] != "7"), barrage.calls()[-8:])
+                  row.get("sigintBlocked") for row in barrage.calls() if cleanup_write(row["args"])),
+              barrage.calls()[-8:])
         check("restore-barrage: nothing in the cleanup raised",
               not [e for e in record.get("events", []) if e["type"] == "cleanup.error"], record.get("events"))
         restored_to_prior(barrage, "restore-barrage", record)
@@ -628,6 +718,9 @@ def main() -> int:
                 if row["args"][1:3] in (["settings", "put"], ["settings", "delete"]):
                     check(f"{made.dir.name}: writes only restored settings ({text})",
                           f"{row['args'][3]}/{row['args'][4]}" in RESTORED, text)
+                if row["args"][1:3] == ["cmd", "notification"]:
+                    check(f"{made.dir.name}: Do Not Disturb only to priority or back off ({text})",
+                          row["args"][3:4] == ["set_dnd"] and row["args"][4:] in (["priority"], ["off"]), text)
 
     if failures:
         print("overnight window FAILED:", file=sys.stderr)
@@ -645,7 +738,8 @@ def main() -> int:
                 "tools/device/test-overnight-window.py", "tools/device/testdata/fake_phone.py")},
             "coverage": ["normal-end", "double-interrupt-during-restore", "signal-barrage",
                          "killed-adb-retries", "job-failure", "hard-deadline", "refusals",
-                         "killed-window-recovery", "lease-release", "closed-adb-vocabulary"],
+                         "killed-window-recovery", "lease-release", "closed-adb-vocabulary",
+                         "dnd-set-restore-refuse"],
             "open": ["Real-phone settings restoration and title recovery are unmeasured."],
             "reproducer": "python3 tools/device/test-overnight-window.py --record " + str(destination),
         }
@@ -655,7 +749,8 @@ def main() -> int:
         destination.write_text(json.dumps(body, indent=2) + "\n", encoding="utf-8")
         print(body["evidenceId"] + ": FIXTURE PASS; wrote " + str(destination))
     print(f"overnight window: {passed} checks -- settings recorded, restored and read back on a normal end, "
-          "an abort, a job failure and the hard deadline; LOCKED, IN_USE, POWER, LEASE_BUSY and "
+          "an abort, a job failure and the hard deadline; Do Not Disturb and heads-up suppression set, "
+          "restored, and refused on failure (DND); LOCKED, IN_USE, POWER, LEASE_BUSY and "
           "OUTSIDE_WINDOW change nothing; a killed window is recovered; the lease is always released")
     return 0
 

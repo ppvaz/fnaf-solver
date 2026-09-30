@@ -11,3 +11,5 @@ __pycache__/
 /android/fnaf1-teach/build/
 /android/fnaf1-teach/debug.keystore
 /.agents/
+# The handset serial, one per host (tools/device/local-profile.mjs; ADR 0002 decision 8).
+/tools/device/local-profile.json

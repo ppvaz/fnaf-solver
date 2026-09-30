@@ -10,7 +10,7 @@
  * design coordinates: those predict where a row should be, the native frames
  * say where it is.
  *
- *   tools/device/fnaf1-menu-probe.sh --dry-run
+ *   tools/device/fnaf1-menu-probe.sh [--dry-run]          (dry by default: no --live, no phone)
  *   tools/device/fnaf1-menu-probe.sh --live --confirm-live --stage title [--frames 12] [--label NAME]
  *   tools/device/fnaf1-menu-probe.sh --live --confirm-live --stage custom-night [--frames 12] [--label NAME]
  *   tools/device/fnaf1-menu-probe.sh --live --confirm-live --stage custom-night --sweep [--label NAME]
@@ -57,13 +57,13 @@ import { performance } from 'node:perf_hooks';
 import { AdbDeviceBridge } from '../../apps/device/src/adb-bridge.js';
 import { AdbHidProcess } from '../../apps/device/src/physical-ports.js';
 import { HidWireTransport } from '../../packages/adapters/src/transports/hid.js';
+import { resolveSerial } from './local-profile.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../..');
 const PACKAGE = 'com.scottgames.fivenightsatfreddys';
 const BUILD = '2.0.7+40';
 const LAUNCHER = '.Main';
-const DEFAULT_SERIAL = 'ZF525F5BH5';
 const TITLE_MODEL_PATH = join(HERE, 'models/title-fnaf1-moto-g56-v207.json');
 const TITLE_OBSERVER = join(HERE, 'fnaf1-title-observe.sh');
 const ROUTE_PATH = join(HERE, 'models/fnaf1-community-loop-moto-g56-v207.json');
@@ -131,8 +131,10 @@ export function parseArgs(argv) {
   if (options.label !== null && !/^[a-z0-9][a-z0-9-]{0,47}$/.test(options.label))
     fail('--label must be 1..48 lowercase letters, digits, or hyphens');
   if (options.dryRun && options.live) fail('--dry-run and --live are mutually exclusive');
+  // Dry unless --live (ADR 0002, 2026-09-29): no flag prints the bindings and touches no phone.
+  if (!options.live) options.dryRun = true;
   if (!options.dryRun) {
-    if (!options.live || !options.confirmLive) fail('live observation needs both --live and --confirm-live');
+    if (!options.confirmLive) fail('live observation needs both --live and --confirm-live');
     if (!STAGES.includes(options.stage)) fail(`--stage must be one of ${STAGES.join(', ')}`);
     if ((options.sweep || options.set) && options.stage !== 'custom-night') fail('--sweep and --set belong to --stage custom-night');
     if (options.sweep && options.set) fail('--sweep and --set are separate probes');
@@ -509,8 +511,8 @@ async function main(argv) {
     return;
   }
   if (process.env.FNAF1_LEASE_HELD !== '1') fail('must run through fnaf1-menu-probe.sh so the serial lease is held');
-  const serial = process.env.FNAF_SERIAL ?? DEFAULT_SERIAL;
-  if (!/^[A-Za-z0-9._:-]+$/.test(serial)) fail('FNAF_SERIAL is not a valid serial token');
+  let serial;
+  try { ({ serial } = resolveSerial()); } catch (error) { fail(error.message); }
   const mode = options.sweep ? '-sweep' : options.set ? '-set' : '';
   const id = `fnaf1-menu-${options.stage}${mode}-${options.label ?? 'probe'}-${stamp()}`;
   const outdir = join(ROOT, 'artifacts', 'runs', id);

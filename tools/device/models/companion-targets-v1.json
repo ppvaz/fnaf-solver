@@ -1,7 +1,7 @@
 {
   "schema": "companion-targets-v1",
   "version": 1,
-  "device": "Moto g56 5G (ZF525F5BH5), 2400x1080 landscape",
+  "device": "Moto g56 5G (the campaign handset; its serial is in the untracked local profile), 2400x1080 landscape",
   "note": "The games the Companion may be pointed at. A target is always named explicitly (cue-helper-setup.py --target, the MCP cue.setup target, the Companion's TARGET verb or its target picker); nothing launches a default game. `titleModel` is the title-model-v1 whose gates identify that game's title/menu screen from a native SNAP frame (tools/device/game-screen.py); null means no measured model, so the game's screen reads UNKNOWN. `legacyReaders` names the on-device reader set a target enables: only retail FNaF 2 has one (Fnaf2Legacy.java). The rebuild packages are the clean-room recompiles; none has a measured title model yet. android/companion Targets.java mirrors this list and TargetsTest.java holds the two to each other.",
   "targets": [
     {

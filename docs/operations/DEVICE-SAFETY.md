@@ -46,6 +46,33 @@ night and were retired on 2026-09-25 (`6d78c7e`, `903ffab`;
   (`cue.queue.enqueue`, `list`, `run`), a closed vocabulary with no raw
   coordinates, HID input or shell.
 
+**Every night runner is dry unless told otherwise (Pedro, 2026-09-29; ADR
+0002).** `night-run.sh`, `fnaf1-night-run.sh`, `fnaf1-custom-run.sh`,
+`fnaf1-menu-probe.sh`, `fnaf3-run.sh`, `fnaf4-run.sh` and `fnaf1-winner.mjs`
+(and `npm run night`, which passes its arguments through) run live only with
+`--live --confirm-live`. Without the pair they print what they would run and
+make no adb call, take no lease and need no serial. Until that day
+`night-run.sh` went live unless `--dry-run` was passed. A live FNaF 2 night is:
+
+```sh
+tools/device/night-run.sh --live --confirm-live --label NAME --bundle DIR --night N
+```
+
+**The handset serial lives on the host, never in the repository (ADR 0002,
+decision 8).** A runner takes `--serial` where it has one, else `FNAF_SERIAL`,
+else the untracked local profile `tools/device/local-profile.json`
+(`device-local-profile-v1`, gitignored; a worktree reads the main checkout's),
+and a live run with none of them refuses before it touches anything. Set it once
+per host:
+
+```sh
+node tools/device/local-profile.mjs set <serial>    # adb devices -l lists it
+```
+
+No tracked script carries a default, and `tools/test-no-serial.mjs` (in `npm
+run test:unit`) refuses any file outside the frozen set and its allowlist that
+names one. Frozen evidence keeps the serial it was written with.
+
 **A death stops the presses, not the observer (2026-09-27).** Once a night has
 been observed, the device-local executor halts actuation on the first `static`
 read: no further schedule, gate, correction or arm line is written, the shared
@@ -159,12 +186,27 @@ restored at the end, however the window ends.
   `--battery-floor`) and below 45 C, at the start and between jobs.
 - **What it changes, and what it only reads.** It records
   `stay_on_while_plugged_in`, `screen_off_timeout`, `screen_brightness`,
-  `screen_brightness_mode`, `airplane_mode_on` and `zen_mode`, then writes that
-  record to disk before it sets stay-awake to 7 (AC, USB or wireless). At the end
-  the first four are put back if anything moved them, and read back.
-  Airplane mode and Do Not Disturb are only read. Their owners are system
-  services: a raw write would desynchronise them, and it would re-enter a DND
-  schedule that ended at 07:00. So a drift in them is reported, never reversed.
+  `screen_brightness_mode`, `heads_up_notifications_enabled`, `zen_mode` and
+  `airplane_mode_on`, then writes that record to disk before it sets stay-awake
+  to 7 (AC, USB or wireless). At the end the first five are put back if anything
+  moved them, and read back. Airplane mode is only read: its owner is the radio
+  stack, a raw write would desynchronise it, so a drift is reported, never
+  reversed.
+- **Do Not Disturb (Pedro, 2026-09-29, ADR 0002 decision 2).** At window open,
+  after stay-awake, it turns heads-up notifications off
+  (`heads_up_notifications_enabled` 0) and Do Not Disturb on, and reads both
+  back. DND goes through NotificationManager's own `cmd notification set_dnd
+  priority` (zen_mode 1), never a raw `settings put`, which would desynchronise
+  the service. It is `priority`, not `on`: `on` is total silence and would also
+  silence an alarm set inside the window, while `priority` keeps the owner's own
+  priority policy. At the end the prior value is restored and read back
+  (`set_dnd off`). If either cannot be set, or does not read back, the window
+  ends `DND` (exit 75) before any job, and everything it changed is restored.
+  A DND the window finds already on (the owner's schedule) is left on and never
+  turned off, so a schedule that ends at 07:00 is not re-entered by a
+  "restore". Whether this handset's SystemUI honours the heads-up setting is
+  not yet measured on the phone: the window proves the write and its read-back,
+  not the absence of a banner.
 - **Deadlines.** A job starts only if it can finish (360 s, the queue's
   `JOB_TIMEOUT_S`) before the stop instant. The stop instant is the window end
   minus the stop graces and the restore budget. At the stop instant the queue
@@ -182,16 +224,19 @@ restored at the end, however the window ends.
 - **Installing it is Pedro's step.** Nothing here installs a timer:
 
   ```sh
-  python3 tools/device/overnight-window.py preflight --serial SERIAL      # read-only: FIT, or why not
-  python3 tools/device/overnight-window.py units --serial SERIAL --out ~/.config/systemd/user
+  node tools/device/local-profile.mjs set <serial>                       # once per host (untracked)
+  python3 tools/device/overnight-window.py preflight                     # read-only: FIT, or why not
+  python3 tools/device/overnight-window.py units --out ~/.config/systemd/user
   systemctl --user daemon-reload
   systemctl --user enable --now fnaf2-overnight-window.timer             # opens at 01:30 every night
   systemctl --user start fnaf2-overnight-window.service                  # or: arm now, at bedtime
   loginctl enable-linger "$USER"                                         # only if logged out overnight
   ```
 
-  The units run the main checkout. The host must be awake at the window start:
-  the timer does not wake it, and a start it missed is not made up later.
+  The units run the main checkout, and name the phone in their own
+  `Environment=FNAF_SERIAL=` line, which lives in `~/.config`, never in the
+  repository. The host must be awake at the window start: the timer does not
+  wake it, and a start it missed is not made up later.
 
 ### Night jobs (Pedro, 2026-09-27: "Yes, play nights")
 
@@ -205,7 +250,8 @@ tools/device/cue-helper-queue.sh enqueue night --game fnaf2 \
 ```
 
 - **What it can name.** It names one night of a committed winner file, and
-  nothing else. The runner is fixed by the winner's schema:
+  nothing else. The runner is fixed by the winner's schema, and the job passes
+  it `--live --confirm-live` itself, since every runner is dry without them:
   - `night-run.sh` for FNaF 2, with the bundle emitted fresh;
   - `fnaf1-winner.mjs` for a FNaF 1 route winner;
   - `fnaf4-run.sh --mode loop` for FNaF 4.

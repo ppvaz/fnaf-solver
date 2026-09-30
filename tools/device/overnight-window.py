@@ -28,18 +28,20 @@ unlocked (waiting a bounded time, then LOCKED), that no call is active and the
 foreground is the launcher, the Companion or a target game (else IN_USE), and
 that the battery is plugged, at or above its floor and below its temperature
 ceiling (else POWER). Only then does it record the settings, write that record
-to disk, and set stay-awake-while-charging. Then it runs the queue one job at a
-time, repeating those checks between jobs, until the queue is empty, a job
-fails, or the deadline. At the end, and on any signal, it stops the queue
-child (SIGINT, SIGTERM, SIGKILL on its process group), returns a killed job to
-PENDING, leaves the screen as it found it, restores every setting it
-restores, reads each one back, releases the lease and writes the record.
+to disk, set stay-awake-while-charging, suppress heads-up notifications and
+turn Do Not Disturb on (else DND: the window refuses and starts no job). Then
+it runs the queue one job at a time, repeating those checks between jobs,
+until the queue is empty, a job fails, or the deadline. At the end, and on any
+signal, it stops the queue child (SIGINT, SIGTERM, SIGKILL on its process
+group), returns a killed job to PENDING, leaves the screen as it found it,
+restores every setting it restores, Do Not Disturb included, reads each one
+back, releases the lease and writes the record.
 
 It never changes lock-screen security (no `locksettings`), never unlocks or
-wakes the phone, never taps anything, never writes airplane mode or Do Not
-Disturb, and runs no command outside its own fixed vocabulary. The jobs carry
-their own resolved profiles; the window infers no mode, geometry, coordinate
-or timing.
+wakes the phone, never taps anything, never writes airplane mode, writes Do Not
+Disturb only through NotificationManager's own `cmd notification set_dnd`, and
+runs no command outside its own fixed vocabulary. The jobs carry their own
+resolved profiles; the window infers no mode, geometry, coordinate or timing.
 
 Nights (Pedro, 2026-09-27: "Yes, play nights"): the window's queue child is
 the only runner that claims `night` jobs (`--nights`), one per call, each only
@@ -102,6 +104,16 @@ MAX_ARM_LEAD_S = 4 * 3600.0       # --max-arm-lead: a window may be armed this e
 # stay_on_while_plugged_in is a bitmask of charger kinds: AC 1 | USB 2 | wireless 4.
 STAY_ON_SETTING = "global/stay_on_while_plugged_in"
 STAY_ON_VALUE = "7"
+# Heads-up notifications, which SystemUI reads from this global setting (1, or
+# unset, is on). Pedro, 2026-09-29 (ADR 0002, decision 2): "Do Not Disturb and
+# heads-up suppression on at window open, the prior setting restored at close;
+# the window refuses if it cannot set them." A banner dropped over the game
+# covers controls the night presses; the setting is written, read back and
+# restored like stay-awake. Whether this handset's SystemUI honours it is not
+# yet measured on the phone (UNKNOWN): the window proves the write, not the
+# absence of a banner.
+HEADS_UP_SETTING = "global/heads_up_notifications_enabled"
+HEADS_UP_OFF = "0"
 # Settings whose `settings put` IS their control path: recorded, restored to
 # the recorded value if anything changed them, and read back.
 RESTORED_SETTINGS = (
@@ -109,12 +121,29 @@ RESTORED_SETTINGS = (
     "system/screen_off_timeout",
     "system/screen_brightness",
     "system/screen_brightness_mode",
+    HEADS_UP_SETTING,
 )
-# Recorded and read back, never written. Airplane mode and Do Not Disturb are
-# owned by system services: a raw `settings put` desynchronises the radios or
-# NotificationManager, and a DND schedule that ended at 07:00 would be
-# re-entered by a "restore". A drift is reported, not reversed.
-WITNESSED_SETTINGS = ("global/airplane_mode_on", "global/zen_mode")
+# Do Not Disturb (same decision). NotificationManager owns it: a raw
+# `settings put global zen_mode` desynchronises it, so the window writes it only
+# through `cmd notification set_dnd`, the service's own shell command, and reads
+# `zen_mode` back. It is set to `priority` (zen_mode 1), not `on`: `on` is
+# total silence, which would also silence an alarm the phone's owner set inside
+# the window, while `priority` keeps his own priority policy (alarms, by
+# default). Only a DND the window turned on is turned off again: a window that
+# finds DND already on (the owner's schedule, zen_mode 1-3) leaves it alone and
+# only witnesses it, so a schedule that ends at 07:00 is never re-entered by a
+# "restore". set_dnd off also snoozes an automatic rule that started after the
+# window opened; the owner's schedule resumes on its next start.
+DND_SETTING = "global/zen_mode"
+DND_ON = "1"
+# zen_mode as Settings.Global stores it -> the `cmd notification set_dnd` word that sets it.
+DND_WORDS = {"0": "off", "1": "priority", "2": "none", "3": "alarms"}
+DND_READBACK_S = 5.0              # zen_mode is read back until it answers the value asked for
+DND_READBACK_POLL_S = 0.25
+# Recorded and read back, never written. Airplane mode is owned by the radios:
+# a raw `settings put` desynchronises them. A drift is reported, not reversed.
+WITNESSED_SETTINGS = ("global/airplane_mode_on",)
+RECORDED_SETTINGS = (*RESTORED_SETTINGS, DND_SETTING, *WITNESSED_SETTINGS)
 SETTING_VALUE = re.compile(r"^(?:null|-?\d{1,12}(?:\.\d{1,6})?)$")
 
 COMPANION = SETUP.HELPER_PACKAGE
@@ -140,7 +169,7 @@ PACK_TIMEOUT_S = 300.0            # one morning `evidence pack` (host only, afte
 RESTORE_RETRY_S = 1800.0          # a phone unreachable at restore is retried this long
 RESTORE_RETRY_POLL_S = 30.0
 # One setting's read, write and read-back, each retried until it answers.
-# Six settings at most: 6 x 15 s stays inside RESTORE_BUDGET_S.
+# Seven settings at most: 7 x 15 s = 105 s stays inside RESTORE_BUDGET_S.
 RESTORE_CALL_BUDGET_S = 15.0
 RESTORE_CALL_POLL_S = 0.5
 # Held while the window cleans up: a child spawned then cannot be killed by a
@@ -157,6 +186,7 @@ FOCUS_RETRIES = 3
 QUEUE_COMMAND = [str(HERE / "cue-helper-queue.sh")]
 HELPER_STOP_COMMAND = [str(HERE / "cue-helper-setup.sh"), "--stop"]
 CAPABILITIES_COMMAND = ["node", str(HERE / "capabilities.mjs")]
+LOCAL_PROFILE_COMMAND = ["node", str(HERE / "local-profile.mjs"), "serial"]
 NIGHT_JOB_COMMAND = [sys.executable, str(HERE / "night-job.py")]
 PACK_COMMAND = ["node", str(ROOT / "tools/evidence.js"), "pack"]
 PACKS_ROOT = ROOT                 # docs/evidence/runs/<run> lives here
@@ -173,7 +203,7 @@ FOCUS = re.compile(r"mCurrentFocus=Window\{\S+ u\d+ ([^\s}]+)")
 EXIT = {
     "COMPLETE": 0, "DEADLINE": 0,
     "LOCKED": 75, "IN_USE": 75, "POWER": 75, "LEASE_BUSY": 75, "DEVICE_ABSENT": 75,
-    "OUTSIDE_WINDOW": 75, "HELD": 75,
+    "OUTSIDE_WINDOW": 75, "HELD": 75, "DND": 75,
     "JOB_FAILED": 1, "CAPABILITY": 1, "UNKNOWN_STATE": 1, "QUEUE_ERROR": 1, "ERROR": 1,
     "ABORTED": 130, "RESTORE_PENDING": 3,
 }
@@ -263,8 +293,24 @@ def window_length_s(start: clock_time, end: clock_time) -> float:
     return (e - s).total_seconds()
 
 
+def local_profile_serial() -> str:
+    """The untracked local profile's serial (local-profile.mjs, ADR 0002
+    decision 8), or '' when the host has none. No tracked default exists."""
+    try:
+        result = subprocess.run(LOCAL_PROFILE_COMMAND, cwd=ROOT, check=False, text=True,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30)
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+    return result.stdout.strip() if result.returncode == 0 else ""
+
+
+SERIAL_HOW_TO = ("--serial, FNAF_SERIAL, or the untracked local profile "
+                 "(node tools/device/local-profile.mjs set <serial>)")
+
+
 def resolve_config(args: argparse.Namespace) -> dict:
-    serial = args.serial or os.environ.get("FNAF_SERIAL") or os.environ.get("ANDROID_SERIAL") or ""
+    serial = (args.serial or os.environ.get("FNAF_SERIAL") or os.environ.get("ANDROID_SERIAL")
+              or local_profile_serial())
     if serial and not SERIAL.fullmatch(serial):
         raise ConfigError(f"the serial is not a device token: {serial!r}")
     start_text = args.start or os.environ.get("FNAF_WINDOW_START") or DEFAULT_START
@@ -296,6 +342,10 @@ def resolve_config(args: argparse.Namespace) -> dict:
         "lockWaitS": lock_wait,
         "maxArmLeadS": lead,
         "stayOn": {"setting": STAY_ON_SETTING, "value": STAY_ON_VALUE},
+        "headsUp": {"setting": HEADS_UP_SETTING, "value": HEADS_UP_OFF},
+        "dnd": {"setting": DND_SETTING, "value": DND_ON,
+                "command": f"cmd notification set_dnd {DND_WORDS[DND_ON]}",
+                "restore": "set_dnd off, only when the window found zen_mode 0"},
         "restoredSettings": list(RESTORED_SETTINGS),
         "witnessedSettings": list(WITNESSED_SETTINGS),
         "allowedForeground": ["<the phone's resolved HOME activity>", COMPANION, *TARGETS],
@@ -469,6 +519,28 @@ def put_setting(serial: str, name: str, value: str) -> bool:
     return write_setting(serial, name, value) == 0
 
 
+def set_dnd(serial: str, zen_mode: str, timeout: float | None = None) -> int:
+    """Do Not Disturb through NotificationManager's own shell command: the
+    exit code. Only a zen_mode the command can name; never `settings put`."""
+    if zen_mode not in DND_WORDS:
+        raise ValueError(f"the window never sets zen_mode={zen_mode!r}")
+    code, _ = adb(serial, "shell", "cmd", "notification", "set_dnd", DND_WORDS[zen_mode], timeout=timeout)
+    return code
+
+
+def write_value(serial: str, name: str, value: str, timeout: float | None = None) -> int:
+    """A restore's write: DND through set_dnd, every other setting through settings put."""
+    if name == DND_SETTING:
+        return set_dnd(serial, value, timeout=timeout)
+    return write_setting(serial, name, value, timeout=timeout)
+
+
+def writes_on_restore(name: str, prior: str) -> bool:
+    """Whether a restore may write `name` back to `prior`. DND only when the
+    window found it off (it turned it on); otherwise it only witnesses it."""
+    return name in RESTORED_SETTINGS or (name == DND_SETTING and prior == "0")
+
+
 def classify_foreground(tokens: list[str], launcher: str | None) -> tuple[str, list[str]]:
     """'ok' when every focused window is the launcher, the Companion or a target."""
     packages = []
@@ -538,11 +610,13 @@ def restore_one(serial: str, name: str, want: str, write: bool) -> dict:
     timeout on a loaded host) is asked again, never taken for the answer.
 
     `write` False only witnesses: the setting is read, never written.
-    Every call's exit code is kept in `calls`, in order."""
+    Every call's exit code is kept in `calls`, in order (`put:` for settings
+    put or delete, `set_dnd:` for Do Not Disturb)."""
     until = mono() + RESTORE_CALL_BUDGET_S
     calls: list[str] = []
     before = None
     last = None
+    verb = "set_dnd" if name == DND_SETTING else "put"
 
     def pause() -> bool:
         """Wait one poll before asking again; False once the budget is spent."""
@@ -565,7 +639,7 @@ def restore_one(serial: str, name: str, want: str, write: bool) -> dict:
         if before is None:
             before = value
         # A write that was killed may still have landed: any attempt counts.
-        attempted = any(call.startswith("put:") for call in calls)
+        attempted = any(call.startswith(f"{verb}:") for call in calls)
         if value == want:
             return {"setting": name, "prior": want, "before": before, "after": value,
                     "action": "restored" if attempted else "unchanged", "calls": calls}
@@ -577,7 +651,7 @@ def restore_one(serial: str, name: str, want: str, write: bool) -> dict:
         remaining = until - mono()
         if remaining <= 0:
             break
-        calls.append(f"put:{write_setting(serial, name, want, timeout=min(ADB_TIMEOUT_S, remaining))}")
+        calls.append(f"{verb}:{write_value(serial, name, want, timeout=min(ADB_TIMEOUT_S, remaining))}")
         # ...and read it back at once.
     row = {"setting": name, "prior": want, "after": last, "calls": calls}
     if last is None:
@@ -591,13 +665,15 @@ def restore_settings(serial: str, prior: dict[str, str], retry_s: float | None =
                      event=lambda *a, **k: None) -> dict:
     """Put every restored setting back to its recorded value and read it back."""
     deadline = mono() + (RESTORE_RETRY_S if retry_s is None else retry_s)
+    written = {name for name in RECORDED_SETTINGS
+               if prior.get(name) is not None and writes_on_restore(name, prior[name])}
     while True:
         results = []
-        for name in (*RESTORED_SETTINGS, *WITNESSED_SETTINGS):
+        for name in RECORDED_SETTINGS:
             want = prior.get(name)
             if want is not None:
-                results.append(restore_one(serial, name, want, write=name in RESTORED_SETTINGS))
-        restored = [row for row in results if row["setting"] in RESTORED_SETTINGS]
+                results.append(restore_one(serial, name, want, write=name in written))
+        restored = [row for row in results if row["setting"] in written]
         verified = all(row["action"] in ("restored", "unchanged") for row in restored)
         # Only a setting the window writes is worth waiting for the phone over.
         reachable = all(row["action"] != "UNREACHABLE" for row in restored)
@@ -902,7 +978,7 @@ class Window:
                           token.split("/", 1)[0] == self.launcher for token in tokens),
                       "projection": read_projection(self.serial)}
         prior = {}
-        for name in (*RESTORED_SETTINGS, *WITNESSED_SETTINGS):
+        for name in RECORDED_SETTINGS:
             value = get_setting(self.serial, name)
             if value is None:
                 return self.end("UNKNOWN_STATE", f"setting unreadable: {name}")
@@ -923,6 +999,11 @@ class Window:
         self.event("settings.applied", setting=STAY_ON_SETTING, value=STAY_ON_VALUE, readBack=read_back)
         if read_back != STAY_ON_VALUE:
             return self.end("UNKNOWN_STATE", "stay-awake did not read back")
+        refused = self.apply_quiet()
+        if refused is not None and self.aborted:
+            return self.end("ABORTED", f"signal {self.signals[0]}")
+        if refused is not None:
+            return self.end("DND", refused)
 
         if armed:
             self.event("arm.wait", until=iso(opens))
@@ -963,6 +1044,35 @@ class Window:
                 holds = 0
                 continue
             return self.end("QUEUE_ERROR", f"queue exit {attempt['exit']}")
+
+    def apply_quiet(self) -> str | None:
+        """Heads-up suppression, then Do Not Disturb (ADR 0002, decision 2):
+        None once both read back, else why the window refuses. The write-ahead
+        record already holds their prior values, so the restore undoes either."""
+        applied = self.record["settings"]["applied"]
+        put_setting(self.serial, HEADS_UP_SETTING, HEADS_UP_OFF)
+        heads_up = get_setting(self.serial, HEADS_UP_SETTING)
+        applied[HEADS_UP_SETTING] = {"value": HEADS_UP_OFF, "readBack": heads_up}
+        self.event("settings.applied", setting=HEADS_UP_SETTING, value=HEADS_UP_OFF, readBack=heads_up)
+        if heads_up != HEADS_UP_OFF:
+            return f"heads-up suppression did not read back ({HEADS_UP_SETTING}={heads_up})"
+        found = self.prior[DND_SETTING]
+        if found != "0":
+            applied[DND_SETTING] = {"value": found, "readBack": found, "action": "already-on"}
+            self.event("settings.dnd", action="already-on", zenMode=found)
+            return None
+        code = set_dnd(self.serial, DND_ON)
+        zen = get_setting(self.serial, DND_SETTING)
+        until = mono() + DND_READBACK_S
+        while code == 0 and zen != DND_ON and mono() < until and not self.aborted:
+            time.sleep(DND_READBACK_POLL_S)
+            zen = get_setting(self.serial, DND_SETTING)
+        applied[DND_SETTING] = {"value": DND_ON, "command": f"cmd notification set_dnd {DND_WORDS[DND_ON]}",
+                                "exit": code, "readBack": zen}
+        self.event("settings.dnd", action="set", value=DND_ON, exit=code, readBack=zen)
+        if zen != DND_ON:
+            return f"do-not-disturb did not read back (set_dnd exit {code}, zen_mode {zen})"
+        return None
 
     # -- the end: always runs
     def finish(self) -> None:
@@ -1221,7 +1331,7 @@ def preflight(config: dict, as_json: bool) -> int:
     """Every read the window decides on, and what it would decide: no writes."""
     serial = config["serial"]
     if serial == "UNKNOWN":
-        print("PREFLIGHT ERROR a serial is required (--serial or FNAF_SERIAL)", file=sys.stderr)
+        print(f"PREFLIGHT ERROR a serial is required: {SERIAL_HOW_TO}", file=sys.stderr)
         return 2
     report: dict = {"schema": "overnight-window-preflight-v1", "serial": serial,
                     "configSha256": canonical_sha256(config), "at": iso(now_local())}
@@ -1252,8 +1362,7 @@ def preflight(config: dict, as_json: bool) -> int:
             report["foreground"] = read_foreground(serial)
             report["battery"] = read_battery(serial)
             report["projection"] = read_projection(serial)
-            report["settings"] = {name: get_setting(serial, name)
-                                  for name in (*RESTORED_SETTINGS, *WITNESSED_SETTINGS)}
+            report["settings"] = {name: get_setting(serial, name) for name in RECORDED_SETTINGS}
             if not report["capabilities"]["ok"]:
                 verdict = ("CAPABILITY", report["capabilities"]["reason"])
             elif report["launcher"] is None:
@@ -1280,7 +1389,7 @@ def preflight(config: dict, as_json: bool) -> int:
 def restore_command(config: dict) -> int:
     serial = config["serial"]
     if serial == "UNKNOWN":
-        print("RESTORE ERROR a serial is required (--serial or FNAF_SERIAL)", file=sys.stderr)
+        print(f"RESTORE ERROR a serial is required: {SERIAL_HOW_TO}", file=sys.stderr)
         return 2
     path = pending_path(serial)
     if not path.exists():
@@ -1314,7 +1423,7 @@ def main_checkout() -> Path:
 
 def render_units(config: dict, out: str | None) -> int:
     if config["serial"] == "UNKNOWN":
-        print("UNITS ERROR the unit names its phone: pass --serial or FNAF_SERIAL", file=sys.stderr)
+        print(f"UNITS ERROR the unit names its phone: {SERIAL_HOW_TO}", file=sys.stderr)
         return 2
     tools = {name: shutil.which(name) for name in ("adb", "node")}
     missing = [name for name, path in tools.items() if path is None]
@@ -1390,7 +1499,8 @@ def parse(argv: list[str] | None) -> argparse.Namespace:
                         choices=("run", "preflight", "restore", "units"))
     parser.add_argument("--live", action="store_true", help="touch the phone (run, restore)")
     parser.add_argument("--confirm-live", action="store_true", help="required with --live")
-    parser.add_argument("--serial", default=None, help="the phone (else FNAF_SERIAL, ANDROID_SERIAL)")
+    parser.add_argument("--serial", default=None,
+                        help="the phone (else FNAF_SERIAL, ANDROID_SERIAL, then the local profile)")
     parser.add_argument("--start", default=None, help=f"window start HH:MM local (default {DEFAULT_START})")
     parser.add_argument("--end", default=None, help=f"window end HH:MM local (default {DEFAULT_END})")
     parser.add_argument("--battery-floor", type=int, default=None,
@@ -1434,7 +1544,7 @@ def main(argv: list[str] | None = None) -> int:
     if not args.live:
         return dry_run(config)
     if config["serial"] == "UNKNOWN":
-        print("WINDOW ERROR a live window needs --serial or FNAF_SERIAL", file=sys.stderr)
+        print(f"WINDOW ERROR a live window needs a serial: {SERIAL_HOW_TO}", file=sys.stderr)
         return 2
     return Window(config).run()
 

@@ -4,7 +4,7 @@
  * REGION frames, SNAP for the title) and through the phone's own A2DP mix
  * (tools/cue/fnaf4-cues.py, live). No screencap, no luma, no grid.
  *
- *   tools/device/fnaf4-run.sh --dry-run
+ *   tools/device/fnaf4-run.sh [--dry-run]          (dry by default: no --live, no phone)
  *   tools/device/fnaf4-run.sh --live --confirm-live --mode calibrate [--label NAME]
  *
  * `calibrate` needs Night 1 on CONTINUE: every AI is 0 until the 2 AM row
@@ -28,13 +28,13 @@ import { HidWireTransport } from '../../packages/adapters/src/transports/hid.js'
 import { loadRegionSet, registerSet } from './native-regions.mjs';
 import { Actor, RegionRecorder, RunRecord, interruptibleSleep, startVideo } from './night-kit.mjs';
 import { audioPreflight } from './audio-players.mjs';
+import { resolveSerial } from './local-profile.mjs';
 import {
   HEARING_PATH, loadHearing, sideGrid, laughGrid, landings, laughs, quietTapAt, releaseAt, shadowOf,
 } from './fnaf4-fredbear.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../..');
-const DEFAULT_SERIAL = 'ZF525F5BH5';
 const PACKAGE = 'com.scottgames.fnaf4';
 const ACTIVITY = `${PACKAGE}/.Main`;
 const CONTROLS_PATH = join(HERE, 'models/controls-fnaf4-moto-g56-v204.json');
@@ -82,8 +82,11 @@ export function parseArgs(argv) {
     else fail(`unknown argument ${a}`);
   }
   if (o.label !== null && !/^[a-z0-9][a-z0-9-]{0,40}$/.test(o.label)) fail('--label is lowercase letters, digits, hyphens');
+  if (o.dryRun && o.live) fail('--dry-run and --live are mutually exclusive');
+  // Dry unless --live (ADR 0002, 2026-09-29): no flag prints the bindings and touches no phone.
+  if (!o.live) o.dryRun = true;
   if (o.dryRun) return o;
-  if (!o.live || !o.confirmLive) fail('live actuation needs --live and --confirm-live');
+  if (!o.confirmLive) fail('live actuation needs --live and --confirm-live');
   if (!MODES.includes(o.mode)) fail(`--mode is one of ${MODES.join(', ')}`);
   if (o.mode === 'loop' && !o.detectors) fail('loop needs --detectors (a fnaf4-detectors-v1 file)');
   if (o.mode === 'loop' && !(Number.isInteger(o.night) && o.night >= 1 && o.night <= 8))
@@ -969,7 +972,8 @@ async function main(argv) {
     .map(async ([k, p]) => [k, { path: p.slice(ROOT.length + 1), sha256: sha256(await readFile(p)) }])));
   if (options.dryRun) { console.log(JSON.stringify({ status: 'DRY_RUN', modes: MODES, bindings }, null, 2)); return; }
   if (process.env.FNAF4_LEASE_HELD !== '1') fail('run through fnaf4-run.sh so the serial lease is held');
-  const serial = process.env.FNAF_SERIAL ?? DEFAULT_SERIAL;
+  let serial;
+  try { ({ serial } = resolveSerial()); } catch (error) { fail(error.message); }
   const c = controlsOf(controlsModel);
 
   const id = `fnaf4-${options.mode}-${options.label ?? 'run'}-${stamp()}`;

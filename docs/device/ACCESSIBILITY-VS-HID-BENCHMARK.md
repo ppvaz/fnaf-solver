@@ -83,7 +83,7 @@ continues in [ANDROID-BOT-LANDSCAPE.md](../research/ANDROID-BOT-LANDSCAPE.md).
 
 ## First Moto g56 pilot — 120 Hz, synthetic target only
 
-On 2026-09-06 the connected Moto g56 5G (`ZF525F5BH5`, Android 16/API 36,
+On 2026-09-06 the connected Moto g56 5G (`<serial>`, Android 16/API 36,
 Cue Helper target SDK 36, landscape `2400x1080`) ran both paths against the
 same foreground synthetic probe view. The display was temporarily requested
 at 120 Hz and the probe reported `refreshHz=120.00001`. The original refresh

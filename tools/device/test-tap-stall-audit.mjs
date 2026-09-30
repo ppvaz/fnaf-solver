@@ -240,7 +240,7 @@ check(cycle1 && !cycle1.includes('monitor-up@+101') && cycle1.includes('monitor-
   const evt = (ms, code, value) => `[${String(Math.floor(ms / 1000)).padStart(8)}.${String(Math.round((ms % 1000) * 1000)).padStart(6, '0')}] /dev/input/event7: ${code.startsWith('BTN') ? 'EV_KEY' : 'EV_ABS'}       ${code.padEnd(20)} ${value}`;
   const press = (atMs, holdMs) => [evt(NIGHT_GO + atMs, 'ABS_MT_TRACKING_ID', '00000001'), evt(NIGHT_GO + atMs, 'BTN_TOUCH', 'DOWN'),
     evt(NIGHT_GO + atMs + holdMs, 'ABS_MT_TRACKING_ID', 'ffffffff'), evt(NIGHT_GO + atMs + holdMs, 'BTN_TOUCH', 'UP')];
-  const text = ['# getevent -lt on ZF525F5BH5, started host 1789240000.000000000, device uptime 100.00 200.00',
+  const text = ['# getevent -lt on FAKE0001, started host 1789240000.000000000, device uptime 100.00 200.00',
     'add device 1: /dev/input/event3', '  name:     "some_touchscreen"', 'add device 2: /dev/input/event7', '  name:     "FNAF Timed Touch"',
     ...press(10100, 33), ...press(14449, 33), ...press(20100, 33), '# stopped host 1789240100.000000000, device uptime 200.00 300.00'].join('\n');
   const parsed = parseInputEvents(text);

@@ -4,7 +4,7 @@
  * Helper: whole native frames (SNAP) for the title and the dials, raw native
  * regions (REGION) for the night. No screencap, no luma, no grid.
  *
- *   tools/device/fnaf1-custom-run.sh --dry-run
+ *   tools/device/fnaf1-custom-run.sh [--dry-run]          (dry by default: no --live, no phone)
  *   tools/device/fnaf1-custom-run.sh --live --confirm-live --dials 0,0,0,0 --mode calibrate-empty [--label NAME]
  *   tools/device/fnaf1-custom-run.sh --live --confirm-live --dials F,B,C,X --mode grid420 --detectors FILE
  *        [--winner FILE | --route tree] [--label NAME]
@@ -46,10 +46,10 @@ import { RegionRecorder, startVideo } from './night-kit.mjs';
 import { loadDetectors, makeClassifier } from './fnaf1-detectors.mjs';
 import { listWinners, routeDrift } from './fnaf1-winner.mjs';
 import { grid420, PHONE_OPTIONS } from '../fnaf1-device-lane.mjs';
+import { resolveSerial } from './local-profile.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../..');
-const DEFAULT_SERIAL = 'ZF525F5BH5';
 const TITLE_MODEL_PATH = join(HERE, 'models/title-fnaf1-moto-g56-v207.json');
 const CUSTOM_NIGHT_MODEL_PATH = join(HERE, 'models/custom-night-fnaf1-moto-g56-v207.json');
 const CONTROLS_PATH = join(HERE, 'models/controls-fnaf1-moto-g56-v207.json');
@@ -93,8 +93,11 @@ export function parseArgs(argv) {
   }
   if (o.winner !== null && o.route !== null) fail('--winner and --route tree are exclusive');
   if (o.label !== null && !/^[a-z0-9][a-z0-9-]{0,40}$/.test(o.label)) fail('--label is lowercase letters, digits, hyphens');
+  if (o.dryRun && o.live) fail('--dry-run and --live are mutually exclusive');
+  // Dry unless --live (ADR 0002, 2026-09-29): no flag prints the bindings and touches no phone.
+  if (!o.live) o.dryRun = true;
   if (o.dryRun) return o;
-  if (!o.live || !o.confirmLive) fail('live actuation needs --live and --confirm-live');
+  if (!o.confirmLive) fail('live actuation needs --live and --confirm-live');
   if (!MODES.includes(o.mode)) fail(`--mode is one of ${MODES.join(', ')}`);
   if (!o.dials) fail('--dials is required');
   if (o.mode === 'calibrate-empty' && DIALS.some(d => o.dials[d] !== 0))
@@ -363,7 +366,8 @@ async function main(argv) {
   if (route?.winner && !route.winner.matches)
     console.error(`fnaf1-custom-run: running the tree's route, not ${route.winner.id}'s (${route.winner.differs.join(', ')} differ)`);
   if (process.env.FNAF1_LEASE_HELD !== '1') fail('run through fnaf1-custom-run.sh so the serial lease is held');
-  const serial = process.env.FNAF_SERIAL ?? DEFAULT_SERIAL;
+  let serial;
+  try { ({ serial } = resolveSerial()); } catch (error) { fail(error.message); }
 
   const id = `fnaf1-custom-${options.mode}-${options.label ?? 'run'}-${stamp()}`;
   const outdir = join(ROOT, 'artifacts', 'runs', id);

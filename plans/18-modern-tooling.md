@@ -155,7 +155,7 @@ placed on its landing frame from the device trace, and `HID-MULTITOUCH.md`
 carries the dated result — confirming or refuting that a 33 ms contact at
 133 ms spacing produces a distinct accepted event.
 
-**Spike result, 2026-08-28 (Moto g56 5G, `ZF525F5BH5`, Android 16 / SDK 36,
+**Spike result, 2026-08-28 (Moto g56 5G, `<serial>`, Android 16 / SDK 36,
 `user` build, `ro.debuggable=0`).** The gating question — can the `shell` user
 capture input dispatch without root — is answered **yes**. `adb shell perfetto
 -t 6s -b 32mb input view wm gfx sched freq sync` wrote a 767 KB trace with the

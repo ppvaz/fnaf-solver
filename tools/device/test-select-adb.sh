@@ -37,12 +37,12 @@ assert_selected() {
   }
 }
 
-USB_LINE='ZF525F5BH5 device usb:338690048X product:bogota model:moto_g56_5G'
+USB_LINE='FAKE0001 device usb:338690048X product:bogota model:moto_g56_5G'
 WIFI_LINE='192.168.0.2:5555 device product:bogota model:moto_g56_5G'
 BOTH_LIST=$'List of devices attached\n'"$USB_LINE"$'\n'"$WIFI_LINE"
 WIFI_LIST=$'List of devices attached\n'"$WIFI_LINE"
 
-assert_selected ZF525F5BH5 "$BOTH_LIST"
+assert_selected FAKE0001 "$BOTH_LIST"
 assert_selected 192.168.0.2:5555 "$WIFI_LIST"
 
 explicit=$(

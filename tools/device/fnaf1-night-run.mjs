@@ -8,7 +8,9 @@
  * accepts only Continue on the FNaF 1-specific observer, records FNaF 1's
  * resolved models/hashes, and never invokes `menu.sh`.
  *
- * Usage (the shell wrapper holds the serial lease):
+ * Usage (the shell wrapper holds the serial lease; without --live it is a dry
+ * run that prints the resolved bindings and touches no phone):
+ *   tools/device/fnaf1-night-run.sh [--dry-run]
  *   tools/device/fnaf1-night-run.sh --live --confirm-live --bt-audio --teach-overlay [--abort-restart] \
  *       --night 1 --cursor-observed 1 --label community-loop-a
  *
@@ -28,12 +30,12 @@ import { performance } from 'node:perf_hooks';
 import { AdbDeviceBridge } from '../../apps/device/src/adb-bridge.js';
 import { AdbHidProcess } from '../../apps/device/src/physical-ports.js';
 import { HidWireTransport } from '../../packages/adapters/src/transports/hid.js';
+import { resolveSerial } from './local-profile.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../..');
 const PACKAGE = 'com.scottgames.fivenightsatfreddys';
 const BUILD = '2.0.7+40';
-const DEFAULT_SERIAL = 'ZF525F5BH5';
 const ROUTE_PATH = join(HERE, 'models/fnaf1-community-loop-moto-g56-v207.json');
 const CONTROL_PATH = join(HERE, 'models/controls-fnaf1-moto-g56-v207.json');
 const TITLE_MODEL_PATH = join(HERE, 'models/title-fnaf1-moto-g56-v207.json');
@@ -90,8 +92,10 @@ export function parseArgs(argv) {
     fail('--label must be 1..48 lowercase letters, digits, or hyphens');
   if (options.dryRun && options.live) fail('--dry-run and --live are mutually exclusive');
   if (options.abortRestart && !options.live) fail('--abort-restart is only valid for an explicit live run');
+  // Dry unless --live (ADR 0002, 2026-09-29): no flag prints the bindings and touches no phone.
+  if (!options.live) options.dryRun = true;
   if (!options.dryRun) {
-    if (!options.live || !options.confirmLive) fail('live actuation needs both --live and --confirm-live');
+    if (!options.confirmLive) fail('live actuation needs both --live and --confirm-live');
     if (!options.btAudio) fail('a live FNaF 1 run requires --bt-audio for retained passive evidence');
     if (!options.teachOverlay) fail('a live FNaF 1 run requires --teach-overlay for the verified passive teaching presenter');
     if (options.night === null || options.cursorObserved === null)
@@ -607,8 +611,8 @@ async function main(argv) {
     return;
   }
   if (process.env.FNAF1_LEASE_HELD !== '1') fail('must run through fnaf1-night-run.sh so the serial lease is held');
-  const serial = process.env.FNAF_SERIAL ?? DEFAULT_SERIAL;
-  if (!/^[A-Za-z0-9._:-]+$/.test(serial)) fail('FNAF_SERIAL is not a valid serial token');
+  let serial;
+  try { ({ serial } = resolveSerial()); } catch (error) { fail(error.message); }
   const id = `fnaf1-night${options.night}-${options.label ?? 'community-loop'}-${stamp()}`;
   const outdir = join(ROOT, 'artifacts', 'runs', id);
   const captureDir = join(homedir(), 'fnaf-apks', 'fnaf1-device-runs', id);

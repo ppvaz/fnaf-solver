@@ -276,7 +276,7 @@ export class AdbCueHelperPort {
    * One adb forward to the helper's loopback control port, and timed raw GETs
    * over it. `request()` spawns an adb shell per read (140-240 ms) and cannot
    * bound a clock; over the forward a GET measured RTT min 5.6, p50 9.1, p90
-   * 14.6 ms on ZF525F5BH5 (2026-09-12), the five fastest of 40 agreeing on the
+   * 14.6 ms on the campaign handset (2026-09-12), the five fastest of 40 agreeing on the
    * device->host offset within 0.46 ms. The forward is opened once, so polling
    * the latched night onset costs a socket round trip, not a process spawn.
    * `read()` is one exchange (offset bound RTT/2); `probe()` keeps the fastest

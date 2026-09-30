@@ -7,7 +7,7 @@ import { readFile } from 'node:fs/promises';
 import { parseArgs, parseTargets, stepsBetween } from './fnaf1-menu-probe.mjs';
 
 const refuses = (argv, pattern) => assert.throws(() => parseArgs(argv), pattern);
-refuses(['--stage', 'title'], /--live and --confirm-live/);
+assert.equal(parseArgs(['--stage', 'title']).dryRun, true, 'no --live is a dry run (ADR 0002)');
 refuses(['--live', '--stage', 'title'], /--live and --confirm-live/);
 refuses(['--live', '--confirm-live', '--stage', 'office'], /--stage must be one of/);
 refuses(['--live', '--confirm-live', '--stage', 'title', '--sweep'], /belong to --stage custom-night/);

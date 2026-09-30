@@ -1439,6 +1439,7 @@
     {
       "file": "tools/device/audio-players.mjs",
       "imports": [
+        "./local-profile.mjs",
         "node:child_process",
         "node:path",
         "node:url"
@@ -1448,6 +1449,7 @@
       "file": "tools/device/audio-probe.mjs",
       "imports": [
         "../../apps/device/src/physical-ports.js",
+        "./local-profile.mjs",
         "node:fs"
       ]
     },
@@ -1551,6 +1553,7 @@
       "imports": [
         "../../apps/device/src/physical-ports.js",
         "../../packages/adapters/src/transports/hid.js",
+        "./local-profile.mjs",
         "node:child_process",
         "node:fs",
         "node:fs/promises",
@@ -1587,6 +1590,7 @@
         "./fnaf1-detectors.mjs",
         "./fnaf1-menu-probe.mjs",
         "./fnaf1-winner.mjs",
+        "./local-profile.mjs",
         "./native-regions.mjs",
         "./night-kit.mjs",
         "node:crypto",
@@ -1612,6 +1616,7 @@
         "../../apps/device/src/adb-bridge.js",
         "../../apps/device/src/physical-ports.js",
         "../../packages/adapters/src/transports/hid.js",
+        "./local-profile.mjs",
         "node:child_process",
         "node:crypto",
         "node:fs",
@@ -1628,6 +1633,7 @@
         "../../apps/device/src/adb-bridge.js",
         "../../apps/device/src/physical-ports.js",
         "../../packages/adapters/src/transports/hid.js",
+        "./local-profile.mjs",
         "node:child_process",
         "node:crypto",
         "node:fs",
@@ -1641,6 +1647,7 @@
     {
       "file": "tools/device/fnaf1-winner.mjs",
       "imports": [
+        "./local-profile.mjs",
         "node:child_process",
         "node:crypto",
         "node:fs",
@@ -1665,6 +1672,7 @@
         "../../apps/device/src/physical-ports.js",
         "../../packages/adapters/src/transports/hid.js",
         "./fnaf3-detectors.mjs",
+        "./local-profile.mjs",
         "./native-regions.mjs",
         "./night-kit.mjs",
         "node:child_process",
@@ -1701,6 +1709,7 @@
         "../../packages/adapters/src/transports/hid.js",
         "./audio-players.mjs",
         "./fnaf4-fredbear.mjs",
+        "./local-profile.mjs",
         "./native-regions.mjs",
         "./night-kit.mjs",
         "node:child_process",
@@ -1756,6 +1765,14 @@
       ]
     },
     {
+      "file": "tools/device/local-profile.mjs",
+      "imports": [
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/device/minus-3-plan.mjs",
       "imports": [
         "./arm-verification.mjs",
@@ -1803,13 +1820,15 @@
     {
       "file": "tools/device/native-frame.mjs",
       "imports": [
-        "../../apps/device/src/physical-ports.js"
+        "../../apps/device/src/physical-ports.js",
+        "./local-profile.mjs"
       ]
     },
     {
       "file": "tools/device/native-regions.mjs",
       "imports": [
         "../../apps/device/src/physical-ports.js",
+        "./local-profile.mjs",
         "node:fs",
         "node:path",
         "node:zlib"
@@ -2283,6 +2302,7 @@
     {
       "file": "tools/device/test-night-run-dry.mjs",
       "imports": [
+        "./local-profile.mjs",
         "node:assert/strict",
         "node:child_process",
         "node:fs",
@@ -3444,6 +3464,15 @@
         "node:fs",
         "node:os",
         "node:path"
+      ]
+    },
+    {
+      "file": "tools/test-no-serial.mjs",
+      "imports": [
+        "node:child_process",
+        "node:fs",
+        "node:path",
+        "node:url"
       ]
     },
     {

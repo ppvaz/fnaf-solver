@@ -416,7 +416,7 @@ Mangle shape of the shared five-tick budget at an unmeasured epoch. Evidence:
 
 ## 2026-09-12 — first Night 5 6 AM on the phone (night5-anchor2)
 
-`night5-anchor2-20260912T204002Z` won Night 5 on ZF525F5BH5 with binding
+`night5-anchor2-20260912T204002Z` won Night 5 on the campaign handset with binding
 `fnv1a-81b5e51c` (Minus Toys, bundle `artifacts/night5-contact-final`,
 observe-once): `device-campaign-result-v1` attempt `WIN`, positive `sixam`
 419 056 ms after the release, save advanced to the 6th Night entry,

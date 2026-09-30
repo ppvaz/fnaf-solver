@@ -1,19 +1,24 @@
 #!/usr/bin/env node
 // One entry point for a night on the phone, whatever the game.
 //
-//   npm run night -- fnaf2 --label NAME [night-run.sh options]
-//   npm run night -- fnaf1 --night N [fnaf1-night-run.sh options]
-//   npm run night -- fnaf1-custom --mode M [fnaf1-custom-run.sh options]
+//   npm run night -- fnaf2 --label NAME [--live --confirm-live] [night-run.sh options]
+//   npm run night -- fnaf1 --night N [--live --confirm-live] [fnaf1-night-run.sh options]
+//   npm run night -- fnaf1-custom --mode M [--live --confirm-live] [fnaf1-custom-run.sh options]
 //   npm run night -- fnaf1-winner --winner FILE [--live --confirm-live --label NAME]
 //
-// Each game keeps its own runner -- they differ in what they drive, and each
-// already takes the serial lease and refuses a live run without its confirm
-// flags. This only picks the runner, passes the arguments through untouched,
-// and packs what the night left behind (tools/evidence-pack.mjs) once it ends,
+// Every runner is dry unless it is given --live --confirm-live (Pedro,
+// 2026-09-29; ADR 0002): without the pair it prints what it would run and
+// touches no phone. A live night reads the handset serial from FNAF_SERIAL or
+// the untracked local profile (tools/device/local-profile.mjs) and refuses
+// without one. Each game keeps its own runner -- they differ in what they
+// drive, and each takes the serial lease before its first adb call.
+//
+// This only picks the runner, passes the arguments through untouched, and
+// packs what the night left behind (tools/evidence-pack.mjs) once it ends,
 // however it ends: a death, an abort and a Ctrl-C are evidence too. night-run.sh
 // packs its own campaigns, so FNaF 2 is only dispatched; the FNaF 1 runners do
-// not, so their new run directories are packed here. A dry run leaves no run
-// directory and so packs nothing.
+// not, so their new run directories are packed here. A FNaF 1 dry run leaves no
+// run directory and so packs nothing.
 import { spawn } from 'node:child_process';
 import { existsSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -77,7 +82,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const [game, ...args] = process.argv.slice(2);
   if (!game || game === '--help' || game === '-h') {
     console.log(`Usage: npm run night -- <${Object.keys(GAMES).join('|')}> [runner options]\n`
-      + 'Runs that game\'s night runner with the options as given, then packs the run.');
+      + 'Runs that game\'s night runner with the options as given, then packs the run.\n'
+      + 'Every runner is dry unless given --live --confirm-live.');
     process.exit(game ? 0 : 2);
   }
   try {

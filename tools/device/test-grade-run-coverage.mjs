@@ -132,6 +132,7 @@ const EXCLUDED = new Map([
   ['cue-helper-setup.py', 'helper setup and target-menu check, gated by test-cue-helper-setup.py; it prepares a session rather than grading one'],
   ['cue-helper-queue.py', 'persistent job queue for absent-device work, gated by test-cue-helper-queue.py'],
   ['cue_helper_device_lock.py', 'per-serial exclusive lease library, gated by test-cue-helper-device-lock.py'],
+  ['local-profile.mjs', 'resolves the handset serial a live runner addresses (FNAF_SERIAL, then the untracked local profile) before any adb call; it reads no run, gated by test-night-run-dry.mjs'],
   ['device-lock-exec.py', 'holds the lease around one bounded command, gated by test-cue-helper-device-lock.py'],
   ['cue-helper-setup.sh', 'thin one-serial wrapper; all UI work and every gate belong to cue-helper-setup.py'],
   ['cue-helper-queue.sh', 'thin wrapper that deliberately does NOT select a device, so enqueue/list work while the phone is absent; the queue gate is test-cue-helper-queue.py'],

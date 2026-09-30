@@ -1344,7 +1344,7 @@ project is doing, on different hardware:
 
 ## The 100 ms contact floor is margin: every touch control registers at 33 ms (2026-08-27)
 
-Measured on the Moto g56 (`ZF525F5BH5`), the LIGHT_AFTER breakthrough plus
+Measured on the Moto g56 (`<serial>`), the LIGHT_AFTER breakthrough plus
 `hid-raise-probe.mjs PROBE_GEN=raise`:
 
 | control | mechanism | 33 ms contact |
@@ -1407,7 +1407,7 @@ Method: `adb shell perfetto --background -t 160s -b 256mb input view gfx wm
 sched` running while `NO_LIGHT=1 SELECT_MS=33 PROBE_NIGHT=continue
 tools/device/hid-sweep-probe.sh 240 160 133 120 100` drove a select-only
 CAM 10→04→07 sweep at five inter-selection spacings on Night 2, monitor up.
-Trace parsed with Perfetto `trace_processor`. Moto g56 5G (`ZF525F5BH5`),
+Trace parsed with Perfetto `trace_processor`. Moto g56 5G (`<serial>`),
 Android 16 / SDK 36, `user` build. Artifacts:
 `captures/n2-inputtrace-0001.{mp4,hid,pftrace}` (ignored capture corpus).
 

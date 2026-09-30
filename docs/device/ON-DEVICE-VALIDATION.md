@@ -1964,7 +1964,7 @@ with the game's rendering. Per-frame `screencap` from the night watchdog
 (night 6-23). The cue helper uses a *continuous* MediaProjection
 VirtualDisplay instead, and it had never been measured against a live sweep.
 
-Measured on the Moto g56 (`ZF525F5BH5`), with the helper capturing
+Measured on the Moto g56 (`<serial>`), with the helper capturing
 (`control=READY`, consent granted) through three 25-sweep c33 LIGHT_AFTER
 probe runs -- `c33cc-dark` / `c33cc-stable` / `c33cc-alt` -- while
 `screenrecord` also ran:

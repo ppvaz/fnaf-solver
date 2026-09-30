@@ -4,6 +4,9 @@
 One JSON state file (FAKE_PHONE_STATE) stands for the handset: its settings,
 lock and power, focus, calls, battery, the Companion's projection, and one
 game (running or not, at its title or mid-night, which title items it shows).
+`cmd notification set_dnd WORD` moves `global/zen_mode` as NotificationManager
+does; the state's `dndFault` makes it fail ("error": a non-zero exit) or do
+nothing ("ignored": exit 0, zen_mode unchanged).
 Every stand-in below reads and writes that file under a lock and appends each
 call to `<state>.log`, so a test can say exactly what was asked of the phone.
 
@@ -40,7 +43,10 @@ PRIOR = {
     "global/stay_on_while_plugged_in": "0", "system/screen_off_timeout": "30000",
     "system/screen_brightness": "120", "system/screen_brightness_mode": "1",
     "global/airplane_mode_on": "0", "global/zen_mode": "0",
+    "global/heads_up_notifications_enabled": "1",
 }
+# `cmd notification set_dnd` words -> the zen_mode NotificationManager stores.
+DND_ZEN = {"off": "0", "all": "0", "priority": "1", "none": "2", "on": "2", "alarms": "3"}
 
 
 def default_phone(**overrides) -> dict:
@@ -143,6 +149,12 @@ def adb(argv: list[str]) -> int:
             state["settings"][args[3] + "/" + args[4]] = args[5]
         elif args[1:3] == ["settings", "delete"]:
             state["settings"].pop(args[3] + "/" + args[4], None)
+        elif args[1:4] == ["cmd", "notification", "set_dnd"] and len(args) == 5 and args[4] in DND_ZEN:
+            fault = state.get("dndFault")
+            if fault == "error":
+                out, code = "Security exception: set_dnd refused by the fixture", 255
+            elif fault != "ignored":
+                state["settings"]["global/zen_mode"] = DND_ZEN[args[4]]
         elif command == "dumpsys power":
             out = "  mWakefulness=" + ("Awake" if state["awake"] else "Asleep")
         elif command == "dumpsys window policy":

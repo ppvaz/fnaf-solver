@@ -11,6 +11,7 @@
  * (native-regions.mjs). Run under the serial lease.
  */
 import { AdbCueHelperPort } from '../../apps/device/src/physical-ports.js';
+import { resolveSerial } from './local-profile.mjs';
 
 function fail(message) { console.error(`native-frame: ${message}`); process.exit(2); }
 
@@ -24,7 +25,9 @@ for (let i = 0; i < argv.length; i += 1) {
 }
 if (!out) fail('--out is required');
 if (process.env.FNAF_LEASE_HELD !== '1' && process.env.FNAF1_LEASE_HELD !== '1') fail('run under the serial lease');
-const port = new AdbCueHelperPort({ serial: process.env.FNAF_SERIAL ?? 'ZF525F5BH5' });
+let serial;
+try { ({ serial } = resolveSerial()); } catch (error) { fail(error.message); }
+const port = new AdbCueHelperPort({ serial });
 port.snap(label, out).then((r) => {
   console.log(JSON.stringify({ out: r.path, bytes: r.bytes, imageNs: String(r.imageNs), snapshotNs: String(r.snapshotNs) }));
 }).catch((error) => fail(error.message));

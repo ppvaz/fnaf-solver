@@ -29,9 +29,10 @@ import { fileURLToPath } from 'node:url';
 import { performance } from 'node:perf_hooks';
 import { AdbCueHelperPort, AdbHidProcess } from '../../apps/device/src/physical-ports.js';
 import { HidWireTransport } from '../../packages/adapters/src/transports/hid.js';
+import { resolveSerial } from './local-profile.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const SERIAL = process.env.FNAF_SERIAL ?? 'ZF525F5BH5';
+let SERIAL = null;                  // FNAF_SERIAL, else the local profile: resolved under the lease below
 const CONTACT_MS = 160;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function fail(m) { console.error(`explore-step: ${m}`); process.exit(2); }
@@ -49,6 +50,7 @@ for (let i = 0; i < argv.length; i += 1) {
 }
 if (!session || !/^[a-z0-9][a-z0-9-]{0,60}$/.test(session)) fail('--session is lowercase letters, digits, hyphens');
 if (process.env.FNAF_LEASE_HELD !== '1') fail('run under the serial lease');
+try { SERIAL = resolveSerial().serial; } catch (error) { fail(error.message); }
 const [verb, ...args] = rest;
 // Anything that touches the game -- a contact, a launch, a stop -- needs the
 // operator's explicit --confirm-live on top of the lease; a snap only reads.
