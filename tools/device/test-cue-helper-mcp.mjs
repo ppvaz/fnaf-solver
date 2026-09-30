@@ -215,7 +215,8 @@ try {
   assert.deepEqual([fnaf3.claim.gaps[1].holds, fnaf3.claim.gaps[1].notMeasured], [false, [NO_LOCAL_DUMP]], 'closed, with no dump for FNaF 3 here');
   assert.ok(fnaf3.notMeasured.includes(NO_LOCAL_DUMP));
   assert.ok(isUnknown(fnaf3.claim.phone), 'no pack is attributed to FNaF 3');
-  assert.ok(isUnknown(fnaf3.claim.chronicle), 'the chronicle attributes nothing to FNaF 3');
+  assert.ok(fnaf3.claim.chronicle.entries >= 1 && fnaf3.claim.chronicle.attribution.includes('chronicle-entries-v2'),
+    'chronicle-entries-v2 entries name FNaF 3');
   const fnaf1 = claimed(await call('describe', { game: 'fnaf1' }), 'describe fnaf1');
   assert.ok(isUnknown(fnaf1.claim.phone.promotion), 'no Plan 12 gate reads a FNaF 1 run');
   refused(await call('describe', { game: 'fnaf9' }), 'invalid-argument', 'an unregistered game');
@@ -228,7 +229,7 @@ try {
   assert.equal(promotions.claim.edges.matched, promotions.claim.edges.graph);
   const fnaf1Packs = claimed(await call('query', { what: 'packs', game: 'fnaf1' }), 'query packs');
   assert.ok(fnaf1Packs.claim.packs.length >= 1 && fnaf1Packs.claim.packs.every(pack => pack.game === 'com.scottgames.fivenightsatfreddys'));
-  const negative = claimed(await call('query', { what: 'chronicle', negative: true }), 'query chronicle');
+  const negative = claimed(await call('query', { what: 'chronicle', negative: true, game: 'fnaf2' }), 'query chronicle');
   assert.equal(negative.claim.entries.length, negatives.length);
   const foxy = claimed(await call('query', { what: 'chronicle', text: 'Foxy' }), 'query chronicle text');
   assert.ok(foxy.claim.entries.every(entry => JSON.stringify(entry).toLowerCase().includes('foxy')));

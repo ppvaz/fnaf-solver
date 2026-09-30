@@ -5,8 +5,10 @@
 <h1>fnaf-solver knowledge portal</h1>
 <p>This static, repository-owned view links README, package docs,
 contract/catalog data, and evidence records. It is written by hand, and
-tools/test-docs.mjs checks that every link resolves. Git remains authoritative.</p>
-<nav><a href="chronicle.html">The Chronicle</a> · <a href="../architecture/README.md">Architecture</a> · <a href="../architecture/DEPENDENCY-GRAPH.md">Dependency graph</a> · <a href="../architecture/COMPATIBILITY.md">Compatibility</a> · <a href="../evidence/README.md">Evidence policy</a> · <a href="../evidence/graph.json">Evidence graph</a> · <a href="../../README.md">Repository front door</a></nav>
+tools/test-docs.mjs checks that every link resolves. Git remains authoritative.
+The Story and the Chronicle are generated from docs/chronicle/ by
+tools/chronicle.mjs (npm run chronicle).</p>
+<nav><a href="story.html">The Story</a> · <a href="chronicle.html">The Chronicle</a> ·<a href="../architecture/README.md">Architecture</a> · <a href="../architecture/DEPENDENCY-GRAPH.md">Dependency graph</a> · <a href="../architecture/COMPATIBILITY.md">Compatibility</a> · <a href="../evidence/README.md">Evidence policy</a> · <a href="../evidence/graph.json">Evidence graph</a> · <a href="../../README.md">Repository front door</a></nav>
 <h2>Machine catalogs</h2>
 <ul><li><a href="../architecture/generated/command-registry.json">commands</a></li><li><a href="../architecture/generated/contract-register.json">contracts</a> · <a href="../architecture/generated/contract-specifications.json">contract specifications</a></li><li><a href="../architecture/generated/protocol-register.json">protocols</a></li><li><a href="../architecture/generated/test-manifest.json">test manifest</a> · <a href="../architecture/generated/import-graph.json">imports</a></li></ul>
 <h2>Retrieval rule</h2><p>Use exact source lookup and generated indexes first. Claims,

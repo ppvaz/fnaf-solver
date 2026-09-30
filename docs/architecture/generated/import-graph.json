@@ -2053,9 +2053,25 @@
       ]
     },
     {
+      "file": "tools/chronicle-schema.mjs",
+      "imports": [
+        "@sixam/source"
+      ]
+    },
+    {
+      "file": "tools/chronicle-story.mjs",
+      "imports": [
+        "./chronicle-schema.mjs",
+        "node:fs/promises",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/chronicle.mjs",
       "imports": [
         "./chronicle-schema.mjs",
+        "./chronicle-story.mjs",
         "node:fs/promises",
         "node:path",
         "node:url"
@@ -4071,9 +4087,11 @@
       "file": "tools/test-chronicle.mjs",
       "imports": [
         "./chronicle-schema.mjs",
+        "./chronicle-story.mjs",
         "./chronicle.mjs",
         "node:assert/strict",
         "node:child_process",
+        "node:crypto",
         "node:fs",
         "node:path"
       ]

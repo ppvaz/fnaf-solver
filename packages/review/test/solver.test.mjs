@@ -89,18 +89,22 @@ for (const game of GAMES) {
   assert.equal(gaps[1].localDump, false);
   assert.deepEqual(gaps[1].notMeasured, [NO_LOCAL_DUMP], 'with no local dump the surface is there, and what it cannot read is said');
   assert.ok(described.notMeasured.includes(NO_LOCAL_DUMP));
+  // The chronicle attributes each entry to a game: v2 names it, v1 is read as FNaF 2.
+  const own = chronicle.entries.filter(entry => entry.target === game.package);
+  if (own.length) {
+    assert.equal(story.entries, own.length);
+    assert.equal(story.newest, own.map(entry => entry.date).sort().at(-1));
+    assert.equal(described.claim.refuted.length, own.filter(isNegative).length);
+  } else {
+    assert.ok(isUnknown(story), `the chronicle attributes nothing to ${game.alias}`);
+    assert.ok(isUnknown(described.claim.refuted));
+  }
   if (game.alias === 'fnaf2') {
-    assert.equal(story.entries, chronicle.entries.length);
-    assert.equal(story.newest, chronicle.entries.map(entry => entry.date).sort().at(-1));
-    assert.equal(described.claim.refuted.length, chronicle.entries.filter(isNegative).length);
     assert.equal(phone.promotedRuns, graphEdges.length, 'every PROMOTED_BY edge in the graph is a FNaF 2 promotion that re-derives');
     assert.equal(phone.label, 'DEVICE_MEASURED');
     assert.equal(gaps[3].promotionEdges, graphEdges.length);
     assert.equal(gaps[3].holds, 'partly', 'promotion is no longer empty, and custody is not complete for every pack');
     assert.ok(described.notMeasured.some(item => item.startsWith('reliability')), 'a promotion is one clear, and that is said');
-  } else {
-    assert.ok(isUnknown(story), `the chronicle attributes nothing to ${game.alias}`);
-    assert.ok(isUnknown(described.claim.refuted));
   }
   if (game.alias === 'fnaf3' || game.alias === 'fnaf4') assert.ok(isUnknown(phone), `no pack is attributed to ${game.alias}`);
   if (game.alias === 'fnaf1') assert.ok(isUnknown(phone.promotion), 'no Plan 12 gate reads a FNaF 1 run');
@@ -125,7 +129,26 @@ assert.equal(claim(solver.query({ what: 'chronicle', negative: true }), 'query c
 const limited = claim(solver.query({ what: 'chronicle', limit: 2 }), 'query chronicle limit');
 assert.equal(limited.claim.entries.length, 2);
 assert.ok(limited.notMeasured.some(item => item.includes('beyond the limit')));
-assert.equal(claim(solver.query({ what: 'chronicle', game: 'fnaf3' }), 'chronicle for FNaF 3').claim.matched, 0);
+assert.equal(claim(solver.query({ what: 'chronicle', game: 'fnaf3' }), 'chronicle for FNaF 3').claim.matched,
+  chronicle.entries.filter(entry => entry.target === 'com.scottgames.fnaf3').length);
+
+// --- the chronicle after 2026-09-09: chronicle-entries-v2 -------------------------------------
+// v2 entries reach the queries: "what has been refuted about Foxy?" returns cited negatives past
+// the v1 corpus's last day, and a v2 correction reads its target as superseded though the frozen
+// v1 file still says standing.
+const v1Newest = chronicle.entries.filter(entry => entry.schema === 'chronicle-entries-v1').map(entry => entry.date).sort().at(-1);
+const foxy = claim(solver.query({ what: 'chronicle', text: 'Foxy', negative: true }), 'refuted about Foxy');
+assert.ok(foxy.claim.entries.some(entry => entry.date > v1Newest && entry.kind === 'refutation'), 'a Foxy refutation after the v1 corpus');
+assert.ok(foxy.claim.entries.every(entry => entry.sources.length > 0 && JSON.stringify(entry).toLowerCase().includes('foxy')));
+const refutedNow = claim(solver.readResource('fnaf://refuted'), 'fnaf://refuted');
+assert.ok(refutedNow.claim.chronicle.some(entry => entry.date > v1Newest), 'fnaf://refuted sees v2 negatives');
+assert.ok(refutedNow.claim.chronicle.some(entry => entry.game !== 'com.scottgames.fnaf2'), 'and attributes them to their game');
+for (const correction of chronicle.entries.filter(entry => entry.supersedes)) {
+  const target = chronicle.entries.find(entry => entry.id === correction.supersedes);
+  assert.equal(target.supersededBy, correction.id, `${target.id} reads as superseded by ${correction.id}`);
+  assert.notEqual(target.status, 'standing');
+  assert.ok(refutedNow.claim.chronicle.some(entry => entry.id === target.id), `${target.id} is listed as refuted`);
+}
 const promotions = claim(solver.query({ what: 'promotions' }), 'query promotions');
 assert.deepEqual(promotions.claim, queryPromotions(ROOT, { winners }), 'query promotions wraps exactly the promotions query');
 

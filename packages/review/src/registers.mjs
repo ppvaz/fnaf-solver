@@ -2,14 +2,14 @@
 //
 // Plan 28: the interface is "a read-mostly projection of registers this repository already
 // generates". Each reader below opens one register and returns it with the path it read, and
-// none writes. Where a register has no field for a question -- the chronicle has no game, the
-// contract register no game dimension -- the reader says so as UNKNOWN(reason) rather than
+// none writes. Where a register has no field for a question -- a chronicle-entries-v1 entry has no
+// game, the contract register no game dimension -- the reader says so as UNKNOWN(reason) rather than
 // guessing, and the rule that attributes a record to a game is named beside the attribution.
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { CONTROL_CATALOGS, GAME_PACKAGES } from '@sixam/source';
 import { isUnknown, unknown } from '@sixam/kernel';
-import { ENTRIES_SCHEMA, KINDS, ROUTES, RUNGS, checkCorpus } from '../../../tools/chronicle-schema.mjs';
+import { KINDS, ROUTES, RUNGS, SCHEMAS, V1_GAME, checkCorpus, readEntries } from '../../../tools/chronicle-schema.mjs';
 import { PACKS_DIR, attestationStatus, packCustody, packEntry, readPack } from './evidence-pack.mjs';
 import { GRAPH_FILE, PROMOTION_EDGE, readGraph } from './evidence-promotion.mjs';
 
@@ -41,19 +41,22 @@ export const executorGames = () => GAMES.filter(game => CONTROL_CATALOGS[game.pa
 // --- the chronicle -------------------------------------------------------------------------
 
 /**
- * The chronicle has no game field. Its route and rung vocabularies (ROUTES, RUNGS in
- * tools/chronicle-schema.mjs) are FNaF 2's -- Minus 7 to 10/20, and Plan 12's FNaF 2 ladder --
- * so every entry is attributed to FNaF 2, and to no other game, by that rule.
+ * A chronicle-entries-v2 entry names its game. A chronicle-entries-v1 entry has no game field,
+ * and its route and rung vocabularies (ROUTES, RUNGS in tools/chronicle-schema.mjs) are FNaF 2's
+ * -- Minus 7 to 10/20, and Plan 12's FNaF 2 ladder -- so every v1 entry is attributed to FNaF 2,
+ * and to no other game, by that rule.
  */
 export const CHRONICLE_GAME = 'com.scottgames.fnaf2';
-export const CHRONICLE_ATTRIBUTION = 'chronicle-entries-v1 has no game field; its ROUTES and RUNGS vocabularies ' +
-  `(${CHRONICLE_SCHEMA_MODULE}) are FNaF 2's, so every entry is attributed to ${CHRONICLE_GAME}`;
+export const CHRONICLE_ATTRIBUTION = 'a chronicle-entries-v2 entry names its game; chronicle-entries-v1 has no game field, and its ' +
+  `ROUTES and RUNGS vocabularies (${CHRONICLE_SCHEMA_MODULE}) are FNaF 2's, so every v1 entry is attributed to ${CHRONICLE_GAME}`;
 /** The kinds that record a negative result. */
 export const NEGATIVE_KINDS = Object.freeze(['refutation', 'retraction', 'negative']);
 
 /**
  * Every checkpoint and entry, checked by the chronicle's own corpus rules; a corpus that fails
- * them is refused rather than served.
+ * them is refused rather than served. Each entry carries its game (v1 entries read as fnaf2) and
+ * `target`, that game's package; an entry a v2 correction supersedes reads as superseded, and
+ * `storedStatus` keeps what its frozen file says (readEntries in tools/chronicle-schema.mjs).
  * @param {string} root
  */
 export function readChronicle(root) {
@@ -61,14 +64,13 @@ export function readChronicle(root) {
   const checkpoints = names.map(name => ({ file: `${CHRONICLE_DIR}/${name}`, ...readJson(root, `${CHRONICLE_DIR}/${name}`) }));
   const problems = checkCorpus(checkpoints);
   if (problems.length) throw new Error(`the chronicle fails its own checks: ${problems.slice(0, 3).join('; ')}`);
-  const entries = checkpoints.flatMap(checkpoint => checkpoint.entries.map(entry => ({ ...entry, checkpoint: checkpoint.checkpoint,
-    file: checkpoint.file })));
-  return { schema: ENTRIES_SCHEMA, checkpoints, entries, rungs: RUNGS, routes: ROUTES, kinds: KINDS };
+  const entries = readEntries(checkpoints).map(entry => ({ ...entry, target: resolveGame(entry.game)?.package ?? CHRONICLE_GAME }));
+  return { schemas: SCHEMAS, v1Game: V1_GAME, checkpoints, entries, rungs: RUNGS, routes: ROUTES, kinds: KINDS };
 }
 
 /**
- * A chronicle label in kernel words: DEVICE_MEASURED is a ClaimLevel, the other four named
- * labels are SourceLabels, and the chronicle's bare UNKNOWN becomes UNKNOWN(reason).
+ * A chronicle label in kernel words: DEVICE_MEASURED, MODEL_ONLY and FIXTURE are ClaimLevels, the
+ * other four named labels are SourceLabels, and the chronicle's bare UNKNOWN becomes UNKNOWN(reason).
  * @param {{id: string, label: string, title: string}} entry
  */
 export const chronicleLabel = entry => entry.label === 'UNKNOWN'

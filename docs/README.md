@@ -29,6 +29,7 @@ controller research, and device evidence form one program.
 | See what completely solving the game would mean, and where we stand on that ladder | [`research/SOLVING-FNAF2.md`](research/SOLVING-FNAF2.md) |
 | Prioritize the research frontier and the Observatory's first encounter experiment | [`research/FNAF2-OBSERVATORY.md`](research/FNAF2-OBSERVATORY.md) |
 | Read what the project has learned | [`chronicle/README.md`](chronicle/README.md) |
+| Read how far the project got, in twelve generated chapters | [`portal/story.html`](portal/story.html) |
 | Understand why facts stay hidden here, and where to look next | [`operations/WHY-FACTS-HIDE.md`](operations/WHY-FACTS-HIDE.md) |
 | Find the right command | [`../tools/README.md`](../tools/README.md) (one index per tool directory) |
 | Pick up unfinished work | [`../plans/`](../plans/) |

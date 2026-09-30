@@ -24,7 +24,7 @@ import { FNAF2, ONE_CLEAR, PLAN12, levelLabel, promotionsQueryEnvelope } from '.
 import { liftPack } from './pack-lift.mjs';
 import { queryPromotions } from './promotions-query.mjs';
 import { CHECKS, RULE_CITES, checkUnknownAsNumber } from './refusals.mjs';
-import { ARCHIVED_ROUTES, CHRONICLE_ATTRIBUTION, CHRONICLE_DIR, CHRONICLE_GAME, CHRONICLE_SCHEMA_MODULE, COMMAND_REGISTRY,
+import { ARCHIVED_ROUTES, CHRONICLE_ATTRIBUTION, CHRONICLE_DIR, CHRONICLE_SCHEMA_MODULE, COMMAND_REGISTRY,
   CONTRACT_REGISTER, CONTROL_CATALOG_DIR, GAMES, controlCatalogFile, catalogUnknowns, chronicleLabel, gameKey, isNegative, packDirectories,
   readArchivedRoutes, readChronicle, readCommandRegistry, readContracts, readPackRow, readPacks, resolveGame } from './registers.mjs';
 
@@ -44,7 +44,7 @@ export const RESOURCES = Object.freeze([
   { uri: 'fnaf://chronicle', name: 'chronicle', description: 'Every chronicle checkpoint and entry, with its label and status.' },
   { uri: 'fnaf://evidence/graph', name: 'evidence graph', description: 'docs/evidence/graph.json: claims, runs and PROMOTED_BY edges.' },
   { uri: 'fnaf://contracts', name: 'contracts', description: 'The contract register, each contract with its conformance fixtures.' },
-  { uri: 'fnaf://refuted', name: 'refuted', description: 'Negative results: chronicle refutations, retractions, negatives and superseded entries, and the parked routes of docs/ARCHIVED-ROUTES.md.' },
+  { uri: 'fnaf://refuted', name: 'refuted', description: 'Negative results: chronicle refutations, retractions, negatives and superseded entries, each with its game, and the parked routes of docs/ARCHIVED-ROUTES.md.' },
 ]);
 export const RESOURCE_TEMPLATES = Object.freeze([
   { uriTemplate: 'fnaf://game/{pkg}/controls', name: 'game controls', description: "One game's control-catalog-v1 (D5), by Android package." },
@@ -155,22 +155,22 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
     };
     notMeasured.push(`which of the other ${register.contracts.length - scoped.length} registered contracts bind this game: the register has no game dimension`);
 
-    // The chronicle.
+    // The chronicle: the entries attributed to this game (v2 names it; v1 is read as FNaF 2).
     const chronicle = readChronicle(root);
     let chronicleView;
     let refuted;
-    if (pkg === CHRONICLE_GAME) {
-      const entries = chronicle.entries;
+    const entries = chronicle.entries.filter(entry => entry.target === pkg);
+    if (entries.length) {
       const newest = entries.map(entry => entry.date).sort().at(-1);
       const labelledUnknown = entries.filter(entry => entry.label === 'UNKNOWN');
       chronicleView = {
         register: CHRONICLE_DIR, attribution: CHRONICLE_ATTRIBUTION, entries: entries.length,
-        checkpoints: chronicle.checkpoints.map(item => item.checkpoint), newest,
+        checkpoints: [...new Set(entries.map(entry => entry.checkpoint))], newest,
         byLabel: sorted(tally(entries, entry => entry.label)), byKind: sorted(tally(entries, entry => entry.kind)),
         byStatus: sorted(tally(entries, entry => entry.status)),
         labelledUnknown: labelledUnknown.map(entry => ({ id: entry.id, label: chronicleLabel(entry) })),
       };
-      notMeasured.push(`anything the chronicle holds after ${newest}, its newest entry`,
+      notMeasured.push(`anything the chronicle holds for ${named.title} after ${newest}, its newest entry`,
         ...labelledUnknown.map(entry => `chronicle ${entry.id}: ${entry.title} (labelled UNKNOWN)`));
       refuted = entries.filter(isNegative).map(entry => ({ id: entry.id, date: entry.date, kind: entry.kind, status: entry.status,
         supersededBy: entry.supersededBy, label: chronicleLabel(entry), title: entry.title, sources: entry.sources }));
@@ -257,9 +257,9 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
     const named = game === undefined ? null : resolveGame(game);
     if (game !== undefined && !named) return gameRefusal(game);
     const chronicle = readChronicle(root);
-    const scoped = !named || named.package === CHRONICLE_GAME;
-    const rows = (scoped ? chronicle.entries : []).filter(entry => (!kind || entry.kind === kind) && (!negative || isNegative(entry)) &&
-      matches(text, [entry.id, entry.title, entry.body, entry.measured, ...entry.tags]));
+    const scoped = !named || chronicle.entries.some(entry => entry.target === named.package);
+    const rows = chronicle.entries.filter(entry => (!named || entry.target === named.package) && (!kind || entry.kind === kind) &&
+      (!negative || isNegative(entry)) && matches(text, [entry.id, entry.title, entry.body, entry.measured, ...entry.tags]));
     const shown = rows.slice(0, limitOf(limit) ?? rows.length).map(entry => ({ ...entry, label: chronicleLabel(entry), chronicleLabel: entry.label }));
     const notMeasured = [
       ...(named && !scoped ? [`${named.title}: ${CHRONICLE_ATTRIBUTION}; none to ${named.package}`] : []),
@@ -271,7 +271,7 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
       claim: { query: 'chronicle', attribution: CHRONICLE_ATTRIBUTION, filters: { game: named?.package ?? null, text: text ?? null,
         kind: kind ?? null, negative: Boolean(negative) }, matched: rows.length, entries: shown },
       label: sharedLabel(shown.map(entry => entry.label), 'chronicle entries'),
-      target: named?.package ?? CHRONICLE_GAME, cite: [CHRONICLE_DIR, CHRONICLE_SCHEMA_MODULE],
+      target: named?.package ?? REPOSITORY_TARGET, cite: [CHRONICLE_DIR, CHRONICLE_SCHEMA_MODULE],
       status: 'standing', supersededBy: null, notMeasured,
       reproducer: reproduce('chronicle', { game, text, kind, negative, limit }),
     });
@@ -494,7 +494,7 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
       return claimEnvelope({
         claim: { attribution: CHRONICLE_ATTRIBUTION, checkpoints: chronicle.checkpoints.map(({ entries, ...checkpoint }) => ({ ...checkpoint,
           entries: entries.map(entry => ({ ...entry, label: chronicleLabel(entry), chronicleLabel: entry.label })) })) },
-        label: sharedLabel(chronicle.entries.map(chronicleLabel), 'chronicle entries'), target: CHRONICLE_GAME,
+        label: sharedLabel(chronicle.entries.map(chronicleLabel), 'chronicle entries'), target: REPOSITORY_TARGET,
         cite: [CHRONICLE_DIR, CHRONICLE_SCHEMA_MODULE], status: 'standing', supersededBy: null,
         notMeasured: [`anything after ${chronicle.entries.map(entry => entry.date).sort().at(-1)}, the chronicle's newest entry`,
           ...chronicle.entries.filter(entry => entry.label === 'UNKNOWN').map(entry => `${entry.id}: labelled UNKNOWN`),
@@ -514,9 +514,9 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
     if (uri === 'fnaf://contracts') return { ...queryContracts({}), reproducer: 'npm run review -- resource fnaf://contracts' };
     if (uri === 'fnaf://refuted') {
       const chronicle = readChronicle(root);
-      const negatives = chronicle.entries.filter(isNegative).map(entry => ({ id: entry.id, date: entry.date, kind: entry.kind,
-        status: entry.status, supersededBy: entry.supersededBy, label: chronicleLabel(entry), title: entry.title, body: entry.body,
-        sources: entry.sources }));
+      const negatives = chronicle.entries.filter(isNegative).map(entry => ({ id: entry.id, date: entry.date, game: entry.target,
+        kind: entry.kind, status: entry.status, supersededBy: entry.supersededBy, label: chronicleLabel(entry), title: entry.title,
+        body: entry.body, sources: entry.sources }));
       const archived = readArchivedRoutes(root);
       return claimEnvelope({
         claim: { rule: `chronicle entries of kind ${['refutation', 'retraction', 'negative'].join(', ')} or not standing; and the rows of ` +

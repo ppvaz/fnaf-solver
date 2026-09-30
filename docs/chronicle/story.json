@@ -1,0 +1,66 @@
+{
+  "schema": "chronicle-story-v1",
+  "title": "The story, in twelve chapters",
+  "chapters": [
+    {
+      "number": 1,
+      "title": "Inheriting a lineage, reading the real game",
+      "entries": ["strategy-lineage", "android-build-is-authority", "six-seven-refuted", "xor28-handle-scramble", "bb-mask-storage-does-not-exist", "gate-search-zero"]
+    },
+    {
+      "number": 2,
+      "title": "The phone becomes a game",
+      "entries": ["first-phone-session", "hid-two-contact", "native-fps-regrade", "spacing-floor-was-a-decoder-floor"]
+    },
+    {
+      "number": 3,
+      "title": "First wall, first determinism",
+      "entries": ["minus3-open-loop-refuted", "drift-not-reproduced", "audio-cues-dead-on-stock-phone", "offline-replay-is-deterministic", "cycle-prerequisites-are-gated"]
+    },
+    {
+      "number": 4,
+      "title": "Story Nights 1–4",
+      "entries": ["night1-device-clear", "night2-device-clear", "night1-device-clear-dated", "night2-device-clear-dated", "night3-device-clear", "night4-device-clear"]
+    },
+    {
+      "number": 5,
+      "title": "The Night 5 wall",
+      "entries": ["night5-open-loop-refuted", "box-margin-is-exhausted", "night5-wall-is-execution", "monitor-raise-fails", "lost-wind-is-catastrophic", "night5-seam-hypothesis-refuted", "night5-mangle-has-no-stun"]
+    },
+    {
+      "number": 6,
+      "title": "Night 5 falls",
+      "entries": ["night5-first-6am", "night5-longer-cycle-refuted", "withered-bonnie-death-model-withdrawn"]
+    },
+    {
+      "number": 7,
+      "title": "Night 6, and Custom Night unlocked",
+      "entries": ["night6-first-6am"]
+    },
+    {
+      "number": 8,
+      "title": "10/20",
+      "entries": ["night7-first-6am-k2", "night7-420-minus3-6am", "night7-k2-cohort-3-of-10", "k2-early-authorization-refuted", "k2-refused-flash-streaks-refuted", "k2-ledger-causes-retracted", "k3-first-6am", "foxy-chain-deaths-were-model-error", "foxy-phone-deaths-not-model-path", "foxy-lost-hall-flash-not-supported"]
+    },
+    {
+      "number": 9,
+      "title": "Reliability, and where the model stops",
+      "entries": ["night6-seed-lock-none", "night6-model-gap-two-wall-clocks", "night7-presets-3000-after-floor-move", "night7-k3-cohort-8-of-10", "night6-twins-proven", "shared-seed-does-not-replay", "model-encounters-at-chance", "teach-panel-10-20-win"]
+    },
+    {
+      "number": 10,
+      "title": "Three more games, same phone",
+      "entries": ["fnaf3-night1-6am", "fnaf3-monitor-tap-was-maintenance", "fnaf1-420-first-6am", "fnaf4-nights-1-3-won", "fnaf4-night4-short", "fnaf3-line-needs-impossible-pace"]
+    },
+    {
+      "number": 11,
+      "title": "47 wins made checkable",
+      "entries": ["custody-recovered-from-run-logs", "plan12-first-promotions", "night7-420-promotion-refused", "promotions-rederive-from-packs"]
+    },
+    {
+      "number": 12,
+      "title": "What's open: the game rebuilt, the encounters",
+      "entries": ["rebuild-builds-from-ccn", "rebuild-phone-encounters-divergent", "rebuild-practice-apk-boots", "full06-balloon-boy-first-difference", "full06-window6-survives-contact-timing", "shared-clock-error-ruled-out", "k3-calibration-build-13-tick-hold", "foxy-move-value2-matches-rebuild", "model-matches-rebuild-not-phone", "fnaf4-night8-won-in-rebuild", "fnaf3-model-65536-retracted"]
+    }
+  ]
+}

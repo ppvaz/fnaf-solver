@@ -308,6 +308,12 @@
       "lifecycle": "supported"
     },
     {
+      "id": "tools/chronicle-story.mjs",
+      "invocation": "tools/chronicle-story.mjs",
+      "kind": "module",
+      "lifecycle": "supported"
+    },
+    {
       "id": "tools/chronicle-harvest.mjs",
       "invocation": "tools/chronicle-harvest.mjs --since COMMIT [--until COMMIT] [--json]",
       "kind": "report",
