@@ -1,0 +1,121 @@
+{
+  "status": "ABORTED",
+  "mode": "live",
+  "result": {
+    "schema": "device-campaign-result-v1",
+    "version": 1,
+    "specHash": "fnv1a-f88708cf",
+    "state": "ABORTED",
+    "targetIndex": 0,
+    "completedNights": [],
+    "attempts": [
+      {
+        "night": 5,
+        "mode": "story",
+        "attempt": 1,
+        "status": "DEATH",
+        "terminal": {
+          "night": 5,
+          "outcome": "death",
+          "sixAm": false
+        }
+      }
+    ],
+    "events": [
+      {
+        "schema": "campaign-event-v1",
+        "type": "campaign.state",
+        "state": "PREFLIGHT",
+        "at": 11780.194083,
+        "data": {
+          "previous": "IDLE"
+        }
+      },
+      {
+        "schema": "campaign-event-v1",
+        "type": "campaign.state",
+        "state": "MENU",
+        "at": 12623.950583,
+        "data": {
+          "previous": "PREFLIGHT",
+          "device": "ZF525F5BH5",
+          "venue": {
+            "schema": "venue-check-v1",
+            "status": "UNBOUND",
+            "refuses": false,
+            "observed": {
+              "schema": "venue-identity-v1",
+              "package": "com.scottgames.fnaf2",
+              "versionName": "2.0.7",
+              "versionCode": "26",
+              "firstInstallTime": "2026-09-27 01:34:27",
+              "lastUpdateTime": "2026-09-27 01:34:27",
+              "buildFingerprint": "motorola/bogota_gn/bogota:16/W1VOS36.88-71-6-2-1-4/f2d68-fde443b:user/release-keys",
+              "securityPatch": "2026-09-01",
+              "handsetHash": "sha256-f88a35e75d347b6b",
+              "companionVersion": "0.1.14+15",
+              "timeZone": "America/Sao_Paulo"
+            },
+            "bindings": [],
+            "drift": [],
+            "unknown": [],
+            "notes": [],
+            "message": "unbound: the observed venue identity is recorded; no profile, winner or qualification binds one, so drift is not checked",
+            "remedy": null
+          }
+        }
+      },
+      {
+        "schema": "campaign-event-v1",
+        "type": "campaign.state",
+        "state": "INTRO_VERIFY",
+        "at": 24807.74575,
+        "data": {
+          "previous": "MENU",
+          "target": "continue"
+        }
+      },
+      {
+        "schema": "campaign-event-v1",
+        "type": "campaign.state",
+        "state": "ACTIVE",
+        "at": 30699.772208,
+        "data": {
+          "previous": "INTRO_VERIFY",
+          "night": 5
+        }
+      },
+      {
+        "schema": "campaign-event-v1",
+        "type": "campaign.attempt",
+        "state": "ACTIVE",
+        "at": 30699.866208,
+        "data": {
+          "night": 5,
+          "attempt": 1
+        }
+      },
+      {
+        "schema": "campaign-event-v1",
+        "type": "campaign.state",
+        "state": "RETRY_VERIFY",
+        "at": 183744.982666,
+        "data": {
+          "previous": "ACTIVE",
+          "reason": "attempt-ended-with-death",
+          "night": 5
+        }
+      },
+      {
+        "schema": "campaign-event-v1",
+        "type": "campaign.state",
+        "state": "ABORTED",
+        "at": 196477.549708,
+        "data": {
+          "previous": "RETRY_VERIFY",
+          "reason": "attempt-budget-exhausted"
+        }
+      }
+    ]
+  }
+}
