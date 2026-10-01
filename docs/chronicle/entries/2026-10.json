@@ -262,9 +262,9 @@
    "sources": [
     "docs/evidence/fnaf2-title-items-calibration-20261001.json",
     "tools/test-mistake-register.ts",
-    "packages/propose/test/test-terminal-deadline.mjs",
-    "packages/propose/test/test-seam-slack.mjs",
-    "packages/propose/bin/plans/basin-edge.mjs"
+    "packages/propose/test/test-terminal-deadline.ts",
+    "packages/propose/test/test-seam-slack.ts",
+    "packages/propose/bin/plans/basin-edge.ts"
    ],
    "status": "standing",
    "supersededBy": null,
