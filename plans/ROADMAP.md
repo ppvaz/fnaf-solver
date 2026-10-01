@@ -211,6 +211,23 @@ Details:
     ([realignment](../docs/evidence/full06-audio-realignment-20261001.json),
     `s2-audio-realignment-f61f47d56098beb2`). DEVICE_MEASURED audio against
     MODEL_ONLY replays.
+  - **The phone's office random stream is read state by state (2026-10-01,
+    pre-registered, SUPPORTED).** On a k3 Night 7 with every Custom Night dial
+    at 0, the Companion 16 native static readout (no frame trace) identified
+    the generator's state in the winding windows, and 13 of 19 consecutive
+    windows' states sit exactly the model's draw count apart (differences of
+    0, 274-276 draws a pair); the power check at the night's own noise passed
+    ([result](../docs/evidence/s2-region-readout-night7-0of20-20261001.json),
+    `s2-region-readout-night7-0of20-6daba88865e81f6a`;
+    [pre-registration](../docs/evidence/s2-region-readout-night7-0of20-predeclaration-20261001.json)).
+    At 0/20 the model's draw accounting is exact over 200 s of a phone night,
+    and the stream runs through two frame stalls (timer-paced draws). Five
+    windows were unreadable (stalls, a camera-switch flash). Open: the seed
+    itself. Stepping back gives 23712, not the wall clock; the wall-clock seed
+    63 ms before onset would put the phone 5 draws ahead of the model before
+    the first window (exploratory; pre-register on a new night). At 10/20,
+    the night's press landings are needed (frame trace + readout now
+    coexist on Companion 16).
   - **Press landing reorders the office stream (2026-10-01, MODEL_ONLY,
     exploratory).** On full-06's measured clock, moving each press from its
     landing frame to its send update (about four updates) leaves every

@@ -97,6 +97,18 @@ for (const file of records) {
     const verdict = consistent >= rec.rule.supportConsistentPairs ? 'SUPPORTED' : consistent <= rec.rule.refuteConsistentPairs ? 'NOT_SUPPORTED' : 'INCONCLUSIVE';
     assert.equal(night.verdict, verdict, `${file} ${night.label}: verdict`);
   }
+  if (Array.isArray(rec.pairs)) {
+    // A night's analysis: the consistent pairs, the analysis verdict, and the power check that can override it.
+    const consistent = rec.pairs.filter((p: { differ: number | null }) => p.differ !== null && Math.abs(p.differ) <= rec.rule.consistencyDraws).length;
+    assert.equal(rec.consistent, consistent, `${file}: consistent pairs`);
+    assert.equal(rec.pairs.length, rec.windows.filter((w: { reading: { top: unknown } }) => w.reading.top).length - 1, `${file}: one pair per consecutive window`);
+    const analysis = consistent >= rec.rule.supportConsistentPairs ? 'SUPPORTED' : consistent <= rec.rule.refuteConsistentPairs ? 'NOT_SUPPORTED' : 'INCONCLUSIVE';
+    assert.equal(rec.analysisVerdict, analysis, `${file}: analysis verdict`);
+    const powered = rec.powerCheck.planted.every((p: { verdict: string }) => p.verdict === 'SUPPORTED');
+    assert.equal(rec.powerCheck.powered, powered, `${file}: power check`);
+    assert.equal(rec.verdict, powered ? analysis : 'UNINFORMATIVE', `${file}: verdict`);
+    assert.equal(rec.identified, rec.windows.filter((w: { reading: { verdict: string } }) => w.reading.verdict === 'IDENTIFIED').length, `${file}: identified windows`);
+  }
   const { id, ...body } = rec;
   assert.equal(id, `${id.slice(0, id.lastIndexOf('-'))}-${sha(canon(body)).slice(0, 16)}`, `${file}: record id`);
   if (rec.predeclaration?.path && existsSync(join(ROOT, rec.predeclaration.path)))

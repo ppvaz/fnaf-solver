@@ -1,0 +1,1988 @@
+{
+ "schema": "evidence-record-v1",
+ "date": "2026-10-01",
+ "step": "ROADMAP S2a: the instrument for a valid seed measurement",
+ "claimLevel": "DEVICE_MEASURED native region frames against MODEL_ONLY predictions",
+ "question": "On a Custom Night with every dial at 0, does the camera static, read off the Companion's static_view rectangle on every copied frame and no frame trace, identify the office generator's state in k3's winding windows, consecutively consistent with the draws the model spends between them?",
+ "predeclaration": {
+  "path": "docs/evidence/s2-region-readout-night7-0of20-predeclaration-20261001.json",
+  "sha256": "507da9f4676720a889b9d27f44454f2d2f9cffc6abd42a03b9869c7c3cda1ad5",
+  "id": "s2-region-readout-night7-0of20"
+ },
+ "nightInputs": {
+  "path": "docs/evidence/s2-region-readout-night7-0of20-inputs-20261001.json",
+  "sha256": "c0090634d6c97a4f42ea026d5c5ec1d4a3007fe15f5ba60c38129fe63212ff82"
+ },
+ "run": "night7-k3-0of20-sr01-20261001T221003Z",
+ "tool": {
+  "path": "packages/propose/bin/recompile/phone-region-readout.ts",
+  "sha256": "2634de6e8c8fef8f12210ecb50cc579d7684d281887cef04475243c2ca30c142"
+ },
+ "readout": {
+  "path": "captures/static-readouts/night7-k3-0of20-sr01-20261001T221003Z.jsonl",
+  "sha256": "7d489d319abcbbb3810982df4edab5779940db04e8acd85e2bed0716964d85a3",
+  "images": 26196
+ },
+ "rule": {
+  "minR": 0.85,
+  "minMargin": 0.08,
+  "aliasSteps": 5,
+  "consistencyDraws": 10,
+  "supportConsistentPairs": 5,
+  "refuteConsistentPairs": 1
+ },
+ "windows": [
+  {
+   "name": "wind-1",
+   "fromMs": 10400,
+   "toMs": 13700,
+   "injectAt": 616,
+   "endFrame": 834,
+   "rQuantiles": {
+    "p50": 0.2708341916169775,
+    "p999": 0.7111809249117784,
+    "max": 0.9765354473846874
+   },
+   "top10": [
+    {
+     "state": 57136,
+     "r": 0.9765354473846874,
+     "o": -4,
+     "blocks": 31
+    },
+    {
+     "state": 5165,
+     "r": 0.8081107616864209,
+     "o": -4,
+     "blocks": 31
+    },
+    {
+     "state": 22387,
+     "r": 0.7838214338376275,
+     "o": -5,
+     "blocks": 32
+    },
+    {
+     "state": 43964,
+     "r": 0.7826838341853452,
+     "o": -6,
+     "blocks": 32
+    },
+    {
+     "state": 56565,
+     "r": 0.7771449564663407,
+     "o": -2,
+     "blocks": 32
+    },
+    {
+     "state": 55697,
+     "r": 0.7763429728372868,
+     "o": 2,
+     "blocks": 31
+    },
+    {
+     "state": 22383,
+     "r": 0.7753575510274057,
+     "o": 5,
+     "blocks": 32
+    },
+    {
+     "state": 57833,
+     "r": 0.7746748215965007,
+     "o": 6,
+     "blocks": 32
+    },
+    {
+     "state": 27132,
+     "r": 0.7720395114544983,
+     "o": 3,
+     "blocks": 32
+    },
+    {
+     "state": 13713,
+     "r": 0.7713607086656724,
+     "o": 0,
+     "blocks": 32
+    }
+   ],
+   "reading": {
+    "verdict": "IDENTIFIED",
+    "top": {
+     "state": 57136,
+     "r": 0.9765354473846874,
+     "o": -4,
+     "blocks": 31
+    },
+    "rival": {
+     "state": 5165,
+     "r": 0.8081107616864209,
+     "o": -4,
+     "blocks": 31
+    }
+   }
+  },
+  {
+   "name": "wind-2",
+   "fromMs": 20400,
+   "toMs": 23700,
+   "injectAt": 1216,
+   "endFrame": 1434,
+   "rQuantiles": {
+    "p50": 0.25383610361558406,
+    "p999": 0.6961658543234173,
+    "max": 0.949529055171559
+   },
+   "top10": [
+    {
+     "state": 13280,
+     "r": 0.949529055171559,
+     "o": -4,
+     "blocks": 31
+    },
+    {
+     "state": 61494,
+     "r": 0.824083167131432,
+     "o": -4,
+     "blocks": 31
+    },
+    {
+     "state": 7276,
+     "r": 0.7986675587288067,
+     "o": 5,
+     "blocks": 32
+    },
+    {
+     "state": 168,
+     "r": 0.7872521809002615,
+     "o": 3,
+     "blocks": 32
+    },
+    {
+     "state": 1332,
+     "r": 0.77906875545949,
+     "o": 6,
+     "blocks": 32
+    },
+    {
+     "state": 56517,
+     "r": 0.7722479832495911,
+     "o": -3,
+     "blocks": 32
+    },
+    {
+     "state": 59005,
+     "r": 0.7668532746036603,
+     "o": 4,
+     "blocks": 32
+    },
+    {
+     "state": 23618,
+     "r": 0.7639411674178365,
+     "o": -4,
+     "blocks": 31
+    },
+    {
+     "state": 16589,
+     "r": 0.7614312083732552,
+     "o": -5,
+     "blocks": 32
+    },
+    {
+     "state": 15418,
+     "r": 0.7600596437614981,
+     "o": -1,
+     "blocks": 32
+    }
+   ],
+   "reading": {
+    "verdict": "IDENTIFIED",
+    "top": {
+     "state": 13280,
+     "r": 0.949529055171559,
+     "o": -4,
+     "blocks": 31
+    },
+    "rival": {
+     "state": 61494,
+     "r": 0.824083167131432,
+     "o": -4,
+     "blocks": 31
+    }
+   }
+  },
+  {
+   "name": "wind-3",
+   "fromMs": 30400,
+   "toMs": 33700,
+   "injectAt": 1816,
+   "endFrame": 2034,
+   "rQuantiles": {
+    "p50": 0.2674742974681305,
+    "p999": 0.7045851671394943,
+    "max": 0.9643562842819271
+   },
+   "top10": [
+    {
+     "state": 31832,
+     "r": 0.9643562842819271,
+     "o": -4,
+     "blocks": 31
+    },
+    {
+     "state": 51137,
+     "r": 0.8448237289861158,
+     "o": -5,
+     "blocks": 32
+    },
+    {
+     "state": 7620,
+     "r": 0.805933120279842,
+     "o": -5,
+     "blocks": 32
+    },
+    {
+     "state": 58702,
+     "r": 0.7905095216300124,
+     "o": -3,
+     "blocks": 32
+    },
+    {
+     "state": 36892,
+     "r": 0.786874564031909,
+     "o": 1,
+     "blocks": 32
+    },
+    {
+     "state": 24903,
+     "r": 0.7856201730075385,
+     "o": 0,
+     "blocks": 32
+    },
+    {
+     "state": 53165,
+     "r": 0.7644517138577085,
+     "o": 3,
+     "blocks": 32
+    },
+    {
+     "state": 25036,
+     "r": 0.7622829971334968,
+     "o": -5,
+     "blocks": 32
+    },
+    {
+     "state": 29827,
+     "r": 0.7621951744123673,
+     "o": -2,
+     "blocks": 32
+    },
+    {
+     "state": 17747,
+     "r": 0.7621818317011422,
+     "o": 4,
+     "blocks": 32
+    }
+   ],
+   "reading": {
+    "verdict": "IDENTIFIED",
+    "top": {
+     "state": 31832,
+     "r": 0.9643562842819271,
+     "o": -4,
+     "blocks": 31
+    },
+    "rival": {
+     "state": 51137,
+     "r": 0.8448237289861158,
+     "o": -5,
+     "blocks": 32
+    }
+   }
+  },
+  {
+   "name": "wind-4",
+   "fromMs": 40400,
+   "toMs": 43700,
+   "injectAt": 2416,
+   "endFrame": 2634,
+   "rQuantiles": {
+    "p50": 0.25990140013220253,
+    "p999": 0.6878522773645974,
+    "max": 0.90969292049095
+   },
+   "top10": [
+    {
+     "state": 26417,
+     "r": 0.90969292049095,
+     "o": -4,
+     "blocks": 31
+    },
+    {
+     "state": 456,
+     "r": 0.7896754132038662,
+     "o": 5,
+     "blocks": 32
+    },
+    {
+     "state": 8828,
+     "r": 0.7805076214850636,
+     "o": 4,
+     "blocks": 32
+    },
+    {
+     "state": 33579,
+     "r": 0.7723834322117759,
+     "o": 1,
+     "blocks": 32
+    },
+    {
+     "state": 9289,
+     "r": 0.7698977500287724,
+     "o": -6,
+     "blocks": 32
+    },
+    {
+     "state": 12821,
+     "r": 0.767518743367664,
+     "o": 1,
+     "blocks": 32
+    },
+    {
+     "state": 35539,
+     "r": 0.7631624680313316,
+     "o": -6,
+     "blocks": 32
+    },
+    {
+     "state": 24410,
+     "r": 0.7619421709575304,
+     "o": -6,
+     "blocks": 32
+    },
+    {
+     "state": 38911,
+     "r": 0.7421494959641184,
+     "o": -4,
+     "blocks": 31
+    },
+    {
+     "state": 20343,
+     "r": 0.7400816137801615,
+     "o": -6,
+     "blocks": 32
+    }
+   ],
+   "reading": {
+    "verdict": "IDENTIFIED",
+    "top": {
+     "state": 26417,
+     "r": 0.90969292049095,
+     "o": -4,
+     "blocks": 31
+    },
+    "rival": {
+     "state": 456,
+     "r": 0.7896754132038662,
+     "o": 5,
+     "blocks": 32
+    }
+   }
+  },
+  {
+   "name": "wind-5",
+   "fromMs": 50400,
+   "toMs": 53700,
+   "injectAt": 3016,
+   "endFrame": 3234,
+   "rQuantiles": {
+    "p50": 0.25098088082711983,
+    "p999": 0.6996993424207437,
+    "max": 0.9724042461789423
+   },
+   "top10": [
+    {
+     "state": 6649,
+     "r": 0.9724042461789423,
+     "o": -4,
+     "blocks": 31
+    },
+    {
+     "state": 8344,
+     "r": 0.8106973365603801,
+     "o": -4,
+     "blocks": 31
+    },
+    {
+     "state": 56402,
+     "r": 0.8094487958536564,
+     "o": 6,
+     "blocks": 32
+    },
+    {
+     "state": 14521,
+     "r": 0.8033334343844022,
+     "o": 1,
+     "blocks": 32
+    },
+    {
+     "state": 19931,
+     "r": 0.7934865329670099,
+     "o": 2,
+     "blocks": 31
+    },
+    {
+     "state": 57978,
+     "r": 0.7919378109535252,
+     "o": 5,
+     "blocks": 32
+    },
+    {
+     "state": 14841,
+     "r": 0.7827325847325354,
+     "o": -4,
+     "blocks": 31
+    },
+    {
+     "state": 9379,
+     "r": 0.782625194844978,
+     "o": 6,
+     "blocks": 32
+    },
+    {
+     "state": 12691,
+     "r": 0.7794943176568956,
+     "o": -3,
+     "blocks": 32
+    },
+    {
+     "state": 11596,
+     "r": 0.7733014828524463,
+     "o": -1,
+     "blocks": 32
+    }
+   ],
+   "reading": {
+    "verdict": "IDENTIFIED",
+    "top": {
+     "state": 6649,
+     "r": 0.9724042461789423,
+     "o": -4,
+     "blocks": 31
+    },
+    "rival": {
+     "state": 8344,
+     "r": 0.8106973365603801,
+     "o": -4,
+     "blocks": 31
+    }
+   }
+  },
+  {
+   "name": "wind-6",
+   "fromMs": 60400,
+   "toMs": 63700,
+   "injectAt": 3616,
+   "endFrame": 3834,
+   "rQuantiles": {
+    "p50": 0.25188622235831676,
+    "p999": 0.6941737726480266,
+    "max": 0.8979129563065169
+   },
+   "top10": [
+    {
+     "state": 62273,
+     "r": 0.8979129563065169,
+     "o": -4,
+     "blocks": 31
+    },
+    {
+     "state": 35897,
+     "r": 0.8482275163154471,
+     "o": 2,
+     "blocks": 31
+    },
+    {
+     "state": 32177,
+     "r": 0.7939200335644475,
+     "o": -5,
+     "blocks": 32
+    },
+    {
+     "state": 22387,
+     "r": 0.7935451824494685,
+     "o": -5,
+     "blocks": 32
+    },
+    {
+     "state": 19243,
+     "r": 0.7827213979651091,
+     "o": 0,
+     "blocks": 32
+    },
+    {
+     "state": 43964,
+     "r": 0.7776990307273071,
+     "o": -5,
+     "blocks": 32
+    },
+    {
+     "state": 20034,
+     "r": 0.7481096895562863,
+     "o": 2,
+     "blocks": 31
+    },
+    {
+     "state": 10976,
+     "r": 0.7474525562512127,
+     "o": -1,
+     "blocks": 32
+    },
+    {
+     "state": 22626,
+     "r": 0.7425225759661047,
+     "o": -5,
+     "blocks": 32
+    },
+    {
+     "state": 53793,
+     "r": 0.7402900322423438,
+     "o": 0,
+     "blocks": 32
+    }
+   ],
+   "reading": {
+    "verdict": "IDENTIFIED",
+    "top": {
+     "state": 62273,
+     "r": 0.8979129563065169,
+     "o": -4,
+     "blocks": 31
+    },
+    "rival": {
+     "state": 32177,
+     "r": 0.7939200335644475,
+     "o": -5,
+     "blocks": 32
+    }
+   }
+  },
+  {
+   "name": "wind-7",
+   "fromMs": 70400,
+   "toMs": 73700,
+   "injectAt": 4216,
+   "endFrame": 4434,
+   "rQuantiles": {
+    "p50": 0.29704490561955577,
+    "p999": 0.7283347761313627,
+    "max": 0.9143372103128804
+   },
+   "top10": [
+    {
+     "state": 15728,
+     "r": 0.9143372103128804,
+     "o": -4,
+     "blocks": 31
+    },
+    {
+     "state": 23557,
+     "r": 0.8181541779519239,
+     "o": 1,
+     "blocks": 32
+    },
+    {
+     "state": 61684,
+     "r": 0.8138006837723089,
+     "o": 0,
+     "blocks": 32
+    },
+    {
+     "state": 2201,
+     "r": 0.8104574923403693,
+     "o": -2,
+     "blocks": 32
+    },
+    {
+     "state": 39922,
+     "r": 0.8049985365388043,
+     "o": 1,
+     "blocks": 32
+    },
+    {
+     "state": 4238,
+     "r": 0.801258812827561,
+     "o": 1,
+     "blocks": 32
+    },
+    {
+     "state": 4625,
+     "r": 0.7997801408487046,
+     "o": 4,
+     "blocks": 32
+    },
+    {
+     "state": 51517,
+     "r": 0.7936688046406062,
+     "o": 1,
+     "blocks": 32
+    },
+    {
+     "state": 62195,
+     "r": 0.7857910535669101,
+     "o": 1,
+     "blocks": 32
+    },
+    {
+     "state": 54993,
+     "r": 0.7844540841021672,
+     "o": 1,
+     "blocks": 32
+    }
+   ],
+   "reading": {
+    "verdict": "IDENTIFIED",
+    "top": {
+     "state": 15728,
+     "r": 0.9143372103128804,
+     "o": -4,
+     "blocks": 31
+    },
+    "rival": {
+     "state": 23557,
+     "r": 0.8181541779519239,
+     "o": 1,
+     "blocks": 32
+    }
+   }
+  },
+  {
+   "name": "wind-8",
+   "fromMs": 80400,
+   "toMs": 83700,
+   "injectAt": 4816,
+   "endFrame": 5034,
+   "rQuantiles": {
+    "p50": 0.24516774474858435,
+    "p999": 0.6961064751658215,
+    "max": 0.967621070524594
+   },
+   "top10": [
+    {
+     "state": 4840,
+     "r": 0.967621070524594,
+     "o": -4,
+     "blocks": 31
+    },
+    {
+     "state": 38551,
+     "r": 0.8525248316538301,
+     "o": -2,
+     "blocks": 32
+    },
+    {
+     "state": 60335,
+     "r": 0.8329770850720181,
+     "o": 4,
+     "blocks": 32
+    },
+    {
+     "state": 7620,
+     "r": 0.7857216476503379,
+     "o": -5,
+     "blocks": 32
+    },
+    {
+     "state": 51137,
+     "r": 0.7814394502422095,
+     "o": -5,
+     "blocks": 32
+    },
+    {
+     "state": 40382,
+     "r": 0.7717936745457189,
+     "o": -2,
+     "blocks": 32
+    },
+    {
+     "state": 25036,
+     "r": 0.7714585246059024,
+     "o": -5,
+     "blocks": 32
+    },
+    {
+     "state": 24903,
+     "r": 0.770504144823974,
+     "o": 0,
+     "blocks": 32
+    },
+    {
+     "state": 50006,
+     "r": 0.7653881559841794,
+     "o": 4,
+     "blocks": 32
+    },
+    {
+     "state": 32804,
+     "r": 0.7562895967400433,
+     "o": 6,
+     "blocks": 32
+    }
+   ],
+   "reading": {
+    "verdict": "IDENTIFIED",
+    "top": {
+     "state": 4840,
+     "r": 0.967621070524594,
+     "o": -4,
+     "blocks": 31
+    },
+    "rival": {
+     "state": 38551,
+     "r": 0.8525248316538301,
+     "o": -2,
+     "blocks": 32
+    }
+   }
+  },
+  {
+   "name": "wind-9",
+   "fromMs": 90400,
+   "toMs": 93700,
+   "injectAt": 5416,
+   "endFrame": 5634,
+   "rQuantiles": {
+    "p50": 0.2774688596583928,
+    "p999": 0.7136228447448792,
+    "max": 0.9004606830904813
+   },
+   "top10": [
+    {
+     "state": 58145,
+     "r": 0.9004606830904813,
+     "o": -6,
+     "blocks": 32
+    },
+    {
+     "state": 54831,
+     "r": 0.8544923309925283,
+     "o": 3,
+     "blocks": 32
+    },
+    {
+     "state": 47089,
+     "r": 0.8136978701242594,
+     "o": 3,
+     "blocks": 32
+    },
+    {
+     "state": 36152,
+     "r": 0.7952075070594767,
+     "o": 5,
+     "blocks": 32
+    },
+    {
+     "state": 51970,
+     "r": 0.7812046381300175,
+     "o": -1,
+     "blocks": 32
+    },
+    {
+     "state": 62573,
+     "r": 0.7765949298466069,
+     "o": 4,
+     "blocks": 32
+    },
+    {
+     "state": 43529,
+     "r": 0.7764532669068329,
+     "o": 3,
+     "blocks": 32
+    },
+    {
+     "state": 37527,
+     "r": 0.7728733007506651,
+     "o": 3,
+     "blocks": 32
+    },
+    {
+     "state": 39364,
+     "r": 0.7699942955586483,
+     "o": 3,
+     "blocks": 32
+    },
+    {
+     "state": 35787,
+     "r": 0.7680811845650416,
+     "o": 3,
+     "blocks": 32
+    }
+   ],
+   "reading": {
+    "verdict": "UNIDENTIFIED",
+    "top": {
+     "state": 58145,
+     "r": 0.9004606830904813,
+     "o": -6,
+     "blocks": 32
+    },
+    "rival": {
+     "state": 54831,
+     "r": 0.8544923309925283,
+     "o": 3,
+     "blocks": 32
+    }
+   }
+  },
+  {
+   "name": "wind-10",
+   "fromMs": 100400,
+   "toMs": 103700,
+   "injectAt": 6016,
+   "endFrame": 6234,
+   "rQuantiles": {
+    "p50": 0.2851514695391562,
+    "p999": 0.7168662831479857,
+    "max": 0.9348715814907281
+   },
+   "top10": [
+    {
+     "state": 16617,
+     "r": 0.9348715814907281,
+     "o": -5,
+     "blocks": 31
+    },
+    {
+     "state": 28388,
+     "r": 0.8506207540407009,
+     "o": -6,
+     "blocks": 32
+    },
+    {
+     "state": 31621,
+     "r": 0.8257323005878547,
+     "o": -6,
+     "blocks": 32
+    },
+    {
+     "state": 10585,
+     "r": 0.8204684389298881,
+     "o": -6,
+     "blocks": 32
+    },
+    {
+     "state": 60335,
+     "r": 0.8103704728070547,
+     "o": 5,
+     "blocks": 32
+    },
+    {
+     "state": 4760,
+     "r": 0.7968231419699183,
+     "o": 0,
+     "blocks": 32
+    },
+    {
+     "state": 15278,
+     "r": 0.7941822834060142,
+     "o": -6,
+     "blocks": 32
+    },
+    {
+     "state": 20343,
+     "r": 0.7870684242844997,
+     "o": -6,
+     "blocks": 32
+    },
+    {
+     "state": 27375,
+     "r": 0.7768343091609502,
+     "o": -6,
+     "blocks": 32
+    },
+    {
+     "state": 3777,
+     "r": 0.7751854116468396,
+     "o": -3,
+     "blocks": 31
+    }
+   ],
+   "reading": {
+    "verdict": "IDENTIFIED",
+    "top": {
+     "state": 16617,
+     "r": 0.9348715814907281,
+     "o": -5,
+     "blocks": 31
+    },
+    "rival": {
+     "state": 28388,
+     "r": 0.8506207540407009,
+     "o": -6,
+     "blocks": 32
+    }
+   }
+  },
+  {
+   "name": "wind-11",
+   "fromMs": 110400,
+   "toMs": 113700,
+   "injectAt": 6616,
+   "endFrame": 6834,
+   "rQuantiles": {
+    "p50": 0.29113746695299364,
+    "p999": 0.7220527887477738,
+    "max": 0.8150996886701296
+   },
+   "top10": [
+    {
+     "state": 56730,
+     "r": 0.8150996886701296,
+     "o": 3,
+     "blocks": 31
+    },
+    {
+     "state": 23782,
+     "r": 0.811713983646215,
+     "o": -3,
+     "blocks": 31
+    },
+    {
+     "state": 20790,
+     "r": 0.806068887368614,
+     "o": -4,
+     "blocks": 30
+    },
+    {
+     "state": 30265,
+     "r": 0.7903723974173156,
+     "o": -5,
+     "blocks": 30
+    },
+    {
+     "state": 57506,
+     "r": 0.7885257424757622,
+     "o": 4,
+     "blocks": 30
+    },
+    {
+     "state": 32984,
+     "r": 0.7849028808389783,
+     "o": 4,
+     "blocks": 30
+    },
+    {
+     "state": 14488,
+     "r": 0.7832423795776869,
+     "o": -5,
+     "blocks": 30
+    },
+    {
+     "state": 24181,
+     "r": 0.7829594943793522,
+     "o": 3,
+     "blocks": 31
+    },
+    {
+     "state": 4238,
+     "r": 0.7817140879654912,
+     "o": 2,
+     "blocks": 30
+    },
+    {
+     "state": 65533,
+     "r": 0.7796382703428762,
+     "o": 3,
+     "blocks": 31
+    }
+   ],
+   "reading": {
+    "verdict": "UNIDENTIFIED",
+    "top": {
+     "state": 56730,
+     "r": 0.8150996886701296,
+     "o": 3,
+     "blocks": 31
+    },
+    "rival": {
+     "state": 23782,
+     "r": 0.811713983646215,
+     "o": -3,
+     "blocks": 31
+    }
+   }
+  },
+  {
+   "name": "wind-12",
+   "fromMs": 120400,
+   "toMs": 123700,
+   "injectAt": 7216,
+   "endFrame": 7434,
+   "rQuantiles": {
+    "p50": 0.2757015002403685,
+    "p999": 0.7479821924519935,
+    "max": 0.8559337558602422
+   },
+   "top10": [
+    {
+     "state": 39922,
+     "r": 0.8559337558602422,
+     "o": -5,
+     "blocks": 31
+    },
+    {
+     "state": 23557,
+     "r": 0.8553073048612134,
+     "o": -3,
+     "blocks": 32
+    },
+    {
+     "state": 4238,
+     "r": 0.8475605384731305,
+     "o": -3,
+     "blocks": 32
+    },
+    {
+     "state": 51517,
+     "r": 0.845256270787372,
+     "o": -3,
+     "blocks": 32
+    },
+    {
+     "state": 54993,
+     "r": 0.8413730276992274,
+     "o": -5,
+     "blocks": 31
+    },
+    {
+     "state": 3727,
+     "r": 0.8322439215292645,
+     "o": -5,
+     "blocks": 31
+    },
+    {
+     "state": 7482,
+     "r": 0.8319338880713141,
+     "o": -4,
+     "blocks": 31
+    },
+    {
+     "state": 56229,
+     "r": 0.8264425984335707,
+     "o": -3,
+     "blocks": 32
+    },
+    {
+     "state": 62195,
+     "r": 0.8256579581618082,
+     "o": -4,
+     "blocks": 31
+    },
+    {
+     "state": 34865,
+     "r": 0.8141051527488117,
+     "o": 1,
+     "blocks": 31
+    }
+   ],
+   "reading": {
+    "verdict": "UNIDENTIFIED",
+    "top": {
+     "state": 39922,
+     "r": 0.8559337558602422,
+     "o": -5,
+     "blocks": 31
+    },
+    "rival": {
+     "state": 23557,
+     "r": 0.8553073048612134,
+     "o": -3,
+     "blocks": 32
+    }
+   }
+  },
+  {
+   "name": "wind-13",
+   "fromMs": 130400,
+   "toMs": 133700,
+   "injectAt": 7816,
+   "endFrame": 8034,
+   "rQuantiles": {
+    "p50": 0.25942043150943056,
+    "p999": 0.6978908207373989,
+    "max": 0.8417732112973637
+   },
+   "top10": [
+    {
+     "state": 7620,
+     "r": 0.8417732112973637,
+     "o": -6,
+     "blocks": 32
+    },
+    {
+     "state": 51137,
+     "r": 0.803167006177882,
+     "o": -5,
+     "blocks": 32
+    },
+    {
+     "state": 45280,
+     "r": 0.7855673977757465,
+     "o": -4,
+     "blocks": 31
+    },
+    {
+     "state": 60224,
+     "r": 0.7854813299811284,
+     "o": -4,
+     "blocks": 31
+    },
+    {
+     "state": 48411,
+     "r": 0.7829129368150249,
+     "o": -6,
+     "blocks": 32
+    },
+    {
+     "state": 64432,
+     "r": 0.7816054554199375,
+     "o": -4,
+     "blocks": 31
+    },
+    {
+     "state": 54087,
+     "r": 0.7786127034647435,
+     "o": -6,
+     "blocks": 32
+    },
+    {
+     "state": 34928,
+     "r": 0.7759209789478019,
+     "o": -3,
+     "blocks": 32
+    },
+    {
+     "state": 48486,
+     "r": 0.7718563579938629,
+     "o": -3,
+     "blocks": 32
+    },
+    {
+     "state": 36892,
+     "r": 0.7704977148779939,
+     "o": 0,
+     "blocks": 32
+    }
+   ],
+   "reading": {
+    "verdict": "UNIDENTIFIED",
+    "top": {
+     "state": 7620,
+     "r": 0.8417732112973637,
+     "o": -6,
+     "blocks": 32
+    },
+    "rival": {
+     "state": 51137,
+     "r": 0.803167006177882,
+     "o": -5,
+     "blocks": 32
+    }
+   }
+  },
+  {
+   "name": "wind-14",
+   "fromMs": 140400,
+   "toMs": 143700,
+   "injectAt": 8416,
+   "endFrame": 8634,
+   "rQuantiles": {
+    "p50": 0.2033733840016747,
+    "p999": 0.6846506446206663,
+    "max": 0.8416006429539749
+   },
+   "top10": [
+    {
+     "state": 51517,
+     "r": 0.8416006429539749,
+     "o": -3,
+     "blocks": 32
+    },
+    {
+     "state": 34380,
+     "r": 0.798478607086698,
+     "o": -3,
+     "blocks": 32
+    },
+    {
+     "state": 60810,
+     "r": 0.7860524856218521,
+     "o": 3,
+     "blocks": 32
+    },
+    {
+     "state": 16589,
+     "r": 0.7673808122395812,
+     "o": -6,
+     "blocks": 32
+    },
+    {
+     "state": 13314,
+     "r": 0.7637588138130023,
+     "o": -2,
+     "blocks": 32
+    },
+    {
+     "state": 49597,
+     "r": 0.7537804002797795,
+     "o": 4,
+     "blocks": 32
+    },
+    {
+     "state": 23557,
+     "r": 0.7518062267908782,
+     "o": -4,
+     "blocks": 31
+    },
+    {
+     "state": 50234,
+     "r": 0.745052651131117,
+     "o": -1,
+     "blocks": 32
+    },
+    {
+     "state": 28386,
+     "r": 0.740723717646174,
+     "o": 6,
+     "blocks": 32
+    },
+    {
+     "state": 12909,
+     "r": 0.7368060125465441,
+     "o": -5,
+     "blocks": 32
+    }
+   ],
+   "reading": {
+    "verdict": "UNIDENTIFIED",
+    "top": {
+     "state": 51517,
+     "r": 0.8416006429539749,
+     "o": -3,
+     "blocks": 32
+    },
+    "rival": {
+     "state": 34380,
+     "r": 0.798478607086698,
+     "o": -3,
+     "blocks": 32
+    }
+   }
+  },
+  {
+   "name": "wind-15",
+   "fromMs": 150400,
+   "toMs": 153700,
+   "injectAt": 9016,
+   "endFrame": 9234,
+   "rQuantiles": {
+    "p50": 0.2555337021105871,
+    "p999": 0.7032370317236628,
+    "max": 0.8919875039093865
+   },
+   "top10": [
+    {
+     "state": 31457,
+     "r": 0.8919875039093865,
+     "o": -4,
+     "blocks": 31
+    },
+    {
+     "state": 31621,
+     "r": 0.7940010101758478,
+     "o": -5,
+     "blocks": 32
+    },
+    {
+     "state": 33097,
+     "r": 0.7849054476987631,
+     "o": 0,
+     "blocks": 32
+    },
+    {
+     "state": 20343,
+     "r": 0.7830133727162304,
+     "o": -5,
+     "blocks": 32
+    },
+    {
+     "state": 12909,
+     "r": 0.7724821146793893,
+     "o": -5,
+     "blocks": 32
+    },
+    {
+     "state": 39980,
+     "r": 0.7689505772120598,
+     "o": 1,
+     "blocks": 32
+    },
+    {
+     "state": 454,
+     "r": 0.7650485292918848,
+     "o": 0,
+     "blocks": 32
+    },
+    {
+     "state": 41483,
+     "r": 0.7645578349338001,
+     "o": -5,
+     "blocks": 32
+    },
+    {
+     "state": 25036,
+     "r": 0.759146176184416,
+     "o": -6,
+     "blocks": 32
+    },
+    {
+     "state": 60335,
+     "r": 0.7524491353612017,
+     "o": 6,
+     "blocks": 32
+    }
+   ],
+   "reading": {
+    "verdict": "IDENTIFIED",
+    "top": {
+     "state": 31457,
+     "r": 0.8919875039093865,
+     "o": -4,
+     "blocks": 31
+    },
+    "rival": {
+     "state": 31621,
+     "r": 0.7940010101758478,
+     "o": -5,
+     "blocks": 32
+    }
+   }
+  },
+  {
+   "name": "wind-16",
+   "fromMs": 160400,
+   "toMs": 163700,
+   "injectAt": 9616,
+   "endFrame": 9834,
+   "rQuantiles": {
+    "p50": 0.2946657722832834,
+    "p999": 0.7256428935402485,
+    "max": 0.8749114079186484
+   },
+   "top10": [
+    {
+     "state": 57040,
+     "r": 0.8749114079186484,
+     "o": -4,
+     "blocks": 31
+    },
+    {
+     "state": 11122,
+     "r": 0.8441343685667335,
+     "o": 3,
+     "blocks": 32
+    },
+    {
+     "state": 3915,
+     "r": 0.8310226511400782,
+     "o": 3,
+     "blocks": 32
+    },
+    {
+     "state": 51825,
+     "r": 0.7985992649973981,
+     "o": 6,
+     "blocks": 32
+    },
+    {
+     "state": 50637,
+     "r": 0.7956735189620499,
+     "o": 4,
+     "blocks": 32
+    },
+    {
+     "state": 12909,
+     "r": 0.7839431994532505,
+     "o": -5,
+     "blocks": 32
+    },
+    {
+     "state": 39922,
+     "r": 0.7827628081544928,
+     "o": 1,
+     "blocks": 32
+    },
+    {
+     "state": 39608,
+     "r": 0.7793589803333436,
+     "o": -4,
+     "blocks": 31
+    },
+    {
+     "state": 4253,
+     "r": 0.7790635409696113,
+     "o": 4,
+     "blocks": 32
+    },
+    {
+     "state": 6578,
+     "r": 0.7745111316703199,
+     "o": 3,
+     "blocks": 32
+    }
+   ],
+   "reading": {
+    "verdict": "UNIDENTIFIED",
+    "top": {
+     "state": 57040,
+     "r": 0.8749114079186484,
+     "o": -4,
+     "blocks": 31
+    },
+    "rival": {
+     "state": 11122,
+     "r": 0.8441343685667335,
+     "o": 3,
+     "blocks": 32
+    }
+   }
+  },
+  {
+   "name": "wind-17",
+   "fromMs": 170400,
+   "toMs": 173700,
+   "injectAt": 10216,
+   "endFrame": 10434,
+   "rQuantiles": {
+    "p50": 0.24386736371453277,
+    "p999": 0.6859277136145434,
+    "max": 0.8563172426969938
+   },
+   "top10": [
+    {
+     "state": 33352,
+     "r": 0.8563172426969938,
+     "o": -4,
+     "blocks": 31
+    },
+    {
+     "state": 39889,
+     "r": 0.8262150479784685,
+     "o": -6,
+     "blocks": 32
+    },
+    {
+     "state": 3009,
+     "r": 0.7987431302926468,
+     "o": 6,
+     "blocks": 32
+    },
+    {
+     "state": 50234,
+     "r": 0.7931638675459199,
+     "o": 3,
+     "blocks": 32
+    },
+    {
+     "state": 54993,
+     "r": 0.7856416618362546,
+     "o": 1,
+     "blocks": 32
+    },
+    {
+     "state": 64739,
+     "r": 0.7762881514234515,
+     "o": 6,
+     "blocks": 32
+    },
+    {
+     "state": 3727,
+     "r": 0.774946957524109,
+     "o": 0,
+     "blocks": 32
+    },
+    {
+     "state": 9646,
+     "r": 0.7707461825952967,
+     "o": 6,
+     "blocks": 32
+    },
+    {
+     "state": 64294,
+     "r": 0.7685571310209268,
+     "o": 6,
+     "blocks": 32
+    },
+    {
+     "state": 43079,
+     "r": 0.766939128645944,
+     "o": 0,
+     "blocks": 32
+    }
+   ],
+   "reading": {
+    "verdict": "UNIDENTIFIED",
+    "top": {
+     "state": 33352,
+     "r": 0.8563172426969938,
+     "o": -4,
+     "blocks": 31
+    },
+    "rival": {
+     "state": 39889,
+     "r": 0.8262150479784685,
+     "o": -6,
+     "blocks": 32
+    }
+   }
+  },
+  {
+   "name": "wind-18",
+   "fromMs": 180400,
+   "toMs": 183700,
+   "injectAt": 10816,
+   "endFrame": 11034,
+   "rQuantiles": {
+    "p50": 0.2496847807808002,
+    "p999": 0.7068908185190501,
+    "max": 0.8147854247049876
+   },
+   "top10": [
+    {
+     "state": 13120,
+     "r": 0.8147854247049876,
+     "o": -4,
+     "blocks": 31
+    },
+    {
+     "state": 60335,
+     "r": 0.8083039237988969,
+     "o": 5,
+     "blocks": 32
+    },
+    {
+     "state": 20012,
+     "r": 0.799658104812152,
+     "o": 4,
+     "blocks": 32
+    },
+    {
+     "state": 22383,
+     "r": 0.7992623237572086,
+     "o": 4,
+     "blocks": 32
+    },
+    {
+     "state": 15739,
+     "r": 0.7868453544834969,
+     "o": -3,
+     "blocks": 32
+    },
+    {
+     "state": 13476,
+     "r": 0.7786894704992521,
+     "o": -2,
+     "blocks": 32
+    },
+    {
+     "state": 56402,
+     "r": 0.7700290321578193,
+     "o": 6,
+     "blocks": 32
+    },
+    {
+     "state": 49925,
+     "r": 0.7682485583356885,
+     "o": -3,
+     "blocks": 32
+    },
+    {
+     "state": 24903,
+     "r": 0.7642828786589438,
+     "o": -2,
+     "blocks": 32
+    },
+    {
+     "state": 33134,
+     "r": 0.7624241147897389,
+     "o": 3,
+     "blocks": 32
+    }
+   ],
+   "reading": {
+    "verdict": "UNIDENTIFIED",
+    "top": {
+     "state": 13120,
+     "r": 0.8147854247049876,
+     "o": -4,
+     "blocks": 31
+    },
+    "rival": {
+     "state": 60335,
+     "r": 0.8083039237988969,
+     "o": 5,
+     "blocks": 32
+    }
+   }
+  },
+  {
+   "name": "wind-19",
+   "fromMs": 190400,
+   "toMs": 193700,
+   "injectAt": 11416,
+   "endFrame": 11634,
+   "rQuantiles": {
+    "p50": 0.2895977752446146,
+    "p999": 0.7201716121398373,
+    "max": 0.8941662316459285
+   },
+   "top10": [
+    {
+     "state": 649,
+     "r": 0.8941662316459285,
+     "o": -4,
+     "blocks": 31
+    },
+    {
+     "state": 55669,
+     "r": 0.8376908149543536,
+     "o": 6,
+     "blocks": 32
+    },
+    {
+     "state": 51702,
+     "r": 0.8185689824520728,
+     "o": 6,
+     "blocks": 32
+    },
+    {
+     "state": 4238,
+     "r": 0.7840861683490022,
+     "o": 1,
+     "blocks": 32
+    },
+    {
+     "state": 56285,
+     "r": 0.7802570265706548,
+     "o": 6,
+     "blocks": 32
+    },
+    {
+     "state": 47817,
+     "r": 0.7782998004780958,
+     "o": 6,
+     "blocks": 32
+    },
+    {
+     "state": 25928,
+     "r": 0.7775504264775122,
+     "o": 3,
+     "blocks": 32
+    },
+    {
+     "state": 19030,
+     "r": 0.775752169812472,
+     "o": 0,
+     "blocks": 32
+    },
+    {
+     "state": 51018,
+     "r": 0.7731184481988821,
+     "o": -5,
+     "blocks": 32
+    },
+    {
+     "state": 19764,
+     "r": 0.7722462887945549,
+     "o": 6,
+     "blocks": 32
+    }
+   ],
+   "reading": {
+    "verdict": "UNIDENTIFIED",
+    "top": {
+     "state": 649,
+     "r": 0.8941662316459285,
+     "o": -4,
+     "blocks": 31
+    },
+    "rival": {
+     "state": 55669,
+     "r": 0.8376908149543536,
+     "o": 6,
+     "blocks": 32
+    }
+   }
+  },
+  {
+   "name": "wind-20",
+   "fromMs": 200400,
+   "toMs": 203700,
+   "injectAt": 12016,
+   "endFrame": 12234,
+   "rQuantiles": {
+    "p50": 0.3048138838852354,
+    "p999": 0.7726149852733984,
+    "max": 0.8684575452634169
+   },
+   "top10": [
+    {
+     "state": 41253,
+     "r": 0.8684575452634169,
+     "o": 3,
+     "blocks": 25
+    },
+    {
+     "state": 33081,
+     "r": 0.8662728530065342,
+     "o": -5,
+     "blocks": 26
+    },
+    {
+     "state": 48411,
+     "r": 0.8582731847693358,
+     "o": -5,
+     "blocks": 26
+    },
+    {
+     "state": 50884,
+     "r": 0.8462249533595778,
+     "o": -5,
+     "blocks": 26
+    },
+    {
+     "state": 41543,
+     "r": 0.8445642240927996,
+     "o": -6,
+     "blocks": 27
+    },
+    {
+     "state": 10987,
+     "r": 0.8443836618385917,
+     "o": -3,
+     "blocks": 25
+    },
+    {
+     "state": 60335,
+     "r": 0.8384126394021882,
+     "o": 5,
+     "blocks": 27
+    },
+    {
+     "state": 10585,
+     "r": 0.8367213181422611,
+     "o": -5,
+     "blocks": 26
+    },
+    {
+     "state": 6905,
+     "r": 0.8353900755310545,
+     "o": -5,
+     "blocks": 26
+    },
+    {
+     "state": 28388,
+     "r": 0.8347065063795973,
+     "o": -6,
+     "blocks": 27
+    }
+   ],
+   "reading": {
+    "verdict": "UNIDENTIFIED",
+    "top": {
+     "state": 41253,
+     "r": 0.8684575452634169,
+     "o": 3,
+     "blocks": 25
+    },
+    "rival": {
+     "state": 33081,
+     "r": 0.8662728530065342,
+     "o": -5,
+     "blocks": 26
+    }
+   }
+  }
+ ],
+ "identified": 10,
+ "pairs": [
+  {
+   "from": "wind-1",
+   "to": "wind-2",
+   "steps": 276,
+   "modelDraws": 276,
+   "differ": 0
+  },
+  {
+   "from": "wind-2",
+   "to": "wind-3",
+   "steps": 274,
+   "modelDraws": 274,
+   "differ": 0
+  },
+  {
+   "from": "wind-3",
+   "to": "wind-4",
+   "steps": 275,
+   "modelDraws": 275,
+   "differ": 0
+  },
+  {
+   "from": "wind-4",
+   "to": "wind-5",
+   "steps": 274,
+   "modelDraws": 274,
+   "differ": 0
+  },
+  {
+   "from": "wind-5",
+   "to": "wind-6",
+   "steps": 274,
+   "modelDraws": 274,
+   "differ": 0
+  },
+  {
+   "from": "wind-6",
+   "to": "wind-7",
+   "steps": 275,
+   "modelDraws": 275,
+   "differ": 0
+  },
+  {
+   "from": "wind-7",
+   "to": "wind-8",
+   "steps": 274,
+   "modelDraws": 274,
+   "differ": 0
+  },
+  {
+   "from": "wind-8",
+   "to": "wind-9",
+   "steps": 275,
+   "modelDraws": 275,
+   "differ": 0
+  },
+  {
+   "from": "wind-9",
+   "to": "wind-10",
+   "steps": 274,
+   "modelDraws": 274,
+   "differ": 0
+  },
+  {
+   "from": "wind-10",
+   "to": "wind-11",
+   "steps": null,
+   "modelDraws": 275,
+   "differ": null
+  },
+  {
+   "from": "wind-11",
+   "to": "wind-12",
+   "steps": 2786,
+   "modelDraws": 275,
+   "differ": 2511
+  },
+  {
+   "from": "wind-12",
+   "to": "wind-13",
+   "steps": null,
+   "modelDraws": 274,
+   "differ": null
+  },
+  {
+   "from": "wind-13",
+   "to": "wind-14",
+   "steps": 5769,
+   "modelDraws": 276,
+   "differ": 5493
+  },
+  {
+   "from": "wind-14",
+   "to": "wind-15",
+   "steps": null,
+   "modelDraws": 274,
+   "differ": null
+  },
+  {
+   "from": "wind-15",
+   "to": "wind-16",
+   "steps": 275,
+   "modelDraws": 275,
+   "differ": 0
+  },
+  {
+   "from": "wind-16",
+   "to": "wind-17",
+   "steps": 274,
+   "modelDraws": 274,
+   "differ": 0
+  },
+  {
+   "from": "wind-17",
+   "to": "wind-18",
+   "steps": 274,
+   "modelDraws": 274,
+   "differ": 0
+  },
+  {
+   "from": "wind-18",
+   "to": "wind-19",
+   "steps": 275,
+   "modelDraws": 275,
+   "differ": 0
+  },
+  {
+   "from": "wind-19",
+   "to": "wind-20",
+   "steps": null,
+   "modelDraws": 274,
+   "differ": null
+  }
+ ],
+ "consistent": 13,
+ "analysisVerdict": "SUPPORTED",
+ "powerCheck": {
+  "strength": {
+   "noiseSd": 1.4150568596995465,
+   "gain": 274.23203349690294,
+   "windows": 20
+  },
+  "planted": [
+   {
+    "state": 12345,
+    "verdict": "SUPPORTED",
+    "identified": 20,
+    "consistent": 19
+   },
+   {
+    "state": 777,
+    "verdict": "SUPPORTED",
+    "identified": 20,
+    "consistent": 19
+   }
+  ],
+  "powered": true
+ },
+ "verdict": "SUPPORTED",
+ "elapsedMs": 4407964,
+ "reading": {
+  "verdict": "SUPPORTED by the predeclared rule: 13 of 19 consecutive windows' top states are consistent, every one of them exactly the model's draw count apart (differences of 0; 274-276 draws a pair), against a bar of 5 and a chance rate of about 3e-4 a pair. 10 of 20 windows met the per-window identification bar; the pairs show the top state was on the stream in 15 (windows 1-10, 15-19).",
+  "establishes": "On Companion 16 the native static readout, without a frame trace, reads the office generator's state in k3's winding windows on the phone, and at every dial 0 the phone spends exactly the model's draws between consecutive readable windows: the model's draw accounting at 0/20 is exact over the first 200 s of a phone night.",
+  "unreadable": "Windows 11-14 and 20 have top states off the stream. 11 and 20 hold the night's two frame stalls (235 ms at 112.7 s, 339 ms at 203.1 s); in 12 the camera-switch flash (luma 255) and a black frame spill into the second g58 period; 13 and 14 have no cause found. Outside the rule, wind-10's state reaches wind-15's in exactly the model's 1374 draws, so the stream runs through the unreadable windows and the stalls: the office draws are timer-paced.",
+  "powerCheck": "Passed (both planted states 20 of 20 windows, 19 of 19 pairs). The estimated gain, 274 luma per unit coefficient, is inflated by the camera-switch flash frames (luma 255) in each window's first 80 ms, so the planted nights were easier than the real one; the next predeclaration needs a robust strength estimate and robust period means.",
+  "clock": "Best frame offsets are -4 in most windows (-3 to -6; +3 in two unreadable ones): the 60 Hz model clock with the measured onset and an 83.2 ms seed-to-first-frame holds to about 4 updates over 200 s.",
+  "exploratory": "Not in the rule: stepping wind-1's state back by the model's 284 draws gives 23712, not the phone's wall clock at onset. But the wall-clock seed at onset - 63 ms reaches wind-1's state in 289 steps: the phone would spend 5 draws more than the model before the office's first window (the full-06 grid readout had hinted at +6 and +8). About 1 in 80 by chance over the 41 wall-clock candidates; to be pre-registered on a new night with c = 5 fixed.",
+  "scope": "Every dial 0, k3's schedule, one night. At 10/20 a press's landing update moves draws (docs/evidence/full06-draw-sensitivity-20261001.json), so a 10/20 readout needs the night's landings (the frame trace is now compatible with the readout) or a nuisance model."
+ },
+ "id": "s2-region-readout-night7-0of20-6daba88865e81f6a"
+}

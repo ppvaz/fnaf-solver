@@ -296,6 +296,35 @@
    "status": "standing",
    "supersededBy": null,
    "supersedes": null
+  },
+  {
+   "id": "phone-rng-read-state-by-state",
+   "date": "2026-10-01",
+   "game": "fnaf2",
+   "kind": "milestone",
+   "title": "The phone's random number generator, read off the screen state by state",
+   "body": "Every 100 ms FNaF 2 redraws the camera static's opacity from a fresh random number, so the static is the game's random generator on screen. On a Night 7 with every animatronic at 0, the Companion copied a small rectangle of the camera picture on every frame, and the analysis tried all 65,536 generator states in each of twenty winding windows. In ten windows one state fit the flicker far better than any other, and the test that mattered held: thirteen times, two consecutive windows' best states were exactly as many generator steps apart as the model spends between them, not one more or less. A random pair does that about three times in ten thousand. The phone's stream and the model's accounting of it are the same, draw for draw, through the first 200 seconds and through two frame stalls. What it does not yet give is the seed itself: stepping back from the first window lands 5 draws from the phone's clock, a lead the next night is declared to test.",
+   "measured": "13 of 19 consecutive pairs at difference 0; 10 of 20 windows identified; power check passed",
+   "label": "DEVICE_MEASURED",
+   "rung": null,
+   "plan": 25,
+   "night": 7,
+   "route": "Minus Toys",
+   "tags": [
+    "device",
+    "seed",
+    "fidelity",
+    "s2",
+    "frames"
+   ],
+   "sources": [
+    "docs/evidence/s2-region-readout-night7-0of20-20261001.json",
+    "docs/evidence/s2-region-readout-night7-0of20-predeclaration-20261001.json",
+    "docs/evidence/companion16-region-under-trace-20261001.json"
+   ],
+   "status": "standing",
+   "supersededBy": null,
+   "supersedes": null
   }
  ]
 }
