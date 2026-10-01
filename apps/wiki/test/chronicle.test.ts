@@ -21,7 +21,7 @@ const FROZEN = {
 for (const [file, sha256] of Object.entries(FROZEN))
   assert.equal(createHash('sha256').update(readFileSync(resolve(ROOT, file))).digest('hex'), sha256, `${file} is frozen and changed`);
 
-function sourcePath(source) {
+function sourcePath(source: string) {
   if (source.startsWith('commit:')) return null;
   const match = source.match(/^(.*?)(?::(\d+))?$/);
   assert(match, `source has no path shape: ${source}`);
@@ -38,7 +38,7 @@ function sourcePath(source) {
   return file;
 }
 
-function checkSource(source) {
+function checkSource(source: string) {
   if (source.startsWith('commit:')) {
     execFileSync('git', ['cat-file', '-e', `${source.slice(7)}^{commit}`], { cwd: ROOT, stdio: 'ignore' });
     return;
@@ -46,8 +46,8 @@ function checkSource(source) {
   sourcePath(source);
 }
 
-function checkOutlook(outlook) {
-  for (const section of ['next', 'missing']) {
+function checkOutlook(outlook: Awaited<ReturnType<typeof loadCorpus>>['outlook'] | undefined) {
+  for (const section of ['next', 'missing'] as const) {
     for (const item of outlook?.[section] ?? []) {
       assert(item.title && item.body, `outlook ${section} item is incomplete`);
       item.sources.forEach(checkSource);
@@ -70,13 +70,13 @@ assert(checkCorpus([invalid]).some((problem) => problem.includes('kind must be o
 const v2 = corpus.checkpoints.find((checkpoint) => checkpoint.schema === ENTRIES_SCHEMA_V2);
 assert(v2, 'the corpus holds a chronicle-entries-v2 checkpoint');
 const base = { ...structuredClone(v2.entries.find((entry) => entry.game === 'fnaf2' && entry.supersedes === null)), id: 'fixture-entry' };
-const fixture = (changes, schema = ENTRIES_SCHEMA_V2) => {
+const fixture = (changes: object, schema: string = ENTRIES_SCHEMA_V2) => {
   const entry = { ...base, ...changes };
   if (schema === ENTRIES_SCHEMA) { delete entry.game; delete entry.supersedes; }
   return checkCorpus([...corpus.checkpoints, { schema, checkpoint: schema === ENTRIES_SCHEMA ? '2026-10' : '2026-09z', label: 'fixture', file: 'fixture.json',
     entries: [{ ...entry, date: schema === ENTRIES_SCHEMA ? '2026-10-01' : entry.date }] }]);
 };
-const refuses = (problems, text, what) => assert(problems.some((problem) => problem.includes(text)), `${what}: ${problems.join(' | ') || 'accepted'}`);
+const refuses = (problems: string[], text: string, what: string) => assert(problems.some((problem) => problem.includes(text)), `${what}: ${problems.join(' | ') || 'accepted'}`);
 assert.deepEqual(fixture({}), [], 'a well-formed v2 entry passes');
 assert.equal(NIGHTS.fnaf4, 8, "FNaF 4's Rulebook names Night 8");
 assert.deepEqual(fixture({ game: 'fnaf4', night: 8, route: null, rung: null }), [], 'FNaF 4 Night 8 is a v2 night');
@@ -90,6 +90,7 @@ refuses(fixture({ label: 'MODEL_ONLY' }, ENTRIES_SCHEMA), 'label must be one of'
 refuses(fixture({ label: 'MEASURED' }), 'label must be one of', 'a label the evidence docs do not define');
 refuses(fixture({ supersedes: 'no-such-entry' }), 'which is not an entry', 'a correction of nothing');
 const corrected = v2.entries.find((entry) => entry.supersedes);
+assert(corrected, 'the corpus holds a v2 correction');
 refuses(fixture({ supersedes: corrected.supersedes }), 'is superseded by both', 'two corrections of one entry');
 const { supersedes: _, ...withoutSupersedes } = base;
 refuses(checkCorpus([...corpus.checkpoints, { schema: ENTRIES_SCHEMA_V2, checkpoint: '2026-09z', label: 'fixture', file: 'fixture.json', entries: [withoutSupersedes] }]),
@@ -101,6 +102,7 @@ refuses(checkCorpus([...corpus.checkpoints, structuredClone(v2)]), 'is already',
 const read = readEntries(corpus.checkpoints);
 for (const entry of read.filter((item) => item.supersedes)) {
   const target = read.find((item) => item.id === entry.supersedes);
+  assert(target, `${entry.supersedes} is an entry`);
   assert.equal(target.status, 'superseded', `${target.id} reads as superseded`);
   assert.equal(target.supersededBy, entry.id);
   if (target.schema === 'chronicle-entries-v1') assert.equal(target.storedStatus, 'standing', `${target.id}'s frozen file is not edited`);
@@ -116,7 +118,7 @@ assert.equal(readFileSync(STORY_OUTPUT, 'utf8'), first.storyOutput, 'generated s
 
 // The story: every chapter's dates come from its standing entries, and every
 // entry it draws on is rendered with its title and a link to its card.
-const byId = new Map<string, any>(first.entries.map((entry) => [entry.id, entry]));
+const byId = new Map(first.entries.map((entry) => [entry.id, entry] as const));
 assert.deepEqual(checkStory(first.story, byId), []);
 refuses(checkStory({ ...first.story, chapters: [{ number: 1, title: 'x', entries: ['no-such-entry'] }] }, byId), 'is not a chronicle entry', 'a chapter of nothing');
 for (const chapter of first.story.chapters) {
