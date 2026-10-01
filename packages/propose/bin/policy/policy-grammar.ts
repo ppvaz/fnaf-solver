@@ -7,37 +7,49 @@
 import {
   BRANCH_SCHEMA, POLICY_SCHEMA, canonicalPolicy, validateBranch, validatePolicy,
 } from '@sixam/propose/policy';
+import type { Branch, PolicyPhase, PolicyProgram, RepeatPhase } from '@sixam/propose/policy';
+import { isRecord } from '@sixam/kernel';
 import { minimalPolicy } from './policy-ir.ts';
+import type { ModeAction } from './policy-interpreter.ts';
 
 export const GRAMMAR_SCHEMA = 'policy-grammar-v1';
 export const PHASE_ORDER = Object.freeze(['idle', 'setup', 'repeat', 'finish', 'observe']);
-export const SETUP_TARGETS = Object.freeze({
+export const SETUP_TARGETS: Readonly<Record<string, { readonly family: string, readonly nights: number[] }>> = Object.freeze({
   'minus-toys-split': Object.freeze({ family: 'minus-toys', nights: [1] }),
 });
 
-const finite = value => Number.isFinite(value);
-const clone = value => structuredClone(value);
+const finite = (value: unknown): value is number => Number.isFinite(value);
+const clone = <T>(value: T): T => structuredClone(value);
 const TRANSITIONS = new Set(['monitor', 'mask']);
 const CAMERAS = new Set(['cam9', 'cam11']);
 
-function fail(message) { throw new TypeError(`policy grammar: ${message}`); }
+function fail(message: string): never { throw new TypeError(`policy grammar: ${message}`); }
 
-function actionAt(action, repeat) {
+/** The monitor, mask and camera a body's actions leave behind. */
+interface SymbolicState { monitorUp: boolean, maskOn: boolean, camera: number | null }
+/** An action that passed checkAction, with its time and how long its contact runs. */
+interface Checked { readonly action: ModeAction, readonly at: number, readonly span: number, readonly end: number }
+
+function actionAt(action: Readonly<Record<string, unknown>>, repeat: boolean) {
   const key = repeat ? 'offsetMs' : 'atMs';
-  if (action[key] === undefined) fail(`${key} is required for ${action.action}`);
+  const at = action[key];
+  if (at === undefined) fail(`${key} is required for ${action.action}`);
   if (repeat ? action.atMs !== undefined : action.offsetMs !== undefined)
     fail(`repeat and absolute action times cannot be mixed (${action.action})`);
-  if (!finite(action[key]) || action[key] < 0)
+  if (!finite(at) || at < 0)
     fail(`action time must be non-negative (${action.action})`);
-  return action[key];
+  return at;
 }
 
-function actionSpan(action) {
+function actionSpan(action: Readonly<Record<string, unknown>>) {
   const mode = action.mode ?? 'tap';
   if (mode === 'camdrop') {
-    for (const key of ['leadMs', 'durationMs', 'tailMs'])
-      if (!finite(action[key]) || action[key] < 0) fail(`camdrop needs ${key}`);
-    return action.leadMs + action.durationMs + action.tailMs;
+    for (const key of ['leadMs', 'durationMs', 'tailMs']) {
+      const value = action[key];
+      if (!finite(value) || value < 0) fail(`camdrop needs ${key}`);
+    }
+    // Each checked finite above.
+    return (action.leadMs as number) + (action.durationMs as number) + (action.tailMs as number);
   }
   if (mode === 'hold' || mode === 'hall') {
     if (!finite(action.durationMs) || action.durationMs <= 0)
@@ -45,13 +57,15 @@ function actionSpan(action) {
     return action.durationMs;
   }
   if (mode !== 'tap') fail(`unsupported action mode ${mode}`);
-  return action.contactMs ?? 0;
+  // validatePolicy checks a phase action's contactMs; a branch arm's is checked
+  // by neither validator and is added to its time as it comes.
+  return (action.contactMs ?? 0) as number;
 }
 
-function checkAction(action, { repeat, phase, index }) {
+function checkAction(action: unknown, { repeat, phase, index }: { repeat: boolean, phase: string, index: number }): Checked {
   const label = `${phase} action ${index}`;
-  if (!action || typeof action !== 'object' || Array.isArray(action)) fail(`${label} is not an object`);
-  if (!['monitor', 'mask', 'cam9', 'cam11', 'ventl', 'light', 'wind', 'hall']
+  if (!isRecord(action)) fail(`${label} is not an object`);
+  if (typeof action.action !== 'string' || !['monitor', 'mask', 'cam9', 'cam11', 'ventl', 'light', 'wind', 'hall']
       .includes(action.action)) fail(`${label} has an unsupported action`);
   const at = actionAt(action, repeat);
   const mode = action.mode ?? 'tap';
@@ -64,10 +78,11 @@ function checkAction(action, { repeat, phase, index }) {
     fail(`${label} camera selection must be a tap`);
   if (TRANSITIONS.has(action.action) && mode !== 'tap')
     fail(`${label} monitor/mask transitions must be taps`);
-  return { action, at, span, end: at + span };
+  // Its action and its mode's numbers are the ones just checked.
+  return { action: action as ModeAction, at, span, end: at + span };
 }
 
-function checkPhaseActions(phase, repeat) {
+function checkPhaseActions(phase: PolicyPhase, repeat: boolean) {
   const actions = phase.actions ?? [];
   if (!Array.isArray(actions)) fail(`${phase.id} actions must be an array`);
   const checked = actions.map((action, index) => checkAction(action, {
@@ -82,7 +97,7 @@ function checkPhaseActions(phase, repeat) {
   return checked;
 }
 
-function applySymbolicAction(state, checked, phase) {
+function applySymbolicAction(state: SymbolicState, checked: Checked, phase: string) {
   const { action } = checked;
   const mode = action.mode ?? 'tap';
   if (mode === 'camdrop') {
@@ -121,7 +136,7 @@ function applySymbolicAction(state, checked, phase) {
   fail(`${phase}: unknown action ${action.action}`);
 }
 
-function checkTiming(phases, checked) {
+function checkTiming(phases: readonly PolicyPhase[], checked: readonly { phase: PolicyPhase, actions: readonly Checked[] }[]) {
   const byId = new Map(checked.map(({ phase, actions }) => [phase.id, actions]));
   for (const phase of phases) {
     const actions = byId.get(phase.id) ?? [];
@@ -150,8 +165,8 @@ function checkTiming(phases, checked) {
   }
 }
 
-function checkOrdering(phases, checked) {
-  const state = { monitorUp: false, maskOn: false, camera: null };
+function checkOrdering(phases: readonly PolicyPhase[], checked: readonly { phase: PolicyPhase, actions: readonly Checked[] }[]) {
+  const state: SymbolicState = { monitorUp: false, maskOn: false, camera: null };
   for (const phase of phases) {
     const actions = checked.find(item => item.phase.id === phase.id)?.actions ?? [];
     if (phase.kind === 'idle' || phase.kind === 'observe') {
@@ -163,8 +178,8 @@ function checkOrdering(phases, checked) {
     if (phase.kind === 'repeat') {
       // A branch may re-select the viewed camera; both arms agree on which,
       // so the body's end state stays determined.
-      const exit: any = checkBranches(phase, actions, entryState);
-      if (Object.hasOwn(exit, 'camera')) state.camera = exit.camera;
+      const exit = checkBranches(phase, actions, entryState);
+      if (exit.camera !== undefined) state.camera = exit.camera;
       // A body is repeated indefinitely.  Requiring its symbolic control state
       // to close prevents a one-mask/one-monitor body from alternating hidden
       // state on every iteration.
@@ -196,7 +211,7 @@ function checkOrdering(phases, checked) {
 // The viewed camera may differ from the decision point -- re-selecting a
 // camera is the point of a branch -- because no action's legality depends on
 // which camera is viewed, only on the monitor being up.
-function checkBranchArm(branch, arm, name, stateAtDecision, phaseId) {
+function checkBranchArm(branch: Branch, arm: Branch['then'], name: string, stateAtDecision: SymbolicState, phaseId: string) {
   const label = `${phaseId} branch ${branch.id} ${name}`;
   const checked = arm.map((action, index) => checkAction(
     { ...action, offsetMs: action.offsetMs }, { repeat: true, phase: label, index }));
@@ -210,14 +225,14 @@ function checkBranchArm(branch, arm, name, stateAtDecision, phaseId) {
   return { end: checked.length ? checked[checked.length - 1].end : 0, state };
 }
 
-function checkBranches(phase, unconditional, entryState) {
+function checkBranches(phase: RepeatPhase, unconditional: readonly Checked[], entryState: SymbolicState) {
   const branches = phase.branches ?? [];
   if (!Array.isArray(branches)) fail(`${phase.id} branches must be an array`);
   if (branches.length && phase.kind !== 'repeat')
     fail(`${phase.id}: branches are only defined inside a repeat body`);
-  const ids = new Set();
-  const windows = [];
-  const exit: any = {};
+  const ids = new Set<string>();
+  const windows: { start: number, end: number, id: string }[] = [];
+  const exit: { camera?: number | null } = {};
   for (const branch of branches) {
     validateBranch(branch);
     if (ids.has(branch.id)) fail(`${phase.id} has duplicate branch id ${branch.id}`);
@@ -252,14 +267,15 @@ function checkBranches(phase, unconditional, entryState) {
 }
 
 /** Validate policy-v1 against the finite, engine-shaped structural grammar. */
-export function validateGrammarPolicy(program) {
-  validatePolicy(program);
+export function validateGrammarPolicy(input: unknown) {
+  const program = validatePolicy(input);
   const target = program.metadata.setupTarget;
-  if (!target || !SETUP_TARGETS[target]) fail('metadata.setupTarget is not a sourced target');
+  // An index reads its key as String() spells it.
+  if (!target || !SETUP_TARGETS[String(target)]) fail('metadata.setupTarget is not a sourced target');
   if (program.phases.length !== PHASE_ORDER.length ||
       program.phases.some((phase, i) => phase.kind !== PHASE_ORDER[i]))
     fail(`phases must be ${PHASE_ORDER.join(',')}`);
-  const checked = [];
+  const checked: { phase: PolicyPhase, actions: Checked[] }[] = [];
   for (const phase of program.phases) {
     const actions = checkPhaseActions(phase, phase.kind === 'repeat');
     checked.push({ phase, actions });
@@ -277,9 +293,16 @@ export function validateGrammarPolicy(program) {
 }
 
 /** Construct a canonical five-phase program from grammar moves. */
+/** The moves buildPolicy assembles into the five phases; validateGrammarPolicy checks what they make. */
+interface Moves {
+  metadata?: Readonly<Record<string, unknown>>, idleEndMs?: number, loopStartMs?: number, loopEndMs?: number,
+  periodMs?: number, observeUntilMs?: number, setupActions?: readonly unknown[], repeatActions?: readonly unknown[],
+  repeatBranches?: readonly unknown[], finishActions?: readonly unknown[], observations?: readonly unknown[], proof?: unknown,
+}
+
 export function buildPolicy({ metadata, idleEndMs, loopStartMs, loopEndMs,
   periodMs, observeUntilMs, setupActions = [], repeatActions = [],
-  repeatBranches = [], finishActions = [], observations = [], proof }: any = {}) {
+  repeatBranches = [], finishActions = [], observations = [], proof }: Moves = {}) {
   const target = metadata?.setupTarget;
   if (!metadata || !target || !proof) fail('metadata, setupTarget, and proof are required');
   const program = {
@@ -302,7 +325,7 @@ export function buildPolicy({ metadata, idleEndMs, loopStartMs, loopEndMs,
   return validateGrammarPolicy(program);
 }
 
-function structuralFingerprint(program) {
+function structuralFingerprint(program: PolicyProgram) {
   validateGrammarPolicy(program);
   return JSON.stringify({
     setupTarget: program.metadata.setupTarget,
@@ -313,9 +336,9 @@ function structuralFingerprint(program) {
       durationMs: phase.endMs - phase.startMs,
       periodMs: phase.periodMs ?? null,
       actions: (phase.actions ?? []).map(action => {
-        const result: any = { action: action.action, mode: action.mode ?? 'tap' };
+        const result: Record<string, unknown> = { action: action.action, mode: action.mode ?? 'tap' };
         if (phase.kind === 'repeat') result.offsetMs = action.offsetMs;
-        else result.relativeMs = action.atMs - phase.startMs;
+        else result.relativeMs = Number(action.atMs) - phase.startMs;
         for (const key of ['leadMs', 'durationMs', 'tailMs'])
           if (action[key] !== undefined) result[key] = action[key];
         return result;
@@ -334,7 +357,7 @@ function structuralFingerprint(program) {
 // The same structure with every time removed. Two programs with the same shape
 // differ only in timing knobs -- which is the space Plan 16 closed by recorded
 // negative, so the duplicate control needs to see it.
-export function structuralShape(program) {
+export function structuralShape(program: PolicyProgram) {
   validateGrammarPolicy(program);
   return JSON.stringify({
     setupTarget: program.metadata.setupTarget,
@@ -354,21 +377,21 @@ export function structuralShape(program) {
 }
 
 /** Every observation-conditioned branch in the program, in document order. */
-export function policyBranches(program) {
+export function policyBranches(program: PolicyProgram) {
   return program.phases.flatMap(phase => phase.branches ?? []);
 }
 
 const MINIMAL = minimalPolicy();
-if (!MINIMAL.metadata.setupTarget) MINIMAL.metadata.setupTarget = 'minus-toys-split';
+if (!MINIMAL.metadata.setupTarget) (MINIMAL.metadata as Record<string, unknown>).setupTarget = 'minus-toys-split';
 const KNOWN = new Map([
   [structuralFingerprint(MINIMAL), 'minus-toys-minimal'],
 ]);
 
-export function policyFingerprint(program) {
+export function policyFingerprint(program: PolicyProgram) {
   return structuralFingerprint(program);
 }
 
-export function classifyPolicy(program) {
+export function classifyPolicy(program: PolicyProgram) {
   const fingerprint = structuralFingerprint(program);
   return {
     fingerprint,

@@ -25,7 +25,7 @@ import { writeFileSync } from 'node:fs';
 import * as E from '@sixam/source/fnaf2';
 import * as C from '@sixam/source/fnaf2';
 
-const arg = (name, def) => {
+const arg = <T>(name: string, def: T): string | T => {
   const v = (process.argv.find(a => a.startsWith(`--${name}=`)) || '').split('=')[1];
   return v === undefined ? def : v;
 };
@@ -39,13 +39,18 @@ const { plan, idleUntilMs } = parsePlanText(text);
 // Wrap tick from outside rather than teaching the engine to record: the engine
 // must not grow a debugging surface for one instrument's sake.
 const origTick = E.Sim.prototype.tick;
-let trace = [];
-E.Sim.prototype.tick = function () {
+let trace: [number, number, number][] = [];
+E.Sim.prototype.tick = function (this: InstanceType<typeof E.Sim>) {
   origTick.call(this);
   trace.push([this.box, this.isWinding ? 1 : 0, this.winding ? 1 : 0]);
 };
 
-const rows = [];
+/** One seed's winding: frames the button was held, frames it was credited, and the lowest box. */
+interface Row {
+  seed: number, won: boolean, held: number, credited: number, minBox: number, frames: number,
+  box: number[] | null, wind: number[] | null,
+}
+const rows: Row[] = [];
 for (let seed = lo; seed <= hi; seed++) {
   trace = [];
   const { sim } = replay(jitterPlan(plan, seed), { night, seed, idleUntilMs });
@@ -69,13 +74,13 @@ for (const r of died.slice(0, 8))
   console.log(`  seed ${r.seed}: DIED, ${pct(r)}% of ${r.held} wind frames credited, ` +
               `box reached ${r.minBox.toFixed(3)}`);
 
-function pct(r) { return r.held ? Math.round(100 * r.credited / r.held) : 100; }
-function median(a) { const s = [...a].sort((x, y) => x - y); return s[s.length >> 1]; }
+function pct(r: Row) { return r.held ? Math.round(100 * r.credited / r.held) : 100; }
+function median(a: number[]) { const s = [...a].sort((x, y) => x - y); return s[s.length >> 1]; }
 
 if (png) {
   const pick = died.length ? [died[0], rows.find(r => r.won)] : rows.slice(0, 2);
   writeFileSync(png.replace(/\.png$/, '.json'),
-    JSON.stringify(pick.filter(Boolean).map(r =>
+    JSON.stringify(pick.filter((r): r is Row => Boolean(r)).map(r =>
       ({ seed: r.seed, won: r.won, box: r.box, wind: r.wind }))));
   console.log(`  wrote ${png.replace(/\.png$/, '.json')} for rendering`);
 }

@@ -5,7 +5,7 @@ import { compilePolicy, replayPolicy } from './policy-interpreter.ts';
 import { build, schedule } from '../plans/minus-toys-plan.ts';
 import * as C from '@sixam/source/fnaf2';
 
-const check = (condition, message) => { if (!condition) throw new Error(message); };
+const check: (condition: unknown, message: string) => asserts condition = (condition, message) => { if (!condition) throw new Error(message); };
 const events = compilePolicy(minimalPolicy(), { untilMs: 420000 });
 const presses = events.filter(event => event.kind === 'press');
 check(presses.some(event => event.atMs === 115000 && event.action === 'monitor'),

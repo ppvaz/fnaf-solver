@@ -2336,6 +2336,7 @@
         "./policy-equivalence.ts",
         "./policy-interpreter.ts",
         "./policy-ir.ts",
+        "@sixam/kernel",
         "@sixam/propose/policy",
         "node:crypto",
         "node:fs",
@@ -2346,6 +2347,7 @@
       "file": "packages/propose/bin/policy/policy-equivalence.ts",
       "imports": [
         "./policy-interpreter.ts",
+        "@sixam/kernel",
         "@sixam/propose/policy",
         "@sixam/source",
         "node:crypto"
@@ -2354,7 +2356,9 @@
     {
       "file": "packages/propose/bin/policy/policy-grammar.ts",
       "imports": [
+        "./policy-interpreter.ts",
         "./policy-ir.ts",
+        "@sixam/kernel",
         "@sixam/propose/policy"
       ]
     },

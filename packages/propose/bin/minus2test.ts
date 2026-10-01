@@ -3,19 +3,22 @@
 import { pathToFileURL } from 'node:url';
 import { runMinusTwo } from '@sixam/propose/experiment';
 
+/** How a night that was not won ended. */
+type Death = NonNullable<ReturnType<typeof runMinusTwo>['sim']['death']>;
+
 const main = () => {
   const n = +(process.argv[2] || 200);
   const worst = process.argv.includes('--worst');
   const camsArg = process.argv.find(value => value.startsWith('--cams='));
   const flashCams = camsArg ? camsArg.slice(7).split(',').map(Number) : [3];
-  const deaths = {};
+  const deaths: Record<string, number> = {};
   let wins = 0, minBox = 1, minPower = Infinity, maxHolds = 0, maxD = 0;
   for (let i = 0; i < n; i++) {
     const result = runMinusTwo({ seed: (i * 2654435761) >>> 0, worst, flashCams });
     minBox = Math.min(minBox, result.minBox); minPower = Math.min(minPower, result.sim.power);
     maxHolds = Math.max(maxHolds, result.maxConsecutiveHolds); maxD = Math.max(maxD, result.maxD);
     if (result.sim.won) wins++;
-    else deaths[result.sim.death.reason] = (deaths[result.sim.death.reason] || 0) + 1;
+    else deaths[(result.sim.death as Death).reason] = (deaths[(result.sim.death as Death).reason] || 0) + 1;
   }
   console.log(`Minus Two probe (${worst ? 'pinned worst-luck' : 'normal'} seeds, flashing CAM ${flashCams.join('/')})`);
   console.log(`${wins}/${n} survived on the current Android model`);

@@ -6,7 +6,11 @@
 import { createHash } from 'node:crypto';
 import { compilePolicy } from './policy-interpreter.ts';
 import { canonicalPolicy, validatePolicy } from '@sixam/propose/policy';
+import type { PolicyAction, PolicyProgram } from '@sixam/propose/policy';
+import { isList, isOneOf } from '@sixam/kernel';
 import { DEVICE_CONTROL_NAMES } from '@sixam/source';
+import { phaseOf } from './policy-interpreter.ts';
+import type { PolicyEvent } from './policy-interpreter.ts';
 
 // The plan text's own short forms, plus the canonical control names taken from
 // the vocabulary rather than copied. This set was a hand copy until 2026-09-20
@@ -15,9 +19,9 @@ import { DEVICE_CONTROL_NAMES } from '@sixam/source';
 // the opening two days later, and then only this gate saw it -- which is why
 // deriving the names beats restating them.
 const PLAN_SHORTHAND = ['cam9', 'cam11', 'ventl', 'light', 'hall'];
-const ACTIONS = new Set([...DEVICE_CONTROL_NAMES, ...PLAN_SHORTHAND]);
-const finite = value => Number.isFinite(value);
-const frame = ms => Math.round(ms * 60 / 1000);
+const ACTIONS = new Set<string>([...DEVICE_CONTROL_NAMES, ...PLAN_SHORTHAND]);
+const finite = (value: unknown): value is number => Number.isFinite(value);
+const frame = (ms: number) => Math.round(ms * 60 / 1000);
 // `cam9`/`cam11` are camera shorthands; `cameraFeedLight` is a control whose
 // name merely starts with the same three letters. A `startsWith('cam')` test
 // turned it into the camera `cam:eraFeedLight`, which is what a prefix match
@@ -28,29 +32,38 @@ const CAMERA_SHORTHAND = /^cam(\d+)$/;
 // plan text can name fold into it here, which is the comparison this gate makes
 // and not a claim that they are the same control.
 const MODEL_LIGHTS = new Set(['ventl', 'cameraFeedLight']);
-const planAction = action => action;
-const semanticAction = action => CAMERA_SHORTHAND.test(action)
-  ? `cam:${CAMERA_SHORTHAND.exec(action)[1]}`
+const planAction = (action: string) => action;
+const semanticAction = (action: string) => CAMERA_SHORTHAND.test(action)
+  // The test just matched.
+  ? `cam:${(CAMERA_SHORTHAND.exec(action) as RegExpExecArray)[1]}`
   : MODEL_LIGHTS.has(action) ? 'light' : action;
-const cameraName = value => /^cam:(?:[1-9]|1[0-2])$/.test(value ?? '');
+// RegExp.test reads its argument as a string, which is what String() spells.
+const cameraName = (value: unknown) => /^cam:(?:[1-9]|1[0-2])$/.test(String(value ?? ''));
 
-function armVerifyCameras(value) {
+function armVerifyCameras(value: unknown) {
   if (value === undefined) return null;
-  if (!Array.isArray(value) || value.length < 2 ||
+  if (!isList(value) || value.length < 2 ||
       value.some(camera => !cameraName(camera)) || new Set(value).size !== value.length)
     fail('metadata.armVerifyCameras must contain unique camera names');
-  const sorted = [...value].sort((a, b) => Number(a.slice(4)) - Number(b.slice(4)));
+  // Each one is a camera name, checked above.
+  const sorted = ([...value] as string[]).sort((a, b) => Number(a.slice(4)) - Number(b.slice(4)));
   return sorted.join(',');
 }
 
-function fail(message) { throw new TypeError(`policy equivalence: ${message}`); }
+function fail(message: string): never { throw new TypeError(`policy equivalence: ${message}`); }
 
-export function policySha256(program) {
+/** A tap, hold or hall row of the plan text: its control and how long it is held. */
+type ContactRow<K> = { readonly at: number, readonly kind: K, readonly action: string, readonly duration: number };
+/** A row of the plan text: a contact, or a camdrop's lead, monitor contact and tail. */
+type PlanRow = ContactRow<'tap'> | ContactRow<'hold'> | ContactRow<'hall'>
+  | { readonly at: number, readonly kind: 'camdrop', readonly a: number, readonly b: number, readonly c: number };
+
+export function policySha256(program: PolicyProgram) {
   validatePolicy(program);
   return createHash('sha256').update(canonicalPolicy(program)).digest('hex');
 }
 
-function rowFor(action, repeat) {
+function rowFor(action: PolicyAction, repeat: boolean) {
   const at = repeat ? action.offsetMs : action.atMs;
   if (!finite(at) || at < 0) fail(`action ${action.action} has no valid plan time`);
   const mode = action.mode ?? 'tap';
@@ -64,7 +77,7 @@ function rowFor(action, repeat) {
 }
 
 /** Compile the supported policy-v1 phases to the phone's plan text. */
-export function compileDevicePlan(program) {
+export function compileDevicePlan(program: PolicyProgram) {
   validatePolicy(program);
   // The device plan text is a static schedule: it has no construct for a
   // decision taken at run time. Refuse rather than silently flatten a branch
@@ -73,7 +86,7 @@ export function compileDevicePlan(program) {
     if ((phase.branches ?? []).length)
       fail(`phase ${phase.id} carries observation-conditioned branches; the device plan format cannot express them`);
   }
-  const byKind = kind => program.phases.find(phase => phase.kind === kind);
+  const byKind = (kind: string) => program.phases.find(phase => phase.kind === kind);
   const idle = byKind('idle');
   const setup = byKind('setup');
   const repeat = byKind('repeat');
@@ -99,16 +112,16 @@ export function compileDevicePlan(program) {
   return lines.join('\n') + '\n';
 }
 
-function number(value, label) {
+function number(value: string | undefined, label: string) {
   if (!/^\d+(?:\.\d+)?$/.test(value ?? '')) fail(`${label} is not numeric`);
   return Number(value);
 }
 
-function parseRow(line, section) {
+function parseRow(line: string, section: string): PlanRow {
   const fields = line.trim().split(/\s+/);
   const at = number(fields.shift(), `${section} row time`);
   const kind = fields.shift();
-  if (!['tap', 'hold', 'hall', 'camdrop'].includes(kind)) fail(`${section} has unsupported row ${kind}`);
+  if (!isOneOf(['tap', 'hold', 'hall', 'camdrop'] as const, kind)) fail(`${section} has unsupported row ${kind}`);
   if (kind === 'camdrop') {
     if (fields.length !== 3) fail('camdrop row shape changed');
     return { at, kind, a: number(fields[0], 'camdrop lead'),
@@ -122,11 +135,11 @@ function parseRow(line, section) {
   return { at, kind, action: fields[0], duration: number(fields[1], `${section} duration`) };
 }
 
-export function parseDevicePlan(text) {
+export function parseDevicePlan(text: unknown) {
   if (typeof text !== 'string') fail('plan text is required');
-  const headers = {};
-  const sections = { opening: [], toys: [], finish: [] };
-  let section = null;
+  const headers: Record<string, string> = {};
+  const sections: Record<'opening' | 'toys' | 'finish', PlanRow[]> = { opening: [], toys: [], finish: [] };
+  let section = null as keyof typeof sections | null;
   for (const raw of text.split(/\r?\n/)) {
     const line = raw.trim();
     if (!line) continue;
@@ -136,7 +149,7 @@ export function parseDevicePlan(text) {
       const [, name, value = ''] = match;
       if (name === 'cycle') {
         if (!Object.hasOwn(sections, value)) fail(`unknown cycle ${value}`);
-        section = value;
+        section = value as keyof typeof sections;
       } else headers[name] = value;
       continue;
     }
@@ -148,7 +161,7 @@ export function parseDevicePlan(text) {
   return { headers, sections };
 }
 
-function expandRow(row, baseMs, out) {
+function expandRow(row: PlanRow, baseMs: number, out: PolicyEvent[]) {
   const atMs = baseMs + row.at;
   if (row.kind === 'tap') out.push({ atMs, kind: 'press', action: semanticAction(row.action) });
   else if (row.kind === 'hold' || row.kind === 'hall') {
@@ -163,12 +176,12 @@ function expandRow(row, baseMs, out) {
 }
 
 /** Expand the parsed plan through the same finite semantics as the phone. */
-export function compileMockPhonePlan(parsed) {
+export function compileMockPhonePlan(parsed: ReturnType<typeof parseDevicePlan>) {
   const loopStart = number(parsed.headers['loop-start'], '#loop-start');
   const stopAt = number(parsed.headers['stop-at'], '#stop-at');
   const period = number(parsed.headers.period, '#period');
   if (period <= 0 || stopAt <= loopStart) fail('invalid repeat bounds');
-  const events = [];
+  const events: PolicyEvent[] = [];
   parsed.sections.opening.forEach(row => expandRow(row, 0, events));
   for (let base = loopStart; base < stopAt; base += period)
     parsed.sections.toys.forEach(row => expandRow(row, base, events));
@@ -177,33 +190,33 @@ export function compileMockPhonePlan(parsed) {
     .sort((a, b) => a.atMs - b.atMs || (a.kind === 'release' ? -1 : 1));
 }
 
-const eventKey = event => [frame(event.atMs), event.kind, event.action].join('|');
+const eventKey = (event: PolicyEvent) => [frame(event.atMs), event.kind, event.action].join('|');
 
 /** Compare IR simulator semantics, emitted device text, and mocked phone output. */
-export function comparePolicyToDevice(program, text = compileDevicePlan(program)) {
+export function comparePolicyToDevice(program: PolicyProgram, text = compileDevicePlan(program)) {
   validatePolicy(program);
   const simulator = compilePolicy(program, { untilMs: Number(parsedOr(program, 'observeUntil')) });
-  let parsed;
+  let parsed: ReturnType<typeof parseDevicePlan>;
   try {
     parsed = parseDevicePlan(text);
   } catch (error) {
-    return { equal: false, mismatches: [{ field: 'plan', error: error.message }],
+    return { equal: false, mismatches: [{ field: 'plan', error: (error as Error).message }],
       simulatorCount: simulator.length, phoneCount: 0 };
   }
   const phone = compileMockPhonePlan(parsed);
   const simKeys = simulator.map(eventKey);
   const phoneKeys = phone.map(eventKey);
-  const mismatches = [];
+  const mismatches: Readonly<Record<string, unknown>>[] = [];
   const size = Math.max(simKeys.length, phoneKeys.length);
   for (let i = 0; i < size; i++) {
     if (simKeys[i] !== phoneKeys[i]) mismatches.push({ index: i, simulator: simKeys[i] ?? null,
       phone: phoneKeys[i] ?? null });
   }
-  const observe = program.phases.find(phase => phase.kind === 'observe');
+  const observe = phaseOf(program, 'observe');
   const observeUntil = number(parsed.headers['observe-until'], '#observe-until');
   if (observeUntil !== observe.endMs)
     mismatches.push({ field: 'observe-until', simulator: observe.endMs, phone: observeUntil });
-  const repeat = program.phases.find(phase => phase.kind === 'repeat');
+  const repeat = phaseOf(program, 'repeat');
   const period = number(parsed.headers.period, '#period');
   if (period !== repeat.periodMs)
     mismatches.push({ field: 'period', simulator: repeat.periodMs, phone: period });
@@ -226,7 +239,7 @@ export function comparePolicyToDevice(program, text = compileDevicePlan(program)
     simulatorCount: simKeys.length, phoneCount: phoneKeys.length };
 }
 
-function parsedOr(program, name) {
-  if (name === 'observeUntil') return program.phases.find(phase => phase.kind === 'observe').endMs;
+function parsedOr(program: PolicyProgram, name: string) {
+  if (name === 'observeUntil') return phaseOf(program, 'observe').endMs;
   return null;
 }

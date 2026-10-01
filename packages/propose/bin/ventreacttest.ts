@@ -22,14 +22,14 @@ import { formatRate } from '../../review/src/stat.ts';
 
 let failures = 0, knownNegatives = 0;
 const assertMode = process.argv.includes('--assert');
-const ok = (group, what, cond) => {
+const ok = (group: string, what: string, cond: unknown) => {
   if (!cond) { failures++; console.error(`FAIL  ${group}: ${what}`); }
   else console.log(`ok    ${group}: ${what}`);
 };
 // Reports remain useful without --assert, but a release-style run must fail
 // when one of the policy claims regresses. The previous helper returned true
 // unconditionally, so --assert was only a formatting flag.
-const KNOWN_NEGATIVE = (group, what, why) => {
+const KNOWN_NEGATIVE = (group: string, what: string, why: string) => {
   knownNegatives++;
   if (assertMode) {
     failures++;
@@ -38,12 +38,12 @@ const KNOWN_NEGATIVE = (group, what, why) => {
     console.error(`KNOWN-NEGATIVE (${knownNegatives}) ${group}: ${what} -- ${why}`);
   }
 };
-const policyGate = (group, what, condition, why) => {
+const policyGate = (group: string, what: string, condition: unknown, why: string) => {
   if (condition) ok(group, what, true);
   else KNOWN_NEGATIVE(group, what, why);
 };
-const O = (v) => ({ state: 'OBSERVED', value: v });
-const U = (r) => ({ state: 'UNKNOWN', reason: r });
+const O = (v: unknown) => ({ state: 'OBSERVED' as const, value: v });
+const U = (r: string) => ({ state: 'UNKNOWN' as const, reason: r });
 
 // --- 1. controller unit: detection -> drop -> flash -> mask -> hold -> verify
 {
@@ -180,7 +180,7 @@ const U = (r) => ({ state: 'UNKNOWN', reason: r });
 
 // --- 2. Night 2 policy A/B: base vs reactive vs noisy ------------------------
 const NIGHT = 2;
-const numericArg = (name, fallback) => {
+const numericArg = (name: string, fallback: number) => {
   const raw = process.argv.find(arg => arg.startsWith(`--${name}=`));
   if (raw === undefined) return fallback;
   const value = Number(raw.slice(name.length + 3));
@@ -190,11 +190,11 @@ const numericArg = (name, fallback) => {
 const SEEDS = Array.from({ length: numericArg('seeds', 300) },
   (_, i) => (i * 2654435761) >>> 0);
 
-const bbInsides = (r) => r.sim.events.filter(e => e.type === 'bb-inside').length;
+const bbInsides = (r: ReturnType<typeof replay>) => r.sim.events.filter(e => e.type === 'bb-inside').length;
 
-function rate(knobs) {
+function rate(knobs: NonNullable<Parameters<typeof replay>[0]>['knobs']) {
   let won = 0, bbIn = 0, bbInRuns = 0;
-  const deaths = {};
+  const deaths: Record<string, number> = {};
   for (const seed of SEEDS) {
     const r = replay({ night: NIGHT, seed, knobs });
     if (r.sim.won) won++;
@@ -209,7 +209,7 @@ const base = rate(KNOBS0);
 const clean = rate({ ...KNOBS0, reactiveBB: true });
 const noisy = rate({ ...KNOBS0, reactiveBB: true, reactiveDelayFrames: 8, reactiveDropRate: 0.2 });
 
-const fmt = (x) => `${x.won}/${SEEDS.length} won (${formatRate(x.won, SEEDS.length, { label: 'survival' })}), ` +
+const fmt = (x: ReturnType<typeof rate>) => `${x.won}/${SEEDS.length} won (${formatRate(x.won, SEEDS.length, { label: 'survival' })}), ` +
   `bb-inside runs ${x.bbInRuns}, ` +
   `deaths ${Object.entries(x.deaths).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k}:${v}`).join(' ') || 'none'}`;
 

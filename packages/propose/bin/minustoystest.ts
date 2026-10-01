@@ -13,7 +13,7 @@ const main = () => {
   const worst = process.argv.includes('--worst');
   const control = process.argv.includes('--no-split');
   const shouldAssert = process.argv.includes('--assert');
-  const deaths = {};
+  const deaths: Record<string, number> = {};
   let wins = 0, minBox = 1, minPower = Infinity, splitMisses = 0;
   let maxBlackouts = 0, maxVentArrivals = 0;
   for (const seed of seeds) {

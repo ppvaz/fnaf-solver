@@ -30,8 +30,8 @@ import { runNight } from './nightloop-run.ts';
 import { SimPool } from './census/pool.ts';
 
 const RUN_MODULE = new URL('./nightloop-run.ts', import.meta.url).href;
-const flag = name => process.argv.includes(`--${name}`);
-const option = (name, fallback) => {
+const flag = (name: string) => process.argv.includes(`--${name}`);
+const option = <T>(name: string, fallback: T): string | T => {
   const found = process.argv.find(a => a.startsWith(`--${name}=`));
   return found ? found.slice(name.length + 3) : fallback;
 };
@@ -44,8 +44,8 @@ const POLICY = option('policy', 'night');
 const QUIET = flag('quiet');
 
 // `--nights=1-7`, `--nights=1,3,6`, or a positional night.
-function parseNights(text) {
-  const out = [];
+function parseNights(text: string | number) {
+  const out: number[] = [];
   for (const part of String(text).split(',')) {
     const range = part.match(/^(\d+)-(\d+)$/);
     if (range) for (let n = +range[1]; n <= +range[2]; n++) out.push(n);
@@ -62,15 +62,17 @@ const SEED_BASE = Number(option('seed-base', '0'));
 const ARMS = option('arms', 'estimator,disabled,open-loop').split(',');
 const WORKERS = Number(option('workers', '0'));
 
-async function cohort(night, mode) {
+async function cohort(night: number, mode: string) {
   const jobs = Array.from({ length: SEEDS }, (_, offset) => ({
     night, seedIndex: SEED_BASE + offset, mode, policy: POLICY, gate: GATE,
   }));
+  // The pool hands back runNight's results across a structured clone.
   const runs = WORKERS > 1
     ? await new SimPool({ workers: WORKERS }).map(RUN_MODULE, 'runNight', jobs)
-        .finally(() => {})
+        .finally(() => {}) as ReturnType<typeof runNight>[]
     : jobs.map(runNight);
-  const result = { night, mode, won: 0, deaths: {}, detail: {}, selected: {},
+  const result = { night, mode, won: 0, deaths: {} as Record<string, number>, detail: {} as Record<string, number>,
+    selected: {} as Record<string, number>,
     actions: 0, released: 0, refused: 0, stranded: 0, frames: 0,
     emergencyReleased: 0, cancelled: 0,
     flashes: 0, minBox: 1, camsUpMax: 0, powerLeftMin: Infinity };
@@ -98,9 +100,10 @@ async function cohort(night, mode) {
 }
 
 const started = Date.now();
-const table: any[] = [];
+type Arm = Awaited<ReturnType<typeof cohort>>;
+const table: { night: number, arms: Record<string, Arm> }[] = [];
 for (const night of NIGHTS) {
-  const arms: Record<string, any> = {};
+  const arms: Record<string, Arm> = {};
   for (const mode of ['estimator', 'disabled', 'open-loop']) {
     if (!ARMS.includes(mode)) continue;
     arms[mode] = await cohort(night, mode);
@@ -114,26 +117,26 @@ console.log(`closed loop, ${SEEDS} full nights per arm, policy=${POLICY} ` +
 for (const { night, arms } of table) {
   console.log(`night ${night}:`);
   for (const [mode, arm] of Object.entries(arms)) {
-    const ci = wilsonInterval((arm as any).won, SEEDS);
-    console.log(`  ${mode.padEnd(10)} ${String((arm as any).won).padStart(4)}/${SEEDS} survived` +
-      ` (${(100 * (arm as any).won / SEEDS).toFixed(1)}% [${(100 * ci.low).toFixed(1)}, ${(100 * ci.high).toFixed(1)}]),` +
-      ` mean ${((arm as any).frames / SEEDS / C.FPS).toFixed(1)}s alive,` +
-      ` ${(arm as any).actions} actions, ${(arm as any).released} released / ${(arm as any).refused} refused /` +
-      ` ${(arm as any).stranded} stranded` +
-      ((arm as any).emergencyReleased || (arm as any).cancelled
-        ? ` (${(arm as any).emergencyReleased} emergency releases, ${(arm as any).cancelled} cancelled)` : ''));
-    if (Object.keys((arm as any).deaths).length)
-      console.log(`    deaths ${JSON.stringify((arm as any).deaths)}`);
+    const ci = wilsonInterval(arm.won, SEEDS);
+    console.log(`  ${mode.padEnd(10)} ${String(arm.won).padStart(4)}/${SEEDS} survived` +
+      ` (${(100 * arm.won / SEEDS).toFixed(1)}% [${(100 * ci.low).toFixed(1)}, ${(100 * ci.high).toFixed(1)}]),` +
+      ` mean ${(arm.frames / SEEDS / C.FPS).toFixed(1)}s alive,` +
+      ` ${arm.actions} actions, ${arm.released} released / ${arm.refused} refused /` +
+      ` ${arm.stranded} stranded` +
+      (arm.emergencyReleased || arm.cancelled
+        ? ` (${arm.emergencyReleased} emergency releases, ${arm.cancelled} cancelled)` : ''));
+    if (Object.keys(arm.deaths).length)
+      console.log(`    deaths ${JSON.stringify(arm.deaths)}`);
     if (!QUIET && mode === 'estimator') {
-      console.log(`    minBox ${(arm as any).minBox.toFixed(3)}, camsUpMax ${(arm as any).camsUpMax}f,` +
-        ` power left >= ${(arm as any).powerLeftMin}, ${(arm as any).flashes} hall flashes`);
-      console.log(`    cycles ${JSON.stringify((arm as any).selected)}`);
+      console.log(`    minBox ${arm.minBox.toFixed(3)}, camsUpMax ${arm.camsUpMax}f,` +
+        ` power left >= ${arm.powerLeftMin}, ${arm.flashes} hall flashes`);
+      console.log(`    cycles ${JSON.stringify(arm.selected)}`);
     }
   }
 }
 
 if (ASSERT) {
-  const check = (condition, message) => {
+  const check = (condition: unknown, message: string) => {
     if (!condition) { console.error(`FAIL ${message}`); process.exitCode = 1; }
     else console.log(`ok   ${message}`);
   };

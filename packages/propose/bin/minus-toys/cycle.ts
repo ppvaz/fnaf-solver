@@ -4,7 +4,7 @@ import { CYCLE, runMinusToys7, cohort } from '@sixam/propose/strategies/minus-to
 
 export { CYCLE, runMinusToys7, cohort };
 
-const arg = (name, fallback) => {
+const arg = (name: string, fallback: number) => {
   const raw = process.argv.find(item => item.startsWith(`--${name}=`));
   return raw === undefined ? fallback : Number(raw.slice(name.length + 3));
 };

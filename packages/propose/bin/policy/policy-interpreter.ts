@@ -2,32 +2,58 @@
 // It expands only the reviewed action modes in the IR; it has no shell or
 // callback escape hatch. A later Sim adapter can consume this event stream.
 import { policyGame, validatePolicy } from '@sixam/propose/policy';
+import type { PolicyAction, PolicyPhase, PolicyProgram, RepeatPhase } from '@sixam/propose/policy';
 import { Sim } from '@sixam/source/fnaf2';
 import * as C from '@sixam/source/fnaf2';
 
 // The FNaF 2 Sim action each of the IR's FNaF 2 spellings presses. The IR
 // accepts every control in the game's catalog, and the Sim ignores a name it
 // does not know, so an action outside this table is refused, not dropped.
-const SIM_ACTION = Object.freeze({
+const SIM_ACTION: Readonly<Record<string, string>> = Object.freeze({
   monitor: 'monitor', mask: 'mask', cam9: 'cam:9', cam11: 'cam:11',
   ventl: 'light', light: 'light', wind: 'wind', hall: 'hall',
 });
-const control = action => {
+const control = (action: string) => {
   if (!Object.hasOwn(SIM_ACTION, action))
     throw new TypeError(`policy interpreter: action ${JSON.stringify(action)} has no FNaF 2 Sim expansion`);
   return SIM_ACTION[action];
 };
 
-function expandAction(action, baseMs, out) {
+/** One press or release the program schedules, at its time in the night. */
+export interface PolicyEvent { readonly atMs: number, readonly kind: 'press' | 'release', readonly action: string }
+
+/**
+ * An action as its reviewed mode spells it: a tap, a hold or hall pulse and its
+ * duration, or a camdrop's lead, monitor contact and tail.
+ */
+export type ModeAction = PolicyAction & (
+  | { readonly mode?: 'tap' }
+  | { readonly mode: 'hold' | 'hall', readonly durationMs: number }
+  | { readonly mode: 'camdrop', readonly leadMs: number, readonly durationMs: number, readonly tailMs: number });
+
+/**
+ * A phase's actions as their modes spell them. validateGrammarPolicy checks
+ * each mode's numbers and validatePolicy does not, so a missing one reads NaN
+ * here, as it did untyped.
+ */
+export const modeActions = (phase: PolicyPhase) => (phase.actions ?? []) as readonly ModeAction[];
+
+/** The program's phase of `kind`, which a caller reads only where the program has one (a missing one throws reading it). */
+export function phaseOf(program: PolicyProgram, kind: 'repeat'): RepeatPhase;
+export function phaseOf(program: PolicyProgram, kind: PolicyPhase['kind']): PolicyPhase;
+export function phaseOf(program: PolicyProgram, kind: PolicyPhase['kind']) {
+  return program.phases.find(phase => phase.kind === kind) as PolicyPhase;
+}
+
+function expandAction(action: ModeAction, baseMs: number, out: PolicyEvent[]) {
   const atMs = baseMs + (action.atMs ?? action.offsetMs ?? 0);
-  const mode = action.mode ?? 'tap';
-  if (mode === 'camdrop') {
+  if (action.mode === 'camdrop') {
     out.push({ atMs, kind: 'press', action: 'light' });
     out.push({ atMs: atMs + action.leadMs, kind: 'press', action: 'monitor' });
     out.push({ atMs: atMs + action.leadMs + action.durationMs + action.tailMs,
       kind: 'release', action: 'light' });
-  } else if (mode === 'hold' || mode === 'hall') {
-    const name = mode === 'hall' ? 'light' : control(action.action);
+  } else if (action.mode === 'hold' || action.mode === 'hall') {
+    const name = action.mode === 'hall' ? 'light' : control(action.action);
     out.push({ atMs, kind: 'press', action: name });
     out.push({ atMs: atMs + action.durationMs, kind: 'release', action: name });
   } else {
@@ -35,7 +61,7 @@ function expandAction(action, baseMs, out) {
   }
 }
 
-export function compilePolicy(program, { untilMs = Infinity } = {}) {
+export function compilePolicy(program: PolicyProgram, { untilMs = Infinity }: { untilMs?: number } = {}) {
   validatePolicy(program);
   const game = policyGame(program);
   if (game !== 'fnaf2')
@@ -51,15 +77,15 @@ export function compilePolicy(program, { untilMs = Infinity } = {}) {
     if ((phase.branches ?? []).length)
       throw new TypeError(`policy interpreter: phase ${phase.id} carries observation-conditioned branches; this compiler evaluates unconditional programs only`);
   }
-  const events = [];
+  const events: PolicyEvent[] = [];
   for (const phase of program.phases) {
     if (phase.kind === 'repeat') {
       for (let base = phase.startMs; base < Math.min(phase.endMs, untilMs);
            base += phase.periodMs) {
-        for (const action of phase.actions ?? []) expandAction(action, base, events);
+        for (const action of modeActions(phase)) expandAction(action, base, events);
       }
     } else if (phase.kind !== 'idle' && phase.kind !== 'observe') {
-      for (const action of phase.actions ?? []) expandAction(action, 0, events);
+      for (const action of modeActions(phase)) expandAction(action, 0, events);
     }
   }
   // A release at a phase seam must happen before the next press at that same
@@ -71,9 +97,9 @@ export function compilePolicy(program, { untilMs = Infinity } = {}) {
 
 // The first exact-engine adapter. It deliberately consumes the same semantic
 // events as the phone compiler; no policy-specific timeline is copied here.
-export function replayPolicy(program, {
+export function replayPolicy(program: PolicyProgram, {
   night = 1, seed = 1, worst = false, untilMs = Infinity,
-} = {}) {
+}: { night?: number, seed?: number, worst?: boolean, untilMs?: number } = {}) {
   const sim = new Sim({ night, seed, worst });
   const events = compilePolicy(program, { untilMs });
   let i = 0;

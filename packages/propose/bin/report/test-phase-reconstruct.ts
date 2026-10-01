@@ -7,8 +7,10 @@
 // interval no recorded quantity measures.
 import { reconstruct, lossBands, phoneWallFrom, SCHEMA } from './phase-reconstruct.ts';
 
-const check = (condition, message) => { if (!condition) throw new Error(message); };
-const expectFailure = (fn, message) => {
+const check: (condition: unknown, message: string) => asserts condition = (condition, message) => { if (!condition) throw new Error(message); };
+/** A field the test reads where the report has it; a missing one fails the check that reads it. */
+const found = <T>(value: T | null | undefined) => value as T;
+const expectFailure = (fn: () => unknown, message: string) => {
   let failed = false;
   try { fn(); } catch { failed = true; }
   check(failed, message);
@@ -46,10 +48,11 @@ check(report.schema === SCHEMA, 'reconstruction did not declare its schema');
 
 // The prefix length is recorded nowhere; it is recovered from the first gate,
 // whose accumulated lag is zero by construction.
-check(report.arm.armReadyAtMs === ARM_READY_AT_MS,
-  `prefix length not recovered (${report.arm.armReadyAtMs})`);
-check(report.arm.lagMs === ARM_LAG_MS,
-  `arm release lag not recovered (${report.arm.lagMs})`);
+const arm = found(report.arm);
+check(arm.armReadyAtMs === ARM_READY_AT_MS,
+  `prefix length not recovered (${arm.armReadyAtMs})`);
+check(arm.lagMs === ARM_LAG_MS,
+  `arm release lag not recovered (${arm.lagMs})`);
 
 // The delivered offset is the plan's own rotation plus everything delivery
 // added to it. This is the quantity the bundle never states.
@@ -57,7 +60,7 @@ check(report.cycles.map(cycle => cycle.deliveredOffsetMs).join(',') === '1333,13
   `delivered offsets wrong (${report.cycles.map(cycle => cycle.deliveredOffsetMs).join(',')})`);
 check(report.cycles.map(cycle => cycle.gateLagMs).join(',') === GATE_LAGS.join(','),
   'per-gate lag was not separated from the arm release lag');
-check(report.deliveredOffsetMs.first === 1333 && report.deliveredOffsetMs.last === 1433,
+check(found(report.deliveredOffsetMs).first === 1333 && found(report.deliveredOffsetMs).last === 1433,
   'delivered offset summary did not span the run');
 
 // The interval between the game's first night frame and the classifier calling
@@ -72,9 +75,10 @@ check(report.origin.priorSampleLabel === 'state=intro',
 
 // The end of the night is bracketed by the classifier's own cadence, and the
 // dump attributes nothing.
-check(report.terminal.bracketMs === 1800 && report.terminal.terminalLabel === 'state=static',
+const terminal = found(report.terminal);
+check(terminal.bracketMs === 1800 && terminal.terminalLabel === 'state=static',
   'terminal bracket wrong');
-check(report.terminal.attribution === 'UNKNOWN',
+check(terminal.attribution === 'UNKNOWN',
   'reconstruction claimed a death attribution the frames cannot support');
 
 // A run that never reached a night has no origin to reconstruct, and saying so
@@ -108,7 +112,7 @@ const ANCHOR = { type: 'origin.anchor', status: 'scheduled', aimMs: 4870, maxK: 
   onsetPhoneWallMs: 1789611303278.1782, onsetPhoneWallLow16: 24942 };
 const SEED_PHONE_WALL_MS = 1789611303187;    // office-seed-bracket, low16 24851
 
-const skewed = phoneWallFrom(ANCHOR, { released: 1789611309534, nightGoAt: 1789611309524 });
+const skewed = found(phoneWallFrom(ANCHOR, { released: 1789611309534, nightGoAt: 1789611309524 }));
 check(Math.abs(skewed.hostWallMinusPhoneWallMs - 1374.823) < 0.01,
   `host-minus-phone skew wrong: ${skewed.hostWallMinusPhoneWallMs}`);
 check(Math.abs((skewed.releasedAtPhoneWallMs - SEED_PHONE_WALL_MS) - 4972.178) < 0.01,

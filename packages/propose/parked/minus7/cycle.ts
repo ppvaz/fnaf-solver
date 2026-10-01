@@ -4,7 +4,7 @@ import { CYCLE, runCycle, cohort } from '@sixam/propose/parked/minus7';
 
 export { CYCLE, runCycle, cohort };
 
-const arg = (name, fallback) => {
+const arg = (name: string, fallback: number) => {
   const raw = process.argv.find(item => item.startsWith(`--${name}=`));
   return raw === undefined ? fallback : Number(raw.slice(name.length + 3));
 };

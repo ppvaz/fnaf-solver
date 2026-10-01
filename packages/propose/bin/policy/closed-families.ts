@@ -11,15 +11,20 @@
 // it may not admit one by accident.
 import { readFileSync } from 'node:fs';
 import { OBSERVATION_BUDGET } from '@sixam/propose/policy';
+import type { PolicyProgram } from '@sixam/propose/policy';
 import { knownPolicyShapes, policyBranches, structuralShape } from './policy-grammar.ts';
 
-const REGISTER = JSON.parse(readFileSync(
+/** A family closed by recorded negative: the rule that recognises it and the plans that closed it. */
+interface ClosedFamily { readonly id: string, readonly rule: string, readonly plans: readonly string[] }
+const REGISTER: { schema: string, families: ClosedFamily[] } = JSON.parse(readFileSync(
   new URL('../../bindings/closed-families.json', import.meta.url), 'utf8'));
 
 export const CLOSED_FAMILIES_SCHEMA = REGISTER.schema;
-export const CLOSED_FAMILIES = Object.freeze(REGISTER.families.map(Object.freeze));
+export const CLOSED_FAMILIES = Object.freeze(REGISTER.families.map(family => Object.freeze(family)));
 
-const RULES = {
+/** What a rule is told besides the program: the timing-free shapes of the known families. */
+interface RuleContext { readonly knownShapes: ReadonlyMap<string, string> }
+const RULES: Readonly<Record<string, (program: PolicyProgram, context: RuleContext) => string | null>> = {
   'no-observation-branch': (program) =>
     policyBranches(program).length === 0
       ? 'the program has no observation-conditioned branch, so its control flow never reads a game fact'
@@ -28,7 +33,7 @@ const RULES = {
   'known-shape-different-times': (program, { knownShapes }) => {
     // A program that does not validate has no shape to compare; the grammar
     // gate reports that separately.
-    let shape;
+    let shape: string;
     try { shape = structuralShape(program); } catch { return null; }
     const known = knownShapes.get(shape);
     if (!known) return null;
@@ -52,7 +57,7 @@ const RULES = {
  *   one entry per closed family the candidate belongs to; empty when the
  *   candidate is outside every family closed to date.
  */
-export function closedFamilyMatches(program, { knownShapes = knownPolicyShapes() } = {}): {id: string, rule: string, plans: string[], detail: string}[] {
+export function closedFamilyMatches(program: PolicyProgram, { knownShapes = knownPolicyShapes() }: Partial<RuleContext> = {}): {id: string, rule: string, plans: string[], detail: string}[] {
   const matches = [];
   for (const entry of CLOSED_FAMILIES) {
     const rule = RULES[entry.rule];
@@ -64,7 +69,7 @@ export function closedFamilyMatches(program, { knownShapes = knownPolicyShapes()
 }
 
 /** Rejection reasons in the search's `reasons` format. */
-export function closedFamilyReasons(program, options) {
+export function closedFamilyReasons(program: PolicyProgram, options?: Partial<RuleContext>) {
   return closedFamilyMatches(program, options)
     .map(match => `closed-family:${match.id}:${match.detail}`);
 }

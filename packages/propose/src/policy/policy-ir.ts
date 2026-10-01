@@ -12,7 +12,7 @@ export const PHASE_KINDS = Object.freeze(['idle', 'setup', 'repeat', 'finish', '
 
 type Game = keyof typeof PACKAGES;
 /** One timed contact a phase authors: a control of its game, at a time inside the phase. */
-interface PolicyAction {
+export interface PolicyAction {
   readonly action: string;
   readonly atMs?: number;
   readonly offsetMs?: number;
@@ -20,17 +20,19 @@ interface PolicyAction {
   readonly [field: string]: unknown;
 }
 /** A span of the night: what runs in it, what it may branch on, and what it records. */
-interface PolicyPhase {
-  readonly kind: (typeof PHASE_KINDS)[number];
+interface PhaseFields {
   readonly id: string;
   readonly startMs: number;
   readonly endMs: number;
-  readonly periodMs?: number;
   readonly actions?: readonly PolicyAction[];
   readonly branches?: readonly Branch[];
   readonly observations?: readonly { readonly fact: string, readonly maxAgeMs: number, readonly confidenceFloor: number }[];
   readonly [field: string]: unknown;
 }
+/** The repeat body, which runs once per positive period. */
+export interface RepeatPhase extends PhaseFields { readonly kind: 'repeat'; readonly periodMs: number }
+/** A phase of each kind; only the repeat body has a period. */
+export type PolicyPhase = RepeatPhase | (PhaseFields & { readonly kind: Exclude<(typeof PHASE_KINDS)[number], 'repeat'>, readonly periodMs?: number });
 /** policy-v1: a finite program of phases over one game's controls, with its proof obligations. */
 export interface PolicyProgram {
   readonly schema: 'policy-v1';

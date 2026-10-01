@@ -19,9 +19,9 @@ export const CYCLE_CONTROLLER_SCHEMA = 'cycle-controller-v1';
 type Estimator = ReturnType<typeof initialEstimator>;
 type FactBatch = Readonly<Record<string, unknown>>;
 /** A plausible world the planner gates a cycle against. */
-type Hypothesis = { readonly id: string, readonly state: ReducedState, readonly hazard: string, readonly plausible: boolean };
+export type Hypothesis = { readonly id: string, readonly state: ReducedState, readonly hazard: string, readonly plausible: boolean };
 /** A cycle action committed for later: its owning invocation, its absolute frame, whether it opens a contact. */
-interface DeferredAction extends CycleAction {
+export interface DeferredAction extends CycleAction {
   readonly cycleId: string;
   readonly cycleRunId: string;
   readonly opensContact: boolean;

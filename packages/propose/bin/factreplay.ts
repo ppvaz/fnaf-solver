@@ -18,6 +18,7 @@ import * as C from '@sixam/source/fnaf2';
 import { Sim, Rng } from '@sixam/source/fnaf2';
 import { Observer } from '@sixam/play/sim';
 import { CycleController, getCycle } from '@sixam/propose/fnaf2';
+import type { Cycle, DeferredAction, Hypothesis } from '@sixam/propose/fnaf2';
 import { canonicalJson, stableHash } from '@sixam/kernel/contracts';
 
 export const FACT_STREAM_SCHEMA = 'offline-fact-stream-v1';
@@ -25,8 +26,20 @@ export const FACT_STREAM_SCHEMA = 'offline-fact-stream-v1';
 const LIBRARY_IDS = ['observe-and-hold', 'defensive-mask', 'wind-and-anchor',
   'foxy-hall-reset', 'verify-and-resume', 'select-box-cam', 'lower-monitor', 'unmask'];
 const WIND_AT = 0.55;
+// Each id names a library cycle.
+const LIBRARY = () => LIBRARY_IDS.map(getCycle) as Cycle[];
 
-function route(cycle, hypothesis, _gate, controller) {
+/** What a decision says about itself: a no-decision names its reason, a selection its record. */
+type DecisionWords = { readonly reason?: unknown, readonly record?: { readonly reason?: unknown } };
+/** One decision boundary as recorded: the facts read, the gate verdicts retained, and what was committed. */
+interface Boundary {
+  frame: number, facts: unknown, gates: Record<string, boolean>, selected: string | null, reason: unknown,
+  actions: { kind: string, action: string }[],
+}
+/** The night a stream records. */
+interface StreamOptions { night: number, seed: number, limitFrames: number }
+
+function route(cycle: Cycle, hypothesis: Hypothesis, _gate: unknown, controller: CycleController) {
   const st = controller.reduced;
   const want = (() => {
     if (hypothesis.hazard === 'active') return st.maskOn ? null : 'defensive-mask';
@@ -42,7 +55,7 @@ function route(cycle, hypothesis, _gate, controller) {
     ? { risk: 0, resourceMargin: 10 } : { risk: 1, resourceMargin: 0 };
 }
 
-function exactReplay(sim, cycle) {
+function exactReplay(sim: Sim, cycle: Cycle) {
   if (cycle.id === 'observe-and-hold') return { accepted: true };
   const copy = Sim.fromSnapshot(sim.opts, sim.snapshot());
   const origin = copy.frame;
@@ -57,15 +70,16 @@ function exactReplay(sim, cycle) {
   return (copy.alive || copy.won) ? { accepted: true } : { accepted: false, reason: 'exact-death' };
 }
 
-const commitOf = (controller, decision, frame) => controller.commit(decision, { frame });
+const commitOf = (controller: CycleController, decision: Parameters<CycleController['commit']>[0], frame: number) =>
+  controller.commit(decision, { frame });
 
 /** Drive one night live, retaining every observation and every decision. */
-function record({ night, seed, limitFrames }) {
+function record({ night, seed, limitFrames }: StreamOptions) {
   const sim = new Sim({ night, seed });
   const observer = new Observer({ interval: 4, rng: new Rng(seed ^ 0x9e3779b9) });
-  const controller = new CycleController({ cycles: LIBRARY_IDS.map(getCycle) });
-  const boundaries = [];
-  const pending = [];
+  const controller = new CycleController({ cycles: LIBRARY() });
+  const boundaries: Boundary[] = [];
+  const pending: DeferredAction[] = [];
   while (sim.alive && !sim.won && sim.frame < limitFrames) {
     if (sim.frame % 4 === 0) {
       const facts = observer.read(sim);
@@ -73,7 +87,7 @@ function record({ night, seed, limitFrames }) {
       // The exact gate is a proof oracle over the live engine, so its verdicts
       // are retained with the stream: a replay has no engine to consult and
       // must not be allowed to invent one.
-      const gates = {};
+      const gates: Record<string, boolean> = {};
       const decision = controller.plan({
         exactGate: cycle => {
           const verdict = exactReplay(sim, cycle);
@@ -85,10 +99,11 @@ function record({ night, seed, limitFrames }) {
       const committed = commitOf(controller, decision, sim.frame);
       for (const action of committed.actions) sim[action.kind](action.action);
       for (const action of committed.deferred) pending.push(action);
+      const said: DecisionWords = decision;
       boundaries.push({
         frame: sim.frame, facts, gates,
         selected: decision.selected ?? null,
-        reason: decision.reason ?? decision.record?.reason ?? null,
+        reason: said.reason ?? said.record?.reason ?? null,
         actions: committed.actions.map(a => ({ kind: a.kind, action: a.action })),
       });
     }
@@ -106,10 +121,10 @@ function record({ night, seed, limitFrames }) {
 }
 
 /** Rebuild the same decisions from the stream alone. No engine is consulted. */
-function replay(stream) {
-  const controller = new CycleController({ cycles: LIBRARY_IDS.map(getCycle) });
-  const pending = [];
-  const rebuilt = [];
+function replay(stream: { readonly boundaries: readonly Boundary[] }) {
+  const controller = new CycleController({ cycles: LIBRARY() });
+  const pending: DeferredAction[] = [];
+  const rebuilt: Omit<Boundary, 'facts' | 'gates'>[] = [];
   let frame = 0;
   for (const boundary of stream.boundaries) {
     // Advance the caller's queue exactly as the recording did.
@@ -133,10 +148,11 @@ function replay(stream) {
     });
     const committed = commitOf(controller, decision, boundary.frame);
     for (const action of committed.deferred) pending.push(action);
+    const said: DecisionWords = decision;
     rebuilt.push({
       frame: boundary.frame,
       selected: decision.selected ?? null,
-      reason: decision.reason ?? decision.record?.reason ?? null,
+      reason: said.reason ?? said.record?.reason ?? null,
       actions: committed.actions.map(a => ({ kind: a.kind, action: a.action })),
     });
   }
@@ -148,7 +164,7 @@ function commitId() {
   catch { return 'UNKNOWN'; }
 }
 
-function manifestFor(stream, { night, seed, limitFrames }) {
+function manifestFor(stream: ReturnType<typeof record>, { night, seed, limitFrames }: StreamOptions) {
   return {
     schema: FACT_STREAM_SCHEMA,
     producer: 'packages/propose/bin/factreplay.ts',
@@ -165,26 +181,26 @@ function manifestFor(stream, { night, seed, limitFrames }) {
   };
 }
 
-function write(path, stream, options) {
+function write(path: string, stream: ReturnType<typeof record>, options: StreamOptions) {
   mkdirSync(dirname(path), { recursive: true });
   const lines = [canonicalJson(manifestFor(stream, options)).trim()];
   for (const boundary of stream.boundaries) lines.push(canonicalJson(boundary).trim());
   writeFileSync(path, `${lines.join('\n')}\n`);
 }
 
-function read(path) {
+function read(path: string) {
   const lines = readFileSync(path, 'utf8').trim().split('\n');
-  const manifest = JSON.parse(lines[0]);
+  const manifest: ReturnType<typeof manifestFor> = JSON.parse(lines[0]);
   if (manifest.schema !== FACT_STREAM_SCHEMA)
     throw new Error(`unexpected stream schema ${manifest.schema}`);
-  const boundaries = lines.slice(1).map(line => JSON.parse(line));
+  const boundaries: Boundary[] = lines.slice(1).map(line => JSON.parse(line));
   const hash = stableHash(boundaries);
   if (hash !== manifest.streamHash)
     throw new Error(`stream digest mismatch: manifest ${manifest.streamHash}, actual ${hash}`);
   return { manifest, boundaries };
 }
 
-const argOf = name => {
+const argOf = (name: string) => {
   const index = process.argv.indexOf(name);
   return index >= 0 ? process.argv[index + 1] : null;
 };
@@ -210,7 +226,7 @@ const rebuilt = replay(loaded);
 console.log(`replayed ${rebuilt.length} boundaries from ${path}` +
   ` (digest ${loaded.manifest.streamHash.slice(0, 12)})`);
 
-const mismatches = [];
+const mismatches: { index: number, frame: number, want: string, got: string }[] = [];
 for (const [index, expected] of loaded.boundaries.entries()) {
   const actual = rebuilt[index];
   const want = canonicalJson({ frame: expected.frame, selected: expected.selected,

@@ -8,16 +8,18 @@ import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { canonicalPolicy, validatePolicy } from '@sixam/propose/policy';
+import type { PolicyProgram } from '@sixam/propose/policy';
+import { isRecord } from '@sixam/kernel';
 import { minimalPolicy } from './policy-ir.ts';
 import { compileDevicePlan, comparePolicyToDevice } from './policy-equivalence.ts';
-import { replayPolicy } from './policy-interpreter.ts';
+import { phaseOf, replayPolicy } from './policy-interpreter.ts';
 
 export const ARTIFACT_SCHEMA = 'policy-artifact-v1';
 
-const sha256 = text => createHash('sha256').update(text).digest('hex');
-const clone = value => JSON.parse(JSON.stringify(value));
+const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
+const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value));
 
-export function compilePolicyArtifact(program = minimalPolicy()) {
+export function compilePolicyArtifact(program: PolicyProgram = minimalPolicy()) {
   validatePolicy(program);
   const canonical = canonicalPolicy(program);
   const plan = compileDevicePlan(program);
@@ -31,7 +33,8 @@ export function compilePolicyArtifact(program = minimalPolicy()) {
     policyId: program.metadata.id,
     policySha256: sha256(canonical),
     planSha256: sha256(plan),
-    sourceDependencies: [...(program.metadata.sourceDependencies ?? [])],
+    // Read as written: nothing checks that it is a list.
+    sourceDependencies: [...(program.metadata.sourceDependencies ?? []) as unknown[]],
     calibrationProfile: program.metadata.calibrationProfile ?? null,
     execution: {
       mode: 'compiled-ir',
@@ -39,44 +42,54 @@ export function compilePolicyArtifact(program = minimalPolicy()) {
       postRunAnalysis: 'explicit-resource-capped',
       automaticHostAnalysis: false,
     },
-    policy: JSON.parse(canonical),
+    // The canonical bytes of the program validated above.
+    policy: JSON.parse(canonical) as PolicyProgram,
     canonicalPolicy: canonical,
     compiledPlan: plan,
   };
 }
 
-export function verifyPolicyArtifact(artifact, plan = artifact?.compiledPlan) {
-  if (!artifact || artifact.schema !== ARTIFACT_SCHEMA)
+/**
+ * A verified artifact: its policy, canonical bytes and plan, and the two
+ * digests checked against them. Its other fields are carried as written.
+ */
+type VerifiedArtifact = Readonly<Record<string, unknown>> & {
+  readonly schema: typeof ARTIFACT_SCHEMA, readonly policy: PolicyProgram, readonly canonicalPolicy: string,
+  readonly compiledPlan: string, readonly policySha256: string, readonly planSha256: string,
+};
+
+export function verifyPolicyArtifact(artifact: unknown, plan: unknown = isRecord(artifact) ? artifact.compiledPlan : undefined) {
+  if (!isRecord(artifact) || artifact.schema !== ARTIFACT_SCHEMA)
     throw new TypeError('policy artifact schema mismatch');
   if (typeof artifact.canonicalPolicy !== 'string' ||
       typeof artifact.compiledPlan !== 'string')
     throw new TypeError('policy artifact is missing its canonical policy or compiled plan');
-  validatePolicy(artifact.policy);
+  const policy = validatePolicy(artifact.policy);
   const canonical = canonicalPolicy(artifact.policy);
   if (canonical !== artifact.canonicalPolicy)
     throw new Error('policy artifact canonical bytes do not match policy');
   if (sha256(canonical) !== artifact.policySha256)
     throw new Error('policy artifact policySha256 does not match canonical bytes');
-  const expectedPlan = compileDevicePlan(artifact.policy);
+  const expectedPlan = compileDevicePlan(policy);
   if (expectedPlan !== artifact.compiledPlan)
     throw new Error('policy artifact compiledPlan differs from the canonical compiler output');
   if (sha256(artifact.compiledPlan) !== artifact.planSha256)
     throw new Error('policy artifact planSha256 does not match compiledPlan bytes');
   if (plan !== artifact.compiledPlan)
     throw new Error('runner plan bytes differ from the policy artifact compiledPlan');
-  const equivalence = comparePolicyToDevice(artifact.policy, plan);
+  const equivalence = comparePolicyToDevice(policy, plan);
   if (!equivalence.equal)
     throw new Error('policy artifact equivalence failed: ' +
       JSON.stringify(equivalence.mismatches.slice(0, 3)));
-  return clone(artifact);
+  return clone(artifact) as VerifiedArtifact;
 }
 
-export function gatePolicyArtifact(program = minimalPolicy(), runs = 200) {
+export function gatePolicyArtifact(program: PolicyProgram = minimalPolicy(), runs = 200) {
   const untilMs = program.phases.find(phase => phase.kind === 'observe')?.endMs;
   for (const worst of [false, true]) {
     const count = worst ? Math.min(100, runs) : runs;
     let survived = 0;
-    const losses = [];
+    const losses: number[] = [];
     for (let i = 0; i < count; i++) {
       const result = replayPolicy(program, {
         night: program.metadata.nights[0],
@@ -89,7 +102,7 @@ export function gatePolicyArtifact(program = minimalPolicy(), runs = 200) {
     }
     const artifactOnly = worst && survived === 0 &&
       losses.length === count &&
-      losses.every(frame => frame < (program.phases.find(phase => phase.kind === 'repeat').startMs * 60 / 1000));
+      losses.every(frame => frame < (phaseOf(program, 'repeat').startMs * 60 / 1000));
     if (survived !== count && !artifactOnly)
       throw new Error('policy artifact exact ' + (worst ? 'worst' : 'normal') +
         ' gate failed: ' + survived + '/' + count);
@@ -99,12 +112,12 @@ export function gatePolicyArtifact(program = minimalPolicy(), runs = 200) {
   return true;
 }
 
-function argument(name) {
+function argument(name: string) {
   const index = process.argv.indexOf(name);
   return index < 0 ? null : process.argv[index + 1];
 }
 
-function writeMetadata(path, artifact) {
+function writeMetadata(path: string | null, artifact: Readonly<Record<string, unknown>>) {
   if (!path) return;
   writeFileSync(path, [
     'policy_schema=' + artifact.policySchema,

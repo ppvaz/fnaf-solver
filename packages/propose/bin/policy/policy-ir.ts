@@ -4,7 +4,10 @@ import { DOUBLE_GLITCH_CAMERA_PAIRS } from '../../../play/bin/probe/arm-verifica
 import { FNAF2_CONTROL_VOCABULARY as V } from '@sixam/source';
 import { POLICY_SCHEMA, validatePolicy } from '@sixam/propose/policy';
 
-const rowAction = (row, defaultContactMs = 33) => {
+/** One row of the Minus Toys plan: a contact, a hall pulse, or a camdrop's lead, monitor contact and tail. */
+type PlanRow = ReturnType<typeof build>['opening'][number];
+
+const rowAction = (row: PlanRow, defaultContactMs = 33): Record<string, unknown> => {
   const [at, kind, action, duration] = row;
   // The policy IR predates the device vocabulary split and intentionally keeps
   // the simulator's context-dependent action names. Translate at this single
@@ -20,11 +23,11 @@ const rowAction = (row, defaultContactMs = 33) => {
              ? { durationMs: duration } : {}), contactMs: duration || defaultContactMs };
 };
 
-export function minimalPolicy(knobs = {}) {
+export function minimalPolicy(knobs: Parameters<typeof build>[0] = {}) {
   const k = { ...KNOBS0, minimal: true, ...knobs };
   const built = build(k);
   const setup = built.opening.map(row => rowAction(row, k.contactMs));
-  const repeat = built.loop.map(row => ({ ...rowAction(row, k.contactMs), offsetMs: row[0] }));
+  const repeat = built.loop.map((row): Record<string, unknown> => ({ ...rowAction(row, k.contactMs), offsetMs: row[0] }));
   // Repeat rows use offsetMs; remove the absolute source field to keep the IR
   // unambiguous for a future semantic interpreter.
   repeat.forEach(action => delete action.atMs);

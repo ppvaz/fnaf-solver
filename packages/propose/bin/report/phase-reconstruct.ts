@@ -26,10 +26,33 @@ import { nightOnsetFromFrames } from '@sixam/play/phone/night-onset';
 
 export const SCHEMA = 'device-phase-reconstruction-v1';
 
-const readJsonl = path => readFileSync(path, 'utf8').trim().split('\n')
+const readJsonl = <T>(path: string): T[] => readFileSync(path, 'utf8').trim().split('\n')
   .filter(Boolean).map(line => JSON.parse(line));
 
-const fail = message => { throw new Error(`phase reconstruction: ${message}`); };
+const fail: (message: string) => never = message => { throw new Error(`phase reconstruction: ${message}`); };
+
+/** A run event as the executor writes it; this tool reads the fields named here. */
+export interface RunEvent {
+  readonly type?: string, readonly at?: number | string, readonly status?: string,
+  readonly sample?: { readonly visualCaptureAt?: number, readonly ageUs?: number | string },
+  readonly reads?: readonly { readonly finishedAt?: number }[],
+  readonly phaseOffsetMs?: number, readonly actionCount?: number, readonly armGoAt?: number, readonly attempt?: unknown,
+  readonly [field: string]: unknown,
+}
+/** A control.gate event: the authored instant it guards, when the stream reached it, and what it read. */
+interface GateEvent extends RunEvent { readonly gateAtMs: number, readonly reachedAt: number }
+/** A row of observations.jsonl: which observer wrote it, when, and what it called the screen. */
+export interface ObservationRow { readonly script?: string, readonly at: number, readonly label?: string }
+/** A native frame: its image time (helper-monotonic ms) and the screen the helper called it. */
+export interface FrameRow { readonly imageMs: number, readonly screenIdentity: number }
+/** What the native frame trace says about the origin, or why it cannot say it. */
+type MeasuredOrigin =
+  | { readonly basis: string, readonly unavailable: 'trace-begins-inside-the-night' | 'trace-begins-after-the-release',
+      readonly traceStartAt: number | null, readonly releasedAt: number, readonly note: string, readonly errorMs?: undefined }
+  | { readonly basis: string, readonly unavailable?: undefined, readonly firstNightFrameAt: number, readonly errorMs: number,
+      readonly deliveredEpochMs: number, readonly uncertaintyMs: number, readonly frameResolutionMs: number | null,
+      readonly clockUncertaintyMs: number, readonly clockSpreadMs: number, readonly clockSamples: number,
+      readonly priorFrameIdentity: number | null };
 
 /**
  * Host wall clock minus phone wall clock, from the anchor's own measurements.
@@ -54,7 +77,7 @@ export function phoneWallFrom(anchor: Record<string, unknown> | undefined, { rel
   if (!parts.every(Number.isFinite)) return null;
   const [offsetMs, wallMinusHostMs, phoneWallMinusMonoMs] = parts;
   const skewMs = offsetMs + wallMinusHostMs - phoneWallMinusMonoMs;
-  const round = value => Math.round(value * 1000) / 1000;
+  const round = (value: number) => Math.round(value * 1000) / 1000;
   return {
     basis: 'origin.anchor',
     hostWallMinusPhoneWallMs: round(skewMs),
@@ -83,8 +106,8 @@ export function phoneWallFrom(anchor: Record<string, unknown> | undefined, { rel
 export { SCREEN_FNAF2_NIGHT, NIGHT_ONSET_HOLD_MS } from '@sixam/play/phone/night-onset';
 
 /** Rows of a `fnaf2-frame-trace-v3` TSV, in helper-monotonic milliseconds. */
-export function parseFrameTrace(text) {
-  const rows = [];
+export function parseFrameTrace(text: string) {
+  const rows: FrameRow[] = [];
   for (const line of text.split('\n')) {
     if (!line || line.startsWith('#') || line.startsWith('seq')) continue;
     const field = line.split('\t');
@@ -100,7 +123,7 @@ export function parseFrameTrace(text) {
  * `resolutionMs` is the gap to the frame before: the entire resolution this
  * measurement has, reported rather than hidden.
  */
-export function firstNightFrame(rows, { holdMs }: any = {}) {
+export function firstNightFrame(rows: FrameRow[], { holdMs }: { holdMs?: number } = {}) {
   return nightOnsetFromFrames(rows, holdMs === undefined ? {} : { holdMs });
 }
 
@@ -130,8 +153,8 @@ export function firstNightFrame(rows, { holdMs }: any = {}) {
  * spread is the dispersion of ONE sample, and quoting it as the uncertainty of
  * an estimate built from 16 of them overstates it by roughly six times.
  */
-export function helperClockOffset(events) {
-  const offsets = [];
+export function helperClockOffset(events: readonly RunEvent[]) {
+  const offsets: number[] = [];
   for (const event of events) {
     const sample = event?.sample;
     const finishedAt = event?.reads?.at?.(-1)?.finishedAt;
@@ -145,7 +168,7 @@ export function helperClockOffset(events) {
   return { offsetMs: floor,
     uncertaintyMs: quartile - floor,
     medianMs: offsets[Math.floor(offsets.length / 2)],
-    spreadMs: offsets.at(-1) - floor,
+    spreadMs: offsets[offsets.length - 1] - floor,
     samples: offsets.length };
 }
 
@@ -160,12 +183,12 @@ export function helperClockOffset(events) {
  * modulo one game second. Getting this sign backwards would name the opposite
  * band, so it is stated here rather than left to the reader.
  */
-export function deliveredEpochMs(errorVersusFirstNightFrameMs) {
+export function deliveredEpochMs(errorVersusFirstNightFrameMs: number) {
   return ((-errorVersusFirstNightFrameMs % 1000) + 1000) % 1000;
 }
 
 /** Which loss band, if any, an epoch falls in. */
-export function bandFor(epochMs, bands) {
+export function bandFor<B extends { readonly fromMs: number, readonly toMs: number }>(epochMs: number, bands: readonly B[]) {
   return bands.find(band => epochMs >= band.fromMs && epochMs < band.toMs) ?? null;
 }
 
@@ -176,21 +199,23 @@ export function bandFor(epochMs, bands) {
  * gate: that gate is reached at `armGoAt + (gateAtMs - armReadyAtMs)` with no
  * accumulated lag, which pins the prefix length exactly.
  */
-export function reconstruct(events, observations, frameTrace = null) {
-  const first = type => events.find(event => event.type === type);
+export function reconstruct(events: readonly RunEvent[], observations: readonly ObservationRow[], frameTrace: FrameRow[] | null = null) {
+  const first = (type: string) => events.find(event => event.type === type);
+  // hid.night-go and its release carry host-wall ms in `at`; other events may carry an ISO string there.
+  const stamped = (type: string) => first(type) as (RunEvent & { readonly at: number }) | undefined;
   const start = first('hid.schedule-start');
-  const nightGo = first('hid.night-go');
+  const nightGo = stamped('hid.night-go');
   const armVerified = first('arm.verified');
-  const gates = events.filter(event => event.type === 'control.gate');
+  const gates = events.filter((event): event is GateEvent => event.type === 'control.gate');
   if (!start) fail('bundle has no hid.schedule-start');
   if (!nightGo) fail('bundle has no hid.night-go: the run never reached a night');
-  const releasedEvent = first('hid.night-go-released');
+  const releasedEvent = stamped('hid.night-go-released');
   const released = releasedEvent?.at ?? nightGo.at;
   const phaseOffsetMs = start.phaseOffsetMs ?? 0;
   const phoneWall = phoneWallFrom(events.find(
     event => event.type === 'origin.anchor' && event.status === 'scheduled'), { released, nightGoAt: nightGo.at });
 
-  let arm = null;
+  let arm: { armGoAt: number, armReadyAtMs: number, lagMs: number, attempt: unknown } | null = null;
   if (armVerified?.armGoAt && gates.length) {
     const armGoAt = armVerified.armGoAt;
     const armReadyAtMs = gates[0].gateAtMs - (gates[0].reachedAt - armGoAt);
@@ -218,7 +243,8 @@ export function reconstruct(events, observations, frameTrace = null) {
       readCount: Array.isArray(gate.reads) ? gate.reads.length : null,
       gateLagMs,
       // What the plan asked for, plus everything the delivery added to it.
-      deliveredOffsetMs: gateLagMs === null ? null : phaseOffsetMs + arm.lagMs + gateLagMs,
+      // gateLagMs is a number only where arm is set.
+      deliveredOffsetMs: gateLagMs === null ? null : phaseOffsetMs + (arm as NonNullable<typeof arm>).lagMs + gateLagMs,
     };
   });
 
@@ -234,7 +260,7 @@ export function reconstruct(events, observations, frameTrace = null) {
 
   // A trace measures the origin error only if its clock can be tied to the
   // executor's. Either half missing leaves the bracket standing, unchanged.
-  let measuredOrigin = null;
+  let measuredOrigin: MeasuredOrigin | null = null;
   if (frameTrace?.length) {
     const clock = helperClockOffset(events);
     const night = firstNightFrame(frameTrace);
@@ -294,7 +320,7 @@ export function reconstruct(events, observations, frameTrace = null) {
       bracketedByMs: beforeNight && firstNight ? firstNight.at - beforeNight.at : null,
       priorSampleLabel: beforeNight?.label ?? null,
       observationCadenceMs: gaps.length
-        ? { min: gaps[0], p50: gaps[Math.floor(gaps.length / 2)], max: gaps.at(-1) }
+        ? { min: gaps[0], p50: gaps[Math.floor(gaps.length / 2)], max: gaps[gaps.length - 1] }
         : null,
     },
     plannedPhaseOffsetMs: phaseOffsetMs,
@@ -302,7 +328,7 @@ export function reconstruct(events, observations, frameTrace = null) {
     arm,
     cycles,
     deliveredOffsetMs: cycles.length && cycles[0].deliveredOffsetMs !== null
-      ? { first: cycles[0].deliveredOffsetMs, last: cycles.at(-1).deliveredOffsetMs }
+      ? { first: cycles[0].deliveredOffsetMs, last: cycles[cycles.length - 1].deliveredOffsetMs }
       : null,
     terminal: lastNight && terminal
       ? { lastNightAt: lastNight.at, terminalAt: terminal.at, terminalLabel: terminal.label,
@@ -317,21 +343,21 @@ export function reconstruct(events, observations, frameTrace = null) {
 }
 
 /** The minus-toys model's response to phase, at frame resolution over one second. */
-async function phaseResponse(night, seeds) {
+async function phaseResponse(night: number, seeds: number) {
   const plan = await import('../plans/minus-toys-plan.ts');
   const C = await import('@sixam/source/fnaf2');
   const stepMs = 1000 / C.FPS;
-  const ticksIn = window => {
+  const ticksIn = (window: { startFrame: number, endFrame: number }) => {
     let ticks = 0;
     for (let frame = window.startFrame; frame <= window.endFrame; frame += 1)
       if (frame % C.FPS === 0) ticks += 1;
     return ticks;
   };
-  const rows = [];
+  const rows: { epochMs: number, maskTicks: number, wins: number, armed: number, seeds: number, deaths: Record<string, number> }[] = [];
   for (let step = 0; step < C.FPS; step += 1) {
     const epochMs = +(step * stepMs).toFixed(2);
     let wins = 0, armed = 0;
-    const deaths = {};
+    const deaths: Record<string, number> = {};
     for (let index = 0; index < seeds; index += 1) {
       const result = plan.replay({ night, seed: (index * 2654435761) >>> 0, epochMs });
       if (result.splitAt >= 0) armed += 1;
@@ -355,12 +381,12 @@ async function phaseResponse(night, seeds) {
  * or wins nearly all of them, so a small block settles it). This is the RATE,
  * and the rate is the number that has to carry the golden 3000 seeds.
  */
-async function uncontrolledPhase(night, runs) {
+async function uncontrolledPhase(night: number, runs: number) {
   const plan = await import('../plans/minus-toys-plan.ts');
   const C = await import('@sixam/source/fnaf2');
   const frames = Math.round(C.FPS);
   let wins = 0, armed = 0;
-  const deaths = {};
+  const deaths: Record<string, number> = {};
   for (let index = 0; index < runs; index += 1) {
     const seed = (index * 2654435761) >>> 0;
     const epochMs = ((seed >>> 7) % frames) * (1000 / C.FPS);
@@ -377,9 +403,9 @@ async function uncontrolledPhase(night, runs) {
 }
 
 /** The contiguous phase band, modulo one game second, where the route loses. */
-export function lossBands(rows) {
-  const bands = [];
-  let open = null;
+export function lossBands(rows: readonly { readonly epochMs: number, readonly wins: number, readonly maskTicks: number }[]) {
+  const bands: { fromMs: number, maskTicks: number, toMs: number }[] = [];
+  let open: { fromMs: number, maskTicks: number } | null = null;
   for (const row of rows) {
     const lost = row.wins === 0;
     if (lost && !open) open = { fromMs: row.epochMs, maskTicks: row.maskTicks };
@@ -390,24 +416,31 @@ export function lossBands(rows) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const arg = (name, fallback?) => {
+  function arg(name: string): string | undefined;
+  function arg(name: string, fallback: string): string;
+  function arg(name: string, fallback?: string) {
     const found = process.argv.find(value => value.startsWith(`--${name}=`));
     if (found) return found.slice(name.length + 3);
     const index = process.argv.indexOf(`--${name}`);
     return index >= 0 && process.argv[index + 1] && !process.argv[index + 1].startsWith('--')
       ? process.argv[index + 1] : fallback;
-  };
+  }
   const run = arg('run');
   if (!run) {
     process.stderr.write('usage: phase-reconstruct.ts --run artifacts/campaign-... ' +
       '[--night N] [--seeds N] [--frame-trace FILE] [--out FILE]\n');
     process.exit(2);
   }
-  const events = readJsonl(join(run, 'events.jsonl'));
-  const observations = readJsonl(join(run, 'observations.jsonl'));
+  const events = readJsonl<RunEvent>(join(run, 'events.jsonl'));
+  const observations = readJsonl<ObservationRow>(join(run, 'observations.jsonl'));
   const tracePath = arg('frame-trace');
   const frameTrace = tracePath ? parseFrameTrace(readFileSync(tracePath, 'utf8')) : null;
-  const report: any = reconstruct(events, observations, frameTrace);
+  const report: ReturnType<typeof reconstruct> & {
+    frameTrace?: string, run?: string,
+    model?: Awaited<ReturnType<typeof phaseResponse>> & { lossBands: ReturnType<typeof lossBands>, uncontrolledPhase: Awaited<ReturnType<typeof uncontrolledPhase>> },
+    deliveredBand?: { epochMs: number, uncertaintyMs: number, band: ReturnType<typeof lossBands>[number] | null, verdict: string,
+      edgeMs: number | null, conclusive?: boolean },
+  } = reconstruct(events, observations, frameTrace);
   if (tracePath) report.frameTrace = tracePath;
   report.run = run;
   const night = arg('night');
@@ -416,7 +449,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     const bands = lossBands(model.rows);
     report.model = { ...model, lossBands: bands,
       uncontrolledPhase: await uncontrolledPhase(+night, +(arg('runs', '3000'))) };
-    const measured = (report.origin as any).measured;
+    const { measured }: { readonly nightGoAt: number, readonly measured?: MeasuredOrigin } = report.origin;
     if (measured && !measured.unavailable) {
       const band = bandFor(measured.deliveredEpochMs, bands);
       report.deliveredBand = { epochMs: measured.deliveredEpochMs,

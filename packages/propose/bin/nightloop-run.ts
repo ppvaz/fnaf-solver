@@ -13,11 +13,12 @@ import { Sim, Rng } from '@sixam/source/fnaf2';
 import { Observer } from '@sixam/play/sim';
 import { CycleController, makeUnknownFacts, getCycle, NightPolicy,
          NIGHT_POLICY_CYCLES } from '@sixam/propose/fnaf2';
+import type { Cycle, DeferredAction, Hypothesis } from '@sixam/propose/fnaf2';
 
 export const LIBRARY_IDS = NIGHT_POLICY_CYCLES;
 const REVIEWED = new Set(LIBRARY_IDS);
 
-export const seedOf = index => (index * 2654435761) >>> 0;
+export const seedOf = (index: number) => (index * 2654435761) >>> 0;
 
 // ---------------------------------------------------------------- the gates
 //
@@ -35,13 +36,13 @@ export const seedOf = index => (index * 2654435761) >>> 0;
 // no controller beside a phone can do. It is a legitimate upper bound and it
 // is what `packages/propose/test/cycle-controller.test.ts` uses at a nine-second
 // horizon; it is not a device-realistic result and must never be quoted as one.
-export function staticGate(cycle) {
+export function staticGate(cycle: Cycle) {
   return REVIEWED.has(cycle.id)
     ? { accepted: true, cycleId: cycle.id, proof: 'reviewed-library-member' }
     : { accepted: false, reason: `not-a-reviewed-primitive:${cycle.id}` };
 }
 
-export function exactGate(sim, cycle) {
+export function exactGate(sim: Sim, cycle: Cycle) {
   if (cycle.id === 'observe-and-hold') return { accepted: true, cycleId: cycle.id };
   const copy = Sim.fromSnapshot(sim.opts, sim.snapshot());
   const origin = copy.frame;
@@ -67,7 +68,7 @@ export function exactGate(sim, cycle) {
 // 2026-09-02: "keep the box wound, mask a blackout, otherwise watch the
 // office". Its one knob is a harness knob and nothing sources it.
 const BASELINE_WIND_AT = 0.55;
-export function baselineScore(cycle, hypothesis, _gate, controller) {
+export function baselineScore(cycle: Cycle, hypothesis: Hypothesis, _gate: unknown, controller: CycleController) {
   const st = controller.reduced;
   const want = (() => {
     if (hypothesis.hazard === 'active') return st.maskOn ? null : 'defensive-mask';
@@ -90,7 +91,14 @@ export function baselineScore(cycle, hypothesis, _gate, controller) {
  *   disabled   -- every fact arrives UNKNOWN; the controller must refuse
  *   open-loop  -- no controller at all; the night runs untouched
  */
-export function runNight(options: any = {}) {
+/** One night's arm, seed and gate; plain data, so a pool worker can take it. */
+interface NightOptions {
+  night?: number, seedIndex?: number, mode?: string, policy?: string, gate?: string,
+  observer?: ConstructorParameters<typeof Observer>[0], policyOptions?: ConstructorParameters<typeof NightPolicy>[0],
+  trace?: boolean,
+}
+
+export function runNight(options: NightOptions = {}) {
   const {
     night = 1, seedIndex = 0, mode = 'estimator', policy = 'night',
     gate = 'static', observer: observerOptions = {}, policyOptions = {},
@@ -98,17 +106,19 @@ export function runNight(options: any = {}) {
   } = options;
   const seed = seedOf(seedIndex);
   const sim = new Sim({ night, seed });
-  const observer = new Observer({ interval: (C as any).OBSERVE_INTERVAL ?? 4,
+  // Source's FNaF 2 module exports no OBSERVE_INTERVAL, so this reads 4.
+  const observer = new Observer({ interval: (C as unknown as { OBSERVE_INTERVAL?: number }).OBSERVE_INTERVAL ?? 4,
     rng: new Rng(seed ^ 0x9e3779b9), ...observerOptions });
-  const controller = new CycleController({ cycles: LIBRARY_IDS.map(getCycle) });
+  // Each id names a library cycle.
+  const controller = new CycleController({ cycles: LIBRARY_IDS.map(getCycle) as Cycle[] });
   controller.reduced.night = night;
   const nightPolicy = policy === 'night'
     ? new NightPolicy({ night, ...policyOptions }) : null;
   const score = nightPolicy ? nightPolicy.scorer : baselineScore;
 
-  const pending: any[] = [];
+  const pending: DeferredAction[] = [];
   const selected: Record<string, number> = {};
-  const traced: any[] = [];
+  const traced: { frame: number, cycle: string, why: string | null, box: number, foxyD: unknown }[] = [];
   let actions = 0, released = 0, refused = 0, gateCalls = 0;
   let emergencyReleased = 0, cancelled = 0;
   let flashes = 0, maskFrames = 0, camsUpMax = 0, minBox = 1;
@@ -123,10 +133,12 @@ export function runNight(options: any = {}) {
         exactGate: cycle => { gateCalls++; return gate === 'exact' ? exactGate(sim, cycle) : staticGate(cycle); },
         score,
       });
+      // A no-decision names its reason; a selection does not.
+      const said: { readonly selected: string | null, readonly reason?: string } = decision;
       if (decision.selected)
         selected[decision.selected] = (selected[decision.selected] ?? 0) + 1;
-      else if (decision.reason)
-        noDecision[decision.reason] = (noDecision[decision.reason] ?? 0) + 1;
+      else if (said.reason)
+        noDecision[said.reason] = (noDecision[said.reason] ?? 0) + 1;
       if (trace && decision.selected)
         traced.push({ frame: sim.frame, cycle: decision.selected,
           why: nightPolicy?.lastDecision?.why ?? null,
@@ -187,4 +199,4 @@ export function runNight(options: any = {}) {
 }
 
 /** Pool entry point: one call maps over a batch of option objects. */
-export const runNightBatch = (optsList) => optsList.map(runNight);
+export const runNightBatch = (optsList: readonly NightOptions[]) => optsList.map(runNight);
