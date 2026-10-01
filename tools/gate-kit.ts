@@ -21,9 +21,8 @@ export const FROZEN = [/^docs\/evidence\//, /^docs\/chronicle\//, /^tools\/recom
 /**
  * Tracked files plus untracked ones git does not ignore, so a new file is
  * judged before it is committed; frozen records and deleted paths are left out.
- * @param {string} [root]
  */
-export function repoFiles(root = ROOT) {
+export function repoFiles(root: string = ROOT) {
   const out = execFileSync('git', ['ls-files', '-z', '--cached', '--others', '--exclude-standard'],
     { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
   return [...new Set(out.split('\0').filter(Boolean))]
@@ -32,8 +31,7 @@ export function repoFiles(root = ROOT) {
     .sort();
 }
 
-/** @param {string} section @param {string} [root] */
-export function loadBaseline(section, root = ROOT) {
+export function loadBaseline(section: string, root: string = ROOT) {
   const record = JSON.parse(readFileSync(join(root, BASELINE), 'utf8'));
   if (record.schema !== 'quality-baseline-v1') throw new Error(`${BASELINE}: schema must be quality-baseline-v1`);
   const found = record[section];
@@ -44,11 +42,10 @@ export function loadBaseline(section, root = ROOT) {
 
 /**
  * Compare what a gate found with its recorded debt.
- * @param {Map<string, {count: number, detail?: string}>} found
- * @param {{entries: Record<string, number | {count: number, why: string}>}} baseline
- * @returns {string[]} one line per failure, empty when the tree matches the record
+ *
+ * @returns one line per failure, empty when the tree matches the record
  */
-export function ratchet(found, baseline) {
+export function ratchet(found: Map<string, {count: number, detail?: string}>, baseline: {entries: Record<string, number | {count: number, why: string}>}): string[] {
   const failures = [];
   const recorded = new Map(Object.entries(baseline.entries ?? {}).map(([key, entry]) => {
     if (typeof entry === 'number') return [key, entry];
@@ -69,9 +66,8 @@ export function ratchet(found, baseline) {
 
 /**
  * Print a gate's verdict and set the exit code.
- * @param {string} gate @param {string[]} failures @param {string} summary
  */
-export function report(gate, failures, summary) {
+export function report(gate: string, failures: string[], summary: string) {
   if (!failures.length) {
     console.log(`${gate}: ${summary}`);
     return;

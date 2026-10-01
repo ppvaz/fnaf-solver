@@ -30,7 +30,7 @@ const WINDOWS = arg('windows', '6000,6500,7000,7500,8000,8500,9000,9500,10000')
 const RUNS = +arg('runs', '400');
 const NIGHTS = arg('nights', '5,6,7').split(',').map(Number);
 
-// The pinned actuator configs from tools/test.mjs. Each is a distinct sourced
+// The pinned actuator configs from tools/test.ts. Each is a distinct sourced
 // latch model the search MUST NOT trade against the others.
 const ACTUATOR_CONFIGS = [
   { id: 'gate       (replay, readLatency 550)', kind: 'gate' },

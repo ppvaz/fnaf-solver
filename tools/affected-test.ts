@@ -16,8 +16,8 @@ const changed = explicit.length ? explicit : [...new Set([
 
 const checks = new Map();
 const add = (id, command, args = []) => checks.set(id, { command, args });
-add('architecture', 'node', ['tools/architecture-test.js']);
-add('references', 'node', ['tools/validate-references.js']);
+add('architecture', 'node', ['tools/architecture-test.ts']);
+add('references', 'node', ['tools/validate-references.ts']);
 
 // ADR 0002 migrations D1/D4/M8: the contracts, the register and Time live in
 // the kernel, each game's Rulebook, Sim and controls in source, the policy
@@ -112,7 +112,7 @@ if (changed.some(path => path.startsWith('apps/trainer/')))
 for (const path of changed.filter(p => /^packages\/[^/]+\/test\/.*\.test\.m?[jt]s$/.test(p)))
   add(`test:${path}`, 'node', [path]);
 if (changed.some(path => path.startsWith('docs/') || path.startsWith('plans/')))
-  add('documentation', 'node', ['tools/test-docs.mjs']);
+  add('documentation', 'node', ['tools/test-docs.ts']);
 if (changed.some(path => path === 'packages/review/src/vault.ts' || path === 'packages/review/test/vault.test.ts'))
   add('vault', 'node', ['packages/review/test/vault.test.ts']);
 if (changed.some(path => path.startsWith('packages/propose/parked/')))

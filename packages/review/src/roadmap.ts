@@ -28,7 +28,7 @@ import { GAMES, gameKey } from './registers.ts';
 import { VERBS } from './solver.ts';
 
 export const ROADMAP = 'plans/ROADMAP.md';
-export const MISTAKE_GATES_FILE = 'tools/test-mistake-register.mjs';
+export const MISTAKE_GATES_FILE = 'tools/test-mistake-register.ts';
 export const MCP_SERVER_FILE = 'apps/desktop/src/companion-mcp.ts';
 
 /** The steps, their headings as the ROADMAP writes them, and what each needs closed first. */
@@ -113,7 +113,7 @@ export function stepRecords(root: string) {
   return byStep;
 }
 
-/** The gate each mistake-register entry relies on: tools/test-mistake-register.mjs's REGISTER_GATES, and the refusals. */
+/** The gate each mistake-register entry relies on: tools/test-mistake-register.ts's REGISTER_GATES, and the refusals. */
 export function mistakeGates(root: string) {
   const text = readFileSync(join(root, MISTAKE_GATES_FILE), 'utf8');
   const block = /const REGISTER_GATES = \[([\s\S]*?)\n\];/.exec(text)?.[1];

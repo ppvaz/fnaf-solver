@@ -325,7 +325,7 @@ this run's abort. `tools/device/run-report.mjs` states the executor-owned facts,
 including the press-acceptance tally and any systematically missed press, which
 is what surfaced gap B. And `test-grade-run-coverage.mjs`, which enforces that
 no instrument exists outside the pipeline, was registered only in
-`tools/test.mjs`'s ENGINE group — a lane CI never runs and one CLAUDE.md
+`tools/test.ts`'s ENGINE group — a lane CI never runs and one CLAUDE.md
 describes as holding intentionally red controls. It had been failing on 11
 scripts, `phase-reconstruct.mjs` among them, which is exactly why the last two
 sessions ran it by hand. It is now in `npm run test:unit`, the lane CI runs,
@@ -1353,7 +1353,7 @@ it. The test pins those four so migrating them is a deliberate edit.
 
 Touching `packages/core/src/control/` woke a gate that had been red for eleven days.
 `tools/policyequivalencetest.mjs` -- the Plan 21 compiler-equivalence regression -- was registered
-only in `tools/test.mjs`'s ENGINE group, which CI does not run and whose reds CLAUDE.md excuses as
+only in `tools/test.ts`'s ENGINE group, which CI does not run and whose reds CLAUDE.md excuses as
 intentional scientific controls, so two real defects sat behind it. `e8af711` (2026-09-09) renamed
 the control vocabulary and left `policy-equivalence.mjs`'s accepted-action set reading `light` and
 `ventl`; `3efc923` (2026-09-11) then put a `cameraFeedLight` row in the opening (the first safe Toy
@@ -1676,7 +1676,7 @@ what it was.
   (`tools/recompile/results/`). The patch applies from its pinned external base and 13 parser
   fixtures plus the comparator pass. Extracted content and raw generated code stay external.
 - **S1 custody:** 79 more night runs packed (162 campaign packs in the clock gate), two clocks
-  declared (`6e170f7`). **S7:** a subagent's `tools/test-mistake-register.mjs` makes register items
+  declared (`6e170f7`). **S7:** a subagent's `tools/test-mistake-register.ts` makes register items
   5, 12 and 13 executable (`12bba15`). **Tooling:** `night-run.sh --dry-run` no longer touches the
   phone (`302f79e`; it had put FNaF 2 in front of an app in use).
 

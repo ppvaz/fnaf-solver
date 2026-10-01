@@ -82,7 +82,7 @@ JAVA="$JDK_ROOT/bin/java"
   -cp "$TEST_TMP" com.ppvaz.fnafcompanion.HidControlsTest
 $JAVA -cp "$TEST_TMP" com.ppvaz.fnafcompanion.PixelWatchTest
 # Compiled above since 2026-09-01 and never executed until 2026-09-27: a test
-# that is only compiled asserts nothing (tools/test-mistake-register.mjs).
+# that is only compiled asserts nothing (tools/test-mistake-register.ts).
 $JAVA -cp "$TEST_TMP" com.ppvaz.fnafcompanion.ScreenIdentityTest
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.NightOnsetLatchTest
 "$JAVA" -Dteach.vector="$HERE/../../packages/play/test/testdata/teach-lesson-night7-k3.txt" \

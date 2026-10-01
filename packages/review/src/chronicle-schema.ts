@@ -2,7 +2,7 @@
 //
 // The generator, the harvester and the check all import this, so a vocabulary
 // that drifts breaks in one place instead of three. It is a module, not a
-// JSON Schema document, for the reason `generate-catalog.js` throws inline
+// JSON Schema document, for the reason `generate-catalog.ts` throws inline
 // rather than validating against a spec: the constraints that matter here are
 // cross-entry (unique ids, a `supersededBy` that resolves, a date inside its
 // own checkpoint window) and no declarative schema expresses them.
@@ -96,7 +96,7 @@ export const gameOf = (entry) => entry.game ?? V1_GAME;
 /**
  * Field-level validation of one entry. Returns a list of complaints, so a bad
  * corpus reports every fault at once instead of one per run -- the same reason
- * `push-gate.mjs` runs every lane rather than stopping at the first failure.
+ * `push-gate.ts` runs every lane rather than stopping at the first failure.
  *
  * @param schema the checkpoint's schema; v1 when omitted
  */
@@ -147,7 +147,7 @@ export function checkEntry(entry: any, where: string, schema: string = ENTRIES_S
 
   // A citation nobody can follow is the failure this repository already names:
   // "a finding nobody can reach is close enough to a finding that does not
-  // exist" (tools/test-docs.mjs). Shape is checked here; resolution is checked
+  // exist" (tools/test-docs.ts). Shape is checked here; resolution is checked
   // by test-chronicle.mjs, which is where the filesystem and git live.
   if (!Array.isArray(entry.sources) || entry.sources.length === 0)
     problems.push(at('sources must name at least one path, path:line, or commit:<sha>'));

@@ -1,6 +1,6 @@
 {
   "schema": "winner-hashes-v1",
-  "generatedFrom": "tools/generate-catalog.js (compileBundle over packages/propose/bindings/<game>/*-winner.json)",
+  "generatedFrom": "tools/generate-catalog.ts (compileBundle over packages/propose/bindings/<game>/*-winner.json)",
   "winners": [
     {
       "file": "packages/propose/bindings/fnaf2/campaign-night1-minimal-winner.json",

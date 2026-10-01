@@ -56,7 +56,7 @@ dependent command.
 
 **Status:** RESOLVED BY REMOVAL (2026-09-25) -- the runtime supervisor, the adapter capability
 registry and the actuator classes were removed with the fixture service path; the campaign sends
-through the HID transport, which `tools/architecture-test.js` now confines to the device runners.
+through the HID transport, which `tools/architecture-test.ts` now confines to the device runners.
 **Owner:** `packages/adapters`
 **Evidence:** `supervisor.js` line 20, `registry.js` line 18, `actuators.js` line 59 (all removed)
 
@@ -76,7 +76,7 @@ bindings produce honest `REJECTED`/`FAILED` results. Add conformance tests for
 evidence CLI test; every new path is mapped in the change that creates it until the lanes are
 generated from one manifest (migration M10).
 **Owner:** test infrastructure
-**Evidence:** [`affected-test.js` (lines 52 and 65)](../../tools/affected-test.js)
+**Evidence:** [`affected-test.ts` (lines 52 and 65)](../../tools/affected-test.ts)
 
 `npm run test:affected` can pass while JavaScript typecheck fails, and changes
 under several `tools/device` paths do not select their focused tests. The
@@ -116,7 +116,7 @@ entry point, one owner, and one focused test file.
 
 **Status:** RESOLVED BY REMOVAL (2026-09-25) -- the device barrel and the extra composition roots
 it exported were deleted; `apps/desktop/src/device-cli.ts` (`campaign`) is the one path onto a phone, and
-`tools/architecture-test.js` refuses a second `live` command.
+`tools/architecture-test.ts` refuses a second `live` command.
 **Owner:** `apps/desktop`
 **Evidence:** `index.js` line 1 (removed), [`COMPATIBILITY.md` (line 21)](COMPATIBILITY.md)
 
@@ -253,7 +253,7 @@ add focused seed tests; record derivation as `golden`, `explicit`, or
 ### LEG-011 — Upgrade the architectural guard from regex heuristics (P2)
 
 **Status:** RESOLVED (2026-09-29) -- every import check in
-[`architecture-test.js`](../../tools/architecture-test.js) now reads the module's syntax tree
+[`architecture-test.ts`](../../tools/architecture-test.ts) now reads the module's syntax tree
 through the pinned `typescript` parser (no new dependency): static imports, aliased and namespace
 re-exports, dynamic `import()` (a computed specifier is refused in a guarded package), `require()`
 and TS import types, resolved to the workspace or directory they land in. The host-global,
@@ -263,7 +263,7 @@ namespace re-export and import, `require` through `createRequire`, and a comment
 that only look like imports (which the regexes misread). The same change adds the rule that
 `packages/review` never imports `apps/device`, `packages/adapters` or `packages/research`.
 **Owner:** architecture tooling
-**Evidence:** [`architecture-test.js`](../../tools/architecture-test.js) (`moduleReferences`, `RULES`, the planted fixtures)
+**Evidence:** [`architecture-test.ts`](../../tools/architecture-test.ts) (`moduleReferences`, `RULES`, the planted fixtures)
 
 The guard strips strings and finds imports with regular expressions. It is a
 useful fast check, but it is not a complete parser and should not be the only
@@ -292,9 +292,9 @@ applies” label to each non-managed section.
 
 The following checks passed during the audit but do not close the findings:
 
-- `node tools/architecture-test.js`
-- `node tools/test-docs.mjs`
-- `node tools/validate-references.js`
+- `node tools/architecture-test.ts`
+- `node tools/test-docs.ts`
+- `node tools/validate-references.ts`
 - `npm run test:affected`
 
 `npm run typecheck` currently fails in `packages/propose/src/experiment/seeds.ts`; that

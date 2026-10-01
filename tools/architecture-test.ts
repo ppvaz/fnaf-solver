@@ -40,8 +40,8 @@ async function files(directory) {
 
 // --- Reading a module's syntax tree ----------------------------------------
 
-/** @param {string} path repository-relative @param {string} source */
-function parse(path, source) {
+/** @param path repository-relative */
+function parse(path: string, source: string) {
   return ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true,
     path.endsWith('.ts') ? ts.ScriptKind.TS : ts.ScriptKind.JS);
 }
@@ -49,10 +49,8 @@ function parse(path, source) {
 /**
  * Every module the file loads or re-exports. `specifier` is null when the
  * parser cannot know it (a computed dynamic import or require).
- * @param {ts.SourceFile} file
- * @returns {{specifier: string | null, form: string}[]}
  */
-function moduleReferences(file) {
+function moduleReferences(file: ts.SourceFile): {specifier: string | null, form: string}[] {
   const found = [];
   const literal = node => node && ts.isStringLiteralLike(node) ? node.text : null;
   const visit = node => {
@@ -77,9 +75,9 @@ function moduleReferences(file) {
 
 /** Is this identifier read as a value, rather than naming a property, a member or a declaration? */
 function isReference(node) {
-  const parent = node.parent;
+  const parent: any = node.parent;
   if (!parent) return true;
-  if ((ts.isPropertyAccessExpression(parent) || ts.isQualifiedName(parent)) && parent.name === node) return false;
+  if ((ts.isPropertyAccessExpression(parent) || ts.isQualifiedName(parent)) && (parent as any).name === node) return false;
   if ((ts.isPropertyAssignment(parent) || ts.isMethodDeclaration(parent) || ts.isPropertyDeclaration(parent) ||
        ts.isGetAccessorDeclaration(parent) || ts.isSetAccessorDeclaration(parent) || ts.isEnumMember(parent) ||
        ts.isPropertySignature(parent) || ts.isMethodSignature(parent)) && parent.name === node) return false;
@@ -105,8 +103,7 @@ function declaredNames(file) {
   return names;
 }
 
-/** @param {ts.SourceFile} file @param {(node: ts.Identifier) => boolean} test */
-function identifiers(file, test) {
+function identifiers(file: ts.SourceFile, test: (node: ts.Identifier) => boolean) {
   const found = [];
   const visit = node => {
     if (ts.isIdentifier(node) && test(node)) found.push(node);
@@ -117,8 +114,8 @@ function identifiers(file, test) {
 }
 
 const HOST_GLOBALS = ['document', 'window', 'fetch', 'process', 'globalThis', 'performance'];
-/** Host or browser globals a core module reads. @param {ts.SourceFile} file */
-function hostGlobals(file) {
+/** Host or browser globals a core module reads. */
+function hostGlobals(file: ts.SourceFile) {
   const declared = declaredNames(file);
   return [...new Set(identifiers(file, node => HOST_GLOBALS.includes(node.text) && !declared.has(node.text) &&
     isReference(node)).map(node => node.text))];
@@ -130,9 +127,8 @@ function hostGlobals(file) {
  * gives two runs of the same input two answers, and a replay cannot reproduce
  * it; time comes from the kernel's clocks and randomness from the game's seeded
  * generator. `new Date(x)` is a pure conversion and passes.
- * @param {ts.SourceFile} file
  */
-function ambientEntropy(file) {
+function ambientEntropy(file: ts.SourceFile) {
   const found = [];
   const named = (node, object, property) => ts.isPropertyAccessExpression(node) &&
     ts.isIdentifier(node.expression) && node.expression.text === object && node.name.text === property;
@@ -157,8 +153,8 @@ const AMBIENT_ENTROPY_TOLERATED = new Map([
     why: 'the generator\'s default seed for an unseeded Sim; the same default as plant-options.js' }],
 ]);
 
-/** Writes into the process-global search knobs. @param {ts.SourceFile} file */
-function searchKnobWrites(file) {
+/** Writes into the process-global search knobs. */
+function searchKnobWrites(file: ts.SourceFile) {
   let writes = 0;
   const onKnobs = node => (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) &&
     ts.isIdentifier(node.expression) && node.expression.text === 'SEARCH_KNOBS';
@@ -196,10 +192,9 @@ const unitOf = path => {
  * The repository unit a reference lands in: a workspace directory
  * (`packages/play`, `apps/desktop`), a top-level directory (`tools`), `builtin`,
  * `external`, `outside` the repository, or `UNRESOLVED`.
- * @param {string} from repository-relative path of the importing file
- * @param {string | null} specifier
+ * @param from repository-relative path of the importing file
  */
-function landing(from, specifier) {
+function landing(from: string, specifier: string | null) {
   if (specifier === null) return { unit: 'UNRESOLVED', target: null };
   if (specifier.startsWith('node:') || BUILTINS.has(specifier.split('/')[0]))
     return { unit: 'builtin', target: specifier.startsWith('node:') ? specifier : `node:${specifier}` };
@@ -313,10 +308,9 @@ const RULES = [
 
 /**
  * Every boundary a file crosses.
- * @param {string} path repository-relative
- * @param {ts.SourceFile} file
+ * @param path repository-relative
  */
-function violations(path, file) {
+function violations(path: string, file: ts.SourceFile) {
   const found = [];
   const references = moduleReferences(file).map(reference => ({ ...reference, ...landing(path, reference.specifier) }));
   for (const rule of RULES.filter(item => item.scope(path)))

@@ -39,7 +39,7 @@ status is a query (`npm run evidence -- promotions`,
 coordinates, shell text, ADB commands, or HID bytes; the HID transport is
 composed only by the named device runners. The imports run
 `kernel <- source <- play <- propose -> review -> source`
-([dependency direction](DEPENDENCY-GRAPH.md)), and `tools/architecture-test.js`
+([dependency direction](DEPENDENCY-GRAPH.md)), and `tools/architecture-test.ts`
 enforces it over each module's syntax tree.
 
 Retired on 2026-09-25, and not part of this architecture: the runtime package

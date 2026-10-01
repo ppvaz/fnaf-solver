@@ -51,7 +51,7 @@ The `@sixam/core` subpaths that re-exported all of this were removed on
 Public API: the package root, `./contracts` and `./time`. Dependencies: none,
 and it imports nothing in the repository -- no workspace, no relative path out
 of itself, no Node built-in; every package may import it
-(`tools/architecture-test.js`). Tests: `test/kernel.test.js` in `test:unit`;
+(`tools/architecture-test.ts`). Tests: `test/kernel.test.js` in `test:unit`;
 `test/claim-envelope.test.js`, the claim envelope's contract test,
 `test/venue-identity.test.js`, and `test/experiment-v2.test.js`, the contract test
 of experiment spec and result v2 and of the Seed, in `test:contracts`.

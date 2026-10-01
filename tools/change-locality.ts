@@ -9,7 +9,7 @@
 // `.githooks/commit-msg` runs this on every commit; PEDRO-OK does not waive it,
 // because the line is one anyone can write.
 //
-//   node tools/change-locality.mjs MSGFILE    exit 0 when local or explained, 1 otherwise
+//   node tools/change-locality.ts MSGFILE    exit 0 when local or explained, 1 otherwise
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -22,8 +22,8 @@ const MIN_REASON = 20;
 // context (the first integration through this gate tripped on it).
 const REGISTRATION = new Set(['tools/quality-baseline.json']);
 
-/** The context a staged path belongs to, or null for registration. @param {string} path */
-export function contextOf(path) {
+/** The context a staged path belongs to, or null for registration. */
+export function contextOf(path: string) {
   if (/^docs\/|^plans\//.test(path) || /\.md$/.test(path) || !path.includes('/') || REGISTRATION.has(path)) return null;
   const pkg = path.match(/^packages\/([^/]+)\//);
   if (pkg) return pkg[1];
@@ -34,8 +34,7 @@ export function contextOf(path) {
   return null;
 }
 
-/** @param {string[]} paths @param {string} message */
-export function localityVerdict(paths, message) {
+export function localityVerdict(paths: string[], message: string) {
   const contexts = [...new Set(paths.map(contextOf).filter(Boolean))].sort();
   if (contexts.length < LIMIT) return { ok: true, contexts };
   const reason = message.split('\n').filter(line => !line.startsWith('#'))

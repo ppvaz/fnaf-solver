@@ -380,10 +380,10 @@ table. A second plan here would fight plan 14 for the same files.
 ## 7. Three test gates run nowhere, and four exclusions cite them as their justification
 
 `test-grade-run-coverage.mjs:82` exempts any file named `test-*` on the stated
-grounds "suite gates, run by tools/test.mjs". That comment is an unverified
+grounds "suite gates, run by tools/test.ts". That comment is an unverified
 assumption and it is false for five files:
 
-| file | in `tools/test.mjs`? | in CI? |
+| file | in `tools/test.ts`? | in CI? |
 |---|---|---|
 | `test-session-manifest.sh` | **no** | **no** |
 | `test-select-adb.sh` | **no** | **no** |
@@ -413,16 +413,16 @@ lives and where CLAUDE.md's purest "instrument nobody runs" example came from.
 points to as "this is now enforced".
 
 **Recommendation: quick fix.** Have `test-grade-run-coverage.mjs` read
-`tools/test.mjs`'s registry and CI's workflow, and fail when a `test-*` file is
+`tools/test.ts`'s registry and CI's workflow, and fail when a `test-*` file is
 in neither. Extend the directory scan to `tools/cue` and `tools/dump`.
 
 **Resolved 2026-08-26.** Three of the five orphans had been wired in without
 this finding being updated; `test-select-adb.sh` and `test-screencheck.py` had
 not, and both still stood as the cited justification for an exclusion. Both are
-registered in `tools/test.mjs` and both passed on the first run.
+registered in `tools/test.ts` and both passed on the first run.
 
 The `test-*` skip is no longer a `continue` under an unverified comment. The
-gate reads `tools/test.mjs` and `.github/workflows/ci.yml` and fails on any
+gate reads `tools/test.ts` and `.github/workflows/ci.yml` and fails on any
 gate in neither, and — the half the recommendation did not name — it now
 **resolves every `test-*` file an exclusion reason cites** and fails when that
 gate does not exist or does not run. The reasons were free text that nothing
@@ -432,7 +432,7 @@ exclusions written for the scripts there.
 
 *Worth recording, because it is the finding in miniature:* the first version of
 the "does this gate run?" check used a substring match, and its positive
-control failed — a **comment** in `tools/test.mjs` naming `test-select-adb.sh`
+control failed — a **comment** in `tools/test.ts` naming `test-select-adb.sh`
 satisfied the check while the registry entry was deleted. It now parses
 registry entries only, for the same reason `grade-run.sh` is read
 invocation-lines-only. A check a mention can satisfy measures documentation.
@@ -606,7 +606,7 @@ questions, and starts by checking the record above against the tree — because
 the first thing it found is that the record was wrong in both directions.
 
 Everything below was verified directly, and the engine suite was green
-(`node tools/test.mjs --engine`) before and after.
+(`node tools/test.ts --engine`) before and after.
 
 ## What the records got wrong about themselves
 
@@ -653,7 +653,7 @@ nothing gated discoverability.
 `ONE-PIXEL-VISION.md` also linked three files under gitignored `captures/` that
 exist for no reader and that no script regenerates.
 
-**Resolved.** `tools/test-docs.mjs` checks that every link resolves, every
+**Resolved.** `tools/test-docs.ts` checks that every link resolves, every
 `docs/` page is indexed, and every tool script has a **table entry**. A mention
 in prose is not an entry — the first version of that check used a substring
 match and passed on tools that had no row, which is exactly how the drift hid.
@@ -667,12 +667,12 @@ not run — and four did.
 
 **Resolved.** The gate now resolves every `test-*` file a reason cites and
 fails when it does not exist or is registered nowhere; the `test-*` skip reads
-`tools/test.mjs` and `ci.yml` instead of asserting in a comment; and the
+`tools/test.ts` and `ci.yml` instead of asserting in a comment; and the
 directory scan covers `tools/cue` and `tools/dump`, which were outside the rule
 entirely — the source of CLAUDE.md's own purest example.
 
 *The instructive part:* the first version used a substring match and its
-positive control failed, because a **comment** in `tools/test.mjs` naming
+positive control failed, because a **comment** in `tools/test.ts` naming
 `test-select-adb.sh` satisfied the check while the registry entry was deleted.
 A check a mention can satisfy measures documentation.
 
@@ -712,7 +712,7 @@ categories are real and consistently used.
 closes the defect they actually caused (finding 12).
 
 **What was deliberately not done:** the physical move. Relocating 83 files
-would touch `grade-run.sh`'s paths, `tools/test.mjs`, CI, four documents and
+would touch `grade-run.sh`'s paths, `tools/test.ts`, CI, four documents and
 the coverage gate's own scan, in a repository with a second session actively
 committing to it. That is not a surgical refactor, and the legibility gain is
 smaller than the merge risk. Recorded here so it is a decision rather than an

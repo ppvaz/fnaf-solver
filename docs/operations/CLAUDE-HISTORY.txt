@@ -521,8 +521,8 @@ retractions than their conclusions.
 ## Checks
 
 ```sh
-node tools/test.mjs --engine     # fast headless feedback; run on every edit
-node tools/test.mjs --engine --extended # full model-sweep gate, as CI runs
+node tools/test.ts --engine     # fast headless feedback; run on every edit
+node tools/test.ts --engine --extended # full model-sweep gate, as CI runs
 tools/device/test-query-cue-helper.sh
 tools/device/test-soak-cue-helper.sh
 ```

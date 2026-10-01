@@ -1,6 +1,6 @@
 {
   "schema": "legacy-path-map-v1",
-  "generatedFrom": "tools/generate-catalog.js",
+  "generatedFrom": "tools/generate-catalog.ts",
   "entries": [
     {
       "id": "device.shell-session",
@@ -198,7 +198,7 @@
       "category": "command",
       "lifecycle": "compatibility",
       "owner": "@sixam/core",
-      "replacement": "node tools/test.mjs --engine (canonical engine fixture lane)",
+      "replacement": "node tools/test.ts --engine (canonical engine fixture lane)",
       "removalGate": "Bare-Node compatibility lane is no longer needed and P9 audit is green",
       "notes": "Retained package command for the old engine test entry point."
     }

@@ -239,7 +239,7 @@ export const POLICIES = {
  *   instants are closer together than one pan round trip, inside a 333 ms
  *   band.
  *
- * (That word is "band" and not the obvious one because `architecture-test.js`
+ * (That word is "band" and not the obvious one because `architecture-test.ts`
  * forbids the DOM globals by name anywhere in core, comments included, and it
  * is right to: a reader grepping for who touches the DOM should not have to
  * sort prose from code.)

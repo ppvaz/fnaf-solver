@@ -13,7 +13,7 @@ import { MIN_RELEASED_MS } from './test-hid-trace.mjs';
 
 const check = (ok, message) => { if (!ok) throw new Error(message); };
 
-// These are the options `tools/test.mjs --engine` pins as `hidpilot n6 target`
+// These are the options `tools/test.ts --engine` pins as `hidpilot n6 target`
 // (3000/3000 ordinary, 3000/3000 pinned-worst). The recipe must be built from
 // the policy that was actually verified, not a neighbouring one.
 const PINNED = { night: 6, sweepSlotMs: MODEL_SLOT_MS, maskMarginMs: 900, pilotOffset: 10 };

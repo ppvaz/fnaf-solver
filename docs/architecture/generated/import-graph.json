@@ -6,7 +6,7 @@
       "imports": [
         "../../../packages/propose/bin/plans/human-gate.mjs",
         "../../../packages/review/src/stat.ts",
-        "../../../tools/chrome.mjs",
+        "../../../tools/chrome.ts",
         "@sixam/source/fnaf2",
         "node:child_process",
         "node:fs",
@@ -101,7 +101,7 @@
       "file": "apps/desktop/src/lab.ts",
       "imports": [
         "../../../packages/play/bin/phone/local-profile.ts",
-        "../../../tools/push-gate.mjs",
+        "../../../tools/push-gate.ts",
         "@sixam/kernel",
         "@sixam/review/consequence",
         "@sixam/review/evidence-pack",
@@ -175,7 +175,7 @@
     {
       "file": "apps/desktop/test/lab.test.ts",
       "imports": [
-        "../../../tools/push-gate.mjs",
+        "../../../tools/push-gate.ts",
         "../src/cli.ts",
         "../src/lab.ts",
         "@sixam/kernel",
@@ -373,7 +373,7 @@
     {
       "file": "apps/trainer/test/browser.test.ts",
       "imports": [
-        "../../../tools/chrome.mjs",
+        "../../../tools/chrome.ts",
         "node:child_process",
         "node:fs",
         "node:os",
@@ -383,7 +383,7 @@
     {
       "file": "apps/trainer/test/calibration.test.ts",
       "imports": [
-        "../../../tools/chrome.mjs",
+        "../../../tools/chrome.ts",
         "node:child_process",
         "node:fs",
         "node:os",
@@ -408,7 +408,7 @@
     {
       "file": "apps/trainer/test/lesson.test.ts",
       "imports": [
-        "../../../tools/chrome.mjs",
+        "../../../tools/chrome.ts",
         "node:child_process",
         "node:fs",
         "node:os",
@@ -427,7 +427,7 @@
     {
       "file": "apps/trainer/test/light.test.ts",
       "imports": [
-        "../../../tools/chrome.mjs",
+        "../../../tools/chrome.ts",
         "node:child_process",
         "node:fs",
         "node:os",
@@ -444,7 +444,7 @@
     {
       "file": "apps/trainer/test/pages.test.ts",
       "imports": [
-        "../../../tools/chrome.mjs",
+        "../../../tools/chrome.ts",
         "node:child_process",
         "node:fs",
         "node:fs/promises",
@@ -457,7 +457,7 @@
     {
       "file": "apps/trainer/test/phase.test.ts",
       "imports": [
-        "../../../tools/chrome.mjs",
+        "../../../tools/chrome.ts",
         "node:child_process",
         "node:fs",
         "node:os",
@@ -4646,7 +4646,7 @@
       ]
     },
     {
-      "file": "tools/affected-test.js",
+      "file": "tools/affected-test.ts",
       "imports": [
         "node:assert/strict",
         "node:child_process",
@@ -4655,7 +4655,7 @@
       ]
     },
     {
-      "file": "tools/architecture-test.js",
+      "file": "tools/architecture-test.ts",
       "imports": [
         "../../../apps/desktop/src/lab.ts",
         "../../../apps/device/src/campaign.js",
@@ -4696,7 +4696,7 @@
       ]
     },
     {
-      "file": "tools/change-locality.mjs",
+      "file": "tools/change-locality.ts",
       "imports": [
         "node:child_process",
         "node:fs",
@@ -4704,14 +4704,14 @@
       ]
     },
     {
-      "file": "tools/chrome.mjs",
+      "file": "tools/chrome.ts",
       "imports": [
         "node:child_process",
         "node:fs"
       ]
     },
     {
-      "file": "tools/commit-identity.mjs",
+      "file": "tools/commit-identity.ts",
       "imports": [
         "node:child_process",
         "node:fs",
@@ -4720,7 +4720,7 @@
       ]
     },
     {
-      "file": "tools/dump-text-check.mjs",
+      "file": "tools/dump-text-check.ts",
       "imports": [
         "node:child_process",
         "node:fs",
@@ -4729,7 +4729,7 @@
       ]
     },
     {
-      "file": "tools/gate-kit.mjs",
+      "file": "tools/gate-kit.ts",
       "imports": [
         "node:child_process",
         "node:fs",
@@ -4738,7 +4738,7 @@
       ]
     },
     {
-      "file": "tools/generate-catalog.js",
+      "file": "tools/generate-catalog.ts",
       "imports": [
         "@sixam/source",
         "node:child_process",
@@ -4751,7 +4751,7 @@
       ]
     },
     {
-      "file": "tools/push-gate.mjs",
+      "file": "tools/push-gate.ts",
       "imports": [
         "../packages/play/bin/phone/local-profile.ts",
         "node:child_process",
@@ -4762,7 +4762,7 @@
       ]
     },
     {
-      "file": "tools/retrieval-benchmark.mjs",
+      "file": "tools/retrieval-benchmark.ts",
       "imports": [
         "node:assert/strict",
         "node:fs/promises",
@@ -4771,17 +4771,17 @@
       ]
     },
     {
-      "file": "tools/test-change-locality.mjs",
+      "file": "tools/test-change-locality.ts",
       "imports": [
-        "./change-locality.mjs",
+        "./change-locality.ts",
         "node:assert/strict",
         "node:fs"
       ]
     },
     {
-      "file": "tools/test-commit-identity.mjs",
+      "file": "tools/test-commit-identity.ts",
       "imports": [
-        "./commit-identity.mjs",
+        "./commit-identity.ts",
         "node:assert/strict",
         "node:child_process",
         "node:fs",
@@ -4791,7 +4791,7 @@
       ]
     },
     {
-      "file": "tools/test-companion-name.mjs",
+      "file": "tools/test-companion-name.ts",
       "imports": [
         "node:child_process",
         "node:fs",
@@ -4800,11 +4800,11 @@
       ]
     },
     {
-      "file": "tools/test-dead-code.mjs",
+      "file": "tools/test-dead-code.ts",
       "imports": [
         "./a.js",
         "./b.js",
-        "./gate-kit.mjs",
+        "./gate-kit.ts",
         "@x/lib",
         "@x/lib/games/g.js",
         "node:assert/strict",
@@ -4814,7 +4814,7 @@
       ]
     },
     {
-      "file": "tools/test-docs.mjs",
+      "file": "tools/test-docs.ts",
       "imports": [
         "@sixam/review/renamed-path",
         "node:child_process",
@@ -4825,9 +4825,9 @@
       ]
     },
     {
-      "file": "tools/test-dump-text-check.mjs",
+      "file": "tools/test-dump-text-check.ts",
       "imports": [
-        "./dump-text-check.mjs",
+        "./dump-text-check.ts",
         "node:assert/strict",
         "node:child_process",
         "node:fs",
@@ -4837,9 +4837,9 @@
       ]
     },
     {
-      "file": "tools/test-duplication.mjs",
+      "file": "tools/test-duplication.ts",
       "imports": [
-        "./gate-kit.mjs",
+        "./gate-kit.ts",
         "node:assert/strict",
         "node:crypto",
         "node:fs",
@@ -4847,16 +4847,16 @@
       ]
     },
     {
-      "file": "tools/test-file-size.mjs",
+      "file": "tools/test-file-size.ts",
       "imports": [
-        "./gate-kit.mjs",
+        "./gate-kit.ts",
         "node:assert/strict",
         "node:fs",
         "node:path"
       ]
     },
     {
-      "file": "tools/test-media.mjs",
+      "file": "tools/test-media.ts",
       "imports": [
         "node:assert/strict",
         "node:child_process",
@@ -4866,7 +4866,7 @@
       ]
     },
     {
-      "file": "tools/test-mistake-register.mjs",
+      "file": "tools/test-mistake-register.ts",
       "imports": [
         "../packages/review/bin/grade/run-report.ts",
         "node:child_process",
@@ -4876,7 +4876,7 @@
       ]
     },
     {
-      "file": "tools/test-no-serial.mjs",
+      "file": "tools/test-no-serial.ts",
       "imports": [
         "node:child_process",
         "node:fs",
@@ -4885,10 +4885,10 @@
       ]
     },
     {
-      "file": "tools/test-push-gate.mjs",
+      "file": "tools/test-push-gate.ts",
       "imports": [
         "../packages/play/bin/phone/local-profile.ts",
-        "./push-gate.mjs",
+        "./push-gate.ts",
         "node:assert/strict",
         "node:child_process",
         "node:fs",
@@ -4898,7 +4898,7 @@
       ]
     },
     {
-      "file": "tools/test-sibling-paths.js",
+      "file": "tools/test-sibling-paths.ts",
       "imports": [
         "node:child_process",
         "node:fs",
@@ -4908,16 +4908,16 @@
       ]
     },
     {
-      "file": "tools/test-todo-refs.mjs",
+      "file": "tools/test-todo-refs.ts",
       "imports": [
-        "./gate-kit.mjs",
+        "./gate-kit.ts",
         "node:assert/strict",
         "node:fs",
         "node:path"
       ]
     },
     {
-      "file": "tools/test-ts-migrate.mjs",
+      "file": "tools/test-ts-migrate.ts",
       "imports": [
         "./lib.js",
         "./types.ts",
@@ -4932,16 +4932,16 @@
       ]
     },
     {
-      "file": "tools/test.mjs",
+      "file": "tools/test.ts",
       "imports": [
-        "./chrome.mjs",
+        "./chrome.ts",
         "node:child_process",
         "node:path",
         "node:url"
       ]
     },
     {
-      "file": "tools/ts-migrate.mjs",
+      "file": "tools/ts-migrate.ts",
       "imports": [
         "${spec}",
         "...",
@@ -4954,7 +4954,7 @@
       ]
     },
     {
-      "file": "tools/validate-references.js",
+      "file": "tools/validate-references.ts",
       "imports": [
         "node:fs",
         "node:fs/promises",

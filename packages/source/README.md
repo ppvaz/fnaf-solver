@@ -5,7 +5,7 @@ contexts: each game's Rulebook data, Sim rules and controls, and the
 cross-game clockwork they share. It moved out of `@sixam/core` in migration
 steps D1 and D4 ([Plan 27](../../plans/27-pivot-and-rebrand.md)'s move map),
 and it imports only [`@sixam/kernel`](../kernel/README.md)
-(`tools/architecture-test.js`).
+(`tools/architecture-test.ts`).
 
 | Path | What it is |
 |---|---|
@@ -15,14 +15,14 @@ and it imports only [`@sixam/kernel`](../kernel/README.md)
 | `src/truth/` | Truth's reading of a game's own event sheet (Plan 28 step 5), pure: the tabular event-text dump parsed into fields (`dump.ts`), the handful of engine ACE numbers it names (`engine.ts`), the per-build handle scramble K by object-type agreement (`handles.ts`), and the events and object queries (`query.ts`); `@sixam/source/truth/read` |
 | `decompile/truth.mjs` | the host side, `@sixam/source/truth`: finds the caller's own dump through the untracked `decompile/local-vault.json` or `$SIXAM_TRUTH_VAULT`, refuses naming the decode when there is none, and decodes a local APK or CCN with the local CTFAK dumper; the MCP `truth` tool and `npm run review -- truth` call it. No dump, decoded text or game asset is tracked: the tests build a synthetic dump from the dumper's grammar at run time |
 | `test/` | the sourced draw-order and Sim contract tests, the control catalog and `semantic-control-v1` tests, the truth tests (`truth.test.js`, over a synthetic dump), and their fixtures; all in `npm run test:contracts` |
-| `decompile/` | the decompile and read chain (was `tools/dump/`): the CTFAK event-text dumper and its Docker image, `regen-dump.sh`, the sheet readers (`readdump.py`, `nightmap.py`, `aimap.py`, `coverage.py`), `extract-samples.sh` and their tests; its [`README.md`](decompile/README.md) is the tool index `tools/test-docs.mjs` holds them to. Two comments still name `tools/dump/`: one in `src/games/fnaf2/config.js`, whose bytes are frozen, and one in `src/games/fnaf3/fnaf3.js`, which another session is editing |
+| `decompile/` | the decompile and read chain (was `tools/dump/`): the CTFAK event-text dumper and its Docker image, `regen-dump.sh`, the sheet readers (`readdump.py`, `nightmap.py`, `aimap.py`, `coverage.py`), `extract-samples.sh` and their tests; its [`README.md`](decompile/README.md) is the tool index `tools/test-docs.ts` holds them to. Two comments still name `tools/dump/`: one in `src/games/fnaf2/config.js`, whose bytes are frozen, and one in `src/games/fnaf3/fnaf3.js`, which another session is editing |
 
 Any file under `src/games/` is importable as `@sixam/source/games/<game>/<file>`,
 for a caller that wants one module's exact namespace (propose's controllers read
 FNaF 2's `config.ts` that way).
 
 **TypeScript.** Since 2026-09-30 the sources are TypeScript that Node runs
-by type stripping (Pedro: "runtime .ts"; `tools/ts-migrate.mjs`), checked at the
+by type stripping (Pedro: "runtime .ts"; `tools/ts-migrate.ts`), checked at the
 strictness they had as JavaScript (`typecheck:js`), to be tightened later. The
 browser gets them with their types erased (`apps/trainer/test/strip-types.ts`).
 

@@ -15,7 +15,7 @@ check(comparison.equal, `compiled policy diverged: ${JSON.stringify(comparison.m
 // one in `opening`. That commit updated the emitter's own expected row and not
 // this number, so the gate has read 183 against a 185-event plan ever since.
 // It went unnoticed for nine days because this file was registered only in
-// `tools/test.mjs`'s ENGINE group, which CI does not run and whose reds
+// `tools/test.ts`'s ENGINE group, which CI does not run and whose reds
 // CLAUDE.md excuses as intentional scientific controls. It is a
 // compiler-equivalence regression gate, not a control, so it is now in
 // `npm run test:unit` as well -- mistake register entry 13.

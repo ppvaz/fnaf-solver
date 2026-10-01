@@ -20,7 +20,7 @@ import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { chromeBinary, chromeArgs } from '../../../tools/chrome.mjs';
+import { chromeBinary, chromeArgs } from '../../../tools/chrome.ts';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css',

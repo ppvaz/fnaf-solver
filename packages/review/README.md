@@ -18,7 +18,7 @@ instrument that moved from `@sixam/core/telemetry` in ADR 0002's Play move;
 
 **Boundary.** Review never imports Play or Propose. In today's names it never
 imports `packages/play`, an application (`apps/*`) or `packages/propose`, and
-`tools/architecture-test.js` refuses any module here that does, by a static
+`tools/architecture-test.ts` refuses any module here that does, by a static
 import, a re-export, a dynamic `import()` or a `require()`. The two campaign
 validators it needs (`validateCampaignResult`, `validateSaveProof`) moved to
 `@sixam/kernel/contracts` for that reason; play's campaign
@@ -80,7 +80,7 @@ verdict does not lose the run identity carried by its `evidence.started` log.
 | `test/solver.test.mjs` | check | For every registered game, `describe` equals the registers it joins (chronicle, contract register, packs, graph edges) and names every catalog UNKNOWN as not measured; the queries count what the registers hold; `promote` proposes exactly the recorded edge for every promoted pack and refuses every other; every resource is a valid envelope; the CLI prints the same envelopes and exits 1 on a refusal; `query promotions --envelope` wraps exactly the query; `docs/evidence` hashes the same before and after. `test:unit`. |
 | `src/consequence.mjs` | module | The consequence class of a change from its paths alone (CLAUDE.md "Consequence lock"; ROADMAP "What counts as consequential now"): `classifyChange(paths)` is `consequential` when the change stages a record (`RECORD_RULES`: a run pack, the evidence graph, an evidence record, a `tools/recompile/results` record, a committed winner, staged `artifacts/`) or code in the Companion, the controller, the trainer or the solver interface (`CODE_AREAS`) with a gate beside it; `bookkeeping` for docs, plans, gates alone, generated catalogs, configuration and code outside the four areas; UNKNOWN(reason) for area code with no gate, which paths cannot settle. A prior-evidence reference or the override never changes the class. `npm run lab -- commit --dry` and `end` share it; the hook stays the only judge of acceptance. |
 | `src/mistakes.mjs` | module | The mistake registers read where they are written (`docs/operations/MISTAKE-REGISTER.md` if it holds entries, else `CLAUDE.md`), leads that wrap a line read whole; `MISTAKE_TAGS`, keyed by entry number, gives each entry its areas and words, and `STEP_AREAS` each ROADMAP step's areas, so `matchMistakes` returns the entries a task should read before it acts. An entry with no tag row is always returned. |
-| `src/roadmap.mjs` | module | Each ROADMAP step open, closed or UNKNOWN(reason), computed from what its "Closes when" can be checked against: S1 from the promotions query's edges and MODEL_ONLY winners; S2 UNKNOWN (no record kind states a twin or trace-equivalence verdict); S3-S5 through their needs; S6 from FNaF 1, 3 and 4 promotion edges, the `fnaf-solver`/`@sixam` names and the solver's verbs; S7 from each mistake entry's gate (`tools/test-mistake-register.mjs`'s `REGISTER_GATES` and the refusals) in a CI lane. Quotes each step's "Closes when" and the "Order." lines; `roadmapDrift` names any it no longer finds. |
+| `src/roadmap.mjs` | module | Each ROADMAP step open, closed or UNKNOWN(reason), computed from what its "Closes when" can be checked against: S1 from the promotions query's edges and MODEL_ONLY winners; S2 UNKNOWN (no record kind states a twin or trace-equivalence verdict); S3-S5 through their needs; S6 from FNaF 1, 3 and 4 promotion edges, the `fnaf-solver`/`@sixam` names and the solver's verbs; S7 from each mistake entry's gate (`tools/test-mistake-register.ts`'s `REGISTER_GATES` and the refusals) in a CI lane. Quotes each step's "Closes when" and the "Order." lines; `roadmapDrift` names any it no longer finds. |
 | `test/lab-queries.test.mjs` | check | Fourteen planted changes classed (docs-only, the evidence README, evidence records, packs, a winner, area code with and without a gate, model code, gates alone, nothing); the real register read with every entry tagged and every tag an entry, a moved register read from its new home, a wrapped lead, an untagged entry kept; `plans/ROADMAP.md` holding every heading and order line; step states under a closed, an open and an inconsistent promotions stub. `test:unit`. |
 
 ## The grade pipeline
@@ -101,7 +101,7 @@ published at 163 s and 153 s and graded at 26.0 s and 72.2 s.
 The video graders apply Play's screen predicate (`nightpredicate.py`, in
 `packages/play/src/sensors/screencap/`) through `sys.path`, so that a recording is
 judged by the rule the live night used. That is a Review-to-Play edge that
-`tools/architecture-test.js` does not see, because it reads JavaScript only. It
+`tools/architecture-test.ts` does not see, because it reads JavaScript only. It
 is recorded here rather than hidden. `actuation-frame-metric.py` likewise reads
 its default monitor and mask rules, as data, from Play's
 `packages/play/profiles/fnaf2/moto-g56/`.

@@ -1,6 +1,6 @@
 {
   "schema": "media-manifest-v1",
-  "rule": "Every tracked image, video and audio file is listed here with a class. Game media (a capture, frame or clip of a game) is refused except the two README clips of Pedro's 2026-09-29 written exception, each 4,000,000 bytes or less: ADR 0002 decision 6, plans/ROADMAP.md gate table. tools/test-media.mjs holds it.",
+  "rule": "Every tracked image, video and audio file is listed here with a class. Game media (a capture, frame or clip of a game) is refused except the two README clips of Pedro's 2026-09-29 written exception, each 4,000,000 bytes or less: ADR 0002 decision 6, plans/ROADMAP.md gate table. tools/test-media.ts holds it.",
   "classes": {
     "game-clip": "A gameplay recording. Only the two README clips of the written exception.",
     "diagram": "A figure drawn by the project: a plot, chart, timeline or schematic. No game pixels.",

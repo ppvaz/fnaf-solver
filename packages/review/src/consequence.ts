@@ -48,7 +48,7 @@ const GATE = [
   /(?:^|\/)test\//,
   /^\.githooks\//,
   /^\.github\//,
-  /^tools\/validate-references\.js$/,
+  /^tools\/validate-references\.ts$/,
 ];
 
 /** Bookkeeping by path: prose, plans, generated views, manifests and configuration. */

@@ -1,13 +1,13 @@
 // The single entry point for the suite.
 //
-//   node tools/test.mjs             # every check that can run here
-//   node tools/test.mjs --engine    # fast headless checks for edit feedback
-//   node tools/test.mjs --gates     # --engine minus BACKLOG; test:unit runs it
-//   node tools/test.mjs --engine --extended # include exhaustive model sweeps
-//   node tools/test.mjs --browser   # Chrome checks only (minutes)
-//   node tools/test.mjs --reports   # also print the diagnostic tools
-//   node tools/test.mjs --parallel  # run the browser checks at once (see below)
-//   node tools/test.mjs --gates --list  # print what those flags select; run nothing
+//   node tools/test.ts             # every check that can run here
+//   node tools/test.ts --engine    # fast headless checks for edit feedback
+//   node tools/test.ts --gates     # --engine minus BACKLOG; test:unit runs it
+//   node tools/test.ts --engine --extended # include exhaustive model sweeps
+//   node tools/test.ts --browser   # Chrome checks only (minutes)
+//   node tools/test.ts --reports   # also print the diagnostic tools
+//   node tools/test.ts --parallel  # run the browser checks at once (see below)
+//   node tools/test.ts --gates --list  # print what those flags select; run nothing
 //
 // Two kinds of tool live in tools/, and the split matters: CHECKS assert and
 // exit non-zero, so a runner can give a verdict on them. REPORTS print numbers
@@ -27,7 +27,7 @@
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, relative } from 'node:path';
-import { chromeBinary, chromeAvailable } from './chrome.mjs';
+import { chromeBinary, chromeAvailable } from './chrome.ts';
 
 const TOOLS = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(TOOLS, '..');
@@ -363,7 +363,7 @@ const ENGINE = [
   // them: TOOLS.md was missing 47 of 137 scripts including grade-run.sh, and
   // docs/README.md was missing HID-MULTITOUCH.md. Cheap, so it runs here
   // rather than being remembered.
-  ['docs', ['test-docs.mjs']],
+  ['docs', ['test-docs.ts']],
   // Same story: the transport helper every device runner picks its phone
   // with, whose exclusion reads "gated by test-select-adb.sh".
   ['select-adb', ['../packages/play/bin/phone/test-select-adb.sh']],
@@ -420,7 +420,7 @@ const BACKLOG = new Map([
   ['reduced model', 'vent press with the monitor up diverges from the Sim (true vs false)'],
   // Scientific controls that stay red until Plans 20-21 price the rescue cost.
   ['vent reactive', 'control: the reactive layer still pays a monitor-down/box cost'],
-  // Not red: CI runs test-docs.mjs in its own step, and here it would also
+  // Not red: CI runs test-docs.ts in its own step, and here it would also
   // read untracked files a concurrent session has not indexed yet.
   ['docs', 'run by the CI documentation step'],
 ]);
@@ -484,7 +484,7 @@ const REPORTS = [
 const secs = (ms) => `${(ms / 1000).toFixed(1)}s`;
 
 function runTool(argv, { timeoutMs = 120_000, streamLabel = null } = {}) {
-  return new Promise((resolve) => {
+  return new Promise<any>((resolve) => {
     const started = Date.now();
     // Most checks are node; the cue front end is stdlib Python, like the rest
     // of the device tooling, so dispatch on the extension.
@@ -572,7 +572,7 @@ async function runGroup(group, judge, { progress = false, concurrent = true, con
 // The browser checks load the built single-file page, so a stale dist/ would
 // test the last build rather than the working tree.
 function build() {
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     spawn('python3', [join(TRAINER_TOOLS, 'build.py')], { cwd: ROOT, stdio: 'ignore' })
       .on('close', c => c === 0 ? resolve() : reject(new Error(`build.py exited ${c}`)));
   });
@@ -588,7 +588,7 @@ async function serve() {
     { cwd: ROOT, stdio: 'ignore' });
   for (let i = 0; i < 40; i++) {
     if (await reachable()) return child;
-    await new Promise(r => setTimeout(r, 25));
+    await new Promise<any>(r => setTimeout(r, 25));
   }
   child.kill();
   throw new Error(`apps/trainer/test/serve.py never answered on ${PORT}`);
@@ -608,7 +608,7 @@ let engine = extended ? ENGINE : ENGINE.filter(([name]) => !EXTENDED_ENGINE.has(
 if (gates) engine = engine.filter(([name]) => !BACKLOG.has(name));
 
 // `--list` prints every registered entry, one JSON object per line, with
-// whether THESE flags would run it, and runs nothing. test-mistake-register.mjs
+// whether THESE flags would run it, and runs nothing. test-mistake-register.ts
 // reads it instead of re-deriving the --gates filter from this file's text.
 if (process.argv.includes('--list')) {
   const selected = new Set([

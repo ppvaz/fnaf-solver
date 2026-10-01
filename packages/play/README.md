@@ -3,7 +3,7 @@
 Play is the Embodiment context of [ADR 0002](../../docs/decisions/0002-kernel-contexts-vocabulary.md):
 what the campaign executor sends and reads through on the phone. It imports
 only `@sixam/kernel`, `@sixam/source` and Node built-ins, and nothing imports
-it but `@sixam/propose` and the applications (`tools/architecture-test.js`).
+it but `@sixam/propose` and the applications (`tools/architecture-test.ts`).
 
 | Folder | What it holds |
 |---|---|
@@ -100,7 +100,7 @@ The transport modules are codecs over injected ports. They own report
 encoding, coordinate conversion, authentication framing and protocol parsing,
 but never open adb, select a policy, or claim that a legal write was accepted by
 the game: a legal HID send is not evidence of acceptance. The composition root
-wires the ports at the edge, and `tools/architecture-test.js` confines the HID
+wires the ports at the edge, and `tools/architecture-test.ts` confines the HID
 transport to the device runners.
 
 **Moved from `packages/adapters` (ADR 0002).** The retained
@@ -134,7 +134,7 @@ passed; the queue's night jobs now pass the pair themselves.
 how to set it. Set it once per host with `node packages/play/bin/phone/local-profile.ts set
 <serial>` (`adb devices -l` lists it); a worktree without its own profile reads
 the main checkout's. No tracked script carries a default, and
-`tools/test-no-serial.mjs` (in `test:unit`) refuses any file outside the frozen
+`tools/test-no-serial.ts` (in `test:unit`) refuses any file outside the frozen
 set and its allowlist that names one.
 
 Seed-pin caveat (2026-09-27): wall-clock resets can occur between the seed
@@ -212,7 +212,7 @@ moved them here, with the description their tool index gave them.
 | `packages/play/bin/probe/atrace-input.sh RUN SECONDS -- COMMAND [ARGS...]` | **device action** | Brackets a command with a phone-side Perfetto `input view wm gfx sched` trace, flushes it on exit, and saves `captures/RUN-input.pftrace`; optionally saves `RUN-surfaceflinger-latency.txt` when `SF_LAYER` is set. When screen recording is enabled, the default is the selected display's native landscape geometry; set `CAPTURE_SCREENRECORD_SIZE=WIDTHxHEIGHT` only for an explicit derived capture. |
 | `packages/play/bin/probe/intersection-state-gate.ts --target office\|monitor-up [--timeout-ms N] [--poll-ms N] [--log FILE]` | **device action** | Read-only Companion state gate for the intersection probe. It requires two fresh increasing frame sequences with explicit or calibrated monitor state and fixed bottom-button strokes, then exits success; it owns no input writer. |
 | `packages/play/bin/probe/inputtrace.py TRACE [--trace-processor PATH] [--package PKG] [--sf-latency FILE]` | check | Queries Perfetto app dispatch, delivery IDs/event times and frame proxies. `--json` emits `inputtrace-result-v2` with content-bound evidence ID and latency tails. Request→creation, creation→dispatch and request→game-effect remain UNKNOWN without matched IDs/clock mappings/effects; next Choreographer is NOT game acceptance. `--expected` gates dispatch count only. |
-| `packages/play/bin/phone/test-screen-map.ts` | check | Holds the screen->raw touch transform `rawX = (1080 - screenY) * 20 / 9`, truncated, to one place: the HID transport in `packages/play` (the authority -- it is what presses the phone). Checks that the Companion's `NightRunner.java` carries no transform or control map (it held a copy of both until 2026-09-30), that every committed Companion route bundle's `hid-controls.txt` is what the transport derives from the profile beside it, that `hid-sweep-probe.ts` re-exports the transport's function, and that the transform truncates, over the real `coords.sh` taps and the camera sweep coordinates. Its shell and Python copies, which once disagreed on 24 of 39 coordinates, left with the legacy lane. `tools/test.mjs --gates` (`test:unit:slow`). |
+| `packages/play/bin/phone/test-screen-map.ts` | check | Holds the screen->raw touch transform `rawX = (1080 - screenY) * 20 / 9`, truncated, to one place: the HID transport in `packages/play` (the authority -- it is what presses the phone). Checks that the Companion's `NightRunner.java` carries no transform or control map (it held a copy of both until 2026-09-30), that every committed Companion route bundle's `hid-controls.txt` is what the transport derives from the profile beside it, that `hid-sweep-probe.ts` re-exports the transport's function, and that the transform truncates, over the real `coords.sh` taps and the camera sweep coordinates. Its shell and Python copies, which once disagreed on 24 of 39 coordinates, left with the legacy lane. `tools/test.ts --gates` (`test:unit:slow`). |
 | `packages/play/bin/probe/test-inputtrace.py` | check | Phone-free regression for the Perfetto input parser: dispatch/delivery/event-id correlation, device-vs-injected identity, frame landing, CSV progress handling, SurfaceFlinger latency parsing, and a fake trace-processor boundary. |
 | `packages/play/bin/probe/test-hid-intersection-probe.ts` | check | No-device regression for split legal-intersection phases, absent mask reports, explicit illegal-path refusals, contact discipline, and manifest state gates. |
 | `packages/play/bin/probe/test-intersection-state-gate.ts` | check | No-device regression for fresh-sequence requirements, explicit monitor state, native bottom-stroke thresholds, animation/unknown refusal, and office/monitor-up target classification. |

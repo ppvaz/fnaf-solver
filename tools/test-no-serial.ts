@@ -10,14 +10,14 @@
 // tools/device/local-profile.json (gitignored; packages/play/bin/phone/local-profile.ts).
 //
 // Scanned: every tracked file, plus untracked files git does not ignore, so a
-// new file is refused before it is committed (tools/test-docs.mjs does the
+// new file is refused before it is committed (tools/test-docs.ts does the
 // same). Not scanned: the frozen set, whose records keep the serial they were
 // written with. Allowlisted: the records below, each with its reason and its
 // exact count, so an allowlisted file cannot gain an occurrence either; an
 // entry whose count no longer matches fails too, so the list only shrinks
 // deliberately. It also checks that the local profile is ignored and untracked.
 //
-//   node tools/test-no-serial.mjs        exit 0 clean, 1 with the files it refuses
+//   node tools/test-no-serial.ts        exit 0 clean, 1 with the files it refuses
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';

@@ -301,11 +301,11 @@ It covers every maintained developer, simulator, browser, device, and
 source-dump tool, including which commands assert and which only report.
 
 ```sh
-node tools/test.mjs              # the whole suite
-node tools/test.mjs --engine     # fast headless checks for each edit
-node tools/test.mjs --engine --extended # include exhaustive model sweeps
-node tools/test.mjs --browser    # Chrome checks only — about four minutes
-node tools/test.mjs --reports    # also print the diagnostic tools
+node tools/test.ts              # the whole suite
+node tools/test.ts --engine     # fast headless checks for each edit
+node tools/test.ts --engine --extended # include exhaustive model sweeps
+node tools/test.ts --browser    # Chrome checks only — about four minutes
+node tools/test.ts --reports    # also print the diagnostic tools
 ```
 
 The fast engine checks are the ones to run on every edit. The default full suite

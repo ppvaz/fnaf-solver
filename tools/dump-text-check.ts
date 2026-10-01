@@ -26,8 +26,8 @@
 // synthetic fixtures of three packages/source/decompile/test-*.py, two grammar notes with
 // placeholders, and one `IF Once` inside a paraphrased block.
 //
-//   node tools/dump-text-check.mjs MSGFILE     exit 1 when the message copies dump text
-//   node tools/dump-text-check.mjs --log N     report hits over the last N commit messages
+//   node tools/dump-text-check.ts MSGFILE     exit 1 when the message copies dump text
+//   node tools/dump-text-check.ts --log N     report hits over the last N commit messages
 //
 // .githooks/commit-msg runs the first form before any other rule, so PEDRO-OK
 // (which waives the consequence lock) does not waive this.
@@ -172,7 +172,7 @@ function main(argv) {
     return 0;
   }
   if (argv.length !== 1) {
-    console.error('usage: dump-text-check.mjs MSGFILE | --log N');
+    console.error('usage: dump-text-check.ts MSGFILE | --log N');
     return 2;
   }
   const hits = findDumpText(commitMessageBody(readFileSync(argv[0], 'utf8'), commentCharOf()));

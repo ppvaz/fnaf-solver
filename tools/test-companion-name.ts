@@ -10,17 +10,17 @@
 // frozen, hash-bound or history.
 //
 // Scanned: every tracked file and every untracked file git does not ignore
-// (tools/test-no-serial.mjs does the same), and every path's own name. A match
+// (tools/test-no-serial.ts does the same), and every path's own name. A match
 // of cue[ _-]?helper that is not one of the stored names is refused.
 //
-//   node tools/test-companion-name.mjs   exit 0 clean, 1 with the lines it refuses
+//   node tools/test-companion-name.ts   exit 0 clean, 1 with the lines it refuses
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const SELF = 'tools/test-companion-name.mjs';
+const SELF = 'tools/test-companion-name.ts';
 const OLD = /cue[ _-]?helper/i;
 
 // Stored names, each with the reason it keeps its spelling.
@@ -99,7 +99,7 @@ const refused = [];
 let scanned = 0;
 let unscanned = 0;
 for (const file of files) {
-  if (UNSCANNED.some(([pattern]) => pattern.test(file))) { unscanned += 1; continue; }
+  if (UNSCANNED.some(([pattern]) => (pattern as any).test(file))) { unscanned += 1; continue; }
   if (offenders(file).length) refused.push(`${file}: the path itself`);
   const path = join(ROOT, file);
   if (!existsSync(path) || !statSync(path).isFile()) continue;   // deleted in the working tree

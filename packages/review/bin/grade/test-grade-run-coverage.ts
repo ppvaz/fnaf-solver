@@ -263,7 +263,7 @@ const scriptNames = (text) => {
   }
   return found;
 };
-const suitePath = join(ROOT, 'tools', 'test.mjs');
+const suitePath = join(ROOT, 'tools', 'test.ts');
 const ciPath = join(ROOT, '.github', 'workflows', 'ci.yml');
 const registered = scriptNames(readFileSync(suitePath, 'utf8'));
 // CI invokes gates as shell command lines rather than quoted strings.
@@ -276,7 +276,7 @@ for (const line of ci.split('\n')) {
 }
 // The third registry. CI's lanes are `npm run test:contracts` and
 // `npm run test:core`, so a gate whose only registration is a package.json
-// script command line IS run -- and reading only tools/test.mjs and ci.yml
+// script command line IS run -- and reading only tools/test.ts and ci.yml
 // reported eleven such gates as "a gate that nothing runs", including every
 // Companion gate and three of the calibration gates. A checker that knows
 // one of two registries measures the registry it knows, not the coverage.
@@ -295,13 +295,13 @@ for (const name of readdirSync(HERE).sort()) {
   if (!/\.(py|mjs|ts|sh)$/.test(name)) continue;
   if (name.startsWith('test-') || /\.test\.m?[jt]s$/.test(name)) {
     // This used to be `continue`, under the comment "suite gates, run by
-    // tools/test.mjs". That comment was an assumption, and it was false for
+    // tools/test.ts". That comment was an assumption, and it was false for
     // five files -- including two that four exclusions below named as their
     // justification. A gate nobody runs excusing a script from coverage is
     // the drawer problem wearing the uniform of the fix for it.
     if (!runs(name))
       complain(`${name} is a gate that nothing runs -- it is in none of ` +
-        'tools/test.mjs, package.json scripts, or .github/workflows/ci.yml. ' +
+        'tools/test.ts, package.json scripts, or .github/workflows/ci.yml. ' +
         'Register it, or delete it.');
     continue;
   }
@@ -332,7 +332,7 @@ for (const [name, reason] of [...EXCLUDED, ...SIBLING_EXCLUDED]) {
       complain(`${name} is excused because of ${gate}, which does not exist`);
     else if (!runs(gate))
       complain(`${name} is excused because of ${gate}, which nothing runs -- ` +
-        'register that gate in tools/test.mjs or ci.yml, or excuse this differently');
+        'register that gate in tools/test.ts or ci.yml, or excuse this differently');
   }
   if (!reason.trim())
     complain(`${name} is excluded with no reason at all -- an exclusion is a ` +
@@ -365,7 +365,7 @@ for (const dir of SIBLINGS) {
     if (name.startsWith('test-') || /\.test\.m?[jt]s$/.test(name)) {
       if (!runs(name))
         complain(`${rel} is a gate that nothing runs -- register it in ` +
-          'tools/test.mjs or .github/workflows/ci.yml, or delete it.');
+          'tools/test.ts or .github/workflows/ci.yml, or delete it.');
       continue;
     }
     if (referenced.has(key(rel))) continue;
@@ -379,7 +379,7 @@ for (const dir of TEST_DIRS) {
   if (!existsSync(path)) { complain(`${dir} is gone: the test scan has nothing to read`); continue; }
   for (const name of readdirSync(path).sort())
     if (/\.(py|mjs|ts|sh)$/.test(name) && (name.startsWith('test-') || dir.endsWith('/test')) && !runs(name))
-      complain(`${dir}/${name} is a gate that nothing runs -- register it in tools/test.mjs or ci.yml, or delete it.`);
+      complain(`${dir}/${name} is a gate that nothing runs -- register it in tools/test.ts or ci.yml, or delete it.`);
 }
 
 if (!failed) console.log(`grade-run.sh coverage: ${referenced.size} scripts invoked, ` +

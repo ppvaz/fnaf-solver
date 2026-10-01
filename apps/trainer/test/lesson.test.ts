@@ -2,7 +2,7 @@
 // the coach is currently cueing. Checks control gating, cueing, streaks and the
 // pass screen.
 import { spawn } from 'node:child_process';
-import { chromeBinary, chromeArgs } from '../../../tools/chrome.mjs';
+import { chromeBinary, chromeArgs } from '../../../tools/chrome.ts';
 import { mkdtempSync } from 'node:fs'; import { tmpdir } from 'node:os'; import { join } from 'node:path';
 
 const BASE = process.argv.find(arg => /^https?:\/\//.test(arg)) ||

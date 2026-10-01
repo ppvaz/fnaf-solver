@@ -1,4 +1,4 @@
-// tools/dump-text-check.mjs and its place in .githooks/commit-msg.
+// tools/dump-text-check.ts and its place in .githooks/commit-msg.
 //
 // Every fixture below is written for this test from the dumpers' grammar
 // (packages/source/decompile/EventTextDumper.cs, packages/source/decompile/aimap.py, packages/source/decompile/readdump.py)
@@ -10,7 +10,7 @@ import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { SIGNATURES, findDumpText, commitMessageBody, refusal } from './dump-text-check.mjs';
+import { SIGNATURES, findDumpText, commitMessageBody, refusal } from './dump-text-check.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const T = '\t';
@@ -63,7 +63,7 @@ const NEGATIVE = [
   'const ITEM = /^\\[(\\d+)\\]ot=(-?\\d+),num=(-?\\d+)/;',
   '| g618 | touch | mask == 0 |',
   'MODEL_ONLY, rebuilt-runtime fidelity. No default changed, no phone claim.',
-  // The hook's evidence reference, assembled so validate-references.js does
+  // The hook's evidence reference, assembled so validate-references.ts does
   // not read this fixture as a stable-ID citation.
   `${'EVIDENCE'}:docs/evidence/plan12-promotions-20260927.json`,
   'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>',
@@ -119,7 +119,7 @@ checks += 1;
 const repo = mkdtempSync(join(tmpdir(), 'dump-text-hook-'));
 try {
   execFileSync('git', ['init', '-q', repo]);
-  // The hook also refuses an identity outside GitHub's noreply form (tools/commit-identity.mjs).
+  // The hook also refuses an identity outside GitHub's noreply form (tools/commit-identity.ts).
   execFileSync('git', ['-C', repo, 'config', 'user.name', 'Hook Test']);
   execFileSync('git', ['-C', repo, 'config', 'user.email', 'hook-test@users.noreply.github.com']);
   const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => !name.startsWith('GIT_')));
@@ -135,7 +135,7 @@ try {
   assert.match(refused.stderr, /line 3 \[rendered-event\]/);
   const clean = run(`Subject\n\n${NEGATIVE.join('\n')}\n`);
   assert.equal(clean.status, 0, `hook refused prose: ${clean.stderr}`);
-  const cli = spawnSync(process.execPath, [join(ROOT, 'tools', 'dump-text-check.mjs'), join(repo, 'MSG')], { encoding: 'utf8' });
+  const cli = spawnSync(process.execPath, [join(ROOT, 'tools', 'dump-text-check.ts'), join(repo, 'MSG')], { encoding: 'utf8' });
   assert.equal(cli.status, 0, `CLI refused prose: ${cli.stderr}`);
   checks += 3;
 } finally {

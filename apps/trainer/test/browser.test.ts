@@ -1,7 +1,7 @@
 // Headless smoke test over the Chrome DevTools Protocol. No dependencies:
 // Node 22 ships a global WebSocket.
 import { spawn } from 'node:child_process';
-import { chromeBinary, chromeArgs } from '../../../tools/chrome.mjs';
+import { chromeBinary, chromeArgs } from '../../../tools/chrome.ts';
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';

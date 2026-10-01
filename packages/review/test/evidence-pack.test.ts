@@ -20,7 +20,7 @@ const put = (path, content) => { mkdirSync(join(root, path, '..'), { recursive: 
 try {
   const winner = { schema: 'winner-v1', strategy: 'minus-toys', knobs: { hallOffsetMs: 7400 } };
   put('packages/propose/bindings/fnaf2/campaign-night5-test-winner.json', JSON.stringify(winner));
-  // The generated register trackedWinners reads (tools/generate-catalog.js): this synthetic
+  // The generated register trackedWinners reads (tools/generate-catalog.ts): this synthetic
   // winner does not compile, so only its file hash identifies it.
   const registerRows = [{ file: 'packages/propose/bindings/fnaf2/campaign-night5-test-winner.json', sha256: sha256(JSON.stringify(winner)), compiledWinnerHash: null }];
   const writeRegister = () => put(WINNER_HASHES, JSON.stringify({ schema: 'winner-hashes-v1', winners: registerRows }));

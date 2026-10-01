@@ -34,7 +34,7 @@ and a vocabulary, and settled this plan's principles. What changes here:
   today and imports nothing; `@sixam/review` holds the evidence tools
   (moved from `tools/` in M5a) and the queries over them; `packages/source`
   (migration M6) will take the Source's code out of `core`. The dependency
-  rule below is ADR 0002's, enforced by `tools/architecture-test.js`.
+  rule below is ADR 0002's, enforced by `tools/architecture-test.ts`.
 
 The sections below keep their original text where it still holds and say where
 it does not; the work packages keep theirs, with a dated note where they name
@@ -325,7 +325,7 @@ kernel <- source <- play <- propose -> review -> source
   that edge closes when `tools/device` is sorted by context (migration M9).
 - `trainer` depends on source, the kernel and browser-local presentation only.
 
-`tools/architecture-test.js` enforces the rule over each module's syntax tree
+`tools/architecture-test.ts` enforces the rule over each module's syntax tree
 (the pinned `typescript` parser): static imports, re-exports, dynamic
 `import()`, `require()`, with planted violations that must be caught.
 
@@ -378,7 +378,7 @@ The important implementation findings are:
   `DEFAULT_CYCLE`, `SEARCH_KNOBS`, and exported `run` functions. Several
   experiments mutate shared knobs. Production concepts must move into
   libraries; tests may import production code, never the reverse.
-- `tools/test.mjs --engine`, described as the fast feedback lane, launched a
+- `tools/test.ts --engine`, described as the fast feedback lane, launched a
   very large concurrent group and had emitted no individual verdict after a
   measured 185 seconds when the reconnaissance run was stopped. Browser tests
   use fixed sleeps up to 58 seconds and grade real-time interactions under

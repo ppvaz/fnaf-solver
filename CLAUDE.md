@@ -19,7 +19,7 @@ kernel and source;
 `apps/desktop` is the one composition root (the device command line, the
 `fnaf-solver` MCP server and the lab verbs) and, with the trainer, a leaf;
 `@sixam/review` reads the evidence and never imports play, an application,
-propose or research (`tools/architecture-test.js`). There is no sandbox
+propose or research (`tools/architecture-test.ts`). There is no sandbox
 (ADR 0002 principle 7): claim-bearing cohorts and censuses are pre-registered,
 and diagnostic sweeps name the explanation they test. Production never
 imports tests, reports, mutable search knobs, DOM, shell, or device details
@@ -175,10 +175,10 @@ longer rebuilds.
 ## Quality gates and the method (Pedro, 2026-09-30)
 
 Executable, in `test:unit` or the commit hook: ambient entropy in replayable
-modules (`tools/architecture-test.js`), the 2,000-line ceiling, dead code,
+modules (`tools/architecture-test.ts`), the 2,000-line ceiling, dead code,
 copied code, TODOs without an owner, change locality (`Contexts:` line for
 three or more contexts), and a GitHub noreply author and committer address on
-every commit (`tools/commit-identity.mjs`, also at pre-push). The first four are ratchets over
+every commit (`tools/commit-identity.ts`, also at pre-push). The first four are ratchets over
 `tools/quality-baseline.json`: never add an entry to turn a gate green; add one
 only as `{count, why}` naming why the finding is accepted, and lower or remove
 entries as debt is paid.
@@ -285,7 +285,7 @@ Each entry below cost a wrong diagnosis or a wasted device run on 2026-09-11.
     systematic below five positive reads of that target.
 
 13. **A gate registered only in a lane CI does not run is not a gate.**
-    `test-grade-run-coverage.mjs` sat in `tools/test.mjs`'s ENGINE group, which
+    `test-grade-run-coverage.mjs` sat in `tools/test.ts`'s ENGINE group, which
     only `npm run test:legacy:engine` invokes and which CLAUDE.md itself
     describes as holding intentionally red controls. It had been failing on 11
     scripts, `phase-reconstruct.mjs` among them — which is exactly why two
@@ -302,7 +302,7 @@ Each entry below broke a gate, a test or a replay during the ADR 0002 moves.
     `"$HERE/x"`; a glob that then matched nothing (grade-run.sh's death-cause
     models); `readdirSync(HERE)` that then listed nothing, so two tests passed
     over zero winners; an import placed before its `sys.path` insert; a
-    regex-escaped path. `tools/test-sibling-paths.js` refuses the literal forms.
+    regex-escaped path. `tools/test-sibling-paths.ts` refuses the literal forms.
     A listing, a template or a string inside another language still has to be
     read, and a test that finds nothing to check must fail.
 

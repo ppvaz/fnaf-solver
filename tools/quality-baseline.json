@@ -2,12 +2,12 @@
   "schema": "quality-baseline-v1",
   "fileSize": {
     "recorded": "2026-09-30",
-    "why": "Source files already over the ceiling when tools/test-file-size.mjs landed; an entry only shrinks.",
+    "why": "Source files already over the ceiling when tools/test-file-size.ts landed; an entry only shrinks.",
     "entries": {}
   },
   "deadCode": {
     "recorded": "2026-09-30",
-    "why": "Orphan modules and unused exports in package and application src/ when tools/test-dead-code.mjs landed; an entry only shrinks.",
+    "why": "Orphan modules and unused exports in package and application src/ when tools/test-dead-code.ts landed; an entry only shrinks.",
     "entries": {
       "export:apps/trainer/src/arcade-lab.ts#ARCADE_PROGRESS_SCHEMA": 1,
       "export:apps/trainer/src/arcade-lab.ts#ARCADE_SET_SCHEMA": 1,
@@ -149,7 +149,7 @@
   },
   "duplication": {
     "recorded": "2026-09-30",
-    "why": "Pairs of files sharing a run of 6 or more normalised lines when tools/test-duplication.mjs landed; an entry only shrinks.",
+    "why": "Pairs of files sharing a run of 6 or more normalised lines when tools/test-duplication.ts landed; an entry only shrinks.",
     "entries": {
       "clone:apps/desktop/bin/fnaf1-custom-run.ts <> packages/play/games/fnaf3/fnaf3-run.ts": 6,
       "clone:apps/desktop/bin/fnaf1-custom-run.ts <> packages/play/games/fnaf4/fnaf4-run.ts": 12,

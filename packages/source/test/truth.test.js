@@ -1,7 +1,7 @@
 // truth.* (Plan 28 step 5) over a synthetic dump: the parse, the handle scramble K, the events and
 // object queries, the refusals, and decode through a stand-in decoder. Every fixture is synthetic
 // (fixtures/truth-dump.mjs); no answer carries a line of the dump; and every tracked truth file
-// passes tools/dump-text-check.mjs, which does catch the text the fixture generates.
+// passes tools/dump-text-check.ts, which does catch the text the fixture generates.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -201,7 +201,7 @@ try {
   checks += 1;
 
   // --- the dump-text check: tracked files pass it, the generated text does not --------------------
-  const check = file => spawnSync(process.execPath, [join(ROOT, 'tools/dump-text-check.mjs'), file], { encoding: 'utf8' });
+  const check = file => spawnSync(process.execPath, [join(ROOT, 'tools/dump-text-check.ts'), file], { encoding: 'utf8' });
   const tracked = ['packages/source/src/truth/dump.ts', 'packages/source/src/truth/engine.ts', 'packages/source/src/truth/handles.ts',
     'packages/source/src/truth/query.ts', 'packages/source/src/truth/index.ts', 'packages/source/decompile/truth.mjs',
     'packages/source/test/truth.test.js', 'packages/source/test/fixtures/truth-dump.mjs', 'packages/source/test/fixtures/truth-decoder-stub.mjs'];

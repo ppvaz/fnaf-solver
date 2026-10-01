@@ -54,12 +54,12 @@
     },
     {
       "id": "test:unit",
-      "command": "node tools/architecture-test.js && node tools/validate-references.js && node tools/test-mistake-register.mjs && node tools/test-dump-text-check.mjs && node tools/test-commit-identity.mjs && node tools/test-media.mjs && node packages/propose/bin/recompile/test-schedule-replay.mjs && node packages/propose/bin/recompile/test-phone-encounter-replay.mjs && node packages/propose/bin/recompile/test-phone-stream-census.mjs && node packages/propose/bin/recompile/test-phone-early-perturbation.mjs && node packages/propose/bin/recompile/test-phone-static-readout.mjs && node packages/propose/bin/recompile/test-phone-clock-sweep.mjs && node packages/propose/bin/recompile/test-hour-grid-fit.mjs && node packages/propose/bin/recompile/test-phone-input-bracket-sweep.mjs && python3 packages/review/bin/recompile/test-phone-input-ledger.py && node packages/propose/test/policyequivalencetest.mjs && node packages/propose/test/test-seam-slack.mjs && node packages/propose/test/test-schedule-economy.mjs && node packages/propose/bindings/test-anchor-aim-band.mjs && node packages/propose/test/test-encounter-fidelity.mjs && node packages/propose/bin/census/test-winner-census.mjs && node packages/propose/bin/recompile/test-rebuild-options-census.mjs && node apps/desktop/test/night.test.ts && node packages/propose/bindings/test-fact-register.mjs && node apps/desktop/test/test-fnaf1-winner.ts && python3 packages/source/decompile/test-instances.py && python3 packages/source/decompile/test-nightmap.py && node packages/source/test/test-night-models.mjs && python3 packages/play/games/fnaf1/test-fnaf1-menus.py && python3 packages/play/games/fnaf1/test-fnaf1-door-light.py && python3 packages/play/games/fnaf1/test-fnaf1-title-stars.py && python3 packages/play/bin/audio/test-bt-audio-collector.py && python3 packages/play/games/fnaf1/test-fnaf1-teach-overlay.py && python3 packages/play/src/sensors/screencap/test-sensor.py && node packages/propose/bin/census/test-fnaf1-device-lane.mjs && node packages/propose/bin/census/test-fnaf1-population-checkpoints.mjs && node apps/desktop/test/test-native-regions.ts && node packages/propose/bin/census/test-fnaf4-census.mjs && npm run test:chronicle && node apps/desktop/test/test-evidence-cli.ts && node tools/test-push-gate.mjs && python3 apps/trainer/test/serve_test.py && node apps/desktop/test/probe.test.ts && node tools/test-no-serial.mjs && node tools/test-companion-name.mjs && node tools/test-sibling-paths.js && python3 packages/review/bin/recompile/test-audio-records.py && node packages/propose/bin/recompile/pilot/test-pilot.mjs && node packages/propose/bin/recompile/test-calib-replay.mjs && node apps/desktop/test/lab.test.ts && node tools/test-file-size.mjs && node tools/test-todo-refs.mjs && node tools/test-dead-code.mjs && node tools/test-duplication.mjs && node tools/test-change-locality.mjs && node tools/test-ts-migrate.mjs && node packages/propose/test/policy-game.test.js && node packages/propose/test/mechanic-constraints.test.js && node packages/propose/bin/census/test-policy-census.mjs && node packages/review/bin/grade/test-grade-run-coverage.ts && node packages/review/bin/recompile/test-compare-draw-trace.ts && node packages/review/bin/recompile/test-child-diagnosis.ts && node packages/review/bin/grade/test-static-terminal-window.ts && node packages/review/bin/grade/test-post-night-static.ts && node packages/review/test/evidence-campaign.test.ts && node packages/review/test/evidence-pack.test.ts && node packages/review/test/evidence-cohort.test.ts && node packages/review/test/evidence-promotion.test.ts && node packages/kernel/test/kernel.test.ts && node packages/review/test/pack-lift.test.ts && node packages/review/test/promotions-query.test.ts && node packages/review/test/refusals.test.ts && node packages/review/test/solver.test.ts && node packages/review/test/lab-queries.test.ts && node packages/review/test/run-audit.test.ts && node packages/play/bin/phone/test-control-anchor.ts && node packages/play/bin/probe/seedpin/test-seedpin.ts && node packages/play/bin/phone/test-night-run-dry.ts && node packages/play/bin/phone/test-event-clocks.ts && node packages/play/games/fnaf1/test-fnaf1-menu-probe.ts && node packages/play/games/fnaf1/test-fnaf1-night-run.ts && node packages/play/games/fnaf3/test-fnaf3-run.ts && node packages/play/games/fnaf4/test-fnaf4-fredbear.ts && node packages/play/bin/companion/test-audio-players.ts && node packages/play/bin/recompile/test-practice-audit.ts && node packages/play/bin/recompile/test-rebuild-night.ts",
+      "command": "node tools/architecture-test.ts && node tools/validate-references.ts && node tools/test-mistake-register.ts && node tools/test-dump-text-check.ts && node tools/test-commit-identity.ts && node tools/test-media.ts && node packages/propose/bin/recompile/test-schedule-replay.mjs && node packages/propose/bin/recompile/test-phone-encounter-replay.mjs && node packages/propose/bin/recompile/test-phone-stream-census.mjs && node packages/propose/bin/recompile/test-phone-early-perturbation.mjs && node packages/propose/bin/recompile/test-phone-static-readout.mjs && node packages/propose/bin/recompile/test-phone-clock-sweep.mjs && node packages/propose/bin/recompile/test-hour-grid-fit.mjs && node packages/propose/bin/recompile/test-phone-input-bracket-sweep.mjs && python3 packages/review/bin/recompile/test-phone-input-ledger.py && node packages/propose/test/policyequivalencetest.mjs && node packages/propose/test/test-seam-slack.mjs && node packages/propose/test/test-schedule-economy.mjs && node packages/propose/bindings/test-anchor-aim-band.mjs && node packages/propose/test/test-encounter-fidelity.mjs && node packages/propose/bin/census/test-winner-census.mjs && node packages/propose/bin/recompile/test-rebuild-options-census.mjs && node apps/desktop/test/night.test.ts && node packages/propose/bindings/test-fact-register.mjs && node apps/desktop/test/test-fnaf1-winner.ts && python3 packages/source/decompile/test-instances.py && python3 packages/source/decompile/test-nightmap.py && node packages/source/test/test-night-models.mjs && python3 packages/play/games/fnaf1/test-fnaf1-menus.py && python3 packages/play/games/fnaf1/test-fnaf1-door-light.py && python3 packages/play/games/fnaf1/test-fnaf1-title-stars.py && python3 packages/play/bin/audio/test-bt-audio-collector.py && python3 packages/play/games/fnaf1/test-fnaf1-teach-overlay.py && python3 packages/play/src/sensors/screencap/test-sensor.py && node packages/propose/bin/census/test-fnaf1-device-lane.mjs && node packages/propose/bin/census/test-fnaf1-population-checkpoints.mjs && node apps/desktop/test/test-native-regions.ts && node packages/propose/bin/census/test-fnaf4-census.mjs && npm run test:chronicle && node apps/desktop/test/test-evidence-cli.ts && node tools/test-push-gate.ts && python3 apps/trainer/test/serve_test.py && node apps/desktop/test/probe.test.ts && node tools/test-no-serial.ts && node tools/test-companion-name.ts && node tools/test-sibling-paths.ts && python3 packages/review/bin/recompile/test-audio-records.py && node packages/propose/bin/recompile/pilot/test-pilot.mjs && node packages/propose/bin/recompile/test-calib-replay.mjs && node apps/desktop/test/lab.test.ts && node tools/test-file-size.ts && node tools/test-todo-refs.ts && node tools/test-dead-code.ts && node tools/test-duplication.ts && node tools/test-change-locality.ts && node tools/test-ts-migrate.ts && node packages/propose/test/policy-game.test.js && node packages/propose/test/mechanic-constraints.test.js && node packages/propose/bin/census/test-policy-census.mjs && node packages/review/bin/grade/test-grade-run-coverage.ts && node packages/review/bin/recompile/test-compare-draw-trace.ts && node packages/review/bin/recompile/test-child-diagnosis.ts && node packages/review/bin/grade/test-static-terminal-window.ts && node packages/review/bin/grade/test-post-night-static.ts && node packages/review/test/evidence-campaign.test.ts && node packages/review/test/evidence-pack.test.ts && node packages/review/test/evidence-cohort.test.ts && node packages/review/test/evidence-promotion.test.ts && node packages/kernel/test/kernel.test.ts && node packages/review/test/pack-lift.test.ts && node packages/review/test/promotions-query.test.ts && node packages/review/test/refusals.test.ts && node packages/review/test/solver.test.ts && node packages/review/test/lab-queries.test.ts && node packages/review/test/run-audit.test.ts && node packages/play/bin/phone/test-control-anchor.ts && node packages/play/bin/probe/seedpin/test-seedpin.ts && node packages/play/bin/phone/test-night-run-dry.ts && node packages/play/bin/phone/test-event-clocks.ts && node packages/play/games/fnaf1/test-fnaf1-menu-probe.ts && node packages/play/games/fnaf1/test-fnaf1-night-run.ts && node packages/play/games/fnaf3/test-fnaf3-run.ts && node packages/play/games/fnaf4/test-fnaf4-fredbear.ts && node packages/play/bin/companion/test-audio-players.ts && node packages/play/bin/recompile/test-practice-audit.ts && node packages/play/bin/recompile/test-rebuild-night.ts",
       "lifecycle": "supported"
     },
     {
       "id": "test:unit:slow",
-      "command": "node packages/propose/bin/plans/test-night7-presets.mjs && node packages/propose/bin/census/test-fnaf1-census.mjs && python3 apps/lab/test/test-overnight-window.py && node packages/propose/bin/census/test-fnaf3-census.mjs && python3 apps/lab/test/test-night-job.py && node tools/test.mjs --gates && python3 packages/play/bin/audio/test-fnaf4-cues.py && node packages/propose/test/test-winners-rebuild.mjs",
+      "command": "node packages/propose/bin/plans/test-night7-presets.mjs && node packages/propose/bin/census/test-fnaf1-census.mjs && python3 apps/lab/test/test-overnight-window.py && node packages/propose/bin/census/test-fnaf3-census.mjs && python3 apps/lab/test/test-night-job.py && node tools/test.ts --gates && python3 packages/play/bin/audio/test-fnaf4-cues.py && node packages/propose/test/test-winners-rebuild.mjs",
       "lifecycle": "supported"
     },
     {
@@ -74,27 +74,27 @@
     },
     {
       "id": "test:legacy:engine",
-      "command": "node tools/test.mjs --engine",
+      "command": "node tools/test.ts --engine",
       "lifecycle": "legacy"
     },
     {
       "id": "test:affected",
-      "command": "node tools/affected-test.js",
+      "command": "node tools/affected-test.ts",
       "lifecycle": "supported"
     },
     {
       "id": "test:simulation",
-      "command": "node tools/test.mjs --engine --extended",
+      "command": "node tools/test.ts --engine --extended",
       "lifecycle": "supported"
     },
     {
       "id": "test:trainer",
-      "command": "node tools/test.mjs --browser",
+      "command": "node tools/test.ts --browser",
       "lifecycle": "supported"
     },
     {
       "id": "test:browser:realtime",
-      "command": "node tools/test.mjs --browser",
+      "command": "node tools/test.ts --browser",
       "lifecycle": "supported"
     },
     {
@@ -159,17 +159,17 @@
     },
     {
       "id": "catalog",
-      "command": "node tools/generate-catalog.js",
+      "command": "node tools/generate-catalog.ts",
       "lifecycle": "supported"
     },
     {
       "id": "push-gate",
-      "command": "node tools/push-gate.mjs",
+      "command": "node tools/push-gate.ts",
       "lifecycle": "supported"
     },
     {
       "id": "test:retrieval",
-      "command": "node tools/retrieval-benchmark.mjs",
+      "command": "node tools/retrieval-benchmark.ts",
       "lifecycle": "supported"
     },
     {
@@ -215,104 +215,116 @@
   ],
   "tools": [
     {
-      "id": "tools/test.mjs",
-      "invocation": "tools/test.mjs",
+      "id": "tools/test.ts",
+      "invocation": "tools/test.ts",
       "kind": "check runner",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/push-gate.mjs",
-      "invocation": "tools/push-gate.mjs",
+      "id": "tools/push-gate.ts",
+      "invocation": "tools/push-gate.ts",
       "kind": "check",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/test-push-gate.mjs",
-      "invocation": "tools/test-push-gate.mjs",
+      "id": "tools/test-push-gate.ts",
+      "invocation": "tools/test-push-gate.ts",
       "kind": "check",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/chrome.mjs",
-      "invocation": "tools/chrome.mjs",
+      "id": "tools/chrome.ts",
+      "invocation": "tools/chrome.ts",
       "kind": "internal module",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/architecture-test.js",
-      "invocation": "tools/architecture-test.js",
+      "id": "tools/architecture-test.ts",
+      "invocation": "tools/architecture-test.ts",
       "kind": "check",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/generate-catalog.js",
-      "invocation": "tools/generate-catalog.js",
+      "id": "tools/affected-test.ts",
+      "invocation": "tools/affected-test.ts [--files] [PATH...]",
+      "kind": "check runner",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "tools/validate-references.ts",
+      "invocation": "tools/validate-references.ts",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "tools/generate-catalog.ts",
+      "invocation": "tools/generate-catalog.ts",
       "kind": "generator",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/ts-migrate.mjs",
-      "invocation": "tools/ts-migrate.mjs DIR [--dry]",
+      "id": "tools/ts-migrate.ts",
+      "invocation": "tools/ts-migrate.ts DIR [--dry]",
       "kind": "migration",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/test-ts-migrate.mjs",
-      "invocation": "tools/test-ts-migrate.mjs",
+      "id": "tools/test-ts-migrate.ts",
+      "invocation": "tools/test-ts-migrate.ts",
       "kind": "check",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/test-docs.mjs",
-      "invocation": "tools/test-docs.mjs",
+      "id": "tools/test-docs.ts",
+      "invocation": "tools/test-docs.ts",
       "kind": "check",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/test-companion-name.mjs",
-      "invocation": "tools/test-companion-name.mjs",
+      "id": "tools/test-companion-name.ts",
+      "invocation": "tools/test-companion-name.ts",
       "kind": "check",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/test-no-serial.mjs",
-      "invocation": "tools/test-no-serial.mjs",
+      "id": "tools/test-no-serial.ts",
+      "invocation": "tools/test-no-serial.ts",
       "kind": "check",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/test-sibling-paths.js",
-      "invocation": "tools/test-sibling-paths.js",
+      "id": "tools/test-sibling-paths.ts",
+      "invocation": "tools/test-sibling-paths.ts",
       "kind": "check",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/test-mistake-register.mjs",
-      "invocation": "tools/test-mistake-register.mjs [--explain]",
+      "id": "tools/test-mistake-register.ts",
+      "invocation": "tools/test-mistake-register.ts [--explain]",
       "kind": "check",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/dump-text-check.mjs",
-      "invocation": "tools/dump-text-check.mjs MSGFILE \\| --log N",
+      "id": "tools/dump-text-check.ts",
+      "invocation": "tools/dump-text-check.ts MSGFILE \\| --log N",
       "kind": "check",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/test-dump-text-check.mjs",
-      "invocation": "tools/test-dump-text-check.mjs",
+      "id": "tools/test-dump-text-check.ts",
+      "invocation": "tools/test-dump-text-check.ts",
       "kind": "check",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/commit-identity.mjs",
-      "invocation": "tools/commit-identity.mjs --hook \\| --push \\| --history [REV]",
+      "id": "tools/commit-identity.ts",
+      "invocation": "tools/commit-identity.ts --hook \\| --push \\| --history [REV]",
       "kind": "check",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/test-commit-identity.mjs",
-      "invocation": "tools/test-commit-identity.mjs",
+      "id": "tools/test-commit-identity.ts",
+      "invocation": "tools/test-commit-identity.ts",
       "kind": "check",
       "lifecycle": "supported"
     },
@@ -323,14 +335,14 @@
       "lifecycle": "supported"
     },
     {
-      "id": "tools/test-media.mjs",
-      "invocation": "tools/test-media.mjs",
+      "id": "tools/test-media.ts",
+      "invocation": "tools/test-media.ts",
       "kind": "check",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/gate-kit.mjs",
-      "invocation": "tools/gate-kit.mjs",
+      "id": "tools/gate-kit.ts",
+      "invocation": "tools/gate-kit.ts",
       "kind": "internal module",
       "lifecycle": "supported"
     },
@@ -341,44 +353,44 @@
       "lifecycle": "supported"
     },
     {
-      "id": "tools/test-file-size.mjs",
-      "invocation": "tools/test-file-size.mjs",
+      "id": "tools/test-file-size.ts",
+      "invocation": "tools/test-file-size.ts",
       "kind": "check",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/test-todo-refs.mjs",
-      "invocation": "tools/test-todo-refs.mjs",
+      "id": "tools/test-todo-refs.ts",
+      "invocation": "tools/test-todo-refs.ts",
       "kind": "check",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/test-dead-code.mjs",
-      "invocation": "tools/test-dead-code.mjs [--list]",
+      "id": "tools/test-dead-code.ts",
+      "invocation": "tools/test-dead-code.ts [--list]",
       "kind": "check",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/test-duplication.mjs",
-      "invocation": "tools/test-duplication.mjs [--list]",
+      "id": "tools/test-duplication.ts",
+      "invocation": "tools/test-duplication.ts [--list]",
       "kind": "check",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/change-locality.mjs",
-      "invocation": "tools/change-locality.mjs MSGFILE",
+      "id": "tools/change-locality.ts",
+      "invocation": "tools/change-locality.ts MSGFILE",
       "kind": "check",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/test-change-locality.mjs",
-      "invocation": "tools/test-change-locality.mjs",
+      "id": "tools/test-change-locality.ts",
+      "invocation": "tools/test-change-locality.ts",
       "kind": "check",
       "lifecycle": "supported"
     },
     {
-      "id": "tools/retrieval-benchmark.mjs",
-      "invocation": "tools/retrieval-benchmark.mjs",
+      "id": "tools/retrieval-benchmark.ts",
+      "invocation": "tools/retrieval-benchmark.ts",
       "kind": "check",
       "lifecycle": "supported"
     },

@@ -1,7 +1,7 @@
 // The Sim observer draws its noise only from the generator the caller passes.
 // Until 2026-09-30 an observer with a rate above zero and no generator fell
 // back to Math.random() in silence, so one seed could give two nights; now the
-// constructor refuses it, and tools/architecture-test.js tolerates no ambient
+// constructor refuses it, and tools/architecture-test.ts tolerates no ambient
 // draw in the observer.
 import assert from 'node:assert/strict';
 import { Rng, Sim } from '@sixam/source/fnaf2';

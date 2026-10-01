@@ -246,5 +246,5 @@ Minus 7 is **not** archived: Pedro means to bring it back as a second
 device-bot strategy (2026-09-24). `tools/minus7/`, `tools/model/`,
 `packages/propose/parked/minus7/cyclesearch.mjs`, `packages/propose/parked/minus7/constrainedsearch.mjs`, `packages/propose/parked/minus7/flicksweep.mjs`
 and `packages/propose/parked/minus7/phase-tolerance.mjs` stay, and the engine checks the current model
-fails on it are named in `BACKLOG` in [`../tools/test.mjs`](../tools/test.mjs)
+fails on it are named in `BACKLOG` in [`../tools/test.ts`](../tools/test.ts)
 as the recovery list.

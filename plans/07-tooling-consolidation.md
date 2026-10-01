@@ -68,7 +68,7 @@ from serial-by-default browser checks and documents `--parallel` as the opt-in.
 
 The README said browser checks run concurrently. The canonical runner executes
 them serially by default because real-time grading becomes unreliable under
-contention; only `--parallel` opts in. Keep `tools/test.mjs` authoritative and
+contention; only `--parallel` opts in. Keep `tools/test.ts` authoritative and
 make the README describe that behavior.
 
 ### 3. Bring device-visual documentation up to current evidence

@@ -299,7 +299,7 @@ Measured windows, 1000 ordinary and 300 pinned-worst nights per offset, min box
 | 120 ms | 340 ms | 900 ms | **12 frames (200 ms)**, offsets 5-16 |
 
 So the blocker for a Night 6 device clear is now named and singular: **the
-camera actuator's inter-selection spacing**. `tools/test.mjs --engine` keeps
+camera actuator's inter-selection spacing**. `tools/test.ts --engine` keeps
 both rejections (`hidpilot n6 device reject`, `hidpilot n6 pulse reject`) and
 both 160 ms survivals so neither half can drift.
 

@@ -49,7 +49,7 @@ export const LANES = [
   { name: 'Clean-checkout model lane', run: 'npm run test:core' },
   { name: 'Trainer build', run: 'npm run build:trainer' },
   { name: 'Campaign dry-run over a committed winner', run: 'd=$(mktemp -d) && trap \'rm -rf "$d"\' EXIT && npm run --silent device:emit -- --winner packages/propose/bindings/fnaf2/campaign-night7-k3-winner.json --out "$d/k3" && npm run --silent device:campaign -- --bundle "$d/k3" --nights 7 --profile hid-mediaprojection' },
-  { name: 'Documentation and catalog links', run: 'npm run catalog && npm run chronicle && git diff --exit-code -- docs/architecture/generated docs/portal && node tools/test-docs.mjs' },
+  { name: 'Documentation and catalog links', run: 'npm run catalog && npm run chronicle && git diff --exit-code -- docs/architecture/generated docs/portal && node tools/test-docs.ts' },
   { name: 'ShellCheck critical diagnostics', needs: 'docker', multiline: true },
   { name: 'Shell footgun regressions', run: 'packages/play/bin/phone/test-shell-footguns.sh' },
   { name: 'Companion query (mock ADB)', run: 'packages/play/bin/companion/test-query-companion.sh' },
@@ -182,8 +182,7 @@ function ciPythonEnv(dir) {
 // real repository -- core.bare=true, which stopped every checkout of it from
 // working as one -- and its `commit -m root` landed on the pushing worktree's
 // branch. A lane gets CI's environment: no GIT_* variables.
-/** @param {NodeJS.ProcessEnv} env */
-function withoutGit(env) {
+function withoutGit(env: NodeJS.ProcessEnv) {
   return Object.fromEntries(Object.entries(env).filter(([name]) => !name.startsWith('GIT_')));
 }
 
@@ -203,15 +202,12 @@ const MEMORY_MAX = process.env.PUSH_GATE_MEMORY_MAX || DEFAULT_MEMORY_MAX;
 const SCOPED = MEMORY_MAX !== 'off'
   && spawnSync('systemd-run', ['--user', '--scope', '-q', '--', 'true'], { stdio: 'ignore' }).status === 0;
 
-/** @param {string} text */
-const shellQuote = text => `'${text.replace(/'/g, `'\\''`)}'`;
+const shellQuote = (text: string) => `'${text.replace(/'/g, `'\\''`)}'`;
 
 /**
  * The shell command that runs `command` under the lane memory ceiling.
- * @param {string} command
- * @param {{ memoryMax?: string, scoped?: boolean }} [options]
  */
-export function laneCommand(command, { memoryMax = MEMORY_MAX, scoped = SCOPED } = {}) {
+export function laneCommand(command: string, { memoryMax = MEMORY_MAX, scoped = SCOPED }: { memoryMax?: string, scoped?: boolean } = {}) {
   if (!scoped || memoryMax === 'off') return command;
   return `systemd-run --user --scope -q -p MemoryMax=${memoryMax} -p MemorySwapMax=4G -- sh -c ${shellQuote(command)}`;
 }
@@ -327,7 +323,7 @@ function validate(sha, subject) {
     if (drift.length) {
       console.log('  FAIL push-gate is out of step with .github/workflows/ci.yml:');
       for (const item of drift) console.log(`      ${item}`);
-      console.log('      Update LANES in tools/push-gate.mjs, or the gate no longer checks what CI checks.');
+      console.log('      Update LANES in tools/push-gate.ts, or the gate no longer checks what CI checks.');
       return { failed: ['push-gate is out of step with ci.yml'], skipped: [] };
     }
     SCRIPTS = JSON.parse(readFileSync(join(worktree, 'package.json'), 'utf8')).scripts;
@@ -385,9 +381,9 @@ function validate(sha, subject) {
 /**
  * What reproduces a lane on this machine: the ci.yml step text itself, which
  * is what LANES holds, or for the ShellCheck lane the step's `run: |` block.
- * @param {string} name a lane name, or the drift failure's
+ * @param name a lane name, or the drift failure's
  */
-export function reproduceCommand(name) {
+export function reproduceCommand(name: string) {
   const lane = LANES.find(item => item.name === name);
   if (!lane) return null;
   return lane.multiline ? `the \`run: |\` script of the "${lane.name}" step in .github/workflows/ci.yml (needs docker)` : lane.run;
@@ -398,16 +394,14 @@ export function reproduceCommand(name) {
  * reproduces it, then how to re-run the whole gate on that commit. A red lane
  * is fixed, never sent past the hook: CLAUDE.md forbids bypassing a hook, so
  * no line here offers one.
- * @param {{sha: string, name: string}[]} broken
- * @returns {string[]}
  */
-export function failureReport(broken) {
+export function failureReport(broken: {sha: string, name: string}[]): string[] {
   const lines = ['', 'push-gate: these lanes would fail on GitHub:'];
   for (const { sha, name } of broken) {
     lines.push(`  ${sha.slice(0, 7)} ${name}`);
     const command = reproduceCommand(name);
     lines.push(command ? `      reproduce: ${command}`
-      : `      reproduce: npm run push-gate -- ${sha.slice(0, 7)} (update LANES in tools/push-gate.mjs to match ci.yml)`);
+      : `      reproduce: npm run push-gate -- ${sha.slice(0, 7)} (update LANES in tools/push-gate.ts to match ci.yml)`);
   }
   const shas = [...new Set(broken.map(item => item.sha.slice(0, 7)))];
   lines.push(`Fix them and commit again. \`npm run push-gate -- ${shas.join(' ')}\` re-runs every lane in a clean checkout of `
@@ -425,17 +419,14 @@ export function failureReport(broken) {
 // changes the verdict.
 export const RUN_RECORD_SCHEMA = 'push-gate-run-v1';
 
-/** @param {NodeJS.ProcessEnv} [env] @param {string} [root] */
-export function runRecordPath(env = process.env, root = ROOT) {
+export function runRecordPath(env: NodeJS.ProcessEnv = process.env, root: string = ROOT) {
   return env.FNAF_LAB_DIR ? join(resolve(env.FNAF_LAB_DIR), 'push-gate.jsonl') : join(mainCheckout(root), 'artifacts/lab/push-gate.jsonl');
 }
 
 /**
  * Append one validated commit's verdict.
- * @param {{sha: string, full: boolean, failed: string[], skipped: string[], at?: Date}} run
- * @param {string} [path]
  */
-export function recordRun({ sha, full, failed, skipped, at = new Date() }, path = runRecordPath()) {
+export function recordRun({ sha, full, failed, skipped, at = new Date() }: {sha: string, full: boolean, failed: string[], skipped: string[], at?: Date}, path: string = runRecordPath()) {
   mkdirSync(dirname(path), { recursive: true });
   appendFileSync(path, `${JSON.stringify({ schema: RUN_RECORD_SCHEMA, sha, full, failed, skipped, at: at.toISOString(), host: hostname() })}\n`);
   return path;
@@ -457,7 +448,7 @@ function commitsFromStdin() {
 
 const FULL = process.argv.includes('--full');
 // Run as a program (the pre-push hook, `npm run push-gate`); importing the
-// module -- tools/test-push-gate.mjs reads failureReport -- runs nothing.
+// module -- tools/test-push-gate.ts reads failureReport -- runs nothing.
 const invoked = process.argv[1] && realpathSync(resolve(process.argv[1])) === realpathSync(fileURLToPath(import.meta.url));
 
 if (invoked) {

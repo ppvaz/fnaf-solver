@@ -45,7 +45,7 @@ export function parseIdent(ident) {
   return m ? { name: m[1], email: m[2] } : null;
 }
 
-const git = (args, cwd) => execFileSync('git', args, { cwd, encoding: 'utf8', maxBuffer: 1 << 28 });
+const git = (args, cwd?) => execFileSync('git', args, { cwd, encoding: 'utf8', maxBuffer: 1 << 28 });
 
 // Every commit `git log REVS` lists, with the roles whose address is refused:
 // { checked, offenders: [{ sha, subject, role, ident }] }. LEGACY commits pass.
@@ -121,7 +121,7 @@ function main(argv) {
     console.log(`commit identity: ${checked} commits from ${rev || 'HEAD'} carry noreply addresses (${LEGACY.size} legacy t <t@t> excepted)`);
     return 0;
   }
-  console.error('usage: commit-identity.mjs --hook | --push (ref lines on stdin) | --history [REV]');
+  console.error('usage: commit-identity.ts --hook | --push (ref lines on stdin) | --history [REV]');
   return 2;
 }
 

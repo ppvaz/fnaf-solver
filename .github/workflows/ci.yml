@@ -57,7 +57,7 @@ jobs:
       - name: Campaign dry-run over a committed winner
         run: d=$(mktemp -d) && trap 'rm -rf "$d"' EXIT && npm run --silent device:emit -- --winner packages/propose/bindings/fnaf2/campaign-night7-k3-winner.json --out "$d/k3" && npm run --silent device:campaign -- --bundle "$d/k3" --nights 7 --profile hid-mediaprojection
       - name: Documentation and catalog links
-        run: npm run catalog && npm run chronicle && git diff --exit-code -- docs/architecture/generated docs/portal && node tools/test-docs.mjs
+        run: npm run catalog && npm run chronicle && git diff --exit-code -- docs/architecture/generated docs/portal && node tools/test-docs.ts
       # The repository has sourced mksh fragments as well as executable bash
       # scripts. ShellCheck's critical tier catches unknown shell context and
       # parse/expansion errors without pretending the existing warning backlog

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Holds tools/ts-migrate.mjs to what the kernel, Source and Play migrations
+// Holds tools/ts-migrate.ts to what the kernel, Source and Play migrations
 // needed, each on a planted fixture in a throwaway repository: every case here
 // once came out wrong. The migrated fixture must typecheck at the strictness
 // JavaScript had (strict off) and run under Node's type stripping with the
@@ -13,7 +13,7 @@
 //   - a parameter a call leaves out is optional, an open literal read is any,
 //     and a promise resolved with nothing is Promise<void>.
 //
-//   node tools/test-ts-migrate.mjs
+//   node tools/test-ts-migrate.ts
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync, mkdirSync } from 'node:fs';
@@ -22,7 +22,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const TOOL = join(ROOT, 'tools/ts-migrate.mjs');
+const TOOL = join(ROOT, 'tools/ts-migrate.ts');
 const TSC = join(ROOT, 'node_modules/typescript/bin/tsc');
 const repo = mkdtempSync(join(tmpdir(), 'ts-migrate-'));
 const git = (...args) => execFileSync('git', args, { cwd: repo, encoding: 'utf8' });

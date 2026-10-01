@@ -798,7 +798,7 @@ inside an editor-disabled folder. The nine second-pass clusters resolved to:
 one real gap (the blackout lockout, §8), one wrong constant (`MASK_ANIM_OFF`),
 five inert/implemented, two dead code.
 
-`sourcetest.mjs` runs first in `node tools/test.mjs --engine`, one case per
+`sourcetest.mjs` runs first in `node tools/test.ts --engine`, one case per
 group citation (currently ≈130 cases), and names the failing group rather than
 the symptom. **When a row in this file changes, its owning document and its
 `sourcetest` case change in the same commit** — otherwise the row is

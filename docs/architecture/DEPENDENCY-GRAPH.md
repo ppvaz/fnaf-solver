@@ -40,7 +40,7 @@ an arrow points at what a package imports; review never imports play or propose
   `winner-hashes.json`, not from compiling a winner (compiling is Propose's).
 - **trainer** uses source and the kernel, and holds its own training records.
 
-`tools/architecture-test.js` enforces every rule above over each module's
+`tools/architecture-test.ts` enforces every rule above over each module's
 syntax tree (the pinned `typescript` parser), with planted violations -- a
 dynamic `import()`, an aliased re-export, a `require()`, play or review
 importing propose -- that must be caught before it reads the tree. The runtime package and the

@@ -6,19 +6,18 @@
 // had none on 2026-09-30, so there is no baseline: the first unreferenced
 // marker fails.
 //
-//   node tools/test-todo-refs.mjs     exit 0 clean, 1 naming file and line
+//   node tools/test-todo-refs.ts     exit 0 clean, 1 naming file and line
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { ROOT, repoFiles, report } from './gate-kit.mjs';
+import { ROOT, repoFiles, report } from './gate-kit.ts';
 
 const SOURCE = /\.(?:js|mjs|cjs|ts|mts|py|java|kt|sh|c|cc|cpp|h|hpp|cs|html|css|yml|yaml)$/;
 // A comment that carries a marker: `//`, `#`, `/*`, a block comment's `*`, or `<!--`.
 const MARKER = /(?:\/\/|#|\/\*|^\s*\*|<!--).*?\b(TODO|FIXME|XXX|HACK)\b(.*)$/;
 const REFERENCE = /^\s*\((?:Plan \d+|S[1-7][a-z]?|ADR \d{4}|#\d+)\)/;
 
-/** @param {string} path @param {string} text */
-export function unreferenced(path, text) {
+export function unreferenced(path: string, text: string) {
   const found = [];
   text.split('\n').forEach((line, index) => {
     const match = line.match(MARKER);
@@ -35,6 +34,6 @@ assert.deepEqual(unreferenced('a.js', '// TODO(S4) move the scheduler\n// FIXME(
 assert.deepEqual(unreferenced('a.js', "const serial = 'XXXX'; // a placeholder\nconst todo = [];"), [],
   'a marker outside a comment and a word that contains one are not markers');
 
-const files = repoFiles().filter(path => SOURCE.test(path) && path !== 'tools/test-todo-refs.mjs');
+const files = repoFiles().filter(path => SOURCE.test(path) && path !== 'tools/test-todo-refs.ts');
 const failures = files.flatMap(path => unreferenced(path, readFileSync(join(ROOT, path), 'utf8')));
 report('todo-refs', failures, `${files.length} files; every TODO, FIXME, XXX and HACK names its plan, step, ADR or issue`);

@@ -166,7 +166,7 @@ for (const path of linkFiles) {
   for (const [kind, pattern] of stablePatterns) {
     for (const match of source.matchAll(pattern)) {
       const line = source.slice(0, match.index).split('\n').length;
-      stableLinks.push({ id: `${kind.toLowerCase()}.${match[1]}`, kind,
+      stableLinks.push({ id: `${(kind as any).toLowerCase()}.${match[1]}`, kind,
         path: relativePath, line, relation: 'REFERENCES' });
     }
   }
@@ -178,7 +178,7 @@ for (const [contractId, paths] of Object.entries(contractEvidence)) {
 }
 const reverseLinks = {
   schema: 'reverse-links-v1',
-  generatedFrom: ['stable IDs in repository text', 'contractEvidence in tools/generate-catalog.js'],
+  generatedFrom: ['stable IDs in repository text', 'contractEvidence in tools/generate-catalog.ts'],
   links: [...new Map(stableLinks.map(link => [
     `${link.id}\u0000${link.path}\u0000${link.line ?? ''}\u0000${link.relation}`, link,
   ])).values()].sort((a, b) => a.id.localeCompare(b.id) || a.path.localeCompare(b.path) ||
@@ -209,12 +209,12 @@ for (const path of sourceFiles.filter(path => /(?:test|check|spec)[^/]*\.(?:mjs|
         : id === 'packages/propose/parked/minus7/test-search.mjs' ? 600000
         : id === 'packages/propose/test/reactivetest.mjs' ? 300000
           : id === 'packages/propose/bin/plans/test-human-gate.mjs' ? 240000 : 180000,
-    timeoutSource: 'tools/test.mjs per-test watchdog',
+    timeoutSource: 'tools/test.ts per-test watchdog',
     deterministic: nondeterministic.length === 0,
     determinismSignals: nondeterministic,
     fixedSleeps,
     sharedResources,
-    subprocesses: /(?:\.sh|test-docs|test\.mjs|spawn\(|execFile)/.test(source),
+    subprocesses: /(?:\.sh|test-docs|test\.ts|spawn\(|execFile)/.test(source),
     measurement: { status: 'NOT_MEASURED', runs: 0, durationMs: null, flakiness: null },
   });
 }
@@ -365,7 +365,7 @@ const legacyPaths = [
   {
     id: 'package.legacy-engine-command', path: 'package.json#scripts.test:legacy:engine', category: 'command',
     lifecycle: 'compatibility', owner: '@sixam/core',
-    replacement: 'node tools/test.mjs --engine (canonical engine fixture lane)',
+    replacement: 'node tools/test.ts --engine (canonical engine fixture lane)',
     removalGate: 'Bare-Node compatibility lane is no longer needed and P9 audit is green',
     notes: 'Retained package command for the old engine test entry point.',
   },
@@ -410,12 +410,12 @@ const outputs = {
   'protocol-register.json': { schema: 'protocol-register-v1', protocols },
   'test-manifest.json': { schema: 'test-manifest-v1', generatedFrom: 'source inventory', tests },
   'duplicate-responsibilities.json': { schema: 'duplicate-responsibility-map-v1', entries: duplicateResponsibilities },
-  'legacy-paths.json': { schema: 'legacy-path-map-v1', generatedFrom: 'tools/generate-catalog.js', entries: legacyPaths },
+  'legacy-paths.json': { schema: 'legacy-path-map-v1', generatedFrom: 'tools/generate-catalog.ts', entries: legacyPaths },
   'reverse-links.json': reverseLinks,
   'anchor-aims.json': { schema: 'anchor-aims-v1', generatedFrom: 'packages/propose/bindings/fact-register.mjs (ANCHOR_AIMS, UNTRACKED_WINNER_DEBT)',
     anchorAims: factRegister.ANCHOR_AIMS, untrackedWinnerDebt: factRegister.UNTRACKED_WINNER_DEBT },
   'fact-register.json': factRegister.build(),
-  'winner-hashes.json': { schema: 'winner-hashes-v1', generatedFrom: 'tools/generate-catalog.js (compileBundle over packages/propose/bindings/<game>/*-winner.json)',
+  'winner-hashes.json': { schema: 'winner-hashes-v1', generatedFrom: 'tools/generate-catalog.ts (compileBundle over packages/propose/bindings/<game>/*-winner.json)',
     winners: winnerHashes },
   // The per-game control catalogs as data (LEG-007): every descriptor with its
   // aliases, action kinds, binding, preconditions and observation, and FNaF 2's

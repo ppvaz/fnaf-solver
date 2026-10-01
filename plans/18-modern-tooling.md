@@ -71,7 +71,7 @@ unrepresentable.
 - JSDoc `@typedef`s for the load-bearing shapes: a `Plan` that *requires*
   `night`, an `AiTable` indexed by night, the semantic action layer from
   plan 16 package 1.
-- `tsc --noEmit` runs in CI and in `node tools/test.mjs --engine`.
+- `tsc --noEmit` runs in CI and in `node tools/test.ts --engine`.
 
 **Done when.** A plan object without `night`, or a `night = 6 ??` default in a
 downstream consumer, is a compile error; the engine suite stays green; no
@@ -276,7 +276,7 @@ number also assumes one host's `adb`/`ffmpeg`.
 - CI derives its versions from the same pin.
 
 **Done when.** From a clean checkout inside the container,
-`node tools/test.mjs --engine`, `packages/play/bin/companion/test-query-companion.sh` and
+`node tools/test.ts --engine`, `packages/play/bin/companion/test-query-companion.sh` and
 `packages/play/bin/companion/test-soak-companion.sh` all pass; CI and local report the same
 tool versions.
 

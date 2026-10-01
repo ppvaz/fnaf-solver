@@ -22,7 +22,7 @@
  * FNAF_LOCAL_PROFILE names another file; the tests point it at a fixture.
  * Order: an explicit environment variable (FNAF_SERIAL), then the profile, then
  * a refusal. A dry run needs no serial; only a live run asks for one.
- * tools/test-no-serial.mjs refuses a serial in any tracked file outside the
+ * tools/test-no-serial.ts refuses a serial in any tracked file outside the
  * frozen set and its allowlist.
  */
 import { existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';

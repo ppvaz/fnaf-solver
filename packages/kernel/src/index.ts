@@ -1,7 +1,7 @@
 /**
  * @sixam/kernel: the ADR 0002 kernel types with a consumer today, as
  * frozen enums, small constructors and validators. It imports nothing; every
- * package may import it (tools/architecture-test.js). Compile-time shapes are
+ * package may import it (tools/architecture-test.ts). Compile-time shapes are
  * in types.ts.
  */
 export { CLAIM_LEVELS, SOURCE_LABELS, isClaimLevel, isSourceLabel, isUnknown, unknown, validateClaimLevel,

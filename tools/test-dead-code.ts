@@ -15,15 +15,15 @@
 // are not judged: people and CI run them by name.
 //
 // The debt that existed when this landed is recorded in
-// tools/quality-baseline.json (`deadCode`) and only shrinks (tools/gate-kit.mjs).
+// tools/quality-baseline.json (`deadCode`) and only shrinks (tools/gate-kit.ts).
 //
-//   node tools/test-dead-code.mjs            exit 0 clean, 1 naming each finding
-//   node tools/test-dead-code.mjs --list     print every finding, recorded or not
+//   node tools/test-dead-code.ts            exit 0 clean, 1 naming each finding
+//   node tools/test-dead-code.ts --list     print every finding, recorded or not
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { basename, dirname, join, posix } from 'node:path';
 import ts from 'typescript';
-import { ROOT, loadBaseline, ratchet, repoFiles, report } from './gate-kit.mjs';
+import { ROOT, loadBaseline, ratchet, repoFiles, report } from './gate-kit.ts';
 
 const SCRIPT = /\.(?:js|mjs|cjs|ts|mts)$/;
 // What can start a module by its path: manifests, shell, Python, CI and pages.
@@ -34,12 +34,7 @@ export const judged = path => /^(?:packages|apps)\/[^/]+\/src\//.test(path) && S
 
 // --- One module's syntax: what it imports and what it exports ------------------
 
-/**
- * @param {string} path @param {string} text
- * @returns {{uses: {specifier: string, names: string[] | '*'}[], strings: string[],
- *   local: Set<string>, reexports: {name: string, from: string, as: string}[], stars: string[]}}
- */
-export function readModule(path, text) {
+export function readModule(path: string, text: string): {uses: {specifier: string, names: string[] | '*'}[], strings: string[], local: Set<string>, reexports: {name: string, from: string, as: string}[], stars: string[]} {
   const file = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true,
     /\.m?ts$/.test(path) ? ts.ScriptKind.TS : ts.ScriptKind.JS);
   const uses = [];
@@ -63,7 +58,7 @@ export function readModule(path, text) {
       const names = [];
       let whole = false;
       if (clause?.name) names.push('default');
-      const bindings = clause?.namedBindings;
+      const bindings: any = clause?.namedBindings;
       if (bindings && ts.isNamespaceImport(bindings)) whole = true;
       else if (bindings) for (const element of bindings.elements) names.push((element.propertyName ?? element.name).text);
       uses.push({ specifier: node.moduleSpecifier.text, names: whole ? '*' : names });
@@ -96,8 +91,7 @@ export function readModule(path, text) {
 
 // --- Resolving a specifier to a repository path --------------------------------
 
-/** @param {string} root */
-export function workspaces(root) {
+export function workspaces(root: string) {
   const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
   const found = [];
   for (const pattern of manifest.workspaces ?? []) {
@@ -114,8 +108,8 @@ export function workspaces(root) {
 
 const target = entry => typeof entry === 'string' ? entry : entry?.import ?? entry?.default ?? null;
 
-/** @param {string} specifier @param {string} from repository path @param {ReturnType<typeof workspaces>} packages @param {Set<string>} known */
-export function resolveSpecifier(specifier, from, packages, known) {
+/** @param from repository path */
+export function resolveSpecifier(specifier: string, from: string, packages: ReturnType<typeof workspaces>, known: Set<string>) {
   const candidates = path => [path, path.replace(/\.m?js$/, '.ts'), path.replace(/\.js$/, '.mjs')];
   const pick = path => candidates(posix.normalize(path)).find(candidate => known.has(candidate)) ?? null;
   if (specifier.startsWith('.')) return pick(posix.join(posix.dirname(from), specifier));
@@ -141,17 +135,15 @@ export function resolveSpecifier(specifier, from, packages, known) {
 // --- The findings ---------------------------------------------------------------
 
 /**
- * @param {Map<string, string>} scripts repository path -> text, every script the tree holds
- * @param {Map<string, string>} naming repository path -> text of the manifests, shell, Python, YAML and HTML
- * @param {ReturnType<typeof workspaces>} packages
+ * @param scripts repository path -> text, every script the tree holds
+ * @param naming repository path -> text of the manifests, shell, Python, YAML and HTML
  */
-export function deadCode(scripts, naming, packages) {
+export function deadCode(scripts: Map<string, string>, naming: Map<string, string>, packages: ReturnType<typeof workspaces>) {
   const known = new Set(scripts.keys());
   const modules = new Map([...scripts].map(([path, text]) => [path, readModule(path, text)]));
   const loaded = new Set();
   const whole = new Set();
-  /** @type {Map<string, Set<string>>} */
-  const usedNames = new Map();
+  const usedNames: Map<string, Set<string>> = new Map();
   const markName = (path, name, seen = new Set()) => {
     const key = `${path}#${name}`;
     if (seen.has(key)) return;

@@ -68,7 +68,7 @@ cadence, `readDelayFrames` round-trip latency, `dropRate` → `UNKNOWN(read-drop
 mid-animation and off-screen refusal), `src/controller.js` (`guardIntents` for
 the night 6-38 rule, `BlackoutReactive` lower→mask→hold→verify→raise with a Foxy
 mask timeout and a press cooldown against stale-read reversal), and
-`packages/propose/test/reactivetest.mjs` in `tools/test.mjs --engine` + `tools/TOOLS.md`
+`packages/propose/test/reactivetest.mjs` in `tools/test.ts --engine` + `tools/TOOLS.md`
 (`e007463`). Integration result: the real minimal Night 1 Minus Toys base dies
 200/200 to four synthetic blackouts, +reactive 0/200, +delayed-and-dropped
 observer 0/200 — with a documented Toy-stun cost for leaving CAM 09, which the
@@ -89,7 +89,7 @@ blackout-specific metric excludes by design.
 - `packages/propose/test/reactivetest.mjs` — gates the reference policy Night 1–7 at 1200 seeds
   against the model; a control with the observer's reads **disabled** must do
   strictly worse; a control with reads **delayed/noised** must degrade
-  gracefully, not cliff. Added to `tools/test.mjs --engine`.
+  gracefully, not cliff. Added to `tools/test.ts --engine`.
 
 ### P2 — cue helper native-res watchlist protocol (no phone; compiles offline) — DONE (worktree)
 
@@ -216,7 +216,7 @@ capture API and not fast enough for the sub-67 ms actions.
 - No `node_modules`; `observer.js`/`controller.js` are bare-node modules with
   their own `sourcetest`-style assertions where they encode a game rule.
 - Every instrument added here is added to `grade-run.sh` or
-  `tools/test.mjs --engine` in the same commit (`test-grade-run-coverage.mjs`).
+  `tools/test.ts --engine` in the same commit (`test-grade-run-coverage.mjs`).
 - The controller route "runs nothing the model gate has not passed — absolute":
   `reactivetest.mjs` is that gate, and `REACTIVE=act` refuses without it.
 - Explainability over accuracy: the watchlist is a hand-auditable list of

@@ -1,4 +1,4 @@
-// tools/commit-identity.mjs and its place in .githooks/commit-msg and .githooks/pre-push.
+// tools/commit-identity.ts and its place in .githooks/commit-msg and .githooks/pre-push.
 //
 // Every refused address below is invented (example.com and the like): the gate
 // exists so that no real one is published again.
@@ -8,10 +8,10 @@ import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { LEGACY, allowedAddress, parseIdent, pushRanges, refusal, scan } from './commit-identity.mjs';
+import { LEGACY, allowedAddress, parseIdent, pushRanges, refusal, scan } from './commit-identity.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const TOOL = join(ROOT, 'tools', 'commit-identity.mjs');
+const TOOL = join(ROOT, 'tools', 'commit-identity.ts');
 const GOOD = 'Hook Test <42+hook-test@users.noreply.github.com>';
 const BAD = 'Someone <someone@example.com>';
 const ZERO = '0'.repeat(40);
@@ -44,7 +44,7 @@ checks += 2;
 const repo = mkdtempSync(join(tmpdir(), 'commit-identity-'));
 const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => !name.startsWith('GIT_')));
 const git = (...args) => execFileSync('git', args, { cwd: repo, encoding: 'utf8', env }).trim();
-const sh = (file, args, input) => spawnSync('sh', [file, ...args], { cwd: repo, encoding: 'utf8', env, input });
+const sh = (file, args, input?) => spawnSync('sh', [file, ...args], { cwd: repo, encoding: 'utf8', env, input });
 try {
   git('init', '-q', '-b', 'master');
   git('config', 'user.name', parseIdent(GOOD).name);
@@ -112,9 +112,9 @@ try {
 }
 
 // 4. Both hooks run it, and test:unit runs this gate.
-assert.match(readFileSync(join(ROOT, '.githooks', 'commit-msg'), 'utf8'), /tools\/commit-identity\.mjs" --hook \|\| exit 1/);
-assert.ok(JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')).scripts['test:unit'].includes('node tools/test-commit-identity.mjs'),
-  'test:unit does not run tools/test-commit-identity.mjs');
+assert.match(readFileSync(join(ROOT, '.githooks', 'commit-msg'), 'utf8'), /tools\/commit-identity\.ts" --hook \|\| exit 1/);
+assert.ok(JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')).scripts['test:unit'].includes('node tools/test-commit-identity.ts'),
+  'test:unit does not run tools/test-commit-identity.ts');
 checks += 1;
 
 console.log(`commit identity: ${checks} checks pass (${history.checked} commits noreply, ${LEGACY.size} legacy; ` +

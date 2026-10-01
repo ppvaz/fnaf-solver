@@ -9,13 +9,13 @@
 //   item 13  "A gate registered only in a lane CI does not run is not a gate."
 //            Every test file in the repository is reached from a CI step
 //            (.github/workflows/ci.yml, through `npm run` scripts and through
-//            `node tools/test.mjs --gates`, whose own `--list` says what it
+//            `node tools/test.ts --gates`, whose own `--list` says what it
 //            selects), or is exempt below, one file at a time, with a reason.
 //            A Java test counts only when its test.sh EXECUTES the class;
 //            compiling it is not running it.
 //   item 5   "Never report a test PASS you did not see print." The incident
 //            was a wrong test path failing silently. Every script path a
-//            package.json script, a CI step or a tools/test.mjs entry names
+//            package.json script, a CI step or a tools/test.ts entry names
 //            must exist, and every `npm run X` must name a script that exists.
 //   item 12  "An absent observation is evidence only when the rule has read the
 //            positive state in the same run." run-report.mjs's five-read
@@ -42,7 +42,7 @@
 // Every check first runs against a planted violation and must catch it. A
 // checker that cannot fail measures documentation, not coverage.
 //
-//   node tools/test-mistake-register.mjs [--explain]
+//   node tools/test-mistake-register.ts [--explain]
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, posix, resolve } from 'node:path';
@@ -50,19 +50,19 @@ import { fileURLToPath } from 'node:url';
 import { report } from '../packages/review/bin/grade/run-report.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const SELF = 'tools/test-mistake-register.mjs';
+const SELF = 'tools/test-mistake-register.ts';
 const explain = process.argv.includes('--explain');
 
 // --- Test files that no CI step runs, one decision each --------------------
 //
 // An entry is a decision, not a formality: deleting one is how a test gets
 // promoted into a lane. A stale entry -- the file now runs, or is gone -- fails.
-// tools/test.mjs's BACKLOG is the other exemption table, and it is read rather
+// tools/test.ts's BACKLOG is the other exemption table, and it is read rather
 // than copied here: an engine check red on purpose carries its reason there.
 const EXEMPT = new Map([
   ['packages/source/recompile/test-child-events.py', 'external-toolchain fixture: emits C++ with the pinned patched Chowdren converter under Python 2.7 and compiles it with C++; toolchain is external and absent from CI; run explicitly per packages/source/recompile/README.md, never count as a CI pass'],
   ['packages/source/recompile/test-mobile-parser.py', 'external-toolchain fixture: imports the pinned patched Anaconda parser and its compiled Cython modules under Python 2.7, absent from this repository and CI; run explicitly per packages/source/recompile/README.md, never count as a CI pass'],
-  // tools/test.mjs's BROWSER group. ci.yml's header gives the reason: a
+  // tools/test.ts's BROWSER group. ci.yml's header gives the reason: a
   // trainer graded in real-time milliseconds on a shared runner says nothing
   // about the code when it fails.
   ['apps/trainer/test/browser.test.ts', 'browser group: real-time graded in Chrome; ci.yml excludes it on purpose (npm run test:browser:realtime)'],
@@ -71,13 +71,13 @@ const EXEMPT = new Map([
   ['apps/trainer/test/lesson.test.ts', 'browser group: real-time graded in Chrome; ci.yml excludes it on purpose (npm run test:browser:realtime)'],
   ['apps/trainer/test/light.test.ts', 'browser group: real-time graded in Chrome; ci.yml excludes it on purpose (npm run test:browser:realtime)'],
   ['apps/trainer/test/pages.test.ts', 'browser group: needs Chrome, like its siblings, and runs with them (npm run test:browser:realtime); not timing-sensitive, so a CI step could run it'],
-  // tools/test.mjs's REPORTS group: named like tests, but they print numbers
+  // tools/test.ts's REPORTS group: named like tests, but they print numbers
   // and always exit 0, so a lane would count a verdict that does not exist.
-  ['packages/propose/bin/minus2test.mjs', 'report, not a check: tools/test.mjs --reports prints it and never judges it'],
-  ['packages/propose/bin/minus6test.mjs', 'report, not a check: tools/test.mjs --reports prints it and never judges it'],
-  ['packages/propose/bin/rvctest.mjs', 'report, not a check: tools/test.mjs --reports prints it and never judges it'],
-  ['packages/propose/test/androidstalltest.mjs', 'report, not a check: tools/test.mjs --reports prints it and never judges it'],
-  // tools/test.mjs's EXTENDED_ENGINE: "green, but four minutes on its own
+  ['packages/propose/bin/minus2test.mjs', 'report, not a check: tools/test.ts --reports prints it and never judges it'],
+  ['packages/propose/bin/minus6test.mjs', 'report, not a check: tools/test.ts --reports prints it and never judges it'],
+  ['packages/propose/bin/rvctest.mjs', 'report, not a check: tools/test.ts --reports prints it and never judges it'],
+  ['packages/propose/test/androidstalltest.mjs', 'report, not a check: tools/test.ts --reports prints it and never judges it'],
+  // tools/test.ts's EXTENDED_ENGINE: "green, but four minutes on its own
   // (2026-09-24): too slow for --gates". No CI step runs --extended either, so
   // these four are item 13's open debt, recorded rather than hidden.
   ['packages/propose/bin/plans/test-minus-toys-plan.mjs', 'extended tier (minutes): only `npm run test:simulation` runs it, and no CI step does -- open item-13 debt'],
@@ -87,7 +87,7 @@ const EXEMPT = new Map([
   // Named like a test, but a runner: it picks gates from the working tree's
   // diff, so its answer depends on what is dirty, and every gate it can pick
   // is judged by this file on its own.
-  ['tools/affected-test.js', 'edit-time runner (`npm run test:affected`) that selects gates from the working-tree diff; not itself a gate'],
+  ['tools/affected-test.ts', 'edit-time runner (`npm run test:affected`) that selects gates from the working-tree diff; not itself a gate'],
 ]);
 
 // --- The gates each register item relies on --------------------------------
@@ -102,7 +102,7 @@ const REGISTER_GATES = [
   [12, SELF],
   [13, SELF],
   [13, 'packages/review/bin/grade/test-grade-run-coverage.ts'],
-  [14, 'tools/test-sibling-paths.js'],
+  [14, 'tools/test-sibling-paths.ts'],
   [15, 'apps/desktop/test/test-fnaf1-winner.ts'],
   [6, 'apps/lab/test/test-night-job.py'],   // after an abort or a killed runner the game is driven back to an observed title
 ];
@@ -209,7 +209,7 @@ export function ciSteps(text) {
   return steps;
 }
 
-// tools/test.mjs answers what a flag set selects; this never re-derives its
+// tools/test.ts answers what a flag set selects; this never re-derives its
 // --gates filter from the file's text (register item 11: read the tool's own
 // computed output before deriving the same quantity by hand).
 const suiteCache = new Map();
@@ -217,7 +217,7 @@ function suite(args) {
   const flags = args.filter(arg => arg !== '--list');
   const key = flags.join(' ');
   if (!suiteCache.has(key)) {
-    const out = execFileSync(process.execPath, [join(ROOT, 'tools/test.mjs'), ...flags, '--list'],
+    const out = execFileSync(process.execPath, [join(ROOT, 'tools/test.ts'), ...flags, '--list'],
       { cwd: ROOT, encoding: 'utf8' });
     suiteCache.set(key, out.trim().split('\n').filter(Boolean).map(line => JSON.parse(line)));
   }
@@ -228,7 +228,7 @@ const normal = path => posix.normalize(path.replace(/^\.\//, ''));
 
 /** Walk one command text, calling sink.file(path, via, reached) for every file
  *  it names and sink.script(name, via) for every `npm run` it names. `reached`
- *  is false for a tools/test.mjs entry these flags do not select. */
+ *  is false for a tools/test.ts entry these flags do not select. */
 export function walk(text, via, sink, scripts = SCRIPTS, open = new Set()) {
   for (const words of simpleCommands(text)) {
     const target = classify(words);
@@ -244,10 +244,10 @@ export function walk(text, via, sink, scripts = SCRIPTS, open = new Set()) {
     if (target.path.includes('$')) continue;   // a variable path is resolved at run time
     const path = normal(target.path);
     sink.file(path, via, true);
-    if (path === 'tools/test.mjs') {
+    if (path === 'tools/test.ts') {
       // A report selected by --reports is printed and never judged: not a gate.
       for (const entry of suite(target.args))
-        sink.file(entry.path, `${via} > tools/test.mjs ${target.args.join(' ')} [${entry.name}]`,
+        sink.file(entry.path, `${via} > tools/test.ts ${target.args.join(' ')} [${entry.name}]`,
           entry.selected && entry.group !== 'reports', entry);
     }
   }
@@ -327,7 +327,7 @@ export function coverage({ files, reached, backlog, exempt, readText }) {
     if (!isTestFile(path)) continue;
     if (reached.has(path)) verdicts.set(path, { ok: true, via: reached.get(path) });
     else if (exempt.has(path)) verdicts.set(path, { ok: true, exempt: exempt.get(path) });
-    else if (backlog.has(path)) verdicts.set(path, { ok: true, exempt: `tools/test.mjs BACKLOG: ${backlog.get(path)}` });
+    else if (backlog.has(path)) verdicts.set(path, { ok: true, exempt: `tools/test.ts BACKLOG: ${backlog.get(path)}` });
     else verdicts.set(path, { ok: false, why: 'no CI step reaches it' });
   }
   const stale = [];
@@ -337,13 +337,13 @@ export function coverage({ files, reached, backlog, exempt, readText }) {
     else if (runs) stale.push(`${path} is exempt but ${runs} runs it -- delete the stale exemption`);
     else if (!isTestFile(path) && !JAVA_TEST.test(path)) stale.push(`${path} is exempt but is not a test file by any convention here`);
     if (!String(reason).trim()) stale.push(`${path} is exempt with no reason`);
-    if (backlog.has(path)) stale.push(`${path} is exempt here AND by tools/test.mjs BACKLOG -- keep one`);
+    if (backlog.has(path)) stale.push(`${path} is exempt here AND by tools/test.ts BACKLOG -- keep one`);
   }
   return { verdicts, stale };
 }
 
 /** Every file a CI step runs, with the first route that reaches it, and the
- *  BACKLOG reason of each tools/test.mjs entry it names but does not run. */
+ *  BACKLOG reason of each tools/test.ts entry it names but does not run. */
 function ciReach(ciText) {
   const reached = new Map();
   const backlog = new Map();
@@ -359,7 +359,7 @@ function ciReach(ciText) {
   return { reached, backlog };
 }
 
-/** Item 5: every script path package.json / CI / tools/test.mjs names exists. */
+/** Item 5: every script path package.json / CI / tools/test.ts names exists. */
 export function missingPaths({ scripts, ciText, exists }) {
   // One message per missing target, at the first line that names it: the
   // same path reached through `npm run test` and CI is one defect, not three.
@@ -437,13 +437,13 @@ const { verdicts, stale } = coverage({ files, reached, backlog, exempt: EXEMPT,
 
 for (const [path, verdict] of [...verdicts].sort(([a], [b]) => a.localeCompare(b))) {
   if (!verdict.ok) fail(`${path}: ${verdict.why}. Register it in a CI lane (npm run test:unit ` +
-    'or test:contracts, or tools/test.mjs ENGINE), or exempt it in this file with a reason.');
+    'or test:contracts, or tools/test.ts ENGINE), or exempt it in this file with a reason.');
   else if (explain) console.log(`  ${verdict.via ? 'runs  ' : 'exempt'} ${path}  <- ${verdict.via ?? verdict.exempt}`);
 }
 for (const message of stale) fail(message);
 
 const missing = missingPaths({ scripts: SCRIPTS, ciText, exists: path => existsSync(join(ROOT, path)) });
-// This includes every tools/test.mjs entry, selected or not (`--list` prints
+// This includes every tools/test.ts entry, selected or not (`--list` prints
 // all of them): an unselected entry's path is checked by nothing else until
 // the day someone runs its group.
 for (const message of missing) fail(`${message} -- a wrong path fails silently behind \`> /dev/null && echo\` (item 5)`);
@@ -475,7 +475,7 @@ for (const [item, gate] of REGISTER_GATES) {
 }
 
 const counts = [...verdicts.values()].reduce((into, v) => {
-  into[v.via ? 'runs' : v.exempt?.startsWith('tools/test.mjs BACKLOG') ? 'backlog' : v.exempt ? 'exempt' : 'orphan'] += 1;
+  into[v.via ? 'runs' : v.exempt?.startsWith('tools/test.ts BACKLOG') ? 'backlog' : v.exempt ? 'exempt' : 'orphan'] += 1;
   return into;
 }, { runs: 0, exempt: 0, backlog: 0, orphan: 0 });
 
@@ -484,7 +484,7 @@ if (failed) {
   process.exit(1);
 }
 console.log(`mistake register: item 13 -- ${verdicts.size} test files, ${counts.runs} run by a CI step, ` +
-  `${counts.exempt} exempt here and ${counts.backlog} by tools/test.mjs BACKLOG, each with a reason; ` +
+  `${counts.exempt} exempt here and ${counts.backlog} by tools/test.ts BACKLOG, each with a reason; ` +
   `item 5 -- every script path and npm script named exists; item 12 -- the five-read threshold holds ` +
   `on both sides; items ${[...new Set(REGISTER_GATES.map(([item]) => item))].join(', ')} rely only on ` +
   'gates a CI step runs');

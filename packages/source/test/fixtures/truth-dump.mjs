@@ -1,7 +1,7 @@
 // A synthetic event-text dump for the truth tests, written from the dumper's grammar
 // (packages/source/decompile/EventTextDumper.cs) with invented objects and numbers. Nothing here is
 // copied from a dump (ADR 0002, decision 12), and the records are assembled at run time from their
-// fields, so this file's own text carries no dump-shaped line: tools/dump-text-check.mjs passes it,
+// fields, so this file's own text carries no dump-shaped line: tools/dump-text-check.ts passes it,
 // and catches the text it generates.
 //
 // The scramble is K = 28, as on FNaF 2's Android build: an item-table row is stored at S and events

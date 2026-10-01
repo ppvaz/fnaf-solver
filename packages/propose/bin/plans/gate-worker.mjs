@@ -3,7 +3,7 @@
 // A gated night is pure -- seeded RNG, no shared state -- so the gate's 1200
 // seeds are embarrassingly parallel, and the night matrix's six nights are too.
 // Nothing here span the threads until the suite's critical path became the
-// matrix at 53 s, which is the whole wall time of `node tools/test.mjs
+// matrix at 53 s, which is the whole wall time of `node tools/test.ts
 // --engine` and therefore the cost of every edit.
 //
 // The plan is rebuilt per (night, options) rather than shipped across the

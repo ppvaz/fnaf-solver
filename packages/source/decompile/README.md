@@ -6,7 +6,7 @@ content and must remain outside the repo. The labels are defined in
 [`tools/README.md`](../../../tools/README.md); the censuses checked against these
 readers are listed there too. These scripts were `tools/dump/` until ADR 0002's
 Source context took them (migration D4, 2026-09-30); this README is still their
-tool index (`tools/test-docs.mjs`).
+tool index (`tools/test-docs.ts`).
 
 | Tool | Kind | Purpose and interface |
 |---|---|---|

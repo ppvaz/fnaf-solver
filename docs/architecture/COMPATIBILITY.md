@@ -4,7 +4,7 @@ This is the bounded migration inventory. Every compatibility or legacy path
 has one replacement owner, an explicit removal gate, and a reason it still
 exists. No entry is a second semantic authority. The machine-readable view is
 generated at [`generated/legacy-paths.json`](generated/legacy-paths.json) from
-the registry in `tools/generate-catalog.js`; regenerate it with `npm run
+the registry in `tools/generate-catalog.ts`; regenerate it with `npm run
 catalog` when a path or gate changes.
 
 Lifecycle meanings:
@@ -50,7 +50,7 @@ of the path that climbs. See the [2026-09-02 roadmap](../../plans/archive/ROADMA
 | `packages/propose/parked/minus7/stock-device-pilot.mjs` | legacy | structured research experiment with an explicit historical actuator model | historical sweeps replay from retained artifacts |
 | `packages/propose/bin/minustoystest.mjs` | compatibility | `npm run research -- minus-toys` | package artifacts and fixed-seed output are equivalent |
 | `packages/propose/bin/minus2test.mjs` | compatibility | `npm run research -- minus-two` | package artifacts and fixed-seed output are equivalent |
-| `package.json#scripts.test:legacy:engine` | compatibility | `node tools/test.mjs --engine` (canonical engine fixture lane) | bare-Node compatibility lane is no longer needed and P9 is green |
+| `package.json#scripts.test:legacy:engine` | compatibility | `node tools/test.ts --engine` (canonical engine fixture lane) | bare-Node compatibility lane is no longer needed and P9 is green |
 
 The cue-model provisioner (`tools/device/provision-cue-model.sh`) is also
 registered as a legacy path. It remains only to replay historical APK

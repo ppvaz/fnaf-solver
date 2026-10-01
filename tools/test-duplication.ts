@@ -12,23 +12,23 @@
 // dropped, so formatting and comments do not hide a copy. Tests, fixtures and
 // frozen records are not scanned. Each pair of files is one finding, counted
 // in shared normalised lines; the pairs that existed when this landed are in
-// tools/quality-baseline.json (`duplication`) and only shrink (tools/gate-kit.mjs).
+// tools/quality-baseline.json (`duplication`) and only shrink (tools/gate-kit.ts).
 //
-//   node tools/test-duplication.mjs            exit 0 clean, 1 naming each pair
-//   node tools/test-duplication.mjs --list     print every pair with its first shared line
+//   node tools/test-duplication.ts            exit 0 clean, 1 naming each pair
+//   node tools/test-duplication.ts --list     print every pair with its first shared line
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { ROOT, loadBaseline, ratchet, repoFiles, report } from './gate-kit.mjs';
+import { ROOT, loadBaseline, ratchet, repoFiles, report } from './gate-kit.ts';
 
 export const WINDOW = 6;
 const SCRIPT = /\.(?:js|mjs|cjs|ts|mts)$/;
 const scanned = path => SCRIPT.test(path) && /^(?:packages|apps|tools|android)\//.test(path) &&
   !/(?:^|\/)(?:test|tests|testdata|fixtures?)\//.test(path) && !/(?:^|\/)test[^/]*\.|\.test\.|\.d\.ts$/.test(path);
 
-/** The lines that carry code, each with its line number. @param {string} text */
-export function normalise(text) {
+/** The lines that carry code, each with its line number. */
+export function normalise(text: string) {
   const lines = [];
   let block = false;
   text.split('\n').forEach((raw, index) => {
@@ -49,11 +49,10 @@ export function normalise(text) {
 
 /**
  * Shared normalised lines per pair of files.
- * @param {Map<string, string>} files path -> text
+ * @param files path -> text
  */
-export function clones(files) {
-  /** @type {Map<string, {path: string, at: number}[]>} */
-  const windows = new Map();
+export function clones(files: Map<string, string>) {
+  const windows: Map<string, {path: string, at: number}[]> = new Map();
   const normalised = new Map();
   for (const [path, text] of files) {
     const lines = normalise(text);
@@ -64,8 +63,7 @@ export function clones(files) {
       windows.get(key).push({ path, at });
     }
   }
-  /** @type {Map<string, {covered: Set<string>, first: string}>} */
-  const pairs = new Map();
+  const pairs: Map<string, {covered: Set<string>, first: string}> = new Map();
   for (const occurrences of windows.values()) {
     const paths = [...new Set(occurrences.map(({ path }) => path))];
     if (paths.length < 2) continue;

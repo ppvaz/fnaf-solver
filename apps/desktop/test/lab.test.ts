@@ -8,7 +8,7 @@ import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpat
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { isUnknown, validateClaimEnvelope } from '@sixam/kernel';
-import { recordRun, runRecordPath } from '../../../tools/push-gate.mjs';
+import { recordRun, runRecordPath } from '../../../tools/push-gate.ts';
 import { main, parse } from '../src/cli.ts';
 import { LAB_VERBS, SESSION_FILE, STALE_PENDING_HOURS, createLab, lastEvening, parseWorktrees, runStamp } from '../src/lab.ts';
 
@@ -37,7 +37,7 @@ function fixture(name) {
   git(root, 'config', 'user.name', 'Lab Test');
   git(root, 'config', 'user.email', 'lab-test@users.noreply.github.com');
   git(root, 'config', 'commit.gpgsign', 'false');
-  for (const path of ['CLAUDE.md', 'plans/ROADMAP.md', '.githooks/commit-msg', 'tools/dump-text-check.mjs', 'tools/change-locality.mjs', 'tools/commit-identity.mjs', 'tools/test-mistake-register.mjs']) {
+  for (const path of ['CLAUDE.md', 'plans/ROADMAP.md', '.githooks/commit-msg', 'tools/dump-text-check.ts', 'tools/change-locality.ts', 'tools/commit-identity.ts', 'tools/test-mistake-register.ts']) {
     mkdirSync(dirname(join(root, path)), { recursive: true });
     copyFileSync(join(REPO, path), join(root, path));
   }

@@ -14,7 +14,7 @@ night and were retired on 2026-09-25 (`6d78c7e`, `903ffab`;
   validates the campaign chain, the bundle and the proof gates and opens no
   transport. CI runs that dry run over the committed Night 7 winner.
   `night-run.sh --dry-run` prints the command and touches no phone. The CLI
-  refuses `--live` without `--confirm-live`, and `tools/architecture-test.js`
+  refuses `--live` without `--confirm-live`, and `tools/architecture-test.ts`
   holds that gate and refuses a second live command in the CLI.
 - **A resolved, hashed profile.** The profile comes from
   `packages/play/profiles/fnaf2/moto-g56/` (`device-profile-v1`; records
@@ -32,7 +32,7 @@ night and were retired on 2026-09-25 (`6d78c7e`, `903ffab`;
   its first adb call, or trusts `FNAF_LEASE_HELD=1` from the holder (an
   overnight window's night job, below).
 - **Named ways to press, one way to see.** Only the device runners that
-  `architecture-test.js` names compose the HID transport: the FNaF 2 campaign
+  `architecture-test.ts` names compose the HID transport: the FNaF 2 campaign
   ports, the FNaF 1, 3 and 4 runners and the one-step explorer, each behind its
   own lease and `--confirm-live`. A new composer has to be named there in the
   diff that adds it. Frames come from the Companion (`REGION`,
@@ -72,7 +72,7 @@ per host:
 node packages/play/bin/phone/local-profile.ts set <serial>    # adb devices -l lists it
 ```
 
-No tracked script carries a default, and `tools/test-no-serial.mjs` (in `npm
+No tracked script carries a default, and `tools/test-no-serial.ts` (in `npm
 run test:unit`) refuses any file outside the frozen set and its allowlist that
 names one. Frozen evidence keeps the serial it was written with.
 

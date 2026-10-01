@@ -1,14 +1,14 @@
 #!/usr/bin/env node
-// Pins tools/change-locality.mjs: which paths are contexts, when a commit needs
+// Pins tools/change-locality.ts: which paths are contexts, when a commit needs
 // a `Contexts:` line, and that `.githooks/commit-msg` runs it.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { contextOf, localityVerdict } from './change-locality.mjs';
+import { contextOf, localityVerdict } from './change-locality.ts';
 
 assert.equal(contextOf('packages/play/src/campaign/planted.js'), 'play');
 assert.equal(contextOf('apps/trainer/src/planted.js'), 'apps/trainer');
 assert.equal(contextOf('android/companion/src/com/ppvaz/fnafcompanion/NightRunner.java'), 'companion');
-assert.equal(contextOf('tools/gate-kit.mjs'), 'tools');
+assert.equal(contextOf('tools/gate-kit.ts'), 'tools');
 for (const registration of ['package.json', 'CLAUDE.md', 'docs/architecture/generated/import-graph.json', 'tools/quality-baseline.json',
   'plans/ROADMAP.md', 'packages/play/README.md', 'docs/evidence/runs/x/pack.json'])
   assert.equal(contextOf(registration), null, `${registration} is registration, not a context`);
@@ -23,5 +23,5 @@ assert.equal(localityVerdict(three,
 assert.deepEqual(localityVerdict(three, 'x').contexts, ['play', 'propose', 'source']);
 
 const hook = readFileSync(new URL('../.githooks/commit-msg', import.meta.url), 'utf8');
-assert.match(hook, /tools\/change-locality\.mjs/, 'the commit-msg hook must run the change-locality check');
+assert.match(hook, /tools\/change-locality\.ts/, 'the commit-msg hook must run the change-locality check');
 console.log('change-locality: contexts, the three-context limit, the Contexts: line and the hook are pinned');

@@ -28,7 +28,7 @@ losing a hop, and both input gates being deleted outright. Each of those is a
 load-bearing sourced rule, and every one of them passed the whole engine suite.
 
 `sourcetest` asserts the mechanisms directly against a hand-driven `Sim`, one
-case per group citation, and runs first in `node tools/test.mjs --engine`. A
+case per group citation, and runs first in `node tools/test.ts --engine`. A
 failure names the group rather than the symptom. **When a row in this ledger
 changes, add or update its case there** — otherwise the row is documentation,
 not a constraint.

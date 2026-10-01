@@ -2,7 +2,7 @@
   "schema": "reverse-links-v1",
   "generatedFrom": [
     "stable IDs in repository text",
-    "contractEvidence in tools/generate-catalog.js"
+    "contractEvidence in tools/generate-catalog.ts"
   ],
   "links": [
     {

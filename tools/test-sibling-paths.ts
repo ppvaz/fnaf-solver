@@ -16,7 +16,7 @@
 // death-cause models, 2026-09-30). A target git ignores is a runtime output and is not required to
 // exist. A path that is meant to be absent is listed in INTENTIONAL with its reason.
 //
-//   node tools/test-sibling-paths.js     exit 0 clean, 1 with the references it refuses
+//   node tools/test-sibling-paths.ts     exit 0 clean, 1 with the references it refuses
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -24,7 +24,7 @@ import { dirname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const SELF = 'tools/test-sibling-paths.js';
+const SELF = 'tools/test-sibling-paths.ts';
 const FROZEN = /^(docs\/evidence\/|docs\/chronicle\/|plans\/archive\/|tools\/recompile\/results\/)/;
 const CODE = /\.(m?js|cjs|ts|py|sh)$/;
 const INTENTIONAL = new Map([

@@ -4,24 +4,23 @@
 // not after; until 2026-09-30 nothing measured it, and plant-model.js had
 // reached 2,719 lines. Files already over are recorded in
 // tools/quality-baseline.json (`fileSize`) at their length and may only shrink
-// (tools/gate-kit.mjs); a file that crosses WARN_AT is named, without failing,
+// (tools/gate-kit.ts); a file that crosses WARN_AT is named, without failing,
 // so the split can be planned while it is still cheap.
 //
-//   node tools/test-file-size.mjs     exit 0 clean, 1 naming each file
+//   node tools/test-file-size.ts     exit 0 clean, 1 naming each file
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { ROOT, loadBaseline, ratchet, repoFiles, report } from './gate-kit.mjs';
+import { ROOT, loadBaseline, ratchet, repoFiles, report } from './gate-kit.ts';
 
 export const CEILING = 2000;
 export const WARN_AT = 1800;
 const SOURCE = /\.(?:js|mjs|cjs|ts|mts|py|java|kt|sh|c|cc|cpp|h|hpp|cs)$/;
 
-/** @param {string} text */
-export const lineCount = text => text.length === 0 ? 0 : text.split('\n').length - (text.endsWith('\n') ? 1 : 0);
+export const lineCount = (text: string) => text.length === 0 ? 0 : text.split('\n').length - (text.endsWith('\n') ? 1 : 0);
 
-/** @param {Iterable<[string, string]>} files path and text */
-export function oversized(files) {
+/** @param files path and text */
+export function oversized(files: Iterable<[string, string]>) {
   const found = new Map();
   const near = [];
   for (const [path, text] of files) {

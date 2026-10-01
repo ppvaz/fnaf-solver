@@ -7,8 +7,8 @@
 # command that reproduces it.
 #
 # Before the gate, every pushed commit's author and committer address must be
-# GitHub's noreply form (tools/commit-identity.mjs): rebase and cherry-pick
+# GitHub's noreply form (tools/commit-identity.ts): rebase and cherry-pick
 # never run commit-msg. Both read the same ref lines.
 refs=$(cat)
-printf '%s\n' "$refs" | node "$(dirname "$0")/../tools/commit-identity.mjs" --push || exit 1
-printf '%s\n' "$refs" | node "$(dirname "$0")/../tools/push-gate.mjs" --stdin
+printf '%s\n' "$refs" | node "$(dirname "$0")/../tools/commit-identity.ts" --push || exit 1
+printf '%s\n' "$refs" | node "$(dirname "$0")/../tools/push-gate.ts" --stdin

@@ -13,7 +13,7 @@ The adapter, the three reimplemented baselines and their measurement live in
 under each work package below. **Packages 5 and 6 are untouched, and packages
 1-3 close only in part, so the plan is not done.**
 
-**Suite entry still to be added** (this stream did not edit `tools/test.mjs`):
+**Suite entry still to be added** (this stream did not edit `tools/test.ts`):
 
 ```js
 ['policytest', ['policytest.mjs', '--assert']],

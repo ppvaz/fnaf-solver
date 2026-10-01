@@ -511,7 +511,7 @@ blind schedule's Foxy deaths were never really Foxy's.
 `node packages/propose/parked/minus7/stock-device-pilot.mjs 200 --vent --sync --assert` guards exactly that
 claim and nothing more — it asserts BB never gets in and no Foxy death follows
 him, and deliberately does **not** assert survival. It runs in
-`tools/test.mjs --engine`, normal and `--worst`. The blind schedule fails it
+`tools/test.ts --engine`, normal and `--worst`. The blind schedule fails it
 200/200 by construction, which is the check working.
 
 What is left is one mode. Every remaining death is the seven walking in during
@@ -1421,7 +1421,7 @@ moved the netstat counters by **zero** and the worst read was 83.8 ms. The
 loop now gates on a `.run` sentinel it never writes, cleanup removes the
 sentinel before pulling the output, the runner sweeps stale
 `fnaf2-cue-*.{run,txt}` at spawn, and `test-cue-trace-loop.sh` (in
-`test.mjs --engine`) extracts the shipped loop and asserts the rm sticks.
+`test.ts --engine`) extracts the shipped loop and asserts the rm sticks.
 
 Two lessons worth their space. A background loop's kill switch must be a file
 the loop never writes. And a read that is scheduled against a slack budget has

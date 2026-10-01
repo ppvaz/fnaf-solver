@@ -36,15 +36,15 @@
 // could only print with an absolute `import("...")` fall back to `any` and
 // are listed too.
 //
-//   node tools/ts-migrate.mjs DIR        migrate every tracked .js under DIR
-//   node tools/ts-migrate.mjs DIR --dry  print what would move and change nothing
+//   node tools/ts-migrate.ts DIR        migrate every tracked .js under DIR
+//   node tools/ts-migrate.ts DIR --dry  print what would move and change nothing
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 
-// TS_MIGRATE_ROOT points the tool at another repository (tools/test-ts-migrate.mjs's fixture). Both the
+// TS_MIGRATE_ROOT points the tool at another repository (tools/test-ts-migrate.ts's fixture). Both the
 // root and DIR are real paths: the working directory comes back resolved, and on macOS the temporary
 // directory is a symlink (/var -> /private/var), so a resolved-only root put DIR outside the repository.
 const ROOT = realpathSync(process.env.TS_MIGRATE_ROOT ? resolve(process.env.TS_MIGRATE_ROOT)
@@ -53,7 +53,7 @@ const git = (...args) => execFileSync('git', args, { cwd: ROOT, encoding: 'utf8'
 const ARITY_ONLY = process.argv.includes('--arity');
 const RELAX_ONLY = process.argv.includes('--relax');
 const [dirArg, ...flags] = process.argv.slice(2).filter(arg => arg !== '--arity' && arg !== '--relax');
-if (!dirArg) { console.error('usage: node tools/ts-migrate.mjs DIR [--dry | --arity | --relax]'); process.exit(2); }
+if (!dirArg) { console.error('usage: node tools/ts-migrate.ts DIR [--dry | --arity | --relax]'); process.exit(2); }
 const DRY = flags.includes('--dry');
 const DIR = relative(ROOT, realpathSync(resolve(dirArg)));
 
@@ -64,9 +64,9 @@ const DIR = relative(ROOT, realpathSync(resolve(dirArg)));
  * TypeScript. This marks exactly those callees' missing parameters optional
  * (`?`, erased like any type), from TypeScript's own diagnostics over the
  * migrated files under the checked options, until none is left.
- * @param {string[]} paths repository-relative .ts files
+ * @param paths repository-relative .ts files
  */
-function relaxArity(paths) {
+function relaxArity(paths: string[]) {
   const parsedJs = ts.getParsedCommandLineOfConfigFile(join(ROOT, 'tsconfig.js.json'), {},
     { ...ts.sys, onUnRecoverableConfigFileDiagnostic: d => { throw new Error(ts.flattenDiagnosticMessageText(d.messageText, '\n')); } });
   const absolute = new Set(paths.map(path => join(ROOT, path)));
@@ -144,9 +144,9 @@ function relaxArity(paths) {
  * variable or parameter it was read from `any` (or, for any other object,
  * casts it `as any` where it is read), from TypeScript's own diagnostics,
  * until none is left. Every such `any` is the debt the tightening pays.
- * @param {string[]} paths repository-relative .ts files
+ * @param paths repository-relative .ts files
  */
-function relaxOpenLiterals(paths) {
+function relaxOpenLiterals(paths: string[]) {
   const parsedJs = ts.getParsedCommandLineOfConfigFile(join(ROOT, 'tsconfig.js.json'), {},
     { ...ts.sys, onUnRecoverableConfigFileDiagnostic: d => { throw new Error(ts.flattenDiagnosticMessageText(d.messageText, '\n')); } });
   const absolute = new Set(paths.map(path => join(ROOT, path)));
@@ -222,7 +222,7 @@ function relaxOpenLiterals(paths) {
         }
         const object = access.expression;
         const symbol = ts.isIdentifier(object) ? checker.getSymbolAtLocation(object) : null;
-        const declaration = symbol?.valueDeclaration;
+        const declaration: any = symbol?.valueDeclaration;
         if (declaration && (ts.isParameter(declaration) || ts.isVariableDeclaration(declaration)) && !declaration.type &&
             ts.isIdentifier(declaration.name) && absolute.has(declaration.getSourceFile().fileName) &&
             !(ts.isVariableDeclaration(declaration) && ts.isForOfStatement(declaration.parent?.parent))) {
@@ -231,7 +231,7 @@ function relaxOpenLiterals(paths) {
           const bare = ts.isParameter(declaration) && ts.isArrowFunction(declaration.parent) &&
             declaration.getSourceFile().text.slice(declaration.parent.getStart(), declaration.getStart()).trim() === '';
           if (bare) add(file, declaration.getStart(), '(');
-          add(file, declaration.name.getEnd() + (declaration.questionToken ? 1 : 0), bare ? ': any)' : ': any');
+          add(file, declaration.name.getEnd() + ((declaration as any).questionToken ? 1 : 0), bare ? ': any)' : ': any');
           typed += 1;
         } else {
           add(name, object.getStart(), '(');
@@ -363,7 +363,7 @@ for (const path of moving) {
     if (ts.isCallExpression(e) && e.expression.getText() === 'Object.defineProperty' && e.arguments.length === 3 &&
         ts.isPropertyAccessExpression(e.arguments[0]) && e.arguments[0].name.text === 'prototype' &&
         ts.isStringLiteral(e.arguments[1]) && ts.isObjectLiteralExpression(e.arguments[2])) {
-      const valueProp = e.arguments[2].properties.find(p => ts.isPropertyAssignment(p) && p.name.getText() === 'value');
+      const valueProp: any = e.arguments[2].properties.find(p => ts.isPropertyAssignment(p) && p.name.getText() === 'value');
       if (valueProp && (ts.isIdentifier(valueProp.initializer) || ts.isPropertyAccessExpression(valueProp.initializer))) {
         owner = e.arguments[0].expression.getText(); name = e.arguments[1].text; value = valueProp.initializer.getText();
       }
@@ -379,7 +379,7 @@ for (const path of moving) {
   }
   const functionLike = node => ts.isFunctionDeclaration(node) || ts.isFunctionExpression(node) || ts.isArrowFunction(node) ||
     ts.isMethodDeclaration(node) || ts.isConstructorDeclaration(node) || ts.isGetAccessorDeclaration(node) || ts.isSetAccessorDeclaration(node);
-  const visit = node => {
+  const visit = (node: any) => {
     // A cast: `/** @type {T} */ (e)`.
     if (ts.isParenthesizedExpression(node)) {
       const tag = ts.getJSDocTags(node).find(ts.isJSDocTypeTag);
@@ -432,7 +432,7 @@ for (const path of moving) {
         const name = param.name.getText();
         let annotation = null;
         if (tag?.typeExpression) {
-          let type = tag.typeExpression.type;
+          let type: any = tag.typeExpression.type;
           let optional = tag.isBracketed;
           if (type.kind === K.JSDocOptionalType) { optional = true; type = type.type; }
           const nested = paramTags.some(t => ts.isQualifiedName(t.name) && t.name.left.getText() === (ts.isIdentifier(param.name) ? name : tag.name.getText()));
@@ -486,7 +486,7 @@ for (const path of moving) {
           ts.forEachChild(member.body, scan);
       }
       if (assigned.length || installedHere.length) {
-        const instance = checker.getDeclaredTypeOfSymbol(node.name ? checker.getSymbolAtLocation(node.name) : node.symbol);
+        const instance = checker.getDeclaredTypeOfSymbol(node.name ? checker.getSymbolAtLocation(node.name) : (node as any).symbol);
         const first = node.members[0];
         const indent = first ? (text.slice(text.lastIndexOf('\n', first.getStart()) + 1, first.getStart()).match(/^\s*/)[0]) : '  ';
         const lines = installedHere.map(({ name, value }) => `${indent}declare ${name}: typeof ${value};\n`).join('') +
@@ -506,14 +506,14 @@ for (const path of moving) {
   visit(file);
   // Typedefs: an import alias becomes a type import after the rename; anything else an exported type.
   for (const statement of [...file.statements, file.endOfFileToken]) {
-    for (const doc of statement.jsDoc ?? []) {
+    for (const doc of (statement as any).jsDoc ?? []) {
       for (const tag of doc.tags ?? []) {
         if (ts.isJSDocTypedefTag(tag)) {
           const name = tag.name?.getText() ?? tag.fullName?.getText();
           const type = tag.typeExpression;
           if (type && !ts.isJSDocTypeLiteral(type) && ts.isImportTypeNode(type.type) && ts.isIdentifier(type.type.qualifier ?? {})) {
             const list = typedefImports.get(path) ?? [];
-            list.push({ spec: type.type.argument.literal.text, name: type.type.qualifier.getText(), alias: name });
+            list.push({ spec: (type.type.argument as any).literal.text, name: type.type.qualifier.getText(), alias: name });
             typedefImports.set(path, list);
             continue;
           }
@@ -550,7 +550,7 @@ for (const [from, to] of renamed) {
   const visit = node => {
     if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument) && node.qualifier && !node.isTypeOf) {
       const head = ts.isIdentifier(node.qualifier) ? node.qualifier.text : node.qualifier.getText().split('.')[0];
-      want(node.argument.literal.text, head);
+      want((node.argument.literal as any).text, head);
       edits.push({ start: node.getStart(), end: node.getEnd(), text: node.getText().slice(node.qualifier.getStart() - node.getStart()) });
       return;
     }

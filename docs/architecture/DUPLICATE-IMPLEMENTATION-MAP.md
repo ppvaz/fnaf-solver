@@ -50,7 +50,7 @@ gate patterns (§20) can be reused instead of reinvented.
 [`generated/duplicate-responsibilities.json`](generated/duplicate-responsibilities.json)
 already exists and stays authoritative for **ownership drift** — which package
 owns a responsibility that a `tools/` path still implements. It has five
-entries and is a hand-maintained constant in `tools/generate-catalog.js:208`,
+entries and is a hand-maintained constant in `tools/generate-catalog.ts:208`,
 so it is "generated" in name only; three of its five rows point at globs
 (`tools/*search*`, `tools/*sweep*`, `tools/*probe*`) rather than files.
 
@@ -337,7 +337,7 @@ current by a gate rather than by memory.
 
 Two caveats, both measured on the clean tree at `a8260aa`:
 
-- It is registered only in `tools/test.mjs:440`, i.e. the explicit
+- It is registered only in `tools/test.ts:440`, i.e. the explicit
   `npm run test:legacy:engine` lane — not in `test:contracts`, so the green
   edit lane never runs it.
 - Run directly, it **exits 1 with 31 complaints**. 19 are real gaps (scripts
@@ -348,17 +348,17 @@ Two caveats, both measured on the clean tree at `a8260aa`:
   entry points, `companion_device_lock.py`, `device-lock-exec.py`,
   `pan-path-capture.py`/`.sh`, `companion-mcp.mjs`, now `apps/desktop/src/`). The other 12 are the gate
   reading the wrong registry: it looks for gate registrations in
-  `tools/test.mjs` and `.github/workflows/ci.yml`, and 11 of those 12 gates are
+  `tools/test.ts` and `.github/workflows/ci.yml`, and 11 of those 12 gates are
   registered in `package.json`'s `test:contracts` /
   `test:device:calibration` instead — which CI does run, by script name. Only
   `test-hid-maskraise-probe.mjs` is genuinely unregistered.
 
 That is itself an instance of this page's subject: two registries for "gates
-that run" (`package.json` scripts and `tools/test.mjs`), with a checker that
+that run" (`package.json` scripts and `tools/test.ts`), with a checker that
 knows one of them.
 
 **RESOLVED 2026-09-08.** `runs()` now reads all three registries
-(`tools/test.mjs`, `package.json` scripts, `ci.yml`), which retired the eleven
+(`tools/test.ts`, `package.json` scripts, `ci.yml`), which retired the eleven
 false complaints. `test-hid-maskraise-probe.mjs` — the one genuinely
 unregistered gate — passes, and is now registered in `test:device:calibration`
 beside its monitorraise sibling. The nineteen unwired scripts gained exclusion
@@ -457,7 +457,7 @@ path that no longer exists. All four now name
 `packages/source/src/games/fnaf2/plant-model.ts`.
 
 Still open: several docs and plans cite the dead path too, and nothing catches
-it. `tools/validate-references.js` resolves `CONTRACT:`/`ADR:`/`CLAIM:`/
+it. `tools/validate-references.ts` resolves `CONTRACT:`/`ADR:`/`CLAIM:`/
 `EVIDENCE:` IDs, not file paths named in prose.
 
 ## 20. Remedies this repository has already proven
@@ -482,7 +482,7 @@ A cleanup should reuse one of these five rather than invent a sixth:
 5. **Enforced census with written exclusions** — the pattern that keeps an
    inventory from rotting into prose. `packages/review/bin/grade/test-grade-run-coverage.ts`
    (every script is wired, gated, or excluded *with a reason*) and
-   `tools/test-docs.mjs` (every page indexed, every tool script carries a
+   `tools/test-docs.ts` (every page indexed, every tool script carries a
    `TOOLS.md` row, no stale row survives a deletion). This is the pattern this
    very page needs applied to it; see §21.
 
@@ -501,7 +501,7 @@ detector was a throwaway script, so nothing recomputes the clone-window
 numbers, and nothing notices when a family gains a sixth member. That is the
 same failure as the register in
 [`generated/duplicate-responsibilities.json`](generated/duplicate-responsibilities.json)
-and as the two indexes `tools/test-docs.mjs` was written to stop. Promoting the
+and as the two indexes `tools/test-docs.ts` was written to stop. Promoting the
 detector into `tools/` — with its `tools/TOOLS.md` row, and a check that every
 family here still has the membership it claims — is the difference between this
 page being a map and being a snapshot. Until then, re-derive before trusting a
@@ -538,7 +538,7 @@ which point here — so this list is load-bearing, not a wish list.
 - **`tools/device/seed-clock.mjs` has no gate and no caller** in the
   repository.
 - **Docs and plans still cite `src/engine.js`.** §19 fixed the four code files.
-  `tools/validate-references.js` resolves stable IDs, not file paths in prose,
+  `tools/validate-references.ts` resolves stable IDs, not file paths in prose,
   so nothing catches the rest. A path-reference check would.
 - **The calibration JSON summary dict is still duplicated** across the fitters
   (§4). It reads each fitter's own fit result, so sharing it wants a small

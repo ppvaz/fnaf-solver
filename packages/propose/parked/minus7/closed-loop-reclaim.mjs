@@ -19,7 +19,7 @@ import { pathToFileURL } from 'node:url';
 import { run as hidRun } from './hid-device-pilot.mjs';
 import { run as pilotRun } from './stock-device-pilot.mjs';
 
-// `hidpilot n6 target` in tools/test.mjs, which is the route plans/12 priced.
+// `hidpilot n6 target` in tools/test.ts, which is the route plans/12 priced.
 export const N6_TARGET = {
   bbMode: 'left', deviceSweep: true, pulseLight: true, sweepSlotMs: 120,
   maskMarginMs: 900, readLatencyMs: 480, hallPulseMs: 83,

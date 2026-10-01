@@ -1,6 +1,6 @@
 // The push gate's closing lines, and what the gate and the hooks tell a person to do.
 //
-// Until 2026-09-29 a red run of tools/push-gate.mjs ended with "Fix them, or push with
+// Until 2026-09-29 a red run of tools/push-gate.ts ended with "Fix them, or push with
 // --no-verify to send them anyway.", and .githooks/pre-push said to "bypass a known-red push
 // with `git push --no-verify`". CLAUDE.md forbids bypassing a hook. Now the gate names each
 // failed lane with the command that reproduces it, and no user-facing string in the gate or
@@ -14,7 +14,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { mainCheckout } from '../packages/play/bin/phone/local-profile.ts';
-import { DEFAULT_MEMORY_MAX, LANES, RUN_RECORD_SCHEMA, failureReport, laneCommand, recordRun, reproduceCommand, runRecordPath } from './push-gate.mjs';
+import { DEFAULT_MEMORY_MAX, LANES, RUN_RECORD_SCHEMA, failureReport, laneCommand, recordRun, reproduceCommand, runRecordPath } from './push-gate.ts';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));
 const BYPASS = /--no-verify|\bcommit\s+-n\b/;
@@ -30,7 +30,7 @@ function jsStrings(source) {
 
 /** What a JavaScript source or a shell hook says to its user that offers the bypass. */
 function bypassSuggestions(name, source) {
-  if (name.endsWith('.mjs') || name.endsWith('.js')) return jsStrings(source).filter(text => BYPASS.test(text));
+  if (/\.m?[jt]s$/.test(name)) return jsStrings(source).filter(text => BYPASS.test(text));
   return source.split('\n').filter(line => /^\s*#/.test(line) ? ADVICE.test(line) : BYPASS.test(line));
 }
 
@@ -40,13 +40,15 @@ assert.deepEqual(bypassSuggestions('x.mjs', "console.log('Fix them, or push with
 assert.equal(bypassSuggestions('x.mjs', 'console.log(`or run git commit -n`);').length, 1);
 assert.deepEqual(bypassSuggestions('x.mjs', "// one `--no-verify` away from being pushed past\nconst a = 'b';"), [],
   'a comment explaining the risk is not a suggestion');
+assert.deepEqual(bypassSuggestions('x.ts', "// one `--no-verify` away from being pushed past\nconst a: string = 'b';"), [],
+  'a TypeScript source reads its comments as JavaScript does');
 assert.equal(bypassSuggestions('hook', '# and bypass a known-red push with `git push --no-verify`.').length, 1);
 assert.equal(bypassSuggestions('hook', 'exec git push --no-verify').length, 1);
 assert.deepEqual(bypassSuggestions('hook', '# the key and never bypass this hook (--no-verify, commit -n).'), [],
   'a comment stating the rule is not a suggestion');
 
 // The gate, the hooks it installs, and the lab that predicts the hook and reads the gate's record.
-for (const file of ['tools/push-gate.mjs', '.githooks/pre-push', '.githooks/commit-msg', 'apps/desktop/src/lab.ts', 'apps/desktop/src/cli.ts'])
+for (const file of ['tools/push-gate.ts', '.githooks/pre-push', '.githooks/commit-msg', 'apps/desktop/src/lab.ts', 'apps/desktop/src/cli.ts'])
   assert.deepEqual(bypassSuggestions(file, readFileSync(join(ROOT, file), 'utf8')), [], `${file} suggests bypassing a hook`);
 
 // Every lane has a command that reproduces it.
@@ -72,7 +74,7 @@ assert.deepEqual(report.slice(0, 8), [
   `  0123456 ${shellcheck.name}`,
   `      reproduce: the \`run: |\` script of the "${shellcheck.name}" step in .github/workflows/ci.yml (needs docker)`,
   '  fedcba9 push-gate is out of step with ci.yml',
-  '      reproduce: npm run push-gate -- fedcba9 (update LANES in tools/push-gate.mjs to match ci.yml)',
+  '      reproduce: npm run push-gate -- fedcba9 (update LANES in tools/push-gate.ts to match ci.yml)',
 ]);
 assert.match(report[8], /^Fix them and commit again\. `npm run push-gate -- 0123456 fedcba9` re-runs every lane in a clean checkout/);
 assert.equal(report.length, 9);

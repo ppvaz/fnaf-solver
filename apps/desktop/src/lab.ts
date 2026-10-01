@@ -26,7 +26,7 @@ import { queryPromotions } from '@sixam/review/promotions-query';
 import { readPacks } from '@sixam/review/registers';
 import { ORDER, ORDER_OF, ROADMAP, STEPS, stateKey, stepStatus } from '@sixam/review/roadmap';
 import { PROFILE_PATH, mainCheckout, profilePaths } from '../../../packages/play/bin/phone/local-profile.ts';
-import { laneCommand, linkDependencies, runRecordPath } from '../../../tools/push-gate.mjs';
+import { laneCommand, linkDependencies, runRecordPath } from '../../../tools/push-gate.ts';
 
 export const LAB_DOC = 'docs/operations/LAB.md';
 export const SESSION_FILE = 'artifacts/lab/session.json';
@@ -170,7 +170,7 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
       branch: git(['rev-parse', '--abbrev-ref', 'HEAD']).trim(), uncommitted: lines(git(['status', '--porcelain'])).length };
   }
 
-  /** The push-gate record for a commit: the last run of tools/push-gate.mjs on it, or not run. */
+  /** The push-gate record for a commit: the last run of tools/push-gate.ts on it, or not run. */
   function pushGate(sha: string) {
     const path = runRecordPath(env, root);
     const runs = existsSync(path) ? lines(readFileSync(path, 'utf8')).flatMap(line => {

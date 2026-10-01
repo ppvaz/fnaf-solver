@@ -1,7 +1,7 @@
 // Calibration smoke test: dragging a control must reposition it and must NOT
 // register as a game input, and the saved layout must reach canonical core config.
 import { spawn } from 'node:child_process';
-import { chromeBinary, chromeArgs } from '../../../tools/chrome.mjs';
+import { chromeBinary, chromeArgs } from '../../../tools/chrome.ts';
 import { mkdtempSync, writeFileSync, readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';

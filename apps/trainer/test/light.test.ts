@@ -2,7 +2,7 @@
 // places; exactly one must be on screen at a time, and the coach must cue the
 // one that is actually visible.
 import { spawn } from 'node:child_process';
-import { chromeBinary, chromeArgs } from '../../../tools/chrome.mjs';
+import { chromeBinary, chromeArgs } from '../../../tools/chrome.ts';
 import { mkdtempSync } from 'node:fs'; import { tmpdir } from 'node:os'; import { join } from 'node:path';
 const PORT = 9339;
 const chrome = spawn(chromeBinary(),

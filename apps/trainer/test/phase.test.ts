@@ -1,7 +1,7 @@
 // Drives lessons 7 (Phase A) and 8 (Phase B) in a real browser. These are the
 // two lessons that have only ever been checked headlessly.
 import { spawn } from 'node:child_process';
-import { chromeBinary, chromeArgs } from '../../../tools/chrome.mjs';
+import { chromeBinary, chromeArgs } from '../../../tools/chrome.ts';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os'; import { join } from 'node:path';
 

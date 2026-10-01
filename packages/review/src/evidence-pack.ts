@@ -528,7 +528,7 @@ export function packEntry(id: string, { pack, wrapper }: {pack: any, wrapper: an
     : { id, kind: 'device-campaign', outcome: pack.outcome, claimLevel: pack.claimLevel, nights: pack.nights, attempts: [] };
 }
 
-/** The generated register of each committed winner's compiled winnerHash (tools/generate-catalog.js). */
+/** The generated register of each committed winner's compiled winnerHash (tools/generate-catalog.ts). */
 export const WINNER_HASHES = 'docs/architecture/generated/winner-hashes.json';
 
 /**

@@ -5,6 +5,6 @@
  * generated from them. Each game's Rulebook data, Sim and controls are its
  * own subpath: `@sixam/source/fnaf1` .. `/fnaf4`, and any of their files
  * under `@sixam/source/games/<game>/`. Source imports only the kernel
- * (tools/architecture-test.js).
+ * (tools/architecture-test.ts).
  */
 export * from './clockwork/index.ts';

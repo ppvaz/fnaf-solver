@@ -10,7 +10,7 @@
 // admitted under.
 //
 // Files present in the working tree but not yet staged count, as in
-// tools/test-docs.mjs: a new image must have its row before it is committed.
+// tools/test-docs.ts: a new image must have its row before it is committed.
 // The frozen set is not exempt; it holds no media, and game media there would
 // be refused like anywhere else.
 import assert from 'node:assert/strict';
@@ -98,7 +98,7 @@ const planted = [
 ];
 for (const [what, input, expect] of planted) {
   const found = mediaProblems(input);
-  assert.ok(found.some((m) => expect.test(m)), `planted ${what} was not caught: ${JSON.stringify(found)}`);
+  assert.ok(found.some((m) => (expect as any).test(m)), `planted ${what} was not caught: ${JSON.stringify(found)}`);
 }
 assert.equal(mediaProblems(good).length, 0);
 assert.ok(MAX_CLIP_BYTES === 4_000_000 && MAX_CLIPS === 2, 'the limits are the decision, not a knob');
