@@ -1158,6 +1158,7 @@
       "imports": [
         "./companion-capture.ts",
         "./physical-ports.ts",
+        "@sixam/kernel",
         "@sixam/kernel/contracts",
         "@sixam/play",
         "node:child_process",
@@ -1171,6 +1172,7 @@
         "./control-effect.ts",
         "./device-shell.ts",
         "./hid-schedule.ts",
+        "@sixam/kernel",
         "@sixam/play",
         "node:child_process",
         "node:util"
@@ -1179,6 +1181,8 @@
     {
       "file": "packages/play/src/campaign/artifact-executor.ts",
       "imports": [
+        "./campaign.ts",
+        "@sixam/kernel",
         "@sixam/kernel/contracts",
         "@sixam/source"
       ]
@@ -1188,6 +1192,7 @@
       "imports": [
         "./artifact-executor.ts",
         "./campaign.ts",
+        "@sixam/kernel",
         "@sixam/kernel/contracts",
         "node:crypto"
       ]
@@ -1195,8 +1200,10 @@
     {
       "file": "packages/play/src/campaign/campaign-composition.ts",
       "imports": [
+        "./artifact-executor.ts",
         "./campaign-bundle.ts",
-        "./campaign-runner.ts"
+        "./campaign-runner.ts",
+        "./campaign.ts"
       ]
     },
     {
@@ -1205,6 +1212,7 @@
         "./adb-bridge.ts",
         "./campaign.ts",
         "./custom-night.ts",
+        "@sixam/kernel",
         "@sixam/kernel/contracts"
       ]
     },
@@ -1212,6 +1220,7 @@
       "file": "packages/play/src/campaign/campaign-proof.ts",
       "imports": [
         "./custom-night.ts",
+        "@sixam/kernel",
         "@sixam/kernel/contracts",
         "@sixam/source/fnaf2"
       ]
@@ -1227,6 +1236,7 @@
       "file": "packages/play/src/campaign/campaign.ts",
       "imports": [
         "./custom-night.ts",
+        "@sixam/kernel",
         "@sixam/kernel/contracts",
         "@sixam/source/fnaf2"
       ]
@@ -1240,8 +1250,15 @@
       ]
     },
     {
+      "file": "packages/play/src/campaign/control-effect.ts",
+      "imports": [
+        "@sixam/kernel"
+      ]
+    },
+    {
       "file": "packages/play/src/campaign/custom-night.ts",
       "imports": [
+        "@sixam/kernel",
         "@sixam/source/fnaf2"
       ]
     },
@@ -1252,10 +1269,19 @@
       ]
     },
     {
+      "file": "packages/play/src/campaign/device-shell.ts",
+      "imports": [
+        "./hid-schedule.ts",
+        "@sixam/kernel"
+      ]
+    },
+    {
       "file": "packages/play/src/campaign/hid-schedule.ts",
       "imports": [
         "./artifact-executor.ts",
+        "./control-effect.ts",
         "./device-local-executor.ts",
+        "@sixam/kernel",
         "@sixam/play",
         "@sixam/source"
       ]
@@ -1269,11 +1295,14 @@
         "./campaign-bundle.ts",
         "./campaign-composition.ts",
         "./campaign-runner.ts",
+        "./campaign.ts",
         "./custom-night.ts",
         "./night-anchor.ts",
         "./physical-ports.ts",
         "./timed-start.ts",
         "./venue.ts",
+        "@sixam/kernel",
+        "@sixam/kernel/contracts",
         "@sixam/play",
         "node:child_process",
         "node:fs",
@@ -1303,6 +1332,7 @@
       "file": "packages/play/src/campaign/venue.ts",
       "imports": [
         "./adb-bridge.ts",
+        "@sixam/kernel",
         "@sixam/kernel/contracts",
         "node:fs/promises",
         "node:path"
@@ -1317,6 +1347,7 @@
     {
       "file": "packages/play/src/coach/cycle-lesson.ts",
       "imports": [
+        "@sixam/kernel",
         "node:crypto"
       ]
     },
@@ -1339,6 +1370,7 @@
     {
       "file": "packages/play/src/phone/android-venue.ts",
       "imports": [
+        "@sixam/kernel",
         "@sixam/kernel/contracts",
         "node:crypto"
       ]
@@ -1346,20 +1378,29 @@
     {
       "file": "packages/play/src/phone/clocks.ts",
       "imports": [
+        "@sixam/kernel",
         "@sixam/kernel/time"
+      ]
+    },
+    {
+      "file": "packages/play/src/phone/control-anchor.ts",
+      "imports": [
+        "@sixam/kernel"
       ]
     },
     {
       "file": "packages/play/src/player/belief-state.ts",
       "imports": [
-        "./plain-clone.ts"
+        "./plain-clone.ts",
+        "@sixam/kernel"
       ]
     },
     {
       "file": "packages/play/src/player/estimator.ts",
       "imports": [
         "./belief-state.ts",
-        "./plain-clone.ts"
+        "./plain-clone.ts",
+        "@sixam/kernel"
       ]
     },
     {
@@ -1373,19 +1414,42 @@
       "file": "packages/play/src/sensors/fnaf2/calibration-state-rule.ts",
       "imports": [
         "./monitor-rule.ts",
-        "node:crypto"
+        "./rule-digest.ts",
+        "@sixam/kernel"
       ]
     },
     {
       "file": "packages/play/src/sensors/fnaf2/camera-rule.ts",
       "imports": [
-        "node:crypto"
+        "./rule-digest.ts",
+        "@sixam/kernel"
       ]
     },
     {
       "file": "packages/play/src/sensors/fnaf2/monitor-rule.ts",
       "imports": [
+        "./rule-digest.ts",
+        "@sixam/kernel"
+      ]
+    },
+    {
+      "file": "packages/play/src/sensors/fnaf2/rule-digest.ts",
+      "imports": [
+        "@sixam/kernel",
         "node:crypto"
+      ]
+    },
+    {
+      "file": "packages/play/src/venues/phone/companion.ts",
+      "imports": [
+        "../../sensors/fnaf2/rule-digest.ts",
+        "@sixam/kernel"
+      ]
+    },
+    {
+      "file": "packages/play/src/venues/phone/hid.ts",
+      "imports": [
+        "@sixam/kernel"
       ]
     },
     {
@@ -1397,7 +1461,8 @@
     {
       "file": "packages/play/src/venues/sim/observer.ts",
       "imports": [
-        "@sixam/source/games/fnaf2/config.ts"
+        "@sixam/source/games/fnaf2/config.ts",
+        "@sixam/source/games/fnaf2/plant-model.ts"
       ]
     },
     {

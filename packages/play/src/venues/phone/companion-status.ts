@@ -30,13 +30,13 @@ export const COMPANION_STATUS_FIELDS = Object.freeze([
 
 const REQUIRED = ['schema', 'capture', 'session', 'snapshotNs'];
 
-function fail(message) { throw new Error(`companion-status-v1: ${message}`); }
+function fail(message: string): never { throw new Error(`companion-status-v1: ${message}`); }
 
-const unknown = value => value === undefined || value === 'UNKNOWN';
-const orNull = value => (unknown(value) ? null : value);
-const noneOrNull = value => (unknown(value) || value === 'NONE' ? null : value);
+const unknown = (value: string | undefined): value is undefined | 'UNKNOWN' => value === undefined || value === 'UNKNOWN';
+const orNull = (value: string | undefined) => (unknown(value) ? null : value);
+const noneOrNull = (value: string | undefined) => (unknown(value) || value === 'NONE' ? null : value);
 
-function integer(fields, key, { nullable = true } = {}) {
+function integer(fields: Readonly<Record<string, string>>, key: string, { nullable = true } = {}) {
   const value = fields[key];
   if (unknown(value)) {
     if (nullable) return null;
@@ -48,7 +48,7 @@ function integer(fields, key, { nullable = true } = {}) {
   return number;
 }
 
-function rect(value) {
+function rect(value: string | undefined) {
   if (unknown(value) || value === 'NONE') return null;
   const match = /^(\d+),(\d+),(\d+),(\d+)$/.exec(value);
   if (!match) fail(`panel is not left,top,right,bottom: ${value}`);
@@ -57,7 +57,7 @@ function rect(value) {
   return Object.freeze({ left, top, right, bottom });
 }
 
-function clearance(value) {
+function clearance(value: string | undefined) {
   if (unknown(value) || value === 'UNCHECKED') return Object.freeze({ state: 'UNCHECKED' });
   let match = /^OK:(\d+)px$/.exec(value);
   if (match) return Object.freeze({ state: 'OK', gapPx: Number(match[1]) });
@@ -102,7 +102,7 @@ export function parseCompanionStatus(line: string) {
     if (!match) fail(`content is not WxH: ${fields.content}`);
     return Object.freeze({ width: Number(match[1]), height: Number(match[2]) });
   })();
-  const flag = key => {
+  const flag = (key: string) => {
     const value = fields[key];
     if (unknown(value)) return null;
     if (value === '1') return true;
@@ -172,7 +172,7 @@ export function parseCompanionEndpoint(text: string) {
     if (at <= 0) continue;
     fields[value.slice(0, at)] = value.slice(at + 1);
   }
-  const bad = message => { throw new Error(`companion-endpoint-v1: ${message}`); };
+  function bad(message: string): never { throw new Error(`companion-endpoint-v1: ${message}`); }
   if (fields.schema !== COMPANION_ENDPOINT_SCHEMA) bad(`schema is ${fields.schema ?? 'missing'}`);
   if (!/^[0-9a-f]{32}$/.test(fields.token ?? '')) bad('token is not 128-bit hex');
   const port = Number(fields.port);

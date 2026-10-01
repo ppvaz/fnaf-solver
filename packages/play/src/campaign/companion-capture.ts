@@ -5,6 +5,7 @@
  * CONTRACT:device-adb-preflight-v1.
  */
 import { execFile as execFileCallback } from 'node:child_process';
+import type { ExecFileOptions } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
@@ -12,13 +13,21 @@ const execFile = promisify(execFileCallback);
 const ROOT = fileURLToPath(new URL('../../../../', import.meta.url));
 const SETUP = fileURLToPath(new URL('../../../../packages/play/bin/companion/companion-setup.sh', import.meta.url));
 
-async function runSetup(file, args, options) {
+/** What the setup script returned: its exit code and both streams. */
+interface SetupResult {
+  exitCode: unknown;
+  stdout: string;
+  stderr: string;
+}
+
+async function runSetup(file: string, args: readonly string[], options: ExecFileOptions): Promise<SetupResult> {
   try {
-    const result = await execFile(file, args, options);
+    const result = await execFile(file, [...args], { ...options, encoding: 'utf8' });
     return { exitCode: 0, stdout: result.stdout ?? '', stderr: result.stderr ?? '' };
   } catch (error) {
-    return { exitCode: Number.isInteger(error.code) ? error.code : 1,
-      stdout: error.stdout ?? '', stderr: error.stderr ?? error.message ?? '' };
+    const failure = error as { code?: unknown, stdout?: string, stderr?: string, message?: string };
+    return { exitCode: Number.isInteger(failure.code) ? failure.code : 1,
+      stdout: failure.stdout ?? '', stderr: failure.stderr ?? failure.message ?? '' };
   }
 }
 
@@ -31,7 +40,8 @@ async function runSetup(file, args, options) {
  * a live control endpoint before they continue.
  */
 export async function restartCompanionCapture({ serial, adb = 'adb', target, screen = 'menu',
-  waitSeconds = 30, run = runSetup }: {serial?: string, adb?: string, target?: string, screen?: string, waitSeconds?: number, run?: (file: any, args: any, options: any) => Promise<{exitCode: any, stdout: any, stderr: any}>} = {}) {
+  waitSeconds = 30, run = runSetup }: {serial?: string, adb?: string, target?: string, screen?: string, waitSeconds?: number,
+  run?: (file: string, args: readonly string[], options: ExecFileOptions) => Promise<Partial<SetupResult> | null | undefined>} = {}) {
   if (typeof serial !== 'string' || serial.length === 0)
     throw new TypeError('Companion capture restart requires an ADB serial');
   if (typeof adb !== 'string' || adb.length === 0)
@@ -51,7 +61,7 @@ export async function restartCompanionCapture({ serial, adb = 'adb', target, scr
       timeout: Math.max(120000, (waitSeconds + 120) * 1000),
       maxBuffer: 4 * 1024 * 1024,
     });
-  const exitCode = Number.isInteger(result?.exitCode) ? result.exitCode : 1;
+  const exitCode = typeof result?.exitCode === 'number' && Number.isInteger(result.exitCode) ? result.exitCode : 1;
   const output = `${result?.stdout ?? ''}${result?.stderr ?? ''}`.trim();
   const status = exitCode === 0 ? 'READY' : exitCode === 75 ? 'HOLD' : 'FAIL';
   return Object.freeze({ status, serial, exitCode, output: output.slice(-4000) });

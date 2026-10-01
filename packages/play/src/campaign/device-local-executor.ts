@@ -9,13 +9,16 @@
  * CONTRACT:device-executor-v1.
  */
 import { validateExecutorRequest } from './artifact-executor.ts';
+import type { ArtifactBlock } from './artifact-executor.ts';
 
-const sleepDefault = milliseconds => new Promise<any>(resolve => setTimeout(resolve, milliseconds));
-const isRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
-const fail = message => { throw new TypeError(`device-local executor: ${message}`); };
+/** A block placed on the night's timeline: its cycle offset plus the cycle's start. */
+export type ScheduledBlock = ArtifactBlock & { readonly scheduleAtMs: number };
 
-export function expandNightBlocks(request, night) {
-  validateExecutorRequest(request);
+const sleepDefault = (milliseconds: number) => new Promise<void>(resolve => setTimeout(resolve, milliseconds));
+function fail(message: string): never { throw new TypeError(`device-local executor: ${message}`); }
+
+export function expandNightBlocks(input: unknown, night: number): ScheduledBlock[] {
+  const request = validateExecutorRequest(input);
   const plan = request.artifact.plans.find(item => item.night === night);
   if (!plan) fail(`night ${night} is not bound to the request`);
   const blocks = request.blocks.filter(block => block.night === night);
@@ -32,7 +35,7 @@ export function expandNightBlocks(request, night) {
   // boundary), leaving the monitor in the wrong parity and making the wind
   // contact inert.  This also preserves the minimal Night 1 emitter's
   // deliberate 115 s pre-2-AM arm.
-  const expanded = opening.map(block => ({ ...block, scheduleAtMs: block.atMs }));
+  const expanded: ScheduledBlock[] = opening.map(block => ({ ...block, scheduleAtMs: block.atMs }));
   for (let base = startMs; base < stopAtMs; base += periodMs) {
     for (const block of steady) {
       const scheduleAtMs = base + block.atMs;
@@ -48,15 +51,17 @@ export function expandNightBlocks(request, night) {
 }
 
 export class DeviceLocalArtifactExecutor {
-  declare applyBlock: Function;
-  declare now: Function;
-  declare sleep: Function;
-  declare abortPort: Function;
-  declare releasePort: Function;
+  declare applyBlock: (block: ScheduledBlock) => unknown;
+  declare now: () => number;
+  declare sleep: (milliseconds: number) => Promise<unknown>;
+  declare abortPort: (reason?: unknown) => unknown;
+  declare releasePort: () => unknown;
   declare lateBudgetMs: number;
   declare running: boolean;
   constructor({ applyBlock, now = () => performance.now(), sleep = sleepDefault,
-    abort, releaseAll, lateBudgetMs = 250 }: {applyBlock?: Function, now?: Function, sleep?: Function, abort?: Function, releaseAll?: Function, lateBudgetMs?: number} = {}) {
+    abort, releaseAll, lateBudgetMs = 250 }: {applyBlock?: (block: ScheduledBlock) => unknown, now?: () => number,
+    sleep?: (milliseconds: number) => Promise<unknown>, abort?: (reason?: unknown) => unknown, releaseAll?: () => unknown,
+    lateBudgetMs?: number} = {}) {
     if (typeof applyBlock !== 'function') throw new TypeError('device-local executor requires applyBlock');
     if (typeof abort !== 'function' || typeof releaseAll !== 'function')
       throw new TypeError('device-local executor requires abort and releaseAll');
@@ -66,8 +71,8 @@ export class DeviceLocalArtifactExecutor {
     this.running = false;
   }
 
-  async execute(request) {
-    validateExecutorRequest(request);
+  async execute(input: unknown) {
+    const request = validateExecutorRequest(input);
     if (request.mode !== 'live' && request.mode !== 'dry-run') fail('unsupported request mode');
     if (request.artifact.plans.length !== 1) fail('one night per device-local execution request is required');
     if (this.running) fail('executor is already running');
@@ -97,6 +102,6 @@ export class DeviceLocalArtifactExecutor {
     }
   }
 
-  abort(reason) { return this.abortPort(reason); }
+  abort(reason?: unknown) { return this.abortPort(reason); }
   releaseAll() { return this.releasePort(); }
 }

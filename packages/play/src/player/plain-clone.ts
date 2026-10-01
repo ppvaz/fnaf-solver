@@ -20,15 +20,20 @@
 // cost dominated by copying a diagnostic buffer is spent where the deadline is
 // tightest.
 
-const fail = (what) => {
+function fail(what: string): never {
   throw new TypeError(`plain-clone: ${what} is not plain data`);
-};
+}
 
 /**
  * Deep-copy plain JSON data: primitives, arrays, and plain objects. Anything
  * else is refused rather than approximated.
  */
-export function plainClone(value) {
+export function plainClone<T>(value: T): T {
+  // A copy of plain data has the shape it was copied from.
+  return copy(value) as T;
+}
+
+function copy(value: unknown): unknown {
   if (value === null) return null;
   const type = typeof value;
   if (type !== 'object') {
@@ -37,15 +42,17 @@ export function plainClone(value) {
     return value;
   }
   if (Array.isArray(value)) {
-    const out = new Array(value.length);
-    for (let i = 0; i < value.length; i++) out[i] = plainClone(value[i]);
+    const items: readonly unknown[] = value;
+    const out = new Array<unknown>(items.length);
+    for (let i = 0; i < items.length; i++) out[i] = copy(items[i]);
     return out;
   }
-  const proto = Object.getPrototypeOf(value);
+  const record = value as Readonly<Record<string, unknown>> & { constructor?: { name?: string } };
+  const proto = Object.getPrototypeOf(record);
   if (proto !== Object.prototype && proto !== null)
-    fail(`an instance of ${value.constructor?.name ?? 'an exotic object'}`);
-  const out = {};
-  for (const key of Object.keys(value)) out[key] = plainClone(value[key]);
+    fail(`an instance of ${record.constructor?.name ?? 'an exotic object'}`);
+  const out: Record<string, unknown> = {};
+  for (const key of Object.keys(record)) out[key] = copy(record[key]);
   return out;
 }
 
@@ -54,10 +61,10 @@ export function plainClone(value) {
  * reference across copies of the owning record cannot become a mutation
  * channel: `shareLog` copies the array, never the entries.
  */
-export function appendLog(log, entry) {
+export function appendLog<T>(log: T[], entry: T) {
   log.push(Object.freeze(entry));
   return log;
 }
 
 /** Copy an append-only log's spine, sharing its frozen entries. */
-export const shareLog = (log) => log.slice();
+export const shareLog = <T>(log: readonly T[]) => log.slice();

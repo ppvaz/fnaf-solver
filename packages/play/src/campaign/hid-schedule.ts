@@ -6,8 +6,12 @@
  * CONTRACT:hid-executor-v1.
  */
 import { HID_DESCRIPTOR, HID_FEATURE_REPORTS, report } from '@sixam/play';
-import { validateExecutorRequest } from './artifact-executor.ts';
+import { isSweepSlot, validateExecutorRequest } from './artifact-executor.ts';
+import type { ArtifactAction, ExecutorRequest } from './artifact-executor.ts';
 import { expandNightBlocks } from './device-local-executor.ts';
+import type { ScheduledBlock } from './device-local-executor.ts';
+import type { MaskTransition, MonitorTransition } from './control-effect.ts';
+import { isRecord } from '@sixam/kernel';
 import { deviceProfileGame } from '@sixam/source';
 import { FNAF2_CONTROL_VOCABULARY as V, FNAF2_PACKAGE } from '@sixam/source';
 
@@ -43,21 +47,47 @@ export const GATE_BUDGET_RESERVE_MS = 400;
 // it, so gating never displaces a contact the plan's timing was validated on.
 export const GATE_MIN_SLACK_MS = 2600;
 
-const isRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
-const fail = message => { throw new TypeError(`adb device-local executor: ${message}`); };
+/** The gate placement knobs; fixtures shorten them, production keeps the defaults above. */
+interface GateTiming {
+  readonly minSlackMs?: number;
+  readonly budgetMinMs?: number;
+  readonly budgetMaxMs?: number;
+  readonly budgetReserveMs?: number;
+}
+/** A host-owned gate: where the stream parks, for how long, and what the plan believes holds there. */
+interface HidGate {
+  readonly gateAtMs: number;
+  readonly budgetMs: number;
+  readonly nextActionId: string;
+  readonly cycle: string;
+  readonly believedMaskOn: boolean | null;
+  readonly believedMonitorUp: boolean | null;
+}
+type ArmedPlan = ExecutorRequest['artifact']['plans'][number] & { readonly armVerification: { readonly untilMs: number } };
+/** device-local-hid-schedule-v1, as compileDeviceLocalHidSchedule returns it. */
+export type HidSchedule = ReturnType<typeof compileDeviceLocalHidSchedule>;
 
-function point(value, control) {
-  if (!isRecord(value) || !Number.isInteger(value.x) || !Number.isInteger(value.y) ||
-      value.x < 0 || value.y < 0 || value.x >= 2400 || value.y >= 1080)
+function fail(message: string): never { throw new TypeError(`adb device-local executor: ${message}`); }
+
+/** An action at its place on the night's timeline. */
+type Timed = { readonly action: ArtifactAction, readonly atMs: number };
+type Point = { readonly x: number, readonly y: number };
+type Contact = { flags: number, point: Point };
+
+const screenInteger = (value: unknown, bound: number): value is number =>
+  typeof value === 'number' && Number.isInteger(value) && value >= 0 && value < bound;
+
+function point(value: unknown, control: string): Point {
+  if (!isRecord(value) || !screenInteger(value.x, 2400) || !screenInteger(value.y, 1080))
     fail(`profile.controlMap.${control} is not a bounded screen point`);
-  return value;
+  return value as unknown as Point;
 }
 
-function controlPoint(request, control) {
+function controlPoint(request: ExecutorRequest, control: string) {
   return point(request.profile.controlMap?.[control], control);
 }
 
-export function line(command, fields = {}) {
+export function line(command: string, fields: Record<string, unknown> = {}) {
   return JSON.stringify({ id: HID_ID, command, ...fields });
 }
 
@@ -65,7 +95,7 @@ export const SHARED_HID_RELEASE = line('report', {
   report: [1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 });
 
-export function sharedScheduleBody(schedule, { armObserveOnce = false } = {}) {
+export function sharedScheduleBody(schedule: HidSchedule, { armObserveOnce = false } = {}): readonly string[] {
   // Blocking mode hands over only the prefix and waits for the arm to confirm
   // before the remainder is released. Observe-once hands over the prefix and
   // the first gated segment together, so the stream never parks and adds no
@@ -81,18 +111,18 @@ export function sharedScheduleBody(schedule, { armObserveOnce = false } = {}) {
   return schedule.lines.slice(2);
 }
 
-function addDelay(events, duration) {
+function addDelay(events: string[], duration: number) {
   if (!Number.isInteger(duration) || duration < 0) fail(`invalid integer delay ${duration}`);
   // AOSP hid rejects a zero duration. A zero is a valid semantic adjacency,
   // so it is represented by no event rather than a fatal device command.
   if (duration > 0) events.push(line('delay', { duration }));
 }
 
-function addReport(events, records) {
+function addReport(events: string[], records: readonly Contact[]) {
   events.push(line('report', { report: report(records) }));
 }
 
-function addSingle(events, request, control, duration) {
+function addSingle(events: string[], request: ExecutorRequest, control: string, duration: number) {
   const target = controlPoint(request, control);
   if (!Number.isInteger(duration) || duration < 1 || duration > 30000)
     fail(`${control} duration is outside 1..30000 ms`);
@@ -101,7 +131,7 @@ function addSingle(events, request, control, duration) {
   addReport(events, [{ flags: 0, point: target }]);
 }
 
-function addTwoContact(events, request, first, second, duration) {
+function addTwoContact(events: string[], request: ExecutorRequest, first: string, second: string, duration: number) {
   const firstPoint = controlPoint(request, first);
   const secondPoint = controlPoint(request, second);
   if (!Number.isInteger(duration) || duration < 1 || duration > 30000)
@@ -113,7 +143,7 @@ function addTwoContact(events, request, first, second, duration) {
   addReport(events, [{ flags: 0, point: firstPoint }, { flags: 4, point: secondPoint }]);
 }
 
-function addAction(events, request, action) {
+function addAction(events: string[], request: ExecutorRequest, action: ArtifactAction): number {
   const duration = action.durationMs ?? 33;
   if (action.kind === 'ensure' || action.kind === 'tap' || action.kind === 'press' ||
       action.kind === 'hold') {
@@ -136,7 +166,7 @@ function addAction(events, request, action) {
     addSingle(events, request, V.mask, 33);
     return duration + released + 33;
   }
-  if (action.kind === 'sweep-slot') {
+  if (isSweepSlot(action)) {
     addSingle(events, request, action.control, action.selectMs);
     addDelay(events, action.settleMs);
     addSingle(events, request, V.cameraFeedLight, action.lightMs);
@@ -175,7 +205,7 @@ function addAction(events, request, action) {
   fail(`unsupported physical action ${action.kind}/${action.compound ?? ''}`);
 }
 
-function actionsOf(block) {
+function actionsOf(block: ScheduledBlock): Timed[] {
   return block.actions.map(action => ({ action,
     atMs: block.scheduleAtMs + action.atMs - block.atMs }));
 }
@@ -193,7 +223,7 @@ function actionsOf(block) {
 // never move.
 export const SECOND_CONTACT_UNDER_MS = 33;
 
-function addSecondContact(events, request, control, duration) {
+function addSecondContact(events: string[], request: ExecutorRequest, control: string, duration: number) {
   const target = controlPoint(request, control);
   if (!Number.isInteger(duration) || duration < 1 || duration > 30000)
     fail(`${control} duration is outside 1..30000 ms`);
@@ -202,8 +232,8 @@ function addSecondContact(events, request, control, duration) {
   addReport(events, [{ flags: 0, point: target }, { flags: 4, point: target }]);
 }
 
-function compileActionEvents(request, actions, { originAtMs = 0 } = {}) {
-  const events = [];
+function compileActionEvents(request: ExecutorRequest, actions: readonly Timed[], { originAtMs = 0 } = {}) {
+  const events: string[] = [];
   let cursor = originAtMs;
   let released = -Infinity;
   for (const { action, atMs } of actions) {
@@ -227,7 +257,7 @@ function compileActionEvents(request, actions, { originAtMs = 0 } = {}) {
  * its block start as the monitor edge would falsely accuse a healthy
  * transition before the monitor contact has even been sent.
  */
-function monitorPressAtMs(action, atMs) {
+function monitorPressAtMs(action: ArtifactAction, atMs: number) {
   if (action.kind === 'compound' && action.compound === 'camdrop')
     return atMs + (action.leadMs ?? 0);
   if (action.kind === 'compound' && action.compound === 'maskraise')
@@ -241,20 +271,19 @@ function monitorPressAtMs(action, atMs) {
  * to the artifact rather than asking a post-run reader to infer a control
  * from otherwise identical HID DOWN/UP pairs.
  */
-function monitorTransitionsOf(actions) {
+function monitorTransitionsOf(actions: readonly Timed[]): readonly MonitorTransition[] {
   return Object.freeze(actions
-    .filter(({ action }) => typeof action.targetMonitorUp === 'boolean')
-    .map(({ action, atMs }) => Object.freeze({
+    .flatMap(({ action, atMs }) => typeof action.targetMonitorUp === 'boolean' ? [Object.freeze({
       actionId: action.id,
       cycle: action.cycle,
       atMs: monitorPressAtMs(action, atMs),
       targetMonitorUp: action.targetMonitorUp,
-    }))
+    })] : [])
     .sort((left, right) => left.atMs - right.atMs || left.actionId.localeCompare(right.actionId)));
 }
 
 /** Return the actual contact where an action asks the game to toggle mask. */
-function maskPressAtMs(action, atMs) {
+function maskPressAtMs(action: ArtifactAction, atMs: number) {
   // An observe-left macro holds the vent button first, then presses mask. The
   // target belongs to that latter contact, not the start of the visual read.
   if (action.kind === 'observe-left')
@@ -267,15 +296,14 @@ function maskPressAtMs(action, atMs) {
  * means the mask should be on; `false` means it should be off.  This is an
  * evidence ledger only and never feeds state back into the scheduled plan.
  */
-function maskTransitionsOf(actions) {
+function maskTransitionsOf(actions: readonly Timed[]): readonly MaskTransition[] {
   return Object.freeze(actions
-    .filter(({ action }) => typeof action.targetMaskOn === 'boolean')
-    .map(({ action, atMs }) => Object.freeze({
+    .flatMap(({ action, atMs }) => typeof action.targetMaskOn === 'boolean' ? [Object.freeze({
       actionId: action.id,
       cycle: action.cycle,
       atMs: maskPressAtMs(action, atMs),
       targetMaskOn: action.targetMaskOn,
-    }))
+    })] : [])
     .sort((left, right) => left.atMs - right.atMs || left.actionId.localeCompare(right.actionId)));
 }
 
@@ -294,15 +322,15 @@ function maskTransitionsOf(actions) {
  * authored contact moves. The budget is carved out of that idle, never added
  * to it.
  */
-function compileGateSegments(request, actions, originAtMs, {
+function compileGateSegments(request: ExecutorRequest, actions: readonly Timed[], originAtMs: number, {
   minSlackMs = GATE_MIN_SLACK_MS,
   budgetMinMs = GATE_BUDGET_MIN_MS,
   budgetMaxMs = GATE_BUDGET_MAX_MS,
   budgetReserveMs = GATE_BUDGET_RESERVE_MS,
-} = {}) {
+}: GateTiming = {}) {
   const ends = actions.map(({ action, atMs }) =>
     atMs + compileActionEvents(request, [{ action, atMs }]).cursor - atMs);
-  const points = [];
+  const points: { index: number, gateAtMs: number, budgetMs: number }[] = [];
   for (let index = 0; index + 1 < actions.length; index += 1) {
     const finishedAtMs = ends[index];
     const nextAtMs = actions[index + 1].atMs;
@@ -313,8 +341,8 @@ function compileGateSegments(request, actions, originAtMs, {
     if (gateAtMs <= finishedAtMs) continue;
     points.push({ index: index + 1, gateAtMs, budgetMs });
   }
-  const segments = [];
-  const gates = [];
+  const segments: (readonly string[])[] = [];
+  const gates: HidGate[] = [];
   let from = 0;
   let cursor = originAtMs;
   for (const point of points) {
@@ -349,7 +377,7 @@ function compileGateSegments(request, actions, originAtMs, {
   return { segments, gates, cursor: tail.cursor };
 }
 
-function compileArmWindow(request, actions) {
+function compileArmWindow(request: ExecutorRequest, actions: readonly Timed[]) {
   const firstWind = actions.find(({ action }) =>
     action.control === V.wind);
   if (!firstWind) fail('arm-verified schedule has no wind action');
@@ -365,8 +393,8 @@ function compileArmWindow(request, actions) {
     armReadyAtMs: prefixCompiled.cursor });
 }
 
-function compileArmSegments(request, actions, register, plan,
-  armWindow = compileArmWindow(request, actions), gateTiming = {}) {
+function compileArmSegments(request: ExecutorRequest, actions: readonly Timed[], register: string, plan: ArmedPlan,
+  armWindow = compileArmWindow(request, actions), gateTiming: GateTiming = {}) {
   const { firstWind, prefix, prefixCompiled, armReadyAtMs } = armWindow;
   // A minimal Night 1 has a steady CAM 09 flash at 140150 ms and its first
   // wind at 140300 ms. That flash is not part of the arm prefix: it must stay
@@ -392,7 +420,8 @@ function compileArmSegments(request, actions, register, plan,
   const remainderSegments = remainderCompiled.segments.map(events => [...events]);
   const tail = plan.timing.observeUntilMs - remainderCompiled.cursor;
   if (tail < 0) fail('HID schedule exceeds the observation envelope');
-  addDelay(remainderSegments.at(-1), tail);
+  // compileGateSegments always ends with the tail segment.
+  addDelay(remainderSegments[remainderSegments.length - 1], tail);
   // The corrective contact is the plan's own authored mask press, not a
   // coordinate invented for the corrector. A plan with no mask action cannot
   // be parity-corrected, and says so rather than pressing something else.
@@ -442,10 +471,10 @@ function compileArmSegments(request, actions, register, plan,
  * The returned lines contain only the fixed hid vocabulary and are suitable
  * for one bounded `adb shell sh -s` transfer.
  */
-export function compileDeviceLocalHidSchedule(request, {
+export function compileDeviceLocalHidSchedule(input: unknown, {
   readyDelayMs = DEFAULT_READY_DELAY_MS, gateTiming = {},
-} = {}) {
-  validateExecutorRequest(request);
+}: { readyDelayMs?: number, gateTiming?: GateTiming } = {}) {
+  const request = validateExecutorRequest(input);
   // The macros below (hallvent, camdrop, the vent read's mask press, the
   // second-contact monitor) are FNaF 2's physical shapes. The request was
   // validated against its game's action table; only FNaF 2's reaches here.
@@ -475,7 +504,8 @@ export function compileDeviceLocalHidSchedule(request, {
   const cursor = compiled.cursor;
   if (cursor > plan.timing.observeUntilMs) fail('HID schedule exceeds the observation envelope');
   addDelay(events, plan.timing.observeUntilMs - cursor);
-  const armWindow = plan.armVerification
+  const armVerification = plan.armVerification;
+  const armWindow = armVerification
     ? compileArmWindow(request, actions) : undefined;
   // The cycle gates are compiled for BOTH arm modes.
   //
@@ -489,8 +519,8 @@ export function compileDeviceLocalHidSchedule(request, {
   // observing, which is Pedro's standing direction (2026-09-12). The two modes
   // now differ in one thing only: whether the opening prefix is PARKED on the
   // arm observation, which is what costs delivered phase.
-  const gated = armWindow
-    ? compileArmSegments(request, actions, register, plan, armWindow, gateTiming) : undefined;
+  const gated = armWindow && armVerification
+    ? compileArmSegments(request, actions, register, { ...plan, armVerification }, armWindow, gateTiming) : undefined;
   return Object.freeze({ schema: 'device-local-hid-schedule-v1', version: 1, night,
     readyDelayMs, phaseOffsetMs, actionCount: actions.length, plannedUntilMs: plan.timing.observeUntilMs,
     lines: Object.freeze(events), monitorTransitions: monitorTransitionsOf(actions),

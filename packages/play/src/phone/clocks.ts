@@ -1,10 +1,33 @@
 /** Injected monotonic/logical clocks; scheduling never calls wall time directly. */
+import { isList, isOneOf, isRecord } from '@sixam/kernel';
 import { ClockPort } from '@sixam/kernel/time';
+
+type MonotonicClock = 'host-monotonic-ms' | 'device-monotonic-ms';
+const CLOCKS: readonly MonotonicClock[] = ['host-monotonic-ms', 'device-monotonic-ms'];
+const finite = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
+
+/** clock-map-v1: a measured map from one session's clock to another's, valid only over its measured span. */
+export interface ClockMap {
+  readonly schema: 'clock-map-v1';
+  readonly id: string;
+  readonly evidenceId: string;
+  readonly sourceClock: MonotonicClock;
+  readonly targetClock: MonotonicClock;
+  readonly sourceSession: string;
+  readonly targetSession: string;
+  readonly sourceAtMs: number;
+  readonly targetAtMs: number;
+  readonly rate: number;
+  readonly errorMs: number;
+  readonly rateErrorPpm: number;
+  readonly validFromMs: number;
+  readonly validUntilMs: number;
+}
 
 export class Clock extends ClockPort {
   declare name: string;
-  declare read: any;
-  constructor({ name, read }) {
+  declare read: () => number;
+  constructor({ name, read }: { name: string, read: () => number }) {
     super();
     if (typeof name !== 'string' || typeof read !== 'function') throw new TypeError('clock needs a name and read function');
     this.name = name; this.read = read;
@@ -20,12 +43,11 @@ export class Clock extends ClockPort {
  * validity windows or sensor restarts. Both domains use milliseconds; offset,
  * rate and their uncertainty come from an explicit calibration artifact.
  */
-export function mapClockInterval(stamp: any, options: any = {}) {
+export function mapClockInterval(stamp: unknown, options: { targetClock?: unknown, targetSession?: unknown,
+  sourceSession?: unknown, uncertaintyMs?: unknown, mapping?: unknown } = {}) {
   const { targetClock, targetSession, sourceSession, uncertaintyMs, mapping } = options;
-  const finite = value => typeof value === 'number' && Number.isFinite(value);
-  const fail = reason => { throw new Error(`clock mapping: ${reason}`); };
-  const clocks = ['host-monotonic-ms', 'device-monotonic-ms'];
-  if (!clocks.includes(stamp?.clock) || !clocks.includes(targetClock) ||
+  function fail(reason: string): never { throw new Error(`clock mapping: ${reason}`); }
+  if (!isRecord(stamp) || !isOneOf(CLOCKS, stamp.clock) || !isOneOf(CLOCKS, targetClock) ||
       !finite(stamp.value) || stamp.value < 0 || !finite(uncertaintyMs) || uncertaintyMs < 0 ||
       typeof sourceSession !== 'string' || !sourceSession || typeof targetSession !== 'string' || !targetSession)
     fail('invalid clock, capture time or uncertainty');
@@ -36,25 +58,27 @@ export function mapClockInterval(stamp: any, options: any = {}) {
     clock: targetClock, earliestMs: stamp.value - uncertaintyMs,
     latestMs: stamp.value + uncertaintyMs, uncertaintyMs, mappingId: null,
   };
-  if (mapping?.schema !== 'clock-map-v1' || typeof mapping.id !== 'string' || !mapping.id ||
+  if (!isRecord(mapping) || mapping.schema !== 'clock-map-v1' || typeof mapping.id !== 'string' || !mapping.id ||
       typeof mapping.evidenceId !== 'string' || !mapping.evidenceId ||
       mapping.sourceClock !== stamp.clock || mapping.targetClock !== targetClock ||
       mapping.sourceSession !== sourceSession || mapping.targetSession !== targetSession)
     fail('missing mapping or source-session mismatch');
   for (const field of ['sourceAtMs', 'targetAtMs', 'rate', 'errorMs', 'rateErrorPpm', 'validFromMs', 'validUntilMs'])
-    if (!finite(mapping[field]) || mapping[field] < 0) fail(`invalid ${field}`);
-  if (mapping.rate <= 0 || mapping.validFromMs > mapping.sourceAtMs ||
-      mapping.sourceAtMs > mapping.validUntilMs ||
-      stamp.value - uncertaintyMs < mapping.validFromMs ||
-      stamp.value + uncertaintyMs > mapping.validUntilMs)
+    if (!finite(mapping[field]) || (mapping[field] as number) < 0) fail(`invalid ${field}`);
+  // Every field the map is read by is checked above.
+  const map = mapping as unknown as ClockMap;
+  if (map.rate <= 0 || map.validFromMs > map.sourceAtMs ||
+      map.sourceAtMs > map.validUntilMs ||
+      stamp.value - uncertaintyMs < map.validFromMs ||
+      stamp.value + uncertaintyMs > map.validUntilMs)
     fail('outside calibrated validity interval');
-  const delta = stamp.value - mapping.sourceAtMs;
-  const value = mapping.targetAtMs + mapping.rate * delta;
-  const error = mapping.errorMs + mapping.rate * uncertaintyMs
-    + (Math.abs(delta) + uncertaintyMs) * mapping.rateErrorPpm / 1e6;
+  const delta = stamp.value - map.sourceAtMs;
+  const value = map.targetAtMs + map.rate * delta;
+  const error = map.errorMs + map.rate * uncertaintyMs
+    + (Math.abs(delta) + uncertaintyMs) * map.rateErrorPpm / 1e6;
   if (!finite(value) || !finite(error) || !finite(value + error) || value - error < 0) fail('invalid mapped interval');
   return { clock: targetClock, earliestMs: value - error, latestMs: value + error,
-    uncertaintyMs: error, mappingId: mapping.id };
+    uncertaintyMs: error, mappingId: map.id };
 }
 
 /** Fit a measured clock-map-v1 from bracketed anchor samples. Each sample
@@ -67,12 +91,11 @@ export function mapClockInterval(stamp: any, options: any = {}) {
  * validity window is exactly the measured span; extrapolating beyond it is
  * refused by mapClockInterval by construction.
  * */
-export function fitClockMap(input: {samples: any[], sourceClock: string, targetClock: string, sourceSession: string, targetSession: string, id: string, evidenceId: string, sourceUncertaintyMs?: number, minSamples?: number, minSpanMs?: number, maxErrorMs?: number, maxRateErrorPpm?: number}) {
-  const failFit = reason => { throw new Error(`clock map fit: ${reason}`); };
-  const { samples, sourceClock, targetClock, sourceSession, targetSession, id, evidenceId } = input ?? {};
-  const clocks = ['host-monotonic-ms', 'device-monotonic-ms'];
-  if (!Array.isArray(samples) || typeof id !== 'string' || !id || typeof evidenceId !== 'string' || !evidenceId ||
-      !clocks.includes(sourceClock) || !clocks.includes(targetClock) ||
+export function fitClockMap(input: {samples: readonly unknown[], sourceClock: string, targetClock: string, sourceSession: string, targetSession: string, id: string, evidenceId: string, sourceUncertaintyMs?: number, minSamples?: number, minSpanMs?: number, maxErrorMs?: number, maxRateErrorPpm?: number}) {
+  function failFit(reason: string): never { throw new Error(`clock map fit: ${reason}`); }
+  const { samples, sourceClock, targetClock, sourceSession, targetSession, id, evidenceId } = input;
+  if (!isList(samples) || typeof id !== 'string' || !id || typeof evidenceId !== 'string' || !evidenceId ||
+      !isOneOf(CLOCKS, sourceClock) || !isOneOf(CLOCKS, targetClock) ||
       typeof sourceSession !== 'string' || !sourceSession || typeof targetSession !== 'string' || !targetSession)
     failFit('invalid fit request');
   if (sourceClock === targetClock && sourceSession === targetSession) failFit('domains and sessions are identical');
@@ -83,11 +106,14 @@ export function fitClockMap(input: {samples: any[], sourceClock: string, targetC
   const maxRateErrorPpm = input.maxRateErrorPpm ?? 2500;
   if (!(sourceUncertaintyMs >= 0) || !Number.isFinite(sourceUncertaintyMs)) failFit('invalid source uncertainty');
   if (samples.length < minSamples) failFit(`need at least ${minSamples} anchors`);
-  const anchors = [];
+  const time = (value: unknown) => {
+    if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) failFit('anchor times must be finite and non-negative');
+    return value;
+  };
+  const anchors: { sourceMs: number, mid: number, uncertaintyMs: number }[] = [];
   for (const sample of samples) {
-    const { sourceMs, targetBeforeMs, targetAfterMs } = sample ?? {};
-    for (const value of [sourceMs, targetBeforeMs, targetAfterMs])
-      if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) failFit('anchor times must be finite and non-negative');
+    const fields = isRecord(sample) ? sample : {};
+    const sourceMs = time(fields.sourceMs), targetBeforeMs = time(fields.targetBeforeMs), targetAfterMs = time(fields.targetAfterMs);
     if (targetAfterMs < targetBeforeMs) failFit('target bracket is inverted');
     anchors.push({ sourceMs, mid: (targetBeforeMs + targetAfterMs) / 2,
       uncertaintyMs: (targetAfterMs - targetBeforeMs) / 2 });

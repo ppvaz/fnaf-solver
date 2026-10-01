@@ -9,7 +9,7 @@
  * CONTRACT:control-exclusion-v1.
  */
 
-const valid = value => value === null || value === true || value === false;
+const valid = (value: unknown) => value === null || value === true || value === false;
 
 export function reconcileExclusiveControls({ monitorUp = null, maskOn = null }: {monitorUp?: boolean|null, maskOn?: boolean|null} = {}): {monitorUp: boolean|null, maskOn: boolean|null, monitorInference: string|null, maskInference: string|null, contradiction: boolean, reason: string|null} {
   if (!valid(monitorUp) || !valid(maskOn))

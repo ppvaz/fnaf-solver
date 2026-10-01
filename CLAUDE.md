@@ -153,7 +153,8 @@ longer rebuilds.
 - No explicit `any`, anywhere. Strict mode refuses an implicit `any` but not a
   written one, so `tools/test-type-debt.ts` counts written `any` and `x!` per
   area: an area without a `typeDebt` entry in `tools/quality-baseline.json`
-  carries none (`packages/kernel/src` and `packages/source/src` so far), and the
+  carries none (`packages/kernel/src`, `packages/source/src` and
+  `packages/play/src` so far), and the
   others only shrink.
   The pass that wrote `any` to get there (`tools/ts-strict.ts`, 7a8393f0) is retired.
 - A validator takes `unknown`, narrows it with the kernel's guards (`isRecord`,
@@ -165,6 +166,9 @@ longer rebuilds.
   counted per area by `tools/test-python-types.ts` against `pythonTypes`. Host
   shell scripts are ported to TypeScript one at a time (their dry runs
   characterized and compared); seedpin moves into the Companion.
+- A `let` that only a callback assigns is narrowed to its initializer: declare
+  it `let x = null as T | null`, or every later read is `null` (or `never`) to
+  the checker.
 - A module both lanes check (the lenient `tsconfig.js.json` reaches it through
   an importer) must also type-check without `strictNullChecks`, where
   `x === null` narrows nothing: return the literal (`return null`).

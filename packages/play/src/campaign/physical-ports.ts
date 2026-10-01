@@ -18,9 +18,25 @@ import type { ChildProcessByStdio } from 'node:child_process';
 import type { Readable, Writable } from 'node:stream';
 const HELPER_PACKAGE = 'com.ppvaz.fnafcompanion';
 const READY_DEVICE = 'FNAF Timed Touch';
-const sleep = milliseconds => new Promise<any>(resolve => setTimeout(resolve, milliseconds));
+const sleep = (milliseconds: number) => new Promise<void>(resolve => setTimeout(resolve, milliseconds));
+const messageOf = (error: unknown) => String((error as { message?: unknown } | null | undefined)?.message ?? error);
 
-function endpointError(message) { throw new Error(`Companion endpoint: ${message}`); }
+function endpointError(message: string): never { throw new Error(`Companion endpoint: ${message}`); }
+
+/** Where the live Companion session listens, and the token its control verbs carry. */
+interface CompanionEndpoint {
+  readonly port: number;
+  readonly token: string;
+  readonly socket?: string;
+  readonly session?: number;
+  readonly source?: 'endpoint-file';
+}
+/** One timed GET: the device->host offset at the exchange's midpoint, its round trip, and the reply fields. */
+interface TimedReply {
+  readonly offsetMs: number;
+  readonly rttMs: number;
+  readonly fields: Readonly<Record<string, string>>;
+}
 
 /**
  * Parse the latest authenticated endpoint announcement from logcat: the
@@ -28,7 +44,7 @@ function endpointError(message) { throw new Error(`Companion endpoint: ${message
  * file (companion-endpoint-v1) is read first; this is the fallback for a
  * helper older than 0.2.0 or a device where run-as is unavailable.
  */
-export function parseCompanionLogEndpoint(text) {
+export function parseCompanionLogEndpoint(text: unknown): CompanionEndpoint {
   if (typeof text !== 'string') endpointError('logcat output is not text');
   const lines = text.split(/\r?\n/).filter(line => /control=(?:READY|DEGRADED)/.test(line));
   const line = lines.at(-1);
@@ -42,9 +58,13 @@ export function parseCompanionLogEndpoint(text) {
   return Object.freeze({ port: numericPort, token });
 }
 
-function runSync(adb: string, args: string[], { timeout = 5000, input, encoding = 'utf8', maxBuffer = 1024 * 1024 }: {timeout?: number, input?: string, encoding?: any, maxBuffer?: number} = {}) {
-  const output = execFileSync(adb, args, { encoding, input, timeout, maxBuffer });
-  return encoding === null ? output : output.replace(/\r/g, '');
+function runSync(adb: string, args: string[], { timeout = 5000, input, maxBuffer = 1024 * 1024 }: {timeout?: number, input?: string, maxBuffer?: number} = {}) {
+  return execFileSync(adb, args, { encoding: 'utf8', input, timeout, maxBuffer }).replace(/\r/g, '');
+}
+
+/** The same bounded adb call, its output kept as bytes (a pulled frame). */
+function runSyncBytes(adb: string, args: string[], { timeout = 5000, maxBuffer = 1024 * 1024 }: {timeout?: number, maxBuffer?: number} = {}) {
+  return execFileSync(adb, args, { timeout, maxBuffer });
 }
 
 // The shell text is fixed here so the port has no caller-controlled shell
@@ -69,17 +89,19 @@ logcat -d --pid="$1" -e 'control=(READY|DEGRADED)' -v brief -s FnafCueHelper:I '
  * the midpoint is off by at most half the round trip.
  */
 function timedExchange(hostPort: number, line: string, timeoutMs: number) {
-  return new Promise<any>((resolvePromise, rejectPromise) => {
+  return new Promise<TimedReply>((resolvePromise, rejectPromise) => {
     const socket = connect({ host: '127.0.0.1', port: hostPort });
-    let sentAt = null;
+    // Set on connect, before any reply can arrive.
+    let sentAt = 0;
     let text = '';
     let settled = false;
-    const settle = (error, value?) => {
+    const settle = (error: unknown, value?: TimedReply) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
       socket.destroy();
-      if (error) rejectPromise(error); else resolvePromise(value);
+      // Every call without an error carries its reply.
+      if (error) rejectPromise(error); else resolvePromise(value as TimedReply);
     };
     // The composition's other helper reads are execFileSync adb shells that
     // block this event loop for 140-240 ms at a time. When the loop frees up,
@@ -112,16 +134,17 @@ function timedExchange(hostPort: number, line: string, timeoutMs: number) {
  * One request line and its one reply line over a host-local forwarded port.
  */
 function lineExchange(hostPort: number, line: string, timeoutMs: number, maxChars = 4096): Promise<string> {
-  return new Promise<any>((resolvePromise, rejectPromise) => {
+  return new Promise<string>((resolvePromise, rejectPromise) => {
     const socket = connect({ host: '127.0.0.1', port: hostPort });
     let text = '';
     let settled = false;
-    const settle = (error, value?) => {
+    const settle = (error: unknown, value?: string) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
       socket.destroy();
-      if (error) rejectPromise(error); else resolvePromise(value);
+      // Every call without an error carries its reply line.
+      if (error) rejectPromise(error); else resolvePromise(value as string);
     };
     // Same deferral as timedExchange: bytes that arrived in time win over a
     // timer that expired while the event loop was blocked.
@@ -142,7 +165,7 @@ function lineExchange(hostPort: number, line: string, timeoutMs: number, maxChar
 export class AdbCompanionPort {
   declare serial: string;
   declare adb: string;
-  declare endpoint: Readonly<{ port: number; token: any; }> | Readonly<{ port: number; token: string; socket: string; session: number; source: "endpoint-file"; }>;
+  declare endpoint: CompanionEndpoint | null;
   constructor(options: {serial: string, adb?: string}) {
     const { serial, adb = 'adb' } = options ?? {};
     if (typeof serial !== 'string' || serial.length === 0) throw new TypeError('Companion port requires an ADB serial');
@@ -159,7 +182,7 @@ export class AdbCompanionPort {
   discover() {
     const pid = runSync(this.adb, ['-s', this.serial, 'shell', 'pidof', HELPER_PACKAGE]).trim().split(/\s+/)[0];
     if (!/^\d+$/.test(pid)) endpointError('helper process is not running');
-    let text = null;
+    let text: string | null = null;
     try {
       text = runSync(this.adb, ['-s', this.serial, 'exec-out', 'run-as', HELPER_PACKAGE, 'cat', COMPANION_ENDPOINT_FILE]);
     } catch { /* no file: an older helper, or no session yet */ }
@@ -246,18 +269,19 @@ export class AdbCompanionPort {
    * nothing a runner reads.
    */
   async announce({ target, lease }: {target?: string, lease?: string | null} = {}) {
-    const result = { target: null, lease: null, errors: [] };
+    type Fields = Readonly<Record<string, string>>;
+    const result: { target: Fields | null, lease: Fields | null, errors: string[] } = { target: null, lease: null, errors: [] };
     if (target !== undefined) {
-      try { result.target = await this.setTarget(target); } catch (error) { result.errors.push(String(error?.message ?? error)); }
+      try { result.target = await this.setTarget(target); } catch (error) { result.errors.push(messageOf(error)); }
     }
     if (lease !== undefined) {
-      try { result.lease = await this.setLease(lease); } catch (error) { result.errors.push(String(error?.message ?? error)); }
+      try { result.lease = await this.setLease(lease); } catch (error) { result.errors.push(messageOf(error)); }
     }
     return result;
   }
 
   /** Synchronous by design: CompanionControlTransport is a bounded request/response codec. */
-  request(line) {
+  request(line: unknown) {
     // FNaF 2 legacy reads (Fnaf2Legacy.java). FRAME is the snapshot and its
     // grid from one locked read; the separate GRID verb is retired.
     if (typeof line !== 'string' || !/^(?:GET|FRAME|WATCH|READ) [0-9a-f]{32}(?: status| [0-9a-f]{64})?$/.test(line))
@@ -291,12 +315,12 @@ export class AdbCompanionPort {
       read: exchange,
       probe: async ({ samples = 8, spacingMs = 15 }: {samples?: number, spacingMs?: number} = {}) => {
         if (!Number.isInteger(samples) || samples < 1 || samples > 64) throw new TypeError('clock probe samples must be 1..64');
-        let best = null;
-        let latest = null;
-        for (let index = 0; index < samples; index += 1) {
+        let latest = await exchange();
+        let best = latest;
+        for (let index = 1; index < samples; index += 1) {
+          await sleep(spacingMs);
           latest = await exchange();
-          if (best === null || latest.rttMs < best.rttMs) best = latest;
-          if (index + 1 < samples) await sleep(spacingMs);
+          if (latest.rttMs < best.rttMs) best = latest;
         }
         return { offsetMs: best.offsetMs, uncertaintyMs: best.uncertaintyMs, rttMs: best.rttMs,
           samples, hostClock: 'performance-now-ms', fields: latest.fields };
@@ -315,7 +339,7 @@ export class AdbCompanionPort {
    * returned as text and an `ERROR` reply rejects. Opening the forward is the
    * only blocking step, so call this before any phase-critical moment.
    */
-  openLesson({ timeoutMs = 1000, lessonLine }: {timeoutMs?: number, lessonLine: RegExp} = ({} as any)) {
+  openLesson({ timeoutMs = 1000, lessonLine }: {timeoutMs?: number, lessonLine?: RegExp} = {}) {
     if (!(lessonLine instanceof RegExp)) throw new TypeError('lesson channel needs the LESSON line grammar');
     const endpoint = this.endpoint ?? this.discover();
     const forwarded = runSync(this.adb, ['-s', this.serial, 'forward', 'tcp:0', `tcp:${endpoint.port}`]).trim().split(/\s+/).at(-1);
@@ -350,7 +374,7 @@ export class AdbCompanionPort {
     const forwarded = runSync(this.adb, ['-s', this.serial, 'forward', 'tcp:0', `tcp:${endpoint.port}`]).trim().split(/\s+/).at(-1);
     if (!/^\d+$/.test(forwarded ?? '')) throw new Error('Companion regions: adb forward returned no host port');
     let closed = false;
-    const exchange = async (line) => {
+    const exchange = async (line: string) => {
       if (closed) throw new Error('Companion region channel is closed');
       const sentAt = performance.now();
       const reply = await lineExchange(Number(forwarded), line, timeoutMs, REGION_LIMITS.lineChars);
@@ -397,8 +421,8 @@ export class AdbCompanionPort {
       const reply = await lineExchange(Number(forwarded), `SNAP ${endpoint.token} ${label}`, timeoutMs);
       const fields = parseCueResponse(reply);
       if (fields.path !== `files/frames/${label}.png`) throw new Error(`Companion snap wrote an unexpected path: ${reply}`);
-      const bytes = runSync(this.adb, ['-s', this.serial, 'exec-out', 'run-as', HELPER_PACKAGE, 'cat', fields.path],
-        { timeout: 10000, encoding: null, maxBuffer: 64 * 1024 * 1024 });
+      const bytes = runSyncBytes(this.adb, ['-s', this.serial, 'exec-out', 'run-as', HELPER_PACKAGE, 'cat', fields.path],
+        { timeout: 10000, maxBuffer: 64 * 1024 * 1024 });
       if (!bytes || bytes.length < 1000) throw new Error('Companion snap pulled an empty frame');
       writeFileSync(target, bytes);
       try { runSync(this.adb, ['-s', this.serial, 'shell', 'run-as', HELPER_PACKAGE, 'rm', '-f', fields.path]); } catch { /* next snap overwrites */ }
@@ -420,8 +444,8 @@ export class AdbHidProcess {
   declare serial: string;
   declare adb: string;
   declare readyTimeoutMs: number;
-  declare child: ChildProcessByStdio<Writable, null, Readable>;
-  declare failed: Error;
+  declare child: ChildProcessByStdio<Writable, null, Readable> | null;
+  declare failed: Error | null;
   declare closed: boolean;
   constructor(options: {serial: string, adb?: string, readyTimeoutMs?: number}) {
     const { serial, adb = 'adb', readyTimeoutMs = 12000 } = options ?? {};
@@ -445,13 +469,14 @@ export class AdbHidProcess {
     this.child = child;
   }
 
-  async write(line) {
+  async write(line: unknown) {
     if (typeof line !== 'string' || line.includes('\n') || line.includes('\r'))
       throw new TypeError('HID port accepts one JSONL line at a time');
     this.ensureStarted();
     if (this.failed || !this.child?.stdin) throw this.failed ?? new Error('ADB HID stdin is unavailable');
-    if (!this.child.stdin.write(`${line}\n`)) await new Promise<any>((resolve, reject) => {
-      this.child.stdin.once('drain', resolve); this.child.stdin.once('error', reject);
+    const stdin = this.child.stdin;
+    if (!stdin.write(`${line}\n`)) await new Promise<unknown>((resolve, reject) => {
+      stdin.once('drain', resolve); stdin.once('error', reject);
     });
   }
 

@@ -25,7 +25,7 @@ export const BUTTON_STROKE_THRESHOLDS = Object.freeze({
   absentMax: 40,
 });
 
-const score = value => {
+const score = (value: unknown) => {
   const numeric = Number(value);
   return Number.isFinite(numeric) && numeric >= 0 ? numeric : null;
 };
@@ -50,7 +50,7 @@ const score = value => {
  * deliberate and is the whole point: an unreadable frame withholds an answer
  * instead of being downgraded to a luma guess.
  */
-export function buttonStrokeState(sample) {
+export function buttonStrokeState(sample: { readonly maskButtonDownstroke?: unknown, readonly monitorButtonDownstroke?: unknown } | null | undefined) {
   const mask = score(sample?.maskButtonDownstroke);
   const monitor = score(sample?.monitorButtonDownstroke);
   if (mask === null || monitor === null)

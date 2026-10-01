@@ -3,10 +3,21 @@
  * Node removes its default SIGINT/SIGTERM exit behavior when a listener is
  * installed, so the handler must own both cleanup and the final exit.
  */
-const signalExitCode = signal => signal === 'SIGINT' ? 130 : 143;
+const signalExitCode = (signal: string) => signal === 'SIGINT' ? 130 : 143;
+
+/** The process surface the handlers need: signal listeners, and an exit code. */
+interface SignalProcess {
+  on(signal: string, handler: () => void): unknown;
+  removeListener(signal: string, handler: () => void): unknown;
+  exit(code: number): unknown;
+  exitCode?: number | string | null;
+}
 
 export function installCampaignSignalHandlers({ cleanup, processObject = process,
-  exit = code => processObject.exit(code), report = error => console.error(`device: signal cleanup: ${error.message}`) }: {cleanup?: Function, processObject?: any, exit?: Function, report?: Function} = {}) {
+  exit = (code: number) => processObject.exit(code),
+  report = (error: unknown) => console.error(`device: signal cleanup: ${(error as Error).message}`) }: {
+  cleanup?: (error: Error) => unknown, processObject?: SignalProcess, exit?: (code: number) => unknown,
+  report?: (error: unknown) => unknown} = {}) {
   if (typeof cleanup !== 'function') throw new TypeError('campaign signal cleanup must be a function');
   if (!processObject || typeof processObject.on !== 'function' ||
       typeof processObject.removeListener !== 'function')
@@ -14,9 +25,9 @@ export function installCampaignSignalHandlers({ cleanup, processObject = process
   if (typeof exit !== 'function') throw new TypeError('campaign signal exit must be a function');
   if (typeof report !== 'function') throw new TypeError('campaign signal report must be a function');
 
-  let task = null;
-  const handlers = new Map();
-  const receive = signal => {
+  let task: Promise<void> | null = null;
+  const handlers = new Map<string, () => void>();
+  const receive = (signal: string) => {
     if (task) return task;
     const code = signalExitCode(signal);
     processObject.exitCode = code;

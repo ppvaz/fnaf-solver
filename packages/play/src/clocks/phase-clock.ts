@@ -10,10 +10,16 @@ export const PHASE_STATES = Object.freeze({
   ACQUIRING: 'ACQUIRING',
   LOCKED: 'LOCKED',
   STALE: 'STALE',
-});
+} as const);
+type PhaseState = typeof PHASE_STATES[keyof typeof PHASE_STATES];
 
-const finite = value => Number.isFinite(value);
-const median = values => {
+/** A latency calibration's status: the latency is a number once enough pairs are in. */
+type LatencyStatus =
+  | { calibrated: true, sampleCount: number, latencyMs: number, uncertaintyMs: number, minMs: number, maxMs: number }
+  | { calibrated: false, sampleCount: number, latencyMs: number | null, uncertaintyMs: number, minMs: number | null, maxMs: number | null };
+
+const finite = (value: unknown): value is number => Number.isFinite(value);
+const median = (values: readonly number[]) => {
   if (!values.length) return null;
   const sorted = [...values].sort((a, b) => a - b);
   const middle = Math.floor(sorted.length / 2);
@@ -28,7 +34,7 @@ const median = values => {
 export class LatencyCalibrator {
   declare minSamples: number;
   declare maxSamples: number;
-  declare samples: any[];
+  declare samples: number[];
   constructor({ minSamples = 3, maxSamples = 32 } = {}) {
     if (!Number.isInteger(minSamples) || minSamples < 1 ||
         !Number.isInteger(maxSamples) || maxSamples < minSamples)
@@ -38,7 +44,7 @@ export class LatencyCalibrator {
     this.samples = [];
   }
 
-  addPair(referenceMs, receivedMs) {
+  addPair(referenceMs: number, receivedMs: number) {
     if (!finite(referenceMs) || !finite(receivedMs))
       throw new TypeError('latency calibration timestamps must be finite');
     this.samples.push(receivedMs - referenceMs);
@@ -46,7 +52,7 @@ export class LatencyCalibrator {
     return this.status();
   }
 
-  status() {
+  status(): LatencyStatus {
     const latencyMs = median(this.samples);
     if (latencyMs === null) {
       return { calibrated: false, sampleCount: 0, latencyMs: null,
@@ -71,22 +77,24 @@ export class LatencyCalibrator {
 }
 
 export class PhaseClockEstimator {
-  declare tickPeriodMs: any;
+  declare tickPeriodMs: number;
   declare minLockTicks: number;
   declare windowTicks: number;
   declare minConfidence: number;
   declare maxResidualMs: number;
   declare staleAfterMs: number;
-  declare latencyCalibration: any;
-  declare samples: any[];
+  declare latencyCalibration: { status(): LatencyStatus } | null;
+  declare samples: { receivedMs: number, index: number, confidence: number }[];
   declare nextIndex: number;
-  declare lastReceivedMs: any;
-  declare state: string;
-  declare gridParity: any;
-  declare paritySource: string;
+  declare lastReceivedMs: number | null;
+  declare state: PhaseState;
+  declare gridParity: 0 | 1 | null;
+  declare paritySource: string | null;
   constructor({ tickPeriodMs = 500, minLockTicks = 6, windowTicks = 12,
                 minConfidence = 0.5, maxResidualMs = tickPeriodMs * 0.2,
-                staleAfterMs = tickPeriodMs * 3, latencyCalibration = null } = {}) {
+                staleAfterMs = tickPeriodMs * 3, latencyCalibration = null }: {
+                tickPeriodMs?: number, minLockTicks?: number, windowTicks?: number, minConfidence?: number,
+                maxResidualMs?: number, staleAfterMs?: number, latencyCalibration?: { status(): LatencyStatus } | null } = {}) {
     if (!finite(tickPeriodMs) || tickPeriodMs <= 0 ||
         !Number.isInteger(minLockTicks) || minLockTicks < 2 ||
         !Number.isInteger(windowTicks) || windowTicks < minLockTicks ||
@@ -116,7 +124,7 @@ export class PhaseClockEstimator {
     };
   }
 
-  observe(receivedMs, { confidence = 1 } = {}) {
+  observe(receivedMs: number, { confidence = 1 } = {}) {
     if (!finite(receivedMs) || !finite(confidence))
       throw new TypeError('phase observations must be finite');
     if (confidence < this.minConfidence) return this.status(receivedMs);
@@ -183,7 +191,7 @@ export class PhaseClockEstimator {
       ? PHASE_STATES.LOCKED : PHASE_STATES.ACQUIRING;
   }
 
-  setParity(parity, source = 'external-reference') {
+  setParity(parity: number, source = 'external-reference') {
     if (parity !== 0 && parity !== 1)
       throw new RangeError('grid parity must be 0 or 1');
     this.gridParity = parity;
@@ -229,13 +237,13 @@ export class PhaseClockEstimator {
  * not clock samples.
  */
 export class WindTickFactAdapter {
-  declare estimator: any;
+  declare estimator: PhaseClockEstimator;
   declare type: string;
-  declare lastReceivedMs: any;
+  declare lastReceivedMs: number | null;
   declare accepted: number;
   declare ignored: number;
   declare rejected: number;
-  constructor(estimator, { type = 'wind-tick' } = {}) {
+  constructor(estimator: PhaseClockEstimator, { type = 'wind-tick' } = {}) {
     if (!estimator || typeof estimator.observe !== 'function' ||
         typeof estimator.status !== 'function')
       throw new TypeError('WindTickFactAdapter needs a PhaseClockEstimator');
@@ -249,11 +257,13 @@ export class WindTickFactAdapter {
     this.rejected = 0;
   }
 
-  observe(fact) {
-    if (!fact || typeof fact !== 'object') {
+  observe(input: unknown) {
+    if (!input || typeof input !== 'object') {
       this.rejected++;
       throw new TypeError('wind-tick fact must be an object');
     }
+    // Any object is read for its fields; one without them is ignored below, not refused.
+    const fact = input as Readonly<Record<string, unknown>>;
     if (fact.type !== this.type) {
       this.ignored++;
       return this.result(false, 'fact-type-not-wind-tick');
@@ -281,7 +291,7 @@ export class WindTickFactAdapter {
       this.estimator.observe(fact.receivedAtMs, { confidence: fact.confidence }));
   }
 
-  result(accepted, reason, estimatorStatus = this.estimator.status(
+  result(accepted: boolean, reason: string | null, estimatorStatus = this.estimator.status(
     this.lastReceivedMs ?? 0)) {
     return {
       schema: 'wind-tick-adapter-v1', accepted, reason,
@@ -305,11 +315,11 @@ export class WindTickFactAdapter {
 // are both calibrated, nextBoundaryFrame() returns Infinity and callers must
 // use a conservative fallback.
 export class EstimatedPhaseClock {
-  declare estimator: any;
+  declare estimator: PhaseClockEstimator;
   declare frameOriginMs: number;
   declare frameRate: number;
   declare kind: string;
-  constructor(estimator, { frameOriginMs = 0, frameRate = 60 } = {}) {
+  constructor(estimator: PhaseClockEstimator, { frameOriginMs = 0, frameRate = 60 } = {}) {
     if (!estimator || typeof estimator.status !== 'function')
       throw new TypeError('EstimatedPhaseClock needs a PhaseClockEstimator');
     if (!finite(frameOriginMs) || !finite(frameRate) || frameRate <= 0)
@@ -320,7 +330,7 @@ export class EstimatedPhaseClock {
     this.kind = 'estimated-a2dp-phase';
   }
 
-  _status(frame = null) {
+  _status(frame: number | null = null) {
     const nowMs = frame === null ? undefined
       : this.frameOriginMs + frame * 1000 / this.frameRate;
     return this.estimator.status(nowMs);
@@ -338,7 +348,7 @@ export class EstimatedPhaseClock {
       ? Math.ceil(status.uncertaintyMs * this.frameRate / 1000) : Infinity;
   }
 
-  nextBoundaryFrame(frame) {
+  nextBoundaryFrame(frame: number) {
     if (!Number.isFinite(frame)) return Infinity;
     const status = this._status(frame);
     if (!status.gamePhaseKnown || status.gridParity === null ||

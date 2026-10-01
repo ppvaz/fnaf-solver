@@ -15,7 +15,15 @@ import { fileURLToPath } from 'node:url';
 import { CompanionControlTransport, HidWireTransport, measureMaskOn, measureMonitorUp,
   parseCameraRule, parseMaskRule, parseMonitorRule, reconcileExclusiveControls } from '@sixam/play';
 import { configureCustomNight, selectCustomNightPreset, validateCustomNightCalibration, CUSTOM_NIGHT_CONTACT_MS } from './custom-night.ts';
+import type { CustomNightCalibration, Tap } from './custom-night.ts';
 import { AdbDeviceBridge } from './adb-bridge.ts';
+import type { CampaignBundle } from './campaign-bundle.ts';
+import type { CampaignSpec, CampaignTarget } from './campaign.ts';
+import type { ArmSample } from './adb-device-local-executor.ts';
+import type { CameraRule } from '@sixam/play';
+import type { ResolvedDeviceProfile } from '@sixam/kernel/contracts';
+import type { VenueBound, VenueIdentity } from '@sixam/kernel';
+import { isRecord } from '@sixam/kernel';
 import { composeCampaignPorts } from './campaign-composition.ts';
 import { AdbDeviceLocalArtifactExecutor } from './adb-device-local-executor.ts';
 import { makeCampaignExecutionRequest } from './campaign-bundle.ts';
@@ -25,6 +33,41 @@ import { LESSON_LINE, lessonForNight, lessonLines, lessonOriginLine } from '../c
 import { phoneWallAt, planTimedStart, waitUntilHostMs } from './timed-start.ts';
 import { DeviceCampaignRunner } from './campaign-runner.ts';
 import { venueDriftDuringRun } from './venue.ts';
+
+type AnchorResult = Awaited<ReturnType<typeof anchorNightRelease>>;
+/** What one observer script printed, and how it exited. */
+interface ObserverResult {
+  readonly code: number;
+  readonly stdout: string;
+  readonly stderr: string;
+}
+type Point = { readonly x: number, readonly y: number };
+type CampaignEventRow = { readonly type: string, readonly [field: string]: unknown };
+/** A Custom Night dial readback over the campaign's own bridge. */
+type ConfigReadback = (request: Readonly<Record<string, unknown>> & { bridge: AdbDeviceBridge, serial: string }) => Promise<unknown>;
+/** What the device CLI hands the composition: the reviewed campaign, its bundle and the phone's resolved profile. */
+interface CampaignPortOptions {
+  readonly spec: CampaignSpec;
+  readonly bundle: CampaignBundle & { readonly artifact?: { winnerHash?: string, engineHash?: string, profileHash?: string } };
+  readonly profile: ResolvedDeviceProfile;
+  readonly calibration?: CustomNightCalibration;
+  readonly calibrationPath?: string | null;
+  readonly qualification?: unknown;
+  readonly serial?: string;
+  readonly adb?: string;
+  readonly machineOnly?: boolean;
+  readonly allowSaveReset?: boolean;
+  readonly armMode?: string;
+  readonly captureRestarted?: boolean;
+  readonly nightAnchorAimMs?: number | null;
+  readonly nightAnchorMaxK?: number | null;
+  readonly nightAnchorPeriodMs?: number;
+  readonly nightAnchorStrict?: boolean;
+  readonly nightAnchorAuthorizeOnLatch?: boolean;
+  readonly teachOverlay?: boolean;
+  readonly venueBindings?: readonly VenueBound[];
+  readonly configReadback?: ConfigReadback;
+}
 
 const TITLE_MODEL = new URL('../../../../packages/play/profiles/fnaf2/moto-g56/title-moto-g56-v207.json', import.meta.url);
 const CAMERA_RULE = new URL('../../../../packages/play/profiles/fnaf2/moto-g56/camera-rule-moto-g56-v207.json', import.meta.url);
@@ -44,26 +87,26 @@ const CUSTOM_NIGHT_READBACK = new URL('../../../../packages/play/bin/probe/custo
 // plus this wait above it.
 export const NIGHT_TERMINAL_WAIT_MS = 120000;
 const AI_DIALS_ALL = ['withfreddy', 'withbonnie', 'withchica', 'foxy', 'toyfreddy', 'toybonnie', 'toychica', 'mangle', 'bb', 'golden'];
-const sleep = milliseconds => new Promise<any>(resolve => setTimeout(resolve, milliseconds));
-const isRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+const sleep = (milliseconds: number) => new Promise<void>(resolve => setTimeout(resolve, milliseconds));
+const messageOf = (error: unknown) => String((error as { message?: unknown } | null | undefined)?.message ?? error);
 
-async function readJson(url) {
+async function readJson(url: URL): Promise<unknown> {
   return JSON.parse(await readFile(url, 'utf8'));
 }
 
-async function observePython(script, input, args = []) {
-  return new Promise<any>(resolve => {
+async function observePython(script: URL, input: Buffer, args: readonly string[] = []) {
+  return new Promise<ObserverResult>(resolve => {
     const child = spawn('python3', [script.pathname, ...args], {
       stdio: ['pipe', 'pipe', 'pipe'], shell: false,
     });
     let stdout = '';
     let stderr = '';
     let settled = false;
-    const finish = (code, detail = '') => {
+    const finish = (code: number | null, detail = '') => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      resolve({ code: Number.isInteger(code) ? code : 1, stdout, stderr: stderr || detail });
+      resolve({ code: typeof code === 'number' && Number.isInteger(code) ? code : 1, stdout, stderr: stderr || detail });
     };
     const timer = setTimeout(() => {
       child.kill('SIGTERM');
@@ -77,25 +120,25 @@ async function observePython(script, input, args = []) {
   });
 }
 
-function lastLine(output) {
+function lastLine(output: unknown) {
   return String(output).replace(/\r/g, '').trim().split(/\n/).at(-1) ?? '';
 }
 
-async function captureAndObserve(bridge, serial, script, args = []) {
+async function captureAndObserve(bridge: AdbDeviceBridge, serial: string, script: URL, args: readonly string[] = []) {
   const png = await bridge.capturePng(serial);
   if (!png) throw new Error('observer capture failed');
   const result = await observePython(script, png, args);
-  await bridge.recordObservation?.({ script: fileURLToPath(script).split('/').at(-1), png, ...result });
+  await bridge.recordObservation?.({ script: fileURLToPath(script).split('/').at(-1) ?? '', png, ...result });
   return result;
 }
 
-async function lifecycle(bridge, serial) {
+async function lifecycle(bridge: AdbDeviceBridge, serial: string) {
   const result = await captureAndObserve(bridge, serial, LIFECYCLE_OBSERVER, ['--sensor', 'screencap-2400x1080']);
   const line = lastLine(result.stdout);
   return line.startsWith('state=') ? line.slice(6) : null;
 }
 
-async function title(bridge, serial, model) {
+async function title(bridge: AdbDeviceBridge, serial: string, model: string) {
   const result = await captureAndObserve(bridge, serial, TITLE_OBSERVER,
     ['--sensor', 'screencap-2400x1080', '--model', model]);
   const line = lastLine(result.stdout);
@@ -134,9 +177,10 @@ export async function settledAfterPress(read: () => Promise<string | null>, { se
   }
 }
 
-async function waitFor(bridge, serial, predicate, timeoutMs, label) {
+async function waitFor(bridge: AdbDeviceBridge, serial: string, predicate: (state: string | null) => boolean,
+  timeoutMs: number, label: string) {
   const deadline = Date.now() + timeoutMs;
-  let last = null;
+  let last: string | null = null;
   while (Date.now() < deadline) {
     last = await lifecycle(bridge, serial);
     if (predicate(last)) return last;
@@ -162,11 +206,14 @@ async function waitFor(bridge, serial, predicate, timeoutMs, label) {
  * DID publish a terminal. Returning null means nothing trustworthy was
  * published and the caller must observe for itself.
  */
-export function terminalFromExecution({ target, execution }: {target: {night: number, mode: string}, execution?: {terminal?: string, status?: string, why?: string, detail?: string} | null}) {
+export function terminalFromExecution({ target, execution: result }: {target: {night: number, mode: string}, execution?: unknown}) {
+  const execution = isRecord(result) ? result : undefined;
   // The executor ended the attempt without testing its policy (invalidRun):
   // an Invalid run, which the campaign replays without spending an attempt.
+  // executeAttempt's settle() tags it with the executor's string reason and message.
+  const text = (value: unknown) => typeof value === 'string' ? value : undefined;
   if (execution?.status === 'INVALID') return { night: target.night, identity: target.mode,
-    outcome: 'invalid', why: execution.why, detail: execution.detail, sixAm: false, positive: false,
+    outcome: 'invalid', why: text(execution.why), detail: text(execution.detail), sixAm: false, positive: false,
     state: 'invalid', source: 'executor' };
   const observed = execution?.terminal;
   if (observed !== 'sixam' && observed !== 'gameover') return null;
@@ -181,20 +228,22 @@ export function terminalFromExecution({ target, execution }: {target: {night: nu
  * during the night (venueDriftDuringRun): a 6 AM on a venue that changed under
  * it did not test the qualified venue.
  */
-export function venueCheckedTerminal(terminal: any, drift: {field: string, from: string, to: string}[]) {
+export function venueCheckedTerminal<T extends { readonly outcome: string }>(terminal: T, drift: {field: string, from: string, to: string}[]) {
   if (!drift.length || terminal.outcome === 'invalid') return terminal;
   return { ...terminal, outcome: 'invalid', sixAm: false, positive: false, observedOutcome: terminal.outcome,
     why: `venue-drift: ${drift.map(item => `${item.field} ${item.from} -> ${item.to}`).join('; ')}` };
 }
 
-function point(value, label) {
-  if (!isRecord(value) || !Number.isInteger(value.x) || !Number.isInteger(value.y) ||
-      value.x < 0 || value.y < 0 || value.x >= 2400 || value.y >= 1080)
+const screenInteger = (value: unknown, bound: number): value is number =>
+  typeof value === 'number' && Number.isInteger(value) && value >= 0 && value < bound;
+
+function point(value: unknown, label: string): Point {
+  if (!isRecord(value) || !screenInteger(value.x, 2400) || !screenInteger(value.y, 1080))
     throw new TypeError(`${label} must be a bounded screen point`);
-  return value;
+  return value as unknown as Point;
 }
 
-function modelPoint(value, label) {
+function modelPoint(value: unknown, label: string) {
   if (!Array.isArray(value) || value.length !== 2)
     throw new TypeError(`${label} must be a two-element model point`);
   return point({ x: value[0], y: value[1] }, label);
@@ -206,13 +255,14 @@ function modelPoint(value, label) {
  * for the Android double-camera glitch; the arm gate needs the complete set,
  * so it consumes the calibrated button entries from that same READ frame.
  */
-function nativeCameraHighlights(read, rule) {
-  const unknown = reason => ({ state: 'UNKNOWN', reason });
+function nativeCameraHighlights(read: Readonly<Record<string, string>> | null | undefined, rule: CameraRule):
+  { state: 'UNKNOWN', reason: string } | { state: 'OBSERVED', value: string[] } {
+  const unknown = (reason: string) => ({ state: 'UNKNOWN' as const, reason });
   if (read?.read !== 'OBSERVED') return unknown('read-unavailable');
   const ageUs = Number(read.ageUs);
   if (!Number.isFinite(ageUs) || ageUs < 0) return unknown('read-unavailable');
   if (ageUs > 500000) return unknown('read-stale');
-  const highlights = [];
+  const highlights: string[] = [];
   for (const button of rule.adapter.buttons) {
     const raw = read[button.entry];
     if (raw === undefined || raw === 'UNKNOWN') return unknown('read-unavailable');
@@ -227,7 +277,7 @@ function nativeCameraHighlights(read, rule) {
   return { state: 'OBSERVED', value: highlights };
 }
 
-function createHidSender(hidProcess, { registerDelayMs = 0 } = {}) {
+function createHidSender(hidProcess: AdbHidProcess, { registerDelayMs = 0 } = {}) {
   const name = 'FNAF Campaign Menu';
   const transport = new HidWireTransport({
     write: line => hidProcess.write(line),
@@ -238,7 +288,7 @@ function createHidSender(hidProcess, { registerDelayMs = 0 } = {}) {
   });
   return {
     transport,
-    send: ({ point: target, durationMs = CUSTOM_NIGHT_CONTACT_MS }) => transport.send({
+    send: ({ point: target, durationMs = CUSTOM_NIGHT_CONTACT_MS }: { point: unknown, durationMs?: number }) => transport.send({
       command: { action: { kind: 'press', durationMs }, source: { controller: 'modern-campaign-menu' } },
       point: target,
     }),
@@ -278,7 +328,7 @@ export function timedStartHeld({ plannedPhoneWallMs, seedPhoneWallMs }: {planned
   return { held: true, delayMs };
 }
 
-export async function createCampaignPorts(options: any = {}) {
+export async function createCampaignPorts(options: CampaignPortOptions) {
   const { spec, bundle, profile, calibration, calibrationPath = null, qualification, serial, adb = 'adb',
     // `armMode` is undefined for a plan that declares no #arm-verify.  It must
     // NOT default to 'blocking' here: cli.js already maps `--arm-none` to
@@ -289,7 +339,7 @@ export async function createCampaignPorts(options: any = {}) {
     // strategy -- Minus 7 among them -- out of the device lane entirely.
     machineOnly = false, allowSaveReset = false, armMode = undefined, captureRestarted = false,
     nightAnchorAimMs = null, nightAnchorMaxK = null, nightAnchorPeriodMs = 1000, nightAnchorStrict = false, nightAnchorAuthorizeOnLatch = false,
-    teachOverlay = false, venueBindings = [] } = (options as any);
+    teachOverlay = false, venueBindings = [] } = options;
   if (typeof teachOverlay !== 'boolean') throw new TypeError('teachOverlay must be boolean');
   // The runner's own preflight compares the venue against the same bindings
   // the CLI's did, so the retained result records the same verdict.
@@ -309,7 +359,7 @@ export async function createCampaignPorts(options: any = {}) {
     throw new TypeError(`nightAnchorAimMs must be null or a millisecond epoch in [0, ${nightAnchorPeriodMs})`);
   // The aim is only as good as the whole seconds it was confirmed at: an aim
   // without its register bound would anchor at an unscored k.
-  if (nightAnchorAimMs !== null && !(Number.isInteger(nightAnchorMaxK) && nightAnchorMaxK >= 0))
+  if (nightAnchorAimMs !== null && !(typeof nightAnchorMaxK === 'number' && Number.isInteger(nightAnchorMaxK) && nightAnchorMaxK >= 0))
     throw new TypeError('nightAnchorAimMs requires nightAnchorMaxK, a non-negative integer');
   // An arm-verified plan still has to name a mode; a glitchless plan must be
   // able to say "no arm verification" rather than being forced to pick one.
@@ -327,21 +377,21 @@ export async function createCampaignPorts(options: any = {}) {
   await mkdir(evidenceDirectory, { recursive: false });
   await writeFile(join(evidenceDirectory, 'request.json'), JSON.stringify({ spec, bundle, profile,
     execution: { armMode } }, null, 2));
-  const onEvent = event => {
+  const onEvent = (event: CampaignEventRow) => {
     const row = JSON.stringify({ at: new Date().toISOString(), ...event });
     appendFileSync(join(evidenceDirectory, 'events.jsonl'), row + '\n');
     process.stderr.write(row + '\n');
   };
   onEvent({ type: 'evidence.started', evidenceDirectory });
   onEvent({ type: 'arm.mode', mode: armMode });
-  let lastLabel = null;
+  let lastLabel: string | null = null;
   let lastFrameAt = 0;
   let frameNumber = 0;
   bridge.recordObservation = async ({ script, png, stdout, stderr, code }) => {
     const label = lastLine(stdout);
     const at = Date.now();
     const retain = label !== lastLabel || !label.startsWith('state=night') || at - lastFrameAt >= 10000;
-    let frame;
+    let frame: string | undefined;
     if (retain) {
       frame = `${String(++frameNumber).padStart(5, '0')}-${script}.png`;
       await writeFile(join(evidenceDirectory, frame), png);
@@ -374,12 +424,12 @@ export async function createCampaignPorts(options: any = {}) {
   // attempt is about to run, for a person watching. Every step is best-effort
   // and evented; a refusal leaves the night exactly as it runs without one.
   // The forward is opened here, at setup, because opening it blocks.
-  let teach = null;
+  let teach: { channel: ReturnType<AdbCompanionPort['openLesson']>, lessonId: string | null } | null = null;
   if (teachOverlay) {
     try { teach = { channel: cuePort.openLesson({ lessonLine: LESSON_LINE }), lessonId: null }; }
-    catch (error) { onEvent({ type: 'teach.unavailable', error: String(error?.message ?? error) }); }
+    catch (error) { onEvent({ type: 'teach.unavailable', error: messageOf(error) }); }
   }
-  const teachArm = async target => {
+  const teachArm = async (target: CampaignTarget) => {
     if (!teach) return;
     teach.lessonId = null;
     try {
@@ -390,10 +440,10 @@ export async function createCampaignPorts(options: any = {}) {
       onEvent({ type: 'teach.lesson', status: 'armed', id: lesson.id, night: target.night,
         rows: lesson.rows.length, reply });
     } catch (error) {
-      onEvent({ type: 'teach.lesson', status: 'refused', night: target.night, error: String(error?.message ?? error) });
+      onEvent({ type: 'teach.lesson', status: 'refused', night: target.night, error: messageOf(error) });
     }
   };
-  const teachOrigin = async release => {
+  const teachOrigin = async (release: AnchorResult | undefined) => {
     if (!teach?.lessonId) return;
     if (release?.status !== 'released') {
       onEvent({ type: 'teach.origin', status: 'skipped', reason: release?.status ?? 'unanchored' });
@@ -404,10 +454,10 @@ export async function createCampaignPorts(options: any = {}) {
       onEvent({ type: 'teach.origin', status: 'running', id: teach.lessonId,
         onsetDeviceMs: release.onsetDeviceMs, afterOnsetMs: release.afterOnsetMs, reply });
     } catch (error) {
-      onEvent({ type: 'teach.origin', status: 'refused', error: String(error?.message ?? error) });
+      onEvent({ type: 'teach.origin', status: 'refused', error: messageOf(error) });
     }
   };
-  const teachClear = async reason => {
+  const teachClear = async (reason: string) => {
     if (!teach?.lessonId) return;
     const id = teach.lessonId;
     teach.lessonId = null;
@@ -415,7 +465,7 @@ export async function createCampaignPorts(options: any = {}) {
       await teach.channel.send(`LESSON ${cueEndpoint.token} clear`);
       onEvent({ type: 'teach.clear', id, reason });
     } catch (error) {
-      onEvent({ type: 'teach.clear', id, reason, status: 'failed', error: String(error?.message ?? error) });
+      onEvent({ type: 'teach.clear', id, reason, status: 'failed', error: messageOf(error) });
     }
   };
   const [cameraRule, monitorRule, maskRule] = await Promise.all([
@@ -442,10 +492,10 @@ export async function createCampaignPorts(options: any = {}) {
       throw new Error('native camera watchlist did not activate');
     armWatchLoaded = true;
   };
-  const observeArm = () => {
+  const observeArm = (): ArmSample => {
     if (!armWatchLoaded) throw new Error('native camera watchlist is not active');
     const read = cueTransport.read();
-    const highlights: any = nativeCameraHighlights(read, cameraRule);
+    const highlights = nativeCameraHighlights(read, cameraRule);
     const cameraValues = Object.fromEntries(cameraRule.adapter.buttons.map(button =>
       [button.control, read[button.entry] ?? 'UNKNOWN']));
     return {
@@ -463,8 +513,8 @@ export async function createCampaignPorts(options: any = {}) {
     // GET/GRID pair is deliberately not used here: those reads cannot prove
     // they describe the same image at the helper's capture cadence.
     const frame = cueTransport.frame();
-    const monitor: any = measureMonitorUp(frame, monitorRule, { cells: frame.cells });
-    const mask: any = measureMaskOn(frame, maskRule, { cells: frame.cells });
+    const monitor = measureMonitorUp(frame, monitorRule, { cells: frame.cells });
+    const mask = measureMaskOn(frame, maskRule, { cells: frame.cells });
     // The fitted monitor rule answers only on the office HUD -- the screen a
     // raised monitor hides. Measured on Night 5 (campaign-2026-09-09T14-14-39,
     // 41 observations: 40 false, 1 true) it never once saw the monitor up,
@@ -473,7 +523,7 @@ export async function createCampaignPorts(options: any = {}) {
     // the two are read as complements rather than one replacing the other:
     // highlights decide monitor-up, the office HUD decides monitor-down.
     let panel: {state: string, reason?: string, value?: string[]} = { state: 'UNKNOWN', reason: 'camera-watch-unavailable' };
-    let panelRead = null;
+    let panelRead: Readonly<Record<string, string>> | null = null;
     try {
       ensureArmWatch();
       panelRead = cueTransport.read();
@@ -504,7 +554,7 @@ export async function createCampaignPorts(options: any = {}) {
     const maskOn = exclusive.maskOn;
     const maskSource = exclusive.maskInference ??
       (mask.state === 'OBSERVED' ? 'mask-rule' : null);
-    let visualCapture = null;
+    let visualCapture: ReturnType<CompanionControlTransport['visualAcquisition']> | null = null;
     try { visualCapture = cueTransport.visualAcquisition(frame); }
     catch { /* an unavailable timestamp leaves the state ACK usable but bounded */ }
     return {
@@ -549,7 +599,7 @@ export async function createCampaignPorts(options: any = {}) {
   // machine-only experiment must use this modern device-local artifact path so
   // every requested night gets its own bound plan and no legacy shell driver
   // can be selected by accident.
-  let menuHid = null;
+  let menuHid: { process: AdbHidProcess, sender: ReturnType<typeof createHidSender> } | null = null;
   const localExecutor = new AdbDeviceLocalArtifactExecutor({ serial, adb,
       observe: () => lifecycle(bridge, serial), observeArm, observeControlState,
       // The title transport is already InputReader-ready when the story row
@@ -564,7 +614,8 @@ export async function createCampaignPorts(options: any = {}) {
       nightReleaseOwner: nightAnchorAimMs === null ? 'observer' : 'port',
       pollMs: 250, onEvent,
       onOutput: output => onEvent({ type: 'hid.stderr', output }) });
-  const titleModel = await readJson(TITLE_MODEL);
+  // The committed title model for this handset; title-observe.py validates the same file.
+  const titleModel = await readJson(TITLE_MODEL) as { items?: Readonly<Record<string, unknown>> };
   const modelPath = TITLE_MODEL.pathname;
   // Set when save() observes the game roll a 6 AM straight into the next
   // night's gameplay (story Nights 1..4 on this build). The next night's
@@ -586,12 +637,12 @@ export async function createCampaignPorts(options: any = {}) {
     await current?.process.close();
   };
 
-  const artifactRequestFor = target => makeCampaignExecutionRequest({
+  const artifactRequestFor = (target: CampaignTarget) => makeCampaignExecutionRequest({
     bundle, plan: bundle.plans.find(item => item.night === target.night), profile,
     mode: 'live', artifact: bundle.artifact, armMode,
   });
-  let pendingExecution = null;
-  const prearm = target => {
+  let pendingExecution: Promise<unknown> | null = null;
+  const prearm = (target: CampaignTarget) => {
     // The native watchlist is a synchronous Companion operation. Load it
     // before starting the held executor so its setup cannot block the
     // phase-critical night release later in intro().
@@ -603,7 +654,7 @@ export async function createCampaignPorts(options: any = {}) {
     pendingExecution.catch(() => {});
   };
 
-  const tap = async ({ point: target, holdMs = CUSTOM_NIGHT_CONTACT_MS }) => {
+  const tap = async ({ point: target, holdMs = CUSTOM_NIGHT_CONTACT_MS }: { point: unknown, holdMs?: number }) => {
     point(target, 'tap point');
     const sender = openMenuHid();
     await sender.transport.send({
@@ -625,10 +676,10 @@ export async function createCampaignPorts(options: any = {}) {
     const text = process.env.FNAF_START_PHONE_WALL_RESIDUE_MS ?? '';
     return text === '' ? null : Number(text);
   };
-  const stampedStartTap = async ({ point: target, holdMs, kind, refusal }) => {
+  const stampedStartTap = async ({ point: target, holdMs, kind, refusal }: { point: unknown, holdMs?: number, kind: string, refusal: string }) => {
     const residueMs = startResidueMs();
-    let clock = null;
-    let plan = null;
+    let clock: ReturnType<AdbCompanionPort['openClock']> | null = null;
+    let plan: ReturnType<typeof planTimedStart> | null = null;
     let tapped = false;
     try {
       clock = cuePort.openClock();
@@ -648,15 +699,15 @@ export async function createCampaignPorts(options: any = {}) {
         plannedPhoneWallMs: plan?.targetPhoneWallMs ?? null, lateMs: plan ? tapHostMs - plan.targetHostMs : null,
         uncertaintyMs: after.uncertaintyMs });
     } catch (error) {
-      if (residueMs !== null) throw new Error(`${refusal}: ${error?.message ?? error}`);
-      onEvent({ type: `${kind}.start`, status: 'unstamped', reason: String(error?.message ?? error) });
+      if (residueMs !== null) throw new Error(`${refusal}: ${(error as { message?: unknown } | null | undefined)?.message ?? error}`);
+      onEvent({ type: `${kind}.start`, status: 'unstamped', reason: messageOf(error) });
       if (!tapped) await tap({ point: target, holdMs });
     } finally {
       clock?.close();
     }
   };
 
-  const menu = async ({ target }) => {
+  const menu = async ({ target }: { target: CampaignTarget }) => {
     // A story night the game rolled straight into after the previous night's
     // observed 6 AM: the roll performed the selection, no title exists to
     // read, and no press may be sent. Anything else still goes through the
@@ -687,7 +738,8 @@ export async function createCampaignPorts(options: any = {}) {
     const targetPoint = targetName === 'customNight'
       ? point(calibration?.menu?.point, 'calibration.menu.point')
       : modelPoint(titleModel.items?.[targetName], `title model ${targetName}`);
-    const holdMs = targetName === 'customNight' ? calibration.menu.holdMs : CUSTOM_NIGHT_CONTACT_MS;
+    // point() above already refused a Custom Night with no calibration.
+    const holdMs = targetName === 'customNight' ? calibration?.menu.holdMs ?? CUSTOM_NIGHT_CONTACT_MS : CUSTOM_NIGHT_CONTACT_MS;
     // This build separates focusing a title row from activating it: the first press paints the
     // `>>` cursor and a second press activates the focused row -- unless the row was already
     // focused, and then the FIRST press activates. An untimed start does not care which press
@@ -710,7 +762,7 @@ export async function createCampaignPorts(options: any = {}) {
     // back from the seed which one.
     const residueMs = startResidueMs();
     const timedStory = residueMs !== null && targetName !== 'customNight';
-    let firstSelectionState;
+    let firstSelectionState: string | null;
     if (timedStory) {
       const timedTap = () => stampedStartTap({ point: targetPoint, holdMs, kind: 'menu',
         refusal: `timed ${targetName} start refused` });
@@ -736,7 +788,7 @@ export async function createCampaignPorts(options: any = {}) {
     if (targetName !== 'newGame') {
       // A first read that already saw the night begin is the entry state: another read costs
       // 1-2 s, and intro() has to stamp before the office appears.
-      const entryState = ['intro', 'newspaper', 'night'].includes(firstSelectionState)
+      const entryState = firstSelectionState !== null && ['intro', 'newspaper', 'night'].includes(firstSelectionState)
         ? firstSelectionState
         : await waitFor(bridge, serial,
           value => value === 'intro' || value === 'newspaper' || value === 'night',
@@ -770,7 +822,7 @@ export async function createCampaignPorts(options: any = {}) {
       saveResetAuthorized: true, confirmation: 'not-present', entryState: confirmationState };
   };
 
-  const intro = async ({ target }) => {
+  const intro = async ({ target }: { target: CampaignTarget }) => {
     // Pre-arm the device-local schedule while the intro card plays. The
     // executor's night_go gate holds every plan action -- arm taps included --
     // until the lifecycle observer positively sees the office. The title HID
@@ -789,7 +841,7 @@ export async function createCampaignPorts(options: any = {}) {
     let executorAuthorized = false;
     const lifecycleNight = waitFor(bridge, serial, value => value === 'night' || executorAuthorized,
       30000, 'night start');
-    let state;
+    let state: string | null;
     if (nightAnchorAimMs === null) {
       state = await lifecycleNight;
       // This is the phase-critical handoff. The measurement deliberately leaves
@@ -801,21 +853,22 @@ export async function createCampaignPorts(options: any = {}) {
       // the helper's latched onset while the intro card is still up, and fires
       // at onset + aim + k s once authorized (night-anchor.js). Any refusal
       // releases at authorization.
-      let authorizedAtHostMs = null;
+      let authorizedAtHostMs: number | null = null;
       const authorized = Promise.race([
         lifecycleNight,
         localExecutor.whenNightAuthorized().then(() => { executorAuthorized = true; return 'night'; }),
       ]).then(value => { authorizedAtHostMs ??= performance.now(); return value; });
-      let clock = null;
+      let clock: ReturnType<AdbCompanionPort['openClock']> | null = null;
       try { clock = cuePort.openClock(); }
-      catch (error) { onEvent({ type: 'origin.anchor', status: 'unavailable', reason: 'probe-failed', error: String(error?.message ?? error) }); }
-      const anchoring = clock === null
-        ? authorized.then(() => { localExecutor.releaseNight(); })
+      catch (error) { onEvent({ type: 'origin.anchor', status: 'unavailable', reason: 'probe-failed', error: messageOf(error) }); }
+      const anchoring: Promise<AnchorResult | undefined> = clock === null
+        ? authorized.then(() => { localExecutor.releaseNight(); return undefined; })
         : anchorNightRelease({ clock,
           authorization: { isAuthorized: () => authorizedAtHostMs !== null, whenAuthorized: () => authorized,
             authorizedAt: () => authorizedAtHostMs },
           release: () => localExecutor.releaseNight(), onEvent,
-          aimMs: nightAnchorAimMs, maxK: nightAnchorMaxK, periodMs: nightAnchorPeriodMs, strict: nightAnchorStrict === true, authorizeOnLatch: nightAnchorAuthorizeOnLatch === true,
+          // Validated a non-negative integer whenever an aim is set.
+          aimMs: nightAnchorAimMs, maxK: nightAnchorMaxK as number, periodMs: nightAnchorPeriodMs, strict: nightAnchorStrict === true, authorizeOnLatch: nightAnchorAuthorizeOnLatch === true,
           notBeforeHostMs: introStartedHostMs });
       anchoring.catch(() => {});
       try {
@@ -847,25 +900,25 @@ export async function createCampaignPorts(options: any = {}) {
   };
 
   // What preflight read, for the terminal's venue check.
-  let preflightIdentity = null;
-  const terminal = async ({ target, execution }) => {
+  let preflightIdentity: VenueIdentity | null = null;
+  const terminal = async ({ target, execution }: { target: CampaignTarget, execution: unknown }) => {
     const observed = await observedTerminal({ target, execution });
     if (observed.outcome === 'unknown' || observed.outcome === 'invalid' || preflightIdentity === null ||
         typeof bridge.venueIdentity !== 'function') return observed;
     // Input stops before the read: a terminal ends the attempt's ownership of
     // the screen, and the read takes a few adb round trips.
     await localExecutor.abort('campaign-terminal-venue-check');
-    let drift = [];
+    let drift: { field: string, from: string, to: string }[] = [];
     try {
       drift = venueDriftDuringRun(preflightIdentity, await bridge.venueIdentity());
       onEvent({ type: 'campaign.terminal.venue', drift });
     } catch (error) {
       // An unreadable venue is not drift; the terminal stands as observed.
-      onEvent({ type: 'campaign.terminal.venue', drift: null, error: error.message });
+      onEvent({ type: 'campaign.terminal.venue', drift: null, error: (error as Error).message });
     }
     return venueCheckedTerminal(observed, drift);
   };
-  const observedTerminal = async ({ target, execution }) => {
+  const observedTerminal = async ({ target, execution }: { target: CampaignTarget, execution: unknown }) => {
     const published = terminalFromExecution({ target, execution });
     if (published) {
       onEvent({ type: 'campaign.terminal.from-executor',
@@ -882,12 +935,12 @@ export async function createCampaignPorts(options: any = {}) {
     return { night: target.night, identity: target.mode, outcome: 'unknown', sixAm: false, positive: false, state };
   };
 
-  const terminalVerification = async ({ target }) => {
+  const terminalVerification = async ({ target }: { target: CampaignTarget }) => {
     const state = await lifecycle(bridge, serial);
     return { night: target.night, sixAm: state === 'sixam', positive: state === 'sixam', state };
   };
 
-  const save = async ({ target }) => {
+  const save = async ({ target }: { target: CampaignTarget }) => {
     // Story Nights 1..4 roll a 6 AM straight into the next night's gameplay
     // on this build — regardless of spec shape — while Night 5 (and 6) end
     // in the paycheck/title instead. For a rolling night the observed roll
@@ -921,7 +974,7 @@ export async function createCampaignPorts(options: any = {}) {
       items };
   };
 
-  const retryReady = async ({ target }) => {
+  const retryReady = async ({ target }: { target: CampaignTarget }) => {
     await waitFor(bridge, serial, value => value === 'title', 15000, 'retry title menu');
     const items = await title(bridge, serial, modelPath);
     return { menuReady: items.includes(target.menuTarget), observed: true, items };
@@ -931,45 +984,49 @@ export async function createCampaignPorts(options: any = {}) {
   // a screenshot, with the measured calibration and the glyph fingerprints
   // that sit beside it (packages/play/profiles/fnaf2/moto-g56/custom-night-glyphs-v1.json). An explicit
   // `configReadback` in options still wins (tests, fixtures).
-  const configReadback = options.configReadback ?? (calibrationPath === null ? undefined
+  const configReadback: ConfigReadback | undefined = options.configReadback ?? (calibrationPath === null ? undefined
     : async ({ bridge: readBridge, serial: readSerial }) => {
       const glyphs = join(dirname(resolve(calibrationPath)), 'custom-night-glyphs-v1.json');
       // The dial screen follows the title tap after a transition of variable
       // length: night7-anchoredi3 read the title (">> Custom Night" selected)
       // and refused. Re-read until the dials are legible, within a budget.
-      let last = { status: 'UNKNOWN', reason: 'no readback attempted' };
+      let last: unknown = { status: 'UNKNOWN', reason: 'no readback attempted' };
       for (let attempt = 0; attempt < 12; attempt += 1) {
         const result = await captureAndObserve(readBridge, readSerial, CUSTOM_NIGHT_READBACK,
           ['--calibration', resolve(calibrationPath), '--glyphs', glyphs, '--sensor', 'screencap-2400x1080']);
         try { last = JSON.parse(lastLine(result.stdout)); }
         catch { last = { status: 'UNKNOWN', reason: `readback observer exit ${result.code}: ${lastLine(result.stderr)}` }; }
-        if (last.status === 'PASS') return last;
-        await new Promise<any>(resolveSleep => setTimeout(resolveSleep, 500));
+        // A parsed `null` throws here, as reading its status always has.
+        if ((last as { status?: unknown }).status === 'PASS') return last;
+        await new Promise<void>(resolveSleep => setTimeout(resolveSleep, 500));
       }
       return last;
     });
-  const customNight = async ({ target }) => {
-    validateCustomNightCalibration(calibration, { targetBuild: spec.target.build });
+  const customNight = async ({ target }: { target: CampaignTarget }) => {
+    const measured = validateCustomNightCalibration(calibration, { targetBuild: spec.target.build });
     if (typeof configReadback !== 'function')
       throw new Error('Custom Night readback adapter is not composed; refusing to change dials');
-    const dialTap = ({ point: targetPoint, holdMs }) => tap({ point: targetPoint, holdMs });
-    const dialReadback = args => configReadback({ ...args, bridge, serial });
+    const dialTap: Tap = ({ point: targetPoint, holdMs }) => tap({ point: targetPoint, holdMs });
+    const dialReadback = (args: Readonly<Record<string, unknown>>) => configReadback({ ...args, bridge, serial });
+    const dials = target.mode === 'custom' ? target.dials : undefined;
     // The measured preset ring (custom-night-moto-g56-v207.json) has a preset
     // whose dials are exactly the target: reach it through the arrow pair
     // first (Pedro, 2026-09-13: "use o preset golden freddy" -- one contact
     // from the opening state instead of six dial taps), then let the per-dial
     // routine confirm with a fresh readback and touch nothing.
-    if (calibrationPath !== null && typeof calibration.configModel === 'string') {
-      const modelPath = join(dirname(resolve(calibrationPath)), calibration.configModel.split('/').at(-1));
-      const model = JSON.parse(await readFile(modelPath, 'utf8'));
-      const wanted = model.presets?.find(item => AI_DIALS_ALL.every(dial => item.dials?.[dial] === target.dials?.[dial]));
+    if (calibrationPath !== null && typeof measured.configModel === 'string') {
+      const modelPath = join(dirname(resolve(calibrationPath)), measured.configModel.split('/').at(-1) ?? '');
+      // selectCustomNightPreset validates the model before it presses anything.
+      const model: { presets?: readonly { id: string, dials?: Readonly<Record<string, unknown>> }[] } =
+        JSON.parse(await readFile(modelPath, 'utf8'));
+      const wanted = model.presets?.find(item => AI_DIALS_ALL.every(dial => item.dials?.[dial] === dials?.[dial]));
       if (wanted) {
         const selected = await selectCustomNightPreset({ preset: wanted.id, model, tap: dialTap, readback: dialReadback,
           direction: 'auto', targetBuild: spec.target.build });
         onEvent({ type: 'custom-night.preset', preset: wanted.id, steps: selected.steps });
       }
     }
-    const configured = await configureCustomNight({ target, calibration,
+    const configured = await configureCustomNight({ target: { dials }, calibration: measured,
       targetBuild: spec.target.build,
       tap: dialTap,
       readback: dialReadback,
@@ -979,24 +1036,24 @@ export async function createCampaignPorts(options: any = {}) {
     // reaches that residue modulo 65 536 ms (packages/play/src/campaign/timed-start.ts). The tap's
     // phone wall time is logged either way; a requested timed start never falls back to
     // an untimed tap.
-    await stampedStartTap({ point: calibration.start.point, holdMs: calibration.start.holdMs,
+    await stampedStartTap({ point: measured.start.point, holdMs: measured.start.holdMs,
       kind: 'custom-night', refusal: 'timed Custom Night start refused' });
     return configured;
   };
 
   // A composition of these ports is always a live run, so an unbound venue refuses here too.
-  const devicePreflight = async args => {
+  const devicePreflight = async (args: { spec: CampaignSpec }) => {
     const result = await bridge.preflight({ targetBuild: spec.target.build,
       restartCapture: false, venueBindings, ...args, requireVenueBinding: true, profileId: profile.id });
     preflightIdentity = result?.venue?.observed ?? null;
     return result;
   };
-  const restartAfterAbort = async reason => {
+  const restartAfterAbort = async (reason: unknown) => {
     // The HID release stops input delivery; it does not rewind the game state.
     // Close the shared title process before restarting the target so no stale
     // input can land in the fresh title/menu instance.
     await closeMenuHid();
-    const detail = String(reason?.message ?? reason ?? 'campaign stopped').slice(0, 240);
+    const detail = String((reason as { message?: unknown } | null | undefined)?.message ?? reason ?? 'campaign stopped').slice(0, 240);
     onEvent({ type: 'campaign.abort.restart', reason: detail });
     try {
       const restarted = await bridge.restartGame();
@@ -1013,7 +1070,7 @@ export async function createCampaignPorts(options: any = {}) {
       onEvent({ type: 'campaign.abort.restarted', state: refreshedState ?? state,
         launcher: restarted.launcher, cueHelperPort: endpoint.port });
     } catch (error) {
-      onEvent({ type: 'campaign.abort.restart-failed', error: error.message });
+      onEvent({ type: 'campaign.abort.restart-failed', error: (error as Error).message });
       throw error;
     }
   };
@@ -1022,7 +1079,9 @@ export async function createCampaignPorts(options: any = {}) {
     terminal, terminalVerification, save, retryReady, localExecutor, restartAfterAbort });
   const ports = {
     ...composed.ports,
-    stopAttempt: async ({ terminal, reason }) => {
+    stopAttempt: async ({ terminal: ended, reason }: { terminal: unknown, reason: string }) => {
+      // What the terminal port above returned.
+      const terminal = ended as { outcome?: string, why?: unknown } | null | undefined;
       // The terminal port may observe game-over before the executor's own
       // lifecycle poll does. Stopping here is the last gate before retryReady
       // or save() can read the title, so no stale HID stream can reach menu.
@@ -1040,16 +1099,17 @@ export async function createCampaignPorts(options: any = {}) {
       if (terminal?.outcome === 'invalid')
         await restartAfterAbort(new Error(`invalid run: ${terminal.why}`));
     },
-    executeAttempt: async ({ target }) => {
+    executeAttempt: async ({ target }: { target: CampaignTarget }) => {
       // intro() pre-armed the schedule during the intro card; the attempt
       // owns that execution. A retry (or any path that skipped intro)
       // falls back to composing the request here.
       // An executor failure tagged Invalid (invalidRun) ends the attempt as an
       // Invalid run instead of failing the campaign's port.
-      const settle = execution => execution.catch(error => {
-        if (typeof error?.invalid !== 'string') throw error;
-        onEvent({ type: 'campaign.attempt.invalid', why: error.invalid, detail: error.message });
-        return { status: 'INVALID', why: error.invalid, detail: error.message };
+      const settle = (execution: Promise<unknown>) => execution.catch((error: unknown) => {
+        const tagged = error as { invalid?: unknown, message?: string } | null | undefined;
+        if (typeof tagged?.invalid !== 'string') throw error;
+        onEvent({ type: 'campaign.attempt.invalid', why: tagged.invalid, detail: tagged.message });
+        return { status: 'INVALID', why: tagged.invalid, detail: tagged.message };
       });
       if (pendingExecution) {
         const pending = pendingExecution;
@@ -1076,7 +1136,7 @@ export async function createCampaignPorts(options: any = {}) {
           await restartAfterAbort(new Error('campaign stopped with a pre-armed attempt'));
       }
     },
-    cleanup: async reason => {
+    cleanup: async (reason: unknown) => {
       pendingExecution = null;
       try { await composed.ports.cleanup(reason); }
       finally {

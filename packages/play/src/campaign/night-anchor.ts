@@ -34,7 +34,16 @@ import { latchedNightOnsetMs } from '@sixam/play/phone/night-onset';
 export const DEFAULT_LATCH_HOLD_MS = 500;
 export const DEFAULT_MIN_LEAD_MS = 80;
 
-const defaultSleep = milliseconds => new Promise<any>(resolve => setTimeout(resolve, Math.max(0, milliseconds)));
+const defaultSleep = (milliseconds: number) => new Promise<void>(resolve => setTimeout(resolve, Math.max(0, milliseconds)));
+const messageOf = (error: unknown) => String((error as { message?: unknown } | null | undefined)?.message ?? error);
+
+/** One device->host clock exchange: the offset, bounded by half its round trip, and the helper's reply fields. */
+interface ClockSample {
+  readonly offsetMs: number;
+  readonly uncertaintyMs: number;
+  readonly rttMs: number;
+  readonly fields: Record<string, string>;
+}
 
 /**
  * The latched onset on the PHONE's wall clock, when the helper reports one.
@@ -55,7 +64,7 @@ export async function anchorNightRelease({ clock, authorization, release, onEven
   now = () => performance.now(), wallNow = () => Date.now(), sleep = defaultSleep,
   latchPollMs = 100, latchWaitMs = 35000, latchGraceAfterAuthorizationMs = 1500,
   minLeadMs = DEFAULT_MIN_LEAD_MS, maxUncertaintyMs = 15, periodMs = 1000, strict = false,
-  authorizeOnLatch = false, latchHoldMs = DEFAULT_LATCH_HOLD_MS }: { clock: { read: () => Promise<{offsetMs: number, uncertaintyMs: number, rttMs: number, fields: Record<string, string>}>, probe: () => Promise<{offsetMs: number, uncertaintyMs: number, rttMs: number, fields: Record<string, string>}>, }, authorization: { isAuthorized: () => boolean, whenAuthorized: () => Promise<unknown>, authorizedAt?: () => number | null }, release: () => void, onEvent?: (event: any) => void, aimMs: number, maxK: number, notBeforeHostMs: number, now?: () => number, wallNow?: () => number, sleep?: (ms: number) => Promise<void>, latchPollMs?: number, latchWaitMs?: number, latchGraceAfterAuthorizationMs?: number, minLeadMs?: number, maxUncertaintyMs?: number, periodMs?: number, strict?: boolean, authorizeOnLatch?: boolean, latchHoldMs?: number, }) {
+  authorizeOnLatch = false, latchHoldMs = DEFAULT_LATCH_HOLD_MS }: { clock: { read: () => Promise<ClockSample>, probe: () => Promise<ClockSample>, }, authorization: { isAuthorized: () => boolean, whenAuthorized: () => Promise<unknown>, authorizedAt?: () => number | null }, release: () => void, onEvent?: (event: { type: string } & Record<string, unknown>) => void, aimMs: number, maxK: number, notBeforeHostMs: number, now?: () => number, wallNow?: () => number, sleep?: (ms: number) => Promise<void>, latchPollMs?: number, latchWaitMs?: number, latchGraceAfterAuthorizationMs?: number, minLeadMs?: number, maxUncertaintyMs?: number, periodMs?: number, strict?: boolean, authorizeOnLatch?: boolean, latchHoldMs?: number, }) {
   if (typeof clock?.read !== 'function' || typeof clock?.probe !== 'function')
     throw new TypeError('night anchor needs a clock with read and probe');
   if (typeof authorization?.isAuthorized !== 'function' || typeof authorization?.whenAuthorized !== 'function')
@@ -69,10 +78,10 @@ export async function anchorNightRelease({ clock, authorization, release, onEven
   const authorizedAtHostMs = () => authorization.authorizedAt?.() ?? null;
   // The latch sees the onset whenever the trace opened, so every attempt logs
   // what it last read, refused or not: the latch-vs-frames check needs both.
-  let latchedSeenDeviceMs = null;
-  let latchedSeenOffsetMs = null;
+  let latchedSeenDeviceMs: number | null = null;
+  let latchedSeenOffsetMs: number | null = null;
   // A refusal still owes the night its release, at authorization -- never before.
-  const fallback = async (reason, detail = {}) => {
+  const fallback = async (reason: string, detail: Record<string, unknown> = {}) => {
     onEvent({ type: 'origin.anchor', status: 'unavailable', reason, aimMs, maxK,
       latchedOnsetDeviceMs: latchedSeenDeviceMs, latchedOffsetMs: latchedSeenOffsetMs, ...detail });
     // A bundle qualified at its anchor epoch holds only there (bundle.ts
@@ -86,7 +95,7 @@ export async function anchorNightRelease({ clock, authorization, release, onEven
     release();
     onEvent({ type: 'origin.anchor', status: 'released-unanchored', reason, firedHostMs: now(),
       firedWallMs: wallNow(), authorizedAtHostMs: authorizedAtHostMs() });
-    return { status: 'unavailable', reason };
+    return { status: 'unavailable' as const, reason };
   };
 
   // Every exchange is a clock sample: the offset is the one with the fastest
@@ -95,11 +104,12 @@ export async function anchorNightRelease({ clock, authorization, release, onEven
   // 140-240 ms at a time during the intro (night5-anchor3 lost its only
   // probe to that) -- so the anchor keeps reading until its deadline instead
   // of refusing on the first one.
-  let best = null;
+  // Typed by assertion so the checker does not narrow it to its initial null: consider() reassigns it.
+  let best = null as ClockSample | null;
   let failures = 0;
-  let lastError = null;
-  const consider = sample => { if (best === null || sample.rttMs < best.rttMs) best = sample; };
-  const failed = error => { failures += 1; lastError = String(error?.message ?? error); };
+  let lastError: string | null = null;
+  const consider = (sample: ClockSample) => { if (best === null || sample.rttMs < best.rttMs) best = sample; };
+  const failed = (error: unknown) => { failures += 1; lastError = messageOf(error); };
 
   // 1. A first offset measurement while the intro card is still up (the clocks
   // drift 0.33 ms per 1000 s); the latch reads below keep improving it.
@@ -107,20 +117,20 @@ export async function anchorNightRelease({ clock, authorization, release, onEven
 
   // 2. Wait for a latched onset that belongs to THIS night.
   const startedAt = now();
-  let authorizedSeenAt = null;
+  let authorizedSeenAt: number | null = null;
   let fieldPresent = false;
-  let staleOnset = null;
+  let staleOnset: number | null = null;
   let reads = 0;
-  let onsetDeviceMs = null;
+  let onsetDeviceMs: number | null = null;
   for (;;) {
-    let read = null;
+    let read: ClockSample | null = null;
     try { read = await clock.read(); consider(read); reads += 1; }
     catch (error) { failed(error); }
     if (read !== null) {
       fieldPresent ||= read.fields?.nightOnsetImageNs !== undefined;
       let candidate;
       try { candidate = latchedNightOnsetMs(read.fields); }
-      catch (error) { return fallback('onset-malformed', { error: String(error?.message ?? error), reads }); }
+      catch (error) { return fallback('onset-malformed', { error: messageOf(error), reads }); }
       if (candidate !== null) {
         // `read` was just considered, so `best` is at least as fast as it.
         const offsetMs = (best ?? read).offsetMs;
@@ -166,7 +176,7 @@ export async function anchorNightRelease({ clock, authorization, release, onEven
   const firstK = Math.max(0, Math.ceil((planAt + minLeadMs - onsetHostMs - aimMs) / periodMs));
   if (firstK > maxK)
     return fallback('k-unreachable', { ...detail, onsetHostMs, k: firstK, plannedAfterOnsetMs: planAt - onsetHostMs });
-  const candidates = [];
+  const candidates: { k: number, releaseHostMs: number }[] = [];
   for (let k = firstK; k <= maxK; k += 1) candidates.push({ k, releaseHostMs: onsetHostMs + aimMs + k * periodMs });
   onEvent({ type: 'origin.anchor', status: 'scheduled', aimMs, maxK, onsetHostMs,
     plannedAfterOnsetMs: planAt - onsetHostMs, candidates, authorizedAtHostMs: authorizedAtHostMs(),
@@ -205,9 +215,10 @@ export async function anchorNightRelease({ clock, authorization, release, onEven
       authorizedAtHostMs: authorizedAtHostMs(), authorizedAfterOnsetMs: (authorizedAtHostMs() ?? NaN) - onsetHostMs });
     // onsetDeviceMs and afterOnsetMs place the schedule's origin on the
     // helper's own image clock (the teach panel narrates from there).
-    return { status: 'released', k, releaseHostMs, firedHostMs, releasedAimMs,
+    return { status: 'released' as const, k, releaseHostMs, firedHostMs, releasedAimMs,
       onsetDeviceMs, afterOnsetMs: firedHostMs - onsetHostMs };
   }
   return fallback('authorization-late', { ...detail, onsetHostMs, maxK,
-    lastCandidateHostMs: candidates.at(-1).releaseHostMs });
+    // firstK <= maxK, so there is at least one candidate.
+    lastCandidateHostMs: candidates[candidates.length - 1].releaseHostMs });
 }

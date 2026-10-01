@@ -6,6 +6,8 @@
  * CONTRACT:hid-executor-v1.
  */
 
+import { isList, isOneOf, isRecord } from '@sixam/kernel';
+
 export const HID_DESCRIPTOR = Object.freeze([
   5, 13, 9, 4, 161, 1, 133, 1, 9, 34, 161, 0, 9, 85, 21, 0, 37, 2,
   117, 8, 149, 1, 177, 2, 9, 84, 129, 2, 5, 13, 9, 34, 161, 2, 9,
@@ -25,12 +27,24 @@ export const HID_FEATURE_REPORTS = Object.freeze([
   Object.freeze({ id: 1, data: Object.freeze([0]) }),
 ]);
 
-const finitePoint = point => point && Number.isFinite(point.x) && Number.isFinite(point.y);
-const byte = value => value & 0xff;
-const high = value => (value >> 8) & 0xff;
+/** A native 2400x1080 landscape screen point. */
+interface Point {
+  readonly x: number;
+  readonly y: number;
+}
+/** What the transport needs of a semantic command: its kind, and a duration where the plan qualified one. */
+interface HidCommand {
+  readonly action?: { readonly kind?: string, readonly durationMs?: number };
+  readonly source?: { readonly durationMs?: number, readonly controller?: string };
+}
+
+const finitePoint = (point: unknown): point is Point =>
+  isRecord(point) && Number.isFinite(point.x) && Number.isFinite(point.y);
+const byte = (value: number) => value & 0xff;
+const high = (value: number) => (value >> 8) & 0xff;
 
 /** Convert native 2400x1080 landscape coordinates to the HID axes. */
-export function toRaw([x, y]) {
+export function toRaw([x, y]: readonly [number, number]) {
   if (!Number.isFinite(x) || !Number.isFinite(y)) throw new TypeError('HID point must be finite');
   return [Math.floor((1080 - y) * 20 / 9), Math.floor(x * 9 / 20)];
 }
@@ -54,7 +68,7 @@ export const HID_CONTROLS_SCHEMA = 'hid-controls-v1';
  * 
  * @param profileSha256 sha256 of the profile file's bytes
  */
-export function hidControlsText(profile: {id: string, controlMap: Record<string, {x: number, y: number}>}, profileSha256: string) {
+export function hidControlsText(profile: {id: string, controlMap: Readonly<Record<string, unknown>>}, profileSha256: string) {
   if (!profile || typeof profile.controlMap !== 'object' || profile.controlMap === null)
     throw new TypeError('the profile names no controlMap');
   if (typeof profile.id !== 'string' || !/^\S+$/.test(profile.id)) throw new TypeError('the profile has no id');
@@ -72,14 +86,14 @@ export function hidControlsText(profile: {id: string, controlMap: Record<string,
   return `${lines.join('\n')}\n`;
 }
 
-function record(flags, point) {
+function record(flags: number, point: Point) {
   const [x, y] = toRaw([point.x, point.y]);
   return [flags, byte(x), high(x), byte(y), high(y)];
 }
 
 /** Encode a bounded report; report IDs and contact records stay transport-local. */
-export function report(records) {
-  if (!Array.isArray(records) || records.length < 1 || records.length > 2)
+export function report(records: readonly { flags: number, point: Point }[]) {
+  if (!isList(records) || records.length < 1 || records.length > 2)
     throw new TypeError('HID report needs one or two contact records');
   // The hybrid descriptor consumes the filler record as contact 1 when a
   // single contact is released.  Leaving it as all-zero bytes makes the
@@ -95,24 +109,26 @@ export function report(records) {
 }
 
 export class HidWireTransport {
-  declare write: any;
-  declare ready: any;
-  declare sleep: any;
-  declare registerDelayMs: any;
-  declare contactMs: any;
-  declare deviceId: any;
-  declare name: any;
-  declare vid: any;
-  declare pid: any;
-  declare bus: any;
-  declare descriptor: any[];
-  declare featureReports: any;
+  declare write: (line: string) => unknown;
+  declare ready: () => unknown;
+  declare sleep: (milliseconds: number) => Promise<unknown>;
+  declare registerDelayMs: number;
+  declare contactMs: number;
+  declare deviceId: number;
+  declare name: string;
+  declare vid: number;
+  declare pid: number;
+  declare bus: string;
+  declare descriptor: number[];
+  declare featureReports: { id: number, data: number[] }[];
   declare started: boolean;
   declare aborted: boolean;
-  constructor(options: any = {}) {
+  constructor(options: { write?: (line: string) => unknown, ready?: () => unknown, sleep?: (milliseconds: number) => Promise<unknown>,
+    registerDelayMs?: number, contactMs?: number, deviceId?: number, name?: string, vid?: number, pid?: number, bus?: string,
+    descriptor?: readonly number[], featureReports?: readonly { readonly id: number, readonly data: readonly number[] }[] } = {}) {
     // Generic contact default for discrete UI controls. Device-local gameplay
     // schedules carry their own explicitly qualified duration.
-    const { write, ready = async () => {}, sleep = milliseconds => new Promise<any>(resolve => setTimeout(resolve, milliseconds)),
+    const { write, ready = async () => {}, sleep = (milliseconds: number) => new Promise<void>(resolve => setTimeout(resolve, milliseconds)),
       registerDelayMs = 0, contactMs = 17, deviceId = 92, name = 'FNAF Timed Touch',
       vid = 6353, pid = 61959, bus = 'usb', descriptor = HID_DESCRIPTOR,
       featureReports = HID_FEATURE_REPORTS } = options;
@@ -138,13 +154,13 @@ export class HidWireTransport {
     this.started = true;
   }
 
-  async send({ command, point }) {
+  async send({ command, point }: { command?: HidCommand | null, point: unknown }) {
     if (!command?.action || !finitePoint(point)) throw new TypeError('HID send needs a semantic command and mapped point');
     await this.start();
     if (this.aborted) throw new Error('HID transport is aborted');
     const kind = command.action.kind;
     if (kind === 'release') return this.releaseAll();
-    if (!['press', 'hold', 'select'].includes(kind)) throw new Error(`HID action is unsupported: ${kind}`);
+    if (!isOneOf(['press', 'hold', 'select'], kind)) throw new Error(`HID action is unsupported: ${kind}`);
     const duration = command.action.durationMs ?? command.source?.durationMs ?? this.contactMs;
     if (!Number.isInteger(duration) || duration < 1 || duration > 30000)
       throw new TypeError('HID action duration must be 1..30000 ms');

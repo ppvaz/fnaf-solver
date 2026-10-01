@@ -32,7 +32,7 @@ export const NIGHT_ONSET_HOLD_MS = 500;
  */
 export const NIGHT5_ANCHOR_AIM_MS = 233;
 
-const finite = value => typeof value === 'number' && Number.isFinite(value);
+const finite = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
 
 /**
  * First held FNAF2_NIGHT frame of a trace.

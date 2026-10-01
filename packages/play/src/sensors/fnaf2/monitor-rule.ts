@@ -15,18 +15,39 @@
  * `monitorUp=` field wins over the derived value.
  * CONTRACT:monitor-rule-v1.
  */
-import { createHash } from 'node:crypto';
+import { isList, isRecord } from '@sixam/kernel';
+import { ruleDigest } from './rule-digest.ts';
+import type { Reading } from './rule-digest.ts';
 
-const cellFeatures = {
+type CellFeature = 'luma' | 'yellowness';
+/** One anchor cell of a fitted rule: where a drawing is (present) or the office is covered (absent). */
+export interface Anchor {
+  readonly cell: number;
+  readonly feature: CellFeature;
+  readonly kind: 'present' | 'absent';
+  readonly rule: { readonly kind: 'threshold', readonly threshold: number, readonly refuse_band: number };
+}
+/** A calibrated monitor-rule-v1 artifact, as parseMonitorRule checks it. */
+export interface MonitorRule {
+  readonly schema: 'monitor-rule-v1';
+  readonly adapter: {
+    readonly anchors: readonly Anchor[],
+    readonly guard: { readonly kind: 'floor', readonly feature: 'helper_grid_mean_luma', readonly min: number, readonly reason: 'frame-dark' },
+  };
+  readonly [field: string]: unknown;
+}
+type MonitorReading = Reading<'monitorUp', boolean>;
+
+const cellFeatures: Readonly<Record<CellFeature, (cell: unknown) => number>> = {
   luma: cell => {
-    if (!Number.isInteger(cell)) return NaN;
+    if (typeof cell !== 'number' || !Number.isInteger(cell)) return NaN;
     const r = (cell >> 16) & 0xff;
     const g = (cell >> 8) & 0xff;
     const b = cell & 0xff;
     return (77 * r + 150 * g + 29 * b) >> 8;
   },
   yellowness: cell => {
-    if (!Number.isInteger(cell)) return NaN;
+    if (typeof cell !== 'number' || !Number.isInteger(cell)) return NaN;
     const r = (cell >> 16) & 0xff;
     const g = (cell >> 8) & 0xff;
     const b = cell & 0xff;
@@ -43,81 +64,78 @@ const UNKNOWN_REASONS = new Set([
   'calibration-refused', 'monitor-rule-absent', 'monitor-state-unavailable',
   'grid-seq-mismatch', 'grid-unavailable',
 ]);
-const finite = value => typeof value === 'number' && Number.isFinite(value);
+const finite = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
 
-function fail(message) { throw new TypeError(`monitor-rule-v1: ${message}`); }
+function fail(message: string): never { throw new TypeError(`monitor-rule-v1: ${message}`); }
 
 /** Stable sha256 over the artifact's canonical JSON for profile binding. */
-export function monitorRuleDigest(artifact) {
-  const stable = value => {
-    if (Array.isArray(value)) return value.map(stable);
-    if (value && typeof value === 'object') {
-      return Object.fromEntries(Object.keys(value).sort().map(key => [key, stable(value[key])]));
-    }
-    return value;
-  };
-  return createHash('sha256').update(JSON.stringify(stable(artifact))).digest('hex');
-}
+export const monitorRuleDigest = ruleDigest;
 
-function parseAnchor(anchor, index) {
-  if (!anchor || typeof anchor !== 'object') fail(`anchor ${index} must be an object`);
-  if (!Number.isInteger(anchor.cell) || anchor.cell < 0 || anchor.cell > 179)
+function parseAnchor(anchor: unknown, index: number): Anchor {
+  if (!isRecord(anchor)) fail(`anchor ${index} must be an object`);
+  if (typeof anchor.cell !== 'number' || !Number.isInteger(anchor.cell) || anchor.cell < 0 || anchor.cell > 179)
     fail(`anchor ${index} cell must index the 180-cell grid`);
-  if (!(anchor.feature in cellFeatures))
+  if (anchor.feature !== 'luma' && anchor.feature !== 'yellowness')
     fail(`anchor ${index} feature must be a per-cell luma or yellowness`);
   if (anchor.kind !== 'present' && anchor.kind !== 'absent') fail(`anchor ${index} kind must be present or absent`);
-  if (anchor.rule?.kind !== 'threshold') fail(`anchor ${index} rule kind must be threshold`);
-  if (!finite(anchor.rule.threshold)) fail(`anchor ${index} threshold must be finite`);
-  const band = anchor.rule.refuse_band;
+  const rule = anchor.rule;
+  if (!isRecord(rule) || rule.kind !== 'threshold') fail(`anchor ${index} rule kind must be threshold`);
+  if (!finite(rule.threshold)) fail(`anchor ${index} threshold must be finite`);
+  const band = rule.refuse_band;
   if (!finite(band) || band < 0) fail(`anchor ${index} refuse_band must be finite non-negative`);
-  if (anchor.separation_margin < band) fail(`anchor ${index} refuse_band exceeds its separation margin`);
-  return anchor;
+  // As JavaScript compares: an absent margin (NaN) passes, a null one reads 0.
+  if (Number(anchor.separation_margin) < band) fail(`anchor ${index} refuse_band exceeds its separation margin`);
+  return anchor as unknown as Anchor;
 }
 
 /**
  * Validate a fitted rule artifact for production use. A refused artifact is
  * evidence, never a rule: parsing one for composition is an error.
  * */
-export function parseMonitorRule(artifact: any) {
-  if (!artifact || typeof artifact !== 'object' || Array.isArray(artifact)) fail('artifact must be an object');
+export function parseMonitorRule(artifact: unknown): MonitorRule {
+  if (!isRecord(artifact)) fail('artifact must be an object');
   if (artifact.schema !== 'monitor-rule-v1') fail('schema mismatch');
   if (artifact.schema_version !== 1) fail('unsupported schema_version');
   if (artifact.status !== 'calibrated')
     fail(`artifact status is ${artifact.status ?? 'missing'} (${artifact.reason ?? 'no reason'}); it cannot drive decisions`);
-  if (artifact.fact?.id !== 'monitorUp') fail('fact id must be monitorUp');
-  const labels = artifact.fact?.labels;
-  if (!Array.isArray(labels) || !['down', 'mask', 'up'].every(label => labels.includes(label)))
+  const fact = isRecord(artifact.fact) ? artifact.fact : {};
+  if (fact.id !== 'monitorUp') fail('fact id must be monitorUp');
+  const labels = fact.labels;
+  if (!isList(labels) || !['down', 'mask', 'up'].every(label => labels.includes(label)))
     fail('fact labels must include down, mask, and up');
-  if (artifact.sensor?.geometry?.[0] !== 2400 || artifact.sensor?.geometry?.[1] !== 1080)
+  const sensor = isRecord(artifact.sensor) ? artifact.sensor : {};
+  const geometry = isList(sensor.geometry) ? sensor.geometry : [];
+  if (geometry[0] !== 2400 || geometry[1] !== 1080)
     fail('sensor geometry must be the native 2400x1080');
-  if (artifact.sensor?.sampling !== 'helper-grid-20x9-cell-center')
+  if (sensor.sampling !== 'helper-grid-20x9-cell-center')
     fail('sensor sampling must be the helper grid');
   const adapter = artifact.adapter;
-  if (!adapter || typeof adapter !== 'object') fail('adapter is required');
-  if (!Array.isArray(adapter.anchors) || adapter.anchors.length < 2)
+  if (!isRecord(adapter)) fail('adapter is required');
+  if (!isList(adapter.anchors) || adapter.anchors.length < 2)
     fail('adapter must carry at least two anchors');
-  const seen = new Set();
-  adapter.anchors.forEach((anchor, index) => {
-    parseAnchor(anchor, index);
+  const seen = new Set<number>();
+  const anchors = adapter.anchors.map((item, index) => {
+    const anchor = parseAnchor(item, index);
     if (seen.has(anchor.cell)) fail(`anchor cell ${anchor.cell} is repeated`);
     seen.add(anchor.cell);
+    return anchor;
   });
-  if (!adapter.anchors.some(anchor => anchor.kind === 'present'))
+  if (!anchors.some(anchor => anchor.kind === 'present'))
     fail('at least one present (map) anchor is required');
-  if (!adapter.anchors.some(anchor => anchor.kind === 'absent'))
+  if (!anchors.some(anchor => anchor.kind === 'absent'))
     fail('at least one absent (covered-office) anchor is required');
   const guard = adapter.guard;
-  if (guard?.kind !== 'floor') fail('guard kind must be floor');
+  if (!isRecord(guard) || guard.kind !== 'floor') fail('guard kind must be floor');
   if (guard.feature !== 'helper_grid_mean_luma') fail('guard feature must be helper_grid_mean_luma');
   if (!finite(guard.min)) fail('guard min must be a finite number');
   if (guard.reason !== 'frame-dark') fail('guard reason must be frame-dark');
-  const reasons = artifact.fact?.unknown_reasons;
-  if (!Array.isArray(reasons) || reasons.some(reason => !UNKNOWN_REASONS.has(reason)))
+  const reasons = fact.unknown_reasons;
+  if (!isList(reasons) || reasons.some(reason => typeof reason !== 'string' || !UNKNOWN_REASONS.has(reason)))
     fail('fact.unknown_reasons must use the monitorUp vocabulary');
-  return Object.freeze(structuredClone(artifact));
+  return Object.freeze(structuredClone(artifact)) as unknown as MonitorRule;
 }
 
-function anchorReadsUp(anchor, cells) {
+function anchorReadsUp(anchor: Anchor, cells: readonly unknown[]) {
   const value = cellFeatures[anchor.feature](cells[anchor.cell]);
   if (!Number.isFinite(value)) return 'missing';
   const { threshold, refuse_band: band } = anchor.rule;
@@ -137,26 +155,28 @@ export { cellFeatures, anchorReadsUp };
  * CompanionControlTransport.monitorMeasurement.
  * @param snapshot parsed `OK k=v` fields from GET
  * @param rule parsed monitor-rule-v1 artifact, or null */
-export function measureMonitorUp(snapshot: any, rule: any, { maxAgeUs = 500000, cells = null } = {}) {
-  const unknown = reason => ({ signal: 'monitorUp', state: 'UNKNOWN', reason });
-  const fields = snapshot && typeof snapshot === 'object' ? snapshot : {};
+export function measureMonitorUp(snapshot: unknown, rule: MonitorRule | null,
+  { maxAgeUs = 500000, cells = null }: { maxAgeUs?: number, cells?: readonly unknown[] | null } = {}): MonitorReading {
+  const unknown = (reason: string): MonitorReading => ({ signal: 'monitorUp', state: 'UNKNOWN', reason });
+  const fields = (snapshot && typeof snapshot === 'object' ? snapshot : {}) as Readonly<Record<string, unknown>>;
   const ageUs = Number(fields.ageUs);
   if (!Number.isFinite(ageUs) || ageUs < 0) return unknown('frame-pending');
   if (ageUs > maxAgeUs) return unknown('frame-stale');
   if (fields.monitorUp === 'true' || fields.monitorUp === 'false')
     return { signal: 'monitorUp', state: 'OBSERVED', value: fields.monitorUp === 'true', confidence: 1 };
   if (fields.monitorUp === 'UNKNOWN')
-    return unknown(UNKNOWN_REASONS.has(fields.monitorReason) ? fields.monitorReason : 'monitor-state-unavailable');
+    return unknown(typeof fields.monitorReason === 'string' && UNKNOWN_REASONS.has(fields.monitorReason)
+      ? fields.monitorReason : 'monitor-state-unavailable');
   if (!rule) return unknown('monitor-rule-absent');
   if (fields.screen !== 'FNAF2_NIGHT') return unknown('screen-identity');
   const source = cells ?? fields.cells;
-  if (!rule.adapter.anchors.some(anchor => Number.isInteger(source?.[anchor.cell])))
+  if (!isList(source) || !rule.adapter.anchors.some(anchor => Number.isInteger(source[anchor.cell])))
     return unknown('grid-unavailable');
   if (Number(fields.seq) !== Number(fields.gridSeq)) return unknown('grid-seq-mismatch');
   if (rule.adapter.guard.feature === 'helper_grid_mean_luma') {
     // The darkness guard is the whole-grid mean luma, computed from the same
     // sensor rows the anchors read -- no dependency on a newer helper build.
-    const total = source.reduce((sum, cell) => {
+    const total = source.reduce<number>((sum, cell) => {
       if (!Number.isInteger(cell)) return NaN;
       return sum + cellFeatures.luma(cell);
     }, 0);

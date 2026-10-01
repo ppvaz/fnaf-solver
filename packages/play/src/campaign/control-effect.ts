@@ -4,18 +4,43 @@
  * log and graded against the transition's target. Split out of
  * adb-device-local-executor.js on 2026-09-25.
  */
-const isRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+import { isList, isRecord } from '@sixam/kernel';
 
-function boundedSampleText(value) {
+/** An authored monitor target at its real contact time (hid-schedule.ts). */
+export interface MonitorTransition {
+  readonly actionId: string;
+  readonly cycle: string;
+  readonly atMs: number;
+  readonly targetMonitorUp: boolean;
+}
+/** An authored mask target at its real contact time (hid-schedule.ts). */
+export interface MaskTransition {
+  readonly actionId: string;
+  readonly cycle: string;
+  readonly atMs: number;
+  readonly targetMaskOn: boolean;
+}
+/** One read of the control state, bracketed by the host's clock; null bounds mean the read did not happen. */
+interface ControlRead {
+  readonly sample: unknown;
+  readonly readStartedAt: number | null;
+  readonly readFinishedAt: number | null;
+}
+type ControlSignal = 'monitorUp' | 'maskOn';
+
+const safeInteger = (value: unknown): value is number => Number.isSafeInteger(value);
+const finiteNumber = (value: unknown): value is number => Number.isFinite(value);
+
+function boundedSampleText(value: unknown) {
   return typeof value === 'string' && value.length <= 160 ? value : null;
 }
 
-export function compactControlSample(value) {
+export function compactControlSample(value: unknown) {
   const sample = isRecord(value) ? value : {};
-  const sequence = typeof sample.sequence === 'string' || Number.isSafeInteger(sample.sequence)
+  const sequence = typeof sample.sequence === 'string' || safeInteger(sample.sequence)
     ? sample.sequence : null;
   const ageUs = typeof sample.ageUs === 'string' && /^\d+$/.test(sample.ageUs)
-    ? sample.ageUs : Number.isSafeInteger(sample.ageUs) && sample.ageUs >= 0 ? sample.ageUs : null;
+    ? sample.ageUs : safeInteger(sample.ageUs) && sample.ageUs >= 0 ? sample.ageUs : null;
   const screen = typeof sample.screen === 'string' && sample.screen.length <= 80 ? sample.screen : null;
   const monitorUp = typeof sample.monitorUp === 'boolean' ? sample.monitorUp : null;
   const maskOn = typeof sample.maskOn === 'boolean' ? sample.maskOn : null;
@@ -28,24 +53,24 @@ export function compactControlSample(value) {
   // Which detector answered is part of the observation: the camera panel and
   // the office HUD see opposite halves of the monitor state.
   const monitorSource = boundedSampleText(sample.monitorSource);
-  const gridLuma = Number.isSafeInteger(sample.gridLuma) && sample.gridLuma >= 0
+  const gridLuma = safeInteger(sample.gridLuma) && sample.gridLuma >= 0
     ? sample.gridLuma : null;
   // Only ever present on a frame the fitted rule refused, and bounded to the
   // helper's fixed 20x9 sensor so a run bundle cannot grow without limit.
-  const maskCells = Array.isArray(sample.maskCells) && sample.maskCells.length === 180 &&
-    sample.maskCells.every(Number.isSafeInteger) ? sample.maskCells : null;
+  const maskCells = isList(sample.maskCells) && sample.maskCells.length === 180 &&
+    sample.maskCells.every(safeInteger) ? sample.maskCells : null;
   const panelSequence = typeof sample.panelSequence === 'string' ||
-    Number.isSafeInteger(sample.panelSequence) ? sample.panelSequence : null;
+    safeInteger(sample.panelSequence) ? sample.panelSequence : null;
   // The helper's fixed downward-chevron scores. They are what the cycle gate
   // decides a frame's readability on, so they are retained in the bundle.
-  const strokeScore = value => {
+  const strokeScore = (value: unknown) => {
     const numeric = Number(value);
     return Number.isFinite(numeric) && numeric >= 0 ? numeric : null;
   };
   const maskButtonDownstroke = strokeScore(sample.maskButtonDownstroke);
   const monitorButtonDownstroke = strokeScore(sample.monitorButtonDownstroke);
-  const visualCaptureAt = Number.isFinite(sample.visualCaptureAt) ? sample.visualCaptureAt : null;
-  const visualCaptureUncertaintyMs = Number.isFinite(sample.visualCaptureUncertaintyMs) &&
+  const visualCaptureAt = finiteNumber(sample.visualCaptureAt) ? sample.visualCaptureAt : null;
+  const visualCaptureUncertaintyMs = finiteNumber(sample.visualCaptureUncertaintyMs) &&
     sample.visualCaptureUncertaintyMs >= 0 ? sample.visualCaptureUncertaintyMs : null;
   return { sequence, ageUs, screen, monitorUp, monitorReason, maskOn, maskReason,
     ...(monitorSource ? { monitorSource } : {}),
@@ -70,22 +95,24 @@ export function compactControlSample(value) {
  * `atFirstFrame` marks the case the series cannot separate — a state already
  * at target before the contact looks exactly like an instant effect.
  */
-export function controlEffectVerdict(reads, signal, target, contactAt) {
+export function controlEffectVerdict(reads: readonly ControlRead[], signal: ControlSignal, target: boolean, contactAt: number) {
   const reasonKey = signal === 'monitorUp' ? 'monitorReason' : 'maskReason';
   const samples = reads.map(read => ({ ...compactControlSample(read.sample),
     readStartedAt: read.readStartedAt, readFinishedAt: read.readFinishedAt,
     sinceContactLowerMs: read.readStartedAt === null ? null : read.readStartedAt - contactAt,
     sinceContactUpperMs: read.readFinishedAt === null ? null : read.readFinishedAt - contactAt }));
-  const verdict = (status, reason, latency = null) => ({ status, reason, latency, samples });
+  type Latency = { lowerMs: number | null, upperMs: number | null, frameAgeUs: string | number | null, atFirstFrame: boolean };
+  const verdict = (status: 'PASS' | 'UNSTABLE' | 'MISSING' | 'UNKNOWN', reason: string | null, latency: Latency | null = null) =>
+    ({ status, reason, latency, samples });
   if (samples.some(sample => sample.screen !== null &&
       sample.screen !== 'FNAF2_NIGHT' && sample.screen !== 'UNKNOWN'))
     return verdict('UNKNOWN', 'screen-identity');
   // A repeated frame sequence is the helper's capture cadence, not a fault. It
   // carries no new observation, so it can neither confirm nor refute a target.
-  const frames = [];
+  const frames: typeof samples = [];
   for (const sample of samples) {
     if (sample.sequence === null || sample[signal] === null) continue;
-    if (frames.length && String(frames.at(-1).sequence) === String(sample.sequence)) continue;
+    if (frames.length && String(frames[frames.length - 1].sequence) === String(sample.sequence)) continue;
     frames.push(sample);
   }
   if (!frames.length)
@@ -105,11 +132,11 @@ export function controlEffectVerdict(reads, signal, target, contactAt) {
   return verdict('MISSING', 'target-not-observed');
 }
 
-export function effectTransitions(monitorTransitions = [], maskTransitions = []) {
+export function effectTransitions(monitorTransitions: readonly MonitorTransition[] = [], maskTransitions: readonly MaskTransition[] = []) {
   return [
-    ...monitorTransitions.map(transition => ({ ...transition, signal: 'monitorUp',
+    ...monitorTransitions.map(transition => ({ ...transition, signal: 'monitorUp' as const,
       target: transition.targetMonitorUp })),
-    ...maskTransitions.map(transition => ({ ...transition, signal: 'maskOn',
+    ...maskTransitions.map(transition => ({ ...transition, signal: 'maskOn' as const,
       target: transition.targetMaskOn })),
   ].sort((left, right) => left.atMs - right.atMs ||
     left.actionId.localeCompare(right.actionId) || left.signal.localeCompare(right.signal));

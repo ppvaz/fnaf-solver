@@ -15,6 +15,37 @@
 import { AI_10_20, AI_DIALS, PUPPET_AI } from '@sixam/source/fnaf2';
 import { CAMPAIGN_STATES, stableHash, validateCampaignResult } from '@sixam/kernel/contracts';
 import { makeCustomNightConfig, validateCustomNightConfig } from './custom-night.ts';
+import type { CustomNightConfig, Dials } from './custom-night.ts';
+import { isList, isOneOf, isRecord } from '@sixam/kernel';
+import type { CampaignAttempt, CampaignEvent, CampaignState } from '@sixam/kernel';
+
+/** When a night's authored schedule runs, in ms from its start. */
+export interface NightTiming {
+  readonly periodMs: number;
+  readonly loopStartMs: number;
+  readonly stopAtMs: number;
+  readonly observeUntilMs: number;
+  readonly idleUntilMs: number;
+  readonly phaseOffsetMs?: number;
+}
+/** One night of a campaign: a story night reached through the title, or Custom Night 7 with its dials. */
+export type CampaignTarget = (
+  | { readonly night: number, readonly mode: 'story', readonly menuTarget: 'newGame' | 'continue' | 'sixthNight',
+      readonly saveCursorObserved?: number | null }
+  | { readonly night: number, readonly mode: 'custom', readonly menuTarget: 'customNight', readonly custom?: CustomNightConfig,
+      readonly dials: Dials, readonly puppet: number }
+) & { readonly timing?: NightTiming, readonly policy?: string };
+/** device-campaign-v1: the nights to play in order, and what counts as their proof. */
+export interface CampaignSpec {
+  readonly schema: 'device-campaign-v1';
+  readonly version: 1;
+  readonly target: { readonly package: string, readonly build: string };
+  readonly profile: string;
+  readonly nights: readonly CampaignTarget[];
+  readonly retry: { readonly maxAttempts: number };
+  readonly proof: { readonly requireSixAm: true, readonly requireSaveOrMenu: true };
+  readonly mechanics?: { readonly requires: readonly string[], readonly forbidden: readonly string[] };
+}
 
 const CAMPAIGN_SCHEMA = 'device-campaign-v1';
 // The result validator and its state list live in kernel/contracts (core/contracts until 2026-09-30) since
@@ -30,7 +61,7 @@ export const DEFAULT_CAMPAIGN_NIGHTS = Object.freeze([1, 2, 3, 4, 5, 6, NIGHT7])
 /** Consecutive Invalid runs after which the campaign holds (ADR 0002, decision 3). */
 const INVALID_RUNS_HOLD = 2;
 const MENU_TARGETS = new Set(['newGame', 'continue', 'sixthNight', 'customNight']);
-const TRANSITIONS = Object.freeze({
+const TRANSITIONS: Readonly<Record<CampaignState, readonly CampaignState[]>> = Object.freeze({
   IDLE: ['PREFLIGHT'],
   PREFLIGHT: ['MENU', 'HOLD', 'ABORTED'],
   HOLD: ['PREFLIGHT', 'ABORTED'],
@@ -45,31 +76,31 @@ const TRANSITIONS = Object.freeze({
   COMPLETE: [],
 });
 
-const isRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
-const fail = message => { throw new TypeError(`campaign: ${message}`); };
-const text = (value, label) => {
+function fail(message: string): never { throw new TypeError(`campaign: ${message}`); }
+const text = (value: unknown, label: string) => {
   if (typeof value !== 'string' || value.length === 0) fail(`${label} must be a non-empty string`);
   return value;
 };
-const integer = (value, label, { min = 0, max = Infinity } = {}) => {
-  if (!Number.isInteger(value) || value < min || value > max) fail(`${label} must be an integer in ${min}..${max}`);
+const integer = (value: unknown, label: string, { min = 0, max = Infinity } = {}) => {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < min || value > max) fail(`${label} must be an integer in ${min}..${max}`);
   return value;
 };
 
-function validateNight(entry, index) {
+function validateNight(entry: unknown, index: number): CampaignTarget {
   if (!isRecord(entry)) fail(`nights[${index}] must be an object`);
   integer(entry.night, `nights[${index}].night`, { min: 1, max: 7 });
   if (entry.night === NIGHT7) {
     if (entry.mode !== 'custom' || entry.menuTarget !== 'customNight')
       fail('Night 7 must use mode=custom and menuTarget=customNight');
-    if (!isRecord(entry.dials)) fail('Night 7 dials are required');
-    for (const dial of AI_DIALS) integer(entry.dials[dial], `nights[${index}].dials.${dial}`, { max: AI_10_20 });
+    const dials = entry.dials;
+    if (!isRecord(dials)) fail('Night 7 dials are required');
+    for (const dial of AI_DIALS) integer(dials[dial], `nights[${index}].dials.${dial}`, { max: AI_10_20 });
     if (entry.puppet !== PUPPET_AI) fail(`Night 7 puppet must be ${PUPPET_AI}`);
     if (entry.custom !== undefined) {
       try { validateCustomNightConfig(entry.custom); }
-      catch (error) { fail(`Night 7 custom configuration is invalid: ${error.message}`); }
+      catch (error) { fail(`Night 7 custom configuration is invalid: ${(error as Error).message}`); }
     }
-    const extras = Object.keys(entry.dials).filter(dial => !AI_DIALS.includes(dial));
+    const extras = Object.keys(dials).filter(dial => !AI_DIALS.includes(dial));
     if (extras.length) fail(`Night 7 has unknown dials: ${extras.join(',')}`);
   } else {
     // Story nights 1..6. Night identity comes from the selection chain: a
@@ -77,62 +108,71 @@ function validateNight(entry, index) {
     // night's observed 6 AM, or the measured sixthNight item for Night 6.
     const allowedTargets = entry.night === 1 ? ['newGame', 'continue']
       : entry.night === NIGHT6 ? ['continue', 'sixthNight'] : ['continue'];
-    if (entry.mode !== 'story' || !allowedTargets.includes(entry.menuTarget))
+    if (entry.mode !== 'story' || !isOneOf(allowedTargets, entry.menuTarget))
       fail(`Night ${entry.night} must use mode=story and menuTarget=${allowedTargets.join(' or ')}`);
     if (entry.menuTarget === 'continue' && entry.saveCursorObserved !== undefined &&
         entry.saveCursorObserved !== null && entry.saveCursorObserved !== entry.night)
       fail(`Night ${entry.night} saveCursorObserved must be ${entry.night} when supplied`);
   }
-  if (entry.timing !== undefined) {
-    if (!isRecord(entry.timing)) fail(`nights[${index}].timing must be an object`);
-    for (const key of ['periodMs', 'loopStartMs', 'stopAtMs', 'observeUntilMs', 'idleUntilMs'])
-      integer(entry.timing[key], `nights[${index}].timing.${key}`);
-    if (entry.timing.phaseOffsetMs !== undefined)
-      integer(entry.timing.phaseOffsetMs, `nights[${index}].timing.phaseOffsetMs`, { max: 2000 });
-    if (entry.timing.periodMs < 1 || entry.timing.stopAtMs <= entry.timing.loopStartMs ||
-        entry.timing.observeUntilMs < entry.timing.stopAtMs || entry.timing.idleUntilMs > entry.timing.loopStartMs)
+  const timing = entry.timing;
+  if (timing !== undefined) {
+    if (!isRecord(timing)) fail(`nights[${index}].timing must be an object`);
+    const [periodMs, loopStartMs, stopAtMs, observeUntilMs, idleUntilMs] =
+      ['periodMs', 'loopStartMs', 'stopAtMs', 'observeUntilMs', 'idleUntilMs'].map(key => integer(timing[key], `nights[${index}].timing.${key}`));
+    if (timing.phaseOffsetMs !== undefined)
+      integer(timing.phaseOffsetMs, `nights[${index}].timing.phaseOffsetMs`, { max: 2000 });
+    if (periodMs < 1 || stopAtMs <= loopStartMs ||
+        observeUntilMs < stopAtMs || idleUntilMs > loopStartMs)
       fail(`nights[${index}].timing bounds are invalid`);
   }
-  if (!MENU_TARGETS.has(entry.menuTarget)) fail(`nights[${index}].menuTarget is unsupported`);
+  if (typeof entry.menuTarget !== 'string' || !MENU_TARGETS.has(entry.menuTarget)) fail(`nights[${index}].menuTarget is unsupported`);
   if (entry.policy !== undefined) text(entry.policy, `nights[${index}].policy`);
-  return entry;
+  return entry as unknown as CampaignTarget;
 }
 
 /** Validate the complete, serializable campaign specification. */
-export function validateCampaignSpec(value) {
+export function validateCampaignSpec(value: unknown): CampaignSpec {
   if (!isRecord(value) || value.schema !== CAMPAIGN_SCHEMA || value.version !== 1)
     fail('schema/version mismatch');
-  if (!isRecord(value.target)) fail('target is required');
-  if (value.target.package !== PACKAGE) fail(`target.package must be ${PACKAGE}`);
-  text(value.target.build, 'target.build');
+  const target = value.target;
+  if (!isRecord(target)) fail('target is required');
+  if (target.package !== PACKAGE) fail(`target.package must be ${PACKAGE}`);
+  text(target.build, 'target.build');
   text(value.profile, 'profile');
-  if (!Array.isArray(value.nights) || value.nights.length < 1 || value.nights.length > 7)
+  const nights = value.nights;
+  if (!isList(nights) || nights.length < 1 || nights.length > 7)
     fail('nights must contain one to seven targets');
-  const seen = new Set();
-  for (const [index, entry] of value.nights.entries()) {
-    validateNight(entry, index);
+  const seen = new Set<number>();
+  let previous: CampaignTarget | null = null;
+  for (const [index, item] of nights.entries()) {
+    const entry = validateNight(item, index);
     if (seen.has(entry.night)) fail(`night ${entry.night} is duplicated`);
     seen.add(entry.night);
-    if (index > 0 && entry.night !== value.nights[index - 1].night + 1)
+    if (previous && entry.night !== previous.night + 1)
       fail('story nights must form one ascending consecutive chain');
+    previous = entry;
   }
-  if (!isRecord(value.retry) || !Number.isInteger(value.retry.maxAttempts) ||
-      value.retry.maxAttempts < 1 || value.retry.maxAttempts > 5)
+  const retry = value.retry;
+  if (!isRecord(retry) || !integerIn(retry.maxAttempts, 1, 5))
     fail('retry.maxAttempts must be an integer in 1..5');
-  if (value.proof?.requireSixAm !== true || value.proof?.requireSaveOrMenu !== true)
+  const proof = isRecord(value.proof) ? value.proof : {};
+  if (proof.requireSixAm !== true || proof.requireSaveOrMenu !== true)
     fail('proof must require positive six-AM and save/menu evidence');
   if (value.mechanics !== undefined) validateMechanics(value.mechanics);
-  return value;
+  return value as unknown as CampaignSpec;
 }
+
+const integerIn = (value: unknown, min: number, max: number) =>
+  typeof value === 'number' && Number.isInteger(value) && value >= min && value <= max;
 
 /**
  * The mechanics a run carries from its bundle (Pedro, 2026-09-30: a RunSpec's
  * constraints travel with the bundle): what the strategy requires and what
  * the build and the run forbid, never both.
  */
-function validateMechanics(mechanics: any) {
-  const ids = (value, label) => {
-    if (!Array.isArray(value) || value.some(id => typeof id !== 'string' || id.trim() === ''))
+function validateMechanics(mechanics: unknown) {
+  const ids = (value: unknown, label: string): readonly string[] => {
+    if (!isList(value) || !value.every((id): id is string => typeof id === 'string' && id.trim() !== ''))
       fail(`mechanics.${label} must list mechanic ids`);
     return value;
   };
@@ -146,7 +186,7 @@ function validateMechanics(mechanics: any) {
 /** Construct a reviewed campaign over any consecutive story-night chain. */
 export function makeCampaignSpec({ profile, targetBuild, maxAttempts = 3,
   night6MenuTarget = 'sixthNight', timingByNight = {}, nights = [...DEFAULT_CAMPAIGN_NIGHTS],
-  storyStart = undefined, storySaveCursor = undefined, night7Dials = undefined, mechanics = undefined }: {profile?: string, targetBuild?: string, maxAttempts?: number, night6MenuTarget?: string, timingByNight?: Record<string, object>, nights?: number[], storyStart?: string, storySaveCursor?: number, night7Dials?: Record<string, number>, mechanics?: {requires: string[], forbidden: string[]}} = {}) {
+  storyStart = undefined, storySaveCursor = undefined, night7Dials = undefined, mechanics = undefined }: {profile?: string, targetBuild?: string, maxAttempts?: number, night6MenuTarget?: string, timingByNight?: Readonly<Record<string, NightTiming>>, nights?: readonly number[], storyStart?: string, storySaveCursor?: number, night7Dials?: Dials, mechanics?: {readonly requires: readonly string[], readonly forbidden: readonly string[]}} = {}) {
   text(profile, 'profile');
   text(targetBuild, 'targetBuild');
   if (!['continue', 'sixthNight'].includes(night6MenuTarget))
@@ -154,7 +194,7 @@ export function makeCampaignSpec({ profile, targetBuild, maxAttempts = 3,
   if (night7Dials !== undefined) {
     if (!isRecord(night7Dials)) fail('night7Dials must be an object of dial -> AI');
     for (const dial of AI_DIALS) {
-      if (!Number.isInteger(night7Dials[dial]) || night7Dials[dial] < 0 || night7Dials[dial] > AI_10_20)
+      if (!integerIn(night7Dials[dial], 0, AI_10_20))
         fail(`night7Dials.${dial} must be an integer in 0..${AI_10_20}`);
     }
     for (const key of Object.keys(night7Dials)) if (!AI_DIALS.includes(key))
@@ -175,7 +215,7 @@ export function makeCampaignSpec({ profile, targetBuild, maxAttempts = 3,
   if (!isRecord(timingByNight)) fail('timingByNight must be an object');
   const dials = night7Dials ? { ...night7Dials }
     : Object.fromEntries(AI_DIALS.map(dial => [dial, AI_10_20]));
-  const timing = night => timingByNight[String(night)] ??
+  const timing = (night: number) => timingByNight[String(night)] ??
     { periodMs: 10000, loopStartMs: 0, stopAtMs: 420000, observeUntilMs: 420000, idleUntilMs: 0 };
   const firstStoryNight = storyNights[0];
   const defaultFirstTarget = firstStoryNight === 1 ? 'newGame' : 'continue';
@@ -200,7 +240,7 @@ export function makeCampaignSpec({ profile, targetBuild, maxAttempts = 3,
   });
 }
 
-function event(state, type, data, at) {
+function event(state: CampaignState, type: string, data: Readonly<Record<string, unknown>> | undefined, at: number): CampaignEvent {
   return Object.freeze({ schema: 'campaign-event-v1', type, state, at, data: structuredClone(data ?? {}) });
 }
 
@@ -209,7 +249,7 @@ function event(state, type, data, at) {
  * its preflight predates venue identity (every result before 2026-09-29).
  * @param result a device-campaign-result-v1
  */
-export function campaignVenue(result: any) {
+export function campaignVenue(result: { readonly events?: readonly CampaignEvent[] } | null | undefined) {
   const preflight = result?.events?.find(item => item?.type === 'campaign.state' &&
     item.data?.previous === 'PREFLIGHT');
   return preflight?.data?.venue ?? null;
@@ -221,18 +261,18 @@ export function campaignVenue(result: any) {
  * returned a bounded, identity-checked result.
  */
 export class CampaignStateMachine {
-  declare spec: any;
+  declare spec: CampaignSpec;
   declare now: () => number;
-  declare onEvent: (record: any) => void;
-  declare state: string;
+  declare onEvent: (record: CampaignEvent) => void;
+  declare state: CampaignState;
   declare targetIndex: number;
   declare attempt: number;
   declare invalidRuns: number;
   declare consecutiveInvalid: number;
-  declare events: any[];
-  declare attempts: any[];
-  declare activeAttempt: { night: any; mode: any; attempt: number; status: string; };
-  constructor({ spec, now = () => performance.now(), onEvent = ((() => {}) as (record: any) => void) }: {spec?: any, now?: () => number, onEvent?: (record: any) => void} = {}) {
+  declare events: CampaignEvent[];
+  declare attempts: CampaignAttempt[];
+  declare activeAttempt: CampaignAttempt | null;
+  constructor({ spec, now = () => performance.now(), onEvent = () => {} }: {spec?: unknown, now?: () => number, onEvent?: (record: CampaignEvent) => void} = {}) {
     this.spec = validateCampaignSpec(spec);
     this.now = now;
     this.onEvent = onEvent;
@@ -247,7 +287,12 @@ export class CampaignStateMachine {
     this.activeAttempt = null;
   }
 
-  get target() { return this.spec.nights[this.targetIndex] ?? null; }
+  get target(): CampaignTarget | null { return this.spec.nights[this.targetIndex] ?? null; }
+
+  /** The night being played: every step from the menu to its save proof has one. */
+  #current(): CampaignTarget {
+    return this.target ?? fail('no night is current');
+  }
 
   /** Attempts of the current target that count against the budget: every run but the Invalid ones. */
   get spentAttempts() { return this.attempt - this.invalidRuns; }
@@ -268,7 +313,7 @@ export class CampaignStateMachine {
       attempts: structuredClone(this.attempts), events: structuredClone(this.events) }));
   }
 
-  transition(next, data = {}) {
+  transition(next: CampaignState, data: Readonly<Record<string, unknown>> = {}) {
     if (!CAMPAIGN_STATES.includes(next)) fail(`unknown state ${next}`);
     if (!TRANSITIONS[this.state].includes(next)) fail(`cannot transition ${this.state} -> ${next}`);
     const previous = this.state;
@@ -285,7 +330,7 @@ export class CampaignStateMachine {
     return this.transition('PREFLIGHT', this.spec.mechanics ? { mechanics: structuredClone(this.spec.mechanics) } : {});
   }
 
-  acceptPreflight(result: any) {
+  acceptPreflight(result: { status?: string, reason?: string | null, serial?: string | null, venue?: unknown } | null | undefined) {
     // A device-preflight-v2 carries the venue it observed; the transition
     // event keeps it, so the campaign result names the venue it ran on.
     const venue = result?.venue ? { venue: structuredClone(result.venue) } : {};
@@ -304,20 +349,21 @@ export class CampaignStateMachine {
       : this.transition('INTRO_VERIFY', { target });
   }
 
-  acceptCustomConfiguration(result: {status?: string, dials?: object, puppet?: number, readback?: object} = {}) {
+  acceptCustomConfiguration(result: {status?: string, dials?: Readonly<Record<string, unknown>>, puppet?: number,
+    readback?: { readonly dials?: Readonly<Record<string, unknown>>, readonly puppet?: unknown }} = {}) {
     const target = this.target;
     const expected = target?.mode === 'custom' ? validateCustomNightConfig(target.custom ?? makeCustomNightConfig(target.dials)) : null;
     const sameDials = expected && AI_DIALS.every(dial => result.dials?.[dial] === expected.dials[dial]);
-    const readbackDials = expected && AI_DIALS.every(dial => (result.readback as any)?.dials?.[dial] === expected.dials[dial]);
+    const readbackDials = expected && AI_DIALS.every(dial => result.readback?.dials?.[dial] === expected.dials[dial]);
     if (target?.mode !== 'custom' || result.status !== 'PASS' || result.puppet !== PUPPET_AI ||
-        !sameDials || !readbackDials || (result.readback as any)?.puppet !== PUPPET_AI)
+        !sameDials || !readbackDials || result.readback?.puppet !== PUPPET_AI)
       return this.transition('HOLD', { reason: 'custom-night-readback-not-confirmed' });
     return this.transition('INTRO_VERIFY', { target: 'customNight', readback: true });
   }
 
   acceptIntro({ night, identity, observed = false }: {night?: number, identity?: string, observed?: boolean} = {}) {
     if (!observed || night !== this.target?.night ||
-        identity !== this.target.mode)
+        identity !== this.#current().mode)
       return this.transition('HOLD', { reason: 'intro-identity-not-confirmed', night, identity });
     return this.transition('ACTIVE', { night });
   }
@@ -329,16 +375,17 @@ export class CampaignStateMachine {
       this.transition('ABORTED', { reason: 'attempt-budget-exhausted' });
       return this.snapshot();
     }
-    const record = { night: this.target.night, mode: this.target.mode, attempt: this.attempt, status: 'ACTIVE' };
+    const target = this.#current();
+    const record = { night: target.night, mode: target.mode, attempt: this.attempt, status: 'ACTIVE' };
     this.attempts.push(record);
     this.activeAttempt = record;
-    const attemptEvent = event(this.state, 'campaign.attempt', { night: this.target.night, attempt: this.attempt }, this.now());
+    const attemptEvent = event(this.state, 'campaign.attempt', { night: target.night, attempt: this.attempt }, this.now());
     this.events.push(attemptEvent); this.onEvent(attemptEvent);
     return this.snapshot();
   }
 
   acceptTerminal({ night, outcome, sixAm = false, why }: {night?: number, outcome?: string, sixAm?: boolean, why?: string} = {}) {
-    if (this.activeAttempt) (this.activeAttempt as any).terminal = { night, outcome, sixAm, ...(why === undefined ? {} : { why }) };
+    if (this.activeAttempt) this.activeAttempt.terminal = { night, outcome, sixAm, ...(why === undefined ? {} : { why }) };
     if (night !== this.target?.night) return this.transition('HOLD', { reason: 'terminal-night-identity-unknown', night });
     if (outcome === 'invalid') return this.#acceptInvalid(night, why);
     this.consecutiveInvalid = 0;
@@ -357,7 +404,7 @@ export class CampaignStateMachine {
    * leaves the budget as it was. The second in a row holds instead, so a
    * cause that invalidates every run cannot replay the night without end.
    */
-  #acceptInvalid(night: number, why: string | undefined) {
+  #acceptInvalid(night: number | undefined, why: string | undefined) {
     if (typeof why !== 'string' || why.length === 0)
       return this.transition('HOLD', { reason: 'terminal-invalid-without-reason', night });
     this.invalidRuns += 1;
@@ -378,7 +425,7 @@ export class CampaignStateMachine {
   acceptTerminalVerification({ sixAm = false, positive = false }: {sixAm?: boolean, positive?: boolean} = {}) {
     if (sixAm !== true || positive !== true)
       return this.transition('ABORTED', { reason: 'terminal-verification-failed' });
-    if (this.activeAttempt) (this.activeAttempt as any).terminalVerification = { sixAm, positive };
+    if (this.activeAttempt) this.activeAttempt.terminalVerification = { sixAm, positive };
     return this.transition('SAVE_VERIFY', { sixAm: true });
   }
 
@@ -398,7 +445,8 @@ export class CampaignStateMachine {
     // night N+1 is itself the advancement evidence and the Continue-visible
     // proof is deferred to the chain's title return. Night 5 never rolls:
     // its 6 AM ends in the paycheck and the title.
-    const rollsIntoNext = target?.night >= 1 && target?.night < NIGHT5;
+    const night = target?.night;
+    const rollsIntoNext = night !== undefined && night >= 1 && night < NIGHT5;
     const valid = target?.night === NIGHT6
       ? observed === true && (cursorNight === NIGHT7 || customNightVisible === true)
       : target?.night === NIGHT7
@@ -406,16 +454,16 @@ export class CampaignStateMachine {
         : rollsIntoNext
           ? observed === true && nextNightStarted === true
           : observed === true && menuReturned === true && continueVisible === true &&
-            (target.night < NIGHT5 || sixthNightVisible === true || cursorNight === 6);
+            (this.#current().night < NIGHT5 || sixthNightVisible === true || cursorNight === 6);
     if (!valid) return this.transition('ABORTED', { reason: 'save-or-menu-advancement-not-proven', cursorNight });
-    const completedNight = target.night;
+    const completedNight = this.#current().night;
     if (this.activeAttempt) {
-      (this.activeAttempt as any).save = { cursorNight, customNightVisible, continueVisible, sixthNightVisible,
+      this.activeAttempt.save = { cursorNight, customNightVisible, continueVisible, sixthNightVisible,
         menuReturned, customCompleted, nextNightStarted, observed };
-      if (target.night === NIGHT7) (this.activeAttempt as any).customReadback = { dials, puppet, ...customReadback };
-      if (proofHash) (this.activeAttempt as any).proofHash = proofHash;
+      if (completedNight === NIGHT7) this.activeAttempt.customReadback = { dials, puppet, ...customReadback };
+      if (proofHash) this.activeAttempt.proofHash = proofHash;
       this.activeAttempt.status = 'WIN';
-      (this.activeAttempt as any).proof = true;
+      this.activeAttempt.proof = true;
     }
     if (this.targetIndex + 1 < this.spec.nights.length) {
       this.targetIndex += 1;

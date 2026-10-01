@@ -205,7 +205,7 @@ export type CampaignState =
   | 'SAVE_VERIFY' | 'HOLD' | 'ABORTED' | 'COMPLETE';
 
 /** campaign-event-v1: one transition or attempt, at the campaign clock's Ms. */
-interface CampaignEvent {
+export interface CampaignEvent {
   readonly schema: 'campaign-event-v1';
   readonly type: string;
   readonly state: CampaignState;
@@ -229,7 +229,7 @@ export interface SaveObservation {
  * One attempt at one night. The campaign fills it in as the night is played, so every field past its
  * start is absent until that step, and a record retained before a field existed lacks it.
  */
-interface CampaignAttempt {
+export interface CampaignAttempt {
   night: number;
   mode: string;
   attempt: number;

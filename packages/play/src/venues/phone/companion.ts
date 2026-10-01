@@ -5,8 +5,23 @@
  * CONTRACT:cue-helper-control-v1.
  */
 
-const bounded = value => typeof value === 'string' && value.length <= 4096;
-export function parseCueResponse(line: string) {
+import { isOneOf } from '@sixam/kernel';
+import type { Reading } from '../../sensors/fnaf2/rule-digest.ts';
+
+/** One native region as a REGION read returns it: its rectangle, its sampling and its raw pixels. */
+interface Region {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly step: number;
+  readonly cols: number;
+  readonly rows: number;
+  readonly pixels: Uint32Array;
+}
+
+const bounded = (value: unknown): value is string => typeof value === 'string' && value.length <= 4096;
+export function parseCueResponse(line: unknown) {
   if (!bounded(line)) throw new TypeError('Companion response is missing or oversized');
   const text = line.trim();
   if (!text.startsWith('OK ')) throw new Error(text.startsWith('ERROR ') ? text : 'Companion response is not OK');
@@ -28,7 +43,8 @@ const REGION_NAME = /^[a-z][a-z0-9_]{0,31}$/;
  * Coordinates are native display pixels (2400x1080 on the moto g56).
  * CONTRACT:cue-helper-control-v1.
  */
-export function regionSetLine(token, name, { x, y, width, height, step = 1 }) {
+export function regionSetLine(token: string, name: string,
+  { x, y, width, height, step = 1 }: { x: number, y: number, width: number, height: number, step?: number }) {
   if (!/^[0-9a-f]{32}$/.test(token)) throw new TypeError('region token must be the 32-hex session token');
   if (!REGION_NAME.test(name)) throw new TypeError(`region name ${name} is not [a-z][a-z0-9_]{0,31}`);
   for (const [key, value] of Object.entries({ x, y, width, height, step })) {
@@ -45,11 +61,13 @@ export function regionSetLine(token, name, { x, y, width, height, step = 1 }) {
  * is -1 until a frame has been copied since the regions were set.
  * CONTRACT:cue-helper-control-v1.
  */
-export function parseRegionRead(line) {
+export function parseRegionRead(line: unknown) {
   if (typeof line !== 'string' || line.length > REGION_LIMITS.lineChars) throw new TypeError('region read is missing or oversized');
   const text = line.trim();
   if (!text.startsWith('OK ')) throw new Error(text.startsWith('ERROR ') ? text : 'region read is not OK');
-  const out = { seq: null, imageNs: null, copiedNs: null, snapshotNs: null, captured: null, regions: {} };
+  const out: { seq: number | null, imageNs: bigint | null, copiedNs: bigint | null, snapshotNs: bigint | null,
+    captured: number | null, regions: Record<string, Region> } =
+    { seq: null, imageNs: null, copiedNs: null, snapshotNs: null, captured: null, regions: {} };
   for (const token of text.slice(3).split(/\s+/)) {
     const eq = token.indexOf('=');
     if (eq <= 0) continue;
@@ -57,7 +75,8 @@ export function parseRegionRead(line) {
     const value = token.slice(eq + 1);
     if (['seq', 'imageNs', 'copiedNs', 'snapshotNs', 'captured', 'regions'].includes(key)) {
       if (!/^-?\d+$/.test(value)) throw new Error(`region read field ${key} is not an integer`);
-      if (key !== 'regions') out[key] = key.endsWith('Ns') ? BigInt(value) : Number(value);
+      if (key === 'seq' || key === 'captured') out[key] = Number(value);
+      else if (key === 'imageNs' || key === 'copiedNs' || key === 'snapshotNs') out[key] = BigInt(value);
       continue;
     }
     const match = /^(\d+),(\d+),(\d+),(\d+),(\d+):([0-9a-f]*)$/.exec(value);
@@ -75,11 +94,14 @@ export function parseRegionRead(line) {
   return Object.freeze(out);
 }
 
+/** A FRAME reply: the helper's fields as it sent them, with its 20x9 grid decoded into cells. */
+export type CompanionFrame = Readonly<Record<string, unknown>> & { readonly gridSeq: string, readonly cells: readonly number[] };
+
 export class CompanionControlTransport {
-  declare request: any;
+  declare request: (line: string) => unknown;
   declare token: string;
-  declare maxAgeUs: any;
-  constructor({ request, token, maxAgeUs = 500000 }: any = {}) {
+  declare maxAgeUs: number;
+  constructor({ request, token, maxAgeUs = 500000 }: { request?: (line: string) => unknown, token?: string, maxAgeUs?: number } = {}) {
     if (typeof request !== 'function') throw new TypeError('Companion transport needs an injected request function');
     if (typeof token !== 'string' || !/^[0-9a-f]{32}$/.test(token)) throw new TypeError('Companion token must be 128-bit hex');
     this.request = request; this.token = token; this.maxAgeUs = maxAgeUs;
@@ -95,17 +117,17 @@ export class CompanionControlTransport {
    * in 12 on the moto g56. `gridSeq` is set from the same `seq` deliberately:
    * one read, one frame.
    */
-  frame() {
-    const fields = (parseCueResponse(this.request(`FRAME ${this.token}`)) as any);
+  frame(): CompanionFrame {
+    const fields = parseCueResponse(this.request(`FRAME ${this.token}`));
     if (fields.grid !== '20x9') throw new Error('Companion frame is missing its sensor');
     const body = typeof fields.cells === 'string' ? fields.cells : '';
     if (!/^[0-9a-f]*$/.test(body)) throw new Error('Companion frame cell is malformed');
     if (body.length !== 180 * 6) throw new TypeError('Companion frame must carry the 180-cell sensor');
-    const cells = [];
+    const cells: number[] = [];
     for (let index = 0; index < body.length; index += 6) cells.push(parseInt(body.slice(index, index + 6), 16));
     return Object.freeze({ ...fields, gridSeq: fields.seq, cells: Object.freeze(cells) });
   }
-  watch(action) {
+  watch(action: string) {
     if (action !== 'status' && !/^[0-9a-f]{64}$/.test(action)) throw new TypeError('Companion watch action is invalid');
     return parseCueResponse(this.request(`WATCH ${this.token} ${action}`));
   }
@@ -115,8 +137,8 @@ export class CompanionControlTransport {
    * Old helpers expose only an integer ageUs: retain the 1 us bracket instead
    * of claiming nanosecond precision. No host/device clock offset is inferred.
    */
-  visualAcquisition(snapshot: any = {}) {
-    const integer = value => typeof value === 'string' && /^\d+$/.test(value);
+  visualAcquisition(snapshot: Readonly<Record<string, unknown>> = {}) {
+    const integer = (value: unknown): value is string => typeof value === 'string' && /^\d+$/.test(value);
     if (!integer(snapshot.snapshotNs) || !integer(snapshot.ageUs) || !integer(snapshot.seq))
       throw new Error('visual-capture-time-unavailable');
     const sequence = Number(snapshot.seq);
@@ -126,9 +148,10 @@ export class CompanionControlTransport {
       throw new Error('visual-capture-time-invalid');
     let captureNs;
     let uncertaintyMs;
-    if (snapshot.visualCaptureNs !== undefined) {
-      if (!integer(snapshot.visualCaptureNs)) throw new Error('visual-capture-time-invalid');
-      captureNs = BigInt(snapshot.visualCaptureNs);
+    const visualCaptureNs = snapshot.visualCaptureNs;
+    if (visualCaptureNs !== undefined) {
+      if (!integer(visualCaptureNs)) throw new Error('visual-capture-time-invalid');
+      captureNs = BigInt(visualCaptureNs);
       const measuredAgeNs = snapshotNs - captureNs;
       if (captureNs <= 0n || measuredAgeNs < ageNs || measuredAgeNs >= ageNs + 1000n)
         throw new Error('visual-capture-age-disagrees');
@@ -146,10 +169,10 @@ export class CompanionControlTransport {
   }
 
   /** A transport measurement is fresh only when helper explicitly says so. */
-  monitorMeasurement(snapshot: any = {}) {
+  monitorMeasurement(snapshot: Readonly<Record<string, unknown>> = {}): Reading<'monitorUp', boolean> {
     const ageUs = Number(snapshot.ageUs);
     const value = snapshot.monitorUp;
-    if (!Number.isFinite(ageUs) || ageUs < 0 || ageUs > this.maxAgeUs || !['true', 'false'].includes(value))
+    if (!Number.isFinite(ageUs) || ageUs < 0 || ageUs > this.maxAgeUs || !isOneOf(['true', 'false'], value))
       return { signal: 'monitorUp', state: 'UNKNOWN', reason: 'monitor-state-unavailable' };
     return { signal: 'monitorUp', state: 'OBSERVED', value: value === 'true', confidence: 1 };
   }

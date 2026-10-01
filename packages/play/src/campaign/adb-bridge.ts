@@ -24,6 +24,38 @@ import { parseCompanionLogEndpoint } from './physical-ports.ts';
 import { restartCompanionCapture as defaultRestartCompanionCapture } from './companion-capture.ts';
 import { readVenueIdentity } from '@sixam/play';
 import { compareVenueIdentity } from '@sixam/kernel/contracts';
+import { isOneOf, isRecord } from '@sixam/kernel';
+import type { VenueBound, VenueCheck } from '@sixam/kernel';
+
+/** One preflight check: PASS, FAIL or HOLD, with what it read. */
+interface PreflightCheck {
+  readonly id: string;
+  readonly status: string;
+  readonly detail: unknown;
+}
+/** What one adb invocation returned. Output is text, except a call with `encoding: null` (the screenshot). */
+interface AdbRun<Out = string | Buffer> {
+  ok: boolean;
+  code?: unknown;
+  stdout: Out;
+  stderr: Out;
+}
+interface RunOptions {
+  encoding?: BufferEncoding | null;
+  timeoutMs?: number;
+  maxBuffer?: number;
+}
+type RunPort = (args: readonly string[], options?: RunOptions) => Promise<AdbRun>;
+interface AdbDevice {
+  serial: string;
+  status: string;
+  details: string[];
+}
+type DeviceSelection =
+  | { status: 'READY', serial: string, device: AdbDevice }
+  | { status: 'HOLD', reason: string, serial?: string, devices?: AdbDevice[], detail?: string };
+
+const textOf = (value: string | Buffer) => typeof value === 'string' ? value : value.toString('utf8');
 
 const execFile = promisify(execFileCallback);
 const GAME_PACKAGE = 'com.scottgames.fnaf2';
@@ -35,9 +67,9 @@ const CLOCK_SAMPLE_SCHEMA = 'device-clock-sample-v1';
 const UPTIME_SAMPLE_SCHEMA = 'device-uptime-sample-v1';
 const CAPTURE_MAX_BUFFER = 16 * 1024 * 1024;
 
-const check = (id, status, detail) => Object.freeze({ id, status, detail });
+const check = (id: string, status: string, detail: unknown): PreflightCheck => Object.freeze({ id, status, detail });
 
-export function parseAdbDevices(text) {
+export function parseAdbDevices(text: unknown): AdbDevice[] {
   if (typeof text !== 'string') throw new TypeError('adb devices output must be text');
   return text.split(/\r?\n/).slice(1).map(line => line.trim()).filter(Boolean).map(line => {
     const [serial, status, ...rest] = line.split(/\s+/);
@@ -45,23 +77,23 @@ export function parseAdbDevices(text) {
   }).filter(device => device.serial && device.status);
 }
 
-function packageBuild(text) {
+function packageBuild(text: string) {
   const versionName = text.match(/\bversionName=([^\s]+)/)?.[1] ?? null;
   const versionCode = text.match(/\bversionCode=(\d+)\b/)?.[1] ?? null;
   return versionName && versionCode ? `${versionName}+${versionCode}` : null;
 }
 
-function expectedBuildSuffix(targetBuild) {
-  const match = typeof targetBuild === 'string' && targetBuild.match(/^[^:]+:(.+)$/);
+function expectedBuildSuffix(targetBuild: string | undefined) {
+  const match = typeof targetBuild === 'string' ? targetBuild.match(/^[^:]+:(.+)$/) : null;
   return match?.[1] ?? targetBuild;
 }
 
-function focusHas(text, packageName) {
+function focusHas(text: unknown, packageName: string) {
   return typeof text === 'string' && text.split(/\r?\n/).some(line =>
     /mCurrentFocus=/.test(line) && line.includes(packageName));
 }
 
-function awakeAndUnlocked(text) {
+function awakeAndUnlocked(text: unknown) {
   if (typeof text !== 'string') return null;
   if (/mWakefulness=Asleep|mWakefulness=Dozing|mDreamingLockscreen=true|isKeyguardShowing=true|mShowingLockscreen=true/i.test(text)) return false;
   if (/mWakefulness=Awake/i.test(text) && /isKeyguardShowing=false|mInputRestricted=false|keyguardgoingaway=false/i.test(text)) return true;
@@ -82,7 +114,7 @@ export function unboundVenueRemedy(profileId: string | null) {
     '`--venue-binding FILE` to the campaign, or pass a qualification-v2 with `--qualification`';
 }
 
-function venueIdentityCheck(venue: any, requireVenueBinding: boolean, profileId: string | null) {
+function venueIdentityCheck(venue: VenueCheck, requireVenueBinding: boolean, profileId: string | null) {
   if (venue.status === 'UNBOUND') {
     const remedy = unboundVenueRemedy(profileId);
     return requireVenueBinding
@@ -97,12 +129,13 @@ function venueIdentityCheck(venue: any, requireVenueBinding: boolean, profileId:
  * The venue a device preflight recorded, or null for a v1 record (which
  * predates it) and for anything that is not a device preflight.
  */
-export function preflightVenue(preflight: any) {
-  if (!PRELIGHT_SCHEMAS.includes(preflight?.schema)) return null;
-  return preflight.schema === 'device-preflight-v1' ? null : (preflight.venue ?? null);
+export function preflightVenue(preflight: unknown): VenueCheck | null {
+  if (!isRecord(preflight) || !isOneOf(PRELIGHT_SCHEMAS, preflight.schema)) return null;
+  // A device-preflight-v2 carries the venue-check-v1 compareVenueIdentity wrote for it.
+  return preflight.schema === 'device-preflight-v1' ? null : (preflight.venue ?? null) as VenueCheck | null;
 }
 
-function readyStatus(checks) {
+function readyStatus(checks: readonly PreflightCheck[]) {
   if (checks.some(item => item.status === 'FAIL')) return 'FAIL';
   if (checks.some(item => item.status === 'HOLD' || item.status === 'UNKNOWN')) return 'HOLD';
   return 'READY';
@@ -110,38 +143,46 @@ function readyStatus(checks) {
 
 export class AdbDeviceBridge {
   declare adb: string;
-  declare serial: string;
+  declare serial: string | undefined;
   declare timeoutMs: number;
   declare maxBuffer: number;
-  declare captureRestart: Function;
-  declare runPort: Function;
+  declare captureRestart: typeof defaultRestartCompanionCapture;
+  declare runPort: RunPort;
   recordObservation: ((observation: { script: string, png: Buffer, stdout: string, stderr: string, code: number }) => Promise<void>) | undefined;
 
   constructor({ adb = 'adb', serial, timeoutMs = 10000, maxBuffer = 2 * 1024 * 1024, run,
-    captureRestart = defaultRestartCompanionCapture }: {adb?: string, serial?: string, timeoutMs?: number, maxBuffer?: number, run?: Function, captureRestart?: Function} = {}) {
+    captureRestart = defaultRestartCompanionCapture }: {adb?: string, serial?: string, timeoutMs?: number, maxBuffer?: number,
+    run?: RunPort, captureRestart?: typeof defaultRestartCompanionCapture} = {}) {
     this.adb = adb; this.serial = serial; this.timeoutMs = timeoutMs; this.maxBuffer = maxBuffer;
     if (typeof captureRestart !== 'function') throw new TypeError('captureRestart must be a function');
     this.captureRestart = captureRestart;
-    this.runPort = run ?? (async (args, options: any = {}) => {
+    this.runPort = run ?? (async (args, options = {}) => {
       try {
-        const result = await execFile(this.adb, args, { encoding: options.encoding === null ? null : (options.encoding ?? 'utf8'),
-          timeout: options.timeoutMs ?? this.timeoutMs, maxBuffer: options.maxBuffer ?? this.maxBuffer });
+        const limits = { timeout: options.timeoutMs ?? this.timeoutMs, maxBuffer: options.maxBuffer ?? this.maxBuffer };
+        const result = options.encoding === null
+          ? await execFile(this.adb, [...args], { ...limits, encoding: 'buffer' })
+          : await execFile(this.adb, [...args], { ...limits, encoding: options.encoding ?? 'utf8' });
         return { ok: true, stdout: result.stdout ?? '', stderr: result.stderr ?? '' };
       } catch (error) {
-        return { ok: false, code: error.code ?? 1, stdout: error.stdout ?? '', stderr: error.stderr ?? error.message ?? '' };
+        const failure = error as { code?: unknown, stdout?: string | Buffer, stderr?: string | Buffer, message?: string };
+        return { ok: false, code: failure.code ?? 1, stdout: failure.stdout ?? '', stderr: failure.stderr ?? failure.message ?? '' };
       }
     });
   }
 
-  async #command(args, options = {}) { return this.runPort(args, options); }
+  /** One text command: its output as text. */
+  async #command(args: readonly string[], options: RunOptions = {}): Promise<AdbRun<string>> {
+    const result = await this.runPort(args, options);
+    return { ...result, stdout: textOf(result.stdout), stderr: textOf(result.stderr) };
+  }
 
-  async devices() {
+  async devices(): Promise<{ status: 'HOLD', reason: string, detail: string } | { status: 'READY', devices: AdbDevice[] }> {
     const result = await this.#command(['devices', '-l']);
     if (!result.ok) return { status: 'HOLD', reason: 'adb-unavailable', detail: result.stderr };
     return { status: 'READY', devices: parseAdbDevices(result.stdout) };
   }
 
-  async selectDevice() {
+  async selectDevice(): Promise<DeviceSelection> {
     const listed = await this.devices();
     if (listed.status !== 'READY') return listed;
     const ready = listed.devices.filter(device => device.status === 'device');
@@ -157,13 +198,13 @@ export class AdbDeviceBridge {
     return { status: 'READY', serial: ready[0].serial, device: ready[0] };
   }
 
-  async #shell(serial, args) { return this.#command(['-s', serial, 'shell', ...args]); }
+  async #shell(serial: string, args: readonly string[]) { return this.#command(['-s', serial, 'shell', ...args]); }
 
   /**
    * The venue identity through fixed read-only queries. `dump` is the game's
    * `dumpsys package` the build check already read.
    */
-  async #venueIdentity(serial: string, targetPackage: string, dump: any, requireHelper: boolean) {
+  async #venueIdentity(serial: string, targetPackage: string, dump: AdbRun<string>, requireHelper: boolean) {
     const fingerprint = await this.#shell(serial, ['getprop', 'ro.build.fingerprint']);
     const securityPatch = await this.#shell(serial, ['getprop', 'ro.build.version.security_patch']);
     const timeZone = await this.#shell(serial, ['getprop', 'persist.sys.timezone']);
@@ -178,7 +219,7 @@ export class AdbDeviceBridge {
    * device is ready to read.
    */
   async venueIdentity({ targetPackage = GAME_PACKAGE, requireHelper = true }: {targetPackage?: string, requireHelper?: boolean} = {}) {
-    const selected: any = await this.selectDevice();
+    const selected = await this.selectDevice();
     if (selected.status !== 'READY') return null;
     const dump = await this.#shell(selected.serial, ['dumpsys', 'package', targetPackage]);
     return this.#venueIdentity(selected.serial, targetPackage, dump, requireHelper);
@@ -186,8 +227,8 @@ export class AdbDeviceBridge {
 
   async preflight({ targetPackage = GAME_PACKAGE, targetBuild, requireHelper = true,
     requireHid = true, restartCapture = false, venueBindings = [], requireVenueBinding = false,
-    profileId = null }: {targetPackage?: string, targetBuild?: string, requireHelper?: boolean, requireHid?: boolean, restartCapture?: boolean, venueBindings?: {source: string, id: string, identity: any}[], requireVenueBinding?: boolean, profileId?: string | null} = {}) {
-    const selected: any = await this.selectDevice();
+    profileId = null }: {targetPackage?: string, targetBuild?: string, requireHelper?: boolean, requireHid?: boolean, restartCapture?: boolean, venueBindings?: readonly VenueBound[], requireVenueBinding?: boolean, profileId?: string | null} = {}) {
+    const selected = await this.selectDevice();
     if (selected.status !== 'READY') return {
       schema: PRELIGHT_SCHEMA, version: PRELIGHT_VERSION, status: 'HOLD', reason: selected.reason,
       checks: [check('adb-device', selected.status, selected.detail ?? selected.reason)], devices: selected.devices ?? [],
@@ -229,11 +270,11 @@ export class AdbDeviceBridge {
     }
     if (requireHelper) {
       if (restartCapture) {
-        let restarted;
+        let restarted: { status: string, output?: string, detail?: string };
         try {
           restarted = await this.restartCompanionCapture({ serial, target: 'fnaf2' });
         } catch (error) {
-          restarted = { status: 'FAIL', detail: error.message };
+          restarted = { status: 'FAIL', detail: (error as Error).message };
         }
         const status = restarted?.status === 'READY' ? 'PASS'
           : restarted?.status === 'HOLD' ? 'HOLD' : 'FAIL';
@@ -245,7 +286,7 @@ export class AdbDeviceBridge {
       if (helper.ok && helper.stdout.trim().length > 0) {
         const endpoint = await this.#shell(serial, ['logcat', '-d', `--pid=${helper.stdout.trim().split(/\s+/)[0]}`, '-v', 'brief', '-s', 'FnafCueHelper:I', '*:S']);
         try { checks.push(check('cue-helper-endpoint', 'PASS', parseCompanionLogEndpoint(endpoint.stdout))); }
-        catch (error) { checks.push(check('cue-helper-endpoint', 'HOLD', error.message)); }
+        catch (error) { checks.push(check('cue-helper-endpoint', 'HOLD', (error as Error).message)); }
       }
     }
     return { schema: PRELIGHT_SCHEMA, version: PRELIGHT_VERSION, status: readyStatus(checks), serial, checks,
@@ -256,12 +297,13 @@ export class AdbDeviceBridge {
    * This bridge is the FNaF 2 campaign's (GAME_PACKAGE), so it names FNaF 2
    * explicitly; setup itself has no default game.
    */
-  async restartCompanionCapture({ serial = this.serial, target = 'fnaf2', screen = 'menu', waitSeconds = 30 } = {}) {
+  async restartCompanionCapture({ serial = this.serial, target = 'fnaf2', screen = 'menu', waitSeconds = 30 }:
+    { serial?: string, target?: string, screen?: string, waitSeconds?: number } = {}) {
     return this.captureRestart({ serial, adb: this.adb, target, screen, waitSeconds });
   }
 
-  async capturePng(serial) {
-    const result = await this.#command(['-s', serial, 'exec-out', 'screencap', '-p'], {
+  async capturePng(serial: string) {
+    const result = await this.runPort(['-s', serial, 'exec-out', 'screencap', '-p'], {
       encoding: null, timeoutMs: 15000, maxBuffer: CAPTURE_MAX_BUFFER,
     });
     return result.ok && Buffer.isBuffer(result.stdout) ? result.stdout : null;
@@ -273,7 +315,8 @@ export class AdbDeviceBridge {
    * the calibrated target and the launcher is resolved by Package Manager,
    * rather than accepting arbitrary shell text from a caller.
    */
-  async restartGame({ serial = this.serial } = {}) {
+  async restartGame({ serial = this.serial }: { serial?: string } = {}) {
+    if (!serial) return Object.freeze({ status: 'FAIL', stage: 'force-stop', detail: 'no device serial is selected' });
     const stopped = await this.#command(['-s', serial, 'shell', 'am', 'force-stop', GAME_PACKAGE]);
     if (!stopped.ok) return Object.freeze({ status: 'FAIL', stage: 'force-stop', detail: stopped.stderr });
     const resolved = await this.#command(['-s', serial, 'shell', 'cmd', 'package', 'resolve-activity', '--brief', GAME_PACKAGE]);
@@ -295,10 +338,10 @@ export class AdbDeviceBridge {
    * the host/device clock relationship. The caller must pair it with a
    * separately recorded start marker.
    */
-  async clockSample({ serial = this.serial } = {}) {
+  async clockSample({ serial = this.serial }: { serial?: string } = {}) {
     let selectedSerial = serial;
     if (!selectedSerial) {
-      const selected: any = await this.selectDevice();
+      const selected = await this.selectDevice();
       if (selected.status !== 'READY') return { schema: CLOCK_SAMPLE_SCHEMA, ...selected };
       selectedSerial = selected.serial;
     }
@@ -342,10 +385,10 @@ export class AdbDeviceBridge {
    * is the source session identity: a reboot changes it and every map built
    * on the previous boot must be refused. No game state is read or written.
    */
-  async uptimeSample({ serial = this.serial } = {}) {
+  async uptimeSample({ serial = this.serial }: { serial?: string } = {}) {
     let selectedSerial = serial;
     if (!selectedSerial) {
-      const selected: any = await this.selectDevice();
+      const selected = await this.selectDevice();
       if (selected.status !== 'READY') return { schema: UPTIME_SAMPLE_SCHEMA, ...selected };
       selectedSerial = selected.serial;
     }

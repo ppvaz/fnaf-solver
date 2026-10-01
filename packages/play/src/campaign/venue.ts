@@ -16,6 +16,8 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { VENUE_DRIFT_FIELDS, stableHash, validateQualification, validateVenueBinding, venueBindingsFor } from '@sixam/kernel/contracts';
 import { preflightVenue, unboundVenueRemedy } from './adb-bridge.ts';
+import { isList, isRecord } from '@sixam/kernel';
+import type { Qualification, VenueBound, VenueCheck, VenueIdentity } from '@sixam/kernel';
 
 /**
  * The bindings for one run: a qualification-v2's own venue, plus every
@@ -23,15 +25,15 @@ import { preflightVenue, unboundVenueRemedy } from './adb-bridge.ts';
  * this run's profile or winner. An invalid qualification binds nothing here;
  * the campaign preflight refuses it with its own check.
  */
-export async function loadVenueBindings({ profileId, winnerHash = null, qualification = null, paths = [] }: {profileId: string, winnerHash?: string | null, qualification?: any, paths?: string[]}) {
-  let valid = null;
+export async function loadVenueBindings({ profileId, winnerHash = null, qualification = null, paths = [] }: {profileId: string, winnerHash?: string | null, qualification?: unknown, paths?: readonly string[]}) {
+  let valid: Qualification | null = null;
   if (qualification) {
     try { valid = validateQualification(qualification); } catch { valid = null; }
   }
-  const bindings = [];
+  const bindings: unknown[] = [];
   for (const path of paths) {
     try { bindings.push(JSON.parse(await readFile(resolve(path), 'utf8'))); }
-    catch (error) { throw new Error(`venue binding ${path} is not readable: ${error.message}`); }
+    catch (error) { throw new Error(`venue binding ${path} is not readable: ${(error as Error).message}`); }
   }
   return venueBindingsFor({ profileId, winnerHash, qualification: valid, bindings });
 }
@@ -47,14 +49,16 @@ export async function loadVenueBindings({ profileId, winnerHash = null, qualific
  * an Invalid run, whatever the night showed. Only drift fields both readings
  * know count; an unread field is not drift. Empty when nothing moved.
  */
-export function venueDriftDuringRun(before: any, after: any): {field: string, from: string, to: string}[] {
+export function venueDriftDuringRun(before: VenueIdentity | null | undefined, after: VenueIdentity | null | undefined):
+  {field: string, from: string, to: string}[] {
   if (!before || !after) return [];
-  return VENUE_DRIFT_FIELDS
-    .filter(field => before[field] !== null && after[field] !== null && before[field] !== after[field])
-    .map(field => ({ field, from: before[field], to: after[field] }));
+  return VENUE_DRIFT_FIELDS.flatMap(field => {
+    const from = before[field], to = after[field];
+    return from !== null && to !== null && from !== to ? [{ field, from, to }] : [];
+  });
 }
 
-export function dryRunVenue({ bindings, profileId }) {
+export function dryRunVenue({ bindings, profileId }: { bindings: readonly VenueBound[], profileId: string | null }) {
   const bound = bindings.map(item => `${item.source} ${item.id}`);
   return Object.freeze({
     status: 'UNKNOWN', reason: 'dry run: no phone is opened, so the venue identity is neither read nor compared',
@@ -70,10 +74,11 @@ export function dryRunVenue({ bindings, profileId }) {
  * drifted from an existing binding (binding it would bless the change the
  * refusal exists to catch), and when a drift field is unread.
  */
-export function bindVenueFromPreflight({ preflight, profileId, boundBy, boundAt }: {preflight: any, profileId: string, boundBy: string, boundAt: string}) {
+export function bindVenueFromPreflight({ preflight, profileId, boundBy, boundAt }: {preflight: unknown, profileId: string, boundBy: string, boundAt: string}) {
   const venue = preflightVenue(preflight);
   if (!venue?.observed) throw new Error('venue binding refused: this preflight observed no venue identity');
-  const build = preflight.checks?.find(item => item.id === 'target-build');
+  const checks = isRecord(preflight) && isList(preflight.checks) ? preflight.checks : [];
+  const build = checks.map(item => (isRecord(item) ? item : {})).find(item => item.id === 'target-build');
   if (build?.status !== 'PASS')
     throw new Error(`venue binding refused: the installed build is not profile ${profileId}'s ` +
       `(${JSON.stringify(build?.detail ?? 'target-build unchecked')})`);
@@ -87,13 +92,13 @@ export function bindVenueFromPreflight({ preflight, profileId, boundBy, boundAt 
 /**
  * Plain-text lines for a venue-check-v1, as `device:preflight` prints them.
  */
-export function renderVenueCheck(venue: any) {
+export function renderVenueCheck(venue: VenueCheck | null | undefined) {
   if (!venue) return 'venue NOT RECORDED: this preflight predates venue identity (device-preflight-v1)';
   // The status leads the line, so the message's own opening word is dropped.
   const lines = [`venue ${venue.status}: ${String(venue.message).replace(/^(?:unbound: |venue )/, '')}`];
   const seen = venue.observed;
   if (seen) {
-    const read = field => seen[field] ?? `UNKNOWN (${seen.unknown?.[field] ?? 'no reason'})`;
+    const read = (field: keyof NonNullable<VenueIdentity['unknown']>) => seen[field] ?? `UNKNOWN (${seen.unknown?.[field] ?? 'no reason'})`;
     lines.push(`  game      ${seen.package} ${read('versionName')} code ${read('versionCode')}`);
     lines.push(`  installed ${read('firstInstallTime')}  updated ${read('lastUpdateTime')}  zone ${read('timeZone')}`);
     lines.push(`  os        ${read('buildFingerprint')}  patch ${read('securityPatch')}`);

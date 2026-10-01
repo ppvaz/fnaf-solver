@@ -148,8 +148,9 @@ export const OBSERVATION_BUDGET = Object.freeze(Object.fromEntries(
 // having decided what it costs.
 {
   const priced = Object.keys(OBSERVATION_BUDGET);
-  const missing = FACTS.filter(fact => !priced.includes(fact));
-  const extra = priced.filter(fact => !FACTS.includes(fact));
+  const facts: readonly string[] = FACTS;
+  const missing = facts.filter(fact => !priced.includes(fact));
+  const extra = priced.filter(fact => !facts.includes(fact));
   if (missing.length || extra.length)
     throw new Error(`observation budget does not cover the sensor: missing ${missing}, extra ${extra}`);
 }

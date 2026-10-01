@@ -248,14 +248,14 @@
       "id": "contract.cue-helper-control-v1",
       "kind": "CONTRACT",
       "path": "packages/play/src/venues/phone/companion.ts",
-      "line": 29,
+      "line": 44,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.cue-helper-control-v1",
       "kind": "CONTRACT",
       "path": "packages/play/src/venues/phone/companion.ts",
-      "line": 46,
+      "line": 62,
       "relation": "REFERENCES"
     },
     {

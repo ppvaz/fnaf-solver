@@ -4,27 +4,40 @@
  * file. It never accepts shell text from a caller. Split out of
  * adb-device-local-executor.js on 2026-09-25.
  */
-const isRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
-const fail = message => { throw new TypeError(`adb device-local executor: ${message}`); };
+import { isList, isRecord } from '@sixam/kernel';
+import type { HidSchedule } from './hid-schedule.ts';
 
-function shellQuote(value) {
+function fail(message: string): never { throw new TypeError(`adb device-local executor: ${message}`); }
+
+/** The marker files the host touches to steer a gated stream. */
+export interface ArmControl {
+  readonly go: string;
+  readonly retry: string;
+  readonly fail: string;
+  readonly rearm: string;
+  readonly nightGo: string;
+  readonly gateGo: string;
+  readonly gateFix: string;
+}
+
+function shellQuote(value: unknown) {
   return `'${String(value).replaceAll("'", "'\\''")}'`;
 }
 
-export function boundedRemotePath(value, label) {
+export function boundedRemotePath(value: unknown, label: string): string {
   if (typeof value !== 'string' ||
       !/^\/data\/local\/tmp\/fnaf2-modern-(?:start|go|retry|fail|rearm|night-go|gate-go|gate-fix)-[A-Za-z0-9._$-]+$/.test(value))
     fail(`${label} is not a bounded device-local control path`);
   return value;
 }
 
-function shellSleepMs(milliseconds) {
+function shellSleepMs(milliseconds: number) {
   if (!Number.isInteger(milliseconds) || milliseconds < 1 || milliseconds > 30000)
     fail('device-local setup delay is outside 1..30000');
   return `sleep ${milliseconds / 1000}`;
 }
 
-function appendWrites(lines, path, values) {
+function appendWrites(lines: string[], path: string, values: readonly string[]) {
   lines.push(`rm -f ${path}`, `: > ${path}`);
   if (values.length === 0) return;
   // One printf per file, not one per line. `printf '%s\n' a b c` reuses its
@@ -38,14 +51,15 @@ function appendWrites(lines, path, values) {
   lines.push(`printf '%s\\n' ${values.map(value => shellQuote(value)).join(' ')} >> ${path}`);
 }
 
-export function renderDeviceLocalScript(schedule, { startMarker = '/data/local/tmp/fnaf2-modern-start-$$', armControl = null } = {}) {
+export function renderDeviceLocalScript(schedule: HidSchedule, { startMarker = '/data/local/tmp/fnaf2-modern-start-$$', armControl = null }:
+  { startMarker?: string, armControl?: ArmControl | null } = {}) {
   if (!schedule || schedule.schema !== 'device-local-hid-schedule-v1' ||
-      !Array.isArray(schedule.lines))
+      !isList(schedule.lines))
     fail('render requires a compiled device-local HID schedule');
   boundedRemotePath(startMarker, 'render startMarker');
   if (armControl !== null) {
     if (!isRecord(armControl)) fail('render armControl must be an object');
-    for (const key of ['go', 'retry', 'fail', 'rearm', 'nightGo', 'gateGo', 'gateFix'])
+    for (const key of ['go', 'retry', 'fail', 'rearm', 'nightGo', 'gateGo', 'gateFix'] as const)
       boundedRemotePath(armControl[key], `render armControl.${key}`);
   }
   if (schedule.gated && armControl === null)
@@ -90,7 +104,8 @@ export function renderDeviceLocalScript(schedule, { startMarker = '/data/local/t
   }
 
   const gated = schedule.gated;
-  const { go, retry, fail: failed, rearm, nightGo, gateGo, gateFix } = armControl;
+  // A gated schedule without armControl was refused above.
+  const { go, retry, fail: failed, rearm, nightGo, gateGo, gateFix } = armControl as ArmControl;
   const armPrefix = '/data/local/tmp/fnaf2-modern-arm-prefix-$$.jsonl';
   const segmentDir = '/data/local/tmp/fnaf2-modern-seg-$$';
   const gateCorrection = '/data/local/tmp/fnaf2-modern-gate-fix-$$.jsonl';

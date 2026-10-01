@@ -4,12 +4,37 @@
 // not invent hidden character positions or rewind the game to an audio event;
 // it records when a fact was observed, when it arrived, and whether the fact
 // is still safe to use at the current decision boundary.
+import { isOneOf, isRecord } from '@sixam/kernel';
 import {
   BELIEF_SCHEMA, FACT_STATES, cloneBelief, initialBelief, reduceBelief,
 } from './belief-state.ts';
+import type { Belief, Fact } from './belief-state.ts';
 import { plainClone, appendLog, shareLog } from './plain-clone.ts';
 
 export const ESTIMATOR_SCHEMA = 'estimator-v1';
+
+type Control = 'monitor' | 'mask';
+/** A fact as a sensor hands it in: the belief's envelope, with the age it may still be used at. */
+type IncomingFact = Fact & { readonly maxAgeMs?: number | null };
+/** The last observed reading of one fact, for contradiction and staleness checks. */
+interface Evidence {
+  state: 'OBSERVED';
+  value: unknown;
+  source: unknown;
+  observedAtMs: number;
+  receivedAtMs: number;
+}
+/** estimator-v1: a belief, the decision clock, the controls still owed a verification, and a bounded trace. */
+interface Estimator {
+  schema: typeof ESTIMATOR_SCHEMA;
+  nowMs: number;
+  belief: Belief;
+  config: { staleAfterMs: Readonly<Record<string, number>>, contradictionWindowMs: number, verifyTimeoutMs: number };
+  latest: Record<string, Evidence>;
+  verificationRequired: Record<Control, boolean>;
+  trace: Readonly<Record<string, unknown>>[];
+  traceDropped: number;
+}
 
 const clone = plainClone;
 
@@ -17,18 +42,16 @@ const clone = plainClone;
 // append-only and its entries are frozen on append, so a copy shares the
 // entries and duplicates only the array spine. Measured 2026-09-02: the deep
 // copy of a saturated 4096-entry trace was 80% of a full closed-loop night.
-function cloneEstimator(estimator) {
+function cloneEstimator(estimator: Estimator): Estimator {
   const { trace, belief, ...rest } = estimator;
-  const next = clone(rest);
-  next.belief = cloneBelief(belief);
-  next.trace = shareLog(trace);
-  return next;
+  return { ...clone(rest), belief: cloneBelief(belief), trace: shareLog(trace) };
 }
-const finite = value => Number.isFinite(value);
-const CONTROL_FACT = Object.freeze({ monitorUp: 'monitor', maskOn: 'mask' });
+const finite = (value: unknown): value is number => Number.isFinite(value);
+const CONTROL_FACT: Readonly<Record<string, Control>> = Object.freeze({ monitorUp: 'monitor', maskOn: 'mask' });
+const controlOf = (name: string) => Object.hasOwn(CONTROL_FACT, name) ? CONTROL_FACT[name] : undefined;
 
-function requireEnvelope(name, fact) {
-  if (!fact || !Object.values(FACT_STATES).includes(fact.state))
+function requireEnvelope(name: string, fact: unknown): asserts fact is IncomingFact {
+  if (!isRecord(fact) || !isOneOf(Object.values(FACT_STATES), fact.state))
     throw new TypeError(`invalid fact envelope for ${name}`);
   if (fact.state === FACT_STATES.UNKNOWN && !fact.reason)
     throw new TypeError(`UNKNOWN fact ${name} needs a reason`);
@@ -37,7 +60,7 @@ function requireEnvelope(name, fact) {
     throw new RangeError(`fact confidence for ${name} must be between 0 and 1`);
 }
 
-function timeOf(fact, key, fallback) {
+function timeOf(fact: IncomingFact, key: 'receivedAtMs' | 'observedAtMs', fallback: number) {
   const value = fact[key];
   return value === null || value === undefined ? fallback : value;
 }
@@ -54,7 +77,7 @@ function timeOf(fact, key, fallback) {
  */
 export const TRACE_LIMIT = 4096;
 
-function appendTrace(state, entry) {
+function appendTrace(state: Estimator, entry: Readonly<Record<string, unknown>>) {
   appendLog(state.trace, entry);
   const overflow = state.trace.length - TRACE_LIMIT;
   if (overflow > 0) {
@@ -63,15 +86,15 @@ function appendTrace(state, entry) {
   }
 }
 
-function appendIncident(state, incident) {
+function appendIncident(state: Estimator, incident: Readonly<Record<string, unknown>>) {
   // Incidents stay unbounded: they are rare by construction (a desync or a
   // sensor contradiction) and they are the record a retraction is argued from.
   appendLog(state.belief.incidents, { ...incident, atMs: state.nowMs });
   appendTrace(state, { type: 'incident', ...incident, atMs: state.nowMs });
 }
 
-function lockForControl(state, factName, reason) {
-  const control = CONTROL_FACT[factName];
+function lockForControl(state: Estimator, factName: string, reason: string) {
+  const control = controlOf(factName);
   if (!control) return;
   state.verificationRequired[control] = true;
   state.belief.control.actionLockout = true;
@@ -83,7 +106,7 @@ function lockForControl(state, factName, reason) {
   }
 }
 
-function maxAgeFor(state, factName, fact, maxAgeMs) {
+function maxAgeFor(state: Estimator, factName: string, fact: IncomingFact, maxAgeMs: Readonly<Record<string, unknown>> | undefined) {
   const explicit = maxAgeMs?.[factName] ?? fact.maxAgeMs;
   if (explicit === undefined || explicit === null) return Infinity;
   if (!finite(explicit) || explicit < 0)
@@ -91,11 +114,11 @@ function maxAgeFor(state, factName, fact, maxAgeMs) {
   return explicit;
 }
 
-function latestReceived(entry) {
+function latestReceived(entry: { receivedAtMs?: number | null } | undefined) {
   return entry?.receivedAtMs ?? -Infinity;
 }
 
-function contradiction(state, name, fact, receivedAtMs) {
+function contradiction(state: Estimator, name: string, fact: IncomingFact, receivedAtMs: number) {
   const previous = state.latest[name];
   if (!previous || previous.state !== FACT_STATES.OBSERVED ||
       fact.state !== FACT_STATES.OBSERVED || previous.value === fact.value)
@@ -110,8 +133,8 @@ function contradiction(state, name, fact, receivedAtMs) {
   return age <= state.config.contradictionWindowMs;
 }
 
-function applyUnknown(state, name, reason, fact, receivedAtMs) {
-  const envelope = {
+function applyUnknown(state: Estimator, name: string, reason: string, fact: IncomingFact, receivedAtMs: number) {
+  const envelope: Fact = {
     state: FACT_STATES.UNKNOWN,
     reason,
     source: fact.source ?? 'estimator',
@@ -128,7 +151,7 @@ function applyUnknown(state, name, reason, fact, receivedAtMs) {
   lockForControl(state, name, reason);
 }
 
-function markStale(state, name, fact, receivedAtMs, observedAtMs, maxAgeMs) {
+function markStale(state: Estimator, name: string, fact: IncomingFact, receivedAtMs: number, observedAtMs: number, maxAgeMs: number) {
   applyUnknown(state, name, 'stale-fact', fact, receivedAtMs);
   appendIncident(state, { type: 'stale-fact', fact: name,
     ageMs: receivedAtMs - observedAtMs, maxAgeMs });
@@ -143,7 +166,8 @@ export function initialEstimator({ belief = null, nowMs = null,
   // moved by itself -- a forcedown -- leaves a pending action that can never
   // reconcile, and every later plan refuses with `control-verification-
   // required` for the rest of the night (measured 2026-09-02).
-  verifyTimeoutMs = 1000 } = {}) {
+  verifyTimeoutMs = 1000 }: { belief?: Belief | null, nowMs?: number | null, staleAfterMs?: Readonly<Record<string, number>>,
+    contradictionWindowMs?: number, verifyTimeoutMs?: number } = {}): Estimator {
   const base = belief ? clone(belief) : initialBelief({ nowMs: nowMs ?? 0 });
   if (!base || base.schema !== BELIEF_SCHEMA)
     throw new TypeError('estimator needs a belief-v1 value');
@@ -152,7 +176,7 @@ export function initialEstimator({ belief = null, nowMs = null,
     throw new RangeError('estimator time must be monotonic');
   if (!finite(contradictionWindowMs) || contradictionWindowMs < 0)
     throw new RangeError('contradictionWindowMs must be non-negative');
-  for (const [name, maxAge] of Object.entries(staleAfterMs as Record<string, number>)) {
+  for (const [name, maxAge] of Object.entries(staleAfterMs)) {
     if (!finite(maxAge) || maxAge < 0)
       throw new RangeError(`staleAfterMs for ${name} must be non-negative`);
   }
@@ -170,7 +194,7 @@ export function initialEstimator({ belief = null, nowMs = null,
   };
 }
 
-function checkEstimator(estimator) {
+function checkEstimator(estimator: Estimator) {
   if (!estimator || estimator.schema !== ESTIMATOR_SCHEMA ||
       !estimator.belief || estimator.belief.schema !== BELIEF_SCHEMA)
     throw new TypeError('estimator schema mismatch');
@@ -181,7 +205,7 @@ function checkEstimator(estimator) {
  * not a new control value: the planner must verify before sending another
  * monitor/mask transition.
  */
-export function predict(estimator, nowMs) {
+export function predict(estimator: Estimator, nowMs: number) {
   checkEstimator(estimator);
   if (!finite(nowMs) || nowMs < estimator.nowMs)
     throw new RangeError('estimator time must move forward');
@@ -203,7 +227,7 @@ export function predict(estimator, nowMs) {
       expected: pending.expected, sentAtMs: pending.sentAtMs ?? null });
   }
   for (const [name, evidence] of Object.entries(next.latest)) {
-    const control = CONTROL_FACT[name];
+    const control = controlOf(name);
     if (!control || next.verificationRequired[control]) continue;
     const maxAge = next.config.staleAfterMs[name];
     if (!finite(maxAge) || maxAge < 0) continue;
@@ -223,21 +247,24 @@ export function predict(estimator, nowMs) {
  * observedAtMs separate from receivedAtMs, so an audio cue can narrow a route
  * hypothesis without pretending it happened at the detector's local clock.
  */
-export function update(estimator, { facts = {}, nowMs = null, maxAgeMs = {} } = {}) {
+export function update(estimator: Estimator, { facts = {}, nowMs = null, maxAgeMs = {} }: {
+  facts?: unknown, nowMs?: number | null, maxAgeMs?: Readonly<Record<string, unknown>> } = {}) {
   checkEstimator(estimator);
-  if (!facts || typeof facts !== 'object' || Array.isArray(facts))
+  if (!isRecord(facts))
     throw new TypeError('estimator facts must be an object');
   let receivedNow = nowMs ?? estimator.nowMs;
+  const checked: [string, IncomingFact][] = [];
   for (const [name, fact] of Object.entries(facts)) {
     requireEnvelope(name, fact);
     const received = timeOf(fact, 'receivedAtMs', receivedNow);
     if (!finite(received) || received < estimator.nowMs)
       throw new RangeError(`receivedAtMs for ${name} is not monotonic`);
     receivedNow = Math.max(receivedNow, received);
+    checked.push([name, fact]);
   }
   let next = predict(estimator, receivedNow);
 
-  for (const [name, fact] of Object.entries(facts)) {
+  for (const [name, fact] of checked) {
     const received = timeOf(fact, 'receivedAtMs', receivedNow);
     const observed = timeOf(fact, 'observedAtMs', received);
     if (!finite(observed) || observed > received) {
@@ -287,7 +314,7 @@ export function update(estimator, { facts = {}, nowMs = null, maxAgeMs = {} } = 
       // reconcile against, and holding the requirement open would refuse every
       // plan for the rest of the run. A transaction still in flight is left
       // alone: `reconcile` owns that path and its mismatch stays locked.
-      const control = CONTROL_FACT[name];
+      const control = controlOf(name);
       if (control && next.belief.pendingAction?.action !== control)
         next.verificationRequired[control] = false;
     }
@@ -296,7 +323,7 @@ export function update(estimator, { facts = {}, nowMs = null, maxAgeMs = {} } = 
 }
 
 /** Record a command; it is not physical truth until reconcile() succeeds. */
-export function send(estimator, options: any = {}) {
+export function send(estimator: Estimator, options: { action: string, expected: unknown, sentAtMs?: number, token?: unknown }) {
   const { action, expected, sentAtMs = estimator.nowMs, token = null } = options;
   checkEstimator(estimator);
   if (!finite(sentAtMs) || sentAtMs < estimator.nowMs)
@@ -314,7 +341,7 @@ export function send(estimator, options: any = {}) {
  * leave the pending action and force recovery; matching verification clears
  * only the corresponding control requirement.
  */
-export function reconcile(estimator, options: any = {}) {
+export function reconcile(estimator: Estimator, options: { action: string, value: unknown, verifiedAtMs?: number, token?: unknown }) {
   const { action, value, verifiedAtMs = estimator.nowMs, token = undefined } = options;
   checkEstimator(estimator);
   if (!finite(verifiedAtMs) || verifiedAtMs < estimator.nowMs)
@@ -341,9 +368,9 @@ export function reconcile(estimator, options: any = {}) {
   return next;
 }
 
-export const needsVerification = (estimator, control) => {
+export const needsVerification = (estimator: Estimator, control: string) => {
   checkEstimator(estimator);
-  if (!['monitor', 'mask'].includes(control)) throw new TypeError('unknown control');
+  if (!isOneOf(['monitor', 'mask'] as const, control)) throw new TypeError('unknown control');
   return estimator.verificationRequired[control] ||
     estimator.belief.control.actionLockout;
 };

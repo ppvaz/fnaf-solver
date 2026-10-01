@@ -43,7 +43,7 @@ export function planTimedStart({ sample, residueMs, nowHostMs, minLeadMs = 1500 
 /**
  * Wait until performance.now() reaches targetHostMs: coarse timers, then a short spin.
  */
-export async function waitUntilHostMs(targetHostMs: number, { now = () => performance.now(), sleep = ms => new Promise<any>(r => setTimeout(r, ms)) }: {now?: () => number, sleep?: (ms: number) => Promise<void>} = {}) {
+export async function waitUntilHostMs(targetHostMs: number, { now = () => performance.now(), sleep = ms => new Promise<void>(r => setTimeout(r, ms)) }: {now?: () => number, sleep?: (ms: number) => Promise<void>} = {}) {
   for (;;) {
     const left = targetHostMs - now();
     if (left <= 0) return now();

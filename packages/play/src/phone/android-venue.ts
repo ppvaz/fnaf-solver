@@ -17,7 +17,8 @@
  * CONTRACT:venue-identity-v1.
  */
 import { createHash } from 'node:crypto';
-import { makeVenueIdentity, VENUE_FIELD_PATTERNS } from '@sixam/kernel/contracts';
+import { isOneOf } from '@sixam/kernel';
+import { makeVenueIdentity, VENUE_FIELD_PATTERNS, VENUE_IDENTITY_FIELDS } from '@sixam/kernel/contracts';
 
 const TIME = '(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2})';
 
@@ -47,7 +48,7 @@ function packageBlock(text: string, packageName: string) {
 export function parseDumpsysPackage(text: string, packageName: string): {versionName: string | null, versionCode: string | null, firstInstallTime: string | null, lastUpdateTime: string | null} {
   if (typeof text !== 'string') throw new TypeError('dumpsys package output must be text');
   const block = packageBlock(text, packageName);
-  const first = pattern => block.match(pattern)?.[1] ?? null;
+  const first = (pattern: RegExp) => block.match(pattern)?.[1] ?? null;
   return {
     versionName: first(/\bversionName=([^\s]+)/),
     versionCode: first(/\bversionCode=(\d+)\b/),
@@ -67,7 +68,7 @@ export function parseGetprop(text: string) {
 
 export type CommandRead = {ok: boolean, stdout?: string, stderr?: string};
 
-const failed = (read, what) => `${what} failed: ${String(read?.stderr ?? '').trim().slice(0, 120) || 'no output'}`;
+const failed = (read: CommandRead | null | undefined, what: string) => `${what} failed: ${String(read?.stderr ?? '').trim().slice(0, 120) || 'no output'}`;
 
 /**
  * Assemble the identity from the raw reads. `companion` is null when the
@@ -113,7 +114,8 @@ export function readVenueIdentity({ packageName, serial, game, fingerprint, secu
   // A reading in a shape this contract does not know is recorded as unread
   // with the text that was seen, so an odd handset holds instead of crashing.
   for (const [field, value] of Object.entries(readings)) {
-    if (field === 'package' || value === null || VENUE_FIELD_PATTERNS[field]?.test(value)) continue;
+    const pattern = isOneOf(VENUE_IDENTITY_FIELDS, field) ? VENUE_FIELD_PATTERNS[field] : undefined;
+    if (field === 'package' || value === null || pattern?.test(value)) continue;
     readings[field] = null;
     reasons[field] = `unrecognised ${field} text: ${JSON.stringify(String(value).slice(0, 60))}`;
   }

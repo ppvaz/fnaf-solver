@@ -13,20 +13,27 @@
 // mid-animation, the office panned, a blackout hiding the opening -- resolves
 // UNKNOWN rather than guessing.
 import * as C from '@sixam/source/games/fnaf2/config.ts';
+import type { Sim } from '@sixam/source/games/fnaf2/plant-model.ts';
 
 // One read per this many frames: ~15 Hz, the measured device cadence.
 export const OBSERVE_INTERVAL = 4;
 
 const MON_UP = 'up', MON_DOWN = 'down';
 
-const O = (value: any): any => ({ state: 'OBSERVED', value });
-const U = (reason: any): any => ({ state: 'UNKNOWN', reason });
+/** One fact as the sensor reads it: a value, or UNKNOWN with the reason it could not be read. */
+type Fact = { readonly state: 'OBSERVED', readonly value: unknown } | { readonly state: 'UNKNOWN', readonly reason: string };
+
+const O = (value: unknown): Fact => ({ state: 'OBSERVED', value });
+const U = (reason: string): Fact => ({ state: 'UNKNOWN', reason });
 
 export const FACTS = ['blackout', 'amHour', 'monitorUp', 'maskOn', 'boxPie',
                       'cameraSelected', 'cameraHighlights', 'splitArmed',
                       'leftOpening', 'ventLightL',
                       'bbVent', 'bbVentId', 'ventThud', 'ventThudId', 'ventThudAge',
-                      'mangleStatic', 'mangleStaticCam'];
+                      'mangleStatic', 'mangleStaticCam'] as const;
+/** A read: the frame it was taken on, and each fact it carries. */
+type Facts = { frame: number } & { [K in typeof FACTS[number]]?: Fact };
+type Cue = 'route' | 'pending' | 'opening';
 
 // How long a heard thud stays in the fact set. The same retention the Balloon
 // Boy opening cue already uses: the fact is an edge, and the consumer decides
@@ -36,7 +43,7 @@ const THUD_WINDOW = C.s(12);
 // A complete fact set with every entry UNKNOWN -- what the controller sees
 // before the first read completes.
 const NO_READ = () => {
-  const o = { frame: -1 };
+  const o: Facts = { frame: -1 };
   for (const k of FACTS) o[k] = U('no-read-yet');
   return o;
 };
@@ -45,35 +52,39 @@ export class Observer {
   declare interval: number;
   declare readDelayFrames: number;
   declare dropRate: number;
-  declare rng: any;
-  declare audioLatencyFrames: any;
-  declare audioDropRate: any;
-  declare audioFalseNegativeRate: any;
-  declare audioFalsePositiveRate: any;
-  declare mangleAudioLatencyFrames: any;
-  declare mangleAudioDropRate: any;
-  declare mangleAudioFalseNegativeRate: any;
-  declare mangleAudioFalsePositiveRate: any;
+  declare rng: { next(): number } | null;
+  declare audioLatencyFrames: number;
+  declare audioDropRate: number;
+  declare audioFalseNegativeRate: number;
+  declare audioFalsePositiveRate: number;
+  declare mangleAudioLatencyFrames: number;
+  declare mangleAudioDropRate: number;
+  declare mangleAudioFalseNegativeRate: number;
+  declare mangleAudioFalsePositiveRate: number;
   declare evtCursor: number;
   declare lastCueAt: number;
-  declare lastCueType: any;
-  declare lastCueId: string;
+  declare lastCueType: Cue | false;
+  declare lastCueId: string | null;
   declare audioSeq: number;
   declare lastThudAt: number;
-  declare lastThudId: string;
+  declare lastThudId: string | null;
   declare mangleStaticByContext: { office: boolean; cam11: boolean; };
-  declare mangleStaticPending: any[];
+  declare mangleStaticPending: { at: number, context: string, present: boolean, id: string }[];
   declare mangleAudioSeq: number;
   declare lastReadFrame: number;
-  declare cache: { frame: number; };
-  declare pending: any[];
+  declare cache: Facts;
+  declare pending: { at: number, snap: Facts }[];
   constructor({ interval = OBSERVE_INTERVAL, readDelayFrames = 0, dropRate = 0,
                 rng = null, audioLatencyFrames = 12, audioDropRate = 0,
                 audioFalseNegativeRate = 0, audioFalsePositiveRate = 0,
                 mangleAudioLatencyFrames = audioLatencyFrames,
                 mangleAudioDropRate = audioDropRate,
                 mangleAudioFalseNegativeRate = audioFalseNegativeRate,
-                mangleAudioFalsePositiveRate = audioFalsePositiveRate } = {}) {
+                mangleAudioFalsePositiveRate = audioFalsePositiveRate }: {
+                interval?: number, readDelayFrames?: number, dropRate?: number, rng?: { next(): number } | null,
+                audioLatencyFrames?: number, audioDropRate?: number, audioFalseNegativeRate?: number,
+                audioFalsePositiveRate?: number, mangleAudioLatencyFrames?: number, mangleAudioDropRate?: number,
+                mangleAudioFalseNegativeRate?: number, mangleAudioFalsePositiveRate?: number } = {}) {
     this.interval = interval;
     this.readDelayFrames = readDelayFrames;  // model host round-trip latency
     this.dropRate = dropRate;                // fraction of reads that come back UNKNOWN
@@ -119,7 +130,7 @@ export class Observer {
 
   // Take a fresh read off a live Sim if the cadence allows, then return the
   // most recent read that has finished its round-trip.
-  read(sim) {
+  read(sim: Sim) {
     // Audio is not on the video cadence: the event feed stands in for the
     // detector, each discrete cue surfacing after the transport latency.
     // Cue semantics are the device owner's play (2026-08-30): laughs are
@@ -150,7 +161,7 @@ export class Observer {
         this.lastThudAt = e.f + this.audioLatencyFrames;
         this.lastThudId = `${this.evtCursor}:${e.f}:thud`;
       }
-      let cue = null;
+      let cue: Cue | null = null;
       if (e.type === 'laugh') cue = 'route';
       else if (e.type === 'vent-bang' && e.data?.who === 'bb') {
         if (e.data.arrival) cue = 'opening';
@@ -189,11 +200,12 @@ export class Observer {
       const snap = this._sample(sim);
       this.pending.push({ at: sim.frame + this.readDelayFrames, snap });
     }
-    while (this.pending.length && this.pending[0].at <= sim.frame)
-      this.cache = this.pending.shift().snap;
-    while (this.mangleStaticPending.length &&
-           this.mangleStaticPending[0].at <= sim.frame) {
-      const cue = this.mangleStaticPending.shift();
+    for (let next = this.pending[0]; next && next.at <= sim.frame; next = this.pending[0]) {
+      this.pending.shift();
+      this.cache = next.snap;
+    }
+    for (let cue = this.mangleStaticPending[0]; cue && cue.at <= sim.frame; cue = this.mangleStaticPending[0]) {
+      this.mangleStaticPending.shift();
       if (cue.context === 'office' || cue.context === 'cam11')
         this.mangleStaticByContext[cue.context] = cue.present;
     }
@@ -202,14 +214,17 @@ export class Observer {
 
   // `rng` is a src/rng.js Rng (next() -> [0,1)) or any {next()}; the
   // constructor refuses a rate above zero without one.
-  _random() { return this.rng.next(); }
+  _random() {
+    if (!this.rng) throw new Error('Observer: a noisy read needs the seeded rng the constructor requires');
+    return this.rng.next();
+  }
 
   _drop() {
     if (!this.dropRate) return false;
     return this._random() < this.dropRate;
   }
 
-  _sample(sim) {
+  _sample(sim: Sim): Facts {
     const midMon = sim.monitor !== MON_UP && sim.monitor !== MON_DOWN;
     const midMask = sim.maskAnim > 0;
     const drop = this._drop();
@@ -281,7 +296,7 @@ export class Observer {
   // Audio is returned from the live cadence, not from the delayed video
   // snapshot. This keeps A2DP latency/detector loss independent of monitor
   // animation, video read cadence, and video drop coins.
-  _audioFacts(sim) {
+  _audioFacts(sim: Sim) {
     let bbVent = O(false), bbVentId = O(null);
     // One detector, one drop coin: the thud and the Balloon Boy classification
     // are the same audio channel, so a dropped read loses both.
@@ -332,5 +347,5 @@ export class Observer {
 }
 
 // Convenience: the value if OBSERVED, else the fallback.
-export const val = (fact, fallback = null) =>
+export const val = (fact: Fact | null | undefined, fallback: unknown = null) =>
   fact && fact.state === 'OBSERVED' ? fact.value : fallback;

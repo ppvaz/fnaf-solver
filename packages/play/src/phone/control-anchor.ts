@@ -37,9 +37,24 @@
 // (`view-scroll-v1`: worldHeight 768 in a 768 window), so a vertical claim is
 // refused rather than quietly ignored.
 
-const finite = value => typeof value === 'number' && Number.isFinite(value);
+import { isOneOf, isRecord } from '@sixam/kernel';
 
-export const ANCHOR_KINDS = Object.freeze(['screen', 'world']);
+const finite = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
+
+export const ANCHOR_KINDS = Object.freeze(['screen', 'world'] as const);
+
+/**
+ * A `controlMap` entry once its anchor is checked: unstated (valid only at the pan it was read at),
+ * pinned to the screen, or scrolling with the world from the pan it was measured at.
+ */
+type AnchoredPoint = { readonly x: number, readonly y: number } & (
+  | { readonly anchor?: undefined }
+  | { readonly anchor: 'screen' }
+  | { readonly anchor: 'world', readonly measuredAtPan: number });
+type WorldAnchored = AnchoredPoint & { readonly anchor: 'world', readonly measuredAtPan: number };
+// A guard rather than a comparison: the lenient lane, without strictNullChecks,
+// cannot narrow on an optional discriminant.
+const worldAnchored = (point: AnchoredPoint): point is WorldAnchored => point.anchor === 'world';
 
 /** The pan is unknown until something reads it; `view-scroll-v1` records that
  * the Companion's `pan_anchor_state` read UNKNOWN throughout 2026-09-19. */
@@ -47,7 +62,7 @@ export const PAN_UNKNOWN = null;
 
 class ControlAnchorError extends Error {}
 
-const fail = message => { throw new ControlAnchorError(message); };
+function fail(message: string): never { throw new ControlAnchorError(message); }
 
 /**
  * Shape rules for one `controlMap` entry. Absent anchor is legal; a half
@@ -56,17 +71,17 @@ const fail = message => { throw new ControlAnchorError(message); };
  * @param control semantic control name
  * @param point the profile's entry for it
  */
-export function validateControlAnchor(control: string, point: any) {
-  if (!point || typeof point !== 'object') fail(`control ${control} has no coordinate binding`);
+export function validateControlAnchor(control: string, point: unknown): AnchoredPoint {
+  if (!isRecord(point)) fail(`control ${control} has no coordinate binding`);
   if (!finite(point.x) || !finite(point.y)) fail(`control ${control} has no finite coordinate`);
   const { anchor } = point;
   const hasPan = Object.hasOwn(point, 'measuredAtPan');
   if (anchor === undefined) {
     if (hasPan) fail(`control ${control} states a pan but no anchor kind: a coordinate measured ` +
       `at a pan is world-anchored, so say so`);
-    return point;
+    return point as unknown as AnchoredPoint;
   }
-  if (!ANCHOR_KINDS.includes(anchor))
+  if (!isOneOf(ANCHOR_KINDS, anchor))
     fail(`control ${control} has anchor "${anchor}"; it must be ${ANCHOR_KINDS.join(' or ')}`);
   if (anchor === 'screen' && hasPan)
     fail(`control ${control} is screen-pinned and cannot have been measured at a pan: ` +
@@ -78,15 +93,15 @@ export function validateControlAnchor(control: string, point: any) {
   }
   if (Object.hasOwn(point, 'measuredAtPanY'))
     fail(`control ${control} declares a vertical pan; these offices scroll on x alone`);
-  return point;
+  return point as unknown as AnchoredPoint;
 }
 
 /** World x of a world-anchored control: the screen x it was read at, plus the
  * pan it was read at. This is derived, never stored, so the profile keeps the
  * measurement and a check does the arithmetic. */
-export function worldX(control, point) {
-  validateControlAnchor(control, point);
-  if (point.anchor !== 'world')
+export function worldX(control: string, input: unknown) {
+  const point = validateControlAnchor(control, input);
+  if (!worldAnchored(point))
     fail(`control ${control} is not world-anchored, so it has no world x`);
   return point.x + point.measuredAtPan;
 }
@@ -98,33 +113,31 @@ export function worldX(control, point) {
  * @param control semantic control name
  * @param point the profile's entry for it
  */
-export function resolveControlPoint(control: string, point: any, view: { viewOffset?: number|null, screenWidth?: number } = {}) {
-  validateControlAnchor(control, point);
+export function resolveControlPoint(control: string, input: unknown, view: { viewOffset?: number|null, screenWidth?: number } = {}) {
+  const point = validateControlAnchor(control, input);
   const { viewOffset = 0, screenWidth } = view;
   if (viewOffset !== PAN_UNKNOWN && (!finite(viewOffset) || viewOffset < 0))
     fail(`view offset must be a non-negative number of screen px or PAN_UNKNOWN, got ${viewOffset}`);
+  if (point.anchor === 'screen') return place(control, point.x, point.y, point.anchor, viewOffset, screenWidth);
   const anchor = point.anchor ?? 'unstated';
-
-  if (anchor === 'screen') return place(control, point.x, point.y, anchor, viewOffset, screenWidth);
 
   if (viewOffset === PAN_UNKNOWN)
     fail(`control ${control} ${anchor === 'world' ? 'scrolls with the office' : 'has no anchor kind'}` +
       `, so its coordinate depends on the pan, and the pan is UNKNOWN. Read the view offset, or ` +
       `press a screen-pinned control instead.`);
 
-  if (anchor === 'unstated') {
-    if (viewOffset === 0) return place(control, point.x, point.y, anchor, viewOffset, screenWidth);
-    fail(`control ${control} has no anchor kind, so its coordinate is only valid at the pan it ` +
-      `was measured at, and the office is panned ${viewOffset} px. Declare anchor:"screen" if it ` +
-      `is pinned, or anchor:"world" with the measuredAtPan it was read at.`);
-  }
-
   // World-anchored: the control scrolls 1:1 with the view, so panning right by
   // d moves it left by d on screen.
-  return place(control, point.x - (viewOffset - point.measuredAtPan), point.y, anchor, viewOffset, screenWidth);
+  if (worldAnchored(point))
+    return place(control, point.x - (viewOffset - point.measuredAtPan), point.y, anchor, viewOffset, screenWidth);
+
+  if (viewOffset === 0) return place(control, point.x, point.y, anchor, viewOffset, screenWidth);
+  fail(`control ${control} has no anchor kind, so its coordinate is only valid at the pan it ` +
+    `was measured at, and the office is panned ${viewOffset} px. Declare anchor:"screen" if it ` +
+    `is pinned, or anchor:"world" with the measuredAtPan it was read at.`);
 }
 
-function place(control, x, y, anchor, viewOffset, screenWidth) {
+function place(control: string, x: number, y: number, anchor: string, viewOffset: number | null, screenWidth: number | undefined) {
   if (finite(screenWidth) && (x < 0 || x >= screenWidth))
     fail(`control ${control} resolves to x ${Math.round(x)} at pan ${viewOffset}, which is off a ` +
       `${screenWidth} px screen: it is not reachable from this view and must be panned to first`);
@@ -137,11 +150,13 @@ function place(control, x, y, anchor, viewOffset, screenWidth) {
  * and binds a coordinate in another; this is the pair that has to agree.
  * @param profile a parsed device profile
  */
-export function unstatedPanDependentControls(profile: any) {
-  const flags = profile?.viewScroll?.panDependent;
+export function unstatedPanDependentControls(profile: unknown) {
+  const viewScroll = isRecord(profile) ? profile.viewScroll : undefined;
+  const flags = isRecord(viewScroll) ? viewScroll.panDependent : undefined;
   if (!flags || typeof flags !== 'object') return [];
+  const controlMap = isRecord(profile) && isRecord(profile.controlMap) ? profile.controlMap : {};
   return Object.entries(flags)
     .filter(([, dependent]) => dependent === true)
     .map(([control]) => control)
-    .filter(control => profile.controlMap?.[control] && profile.controlMap[control].anchor === undefined);
+    .filter(control => { const entry = controlMap[control]; return Boolean(entry) && (!isRecord(entry) || entry.anchor === undefined); });
 }

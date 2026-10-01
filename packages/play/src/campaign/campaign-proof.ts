@@ -4,20 +4,28 @@
  */
 import { AI_DIALS, PUPPET_AI } from '@sixam/source/fnaf2';
 import { stableHash, validateSaveProof } from '@sixam/kernel/contracts';
+import { isRecord } from '@sixam/kernel';
 import { makeCustomNightConfig, validateCustomNightConfig } from './custom-night.ts';
+import type { Dials } from './custom-night.ts';
 
 export const CAMPAIGN_PROOF_SCHEMA = 'campaign-proof-v1';
 
-const isRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
-const fail = message => { throw new TypeError(`campaign proof: ${message}`); };
+/** What a proof is checked against: the night, its mode, and Night 7's configuration. */
+interface ProofTarget {
+  readonly night: number;
+  readonly mode: string;
+  readonly custom?: unknown;
+}
 
-function exactDials(value, expected) {
+function fail(message: string): never { throw new TypeError(`campaign proof: ${message}`); }
+
+function exactDials(value: unknown, expected: Dials) {
   if (!isRecord(value)) return false;
   return AI_DIALS.every(dial => value[dial] === expected[dial]);
 }
 
 /** Reject death, disappearance, and generic "finished" statuses. */
-export function validateSixAmProof(value, target) {
+export function validateSixAmProof(value: unknown, target: ProofTarget | null | undefined) {
   if (!isRecord(value) || value.outcome !== 'sixam' || value.sixAm !== true)
     fail('terminal proof is not a positive 6 AM observation');
   if (value.night !== target?.night) fail('terminal proof has the wrong night identity');
@@ -31,7 +39,7 @@ export function validateSixAmProof(value, target) {
 // re-exported here unchanged.
 export { validateSaveProof };
 
-export function validateCustomReadback(value, target) {
+export function validateCustomReadback(value: unknown, target: ProofTarget | null | undefined) {
   const expected = validateCustomNightConfig(target?.custom ?? makeCustomNightConfig());
   if (!isRecord(value) || value.status !== 'PASS' || value.puppet !== PUPPET_AI ||
       !exactDials(value.dials, expected.dials))
@@ -40,7 +48,8 @@ export function validateCustomReadback(value, target) {
 }
 
 /** Build the immutable proof row attached to a completed attempt. */
-export function makeAttemptProof({ target, attempt, terminal, terminalVerification, save, customReadback }: {target?: any, attempt?: number, terminal?: any, terminalVerification?: any, save?: any, customReadback?: any} = {}) {
+export function makeAttemptProof({ target, attempt, terminal, terminalVerification, save, customReadback }: {target: ProofTarget, attempt: number,
+  terminal: unknown, terminalVerification: unknown, save: unknown, customReadback?: unknown}) {
   validateSixAmProof(terminal, target);
   if (!isRecord(terminalVerification) || terminalVerification.sixAm !== true || terminalVerification.positive !== true)
     fail('terminal verification is incomplete');
