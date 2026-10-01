@@ -273,7 +273,20 @@ def capture_via_adb(timeout):
     return io.BytesIO(result.stdout)
 
 
+FLAGS = ("--measure", "--adb", "--continue-night")
+VALUED = ("--sensor", "--model")
+
 def main(argv):
+    # Every token is a flag or a valued flag's value. The frame comes on stdin (or --adb): a positional path used to be
+    # ignored, and the stdin frame read as `unknown=unreadable-frame` (CLAUDE.md mistake register 1), so it is refused.
+    i = 0
+    while i < len(argv):
+        if argv[i] in VALUED: i += 2
+        elif argv[i] in FLAGS: i += 1
+        else:
+            print(f"title-observe.py: unexpected argument {argv[i]!r}; the frame is read from stdin (or --adb), "
+                  "never from a path argument", file=sys.stderr)
+            return 2
     measure = "--measure" in argv
     use_adb = "--adb" in argv
     want_night = "--continue-night" in argv

@@ -21,6 +21,15 @@
 //            positive state in the same run." run-report.mjs's five-read
 //            threshold is exercised on both sides of the boundary; before this
 //            nothing asserted it.
+//   item 1   "Read a tool's own usage before the first invocation." The incident
+//            was title-observe.py ignoring a positional frame path and reading
+//            stdin; it now refuses any token it does not consume, and
+//            packages/play/src/sensors/screencap/test-sensor.py runs it with one.
+//   items 3, 6  are apps/lab/test/test-night-job.py's: the night job refuses on an
+//            observed title that does not offer the night and on a Continue
+//            night it cannot read (never assumed), and after an abort or a killed
+//            runner the game is driven back to an observed title. It runs in
+//            test:unit:slow, which CI's slow lane runs.
 //   items 7, 9  are packages/propose/test/test-seam-slack.mjs's: every compiled plan
 //            clears every floor by the allowance, and the mask floor IS its
 //            measurement, read from SEAM_FLOORS rather than from a comment.
@@ -85,6 +94,8 @@ const EXEMPT = new Map([
 // Item 13 applied to the register: a register entry whose gate no CI step runs
 // has no gate.
 const REGISTER_GATES = [
+  [1, 'packages/play/src/sensors/screencap/test-sensor.py'],   // title-observe.py refuses a path it would not read
+  [3, 'apps/lab/test/test-night-job.py'],   // a night job refuses on an observed title mismatch and on an unreadable Continue night
   [5, SELF],
   [7, 'packages/propose/test/test-seam-slack.mjs'],
   [9, 'packages/propose/test/test-seam-slack.mjs'],
@@ -93,6 +104,7 @@ const REGISTER_GATES = [
   [13, 'packages/review/bin/grade/test-grade-run-coverage.ts'],
   [14, 'tools/test-sibling-paths.js'],
   [15, 'apps/desktop/test/test-fnaf1-winner.mjs'],
+  [6, 'apps/lab/test/test-night-job.py'],   // after an abort or a killed runner the game is driven back to an observed title
 ];
 
 let failed = 0;

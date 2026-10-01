@@ -80,6 +80,14 @@ def main():
         check("title-observe refuses a foreign frame",
               "sensor-mismatch" in out.stdout, out.stdout.strip())
 
+        # CLAUDE.md mistake register 1: the frame is read from stdin, and a path argument used to be ignored in
+        # silence (the stdin frame then read `unknown=unreadable-frame`). A token it does not consume is refused.
+        with open(other, "rb") as fh:
+            stray = subprocess.run([sys.executable, str(HERE / "title-observe.py"), str(other)],
+                                   stdin=fh, capture_output=True, text=True, env=env, check=False)
+        check("title-observe refuses a path argument it would not read",
+              stray.returncode == 2 and "read from stdin" in stray.stderr and not stray.stdout, (stray.returncode, stray.stderr.strip()))
+
         # The per-game wrapper must never inherit menu.sh's FNaF 2 default.
         # This synthetic frame is deliberately shaped to satisfy FNaF 2's
         # title model while leaving the FNaF 1 logo/menu gates dark.  It proves
