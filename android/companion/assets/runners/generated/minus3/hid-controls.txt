@@ -1,6 +1,6 @@
 #schema hid-controls-v1
 #profile hid-mediaprojection
-#profile-sha256 c929d673a056b4d7ef1839bccc4666986e2a1991b39232c0869046b0d68ae6e0
+#profile-sha256 59a71a13e9c7e2004897821ca1e6d7c664272818bb6fca4b28cdea6557c77dea
 cam:10 808 892
 cam:11 951 1002
 cam:4 866 777
