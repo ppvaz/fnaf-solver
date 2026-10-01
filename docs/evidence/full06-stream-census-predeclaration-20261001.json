@@ -1,0 +1,56 @@
+{
+ "schema": "experiment-spec-v2",
+ "id": "full06-stream-census",
+ "purpose": "diagnostic sweep",
+ "claimLevel": "MODEL_ONLY",
+ "date": "2026-10-01",
+ "step": "S2 (plans/ROADMAP.md): fidelity at the level of encounters, full-06",
+ "night": "full-06",
+ "question": "Does some office RNG start state, replayed through the production model on full-06's own measured clock and landed contacts, reproduce the phone's mask windows, where the measured seed 47593 parts from them at window 6?",
+ "premise": {
+  "modelEqualsRebuild": "At 47593 the production model's landed windows equal the rebuild's (...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.B) and both die on the same terminal loop (control run 2026-10-01, before this file); docs/evidence/full06-winning-branch-20260930.json has their draw streams equal through 6 AM on the winning branch.",
+  "audioRealigned": "The 2026-09-28 phone audio read (tools/recompile/results/phone-audio-cues-full-06-20260928.json) is 30.000 s late: the reader paired each mask onset with the nearest play within 1 s, which fits any whole number of 10 s windows. Solved over the rebuild's own monitor and mask plays the offset is audio-minus-game 29.754 s (18 anchor onsets agree, the best other offset 12), inside the wall-clock bound [29.6, 36.2] s from the capture's start stamp, the seed bracket and the 1402.2 ms host-minus-phone skew. On that clock the phone's Balloon Boy hops at 10.04 (echo4b), 15.08 (echo3b) and 20.04 (echo3b with a vent bang), where the rebuild hops silently at 10.0 (CAM 10 to 7) and plays echo1 at 15.03: the phone's Balloon Boy looks one roll ahead from the first 5 s roll. The '40 s' divergence of docs/evidence/full06-input-registration-20260928.json is an artifact of the misalignment."
+ },
+ "explanations": [
+  {
+   "id": "E-start",
+   "statement": "The phone's office stream began at a start state other than 47593 (a wrong seed, or a constant startup draw offset), while the model's mechanics and the landed inputs are right.",
+   "predicts": "IDENTIFIED: one start state agrees with the phone's windows far longer than every other, and it confirms on the held-out audio."
+  },
+  {
+   "id": "E-after-start",
+   "statement": "The start state is right (or no start state helps): the phone and the host programs part after the start, in mechanics or in what the inputs did.",
+   "predicts": "MEASURED_SEED_BEST, or INCONCLUSIVE with no state far past the rest."
+  }
+ ],
+ "family": {
+  "description": "Every 16-bit office start state 0..65535 (the Rng keeps state & 0xffff; startup draw offsets from 47593 are the 16,384 states of its cycle, a subset), each replayed once through the production Sim.",
+  "model": "packages/source/src/games/fnaf2 Sim through packages/source/recompile/model-draw-trace.mjs drawTrace, the config's sourced rebuild model options, night 7 with the night7-dials20 Custom Night",
+  "inputs": "phone-encounter-replay.mjs prepare() for full-06's primary variant (landed): the k3 binding's schedule mapped on the phone's own frame trace, each press on the update that drew its landing frame, explicit contact durations, measured update times"
+ },
+ "inputs": {
+  "config": "26b89b453e2b483610c118c264d1eb0dbb5d06758ab53db283807ffc25d666d0",
+  "modelOptions": "d1ba74693da29dac953058c1ea5d41b553ac6d7494ce911f6e8c742ef487db4a",
+  "contacts": "c4ca5d3320b8a65c3522d3a3a072a79c7a10251447f5112a61a903d45da6c67f",
+  "frameTimes": "383d25c80bb3648e9199589ebce7b6782a510eacee4409df3c90e940869541cf"
+ },
+ "fingerprint": {
+  "selecting": "The phone's 42 mask-window codes for full-06 (phone-encounter-nights.json nights[full-06].phone.windows: right-eyehole reads, DEVICE_MEASURED), scored by the replay tool's own windowCodes and scoreWindows. A state's prefix is the number of read windows before its first disagreement.",
+  "heldOut": "The phone audio's Balloon Boy events on the corrected clock, never used in selection: a hop vocal at 10.04 (echo4b, handle 24), 15.08 (echo3b, handle 23) and 20.04 (echo3b, with the ventwalk of a CAM 1 to CAM 5 hop). A selected state confirms when its model run hops Balloon Boy at the 10, 15 and 20 s rolls out of CAM 7, 3 and 1, each with that vocal or a value-4 redraw (whose vocal the model does not log)."
+ },
+ "decisionRule": {
+  "stage1Windows": 16,
+  "stage2MinPrefix": 10,
+  "identifyMinPrefix": 20,
+  "identifyMarginWindows": 4,
+  "text": "Stage 1 plays every state through the start of window 16 and scores windows 0-15. Every state whose prefix is at least 10, and 47593 regardless, is replayed through the whole night and scored on all 42 windows. Rank stage-2 states by prefix, then agreement, then state. IDENTIFIED when the top state is not 47593, its prefix is at least 20 and it leads every other state by at least 4 windows. MEASURED_SEED_BEST when 47593's prefix is at least the top prefix. INCONCLUSIVE otherwise. The windows have structure (B then C), so chance agreement is judged against the census's own runner-up, not an iid null."
+ },
+ "stoppingRule": {
+  "kind": "fixed-sample",
+  "text": "All 65,536 states, once, at most six worker threads. No threshold, window count or fingerprint is changed after the run; a different rule is a new predeclaration."
+ },
+ "costProbe": "Before this file: the measured seed alone, through the whole night (236 ms) and through 8, 12 and 16 windows (32-58 ms). No other state was replayed.",
+ "tool": "node packages/propose/bin/recompile/phone-stream-census.mjs --night full-06 --predeclaration docs/evidence/full06-stream-census-predeclaration-20261001.json --workers 6 --out <result>",
+ "resultRecord": "docs/evidence/full06-stream-census-20261001.json",
+ "rung": "None. MODEL_ONLY; an identified state is a hypothesis about the phone, labelled 'identified' on the seed-provenance axis, never a measurement."
+}
