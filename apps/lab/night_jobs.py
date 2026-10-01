@@ -295,13 +295,35 @@ def title_expectation(game: str, night: int) -> dict:
     return {"readable": True, "item": "continue", "continueNight": night}
 
 
+VENUE_BINDINGS = ROOT / "docs" / "evidence"
+
+def venue_bindings(profile: str, root: Path = VENUE_BINDINGS) -> list[Path]:
+    """The committed venue-binding-v1 files whose subject is this profile. Since 2026-09-30 a live FNaF 2 campaign
+    refuses `venue-identity-unbound` without one, and the campaign itself still refuses a binding whose identity has
+    drifted, so passing every committed binding for the profile is safe: the phone decides which one holds."""
+    found = []
+    for path in sorted(root.glob("venue-binding-*.json")):
+        try:
+            record = json.loads(path.read_text())
+        except (OSError, ValueError):
+            continue
+        subject = record.get("subject") or {}
+        if record.get("schema") == "venue-binding-v1" and subject.get("kind") == "profile" and subject.get("id") == profile:
+            found.append(path)
+    return found
+
 def runner_command(game: str, binding: dict, winner: dict, night: int, label: str, serial: str,
                    audio: bool) -> tuple[list[str], dict]:
     """The one runner a game's night uses, and the lease-held marker it takes."""
     if game == "fnaf2":
+        venues = venue_bindings(binding["profile"])
+        if not venues:
+            raise ValueError(f"no committed venue binding names profile {binding['profile']}: a live night would refuse venue-identity-unbound")
         argv = [str(HERE / "../../packages/play/bin/phone/night-run.sh"), "--live", "--confirm-live", "--label", label,
                 "--bundle", binding["bundle"]["dir"], "--night", str(night), "--serial", serial,
                 "--profile", binding["profile"], "--no-grade"]
+        for venue in venues:
+            argv += ["--venue-binding", str(venue)]
         if audio:
             argv.append("--bt-audio")
         return argv, {"FNAF_LEASE_HELD": "1", "FNAF_SERIAL": serial}

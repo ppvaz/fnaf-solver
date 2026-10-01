@@ -1,0 +1,22 @@
+{
+ "schema": "cohort-predeclaration-v1",
+ "declaredAt": "2026-10-01T04:05:00Z",
+ "declaredBy": "Pedro installed the overnight window on 2026-10-01 ('Install it', for queued k3 nights that accumulate packed Night 7 runs); written by Claude before any slot was enqueued or played",
+ "ladder": "S4 (plans/ROADMAP.md): Night 7 reliability on the phone, unattended. A cohort result, not a promotion; each won night may still be promoted on its own pack.",
+ "night": 7,
+ "configuration": {"dials": "all ten at 20 (10/20), the k3 binding's default Custom Night vector", "seed": "natural: the game's own wall clock at each night start, never pinned", "venue": "docs/evidence/venue-binding-hid-mediaprojection-20260930.json (passed by the night job since this commit)"},
+ "binding": {"name": "k3", "trackedAs": "packages/propose/bindings/fnaf2/campaign-night7-k3-winner.json", "winnerSha256": "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78", "winnerHash": "fnv1a-5c8dcb5f"},
+ "commit": "the commit that adds this file; the overnight window runs that checkout",
+ "command": "apps/lab/overnight-window.py (fnaf2-overnight-window.timer, 01:30-07:00) -> companion-queue.py night jobs -> apps/lab/night-job.py -> packages/play/bin/phone/night-run.sh --live --confirm-live --label k3-ow-rNN --bundle <emitted fresh from the committed winner> --night 7 --serial <the lease's> --profile hid-mediaprojection --no-grade --venue-binding docs/evidence/venue-binding-hid-mediaprojection-20260930.json [--bt-audio on r05 and r06]",
+ "commandNote": "No frame trace (a traced run is a measurement run) and no video grade (--no-grade); slots r01-r04 run without audio and r05-r06 retain the phone's A2DP mix, last, because a job failure ends the window and the audio link is the likeliest unattended failure. The window restores every phone setting it changes.",
+ "size": 6,
+ "rules": {
+  "counted": "a slot counts once its campaign observes the night; a job refused before the runner (title, venue, power, lock, lease, window) is not a slot played and is re-queued as rNNb on a later night",
+  "win": "the executor's terminal sixam with its campaign proof, as the pack records it (Plan 12's terminalPass reads the same)",
+  "death": "the executor's terminal gameover; the cause is read later from the pack where it can be, otherwise UNKNOWN",
+  "noTuning": "the binding, the bundle emitter and the night-run path are not changed between slots; a change ends this cohort and starts a new predeclaration"
+ },
+ "prior": "k3 reached 6 AM on 8 of 10 predeclared attended nights (docs/evidence/night7-cohort-k3-result-20260918.json). The model is not a predictor of a phone night here: its encounter rates match the phone's on full-06 but not which encounter comes when (docs/evidence/full06-occupancy-rates-20261001.json).",
+ "report": "wins of slots played, deaths, refused jobs with reasons, each slot's pack id, and the exact commit; computed by `npm run evidence -- cohort docs/evidence/night7-cohort-k3-overnight-predeclaration-20261001.json` once the packs exist",
+ "labels": "night7-k3-ow-r01 .. night7-k3-ow-r06 (re-queued slots rNNb, rNNc, ...)"
+}

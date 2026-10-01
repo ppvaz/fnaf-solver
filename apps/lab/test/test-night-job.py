@@ -280,6 +280,12 @@ def enqueue_checks(base: Path) -> None:
             check(f"enqueue refuses {name}", True)
     check("custody: a file git does not track is UNTRACKED",
           night_jobs.custody("packages/propose/bindings/fnaf2/no-such-night-job-fixture-winner.json") == "UNTRACKED")
+    with tempfile.TemporaryDirectory() as tmp:
+        (Path(tmp) / "venue-binding-a.json").write_text(json.dumps({"schema": "venue-binding-v1", "subject": {"kind": "profile", "id": "p1"}}))
+        (Path(tmp) / "venue-binding-b.json").write_text(json.dumps({"schema": "venue-binding-v1", "subject": {"kind": "profile", "id": "p2"}}))
+        check("venue: a profile gets only the bindings that name it", [p.name for p in night_jobs.venue_bindings("p1", Path(tmp))] == ["venue-binding-a.json"])
+        check("venue: an unbound profile gets none, and its night is refused before the runner",
+              night_jobs.venue_bindings("p3", Path(tmp)) == [])
     check("title: FNaF 4 has no title model, so its night cannot be observed",
           night_jobs.title_expectation("fnaf4", 3)["readable"] is False)
     check("title: 7 is Custom Night, 6 is 6th Night, 1-5 the digit under Continue",
@@ -388,6 +394,10 @@ def main() -> int:
         # night job that left the pair out would "play" a dry run and nothing else.
         check("success: night-run.sh was asked for a live night (--live --confirm-live)",
               "--live" in argv and "--confirm-live" in argv, argv)
+        venue_at = argv.index("--venue-binding") if argv and "--venue-binding" in argv else -1
+        check("success: night-run.sh got the committed venue binding that names its profile",
+              venue_at > 0 and argv[venue_at + 1].endswith("venue-binding-hid-mediaprojection-20260930.json")
+              and record.get("venueBindings", [{}])[0].get("path") == "docs/evidence/venue-binding-hid-mediaprojection-20260930.json", argv)
         check("success: night-run.sh got the bundle, the night and --no-grade",
               bool(argv) and argv[0].endswith("night-run.sh") and argv[argv.index("--night") + 1] == "7"
               and "--no-grade" in argv and calls[0]["bundleManifest"] is True, calls)

@@ -40,6 +40,7 @@ interrupted. The record is `artifacts/night-jobs/<job>/job.json`.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -311,7 +312,13 @@ class NightJob:
         if self.aborted:
             return self.refuse("INTERRUPTED", f"signal {self.signals[0]} before the night", 130)
 
-        argv, marker = night_jobs.runner_command(game, binding, winner, night, args.label, self.serial, args.audio)
+        try:
+            argv, marker = night_jobs.runner_command(game, binding, winner, night, args.label, self.serial, args.audio)
+        except ValueError as error:   # a FNaF 2 night with no committed venue binding for its profile
+            return self.refuse("VENUE_UNBOUND", str(error))
+        venues = [argv[i + 1] for i, item in enumerate(argv) if item == "--venue-binding"]
+        if venues:
+            self.record["venueBindings"] = [{"path": os.path.relpath(v, ROOT), "sha256": hashlib.sha256(Path(v).read_bytes()).hexdigest()} for v in venues]
         if RUNNER_PREFIX:
             argv = [*RUNNER_PREFIX, *argv]
         self.record["runner"] = {"argv": argv, "marker": marker, "timeoutS": night_jobs.runner_timeout_s(binding["nightMs"])}
