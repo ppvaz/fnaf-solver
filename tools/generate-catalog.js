@@ -185,7 +185,7 @@ const reverseLinks = {
     (a.line ?? 0) - (b.line ?? 0) || a.relation.localeCompare(b.relation)),
 };
 const tests = [];
-for (const path of sourceFiles.filter(path => /(?:test|check|spec)[^/]*\.(?:mjs|js|py|sh)$/.test(path))) {
+for (const path of sourceFiles.filter(path => /(?:test|check|spec)[^/]*\.(?:mjs|js|ts|mts|py|sh)$/.test(path) && !path.endsWith('.d.ts'))) {
   const source = await readFile(path, 'utf8');
   const id = relative(ROOT, path);
   const lane = path.includes('browser') || path.includes('realtime') ? 'test:browser:realtime' : path.includes('device') ? 'test:contracts' : 'test:unit';

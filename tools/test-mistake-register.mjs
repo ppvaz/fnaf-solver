@@ -161,7 +161,7 @@ export function classify(words) {
       return null;
     return { kind: 'file', path: rest[at], args: rest.slice(at + 1) };
   }
-  if (command.includes('/') && /\.(?:sh|py|mjs|js)$/.test(command))
+  if (command.includes('/') && /\.(?:sh|py|mjs|js|ts|mts)$/.test(command))
     return { kind: 'file', path: command, args: rest };
   return null;
 }
@@ -245,10 +245,10 @@ export function walk(text, via, sink, scripts = SCRIPTS, open = new Set()) {
 
 const TEST_FILE = [
   // Wherever the ADR 0002 moves put them: tools/, a package or an application.
-  /^(?:tools|packages|apps)\/(?:[\w.-]+\/)*test-[\w.-]+\.(?:mjs|js|py|sh)$/,
-  /^(?:tools|packages\/propose)\/(?:[\w.-]+\/)*[a-z0-9-]*test\.(?:mjs|js)$/,
+  /^(?:tools|packages|apps)\/(?:[\w.-]+\/)*test-[\w.-]+\.(?:mjs|js|ts|mts|py|sh)$/,
+  /^(?:tools|packages\/propose)\/(?:[\w.-]+\/)*[a-z0-9-]*test\.(?:mjs|js|ts|mts)$/,
   /(?:^|\/)test_[\w.-]+\.py$|_test\.py$/,
-  /^(?:packages|apps)\/[\w.-]+\/test\/(?:[\w.-]+\/)*[\w.-]+\.test\.(?:mjs|js)$/,
+  /^(?:packages|apps)\/[\w.-]+\/test\/(?:[\w.-]+\/)*[\w.-]+\.test\.(?:mjs|js|ts|mts)$/,
   /^android\/[\w.-]+\/test\.sh$/,
 ];
 const JAVA_TEST = /^android\/([\w.-]+)\/test\/(?:[\w.-]+\/)*(\w+Test)\.java$/;
@@ -367,6 +367,11 @@ export function missingPaths({ scripts, ciText, exists }) {
 }
 
 // --- Positive controls: each check must catch a planted violation -----------
+{
+  // A test that moves to TypeScript stays a test: the conventions read .ts as they read .js.
+  for (const path of ['packages/play/test/planted.test.ts', 'tools/test-planted.ts', 'packages/propose/test/plantedtest.mts'])
+    if (!isTestFile(path)) throw new Error(`mistake register: ${path} is a test by the conventions here, and is not recognised`);
+}
 {
   // item 5, the incident itself: tools/test-bundle.mjs for packages/propose/test/test-bundle.mjs.
   const planted = missingPaths({

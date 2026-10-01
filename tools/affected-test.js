@@ -109,14 +109,14 @@ if (changed.some(path => path.startsWith('apps/desktop/')))
     add(`test:${test}`, 'node', [test]);
 if (changed.some(path => path.startsWith('apps/trainer/')))
   add('trainer-build', 'python3', ['apps/trainer/test/build.py']);
-for (const path of changed.filter(p => /^packages\/[^/]+\/test\/.*\.test\.m?js$/.test(p)))
+for (const path of changed.filter(p => /^packages\/[^/]+\/test\/.*\.test\.m?[jt]s$/.test(p)))
   add(`test:${path}`, 'node', [path]);
 if (changed.some(path => path.startsWith('docs/') || path.startsWith('plans/')))
   add('documentation', 'node', ['tools/test-docs.mjs']);
 if (changed.some(path => path === 'packages/review/src/vault.ts' || path === 'packages/review/test/vault.test.mjs'))
   add('vault', 'node', ['packages/review/test/vault.test.mjs']);
 if (changed.some(path => path.startsWith('packages/propose/parked/')))
-  add('model-syntax', 'node', ['--check', ...changed.filter(path => /\.(?:js|mjs)$/.test(path) && path.startsWith('packages/propose/parked/'))]);
+  add('model-syntax', 'node', ['--check', ...changed.filter(path => /\.(?:js|mjs|ts|mts)$/.test(path) && path.startsWith('packages/propose/parked/'))]);
 
 assert.ok(checks.size > 0);
 console.log(`affected: ${changed.length} changed paths -> ${[...checks.keys()].join(', ')}`);

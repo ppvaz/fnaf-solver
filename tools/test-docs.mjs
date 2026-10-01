@@ -155,7 +155,7 @@ for (const index of indexes) {
     if (!line.startsWith('|')) continue;
     const cells = line.split('|');
     if (cells.length < 3) continue;
-    for (const m of cells[1].matchAll(/`([\w./-]+\.(?:mjs|js|json|cs|py|sh|c|S))\b/g))
+    for (const m of cells[1].matchAll(/`([\w./-]+\.(?:mjs|js|ts|mts|json|cs|py|sh|c|S))\b/g))
       entries.add(basename(m[1]));
   }
   entriesOf.set(index, entries);
@@ -166,7 +166,7 @@ const nearestIndex = (file) => {
   return null;
 };
 if (!entriesOf.has('tools/README.md')) complain('tools/README.md, the root tool index, is missing');
-const scripts = tracked.filter((f) => underToolRoot(f) && /\.(mjs|py|sh|c|S)$/.test(f));
+const scripts = tracked.filter((f) => underToolRoot(f) && /\.(mjs|mts|ts|py|sh|c|S)$/.test(f) && !f.endsWith('.d.ts'));
 for (const script of scripts) {
   const index = nearestIndex(script);
   if (index && !entriesOf.get(index).has(basename(script)))

@@ -552,8 +552,10 @@ for (const path of AMBIENT_ENTROPY_TOLERATED.keys())
   assert.ok(hostFree.some(file => repoPath(file) === path), `AMBIENT_ENTROPY_TOLERATED names ${path}, which is not a host-free module`);
 // A test is a test-named file, or a `*.test.*` file in a package's or an
 // application's test folder (apps/desktop/test loads package fixtures).
-const testNamed = path => /(?:^|\/)test[^/]*\.(?:js|mjs|ts)$/.test(path) || /\/test\/[^/]+\.test\.m?js$/.test(path);
+const testNamed = path => /(?:^|\/)test[^/]*\.(?:js|mjs|ts)$/.test(path) || /\/test\/[^/]+\.test\.m?[jt]s$/.test(path);
 const reportNamed = path => /(?:^|\/)report[^/]*\.(?:js|mjs|ts)$/.test(path);
+assert.ok(testNamed('packages/play/test/planted.test.ts') && testNamed('apps/desktop/test/planted.test.mts'),
+  'a TypeScript test in a test folder is a test, not production');
 const operational = [
   ...production,
   ...await files(join(ROOT, 'apps')),
