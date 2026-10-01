@@ -60,6 +60,7 @@ JAVA="$JDK_ROOT/bin/java"
   "$HERE/test/com/ppvaz/fnafcompanion/CycleLessonTest.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/TeachPanelTest.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/NativeRegionsTest.java" \
+  "$HERE/test/com/ppvaz/fnafcompanion/NativeFrameTest.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/Fnaf2LegacyTest.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/CompanionStatusTest.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/TargetsTest.java" \
@@ -69,6 +70,7 @@ JAVA="$JDK_ROOT/bin/java"
   "$HERE/test/com/ppvaz/fnafcompanion/Fnaf4LessonTest.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/HidControlsTest.java"
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.NativeRegionsTest
+"$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.NativeFrameTest
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.Fnaf2LegacyTest
 "$JAVA" -Dstatus.vector="$HERE/../../packages/play/test/testdata/companion-status-v1.txt" \
   -cp "$TEST_TMP" com.ppvaz.fnafcompanion.CompanionStatusTest

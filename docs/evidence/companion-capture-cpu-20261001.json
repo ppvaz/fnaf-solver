@@ -1,0 +1,472 @@
+{
+ "schema": "companion-capture-cpu-v1",
+ "step": "ROADMAP S4",
+ "claimLevel": "DEVICE_MEASURED",
+ "evidenceId": "companion-capture-cpu-d9ecf3eadaba659a",
+ "date": "2026-10-01",
+ "question": "Is the Companion's capture thread CPU-bound, where does its time go, and does AOT compilation or a different pixel read change it?",
+ "handset": "moto g56 5G (mt6855), Android 16 (SDK 36), user build; serial from the local profile",
+ "conditions": {
+  "screen": "FNaF 2 retail 2.0.7 title menu (animated), capture fresh after a force-stop; no game input",
+  "cold": "the first 10 s after setup",
+  "warm": "20 s, 15 s after cold",
+  "light": "warm with screenrecord 1200x540 at 2 Mbps",
+  "full": "warm with screenrecord at native size, 8 Mbps"
+ },
+ "instrument": {
+  "cpu": "simpleperf stat --app com.ppvaz.fnafcompanion --per-thread -e task-clock --duration N",
+  "symbols": "simpleperf record --app ... -e cpu-clock -f 1000 --duration 20; report --comms cue-visual --sort dso,symbol",
+  "frames": "companion-status-v1 frames over snapshotNs, read before and after the stat window",
+  "tool": "scratchpad sweep scripts run under packages/play/src/safety/device-lock-exec.py (diagnostic sweep, not a supported command)"
+ },
+ "aot": {
+  "requested": "cmd package compile -m speed -f com.ppvaz.fnafcompanion",
+  "printed": "Success",
+  "before": "[status=verify] [reason=cmdline]",
+  "after": "[status=verify] [reason=cmdline]"
+ },
+ "result": {
+  "installed-15": {
+   "source": "the Companion on the phone since 2026-09-25 (versionCode 15); source predates de665244",
+   "windows": {
+    "cold": {
+     "seconds": 10.0102,
+     "cueVisualCpuMs": 9297.067784,
+     "cueVisualCores": 0.929,
+     "fps": "UNKNOWN (a helper older than 0.2.0 answers no STATUS)"
+    },
+    "warm": {
+     "seconds": 20.020186,
+     "cueVisualCpuMs": 18956.751623,
+     "cueVisualCores": 0.947,
+     "fps": "UNKNOWN (a helper older than 0.2.0 answers no STATUS)",
+     "cueVisualTopSymbols": [
+      {
+       "share": 25.22,
+       "symbol": "java.nio.DirectByteBuffer.get"
+      },
+      {
+       "share": 23.83,
+       "symbol": "art_jni_trampoline"
+      },
+      {
+       "share": 22.18,
+       "symbol": "com.ppvaz.fnafcompanion.PixelWatch$ByteBufferFrame.rgb"
+      },
+      {
+       "share": 7.45,
+       "symbol": "com.ppvaz.fnafcompanion.PixelWatch.blockLuma"
+      },
+      {
+       "share": 6.71,
+       "symbol": "java.nio.Buffer.checkIndex"
+      },
+      {
+       "share": 5.38,
+       "symbol": "java.nio.DirectByteBuffer.ix"
+      },
+      {
+       "share": 1.89,
+       "symbol": "PVRSRVCacheOpBatchExec"
+      },
+      {
+       "share": 1.61,
+       "symbol": "Memory_peekByte(_JNIEnv*, _jclass*, long)"
+      }
+     ],
+     "byteBufferAccessorShare": 64.35
+    },
+    "light": {
+     "seconds": 20.018211,
+     "cueVisualCpuMs": 18597.758926,
+     "cueVisualCores": 0.929,
+     "fps": "UNKNOWN (a helper older than 0.2.0 answers no STATUS)",
+     "cueVisualTopSymbols": [
+      {
+       "share": 26.05,
+       "symbol": "java.nio.DirectByteBuffer.get"
+      },
+      {
+       "share": 23.3,
+       "symbol": "art_jni_trampoline"
+      },
+      {
+       "share": 21.72,
+       "symbol": "com.ppvaz.fnafcompanion.PixelWatch$ByteBufferFrame.rgb"
+      },
+      {
+       "share": 7.6,
+       "symbol": "com.ppvaz.fnafcompanion.PixelWatch.blockLuma"
+      },
+      {
+       "share": 7.2,
+       "symbol": "java.nio.Buffer.checkIndex"
+      },
+      {
+       "share": 5.25,
+       "symbol": "java.nio.DirectByteBuffer.ix"
+      },
+      {
+       "share": 1.7,
+       "symbol": "PVRSRVCacheOpBatchExec"
+      },
+      {
+       "share": 1.66,
+       "symbol": "java.nio.Buffer.limit"
+      }
+     ],
+     "byteBufferAccessorShare": 65.06
+    },
+    "full": {
+     "seconds": 20.018382,
+     "cueVisualCpuMs": 18305.288063,
+     "cueVisualCores": 0.914,
+     "fps": "UNKNOWN (a helper older than 0.2.0 answers no STATUS)",
+     "cueVisualTopSymbols": [
+      {
+       "share": 25.55,
+       "symbol": "java.nio.DirectByteBuffer.get"
+      },
+      {
+       "share": 23.77,
+       "symbol": "art_jni_trampoline"
+      },
+      {
+       "share": 21.96,
+       "symbol": "com.ppvaz.fnafcompanion.PixelWatch$ByteBufferFrame.rgb"
+      },
+      {
+       "share": 7.54,
+       "symbol": "com.ppvaz.fnafcompanion.PixelWatch.blockLuma"
+      },
+      {
+       "share": 7.08,
+       "symbol": "java.nio.Buffer.checkIndex"
+      },
+      {
+       "share": 5.23,
+       "symbol": "java.nio.DirectByteBuffer.ix"
+      },
+      {
+       "share": 1.75,
+       "symbol": "java.nio.Buffer.limit"
+      },
+      {
+       "share": 1.73,
+       "symbol": "PVRSRVCacheOpBatchExec"
+      }
+     ],
+     "byteBufferAccessorShare": 64.99
+    }
+   }
+  },
+  "head-16": {
+   "source": "android/companion at f0d4efc8 (versionCode 16, 0.2.0), unchanged through 8bd7b913",
+   "apkSha256": "714be38b1d459c6a823467d93af585e0cb693a41fa8037fb9d0fb4752e8226e1",
+   "windows": {
+    "cold": {
+     "seconds": 10.006393,
+     "cueVisualCpuMs": 2696.929919,
+     "cueVisualCores": 0.27,
+     "framesProcessed": 629,
+     "statusSpanSeconds": 10.49,
+     "fps": 60.0,
+     "cpuMsPerFrame": 4.49,
+     "frameAgeMs": [
+      7,
+      14
+     ],
+     "thermal": "NONE",
+     "battery": "93",
+     "charging": "1",
+     "legacy": "fnaf2",
+     "app": "16"
+    },
+    "warm": {
+     "seconds": 20.020276,
+     "cueVisualCpuMs": 8216.171168,
+     "cueVisualCores": 0.41,
+     "framesProcessed": 1230,
+     "statusSpanSeconds": 20.505,
+     "fps": 60.0,
+     "cpuMsPerFrame": 6.84,
+     "frameAgeMs": [
+      13,
+      19
+     ],
+     "thermal": "NONE",
+     "battery": "93",
+     "charging": "1",
+     "legacy": "fnaf2",
+     "app": "16",
+     "cueVisualTopSymbols": [
+      {
+       "share": 19.75,
+       "symbol": "art_jni_trampoline"
+      },
+      {
+       "share": 16.04,
+       "symbol": "java.nio.DirectByteBuffer.get"
+      },
+      {
+       "share": 14.81,
+       "symbol": "PVRSRVCacheOpBatchExec"
+      },
+      {
+       "share": 6.76,
+       "symbol": "com.ppvaz.fnafcompanion.NativeFrame$ByteBufferView.rgb"
+      },
+      {
+       "share": 6.66,
+       "symbol": "java.nio.Buffer.checkIndex"
+      },
+      {
+       "share": 4.66,
+       "symbol": "java.nio.DirectByteBuffer.ix"
+      },
+      {
+       "share": 3.18,
+       "symbol": "java.lang.Math.max"
+      },
+      {
+       "share": 3.09,
+       "symbol": "com.ppvaz.fnafcompanion.PixelWatch.maxChannel"
+      }
+     ],
+     "byteBufferAccessorShare": 49.22
+    },
+    "light": {
+     "seconds": 20.019999,
+     "cueVisualCpuMs": 6342.892303,
+     "cueVisualCores": 0.317,
+     "framesProcessed": 1228,
+     "statusSpanSeconds": 20.463,
+     "fps": 60.0,
+     "cpuMsPerFrame": 5.28,
+     "frameAgeMs": [
+      10,
+      7
+     ],
+     "thermal": "NONE",
+     "battery": "93",
+     "charging": "1",
+     "legacy": "fnaf2",
+     "app": "16",
+     "cueVisualTopSymbols": [
+      {
+       "share": 20.81,
+       "symbol": "art_jni_trampoline"
+      },
+      {
+       "share": 17.44,
+       "symbol": "java.nio.DirectByteBuffer.get"
+      },
+      {
+       "share": 12.35,
+       "symbol": "PVRSRVCacheOpBatchExec"
+      },
+      {
+       "share": 6.32,
+       "symbol": "java.nio.Buffer.checkIndex"
+      },
+      {
+       "share": 6.07,
+       "symbol": "com.ppvaz.fnafcompanion.NativeFrame$ByteBufferView.rgb"
+      },
+      {
+       "share": 5.0,
+       "symbol": "java.nio.DirectByteBuffer.ix"
+      },
+      {
+       "share": 3.53,
+       "symbol": "java.lang.Math.max"
+      },
+      {
+       "share": 2.59,
+       "symbol": "com.ppvaz.fnafcompanion.PixelWatch.maxChannel"
+      }
+     ],
+     "byteBufferAccessorShare": 51.78
+    }
+   }
+  },
+  "rowcopy-16": {
+   "source": "head-16 plus the commit that adds this record: NativeFrame.ByteBufferView reads each touched row once per frame with one bulk get",
+   "apkSha256": "048f95bf14bbc22d69dadda61eeb05b377581bd5223073d7ab8a1ef1318b29bc",
+   "windows": {
+    "cold": {
+     "seconds": 10.010371,
+     "cueVisualCpuMs": 2137.363739,
+     "cueVisualCores": 0.214,
+     "framesProcessed": 627,
+     "statusSpanSeconds": 10.444,
+     "fps": 60.0,
+     "cpuMsPerFrame": 3.56,
+     "frameAgeMs": [
+      20,
+      13
+     ],
+     "thermal": "NONE",
+     "battery": "94",
+     "charging": "1",
+     "legacy": "fnaf2",
+     "app": "16"
+    },
+    "warm": {
+     "seconds": 20.013976,
+     "cueVisualCpuMs": 6212.677754,
+     "cueVisualCores": 0.31,
+     "framesProcessed": 1230,
+     "statusSpanSeconds": 20.497,
+     "fps": 60.0,
+     "cpuMsPerFrame": 5.17,
+     "frameAgeMs": [
+      11,
+      8
+     ],
+     "thermal": "NONE",
+     "battery": "94",
+     "charging": "1",
+     "legacy": "fnaf2",
+     "app": "16",
+     "cueVisualTopSymbols": [
+      {
+       "share": 22.24,
+       "symbol": "PVRSRVCacheOpBatchExec"
+      },
+      {
+       "share": 21.05,
+       "symbol": "com.ppvaz.fnafcompanion.NativeFrame$ByteBufferView.rgb"
+      },
+      {
+       "share": 7.3,
+       "symbol": "__memcpy_aarch64_simd"
+      },
+      {
+       "share": 6.71,
+       "symbol": "java.lang.Math.max"
+      },
+      {
+       "share": 4.76,
+       "symbol": "com.ppvaz.fnafcompanion.PixelWatch.maxChannel"
+      },
+      {
+       "share": 3.34,
+       "symbol": "com.ppvaz.fnafcompanion.PixelWatch.strokeColumnHit"
+      },
+      {
+       "share": 1.97,
+       "symbol": "void art::interpreter::ExecuteSwitchImplCpp<false>(art::interpreter::SwitchImplContext*)"
+      },
+      {
+       "share": 1.75,
+       "symbol": "void art::StackVisitor::WalkStack<(art::StackVisitor::CountTransitions)0, false>(bool)"
+      }
+     ],
+     "byteBufferAccessorShare": 0.66
+    },
+    "light": {
+     "seconds": 20.017867,
+     "cueVisualCpuMs": 4227.013495,
+     "cueVisualCores": 0.211,
+     "framesProcessed": 1230,
+     "statusSpanSeconds": 20.509,
+     "fps": 60.0,
+     "cpuMsPerFrame": 3.52,
+     "frameAgeMs": [
+      3,
+      9
+     ],
+     "thermal": "NONE",
+     "battery": "95",
+     "charging": "1",
+     "legacy": "fnaf2",
+     "app": "16",
+     "cueVisualTopSymbols": [
+      {
+       "share": 21.72,
+       "symbol": "PVRSRVCacheOpBatchExec"
+      },
+      {
+       "share": 20.74,
+       "symbol": "com.ppvaz.fnafcompanion.NativeFrame$ByteBufferView.rgb"
+      },
+      {
+       "share": 7.2,
+       "symbol": "__memcpy_aarch64_simd"
+      },
+      {
+       "share": 5.84,
+       "symbol": "java.lang.Math.max"
+      },
+      {
+       "share": 3.83,
+       "symbol": "com.ppvaz.fnafcompanion.PixelWatch.maxChannel"
+      },
+      {
+       "share": 3.18,
+       "symbol": "com.ppvaz.fnafcompanion.PixelWatch.strokeColumnHit"
+      },
+      {
+       "share": 2.25,
+       "symbol": "void art::interpreter::ExecuteSwitchImplCpp<false>(art::interpreter::SwitchImplContext*)"
+      },
+      {
+       "share": 1.74,
+       "symbol": "void art::StackVisitor::WalkStack<(art::StackVisitor::CountTransitions)0, false>(bool)"
+      }
+     ],
+     "byteBufferAccessorShare": 1.06
+    }
+   }
+  }
+ },
+ "inputsSha256": {
+  "out-fixed/cold/stat.txt": "1630c13d17a6fdb651e8b132b1f0b5a4f3bb9d2cc998d24483d6155cec1ce2cc",
+  "out-fixed/cold/status-after.txt": "ced309da91e6e84d94ccd54052ea0d0a207aa4c9a0031441f230e131f3a05182",
+  "out-fixed/cold/status-before.txt": "7fc65f6ad15bdf8b22ce220ce8e26a988e9258b2c4b0e698f6e8a6e39807aee0",
+  "out-fixed/light-rec/report-visual.txt": "71a47b5451e12069c6165f3a8252c00badea25445850174d2c1c65054f442964",
+  "out-fixed/light-stat/stat.txt": "307406a49a3d31071efc22e0b5306bd9b83fc5cdd517e19799fb78c3764244fa",
+  "out-fixed/light-stat/status-after.txt": "b270661eae9ac475390c1fc9c405d30f59ad7c71417e68b20ae5a41ae19a98ab",
+  "out-fixed/light-stat/status-before.txt": "f8859a93480ec8bece5a1ab29af5875971c856012acd58a09075760f38097cdb",
+  "out-fixed/warm-rec/report-visual.txt": "31dfa47e3969ee0d77d5979215ab1e5d070c928a29bd1ac04316505f37874b76",
+  "out-fixed/warm-stat/stat.txt": "a252ee456463f60d42bf49e8baa60396eb3246ae5c09ecadcfef1112cc8f2e75",
+  "out-fixed/warm-stat/status-after.txt": "4076b26eadddc18f051f83703a47cb11cb0620da5b2bd4ae7e13ad906560ea0d",
+  "out-fixed/warm-stat/status-before.txt": "f13d13804e427b66650b06939094b643cb3bc1b3cf1b287a047513c08f5b50c4",
+  "out-head/cold/stat.txt": "45b7ecb472a823c4d6fa2e5dbc54cedcfb9ae7d9694a7371ec10f8f67a8b4d91",
+  "out-head/cold/status-after.txt": "af33e154fb7d51dbb3dc622b0a16ad5c6b6418379671d89f3591b03071f8d4be",
+  "out-head/cold/status-before.txt": "9141ba2adce5370a691ff42924d365a284a6b94f5dadfb6e4b02565ad8a684f5",
+  "out-head/light-rec/report-visual.txt": "556bbdd8107d9ef02578389743d8cb14b6f981a739e767e5bfae11bb6950ddd2",
+  "out-head/light-stat/stat.txt": "95f8b4cd8d0352495d4d4e366a9e7639b1684d8ad405f999a95436396c102db7",
+  "out-head/light-stat/status-after.txt": "1fc90adaf8042ac8b423942506a3823456561ba137879c53de0d051b89b0d009",
+  "out-head/light-stat/status-before.txt": "8fa3388181fb72612c2b99a531af514c4a3ddc6d8bdaaf638a46c7acec428b2a",
+  "out-head/warm-rec/report-visual.txt": "1c636100c94839f3f07106d1bdbe2a9aa4c7971d214733086947c4d1c8b02443",
+  "out-head/warm-stat/stat.txt": "1205b27dd03d4304f9c752e41ebc91fe414b47d85ee8ace5554f6235371d2bcf",
+  "out-head/warm-stat/status-after.txt": "4d377853f06950ee574b3aca4c162ae340f2f0c8e3d0b421bb0b7e44f748f46f",
+  "out-head/warm-stat/status-before.txt": "596fa48650755b4411f1477d88f4b5251d355d195e7274954475e96fdf9cf27f",
+  "out/compile.txt": "7fc0023a6402c7bd7abd98bb3e580968de4833eed07d88d1cc8d70819d69c7a0",
+  "out/dexopt-after.txt": "87b113dc6ee840c39965a9b1d762c6dcf7ecac3d14969751c6f2a9b50446ce16",
+  "out/dexopt-before.txt": "87b113dc6ee840c39965a9b1d762c6dcf7ecac3d14969751c6f2a9b50446ce16",
+  "out/verify-cold/stat.txt": "2bdaef00d4766026341ccb5c30cf4dc3e6f9bc263c580e39a08d484ebdf4de21",
+  "out/verify-cold/status-after.txt": "ffd73ba6f9ad3e049ff3142894ad5dc41d54eedfae75c4bfed58dc2ea93f2d50",
+  "out/verify-cold/status-before.txt": "ffd73ba6f9ad3e049ff3142894ad5dc41d54eedfae75c4bfed58dc2ea93f2d50",
+  "out/verify-full-rec/report-visual.txt": "00408ce57c4897d9077c0b251d990ccdabce414cd537474a7aacac42e1b437ef",
+  "out/verify-full-stat/stat.txt": "35e0214f744e31a4677a427bd68bd9bf8bbe0367b3cf7766bea663d9543d80c0",
+  "out/verify-full-stat/status-after.txt": "ffd73ba6f9ad3e049ff3142894ad5dc41d54eedfae75c4bfed58dc2ea93f2d50",
+  "out/verify-full-stat/status-before.txt": "ffd73ba6f9ad3e049ff3142894ad5dc41d54eedfae75c4bfed58dc2ea93f2d50",
+  "out/verify-light-rec/report-visual.txt": "30f5b06974da503d49bf90ca4f41b32357506e98e88bdfd905e7980088e33d3c",
+  "out/verify-light-stat/stat.txt": "67f0c12da2f831f1c74a015051d3966094e3a5542604eb397057e76caf08c785",
+  "out/verify-light-stat/status-after.txt": "ffd73ba6f9ad3e049ff3142894ad5dc41d54eedfae75c4bfed58dc2ea93f2d50",
+  "out/verify-light-stat/status-before.txt": "ffd73ba6f9ad3e049ff3142894ad5dc41d54eedfae75c4bfed58dc2ea93f2d50",
+  "out/verify-warm-rec/report-visual.txt": "65136bec35da3b53fda7ed4640e682f7bc68ec74fdabfe3ccf617d9002455e6e",
+  "out/verify-warm-stat/stat.txt": "9e0c7933233869180fb434d518d51a4dfa01de2240dd3ad183f8f380aa5996d6",
+  "out/verify-warm-stat/status-after.txt": "ffd73ba6f9ad3e049ff3142894ad5dc41d54eedfae75c4bfed58dc2ea93f2d50",
+  "out/verify-warm-stat/status-before.txt": "ffd73ba6f9ad3e049ff3142894ad5dc41d54eedfae75c4bfed58dc2ea93f2d50"
+ },
+ "notClaimed": [
+  "A night: the menu's per-frame work is the FNaF 2 legacy pass; office and camera screens were not measured.",
+  "FNaF 1, 3 and 4 (no legacy pass, regions only) were not measured.",
+  "Game acceptance, input timing or any 6 AM rate: capture CPU only.",
+  "The frames a display update produces: fps is what the Companion processed."
+ ]
+}

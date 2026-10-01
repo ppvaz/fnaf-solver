@@ -185,9 +185,18 @@ longer rebuilds.
   pixels, never the grid; per-pixel brightness thresholds for text glyphs; reading
   the 20x9 `grid_hex` already retained in old evidence; `screencap` only while the
   helper cannot run (before consent, after a crash) or as an independent witness.
-- **A screenrecord costs the helper half its frames** (75 -> 37 distinct of 150
-  REGION reads even at 1200x540, 2 Mbps; 2026-09-25). A closed-loop night that
-  records itself must survive a starved capture; `420-c` did not at full size.
+- **A screenrecord cost the old helper half its frames** (75 -> 37 distinct of
+  150 REGION reads even at 1200x540, 2 Mbps; 2026-09-25), on Companion 15, whose
+  capture thread was saturated (0.93 of a core). Companion 16 processes 60.0 fps
+  under the same recording at the FNaF 2 menu on a third of a core
+  (`companion-capture-cpu-d9ecf3eadaba659a`); REGION reads under a recording, and
+  a recorded night, are not re-measured. A closed-loop night that records itself
+  must still survive a starved capture; `420-c` did not at full size.
+- **Measure the Companion that is installed, not the one in the tree.** Compare
+  `dumpsys package com.ppvaz.fnafcompanion` versionCode with `build.sh`'s
+  `--version-code`: the phone ran 15 for six days after the tree moved to 16, so
+  every capture number of that week, and the first profile of 2026-10-01, is
+  the old helper's.
 - **Everything that runs on the phone lives in the Companion**
   (`android/companion`). No separate APKs; a new on-device feature is a Companion
   feature. `packages/play/bin/companion/companion-setup.sh` drives install and projection
