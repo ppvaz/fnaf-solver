@@ -2051,6 +2051,12 @@
       "lifecycle": "supported"
     },
     {
+      "id": "packages/propose/bin/census/test-census-workers.ts",
+      "invocation": "packages/propose/bin/census/test-census-workers.ts",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
       "id": "packages/propose/bin/plans/device-lane.ts",
       "invocation": "packages/propose/bin/plans/device-lane.ts --bundle DIR --night N [--seeds N] [--epoch MS]",
       "kind": "report",

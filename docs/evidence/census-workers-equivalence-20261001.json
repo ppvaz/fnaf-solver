@@ -1,0 +1,81 @@
+{
+ "schema": "census-workers-equivalence-v1",
+ "claimLevel": "MODEL_ONLY",
+ "date": "2026-10-01",
+ "step": "ROADMAP S3",
+ "evidenceId": "census-workers-d620f3134c94d00a",
+ "question": "Does census.ts --workers N give the serial census byte for byte, and how much faster is it?",
+ "method": {
+  "base": "packages/propose/bin/census/census.ts at e6394851 (before ec92e3b0), run from a copy beside it",
+  "changed": "packages/propose/bin/census/census.ts at ec92e3b0: serial (new1) and --workers 6 (new6)",
+  "command": "node <census.ts> --game G --night N --seeds 3000 --json [--workers 6] (Node 22.23.2), each run once, in sequence",
+  "host": "lab Mac, Apple M1 (4 performance + 4 efficiency cores), another session running",
+  "loadAverage": {
+   "before": [
+    7.39,
+    11.43,
+    33.1
+   ],
+   "after": [
+    9.04,
+    11.19,
+    31.41
+   ]
+  }
+ },
+ "result": {
+  "fnaf1 night 4": {
+   "identical": true,
+   "seeds": 3000,
+   "wins": 3000,
+   "outputSha256": "afac2fee3ec44e66a1a5b4a1a5d914f87bedcb92b32830f18bede8176588204e",
+   "wallSeconds": {
+    "head": 10.68,
+    "new1": 10.93,
+    "new6": 3.69
+   },
+   "speedupAt6Workers": 2.89
+  },
+  "fnaf3 night 5": {
+   "identical": true,
+   "seeds": 3000,
+   "wins": 1404,
+   "outputSha256": "78c4cd3c8f028bfe46c3b75ef08ecad396f2c976426b3ddf47f428891a38506c",
+   "wallSeconds": {
+    "head": 13.17,
+    "new1": 13.31,
+    "new6": 4.87
+   },
+   "speedupAt6Workers": 2.7
+  },
+  "fnaf4 night 5": {
+   "identical": true,
+   "seeds": 3000,
+   "wins": 53,
+   "outputSha256": "18b7781d4b8835c9cb60763a1124b1b519b75ea603788bf5ca51253c27daa9cb",
+   "wallSeconds": {
+    "head": 3.13,
+    "new1": 3.29,
+    "new6": 1.85
+   },
+   "speedupAt6Workers": 1.69
+  }
+ },
+ "inputsSha256": {
+  "compare.log": "674d73c715be5372903afaddafb4e507e69a43fdf10de4fb6c3e718c5191d2e6",
+  "fnaf1-head.json": "afac2fee3ec44e66a1a5b4a1a5d914f87bedcb92b32830f18bede8176588204e",
+  "fnaf1-new1.json": "afac2fee3ec44e66a1a5b4a1a5d914f87bedcb92b32830f18bede8176588204e",
+  "fnaf1-new6.json": "afac2fee3ec44e66a1a5b4a1a5d914f87bedcb92b32830f18bede8176588204e",
+  "fnaf3-head.json": "78c4cd3c8f028bfe46c3b75ef08ecad396f2c976426b3ddf47f428891a38506c",
+  "fnaf3-new1.json": "78c4cd3c8f028bfe46c3b75ef08ecad396f2c976426b3ddf47f428891a38506c",
+  "fnaf3-new6.json": "78c4cd3c8f028bfe46c3b75ef08ecad396f2c976426b3ddf47f428891a38506c",
+  "fnaf4-head.json": "18b7781d4b8835c9cb60763a1124b1b519b75ea603788bf5ca51253c27daa9cb",
+  "fnaf4-new1.json": "18b7781d4b8835c9cb60763a1124b1b519b75ea603788bf5ca51253c27daa9cb",
+  "fnaf4-new6.json": "18b7781d4b8835c9cb60763a1124b1b519b75ea603788bf5ca51253c27daa9cb"
+ },
+ "notClaimed": [
+  "A device result: the census is the simulator.",
+  "Precise speedups: one run per variant on a loaded machine; the identical outputs are the claim, the times its scale.",
+  "FNaF 2: census.ts sends it to its own sweep, which --workers does not change."
+ ]
+}
