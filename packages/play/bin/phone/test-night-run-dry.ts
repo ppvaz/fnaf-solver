@@ -130,18 +130,16 @@ try {
     'night-run.sh must run, and re-run under the lease, from its snapshot rather than from the checkout');
   console.log('night-run: every run executes a private snapshot, removed once past the lease');
 
-  // --static-readout: native camera-view pixels into captures/ (never the packed run directory), never beside a frame
-  // trace (on Companion 0.1.14 the trace starves the region copier: 0 of 553 frames, 2026-10-01), and nothing on the
-  // phone in a dry run.
-  const traced = run(nightRun('--frame-trace', '--static-readout'), bare());
-  ok(traced.status !== 0 && /exclude each other/.test(traced.stderr) && adbCalls().length === 0,
-    `--static-readout with --frame-trace must refuse before adb:\n${traced.stdout}\n${traced.stderr}`);
-  const readout = run(nightRun('--static-readout'), bare());
-  const recorder = readout.stdout.split('\n').find((line) => line.startsWith('static readout (from hid.schedule-start):')) ?? '';
-  ok(readout.status === 0 && /native-regions\.ts record --model packages\/play\/profiles\/fnaf2\/moto-g56\/static-view-moto-g56-v207\.json --set static /.test(recorder)
-    && /--out captures\/static-readouts\//.test(recorder) && adbCalls().length === 0,
-    `a dry --static-readout run names its recorder, writing under captures/:\n${readout.stdout}\n${readout.stderr}`);
-  console.log('night-run: --static-readout refuses a frame trace beside it and records native camera pixels under captures/');
+  // --static-readout: native camera-view pixels into captures/ (never the packed run directory), with or without a
+  // frame trace (Companion 16 copies every frame under a trace, 2026-10-01), and nothing on the phone in a dry run.
+  for (const flags of [['--static-readout'], ['--frame-trace', '--static-readout']]) {
+    const readout = run(nightRun(...flags), bare());
+    const recorder = readout.stdout.split('\n').find((line) => line.startsWith('static readout (from hid.schedule-start):')) ?? '';
+    ok(readout.status === 0 && /native-regions\.ts record --model packages\/play\/profiles\/fnaf2\/moto-g56\/static-view-moto-g56-v207\.json --set static /.test(recorder)
+      && /--out captures\/static-readouts\//.test(recorder) && adbCalls().length === 0,
+      `a dry ${flags.join(' ')} run names its recorder, writing under captures/:\n${readout.stdout}\n${readout.stderr}`);
+  }
+  console.log('night-run: --static-readout records native camera pixels under captures/, with or without a frame trace');
 
   const half = run(nightRun('--live'), bare({ FNAF_SERIAL: FAKE }));
   ok(half.status === 2 && /both --live and --confirm-live/.test(half.stderr) && adbCalls().length === 0,

@@ -225,8 +225,11 @@ Details:
     so a readout scan needs that night's camera, monitor and hall landings
     measured, or carried as a nuisance
     ([draw sensitivity](../docs/evidence/full06-draw-sensitivity-20261001.json),
-    `s2-draw-sensitivity-ffde3e5ae1319d23`). On Companion 0.1.14 a frame
-    trace starves the region copier (0 of 553 frames). With every Custom
+    `s2-draw-sensitivity-ffde3e5ae1319d23`). On Companion 15 a frame trace
+    starved the region copier (0 of 553 frames); Companion 16, installed
+    2026-10-01, copies every frame at 60.1 fps with or without one
+    ([measurement](../docs/evidence/companion16-region-under-trace-20261001.json),
+    `companion16-region-under-trace-61d26b3507490827`). With every Custom
     Night dial at 0 the night's own draws are the clock-timed rolls, and the
     in-window prediction agrees across press rules on 0.85-1.00 of periods at
     zero shift and under a 60 Hz clock on 0.79-1.00

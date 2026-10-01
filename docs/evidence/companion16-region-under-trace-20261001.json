@@ -1,0 +1,51 @@
+{
+ "schema": "evidence-record-v1",
+ "date": "2026-10-01",
+ "step": "ROADMAP S2a (the static-readout instrument)",
+ "claimLevel": "DEVICE_MEASURED",
+ "question": "On the Companion now installed (16, 0.2.0), does a running frame trace starve the REGION copier, as it did on 15?",
+ "handset": "moto g56 5G, Android 16; the local profile's serial",
+ "companion": {
+  "installed": "versionCode=16 versionName=0.2.0, lastUpdateTime 2026-10-01 12:01:15 (dumpsys package com.ppvaz.fnafcompanion)",
+  "game": "com.scottgames.fnaf2 2.0.7 (26), installed 2026-09-27 01:34:27, unchanged"
+ },
+ "conditions": "FNaF 2 title menu (animated), capture started by cue_setup (named controls only, no game input), under the serial lease; static-view-moto-g56-v207.json set `static`; native-regions.ts record for 8 s, then a frame trace started and the same record for 8 s, then the trace stopped (it reported 511 frames).",
+ "result": {
+  "withoutTrace": {
+   "frames": 481,
+   "seconds": 8,
+   "fps": 60.1,
+   "gapMs": {
+    "median": 16.6,
+    "max": 19.7
+   },
+   "reopens": 0,
+   "rowsSha256": "217214986abb775e5875968226100b83ed5d0fb1ea08a28ab3edf98c8060cfac"
+  },
+  "underTrace": {
+   "frames": 481,
+   "seconds": 8,
+   "fps": 60.1,
+   "gapMs": {
+    "median": 16.7,
+    "max": 20.3
+   },
+   "reopens": 0,
+   "rowsSha256": "6c3273a85ae821fd735b203649c38f8a3bb37606618a7c958271d3a357470315"
+  },
+  "traceFrames": 511
+ },
+ "reading": "Companion 16 copies the static_view region on every frame, 60.1 fps, with or without a running frame trace (481 of 481 rows each way, no gap over 20.3 ms). On Companion 15 the same record kept 288 frames in 10 s without the trace and 0 under it (2026-10-01, the night of night7-k3-sr03). night-run.sh no longer refuses --static-readout beside --frame-trace.",
+ "previous": {
+  "companion15": {
+   "withoutTrace": "288 frames in 10 s",
+   "underTrace": "0 frames while the trace took 553 in 8 s"
+  }
+ },
+ "notClaimed": [
+  "A night: the menu was measured, not the office or the cameras.",
+  "Game acceptance or input timing."
+ ],
+ "rows": "the recorder rows stay in the session scratchpad (raw native pixels; publishing boundary), named by sha256 only",
+ "id": "companion16-region-under-trace-61d26b3507490827"
+}
