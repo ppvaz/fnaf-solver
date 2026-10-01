@@ -17,9 +17,14 @@ import {
   validateResolution,
   validateCommitment,
 } from './training/index.ts';
+import type { Commitment, Exercise, ExerciseAttempt, Resolution } from './training/index.ts';
 import { stableHash } from '@sixam/kernel/contracts';
-import { finite, freeze, isRecord, validatorsFor } from './validate.ts';
-const { fail, object, text } = validatorsFor('microtrainer', { textMax: 160 });
+import { among, finite, freeze, isInteger, isList, isRecord, validatorsFor } from './validate.ts';
+const kit = validatorsFor('microtrainer', { textMax: 160 });
+// Annotated, so the checker knows a call to it does not return.
+const fail: (message: string) => never = kit.fail;
+const { object, text } = kit;
+type Fields = Readonly<Record<string, unknown>>;
 
 export const MICROTRAINER_SESSION_SCHEMA = 'microtrainer-session-v1';
 export const MICROTRAINER_EVENT_SCHEMA = 'microtrainer-event-v1';
@@ -31,43 +36,124 @@ export const UNKNOWN_CHOICE = 'UNKNOWN';
 export const MICROTRAINER_SPLITS = Object.freeze(['calibration', 'holdout', 'practice', 'replay']);
 export const MICROTRAINER_SURFACES = Object.freeze(['campaign', 'rhythm-highway', 'threat-constellation', 'replay']);
 
-const clone = value => structuredClone(value);
+/** The retained, pre-prompt state every exercise is built from. */
+interface ReplaySnapshot {
+  readonly schema: typeof REPLAY_SNAPSHOT_SCHEMA;
+  readonly id: string;
+  readonly sessionId: string;
+  readonly beliefSequence: number;
+  readonly clock: string;
+  readonly atMs: number;
+  readonly profileId: string;
+  readonly activityGateVersion: string;
+  readonly factIds: readonly string[];
+  readonly stateFamily: string;
+  readonly split: string;
+  readonly artifactIds?: readonly string[];
+}
+/** A retained, profile-bound image label. */
+interface RetainedCrop {
+  readonly schema: typeof RETAINED_CROP_SCHEMA;
+  readonly id: string;
+  readonly artifactId: string;
+  readonly sha256: string;
+  readonly factId: string;
+  readonly sessionId: string;
+  readonly profileId: string;
+  readonly retained: true;
+  readonly split: string;
+  readonly label: string;
+  readonly labelProvenance?: Fields;
+}
+interface TimingBucket { readonly id: string, readonly minMs: number | null, readonly maxMs: number | null }
+interface TimingBuckets { readonly schema: typeof TIMING_BUCKET_SCHEMA, readonly buckets: readonly TimingBucket[] }
+interface SimulatorCase {
+  readonly schema: typeof EXACT_SIMULATOR_CASE_SCHEMA;
+  readonly id: string;
+  readonly version: string;
+  readonly engineHash: string;
+  readonly authority: 'exact-simulator';
+  readonly modelLabel: 'MODEL_ONLY';
+  readonly provenance: { readonly source: string, readonly factIds: readonly string[] };
+}
+interface SessionHeader {
+  readonly sessionId: string;
+  readonly sourceSessionId: string;
+  readonly clock: string;
+  readonly startedAtMs: number;
+  readonly endedAtMs: number;
+  readonly profileId: string;
+  readonly surface: string;
+  readonly split: string;
+}
+type Grade = ReturnType<typeof gradeMicrotrainerAttempt>;
+/** One exercise's replay record: prompt, response, outcome, timing and scheduler joined. */
+interface MicrotrainerRecord {
+  readonly exercise: Exercise;
+  readonly events: readonly unknown[];
+  readonly final: Exercise;
+  readonly attempt: ExerciseAttempt;
+  readonly prompt: { readonly atMs: number, readonly target: string, readonly choices: readonly string[] };
+  readonly commitment: Commitment | null;
+  readonly resolution: Resolution | 'CENSORED';
+  readonly latency: { readonly shownToPromptMs: number, readonly promptToCommitMs: number | null, readonly promptToResolutionMs: number | null };
+  readonly scheduler: unknown;
+  readonly provenance: {
+    readonly sourceSessionId: string, readonly factIds: readonly string[], readonly artifactIds?: readonly string[],
+    readonly split: string, readonly activityGateVersion?: unknown,
+  };
+  readonly grade: Grade;
+}
+/** The options every builder takes; each is checked before it is used. */
+interface ExerciseOptions {
+  readonly id?: string;
+  readonly snapshot?: unknown;
+  readonly target?: string;
+  readonly choices?: readonly string[];
+  readonly horizonMs?: number;
+  readonly commitWindowMs?: number;
+  readonly scheduler?: unknown;
+  readonly commitment?: unknown;
+}
+
+const clone = <T>(value: T) => structuredClone(value);
 export class MicrotrainerIneligibleError extends Error {
   declare name: string;
-  declare reason: any;
-  constructor(reason) {
+  declare reason: string;
+  constructor(reason: string) {
     super(`microtrainer exercise is ineligible: ${reason}`);
     this.name = 'MicrotrainerIneligibleError';
     this.reason = reason;
   }
 }
 
-const reject = reason => new MicrotrainerIneligibleError(reason);
+const reject = (reason: string) => new MicrotrainerIneligibleError(reason);
 
-function number(name, value, { min = 0, max = Infinity } = {}) {
+function number(name: string, value: unknown, { min = 0, max = Infinity } = {}) {
   if (!finite(value) || value < min || value > max) fail(`${name} is outside its numeric bounds`);
   return value;
 }
 
-function integer(name, value) {
-  if (!Number.isInteger(value) || value < 0) fail(`${name} must be a non-negative integer`);
+function integer(name: string, value: unknown) {
+  if (!isInteger(value) || value < 0) fail(`${name} must be a non-negative integer`);
   return value;
 }
 
-function list(name, values, { min = 0, max = 128 } = {}) {
-  if (!Array.isArray(values) || values.length < min || values.length > max ||
+function list(name: string, values: unknown, { min = 0, max = 128 } = {}) {
+  if (!isList(values) || values.length < min || values.length > max ||
       values.some(value => typeof value !== 'string' || value.length === 0 || value.length > 160))
     fail(`${name} must contain ${min}-${max} bounded strings`);
   if (new Set(values).size !== values.length) fail(`${name} must contain unique strings`);
-  return values;
+  // Every member was just checked to be a string.
+  return values as readonly string[];
 }
 
-function clock(name, value) {
-  if (!EXERCISE_CLOCKS.includes(value)) fail(`${name} must be a declared monotonic clock`);
+function clock(name: string, value: unknown) {
+  if (!among(EXERCISE_CLOCKS, value)) fail(`${name} must be a declared monotonic clock`);
   return value;
 }
 
-function validateScheduler(input) {
+function validateScheduler(input: unknown) {
   const value = object('scheduler', input);
   text('scheduler.policyId', value.policyId, 96);
   text('scheduler.policyVersion', value.policyVersion, 64);
@@ -79,7 +165,7 @@ function validateScheduler(input) {
 }
 
 /** Validate the retained, pre-prompt source snapshot used by all exercise families. */
-export function validateReplaySnapshot(input) {
+export function validateReplaySnapshot(input: unknown): ReplaySnapshot {
   const value = object('snapshot', input);
   if (value.schema !== REPLAY_SNAPSHOT_SCHEMA) fail(`snapshot schema must be ${REPLAY_SNAPSHOT_SCHEMA}`);
   const allowed = new Set(['schema', 'id', 'sessionId', 'beliefSequence', 'clock', 'atMs',
@@ -95,24 +181,24 @@ export function validateReplaySnapshot(input) {
   text('snapshot.activityGateVersion', value.activityGateVersion, 96);
   list('snapshot.factIds', value.factIds, { min: 1 });
   text('snapshot.stateFamily', value.stateFamily, 96);
-  if (!MICROTRAINER_SPLITS.includes(value.split)) fail('snapshot.split is invalid');
+  if (!among(MICROTRAINER_SPLITS, value.split)) fail('snapshot.split is invalid');
   if (value.artifactIds !== undefined) list('snapshot.artifactIds', value.artifactIds);
-  return freeze(clone(value));
+  return freeze(clone(value) as unknown as ReplaySnapshot);
 }
 
 /** Construct a source snapshot without allowing a mutable belief/runtime object in it. */
-export function makeReplaySnapshot(input) {
+export function makeReplaySnapshot(input: object) {
   return validateReplaySnapshot({ schema: REPLAY_SNAPSHOT_SCHEMA, ...clone(input) });
 }
 
-function validateChoices(choices, { requireUnknown = false } = {}) {
-  list('question.choices', choices, { min: 2, max: 32 });
-  if (requireUnknown && !choices.includes(UNKNOWN_CHOICE))
+function validateChoices(choices: unknown, { requireUnknown = false } = {}) {
+  const valid = list('question.choices', choices, { min: 2, max: 32 });
+  if (requireUnknown && !valid.includes(UNKNOWN_CHOICE))
     fail(`question.choices must include ${UNKNOWN_CHOICE}`);
-  return choices;
+  return valid;
 }
 
-function validateResolutionForSource(resolution, snapshot, choices, revealDeadlineMs) {
+function validateResolutionForSource(resolution: unknown, snapshot: ReplaySnapshot, choices: readonly string[], revealDeadlineMs: number) {
   const value = validateResolution(resolution, choices);
   if (value.occurredAtMs < snapshot.atMs || value.occurredAtMs > revealDeadlineMs)
     fail('resolution is outside the replay horizon');
@@ -121,7 +207,7 @@ function validateResolutionForSource(resolution, snapshot, choices, revealDeadli
   return value;
 }
 
-function validateOptionalCommitment(commitment, snapshot, choices, commitDeadlineMs) {
+function validateOptionalCommitment(commitment: unknown, snapshot: ReplaySnapshot, choices: readonly string[], commitDeadlineMs: number) {
   if (commitment === null || commitment === undefined) return null;
   const value = validateCommitment(commitment, choices);
   if (value.committedAtMs < snapshot.atMs || value.committedAtMs > commitDeadlineMs)
@@ -129,7 +215,7 @@ function validateOptionalCommitment(commitment, snapshot, choices, commitDeadlin
   return value;
 }
 
-function validateEligibilitySource(snapshot, scheduler, extra = {}) {
+function validateEligibilitySource(snapshot: ReplaySnapshot, scheduler: unknown, extra: object = {}) {
   validateScheduler(scheduler);
   return {
     activityGateVersion: snapshot.activityGateVersion,
@@ -146,15 +232,19 @@ function validateEligibilitySource(snapshot, scheduler, extra = {}) {
 
 function baseExercise({ id, kind, snapshot, target, choices, questionHorizonMs,
   commitWindowMs, revealHorizonMs, scheduler, extraEligibility = {}, commitment = null,
-  resolution = null, cancellation = null }) {
+  resolution = null, cancellation = null }: {
+    id: unknown, kind: string, snapshot: ReplaySnapshot, target: unknown, choices: unknown, questionHorizonMs: unknown,
+    commitWindowMs: unknown, revealHorizonMs: unknown, scheduler: unknown, extraEligibility?: object, commitment?: unknown,
+    resolution?: unknown, cancellation?: unknown,
+  }) {
   text('exercise.id', id);
   const questionChoices = validateChoices(choices);
   number('question.horizonMs', questionHorizonMs, { min: Number.MIN_VALUE });
-  number('commitWindowMs', commitWindowMs, { min: Number.MIN_VALUE });
-  number('revealHorizonMs', revealHorizonMs, { min: commitWindowMs });
+  const commitWindow = number('commitWindowMs', commitWindowMs, { min: Number.MIN_VALUE });
+  const revealHorizon = number('revealHorizonMs', revealHorizonMs, { min: commitWindow });
   const promptAtMs = snapshot.atMs;
-  const commitDeadlineMs = promptAtMs + commitWindowMs;
-  const revealDeadlineMs = promptAtMs + revealHorizonMs;
+  const commitDeadlineMs = promptAtMs + commitWindow;
+  const revealDeadlineMs = promptAtMs + revealHorizon;
   const initial = makeExercise({
     id, kind, sourceSessionId: snapshot.sessionId, beliefSequence: snapshot.beliefSequence,
     clock: snapshot.clock, createdAtMs: promptAtMs, promptAtMs, commitDeadlineMs,
@@ -162,7 +252,7 @@ function baseExercise({ id, kind, snapshot, target, choices, questionHorizonMs,
     eligibility: validateEligibilitySource(snapshot, scheduler, extraEligibility),
     question: { target: text('question.target', target, 128), choices: questionChoices, horizonMs: questionHorizonMs },
   });
-  const events: any[] = [{
+  const events: Fields[] = [{
     schema: EXERCISE_EVENT_SCHEMA, exerciseId: initial.id, seq: 0,
     type: 'PROMPTED', atMs: promptAtMs, clock: snapshot.clock,
   }];
@@ -185,7 +275,8 @@ function baseExercise({ id, kind, snapshot, target, choices, questionHorizonMs,
     const validCancellation = clone(cancellation);
     if (!isRecord(validCancellation) || validCancellation.schema !== 'exercise-cancellation-v1')
       fail('cancellation schema is invalid');
-    if (validCancellation.atMs < promptAtMs || validCancellation.atMs > revealDeadlineMs)
+    // Compared as JavaScript compares: a field that is not a number is converted to one.
+    if (Number(validCancellation.atMs) < promptAtMs || Number(validCancellation.atMs) > revealDeadlineMs)
       fail('cancellation is outside the replay horizon');
     events.push({
       schema: EXERCISE_EVENT_SCHEMA, exerciseId: initial.id, seq: events.length,
@@ -197,15 +288,16 @@ function baseExercise({ id, kind, snapshot, target, choices, questionHorizonMs,
   return freeze(clone({ exercise: initial, events, replay }));
 }
 
-function independentEvidence(value, snapshot) {
-  list('resolution.evidenceFactIds', value.evidenceFactIds, { min: 1 });
-  if (value.evidenceFactIds.some(id => snapshot.factIds.includes(id)))
+function independentEvidence(value: unknown, snapshot: ReplaySnapshot) {
+  // A value that is not an object has no evidence ids.
+  const ids = list('resolution.evidenceFactIds', isRecord(value) ? value.evidenceFactIds : undefined, { min: 1 });
+  if (ids.some(id => snapshot.factIds.includes(id)))
     fail('resolution evidence must be independent of the pre-prompt facts');
 }
 
 /** Build a prediction exercise from a retained future fact, never from the prediction itself. */
 export function makePredictionExercise({ id, snapshot: snapshotInput, target, choices, horizonMs,
-  commitWindowMs = horizonMs, scheduler, futureFact = null, commitment = null }: any = {}) {
+  commitWindowMs = horizonMs, scheduler, futureFact = null, commitment = null }: ExerciseOptions & { futureFact?: unknown } = {}) {
   const snapshot = validateReplaySnapshot(snapshotInput);
   const resolution = futureFact ? clone(futureFact) : null;
   if (resolution) independentEvidence(resolution, snapshot);
@@ -216,7 +308,7 @@ export function makePredictionExercise({ id, snapshot: snapshotInput, target, ch
   });
 }
 
-function validateCrop(input, snapshot) {
+function validateCrop(input: unknown, snapshot: ReplaySnapshot): RetainedCrop {
   const value = object('crop', input);
   if (value.schema !== RETAINED_CROP_SCHEMA) fail(`crop schema must be ${RETAINED_CROP_SCHEMA}`);
   const allowed = new Set(['schema', 'id', 'artifactId', 'sha256', 'factId', 'sessionId',
@@ -231,21 +323,23 @@ function validateCrop(input, snapshot) {
   text('crop.profileId', value.profileId);
   if (value.profileId !== snapshot.profileId) throw reject('recognition-profile-mismatch');
   if (value.retained !== true) throw reject('recognition-crop-not-retained');
-  if (!['calibration', 'holdout', 'practice', 'replay'].includes(value.split))
+  if (!among(['calibration', 'holdout', 'practice', 'replay'], value.split))
     fail('crop.split is invalid');
   text('crop.label', value.label, 96);
   if (value.label === UNKNOWN_CHOICE) fail('a retained crop label must be distinct from UNKNOWN');
   if (value.labelProvenance !== undefined) object('crop.labelProvenance', value.labelProvenance);
-  return value;
+  return value as unknown as RetainedCrop;
 }
 
 /** Build recognition only from retained, profile-bound labels and always expose abstention. */
 export function makeRecognitionExercise({ id, snapshot: snapshotInput, crop: cropInput, choices,
-  horizonMs = 1000, commitWindowMs = horizonMs, scheduler, commitment = null }: any = {}) {
+  horizonMs = 1000, commitWindowMs = horizonMs, scheduler, commitment = null }: ExerciseOptions & { crop?: unknown } = {}) {
   const snapshot = validateReplaySnapshot(snapshotInput);
   const crop = validateCrop(cropInput, snapshot);
   const questionChoices = [...new Set([...(choices || []), crop.label, UNKNOWN_CHOICE])];
-  const resolutionAtMs = Math.max(snapshot.atMs + 1, commitment?.committedAtMs ?? snapshot.atMs + 1);
+  // Math.max converts its arguments to numbers; a commitment that is not an object has no time.
+  const committedAtMs = isRecord(commitment) ? commitment.committedAtMs : undefined;
+  const resolutionAtMs = Math.max(snapshot.atMs + 1, Number(committedAtMs ?? snapshot.atMs + 1));
   const resolution = {
     schema: 'resolution-v1', outcome: crop.label, occurredAtMs: resolutionAtMs,
     evidenceFactIds: [crop.factId],
@@ -268,34 +362,37 @@ export function makeRecognitionExercise({ id, snapshot: snapshotInput, crop: cro
   return result;
 }
 
-function validateTimingBuckets(input) {
+function validateTimingBuckets(input: unknown) {
   const value = object('timingBuckets', input);
   if (value.schema !== TIMING_BUCKET_SCHEMA) fail(`timing bucket schema must be ${TIMING_BUCKET_SCHEMA}`);
-  if (!Array.isArray(value.buckets) || value.buckets.length < 2 || value.buckets.length > 16)
+  const buckets = value.buckets;
+  if (!isList(buckets) || buckets.length < 2 || buckets.length > 16)
     fail('timingBuckets.buckets must contain 2-16 buckets');
   const ids = new Set();
-  let previousMax = null;
-  for (const [index, bucket] of value.buckets.entries()) {
-    object(`timingBuckets.buckets[${index}]`, bucket);
+  let previousMax: number | null = null;
+  for (const [index, item] of buckets.entries()) {
+    const bucket = object(`timingBuckets.buckets[${index}]`, item);
     text(`timingBuckets.buckets[${index}].id`, bucket.id, 64);
     if (ids.has(bucket.id)) fail('timing bucket ids must be unique');
     ids.add(bucket.id);
-    if (bucket.minMs !== null) number(`timing bucket ${bucket.id}.minMs`, bucket.minMs, { min: -Infinity });
-    if (bucket.maxMs !== null) number(`timing bucket ${bucket.id}.maxMs`, bucket.maxMs, { min: -Infinity });
-    if (bucket.minMs === null && index !== 0) fail('only the first timing bucket may be unbounded below');
-    if (bucket.maxMs === null && index !== value.buckets.length - 1) fail('only the last timing bucket may be unbounded above');
-    if (bucket.minMs !== null && bucket.maxMs !== null && bucket.maxMs <= bucket.minMs)
+    const minMs = bucket.minMs === null ? null : number(`timing bucket ${bucket.id}.minMs`, bucket.minMs, { min: -Infinity });
+    const maxMs = bucket.maxMs === null ? null : number(`timing bucket ${bucket.id}.maxMs`, bucket.maxMs, { min: -Infinity });
+    if (minMs === null && index !== 0) fail('only the first timing bucket may be unbounded below');
+    if (maxMs === null && index !== buckets.length - 1) fail('only the last timing bucket may be unbounded above');
+    if (minMs !== null && maxMs !== null && maxMs <= minMs)
       fail(`timing bucket ${bucket.id} is empty`);
-    if (previousMax !== null && bucket.minMs !== previousMax)
+    if (previousMax !== null && minMs !== previousMax)
       fail('timing bucket boundaries must be contiguous');
-    previousMax = bucket.maxMs;
+    previousMax = maxMs;
   }
-  if (value.buckets[0].minMs !== null || value.buckets.at(-1).maxMs !== null)
+  // Every bucket was checked above.
+  const checked = value as unknown as TimingBuckets;
+  if (checked.buckets[0].minMs !== null || (checked.buckets.at(-1) as TimingBucket).maxMs !== null)
     fail('timing buckets must cover the full numeric range');
-  return value;
+  return checked;
 }
 
-function timingBucketFor(value, buckets) {
+function timingBucketFor(value: number, buckets: readonly TimingBucket[]) {
   return buckets.find(bucket => (bucket.minMs === null || value >= bucket.minMs) &&
     (bucket.maxMs === null || value < bucket.maxMs))?.id ?? null;
 }
@@ -303,29 +400,32 @@ function timingBucketFor(value, buckets) {
 /** Build a coarse timing exercise and refuse deadlines already inside the measured response budget. */
 export function makeTimingExercise({ id, snapshot: snapshotInput, target, deadlineAtMs,
   responseLatencyBudgetMs, timingBuckets, observedActionAtMs = null, evidenceFactIds = null,
-  scheduler, commitment = null }: any = {}) {
+  scheduler, commitment = null }: ExerciseOptions & {
+    deadlineAtMs?: number, responseLatencyBudgetMs?: number, timingBuckets?: unknown,
+    observedActionAtMs?: number | null, evidenceFactIds?: readonly string[] | null,
+  } = {}) {
   const snapshot = validateReplaySnapshot(snapshotInput);
-  number('deadlineAtMs', deadlineAtMs, { min: snapshot.atMs });
-  number('responseLatencyBudgetMs', responseLatencyBudgetMs);
+  const deadline = number('deadlineAtMs', deadlineAtMs, { min: snapshot.atMs });
+  const budget = number('responseLatencyBudgetMs', responseLatencyBudgetMs);
   const bucketSpec = validateTimingBuckets(timingBuckets);
-  const questionHorizonMs = deadlineAtMs - snapshot.atMs;
-  if (questionHorizonMs <= responseLatencyBudgetMs)
+  const questionHorizonMs = deadline - snapshot.atMs;
+  if (questionHorizonMs <= budget)
     throw reject('timing-deadline-inside-response-budget');
   let futureFact = null;
   let revealHorizonMs = questionHorizonMs;
   if (observedActionAtMs !== null && observedActionAtMs !== undefined) {
-    number('observedActionAtMs', observedActionAtMs, { min: snapshot.atMs });
-    const remainingMs = deadlineAtMs - observedActionAtMs;
+    const observed = number('observedActionAtMs', observedActionAtMs, { min: snapshot.atMs });
+    const remainingMs = deadline - observed;
     const outcome = timingBucketFor(remainingMs, bucketSpec.buckets);
     if (!outcome) fail('observed timing does not fit a declared bucket');
     list('evidenceFactIds', evidenceFactIds, { min: 1 });
     futureFact = {
-      schema: 'resolution-v1', outcome, occurredAtMs: observedActionAtMs,
+      schema: 'resolution-v1', outcome, occurredAtMs: observed,
       evidenceFactIds: clone(evidenceFactIds),
     };
     independentEvidence(futureFact, snapshot);
     // Late actions remain resolvable, but only within a declared evidence window.
-    revealHorizonMs = Math.max(questionHorizonMs, observedActionAtMs - snapshot.atMs) + 1;
+    revealHorizonMs = Math.max(questionHorizonMs, observed - snapshot.atMs) + 1;
   }
   return baseExercise({
     id, kind: 'timing', snapshot, target,
@@ -338,7 +438,7 @@ export function makeTimingExercise({ id, snapshot: snapshotInput, target, deadli
   });
 }
 
-function validateSimulatorCase(input, snapshot) {
+function validateSimulatorCase(input: unknown, snapshot: ReplaySnapshot): SimulatorCase {
   const value = object('simulatorCase', input);
   if (value.schema !== EXACT_SIMULATOR_CASE_SCHEMA)
     fail(`simulatorCase schema must be ${EXACT_SIMULATOR_CASE_SCHEMA}`);
@@ -347,25 +447,26 @@ function validateSimulatorCase(input, snapshot) {
   text('simulatorCase.engineHash', value.engineHash, 128);
   if (value.authority !== 'exact-simulator') throw reject('strategy-case-not-exact-simulator');
   if (value.modelLabel !== 'MODEL_ONLY') throw reject('strategy-case-not-model-only');
-  object('simulatorCase.provenance', value.provenance);
-  text('simulatorCase.provenance.source', value.provenance.source, 128);
-  list('simulatorCase.provenance.factIds', value.provenance.factIds, { min: 1 });
-  if (value.provenance.factIds.some(id => snapshot.factIds.includes(id)))
+  const provenance = object('simulatorCase.provenance', value.provenance);
+  text('simulatorCase.provenance.source', provenance.source, 128);
+  const factIds = list('simulatorCase.provenance.factIds', provenance.factIds, { min: 1 });
+  if (factIds.some(id => snapshot.factIds.includes(id)))
     fail('strategy evidence must be independent of the pre-prompt facts');
-  return value;
+  return value as unknown as SimulatorCase;
 }
 
 /** Build strategy only from an exact-simulator result with visible MODEL_ONLY provenance. */
 export function makeStrategyExercise({ id, snapshot: snapshotInput, target, choices, horizonMs,
-  simulatorCase, result, scheduler, commitment = null }: any = {}) {
+  simulatorCase, result, scheduler, commitment = null }: ExerciseOptions & { simulatorCase?: unknown, result?: unknown } = {}) {
   const snapshot = validateReplaySnapshot(snapshotInput);
   const exactCase = validateSimulatorCase(simulatorCase, snapshot);
-  object('simulatorCase.result', result);
+  const outcome = object('simulatorCase.result', result);
   const resolution = validateResolution({
-    schema: 'resolution-v1', outcome: result.outcome, occurredAtMs: result.occurredAtMs,
-    evidenceFactIds: result.evidenceFactIds,
+    schema: 'resolution-v1', outcome: outcome.outcome, occurredAtMs: outcome.occurredAtMs,
+    evidenceFactIds: outcome.evidenceFactIds,
   }, choices);
-  if (resolution.occurredAtMs < snapshot.atMs || resolution.occurredAtMs > snapshot.atMs + horizonMs)
+  // An absent horizon makes this NaN, and baseExercise refuses it below.
+  if (resolution.occurredAtMs < snapshot.atMs || resolution.occurredAtMs > snapshot.atMs + (horizonMs as number))
     fail('strategy result is outside the replay horizon');
   independentEvidence(resolution, snapshot);
   return baseExercise({
@@ -385,14 +486,17 @@ export function makeStrategyExercise({ id, snapshot: snapshotInput, target, choi
 
 /** Create a presentation/response attempt, keeping it separate from exercise truth. */
 export function makeMicrotrainerAttempt({ exercise, rendererId, rendererVersion,
-  sessionId, shownAtMs, commitment = null, motor = null }: any = {}) {
+  sessionId, shownAtMs, commitment = null, motor = null }: {
+    exercise?: unknown, rendererId?: string, rendererVersion?: string, sessionId?: string, shownAtMs?: number,
+    commitment?: unknown, motor?: unknown,
+  } = {}) {
   const value = validateExercise(exercise);
   text('rendererId', rendererId, 96);
   text('rendererVersion', rendererVersion, 64);
   text('attempt.sessionId', sessionId);
   clock('attempt.clock', value.clock);
-  number('shownAtMs', shownAtMs);
-  if (shownAtMs > value.promptAtMs) fail('attempt was shown after the exercise prompt');
+  const shown = number('shownAtMs', shownAtMs);
+  if (shown > value.promptAtMs) fail('attempt was shown after the exercise prompt');
   const validCommitment = commitment === null ? null : validateCommitment(commitment, value.question.choices);
   if (validCommitment && (validCommitment.committedAtMs < value.promptAtMs ||
       validCommitment.committedAtMs > value.commitDeadlineMs))
@@ -405,26 +509,26 @@ export function makeMicrotrainerAttempt({ exercise, rendererId, rendererVersion,
 }
 
 /** Grade only a completed, independently resolved exercise; every other case is censored. */
-export function gradeMicrotrainerAttempt(exercise, attempt) {
+export function gradeMicrotrainerAttempt(exercise: unknown, attempt: unknown) {
   const value = validateExercise(exercise);
   const response = validateExerciseAttempt(attempt);
   if (response.exerciseId !== value.id) fail('attempt targets another exercise');
   if (response.resolutionDisposition !== value.disposition) fail('attempt disposition disagrees with replay');
   if (value.disposition !== 'COMPLETED' || value.resolution === 'CENSORED' ||
       value.commitment === null || response.commitment === null) {
-    return freeze({ status: 'CENSORED', reason: value.commitment === null ? 'missing-commitment' : 'non-completed-exercise', score: null });
+    return freeze({ status: 'CENSORED' as const, reason: value.commitment === null ? 'missing-commitment' : 'non-completed-exercise', score: null });
   }
   if (response.commitment.choice !== value.commitment.choice ||
       response.commitment.committedAtMs !== value.commitment.committedAtMs)
     fail('attempt commitment disagrees with exercise replay');
   const correct = response.commitment.choice === value.resolution.outcome;
   return freeze({
-    status: 'SCORED', correct, score: { [value.kind]: correct ? 1 : 0 },
+    status: 'SCORED' as const, correct, score: { [value.kind]: correct ? 1 : 0 },
     denominator: 1, outcome: value.resolution.outcome,
   });
 }
 
-function eventForRecord(record, type, atMs, data) {
+function eventForRecord(record: MicrotrainerRecord, type: string, atMs: number, data: object) {
   return {
     schema: MICROTRAINER_EVENT_SCHEMA, sessionId: record.attempt.sessionId,
     exerciseId: record.exercise.id, seq: 0, type, clock: record.exercise.clock,
@@ -436,8 +540,8 @@ function eventForRecord(record, type, atMs, data) {
   };
 }
 
-function validateLatency(latency, record) {
-  object('record.latency', latency);
+function validateLatency(input: unknown, record: { final: Exercise, attempt: ExerciseAttempt }) {
+  const latency = object('record.latency', input);
   for (const name of ['shownToPromptMs', 'promptToCommitMs', 'promptToResolutionMs']) {
     if (latency[name] !== null) number(`record.latency.${name}`, latency[name]);
   }
@@ -452,11 +556,11 @@ function validateLatency(latency, record) {
   return latency;
 }
 
-function validateRecord(input) {
+function validateRecord(input: unknown): MicrotrainerRecord {
   const record = object('record', input);
   const exercise = validateExercise(record.exercise);
   const events = record.events;
-  if (!Array.isArray(events) || events.length === 0) fail('record.events are required');
+  if (!isList(events) || events.length === 0) fail('record.events are required');
   const final = replayExercise(exercise, events);
   if (stableHash(final) !== stableHash(record.final)) fail('record.final does not match replayed events');
   const attempt = validateExerciseAttempt(record.attempt);
@@ -465,30 +569,32 @@ function validateRecord(input) {
   validateScheduler(record.scheduler);
   if (stableHash(record.scheduler) !== stableHash(final.eligibility.scheduler))
     fail('record scheduler does not match exercise eligibility');
-  if (attempt.sessionId !== record.attempt.sessionId) fail('record attempt identity is inconsistent');
-  object('record.prompt', record.prompt);
-  if (record.prompt.atMs !== final.promptAtMs || record.prompt.target !== final.question.target ||
-      stableHash(record.prompt.choices) !== stableHash(final.question.choices))
+  // record.attempt was just validated as an attempt, so it is an object.
+  if (attempt.sessionId !== (record.attempt as Fields).sessionId) fail('record attempt identity is inconsistent');
+  const prompt = object('record.prompt', record.prompt);
+  if (prompt.atMs !== final.promptAtMs || prompt.target !== final.question.target ||
+      stableHash(prompt.choices) !== stableHash(final.question.choices))
     fail('record.prompt does not match the frozen exercise');
   if (record.commitment !== null && stableHash(record.commitment) !== stableHash(final.commitment))
     fail('record.commitment does not match replay');
   if (record.resolution !== final.resolution && stableHash(record.resolution) !== stableHash(final.resolution))
     fail('record.resolution does not match replay');
-  object('record.provenance', record.provenance);
-  text('record.provenance.sourceSessionId', record.provenance.sourceSessionId);
-  list('record.provenance.factIds', record.provenance.factIds, { min: 1 });
-  if (record.provenance.artifactIds !== undefined)
-    list('record.provenance.artifactIds', record.provenance.artifactIds);
-  if (record.provenance.sourceSessionId !== final.sourceSessionId ||
-      stableHash(record.provenance.factIds) !== stableHash(final.eligibility.factIds))
+  const provenance = object('record.provenance', record.provenance);
+  text('record.provenance.sourceSessionId', provenance.sourceSessionId);
+  list('record.provenance.factIds', provenance.factIds, { min: 1 });
+  if (provenance.artifactIds !== undefined)
+    list('record.provenance.artifactIds', provenance.artifactIds);
+  if (provenance.sourceSessionId !== final.sourceSessionId ||
+      stableHash(provenance.factIds) !== stableHash(final.eligibility.factIds))
     fail('record provenance does not match the exercise source');
-  if (!MICROTRAINER_SPLITS.includes(record.provenance.split)) fail('record.provenance.split is invalid');
+  if (!among(MICROTRAINER_SPLITS, provenance.split)) fail('record.provenance.split is invalid');
   validateLatency(record.latency, { final, attempt });
-  return { ...record, exercise, final, attempt, grade };
+  // Every field was checked above, against the replay it records.
+  return { ...record, exercise, final, attempt, grade } as unknown as MicrotrainerRecord;
 }
 
 /** Make one Plan 09-compatible replay record with prompt, response, outcome, timing, and scheduler joins. */
-export function makeMicrotrainerRecord({ exercise, events, attempt, scheduler = null }: any = {}) {
+export function makeMicrotrainerRecord({ exercise, events, attempt, scheduler = null }: { exercise?: unknown, events?: unknown, attempt?: unknown, scheduler?: unknown } = {}) {
   const value = validateExercise(exercise);
   const final = replayExercise(value, events);
   const response = validateExerciseAttempt(attempt);
@@ -520,37 +626,38 @@ export function makeMicrotrainerRecord({ exercise, events, attempt, scheduler = 
   return freeze(clone(validateRecord(record)));
 }
 
-function validateSessionHeader(input) {
+function validateSessionHeader(input: unknown) {
   const session = object('session', input);
   text('session.sessionId', session.sessionId);
   text('session.sourceSessionId', session.sourceSessionId);
   clock('session.clock', session.clock);
-  number('session.startedAtMs', session.startedAtMs);
-  number('session.endedAtMs', session.endedAtMs, { min: session.startedAtMs });
+  const startedAtMs = number('session.startedAtMs', session.startedAtMs);
+  number('session.endedAtMs', session.endedAtMs, { min: startedAtMs });
   text('session.profileId', session.profileId);
-  if (!MICROTRAINER_SURFACES.includes(session.surface)) fail('session.surface is invalid');
-  if (!MICROTRAINER_SPLITS.includes(session.split)) fail('session.split is invalid');
-  return session;
+  if (!among(MICROTRAINER_SURFACES, session.surface)) fail('session.surface is invalid');
+  if (!among(MICROTRAINER_SPLITS, session.split)) fail('session.split is invalid');
+  return session as unknown as SessionHeader;
 }
 
 /** Validate and freeze the complete offline session artifact. */
-export function validateMicrotrainerSession(input) {
+export function validateMicrotrainerSession(input: unknown) {
   const value = object('session record', input);
   if (value.schema !== MICROTRAINER_SESSION_SCHEMA)
     fail(`session schema must be ${MICROTRAINER_SESSION_SCHEMA}`);
   if (value.version !== 1) fail('session version is unsupported');
   const session = validateSessionHeader(value.session);
-  if (!Array.isArray(value.records)) fail('session.records are required');
-  if (!Array.isArray(value.artifacts)) fail('session.artifacts are required');
-  for (const [index, artifact] of value.artifacts.entries()) {
-    object(`session.artifacts[${index}]`, artifact);
+  const recordsIn = value.records, artifacts = value.artifacts;
+  if (!isList(recordsIn)) fail('session.records are required');
+  if (!isList(artifacts)) fail('session.artifacts are required');
+  for (const [index, item] of artifacts.entries()) {
+    const artifact = object(`session.artifacts[${index}]`, item);
     text(`session.artifacts[${index}].artifactId`, artifact.artifactId);
     text(`session.artifacts[${index}].sha256`, artifact.sha256, 128);
     text(`session.artifacts[${index}].mediaType`, artifact.mediaType, 96);
     text(`session.artifacts[${index}].role`, artifact.role, 96);
     if (artifact.size !== undefined) number(`session.artifacts[${index}].size`, artifact.size);
   }
-  const records = value.records.map(validateRecord);
+  const records = recordsIn.map(record => validateRecord(record));
   let previousAt = -Infinity;
   for (const [index, record] of records.entries()) {
     if (record.final.clock !== session.clock) fail(`record ${index} clock does not match session`);
@@ -569,7 +676,8 @@ export function validateMicrotrainerSession(input) {
     if (record.final.sourceSessionId !== session.sourceSessionId)
       fail(`record ${index} source session does not match session`);
   }
-  const artifactIds = new Set(value.artifacts.map(artifact => artifact.artifactId));
+  // Each artifact was checked to be an object above.
+  const artifactIds = new Set(artifacts.map(artifact => (artifact as Fields).artifactId));
   for (const [index, record] of records.entries()) {
     if (record.attempt.sessionId !== session.sessionId)
       fail(`record ${index} attempt does not belong to the session`);
@@ -577,13 +685,14 @@ export function validateMicrotrainerSession(input) {
       if (!artifactIds.has(artifactId)) fail(`record ${index} references an unretained artifact`);
     }
   }
-  if (!Array.isArray(value.events)) fail('session.events are required');
+  const events = value.events;
+  if (!isList(events)) fail('session.events are required');
   const expectedEvents = sessionEvents(records);
-  if (stableHash(value.events) !== stableHash(expectedEvents))
+  if (stableHash(events) !== stableHash(expectedEvents))
     fail('session.events do not match the replay records');
   let previousEventAt = -Infinity;
-  for (const [index, event] of value.events.entries()) {
-    object(`session.events[${index}]`, event);
+  for (const [index, item] of events.entries()) {
+    const event = object(`session.events[${index}]`, item);
     if (event.schema !== MICROTRAINER_EVENT_SCHEMA) fail(`session event ${index} schema mismatch`);
     text(`session.events[${index}].sessionId`, event.sessionId);
     if (event.sessionId !== session.sessionId) fail(`session event ${index} targets another session`);
@@ -591,16 +700,17 @@ export function validateMicrotrainerSession(input) {
     if (event.seq !== index) fail(`session event ${index} sequence is not contiguous`);
     clock(`session.events[${index}].clock`, event.clock);
     if (event.clock !== session.clock) fail(`session event ${index} clock does not match session`);
-    number(`session.events[${index}].atMs`, event.atMs);
-    if (event.atMs < previousEventAt) fail('session events are not ordered');
-    previousEventAt = event.atMs;
+    const atMs = number(`session.events[${index}].atMs`, event.atMs);
+    if (atMs < previousEventAt) fail('session events are not ordered');
+    previousEventAt = atMs;
   }
-  return freeze(clone(value));
+  // Every record was replayed above, and every field of the header checked.
+  return freeze(clone(value) as unknown as { readonly session: SessionHeader, readonly records: readonly MicrotrainerRecord[], readonly [field: string]: unknown });
 }
 
 /** Emit one ordered event stream from the validated per-exercise records. */
-function sessionEvents(records) {
-  const events = [];
+function sessionEvents(records: readonly MicrotrainerRecord[]) {
+  const events: ReturnType<typeof eventForRecord>[] = [];
   for (const record of records) {
     events.push(eventForRecord(record, 'PROMPTED', record.final.promptAtMs, {
       target: record.final.question.target, choices: record.final.question.choices,
@@ -618,9 +728,9 @@ function sessionEvents(records) {
 }
 
 /** Build an immutable Plan 09-compatible session record; no raw media is embedded. */
-export function makeMicrotrainerSession({ session, records = [], artifacts = [] }: any = {}) {
+export function makeMicrotrainerSession({ session, records = [], artifacts = [] }: { session?: unknown, records?: unknown, artifacts?: unknown } = {}) {
   const header = validateSessionHeader(session);
-  if (!Array.isArray(records)) fail('records must be an array');
+  if (!isList(records)) fail('records must be an array');
   const validatedRecords = records.map(record => validateRecord(record));
   const value = {
     schema: MICROTRAINER_SESSION_SCHEMA, version: 1, session: clone(header),
@@ -630,7 +740,7 @@ export function makeMicrotrainerSession({ session, records = [], artifacts = [] 
 }
 
 /** Replay every record in a session and return the same semantic grades. */
-export function replayMicrotrainerSession(input) {
+export function replayMicrotrainerSession(input: unknown) {
   const session = validateMicrotrainerSession(input);
   return freeze(clone(session.records.map(record => ({
     exerciseId: record.exercise.id,

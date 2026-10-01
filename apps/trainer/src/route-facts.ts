@@ -9,6 +9,8 @@
 // whose value differs from the record's field, so a record that moves takes
 // the page with it instead of leaving it quoting a stale number.
 
+import { isList, isRecord } from './validate.ts';
+
 type ClaimLevel = 'MODEL_ONLY' | 'FIXTURE' | 'DEVICE_MEASURED';
 type PathStep = string | number | {id: string};
 type RouteFact = {id: string, label: ClaimLevel, text: string, record?: string, values?: Record<string, number>, from?: Record<string, PathStep[]>, unknown?: string};
@@ -16,7 +18,7 @@ type RouteFact = {id: string, label: ClaimLevel, text: string, record?: string, 
 const EVIDENCE = 'docs/evidence/';
 export const REPOSITORY = 'https://github.com/ppvaz/fnaf-solver/blob/master/';
 
-export const ROUTE_FACTS: readonly RouteFact[] = Object.freeze([
+export const ROUTE_FACTS: readonly RouteFact[] = Object.freeze<RouteFact[]>([
   {
     id: 'bot-cohort',
     label: 'DEVICE_MEASURED',
@@ -80,13 +82,14 @@ export function factText(fact: RouteFact) {
 }
 
 /** The field a path names inside a record; `{id}` picks the array element with that id. */
-export function pick(record, path) {
+export function pick(record: unknown, path: readonly PathStep[]) {
   let here = record;
   for (const step of path) {
     if (here == null) return undefined;
+    // A record is JSON: indexing reads a field, or undefined where there is none.
     here = typeof step === 'object'
-      ? (Array.isArray(here) ? here.find(item => item?.id === step.id) : undefined)
-      : here[step];
+      ? (isList(here) ? here.find(item => isRecord(item) && item.id === step.id) : undefined)
+      : (here as Readonly<Record<string | number, unknown>>)[step];
   }
   return here;
 }

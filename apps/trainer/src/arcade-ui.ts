@@ -19,6 +19,7 @@ import {
   resetArcadeProgress,
   validateArcadeProgress,
 } from './arcade-lab.ts';
+import { find } from './dom.ts';
 
 const STORAGE_KEY = 'm7.arcade.progress';
 const PROFILE_ID = 'arcade-fixture-profile-v1';
@@ -34,9 +35,9 @@ const SPECS = Object.freeze([
   { id: 'fixture-hall-03', target: 'next-hall-state', outcome: 'THREAT', stateFamily: 'hall-threat' },
 ]);
 
-function clone(value) { return structuredClone(value); }
+function clone<T>(value: T) { return structuredClone(value); }
 
-function fixtureSpec(spec, index) {
+function fixtureSpec(spec: (typeof SPECS)[number], index: number) {
   const atMs = index * 1000;
   const snapshot = makeReplaySnapshot({
     id: `fixture-snapshot-${spec.id}`, sessionId: 'arcade-fixture-source',
@@ -60,19 +61,19 @@ function readProgress() {
   }
 }
 
-function writeProgress(progress) {
+function writeProgress(progress: unknown) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(progress)); } catch { /* local-only storage may be unavailable */ }
 }
 
 export class ArcadeLab {
-  declare root: any;
-  declare progress: any;
+  declare root: HTMLElement;
+  declare progress: ReturnType<typeof readProgress>;
   declare index: number;
   declare answered: boolean;
   declare sessionId: string;
-  declare specs: any[];
-  declare set: any;
-  constructor(root) {
+  declare specs: ReturnType<typeof fixtureSpec>[];
+  declare set: ReturnType<typeof makeArcadeSet>;
+  constructor(root: HTMLElement) {
     this.root = root;
     this.progress = readProgress();
     this.index = 0;
@@ -87,8 +88,9 @@ export class ArcadeLab {
 
   bind() {
     this.root.addEventListener('click', event => {
-      const target = (event.target as any);
-      const answer = target.closest?.('[data-arcade-answer]')?.dataset.arcadeAnswer;
+      // A click targets an element.
+      const target = event.target as Element;
+      const answer = target.closest?.<HTMLElement>('[data-arcade-answer]')?.dataset.arcadeAnswer;
       if (answer) { this.answer(answer); return; }
       if (target.closest?.('#btn-arcade-next')) this.next();
       if (target.closest?.('#btn-arcade-reset')) this.reset();
@@ -106,13 +108,13 @@ export class ArcadeLab {
   render() {
     const specId = this.set.exerciseIds[this.index];
     const spec = this.specs.find(item => item.id === specId);
-    const title = this.root.querySelector('#arcade-title');
-    const meta = this.root.querySelector('#arcade-meta');
-    const prompt = this.root.querySelector('#arcade-prompt');
-    const choices = this.root.querySelector('#arcade-choices');
-    const feedback = this.root.querySelector('#arcade-feedback');
-    const record = this.root.querySelector('#arcade-record');
-    const next = this.root.querySelector('#btn-arcade-next');
+    const title = find(this.root, '#arcade-title');
+    const meta = find(this.root, '#arcade-meta');
+    const prompt = find(this.root, '#arcade-prompt');
+    const choices = find(this.root, '#arcade-choices');
+    const feedback = find(this.root, '#arcade-feedback');
+    const record = find(this.root, '#arcade-record');
+    const next = find(this.root, '#btn-arcade-next');
     record.textContent = `LOCAL BESTS · ${this.progress.correct}/${this.progress.scored} correct · best ${this.progress.bestCombo}× · censored ${this.progress.censored}`;
     if (!spec) {
       title.textContent = 'SET COMPLETE';
@@ -130,14 +132,14 @@ export class ArcadeLab {
     prompt.textContent = `What is the independently resolved ${spec.target}?`;
     choices.innerHTML = spec.choices.map(choice =>
       `<button class="arcade-choice" data-arcade-answer="${choice}">${choice}</button>`).join('');
-    for (const button of choices.querySelectorAll('[data-arcade-answer]')) button.disabled = this.answered;
+    for (const button of choices.querySelectorAll<HTMLButtonElement>('[data-arcade-answer]')) button.disabled = this.answered;
     feedback.textContent = this.answered ? feedback.textContent : '';
     feedback.className = this.answered ? feedback.className : 'arcade-feedback';
     next.hidden = !this.answered;
     next.textContent = this.index + 1 === this.set.count ? 'Finish set' : 'Next mission';
   }
 
-  answer(choice) {
+  answer(choice: string) {
     if (this.answered) return;
     const specId = this.set.exerciseIds[this.index];
     const spec = this.specs.find(item => item.id === specId);
@@ -152,11 +154,11 @@ export class ArcadeLab {
     this.progress = applyArcadeGrade(this.progress, grade, Date.now());
     writeProgress(this.progress);
     this.answered = true;
-    const feedback = this.root.querySelector('#arcade-feedback');
+    const feedback = find(this.root, '#arcade-feedback');
     feedback.textContent = grade.correct ? `CORRECT · ${grade.outcome}` : `MISS · evidence says ${grade.outcome}`;
     feedback.className = grade.correct ? 'good' : 'bad';
-    this.root.querySelectorAll('[data-arcade-answer]').forEach(button => { button.disabled = true; });
-    this.root.querySelector('#btn-arcade-next').hidden = false;
+    this.root.querySelectorAll<HTMLButtonElement>('[data-arcade-answer]').forEach(button => { button.disabled = true; });
+    find(this.root, '#btn-arcade-next').hidden = false;
   }
 
   next() {
@@ -173,7 +175,7 @@ export class ArcadeLab {
   }
 
   export() {
-    const area = this.root.querySelector('#arcade-export');
+    const area = find<HTMLTextAreaElement>(this.root, '#arcade-export');
     area.value = exportArcadeProgress(this.progress);
     area.hidden = false; area.select?.();
     try { void navigator.clipboard?.writeText(area.value).catch(() => {}); }

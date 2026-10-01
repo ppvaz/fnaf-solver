@@ -203,7 +203,6 @@
       "debt:apps/desktop/bin": 26,
       "debt:apps/desktop/src": 37,
       "debt:apps/desktop/test": 29,
-      "debt:apps/trainer/src": 143,
       "debt:apps/trainer/test": 24,
       "debt:apps/wiki/test": 1,
       "debt:packages/kernel/test": 10,

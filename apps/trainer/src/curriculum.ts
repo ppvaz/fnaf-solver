@@ -14,7 +14,7 @@ export type Step = {id: string, at: number, label: string, action: string, want?
 const S = (id: string, at: number, label: string, action: string, extra: Partial<Step> = {}): Step => ({ id, at, label, action, ...extra });
 
 // the three-camera sweep, offset from wherever it starts
-const sweep = (t0) => [
+const sweep = (t0: number) => [
   S('cam-10', t0 + 0.00, 'CAM 10, then LIGHT', 'camflash', { cam: 10 }),
   S('cam-4', t0 + 0.20, 'CAM 04, then LIGHT', 'camflash', { cam: 4 }),
   S('cam-7', t0 + 0.40, 'CAM 07, then LIGHT', 'camflash', { cam: 7 }),
@@ -40,7 +40,7 @@ const sweep = (t0) => [
 // geometry, so no step here carries one: how late each step can be before the
 // night is lost is UNKNOWN for this timing, and grading uses the lesson's own
 // tolerance.
-const frames = n => n / C.FPS;
+const frames = (n: number) => n / C.FPS;
 const SLACK = 2;
 const MASK_ON = 0.20;
 const MASK_OFF = MASK_ON + frames(C.MASK_ANIM_ON + SLACK);   // the mask is fully on
@@ -49,7 +49,7 @@ const RAISE = HALL + frames(11);                              // CYCLE_SCRIPT's 
 const SWEEP = RAISE + frames(C.MONITOR_ANIM_UP + SLACK);     // the monitor is fully up
 const HOME = SWEEP + 0.60;                                    // three cameras, 0.2 s apart
 const WIND = HOME + 0.10;
-const ms3 = x => Math.round(x * 1000) / 1000;
+const ms3 = (x: number) => Math.round(x * 1000) / 1000;
 
 const F = (...args: Parameters<typeof S>) => Object.freeze(S(...args));
 export const MINUS7_CYCLE = Object.freeze([
@@ -252,14 +252,14 @@ export const LESSONS = [
   },
 ];
 
-export const byId = (id) => LESSONS.find(l => l.id === id);
+export const byId = (id: string | null | undefined) => LESSONS.find(l => l.id === id);
 
 /**
  * The Sim a lesson starts on: its options, and its opening state. The app and
  * the lesson tests both start lessons here.
  * @param options extra Sim options
  */
-export function lessonSim(lesson: typeof LESSONS[number], options: any = {}) {
+export function lessonSim(lesson: typeof LESSONS[number], options: ConstructorParameters<typeof C.Sim>[0] = {}) {
   const sim = new C.Sim({ android: true, record: true, ...lesson.sim,
     ...(lesson.fullNight ? {} : { durationFrames: LESSON_FRAMES }), ...options });
   if (lesson.start) {
@@ -276,13 +276,16 @@ export function lessonSim(lesson: typeof LESSONS[number], options: any = {}) {
 
 const KEY = 'm7.progress';
 
-export function loadProgress() {
+/** Each lesson's progress, as saveProgress writes it to this device. */
+type Progress = Record<string, { passed: boolean, best: number } | undefined>;
+
+export function loadProgress(): Progress {
   try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch { return {}; }
 }
-export function saveProgress(p) {
+export function saveProgress(p: Progress) {
   try { localStorage.setItem(KEY, JSON.stringify(p)); } catch { /* ignore */ }
 }
-export function markPassed(id, bestCombo) {
+export function markPassed(id: string, bestCombo: number) {
   const p = loadProgress();
   p[id] = { passed: true, best: Math.max(bestCombo || 0, p[id]?.best || 0) };
   saveProgress(p);
@@ -291,7 +294,7 @@ export function markPassed(id, bestCombo) {
 
 // Best combo counts even on a run you did not pass -- progress you can see is
 // the point of a drill.
-export function recordCombo(id, combo) {
+export function recordCombo(id: string, combo: number) {
   if (!combo) return;
   const p = loadProgress();
   const cur = p[id] || { passed: false, best: 0 };

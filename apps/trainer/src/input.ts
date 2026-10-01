@@ -1,12 +1,17 @@
 // Touch plumbing. Everything is pointer-driven, nothing relies on click, and
 // every handler cancels the browser's default so a fast double tap never zooms
 // the page mid-run.
-export function bindInputs(root, onPress, onRelease) {
-  const held = new Map(); // pointerId -> action
+/** A pressed control: its action, whether it is tapped or held, and its element. */
+interface Hit { readonly act: string, readonly mode: string, readonly el: HTMLElement }
 
-  const actionOf = (el) => {
-    const t = el.closest('[data-act]');
-    return t ? { act: t.dataset.act, mode: t.dataset.mode || 'tap', el: t } : null;
+export function bindInputs(root: HTMLElement, onPress: (act: string) => void, onRelease: (act: string) => void) {
+  const held = new Map<number, Hit>(); // pointerId -> action
+
+  // Pointer and touch events on the trainer target elements.
+  const actionOf = (el: EventTarget | null): Hit | null => {
+    const t = (el as Element).closest<HTMLElement>('[data-act]');
+    // The selector matched data-act, so the element carries it.
+    return t ? { act: t.dataset.act as string, mode: t.dataset.mode || 'tap', el: t } : null;
   };
 
   root.addEventListener('pointerdown', (e) => {
@@ -21,7 +26,7 @@ export function bindInputs(root, onPress, onRelease) {
     try { hit.el.setPointerCapture?.(e.pointerId); } catch { /* not fatal */ }
   }, { passive: false });
 
-  const up = (e) => {
+  const up = (e: PointerEvent) => {
     const hit = held.get(e.pointerId);
     if (!hit) return;
     held.delete(e.pointerId);
@@ -51,7 +56,7 @@ export async function keepAwake() {
 }
 
 export function isFullscreen() {
-  return !!(document.fullscreenElement || (document as any).webkitFullscreenElement);
+  return !!(document.fullscreenElement || document.webkitFullscreenElement);
 }
 
 // Browser chrome is not cosmetic here: an address bar showing or hiding resizes
@@ -61,15 +66,15 @@ export function isFullscreen() {
 // Must NOT be awaited-into: requestFullscreen only succeeds while the browser
 // still considers itself inside a user gesture, and awaiting anything first
 // spends that. Call it synchronously from the handler and let it settle later.
-export function goFullscreen(el: any = document.documentElement) {
+export function goFullscreen(el: HTMLElement = document.documentElement) {
   if (isFullscreen()) return Promise.resolve(true);
   const req = el.requestFullscreen || el.webkitRequestFullscreen;
   if (!req) return Promise.resolve(false);
-  let p;
+  let p: Promise<void> | undefined;
   try { p = req.call(el, { navigationUI: 'hide' }); } catch { return Promise.resolve(false); }
   return Promise.resolve(p)
-    .then(() => { (screen.orientation as any)?.lock?.('landscape')?.catch(() => {}); return true; })
+    .then(() => { screen.orientation?.lock?.('landscape')?.catch(() => {}); return true; })
     .catch(() => false);
 }
 
-export function buzz(ms) { try { navigator.vibrate?.(ms); } catch { /* ignore */ } }
+export function buzz(ms: VibratePattern) { try { navigator.vibrate?.(ms); } catch { /* ignore */ } }

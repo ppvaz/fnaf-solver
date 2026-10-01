@@ -7,8 +7,21 @@
 
 import { validateExercise, validateExerciseAttempt } from './training/index.ts';
 import { makeMicrotrainerAttempt, gradeMicrotrainerAttempt } from './microtrainer.ts';
-import { freeze, validatorsFor } from './validate.ts';
-const { fail, object, text } = validatorsFor('renderer');
+import { among, freeze, isList, validatorsFor } from './validate.ts';
+const kit = validatorsFor('renderer');
+// Annotated, so the checker knows a call to it does not return.
+const fail: (message: string) => never = kit.fail;
+const { object, text } = kit;
+
+/** A registered presentation of exercises. */
+interface Renderer {
+  readonly schema: typeof RENDERER_SCHEMA;
+  readonly id: string;
+  readonly version: string;
+  readonly kinds: readonly string[];
+  readonly presentation: string;
+  readonly accessibility: Readonly<Record<string, unknown>>;
+}
 
 export const RENDERER_SCHEMA = 'exercise-renderer-v1';
 export const RENDERER_VIEW_SCHEMA = 'exercise-render-view-v1';
@@ -18,17 +31,17 @@ export const RENDERER_CAPABILITIES = Object.freeze([
   'non-color-labels', 'scalable-text', 'precision-pointer-optional',
 ]);
 
-const clone = value => structuredClone(value);
+const clone = <T>(value: T) => structuredClone(value);
 
-function list(name, values) {
-  if (!Array.isArray(values) || values.length === 0 ||
+function list(name: string, values: unknown) {
+  if (!isList(values) || values.length === 0 ||
       values.some(value => typeof value !== 'string' || value.length === 0))
     fail(`${name} must be a non-empty string array`);
   if (new Set(values).size !== values.length) fail(`${name} must be unique`);
   return values;
 }
 
-function validateAccessibility(input) {
+function validateAccessibility(input: unknown) {
   const value = object('renderer.accessibility', input);
   for (const capability of RENDERER_CAPABILITIES) {
     if (value[capability] !== true) fail(`renderer.accessibility.${capability} is required`);
@@ -37,18 +50,18 @@ function validateAccessibility(input) {
 }
 
 /** Validate a renderer without importing DOM or presentation implementation code. */
-export function validateRenderer(input) {
+export function validateRenderer(input: unknown): Renderer {
   const value = object('renderer', input);
   if (value.schema !== RENDERER_SCHEMA) fail(`renderer schema must be ${RENDERER_SCHEMA}`);
-  if (!RENDERER_IDS.includes(value.id)) fail('renderer.id is not registered');
+  if (!among(RENDERER_IDS, value.id)) fail('renderer.id is not registered');
   text('renderer.version', value.version, 64);
-  if (!Array.isArray(value.kinds) || value.kinds.some(kind =>
-      !['prediction', 'recognition', 'timing', 'strategy'].includes(kind)))
+  if (!isList(value.kinds) || value.kinds.some(kind =>
+      !among(['prediction', 'recognition', 'timing', 'strategy'], kind)))
     fail('renderer.kinds contains an unsupported exercise kind');
   list('renderer.kinds', value.kinds);
   text('renderer.presentation', value.presentation, 96);
   validateAccessibility(value.accessibility);
-  return freeze(clone(value));
+  return freeze(clone(value) as unknown as Renderer);
 }
 
 export const RENDERERS = Object.freeze({
@@ -69,16 +82,18 @@ export const RENDERERS = Object.freeze({
   },
 });
 
-function rendererFor(input) {
-  return validateRenderer(typeof input === 'string' ? RENDERERS[input] : input);
+function rendererFor(input: unknown) {
+  // A name that is not registered reads undefined (or an inherited member), which validateRenderer refuses.
+  return validateRenderer(typeof input === 'string' ? (RENDERERS as Readonly<Record<string, unknown>>)[input] : input);
 }
 
 /** Build a renderer view that freezes question/deadlines and never embeds raw media. */
-export function makeRendererView(exerciseInput, rendererInput) {
+export function makeRendererView(exerciseInput: unknown, rendererInput: unknown) {
   const exercise = validateExercise(exerciseInput);
   const renderer = rendererFor(rendererInput);
   if (!renderer.kinds.includes(exercise.kind)) fail('renderer does not support this exercise kind');
-  const sourceCrop = exercise.eligibility.sourceCrop;
+  // A recognition exercise's crop (makeRecognitionExercise); its fields are read as JavaScript reads them.
+  const sourceCrop = exercise.eligibility.sourceCrop as Readonly<Record<string, unknown>> | null | undefined;
   return freeze({
     schema: RENDERER_VIEW_SCHEMA, renderer: { id: renderer.id, version: renderer.version },
     exerciseId: exercise.id, kind: exercise.kind, target: exercise.question.target,
@@ -99,7 +114,9 @@ export function makeRendererView(exerciseInput, rendererInput) {
  * Create an attempt through the shared renderer contract, without scoring motor behavior as correctness.
  */
 export function makeRendererAttempt({ exercise, renderer, sessionId, shownAtMs,
-  commitment = null, motor = null }: any = {}) {
+  commitment = null, motor = null }: {
+    exercise?: unknown, renderer?: unknown, sessionId?: string, shownAtMs?: number, commitment?: unknown, motor?: unknown,
+  } = {}) {
   const value = validateExercise(exercise);
   const descriptor = rendererFor(renderer);
   const view = makeRendererView(value, descriptor);
@@ -111,9 +128,9 @@ export function makeRendererAttempt({ exercise, renderer, sessionId, shownAtMs,
 }
 
 /** Prove presentation invariance for the same frozen attempt across renderers. */
-export function compareRendererAttempts(exerciseInput, attempts) {
+export function compareRendererAttempts(exerciseInput: unknown, attempts: unknown) {
   const exercise = validateExercise(exerciseInput);
-  if (!Array.isArray(attempts) || attempts.length < 2) fail('at least two renderer attempts are required');
+  if (!isList(attempts) || attempts.length < 2) fail('at least two renderer attempts are required');
   const rows = attempts.map(attempt => {
     const value = validateExerciseAttempt(attempt);
     if (value.exerciseId !== exercise.id) fail('renderer attempt targets another exercise');

@@ -270,8 +270,15 @@
       "file": "apps/trainer/src/arcade-ui.ts",
       "imports": [
         "./arcade-lab.ts",
+        "./dom.ts",
         "./microtrainer.ts",
         "./renderers.ts"
+      ]
+    },
+    {
+      "file": "apps/trainer/src/assets.ts",
+      "imports": [
+        "./audio.ts"
       ]
     },
     {
@@ -299,6 +306,8 @@
     {
       "file": "apps/trainer/src/lane.ts",
       "imports": [
+        "./coach.ts",
+        "./curriculum.ts",
         "@sixam/source/fnaf2"
       ]
     },
@@ -310,6 +319,7 @@
         "./audio.ts",
         "./coach.ts",
         "./curriculum.ts",
+        "./dom.ts",
         "./input.ts",
         "./lane.ts",
         "./report.ts",
@@ -337,7 +347,26 @@
     {
       "file": "apps/trainer/src/report.ts",
       "imports": [
+        "./coach.ts",
         "@sixam/source/fnaf2"
+      ]
+    },
+    {
+      "file": "apps/trainer/src/route-facts.ts",
+      "imports": [
+        "./validate.ts"
+      ]
+    },
+    {
+      "file": "apps/trainer/src/training/activity-gate.ts",
+      "imports": [
+        "../validate.ts"
+      ]
+    },
+    {
+      "file": "apps/trainer/src/training/exercise.ts",
+      "imports": [
+        "../validate.ts"
       ]
     },
     {
@@ -350,6 +379,8 @@
     {
       "file": "apps/trainer/src/ui.ts",
       "imports": [
+        "./coach.ts",
+        "./dom.ts",
         "./lane.ts",
         "./report.ts",
         "@sixam/source/fnaf2"

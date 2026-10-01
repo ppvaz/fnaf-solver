@@ -6,7 +6,7 @@
 // and the `x!` assertion -- and holds each area to its entry in tools/quality-baseline.json
 // (`typeDebt`, through tools/gate-kit.ts): a new one fails unless one is paid elsewhere in the area, a
 // paid one lowers the entry, and an area with no entry carries none. That is how an area stays typed
-// once it is: the kernel, Source, Play, Propose and Review src, and the wiki, since 2026-10-01.
+// once it is: the kernel, Source, Play, Propose and Review src, the wiki and the trainer, since 2026-10-01.
 //
 //   node tools/test-type-debt.ts          exit 0 when no area's debt grew, 1 naming each area that did
 //   node tools/test-type-debt.ts --list   print each area's count

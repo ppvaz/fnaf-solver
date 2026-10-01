@@ -4,6 +4,8 @@
 // qualified. It does not estimate risk, repair stale belief, or infer a quiet
 // interval from an absent signal; those are upstream responsibilities.
 
+import { among, isList } from '../validate.ts';
+
 export const ACTIVITY_GATE_SCHEMA = 'activity-gate-v1';
 export const ACTIVITY_GATE_PROFILE_SCHEMA = 'activity-gate-profile-v1';
 export const ACTIVITY_GATE_DECISION_SCHEMA = 'activity-gate-decision-v1';
@@ -17,31 +19,52 @@ export const ACTIVITY_GATE_QUALIFICATIONS = Object.freeze([
   'QUALIFIED', 'UNQUALIFIED', 'UNKNOWN',
 ]);
 
-const FRESHNESS = new Set(['FRESH', 'STALE', 'UNKNOWN']);
-const CONSISTENCY = new Set(['CONSISTENT', 'CONFLICTING', 'UNKNOWN']);
-const CRITICAL = new Set(['CLEAR', 'ACTIVE', 'COOLING_DOWN', 'UNKNOWN']);
-const clone = value => structuredClone(value);
-const finite = value => typeof value === 'number' && Number.isFinite(value);
+type Qualification = 'QUALIFIED' | 'UNQUALIFIED' | 'UNKNOWN';
+/** The versioned latency/risk profile the gate reads. */
+interface ActivityGateProfile {
+  readonly schema: typeof ACTIVITY_GATE_PROFILE_SCHEMA;
+  readonly id: string;
+  readonly version: string;
+  readonly profileLimit: number;
+  readonly timing: { readonly promptMs: number, readonly revealMs: number, readonly cancelP99Ms: number, readonly humanRecoveryBudgetMs: number };
+  readonly requiredCapabilities: readonly string[];
+}
+/** What the gate is asked to admit a prompt against. */
+interface ActivityGateSnapshot {
+  readonly schema: typeof ACTIVITY_GATE_SCHEMA;
+  readonly profileId: string;
+  readonly nowMs: number;
+  readonly screen: { readonly identity: string, readonly qualification: Qualification };
+  readonly belief: {
+    readonly freshness: string, readonly consistency: string, readonly criticalState: string,
+    readonly riskUpperBound: number | null, readonly quietHorizonMs: number | null,
+  };
+  readonly capabilities: Readonly<Record<string, Qualification>>;
+}
 
-function fail(message) { throw new TypeError(`activity gate: ${message}`); }
-function object(name, value) {
+const FRESHNESS: ReadonlySet<unknown> = new Set(['FRESH', 'STALE', 'UNKNOWN']);
+const CONSISTENCY: ReadonlySet<unknown> = new Set(['CONSISTENT', 'CONFLICTING', 'UNKNOWN']);
+const CRITICAL: ReadonlySet<unknown> = new Set(['CLEAR', 'ACTIVE', 'COOLING_DOWN', 'UNKNOWN']);
+const clone = <T>(value: T) => structuredClone(value);
+const finite = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
+
+function fail(message: string): never { throw new TypeError(`activity gate: ${message}`); }
+function object(name: string, value: unknown): asserts value is Readonly<Record<string, unknown>> {
   if (value === null || typeof value !== 'object' || Array.isArray(value))
     fail(`${name} must be an object`);
-  return value;
 }
-function string(name, value, max = 128) {
+function string(name: string, value: unknown, max = 128): asserts value is string {
   if (typeof value !== 'string' || value.length === 0 || value.length > max)
     fail(`${name} must be a non-empty bounded string`);
-  return value;
 }
-function nonNegative(name, value) {
+function nonNegative(name: string, value: unknown): asserts value is number {
   if (!finite(value) || value < 0) fail(`${name} must be finite and non-negative`);
 }
-function nullableNonNegative(name, value) {
+function nullableNonNegative(name: string, value: unknown): asserts value is number | null {
   if (value !== null) nonNegative(name, value);
 }
 
-function validateTiming(timing) {
+function validateTiming(timing: unknown) {
   object('profile.timing', timing);
   for (const name of ['promptMs', 'revealMs', 'cancelP99Ms', 'humanRecoveryBudgetMs'])
     nonNegative(`profile.timing.${name}`, timing[name]);
@@ -49,7 +72,7 @@ function validateTiming(timing) {
 }
 
 /** Validate the versioned latency/risk profile used by the gate. */
-export function validateActivityGateProfile(input) {
+export function validateActivityGateProfile(input: unknown): Readonly<ActivityGateProfile> {
   object('profile', input);
   if (input.schema !== ACTIVITY_GATE_PROFILE_SCHEMA)
     fail(`profile schema must be ${ACTIVITY_GATE_PROFILE_SCHEMA}`);
@@ -58,48 +81,51 @@ export function validateActivityGateProfile(input) {
   if (!finite(input.profileLimit) || input.profileLimit < 0 || input.profileLimit > 1)
     fail('profile.profileLimit must be between 0 and 1');
   validateTiming(input.timing);
-  if (!Array.isArray(input.requiredCapabilities) ||
-      input.requiredCapabilities.length !== ACTIVITY_GATE_CAPABILITIES.length ||
-      input.requiredCapabilities.some(name => !ACTIVITY_GATE_CAPABILITIES.includes(name)) ||
-      new Set(input.requiredCapabilities).size !== input.requiredCapabilities.length)
+  const required = input.requiredCapabilities;
+  if (!isList(required) ||
+      required.length !== ACTIVITY_GATE_CAPABILITIES.length ||
+      required.some(name => !among(ACTIVITY_GATE_CAPABILITIES, name)) ||
+      new Set(required).size !== required.length)
     fail('profile.requiredCapabilities must contain all unique known capabilities');
-  return Object.freeze(clone(input));
+  return Object.freeze(clone(input) as unknown as ActivityGateProfile);
 }
 
-function validateCapabilities(capabilities) {
+function validateCapabilities(capabilities: unknown) {
   object('snapshot.capabilities', capabilities);
   for (const name of ACTIVITY_GATE_CAPABILITIES) {
-    if (!ACTIVITY_GATE_QUALIFICATIONS.includes(capabilities[name]))
+    if (!among(ACTIVITY_GATE_QUALIFICATIONS, capabilities[name]))
       fail(`snapshot.capabilities.${name} is invalid`);
   }
   return capabilities;
 }
 
 /** Validate an immutable snapshot without deciding whether it is eligible. */
-export function validateActivityGateSnapshot(input) {
+export function validateActivityGateSnapshot(input: unknown): Readonly<ActivityGateSnapshot> {
   object('snapshot', input);
   if (input.schema !== ACTIVITY_GATE_SCHEMA)
     fail(`snapshot schema must be ${ACTIVITY_GATE_SCHEMA}`);
   string('snapshot.profileId', input.profileId, 160);
   nonNegative('snapshot.nowMs', input.nowMs);
-  object('snapshot.screen', input.screen);
-  if (!ACTIVITY_GATE_SCREEN_IDENTITIES.includes(input.screen.identity))
+  const screen = input.screen;
+  object('snapshot.screen', screen);
+  if (!among(ACTIVITY_GATE_SCREEN_IDENTITIES, screen.identity))
     fail('snapshot.screen.identity is invalid');
-  if (!ACTIVITY_GATE_QUALIFICATIONS.includes(input.screen.qualification))
+  if (!among(ACTIVITY_GATE_QUALIFICATIONS, screen.qualification))
     fail('snapshot.screen.qualification is invalid');
-  object('snapshot.belief', input.belief);
-  if (!FRESHNESS.has(input.belief.freshness)) fail('snapshot.belief.freshness is invalid');
-  if (!CONSISTENCY.has(input.belief.consistency)) fail('snapshot.belief.consistency is invalid');
-  if (!CRITICAL.has(input.belief.criticalState)) fail('snapshot.belief.criticalState is invalid');
-  nullableNonNegative('snapshot.belief.riskUpperBound', input.belief.riskUpperBound);
-  if (input.belief.riskUpperBound !== null && input.belief.riskUpperBound > 1)
+  const belief = input.belief;
+  object('snapshot.belief', belief);
+  if (!FRESHNESS.has(belief.freshness)) fail('snapshot.belief.freshness is invalid');
+  if (!CONSISTENCY.has(belief.consistency)) fail('snapshot.belief.consistency is invalid');
+  if (!CRITICAL.has(belief.criticalState)) fail('snapshot.belief.criticalState is invalid');
+  nullableNonNegative('snapshot.belief.riskUpperBound', belief.riskUpperBound);
+  if (belief.riskUpperBound !== null && belief.riskUpperBound > 1)
     fail('snapshot.belief.riskUpperBound must be at most 1');
-  nullableNonNegative('snapshot.belief.quietHorizonMs', input.belief.quietHorizonMs);
+  nullableNonNegative('snapshot.belief.quietHorizonMs', belief.quietHorizonMs);
   validateCapabilities(input.capabilities);
-  return Object.freeze(clone(input));
+  return Object.freeze(clone(input) as unknown as ActivityGateSnapshot);
 }
 
-function requiredQuietMs(profile) {
+function requiredQuietMs(profile: ActivityGateProfile) {
   const { promptMs, revealMs, cancelP99Ms, humanRecoveryBudgetMs } = profile.timing;
   return promptMs + revealMs + cancelP99Ms + humanRecoveryBudgetMs;
 }
@@ -108,10 +134,10 @@ function requiredQuietMs(profile) {
  * Evaluate eligibility with stable refusal reasons. The order is diagnostic;
  * all failed prerequisites are retained so callers do not retry blindly.
  */
-export function evaluateActivityGate(snapshotInput, profileInput) {
+export function evaluateActivityGate(snapshotInput: unknown, profileInput: unknown) {
   const snapshot = validateActivityGateSnapshot(snapshotInput);
   const profile = validateActivityGateProfile(profileInput);
-  const reasons = [];
+  const reasons: string[] = [];
   if (snapshot.profileId !== profile.id) reasons.push('profile-mismatch');
   if (snapshot.screen.identity !== 'FNAF2_NIGHT') reasons.push('screen-not-night');
   if (snapshot.screen.qualification !== 'QUALIFIED') reasons.push('screen-unqualified');

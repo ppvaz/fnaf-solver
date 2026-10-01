@@ -1,5 +1,19 @@
 import * as C from '@sixam/source/fnaf2';
 import { MINUS7_CYCLE } from './curriculum.ts';
+import type { Step } from './curriculum.ts';
+
+/** One graded step: what the lane and the summary read. */
+interface Result { readonly stepId: string, readonly label: string, readonly delta: number | null, readonly grade: string, readonly t: number }
+/** A step coming up, for the rhythm lane. */
+export interface Note { readonly step: Step, readonly due: number, readonly done: boolean }
+interface CoachOptions {
+  readonly script?: readonly Step[];
+  readonly enabled?: boolean;
+  readonly anchorDigits?: readonly number[];
+  readonly tolGood?: number;
+  readonly tolOk?: number;
+  readonly onCycle?: ((ok: boolean, streak: number) => void) | null;
+}
 
 // Whether the game took a press. A send is not game acceptance (CLAUDE.md):
 // the Sim refuses a press without a word -- the mask while it is still
@@ -10,7 +24,7 @@ import { MINUS7_CYCLE } from './curriculum.ts';
 // press the game had refused.
 
 /** The Sim state a press can change. */
-export function pressState(sim: any) {
+export function pressState(sim: C.Sim) {
   return {
     maskOn: sim.maskOn, maskAnim: sim.maskAnim, monitor: sim.monitor,
     dropEverything: !!sim.dropEverything, dropTouch: sim.dropTouch ?? null,
@@ -43,7 +57,7 @@ export function pressLanded(before: ReturnType<typeof pressState>, after: Return
  * The one press path, shared by the app and the tests: the Sim takes the press
  * first, then the coach grades it knowing whether it landed.
  */
-export function playPress(sim: any, coach: Coach | null | undefined, act: string) {
+export function playPress(sim: C.Sim, coach: Coach | null | undefined, act: string) {
   const before = pressState(sim);
   sim.press(act);
   const landed = pressLanded(before, pressState(sim), act);
@@ -54,20 +68,20 @@ export function playPress(sim: any, coach: Coach | null | undefined, act: string
 // Watches the routine rather than the game: which input was due, when it
 // actually landed, and by how much it was off.
 export class Coach {
-  declare sim: any;
-  declare script: any;
+  declare sim: C.Sim;
+  declare script: readonly Step[];
   declare enabled: boolean;
-  declare anchorDigits: any;
-  declare tolGood: any;
-  declare tolOk: any;
-  declare cycleStart: number;
+  declare anchorDigits: readonly number[];
+  declare tolGood: number;
+  declare tolOk: number;
+  declare cycleStart: number | null;
   declare idx: number;
-  declare results: any[];
-  declare trace: any[];
-  declare holds: any[];
-  declare pendingFlash: { step: any; t: any; delta: number; };
+  declare results: Result[];
+  declare trace: { cycle: number, stepId: string, action: string, at: number, delta: number | null, grade: string, t: number }[];
+  declare holds: { cycle: number, stepId: string, heldSec: number, targetSec: number | undefined }[];
+  declare pendingFlash: { step: Step; t: number; delta: number; } | null;
   declare suspended: boolean;
-  declare onCycle: any;
+  declare onCycle: ((ok: boolean, streak: number) => void) | null;
   declare cycleOk: boolean;
   declare windFrames: number;
   declare combo: number;
@@ -75,10 +89,10 @@ export class Coach {
   declare streak: number;
   declare bestStreak: number;
   declare cycles: number;
-  declare settleAt: number;
-  declare last: any;
-  declare lastHeld: number;
-  constructor(sim, opts: any = {}) {
+  declare settleAt: number | null;
+  declare last: Result | undefined;
+  declare lastHeld: number | undefined;
+  constructor(sim: C.Sim, opts: CoachOptions = {}) {
     this.sim = sim;
     this.script = opts.script || MINUS7_CYCLE;
     this.enabled = opts.enabled !== false;
@@ -108,12 +122,13 @@ export class Coach {
   }
 
   get expected() { return this.cycleStart == null ? null : this.script[this.idx]; }
-  get expectedAt() { const e = this.expected; return e ? this.cycleStart + e.at : null; }
+  // An expected step exists only once a cycle has started.
+  get expectedAt() { const e = this.expected; return e ? (this.cycleStart as number) + e.at : null; }
 
   // Next whole second, strictly after `t`, whose digit is an anchor digit.
   // Must be strictly after: returning a time already past makes a short script
   // wrap every frame instead of once per cycle.
-  nextAnchor(t) {
+  nextAnchor(t: number) {
     const from = Math.floor(t) + 1;
     for (let k = 0; k < 12; k++) {
       const cand = from + k;
@@ -122,14 +137,14 @@ export class Coach {
     return from;
   }
 
-  start(t) { this.cycleStart = this.nextAnchor(t); this.idx = 0; }
+  start(t: number) { this.cycleStart = this.nextAnchor(t); this.idx = 0; }
 
   // The tolerance for one step, as separate early/late magnitudes. A step that
   // carries a measured window is graded against that; anything else falls back
   // to the lesson's own symmetric pair.
-  tolFor(step) { return C.stepTol(step, this.tolGood, this.tolOk); }
+  tolFor(step: Step) { return C.stepTol(step, this.tolGood, this.tolOk); }
 
-  grade(step, delta) {
+  grade(step: Step, delta: number) {
     const t = this.tolFor(step);
     const a = Math.abs(delta);
     const good = delta > 0 ? t.goodLate : t.goodEarly;
@@ -139,7 +154,7 @@ export class Coach {
 
   // The wind step is graded on how long the box was actually being wound, not
   // on the press: a tap would otherwise score full marks while the box drains.
-  get windStep() { return this.script.find(st => st.hold); }
+  get windStep() { return this.script.find((st): st is Step & { readonly hold: number } => !!st.hold); }
 
   // called every frame
   update() {
@@ -160,7 +175,7 @@ export class Coach {
     return null;
   }
 
-  advance(t) {
+  advance(t: number) {
     this.idx++;
     if (this.idx >= this.script.length) this.wrap(t);
   }
@@ -171,7 +186,7 @@ export class Coach {
   // 2026-09-30 it was settled at the WIND press, which graded the previous
   // pass's hold: every lesson's first pass read `no-wind`, and each trace
   // `holds` row carried the next pass's cycle.
-  wrap(t) {
+  wrap(t: number) {
     const last = this.script[this.script.length - 1];
     this.cycleStart = this.nextAnchor(t + 0.2);
     this.idx = 0;
@@ -179,7 +194,7 @@ export class Coach {
     else this.completeCycle();
   }
 
-  push(step, delta, grade) {
+  push(step: Step, delta: number | null, grade: string) {
     this.trace.push({ cycle: this.cycles, stepId: step.id, action: step.action,
                       at: step.at, delta, grade, t: this.sim.t });
     this.results.push({ stepId: step.id, label: step.label, delta, grade, t: this.sim.t });
@@ -194,7 +209,7 @@ export class Coach {
   // cycles are just this one shifted.
   upcoming(horizon = 3) {
     if (this.cycleStart == null || !this.script?.length) return [];
-    const t = this.sim.t, out = [];
+    const t = this.sim.t, out: Note[] = [];
     for (let c = 0; c < 3; c++) {
       const base = this.cycleStart + c * 5;
       for (let i = 0; i < this.script.length; i++) {
@@ -233,7 +248,7 @@ export class Coach {
     return this.sim.camsUp ? '[data-widget="camlight"]' : '[data-widget="light"]';
   }
 
-  get cue() {
+  get cue(): { sel: string, label: string, now?: boolean } | null {
     if (this.suspended || this.cycleStart == null) return null;
     if (this.pendingFlash) return { sel: this.lightSel, label: 'Flash' };
     const e = this.expected;
@@ -252,7 +267,7 @@ export class Coach {
   // Called on every player input, after the Sim has taken or refused it. A
   // refused press keeps its time for the lateness census but is graded
   // `refused`, not on its timing, and it moves the pass on like a miss.
-  onInput(act, landed = true) {
+  onInput(act: string, landed = true) {
     if (!this.enabled || this.suspended || this.cycleStart == null) return;
     const t = this.sim.t;
     // resolve a pending camera flash
@@ -281,7 +296,7 @@ export class Coach {
     this.advance(t);
   }
 
-  matches(step, act) {
+  matches(step: Step, act: string) {
     switch (step.action) {
       case 'monitor': return act === 'monitor';
       case 'mask':    return act === 'mask';
@@ -294,7 +309,7 @@ export class Coach {
   }
 
   get summary() {
-    const scored = this.results.filter(r => r.delta != null);
+    const scored = this.results.filter((r): r is Result & { readonly delta: number } => r.delta != null);
     const n = scored.length || 1;
     const good = this.results.filter(r => r.grade === 'good').length;
     const bad = this.results.filter(r => r.grade === 'missed' || r.grade === 'late' ||
@@ -307,14 +322,14 @@ export class Coach {
 
 // The Phase B duel: measures un-mask -> CAM 10 -> CAM 04 as one motion.
 export class DuelTimer {
-  declare best: number;
-  declare startT: any;
-  declare marks: any[];
-  declare lastResult: number;
-  constructor() { this.reset(); this.best = +localStorage.getItem('m7.bestDuel') || null; }
+  declare best: number | null;
+  declare startT: number | null;
+  declare marks: { t: number, what: string }[];
+  declare lastResult: number | null;
+  constructor() { this.reset(); this.best = Number(localStorage.getItem('m7.bestDuel')) || null; }
   reset() { this.startT = null; this.marks = []; this.lastResult = null; }
-  begin(t) { this.startT = t; this.marks = []; }
-  mark(t, what) {
+  begin(t: number) { this.startT = t; this.marks = []; }
+  mark(t: number, what: string) {
     if (this.startT == null) return;
     this.marks.push({ t: t - this.startT, what });
     if (what === 'cam:4') {

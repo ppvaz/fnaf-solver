@@ -1,38 +1,59 @@
 import * as C from '@sixam/source/fnaf2';
 import { fmtTime } from './report.ts';
 import { Lane } from './lane.ts';
+import { find } from './dom.ts';
+import type { Coach, DuelTimer } from './coach.ts';
 
-const pad2 = (n) => String(n).padStart(2, '0');
+/** Where a control sits, as fractions of its space. */
+interface Rect { x: number, y: number, w: number, h: number }
+type Layout = { map: Record<string, Rect>, widgets: Record<string, Rect & { space: string }> };
+/** A control being dragged or resized while calibrating. */
+interface Drag {
+  el: HTMLElement, box: DOMRect, resizing: boolean, dx: number, dy: number, ox: number, oy: number,
+  x?: number, y?: number, w?: number, h?: number,
+}
 
-const GRADE_FX = {
+const pad2 = (n: number | string) => String(n).padStart(2, '0');
+// Every element looked up below sits inside the markup build() wrote.
+const parentOf = (el: Element) => el.parentElement as HTMLElement;
+
+const GRADE_FX: Readonly<Record<string, string>> = {
   good: '#57DC6E', ok: '#FFB020', late: '#FF5449',
   missed: '#FF5449', skipped: '#FF5449', 'no-flash': '#FF5449', refused: '#FF5449',
 };
 
 export class UI {
-  declare root: any;
-  declare map: any;
-  declare widgets: any;
+  declare root: HTMLElement;
+  declare map: Layout['map'];
+  declare widgets: Layout['widgets'];
   declare calibrating: boolean;
   declare duelMode: boolean;
-  declare duel: any;
+  declare duel: DuelTimer | null;
   declare showCues: boolean;
   declare reduce: MediaQueryList;
-  declare el: { tMain: any; tDec: any; boxFill: any; bars: any[]; budget: any; stuns: any[]; stunRows: any[]; foxy: any; bb: any; gf: any; office: any; monitor: any; hallGlow: any; hallWho: any; maskOv: any; blackoutOv: any; feedCam: any; feedName: any; feedBody: any; feedStun: any; wind: any; map: any; coachNext: any; coachFb: any; coachStreak: any; coachBar: any; coachBarFill: any; lane: any; monArrow: any; fx: { vignette: any; wipe: any; scan: any; }; timer: any; };
+  declare el: {
+    tMain: HTMLElement; tDec: HTMLElement; boxFill: HTMLElement; bars: Element[]; budget: HTMLElement;
+    stuns: HTMLElement[]; stunRows: HTMLElement[]; foxy: HTMLElement; bb: HTMLElement; gf: HTMLElement;
+    office: HTMLElement; monitor: HTMLElement; hallGlow: HTMLElement; hallWho: HTMLElement; maskOv: HTMLElement;
+    blackoutOv: HTMLElement; feedCam: HTMLElement; feedName: HTMLElement; feedBody: HTMLElement; feedStun: HTMLElement;
+    wind: HTMLElement; map: HTMLElement; coachNext: HTMLElement; coachFb: HTMLElement; coachStreak: HTMLElement;
+    coachBar: HTMLElement; coachBarFill: HTMLElement; lane: HTMLCanvasElement; monArrow: HTMLElement;
+    fx: { vignette: HTMLElement; wipe: HTMLElement; scan: HTMLElement; }; timer: HTMLElement;
+  };
   declare lane: Lane;
-  declare _mapW: any;
-  declare _mapH: any;
-  declare lastMaskOn: any;
-  declare _maskWas: any;
-  declare _whoWas: any;
-  declare _lastShown: any;
-  declare useLight: boolean;
-  declare useCamLight: boolean;
+  declare _mapW: number | undefined;
+  declare _mapH: number | undefined;
+  declare lastMaskOn: boolean | undefined;
+  declare _maskWas: boolean | undefined;
+  declare _whoWas: string | undefined;
+  declare _lastShown: Coach['last'] | null;
+  declare useLight: boolean | undefined;
+  declare useCamLight: boolean | undefined;
   declare lockMonitor: boolean;
-  declare lastCamsUp: any;
-  declare _cueEl: any;
-  declare _cueSel: any;
-  constructor(root) {
+  declare lastCamsUp: boolean | undefined;
+  declare _cueEl: Element | null | undefined;
+  declare _cueSel: string | null | undefined;
+  constructor(root: HTMLElement) {
     this.root = root;
     const saved = loadLayout();
     this.map = saved.map;
@@ -110,41 +131,41 @@ export class UI {
       <div id="fx" aria-hidden="true"><i class="fx-vignette"></i><i class="fx-wipe"></i><i class="fx-scan"></i></div>
     `;
     this.el = {
-      tMain: this.root.querySelector('#t-main'),
-      tDec: this.root.querySelector('#t-dec'),
-      boxFill: this.root.querySelector('#box-fill'),
+      tMain: find(this.root, '#t-main'),
+      tDec: find(this.root, '#t-dec'),
+      boxFill: find(this.root, '#box-fill'),
       bars: [...this.root.querySelectorAll('#bars i')],
-      budget: this.root.querySelector('#budget'),
-      stuns: C.TARGET_CAMS.map(c => this.root.querySelector(`.stun[data-cam="${c}"] .stun-track i`)),
-      stunRows: C.TARGET_CAMS.map(c => this.root.querySelector(`.stun[data-cam="${c}"]`)),
-      foxy: this.root.querySelector('#th-foxy span'),
-      bb: this.root.querySelector('#th-bb span'),
-      gf: this.root.querySelector('#th-gf span'),
-      office: this.root.querySelector('#office'),
-      monitor: this.root.querySelector('#monitor'),
-      hallGlow: this.root.querySelector('#hall-glow'),
-      hallWho: this.root.querySelector('#hall-who'),
-      maskOv: this.root.querySelector('#mask-ov'),
-      blackoutOv: this.root.querySelector('#blackout-ov'),
-      feedCam: this.root.querySelector('#feed-cam'),
-      feedName: this.root.querySelector('#feed-name'),
-      feedBody: this.root.querySelector('#feed-body'),
-      feedStun: this.root.querySelector('#feed-stun'),
-      wind: this.root.querySelector('#windbtn'),
-      map: this.root.querySelector('#map'),
-      coachNext: this.root.querySelector('#coach-next'),
-      coachFb: this.root.querySelector('#coach-fb'),
-      coachStreak: this.root.querySelector('#coach-streak'),
-      coachBar: this.root.querySelector('#coach-bar'),
-      coachBarFill: this.root.querySelector('#coach-bar i'),
-      lane: this.root.querySelector('#lane'),
-      monArrow: this.root.querySelector('#mon-arrow'),
+      budget: find(this.root, '#budget'),
+      stuns: C.TARGET_CAMS.map(c => find(this.root, `.stun[data-cam="${c}"] .stun-track i`)),
+      stunRows: C.TARGET_CAMS.map(c => find(this.root, `.stun[data-cam="${c}"]`)),
+      foxy: find(this.root, '#th-foxy span'),
+      bb: find(this.root, '#th-bb span'),
+      gf: find(this.root, '#th-gf span'),
+      office: find(this.root, '#office'),
+      monitor: find(this.root, '#monitor'),
+      hallGlow: find(this.root, '#hall-glow'),
+      hallWho: find(this.root, '#hall-who'),
+      maskOv: find(this.root, '#mask-ov'),
+      blackoutOv: find(this.root, '#blackout-ov'),
+      feedCam: find(this.root, '#feed-cam'),
+      feedName: find(this.root, '#feed-name'),
+      feedBody: find(this.root, '#feed-body'),
+      feedStun: find(this.root, '#feed-stun'),
+      wind: find(this.root, '#windbtn'),
+      map: find(this.root, '#map'),
+      coachNext: find(this.root, '#coach-next'),
+      coachFb: find(this.root, '#coach-fb'),
+      coachStreak: find(this.root, '#coach-streak'),
+      coachBar: find(this.root, '#coach-bar'),
+      coachBarFill: find(this.root, '#coach-bar i'),
+      lane: find<HTMLCanvasElement>(this.root, '#lane'),
+      monArrow: find(this.root, '#mon-arrow'),
       fx: {
-        vignette: this.root.querySelector('.fx-vignette'),
-        wipe: this.root.querySelector('.fx-wipe'),
-        scan: this.root.querySelector('.fx-scan'),
+        vignette: find(this.root, '.fx-vignette'),
+        wipe: find(this.root, '.fx-wipe'),
+        scan: find(this.root, '.fx-scan'),
       },
-      timer: this.root.querySelector('.hud-timer'),
+      timer: find(this.root, '.hud-timer'),
     };
     this.lane = new Lane(this.el.lane);
     this.buildMap();
@@ -154,8 +175,9 @@ export class UI {
 
   // Position every touch control from the calibrated geometry.
   applyWidgets() {
-    for (const el of this.root.querySelectorAll('[data-widget]')) {
-      const w = this.widgets[el.dataset.widget];
+    for (const el of this.root.querySelectorAll<HTMLElement>('[data-widget]')) {
+      // A property key is a string, as indexing would make it.
+      const w = this.widgets[String(el.dataset.widget)];
       if (!w) {
         // Silently skipping leaves the control stacked at 0,0 with no clue why.
         console.error(`[layout] no geometry for widget "${el.dataset.widget}" — check DEFAULT_WIDGETS`);
@@ -179,9 +201,9 @@ export class UI {
       b.dataset.cam = id;
       if (C.TARGET_CAMS.includes(+id)) b.classList.add('is-target');
       if (+id === C.BOX_CAM) b.classList.add('is-box');
-      b.style.left = `${(r as any).x * 100}%`; b.style.top = `${(r as any).y * 100}%`;
-      b.style.width = `${(r as any).w * 100}%`; b.style.height = `${(r as any).h * 100}%`;
-      b.innerHTML = `<b>${pad2(id)}</b><em>${C.CAMS[id].name}</em>`;
+      b.style.left = `${r.x * 100}%`; b.style.top = `${r.y * 100}%`;
+      b.style.width = `${r.w * 100}%`; b.style.height = `${r.h * 100}%`;
+      b.innerHTML = `<b>${pad2(id)}</b><em>${C.CAMS[+id].name}</em>`;
       m.appendChild(b);
     }
   }
@@ -189,7 +211,7 @@ export class UI {
   // CSS aspect-ratio loses to the height cap inside a flex row, so size the map
   // explicitly: the traced coordinates only hold their shape at 268:199.
   fitMap() {
-    const wrap = this.el.map.parentElement;
+    const wrap = parentOf(this.el.map);
     const cs = getComputedStyle(wrap);
     const availW = wrap.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
     const availH = wrap.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
@@ -199,13 +221,13 @@ export class UI {
     this.el.map.style.height = `${w / C.MAP_AR}px`;
   }
 
-  render(sim, coach) {
+  render(sim: C.Sim, coach: Coach | null | undefined) {
     // Phase B runs without a script; its lane shows the stun deadline instead.
     if (this.duelMode) this.lane.drawDuel(sim, this.duel);
-    if (this._mapW !== this.el.map.parentElement.clientWidth ||
-        this._mapH !== this.el.map.parentElement.clientHeight) {
-      this._mapW = this.el.map.parentElement.clientWidth;
-      this._mapH = this.el.map.parentElement.clientHeight;
+    if (this._mapW !== parentOf(this.el.map).clientWidth ||
+        this._mapH !== parentOf(this.el.map).clientHeight) {
+      this._mapW = parentOf(this.el.map).clientWidth;
+      this._mapH = parentOf(this.el.map).clientHeight;
       this.fitMap();
     }
     const t = sim.t;
@@ -230,7 +252,7 @@ export class UI {
     }
 
     this.el.boxFill.style.width = `${sim.box * 100}%`;
-    this.el.boxFill.parentElement.classList.toggle('is-low', sim.box < 0.28);
+    parentOf(this.el.boxFill).classList.toggle('is-low', sim.box < 0.28);
     const bars = sim.bars;
     this.el.bars.forEach((b, i) => b.classList.toggle('on', i < bars));
     this.el.bars.forEach(b => b.classList.toggle('blink', sim.power <= C.POWER_BLINK));
@@ -240,13 +262,13 @@ export class UI {
     this.el.budget.className = perSec > C.POWER_FRAMES / C.NIGHT_FRAMES ? 'over' : '';
 
     this.el.foxy.textContent = sim.foxy.loc === 'hall' ? `HALL D=${sim.foxy.D}` : 'AWAY';
-    this.el.foxy.parentElement.className = `threat ${sim.foxy.gotYou ? 'crit' : sim.foxy.loc === 'hall' && sim.foxy.D >= 3 ? 'warn' : ''}`;
+    parentOf(this.el.foxy).className = `threat ${sim.foxy.gotYou ? 'crit' : sim.foxy.loc === 'hall' && sim.foxy.D >= 3 ? 'warn' : ''}`;
     this.el.bb.textContent = sim.bb.inside ? 'IN OFFICE'
       : sim.bb.inOpening ? 'IN VENT' : `${sim.bb.stage}/${C.BB_STAGES}`;
-    this.el.bb.parentElement.className = `threat ${sim.bb.inside || sim.bb.inOpening ? 'crit'
+    parentOf(this.el.bb).className = `threat ${sim.bb.inside || sim.bb.inOpening ? 'crit'
       : sim.bb.stage >= C.BB_STAGES - 1 ? 'warn' : ''}`;
     this.el.gf.textContent = sim.gf.present ? 'OFFICE' : sim.gf.inHall ? 'HALL' : '—';
-    this.el.gf.parentElement.className = `threat ${sim.gf.present || sim.gf.inHall ? 'crit' : ''}`;
+    parentOf(this.el.gf).className = `threat ${sim.gf.present || sim.gf.inHall ? 'crit' : ''}`;
 
     // A masked player has no other move: hide every control but MASK while it
     // is on (or going on), so the trainer never invites an input the game
@@ -307,7 +329,7 @@ export class UI {
       this.el.feedCam.textContent = `CAM ${pad2(viewing)}`;
       this.el.feedName.textContent = C.CAMS[viewing].name;
       const here = sim.units.filter(u => !u.done && u.path[u.idx] === viewing);
-      const extra = [];
+      const extra: string[] = [];
       if (viewing === 10 && sim.bb.stage === 0) extra.push('BB');
       if (viewing === 5 && sim.bb.stage === C.BB_STAGES - 1) extra.push('BB');
       if (viewing === 11) extra.push(`PUPPET ${sim.puppet.stage}/${C.PUPPET_ESCAPE_STAGES}`);
@@ -318,8 +340,9 @@ export class UI {
       const maxStun = Math.max(0, ...here.map(u => sim.unitStunLeft(u)));
       this.el.feedStun.style.width = `${(maxStun / C.STUN_FRAMES) * 100}%`;
       this.el.wind.classList.toggle('shown', viewing === C.BOX_CAM);
-      for (const b of this.el.map.children) {
-        const id = +b.dataset.cam;
+      // The map holds only the camera buttons buildMap made.
+      for (const b of this.el.map.children as HTMLCollectionOf<HTMLElement>) {
+        const id = Number(b.dataset.cam);
         // The stale marker tile remains lit when a raise restores a different
         // `viewing` camera; two active buttons are the glitch's visible tell.
         b.classList.toggle('active', id === viewing || id === sim.cam);
@@ -376,16 +399,16 @@ export class UI {
     }
   }
 
-  setCoachVisible(v) {
-    this.root.querySelector('#coach').style.display = v ? '' : 'none';
+  setCoachVisible(v: boolean) {
+    find(this.root, '#coach').style.display = v ? '' : 'none';
     this.el.lane.style.display = v ? '' : 'none';
   }
 
   // Show only the controls a lesson actually uses. Fewer things on screen is
   // the main lever for making an early lesson learnable.
-  setControls(list) {
+  setControls(list: readonly string[] | null | undefined) {
     const on = new Set(list || ['light', 'mask', 'monitor', 'cams', 'wind', 'vents']);
-    const vis = (sel, show) => this.root.querySelectorAll(sel)
+    const vis = (sel: string, show: boolean) => this.root.querySelectorAll(sel)
       .forEach(e => e.classList.toggle('hidden-ctrl', !show));
     this.useLight = on.has('light');
     this.useCamLight = on.has('camlight');
@@ -402,8 +425,8 @@ export class UI {
   // are calibrating, where both need to be reachable.
   applyLightVisibility(camsUp = this.lastCamsUp) {
     this.lastCamsUp = camsUp;
-    const office = this.root.querySelector('[data-widget="light"]');
-    const cam = this.root.querySelector('[data-widget="camlight"]');
+    const office = find(this.root, '[data-widget="light"]');
+    const cam = find(this.root, '[data-widget="camlight"]');
     if (this.calibrating) {
       office.classList.toggle('hidden-ctrl', false);
       cam.classList.toggle('hidden-ctrl', false);
@@ -417,7 +440,7 @@ export class UI {
   // WAAPI rather than a class toggle: no forced reflow read per input, and
   // transform/opacity stay off the main thread. Cancels anything in flight so
   // rapid inputs restart cleanly instead of queueing.
-  fx(el, frames, opts = {}) {
+  fx(el: Element | null | undefined, frames: Keyframe[], opts: KeyframeAnimationOptions = {}) {
     if (this.reduce.matches || !el) return;
     for (const a of el.getAnimations()) a.cancel();
     el.animate(frames, { easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'none', ...opts });
@@ -426,7 +449,7 @@ export class UI {
   // A grade is currently readable only in the coach strip and the lane -- two
   // places the eye is not, because it is on the button. A screen-edge wash is
   // legible in peripheral vision and, being edge-only, hides nothing.
-  grade(g) {
+  grade(g: string) {
     const el = this.el.fx.vignette;
     el.style.setProperty('--fxc', GRADE_FX[g] || '#FF5449');
     const peak = g === 'good' ? 0.28 : g === 'ok' ? 0.34 : 0.62;
@@ -444,7 +467,7 @@ export class UI {
     ], { duration: 320, easing: 'linear' });
   }
 
-  cleanPass(t) {
+  cleanPass(t: number) {
     this.lane.cleanPass(t);
     const el = this.el.lane;
     el.classList.remove('pass');
@@ -468,7 +491,7 @@ export class UI {
     ], { duration: 420, easing: 'cubic-bezier(.16,1,.3,1)' });
   }
 
-  setStreak(text) {
+  setStreak(text: string | null | undefined) {
     if (text && text !== this.el.coachStreak.textContent) {
       this.fx(this.el.coachStreak,
         [{ transform: 'scale(1.35)' }, { transform: 'scale(1)' }], { duration: 200 });
@@ -496,7 +519,7 @@ export class UI {
   }
 
   // Put a pulsing ring on whatever the player should touch next.
-  setCue(cue) {
+  setCue(cue: { sel: string, now?: boolean } | null) {
     if (this._cueEl && this._cueSel !== cue?.sel) {
       this._cueEl.classList.remove('cue', 'cue-now');
       this._cueEl = null; this._cueSel = null;
@@ -514,7 +537,7 @@ export class UI {
   // Drag-to-calibrate. The geometry shipped in config.js is a reconstruction,
   // so every control -- cameras, light, mask, monitor, vents, wind -- can be
   // dragged to wherever your thumb actually wants it.
-  enableCalibration(on) {
+  enableCalibration(on: boolean) {
     this.calibrating = on;
     this.root.classList.toggle('calibrating', on);
     for (const el of this.root.querySelectorAll('.camb, [data-widget]')) {
@@ -531,7 +554,7 @@ export class UI {
   // whichever element happens to be on top. Flag them instead of letting the
   // player discover it mid-run.
   checkCollisions() {
-    const els = [...this.root.querySelectorAll('.camb, [data-widget]')]
+    const els = [...this.root.querySelectorAll<HTMLElement>('.camb, [data-widget]')]
       .filter(e => e.offsetParent !== null);
     const rects = els.map(e => e.getBoundingClientRect());
     els.forEach(e => e.classList.remove('collide'));
@@ -549,8 +572,9 @@ export class UI {
   }
 
   bindCalibration() {
-    let drag = null;
-    const target = (e) => e.target.closest('.camb, [data-widget]');
+    let drag = null as Drag | null;
+    // Pointer events on the trainer target elements.
+    const target = (e: PointerEvent) => (e.target as Element).closest<HTMLElement>('.camb, [data-widget]');
 
     this.root.addEventListener('pointerdown', (e) => {
       if (!this.calibrating) return;
@@ -559,7 +583,7 @@ export class UI {
       const box = el.offsetParent?.getBoundingClientRect();
       if (!box) return;
       const r = el.getBoundingClientRect();
-      const resizing = !!e.target.closest('.rs');
+      const resizing = !!(e.target as Element).closest('.rs');
       drag = { el, box, resizing,
                dx: e.clientX - r.left, dy: e.clientY - r.top,
                ox: r.left, oy: r.top };
@@ -593,10 +617,12 @@ export class UI {
     const end = () => {
       if (!drag) return;
       const { el, x, y, w, h } = drag;
-      const rec = el.dataset.widget ? this.widgets[el.dataset.widget] : this.map[el.dataset.cam];
+      // A property key is a string, as indexing would make it.
+      const rec = el.dataset.widget ? this.widgets[el.dataset.widget] : this.map[String(el.dataset.cam)];
       let changed = false;
-      if (x != null) { rec.x = x; rec.y = y; changed = true; }
-      if (w != null) { rec.w = w; rec.h = h; changed = true; }
+      // A move sets x and y together, and a resize w and h.
+      if (x != null) { rec.x = x; rec.y = y as number; changed = true; }
+      if (w != null) { rec.w = w; rec.h = h as number; changed = true; }
       if (changed) saveLayout(this.map, this.widgets);
       el.classList.remove('dragging');
       drag = null;
@@ -617,20 +643,22 @@ export class UI {
   }
 }
 
-const clone = (o) => JSON.parse(JSON.stringify(o));
+const clone = <T>(o: T): T => JSON.parse(JSON.stringify(o));
 
 function loadLayout() {
-  const out = { map: clone(C.DEFAULT_MAP), widgets: clone(C.DEFAULT_WIDGETS) };
+  const out: Layout = { map: clone(C.DEFAULT_MAP), widgets: clone(C.DEFAULT_WIDGETS) };
   try {
     const raw = localStorage.getItem('m7.layout');
     if (raw) {
-      const saved = JSON.parse(raw);
+      // What saveLayout wrote on this device; a file that does not read so falls to the defaults.
+      const saved = JSON.parse(raw) as Partial<{ map: Record<string, Partial<Rect>>, widgets: Record<string, Partial<Rect>> }>;
       for (const k of Object.keys(out.map)) if (saved.map?.[k]) Object.assign(out.map[k], saved.map[k]);
       for (const k of Object.keys(out.widgets)) if (saved.widgets?.[k]) {
         // `space` is structural, not user data: never let a saved file change it.
         const v = saved.widgets[k];
-        for (const f of ['x', 'y', 'w', 'h']) {
-          if (typeof v?.[f] === 'number') out.widgets[k][f] = v[f];
+        for (const f of ['x', 'y', 'w', 'h'] as const) {
+          const n = v?.[f];
+          if (typeof n === 'number') out.widgets[k][f] = n;
         }
       }
     }
@@ -638,7 +666,7 @@ function loadLayout() {
   return out;
 }
 
-function saveLayout(map, widgets) {
+function saveLayout(map: Layout['map'], widgets: Layout['widgets']) {
   try { localStorage.setItem('m7.layout', JSON.stringify({ map, widgets })); } catch { /* ignore */ }
 }
 

@@ -1,4 +1,6 @@
 import * as C from '@sixam/source/fnaf2';
+import type { Coach, DuelTimer, Note } from './coach.ts';
+import type { Step } from './curriculum.ts';
 
 // A rhythm lane. The routine is a timing pattern, so show it as one: upcoming
 // inputs scroll toward a hit line, each with its tolerance window drawn around
@@ -18,7 +20,12 @@ const INK = { dim: '#8A9483', dimmer: '#5C6656', line: '#161C16',
               good: '#57DC6E', ok: '#FFB020', bad: '#FF5449', violet: '#C983F5' };
 const MONO = "'IBM Plex Mono', ui-monospace, monospace";
 
-export function glyphFor(step) {
+/** What a step draws as, and which control's colours it takes. */
+interface Glyph { readonly text: string, readonly kind: keyof typeof COLORS }
+/** A floating judgement. */
+interface Pop { readonly label: string, readonly grade: string, readonly t: number, readonly born: number }
+
+export function glyphFor(step: Step): Glyph {
   switch (step.action) {
     case 'monitor': return { text: step.want === 'up' ? 'CAMS ▲' : 'CAMS ▼', kind: 'monitor' };
     case 'mask': return { text: 'MASK', kind: 'mask' };
@@ -34,8 +41,9 @@ export function glyphFor(step) {
 // routine laid out on a timeline before you have to play it. With `head` set,
 // a playhead is drawn at that offset and the glyphs it has already passed are
 // lit -- see sweepPattern below for why that is worth the extra parameter.
-export function drawPattern(canvas, script, head = null) {
-  const ctx = canvas.getContext('2d');
+export function drawPattern(canvas: HTMLCanvasElement, script: readonly Step[] | null | undefined, head: number | null = null) {
+  // A canvas that has no other context gives a 2d one.
+  const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
   const dpr = Math.min(2, window.devicePixelRatio || 1);
   const W = canvas.clientWidth, H = canvas.clientHeight;
   if (!W || !H || !script?.length) return;
@@ -46,13 +54,13 @@ export function drawPattern(canvas, script, head = null) {
   const last = script[script.length - 1];
   const span = Math.max(2, last.at + (last.hold || 0) + 0.4);
   const padL = 20, padR = 14, padB = 20, padT = 14;
-  const xOf = (at) => padL + (at / span) * (W - padL - padR);
+  const xOf = (at: number) => padL + (at / span) * (W - padL - padR);
 
   // Ten inputs land inside 1.5 s, so three rows is not enough to lay them out
   // without collisions -- take as many as the box is tall enough to hold.
   const ROW_H = 20, headBand = 24;   // headBand keeps row 0 clear of the anchor label
   const nRows = Math.max(3, Math.min(6, Math.floor((H - padT - padB - headBand) / ROW_H)));
-  const yOf = (row) => padT + headBand + 10 + row * ROW_H;
+  const yOf = (row: number) => padT + headBand + 10 + row * ROW_H;
 
   // second gridlines
   ctx.font = `9px ${MONO}`;
@@ -117,7 +125,7 @@ export function drawPattern(canvas, script, head = null) {
 // tap is graded: the brief used to teach the ORDER of ten inputs but nothing
 // about them landing inside 1.5 seconds. Linear is not a stylistic choice --
 // any easing here would teach a tempo the game does not have.
-export function sweepPattern(canvas, script, isLive) {
+export function sweepPattern(canvas: HTMLCanvasElement, script: readonly Step[] | null | undefined, isLive: () => boolean) {
   if (!script?.length) return;
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
     requestAnimationFrame(() => drawPattern(canvas, script));
@@ -125,8 +133,8 @@ export function sweepPattern(canvas, script, isLive) {
   }
   const last = script[script.length - 1];
   const span = last.at + (last.hold || 0) + 0.4;
-  let t0 = null;
-  const step = (now) => {
+  let t0 = null as number | null;
+  const step = (now: number) => {
     if (!isLive()) return;
     if (t0 == null) t0 = now;
     const head = (now - t0) / 1000;
@@ -138,15 +146,16 @@ export function sweepPattern(canvas, script, isLive) {
 }
 
 export class Lane {
-  declare canvas: any;
-  declare ctx: any;
-  declare pops: any[];
+  declare canvas: HTMLCanvasElement;
+  declare ctx: CanvasRenderingContext2D;
+  declare pops: Pop[];
   declare flash: number;
   declare pps: number;
-  declare comboFlash: any;
-  constructor(canvas) {
+  declare comboFlash: number | null | undefined;
+  constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
-    this.ctx = canvas.getContext('2d');
+    // A canvas that has no other context gives a 2d one.
+    this.ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
     this.pops = [];           // floating judgement text
     this.flash = 0;           // whole-lane flash on a clean pass
     // Lookahead must exceed one 5s cycle, or the lane sits empty between
@@ -154,17 +163,17 @@ export class Lane {
     this.pps = 105;
   }
 
-  pop(label, grade, t) {
+  pop(label: string, grade: string, t: number) {
     this.pops.push({ label, grade, t, born: t });
     if (this.pops.length > 8) this.pops.shift();
   }
 
-  cleanPass(t) { this.flash = t; }
-  milestone(t) { this.comboFlash = t; }
+  cleanPass(t: number) { this.flash = t; }
+  milestone(t: number) { this.comboFlash = t; }
 
   // Phase B has no script to follow, so the lane shows the thing that actually
   // matters there: how much stun is left before the animatronics break loose.
-  drawDuel(sim, duel) {
+  drawDuel(sim: C.Sim, duel: DuelTimer | null | undefined) {
     const cv = this.canvas, ctx = this.ctx;
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     const W = cv.clientWidth, H = cv.clientHeight;
@@ -204,7 +213,7 @@ export class Lane {
     ctx.fillText(`last ${last}   best ${best}`, W - pad, mid - 13);
   }
 
-  draw(coach, sim) {
+  draw(coach: Coach | null | undefined, sim: C.Sim) {
     const cv = this.canvas, ctx = this.ctx;
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     const W = cv.clientWidth, H = cv.clientHeight;
@@ -252,7 +261,7 @@ export class Lane {
       // one placed there.
       const ROWS = [-15, 0, 15];
       const rowEnd = [-1e9, -1e9, -1e9];
-      const placed = [];
+      const placed: { n: Note, x: number, g: Glyph, tw: number, y: number }[] = [];
       for (const n of notes) {
         const x = hitX + (n.due - t) * this.pps;
         if (x < -60 || x > W + 60) continue;
@@ -317,7 +326,7 @@ export class Lane {
     // Combo. The app's only continuous reward, and crossing 10 or 20 used to be
     // a silent colour change. It sits in the far corner of the lane, so scaling
     // it disturbs nothing.
-    if (coach?.combo > 2) {
+    if (coach != null && coach.combo > 2) {
       const k = this.comboFlash != null ? Math.min(1, (t - this.comboFlash) / 0.36) : 1;
       const col = coach.combo >= 20 ? INK.violet : coach.combo >= 10 ? INK.good : INK.dim;
       ctx.save();
@@ -333,7 +342,7 @@ export class Lane {
   }
 }
 
-function roundRect(ctx, x, y, w, h, r) {
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
   ctx.arcTo(x + w, y, x + w, y + h, r);

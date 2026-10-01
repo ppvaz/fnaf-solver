@@ -1,11 +1,22 @@
 import * as C from '@sixam/source/fnaf2';
+import type { Coach } from './coach.ts';
+
+/** One row of the timeline: a value in [0, 1] per frame, and when it reads as danger or as idle. */
+interface Row {
+  readonly label: string;
+  readonly get: (i: number) => number;
+  readonly color: string;
+  readonly danger?: (i: number) => boolean;
+  readonly idle?: (i: number) => boolean;
+}
 
 const MONO = "'IBM Plex Mono', ui-monospace, monospace";
 
 // The post-run view. The important row is stun coverage: three bars that must
 // never touch zero. Everything else explains why they did.
-export function drawTimeline(canvas, sim) {
-  const ctx = canvas.getContext('2d');
+export function drawTimeline(canvas: HTMLCanvasElement, sim: C.Sim) {
+  // A canvas that has no other context gives a 2d one.
+  const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
   const dpr = Math.min(2, window.devicePixelRatio || 1);
   const W = canvas.clientWidth, H = canvas.clientHeight;
   canvas.width = W * dpr; canvas.height = H * dpr;
@@ -16,7 +27,7 @@ export function drawTimeline(canvas, sim) {
   const n = rec.n;
   if (!n) return;
   const pad = 52, plotW = W - pad - 10;
-  const stunRow = (k) => ({
+  const stunRow = (k: number): Row => ({
     label: `CAM ${String(C.TARGET_CAMS[k]).padStart(2, '0')}`,
     get: i => rec.stun[k][i] / C.STUN_FRAMES,
     color: '#4FD2EE',
@@ -25,7 +36,7 @@ export function drawTimeline(canvas, sim) {
     danger: i => (rec.occ[i] & (1 << k)) !== 0 && rec.stun[k][i] === 0,
     idle: i => (rec.occ[i] & (1 << k)) === 0,
   });
-  const rows = [
+  const rows: Row[] = [
     stunRow(0), stunRow(1), stunRow(2),
     { label: 'FOXY D', get: i => Math.min(1, rec.d[i] / 8), color: '#FFB020', danger: i => rec.d[i] >= 4 },
     { label: 'POWER',  get: i => rec.power[i] / C.POWER_FRAMES, color: '#57DC6E' },
@@ -34,7 +45,7 @@ export function drawTimeline(canvas, sim) {
   const rowH = Math.floor((H - 26) / rows.length);
 
   ctx.font = `500 8.5px ${MONO}`;
-  rows.forEach((row: any, r) => {
+  rows.forEach((row, r) => {
     const y0 = r * rowH + 4, h = rowH - 8;
     ctx.fillStyle = '#8A9483';
     ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
@@ -72,7 +83,7 @@ export function drawTimeline(canvas, sim) {
   }
 }
 
-export function buildSummary(sim, coach) {
+export function buildSummary(sim: C.Sim, coach: Coach | null | undefined) {
   const s = coach ? coach.summary : null;
   const survived = sim.frame / C.FPS;
   const hour = Math.min(6, Math.floor(sim.frame / C.HOUR_FRAMES));
@@ -92,8 +103,8 @@ export function buildSummary(sim, coach) {
 }
 
 // How often each stalled camera actually lapsed while somebody was standing in it.
-function countStunGaps(sim) {
-  const rec = sim.rec, out = [];
+function countStunGaps(sim: C.Sim) {
+  const rec = sim.rec, out: { cam: number, gaps: number, worstSec: number }[] = [];
   for (let k = 0; k < 3; k++) {
     let gaps = 0, inGap = false, worst = 0, cur = 0;
     for (let i = 0; i < rec.n; i++) {
@@ -107,7 +118,7 @@ function countStunGaps(sim) {
   return out;
 }
 
-export function fmtTime(sec) {
+export function fmtTime(sec: number) {
   const m = Math.floor(sec / 60), s = (sec % 60);
   return `${m}:${s.toFixed(1).padStart(4, '0')}`;
 }
