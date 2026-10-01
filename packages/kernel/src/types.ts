@@ -90,12 +90,12 @@ interface Witness {
 }
 
 /** A VenueIdentity field whose move refuses a bound run and demotes a qualification (principle 12). */
-type VenueDriftField =
+export type VenueDriftField =
   | 'package' | 'versionName' | 'versionCode' | 'firstInstallTime' | 'lastUpdateTime'
   | 'buildFingerprint' | 'securityPatch' | 'handsetHash';
 /** Recorded and compared, reported when it moves, never refused. */
-type VenueNoteField = 'companionVersion' | 'timeZone';
-type VenueField = VenueDriftField | VenueNoteField;
+export type VenueNoteField = 'companionVersion' | 'timeZone';
+export type VenueField = VenueDriftField | VenueNoteField;
 
 /**
  * VenueIdentity: the world under a phone venue, measured at preflight and
@@ -124,6 +124,134 @@ export interface VenueIdentity {
   readonly timeZone: string | null;
   /** The reason for each field that is null; absent when every field was read. */
   readonly unknown?: Readonly<Partial<Record<VenueField, string>>>;
+}
+
+/** venue-binding-v1: a measured identity bound to a profile or a winner, kept apart from both so neither's hash moves. */
+export interface VenueBinding {
+  readonly schema: 'venue-binding-v1';
+  readonly subject: { readonly kind: 'profile' | 'winner'; readonly id: string };
+  readonly identity: VenueIdentity;
+  readonly boundBy: string;
+  /** `YYYY-MM-DD`. */
+  readonly boundAt: string;
+  readonly evidenceId: string;
+}
+
+/** What binds a run to a venue: a profile's or a winner's venue-binding-v1, or a qualification-v2's own venue. */
+export type VenueBindingSource = 'profile' | 'winner' | 'qualification';
+
+/** One identity a run is bound to, and what bound it. */
+export interface VenueBound {
+  readonly source: VenueBindingSource;
+  readonly id: string;
+  readonly identity: VenueIdentity;
+}
+
+/** A bound field the observed venue reads differently. */
+export interface VenueFieldMove {
+  readonly field: VenueField;
+  readonly from: string;
+  readonly to: string;
+  readonly source: VenueBindingSource;
+  readonly id: string;
+}
+
+/** A bound drift field the observed venue could not read, so it cannot be cleared. */
+export interface VenueFieldUnread {
+  readonly field: VenueField;
+  readonly reason: string;
+  readonly source: VenueBindingSource;
+  readonly id: string;
+}
+
+export type VenueCheckStatus = 'UNBOUND' | 'MATCH' | 'DRIFT' | 'UNKNOWN';
+
+/** venue-check-v1: an observed identity compared with every identity the run is bound to. */
+export interface VenueCheck {
+  readonly schema: 'venue-check-v1';
+  readonly status: VenueCheckStatus;
+  /** True exactly when the status is DRIFT. */
+  readonly refuses: boolean;
+  readonly observed: VenueIdentity | null;
+  readonly bindings: readonly { readonly source: VenueBindingSource; readonly id: string }[];
+  readonly drift: readonly VenueFieldMove[];
+  readonly unknown: readonly VenueFieldUnread[];
+  /** Note fields that moved: reported, never refused. */
+  readonly notes: readonly VenueFieldMove[];
+  readonly message: string;
+  readonly remedy: string | null;
+}
+
+/**
+ * A retained qualification verdict, bound to a winner and an engine by their hashes. `qualification-v2` is v1
+ * plus the venue it was measured on (`bindQualificationVenue`).
+ */
+export interface Qualification {
+  readonly schema: 'qualification-v1' | 'qualification-v2';
+  readonly policyHash: string;
+  readonly modelHash: string;
+  readonly sampleCount: number;
+  readonly verdict: 'PASS' | 'FAIL' | 'INCONCLUSIVE';
+  readonly evidenceId: string;
+  /** Only a DEVICE_MEASURED PASS is QUALIFIED; anything else stands as a CANDIDATE. */
+  readonly claimLevel?: ClaimLevel;
+  /** A v2's venue, every drift field read. */
+  readonly venue?: VenueIdentity;
+}
+
+/** A device campaign's state machine (`CAMPAIGN_STATES`). */
+export type CampaignState =
+  | 'IDLE' | 'PREFLIGHT' | 'MENU' | 'INTRO_VERIFY' | 'ACTIVE' | 'CUSTOM_VERIFY' | 'TERMINAL_VERIFY' | 'RETRY_VERIFY'
+  | 'SAVE_VERIFY' | 'HOLD' | 'ABORTED' | 'COMPLETE';
+
+/** campaign-event-v1: one transition or attempt, at the campaign clock's Ms. */
+interface CampaignEvent {
+  readonly schema: 'campaign-event-v1';
+  readonly type: string;
+  readonly state: CampaignState;
+  readonly at: number;
+  readonly data: Readonly<Record<string, unknown>>;
+}
+
+/** What the title or the next night showed after a win: the save's advancement (campaign-proof-v1). */
+export interface SaveObservation {
+  readonly cursorNight?: number;
+  readonly customNightVisible?: boolean;
+  readonly continueVisible?: boolean;
+  readonly sixthNightVisible?: boolean;
+  readonly menuReturned?: boolean;
+  readonly customCompleted?: boolean;
+  readonly nextNightStarted?: boolean;
+  readonly observed?: boolean;
+}
+
+/**
+ * One attempt at one night. The campaign fills it in as the night is played, so every field past its
+ * start is absent until that step, and a record retained before a field existed lacks it.
+ */
+interface CampaignAttempt {
+  night: number;
+  mode: string;
+  attempt: number;
+  status: string;
+  terminal?: { night?: number; outcome?: string; sixAm: boolean; why?: string };
+  terminalVerification?: { sixAm: boolean; positive: boolean };
+  save?: SaveObservation;
+  customReadback?: Readonly<Record<string, unknown>>;
+  proofHash?: string;
+  proof?: boolean;
+}
+
+/** device-campaign-result-v1: what a campaign retains and the evidence index reads back. */
+export interface CampaignResult {
+  readonly schema: 'device-campaign-result-v1';
+  readonly version: 1;
+  readonly specHash: string;
+  readonly state: CampaignState;
+  readonly targetIndex?: number;
+  readonly completedNights: readonly number[];
+  readonly attempts: readonly CampaignAttempt[];
+  readonly events: readonly CampaignEvent[];
 }
 
 /**

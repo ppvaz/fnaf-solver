@@ -12,6 +12,7 @@
 // packages/play/bin/phone/test-event-clocks.ts refuses a packed event whose timestamp field
 // is not declared or whose value is implausible for its clock. The executor's
 // rows are unchanged; this is the reader's contract for them.
+import { isOneOf } from '../labels.ts';
 
 export const EVENT_CLOCKS = Object.freeze({
   HOST_WALL: 'host-wall-ms',
@@ -22,15 +23,16 @@ export const EVENT_CLOCKS = Object.freeze({
   DURATION: 'duration-ms',
   DURATION_US: 'duration-us',
   OFFSET: 'clock-offset-ms',
-});
+} as const);
 const C = EVENT_CLOCKS;
+export type EventClock = typeof EVENT_CLOCKS[keyof typeof EVENT_CLOCKS];
 
 /** A leaf that carries a time, a duration or an offset, by name. Case-sensitive: `status` is not one. */
 export const TIMESTAMP_LEAF = /(?:At|Ms|Us|Ns)$|^at$/;
 
 // Leaf name -> clock, for every event type. Paths use the leaf name only;
 // `samples[].readStartedAt` and `readStartedAt` are the same field.
-const BY_LEAF = Object.freeze({
+const BY_LEAF: Readonly<Record<string, EventClock>> = Object.freeze({
   at: C.HOST_WALL, // the ISO stamp modern-campaign-ports adds, or the executor's own Date.now()
   // host wall clock: Date.now() in the executor and the anchor
   reachedAt: C.HOST_WALL, releaseAt: C.HOST_WALL, contactAt: C.HOST_WALL, windowEndAt: C.HOST_WALL,
@@ -77,10 +79,16 @@ const BY_LEAF = Object.freeze({
   latchedOffsetMs: C.OFFSET, // host monotonic minus device monotonic, as the latch saw it
 });
 
+/** A path's last name, without the `[]` an array item adds. */
+const leafOf = (path: string) => {
+  const name = String(path);
+  return name.slice(name.lastIndexOf('.') + 1).replace(/\[\]$/, '');
+};
+
 /** The declared clock of a field, or null when nothing declares it. */
-export function clockOfField(path: any) {
-  const leaf = String(path).split('.').pop()!.replace(/\[\]$/, '');
-  return Object.hasOwn(BY_LEAF, leaf) ? (BY_LEAF as any)[leaf] : null;
+export function clockOfField(path: string): EventClock | null {
+  const leaf = leafOf(path);
+  return Object.hasOwn(BY_LEAF, leaf) ? BY_LEAF[leaf] : null;
 }
 
 /**
@@ -88,17 +96,16 @@ export function clockOfField(path: any) {
  * when undeclared). Null values are skipped: an unmeasured read is not a time.
  * @param event one parsed events.jsonl row
  */
-export function eventTimestamps(event: object): {path: string, clock: string, value: number | string}[] {
-  const out: any[] = [];
-  const walk = (prefix: any, value: any) => {
+export function eventTimestamps(event: object): {path: string, clock: EventClock | 'UNKNOWN', value: unknown}[] {
+  const out: {path: string, clock: EventClock | 'UNKNOWN', value: unknown}[] = [];
+  const walk = (prefix: string, value: unknown) => {
     if (value === null || value === undefined) return;
     if (Array.isArray(value)) { for (const item of value) walk(`${prefix}[]`, item); return; }
     if (typeof value === 'object') {
       for (const [key, item] of Object.entries(value)) walk(prefix ? `${prefix}.${key}` : key, item);
       return;
     }
-    const leaf = prefix.split('.').pop().replace(/\[\]$/, '');
-    if (!TIMESTAMP_LEAF.test(leaf)) return;
+    if (!TIMESTAMP_LEAF.test(leafOf(prefix))) return;
     out.push({ path: prefix, clock: clockOfField(prefix) ?? 'UNKNOWN', value });
   };
   walk('', event);
@@ -109,19 +116,25 @@ export function eventTimestamps(event: object): {path: string, clock: string, va
 // a wall clock is an epoch between 2020 and 2100, a monotonic clock is under 10^11 ms
 // (three years of uptime), a plan time is inside a night.
 const WALL = [1.577e12, 4.1e12];
-const PLAUSIBLE = {
-  [C.HOST_WALL]: (value: any) => typeof value === 'string' ? !Number.isNaN(Date.parse(value)) : value >= WALL[0] && value <= WALL[1],
-  [C.PHONE_WALL]: (value: any) => value >= WALL[0] && value <= WALL[1],
-  [C.HOST_MONOTONIC]: (value: any) => value >= 0 && value < 1e11,
-  [C.DEVICE_MONOTONIC]: (value: any) => value >= 0 && value < 1e11,
-  [C.PLAN]: (value: any) => value >= 0 && value <= 3.6e6,
-};
+const PLAUSIBLE = new Map<string, (value: number) => boolean>([
+  [C.HOST_WALL, value => value >= WALL[0] && value <= WALL[1]],
+  [C.PHONE_WALL, value => value >= WALL[0] && value <= WALL[1]],
+  [C.HOST_MONOTONIC, value => value >= 0 && value < 1e11],
+  [C.DEVICE_MONOTONIC, value => value >= 0 && value < 1e11],
+  [C.PLAN, value => value >= 0 && value <= 3.6e6],
+]);
 
-/** Is `value` plausible for `clock`? Durations and offsets are only required to be finite numbers. */
-export function plausibleForClock(clock: any, value: any) {
-  if ((PLAUSIBLE as any)[clock]) return (typeof value === 'number' && Number.isFinite(value)) || clock === C.HOST_WALL
-    ? (PLAUSIBLE as any)[clock](value) : false;
-  if ([C.DURATION, C.DURATION_US, C.OFFSET].includes(clock))
+/**
+ * Is `value` plausible for `clock`? The host wall clock also reads the ISO stamp every row carries. Durations and
+ * offsets are only required to be finite numbers.
+ */
+export function plausibleForClock(clock: string, value: unknown) {
+  const range = PLAUSIBLE.get(clock);
+  if (range) {
+    if (clock === C.HOST_WALL && typeof value === 'string') return !Number.isNaN(Date.parse(value));
+    return typeof value === 'number' && Number.isFinite(value) && range(value);
+  }
+  if (isOneOf([C.DURATION, C.DURATION_US, C.OFFSET], clock))
     return (typeof value === 'number' && Number.isFinite(value)) || (typeof value === 'string' && /^-?\d+(\.\d+)?$/.test(value));
   return false;
 }

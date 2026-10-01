@@ -4,6 +4,7 @@
 // the physical framing, baud rate, USB descriptor, and GPIO/HID mapping to a
 // bench adapter.  The data that crosses that boundary is small, versioned,
 // timestamped, and safe to reject when its clock or sequence is suspect.
+import { isList, isRecord } from '../labels.ts';
 
 export const FACT_MESSAGE_SCHEMA = 'fact-message-v1';
 export const MAX_FACT_MESSAGE_BYTES = 1024;
@@ -14,78 +15,118 @@ export const MAX_CYCLE_ACTIONS = 16;
 export const MAX_CYCLE_HORIZON_MS = 15000;
 
 const UINT32_MAX = 0xffffffff;
-const clone = (value: any) => structuredClone(value);
-const finite = (value: any) => Number.isFinite(value);
+const clone = <T>(value: T): T => structuredClone(value);
+const finite = (value: unknown): value is number => Number.isFinite(value);
 
-function invalid(message: any) { throw new TypeError(`fact link: ${message}`); }
+/** A fact's value on the wire: a JSON primitive. */
+type FactValue = string | number | boolean | null;
 
-function boundedString(name: any, value: any, max: any) {
+interface FactMessageBase {
+  readonly schema: typeof FACT_MESSAGE_SCHEMA;
+  readonly seq: number;
+  readonly type: string;
+  readonly confidence: number;
+  readonly source: string;
+  readonly calibrationProfile: string | null;
+  /** When the source saw it, on the sender's clock; absent when the source cannot say. */
+  readonly t_observed?: number;
+  /** When the sender received it, on the sender's clock. */
+  readonly t_received: number;
+  readonly latencyMin: number;
+  readonly latencyMax: number;
+}
+/** fact-message-v1: one observation, or one UNKNOWN with its reason. */
+type FactMessage = FactMessageBase &
+  ({ readonly state: 'OBSERVED'; readonly value: FactValue } | { readonly state: 'UNKNOWN'; readonly reason: string });
+
+/** A cycle action the host approved: any fields the actuator reads, with its id and when it is due. */
+type CycleAction = Readonly<Record<string, unknown>> & { readonly id: string; readonly atMs: number };
+
+/** What a host sends to approve a cycle; every field is checked. */
+interface CycleApprovalInput {
+  readonly cycleId?: unknown;
+  readonly validFromMs?: unknown;
+  readonly validUntilMs?: unknown;
+  readonly actions?: unknown;
+}
+
+interface CycleApproval {
+  readonly cycleId: string;
+  readonly validFromMs: number;
+  readonly validUntilMs: number;
+  readonly actions: readonly CycleAction[];
+}
+
+function invalid(message: string): never { throw new TypeError(`fact link: ${message}`); }
+
+function boundedString(name: string, value: unknown, max: number): string {
   if (typeof value !== 'string' || value.length === 0 || value.length > max)
     invalid(`${name} must be a non-empty string of at most ${max} characters`);
   return value;
 }
 
-function optionalString(name: any, value: any, max: any) {
+function optionalString(name: string, value: unknown, max: number): string | null {
   if (value === null || value === undefined) return null;
   return boundedString(name, value, max);
 }
 
-function timestamp(name: any, value: any, { optional = false } = {}) {
-  if (value === undefined && optional) return undefined;
+function timestamp(name: string, value: unknown): number {
   if (!finite(value) || value < 0) invalid(`${name} must be a finite non-negative number`);
   return value;
 }
 
-function primitiveValue(name: any, value: any) {
-  if (value === null || typeof value === 'boolean' || typeof value === 'string') return value;
+function primitiveValue(name: string, value: unknown): FactValue {
+  if (value === null) return null;
+  if (typeof value === 'boolean' || typeof value === 'string') return value;
   if (typeof value === 'number' && finite(value)) return value;
   invalid(`${name} must be a JSON primitive`);
 }
 
-function sequence(value: any) {
-  if (!Number.isInteger(value) || value < 0 || value > UINT32_MAX)
+function sequence(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 0 || value > UINT32_MAX)
     invalid('seq must be an unsigned 32-bit integer');
   return value;
 }
 
-function validateMessage(input: any) {
-  if (!input || typeof input !== 'object' || Array.isArray(input))
+function validateMessage(input: unknown): FactMessage {
+  if (!isRecord(input))
     invalid('message must be an object');
   if (input.schema !== FACT_MESSAGE_SCHEMA)
     invalid(`schema must be ${FACT_MESSAGE_SCHEMA}`);
-  sequence(input.seq);
-  boundedString('type', input.type, MAX_FACT_TYPE_LENGTH);
+  const seq = sequence(input.seq);
+  const type = boundedString('type', input.type, MAX_FACT_TYPE_LENGTH);
   const state = input.state ?? 'OBSERVED';
   if (state !== 'OBSERVED' && state !== 'UNKNOWN')
     invalid('state must be OBSERVED or UNKNOWN');
+  let reading;
   if (state === 'OBSERVED') {
     if (!Object.hasOwn(input, 'value')) invalid('OBSERVED message needs value');
-    primitiveValue('value', input.value);
+    reading = { state: 'OBSERVED' as const, value: primitiveValue('value', input.value) };
   } else {
     if (Object.hasOwn(input, 'value')) invalid('UNKNOWN message cannot carry value');
-    boundedString('reason', input.reason, 128);
+    reading = { state: 'UNKNOWN' as const, reason: boundedString('reason', input.reason, 128) };
   }
-  boundedString('source', input.source, MAX_FACT_SOURCE_LENGTH);
-  optionalString('calibrationProfile', input.calibrationProfile,
+  const source = boundedString('source', input.source, MAX_FACT_SOURCE_LENGTH);
+  const calibrationProfile = optionalString('calibrationProfile', input.calibrationProfile,
     MAX_CALIBRATION_PROFILE_LENGTH);
-  const observed = timestamp('t_observed', input.t_observed, { optional: true });
+  const observed = input.t_observed === undefined ? undefined : timestamp('t_observed', input.t_observed);
   const received = timestamp('t_received', input.t_received);
   if (observed !== undefined && observed > received)
     invalid('t_observed cannot be later than t_received');
   const latencyMin = timestamp('latencyMin', input.latencyMin);
   const latencyMax = timestamp('latencyMax', input.latencyMax);
   if (latencyMin > latencyMax) invalid('latencyMin cannot exceed latencyMax');
-  if (!finite(input.confidence) || input.confidence < 0 || input.confidence > 1)
+  const confidence = input.confidence;
+  if (!finite(confidence) || confidence < 0 || confidence > 1)
     invalid('confidence must be between 0 and 1');
   return {
     schema: FACT_MESSAGE_SCHEMA,
-    seq: input.seq,
-    type: input.type,
-    state,
-    ...(state === 'OBSERVED' ? { value: input.value } : { reason: input.reason }),
-    confidence: input.confidence,
-    source: input.source,
-    calibrationProfile: input.calibrationProfile ?? null,
+    seq,
+    type,
+    ...reading,
+    confidence,
+    source,
+    calibrationProfile,
     ...(observed === undefined ? {} : { t_observed: observed }),
     t_received: received,
     latencyMin,
@@ -94,10 +135,10 @@ function validateMessage(input: any) {
 }
 
 /** Encode one newline-delimited, bounded fact message. */
-export function encodeFactMessage(input: any) {
+export function encodeFactMessage(input: object) {
   const message = validateMessage({
     ...input,
-    schema: input?.schema ?? FACT_MESSAGE_SCHEMA,
+    schema: ('schema' in input ? input.schema : undefined) ?? FACT_MESSAGE_SCHEMA,
   });
   const line = JSON.stringify(message);
   const bytes = new TextEncoder().encode(line + '\n').byteLength;
@@ -107,25 +148,25 @@ export function encodeFactMessage(input: any) {
 }
 
 /** Decode one complete newline-delimited fact message. */
-export function decodeFactMessage(line: any) {
+export function decodeFactMessage(line: unknown): FactMessage {
   if (typeof line !== 'string') invalid('wire message must be a string');
   const bytes = new TextEncoder().encode(line).byteLength;
   if (bytes > MAX_FACT_MESSAGE_BYTES) throw new RangeError('fact message exceeds byte limit');
   if (!line.endsWith('\n')) invalid('wire message must end with newline');
   if (line.slice(0, -1).includes('\n')) invalid('wire message must contain one line');
-  let parsed;
+  let parsed: unknown;
   try { parsed = JSON.parse(line.slice(0, -1)); }
-  catch (error) { throw new TypeError(`fact link: invalid JSON (${(error as any).message})`); }
+  catch (error) { throw new TypeError(`fact link: invalid JSON (${(error as Error).message})`); }
   return validateMessage(parsed);
 }
 
 /** Convert a valid wire message to the estimator's fact-envelope shape. */
-export function messageToFact(message: any, receivedAtMs: any) {
-  const valid = (validateMessage(message) as any);
+export function messageToFact(message: unknown, receivedAtMs: unknown) {
+  const valid = validateMessage(message);
   const received = timestamp('link receipt time', receivedAtMs);
   const fact = valid.state === 'OBSERVED'
-    ? { state: 'OBSERVED', value: valid.value }
-    : { state: 'UNKNOWN', reason: valid.reason };
+    ? { state: valid.state, value: valid.value }
+    : { state: valid.state, reason: valid.reason };
   return {
     type: valid.type,
     ...fact,
@@ -140,7 +181,7 @@ export function messageToFact(message: any, receivedAtMs: any) {
   };
 }
 
-function serialDistance(next: any, previous: any) {
+function serialDistance(next: number, previous: number) {
   return (next - previous + 0x100000000) % 0x100000000;
 }
 
@@ -151,14 +192,14 @@ function serialDistance(next: any, previous: any) {
  */
 export class FactLinkReceiver {
   declare staleAfterMs: number;
-  declare lastSeq: any;
-  declare lastSenderReceivedMs: any;
-  declare lastLinkReceiptMs: any;
+  declare lastSeq: number | null;
+  declare lastSenderReceivedMs: number | null;
+  declare lastLinkReceiptMs: number | null;
   declare gapCount: number;
-  declare lastGap: { after: any; before: any; missing: number; } | null;
+  declare lastGap: { after: number; before: number; missing: number; } | null;
   declare accepted: number;
   declare rejected: number;
-  constructor({ staleAfterMs = 1000, initialSeq = null } = {}) {
+  constructor({ staleAfterMs = 1000, initialSeq = null }: { staleAfterMs?: number, initialSeq?: number | null } = {}) {
     if (!finite(staleAfterMs) || staleAfterMs <= 0)
       throw new RangeError('staleAfterMs must be positive');
     if (initialSeq !== null) sequence(initialSeq);
@@ -172,7 +213,7 @@ export class FactLinkReceiver {
     this.rejected = 0;
   }
 
-  receive(line: any, options: any = {}) {
+  receive(line: unknown, options: { receivedAtMs?: unknown } = {}) {
     const { receivedAtMs } = options;
     const receipt = timestamp('link receipt time', receivedAtMs);
     let message;
@@ -217,7 +258,7 @@ export class FactLinkReceiver {
     };
   }
 
-  status(nowMs = this.lastLinkReceiptMs ?? 0) {
+  status(nowMs: unknown = this.lastLinkReceiptMs ?? 0) {
     const now = timestamp('status time', nowMs);
     const ageMs = this.lastLinkReceiptMs === null ? Infinity : now - this.lastLinkReceiptMs;
     return {
@@ -236,23 +277,23 @@ export class FactLinkReceiver {
   }
 }
 
-function actionId(action: any, index: any) {
-  const id = action?.id ?? `action-${index + 1}`;
+function actionId(action: Record<string, unknown>, index: number) {
+  const id = action.id ?? `action-${index + 1}`;
   return boundedString('cycle action id', id, 64);
 }
 
-function validateCycleApproval({ cycleId, validFromMs, validUntilMs, actions }: any) {
-  boundedString('cycleId', cycleId, 96);
+function validateCycleApproval({ cycleId, validFromMs, validUntilMs, actions }: CycleApprovalInput): CycleApproval {
+  const id = boundedString('cycleId', cycleId, 96);
   const from = timestamp('validFromMs', validFromMs);
   const until = timestamp('validUntilMs', validUntilMs);
   if (until < from) invalid('cycle validity cannot run backwards');
   if (until - from > MAX_CYCLE_HORIZON_MS)
     throw new RangeError(`cycle horizon exceeds ${MAX_CYCLE_HORIZON_MS} ms`);
-  if (!Array.isArray(actions) || actions.length > MAX_CYCLE_ACTIONS)
+  if (!isList(actions) || actions.length > MAX_CYCLE_ACTIONS)
     throw new RangeError(`cycle must contain 0-${MAX_CYCLE_ACTIONS} actions`);
   let previousAt = from;
-  const safeActions = actions.map((action, index) => {
-    if (!action || typeof action !== 'object' || Array.isArray(action))
+  const safeActions = actions.map((action, index): CycleAction => {
+    if (!isRecord(action))
       invalid(`cycle action ${index} must be an object`);
     const atMs = timestamp(`cycle action ${index} atMs`, action.atMs);
     if (atMs < from || atMs > until) invalid(`cycle action ${index} is outside validity`);
@@ -264,7 +305,7 @@ function validateCycleApproval({ cycleId, validFromMs, validUntilMs, actions }: 
       ...clone(action), id: actionId(action, index), atMs,
     };
   });
-  return { cycleId, validFromMs: from, validUntilMs: until, actions: safeActions };
+  return { cycleId: id, validFromMs: from, validUntilMs: until, actions: safeActions };
 }
 
 /**
@@ -275,10 +316,10 @@ function validateCycleApproval({ cycleId, validFromMs, validUntilMs, actions }: 
 export class SafeCycleHandoff {
   declare linkTimeoutMs: number;
   declare maxActions: number;
-  declare approval: { cycleId: any; validFromMs: any; validUntilMs: any; actions: any[]; } | null;
-  declare emitted: Set<any>;
-  declare lastLinkMs: any;
-  constructor({ linkTimeoutMs = 500, maxActions = MAX_CYCLE_ACTIONS } = {}) {
+  declare approval: CycleApproval | null;
+  declare emitted: Set<string>;
+  declare lastLinkMs: number | null;
+  constructor({ linkTimeoutMs = 500, maxActions = MAX_CYCLE_ACTIONS }: { linkTimeoutMs?: number, maxActions?: number } = {}) {
     if (!finite(linkTimeoutMs) || linkTimeoutMs <= 0)
       throw new RangeError('linkTimeoutMs must be positive');
     if (!Number.isInteger(maxActions) || maxActions < 1 || maxActions > MAX_CYCLE_ACTIONS)
@@ -290,7 +331,7 @@ export class SafeCycleHandoff {
     this.lastLinkMs = null;
   }
 
-  noteLink(receivedAtMs: any) {
+  noteLink(receivedAtMs: unknown) {
     const now = timestamp('link activity time', receivedAtMs);
     if (this.lastLinkMs !== null && now < this.lastLinkMs)
       throw new RangeError('link activity time moved backwards');
@@ -298,7 +339,7 @@ export class SafeCycleHandoff {
     return this.status(now);
   }
 
-  approve(approval: any) {
+  approve(approval: CycleApprovalInput) {
     const checked = validateCycleApproval(approval);
     if (checked.actions.length > this.maxActions)
       throw new RangeError(`cycle exceeds local action limit ${this.maxActions}`);
@@ -309,10 +350,10 @@ export class SafeCycleHandoff {
     return this.status(this.lastLinkMs ?? checked.validFromMs);
   }
 
-  due(nowMs: any) {
+  due(nowMs: unknown) {
     const now = timestamp('cycle poll time', nowMs);
     if (!this.approval || now > this.approval.validUntilMs) return [];
-    const out = [];
+    const out: (CycleAction & { cycleId: string, linkState: string })[] = [];
     for (const action of this.approval.actions) {
       if (action.atMs > now || this.emitted.has(action.id)) continue;
       this.emitted.add(action.id);
@@ -322,13 +363,13 @@ export class SafeCycleHandoff {
     return out;
   }
 
-  linkState(nowMs: any) {
+  linkState(nowMs: unknown) {
     const now = timestamp('link state time', nowMs);
     if (this.lastLinkMs === null) return 'UNSEEN';
     return now - this.lastLinkMs > this.linkTimeoutMs ? 'STALE' : 'HEALTHY';
   }
 
-  status(nowMs = this.lastLinkMs ?? 0) {
+  status(nowMs: unknown = this.lastLinkMs ?? 0) {
     const now = timestamp('handoff status time', nowMs);
     const approval = this.approval ? {
       cycleId: this.approval.cycleId,

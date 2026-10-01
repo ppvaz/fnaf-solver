@@ -10,49 +10,52 @@
  * CONTRACT:device-campaign-result-v1 CONTRACT:campaign-proof-v1
  */
 
-export const CAMPAIGN_STATES = Object.freeze([
+import { isList, isOneOf, isRecord } from '../labels.ts';
+import type { CampaignResult, CampaignState, SaveObservation } from '../types.ts';
+
+export const CAMPAIGN_STATES: readonly CampaignState[] = Object.freeze([
   'IDLE', 'PREFLIGHT', 'MENU', 'INTRO_VERIFY', 'ACTIVE',
   'CUSTOM_VERIFY', 'TERMINAL_VERIFY', 'RETRY_VERIFY', 'SAVE_VERIFY', 'HOLD', 'ABORTED', 'COMPLETE',
-]);
+] as const);
 
-const isRecord = (value: any) => value !== null && typeof value === 'object' && !Array.isArray(value);
-const failCampaign = (message: any) => { throw new TypeError(`campaign: ${message}`); };
-const failProof = (message: any) => { throw new TypeError(`campaign proof: ${message}`); };
-const text = (value: any, label: any) => {
+function failCampaign(message: string): never { throw new TypeError(`campaign: ${message}`); }
+function failProof(message: string): never { throw new TypeError(`campaign proof: ${message}`); }
+const text = (value: unknown, label: string) => {
   if (typeof value !== 'string' || value.length === 0) failCampaign(`${label} must be a non-empty string`);
   return value;
 };
 
-export function validateCampaignResult(value: any) {
+export function validateCampaignResult(value: unknown): CampaignResult {
   if (!isRecord(value) || value.schema !== 'device-campaign-result-v1' || value.version !== 1)
     failCampaign('result schema/version mismatch');
-  if (!CAMPAIGN_STATES.includes(value.state)) failCampaign('result state is invalid');
+  if (!isOneOf(CAMPAIGN_STATES, value.state)) failCampaign('result state is invalid');
   text(value.specHash, 'result.specHash');
-  if (!Array.isArray(value.completedNights) || !Array.isArray(value.attempts) || !Array.isArray(value.events))
+  if (!isList(value.completedNights) || !isList(value.attempts) || !isList(value.events))
     failCampaign('result attempts/events are required');
-  if (value.completedNights.some((night: any) => !Number.isInteger(night) || night < 1 || night > 7))
+  if (value.completedNights.some(night => typeof night !== 'number' || !Number.isInteger(night) || night < 1 || night > 7))
     failCampaign('result completedNights contains an unsupported night');
-  return value;
+  return value as unknown as CampaignResult;
 }
 
-export function validateSaveProof(value: any, target: any) {
-  if (target?.night === 6) {
+export function validateSaveProof(value: unknown, target: { night?: number } | null | undefined): SaveObservation {
+  const night = target?.night;
+  if (night === 6) {
     if (!isRecord(value) || value.observed !== true ||
         (value.cursorNight !== 7 && value.customNightVisible !== true))
       failProof('Night 6 save proof must positively observe cursor Night 7 or Custom Night visibility');
-  } else if (target?.night === 7) {
+  } else if (night === 7) {
     if (!isRecord(value) || value.menuReturned !== true || value.customCompleted !== true || value.observed !== true)
       failProof('Custom Night save proof must positively observe the completed menu return');
-  } else if (target?.night >= 1 && target?.night <= 4) {
+  } else if (night !== undefined && night >= 1 && night <= 4) {
     // Story Nights 1..4 roll directly into the next night's gameplay on the
     // target build. The observed next-night office is the save advancement
     // proof; there is no title screen to inspect between the two nights.
     if (!isRecord(value) || value.observed !== true || value.nextNightStarted !== true)
-      failProof(`Story Night ${target?.night} save proof must positively observe the next-night roll-through`);
+      failProof(`Story Night ${night} save proof must positively observe the next-night roll-through`);
   } else if (!isRecord(value) || value.observed !== true || value.menuReturned !== true ||
       value.continueVisible !== true ||
-      (target?.night === 5 && value.sixthNightVisible !== true && value.cursorNight !== 6)) {
-    failProof(`Story Night ${target?.night} save proof must positively observe the menu return and save advancement`);
+      (night === 5 && value.sixthNightVisible !== true && value.cursorNight !== 6)) {
+    failProof(`Story Night ${night} save proof must positively observe the menu return and save advancement`);
   }
-  return value;
+  return value as SaveObservation;
 }

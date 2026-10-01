@@ -148,6 +148,20 @@ by content hash.
 `UNTRACKED_WINNER_DEBT` is 1 of 1: Night 6 `a`, whose winner was found but no
 longer rebuilds.
 
+## Types (Pedro, 2026-10-01: "Real types everywhere")
+
+- No explicit `any`, anywhere. Strict mode refuses an implicit `any` but not a
+  written one, so `tools/test-type-debt.ts` counts written `any` and `x!` per
+  area: an area without a `typeDebt` entry in `tools/quality-baseline.json`
+  carries none (`packages/kernel/src` first), and the others only shrink.
+- A validator takes `unknown`, narrows it with the kernel's guards (`isRecord`,
+  `isList`, `isOneOf`, `isText`, `fail(): never`, `@sixam/kernel` labels) and
+  ends with `return value as unknown as T`: the one assertion where a checked
+  record becomes its type. `Array.isArray` narrows to `any[]`; use `isList`.
+- A module both lanes check (the lenient `tsconfig.js.json` reaches it through
+  an importer) must also type-check without `strictNullChecks`, where
+  `x === null` narrows nothing: return the literal (`return null`).
+
 ## Sensors and on-device code (Pedro, 2026-09-24/25 — start here, not with the old sensors)
 
 - **A detector reads small regions of native frames.** The Companion copies

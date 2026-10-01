@@ -180,7 +180,7 @@
   },
   "typeDebt": {
     "recorded": "2026-10-01",
-    "why": "Explicit any and non-null assertions per area when tools/test-type-debt.ts landed: the types JavaScript left implicit, written down; an entry only shrinks, or rises in the commit that turns an area strict or brings JavaScript into it as TypeScript.",
+    "why": "Explicit any and non-null assertions per area when tools/test-type-debt.ts landed: the types JavaScript left implicit, written down. Pedro, 2026-10-01: real types everywhere, no explicit any, so an entry only shrinks (it rose once, when the six bundle-hashed .mjs joined as TypeScript), and an area that reaches none loses its entry and must stay at none.",
     "entries": {
       "debt:apps/desktop/bin": 26,
       "debt:apps/desktop/src": 37,
@@ -189,7 +189,6 @@
       "debt:apps/trainer/test": 24,
       "debt:apps/wiki": 3,
       "debt:apps/wiki/test": 1,
-      "debt:packages/kernel/src": 169,
       "debt:packages/kernel/test": 10,
       "debt:packages/play/bin": 78,
       "debt:packages/play/games": 133,

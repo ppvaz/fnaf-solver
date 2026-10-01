@@ -11,20 +11,20 @@
  * member stands for (a census over the pinned window is `pinned`, with the
  * window as its bracket).
  */
-import { fail, isRecord } from './labels.ts';
+import { fail, isOneOf, isRecord } from './labels.ts';
 import { validateInterval } from './time/interval.ts';
 import type { Seed, SeedBelief, SeedProvenance } from './types.ts';
 
-export const SEED_PROVENANCES = Object.freeze(['natural', 'pinned', 'identified']);
-export const SEED_BELIEFS = Object.freeze(['known', 'candidates', 'unknown']);
-const FIELDS = Object.freeze(['provenance', 'bracket', 'belief', 'value', 'candidates']);
-const isSeedValue = (value: any) => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
+export const SEED_PROVENANCES = Object.freeze(['natural', 'pinned', 'identified'] as const);
+export const SEED_BELIEFS = Object.freeze(['known', 'candidates', 'unknown'] as const);
+const FIELDS: readonly string[] = Object.freeze(['provenance', 'bracket', 'belief', 'value', 'candidates']);
+const isSeedValue = (value: unknown) => typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
 
 /**
  * A provenance, with the bracket a pinned seed carries and no other does.
  */
-export function validateSeedProvenance(provenance: any, bracket?: any): SeedProvenance {
-  if (!SEED_PROVENANCES.includes(provenance))
+export function validateSeedProvenance(provenance: unknown, bracket?: unknown): SeedProvenance {
+  if (!isOneOf(SEED_PROVENANCES, provenance))
     fail(`seed provenance must be one of ${SEED_PROVENANCES.join(', ')}, not ${JSON.stringify(provenance)}`);
   if (provenance === 'pinned') {
     if (bracket === undefined) fail('a pinned seed names the bracket it was pinned into');
@@ -36,11 +36,11 @@ export function validateSeedProvenance(provenance: any, bracket?: any): SeedProv
 /**
  * One seed: {provenance, bracket? (pinned only), belief, value? (known only), candidates? (candidates only)}.
  */
-export function validateSeed(value: any): Seed {
+export function validateSeed(value: unknown): Seed {
   if (!isRecord(value) || Object.keys(value).some(key => !FIELDS.includes(key)))
     fail(`a seed is {${FIELDS.join(', ')}} and nothing else`);
   validateSeedProvenance(value.provenance, value.bracket);
-  if (!SEED_BELIEFS.includes(value.belief))
+  if (!isOneOf(SEED_BELIEFS, value.belief))
     fail(`seed belief must be one of ${SEED_BELIEFS.join(', ')}, not ${JSON.stringify(value.belief)}`);
   if ((value.belief === 'known') !== (value.value !== undefined)) fail('a known seed carries its value, and only a known one does');
   if (value.value !== undefined && !isSeedValue(value.value)) fail('a seed value is an unsigned 32-bit integer');
@@ -48,5 +48,5 @@ export function validateSeed(value: any): Seed {
   if (value.candidates !== undefined && (!Array.isArray(value.candidates) || value.candidates.length < 2 ||
       !value.candidates.every(isSeedValue) || new Set(value.candidates).size !== value.candidates.length))
     fail('a candidate set holds at least two distinct unsigned 32-bit seeds');
-  return (value as Seed);
+  return value as unknown as Seed;
 }

@@ -1,11 +1,12 @@
 #!/usr/bin/env node
-// The type debt strict mode leaves, counted so it only shrinks. Every module came from JavaScript,
-// where an untyped value was already `any`; turning strict mode on wrote that down (tools/ts-strict.ts)
-// as an explicit `any` or a non-null `!`, each a place a real type or a real check is still owed.
-// This counts both, per area (a package's or an application's src, test or bin, and tools), from the
-// syntax tree -- `any` written as a type, and the `x!` assertion -- and holds each area to its entry
-// in tools/quality-baseline.json (`typeDebt`, through tools/gate-kit.ts): a new `any` or `!` fails
-// unless one is paid elsewhere in the area, and a paid one lowers the entry.
+// Explicit `any` and non-null `!`, counted per area so they only shrink, to none. Strict mode refuses an
+// implicit `any` but accepts a written one, and `x!` switches its null check off; Pedro's decision on
+// 2026-10-01 is real types everywhere, with no explicit `any`. This counts both, per area (a package's
+// or an application's src, test or bin, and tools), from the syntax tree -- `any` written as a type,
+// and the `x!` assertion -- and holds each area to its entry in tools/quality-baseline.json
+// (`typeDebt`, through tools/gate-kit.ts): a new one fails unless one is paid elsewhere in the area, a
+// paid one lowers the entry, and an area with no entry carries none. That is how an area stays typed
+// once it is: packages/kernel/src since 2026-10-01.
 //
 //   node tools/test-type-debt.ts          exit 0 when no area's debt grew, 1 naming each area that did
 //   node tools/test-type-debt.ts --list   print each area's count

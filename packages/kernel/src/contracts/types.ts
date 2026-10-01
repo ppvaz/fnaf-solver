@@ -14,6 +14,70 @@ export interface ClockRef {
   readonly value: number;
 }
 
+/** A v1 record its validator checks only in part: the fields named beside this are checked, any other is the writer's. */
+interface OpenRecord {
+  readonly [field: string]: unknown;
+}
+
+export interface StateEstimate extends OpenRecord {
+  readonly schema: 'state-estimate-v1';
+  readonly id: string;
+  readonly at: ClockRef;
+  readonly values: Readonly<Record<string, unknown>>;
+}
+
+export interface ExperimentSpecV1 extends OpenRecord {
+  readonly schema: 'experiment-spec-v1';
+  readonly id: string;
+  readonly operation: string;
+  readonly modelHash: string;
+  readonly seeds: readonly unknown[];
+  readonly sample: Readonly<Record<string, unknown>>;
+  readonly claimLevel: string;
+}
+
+export interface ExperimentResultV1 extends OpenRecord {
+  readonly schema: 'experiment-result-v1';
+  readonly operation: string;
+  readonly verdict: string;
+  readonly modelHash: string;
+  readonly specHash: string;
+  readonly sample: Readonly<Record<string, unknown>>;
+  readonly claimLevel: string;
+}
+
+export interface ArtifactRef extends OpenRecord {
+  readonly schema: 'artifact-ref-v1';
+  readonly hash: string;
+  readonly mediaType: string;
+  readonly producer: string;
+  readonly size: number;
+}
+
+export interface ClaimEvidenceGraph extends OpenRecord {
+  readonly schema: 'claim-evidence-v1';
+  readonly id: string;
+  readonly nodes: readonly unknown[];
+  readonly edges: readonly unknown[];
+}
+
+export interface TelemetryEvent extends OpenRecord {
+  readonly schema: 'telemetry-event-v1';
+  readonly sessionId: string;
+  readonly type: string;
+  readonly component: string;
+  readonly at: ClockRef;
+}
+
+export interface SessionManifest extends OpenRecord {
+  readonly schema: 'session-manifest-v1';
+  readonly id: string;
+  readonly profileHash: string;
+  readonly targetBuild: string;
+  readonly events: readonly TelemetryEvent[];
+  readonly artifacts: Readonly<Record<string, unknown>>;
+}
+
 /** The Android package of each registered game (@sixam/source clockwork/control-registry.js). */
 export type GamePackage =
   | 'com.scottgames.fivenightsatfreddys'

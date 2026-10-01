@@ -17,17 +17,21 @@
  * handset is named by `handsetHash`, the first 16 hex of sha256(serial).
  * CONTRACT:venue-identity-v1. CONTRACT:venue-check-v1. CONTRACT:venue-binding-v1.
  */
-import type { VenueIdentity } from '../types.ts';
+import type {
+  VenueBinding, VenueBindingSource, VenueBound, VenueCheck, VenueCheckStatus, VenueDriftField, VenueField, VenueFieldMove,
+  VenueFieldUnread, VenueIdentity, VenueNoteField,
+} from '../types.ts';
+import { isList, isOneOf, isRecord } from '../labels.ts';
 
 export const VENUE_IDENTITY_SCHEMA = 'venue-identity-v1';
 export const VENUE_CHECK_SCHEMA = 'venue-check-v1';
 export const VENUE_BINDING_SCHEMA = 'venue-binding-v1';
 
 /** A move in any of these refuses a bound run and demotes a qualification. */
-export const VENUE_DRIFT_FIELDS = Object.freeze([
+export const VENUE_DRIFT_FIELDS: readonly VenueDriftField[] = Object.freeze([
   'package', 'versionName', 'versionCode', 'firstInstallTime', 'lastUpdateTime',
   'buildFingerprint', 'securityPatch', 'handsetHash',
-]);
+] as const);
 /**
  * Recorded and compared, reported when they move, never refused. The Companion
  * is this project's own instrument and is reinstalled between sessions. The
@@ -35,14 +39,14 @@ export const VENUE_DRIFT_FIELDS = Object.freeze([
  * local wall-clock strings; a zone change therefore reads as a time drift,
  * which refuses (the safe direction).
  */
-export const VENUE_NOTE_FIELDS = Object.freeze(['companionVersion', 'timeZone']);
-export const VENUE_IDENTITY_FIELDS = Object.freeze([...VENUE_DRIFT_FIELDS, ...VENUE_NOTE_FIELDS]);
-export const VENUE_CHECK_STATUSES = Object.freeze(['UNBOUND', 'MATCH', 'DRIFT', 'UNKNOWN']);
-export const VENUE_BINDING_SOURCES = Object.freeze(['profile', 'winner', 'qualification']);
+export const VENUE_NOTE_FIELDS: readonly VenueNoteField[] = Object.freeze(['companionVersion', 'timeZone'] as const);
+export const VENUE_IDENTITY_FIELDS: readonly VenueField[] = Object.freeze([...VENUE_DRIFT_FIELDS, ...VENUE_NOTE_FIELDS]);
+export const VENUE_CHECK_STATUSES: readonly VenueCheckStatus[] = Object.freeze(['UNBOUND', 'MATCH', 'DRIFT', 'UNKNOWN'] as const);
+export const VENUE_BINDING_SOURCES: readonly VenueBindingSource[] = Object.freeze(['profile', 'winner', 'qualification'] as const);
 
 const DUMPSYS_TIME = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
 /** What a read field must look like; anything else is recorded as unread, not guessed. */
-export const VENUE_FIELD_PATTERNS = Object.freeze({
+export const VENUE_FIELD_PATTERNS: Readonly<Record<VenueField, RegExp>> = Object.freeze({
   package: /^[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z][A-Za-z0-9_]*)+$/,
   versionName: /^[^\s]{1,64}$/,
   versionCode: /^\d{1,20}$/,
@@ -54,27 +58,26 @@ export const VENUE_FIELD_PATTERNS = Object.freeze({
   companionVersion: /^[^\s]{1,64}$/,
   timeZone: /^[A-Za-z0-9_+\-/]{1,64}$/,
 });
-const GAME_FIELDS = new Set(['package', 'versionName', 'versionCode', 'firstInstallTime', 'lastUpdateTime']);
-const OS_FIELDS = new Set(['buildFingerprint', 'securityPatch']);
+const GAME_FIELDS = new Set<string>(['package', 'versionName', 'versionCode', 'firstInstallTime', 'lastUpdateTime']);
+const OS_FIELDS = new Set<string>(['buildFingerprint', 'securityPatch']);
 
-const isRecord = (value: any) => value !== null && typeof value === 'object' && !Array.isArray(value);
-const fail = (message: any) => { throw new TypeError(`venue: ${message}`); };
-const bounded = (value: any, label: any, max = 256) => {
+function fail(message: string): never { throw new TypeError(`venue: ${message}`); }
+function bounded(value: unknown, label: string, max = 256): string {
   if (typeof value !== 'string' || value.length === 0 || value.length > max)
     fail(`${label} must be a non-empty string of at most ${max} characters`);
   return value;
-};
+}
 
 /**
  * Validate a venue-identity-v1 record. It is closed: any other key, and in
  * particular a raw `serial`, is refused. With `requireKnown`, every drift
  * field must be read (a binding cannot bind to an unknown).
  */
-export function validateVenueIdentity(value: any, { requireKnown = false, label = 'identity' }: {requireKnown?: boolean, label?: string} = {}): VenueIdentity {
+export function validateVenueIdentity(value: unknown, { requireKnown = false, label = 'identity' }: {requireKnown?: boolean, label?: string} = {}): VenueIdentity {
   if (!isRecord(value) || value.schema !== VENUE_IDENTITY_SCHEMA) fail(`${label} is not ${VENUE_IDENTITY_SCHEMA}`);
   if (Object.hasOwn(value, 'serial'))
     fail(`${label} carries a raw serial; a venue names its handset only by handsetHash`);
-  const allowed = new Set(['schema', 'unknown', ...VENUE_IDENTITY_FIELDS]);
+  const allowed = new Set<string>(['schema', 'unknown', ...VENUE_IDENTITY_FIELDS]);
   const extra = Object.keys(value).filter(key => !allowed.has(key));
   if (extra.length) fail(`${label} has undeclared fields: ${extra.join(', ')}`);
   const unknown = value.unknown ?? {};
@@ -84,18 +87,18 @@ export function validateVenueIdentity(value: any, { requireKnown = false, label 
     const reading = value[field];
     if (reading === null) {
       bounded(unknown[field], `${label}.unknown.${field}`);
-      if (requireKnown && VENUE_DRIFT_FIELDS.includes(field))
+      if (requireKnown && isOneOf(VENUE_DRIFT_FIELDS, field))
         fail(`${label}.${field} is unknown (${unknown[field]}); a binding needs every drift field read`);
     } else {
-      if (typeof reading !== 'string' || !(VENUE_FIELD_PATTERNS as any)[field].test(reading))
+      if (typeof reading !== 'string' || !VENUE_FIELD_PATTERNS[field].test(reading))
         fail(`${label}.${field} is malformed: ${JSON.stringify(reading)}`);
       if (Object.hasOwn(unknown, field)) fail(`${label}.${field} is read and also listed as unknown`);
     }
   }
   for (const field of Object.keys(unknown))
-    if (!VENUE_IDENTITY_FIELDS.includes(field)) fail(`${label}.unknown names an undeclared field ${field}`);
+    if (!isOneOf(VENUE_IDENTITY_FIELDS, field)) fail(`${label}.unknown names an undeclared field ${field}`);
   if (value.package === null) fail(`${label}.package must be named: it is the package that was queried`);
-  return value;
+  return value as unknown as VenueIdentity;
 }
 
 /**
@@ -120,9 +123,9 @@ export function makeVenueIdentity(readings: Record<string, string | null>, reaso
  * profile's sha256 nor a committed winner. A qualification binds its venue
  * itself (qualification-v2).
  */
-export function validateVenueBinding(value: any) {
+export function validateVenueBinding(value: unknown): VenueBinding {
   if (!isRecord(value) || value.schema !== VENUE_BINDING_SCHEMA) fail(`binding is not ${VENUE_BINDING_SCHEMA}`);
-  if (!isRecord(value.subject) || !['profile', 'winner'].includes(value.subject.kind))
+  if (!isRecord(value.subject) || !isOneOf(['profile', 'winner'], value.subject.kind))
     fail('binding.subject.kind must be profile or winner');
   bounded(value.subject.id, 'binding.subject.id');
   validateVenueIdentity(value.identity, { requireKnown: true, label: 'binding.identity' });
@@ -130,7 +133,7 @@ export function validateVenueBinding(value: any) {
   if (typeof value.boundAt !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value.boundAt))
     fail('binding.boundAt must be a YYYY-MM-DD date');
   bounded(value.evidenceId, 'binding.evidenceId');
-  return value;
+  return value as unknown as VenueBinding;
 }
 
 /**
@@ -140,15 +143,17 @@ export function validateVenueBinding(value: any) {
  * than ignored. The qualification's schema is checked by validateQualification,
  * which callers run first.
  */
-export function venueBindingsFor({ profileId = null, winnerHash = null, qualification = null, bindings = [] }: {profileId?: string | null, winnerHash?: string | null, qualification?: any, bindings?: any[]} = {}): {source: string, id: string, identity: any}[] {
-  if (!Array.isArray(bindings)) fail('bindings must be an array of venue-binding-v1 records');
-  const selected = [];
+export function venueBindingsFor({ profileId = null, winnerHash = null, qualification = null, bindings = [] }:
+  {profileId?: string | null, winnerHash?: string | null, qualification?: {schema: string, evidenceId: string, venue?: unknown} | null,
+    bindings?: readonly unknown[]} = {}): VenueBound[] {
+  if (!isList(bindings)) fail('bindings must be an array of venue-binding-v1 records');
+  const selected: VenueBound[] = [];
   if (qualification?.schema === 'qualification-v2') {
-    validateVenueIdentity(qualification.venue, { requireKnown: true, label: 'qualification.venue' });
-    selected.push({ source: 'qualification', id: qualification.evidenceId, identity: qualification.venue });
+    const identity = validateVenueIdentity(qualification.venue, { requireKnown: true, label: 'qualification.venue' });
+    selected.push({ source: 'qualification', id: qualification.evidenceId, identity });
   }
-  for (const binding of bindings) {
-    validateVenueBinding(binding);
+  for (const record of bindings) {
+    const binding = validateVenueBinding(record);
     const { kind, id } = binding.subject;
     const own = kind === 'profile' ? profileId : winnerHash;
     if (own === null || own === undefined)
@@ -160,14 +165,14 @@ export function venueBindingsFor({ profileId = null, winnerHash = null, qualific
   return selected;
 }
 
-const describe = (value: any) => (value === null ? 'UNKNOWN' : value);
+const describe = (value: string | null) => (value === null ? 'UNKNOWN' : value);
 
-function remedyFor(drift: any) {
-  const fields = new Set<string>(drift.map((item: any) => item.field));
+function remedyFor(drift: readonly VenueFieldMove[]) {
+  const fields = new Set<string>(drift.map(item => item.field));
   const parts = ['re-qualify on the observed venue (a new qualification-v2, or a venue-binding-v1 ' +
     'over the identity this preflight recorded, from a measured run)'];
   if ([...fields].some(field => GAME_FIELDS.has(field))) {
-    const bound = drift.find((item: any) => GAME_FIELDS.has(item.field));
+    const bound = drift.find(item => GAME_FIELDS.has(item.field));
     const target = bound ? ` bound by ${bound.source} ${bound.id}` : '';
     parts.push(`or roll the game back to the build${target} and keep Play auto-update off for it`);
   }
@@ -187,35 +192,40 @@ function remedyFor(drift: any) {
  * field could not be read, so it cannot be cleared. MATCH: every bound drift
  * field is equal. Note fields that move are reported under `notes`.
  */
-export function compareVenueIdentity({ observed = null, bindings = [] }: {observed?: any, bindings?: {source: string, id: string, identity: any}[]} = {}) {
-  if (observed !== null) validateVenueIdentity(observed, { label: 'observed' });
-  if (!Array.isArray(bindings)) fail('bindings must be an array');
-  const drift = [];
-  const unknown = [];
-  const notes = [];
+export function compareVenueIdentity({ observed = null, bindings = [] }: {observed?: unknown, bindings?: readonly unknown[]} = {}): VenueCheck {
+  const seen = observed === null ? null : validateVenueIdentity(observed, { label: 'observed' });
+  if (!isList(bindings)) fail('bindings must be an array');
+  const bound: VenueBound[] = [];
+  const drift: VenueFieldMove[] = [];
+  const unknown: VenueFieldUnread[] = [];
+  const notes: VenueFieldMove[] = [];
   for (const binding of bindings) {
-    if (!isRecord(binding) || !VENUE_BINDING_SOURCES.includes(binding.source))
+    if (!isRecord(binding) || !isOneOf(VENUE_BINDING_SOURCES, binding.source))
       fail(`binding source must be one of ${VENUE_BINDING_SOURCES.join(', ')}`);
-    bounded(binding.id, 'binding id');
-    validateVenueIdentity(binding.identity, { requireKnown: true, label: `${binding.source} ${binding.id}` });
+    const id = bounded(binding.id, 'binding id');
+    const identity = validateVenueIdentity(binding.identity, { requireKnown: true, label: `${binding.source} ${id}` });
+    const where = { source: binding.source, id };
+    bound.push({ ...where, identity });
     for (const field of VENUE_IDENTITY_FIELDS) {
-      const from = binding.identity[field];
-      const to = observed ? observed[field] : null;
+      const from = identity[field];
+      const to = seen ? seen[field] : null;
       if (from === null) continue;
-      const where = { source: binding.source, id: binding.id };
-      if (VENUE_NOTE_FIELDS.includes(field)) {
+      if (isOneOf(VENUE_NOTE_FIELDS, field)) {
         if (to !== null && to !== from) notes.push({ field, from, to, ...where });
       } else if (to === null) {
-        unknown.push({ field, reason: observed ? observed.unknown[field] : 'no venue identity was observed', ...where });
+        // A null field is read only with its reason in `unknown` (validateVenueIdentity).
+        const reason = seen ? seen.unknown?.[field] ?? fail(`observed.${field} is unread without a reason`)
+          : 'no venue identity was observed';
+        unknown.push({ field, reason, ...where });
       } else if (to !== from) drift.push({ field, from, to, ...where });
     }
   }
-  const status = bindings.length === 0 ? 'UNBOUND' : drift.length ? 'DRIFT' : unknown.length ? 'UNKNOWN' : 'MATCH';
-  const named = bindings.map(item => `${item.source} ${item.id}`).join(', ');
-  const unread = observed ? VENUE_DRIFT_FIELDS.filter(field => observed[field] === null) : [];
+  const status = bound.length === 0 ? 'UNBOUND' : drift.length ? 'DRIFT' : unknown.length ? 'UNKNOWN' : 'MATCH';
+  const named = bound.map(item => `${item.source} ${item.id}`).join(', ');
+  const unread = seen ? VENUE_DRIFT_FIELDS.filter(field => seen[field] === null) : [];
   let message;
   if (status === 'UNBOUND') {
-    message = observed
+    message = seen
       ? 'unbound: the observed venue identity is recorded; no profile, winner or qualification binds one, so drift is not checked'
       : 'unbound, and no venue identity was observed';
     if (unread.length) message += ` (unread: ${unread.join(', ')})`;
@@ -230,7 +240,7 @@ export function compareVenueIdentity({ observed = null, bindings = [] }: {observ
     message += `; noted, not refused: ${notes.map(item => `${item.field} ${item.from} -> ${item.to}`).join('; ')}`;
   return Object.freeze({
     schema: VENUE_CHECK_SCHEMA, status, refuses: status === 'DRIFT',
-    observed, bindings: bindings.map(item => ({ source: item.source, id: item.id })),
+    observed: seen, bindings: bound.map(item => ({ source: item.source, id: item.id })),
     drift, unknown, notes, message,
     remedy: status === 'DRIFT' ? remedyFor(drift)
       : status === 'UNKNOWN' ? 'read the identity again (adb, dumpsys package, getprop); the run holds until every bound field is compared'
@@ -241,13 +251,13 @@ export function compareVenueIdentity({ observed = null, bindings = [] }: {observ
 /**
  * Validate a stored venue-check-v1 (for readers of preflight records).
  */
-export function validateVenueCheck(value: any) {
+export function validateVenueCheck(value: unknown): VenueCheck {
   if (!isRecord(value) || value.schema !== VENUE_CHECK_SCHEMA) fail(`check is not ${VENUE_CHECK_SCHEMA}`);
-  if (!VENUE_CHECK_STATUSES.includes(value.status)) fail('check.status is not a venue check status');
+  if (!isOneOf(VENUE_CHECK_STATUSES, value.status)) fail('check.status is not a venue check status');
   if (value.refuses !== (value.status === 'DRIFT')) fail('check.refuses must be true exactly when status is DRIFT');
   if (value.observed !== null) validateVenueIdentity(value.observed, { label: 'check.observed' });
   for (const key of ['bindings', 'drift', 'unknown', 'notes'])
-    if (!Array.isArray(value[key])) fail(`check.${key} must be an array`);
+    if (!isList(value[key])) fail(`check.${key} must be an array`);
   bounded(value.message, 'check.message', 4096);
-  return value;
+  return value as unknown as VenueCheck;
 }

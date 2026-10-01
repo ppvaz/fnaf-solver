@@ -10,27 +10,29 @@
  * CONTRACT:qualification-v1. CONTRACT:qualification-v2.
  */
 import { compareVenueIdentity, validateVenueIdentity } from './venue-identity.ts';
+import { isOneOf, isRecord } from '../labels.ts';
+import type { Qualification, VenueIdentity } from '../types.ts';
 
-export const QUALIFICATION_SCHEMAS = Object.freeze(['qualification-v1', 'qualification-v2']);
-export const QUALIFICATION_LIFECYCLES = Object.freeze(['QUALIFIED', 'CANDIDATE']);
+export const QUALIFICATION_SCHEMAS = Object.freeze(['qualification-v1', 'qualification-v2'] as const);
+export const QUALIFICATION_LIFECYCLES = Object.freeze(['QUALIFIED', 'CANDIDATE'] as const);
 
 // Retained-run contracts. They lived in packages/runtime beside the fixture
 // scheduler and supervisor until 2026-09-25; the campaign preflight, the
 // artifact runner and the evidence index read them, so they belong in core.
-export function validateQualification(value: any) {
-  if (!value || !QUALIFICATION_SCHEMAS.includes(value.schema) || typeof value.policyHash !== 'string' ||
-      typeof value.modelHash !== 'string' || !Number.isInteger(value.sampleCount) || value.sampleCount < 1 ||
-      !['PASS', 'FAIL', 'INCONCLUSIVE'].includes(value.verdict) ||
+export function validateQualification(value: unknown): Qualification {
+  if (!isRecord(value) || !isOneOf(QUALIFICATION_SCHEMAS, value.schema) || typeof value.policyHash !== 'string' ||
+      typeof value.modelHash !== 'string' || typeof value.sampleCount !== 'number' || !Number.isInteger(value.sampleCount) ||
+      value.sampleCount < 1 || !isOneOf(['PASS', 'FAIL', 'INCONCLUSIVE'], value.verdict) ||
       typeof value.evidenceId !== 'string' || value.evidenceId.length === 0)
     throw new TypeError('qualification is incomplete');
   if (value.schema === 'qualification-v2') {
     try {
       validateVenueIdentity(value.venue, { requireKnown: true, label: 'qualification.venue' });
     } catch (error) {
-      throw new TypeError(`qualification is incomplete: ${(error as any).message}`);
+      throw new TypeError(`qualification is incomplete: ${(error as Error).message}`);
     }
   }
-  return value;
+  return value as unknown as Qualification;
 }
 
 /**
@@ -40,8 +42,8 @@ export function validateQualification(value: any) {
  * @param qualification a qualification-v1
  * @param venue the venue-identity-v1 recorded by that run's preflight
  */
-export function bindQualificationVenue(qualification: any, venue: any) {
-  validateQualification(qualification);
+export function bindQualificationVenue(record: unknown, venue: VenueIdentity) {
+  const qualification = validateQualification(record);
   if (qualification.schema !== 'qualification-v1')
     throw new TypeError(`qualification ${qualification.evidenceId} already binds a venue; re-qualify to bind another`);
   const bound = { ...qualification, schema: 'qualification-v2', venue };
@@ -51,8 +53,8 @@ export function bindQualificationVenue(qualification: any, venue: any) {
 /**
  * Where a qualification stands on the observed venue.
  */
-export function qualificationStanding({ qualification, observed = null }: {qualification: any, observed?: any}) {
-  validateQualification(qualification);
+export function qualificationStanding({ qualification: record, observed = null }: {qualification: unknown, observed?: unknown}) {
+  const qualification = validateQualification(record);
   const earned = qualification.verdict === 'PASS' && qualification.claimLevel === 'DEVICE_MEASURED';
   if (qualification.schema === 'qualification-v1') {
     return Object.freeze({
