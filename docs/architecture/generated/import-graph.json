@@ -4605,6 +4605,15 @@
       ]
     },
     {
+      "file": "tools/commit-identity.mjs",
+      "imports": [
+        "node:child_process",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/dump-text-check.mjs",
       "imports": [
         "node:child_process",
@@ -4661,6 +4670,18 @@
         "./change-locality.mjs",
         "node:assert/strict",
         "node:fs"
+      ]
+    },
+    {
+      "file": "tools/test-commit-identity.mjs",
+      "imports": [
+        "./commit-identity.mjs",
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
       ]
     },
     {

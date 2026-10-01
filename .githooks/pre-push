@@ -5,4 +5,10 @@
 # A red lane is fixed and pushed again, never sent past this hook: CLAUDE.md
 # forbids bypassing a hook, and the gate names each failed lane with the
 # command that reproduces it.
-exec node "$(dirname "$0")/../tools/push-gate.mjs" --stdin
+#
+# Before the gate, every pushed commit's author and committer address must be
+# GitHub's noreply form (tools/commit-identity.mjs): rebase and cherry-pick
+# never run commit-msg. Both read the same ref lines.
+refs=$(cat)
+printf '%s\n' "$refs" | node "$(dirname "$0")/../tools/commit-identity.mjs" --push || exit 1
+printf '%s\n' "$refs" | node "$(dirname "$0")/../tools/push-gate.mjs" --stdin

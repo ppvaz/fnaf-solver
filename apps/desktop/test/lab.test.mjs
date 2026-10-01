@@ -35,9 +35,9 @@ function fixture(name) {
   mkdirSync(root, { recursive: true });
   git(root, 'init', '-q', '-b', 'master');
   git(root, 'config', 'user.name', 'Lab Test');
-  git(root, 'config', 'user.email', 'lab@example.invalid');
+  git(root, 'config', 'user.email', 'lab-test@users.noreply.github.com');
   git(root, 'config', 'commit.gpgsign', 'false');
-  for (const path of ['CLAUDE.md', 'plans/ROADMAP.md', '.githooks/commit-msg', 'tools/dump-text-check.mjs', 'tools/change-locality.mjs', 'tools/test-mistake-register.mjs']) {
+  for (const path of ['CLAUDE.md', 'plans/ROADMAP.md', '.githooks/commit-msg', 'tools/dump-text-check.mjs', 'tools/change-locality.mjs', 'tools/commit-identity.mjs', 'tools/test-mistake-register.mjs']) {
     mkdirSync(dirname(join(root, path)), { recursive: true });
     copyFileSync(join(REPO, path), join(root, path));
   }

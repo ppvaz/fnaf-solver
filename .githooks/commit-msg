@@ -23,6 +23,11 @@ if ! command -v node > /dev/null 2>&1; then
 fi
 node "$(dirname "$0")/../tools/dump-text-check.mjs" "$msgfile" || exit 1
 
+# Author and committer addresses (Pedro, 2026-09-30): GitHub's noreply form
+# only, on every commit, staged or not. PEDRO-OK does not waive it. Rebase and
+# cherry-pick skip this hook; pre-push checks what they made.
+node "$(dirname "$0")/../tools/commit-identity.mjs" --hook || exit 1
+
 staged=$(git diff --cached --name-only)
 [ -z "$staged" ] && exit 0
 

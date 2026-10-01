@@ -167,8 +167,9 @@ longer rebuilds.
 
 Executable, in `test:unit` or the commit hook: ambient entropy in replayable
 modules (`tools/architecture-test.js`), the 2,000-line ceiling, dead code,
-copied code, TODOs without an owner, and change locality (`Contexts:` line for
-three or more contexts). The first four are ratchets over
+copied code, TODOs without an owner, change locality (`Contexts:` line for
+three or more contexts), and a GitHub noreply author and committer address on
+every commit (`tools/commit-identity.mjs`, also at pre-push). The first four are ratchets over
 `tools/quality-baseline.json`: never add an entry to turn a gate green; add one
 only as `{count, why}` naming why the finding is accepted, and lower or remove
 entries as debt is paid.

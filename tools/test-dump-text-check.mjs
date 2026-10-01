@@ -119,11 +119,15 @@ checks += 1;
 const repo = mkdtempSync(join(tmpdir(), 'dump-text-hook-'));
 try {
   execFileSync('git', ['init', '-q', repo]);
+  // The hook also refuses an identity outside GitHub's noreply form (tools/commit-identity.mjs).
+  execFileSync('git', ['-C', repo, 'config', 'user.name', 'Hook Test']);
+  execFileSync('git', ['-C', repo, 'config', 'user.email', 'hook-test@users.noreply.github.com']);
+  const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => !name.startsWith('GIT_')));
   const hook = join(ROOT, '.githooks', 'commit-msg');
   const run = (body) => {
     const file = join(repo, 'MSG');
     writeFileSync(file, body);
-    return spawnSync('sh', [hook, file], { cwd: repo, encoding: 'utf8' });
+    return spawnSync('sh', [hook, file], { cwd: repo, encoding: 'utf8', env });
   };
   const refused = run(`Subject\n\n${dumpLine}\n\nPEDRO-OK\n`);
   assert.equal(refused.status, 1, `hook let a dump line through: ${refused.stderr}`);
