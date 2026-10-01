@@ -43,6 +43,11 @@
 //            packages/propose/bin/plans/basin-edge.ts, which keeps scanning and
 //            prints a response that clears again as banded; the check below
 //            plants the 2026-09-11 shape against it.
+//   item 10  "A number measured in one direction does not transfer to the
+//            other." Every seam artifact-commands.ts compiles names its floor
+//            and the order of the two events its gap runs between, read from
+//            the compiler's own state, and test-seam-slack.ts holds each one
+//            to Review's DIRECTIONAL_CONSTANTS (a planted reverse first).
 //   items 7, 9  are packages/propose/test/test-seam-slack.ts's: every compiled plan
 //            clears every floor by the allowance, and the mask floor IS its
 //            measurement, read from SEAM_FLOORS rather than from a comment.
@@ -64,6 +69,7 @@ import { report } from '../packages/review/bin/grade/run-report.ts';
 import { formatEdge, scanEdge } from '../packages/propose/bin/plans/basin-edge.ts';
 import { report as capabilityReport, traceDecision } from '../packages/play/bin/phone/capabilities.ts';
 import { checkCapabilitiesFirst } from '../packages/review/src/refusals.ts';
+import { readMistakes } from '../packages/review/src/mistakes.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SELF = 'tools/test-mistake-register.ts';
@@ -115,6 +121,7 @@ const REGISTER_GATES = [
   [5, SELF],
   [7, 'packages/propose/test/test-seam-slack.ts'],
   [9, 'packages/propose/test/test-seam-slack.ts'],
+  [10, 'packages/propose/test/test-seam-slack.ts'],   // a floor measured in one order is used only in that order
   [8, SELF],
   [11, SELF],
   [12, SELF],
@@ -124,6 +131,14 @@ const REGISTER_GATES = [
   [15, 'apps/desktop/test/test-fnaf1-winner.ts'],
   [6, 'apps/lab/test/test-night-job.py'],   // after an abort or a killed runner the game is driven back to an observed title
 ];
+
+// Register entries no gate holds yet (ROADMAP S7 closes when this is empty).
+// A ratchet: an entry leaves it when a REGISTER_GATES row lands, and a new
+// register entry fails until it has a row or is listed here with its reason.
+const OPEN_ENTRIES = new Map([
+  [2, 'an observation-based rule cites its measured row: the FNaF 2 title model\'s item thresholds name no calibration rows'],
+  [4, 'deadlines re-derived per executor: the night-terminal waits are typed-in numbers, and no game-clock trail is measured'],
+]);
 
 let failed = 0;
 const fail = (message) => { failed += 1; console.error(`  FAIL ${message}`); };
@@ -470,6 +485,19 @@ for (const [item, gate] of REGISTER_GATES) {
   if (!existsSync(join(ROOT, gate))) fail(`register item ${item} relies on ${gate}, which does not exist`);
   else if (!reached.has(gate)) fail(`register item ${item} relies on ${gate}, which no CI step runs (item 13)`);
 }
+// Every entry the registers hold (read where they are written) names a gate or
+// is open with a reason; an open entry that has a gate is stale.
+{
+  const gated = new Set(REGISTER_GATES.map(([item]) => item));
+  const { source, entries } = readMistakes(ROOT);
+  if (!entries.length) fail(`no mistake-register entry was read (${source ?? 'no source'})`);
+  for (const { n } of entries) {
+    if (!gated.has(n) && !OPEN_ENTRIES.has(n)) fail(`register entry ${n} names no gate and is not listed open (ROADMAP S7)`);
+    if (gated.has(n) && OPEN_ENTRIES.has(n)) fail(`register entry ${n} has a gate and is still listed open`);
+  }
+  for (const n of [...gated, ...OPEN_ENTRIES.keys()])
+    if (!entries.some(entry => entry.n === n)) fail(`register entry ${n} is gated or listed open but the registers hold no such entry`);
+}
 
 // --- item 12 on the tree: the five-read threshold, both sides ----------------
 {
@@ -549,5 +577,5 @@ console.log(`mistake register: item 13 -- ${verdicts.size} test files, ${counts.
   'item 5 -- every script path and npm script named exists; item 8 -- the input trace runs only on a ' +
   `capability read as present; item 11 -- a margin scan reads a banded ` +
   'response as banded; item 12 -- the five-read threshold holds ' +
-  `on both sides; items ${[...new Set(REGISTER_GATES.map(([item]) => item))].join(', ')} rely only on ` +
-  'gates a CI step runs');
+  `on both sides; items ${[...new Set(REGISTER_GATES.map(([item]) => item))].sort((a, b) => a - b).join(', ')} rely only on ` +
+  `gates a CI step runs; open (no gate yet): ${[...OPEN_ENTRIES.keys()].join(', ') || 'none'}`);

@@ -22,12 +22,20 @@
 //      allowance, not by zero;
 //   2. every floor that derives from a measurement stands at least the jitter
 //      allowance above that measurement.
+//
+// And one about order (mistake register item 10, "a number measured in one
+// direction does not transfer to the other"): every seam a plan compiles names
+// its floor and the two events its gap runs between, as the compiler's own
+// state saw them, and a floor measured in one order is used only in that order
+// (Review's DIRECTIONAL_CONSTANTS). A floor with no registered order is an
+// engine animation listed below with its reason.
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compileArtifactPlans, SEAM_FLOORS } from '../bin/plans/artifact-commands.ts';
 import { parsePlan, validateWinner, STRATEGY_REGISTRY } from '../bin/plans/bundle.ts';
 import { FUSION_POLL_MS } from '../bin/plans/recipe.mjs';
+import { checkDirectionalReuse, DIRECTIONAL_CONSTANTS } from '@sixam/review/refusals';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 // The committed FNaF 2 winners (winner-v1): packages/propose/bindings/fnaf2.
@@ -104,6 +112,30 @@ const fail = message => { failed += 1; process.stdout.write(`  FAIL ${message}\n
       'every slack this gate reports would overstate the true margin by the difference.');
 }
 
+// --- order: every floor is measured in one order, or is an engine animation --
+// An animation lasts as long whichever press follows it, so its floor has no
+// order to reuse; the others were measured as one press after another.
+const ANIMATION_FLOORS = Object.freeze({
+  maskAnimOffMs: 'the mask-off animation (engine frames): no press lands while it plays',
+  maskAnimOnMs: 'the mask-on animation (engine frames): the mask cannot be toggled while it plays',
+  monitorAnimUpMs: 'the monitor raise animation (engine frames): the monitor cannot reverse while it plays',
+  monitorAnimDownMs: 'the monitor lowering animation (engine frames): the monitor cannot reverse while it plays',
+});
+for (const floor of Object.keys(SEAM_FLOORS))
+  if (!Object.hasOwn(DIRECTIONAL_CONSTANTS, floor) && !Object.hasOwn(ANIMATION_FLOORS, floor))
+    fail(`SEAM_FLOORS.${floor} has no registered order (DIRECTIONAL_CONSTANTS) and is not an engine animation`);
+const orderRefusal = seam => {
+  if (!seam.floor || !seam.first || !seam.then)
+    return `${seam.relation} at +${seam.atMs} names no floor or no order (${seam.floor}: ${seam.first} -> ${seam.then})`;
+  if (Object.hasOwn(ANIMATION_FLOORS, seam.floor)) return null;
+  const verdict = checkDirectionalReuse({ constant: seam.floor, use: { first: seam.first, then: seam.then } });
+  return verdict.refused ? `${seam.relation} at +${seam.atMs}: ${verdict.because}` : null;
+};
+// The planted violation: the mask floor read after a monitor RAISE, the reverse
+// of the lowering its trace measured, must be refused.
+if (!orderRefusal({ relation: 'mask-after-monitor-down', atMs: 0, floor: 'monitorMaskReadyMs', first: 'monitor-up', then: 'mask' }))
+  fail('the order check passed the mask floor used after a monitor raise; it measures monitor-down -> mask');
+
 // --- 2. every shipped plan must clear every floor by the allowance ----------
 const winners = readdirSync(WINNERS)
   .filter(name => name.startsWith('campaign-') && name.endsWith('-winner.json'))
@@ -162,6 +194,10 @@ for (const { label: file, winner: rawWinner } of audits) {
       (low === null || s.slackMs < low.slackMs ? s : low), null);
     process.stdout.write(`${file} night ${plan.night}: ${(plan.seams ?? []).length} gated rows, ` +
       `worst slack ${worst ? `${worst.slackMs} ms (${worst.relation} at +${worst.atMs})` : 'n/a'}\n`);
+    for (const s of plan.seams ?? []) {
+      const refusal = orderRefusal(s);
+      if (refusal) fail(`${file} night ${plan.night}: ${refusal}`);
+    }
     for (const s of tight)
       fail(`${file} night ${plan.night}: ${s.kind} at +${s.atMs} ms clears the ${s.relation} ` +
         `floor of ${s.floorMs} ms by only ${s.slackMs} ms (gap ${s.gapMs} ms); ` +
@@ -174,5 +210,6 @@ if (failed) {
     'findings: each one is a press the phone can lose to a frame of jitter.\n');
   process.exit(1);
 }
-process.stdout.write('seam slack: every floor stands above its measurement and every shipped ' +
-  `plan clears every timing floor by at least ${SEAM_JITTER_ALLOWANCE_MS} ms\n`);
+process.stdout.write('seam slack: every floor stands above its measurement, every shipped ' +
+  `plan clears every timing floor by at least ${SEAM_JITTER_ALLOWANCE_MS} ms, and uses each ` +
+  'measured floor in the order it was measured\n');

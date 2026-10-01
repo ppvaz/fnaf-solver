@@ -37,7 +37,7 @@ const MONITOR_ANIM_DOWN_MS = Math.round(C.MONITOR_ANIM_DOWN * 1000 / C.FPS);
 const MASK_BUTTON_VISIBLE_AFTER_MONITOR_DOWN_MS = 382.5;
 // The floor is the MEASUREMENT, and nothing else. A press before the mask
 // button is fully visible is illegal; how much room a schedule leaves beyond
-// that is a margin question, and margin belongs to test-seam-slack.mjs.
+// that is a margin question, and margin belongs to test-seam-slack.ts.
 //
 // Folding a margin in here double-counted it. The floor was
 // measurement + MIN_CONTACT_MS = 416, the gate then demanded the allowance on
@@ -163,9 +163,16 @@ function armVerification(parsed) {
 // caller-supplied array and attached at PLAN level, never inside `cycles`, so
 // it never reaches persistArtifactPlans and never moves an artifact hash.
 // `test-seam-slack.ts` is what turns the record into a refusal.
+//
+// Each record also names its floor (a SEAM_FLOORS key) and the order of the two
+// events its gap runs between, read from this compiler's own state (which
+// monitor transition came last, which mask edge), never restated. A floor
+// measured in one order does not transfer to the other (mistake register item
+// 10); test-seam-slack.ts holds every record to Review's directional register.
 /** The timing floors these gates enforce, so no auditor has to restate one. */
 export const SEAM_FLOORS = Object.freeze({
   maskAnimOffMs: MASK_ANIM_OFF_MS,
+  maskAnimOnMs: MASK_ANIM_ON_MS,
   monitorAnimDownMs: MONITOR_ANIM_DOWN_MS,
   monitorAnimUpMs: MONITOR_ANIM_UP_MS,
   monitorMaskReadyMs: MONITOR_MASK_READY_MS,
@@ -178,11 +185,14 @@ export const SEAM_FLOORS = Object.freeze({
 });
 
 export function compileCycle(cycle, rows, initial = initialState(cycle), seams = [], declaredViewing = null) {
-  const seam = (relation, row, gapMs, floorMs) => {
+  const seam = (relation, row, gapMs, floor, first, then) => {
     if (!Number.isFinite(gapMs)) return;   // no prior transition to measure against
+    if (!Object.hasOwn(SEAM_FLOORS, floor)) throw new TypeError(`${cycle}: seam ${relation} names no SEAM_FLOORS key (${floor})`);
+    const floorMs = SEAM_FLOORS[floor];
     seams.push(Object.freeze({ cycle, relation, atMs: row.at, kind: row.kind,
-      gapMs, floorMs, slackMs: gapMs - floorMs }));
+      gapMs, floorMs, slackMs: gapMs - floorMs, floor, first, then }));
   };
+  const pressOf = row => (row.kind === 'tap' || row.kind === 'hold' ? semantic(row.control) : row.kind);
   if (!Array.isArray(rows)) throw new TypeError('artifact cycle rows must be an array');
   const state: any = { ...initial };
   // When the monitor raise and the mask-off press began, so a press cannot be
@@ -191,6 +201,7 @@ export function compileCycle(cycle, rows, initial = initialState(cycle), seams =
   let monitorDownAt = -Infinity;
   let monitorTransitionAt = -Infinity;
   let monitorTransitionMs = 0;
+  let monitorTransition = null;   // 'monitor-up' or 'monitor-down': the last transition's direction
   let maskOffAt = -Infinity;
   let maskOnAt = -Infinity;
   const blocks = [];
@@ -212,7 +223,7 @@ export function compileCycle(cycle, rows, initial = initialState(cycle), seams =
     if (!isMaskRow && row.at - maskOffAt < MASK_ANIM_OFF_MS)
       throw new TypeError(`${cycle}: ${row.kind} at +${row.at} ms lands inside the ` +
         `${MASK_ANIM_OFF_MS} ms mask-off animation from +${maskOffAt} ms, where the engine drops it`);
-    if (!isMaskRow) seam('after-mask-off-animation', row, row.at - maskOffAt, MASK_ANIM_OFF_MS);
+    if (!isMaskRow) seam('after-mask-off-animation', row, row.at - maskOffAt, 'maskAnimOffMs', 'mask-off', pressOf(row));
 
     const rawControl = row.kind === 'tap' || row.kind === 'hold' ? semantic(row.control) : null;
     const needsMonitorDown = rawControl === V.hallLight || rawControl === V.leftVentLight ||
@@ -254,7 +265,9 @@ export function compileCycle(cycle, rows, initial = initialState(cycle), seams =
       throw new TypeError(`${cycle}: ${row.kind} at +${row.at} ms reverses the monitor ` +
         `inside its ${monitorTransitionMs} ms animation from +${monitorTransitionAt} ms`);
     if (startsMonitorTransition)
-      seam('monitor-reversal', row, row.at - monitorTransitionAt, monitorTransitionMs);
+      seam('monitor-reversal', row, row.at - monitorTransitionAt,
+        monitorTransition === 'monitor-up' ? 'monitorAnimUpMs' : 'monitorAnimDownMs',
+        monitorTransition, state.monitorUp ? 'monitor-down' : 'monitor-up');
 
     // rule: a press that needs the monitor up must clear the raise animation
     const needsMonitorUp = row.kind === 'camdrop' || row.kind === 'sweep' ||
@@ -265,14 +278,15 @@ export function compileCycle(cycle, rows, initial = initialState(cycle), seams =
       const isWind = (row.kind === 'tap' || row.kind === 'hold') && semantic(row.control) === V.wind;
       const readyMs = isWind ? MONITOR_READY_WIND_MS : MONITOR_READY_CAMERA_MS;
       seam(isWind ? 'after-monitor-raise-wind' : 'after-monitor-raise-camera',
-        row, row.at - monitorUpAt, readyMs);
+        row, row.at - monitorUpAt, isWind ? 'monitorReadyWindMs' : 'monitorReadyCameraMs',
+        'monitor-up', isWind ? 'wind' : 'camera');
       if (row.at - monitorUpAt < readyMs)
         throw new TypeError(`${cycle}: ${row.kind} at +${row.at} ms is within ${readyMs} ms of the ` +
           `monitor raise at +${monitorUpAt} ms; that control is not reliably on screen yet and the contact ` +
           'hits the office underneath (device: wind missed at raise+200 ms, works at raise+450 ms)');
     }
     if (isMaskRow)
-      seam('mask-after-monitor-down', row, row.at - monitorTransitionAt, MONITOR_MASK_READY_MS);
+      seam('mask-after-monitor-down', row, row.at - monitorTransitionAt, 'monitorMaskReadyMs', monitorTransition, 'mask');
     if (isMaskRow && row.at - monitorTransitionAt < MONITOR_MASK_READY_MS)
       throw new TypeError(`${cycle}: mask at +${row.at} ms lands before the mask ` +
         `control reappears after monitor lowering from +${monitorTransitionAt} ms; ` +
@@ -283,6 +297,7 @@ export function compileCycle(cycle, rows, initial = initialState(cycle), seams =
         state.monitorUp = !state.monitorUp;
         monitorTransitionAt = row.at;
         monitorTransitionMs = state.monitorUp ? MONITOR_ANIM_UP_MS : MONITOR_ANIM_DOWN_MS;
+        monitorTransition = state.monitorUp ? 'monitor-up' : 'monitor-down';
         if (state.monitorUp) monitorUpAt = row.at;
         if (!state.monitorUp) { monitorDownAt = row.at; state.camera = null; }
         actions.push(action(cycle, row, id, { kind: 'ensure', control,
@@ -290,7 +305,7 @@ export function compileCycle(cycle, rows, initial = initialState(cycle), seams =
       } else if (control === V.mask) {
         if (state.monitorUp) throw new TypeError(`${cycle}: mask toggle requires monitor down`);
         if (state.maskOn) {
-          seam('after-mask-on-animation', row, row.at - maskOnAt, MASK_ANIM_ON_MS);
+          seam('after-mask-on-animation', row, row.at - maskOnAt, 'maskAnimOnMs', 'mask-on', 'mask-off');
           if (row.at - maskOnAt < MASK_ANIM_ON_MS)
             throw new TypeError(`${cycle}: mask toggle at +${row.at} ms lands inside the ` +
               `${MASK_ANIM_ON_MS} ms mask-on animation from +${maskOnAt} ms, where the engine drops it`);
@@ -316,6 +331,7 @@ export function compileCycle(cycle, rows, initial = initialState(cycle), seams =
       state.monitorUp = true;
       monitorTransitionAt = row.at;
       monitorTransitionMs = MONITOR_ANIM_UP_MS;
+      monitorTransition = 'monitor-up';
       monitorUpAt = row.at;
       actions.push(action(cycle, row, id, { kind: 'compound', compound: 'hallraise',
         control: V.hallLight, requiresMonitorUp: false, targetMonitorUp: true,
@@ -324,12 +340,12 @@ export function compileCycle(cycle, rows, initial = initialState(cycle), seams =
       if (state.monitorUp) throw new TypeError(`${cycle}: maskraise starts with monitor up`);
       // The compound's internal gap is deliberately NOT checked against
       // MASK_ANIM_OFF_MS. That was tried on 2026-09-19 and was wrong: the
-      // reviewed gap is 180 ms, and 180 ms is a DEVICE measurement of this
-      // exact transition (actuator.mjs: a monitor press after a mask press,
-      // 0 of 17 lost at or above 180 ms). Refusing it would contradict a
-      // measurement with a model constant -- mistake-register item 10 in the
-      // other direction.
-      seam('after-mask-on-animation', row, row.at - maskOnAt, MASK_ANIM_ON_MS);
+      // device measured this exact transition (actuator.mjs: a monitor press
+      // after a mask-off press, 0 of 17 lost at or above 180 ms), and the
+      // compound's gap is MASK_RAISE_GAP_MS (300 ms; bundle.mjs refuses less).
+      // Refusing it would contradict a measurement with a model constant --
+      // mistake-register item 10 in the other direction.
+      seam('after-mask-on-animation', row, row.at - maskOnAt, 'maskAnimOnMs', 'mask-on', 'mask-off');
       if (row.at - maskOnAt < MASK_ANIM_ON_MS)
         throw new TypeError(`${cycle}: maskraise at +${row.at} ms takes the mask off inside the ` +
           `${MASK_ANIM_ON_MS} ms mask-on animation from +${maskOnAt} ms, where the engine drops it`);
@@ -337,6 +353,7 @@ export function compileCycle(cycle, rows, initial = initialState(cycle), seams =
       maskOffAt = row.at;
       monitorTransitionAt = row.at + row.gap;
       monitorTransitionMs = MONITOR_ANIM_UP_MS;
+      monitorTransition = 'monitor-up';
       monitorUpAt = row.at + row.gap;
       actions.push(action(cycle, row, id, { kind: 'compound', compound: 'maskraise',
         control: row.mode === 'hall' ? V.hallLight : V.monitor, requiresMonitorUp: false,
@@ -367,6 +384,7 @@ export function compileCycle(cycle, rows, initial = initialState(cycle), seams =
       monitorDownAt = row.at + row.lead;
       monitorTransitionAt = monitorDownAt;
       monitorTransitionMs = MONITOR_ANIM_DOWN_MS;
+      monitorTransition = 'monitor-down';
       actions.push(action(cycle, row, id, { kind: 'compound', compound: 'camdrop',
         control: V.cameraFeedLight, requiresMonitorUp: true, targetMonitorUp: false,
         leadMs: row.lead, durationMs: row.contact, tailMs: row.tail }));

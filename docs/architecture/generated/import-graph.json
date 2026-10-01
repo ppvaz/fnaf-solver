@@ -1908,6 +1908,22 @@
       ]
     },
     {
+      "file": "packages/propose/bin/plans/artifact-commands.ts",
+      "imports": [
+        "./recipe.mjs",
+        "@sixam/source",
+        "@sixam/source/fnaf2"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/plans/artifact-commands.ts",
+      "imports": [
+        "./recipe.mjs",
+        "@sixam/source",
+        "@sixam/source/fnaf2"
+      ]
+    },
+    {
       "file": "packages/propose/bin/plans/bundle.ts",
       "imports": [
         "./artifact-commands.ts",
@@ -3438,6 +3454,7 @@
         "../bin/plans/artifact-commands.ts",
         "../bin/plans/bundle.ts",
         "../bin/plans/recipe.mjs",
+        "@sixam/review/refusals",
         "node:fs",
         "node:path",
         "node:url"
@@ -4874,6 +4891,7 @@
         "../packages/play/bin/phone/capabilities.ts",
         "../packages/propose/bin/plans/basin-edge.ts",
         "../packages/review/bin/grade/run-report.ts",
+        "../packages/review/src/mistakes.ts",
         "../packages/review/src/refusals.ts",
         "\\.\\/basin-edge\\.ts",
         "node:child_process",
@@ -4888,6 +4906,7 @@
         "../packages/play/bin/phone/capabilities.ts",
         "../packages/propose/bin/plans/basin-edge.ts",
         "../packages/review/bin/grade/run-report.ts",
+        "../packages/review/src/mistakes.ts",
         "../packages/review/src/refusals.ts",
         "\\.\\/basin-edge\\.ts",
         "node:child_process",
@@ -4902,6 +4921,7 @@
         "../packages/play/bin/phone/capabilities.ts",
         "../packages/propose/bin/plans/basin-edge.ts",
         "../packages/review/bin/grade/run-report.ts",
+        "../packages/review/src/mistakes.ts",
         "../packages/review/src/refusals.ts",
         "\\.\\/basin-edge\\.ts",
         "node:child_process",
