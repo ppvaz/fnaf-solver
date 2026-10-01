@@ -3132,8 +3132,17 @@ already reaches 2.9x at `--jobs 8` with an identical loss hash. The policy censu
 caps at two workers (`MAX_JOBS`), which the 2026-09-30 census paid as 36
 minutes, and FNaF 1, 3 and 4 censuses run on one core.
 
+Then, at Pedro's "all": the policy census keeps one worker by default and takes
+up to six (d80392a9); FNaF 1, 3 and 4 censuses take `--workers N` over `pool.ts`,
+byte for byte the serial result, 1.7-2.9x faster at six (ec92e3b0,
+`census-workers-d620f3134c94d00a`); and four per-tick cuts take the FNaF 2 Sim
+from 114 to 163 nights a second on one core with every seed of nine cohorts
+identical tick by tick (0dba2588, `sim-tick-cuts-3dbd77e91e511078`). Branching on
+`opts` once per night is unsafe (they change mid-night); skipping idle ticks is
+not possible as the model stands (draws every 60 frames). `android/fnaf1-teach`
+is folded into the Companion and deleted (581d879a..15498c55).
+
 Open: a night's screens (office and cameras) and FNaF 1/3/4's region-only load,
-not measured; REGION reads under a recording; the policy census's worker cap
-(Pedro: kept low so the machine stays usable); per-tick cost in `tick` and
-`tickUnits` (60% of Sim time), where no cut has yet shown a measured gain.
-Evidence ID: `companion-capture-cpu-d9ecf3eadaba659a`.
+not measured; REGION reads under a recording; the FNaF 1 teaching strip shown
+during a real night. Evidence IDs: `companion-capture-cpu-d9ecf3eadaba659a`,
+`census-workers-d620f3134c94d00a`, `sim-tick-cuts-3dbd77e91e511078`.
