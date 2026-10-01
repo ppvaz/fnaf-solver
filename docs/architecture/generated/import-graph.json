@@ -4981,6 +4981,27 @@
       ]
     },
     {
+      "file": "tools/test-ts-strict.ts",
+      "imports": [
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "tools/test-type-debt.ts",
+      "imports": [
+        "./gate-kit.ts",
+        "node:assert/strict",
+        "node:fs",
+        "node:path",
+        "typescript"
+      ]
+    },
+    {
       "file": "tools/test.ts",
       "imports": [
         "./chrome.ts",
@@ -4995,6 +5016,16 @@
         "${spec}",
         "...",
         "m",
+        "node:child_process",
+        "node:fs",
+        "node:path",
+        "node:url",
+        "typescript"
+      ]
+    },
+    {
+      "file": "tools/ts-strict.ts",
+      "imports": [
         "node:child_process",
         "node:fs",
         "node:path",
