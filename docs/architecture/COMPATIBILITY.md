@@ -29,7 +29,7 @@ Lifecycle meanings:
 
 The historical shell runner, its launcher facade, the artifact runner and the
 fixture service path were archived on 2026-09-25
-([`../ARCHIVED-ROUTES.md`](../ARCHIVED-ROUTES.md)); `apps/desktop/src/device-cli.js`
+([`../ARCHIVED-ROUTES.md`](../ARCHIVED-ROUTES.md)); `apps/desktop/src/device-cli.ts`
 `campaign` is the one path onto a phone.
 
 **Deprecated 2026-09-02.** `legacy-trial.sh` is reference and characterization

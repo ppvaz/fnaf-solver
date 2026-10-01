@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// `npm run lab -- <verb>`: the operator verbs from a shell (apps/desktop/src/lab.mjs).
+// `npm run lab -- <verb>`: the operator verbs from a shell (apps/desktop/src/lab.ts).
 //
 //   npm run lab -- status                                   where everything stands
 //   npm run lab -- next                                     the next step or action, ranked
@@ -16,7 +16,7 @@ import { realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isUnknown } from '@sixam/kernel';
-import { LAB_VERBS, createLab } from './lab.mjs';
+import { LAB_VERBS, createLab } from './lab.ts';
 
 const ROOT = resolve(fileURLToPath(new URL('../../../', import.meta.url)));
 const USAGE = `usage: npm run lab -- <verb> [--json]
@@ -31,8 +31,8 @@ const USAGE = `usage: npm run lab -- <verb> [--json]
 const said = value => (isUnknown(value) ? `UNKNOWN (${value.reason})` : value);
 const yes = ok => (isUnknown(ok) ? 'UNKNOWN' : ok ? 'ok  ' : 'FAIL');
 
-/** Text for each verb's claim. @type {Record<string, (claim: any) => string[]>} */
-const RENDER = {
+/** Text for each verb's claim. */
+const RENDER: Record<string, (claim: any) => string[]> = {
   status(claim) {
     const out = [];
     const { head, pushGate, sync, session, steps, promotions, phone, decisions, doctor } = claim;
@@ -139,8 +139,7 @@ const RENDER = {
   },
 };
 
-/** @param {string[]} argv */
-export function parse(argv) {
+export function parse(argv: string[]) {
   const [verb, ...rest] = argv;
   if (!LAB_VERBS.some(row => row.verb === verb)) return { error: verb ? `unknown verb ${verb}` : 'no verb' };
   const options = { verb, json: false, args: {} };
@@ -156,7 +155,7 @@ export function parse(argv) {
       if (flag === '--json') { options.json = true; continue; }
       if (!allowed.includes(flag)) return { error: `${verb} takes no ${flag}` };
       if (flag === '--dry') continue;
-      if (flag === '--no-catalog') { options.args.catalog = false; continue; }
+      if (flag === '--no-catalog') { (options.args as any).catalog = false; continue; }
       const key = { '--step': 'step', '--artifact': 'artifact', '-m': 'message', '--message': 'message', '-F': 'messageFile', '--file': 'messageFile',
         '--since': 'since' }[flag];
       options.args[key] = value(index, flag);
@@ -166,9 +165,8 @@ export function parse(argv) {
   return options;
 }
 
-/** @param {string[]} argv @param {{root?: string, lab?: ReturnType<typeof createLab>, write?: (text: string) => void}} [context] */
-export function main(argv, { root = ROOT, lab = createLab({ root }), write = text => process.stdout.write(text) } = {}) {
-  const options = parse(argv);
+export function main(argv: string[], { root = ROOT, lab = createLab({ root }), write = text => process.stdout.write(text) }: {root?: string, lab?: ReturnType<typeof createLab>, write?: (text: string) => void} = {}) {
+  const options: any = parse(argv);
   if (options.error) { process.stderr.write(`lab: ${options.error}\n${USAGE}\n`); return 2; }
   const envelope = lab[options.verb](options.args);
   if (options.json) write(`${JSON.stringify(envelope, null, 2)}\n`);

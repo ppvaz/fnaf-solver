@@ -29,7 +29,7 @@ import { VERBS } from './solver.ts';
 
 export const ROADMAP = 'plans/ROADMAP.md';
 export const MISTAKE_GATES_FILE = 'tools/test-mistake-register.mjs';
-export const MCP_SERVER_FILE = 'apps/desktop/src/companion-mcp.mjs';
+export const MCP_SERVER_FILE = 'apps/desktop/src/companion-mcp.ts';
 
 /** The steps, their headings as the ROADMAP writes them, and what each needs closed first. */
 export const STEPS = Object.freeze([

@@ -31,9 +31,9 @@ of registers this repository already generates —
 [the chronicle](../packages/review/src/chronicle-schema.ts),
 [the evidence graph](../docs/evidence/graph.json) — plus two write paths that
 already exist behind gates ([simulation](../packages/propose/bin/plans/bundle.mjs),
-[device](../apps/desktop/src/device-cli.js)). What is new below is envelope, routing and
+[device](../apps/desktop/src/device-cli.ts)). What is new below is envelope, routing and
 refusal; the knowledge is already here and the safety boundary is already proven
-in [`companion-mcp.mjs`](../apps/desktop/src/companion-mcp.mjs).
+in [`companion-mcp.mjs`](../apps/desktop/src/companion-mcp.ts).
 `UNKNOWN(not-estimated)`: no line count or schedule is offered, because none was
 measured and an invented one would be the tautology mistake 7 describes.
 
@@ -267,7 +267,7 @@ part that genuinely transfers to a stranger. Four of the seven do not exist yet.
 
 Already built, and more than most projects ever have: the contract register, the
 command registry, the chronicle corpus with kinds/labels/rungs/statuses,
-[`evidence.js`](../apps/desktop/src/evidence.js) with real claim ceilings and a `why` verb,
+[`evidence.js`](../apps/desktop/src/evidence.ts) with real claim ceilings and a `why` verb,
 the content-addressed vault, a proven MCP safety boundary, capability preflight,
 and the per-game vocabulary registry added to
 [`vocabulary.js`](../packages/source/src/clockwork/vocabulary.ts) this week.

@@ -10,6 +10,6 @@
     "@sixam/source": "file:../../packages/source"
   },
   "bin": {
-    "fnaf2-device": "src/device-cli.js"
+    "fnaf2-device": "src/device-cli.ts"
   }
 }

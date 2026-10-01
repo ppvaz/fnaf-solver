@@ -63,7 +63,7 @@ if (sourceChanged || coreChanged || proposeChanged || playModelChanged) {
   add('winners-rebuild', 'node', ['packages/propose/test/test-winners-rebuild.mjs']);
 }
 if (changed.some(path => path.startsWith('packages/play/') || path.startsWith('packages/adapters/') ||
-    path === 'apps/desktop/src/device-cli.js')) {
+    path === 'apps/desktop/src/device-cli.ts')) {
   add('adapter-contracts', 'node', ['packages/play/test/conformance.test.js']);
   add('device-executor', 'node', ['packages/play/test/adb-device-local-executor.test.js']);
   add('device-campaign', 'node', ['packages/play/test/campaign.test.js']);
@@ -94,7 +94,7 @@ if (changed.some(path => ['packages/propose/src/experiment/', 'packages/propose/
 // evidence CLI that composes it (`npm run evidence`). Review imports the
 // kernel, so a kernel change runs both. LEG-003's interim mapping for the two
 // packages created on 2026-09-29.
-if (changed.some(path => path.startsWith('packages/review/') || path.startsWith('packages/kernel/') || path === 'apps/desktop/src/evidence.js' ||
+if (changed.some(path => path.startsWith('packages/review/') || path.startsWith('packages/kernel/') || path === 'apps/desktop/src/evidence.ts' ||
     path === 'tools/evidence-pack.mjs' || path.startsWith('docs/evidence/runs/') || path === 'docs/evidence/graph.json' ||
     path === 'packages/propose/bindings/fact-register.mjs' || /^packages\/propose\/bindings\/[^/]+\/[^/]+-winner\.json$/.test(path))) {
   for (const test of ['evidence-campaign', 'evidence-pack', 'evidence-cohort', 'evidence-promotion'])

@@ -67,28 +67,28 @@ const HOUR = 3600 * 1000;
 const lines = text => (text ?? '').split('\n').map(line => line.trimEnd()).filter(Boolean);
 const plain = text => text.replace(/\*\*/g, '');
 const shellQuote = text => (/^[\w@%+=:,./-]+$/.test(text) ? text : `'${String(text).replaceAll("'", "'\\''")}'`);
-const withoutGit = env => Object.fromEntries(Object.entries(env).filter(([name]) => !name.startsWith('GIT_')));
+const withoutGit = (env: NodeJS.ProcessEnv): NodeJS.ProcessEnv => Object.fromEntries(Object.entries(env).filter(([name]) => !name.startsWith('GIT_')));
 const readJson = path => JSON.parse(readFileSync(path, 'utf8'));
 const iso = date => date.toISOString();
 const hoursBetween = (from, to) => Math.round(((to.getTime() - from.getTime()) / HOUR) * 10) / 10;
 const mtime = path => { try { return statSync(path).mtime; } catch { return null; } };
 
-/** The last evening before `now`: 18:00 local, today if that has passed, else yesterday. @param {Date} now */
-export function lastEvening(now) {
+/** The last evening before `now`: 18:00 local, today if that has passed, else yesterday. */
+export function lastEvening(now: Date) {
   const evening = new Date(now);
   evening.setHours(EVENING_HOUR, 0, 0, 0);
   if (evening.getTime() > now.getTime()) evening.setDate(evening.getDate() - 1);
   return evening;
 }
 
-/** A run id's stamp (`...-20260914T220233Z`, with or without milliseconds) as a date, or null. @param {string} id */
-export function runStamp(id) {
+/** A run id's stamp (`...-20260914T220233Z`, with or without milliseconds) as a date, or null. */
+export function runStamp(id: string) {
   const match = /(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})\d*Z$/.exec(id);
   return match ? new Date(Date.UTC(+match[1], +match[2] - 1, +match[3], +match[4], +match[5], +match[6])) : null;
 }
 
-/** `git worktree list --porcelain`, one row per worktree. @param {string} text */
-export function parseWorktrees(text) {
+/** `git worktree list --porcelain`, one row per worktree. */
+export function parseWorktrees(text: string) {
   return text.split('\n\n').map(block => block.split('\n').filter(Boolean)).filter(rows => rows.length).map(rows => {
     const row = { path: null, head: null, branch: null, locked: false, prunable: false, detached: false };
     for (const line of rows) {
@@ -139,20 +139,17 @@ function winnersKey(root) {
 
 /**
  * The lab over one checkout.
- * @param {{root: string, env?: NodeJS.ProcessEnv, now?: () => Date, winners?: () => Map<string, string>,
- *   promotions?: () => any, packs?: () => any[], queue?: () => {jobs: any[]}, host?: typeof PROC_HOST,
- *   catalogCommands?: readonly string[]}} options
- *   Tests replace the promotions query, the pack rows, the queue and the host; everything else is read.
+ * @param options 
+ * Tests replace the promotions query, the pack rows, the queue and the host; everything else is read.
  */
 export function createLab({ root: rootIn, env = process.env, now = () => new Date(), winners: winnersOverride, promotions: promotionsOverride,
-  packs: packsOverride, queue: queueOverride, host = PROC_HOST, catalogCommands = CATALOG_COMMANDS }) {
+  packs: packsOverride, queue: queueOverride, host = PROC_HOST, catalogCommands = CATALOG_COMMANDS }: {root: string, env?: NodeJS.ProcessEnv, now?: () => Date, winners?: () => Map<string, string>, promotions?: () => any, packs?: () => any[], queue?: () => {jobs: any[]}, host?: typeof PROC_HOST, catalogCommands?: readonly string[]}) {
   const root = resolve(rootIn);
   const cleanEnv = withoutGit(env);
 
   // --- reading git and the host ------------------------------------------------------------------
 
-  /** @param {string[]} args @param {{cwd?: string, allowFail?: boolean}} [options] */
-  const git = (args, { cwd = root, allowFail = false } = {}) => {
+  const git = (args: string[], { cwd = root, allowFail = false }: {cwd?: string, allowFail?: boolean} = {}) => {
     const result = spawnSync('git', args, { cwd, encoding: 'utf8', env: cleanEnv, maxBuffer: 256 * 1024 * 1024 });
     if (result.status === 0) return result.stdout;
     if (allowFail) return null;
@@ -173,8 +170,8 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
       branch: git(['rev-parse', '--abbrev-ref', 'HEAD']).trim(), uncommitted: lines(git(['status', '--porcelain'])).length };
   }
 
-  /** The push-gate record for a commit: the last run of tools/push-gate.mjs on it, or not run. @param {string} sha */
-  function pushGate(sha) {
+  /** The push-gate record for a commit: the last run of tools/push-gate.mjs on it, or not run. */
+  function pushGate(sha: string) {
     const path = runRecordPath(env, root);
     const runs = existsSync(path) ? lines(readFileSync(path, 'utf8')).flatMap(line => {
       try { return [JSON.parse(line)]; } catch { return []; }
@@ -328,8 +325,7 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
     }
   }
 
-  /** @param {{catalog?: boolean}} [options] */
-  function runDoctor({ catalog = true } = {}) {
+  function runDoctor({ catalog = true }: {catalog?: boolean} = {}) {
     const checks = [];
     const findings = [];
     const check = (id, what, ok, detail = null) => { checks.push({ id, what, ok, ...(detail ? { detail } : {}) }); };
@@ -473,7 +469,7 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
     if (!isUnknown(phone.queue)) delete phone.queue.jobsRaw;
     const repoSync = at ? sync() : null;
     const notMeasured = [
-      ...rows.filter(row => isUnknown(row.state)).map(row => `${row.id}: ${row.state.reason}`),
+      ...rows.filter(row => isUnknown(row.state)).map(row => `${row.id}: ${(row.state as any).reason}`),
       'the remote since the last fetch: the lab never fetches',
       'catalog drift: status builds no worktree (npm run lab -- doctor computes it)',
       ...(isUnknown(promotions) ? [promotions.reason] : ['reliability: a promotion is one clear on the phone, not a rate']),
@@ -549,14 +545,13 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
           'whose needs are closed, then pending decisions and the push gate' },
       label: label('a ranking of open work'), target: REPOSITORY_TARGET, cite: [ROADMAP, 'docs/evidence/graph.json', LAB_DOC],
       status: 'standing', supersededBy: null,
-      notMeasured: [...rows.filter(row => isUnknown(row.state)).map(row => `${row.id}: ${row.state.reason}`),
+      notMeasured: [...rows.filter(row => isUnknown(row.state)).map(row => `${row.id}: ${(row.state as any).reason}`),
         'whether the phone is present: an enqueued night waits for the overnight window'],
       reproducer: 'npm run lab -- next',
     });
   }
 
-  /** @param {{step?: string, artifact?: string}} args */
-  function start({ step, artifact } = {}) {
+  function start({ step, artifact }: {step?: string, artifact?: string} = {}) {
     const family = stepFamily(step);
     if (!family) return badArgument(`${JSON.stringify(step ?? null)} is not a ROADMAP step`, 'name one of S1..S7 (S2a and S2b name S2)');
     if (typeof artifact !== 'string' || !artifact.trim())
@@ -586,8 +581,7 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
     });
   }
 
-  /** @param {{message?: string, messageFile?: string}} args */
-  function commit({ message, messageFile } = {}) {
+  function commit({ message, messageFile }: {message?: string, messageFile?: string} = {}) {
     if (message !== undefined && messageFile !== undefined) return badArgument('a message is given once', 'pass -m MESSAGE or -F FILE, not both');
     let text = message;
     if (messageFile !== undefined) {
@@ -622,8 +616,7 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
     });
   }
 
-  /** @param {{since?: string}} args */
-  function end({ since } = {}) {
+  function end({ since }: {since?: string} = {}) {
     const session = readSession();
     const base = since ?? session?.base;
     if (!base) return refusalEnvelope({ rule: 'no-session', because: 'no session is open and no --since was given', cite: [SESSION_FILE, LAB_DOC],
@@ -645,10 +638,10 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
     const rows = steps(promotions);
     const family = session?.stepFamily ?? null;
     const open = rows.filter(row => stateKey(row) !== 'closed' && (!family || row.id === family))
-      .map(row => ({ step: row.id, state: stateKey(row), unmet: row.unmet, alsoOpen: row.alsoOpen ?? [],
+      .map((row: any) => ({ step: row.id, state: stateKey(row), unmet: row.unmet, alsoOpen: row.alsoOpen ?? [],
         ...(isUnknown(row.state) ? { reason: row.state.reason } : {}) }));
     const gate = at ? pushGate(at.sha) : null;
-    const claim = {
+    const claim: any = {
       verb: 'end', session: session && !since ? { id: session.id, step: session.step, artifact: session.artifact } : null,
       base: baseSha.slice(0, 7), head: at?.short ?? null, commits, ratio, ratioText: `${ratio.consequential}:${ratio.bookkeeping}`,
       records: [...new Set(commits.flatMap(item => item.records))], open,
@@ -672,8 +665,7 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
     });
   }
 
-  /** @param {{since?: string}} args */
-  function morning({ since } = {}) {
+  function morning({ since }: {since?: string} = {}) {
     const at = now();
     const from = since ? new Date(since) : lastEvening(at);
     if (Number.isNaN(from.getTime())) return badArgument(`${since} is not a date`, 'pass --since as an ISO date or time');

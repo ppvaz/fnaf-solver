@@ -24,7 +24,7 @@
     },
     {
       "id": "probe",
-      "command": "node apps/desktop/src/probe.js",
+      "command": "node apps/desktop/src/probe.ts",
       "lifecycle": "supported"
     },
     {
@@ -119,7 +119,7 @@
     },
     {
       "id": "evidence",
-      "command": "node apps/desktop/src/evidence.js",
+      "command": "node apps/desktop/src/evidence.ts",
       "lifecycle": "supported"
     },
     {
@@ -129,12 +129,12 @@
     },
     {
       "id": "lab",
-      "command": "node apps/desktop/src/cli.mjs",
+      "command": "node apps/desktop/src/cli.ts",
       "lifecycle": "supported"
     },
     {
       "id": "night",
-      "command": "node apps/desktop/src/night.js",
+      "command": "node apps/desktop/src/night.ts",
       "lifecycle": "supported"
     },
     {
@@ -174,22 +174,22 @@
     },
     {
       "id": "device:preflight",
-      "command": "node apps/desktop/src/device-cli.js preflight",
+      "command": "node apps/desktop/src/device-cli.ts preflight",
       "lifecycle": "supported"
     },
     {
       "id": "device:campaign",
-      "command": "node apps/desktop/src/device-cli.js campaign",
+      "command": "node apps/desktop/src/device-cli.ts campaign",
       "lifecycle": "supported"
     },
     {
       "id": "device:clockmap",
-      "command": "node apps/desktop/src/device-cli.js clockmap",
+      "command": "node apps/desktop/src/device-cli.ts clockmap",
       "lifecycle": "supported"
     },
     {
       "id": "device:grade",
-      "command": "node apps/desktop/src/device-cli.js grade",
+      "command": "node apps/desktop/src/device-cli.ts grade",
       "lifecycle": "supported"
     },
     {
@@ -209,7 +209,7 @@
     },
     {
       "id": "device:mcp",
-      "command": "node apps/desktop/src/companion-mcp.mjs",
+      "command": "node apps/desktop/src/companion-mcp.ts",
       "lifecycle": "supported"
     }
   ],
@@ -641,8 +641,8 @@
       "lifecycle": "supported"
     },
     {
-      "id": "apps/desktop/src/probe.js",
-      "invocation": "apps/desktop/src/probe.js",
+      "id": "apps/desktop/src/probe.ts",
+      "invocation": "apps/desktop/src/probe.ts",
       "kind": "report",
       "lifecycle": "supported"
     },
@@ -653,8 +653,8 @@
       "lifecycle": "supported"
     },
     {
-      "id": "apps/desktop/src/evidence.js",
-      "invocation": "apps/desktop/src/evidence.js",
+      "id": "apps/desktop/src/evidence.ts",
+      "invocation": "apps/desktop/src/evidence.ts",
       "kind": "evidence CLI",
       "lifecycle": "supported"
     },

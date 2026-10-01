@@ -42,13 +42,11 @@ const runDirs = root => {
 
 /**
  * Run one night and pack the run directories it created.
- * @param {string} game a key of GAMES
- * @param {string[]} args passed to the runner as given, except that a `--winner` path a record wrote before the
- *   winner moved (tools/device/, until 2026-09-30) is followed to where the winner lives now
- * @param {{root?: string, pack?: (root: string, id: string) => Promise<number>}} [options]
- * @returns {Promise<{status: number, packed: string[]}>}
+ * @param game a key of GAMES
+ * @param args passed to the runner as given, except that a `--winner` path a record wrote before the
+ * winner moved (tools/device/, until 2026-09-30) is followed to where the winner lives now
  */
-export async function runNight(game, args, { root = ROOT, pack = packRun } = {}) {
+export async function runNight(game: string, args: string[], { root = ROOT, pack = packRun }: {root?: string, pack?: (root: string, id: string) => Promise<number>} = {}): Promise<{status: number, packed: string[]}> {
   const entry = GAMES[game];
   if (!entry) throw new Error(`unknown game ${JSON.stringify(game)}; one of ${Object.keys(GAMES).join(', ')}`);
   const before = runDirs(root);
@@ -58,7 +56,7 @@ export async function runNight(game, args, { root = ROOT, pack = packRun } = {})
   // for it to finish its own abort and reset, then packs what it left.
   const ignore = () => {};
   process.on('SIGINT', ignore);
-  const status = await new Promise((done, failed) => {
+  const status = await new Promise<any>((done, failed) => {
     child.on('error', failed);
     child.on('close', (code, signal) => done(code ?? (signal ? 128 : 1)));
   }).finally(() => process.off('SIGINT', ignore));
@@ -74,8 +72,8 @@ export async function runNight(game, args, { root = ROOT, pack = packRun } = {})
 }
 
 function packRun(root, id) {
-  return new Promise((done, failed) => {
-    const child = spawn(process.execPath, [join(root, 'apps/desktop/src/evidence.js'), 'pack', id], { cwd: root, stdio: 'inherit' });
+  return new Promise<any>((done, failed) => {
+    const child = spawn(process.execPath, [join(root, 'apps/desktop/src/evidence.ts'), 'pack', id], { cwd: root, stdio: 'inherit' });
     child.on('error', failed);
     child.on('close', code => done(code ?? 1));
   });

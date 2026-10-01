@@ -85,7 +85,7 @@ function parse(argv) {
   const command = first;
   const rest = tail;
   if (!knownCommands.has(command)) throw new Error(`unknown command: ${first}`);
-  const options = { command, profile: 'hid-mediaprojection', live: false, confirmLive: false,
+  const options: any = { command, profile: 'hid-mediaprojection', live: false, confirmLive: false,
     json: false, serial: undefined, nights: [...DEFAULT_CAMPAIGN_NIGHTS], maxAttempts: 3, storyStart: undefined, saveCursor: undefined,
     requireHelper: true, requireHid: true,
     guided: false, machineOnly: false, armMode: 'blocking', allowSaveReset: false, nightAnchorAimMs: null, nightAnchorMaxK: null, nightAnchorPeriodMs: 1000, nightAnchorStrict: false, nightAnchorAuthorizeOnLatch: false, teachOverlay: false, calibration: undefined, bundle: undefined,
@@ -229,9 +229,8 @@ async function campaignBundle(path, spec, profileId) {
  * The bundle's timing per night, and the mechanics the run carries: what its
  * strategy requires and what its build and this run forbid, refused here,
  * before any phone is opened, when they meet (Pedro, 2026-09-30).
- * @param {string | undefined} path @param {number[]} nights @param {string[]} forbid
  */
-async function campaignTiming(path, nights, forbid = []) {
+async function campaignTiming(path: string | undefined, nights: number[], forbid: string[] = []) {
   if (!path) {
     if (forbid.length) throw new Error('--forbid-mechanic needs the --bundle it constrains');
     return { timingByNight: {}, mechanics: undefined };
@@ -247,7 +246,7 @@ async function campaignTiming(path, nights, forbid = []) {
 }
 
 async function main(argv = process.argv.slice(2)) {
-  const options = parse(argv);
+  const options: any = parse(argv);
   if (options.command === 'help') return help();
   if (options.command === 'grade') {
     const run = argv[1]; if (!run) throw new Error('grade requires RUN_ID');
@@ -266,30 +265,28 @@ async function main(argv = process.argv.slice(2)) {
     const bridge = new AdbDeviceBridge({ serial: options.serial });
     let helperTransport = null;
     if (options.source === 'helper') {
-      const selected = /** @type {any} */ (await bridge.selectDevice());
+      const selected = ((await bridge.selectDevice()) as any);
       if (selected.status !== 'READY') throw new Error(`clockmap needs one ready device: ${selected.reason ?? 'unavailable'}`);
       const port = new AdbCompanionPort({ serial: selected.serial });
       const endpoint = port.discover();
       helperTransport = new CompanionControlTransport({ request: line => port.request(line), token: endpoint.token });
     }
-    const sleep = ms => new Promise(done => setTimeout(done, ms));
-    /** @type {{bootId: string, quantizationMs: number, sourceMs: number,
-     *   targetBeforeMs: number, targetAfterMs: number}[]} */
-    const samples = [];
+    const sleep = ms => new Promise<any>(done => setTimeout(done, ms));
+    const samples: {bootId: string, quantizationMs: number, sourceMs: number, targetBeforeMs: number, targetAfterMs: number}[] = [];
     for (let index = 0; index < options.count; index += 1) {
       if (index) await sleep(Math.floor(options.spanMs / (options.count - 1)));
       if (options.source === 'helper') {
         const targetBeforeMs = Number(process.hrtime.bigint()) / 1e6;
-        const fields = /** @type {any} */ (helperTransport.snapshot());
+        const fields = (helperTransport.snapshot() as any);
         const targetAfterMs = Number(process.hrtime.bigint()) / 1e6;
         if (!/^\d+$/.test(fields.snapshotNs ?? '')) throw new Error('helper snapshot has no monotonic timestamp');
-        const identity = /** @type {any} */ (await bridge.uptimeSample());
+        const identity = ((await bridge.uptimeSample()) as any);
         if (identity.status !== 'READY') throw new Error(`boot identity is unavailable: ${identity.reason ?? 'unavailable'}`);
         samples.push({ bootId: identity.bootId, quantizationMs: 1,
           sourceMs: Number(BigInt(fields.snapshotNs) / 1000000n), targetBeforeMs, targetAfterMs });
         continue;
       }
-      const sample = /** @type {any} */ (await bridge.uptimeSample());
+      const sample = ((await bridge.uptimeSample()) as any);
       if (sample.status !== 'READY') throw new Error(`clockmap anchor ${index} is ${sample.status}: ${sample.reason ?? 'unavailable'}`);
       samples.push({ bootId: sample.bootId, quantizationMs: sample.quantizationMs,
         sourceMs: sample.sourceMs, targetBeforeMs: sample.targetBeforeMs, targetAfterMs: sample.targetAfterMs });

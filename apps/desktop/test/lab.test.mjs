@@ -9,8 +9,8 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { isUnknown, validateClaimEnvelope } from '@sixam/kernel';
 import { recordRun, runRecordPath } from '../../../tools/push-gate.mjs';
-import { main, parse } from '../src/cli.mjs';
-import { LAB_VERBS, SESSION_FILE, STALE_PENDING_HOURS, createLab, lastEvening, parseWorktrees, runStamp } from '../src/lab.mjs';
+import { main, parse } from '../src/cli.ts';
+import { LAB_VERBS, SESSION_FILE, STALE_PENDING_HOURS, createLab, lastEvening, parseWorktrees, runStamp } from '../src/lab.ts';
 
 const REPO = resolve(import.meta.dirname, '../../..');
 const OVERRIDE = ['PEDRO', 'OK'].join('-');

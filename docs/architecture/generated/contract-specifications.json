@@ -369,7 +369,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateArtifactRef",
       "conformanceFixtures": [
-        "apps/desktop/src/evidence.js"
+        "apps/desktop/src/evidence.ts"
       ]
     },
     {
@@ -389,7 +389,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateClaimEvidence",
       "conformanceFixtures": [
-        "apps/desktop/src/evidence.js"
+        "apps/desktop/src/evidence.ts"
       ]
     },
     {

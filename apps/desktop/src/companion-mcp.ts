@@ -15,7 +15,7 @@
  * refuses. `truth` (op decode | events | object) reads the caller's own local
  * dump and decodes only a local APK or CCN: it ships the decoder, never the
  * decoded data, and never touches a phone. `lab.*` are
- * apps/desktop/src/lab.mjs, the same functions `npm run lab` calls, over this
+ * apps/desktop/src/lab.ts, the same functions `npm run lab` calls, over this
  * checkout; `lab.doctor` leaves out the catalog-drift check, which builds a
  * temporary worktree. Messages use MCP's
  * newline-delimited JSON-RPC transport.
@@ -26,8 +26,8 @@ import { CHECKS } from '@sixam/review/refusals';
 import { GAMES, resolveGame } from '@sixam/review/registers';
 import { INSTRUMENTS, QUERIES, SURFACE_DOC, createSolver } from '@sixam/review/solver';
 import { KINDS } from '@sixam/review/chronicle-schema';
-import { createCompanionMcp } from './mcp.js';
-import { createLab } from './lab.mjs';
+import { createCompanionMcp } from './mcp.ts';
+import { createLab } from './lab.ts';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const cue = createCompanionMcp();

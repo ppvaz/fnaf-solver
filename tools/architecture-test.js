@@ -419,7 +419,7 @@ assert.deepEqual(planted(PLAY, "import { readPack } from '@sixam/review/evidence
 assert.deepEqual(planted(PLAY, "import { Observer } from '@sixam/core/sensing';"), ['play'], 'play must not import core');
 assert.deepEqual(planted(PLAY, "export const load = () => import('../../../tools/device/bundle.mjs');"), ['play'],
   'play must not reach tools/, even by a dynamic import');
-assert.deepEqual(planted(PLAY, "export { cli } from '../../../apps/desktop/src/lab.mjs';"), ['play'], 'play must not import an application');
+assert.deepEqual(planted(PLAY, "export { cli } from '../../../apps/desktop/src/lab.ts';"), ['play'], 'play must not import an application');
 assert.deepEqual(planted(PLAY, "const where = './phone/clocks.js';\nexport const load = () => import(where);"), ['play'],
   'play must refuse a dynamic import() it cannot resolve');
 assert.deepEqual(planted('packages/play/test/planted.test.js', "import assert from 'node:assert/strict';\n" +
@@ -432,7 +432,7 @@ assert.deepEqual(planted(SOURCE, "import { HID_DESCRIPTOR } from '@sixam/play';"
   'source must not import play');
 assert.deepEqual(planted(REVIEW, "import { HID_DESCRIPTOR } from '@sixam/play';"), ['play-importers', 'review'],
   'review must not import play');
-assert.deepEqual(planted(REVIEW, "export const load = () => import('../../../apps/desktop/src/lab.mjs');"), ['review'],
+assert.deepEqual(planted(REVIEW, "export const load = () => import('../../../apps/desktop/src/lab.ts');"), ['review'],
   'review must not import an application');
 assert.deepEqual(planted(REVIEW, "import { NightPolicy } from '@sixam/propose';"), ['propose-importers', 'review'],
   'review must not import propose');
@@ -586,7 +586,7 @@ for (const path of [...await files(join(ROOT, 'apps')), ...await files(join(ROOT
   if (!physicalActuatorOwners.has(path) && identifiers(await tree(path), node => node.text === 'HidWireTransport').length)
     assert.fail(`${path} reaches the HID transport outside the device runners`);
 }
-const cli = await readFile(join(ROOT, 'apps/desktop/src/device-cli.js'), 'utf8');
+const cli = await readFile(join(ROOT, 'apps/desktop/src/device-cli.ts'), 'utf8');
 // The campaign is the only command that touches a phone; its live branch must
 // keep refusing without the explicit confirmation.
 assert.match(cli, /if \(!options\.confirmLive\) throw new Error\('live campaign requires --confirm-live'\);/,

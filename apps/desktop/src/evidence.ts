@@ -176,10 +176,8 @@ function editDistance(a, b) {
  * The error for an id that names nothing here, carrying the three nearest ids: those the typed
  * id is a prefix of first, then by edit distance. `artifacts/` is gitignored, so on a clean
  * checkout the committed packs are the only candidates.
- * @param {string} run
- * @param {{packsOnly?: boolean}} [options]
  */
-async function unknownRun(run, { packsOnly = false } = {}) {
+async function unknownRun(run: string, { packsOnly = false }: {packsOnly?: boolean} = {}) {
   const ids = [...new Set([...(packsOnly ? [] : await directories(ARTIFACTS)), ...await directories(PACKS)])];
   const nearest = ids.map(name => ({ name, prefix: name.startsWith(run) ? 0 : 1, distance: editDistance(run, name) }))
     .sort((a, b) => a.prefix - b.prefix || a.distance - b.distance || a.name.localeCompare(b.name))
@@ -337,10 +335,10 @@ function pack(id, { replace = false, timeline = null } = {}) {
       paths: sum.paths + file.redactions.paths, pixelArrays: sum.pixelArrays + file.redactions.pixelArrays,
       frameRefs: sum.frameRefs + file.redactions.frameRefs }), { paths: 0, pixelArrays: 0, frameRefs: 0 });
     return { id: made.id, status, dir: `${PACKS_DIR}/${made.id}`, outcome: made.outcome, claimLevel: made.claimLevel,
-      nights: made.nights, files: made.files.length, bytes: made.files.reduce((sum, file) => sum + file.bytes, 0),
+      nights: (made as any).nights, files: made.files.length, bytes: made.files.reduce((sum, file) => sum + file.bytes, 0),
       withheld: made.withheld.length, withheldBytes: made.withheld.reduce((sum, item) => sum + (item.bytes ?? 0), 0),
-      redactions, winnerHash: made.bundle?.winnerHash ?? null, ...(made.custody ? { custody: made.custody } : {}),
-      winnerCommitted: Boolean(made.bundle?.winnerHash && trackedWinners(ROOT).has(made.bundle.winnerHash)) };
+      redactions, winnerHash: (made as any).bundle?.winnerHash ?? null, ...((made as any).custody ? { custody: (made as any).custody } : {}),
+      winnerCommitted: Boolean((made as any).bundle?.winnerHash && trackedWinners(ROOT).has((made as any).bundle.winnerHash)) };
   });
   console.log(JSON.stringify({ schema: 'run-pack-result-v1', packs: results }, null, 2));
 }
@@ -387,7 +385,7 @@ async function main([operation = 'help', first, second]) {
     return console.log(JSON.stringify(envelope ? promotionSummaryEnvelope(summary) : summary, null, 2));
   }
   if (operation === 'show') {
-    const loaded = await loadAny(first);
+    const loaded: any = await loadAny(first);
     // --envelope: the same object, as the claim of a claim-envelope-v1 at the record's own claim level.
     const print = shown => console.log(JSON.stringify(envelope ? showEnvelope(first, shown, showTarget(first, loaded)) : shown, null, 2));
     if (loaded.kind === 'device-campaign') {
@@ -404,8 +402,8 @@ async function main([operation = 'help', first, second]) {
   }
   if (operation === 'diff') {
     if (!first || !second) throw new Error('diff needs two ids: npm run evidence -- diff LEFT RIGHT');
-    const left = await loadAny(first);
-    const right = await loadAny(second);
+    const left: any = await loadAny(first);
+    const right: any = await loadAny(second);
     if (left.kind === 'session' && right.kind === 'session') {
       const changes = [];
       if (stable(left.result) !== stable(right.result)) changes.push('result');
@@ -438,10 +436,10 @@ async function main([operation = 'help', first, second]) {
     if (loaded.kind === 'fnaf1-run')
       return console.log(`replay=${first} status=NOT_REPLAYABLE reason="a FNaF 1 night on the phone is not a deterministic replay; its pack holds the runner's record and events only"`);
     if (loaded.kind === 'device-bundle') {
-      const { bundle } = loaded;
+      const { bundle } = (loaded as any);
       return console.log(`replay=${first} evaluations=${bundle.replay.results.length} resultHash=${bundle.manifest.replay.hash} status=REPLAYED`);
     }
-    const { result, manifest, spec } = loaded;
+    const { result, manifest, spec } = (loaded as any);
     if (!manifest.events?.length || !manifest.profileHash || !result.evidenceId) throw new Error('bundle lacks replay inputs');
     if (!manifest.reproducer?.case || !spec) throw new Error('bundle does not contain a deterministic experiment spec');
     if (spec.id !== manifest.reproducer.case) throw new Error('reproducer case does not match experiment spec');
@@ -450,9 +448,9 @@ async function main([operation = 'help', first, second]) {
     return console.log(`replay=${result.evidenceId} evaluations=${evaluation.evaluations.length} resultHash=${replayHash} status=REPLAYED`);
   }
   if (operation === 'why') {
-    const loaded = await loadAny(first);
+    const loaded: any = await loadAny(first);
     if (loaded.kind === 'session') {
-      const { manifest } = loaded;
+      const { manifest } = (loaded as any);
       return console.log(JSON.stringify({ schema: 'causal-trace-v1', run: first, events: manifest.events.map(event => ({ type: event.type, component: event.component, at: event.at, data: event.data })) }, null, 2));
     }
     if (loaded.kind === 'device-bundle')
@@ -470,7 +468,7 @@ async function main([operation = 'help', first, second]) {
       ...(place.custody ? { custody: place.custody } : {}), events }, null, 2));
   }
   if (operation === 'promote') {
-    const loaded = await loadAny(first);
+    const loaded: any = await loadAny(first);
     if (loaded.kind === 'fnaf1-run')
       return console.log(JSON.stringify({ schema: 'plan12-promotion-gate-v1', evidenceId: first, kind: 'fnaf1-run',
         source: 'pack', packSha256: loaded.packed.digest, accepted: false, status: 'REFUSED',
@@ -518,7 +516,7 @@ async function main([operation = 'help', first, second]) {
       }, null, 2));
     }
     if (loaded.kind === 'device-bundle') {
-      const { bundle } = loaded;
+      const { bundle } = (loaded as any);
       const gate = bundle.manifest.gate ?? {};
       const checks = {
         offlineEvidence: gate.claimLevel === 'DEVICE_MEASURED',
@@ -534,7 +532,7 @@ async function main([operation = 'help', first, second]) {
         reason: accepted ? null : 'Plan 12 requires external evidence, a passing terminal result, and an explicit gate attestation',
       }, null, 2));
     }
-    const { result, manifest } = loaded;
+    const { result, manifest } = (loaded as any);
     const checks = {
       offlineEvidence: result.claimLevel === 'DEVICE_MEASURED',
       terminalPass: result.outcome === 'PASS',

@@ -115,7 +115,7 @@ entry point, one owner, and one focused test file.
 ### LEG-005 — Narrow the public API and isolate legacy paths (P1)
 
 **Status:** RESOLVED BY REMOVAL (2026-09-25) -- the device barrel and the extra composition roots
-it exported were deleted; `apps/desktop/src/device-cli.js` (`campaign`) is the one path onto a phone, and
+it exported were deleted; `apps/desktop/src/device-cli.ts` (`campaign`) is the one path onto a phone, and
 `tools/architecture-test.js` refuses a second `live` command.
 **Owner:** `apps/desktop`
 **Evidence:** `index.js` line 1 (removed), [`COMPATIBILITY.md` (line 21)](COMPATIBILITY.md)

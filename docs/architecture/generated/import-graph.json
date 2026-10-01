@@ -36,9 +36,9 @@
       ]
     },
     {
-      "file": "apps/desktop/src/cli.mjs",
+      "file": "apps/desktop/src/cli.ts",
       "imports": [
-        "./lab.mjs",
+        "./lab.ts",
         "@sixam/kernel",
         "node:fs",
         "node:path",
@@ -46,10 +46,10 @@
       ]
     },
     {
-      "file": "apps/desktop/src/companion-mcp.mjs",
+      "file": "apps/desktop/src/companion-mcp.ts",
       "imports": [
-        "./lab.mjs",
-        "./mcp.js",
+        "./lab.ts",
+        "./mcp.ts",
         "@sixam/kernel",
         "@sixam/review/chronicle-schema",
         "@sixam/review/refusals",
@@ -59,7 +59,7 @@
       ]
     },
     {
-      "file": "apps/desktop/src/device-cli.js",
+      "file": "apps/desktop/src/device-cli.ts",
       "imports": [
         "@sixam/kernel/contracts",
         "@sixam/play",
@@ -79,7 +79,7 @@
       ]
     },
     {
-      "file": "apps/desktop/src/evidence.js",
+      "file": "apps/desktop/src/evidence.ts",
       "imports": [
         "../../../packages/propose/bin/plans/bundle.mjs",
         "@sixam/kernel/contracts",
@@ -98,7 +98,7 @@
       ]
     },
     {
-      "file": "apps/desktop/src/lab.mjs",
+      "file": "apps/desktop/src/lab.ts",
       "imports": [
         "../../../packages/play/bin/phone/local-profile.mjs",
         "../../../tools/push-gate.mjs",
@@ -116,7 +116,7 @@
       ]
     },
     {
-      "file": "apps/desktop/src/mcp.js",
+      "file": "apps/desktop/src/mcp.ts",
       "imports": [
         "@sixam/kernel",
         "node:child_process",
@@ -125,7 +125,7 @@
       ]
     },
     {
-      "file": "apps/desktop/src/night.js",
+      "file": "apps/desktop/src/night.ts",
       "imports": [
         "@sixam/review/renamed-path",
         "node:child_process",
@@ -135,7 +135,7 @@
       ]
     },
     {
-      "file": "apps/desktop/src/probe.js",
+      "file": "apps/desktop/src/probe.ts",
       "imports": [
         "node:child_process",
         "node:fs",
@@ -176,8 +176,8 @@
       "file": "apps/desktop/test/lab.test.mjs",
       "imports": [
         "../../../tools/push-gate.mjs",
-        "../src/cli.mjs",
-        "../src/lab.mjs",
+        "../src/cli.ts",
+        "../src/lab.ts",
         "@sixam/kernel",
         "node:assert/strict",
         "node:child_process",
@@ -189,7 +189,7 @@
     {
       "file": "apps/desktop/test/night.test.js",
       "imports": [
-        "../src/night.js",
+        "../src/night.ts",
         "node:assert/strict",
         "node:fs",
         "node:os",
@@ -238,7 +238,7 @@
         "../../../packages/propose/bin/census/fnaf1-device-lane.mjs",
         "../../../packages/propose/bin/census/winner-census.mjs",
         "../bin/fnaf1-custom-run.mjs",
-        "../src/night.js",
+        "../src/night.ts",
         "@sixam/review/renamed-path",
         "node:child_process",
         "node:fs",
@@ -4507,7 +4507,7 @@
     {
       "file": "tools/architecture-test.js",
       "imports": [
-        "../../../apps/desktop/src/lab.mjs",
+        "../../../apps/desktop/src/lab.ts",
         "../../../apps/device/src/campaign.js",
         "../../../apps/device/src/cli.js",
         "../../../tools/device/bundle.mjs",

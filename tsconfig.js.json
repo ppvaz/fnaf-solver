@@ -16,9 +16,9 @@
     "packages/propose/src/**/*.ts",
     "packages/review/src/**/*.ts",
     "packages/propose/parked/**/*.js",
-    "apps/desktop/src/**/*.js",
+    "apps/desktop/src/**/*.ts",
     "apps/trainer/src/**/*.js",
     "apps/trainer/src/**/*.d.ts"
   ],
-  "exclude": ["node_modules", "dist", "artifacts", "apps/desktop/src/evidence.js"]
+  "exclude": ["node_modules", "dist", "artifacts", "apps/desktop/src/evidence.ts"]
 }

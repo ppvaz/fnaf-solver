@@ -46,7 +46,7 @@ assert.deepEqual(bypassSuggestions('hook', '# the key and never bypass this hook
   'a comment stating the rule is not a suggestion');
 
 // The gate, the hooks it installs, and the lab that predicts the hook and reads the gate's record.
-for (const file of ['tools/push-gate.mjs', '.githooks/pre-push', '.githooks/commit-msg', 'apps/desktop/src/lab.mjs', 'apps/desktop/src/cli.mjs'])
+for (const file of ['tools/push-gate.mjs', '.githooks/pre-push', '.githooks/commit-msg', 'apps/desktop/src/lab.ts', 'apps/desktop/src/cli.ts'])
   assert.deepEqual(bypassSuggestions(file, readFileSync(join(ROOT, file), 'utf8')), [], `${file} suggests bypassing a hook`);
 
 // Every lane has a command that reproduces it.

@@ -51,7 +51,7 @@ office controls require DOWN; UNKNOWN or a failed bounded retry aborts and
 releases all contacts instead of continuing by toggle parity. Neither executor
 promotes a claim; `composeCampaignPorts` binds the selected executor to a
 validated campaign bundle, and `modern-campaign-ports.ts` is the default ports
-module the device command line loads (`apps/desktop/src/device-cli.js`). The
+module the device command line loads (`apps/desktop/src/device-cli.ts`). The
 result contract records every attempt, death retry, positive terminal proof,
 Custom Night readback, and save/menu proof.
 

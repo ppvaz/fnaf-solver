@@ -322,7 +322,7 @@ Instruments: `grade-night.py` (278), `grade-minus7.py` (159),
 `maskraise-grade.py` (526), `death-cause.py` (224), `death-census.py` (145),
 `sweepcheck.py` (291), `windpct.py` (156), `camtrace.py` (140),
 `screenstate.py` (209), `replay-screen-model.py` (137), plus the `grade`
-verb in `apps/desktop/src/device-cli.js` (was `apps/device/src/cli.js:193`).
+verb in `apps/desktop/src/device-cli.ts` (was `apps/device/src/cli.js:193`).
 
 **The best existing inventory in the repository is this family's gate.**
 `packages/review/bin/grade/test-grade-run-coverage.mjs` enforces that every script in

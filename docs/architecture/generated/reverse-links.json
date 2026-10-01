@@ -39,7 +39,7 @@
     {
       "id": "contract.artifact-ref-v1",
       "kind": "CONTRACT",
-      "path": "apps/desktop/src/evidence.js",
+      "path": "apps/desktop/src/evidence.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -136,7 +136,7 @@
     {
       "id": "contract.claim-evidence-v1",
       "kind": "CONTRACT",
-      "path": "apps/desktop/src/evidence.js",
+      "path": "apps/desktop/src/evidence.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {

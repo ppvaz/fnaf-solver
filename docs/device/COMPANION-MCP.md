@@ -1,7 +1,7 @@
 # Companion MCP
 
 The repository includes a project-local stdio MCP server, `fnaf-solver`, at
-`apps/desktop/src/companion-mcp.mjs` (it was `tools/device/companion-mcp.mjs`
+`apps/desktop/src/companion-mcp.ts` (it was `tools/device/companion-mcp.mjs`
 until ADR 0002's Play move made `apps/desktop` the composition root). It carries two surfaces: the safe Companion
 operations, and steps 1-5 of the solver interface of
 [Plan 28](../../plans/28-solver-interface.md), with the operator's read-only
@@ -139,7 +139,7 @@ Register this project once from the repository root; after that the server is
 available to Codex sessions:
 
 ```sh
-codex mcp add fnaf-solver -- node "$PWD/apps/desktop/src/companion-mcp.mjs"
+codex mcp add fnaf-solver -- node "$PWD/apps/desktop/src/companion-mcp.ts"
 ```
 
 The registration stores the absolute path, so repeat it after moving or

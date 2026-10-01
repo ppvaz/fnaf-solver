@@ -30,7 +30,7 @@ writeFileSync(join(temp, 'events.txt'), syntheticDump());
 writeFileSync(join(temp, 'vault.json'), JSON.stringify({ schema: 'truth-local-vault-v1',
   games: { 'com.scottgames.fnaf2': { dump: join(temp, 'events.txt') } } }));
 const { CTFAK_SRC, DOTNET, DOTNET_ROOT, ...inherited } = process.env;
-const child = spawn(process.execPath, [join(root, 'apps/desktop/src/companion-mcp.mjs')], {
+const child = spawn(process.execPath, [join(root, 'apps/desktop/src/companion-mcp.ts')], {
   cwd: root,
   env: { ...inherited, CUE_HELPER_QUEUE_FILE: join(temp, 'jobs.json'), ANDROID_SERIAL: 'missing-device',
     [VAULT_ENV]: join(temp, 'vault.json'), [CACHE_ENV]: join(temp, 'cache'), PATH: process.env.PATH },

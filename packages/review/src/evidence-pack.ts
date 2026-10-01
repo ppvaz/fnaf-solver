@@ -25,7 +25,7 @@
 // says so. night-run.sh tees the campaign CLI's stdout and stderr into run/campaign.log; the CLI
 // prints the retained result with the same JSON.stringify(retained, null, 2) it writes to
 // result.json, and writes every event row to stderr as it appends it to events.jsonl
-// (apps/desktop/src/device-cli.js and packages/play/src/campaign/modern-campaign-ports.ts, which were
+// (apps/desktop/src/device-cli.ts and packages/play/src/campaign/modern-campaign-ports.ts, which were
 // apps/device/src/ until ADR 0002's Play move; unchanged from 2026-09-12 on). Checked on
 // the campaigns that still have both (RECOVERY_RECORD): every events.jsonl and every printed
 // result.json comes back byte-identical. What the log never carried stays lost and is named as

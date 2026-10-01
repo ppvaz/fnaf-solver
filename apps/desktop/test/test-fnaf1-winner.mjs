@@ -34,7 +34,7 @@ import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { GAMES } from '../src/night.js';
+import { GAMES } from '../src/night.ts';
 import { designBlock } from '../../../packages/propose/bin/census/winner-census.mjs';
 import { FOUR_TWENTY, LANE_FILE, LANE_FILES, POPULATION_KIND, POPULATION_LANES, TIMING_PATH, loadTiming, newestTreeRecord,
   pinnedGrid420, runDeviceNight, winnerPolicyOptions } from '../../../packages/propose/bin/census/fnaf1-device-lane.mjs';

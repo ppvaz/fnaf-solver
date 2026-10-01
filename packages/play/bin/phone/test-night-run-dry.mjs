@@ -110,7 +110,7 @@ try {
     ok(r.status === 0, `${what}: the dry run failed:\n${r.stdout}\n${r.stderr}`);
     ok(/DRY RUN, the phone is not actuated/.test(r.stdout), `${what}: not reported as a dry run:\n${r.stdout}`);
     const command = (r.stdout.split('DRY RUN')[1] ?? '').split('\n')[1] ?? '';
-    ok(/cli\.js campaign /.test(command) && !command.includes('--live'),
+    ok(/device-cli\.ts campaign /.test(command) && !command.includes('--live'),
       `${what}: the printed campaign command is missing or asks for a live run:\n${r.stdout}`);
     ok(/serial   UNKNOWN/.test(r.stdout), `${what}: a dry run with no serial anywhere should say UNKNOWN:\n${r.stdout}`);
     ok(adbCalls().length === 0, `${what}: a dry run called adb:\n  ${adbCalls().join('\n  ')}`);

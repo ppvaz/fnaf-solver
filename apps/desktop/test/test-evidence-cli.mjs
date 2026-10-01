@@ -17,7 +17,7 @@ import { promotionSummary } from '@sixam/review/evidence-promotion';
 import { validateClaimEnvelope } from '@sixam/kernel';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '../../..'));
-const CLI = join(ROOT, 'apps/desktop/src/evidence.js');
+const CLI = join(ROOT, 'apps/desktop/src/evidence.ts');
 // The FNaF 1 pack's events.jsonl is 1.5 MB, and `why` prints all of it: past spawnSync's 1 MB default.
 const cli = (...args) => spawnSync(process.execPath, [CLI, ...args], { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 << 20 });
 const json = (result, what) => {

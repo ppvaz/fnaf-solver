@@ -132,7 +132,7 @@ function cueRunOptions(args) {
   return { waitSeconds: wait, intervalSeconds: interval };
 }
 
-async function runCueCommand(script, args, options = {}) {
+async function runCueCommand(script, args, options: any = {}) {
   try {
     const result = await execFile(script, args, {
       cwd: ROOT, shell: false, env: process.env,
@@ -178,7 +178,7 @@ export function createCompanionMcp({ run = runCueCommand } = {}) {
           return cueResult('cue.setup', result);
         }
         if (name === 'cue.queue.enqueue') {
-          const options = cueQueueEnqueueArgs(args);
+          const options: any = cueQueueEnqueueArgs(args);
           if (options.ok === false) return options;
           const result = await run(CUE_QUEUE, cueQueueCommand(options));
           if (result.exitCode !== 0) return cueResult('cue.queue.enqueue', result);

@@ -1,4 +1,4 @@
-// The one night entry point (apps/desktop/src/night.js), against fake runners in a
+// The one night entry point (apps/desktop/src/night.ts), against fake runners in a
 // throwaway tree: arguments reach the runner untouched, the FNaF 1 run
 // directories a night creates are packed however it exits, directories that
 // were already there or belong to another game are not, and FNaF 2 -- whose
@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { GAMES, runNight } from '../src/night.js';
+import { GAMES, runNight } from '../src/night.ts';
 
 const root = mkdtempSync(join(tmpdir(), 'night-test-'));
 const runner = (path, body) => {

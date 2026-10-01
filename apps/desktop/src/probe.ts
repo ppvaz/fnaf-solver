@@ -135,8 +135,7 @@ function report(checks) {
     lines.push(`  ${checks[key].status.padEnd(9)}${checks[key].name}: ${checks[key].detail}`);
   const checkout = ['node', 'deps'];
   const full = ['node', 'deps', 'java', 'python', 'ffmpeg', 'clone'];
-  /** @type {Record<string, [{ ready: boolean, blocking: string[], differs: string[] }, string]>} */
-  const routes = {
+  const routes: Record<string, [{ ready: boolean, blocking: string[], differs: string[] }, string]> = {
     Story: [{ ready: true, blocking: [], differs: [] }, 'nothing to install; README.md and the clips in it'],
     Strategies: [route(checks, checkout), '`npm run research -- --help`'],
     Claims: [route(checks, checkout), '`npm run evidence -- promotions`'],
