@@ -8,11 +8,12 @@ const monitorRule = parseMonitorRule(JSON.parse(await readFile(
   new URL('../../profiles/fnaf2/moto-g56/monitor-rule-moto-g56-v207.json', import.meta.url), 'utf8')));
 const maskRule = parseMaskRule(JSON.parse(await readFile(
   new URL('../../profiles/fnaf2/moto-g56/mask-rule-moto-g56-v207.json', import.meta.url), 'utf8')));
-const rgb = (luma, blue = luma) => (luma << 16) | (luma << 8) | blue;
+const rgb = (luma: number, blue = luma) => (luma << 16) | (luma << 8) | blue;
 
 function frame({ monitorUp, maskOn = false, sequence = 1, visual = 'OBSERVED',
-  visualReason, screen = 'FNAF2_NIGHT' }: any = {}) {
-  const cells = new Array(180).fill(rgb(40));
+  visualReason, screen = 'FNAF2_NIGHT' }: { monitorUp?: boolean | null, maskOn?: boolean, sequence?: number, visual?: string,
+    visualReason?: string, screen?: string } = {}): { cells?: number[], [field: string]: unknown } {
+  const cells = new Array<number>(180).fill(rgb(40));
   // Start with the measured office baseline: map-present anchors are dark and
   // monitor-covered/mask-off anchors are bright.
   for (const anchor of monitorRule.adapter.anchors) {
@@ -39,18 +40,18 @@ function frame({ monitorUp, maskOn = false, sequence = 1, visual = 'OBSERVED',
     mask_button_mean_luma: '0', monitor_button_mean_luma: '255' };
 }
 
-const office: any = classifyFrame(frame({ monitorUp: false }), { monitorRule, maskRule, target: 'office' });
+const office = classifyFrame(frame({ monitorUp: false }), { monitorRule, maskRule, target: 'office' });
 assert.equal(office.pass, true);
 assert.equal(office.monitorSource, 'helper-explicit');
 assert.equal(office.mask, false);
-assert.ok(office.maskButtonDownstroke >= BUTTON_THRESHOLDS.visibleMin);
-assert.ok(office.monitorButtonDownstroke >= BUTTON_THRESHOLDS.visibleMin);
+assert.ok(Number(office.maskButtonDownstroke) >= BUTTON_THRESHOLDS.visibleMin);
+assert.ok(Number(office.monitorButtonDownstroke) >= BUTTON_THRESHOLDS.visibleMin);
 
-const up: any = classifyFrame(frame({ monitorUp: true }), { monitorRule, maskRule, target: 'monitor-up' });
+const up = classifyFrame(frame({ monitorUp: true }), { monitorRule, maskRule, target: 'monitor-up' });
 assert.equal(up.pass, true);
 assert.equal(up.monitor, true);
-assert.ok(up.maskButtonDownstroke <= BUTTON_THRESHOLDS.absentMax);
-assert.ok(up.monitorButtonDownstroke >= BUTTON_THRESHOLDS.visibleMin);
+assert.ok(Number(up.maskButtonDownstroke) <= BUTTON_THRESHOLDS.absentMax);
+assert.ok(Number(up.monitorButtonDownstroke) >= BUTTON_THRESHOLDS.visibleMin);
 
 const maskUp = classifyFrame(frame({ monitorUp: false, maskOn: true }), { monitorRule, maskRule, target: 'office' });
 assert.equal(maskUp.pass, false);
@@ -64,7 +65,7 @@ assert.equal(transition.pass, false);
 const metadataUnknownFields = frame({ monitorUp: null, visual: 'UNKNOWN',
   visualReason: 'content-hidden' });
 metadataUnknownFields.cells = undefined;
-const metadataUnknownOffice: any = classifyFrame(metadataUnknownFields, {
+const metadataUnknownOffice = classifyFrame(metadataUnknownFields, {
   monitorRule, maskRule, target: 'office',
 });
 assert.equal(metadataUnknownOffice.pass, true,
@@ -80,7 +81,7 @@ const noStateEvidence = classifyFrame({ visual: 'UNKNOWN', visualReason: 'conten
 assert.match(noStateEvidence.reason, /^state-unknown:/);
 const unknownScreenOfficeFields = frame({ monitorUp: null, visual: 'OBSERVED', screen: 'UNKNOWN' });
 unknownScreenOfficeFields.cells = undefined;
-const unknownScreenOffice: any = classifyFrame(unknownScreenOfficeFields, {
+const unknownScreenOffice = classifyFrame(unknownScreenOfficeFields, {
   monitorRule, maskRule, target: 'office',
 });
 assert.equal(unknownScreenOffice.pass, true,

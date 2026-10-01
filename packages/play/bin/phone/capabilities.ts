@@ -24,7 +24,7 @@ export const SCHEMA = 'device-capabilities-v1';
 
 const UNKNOWN = 'UNKNOWN';
 
-const sh = (serial, args, { timeout = 20000 } = {}) => {
+const sh = (serial: string | undefined, args: string[], { timeout = 20000 }: { timeout?: number } = {}) => {
   try {
     return execFileSync('adb', [...(serial ? ['-s', serial] : []), ...args],
       { encoding: 'utf8', timeout, stdio: ['ignore', 'pipe', 'ignore'] }).trim();
@@ -32,8 +32,8 @@ const sh = (serial, args, { timeout = 20000 } = {}) => {
 };
 
 /** Ask the phone the questions the instruments actually depend on. */
-export function probe(serial) {
-  const prop = name => sh(serial, ['shell', 'getprop', name]) || UNKNOWN;
+export function probe(serial?: string) {
+  const prop = (name: string) => sh(serial, ['shell', 'getprop', name]) || UNKNOWN;
   const dataSources = (() => {
     const out = sh(serial, ['shell', 'perfetto', '--query'], { timeout: 40000 });
     if (out === null) return null;
@@ -60,7 +60,10 @@ export function probe(serial) {
 
 // Each entry names an instrument, what it needs from the phone, and how to
 // capture its input. A `false` here is the answer that would have saved a run.
-const INSTRUMENTS = [
+type Device = ReturnType<typeof probe>;
+/** An instrument, what it needs of the phone, and whether this phone has it (null: unread). */
+interface Instrument { tool: string, needs: string, capture: string, available: (d: Device) => boolean | null, ifMissing: string }
+const INSTRUMENTS: readonly Instrument[] = [
   { tool: 'packages/play/bin/probe/inputtrace.py',
     needs: 'a Perfetto app input-dispatch data source (android.input.inputevent)',
     capture: 'packages/play/bin/probe/atrace-input.sh RUN SECONDS -- COMMAND',
@@ -105,13 +108,13 @@ const INSTRUMENTS = [
  * sources could not be read, does not: an unread capability is not a yes (mistake register item 8,
  * and Review's checkCapabilitiesFirst refuses it the same way). `--force-trace` is the caller's override.
  */
-export function traceDecision(device) {
+export function traceDecision(device: Device) {
   const available = INSTRUMENTS[0].available(device);
   if (available === true) return { trace: true, reason: 'android.input.inputevent is advertised' };
   return { trace: false, reason: available === false ? 'no android.input.inputevent' : 'the Perfetto data sources could not be read' };
 }
 
-export function report(device) {
+export function report(device: Device) {
   return {
     schema: SCHEMA,
     recordedAt: new Date().toISOString().slice(0, 10),
@@ -124,7 +127,7 @@ export function report(device) {
   };
 }
 
-export function render(value) {
+export function render(value: ReturnType<typeof report>) {
   const d = value.device;
   const lines = [`device ${d.model} (${d.serial}) Android ${d.androidRelease} / SDK ${d.sdk}, ` +
     `display ${d.displayGeometry}`];
@@ -149,7 +152,7 @@ export function render(value) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const flag = name => {
+  const flag = (name: string) => {
     const index = process.argv.indexOf(`--${name}`);
     return index >= 0 && process.argv[index + 1] && !process.argv[index + 1].startsWith('--')
       ? process.argv[index + 1] : undefined;

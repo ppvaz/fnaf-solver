@@ -5,7 +5,9 @@
 import { HID_FEATURE_REPORTS } from '@sixam/play';
 import { MONITOR_POINT, READY_DELAY_MS, SYNC, chain, jsonl, plan, stream } from './practice-audit.ts';
 
-const check = (ok, message) => { if (!ok) throw new Error(message); };
+const check = (ok: unknown, message: string) => { if (!ok) throw new Error(message); };
+/** A statistic the fixture produces by construction. */
+const found = <T>(value: T | null | undefined) => value as T;
 
 const sweep = plan(1);
 check(sweep.contacts.length === 126 && sweep.contacts.filter(c => c.sync).length === 2 * SYNC.count,
@@ -24,12 +26,12 @@ const reports = lines.filter(l => l.command === 'report');
 check(reports.every(r => r.report.length === 12 && r.report[0] === 1), 'every report is a 12-byte report-ID-1 packet');
 check(reports.filter((_, i) => i % 2 === 1).every(r => r.report[7] === 4), 'a release names contact 1 inactive (trap 2)');
 
-const parsed = jsonl('{"u":1}{"u":2}\n{"u":3,"f\n{"event":"x"}\n{"u":4,"f":3{"schema":"s"}\n');
+const parsed = jsonl<{ u?: number, event?: string, schema?: string }>('{"u":1}{"u":2}\n{"u":3,"f\n{"event":"x"}\n{"u":4,"f":3{"schema":"s"}\n');
 check(JSON.stringify(parsed.map(r => r.u ?? r.event ?? r.schema)) === '[1,2,"x","s"]',
   `glued rows split, cut rows dropped: ${JSON.stringify(parsed)}`);
 
 // Two contacts: the first drained by different pumps (taken), the second by one (invisible).
-const ms = n => n * 1e6;
+const ms = (n: number) => n * 1e6;
 const kernelEdges = [{ pressMs: 100, releaseMs: 150 }, { pressMs: 300, releaseMs: 305 }];
 const calibInput = [
   { src: 'java', a: 0, ev: ms(100), rx: ms(102), t: ms(102.05) }, { src: 'sdl', k: 'mdown', t: ms(102.1) },
@@ -48,7 +50,7 @@ check(result.rows[0].verdict === 'TAKEN' && result.rows[0].pressPump === 2 && re
   'a press and release drained by different pumps is taken on the first pump');
 check(result.rows[1].verdict === 'INVISIBLE', 'one pump draining press and release leaves the game blind to it');
 check(result.flagsAgree, 'the polled flags must agree with the verdicts');
-check(Math.abs(result.press.kernelToPollMs.min - 12) < 1e-6 && Math.abs(result.press.dispatchMs.min - 2) < 1e-6,
+check(Math.abs(found(result.press.kernelToPollMs).min - 12) < 1e-6 && Math.abs(found(result.press.dispatchMs).min - 2) < 1e-6,
   'the chain terms are the stamps\' differences');
 
 console.log('practice-audit: plans, stream, log reading and chain verdicts hold');

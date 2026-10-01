@@ -13,10 +13,10 @@
 import { AdbCompanionPort } from '../../src/campaign/physical-ports.ts';
 import { resolveSerial } from './local-profile.ts';
 
-function fail(message) { console.error(`native-frame: ${message}`); process.exit(2); }
+function fail(message: string): never { console.error(`native-frame: ${message}`); process.exit(2); }
 
 const argv = process.argv.slice(2);
-let out = null;
+let out: string | null = null;
 let label = `snap-${Date.now()}`;
 for (let i = 0; i < argv.length; i += 1) {
   if (argv[i] === '--out') out = argv[++i];
@@ -25,8 +25,8 @@ for (let i = 0; i < argv.length; i += 1) {
 }
 if (!out) fail('--out is required');
 if (process.env.FNAF_LEASE_HELD !== '1' && process.env.FNAF1_LEASE_HELD !== '1') fail('run under the serial lease');
-let serial;
-try { ({ serial } = resolveSerial()); } catch (error) { fail(error.message); }
+let serial: string;
+try { ({ serial } = resolveSerial()); } catch (error) { fail((error as Error).message); }
 const port = new AdbCompanionPort({ serial });
 port.snap(label, out).then((r) => {
   console.log(JSON.stringify({ out: r.path, bytes: r.bytes, imageNs: String(r.imageNs), snapshotNs: String(r.snapshotNs) }));

@@ -21,6 +21,20 @@ import { CompanionControlTransport, measureMaskOn, measureMonitorUp,
   parseMaskRule, parseMonitorRule } from '@sixam/play';
 import { AdbCompanionPort } from '../../src/campaign/physical-ports.ts';
 
+/** A Companion GET or FRAME reply's fields, or a fixture of one. */
+type Fields = Readonly<Record<string, unknown>>;
+/** What a measurement says it could not read. */
+type Reasoned = { readonly reason?: string };
+/** One frame's verdict; a frame refused before its state was read carries only the first eight fields. */
+interface Classified {
+  readonly sequence: number | null, readonly ageUs: number | null, readonly screen: unknown, readonly visual: unknown,
+  readonly observerState: string, readonly observerReason: string | null, readonly pass: boolean, readonly reason: string;
+  readonly monitor?: boolean | null, readonly monitorSource?: string, readonly stateSource?: string, readonly derivedMonitor?: boolean | null,
+  readonly monitorReason?: string | null, readonly mask?: boolean | null, readonly maskReason?: string | null, readonly strokeSource?: string,
+  readonly maskButtonDownstroke?: number | null, readonly monitorButtonDownstroke?: number | null,
+  readonly maskButtonMean?: number | null, readonly monitorButtonMean?: number | null;
+}
+
 export const BUTTON_THRESHOLDS = Object.freeze({
   /** 100 of roughly 142 sampled stroke columns is a full glyph. */
   visibleMin: 100,
@@ -28,19 +42,19 @@ export const BUTTON_THRESHOLDS = Object.freeze({
   absentMax: 40,
 });
 
-const sleep = milliseconds => new Promise<any>(resolveSleep => setTimeout(resolveSleep, milliseconds));
-const integer = (value, name) => {
+const sleep = (milliseconds: number) => new Promise(resolveSleep => setTimeout(resolveSleep, milliseconds));
+const integer = (value: unknown, name: string) => {
   if (!Number.isInteger(value)) throw new Error(`${name} must be an integer`);
   return value;
 };
 
-function numericField(fields, name) {
+function numericField(fields: Fields | null, name: string) {
   const value = Number(fields?.[name]);
   return Number.isFinite(value) && value >= 0 ? value : null;
 }
 
 /** The fixed downward-chevron scores from the native helper image. */
-export function bottomButtons(cells, fields = null) {
+export function bottomButtons(cells: unknown, fields: Fields | null = null) {
   const maskStroke = numericField(fields, 'mask_button_downstroke');
   const monitorStroke = numericField(fields, 'monitor_button_downstroke');
   const maskMean = numericField(fields, 'mask_button_mean_luma');
@@ -60,7 +74,7 @@ export function bottomButtons(cells, fields = null) {
  * flag: a capture can reject its content metadata while still carrying a
  * fresh, unambiguous pair of fixed UI strokes from the same image.
  */
-function strokeMonitorState(buttons) {
+function strokeMonitorState(buttons: ReturnType<typeof bottomButtons>) {
   if (buttons.maskStroke === null || buttons.monitorStroke === null) return null;
   if (buttons.maskStroke <= BUTTON_THRESHOLDS.absentMax &&
       buttons.monitorStroke >= BUTTON_THRESHOLDS.visibleMin) return true;
@@ -69,7 +83,7 @@ function strokeMonitorState(buttons) {
   return null;
 }
 
-function explicitMonitor(fields) {
+function explicitMonitor(fields: Fields) {
   if (fields.monitorUp === 'true') return true;
   if (fields.monitorUp === 'false') return false;
   return null;
@@ -79,7 +93,8 @@ function explicitMonitor(fields) {
  * Classify one parsed FRAME for a gate. This function is pure and is exercised
  * without a phone by test-intersection-state-gate.mjs.
  */
-export function classifyFrame(fields, { monitorRule, maskRule, target }) {
+export function classifyFrame(fields: Fields, { monitorRule, maskRule, target }:
+  { monitorRule: ReturnType<typeof parseMonitorRule>, maskRule: ReturnType<typeof parseMaskRule>, target: string }): Classified {
   const ageUs = Number(fields?.ageUs);
   const sequence = Number(fields?.seq);
   const visualObserved = fields?.visual === 'OBSERVED';
@@ -107,21 +122,22 @@ export function classifyFrame(fields, { monitorRule, maskRule, target }) {
   const explicit = explicitMonitor(fields);
   const hasGrid = Array.isArray(fields.cells) && fields.cells.length === 180 &&
     fields.cells.every(cell => Number.isInteger(cell));
-  const derivedMeasurement: any = hasGrid
+  // hasGrid checked the cells.
+  const derivedMeasurement = hasGrid
     ? measureMonitorUp({ ...fields, monitorUp: undefined,
       monitorReason: undefined, gridSeq: fields.seq }, monitorRule,
-    { maxAgeUs: 500000, cells: fields.cells })
-    : { state: 'UNKNOWN', value: null, reason: 'grid-unavailable' };
+    { maxAgeUs: 500000, cells: fields.cells as readonly unknown[] })
+    : { state: 'UNKNOWN' as const, value: null, reason: 'grid-unavailable' };
   const derived = derivedMeasurement.state === 'OBSERVED' ? derivedMeasurement.value : null;
   const strokeMonitor = strokeMonitorState(buttons);
   const monitor = explicit ?? derived ?? strokeMonitor;
   const monitorSource = explicit !== null ? 'helper-explicit'
     : derived !== null ? 'fitted-grid'
       : strokeMonitor !== null ? 'native-stroke' : 'unknown';
-  const maskMeasurement: any = target === 'office' && hasGrid
+  const maskMeasurement = target === 'office' && hasGrid
     ? measureMaskOn({ ...fields, gridSeq: fields.seq }, maskRule,
-      { maxAgeUs: 500000, cells: fields.cells })
-    : { signal: 'maskOn', state: 'UNKNOWN', value: null, confidence: 0,
+      { maxAgeUs: 500000, cells: fields.cells as readonly unknown[] })
+    : { signal: 'maskOn', state: 'UNKNOWN' as const, value: null, confidence: 0,
       reason: 'grid-unavailable' };
   const mask = maskMeasurement.state === 'OBSERVED' ? maskMeasurement.value : null;
   const strokesAvailable = buttons.maskStroke !== null && buttons.monitorStroke !== null;
@@ -140,7 +156,7 @@ export function classifyFrame(fields, { monitorRule, maskRule, target }) {
         : monitor !== true ? (explicit === null && derived === null
         ? (!visualObserved
             ? `state-unknown:${visualReason ?? 'unavailable'}`
-            : `monitor-unknown:${derivedMeasurement.reason ?? 'unavailable'}`)
+            : `monitor-unknown:${(derivedMeasurement as Reasoned).reason ?? 'unavailable'}`)
           : 'monitor-not-up')
         : 'monitor-up-stroke-signature-missing';
     }
@@ -151,14 +167,14 @@ export function classifyFrame(fields, { monitorRule, maskRule, target }) {
         : monitor !== false ? (!visualObserved && monitor === null
             ? `state-unknown:${visualReason ?? 'unavailable'}` : 'monitor-not-down')
           : !buttonsOffice ? 'office-stroke-signature-missing'
-            : mask !== false ? (maskMeasurement.reason ?? 'mask-not-down')
+            : mask !== false ? ((maskMeasurement as Reasoned).reason ?? 'mask-not-down')
               : 'office-stroke-signature-missing';
     }
   }
   return { ...common, pass, reason: pass ? 'positive-state' : reason,
     monitor, monitorSource, stateSource: monitorSource,
-    derivedMonitor: derived, monitorReason: derivedMeasurement.reason ?? null,
-    mask, maskReason: maskMeasurement.reason ?? null,
+    derivedMonitor: derived, monitorReason: (derivedMeasurement as Reasoned).reason ?? null,
+    mask, maskReason: (maskMeasurement as Reasoned).reason ?? null,
     strokeSource: buttons.source,
     maskButtonDownstroke: buttons.maskStroke,
     monitorButtonDownstroke: buttons.monitorStroke,
@@ -168,8 +184,8 @@ export function classifyFrame(fields, { monitorRule, maskRule, target }) {
   };
 }
 
-function parseArguments(argv) {
-  const values = { target: null, timeoutMs: 8000, pollMs: 50, log: null };
+function parseArguments(argv: string[]) {
+  const values = { target: null as string | null, timeoutMs: 8000, pollMs: 50, log: null as string | null };
   for (let index = 0; index < argv.length; index++) {
     const arg = argv[index];
     if (arg === '--target') values.target = argv[++index];
@@ -178,7 +194,7 @@ function parseArguments(argv) {
     else if (arg === '--log') values.log = argv[++index];
     else throw new Error(`unknown argument ${arg}`);
   }
-  if (!['office', 'monitor-up'].includes(values.target))
+  if (!['office', 'monitor-up'].includes(values.target as string))
     throw new Error('--target must be office or monitor-up');
   integer(values.timeoutMs, 'timeout-ms');
   integer(values.pollMs, 'poll-ms');
@@ -186,19 +202,19 @@ function parseArguments(argv) {
   if (values.pollMs < 20 || values.pollMs > 1000) throw new Error('poll-ms must be 20..1000');
   if (values.log !== null && (typeof values.log !== 'string' || values.log.length === 0))
     throw new Error('--log needs a path');
-  return values;
+  return values as typeof values & { target: string };   // one of the two, checked above
 }
 
-function writeLogger(path) {
+function writeLogger(path: string | null) {
   if (!path) return () => {};
   const target = resolve(path);
   mkdirSync(dirname(target), { recursive: true });
   const fd = openSync(target, 'wx');
   closeSync(fd);
-  return row => appendFileSync(target, `${JSON.stringify(row)}\n`);
+  return (row: object) => appendFileSync(target, `${JSON.stringify(row)}\n`);
 }
 
-async function run({ target, timeoutMs, pollMs, log }) {
+async function run({ target, timeoutMs, pollMs, log }: ReturnType<typeof parseArguments>) {
   const serial = process.env.ANDROID_SERIAL;
   if (typeof serial !== 'string' || serial.length === 0)
     throw new Error('ANDROID_SERIAL must be selected before the state gate starts');
@@ -215,10 +231,10 @@ async function run({ target, timeoutMs, pollMs, log }) {
   const deadline = startedAt + timeoutMs;
   let lastSequence = 0;
   let streak = 0;
-  let last = null;
+  let last = null as ReturnType<typeof classifyFrame> | null;
   let observations = 0;
   while (Date.now() < deadline) {
-    let row;
+    let row: Readonly<Record<string, unknown>>;
     try {
       // The gate needs only the lightweight native stroke fields. FRAME would
       // serialize the full 20x9 grid on every poll and can load the capture
@@ -233,7 +249,8 @@ async function run({ target, timeoutMs, pollMs, log }) {
         lastSequence = sequence;
         const classified = classifyFrame(fields, { monitorRule, maskRule, target });
         row = { target, hostMs: Date.now(), ...classified };
-        if (classified.pass && last?.pass && last.sequence < classified.sequence) streak += 1;
+        // A passing frame has its sequence.
+        if (classified.pass && last?.pass && (last.sequence as number) < (classified.sequence as number)) streak += 1;
         else streak = classified.pass ? 1 : 0;
         last = classified;
         observations += 1;

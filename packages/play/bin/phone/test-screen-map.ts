@@ -25,7 +25,7 @@ import { toRaw as probeToRaw, COORDS } from './hid-sweep-probe.ts';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '../../../..');
 let failed = 0;
-const complain = (message) => { console.error(message); failed = 1; };
+const complain = (message: string) => { console.error(message); failed = 1; };
 
 // The real tap table, read from coords.sh rather than restated here -- a stub
 // that drifts from the value it stands in for tests the stub -- plus the camera
@@ -70,7 +70,7 @@ if (compared < 4) complain(`only ${compared} Companion route bundles found; the 
 // two differ. Without this the check passes if every copy is changed to round
 // together, which is a different transform from the one the phone has been
 // calibrated against.
-const halfUp = [400, 730]; // newGame: exact 777.78, floors to 777, rounds to 778
+const halfUp = [400, 730] as const; // newGame: exact 777.78, floors to 777, rounds to 778
 if (toRaw(halfUp)[0] !== 777)
   complain(`the transform no longer truncates: ${JSON.stringify(halfUp)} -> ` +
     `${toRaw(halfUp)[0]}, expected 777. Every device coordinate this project ` +

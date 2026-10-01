@@ -2,9 +2,9 @@
 // records while contact 1 is involved), a tick-F row is sent (F - 1) ticks
 // after its frame's marker with no drift, and a press on the tick its pointer
 // released is moved one tick later. No device.
-import { HID_PROCESS, encoder, onPhoneScript, parts, timedPart, toNative } from './rebuild-night.ts';
+import { type Bumped, type TimedRow, HID_PROCESS, encoder, onPhoneScript, parts, timedPart, toNative } from './rebuild-night.ts';
 
-const check = (ok, message) => { if (!ok) throw new Error(message); };
+const check = (ok: unknown, message: string) => { if (!ok) throw new Error(message); };
 
 const p = toNative([384, 384]);
 check(p.x === 900 && p.y === 540, 'the frame point maps back to the profile point');
@@ -21,18 +21,18 @@ check(camdrop[1][1] === 2 && camdrop[1][2] === 0x03 && camdrop[1][7] === 0x07, '
 check(camdrop[2][1] === 2 && camdrop[2][7] === 0x04, 'contact 1 releases while contact 0 is held');
 check(camdrop[3][1] === 1 && camdrop[3][2] === 0x00 && camdrop[3][7] === 4, 'the last release names contact 1 inactive');
 
-const rows = [];
+const rows: TimedRow[] = [];
 for (let k = 0; k < 600; k++) rows.push({ tick: 2 + k * 40, op: 'down', pointer: 0, x: 384, y: 384 }, { tick: 4 + k * 40, op: 'up', pointer: 0 });
 const lines = timedPart(rows, encoder()).map(l => JSON.parse(l));
-let t = 0; const at = [];
+let t = 0; const at: number[] = [];
 for (const l of lines) { if (l.command === 'delay') t += l.duration; else at.push(t); }
 check(at.every((ms, i) => Math.abs(ms - (rows[i].tick - 1) * 1000 / 60) <= 0.5), 'every report goes out within 0.5 ms of its tick, however late in the night');
 
-const bumped = [];
+const bumped: Bumped[] = [];
 const same = timedPart([{ tick: 271, op: 'down', pointer: 0, x: 213, y: 631 }, { tick: 274, op: 'up', pointer: 0 },
   { tick: 274, op: 'down', pointer: 0, x: 384, y: 384 }], encoder(), bumped);
 check(bumped.length === 1 && bumped[0].sentAtTick === 275, 'a press on its pointer\'s release tick goes one tick later');
-check(JSON.parse(same.at(-2)).duration === 17, 'the moved press is one tick after the release');
+check(JSON.parse(same.at(-2) as string).duration === 17, 'the moved press is one tick after the release');
 
 const text = ['1 200 downobj 0 btnCustomNight.Active', '1 203 up 0', '12 60 down 0 896 112', '12 63 up 0',
   '3 146 down 0 759 708', '3 148 up 0'].join('\n');

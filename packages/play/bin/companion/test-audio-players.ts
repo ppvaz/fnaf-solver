@@ -4,9 +4,9 @@
 // org.fnaf2rebuild.play (uid 10783) held a started player behind FNaF 4.
 import { startedPlayers, packagesByUid, audioVerdict, audioPreflight, COMPANION } from './audio-players.ts';
 
-const failures = [];
+const failures: string[] = [];
 let checks = 0;
-const ok = (what, c) => { checks += 1; if (!c) failures.push(what); };
+const ok = (what: string, c: unknown) => { checks += 1; if (!c) failures.push(what); };
 
 const DUMP = `PlaybackActivityMonitor dump time: 9:17:50 PM
 
@@ -61,7 +61,7 @@ const system = startedPlayers(DUMP.replace('u/pid:10783/6963', 'u/pid:1000/77'))
 ok('a system uid (< 10000) is not an app', audioVerdict(system, byUid, ['com.scottgames.fnaf4', COMPANION]).status === 'READY');
 
 // The phone path, with adb injected: an unreadable phone is UNKNOWN, not READY.
-const fake = (dump, pm) => (args) => (args.includes('dumpsys') ? dump : pm);
+const fake = (dump: string, pm: string) => (args: string[]) => (args.includes('dumpsys') ? dump : pm);
 ok('the phone path refuses the fixture', audioPreflight({ serial: 'X', target: 'com.scottgames.fnaf4', adb: fake(DUMP, PM) }).status === 'REFUSED');
 ok('a dump without the monitor is UNKNOWN', audioPreflight({ serial: 'X', target: 'com.scottgames.fnaf4', adb: fake('nothing', PM) }).status === 'UNKNOWN');
 ok('adb failing is UNKNOWN', audioPreflight({ serial: 'X', target: 'com.scottgames.fnaf4', adb: () => { throw new Error('no device'); } }).status === 'UNKNOWN');

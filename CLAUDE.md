@@ -154,10 +154,10 @@ longer rebuilds.
   written one, so `tools/test-type-debt.ts` counts written `any` and `x!` per
   area: an area without a `typeDebt` entry in `tools/quality-baseline.json`
   carries none (`packages/kernel/src`, `packages/source/src`,
-  `packages/play/src`, `packages/play/games`, `packages/propose/src`,
-  `packages/review/src`, `apps/wiki` with its test, `apps/trainer/src`,
-  `apps/desktop/src` and `packages/kernel/test` so far), and the others only
-  shrink.
+  `packages/play/src`, `packages/play/games`, `packages/play/bin`,
+  `packages/propose/src`, `packages/review/src`, `apps/wiki` with its test,
+  `apps/trainer/src`, `apps/desktop/src` and `packages/kernel/test` so far),
+  and the others only shrink.
   The pass that wrote `any` to get there (`tools/ts-strict.ts`, 7a8393f0) is retired.
 - A validator takes `unknown`, narrows it with the kernel's guards (`isRecord`,
   `isList`, `isOneOf`, `isText`, `fail(): never`, `@sixam/kernel` labels) and

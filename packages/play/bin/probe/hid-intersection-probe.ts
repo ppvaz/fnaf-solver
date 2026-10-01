@@ -16,12 +16,13 @@ import { writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { COORDS, toRaw } from '../phone/hid-sweep-probe.ts';
 
-export const HALL_LIGHT = [1200, 540];
+type Point = readonly [number, number];
+export const HALL_LIGHT: Point = [1200, 540];
 export const HID_ID = 114;
 
-const lo = value => value & 0xff;
-const hi = value => (value >> 8) & 0xff;
-export const record = (flags, point) => {
+const lo = (value: number) => value & 0xff;
+const hi = (value: number) => (value >> 8) & 0xff;
+export const record = (flags: number, point: Point) => {
   const [x, y] = toRaw(point);
   return [flags, lo(x), hi(x), lo(y), hi(y)];
 };
@@ -32,7 +33,7 @@ const DESCRIPTOR = [5,13,9,4,161,1,133,1,9,34,161,0,9,85,21,0,37,2,117,8,149,1,1
   5,13,9,34,161,2,9,66,21,0,37,1,117,1,129,2,9,50,129,2,9,81,37,63,117,6,129,2,
   5,1,9,48,38,95,9,117,16,129,2,9,49,38,55,4,129,2,192,192,192];
 
-const integer = (name, value, min, max) => {
+const integer = (name: string, value: number, min: number, max: number) => {
   if (!Number.isInteger(value) || value < min || value > max)
     throw new Error(`${name} must be an integer between ${min} and ${max} ms`);
   return value;
@@ -54,23 +55,23 @@ export function timingPlan({ contactMs = 33, camdropLeadMs = 150,
     camdropTotalMs: camdropLeadMs + camdropMonitorMs + camdropTailMs });
 }
 
-function oneContactReport(point, flags) {
+function oneContactReport(point: Point, flags: number) {
   return { id: HID_ID, command: 'report',
     report: [1, 1, ...record(flags, point), 0, 0, 0, 0, 0] };
 }
 
-function twoContactReport(first, firstFlags, second, secondFlags) {
+function twoContactReport(first: Point, firstFlags: number, second: Point, secondFlags: number) {
   return { id: HID_ID, command: 'report',
     report: [1, 2, ...record(firstFlags, first), ...record(secondFlags, second)] };
 }
 
-function delay(duration) { return { id: HID_ID, command: 'delay', duration }; }
+function delay(duration: number) { return { id: HID_ID, command: 'delay', duration }; }
 
 /**
  * Build the four independently releasable phases.  The wrapper writes only
  * the next phase after its state gate has passed.
  */
-export function phases(options = {}) {
+export function phases(options: Parameters<typeof timingPlan>[0] = {}) {
   const plan = timingPlan(options);
   const register = [{ id: HID_ID, command: 'register',
     name: 'FNAF HID camera-light intersection probe', vid: 6353, pid: 61964,
@@ -138,14 +139,14 @@ export function phases(options = {}) {
   return Object.freeze({ register, raise, camdrop, hall, manifest });
 }
 
-export function stream(options = {}) {
+export function stream(options: Parameters<typeof timingPlan>[0] = {}) {
   const built = phases(options);
   return [...built.register, ...built.raise, ...built.camdrop, ...built.hall];
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   if (process.argv.length > 2) throw new Error('intersection probe takes no positional arguments');
-  const env = (name, fallback) => {
+  const env = (name: string, fallback: number) => {
     const value = Number(process.env[name]);
     return Number.isFinite(value) ? value : fallback;
   };
@@ -160,10 +161,10 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     preRaiseMs: env('PRE_RAISE_MS', 100),
     postHallMs: env('POST_HALL_MS', 1500),
   });
-  writeFileSync(`${splitOut}.register.jsonl`, built.register.map(JSON.stringify).join('\n') + '\n');
-  writeFileSync(`${splitOut}.raise.jsonl`, built.raise.map(JSON.stringify).join('\n') + '\n');
-  writeFileSync(`${splitOut}.camdrop.jsonl`, built.camdrop.map(JSON.stringify).join('\n') + '\n');
-  writeFileSync(`${splitOut}.hall.jsonl`, built.hall.map(JSON.stringify).join('\n') + '\n');
+  writeFileSync(`${splitOut}.register.jsonl`, built.register.map((event) => JSON.stringify(event)).join('\n') + '\n');
+  writeFileSync(`${splitOut}.raise.jsonl`, built.raise.map((event) => JSON.stringify(event)).join('\n') + '\n');
+  writeFileSync(`${splitOut}.camdrop.jsonl`, built.camdrop.map((event) => JSON.stringify(event)).join('\n') + '\n');
+  writeFileSync(`${splitOut}.hall.jsonl`, built.hall.map((event) => JSON.stringify(event)).join('\n') + '\n');
   writeFileSync(`${splitOut}.intersection.json`, JSON.stringify(built.manifest, null, 2) + '\n');
   for (const event of stream({
     contactMs: env('CONTACT_MS', 33),

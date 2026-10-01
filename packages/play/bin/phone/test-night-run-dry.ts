@@ -34,7 +34,7 @@ const ours = () => (existsSync(runsDir) ? readdirSync(runsDir).filter((n) => n.s
 const FAKE = 'FAKE0001';
 const LEASE_MARKERS = ['FNAF_LEASE_HELD', 'FNAF1_LEASE_HELD', 'FNAF3_LEASE_HELD', 'FNAF4_LEASE_HELD', 'CUE_HELPER_LEASE_OWNER_PID'];
 let checks = 0;
-const ok = (condition, message) => { assert.ok(condition, message); checks += 1; };
+const ok = (condition: unknown, message: string) => { assert.ok(condition, message); checks += 1; };
 
 try {
   const bin = join(tmp, 'bin');
@@ -47,13 +47,13 @@ try {
   const noProfile = join(tmp, 'no-such-profile.json');
   // The environment of a host with no serial anywhere: no FNAF_SERIAL, no
   // ANDROID_SERIAL, a profile path that does not exist, no lease marker.
-  const bare = (extra = {}) => {
-    const env = { ...process.env, PATH: `${bin}:${process.env.PATH}`, CUE_HELPER_LOCK_DIR: locks,
+  const bare = (extra: NodeJS.ProcessEnv = {}) => {
+    const env: NodeJS.ProcessEnv = { ...process.env, PATH: `${bin}:${process.env.PATH}`, CUE_HELPER_LOCK_DIR: locks,
       FNAF_LOCAL_PROFILE: noProfile, ...extra };
     for (const name of ['FNAF_SERIAL', 'ANDROID_SERIAL', ...LEASE_MARKERS]) if (!(name in extra)) delete env[name];
     return env;
   };
-  const run = (argv, env) => {
+  const run = (argv: string[], env: NodeJS.ProcessEnv) => {
     writeFileSync(log, '');
     return spawnSync(argv[0], argv.slice(1), { cwd: ROOT, encoding: 'utf8', env, timeout: 120000 });
   };
@@ -101,7 +101,7 @@ try {
   mkdirSync(join(tmp, 'bundle'));
   writeFileSync(join(tmp, 'bundle/manifest.json'), '{}\n');
   writeFileSync(join(tmp, 'qualification.json'), '{}\n');
-  const nightRun = (...flags) => ['bash', 'packages/play/bin/phone/night-run.sh', '--label', label, '--night', '5',
+  const nightRun = (...flags: string[]) => ['bash', 'packages/play/bin/phone/night-run.sh', '--label', label, '--night', '5',
     '--bundle', join(tmp, 'bundle'), '--qualification', join(tmp, 'qualification.json'), '--no-trace', '--no-grade', ...flags];
 
   for (const flags of [[], ['--dry-run']]) {
@@ -156,7 +156,7 @@ try {
   // --- the FNaF 1, 3 and 4 wrappers: dry, and serial-less refusals ------------------
   // Each is a thin lease wrapper around a Node runner with the same contract.
   // The Custom Night runner composes Play with Propose's grid420, so it is the desktop's.
-  const wrapperPath = name => (name === 'fnaf1-custom-run.sh' ? `apps/desktop/bin/${name}`
+  const wrapperPath = (name: string) => (name === 'fnaf1-custom-run.sh' ? `apps/desktop/bin/${name}`
     : `packages/play/games/${name.split('-')[0]}/${name}`);
   const wrappers = {
     'fnaf1-night-run.sh': { live: ['--bt-audio', '--teach-overlay', '--night', '1', '--cursor-observed', '1'] },
@@ -182,14 +182,14 @@ try {
   // A live run takes the serial lease before its first adb call (it took none
   // until 2026-09-27). With another owner holding it, the run holds at once.
   // The serial comes from --serial, or from the local profile when none is given.
-  const holdLease = async (serial, body) => {
+  const holdLease = async (serial: string, body: () => void) => {
     const holder = spawn('python3', ['-c', [
       'import sys, time', `sys.path.insert(0, ${JSON.stringify(join(ROOT, 'packages/play/src/safety'))})`,
       'from companion_device_lock import DeviceLock', `lease = DeviceLock(${JSON.stringify(serial)}); lease.__enter__()`,
       "print('held', flush=True)", 'time.sleep(120)'].join('\n')],
     { env: { ...process.env, CUE_HELPER_LOCK_DIR: locks }, stdio: ['ignore', 'pipe', 'inherit'] });
     try {
-      await new Promise<any>((resolve, reject) => {
+      await new Promise<unknown>((resolve, reject) => {
         holder.stdout.once('data', resolve);
         holder.once('exit', code => reject(new Error(`the lease holder exited ${code}`)));
       });
@@ -203,7 +203,7 @@ try {
     for (const [how, argv, env] of [
       ['--serial', nightRun('--live', '--confirm-live', '--serial', FAKE), bare()],
       ['the local profile', nightRun('--live', '--confirm-live'), bare({ FNAF_LOCAL_PROFILE: profile })],
-    ]) {
+    ] satisfies [string, string[], NodeJS.ProcessEnv][]) {
       const live = run(argv, env);
       ok(live.status === 75, `night-run --live (serial from ${how}) under another owner's lease did not hold:\n${live.stdout}\n${live.stderr}`);
       ok(live.stderr.includes(`DEVICE HOLD reason=device-busy serial=${FAKE}`), `night-run --live: no lease hold line:\n${live.stderr}`);
@@ -247,7 +247,7 @@ exit 7
       cleanup.kill('SIGTERM'); cleanup.kill('SIGINT');
     }
   });
-  const exitCode = await new Promise<any>((resolve, reject) => {
+  const exitCode = await new Promise<{ code: number | null, signal: NodeJS.Signals | null }>((resolve, reject) => {
     cleanup.once('error', reject);
     cleanup.once('close', (code, signal) => resolve({ code, signal }));
   });

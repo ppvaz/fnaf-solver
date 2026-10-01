@@ -32,14 +32,14 @@ import { HidWireTransport } from '../../src/venues/phone/hid.ts';
 import { resolveSerial } from './local-profile.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..');
-let SERIAL = null;                  // FNAF_SERIAL, else the local profile: resolved under the lease below
+let SERIAL: string;                 // FNAF_SERIAL, else the local profile: resolved under the lease below
 const CONTACT_MS = 160;
-const sleep = (ms) => new Promise<any>((r) => setTimeout(r, ms));
-function fail(m) { console.error(`explore-step: ${m}`); process.exit(2); }
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+function fail(m: string): never { console.error(`explore-step: ${m}`); process.exit(2); }
 
 const argv = process.argv.slice(2);
-let session = null; let label = null; let holdMs = CONTACT_MS; let gapMs = 120; let confirmLive = false;
-const rest = [];
+let session = null as string | null; let label = null as string | null; let holdMs = CONTACT_MS; let gapMs = 120; let confirmLive = false;
+const rest: string[] = [];
 for (let i = 0; i < argv.length; i += 1) {
   if (argv[i] === '--session') session = argv[++i];
   else if (argv[i] === '--label') label = argv[++i];
@@ -50,7 +50,7 @@ for (let i = 0; i < argv.length; i += 1) {
 }
 if (!session || !/^[a-z0-9][a-z0-9-]{0,60}$/.test(session)) fail('--session is lowercase letters, digits, hyphens');
 if (process.env.FNAF_LEASE_HELD !== '1') fail('run under the serial lease');
-try { SERIAL = resolveSerial().serial; } catch (error) { fail(error.message); }
+try { SERIAL = resolveSerial().serial; } catch (error) { fail((error as Error).message); }
 const [verb, ...args] = rest;
 // Anything that touches the game -- a contact, a launch, a stop -- needs the
 // operator's explicit --confirm-live on top of the lease; a snap only reads.
@@ -59,16 +59,16 @@ const outdir = join(ROOT, 'artifacts', 'runs', session);
 const framedir = join(homedir(), 'fnaf-apks', 'explore', session);
 await mkdir(outdir, { recursive: true });
 await mkdir(framedir, { recursive: true });
-const event = async (type, fields) => appendFile(join(outdir, 'events.jsonl'),
+const event = async (type: string, fields: object) => appendFile(join(outdir, 'events.jsonl'),
   `${JSON.stringify({ atWallMs: Date.now(), type, ...fields })}\n`);
-const coord = (v, max) => {
+const coord = (v: string | undefined, max: number) => {
   const n = Number(v);
   if (!Number.isInteger(n) || n < 0 || n >= max) fail(`coordinate ${v} outside 0..${max - 1}`);
   return n;
 };
 if (!Number.isInteger(holdMs) || holdMs < 16 || holdMs > 5000) fail('--hold is 16..5000 ms');
 
-async function snap(name) {
+async function snap(name: string | null) {
   const port = new AdbCompanionPort({ serial: SERIAL });
   const n = existsSync(join(outdir, 'events.jsonl'))
     ? (await readFile(join(outdir, 'events.jsonl'), 'utf8')).split('\n').filter(Boolean).length : 0;
@@ -78,7 +78,7 @@ async function snap(name) {
   console.log(file);
 }
 
-async function withHid(fn) {
+async function withHid(fn: (hid: HidWireTransport) => Promise<void>) {
   const proc = new AdbHidProcess({ serial: SERIAL });
   const hid = new HidWireTransport({ write: (l) => proc.write(l), ready: () => proc.ready(), contactMs: CONTACT_MS });
   await hid.start();

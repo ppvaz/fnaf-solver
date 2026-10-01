@@ -52,6 +52,71 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { buttonStrokeState } from '@sixam/play';
 
+/** One row of a fnaf2-frame-trace-v3 stroke trace. */
+export interface StrokeRow {
+  readonly seq: number, readonly imageMs: number, readonly elapsedMs: number, readonly screenIdentity: number,
+  readonly maskButtonDownstroke: number, readonly monitorButtonDownstroke: number, readonly hallLuma: number | null;
+}
+interface Proof { readonly signature: string, readonly windowMs: number }
+/** What a contact must do to the strokes: a toggle proven by signatures, or the hall flash lit. */
+type Expectation =
+  | { readonly name: string, readonly proofs: readonly Proof[], readonly inverse: string, readonly hall?: undefined }
+  | { readonly name: 'hall-lit', readonly hall: true, readonly proofs: readonly Proof[], readonly inverse: null, readonly windowMs: number };
+/** One row of a compiled plan, as request.json carries it. */
+export interface PlanAction {
+  readonly id: string, readonly kind: string, readonly compound?: string, readonly leadMs?: number, readonly control?: string,
+  readonly atMs: number, readonly durationMs: number, readonly targetMonitorUp?: unknown, readonly targetMaskOn?: unknown;
+}
+/** A compiled plan, as request.json's bundle.plans carry it. */
+export interface Plan {
+  readonly night?: number;
+  readonly timing: { readonly periodMs: number, readonly loopStartMs: number, readonly stopAtMs: number, readonly idleUntilMs?: number,
+    readonly observeUntilMs?: number };
+  readonly cycles: Readonly<Record<string, { readonly blocks: readonly { readonly actions: readonly PlanAction[] }[] }>>;
+}
+/** A scheduled contact on the night timeline. */
+interface Contact {
+  readonly id: string, readonly cycle: string, readonly iteration: number, readonly kind: string, readonly control: string | undefined,
+  readonly atMs: number, readonly durationMs: number, readonly expect: Expectation | null;
+}
+type HallContact = Contact & { readonly expect: Extract<Expectation, { hall: true }> };
+/** An events.jsonl row, as the clock bracket reads gate samples off it. */
+export interface RunEvent {
+  readonly type?: string, readonly at?: number;
+  readonly sample?: { readonly visualCaptureAt?: number, readonly ageUs?: number | string };
+  readonly reads?: readonly { readonly startedAt?: number, readonly finishedAt?: number }[];
+}
+/** The helper clock against the executor's, as a bracket. */
+interface Bracket { readonly earlyOffsetMs: number, readonly lateOffsetMs: number, readonly bracketMs: number }
+/** A contact graded at one end of the bracket. */
+type Grade =
+  | { readonly status: 'OUTSIDE_TRACE' }
+  | { readonly status: 'UNGRADED' | 'HALL' | 'UNREADABLE' | 'ALREADY' | 'INVERTED' | 'MISSING' | 'LANDED', readonly startAt: number,
+    readonly preSignature: string | null, readonly maxGapMs: number, readonly coveredByStall: boolean, readonly buttonAbsent: boolean,
+    readonly landedAfterMs: number | null };
+export type InTrace = Exclude<Grade, { status: 'OUTSIDE_TRACE' }>;
+/** A contact as the audit reports it. */
+export type Graded = Contact & {
+  readonly status: string, readonly buttonAbsent?: boolean, readonly coveredByStall?: boolean, readonly buttonAbsentAmbiguous?: boolean,
+  readonly coveredAmbiguous?: boolean, readonly maxGapMs?: number, readonly atEarly?: Grade, readonly atLate?: Grade,
+  readonly landedAfterMs?: number | null, readonly officeFrames?: number, readonly startAt?: number;
+};
+/** A kernel touch contact (getevent clock, ms). */
+interface TouchEdge { readonly pressMs: number, readonly releaseMs: number }
+/** A press edge matched to a scheduled contact, with its effect's latency. */
+interface LatencyMatch {
+  readonly id: string, readonly atMs: number, readonly control: string | undefined, readonly name: string, readonly pressMs: number,
+  readonly releaseMs: number, readonly holdMs: number, readonly pressToEffectMs: number | null, readonly releaseToEffectMs: number | null;
+}
+interface Stats { readonly n: number, readonly min: number, readonly median: number, readonly max: number }
+/** The press edges read under one clock hypothesis. */
+interface Hypothesis {
+  readonly matched: number, readonly withEffect: number,
+  readonly perControl: Readonly<Record<string, { readonly pressToEffect: Stats | null, readonly releaseToEffect: Stats | null }>>;
+  readonly matches: readonly LatencyMatch[];
+}
+type Report = ReturnType<typeof audit>;
+
 export const SCHEMA = 'device-tap-stall-audit-v1';
 
 /** Contact lengths priced in every report, alongside the plan's own. */
@@ -100,7 +165,7 @@ export const HALL_WINDOW_MS = 160;
 export function hallCells(roi = HALL_ROI) {
   const cellW = roi.nativeWidth / roi.gridCols;
   const cellH = roi.nativeHeight / roi.gridRows;
-  const cells = [];
+  const cells: number[] = [];
   for (let row = 0; row < roi.gridRows; row += 1)
     for (let col = 0; col < roi.gridCols; col += 1)
       if (col * cellW < roi.x + roi.width && (col + 1) * cellW > roi.x &&
@@ -110,10 +175,10 @@ export function hallCells(roi = HALL_ROI) {
 }
 
 const HALL_CELLS = hallCells();
-const cellLuma = rgb => ((77 * ((rgb >> 16) & 255) + 150 * ((rgb >> 8) & 255) + 29 * (rgb & 255)) >> 8);
+const cellLuma = (rgb: number) => ((77 * ((rgb >> 16) & 255) + 150 * ((rgb >> 8) & 255) + 29 * (rgb & 255)) >> 8);
 
 /** Mean luma of the hall cells of one grid_hex field, or null when absent. */
-export function hallLumaOf(gridHex) {
+export function hallLumaOf(gridHex: unknown) {
   if (typeof gridHex !== 'string' || gridHex.length < HALL_ROI.gridCols * HALL_ROI.gridRows * 6) return null;
   let sum = 0;
   for (const cell of HALL_CELLS) sum += cellLuma(parseInt(gridHex.slice(cell * 6, cell * 6 + 6), 16));
@@ -133,15 +198,15 @@ export const EFFECT_WINDOW_MS = Object.freeze({
   'office-after-mask-off': 500,
 });
 
-const fail = message => { throw new TypeError(`tap-stall-audit: ${message}`); };
+const fail: (message: string) => never = message => { throw new TypeError(`tap-stall-audit: ${message}`); };
 
 /**
  * Rows of a `fnaf2-frame-trace-v3` TSV with the two native stroke scores.
  * phase-reconstruct's parser keeps only identity; this one keeps what the
  * button classifier needs, on the same helper-monotonic millisecond clock.
  */
-export function parseStrokeTrace(text) {
-  const rows = [];
+export function parseStrokeTrace(text: string) {
+  const rows: StrokeRow[] = [];
   for (const line of text.split('\n')) {
     if (!line || line.startsWith('#') || line.startsWith('seq')) continue;
     const field = line.split('\t');
@@ -178,9 +243,9 @@ export function parseStrokeTrace(text) {
  * press (the mask and monitor luma move at the same latency for 33 and 200 ms
  * contacts), but the strokes are hidden until release.
  */
-function expectation(action) {
+function expectation(action: PlanAction): Expectation | null {
   const d = action.durationMs;
-  const proof = (signature, windowMs) => ({ signature, windowMs: windowMs + d });
+  const proof = (signature: string, windowMs: number) => ({ signature, windowMs: windowMs + d });
   if (action.kind === 'compound' && action.compound === 'camdrop')
     return { name: 'monitor-down', proofs: [proof('office', 600), proof('mask-on', 900)], inverse: 'monitor-up' };
   if (action.control === 'monitor' && typeof action.targetMonitorUp === 'boolean')
@@ -201,7 +266,7 @@ function expectation(action) {
   return null;
 }
 
-const provesAlready = (expect, signature) => expect.proofs.some(p => p.signature === signature);
+const provesAlready = (expect: Expectation, signature: string | null) => expect.proofs.some(p => p.signature === signature);
 
 /**
  * Every physical contact the plan schedules, on the night timeline, expanded
@@ -209,15 +274,15 @@ const provesAlready = (expect, signature) => expect.proofs.some(p => p.signature
  * other cycle from max(loopStartMs, idleUntilMs) every periodMs until
  * stopAtMs. A camdrop's contact is its monitor tap, `leadMs` after the row.
  */
-export function expandContacts(plan) {
+export function expandContacts(plan: Plan) {
   if (!plan?.timing || !plan?.cycles) fail('plan has no timing/cycles');
   const { periodMs, loopStartMs, stopAtMs, idleUntilMs = 0 } = plan.timing;
   const cycles = Object.entries(plan.cycles);
   const opening = cycles.filter(([name]) => name === 'opening');
   const steady = cycles.filter(([name]) => name !== 'opening' && name !== 'finish');
   if (!opening.length) fail('plan has no opening cycle');
-  const contacts = [];
-  const push = (cycleName, action, baseMs, iteration) => {
+  const contacts: Contact[] = [];
+  const push = (cycleName: string, action: PlanAction, baseMs: number, iteration: number) => {
     const lead = action.kind === 'compound' ? (action.leadMs ?? 0) : 0;
     const control = action.kind === 'compound' && action.compound === 'camdrop' ? 'monitor' : action.control;
     contacts.push({
@@ -227,21 +292,21 @@ export function expandContacts(plan) {
     });
   };
   for (const [name, cycle] of opening)
-    for (const block of (cycle as any).blocks) for (const action of block.actions) push(name, action, 0, 0);
+    for (const block of cycle.blocks) for (const action of block.actions) push(name, action, 0, 0);
   const startMs = Math.max(loopStartMs, idleUntilMs);
   let iteration = 0;
   for (let base = startMs; base < stopAtMs; base += periodMs, iteration += 1)
     for (const [name, cycle] of steady)
-      for (const block of (cycle as any).blocks)
+      for (const block of cycle.blocks)
         for (const action of block.actions)
           if (base + action.atMs < stopAtMs) push(name, action, base, iteration);
   return contacts.sort((a, b) => a.atMs - b.atMs || a.id.localeCompare(b.id));
 }
 
-const signatureOf = row => buttonStrokeState(row).signature;
+const signatureOf = (row: StrokeRow) => buttonStrokeState(row).signature;
 
 /** Fraction of the trace's span on which a `contactMs` contact fits inside one interval. */
-export function exposure(intervalsMs, spanMs, contactMs) {
+export function exposure(intervalsMs: readonly number[], spanMs: number, contactMs: number) {
   if (!(spanMs > 0)) return 0;
   let covered = 0;
   for (const gap of intervalsMs) covered += Math.max(0, gap - contactMs);
@@ -266,9 +331,9 @@ export function exposure(intervalsMs, spanMs, contactMs) {
  * both ends agree. Anything else is AMBIGUOUS and says so. The exposure table
  * needs no clock at all: it reads the intervals.
  */
-export function clockBracket(events) {
-  const early = [];
-  const late = [];
+export function clockBracket(events: readonly RunEvent[]) {
+  const early: number[] = [];
+  const late: number[] = [];
   for (const event of events) {
     const sample = event?.sample;
     const read = event?.reads?.at?.(-1);
@@ -278,7 +343,7 @@ export function clockBracket(events) {
     late.push(read.finishedAt - ageMs - sample.visualCaptureAt);
   }
   if (!early.length) return null;
-  const min = values => Math.min(...values);
+  const min = (values: number[]) => Math.min(...values);
   return { earlyOffsetMs: min(early), lateOffsetMs: min(late),
     bracketMs: min(late) - min(early), samples: early.length };
 }
@@ -294,12 +359,13 @@ export function clockBracket(events) {
  * than the gate reads do (strokes3: ~80 ms against 180). The gate bracket
  * still bounds the search window and the result.
  */
-export function scheduleAnchor(contacts, trace, released, gate, latencyBoundsMs) {
-  const differences = [];
+export function scheduleAnchor(contacts: readonly Contact[], trace: readonly StrokeRow[], released: number, gate: Bracket,
+  latencyBoundsMs: readonly number[]) {
+  const differences: number[] = [];
   for (const contact of contacts) {
     const wanted = contact.expect?.name;
     if (wanted !== 'mask-on' && wanted !== 'monitor-up') continue;
-    const windowMs = contact.expect.proofs[0].windowMs;
+    const windowMs = (contact.expect as Expectation).proofs[0].windowMs;   // named, so expected
     // A held button's pressed sprite blanks the strokes until release, so a
     // long contact's signature transition tracks the RELEASE, not the press.
     if (contact.durationMs > ANCHOR_CONTACT_MAX_MS) continue;
@@ -327,10 +393,10 @@ export function scheduleAnchor(contacts, trace, released, gate, latencyBoundsMs)
     earlyOffsetMs: early, lateOffsetMs: late, bracketMs: late - early };
 }
 
-function gradeContacts(contacts, trace, offsetMs, released) {
+function gradeContacts(contacts: readonly Contact[], trace: readonly StrokeRow[], offsetMs: number, released: number): Grade[] {
   const frames = trace.map(row => ({ ...row, wallMs: row.imageMs + offsetMs }));
   const intervals = frames.slice(1).map((row, index) => row.wallMs - frames[index].wallMs);
-  const indexAtOrBefore = wallMs => {
+  const indexAtOrBefore = (wallMs: number) => {
     let low = 0, high = frames.length - 1, found = -1;
     while (low <= high) {
       const mid = (low + high) >> 1;
@@ -342,7 +408,8 @@ function gradeContacts(contacts, trace, offsetMs, released) {
     const startAt = released + contact.atMs;
     const endAt = startAt + contact.durationMs;
     const before = indexAtOrBefore(startAt);
-    if (before < 0 || endAt > frames.at(-1).wallMs) return { status: 'OUTSIDE_TRACE' };
+    // trace has two frames at least (audit checks).
+    if (before < 0 || endAt > (frames.at(-1) as (typeof frames)[number]).wallMs) return { status: 'OUTSIDE_TRACE' };
     const preSignature = signatureOf(frames[before]);
     let maxGapMs = 0;
     for (let index = before; index < frames.length - 1 && frames[index].wallMs < endAt; index += 1)
@@ -351,14 +418,14 @@ function gradeContacts(contacts, trace, offsetMs, released) {
     // The button the contact needs is absent in exactly one signature each.
     const buttonAbsent = (contact.control === 'mask' && preSignature === 'monitor-up') ||
       (contact.control === 'monitor' && preSignature === 'mask-on');
-    const firstAfter = (wanted, windowMs) => {
+    const firstAfter = (wanted: string | null, windowMs: number) => {
       for (let index = before + 1; index < frames.length &&
            frames[index].wallMs <= startAt + windowMs; index += 1)
         if (signatureOf(frames[index]) === wanted) return Math.round(frames[index].wallMs - startAt);
       return null;
     };
-    let status = 'UNGRADED';
-    let landedAfterMs = null;
+    let status: InTrace['status'] = 'UNGRADED';
+    let landedAfterMs = null as number | null;
     if (contact.expect?.hall) status = 'HALL'; // graded once on the midpoint clock, see gradeHall
     else if (contact.expect) {
       const expect = contact.expect;
@@ -390,12 +457,12 @@ function gradeContacts(contacts, trace, offsetMs, released) {
  * The screen gate is on the frames themselves: a lit frame counts only if its
  * strokes read office, and a window with no office frame at all is UNREADABLE.
  */
-function gradeHall(contact, trace, offsetMs, halfBracketMs, released) {
+function gradeHall(contact: HallContact, trace: readonly StrokeRow[], offsetMs: number, halfBracketMs: number, released: number) {
   const startAt = released + contact.atMs;
   const from = startAt - halfBracketMs;
   const to = startAt + contact.expect.windowMs + halfBracketMs;
   let office = 0;
-  let litAfterMs = null;
+  let litAfterMs = null as number | null;
   for (const row of trace) {
     const wallMs = row.imageMs + offsetMs;
     if (wallMs < from) continue;
@@ -421,10 +488,10 @@ function gradeHall(contact, trace, offsetMs, halfBracketMs, released) {
 export const VIRTUAL_TOUCH_DEVICE_NAME = /FNAF Timed Touch/i;
 const REUSED_MENU_TOUCH_DEVICE_NAME = /FNAF Campaign Menu/i;
 
-export function parseInputEvents(text) {
-  const devices = {};
-  const events = [];
-  let pendingNode = null;
+export function parseInputEvents(text: string) {
+  const devices: Record<string, string> = {};
+  const events: { ms: number, node: string, type: string, code: string, value: string }[] = [];
+  let pendingNode = null as string | null;
   for (const line of text.split('\n')) {
     const add = line.match(/^add device \d+: (\/dev\/input\/event\d+)/);
     if (add) { pendingNode = add[1]; devices[pendingNode] = devices[pendingNode] ?? ''; continue; }
@@ -437,15 +504,15 @@ export function parseInputEvents(text) {
 }
 
 /** Press/release edges of the virtual touch device, in the getevent clock (ms). */
-export function touchEdges(parsed, deviceName = VIRTUAL_TOUCH_DEVICE_NAME) {
+export function touchEdges(parsed: ReturnType<typeof parseInputEvents>, deviceName = VIRTUAL_TOUCH_DEVICE_NAME) {
   const entries = Object.entries(parsed.devices);
   const node = entries.find(([, name]) => deviceName.test(name))?.[0]
     ?? (deviceName === VIRTUAL_TOUCH_DEVICE_NAME
       ? entries.find(([, name]) => REUSED_MENU_TOUCH_DEVICE_NAME.test(name))?.[0]
       : null);
   if (!node) return { node: null, edges: [] };
-  const edges = [];
-  let down = null;
+  const edges: TouchEdge[] = [];
+  let down = null as number | null;
   for (const event of parsed.events) {
     if (event.node !== node) continue;
     const isDown = (event.code === 'BTN_TOUCH' && event.value === 'DOWN') ||
@@ -467,26 +534,27 @@ export function touchEdges(parsed, deviceName = VIRTUAL_TOUCH_DEVICE_NAME) {
  * hypothesis that matches more presses with a visible effect is reported as
  * the physical one. Press and release edges are reported separately.
  */
-export function actuationLatency({ contacts, trace, edges, released, clock, windowMs = 250 }) {
+export function actuationLatency({ contacts, trace, edges, released, clock, windowMs = 250 }: { contacts: readonly Contact[],
+  trace: readonly StrokeRow[], edges: readonly TouchEdge[], released: number, clock: Bracket, windowMs?: number }) {
   if (!edges.length) return null;
   const mid = (clock.earlyOffsetMs + clock.lateOffsetMs) / 2;
   const bootMinusMono = trace[0].elapsedMs - trace[0].imageMs;
-  const hypotheses = {};
+  const hypotheses: Record<string, Hypothesis> = {};
   for (const [name, frameClock, toWall] of [
     ['monotonic', row => row.imageMs, ms => ms + mid],
     ['boottime', row => row.elapsedMs, ms => ms - bootMinusMono + mid],
-  ]) {
-    const matches = [];
+  ] satisfies [string, (row: StrokeRow) => number, (ms: number) => number][]) {
+    const matches: LatencyMatch[] = [];
     for (const edge of edges) {
       const pressWall = toWall(edge.pressMs);
-      let best = null;
+      let best = null as { contact: Contact, d: number } | null;
       for (const contact of contacts) {
         const d = Math.abs(released + contact.atMs - pressWall);
         if (d <= windowMs && (!best || d < best.d)) best = { contact, d };
       }
       if (!best || !best.contact.expect) continue;
       const expect = best.contact.expect;
-      let effectMs = null;
+      let effectMs = null as number | null;
       for (const row of trace) {
         const t = frameClock(row);
         if (t <= edge.pressMs) continue;
@@ -501,19 +569,19 @@ export function actuationLatency({ contacts, trace, edges, released, clock, wind
         pressToEffectMs: effectMs === null ? null : Math.round(effectMs - edge.pressMs),
         releaseToEffectMs: effectMs === null ? null : Math.round(effectMs - edge.releaseMs) });
     }
-    const perControl = {};
+    const perControl: Record<string, { press: number[], release: number[] }> = {};
     for (const m of matches) {
       if (m.pressToEffectMs === null) continue;
       const bucket = perControl[m.name] ?? (perControl[m.name] = { press: [], release: [] });
-      bucket.press.push(m.pressToEffectMs); bucket.release.push(m.releaseToEffectMs);
+      bucket.press.push(m.pressToEffectMs); bucket.release.push(m.releaseToEffectMs as number);   // set with the press
     }
-    const stats = values => { const v = [...values].sort((a, b) => a - b); return v.length ? { n: v.length, min: v[0], median: v[v.length >> 1], max: v.at(-1) } : null; };
+    const stats = (values: number[]) => { const v = [...values].sort((a, b) => a - b); return v.length ? { n: v.length, min: v[0], median: v[v.length >> 1], max: v.at(-1) as number } : null; };
     hypotheses[name] = { matched: matches.length, withEffect: matches.filter(m => m.pressToEffectMs !== null).length,
-      perControl: Object.fromEntries(Object.entries(perControl).map(([k, b]) => [k, { pressToEffect: stats((b as any).press), releaseToEffect: stats((b as any).release) }])),
+      perControl: Object.fromEntries(Object.entries(perControl).map(([k, b]) => [k, { pressToEffect: stats(b.press), releaseToEffect: stats(b.release) }])),
       matches };
   }
-  const best = Object.entries(hypotheses).sort((a, b) => (b[1] as any).withEffect - (a[1] as any).withEffect)[0];
-  return { edges: edges.length, physicalClock: best && (best[1] as any).withEffect ? best[0] : null, hypotheses };
+  const best = Object.entries(hypotheses).sort((a, b) => b[1].withEffect - a[1].withEffect)[0];
+  return { edges: edges.length, physicalClock: best && best[1].withEffect ? best[0] : null, hypotheses };
 }
 
 const LOST = new Set(['MISSING', 'INVERTED']);
@@ -523,18 +591,21 @@ const LOST = new Set(['MISSING', 'INVERTED']);
  * request.json's bundle.plans, `trace` the parsed stroke trace.
  */
 export function audit({ events, plan, trace, referenceContactsMs = REFERENCE_CONTACTS_MS,
-  anchor = 'schedule', actuationLatencyBoundsMs = ACTUATION_LATENCY_BOUNDS_MS, inputEvents = null }) {
+  anchor = 'schedule', actuationLatencyBoundsMs = ACTUATION_LATENCY_BOUNDS_MS, inputEvents = null }: { events: readonly RunEvent[],
+  plan: Plan, trace: readonly StrokeRow[], referenceContactsMs?: readonly number[], anchor?: string,
+  actuationLatencyBoundsMs?: readonly number[], inputEvents?: ReturnType<typeof parseInputEvents> | null }) {
   if (!Array.isArray(events)) fail('events must be an array');
   if (!Array.isArray(trace) || trace.length < 2) fail('frame trace has fewer than two frames');
-  const first = type => events.find(event => event.type === type);
+  const first = (type: string) => events.find(event => event.type === type);
   const nightGo = first('hid.night-go');
   if (!nightGo) fail('bundle has no hid.night-go: the run never reached a night');
-  const released = first('hid.night-go-released')?.at ?? nightGo.at;
+  // The executor stamps both rows with their time.
+  const released = (first('hid.night-go-released')?.at ?? nightGo.at) as number;
   const gate = clockBracket(events);
   if (!gate) fail('no gate sample carries visualCaptureAt/ageUs: the helper clock cannot be tied to the executor');
 
   const intervals = trace.slice(1).map((row, index) => row.imageMs - trace[index].imageMs);
-  const spanMs = trace.at(-1).imageMs - trace[0].imageMs;
+  const spanMs = (trace.at(-1) as StrokeRow).imageMs - trace[0].imageMs;   // two frames at least, checked above
   const contacts = expandContacts(plan);
   const schedule = anchor === 'schedule' ? scheduleAnchor(contacts, trace, released, gate, actuationLatencyBoundsMs) : null;
   const clock = schedule
@@ -546,13 +617,13 @@ export function audit({ events, plan, trace, referenceContactsMs = REFERENCE_CON
   const atLate = gradeContacts(contacts, trace, clock.lateOffsetMs, released);
 
   const midOffset = (clock.earlyOffsetMs + clock.lateOffsetMs) / 2;
-  const graded = contacts.map((contact, index) => {
+  const graded = contacts.map((contact, index): Graded => {
     const early = atEarly[index];
     const late = atLate[index];
     if (early.status === 'OUTSIDE_TRACE' || late.status === 'OUTSIDE_TRACE')
       return { ...contact, status: 'OUTSIDE_TRACE' };
     if (contact.expect?.hall) {
-      const hall = gradeHall(contact, trace, midOffset, clock.bracketMs / 2, released);
+      const hall = gradeHall(contact as HallContact, trace, midOffset, clock.bracketMs / 2, released);
       return { ...contact, ...hall, buttonAbsent: false, coveredByStall: early.coveredByStall && late.coveredByStall,
         buttonAbsentAmbiguous: false, coveredAmbiguous: early.coveredByStall !== late.coveredByStall,
         maxGapMs: Math.max(early.maxGapMs, late.maxGapMs), atEarly: early, atLate: late };
@@ -573,9 +644,9 @@ export function audit({ events, plan, trace, referenceContactsMs = REFERENCE_CON
   });
 
   const inTrace = graded.filter(row => row.status !== 'OUTSIDE_TRACE');
-  const tally = {};
+  const tally: Record<string, number> = {};
   for (const row of graded) tally[row.status] = (tally[row.status] ?? 0) + 1;
-  const key = row => `${row.id}@${row.atMs}`;
+  const key = (row: Graded) => `${row.id}@${row.atMs}`;
   const lost = inTrace.filter(row => LOST.has(row.status));
   const covered = inTrace.filter(row => row.coveredByStall);
   const absent = inTrace.filter(row => row.buttonAbsent);
@@ -586,8 +657,8 @@ export function audit({ events, plan, trace, referenceContactsMs = REFERENCE_CON
   // Physics check on the bracket: an effect cannot be rendered in under one
   // frame, so the smallest landed-effect latency at each end says how far
   // that end can be from the truth.
-  const minLatency = grades => Math.min(...grades.filter(g => g.status === 'LANDED' && g.landedAfterMs !== null)
-    .map(g => g.landedAfterMs), Infinity);
+  const minLatency = (grades: readonly Grade[]) => Math.min(...grades
+    .flatMap(g => (g.status === 'LANDED' && g.landedAfterMs !== null ? [g.landedAfterMs] : [])), Infinity);
 
   const nightTaps = contacts.filter(row => row.durationMs <= TAP_CLASS_MAX_MS).length;
   const lengths = [...new Set([...referenceContactsMs,
@@ -599,7 +670,7 @@ export function audit({ events, plan, trace, referenceContactsMs = REFERENCE_CON
   });
   const sorted = [...intervals].sort((a, b) => a - b);
 
-  let latency = null;
+  let latency = null as ReturnType<typeof actuationLatency> | { edges: number, physicalClock: null, hypotheses: Record<string, Hypothesis>, note: string };
   if (inputEvents) {
     const { node, edges: touch } = touchEdges(inputEvents);
     latency = node ? actuationLatency({ contacts, trace, edges: touch, released, clock })
@@ -614,7 +685,7 @@ export function audit({ events, plan, trace, referenceContactsMs = REFERENCE_CON
       minLandedLatencyMs: { early: minLatency(atEarly), late: minLatency(atLate) } },
     frames: { count: trace.length, spanMs,
       intervalMs: { p50: sorted[sorted.length >> 1], p99: sorted[Math.floor(sorted.length * 0.99)],
-        max: sorted.at(-1), over33: intervals.filter(gap => gap > 33).length } },
+        max: sorted.at(-1) as number, over33: intervals.filter(gap => gap > 33).length } },
     contacts: graded,
     summary: {
       scheduled: contacts.length, inTrace: inTrace.length, tally,
@@ -645,12 +716,12 @@ export function audit({ events, plan, trace, referenceContactsMs = REFERENCE_CON
  * correction -- against `monitor-up@+14018 office@+14384 mask-on@+14469` on
  * every clean cycle.
  */
-export function formatTransitions(report, trace, plan) {
+export function formatTransitions(report: Report, trace: readonly StrokeRow[], plan: Plan) {
   const { periodMs, loopStartMs, stopAtMs, idleUntilMs = 0 } = plan.timing;
   const offset = (report.clock.earlyOffsetMs + report.clock.lateOffsetMs) / 2;
   const half = report.clock.bracketMs / 2;
-  const transitions = [];
-  let previous;
+  const transitions: { at: number, signature: string | null }[] = [];
+  let previous: string | null | undefined;
   for (const row of trace) {
     const signature = signatureOf(row);
     if (signature === previous) continue;
@@ -662,7 +733,7 @@ export function formatTransitions(report, trace, plan) {
   // offsets are printed from the iteration BASE, matching the plan's atMs.
   const startMs = Math.max(loopStartMs, idleUntilMs);
   const steadyRows = Object.entries(plan.cycles).filter(([name]) => name !== 'opening' && name !== 'finish')
-    .flatMap(([, cycle]) => (cycle as any).blocks.flatMap(block => block.actions.map(action => action.atMs)));
+    .flatMap(([, cycle]) => cycle.blocks.flatMap(block => block.actions.map(action => action.atMs)));
   const firstRowMs = steadyRows.length ? Math.min(...steadyRows) : 0;
   const lines = [`signature transitions per plan iteration, ms from the iteration base (loop rows run +${firstRowMs}..), ` +
     `clock at the bracket midpoint (+-${half.toFixed(0)} ms):`];
@@ -677,8 +748,8 @@ export function formatTransitions(report, trace, plan) {
   return lines.join('\n');
 }
 
-export function formatReport(report) {
-  const lines = [];
+export function formatReport(report: Report) {
+  const lines: string[] = [];
   const { summary, frames, clock, exposure: table } = report;
   lines.push(`frames ${frames.count} over ${(frames.spanMs / 1000).toFixed(1)} s; interval p50 ${frames.intervalMs.p50.toFixed(2)} ms, ` +
     `p99 ${frames.intervalMs.p99.toFixed(1)} ms, max ${frames.intervalMs.max.toFixed(1)} ms, ${frames.intervalMs.over33} over 33 ms`);
@@ -697,11 +768,12 @@ export function formatReport(report) {
   if (anomalies.length) {
     lines.push('contacts covered by a stall, arrived with their button absent, without their effect, or ambiguous across the bracket:');
     for (const row of anomalies) {
-      const side = grade => `${grade.status}${grade.landedAfterMs === null ? '' : `+${grade.landedAfterMs}ms`}` +
+      // A row the bracket graded has both ends.
+      const side = (grade: InTrace) => `${grade.status}${grade.landedAfterMs === null ? '' : `+${grade.landedAfterMs}ms`}` +
         `${grade.buttonAbsent ? ' absent' : ''}${grade.coveredByStall ? ' covered' : ''} pre=${grade.preSignature ?? 'unreadable'}`;
       lines.push(`  ${row.id}@${row.atMs} ${row.control} ${row.durationMs} ms  max interval ${row.maxGapMs} ms  ` +
         `${row.status}${row.buttonAbsent ? ' BUTTON ABSENT' : ''}${row.coveredByStall ? ' COVERED' : ''}` +
-        `  [early: ${side(row.atEarly)} | late: ${side(row.atLate)}]`);
+        `  [early: ${side(row.atEarly as InTrace)} | late: ${side(row.atLate as InTrace)}]`);
     }
   } else lines.push('no contact was covered by a stall, arrived with its button absent, or missed its effect');
   const hall = summary.hall;
@@ -718,14 +790,15 @@ export function formatReport(report) {
       `${row.expectedLostPerNight.toFixed(2).padStart(8)}              ${(row.pZeroLost * 100).toFixed(0).padStart(3)}%`);
   const L = report.actuationLatency;
   if (L) {
-    if (!L.physicalClock) lines.push(`actuation latency (getevent): ${L.note ?? `${L.edges} press edges, none matched a scheduled contact with a visible effect under either clock`}`);
+    if (!L.physicalClock) lines.push(`actuation latency (getevent): ${'note' in L ? L.note : `${L.edges} press edges, none matched a scheduled contact with a visible effect under either clock`}`);
     else {
       const h = L.hypotheses[L.physicalClock];
       lines.push(`actuation latency (getevent kernel press edge -> first effect frame, both on the device clock; ` +
         `getevent clock read as ${L.physicalClock}: ${h.withEffect} of ${L.edges} edges matched with an effect; ` +
-        Object.entries(L.hypotheses).filter(([k]) => k !== L.physicalClock).map(([k, v]) => `${(v as any).withEffect} under ${k}`).join(', ') + '):');
+        Object.entries(L.hypotheses).filter(([k]) => k !== L.physicalClock).map(([k, v]) => `${v.withEffect} under ${k}`).join(', ') + '):');
       for (const [control, v] of Object.entries(h.perControl)) {
-        const p = (v as any).pressToEffect, r = (v as any).releaseToEffect;
+        // A control is listed only with a matched effect.
+        const p = v.pressToEffect as Stats, r = v.releaseToEffect as Stats;
         lines.push(`  ${control.padEnd(13)} press->effect n=${p.n} min ${p.min} median ${p.median} max ${p.max} ms | release->effect median ${r.median} ms`);
       }
     }
@@ -734,10 +807,10 @@ export function formatReport(report) {
   return lines.join('\n');
 }
 
-const readJsonl = path => readFileSync(path, 'utf8').split('\n').filter(Boolean).map(line => JSON.parse(line));
+const readJsonl = (path: string) => readFileSync(path, 'utf8').split('\n').filter(Boolean).map(line => JSON.parse(line));
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const arg = (name, fallback?) => {
+  const arg = (name: string, fallback?: string) => {
     const found = process.argv.find(value => value.startsWith(`--${name}=`));
     if (found) return found.slice(name.length + 3);
     const index = process.argv.indexOf(`--${name}`);
@@ -755,23 +828,24 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   try {
     const events = readJsonl(join(run, 'events.jsonl'));
     const request = JSON.parse(readFileSync(join(run, 'request.json'), 'utf8'));
-    const plans = request?.bundle?.plans ?? [];
+    const plans: Plan[] = request?.bundle?.plans ?? [];
     const night = arg('night');
     const plan = night === undefined ? plans[0] : plans.find(entry => entry.night === Number(night));
     if (!plan) fail(`request.json binds no plan${night === undefined ? '' : ` for night ${night}`}`);
     const trace = parseStrokeTrace(readFileSync(tracePath, 'utf8'));
     const inputEvents = inputPath ? parseInputEvents(readFileSync(inputPath, 'utf8')) : null;
-    const report: any = audit({ events, plan, trace, inputEvents });
+    // request.json binds it (checked above).
+    const report: Report & { run?: string, frameTrace?: string } = audit({ events, plan: plan as Plan, trace, inputEvents });
     report.run = run;
     report.frameTrace = tracePath;
     const out = arg('out');
     if (out) writeFileSync(out, JSON.stringify(report, null, 2) + '\n');
     const text = process.argv.includes('--json') ? JSON.stringify(report, null, 2)
-      : formatReport(report) + (process.argv.includes('--transitions') ? '\n' + formatTransitions(report, trace, plan) : '');
+      : formatReport(report) + (process.argv.includes('--transitions') ? '\n' + formatTransitions(report, trace, plan as Plan) : '');
     process.stdout.write(text + '\n');
     process.exit(report.verdict === 'CONTACT_LOST' || report.verdict === 'HALL_DARK' ? 3 : 0);
   } catch (error) {
-    process.stderr.write(`${error.message}\n`);
+    process.stderr.write(`${(error as Error).message}\n`);
     process.exit(2);
   }
 }

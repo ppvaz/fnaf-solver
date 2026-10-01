@@ -20,9 +20,11 @@ assert.deepEqual(built.manifest.illegalPathsRefused,
 assert.equal(built.manifest.maskReports, 0);
 assert.equal(built.manifest.dependentControlsStateGated, true);
 
-const reports = phase => phase.filter(event => event.command === 'report').map(event => event.report);
+// A report event carries its report.
+const reports = (phase: readonly { command: string, report?: number[] }[]) =>
+  phase.filter(event => event.command === 'report').map(event => event.report as number[]);
 const allReports = [...reports(built.raise), ...reports(built.camdrop), ...reports(built.hall)];
-const containsPoint = (report, point) => {
+const containsPoint = (report: number[], point: readonly [number, number]) => {
   const raw = record(0, point).slice(1);
   return [2, 7].some(offset => report.length >= offset + 5 &&
     report.slice(offset + 1, offset + 5).every((value, index) => value === raw[index]));

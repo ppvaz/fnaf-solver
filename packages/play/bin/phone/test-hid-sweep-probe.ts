@@ -1,25 +1,26 @@
 // No-device regression for the sweep probe's report stream: the trap-2
 // contact discipline, the pulsed (not held) light, and the requested spacing.
-import { stream, COORDS, toRaw } from './hid-sweep-probe.ts';
+import { type HidEvent, stream, COORDS, toRaw } from './hid-sweep-probe.ts';
 
-const check = (ok, message) => { if (!ok) throw new Error(message); };
-const key = (point) => toRaw(point).join(',');
+const check: (ok: unknown, message: string) => asserts ok = (ok, message) => { if (!ok) throw new Error(message); };
+const key = (point: readonly [number, number]) => toRaw(point).join(',');
 
 const SPACINGS = [240, 160, 120, 100];
 const events = stream(SPACINGS);   // the shipped geometry: no light lead
 check(events[0].command === 'register', 'must register first');
-check(events[1].command === 'delay' && events[1].duration >= 6000,
+const ready = events[1];
+check(ready.command === 'delay' && ready.duration >= 6000,
   'must wait for framework-level input attachment, not just UHID open');
 
-for (const event of events.filter(e => e.command === 'report'))
+for (const event of events.filter((e): e is Extract<HidEvent, { command: 'report' }> => e.command === 'report'))
   check(event.report.length === 12 && event.report[0] === 1 && event.report[1] <= 2,
     'every report must be a 12-byte report-ID-1 packet within the descriptor');
 
 // Walk the stream on a virtual clock and record what the light and the
 // selected camera are doing.
-let t = 0, lightDown = null, camDown = null;
-const selections = [];   // [camKey, downMs]
-const lightPulses = [];  // [downMs, upMs, camKeyAtDown]
+let t = 0, lightDown = null as [number, string] | null, camDown = null as string | null;
+const selections: [string, number][] = [];   // [camKey, downMs]
+const lightPulses: [number, number, string | null, string][] = [];  // [downMs, upMs, camKeyAtDown]
 for (const event of events) {
   if (event.command === 'delay') { t += event.duration; continue; }
   if (event.command !== 'report') continue;
@@ -91,7 +92,7 @@ for (let s = 0; s < SPACINGS.length; s++) {
 // The 10 ms lead stays reachable so recordings taken under it stay
 // reproducible, and it must still be the shorter pulse it always was.
 const led = stream([120], { lightLeadMs: 10, lightTailMs: 0, contactMs: 100 });
-let lt = 0, ldown = null, ledPulses = [];
+let lt = 0, ldown = null as number | null, ledPulses: number[] = [];
 const [leadLightX, leadLightY] = toRaw(COORDS.cameraFeedLight);
 for (const event of led) {
   if (event.command === 'delay') { lt += event.duration; continue; }
@@ -118,7 +119,7 @@ check(litMs <= budget, `a sweep must draw at most ${budget} ms of light, got ${l
 // the edges.
 {
   const held = stream([66], { contactMs: 33, heldLight: true });
-  let ht = 0, hLightDown = null, hSelections = [], hLightSpan = null;
+  let ht = 0, hLightDown = null as number | null, hSelections: string[] = [], hLightSpan = null as number | null;
   for (const event of held) {
     if (event.command === 'delay') { ht += event.duration; continue; }
     if (event.command !== 'report') continue;
@@ -142,7 +143,7 @@ check(litMs <= budget, `a sweep must draw at most ${budget} ms of light, got ${l
     `held light must be one continuous span = 165 sweep + 50 tail = 215 ms, got ${hLightSpan}`);
   // that tail must sit AFTER the last select's release, not before it
   const heldTail = stream([66], { contactMs: 33, heldLight: true, lightTailMs: 0 });
-  let tt = 0, tLightUp = null, tLastSelUp = null;
+  let tt = 0, tLightUp = null as number | null, tLastSelUp = null as number | null;
   for (const event of heldTail) {
     if (event.command === 'delay') { tt += event.duration; continue; }
     if (event.command !== 'report') continue;
@@ -165,7 +166,7 @@ check(litMs <= budget, `a sweep must draw at most ${budget} ms of light, got ${l
 // flashlight registers on press.
 {
   const la = stream([120], { lightAfter: true, selectMs: 25, contactMs: 40 });
-  let t = 0, events = [];
+  let t = 0, events: { t: number, down: boolean, xy: string, count: number }[] = [];
   for (const e of la) {
     if (e.command === 'delay') { t += e.duration; continue; }
     if (e.command !== 'report') continue;
@@ -179,10 +180,10 @@ check(litMs <= budget, `a sweep must draw at most ${budget} ms of light, got ${l
   // Every LIGHT_AFTER report is a single-contact report (count 1) on contact 0
   // -- that is the geometry the camera-park taps use and the c33 run that lit
   // nothing did NOT (it put the select on contact 1 with a zeroed contact 0).
-  for (const e of la.filter(x => x.command === 'report'))
+  for (const e of la.filter((x): x is Extract<HidEvent, { command: 'report' }> => x.command === 'report'))
     check(e.report[1] === 1, `LIGHT_AFTER reports must be single-contact, got count ${e.report[1]}`);
-  const key2 = ([x, y]) => `${x},${y}`;
-  for (const cam of ['cam10', 'cam4', 'cam7']) {
+  const key2 = ([x, y]: readonly [number, number]) => `${x},${y}`;
+  for (const cam of ['cam10', 'cam4', 'cam7'] as const) {
     const camXY = key(COORDS[cam]);
     const selDown = events.find(e => e.down && e.xy === camXY);
     const selUp = events.find(e => !e.down && e.xy === camXY && e.t >= (selDown?.t ?? 0));
@@ -200,11 +201,11 @@ console.log(`HID sweep probe checks passed (${SPACINGS.join('/')} ms spacings, $
 // selects the three cameras and never lights them; altLight lights only even
 // sweeps. A frame walk must find zero light-coordinate presses in a dark sweep.
 {
-  const isLight = r => r[2] % 2 === 1
+  const isLight = (r: number[]) => r[2] % 2 === 1
     && (r[3] | (r[4] << 8)) === toRaw(COORDS.cameraFeedLight)[0]
     && (r[5] | (r[6] << 8)) === toRaw(COORDS.cameraFeedLight)[1];
   const camKeys = [COORDS.cam10, COORDS.cam4, COORDS.cam7].map(key);
-  const isTargetSelDown = r => r[2] === 3
+  const isTargetSelDown = (r: number[]) => r[2] === 3
     && camKeys.includes(`${r[3] | (r[4] << 8)},${r[5] | (r[6] << 8)}`);
   const dark = stream([90, 90], { lightAfter: true, selectMs: 17, contactMs: 33, noLight: true });
   check(dark.filter(e => e.command === 'report' && isLight(e.report)).length === 0,
@@ -214,7 +215,7 @@ console.log(`HID sweep probe checks passed (${SPACINGS.join('/')} ms spacings, $
 
   const alt = stream([90, 90, 90, 90], { lightAfter: true, selectMs: 17, contactMs: 33, altLight: true });
   // split the report stream into sweeps at each CAM 11 park
-  let sweep = -1, perSweepLights = [];
+  let sweep = -1, perSweepLights: number[] = [];
   for (const e of alt) {
     if (e.command !== 'report') continue;
     const xy = `${e.report[3] | (e.report[4] << 8)},${e.report[5] | (e.report[6] << 8)}`;

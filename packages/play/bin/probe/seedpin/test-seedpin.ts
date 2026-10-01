@@ -11,7 +11,7 @@
 import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 
-const check = (condition, message) => { if (!condition) throw new Error(`seedpin: ${message}`); };
+const check: (condition: unknown, message: string) => asserts condition = (condition, message) => { if (!condition) throw new Error(`seedpin: ${message}`); };
 const DIR = 'packages/play/bin/probe/seedpin';
 const script = readFileSync(`${DIR}/seedpin.sh`, 'utf8');
 

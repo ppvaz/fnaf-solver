@@ -96,7 +96,7 @@ assert.ok(separation > SCREEN,
 
 // Each door is reachable from exactly one end of the pan, which is what makes
 // every door press pan-then-press.
-const reach = (control, viewOffset) => {
+const reach = (control: string, viewOffset: number) => {
   try { resolveControlPoint(control, map.controlMap[control], { viewOffset, screenWidth: SCREEN }); return true; }
   catch { return false; }
 };
@@ -108,8 +108,9 @@ assert.ok(reach('monitor', 0) && reach('monitor', MAX_PAN), 'the camera tab is r
 //    names must pass the semantic contract.
 const fnaf1 = GAME_CONTROLS[map.target.package];
 assert.ok(fnaf1, `${map.target.package} is not registered in GAME_CONTROLS`);
+const vocabulary: readonly string[] = fnaf1.controls;
 for (const control of Object.keys(map.controlMap)) {
-  assert.ok(fnaf1.controls.includes(control), `${control} is not in FNaF 1's registered vocabulary`);
+  assert.ok(vocabulary.includes(control), `${control} is not in FNaF 1's registered vocabulary`);
   validateControlCommand({ schema: 'control-command-v1', id: 'c', action: { kind: 'press', control },
     requestedAt: { clock: 'host-monotonic-ms', value: 0 }, source: { controller: 'test' } });
 }

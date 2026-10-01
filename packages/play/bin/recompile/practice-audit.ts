@@ -36,6 +36,40 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { HID_DESCRIPTOR, HID_FEATURE_REPORTS, report } from '@sixam/play';
 import { parseInputEvents, touchEdges } from '../grade/tap-stall-audit.ts';
 
+interface Point { readonly x: number, readonly y: number }
+/** One planned contact: when, how long, and where when not the plan's own point. */
+interface PlannedContact {
+  readonly index: number, readonly atMs: number, readonly holdMs: number, readonly gapMs: number, readonly point?: Point, readonly sync?: boolean;
+}
+type Plan = ReturnType<typeof plan>;
+/** A practice-state.jsonl row: one office update, its SDL clock. */
+interface StateRow { readonly frame: number, readonly update: number, readonly elapsed_ms: number }
+/** A practice-input.jsonl row: a left-button edge with the update that saw it. */
+interface InputEdge {
+  readonly frame: number, readonly edge: 'down' | 'up', readonly update: number, readonly elapsed_ms: number, readonly x: number, readonly y: number;
+}
+/** One update's pump and swap times (ns), the frame it ran in and whether the button was down at its poll. */
+interface PumpRow {
+  readonly u: number, readonly f: number, readonly t0: number, readonly tp: number, readonly te: number, readonly ts: number,
+  readonly tu: number, readonly m: number, readonly session?: undefined, readonly seed?: undefined;
+}
+/** A frame's RNG seed and the update it followed. */
+interface SeedRow { readonly seed: unknown, readonly f: number, readonly after_u: number, readonly u?: undefined, readonly session?: undefined }
+/** A calib-updates.jsonl row: the session header (its clocks), a seed, or a pump. */
+type CalibUpdate = PumpRow | SeedRow
+  | { readonly session: { readonly boot_ns: number, readonly mono_ns: number }, readonly u?: undefined, readonly seed?: undefined };
+/** A calib-input.jsonl row: a Java MotionEvent (action, event and receive times) or the SDL event native code queued. */
+interface CalibInput {
+  readonly src: string, readonly t: number, readonly a?: number, readonly ev?: number, readonly rx?: number, readonly k?: string;
+}
+type JavaRow = CalibInput & { readonly a: number, readonly ev: number, readonly rx: number };
+interface KernelEdge { readonly pressMs: number, readonly releaseMs: number }
+/** One contact followed down the chain: its verdict, and when traced the pumps and stage times (ns) of each edge. */
+interface ChainRow {
+  index: number, sync: boolean, holdMs: number, gapMs: number, verdict: string, pressPump?: number, releasePump?: number,
+  polledDown?: number, flagsAgree?: boolean, press?: Record<string, number | null>, release?: Record<string, number | null>;
+}
+
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
 export const SCHEMA = 'recompile-practice-actuation-audit-v1';
 export const PACKAGE = 'org.fnaf2practice.play';
@@ -61,7 +95,7 @@ export const MONITOR_POINT = Object.freeze({ x: 1780, y: 1015 });
 export const CONTINUE_GAME = Object.freeze({ x: 72, y: 536 });
 export const GAME_SIZE = Object.freeze([1024, 768]);
 export const NATIVE_SIZE = Object.freeze([2400, 1080]);
-export const toNative = ({ x, y }) => ({ x: x * NATIVE_SIZE[0] / GAME_SIZE[0], y: y * NATIVE_SIZE[1] / GAME_SIZE[1] });
+export const toNative = ({ x, y }: Point) => ({ x: x * NATIVE_SIZE[0] / GAME_SIZE[0], y: y * NATIVE_SIZE[1] / GAME_SIZE[1] });
 
 // Hold durations straddle one and two 60 Hz updates; gaps test whether a
 // release followed by a press is seen as two contacts. 33 ms is the campaign's
@@ -73,7 +107,7 @@ export const REPEATS = 3;
 // and the game loop is fitted on them, never on the contacts being graded.
 export const SYNC = Object.freeze({ count: 3, holdMs: 200, gapMs: 600 });
 
-function mulberry32(seed) {
+function mulberry32(seed: number) {
   let a = seed >>> 0;
   return () => {
     a = (a + 0x6d2b79f5) >>> 0;
@@ -92,7 +126,7 @@ function mulberry32(seed) {
  */
 export function plan(seed = 1, kind = 'sweep') {
   const rand = mulberry32(seed);
-  const cells = [];
+  const cells: { holdMs: number, gapMs: number, point?: Point, sync?: boolean }[] = [];
   if (kind === 'monitor') {
     for (let i = 0; i < 30; i++) cells.push({ holdMs: 50, gapMs: 900 + Math.floor(rand() * 1600), point: MONITOR_POINT });
   } else if (kind === 'sweep') {
@@ -104,7 +138,7 @@ export function plan(seed = 1, kind = 'sweep') {
     }
   } else throw new Error(`unknown plan ${kind}`);
   const sync = () => Array.from({ length: SYNC.count }, () => ({ holdMs: SYNC.holdMs, gapMs: SYNC.gapMs, sync: true }));
-  const contacts = [];
+  const contacts: PlannedContact[] = [];
   let t = 0;
   for (const cell of [...sync(), ...cells, ...sync()]) {
     contacts.push({ index: contacts.length, atMs: t, ...cell });
@@ -113,18 +147,18 @@ export function plan(seed = 1, kind = 'sweep') {
   return Object.freeze({ seed, kind, point: PRESS_POINT, readyDelayMs: READY_DELAY_MS, spanMs: t, contacts });
 }
 
-const line = (command, fields = {}) => JSON.stringify({ id: HID_ID, command, ...fields });
-const down = point => line('report', { report: report([{ flags: 0x03, point }]) });
-const up = point => line('report', { report: report([{ flags: 0x00, point }]) });
-const delay = duration => line('delay', { duration });
+const line = (command: string, fields: object = {}) => JSON.stringify({ id: HID_ID, command, ...fields });
+const down = (point: Point) => line('report', { report: report([{ flags: 0x03, point }]) });
+const up = (point: Point) => line('report', { report: report([{ flags: 0x00, point }]) });
+const delay = (duration: number) => line('delay', { duration });
 
-function register(readyDelayMs) {
+function register(readyDelayMs: number) {
   return [line('register', { name: HID_NAME, vid: 6353, pid: 61959, bus: 'usb',
     descriptor: HID_DESCRIPTOR, feature_reports: HID_FEATURE_REPORTS }), delay(readyDelayMs)];
 }
 
 /** The hid lines for a plan: register, wait, then each contact on contact 0. */
-export function stream(p) {
+export function stream(p: Plan) {
   const out = register(p.readyDelayMs);
   for (const c of p.contacts) {
     const point = c.point ?? p.point;
@@ -147,8 +181,9 @@ export const dropped = { rows: 0 };
 // Every log row begins with one of these keys, and no nested object does, so a
 // row cut at any byte is split from whatever the next launch appended to it.
 export const ROW_START = /(?=\{"(?:schema|u|seed|src|event)":)/;
-export function jsonl(text) {
-  const out = [];
+/** The rows of a log, of the shape its writer gives them. */
+export function jsonl<T = unknown>(text: string) {
+  const out: T[] = [];
   for (const line of text.split('\n')) {
     if (!line) continue;
     for (const piece of line.split(ROW_START)) {
@@ -157,7 +192,7 @@ export function jsonl(text) {
   }
   return out;
 }
-const sha256 = text => createHash('sha256').update(text).digest('hex');
+const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
 
 /**
  * Grade a live run's files with a poll model.
@@ -177,7 +212,8 @@ const sha256 = text => createHash('sha256').update(text).digest('hex');
  * the previous contact (its gap falls between two polls), and the prediction
  * is compared with what the game logged.
  */
-export function grade({ planJson, getevent, inputEdges, stateRows }) {
+export function grade({ planJson, getevent, inputEdges, stateRows }:
+  { planJson: Plan, getevent: string, inputEdges: readonly InputEdge[], stateRows: readonly StateRow[] }) {
   const p = planJson;
   const kernel = touchEdges(parseInputEvents(getevent), new RegExp(HID_NAME, 'i'));
   if (kernel.node === null) throw new Error(`no "${HID_NAME}" device in the getevent log`);
@@ -202,8 +238,9 @@ export function grade({ planJson, getevent, inputEdges, stateRows }) {
   // Pair every logged edge with the kernel edge nearest its C0-predicted stamp.
   const kernelDowns = kernel.edges.map((k, i) => ({ i, ms: k.pressMs }));
   const kernelUps = kernel.edges.map((k, i) => ({ i, ms: k.releaseMs }));
-  const pair = (logged, kset) => logged.map(e => {
-    let best = null;
+  type Paired = { edge: InputEdge, kernel: number | null, kMs?: number };
+  const pair = (logged: readonly InputEdge[], kset: readonly { i: number, ms: number }[]) => logged.map((e): Paired => {
+    let best = null as { i: number, ms: number, d: number } | null;
     for (const k of kset) {
       const d = e.elapsed_ms - (k.ms + C0);
       if (d > -20 && d <= 36 && (best === null || Math.abs(d - 8) < Math.abs(best.d - 8))) best = { ...k, d };
@@ -214,9 +251,10 @@ export function grade({ planJson, getevent, inputEdges, stateRows }) {
   const pairedUps = pair(ups, kernelUps);
   // Interval of C from each paired edge. E(u-1) may be missing if the update
   // before is not logged; such an edge bounds C from above only.
-  const bounds = [...pairedDowns, ...pairedUps].filter(x => x.kernel !== null).map(x => {
+  const bounds = [...pairedDowns, ...pairedUps].filter((x): x is typeof x & { kernel: number, kMs: number } => x.kernel !== null).map(x => {
     const u = x.edge.update;
-    const hi = E.get(u) - x.kMs;
+    // An update the log does not hold reads NaN, as it did untyped.
+    const hi = (E.get(u) as number) - x.kMs;
     const prev = E.get(u - 1);
     const lo = prev === undefined ? -Infinity : prev - x.kMs;
     return { kind: x.edge.edge, kernel: x.kernel, update: u, lo, hi };
@@ -225,20 +263,23 @@ export function grade({ planJson, getevent, inputEdges, stateRows }) {
   const hi = Math.min(...bounds.map(b => b.hi));
   // The C that violates the fewest intervals, and by how much the rest must widen.
   const candidates = [...new Set(bounds.flatMap(b => [b.lo, b.hi]).filter(Number.isFinite))].sort((a, b) => a - b);
-  let best = null;
-  for (let c = candidates[0]; c <= candidates.at(-1); c += 0.25) {
+  let best = null as { c: number, violations: number, worst: number } | null;
+  for (let c = candidates[0]; c <= (candidates.at(-1) as number); c += 0.25) {
     const miss = bounds.map(b => (c <= b.lo ? b.lo - c + 1e-9 : c > b.hi ? c - b.hi : 0));
     const violations = miss.filter(m => m > 0).length;
     const worst = Math.max(...miss);
     if (best === null || violations < best.violations || (violations === best.violations && worst < best.worst))
       best = { c, violations, worst };
   }
-  const C = lo <= hi ? (lo + hi) / 2 : best.c;
+  // Every paired edge bounds C, so the scan visits a candidate.
+  const fitted = best as { c: number, violations: number, worst: number };
+  const C = lo <= hi ? (lo + hi) / 2 : fitted.c;
   // Predict each kernel contact from the logged update stamps (poll ~ stamp).
   const updates = office.map(r => r.update);
-  const stampOf = u => E.get(u);
-  const pollsIn = (a, b) => updates.filter(u => stampOf(u) >= a && stampOf(u) < b).length;
-  const rows = p.contacts.map((c, i) => {
+  const stampOf = (u: number) => E.get(u) as number;   // every office update is stamped
+  const pollsIn = (a: number, b: number) => updates.filter(u => stampOf(u) >= a && stampOf(u) < b).length;
+  const rows = p.contacts.map((c, i): { index: number, sync: boolean, holdMs: number, gapMs: number, plannedAtMs: number,
+    kernelAtMs: number, kernelHoldMs: number, predicted: string, observed: string | null, downUpdate?: number } => {
     const k = kernel.edges[i];
     const press = k.pressMs + C, release = k.releaseMs + C;
     const prev = i > 0 ? kernel.edges[i - 1].releaseMs + C : -Infinity;
@@ -261,15 +302,15 @@ export function grade({ planJson, getevent, inputEdges, stateRows }) {
     r.observed = prevUp ? 'INVISIBLE' : 'MERGED';
   }
   const graded = rows.filter(r => !r.sync);
-  const table = (key, values) => values.map(v => {
+  const table = (key: 'holdMs' | 'gapMs', values: readonly number[]) => values.map(v => {
     const set = graded.filter(r => r[key] === v);
-    const count = s => Object.fromEntries(['TAKEN', 'INVISIBLE', 'MERGED'].map(t => [t, set.filter(r => r[s] === t).length]));
+    const count = (s: 'observed' | 'predicted') => Object.fromEntries(['TAKEN', 'INVISIBLE', 'MERGED'].map(t => [t, set.filter(r => r[s] === t).length]));
     return { [key]: v, contacts: set.length, observed: count('observed'), predicted: count('predicted'),
       agree: set.filter(r => r.observed === r.predicted).length };
   });
   const drift = rows.map(r => r.kernelAtMs - r.plannedAtMs);
   const holdErr = rows.map(r => r.kernelHoldMs - r.holdMs);
-  const deltas = [];
+  const deltas: number[] = [];
   for (let i = 1; i < office.length; i++)
     if (office[i].update === office[i - 1].update + 1) deltas.push(office[i].elapsed_ms - office[i - 1].elapsed_ms);
   return {
@@ -282,8 +323,8 @@ export function grade({ planJson, getevent, inputEdges, stateRows }) {
       coarseMs: C0,
       feasible: lo <= hi ? { loMs: +lo.toFixed(3), hiMs: +hi.toFixed(3), widthMs: +(hi - lo).toFixed(3) } : null,
       constantDelayHolds: lo <= hi,
-      bestMs: +best.c.toFixed(3), violatedIntervals: best.violations, of: bounds.length,
-      jitterLowerBoundMs: lo <= hi ? 0 : +best.worst.toFixed(3),
+      bestMs: +fitted.c.toFixed(3), violatedIntervals: fitted.violations, of: bounds.length,
+      jitterLowerBoundMs: lo <= hi ? 0 : +fitted.worst.toFixed(3),
     },
     contacts: rows.length, graded: graded.length,
     agree: graded.filter(r => r.observed === r.predicted).length,
@@ -311,36 +352,41 @@ export function grade({ planJson, getevent, inputEdges, stateRows }) {
  * getevent clock is not assumed: its offset to the MotionEvent time is
  * measured, and the session header's MONOTONIC and BOOTTIME stamps name it.
  */
-export function chain({ kernelEdges, plan: p, calibUpdates, calibInput }) {
+export function chain({ kernelEdges, plan: p, calibUpdates, calibInput }:
+  { kernelEdges: readonly KernelEdge[], plan: { readonly contacts: readonly { readonly holdMs: number, readonly gapMs: number, readonly sync?: boolean }[] },
+    calibUpdates: readonly CalibUpdate[], calibInput: readonly CalibInput[] }) {
   const header = calibUpdates.find(r => r.session)?.session ?? null;
-  const updates = calibUpdates.filter(r => r.u !== undefined);
-  const java = calibInput.filter(r => r.src === 'java');
+  const updates = calibUpdates.filter((r): r is PumpRow => r.u !== undefined);
+  // A Java row carries its action and both times.
+  const java = calibInput.filter((r): r is JavaRow => r.src === 'java');
   const sdl = calibInput.filter(r => r.src === 'sdl');
-  const ns = ms => Math.round(ms * 1e6);
+  const ns = (ms: number) => Math.round(ms * 1e6);
   const offsets = kernelEdges.map(k => {
     const best = java.filter(j => j.a === 0)
-      .reduce((b, j) => (b === null || Math.abs(j.ev - ns(k.pressMs)) < Math.abs(b.ev - ns(k.pressMs)) ? j : b), null);
+      .reduce<JavaRow | null>((b, j) => (b === null || Math.abs(j.ev - ns(k.pressMs)) < Math.abs(b.ev - ns(k.pressMs)) ? j : b), null);
     return best ? best.ev - ns(k.pressMs) : null;
   }).filter(v => v !== null).sort((a, b) => a - b);
   const offsetNs = offsets[Math.floor(offsets.length / 2)] ?? 0;
   const bootMinusMono = header ? header.boot_ns - header.mono_ns : null;
   const clock = Math.abs(offsetNs) < 5e6 ? 'CLOCK_MONOTONIC'
     : bootMinusMono !== null && Math.abs(-offsetNs - bootMinusMono) < 5e6 ? 'CLOCK_BOOTTIME' : 'UNKNOWN';
-  const pumpOf = t => updates.find(u => u.tp >= t) ?? null;
-  const edge = (kNs, action, kind) => {
+  const pumpOf = (t: number) => updates.find(u => u.tp >= t) ?? null;
+  const edge = (kNs: number, action: number, kind: string):
+    { j: JavaRow, q: CalibInput, pump: PumpRow | null } | { j: JavaRow, q?: undefined, pump?: undefined } | null => {
     const j = java.find(r => r.a === action && Math.abs(r.ev - kNs) < 2e6);
     if (!j) return null;
     const q = sdl.find(r => r.k === kind && r.t >= j.t - 1e6 && r.t <= j.t + 50e6);
     if (!q) return { j };
     return { j, q, pump: pumpOf(q.t) };
   };
-  const rows = kernelEdges.map((k, i) => {
+  const rows = kernelEdges.map((k, i): ChainRow => {
     const kd = ns(k.pressMs) + offsetNs, ku = ns(k.releaseMs) + offsetNs;
     const d = edge(kd, 0, 'mdown'), u = edge(ku, 1, 'mup');
     const c = p.contacts[i];
     const base = { index: i, sync: !!c.sync, holdMs: c.holdMs, gapMs: c.gapMs };
     if (!d?.pump || !u?.pump) return { ...base, verdict: 'UNTRACED' };
-    const polled = updates.filter(x => x.u >= d.pump.u && x.u < u.pump.u);
+    const pressPump = d.pump, releasePump = u.pump;
+    const polled = updates.filter(x => x.u >= pressPump.u && x.u < releasePump.u);
     const verdict = u.pump.u > d.pump.u ? 'TAKEN' : 'INVISIBLE';
     return {
       ...base, verdict, pressPump: d.pump.u, releasePump: u.pump.u,
@@ -361,14 +407,16 @@ export function chain({ kernelEdges, plan: p, calibUpdates, calibInput }) {
         && rows[i - 1].verdict === 'TAKEN')
       rows[i].verdict = 'MERGED';
   const graded = rows.filter(r => !r.sync);
-  const table = (key, values) => values.map(v => {
+  const table = (key: 'holdMs' | 'gapMs', values: readonly number[]) => values.map(v => {
     const set = graded.filter(r => r[key] === v);
     return { [key]: v, contacts: set.length, ...countBy(set.map(r => r.verdict)) };
   });
   const taken = rows.filter(r => r.verdict === 'TAKEN' || r.verdict === 'MERGED');
-  const stat = (side, key) => range(taken.map(r => r[side][key]).filter(v => v !== null && v !== undefined).map(v => v / 1e6));
+  // A taken contact was traced, so it has both sides.
+  const stat = (side: 'press' | 'release', key: string) => range(taken.map(r => (r[side] as Record<string, number | null>)[key])
+    .filter((v): v is number => v !== null && v !== undefined).map(v => v / 1e6));
   const office = updates.filter(r => r.f === 3);
-  const period = [];
+  const period: number[] = [];
   for (let i = 1; i < office.length; i++) if (office[i].u === office[i - 1].u + 1) period.push((office[i].t0 - office[i - 1].t0) / 1e6);
   return {
     getevent: { clock, offsetToMotionEventMs: +(offsetNs / 1e6).toFixed(3),
@@ -391,52 +439,52 @@ export function chain({ kernelEdges, plan: p, calibUpdates, calibInput }) {
       swapMs: range(office.filter(r => r.ts > 0).map(r => (r.ts - r.te) / 1e6)),
       periodsOver25Ms: period.filter(v => v > 25).length,
     },
-    seeds: calibUpdates.filter(r => r.seed !== undefined).map(r => ({ frame: r.f, seed: r.seed, afterUpdate: r.after_u })),
+    seeds: calibUpdates.filter((r): r is SeedRow => r.seed !== undefined).map(r => ({ frame: r.f, seed: r.seed, afterUpdate: r.after_u })),
     rows,
   };
 }
 
-function countBy(values) {
-  const out = {};
+function countBy(values: Iterable<string | number>) {
+  const out: Record<string, number> = {};
   for (const v of values) out[v] = (out[v] ?? 0) + 1;
   return out;
 }
-function range(values) {
+function range(values: readonly number[]) {
   if (values.length === 0) return null;
   const s = [...values].sort((a, b) => a - b);
-  const q = f => s[Math.min(s.length - 1, Math.floor(f * (s.length - 1)))];
-  return { n: s.length, min: +s[0].toFixed(3), p50: +q(0.5).toFixed(3), p90: +q(0.9).toFixed(3), max: +s.at(-1).toFixed(3) };
+  const q = (f: number) => s[Math.min(s.length - 1, Math.floor(f * (s.length - 1)))];
+  return { n: s.length, min: +s[0].toFixed(3), p50: +q(0.5).toFixed(3), p90: +q(0.9).toFixed(3), max: +(s.at(-1) as number).toFixed(3) };
 }
 
 // ---- live (device) -------------------------------------------------------
 
-function fail(message) { console.error(`practice-audit: ${message}`); process.exit(2); }
+function fail(message: string): never { console.error(`practice-audit: ${message}`); process.exit(2); }
 
-function adb(serial, args, { input, timeout = 20000 }: any = {}) {
+function adb(serial: string, args: string[], { input, timeout = 20000 }: { input?: string, timeout?: number } = {}) {
   return execFileSync('adb', ['-s', serial, ...args], { input, timeout, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
 }
 
-function runAs(serial, command, timeout = 30000) {
+function runAs(serial: string, command: string, timeout = 30000) {
   return adb(serial, ['shell', `run-as ${PACKAGE} sh -c '${command}'`], { timeout });
 }
 
 // run-as starts in the app's data directory; the runtime chdirs to files/.
 const FILES = 'files';
 
-function lineCount(serial, file) {
+function lineCount(serial: string, file: string) {
   const out = runAs(serial, `if [ -f ${FILES}/${file} ]; then wc -l < ${FILES}/${file}; else echo MISSING; fi`).trim();
   if (out === 'MISSING') return 0;
   if (!/^\d+$/.test(out)) fail(`cannot count ${file}: ${out}`);
   return Number(out);
 }
 
-function sendStream(serial, lines, name, timeoutMs) {
+function sendStream(serial: string, lines: string[], name: string, timeoutMs: number) {
   const remote = `/data/local/tmp/${name}.hid`;
   adb(serial, ['shell', `cat > ${remote}`], { input: lines.join('\n') + '\n' });
   adb(serial, ['shell', `/system/bin/hid - < ${remote} > /dev/null 2>&1; rm -f ${remote}`], { timeout: timeoutMs });
 }
 
-function preflight(serial) {
+function preflight(serial: string) {
   const pkg = adb(serial, ['shell', `pm path ${PACKAGE}`]).trim();
   if (!pkg.startsWith('package:')) fail(`${PACKAGE} is not installed`);
   const apk = pkg.split('\n')[0].slice('package:'.length).trim();
@@ -446,11 +494,11 @@ function preflight(serial) {
   return { apkSha256: apkSha, top, lock };
 }
 
-async function live(args) {
+async function live(args: string[]) {
   if (!args.includes('--live')) fail('dry by default: add --live to press the phone');
   if (process.env.CUE_HELPER_LEASE_OWNER_PID === undefined && process.env.FNAF_LEASE_HELD !== '1')
     fail('run under packages/play/src/safety/device-lock-exec.py SERIAL -- ... so the serial lease is held');
-  const serial = process.env.FNAF_SERIAL
+  const serial: string = process.env.FNAF_SERIAL
     ?? JSON.parse(readFileSync(join(ROOT, 'tools/device/local-profile.json'), 'utf8')).serial;
   const out = resolve(opt(args, '--out') ?? fail('--out DIR is required'));
   if (!relative(ROOT, out).startsWith('..')) fail('--out must be outside the repository');
@@ -459,7 +507,7 @@ async function live(args) {
   const pre = preflight(serial);
   if (!pre.top.includes(PACKAGE)) fail(`the practice build is not in front: ${pre.top}`);
   if (/mDreamingLockscreen=true/.test(pre.lock)) fail('the phone is locked');
-  const log = (m) => { console.log(m); writeFileSync(join(out, 'live.log'), `${new Date().toISOString()} ${m}\n`, { flag: 'a' }); };
+  const log = (m: string) => { console.log(m); writeFileSync(join(out, 'live.log'), `${new Date().toISOString()} ${m}\n`, { flag: 'a' }); };
   log(`preflight ${JSON.stringify(pre)}`);
   // Both logs are appended across launches and SDL ticks restart at each
   // launch, so only rows written after this point belong to this run.
@@ -486,7 +534,7 @@ async function live(args) {
   writeFileSync(join(out, 'stream.hid'), lines.join('\n') + '\n');
   log(`stream: ${p.contacts.length} contacts over ${p.spanMs} ms after a ${p.readyDelayMs} ms ready delay`);
   const ge = spawn('adb', ['-s', serial, 'shell', 'getevent -lt'], { stdio: ['ignore', 'pipe', 'pipe'] });
-  const geChunks = [];
+  const geChunks: Buffer[] = [];
   ge.stdout.on('data', d => geChunks.push(d));
   await sleep(500);
   try {
@@ -514,25 +562,26 @@ async function live(args) {
   log(`pulled ${inputText.split('\n').filter(Boolean).length} input edges, ${stateText.split('\n').filter(Boolean).length} state rows`);
 }
 
-const sleep = ms => new Promise<any>(r => setTimeout(r, ms));
-function opt(args, name) { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : undefined; }
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+function opt(args: string[], name: string) { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : undefined; }
 
-function gradeDir(args) {
+function gradeDir(args: string[]) {
   const dir = resolve(opt(args, '--in') ?? fail('--in DIR is required'));
-  const read = f => readFileSync(join(dir, f), 'utf8');
-  const planJson = JSON.parse(read('plan.json'));
+  const read = (f: string) => readFileSync(join(dir, f), 'utf8');
+  const planJson: Plan = JSON.parse(read('plan.json'));
   const getevent = read('getevent.txt');
-  const inputEdges = jsonl(read('practice-input.jsonl'));
-  const stateRows = jsonl(read('practice-state.jsonl'));
-  const meta = existsSync(join(dir, 'meta.json')) ? JSON.parse(read('meta.json')) : {};
-  const { kernelEdges, ...result } = grade({ planJson, getevent, inputEdges, stateRows });
+  const inputEdges = jsonl<InputEdge>(read('practice-input.jsonl'));
+  const stateRows = jsonl<StateRow>(read('practice-state.jsonl'));
+  const meta: { apkSha256?: string } = existsSync(join(dir, 'meta.json')) ? JSON.parse(read('meta.json')) : {};
+  const { kernelEdges, ...graded } = grade({ planJson, getevent, inputEdges, stateRows });
+  const result: typeof graded & { chain?: ReturnType<typeof chain> } = graded;
   if (existsSync(join(dir, 'calib-updates.jsonl')) && existsSync(join(dir, 'calib-input.jsonl'))) {
-    (result as any).chain = chain({ kernelEdges, plan: planJson, calibUpdates: jsonl(read('calib-updates.jsonl')),
-      calibInput: jsonl(read('calib-input.jsonl')) });
+    result.chain = chain({ kernelEdges, plan: planJson, calibUpdates: jsonl<CalibUpdate>(read('calib-updates.jsonl')),
+      calibInput: jsonl<CalibInput>(read('calib-input.jsonl')) });
   }
   const inputs = { plan: sha256(read('plan.json')), getevent: sha256(getevent),
     practiceInput: sha256(read('practice-input.jsonl')), practiceState: sha256(read('practice-state.jsonl')),
-    ...((result as any).chain ? { calibUpdates: sha256(read('calib-updates.jsonl')), calibInput: sha256(read('calib-input.jsonl')) } : {}) };
+    ...(result.chain ? { calibUpdates: sha256(read('calib-updates.jsonl')), calibInput: sha256(read('calib-input.jsonl')) } : {}) };
   const record = {
     schema: SCHEMA, step: 'ROADMAP S2', claimLevel: 'DEVICE_MEASURED', fidelity: 'rebuilt-runtime',
     evidenceId: `practice-actuation-audit-${sha256(JSON.stringify(inputs)).slice(0, 16)}`,
@@ -551,7 +600,7 @@ function gradeDir(args) {
     // With calibration logs the chain's verdicts come from the pumps that
     // drained each edge and are checked by the polled flag; the poll model
     // pairs ms-stamped edges and can mis-pair neighbouring short contacts.
-    verdictSource: (result as any).chain ? 'chain' : 'pollModel',
+    verdictSource: result.chain ? 'chain' : 'pollModel',
     result,
   };
   const outFile = opt(args, '--record');

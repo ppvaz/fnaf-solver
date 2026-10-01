@@ -34,6 +34,14 @@ import { toRaw } from '@sixam/play/venues/phone/hid';
 // The wrappers therefore enter the night through menu_select and start the
 // stream with the office already up. See test-menu.sh's structural half, which
 // now covers every language rather than *.sh.
+type Point = readonly [number, number];
+/** One line of the /system/bin/hid stream. */
+export type HidEvent =
+  | { readonly id: number, readonly command: 'report', readonly report: number[] }
+  | { readonly id: number, readonly command: 'delay', readonly duration: number }
+  | { readonly id: number, readonly command: 'register', readonly name: string, readonly vid: number, readonly pid: number,
+    readonly bus: string, readonly descriptor: number[] };
+
 export const COORDS = {
   monitor: [1780, 1015],
   // Official camera-feed flash: the cam-flash/hall-flash intersection point.
@@ -42,36 +50,37 @@ export const COORDS = {
   cam4: [1730, 710],
   cam7: [1775, 615],
   cam11: [2275, 685],
-};
+} satisfies Readonly<Record<string, Point>>;
 
 const ID = 102;
-const lo = v => v & 0xff;
-const hi = v => (v >> 8) & 0xff;
+const lo = (v: number) => v & 0xff;
+const hi = (v: number) => (v >> 8) & 0xff;
 // 0x03/0x00 are contact 0 down/up; 0x07/0x04 are contact 1 down/up. Both
 // records are always present so Linux consumes contact 1's release: a report
 // that promises one record leaves contact 1 latched down (trap 2).
-const record = (flags, point) => {
+const record = (flags: number, point: Point) => {
   const [x, y] = toRaw(point);
   return [flags, lo(x), hi(x), lo(y), hi(y)];
 };
 
-export function stream(spacings, { readyMs = 7000,
+export function stream(spacings: readonly number[], { readyMs = 7000,
                                    contactMs = 33, lightLeadMs = 0,
                                    heldLight = false, lightTailMs = 50,
                                    lightAfter = false, selectMs = 33, parkMs = 1500,
                                    noLight = false, altLight = false } = {}) {
-  const out = [];
-  const emit = (command, extra) => out.push({ id: ID, command, ...extra });
-  const report = (r) => emit('report', { report: [1, 2, ...r] });
-  const delay = (duration) => emit('delay', { duration });
+  const out: HidEvent[] = [];
+  // Each call names its command's own fields.
+  const emit = (command: HidEvent['command'], extra: object) => out.push({ id: ID, command, ...extra } as HidEvent);
+  const report = (r: number[]) => emit('report', { report: [1, 2, ...r] });
+  const delay = (duration: number) => emit('delay', { duration });
   // A one-contact tap still sends its own release; contact 1 stays untouched.
   // Everything single-finger goes on CONTACT 0 (the camera-park taps do), and
   // the release carries the 0x04 in contact 1's flags so Linux consumes it.
-  const c0Down = (point) =>
+  const c0Down = (point: Point) =>
     out.push({ id: ID, command: 'report', report: [1, 1, ...record(0x03, point), 0, 0, 0, 0, 0] });
-  const c0Up = (point) =>
+  const c0Up = (point: Point) =>
     out.push({ id: ID, command: 'report', report: [1, 1, ...record(0x00, point), 4, 0, 0, 0, 0] });
-  const tap = (point, hold = 120) => { c0Down(point); delay(hold); c0Up(point); };
+  const tap = (point: Point, hold = 120) => { c0Down(point); delay(hold); c0Up(point); };
 
   emit('register', {
     name: 'FNAF HID sweep probe',
@@ -94,7 +103,7 @@ export function stream(spacings, { readyMs = 7000,
   delay(parkMs);
 
   for (const [sweepIdx, spacing] of spacings.entries()) {
-    const cams = ['cam10', 'cam4', 'cam7'];
+    const cams = ['cam10', 'cam4', 'cam7'] as const;
     // Control geometries for validating sweepcheck against false positives:
     //   noLight  -- every sweep selects the three cameras and NEVER lights
     //               them; sweepcheck must report 0 lit.

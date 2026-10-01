@@ -34,12 +34,12 @@ const PACKAGE = 'org.fnaf2practice.play';
 export const BEACON_REGION = Object.freeze({ x: 75, y: 5, width: 2251, height: 1, step: 50 });
 const CENTRE_EVERY = 3;
 
-function fail(message) { console.error(`capture-latency: ${message}`); process.exit(2); }
-const opt = (args, name) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : undefined; };
-const sha256 = text => createHash('sha256').update(text).digest('hex');
+function fail(message: string): never { console.error(`capture-latency: ${message}`); process.exit(2); }
+const opt = (args: string[], name: string) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : undefined; };
+const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
 
 /** The update a beacon row shows, or null when any cell is not clearly black or white. */
-export function decodeBeacon(pixels) {
+export function decodeBeacon(pixels: ArrayLike<number>) {
   let gray = 0, margin = 255;
   for (let b = 0; b < 16; b++) {
     const rgb = pixels[b * CENTRE_EVERY];
@@ -53,7 +53,7 @@ export function decodeBeacon(pixels) {
   return { u16: u, margin };
 }
 
-async function live(args) {
+async function live(args: string[]) {
   if (!args.includes('--live')) fail('dry by default: add --live to read the phone');
   if (process.env.CUE_HELPER_LEASE_OWNER_PID === undefined) fail('run under packages/play/src/safety/device-lock-exec.py SERIAL -- ...');
   const out = resolve(opt(args, '--out') ?? fail('--out DIR'));
@@ -62,7 +62,7 @@ async function live(args) {
   if (!(seconds > 0 && seconds <= 120)) fail('--seconds must be in (0, 120]');
   mkdirSync(out, { recursive: true });
   const { serial } = resolveSerial();
-  const adb = (a, timeout = 30000) => execFileSync('adb', ['-s', serial, ...a], { encoding: 'utf8', timeout, maxBuffer: 256 << 20 });
+  const adb = (a: string[], timeout = 30000) => execFileSync('adb', ['-s', serial, ...a], { encoding: 'utf8', timeout, maxBuffer: 256 << 20 });
   const top = adb(['shell', 'dumpsys activity activities | grep -m1 topResumedActivity']);
   if (!top.includes(PACKAGE)) fail(`the calibration build is not in front: ${top.trim()}`);
   const port = new AdbCompanionPort({ serial });
@@ -81,7 +81,7 @@ async function live(args) {
       if (r.seq < 0 || r.seq === last) continue;
       last = r.seq;
       distinct++;
-      const { u16, margin } = decodeBeacon((r.regions as any).beacon.pixels);
+      const { u16, margin } = decodeBeacon(r.regions.beacon.pixels);
       appendFileSync(frames, JSON.stringify({ seq: r.seq, imageNs: String(r.imageNs), snapshotNs: String(r.snapshotNs),
         rttMs: +r.rttMs.toFixed(3), u16, margin: +margin.toFixed(1) }) + '\n');
     }
@@ -96,16 +96,21 @@ async function live(args) {
   console.log(JSON.stringify({ reads, distinctFrames: distinct, seconds }));
 }
 
-function range(values) {
+function range(values: number[]) {
   if (values.length === 0) return null;
   const s = [...values].sort((a, b) => a - b);
-  const q = f => s[Math.min(s.length - 1, Math.floor(f * (s.length - 1)))];
-  return { n: s.length, min: +s[0].toFixed(3), p50: +q(0.5).toFixed(3), p90: +q(0.9).toFixed(3), max: +s.at(-1).toFixed(3) };
+  const q = (f: number) => s[Math.min(s.length - 1, Math.floor(f * (s.length - 1)))];
+  return { n: s.length, min: +s[0].toFixed(3), p50: +q(0.5).toFixed(3), p90: +q(0.9).toFixed(3), max: +s[s.length - 1].toFixed(3) };
 }
 
-export function grade(framesText, updatesText) {
-  const frames = framesText.split('\n').filter(Boolean).map(l => JSON.parse(l));
-  const rows = [];
+/** A frames.jsonl row, as live() writes it. */
+interface FrameRow { seq: number, imageNs: string, snapshotNs: string, rttMs: number, u16: number | null, margin: number }
+/** A calibration update row (apply-calib-mod.py): its index, and the CLOCK_MONOTONIC ns its events ended and its swap returned. */
+interface UpdateRow { u: number, te: number, ts: number }
+
+export function grade(framesText: string, updatesText: string) {
+  const frames: FrameRow[] = framesText.split('\n').filter(Boolean).map(l => JSON.parse(l));
+  const rows: UpdateRow[] = [];
   for (const line of updatesText.split('\n')) {
     if (!line.startsWith('{"u"')) continue;
     try { rows.push(JSON.parse(line)); } catch { /* a row cut at the pull */ }
@@ -127,7 +132,7 @@ export function grade(framesText, updatesText) {
   const shown = new Set(out.map(o => o.u));
   const lo = Math.min(...out.map(o => o.u)), hi = Math.max(...out.map(o => o.u));
   const seqs = frames.map(f => f.seq).sort((a, b) => a - b);
-  const seqSpan = seqs.at(-1) - seqs[0] + 1;
+  const seqSpan = seqs[seqs.length - 1] - seqs[0] + 1;
   return {
     capturedFrames: frames.length, decoded: decoded.length, undecodable: frames.length - decoded.length,
     joined: out.length,
@@ -142,7 +147,7 @@ export function grade(framesText, updatesText) {
   };
 }
 
-function gradeCmd(args) {
+function gradeCmd(args: string[]) {
   const dir = resolve(opt(args, '--in') ?? fail('--in DIR'));
   const framesText = readFileSync(join(dir, 'frames.jsonl'), 'utf8');
   const updatesText = readFileSync(join(dir, 'calib-updates.jsonl'), 'utf8');

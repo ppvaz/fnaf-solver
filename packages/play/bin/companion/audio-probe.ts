@@ -23,10 +23,10 @@ import { appendFileSync } from 'node:fs';
 import { AdbCompanionPort } from '../../src/campaign/physical-ports.ts';
 import { resolveSerial } from '../phone/local-profile.ts';
 
-function fail(message) { console.error(`audio-probe: ${message}`); process.exit(2); }
+function fail(message: string): never { console.error(`audio-probe: ${message}`); process.exit(2); }
 
-export function parseArgs(argv) {
-  const options = { seconds: null, scope: 'target', label: null, out: null };
+export function parseArgs(argv: string[]) {
+  const options = { seconds: null as number | null, scope: 'target', label: null as string | null, out: null as string | null };
   for (let i = 0; i < argv.length; i += 1) {
     const flag = argv[i];
     if (flag === '--seconds') options.seconds = Number(argv[++i]);
@@ -35,18 +35,19 @@ export function parseArgs(argv) {
     else if (flag === '--out') options.out = argv[++i];
     else throw new Error(`unknown flag ${flag}`);
   }
-  if (!Number.isInteger(options.seconds) || options.seconds < 1 || options.seconds > 30)
+  if (!Number.isInteger(options.seconds) || (options.seconds as number) < 1 || (options.seconds as number) > 30)
     throw new Error('--seconds must be a whole number 1..30');
   if (typeof options.scope !== 'string' || !/^[a-z0-9._-]{1,64}$/.test(options.scope))
     throw new Error('--scope must be all, target, a game key or a package');
   if (options.label !== null && !/^[A-Za-z0-9._-]{1,48}$/.test(options.label))
     throw new Error('--label must be 1..48 of [A-Za-z0-9._-]');
-  return options;
+  return options as typeof options & { seconds: number };   // an integer, checked above
 }
 
 /** The probe reply's derived numbers as a typed row; refuses anything that looks like audio. */
-export function probeRow(fields, { label = null, scope = null } = {}) {
-  const number = key => (fields[key] === undefined ? null : Number(fields[key]));
+export function probeRow(fields: Readonly<Record<string, string | undefined>>,
+  { label = null, scope = null }: { label?: string | null, scope?: string | null } = {}) {
+  const number = (key: string) => (fields[key] === undefined ? null : Number(fields[key]));
   const onsetMs = fields.onsetMs === undefined || fields.onsetMs === 'NONE' ? []
     : fields.onsetMs.split(',').map(Number);
   if (onsetMs.some(value => !Number.isInteger(value) || value < 0)) throw new Error('audio probe onset times are malformed');
@@ -59,13 +60,13 @@ export function probeRow(fields, { label = null, scope = null } = {}) {
   };
 }
 
-async function main(argv) {
-  let options;
-  try { options = parseArgs(argv); } catch (error) { fail(error.message); }
+async function main(argv: string[]) {
+  let options: ReturnType<typeof parseArgs>;
+  try { options = parseArgs(argv); } catch (error) { fail((error as Error).message); }
   if (process.env.FNAF_LEASE_HELD !== '1' && process.env.FNAF1_LEASE_HELD !== '1' && process.env.CUE_HELPER_LEASE_OWNER_PID === undefined)
     fail('run under the serial lease (packages/play/src/safety/device-lock-exec.py SERIAL -- ...)');
-  let serial;
-  try { ({ serial } = resolveSerial({ names: ['FNAF_SERIAL', 'ANDROID_SERIAL'] })); } catch (error) { fail(error.message); }
+  let serial: string;
+  try { ({ serial } = resolveSerial({ names: ['FNAF_SERIAL', 'ANDROID_SERIAL'] })); } catch (error) { fail((error as Error).message); }
   const port = new AdbCompanionPort({ serial });
   const fields = await port.audioProbe({ seconds: options.seconds, scope: options.scope });
   const row = { at: new Date().toISOString(), ...probeRow(fields, options) };
@@ -75,5 +76,5 @@ async function main(argv) {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  main(process.argv.slice(2)).catch(error => fail(error.message));
+  main(process.argv.slice(2)).catch((error: Error) => fail(error.message));
 }

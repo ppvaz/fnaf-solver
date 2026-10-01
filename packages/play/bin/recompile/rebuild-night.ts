@@ -44,15 +44,23 @@ const HID_ID = 105;
 const READY_DELAY_MS = 7000;
 const TICK_MS = 1000 / 60;
 const GAME = [1024, 768], NATIVE = [2400, 1080];
-export const toNative = ([x, y]) => ({ x: x * NATIVE[0] / GAME[0], y: y * NATIVE[1] / GAME[1] });
+export const toNative = ([x, y]: readonly [number, number]) => ({ x: x * NATIVE[0] / GAME[0], y: y * NATIVE[1] / GAME[1] });
 
-function fail(message) { console.error(`rebuild-night: ${message}`); process.exit(2); }
-const opt = (args, name) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : undefined; };
-const line = (command, fields = {}) => JSON.stringify({ id: HID_ID, command, ...fields });
+type Point = ReturnType<typeof toNative>;
+/** One harness row: a pointer edge or move on a frame's tick, in game coordinates. */
+export interface TimedRow { readonly tick: number, readonly op: string, readonly pointer: number, readonly x?: number | null, readonly y?: number | null }
+type InputRow = TimedRow & { readonly frame: number, readonly x: number | null, readonly y: number | null, readonly object: string | null };
+/** A press moved one tick later, with the tick it went out on. */
+export type Bumped = TimedRow & { readonly sentAtTick: number };
+type Adb = (args: string[], options?: { input?: string | Buffer, timeout?: number }) => string;
+
+function fail(message: string): never { console.error(`rebuild-night: ${message}`); process.exit(2); }
+const opt = (args: string[], name: string) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : undefined; };
+const line = (command: string, fields: object = {}) => JSON.stringify({ id: HID_ID, command, ...fields });
 
 /** Harness rows by frame: { frame, tick, op, pointer, x, y }. */
-export function parseInput(text) {
-  const rows = [];
+export function parseInput(text: string) {
+  const rows: InputRow[] = [];
   for (const raw of text.split('\n')) {
     const l = raw.trim();
     if (!l || l.startsWith('#')) continue;
@@ -65,19 +73,21 @@ export function parseInput(text) {
 
 /** Contact-state encoder: one report per row, both records while contact 1 is involved. */
 export function encoder() {
-  const state = [{ down: false, point: null }, { down: false, point: null }];
-  return (row) => {
+  const state: { down: boolean, point: Point | null }[] = [{ down: false, point: null }, { down: false, point: null }];
+  return (row: TimedRow) => {
     const p = row.pointer;
     if (p !== 0 && p !== 1) throw new Error(`pointer ${p}: the descriptor has two contacts`);
     const c = state[p];
-    if (row.op === 'down') { c.down = true; c.point = toNative([row.x, row.y]); }
-    else if (row.op === 'move') { c.point = toNative([row.x, row.y]); }
+    // A press or a move names its point.
+    if (row.op === 'down') { c.down = true; c.point = toNative([row.x, row.y] as [number, number]); }
+    else if (row.op === 'move') { c.point = toNative([row.x, row.y] as [number, number]); }
     else if (row.op === 'up') { if (!c.down) throw new Error(`pointer ${p} released while up`); c.down = false; }
     else throw new Error(`unsupported op ${row.op}`);
     const involvesOne = state[1].down || (p === 1 && row.op === 'up');
-    const rec0 = { flags: state[0].down ? 0x03 : 0x00, point: state[0].point ?? state[1].point };
+    // A report follows a press, so a contact has its point.
+    const rec0 = { flags: state[0].down ? 0x03 : 0x00, point: (state[0].point ?? state[1].point) as Point };
     if (!involvesOne) return report([rec0]);
-    return report([rec0, { flags: state[1].down ? 0x07 : 0x04, point: state[1].point }]);
+    return report([rec0, { flags: state[1].down ? 0x07 : 0x04, point: state[1].point as Point }]);
   };
 }
 
@@ -89,10 +99,10 @@ export function encoder() {
  * instead of lift and press (the harness applies both edges, and the retail
  * Multiple Touch takes both events). Each such row is returned in `bumped`.
  */
-export function timedPart(rows, encode, bumped = []) {
-  const out = [];
+export function timedPart(rows: readonly TimedRow[], encode: (row: TimedRow) => number[], bumped: Bumped[] = []) {
+  const out: string[] = [];
   let sent = 0;
-  const lastUp = new Map();
+  const lastUp = new Map<number, number>();
   for (const r of [...rows].sort((a, b) => a.tick - b.tick)) {
     let tick = r.tick;
     if (r.op === 'down' && lastUp.get(r.pointer) === tick) { tick += 1; bumped.push({ ...r, sentAtTick: tick }); }
@@ -104,18 +114,18 @@ export function timedPart(rows, encode, bumped = []) {
   return out;
 }
 
-export function parts(text, titleTap = [264, 696]) {
+export function parts(text: string, titleTap: readonly number[] = [264, 696]) {
   const rows = parseInput(text);
   const frames = [...new Set(rows.map(r => r.frame))];
   if (JSON.stringify(frames) !== JSON.stringify([1, 12, 3])) throw new Error(`expected title (1), customize (12) and office (3) rows, got ${frames}`);
   const encode = encoder();
-  const tap = toNative(titleTap);
+  const tap = toNative(titleTap as [number, number]);   // an x,y pair
   const A = [line('register', { name: 'FNAF Rebuild Night', vid: 6353, pid: 61959, bus: 'usb',
       descriptor: HID_DESCRIPTOR, feature_reports: HID_FEATURE_REPORTS }),
     line('delay', { duration: READY_DELAY_MS }),
     line('report', { report: report([{ flags: 0x03, point: tap }]) }), line('delay', { duration: 50 }),
     line('report', { report: report([{ flags: 0x00, point: tap }]) })];
-  const bumped = [];
+  const bumped: Bumped[] = [];
   const B = timedPart(rows.filter(r => r.frame === 12), encode, bumped);
   const C = timedPart(rows.filter(r => r.frame === 3), encode, bumped);
   C.push(line('report', { report: report([{ flags: 0x00, point: tap }]) }));
@@ -134,7 +144,7 @@ export const HID_PROCESS = '^app_process /system/bin com.android.commands.hid.Hi
  * (-T 1) and matches every frame but 3.
  */
 export function onPhoneScript() {
-  const wait = e => `logcat -m 1 -s Calib:I -e '${e}' >/dev/null`;
+  const wait = (e: string) => `logcat -m 1 -s Calib:I -e '${e}' >/dev/null`;
   return [
     `( cat /data/local/tmp/rn-A.hid; ${wait('frame 12 update 1 done')}; cat /data/local/tmp/rn-B.hid;`,
     ` ${wait('frame 3 update 1 done')}; cat /data/local/tmp/rn-C.hid ) | /system/bin/hid - >/dev/null 2>&1 &`,
@@ -145,16 +155,16 @@ export function onPhoneScript() {
   ].join('');
 }
 
-function hidProcesses(adb) {
+function hidProcesses(adb: Adb) {
   return Number(adb(['shell', `ps -A -o ARGS | grep -c '${HID_PROCESS}' || true`]).trim()) || 0;
 }
 
-function stopHid(adb) {
+function stopHid(adb: Adb) {
   // pkill -f with an anchored pattern: the shell running this has `sh -c` first.
   try { adb(['shell', `pkill -f '${HID_PROCESS}'`]); } catch { /* none left */ }
 }
 
-async function live(args) {
+async function live(args: string[]) {
   if (!args.includes('--live')) fail('dry by default: add --live to press the phone');
   if (process.env.CUE_HELPER_LEASE_OWNER_PID === undefined) fail('run under packages/play/src/safety/device-lock-exec.py SERIAL -- ...');
   const input = resolve(opt(args, '--input') ?? fail('--input FILE'));
@@ -165,8 +175,8 @@ async function live(args) {
   const text = readFileSync(input, 'utf8');
   const { A, B, C, bumped, lastOfficeTick } = parts(text, (opt(args, '--title-tap') ?? '264,696').split(',').map(Number));
   const { serial } = resolveSerial();
-  const adb = (a, o = {}) => execFileSync('adb', ['-s', serial, ...a], { encoding: 'utf8', timeout: 60000, maxBuffer: 512 << 20, ...o });
-  const log = m => { console.log(m); writeFileSync(join(out, 'live.log'), `${new Date().toISOString()} ${m}\n`, { flag: 'a' }); };
+  const adb: Adb = (a, o = {}) => execFileSync('adb', ['-s', serial, ...a], { encoding: 'utf8', timeout: 60000, maxBuffer: 512 << 20, ...o });
+  const log = (m: string) => { console.log(m); writeFileSync(join(out, 'live.log'), `${new Date().toISOString()} ${m}\n`, { flag: 'a' }); };
   const pkg = adb(['shell', `pm path ${PACKAGE}`]).trim();
   if (!pkg.startsWith('package:')) fail(`${PACKAGE} is not installed`);
   const apkSha = adb(['shell', `sha256sum ${pkg.split('\n')[0].slice(8)}`]).split(/\s+/)[0];
@@ -205,17 +215,17 @@ async function live(args) {
   while (Date.now() < until) {
     after = adb(['shell', 'logcat -d -s Calib:I | grep "update 1 done" | tail -3']).trim();
     if (/frame 3 update 1 done[\s\S]*frame \d+ update 1 done/.test(after)) break;
-    await new Promise<any>(r => setTimeout(r, 3000));
+    await new Promise(r => setTimeout(r, 3000));
   }
   log(`frames after the office: ${after.split('\n').map(l => l.replace(/.*Calib\s*:\s*/, '')).join(' | ')}`);
-  const tail = h => `tail -n +$(grep -n schema files/${h} | tail -1 | cut -d: -f1) files/${h}`;
+  const tail = (h: string) => `tail -n +$(grep -n schema files/${h} | tail -1 | cut -d: -f1) files/${h}`;
   writeFileSync(join(out, 'calib-updates.jsonl'), adb(['exec-out', 'run-as', PACKAGE, 'sh', '-c', tail('calib-updates.jsonl')], { timeout: 180000 }));
   writeFileSync(join(out, 'calib-input.jsonl'), adb(['exec-out', 'run-as', PACKAGE, 'sh', '-c', tail('calib-input.jsonl')], { timeout: 120000 }));
   writeFileSync(join(out, 'freddy2'), readFileSync(save));
   log('pulled the calibration logs of this session');
 }
 
-function plan(args) {
+function plan(args: string[]) {
   const text = readFileSync(resolve(opt(args, '--input') ?? fail('--input FILE')), 'utf8');
   const { A, B, C, bumped, office, lastOfficeTick } = parts(text, (opt(args, '--title-tap') ?? '264,696').split(',').map(Number));
   const twoRecord = C.filter(l => l.includes('"report":[1,2')).length;
