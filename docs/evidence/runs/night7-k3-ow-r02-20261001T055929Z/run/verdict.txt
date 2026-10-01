@@ -1,0 +1,18 @@
+run          night7-k3-ow-r02-20261001T055929Z
+bundle       artifacts/night-jobs/cue-1790827504-30905e64/bundle
+campaign dir artifacts/campaign-2026-10-01T05-59-44.644Z
+campaign exit 1
+--- attempt 1 of 1: artifacts/campaign-2026-10-01T05-59-44.644Z ---
+--- modern campaign bundle (executor-owned facts) ---
+  night reached               yes
+  arm mode                    observe-once
+  arm                         UNRESOLVED (non-fatal) on attempt 1 (0 retries, 1 samples)
+  arm verified at             UNKNOWN
+  parked prefix (plan)        UNKNOWN
+  PHASE LAG (suffix shift)    none -- observe-once never parks the stream
+  cycle gates                 13 (13 agreed, 0 corrected, 0 aborted)
+  gate lag                    UNKNOWN
+  delivered offset            UNKNOWN
+  corrections landed          0 confirmed, 0 unconfirmed, 0 unread, 0 never read back
+  press acceptance            3 graded -- 2 UNKNOWN, 1 UNSTABLE
+  stop reason                 arm-unresolved (ambiguous-threshold)

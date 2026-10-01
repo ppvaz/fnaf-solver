@@ -12,7 +12,7 @@
 //   node apps/desktop/test/test-native-regions.ts
 
 import { parseRegionRead, regionSetLine } from '../../../packages/play/src/venues/phone/companion.ts';
-import { pngFromRegion } from '../../../packages/play/bin/phone/native-regions.ts';
+import { pngFromRegion, recordFrames } from '../../../packages/play/bin/phone/native-regions.ts';
 import { makeClassifier } from '../../../packages/play/games/fnaf1/fnaf1-detectors.ts';
 import { parseArgs } from '../bin/fnaf1-custom-run.ts';
 
@@ -107,6 +107,65 @@ throws('--route takes only tree', () => parseArgs(['--live', '--confirm-live', '
   '--detectors', 'x', '--route', 'winner']));
 throws('--winner and --route tree are exclusive', () => parseArgs(['--live', '--confirm-live', '--dials', '20,20,20,20',
   '--mode', 'grid420', '--detectors', 'x', '--winner', 'w.json', '--route', 'tree']));
+
+// --- 4. the recorder through the three ways a night took it (2026-10-01) --------------------------------------
+// A simulated helper on a fake clock: a session copies frame k at 33 ms intervals from `firstAt`, or nothing while the
+// screen is still; a capture restart replaces the session (new endpoint, seq from 1) and leaves an old channel reading
+// its last frame. `fresh` rediscovery can be made to fail, as a rotated logcat line makes it fail mid-night.
+async function recorderRun({ seconds = 10, stillUntil = 0, restartAt = Infinity, freshFails = false, cachedFails = false }) {
+  let clock = 0;
+  const now = () => clock;
+  const pixels = new Uint32Array([0x808080]);
+  const sessionAt = (t) => (t >= restartAt ? 1 : 0);
+  let endpoint = 0;   // the session a cached channel was opened on
+  const calls = { cached: 0, fresh: 0 };
+  const channelOn = (session) => {
+    let lastSeq = -1;
+    return {
+      read: async () => {
+        clock += 15;
+        if (sessionAt(clock) !== session) return { seq: lastSeq, imageNs: 0n, imageHostMs: clock, rttMs: 15, regions: { v: { cols: 1, rows: 1, step: 1, pixels } } };
+        const start = session === 0 ? stillUntil : restartAt;
+        lastSeq = clock < start ? -1 : Math.floor((clock - start) / 33) + 1;
+        return { seq: lastSeq, imageNs: BigInt(Math.round(clock * 1e6)), imageHostMs: clock, rttMs: 15, regions: { v: { cols: 1, rows: 1, step: 1, pixels } } };
+      },
+      close: () => {}, clear: async () => {},
+    };
+  };
+  const open = async (fresh) => {
+    clock += 200;
+    if (fresh) { calls.fresh += 1; if (freshFails) throw new Error('Companion endpoint: no READY or DEGRADED endpoint'); endpoint = sessionAt(clock); }
+    else {
+      calls.cached += 1;
+      if (cachedFails || endpoint !== sessionAt(clock)) throw new Error('Companion exchange timed out');
+    }
+    return { opened: channelOn(endpoint), read: null };
+  };
+  const rows = [];
+  const done = await recordFrames({ open, seconds, append: (row) => rows.push(row), now });
+  return { done, rows, calls, frames: rows.filter((row) => 'seq' in row) };
+}
+{
+  // night7-k3-sr02: the intro card is still for 5 s; the recorder waits and records the night that follows.
+  const still = await recorderRun({ stillUntil: 5000 });
+  ok('a still intro does not end the recording', still.frames.length > 100);
+  ok('a still screen reopens through the cached endpoint, never by rediscovery', still.calls.fresh === 0 && still.done.reopened >= 1);
+  ok('no row is written for seq -1', still.frames.every((row) => row.seq >= 1));
+  // night7-k3-sr01: the preflight restarts capture 2 s in; the old channel repeats its last frame, its endpoint is gone.
+  const restart = await recorderRun({ restartAt: 2000 });
+  const before = restart.frames.filter((row) => row.imageHostMs < 2000).length;
+  const after = restart.frames.filter((row) => row.imageHostMs > 5000).length;
+  ok(`a capture restart is crossed: frames from both sessions are kept (${before} before, ${after} after)`, before > 40 && after > 100);
+  ok('the stopped session is reached by rediscovery after the cached endpoint fails', restart.calls.fresh >= 1);
+  // night7-k3-sr03: rediscovery fails mid-night; a still screen must not need it.
+  const rotated = await recorderRun({ stillUntil: 8000, freshFails: true });
+  ok('a still screen survives a failing rediscovery', rotated.frames.length > 30 && rotated.calls.fresh === 0);
+  // Both ways failing is a failure, said as one.
+  let refused = null;
+  try { await recorderRun({ restartAt: 2000, freshFails: true }); } catch (error) { refused = error.message; }
+  checks += 1;
+  if (!refused || !/could not be reopened/.test(refused)) failures.push(`a restart with no reachable endpoint must throw, got ${refused}`);
+}
 
 if (failures.length) {
   console.error(`native regions: ${failures.length} of ${checks} checks failed`);

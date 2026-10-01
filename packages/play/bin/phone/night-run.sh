@@ -207,8 +207,12 @@ RUNID="night${NIGHT}-${LABEL}-${STAMP}"
 # a blind attempt: night7-night7-anchoredj9-aim2315-tf-20260913T233252Z (52
 # characters, the label already carried the night prefix) did exactly that on
 # 2026-09-13. Refuse before touching the phone.
-if [ "$STATIC_READOUT" = 1 ] && [ "$FRAME_TRACE" != 1 ]; then
-  die "--static-readout reads the camera static against the frame trace's own image clock: add --frame-trace"
+# Measured 2026-10-01 on Companion 0.1.14: while a frame trace drains the
+# capture queue the helper copies no region (0 of 553 traced frames in 8 s; 288
+# frames in 10 s without the trace). The static readout's rows carry the helper's
+# own image clock instead.
+if [ "$STATIC_READOUT" = 1 ] && [ "$FRAME_TRACE" = 1 ]; then
+  die "--static-readout and --frame-trace exclude each other: the frame trace starves the Companion's region copier (0 of 553 frames, 2026-10-01); drop --frame-trace"
 fi
 if [ "$FRAME_TRACE" = 1 ] && [ "${#RUNID}" -gt 48 ]; then
   die "--frame-trace needs a run id of at most 48 characters; '$RUNID' has ${#RUNID} (the label gets 'night${NIGHT}-' and a 16-character stamp)"
@@ -362,7 +366,7 @@ stop_frame_trace() {
 
 # The camera static re-rolls its blend coefficient from the game's Random(50) every 100 ms (Office g58), so the
 # static's opacity over the camera picture reads the random stream out (docs/evidence/full06-static-readout-*).
-# OPT-IN with --frame-trace: a measurement run. native-regions.ts records the model's static_view rectangle on every
+# OPT-IN, never with --frame-trace: a measurement run. native-regions.ts records the model's static_view rectangle on every
 # copied frame into captures/static-readouts/, which is never packed: the rows carry raw native pixels (publishing
 # boundary). It never touches the executor's reads (the FNaF 2 executor reads no REGION). It starts at
 # hid.schedule-start, seconds before the release: evidence.started comes BEFORE the preflight restarts the helper's

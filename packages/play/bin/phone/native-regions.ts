@@ -78,6 +78,51 @@ const quantile = (sorted, q) => sorted[Math.min(sorted.length - 1, Math.floor(q 
 // How long `record` waits without a new frame before reopening its channel.
 const RECORD_STALL_MS = 3000;
 
+/**
+ * Record every distinct copied frame for `seconds`, appending one row per frame (its pixels as base64 0xRRGGBB words,
+ * its image clock) and one row per reopen. `open(fresh)` registers the set on a channel and returns
+ * `{opened, read}`; `fresh` rediscovers the helper's endpoint.
+ *
+ * Three ways a night took the recorder on 2026-10-01, each held here:
+ *   - a still screen copies no frame (the intro card: seq -1, then the same seq): it waits, reopening through the
+ *     cached endpoint after RECORD_STALL_MS without a new frame (night7-k3-sr02 gave up within a second);
+ *   - a capture restart leaves the channel on a stopped session whose last frame never changes and whose endpoint
+ *     is gone: the cached reopen fails, and a fresh one reaches the new session (night7-k3-sr01 kept two frames);
+ *   - rediscovery can fail mid-night (the endpoint's logcat line rotates out), so it is tried only after the cached
+ *     endpoint fails (night7-k3-sr03 lost the recorder rediscovering through a still intro).
+ * A read the session no longer answers forces a reopen; a reopen that fails both ways throws.
+ */
+export async function recordFrames({ open, seconds, append, now = () => performance.now(), stallMs = RECORD_STALL_MS }) {
+  let channel = (await open(false)).opened;
+  const until = now() + seconds * 1000;
+  let last = -1; let rows = 0; let reopened = 0;
+  let advancedAt = now();
+  while (now() < until) {
+    if (now() - advancedAt > stallMs) {
+      try { channel.close(); } catch { /* the stopped session may already be gone */ }
+      let next;
+      try { next = await open(false); }
+      catch {
+        try { next = await open(true); }
+        catch (error) { throw new Error(`frames stopped at seq ${last} and the channel could not be reopened: ${error.message}`); }
+      }
+      channel = next.opened; reopened += 1; advancedAt = now();
+      append({ reopened, afterSeq: last, atHostMs: now() });
+      continue;
+    }
+    let r;
+    try { r = await channel.read(); }
+    catch { advancedAt = -Infinity; continue; }   // a read the session no longer answers: reopen now
+    if (r.seq < 0 || r.seq === last) continue;
+    last = r.seq; advancedAt = now();
+    const regions = Object.fromEntries(Object.entries(r.regions).map(([k, v]) =>
+      [k, { cols: (v as any).cols, rows: (v as any).rows, step: (v as any).step, hex: Buffer.from(new Uint8Array((v as any).pixels.buffer)).toString('base64') }]));
+    append({ seq: r.seq, imageNs: r.imageNs === null ? null : String(r.imageNs), imageHostMs: r.imageHostMs, rttMs: r.rttMs, regions });
+    rows += 1;
+  }
+  return { rows, reopened, channel };
+}
+
 async function main(argv) {
   const verb = argv[0];
   const opt = { model: null, set: 'night', count: 200, seconds: 10, out: null };
@@ -98,10 +143,13 @@ async function main(argv) {
   const { set } = loadRegionSet(opt.model, opt.set);
   let serial;
   try { ({ serial } = resolveSerial()); } catch (error) { fail(error.message); }
-  // A fresh port rediscovers the helper's endpoint, so a channel opened after a
-  // capture restart reaches the new session rather than the stopped one.
-  const open = async () => {
-    const opened = new AdbCompanionPort({ serial }).openRegions({ timeoutMs: 1500 });
+  // A channel on this port reuses its cached endpoint. `fresh` rediscovers it, which a capture restart needs (the
+  // stopped session's endpoint is gone) and which a long night can fail (its logcat line rotates out: 2026-10-01,
+  // night7-k3-sr03 lost its recorder that way while merely waiting through the intro card).
+  let port = new AdbCompanionPort({ serial });
+  const open = async (fresh = false) => {
+    if (fresh) port = new AdbCompanionPort({ serial });
+    const opened = port.openRegions({ timeoutMs: 1500 });
     await registerSet(opened, set);
     // The first read after registration is seq -1 until a frame is copied.
     let read = await opened.read();
@@ -110,7 +158,9 @@ async function main(argv) {
   };
   let { opened: channel, read: first } = await open();
   try {
-    if (first.seq < 0) fail('no frame was copied after registration: is capture running and the display awake?');
+    // `record` waits instead: MediaProjection copies a frame only when the screen changes, and a night's intro card
+    // is still for seconds (2026-10-01, night7-k3-sr02: the recorder started there and gave up within a second).
+    if (first.seq < 0 && verb !== 'record') fail('no frame was copied after registration: is capture running and the display awake?');
     if (verb === 'set') { console.log(`registered ${Object.keys(set).length} regions; seq ${first.seq}`); return; }
     if (verb === 'png') {
       if (!opt.out) fail('--out DIR is required');
@@ -137,33 +187,13 @@ async function main(argv) {
     }
     if (verb === 'record') {
       if (!opt.out) fail('--out FILE.jsonl is required');
-      const until = performance.now() + opt.seconds * 1000;
-      let last = -1; let rows = 0; let reopened = 0;
-      let advancedAt = performance.now();
-      while (performance.now() < until) {
-        // A capture restart (the campaign preflight's, an abort's) leaves this
-        // channel on a stopped session whose last frame never changes: on
-        // 2026-10-01 (night7-k3-sr01) the recorder kept two frames of a whole
-        // night that way. After RECORD_STALL_MS without a new frame it opens a
-        // fresh channel; a screen that is merely still costs a re-registration.
-        if (performance.now() - advancedAt > RECORD_STALL_MS) {
-          try { channel.close(); } catch { /* the stopped session may already be gone */ }
-          let next;
-          try { next = await open(); }
-          catch (error) { fail(`frames stopped at seq ${last} and the channel could not be reopened: ${error.message}`); }
-          channel = next.opened; reopened += 1; advancedAt = performance.now();
-          appendFileSync(opt.out, `${JSON.stringify({ reopened, afterSeq: last, atHostMs: performance.now() })}\n`);
-          continue;
-        }
-        const r = await channel.read();
-        if (r.seq === last) continue;
-        last = r.seq; advancedAt = performance.now();
-        const regions = Object.fromEntries(Object.entries(r.regions).map(([k, v]) =>
-          [k, { cols: (v as any).cols, rows: (v as any).rows, step: (v as any).step, hex: Buffer.from(new Uint8Array((v as any).pixels.buffer)).toString('base64') }]));
-        appendFileSync(opt.out, `${JSON.stringify({ seq: r.seq, imageNs: r.imageNs === null ? null : String(r.imageNs), imageHostMs: r.imageHostMs, rttMs: r.rttMs, regions })}\n`);
-        rows += 1;
-      }
-      console.log(`recorded ${rows} frames to ${opt.out} (${reopened} reopen(s) after ${RECORD_STALL_MS} ms without a frame)`);
+      try { channel.close(); } catch { /* recordFrames opens its own channel */ }
+      let done;
+      try {
+        done = await recordFrames({ open, seconds: opt.seconds, append: (row) => appendFileSync(opt.out, `${JSON.stringify(row)}\n`) });
+      } catch (error) { fail(error.message); }
+      channel = done.channel;
+      console.log(`recorded ${done.rows} frames to ${opt.out} (${done.reopened} reopen(s) after ${RECORD_STALL_MS} ms without a frame)`);
     }
   } finally {
     try { await channel.clear(); } catch { /* the helper drops regions with its session */ }
