@@ -15,27 +15,27 @@ export const CAMPAIGN_STATES = Object.freeze([
   'CUSTOM_VERIFY', 'TERMINAL_VERIFY', 'RETRY_VERIFY', 'SAVE_VERIFY', 'HOLD', 'ABORTED', 'COMPLETE',
 ]);
 
-const isRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
-const failCampaign = message => { throw new TypeError(`campaign: ${message}`); };
-const failProof = message => { throw new TypeError(`campaign proof: ${message}`); };
-const text = (value, label) => {
+const isRecord = (value: any) => value !== null && typeof value === 'object' && !Array.isArray(value);
+const failCampaign = (message: any) => { throw new TypeError(`campaign: ${message}`); };
+const failProof = (message: any) => { throw new TypeError(`campaign proof: ${message}`); };
+const text = (value: any, label: any) => {
   if (typeof value !== 'string' || value.length === 0) failCampaign(`${label} must be a non-empty string`);
   return value;
 };
 
-export function validateCampaignResult(value) {
+export function validateCampaignResult(value: any) {
   if (!isRecord(value) || value.schema !== 'device-campaign-result-v1' || value.version !== 1)
     failCampaign('result schema/version mismatch');
   if (!CAMPAIGN_STATES.includes(value.state)) failCampaign('result state is invalid');
   text(value.specHash, 'result.specHash');
   if (!Array.isArray(value.completedNights) || !Array.isArray(value.attempts) || !Array.isArray(value.events))
     failCampaign('result attempts/events are required');
-  if (value.completedNights.some(night => !Number.isInteger(night) || night < 1 || night > 7))
+  if (value.completedNights.some((night: any) => !Number.isInteger(night) || night < 1 || night > 7))
     failCampaign('result completedNights contains an unsupported night');
   return value;
 }
 
-export function validateSaveProof(value, target) {
+export function validateSaveProof(value: any, target: any) {
   if (target?.night === 6) {
     if (!isRecord(value) || value.observed !== true ||
         (value.cursorNight !== 7 && value.customNightVisible !== true))

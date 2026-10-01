@@ -36,7 +36,7 @@ export function validateAnnotation(value: any): Annotation {
   const kinds = ANNOTATION_KINDS.filter(kind => kind in value);
   if (kinds.length !== 1 || !isText(value[kinds[0]])) fail('an annotation is exactly one of a class, a measure or a tag, by name');
   if (!('value' in value)) fail('an annotation carries a value');
-  if (!Array.isArray(value.inputs) || !value.inputs.every(hash => typeof hash === 'string' && HASH.test(hash)))
+  if (!Array.isArray(value.inputs) || !value.inputs.every((hash: any) => typeof hash === 'string' && HASH.test(hash)))
     fail('an annotation lists the content hash of every input');
   if (!isText(value.by)) fail('an annotation names who wrote it');
   if (!ANNOTATION_STATUSES.includes(value.status)) fail(`an annotation's status is one of ${ANNOTATION_STATUSES.join(', ')}`);

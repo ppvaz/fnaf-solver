@@ -17,7 +17,7 @@ export const QUALIFICATION_LIFECYCLES = Object.freeze(['QUALIFIED', 'CANDIDATE']
 // Retained-run contracts. They lived in packages/runtime beside the fixture
 // scheduler and supervisor until 2026-09-25; the campaign preflight, the
 // artifact runner and the evidence index read them, so they belong in core.
-export function validateQualification(value) {
+export function validateQualification(value: any) {
   if (!value || !QUALIFICATION_SCHEMAS.includes(value.schema) || typeof value.policyHash !== 'string' ||
       typeof value.modelHash !== 'string' || !Number.isInteger(value.sampleCount) || value.sampleCount < 1 ||
       !['PASS', 'FAIL', 'INCONCLUSIVE'].includes(value.verdict) ||
@@ -27,7 +27,7 @@ export function validateQualification(value) {
     try {
       validateVenueIdentity(value.venue, { requireKnown: true, label: 'qualification.venue' });
     } catch (error) {
-      throw new TypeError(`qualification is incomplete: ${error.message}`);
+      throw new TypeError(`qualification is incomplete: ${(error as any).message}`);
     }
   }
   return value;

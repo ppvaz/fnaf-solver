@@ -78,9 +78,9 @@ const BY_LEAF = Object.freeze({
 });
 
 /** The declared clock of a field, or null when nothing declares it. */
-export function clockOfField(path) {
-  const leaf = String(path).split('.').pop().replace(/\[\]$/, '');
-  return Object.hasOwn(BY_LEAF, leaf) ? BY_LEAF[leaf] : null;
+export function clockOfField(path: any) {
+  const leaf = String(path).split('.').pop()!.replace(/\[\]$/, '');
+  return Object.hasOwn(BY_LEAF, leaf) ? (BY_LEAF as any)[leaf] : null;
 }
 
 /**
@@ -89,8 +89,8 @@ export function clockOfField(path) {
  * @param event one parsed events.jsonl row
  */
 export function eventTimestamps(event: object): {path: string, clock: string, value: number | string}[] {
-  const out = [];
-  const walk = (prefix, value) => {
+  const out: any[] = [];
+  const walk = (prefix: any, value: any) => {
     if (value === null || value === undefined) return;
     if (Array.isArray(value)) { for (const item of value) walk(`${prefix}[]`, item); return; }
     if (typeof value === 'object') {
@@ -110,17 +110,17 @@ export function eventTimestamps(event: object): {path: string, clock: string, va
 // (three years of uptime), a plan time is inside a night.
 const WALL = [1.577e12, 4.1e12];
 const PLAUSIBLE = {
-  [C.HOST_WALL]: value => typeof value === 'string' ? !Number.isNaN(Date.parse(value)) : value >= WALL[0] && value <= WALL[1],
-  [C.PHONE_WALL]: value => value >= WALL[0] && value <= WALL[1],
-  [C.HOST_MONOTONIC]: value => value >= 0 && value < 1e11,
-  [C.DEVICE_MONOTONIC]: value => value >= 0 && value < 1e11,
-  [C.PLAN]: value => value >= 0 && value <= 3.6e6,
+  [C.HOST_WALL]: (value: any) => typeof value === 'string' ? !Number.isNaN(Date.parse(value)) : value >= WALL[0] && value <= WALL[1],
+  [C.PHONE_WALL]: (value: any) => value >= WALL[0] && value <= WALL[1],
+  [C.HOST_MONOTONIC]: (value: any) => value >= 0 && value < 1e11,
+  [C.DEVICE_MONOTONIC]: (value: any) => value >= 0 && value < 1e11,
+  [C.PLAN]: (value: any) => value >= 0 && value <= 3.6e6,
 };
 
 /** Is `value` plausible for `clock`? Durations and offsets are only required to be finite numbers. */
-export function plausibleForClock(clock, value) {
-  if (PLAUSIBLE[clock]) return (typeof value === 'number' && Number.isFinite(value)) || clock === C.HOST_WALL
-    ? PLAUSIBLE[clock](value) : false;
+export function plausibleForClock(clock: any, value: any) {
+  if ((PLAUSIBLE as any)[clock]) return (typeof value === 'number' && Number.isFinite(value)) || clock === C.HOST_WALL
+    ? (PLAUSIBLE as any)[clock](value) : false;
   if ([C.DURATION, C.DURATION_US, C.OFFSET].includes(clock))
     return (typeof value === 'number' && Number.isFinite(value)) || (typeof value === 'string' && /^-?\d+(\.\d+)?$/.test(value));
   return false;

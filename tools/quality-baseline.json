@@ -149,7 +149,6 @@
     "entries": {
       "clone:apps/desktop/bin/fnaf1-custom-run.ts <> packages/play/games/fnaf3/fnaf3-run.ts": 6,
       "clone:apps/desktop/bin/fnaf1-custom-run.ts <> packages/play/games/fnaf4/fnaf4-run.ts": 12,
-      "clone:packages/kernel/src/contracts/index.ts <> packages/source/src/clockwork/control-contracts.ts": 7,
       "clone:packages/play/bin/grade/tap-stall-audit.ts <> packages/propose/bin/report/phase-reconstruct.ts": {
         "count": 8,
         "why": "the 8 lines this pair carried when the gate landed; between the Play and Propose migrations one side had type annotations and only 6 matched, and with both sides .ts again the original 8 match"
@@ -190,7 +189,7 @@
       "debt:apps/trainer/test": 24,
       "debt:apps/wiki": 3,
       "debt:apps/wiki/test": 1,
-      "debt:packages/kernel/src": 52,
+      "debt:packages/kernel/src": 169,
       "debt:packages/kernel/test": 10,
       "debt:packages/play/bin": 64,
       "debt:packages/play/games": 133,

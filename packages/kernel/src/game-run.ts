@@ -34,7 +34,7 @@ export function validateGameRun(value: any): GameRun {
   knownOr(value.clocks, 'clocks', clocks => Array.isArray(clocks) && clocks.every(isRecord));
   for (const phase of ['before', 'night', 'after']) knownOr(value[phase], phase, Array.isArray);
   validateOutcome(value.reportedOutcome);
-  if (!Array.isArray(value.witnesses) || !value.witnesses.every(item => isRecord(item) && isText(item.name) &&
+  if (!Array.isArray(value.witnesses) || !value.witnesses.every((item: any) => isRecord(item) && isText(item.name) &&
       /^[0-9a-f]{64}$/.test(item.sha256) && isText(item.kind)))
     fail('GameRun.witnesses must be {name, sha256, kind} with a sha256 hex digest');
   const custody = value.custody;

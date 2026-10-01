@@ -5,9 +5,9 @@
  */
 import type { ClaimLevel, SourceLabel, Unknown } from './types.ts';
 
-export const fail = message => { throw new TypeError(`kernel: ${message}`); };
-export const isRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
-export const isText = value => typeof value === 'string' && value.trim().length > 0;
+export const fail = (message: any) => { throw new TypeError(`kernel: ${message}`); };
+export const isRecord = (value: any) => value !== null && typeof value === 'object' && !Array.isArray(value);
+export const isText = (value: any) => typeof value === 'string' && value.trim().length > 0;
 
 /**
  * An unknown value and why it is unknown.

@@ -18,7 +18,7 @@ import type { Seed, SeedBelief, SeedProvenance } from './types.ts';
 export const SEED_PROVENANCES = Object.freeze(['natural', 'pinned', 'identified']);
 export const SEED_BELIEFS = Object.freeze(['known', 'candidates', 'unknown']);
 const FIELDS = Object.freeze(['provenance', 'bracket', 'belief', 'value', 'candidates']);
-const isSeedValue = value => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
+const isSeedValue = (value: any) => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
 
 /**
  * A provenance, with the bracket a pinned seed carries and no other does.

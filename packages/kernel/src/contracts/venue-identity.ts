@@ -57,9 +57,9 @@ export const VENUE_FIELD_PATTERNS = Object.freeze({
 const GAME_FIELDS = new Set(['package', 'versionName', 'versionCode', 'firstInstallTime', 'lastUpdateTime']);
 const OS_FIELDS = new Set(['buildFingerprint', 'securityPatch']);
 
-const isRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
-const fail = message => { throw new TypeError(`venue: ${message}`); };
-const bounded = (value, label, max = 256) => {
+const isRecord = (value: any) => value !== null && typeof value === 'object' && !Array.isArray(value);
+const fail = (message: any) => { throw new TypeError(`venue: ${message}`); };
+const bounded = (value: any, label: any, max = 256) => {
   if (typeof value !== 'string' || value.length === 0 || value.length > max)
     fail(`${label} must be a non-empty string of at most ${max} characters`);
   return value;
@@ -87,7 +87,7 @@ export function validateVenueIdentity(value: any, { requireKnown = false, label 
       if (requireKnown && VENUE_DRIFT_FIELDS.includes(field))
         fail(`${label}.${field} is unknown (${unknown[field]}); a binding needs every drift field read`);
     } else {
-      if (typeof reading !== 'string' || !VENUE_FIELD_PATTERNS[field].test(reading))
+      if (typeof reading !== 'string' || !(VENUE_FIELD_PATTERNS as any)[field].test(reading))
         fail(`${label}.${field} is malformed: ${JSON.stringify(reading)}`);
       if (Object.hasOwn(unknown, field)) fail(`${label}.${field} is read and also listed as unknown`);
     }
@@ -160,14 +160,14 @@ export function venueBindingsFor({ profileId = null, winnerHash = null, qualific
   return selected;
 }
 
-const describe = value => (value === null ? 'UNKNOWN' : value);
+const describe = (value: any) => (value === null ? 'UNKNOWN' : value);
 
-function remedyFor(drift) {
-  const fields = new Set<string>(drift.map(item => item.field));
+function remedyFor(drift: any) {
+  const fields = new Set<string>(drift.map((item: any) => item.field));
   const parts = ['re-qualify on the observed venue (a new qualification-v2, or a venue-binding-v1 ' +
     'over the identity this preflight recorded, from a measured run)'];
   if ([...fields].some(field => GAME_FIELDS.has(field))) {
-    const bound = drift.find(item => GAME_FIELDS.has(item.field));
+    const bound = drift.find((item: any) => GAME_FIELDS.has(item.field));
     const target = bound ? ` bound by ${bound.source} ${bound.id}` : '';
     parts.push(`or roll the game back to the build${target} and keep Play auto-update off for it`);
   }

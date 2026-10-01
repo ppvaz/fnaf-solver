@@ -44,9 +44,9 @@ export const RATE_METHODS = Object.freeze(['wilson', 'wilson-bonferroni', 'exhau
 const SEED_SET_FIELDS = Object.freeze(['name', 'derivation', 'provenance', 'bracket', 'count', 'sha256', 'definition']);
 const ID = /^[A-Za-z][A-Za-z0-9_-]{0,63}$/;
 const SHA256 = /^[0-9a-f]{64}$/;
-const isSeed = value => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
-const isCount = value => Number.isInteger(value) && value >= 1;
-const texts = (value, label, { min = 1 } = {}) => {
+const isSeed = (value: any) => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
+const isCount = (value: any) => Number.isInteger(value) && value >= 1;
+const texts = (value: any, label: any, { min = 1 } = {}) => {
   if (!Array.isArray(value) || value.length < min || !value.every(isText)) fail(`${label} is a list of at least ${min} non-empty text(s)`);
   return value;
 };
@@ -59,7 +59,7 @@ const texts = (value, label, { min = 1 } = {}) => {
 export function validateSeedDerivation(derivation: any, label: string = 'seed set') {
   if (!isRecord(derivation) || !SEED_DERIVATIONS.includes(derivation.kind))
     fail(`${label}: derivation.kind must be one of ${SEED_DERIVATIONS.join(', ')}`);
-  const only = keys => { if (Object.keys(derivation).some(key => !keys.includes(key))) fail(`${label}: a ${derivation.kind} derivation is {${keys.join(', ')}}`); };
+  const only = (keys: any) => { if (Object.keys(derivation).some(key => !keys.includes(key))) fail(`${label}: a ${derivation.kind} derivation is {${keys.join(', ')}}`); };
   if (derivation.kind === 'golden') {
     only(['kind', 'count', 'salt', 'modulus']);
     if (!isCount(derivation.count)) fail(`${label}: a golden derivation names a positive count`);
@@ -80,7 +80,7 @@ export function validateSeedDerivation(derivation: any, label: string = 'seed se
 }
 
 /** The count a derivation fixes without expanding it, or null for a golden cohort reduced by a modulus. */
-export function derivedCount(derivation) {
+export function derivedCount(derivation: any) {
   if (derivation.kind === 'explicit') return derivation.seeds.length;
   if (derivation.kind === 'explicit-range') return derivation.to - derivation.from + 1;
   return derivation.modulus === undefined ? derivation.count : null;
@@ -106,14 +106,14 @@ export function validateSeedSet(value: any, label: string = 'seed set') {
 }
 
 /** Seeds two sets are known to share without expanding a golden cohort; null when that needs the generator. */
-export function knownOverlap(a, b) {
-  const list = set => set.derivation.kind === 'explicit' ? set.derivation.seeds : null;
-  const range = set => set.derivation.kind === 'explicit-range' ? set.derivation : null;
+export function knownOverlap(a: any, b: any) {
+  const list = (set: any) => set.derivation.kind === 'explicit' ? set.derivation.seeds : null;
+  const range = (set: any) => set.derivation.kind === 'explicit-range' ? set.derivation : null;
   if (range(a) && range(b)) return Math.max(0, Math.min(a.derivation.to, b.derivation.to) - Math.max(a.derivation.from, b.derivation.from) + 1);
-  const inRange = (seeds, r) => seeds.filter(seed => seed >= r.from && seed <= r.to).length;
+  const inRange = (seeds: any, r: any) => seeds.filter((seed: any) => seed >= r.from && seed <= r.to).length;
   if (list(a) && range(b)) return inRange(list(a), range(b));
   if (range(a) && list(b)) return inRange(list(b), range(a));
-  if (list(a) && list(b)) { const seen = new Set(list(a)); return list(b).filter(seed => seen.has(seed)).length; }
+  if (list(a) && list(b)) { const seen = new Set(list(a)); return list(b).filter((seed: any) => seen.has(seed)).length; }
   return null;
 }
 
@@ -124,7 +124,7 @@ function validatePredicate(predicate: any, measures: Set<string>, label: string)
     const key = 'all' in predicate ? 'all' : 'any';
     if (keys.length !== 1 || !Array.isArray(predicate[key]) || !predicate[key].length)
       fail(`${label}: {${key}: [...]} holds at least one predicate and nothing else`);
-    predicate[key].forEach((item, index) => validatePredicate(item, measures, `${label}.${key}[${index}]`));
+    predicate[key].forEach((item: any, index: any) => validatePredicate(item, measures, `${label}.${key}[${index}]`));
     return;
   }
   if ('not' in predicate) {
@@ -151,7 +151,7 @@ export function validateExperimentSpecV2(input: any): ExperimentSpecV2 {
   if (!Array.isArray(input.explanations) || input.explanations.length < 2)
     fail('experiment spec v2: an experiment names at least two competing explanations');
   const ids = new Set();
-  input.explanations.forEach((explanation, index) => {
+  input.explanations.forEach((explanation: any, index: any) => {
     const label = `experiment spec v2: explanations[${index}]`;
     if (!isRecord(explanation) || !ID.test(explanation.id ?? '')) fail(`${label} has a short id`);
     if (ids.has(explanation.id)) fail(`${label}: id ${explanation.id} is used twice`);
@@ -227,7 +227,7 @@ export function validateExperimentResultV2(input: any, spec?: ExperimentSpecV2) 
     if (!Number.isFinite(value)) fail(`experiment result v2: observation ${name} is a finite number`);
   if (!Array.isArray(input.explanations) || !input.explanations.length) fail('experiment result v2: explanations are tagged');
   const tagged = new Set();
-  input.explanations.forEach((item, index) => {
+  input.explanations.forEach((item: any, index: any) => {
     const label = `experiment result v2: explanations[${index}]`;
     if (!isRecord(item) || !ID.test(item.id ?? '') || tagged.has(item.id)) fail(`${label} names one explanation once`);
     tagged.add(item.id);
@@ -237,7 +237,7 @@ export function validateExperimentResultV2(input: any, spec?: ExperimentSpecV2) 
     if ((item.status === 'surviving') !== item.evidence.holds) fail(`${label}: an explanation survives exactly when its prediction holds`);
   });
   if (!Array.isArray(input.rates)) fail('experiment result v2: rates is a list');
-  input.rates.forEach((rate, index) => validateRate(rate, `experiment result v2: rates[${index}]`));
+  input.rates.forEach((rate: any, index: any) => validateRate(rate, `experiment result v2: rates[${index}]`));
   if (!isRecord(input.stopped) || !isText(input.stopped.rule) || !isText(input.stopped.reached))
     fail('experiment result v2: stopped is {rule, reached}');
   if (spec) {
