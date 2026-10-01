@@ -1756,12 +1756,14 @@
       "imports": [
         "../../parked/minus7/policy.ts",
         "../../parked/minus7/policybaselines.ts",
+        "./pool.ts",
         "@sixam/propose/games/policy-fnaf1.ts",
         "@sixam/propose/games/policy-fnaf3.ts",
         "@sixam/propose/games/policy-fnaf4.ts",
         "@sixam/source/fnaf1",
         "@sixam/source/fnaf3",
-        "@sixam/source/fnaf4"
+        "@sixam/source/fnaf4",
+        "node:worker_threads"
       ]
     },
     {
@@ -1822,6 +1824,14 @@
       "imports": [
         "node:os",
         "node:worker_threads"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/census/test-census-workers.ts",
+      "imports": [
+        "./census.ts",
+        "./pool.ts",
+        "node:assert/strict"
       ]
     },
     {

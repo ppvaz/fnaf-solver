@@ -11,17 +11,25 @@
 //   node packages/propose/bin/census/census.ts --game fnaf1 --night 4 --seeds 65536
 //   node packages/propose/bin/census/census.ts --game fnaf4 --night 5 --seeds 3000 --start 3000
 //   node packages/propose/bin/census/census.ts --game fnaf1 --all
+//   node packages/propose/bin/census/census.ts --game fnaf3 --night 5 --seeds 65536 --workers 6
+//
+// `--workers N` spreads the seeds over N threads of pool.ts (FNaF 1, 3 and 4);
+// the default is one, so a census leaves the machine usable for other work.
+// Every seed's outcome is tallied in seed order whatever N is, so the printed
+// and --json results are the same byte for byte.
 //
 // A census is a **model** result. It says what the simulator does under the
 // rules read out of the dump; it is not a device measurement and cannot be
 // promoted as one.
 
+import { isMainThread } from 'node:worker_threads';
 import { Fnaf1Sim } from '@sixam/source/fnaf1';
 import { POLICIES as FNAF1_POLICIES } from '@sixam/propose/games/policy-fnaf1.ts';
 import { Fnaf3Sim } from '@sixam/source/fnaf3';
 import { POLICIES as FNAF3_POLICIES } from '@sixam/propose/games/policy-fnaf3.ts';
 import { Fnaf4Sim } from '@sixam/source/fnaf4';
 import { POLICIES as FNAF4_POLICIES } from '@sixam/propose/games/policy-fnaf4.ts';
+import { SimPool } from './pool.ts';
 
 const SIMS = {
   fnaf1: { Sim: Fnaf1Sim, policies: FNAF1_POLICIES, nights: [1, 2, 3, 4, 5, 6],
@@ -61,7 +69,7 @@ async function censusFnaf2({ night, policy, seeds, start }) {
 }
 
 function parseArgs(argv) {
-  const args = { game: 'fnaf1', policy: null, seeds: 3000, night: null,
+  const args = { game: 'fnaf1', policy: null, seeds: 3000, night: null, workers: 1,
                  start: 0, all: false, json: false, options: {}, custom: null, hyper: false, sim: {} };
   for (let i = 0; i < argv.length; i += 1) {
     const flag = argv[i];
@@ -70,6 +78,7 @@ function parseArgs(argv) {
     else if (flag === '--seeds') args.seeds = Number(argv[++i]);
     else if (flag === '--start') args.start = Number(argv[++i]);
     else if (flag === '--night') args.night = Number(argv[++i]);
+    else if (flag === '--workers') args.workers = Number(argv[++i]);
     else if (flag === '--all') args.all = true;
     // FNaF 3's Aggressive cheat (`hyper on?`, g222): the move counter gains 2 a second.
     else if (flag === '--hyper') args.hyper = true;
@@ -88,28 +97,59 @@ function parseArgs(argv) {
     else if (flag.startsWith('--sim.')) { const v = argv[++i]; args.sim[flag.slice(6)] = v === '0' ? false : v === '1' ? true : Number(v); }
     else throw new Error(`unknown flag ${flag}`);
   }
+  if (!Number.isInteger(args.workers) || args.workers < 1) throw new Error('--workers must be a positive integer');
   return args;
 }
 
-export function census({ game, night, policy, seeds, start = 0, options = {}, custom = null, hyper = false, sim = {} }) {
+function checkStart({ start = 0 }) {
   if (!Number.isInteger(start) || start < 0) throw new Error('--start must be a non-negative integer');
-  if (game === 'fnaf2') return censusFnaf2({ night, policy, seeds, start });
+}
+
+function checkGame({ game, policy, hyper = false }) {
   if (hyper && game !== 'fnaf3') throw new Error('--hyper is FNaF 3\'s Aggressive cheat');
   const entry = SIMS[game];
   if (!entry) throw new Error(`no simulator for ${game}`);
-  const makePolicy = entry.policies[policy];
-  if (!makePolicy) {
+  if (!entry.policies[policy]) {
     throw new Error(`no policy ${policy} for ${game}; have ${Object.keys(entry.policies).join(', ')}`);
   }
+}
+
+/** One seed of a FNaF 1, 3 or 4 census as [outcome, frames]: plain data, so it is also pool.ts's task. */
+export function censusSeed({ game, night, policy, seed, options = {}, custom = null, hyper = false, sim = {} }) {
+  const entry = SIMS[game];
+  const result = new entry.Sim({ night, seed, custom, hyper, ...sim }).run(entry.policies[policy](options));
+  return [result.outcome, result.frames];
+}
+
+const seedList = ({ game, night, policy, seeds, start = 0, options = {}, custom = null, hyper = false, sim = {} }) =>
+  Array.from({ length: seeds }, (_, i) => ({ game, night, policy, seed: start + i, options, custom, hyper, sim }));
+
+export function census(params) {
+  checkStart(params);
+  if (params.game === 'fnaf2') return censusFnaf2(params);
+  checkGame(params);
+  return tally(params, seedList(params).map(censusSeed));
+}
+
+/** census() with the seeds spread over a pool.ts pool; the same result, tallied in seed order. */
+export async function censusOnPool(params, pool) {
+  checkStart(params);
+  if (params.game === 'fnaf2') return censusFnaf2(params);
+  checkGame(params);
+  return tally(params, await pool.map(import.meta.url, 'censusSeed', seedList(params)));
+}
+
+// Seed order, always: the causes keep their first-seen order among equal
+// counts and the survived time is one floating sum, so a different order
+// would change the result.
+function tally({ game, night, policy, seeds, start = 0, custom = null, hyper = false, sim = {} }, rows) {
   const causes = new Map();
   let wins = 0;
   let survivedMs = 0;
-  for (let seed = start; seed < start + seeds; seed += 1) {
-    const instance = new entry.Sim({ night, seed, custom, hyper, ...sim });
-    const result = instance.run(makePolicy(options));
-    if (result.outcome === '6AM') wins += 1;
-    causes.set(result.outcome, (causes.get(result.outcome) ?? 0) + 1);
-    survivedMs += result.frames * (1000 / 60);
+  for (const [outcome, frames] of rows) {
+    if (outcome === '6AM') wins += 1;
+    causes.set(outcome, (causes.get(outcome) ?? 0) + 1);
+    survivedMs += frames * (1000 / 60);
   }
   return {
     game, night, policy, seeds, start, wins, custom, ...(hyper ? { hyper } : {}),
@@ -147,16 +187,23 @@ async function main() {
   const nights = args.night ? [args.night]
     : (fnaf2 ? [1, 2, 3, 4, 5, 6, 7] : entry.nights);
   const policies = args.all && !fnaf2 ? Object.keys(entry.policies) : [args.policy];
+  const pool = new SimPool({ workers: args.workers });
   const rows = [];
-  for (const policy of policies) {
-    for (const night of nights) {
-      rows.push(await census({ game: args.game, night, policy, seeds: args.seeds,
-                               start: args.start, options: args.options, custom: args.custom, hyper: args.hyper,
-                               sim: args.sim }));
+  try {
+    for (const policy of policies) {
+      for (const night of nights) {
+        rows.push(await censusOnPool({ game: args.game, night, policy, seeds: args.seeds,
+                                       start: args.start, options: args.options, custom: args.custom, hyper: args.hyper,
+                                       sim: args.sim }, pool));
+      }
     }
+  } finally {
+    await pool.close();
   }
   if (args.json) { console.log(JSON.stringify(rows, null, 2)); return; }
   for (const row of rows) console.log(report(row));
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main();
+// isMainThread: a pool worker inherits process.argv, so without it every
+// worker that imports this module as its task would run the census again.
+if (isMainThread && import.meta.url === `file://${process.argv[1]}`) main();
