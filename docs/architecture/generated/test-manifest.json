@@ -257,8 +257,7 @@
         "time.sleep(0.5"
       ],
       "sharedResources": [
-        "device-transport",
-        "local-http-port"
+        "device-transport"
       ],
       "subprocesses": true,
       "measurement": {
@@ -1035,8 +1034,7 @@
       "determinismSignals": [],
       "fixedSleeps": [],
       "sharedResources": [
-        "device-transport",
-        "local-http-port"
+        "device-transport"
       ],
       "subprocesses": false,
       "measurement": {
@@ -1156,8 +1154,7 @@
       "determinismSignals": [],
       "fixedSleeps": [],
       "sharedResources": [
-        "device-transport",
-        "local-http-port"
+        "device-transport"
       ],
       "subprocesses": true,
       "measurement": {
@@ -1543,8 +1540,7 @@
       "determinismSignals": [],
       "fixedSleeps": [],
       "sharedResources": [
-        "device-transport",
-        "local-http-port"
+        "device-transport"
       ],
       "subprocesses": true,
       "measurement": {
@@ -1563,9 +1559,7 @@
       "deterministic": true,
       "determinismSignals": [],
       "fixedSleeps": [],
-      "sharedResources": [
-        "local-http-port"
-      ],
+      "sharedResources": [],
       "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",
@@ -2188,9 +2182,7 @@
       "deterministic": true,
       "determinismSignals": [],
       "fixedSleeps": [],
-      "sharedResources": [
-        "local-http-port"
-      ],
+      "sharedResources": [],
       "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",
@@ -2840,8 +2832,7 @@
       "determinismSignals": [],
       "fixedSleeps": [],
       "sharedResources": [
-        "device-transport",
-        "local-http-port"
+        "device-transport"
       ],
       "subprocesses": false,
       "measurement": {
@@ -3713,8 +3704,7 @@
       "determinismSignals": [],
       "fixedSleeps": [],
       "sharedResources": [
-        "device-transport",
-        "local-http-port"
+        "device-transport"
       ],
       "subprocesses": true,
       "measurement": {
@@ -3769,9 +3759,7 @@
       "deterministic": true,
       "determinismSignals": [],
       "fixedSleeps": [],
-      "sharedResources": [
-        "local-http-port"
-      ],
+      "sharedResources": [],
       "subprocesses": false,
       "measurement": {
         "status": "NOT_MEASURED",
@@ -3791,9 +3779,7 @@
         "new Date("
       ],
       "fixedSleeps": [],
-      "sharedResources": [
-        "local-http-port"
-      ],
+      "sharedResources": [],
       "subprocesses": false,
       "measurement": {
         "status": "NOT_MEASURED",
@@ -4000,8 +3986,7 @@
       "determinismSignals": [],
       "fixedSleeps": [],
       "sharedResources": [
-        "device-transport",
-        "local-http-port"
+        "device-transport"
       ],
       "subprocesses": true,
       "measurement": {
