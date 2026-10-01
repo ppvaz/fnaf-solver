@@ -279,7 +279,10 @@ try {
   assert.equal(proposal.claim.proposal, 'PROMOTED_BY');
   assert.equal(proposal.claim.inGraph, 'ALREADY_RECORDED');
   assert.equal(proposal.label, 'DEVICE_MEASURED');
-  refused(await call('promote', { pack: 'fnaf1-custom-grid420-420-a-20260925T024452598Z' }), 'plan12-promotion', 'a FNaF 1 run');
+  // A FNaF 1 runner pack is read by Plan 12's checks too (packages/review/src/fnaf1-promotion.ts): its 4/20 night is promoted.
+  const fnaf1Proposal = claimed(await call('promote', { pack: 'fnaf1-custom-grid420-420-a-20260925T024452598Z' }), 'promote the FNaF 1 4/20 night');
+  assert.equal(fnaf1Proposal.claim.inGraph, 'ALREADY_RECORDED');
+  assert.equal(fnaf1Proposal.claim.edge.from, 'claim.fnaf1.custom-night.20-20-20-20.device-6am');
 
   // --- truth: the caller's own local dump, never the repository's --------------------------------
   const events = claimed(await call('truth', { op: 'events', game: 'fnaf2', query: { object: 'lamp', value: 2 } }), 'truth events');
