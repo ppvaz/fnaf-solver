@@ -8,21 +8,19 @@
 // the generator advanced or stepped back one or two draws after one update in 0..300. Each member is one full-night
 // replay through the production Sim (phone-stream-census.mjs inputs()), scored on the predeclared fingerprints and
 // decided by the predeclared rule, verbatim. MODEL_ONLY: a fitting member is a hypothesis about the phone.
-import { createHash } from 'node:crypto';
-import { readFileSync, writeFileSync } from 'node:fs';
-import { cpus } from 'node:os';
-import { fileURLToPath, pathToFileURL } from 'node:url';
-import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
+import { writeFileSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
+import { isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { cumulative, maskPresses, scoreWindows, windowCodes, WINDOW_MS } from './phone-encounter-replay.mjs';
 import { LEDGERS } from './compare-schedule-replay.mjs';
 import { inputs } from './phone-stream-census.mjs';
+import { fanOut, predeclared, sweepArgs } from './sweep-common.mjs';
 import { drawTrace } from '../../../source/recompile/model-draw-trace.mjs';
 import { RNG_INCREMENT, RNG_MASK, RNG_MULTIPLIER } from '../../../source/src/games/fnaf2/rng.ts';
 
 export const SCHEMA = 'phone-early-perturbation-v1';
 const CODE = { withbonnie: 'B', withchica: 'C', withfreddy: 'F', toybonnie: 'b', toychica: 'c', toyfreddy: 'f', mangle: 'M', bb: 'x' };
 const INVERSE = (() => { for (let m = 1; m < 0x10000; m += 2) if (((RNG_MULTIPLIER * m) & RNG_MASK) === 1) return m; throw new Error('no inverse'); })();
-const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 /** The generator's state `k` draws on (k < 0: back). */
 export function stepState(state, k) {
   let s = state;
@@ -87,15 +85,6 @@ export function playMember(inp, member) {
     outcome: run.won ? '6am' : run.death ? `death:${run.death.reason}@${run.death.t ?? '?'}` : 'alive' };
 }
 
-function pool(night, members, workers) {
-  const chunks = Array.from({ length: workers }, (_, w) => members.map((m, i) => [i, m]).filter(([i]) => i % workers === w));
-  return Promise.all(chunks.filter((c) => c.length).map((chunk) => new Promise((done, fail) => {
-    const worker = new Worker(fileURLToPath(import.meta.url), { workerData: { tool: SCHEMA, night, chunk } });
-    worker.on('message', done); worker.on('error', fail);
-    worker.on('exit', (code) => { if (code) fail(new Error(`worker exited ${code}`)); });
-  }))).then((parts) => parts.flat().sort((a, b) => a.i - b.i).map(({ row }) => row));
-}
-
 /** The predeclared rule: SUPPORTED when some member meets both fingerprints. */
 export function decide(rule, rows) {
   const fits = rows.filter((r) => r.audioFits && r.agree >= rule.minAgree);
@@ -103,24 +92,16 @@ export function decide(rule, rows) {
 }
 
 async function main(argv) {
-  const args = {};
-  for (let i = 0; i < argv.length; i += 2) {
-    if (!['--predeclaration', '--workers', '--out'].includes(argv[i]) || !argv[i + 1]) throw new Error('see usage at top of file');
-    args[argv[i].slice(2)] = argv[i + 1];
-  }
-  const preBytes = readFileSync(args.predeclaration);
-  const pre = JSON.parse(preBytes.toString('utf8'));
-  const inp = inputs(pre.night);
-  if (inp.measuredSeed !== pre.seed) throw new Error(`${pre.night}'s measured seed is ${inp.measuredSeed}, not the predeclared ${pre.seed}`);
+  const args = sweepArgs(argv);
+  const { pre, inp, record } = predeclared(args.predeclaration, inputs);
   const firstMask = maskPresses(inp.queue)[0].tick;
   const members = family(inp.contacts, firstMask);
-  const workers = Number(args.workers ?? Math.max(1, Math.min(6, cpus().length - 2)));
   const t0 = Date.now();
   const control = playMember(inp, { kind: 'none' });
-  const rows = await pool(pre.night, members, workers);
+  const rows = (await fanOut(import.meta.url, SCHEMA, { night: pre.night }, members.map((m, i) => [i, m]), args.workers)).sort((a, b) => a.i - b.i).map(({ row }) => row);
   const decision = decide(pre.decisionRule, rows);
   const result = { schema: SCHEMA, claimLevel: 'MODEL_ONLY', night: pre.night, seed: pre.seed,
-    predeclaration: { path: args.predeclaration, sha256: sha256(preBytes), id: pre.id }, inputs: inp.hashes, phoneWindows: inp.phone,
+    predeclaration: record, inputs: inp.hashes, phoneWindows: inp.phone,
     firstMaskTick: firstMask, members: members.length, control, rows, decision, elapsedMs: Date.now() - t0 };
   if (args.out) writeFileSync(args.out, `${JSON.stringify(result, null, 1)}\n`);
   const best = [...rows].sort((a, b) => b.agree - a.agree || b.prefix - a.prefix).slice(0, 8);

@@ -6,11 +6,12 @@
   "next": [
    {
     "title": "S2: Balloon Boy's first roll and Withered Freddy's two windows on full-06",
-    "body": "As of s2-stream-census-45ad1201c90a4531 and s2-early-perturbation-1c931f96a31dcb24, neither another office start state nor one change before Balloon Boy's first roll at the measured seed reproduces full-06; the strong fits all miss the two windows the phone reads as Withered Freddy (22 and 26), and as of s2-audio-realignment-f61f47d56098beb2 the phone's draw stream parts from the host's by 15 s. The records leave S2 open; the separator is a phone night that watches Balloon Boy's camera through the first rolls.",
+    "body": "As of s2-stream-census-45ad1201c90a4531 and s2-early-perturbation-1c931f96a31dcb24, neither another office start state nor one change before Balloon Boy's first roll at the measured seed reproduces full-06; the strong fits all miss the two windows the phone reads as Withered Freddy (22 and 26), and as of s2-audio-realignment-f61f47d56098beb2 the phone's draw stream parts from the host's by 15 s. The records leave S2 open; as of s2-static-readout-confirm-6ccf7cf7ccd77fec the camera static reads the stream out but the retained grid cannot identify a state, so the separator is a traced Night 7 whose camera view is read natively through the winding windows.",
     "sources": [
      "docs/evidence/full06-stream-census-20261001.json",
      "docs/evidence/full06-early-perturbation-20261001.json",
      "docs/evidence/full06-audio-realignment-20261001.json",
+     "docs/evidence/full06-static-readout-confirm-20261001.json",
      "plans/ROADMAP.md"
     ]
    },
@@ -145,6 +146,36 @@
    "sources": [
     "docs/evidence/full06-early-perturbation-20261001.json",
     "docs/evidence/full06-early-perturbation-predeclaration-20261001.json"
+   ],
+   "status": "standing",
+   "supersededBy": null,
+   "supersedes": null
+  },
+  {
+   "id": "full06-camera-static-reads-the-stream",
+   "date": "2026-10-01",
+   "game": "fnaf2",
+   "kind": "negative",
+   "title": "The camera static carries the random stream on screen, but the retained grid cannot identify a state",
+   "body": "Every 100 ms the Office sheet re-rolls the camera static's blend coefficient from Random(50), and while k3 winds through the camera glitch the static is shown at it. In full-06's retained frames the grid's mean luma, averaged over each of those periods, steps 8.6 to 16 times above its within-period noise. Pre-registered, every one of the 65,536 generator states was written into the model before each winding window: none reproduces the flicker past the chance maximum (best r 0.69-0.78). A post hoc pattern, the best states sitting a few draws past the model's count on the measured seed's own cycle, was then tested on four held-out windows and hit one (NOT_SUPPORTED). Single draws need the camera view's native pixels on a new traced night.",
+   "measured": "1 of 4 held-out windows; best r 0.69-0.78",
+   "label": "DEVICE_MEASURED",
+   "rung": null,
+   "plan": 25,
+   "night": 7,
+   "route": "Minus Toys",
+   "tags": [
+    "device",
+    "frames",
+    "seed",
+    "fidelity",
+    "s2"
+   ],
+   "sources": [
+    "docs/evidence/full06-static-readout-20261001.json",
+    "docs/evidence/full06-static-readout-confirm-20261001.json",
+    "docs/evidence/full06-static-readout-predeclaration-20261001.json",
+    "docs/evidence/full06-static-readout-confirm-predeclaration-20261001.json"
    ],
    "status": "standing",
    "supersededBy": null,

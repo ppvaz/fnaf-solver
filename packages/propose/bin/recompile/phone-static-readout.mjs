@@ -13,21 +13,19 @@
 // grid_mean_luma averaged over the frames of each g58 period. The predeclaration's rule decides, verbatim: per
 // window IDENTIFIED or not, and for identified states their generator distance from the measured seed and from each
 // other. DEVICE_MEASURED frames (retained, private) against MODEL_ONLY predictions.
-import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { cpus } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
+import { isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { loadConfig, officeClock, traceColumns } from './phone-encounter-replay.mjs';
 import { inputs } from './phone-stream-census.mjs';
+import { fanOut, predeclared, sha256, sweepArgs } from './sweep-common.mjs';
 import { drawTrace } from '../../../source/recompile/model-draw-trace.mjs';
 import { RNG_INCREMENT, RNG_MASK, RNG_MULTIPLIER } from '../../../source/src/games/fnaf2/rng.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
 const CONFIG = 'packages/propose/bin/recompile/phone-encounter-nights.json';
 export const SCHEMA = 'phone-static-readout-v1';
-const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const draw = (state, n) => (state * n) >> 16;   // CRun.random(N) on the post-draw state
 
 /** The night's frame clock and per-image grid_mean_luma, from its hashed private trace. */
@@ -140,12 +138,12 @@ export function neighbourhoodP(scanRs, bestR, size) {
   return 1 - below ** size;
 }
 
-async function confirm(pre, preBytes, args, inp, fr, workers, all, t0) {
+async function confirm(pre, record, args, inp, fr, workers, all, t0) {
   const { radius, alpha, minHits } = pre.decisionRule;
   const windows = [];
   for (const win of pre.windows) {
     const control = predict(inp, { injectAt: win.injectAt, frames: win.endFrame });
-    const scores = await pool(pre.night, win, all, workers);
+    const scores = await fanOut(import.meta.url, SCHEMA, { night: pre.night, win }, all, workers);
     const rs = scores.map((s) => s.r).filter((r) => r !== null).sort((a, b) => a - b);
     const byState = new Map(scores.map((s) => [s.state, s.r]));
     let s = pre.seed;
@@ -163,41 +161,24 @@ async function confirm(pre, preBytes, args, inp, fr, workers, all, t0) {
   const verdict = hits >= minHits ? 'SUPPORTED' : 'NOT_SUPPORTED';
   console.log(`${hits} of ${windows.length} held-out windows hit: ${verdict}`);
   const result = { schema: SCHEMA, kind: 'confirm', claimLevel: 'DEVICE_MEASURED frames against MODEL_ONLY predictions', night: pre.night, seed: pre.seed,
-    predeclaration: { path: args.predeclaration, sha256: sha256(preBytes), id: pre.id }, inputs: inp.hashes, windows, hits, verdict, elapsedMs: Date.now() - t0 };
+    predeclaration: record, inputs: inp.hashes, windows, hits, verdict, elapsedMs: Date.now() - t0 };
   if (args.out) writeFileSync(args.out, `${JSON.stringify(result, null, 1)}\n`);
 }
 
-function pool(night, win, states, workers) {
-  const chunks = Array.from({ length: workers }, (_, w) => states.filter((_, k) => k % workers === w));
-  return Promise.all(chunks.filter((c) => c.length).map((chunk) => new Promise((done, fail) => {
-    const worker = new Worker(fileURLToPath(import.meta.url), { workerData: { tool: SCHEMA, night, win, chunk } });
-    worker.on('message', done); worker.on('error', fail);
-    worker.on('exit', (code) => { if (code) fail(new Error(`worker exited ${code}`)); });
-  }))).then((parts) => parts.flat());
-}
-
 async function main(argv) {
-  const args = {};
-  for (let i = 0; i < argv.length; i += 2) {
-    if (!['--predeclaration', '--workers', '--out'].includes(argv[i]) || !argv[i + 1]) throw new Error('see usage at top of file');
-    args[argv[i].slice(2)] = argv[i + 1];
-  }
-  const preBytes = readFileSync(args.predeclaration);
-  const pre = JSON.parse(preBytes.toString('utf8'));
-  const inp = inputs(pre.night);
-  if (inp.measuredSeed !== pre.seed) throw new Error('the measured seed is not the predeclared one');
-  for (const [k, v] of Object.entries(pre.inputs ?? {})) if (inp.hashes[k] !== v) throw new Error(`input ${k} changed since the predeclaration`);
+  const args = sweepArgs(argv);
+  const { pre, inp, record } = predeclared(args.predeclaration, inputs);
   const fr = frames(pre.night);
-  const workers = Number(args.workers ?? Math.max(1, Math.min(6, cpus().length - 2)));
+  const { workers } = args;
   const all = Array.from({ length: 0x10000 }, (_, s) => s);
   const cycle = cycleIndex(pre.seed);
   const t0 = Date.now();
-  if (pre.kind === 'confirm') return confirm(pre, preBytes, args, inp, fr, workers, all, t0);
+  if (pre.kind === 'confirm') return confirm(pre, record, args, inp, fr, workers, all, t0);
   const windows = [];
   for (const win of pre.windows) {
     const control = predict(inp, { injectAt: win.injectAt, frames: win.endFrame });
     const controlR = pearson(...(() => { const b = blocks(control.per, fr, win); return [b.map((x) => 1 - x.alpha / 255), b.map((x) => x.mean)]; })());
-    const scores = await pool(pre.night, win, all, workers);
+    const scores = await fanOut(import.meta.url, SCHEMA, { night: pre.night, win }, all, workers);
     const decision = identify(pre.decisionRule, scores);
     const rs = scores.map((s) => s.r).filter((r) => r !== null).sort((a, b) => a - b);
     const top = decision.top;
@@ -212,7 +193,7 @@ async function main(argv) {
     ? (() => { const c = cycleIndex(a.decision.top.state); return { sameCycle: c.has(b.decision.top.state), steps: c.get(b.decision.top.state) ?? null,
       modelDraws: b.modelAtInject.draws - a.modelAtInject.draws }; })() : null;
   const result = { schema: SCHEMA, claimLevel: 'DEVICE_MEASURED frames against MODEL_ONLY predictions', night: pre.night, seed: pre.seed,
-    predeclaration: { path: args.predeclaration, sha256: sha256(preBytes), id: pre.id }, inputs: inp.hashes, windows, between, elapsedMs: Date.now() - t0 };
+    predeclaration: record, inputs: inp.hashes, windows, between, elapsedMs: Date.now() - t0 };
   if (args.out) writeFileSync(args.out, `${JSON.stringify(result, null, 1)}\n`);
   for (const w of windows) {
     console.log(`${w.name}: control r ${w.controlR?.toFixed(3)}; r quantiles ${JSON.stringify(Object.fromEntries(Object.entries(w.rQuantiles).map(([k, v]) => [k, Number(v.toFixed(3))])))}`);

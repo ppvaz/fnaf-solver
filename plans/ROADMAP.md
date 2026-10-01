@@ -224,9 +224,23 @@ Details:
     bracket fits the audio
     ([sweep](../docs/evidence/full06-early-perturbation-20261001.json),
     `s2-early-perturbation-1c931f96a31dcb24`, pre-registered,
-    NOT_SUPPORTED). The physical separator is a phone night that watches
-    Balloon Boy's camera through the first rolls, so his early moves are
-    read directly; Withered Freddy's two windows are the other target
+    NOT_SUPPORTED).
+  - **The camera static reads the random stream out, too coarsely in the
+    retained grid (pre-registered, two sweeps).** Office g58 re-rolls the
+    static's blend coefficient from Random(50) every 100 ms, and in
+    full-06's winding windows the retained frames' period-mean luma steps
+    8.6-16 times above its within-period noise. Scanning every generator
+    state against it identifies none (best r 0.69-0.78, at the chance
+    maxima), and the held-out test of "the seed is right, the phone a few
+    draws ahead" hits 1 of 4 windows (NOT_SUPPORTED), though small offsets
+    recur
+    ([readout](../docs/evidence/full06-static-readout-20261001.json),
+    `s2-static-readout-f9d8879e0d3f3e49`;
+    [confirmation](../docs/evidence/full06-static-readout-confirm-20261001.json),
+    `s2-static-readout-confirm-6ccf7cf7ccd77fec`). The physical separator is
+    a traced Night 7 whose camera-view region is read natively through the
+    winding windows, so single draws resolve and the seed is checked state
+    by state; Withered Freddy's two windows are the other target
     ([census](../docs/evidence/full06-stream-census-20261001.json),
     `s2-stream-census-45ad1201c90a4531`;
     [pre-registration](../docs/evidence/full06-stream-census-predeclaration-20261001.json)).
