@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { parseArgs, parseTargets, stepsBetween } from './fnaf1-menu-probe.ts';
 
-const refuses = (argv, pattern) => assert.throws(() => parseArgs(argv), pattern);
+const refuses = (argv: string[], pattern: RegExp) => assert.throws(() => parseArgs(argv), pattern);
 assert.equal(parseArgs(['--stage', 'title']).dryRun, true, 'no --live is a dry run (ADR 0002)');
 refuses(['--live', '--stage', 'title'], /--live and --confirm-live/);
 refuses(['--live', '--confirm-live', '--stage', 'office'], /--stage must be one of/);

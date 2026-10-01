@@ -58,6 +58,32 @@ import { AdbDeviceBridge } from '../../src/campaign/adb-bridge.ts';
 import { AdbHidProcess } from '../../src/campaign/physical-ports.ts';
 import { HidWireTransport } from '../../src/venues/phone/hid.ts';
 import { resolveSerial } from '../../bin/phone/local-profile.ts';
+import { isList } from '@sixam/kernel';
+
+/** The title observer's verdict on one native frame. */
+interface TitleRead { confident: boolean, output: string, code: number | null, frame: string }
+/** What a child process left. */
+interface RunResult { code: number | null, signal: NodeJS.Signals | null, timedOut: boolean, stdout: string, stderr: string }
+type RunOptions = { input?: string | Buffer | null, timeoutMs?: number, env?: NodeJS.ProcessEnv };
+/** fnaf1-custom-night-read.py's verdict on one Custom Night frame. */
+interface DialRead {
+  readonly screen: string, readonly status?: string, readonly reason?: string,
+  readonly masks: Readonly<Record<string, unknown>>, readonly dials: Readonly<Record<Dial, number>>;
+}
+type Point = readonly [number, number];
+/** The measured FNaF 1 Custom Night model (profiles/fnaf1/moto-g56). */
+interface CustomNightModel {
+  readonly schema: string, readonly build: string;
+  readonly dials: Readonly<Record<string, { readonly increment: Point, readonly decrement: Point }>>;
+  readonly stepping: { readonly modulus: number, readonly contactMs: number, readonly autoRepeatAfterMs: number };
+  readonly controls: { readonly back: { readonly point: Point } };
+  readonly settle: { readonly boundMs: number };
+}
+/** The measured FNaF 1 title model. */
+interface TitleModel { readonly schema: string, readonly build?: string, readonly items: Readonly<Record<string, unknown>> }
+type Options = ReturnType<typeof parseArgs>;
+/** A bridge built on the serial the lease resolved. */
+type Bridge = AdbDeviceBridge & { readonly serial: string };
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../../../..');
@@ -83,39 +109,42 @@ const TITLE_WAIT_MS = 45000;
 const LEAVE_WAIT_MS = 12000;
 const FRAME_INTERVAL_MS = 400;
 
-const sleep = ms => new Promise<any>(resolvePromise => setTimeout(resolvePromise, ms));
+const sleep = (ms: number) => new Promise(resolvePromise => setTimeout(resolvePromise, ms));
 const stamp = () => new Date().toISOString().replace(/[-:.]/g, '');
-const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
+const sha256 = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
 
-function fail(message) { throw new Error(`fnaf1-menu-probe: ${message}`); }
+function fail(message: string): never { throw new Error(`fnaf1-menu-probe: ${message}`); }
 
-function parseInteger(value, name, { min, max }) {
+function parseInteger(value: unknown, name: string, { min, max }: { min: number, max: number }) {
   if (!/^[0-9]+$/.test(String(value))) fail(`${name} must be an integer`);
   const number = Number(value);
   if (number < min || number > max) fail(`${name} must be ${min}..${max}`);
   return number;
 }
 
-const DIALS = Object.freeze(['freddy', 'bonnie', 'chica', 'foxy']);
+const DIALS = Object.freeze(['freddy', 'bonnie', 'chica', 'foxy'] as const);
+type Dial = (typeof DIALS)[number];
+const isPoint = (value: unknown): value is Point => isList(value) && value.length === 2 && value.every(Number.isInteger);
 
 /** `F,B,C,X` as four integers 0..20 in screen order; 1/9/8/7 is refused. */
-export function parseTargets(text) {
+export function parseTargets(text: unknown) {
   const parts = String(text ?? '').split(',');
   if (parts.length !== 4) fail('--set needs four comma-separated values: Freddy,Bonnie,Chica,Foxy');
   const values = parts.map((part, index) => parseInteger(part, `--set ${DIALS[index]}`, { min: 0, max: 20 }));
   if (values.join('/') === '1/9/8/7') fail('--set refuses 1/9/8/7: that combination sends Ready away from the night (customize g8, g60-g64)');
-  return Object.freeze(Object.fromEntries(DIALS.map((dial, index) => [dial, values[index]])));
+  // One entry per dial.
+  return Object.freeze(Object.fromEntries(DIALS.map((dial, index) => [dial, values[index]])) as Record<Dial, number>);
 }
 
 /** The short way round the 21-value cycle: a signed step count, ties going up. */
-export function stepsBetween(from, to, modulus = 21) {
+export function stepsBetween(from: number, to: number, modulus = 21) {
   const up = ((to - from) % modulus + modulus) % modulus;
   return up <= modulus - up ? up : -(modulus - up);
 }
 
-export function parseArgs(argv) {
-  const options = { live: false, confirmLive: false, dryRun: false, stage: null, frames: 12, label: null, sweep: false,
-    set: null };
+export function parseArgs(argv: string[]) {
+  const options = { live: false, confirmLive: false, dryRun: false, stage: null as string | null, frames: 12, label: null as string | null,
+    sweep: false, set: null as Readonly<Record<Dial, number>> | null };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === '--live') options.live = true;
@@ -135,18 +164,18 @@ export function parseArgs(argv) {
   if (!options.live) options.dryRun = true;
   if (!options.dryRun) {
     if (!options.confirmLive) fail('live observation needs both --live and --confirm-live');
-    if (!STAGES.includes(options.stage)) fail(`--stage must be one of ${STAGES.join(', ')}`);
+    if (!STAGES.includes(options.stage as string)) fail(`--stage must be one of ${STAGES.join(', ')}`);
     if ((options.sweep || options.set) && options.stage !== 'custom-night') fail('--sweep and --set belong to --stage custom-night');
     if (options.sweep && options.set) fail('--sweep and --set are separate probes');
   }
   return Object.freeze(options);
 }
 
-function run(command, args, { input = null, timeoutMs = 15000, env = {} } = {}) {
-  return new Promise<any>((resolvePromise, reject) => {
+function run(command: string, args: string[], { input = null, timeoutMs = 15000, env = {} }: RunOptions = {}) {
+  return new Promise<RunResult>((resolvePromise, reject) => {
     const child = spawn(command, args, { cwd: ROOT, shell: false, stdio: ['pipe', 'pipe', 'pipe'],
       env: { ...process.env, ...env } });
-    const stdout = [], stderr = [];
+    const stdout: Buffer[] = [], stderr: Buffer[] = [];
     let timedOut = false;
     const timer = setTimeout(() => { timedOut = true; child.kill('SIGTERM'); }, timeoutMs);
     child.stdout.on('data', chunk => stdout.push(chunk));
@@ -161,14 +190,22 @@ function run(command, args, { input = null, timeoutMs = 15000, env = {} } = {}) 
   });
 }
 
-const relativeToRoot = path => relative(ROOT, path).replaceAll('\\', '/');
+const relativeToRoot = (path: string) => relative(ROOT, path).replaceAll('\\', '/');
+
+/** A retained native frame. */
+interface CaptureFrame { name: string, path: string, sha256: string, bytes: number, atWallMs: number }
 
 class ProbeRecord {
-  declare outdir: any;
-  declare captureDir: any;
-  declare document: { schema: string; id: any; startedAt: string; claimLevel: string; target: { package: string; build: string; }; options: any; bindings: any; capture: { sensor: string; directory: any; frames: any[]; }; inputsSent: number; events: any[]; status: string; };
+  declare outdir: string;
+  declare captureDir: string;
+  declare document: {
+    schema: string, id: string, startedAt: string, claimLevel: string, target: { package: string, build: string }, options: Options,
+    bindings: object, capture: { sensor: string, directory: string, frames: CaptureFrame[] }, inputsSent: number, events: object[],
+    status: string, updatedAt?: string, preflight?: unknown, titleReads?: string[], titleBefore?: string, titleAfter?: string,
+    dialsAtEntry?: unknown, dialsSet?: unknown, dialsRestored?: unknown, recovery?: string, error?: string,
+  };
   declare eventsPath: string;
-  constructor({ id, outdir, captureDir, options, bindings }) {
+  constructor({ id, outdir, captureDir, options, bindings }: { id: string, outdir: string, captureDir: string, options: Options, bindings: object }) {
     this.outdir = outdir; this.captureDir = captureDir;
     this.document = {
       schema: 'fnaf1-menu-probe-v1', id, startedAt: new Date().toISOString(),
@@ -180,14 +217,14 @@ class ProbeRecord {
     this.eventsPath = join(outdir, 'events.jsonl');
   }
 
-  async event(type, fields = {}) {
+  async event(type: string, fields: object = {}) {
     const row = { atWallMs: Date.now(), atMonotonicMs: Math.round(performance.now()), type, ...fields };
     this.document.events.push(row);
     await appendFile(this.eventsPath, `${JSON.stringify(row)}\n`);
     return row;
   }
 
-  async capture(name, png) {
+  async capture(name: string, png: Buffer) {
     const filename = `${String(this.document.capture.frames.length).padStart(4, '0')}-${name}.png`;
     const path = join(this.captureDir, filename);
     await writeFile(path, png);
@@ -197,14 +234,14 @@ class ProbeRecord {
     return path;
   }
 
-  async save(status) {
+  async save(status: string) {
     this.document.status = status;
-    (this.document as any).updatedAt = new Date().toISOString();
+    this.document.updatedAt = new Date().toISOString();
     await writeFile(join(this.outdir, 'probe.json'), `${JSON.stringify(this.document, null, 2)}\n`);
   }
 }
 
-async function titleRead(bridge, record, label) {
+async function titleRead(bridge: Bridge, record: ProbeRecord, label: string): Promise<TitleRead> {
   const png = await bridge.capturePng(bridge.serial);
   if (!png) fail('native capture failed');
   const frame = await record.capture(label, png);
@@ -214,13 +251,13 @@ async function titleRead(bridge, record, label) {
   return read;
 }
 
-async function focused(serial) {
+async function focused(serial: string) {
   const windows = await run('adb', ['-s', serial, 'shell', 'dumpsys', 'window'], { timeoutMs: 10000 });
   const focus = windows.stdout.split('\n').find(line => /mCurrentFocus=/.test(line)) ?? '';
   return focus.includes(`${PACKAGE}/`);
 }
 
-async function launch(serial, record) {
+async function launch(serial: string, record: ProbeRecord) {
   const launched = await run('adb', ['-s', serial, 'shell', 'am', 'start', '-W', '-n', `${PACKAGE}/${LAUNCHER}`],
     { timeoutMs: 30000 });
   await record.event('launch', { code: launched.code, output: `${launched.stdout}${launched.stderr}`.trim() });
@@ -228,7 +265,7 @@ async function launch(serial, record) {
     fail(`launch failed: ${(launched.stdout || launched.stderr).trim()}`);
 }
 
-async function ensureTitle(bridge, record, { requireHid }) {
+async function ensureTitle(bridge: Bridge, record: ProbeRecord, { requireHid }: { requireHid: boolean }) {
   if (!await focused(bridge.serial)) await launch(bridge.serial, record);
   else await record.event('launch-skipped', { reason: 'FNaF 1 already focused' });
   const preflight = await bridge.preflight({ targetPackage: PACKAGE, targetBuild: `${PACKAGE}:${BUILD}`,
@@ -239,7 +276,7 @@ async function ensureTitle(bridge, record, { requireHid }) {
   await waitForTitle(bridge, record, 'wait');
 }
 
-async function waitForTitle(bridge, record, prefix) {
+async function waitForTitle(bridge: Bridge, record: ProbeRecord, prefix: string) {
   const deadline = performance.now() + TITLE_WAIT_MS;
   for (let waited = 0; ; waited += 1) {
     const read = await titleRead(bridge, record, `${prefix}-${String(waited).padStart(2, '0')}`);
@@ -254,10 +291,10 @@ async function waitForTitle(bridge, record, prefix) {
  * title static refuses about one frame in ten (`ambiguous:static-bar`), so a
  * refused triple is retried a bounded number of times rather than read.
  */
-async function titleConsensus(bridge, record, prefix, required) {
-  let values = [];
+async function titleConsensus(bridge: Bridge, record: ProbeRecord, prefix: string, required: readonly string[]) {
+  let values: string[] = [];
   for (let attempt = 1; attempt <= CONSENSUS_ATTEMPTS; attempt += 1) {
-    const reads = [];
+    const reads: TitleRead[] = [];
     for (let index = 0; index < CONSENSUS_FRAMES; index += 1) {
       reads.push(await titleRead(bridge, record, `${prefix}-${attempt}-${index + 1}`));
       await sleep(FRAME_INTERVAL_MS);
@@ -273,9 +310,9 @@ async function titleConsensus(bridge, record, prefix, required) {
   fail(`FNaF 1 title consensus refused (${required.join('+')}) ${CONSENSUS_ATTEMPTS} times; last: ${values.join(' | ')}`);
 }
 
-async function stageTitle(bridge, record, options) {
+async function stageTitle(bridge: Bridge, record: ProbeRecord, options: Options) {
   await ensureTitle(bridge, record, { requireHid: false });
-  const reads = [];
+  const reads: TitleRead[] = [];
   for (let index = 0; index < options.frames; index += 1) {
     reads.push(await titleRead(bridge, record, `title-${String(index + 1).padStart(2, '0')}`));
     await sleep(FRAME_INTERVAL_MS);
@@ -283,13 +320,13 @@ async function stageTitle(bridge, record, options) {
   record.document.titleReads = reads.map(read => read.output);
 }
 
-async function readDials(png) {
+async function readDials(png: Buffer): Promise<DialRead> {
   const result = await run('python3', [DIAL_READER, '--model', CUSTOM_NIGHT_MODEL_PATH], { input: png, timeoutMs: 15000 });
   try { return JSON.parse(result.stdout.trim()); }
   catch { fail(`dial reader returned no JSON: ${result.stdout.trim() || result.stderr.trim()}`); }
 }
 
-async function captureDials(bridge, record, name) {
+async function captureDials(bridge: Bridge, record: ProbeRecord, name: string) {
   const png = await bridge.capturePng(bridge.serial);
   if (!png) fail('native capture failed');
   const frame = await record.capture(name, png);
@@ -300,9 +337,9 @@ async function captureDials(bridge, record, name) {
 }
 
 /** Two consecutive identical reads: the screen has no static once it has faded in. */
-async function settleCustomNight(bridge, record, boundMs) {
+async function settleCustomNight(bridge: Bridge, record: ProbeRecord, boundMs: number) {
   const deadline = performance.now() + boundMs;
-  let previous = null;
+  let previous = null as DialRead | null;
   for (let index = 1; ; index += 1) {
     const png = await bridge.capturePng(bridge.serial);
     if (!png) fail('native capture failed');
@@ -321,10 +358,11 @@ async function settleCustomNight(bridge, record, boundMs) {
  * Every dial through a full cycle each way. One press, one read; the press
  * must move its own dial and nothing else, and 21 presses must come home.
  */
-async function sweepDials(bridge, record, hid, customNight, contactMs, start) {
+async function sweepDials(bridge: Bridge, record: ProbeRecord, hid: HidWireTransport, customNight: CustomNightModel, contactMs: number,
+  start: DialRead) {
   let masks = start.masks;
   for (const [name, dial] of Object.entries(customNight.dials)) {
-    for (const direction of ['increment', 'decrement']) {
+    for (const direction of ['increment', 'decrement'] as const) {
       const home = masks[name];
       for (let step = 1; step <= customNight.stepping.modulus; step += 1) {
         if (record.document.inputsSent >= MAX_INPUTS) fail(`input cap ${MAX_INPUTS} reached`);
@@ -348,7 +386,7 @@ async function sweepDials(bridge, record, hid, customNight, contactMs, start) {
 }
 
 /** Press the measured Back and demand the title the probe entered from. */
-async function leaveThroughBack(bridge, record, hid, customNight, contactMs) {
+async function leaveThroughBack(bridge: Bridge, record: ProbeRecord, hid: HidWireTransport, customNight: CustomNightModel, contactMs: number) {
   const [x, y] = customNight.controls.back.point;
   await record.event('input.requested', { control: 'back', point: { x, y }, durationMs: contactMs });
   await hid.send({ command: { action: { kind: 'press', durationMs: contactMs } }, point: { x, y } });
@@ -365,7 +403,8 @@ async function leaveThroughBack(bridge, record, hid, customNight, contactMs) {
  * reader names the expected value after each press -- the held-out test of a
  * glyph table learned from a different run's frames.
  */
-async function setDials(bridge, record, hid, customNight, contactMs, targets, label) {
+async function setDials(bridge: Bridge, record: ProbeRecord, hid: HidWireTransport, customNight: CustomNightModel, contactMs: number,
+  targets: Readonly<Record<Dial, number>>, label: string) {
   let read = await captureDials(bridge, record, `${label}-start`);
   if (read.status !== 'PASS') fail(`dials unreadable before ${label}: ${read.reason}`);
   const modulus = customNight.stepping.modulus;
@@ -401,7 +440,7 @@ async function setDials(bridge, record, hid, customNight, contactMs, targets, la
  * success and failure alike -- so no run leaves the phone in an unverified
  * state (mistake register entry 6).
  */
-async function restartToTitle(bridge, record) {
+async function restartToTitle(bridge: Bridge, record: ProbeRecord) {
   const stopped = await run('bash', [TEARDOWN, PACKAGE], { timeoutMs: 30000, env: { ANDROID_SERIAL: bridge.serial } });
   await record.event('restart-stop', { code: stopped.code, output: `${stopped.stdout}${stopped.stderr}`.trim() });
   if (stopped.code !== 0) fail('the force-stop failed; the game state is UNKNOWN');
@@ -416,16 +455,16 @@ async function restartToTitle(bridge, record) {
  * One press on the measured Custom Night row, then either the settling screen
  * retained (discovery) or the checked sweep and an exit through Back.
  */
-async function stageCustomNight(bridge, record, options, { titleModel, contactMs, customNight }) {
+async function stageCustomNight(bridge: Bridge, record: ProbeRecord, options: Options,
+  { titleModel, contactMs, customNight }: { titleModel: TitleModel, contactMs: number, customNight: CustomNightModel }) {
   const point = titleModel.items.customNight;
-  if (!Array.isArray(point) || point.length !== 2 || !point.every(Number.isInteger))
-    fail('title model has no measured customNight row');
+  if (!isPoint(point)) fail('title model has no measured customNight row');
   await ensureTitle(bridge, record, { requireHid: true });
   const hidProcess = new AdbHidProcess({ serial: bridge.serial });
   const hid = new HidWireTransport({ write: line => hidProcess.write(line), ready: () => hidProcess.ready(), contactMs });
   let pressed = false;
   let exitedByBack = false;
-  let stageError = null;
+  let stageError: unknown = null;
   try {
     await hid.start();
     await record.event('hid-ready', { contactMs });
@@ -484,17 +523,17 @@ async function stageCustomNight(bridge, record, options, { titleModel, contactMs
   if (stageError) throw stageError;
 }
 
-async function main(argv) {
+async function main(argv: string[]) {
   const options = parseArgs(argv);
-  const titleModel = JSON.parse(await readFile(TITLE_MODEL_PATH, 'utf8'));
+  const titleModel: TitleModel = JSON.parse(await readFile(TITLE_MODEL_PATH, 'utf8'));
   if (titleModel.schema !== 'title-model-v1' || !String(titleModel.build ?? '').startsWith(`${PACKAGE} `))
     fail('title model is not FNaF 1\'s');
   // The one measured FNaF 1 contact (controls-fnaf1 contactRule: 160 ms landed
   // where `input tap` was dropped). The route that carries it is the checked copy.
   const route = JSON.parse(await readFile(ROUTE_PATH, 'utf8'));
-  const contactMs = route?.controls?.contactMs;
+  const contactMs: unknown = route?.controls?.contactMs;
   if (contactMs !== 160) fail('the FNaF 1 route no longer carries the measured 160 ms contact');
-  const customNight = JSON.parse(await readFile(CUSTOM_NIGHT_MODEL_PATH, 'utf8'));
+  const customNight: CustomNightModel = JSON.parse(await readFile(CUSTOM_NIGHT_MODEL_PATH, 'utf8'));
   if (customNight.schema !== 'fnaf1-custom-night-model-v1' || customNight.build !== `${PACKAGE}:${BUILD}`)
     fail('Custom Night model is not FNaF 1\'s');
   if (customNight.stepping?.contactMs !== contactMs ||
@@ -515,8 +554,8 @@ async function main(argv) {
     return;
   }
   if (process.env.FNAF1_LEASE_HELD !== '1') fail('must run through fnaf1-menu-probe.sh so the serial lease is held');
-  let serial;
-  try { ({ serial } = resolveSerial()); } catch (error) { fail(error.message); }
+  let serial: string;
+  try { ({ serial } = resolveSerial()); } catch (error) { fail((error as Error).message); }
   const mode = options.sweep ? '-sweep' : options.set ? '-set' : '';
   const id = `fnaf1-menu-${options.stage}${mode}-${options.label ?? 'probe'}-${stamp()}`;
   const outdir = join(ROOT, 'artifacts', 'runs', id);
@@ -524,14 +563,14 @@ async function main(argv) {
   await Promise.all([mkdir(outdir, { recursive: true }), mkdir(captureDir, { recursive: true })]);
   const record = new ProbeRecord({ id, outdir, captureDir, options, bindings });
   await record.save('PREFLIGHT');
-  const bridge = new AdbDeviceBridge({ serial });
+  const bridge = new AdbDeviceBridge({ serial }) as Bridge;
   try {
     if (options.stage === 'title') await stageTitle(bridge, record, options);
     else if (options.stage === 'custom-night') await stageCustomNight(bridge, record, options, { titleModel, contactMs, customNight });
     await record.save('COMPLETE');
   } catch (error) {
-    (record.document as any).error = error instanceof Error ? error.message : String(error);
-    await record.event('error', { message: (record.document as any).error });
+    record.document.error = error instanceof Error ? error.message : String(error);
+    await record.event('error', { message: record.document.error });
     await record.save('FAILED_OR_REFUSED');
   }
   console.log(`fnaf1 menu probe ${id}: ${record.document.status}; inputs=${record.document.inputsSent}; ` +
@@ -540,7 +579,7 @@ async function main(argv) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  main(process.argv.slice(2)).catch(error => { console.error(error.message); process.exitCode = 2; });
+  main(process.argv.slice(2)).catch((error: Error) => { console.error(error.message); process.exitCode = 2; });
 }
 
 // The measured menu steps, for a runner that goes on past Ready. Everything a

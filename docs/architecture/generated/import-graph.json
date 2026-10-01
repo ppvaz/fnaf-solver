@@ -870,6 +870,7 @@
     {
       "file": "packages/play/bin/phone/night-kit.ts",
       "imports": [
+        "../../src/campaign/physical-ports.ts",
         "node:child_process",
         "node:crypto",
         "node:fs",
@@ -1044,6 +1045,7 @@
         "../../src/campaign/adb-bridge.ts",
         "../../src/campaign/physical-ports.ts",
         "../../src/venues/phone/hid.ts",
+        "@sixam/kernel",
         "node:child_process",
         "node:crypto",
         "node:fs",
@@ -1142,6 +1144,8 @@
       "file": "packages/play/games/fnaf3/test-fnaf3-run.ts",
       "imports": [
         "../../bin/phone/native-regions.ts",
+        "../../bin/phone/night-kit.ts",
+        "../../src/campaign/physical-ports.ts",
         "./fnaf3-detectors.ts",
         "./fnaf3-run.ts",
         "node:fs"
@@ -1191,6 +1195,7 @@
         "../../bin/phone/night-kit.ts",
         "../../src/venues/phone/hid.ts",
         "./fnaf4-fredbear.ts",
+        "./fnaf4-hearing-evidence.ts",
         "./fnaf4-run.ts",
         "node:crypto",
         "node:fs"

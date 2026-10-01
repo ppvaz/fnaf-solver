@@ -147,8 +147,6 @@
     "recorded": "2026-09-30",
     "why": "Pairs of files sharing a run of 6 or more normalised lines when tools/test-duplication.ts landed; an entry only shrinks.",
     "entries": {
-      "clone:apps/desktop/bin/fnaf1-custom-run.ts <> packages/play/games/fnaf3/fnaf3-run.ts": 6,
-      "clone:apps/desktop/bin/fnaf1-custom-run.ts <> packages/play/games/fnaf4/fnaf4-run.ts": 12,
       "clone:packages/play/bin/grade/tap-stall-audit.ts <> packages/propose/bin/report/phase-reconstruct.ts": {
         "count": 8,
         "why": "the 8 lines this pair carried when the gate landed; between the Play and Propose migrations one side had type annotations and only 6 matched, and with both sides .ts again the original 8 match"
@@ -203,8 +201,7 @@
       "debt:apps/desktop/bin": 26,
       "debt:apps/desktop/test": 29,
       "debt:apps/trainer/test": 24,
-      "debt:packages/play/bin": 64,
-      "debt:packages/play/games": 133,
+      "debt:packages/play/bin": 32,
       "debt:packages/play/test": 62,
       "debt:packages/propose/bin": 190,
       "debt:packages/propose/bindings": 21,

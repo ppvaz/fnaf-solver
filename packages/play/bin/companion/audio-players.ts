@@ -21,9 +21,12 @@ import { SerialUnset, resolveSerial } from '../phone/local-profile.ts';
 export const COMPANION = 'com.ppvaz.fnafcompanion';
 const FIRST_APP_UID = 10000;          // Android: uids below are the system's own
 
+/** One started player of `dumpsys audio`. */
+interface Player { piid: number, uid: number, pid: number, type: string, usage: string | null }
+
 /** Started players of the `players:` list: [{ piid, uid, pid, type, usage }]. */
-export function startedPlayers(dumpsysAudio) {
-  const out = new Map();
+export function startedPlayers(dumpsysAudio: string) {
+  const out = new Map<string, Player>();
   let inPlayers = false;
   for (const line of String(dumpsysAudio).split('\n')) {
     if (/^\s*players:\s*$/.test(line)) { inPlayers = true; continue; }
@@ -37,8 +40,8 @@ export function startedPlayers(dumpsysAudio) {
 }
 
 /** `pm list packages -U` -> Map(uid -> [package]). */
-export function packagesByUid(pmList) {
-  const map = new Map();
+export function packagesByUid(pmList: string) {
+  const map = new Map<number, string[]>();
   for (const line of String(pmList).split('\n')) {
     const m = line.match(/^package:(\S+)\s+uid:(\d+)/);
     if (!m) continue;
@@ -49,29 +52,30 @@ export function packagesByUid(pmList) {
 }
 
 /** The verdict over parsed players: an app (uid >= 10000) outside `allow` refuses. */
-export function audioVerdict(players, byUid, allow) {
+export function audioVerdict(players: readonly Player[], byUid: ReadonlyMap<number, readonly string[]>, allow: readonly string[]) {
   const named = players.map((p) => ({ ...p, packages: byUid.get(p.uid) ?? [] }));
   const foreign = named.filter((p) => p.uid >= FIRST_APP_UID && !p.packages.some((pkg) => allow.includes(pkg)));
-  if (!foreign.length) return { status: 'READY', started: named, foreign };
+  if (!foreign.length) return { status: 'READY' as const, started: named, foreign };
   const who = foreign.map((p) => `uid ${p.uid} ${p.packages.join('+') || 'UNKNOWN(package)'} (${p.type}, ${p.usage})`).join('; ');
-  return { status: 'REFUSED', reason: `another app is playing into the mix: ${who}`, started: named, foreign };
+  return { status: 'REFUSED' as const, reason: `another app is playing into the mix: ${who}`, started: named, foreign };
 }
 
 /** Read the phone and decide. `adb` is injectable for tests. */
-export function audioPreflight({ serial, target, allow = [], adb = (args) => execFileSync('adb', ['-s', serial, ...args], { encoding: 'utf8', timeout: 20000 }) }) {
-  let dump; let pm;
+export function audioPreflight({ serial, target, allow = [], adb = (args) => execFileSync('adb', ['-s', serial, ...args], { encoding: 'utf8', timeout: 20000 }) }:
+  { serial: string, target: string, allow?: readonly string[], adb?: (args: string[]) => string }) {
+  let dump: string; let pm: string;
   try {
     dump = adb(['shell', 'dumpsys', 'audio']);
     pm = adb(['shell', 'pm', 'list', 'packages', '-U']);
   } catch (e) {
-    return { status: 'UNKNOWN', reason: `cannot read the phone's players: ${e.message}` };
+    return { status: 'UNKNOWN' as const, reason: `cannot read the phone's players: ${(e as Error).message}` };
   }
-  if (!/PlaybackActivityMonitor/.test(dump)) return { status: 'UNKNOWN', reason: 'dumpsys audio carried no PlaybackActivityMonitor' };
+  if (!/PlaybackActivityMonitor/.test(dump)) return { status: 'UNKNOWN' as const, reason: 'dumpsys audio carried no PlaybackActivityMonitor' };
   return audioVerdict(startedPlayers(dump), packagesByUid(pm), [target, COMPANION, ...allow]);
 }
 
-function main(argv) {
-  let serial = null; let target = null; const allow = [];
+function main(argv: string[]) {
+  let serial = null as string | null; let target = null as string | null; const allow: string[] = [];
   for (let i = 0; i < argv.length; i += 1) {
     if (argv[i] === '--serial') serial = argv[++i];
     else if (argv[i] === '--target') target = argv[++i];

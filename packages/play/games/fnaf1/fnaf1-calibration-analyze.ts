@@ -19,16 +19,34 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { join } from 'node:path';
 
-function fail(message) { console.error(`fnaf1-calibration-analyze: ${message}`); process.exit(2); }
+/** A runner's event row, as events.jsonl holds it. */
+export interface RunEvent {
+  readonly type: string, readonly hostMs?: number, readonly control?: string, readonly state?: string, readonly [field: string]: unknown;
+}
+/** One REGION read: each registered rectangle's raw samples, stamped on the host clock. */
+export interface RegionFrame {
+  readonly seq: unknown, readonly t: number | null, readonly sentAt: unknown, readonly receivedAt: unknown,
+  readonly regions: Readonly<Record<string, Uint32Array>>;
+}
+/** A calibration run: its probe.json, its events and the region frames the helper returned. */
+export interface Run {
+  readonly probe: { readonly id?: string, readonly readyHostMs: number, readonly regions?: { readonly path?: string } };
+  readonly events: RunEvent[];
+  readonly frames: RegionFrame[];
+}
+type Press = RunEvent & { readonly hostMs: number };
 
-export function loadRun(dir) {
+function fail(message: string): never { console.error(`fnaf1-calibration-analyze: ${message}`); process.exit(2); }
+
+export function loadRun(dir: string): Run {
   const probe = JSON.parse(readFileSync(join(dir, 'probe.json'), 'utf8'));
-  const events = readFileSync(join(dir, 'events.jsonl'), 'utf8').trim().split('\n').map(JSON.parse);
+  const events = readFileSync(join(dir, 'events.jsonl'), 'utf8').trim().split('\n').map((line) => JSON.parse(line) as RunEvent);
   const regionsPath = probe.regions?.path;
   if (!regionsPath) fail('run has no recorded regions');
   const frames = gunzipSync(readFileSync(regionsPath)).toString('utf8').trim().split('\n').map((line) => {
-    const row = JSON.parse(line);
-    const regions = {};
+    // A regions.jsonl row: base64 samples per region.
+    const row: { seq: unknown, imageHostMs: number | null, sentAt: unknown, receivedAt: unknown, regions: Record<string, string> } = JSON.parse(line);
+    const regions: Record<string, Uint32Array> = {};
     for (const [name, b64] of Object.entries(row.regions)) {
       const buf = Buffer.from(b64, 'base64');
       regions[name] = new Uint32Array(buf.buffer, buf.byteOffset, buf.length / 4);
@@ -39,7 +57,7 @@ export function loadRun(dir) {
 }
 
 /** Mean absolute RGB difference between two sample vectors, 0..255. */
-export function distance(a, b) {
+export function distance(a: ArrayLike<number>, b: ArrayLike<number>) {
   let sum = 0;
   for (let i = 0; i < a.length; i += 1) {
     const x = a[i]; const y = b[i];
@@ -49,53 +67,57 @@ export function distance(a, b) {
   return sum / (a.length * 3);
 }
 
-const REGION_FOR = {
+const REGION_FOR: Readonly<Record<string, string>> = {
   leftDoorLight: 'left_doorway', leftDoor: 'left_doorway', rightDoorLight: 'right_doorway',
   rightDoor: 'right_doorway', monitor: 'cam_label', cam4B: 'map_cam4b',
   'pan-right': 'right_panel', 'pan-left': 'left_panel',
 };
 
-export function analyze({ probe, events, frames }) {
-  const presses = events.filter((e) => e.type === 'input.requested' && typeof e.hostMs === 'number');
+export function analyze({ probe, events, frames }: Run) {
+  const presses = events.filter((e): e is Press => e.type === 'input.requested' && typeof e.hostMs === 'number');
   const readyAt = probe.readyHostMs;
   // Frame-to-frame noise per region while nothing is pressed: the floor any
   // "changed" call must stand above.
-  const noise = {};
+  const noise: Record<string, { p50: number, p95: number }> = {};
   for (const name of Object.keys(frames[0].regions)) {
-    const diffs = [];
+    const diffs: number[] = [];
     for (let i = 1; i < frames.length; i += 1) diffs.push(distance(frames[i].regions[name], frames[i - 1].regions[name]));
     diffs.sort((a, b) => a - b);
     noise[name] = { p50: diffs[diffs.length >> 1], p95: diffs[Math.floor(diffs.length * 0.95)] };
   }
-  const rows = [];
+  const rows: { control: string | undefined, state: string | null, pressAt: number, firstChangeMs: number | null, change: number | null,
+    settledChange: number | null, threshold: number }[] = [];
   for (const p of presses) {
-    const region = REGION_FOR[p.control];
+    // An index reads a missing control as the key 'undefined', which names no region.
+    const region = REGION_FOR[p.control as string];
     if (!region) continue;
     const before = [...frames].reverse().find((f) => f.t !== null && f.t <= p.hostMs);
     if (!before) continue;
     // Consecutive frames of a still region are identical (noise p50 is 0), so
     // a small absolute floor separates a real change from nothing.
     const threshold = 3;
-    const after = frames.find((f) => f.t !== null && f.t > p.hostMs
+    const after = frames.find((f): f is RegionFrame & { t: number } => f.t !== null && f.t > p.hostMs
       && distance(f.regions[region], before.regions[region]) > threshold);
-    const settle = after ? frames.filter((f) => f.t > after.t && f.t < after.t + 1200) : [];
+    // null orders as 0, before every stamp after a press.
+    const settle = after ? frames.filter((f) => (f.t as number) > after.t && (f.t as number) < after.t + 1200) : [];
     rows.push({
       control: p.control, state: p.state ?? null, pressAt: +(p.hostMs - readyAt).toFixed(1),
       firstChangeMs: after ? +(after.t - p.hostMs).toFixed(1) : null,
       change: after ? +distance(after.regions[region], before.regions[region]).toFixed(2) : null,
-      settledChange: settle.length ? +distance(settle.at(-1).regions[region], before.regions[region]).toFixed(2) : null,
+      settledChange: settle.length ? +distance((settle.at(-1) as RegionFrame).regions[region], before.regions[region]).toFixed(2) : null,
       threshold: +threshold.toFixed(2),
     });
   }
   // The office's hour text: its final in-night content, and the first frame
   // after Ready that already shows it.
-  const clock = frames.filter((f) => f.t !== null && f.t > readyAt);
+  const clock = frames.filter((f): f is RegionFrame & { t: number } => f.t !== null && f.t > readyAt);
   let onset = null; let hourChange = null;
   if (clock.length) {
     // The office's first frame: the hour region equal to how it reads in the
     // room at pan 0 before any control is touched.
     const firstPress = presses.find((p) => p.hostMs > readyAt)?.hostMs ?? Infinity;
-    const lateRef = [...clock].reverse().find((f) => f.t < firstPress) ?? clock.at(-1);
+    // clock holds a frame.
+    const lateRef = [...clock].reverse().find((f) => f.t < firstPress) ?? (clock.at(-1) as RegionFrame);
     const onsetFrame = clock.find((f) => distance(f.regions.hud_clock, lateRef.regions.hud_clock) < 4);
     onset = onsetFrame ? +(onsetFrame.t - readyAt).toFixed(1) : null;
     if (onsetFrame) {
@@ -106,7 +128,7 @@ export function analyze({ probe, events, frames }) {
       hourChange = changed ? +(changed.t - onsetFrame.t).toFixed(1) : null;
     }
   }
-  const byControl = {};
+  const byControl: Record<string, (number | null)[]> = {};
   for (const r of rows) {
     const key = `${r.control}${r.state ? `:${r.state}` : ''}`;
     (byControl[key] ??= []).push(r.firstChangeMs);
@@ -117,7 +139,7 @@ export function analyze({ probe, events, frames }) {
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const argv = process.argv.slice(2);
-  let dir = null; let out = null;
+  let dir = null as string | null; let out = null as string | null;
   for (let i = 0; i < argv.length; i += 1) {
     if (argv[i] === '--run') dir = argv[++i];
     else if (argv[i] === '--out') out = argv[++i];

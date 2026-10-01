@@ -5,21 +5,40 @@
 import { createWriteStream, existsSync } from 'node:fs';
 import { appendFile, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-import { spawn, execFileSync } from 'node:child_process';
-import { createGzip } from 'node:zlib';
+import { type ChildProcess, spawn, execFileSync } from 'node:child_process';
+import { type Gzip, createGzip } from 'node:zlib';
 import { join } from 'node:path';
 import { performance } from 'node:perf_hooks';
+import type { AdbCompanionPort } from '../../src/campaign/physical-ports.ts';
 
-const sleep = (ms) => new Promise<any>((r) => setTimeout(r, ms));
-const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
+/** A point on the native display. */
+export interface Point { readonly x: number, readonly y: number }
+/** What an Actor writes its contacts through: the HID transport a device runner composes. */
+interface ContactPort {
+  send(input: { command: { action: { kind: 'press' | 'hold', durationMs: number } }, point: Point }): Promise<unknown>;
+}
+type RegionChannel = ReturnType<AdbCompanionPort['openRegions']>;
+/** One read of the registered regions, stamped on the host clock. */
+export type RegionRead = Awaited<ReturnType<RegionChannel['read']>>;
+/** A retained native frame. */
+interface CaptureFrame { name: string, path: string, sha256: string, atWallMs: number }
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const sha256 = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
 
 /** A run's document (run.json) and its event rows (events.jsonl), host clocks named. */
 export class RunRecord {
-  declare outdir: any;
-  declare captureDir: any;
+  declare outdir: string;
+  declare captureDir: string;
   declare eventsPath: string;
-  declare document: { schema: any; id: any; startedAt: string; claimLevel: any; target: { package: any; }; options: any; bindings: any; capture: { sensor: any; directory: any; frames: any[]; }; inputsSent: number; status: string; };
-  constructor({ schema, pkg, id, outdir, captureDir, options, bindings, claimLevel, sensor }) {
+  /** A game's runner records its own fields beside these. */
+  declare document: {
+    schema: string, id: string, startedAt: string, claimLevel: string, target: { package: string }, options: unknown, bindings: unknown,
+    capture: { sensor: string, directory: string, frames: CaptureFrame[] }, inputsSent: number, status: string, updatedAt?: string,
+    [field: string]: unknown,
+  };
+  constructor({ schema, pkg, id, outdir, captureDir, options, bindings, claimLevel, sensor }: { schema: string, pkg: string, id: string,
+    outdir: string, captureDir: string, options: unknown, bindings: unknown, claimLevel: string, sensor: string }) {
     this.outdir = outdir; this.captureDir = captureDir;
     this.eventsPath = join(outdir, 'events.jsonl');
     this.document = {
@@ -29,12 +48,12 @@ export class RunRecord {
       inputsSent: 0, status: 'STARTING',
     };
   }
-  async event(type, fields = {}) {
+  async event(type: string, fields: object = {}) {
     const row = { atWallMs: Date.now(), atMonotonicMs: Math.round(performance.now()), type, ...fields };
     await appendFile(this.eventsPath, `${JSON.stringify(row)}\n`);
     return row;
   }
-  async capture(name, png) {
+  async capture(name: string, png: Buffer) {
     const filename = `${String(this.document.capture.frames.length).padStart(4, '0')}-${name}.png`;
     const path = join(this.captureDir, filename);
     await writeFile(path, png);
@@ -43,9 +62,9 @@ export class RunRecord {
     await this.event('capture', frame);
     return path;
   }
-  async save(status) {
+  async save(status: string) {
     this.document.status = status;
-    (this.document as any).updatedAt = new Date().toISOString();
+    this.document.updatedAt = new Date().toISOString();
     await writeFile(join(this.outdir, 'run.json'), `${JSON.stringify(this.document, null, 2)}\n`);
   }
 }
@@ -56,9 +75,9 @@ export class RunRecord {
  * decides, not a chain of reports with a release between each.
  */
 export function interruptibleSleep() {
-  const pending = new Set();
+  const pending = new Set<() => void>();
   return {
-    sleep: (ms) => new Promise<void>((resolve) => {
+    sleep: (ms: number) => new Promise<void>((resolve) => {
       const done = () => { clearTimeout(timer); pending.delete(done); resolve(); };
       const timer = setTimeout(done, ms);
       pending.add(done);
@@ -70,20 +89,20 @@ export function interruptibleSleep() {
 /** HID contacts, each one an event row on the host clock. */
 export class Actor {
   /** `interrupt` cuts the transport's pending sleep (interruptibleSleep): holdWhile needs it. */
-  declare hid: any;
-  declare record: any;
-  declare contactMs: any;
-  declare interrupt: any;
-  constructor(hid, record, contactMs, { interrupt = null } = {}) {
+  declare hid: ContactPort;
+  declare record: RunRecord;
+  declare contactMs: number;
+  declare interrupt: (() => void) | null;
+  constructor(hid: ContactPort, record: RunRecord, contactMs: number, { interrupt = null }: { interrupt?: (() => void) | null } = {}) {
     this.hid = hid; this.record = record; this.contactMs = contactMs; this.interrupt = interrupt;
   }
-  async press(control, point, detail = {}) {
+  async press(control: string, point: Point, detail: object = {}) {
     await this.record.event('input.requested', { control, point, kind: 'press', durationMs: this.contactMs, hostMs: performance.now(), ...detail });
     await this.hid.send({ command: { action: { kind: 'press', durationMs: this.contactMs } }, point });
     this.record.document.inputsSent += 1;
     await this.record.event('input.released', { control, hostMs: performance.now() });
   }
-  async double(control, point, gapMs) {
+  async double(control: string, point: Point, gapMs: number) {
     await this.record.event('input.requested', { control, point, kind: 'double', gapMs, hostMs: performance.now() });
     await this.hid.send({ command: { action: { kind: 'press', durationMs: this.contactMs } }, point });
     const between = performance.now();
@@ -100,12 +119,12 @@ export class Actor {
    * 0.44-0.50 s three times in 17 s of holding (native frames, evidence
    * fnaf4-night5-n5b-20260927), so a repel tick could find it open.
    */
-  async holdWhile(control, point, maxMs, stop, { pollMs = 30 } = {}) {
+  async holdWhile(control: string, point: Point, maxMs: number, stop: () => string | null, { pollMs = 30 }: { pollMs?: number } = {}) {
     if (typeof this.interrupt !== 'function') throw new Error('holdWhile needs the transport\'s interruptible sleep');
     const start = performance.now();
     await this.record.event('input.requested', { control, point, kind: 'hold-while', maxMs, hostMs: start });
     let why = 'max';
-    let done = false;
+    let done = false as boolean;
     const contact = this.hid.send({ command: { action: { kind: 'hold', durationMs: Math.round(maxMs) } }, point })
       .finally(() => { done = true; });
     this.record.document.inputsSent += 1;
@@ -119,7 +138,7 @@ export class Actor {
     await this.record.event('input.released', { control, hostMs: performance.now(), why });
     return { heldMs: performance.now() - start, why };
   }
-  async hold(control, point, durationMs) {
+  async hold(control: string, point: Point, durationMs: number) {
     await this.record.event('input.requested', { control, point, kind: 'hold', durationMs, hostMs: performance.now() });
     await this.hid.send({ command: { action: { kind: 'hold', durationMs } }, point });
     this.record.document.inputsSent += 1;
@@ -129,24 +148,24 @@ export class Actor {
 
 /** Every distinct native-region frame, gzipped NDJSON, stamped on the host clock. */
 export class RegionRecorder {
-  declare channel: any;
-  declare path: any;
+  declare channel: Pick<RegionChannel, 'read'>;
+  declare path: string;
   declare running: boolean;
   declare frames: number;
   declare errors: number;
   declare gzip: Gzip;
   declare last: number;
-  declare latest: any;
-  declare listeners: Set<any>;
+  declare latest: RegionRead | null;
+  declare listeners: Set<(read: RegionRead) => void>;
   declare loop: Promise<void>;
-  constructor(channel, path) {
+  constructor(channel: Pick<RegionChannel, 'read'>, path: string) {
     this.channel = channel; this.path = path; this.running = false; this.frames = 0; this.errors = 0;
     this.gzip = createGzip(); this.gzip.pipe(createWriteStream(path));
     this.last = -1; this.latest = null;
     this.listeners = new Set();
   }
   /** Called with each new frame, in order, before the next read. */
-  onFrame(fn) { this.listeners.add(fn); return () => this.listeners.delete(fn); }
+  onFrame(fn: (read: RegionRead) => void) { this.listeners.add(fn); return () => this.listeners.delete(fn); }
   start() {
     this.running = true;
     this.loop = (async () => {
@@ -157,9 +176,10 @@ export class RegionRecorder {
           this.last = r.seq;
           this.latest = r;
           const regions = Object.fromEntries(Object.entries(r.regions).map(([k, v]) =>
-            [k, Buffer.from(new Uint8Array((v as any).pixels.buffer)).toString('base64')]));
+            [k, Buffer.from(new Uint8Array(v.pixels.buffer)).toString('base64')]));
+          // null adds as 0, as it did untyped.
           this.gzip.write(`${JSON.stringify({ seq: r.seq, imageHostMs: r.imageHostMs,
-            imageWallMs: performance.timeOrigin + r.imageHostMs, sentAt: r.sentAt,
+            imageWallMs: performance.timeOrigin + (r.imageHostMs as number), sentAt: r.sentAt,
             receivedAt: r.receivedAt, regions })}\n`);
           this.frames += 1;
           for (const fn of this.listeners) fn(r);
@@ -173,7 +193,7 @@ export class RegionRecorder {
   async stop() {
     this.running = false;
     await this.loop;
-    await new Promise<any>((r) => this.gzip.end(r));
+    await new Promise<void>((r) => this.gzip.end(r));
   }
 }
 
@@ -188,10 +208,10 @@ export class RegionRecorder {
  * purpose: any screenrecord halves the helper's distinct frames (75 -> 37 of
  * 150 reads, 2026-09-25), and a full-size one starved 420-c into a death.
  */
-export function startVideo(serial, id, { segmentsMax = 6 } = {}) {
-  const segments = [];
+export function startVideo(serial: string, id: string, { segmentsMax = 6 }: { segmentsMax?: number } = {}) {
+  const segments: string[] = [];
   let stopped = false;
-  let current = null;
+  let current = null as ChildProcess | null;
   const next = () => {
     if (stopped || segments.length >= segmentsMax) return;
     const path = `/sdcard/Movies/${id}-${segments.length + 1}.mp4`;
@@ -202,13 +222,14 @@ export function startVideo(serial, id, { segmentsMax = 6 } = {}) {
   };
   next();
   return {
-    async stop(outDir) {
+    async stop(outDir: string) {
       stopped = true;
       try { execFileSync('adb', ['-s', serial, 'shell', 'pkill', '-INT', 'screenrecord'], { timeout: 10000 }); } catch { /* none running */ }
       for (let i = 0; i < 40 && current; i += 1) await sleep(250);
-      const pulled = [];
+      const pulled: string[] = [];
       for (const remote of segments) {
-        const local = join(outDir, remote.split('/').pop());
+        // A path's last segment: split returns at least one.
+        const local = join(outDir, remote.split('/').pop() as string);
         try {
           execFileSync('adb', ['-s', serial, 'pull', remote, local], { timeout: 120000, stdio: 'ignore' });
           if (existsSync(local)) pulled.push(local);

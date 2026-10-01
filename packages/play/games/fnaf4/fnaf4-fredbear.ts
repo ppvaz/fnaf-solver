@@ -18,7 +18,28 @@ import { readFileSync } from 'node:fs';
 
 export const HEARING_PATH = new URL('../../profiles/fnaf4/moto-g56/hearing-fnaf4-fredbear-moto-g56-v204.json', import.meta.url);
 
-export function loadHearing(path = HEARING_PATH) {
+/** A grid's measured offsets and gates. */
+interface GridModel { readonly onsetOffsetMs: number, readonly halfWidthMs: number, readonly minNcc: number, readonly decideAfterMs: number }
+type ByShadow = { readonly shadow0: number, readonly shadow1: number };
+/** A fnaf4-fredbear-hearing-v1 model, as the runner and loadHearing read it. */
+export interface Hearing {
+  readonly schema: 'fnaf4-fredbear-hearing-v1';
+  readonly families: Readonly<Record<string, object>>;
+  readonly sideGrid: GridModel & { readonly periodMs: ByShadow, readonly sideRatio: number };
+  readonly laughGrid: GridModel & { readonly periodMs: number, readonly roomPeriodMs: ByShadow };
+  readonly quietWalk: { readonly runOnsetAfterIssueMs: Readonly<Record<string, readonly [number, number]>>, readonly windowClearMs: number,
+    readonly runLengthMs: number };
+  readonly door: { readonly openAfterReleaseMs: readonly [number, number], readonly releaseAfterOnsetMs: number };
+  readonly idle: { readonly stillS: number, readonly holdCapS: number };
+  readonly [field: string]: unknown;
+}
+/** A detector line: its family and score, and for a cue its onset on the host wall clock. */
+export interface CueEvent { readonly cue: string, readonly onsetMs?: number, readonly ncc: number }
+/** A line that carries an onset. */
+export type Onset<E extends CueEvent = CueEvent> = E & { readonly onsetMs: number };
+export const hasOnset = <E extends CueEvent>(e: E): e is Onset<E> => Number.isFinite(e.onsetMs);
+
+export function loadHearing(path: URL | string = HEARING_PATH): Hearing {
   const m = JSON.parse(readFileSync(path, 'utf8'));
   if (m.schema !== 'fnaf4-fredbear-hearing-v1') throw new Error(`${path}: not a fnaf4-fredbear-hearing-v1 file`);
   for (const g of [m.sideGrid, m.laughGrid]) {
@@ -30,34 +51,39 @@ export function loadHearing(path = HEARING_PATH) {
 }
 
 /** Shadow nights (7, 8) roll every 2000 ms (g287) and teleport every 20000 (g641/g642). */
-export const shadowOf = (night) => (night >= 7 ? 1 : 0);
+export const shadowOf = (night: number) => (night >= 7 ? 1 : 0);
 
 /**
  * A grid of the level's own timer on the host wall clock: tick k's sound
  * starts at origin + k * period + offset (the offset folds in the A2DP lag).
  */
 export class Grid {
-  constructor(originWall, periodMs, { onsetOffsetMs, halfWidthMs, decideAfterMs }) {
+  declare originWall: number;
+  declare periodMs: number;
+  declare offsetMs: number;
+  declare halfWidthMs: number;
+  declare decideAfterMs: number;
+  constructor(originWall: number, periodMs: number, { onsetOffsetMs, halfWidthMs, decideAfterMs }: Omit<GridModel, 'minNcc'>) {
     Object.assign(this, { originWall, periodMs, offsetMs: onsetOffsetMs, halfWidthMs, decideAfterMs });
   }
-  at(k) { return (this as any).originWall + k * (this as any).periodMs + (this as any).offsetMs; }
+  at(k: number) { return this.originWall + k * this.periodMs + this.offsetMs; }
   /** The tick whose window holds an onset, or null (off the grid: not his). */
-  tickOf(onsetWall) {
-    const k = Math.round((onsetWall - (this as any).originWall - (this as any).offsetMs) / (this as any).periodMs);
-    return Math.abs(onsetWall - this.at(k)) <= (this as any).halfWidthMs ? k : null;
+  tickOf(onsetWall: number) {
+    const k = Math.round((onsetWall - this.originWall - this.offsetMs) / this.periodMs);
+    return Math.abs(onsetWall - this.at(k)) <= this.halfWidthMs ? k : null;
   }
   /** The first tick at or after a wall time. */
-  nextK(wall) { return Math.ceil((wall - (this as any).originWall - (this as any).offsetMs) / (this as any).periodMs); }
+  nextK(wall: number) { return Math.ceil((wall - this.originWall - this.offsetMs) / this.periodMs); }
   /** The last tick at or before a wall time. */
-  lastK(wall) { return Math.floor((wall - (this as any).originWall - (this as any).offsetMs) / (this as any).periodMs); }
+  lastK(wall: number) { return Math.floor((wall - this.originWall - this.offsetMs) / this.periodMs); }
   /** Whether tick k's candidates are all in by `nowWall`. */
-  decided(k, nowWall) { return nowWall >= this.at(k) + (this as any).decideAfterMs; }
+  decided(k: number, nowWall: number) { return nowWall >= this.at(k) + this.decideAfterMs; }
 }
 
-export function sideGrid(originWall, night, hearing) {
+export function sideGrid(originWall: number, night: number, hearing: Hearing) {
   return new Grid(originWall, hearing.sideGrid.periodMs[shadowOf(night) ? 'shadow1' : 'shadow0'], hearing.sideGrid);
 }
-export function laughGrid(originWall, hearing) {
+export function laughGrid(originWall: number, hearing: Hearing) {
   return new Grid(originWall, hearing.laughGrid.periodMs, hearing.laughGrid);
 }
 
@@ -68,10 +94,12 @@ export function laughGrid(originWall, hearing) {
  * at up to 0.28 of its own score). Rows come back in tick order, accepted or
  * not, so a caller can show what it heard and why it did not act.
  */
-export function landings(events, grid, gate, { fromK = -Infinity, toK = Infinity } = {}) {
-  const per = new Map();
+export function landings(events: Iterable<CueEvent>, grid: Grid, gate: { readonly minNcc: number, readonly sideRatio: number },
+  { fromK = -Infinity, toK = Infinity }: { fromK?: number, toK?: number } = {}):
+  { k: number, L: number, R: number, side: 'L' | 'R' | null, ncc: number, other: number }[] {
+  const per = new Map<number, { k: number, L: number, R: number }>();
   for (const e of events) {
-    if ((e.cue !== 'fb-left' && e.cue !== 'fb-right') || !Number.isFinite(e.onsetMs)) continue;
+    if ((e.cue !== 'fb-left' && e.cue !== 'fb-right') || !hasOnset(e)) continue;
     const k = grid.tickOf(e.onsetMs);
     if (k === null || k < fromK || k > toK) continue;
     const row = per.get(k) ?? { k, L: 0, R: 0 };
@@ -93,10 +121,10 @@ export function landings(events, grid, gate, { fromK = -Infinity, toK = Infinity
  * period (30 s, 20 s under shadow): only there can a laugh mean he is on the
  * bed or in the closet (g639-g642); elsewhere it is g530's fake.
  */
-export function laughs(events, grid, gate, roomPeriodMs) {
-  const per = new Map();
+export function laughs(events: Iterable<CueEvent>, grid: Grid, gate: { readonly minNcc: number }, roomPeriodMs: number) {
+  const per = new Map<number, number>();
   for (const e of events) {
-    if (e.cue !== 'laugh' || !Number.isFinite(e.onsetMs)) continue;
+    if (e.cue !== 'laugh' || !hasOnset(e)) continue;
     const k = grid.tickOf(e.onsetMs);
     if (k === null) continue;
     per.set(k, Math.max(per.get(k) ?? 0, e.ncc));
@@ -112,7 +140,7 @@ export function laughs(events, grid, gate, roomPeriodMs) {
  * `windowClearMs` of the tick's window and ends before the next window opens.
  * Null when no such slot exists (a 2000 ms grid is too short for a 1.48 s run).
  */
-export function walkSlot(grid, hearing, gesture) {
+export function walkSlot(grid: Grid, hearing: Hearing, gesture: string): [number, number] | null {
   const q = hearing.quietWalk;
   const [onLo, onHi] = q.runOnsetAfterIssueMs[gesture];
   const lo = -grid.halfWidthMs + q.windowClearMs - onLo;
@@ -126,7 +154,7 @@ export function walkSlot(grid, hearing, gesture) {
  * skipped: a walk waits for the next tick's slot. Returns a wall time >= now;
  * with no slot at all (shadow grid), now.
  */
-export function quietTapAt(nowWall, grid, hearing, gesture, roomPeriodMs = 0) {
+export function quietTapAt(nowWall: number, grid: Grid, hearing: Hearing, gesture: string, roomPeriodMs = 0) {
   const slot = walkSlot(grid, hearing, gesture);
   if (!slot) return nowWall;
   for (let k = grid.lastK(nowWall) - 1; ; k += 1) {
@@ -141,7 +169,7 @@ export function quietTapAt(nowWall, grid, hearing, gesture, roomPeriodMs = 0) {
  * through the tick (a repel fires on it, g502/g503) and reads open in time for
  * a back issued at the start of the tick's press slot.
  */
-export function releaseAt(k, grid, hearing) {
+export function releaseAt(k: number, grid: Grid, hearing: Hearing) {
   const slot = walkSlot(grid, hearing, 'press');
   const open = hearing.door.openAfterReleaseMs[1];
   return grid.at(k) + Math.max(slot ? slot[0] - open : 0, hearing.door.releaseAfterOnsetMs);

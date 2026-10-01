@@ -24,9 +24,43 @@ import { performance } from 'node:perf_hooks';
 import { AdbCompanionPort, AdbHidProcess } from '../../src/campaign/physical-ports.ts';
 import { HidWireTransport } from '../../src/venues/phone/hid.ts';
 import { loadRegionSet, registerSet } from '../../bin/phone/native-regions.ts';
-import { Actor, RegionRecorder, RunRecord, startVideo } from '../../bin/phone/night-kit.ts';
-import { Reader, boxLuma, loadPairs, medianLuma, occupancy, stateScore } from './fnaf3-detectors.ts';
+import { Actor, type Point, type RegionRead, RegionRecorder, RunRecord, startVideo } from '../../bin/phone/night-kit.ts';
+import { Reader, type StoredPair, boxLuma, loadPairs, medianLuma, occupancy, stateScore } from './fnaf3-detectors.ts';
 import { resolveSerial } from '../../bin/phone/local-profile.ts';
+
+/** The measured FNaF 3 control map, with the pans' hold times. */
+type Controls = Readonly<Record<string, Point>> & { readonly panLeft: Point & { readonly holdMs: number },
+  readonly panRight: Point & { readonly holdMs: number } };
+/** A frame recent enough to read: one with no image time reads as old as the process. */
+type Seen = RegionRead & { readonly imageHostMs: number };
+type Reboot = 'ALL' | 'VENT' | 'VIDEO' | 'AUDIO';
+/** fnaf3-detectors-v1: each camera's empty template and an occupancy cut. */
+interface DetectorsV1 {
+  readonly schema: 'fnaf3-detectors-v1', readonly templates: Readonly<Record<string, readonly number[]>>, readonly occupied: number | null,
+  readonly cuts?: Readonly<Record<string, number>>, readonly window?: number, readonly settleMs?: number, readonly source?: unknown,
+  readonly cams?: undefined;
+}
+/** fnaf3-detectors-v2: the game's own pictures per camera, and each camera's cut. */
+interface DetectorsV2 {
+  readonly schema: 'fnaf3-detectors-v2',
+  readonly cams: Readonly<Record<string, { readonly cut: number, readonly cutB: number | null, readonly pairs: readonly StoredPair[] }>>;
+  readonly window?: number, readonly settleMs?: number, readonly source?: unknown;
+  readonly templates?: undefined, readonly cuts?: undefined, readonly occupied?: undefined;
+}
+type Detectors = DetectorsV1 | DetectorsV2;
+/** One look's verdict: v1 a temporal median against the empty template, v2 the game's pictures. */
+type Score =
+  | { v: 1, mean: number, over: number, gain: number, C?: undefined, B?: undefined, P?: undefined, phantom?: boolean }
+  | { v: 2, C: number, B: number | null, P: number | null, mean?: undefined, over?: undefined, phantom?: boolean };
+interface Stats {
+  looks: number, sightings: number, seals: number, sealFails: number, reboots: number, lost: number, recoveries: number, lures: number,
+  phantoms?: number;
+}
+/** Where one move can take him from each place the monitor shows. */
+type Edges = Readonly<Record<number, readonly number[]>>;
+/** How many of his moves out of a vent stand between him and the kill. */
+type MovesToKill = Readonly<Record<number, number>>;
+const isInteger = (value: unknown): value is number => Number.isInteger(value);
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../../../..');
@@ -42,17 +76,17 @@ const STALE_FRAME_MS = 400;
 // doors take the same gesture at 100 ms.
 const SEAL_GAP_MS = 120;
 
-const sleep = (ms) => new Promise<any>((r) => setTimeout(r, ms));
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const stamp = () => new Date().toISOString().replace(/[-:.]/g, '');
-const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
-function fail(message) { throw new Error(`fnaf3-run: ${message}`); }
+const sha256 = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
+function fail(message: string): never { throw new Error(`fnaf3-run: ${message}`); }
 // A SIGINT ends the night's loop at its next step, so the record, the region
 // file and the game's teardown still run (a killed run leaves all three).
 const STOP = { requested: false };
 
-export function parseArgs(argv) {
-  const o = { live: false, confirmLive: false, dryRun: false, mode: null, label: null, detectors: null,
-    stopAfterMs: NIGHT_MS + 30000, teach: false, video: false, night: null, survey: false };
+export function parseArgs(argv: string[]) {
+  const o = { live: false, confirmLive: false, dryRun: false, mode: null as string | null, label: null as string | null,
+    detectors: null as string | null, stopAfterMs: NIGHT_MS + 30000, teach: false, video: false, night: null as number | null, survey: false };
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i];
     if (a === '--live') o.live = true;
@@ -74,24 +108,25 @@ export function parseArgs(argv) {
   if (!o.live) o.dryRun = true;
   if (o.dryRun) return o;
   if (!o.confirmLive) fail('live actuation needs --live and --confirm-live');
-  if (!MODES.includes(o.mode)) fail(`--mode is one of ${MODES.join(', ')}`);
+  if (!MODES.includes(o.mode as string)) fail(`--mode is one of ${MODES.join(', ')}`);
   if (o.mode === 'loop' && !o.detectors) fail('loop needs --detectors (a fnaf3-detectors-v1 file)');
-  if (o.mode === 'loop' && !(Number.isInteger(o.night) && o.night >= 1 && o.night <= 6))
+  if (o.mode === 'loop' && !(isInteger(o.night) && o.night >= 1 && o.night <= 6))
     fail('loop needs --night 1..6 (the title\'s LOAD GAME number, 6 for Nightmare)');
   return o;
 }
 
 class Eyes {
-  declare recorder: any;
-  declare reader: any;
-  constructor(recorder, reader) { this.recorder = recorder; this.reader = reader; }
+  declare recorder: RegionRecorder;
+  declare reader: Reader;
+  constructor(recorder: RegionRecorder, reader: Reader) { this.recorder = recorder; this.reader = reader; }
   now() {
     const r = this.recorder.latest;
-    if (!r || performance.now() - r.imageHostMs > STALE_FRAME_MS) return null;
-    return r;
+    // A null image time subtracts as 0.
+    if (!r || performance.now() - (r.imageHostMs as number) > STALE_FRAME_MS) return null;
+    return r as Seen;
   }
   /** The first frame rendered after `sinceHostMs` that satisfies `test`, or null by the bound. */
-  async until(test, sinceHostMs, boundMs) {
+  async until(test: (frame: Seen) => boolean, sinceHostMs: number, boundMs: number) {
     let seen = -1;
     while (performance.now() < sinceHostMs + boundMs) {
       const f = this.now();
@@ -105,9 +140,12 @@ class Eyes {
   }
 }
 
-function controlsOf(model) {
-  return Object.fromEntries(Object.entries(model.controlMap).map(([k, v]) => [k, { ...v }]));
+function controlsOf(model: { readonly controlMap: Readonly<Record<string, object>> }) {
+  // The measured map names every control, the pans with their hold times.
+  return Object.fromEntries(Object.entries(model.controlMap).map(([k, v]) => [k, { ...v }])) as Controls;
 }
+/** What the night's steps share. */
+interface Hands { readonly act: Actor, readonly c: Controls, readonly eyes: Eyes, readonly reader: Reader }
 
 /**
  * The monitor up: pan right, press its tab, and wait for a CAM label to turn
@@ -116,8 +154,8 @@ function controlsOf(model) {
  * missed, 15.4 s landed) and just after the maintenance menu closes (cal2: a
  * pan 300 ms after the close left the tab out of view; 4 s later it landed).
  */
-export async function raiseMonitor({ act, c, eyes, reader }, tries = 3) {
-  const pt = (k) => ({ x: c[k].x, y: c[k].y });
+export async function raiseMonitor({ act, c, eyes, reader }: Hands, tries = 3) {
+  const pt = (k: string) => ({ x: c[k].x, y: c[k].y });
   // Its tab is a toggle: pressed with the monitor up, it drops it (cal2's
   // recoveries flipped a raised monitor down after one unread label).
   const up = await eyes.until((fr) => reader.selected(fr) !== null, performance.now() - 400, 500);
@@ -144,8 +182,8 @@ export async function raiseMonitor({ act, c, eyes, reader }, tries = 3) {
 }
 
 /** Every read of `read(frame)` over `ms`, united: the error lines and words blink. */
-async function collect(eyes, ms, read) {
-  const out = new Set();
+async function collect(eyes: Eyes, ms: number, read: (frame: Seen) => Iterable<string>) {
+  const out = new Set<string>();
   let seq = -1;
   const until = performance.now() + ms;
   while (performance.now() < until) {
@@ -169,9 +207,9 @@ export class SystemsClock {
   declare av5: number;
   declare camHits: number;
   declare lures: number;
-  constructor(ai) { this.ai = Math.max(1, ai); this.upMs = 0; this.av5 = 0; this.camHits = 0; this.lures = 0; }
+  constructor(ai: number) { this.ai = Math.max(1, ai); this.upMs = 0; this.av5 = 0; this.camHits = 0; this.lures = 0; }
   /** Account monitor-up time; the game's 1 s tick counts it whole seconds at a time. */
-  addMonitorMs(ms) {
+  addMonitorMs(ms: number) {
     this.upMs += ms;
     while (this.upMs >= 1000) {
       this.upMs -= 1000;
@@ -186,7 +224,7 @@ export class SystemsClock {
   }
   luresLeft() { return Math.max(0, Math.ceil((10 - this.ai * this.lures) / this.ai)); }
   lured() { this.lures += 1; }
-  rebooted(which) {
+  rebooted(which: Reboot) {
     if (which === 'VIDEO' || which === 'ALL') this.camHits = 0;
     if (which === 'ALL') { this.av5 = 0; this.upMs = 0; }
     if (which === 'AUDIO' || which === 'ALL') this.lures = 0;
@@ -203,7 +241,7 @@ export class SystemsClock {
  * counter one lure from breaking, or a camera that would send the loop back
  * within 15 s of monitor time anyway (a trip is ~5 s plus its reboot).
  */
-export function chooseReboot(words, clock) {
+export function chooseReboot(words: ReadonlySet<string>, clock: SystemsClock): Reboot | null {
   if (words.size >= 2) return 'ALL';
   if (words.has('VIDEO')) return clock.av5 >= 7 || clock.luresLeft() <= 1 ? 'ALL' : 'VIDEO';
   const other = words.has('VENT') ? 'VENT' : words.has('AUDIO') ? 'AUDIO' : null;
@@ -211,7 +249,7 @@ export function chooseReboot(words, clock) {
   return clock.cameraLeftS() < 15 ? 'ALL' : other;
 }
 
-const REBOOT_ROW = { VENT: 'rebootVent', VIDEO: 'rebootCamera', AUDIO: 'rebootAudio', ALL: 'rebootAll' };
+const REBOOT_ROW: Readonly<Record<Reboot, string>> = { VENT: 'rebootVent', VIDEO: 'rebootCamera', AUDIO: 'rebootAudio', ALL: 'rebootAll' };
 
 /**
  * Answer the monitor's red error lines with the reboot they need. The lines
@@ -222,8 +260,10 @@ const REBOOT_ROW = { VENT: 'rebootVent', VIDEO: 'rebootCamera', AUDIO: 'rebootAu
  * is pressed each second until the menu closes, and the office is given
  * 500 ms before the monitor goes back up (cal2).
  */
-async function serviceSystems({ act, c, eyes, reader, clock = null, force = [], onMenu = async () => {} }) {
-  const pt = (k) => ({ x: c[k].x, y: c[k].y });
+async function serviceSystems({ act, c, eyes, reader, clock = null, force = [], onMenu = async () => {} }: Hands & {
+  clock?: SystemsClock | null, force?: readonly string[], onMenu?: (words: Set<string>, which: Reboot | null) => Promise<unknown> }):
+  Promise<{ lines: string[], words?: string[], rebooted: Reboot | null, rebootMs?: number, ok?: boolean, why: string, awayMs: number } | null> {
+  const pt = (k: string) => ({ x: c[k].x, y: c[k].y });
   const lines = await collect(eyes, 700, (f) => (reader.selected(f) !== null ? reader.errorLines(f) : []));
   for (const w of force) lines.add(w);
   if (lines.size === 0) return null;
@@ -249,7 +289,7 @@ async function serviceSystems({ act, c, eyes, reader, clock = null, force = [], 
   // Audio is serviced too: the lure is the only way back off attack stage 1
   // (g320), and n2b left it broken all night. chooseReboot weighs a single
   // reboot against reboot all.
-  const which = clock ? chooseReboot(words, clock)
+  const which: Reboot | null = clock ? chooseReboot(words, clock)
     : words.size >= 2 ? 'ALL' : words.has('VENT') ? 'VENT' : words.has('VIDEO') ? 'VIDEO' : words.has('AUDIO') ? 'AUDIO' : null;
   await onMenu(words, which);
   const rebootAt = performance.now();
@@ -257,7 +297,7 @@ async function serviceSystems({ act, c, eyes, reader, clock = null, force = [], 
     await act.press(REBOOT_ROW[which], pt(REBOOT_ROW[which]));
     await sleep(900);
   }
-  let closed = null;
+  let closed = null as Seen | null;
   for (let i = 0; i < 24 && !closed; i += 1) {
     at = performance.now();
     await act.press('exitMaint', pt('exitMaint'));
@@ -280,10 +320,12 @@ async function serviceSystems({ act, c, eyes, reader, clock = null, force = [], 
  * light states. Every fourth sweep shows the vents; the first vent pass
  * seals vent 14 by a double tap. Ventilation is rebooted on its red line.
  */
-async function calibrate({ act, c, record, eyes, reader, snapTo, stopAfterMs, epochHostMs, det = null, survey = false }) {
-  const pt = (k) => ({ x: c[k].x, y: c[k].y });
+async function calibrate({ act, c, record, eyes, reader, snapTo, stopAfterMs, epochHostMs, det = null, survey = false }: Hands & {
+  record: RunRecord, snapTo: (name: string) => Promise<void>, stopAfterMs: number, epochHostMs: number, det?: DetectorsV1 | null,
+  survey?: boolean }) {
+  const pt = (k: string) => ({ x: c[k].x, y: c[k].y });
   const nightMs = () => performance.now() - epochHostMs;
-  const mark = (phase, f = {}) => record.event('phase', { phase, atNightMs: Math.round(nightMs()), ...f });
+  const mark = (phase: string, f: object = {}) => record.event('phase', { phase, atNightMs: Math.round(nightMs()), ...f });
   const over = () => {
     const f = eyes.now();
     return f && reader.title(f) >= 0.2;
@@ -293,7 +335,7 @@ async function calibrate({ act, c, record, eyes, reader, snapTo, stopAfterMs, ep
     await mark('monitor-up', { selected: r ? reader.selected(r.frame) : null, tries: r?.tries ?? null, ms: r ? Math.round(r.ms) : null });
     return r?.frame ?? null;
   };
-  const show = async (n, dwellMs) => {
+  const show = async (n: number, dwellMs: number) => {
     const k = `cam${String(n).padStart(2, '0')}`;
     const at = performance.now();
     await act.press(k, pt(k));
@@ -303,7 +345,7 @@ async function calibrate({ act, c, record, eyes, reader, snapTo, stopAfterMs, ep
     // With templates from an earlier night: score the visit and SNAP it when
     // it is unlike the empty room, so a person can say what was there.
     const t0 = performance.now();
-    const feeds = []; let seq = -1;
+    const feeds: Uint32Array[] = []; let seq = -1;
     while (performance.now() < t0 + dwellMs) {
       const g = eyes.now();
       if (g && g.seq !== seq && g.imageHostMs >= at + 400 && reader.selected(g) === n) { seq = g.seq; feeds.push(g.regions.feed.pixels); }
@@ -365,18 +407,18 @@ async function calibrate({ act, c, record, eyes, reader, snapTo, stopAfterMs, ep
 // where one move can take him. A vent resolves back to its camera when it is
 // the sealed one and onward otherwise; 'A1'/'A3' are the attack chain's
 // stages (A1 advances only on the blackout, g486; A3 two moves from the kill).
-export const NEXT = {
+export const NEXT: Edges = {
   10: [9, 14], 9: [10, 8, 11], 8: [9, 7, 5], 7: [8, 6, 12], 6: [7, 5],
   5: [6, 2, 4, 13], 2: [5, 4, 15], 4: [2, 3], 3: [4], 1: [],
   11: [9], 12: [7], 13: [5], 14: [10], 15: [2],
 };
 // The vent each camera leads into (every entrance is on branch 4).
-export const VENT_OF = { 10: 14, 9: 11, 7: 12, 5: 13, 2: 15 };
+export const VENT_OF: Readonly<Record<number, number>> = { 10: 14, 9: 11, 7: 12, 5: 13, 2: 15 };
 // 14 and 15 kill on his next move out of them; 11 and 12 put him two moves out.
-const DANGER = { 14: 0, 15: 0, 11: 1, 12: 1, 13: 2 };
+const DANGER: MovesToKill = { 14: 0, 15: 0, 11: 1, 12: 1, 13: 2 };
 
 /** The cameras to look at, nearest ring first, from where he was last seen. */
-export function searchOrder(from) {
+export function searchOrder(from: number | null) {
   if (!from) return [10, 9, 8, 7, 6, 5, 2, 4, 3];
   const seen = new Set([from]);
   const order = [from];
@@ -396,35 +438,37 @@ export function searchOrder(from) {
 }
 
 const F3_LINE = /^LESSON [0-9a-f]{32} f3 (origin \d{1,19}|night [1-6] (NORMAL|AGGRESSIVE)|step [A-Z_]+|look (\d{1,2}|OFF)|seen (\d{1,2}|NONE)|sealed (1[1-5]|NONE)|lure \d{1,2}|sight \d{1,3}|lures \d{1,2}|sys (AUDIO|CAMERA|VENT) (OK|ERROR|REBOOT)|clear)$/;
-export function teachFeed(port, record) {
+export function teachFeed(port: AdbCompanionPort, record: RunRecord) {
   const channel = port.openLesson({ timeoutMs: 800, lessonLine: F3_LINE });
-  const token = port.endpoint.token;
-  let chain = Promise.resolve();
-  const last = {};
-  const say = (words, key = null) => {
+  // openLesson found the endpoint.
+  const token = (port.endpoint as NonNullable<AdbCompanionPort['endpoint']>).token;
+  let chain: Promise<unknown> = Promise.resolve();
+  const last: Record<string, string> = {};
+  const say = (words: string, key: string | null = null) => {
     if (key !== null) { if (last[key] === words) return; last[key] = words; }
     chain = chain.then(() => channel.send(`LESSON ${token} f3 ${words}`))
-      .catch((e) => record.event('teach-error', { words, message: e.message }).catch(() => {}));
+      .catch((e: Error) => record.event('teach-error', { words, message: e.message }).catch(() => {}));
   };
   // A runner that dies before its own clear leaves its lesson on the panel,
   // and the next origin would reattach it (n2e's last sighting showed on the
   // title): each night starts from a fresh one.
   say('clear');
   return {
-    origin: (ns) => say(`origin ${ns}`),
-    night: (n, aggressive) => say(`night ${n} ${aggressive ? 'AGGRESSIVE' : 'NORMAL'}`),
-    step: (s) => say(`step ${s}`, 'step'),
-    look: (n) => say(`look ${n ?? 'OFF'}`, 'look'),
-    seen: (n) => say(`seen ${n ?? 'NONE'}`),
-    sealed: (v) => say(`sealed ${v ?? 'NONE'}`, 'sealed'),
-    lure: (n) => say(`lure ${n}`),
-    sys: (which, state) => say(`sys ${which} ${state}`, `sys${which}`),
-    sight: (sec) => say(`sight ${Math.max(0, Math.min(999, Math.round(sec)))}`, 'sight'),
-    lures: (n) => say(`lures ${Math.max(0, Math.min(99, n))}`, 'lures'),
+    origin: (ns: bigint | number | null) => say(`origin ${ns}`),
+    night: (n: number, aggressive: boolean) => say(`night ${n} ${aggressive ? 'AGGRESSIVE' : 'NORMAL'}`),
+    step: (s: string) => say(`step ${s}`, 'step'),
+    look: (n: number | null) => say(`look ${n ?? 'OFF'}`, 'look'),
+    seen: (n: number | null) => say(`seen ${n ?? 'NONE'}`),
+    sealed: (v: number | null) => say(`sealed ${v ?? 'NONE'}`, 'sealed'),
+    lure: (n: number) => say(`lure ${n}`),
+    sys: (which: string, state: string) => say(`sys ${which} ${state}`, `sys${which}`),
+    sight: (sec: number) => say(`sight ${Math.max(0, Math.min(999, Math.round(sec)))}`, 'sight'),
+    lures: (n: number) => say(`lures ${Math.max(0, Math.min(99, n))}`, 'lures'),
     clear: async () => { say('clear'); await chain; channel.close(); },
   };
 }
-const QUIET = { origin() {}, night() {}, step() {}, look() {}, seen() {}, sealed() {}, lure() {}, sys() {}, sight() {}, lures() {}, async clear() {} };
+type Teach = ReturnType<typeof teachFeed>;
+const QUIET: Teach = { origin() {}, night() {}, step() {}, look() {}, seen() {}, sealed() {}, lure() {}, sys() {}, sight() {}, lures() {}, async clear() {} };
 
 /**
  * The tracking loop. The monitor stays up. While he is seen, the loop stays
@@ -435,17 +479,18 @@ const QUIET = { origin() {}, night() {}, step() {}, look() {}, seen() {}, sealed
  * ventilation error line is answered with a reboot whose timer runs on
  * after the panel is left.
  */
-async function loopNight({ act, c, record, eyes, reader, det, epochHostMs, stopAfterMs, night, teach = QUIET }) {
-  const pt = (k) => ({ x: c[k].x, y: c[k].y });
-  const camKey = (n) => `cam${String(n).padStart(2, '0')}`;
+async function loopNight({ act, c, record, eyes, reader, det, epochHostMs, stopAfterMs, night, teach = QUIET }: Hands & {
+  record: RunRecord, det: Detectors, epochHostMs: number, stopAfterMs: number, night: number, teach?: Teach }) {
+  const pt = (k: string) => ({ x: c[k].x, y: c[k].y });
+  const camKey = (n: number) => `cam${String(n).padStart(2, '0')}`;
   const nightMs = () => performance.now() - epochHostMs;
-  const log = (m, f = {}) => record.event('policy', { atNightMs: Math.round(nightMs()), m, ...f });
-  const stats: any = { looks: 0, sightings: 0, seals: 0, sealFails: 0, reboots: 0, lost: 0, recoveries: 0, lures: 0 };
+  const log = (m: string, f: object = {}) => record.event('policy', { atNightMs: Math.round(nightMs()), m, ...f });
+  const stats: Stats = { looks: 0, sightings: 0, seals: 0, sealFails: 0, reboots: 0, lost: 0, recoveries: 0, lures: 0 };
   const ai = night <= 1 ? 0 : night <= 5 ? night : 7;
   const clock = new SystemsClock(ai);
   let clockAt = performance.now();
   let flashSeq = -1;
-  let scareAt = null;
+  let scareAt = null as number | null;
   const clockTimer = setInterval(() => {
     const now = performance.now();
     const f = eyes.now();
@@ -464,10 +509,11 @@ async function loopNight({ act, c, record, eyes, reader, det, epochHostMs, stopA
     teach.sight(clock.cameraLeftS());
     teach.lures(clock.luresLeft());
   }, 200);
-  let look = null;            // the camera on screen, as its green label says
-  let seen = null;            // { cam, atMs } where he was last seen
-  let sealed = null;          // the vent whose bar last read red
-  const cut = (n) => det.cuts?.[n] ?? det.occupied;
+  let look = null as number | null;                         // the camera on screen, as its green label says
+  let seen = null as { cam: number, atMs: number } | null;  // where he was last seen
+  let sealed = null as number | null;                       // the vent whose bar last read red
+  // main refuses a v1 file with neither a cut per camera nor one cut.
+  const cut = (n: number) => (det.cuts?.[n] ?? det.occupied) as number;
 
   const current = () => { const f = eyes.now(); return f ? reader.selected(f) : null; };
   const monitorUp = async () => {
@@ -477,8 +523,8 @@ async function loopNight({ act, c, record, eyes, reader, det, epochHostMs, stopA
     return !!r;
   };
   /** Put camera n on screen: toggle the map if n is on the other one. */
-  const view = async (n) => {
-    const onVents = (m) => m !== null && m >= 11;
+  const view = async (n: number) => {
+    const onVents = (m: number | null) => m !== null && m >= 11;
     for (let attempt = 0; attempt < 2; attempt += 1) {
       look = current();
       if (look === n) return true;
@@ -518,10 +564,12 @@ async function loopNight({ act, c, record, eyes, reader, det, epochHostMs, stopA
    * Springtrap) and averages; v1 compares a temporal median with the camera's
    * empty template.
    */
-  const score = async (n, frames = det.window ?? 5) => {
-    if (pairs ? !pairs[n] : !det.templates[n]) return null;
+  // pairs is null exactly for a v1 file.
+  const templates = () => (det as DetectorsV1).templates;
+  const score = async (n: number, frames = det.window ?? 5): Promise<Score | null> => {
+    if (pairs ? !pairs[n] : !templates()[n]) return null;
     const since = performance.now() + (det.settleMs ?? 400);
-    const feeds = [];
+    const feeds: Uint32Array[] = [];
     let seq = -1;
     const until = since + 1500;
     while (performance.now() < until && feeds.length < frames) {
@@ -533,7 +581,7 @@ async function loopNight({ act, c, record, eyes, reader, det, epochHostMs, stopA
     }
     if (feeds.length < Math.min(3, frames)) return null;
     stats.looks += 1;
-    if (!pairs) return { ...occupancy(medianLuma(feeds), det.templates[n]), v: 1 };
+    if (!pairs) return { ...occupancy(medianLuma(feeds), templates()[n]), v: 1 };
     let C = 0; let B = 0; let nB = 0; let P = 0; let nP = 0;
     for (const feed of feeds) {
       const r = stateScore(pairs[n], boxLuma(feed));
@@ -543,17 +591,17 @@ async function loopNight({ act, c, record, eyes, reader, det, epochHostMs, stopA
     }
     return { C: C / feeds.length, B: nB ? B / nB : null, P: nP ? P / nP : null, v: 2 };
   };
-  const occupied = (n, s) => {
+  const occupied = (n: number, s: Score) => {
     if (s.v === 1) return s.over > cut(n);
-    const cam = det.cams[n];
+    const cam = (det as DetectorsV2).cams[n];   // a v2 score comes only from a v2 file
     const him = s.C > cam.cut || (cam.cutB !== null && s.B !== null && s.B > cam.cutB);
     // A phantom's picture that fits better than his is a phantom, not him.
     if (him && s.P !== null && s.P > 2 && s.P > Math.max(s.C, s.B ?? -Infinity)) { s.phantom = true; return false; }
     return him;
   };
-  const here = async (n) => {
+  const here = async (n: number) => {
     if (!await view(n)) return null;
-    const s: any = await score(n);
+    const s = await score(n);
     if (!s) return null;
     const occ = occupied(n, s);
     if (s.phantom) {
@@ -569,7 +617,7 @@ async function loopNight({ act, c, record, eyes, reader, det, epochHostMs, stopA
     return { occ, ...s };
   };
   /** Seal vent v: double-tap its label on the vent map and keep the map open until the bar is red. */
-  const seal = async (v) => {
+  const seal = async (v: number) => {
     teach.step('SEAL');
     // The vent map, without a single press on v first: a lone press just
     // before the double tap could pair with its first tap.
@@ -588,11 +636,11 @@ async function loopNight({ act, c, record, eyes, reader, det, epochHostMs, stopA
     await log(`sealed ${v}`, { ms: Math.round(f.imageHostMs - at) });
     return true;
   };
-  const TEACH_SYS = { VENT: 'VENT', VIDEO: 'CAMERA', AUDIO: 'AUDIO' };
+  const TEACH_SYS: Readonly<Record<string, string>> = { VENT: 'VENT', VIDEO: 'CAMERA', AUDIO: 'AUDIO' };
   /** True when the loop left the monitor to reboot something (its picture of him is stale). */
   const service = async () => {
     const f = eyes.now();
-    let force = [];
+    let force: string[] = [];
     if (scareAt !== null) {
       // Let the scare's frozen state pass (g890-g894 clear it) before the menu.
       await log('a white flash: a phantom scare broke ventilation; rebooting it');
@@ -607,7 +655,8 @@ async function loopNight({ act, c, record, eyes, reader, det, epochHostMs, stopA
     const r = await serviceSystems({ act, c, eyes, reader, clock, force, onMenu: async (words, which) => {
       for (const w of words) teach.sys(TEACH_SYS[w], 'ERROR');
       teach.look(null);
-      teach.step({ ALL: 'REBOOT_ALL', VENT: 'REBOOT_VENT', VIDEO: 'REBOOT_CAMERA', AUDIO: 'REBOOT_AUDIO' }[which] ?? 'SWEEP');
+      // No reboot indexes as the key 'null', which names no step.
+      teach.step(({ ALL: 'REBOOT_ALL', VENT: 'REBOOT_VENT', VIDEO: 'REBOOT_CAMERA', AUDIO: 'REBOOT_AUDIO' } as Readonly<Record<string, string>>)[String(which)] ?? 'SWEEP');
       for (const w of which === 'ALL' ? ['AUDIO', 'VIDEO', 'VENT'] : which ? [which] : []) teach.sys(TEACH_SYS[w], 'REBOOT');
     } });
     if (!r || !r.rebooted) return false;
@@ -622,7 +671,7 @@ async function loopNight({ act, c, record, eyes, reader, det, epochHostMs, stopA
   };
   // The title after a death carries static that dims the logo to 0.06-0.15
   // (n2c 158-175 s) against the office's 0.00: a second of it is the title.
-  let titleSince = null;
+  let titleSince = null as number | null;
   const over = () => {
     const f = eyes.now();
     if (!f) return false;
@@ -643,7 +692,7 @@ async function loopNight({ act, c, record, eyes, reader, det, epochHostMs, stopA
    * (g343-g352). It needs the camera map, Play Audio ready (not dashes) and
    * no audio error, and costs AI audio points (g301).
    */
-  const lureAt = async (n, why) => {
+  const lureAt = async (n: number, why: string) => {
     if (!await view(n)) return false;
     await sleep(150);
     const f = eyes.now();
@@ -662,10 +711,10 @@ async function loopNight({ act, c, record, eyes, reader, det, epochHostMs, stopA
   // vent 13 or 15 unsealed.
   const NEAR_OFFICE = new Set([1, 2, 3, 4, 13, 15]);
   // Where to lure him from each office-side camera: one step further out.
-  const HERD = { 2: 5, 3: 2, 4: 2, 5: 6 };
+  const HERD: Readonly<Record<number, number>> = { 2: 5, 3: 2, 4: 2, 5: 6 };
 
   if (!await monitorUp()) await monitorUp();
-  let lostSinceMs = null;
+  let lostSinceMs = null as number | null;
   while (nightMs() < stopAfterMs && !over() && !STOP.requested) {
     await service();
     if (current() === null) {
@@ -682,7 +731,7 @@ async function loopNight({ act, c, record, eyes, reader, det, epochHostMs, stopA
     }
     if (seen && lostSinceMs === null) {
       teach.step('WATCH');
-      const r: any = await here(seen.cam);
+      const r = await here(seen.cam);
       if (r && r.occ) {
         // The office side feeds attack stage 1 (cam 02's and cam 03's exits)
         // and vents 13 and 15: a lure one camera further out pulls him off it
@@ -697,7 +746,7 @@ async function loopNight({ act, c, record, eyes, reader, det, epochHostMs, stopA
         // alternate with 1, and the same coin picks his action-4 exit
         // (g242/g243, g246/g247): plainly there, his exit is attack stage 1
         // or cam 04, not the vent, and a seal buys nothing.
-        const plain = r.v === 2 && (seen.cam === 2 || seen.cam === 5) && r.C > det.cams[seen.cam].cut;
+        const plain = r.v === 2 && (seen.cam === 2 || seen.cam === 5) && r.C > (det as DetectorsV2).cams[seen.cam].cut;
         const v = VENT_OF[seen.cam];
         if (v && sealed !== v && !plain) {
           await log(`he is at ${seen.cam} beside vent ${v}: sealing it`, { C: r.C ?? r.over, B: r.B ?? null });
@@ -726,7 +775,7 @@ async function loopNight({ act, c, record, eyes, reader, det, epochHostMs, stopA
       if (over()) break;
       if (await service()) break;
       if (n >= 11 && sealed === n) continue;
-      const r: any = await here(n);
+      const r = await here(n);
       if (r && r.occ) {
         await log(`found at ${n}`, { C: r.C ?? r.over, B: r.B ?? null, lostMs: lostSinceMs === null ? null : Math.round(nightMs() - lostSinceMs) });
         if (n >= 11 && sealed !== n) await seal(n);
@@ -746,16 +795,16 @@ async function loopNight({ act, c, record, eyes, reader, det, epochHostMs, stopA
   return stats;
 }
 
-async function main(argv) {
+async function main(argv: string[]) {
   const options = parseArgs(argv);
   const controlsModel = JSON.parse(await readFile(CONTROLS_PATH, 'utf8'));
   const regionModel = loadRegionSet(REGIONS_PATH, 'night');
   const bindings = Object.fromEntries(await Promise.all([['controls', CONTROLS_PATH], ['regions', REGIONS_PATH]]
-    .map(async ([k, p]) => [k, { path: p.slice(ROOT.length + 1), sha256: sha256(await readFile(p)) }])));
+    .map(async ([k, p]) => [k, { path: p.slice(ROOT.length + 1), sha256: sha256(await readFile(p)) }] as const)));
   if (options.dryRun) { console.log(JSON.stringify({ status: 'DRY_RUN', modes: MODES, bindings }, null, 2)); return; }
   if (process.env.FNAF3_LEASE_HELD !== '1') fail('run through fnaf3-run.sh so the serial lease is held');
-  let serial;
-  try { ({ serial } = resolveSerial()); } catch (error) { fail(error.message); }
+  let serial: string;
+  try { ({ serial } = resolveSerial()); } catch (error) { fail((error as Error).message); }
   const c = controlsOf(controlsModel);
   const reader = new Reader(c);
 
@@ -775,7 +824,7 @@ async function main(argv) {
   const snapDir = join(tmpdir(), `fnaf3-snap-${process.pid}`);
   await mkdir(snapDir, { recursive: true });
   let n = 0;
-  const snapTo = async (name) => {
+  const snapTo = async (name: string) => {
     n += 1;
     const target = join(snapDir, `f${n}.png`);
     const at = performance.now();
@@ -783,11 +832,14 @@ async function main(argv) {
     await record.capture(name, await readFile(target));
     await record.event('snap-ms', { name, ms: Math.round(performance.now() - at) });
   };
-  let hidProcess = null; let recorder = null; let channel = null; let entered = false; let error = null; let video = null;
+  let hidProcess = null as AdbHidProcess | null; let recorder = null as RegionRecorder | null;
+  let channel = null as ReturnType<AdbCompanionPort['openRegions']> | null; let entered = false; let error = null as Error | null;
+  let video = null as ReturnType<typeof startVideo> | null;
   try {
     await snapTo('title-before');
-    hidProcess = new AdbHidProcess({ serial });
-    const hid = new HidWireTransport({ write: (l) => hidProcess.write(l), ready: () => hidProcess.ready(), contactMs: CONTACT_MS });
+    const adbHid = new AdbHidProcess({ serial });
+    hidProcess = adbHid;
+    const hid = new HidWireTransport({ write: (l) => adbHid.write(l), ready: () => adbHid.ready(), contactMs: CONTACT_MS });
     await hid.start();
     const act = new Actor(hid, record, CONTACT_MS);
     channel = port.openRegions({ timeoutMs: 1500 });
@@ -810,37 +862,42 @@ async function main(argv) {
     if (!office) fail('the title did not leave within 15 s of LOAD GAME');
     await sleep(3500);
     const epochHostMs = office.imageHostMs;
-    record.document.night = { officeAfterLoadMs: office.imageHostMs - pressAt, epochHostMs };
+    const nightDoc: { officeAfterLoadMs: number, epochHostMs: number, endedAtNightMs?: number } =
+      { officeAfterLoadMs: office.imageHostMs - pressAt, epochHostMs };
+    record.document.night = nightDoc;
     await record.save('NIGHT_RUNNING');
     if (options.mode === 'calibrate') {
-      const det = options.detectors ? JSON.parse(await readFile(options.detectors, 'utf8')) : null;
-      if (det) record.document.detectors = { path: options.detectors, sha256: sha256(await readFile(options.detectors)), source: det.source };
+      const det: DetectorsV1 | null = options.detectors ? JSON.parse(await readFile(options.detectors, 'utf8')) : null;
+      // A file was read only when --detectors named one.
+      if (det) record.document.detectors = { path: options.detectors, sha256: sha256(await readFile(options.detectors as string)), source: det.source };
       await calibrate({ act, c, record, eyes, reader, snapTo, stopAfterMs: options.stopAfterMs, epochHostMs, det, survey: options.survey });
     } else {
-      const det = JSON.parse(await readFile(options.detectors, 'utf8'));
+      // The loop requires --detectors and --night (parseArgs).
+      const detectors = options.detectors as string;
+      const det: Detectors = JSON.parse(await readFile(detectors, 'utf8'));
       if (!['fnaf3-detectors-v1', 'fnaf3-detectors-v2'].includes(det.schema)) fail('--detectors is not fnaf3-detectors-v1 or v2');
-      if (det.schema === 'fnaf3-detectors-v2' ? !Object.values(det.cams).every((v: any) => Number.isFinite(v.cut))
+      if (det.schema === 'fnaf3-detectors-v2' ? !Object.values(det.cams).every((v) => Number.isFinite(v.cut))
         : !Number.isFinite(det.occupied) && !det.cuts) fail('--detectors has no occupancy cut chosen');
-      record.document.detectors = { path: options.detectors, sha256: sha256(await readFile(options.detectors)), source: det.source };
+      record.document.detectors = { path: options.detectors, sha256: sha256(await readFile(detectors)), source: det.source };
       let teach = QUIET;
       if (options.teach) {
         try {
           teach = teachFeed(port, record);
           // The office's first frame on the helper's own image clock.
           teach.origin(office.imageNs);
-          teach.night(options.night, false);
+          teach.night(options.night as number, false);
           teach.step('SWEEP');
-        } catch (e) { await record.event('teach-error', { message: e.message }); teach = QUIET; }
+        } catch (e) { await record.event('teach-error', { message: (e as Error).message }); teach = QUIET; }
       }
       record.document.teach = options.teach;
       record.document.loop = await loopNight({ act, c, record, eyes, reader, det, epochHostMs,
-        stopAfterMs: options.stopAfterMs, night: options.night, teach });
+        stopAfterMs: options.stopAfterMs, night: options.night as number, teach });
       await teach.clear();
     }
-    record.document.night.endedAtNightMs = performance.now() - epochHostMs;
+    nightDoc.endedAtNightMs = performance.now() - epochHostMs;
     for (let i = 0; i < 3; i += 1) { await snapTo(`after-night-${i}`); await sleep(2500); }
   } catch (e) {
-    error = e;
+    error = e as Error;
   } finally {
     try { await hidProcess?.close(); } catch { /* the lease bounds cleanup */ }
     if (recorder) {
@@ -854,7 +911,7 @@ async function main(argv) {
         const dir = join(homedir(), 'fnaf-apks', 'fnaf3-videos');
         await mkdir(dir, { recursive: true });
         record.document.video = await video.stop(dir);
-      } catch (e) { record.document.video = `FAILED: ${e.message}`; }
+      } catch (e) { record.document.video = `FAILED: ${(e as Error).message}`; }
     }
     if (entered) {
       // FNaF 3 banks a won night before its minigame (fnaf3-first-night-20260920),
@@ -865,7 +922,7 @@ async function main(argv) {
         await sleep(10000);
         await snapTo('title-after');
         record.document.recovery = 'RELAUNCHED_TO_TITLE (snap retained, read by a person)';
-      } catch (e) { record.document.recovery = `FAILED: ${e.message}`; error ??= e; }
+      } catch (e) { record.document.recovery = `FAILED: ${(e as Error).message}`; error ??= e as Error; }
     }
   }
   if (error) {
@@ -874,11 +931,11 @@ async function main(argv) {
     await record.save('FAILED_OR_REFUSED');
   } else await record.save('COMPLETE');
   console.log(`fnaf3 run ${id}: ${record.document.status}; inputs=${record.document.inputsSent}; ` +
-    `regionFrames=${record.document.regions?.frames}; out=${outdir}; frames=${captureDir}`);
+    `regionFrames=${recorder?.frames}; out=${outdir}; frames=${captureDir}`);
   if (record.document.status !== 'COMPLETE') process.exitCode = 3;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   process.on('SIGINT', () => { STOP.requested = true; });
-  main(process.argv.slice(2)).catch((error) => { console.error(error.message); process.exitCode = 2; });
+  main(process.argv.slice(2)).catch((error: Error) => { console.error(error.message); process.exitCode = 2; });
 }

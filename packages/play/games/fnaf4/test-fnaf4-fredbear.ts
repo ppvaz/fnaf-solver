@@ -8,15 +8,18 @@ import { createHash } from 'node:crypto';
 import {
   HEARING_PATH, loadHearing, Grid, sideGrid, laughGrid, landings, laughs, walkSlot, quietTapAt, releaseAt, shadowOf,
 } from './fnaf4-fredbear.ts';
-import { Actor, interruptibleSleep } from '../../bin/phone/night-kit.ts';
+import { Actor, type RunRecord, interruptibleSleep } from '../../bin/phone/night-kit.ts';
 import { HidWireTransport } from '../../src/venues/phone/hid.ts';
+import type { HearingRecord } from './fnaf4-hearing-evidence.ts';
 
-const failures = [];
+const failures: string[] = [];
 let checks = 0;
-const ok = (what, c) => { checks += 1; if (!c) failures.push(what); };
+const ok = (what: string, c: unknown) => { checks += 1; if (!c) failures.push(what); };
+/** A fake that implements only what the code under test calls. */
+const fakeOf = <T>(value: unknown) => value as T;
 
 const hearing = loadHearing();
-const record = JSON.parse(readFileSync(new URL('../../../../docs/evidence/fnaf4-night5-n5b-20260927.json', import.meta.url), 'utf8'));
+const record: HearingRecord = JSON.parse(readFileSync(new URL('../../../../docs/evidence/fnaf4-night5-n5b-20260927.json', import.meta.url), 'utf8'));
 const MARGIN = 0.04;       // a floor must clear what it separates by this much on each side
 
 // --- the grid -------------------------------------------------------------------------
@@ -28,14 +31,14 @@ const MARGIN = 0.04;       // a floor must clear what it separates by this much 
   ok('next and last tick bracket a time', g.nextK(g.at(3) + 1) === 4 && g.lastK(g.at(3) + 1) === 3 && g.nextK(g.at(3)) === 3);
   ok('a tick is decided only after its candidates are in', !g.decided(3, g.at(3) + 1999) && g.decided(3, g.at(3) + 2000));
   ok('shadow nights are 7 and 8', shadowOf(5) === 0 && shadowOf(6) === 0 && shadowOf(7) === 1 && shadowOf(8) === 1);
-  ok('Night 5 rolls on 3000 ms, Night 7 on 2000 ms', (sideGrid(0, 5, hearing) as any).periodMs === 3000 && (sideGrid(0, 7, hearing) as any).periodMs === 2000);
-  ok('laughs are on 10000 ms', (laughGrid(0, hearing) as any).periodMs === 10000);
+  ok('Night 5 rolls on 3000 ms, Night 7 on 2000 ms', sideGrid(0, 5, hearing).periodMs === 3000 && sideGrid(0, 7, hearing).periodMs === 2000);
+  ok('laughs are on 10000 ms', laughGrid(0, hearing).periodMs === 10000);
 }
 
 // --- landings and laughs on synthetic candidates ---------------------------------------
 {
   const g = sideGrid(0, 5, hearing);
-  const ev = (cue, k, ncc, dt = 0) => ({ cue, ncc, onsetMs: g.at(k) + dt });
+  const ev = (cue: string, k: number, ncc: number, dt = 0) => ({ cue, ncc, onsetMs: g.at(k) + dt });
   const rows = landings([ev('fb-right', 2, 0.30), ev('fb-left', 2, 0.08), ev('fb-left', 3, 0.35, 90),
     ev('fb-left', 4, 0.26), ev('fb-right', 4, 0.24), ev('fb-right', 5, 0.17), ev('fb-left', 6, 0.9, 400)], g, hearing.sideGrid);
   const by = Object.fromEntries(rows.map((r) => [r.k, r]));
@@ -56,7 +59,7 @@ const MARGIN = 0.04;       // a floor must clear what it separates by this much 
 // Each Night 5 replay (audio.raw through the model's detector): its landings and
 // laughs reproduce from the retained candidates, and the floors clear its silent
 // grid instants and sit under its weakest event, each by MARGIN.
-const replayed = (label, expectLandings, expectLaughs, { deaf = false } = {}) => {
+const replayed = (label: string, expectLandings: string, expectLaughs: string, { deaf = false }: { deaf?: boolean } = {}) => {
   const b = record.derived?.[label];
   ok(`the evidence record carries ${label}'s rows`, !!b?.hearing?.candidates?.length);
   if (!b) return null;
@@ -71,7 +74,8 @@ const replayed = (label, expectLandings, expectLaughs, { deaf = false } = {}) =>
   const s = h.summary;
   // A deaf night (another app's music over the game) only has to accept nothing.
   ok(`${label}: the side floor ${hearing.sideGrid.minNcc} clears the silent ticks (max ${s.silentTickMaxNcc}) by ${deaf ? 0 : MARGIN}`,
-    hearing.sideGrid.minNcc - s.silentTickMaxNcc >= (deaf ? 0.001 : MARGIN));
+    // Every replayed night has silent ticks and quiet laugh ticks.
+    hearing.sideGrid.minNcc - (s.silentTickMaxNcc as number) >= (deaf ? 0.001 : MARGIN));
   if (s.landingMinNcc !== null) {
     ok(`${label}: the side floor ${hearing.sideGrid.minNcc} sits under the weakest landing (${s.landingMinNcc}) by ${MARGIN}`,
       s.landingMinNcc - hearing.sideGrid.minNcc >= MARGIN);
@@ -84,7 +88,7 @@ const replayed = (label, expectLandings, expectLaughs, { deaf = false } = {}) =>
     .map((l) => `${l.room ? 'room' : 'fake'}@${l.k * 10}s`).join(' ');
   ok(`${label}: laughs replay as ${expectLaughs} (${ls})`, ls === expectLaughs);
   ok(`${label}: the laugh floor ${hearing.laughGrid.minNcc} clears the quiet laugh ticks (max ${s.quietLaughTickMaxNcc}) by ${MARGIN}`,
-    hearing.laughGrid.minNcc - s.quietLaughTickMaxNcc >= MARGIN);
+    hearing.laughGrid.minNcc - (s.quietLaughTickMaxNcc as number) >= MARGIN);
   if (s.laughMinNcc !== null) {
     ok(`${label}: the laugh floor ${hearing.laughGrid.minNcc} sits under the weakest laugh (${s.laughMinNcc}) by ${MARGIN}`,
       s.laughMinNcc - hearing.laughGrid.minNcc >= MARGIN);
@@ -96,7 +100,7 @@ const replayed = (label, expectLandings, expectLaughs, { deaf = false } = {}) =>
     ok(`${label}: ${cue} ${ncc} at ${rel} ms lies ${dt.toFixed(0)} ms from its tick, inside ${hearing.sideGrid.halfWidthMs - 30}`,
       Math.abs(dt) <= hearing.sideGrid.halfWidthMs - 30);
   }
-  const opens = (b.views?.holds ?? []).map((x) => x.openAfterReleaseMs).filter(Number.isFinite);
+  const opens = (b.views?.holds ?? []).map((x) => x.openAfterReleaseMs).filter((x): x is number => Number.isFinite(x));
   ok(`${label}: the door reads open ${opens.join('/')} ms after a release, inside the model's ${hearing.door.openAfterReleaseMs}`,
     opens.every((ms) => ms >= hearing.door.openAfterReleaseMs[0] && ms <= hearing.door.openAfterReleaseMs[1]));
   return b;
@@ -130,7 +134,7 @@ replayed('n5c-replay', '', 'fake@20s', { deaf: true });
 {
   const modelSha = createHash('sha256').update(readFileSync(HEARING_PATH)).digest('hex');
   for (const [k, b] of Object.entries(record.derived ?? {})) {
-    ok(`${k} was derived under the current hearing model`, (b as any).hearingModel?.sha256 === modelSha);
+    ok(`${k} was derived under the current hearing model`, b.hearingModel?.sha256 === modelSha);
   }
 }
 
@@ -138,17 +142,17 @@ replayed('n5c-replay', '', 'fake@20s', { deaf: true });
 const silence = Object.entries(record.derived ?? {}).filter(([k]) => k.startsWith('silence-'));
 ok('the record carries the Nights 1-4 silence rows', silence.length >= 4);
 for (const [k, b] of silence) {
-  ok(`${k}: no laugh on the grid (max ${(b as any).hearing.summary.quietLaughTickMaxNcc}) within ${MARGIN} of the floor`,
-    (b as any).hearing.summary.laughsAccepted.length === 0 && hearing.laughGrid.minNcc - (b as any).hearing.summary.quietLaughTickMaxNcc >= MARGIN);
+  ok(`${k}: no laugh on the grid (max ${b.hearing.summary.quietLaughTickMaxNcc}) within ${MARGIN} of the floor`,
+    b.hearing.summary.laughsAccepted.length === 0 && hearing.laughGrid.minNcc - (b.hearing.summary.quietLaughTickMaxNcc as number) >= MARGIN);
 }
 
 // --- our own run's sound, measured on every walk of Nights 1-5 -------------------------
 {
   const rows = Object.entries(record.derived ?? {}).filter(([k]) => k !== 'n5b-live')
-    .flatMap(([, b]) => (b as any).runOnsets ?? [])
-    .filter(([control, , from, , ms]) => ms !== null && (control !== 'back' || ['leftDoor', 'rightDoor', 'closet'].includes(from)));
+    .flatMap(([, b]) => b.runOnsets ?? [])
+    .filter(([control, , from, , ms]) => ms !== null && (control !== 'back' || (['leftDoor', 'rightDoor', 'closet'] as (string | null)[]).includes(from)));
   for (const gesture of ['press', 'double']) {
-    const ms = rows.filter((r) => r[1] === gesture).map((r) => r[4]);
+    const ms = rows.filter((r) => r[1] === gesture).map((r) => r[4] as number);   // measured: filtered above
     const [lo, hi] = hearing.quietWalk.runOnsetAfterIssueMs[gesture];
     ok(`${gesture}: ${ms.length} measured run onsets (${Math.min(...ms)}..${Math.max(...ms)} ms) lie in the model's ${lo}..${hi}`,
       ms.length >= 50 && ms.every((x) => x >= lo && x <= hi));
@@ -157,13 +161,14 @@ for (const [k, b] of silence) {
 
 // --- walks and releases ---------------------------------------------------------------
 {
-  const g: any = sideGrid(0, 5, hearing);
-  const press = walkSlot(g, hearing, 'press');
-  const dbl = walkSlot(g, hearing, 'double');
+  const g = sideGrid(0, 5, hearing);
+  // A 3 s grid has both slots (checked next); a null one throws below, as it did untyped.
+  const press = walkSlot(g, hearing, 'press') as [number, number];
+  const dbl = walkSlot(g, hearing, 'double') as [number, number];
   ok(`a back has a quiet slot on a 3 s grid (${press})`, press && press[0] < press[1]);
   ok(`a door run has a quiet slot on a 3 s grid (${dbl})`, dbl && dbl[0] < dbl[1]);
   const q = hearing.quietWalk;
-  for (const [gesture, slot] of [['press', press], ['double', dbl]]) {
+  for (const [gesture, slot] of [['press', press], ['double', dbl]] as const) {
     const [onLo, onHi] = q.runOnsetAfterIssueMs[gesture];
     ok(`${gesture}: its run starts after the tick window's first ${q.windowClearMs} ms`, slot[0] + onLo >= -g.halfWidthMs + q.windowClearMs);
     ok(`${gesture}: its run ends before the next window`, slot[1] + onHi + q.runLengthMs <= g.periodMs - g.halfWidthMs);
@@ -198,10 +203,10 @@ for (const [k, b] of silence) {
 
 // --- a hold is ONE contact ------------------------------------------------------------
 {
-  const lines = [];
+  const lines: { command: string, report: number[] }[] = [];
   const naps = interruptibleSleep();
   const hid = new HidWireTransport({ write: async (l) => { lines.push(JSON.parse(l)); }, sleep: naps.sleep, contactMs: 160 });
-  const record0 = { document: { inputsSent: 0 }, event: async () => ({}) };
+  const record0 = fakeOf<RunRecord>({ document: { inputsSent: 0 }, event: async () => ({}) });
   const act = new Actor(hid, record0, 160, { interrupt: naps.interrupt });
   const t0 = Date.now();
   let polls = 0;

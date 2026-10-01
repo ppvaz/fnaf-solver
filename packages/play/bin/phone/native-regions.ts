@@ -25,25 +25,34 @@ import { deflateSync } from 'node:zlib';
 import { AdbCompanionPort } from '../../src/campaign/physical-ports.ts';
 import { resolveSerial } from './local-profile.ts';
 
-function fail(message) { console.error(`native-regions: ${message}`); process.exit(2); }
+/** A registered rectangle of native display pixels, sampled every `step`. */
+interface Rect { readonly x: number, readonly y: number, readonly width: number, readonly height: number, readonly step?: number }
+type RegionChannel = ReturnType<AdbCompanionPort['openRegions']>;
+type RegionRead = Awaited<ReturnType<RegionChannel['read']>>;
+/** What `record` needs of a channel. */
+type RecordChannel = Pick<RegionChannel, 'read' | 'close'>;
 
-export function loadRegionSet(path, name) {
+function fail(message: string): never { console.error(`native-regions: ${message}`); process.exit(2); }
+
+export function loadRegionSet(path: string, name: string) {
   const model = JSON.parse(readFileSync(path, 'utf8'));
   if (model.schema !== 'native-regions-v1') fail(`${path} is not native-regions-v1`);
-  const set = model.sets?.[name];
+  const set: Readonly<Record<string, Rect>> | undefined = model.sets?.[name];
   if (!set) fail(`${path} has no set ${name}`);
   return { model, set };
 }
 
-export async function registerSet(channel, set) {
+export async function registerSet(channel: Pick<RegionChannel, 'clear' | 'set'>, set: Readonly<Record<string, Rect>>) {
   await channel.clear();
   for (const [name, r] of Object.entries(set)) {
-    await channel.set(name, { x: (r as any).x, y: (r as any).y, width: (r as any).width, height: (r as any).height, step: (r as any).step });
+    await channel.set(name, { x: r.x, y: r.y, width: r.width, height: r.height, step: r.step });
   }
 }
 
 /** A minimal RGB PNG encoder, so a region can be looked at without a dependency. */
-export function pngFromRegion(region, scale = region.step) {
+// A region read names its step; a caller without one passes the scale.
+export function pngFromRegion(region: { readonly cols: number, readonly rows: number, readonly step?: number, readonly pixels: ArrayLike<number> },
+  scale = region.step as number) {
   const width = region.cols * scale;
   const height = region.rows * scale;
   const raw = Buffer.alloc((width * 3 + 1) * height);
@@ -60,8 +69,8 @@ export function pngFromRegion(region, scale = region.step) {
     for (let k = 0; k < 8; k += 1) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
     return c >>> 0;
   });
-  const crc = (buf) => { let c = 0xffffffff; for (const b of buf) c = crcTable[(c ^ b) & 0xff] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
-  const chunk = (type, data) => {
+  const crc = (buf: Buffer) => { let c = 0xffffffff; for (const b of buf) c = crcTable[(c ^ b) & 0xff] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
+  const chunk = (type: string, data: Buffer) => {
     const len = Buffer.alloc(4); len.writeUInt32BE(data.length);
     const body = Buffer.concat([Buffer.from(type, 'ascii'), data]);
     const sum = Buffer.alloc(4); sum.writeUInt32BE(crc(body));
@@ -74,7 +83,7 @@ export function pngFromRegion(region, scale = region.step) {
     chunk('IHDR', ihdr), chunk('IDAT', deflateSync(raw)), chunk('IEND', Buffer.alloc(0))]);
 }
 
-const quantile = (sorted, q) => sorted[Math.min(sorted.length - 1, Math.floor(q * sorted.length))];
+const quantile = (sorted: number[], q: number) => sorted[Math.min(sorted.length - 1, Math.floor(q * sorted.length))];
 // How long `record` waits without a new frame before reopening its channel.
 const RECORD_STALL_MS = 3000;
 
@@ -92,7 +101,9 @@ const RECORD_STALL_MS = 3000;
  *     endpoint fails (night7-k3-sr03 lost the recorder rediscovering through a still intro).
  * A read the session no longer answers forces a reopen; a reopen that fails both ways throws.
  */
-export async function recordFrames({ open, seconds, append, now = () => performance.now(), stallMs = RECORD_STALL_MS }) {
+export async function recordFrames<C extends RecordChannel>({ open, seconds, append, now = () => performance.now(), stallMs = RECORD_STALL_MS }:
+  { open: (fresh: boolean) => Promise<{ opened: C }>, seconds: number, append: (row: object) => void, now?: () => number,
+    stallMs?: number }) {
   let channel = (await open(false)).opened;
   const until = now() + seconds * 1000;
   let last = -1; let rows = 0; let reopened = 0;
@@ -100,32 +111,32 @@ export async function recordFrames({ open, seconds, append, now = () => performa
   while (now() < until) {
     if (now() - advancedAt > stallMs) {
       try { channel.close(); } catch { /* the stopped session may already be gone */ }
-      let next;
+      let next: { opened: C };
       try { next = await open(false); }
       catch {
         try { next = await open(true); }
-        catch (error) { throw new Error(`frames stopped at seq ${last} and the channel could not be reopened: ${error.message}`); }
+        catch (error) { throw new Error(`frames stopped at seq ${last} and the channel could not be reopened: ${(error as Error).message}`); }
       }
       channel = next.opened; reopened += 1; advancedAt = now();
       append({ reopened, afterSeq: last, atHostMs: now() });
       continue;
     }
-    let r;
+    let r: RegionRead;
     try { r = await channel.read(); }
     catch { advancedAt = -Infinity; continue; }   // a read the session no longer answers: reopen now
     if (r.seq < 0 || r.seq === last) continue;
     last = r.seq; advancedAt = now();
     const regions = Object.fromEntries(Object.entries(r.regions).map(([k, v]) =>
-      [k, { cols: (v as any).cols, rows: (v as any).rows, step: (v as any).step, hex: Buffer.from(new Uint8Array((v as any).pixels.buffer)).toString('base64') }]));
+      [k, { cols: v.cols, rows: v.rows, step: v.step, hex: Buffer.from(new Uint8Array(v.pixels.buffer)).toString('base64') }]));
     append({ seq: r.seq, imageNs: r.imageNs === null ? null : String(r.imageNs), imageHostMs: r.imageHostMs, rttMs: r.rttMs, regions });
     rows += 1;
   }
   return { rows, reopened, channel };
 }
 
-async function main(argv) {
+async function main(argv: string[]) {
   const verb = argv[0];
-  const opt = { model: null, set: 'night', count: 200, seconds: 10, out: null };
+  const opt = { model: null as string | null, set: 'night', count: 200, seconds: 10, out: null as string | null };
   for (let i = 1; i < argv.length; i += 1) {
     const flag = argv[i];
     if (flag === '--model') opt.model = argv[++i];
@@ -141,8 +152,8 @@ async function main(argv) {
     fail('run under the serial lease (tools/device/lease.sh or the night wrapper)');
   }
   const { set } = loadRegionSet(opt.model, opt.set);
-  let serial;
-  try { ({ serial } = resolveSerial()); } catch (error) { fail(error.message); }
+  let serial: string;
+  try { ({ serial } = resolveSerial()); } catch (error) { fail((error as Error).message); }
   // A channel on this port reuses its cached endpoint. `fresh` rediscovers it, which a capture restart needs (the
   // stopped session's endpoint is gone) and which a long night can fail (its logcat line rotates out: 2026-10-01,
   // night7-k3-sr03 lost its recorder that way while merely waiting through the intro card).
@@ -172,15 +183,16 @@ async function main(argv) {
       return;
     }
     if (verb === 'latency') {
-      const rtt = []; const age = []; const seqs = new Set();
+      const rtt: number[] = []; const age: number[] = []; const seqs = new Set<number>();
       for (let i = 0; i < opt.count; i += 1) {
         const r = await channel.read();
         rtt.push(r.rttMs);
-        if (r.imageNs >= 0n) age.push(Number(r.snapshotNs - r.imageNs) / 1e6);
+        // A read the helper answered names both clocks; one that did not throws here, as it did untyped.
+        if ((r.imageNs as bigint) >= 0n) age.push(Number((r.snapshotNs as bigint) - (r.imageNs as bigint)) / 1e6);
         seqs.add(r.seq);
       }
       rtt.sort((a, b) => a - b); age.sort((a, b) => a - b);
-      const row = (xs) => ({ p50: +quantile(xs, 0.5).toFixed(2), p95: +quantile(xs, 0.95).toFixed(2), max: +xs.at(-1).toFixed(2) });
+      const row = (xs: number[]) => ({ p50: +quantile(xs, 0.5).toFixed(2), p95: +quantile(xs, 0.95).toFixed(2), max: +(xs.at(-1) as number).toFixed(2) });
       console.log(JSON.stringify({ reads: opt.count, distinctFrames: seqs.size, rttMs: row(rtt),
         frameAgeAtReplyMs: row(age), note: 'frame age = helper clock at reply minus image timestamp' }));
       return;
@@ -188,10 +200,11 @@ async function main(argv) {
     if (verb === 'record') {
       if (!opt.out) fail('--out FILE.jsonl is required');
       try { channel.close(); } catch { /* recordFrames opens its own channel */ }
-      let done;
+      const out = opt.out;
+      let done: { rows: number, reopened: number, channel: RegionChannel };
       try {
-        done = await recordFrames({ open, seconds: opt.seconds, append: (row) => appendFileSync(opt.out, `${JSON.stringify(row)}\n`) });
-      } catch (error) { fail(error.message); }
+        done = await recordFrames({ open, seconds: opt.seconds, append: (row) => appendFileSync(out, `${JSON.stringify(row)}\n`) });
+      } catch (error) { fail((error as Error).message); }
       channel = done.channel;
       console.log(`recorded ${done.rows} frames to ${opt.out} (${done.reopened} reopen(s) after ${RECORD_STALL_MS} ms without a frame)`);
     }
@@ -202,5 +215,5 @@ async function main(argv) {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  main(process.argv.slice(2)).catch((error) => fail(error.message));
+  main(process.argv.slice(2)).catch((error: Error) => fail(error.message));
 }

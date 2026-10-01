@@ -52,12 +52,60 @@ const AUDIO_CAPTURE = join(ROOT, 'packages/play/bin/audio/capture-bt-audio.sh');
 const TEARDOWN = join(HERE, '../../bin/phone/game-teardown.sh');
 const TITLE_INTERVAL_MS = 250;
 
-const sleep = ms => new Promise<any>(resolvePromise => setTimeout(resolvePromise, ms));
+type Side = 'left' | 'right';
+/** The Night 1 staging offsets, each from Continue's release. */
+type Night1Staging = Readonly<Record<'bonnieArmedAtMs' | 'leftCalibrationAtMs' | 'leftCalibrationBudgetMs' | 'leftCalibrationObservedMs' |
+  'firstLeftScanAtMs' | 'leftScanIntervalMs' | 'rightAndCameraArmedAtMs' | 'rightAndMonitorCalibrationAtMs' |
+  'rightAndMonitorCalibrationBudgetMs' | 'rightAndMonitorObservedMs' | 'fullLoopAtMs', number>>;
+/** The FNaF 1 route profile (fnaf1-device-route-v1), as validateRoute checks it. */
+interface Route {
+  readonly schema: string;
+  readonly target: { readonly package: string, readonly build: string, readonly launcher: string };
+  readonly title: { readonly observer: string, readonly model: string, readonly requiredItem: string, readonly consensusFrames: number };
+  readonly audio: { readonly required: boolean, readonly purpose?: string };
+  readonly teachingOverlay: { readonly required: boolean, readonly tool: string, readonly model: string, readonly schema: string };
+  readonly controls: { readonly contactMs: number, readonly startsAtPan: number };
+  readonly timing: { readonly lightAfterPressMs: number, readonly flipSettleMs: number, readonly cameraUpDwellMs: number,
+    readonly officeReadyDelayMs: number, readonly doorRecheckMs: number, readonly actionBoundMs: number };
+  readonly night1Staging?: Night1Staging;
+}
+interface PanBinding {
+  readonly x: number, readonly y: number, readonly resultingPan: number, readonly durationMs: number,
+  readonly claimLevel: string, readonly durationClaimLevel: string;
+}
+/** The FNaF 1 control map, as validateRoute checks it. */
+interface Controls {
+  readonly target: { readonly package: string, readonly version: string };
+  readonly view: { readonly startsAt: number, readonly maxPanPx: number, readonly scale: number };
+  readonly panMap: Readonly<Record<string, PanBinding>>;
+  readonly controlMap: Readonly<Record<string, { readonly x: number, readonly y: number }>>;
+}
+/** The FNaF 1 title model, as validateRoute checks it. */
+interface TitleModel { readonly schema: string, readonly build?: string, readonly items: { readonly continue: readonly [number, number] } }
+/** The FNaF 1 teaching strip's model, as validateRoute checks it. */
+interface TeachModel {
+  readonly schema: string, readonly target: { readonly package: string, readonly build: string };
+  readonly presenter: { readonly package: string, readonly lesson: string }, readonly stages: readonly string[];
+}
+/** What a child process left. */
+interface RunResult { code: number | null, signal: NodeJS.Signals | null, timedOut: boolean, stdout: string, stderr: string }
+type RunOptions = { input?: string | Buffer | null, timeoutMs?: number, env?: NodeJS.ProcessEnv };
+/** The title observer's verdict on one native frame. */
+interface TitleRead { confident: boolean, output: string, stderr: string, frame: string, code: number | null }
+/** fnaf1-door-light.py's JSON line. */
+interface DoorVerdict { readonly status?: unknown, readonly reason?: unknown, readonly state?: unknown }
+/** A bridge built on the serial the lease resolved. */
+type Bridge = AdbDeviceBridge & { readonly serial: string };
+type Options = ReturnType<typeof parseArgs>;
+/** The teaching strip's record, which preflight writes before anything else reads it. */
+type Overlay = NonNullable<RunRecord['document']['teachingOverlay']>;
+
+const sleep = (ms: number) => new Promise(resolvePromise => setTimeout(resolvePromise, ms));
 const stamp = () => new Date().toISOString().replace(/[-:.]/g, '').replace('T', 'T').replace('Z', 'Z');
-const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
+const sha256 = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
 
 /** Wait in one-second slices so an abort request never hides behind a long idle. */
-async function waitUntil(monotonicMs, shouldStop = () => false) {
+async function waitUntil(monotonicMs: number, shouldStop = () => false) {
   while (!shouldStop()) {
     const remaining = monotonicMs - performance.now();
     if (remaining <= 0) return true;
@@ -66,9 +114,9 @@ async function waitUntil(monotonicMs, shouldStop = () => false) {
   return false;
 }
 
-function fail(message) { throw new Error(`fnaf1-night-run: ${message}`); }
+function fail(message: string): never { throw new Error(`fnaf1-night-run: ${message}`); }
 
-function parseInteger(value, name, { min, max }) {
+function parseInteger(value: unknown, name: string, { min, max }: { min: number, max: number }) {
   if (!/^[0-9]+$/.test(String(value))) fail(`${name} must be an integer`);
   const number = Number(value);
   if (!Number.isInteger(number) || number < min || number > max)
@@ -76,9 +124,9 @@ function parseInteger(value, name, { min, max }) {
   return number;
 }
 
-export function parseArgs(argv) {
-  const options = { live: false, confirmLive: false, btAudio: false, teachOverlay: false, abortRestart: false, night: null,
-    cursorObserved: null, label: null, dryRun: false };
+export function parseArgs(argv: string[]) {
+  const options = { live: false, confirmLive: false, btAudio: false, teachOverlay: false, abortRestart: false, night: null as number | null,
+    cursorObserved: null as number | null, label: null as string | null, dryRun: false };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === '--live') options.live = true;
@@ -110,11 +158,12 @@ export function parseArgs(argv) {
   return Object.freeze(options);
 }
 
-async function readJson(path) { return JSON.parse(await readFile(path, 'utf8')); }
-async function fileHash(path) { return sha256(await readFile(path)); }
-async function executable(path) { await access(path, fsConstants.X_OK); }
+/** A profile file, of the shape validateRoute then checks. */
+async function readJson<T>(path: string): Promise<T> { return JSON.parse(await readFile(path, 'utf8')); }
+async function fileHash(path: string) { return sha256(await readFile(path)); }
+async function executable(path: string) { await access(path, fsConstants.X_OK); }
 
-export function validateRoute(route, controls, titleModel, teachModel) {
+export function validateRoute(route: Route, controls: Controls, titleModel: TitleModel, teachModel: TeachModel) {
   if (route?.schema !== 'fnaf1-device-route-v1') fail('route schema is not fnaf1-device-route-v1');
   if (route?.target?.package !== PACKAGE || route?.target?.build !== BUILD || route?.target?.launcher !== '.Main')
     fail('route targets the wrong game or build');
@@ -160,7 +209,7 @@ export function validateRoute(route, controls, titleModel, teachModel) {
     if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.y))
       fail(`control model has no finite ${control} point`);
   }
-  for (const key of ['lightAfterPressMs', 'flipSettleMs', 'cameraUpDwellMs', 'officeReadyDelayMs', 'doorRecheckMs', 'actionBoundMs']) {
+  for (const key of ['lightAfterPressMs', 'flipSettleMs', 'cameraUpDwellMs', 'officeReadyDelayMs', 'doorRecheckMs', 'actionBoundMs'] as const) {
     if (!Number.isInteger(route?.timing?.[key]) || route.timing[key] < 1)
       fail(`route timing ${key} is missing`);
   }
@@ -173,12 +222,13 @@ export function validateRoute(route, controls, titleModel, teachModel) {
  * numeric gates here rather than explanatory prose in JSON, so a later edit
  * cannot quietly reintroduce the midnight full loop.
  */
-export function night1Staging(route) {
-  const staging = route?.night1Staging;
+export function night1Staging(route: Route) {
+  // Each key is checked below before any is read.
+  const staging = route?.night1Staging as Night1Staging;
   const keys = ['bonnieArmedAtMs', 'leftCalibrationAtMs', 'leftCalibrationBudgetMs',
     'leftCalibrationObservedMs', 'firstLeftScanAtMs', 'leftScanIntervalMs',
     'rightAndCameraArmedAtMs', 'rightAndMonitorCalibrationAtMs',
-    'rightAndMonitorCalibrationBudgetMs', 'rightAndMonitorObservedMs', 'fullLoopAtMs'];
+    'rightAndMonitorCalibrationBudgetMs', 'rightAndMonitorObservedMs', 'fullLoopAtMs'] as const;
   for (const key of keys) {
     if (!Number.isInteger(staging?.[key]) || staging[key] < 1)
       fail(`Night 1 staging ${key} is missing`);
@@ -197,11 +247,11 @@ export function night1Staging(route) {
   return Object.freeze({ ...staging });
 }
 
-function run(command, args, { input = null, timeoutMs = 15000, env = {} } = {}) {
-  return new Promise<any>((resolvePromise, reject) => {
+function run(command: string, args: string[], { input = null, timeoutMs = 15000, env = {} }: RunOptions = {}) {
+  return new Promise<RunResult>((resolvePromise, reject) => {
     const child = spawn(command, args, { cwd: ROOT, shell: false, stdio: ['pipe', 'pipe', 'pipe'],
       env: { ...process.env, ...env } });
-    const stdout = [], stderr = [];
+    const stdout: Buffer[] = [], stderr: Buffer[] = [];
     let timedOut = false;
     const timer = setTimeout(() => { timedOut = true; child.kill('SIGTERM'); }, timeoutMs);
     child.stdout.on('data', chunk => stdout.push(chunk));
@@ -216,12 +266,12 @@ function run(command, args, { input = null, timeoutMs = 15000, env = {} } = {}) 
   });
 }
 
-function parseJsonLine(text, context) {
+function parseJsonLine(text: string, context: string): DoorVerdict {
   try { return JSON.parse(text.trim()); }
   catch { fail(`${context} did not return JSON: ${text.trim() || 'empty'}`); }
 }
 
-function relativeToRoot(path) { return relative(ROOT, path).replaceAll('\\', '/'); }
+function relativeToRoot(path: string) { return relative(ROOT, path).replaceAll('\\', '/'); }
 
 /**
  * `capture-bt-audio.sh --start` deliberately accepts a connected PCM that is
@@ -229,20 +279,30 @@ function relativeToRoot(path) { return relative(ROOT, path).replaceAll('\\', '/'
  * Do not collapse that state into a disconnected route.  The recorder still
  * does the authoritative `bluealsa-cli info` check before it opens anything.
  */
-export function audioLinkState(result) {
+export function audioLinkState(result: { readonly code: number | null, readonly stdout?: string, readonly stderr?: string }) {
   const output = `${result.stdout ?? ''}${result.stderr ?? ''}`;
   if (result.code === 0 && /audio-route=READY\b/.test(output)) return 'READY';
   if (/audio-route=UNKNOWN reason=a2dp-stream-not-running\b/.test(output)) return 'CONNECTED_NOT_STREAMING';
   return 'UNAVAILABLE';
 }
 
+/** A retained native frame. */
+interface CaptureFrame { name: string, path: string, sha256: string, bytes: number, atWallMs: number }
+
 class RunRecord {
-  declare id: any;
-  declare outdir: any;
-  declare captureDir: any;
-  declare document: { schema: string; id: any; startedAt: string; claimLevel: string; target: { package: string; build: string; }; options: any; bindings: any; capture: { sensor: string; directory: any; frames: any[]; }; events: any[]; status: string; terminal: string; audio: { requested: any; }; };
+  declare id: string;
+  declare outdir: string;
+  declare captureDir: string;
+  declare document: {
+    schema: string, id: string, startedAt: string, claimLevel: string, target: { package: string, build: string }, options: Options,
+    bindings: object, capture: { sensor: string, directory: string, frames: CaptureFrame[] }, events: object[], status: string,
+    terminal: string, updatedAt?: string, preflight?: unknown, doorSensors?: { left: string | null, right: string | null },
+    teachingOverlay?: { requested: boolean, status: string, model: object, stage?: string, clearError?: string },
+    error?: string, abortRestart?: string, teardown?: string,
+    audio: { requested: boolean, linkState?: string, base?: string, pid?: string, status?: string, sidecar?: unknown, stopError?: string },
+  };
   declare eventsPath: string;
-  constructor({ id, outdir, captureDir, options, bindings }) {
+  constructor({ id, outdir, captureDir, options, bindings }: { id: string, outdir: string, captureDir: string, options: Options, bindings: object }) {
     this.id = id; this.outdir = outdir; this.captureDir = captureDir;
     this.document = {
       schema: 'fnaf1-device-run-v1', id, startedAt: new Date().toISOString(),
@@ -254,14 +314,14 @@ class RunRecord {
     this.eventsPath = join(outdir, 'events.jsonl');
   }
 
-  async event(type, fields = {}) {
+  async event(type: string, fields: object = {}) {
     const row = { atWallMs: Date.now(), atMonotonicMs: Math.round(performance.now()), type, ...fields };
     this.document.events.push(row);
     await appendFile(this.eventsPath, `${JSON.stringify(row)}\n`);
     return row;
   }
 
-  async capture(name, png) {
+  async capture(name: string, png: Buffer) {
     const filename = `${String(this.document.capture.frames.length).padStart(4, '0')}-${name}.png`;
     const path = join(this.captureDir, filename);
     await writeFile(path, png);
@@ -271,14 +331,14 @@ class RunRecord {
     return path;
   }
 
-  async save(status) {
+  async save(status: string) {
     this.document.status = status;
-    (this.document as any).updatedAt = new Date().toISOString();
+    this.document.updatedAt = new Date().toISOString();
     await writeFile(join(this.outdir, 'run.json'), `${JSON.stringify(this.document, null, 2)}\n`);
   }
 }
 
-async function titleRead(bridge, record, label) {
+async function titleRead(bridge: Bridge, record: RunRecord, label: string): Promise<TitleRead> {
   const png = await bridge.capturePng(bridge.serial);
   if (!png) fail('native title capture failed');
   const path = await record.capture(label, png);
@@ -289,8 +349,8 @@ async function titleRead(bridge, record, label) {
   return result;
 }
 
-async function titleConsensus(bridge, record, frames, prefix) {
-  const reads = [];
+async function titleConsensus(bridge: Bridge, record: RunRecord, frames: number, prefix: string) {
+  const reads: TitleRead[] = [];
   for (let index = 0; index < frames; index += 1) {
     const read = await titleRead(bridge, record, `${prefix}-${index + 1}`);
     reads.push(read);
@@ -302,7 +362,7 @@ async function titleConsensus(bridge, record, frames, prefix) {
   return reads[0];
 }
 
-async function waitForTitleToLeave(bridge, record) {
+async function waitForTitleToLeave(bridge: Bridge, record: RunRecord) {
   for (let attempt = 0; attempt < 12; attempt += 1) {
     await sleep(1000);
     const read = await titleRead(bridge, record, `after-continue-${attempt + 1}`);
@@ -312,29 +372,30 @@ async function waitForTitleToLeave(bridge, record) {
 }
 
 class Fnaf1Controls {
-  declare hid: any;
-  declare record: any;
-  declare route: any;
-  declare controls: any;
-  declare bridge: any;
-  declare pan: any;
+  declare hid: HidWireTransport;
+  declare record: RunRecord;
+  declare route: Route;
+  declare controls: Controls;
+  declare bridge: Bridge;
+  declare pan: number;
   declare doors: { left: { closed: boolean; recheckAt: number; }; right: { closed: boolean; recheckAt: number; }; };
-  declare notBeforeControlMs: any;
-  constructor({ hid, record, route, controls, bridge, notBeforeControlMs = null }) {
+  declare notBeforeControlMs: number | null;
+  constructor({ hid, record, route, controls, bridge, notBeforeControlMs = null }:
+    { hid: HidWireTransport, record: RunRecord, route: Route, controls: Controls, bridge: Bridge, notBeforeControlMs?: number | null }) {
     this.hid = hid; this.record = record; this.route = route; this.controls = controls; this.bridge = bridge;
     this.pan = controls.view.startsAt;
     this.doors = { left: { closed: false, recheckAt: 0 }, right: { closed: false, recheckAt: 0 } };
     this.notBeforeControlMs = notBeforeControlMs;
   }
 
-  point(control) { return this.controls.controlMap[control]; }
+  point(control: string) { return this.controls.controlMap[control]; }
 
-  assertControlWindow(action) {
+  assertControlWindow(action: string) {
     if (this.notBeforeControlMs !== null && performance.now() < this.notBeforeControlMs)
       fail(`Night 1 hands-off gate refused ${action} before ${Math.round(this.notBeforeControlMs)} ms`);
   }
 
-  async press(control, durationMs = this.route.controls.contactMs, detail = {}) {
+  async press(control: string, durationMs = this.route.controls.contactMs, detail: object = {}) {
     this.assertControlWindow(control);
     const point = this.point(control);
     await this.record.event('input.requested', { control, point: { x: point.x, y: point.y }, durationMs,
@@ -343,7 +404,7 @@ class Fnaf1Controls {
     await this.record.event('input.released', { control, durationMs, pan: this.pan, ...detail });
   }
 
-  async panTo(side) {
+  async panTo(side: Side) {
     const binding = this.controls.panMap[side];
     if (this.pan === binding.resultingPan) return;
     this.assertControlWindow(`pan-${side}`);
@@ -356,12 +417,12 @@ class Fnaf1Controls {
     await this.record.event('pan.released', { side, pan: this.pan });
   }
 
-  async toggleLight(side) {
+  async toggleLight(side: Side) {
     await this.press(side === 'left' ? 'leftDoorLight' : 'rightDoorLight', undefined, { side, action: 'toggle-light' });
     await sleep(this.route.timing.lightAfterPressMs);
   }
 
-  async setDoor(side, closed, reason) {
+  async setDoor(side: Side, closed: boolean, reason: string) {
     const state = this.doors[side];
     if (state.closed === closed) return;
     await this.panTo(side);
@@ -372,7 +433,7 @@ class Fnaf1Controls {
     await sleep(this.route.timing.flipSettleMs);
   }
 
-  async monitorFlick(captureName = null) {
+  async monitorFlick(captureName: string | null = null) {
     await this.press('monitor', undefined, { action: 'monitor-raise' });
     await sleep(this.route.timing.flipSettleMs);
     if (captureName) {
@@ -386,7 +447,7 @@ class Fnaf1Controls {
   }
 }
 
-async function detectorCalibrate(side, off, ons, modelPath, record) {
+async function detectorCalibrate(side: Side, off: string, ons: string[], modelPath: string, record: RunRecord) {
   const args = [DOOR_SENSOR, 'calibrate', '--side', side, '--off', off];
   for (const on of ons) args.push('--on', on);
   args.push('--out', modelPath);
@@ -396,7 +457,7 @@ async function detectorCalibrate(side, off, ons, modelPath, record) {
   return result.code === 0 && payload.status === 'READY' ? payload : null;
 }
 
-async function detectorScore(modelPath, frame, side, record) {
+async function detectorScore(modelPath: string, frame: string, side: Side, record: RunRecord): Promise<DoorVerdict> {
   const result = await run('python3', [DOOR_SENSOR, 'score', '--model', modelPath, '--frame', frame], { timeoutMs: 30000 });
   const payload = parseJsonLine(result.stdout, `door-light ${side} score`);
   await record.event('door-light-score', { side, code: result.code, payload, stderr: result.stderr.trim(), frame });
@@ -404,13 +465,13 @@ async function detectorScore(modelPath, frame, side, record) {
   return payload;
 }
 
-async function captureNative(bridge, record, name) {
+async function captureNative(bridge: Bridge, record: RunRecord, name: string) {
   const png = await bridge.capturePng(bridge.serial);
   if (!png) fail(`native capture failed: ${name}`);
   return record.capture(name, png);
 }
 
-async function calibrateSide(side, control, record) {
+async function calibrateSide(side: Side, control: Fnaf1Controls, record: RunRecord) {
   await control.panTo(side);
   await captureNative(control.bridge, record, `${side}-before-calibration`);
   await control.toggleLight(side);
@@ -447,7 +508,7 @@ async function calibrateSide(side, control, record) {
   return model;
 }
 
-async function scanDoor(side, modelPath, control, record, cycle) {
+async function scanDoor(side: Side, modelPath: string, control: Fnaf1Controls, record: RunRecord, cycle: number): Promise<DoorVerdict> {
   await control.panTo(side);
   const door = control.doors[side];
   if (door.closed && Date.now() < door.recheckAt) {
@@ -470,9 +531,12 @@ async function scanDoor(side, modelPath, control, record, cycle) {
  * needed to make the next phase observable; the steady full loop cannot begin
  * before the right/monitor 3 AM preparation has completed.
  */
-async function stageNight1({ route, record, bridge, control, nightEpochMs, shouldStop, teachStage = null }) {
+async function stageNight1({ route, record, bridge, control, nightEpochMs, shouldStop, teachStage = null }:
+  { route: Route, record: RunRecord, bridge: Bridge, control: Fnaf1Controls, nightEpochMs: number, shouldStop: () => boolean,
+    teachStage?: ((stage: string) => Promise<void>) | null }):
+  Promise<{ leftModel?: string, rightModel?: string, terminal?: boolean, stopped?: boolean }> {
   const staging = night1Staging(route);
-  const at = offset => nightEpochMs + offset;
+  const at = (offset: number) => nightEpochMs + offset;
   const leftDeadline = at(staging.leftCalibrationAtMs + staging.leftCalibrationBudgetMs);
   const rightDeadline = at(staging.fullLoopAtMs);
   await record.event('night1-hands-off', {
@@ -523,7 +587,7 @@ async function stageNight1({ route, record, bridge, control, nightEpochMs, shoul
   return { leftModel, rightModel, terminal: false, stopped: false };
 }
 
-async function startAudio(serial, id, record) {
+async function startAudio(serial: string, id: string, record: RunRecord) {
   const env = { ANDROID_SERIAL: serial };
   const link = await run('bash', [AUDIO_LINK, '--ensure', '--game-package', PACKAGE], { timeoutMs: 120000, env });
   await writeFile(join(record.outdir, 'bt-audio-link.txt'), `${link.stdout}${link.stderr}`);
@@ -541,7 +605,7 @@ async function startAudio(serial, id, record) {
   return base;
 }
 
-async function stopAudio(serial, base, record) {
+async function stopAudio(serial: string, base: string | null, record: RunRecord) {
   if (!base) return;
   const result = await run('bash', [AUDIO_CAPTURE, '--stop', base], { timeoutMs: 120000, env: { ANDROID_SERIAL: serial } });
   await writeFile(join(record.outdir, 'bt-audio-stop.txt'), `${result.stdout}${result.stderr}`);
@@ -560,7 +624,8 @@ async function stopAudio(serial, base, record) {
  * non-touchable window; it is never asked to identify game pixels or authorize
  * an input.
  */
-async function teachOverlay(serial, record, mode, { night = null, stage = null, runId = null } = {}) {
+async function teachOverlay(serial: string, record: RunRecord, mode: string,
+  { night = null, stage = null, runId = null }: { night?: number | null, stage?: string | null, runId?: string | null } = {}) {
   const args = [TEACH_OVERLAY, mode];
   if (mode === '--show' || mode === '--update') {
     args.push('--night', String(night), '--stage', String(stage), '--run', String(runId));
@@ -572,7 +637,7 @@ async function teachOverlay(serial, record, mode, { night = null, stage = null, 
   return output;
 }
 
-async function titleGatedTeardown(serial, record) {
+async function titleGatedTeardown(serial: string, record: RunRecord) {
   const result = await run('bash', [TEARDOWN, PACKAGE, '--after-night'], {
     timeoutMs: 190000,
     env: { ANDROID_SERIAL: serial, TITLE_MODEL: TITLE_MODEL_PATH, FNAF_TITLE_OBSERVE: TITLE_OBSERVER },
@@ -588,7 +653,7 @@ async function titleGatedTeardown(serial, record) {
  * the normal post-night path: a completed night still waits for its observed
  * title/save boundary before any stop reaches the game.
  */
-async function abortRestart(serial, bridge, record, route) {
+async function abortRestart(serial: string, bridge: Bridge, record: RunRecord, route: Route) {
   const stopped = await run('bash', [TEARDOWN, PACKAGE], {
     timeoutMs: 30000, env: { ANDROID_SERIAL: serial },
   });
@@ -604,12 +669,12 @@ async function abortRestart(serial, bridge, record, route) {
   record.document.abortRestart = 'TITLE_CONFIRMED';
 }
 
-function titleGone(read) { return !read.confident && /not-the-title-screen/.test(`${read.output} ${read.stderr}`); }
+function titleGone(read: TitleRead) { return !read.confident && /not-the-title-screen/.test(`${read.output} ${read.stderr}`); }
 
-async function main(argv) {
+async function main(argv: string[]) {
   const options = parseArgs(argv);
   const [route, controls, titleModel, teachModel] = await Promise.all([
-    readJson(ROUTE_PATH), readJson(CONTROL_PATH), readJson(TITLE_MODEL_PATH), readJson(TEACH_MODEL_PATH),
+    readJson<Route>(ROUTE_PATH), readJson<Controls>(CONTROL_PATH), readJson<TitleModel>(TITLE_MODEL_PATH), readJson<TeachModel>(TEACH_MODEL_PATH),
   ]);
   validateRoute(route, controls, titleModel, teachModel);
   await Promise.all([executable(TITLE_OBSERVER), executable(AUDIO_LINK), executable(AUDIO_CAPTURE),
@@ -630,38 +695,39 @@ async function main(argv) {
     return;
   }
   if (process.env.FNAF1_LEASE_HELD !== '1') fail('must run through fnaf1-night-run.sh so the serial lease is held');
-  let serial;
-  try { ({ serial } = resolveSerial()); } catch (error) { fail(error.message); }
+  let serial: string;
+  try { ({ serial } = resolveSerial()); } catch (error) { fail((error as Error).message); }
   const id = `fnaf1-night${options.night}-${options.label ?? 'community-loop'}-${stamp()}`;
   const outdir = join(ROOT, 'artifacts', 'runs', id);
   const captureDir = join(homedir(), 'fnaf-apks', 'fnaf1-device-runs', id);
   await Promise.all([mkdir(outdir, { recursive: true }), mkdir(captureDir, { recursive: true })]);
   const record = new RunRecord({ id, outdir, captureDir, options, bindings });
   await record.save('PREFLIGHT');
-  const bridge = new AdbDeviceBridge({ serial });
-  let audioBase = null;
-  let hidProcess = null;
-  let hid = null;
+  const bridge = new AdbDeviceBridge({ serial }) as Bridge;
+  let audioBase = null as string | null;
+  let hidProcess = null as AdbHidProcess | null;
+  let hid = null as HidWireTransport | null;
   let continueSent = false;
   let teachVisible = false;
   let stopRequested = false;
-  const requestStop = signal => { stopRequested = true; record.event('signal', { signal }).catch(() => {}); };
+  const requestStop = (signal: string) => { stopRequested = true; record.event('signal', { signal }).catch(() => {}); };
   process.once('SIGINT', () => requestStop('SIGINT'));
   process.once('SIGTERM', () => requestStop('SIGTERM'));
   try {
     const preflight = await bridge.preflight({ targetPackage: PACKAGE, targetBuild: `${PACKAGE}:${BUILD}`,
       requireHelper: false, requireHid: true });
-    (record.document as any).preflight = preflight;
+    record.document.preflight = preflight;
     await record.event('preflight', { status: preflight.status, checks: preflight.checks });
     if (preflight.status !== 'READY') fail(`preflight ${preflight.status}: ${JSON.stringify(preflight.checks)}`);
     await teachOverlay(serial, record, '--preflight');
-    (record.document as any).teachingOverlay = { requested: true, status: 'PREFLIGHT_READY', model: bindings.teachingOverlay };
+    record.document.teachingOverlay = { requested: true, status: 'PREFLIGHT_READY', model: bindings.teachingOverlay };
     audioBase = await startAudio(serial, id, record);
     await record.save('TITLE_GATE');
     await titleConsensus(bridge, record, route.title.consensusFrames, 'title-before-continue');
 
-    hidProcess = new AdbHidProcess({ serial });
-    hid = new HidWireTransport({ write: line => hidProcess.write(line), ready: () => hidProcess.ready(),
+    const adbHid = new AdbHidProcess({ serial });
+    hidProcess = adbHid;
+    hid = new HidWireTransport({ write: line => adbHid.write(line), ready: () => adbHid.ready(),
       contactMs: route.controls.contactMs });
     await hid.start();
     await record.event('hid-ready', { contactMs: route.controls.contactMs });
@@ -685,13 +751,13 @@ async function main(argv) {
     const initialTeachStage = options.night === 1 ? 'hands-off' : 'night2-calibration';
     await teachOverlay(serial, record, '--show', { night: options.night, stage: initialTeachStage, runId: id });
     teachVisible = true;
-    (record.document as any).teachingOverlay.status = 'VISIBLE';
-    (record.document as any).teachingOverlay.stage = initialTeachStage;
+    (record.document.teachingOverlay as Overlay).status = 'VISIBLE';
+    (record.document.teachingOverlay as Overlay).stage = initialTeachStage;
     await captureNative(bridge, record, `teach-overlay-${initialTeachStage}`);
-    const teachStage = async stage => {
+    const teachStage = async (stage: string) => {
       await teachOverlay(serial, record, '--update', { night: options.night, stage, runId: id });
-      (record.document as any).teachingOverlay.status = 'VISIBLE';
-      (record.document as any).teachingOverlay.stage = stage;
+      (record.document.teachingOverlay as Overlay).status = 'VISIBLE';
+      (record.document.teachingOverlay as Overlay).stage = stage;
     };
     // This is not a readiness claim. It avoids the immediate transition while
     // the Night 1 hands-off clock continues; its later light transition is the
@@ -720,7 +786,7 @@ async function main(argv) {
       await control.monitorFlick('monitor-up-calibration');
       await captureNative(bridge, record, 'monitor-down-calibration');
     }
-    (record.document as any).doorSensors = { left: leftModel, right: rightModel };
+    record.document.doorSensors = { left: leftModel, right: rightModel };
     if (!stageTerminal && !stopRequested && leftModel && rightModel) {
       await teachStage('full-loop');
       await record.save('RUNNING');
@@ -741,37 +807,37 @@ async function main(argv) {
     if (stopRequested) record.document.terminal = 'ABORT_REQUESTED: controls released; teardown waits for title';
     else if (record.document.terminal === 'UNKNOWN') record.document.terminal = 'ACTION_BOUND_REACHED: teardown waits for title';
   } catch (error) {
-    (record.document as any).error = error instanceof Error ? error.message : String(error);
+    record.document.error = error instanceof Error ? error.message : String(error);
     record.document.terminal = continueSent ? 'RUN_ERROR_AFTER_CONTINUE' : 'PRE_RUN_REFUSAL';
-    await record.event('error', { message: (record.document as any).error });
+    await record.event('error', { message: record.document.error });
   } finally {
     try { await hid?.abort(); } catch { /* release is best effort, teardown remains title-gated */ }
     try { await hidProcess?.close(); } catch { /* the lease still bounds process cleanup */ }
     if (teachVisible) {
       try {
         await teachOverlay(serial, record, '--clear');
-        (record.document as any).teachingOverlay.status = 'CLEARED';
+        (record.document.teachingOverlay as Overlay).status = 'CLEARED';
       } catch (error) {
-        (record.document as any).teachingOverlay.clearError = error instanceof Error ? error.message : String(error);
+        (record.document.teachingOverlay as Overlay).clearError = error instanceof Error ? error.message : String(error);
       }
     }
     const explicitAbort = continueSent && stopRequested && options.abortRestart
       && !String(record.document.terminal).startsWith('TITLE:');
     if (explicitAbort) {
       try { await abortRestart(serial, bridge, record, route); }
-      catch (error) { (record.document as any).abortRestart = `FAILED:${error instanceof Error ? error.message : String(error)}`; }
+      catch (error) { record.document.abortRestart = `FAILED:${error instanceof Error ? error.message : String(error)}`; }
     } else if (continueSent) {
       const teardown = await titleGatedTeardown(serial, record);
-      if (teardown.code !== 0) (record.document as any).teardown = 'REFUSED_OR_FAILED';
-      else (record.document as any).teardown = 'TITLE_CONFIRMED_AND_STOPPED';
+      if (teardown.code !== 0) record.document.teardown = 'REFUSED_OR_FAILED';
+      else record.document.teardown = 'TITLE_CONFIRMED_AND_STOPPED';
     }
     try { await stopAudio(serial, audioBase, record); }
-    catch (error) { (record.document.audio as any).stopError = error instanceof Error ? error.message : String(error); }
-    await record.save((record.document as any).error ? 'FAILED_OR_REFUSED' : 'COMPLETE');
+    catch (error) { record.document.audio.stopError = error instanceof Error ? error.message : String(error); }
+    await record.save(record.document.error ? 'FAILED_OR_REFUSED' : 'COMPLETE');
     console.log(`fnaf1 run ${id}: ${record.document.status}; terminal=${record.document.terminal}; out=${outdir}`);
   }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  main(process.argv.slice(2)).catch(error => { console.error(error.message); process.exitCode = 2; });
+  main(process.argv.slice(2)).catch((error: Error) => { console.error(error.message); process.exitCode = 2; });
 }

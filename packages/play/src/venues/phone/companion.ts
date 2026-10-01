@@ -91,7 +91,8 @@ export function parseRegionRead(line: unknown) {
     out.regions[key] = Object.freeze({ x, y, width, height, step, cols, rows, pixels });
   }
   if (out.seq === null) throw new Error('region read has no seq');
-  return Object.freeze(out);
+  // seq is the number just checked.
+  return Object.freeze(out) as Readonly<typeof out & { seq: number }>;
 }
 
 /** A FRAME reply: the helper's fields as it sent them, with its 20x9 grid decoded into cells. */

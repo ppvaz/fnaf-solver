@@ -35,7 +35,7 @@
  */
 import { execFileSync, spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, readlinkSync, realpathSync,
+import { type Stats, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, readlinkSync, realpathSync,
   rmSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
@@ -59,22 +59,31 @@ const SAFE_TOKEN = /^[A-Za-z0-9._,/~:=+-]+$/;
 const SERIAL = /^[A-Za-z0-9._:-]+$/;
 const LABEL = /^[a-z0-9][a-z0-9-]{0,40}$/;
 
-export const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
+/** A fnaf1-route-winner-v1: its route pinned by sha256 as the files stood at sourcesAtCommit. */
+export interface Fnaf1Winner {
+  readonly schema: typeof WINNER_SCHEMA, readonly id: string, readonly sourcesAtCommit: string;
+  readonly sources: Readonly<Record<string, string>>, readonly command: string;
+  readonly detectors?: { readonly file?: string, readonly sha256?: string, readonly rebuild?: readonly string[] };
+  readonly helperApk?: { readonly sha256?: string };
+  readonly [field: string]: unknown;
+}
+
+export const sha256 = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
 /** Git's own object id for a blob: what `git ls-tree` lists for the file. */
-export const gitBlobId = (bytes) => createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');
-const git = (root, args, options = {}) => execFileSync('git', ['-C', root, ...args],
+export const gitBlobId = (bytes: Buffer) => createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');
+const git = (root: string, args: string[], options: { input?: Buffer } = {}) => execFileSync('git', ['-C', root, ...args],
   { maxBuffer: 1 << 28, stdio: ['ignore', 'pipe', 'pipe'], ...options });
-function fail(message) { throw new Error(`fnaf1-winner: ${message}`); }
+function fail(message: string): never { throw new Error(`fnaf1-winner: ${message}`); }
 
 /** Every committed FNaF 1 route winner, repository-relative. */
 export function listWinners(root = ROOT) {
   const dir = join(root, BINDINGS_DIR, 'fnaf1');
   return (existsSync(dir) ? readdirSync(dir) : []).filter((name) => name.endsWith('-winner.json')).sort()
-    .map((name) => ({ path: `${BINDINGS_DIR}/fnaf1/${name}`, winner: JSON.parse(readFileSync(join(dir, name), 'utf8')) }))
+    .map((name) => ({ path: `${BINDINGS_DIR}/fnaf1/${name}`, winner: JSON.parse(readFileSync(join(dir, name), 'utf8')) as Fnaf1Winner }))
     .filter(({ winner }) => winner.schema === WINNER_SCHEMA);
 }
 
-export function loadWinner(path, root = ROOT) {
+export function loadWinner(path: string, root = ROOT): Fnaf1Winner {
   const winner = JSON.parse(readFileSync(resolve(root, path), 'utf8'));
   if (winner.schema !== WINNER_SCHEMA) fail(`${path} is not a ${WINNER_SCHEMA}`);
   const problems = shapeProblems(winner);
@@ -83,8 +92,8 @@ export function loadWinner(path, root = ROOT) {
 }
 
 /** What a winner must state for a replay to be derived from it alone. */
-export function shapeProblems(winner) {
-  const problems = [];
+export function shapeProblems(winner: Partial<Fnaf1Winner>) {
+  const problems: string[] = [];
   if (typeof winner.id !== 'string' || !winner.id) problems.push('no id');
   if (!FULL_SHA.test(String(winner.sourcesAtCommit ?? '')))
     problems.push(`sourcesAtCommit must be a full 40-hex commit id, not ${JSON.stringify(winner.sourcesAtCommit)} ` +
@@ -98,7 +107,7 @@ export function shapeProblems(winner) {
 }
 
 /** The pinned commit, resolved in this clone -- or why it cannot be. */
-export function pinnedCommit(winner, root = ROOT) {
+export function pinnedCommit(winner: Fnaf1Winner, root = ROOT) {
   const commit = String(winner.sourcesAtCommit ?? '');
   if (!FULL_SHA.test(commit)) fail(`${winner.id}: sourcesAtCommit is not a full commit id`);
   try {
@@ -111,17 +120,17 @@ export function pinnedCommit(winner, root = ROOT) {
 }
 
 /** Each pinned file as the commit holds it, against the winner's sha256. */
-export function pinsAtCommit(winner, root = ROOT) {
+export function pinsAtCommit(winner: Fnaf1Winner, root = ROOT) {
   const commit = pinnedCommit(winner, root);
   return Object.entries(winner.sources).map(([path, pinned]) => {
-    let atCommit = null;
+    let atCommit = null as string | null;
     try { atCommit = sha256(git(root, ['show', `${commit}:${path}`])); } catch { /* absent at the commit */ }
     return { path, pinned, atCommit, ok: atCommit === pinned };
   });
 }
 
 /** The pinned files this checkout's tree no longer holds byte for byte. */
-export function routeDrift(winner, root = ROOT) {
+export function routeDrift(winner: Fnaf1Winner, root = ROOT) {
   return Object.entries(winner.sources).flatMap(([path, pinned]) => {
     const file = join(root, path);
     const tree = existsSync(file) ? sha256(readFileSync(file)) : null;
@@ -130,7 +139,7 @@ export function routeDrift(winner, root = ROOT) {
 }
 
 /** `git ls-tree -r` of a commit: [{mode, type, id, path}]. */
-export function commitListing(commit, root = ROOT) {
+export function commitListing(commit: string, root = ROOT) {
   return git(root, ['ls-tree', '-r', '-z', '--full-tree', commit]).toString('utf8').split('\0').filter(Boolean)
     .map((line) => {
       const tab = line.indexOf('\t');
@@ -145,12 +154,12 @@ export function commitListing(commit, root = ROOT) {
  * executable bit, a changed symlink, and a workspace link that resolves
  * outside the tree. Empty means the tree IS the commit, for every tracked file.
  */
-export function treeProblems(dir, commit, root = ROOT, listing = commitListing(commit, root)) {
-  const problems = [];
+export function treeProblems(dir: string, commit: string, root = ROOT, listing = commitListing(commit, root)) {
+  const problems: string[] = [];
   for (const { mode, type, id, path } of listing) {
     const file = join(dir, path);
     if (type !== 'blob') { problems.push(`${path}: a ${type} entry cannot be materialized`); continue; }
-    let stat;
+    let stat: Stats;
     try { stat = lstatSync(file); } catch { problems.push(`${path}: missing`); continue; }
     if (mode === '120000') {
       const target = git(root, ['cat-file', 'blob', id]).toString('utf8');
@@ -165,7 +174,7 @@ export function treeProblems(dir, commit, root = ROOT, listing = commitListing(c
   for (const scope of existsSync(links) ? readdirSync(links) : []) {
     const names = scope.startsWith('@') ? readdirSync(join(links, scope)).map((n) => `${scope}/${n}`) : [scope];
     for (const name of names) {
-      let at;
+      let at: string;
       try { at = realpathSync(join(links, name)); } catch { problems.push(`node_modules/${name} resolves to nothing`); continue; }
       if (relative(realpathSync(dir), at).startsWith('..')) problems.push(`node_modules/${name} resolves outside the tree (${at})`);
     }
@@ -174,17 +183,18 @@ export function treeProblems(dir, commit, root = ROOT, listing = commitListing(c
 }
 
 /** Link the tree's workspace packages the way npm does, relative, so each resolves inside the tree. */
-function linkWorkspaces(dir) {
-  const pkg = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
+function linkWorkspaces(dir: string) {
+  const pkg: { workspaces?: string[] } = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
   for (const pattern of pkg.workspaces ?? []) {
     const star = pattern.match(/^([\w.-]+(?:\/[\w.-]+)*)\/\*$/);
     const parents = star ? readdirSync(join(dir, star[1])).map((name) => `${star[1]}/${name}`) : [pattern];
     for (const workspace of parents) {
       const manifest = join(dir, workspace, 'package.json');
       if (!existsSync(manifest)) continue;
-      const { name } = JSON.parse(readFileSync(manifest, 'utf8'));
+      const { name }: { name?: unknown } = JSON.parse(readFileSync(manifest, 'utf8'));
       if (!/^(@[\w.-]+\/)?[\w.-]+$/.test(String(name))) fail(`${workspace}: unusable package name ${JSON.stringify(name)}`);
-      const link = join(dir, 'node_modules', name);
+      // A name the pattern read as one; a non-string one throws in join, as it did untyped.
+      const link = join(dir, 'node_modules', name as string);
       mkdirSync(dirname(link), { recursive: true });
       symlinkSync(relative(dirname(link), join(dir, workspace)), link);
     }
@@ -197,7 +207,7 @@ function linkWorkspaces(dir) {
  * the winner. `outputs` is the checkout whose `artifacts` and `captures` the
  * tree's own are linked to; null leaves them out (a dry run executes nothing).
  */
-export function materialize(winner, dir, { root = ROOT, outputs = null } = {}) {
+export function materialize(winner: Fnaf1Winner, dir: string, { root = ROOT, outputs = null }: { root?: string, outputs?: string | null } = {}) {
   const commit = pinnedCommit(winner, root);
   const listing = commitListing(commit, root);
   for (const name of OUTPUT_LINKS)
@@ -212,7 +222,7 @@ export function materialize(winner, dir, { root = ROOT, outputs = null } = {}) {
     const file = join(dir, path);
     const actual = existsSync(file) ? sha256(readFileSync(file)) : null;
     if (actual !== pinned) problems.push(`${path}: the commit holds ${actual ?? 'nothing'}, the winner pins ${pinned}`);
-    return [path, actual];
+    return [path, actual] as const;
   });
   if (problems.length) fail(`${winner.id}: the tree of ${commit.slice(0, 12)} is not the winner's route:\n  ${problems.join('\n  ')}`);
   if (outputs) {
@@ -226,7 +236,7 @@ export function materialize(winner, dir, { root = ROOT, outputs = null } = {}) {
 }
 
 /** Remove a materialized tree without ever following its links into the checkout. */
-export function removeTree(dir) {
+export function removeTree(dir: string) {
   for (const name of OUTPUT_LINKS) {
     const link = join(dir, name);
     try { if (lstatSync(link).isSymbolicLink()) unlinkSync(link); } catch { /* not linked */ }
@@ -239,7 +249,7 @@ export function removeTree(dir) {
  * plain word list (no quoting, no shell); anything else is refused rather
  * than interpreted. A leading `~/` is the operator's home, as the shell read it.
  */
-export function replayArguments(winner, { label = 'replay', home = homedir() } = {}) {
+export function replayArguments(winner: Fnaf1Winner, { label = 'replay', home = homedir() }: { label?: string, home?: string } = {}) {
   if (!LABEL.test(label)) fail('--label is lowercase letters, digits, hyphens');
   const tokens = winner.command.trim().split(/\s+/);
   const unsafe = tokens.filter((token) => !SAFE_TOKEN.test(token));
@@ -273,7 +283,8 @@ export function sharedLockDir(root = ROOT, env = process.env) {
   return join(env.CUE_HELPER_STATE_DIR || join(mainCheckout(root), 'captures/cue-helper'), 'locks');
 }
 
-export function replayInvocation(winner, { root = ROOT, tree, serial, label, env = process.env, home = homedir() }) {
+export function replayInvocation(winner: Fnaf1Winner, { root = ROOT, tree, serial, label, env = process.env, home = homedir() }:
+  { root?: string, tree: string, serial: string, label?: string, env?: NodeJS.ProcessEnv, home?: string }) {
   if (!SERIAL.test(String(serial))) fail('the serial is invalid');
   const lockDir = sharedLockDir(root, env);
   const args = replayArguments(winner, { label, home });
@@ -288,7 +299,7 @@ export function replayInvocation(winner, { root = ROOT, tree, serial, label, env
 }
 
 /** The detectors file the winner ran with, which is never tracked: present and byte-identical, or not. */
-export function detectorsCheck(winner, home = homedir()) {
+export function detectorsCheck(winner: Fnaf1Winner, home = homedir()) {
   const pinned = winner.detectors?.sha256 ?? null;
   if (!winner.detectors?.file) return { status: 'NONE', pinned };
   const file = winner.detectors.file.startsWith('~/') ? join(home, winner.detectors.file.slice(2)) : winner.detectors.file;
@@ -302,19 +313,19 @@ export function detectorsCheck(winner, home = homedir()) {
  * winner whose `command` and pins are what the repository holds, never a
  * local edit of them.
  */
-export function winnerCustody(path, root = ROOT) {
+export function winnerCustody(path: string, root = ROOT) {
   try { git(root, ['ls-files', '--error-unmatch', '--', path]); } catch { return 'UNTRACKED'; }
   try { git(root, ['diff', '--quiet', 'HEAD', '--', path]); } catch { return 'MODIFIED'; }
   return 'COMMITTED';
 }
 
-const runDirs = (root) => {
+const runDirs = (root: string) => {
   const dir = join(root, 'artifacts', 'runs');
   return new Set(existsSync(dir) ? readdirSync(dir) : []);
 };
 
-function parseArgs(argv) {
-  const o = { winner: null, live: false, confirmLive: false, label: 'replay' };
+function parseArgs(argv: string[]) {
+  const o = { winner: null as string | null, live: false, confirmLive: false, label: 'replay' };
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i];
     if (a === '--winner') o.winner = argv[++i];
@@ -329,15 +340,16 @@ function parseArgs(argv) {
   return o;
 }
 
-async function main(argv) {
+async function main(argv: string[]) {
   const o = parseArgs(argv);
-  const winnerPath = relative(ROOT, resolve(o.winner));
+  // parseArgs requires --winner.
+  const winnerPath = relative(ROOT, resolve(o.winner as string));
   const winner = loadWinner(winnerPath);
   // FNAF_SERIAL, else the untracked local profile (ADR 0002 decision 8); the
   // winner's `target.device` records the phone it won on and is no default.
   // A dry replay names no phone and prints UNKNOWN in the lease's place.
   let serial = 'UNKNOWN';
-  try { ({ serial } = resolveSerial()); } catch (error) { if (o.live) fail(error.message); }
+  try { ({ serial } = resolveSerial()); } catch (error) { if (o.live) fail((error as Error).message); }
   const detectors = detectorsCheck(winner);
   const custody = winnerCustody(winnerPath);
   const drift = routeDrift(winner);
@@ -345,7 +357,7 @@ async function main(argv) {
     fail(`${winnerPath} is ${custody}: a live replay runs only the committed winner, never a local edit of it`);
   if (o.live && detectors.status !== 'MATCH' && detectors.status !== 'NONE')
     fail(`the detectors file is ${detectors.status} (${detectors.file}); the winner ran with sha256 ${detectors.pinned}. ` +
-      `Rebuild it: ${(winner.detectors.rebuild ?? []).join(' && ')}`);
+      `Rebuild it: ${(winner.detectors?.rebuild ?? []).join(' && ')}`);
   const scratch = mkdtempSync(join(tmpdir(), 'fnaf1-winner-'));
   const tree = join(scratch, 'tree');
   try {
@@ -368,7 +380,7 @@ async function main(argv) {
     const before = runDirs(ROOT);
     const ignore = () => {};
     process.on('SIGINT', ignore);
-    const status = await new Promise<any>((done, failed) => {
+    const status = await new Promise<number>((done, failed) => {
       const child = spawn(plan.file, plan.args, { cwd: plan.cwd, env: plan.env, stdio: 'inherit' });
       child.on('error', failed);
       child.on('close', (code, signal) => done(code ?? (signal ? 128 : 1)));
@@ -389,5 +401,5 @@ async function main(argv) {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   main(process.argv.slice(2)).then((status) => { process.exitCode = status; },
-    (error) => { console.error(error.message); process.exitCode = 2; });
+    (error: Error) => { console.error(error.message); process.exitCode = 2; });
 }

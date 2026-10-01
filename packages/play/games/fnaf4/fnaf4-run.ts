@@ -26,12 +26,39 @@ import { performance } from 'node:perf_hooks';
 import { AdbCompanionPort, AdbHidProcess } from '../../src/campaign/physical-ports.ts';
 import { HidWireTransport } from '../../src/venues/phone/hid.ts';
 import { loadRegionSet, registerSet } from '../../bin/phone/native-regions.ts';
-import { Actor, RegionRecorder, RunRecord, interruptibleSleep, startVideo } from '../../bin/phone/night-kit.ts';
+import { Actor, type Point, type RegionRead, RegionRecorder, RunRecord, interruptibleSleep, startVideo } from '../../bin/phone/night-kit.ts';
 import { audioPreflight } from '../../bin/companion/audio-players.ts';
 import { resolveSerial } from '../../bin/phone/local-profile.ts';
 import {
-  HEARING_PATH, loadHearing, sideGrid, laughGrid, landings, laughs, quietTapAt, releaseAt, shadowOf,
+  type CueEvent, type Hearing, HEARING_PATH, loadHearing, sideGrid, laughGrid, landings, laughs, quietTapAt, releaseAt, shadowOf,
 } from './fnaf4-fredbear.ts';
+
+type Side = 'L' | 'R';
+type Control = Point & { readonly holdMs?: number, readonly gapMs?: number };
+/** The measured FNaF 4 control map: the door and closet runs with their double-tap gaps, the pans with their holds. */
+type Controls = Readonly<Record<string, Control>> & Readonly<Record<'leftDoor' | 'rightDoor' | 'closet', Control & { readonly gapMs: number }>>
+  & Readonly<Record<'panLeft' | 'panRight', Control & { readonly holdMs: number }>>;
+/** A fnaf4-detectors-v1 file: view templates over the edge and centre regions. */
+interface Detectors {
+  readonly schema: string, readonly regions: readonly string[], readonly templates: Readonly<Record<string, readonly number[]>>,
+  readonly sampleCounts: readonly number[], readonly source?: unknown;
+}
+/** A frame read as its nearest view. */
+interface Read {
+  readonly view: string, readonly dist: number, readonly margin: number, readonly seq: number, readonly imageHostMs: number,
+  readonly imageNs: bigint | null, readonly v: Float32Array, readonly loose?: boolean, readonly closetOff?: number;
+}
+/** A line of the live audio detector: a cue with its onset, a breathing hop, or the loop's envelope. */
+interface CueLine extends CueEvent {
+  readonly atMs?: number, readonly phase?: number, readonly loopStartMs?: number, readonly handle?: unknown;
+}
+/** The breathing loop's envelope line. */
+interface Envelope { readonly lengthS: number, readonly loudS: readonly (readonly [number, number])[], readonly midS?: readonly (readonly [number, number])[] }
+interface Stats {
+  cycles: number, closes: number, flashes: number, occupiedHall: number, closetHolds: number, lost: number, foxyEntries?: number,
+  fredbear?: object;
+}
+const isInteger = (value: unknown): value is number => Number.isInteger(value);
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../../../..');
@@ -58,15 +85,15 @@ export const OCCUPIED = 2;
 // -0.44..-0.55 s (the loop starts 1 s into the level, g4).
 export const LEVEL_ORIGIN_MS = -520;
 
-const sleep = ms => new Promise<any>(r => setTimeout(r, ms));
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 const stamp = () => new Date().toISOString().replace(/[-:.]/g, '');
-const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
-const wallOf = (hostMs) => performance.timeOrigin + hostMs;
-function fail(message) { throw new Error(`fnaf4-run: ${message}`); }
+const sha256 = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
+const wallOf = (hostMs: number) => performance.timeOrigin + hostMs;
+function fail(message: string): never { throw new Error(`fnaf4-run: ${message}`); }
 
-export function parseArgs(argv) {
-  const o = { live: false, confirmLive: false, dryRun: false, mode: null, label: null, detectors: null,
-    stopAfterMs: NIGHT_MS + 20000, teach: false, video: false, night: null };
+export function parseArgs(argv: string[]) {
+  const o = { live: false, confirmLive: false, dryRun: false, mode: null as string | null, label: null as string | null,
+    detectors: null as string | null, stopAfterMs: NIGHT_MS + 20000, teach: false, video: false, night: null as number | null };
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i];
     if (a === '--live') o.live = true;
@@ -87,9 +114,9 @@ export function parseArgs(argv) {
   if (!o.live) o.dryRun = true;
   if (o.dryRun) return o;
   if (!o.confirmLive) fail('live actuation needs --live and --confirm-live');
-  if (!MODES.includes(o.mode)) fail(`--mode is one of ${MODES.join(', ')}`);
+  if (!MODES.includes(o.mode as string)) fail(`--mode is one of ${MODES.join(', ')}`);
   if (o.mode === 'loop' && !o.detectors) fail('loop needs --detectors (a fnaf4-detectors-v1 file)');
-  if (o.mode === 'loop' && !(Number.isInteger(o.night) && o.night >= 1 && o.night <= 8))
+  if (o.mode === 'loop' && !(isInteger(o.night) && o.night >= 1 && o.night <= 8))
     fail('loop needs --night 1..8 (the title\'s CONTINUE number, or 6-8 for the extra nights)');
   return o;
 }
@@ -105,16 +132,16 @@ export function parseArgs(argv) {
  * hears every landing late.
  */
 export const FREDBEAR_ONLY_FAMILIES = ['run', 'fb-left', 'fb-right', 'laugh'];
-export function cueArgs(captureDir, night) {
+export function cueArgs(captureDir: string, night: number | null) {
   return [CUES, '--refs', REFS, '--live', PCM, '--raw', join(captureDir, 'audio.raw'),
     '--events', join(captureDir, 'cues.jsonl'), '--hearing', fileURLToPath(HEARING_PATH),
     ...(night === 5 ? ['--families', FREDBEAR_ONLY_FAMILIES.join(','), '--no-breath'] : [])];
 }
 
-function startCues(captureDir, night) {
+function startCues(captureDir: string, night: number | null) {
   const child = spawn('python3', cueArgs(captureDir, night), { stdio: ['ignore', 'pipe', 'pipe'] });
-  const events = [];
-  const errors = [];
+  const events: CueLine[] = [];
+  const errors: string[] = [];
   createInterface({ input: child.stdout }).on('line', (line) => {
     try { events.push(JSON.parse(line)); } catch { /* partial line at exit */ }
   });
@@ -130,9 +157,10 @@ function startCues(captureDir, night) {
   };
 }
 
-function controlsOf(model) {
+function controlsOf(model: { readonly controlMap: Readonly<Record<string, Control>> }) {
   const c = model.controlMap;
-  return Object.fromEntries(Object.entries(c).map(([k, v]) => [k, { x: (v as any).x, y: (v as any).y, holdMs: (v as any).holdMs, gapMs: (v as any).gapMs }]));
+  // The measured map names every control, the runs with their gaps and the pans with their holds.
+  return Object.fromEntries(Object.entries(c).map(([k, v]) => [k, { x: v.x, y: v.y, holdMs: v.holdMs, gapMs: v.gapMs }])) as Controls;
 }
 
 /**
@@ -140,9 +168,9 @@ function controlsOf(model) {
  * closet (lit, shut), right door (listen, lit, shut), back to the left view.
  * Waits are generous on purpose -- this run measures them.
  */
-async function calibrate({ act, c, record, snapTo }) {
-  const mark = (phase) => record.event('phase', { phase, hostMs: performance.now() });
-  const pt = (k) => ({ x: c[k].x, y: c[k].y });
+async function calibrate({ act, c, record, snapTo }: { act: Actor, c: Controls, record: RunRecord, snapTo: (name: string) => Promise<void> }) {
+  const mark = (phase: string) => record.event('phase', { phase, hostMs: performance.now() });
+  const pt = (k: string) => ({ x: c[k].x, y: c[k].y });
   for (let round = 1; round <= 2; round += 1) {
     await mark(`r${round}-room-left`); await sleep(1500);
     if (round === 1) await snapTo('room-left');
@@ -190,7 +218,7 @@ async function calibrate({ act, c, record, snapTo }) {
 }
 
 /** A region frame as the detector file lays it out: left_edge, right_edge, center, RGB per sample. */
-function frameVector(r, keys) {
+function frameVector(r: RegionRead, keys: readonly string[]) {
   const parts = keys.map((k) => r.regions[k].pixels);
   const n = parts.reduce((s, p) => s + p.length * 3, 0);
   const v = new Float32Array(n);
@@ -206,12 +234,12 @@ function frameVector(r, keys) {
  * is distance, not noise (cal0 held-out self-distance p90 0.0).
  */
 class Eyes {
-  declare recorder: any;
-  declare keys: any;
+  declare recorder: RegionRecorder;
+  declare keys: readonly string[];
   declare names: string[];
   declare t: Float32Array<ArrayBuffer>[];
-  declare center: any[];
-  constructor(recorder, det) {
+  declare center: number[];
+  constructor(recorder: RegionRecorder, det: Detectors) {
     this.recorder = recorder;
     this.keys = det.regions;
     this.names = Object.keys(det.templates);
@@ -219,9 +247,10 @@ class Eyes {
     const [l, r] = det.sampleCounts;
     this.center = [l + r, det.sampleCounts.reduce((s, x) => s + x, 0)];
   }
-  now() {
+  now(): Read | null {
     const r = this.recorder.latest;
-    if (!r || performance.now() - r.imageHostMs > STALE_FRAME_MS) return null;
+    // A null image time subtracts as 0, so such a frame is stale.
+    if (!r || performance.now() - (r.imageHostMs as number) > STALE_FRAME_MS) return null;
     const v = frameVector(r, this.keys);
     let best = -1; let bd = Infinity; let second = Infinity;
     for (let i = 0; i < this.t.length; i += 1) {
@@ -230,24 +259,24 @@ class Eyes {
       d /= v.length;
       if (d < bd) { second = bd; bd = d; best = i; } else if (d < second) second = d;
     }
-    return { view: this.names[best], dist: bd, margin: second - bd, seq: r.seq, imageHostMs: r.imageHostMs, imageNs: r.imageNs, v };
+    return { view: this.names[best], dist: bd, margin: second - bd, seq: r.seq, imageHostMs: r.imageHostMs as number, imageNs: r.imageNs, v };
   }
   /** Distance over the two edge regions only: the rooms, whatever the closet between them shows. */
-  edgeDist(read, name) {
+  edgeDist(read: Read, name: string) {
     const t = this.t[this.names.indexOf(name)];
     const b = this.center[0];
     let d = 0;
     for (let k = 0; k < b; k += 1) d += Math.abs(read.v[k] - t[k]);
     return d / b;
   }
-  occupancy(read, litName) {
+  occupancy(read: Read, litName: string) {
     const t = this.t[this.names.indexOf(litName)];
     const [a, b] = this.center;
     let d = 0;
     for (let k = a; k < b; k += 1) d += Math.abs(read.v[k] - t[k]);
     return d / (b - a);
   }
-  async wait(views, boundMs) {
+  async wait(views: readonly string[], boundMs: number) {
     const until = performance.now() + boundMs;
     let seen = -1;
     while (performance.now() < until) {
@@ -268,7 +297,9 @@ class Eyes {
    * so nearest-template alone arrives early and the next input is dropped.
    * Past `minMs + lateMs` a looser match is accepted and says so.
    */
-  async arrive(views, sinceHostMs, { minMs, boundMs, exact = 0.8, loose = 6, lateMs = 1500 }) {
+  async arrive(views: readonly string[], sinceHostMs: number,
+    { minMs, boundMs, exact = 0.8, loose = 6, lateMs = 1500 }: { minMs: number, boundMs: number, exact?: number, loose?: number, lateMs?: number }):
+    Promise<Read | null> {
     let seen = -1;
     while (performance.now() < sinceHostMs + boundMs) {
       const f = this.now();
@@ -297,8 +328,8 @@ class Eyes {
 // Measured on cal0 (touch start -> settled frame): door runs 2357-2612 ms,
 // closet 2195-2224, back from a door 1671-1752, from the closet 1748-1767,
 // from the bed 955-969, bed turn 332-333, pans 289-567.
-const ROOM_VIEWS = ['hub', 'roomL', 'roomR'];
-const ARRIVE = {
+const ROOM_VIEWS: readonly string[] = ['hub', 'roomL', 'roomR'];
+const ARRIVE: Readonly<Record<string, { readonly minMs: number, readonly boundMs: number, readonly exact?: number }>> = {
   leftDoor: { minMs: 2100, boundMs: 4200 }, rightDoor: { minMs: 2100, boundMs: 4200 },
   closet: { minMs: 1900, boundMs: 3800 },
   back: { minMs: 700, boundMs: 3000 },
@@ -308,21 +339,22 @@ const ARRIVE = {
 
 /** The live audio detector's lines, read by host time (wall ms). */
 class Ears {
-  declare cues: any;
-  declare loopOriginWall: any;
-  declare levelOriginWall: any;
-  constructor(cues) { this.cues = cues; this.loopOriginWall = null; this.levelOriginWall = null; }
+  declare cues: Pick<ReturnType<typeof startCues>, 'events'>;
+  declare loopOriginWall: number | null;
+  declare levelOriginWall: number | null;
+  constructor(cues: Pick<ReturnType<typeof startCues>, 'events'>) { this.cues = cues; this.loopOriginWall = null; this.levelOriginWall = null; }
   /** The game's breathing loop starts 1 s into the level (g4); its audio reaches the host AUDIO_LAG_MS later. */
-  anchor(levelOriginWall) { this.levelOriginWall = levelOriginWall; this.loopOriginWall = levelOriginWall + 1000 + AUDIO_LAG_MS; }
-  get envelope() { return this.cues.events.find((e) => e.cue === 'breath-envelope') ?? null; }
+  anchor(levelOriginWall: number) { this.levelOriginWall = levelOriginWall; this.loopOriginWall = levelOriginWall + 1000 + AUDIO_LAG_MS; }
+  // The detector's breath-envelope line.
+  get envelope() { return (this.cues.events.find((e) => e.cue === 'breath-envelope') ?? null) as Envelope | null; }
   /** Seconds of the loop's loud and medium stretches that [fromWall, toWall] covered. */
-  coverage(fromWall, toWall) {
+  coverage(fromWall: number, toWall: number) {
     const env = this.envelope;
     if (!env || this.loopOriginWall === null || toWall <= fromWall) return { loud: 0, mid: 0 };
     const L = env.lengthS;
     const a = (((fromWall - this.loopOriginWall) / 1000) % L + L) % L;
     const len = (toWall - fromWall) / 1000;
-    const over = (spans) => {
+    const over = (spans: Envelope['loudS']) => {
       let t = 0;
       for (const [s0, s1] of spans) for (const k of [0, L]) {
         const lo = Math.max(a, s0 + k); const hi = Math.min(a + len, s1 + k);
@@ -333,31 +365,33 @@ class Ears {
     return { loud: over(env.loudS), mid: over(env.midS ?? env.loudS) };
   }
   /** Hops whose best lag puts the loop where the GAME's loop is (within 300 ms). */
-  gameMatches(hops) {
+  gameMatches(hops: readonly CueLine[]) {
     const env = this.envelope;
     if (!env || this.loopOriginWall === null) return 0;
     const L = env.lengthS * 1000;
+    const origin = this.loopOriginWall;
     return hops.filter((e) => {
       if (e.ncc < 0.28 || e.loopStartMs === undefined) return false;
-      const d = (((e.loopStartMs - this.loopOriginWall) % L) + L) % L;
+      const d = (((e.loopStartMs - origin) % L) + L) % L;
       return Math.min(d, L - d) <= 300;
     }).length;
   }
   /** The newest onset of any of `names` after `fromWall`, or null. */
-  latest(names, fromWall = 0) {
+  latest(names: readonly string[], fromWall = 0) {
     for (let i = this.cues.events.length - 1; i >= 0; i -= 1) {
       const e = this.cues.events[i];
       if (e.onsetMs !== undefined && e.onsetMs > fromWall && names.includes(e.cue)) return e;
     }
     return null;
   }
-  breath(fromWall, toWall) {
-    const hops = this.cues.events.filter((e) => e.cue === 'breath' && e.atMs >= fromWall && e.atMs <= toWall);
+  breath(fromWall: number, toWall: number) {
+    // A breathing hop carries its time and phase; undefined compares false.
+    const hops = this.cues.events.filter((e) => e.cue === 'breath' && (e.atMs as number) >= fromWall && (e.atMs as number) <= toWall);
     const max = hops.reduce((m, e) => Math.max(m, e.ncc), 0);
     const game = this.gameMatches(hops);
     // A real loop keeps its phase: >= 3 hops above 0.30 whose loop phase
     // agrees within 80 ms (circular over the 17.675 s loop).
-    const strong = hops.filter((e) => e.ncc >= 0.30).map((e) => e.phase);
+    const strong = hops.filter((e) => e.ncc >= 0.30).map((e) => e.phase as number);
     let consistent = 0;
     for (const p of strong) {
       const near = strong.filter((q) => { const d = Math.abs(p - q) % 17.675; return Math.min(d, 17.675 - d) <= 0.08; }).length;
@@ -374,35 +408,37 @@ class Ears {
  * failed send never touches the night.
  */
 const F4_LINE = /^LESSON [0-9a-f]{32} f4 (origin \d{1,19}|step [A-Z_]+|door [LR] (CLEAR|BREATH|STEPS|HALL|SHUT)|closet (EMPTY|FOXY)|bed (CLEAR|FREDDLES)|level (\d{1,3}|OFF)|cover (\d{1,3}|OFF)|bedlit|fb mode (OFF|FREDBEAR|NIGHTMARE|NIGHTMARE_MAX)|fb at (UNKNOWN|LEFT|RIGHT|ROOM)|fb heard (RAN_LEFT|RAN_RIGHT|LAUGH)|fb ran|clear)$/;
-function teachFeed(port, record) {
+function teachFeed(port: AdbCompanionPort, record: RunRecord) {
   const channel = port.openLesson({ timeoutMs: 800, lessonLine: F4_LINE });
-  const token = port.endpoint.token;
-  let chain = Promise.resolve();
-  const last = {};
-  const say = (words, key = null) => {
+  // openLesson found the endpoint.
+  const token = (port.endpoint as NonNullable<AdbCompanionPort['endpoint']>).token;
+  let chain: Promise<unknown> = Promise.resolve();
+  const last: Record<string, string> = {};
+  const say = (words: string, key: string | null = null) => {
     if (key !== null) { if (last[key] === words) return; last[key] = words; }
     chain = chain.then(() => channel.send(`LESSON ${token} f4 ${words}`))
-      .catch((e) => record.event('teach-error', { words, message: e.message }).catch(() => {}));
+      .catch((e: Error) => record.event('teach-error', { words, message: e.message }).catch(() => {}));
   };
   return {
-    origin: (ns) => say(`origin ${ns}`),
-    step: (step) => say(`step ${step}`, 'step'),
-    door: (side, word) => say(`door ${side} ${word}`, `door${side}`),
-    closet: (word) => say(`closet ${word}`, 'closet'),
-    bed: (word) => say(`bed ${word}`, 'bed'),
-    level: (ncc) => say(ncc === null ? 'level OFF' : `level ${Math.max(0, Math.min(100, Math.round(ncc * 100)))}`, 'level'),
-    cover: (fraction) => say(fraction === null ? 'cover OFF' : `cover ${Math.max(0, Math.min(100, Math.round(fraction * 100)))}`, 'cover'),
+    origin: (ns: bigint) => say(`origin ${ns}`),
+    step: (step: string) => say(`step ${step}`, 'step'),
+    door: (side: Side, word: string) => say(`door ${side} ${word}`, `door${side}`),
+    closet: (word: string) => say(`closet ${word}`, 'closet'),
+    bed: (word: string) => say(`bed ${word}`, 'bed'),
+    level: (ncc: number | null) => say(ncc === null ? 'level OFF' : `level ${Math.max(0, Math.min(100, Math.round(ncc * 100)))}`, 'level'),
+    cover: (fraction: number | null) => say(fraction === null ? 'cover OFF' : `cover ${Math.max(0, Math.min(100, Math.round(fraction * 100)))}`, 'cover'),
     bedLit: () => say('bedlit'),
-    fbMode: (mode) => say(`fb mode ${mode}`, 'fbMode'),
-    fbAt: (where) => say(`fb at ${where}`, 'fbAt'),
-    fbHeard: (what) => say(`fb heard ${what}`),
+    fbMode: (mode: string) => say(`fb mode ${mode}`, 'fbMode'),
+    fbAt: (where: string) => say(`fb at ${where}`, 'fbAt'),
+    fbHeard: (what: string) => say(`fb heard ${what}`),
     fbRan: () => say('fb ran'),
     clear: async () => { say('clear'); await chain; channel.close(); },
   };
 }
 
 /** The panel's words for nothing to say: a loop without --teach. */
-const QUIET = { origin() {}, step() {}, door() {}, closet() {}, bed() {}, level() {}, cover() {}, bedLit() {}, fbMode() {}, fbAt() {}, fbHeard() {}, fbRan() {}, async clear() {} };
+type Teach = ReturnType<typeof teachFeed>;
+const QUIET: Teach = { origin() {}, step() {}, door() {}, closet() {}, bed() {}, level() {}, cover() {}, bedLit() {}, fbMode() {}, fbAt() {}, fbHeard() {}, fbRan() {}, async clear() {} };
 
 /**
  * The community loop on the handset, stations confirmed by native frames and
@@ -418,18 +454,21 @@ const QUIET = { origin() {}, step() {}, door() {}, closet() {}, bed() {}, level(
  * a hall-far occupant home (g68/g84) -- a flash into hall-near is the one
  * certain death (g345/g346), so doubt always closes.
  */
-export async function loopNight({ act, c, record, eyes, ears, epochHostMs, stopAfterMs, night, teach = QUIET, hearing = loadHearing() }) {
-  const pt = (k) => ({ x: c[k].x, y: c[k].y });
+export async function loopNight({ act, c, record, eyes, ears, epochHostMs, stopAfterMs, night, teach = QUIET, hearing = loadHearing() }:
+  { act: Actor, c: Controls, record: RunRecord, eyes: Eyes, ears: Ears, epochHostMs: number, stopAfterMs: number, night: number,
+    teach?: Teach, hearing?: Hearing }) {
+  const pt = (k: string) => ({ x: c[k].x, y: c[k].y });
   const nightMs = () => performance.now() - epochHostMs;
-  const log = (m, f = {}) => record.event('policy', { atNightMs: Math.round(nightMs()), m, ...f });
-  const stats: any = { cycles: 0, closes: 0, flashes: 0, occupiedHall: 0, closetHolds: 0, lost: 0 };
+  const log = (m: string, f: object = {}) => record.event('policy', { atNightMs: Math.round(nightMs()), m, ...f });
+  const stats: Stats = { cycles: 0, closes: 0, flashes: 0, occupiedHall: 0, closetHolds: 0, lost: 0 };
   let where = 'roomL';
 
-  const go = async (control, views, _boundMs, gesture = 'press') => {
+  const go = async (control: string, views: readonly string[], _boundMs: number, gesture = 'press'): Promise<Read | null> => {
     for (let attempt = 0; attempt < 2; attempt += 1) {
       const at = performance.now();
-      if (gesture === 'double') await act.double(control, pt(control), c[control].gapMs);
-      else if (gesture === 'hold') await act.hold(control, pt(control), c[control].holdMs);
+      // A double-tap control names its gap, a held one its hold.
+      if (gesture === 'double') await act.double(control, pt(control), c[control].gapMs as number);
+      else if (gesture === 'hold') await act.hold(control, pt(control), c[control].holdMs as number);
       else await act.press(control, pt(control));
       const f = await eyes.arrive(views, at, ARRIVE[control]);
       // Every walk resets his stillness counter (g567: a carpet run exists).
@@ -445,9 +484,10 @@ export async function loopNight({ act, c, record, eyes, ears, epochHostMs, stopA
       // the game over and 06:00 never turn back into a room within 5 s.
       for (let waited = 0; (!now || now.dist >= 12) && waited < 5000; waited += 250) {
         await sleep(250);
-        now = eyes.now();
-        const room = now && ROOM_VIEWS.find((v) => eyes.edgeDist(now, v) <= 0.8);
-        if (room) { now = { ...now, view: room, dist: 0 }; break; }
+        const read = eyes.now();
+        now = read;
+        const room = read && ROOM_VIEWS.find((v) => eyes.edgeDist(read, v) <= 0.8);
+        if (read && room) { now = { ...read, view: room, dist: 0 }; break; }
       }
       if (!now || now.dist >= 12) return null;
       where = now.view;
@@ -468,7 +508,7 @@ export async function loopNight({ act, c, record, eyes, ears, epochHostMs, stopA
    * view than the lit closet, read 'undefined', and went unheld twice. A
    * flash with no frame at all reads as occupied (Infinity), never empty.
    */
-  const flash = async (ms, litName) => {
+  const flash = async (ms: number, litName: string) => {
     const start = performance.now();
     const done = act.hold('flashlight', pt('flashlight'), ms);
     let occ = Infinity; let seen = -1;
@@ -485,7 +525,7 @@ export async function loopNight({ act, c, record, eyes, ears, epochHostMs, stopA
     return occ;
   };
 
-  const door = async (side) => {
+  const door = async (side: Side) => {
     const view = side === 'L' ? 'doorL' : 'doorR';
     teach.step('WALK');
     const arrived = await go(side === 'L' ? 'leftDoor' : 'rightDoor', [view], 3600, 'double');
@@ -497,10 +537,12 @@ export async function loopNight({ act, c, record, eyes, ears, epochHostMs, stopA
     // a listen lasts until it has covered 0.5 s of loud or 1.4 s of medium
     // breath -- n4e/n4g trusted 1.1-1.4 s listens that may have covered
     // neither. It stops early on breathing that sits at the game's own phase.
-    const listen = async (fromWall, minMs = 900, maxMs = 4500) => {
+    const listen = async (fromWall: number, minMs = 900, maxMs = 4500) => {
       const start = performance.now();
       for (;;) {
-        const hop = ears.cues.events.findLast?.((e) => e.cue === 'breath');
+        // Node has findLast; the ES2022 lib this checks against does not name it, and the call allows its absence.
+        const lines = ears.cues.events as CueLine[] & { findLast?: (match: (e: CueLine) => boolean) => CueLine | undefined };
+        const hop = lines.findLast?.((e) => e.cue === 'breath');
         if (hop) teach.level(hop.ncc);
         const now = wallOf(performance.now());
         const cov = ears.coverage(fromWall - AUDIO_LAG_MS, now - AUDIO_LAG_MS);
@@ -514,7 +556,7 @@ export async function loopNight({ act, c, record, eyes, ears, epochHostMs, stopA
     };
     // A quiet verdict needs a listen that covered a breath: n4k lit the left
     // hall after a listen that ran out at 60% coverage (the panel said so).
-    const judge = (h, stepsSince, c) => {
+    const judge = (h: ReturnType<Ears['breath']>, stepsSince: number, c: { readonly enough: boolean } | null) => {
       if (h.game >= 2 || (h.consistent >= 3 && h.max >= 0.45)) return 'BREATH';
       if (h.game === 1 || h.max >= 0.33 || ears.latest(['step'], stepsSince)) return 'DOUBT';
       if (c && !c.enough) return 'DOUBT';
@@ -602,7 +644,7 @@ export async function loopNight({ act, c, record, eyes, ears, epochHostMs, stopA
     if (!at) return false;
     teach.step('BED');
     // Freddles are distance from the empty lit bed; drain until it reads empty.
-    let occ = null;
+    let occ = null as number | null;
     for (let slice = 0; slice < 6; slice += 1) {
       occ = await flash(600, 'bed-lit');
       teach.bed(occ <= OCCUPIED ? 'CLEAR' : 'FREDDLES');
@@ -665,15 +707,15 @@ export async function loopNight({ act, c, record, eyes, ears, epochHostMs, stopA
   const closetDue = () => nightMs() - lastClosetMs > CLOSET_EVERY_MS;
   // A door left with someone still breathing at it: the bed turn is what
   // kills with his bedroom flag (g375/g376), so no bed until it is cleared.
-  const unresolved = new Set();
+  const unresolved = new Set<Side>();
   // The bed turn kills if Bonnie or Chica has dwelt at hall-near 20 - night
   // seconds (g484/g479 -> g375/g376), and a lit silent hall is what resets
   // it. n4h turned to the bed ~40 s after the left door's last check, while a
   // right-door episode ran 19 s. So a bed turn needs both doors cleared
   // within (20 - night - 4) s, and a stale door is checked first.
-  const lastClearMs = { L: -Infinity, R: -Infinity };
+  const lastClearMs: Record<Side, number> = { L: -Infinity, R: -Infinity };
   const FRESH_MS = Math.max(4000, (20 - Math.min(night, 8) - 4) * 1000);
-  const staleDoors = () => ['L', 'R'].filter((d) => nightMs() - lastClearMs[d] > FRESH_MS);
+  const staleDoors = () => (['L', 'R'] as const).filter((d) => nightMs() - lastClearMs[d] > FRESH_MS);
   const closet = async (enteredMs = 0) => {
     lastClosetMs = nightMs();
     teach.step('WALK');
@@ -705,11 +747,12 @@ export async function loopNight({ act, c, record, eyes, ears, epochHostMs, stopA
    * (g98/g100/g111), which is the entry a player sees and hears. So a return
    * that lands in room-left or room-right is Foxy in the closet.
    */
-  const home = async (side) => {
+  const home = async (side: string) => {
     const f = await back(ROOM_VIEWS, 2600);
     if (!f) return null;
-    if (f.view === 'hub' && f.closetOff > 10) {
-      await log(`closet stands open in the hub (${f.closetOff.toFixed(1)}): Foxy is inside`);
+    // A read without its closet distance compares false.
+    if (f.view === 'hub' && (f.closetOff as number) > 10) {
+      await log(`closet stands open in the hub (${(f.closetOff as number).toFixed(1)}): Foxy is inside`);
       foxyInside = true;
       teach.closet('FOXY');
     }
@@ -722,7 +765,7 @@ export async function loopNight({ act, c, record, eyes, ears, epochHostMs, stopA
     return 'HUB';
   };
 
-  const back = (views, boundMs) => go('back', views, boundMs);
+  const back = (views: readonly string[], boundMs: number) => go('back', views, boundMs);
 
   // --- Fredbear (Night 5; Nights 6-8 from 4 AM) --------------------------------
   // Every landing of his on a living-room side plays that side's sound (fb-left
@@ -739,16 +782,19 @@ export async function loopNight({ act, c, record, eyes, ears, epochHostMs, stopA
   const FRED_FROM_MS = night === 5 ? 0 : 240000;      // g599/g601/g603 at 4 AM
   const fredActive = () => night >= 5 && nightMs() >= FRED_FROM_MS;
   const nowWall = () => wallOf(performance.now());
-  const sGrid: any = sideGrid(ears.levelOriginWall, night, hearing);
-  const lGrid = laughGrid(ears.levelOriginWall, hearing);
+  // main anchors the ears before the loop starts.
+  const levelOriginWall = ears.levelOriginWall as number;
+  const sGrid = sideGrid(levelOriginWall, night, hearing);
+  const lGrid = laughGrid(levelOriginWall, hearing);
   const roomPeriodMs = hearing.laughGrid.roomPeriodMs[shadowOf(night) ? 'shadow1' : 'shadow0'];
   // His first move from the centre is a landing (g491/g492) on a roll that
   // passes with Fredbear AI / 20 (12 on Night 5, g228): after 4 rolls unheard
   // (2.6 % at 0.6) the start is a guess, and the panel says so. The wait ends
   // by ~17 s of level time, well inside the 25 s stillness fuse (g564).
   const FIRST_LISTEN_TICKS = 4;
-  const fred = { side: null, k: -Infinity, guess: null, lastRunWall: null, heard: 0, laughs: 0, fakes: 0, roomChecks: 0, holds: 0 };
-  const handledLaughs = new Set();
+  const fred = { side: null as Side | null, k: -Infinity, guess: null as Side | null, lastRunWall: null as number | null, heard: 0, laughs: 0,
+    fakes: 0, roomChecks: 0, holds: 0 };
+  const handledLaughs = new Set<number>();
   // Fold every decided grid tick into what we believe, and tell the panel
   // what was heard -- only what the grid accepted, never a raw cue line.
   const hearFred = () => {
@@ -772,24 +818,24 @@ export async function loopNight({ act, c, record, eyes, ears, epochHostMs, stopA
     .find((l) => l.accepted && l.room && !handledLaughs.has(l.k) && lGrid.decided(l.k, nowWall())) ?? null;
   // A walk waits for its quiet slot: our own run is the loudest sound in the
   // mix and would hide a landing on the tick it covers (n5b: 32.4 s, 35.4 s).
-  const quiet = async (gesture) => {
+  const quiet = async (gesture: string) => {
     const wait = quietTapAt(nowWall(), sGrid, hearing, gesture, roomPeriodMs) - nowWall();
     if (wait > 0) await sleep(wait);
   };
   const ran = () => { fred.lastRunWall = nowWall(); teach.fbRan(); };
-  const toRoomView = async (side) => {
+  const toRoomView = async (side: Side) => {
     const view = side === 'L' ? 'roomL' : 'roomR';
     return where === view || !!await go(side === 'L' ? 'panLeft' : 'panRight', [view], 1500, 'hold');
   };
   /** Off a door: wait for it to read open (a back pressed while it reopens is dropped: n5b 2 of 2), then back. */
-  const offDoor = async (side) => {
+  const offDoor = async (side: Side) => {
     const open = await eyes.wait([side === 'L' ? 'doorL' : 'doorR'], hearing.door.openAfterReleaseMs[1] + 900);
     if (!open) await log(`fredbear: the ${side} door never read open after the release`);
     const f = await back(ROOM_VIEWS, 2600);
     if (f) ran();
     return f;
   };
-  const shutViewOf = (side) => (side === 'L' ? 'doorL-shut' : 'doorR-shut');
+  const shutViewOf = (side: Side) => (side === 'L' ? 'doorL-shut' : 'doorR-shut');
   /**
    * To a door and hold it, one contact from the run until a reason to leave:
    * he landed on the other side (released just after the next tick, so the
@@ -799,7 +845,7 @@ export async function loopNight({ act, c, record, eyes, ears, epochHostMs, stopA
    * The close button is pressed during the run -- at (1990, 900) it cannot pan
    * the room, which pans only below follow 7 (g21-g24).
    */
-  const holdDoor = async (side, guess) => {
+  const holdDoor = async (side: Side, guess: boolean) => {
     const stepName = `${guess ? 'FB_GUESS' : 'FB_HOLD'}_${side === 'L' ? 'LEFT' : 'RIGHT'}`;
     teach.step(stepName);
     if (!guess) teach.fbAt(side === 'L' ? 'LEFT' : 'RIGHT');
@@ -813,7 +859,8 @@ export async function loopNight({ act, c, record, eyes, ears, epochHostMs, stopA
     ran();
     teach.door(side, 'SHUT');
     const started = nowWall();
-    let shutAt = null; let lostSince = null; let releaseSlot = null; let reason = null;
+    let shutAt = null as number | null; let lostSince = null as number | null; let releaseSlot = null as number | null;
+    let reason = null as string | null;
     const heldK = fred.k;
     const openView = side === 'L' ? 'doorL' : 'doorR';
     fred.holds += 1;
@@ -837,7 +884,8 @@ export async function loopNight({ act, c, record, eyes, ears, epochHostMs, stopA
         if (fred.k > heldK && fred.side !== side) { reason = 'moved'; releaseSlot = releaseAt(fred.k + 1, sGrid, hearing); }
         else if (guess && fred.k > heldK && fred.side === side) { guess = false; teach.step(`FB_HOLD_${side === 'L' ? 'LEFT' : 'RIGHT'}`); teach.fbAt(side === 'L' ? 'LEFT' : 'RIGHT'); }
         else if (guess && now > shutAt + sGrid.periodMs) { reason = 'guess'; releaseSlot = releaseAt(sGrid.nextK(now), sGrid, hearing); }
-        else if (now - fred.lastRunWall > hearing.idle.holdCapS * 1000) { reason = 'still'; releaseSlot = releaseAt(sGrid.nextK(now), sGrid, hearing); }
+        // Set when Fredbear's branch started.
+        else if (now - (fred.lastRunWall as number) > hearing.idle.holdCapS * 1000) { reason = 'still'; releaseSlot = releaseAt(sGrid.nextK(now), sGrid, hearing); }
       }
       return releaseSlot !== null && now >= releaseSlot ? reason : null;
     });
@@ -903,13 +951,13 @@ export async function loopNight({ act, c, record, eyes, ears, epochHostMs, stopA
     }
     return leaveCloset().then((ok) => { if (ok) ran(); return ok; });
   };
-  const fredStep = async () => {
+  const fredStep = async (): Promise<boolean> => {
     hearFred();
     if (pendingRoom()) return roomCheck();
     if (fred.side !== null) return holdDoor(fred.side, false);
     // Nothing heard yet: he is in the centre until his first landing. Wait in
     // a room view (never at a door: that is listening) for the first rolls.
-    const firstTicks = sGrid.nextK(ears.levelOriginWall + FRED_FROM_MS + 1) + FIRST_LISTEN_TICKS;
+    const firstTicks = sGrid.nextK(levelOriginWall + FRED_FROM_MS + 1) + FIRST_LISTEN_TICKS;
     if (fred.guess === null && !sGrid.decided(firstTicks, nowWall())) {
       teach.step('FB_LISTEN'); teach.fbAt('UNKNOWN');
       if (!ROOM_VIEWS.includes(where) && !await toRoomView('L')) return false;
@@ -939,7 +987,7 @@ export async function loopNight({ act, c, record, eyes, ears, epochHostMs, stopA
     }
     // The closet's double tap at x 1050 is inside it from the hub and from
     // room-right, never from room-left (controls-fnaf4 closet).
-    const toCloset = async (enteredMs) => {
+    const toCloset = async (enteredMs: number) => {
       await centre();
       if (!await closet(enteredMs)) return false;
       return leaveCloset();
@@ -970,18 +1018,18 @@ export async function loopNight({ act, c, record, eyes, ears, epochHostMs, stopA
   return stats;
 }
 
-async function main(argv) {
+async function main(argv: string[]) {
   const options = parseArgs(argv);
   const controlsModel = JSON.parse(await readFile(CONTROLS_PATH, 'utf8'));
   const regionModel = loadRegionSet(REGIONS_PATH, 'night');
   const hearing = loadHearing();
   const bindings = Object.fromEntries(await Promise.all([['controls', CONTROLS_PATH], ['regions', REGIONS_PATH], ['cues', CUES],
     ['hearing', fileURLToPath(HEARING_PATH)]]
-    .map(async ([k, p]) => [k, { path: p.slice(ROOT.length + 1), sha256: sha256(await readFile(p)) }])));
+    .map(async ([k, p]) => [k, { path: p.slice(ROOT.length + 1), sha256: sha256(await readFile(p)) }] as const)));
   if (options.dryRun) { console.log(JSON.stringify({ status: 'DRY_RUN', modes: MODES, bindings }, null, 2)); return; }
   if (process.env.FNAF4_LEASE_HELD !== '1') fail('run through fnaf4-run.sh so the serial lease is held');
-  let serial;
-  try { ({ serial } = resolveSerial()); } catch (error) { fail(error.message); }
+  let serial: string;
+  try { ({ serial } = resolveSerial()); } catch (error) { fail((error as Error).message); }
   const c = controlsOf(controlsModel);
 
   const id = `fnaf4-${options.mode}-${options.label ?? 'run'}-${stamp()}`;
@@ -1000,13 +1048,15 @@ async function main(argv) {
   const snapDir = join(tmpdir(), `fnaf4-snap-${process.pid}`);
   await mkdir(snapDir, { recursive: true });
   let n = 0;
-  const snapTo = async (name) => {
+  const snapTo = async (name: string) => {
     n += 1;
     const target = join(snapDir, `f${n}.png`);
     await port.snap(`f4s${n}`, target);
     await record.capture(name, await readFile(target));
   };
-  let hidProcess = null; let recorder = null; let channel = null; let cues = null; let entered = false; let error = null; let video = null;
+  let hidProcess = null as AdbHidProcess | null; let recorder = null as RegionRecorder | null;
+  let channel = null as ReturnType<AdbCompanionPort['openRegions']> | null; let cues = null as ReturnType<typeof startCues> | null;
+  let entered = false; let error = null as (Error & { refused?: boolean }) | null; let video = null as ReturnType<typeof startVideo> | null;
   try {
     const link = execFileSync(join(ROOT, 'packages/play/bin/audio/bt-audio-link.sh'), ['--ensure', '--game-package', PACKAGE],
       { encoding: 'utf8', timeout: 90000 });
@@ -1016,48 +1066,55 @@ async function main(argv) {
     const players = audioPreflight({ serial, target: PACKAGE });
     await record.event('audio-players', players);
     if (players.status !== 'READY') {
-      const refusal: any = new Error(`fnaf4-run: audio preflight ${players.status}: ${players.reason}`);
+      const refusal: Error & { refused?: boolean } = new Error(`fnaf4-run: audio preflight ${players.status}: ${players.reason}`);
       refusal.refused = true;
       throw refusal;
     }
     await snapTo('title-before');
-    hidProcess = new AdbHidProcess({ serial });
+    const adbHid = new AdbHidProcess({ serial });
+    hidProcess = adbHid;
     // One sleep port the Actor can cut short: a door hold is ONE contact (holdWhile).
     const naps = interruptibleSleep();
-    const hid = new HidWireTransport({ write: l => hidProcess.write(l), ready: () => hidProcess.ready(), contactMs: CONTACT_MS, sleep: naps.sleep });
+    const hid = new HidWireTransport({ write: l => adbHid.write(l), ready: () => adbHid.ready(), contactMs: CONTACT_MS, sleep: naps.sleep });
     await hid.start();
     const act = new Actor(hid, record, CONTACT_MS, { interrupt: naps.interrupt });
 
-    cues = startCues(captureDir, options.night);
-    for (let i = 0; i < 50 && !cues.started(); i += 1) await sleep(100);
-    if (!cues.started()) fail(`audio detector did not start: ${cues.errors.slice(-3).join(' | ')}`);
+    const live = startCues(captureDir, options.night);
+    cues = live;
+    for (let i = 0; i < 50 && !live.started(); i += 1) await sleep(100);
+    if (!live.started()) fail(`audio detector did not start: ${live.errors.slice(-3).join(' | ')}`);
     channel = port.openRegions({ timeoutMs: 1500 });
     await registerSet(channel, regionModel.set);
-    recorder = new RegionRecorder(channel, join(captureDir, 'regions.ndjson.gz'));
-    recorder.start();
+    const frames = new RegionRecorder(channel, join(captureDir, 'regions.ndjson.gz'));
+    recorder = frames;
+    frames.start();
     await sleep(500);
 
     if (options.video) video = startVideo(serial, id);
     entered = true;
     await act.press('continue', { x: c.continue.x, y: c.continue.y });
-    record.document.continueHostMs = performance.now();
+    const continueHostMs = performance.now();
+    record.document.continueHostMs = continueHostMs;
     await record.save('NIGHT');
     if (options.mode === 'calibrate') {
       // The night card, then the room; the first calibration step starts well after.
       await sleep(11000);
       await calibrate({ act, c, record, snapTo });
     } else {
-      const det = JSON.parse(await readFile(options.detectors, 'utf8'));
+      // The loop requires --detectors and --night (parseArgs).
+      const detectors = options.detectors as string;
+      const det: Detectors = JSON.parse(await readFile(detectors, 'utf8'));
       if (det.schema !== 'fnaf4-detectors-v1') fail('--detectors is not fnaf4-detectors-v1');
-      record.document.detectors = { path: options.detectors, sha256: sha256(await readFile(options.detectors)), source: det.source };
-      const eyes = new Eyes(recorder, det);
+      record.document.detectors = { path: options.detectors, sha256: sha256(await readFile(detectors)), source: det.source };
+      const eyes = new Eyes(frames, det);
       const first = await eyes.wait(['roomL'], 20000);
       if (!first) fail('no room-left frame within 20 s of CONTINUE');
       // The level frame starts about when its first room frame shows
       // (UNKNOWN(origin-offset): no hour boundary has been measured yet).
       const epochHostMs = first.imageHostMs;
-      record.document.night = { firstRoomAfterContinueMs: first.imageHostMs - record.document.continueHostMs, epochHostMs,
-        levelOriginWallMs: wallOf(epochHostMs) + LEVEL_ORIGIN_MS };
+      const nightDoc: { firstRoomAfterContinueMs: number, epochHostMs: number, levelOriginWallMs: number, endedAtNightMs?: number } =
+        { firstRoomAfterContinueMs: first.imageHostMs - continueHostMs, epochHostMs, levelOriginWallMs: wallOf(epochHostMs) + LEVEL_ORIGIN_MS };
+      record.document.night = nightDoc;
       await record.save('NIGHT_RUNNING');
       let teach = QUIET;
       if (options.teach) {
@@ -1066,22 +1123,23 @@ async function main(argv) {
           // The origin on the helper's own image clock: the first room frame.
           // The level's own clock starts LEVEL_ORIGIN_MS before its first
           // room frame (breathing phase, Nights 2-4): the panel's bars run on it.
-          teach.origin(first.imageNs + BigInt(LEVEL_ORIGIN_MS) * 1000000n);
+          // A region read names its image time.
+          teach.origin((first.imageNs as bigint) + BigInt(LEVEL_ORIGIN_MS) * 1000000n);
           teach.step('WALK');
-        } catch (e) { await record.event('teach-error', { message: e.message }); teach = QUIET; }
+        } catch (e) { await record.event('teach-error', { message: (e as Error).message }); teach = QUIET; }
       }
       record.document.teach = options.teach;
-      const ears = new Ears(cues);
+      const ears = new Ears(live);
       ears.anchor(wallOf(epochHostMs) + LEVEL_ORIGIN_MS);
       record.document.loop = await loopNight({ act, c, record, eyes, ears, epochHostMs,
-        stopAfterMs: options.stopAfterMs, night: options.night, teach, hearing });
+        stopAfterMs: options.stopAfterMs, night: options.night as number, teach, hearing });
       await teach.clear();
-      record.document.night.endedAtNightMs = performance.now() - epochHostMs;
+      nightDoc.endedAtNightMs = performance.now() - epochHostMs;
       for (let i = 0; i < 3; i += 1) { await snapTo(`after-night-${i}`); await sleep(2500); }
     }
     await snapTo('end');
   } catch (e) {
-    error = e;
+    error = e as Error;
   } finally {
     try { await hidProcess?.close(); } catch { /* the lease bounds cleanup */ }
     if (recorder) {
@@ -1100,7 +1158,7 @@ async function main(argv) {
         const dir = join(homedir(), 'fnaf-apks', 'fnaf4-videos');
         await mkdir(dir, { recursive: true });
         record.document.video = await video.stop(dir);
-      } catch (e) { record.document.video = `FAILED: ${e.message}`; }
+      } catch (e) { record.document.video = `FAILED: ${(e as Error).message}`; }
     }
     if (entered) {
       // Abandon whatever follows the night (the minigame, a game over); the
@@ -1111,7 +1169,7 @@ async function main(argv) {
         await sleep(10000);
         await snapTo('title-after');
         record.document.recovery = 'RELAUNCHED_TO_TITLE (snap retained, read by a person)';
-      } catch (e) { record.document.recovery = `FAILED: ${e.message}`; error ??= e; }
+      } catch (e) { record.document.recovery = `FAILED: ${(e as Error).message}`; error ??= e as Error; }
     }
   }
   if (error) {
@@ -1120,10 +1178,10 @@ async function main(argv) {
     await record.save(error.refused && record.document.inputsSent === 0 ? 'REFUSED' : 'FAILED_OR_REFUSED');
   } else await record.save('COMPLETE');
   console.log(`fnaf4 run ${id}: ${record.document.status}; inputs=${record.document.inputsSent}; ` +
-    `regionFrames=${record.document.regions?.frames}; audioEvents=${record.document.audio?.events}; out=${outdir}; frames=${captureDir}`);
+    `regionFrames=${recorder?.frames}; audioEvents=${cues?.events.length}; out=${outdir}; frames=${captureDir}`);
   if (record.document.status !== 'COMPLETE') process.exitCode = 3;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  main(process.argv.slice(2)).catch(error => { console.error(error.message); process.exitCode = 2; });
+  main(process.argv.slice(2)).catch((error: Error) => { console.error(error.message); process.exitCode = 2; });
 }
