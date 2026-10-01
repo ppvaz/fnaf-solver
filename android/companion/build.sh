@@ -61,41 +61,16 @@ mkdir -p "$CLASSES_DIR" "$DEX_DIR"
     --version-name 0.2.0 \
     -o "$BUILD_DIR/base-unsigned.apk"
 
+# Every source under src/, never a hand list: HidControls.java joined the tree on
+# 2026-09-30 without joining a list here, and the Companion stopped building.
+mapfile -t SOURCES < <(find "$SCRIPT_DIR/src" -name '*.java' | sort)
 "$JAVAC" \
     -encoding UTF-8 \
     -source 17 \
     -target 17 \
     -classpath "$ANDROID_JAR" \
     -d "$CLASSES_DIR" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/MainActivity.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/RunnerCatalog.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/NightRunner.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/TermuxBridge.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/AccessibilityProbeActivity.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/AccessibilityGameProbeReceiver.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/AccessibilityProbeService.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/NativeFrame.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/Targets.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/CompanionStatus.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/AudioProbeAnalysis.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/AudioProbe.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/PixelWatch.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/Fnaf2Legacy.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/NativeRegions.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/ScreenIdentity.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/NightOnsetLatch.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/MonitorStateDetector.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/CycleLesson.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/TeachPanel.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/Fnaf1Lesson.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/Fnaf1PanelView.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/Fnaf3Lesson.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/Fnaf3PanelView.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/Fnaf4Lesson.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/Fnaf4PanelView.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/TeachPanelView.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/OverlayController.java" \
-    "$SCRIPT_DIR/src/com/ppvaz/fnafcompanion/CaptureService.java"
+    "${SOURCES[@]}"
 
 "$JAR" --create --file "$BUILD_DIR/classes.jar" -C "$CLASSES_DIR" .
 JAVA_HOME="$JDK_ROOT" "$D8" \
