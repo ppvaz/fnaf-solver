@@ -178,5 +178,38 @@
       "clone:packages/propose/parked/minus7/periodicsweep.ts <> packages/propose/parked/minus7/phasesweep.ts": 9,
       "clone:packages/review/bin/grade/post-night-static.ts <> packages/review/bin/grade/static-terminal-window.ts": 7
     }
+  },
+  "typeDebt": {
+    "recorded": "2026-10-01",
+    "why": "Explicit any and non-null assertions per area when tools/test-type-debt.ts landed: the types JavaScript left implicit, written down; an entry only shrinks, or rises in the commit that turns an area strict.",
+    "entries": {
+      "debt:apps/desktop/bin": 26,
+      "debt:apps/desktop/src": 37,
+      "debt:apps/desktop/test": 29,
+      "debt:apps/trainer/src": 143,
+      "debt:apps/trainer/test": 24,
+      "debt:apps/wiki": 3,
+      "debt:apps/wiki/test": 1,
+      "debt:packages/kernel/src": 52,
+      "debt:packages/kernel/test": 10,
+      "debt:packages/play/bin": 64,
+      "debt:packages/play/games": 133,
+      "debt:packages/play/src": 222,
+      "debt:packages/play/test": 62,
+      "debt:packages/propose/bin": 208,
+      "debt:packages/propose/bindings": 21,
+      "debt:packages/propose/parked": 55,
+      "debt:packages/propose/src": 89,
+      "debt:packages/propose/test": 30,
+      "debt:packages/review/bin": 10,
+      "debt:packages/review/src": 71,
+      "debt:packages/review/test": 40,
+      "debt:packages/review/venue-grid": 1,
+      "debt:packages/source/decompile": 2,
+      "debt:packages/source/recompile": 2,
+      "debt:packages/source/src": 72,
+      "debt:packages/source/test": 12,
+      "debt:tools": 17
+    }
   }
 }
