@@ -2519,6 +2519,17 @@
       ]
     },
     {
+      "file": "packages/propose/bin/recompile/test-phone-stream-census.mjs",
+      "imports": [
+        "./phone-stream-census.mjs",
+        "node:assert/strict",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/propose/bin/recompile/test-rebuild-options-census.mjs",
       "imports": [
         "../../../source/recompile/model-draw-trace.mjs",

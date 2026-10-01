@@ -193,18 +193,34 @@ Details:
     eligibility and encounter start in the rebuild against the model around
     the earlier draw split; the same-phase phone twin remains the physical
     separator. S2 stays open.
-  - **The phone's own frames and audio locate the first divergent state at
-    40.0 s, not at window 6.** The hall flash ends 3-5 updates before the
-    replayed hall contact in every flashed cycle (monitor -2..+1, mask 0..-1);
-    the eyehole confirms B, C, empty, empty in windows 3-6; the A2DP capture,
-    aligned on the mask sound, has Balloon Boy hopping at 40.0, 45.1 and 50.0 s
-    and at the office at 60.38 s, where the rebuild's audio trace and the model
-    hold him through the 40 and 45 s rolls and bring him at 70.3 s. What holds
-    the rebuild's Balloon Boy after his leave is UNKNOWN; hall-contact shifts
-    inside the measured bracket never empty window 6
+  - **The phone's own frames** put the hall flash's end 3-5 updates before the
+    replayed hall contact in every flashed cycle (monitor -2..+1, mask
+    0..-1), and the eyehole confirms B, C, empty, empty in windows 3-6;
+    hall-contact shifts inside the measured bracket never empty window 6
     ([record](../docs/evidence/full06-input-registration-20260928.json),
-    `s2-input-registration-b09be5c86b35a4a3`). DEVICE_MEASURED reads against
+    `s2-input-registration-b09be5c86b35a4a3`).
+  - **Retracted 2026-10-01: the "40.0 s" Balloon Boy divergence.** That
+    record's audio was read 30 s late: the reader paired each mask-sound
+    onset with the nearest play within 1 s, and the mask sound repeats every
+    window. Solved over the rebuild's monitor and mask plays, and bounded by
+    the capture's own stamps, the phone's Balloon Boy hop vocals are at
+    10.04, 15.08 and 20.04 s; the rebuild and the model move him silently out
+    of CAM 10 at 10.0 s, so on the phone his first roll, at 5 s, already
+    succeeded. The first state difference is at or before that roll
+    ([realignment](../docs/evidence/full06-audio-realignment-20261001.json),
+    `s2-audio-realignment-f61f47d56098beb2`). DEVICE_MEASURED audio against
     MODEL_ONLY replays.
+  - **No office start state explains full-06 (pre-registered, MODEL_ONLY,
+    INCONCLUSIVE).** All 65,536 start states were replayed on the night's
+    measured clock and landed contacts. The measured seed agrees through
+    window 6, no better than 26,557 others; no state agrees past window 23 of
+    42, and start states up to 12 draws from the seed never reach window 10.
+    The strong states share their misses: Withered Freddy's two windows (22
+    and 26) and a one-window slip of the B/C rhythm at 31-32. Those, and
+    what passes Balloon Boy's first roll on the phone, are S2's next targets
+    ([census](../docs/evidence/full06-stream-census-20261001.json),
+    `s2-stream-census-45ad1201c90a4531`;
+    [pre-registration](../docs/evidence/full06-stream-census-predeclaration-20261001.json)).
 - **Absorbs** Plan 17 (route 5), Plan 25 horizon 2, and the model parts of
   Plans 15 and 19.
 

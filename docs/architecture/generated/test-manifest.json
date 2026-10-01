@@ -2721,6 +2721,24 @@
       }
     },
     {
+      "id": "packages/propose/bin/recompile/test-phone-stream-census.mjs",
+      "lane": "test:unit",
+      "owner": "@sixam/propose",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "packages/propose/bin/recompile/test-rebuild-options-census.mjs",
       "lane": "test:unit",
       "owner": "@sixam/propose",

@@ -5,9 +5,10 @@
  "outlook": {
   "next": [
    {
-    "title": "S2: what moves full-06's Balloon Boy at the 5 s roll",
-    "body": "As of s2-audio-realignment-f61f47d56098beb2, full-06's phone audio sits 29.754 s after its capture began, not -0.246 s; on that clock the phone's Balloon Boy plays a hop vocal at 10.04 s where the rebuild and the model move him silently from CAM 10, so the first state difference is at or before the night's first 5 s roll, and the 40 s reading is retracted. The record leaves S2 open.",
+    "title": "S2: Balloon Boy's first roll and Withered Freddy's two windows on full-06",
+    "body": "As of s2-stream-census-45ad1201c90a4531, no office start state reproduces full-06: the strong fits all miss the two windows the phone reads as Withered Freddy (22 and 26) and a B/C slip at 31-32; and as of s2-audio-realignment-f61f47d56098beb2 the phone's Balloon Boy passes his first, 5 s roll where the host programs' does not. The records leave S2 open.",
     "sources": [
+     "docs/evidence/full06-stream-census-20261001.json",
      "docs/evidence/full06-audio-realignment-20261001.json",
      "plans/ROADMAP.md"
     ]
@@ -91,6 +92,34 @@
    "status": "standing",
    "supersededBy": null,
    "supersedes": "full06-balloon-boy-first-difference"
+  },
+  {
+   "id": "full06-no-start-state-explains-the-night",
+   "date": "2026-10-01",
+   "game": "fnaf2",
+   "kind": "negative",
+   "title": "No office start state reproduces full-06; its strong fits share the same misses",
+   "body": "Pre-registered before any state but the measured seed was replayed: every one of the 65,536 office start states through the production model on full-06's own measured clock and landed contacts, scored against the phone's 42 eyehole-read mask windows. The measured seed agrees through window 6, no better than 26,557 others; no state agrees past window 23, three tie there, and start states up to 12 draws from the seed never reach window 10. By the predeclared rule that is INCONCLUSIVE, not an identified seed. The strong states miss the same windows: the two the phone reads as Withered Freddy (22 and 26), and a one-window slip of the B-then-C rhythm at 31-32. Misses every start state shares come from the mechanics or the inputs, not the seed.",
+   "measured": "best prefix 23 of 42; measured seed 6",
+   "label": "MODEL_ONLY",
+   "rung": null,
+   "plan": 25,
+   "night": 7,
+   "route": "Minus Toys",
+   "tags": [
+    "model",
+    "census",
+    "encounter",
+    "fidelity",
+    "s2"
+   ],
+   "sources": [
+    "docs/evidence/full06-stream-census-20261001.json",
+    "docs/evidence/full06-stream-census-predeclaration-20261001.json"
+   ],
+   "status": "standing",
+   "supersededBy": null,
+   "supersedes": null
   }
  ]
 }
