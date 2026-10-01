@@ -106,7 +106,7 @@ Levels 4–7 are blocked offline, before any phone is involved. Everything below
 is **in the simulator**; reproduce with
 
 ```sh
-node packages/propose/bin/plans/test-night-matrix.mjs            # the human-gate column
+node packages/propose/bin/plans/test-night-matrix.ts            # the human-gate column
 node packages/propose/parked/minus7/hid-device-pilot.mjs 200 --night=N --device-sweep --pulse-light \
   --sweep-slot-ms=120 --mask-margin-ms=900 --read-latency-ms=480 \
   --pilot-offset-ms=167 [--device-actuator] [--press-late-ms=MIN,MAX]
@@ -218,7 +218,7 @@ with a second read, correct only if both agree), the classifier checkpoint's
 `MASK_ALREADY_OFF`, the read costs, and the `desyncs -le 12` abort. It is
 deliberately not an idealised controller: it is one-directional, it looks twice
 a cycle and nowhere else, and it reads a screen state rather than a toggle
-parity. Reproduce with `node packages/propose/parked/minus7/closed-loop-reclaim.mjs`. **In the simulator:**
+parity. Reproduce with `node packages/propose/parked/minus7/closed-loop-reclaim.ts`. **In the simulator:**
 
 | Night | exact | actuator, open loop | actuator + modelled loop | reclaim | free ideal bidirectional resync | `--vent --sync` route ref |
 |---|---|---|---|---|---|---|
@@ -275,7 +275,7 @@ stops the pilot executing the geometry that was killing it. That is not a
 defence of a broken loop; it is another measurement saying the deaths are
 geometric.
 
-Pinned in `packages/propose/test/test-actuator.mjs`, including the vacuity guard — if
+Pinned in `packages/propose/test/test-actuator.ts`, including the vacuity guard — if
 there is nothing for the loop to correct, the zero is not a result.
 
 ### What this means for the ladder
@@ -299,7 +299,7 @@ adding a loop.
 
 PROGRESS.md's "very next step" asks for the sources of launch lateness to be
 separated and each one reduced with device evidence or recorded as a floor.
-This is the offline half. `packages/propose/parked/minus7/latenesssweep.mjs` prices it; the full table
+This is the offline half. `packages/propose/parked/minus7/latenesssweep.ts` prices it; the full table
 and the device probe behind it live in
 [`HID-MULTITOUCH.md`](../docs/device/HID-MULTITOUCH.md) §"What the shell's clock
 actually costs".

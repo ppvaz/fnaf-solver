@@ -118,7 +118,7 @@ entry point, one owner, and one focused test file.
 it exported were deleted; `apps/desktop/src/device-cli.ts` (`campaign`) is the one path onto a phone, and
 `tools/architecture-test.ts` refuses a second `live` command.
 **Owner:** `apps/desktop`
-**Evidence:** `index.js` line 1 (removed), [`COMPATIBILITY.md` (line 21)](COMPATIBILITY.md)
+**Evidence:** `index.ts` line 1 (removed), [`COMPATIBILITY.md` (line 21)](COMPATIBILITY.md)
 
 The device barrel exposes many composition roots, executors, compatibility
 facades, and modern paths together. A caller can import an implementation
@@ -204,9 +204,9 @@ earliest to the latest terminal frame over every evaluation, in `simulator-frame
 with how many evaluations it spans, or `UNKNOWN(reason)` when none reports one. The
 CLI stamps the manifest's `experiment.result` event at that interval's upper bound
 and refuses an experiment with no terminal frame instead of writing 0. The
-regression is `packages/propose/test/census.test.js` (three evaluations whose first
+regression is `packages/propose/test/census.test.ts` (three evaluations whose first
 is not the latest, reordered) and every named case in
-`packages/propose/test/experiment.test.js`, both in `test:contracts`.
+`packages/propose/test/experiment.test.ts`, both in `test:contracts`.
 **Owner:** `packages/propose` (was `packages/research`)
 **Evidence:** [`experiment.js`](../../packages/propose/src/experiment/experiment.ts), [`cli.js`](../../packages/propose/src/experiment/cli.ts)
 
@@ -232,7 +232,7 @@ is unchanged, so every figure keyed by it stands. The experiment-spec-v2 seed se
 (`describeSeedSet`, `expandSeedSet`, validated by the kernel's `validateSeedSet`)
 carries derivation, provenance, count and sha256, and a census under 3000 seeds is
 refused by review's `seed-floor` rule (`resolveCensusCohort`). Focused tests:
-`packages/propose/test/census.test.js` and `packages/kernel/test/experiment-v2.test.ts`
+`packages/propose/test/census.test.ts` and `packages/kernel/test/experiment-v2.test.ts`
 (`test:contracts`). `packages/propose/bin/plans/minus-3-plan.mjs` still passes the golden salt
 beside an explicit list; its bytes are hashed into every Minus 3 bundle, so it is
 not edited, and the descriptor now records such a list by what it is.

@@ -136,7 +136,7 @@ export function queryPromotions(root: string, { winners = trackedWinners(root) }
     schema: QUERY_SCHEMA, query: 'promotions', command: QUERY_COMMAND,
     authority: 'plans/12-end-to-end-evidence-campaign.md; docs/decisions/0002-kernel-contexts-vocabulary.md principles 4 and 11',
     sources: { packs: PACKS_DIR, graph: GRAPH_FILE, winners: `${BINDINGS_DIR}/<game>/*-winner.json`,
-      debt: `${ANCHOR_AIMS_FILE} (generated from ${BINDINGS_DIR}/fact-register.mjs ANCHOR_AIMS and UNTRACKED_WINNER_DEBT)` },
+      debt: `${ANCHOR_AIMS_FILE} (generated from ${BINDINGS_DIR}/fact-register.ts ANCHOR_AIMS and UNTRACKED_WINNER_DEBT)` },
     rule: 'an edge is derived for a pack when every packPromotionChecks check passes, derivePromotion re-derives every check and ' +
       'names the claim, and the pack attestation lists exactly the checks, inputs, claim and custody derived now; the edge is ' +
       "recordPromotion's over that pack, and it matches when graph.json holds the same edge (canonical JSON)",

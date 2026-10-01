@@ -35,9 +35,9 @@ import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { GAMES } from '../src/night.ts';
-import { designBlock } from '../../../packages/propose/bin/census/winner-census.mjs';
+import { designBlock } from '../../../packages/propose/bin/census/winner-census.ts';
 import { FOUR_TWENTY, LANE_FILE, LANE_FILES, POPULATION_KIND, POPULATION_LANES, TIMING_PATH, loadTiming, newestTreeRecord,
-  pinnedGrid420, runDeviceNight, winnerPolicyOptions } from '../../../packages/propose/bin/census/fnaf1-device-lane.mjs';
+  pinnedGrid420, runDeviceNight, winnerPolicyOptions } from '../../../packages/propose/bin/census/fnaf1-device-lane.ts';
 import { ROOT, RUNNER, listWinners, shapeProblems, pinsAtCommit, pinnedCommit, routeDrift, materialize, removeTree,
   treeProblems, replayArguments, replayInvocation, sha256, sharedLockDir, winnerCustody } from '../../../packages/play/games/fnaf1/fnaf1-winner.ts';
 import { currentPath } from '@sixam/review/renamed-path';

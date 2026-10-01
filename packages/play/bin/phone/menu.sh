@@ -7,7 +7,7 @@
 #   GameConfig  which night is being played              (6, or custom dials)
 #   MenuTarget  which title item gets pressed            (newGame|continue|sixthNight|customNight)
 #   SaveState   what the save cursor actually holds      (only an observation can say)
-#   Policy      which gated plan is executing            (recipe.mjs + human-gate.mjs)
+#   Policy      which gated plan is executing            (recipe.mjs + human-gate.ts)
 #
 # `NIGHT=continue` was all four at once: a menu action standing in for a night
 # identity, resolved by `NIGHT_TAP=$TAP_CONTINUE; [ "$NIGHT" = 6th ] &&

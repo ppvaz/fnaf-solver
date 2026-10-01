@@ -647,7 +647,7 @@ anything.
 
 Plan 16 item 10 is "fire the attack cycle's mask-off/reset/raise the instant a
 BB departure bang is heard" — the one policy the `bang` cue could still enable.
-`packages/propose/parked/minus7/i10latency.mjs` sweeps the whole audio path as one number
+`packages/propose/parked/minus7/i10latency.ts` sweeps the whole audio path as one number
 (`replay()`'s `bangLatencyMs` = PCM buffering + onset classification + IPC +
 reaction) against the blind baseline, 800 seeds correlated:
 
@@ -824,7 +824,7 @@ measured at 2.9-4.6 detections per minute on the phone, where the vocals were
 
 **Correction (2026-08-24, from gate 0).** That upper bound is further out of
 reach than recorded above. `--vocal-cam5` resets its count on
-`vent-bang who === 'bb' && leaving`, and `packages/propose/bin/minus6test.mjs` counts threats
+`vent-bang who === 'bb' && leaving`, and `packages/propose/bin/minus6test.ts` counts threats
 with `who !== 'bb'`. Both read an identity the source does not put in the
 audio: every one of those events is sample 17. The 3,000/3,000 figure therefore
 assumes a perfectly attributed departure cue that no detector can produce, on

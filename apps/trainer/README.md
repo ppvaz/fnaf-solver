@@ -41,7 +41,7 @@ been played on the phone. The trainer keeps teaching Minus 7 until a route is
 certified there. Coached nights are practice and never count toward S5's
 `P(win | H)` (ADR 0002, Pedro's decision 19).
 
-The DOM-free parts are exported from `src/index.js`: `Coach`, and the Plan 24
+The DOM-free parts are exported from `src/index.ts`: `Coach`, and the Plan 24
 replay microtrainer and renderer descriptors (`microtrainer-session-v1`,
 `exercise-renderer-v1`, `arcade-lab-progress-v1`). The Arcade lab in the menu
 is a clearly labelled `FIXTURE / PRACTICE` prediction demo over three fixture

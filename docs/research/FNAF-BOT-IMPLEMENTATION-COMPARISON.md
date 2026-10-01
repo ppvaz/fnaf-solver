@@ -42,7 +42,7 @@ Treating the project only as “a FNaF 2 bot” hides most of what exists here.
 | Reactive visual sensing | Static libc-free AArch64 `screencheck` (archived 2026-09-25), ROI/pixel/template classifiers, holdout/replay/benchmark pipeline | Cheap stock-device sensing exists and BB-left models are integrated. It is not yet a complete night-wide perception stack. |
 | Audio sensing | MediaProjection helper, feature extraction, denoising, cascade scans for BB/other cues | Demonstrates measured cue-detection work. It is an optional grader/sensor, not a closed-loop policy by itself. |
 | Policy prototypes | `tools/gatebot.mjs` (removed 2026-09-24, [archive](../ARCHIVED-ROUTES.md)), BB-aware tests, camera-stall and gate-policy experiments | Primarily simulator policies. The corrected office model rejects the searched reactive family; do not present `gatebot` as a live 10/20 bot. |
-| Validation and safety | Source regressions, engine tests, worst-case sweeps, capture grading, actuator error model, [`human-gate.mjs`](../../packages/propose/bin/plans/human-gate.mjs) | The live runner refuses plans below 40/100 under ±60 ms modeled schedule jitter. This is a deployment gate, not a success guarantee. |
+| Validation and safety | Source regressions, engine tests, worst-case sweeps, capture grading, actuator error model, [`human-gate.ts`](../../packages/propose/bin/plans/human-gate.ts) | The live runner refuses plans below 40/100 under ±60 ms modeled schedule jitter. This is a deployment gate, not a success guarantee. |
 
 ## Architecture comparison
 

@@ -4,7 +4,7 @@
 #
 # Every previous attempt was assembled by hand across two terminals (PROGRESS,
 # 2026-09-11): start `screenrecord`, run the campaign, stop the recording, pull
-# it, hash it, run `phase-reconstruct.mjs`, run `run-timeline.py`, then drive
+# it, hash it, run `phase-reconstruct.ts`, run `run-timeline.py`, then drive
 # the phone back to the title. Six manual steps is six ways to lose an attempt,
 # and mistake-register entry 6 says every aborted attempt leaves the game
 # mid-night. This script is that sequence with the failure handling attached:
@@ -146,7 +146,7 @@ TITLE_MODEL_PATH="packages/play/profiles/fnaf2/moto-g56/title-moto-g56-v207.json
 CAUSE_MODEL_PATH="packages/play/profiles/fnaf2/moto-g56/death-cause-withered-chica-moto-g56-v207.json"
 TRACE_TOOL="packages/play/bin/probe/atrace-input.sh"
 for path in "$BUNDLE/manifest.json" "$QUALIFICATION" "$TITLE_MODEL_PATH" \
-            packages/propose/bin/report/phase-reconstruct.mjs packages/review/bin/grade/run-timeline.py \
+            packages/propose/bin/report/phase-reconstruct.ts packages/review/bin/grade/run-timeline.py \
             packages/play/src/sensors/screencap/title-observe.py packages/play/bin/probe/inputtrace.py \
             "$TRACE_TOOL" apps/desktop/src/device-cli.ts apps/desktop/src/evidence.ts; do
   [ -e "$path" ] || die "missing required input: $path"
@@ -535,7 +535,7 @@ analyze() {
         > "$OUTDIR/run-report$suffix.json" 2>/dev/null || true
 
       say "delivered phase against the model band (attempt $attempt)"
-      node packages/propose/bin/report/phase-reconstruct.mjs --run "$dir" --night "$NIGHT" \
+      node packages/propose/bin/report/phase-reconstruct.ts --run "$dir" --night "$NIGHT" \
         --out "$OUTDIR/phase$suffix.json" 2>&1 | tee "$OUTDIR/phase$suffix.log" || true
     done
   else
@@ -652,7 +652,7 @@ CAMPAIGN=(node apps/desktop/src/device-cli.ts campaign
 # Place the schedule release at the helper's latched night onset + an epoch
 # (mod one game second) instead of wherever the ~1 Hz office classifier fires.
 # The aim is NOT a literal here: it is registered per binding in
-# packages/propose/bindings/fact-register.mjs (ANCHOR_AIMS) next to the evidence that
+# packages/propose/bindings/fact-register.ts (ANCHOR_AIMS) next to the evidence that
 # derived it, and looked up by the bundle's own winner hash, so a rebinding
 # cannot inherit a number priced for another policy. No entry, or an entry
 # whose evidence fails its checks, means no anchor: the release happens the
@@ -665,7 +665,7 @@ CAMPAIGN=(node apps/desktop/src/device-cli.ts campaign
 # bound at all the anchor is OFF. Every anchor refusal at run time also
 # releases at once.
 BUNDLE_WINNER_HASH="$(node -e 'process.stdout.write(String(JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).winnerHash ?? ""))' "$BUNDLE/manifest.json" 2>/dev/null || true)"
-# A death-targeting bundle (gate DEATH_TARGETED, packages/propose/bin/plans/death-prediction.mjs)
+# A death-targeting bundle (gate DEATH_TARGETED, packages/propose/bin/plans/death-prediction.ts)
 # exists to test a model prediction of a death. The prediction is retained
 # beside the run BEFORE the campaign starts, so the read-out cannot be fitted
 # to the outcome, and it is printed so the operator knows what the run claims.
@@ -680,7 +680,7 @@ for (const k of p.killers) console.log(`predict  ${k.killer} ${(100 * k.share).t
   printf 'predict  retained %s/prediction.json\n' "$OUTDIR"
 fi
 if [ -z "${NIGHT_ANCHOR_AIM_MS:-}" ]; then
-  if aim="$(node packages/propose/bindings/fact-register.mjs --anchor-aim "$BUNDLE_WINNER_HASH" 2>"$OUTDIR/anchor-aim.err")"; then
+  if aim="$(node packages/propose/bindings/fact-register.ts --anchor-aim "$BUNDLE_WINNER_HASH" 2>"$OUTDIR/anchor-aim.err")"; then
     NIGHT_ANCHOR_AIM_MS="$aim"
     printf 'anchor   aim %s ms from the fact register for binding %s\n' "$aim" "$BUNDLE_WINNER_HASH"
   else
@@ -699,7 +699,7 @@ fi
 ANCHOR_AIM_EXPLICIT=0
 [ -n "${NIGHT_ANCHOR_AIM_MS:-}" ] && [ "${NIGHT_ANCHOR_AIM_MS:-}" != off ] && ANCHOR_AIM_EXPLICIT=1
 if [ "$NIGHT_ANCHOR_AIM_MS" != off ] && [ -z "${NIGHT_ANCHOR_MAX_K:-}" ]; then
-  if max_k="$(node packages/propose/bindings/fact-register.mjs --anchor-max-k "$BUNDLE_WINNER_HASH" 2>"$OUTDIR/anchor-max-k.err")"; then
+  if max_k="$(node packages/propose/bindings/fact-register.ts --anchor-max-k "$BUNDLE_WINNER_HASH" 2>"$OUTDIR/anchor-max-k.err")"; then
     NIGHT_ANCHOR_MAX_K="$max_k"
   elif [ "$ANCHOR_AIM_EXPLICIT" = 1 ]; then
     die "NIGHT_ANCHOR_AIM_MS=$NIGHT_ANCHOR_AIM_MS was given but no maxK is registered for $BUNDLE_WINNER_HASH; state NIGHT_ANCHOR_MAX_K too rather than releasing unanchored"
@@ -713,7 +713,7 @@ fi
 # (g337). The period is registered beside the aim; an override must state it
 # (NIGHT_ANCHOR_PERIOD_MS=<ms>).
 if [ "$NIGHT_ANCHOR_AIM_MS" != off ] && [ -z "${NIGHT_ANCHOR_PERIOD_MS:-}" ]; then
-  if period="$(node packages/propose/bindings/fact-register.mjs --anchor-period-ms "$BUNDLE_WINNER_HASH" 2>"$OUTDIR/anchor-period.err")"; then
+  if period="$(node packages/propose/bindings/fact-register.ts --anchor-period-ms "$BUNDLE_WINNER_HASH" 2>"$OUTDIR/anchor-period.err")"; then
     NIGHT_ANCHOR_PERIOD_MS="$period"
   elif [ "$ANCHOR_AIM_EXPLICIT" = 1 ]; then
     die "NIGHT_ANCHOR_AIM_MS=$NIGHT_ANCHOR_AIM_MS was given but no period is registered for $BUNDLE_WINNER_HASH; state NIGHT_ANCHOR_PERIOD_MS too (Night 5 is 1000, Night 6/7 the 5000 ms Foxy roll) rather than releasing unanchored"
@@ -723,7 +723,7 @@ if [ "$NIGHT_ANCHOR_AIM_MS" != off ] && [ -z "${NIGHT_ANCHOR_PERIOD_MS:-}" ]; th
   fi
 fi
 # A bundle whose gate was scored at an anchor epoch (manifest.anchorEpochMs,
-# packages/propose/bin/plans/bundle.mjs) holds only there: released unanchored it runs a phase
+# packages/propose/bin/plans/bundle.ts) holds only there: released unanchored it runs a phase
 # no census has seen, on Night 6 one the model loses to Foxy. Refuse, do not
 # "release the old way".
 BUNDLE_ANCHOR_EPOCH_MS="$(node -e 'const v = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).anchorEpochMs; process.stdout.write(v === undefined ? "" : String(v))' "$BUNDLE/manifest.json" 2>/dev/null || true)"
@@ -753,7 +753,7 @@ fi
 # night origin is bracketed wider than that whole period (1852 ms on the
 # 2026-09-12 run). Until the origin is pinned the delivered phase is
 # effectively uniform, which is the model's own 1375/3000 uncontrolled-phase
-# result. Read phase-reconstruct.mjs, never a single tolerance number.
+# result. Read phase-reconstruct.ts, never a single tolerance number.
 [ "$ARM_MODE" = "observe-once" ] && CAMPAIGN+=(--arm-observe-once)
 # --arm-none must be forwarded too: the CLI defaults armMode to blocking, and
 # blocking is refused for plans with no #arm-verify (the minus7 catalog).

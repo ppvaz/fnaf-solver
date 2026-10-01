@@ -122,7 +122,7 @@ function addAction(events, request, action) {
   }
   if (action.kind === 'observe-left') {
     // The mask press comes `maskGapMs` AFTER the vent light is released: the
-    // compiler (artifact-commands.mjs) places it at at + duration + gap and
+    // compiler (artifact-commands.ts) places it at at + duration + gap and
     // refuses a gap under one Fusion poll, because a release and a press on
     // the same contact in the same instant can reach the game as a move, not a
     // new touch. Until 2026-09-27 this measured the gap from the read's start
@@ -283,7 +283,7 @@ function maskTransitionsOf(actions) {
  * Split the post-arm stream at the points where the authored plan already
  * idles, and record the mask parity the plan believes holds there.
  *
- * A plan's `targetMaskOn` chain is a simulation: `artifact-commands.mjs`
+ * A plan's `targetMaskOn` chain is a simulation: `artifact-commands.ts`
  * derives it by toggling a modelled state, so every target after the first
  * missed contact describes a device state that no longer exists. Gating at a
  * cycle boundary is what stops one missed toggle from re-aiming the whole

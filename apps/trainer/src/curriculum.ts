@@ -31,7 +31,7 @@ const sweep = (t0) => [
 // docs/evidence/policy-baseline-mask-animation-20260927.json, MODEL_ONLY).
 //
 // So each gap the Sim gates on an animation is that animation's SOURCED length
-// plus two frames (33 ms), the least margin test-seam-slack.mjs lets a device
+// plus two frames (33 ms), the least margin test-seam-slack.ts lets a device
 // plan clear a floor by: a cue on the floor itself is refused one frame early.
 // The ungated gaps keep CYCLE_SCRIPT's spacing. apps/trainer/test/
 // lessons.test.ts plays every lesson through the Sim and fails on a refusal.

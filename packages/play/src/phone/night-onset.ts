@@ -7,7 +7,7 @@
 // Two of three measured epochs that day fell in a losing band.
 //
 // Epoch 0 is defined once, here, and used on both sides:
-//   - post hoc, over a Companion frame trace (packages/propose/bin/report/phase-reconstruct.mjs);
+//   - post hoc, over a Companion frame trace (packages/propose/bin/report/phase-reconstruct.ts);
 //   - live, over the onset the helper latches (NightOnsetLatch.java), so the
 //     release the executor places and the epoch the audit measures are the
 //     same definition by construction.

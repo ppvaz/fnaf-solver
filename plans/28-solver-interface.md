@@ -30,7 +30,7 @@ of registers this repository already generates —
 [commands](../docs/architecture/generated/command-registry.json),
 [the chronicle](../packages/review/src/chronicle-schema.ts),
 [the evidence graph](../docs/evidence/graph.json) — plus two write paths that
-already exist behind gates ([simulation](../packages/propose/bin/plans/bundle.mjs),
+already exist behind gates ([simulation](../packages/propose/bin/plans/bundle.ts),
 [device](../apps/desktop/src/device-cli.ts)). What is new below is envelope, routing and
 refusal; the knowledge is already here and the safety boundary is already proven
 in [`companion-mcp.mjs`](../apps/desktop/src/companion-mcp.ts).
@@ -64,7 +64,7 @@ CLAUDE.md records, from 2026-09-17, "79 runs on this machine and **zero**
 ```sh
 npm run evidence -- list
 node -e "const g=require('./docs/evidence/graph.json');console.log(g.nodes.length,g.edges.length)"
-node -e "import('./packages/propose/bindings/fact-register.mjs').then(m=>console.log(Object.keys(m.UNTRACKED_WINNER_DEBT).length))"
+node -e "import('./packages/propose/bindings/fact-register.ts').then(m=>console.log(Object.keys(m.UNTRACKED_WINNER_DEBT).length))"
 ```
 
 | Quantity | 2026-09-17 | 2026-09-20 |

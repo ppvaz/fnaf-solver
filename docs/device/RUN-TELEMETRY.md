@@ -71,7 +71,7 @@ that failed is the one that is not graded unless somebody remembers to type
    and decision records are device-side."
 3. **The three defaults that are off.** A run launched with no environment
    produces no HID trace, no cue trace and no audio. Without the HID trace
-   `grade-run.sh:132-143` silently skips **both** `test-hid-trace.mjs` and
+   `grade-run.sh:132-143` silently skips **both** `test-hid-trace.ts` and
    `desync-scan.py` — the two instruments `CLAUDE.md` names as the only ones
    that see the monitor desync — and still prints "every instrument passed"
    (`ARCHITECTURE-AUDIT.md:126-160`). The default configuration of the runner
@@ -122,7 +122,7 @@ cost, not no work.
 | # | Signal | Price | Catches |
 |---|---|---|---|
 | 1 | **Persist the driver's stdout+stderr** to `captures/RUN-run.log` and register it as an artifact | **0 ms**; ~8 lines/cycle × ~80 B ≈ **70 kB/night** | Everything above that was "reported by the owner before any log showed it" — because after the fact there is no log at all |
-| 2 | **`HID_TRACE_RUN=1` by default** | one builtin `printf >>` per report; **unmeasured** — see §6 | Restores `test-hid-trace.mjs` and `desync-scan.py`, which are skipped silently today |
+| 2 | **`HID_TRACE_RUN=1` by default** | one builtin `printf >>` per report; **unmeasured** — see §6 | Restores `test-hid-trace.ts` and `desync-scan.py`, which are skipped silently today |
 | 3 | **Print the target offset beside `actual`** at every `press_at` / `hold_at` / `wait_until` | **0 ms** — the value is already in scope | Per-boundary landing error, measured instead of back-computed. Closes `PROGRESS.md:34-37`'s stated criterion and retires the forbidden ~300 ms figure |
 | 4 | **Timestamp every `hid_emit` with `now_rel`** | 0.36 ms × ~30 = **~11 ms** | The auditor's 2742 ms clock drift; queue depth at the seam |
 | 5 | **Bracket every cue read** with `now_rel` and log the raw response verbatim | 0.72 ms × ~2 = **~1.5 ms** | The 1-3% / ~1060 ms stall tail that *every night since the trace feature landed* carried invisibly, and part of the documented 30-900 ms capture lateness |

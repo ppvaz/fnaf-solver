@@ -2232,7 +2232,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/census/fnaf1-population-checkpoints.mjs",
+      "id": "packages/propose/bin/census/fnaf1-population-checkpoints.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2253,7 +2253,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/census/test-fnaf1-census.mjs",
+      "id": "packages/propose/bin/census/test-fnaf1-census.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2271,7 +2271,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/census/test-fnaf1-device-lane.mjs",
+      "id": "packages/propose/bin/census/test-fnaf1-device-lane.ts",
       "lane": "test:contracts",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2289,7 +2289,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/census/test-fnaf1-population-checkpoints.mjs",
+      "id": "packages/propose/bin/census/test-fnaf1-population-checkpoints.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2309,7 +2309,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/census/test-fnaf3-census.mjs",
+      "id": "packages/propose/bin/census/test-fnaf3-census.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2327,7 +2327,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/census/test-fnaf4-census.mjs",
+      "id": "packages/propose/bin/census/test-fnaf4-census.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2345,7 +2345,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/census/test-policy-census.mjs",
+      "id": "packages/propose/bin/census/test-policy-census.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2363,7 +2363,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/census/test-winner-census.mjs",
+      "id": "packages/propose/bin/census/test-winner-census.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2381,7 +2381,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/minus2test.mjs",
+      "id": "packages/propose/bin/minus2test.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2399,7 +2399,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/minus6test.mjs",
+      "id": "packages/propose/bin/minus6test.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2417,7 +2417,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/minustoystest.mjs",
+      "id": "packages/propose/bin/minustoystest.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2435,7 +2435,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/plans/test-human-gate.mjs",
+      "id": "packages/propose/bin/plans/test-human-gate.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 240000,
@@ -2455,7 +2455,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/plans/test-minus-toys-jitter.mjs",
+      "id": "packages/propose/bin/plans/test-minus-toys-jitter.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2473,7 +2473,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/plans/test-minus-toys-margin.mjs",
+      "id": "packages/propose/bin/plans/test-minus-toys-margin.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2491,7 +2491,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/plans/test-minus-toys-plan.mjs",
+      "id": "packages/propose/bin/plans/test-minus-toys-plan.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2511,7 +2511,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/plans/test-minus3-frame-light.mjs",
+      "id": "packages/propose/bin/plans/test-minus3-frame-light.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2531,7 +2531,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/plans/test-night-matrix.mjs",
+      "id": "packages/propose/bin/plans/test-night-matrix.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2549,7 +2549,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/plans/test-night7-presets.mjs",
+      "id": "packages/propose/bin/plans/test-night7-presets.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2567,7 +2567,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/policy/policy-inspect.js",
+      "id": "packages/propose/bin/policy/policy-inspect.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2585,7 +2585,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/policy/test-policy-interpreter.mjs",
+      "id": "packages/propose/bin/policy/test-policy-interpreter.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2603,7 +2603,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/policy/test-policy-ir.mjs",
+      "id": "packages/propose/bin/policy/test-policy-ir.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2621,7 +2621,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/recompile/pilot/test-pilot.mjs",
+      "id": "packages/propose/bin/recompile/pilot/test-pilot.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2641,7 +2641,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/recompile/test-calib-replay.mjs",
+      "id": "packages/propose/bin/recompile/test-calib-replay.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2659,7 +2659,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/recompile/test-hour-grid-fit.mjs",
+      "id": "packages/propose/bin/recompile/test-hour-grid-fit.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2677,7 +2677,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/recompile/test-phone-clock-sweep.mjs",
+      "id": "packages/propose/bin/recompile/test-phone-clock-sweep.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2695,7 +2695,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/recompile/test-phone-early-perturbation.mjs",
+      "id": "packages/propose/bin/recompile/test-phone-early-perturbation.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2713,7 +2713,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/recompile/test-phone-encounter-replay.mjs",
+      "id": "packages/propose/bin/recompile/test-phone-encounter-replay.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2731,7 +2731,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/recompile/test-phone-input-bracket-sweep.mjs",
+      "id": "packages/propose/bin/recompile/test-phone-input-bracket-sweep.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2749,7 +2749,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/recompile/test-phone-static-readout.mjs",
+      "id": "packages/propose/bin/recompile/test-phone-static-readout.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2767,7 +2767,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/recompile/test-phone-stream-census.mjs",
+      "id": "packages/propose/bin/recompile/test-phone-stream-census.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2785,7 +2785,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/recompile/test-rebuild-options-census.mjs",
+      "id": "packages/propose/bin/recompile/test-rebuild-options-census.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2803,7 +2803,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/recompile/test-schedule-replay.mjs",
+      "id": "packages/propose/bin/recompile/test-schedule-replay.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2823,7 +2823,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/report/test-phase-reconstruct.mjs",
+      "id": "packages/propose/bin/report/test-phase-reconstruct.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2843,7 +2843,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/rvctest.mjs",
+      "id": "packages/propose/bin/rvctest.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2861,7 +2861,7 @@
       }
     },
     {
-      "id": "packages/propose/bin/ventreacttest.mjs",
+      "id": "packages/propose/bin/ventreacttest.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 900000,
@@ -2870,7 +2870,7 @@
       "determinismSignals": [],
       "fixedSleeps": [],
       "sharedResources": [],
-      "subprocesses": false,
+      "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",
         "runs": 0,
@@ -2879,7 +2879,7 @@
       }
     },
     {
-      "id": "packages/propose/bindings/test-anchor-aim-band.mjs",
+      "id": "packages/propose/bindings/test-anchor-aim-band.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2897,7 +2897,7 @@
       }
     },
     {
-      "id": "packages/propose/bindings/test-fact-register.mjs",
+      "id": "packages/propose/bindings/test-fact-register.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2973,7 +2973,7 @@
       }
     },
     {
-      "id": "packages/propose/parked/minus7/policytest.mjs",
+      "id": "packages/propose/parked/minus7/policytest.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -2984,7 +2984,7 @@
       "sharedResources": [
         "device-transport"
       ],
-      "subprocesses": false,
+      "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",
         "runs": 0,
@@ -2993,7 +2993,7 @@
       }
     },
     {
-      "id": "packages/propose/parked/minus7/test-bb-cue-state.mjs",
+      "id": "packages/propose/parked/minus7/test-bb-cue-state.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -3011,7 +3011,7 @@
       }
     },
     {
-      "id": "packages/propose/parked/minus7/test-device-input-gaps.mjs",
+      "id": "packages/propose/parked/minus7/test-device-input-gaps.ts",
       "lane": "test:contracts",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -3029,7 +3029,7 @@
       }
     },
     {
-      "id": "packages/propose/parked/minus7/test-search.mjs",
+      "id": "packages/propose/parked/minus7/test-search.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 600000,
@@ -3049,7 +3049,7 @@
       }
     },
     {
-      "id": "packages/propose/test/androidstalltest.mjs",
+      "id": "packages/propose/test/androidstalltest.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -3067,7 +3067,7 @@
       }
     },
     {
-      "id": "packages/propose/test/census.test.js",
+      "id": "packages/propose/test/census.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -3085,7 +3085,7 @@
       }
     },
     {
-      "id": "packages/propose/test/cycle-controller.test.js",
+      "id": "packages/propose/test/cycle-controller.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -3105,7 +3105,7 @@
       }
     },
     {
-      "id": "packages/propose/test/cycle-library.test.js",
+      "id": "packages/propose/test/cycle-library.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -3123,7 +3123,7 @@
       }
     },
     {
-      "id": "packages/propose/test/cycle-planner.test.js",
+      "id": "packages/propose/test/cycle-planner.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -3141,7 +3141,7 @@
       }
     },
     {
-      "id": "packages/propose/test/experiment.test.js",
+      "id": "packages/propose/test/experiment.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -3159,7 +3159,7 @@
       }
     },
     {
-      "id": "packages/propose/test/legacy-equivalence.test.js",
+      "id": "packages/propose/test/legacy-equivalence.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -3177,115 +3177,7 @@
       }
     },
     {
-      "id": "packages/propose/test/mangletest.mjs",
-      "lane": "test:unit",
-      "owner": "@sixam/propose",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.ts per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/propose/test/mechanic-constraints.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/propose",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.ts per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/propose/test/night-policy.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/propose",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.ts per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/propose/test/observationlanguagetest.mjs",
-      "lane": "test:unit",
-      "owner": "@sixam/propose",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.ts per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/propose/test/policy-game.test.js",
-      "lane": "test:unit",
-      "owner": "@sixam/propose",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.ts per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/propose/test/policyartifacttest.mjs",
-      "lane": "test:unit",
-      "owner": "@sixam/propose",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.ts per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/propose/test/policyequivalencetest.mjs",
+      "id": "packages/propose/test/mangletest.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -3303,7 +3195,7 @@
       }
     },
     {
-      "id": "packages/propose/test/policygrammartest.mjs",
+      "id": "packages/propose/test/mechanic-constraints.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -3321,7 +3213,7 @@
       }
     },
     {
-      "id": "packages/propose/test/policysearchtest.mjs",
+      "id": "packages/propose/test/night-policy.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -3339,7 +3231,115 @@
       }
     },
     {
-      "id": "packages/propose/test/reactivetest.mjs",
+      "id": "packages/propose/test/observationlanguagetest.ts",
+      "lane": "test:unit",
+      "owner": "@sixam/propose",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.ts per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/propose/test/policy-game.test.ts",
+      "lane": "test:unit",
+      "owner": "@sixam/propose",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.ts per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/propose/test/policyartifacttest.ts",
+      "lane": "test:unit",
+      "owner": "@sixam/propose",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.ts per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/propose/test/policyequivalencetest.ts",
+      "lane": "test:unit",
+      "owner": "@sixam/propose",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.ts per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/propose/test/policygrammartest.ts",
+      "lane": "test:unit",
+      "owner": "@sixam/propose",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.ts per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/propose/test/policysearchtest.ts",
+      "lane": "test:unit",
+      "owner": "@sixam/propose",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.ts per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/propose/test/reactivetest.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 300000,
@@ -3350,7 +3350,7 @@
       "sharedResources": [
         "device-transport"
       ],
-      "subprocesses": false,
+      "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",
         "runs": 0,
@@ -3359,7 +3359,7 @@
       }
     },
     {
-      "id": "packages/propose/test/reducedmodeltest.mjs",
+      "id": "packages/propose/test/reducedmodeltest.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -3379,7 +3379,7 @@
       }
     },
     {
-      "id": "packages/propose/test/test-actuator.mjs",
+      "id": "packages/propose/test/test-actuator.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -3397,7 +3397,7 @@
       }
     },
     {
-      "id": "packages/propose/test/test-artifact-animation-gates.mjs",
+      "id": "packages/propose/test/test-artifact-animation-gates.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -3415,65 +3415,7 @@
       }
     },
     {
-      "id": "packages/propose/test/test-bundle.mjs",
-      "lane": "test:unit",
-      "owner": "@sixam/propose",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.ts per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "device-transport"
-      ],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/propose/test/test-encounter-fidelity.mjs",
-      "lane": "test:unit",
-      "owner": "@sixam/propose",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.ts per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/propose/test/test-hid-trace.mjs",
-      "lane": "test:unit",
-      "owner": "@sixam/propose",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.ts per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [
-        "device-transport"
-      ],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/propose/test/test-recipe.mjs",
+      "id": "packages/propose/test/test-bundle.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -3493,7 +3435,25 @@
       }
     },
     {
-      "id": "packages/propose/test/test-schedule-economy.mjs",
+      "id": "packages/propose/test/test-encounter-fidelity.ts",
+      "lane": "test:unit",
+      "owner": "@sixam/propose",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.ts per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/propose/test/test-hid-trace.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -3513,7 +3473,27 @@
       }
     },
     {
-      "id": "packages/propose/test/test-seam-slack.mjs",
+      "id": "packages/propose/test/test-recipe.ts",
+      "lane": "test:unit",
+      "owner": "@sixam/propose",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.ts per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "device-transport"
+      ],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/propose/test/test-schedule-economy.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,
@@ -3533,7 +3513,27 @@
       }
     },
     {
-      "id": "packages/propose/test/test-winners-rebuild.mjs",
+      "id": "packages/propose/test/test-seam-slack.ts",
+      "lane": "test:unit",
+      "owner": "@sixam/propose",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.ts per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [
+        "device-transport"
+      ],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/propose/test/test-winners-rebuild.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
       "timeoutMs": 180000,

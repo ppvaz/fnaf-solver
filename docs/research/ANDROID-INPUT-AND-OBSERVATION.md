@@ -121,7 +121,7 @@ Vendor marketing claiming "humans 150–1500 ms with >100 ms variance, bots SD
 <5 ms" ([GeeTest](https://www.geetest.com/en/article/behavioral-biometrics-bot-detection))
 is COMMUNITY folklore with no methodology.
 
-**Relevant to `human-gate.mjs`'s ±60 ms iid slack: there is no external
+**Relevant to `human-gate.ts`'s ±60 ms iid slack: there is no external
 corroboration to cite, because the literature reports means and never
 variance.** The one public route to real numbers is **HuMIdb** (600 users, 179
 device models, freely available, [arXiv:2005.13655](https://arxiv.org/abs/2005.13655))

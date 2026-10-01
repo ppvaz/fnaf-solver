@@ -10,7 +10,7 @@ import { contactEdges, drawTrace } from '../recompile/model-draw-trace.ts';
 const QUIET = { night: 7, seed: 3, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false, boxEnabled: false, foxyEnabled: false,
                 sourcedDropLightOrder: true };
 const settle = (s, n) => { for (let i = 0; i < n; i++) s.tick(); };
-// The ledger states compare-schedule-replay.mjs reads (`flip panel button` v0 and `mask` v0).
+// The ledger states compare-schedule-replay.ts reads (`flip panel button` v0 and `mask` v0).
 const monitorState = s => ({ down: 0, raising: 1, up: 2, lowering: 3 })[s.monitor];
 const maskState = s => (s.maskOn ? (s.maskAnim > 0 ? 1 : 2) : (s.maskAnim > 0 ? 3 : 0));
 /** Press on update F (the Sim's frame now), then tick; the update each state was first reached on. */

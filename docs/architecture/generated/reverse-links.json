@@ -214,13 +214,13 @@
     {
       "id": "contract.controller-v1",
       "kind": "CONTRACT",
-      "path": "packages/propose/test/cycle-controller.test.js",
+      "path": "packages/propose/test/cycle-controller.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.controller-v1",
       "kind": "CONTRACT",
-      "path": "packages/propose/test/reactivetest.mjs",
+      "path": "packages/propose/test/reactivetest.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -312,13 +312,13 @@
     {
       "id": "contract.device-artifact-v1",
       "kind": "CONTRACT",
-      "path": "packages/propose/test/test-bundle.mjs",
+      "path": "packages/propose/test/test-bundle.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.device-bundle-v1",
       "kind": "CONTRACT",
-      "path": "packages/propose/test/test-bundle.mjs",
+      "path": "packages/propose/test/test-bundle.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -456,7 +456,7 @@
     {
       "id": "contract.device-profile-v1",
       "kind": "CONTRACT",
-      "path": "packages/propose/test/test-bundle.mjs",
+      "path": "packages/propose/test/test-bundle.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -506,7 +506,7 @@
     {
       "id": "contract.experiment-result-v1",
       "kind": "CONTRACT",
-      "path": "packages/propose/test/experiment.test.js",
+      "path": "packages/propose/test/experiment.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -518,7 +518,7 @@
     {
       "id": "contract.experiment-result-v2",
       "kind": "CONTRACT",
-      "path": "packages/propose/test/census.test.js",
+      "path": "packages/propose/test/census.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -531,7 +531,7 @@
     {
       "id": "contract.experiment-spec-v1",
       "kind": "CONTRACT",
-      "path": "packages/propose/test/experiment.test.js",
+      "path": "packages/propose/test/experiment.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -543,7 +543,7 @@
     {
       "id": "contract.experiment-spec-v2",
       "kind": "CONTRACT",
-      "path": "packages/propose/test/census.test.js",
+      "path": "packages/propose/test/census.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -646,7 +646,7 @@
     {
       "id": "contract.policy-program-v1",
       "kind": "CONTRACT",
-      "path": "packages/propose/bin/policy/test-policy-ir.mjs",
+      "path": "packages/propose/bin/policy/test-policy-ir.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -666,20 +666,20 @@
     {
       "id": "contract.policy-program-v1",
       "kind": "CONTRACT",
-      "path": "packages/propose/test/policy-game.test.js",
+      "path": "packages/propose/test/policy-game.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.policy-program-v1",
       "kind": "CONTRACT",
-      "path": "packages/propose/test/policy-game.test.js",
+      "path": "packages/propose/test/policy-game.test.ts",
       "line": 3,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.policy-program-v1",
       "kind": "CONTRACT",
-      "path": "packages/propose/test/policygrammartest.mjs",
+      "path": "packages/propose/test/policygrammartest.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -750,7 +750,7 @@
     {
       "id": "contract.semantic-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/propose/bin/policy/test-policy-interpreter.mjs",
+      "path": "packages/propose/bin/policy/test-policy-interpreter.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -954,7 +954,7 @@
     {
       "id": "contract.winner-v1",
       "kind": "CONTRACT",
-      "path": "packages/propose/test/test-bundle.mjs",
+      "path": "packages/propose/test/test-bundle.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {

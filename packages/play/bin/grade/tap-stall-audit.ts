@@ -259,7 +259,7 @@ export function exposure(intervalsMs, spanMs, contactMs) {
  * the reads take 139-237 ms, so the two anchors sit 180 ms apart, and neither
  * end is physical: the early one has mask presses take effect 2-16 ms after
  * the contact (a touch cannot be rendered in 2 ms) and the late one has them
- * take 135-196 ms. phase-reconstruct.mjs's `helperClockOffset` is the late
+ * take 135-196 ms. phase-reconstruct.ts's `helperClockOffset` is the late
  * end alone; for a 33 ms contact that is not a clock, it is a range.
  *
  * So every contact is graded at BOTH ends and a finding is asserted only when

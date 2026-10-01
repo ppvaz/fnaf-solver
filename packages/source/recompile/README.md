@@ -23,7 +23,7 @@ directory (`/private/tmp/fnaf2-recompile.*` on the dev machine).
 | `model-draw-trace.ts` | The simulator's `Random(N)` draws frame by frame (draws so far, LCG state), in the shape the harness traces: two runs of one night and seed that spend the same draws every frame read the same stream, and the first frame where the counts part is where to look. Refuses a `@sixam/core` resolved outside its own checkout (a worktree without `npm ci` loads the parent's model). MODEL_ONLY. |
 | `sourced-model-options.json` | Explicit diagnostic variant enabling the model's existing sourced flags. It does not change core defaults or establish fidelity. |
 | `sourced-rebuild-model-options.json` | The origin set plus `sourcedFootstepDraws`, `footstepCamMarkers`, `sourcedBoxCountdown`, `sourcedPuppetMoveOrder`, `sourcedHourTable`, and for Custom Night `sourcedParkedMarker`, `sourcedCustomDialOrder` and `sourcedCam8Cancel`: the options under which the model matches the rebuilt no-input Nights 1-6 and the uniform Custom Nights up to each night's terminal loop. Since the replay splits (2026-09-27, late) it also carries `sourcedPromotedMoves`, `sourcedValue5` (in place of `frameValue5` 1), `sourcedOfficeFootsteps`, `sourcedBlackoutClockEnd`, `sourcedBDrainOrder`, `sourcedRoutePass`, `sourcedOfficeRolls`, `sourcedAnimationCount`, `sourcedGatedEvery`, `sourcedBBMoves`, `sourcedExposureValue5` and `sourcedRouteViewDraws`, under which the Night 1, 5 and 7 winner replays match the rebuild to their last or terminal update. Diagnostic; defaults unchanged. |
-| `sourced-rebuild-model-options-20260927a.json` | The rebuild set as it stood before the Nights 6-7 options (`sourcedParkedMarker`, `sourcedCustomDialOrder`, `sourcedCam8Cancel`), byte for byte: the file `rebuild-options-census-20260927` scored (`packages/propose/bin/recompile/rebuild-options-census.mjs --options`). A snapshot, never edited; a census of the current set is a new record. |
+| `sourced-rebuild-model-options-20260927a.json` | The rebuild set as it stood before the Nights 6-7 options (`sourcedParkedMarker`, `sourcedCustomDialOrder`, `sourcedCam8Cancel`), byte for byte: the file `rebuild-options-census-20260927` scored (`packages/propose/bin/recompile/rebuild-options-census.ts --options`). A snapshot, never edited; a census of the current set is a new record. |
 | `sourced-rebuild-model-options-20260927b.json` | The rebuild set with the Nights 6-7 options and before `sourcedPromotedViewDraws`, byte for byte (sha `cc41410e`): the file `rebuild-options-census-20260927b` scored (all 26 subjects). A snapshot, never edited; a census of a later set is a new record. |
 | `sourced-rebuild-model-options-20260927c.json` | The rebuild set as it stood at `5f6418c`, before the replay-split options (`sourcedPromotedMoves` on), byte for byte (sha `b7eddb60`): the file `phone-encounters-20260927` (`recompile-phone-encounters-e18a527d01bcdb54`) ran under. Its gate finds the scored bytes by hash among the named file and these snapshots. A snapshot, never edited. |
 | `sourced-rebuild-model-options-20260929a.json` | The rebuild set as it stood before `sourcedFoxyMoveValue2`, byte for byte (sha `baf090cd`): the bytes every record scored under the main set until 2026-09-29 names, found by hash. A snapshot, never edited. |
@@ -757,11 +757,11 @@ committed winner's own tap schedule into the pinned binary `036076d3` (patch
 `sourced-rebuild-model-options.json`, seed 24850.
 
 ```sh
-node packages/propose/bin/recompile/schedule-to-input.mjs --winner packages/propose/bindings/fnaf2/campaign-night5-contact-final-winner.json \
+node packages/propose/bin/recompile/schedule-to-input.ts --winner packages/propose/bindings/fnaf2/campaign-night5-contact-final-winner.json \
   --night 5 --navigation packages/source/recompile/fixtures/continue.input --out <run>/run.input
 # harness recipe above, plus CHOWDREN_STOP_FRAME=5 CHOWDREN_MAX_TICKS=30 (stop on 06-next day) and
 # CHOWDREN_WATCH='flip panel button:0' (a second run with CHOWDREN_WATCH=mask:0 for the mask ledger)
-node packages/propose/bin/recompile/compare-schedule-replay.mjs --trace <run>/trace --repeat-trace <run2>/trace \
+node packages/propose/bin/recompile/compare-schedule-replay.ts --trace <run>/trace --repeat-trace <run2>/trace \
   --input <run>/run.input --navigation packages/source/recompile/fixtures/continue.input \
   --winner packages/propose/bindings/fnaf2/campaign-night5-contact-final-winner.json --night 5 --seed 24850 \
   --model-options packages/source/recompile/sourced-rebuild-model-options.json \
@@ -1127,12 +1127,12 @@ untracked `base/android/`, the generated `AndroidSans.dat` and the Cython
 ```sh
 # the Night 5 recipe above, on binary e616c431, plus
 CHOWDREN_WATCH_COUNTER='being attacked by,in danger,got you stage,viewing,viewing hall light'
-node packages/propose/bin/recompile/compare-schedule-replay.mjs ... (as above) \
+node packages/propose/bin/recompile/compare-schedule-replay.ts ... (as above) \
   --baseline tools/recompile/results/night5-contact-final-replay-20260927.json \
   --out tools/recompile/results/night5-contact-final-replay-e616c431.json
 ```
 
-The value table (`ATTACKERS` in `compare-schedule-replay.mjs`) is the office
+The value table (`ATTACKERS` in `compare-schedule-replay.ts`) is the office
 sheet's writes of `being attacked by`: 1 Withered Freddy (g556/g560/g564),
 2 Withered Bonnie (g557/g561/g565), 3 Withered Chica (g558/g562/g566),
 4 Withered Foxy (g571-g573), 5 Toy Bonnie (g568, g722), 6 Toy Chica (g569),
@@ -1522,11 +1522,11 @@ only while drawing, and the drawn-time stop line. The whole patch, applied
 with GNU patch to a fresh `9b00bb4` archive, reproduces every scoped file of the tree.
 
 ```sh
-node packages/propose/bin/recompile/phone-encounter-replay.mjs emit --night full-06 --variant landed \
+node packages/propose/bin/recompile/phone-encounter-replay.ts emit --night full-06 --variant landed \
   --out-dir <runs>/full-06-landed --inputs-root <main checkout>   # run.input, frametimes.txt, env, save-before.ini
 # in the fnaf2-chowdren:buster container, cwd = the run dir: run-harness.sh with CHOWDREN_BINARY = the pinned
 # binary, CHOWDREN_HARNESS=1 CHOWDREN_NO_DRAW=1 CHOWDREN_INPUT=run.input CHOWDREN_TRACE=trace and the env lines
-node packages/propose/bin/recompile/phone-encounter-replay.mjs compare --runs <runs> --inputs-root <main checkout> \
+node packages/propose/bin/recompile/phone-encounter-replay.ts compare --runs <runs> --inputs-root <main checkout> \
   --out tools/recompile/results/phone-encounters-20260927.json
 ```
 

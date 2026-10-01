@@ -49,23 +49,23 @@ const ENGINE = [
   // Plan 02's reopened Android route: the sourced split-camera state must arm,
   // the published 10 s Minus Toys loop must clear both normal and pinned
   // worst-luck seeds, and the same loop without the split must fail.
-  ['minus toys', ['../packages/propose/bin/minustoystest.mjs', '200', '--assert']],
-  ['minus toys worst', ['../packages/propose/bin/minustoystest.mjs', '100', '--worst', '--assert']],
-  ['minus toys no-split', ['../packages/propose/bin/minustoystest.mjs', '200', '--no-split', '--assert']],
+  ['minus toys', ['../packages/propose/bin/minustoystest.ts', '200', '--assert']],
+  ['minus toys worst', ['../packages/propose/bin/minustoystest.ts', '100', '--worst', '--assert']],
+  ['minus toys no-split', ['../packages/propose/bin/minustoystest.ts', '200', '--no-split', '--assert']],
   ['simtest', ['../packages/source/test/simtest.ts', '--sweep']],
   ['hidreporttest', ['../packages/play/test/hid-report.test.ts']],
   // Plan 19 pkg 1: the stock-device observation model (OBSERVED/UNKNOWN facts,
   // sensor cadence + latency + drops) and the blackout-reactive controller
   // (animation-window guard, lower-mask-verify-raise, graceful under a noisy
   // observer).
-  ['reactivetest', ['../packages/propose/test/reactivetest.mjs', '--assert']],
+  ['reactivetest', ['../packages/propose/test/reactivetest.ts', '--assert']],
   // Plan 19/21 BB vent policy: this is deliberately a release gate. Its
   // measured policy regressions must fail -- they are not printable
   // known-negatives that allow --assert to pass.
-  ['vent reactive', ['../packages/propose/bin/ventreacttest.mjs', '--assert']],
+  ['vent reactive', ['../packages/propose/bin/ventreacttest.ts', '--assert']],
   // Mangle audio-static contexts and the named five-tick mask response;
   // kept separate from the BB gate so the two audio channels cannot cross.
-  ['mangle reactive', ['../packages/propose/test/mangletest.mjs', '--assert']],
+  ['mangle reactive', ['../packages/propose/test/mangletest.ts', '--assert']],
   // Plan 21 phase-clock foundation: paired A2DP latency calibration, 2 Hz
   // period/phase lock, explicit 500 ms parity, and stale/low-confidence
   // recovery. No privileged engine phase is used here.
@@ -79,7 +79,7 @@ const ENGINE = [
   ['belief state', ['../packages/play/test/belief.test.ts']],
   // Plan 20 package 2: controller-visible reduced transition model agrees with
   // seeded Sim control/resource traces; hidden routes remain risk buckets.
-  ['reduced model', ['../packages/propose/test/reducedmodeltest.mjs']],
+  ['reduced model', ['../packages/propose/test/reducedmodeltest.ts']],
   // Plan 20 package 3: delayed facts retain event time, UNKNOWN never clears
   // risk, stale controls require verification, and contradictions fail safe.
   ['estimator', ['../packages/play/test/estimator.test.ts']],
@@ -91,39 +91,39 @@ const ENGINE = [
   // truth-state oracle, disabled observations, and the estimator controller.
   // Plan 21 package 1: the current Minimal Minus Toys headers are represented
   // once as finite policy IR and round-trip with a canonical hash.
-  ['policy IR', ['../packages/propose/bin/policy/test-policy-ir.mjs']],
+  ['policy IR', ['../packages/propose/bin/policy/test-policy-ir.ts']],
   // Plan 21 package 2 foundation: compile the finite IR into semantic press /
   // release events, including repeat and terminal phases.
-  ['policy interpreter', ['../packages/propose/bin/policy/test-policy-interpreter.mjs']],
+  ['policy interpreter', ['../packages/propose/bin/policy/test-policy-interpreter.ts']],
   // Plan 21 package 3: finite phase/action grammar, engine-shaped ordering
   // checks, and duplicate-family classification.
-  ['policy grammar', ['../packages/propose/test/policygrammartest.mjs']],
+  ['policy grammar', ['../packages/propose/test/policygrammartest.ts']],
   // Plan 21 package 5: IR, device-plan text, and mocked phone trace stay
   // equivalent, including arm timing, repeat cadence, and terminal tail.
-  ['policy equivalence', ['../packages/propose/test/policyequivalencetest.mjs']],
+  ['policy equivalence', ['../packages/propose/test/policyequivalencetest.ts']],
   // Plan 21 package 4: explicit structural mutations run through grammar,
   // device-equivalence, exact-engine, and provenance/Pareto gates.
-  ['policy search', ['../packages/propose/test/policysearchtest.mjs']],
+  ['policy search', ['../packages/propose/test/policysearchtest.ts']],
   // Plan 21 package 6: canonical policy artifact, compiled-plan hash binding,
   // runner wiring, and the opt-in post-run analysis boundary.
-  ['policy artifact', ['../packages/propose/test/policyartifacttest.mjs']],
+  ['policy artifact', ['../packages/propose/test/policyartifacttest.ts']],
   // Plan 16 pkg 1/3 gates: Sim.snapshot()/restore() bit-identity, the semantic
   // action layer, and the parameter search harness reproducing the 803feb3
   // ladder on a zero perturbation.
-  ['minus7 search', ['../packages/propose/parked/minus7/test-search.mjs']],
-  ['reactive pilot', ['../packages/propose/parked/minus7/reactive-pilot.mjs', '200', '--assert']],
-  ['reactive pilot --worst', ['../packages/propose/parked/minus7/reactive-pilot.mjs', '100', '--worst', '--assert']],
+  ['minus7 search', ['../packages/propose/parked/minus7/test-search.ts']],
+  ['reactive pilot', ['../packages/propose/parked/minus7/reactive-pilot.ts', '200', '--assert']],
+  ['reactive pilot --worst', ['../packages/propose/parked/minus7/reactive-pilot.ts', '100', '--worst', '--assert']],
   // The human-slack budget, measured 2026-08-25: reactive Minus 7 holds
   // 200/200 at +/-60 ms uniform per-input error, 89/200 at +/-100, 0/200 at
   // +/-150. The strategy's human-executability rests on this margin (and on
   // human error correlating rather than being iid -- plans/04), so hold the
   // floor of the bracket. If this flips, the human-viability picture changed.
-  ['reactive pilot jitter 60', ['../packages/propose/parked/minus7/reactive-pilot.mjs', '200', '--jitter=60', '--assert']],
+  ['reactive pilot jitter 60', ['../packages/propose/parked/minus7/reactive-pilot.ts', '200', '--jitter=60', '--assert']],
   // The pilot asserts one narrow claim, not survival: Balloon Boy never
   // reaches the office, and no Foxy death follows him taking the lights.
-  ['stock device pilot', ['../packages/propose/parked/minus7/stock-device-pilot.mjs', '200', '--vent', '--sync', '--assert']],
-  ['stock device pilot --worst', ['../packages/propose/parked/minus7/stock-device-pilot.mjs', '100', '--vent', '--sync', '--worst', '--assert']],
-  ['stock device pilot --guard', ['../packages/propose/parked/minus7/stock-device-pilot.mjs', '200', '--night=6', '--vent', '--sync', '--assert-guard']],
+  ['stock device pilot', ['../packages/propose/parked/minus7/stock-device-pilot.ts', '200', '--vent', '--sync', '--assert']],
+  ['stock device pilot --worst', ['../packages/propose/parked/minus7/stock-device-pilot.ts', '100', '--vent', '--sync', '--worst', '--assert']],
+  ['stock device pilot --guard', ['../packages/propose/parked/minus7/stock-device-pilot.ts', '200', '--night=6', '--vent', '--sync', '--assert-guard']],
   // The sparse-left Night 7 candidate is an aligned simulator contract, not a
   // device clear. Its explicit pilot offset keeps the phase dependency visible.
   ['hidpilot sparse-left', ['../packages/propose/parked/minus7/hid-device-pilot.mjs', '500', '--night=7', '--sparse-left', '--assert']],
@@ -190,36 +190,36 @@ const ENGINE = [
   // the phone's floor, camera spacing it has actually landed, a hall flash per
   // cycle, wind above break-even, the flashlight inside night 6's 3000 frames,
   // and the monitor/mask polarity invariants.
-  ['recipe', ['../packages/propose/test/test-recipe.mjs']],
+  ['recipe', ['../packages/propose/test/test-recipe.ts']],
   // The microroutine oracle: the runner can record every report it sends, and
   // this audits that artifact for contact length, released time between two
   // buttons, and the trap-2 release discipline. Its self-test runs here; point
   // it at a captured trace to audit a real run.
-  ['hid trace', ['../packages/propose/test/test-hid-trace.mjs']],
+  ['hid trace', ['../packages/propose/test/test-hid-trace.ts']],
   // The Minus Toys device plan (plan 02 pkg 2a, device half): the ported
   // glitch loop still clears nights 2 and 7 in the exact model with the split
   // armed, the no-split control still loses, and every instruction kind and
   // control it emits is one the on-phone interpreter implements.
-  ['minus toys plan', ['../packages/propose/bin/plans/test-minus-toys-plan.mjs']],
+  ['minus toys plan', ['../packages/propose/bin/plans/test-minus-toys-plan.ts']],
   // The per-instruction timing margin map for that plan: how far each press can
   // move before a seed dies. Pins the two facts the 2026-08-28 device-run
   // writeup rests on -- the split-arming pair has ~one Fusion poll of slack, and
   // the whole-schedule phase tolerance (33/99 ms) is far under the 302 ms epoch
   // bracket the run reported.
-  ['minus toys margin', ['../packages/propose/bin/plans/test-minus-toys-margin.mjs']],
+  ['minus toys margin', ['../packages/propose/bin/plans/test-minus-toys-margin.ts']],
   // The robustness objective: replays the loop through a calibrated model of
   // the first device run's clock error (epoch bracket, game-vs-wall drift,
   // per-press jitter) with an optional per-hour AM re-anchor. A search fitness
   // function -- the deterministic gate's 200/200 has ~66 ms of phase tolerance
   // behind it.
-  ['minus toys jitter', ['../packages/propose/bin/plans/test-minus-toys-jitter.mjs']],
+  ['minus toys jitter', ['../packages/propose/bin/plans/test-minus-toys-jitter.ts']],
   // The engine cannot price an input the port refuses, so the plan is checked
   // against the phone's measured input-acceptance gaps separately.
-  ['device input gaps', ['../packages/propose/parked/minus7/test-device-input-gaps.mjs']],
+  ['device input gaps', ['../packages/propose/parked/minus7/test-device-input-gaps.ts']],
   // The measured actuator as a simulator layer -- launch lateness and the
   // mask-seam monitor drop. This gates that the model reproduces the desync
   // census's band rates, keeps hold lengths, and replays under a seed.
-  ['device actuator', ['../packages/propose/test/test-actuator.mjs']],
+  ['device actuator', ['../packages/propose/test/test-actuator.ts']],
   // Nothing reaches the phone unless locally proven (2026-08-25, absolute,
   // no override). The model gate replays the plan through the engine under
   // measured human slack before the runner's first adb command, and refuses
@@ -228,7 +228,7 @@ const ENGINE = [
   // checks verify both layers against mocks, exercise the sole runner path
   // with a fake adb, and assert the shipped Night 6 plan PASSES (648/1200 with
   // the sourced Fusion LCG and measured-safe maskraise compound).
-  ['human gate', ['../packages/propose/bin/plans/test-human-gate.mjs']],
+  ['human gate', ['../packages/propose/bin/plans/test-human-gate.ts']],
   // The gate counts the deaths and prints its top four; on Night 2 that cut
   // says "Foxy, mostly" when Foxy is 58% and the office is 42%. deathchart.ts
   // charts the whole census by the engine's own kill() reasons. This pins the
@@ -252,7 +252,7 @@ const ENGINE = [
   // replay and receive a verdict priced against ITS OWN AI table. Nights 1 and
   // 3 used to crash the builder on one shared message that covered two
   // opposite facts -- Balloon Boy is impossible on 1 and merely rare on 3.
-  ['night matrix', ['../packages/propose/bin/plans/test-night-matrix.mjs']],
+  ['night matrix', ['../packages/propose/bin/plans/test-night-matrix.ts']],
   // Nothing is pressed on the title screen that was not seen there, and New
   // Game -- which erases a save that cannot be restored -- needs a capability
   // the caller sets for one run. The structural half proves no second title
@@ -304,7 +304,7 @@ const ENGINE = [
   // wind-only policy, an inverted ladder and a flash-deleted Minus 7 must all
   // score zero on Night 7, and Night 1 -- whose AI table cannot arm Balloon Boy
   // -- is the positive control every family must clear.
-  ['policytest', ['../packages/propose/parked/minus7/policytest.mjs', '--assert']],
+  ['policytest', ['../packages/propose/parked/minus7/policytest.ts', '--assert']],
   ['camtrace', ['../packages/review/bin/grade/test-camtrace.py']],
   // Plan 09's read-only corpus index: classify existing artifacts without
   // rewriting them, preserve basename joins, and surface unknown/empty files.
@@ -378,7 +378,7 @@ const ENGINE = [
   ['sweepcheck discriminator', ['../packages/review/bin/grade/test-sweepcheck.py']],
   ['grade-run coverage', ['../packages/review/bin/grade/test-grade-run-coverage.ts']],
   ['cuetest', ['../packages/propose/parked/minus7/cue/test-cue.py']],
-  ['BB cue state', ['../packages/propose/parked/minus7/test-bb-cue-state.mjs']],
+  ['BB cue state', ['../packages/propose/parked/minus7/test-bb-cue-state.ts']],
   ['latency experiment', ['../packages/propose/parked/minus7/cue/test-latency-experiment.py']],
 ];
 
@@ -435,20 +435,20 @@ const BROWSER = [
   ['pages entry', ['../apps/trainer/test/pages.test.ts']],
 ];
 const REPORTS = [
-  ['minus2test', ['../packages/propose/bin/minus2test.mjs']],
-  ['minus6test', ['../packages/propose/bin/minus6test.mjs']],
-  ['rvctest', ['../packages/propose/bin/rvctest.mjs', '200']],
-  ['androidstalltest', ['../packages/propose/test/androidstalltest.mjs']],
+  ['minus2test', ['../packages/propose/bin/minus2test.ts']],
+  ['minus6test', ['../packages/propose/bin/minus6test.ts']],
+  ['rvctest', ['../packages/propose/bin/rvctest.ts', '200']],
+  ['androidstalltest', ['../packages/propose/test/androidstalltest.ts']],
   // The blind schedule, still unjudged: it is what the phone runs today, and
   // it fails the assertion above by construction (200/200 BB->Foxy).
-  ['stock device pilot blind', ['../packages/propose/parked/minus7/stock-device-pilot.mjs']],
+  ['stock device pilot blind', ['../packages/propose/parked/minus7/stock-device-pilot.ts']],
   // ...and on the night the device actually selects, where the same schedule
   // reaches about 118 s instead of 48 s and still loses.
-  ['stock device pilot 6th night', ['../packages/propose/parked/minus7/stock-device-pilot.mjs', '200', '--night=6', '--vent', '--sync']],
+  ['stock device pilot 6th night', ['../packages/propose/parked/minus7/stock-device-pilot.ts', '200', '--night=6', '--vent', '--sync']],
   // The same night through the measured actuator (launch lateness plus the
   // mask-seam drop). A report, not a check: survival under the model is still
   // a statement about the model.
-  ['stock device pilot actuator', ['../packages/propose/parked/minus7/stock-device-pilot.mjs', '200', '--night=6', '--vent',
+  ['stock device pilot actuator', ['../packages/propose/parked/minus7/stock-device-pilot.ts', '200', '--night=6', '--vent',
     '--sync', '--device-actuator']],
   // The shipped n6 target under the same actuator.
   //
@@ -470,12 +470,12 @@ const REPORTS = [
   // loop whose reads are always wrong HURTS, one that reads inside the flip
   // window causes the desyncs it looks for, and a free perfect one gains
   // nothing either.
-  ['closed-loop reclaim', ['../packages/propose/parked/minus7/closed-loop-reclaim.mjs', '--runs=200']],
+  ['closed-loop reclaim', ['../packages/propose/parked/minus7/closed-loop-reclaim.ts', '--runs=200']],
   // What a lateness reduction would be worth. Two controls before a table: the
   // zero row must reproduce the exact figure and the 110-300 ms row must
   // reproduce plans/12, so a drifted cell fails instead of being re-read. The
   // knee is the 2->3 frame boundary -- free to 41 ms, gone at 42.
-  ['lateness sweep', ['../packages/propose/parked/minus7/latenesssweep.mjs', '--runs=200', '--assert']],
+  ['lateness sweep', ['../packages/propose/parked/minus7/latenesssweep.ts', '--runs=200', '--assert']],
   // The measured human bands, from whatever trainer runs have been recorded.
   // Empty until practice sessions accumulate under /save-trace.
   ['tracereport', ['../apps/trainer/test/tracereport.ts']],

@@ -316,8 +316,8 @@ Then, before it enters the simulator:
 
 - Record the group numbers in `ANDROID-SOURCE-STATUS.md` and label the constant
   `[SOURCED]` in `src/config.js`. A rule with no group number is `[MODEL]`.
-- Add or update the engine test (`packages/propose/parked/minus7/reactive-pilot.mjs`, `packages/source/test/simtest.ts`,
-  `packages/propose/test/androidstalltest.mjs`) in the same commit.
+- Add or update the engine test (`packages/propose/parked/minus7/reactive-pilot.ts`, `packages/source/test/simtest.ts`,
+  `packages/propose/test/androidstalltest.ts`) in the same commit.
 
 ---
 

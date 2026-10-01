@@ -3,7 +3,7 @@
  * an experiment names its competing explanations and the observation that
  * separates them, and a census names its population, policy family, seeds and
  * held-out block. v1 (`validateExperiment`, `validateExperimentResult` in
- * index.js) is still read; nothing here changes it.
+ * index.ts) is still read; nothing here changes it.
  *
  * A spec v2 holds the question; `explanations[]`, each with its assumptions and
  * the observation it predicts, written as a predicate over named measures; the

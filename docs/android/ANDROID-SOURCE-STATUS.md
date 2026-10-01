@@ -557,7 +557,7 @@ already assumed.
 ### The simulator has been reading a field the phone cannot hear
 
 `src/engine.js` emits `vent-bang` with a `who`, and two controllers consume it:
-`packages/propose/bin/minus6test.mjs` counts threats with `e.data?.who !== 'bb'`, and
+`packages/propose/bin/minus6test.ts` counts threats with `e.data?.who !== 'bb'`, and
 `packages/propose/parked/minus7/hid-device-pilot.mjs --vocal-cam5` resets its vocal count on
 `who === 'bb' && leaving`. The source says every one of those events is sample
 17. No audio detector can recover `who`, so both controllers are using a sensor
@@ -1026,7 +1026,7 @@ parameter).
 - **The engine now models this.** `src/engine.js` keeps `viewing`, `cam`, and
   `lastViewed` separately; the raise restore can create the sourced split, and
   the camera-light rule applies its target from the marker while retaining the
-  `viewing` immunity gate. `packages/propose/bin/minustoystest.mjs` and
+  `viewing` immunity gate. `packages/propose/bin/minustoystest.ts` and
   `packages/propose/bin/plans/minus-toys-plan.mjs` exercise it with split and no-split
   controls. The remaining question is transfer of a full policy under device
   timing, not whether Android has the state.
@@ -1180,7 +1180,7 @@ each resolved item records the finding. Remaining open items are marked OPEN.
    `viewing` for the `<> 8 / <> 9 / <> 11` immunity, so the CAM 08/09/11 flash
    exclusions are bypassable, and with `viewing == 11` the held light still
    blocks the Puppet (g494). **Engine/model answered 2026-08-28:** `Sim` now
-   carries all three fields and `minustoystest.mjs` scores 200/200 normal plus
+   carries all three fields and `minustoystest.ts` scores 200/200 normal plus
    100/100 pinned worst-luck; its no-split control is 0/200. Deliberate arming
    is proved once on the target phone. Still OPEN: arming repeatability, the
    empirical window width, and an observed Toy stun through the glitched marker.

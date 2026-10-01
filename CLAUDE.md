@@ -87,7 +87,7 @@ labels still do not promote one another.
 - End every session by reporting the consequential:bookkeeping commit ratio.
 - A binding that wins on the phone, or that gets an `ANCHOR_AIMS` entry, is
   committed as `packages/propose/bindings/<game>/campaign-night<N>-<name>-winner.json`
-  in the same commit (`test-fact-register.mjs` refuses otherwise). Winners lived in
+  in the same commit (`test-fact-register.ts` refuses otherwise). Winners lived in
   `tools/device/` until 2026-09-30 (Pedro: "Move to propose/bindings"); records
   written before then keep that path, and their readers follow the file through
   git's renames. `artifacts/` is
@@ -126,7 +126,7 @@ Nights 1-4 two each, Night 5 seven, Night 6 eight, and Night 7 24: 21 at 10/20,
 one at BB+Foxy 20, two at BB+Golden 20. 36 of them are recovered custody. All
 were attested by an agent under the delegation. Refused: the Night 7 4/20 Minus
 3 win `night7-n7-420-minimal-m3`, because its winner is held back
-(`test-seam-slack.mjs` refuses its 0 ms margin) and its pack holds no dial
+(`test-seam-slack.ts` refuses its 0 ms margin) and its pack holds no dial
 readback. Every death, lost result and FNaF 1 run is refused too, and the
 video-only 6 AMs `night5-anchor4` and `night5-perfetto1` fail `terminalPass`.
 A promotion is one clear, not a reliability claim. `npm run review -- query
@@ -134,7 +134,7 @@ promotions` re-derives every edge and S1's open items below from the packs, the
 attestations and the winners, and checks them against `graph.json`. **S1's
 closing condition holds since 2026-09-30:** every one of the 25 committed
 `winner-v1` bindings is named by a run pack, and they rebuild
-(`test-winners-rebuild.mjs`). `campaign-toys-night5-winner.json` was packed on
+(`test-winners-rebuild.ts`). `campaign-toys-night5-winner.json` was packed on
 the phone that day (`d659cd62`, a death). The MODEL_ONLY
 `campaign-night1-minus7-winner.json` was retired to
 `packages/propose/bindings/fnaf2/retired/` (Pedro: "minus 7 at night 1?
@@ -226,7 +226,7 @@ Each entry below cost a live attempt or a false diagnosis on 2026-09-06.
    while the game clock can trail by a minute). Port reuse is not timing
    reuse.
 5. **Never report a test PASS you did not see print.** A wrong test path
-   (`tools/test-bundle.mjs` vs `packages/propose/test/test-bundle.mjs`) failed
+   (`tools/test-bundle.ts` vs `packages/propose/test/test-bundle.ts`) failed
    silently behind `> /dev/null 2>&1 && echo` twice before being caught.
    Confirm the file exists and the pass line is in the output before
    claiming green.
@@ -244,10 +244,10 @@ Each entry below cost a wrong diagnosis or a wasted device run on 2026-09-11.
    `MONITOR_ANIM_DOWN_MS + MIN_CONTACT_MS` = 400 with the comment "which is the
    +400 ms timing used by the Night 5 route" — and the route presses at exactly
    +400. `400 < 400` is false, so the one check that could have caught it passed
-   in silence, and `test-artifact-animation-gates.mjs` pinned that boundary as
+   in silence, and `test-artifact-animation-gates.ts` pinned that boundary as
    correct. A constant defined as *what we already do* is a tautology that
    survives review because it looks derived. On the phone that zero cost about
-   one cycle in eight. `test-seam-slack.mjs` now refuses a plan that clears any
+   one cycle in eight. `test-seam-slack.ts` now refuses a plan that clears any
    timing floor by less than 33 ms, and refuses a floor that does not stand that
    far above its own measurement.
 
@@ -272,8 +272,8 @@ Each entry below cost a wrong diagnosis or a wasted device run on 2026-09-11.
     at every phase, refuting it.
 
 11. **Read a tool's own computed output before deriving the same quantity by
-    hand.** `phase-reconstruct.mjs` already reports `model.lossBands`. An agent
-    instead ran `minus-toys-margin.mjs`'s `edge()`, which stops at the first
+    hand.** `phase-reconstruct.ts` already reports `model.lossBands`. An agent
+    instead ran `minus-toys-margin.ts`'s `edge()`, which stops at the first
     failure and is valid only for a contiguous basin, and published a "408 ms
     cliff" for a response that is banded and periodic — condemning a 1320 ms run
     the model actually scores 3000/3000.
@@ -288,7 +288,7 @@ Each entry below cost a wrong diagnosis or a wasted device run on 2026-09-11.
     `test-grade-run-coverage.mjs` sat in `tools/test.ts`'s ENGINE group, which
     only `npm run test:legacy:engine` invokes and which CLAUDE.md itself
     describes as holding intentionally red controls. It had been failing on 11
-    scripts, `phase-reconstruct.mjs` among them — which is exactly why two
+    scripts, `phase-reconstruct.ts` among them — which is exactly why two
     sessions ran that by hand. Structural gates belong in `npm run test:unit`.
 
 ## Mistake register (2026-09-30 — the moves)

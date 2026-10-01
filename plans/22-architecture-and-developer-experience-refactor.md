@@ -321,7 +321,7 @@ kernel <- source <- play <- propose -> review -> source
   re-export propose.
 - `review` imports core and the kernel and never `packages/play`, an
   application, `packages/adapters`, `packages/propose` or `packages/research`. It still reaches
-  `packages/propose/bin/plans/bundle.mjs` to compile a committed winner to its bundle hash;
+  `packages/propose/bin/plans/bundle.ts` to compile a committed winner to its bundle hash;
   that edge closes when `tools/device` is sorted by context (migration M9).
 - `trainer` depends on source, the kernel and browser-local presentation only.
 
@@ -346,7 +346,7 @@ The important implementation findings are:
   public mutable truth state is also consumed directly, so a narrow
   `PlantModel` facade and a separate privileged truth-sensor contract are
   needed before moving it.
-- `packages/propose/parked/minus7/policy.mjs` defines a useful but implicit controller API—`reset` and
+- `packages/propose/parked/minus7/policy.ts` defines a useful but implicit controller API—`reset` and
   `step` plus tap/hold/press/release scheduling—but `PolicyRun` also owns
   observation privilege, timing, simulated actuation faults, and reporting.
   Those are separate runtime services.

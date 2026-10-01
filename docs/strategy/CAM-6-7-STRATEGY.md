@@ -152,7 +152,7 @@ as a reactive hybrid also scored 0/150, and the full post-mortem is in
 
 **Minus 6 (2026-08-20): also refuted.** The last revival idea — keep the
 06/07 cover and *tolerate* the one uncovered route through the sourced office
-encounter — scored 0/200 (`node packages/propose/bin/minus6test.mjs`). Post-XOR correction
+encounter — scored 0/200 (`node packages/propose/bin/minus6test.ts`). Post-XOR correction
 along the way: the route 06/07 never sees is Toy Freddy's, not Withered
 Freddy's as the pre-XOR refutation above phrased it; W. Freddy is held at
 CAM 07. The covered six never broke the stall — Toy Freddy's encounter

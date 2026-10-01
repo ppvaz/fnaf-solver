@@ -5,7 +5,7 @@
 // runs there; a developer running the same `npm run` lines runs them against a
 // working tree that also holds uncommitted edits, untracked files, and stale
 // generated output. Those two answers differ, and the difference is not
-// theoretical: `fcd4312` added `packages/propose/bin/nightloop-run.mjs` without its
+// theoretical: `fcd4312` added `packages/propose/bin/nightloop-run.ts` without its
 // `command-registry.json` row and CI failed `git diff --exit-code` on every
 // push for a day, while the same catalog command in the author's tree looked
 // settled. `npm run catalog` in a dirty tree is a DIFFERENT MEASUREMENT from
@@ -17,8 +17,8 @@
 //   - CI stops the job at its first failed step. This runs every lane, because
 //     a job that stops early reports one break and hides the rest.
 //   - When a lane fails, its `&&` chain is re-run command by command to name
-//     every failure in it. `deb6463` broke both `night-policy.test.js` and
-//     `observationlanguagetest.mjs`; they sit in one `&&` chain, so CI only
+//     every failure in it. `deb6463` broke both `night-policy.test.ts` and
+//     `observationlanguagetest.ts`; they sit in one `&&` chain, so CI only
 //     ever named the first and the second stayed invisible for a day.
 //
 // The verdict itself is CI's: a lane is the step text from `ci.yml`, and

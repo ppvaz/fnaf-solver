@@ -30,7 +30,7 @@
 //            night it cannot read (never assumed), and after an abort or a killed
 //            runner the game is driven back to an observed title. It runs in
 //            test:unit:slow, which CI's slow lane runs.
-//   items 7, 9  are packages/propose/test/test-seam-slack.mjs's: every compiled plan
+//   items 7, 9  are packages/propose/test/test-seam-slack.ts's: every compiled plan
 //            clears every floor by the allowance, and the mask floor IS its
 //            measurement, read from SEAM_FLOORS rather than from a comment.
 //            That equality was checked in one direction only; a floor BELOW
@@ -73,17 +73,17 @@ const EXEMPT = new Map([
   ['apps/trainer/test/pages.test.ts', 'browser group: needs Chrome, like its siblings, and runs with them (npm run test:browser:realtime); not timing-sensitive, so a CI step could run it'],
   // tools/test.ts's REPORTS group: named like tests, but they print numbers
   // and always exit 0, so a lane would count a verdict that does not exist.
-  ['packages/propose/bin/minus2test.mjs', 'report, not a check: tools/test.ts --reports prints it and never judges it'],
-  ['packages/propose/bin/minus6test.mjs', 'report, not a check: tools/test.ts --reports prints it and never judges it'],
-  ['packages/propose/bin/rvctest.mjs', 'report, not a check: tools/test.ts --reports prints it and never judges it'],
-  ['packages/propose/test/androidstalltest.mjs', 'report, not a check: tools/test.ts --reports prints it and never judges it'],
+  ['packages/propose/bin/minus2test.ts', 'report, not a check: tools/test.ts --reports prints it and never judges it'],
+  ['packages/propose/bin/minus6test.ts', 'report, not a check: tools/test.ts --reports prints it and never judges it'],
+  ['packages/propose/bin/rvctest.ts', 'report, not a check: tools/test.ts --reports prints it and never judges it'],
+  ['packages/propose/test/androidstalltest.ts', 'report, not a check: tools/test.ts --reports prints it and never judges it'],
   // tools/test.ts's EXTENDED_ENGINE: "green, but four minutes on its own
   // (2026-09-24): too slow for --gates". No CI step runs --extended either, so
   // these four are item 13's open debt, recorded rather than hidden.
-  ['packages/propose/bin/plans/test-minus-toys-plan.mjs', 'extended tier (minutes): only `npm run test:simulation` runs it, and no CI step does -- open item-13 debt'],
-  ['packages/propose/bin/plans/test-minus-toys-margin.mjs', 'extended tier (minutes): only `npm run test:simulation` runs it, and no CI step does -- open item-13 debt'],
-  ['packages/propose/bin/plans/test-minus-toys-jitter.mjs', 'extended tier (minutes): only `npm run test:simulation` runs it, and no CI step does -- open item-13 debt'],
-  ['packages/propose/bin/plans/test-night-matrix.mjs', 'extended tier (minutes): only `npm run test:simulation` runs it, and no CI step does -- open item-13 debt'],
+  ['packages/propose/bin/plans/test-minus-toys-plan.ts', 'extended tier (minutes): only `npm run test:simulation` runs it, and no CI step does -- open item-13 debt'],
+  ['packages/propose/bin/plans/test-minus-toys-margin.ts', 'extended tier (minutes): only `npm run test:simulation` runs it, and no CI step does -- open item-13 debt'],
+  ['packages/propose/bin/plans/test-minus-toys-jitter.ts', 'extended tier (minutes): only `npm run test:simulation` runs it, and no CI step does -- open item-13 debt'],
+  ['packages/propose/bin/plans/test-night-matrix.ts', 'extended tier (minutes): only `npm run test:simulation` runs it, and no CI step does -- open item-13 debt'],
   // Named like a test, but a runner: it picks gates from the working tree's
   // diff, so its answer depends on what is dirty, and every gate it can pick
   // is judged by this file on its own.
@@ -97,8 +97,8 @@ const REGISTER_GATES = [
   [1, 'packages/play/src/sensors/screencap/test-sensor.py'],   // title-observe.py refuses a path it would not read
   [3, 'apps/lab/test/test-night-job.py'],   // a night job refuses on an observed title mismatch and on an unreadable Continue night
   [5, SELF],
-  [7, 'packages/propose/test/test-seam-slack.mjs'],
-  [9, 'packages/propose/test/test-seam-slack.mjs'],
+  [7, 'packages/propose/test/test-seam-slack.ts'],
+  [9, 'packages/propose/test/test-seam-slack.ts'],
   [12, SELF],
   [13, SELF],
   [13, 'packages/review/bin/grade/test-grade-run-coverage.ts'],
@@ -385,13 +385,13 @@ export function missingPaths({ scripts, ciText, exists }) {
     if (!isTestFile(path)) throw new Error(`mistake register: ${path} is a test by the conventions here, and is not recognised`);
 }
 {
-  // item 5, the incident itself: tools/test-bundle.mjs for packages/propose/test/test-bundle.mjs.
+  // item 5, the incident itself: tools/test-bundle.ts for packages/propose/test/test-bundle.ts.
   const planted = missingPaths({
-    scripts: { 'test:planted': 'node tools/test-bundle.mjs > /dev/null 2>&1 && echo PASS', 'test:alias': 'npm run test:nope' },
+    scripts: { 'test:planted': 'node tools/test-bundle.ts > /dev/null 2>&1 && echo PASS', 'test:alias': 'npm run test:nope' },
     ciText: null, exists: path => existsSync(join(ROOT, path)),
   });
-  if (!planted.some(p => p.includes('tools/test-bundle.mjs')))
-    fail('control: a package.json script naming tools/test-bundle.mjs (the item-5 wrong path) was not caught');
+  if (!planted.some(p => p.includes('tools/test-bundle.ts')))
+    fail('control: a package.json script naming tools/test-bundle.ts (the item-5 wrong path) was not caught');
   if (!planted.some(p => p.includes('npm run test:nope')))
     fail('control: `npm run` of an undefined script was not caught');
 

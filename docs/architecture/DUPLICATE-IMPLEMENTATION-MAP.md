@@ -225,8 +225,8 @@ Host-side schedulers and their simulator twins:
   carrying `device-executor-v1`, which is the binding that makes this
   family legible.
 - **Simulator pilots:** `packages/propose/parked/minus7/hid-device-pilot.mjs` (962),
-  `stock-device-pilot.mjs` (412), `reactive-pilot.mjs` (344),
-  `closed-loop-reclaim.mjs` (155). `stock-device-pilot.mjs:3` states its
+  `stock-device-pilot.ts` (412), `reactive-pilot.ts` (344),
+  `closed-loop-reclaim.ts` (155). `stock-device-pilot.ts:3` states its
   relationship — it replays `tools/device/trial.sh`'s millisecond table — and
   `hid-device-pilot.mjs:9` states that its CAM 05 policy is "retained as a
   comparison, not the selected" one. Those two headers are the only thing
@@ -244,19 +244,19 @@ Host-side schedulers and their simulator twins:
 Twelve modules spell "policy", in at least three unrelated vocabularies.
 
 - **policy-v1 IR (gated).** `packages/propose/src/policy/policy-ir.ts` (86) owns
-  the schema with `observation-language.js`; `packages/propose/bin/policy/policy-grammar.mjs`
-  (387), `policy-interpreter.mjs` (77), `policy-search.mjs` (169),
-  `policy-artifact.mjs` (142) build on it, and `policy-equivalence.mjs` (214)
-  is a real compiler-equivalence gate. `packages/propose/bin/policy/policy-ir.mjs` (51) is a
+  the schema with `observation-language.js`; `packages/propose/bin/policy/policy-grammar.ts`
+  (387), `policy-interpreter.ts` (77), `policy-search.ts` (169),
+  `policy-artifact.ts` (142) build on it, and `policy-equivalence.ts` (214)
+  is a real compiler-equivalence gate. `packages/propose/bin/policy/policy-ir.ts` (51) is a
   **name collision, not a copy**: it converts one Night 1 plan into the IR.
 - **Invention language.** `tools/invent/policy-lang.mjs` (499) — a rule-list
   genome over a privileged simulator surface, explicitly not device-promotable.
   Its header states the duplication outright: first-match-wins "exactly like
-  the cascade in `packages/propose/parked/minus7/reactive-policy.mjs`'s `decide()`".
-- **Reactive rule cascade.** `packages/propose/parked/minus7/reactive-policy.mjs` (96).
-- **Comparison adapter.** `packages/propose/parked/minus7/policy.mjs` (361) and
-  `packages/propose/parked/minus7/policybaselines.mjs` (532) — the plans/11 observation/action contract.
-  `packages/propose/bin/policy/policy-inspect.js` (12) is the CLI shim.
+  the cascade in `packages/propose/parked/minus7/reactive-policy.ts`'s `decide()`".
+- **Reactive rule cascade.** `packages/propose/parked/minus7/reactive-policy.ts` (96).
+- **Comparison adapter.** `packages/propose/parked/minus7/policy.ts` (361) and
+  `packages/propose/parked/minus7/policybaselines.ts` (532) — the plans/11 observation/action contract.
+  `packages/propose/bin/policy/policy-inspect.ts` (12) is the CLI shim.
 
 Cleanup decision: the three vocabularies are probably all warranted (device IR,
 privileged genome, comparison adapter) — but nothing says so, and the shared
@@ -267,10 +267,10 @@ name is what makes a newcomer read the wrong file.
 `packages/propose/bin/plans/minus-toys-plan.mjs` (554) and `minus-3-plan.mjs` (239) implement
 the *same undeclared interface*: `KNOBS0`, `build()`, `schedule()`,
 `replay()`, `emitPlan()`, plus a census entry point (`phaseScan` / `gate`).
-`minus3-frame-light.mjs` (145) is a third shape for the same job
+`minus3-frame-light.ts` (145) is a third shape for the same job
 (`winRows`/`deviceEdges`/`census` with a pinned `EDGES_SHA256`).
 `recipe.mjs` (1081) is the older monolith that emits cycle recipes directly,
-and `bundle.mjs` (546) compiles a winner into the device bundle.
+and `bundle.ts` (546) compiles a winner into the device bundle.
 
 Each route has its own seed census, so the *results* are gated; the *interface*
 is not, which is why a fourth route means a fourth hand-written module.
@@ -281,11 +281,11 @@ is not, which is why a fourth route means a fourth hand-written module.
   mechanics authority.
 - `plant.js` (44) — semantic facade over it (`plant-model-v1`).
 - `reduced-model.js` (334) — deliberately not a second engine; gated against
-  seeded `Sim` replays by `packages/propose/test/reducedmodeltest.mjs`.
-- `packages/propose/parked/minus7/sim.mjs` (149) — searchable wrapper: clone, semantic actions,
+  seeded `Sim` replays by `packages/propose/test/reducedmodeltest.ts`.
+- `packages/propose/parked/minus7/sim.ts` (149) — searchable wrapper: clone, semantic actions,
   privileged view.
 - `packages/propose/src/experiment/families/minus-toys.ts`, `minus-two.js` — exact
-  evaluators, with `packages/propose/test/legacy-equivalence.test.js`.
+  evaluators, with `packages/propose/test/legacy-equivalence.test.ts`.
 
 This is the family a cleanup should imitate: four things named like engines,
 one authority, an equivalence gate for each derived model.
@@ -295,19 +295,19 @@ one authority, an equivalence gate for each derived model.
 Roughly twenty independent harnesses over the same engine. Already flagged as
 globs in the generated register; named here so they can be triaged:
 
-- `packages/propose/parked/minus7/` (was `tools/minus7/`): `search.mjs` (189), `paramsearch.mjs` (239),
-  `geometrysearch.mjs` (303), `cyclelengthsearch.mjs` (129),
-  `devicetimesearch.mjs` (97), `robustify.mjs` (117), `constrained-worker.mjs`.
+- `packages/propose/parked/minus7/` (was `tools/minus7/`): `search.mjs` (189), `paramsearch.ts` (239),
+  `geometrysearch.ts` (303), `cyclelengthsearch.ts` (129),
+  `devicetimesearch.ts` (97), `robustify.ts` (117), `constrained-worker.ts`.
 - `tools/invent/`: `search.mjs` (248), `campaign.mjs` (290), `ablate.mjs` (151).
-- root: `constrainedsearch.mjs` (205), `cyclesearch.mjs` (251),
+- root: `constrainedsearch.ts` (205), `cyclesearch.ts` (251),
   `gatesearch.mjs` (113), `strategysearch.mjs` (179), `knobsweep.mjs` (133),
-  `latenesssweep.mjs` (185), `phasesweep.mjs` (47), `periodicsweep.mjs` (40),
-  `flicksweep.mjs` (39), `phase-tolerance.mjs` (198).
-- `packages/propose/bin/policy/policy-search.mjs` (169), `gate-worker.mjs` (42).
+  `latenesssweep.ts` (185), `phasesweep.ts` (47), `periodicsweep.ts` (40),
+  `flicksweep.ts` (39), `phase-tolerance.ts` (198).
+- `packages/propose/bin/policy/policy-search.ts` (169), `gate-worker.ts` (42).
 - Owner per the charter: `packages/propose/src/experiment/experiment.ts` with specs under
   `packages/propose/experiments/`.
-- Shared execution machinery that already exists: `packages/propose/bin/census/pool.mjs` (129) +
-  `pool-worker.mjs`.
+- Shared execution machinery that already exists: `packages/propose/bin/census/pool.ts` (129) +
+  `pool-worker.ts`.
 
 ## 13. Grading instruments — binding: `GATE` on coverage only
 
@@ -330,7 +330,7 @@ verb in `apps/desktop/src/device-cli.ts` (was `apps/device/src/cli.js:193`).
 cue scripts moved to (its `SIBLINGS`) is either invoked by
 `grade-run.sh`, a gate the suite runs, or **excluded with a written reason** —
 and its `EXCLUDED` map carries ~90 one-line rationales ("simulator layer, gated
-by test-actuator.mjs"; "charts the model gate's death census for a PLAN ...
+by test-actuator.ts"; "charts the model gate's death census for a PLAN ...
 a simulator result with no run artifact to read"). A cleanup should read that
 map before this page: it is the annotated census of `tools/device`, kept
 current by a gate rather than by memory.
@@ -341,10 +341,10 @@ Two caveats, both measured on the clean tree at `a8260aa`:
   `npm run test:legacy:engine` lane — not in `test:contracts`, so the green
   edit lane never runs it.
 - Run directly, it **exits 1 with 31 complaints**. 19 are real gaps (scripts
-  added since the exclusion list was last extended: `bundle.mjs`,
+  added since the exclusion list was last extended: `bundle.ts`,
   `mask-calibrate.py`, `screen-calibrate.py`, `minus-3-plan.mjs`,
-  `minus3-frame-light.mjs`, `artifact-commands.mjs`, `artifact-runner.mjs`,
-  `emit.mjs`, `seed-clock.mjs`, `closed-families.mjs`, the five Companion
+  `minus3-frame-light.ts`, `artifact-commands.ts`, `artifact-runner.mjs`,
+  `emit.ts`, `seed-clock.mjs`, `closed-families.ts`, the five Companion
   entry points, `companion_device_lock.py`, `device-lock-exec.py`,
   `pan-path-capture.py`/`.sh`, `companion-mcp.mjs`, now `apps/desktop/src/`). The other 12 are the gate
   reading the wrong registry: it looks for gate registrations in
@@ -379,7 +379,7 @@ control works.
 ## 14. Trace readers — binding: `NONE`
 
 Nine readers of overlapping run telemetry: `clocktrace.mjs` (129),
-`drifttrace.mjs` (211), `windtrace.mjs` (85), `camtrace.py` (140),
+`drifttrace.mjs` (211), `windtrace.ts` (85), `camtrace.py` (140),
 `inputtrace.py` (484), `run-timeline.py` (478), `packages/review/bin/report/bench-trace.ts` (36)
 over `packages/review/src/measure/bench-trace.ts`, `apps/trainer/test/tracereport.ts` (115),
 `atrace-input.sh`. `run-timeline.py` and `drifttrace.mjs` both join plan
@@ -431,10 +431,10 @@ green.
 | Twin | Lines | Verdict |
 |---|---|---|
 | `packages/review/src/stat.ts` / `packages/review/src/stat.py` | 129 / 113 | **`GATE`, keep.** Same five functions; `packages/review/test/stat.test.ts:49` spawns `python3` and compares. The model pair. |
-| `packages/propose/bin/policy/closed-families.mjs` / `tools/invent/closed-families.mjs` | 70 / 134 | Two registers of closed policy families — device-plan surface vs privileged genome surface. Same register, two classifiers. |
-| `tools/invent/search.mjs` / `packages/propose/parked/minus7/search.mjs` | 248 / 189 | Two constrained searches; see §12. |
-| `packages/propose/parked/minus7/cycle.mjs` / `packages/propose/bin/minus-toys/cycle.mjs` | 244 / 263 | Same shape, different route. `tools/minustoys/` holds **exactly one file**. **Decided 2026-09-08: keep.** One directory per route is the convention; a move would touch importers, the `TOOLS.md` row and the generated catalogs for no behaviour change, and Minus Toys is the live Night 5/6 route. |
-| `packages/propose/src/policy/policy-ir.ts` / `packages/propose/bin/policy/policy-ir.mjs` | 86 / 51 | Name collision only; see §9. |
+| `packages/propose/bin/policy/closed-families.ts` / `tools/invent/closed-families.ts` | 70 / 134 | Two registers of closed policy families — device-plan surface vs privileged genome surface. Same register, two classifiers. |
+| `tools/invent/search.mjs` / `packages/propose/parked/minus7/search.ts` | 248 / 189 | Two constrained searches; see §12. |
+| `packages/propose/parked/minus7/cycle.ts` / `packages/propose/bin/minus-toys/cycle.ts` | 244 / 263 | Same shape, different route. `tools/minustoys/` holds **exactly one file**. **Decided 2026-09-08: keep.** One directory per route is the convention; a move would touch importers, the `TOOLS.md` row and the generated catalogs for no behaviour change, and Minus Toys is the live Night 5/6 route. |
+| `packages/propose/src/policy/policy-ir.ts` / `packages/propose/bin/policy/policy-ir.ts` | 86 / 51 | Name collision only; see §9. |
 
 ## 18. Not duplication (checked, so a cleanup does not "fix" them)
 
@@ -446,13 +446,13 @@ green.
   emits the report stream, the `.sh` drives and measures the phone.
 - The four `packages/core/src/*/ports.js` files are one port interface per
   concern (actuation, control, sensing, timing), not four copies.
-- `index.js` barrels across packages.
+- `index.ts` barrels across packages.
 
 ## 19. Stale authority citations
 
-**RESOLVED 2026-09-08 in code.** `packages/propose/parked/minus7/policy.mjs`,
-`packages/propose/parked/minus7/constrainedsearch.mjs`, `packages/propose/parked/minus7/sim.mjs` and
-`packages/propose/parked/minus7/search.mjs` named `src/engine.js` as the mechanics authority — a
+**RESOLVED 2026-09-08 in code.** `packages/propose/parked/minus7/policy.ts`,
+`packages/propose/parked/minus7/constrainedsearch.ts`, `packages/propose/parked/minus7/sim.ts` and
+`packages/propose/parked/minus7/search.ts` named `src/engine.js` as the mechanics authority — a
 path that no longer exists. All four now name
 `packages/source/src/games/fnaf2/plant-model.ts`.
 
@@ -476,9 +476,9 @@ A cleanup should reuse one of these five rather than invent a sixth:
 3. **Shared JSONL vectors read from both languages.**
    `packages/kernel/test/contract-vectors.py` over `packages/source/test/fixtures/*.jsonl`.
 4. **Equivalence gate between a model and its authority.**
-   `packages/propose/test/reducedmodeltest.mjs` (reduced model vs seeded `Sim`),
-   `packages/propose/bin/policy/policy-equivalence.mjs` (two compilers of one plan format),
-   `packages/propose/test/legacy-equivalence.test.js`.
+   `packages/propose/test/reducedmodeltest.ts` (reduced model vs seeded `Sim`),
+   `packages/propose/bin/policy/policy-equivalence.ts` (two compilers of one plan format),
+   `packages/propose/test/legacy-equivalence.test.ts`.
 5. **Enforced census with written exclusions** — the pattern that keeps an
    inventory from rotting into prose. `packages/review/bin/grade/test-grade-run-coverage.ts`
    (every script is wired, gated, or excluded *with a reason*) and

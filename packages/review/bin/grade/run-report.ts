@@ -11,7 +11,7 @@
 //
 // This states them. It invents nothing: every number below is a timestamp the
 // executor already recorded, and anything the bundle cannot pin is UNKNOWN.
-// `phase-reconstruct.mjs` remains the authority on delivered phase against the
+// `phase-reconstruct.ts` remains the authority on delivered phase against the
 // model band; this is the run-shaped summary around it.
 //
 //   node packages/review/bin/grade/run-report.ts --run artifacts/campaign-... [--json]

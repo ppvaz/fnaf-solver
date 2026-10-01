@@ -4,7 +4,7 @@
 //
 // WHAT THIS IS. `selectCycle` needs somebody to say which reviewed primitive it
 // should prefer at this boundary. Until now the only thing saying so was
-// `packages/propose/bin/nightloop.mjs`'s declared BASELINE CONTROL -- "wind when the box is
+// `packages/propose/bin/nightloop.ts`'s declared BASELINE CONTROL -- "wind when the box is
 // low, mask on a blackout, otherwise watch" -- which is not a strategy and was
 // never claimed to be one. Driven over a full night it dies: measured
 // 2026-09-02, Night 1 estimator arm 0/3, `{"inside-office": 3}`.

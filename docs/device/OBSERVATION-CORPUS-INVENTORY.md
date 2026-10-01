@@ -118,7 +118,7 @@ coarse end description. It is not yet a positive 6 AM/win classifier.
 | Paths/formats | `captures/RUN-hid.jsonl` for emitted marks/delays/reports; `captures/OUT.hid` for a generated probe stream |
 | Content | Exact HID reports and delay commands; runner marks at action boundaries |
 | Clock | Mixed/rebased scheduled milliseconds described in the clock table |
-| Consumers | `test-hid-trace.mjs`, `desync-scan.py`, probe/device HID executable |
+| Consumers | `test-hid-trace.ts`, `desync-scan.py`, probe/device HID executable |
 | Labels | Action intent and geometry; no acceptance label |
 | Gaps | Optional and therefore absent from many run bundles; no plan/config hash; JSONL has no header/session metadata; a probe `.hid` is an input artifact, not observed output |
 | Authority | Authoritative emitted-action record. Video or a state sensor must establish acceptance. |

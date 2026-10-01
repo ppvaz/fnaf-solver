@@ -21,9 +21,9 @@ verified directly.
 
 ## 1. The model gate passes on its seed block, not on the model
 
-**Measured, not inferred.** `human-gate.mjs` evaluates the plan on seeds
-1..`GATE_RUNS` with `GATE_RUNS = 100` (`packages/propose/bin/plans/human-gate.mjs:45,108`).
-`test-human-gate.mjs:77-79` asserts the shipped Night 6 plan clears
+**Measured, not inferred.** `human-gate.ts` evaluates the plan on seeds
+1..`GATE_RUNS` with `GATE_RUNS = 100` (`packages/propose/bin/plans/human-gate.ts:45,108`).
+`test-human-gate.ts:77-79` asserts the shipped Night 6 plan clears
 `GATE_MIN_SURVIVAL = 0.40` on exactly that block, and CI runs it.
 
 I replayed the shipped plan through the same `jitterPlan` + `replay` path the
@@ -51,7 +51,7 @@ single number that authorises touching the phone. CLAUDE.md calls the gate
 "absolute, no override" and says it "grounds **every current device route**".
 It currently grounds a route that does not meet its own bar.
 
-Two smaller things fall out of the same file. `human-gate.mjs:25-27` states that
+Two smaller things fall out of the same file. `human-gate.ts:25-27` states that
 `0.40` is "the replay contract `test-runner-plan.mjs` already holds" — but
 `test-runner-plan.mjs:196-212` requires `survived === RUNS`, i.e. 300/300 at zero
 jitter. Two different contracts, one cited as the provenance of the other. And
@@ -63,7 +63,7 @@ it, and Plan 12's ladder starts from a gate that is not measuring what it says.
 
 **Recommendation: quick fix.** Raise `GATE_RUNS` to at least 1000, and have the
 gate print the survival interval rather than a bare fraction. Expect
-`test-human-gate.mjs` to go red — that is the correct outcome and the real
+`test-human-gate.ts` to go red — that is the correct outcome and the real
 finding. Move `TEMPLATE_SEED` outside the gate block while you are there.
 
 **Resolved 2026-08-26.** `GATE_RUNS` is now 1200. The widened gate first did go
@@ -76,7 +76,7 @@ block table remains above as the evidence for widening the sample.
 block 1..100 is a biased sample of the Fusion LCG's state space. It is not. The
 map `s -> (s*31415+1) mod 2^16` decomposes into exactly 4 cycles of 16,384, and
 seeds 1..100 hit them 25/25/25/25 — identical to the spread seeds
-`i*2246822519` the search tools use (`packages/propose/parked/minus7/cyclesearch.mjs:87`). The seed block
+`i*2246822519` the search tools use (`packages/propose/parked/minus7/cyclesearch.ts:87`). The seed block
 is unbiased; it is simply too small.
 
 ---
@@ -295,11 +295,11 @@ stop agreeing"* — sixteen lines above one of the four copies of `33`.
 
 | constant | copies |
 |---|---|
-| `FUSION_POLL_MS = 33` | `recipe.mjs:456`, `actuator.mjs:107`, `trial.sh`, **and `test-recipe.mjs:224`** — the test that gates the emitter holds its own copy, plus bare `33` literals at :184 and :199 |
-| contact floor `100` | `recipe.mjs:20`, `test-hid-trace.mjs:22`, `actuator.mjs:106`, `test-device-input-gaps.mjs:65`, `trial.sh` ×2, `hid-sweep-probe.{mjs,sh}` |
-| `MONITOR_ANIM_DOWN_MS = 367` | `actuator.mjs:105`, `trial.sh`, `test-device-input-gaps.mjs:63` — all hand-computed from `src/config.js:336` (22 frames). Note `test-device-input-gaps.mjs:55` **does** assert the derived UP value against `C.MONITOR_ANIM_UP`; DOWN, eight lines later, is a bare literal with no equivalent check, and `actuator.mjs` already imports `C` |
-| mask→monitor seam `180` | `recipe.mjs:358` (`MASK_RAISE_GAP_MS`), `actuator.mjs:66` (`SEAM_SAFE_MS`), plus literals in `test-recipe.mjs:140` and `test-runner-plan.mjs:149` |
-| lateness band 110–300 | `actuator.mjs:89-90` and `latenesssweep.mjs:84-85`, the latter labelled "actuator.mjs default band" and not importing it |
+| `FUSION_POLL_MS = 33` | `recipe.mjs:456`, `actuator.mjs:107`, `trial.sh`, **and `test-recipe.ts:224`** — the test that gates the emitter holds its own copy, plus bare `33` literals at :184 and :199 |
+| contact floor `100` | `recipe.mjs:20`, `test-hid-trace.ts:22`, `actuator.mjs:106`, `test-device-input-gaps.ts:65`, `trial.sh` ×2, `hid-sweep-probe.{mjs,sh}` |
+| `MONITOR_ANIM_DOWN_MS = 367` | `actuator.mjs:105`, `trial.sh`, `test-device-input-gaps.ts:63` — all hand-computed from `src/config.js:336` (22 frames). Note `test-device-input-gaps.ts:55` **does** assert the derived UP value against `C.MONITOR_ANIM_UP`; DOWN, eight lines later, is a bare literal with no equivalent check, and `actuator.mjs` already imports `C` |
+| mask→monitor seam `180` | `recipe.mjs:358` (`MASK_RAISE_GAP_MS`), `actuator.mjs:66` (`SEAM_SAFE_MS`), plus literals in `test-recipe.ts:140` and `test-runner-plan.mjs:149` |
+| lateness band 110–300 | `actuator.mjs:89-90` and `latenesssweep.ts:84-85`, the latter labelled "actuator.mjs default band" and not importing it |
 
 All of these currently agree. **One does not.** The HID axis transform
 `rawX = (1080 − y) * 20 / 9` has three implementations with three rounding
@@ -448,7 +448,7 @@ CLAUDE.md states this as absolute, no override. Three things sit outside it:
 
 - **`trial-maskcamp.sh` is a second device runner that never calls the gate.**
   It presses via `adb shell input swipe` from a hand-written inline schedule
-  (`trial-maskcamp.sh:121-139`). No `human-gate.mjs`, no `HUMAN_FLOOR_MS`.
+  (`trial-maskcamp.sh:121-139`). No `human-gate.ts`, no `HUMAN_FLOOR_MS`.
   `test-grade-run-coverage.mjs` excuses it as `'run launcher'`.
 - **~370 lines of inline schedule remain in `trial.sh`** — the
   `HID_LEFT_SURVIVAL` route and the "Calibration opening" fallthrough, full of
@@ -457,7 +457,7 @@ CLAUDE.md states this as absolute, no override. Three things sit outside it:
   Meanwhile `test-runner-plan.mjs:21-22` slices its "no schedule literals in the
   driver" check to end exactly where those blocks begin, so the check runs on the
   one block that has none.
-- **`test-human-gate.mjs:106-108`'s "no inline schedule fallback" check asserts
+- **`test-human-gate.ts:106-108`'s "no inline schedule fallback" check asserts
   that a prose phrase is absent** from the runner. Deleting the comment satisfies
   it. It says nothing about whether inline schedules exist. They do.
 

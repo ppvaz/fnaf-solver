@@ -4,7 +4,7 @@
 // A move rewrites `import` specifiers and repo-rooted mentions, but a script also reaches its
 // neighbours through its own location: `new URL('recipe.mjs', import.meta.url)`,
 // `join(HERE, 'x')`, `HERE / "x"`, `"$HERE/x"`. None of those fail until the line runs. On
-// 2026-09-30 d2585a30 had moved recipe.mjs to packages/propose/bin/plans and left windtrace.mjs
+// 2026-09-30 d2585a30 had moved recipe.mjs to packages/propose/bin/plans and left windtrace.ts
 // and deathchart.ts asking for it beside themselves; the ADR 0002 moves are not finished, so
 // this is checked, not remembered.
 //

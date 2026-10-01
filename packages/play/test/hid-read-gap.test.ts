@@ -1,5 +1,5 @@
 // A `read` (observe-left) holds the left vent light, releases it, and presses
-// the mask `maskGapMs` later -- the timing artifact-commands.mjs compiles and
+// the mask `maskGapMs` later -- the timing artifact-commands.ts compiles and
 // validates. The HID schedule used to send the mask press in the same instant
 // as the release (it measured the gap from the read's start), and the phone
 // lost that mask-on press on about half of a Night 1 minus7 run's cycles.

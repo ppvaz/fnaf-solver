@@ -46,7 +46,7 @@ searches were already closed.
 |---|---|---|
 | `tools/gatesearch.mjs`, `tools/gatebot.mjs` | Gate-aware visible-state policy search | Plan 06, no survivor — [`strategy/GATE-SEARCH.md`](strategy/GATE-SEARCH.md) |
 | `tools/strategysearch.mjs` | Fixed camera-cover strategy enumeration | [`strategy/CAM-6-7-STRATEGY.md`](strategy/CAM-6-7-STRATEGY.md) |
-| `tools/knobsweep.mjs` | `NightPolicy` knob factorial over a held-out cohort | Plan 20; `packages/propose/bin/nightloop.mjs` remains |
+| `tools/knobsweep.mjs` | `NightPolicy` knob factorial over a held-out cohort | Plan 20; `packages/propose/bin/nightloop.ts` remains |
 
 ## Closed device probes (2026-09-24, second pass)
 
@@ -58,7 +58,7 @@ tag carries them unchanged (`git checkout archive/2026-09-24 -- <path>`).
 
 | Tools | What they measured | Where the answer lives now |
 |---|---|---|
-| `hid-maskraise-probe.mjs`, `hid-monitorraise-probe.mjs`, `hid-raise-probe.mjs`, `hid-transition-probe.mjs`, `hid-sweep-probe.sh`, `maskraise-grade.py`, `monitorraise-watch.py`, `calibration-stability.py`, `frame-clock.py` | Mask/monitor seam windows, camera sweep spacing, animation transitions | [`device/HID-MULTITOUCH.md`](device/HID-MULTITOUCH.md) ("the phone accepts 120 ms spacing"); the floors in `packages/propose/bin/plans/artifact-commands.mjs` and `actuator.mjs`'s `SEAM_BANDS`, held by `test-seam-slack.mjs` |
+| `hid-maskraise-probe.mjs`, `hid-monitorraise-probe.mjs`, `hid-raise-probe.mjs`, `hid-transition-probe.mjs`, `hid-sweep-probe.sh`, `maskraise-grade.py`, `monitorraise-watch.py`, `calibration-stability.py`, `frame-clock.py` | Mask/monitor seam windows, camera sweep spacing, animation transitions | [`device/HID-MULTITOUCH.md`](device/HID-MULTITOUCH.md) ("the phone accepts 120 ms spacing"); the floors in `packages/propose/bin/plans/artifact-commands.ts` and `actuator.mjs`'s `SEAM_BANDS`, held by `test-seam-slack.ts` |
 | `pan-probe.sh`, `pan-path-capture.py`, `pan-path-capture.sh`, `region-probe.sh`, `region-classify.py` | Office pan and what a touch does per screen region | `pan-shift.py` stays as the measuring stick; the scroll is read from the dump |
 | `grid-signature.py` | Frame signatures for a live check | Superseded by the fitted `*-calibrate.py` rules (`monitor-rule-v1`, `camera-rule-v1`) the executor reads |
 | `night5-modal-observer.mjs` | Dual-modality sampling on Night 5 | [`evidence/night5-monitor-raise-loss-20260909.json`](evidence/night5-monitor-raise-loss-20260909.json); Night 5 is won |
@@ -68,7 +68,7 @@ tag carries them unchanged (`git checkout archive/2026-09-24 -- <path>`).
 
 `hid-sweep-probe.ts` stays: despite its name it is the `COORDS`/`toRaw`
 library the live intersection gate and `test-screen-map.ts` import.
-`gate-worker.mjs` and `minus-toys-jitter.mjs` stay too — the `night matrix`
+`gate-worker.ts` and `minus-toys-jitter.ts` stay too — the `night matrix`
 and `vent reactive` checks load them.
 
 ## The legacy `trial.sh` lane (2026-09-25, Plan 22 P9)
@@ -95,8 +95,8 @@ With them went their tests (`test-runner-plan`, `test-plan-interpreter`,
 `test-cue-trace-loop`, `test-screenrecord-capability`, `test-trial-reactive`,
 `test-preflight`, `test-pilot-supervisor`, `test-drifttrace`, `test-elegance`,
 `test-cam11lit`). Tests of shared modules kept their module half:
-`test-human-gate.mjs` still gates `human-gate.mjs`, `test-session-manifest.sh`
-now reads `collect-cue-audio.sh` as the producer, `policyartifacttest.mjs` keeps
+`test-human-gate.ts` still gates `human-gate.ts`, `test-session-manifest.sh`
+now reads `collect-cue-audio.sh` as the producer, `policyartifacttest.ts` keeps
 the artifact checks.
 
 `grade-run.sh` lost the channels only that runner produced -- the HID trace,
@@ -128,16 +128,16 @@ of it from the last commit that carried it:
 | Paths | What it was |
 |---|---|
 | `packages/runtime/` | Fixture temporal dispatcher (`trajectory-v1`), safety supervisor (`supervisor-v1`) and the retained-run validators |
-| `apps/device/src/service.js`, `composition.js`, `modern-composition.js`, `calibration-fixture.js`, `live-seam-composition.js`, `seam-calibration.js`, `index.js`, `apps/device/fixtures/seam-calibration.json` | The service, its composition roots, the seam calibration workflow (`seam-actuator-qualification-v1`) and the package barrel |
+| `apps/device/src/service.js`, `composition.js`, `modern-composition.js`, `calibration-fixture.js`, `live-seam-composition.js`, `seam-calibration.js`, `index.ts`, `apps/device/fixtures/seam-calibration.json` | The service, its composition roots, the seam calibration workflow (`seam-actuator-qualification-v1`) and the package barrel |
 | `createActuatorMcp` in `apps/device/src/mcp.js` | The MCP surface over the service; the Companion MCP beside it stays |
 | `tools/device/trial.sh`, `tools/device/artifact-runner.mjs` | The artifact lane's launcher and runner |
 
 What moved rather than left: `validateQualification`, `validateTelemetry` and
 `validateManifest` now live in `core/contracts` (the campaign preflight and the
-evidence index read them); the executor-request boundary `test-bundle.mjs`
+evidence index read them); the executor-request boundary `test-bundle.ts`
 checked through the artifact runner is checked on `makeExecutorRequest`
 directly. CI's device lane is now a campaign dry run over the committed Night 7
-winner, and `test-winners-rebuild.mjs` compiles every committed winner.
+winner, and `test-winners-rebuild.ts` compiles every committed winner.
 
 ## The adapter hexagon and screencheck (2026-09-25, the same retirement's second half)
 
@@ -244,7 +244,7 @@ FNaF 2 night run reads. It stays.
 
 Minus 7 is **not** archived: Pedro means to bring it back as a second
 device-bot strategy (2026-09-24). `tools/minus7/`, `tools/model/`,
-`packages/propose/parked/minus7/cyclesearch.mjs`, `packages/propose/parked/minus7/constrainedsearch.mjs`, `packages/propose/parked/minus7/flicksweep.mjs`
-and `packages/propose/parked/minus7/phase-tolerance.mjs` stay, and the engine checks the current model
+`packages/propose/parked/minus7/cyclesearch.ts`, `packages/propose/parked/minus7/constrainedsearch.ts`, `packages/propose/parked/minus7/flicksweep.ts`
+and `packages/propose/parked/minus7/phase-tolerance.ts` stay, and the engine checks the current model
 fails on it are named in `BACKLOG` in [`../tools/test.ts`](../tools/test.ts)
 as the recovery list.

@@ -435,7 +435,7 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
     const loose = [...new Set([...untracked, ...ignored])].sort();
     check('untracked-winner', 'every *-winner.json is tracked', loose.length === 0);
     for (const file of loose) find('untracked-winner', `${file} is not tracked: it cannot be re-run on another machine`,
-      `commit it as ${BINDINGS_DIR}/<game>/campaign-night<N>-<name>-winner.json in the commit that uses it (CLAUDE.md; test-fact-register.mjs)`);
+      `commit it as ${BINDINGS_DIR}/<game>/campaign-night<N>-<name>-winner.json in the commit that uses it (CLAUDE.md; test-fact-register.ts)`);
 
     return { checks, findings };
   }

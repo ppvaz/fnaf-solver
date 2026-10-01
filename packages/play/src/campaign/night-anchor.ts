@@ -75,7 +75,7 @@ export async function anchorNightRelease({ clock, authorization, release, onEven
   const fallback = async (reason, detail = {}) => {
     onEvent({ type: 'origin.anchor', status: 'unavailable', reason, aimMs, maxK,
       latchedOnsetDeviceMs: latchedSeenDeviceMs, latchedOffsetMs: latchedSeenOffsetMs, ...detail });
-    // A bundle qualified at its anchor epoch holds only there (bundle.mjs
+    // A bundle qualified at its anchor epoch holds only there (bundle.ts
     // winner.anchorEpochMs): releasing it at a drawn phase spends a night on a
     // stream no census has seen. Strict refuses instead; the attempt aborts.
     if (strict) {

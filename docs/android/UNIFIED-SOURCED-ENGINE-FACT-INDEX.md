@@ -227,7 +227,7 @@ are reads in g450‑457. B drains by `min(4, frameDelta/16.666)` per frame
 - The exclusions carry **no night condition** — the 8/9/11 gates are absolute.
 - `{4, 7, 10}` is a route cut set: every `STALLED` path crosses it within two
   hops, which is why the Minus 7 three-camera loop covers seven characters.
-- Model controls (`packages/propose/test/androidstalltest.mjs`, shipped Minus 7 schedule):
+- Model controls (`packages/propose/test/androidstalltest.ts`, shipped Minus 7 schedule):
   sourced model 200/200 + 100/100 worst-luck; **stall removed 0/200**; marker
   hold alone 0/200. The flash is the strategy's load-bearing mechanism.
 
@@ -269,7 +269,7 @@ Payoff (sourced and now exercised in the engine, **not yet observed on-device**)
 `cam 9` with `viewing ≠ 9` and a held flash stuns all three Toys through the
 CAM 09 immunity (g453‑455); same for `cam 8`/Withereds and `cam 11`/Mangle.
 With `viewing == 11` the held light still blocks the Puppet (g494).
-`minustoystest.mjs` now gates the consequence: 200/200 normal and 100/100
+`minustoystest.ts` now gates the consequence: 200/200 normal and 100/100
 pinned worst-luck with the split, 0/200 without it. Deliberate device arming is
 proved once. **Still open:** repeatability, the empirical window width, and a
 Toy stun observed through a glitched marker on the phone.
@@ -745,7 +745,7 @@ a small dispatch bank turns it into sound:
 | 150/150 monitor-denial reopening | Retracted — g538‑555 resolve a *latched* state at the 300-frame endpoint, not continuous mask polling. Corrected controller: 0/150. | (ledger) |
 | `mmaskOff` state flip at **15** frames | Event threshold is **14** (g10/g11); `config.js` `MASK_ANIM_OFF = 15` is the animation-bank rounding — off by one. | 2026‑08‑26 (unfixed) |
 | `sweepcheck.py` "every flash lands 68/75" via feed brightness | Withdrawn — the stun has no rendering term; feed brightness measures nothing. Use `camtrace.py` (button highlight driven from `viewing` by g46‑57). | 2026‑08‑26 |
-| The simulator's `vent-bang` event carried a `who` field | Every such event is sample 17; no audio detector can recover `who`. `minus6test.mjs` and `hid-device-pilot.mjs --vocal-cam5` used a sensor that does not exist. A `sample` field was added. | 2026‑08‑24 |
+| The simulator's `vent-bang` event carried a `who` field | Every such event is sample 17; no audio detector can recover `who`. `minus6test.ts` and `hid-device-pilot.mjs --vocal-cam5` used a sensor that does not exist. A `sample` field was added. | 2026‑08‑24 |
 | "Minus Toys cannot transfer (no double-camera state, CAM 09 flash-excluded)" | **Withdrawn and corrected.** The sourced split is implemented in the engine; the deterministic split policy clears 200/200 normal and 100/100 pinned-worst seeds, with a 0/200 no-split control. The 2026-08-28 open-loop device attempt failed, while a 2026-08-29 Night 1 calibration removed the previously measured drift/desync explanation only for an unstressed run. The current question is full-policy device transfer under load. | 2026‑08‑29 |
 | Frame instances are **not** XOR-scrambled (TYPE vs image, 914/914) | They share the event space: an instance `OI` names `item_table[OI ^ 28]` and its dumped image is the partner's. The 914/914 check compared a row with its own image. Recompiled Office positions match 186/189 by raw handle, 2/189 through the XOR. Every `readdump.py instances` name and box before the fix was the partner's; the vent anchors stay off-frame (X −274), and `lightLeftHitbox`/`lightRightHitbox` have no frame-3 instance. | 2026‑09‑15 |
 | Frame instances "share the event space" (`OI` names `item_table[OI ^ 28]`; 186/189 recompile join) | **Corrected again.** The runtime's layout loader reads a placed instance's handle as `readAShort() ^ 48` (`Frame/CLO.load`), then resolves it through the `^ 28` item table: event handle = `OI ^ 48`, row = `OI ^ 44`. The 186/189 join compared the instance chunk with mmfparser's reading of the same chunk. Under the runtime rule all twelve camera markers are placed, the vent anchors are on-frame at (147, 429) and (1444, 427) matching the phone, and the light hitboxes have instances. `readdump.py --lo-xor`. | 2026‑09‑15 |

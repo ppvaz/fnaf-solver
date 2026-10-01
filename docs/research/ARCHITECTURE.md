@@ -15,8 +15,8 @@ only depend inward on published contracts.
 The reference CLI cases cover model probing, controller synthesis, cycle
 optimization, bounded robustness, fixture-profile characterization, and two
 family-specific Android-model campaigns: the split-camera Minus Toys policy and
-the glitchless Minus Two policy. The legacy `minustoystest.mjs` and
-`minus2test.mjs` commands call those same family evaluators, so a new candidate
+the glitchless Minus Two policy. The legacy `minustoystest.ts` and
+`minus2test.ts` commands call those same family evaluators, so a new candidate
 space can be changed without copying their simulation loop. All remain capped
 at `MODEL_ONLY` until external/device evidence is retained.
 

@@ -10,7 +10,7 @@
       "responsibility": "semantic policy IR",
       "owner": "@sixam/propose",
       "legacy": [
-        "packages/propose/bin/policy/policy-ir.mjs"
+        "packages/propose/bin/policy/policy-ir.ts"
       ]
     },
     {

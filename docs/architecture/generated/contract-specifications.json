@@ -42,7 +42,7 @@
       "conformanceFixtures": [
         "packages/source/test/contracts.test.ts",
         "packages/source/test/control-catalog.test.ts",
-        "packages/propose/bin/policy/test-policy-interpreter.mjs"
+        "packages/propose/bin/policy/test-policy-interpreter.ts"
       ]
     },
     {
@@ -62,9 +62,9 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validatePolicy",
       "conformanceFixtures": [
-        "packages/propose/test/policygrammartest.mjs",
-        "packages/propose/bin/policy/test-policy-ir.mjs",
-        "packages/propose/test/policy-game.test.js"
+        "packages/propose/test/policygrammartest.ts",
+        "packages/propose/bin/policy/test-policy-ir.ts",
+        "packages/propose/test/policy-game.test.ts"
       ]
     },
     {
@@ -84,8 +84,8 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "Controller",
       "conformanceFixtures": [
-        "packages/propose/test/reactivetest.mjs",
-        "packages/propose/test/cycle-controller.test.js"
+        "packages/propose/test/reactivetest.ts",
+        "packages/propose/test/cycle-controller.test.ts"
       ]
     },
     {
@@ -166,7 +166,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateProfile",
       "conformanceFixtures": [
-        "packages/propose/test/test-bundle.mjs",
+        "packages/propose/test/test-bundle.ts",
         "packages/play/test/profile-game.test.ts"
       ]
     },
@@ -227,7 +227,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateExperiment",
       "conformanceFixtures": [
-        "packages/propose/test/experiment.test.js"
+        "packages/propose/test/experiment.test.ts"
       ]
     },
     {
@@ -247,7 +247,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateExperimentResult",
       "conformanceFixtures": [
-        "packages/propose/test/experiment.test.js"
+        "packages/propose/test/experiment.test.ts"
       ]
     },
     {
@@ -268,7 +268,7 @@
       "runtimeValidation": "validateExperimentSpecV2",
       "conformanceFixtures": [
         "packages/kernel/test/experiment-v2.test.ts",
-        "packages/propose/test/census.test.js"
+        "packages/propose/test/census.test.ts"
       ]
     },
     {
@@ -289,7 +289,7 @@
       "runtimeValidation": "validateExperimentResultV2",
       "conformanceFixtures": [
         "packages/kernel/test/experiment-v2.test.ts",
-        "packages/propose/test/census.test.js"
+        "packages/propose/test/census.test.ts"
       ]
     },
     {
@@ -298,7 +298,7 @@
       "version": 1,
       "owner": "propose/device",
       "kind": "artifact",
-      "purpose": "Stable winner-v1 boundary for propose/device; its validator is packages/propose/bin/plans/bundle.mjs validateWinner.",
+      "purpose": "Stable winner-v1 boundary for propose/device; its validator is packages/propose/bin/plans/bundle.ts validateWinner.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -307,9 +307,9 @@
       "unknownBehavior": "Invalid or unavailable data is rejected or represented as an explicit UNKNOWN state; it is never silently promoted.",
       "errorBehavior": "Reject malformed, incompatible, uncalibrated, or out-of-budget values at the boundary.",
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
-      "runtimeValidation": "packages/propose/bin/plans/bundle.mjs validateWinner",
+      "runtimeValidation": "packages/propose/bin/plans/bundle.ts validateWinner",
       "conformanceFixtures": [
-        "packages/propose/test/test-bundle.mjs"
+        "packages/propose/test/test-bundle.ts"
       ]
     },
     {
@@ -318,7 +318,7 @@
       "version": 1,
       "owner": "packages/play",
       "kind": "artifact",
-      "purpose": "Stable device-bundle-v1 boundary for packages/play; its validator is packages/propose/bin/plans/bundle.mjs validateBundle.",
+      "purpose": "Stable device-bundle-v1 boundary for packages/play; its validator is packages/propose/bin/plans/bundle.ts validateBundle.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -327,9 +327,9 @@
       "unknownBehavior": "Invalid or unavailable data is rejected or represented as an explicit UNKNOWN state; it is never silently promoted.",
       "errorBehavior": "Reject malformed, incompatible, uncalibrated, or out-of-budget values at the boundary.",
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
-      "runtimeValidation": "packages/propose/bin/plans/bundle.mjs validateBundle",
+      "runtimeValidation": "packages/propose/bin/plans/bundle.ts validateBundle",
       "conformanceFixtures": [
-        "packages/propose/test/test-bundle.mjs"
+        "packages/propose/test/test-bundle.ts"
       ]
     },
     {
@@ -491,7 +491,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "hashed semantic blocks",
       "conformanceFixtures": [
-        "packages/propose/test/test-bundle.mjs"
+        "packages/propose/test/test-bundle.ts"
       ]
     },
     {

@@ -7,7 +7,7 @@
 // rule:
 //
 //   seed-floor          a win rate quoted under 3000 seeds (plans/ROADMAP.md keeps "the 3000-seed
-//                       rule with a held-out block"; packages/propose/bin/census/census.mjs defaults to it)
+//                       rule with a held-out block"; packages/propose/bin/census/census.ts defaults to it)
 //   directional-reuse   a constant measured in one direction reused in another (CLAUDE.md mistake 10)
 //   capabilities-first  an instrument proposed before the phone's capabilities were read, or one the
 //                       report says the phone cannot feed (CLAUDE.md mistake 8)
@@ -35,7 +35,7 @@ export const MISTAKE_ENTRIES = Object.freeze({
 
 /** Where each rule is written. Each cite is a path, and a `#anchor` names the entry in it. */
 export const RULE_CITES = Object.freeze({
-  'seed-floor': Object.freeze(['plans/ROADMAP.md', 'packages/propose/bin/census/census.mjs']),
+  'seed-floor': Object.freeze(['plans/ROADMAP.md', 'packages/propose/bin/census/census.ts']),
   'directional-reuse': Object.freeze(['CLAUDE.md#mistake-10']),
   'capabilities-first': Object.freeze(['CLAUDE.md#mistake-8', 'packages/play/bin/phone/capabilities.ts']),
   'unknown-as-number': Object.freeze(['docs/decisions/0002-kernel-contexts-vocabulary.md#principles',
@@ -49,7 +49,7 @@ export const RULE_CITES = Object.freeze({
  */
 export const RULE_SOURCES = Object.freeze({
   'seed-floor': Object.freeze([['plans/ROADMAP.md', 'the 3000-seed rule with a held-out block'],
-    ['packages/propose/bin/census/census.mjs', 'no win rate below 3000 seeds may be']]),
+    ['packages/propose/bin/census/census.ts', 'no win rate below 3000 seeds may be']]),
   'directional-reuse': Object.freeze([['CLAUDE.md', `10. **${MISTAKE_ENTRIES[10]}**`]]),
   'capabilities-first': Object.freeze([['CLAUDE.md', `8. **${MISTAKE_ENTRIES[8]}**`],
     ['packages/play/bin/phone/capabilities.ts', "export const SCHEMA = 'device-capabilities-v1'"]]),
@@ -122,9 +122,9 @@ export function checkSeedFloor(quote: {seeds: any, wins?: any, heldOut?: any}) {
     return refuse('not-a-number', `${operands.wins} wins is not a count of seeds in 0..${seeds}`, 'quote the census win count');
   if (seeds < SEED_FLOOR)
     return refuse('seed-floor', `a win rate is quoted over ${seeds} seeds; no win rate below ${SEED_FLOOR} seeds is quoted`,
-      `run the census over at least ${SEED_FLOOR} seeds (packages/propose/bin/census/census.mjs --seeds ${SEED_FLOOR} for FNaF 1, 3 and 4; ` +
-      `packages/propose/bin/census/winner-census.mjs for a FNaF 2 winner; ${SEED_SPACE} is exhaustive for the 16-bit RNG), then confirm it on a ` +
-      `held-out block (census.mjs --start ${SEED_FLOOR})`);
+      `run the census over at least ${SEED_FLOOR} seeds (packages/propose/bin/census/census.ts --seeds ${SEED_FLOOR} for FNaF 1, 3 and 4; ` +
+      `packages/propose/bin/census/winner-census.ts for a FNaF 2 winner; ${SEED_SPACE} is exhaustive for the 16-bit RNG), then confirm it on a ` +
+      `held-out block (census.ts --start ${SEED_FLOOR})`);
   const heldOut = quote?.heldOut;
   return passed([
     ...(heldOut === undefined || heldOut === null ? ['a held-out seed block: none was named, and a swept setting can lose on a fresh block'] : []),
@@ -142,13 +142,13 @@ export const DIRECTIONAL_CONSTANTS = Object.freeze({
     marker: 'under 140 ms after the mask press 5 of 7 monitor', measures: 'monitor presses lost after a mask press, by gap' }),
   SEAM_SAFE_MS: Object.freeze({ first: 'mask', then: 'monitor', source: 'packages/play/bin/phone/actuator.mjs',
     marker: 'export const SEAM_SAFE_MS = 180', measures: 'the mask-to-monitor gap past which no monitor press was lost (0 of 17)' }),
-  maskButtonFullyVisibleAfterMonitorDownMs: Object.freeze({ first: 'monitor-down', then: 'mask', source: 'packages/propose/bin/plans/artifact-commands.mjs',
+  maskButtonFullyVisibleAfterMonitorDownMs: Object.freeze({ first: 'monitor-down', then: 'mask', source: 'packages/propose/bin/plans/artifact-commands.ts',
     marker: 'maskButtonFullyVisibleAfterMonitorDownMs', measures: 'the mask button fully drawn after monitor-down, native frame trace' }),
-  monitorMaskReadyMs: Object.freeze({ first: 'monitor-down', then: 'mask', source: 'packages/propose/bin/plans/artifact-commands.mjs',
+  monitorMaskReadyMs: Object.freeze({ first: 'monitor-down', then: 'mask', source: 'packages/propose/bin/plans/artifact-commands.ts',
     marker: 'monitorMaskReadyMs: MONITOR_MASK_READY_MS', measures: 'the floor on a mask press after monitor-down' }),
-  monitorReadyCameraMs: Object.freeze({ first: 'monitor-up', then: 'camera', source: 'packages/propose/bin/plans/artifact-commands.mjs',
+  monitorReadyCameraMs: Object.freeze({ first: 'monitor-up', then: 'camera', source: 'packages/propose/bin/plans/artifact-commands.ts',
     marker: 'monitorReadyCameraMs: MONITOR_READY_CAMERA_MS', measures: 'the floor on a camera select after the monitor raise' }),
-  monitorReadyWindMs: Object.freeze({ first: 'monitor-up', then: 'wind', source: 'packages/propose/bin/plans/artifact-commands.mjs',
+  monitorReadyWindMs: Object.freeze({ first: 'monitor-up', then: 'wind', source: 'packages/propose/bin/plans/artifact-commands.ts',
     marker: 'monitorReadyWindMs: MONITOR_READY_WIND_MS', measures: 'the floor on a wind hold after the monitor raise' }),
 });
 

@@ -1,6 +1,6 @@
 {
   "schema": "anchor-aims-v1",
-  "generatedFrom": "packages/propose/bindings/fact-register.mjs (ANCHOR_AIMS, UNTRACKED_WINNER_DEBT)",
+  "generatedFrom": "packages/propose/bindings/fact-register.ts (ANCHOR_AIMS, UNTRACKED_WINNER_DEBT)",
   "anchorAims": {
     "fnv1a-81b5e51c": {
       "night": 5,
@@ -225,6 +225,6 @@
     }
   },
   "untrackedWinnerDebt": {
-    "fnv1a-bc5e044c": "night 6 a: found 2026-09-25 at artifacts/night6-anchored/bundle/winner.json with this stableHash, but not committable: it no longer rebuilds (winner.gate.replayHash does not match the candidate replay under the current engine), which test-winners-rebuild.mjs refuses by design"
+    "fnv1a-bc5e044c": "night 6 a: found 2026-09-25 at artifacts/night6-anchored/bundle/winner.json with this stableHash, but not committable: it no longer rebuilds (winner.gate.replayHash does not match the candidate replay under the current engine), which test-winners-rebuild.ts refuses by design"
   }
 }

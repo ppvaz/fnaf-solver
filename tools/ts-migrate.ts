@@ -710,7 +710,7 @@ if (manifest) {
   // Exports and bin entries alike; a bin path may omit the leading `./`.
   const next = text.replace(/"((?:\.\/)?[^"\s:]+)\.(m?js)"/g, (match, stem, extension) => {
     if (movedAbs.has(join(ROOT, dirname(manifest), `${stem}.${extension}`))) return `"${stem}.ts"`;
-    // A wildcard target (`./src/campaign/*.js`, `./src/strategies/*/index.js`) names the .ts
+    // A wildcard target (`./src/campaign/*.js`, `./src/strategies/*/index.ts`) names the .ts
     // once every file it matches is a .ts and none a .js.
     if (stem.includes('*')) {
       const [before, after] = stem.split('*');

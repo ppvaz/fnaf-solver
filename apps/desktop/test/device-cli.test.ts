@@ -82,7 +82,7 @@ try {
 const k3 = join(ROOT, 'packages/propose/bindings/fnaf2/campaign-night7-k3-winner.json');
 const bundles = mkdtempSync(join(tmpdir(), 'device-cli-mechanics-'));
 try {
-  const emitted = spawnSync(process.execPath, [join(ROOT, 'packages/propose/bin/plans/emit.mjs'),
+  const emitted = spawnSync(process.execPath, [join(ROOT, 'packages/propose/bin/plans/emit.ts'),
     '--winner', k3, '--out', join(bundles, 'k3')], { cwd: ROOT, encoding: 'utf8' });
   assert.equal(emitted.status, 0, emitted.stderr);
   const dry = run(['campaign', '--bundle', join(bundles, 'k3'), '--nights', '7', '--profile', 'hid-mediaprojection', '--json']);

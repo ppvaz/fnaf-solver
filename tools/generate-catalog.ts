@@ -62,10 +62,10 @@ const protocols = contractRegister.contracts.filter(item => ['wire', 'process'].
 const contractEvidence = {
   'plant-model-v1': ['packages/source/test/sourcetest.ts', 'packages/source/test/simtest.ts'],
   'semantic-control-v1': ['packages/source/test/contracts.test.ts', 'packages/source/test/control-catalog.test.ts',
-    'packages/propose/bin/policy/test-policy-interpreter.mjs'],
-  'policy-program-v1': ['packages/propose/test/policygrammartest.mjs', 'packages/propose/bin/policy/test-policy-ir.mjs',
-    'packages/propose/test/policy-game.test.js'],
-  'controller-v1': ['packages/propose/test/reactivetest.mjs', 'packages/propose/test/cycle-controller.test.js'],
+    'packages/propose/bin/policy/test-policy-interpreter.ts'],
+  'policy-program-v1': ['packages/propose/test/policygrammartest.ts', 'packages/propose/bin/policy/test-policy-ir.ts',
+    'packages/propose/test/policy-game.test.ts'],
+  'controller-v1': ['packages/propose/test/reactivetest.ts', 'packages/propose/test/cycle-controller.test.ts'],
   'qualification-v1': ['packages/source/test/contracts.test.ts', 'packages/kernel/test/venue-identity.test.ts'],
   'qualification-v2': ['packages/kernel/test/venue-identity.test.ts', 'packages/play/test/venue-preflight.test.ts'],
   'venue-identity-v1': ['packages/kernel/test/venue-identity.test.ts', 'packages/play/test/android-venue.test.ts'],
@@ -73,16 +73,16 @@ const contractEvidence = {
   'venue-binding-v1': ['packages/kernel/test/venue-identity.test.ts', 'packages/play/test/venue-preflight.test.ts'],
   'state-estimate-v1': ['packages/play/test/estimator.test.ts'],
   'clock-v1': ['packages/play/test/phase-clock.test.ts'],
-  'device-profile-v1': ['packages/propose/test/test-bundle.mjs', 'packages/play/test/profile-game.test.ts'],
+  'device-profile-v1': ['packages/propose/test/test-bundle.ts', 'packages/play/test/profile-game.test.ts'],
   'telemetry-event-v1': ['packages/kernel/test/factlinktest.ts'],
   'session-manifest-v1': ['packages/play/bin/phone/test-session-manifest.sh'],
-  'experiment-spec-v1': ['packages/propose/test/experiment.test.js'],
-  'experiment-result-v1': ['packages/propose/test/experiment.test.js'],
-  'experiment-spec-v2': ['packages/kernel/test/experiment-v2.test.ts', 'packages/propose/test/census.test.js'],
-  'experiment-result-v2': ['packages/kernel/test/experiment-v2.test.ts', 'packages/propose/test/census.test.js'],
-  'winner-v1': ['packages/propose/test/test-bundle.mjs'],
-  'device-bundle-v1': ['packages/propose/test/test-bundle.mjs'],
-  'device-artifact-v1': ['packages/propose/test/test-bundle.mjs'],
+  'experiment-spec-v1': ['packages/propose/test/experiment.test.ts'],
+  'experiment-result-v1': ['packages/propose/test/experiment.test.ts'],
+  'experiment-spec-v2': ['packages/kernel/test/experiment-v2.test.ts', 'packages/propose/test/census.test.ts'],
+  'experiment-result-v2': ['packages/kernel/test/experiment-v2.test.ts', 'packages/propose/test/census.test.ts'],
+  'winner-v1': ['packages/propose/test/test-bundle.ts'],
+  'device-bundle-v1': ['packages/propose/test/test-bundle.ts'],
+  'device-artifact-v1': ['packages/propose/test/test-bundle.ts'],
   'trainer-trace-v1': ['apps/trainer/test/tracereport.ts'],
   'artifact-ref-v1': ['apps/desktop/src/evidence.ts'],
   'claim-evidence-v1': ['apps/desktop/src/evidence.ts'],
@@ -205,10 +205,10 @@ for (const path of sourceFiles.filter(path => /(?:test|check|spec)[^/]*\.(?:mjs|
       : path.includes('packages/play') ? '@sixam/play'
       : path.includes('packages/kernel') ? '@sixam/kernel' : path.includes('packages') ? 'package boundary' : 'legacy migration',
     timeoutMs: lane === 'test:browser:realtime' ? 360000
-      : id === 'packages/propose/bin/ventreacttest.mjs' ? 900000
-        : id === 'packages/propose/parked/minus7/test-search.mjs' ? 600000
-        : id === 'packages/propose/test/reactivetest.mjs' ? 300000
-          : id === 'packages/propose/bin/plans/test-human-gate.mjs' ? 240000 : 180000,
+      : id === 'packages/propose/bin/ventreacttest.ts' ? 900000
+        : id === 'packages/propose/parked/minus7/test-search.ts' ? 600000
+        : id === 'packages/propose/test/reactivetest.ts' ? 300000
+          : id === 'packages/propose/bin/plans/test-human-gate.ts' ? 240000 : 180000,
     timeoutSource: 'tools/test.ts per-test watchdog',
     deterministic: nondeterministic.length === 0,
     determinismSignals: nondeterministic,
@@ -220,7 +220,7 @@ for (const path of sourceFiles.filter(path => /(?:test|check|spec)[^/]*\.(?:mjs|
 }
 const duplicateResponsibilities = [
   { responsibility: 'canonical mechanics', owner: '@sixam/source', legacy: [] },
-  { responsibility: 'semantic policy IR', owner: '@sixam/propose', legacy: ['packages/propose/bin/policy/policy-ir.mjs'] },
+  { responsibility: 'semantic policy IR', owner: '@sixam/propose', legacy: ['packages/propose/bin/policy/policy-ir.ts'] },
   { responsibility: 'physical actuation', owner: '@sixam/play', legacy: ['packages/play/bin/phone/actuator.mjs'] },
   { responsibility: 'device composition', owner: '@sixam/desktop', legacy: ['packages/propose/bin/plans/recipe.mjs'] },
   { responsibility: 'research execution', owner: '@sixam/propose', legacy: ['tools/*search*', 'tools/*sweep*', 'tools/*probe*'] },
@@ -303,28 +303,28 @@ const legacyPaths = [
     notes: 'Still used by the bundle compiler, so removal is blocked until extraction.',
   },
   {
-    id: 'device.policy-ir-module', path: 'packages/propose/bin/policy/policy-ir.mjs', category: 'policy',
+    id: 'device.policy-ir-module', path: 'packages/propose/bin/policy/policy-ir.ts', category: 'policy',
     lifecycle: 'transitional', owner: '@sixam/propose',
     replacement: 'the policy-program contract in `@sixam/propose/policy` and the propose experiment emitter',
     removalGate: 'P3 policy vocabulary migration and fixed-seed artifact equivalence',
     notes: 'Compatibility policy builder retained while policy ownership moves out of tools.',
   },
   {
-    id: 'research.stock-device-pilot', path: 'packages/propose/parked/minus7/stock-device-pilot.mjs', category: 'research',
+    id: 'research.stock-device-pilot', path: 'packages/propose/parked/minus7/stock-device-pilot.ts', category: 'research',
     lifecycle: 'legacy', owner: '@sixam/propose',
     replacement: 'experiment spec/runner with an explicit historical actuator model',
     removalGate: 'Historical sweeps have structured, replayable experiment artifacts',
     notes: 'Retired swipe-era schedule report; it is not a selectable device route.',
   },
   {
-    id: 'research.minus-toys-alias', path: 'packages/propose/bin/minustoystest.mjs', category: 'research-alias',
+    id: 'research.minus-toys-alias', path: 'packages/propose/bin/minustoystest.ts', category: 'research-alias',
     lifecycle: 'compatibility', owner: '@sixam/propose',
     replacement: 'npm run research -- minus-toys',
     removalGate: 'Package structured artifacts and fixed-seed output are equivalent',
     notes: 'Compatibility alias for the propose package family evaluator (packages/propose/src/experiment/families/).',
   },
   {
-    id: 'research.minus-two-alias', path: 'packages/propose/bin/minus2test.mjs', category: 'research-alias',
+    id: 'research.minus-two-alias', path: 'packages/propose/bin/minus2test.ts', category: 'research-alias',
     lifecycle: 'compatibility', owner: '@sixam/propose',
     replacement: 'npm run research -- minus-two',
     removalGate: 'Package structured artifacts and fixed-seed output are equivalent',
@@ -379,7 +379,7 @@ const legacyPaths = [
 // when a winner file's bytes differ from the sha256 recorded here. Retired winners
 // (bindings/<game>/retired/) are listed too, marked retired: a pack that ran one
 // keeps its custody.
-const { compileBundle } = await import(pathToFileURL(join(ROOT, 'packages/propose/bin/plans/bundle.mjs')).href);
+const { compileBundle } = await import(pathToFileURL(join(ROOT, 'packages/propose/bin/plans/bundle.ts')).href);
 const { custodyWinnerFiles } = await import(pathToFileURL(join(ROOT, 'packages/review/src/evidence-pack.ts')).href);
 const winnerHashes = [];
 for (const file of custodyWinnerFiles(ROOT)) {
@@ -400,7 +400,7 @@ for (const file of custodyWinnerFiles(ROOT)) {
 // imports it, so its promotions query reads this generated copy. The register
 // of fact producers itself is written beside them: it was generated by hand
 // until 2026-09-30, and had gone three moves stale.
-const factRegister = await import(pathToFileURL(join(ROOT, 'packages/propose/bindings/fact-register.mjs')).href);
+const factRegister = await import(pathToFileURL(join(ROOT, 'packages/propose/bindings/fact-register.ts')).href);
 
 const outputs = {
   'import-graph.json': { schema: 'import-graph-v1', files: importGraph },
@@ -412,7 +412,7 @@ const outputs = {
   'duplicate-responsibilities.json': { schema: 'duplicate-responsibility-map-v1', entries: duplicateResponsibilities },
   'legacy-paths.json': { schema: 'legacy-path-map-v1', generatedFrom: 'tools/generate-catalog.ts', entries: legacyPaths },
   'reverse-links.json': reverseLinks,
-  'anchor-aims.json': { schema: 'anchor-aims-v1', generatedFrom: 'packages/propose/bindings/fact-register.mjs (ANCHOR_AIMS, UNTRACKED_WINNER_DEBT)',
+  'anchor-aims.json': { schema: 'anchor-aims-v1', generatedFrom: 'packages/propose/bindings/fact-register.ts (ANCHOR_AIMS, UNTRACKED_WINNER_DEBT)',
     anchorAims: factRegister.ANCHOR_AIMS, untrackedWinnerDebt: factRegister.UNTRACKED_WINNER_DEBT },
   'fact-register.json': factRegister.build(),
   'winner-hashes.json': { schema: 'winner-hashes-v1', generatedFrom: 'tools/generate-catalog.ts (compileBundle over packages/propose/bindings/<game>/*-winner.json)',

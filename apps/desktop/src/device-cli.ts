@@ -201,7 +201,7 @@ async function jsonFile(path, label) {
 
 async function campaignBundle(path, spec, profileId) {
   if (!path) return null;
-  const { validateBundle } = await import(pathToFileURL(join(ROOT, 'packages/propose/bin/plans/bundle.mjs')).href);
+  const { validateBundle } = await import(pathToFileURL(join(ROOT, 'packages/propose/bin/plans/bundle.ts')).href);
   const validated = validateBundle(resolve(path));
   if (!validated.compiled) throw new Error('campaign bundle has no compiled artifact');
   if (validated.profile.id !== profileId) throw new Error(`campaign bundle profile ${validated.profile.id} does not match ${profileId}`);
@@ -235,7 +235,7 @@ async function campaignTiming(path: string | undefined, nights: number[], forbid
     if (forbid.length) throw new Error('--forbid-mechanic needs the --bundle it constrains');
     return { timingByNight: {}, mechanics: undefined };
   }
-  const { runMechanics, validateBundle } = await import(pathToFileURL(join(ROOT, 'packages/propose/bin/plans/bundle.mjs')).href);
+  const { runMechanics, validateBundle } = await import(pathToFileURL(join(ROOT, 'packages/propose/bin/plans/bundle.ts')).href);
   const validated = validateBundle(resolve(path));
   if (!validated.compiled) throw new Error('campaign bundle has no compiled artifact');
   const requested = new Set(nights);

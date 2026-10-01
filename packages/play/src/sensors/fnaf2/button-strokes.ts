@@ -8,7 +8,7 @@
  * samples are too coarse for the glyph.
  *
  * This module exists so the thresholds have ONE home. They were defined in
- * `tools/device/intersection-state-gate.ts`, which consumed them correctly
+ * `tools/device/intersection-state-gate.mjs`, which consumed them correctly
  * and said so -- "fitted grid anchors are a diagnostic fallback only", "a
  * missing stroke score is a refusal, never a luma fallback" -- while the
  * executor answered the same questions from the grid with exactly the luma

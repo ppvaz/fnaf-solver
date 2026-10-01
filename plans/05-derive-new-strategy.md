@@ -177,8 +177,8 @@ simulator" on all of them.
   dedicated state machine.
 - **Action grain: semantic.** The search interprets a genome into one semantic
   action per decision tick against the exact engine, reusing
-  `packages/propose/parked/minus7/sim.mjs`'s vocabulary (`MASK_ON`, `HALL_FLASH`, `WIND`,
-  `cam:NN`, …). Frame-level lowering through `packages/propose/parked/minus7/policy.mjs` happens only in
+  `packages/propose/parked/minus7/sim.ts`'s vocabulary (`MASK_ON`, `HALL_FLASH`, `WIND`,
+  `cam:NN`, …). Frame-level lowering through `packages/propose/parked/minus7/policy.ts` happens only in
   package 9. Rationale: the semantic layer searches ~100× faster and matches how
   a human or an in-engine build would act; the device actuator is a
   package-9 concern.
@@ -208,7 +208,7 @@ simulator" on all of them.
   exact), and a pure deterministic `interpret(genome, obs) -> action`.
   **Gate:** `test-policy-lang.mjs` — serialize/parse round-trips; interpreter
   purity (same obs → same action, no retained state beyond declared registers);
-  and a hand-written rule-list reproduces `packages/propose/parked/minus7/reactive-policy.mjs`'s `decide()`
+  and a hand-written rule-list reproduces `packages/propose/parked/minus7/reactive-policy.ts`'s `decide()`
   on a 200-seed sample, proving the language is expressive enough to contain the
   known reactive policy.
 - **6c. Duplicate-policy control.** Encode one Plan 05 static cover and one
@@ -219,7 +219,7 @@ simulator" on all of them.
   prose — while `packages/propose/bindings/closed-families.json` recorded three with
   citations, so the search pruned against less than the repository knows.
   `tools/invent/closed-families.mjs` now implements the register's rule names
-  against a genome, as `packages/propose/bin/policy/closed-families.mjs` does against an
+  against a genome, as `packages/propose/bin/policy/closed-families.ts` does against an
   observation-language program: one register, two interpreters, and the gate
   fails if the register names a rule this surface has not implemented. The
   static cover and the phase schedule are now the SAME closure
@@ -236,12 +236,12 @@ privileged Custom Night view of `Sim` internals. What landed for that surface:
 `packages/propose/src/policy/observation-language.js` (the measured per-fact
 observation budget, with all four audio facts `UNKNOWN` and excluded, and the
 host round trip `UNKNOWN`), an observation-conditioned branch construct in
-`packages/propose/bin/policy/policy-grammar.mjs`, and a mechanical duplicate control in
+`packages/propose/bin/policy/policy-grammar.ts`, and a mechanical duplicate control in
 `tools/device/closed-families.{json,mjs}` that classifies any unconditioned
 schedule into the family Plans 05/06/16 closed by recorded negative. That
 satisfies 6c's intent for the branch language and none of 6b's: there is no
 rule-list/register genome, no `serialize`/`parse` round trip, and no proof that
-the language contains `packages/propose/parked/minus7/reactive-policy.mjs`'s `decide()`. The two
+the language contains `packages/propose/parked/minus7/reactive-policy.ts`'s `decide()`. The two
 observation surfaces are disjoint in privilege and the plan must say which one
 the campaign searches before 6b is written. See `plans/PROGRESS.md`
 §"Plan 05 — Custom Night invention campaign", 2026-09-02.
@@ -254,7 +254,7 @@ admitted at 3000 seeds and confirmed on a held-out block, and the search now
 feeds step S3, a census over policies.*
 
 - **7a. Harness.** `tools/invent/search.mjs`: rollout = `interpret` →
-  semantic action → exact engine, seeded like `packages/propose/parked/minus7/search.mjs`.
+  semantic action → exact engine, seeded like `packages/propose/parked/minus7/search.ts`.
   1200-seed admission gate reused verbatim. Pareto front over
   (survival ↑, input count ↓, registers ↓, rule count ↓). Negative controls:
   the empty policy and a random-genome baseline run every generation so a
@@ -340,7 +340,7 @@ per target (`box-anatomy-bb{,+foxy}.json` beside the frontiers):
 ### Package 9 — cross the boundary
 
 Take the strongest survivor across targets, lower its semantic actions to
-frame-level through `packages/propose/parked/minus7/policy.mjs`, run it under `--device-actuator`, and
+frame-level through `packages/propose/parked/minus7/policy.ts`, run it under `--device-actuator`, and
 measure it in Plan 17's in-engine build as the perfect oracle before any human
 or device translation. **Gate:** observed real-engine evidence for the
 load-bearing mechanic; honest promote/reject in this plan and `PROGRESS.md`.

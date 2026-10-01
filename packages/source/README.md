@@ -33,7 +33,7 @@ imports the other two by `./`. `MODEL_SOURCES` in
 then every module `plant-model.ts` reaches by a relative import (the 2026-09-30
 splits), and hashes the whole list into new records. A retained bracket-sweep
 result names the first three by their old paths and sha256; its check
-(`packages/propose/bin/recompile/test-phone-input-bracket-sweep.mjs`) finds each
+(`packages/propose/bin/recompile/test-phone-input-bracket-sweep.ts`) finds each
 old path's bytes in that path's git history and requires the record to name, by
 file stem and in order, the files the current list begins with, so it depends
 neither on where they live, nor on `.js` becoming `.ts`, nor on modules split

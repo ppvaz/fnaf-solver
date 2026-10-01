@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { canonicalJson, stableHash, validateArtifactRef } from '@sixam/kernel/contracts';
 import { validateManifest } from '@sixam/kernel/contracts';
 import { replayModelResult } from '@sixam/propose/experiment';
-import { BUNDLE_SCHEMA, validateBundle } from '../../../packages/propose/bin/plans/bundle.mjs';
+import { BUNDLE_SCHEMA, validateBundle } from '../../../packages/propose/bin/plans/bundle.ts';
 import { isCampaignResult, campaignEntry, campaignPromotionChecks } from '@sixam/review/evidence-campaign';
 import { PACKS_DIR, resolvePackTargets, buildPack, buildFnaf1Pack, writePack, readPack, packPromotionChecks,
   trackedWinners, packEntry, recoveryCheck, attestationStatus, packCustody } from '@sixam/review/evidence-pack';

@@ -104,7 +104,7 @@
     },
     {
       "id": "device.policy-ir-module",
-      "path": "packages/propose/bin/policy/policy-ir.mjs",
+      "path": "packages/propose/bin/policy/policy-ir.ts",
       "category": "policy",
       "lifecycle": "transitional",
       "owner": "@sixam/propose",
@@ -114,7 +114,7 @@
     },
     {
       "id": "research.stock-device-pilot",
-      "path": "packages/propose/parked/minus7/stock-device-pilot.mjs",
+      "path": "packages/propose/parked/minus7/stock-device-pilot.ts",
       "category": "research",
       "lifecycle": "legacy",
       "owner": "@sixam/propose",
@@ -124,7 +124,7 @@
     },
     {
       "id": "research.minus-toys-alias",
-      "path": "packages/propose/bin/minustoystest.mjs",
+      "path": "packages/propose/bin/minustoystest.ts",
       "category": "research-alias",
       "lifecycle": "compatibility",
       "owner": "@sixam/propose",
@@ -134,7 +134,7 @@
     },
     {
       "id": "research.minus-two-alias",
-      "path": "packages/propose/bin/minus2test.mjs",
+      "path": "packages/propose/bin/minus2test.ts",
       "category": "research-alias",
       "lifecycle": "compatibility",
       "owner": "@sixam/propose",

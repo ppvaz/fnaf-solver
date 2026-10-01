@@ -45,7 +45,7 @@ import { loadRegionSet, registerSet } from '../../../packages/play/bin/phone/nat
 import { RegionRecorder, startVideo } from '../../../packages/play/bin/phone/night-kit.ts';
 import { loadDetectors, makeClassifier } from '../../../packages/play/games/fnaf1/fnaf1-detectors.ts';
 import { listWinners, routeDrift } from '../../../packages/play/games/fnaf1/fnaf1-winner.ts';
-import { grid420, PHONE_OPTIONS } from '../../../packages/propose/bin/census/fnaf1-device-lane.mjs';
+import { grid420, PHONE_OPTIONS } from '../../../packages/propose/bin/census/fnaf1-device-lane.ts';
 import { resolveSerial } from '../../../packages/play/bin/phone/local-profile.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -107,7 +107,7 @@ export function parseArgs(argv) {
 }
 
 /** What a grid420 night executes from this tree when no committed winner names its night. */
-const ROUTE_FILES = Object.freeze(['packages/propose/bin/census/fnaf1-device-lane.mjs', 'apps/desktop/bin/fnaf1-custom-run.ts',
+const ROUTE_FILES = Object.freeze(['packages/propose/bin/census/fnaf1-device-lane.ts', 'apps/desktop/bin/fnaf1-custom-run.ts',
   'packages/play/games/fnaf1/fnaf1-detectors.ts', 'packages/play/profiles/fnaf1/moto-g56/fnaf1-device-timing-moto-g56-v207.json',
   'packages/play/profiles/fnaf1/moto-g56/regions-fnaf1-moto-g56-v207.json', 'packages/play/profiles/fnaf1/moto-g56/controls-fnaf1-moto-g56-v207.json',
   'packages/play/profiles/fnaf1/moto-g56/custom-night-fnaf1-moto-g56-v207.json']);
@@ -255,7 +255,7 @@ async function waitForOffice(recorder, classify, boundMs) {
 }
 
 /**
- * Drive a device-lane policy (packages/propose/bin/census/fnaf1-device-lane.mjs) on the phone: the
+ * Drive a device-lane policy (packages/propose/bin/census/fnaf1-device-lane.ts) on the phone: the
  * same generator, its actions performed by the HID and its reads answered by
  * the newest native-region frame, classified. Time is the night's own: 0 is
  * the origin placed from the first office frame.

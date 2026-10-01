@@ -58,9 +58,9 @@ if (sourceChanged || coreChanged || proposeChanged || playModelChanged) {
     add(`test:packages/propose/test/${gate}.test.js`, 'node', [`packages/propose/test/${gate}.test.js`]);
   // Offline replay determinism: the same recorded facts must rebuild the same
   // decisions, which is what makes a retained stream evidence rather than a log.
-  add('fact-replay', 'node', ['packages/propose/bin/factreplay.mjs', '--assert']);
+  add('fact-replay', 'node', ['packages/propose/bin/factreplay.ts', '--assert']);
   // The winners compile through the Sim and the catalogs.
-  add('winners-rebuild', 'node', ['packages/propose/test/test-winners-rebuild.mjs']);
+  add('winners-rebuild', 'node', ['packages/propose/test/test-winners-rebuild.ts']);
 }
 if (changed.some(path => path.startsWith('packages/play/') || path.startsWith('packages/adapters/') ||
     path === 'apps/desktop/src/device-cli.ts')) {
@@ -68,15 +68,15 @@ if (changed.some(path => path.startsWith('packages/play/') || path.startsWith('p
   add('device-executor', 'node', ['packages/play/test/adb-device-local-executor.test.ts']);
   add('device-campaign', 'node', ['packages/play/test/campaign.test.ts']);
   add('device-cli', 'node', ['apps/desktop/test/device-cli.test.ts']);
-  add('winners-rebuild', 'node', ['packages/propose/test/test-winners-rebuild.mjs']);
+  add('winners-rebuild', 'node', ['packages/propose/test/test-winners-rebuild.ts']);
 }
 if (changed.some(path => path.startsWith('packages/propose/src/policy/') || path.startsWith('packages/core/src/control/') ||
     path.startsWith('packages/source/src/clockwork/') || path.startsWith('tools/device/policy-') ||
     path.startsWith('tools/device/closed-families'))) {
-  add('policy-grammar', 'node', ['packages/propose/test/policygrammartest.mjs']);
-  add('policy-search', 'node', ['packages/propose/test/policysearchtest.mjs']);
-  add('policy-equivalence', 'node', ['packages/propose/test/policyequivalencetest.mjs']);
-  add('observation-language', 'node', ['packages/propose/test/observationlanguagetest.mjs']);
+  add('policy-grammar', 'node', ['packages/propose/test/policygrammartest.ts']);
+  add('policy-search', 'node', ['packages/propose/test/policysearchtest.ts']);
+  add('policy-equivalence', 'node', ['packages/propose/test/policyequivalencetest.ts']);
+  add('observation-language', 'node', ['packages/propose/test/observationlanguagetest.ts']);
 }
 // FNaF 1, 3 and 4's policies are what each game's census runs.
 for (const game of [1, 3, 4])
@@ -86,8 +86,8 @@ for (const game of [1, 3, 4])
 // packages/research, now its compatibility shim).
 if (changed.some(path => ['packages/propose/src/experiment/', 'packages/propose/src/strategies/', 'packages/propose/parked/',
   'packages/propose/experiments/', 'packages/research/'].some(prefix => path.startsWith(prefix)))) {
-  add('research-contracts', 'node', ['packages/propose/test/experiment.test.js']);
-  add('research-aliases', 'node', ['packages/propose/test/legacy-equivalence.test.js']);
+  add('research-contracts', 'node', ['packages/propose/test/experiment.test.ts']);
+  add('research-aliases', 'node', ['packages/propose/test/legacy-equivalence.test.ts']);
 }
 // Review reads the committed evidence (packs, graph, winners, the anchor
 // register): a change to it or to what it reads runs its own tests and the
@@ -96,7 +96,7 @@ if (changed.some(path => ['packages/propose/src/experiment/', 'packages/propose/
 // packages created on 2026-09-29.
 if (changed.some(path => path.startsWith('packages/review/') || path.startsWith('packages/kernel/') || path === 'apps/desktop/src/evidence.ts' ||
     path === 'tools/evidence-pack.mjs' || path.startsWith('docs/evidence/runs/') || path === 'docs/evidence/graph.json' ||
-    path === 'packages/propose/bindings/fact-register.mjs' || /^packages\/propose\/bindings\/[^/]+\/[^/]+-winner\.json$/.test(path))) {
+    path === 'packages/propose/bindings/fact-register.ts' || /^packages\/propose\/bindings\/[^/]+\/[^/]+-winner\.json$/.test(path))) {
   for (const test of ['evidence-campaign', 'evidence-pack', 'evidence-cohort', 'evidence-promotion'])
     add(`test:packages/review/test/${test}.test.mjs`, 'node', [`packages/review/test/${test}.test.mjs`]);
   for (const test of ['pack-lift', 'promotions-query'])

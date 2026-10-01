@@ -48,7 +48,7 @@ export function promotionsQueryEnvelope(result: ReturnType<typeof import('./prom
   const unknownCustody = lift.custody.UNKNOWN ?? 0;
   return claimEnvelope({
     claim: result, label: 'DEVICE_MEASURED', target: FNAF2,
-    cite: [GRAPH_FILE, PACKS_DIR, 'packages/propose/bindings/fact-register.mjs', PLAN12],
+    cite: [GRAPH_FILE, PACKS_DIR, 'packages/propose/bindings/fact-register.ts', PLAN12],
     status: 'standing', supersededBy: null,
     notMeasured: [
       ONE_CLEAR,

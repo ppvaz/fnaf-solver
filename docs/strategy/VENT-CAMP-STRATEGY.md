@@ -150,7 +150,7 @@ Gaps and conflicts in `src/engine.js` / `src/config.js` (as researched
    DJ Sterf's 100 × night figure); the RVC-specific "hold rather than tap" exposure
    accounting should be checked.
 
-`packages/propose/bin/rvctest.mjs` encodes the opening and 15-second backbone as an Android policy
+`packages/propose/bin/rvctest.ts` encodes the opening and 15-second backbone as an Android policy
 probe. It deliberately does not encode the post-wind decision tree yet. Its
 failures identify missing Android mechanics or missing decisions; they are not a
 measured win rate for brayden's original strategy.

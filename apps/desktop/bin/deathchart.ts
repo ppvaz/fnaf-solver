@@ -1,6 +1,6 @@
 // What is killing a night, as one picture.
 //
-// `human-gate.mjs` already counts the deaths -- it prints its top four on a
+// `human-gate.ts` already counts the deaths -- it prints its top four on a
 // refusal and throws the rest away. But the top four is the wrong cut: on
 // Night 2 the two Foxy rows are 1st and 2nd and the three Toy office entries
 // are 3rd, 4th and 5th, so the printed list says "Foxy, mostly" when Foxy is
@@ -29,7 +29,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { writeFileSync, existsSync } from 'node:fs';
 import { chromeBinary, chromeAvailable } from '../../../tools/chrome.ts';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { modelGate, GATE_RUNS, HUMAN_SLACK_MS } from '../../../packages/propose/bin/plans/human-gate.mjs';
+import { modelGate, GATE_RUNS, HUMAN_SLACK_MS } from '../../../packages/propose/bin/plans/human-gate.ts';
 import { formatRate } from '../../../packages/review/src/stat.ts';
 import * as C from '@sixam/source/fnaf2';
 

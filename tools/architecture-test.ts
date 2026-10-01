@@ -230,14 +230,14 @@ const DEVICE_SHELL = ['node:child_process', 'node:net', 'node:dgram'];
 const PROPOSE_READS = ['packages/propose', 'packages/kernel', 'packages/source', 'packages/play', 'packages/review', 'builtin'];
 // Propose command lines that import a module whose path is computed, each with why it cannot be written down.
 const COMPUTED_IMPORTS = new Map([
-  ['packages/propose/bin/census/fnaf1-device-lane.mjs', 'grid420 as a winner\'s pinned commit holds it, from the ' +
+  ['packages/propose/bin/census/fnaf1-device-lane.ts', 'grid420 as a winner\'s pinned commit holds it, from the ' +
     'temporary tree fnaf1-winner.ts materializes and checks file by file'],
-  ['packages/propose/bin/census/pool-worker.mjs', 'the task module a pool.mjs batch names, held for the life of the worker'],
-  ['packages/propose/bin/census/pool.mjs', 'the same task module, imported in-process when the pool runs serially'],
-  ['packages/propose/bin/recompile/pilot/batch.mjs', 'the game\'s pilot module (./fnaf3.mjs or ./fnaf4.mjs) that --game names'],
-  ['packages/propose/bin/recompile/pilot/pilot.mjs', 'the game\'s pilot module (./fnaf3.mjs or ./fnaf4.mjs) that --game names'],
-  ['packages/propose/bin/recompile/pilot/replay.mjs', 'the game\'s pilot module (./fnaf3.mjs or ./fnaf4.mjs) that --game names'],
-  ['packages/propose/bin/recompile/pilot/search.mjs', 'the game\'s pilot module (./fnaf3.mjs or ./fnaf4.mjs) that --game names'],
+  ['packages/propose/bin/census/pool-worker.ts', 'the task module a pool.ts batch names, held for the life of the worker'],
+  ['packages/propose/bin/census/pool.ts', 'the same task module, imported in-process when the pool runs serially'],
+  ['packages/propose/bin/recompile/pilot/batch.ts', 'the game\'s pilot module (./fnaf3.ts or ./fnaf4.ts) that --game names'],
+  ['packages/propose/bin/recompile/pilot/pilot.ts', 'the game\'s pilot module (./fnaf3.ts or ./fnaf4.ts) that --game names'],
+  ['packages/propose/bin/recompile/pilot/replay.ts', 'the game\'s pilot module (./fnaf3.ts or ./fnaf4.ts) that --game names'],
+  ['packages/propose/bin/recompile/pilot/search.ts', 'the game\'s pilot module (./fnaf3.ts or ./fnaf4.ts) that --game names'],
 ]);
 const RULES = [
   {
@@ -358,14 +358,14 @@ assert.deepEqual(planted(KERNEL, "export const load = () => import('../../review
   'the kernel must not reach another package by a relative dynamic import');
 assert.deepEqual(planted(KERNEL, "export * from './labels.js';"), [], 'the kernel may import itself');
 assert.deepEqual(planted('packages/kernel/test/planted.test.js',
-  "import assert from 'node:assert/strict';\nimport { unknown } from '../src/index.js';"), [], 'a kernel test may import the kernel and node:');
+  "import assert from 'node:assert/strict';\nimport { unknown } from '../src/index.ts';"), [], 'a kernel test may import the kernel and node:');
 assert.deepEqual(planted('packages/kernel/test/planted.test.js', "import { readPack } from '@sixam/review/evidence-pack';"),
   ['kernel-test'], 'a kernel test must not import review');
 assert.deepEqual(planted(REVIEW, "import { unknown } from '@sixam/kernel';"), [], 'review may import the kernel');
 // Source imports only the kernel (ADR 0002), and core may import source.
 const SOURCE = 'packages/source/src/planted.js';
 assert.deepEqual(planted(SOURCE, "import { stableHash } from '@sixam/kernel/contracts';"), [], 'source may import the kernel');
-assert.deepEqual(planted(SOURCE, "export * from './clockwork/index.js';"), [], 'source may import itself');
+assert.deepEqual(planted(SOURCE, "export * from './clockwork/index.ts';"), [], 'source may import itself');
 assert.deepEqual(planted(SOURCE, "import { NightPolicy } from '@sixam/core/control';"), ['source'],
   'source must not import core');
 assert.deepEqual(planted(SOURCE, "export const load = () => import('../../core/src/sensing/observer.js');"), ['source'],
@@ -386,7 +386,7 @@ assert.deepEqual(planted(PROPOSE, "import { spawn } from 'node:child_process';")
 assert.deepEqual(planted(PROPOSE, "import { cli } from '@sixam/desktop';"), ['propose'], 'propose must not import the composition root');
 assert.deepEqual(planted('packages/play/src/planted.js', "import { createLab } from '@sixam/desktop/package.json';"), ['play'],
   'play must not import the composition root');
-assert.deepEqual(planted(PROPOSE, "export const load = () => import('../../../tools/device/bundle.mjs');"), ['propose'],
+assert.deepEqual(planted(PROPOSE, "export const load = () => import('../../../tools/device/bundle.ts');"), ['propose'],
   'propose must not reach tools/, even by a dynamic import');
 assert.deepEqual(planted(PROPOSE, "import { NightPolicy } from '@sixam/core/control';"), ['propose'],
   'propose must not import the core shim that re-exports it');
@@ -411,7 +411,7 @@ assert.deepEqual(planted(PLAY, "import { stableHash } from '@sixam/kernel/contra
 'play may import itself, the kernel, source and node:');
 assert.deepEqual(planted(PLAY, "import { readPack } from '@sixam/review/evidence-pack';"), ['play'], 'play must not import review');
 assert.deepEqual(planted(PLAY, "import { Observer } from '@sixam/core/sensing';"), ['play'], 'play must not import core');
-assert.deepEqual(planted(PLAY, "export const load = () => import('../../../tools/device/bundle.mjs');"), ['play'],
+assert.deepEqual(planted(PLAY, "export const load = () => import('../../../tools/device/bundle.ts');"), ['play'],
   'play must not reach tools/, even by a dynamic import');
 assert.deepEqual(planted(PLAY, "export { cli } from '../../../apps/desktop/src/lab.ts';"), ['play'], 'play must not import an application');
 assert.deepEqual(planted(PLAY, "const where = './phone/clocks.js';\nexport const load = () => import(where);"), ['play'],

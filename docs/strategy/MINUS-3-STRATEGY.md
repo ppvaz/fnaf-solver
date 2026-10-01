@@ -70,7 +70,7 @@ beatable every single time, although this strat is way, way easier" (Tru3P1ay3r)
 Foxy is nullified, Toy Bonnie never vent-camps, the music box "never went below half."
 
 **Device-transfer result (2026-08-28, `n2-minustoys-0117`).** The engine port
-(`packages/propose/bin/minustoystest.mjs` / `packages/propose/bin/plans/minus-toys-plan.mjs`, 200/200 in the
+(`packages/propose/bin/minustoystest.ts` / `packages/propose/bin/plans/minus-toys-plan.mjs`, 200/200 in the
 deterministic model) was run open-loop on the Moto g56, Night 2. **It died at
 ~2 AM to Balloon Boy walking into the office, then Foxy** -- and the model
 explains why: shrinking the mask window by ±500 ms in the sim drops Night 2 to
@@ -78,7 +78,7 @@ explains why: shrinking the mask window by ±500 ms in the sim drops Night 2 to
 of the 5 mask ticks it needs to *cleanly* evict Balloon Boy. That is the
 **~0.66 s margin above, measured** -- and the device port cannot hold it. It is
 anchored to `T0` (first HUD frame), not to the game's :X0/:X5 phase; the
-per-instruction margin map (`packages/propose/bin/plans/minus-toys-margin.mjs`) puts the
+per-instruction margin map (`packages/propose/bin/plans/minus-toys-margin.ts`) puts the
 whole-schedule phase tolerance at **33 ms early / 99 ms late**, against an epoch
 bracket the run measured at **302 ms** -- three to nine times the margin before
 any per-cycle jitter or the −184 ms/min game-vs-wall drift the run also
@@ -210,7 +210,7 @@ Gaps in `src/engine.js` (all load-bearing for this family, none exercised by Min
 
 ## 7. 2026-08-20 Android probe verdict (plan 02 step 2)
 
-`packages/propose/bin/minus2test.mjs` encodes the family's only Android-viable member —
+`packages/propose/bin/minus2test.ts` encodes the family's only Android-viable member —
 glitchless Minus Two, adapted with every available trick (sourced right-vent
 Toy Bonnie stall, boundary-aligned Foxy flashes during holds, reactive
 mask-hold branches, observable-only controller) — against the corrected
@@ -223,7 +223,7 @@ Android model:
   item 2), and the CAM 09 exclusion gates on `viewing` while the stun targets
   the marker, so a split selection bypasses it (§5 item 3). **This does not itself
   make a device policy viable.** The engine now models the split and its
-  glitched CAM 09 stun path; `packages/propose/bin/minustoystest.mjs` clears 200/200 normal
+  glitched CAM 09 stun path; `packages/propose/bin/minustoystest.ts` clears 200/200 normal
   and 100/100 pinned-worst seeds, and its no-split control clears 0/200. The
   2026-08-28 graded open-loop phone attempt nevertheless failed through the
   BB→Foxy chain. The 2026-08-29 Night 1 calibration found no measurable drift
@@ -262,7 +262,7 @@ all in [`ANDROID-SOURCE-STATUS.md`](../android/ANDROID-SOURCE-STATUS.md)
 consequences:
 
 - **Minus Toys is positive in the Android model, not yet proved on-device.**
-  `packages/propose/bin/minustoystest.mjs` arms the split through the real 200 ms sampler and
+  `packages/propose/bin/minustoystest.ts` arms the split through the real 200 ms sampler and
   runs the published 10 s cadence: **200/200 normal + 100/100 pinned
   worst-luck**, against a **0/200 no-split control**. Deliberate device arming
   is proved below; actual Toy stun transfer and repeatability remain open.
@@ -457,7 +457,7 @@ AI 0 on Night 1 (`elegance.py`'s test).
 **Status (corrected 2026-08-29):** an earlier draft here said "no gated device
 plan exists — the engine models no split-camera state". **Both halves were
 stale.** Plan 02 pkg 2a shipped 2026-08-28 (`c038938`): the engine separates
-`viewing`, sampled `lastViewed` and the parked marker; `packages/propose/bin/minustoystest.mjs`
+`viewing`, sampled `lastViewed` and the parked marker; `packages/propose/bin/minustoystest.ts`
 gates the split 200/200; and **`packages/propose/bin/plans/minus-toys-plan.mjs --night=1`
 emits a gated device plan that scores 200/200 normal + 100/100 worst-luck**.
 `trial.sh DEVICE_POLICY=minus-toys NIGHT=continue CALIBRATION_STORY_NIGHT=1`
@@ -828,7 +828,7 @@ failed arm has nothing to catch it. Two consequences:
    > writes `viewing=9` — exactly r3. Measured by the new
    > `minus-toys-plan.mjs --phasegate` (epochs +7f/+8f/+9f miss; bimodal 24/24
    > or 0/24; P(miss) = 3/12 per attempt; pinned in
-   > `test-minus-toys-plan.mjs`). No static same-slot arm reaches 12/12 — a
+   > `test-minus-toys-plan.ts`). No static same-slot arm reaches 12/12 — a
    > 1-frame gap needs overlapping contacts, i.e. the measured drag defect —
    > so the fix is runner-side: the emitted `#arm-verify 1` header opens an
    > arm-verify window after the raise; `trial.sh` photographs the monitor and

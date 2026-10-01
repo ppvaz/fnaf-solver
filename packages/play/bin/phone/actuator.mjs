@@ -16,7 +16,7 @@
 //
 //   **Re-scoped 2026-08-26, and the original is kept because the `worst`-mode
 //   decision still rests on it.** On the HID route the mean is NOT nearly free
-//   and the spread is not the lever: `packages/propose/parked/minus7/latenesssweep.mjs` finds a uniform
+//   and the spread is not the lever: `packages/propose/parked/minus7/latenesssweep.ts` finds a uniform
 //   205 ms is 0/200 on Nights 2-7 at any spread from +/-0 to +/-95, and halving
 //   it to 110 or 83 changes nothing. Both readings are the same statement once
 //   the frame quantisation below is taken seriously -- what costs nights is

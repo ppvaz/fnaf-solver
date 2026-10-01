@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Play a harness input file -- a committed winner's schedule as
-// schedule-to-input.mjs writes it, with its title and customize navigation --
+// schedule-to-input.ts writes it, with its title and customize navigation --
 // on the calibration build on the phone, through the campaign's transport.
 //
 // The file's rows are in frame ticks. On the phone each frame's ticks start
@@ -15,7 +15,7 @@
 // A row at tick F is sent (F - 1) x 1000/60 ms after its marker, so it
 // arrives inside the poll interval before update F + 1, the update the host
 // harness applies it to. The phone's actual landings are read afterwards from
-// the calibration log, and calib-replay.mjs replays those, not these.
+// the calibration log, and calib-replay.ts replays those, not these.
 //
 // Two contacts are encoded as the transport sends them (hid-sweep-probe.ts,
 // packages/play/src/campaign/hid-schedule.ts): pointer p is HID contact p; contact 0 is

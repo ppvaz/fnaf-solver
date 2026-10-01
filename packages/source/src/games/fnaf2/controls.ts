@@ -7,7 +7,7 @@
  * control, never rename one. Each fact names where it was read; a fact that
  * was never read is `UNKNOWN(reason)`.
  *
- * - `requires`: packages/propose/bin/plans/artifact-commands.mjs refuses a plan that breaks
+ * - `requires`: packages/propose/bin/plans/artifact-commands.ts refuses a plan that breaks
  *   these (every control but the mask is illegal while the mask is up; the
  *   mask and the lights below it need the monitor down; the feed light, the
  *   cameras and the wind need it up; a wind needs the box camera viewed,
@@ -20,7 +20,7 @@
  *   `monitorUp` (monitor-rule-v1), `maskOn` (the effect grader in
  *   packages/play/src/campaign/control-effect.ts) and `cameraSelected` (camera-rule-v1).
  * - `model`: the simulator action the control drives. Both lights drive the
- *   one context-dependent `light` (packages/propose/bin/plans/device-lane.mjs SIM_ACTION).
+ *   one context-dependent `light` (packages/propose/bin/plans/device-lane.ts SIM_ACTION).
  * CONTRACT:semantic-control-v1 CONTRACT:device-executor-v1.
  */
 import { ARTIFACT_ACTION_TABLE_SCHEMA, CONTROL_CATALOG_SCHEMA, defineControlCatalog } from '../../clockwork/control-catalog.ts';
@@ -105,7 +105,7 @@ export const FNAF2_CONTROL_CATALOG = defineControlCatalog({
   auxiliaryPoints: ['mute'],
   artifactActions: FNAF2_ARTIFACT_ACTION_TABLE,
   sources: [
-    'packages/propose/bin/plans/artifact-commands.mjs (preconditions)',
+    'packages/propose/bin/plans/artifact-commands.ts (preconditions)',
     'packages/play/profiles/fnaf2/moto-g56/hid-mediaprojection.json viewScroll (anchors)',
     'packages/play/src/sensors/fnaf2/monitor-rule.ts, camera-rule.js; packages/play/src/campaign/control-effect.ts (observations)',
   ],

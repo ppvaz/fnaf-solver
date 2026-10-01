@@ -22,14 +22,14 @@ const cases = [
   [['docs/architecture/generated/command-registry.json', 'package.json'], 'bookkeeping', 'generated catalogs and a manifest'],
   [['docs/evidence/night7-new-record-20260930.json'], 'consequential', 'an evidence record'],
   [['docs/evidence/runs/night1-x-20260930T020000Z/pack.json', 'docs/evidence/graph.json'], 'consequential', 'a run pack and a promotion'],
-  [['tools/recompile/results/k3-replay-20260930.json', 'tools/recompile/replay.mjs'], 'consequential', 'a host-side record with its code'],
+  [['tools/recompile/results/k3-replay-20260930.json', 'tools/recompile/replay.ts'], 'consequential', 'a host-side record with its code'],
   [['packages/propose/bindings/fnaf2/campaign-night9-z-winner.json'], 'consequential', 'a committed winner'],
   [['packages/review/src/lab-x.mjs', 'packages/review/test/lab-x.test.mjs'], 'consequential', 'solver-interface code with its gate'],
   [['android/companion/src/main/java/X.java', 'android/companion/src/test/java/XTest.java'], 'consequential', 'Companion code with its gate'],
   [['packages/play/src/campaign/campaign.js'], 'UNKNOWN', 'controller code with no gate beside it'],
   [['apps/trainer/src/app.js', 'docs/x.md'], 'UNKNOWN', 'trainer code with no gate beside it'],
   [['packages/core/src/mechanics/plant-model.js', 'packages/core/test/foxy.test.js'], 'bookkeeping', 'model code and a test, no record'],
-  [['packages/propose/test/test-seam-slack.mjs', '.githooks/commit-msg'], 'bookkeeping', 'gates alone'],
+  [['packages/propose/test/test-seam-slack.ts', '.githooks/commit-msg'], 'bookkeeping', 'gates alone'],
   [[], 'bookkeeping', 'nothing changed'],
 ];
 for (const [paths, expected, why] of cases) {
@@ -42,8 +42,8 @@ for (const [paths, expected, why] of cases) {
 assert.deepEqual(pathKind('apps/desktop/src/companion-mcp.ts'), { kind: 'code', area: 'solver-interface' }, 'the MCP server is the solver interface');
 assert.deepEqual(pathKind('apps/desktop/src/lab.ts'), { kind: 'code', area: 'solver-interface' });
 assert.deepEqual(pathKind('packages/play/bin/phone/actuator.mjs'), { kind: 'code', area: 'controller' });
-assert.deepEqual(pathKind('packages/propose/bin/plans/bundle.mjs'), { kind: 'code', area: 'controller' }, 'moved device code keeps its area');
-assert.deepEqual(pathKind('packages/propose/bin/recompile/pilot/pilot.mjs'), { kind: 'code', area: null }, 'rebuild tooling is outside the four areas');
+assert.deepEqual(pathKind('packages/propose/bin/plans/bundle.ts'), { kind: 'code', area: 'controller' }, 'moved device code keeps its area');
+assert.deepEqual(pathKind('packages/propose/bin/recompile/pilot/pilot.ts'), { kind: 'code', area: null }, 'rebuild tooling is outside the four areas');
 assert.equal(pathKind('packages/source/test/simtest.ts').kind, 'gate');
 assert.equal(pathKind('docs/evidence/night5-first-6am-20260912.md').kind, 'record', 'a Markdown evidence record is still a record');
 assert.equal(new Set(RECORD_RULES.map(rule => rule.id)).size, RECORD_RULES.length);

@@ -116,7 +116,7 @@ reason is unchanged.
 1. **Consecutive-tick mask clears** (g292-294): a masked vent visitor should
    need ~5 s of *continuous* mask to be forced out (10%/s early roll), not the
    PC-style sub-second repel. This single rule refuted the whole Minus 3
-   family in `packages/propose/bin/minus2test.mjs`; if the device disagrees, that family
+   family in `packages/propose/bin/minus2test.ts`; if the device disagrees, that family
    reopens.
 2. ~~Double-camera glitch absence (one `viewing` counter, atomic per touch).~~
    **Reversed 2026-08-26:** the glitch transfers — `viewing` (counter 55) and
@@ -439,7 +439,7 @@ frame it already captures, so that path no longer requires one.
 
 ## Simulating the pilot (2026-08-20)
 
-`packages/propose/parked/minus7/stock-device-pilot.mjs` replays `trial.sh`'s millisecond table in the
+`packages/propose/parked/minus7/stock-device-pilot.ts` replays `trial.sh`'s millisecond table in the
 sourced engine with no state reads, so schedule changes can be judged without
 spending a night on the phone. The shipped blind schedule dies **200/200 to
 Foxy**, with Balloon Boy as the cause rather than the recorded killer.
@@ -508,7 +508,7 @@ The chain is gone, under pinned worst-luck RNG as well as normal seeds: Balloon
 Boy never reaches the office, so Foxy never collects a run because of him. The
 blind schedule's Foxy deaths were never really Foxy's.
 
-`node packages/propose/parked/minus7/stock-device-pilot.mjs 200 --vent --sync --assert` guards exactly that
+`node packages/propose/parked/minus7/stock-device-pilot.ts 200 --vent --sync --assert` guards exactly that
 claim and nothing more — it asserts BB never gets in and no Foxy death follows
 him, and deliberately does **not** assert survival. It runs in
 `tools/test.ts --engine`, normal and `--worst`. The blind schedule fails it
@@ -609,13 +609,13 @@ retaining their useful “capture and branch locally” boundary.
 Three pure simulator reports are retained so the unsuccessful policy ideas are
 not repeated:
 
-- `phasesweep.mjs`: cams-down phase can defer BB's latched final hop but no
+- `phasesweep.ts`: cams-down phase can defer BB's latched final hop but no
   200 ms alignment eliminates office arrivals (best was 61/200 overall and
   66/200 among phases where the interval lands cams-down).
-- `periodicsweep.mjs`: a blind full response every third/fourth cycle keeps BB
+- `periodicsweep.ts`: a blind full response every third/fourth cycle keeps BB
   out, but the mask blocks the hall and the policy dies sooner (about 30 s
   median versus 48 s).
-- `flicksweep.mjs`: blindly dropping the Golden Freddy flick loses 199/200 at
+- `flicksweep.ts`: blindly dropping the Golden Freddy flick loses 199/200 at
   a 13 s median, so a blind schedule cannot buy time that way. A visual policy
   may skip it only on a proven-empty office frame.
 
@@ -767,7 +767,7 @@ verdict. The runner calls it. See CLAUDE.md, "Instruments are not a pipeline".
   select unless the monitor has finished raising, and the attack cycle asked for
   one exactly 200 ms after the raise -- zero margin against a 204 ms sourced
   animation, deterministic in the engine and a coin flip on a phone whose
-  wall-timed anchors land 49-93 ms late. `test-device-input-gaps.mjs` gates it
+  wall-timed anchors land 49-93 ms late. `test-device-input-gaps.ts` gates it
   against the sourced constant, derived rather than restated.
 
 ### Measurements worth keeping
@@ -908,7 +908,7 @@ animation running as decoration, so `press()` accepts a monitor press the phone
 throws away. The simulator cannot fail this way; only the phone can.
 
 **The emitter's contract passed every one of these presses.** That is the
-control, and it is the part worth keeping: `test-hid-trace.mjs` audits nights 6-10, 6-12 and 6-14 and reports no defect at 8.41 s, 8.41 s and 8.47 s -- 35, 76 and
+control, and it is the part worth keeping: `test-hid-trace.ts` audits nights 6-10, 6-12 and 6-14 and reports no defect at 8.41 s, 8.41 s and 8.47 s -- 35, 76 and
 78 ms released, all above `MIN_RELEASED_MS` -- and the game ignored all three.
 It does flag nights 6-22 and 6-28 at exactly the blamed press ("only 0 ms released
 between 144,270 and 144,801"), which is the auditor working. A legal stream is
@@ -925,7 +925,7 @@ The other two live seams are smaller and both real:
 
 - **34 ms is the plan's spacing before the hall-flash pair** (`2717 tap monitor`
   after a wind hold ending at 2683, `3267 tap monitor` after a hall hold ending
-  at 3233), which is one Fusion poll and the floor `test-recipe.mjs` asserts.
+  at 3233), which is one Fusion poll and the floor `test-recipe.ts` asserts.
   Three of the fourteen desyncs are there -- nights 6-33, 6-35 and 6-37. Most of
   those windows cannot be graded -- 550 ms is shorter than the flip animation
   inside it -- so the rate is not measurable from these runs; what *is*
@@ -988,7 +988,7 @@ The one correction that did fire is the fix working rather than the bug: at
 97.57 s the post-gate sample read `luma 255`, the classifier agreed
 (`cams=UP-DESYNCED`), and the recovery put the cams back down. Compare night 6-38, where the same code sampled 214 ms into a flip and invented the desync.
 
-What caused it is the seam this session did not touch. `test-hid-trace.mjs`
+What caused it is the seam this session did not touch. `test-hid-trace.ts`
 flags **three 0 ms released cam7 -> monitor presses** in this run, at 22.16 s,
 37.20 s and 97.14 s: the sweep's final camera release and the next anchor's
 monitor press in the same instant. Two landed, the third did not. That is the
@@ -1157,7 +1157,7 @@ has not yet run on the phone. The next night is the test.
 
 ### Retraction: the "0 ms released" cycle seam was the auditor's clock (2026-08-25)
 
-**`test-hid-trace.mjs` cannot time a boundary the runner waits through, and its
+**`test-hid-trace.ts` cannot time a boundary the runner waits through, and its
 zero-gap flags at the cycle seam are artifacts.** Everything above that blames
 "the sweep's final camera release and the next anchor's monitor press in the
 same instant" -- including calling it *the largest remaining source* -- rests on
@@ -1273,7 +1273,7 @@ The flip gate and the classifier checkpoint above are the two places
 contained them. Every actuator figure for Nights 2+ was therefore a statement
 about a controller the phone does not run, and plans/12 said so and left the
 number unmeasured. `packages/play/bin/phone/actuator.mjs` now carries `MonitorSupervisor`,
-and `packages/propose/parked/minus7/closed-loop-reclaim.mjs` prices it. **Everything below is in the
+and `packages/propose/parked/minus7/closed-loop-reclaim.ts` prices it. **Everything below is in the
 simulator.** No phone was involved.
 
 ### What was modelled, from the shell rather than from an ideal
@@ -1363,7 +1363,7 @@ deaths. A loop whose false corrections invert the monitor stops the pilot
 executing the geometry that was killing it. That is not a defence of a broken
 loop. It is another measurement saying the deaths are geometric.
 
-The zero and its vacuity guard are pinned in `packages/propose/test/test-actuator.mjs`:
+The zero and its vacuity guard are pinned in `packages/propose/test/test-actuator.ts`:
 if a future change leaves the loop with nothing to correct, the zero stops being
 a result and the check fails.
 
@@ -1810,7 +1810,7 @@ favourable number with n=5 is precisely what this repository's rules say to
 distrust.
 
 **The control that would settle it was not recorded.** `n1-grey-2202` reports
-`hid trace: MISSING (run with HID_TRACE_RUN=1)`. `test-hid-trace.mjs` audits
+`hid trace: MISSING (run with HID_TRACE_RUN=1)`. `test-hid-trace.ts` audits
 what the phone was *sent*; `sweepcheck.py` reports what the game *did*. Only
 both together separate "the press never went out" from "it went out and Fusion
 swallowed it" -- and those have opposite fixes. **Any further Night 1 run must
@@ -1992,7 +1992,7 @@ be graded against a signature recalibrated from an `ALT_LIGHT` run recorded
 ## A second device policy: Minus Toys, wired into the same runner (2026-08-28)
 
 Until now `trial.sh` emitted only Minus 7 (`recipe.mjs --device-plan`). The
-Minus Toys engine result (plan 02 pkg 2a; `packages/propose/bin/minustoystest.mjs`, 200/200
+Minus Toys engine result (plan 02 pkg 2a; `packages/propose/bin/minustoystest.ts`, 200/200
 normal + 100/100 worst per night, 0/200 no-split control) existed only as an
 engine schedule. `packages/propose/bin/plans/minus-toys-plan.mjs` ports it into the on-phone
 interpreter's plan format and `DEVICE_POLICY=minus-toys tools/device/trial.sh`
@@ -2021,7 +2021,7 @@ New runner pieces, all mock-gated (no phone):
   `plan_emit`), spanning light-lead + monitor-contact + light-tail.
 - The CAM 09 coordinate threaded through the driver's positional argument
   header (`trial/01-arguments.sh`, `plan_control_xy`).
-- The gate: `minus-toys-plan.mjs --night=N --gate` replaces `human-gate.mjs`
+- The gate: `minus-toys-plan.mjs --night=N --gate` replaces `human-gate.ts`
   for this policy and runs before the first adb command.
 - `04-session.sh`'s epoch centring stays Minus-7-only: the published route's
   phase window is one-sided (tolerates a late T0, almost no early one), so the
@@ -2039,7 +2039,7 @@ New runner pieces, all mock-gated (no phone):
    down for every model-gated plan path (`1|2`); only the dormant unpriced
    route (`0`) still gets the scalar.
 
-`test-minus-toys-plan.mjs` gates the ported schedule (survival + split armed +
+`test-minus-toys-plan.ts` gates the ported schedule (survival + split armed +
 control + emitted-plan shape + every kind/control implemented);
 `test-plan-interpreter.sh` runs the emitted plan through the shipped interpreter
 functions (camdrop span, the opening resolving every control, the toys macro's
@@ -2087,7 +2087,7 @@ repository reads the `your view` marker, which is the other half of the split.
 
 ### Two instrument problems this run exposed, both open
 
-- **`test-hid-trace.mjs` FAILED with "98 problems"** because its contact-length
+- **`test-hid-trace.ts` FAILED with "98 problems"** because its contact-length
   floor is 100 ms -- a Minus 7 assumption. The Minus Toys plan deliberately
   uses 33 ms contacts (the g56 "33 ms registers for every touch control"
   finding, CLAUDE.md). Every 33 ms contact reads as a violation. This is a
@@ -2119,7 +2119,7 @@ deterministic engine. Measured this session, with the engine:
   locks on. The cadence never reaches more than **4** `maskTicks` against a
   `VENT_MASK_TICKS = 5` repel threshold -- it never *cleanly* evicts Balloon
   Boy, it relies entirely on the 10 %/tick `VENT_EARLY_LEAVE_CHANCE` roll.
-- **The per-instruction margin map** (`packages/propose/bin/plans/minus-toys-margin.mjs`,
+- **The per-instruction margin map** (`packages/propose/bin/plans/minus-toys-margin.ts`,
   Night 2, 120 seeds, model only, no jitter -- it shifts one press in isolation
   and reports how far it can move before some seed dies):
 
@@ -2151,7 +2151,7 @@ deterministic engine. Measured this session, with the engine:
   600 -- necessary, not sufficient.
 
   **2026-09-05 provenance correction:** the 29 ms parameter is sourced by
-  `minus-toys-jitter.mjs` to a *per-anchor drift residual*. `drifttrace.mjs`
+  `minus-toys-jitter.ts` to a *per-anchor drift residual*. `drifttrace.mjs`
   pairs driver marks preceding reports, not input event IDs with app receipt;
   it does not measure command-to-game-effect latency. Treat this Gaussian
   per-row ensemble as a sensitivity assumption, not a measured per-press
@@ -2316,7 +2316,7 @@ Stated plainly so it stops being re-derived:
 - `/system/bin/hid` schedules one on-device timeline; intra-macro error is about
   **±2 ms**, and the g56 registers **33 ms** contacts on every touch control
   (`HID-MULTITOUCH.md` §"The 100 ms contact floor is margin").
-- Against that, `minus-toys-margin.mjs` puts whole-schedule phase tolerance at
+- Against that, `minus-toys-margin.ts` puts whole-schedule phase tolerance at
   **33 ms early / 99 ms late**, versus an epoch-latch bracket the same run
   measured at **302 ms** and a **−184 ms/min** drift.
 
@@ -2436,7 +2436,7 @@ cannot see either problem.
 
 So a search criterion worth adding alongside survival: **how much of a policy's
 load-bearing state is rendered, and how wide is its per-instruction margin map**
-(`minus-toys-margin.mjs` is the template for the second half). A policy whose
+(`minus-toys-margin.ts` is the template for the second half). A policy whose
 guards are invisible is a policy whose failures are undiagnosable on the phone,
 which is the position this session ended in. Unbuilt, and offered as a design
 note rather than a result.
@@ -2456,13 +2456,13 @@ Two instruments, two names, deliberately distinct:
   death-time quantiles over every epoch phase a drawn release can land on, at
   the 3000-replay standard — and the grader reads killer and time off the
   frames afterwards. The residual is the measurement.
-  `packages/propose/bin/plans/death-prediction.mjs` writes the `death-prediction-v1` record;
+  `packages/propose/bin/plans/death-prediction.ts` writes the `death-prediction-v1` record;
   `night-run.sh` retains it as `prediction.json` beside the run *before* the
   campaign, so it cannot be fitted to the outcome, and prints it. A 6 AM
   attempt carries the trivial prediction "no death".
 - **`death-targeting`** is a property of a *bundle*: a plan whose model gate
   is honestly not PASS because the model expects a death, built to test that
-  expectation on the phone. `bundle.mjs` accepts `gate.status =
+  expectation on the phone. `bundle.ts` accepts `gate.status =
   DEATH_TARGETED` only with the prediction attached, carries it in the
   manifest, and nothing downstream may read such a run as a route claim. The
   deliberate variants — skip the hall flash and time Foxy, wind nothing and
@@ -2568,7 +2568,7 @@ failed split and aborts.
 What this changes:
 
 - A bundle can now be qualified at the epoch its anchor delivers
-  (`winner.anchorEpochMs`, `packages/propose/bin/plans/bundle.mjs`): the gate replays there,
+  (`winner.anchorEpochMs`, `packages/propose/bin/plans/bundle.ts`): the gate replays there,
   the manifest carries it, and `night-run.sh` refuses to run such a bundle
   unanchored. `artifacts/night6-anchored` (fnv1a-bc5e044c) is the hallfix
   knobs at anchorEpochMs 3850 with an honest PASS.

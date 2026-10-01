@@ -129,7 +129,7 @@ is not opened. **None of these replaces reading it.**
 - **A winning binding is committed, not left in `artifacts/`.** A binding that
   wins on the phone, or that gets an `ANCHOR_AIMS` entry, ships as
   `tools/device/campaign-night<N>-<name>-winner.json` in the same commit;
-  `test-fact-register.mjs` refuses otherwise. `artifacts/` is gitignored, and a
+  `test-fact-register.ts` refuses otherwise. `artifacts/` is gitignored, and a
   winner that lives only there cannot be re-run on another machine.
 - **Label every result.** `MODEL_ONLY`, `FIXTURE`, `DEVICE_MEASURED` are
   distinct ceilings and do not promote one another. Use `UNKNOWN` for a missing

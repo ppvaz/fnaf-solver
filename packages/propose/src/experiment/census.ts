@@ -40,7 +40,7 @@ export function probit(p: number) {
 }
 
 /** The Wilson score interval for successes of n at quantile z, clamped to hold the point. */
-export function wilsonInterval(successes, n, z) {
+function wilsonInterval(successes, n, z) {
   const p = successes / n;
   const z2 = z * z;
   const denominator = 1 + z2 / n;
@@ -104,7 +104,7 @@ export function resolveCensusCohort(spec: any): {development: number[], heldOut:
 }
 
 /** The measures a predicate reads. */
-export function predicateMeasures(predicate: any): string[] {
+function predicateMeasures(predicate: any): string[] {
   if ('all' in predicate) return [...new Set<string>(predicate.all.flatMap(predicateMeasures))];
   if ('any' in predicate) return [...new Set<string>(predicate.any.flatMap(predicateMeasures))];
   if ('not' in predicate) return predicateMeasures(predicate.not);

@@ -15,7 +15,7 @@
 //      the same run (mistake register #12) -- and then it is ACTUATION. A campaign abort is
 //      SCHEDULING. The earliest of these is the first divergence.
 //   3. with nothing before the onset, the strategy is judged only on a verified execution: an arm
-//      that was VERIFIED and every graded effect PASS. Then phase-reconstruct.mjs's own verdict on
+//      that was VERIFIED and every graded effect PASS. Then phase-reconstruct.ts's own verdict on
 //      the delivered phase decides (its deliveredBand, read rather than re-derived: mistake
 //      register #11), and only when it is conclusive: IN A LOSS BAND -> STRATEGY; outside every
 //      loss band -> MODEL (the phone did what the model says cannot happen at that phase).

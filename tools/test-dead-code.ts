@@ -196,7 +196,7 @@ export function deadCode(scripts: Map<string, string>, naming: Map<string, strin
     }
   }
   const namingText = [...naming.values()].join('\n');
-  // A bare file name counts only when no other script shares it: `index.js` in
+  // A bare file name counts only when no other script shares it: `index.ts` in
   // a manifest says nothing about which index.
   const basenames = new Map();
   for (const path of modules.keys()) basenames.set(basename(path), (basenames.get(basename(path)) ?? 0) + 1);
@@ -220,9 +220,9 @@ export function deadCode(scripts: Map<string, string>, naming: Map<string, strin
 
 // Planted cases run first and must be caught.
 {
-  const packages = [{ name: '@x/lib', dir: 'packages/lib', exports: { '.': './src/index.js', './games/*': './src/games/*' } }];
+  const packages = [{ name: '@x/lib', dir: 'packages/lib', exports: { '.': './src/index.ts', './games/*': './src/games/*' } }];
   const scripts = new Map([
-    ['packages/lib/src/index.js', "export * from './a.js';\nexport { b as bee } from './b.js';\n"],
+    ['packages/lib/src/index.ts', "export * from './a.js';\nexport { b as bee } from './b.js';\n"],
     ['packages/lib/src/a.js', 'export const a = 1;\nexport const unusedA = 2;\n'],
     ['packages/lib/src/b.js', 'export function b() {}\nexport default 3;\n'],
     ['packages/lib/src/orphan.js', 'export const lost = 1;\n'],

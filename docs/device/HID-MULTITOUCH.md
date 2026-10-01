@@ -242,13 +242,13 @@ not the mask toggle. `maskraise` now holds that seam at the measured-safe
 > measured-safe `maskraise` compound resets Foxy without moving the read or the
 > stun sweep, and scores **673/1200 = 56.1%** on the same seeds. Nights 1–5
 > remain above contract at 99.1, 68.9, 78.8, 73.2, and 63.9 per cent
-> (`packages/propose/bin/plans/human-gate.mjs`; absolute, no override). A gap floor was the
+> (`packages/propose/bin/plans/human-gate.ts`; absolute, no override). A gap floor was the
 > first form of this rule and was
 > retired the same day: gap width never separated human from machine —
 > precision does, which is exactly what error-injected replay measures. The
 > pricing below remains correct and worth keeping: it establishes what the
 > *machine* route costs, and that even the machine cannot land the ideal
-> figures. `test-human-gate.mjs` pins the 1200-seed pass.
+> figures. `test-human-gate.ts` pins the 1200-seed pass.
 >
 > Priced the obvious follow-up the same day: the route at the floor's own
 > 350 ms slots is **0/200 in the exact simulator at every offset tried**
@@ -386,7 +386,7 @@ first place to look if a select goes missing.
 The probes above ran a burst that led the light pulse by 10 ms inside a 100 ms
 select, leaving the pulse itself 90 ms. That is under the 100-120 ms this
 document's own verified report sequence requires, and the contact floor in
-`packages/propose/test/test-hid-trace.mjs` was briefly lowered to 90 to accommodate it —
+`packages/propose/test/test-hid-trace.ts` was briefly lowered to 90 to accommodate it —
 the wrong direction to move a device threshold.
 
 Four constraints cannot all hold at once:
@@ -452,7 +452,7 @@ the shell's clock is not *a* contributor to the actuator cliff — on this route
 it is the whole of it, and the budget it has to fit into is a **frame count,
 not a millisecond figure**.
 
-`packages/propose/parked/minus7/latenesssweep.mjs` sweeps `packages/play/bin/phone/actuator.mjs`'s lateness band
+`packages/propose/parked/minus7/latenesssweep.ts` sweeps `packages/play/bin/phone/actuator.mjs`'s lateness band
 across Nights 1–7 at the `hidpilot n6 target` settings, 200 seeds a cell.
 **Every number here is a simulator number** — the actuator models launch
 lateness and the mask seam and nothing else. Two controls make the table
@@ -568,7 +568,7 @@ by one frame kills Nights 6 and 7 outright. The mechanism is visible in the
 counts: 280 camera selects land while the monitor is still `raising` and the
 engine throws them away — the zero-margin `MONITOR_ANIM_UP` collision this
 document's sibling already found in the plan and gated with
-`test-device-input-gaps.mjs`.
+`test-device-input-gaps.ts`.
 
 So the cliff is **relative displacement, not lateness**. That is precisely the
 error mode the single-macro-per-cycle architecture exists to prevent: inside a
@@ -708,7 +708,7 @@ alone emits a zero delay, which is why two green test suites missed it.
 - **`tools/device/test-plan-interpreter.sh`** fails on any emitted
   `hid_delay <= 0`, and was verified to fail on the pre-fix code before it was
   fixed, so the assertion is not passing vacuously.
-- **`packages/propose/test/test-hid-trace.mjs`** reports a zero-length delay as a
+- **`packages/propose/test/test-hid-trace.ts`** reports a zero-length delay as a
   problem, and its self-test requires that it be caught alongside the short
   contact, the zero-gap button change and the latched contact.
 
@@ -1392,7 +1392,7 @@ geometry did not.
 
 **The synthesis for the sub-70 nights:** the actuator was never the binding
 constraint. n1-n6 clear at machine precision with the *shipped* geometry; the
-sub-70 ladder is `human-gate.mjs`'s iid model on a geometrically-wedged Foxy
+sub-70 ladder is `human-gate.ts`'s iid model on a geometrically-wedged Foxy
 reset. A faster or lighter actuator does not touch that. The open levers stay
 item 12's correlated jitter shape and item 10's bang-anchored reset.
 

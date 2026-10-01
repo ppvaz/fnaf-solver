@@ -346,12 +346,12 @@ step_shared "video instruments over one shared decode (survival, cameras, light,
 
 # 5b-i. What the EXECUTOR knows, which no video instrument can see: when the
 # night started, what the arm gate cost, which cycle gates had to correct the
-# phone, and why the stream stopped. `phase-reconstruct.mjs` then states the
+# phone, and why the stream stopped. `phase-reconstruct.ts` then states the
 # phase the run actually delivered against the model's own response to phase.
 #
 # These were run by hand after every attempt until 2026-09-12 -- they were the
 # slow half of each iteration, and `test-grade-run-coverage.mjs` had been
-# naming phase-reconstruct.mjs as unwired the whole time, into a lane CI does
+# naming phase-reconstruct.ts as unwired the whole time, into a lane CI does
 # not run.
 if [ -n "$CAMPAIGN_DIR" ] && [ -d "$CAMPAIGN_DIR" ]; then
   step "campaign bundle (executor-owned facts)" \
@@ -365,7 +365,7 @@ if [ -n "$CAMPAIGN_DIR" ] && [ -d "$CAMPAIGN_DIR" ]; then
   FRAME_TRACE_ARG=()
   [ -n "$FRAME_TRACE" ] && FRAME_TRACE_ARG=(--frame-trace "$FRAME_TRACE")
   step "delivered phase vs the model band" \
-    node "$HERE/../../../propose/bin/report/phase-reconstruct.mjs" --run "$CAMPAIGN_DIR" "${RUN_NIGHT_ARG[@]}" "${FRAME_TRACE_ARG[@]}"
+    node "$HERE/../../../propose/bin/report/phase-reconstruct.ts" --run "$CAMPAIGN_DIR" "${RUN_NIGHT_ARG[@]}" "${FRAME_TRACE_ARG[@]}"
 else
   echo
   echo "--- campaign bundle (executor-owned facts) ---"

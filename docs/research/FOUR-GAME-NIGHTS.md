@@ -14,7 +14,7 @@ these rules does, and are not device measurements.*
 | Night models | `packages/source/src/games/fnaf*/fnaf*.js`, `packages/source/src/clockwork/night-model.js` | all four: clock, per-night table, roll schedule |
 | Simulator | `packages/source/src/games/fnaf1/sim-fnaf1.js`, `sim-fnaf3.js`, `sim-fnaf4.js` | FNaF 1, 3 and 4; FNaF 4 remains **MODEL_ONLY** |
 | Policies | `packages/propose/src/games/policy-fnaf1.js`, `policy-fnaf3.js`, `policy-fnaf4.js` | FNaF 1, 3 and 4 published lines and controls |
-| Census | `packages/propose/bin/census/census.mjs` | FNaF 1, 3 and 4; held-out seed blocks via `--start` |
+| Census | `packages/propose/bin/census/census.ts` | FNaF 1, 3 and 4; held-out seed blocks via `--start` |
 
 FNaF 2's night already has a simulator (`plant-model.js`) and a route; its
 entry here contributes the clock groups its constants lacked. FNaF 3 and FNaF 4
@@ -211,7 +211,7 @@ door shuts are belief-driven and last a whole camp (12–20 s), so a 270 ms pan
 fits inside its 1 s check cadence with room to spare, and its detectors are
 cheap: door-light occupancy is a luma read at a known coordinate, which
 `packages/screencheck` and the `*-rule-v1` models already do on this handset.
-`census.mjs` prints `[MODEL ONLY]` beside every `roll-grid` row.
+`census.ts` prints `[MODEL ONLY]` beside every `roll-grid` row.
 
 That is the one place in this work where the community line and the machine
 line genuinely differ in outcome, and it is reported as a difference rather
@@ -346,7 +346,7 @@ Two source facts do the work, and neither is in any public account:
   **Retracted 2026-09-30:** g252 and g275 advance stage 1 on his own roll
   whenever a screen is up, and g253 then advances stage 2 on a roll alone. A
   simulator built from his movement graph and nothing else reports a night
-  that never ends — which is exactly what the `test-fnaf3-census.mjs` negative
+  that never ends — which is exactly what the `test-fnaf3-census.ts` negative
   control demonstrates: disabling the blackout ramp makes the *failing*
   controls start passing.
 - **The blackout needs twice the error dwell the hallucination does**
@@ -474,7 +474,7 @@ door press [g166, g168-g228], the 23-frame monitor flip that locks the tab and
 keeps `viewing` 0 until it completes [g5/g6, g270/g271, g846], doors that take 32
 frames to close or open and during which nobody dies or leaves [g160/g161,
 g343/g344], lights put out by the put-down [g357], and door power charged while
-shut and opening but not while closing [g305-g308]. `packages/propose/bin/census/fnaf1-device-lane.mjs`
+shut and opening but not while closing [g305-g308]. `packages/propose/bin/census/fnaf1-device-lane.ts`
 drives it through the handset's measured costs: a 160 ms contact, a 310 ms pan
 hold, controls reachable only at their own pan, and reads that return a frame
 that is already old.
@@ -537,7 +537,7 @@ cycle and never check, so they walk into him on a timer.
 
 That is fixable and observation-legal: `gfPresent` in belief mode is
 `!camsUp && !maskOn && gf.present`, which is what a player can see because he
-is rendered in the office. `goldenGuard` in `policybaselines.mjs` masks on
+is rendered in the office. `goldenGuard` in `policybaselines.ts` masks on
 sight, and the reaction window is comfortable — measured at **42–46 frames**
 between first sighting and death, against ~37 for a monitor-drop plus a
 fully-on mask.
@@ -617,7 +617,7 @@ the same bank, and a fresh dump reproduces all four to the millisecond
 But **an animation length is not control readiness**. FNaF 2 is the worked
 example: `mmonitorDown` runs 367 ms, while the native frame trace has the mask
 button absent through 322 ms, faint at ~337 ms and fully visible only at
-**382.5 ms** — about one frame later. `packages/propose/bin/plans/artifact-commands.mjs`
+**382.5 ms** — about one frame later. `packages/propose/bin/plans/artifact-commands.ts`
 uses the measured figure, because the derived one sat 66.5 ms above the real
 visibility point and chasing it took the Minus Toys loop from 120/120 to
 0/120. So every figure above is a **lower bound**, to be replaced per leg by a
@@ -638,15 +638,15 @@ in hand.
 ```sh
 packages/source/decompile/nightmap.py --game fnaf3 --table --clock --rolls
 packages/source/decompile/nightmap.py --game fnaf1 --graph charBonnie
-node packages/propose/bin/census/census.mjs --game fnaf1 --seeds 3000 --policy roll-grid
-node packages/propose/bin/census/census.mjs --game fnaf1 --policy roll-grid --custom 20 --seeds 3000
-node packages/propose/bin/census/census.mjs --game fnaf4 --night 5 --policy community-loop --seeds 3000
-node packages/propose/bin/census/census.mjs --game fnaf4 --night 5 --policy community-loop --seeds 3000 --start 3000
-node packages/propose/bin/census/test-fnaf4-census.mjs
+node packages/propose/bin/census/census.ts --game fnaf1 --seeds 3000 --policy roll-grid
+node packages/propose/bin/census/census.ts --game fnaf1 --policy roll-grid --custom 20 --seeds 3000
+node packages/propose/bin/census/census.ts --game fnaf4 --night 5 --policy community-loop --seeds 3000
+node packages/propose/bin/census/census.ts --game fnaf4 --night 5 --policy community-loop --seeds 3000 --start 3000
+node packages/propose/bin/census/test-fnaf4-census.ts
 ```
 
 Gated by `packages/source/decompile/test-nightmap.py`, `packages/source/test/test-night-models.ts` and
-`packages/propose/bin/census/test-fnaf1-census.mjs`, `packages/propose/bin/census/test-fnaf3-census.mjs` and
-`packages/propose/bin/census/test-fnaf4-census.mjs`, all in `npm run test:unit`. The model censuses
+`packages/propose/bin/census/test-fnaf1-census.ts`, `packages/propose/bin/census/test-fnaf3-census.ts` and
+`packages/propose/bin/census/test-fnaf4-census.ts`, all in `npm run test:unit`. The model censuses
 need no game content; `--start` selects a disjoint seed block for the three
 simulator-backed games.

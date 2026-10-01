@@ -26,7 +26,7 @@ export function checkCustomNight(night, customNight) {
 }
 
 // `schedule` (a Sim queue, `[frame, press|release, action]`) drives the model with a replayed schedule;
-// the harness trace must then come from the same schedule (compare-schedule-replay.mjs binds the two).
+// the harness trace must then come from the same schedule (compare-schedule-replay.ts binds the two).
 export function compareTrace(text, { night, seed, frame, frames, modelOptions = {}, customNight = null, schedule = [], observe = null,
   frameTimes = null, contacts = null }) {
   checkCustomNight(night, customNight);

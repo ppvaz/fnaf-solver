@@ -8,7 +8,7 @@ export const MANIFEST = Object.freeze({
   target: '10/20',
   canonicalNights: Object.freeze([7]),
   // The CAM 09 marker's toy stall needs the split; without it the route
-  // scores 0/200 on 10/20 (minustoystest.mjs --no-split).
+  // scores 0/200 on 10/20 (minustoystest.ts --no-split).
   requires: Object.freeze([CAMERA_SPLIT]),
   claim: 'MODEL_ONLY',
   status: 'model-route',
