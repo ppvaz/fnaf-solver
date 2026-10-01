@@ -30,6 +30,13 @@
 //            night it cannot read (never assumed), and after an abort or a killed
 //            runner the game is driven back to an observed title. It runs in
 //            test:unit:slow, which CI's slow lane runs.
+//   item 11  "Read a tool's own computed output before deriving the same
+//            quantity by hand." The incident was minus-toys-margin.ts's edge(),
+//            which stopped at its first failure and so printed a banded phase
+//            response as a "408 ms cliff". The margin scans now go through
+//            packages/propose/bin/plans/basin-edge.ts, which keeps scanning and
+//            prints a response that clears again as banded; the check below
+//            plants the 2026-09-11 shape against it.
 //   items 7, 9  are packages/propose/test/test-seam-slack.ts's: every compiled plan
 //            clears every floor by the allowance, and the mask floor IS its
 //            measurement, read from SEAM_FLOORS rather than from a comment.
@@ -48,6 +55,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, posix, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { report } from '../packages/review/bin/grade/run-report.ts';
+import { formatEdge, scanEdge } from '../packages/propose/bin/plans/basin-edge.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SELF = 'tools/test-mistake-register.ts';
@@ -99,6 +107,7 @@ const REGISTER_GATES = [
   [5, SELF],
   [7, 'packages/propose/test/test-seam-slack.ts'],
   [9, 'packages/propose/test/test-seam-slack.ts'],
+  [11, SELF],
   [12, SELF],
   [13, SELF],
   [13, 'packages/review/bin/grade/test-grade-run-coverage.ts'],
@@ -474,6 +483,25 @@ for (const [item, gate] of REGISTER_GATES) {
   }
 }
 
+// --- item 11 on the tree: a margin scan does not hide a banded response -----
+{
+  // The 2026-09-11 response: clears to 99 ms, loses 132-198, clears again from
+  // 231. A scan that stops at its first failure reads "99", the "cliff" that
+  // would have condemned a run the model wins; basin-edge.ts must not.
+  const banded = (k) => k <= 99 || k >= 231;
+  const firstFailure = (clears) => { let last = 0; for (let k = 33; k <= 330; k += 33) { if (!clears(k)) break; last = k; } return String(last); };
+  if (firstFailure(banded) !== '99') fail('the planted stop-at-first-failure scan no longer reproduces the 2026-09-11 reading');
+  const read = scanEdge(banded, { step: 33, max: 330 });
+  if (read.resumesAt !== 231 || formatEdge(read) === firstFailure(banded))
+    fail(`basin-edge.ts reads a banded response as ${formatEdge(read)}; item 11 says it is banded, not a budget`);
+  if (formatEdge(scanEdge((k) => k <= 99, { step: 33, max: 330 })) !== '99') fail('basin-edge.ts no longer reads a contiguous basin as its edge');
+  // An uncut basin is capped even when max is not a multiple of the step (the
+  // margin tool's default 800 ms over 33 ms steps never printed ">=").
+  if (formatEdge(scanEdge(() => true, { step: 33, max: 800 })) !== '>=792') fail('basin-edge.ts does not mark an uncut scan as capped');
+  for (const tool of ['packages/propose/bin/plans/minus-toys-margin.ts', 'packages/propose/bin/plans/minus-toys-jitter.ts'])
+    if (!/from '\.\/basin-edge\.ts'/.test(readFileSync(join(ROOT, tool), 'utf8'))) fail(`${tool} scans a margin without basin-edge.ts (item 11)`);
+}
+
 const counts = [...verdicts.values()].reduce((into, v) => {
   into[v.via ? 'runs' : v.exempt?.startsWith('tools/test.ts BACKLOG') ? 'backlog' : v.exempt ? 'exempt' : 'orphan'] += 1;
   return into;
@@ -485,6 +513,7 @@ if (failed) {
 }
 console.log(`mistake register: item 13 -- ${verdicts.size} test files, ${counts.runs} run by a CI step, ` +
   `${counts.exempt} exempt here and ${counts.backlog} by tools/test.ts BACKLOG, each with a reason; ` +
-  `item 5 -- every script path and npm script named exists; item 12 -- the five-read threshold holds ` +
+  `item 5 -- every script path and npm script named exists; item 11 -- a margin scan reads a banded ` +
+  'response as banded; item 12 -- the five-read threshold holds ' +
   `on both sides; items ${[...new Set(REGISTER_GATES.map(([item]) => item))].join(', ')} rely only on ` +
   'gates a CI step runs');

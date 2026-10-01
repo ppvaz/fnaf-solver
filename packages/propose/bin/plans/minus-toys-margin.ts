@@ -20,6 +20,7 @@
 // it inherits the engine's Golden-Freddy-interval and Toy-cam-stall gaps
 // (plans/02 sec.5) -- read it as "the model has at most this much slack here".
 import { OPENING, LOOP, replay } from './minus-toys-plan.mjs';
+import { formatEdge, scanEdge } from './basin-edge.ts';
 import { FNAF2_CONTROL_VOCABULARY as V } from '@sixam/source';
 
 const arg = (k, d) => {
@@ -42,16 +43,10 @@ function allSurvive(shift) {
   return true;
 }
 
-// Largest k in [0, MAX] (ms, multiples of STEP) for which `mk(k)` still clears,
-// scanning outward and stopping at the first failure (the basin is contiguous).
-function edge(mk) {
-  let last = 0;
-  for (let k = STEP; k <= MAX; k += STEP) {
-    if (!allSurvive(mk(k))) break;
-    last = k;
-  }
-  return last === MAX ? `>=${MAX}` : String(last);
-}
+// Largest k in [0, MAX] (ms, multiples of STEP) for which `mk(k)` still clears.
+// The scan goes on past the first failure, and a response that clears again
+// prints as banded rather than as a budget (basin-edge.ts).
+const edge = mk => formatEdge(scanEdge(k => allSurvive(mk(k)), { step: STEP, max: MAX }));
 
 const rowShift = (cycle, index, delta) =>
   (c, i) => (c === cycle && i === index ? delta : 0);
@@ -105,9 +100,10 @@ console.log(`  n2-minustoys-0117 reported a 302 ms epoch bracket alone.`);
 // press from the first wind onward and to nothing before it (`phaseLagMs` in
 // packages/play/src/campaign/adb-device-local-executor.ts).
 //
-// **This response is BANDED, not a cliff, and `edge()` above must not be used
-// on it.** `edge()` scans outward and stops at the first failure, which is
-// correct only for a contiguous basin. The model's response to phase repeats
+// **This response is BANDED, not a cliff.** `edge()` above prints such a
+// response as banded, but its first band edge is still not the budget. A
+// stop-at-first-failure scan, the earlier `edge()`, is correct only for a
+// contiguous basin. The model's response to phase repeats
 // on the game's 1-second grid with several separate loss bands inside it, so a
 // stop-at-first-failure scan reports the first band edge and silently hides
 // every winning window beyond it. Read on 2026-09-11 that way, the first edge

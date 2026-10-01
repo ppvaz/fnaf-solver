@@ -522,11 +522,16 @@ and after it, and each night's pack is written in the morning.
     that gate runs in a CI lane.
 - **Artifact:** a morning report that refutes a mechanism nobody had queued,
   with the run bundles that did it.
-- **Stands (2026-10-01):** entries 1, 3 and 6 now name gates a CI lane runs
-  (title-observe.py refuses a path it would not read; the night job refuses on
-  an observed title mismatch and recovers an observed title after an abort);
-  entries 2, 4 and 11 still name none. No morning report has run yet: the
-  overnight window was installed on 2026-10-01.
+- **Stands (2026-10-01):** entries 1, 3, 6 and 11 now name gates a CI lane
+  runs (title-observe.py refuses a path it would not read; the night job
+  refuses on an observed title mismatch and recovers an observed title after an
+  abort; the margin scans go through `basin-edge.ts`, which prints a response
+  that clears again past its first failure as banded, and on its first run it
+  showed Minus Toys' whole-schedule phase margin, 33/99 ms since 2026-08-28, is
+  such a band edge). Entries 2, 4, 8 and 10 still name none (an earlier count
+  of this list missed 8 and 10). No morning report has run yet: the overnight
+  window was installed on 2026-10-01, its first job refused
+  `qualification-binding`, and its second start found no phone on adb.
 - **Absorbs** Plan 25 horizon 3 and Plans 07, 18 and 22.
 
 **Order.**

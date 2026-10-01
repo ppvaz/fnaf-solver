@@ -1995,6 +1995,7 @@
     {
       "file": "packages/propose/bin/plans/minus-toys-jitter.ts",
       "imports": [
+        "./basin-edge.ts",
         "./minus-toys-plan.mjs",
         "node:url"
       ]
@@ -2002,6 +2003,7 @@
     {
       "file": "packages/propose/bin/plans/minus-toys-margin.ts",
       "imports": [
+        "./basin-edge.ts",
         "./minus-toys-plan.mjs",
         "@sixam/source"
       ]
@@ -2114,6 +2116,7 @@
     {
       "file": "packages/propose/bin/plans/test-minus-toys-margin.ts",
       "imports": [
+        "./minus-toys-plan.mjs",
         "node:child_process",
         "node:path",
         "node:url"
@@ -4868,7 +4871,33 @@
     {
       "file": "tools/test-mistake-register.ts",
       "imports": [
+        "../packages/propose/bin/plans/basin-edge.ts",
         "../packages/review/bin/grade/run-report.ts",
+        "\\.\\/basin-edge\\.ts",
+        "node:child_process",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "tools/test-mistake-register.ts",
+      "imports": [
+        "../packages/propose/bin/plans/basin-edge.ts",
+        "../packages/review/bin/grade/run-report.ts",
+        "\\.\\/basin-edge\\.ts",
+        "node:child_process",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "tools/test-mistake-register.ts",
+      "imports": [
+        "../packages/propose/bin/plans/basin-edge.ts",
+        "../packages/review/bin/grade/run-report.ts",
+        "\\.\\/basin-edge\\.ts",
         "node:child_process",
         "node:fs",
         "node:path",

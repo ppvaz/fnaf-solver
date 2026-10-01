@@ -35,6 +35,7 @@
 // each figure as "in the model, under the calibrated ensemble".
 import { pathToFileURL } from 'node:url';
 import { replay, KNOBS0 } from './minus-toys-plan.mjs';
+import { scanEdge } from './basin-edge.ts';
 
 const HOUR_MS = 70000;
 const NIGHT_MS = 420000;
@@ -131,12 +132,14 @@ export function basinWidth({ night, opts = {}, seeds = 200, max = 560, step = 33
   for (let k = step; k <= max; k += step) offs.push(-k, k);
   const curve = offs.sort((a, b) => a - b).map(k => [k, rate(k)]);
   const at = k => (curve.find(([p]) => p === k) ?? [k, 0])[1];
-  if (at(0) < threshold) return { early: 0, late: 0, width: 0, curve };
-  let late = 0, early = 0;
-  for (let k = step; k <= max; k += step) { if (at(k) < threshold) break; late = k; }
-  for (let k = step; k <= max; k += step) { if (at(-k) < threshold) break; early = k; }
-  return { early, late, width: early + late, curve,
-           cappedLate: late === max, cappedEarly: early === max };
+  if (at(0) < threshold) return { early: 0, late: 0, width: 0, curve, resumesLate: null, resumesEarly: null };
+  const late = scanEdge(k => at(k) >= threshold, { step, max });
+  const early = scanEdge(k => at(-k) >= threshold, { step, max });
+  // A band that clears again past the edge (basin-edge.ts) is not part of the
+  // width, and is returned so a reader does not take the width as the budget.
+  return { early: early.edge, late: late.edge, width: early.edge + late.edge, curve,
+           cappedLate: late.capped, cappedEarly: early.capped,
+           resumesLate: late.resumesAt, resumesEarly: early.resumesAt };
 }
 
 // --- CLI -----------------------------------------------------------------
@@ -167,8 +170,10 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       const b = basinWidth({ night, opts: { reanchor }, seeds: Math.min(seeds, 250), knobs });
       const curve = b.curve.filter(([k]) => k % 132 === 0)
         .map(([k, r]) => `${k >= 0 ? '+' : ''}${k}:${(r * 100).toFixed(0)}%`).join('  ');
+      const again = [b.resumesEarly !== null && `-${b.resumesEarly}`, b.resumesLate !== null && `+${b.resumesLate}`].filter(Boolean);
       console.log(`  night ${night}:  basin early -${b.early}${b.cappedEarly ? '+' : ''} ` +
-        `late +${b.late}${b.cappedLate ? '+' : ''}  (width ${b.width} ms)`);
+        `late +${b.late}${b.cappedLate ? '+' : ''}  (width ${b.width} ms)` +
+        (again.length ? `  BANDED: clears again at ${again.join(' and ')}` : ''));
       console.log(`           ${curve}`);
     }
     console.log('  width 0 => per-press jitter alone is below 70%; no fixed phase ' +
