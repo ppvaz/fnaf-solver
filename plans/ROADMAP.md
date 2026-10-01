@@ -231,21 +231,26 @@ Details:
     `s2-early-perturbation-1c931f96a31dcb24`, pre-registered,
     NOT_SUPPORTED).
   - **The camera static reads the random stream out, too coarsely in the
-    retained grid (pre-registered, two sweeps).** Office g58 re-rolls the
+    retained grid (pre-registered, three sweeps).** Office g58 re-rolls the
     static's blend coefficient from Random(50) every 100 ms, and in
     full-06's winding windows the retained frames' period-mean luma steps
     8.6-16 times above its within-period noise. Scanning every generator
     state against it identifies none (best r 0.69-0.78, at the chance
     maxima), and the held-out test of "the seed is right, the phone a few
     draws ahead" hits 1 of 4 windows (NOT_SUPPORTED), though small offsets
-    recur
+    recur. With the cameras' own pan removed from both series, four untouched
+    windows hit none (NOT_SUPPORTED; every best offset negative)
     ([readout](../docs/evidence/full06-static-readout-20261001.json),
     `s2-static-readout-f9d8879e0d3f3e49`;
     [confirmation](../docs/evidence/full06-static-readout-confirm-20261001.json),
-    `s2-static-readout-confirm-6ccf7cf7ccd77fec`). The physical separator is
+    `s2-static-readout-confirm-6ccf7cf7ccd77fec`;
+    [detrended](../docs/evidence/full06-static-readout-detrended-20261001.json),
+    `s2-static-readout-detrended-05065abd44c9cf0b`). The physical separator is
     a traced Night 7 whose camera-view region is read natively through the
     winding windows, so single draws resolve and the seed is checked state
-    by state
+    by state: `night-run.sh --frame-trace --static-readout` records it
+    (dry-run gated), and the night waits for an attended session (Pedro,
+    2026-10-01: "Build it, run when I'm here")
     ([census](../docs/evidence/full06-stream-census-20261001.json),
     `s2-stream-census-45ad1201c90a4531`;
     [pre-registration](../docs/evidence/full06-stream-census-predeclaration-20261001.json)).
@@ -325,6 +330,18 @@ identifies the seed during the night (65,536 -> 1), then plays that seed's plan.
   `P_max`.
 - **Artifact:** the cohort's run packs and its result record.
 - **Stands:**
+  - **The overnight window is installed (2026-10-01, Pedro: "Install it").**
+    `fnaf2-overnight-window.timer` opens it at 01:30; it plays queued nights of
+    committed winners only while the phone is idle, plugged and unlocked, and
+    restores every setting it changes. Queued FNaF 2 nights now pass their
+    committed venue binding (they would have refused `venue-identity-unbound`)
+    and the qualification bound to their winner: the first window's job
+    refused `qualification-binding` before its night, so it is not a slot
+    played and was re-queued
+    ([pack](../docs/evidence/runs/night7-k3-ow-r01-20261001T043050Z/pack.json)).
+    A six-night k3 cohort is pre-declared and queued
+    ([pre-registration](../docs/evidence/night7-cohort-k3-overnight-predeclaration-20261001.json));
+    its result is computed from the packs by `npm run evidence -- cohort`.
   - k3 reached 6 AM on 8 of 10 nights with an anchored open-loop schedule and a
     belief-gated supervisor
     ([k3 cohort](../docs/evidence/night7-cohort-k3-result-20260918.json)).
@@ -451,6 +468,12 @@ and the solver MCP with its claim envelope (Plan 28).
     to 20,489 (Night 6) of 65,536, and 7,226 on Aggressive Nightmare
     ([`fnaf3-stage1-g275-census-20260930`](../docs/evidence/fnaf3-stage1-g275-census-20260930.json)).
   - **FNaF 4:** model only ([four games](../docs/research/FOUR-GAME-NIGHTS.md)).
+  - **FNaF 4 cannot be promoted on its winning run (2026-10-01).** The title's
+    CONTINUE digit is a clean terminal witness (it advances only across the won
+    nights in all 40 retained title frames), but the committed
+    `fnaf4-night3-loop-winner.json` pins a newer cue model than run n3c ran, so
+    n3c is not a run of that winner. Pedro: keep the save and promote the next
+    win of its current night, its winner committed in the same commit.
   - **In the rebuild (2026-09-29, MODEL_ONLY, rebuilt-runtime).** A lockstep
     pilot wins each game's hardest night in the rebuilt runtime, and the game
     writes its own mark: FNaF 3 Aggressive Nightmare (`4thstar=1`,
@@ -499,6 +522,11 @@ and after it, and each night's pack is written in the morning.
     that gate runs in a CI lane.
 - **Artifact:** a morning report that refutes a mechanism nobody had queued,
   with the run bundles that did it.
+- **Stands (2026-10-01):** entries 1, 3 and 6 now name gates a CI lane runs
+  (title-observe.py refuses a path it would not read; the night job refuses on
+  an observed title mismatch and recovers an observed title after an abort);
+  entries 2, 4 and 11 still name none. No morning report has run yet: the
+  overnight window was installed on 2026-10-01.
 - **Absorbs** Plan 25 horizon 3 and Plans 07, 18 and 22.
 
 **Order.**

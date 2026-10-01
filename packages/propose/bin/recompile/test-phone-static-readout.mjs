@@ -43,7 +43,8 @@ assert.deepEqual(detrend([1, 2, 3, 4, 5], 3), [-0.5, 0, 0, 0, 0.5]);
 assert.throws(() => detrend([1, 2, 3], 4), /odd/);
 
 // --- the records
-const recs = ['docs/evidence/full06-static-readout-20261001.json', 'docs/evidence/full06-static-readout-confirm-20261001.json'].filter((p) => existsSync(join(ROOT, p)));
+const recs = ['docs/evidence/full06-static-readout-20261001.json', 'docs/evidence/full06-static-readout-confirm-20261001.json',
+  'docs/evidence/full06-static-readout-detrended-20261001.json'].filter((p) => existsSync(join(ROOT, p)));
 assert.ok(recs.length >= 1, 'the static readout record exists');
 for (const path of recs) {
   const rec = json(path);

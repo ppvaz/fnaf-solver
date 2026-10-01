@@ -1,0 +1,3 @@
+{"at":"2026-10-01T04:31:07.095Z","type":"evidence.started","evidenceDirectory":"artifacts/campaign-2026-10-01T04-31-07.092Z"}
+{"at":"2026-10-01T04:31:07.096Z","type":"arm.mode","mode":"observe-once"}
+{"at":"2026-10-01T04:31:07.332Z","type":"companion.announce","target":null,"lease":null,"errors":["Companion TARGET: ERROR unknown-verb","Companion LEASE: ERROR unknown-verb"]}
