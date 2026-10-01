@@ -1,0 +1,54 @@
+{
+  "schema": "device-death-read-v1",
+  "id": "night7-420-m3s-r01-death-frames-20260930",
+  "date": "2026-09-30",
+  "step": "S1/S4 (plans/ROADMAP.md): attribute the first phone death of campaign-night7-420-minus3-winner.json, execution before strategy",
+  "run": "night7-n7-420-m3s-r01-20261001T020037Z",
+  "pack": "docs/evidence/runs/night7-n7-420-m3s-r01-20261001T020037Z",
+  "binding": { "file": "packages/propose/bindings/fnaf2/campaign-night7-420-minus3-winner.json", "winnerHash": "fnv1a-c839fc9f" },
+  "claimLevel": "DEVICE_MEASURED",
+  "witnesses": {
+    "recording": { "sha256": "575c98a856920a93d4561e315984b984846979f5da7938a4b87ac198f2b93568", "duration_s": 90.32, "captureFps": 54, "withheld": "game frames are never committed; named by sha256" },
+    "grader": "run/grade.log: camera selections (cam 11 38.48-40.76, 47.13-50.74, 61.02-66.87 s of the recording; cam 07 36.85-36.93, cam 11 37.02-37.44)",
+    "executor": "events.jsonl control.gate rows at gateAtMs 5700, 15700, 25700",
+    "frames": "the recording read at 2 fps over 40-80 s and 10 fps over 80-90 s, by an agent"
+  },
+  "clock": {
+    "rule": "schedule time 0 = recording 36.86 s, fixed by the opening's own monitor taps: the opening raises the monitor at +1616 ms and camdrops it at +4000 ms, and the grader reads cam 11 up 38.48-40.76 s; cam 07/11 at 36.85-37.44 s are the +0 raise and the +300/+833 camera taps",
+    "cycle": "the clear cycle runs at loop start 5000 + its rows: hall flash +9700, monitor tap +10300, wind 10800-14000, camdrop +14000, gate +5700 (each per 10 s)",
+    "check": "cycle 0's raise and camdrop land at 47.16 and 50.86 s; the grader reads cam 11 up 47.13-50.74 s"
+  },
+  "sequence": [
+    { "night_s": 10.3, "recording_s": 47.16, "planned": "cycle 0 monitor tap (raise)", "observed": "up at 47.13" },
+    { "night_s": 14.0, "recording_s": 50.86, "planned": "cycle 0 camdrop (lower)", "observed": "down at 50.74" },
+    { "night_s": 15.7, "recording_s": 52.56, "planned": "gate", "observed": "strokeSignature office; monitor rule null (monitor-state-unavailable); AGREED" },
+    { "night_s": 20.3, "recording_s": 57.16, "planned": "cycle 1 monitor tap (raise)", "observed": "LOST: the office stays on screen 50.74-61.02 s" },
+    { "night_s": 24.0, "recording_s": 60.86, "planned": "cycle 1 camdrop (lower)", "observed": "the monitor goes UP at 61.02: the toggle chain is inverted" },
+    { "night_s": 25.7, "recording_s": 62.56, "planned": "gate", "observed": "strokeSignature monitor-up; monitor rule null (monitor-state-unavailable); AGREED, no correction" },
+    { "night_s": 29.7, "recording_s": 66.56, "planned": "cycle 2 hall flash", "observed": "lands cams-up (cam 11 on screen until 66.87), so the game drops it" },
+    { "night_s": 30.3, "recording_s": 67.16, "planned": "cycle 2 monitor tap (raise)", "observed": "the monitor goes DOWN at 66.87; the wind that follows is held in the office" },
+    { "night_s": 33.6, "recording_s": 70.5, "planned": "-", "observed": "Withered Foxy jumpscare in the office; static from 71.0 s; Game Over" }
+  ],
+  "killer": "Withered Foxy (frame at 70.5 s of the recording)",
+  "mechanism": "One lost monitor tap (cycle 1's raise, night 20.3 s) inverted the monitor chain. The next camdrop raised the monitor, the next hall flash -- the only input that answers Foxy at this vector -- landed cams-up and was dropped, and Foxy attacked about 14 s after the last flash that could land. This is night7-n7-420-minimal-m2's mechanism of 2026-09-14 (hid-schedule.ts cites it).",
+  "executionFault": {
+    "where": "packages/play/src/campaign/adb-device-local-executor.ts, the gate's monitor-parity check",
+    "rule": "monitorInverted = maskCorrection === null && believedMonitorUp === false && sample.monitorUp === true",
+    "observed": "at gate 25700 the plan believed the monitor down; the stroke signature read monitor-up, but the monitor rule returned null (monitor-state-unavailable), so monitorInverted was false and the gate fell through to the vacuous no-mask-in-plan AGREED. The correction built for exactly this failure never fired.",
+    "gateReads": [
+      { "gateAtMs": 5700, "strokeSignature": "office", "monitorUp": false, "monitorButtonDownstroke": 138, "status": "AGREED" },
+      { "gateAtMs": 15700, "strokeSignature": "office", "monitorUp": null, "monitorReason": "monitor-state-unavailable", "monitorButtonDownstroke": 138, "status": "AGREED" },
+      { "gateAtMs": 25700, "strokeSignature": "monitor-up", "monitorUp": null, "monitorReason": "monitor-state-unavailable", "monitorButtonDownstroke": 140, "status": "AGREED" }
+    ],
+    "register": "CLAUDE.md mistake 12: an unread state is not evidence of the expected one. A maskless gate that cannot read the monitor has verified nothing, and here it released as AGREED."
+  },
+  "attribution": {
+    "class": "EXECUTION",
+    "because": "the planned schedule wins the model at this vector (3000/3000 design, 3000/3000 held out; docs/evidence/night7-420-minus3-seam-shift-20260930.json), and the night died after a planned press did not land and the planned correction did not fire. The instrument run-audit@1 says UNKNOWN; this read supplies the first divergence it lacked.",
+    "unknown": [
+      "why cycle 1's monitor tap was lost: no input trace exists on this handset (no android.input.inputevent), and its seam to the hall release is not under the 100 ms band",
+      "whether a fired correction would have saved the night: the inversion was visible at gate 25700, 4 s before the dropped flash"
+    ]
+  },
+  "next": "make a maskless gate use the stroke signature when the monitor rule is unread (or refuse to release as AGREED when it can read neither), then run the binding again"
+}

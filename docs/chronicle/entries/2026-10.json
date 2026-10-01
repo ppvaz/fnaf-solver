@@ -30,10 +30,11 @@
   ],
   "missing": [
    {
-    "title": "Two committed winners with no pack",
-    "body": "As of review-promotions-20260929, campaign-night1-minus7-winner.json and campaign-toys-night5-winner.json are MODEL_ONLY winners that no run pack names, and UNTRACKED_WINNER_DEBT is 1 of 1.",
+    "title": "Night 6 a, and the 4/20 binding's blind gate",
+    "body": "Since 2026-09-30 every committed winner is named by a run pack: the toys Night 5 winner was packed and both Minus 7 Night 1 bindings were retired. UNTRACKED_WINNER_DEBT is still 1 of 1 (Night 6 a). The 4/20 Minus 3 binding's first night died to Withered Foxy after a lost monitor tap inverted the chain; the maskless gate built to correct that released AGREED on an unread monitor.",
     "sources": [
-     "docs/evidence/review-promotions-20260929.json"
+     "docs/evidence/night7-420-m3s-r01-death-frames-20260930.json",
+     "docs/evidence/runs/night7-n7-420-m3s-r01-20261001T020037Z/pack.json"
     ]
    },
    {
