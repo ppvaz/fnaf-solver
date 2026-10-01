@@ -1,0 +1,95 @@
+{
+ "schema": "chronicle-entries-v2",
+ "checkpoint": "2026-10",
+ "label": "The phone's own clock",
+ "outlook": {
+  "next": [
+   {
+    "title": "S2: what moves full-06's Balloon Boy at the 5 s roll",
+    "body": "As of s2-audio-realignment-f61f47d56098beb2, full-06's phone audio sits 29.754 s after its capture began, not -0.246 s; on that clock the phone's Balloon Boy plays a hop vocal at 10.04 s where the rebuild and the model move him silently from CAM 10, so the first state difference is at or before the night's first 5 s roll, and the 40 s reading is retracted. The record leaves S2 open.",
+    "sources": [
+     "docs/evidence/full06-audio-realignment-20261001.json",
+     "plans/ROADMAP.md"
+    ]
+   },
+   {
+    "title": "An office trace from the rebuild on the phone",
+    "body": "As of recompile-practice-apk-ad92f5548c4cf9a5, the FNaF 2 research rebuild installs and boots on the phone, and no office encounter trace has been collected on it.",
+    "sources": [
+     "tools/recompile/results/fnaf2-practice-20260928.json"
+    ]
+   },
+   {
+    "title": "FNaF 4 Night 4 and the Fredbear nights",
+    "body": "As of fnaf4-nights-1-3-20260925 and fnaf4-night5-n5b-20260927, FNaF 4 Night 4's best attempt died 0.24 s before 6 AM and the first Night 5 died at 38.7 s; the nights toward 20/20/20/20 are played, not seeded.",
+    "sources": [
+     "docs/evidence/fnaf4-nights-1-3-20260925.json",
+     "docs/evidence/fnaf4-night5-n5b-20260927.json"
+    ]
+   }
+  ],
+  "missing": [
+   {
+    "title": "Two committed winners with no pack",
+    "body": "As of review-promotions-20260929, campaign-night1-minus7-winner.json and campaign-toys-night5-winner.json are MODEL_ONLY winners that no run pack names, and UNTRACKED_WINNER_DEBT is 1 of 1.",
+    "sources": [
+     "docs/evidence/review-promotions-20260929.json"
+    ]
+   },
+   {
+    "title": "A rate for any binding but k3",
+    "body": "The k3 cohort's 8 of 10 is one ten-run measurement of one binding, not a rate for other bindings, and the model predicted no rate for it.",
+    "sources": [
+     "docs/evidence/night7-cohort-k3-result-20260918.json"
+    ]
+   },
+   {
+    "title": "A promotion path for FNaF 1, 3 and 4",
+    "body": "The FNaF 1 4/20 and FNaF 4 story-night 6 AMs record no Plan 12 edge, and the evidence CLI does not read FNaF 1 run records.",
+    "sources": [
+     "docs/evidence/fnaf1-420-first-6am-20260925.json",
+     "docs/evidence/fnaf4-nights-1-3-20260925.json"
+    ]
+   },
+   {
+    "title": "A FNaF 3 policy that takes every seed",
+    "body": "As of fnaf3-stage1-g275-census-20260930, no policy in the FNaF 3 model reaches 6 AM on every seed under the corrected attack-stage rule.",
+    "sources": [
+     "docs/evidence/fnaf3-stage1-g275-census-20260930.json"
+    ]
+   }
+  ]
+ },
+ "entries": [
+  {
+   "id": "full06-audio-clock-thirty-seconds-late",
+   "date": "2026-10-01",
+   "game": "fnaf2",
+   "kind": "retraction",
+   "title": "full-06's phone audio was read 30 s late: Balloon Boy parts from the host at the first roll, not at 40 s",
+   "body": "The audio reader paired each mask-sound onset with the nearest rebuild play within 1 s, which assumes the capture starts at game 0; it starts before the night, and the mask sound repeats every 10 s window, so the 2026-09-28 read fit three windows late. Solved over the rebuild's monitor and mask plays, the opening's five sounds (2.53 to 5.43 s) land within 0.04 s of their plays, and the capture's own start and stop stamps admit only that offset. On the corrected clock the phone's Balloon Boy hop vocals are at 10.04, 15.08 and 20.04 s, every one just after a 5 s roll; the rebuild agrees at 20 s but moves him from CAM 10 silently at 10.0 s, so on the phone his first roll, at 5 s, already succeeded. The frame-trace input registration of the corrected entry stands: the phone's hall flash ends 3 to 5 updates before the replayed hall release, monitor raises land within -2..+1 updates and mask presses within 0..-1. The reader now refuses an offset that another offset fits nearly as well.",
+   "measured": "29.754 s (18 anchor onsets; runner-up 12)",
+   "label": "DEVICE_MEASURED",
+   "rung": null,
+   "plan": 25,
+   "night": 7,
+   "route": "Minus Toys",
+   "tags": [
+    "device",
+    "audio",
+    "encounter",
+    "fidelity",
+    "retraction",
+    "s2"
+   ],
+   "sources": [
+    "docs/evidence/full06-audio-realignment-20261001.json",
+    "tools/recompile/results/phone-audio-cues-full-06-20261001.json",
+    "docs/evidence/full06-input-registration-20260928.json"
+   ],
+   "status": "standing",
+   "supersededBy": null,
+   "supersedes": "full06-balloon-boy-first-difference"
+  }
+ ]
+}

@@ -1,0 +1,1135 @@
+{
+ "schema": "phone-audio-cues-v2",
+ "claimLevel": "DEVICE_MEASURED audio, arithmetic alignment",
+ "capture": {
+  "path": "/home/pedro/fnaf-apks/bt-audio-captures/night7-night7-k3-full-06-20260915T225056Z.bt.wav",
+  "sha256": "e0fe3d356af71228ae23286114d4a03c5bf677ab7a80964de1e0c5cb5a6b0183",
+  "rate": 44100,
+  "fromS": 0.0,
+  "toS": 481.797
+ },
+ "rule": {
+  "coreS": 0.4,
+  "minGapS": 0.25,
+  "threshold": 0.3,
+  "silenceFloor": 30.0,
+  "anchorToleranceS": 0.1,
+  "anchorMargin": 3
+ },
+ "offset": {
+  "audioMinusGameS": 29.754,
+  "matches": 18,
+  "pairs": [
+   {
+    "cue": "s0005",
+    "audioS": 32.325,
+    "gameS": 2.53,
+    "diffS": 29.795
+   },
+   {
+    "cue": "s0005",
+    "audioS": 33.9,
+    "gameS": 4.13,
+    "diffS": 29.77
+   },
+   {
+    "cue": "s0005",
+    "audioS": 39.914,
+    "gameS": 10.13,
+    "diffS": 29.784
+   },
+   {
+    "cue": "s0006",
+    "audioS": 33.168,
+    "gameS": 3.43,
+    "diffS": 29.738
+   },
+   {
+    "cue": "s0006",
+    "audioS": 34.591,
+    "gameS": 4.88,
+    "diffS": 29.711
+   },
+   {
+    "cue": "s0006",
+    "audioS": 53.608,
+    "gameS": 23.84,
+    "diffS": 29.768
+   },
+   {
+    "cue": "s0006",
+    "audioS": 83.596,
+    "gameS": 53.85,
+    "diffS": 29.746
+   },
+   {
+    "cue": "s0007",
+    "audioS": 35.18,
+    "gameS": 5.43,
+    "diffS": 29.75
+   },
+   {
+    "cue": "s0007",
+    "audioS": 44.008,
+    "gameS": 14.27,
+    "diffS": 29.738
+   },
+   {
+    "cue": "s0007",
+    "audioS": 54.024,
+    "gameS": 24.27,
+    "diffS": 29.754
+   },
+   {
+    "cue": "s0007",
+    "audioS": 64.01,
+    "gameS": 34.27,
+    "diffS": 29.74
+   },
+   {
+    "cue": "s0007",
+    "audioS": 74.017,
+    "gameS": 44.27,
+    "diffS": 29.747
+   },
+   {
+    "cue": "s0007",
+    "audioS": 94.04,
+    "gameS": 64.27,
+    "diffS": 29.77
+   },
+   {
+    "cue": "s0007",
+    "audioS": 104.015,
+    "gameS": 74.27,
+    "diffS": 29.745
+   },
+   {
+    "cue": "s0007",
+    "audioS": 124.038,
+    "gameS": 94.28,
+    "diffS": 29.758
+   },
+   {
+    "cue": "s0007",
+    "audioS": 134.034,
+    "gameS": 104.27,
+    "diffS": 29.764
+   },
+   {
+    "cue": "s0007",
+    "audioS": 164.013,
+    "gameS": 134.27,
+    "diffS": 29.743
+   },
+   {
+    "cue": "s0007",
+    "audioS": 174.04,
+    "gameS": 144.27,
+    "diffS": 29.77
+   }
+  ],
+  "cues": [
+   "s0005",
+   "s0006",
+   "s0007",
+   "s0008"
+  ],
+  "spreadS": 0.084,
+  "runnerUp": {
+   "audioMinusGameS": 249.782,
+   "matches": 12
+  },
+  "toleranceS": 0.1,
+  "margin": 3,
+  "status": "SOLVED",
+  "anchorSource": {
+   "specs": [],
+   "plays": "tools/recompile/results/rebuild-audio-full-06-landed-20260928.json",
+   "playsSha256": "e3f4e6482ced8d3025533829b592c43a10e520c60b0a7fe98d31f6499618bf59"
+  }
+ },
+ "cues": {
+  "s0017": {
+   "coreS": 0.4,
+   "coreOffsetS": 2.48,
+   "onsets": [
+    {
+     "audioS": 47.442,
+     "ncc": 0.383,
+     "gameS": 17.69
+    },
+    {
+     "audioS": 49.798,
+     "ncc": 0.622,
+     "gameS": 20.04
+    },
+    {
+     "audioS": 52.41,
+     "ncc": 0.388,
+     "gameS": 22.66
+    },
+    {
+     "audioS": 54.766,
+     "ncc": 0.69,
+     "gameS": 25.01
+    },
+    {
+     "audioS": 57.765,
+     "ncc": 0.369,
+     "gameS": 28.01
+    },
+    {
+     "audioS": 60.13,
+     "ncc": 0.632,
+     "gameS": 30.38
+    },
+    {
+     "audioS": 65.91,
+     "ncc": 0.391,
+     "gameS": 36.16
+    },
+    {
+     "audioS": 68.267,
+     "ncc": 0.447,
+     "gameS": 38.51
+    },
+    {
+     "audioS": 74.789,
+     "ncc": 0.61,
+     "gameS": 45.04
+    },
+    {
+     "audioS": 85.883,
+     "ncc": 0.42,
+     "gameS": 56.13
+    },
+    {
+     "audioS": 89.753,
+     "ncc": 0.627,
+     "gameS": 60.0
+    },
+    {
+     "audioS": 92.394,
+     "ncc": 0.324,
+     "gameS": 62.64
+    },
+    {
+     "audioS": 94.751,
+     "ncc": 0.655,
+     "gameS": 65.0
+    },
+    {
+     "audioS": 100.104,
+     "ncc": 0.486,
+     "gameS": 70.35
+    },
+    {
+     "audioS": 102.411,
+     "ncc": 0.381,
+     "gameS": 72.66
+    },
+    {
+     "audioS": 104.839,
+     "ncc": 0.413,
+     "gameS": 75.08
+    },
+    {
+     "audioS": 107.195,
+     "ncc": 0.603,
+     "gameS": 77.44
+    },
+    {
+     "audioS": 115.881,
+     "ncc": 0.336,
+     "gameS": 86.13
+    },
+    {
+     "audioS": 118.238,
+     "ncc": 0.547,
+     "gameS": 88.48
+    },
+    {
+     "audioS": 122.403,
+     "ncc": 0.342,
+     "gameS": 92.65
+    },
+    {
+     "audioS": 124.76,
+     "ncc": 0.647,
+     "gameS": 95.01
+    },
+    {
+     "audioS": 132.43,
+     "ncc": 0.408,
+     "gameS": 102.68
+    },
+    {
+     "audioS": 134.786,
+     "ncc": 0.407,
+     "gameS": 105.03
+    },
+    {
+     "audioS": 140.12,
+     "ncc": 0.64,
+     "gameS": 110.37
+    },
+    {
+     "audioS": 146.459,
+     "ncc": 0.421,
+     "gameS": 116.7
+    },
+    {
+     "audioS": 147.414,
+     "ncc": 0.356,
+     "gameS": 117.66
+    },
+    {
+     "audioS": 149.77,
+     "ncc": 0.566,
+     "gameS": 120.02
+    },
+    {
+     "audioS": 157.42,
+     "ncc": 0.308,
+     "gameS": 127.67
+    },
+    {
+     "audioS": 159.777,
+     "ncc": 0.545,
+     "gameS": 130.02
+    },
+    {
+     "audioS": 162.408,
+     "ncc": 0.388,
+     "gameS": 132.65
+    },
+    {
+     "audioS": 164.765,
+     "ncc": 0.578,
+     "gameS": 135.01
+    },
+    {
+     "audioS": 167.762,
+     "ncc": 0.391,
+     "gameS": 138.01
+    },
+    {
+     "audioS": 170.118,
+     "ncc": 0.552,
+     "gameS": 140.36
+    },
+    {
+     "audioS": 174.294,
+     "ncc": 0.371,
+     "gameS": 144.54
+    },
+    {
+     "audioS": 176.65,
+     "ncc": 0.649,
+     "gameS": 146.9
+    },
+    {
+     "audioS": 186.332,
+     "ncc": 0.391,
+     "gameS": 156.58
+    },
+    {
+     "audioS": 187.439,
+     "ncc": 0.311,
+     "gameS": 157.68
+    },
+    {
+     "audioS": 189.796,
+     "ncc": 0.559,
+     "gameS": 160.04
+    },
+    {
+     "audioS": 197.73,
+     "ncc": 0.438,
+     "gameS": 167.98
+    },
+    {
+     "audioS": 200.087,
+     "ncc": 0.727,
+     "gameS": 170.33
+    },
+    {
+     "audioS": 206.203,
+     "ncc": 0.393,
+     "gameS": 176.45
+    },
+    {
+     "audioS": 208.559,
+     "ncc": 0.632,
+     "gameS": 178.8
+    },
+    {
+     "audioS": 214.776,
+     "ncc": 0.498,
+     "gameS": 185.02
+    },
+    {
+     "audioS": 217.438,
+     "ncc": 0.383,
+     "gameS": 187.68
+    },
+    {
+     "audioS": 219.794,
+     "ncc": 0.601,
+     "gameS": 190.04
+    },
+    {
+     "audioS": 227.404,
+     "ncc": 0.308,
+     "gameS": 197.65
+    },
+    {
+     "audioS": 229.76,
+     "ncc": 0.489,
+     "gameS": 200.01
+    },
+    {
+     "audioS": 234.779,
+     "ncc": 0.587,
+     "gameS": 205.02
+    },
+    {
+     "audioS": 236.039,
+     "ncc": 0.339,
+     "gameS": 206.28
+    },
+    {
+     "audioS": 237.735,
+     "ncc": 0.31,
+     "gameS": 207.98
+    },
+    {
+     "audioS": 240.092,
+     "ncc": 0.52,
+     "gameS": 210.34
+    },
+    {
+     "audioS": 246.027,
+     "ncc": 0.343,
+     "gameS": 216.27
+    },
+    {
+     "audioS": 248.391,
+     "ncc": 0.695,
+     "gameS": 218.64
+    },
+    {
+     "audioS": 259.779,
+     "ncc": 0.641,
+     "gameS": 230.02
+    },
+    {
+     "audioS": 262.421,
+     "ncc": 0.31,
+     "gameS": 232.67
+    },
+    {
+     "audioS": 264.777,
+     "ncc": 0.664,
+     "gameS": 235.02
+    },
+    {
+     "audioS": 267.764,
+     "ncc": 0.371,
+     "gameS": 238.01
+    },
+    {
+     "audioS": 270.121,
+     "ncc": 0.634,
+     "gameS": 240.37
+    },
+    {
+     "audioS": 276.44,
+     "ncc": 0.335,
+     "gameS": 246.69
+    },
+    {
+     "audioS": 279.254,
+     "ncc": 0.626,
+     "gameS": 249.5
+    },
+    {
+     "audioS": 292.42,
+     "ncc": 0.331,
+     "gameS": 262.67
+    },
+    {
+     "audioS": 294.776,
+     "ncc": 0.496,
+     "gameS": 265.02
+    },
+    {
+     "audioS": 304.782,
+     "ncc": 0.516,
+     "gameS": 275.03
+    },
+    {
+     "audioS": 317.42,
+     "ncc": 0.358,
+     "gameS": 287.67
+    },
+    {
+     "audioS": 320.112,
+     "ncc": 0.742,
+     "gameS": 290.36
+    },
+    {
+     "audioS": 322.418,
+     "ncc": 0.394,
+     "gameS": 292.66
+    },
+    {
+     "audioS": 324.775,
+     "ncc": 0.567,
+     "gameS": 295.02
+    },
+    {
+     "audioS": 326.624,
+     "ncc": 0.395,
+     "gameS": 296.87
+    },
+    {
+     "audioS": 328.981,
+     "ncc": 0.589,
+     "gameS": 299.23
+    },
+    {
+     "audioS": 336.6,
+     "ncc": 0.331,
+     "gameS": 306.85
+    },
+    {
+     "audioS": 338.956,
+     "ncc": 0.596,
+     "gameS": 309.2
+    },
+    {
+     "audioS": 342.421,
+     "ncc": 0.334,
+     "gameS": 312.67
+    },
+    {
+     "audioS": 344.777,
+     "ncc": 0.632,
+     "gameS": 315.02
+    },
+    {
+     "audioS": 347.419,
+     "ncc": 0.359,
+     "gameS": 317.66
+    },
+    {
+     "audioS": 347.754,
+     "ncc": 0.37,
+     "gameS": 318.0
+    },
+    {
+     "audioS": 350.111,
+     "ncc": 0.63,
+     "gameS": 320.36
+    },
+    {
+     "audioS": 352.102,
+     "ncc": 0.353,
+     "gameS": 322.35
+    },
+    {
+     "audioS": 352.417,
+     "ncc": 0.394,
+     "gameS": 322.66
+    },
+    {
+     "audioS": 354.774,
+     "ncc": 0.579,
+     "gameS": 325.02
+    },
+    {
+     "audioS": 362.413,
+     "ncc": 0.356,
+     "gameS": 332.66
+    },
+    {
+     "audioS": 362.962,
+     "ncc": 0.383,
+     "gameS": 333.21
+    },
+    {
+     "audioS": 365.318,
+     "ncc": 0.501,
+     "gameS": 335.56
+    },
+    {
+     "audioS": 377.418,
+     "ncc": 0.37,
+     "gameS": 347.66
+    },
+    {
+     "audioS": 379.774,
+     "ncc": 0.565,
+     "gameS": 350.02
+    },
+    {
+     "audioS": 382.416,
+     "ncc": 0.364,
+     "gameS": 352.66
+    },
+    {
+     "audioS": 384.772,
+     "ncc": 0.436,
+     "gameS": 355.02
+    },
+    {
+     "audioS": 390.116,
+     "ncc": 0.601,
+     "gameS": 360.36
+    },
+    {
+     "audioS": 398.659,
+     "ncc": 0.467,
+     "gameS": 368.9
+    },
+    {
+     "audioS": 412.415,
+     "ncc": 0.361,
+     "gameS": 382.66
+    },
+    {
+     "audioS": 414.771,
+     "ncc": 0.57,
+     "gameS": 385.02
+    },
+    {
+     "audioS": 417.433,
+     "ncc": 0.308,
+     "gameS": 387.68
+    },
+    {
+     "audioS": 419.789,
+     "ncc": 0.535,
+     "gameS": 390.04
+    },
+    {
+     "audioS": 422.433,
+     "ncc": 0.305,
+     "gameS": 392.68
+    },
+    {
+     "audioS": 424.798,
+     "ncc": 0.505,
+     "gameS": 395.04
+    },
+    {
+     "audioS": 432.417,
+     "ncc": 0.357,
+     "gameS": 402.66
+    },
+    {
+     "audioS": 434.774,
+     "ncc": 0.628,
+     "gameS": 405.02
+    },
+    {
+     "audioS": 437.771,
+     "ncc": 0.335,
+     "gameS": 408.02
+    },
+    {
+     "audioS": 440.127,
+     "ncc": 0.669,
+     "gameS": 410.37
+    },
+    {
+     "audioS": 442.395,
+     "ncc": 0.384,
+     "gameS": 412.64
+    },
+    {
+     "audioS": 444.76,
+     "ncc": 0.565,
+     "gameS": 415.01
+    },
+    {
+     "audioS": 445.999,
+     "ncc": 0.347,
+     "gameS": 416.24
+    }
+   ]
+  },
+  "s0021": {
+   "coreS": 0.4,
+   "coreOffsetS": 0.05,
+   "onsets": []
+  },
+  "s0023": {
+   "coreS": 0.4,
+   "coreOffsetS": 0.247,
+   "onsets": [
+    {
+     "audioS": 44.831,
+     "ncc": 0.408,
+     "gameS": 15.08
+    },
+    {
+     "audioS": 49.798,
+     "ncc": 0.358,
+     "gameS": 20.04
+    }
+   ]
+  },
+  "s0024": {
+   "coreS": 0.4,
+   "coreOffsetS": 0.17,
+   "onsets": [
+    {
+     "audioS": 39.792,
+     "ncc": 0.332,
+     "gameS": 10.04
+    },
+    {
+     "audioS": 329.793,
+     "ncc": 0.336,
+     "gameS": 300.04
+    }
+   ]
+  },
+  "s0025": {
+   "coreS": 0.4,
+   "coreOffsetS": 1.678,
+   "onsets": [
+    {
+     "audioS": 249.192,
+     "ncc": 0.307,
+     "gameS": 219.44
+    }
+   ]
+  },
+  "s0027": {
+   "coreS": 0.4,
+   "coreOffsetS": 1.917,
+   "onsets": []
+  },
+  "s0028": {
+   "coreS": 0.4,
+   "coreOffsetS": 1.386,
+   "onsets": [
+    {
+     "audioS": 25.351,
+     "ncc": 0.322,
+     "gameS": -4.4
+    }
+   ]
+  },
+  "s0029": {
+   "coreS": 0.4,
+   "coreOffsetS": 0.046,
+   "onsets": []
+  },
+  "s0031": {
+   "coreS": 0.4,
+   "coreOffsetS": 2.942,
+   "onsets": [
+    {
+     "audioS": -2.942,
+     "ncc": 0.37,
+     "gameS": -32.7
+    },
+    {
+     "audioS": -2.61,
+     "ncc": 0.368,
+     "gameS": -32.36
+    },
+    {
+     "audioS": -2.291,
+     "ncc": 0.381,
+     "gameS": -32.04
+    },
+    {
+     "audioS": -1.921,
+     "ncc": 0.338,
+     "gameS": -31.68
+    },
+    {
+     "audioS": -1.498,
+     "ncc": 0.323,
+     "gameS": -31.25
+    },
+    {
+     "audioS": -0.667,
+     "ncc": 0.402,
+     "gameS": -30.42
+    },
+    {
+     "audioS": 3.201,
+     "ncc": 0.321,
+     "gameS": -26.55
+    },
+    {
+     "audioS": 3.817,
+     "ncc": 0.32,
+     "gameS": -25.94
+    },
+    {
+     "audioS": 4.422,
+     "ncc": 0.353,
+     "gameS": -25.33
+    },
+    {
+     "audioS": 5.278,
+     "ncc": 0.338,
+     "gameS": -24.48
+    },
+    {
+     "audioS": 5.656,
+     "ncc": 0.443,
+     "gameS": -24.1
+    },
+    {
+     "audioS": 6.313,
+     "ncc": 0.515,
+     "gameS": -23.44
+    },
+    {
+     "audioS": 6.564,
+     "ncc": 0.388,
+     "gameS": -23.19
+    },
+    {
+     "audioS": 6.819,
+     "ncc": 0.341,
+     "gameS": -22.94
+    },
+    {
+     "audioS": 144.793,
+     "ncc": 0.407,
+     "gameS": 115.04
+    },
+    {
+     "audioS": 194.34,
+     "ncc": 0.301,
+     "gameS": 164.59
+    },
+    {
+     "audioS": 195.454,
+     "ncc": 0.449,
+     "gameS": 165.7
+    },
+    {
+     "audioS": 234.789,
+     "ncc": 0.448,
+     "gameS": 205.04
+    },
+    {
+     "audioS": 250.474,
+     "ncc": 0.35,
+     "gameS": 220.72
+    },
+    {
+     "audioS": 279.812,
+     "ncc": 0.368,
+     "gameS": 250.06
+    },
+    {
+     "audioS": 284.77,
+     "ncc": 0.421,
+     "gameS": 255.02
+    },
+    {
+     "audioS": 350.436,
+     "ncc": 0.399,
+     "gameS": 320.68
+    },
+    {
+     "audioS": 424.798,
+     "ncc": 0.482,
+     "gameS": 395.04
+    },
+    {
+     "audioS": 429.796,
+     "ncc": 0.593,
+     "gameS": 400.04
+    },
+    {
+     "audioS": 439.792,
+     "ncc": 0.478,
+     "gameS": 410.04
+    }
+   ]
+  },
+  "s0032": {
+   "coreS": 0.4,
+   "coreOffsetS": 1.646,
+   "onsets": [
+    {
+     "audioS": 7.631,
+     "ncc": 0.316,
+     "gameS": -22.12
+    },
+    {
+     "audioS": 54.817,
+     "ncc": 0.418,
+     "gameS": 25.06
+    },
+    {
+     "audioS": 60.455,
+     "ncc": 0.567,
+     "gameS": 30.7
+    },
+    {
+     "audioS": 89.783,
+     "ncc": 0.355,
+     "gameS": 60.03
+    },
+    {
+     "audioS": 149.791,
+     "ncc": 0.392,
+     "gameS": 120.04
+    },
+    {
+     "audioS": 244.795,
+     "ncc": 0.323,
+     "gameS": 215.04
+    },
+    {
+     "audioS": 369.808,
+     "ncc": 0.421,
+     "gameS": 340.05
+    },
+    {
+     "audioS": 409.814,
+     "ncc": 0.518,
+     "gameS": 380.06
+    },
+    {
+     "audioS": 414.771,
+     "ncc": 0.395,
+     "gameS": 385.02
+    }
+   ]
+  },
+  "s0033": {
+   "coreS": 0.284,
+   "coreOffsetS": 0.0,
+   "onsets": [
+    {
+     "audioS": 63.198,
+     "ncc": 0.301,
+     "gameS": 33.44
+    },
+    {
+     "audioS": 202.84,
+     "ncc": 0.307,
+     "gameS": 173.09
+    }
+   ]
+  },
+  "s0005": {
+   "coreS": 0.4,
+   "coreOffsetS": 0.066,
+   "onsets": [
+    {
+     "audioS": 32.325,
+     "ncc": 0.42,
+     "gameS": 2.57
+    },
+    {
+     "audioS": 33.9,
+     "ncc": 0.508,
+     "gameS": 4.15
+    },
+    {
+     "audioS": 39.914,
+     "ncc": 0.302,
+     "gameS": 10.16
+    }
+   ]
+  },
+  "s0006": {
+   "coreS": 0.395,
+   "coreOffsetS": 0.0,
+   "onsets": [
+    {
+     "audioS": 33.168,
+     "ncc": 0.315,
+     "gameS": 3.41
+    },
+    {
+     "audioS": 34.591,
+     "ncc": 0.479,
+     "gameS": 4.84
+    },
+    {
+     "audioS": 53.608,
+     "ncc": 0.338,
+     "gameS": 23.85
+    },
+    {
+     "audioS": 83.596,
+     "ncc": 0.327,
+     "gameS": 53.84
+    },
+    {
+     "audioS": 293.608,
+     "ncc": 0.303,
+     "gameS": 263.85
+    }
+   ]
+  },
+  "s0007": {
+   "coreS": 0.4,
+   "coreOffsetS": 0.211,
+   "onsets": [
+    {
+     "audioS": 35.18,
+     "ncc": 0.496,
+     "gameS": 5.43
+    },
+    {
+     "audioS": 44.008,
+     "ncc": 0.389,
+     "gameS": 14.25
+    },
+    {
+     "audioS": 54.024,
+     "ncc": 0.34,
+     "gameS": 24.27
+    },
+    {
+     "audioS": 64.01,
+     "ncc": 0.332,
+     "gameS": 34.26
+    },
+    {
+     "audioS": 74.017,
+     "ncc": 0.361,
+     "gameS": 44.26
+    },
+    {
+     "audioS": 94.04,
+     "ncc": 0.382,
+     "gameS": 64.29
+    },
+    {
+     "audioS": 104.015,
+     "ncc": 0.343,
+     "gameS": 74.26
+    },
+    {
+     "audioS": 124.038,
+     "ncc": 0.402,
+     "gameS": 94.28
+    },
+    {
+     "audioS": 134.034,
+     "ncc": 0.349,
+     "gameS": 104.28
+    },
+    {
+     "audioS": 164.013,
+     "ncc": 0.318,
+     "gameS": 134.26
+    },
+    {
+     "audioS": 174.04,
+     "ncc": 0.335,
+     "gameS": 144.29
+    },
+    {
+     "audioS": 184.036,
+     "ncc": 0.408,
+     "gameS": 154.28
+    },
+    {
+     "audioS": 194.032,
+     "ncc": 0.4,
+     "gameS": 164.28
+    },
+    {
+     "audioS": 204.038,
+     "ncc": 0.359,
+     "gameS": 174.28
+    },
+    {
+     "audioS": 264.036,
+     "ncc": 0.317,
+     "gameS": 234.28
+    },
+    {
+     "audioS": 274.052,
+     "ncc": 0.336,
+     "gameS": 244.3
+    },
+    {
+     "audioS": 284.038,
+     "ncc": 0.302,
+     "gameS": 254.28
+    },
+    {
+     "audioS": 294.024,
+     "ncc": 0.389,
+     "gameS": 264.27
+    },
+    {
+     "audioS": 304.041,
+     "ncc": 0.33,
+     "gameS": 274.29
+    },
+    {
+     "audioS": 334.029,
+     "ncc": 0.317,
+     "gameS": 304.27
+    },
+    {
+     "audioS": 344.036,
+     "ncc": 0.353,
+     "gameS": 314.28
+    },
+    {
+     "audioS": 354.022,
+     "ncc": 0.367,
+     "gameS": 324.27
+    },
+    {
+     "audioS": 374.034,
+     "ncc": 0.38,
+     "gameS": 344.28
+    },
+    {
+     "audioS": 384.051,
+     "ncc": 0.413,
+     "gameS": 354.3
+    },
+    {
+     "audioS": 394.037,
+     "ncc": 0.325,
+     "gameS": 364.28
+    },
+    {
+     "audioS": 414.04,
+     "ncc": 0.363,
+     "gameS": 384.29
+    },
+    {
+     "audioS": 434.052,
+     "ncc": 0.355,
+     "gameS": 404.3
+    },
+    {
+     "audioS": 444.059,
+     "ncc": 0.442,
+     "gameS": 414.3
+    }
+   ]
+  },
+  "s0008": {
+   "coreS": 0.4,
+   "coreOffsetS": 0.326,
+   "onsets": []
+  }
+ }
+}

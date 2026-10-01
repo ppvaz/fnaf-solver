@@ -1,0 +1,471 @@
+{
+ "schema": "evidence-record-v1",
+ "date": "2026-10-01",
+ "step": "ROADMAP S2",
+ "claimLevel": "DEVICE_MEASURED phone audio on an arithmetic alignment; MODEL_ONLY rebuild plays",
+ "question": "On what clock does full-06's phone audio sit, and where does it first disagree with the rebuild?",
+ "status": "RETRACTS_40S_BALLOON_BOY_DIVERGENCE",
+ "retracts": {
+  "record": "docs/evidence/full06-input-registration-20260928.json",
+  "id": "s2-input-registration-b09be5c86b35a4a3",
+  "part": "measurements.phoneCues and the finding that the phone's first divergent state is Balloon Boy at the 40.0 s roll (hops 40.0/45.1/50.0, office 60.38)",
+  "chronicle": "full06-balloon-boy-first-difference",
+  "cause": "phone-audio-cues.py paired each mask-sound onset with the nearest rebuild play within 1 s, which assumes the capture starts at game 0; the capture starts before the night and the mask sound repeats every 10 s window, so the read fit three windows late. The anchor list also began at the fourth mask (34.27 s), leaving out the opening sounds that no period can imitate.",
+  "kept": "The record's frame-trace input registration (hall flash, monitor and mask updates), its eyehole reads and its hall-shift sensitivity do not depend on the audio clock and are not retracted."
+ },
+ "measurements": {
+  "wallClock": {
+   "captureStartHostWallMs": 1789512659595,
+   "startIsUpperBound": true,
+   "captureStopHostWallMs": 1789513147868,
+   "audioDurationMs": 481796.6,
+   "missingMs": 6476.4,
+   "timeAxis": "BROKEN",
+   "seedStampPhoneWallMs": 1789512694249,
+   "seedBracketPhoneWallMs": [
+    1789512694248,
+    1789512694261
+   ],
+   "hostMinusPhoneSkewMs": 1402.2,
+   "seedToFirstOfficeFrameMs": 81.0,
+   "game0AudioS": {
+    "fromStopStamp": 29.661,
+    "fromStartStampLessAllMissing": 29.661,
+    "bound": [
+     29.661,
+     36.137
+    ]
+   },
+   "rule": "game 0 sits at audio duration less (stop stamp less game 0 on the host clock), plus whatever audio was lost after game 0 (0 to missingMs)"
+  },
+  "offset": {
+   "old": -0.246,
+   "solved": 29.754,
+   "differenceS": 30.0,
+   "matches": 18,
+   "byCue": {
+    "s0005": 3,
+    "s0006": 4,
+    "s0007": 11,
+    "s0008": 0
+   },
+   "spreadS": 0.084,
+   "runnerUp": {
+    "audioMinusGameS": 249.782,
+    "matches": 12
+   },
+   "lostAfterGame0S": 0.093
+  },
+  "oldReadUnderSolvedRule": {
+   "ownAnchors": {
+    "status": "AMBIGUOUS",
+    "bestAudioMinusGameS": -0.246,
+    "matches": 8,
+    "runnerUp": {
+     "audioMinusGameS": 29.77,
+     "matches": 6
+    }
+   },
+   "allRebuildMaskPlays": {
+    "status": "AMBIGUOUS",
+    "bestAudioMinusGameS": 29.75,
+    "matches": 9,
+    "runnerUp": {
+     "audioMinusGameS": 19.77,
+     "matches": 8
+    }
+   }
+  },
+  "opening": [
+   {
+    "gameS": 2.53,
+    "cue": "s0005",
+    "phoneS": 2.57
+   },
+   {
+    "gameS": 3.43,
+    "cue": "s0006",
+    "phoneS": 3.41
+   },
+   {
+    "gameS": 4.13,
+    "cue": "s0005",
+    "phoneS": 4.15
+   },
+   {
+    "gameS": 4.88,
+    "cue": "s0006",
+    "phoneS": 4.84
+   },
+   {
+    "gameS": 5.43,
+    "cue": "s0007",
+    "phoneS": 5.43
+   }
+  ],
+  "comparisonUptoS": 150.05,
+  "ncFloors": {
+   "s0017": 0.55,
+   "s0021": 0.3,
+   "s0023": 0.3,
+   "s0024": 0.3
+  },
+  "comparison": {
+   "s0017": [
+    {
+     "gameS": 20.01,
+     "rebuild": true,
+     "phone": "HEARD",
+     "phoneS": 20.04,
+     "ncc": 0.622
+    },
+    {
+     "gameS": 25.0,
+     "rebuild": true,
+     "phone": "HEARD",
+     "phoneS": 25.01,
+     "ncc": 0.69
+    },
+    {
+     "gameS": 30.33,
+     "rebuild": true,
+     "phone": "HEARD",
+     "phoneS": 30.38,
+     "ncc": 0.632
+    },
+    {
+     "gameS": 37.48,
+     "rebuild": true,
+     "phone": "UNKNOWN"
+    },
+    {
+     "gameS": 45.02,
+     "rebuild": true,
+     "phone": "HEARD",
+     "phoneS": 45.04,
+     "ncc": 0.61
+    },
+    {
+     "gameS": 50.02,
+     "rebuild": true,
+     "phone": "UNKNOWN"
+    },
+    {
+     "gameS": 55.01,
+     "rebuild": true,
+     "phone": "UNKNOWN"
+    },
+    {
+     "gameS": 59.32,
+     "rebuild": true,
+     "phone": "UNKNOWN"
+    },
+    {
+     "gameS": 60.0,
+     "rebuild": false,
+     "phone": "PHONE_ONLY",
+     "ncc": 0.627
+    },
+    {
+     "gameS": 65.02,
+     "rebuild": true,
+     "phone": "HEARD",
+     "phoneS": 65.0,
+     "ncc": 0.655
+    },
+    {
+     "gameS": 70.03,
+     "rebuild": true,
+     "phone": "UNKNOWN"
+    },
+    {
+     "gameS": 70.32,
+     "rebuild": true,
+     "phone": "UNKNOWN"
+    },
+    {
+     "gameS": 77.44,
+     "rebuild": false,
+     "phone": "PHONE_ONLY",
+     "ncc": 0.603
+    },
+    {
+     "gameS": 79.2,
+     "rebuild": true,
+     "phone": "UNKNOWN"
+    },
+    {
+     "gameS": 80.02,
+     "rebuild": true,
+     "phone": "UNKNOWN"
+    },
+    {
+     "gameS": 85.02,
+     "rebuild": true,
+     "phone": "UNKNOWN"
+    },
+    {
+     "gameS": 89.15,
+     "rebuild": true,
+     "phone": "UNKNOWN"
+    },
+    {
+     "gameS": 95.01,
+     "rebuild": false,
+     "phone": "PHONE_ONLY",
+     "ncc": 0.647
+    },
+    {
+     "gameS": 100.01,
+     "rebuild": true,
+     "phone": "UNKNOWN"
+    },
+    {
+     "gameS": 110.01,
+     "rebuild": true,
+     "phone": "UNKNOWN"
+    },
+    {
+     "gameS": 110.34,
+     "rebuild": true,
+     "phone": "HEARD",
+     "phoneS": 110.37,
+     "ncc": 0.64
+    },
+    {
+     "gameS": 115.02,
+     "rebuild": true,
+     "phone": "UNKNOWN"
+    },
+    {
+     "gameS": 115.74,
+     "rebuild": true,
+     "phone": "UNKNOWN"
+    },
+    {
+     "gameS": 120.0,
+     "rebuild": true,
+     "phone": "HEARD",
+     "phoneS": 120.02,
+     "ncc": 0.566
+    },
+    {
+     "gameS": 128.92,
+     "rebuild": true,
+     "phone": "UNKNOWN"
+    },
+    {
+     "gameS": 135.01,
+     "rebuild": false,
+     "phone": "PHONE_ONLY",
+     "ncc": 0.578
+    },
+    {
+     "gameS": 140.36,
+     "rebuild": false,
+     "phone": "PHONE_ONLY",
+     "ncc": 0.552
+    },
+    {
+     "gameS": 145.0,
+     "rebuild": true,
+     "phone": "UNKNOWN"
+    },
+    {
+     "gameS": 146.9,
+     "rebuild": false,
+     "phone": "PHONE_ONLY",
+     "ncc": 0.649
+    }
+   ],
+   "s0021": [
+    {
+     "gameS": 15.03,
+     "rebuild": true,
+     "phone": "UNKNOWN"
+    },
+    {
+     "gameS": 30.33,
+     "rebuild": true,
+     "phone": "UNKNOWN"
+    },
+    {
+     "gameS": 60.01,
+     "rebuild": true,
+     "phone": "UNKNOWN"
+    },
+    {
+     "gameS": 70.32,
+     "rebuild": true,
+     "phone": "UNKNOWN"
+    },
+    {
+     "gameS": 80.02,
+     "rebuild": true,
+     "phone": "UNKNOWN"
+    },
+    {
+     "gameS": 90.02,
+     "rebuild": true,
+     "phone": "UNKNOWN"
+    },
+    {
+     "gameS": 110.34,
+     "rebuild": true,
+     "phone": "UNKNOWN"
+    },
+    {
+     "gameS": 140.01,
+     "rebuild": true,
+     "phone": "UNKNOWN"
+    },
+    {
+     "gameS": 145.0,
+     "rebuild": true,
+     "phone": "UNKNOWN"
+    }
+   ],
+   "s0023": [
+    {
+     "gameS": 15.08,
+     "rebuild": false,
+     "phone": "PHONE_ONLY",
+     "ncc": 0.408
+    },
+    {
+     "gameS": 20.01,
+     "rebuild": true,
+     "phone": "HEARD",
+     "phoneS": 20.04,
+     "ncc": 0.358
+    },
+    {
+     "gameS": 65.02,
+     "rebuild": true,
+     "phone": "UNKNOWN"
+    },
+    {
+     "gameS": 100.01,
+     "rebuild": true,
+     "phone": "UNKNOWN"
+    }
+   ],
+   "s0024": [
+    {
+     "gameS": 10.04,
+     "rebuild": false,
+     "phone": "PHONE_ONLY",
+     "ncc": 0.332
+    },
+    {
+     "gameS": 25.02,
+     "rebuild": true,
+     "phone": "UNKNOWN"
+    },
+    {
+     "gameS": 55.01,
+     "rebuild": true,
+     "phone": "UNKNOWN"
+    },
+    {
+     "gameS": 130.0,
+     "rebuild": true,
+     "phone": "UNKNOWN"
+    }
+   ]
+  },
+  "balloonBoyVocals": [
+   {
+    "gameS": 10.04,
+    "cue": "s0024",
+    "ncc": 0.332,
+    "afterRollS": 0.04
+   },
+   {
+    "gameS": 15.08,
+    "cue": "s0023",
+    "ncc": 0.408,
+    "afterRollS": 0.08
+   },
+   {
+    "gameS": 20.04,
+    "cue": "s0023",
+    "ncc": 0.358,
+    "afterRollS": 0.04
+   },
+   {
+    "gameS": 300.04,
+    "cue": "s0024",
+    "ncc": 0.336,
+    "afterRollS": 0.04
+   }
+  ],
+  "templateConfusion": {
+   "echoMaxOffDiagonal": 0.22,
+   "ventwalkVsFootsteps": [
+    0.36,
+    0.48
+   ],
+   "rule": "clean reference cores against clean reference files, max NCC; the ventwalk floor 0.55 sits above its footstep cross-match"
+  },
+  "echo1Sensitivity": "UNKNOWN: copies injected at the least-squares gain of the heard echoes were not detected for any echo, heard ones included, so that gain is biased low and this test cannot show echo1 audible"
+ },
+ "findings": [
+  "The 2026-09-28 read is 30.0 s late: solved over the rebuild's monitor and mask plays, audio minus game is 29.754 s (18 anchor onsets agree, spread 0.084 s; the best other offset has 12), and the wall clock puts game 0 at audio 29.661-36.137 s, which the old offset (-0.246 s) is outside.",
+  "On the corrected clock the opening's monitor and mask sounds land on the rebuild's own plays (2.53, 3.43, 4.13, 4.88, 5.43 s), which the old read had before the capture began.",
+  "The '40.0 s' Balloon Boy hops are at 10.04 (echo4b), 15.08 (echo3b) and 20.04 s (echo3b): the echo templates fire four times in the night, every time 0.04-0.08 s after a 5 s roll, so each is a hop vocal; silence is uninformative (four heard of about 41 in the model).",
+  "The rebuild agrees with the phone on the echo3b and vent bang at 20.0 s and the vent bangs at 25.0, 30.3, 45.0 and 65.0 s, but it moves Balloon Boy CAM 10 to 7 at 10.0 s, a hop g413 gives no sound, and plays echo1 at 15.03. A hop vocal at 10.04 needs Balloon Boy past CAM 10 by the 10 s roll: on the phone his first roll, at 5 s, already succeeded. That is the earliest state difference this capture shows, at or before the night's first Balloon Boy roll."
+ ],
+ "open": [
+  "Whether a different office start state explains it: docs/evidence/full06-stream-census-predeclaration-20261001.json, run as docs/evidence/full06-stream-census-20261001.json.",
+  "Echo1's audibility in this capture, so that its silence could be read.",
+  "The audio of the other clock-seeded nights (full-04 and the Night 6 twins) under the solved rule."
+ ],
+ "provenance": {
+  "files": [
+   {
+    "path": "tools/recompile/results/phone-audio-cues-full-06-20260928.json",
+    "sha256": "df94274975c2718c31fdc9dc82c70b83c62579b4d2460b967859539eb2768448"
+   },
+   {
+    "path": "tools/recompile/results/phone-audio-cues-full-06-20261001.json",
+    "sha256": "91282c6a8ba491e449ad3a6c415c6e31a5b3e8f236e750bef895eb7da8095f20"
+   },
+   {
+    "path": "tools/recompile/results/rebuild-audio-full-06-landed-20260928.json",
+    "sha256": "e3f4e6482ced8d3025533829b592c43a10e520c60b0a7fe98d31f6499618bf59"
+   },
+   {
+    "path": "docs/evidence/runs/night7-night7-k3-full-06-20260915T225056Z/run/bt-audio.json",
+    "sha256": "434443c7cec1fd5dd5648fd123f3296f06b10c07159b91f030f35340b238d220"
+   },
+   {
+    "path": "docs/evidence/runs/night7-night7-k3-full-06-20260915T225056Z/run/office-seed-bracket.json",
+    "sha256": "00879c04b3a7ab0d2ebec713f136f28aaf0a40850caf17529a706121cef9f39d"
+   },
+   {
+    "path": "packages/propose/bin/recompile/phone-encounter-nights.json",
+    "sha256": "26b89b453e2b483610c118c264d1eb0dbb5d06758ab53db283807ffc25d666d0"
+   },
+   {
+    "path": "docs/evidence/full06-input-registration-20260928.json",
+    "sha256": "e667e30264899f0daa57394a029f9029ae8abc2bb1e31750a79c599d51fdcfed"
+   },
+   {
+    "path": "packages/review/bin/recompile/phone-audio-cues.py",
+    "sha256": "4a56a4ef1eb31acd860caf285cbd5ebc5bd66db17c8b41e6d854733807c0b5c0"
+   }
+  ],
+  "capture": {
+   "path": "/home/pedro/fnaf-apks/bt-audio-captures/night7-night7-k3-full-06-20260915T225056Z.bt.wav",
+   "sha256": "e0fe3d356af71228ae23286114d4a03c5bf677ab7a80964de1e0c5cb5a6b0183",
+   "note": "private A2DP capture, never committed"
+  }
+ },
+ "reproducer": {
+  "cues": "packages/review/bin/recompile/phone-audio-cues.py CAPTURE.wav --refs ~/fnaf-apks/cue-refs --cues s0017,s0021,s0023,s0024,s0025,s0027,s0028,s0029,s0031,s0032,s0033 --anchor-plays tools/recompile/results/rebuild-audio-full-06-landed-20260928.json --anchor-cues s0005,s0006,s0007,s0008 --json tools/recompile/results/phone-audio-cues-full-06-20261001.json",
+  "record": "python3 artifacts/s2-bb-audio-20261001/realign-record.py",
+  "gate": "python3 packages/review/bin/recompile/test-phone-input-ledger.py"
+ },
+ "id": "s2-audio-realignment-f61f47d56098beb2"
+}

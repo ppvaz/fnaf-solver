@@ -1294,8 +1294,8 @@
       "route": "Minus Toys",
       "tags": ["device", "audio", "encounter", "fidelity"],
       "sources": ["docs/evidence/full06-input-registration-20260928.json"],
-      "status": "standing",
-      "supersededBy": null,
+      "status": "superseded",
+      "supersededBy": "full06-audio-clock-thirty-seconds-late",
       "supersedes": null
     },
     {

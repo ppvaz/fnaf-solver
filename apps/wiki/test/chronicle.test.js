@@ -98,13 +98,15 @@ refuses(checkCorpus([...corpus.checkpoints, { schema: ENTRIES_SCHEMA_V2, checkpo
   'supersedes is required', 'a v2 entry without supersedes');
 refuses(checkCorpus([...corpus.checkpoints, structuredClone(v2)]), 'is already', 'two checkpoints with one id');
 
-// A correction reads its frozen target as superseded without editing it.
+// A correction reads its target as superseded. A frozen v1 target's file is never edited and still says
+// standing; a v2 target's file states its side of the pair (checkCorpus refuses one that does not).
 const read = readEntries(corpus.checkpoints);
 for (const entry of read.filter((item) => item.supersedes)) {
   const target = read.find((item) => item.id === entry.supersedes);
   assert.equal(target.status, 'superseded', `${target.id} reads as superseded`);
   assert.equal(target.supersededBy, entry.id);
-  assert.equal(target.storedStatus, 'standing', `${target.id}'s frozen file is not edited`);
+  if (target.schema === 'chronicle-entries-v1') assert.equal(target.storedStatus, 'standing', `${target.id}'s frozen file is not edited`);
+  else assert.notEqual(target.storedStatus, 'standing', `${target.id}'s v2 file names its correction`);
 }
 
 const first = await generate({ write: true });
