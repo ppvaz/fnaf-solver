@@ -1,0 +1,40 @@
+{
+ "schema": "experiment-spec-v2",
+ "id": "full06-static-readout-detrended",
+ "kind": "confirm",
+ "purpose": "confirmatory sweep on held-out windows",
+ "claimLevel": "DEVICE_MEASURED frames against MODEL_ONLY predictions",
+ "date": "2026-10-01",
+ "step": "S2 (plans/ROADMAP.md): establish a valid seed measurement (S2a) on a traced night, full-06",
+ "night": "full-06",
+ "seed": 47593,
+ "question": "With the cameras' own slow pan removed, does a state on the measured seed's generator cycle near the model's draw count reproduce the camera static's flicker in held-out winding windows better than chance?",
+ "hypothesis": {
+  "source": "docs/evidence/full06-static-readout-confirm-20261001.json (NOT_SUPPORTED, 1 of 4 hits, raw period means). Retained native frames of the camera view (artifacts/campaign-2026-09-27T19-30-35.284Z lifecycle frames 00011 and 00015) show the camera picture panning sideways on its own, so the period means carry a slow drift under the static's 0.1 s steps. Exploratory, on already-seen windows only: removing a centred 5-period running mean from both series lifts the same seed-cycle offsets, wind-1 d 6 from r 0.497 to 0.673 and wind-2 d 8 from 0.734 to 0.786, against 400 random states whose detrended r reach 0.68 and 0.56 at most.",
+  "statement": "E-seed-ahead, read without the pan: the measured seed is right and the phone spends a few more draws than the model."
+ },
+ "heldOut": "wind-7..wind-10, the winding windows at 70-104 s; no state was scored on them before this file. Only their frames, period counts (31-32) and the model's draw counts at injection (2592, 3069, 3365, 3837) were computed. wind-1..wind-6 are excluded: all were seen.",
+ "family": "As docs/evidence/full06-static-readout-predeclaration-20261001.json: every generator state written into the model after each window's injection update, its predicted static opacity correlated with the retained frames' period-mean luma, both series detrended by a centred 5-period running mean (phone-static-readout.mjs detrend).",
+ "inputs": {
+  "config": "26b89b453e2b483610c118c264d1eb0dbb5d06758ab53db283807ffc25d666d0",
+  "modelOptions": "d1ba74693da29dac953058c1ea5d41b553ac6d7494ce911f6e8c742ef487db4a",
+  "contacts": "c4ca5d3320b8a65c3522d3a3a072a79c7a10251447f5112a61a903d45da6c67f",
+  "frameTimes": "383d25c80bb3648e9199589ebce7b6782a510eacee4409df3c90e940869541cf"
+ },
+ "windows": [
+  {"name": "wind-7", "fromMs": 70400, "toMs": 73700, "cam": 9, "viewing": 11, "injectAt": 4228, "endFrame": 4463, "detrendK": 5},
+  {"name": "wind-8", "fromMs": 80400, "toMs": 83700, "cam": 9, "viewing": 11, "injectAt": 4829, "endFrame": 5065, "detrendK": 5},
+  {"name": "wind-9", "fromMs": 90400, "toMs": 93700, "cam": 9, "viewing": 11, "injectAt": 5430, "endFrame": 5665, "detrendK": 5},
+  {"name": "wind-10", "fromMs": 100400, "toMs": 103700, "cam": 9, "viewing": 11, "injectAt": 6032, "endFrame": 6266, "detrendK": 5}
+ ],
+ "decisionRule": {
+  "radius": 100,
+  "alpha": 0.01,
+  "minHits": 2,
+  "text": "Per window: every state is scanned with the detrended statistic; among the measured seed's cycle states at the model's own draw count by the injection plus d, d in -100..100 (201 states), take the best r. Its p-value is 1 - F(r)^201, F the window's empirical distribution of detrended r over all 65,536 states. A window hits at p < 0.01. SUPPORTED when at least 2 of the 4 windows hit (chance about 0.06%), else NOT_SUPPORTED. The best d per window is reported, not tested."
+ },
+ "stoppingRule": {"kind": "fixed-sample", "text": "Four windows, every state, once. No window, radius, detrend width or threshold changes after the run; a different detrend is a new predeclaration on other windows."},
+ "tool": "node packages/propose/bin/recompile/phone-static-readout.mjs --predeclaration docs/evidence/full06-static-readout-detrended-predeclaration-20261001.json --workers 4 --out <result>",
+ "resultRecord": "docs/evidence/full06-static-readout-detrended-20261001.json",
+ "rung": "None. SUPPORTED would support the measured seed at full-06 and make the detrended static readout an instrument for S2a and S4; it is not an outcome claim."
+}

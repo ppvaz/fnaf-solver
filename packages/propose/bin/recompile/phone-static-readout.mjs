@@ -107,10 +107,22 @@ export function pearson(xs, ys) {
 }
 
 /** r between a state's predicted opacity and the measured block means of one window. */
+/**
+ * Each value less the centred running mean of `k` values around it (fewer at the ends). The cameras pan on their own,
+ * so the picture under the static drifts slowly while the static's coefficient steps every g58 period; a window's
+ * `detrendK` removes that drift from both the measured means and the predicted opacity before they are correlated.
+ */
+export function detrend(xs, k) {
+  if (!k) return xs;
+  if (!Number.isInteger(k) || k < 3 || k % 2 === 0) throw new Error('detrendK must be an odd integer of at least 3');
+  return xs.map((x, i) => { const w = xs.slice(Math.max(0, i - (k >> 1)), Math.min(xs.length, i + (k >> 1) + 1)); return x - w.reduce((a, b) => a + b, 0) / w.length; });
+}
+
+/** r between a state's predicted opacity and the measured block means of one window (detrended when the window says so). */
 export function scoreState(inp, fr, win, state) {
   const { per } = predict(inp, { state, injectAt: win.injectAt, frames: win.endFrame });
   const b = blocks(per, fr, win);
-  return { state, blocks: b.length, r: pearson(b.map((x) => 1 - x.alpha / 255), b.map((x) => x.mean)) };
+  return { state, blocks: b.length, r: pearson(detrend(b.map((x) => 1 - x.alpha / 255), win.detrendK), detrend(b.map((x) => x.mean), win.detrendK)) };
 }
 
 /** The generator's cycle through `from`: state -> steps from `from` (the LCG splits 65,536 states into 4 cycles). */
