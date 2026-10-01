@@ -1,0 +1,131 @@
+==============================================================
+run: night7-n7-420-m3s-r01-20261001T020037Z
+==============================================================
+capture: night7-n7-420-m3s-r01-20261001T020037Z.mp4
+input trace: none (run atrace-input.sh around the command)
+SurfaceFlinger latency: none (set SF_LAYER for capture)
+campaign bundle: artifacts/campaign-2026-10-01T02-00-53.450Z
+frame trace: none (run query-companion.sh trace start/stop around the run)
+capture rate: 54 fps (ffprobe 109485000/2032249)
+  using measured 54 fps for timing-sensitive graders (nominal 60)
+
+--- input dispatch / frame landing (Perfetto) ---
+  no input trace kept for night7-n7-420-m3s-r01-20261001T020037Z; rendered video cannot establish dispatch.
+
+--- clock transitions (HUD first frame, 1 AM) ---
+clocktrace: HUD first=34407ms; 1 AM was not found
+
+[ 1/ 7  14%] --- video instruments over one shared decode (survival, cameras, light, keyframes, box, intervals, timeline) ---
+           ... video instruments over one shared decode (survival, cameras, light, keyframes, box, intervals, timeline) still running (20s)
+           ... video instruments over one shared decode (survival, cameras, light, keyframes, box, intervals, timeline) still running (40s)
+--- survival (the only number that is a run length) ---
+packages/review/bin/grade/../../../../captures/night7-n7-420-m3s-r01-20261001T020037Z.mp4: 361 frames at 4.0 fps
+  night HUD appears at 25.5s
+  5 HUD-absent stretches contain no death static -- the monitor is up; longest 17.0s at 70.8s
+  HUD last seen at 87.8s of 90.2s recorded
+  ALIVE for at least 62.5s -- nothing in this recording shows the run ending, so this is a lower bound
+[decode-once] survival (the only number that is a run length): exit 0, 25s, ok
+--- camera selections ---
+packages/review/bin/grade/../../../../captures/night7-n7-420-m3s-r01-20261001T020037Z.mp4: selected-camera trace at 54 fps
+  cam 04    4.28s ->   8.65s  (4.37s)
+  cam 04   11.09s ->  13.48s  (2.39s)
+  cam 07   36.85s ->  36.93s  (0.07s)
+  cam 11   37.02s ->  37.44s  (0.43s)
+  cam 11   38.48s ->  40.76s  (2.28s)
+  cam 11   47.13s ->  50.74s  (3.61s)
+  cam 11   61.02s ->  66.87s  (5.85s)
+summary: 0 complete 10-04-07-11 sweeps, 0 incomplete sweep starts
+[decode-once] camera selections: exit 0, 25s, ok
+--- camera light actually flashing ---
+packages/review/bin/grade/../../../../captures/night7-n7-420-m3s-r01-20261001T020037Z.mp4: signature sweepcheck-signature.json  (sweep lit iff >=2/3 cams)
+summary: 0/0 sweeps lit (>=2 of 3 cameras)
+NO GRADABLE SWEEP: no sweep window was found in this run, so this instrument says nothing about whether the light fired.
+[decode-once] camera light actually flashing: exit 3, 49s, a result about the run, not an instrument failure
+--- keyframes (what the run contained) ---
+packages/review/bin/grade/../../../../captures/night7-n7-420-m3s-r01-20261001T020037Z.mp4: 181 frames at 2.0 fps, 12 kept
+  timestamps: 0.0s 3.5s 9.0s 11.5s 25.5s 36.5s 37.0s 40.5s 47.5s 60.5s 67.5s 83.0s
+  sheet: packages/review/bin/grade/../../../../captures/night7-n7-420-m3s-r01-20261001T020037Z-keyframes.png
+[decode-once] keyframes (what the run contained): exit 0, 49s, ok
+--- music box ---
+packages/review/bin/grade/../../../../captures/night7-n7-420-m3s-r01-20261001T020037Z.mp4: 90.33s sampled at 12 fps
+  cam11   4.25s ->   8.67s    2.4% ->   2.4%  (range   2.4-  2.4%)
+  cam11  11.08s ->  13.50s    2.4% ->   2.4%  (range   2.4-  2.4%)
+  cam11  38.67s ->  40.50s   78.6% -> 100.0%  (range  78.6-100.0%)
+  cam11  47.33s ->  50.58s   61.4% -> 100.0%  (range  61.4-100.0%)
+[decode-once] music box: exit 0, 25s, ok
+--- office / mask / camera intervals ---
+packages/review/bin/grade/../../../../captures/night7-n7-420-m3s-r01-20261001T020037Z.mp4: 90.33s sampled at 12 fps
+  camera   0.00s ->   3.58s  (3.58s)
+  camera  13.50s ->  29.83s  (16.33s)
+  camera  34.42s ->  90.33s  (55.92s)
+summary: 3 camera intervals, 0 visible hall flashes, 0 latched-mask intervals
+note: visible hall flashes are only a rendering lower bound; the sourced movement blackout can hide logically accepted Foxy flashes
+[decode-once] office / mask / camera intervals: exit 0, 25s, ok
+--- run timeline and terminal outcome ---
+packages/review/bin/grade/../../../../captures/night7-n7-420-m3s-r01-20261001T020037Z.mp4: 181 frames at 2.0 fps, 640x288
+      0.0s ->     4.5s  (   4.5s)  other
+      4.5s ->     8.5s  (   4.0s)  camera
+      8.5s ->    11.0s  (   2.5s)  other
+     11.0s ->    13.5s  (   2.5s)  camera
+     13.5s ->    25.5s  (  12.0s)  other
+     25.5s ->    30.0s  (   4.5s)  camera
+     30.0s ->    34.5s  (   4.5s)  other
+     34.5s ->    38.5s  (   4.0s)  office
+     38.5s ->    41.0s  (   2.5s)  camera
+     41.0s ->    47.0s  (   6.0s)  office
+     47.0s ->    51.0s  (   4.0s)  camera
+     51.0s ->    61.0s  (  10.0s)  office
+     61.0s ->    67.0s  (   6.0s)  camera
+     67.0s ->    71.0s  (   4.0s)  office
+     71.0s ->    90.5s  (  19.5s)  other
+
+  TERMINAL: death -- terminal-static at 88.0s
+  the recording ends in sustained static the HUD never returns from
+[decode-once] run timeline and terminal outcome: exit 0, 49s, ok
+[decode-once] 2 shared decode(s) for 7 instruments: 7 branches in 23.0s (exit 0), 3 branches in 21.2s (exit 0)
+[ 1/ 7  14%] video instruments over one shared decode (survival, cameras, light, keyframes, box, intervals, timeline) took 50s (pipeline 66s)
+
+[ 2/ 7  28%] --- campaign bundle (executor-owned facts) ---
+--- modern campaign bundle (executor-owned facts) ---
+  night reached               yes
+  arm mode                    observe-once
+  arm                         UNRESOLVED (non-fatal) on attempt 1 (0 retries, 1 samples)
+  arm verified at             UNKNOWN
+  parked prefix (plan)        UNKNOWN
+  PHASE LAG (suffix shift)    none -- observe-once never parks the stream
+  cycle gates                 3 (3 agreed, 0 corrected, 0 aborted)
+  gate lag                    UNKNOWN
+  delivered offset            UNKNOWN
+  corrections landed          0 confirmed, 0 unconfirmed, 0 unread, 0 never read back
+  press acceptance            3 graded -- 2 UNKNOWN, 1 PASS
+  stop reason                 arm-unresolved (ambiguous-threshold)
+[ 2/ 7  28%] campaign bundle (executor-owned facts) took 0s (pipeline 66s)
+
+[ 3/ 7  42%] --- delivered phase vs the model band ---
+node:internal/deps/amaro/dist/index:550
+    var wasmInstance = new WebAssembly.Instance(wasmModule, imports);
+                       ^
+
+RangeError: WebAssembly.Instance(): Out of memory: Cannot allocate Wasm memory for new instance
+    at lib/wasm.js (node:internal/deps/amaro/dist/index:550:24)
+    at __require (node:internal/deps/amaro/dist/index:9:50)
+    at node:internal/deps/amaro/dist/index:564:27
+    at BuiltinModule.compileForInternalLoader (node:internal/bootstrap/realm:400:7)
+    at requireBuiltin (node:internal/bootstrap/realm:431:14)
+    at node:internal/modules/typescript:42:17
+    at node:internal/util:796:15
+    at parseTypeScript (node:internal/modules/typescript:53:17)
+    at processTypeScriptCode (node:internal/modules/typescript:133:42)
+    at stripTypeScriptModuleTypes (node:internal/modules/typescript:163:10)
+
+Node.js v22.23.2
+  ^ FAILED (resource-limited or diagnostic error)
+[ 3/ 7  42%] delivered phase vs the model band took 0s (pipeline 66s)
+
+--- native-frame state coverage for the actuation ---
+  no frame trace for night7-n7-420-m3s-r01-20261001T020037Z: frame-level state coverage and input/frame
+  alignment are UNKNOWN. Nothing was measured.
+
+==============================================================
+VERDICT: at least one instrument FAILED for night7-n7-420-m3s-r01-20261001T020037Z -- read above
+==============================================================
