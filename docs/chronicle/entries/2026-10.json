@@ -240,6 +240,35 @@
    "status": "standing",
    "supersededBy": null,
    "supersedes": null
+  },
+  {
+   "id": "s7-every-register-entry-gated",
+   "date": "2026-10-01",
+   "game": "fnaf2",
+   "kind": "milestone",
+   "title": "Every mistake-register entry names a gate a CI lane runs",
+   "body": "ROADMAP S7 closes on two conditions, and one now holds: each of the fifteen register entries names the check that enforces it, and that check runs in CI. The register gate reads the entries where CLAUDE.md writes them and fails on one that is neither gated nor listed open. Five gates landed in one day, each first made to fail on a planted violation. Two found live defects: night-run.sh kept the input trace on when it could not read the phone's capabilities, and the margin map's whole-schedule phase budget for Minus Toys, 33/99 ms since August, is the edge of one band of a banded response. A third measured what a rule had assumed: Continue reads present on all 89 retained FNaF 2 title frames, so the menu fixture's fresh save, drawn without it, was the register's own mistake in fixture form. The other condition, a morning report that refutes a mechanism nobody queued, has not run.",
+   "measured": "15 of 15 entries gated; Continue present on 89 of 89 title frames; latest 6 AM 3.0 s past the night over 34 won packs",
+   "label": "DEVICE_MEASURED",
+   "rung": null,
+   "plan": 25,
+   "night": null,
+   "route": null,
+   "tags": [
+    "gates",
+    "s7",
+    "register"
+   ],
+   "sources": [
+    "docs/evidence/fnaf2-title-items-calibration-20261001.json",
+    "tools/test-mistake-register.ts",
+    "packages/propose/test/test-terminal-deadline.mjs",
+    "packages/propose/test/test-seam-slack.mjs",
+    "packages/propose/bin/plans/basin-edge.mjs"
+   ],
+   "status": "standing",
+   "supersededBy": null,
+   "supersedes": null
   }
  ]
 }

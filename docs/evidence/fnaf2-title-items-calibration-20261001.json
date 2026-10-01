@@ -1,0 +1,1048 @@
+{
+ "schema": "title-items-calibration-v1",
+ "date": "2026-10-01",
+ "step": "ROADMAP S7: mistake register item 2 (\"An observation-based rule must cite the measured row that backs it\")",
+ "claimLevel": "DEVICE_MEASURED: retained native title frames of FNaF 2 v2.0.7 on the moto g56, read by the model under test",
+ "model": {
+  "path": "packages/play/profiles/fnaf2/moto-g56/title-moto-g56-v207.json",
+  "sha256": "6bcedeb213d716f2f52df36f949e98d55811ba76695f5f05ec71b905d6ecd2d9"
+ },
+ "observer": {
+  "path": "packages/play/src/sensors/screencap/title-observe.py",
+  "sha256": "01ec1e240b3e70b3f4d919771f18aff3c2f350983071780c67366eb320b7aa0b"
+ },
+ "thresholds": {
+  "presentMin": 0.02,
+  "absentMax": 0.008,
+  "rule": "an item reads present at or above presentMin, absent at or below absentMax, and the observer refuses anything between (title-observe.py)"
+ },
+ "frames": {
+  "count": 89,
+  "campaigns": 38,
+  "source": "every retained FNaF 2 title frame on this machine (artifacts/, gitignored: the frames stay there, named here by sha256 only); 85 are the frames a campaign's title observer read, 4 are runner title captures",
+  "fractions": "as title-observe.py --measure prints them, four decimals"
+ },
+ "rows": [
+  {
+   "frame": "campaign-2026-09-20T00-41-12.166Z/00001-title-observe.py.png",
+   "sha256": "e6edc12df16cf64619b7cdce7fb0df52e3f2f933faf146bc8863598556f754dc",
+   "read": "items=continue,newGame",
+   "fractions": {
+    "continue": 0.0293,
+    "customNight": 0.0,
+    "newGame": 0.0732,
+    "sixthNight": 0.0
+   }
+  },
+  {
+   "frame": "campaign-2026-09-20T00-41-12.166Z/00002-title-observe.py.png",
+   "sha256": "f0145ca82f5584ce82b38645d2038a565dd831261fccfeaa091a64291308bbdb",
+   "read": "items=continue,newGame",
+   "fractions": {
+    "continue": 0.0283,
+    "customNight": 0.0,
+    "newGame": 0.0693,
+    "sixthNight": 0.0
+   }
+  },
+  {
+   "frame": "campaign-2026-09-20T00-41-12.166Z/00085-title-observe.py.png",
+   "sha256": "177b423b2241dfdc167195a02625bb35515d0db3a1377a851f3b13c0a3a5c4c1",
+   "read": "items=continue,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0264,
+    "customNight": 0.0,
+    "newGame": 0.0742,
+    "sixthNight": 0.0645
+   }
+  },
+  {
+   "frame": "campaign-2026-09-20T01-02-31.713Z/00001-title-observe.py.png",
+   "sha256": "c2f4378696353089238607c10ef9412a66d058926a04bdbcdc8728f96a37ae54",
+   "read": "items=continue,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0283,
+    "customNight": 0.0,
+    "newGame": 0.0723,
+    "sixthNight": 0.0693
+   }
+  },
+  {
+   "frame": "campaign-2026-09-20T01-02-31.713Z/00002-title-observe.py.png",
+   "sha256": "b81461ce062bee6071693d792b49a81abd39794a9a855a1ee554b5007d8d3063",
+   "read": "items=continue,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0303,
+    "customNight": 0.0,
+    "newGame": 0.0742,
+    "sixthNight": 0.0723
+   }
+  },
+  {
+   "frame": "campaign-2026-09-20T01-09-14.899Z/00001-title-observe.py.png",
+   "sha256": "b877e40de5b27a35c359275e3597e46bae67a9c51c381f3092ce66ab74728224",
+   "read": "items=continue,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0283,
+    "customNight": 0.0,
+    "newGame": 0.0703,
+    "sixthNight": 0.0684
+   }
+  },
+  {
+   "frame": "campaign-2026-09-20T01-09-14.899Z/00002-title-observe.py.png",
+   "sha256": "f3c6e82d42ef5e2cf885f6cc16588316c16f329aaf64a1ec3457669dbe7489b0",
+   "read": "items=continue,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0283,
+    "customNight": 0.0,
+    "newGame": 0.0693,
+    "sixthNight": 0.0684
+   }
+  },
+  {
+   "frame": "campaign-2026-09-20T01-09-14.899Z/00029-title-observe.py.png",
+   "sha256": "04213357f44bdfb8a000a3903d33ee7ff74fb860b558522ec256fef2ccc222c2",
+   "read": "items=continue,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0312,
+    "customNight": 0.0,
+    "newGame": 0.0703,
+    "sixthNight": 0.0693
+   }
+  },
+  {
+   "frame": "campaign-2026-09-20T01-25-54.247Z/00001-title-observe.py.png",
+   "sha256": "5e8a522c6610a2753c8ee1dbe0ff8adcef2c21cff81b01dc111b6ea573f22ac0",
+   "read": "items=continue,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0283,
+    "customNight": 0.0,
+    "newGame": 0.0693,
+    "sixthNight": 0.0684
+   }
+  },
+  {
+   "frame": "campaign-2026-09-20T01-25-54.247Z/00002-title-observe.py.png",
+   "sha256": "8245391a41369c2bff171a6eed18c6ff34efaaafd16b7b1cb680c689630363a1",
+   "read": "items=continue,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0352,
+    "customNight": 0.0,
+    "newGame": 0.0684,
+    "sixthNight": 0.0938
+   }
+  },
+  {
+   "frame": "campaign-2026-09-20T01-25-54.247Z/00048-title-observe.py.png",
+   "sha256": "7215db8349242304d587b48bc280819404b95b8551713c0280ee10350782eef0",
+   "read": "items=continue,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0303,
+    "customNight": 0.0,
+    "newGame": 0.0732,
+    "sixthNight": 0.0703
+   }
+  },
+  {
+   "frame": "campaign-2026-09-20T01-39-16.104Z/00001-title-observe.py.png",
+   "sha256": "517dd13e720762997d662c4fa772120402e12b75b4fab44fa5de0acd22642b76",
+   "read": "items=continue,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0283,
+    "customNight": 0.0,
+    "newGame": 0.1445,
+    "sixthNight": 0.0713
+   }
+  },
+  {
+   "frame": "campaign-2026-09-20T01-39-16.104Z/00002-title-observe.py.png",
+   "sha256": "21aa110d6b4bdbebb906e3827a899a37a60b427ebb11877fdc01edf069283b80",
+   "read": "items=continue,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0361,
+    "customNight": 0.0,
+    "newGame": 0.0762,
+    "sixthNight": 0.0723
+   }
+  },
+  {
+   "frame": "campaign-2026-09-20T01-45-14.223Z/00001-title-observe.py.png",
+   "sha256": "4ea89758122e5aed59afe694395e688cdb9d90596254061d9c56468b31255aaf",
+   "read": "items=continue,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0273,
+    "customNight": 0.0,
+    "newGame": 0.0781,
+    "sixthNight": 0.0898
+   }
+  },
+  {
+   "frame": "campaign-2026-09-20T01-45-14.223Z/00002-title-observe.py.png",
+   "sha256": "fdf450b93b86cac6ea556c0faee684ddcd9a098cda5aa1ec48b101671c350f8e",
+   "read": "items=continue,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0293,
+    "customNight": 0.0,
+    "newGame": 0.0723,
+    "sixthNight": 0.0693
+   }
+  },
+  {
+   "frame": "campaign-2026-09-20T01-45-14.223Z/00032-title-observe.py.png",
+   "sha256": "f37e47b8d4babbcf8fb4a93f35cf6644a647094f958abdf23c39b234906ebca8",
+   "read": "items=continue,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0293,
+    "customNight": 0.0,
+    "newGame": 0.0723,
+    "sixthNight": 0.0723
+   }
+  },
+  {
+   "frame": "campaign-2026-09-20T02-14-48.323Z/00001-title-observe.py.png",
+   "sha256": "0eaa3afdf338bacd8e58605339194efa5988099682db499af403b07cf04f9434",
+   "read": "items=continue,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0293,
+    "customNight": 0.0,
+    "newGame": 0.0684,
+    "sixthNight": 0.0674
+   }
+  },
+  {
+   "frame": "campaign-2026-09-20T02-14-48.323Z/00002-title-observe.py.png",
+   "sha256": "f95e199e1aa024e3600be43864414eb9d350766254968228829816d3e274eeb5",
+   "read": "items=continue,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0293,
+    "customNight": 0.0,
+    "newGame": 0.0693,
+    "sixthNight": 0.0684
+   }
+  },
+  {
+   "frame": "campaign-2026-09-20T02-14-48.323Z/00055-title-observe.py.png",
+   "sha256": "89ab5e14ae84c0b9850804013502b50bb6b8dce6df77c8e4e2ea5b219d8246ba",
+   "read": "items=continue,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0312,
+    "customNight": 0.0,
+    "newGame": 0.0693,
+    "sixthNight": 0.0693
+   }
+  },
+  {
+   "frame": "campaign-2026-09-20T02-28-21.996Z/00001-title-observe.py.png",
+   "sha256": "534127f5cd00c5a36c3adbbe33fead7e5c0521a5d4e2432ce23949e2e062a7fb",
+   "read": "items=continue,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0293,
+    "customNight": 0.0,
+    "newGame": 0.0684,
+    "sixthNight": 0.084
+   }
+  },
+  {
+   "frame": "campaign-2026-09-20T02-28-21.996Z/00002-title-observe.py.png",
+   "sha256": "acaff093604c74f9193f85c42259fa85ff9c31060fa55c6e76e725a08cde4abf",
+   "read": "items=continue,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0352,
+    "customNight": 0.0,
+    "newGame": 0.0752,
+    "sixthNight": 0.0713
+   }
+  },
+  {
+   "frame": "campaign-2026-09-20T02-28-21.996Z/00077-title-observe.py.png",
+   "sha256": "7261e7e7b4dbb1b62c8f699a5f3e6419ba63c8571ee16677af34513252ac012d",
+   "read": "items=continue,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0273,
+    "customNight": 0.0,
+    "newGame": 0.0723,
+    "sixthNight": 0.0674
+   }
+  },
+  {
+   "frame": "campaign-2026-09-20T02-40-43.128Z/00001-title-observe.py.png",
+   "sha256": "4092c86492ff73dcc9376c268ca3db612d81d03e2aebb06f849cfef7e889f053",
+   "read": "items=continue,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0283,
+    "customNight": 0.0,
+    "newGame": 0.0791,
+    "sixthNight": 0.0693
+   }
+  },
+  {
+   "frame": "campaign-2026-09-20T02-40-43.128Z/00002-title-observe.py.png",
+   "sha256": "612f1c9bc0f8bc006db031e11a5a947cc4f00725092603002ad44bea4ace034d",
+   "read": "items=continue,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0312,
+    "customNight": 0.0,
+    "newGame": 0.0801,
+    "sixthNight": 0.0723
+   }
+  },
+  {
+   "frame": "campaign-2026-09-20T02-40-43.128Z/00100-title-observe.py.png",
+   "sha256": "be9c458a4aa7ed8074d81365f45156c73ff5b66134bcc8ce3f869045c5d43615",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0312,
+    "customNight": 0.0664,
+    "newGame": 0.0693,
+    "sixthNight": 0.0693
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T05-23-40.410Z/00001-title-observe.py.png",
+   "sha256": "c7733e29b918fa1ac9f7fdf20fb3fe448c3a29883ed3253df85c5db18902d4f1",
+   "read": "items=continue,newGame",
+   "fractions": {
+    "continue": 0.0352,
+    "customNight": 0.0,
+    "newGame": 0.0752,
+    "sixthNight": 0.0
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T05-32-26.274Z/00001-title-observe.py.png",
+   "sha256": "2207b996f61dedf6637aee719ff1daf21c4d26fbe7231907a32dfd0c2391c810",
+   "read": "items=continue,newGame",
+   "fractions": {
+    "continue": 0.0303,
+    "customNight": 0.0,
+    "newGame": 0.0771,
+    "sixthNight": 0.0
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T05-32-26.274Z/00002-title-observe.py.png",
+   "sha256": "28c0523fdd882f3031160b3309d2cac6e96290dd6e9145a82b4429bde67c0e41",
+   "read": "items=continue,newGame",
+   "fractions": {
+    "continue": 0.0293,
+    "customNight": 0.0,
+    "newGame": 0.0732,
+    "sixthNight": 0.0
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T05-43-42.402Z/00001-title-observe.py.png",
+   "sha256": "aece72ed40395638178c50e98418099fa7b6a53526b46127a9d5373a2b7f9ee5",
+   "read": "items=continue,newGame",
+   "fractions": {
+    "continue": 0.0293,
+    "customNight": 0.0,
+    "newGame": 0.0752,
+    "sixthNight": 0.0
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T05-43-42.402Z/00002-title-observe.py.png",
+   "sha256": "2c1c819a021307df055ab8f02e225a61ffe7a2af81c8209b8f2392c7e15d0d47",
+   "read": "items=continue,newGame",
+   "fractions": {
+    "continue": 0.0264,
+    "customNight": 0.0,
+    "newGame": 0.0684,
+    "sixthNight": 0.0
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T05-47-04.689Z/00001-title-observe.py.png",
+   "sha256": "557acc5c071d73d7577d1264989839e68a5385a77cf41dc1568b1ad3e8f03d41",
+   "read": "items=continue,newGame",
+   "fractions": {
+    "continue": 0.0391,
+    "customNight": 0.0,
+    "newGame": 0.0801,
+    "sixthNight": 0.0
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T05-47-04.689Z/00002-title-observe.py.png",
+   "sha256": "eb140f8c724f967d3b4e89028124e21cdf073d3ef848436837f697173bbcafec",
+   "read": "items=continue,newGame",
+   "fractions": {
+    "continue": 0.0293,
+    "customNight": 0.0,
+    "newGame": 0.0684,
+    "sixthNight": 0.0
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T05-51-26.867Z/00001-title-observe.py.png",
+   "sha256": "c9b55cb214842f22179a70aa232dd46532f03929475bd5589bc33ed534c11da6",
+   "read": "items=continue,newGame",
+   "fractions": {
+    "continue": 0.0293,
+    "customNight": 0.0,
+    "newGame": 0.0996,
+    "sixthNight": 0.0
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T05-51-26.867Z/00002-title-observe.py.png",
+   "sha256": "0ca8d63a68a30320ee0cf2cece31bc2300c627bef23bbf62a60bfbe19aefa535",
+   "read": "items=continue,newGame",
+   "fractions": {
+    "continue": 0.0303,
+    "customNight": 0.0,
+    "newGame": 0.0742,
+    "sixthNight": 0.0
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T05-56-25.482Z/00001-title-observe.py.png",
+   "sha256": "50b0215b336adb0d09b00f76df8dbbb5f139118181c7cfd036c15298de11a229",
+   "read": "items=continue,newGame",
+   "fractions": {
+    "continue": 0.0439,
+    "customNight": 0.0,
+    "newGame": 0.0781,
+    "sixthNight": 0.0
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T05-56-25.482Z/00002-title-observe.py.png",
+   "sha256": "d3df6458aa3e78ed1eca5708da56468b84b9de89c39a74a68a175db5bd1528c8",
+   "read": "items=continue,newGame",
+   "fractions": {
+    "continue": 0.0508,
+    "customNight": 0.0,
+    "newGame": 0.1025,
+    "sixthNight": 0.0
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T06-08-25.299Z/00001-title-observe.py.png",
+   "sha256": "1ac744dbc9ee91a71e46eec2bfa999f94f7213e27e20b152344999293978d469",
+   "read": "items=continue,newGame",
+   "fractions": {
+    "continue": 0.0293,
+    "customNight": 0.0,
+    "newGame": 0.0693,
+    "sixthNight": 0.0
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T06-08-25.299Z/00002-title-observe.py.png",
+   "sha256": "2e7565ab82903a6982b4691ab286e856d93a40d6d2b10940a3af8801447264e4",
+   "read": "items=continue,newGame",
+   "fractions": {
+    "continue": 0.0303,
+    "customNight": 0.0,
+    "newGame": 0.0771,
+    "sixthNight": 0.0
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T06-20-19.457Z/00001-title-observe.py.png",
+   "sha256": "2eb51587fb9961455c7d6db0aa6bd8545e3dbde4ec5a6decc1ced2b61528e354",
+   "read": "items=continue,newGame",
+   "fractions": {
+    "continue": 0.0371,
+    "customNight": 0.0,
+    "newGame": 0.0957,
+    "sixthNight": 0.0
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T06-20-19.457Z/00002-title-observe.py.png",
+   "sha256": "6ec201b5e92d4705b8c88ca7b96010b8b388484d905b00465fae4b0077667dba",
+   "read": "items=continue,newGame",
+   "fractions": {
+    "continue": 0.0352,
+    "customNight": 0.0,
+    "newGame": 0.0752,
+    "sixthNight": 0.0
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T06-32-22.430Z/00001-title-observe.py.png",
+   "sha256": "b3d36899acfc81fa64ddea036365fa9c8fbd35868eaff7ce8e5b30eddb353052",
+   "read": "items=continue,newGame",
+   "fractions": {
+    "continue": 0.0293,
+    "customNight": 0.0,
+    "newGame": 0.0684,
+    "sixthNight": 0.0
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T06-32-22.430Z/00002-title-observe.py.png",
+   "sha256": "224ac0a471debfc6f252852072bbdf593cd63c85e8f67778130c6511f0269165",
+   "read": "items=continue,newGame",
+   "fractions": {
+    "continue": 0.0283,
+    "customNight": 0.0,
+    "newGame": 0.1816,
+    "sixthNight": 0.0
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T06-44-00.809Z/00001-title-observe.py.png",
+   "sha256": "8139b6fc99db0f8f28c9eff5aaec95da4446703a9f4ade439c5bd7e96916969a",
+   "read": "items=continue,newGame",
+   "fractions": {
+    "continue": 0.0273,
+    "customNight": 0.0,
+    "newGame": 0.0771,
+    "sixthNight": 0.0
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T06-44-00.809Z/00002-title-observe.py.png",
+   "sha256": "98996972ca11b5765c5cd17794098d21e7d63e019f28bad1bfe129c27612ccea",
+   "read": "items=continue,newGame",
+   "fractions": {
+    "continue": 0.0361,
+    "customNight": 0.0,
+    "newGame": 0.0801,
+    "sixthNight": 0.0
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T06-44-00.809Z/00025-title-observe.py.png",
+   "sha256": "cb51de0d5a139326d6e569c50522965849db2a48b5d0b67f1be0737aed69f68e",
+   "read": "items=continue,newGame",
+   "fractions": {
+    "continue": 0.0312,
+    "customNight": 0.0,
+    "newGame": 0.0693,
+    "sixthNight": 0.0
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T06-49-36.030Z/00001-title-observe.py.png",
+   "sha256": "bcf87bf8db8a08bf98e2d1b634f91ffedba51cccf5df544fd83315516688678a",
+   "read": "items=continue,newGame",
+   "fractions": {
+    "continue": 0.0293,
+    "customNight": 0.0,
+    "newGame": 0.0762,
+    "sixthNight": 0.0
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T06-49-36.030Z/00002-title-observe.py.png",
+   "sha256": "b83e20baa2f17e63bbfbaaea9c5e1042c50a4fd73f1500dd2fbdf4614744535b",
+   "read": "items=continue,newGame",
+   "fractions": {
+    "continue": 0.0352,
+    "customNight": 0.0,
+    "newGame": 0.126,
+    "sixthNight": 0.0
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T06-49-36.030Z/00041-title-observe.py.png",
+   "sha256": "a6f05a4a9d4772d541754c0221d1df765a45cca2edebb0c352d0476d8462aa51",
+   "read": "items=continue,newGame",
+   "fractions": {
+    "continue": 0.0293,
+    "customNight": 0.0,
+    "newGame": 0.0762,
+    "sixthNight": 0.0
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T06-59-58.763Z/00001-title-observe.py.png",
+   "sha256": "4c4cc9c544f6bb6291a903d660351f9b5fb3355695b38a4342692d9185a6607f",
+   "read": "items=continue,newGame",
+   "fractions": {
+    "continue": 0.0322,
+    "customNight": 0.0,
+    "newGame": 0.0889,
+    "sixthNight": 0.0
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T06-59-58.763Z/00002-title-observe.py.png",
+   "sha256": "19a97a3f0a85ab581c709ffdb4c77975724a931ba8fa280f9ea968f60938b1b8",
+   "read": "items=continue,newGame",
+   "fractions": {
+    "continue": 0.0283,
+    "customNight": 0.0,
+    "newGame": 0.0723,
+    "sixthNight": 0.0
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T06-59-58.763Z/00091-title-observe.py.png",
+   "sha256": "1519e393d7a522b36f6d35481dccc59434ff3307409585414be1602b9e177010",
+   "read": "items=continue,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0273,
+    "customNight": 0.0,
+    "newGame": 0.0674,
+    "sixthNight": 0.0674
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T07-11-24.739Z/00001-title-observe.py.png",
+   "sha256": "0af64449e7637531b20e62077d17d52d35e6411a8782f0b0ba5a1e7357b6e06a",
+   "read": "items=continue,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0352,
+    "customNight": 0.0,
+    "newGame": 0.0752,
+    "sixthNight": 0.0713
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T07-11-24.739Z/00002-title-observe.py.png",
+   "sha256": "122462327549c564282ad609b94429702896737fd135c3896b7d46d5aed48c52",
+   "read": "items=continue,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0303,
+    "customNight": 0.0,
+    "newGame": 0.0723,
+    "sixthNight": 0.0693
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T07-11-24.739Z/00094-title-observe.py.png",
+   "sha256": "1a39388fc13ee7d47453bacd4287d90a60b79ed017ab754059cb3fe6902f34d3",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0303,
+    "customNight": 0.0732,
+    "newGame": 0.0771,
+    "sixthNight": 0.0723
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T07-23-27.810Z/00001-title-observe.py.png",
+   "sha256": "13a84db73dfadd715dc50182aa4b25769c287dfde12bc10ba406bbe583bd0229",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0312,
+    "customNight": 0.0703,
+    "newGame": 0.0762,
+    "sixthNight": 0.0752
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T07-23-27.810Z/00002-title-observe.py.png",
+   "sha256": "9756cf15a8039838e0c45882be05786b8e975a3174751f00e0abc740e23ed27c",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0312,
+    "customNight": 0.0723,
+    "newGame": 0.0781,
+    "sixthNight": 0.0732
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T07-26-47.106Z/00001-title-observe.py.png",
+   "sha256": "f41a9a9b4eacb9186f7b245d8c4c3ef1732d5b6138420868062e84d930ed467c",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0273,
+    "customNight": 0.0693,
+    "newGame": 0.0713,
+    "sixthNight": 0.0674
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T07-26-47.106Z/00002-title-observe.py.png",
+   "sha256": "11acadd3a3fbcd383a334d00e46198e3a90b47e90f08e32f0d44c0a9903989ec",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0293,
+    "customNight": 0.0645,
+    "newGame": 0.0693,
+    "sixthNight": 0.0684
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T07-26-47.106Z/00077-title-observe.py.png",
+   "sha256": "014b8db3c646bbdd94696ebf61c05d89361bd51a8cf660a2b6d79f3cb9ddc7c4",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0352,
+    "customNight": 0.0732,
+    "newGame": 0.0752,
+    "sixthNight": 0.0713
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T07-37-28.535Z/00001-title-observe.py.png",
+   "sha256": "7d0e02eda51c6b938306a7a8cdeb973b502579bdc96048c2d7a05bd844ff73b2",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0371,
+    "customNight": 0.0713,
+    "newGame": 0.1006,
+    "sixthNight": 0.0898
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T07-37-28.535Z/00002-title-observe.py.png",
+   "sha256": "b2239a929c9c5a36ecc2464693441f99e82191108f44568765688c4ac8089994",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0264,
+    "customNight": 0.0674,
+    "newGame": 0.0986,
+    "sixthNight": 0.0684
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T07-37-28.535Z/00081-title-observe.py.png",
+   "sha256": "d2508646deb114d15e836bb46c5fe6d260c40845a32555dca8ffa86c0958d898",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0342,
+    "customNight": 0.0693,
+    "newGame": 0.085,
+    "sixthNight": 0.0732
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T07-48-13.319Z/00001-title-observe.py.png",
+   "sha256": "52abc9bb5b65d8f55a7cae748ae3cf31e2cb160b5a576249f1e1befd0a6666ce",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0361,
+    "customNight": 0.0752,
+    "newGame": 0.0762,
+    "sixthNight": 0.0723
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T07-48-13.319Z/00002-title-observe.py.png",
+   "sha256": "90124c4e946e5c7e75821eb8894daf8e6bff3ee8c3c913f334698e5e346611ee",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0615,
+    "customNight": 0.0703,
+    "newGame": 0.0762,
+    "sixthNight": 0.0713
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T07-48-13.319Z/00096-title-observe.py.png",
+   "sha256": "4131be125e9fd1bbaf52abee387378e7d783511483c1ce5b3a4579b6d304aa0d",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0332,
+    "customNight": 0.0693,
+    "newGame": 0.0703,
+    "sixthNight": 0.0693
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T08-09-07.565Z/00001-title-observe.py.png",
+   "sha256": "93fb3132e923a85e4f2b163dc22b94354f9152735e525da0a23cef2d91a96912",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0498,
+    "customNight": 0.0645,
+    "newGame": 0.0742,
+    "sixthNight": 0.0713
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T08-09-07.565Z/00002-title-observe.py.png",
+   "sha256": "066be6c9d832d163512d980b24e192255aebf40448263646b135ee5104357189",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0361,
+    "customNight": 0.0674,
+    "newGame": 0.1338,
+    "sixthNight": 0.0791
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T08-11-12.163Z/00001-title-observe.py.png",
+   "sha256": "ac00a223d58ec2fc94e08afecbe6e7dea86ad2423c002bb48c62e0579fbc9702",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0283,
+    "customNight": 0.0693,
+    "newGame": 0.0693,
+    "sixthNight": 0.0742
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T08-11-12.163Z/00002-title-observe.py.png",
+   "sha256": "47360ad6886998b2c921283d9a897205b38d6beabff969d5dbed8402889116a1",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0283,
+    "customNight": 0.0713,
+    "newGame": 0.0703,
+    "sixthNight": 0.0684
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T08-12-15.258Z/00001-title-observe.py.png",
+   "sha256": "44ce4b786c025e6bb477e32e9223845f541413bf22fbd16990a3cd8386297b6d",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0303,
+    "customNight": 0.0771,
+    "newGame": 0.0742,
+    "sixthNight": 0.0762
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T08-12-15.258Z/00002-title-observe.py.png",
+   "sha256": "069ca9acb46366f4c2af97ba8e27077b5a5f8c399f695b444913d70db58bc066",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0293,
+    "customNight": 0.0674,
+    "newGame": 0.0684,
+    "sixthNight": 0.0674
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T08-13-20.707Z/00001-title-observe.py.png",
+   "sha256": "fac5e85aebe60a8e4fdfc03a48c3b0c1a59c2875317b8c7d49d0c8f667cf276e",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0264,
+    "customNight": 0.0635,
+    "newGame": 0.0674,
+    "sixthNight": 0.083
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T08-13-20.707Z/00002-title-observe.py.png",
+   "sha256": "4ec37129b90f1184fdda79f4bd5c1e5f2f99eaa6515a0f64a95948a51a14a34a",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0283,
+    "customNight": 0.0762,
+    "newGame": 0.0703,
+    "sixthNight": 0.0684
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T08-14-25.045Z/00001-title-observe.py.png",
+   "sha256": "77bc2d046282b4b00caad37529fe2f09f2af85cb777375c6066fdcc5728d3c9a",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0527,
+    "customNight": 0.0645,
+    "newGame": 0.0693,
+    "sixthNight": 0.0684
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T08-14-25.045Z/00002-title-observe.py.png",
+   "sha256": "665788915ba3fd43d73b59f2dd876b7d876a2f67733a3552ae58fd7864fb7f6a",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0283,
+    "customNight": 0.0742,
+    "newGame": 0.0693,
+    "sixthNight": 0.0684
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T19-23-20.549Z/00001-title-observe.py.png",
+   "sha256": "c4160828412199310c95acee266e800cbfbcdd0c40ebc5a6db8aaba18ac3cbec",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0293,
+    "customNight": 0.0713,
+    "newGame": 0.0801,
+    "sixthNight": 0.0693
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T19-23-20.549Z/00002-title-observe.py.png",
+   "sha256": "ed3e71b407e36a0dfff2c39e5e88950b22aa7a2ef859cd56872d2acec7090106",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0273,
+    "customNight": 0.0713,
+    "newGame": 0.0713,
+    "sixthNight": 0.0674
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T19-23-20.549Z/00070-title-observe.py.png",
+   "sha256": "98eb100b4cd415f5a4259b32272844d9d3084b4f3b47a42496b51b95b5db2316",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0293,
+    "customNight": 0.0742,
+    "newGame": 0.0732,
+    "sixthNight": 0.0703
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T19-30-35.284Z/00001-title-observe.py.png",
+   "sha256": "620bcd45607ce138bd17fbc8159272aa01ff6479ef3d5784dd277809f9b7b952",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0332,
+    "customNight": 0.0703,
+    "newGame": 0.0732,
+    "sixthNight": 0.0703
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T19-30-35.284Z/00002-title-observe.py.png",
+   "sha256": "05e08f076fbc0c04356f43389b787d3994f4c5b92b6ce999cba40f3c534acac6",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0293,
+    "customNight": 0.0674,
+    "newGame": 0.0723,
+    "sixthNight": 0.0693
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T19-57-48.206Z/00001-title-observe.py.png",
+   "sha256": "74d00d15a33ce38cf1d7bae2f956c0277d9df598fb93feca0b3360a0f77854a7",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0283,
+    "customNight": 0.0693,
+    "newGame": 0.0693,
+    "sixthNight": 0.0684
+   }
+  },
+  {
+   "frame": "campaign-2026-09-27T19-57-48.206Z/00002-title-observe.py.png",
+   "sha256": "388a6c8066d273e6f1256d91cd7eb3efa3d253f943ae7220351fd6a39f6f1808",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0449,
+    "customNight": 0.0664,
+    "newGame": 0.0732,
+    "sixthNight": 0.0703
+   }
+  },
+  {
+   "frame": "campaign-2026-10-01T02-00-53.450Z/00001-title-observe.py.png",
+   "sha256": "36246fdca2599fe932c97c78d95bf4ea6280f241e113a9eabc0db78a1fa2eae9",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0479,
+    "customNight": 0.0996,
+    "newGame": 0.0977,
+    "sixthNight": 0.0859
+   }
+  },
+  {
+   "frame": "campaign-2026-10-01T02-00-53.450Z/00002-title-observe.py.png",
+   "sha256": "ea964d1b8f2ecb328acace4ce4f688d9b9dfe79f2f9368c72e916d2a45f5ac84",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0752,
+    "customNight": 0.0986,
+    "newGame": 0.0908,
+    "sixthNight": 0.1104
+   }
+  },
+  {
+   "frame": "campaign-2026-10-01T02-00-53.450Z/00035-title-observe.py.png",
+   "sha256": "14a455351fb5d9abf8b8f78b4aace7c8941b2a8471e33dd8844c8146de4e4af0",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0381,
+    "customNight": 0.1211,
+    "newGame": 0.1289,
+    "sixthNight": 0.0859
+   }
+  },
+  {
+   "frame": "forensics/twin-20260927/resume-title.png",
+   "sha256": "7f03c64bd895ab1deb8e25ba66936d35f9afbb44979fa7882b7dcd890361ffdc",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0283,
+    "customNight": 0.0723,
+    "newGame": 0.0703,
+    "sixthNight": 0.0684
+   }
+  },
+  {
+   "frame": "night-jobs/cue-1790827503-3b42af5f/frames/title-001.png",
+   "sha256": "ae5fb89a6be89862732d4231c003439b5bbaa1bdd8cbda21418b4a229936c97b",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0293,
+    "customNight": 0.0615,
+    "newGame": 0.0684,
+    "sixthNight": 0.0684
+   }
+  },
+  {
+   "frame": "night-jobs/cue-1790827503-3b42af5f/frames/title-002.png",
+   "sha256": "b0e54272d940aa6b7ea11faf9039fe00637e8c1b953bcfe6db55a003f38f51b7",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0293,
+    "customNight": 0.0762,
+    "newGame": 0.0723,
+    "sixthNight": 0.0723
+   }
+  },
+  {
+   "frame": "runs/night6-tw27-05-20260927T081406Z/post-run-title.png",
+   "sha256": "0ff79340db81c88997d85984e230165440e93b38547cdb8c445edf01e740a3eb",
+   "read": "items=continue,customNight,newGame,sixthNight",
+   "fractions": {
+    "continue": 0.0293,
+    "customNight": 0.0625,
+    "newGame": 0.0684,
+    "sixthNight": 0.0703
+   }
+  }
+ ],
+ "summary": {
+  "newGame": {
+   "present": 89,
+   "presentMin": 0.0674,
+   "presentMax": 0.1816,
+   "absent": 0,
+   "absentMax": null,
+   "undecided": 0
+  },
+  "continue": {
+   "present": 89,
+   "presentMin": 0.0264,
+   "presentMax": 0.0752,
+   "absent": 0,
+   "absentMax": null,
+   "undecided": 0
+  },
+  "sixthNight": {
+   "present": 62,
+   "presentMin": 0.0645,
+   "presentMax": 0.1104,
+   "absent": 27,
+   "absentMax": 0.0,
+   "undecided": 0
+  },
+  "customNight": {
+   "present": 37,
+   "presentMin": 0.0615,
+   "presentMax": 0.1211,
+   "absent": 52,
+   "absentMax": 0.0,
+   "undecided": 0
+  }
+ },
+ "reading": {
+  "continue": "Continue reads present on all 89 frames, narrowest 0.0264, the value the model's own table gives for a fresh save. A rule or fixture that reads a missing Continue as a fresh save contradicts these rows.",
+  "separation": "No frame puts any item between the thresholds; every absent read is exactly 0.0000, and the narrowest present read of any item is 0.0264 against presentMin 0.02.",
+  "scope": "Title frames only. The Options screen's 0.0186 in the New Game band, which the logo gate exists for, is not among these rows."
+ },
+ "reproducer": "TITLE_MODEL=packages/play/profiles/fnaf2/moto-g56/title-moto-g56-v207.json python3 packages/play/src/sensors/screencap/title-observe.py --measure < FRAME, and the same without --measure for the read, for every frame named",
+ "gate": "tools/test-mistake-register.ts (item 2): the model is the one measured, every row re-derives its read from its fractions, and none is undecided",
+ "id": "title-items-fnaf2-3c53e9fd39d18b07"
+}

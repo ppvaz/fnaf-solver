@@ -387,9 +387,11 @@ export class CampaignStateMachine {
     dials, puppet, customReadback, proofHash }: {cursorNight?: number, customNightVisible?: boolean, menuReturned?: boolean, customCompleted?: boolean, observed?: boolean, continueVisible?: boolean, sixthNightVisible?: boolean, nextNightStarted?: boolean, dials?: object, puppet?: number, customReadback?: object, proofHash?: string} = {}) {
     const target = this.target;
     // Save advancement is night-specific positive evidence: Night 6 unlocks
-    // Custom Night, Night 5 reveals the measured sixthNight item, and the
-    // fresh-save chain Nights 1..4 proves the cursor moved by the Continue
-    // item becoming visible after the 6 AM that New Game started.
+    // Custom Night, and Night 5 reveals the measured sixthNight item (or the
+    // cursor reads 6). Continue is NOT evidence: it renders on every FNaF 2
+    // title frame read, a fresh save included (89 of 89,
+    // docs/evidence/fnaf2-title-items-calibration-20261001.json; mistake
+    // register item 2), so `continueVisible` below only confirms a title read.
     // Nights 1..4 are the exception: on this build the game rolls a 6 AM
     // straight into the next night's gameplay without any menu — regardless
     // of whether the spec chains another night — so the observed roll into

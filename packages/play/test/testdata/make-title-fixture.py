@@ -47,7 +47,15 @@ POINTS = {
 # Which items are lit, per save state. `half` covers only the top half of the
 # band, landing the measurement inside the undecided interval.
 STATES = {
-    "fresh-save": {"newGame": "on"},
+    # Measured, not assumed (mistake register item 2): Continue renders on
+    # every FNaF 2 title frame read, a fresh save included -- 89 of 89 in
+    # docs/evidence/fnaf2-title-items-calibration-20261001.json, narrowest
+    # 0.0264. So a fresh save's title shows New Game and Continue, like a
+    # save with story progress.
+    "fresh-save": {"newGame": "on", "continue": "on"},
+    # Synthetic: no save state of build 26 draws this. It exists to prove that
+    # an item absent from the screen is not pressed.
+    "continue-absent": {"newGame": "on"},
     "story-progress": {"newGame": "on", "continue": "on"},
     "sixth-unlocked": {"newGame": "on", "continue": "on", "sixthNight": "on"},
     "custom-unlocked": {"newGame": "on", "continue": "on", "sixthNight": "on",

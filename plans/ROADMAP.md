@@ -522,24 +522,28 @@ and after it, and each night's pack is written in the morning.
     that gate runs in a CI lane.
 - **Artifact:** a morning report that refutes a mechanism nobody had queued,
   with the run bundles that did it.
-- **Stands (2026-10-01):** entries 1, 3, 4, 6, 8, 10 and 11 now name gates
-  a CI lane runs (title-observe.py refuses a path it would not read; the night
-  job refuses on an observed title mismatch and recovers an observed title
-  after an abort; the port's night-terminal wait is held above the latest 6 AM
-  measured in the won packs, 3.0 s past the 420 s night over 34 nights, for
-  every committed plan's end; night-run.sh asks `capabilities.ts traceDecision` whether to
-  carry the input trace, and no longer keeps it on when the phone's data
-  sources cannot be read; every compiled seam names its floor and the order
-  of its two events, and a floor measured in one order is used only in that
-  order; the margin scans go through `basin-edge.ts`, which prints a response
-  that clears again past its first failure as banded, and on its first run it
-  showed Minus Toys' whole-schedule phase margin, 33/99 ms since 2026-08-28, is
-  such a band edge). Entry 2 still names none: the FNaF 2 title model's item
-  thresholds cite no measured rows (an earlier count of this list missed 8
-  and 10). `tools/test-mistake-register.ts` now reads the registers and
-  refuses an entry that is neither gated nor listed open. No morning report has run yet: the overnight
-  window was installed on 2026-10-01, its first job refused
-  `qualification-binding`, and its second start found no phone on adb.
+- **Stands (2026-10-01):** the second closing condition holds: every entry
+  in the mistake registers names a gate a CI lane runs, and
+  `tools/test-mistake-register.ts` reads the registers where they are written
+  and fails on an entry that is neither gated nor listed open (none is). The
+  gates landed today: entry 2, title models held to measured rows (FNaF 2's
+  thresholds against 89 retained title frames,
+  [`title-items-fnaf2-3c53e9fd39d18b07`](../docs/evidence/fnaf2-title-items-calibration-20261001.json):
+  Continue on every one, so the menu fixture's fresh save now draws it; the
+  FNaF 1, 3 and 4 title models are listed as debt with what each lacks);
+  entry 4, the port's night-terminal wait held above the latest 6 AM measured
+  in the won packs, 3.0 s past the 420 s night over 34 nights, for every
+  committed plan's end; entry 8, night-run.sh asks `capabilities.ts
+  traceDecision`, and no longer keeps the input trace on when the phone's data
+  sources cannot be read; entry 10, every compiled seam names its floor and
+  the order of its two events, and a floor measured in one order is used only
+  in that order; entry 11, margin scans go through `basin-edge.ts`, which
+  prints a response that clears again as banded, and on its first run showed
+  Minus Toys' whole-schedule phase margin, 33/99 ms since 2026-08-28, is such a
+  band edge. Entries 1, 3 and 6 were gated earlier the same day. The first
+  condition is open: no morning report has run. The overnight window was
+  installed on 2026-10-01, its first job refused `qualification-binding`, and
+  its second start found no phone on adb; six k3 nights stay queued.
 - **Absorbs** Plan 25 horizon 3 and Plans 07, 18 and 22.
 
 **Order.**

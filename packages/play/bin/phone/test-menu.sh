@@ -89,9 +89,14 @@ expect_tap() {                              # name "x y"
 }
 
 # ------------------------------------------------- the item has to be there
+attempt continue-absent continue
+expect 'an absent Continue refuses' 'continue is not on the title screen'
+expect_no_tap 'an absent Continue refuses'
+
+# A fresh save still shows Continue on build 26 (measured), so Continue on a
+# fresh save is pressed like any other observed item.
 attempt fresh-save continue
-expect 'fresh save refuses Continue' 'continue is not on the title screen'
-expect_no_tap 'fresh save refuses Continue'
+expect_tap 'a fresh save presses its observed Continue' '400 730'
 
 attempt fresh-save sixthNight
 expect 'fresh save refuses Sixth Night' 'sixthNight is not on the title screen'
@@ -115,7 +120,7 @@ expect_no_tap 'New Game refused without the capability'
 
 # It is a capability, not a fallback: a title with no Continue does not make
 # New Game the answer.
-attempt fresh-save newGame MENU_ALLOW_SAVE_RESET=0
+attempt continue-absent newGame MENU_ALLOW_SAVE_RESET=0
 expect_no_tap 'a missing Continue does not authorize New Game'
 
 attempt fresh-save newGame MENU_ALLOW_SAVE_RESET=1
@@ -272,4 +277,4 @@ $title_coords
 EOF
 
 [ "$failed" -eq 0 ] || { echo 'menu selector checks failed'; exit 1; }
-echo 'menu selector: 8 screen states, 11 refusals, New Game gated by capability, no second title table'
+echo 'menu selector: 9 screen states, 11 refusals, New Game gated by capability, no second title table'

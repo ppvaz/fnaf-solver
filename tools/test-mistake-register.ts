@@ -30,6 +30,12 @@
 //            night it cannot read (never assumed), and after an abort or a killed
 //            runner the game is driven back to an observed title. It runs in
 //            test:unit:slow, which CI's slow lane runs.
+//   item 2   "An observation-based rule must cite the measured row that backs
+//            it." Every committed title model is either held to a calibration
+//            record (its sha256 is the one measured, every row re-derives its
+//            read, none sits between the thresholds) or listed with what it
+//            lacks. FNaF 2's rows (89 retained title frames) show Continue on
+//            every one, so the menu fixture's fresh save draws it.
 //   item 4   "Re-derive every deadline when a port crosses executors." Every
 //            executor returns to one port, whose NIGHT_TERMINAL_WAIT_MS has to
 //            answer for the plan that ends earliest; test-terminal-deadline.ts
@@ -68,6 +74,7 @@
 //
 //   node tools/test-mistake-register.ts [--explain]
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, posix, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -123,6 +130,7 @@ const EXEMPT = new Map([
 // has no gate.
 const REGISTER_GATES = [
   [1, 'packages/play/src/sensors/screencap/test-sensor.py'],   // title-observe.py refuses a path it would not read
+  [2, SELF],
   [3, 'apps/lab/test/test-night-job.py'],   // a night job refuses on an observed title mismatch and on an unreadable Continue night
   [4, 'packages/propose/test/test-terminal-deadline.ts'],   // every committed plan's end plus the port's wait covers the latest measured 6 AM
   [5, SELF],
@@ -142,9 +150,32 @@ const REGISTER_GATES = [
 // Register entries no gate holds yet (ROADMAP S7 closes when this is empty).
 // A ratchet: an entry leaves it when a REGISTER_GATES row lands, and a new
 // register entry fails until it has a row or is listed here with its reason.
-const OPEN_ENTRIES = new Map([
-  [2, 'an observation-based rule cites its measured row: the FNaF 2 title model\'s item thresholds name no calibration rows'],
+const OPEN_ENTRIES = new Map([]);
+
+// --- item 2: every title model's item thresholds stand on measured rows ------
+// A model listed here is held to its calibration record below; one listed in
+// TITLE_MODELS_UNMEASURED is debt, named with what it lacks. A title model in
+// neither fails, so a new one arrives with its rows or with its reason.
+const TITLE_CALIBRATIONS = new Map([
+  ['packages/play/profiles/fnaf2/moto-g56/title-moto-g56-v207.json', 'docs/evidence/fnaf2-title-items-calibration-20261001.json'],
 ]);
+const TITLE_MODELS_UNMEASURED = new Map([
+  ['packages/play/profiles/fnaf1/moto-g56/title-fnaf1-moto-g56-v207.json', 'item and continue_subtitle thresholds are justified by notes only; no record holds the rows'],
+  ['packages/play/profiles/fnaf1/moto-g56/title-stars-fnaf1-moto-g56-v207.json', 'measured, by its own gate: packages/play/games/fnaf1/test-fnaf1-title-stars.py re-derives it from docs/evidence/fnaf1-title-stars-calibration-20261001.json'],
+  ['packages/play/profiles/fnaf3/moto-g56/title-fnaf3-moto-g56-v204.json', 'cites no calibration; its item thresholds have no committed rows'],
+  ['packages/play/profiles/fnaf4/moto-g56/title-fnaf4-moto-g56-v204.json', 'cites docs/evidence/companion-game-screen-20260927.json, which holds gate fractions but no item-band rows'],
+]);
+/** The read title-observe.py makes of one row's fractions: its items, or the item it refuses as undecided. */
+function titleRead(model, fractions) {
+  const present = [];
+  for (const name of Object.keys(model.items)) {
+    const value = fractions[name];
+    if (typeof value !== 'number') return { undecided: name };
+    if (value >= model.present_min) present.push(name);
+    else if (value > model.absent_max) return { undecided: name };
+  }
+  return { items: present.sort() };
+}
 
 let failed = 0;
 const fail = (message) => { failed += 1; console.error(`  FAIL ${message}`); };
@@ -523,6 +554,44 @@ for (const [item, gate] of REGISTER_GATES) {
     const got = verdict(reads);
     if (got !== want)
       fail(`run-report.mjs calls 4 MISSING of 5 with ${reads} positive read(s) ${got}; item 12 says ${want}`);
+  }
+}
+
+// --- item 2 on the tree: title thresholds against their measured rows -------
+{
+  const models = execFileSync('git', ['ls-files', 'packages/play/profiles/*/*/title-*.json'], { cwd: ROOT, encoding: 'utf8' })
+    .split('\n').filter(Boolean);
+  if (!models.length) fail('no title model was found to hold to its rows (item 2)');
+  for (const path of models)
+    if (!TITLE_CALIBRATIONS.has(path) && !TITLE_MODELS_UNMEASURED.has(path))
+      fail(`${path} reads title items with thresholds no record measured, and is not listed with a reason (item 2)`);
+  for (const path of [...TITLE_CALIBRATIONS.keys(), ...TITLE_MODELS_UNMEASURED.keys()])
+    if (!models.includes(path)) fail(`${path} is listed for item 2 but is not a committed title model`);
+  for (const [path, recordPath] of TITLE_CALIBRATIONS) {
+    const bytes = readFileSync(join(ROOT, path));
+    const model = JSON.parse(bytes.toString('utf8'));
+    const record = JSON.parse(readFileSync(join(ROOT, recordPath), 'utf8'));
+    if (record.model?.path !== path || record.model?.sha256 !== createHash('sha256').update(bytes).digest('hex'))
+      fail(`${path} is not the model ${recordPath} measured: re-measure its rows before changing its thresholds`);
+    if (!Array.isArray(record.rows) || record.rows.length < 20) fail(`${recordPath}: fewer than 20 measured rows`);
+    const reads = (rows, m) => rows.map(row => ({ row, read: titleRead(m, row.fractions) }));
+    for (const { row, read } of reads(record.rows ?? [], model)) {
+      if (read.undecided) fail(`${recordPath}: ${row.frame} puts ${read.undecided} between the thresholds of ${path}`);
+      else if (row.read !== `items=${read.items.join(',')}`) fail(`${recordPath}: ${row.frame} was read ${row.read}, its fractions say items=${read.items.join(',')}`);
+    }
+    // The planted violation: a present threshold above the narrowest measured
+    // Continue must leave a measured row undecided.
+    const narrowest = Math.min(...(record.rows ?? []).map(row => row.fractions.continue).filter(v => v >= model.present_min));
+    if (!reads(record.rows ?? [], { ...model, present_min: narrowest + 0.001 }).some(({ read }) => read.undecided))
+      fail(`${recordPath}: a present threshold above every measured Continue still left no row undecided; the check cannot fail`);
+    // The rows' own finding: Continue on every title frame read. A fixture that
+    // names a save state must draw what was measured for it.
+    if (path.includes('/fnaf2/') && (record.rows ?? []).every(row => row.fractions.continue >= model.present_min)) {
+      const fixture = readFileSync(join(ROOT, 'packages/play/test/testdata/make-title-fixture.py'), 'utf8');
+      const fresh = fixture.match(/^\s*"fresh-save":\s*\{([^}]*)\}/m);
+      if (!fresh || !/"continue"/.test(fresh[1]))
+        fail('make-title-fixture.py draws a fresh save without Continue; every measured FNaF 2 title frame shows it (item 2)');
+    }
   }
 }
 
