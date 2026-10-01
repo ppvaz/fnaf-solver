@@ -13,7 +13,7 @@ import { BUNDLE_SCHEMA, validateBundle } from '../../../packages/propose/bin/pla
 import { isCampaignResult, campaignEntry, campaignPromotionChecks } from '@sixam/review/evidence-campaign';
 import { PACKS_DIR, resolvePackTargets, buildPack, buildFnaf1Pack, writePack, readPack, packPromotionChecks,
   trackedWinners, packEntry, recoveryCheck, attestationStatus, packCustody } from '@sixam/review/evidence-pack';
-import { GRAPH_FILE, attestPack, derivePromotion, formatGraph, promotionEdgeFor, promotionSummary, readGraph,
+import { GRAPH_FILE, attestPack, derivePromotion, fnaf1PromotionChecks, formatGraph, promotionEdgeFor, promotionSummary, readGraph,
   recordPromotion } from '@sixam/review/evidence-promotion';
 import { computeCohort } from '@sixam/review/evidence-cohort';
 import { FNAF2, promotionSummaryEnvelope, showEnvelope } from '@sixam/review/envelopes';
@@ -469,10 +469,28 @@ async function main([operation = 'help', first, second]) {
   }
   if (operation === 'promote') {
     const loaded: any = await loadAny(first);
-    if (loaded.kind === 'fnaf1-run')
-      return console.log(JSON.stringify({ schema: 'plan12-promotion-gate-v1', evidenceId: first, kind: 'fnaf1-run',
-        source: 'pack', packSha256: loaded.packed.digest, accepted: false, status: 'REFUSED',
-        reason: 'Plan 12 gates the FNaF 2 campaign; no promotion gate reads FNaF 1 runs yet' }, null, 2));
+    if (loaded.kind === 'fnaf1-run') {
+      // A FNaF 1 runner's pack: Plan 12's checks read from the runner's record, its events and the
+      // title-star read (fnaf1-promotion.ts), then the attestation; recorded as the FNaF 2 path records.
+      const checks = fnaf1PromotionChecks(ROOT, first, loaded.packed);
+      const derived = derivePromotion(ROOT, first, new Map());
+      const identity = derived.verified.find(item => item.check === 'claimIdentity');
+      const allChecks = { ...checks, claimIdentity: identity.pass };
+      const accepted = Object.values(allChecks).every(Boolean);
+      let recorded = null;
+      if (accepted) {
+        const result = recordPromotion(readGraph(ROOT), { id: first, claim: derived.claim, digest: loaded.packed.digest,
+          attestation: loaded.packed.attestation, custody: derived.custody, nights: loaded.packed.pack.nights ?? [],
+          runLabel: `FNaF 1 Custom Night 6 AM on the phone, run pack ${first}` });
+        if (result.status !== 'ALREADY_RECORDED') writeFileSync(join(ROOT, GRAPH_FILE), formatGraph(result.graph));
+        recorded = { graph: GRAPH_FILE, status: result.status, edge: result.edge };
+      }
+      return console.log(JSON.stringify({ schema: 'plan12-promotion-gate-v1', evidenceId: first, kind: 'fnaf1-run', source: 'pack',
+        packSha256: loaded.packed.digest, custody: derived.custody, attestation: attestationView(loaded.packed), claim: derived.claim,
+        authority: 'plans/12-end-to-end-evidence-campaign.md (its checks, read from a FNaF 1 runner pack: packages/review/src/fnaf1-promotion.ts)',
+        accepted, checks: allChecks, status: accepted ? 'PROMOTED' : 'REFUSED', ...(recorded ? { recorded } : {}),
+        ...(accepted ? {} : { failed: derived.verified.filter(item => !item.pass).map(item => ({ check: item.check, failed: item.detail.failed })) }) }, null, 2));
+    }
     if (loaded.kind === 'device-campaign' && loaded.packed) {
       // A pack: the five checks, then the claim the night supports, re-derived from the pack.
       // An accepted pack is recorded as a PROMOTED_BY edge in the evidence graph, naming who

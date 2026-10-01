@@ -44,6 +44,20 @@
         "pixelArrays": 0,
         "frameRefs": 0
       }
+    },
+    {
+      "name": "title-stars.json",
+      "sha256": "a8e8893f6e5fb01a90d698ad609ea62b3794d4417a1b7b8412711d7ba25180c2",
+      "bytes": 2274,
+      "source": {
+        "sha256": "a8e8893f6e5fb01a90d698ad609ea62b3794d4417a1b7b8412711d7ba25180c2",
+        "bytes": 2274
+      },
+      "redactions": {
+        "paths": 0,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
     }
   ],
   "withheld": [],

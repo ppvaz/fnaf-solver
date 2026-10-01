@@ -24,6 +24,7 @@ import { basename, join } from 'node:path';
 import { canonicalJson, stableHash, validateSaveProof } from '@sixam/kernel/contracts';
 import { AI_DIALS, PUPPET_AI } from '@sixam/source/fnaf2';
 import { campaignEntry } from './evidence-campaign.ts';
+import { deriveFnaf1Promotion } from './fnaf1-promotion.ts';
 import { AGENT_DELEGATION, ATTESTATION_FILE, ATTESTATION_SCHEMA, PACKS_DIR, RECOVERY_RECORD, attestationStatus,
   custodyWinnerFiles, packCustody, packManifestComplete, packPromotionChecks, readPack } from './evidence-pack.ts';
 
@@ -90,7 +91,7 @@ export function derivePromotion(root: string, id: string, winners: Map<string, s
   const dir = join(root, PACKS_DIR, id);
   const loaded = readPack(dir);
   const { pack, wrapper, files, digest } = loaded;
-  if (pack.kind === 'fnaf1-run') throw new Error(`${id} is a FNaF 1 run; Plan 12 gates the FNaF 2 campaign`);
+  if (pack.kind === 'fnaf1-run') return deriveFnaf1Promotion(root, id, dir, loaded);   // the same checks, read from a FNaF 1 runner's pack
   const packed = name => pack.files.find(file => file.name === name);
   const inputs = (...names) => names.map(packed).filter(Boolean).map(file => ({ name: file.name, sha256: file.sha256 }));
   const text = name => (packed(name) ? readFileSync(join(dir, name), 'utf8') : null);
@@ -231,10 +232,10 @@ export const promotionEdgeFor = (graph, id) => graph.edges.find(edge => edge.typ
  * the run that names the attestation, its author and the pack's custody. Idempotent; an edge
  * for the same run with another pack sha256 or author is replaced and reported as UPDATED.
  */
-export function recordPromotion(graph, { id, claim, digest, attestation, custody, nights }): {graph: any, status: 'ADDED' | 'ALREADY_RECORDED' | 'UPDATED', edge: any} {
+export function recordPromotion(graph, { id, claim, digest, attestation, custody, nights, runLabel = null }: any): {graph: any, status: 'ADDED' | 'ALREADY_RECORDED' | 'UPDATED', edge: any} {
   const next = { ...graph, nodes: [...graph.nodes], edges: [...graph.edges] };
   const claimNode = { id: claim.id, kind: 'Claim', label: claim.label, claimLevel: 'DEVICE_MEASURED' };
-  const runNode = { id: runNodeId(id), kind: 'Run', label: `Night ${nights.join(',')} 6 AM on the phone, run pack ${id}`,
+  const runNode = { id: runNodeId(id), kind: 'Run', label: runLabel ?? `Night ${nights.join(',')} 6 AM on the phone, run pack ${id}`,
     source: `${PACKS_DIR}/${id}/pack.json`, packSha256: digest };
   for (const node of [claimNode, runNode]) {
     const at = next.nodes.findIndex(item => item.id === node.id);
@@ -253,6 +254,14 @@ export function recordPromotion(graph, { id, claim, digest, attestation, custody
   if (at >= 0) next.edges[at] = edge;
   else next.edges.push(edge);
   return { graph: next, status: at >= 0 ? 'UPDATED' : 'ADDED', edge };
+}
+
+/** A FNaF 1 pack's checks in packPromotionChecks's shape: the derived checks plus its attestation. */
+export function fnaf1PromotionChecks(root: string, id: string, loaded: any) {
+  const derived = deriveFnaf1Promotion(root, id, join(root, PACKS_DIR, id), loaded);
+  const pass = (check) => derived.verified.find((item) => item.check === check)?.pass === true;
+  return { offlineEvidence: pass('offlineEvidence'), terminalPass: pass('terminalPass'), manifestComplete: pass('manifestComplete'),
+    plan12Attestation: attestationStatus(loaded.attestation, loaded.digest).valid, winnerCommitted: pass('winnerCommitted') };
 }
 
 const nightOf = (id, pack) => pack?.kind === 'fnaf1-run' ? 'fnaf1'
@@ -280,14 +289,10 @@ export function promotionSummary(root: string, winners: Map<string, string>) {
     const row = nights[night] ??= { packs: 0, executorWins: 0, attested: 0, promoted: 0, refused: {} };
     row.packs += 1;
     const edge = promotionEdgeFor(graph, id);
-    if (loaded.pack.kind === 'fnaf1-run') {
-      row.refused['fnaf1-run (no FNaF 1 gate)'] = (row.refused['fnaf1-run (no FNaF 1 gate)'] ?? 0) + 1;
-      if (edge) stale.push({ id, reason: 'a FNaF 1 run has no Plan 12 gate' });
-      continue;
-    }
-    const checks = packPromotionChecks(loaded, winners);
+    const checks = loaded.pack.kind === 'fnaf1-run' ? fnaf1PromotionChecks(root, id, loaded) : packPromotionChecks(loaded, winners);
     const attestation = attestationStatus(loaded.attestation, loaded.digest);
-    if (loaded.pack.outcome === 'WIN') row.executorWins += 1;
+    const won = loaded.pack.kind === 'fnaf1-run' ? checks.terminalPass : loaded.pack.outcome === 'WIN';
+    if (won) row.executorWins += 1;
     if (attestation.valid) row.attested += 1;
     const accepted = Object.values(checks).every(Boolean);
     if (accepted && edge?.packSha256 === loaded.digest) {
@@ -300,7 +305,7 @@ export function promotionSummary(root: string, winners: Map<string, string>) {
     if (edge) stale.push({ id, reason: accepted ? 'edge binds another pack sha256' : `edge recorded but ${failing.join(', ')} fail` });
     const key = failing.join(',');
     row.refused[key] = (row.refused[key] ?? 0) + 1;
-    if (loaded.pack.outcome === 'WIN') refusedWins.push({ id, night, failing, custody: packCustody(loaded.pack).kind });
+    if (won) refusedWins.push({ id, night, failing, custody: packCustody(loaded.pack).kind });
   }
   const body = {
     schema: PROMOTION_SUMMARY_SCHEMA, tool: 'npm run evidence -- promotions', authority: 'plans/12-end-to-end-evidence-campaign.md',

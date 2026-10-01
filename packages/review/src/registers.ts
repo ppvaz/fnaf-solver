@@ -191,7 +191,7 @@ export function readPackRow(root: string, id: string, edges: Map<string, any> = 
   const fnaf1 = loaded.pack.kind === 'fnaf1-run';
   const entry = fnaf1 ? null : packEntry(id, loaded);
   const edge = edges.get(`run.${id}`) ?? null;
-  const attestation = fnaf1 ? null : attestationStatus(loaded.attestation, loaded.digest);
+  const attestation = attestationStatus(loaded.attestation, loaded.digest);
   return {
     id, valid: true, game, gameBasis: basis, kind: fnaf1 ? 'fnaf1-run' : 'device-campaign',
     outcome: fnaf1 ? loaded.pack.outcome?.ended ?? null : entry.outcome,

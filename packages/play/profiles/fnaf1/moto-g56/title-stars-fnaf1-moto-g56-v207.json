@@ -1,0 +1,12 @@
+{
+ "schema": "title-stars-model-v1",
+ "build": "com.scottgames.fivenightsatfreddys v2.0.7 versionCode 40",
+ "device": "Moto g56 5G, 2400x1080 landscape (helper native frames)",
+ "frame": [2400, 1080],
+ "slots": [[377, 461], [521, 461], [662, 461]],
+ "half": 8,
+ "white_min": 230,
+ "present_min": 0.5,
+ "calibration": "docs/evidence/fnaf1-title-stars-calibration-20261001.json",
+ "note": "The stars under FNaF 1's title logo, left to right. A slot is a star when at least half of the 16x16 box at its centre is near-white (every channel >= 230): the solid core of a filled star. Measured on all 97 retained FNaF 1 title frames on this host: every one of the 291 slot reads is exactly 0.0 or 1.0, and every frame fills its slots left to right (0, 2 or 3 stars). The static behind the title never fills a core box. A star count is read only on a frame the title model itself reads as the title (title-observe.py, confident); this model reads no menu item and no other screen."
+}

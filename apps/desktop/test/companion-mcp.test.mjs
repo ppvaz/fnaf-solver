@@ -218,7 +218,7 @@ try {
   assert.ok(fnaf3.claim.chronicle.entries >= 1 && fnaf3.claim.chronicle.attribution.includes('chronicle-entries-v2'),
     'chronicle-entries-v2 entries name FNaF 3');
   const fnaf1 = claimed(await call('describe', { game: 'fnaf1' }), 'describe fnaf1');
-  assert.ok(isUnknown(fnaf1.claim.phone.promotion), 'no Plan 12 gate reads a FNaF 1 run');
+  assert.ok(!isUnknown(fnaf1.claim.phone.promotion) && fnaf1.claim.phone.promotion.promotedRuns.length >= 1, 'the FNaF 1 4/20 run is promoted');
   refused(await call('describe', { game: 'fnaf9' }), 'invalid-argument', 'an unregistered game');
   refused(await call('describe', { game: 'fnaf2', shell: 'rm -rf /' }), 'invalid-argument', 'an argument the tool does not name');
 

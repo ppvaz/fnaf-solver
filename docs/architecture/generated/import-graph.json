@@ -3623,8 +3623,18 @@
       "imports": [
         "./evidence-campaign.ts",
         "./evidence-pack.ts",
+        "./fnaf1-promotion.ts",
         "@sixam/kernel/contracts",
         "@sixam/source/fnaf2",
+        "node:crypto",
+        "node:fs",
+        "node:path"
+      ]
+    },
+    {
+      "file": "packages/review/src/fnaf1-promotion.ts",
+      "imports": [
+        "./evidence-pack.ts",
         "node:crypto",
         "node:fs",
         "node:path"

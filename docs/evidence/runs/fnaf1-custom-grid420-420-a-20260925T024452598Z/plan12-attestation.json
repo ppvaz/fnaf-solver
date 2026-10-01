@@ -1,0 +1,143 @@
+{
+  "schema": "plan12-attestation-v2",
+  "status": "PASS",
+  "evidenceId": "fnaf1-custom-grid420-420-a-20260925T024452598Z",
+  "packSha256": "a664d8fba19e422b817307ffa0cd99752b10561ac2e52717161e074c056de30a",
+  "attestedBy": {
+    "kind": "agent",
+    "delegation": "pedro-2026-09-27",
+    "note": "claude-opus session 2026-10-01 (S6 FNaF 1 promotion; title-star terminal read by packages/play/games/fnaf1/fnaf1-title-stars.py)"
+  },
+  "date": "2026-10-01",
+  "tool": "npm run evidence -- attest",
+  "authority": "plans/12-end-to-end-evidence-campaign.md",
+  "claim": {
+    "id": "claim.fnaf1.custom-night.20-20-20-20.device-6am",
+    "night": 7,
+    "mode": "custom",
+    "dials": {
+      "bonnie": 20,
+      "chica": 20,
+      "foxy": 20,
+      "freddy": 20
+    },
+    "label": "FNaF 1 Custom Night 4/20 (all four at 20) reaches 6 AM on the phone (the save earns its title star)"
+  },
+  "custody": {
+    "kind": "original",
+    "lost": []
+  },
+  "verified": [
+    {
+      "check": "offlineEvidence",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "probe.json",
+          "sha256": "0c22f18704eaf450d14a94a2f6af43cd1c0b9a736da79c88de96a2c057bcb4cf"
+        }
+      ],
+      "detail": {
+        "live": true,
+        "claimLevel": "DEVICE_MEASURED",
+        "status": "COMPLETE"
+      }
+    },
+    {
+      "check": "terminalPass",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "title-stars.json",
+          "sha256": "a8e8893f6e5fb01a90d698ad609ea62b3794d4417a1b7b8412711d7ba25180c2"
+        },
+        {
+          "name": "probe.json",
+          "sha256": "0c22f18704eaf450d14a94a2f6af43cd1c0b9a736da79c88de96a2c057bcb4cf"
+        },
+        {
+          "name": "events.jsonl",
+          "sha256": "24b01570dccbe7626e6a9d7fbff280573548b349e7d921b1c785ff2d15dc5194"
+        }
+      ],
+      "detail": {
+        "starsBefore": 2,
+        "starsAfter": 3,
+        "earned": 1,
+        "nightEnded": "STOP_AFTER",
+        "reader": {
+          "path": "packages/play/games/fnaf1/fnaf1-title-stars.py",
+          "sha256": "2531b0f187d4dc19a7aab41b9085d8c6e31ce421c519602d70eef411b57499da"
+        },
+        "model": {
+          "path": "packages/play/profiles/fnaf1/moto-g56/title-stars-fnaf1-moto-g56-v207.json",
+          "sha256": "0c2baaf86bbc68678d890fa569eefb8f3a9e373cb1fe6f4d14b73cedd7dae9a7"
+        }
+      }
+    },
+    {
+      "check": "manifestComplete",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "probe.json",
+          "sha256": "0c22f18704eaf450d14a94a2f6af43cd1c0b9a736da79c88de96a2c057bcb4cf"
+        },
+        {
+          "name": "events.jsonl",
+          "sha256": "24b01570dccbe7626e6a9d7fbff280573548b349e7d921b1c785ff2d15dc5194"
+        },
+        {
+          "name": "title-stars.json",
+          "sha256": "a8e8893f6e5fb01a90d698ad609ea62b3794d4417a1b7b8412711d7ba25180c2"
+        }
+      ],
+      "detail": {
+        "custody": "original",
+        "lost": []
+      }
+    },
+    {
+      "check": "winnerCommitted",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "packages/propose/bindings/fnaf1/fnaf1-custom-night7-420-grid420-winner.json",
+          "sha256": "a3f69cc2909b38e80ac5a6e691843052c98d06f00da34992dd0f8d2203e35f3f"
+        }
+      ],
+      "detail": {
+        "winner": "packages/propose/bindings/fnaf1/fnaf1-custom-night7-420-grid420-winner.json",
+        "run": "fnaf1-custom-grid420-420-a-20260925T024452598Z"
+      }
+    },
+    {
+      "check": "claimIdentity",
+      "pass": true,
+      "inputs": [
+        {
+          "name": "events.jsonl",
+          "sha256": "24b01570dccbe7626e6a9d7fbff280573548b349e7d921b1c785ff2d15dc5194"
+        },
+        {
+          "name": "probe.json",
+          "sha256": "0c22f18704eaf450d14a94a2f6af43cd1c0b9a736da79c88de96a2c057bcb4cf"
+        }
+      ],
+      "detail": {
+        "observedDials": {
+          "bonnie": 20,
+          "chica": 20,
+          "foxy": 20,
+          "freddy": 20
+        },
+        "setDials": {
+          "bonnie": 20,
+          "chica": 20,
+          "foxy": 20,
+          "freddy": 20
+        }
+      }
+    }
+  ]
+}

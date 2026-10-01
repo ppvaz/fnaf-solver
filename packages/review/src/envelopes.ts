@@ -96,7 +96,7 @@ export function showEnvelope(id: string, shown: any, { target, source, claimLeve
     notMeasured: [
       ...lost.map(name => `${name}: lost with this run's custody (${custody.kind})`),
       ...(shown.outcome === 'WIN' && !shown.promotion ? ['promotion: this run holds no PROMOTED_BY edge'] : []),
-      ...(shown.kind === 'fnaf1-run' ? ['promotion: no Plan 12 gate reads a FNaF 1 run'] : []),
+      ...(shown.kind === 'fnaf1-run' && !shown.promotion ? ['promotion: this FNaF 1 run holds no PROMOTED_BY edge'] : []),
       ...(claimLevel === 'DEVICE_MEASURED' ? [] : ['the phone: this record is not a live device measurement']),
       ...unknownsIn(shown).map(item => `${item.path || 'the record'}: UNKNOWN${item.reason ? ` (${item.reason})` : ''}`),
     ],

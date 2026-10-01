@@ -92,9 +92,11 @@ assert.equal(held.reportedOutcome.kind, 'Aborted');
 assert.match(held.reportedOutcome.why, /PREFLIGHT>HOLD/);
 assert.deepEqual(held.night, []);
 
-// The FNaF 1 runner's pack: its stop-after budget is a Timeout, its night cut at night-origin/night-ended.
+// The FNaF 1 runner's pack: its night cut at night-origin/night-ended. Its route stopped on its stop-after budget,
+// but its packed title-stars.json reads the save's third star earned across the night, so it lifts as a 6 AM; a
+// FNaF 1 pack with no star read keeps the stop-after budget as a Timeout (liftFnaf1).
 const fnaf1 = one('fnaf1-custom-grid420-420-a-20260925T024452598Z');
-assert.deepEqual(fnaf1.reportedOutcome, { kind: 'Timeout' });
+assert.deepEqual(fnaf1.reportedOutcome, { kind: 'SixAM' });
 assert.equal(fnaf1.runMode, 'live');
 assert.equal(fnaf1.night[0].type, 'night-origin');
 assert.equal(fnaf1.night.at(-1).type, 'night-ended');

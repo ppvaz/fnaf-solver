@@ -20,7 +20,7 @@ import { basename, join } from 'node:path';
 import { canonicalJson, stableHash } from '@sixam/kernel/contracts';
 import { BINDINGS_DIR, isUnknown, validateAnnotation, validateClaimLevel } from '@sixam/kernel';
 import { ATTESTATION_FILE, PACKS_DIR, WINNER_HASHES, packPromotionChecks, trackedWinners, winnerFiles } from './evidence-pack.ts';
-import { GRAPH_FILE, PROMOTION_EDGE, derivePromotion, readGraph, recordPromotion } from './evidence-promotion.ts';
+import { GRAPH_FILE, PROMOTION_EDGE, derivePromotion, fnaf1PromotionChecks, readGraph, recordPromotion } from './evidence-promotion.ts';
 import { liftPack, packIds } from './pack-lift.ts';
 
 export const QUERY_SCHEMA = 'review-promotions-query-v1';
@@ -89,8 +89,8 @@ export function queryPromotions(root: string, { winners = trackedWinners(root) }
     const { loaded } = lifted;
     const hash = loaded.pack.bundle?.winnerHash;
     if (hash) packsByWinnerHash.set(hash, [...(packsByWinnerHash.get(hash) ?? []), id]);
-    if (loaded.pack.kind === 'fnaf1-run') continue;
-    if (!Object.values(packPromotionChecks(loaded, winners)).every(Boolean)) continue;
+    const checks = loaded.pack.kind === 'fnaf1-run' ? fnaf1PromotionChecks(root, id, loaded) : packPromotionChecks(loaded, winners);
+    if (!Object.values(checks).every(Boolean)) continue;
     const derivation = derivePromotion(root, id, winners);
     const attestation = loaded.attestation;
     const drift = [

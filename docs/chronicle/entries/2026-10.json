@@ -49,10 +49,10 @@
     ]
    },
    {
-    "title": "A promotion path for FNaF 1, 3 and 4",
-    "body": "The FNaF 1 4/20 and FNaF 4 story-night 6 AMs record no Plan 12 edge, and the evidence CLI does not read FNaF 1 run records.",
+    "title": "A promotion path for FNaF 3 and 4",
+    "body": "As of the FNaF 1 4/20 promotion of 2026-10-01, Plan 12's checks read a FNaF 1 runner pack, its terminal the save's title star; FNaF 4's story-night 6 AMs and FNaF 3's nights have no run pack, no terminal reader and no edge.",
     "sources": [
-     "docs/evidence/fnaf1-420-first-6am-20260925.json",
+     "docs/evidence/runs/fnaf1-custom-grid420-420-a-20260925T024452598Z/plan12-attestation.json",
      "docs/evidence/fnaf4-nights-1-3-20260925.json"
     ]
    },
@@ -210,6 +210,34 @@
    "status": "standing",
    "supersededBy": null,
    "supersedes": "full06-no-start-state-explains-the-night"
+  },
+  {
+   "id": "fnaf1-420-promoted",
+   "date": "2026-10-01",
+   "game": "fnaf1",
+   "kind": "milestone",
+   "title": "FNaF 1's 4/20 night is promoted: the first promotion edge outside FNaF 2",
+   "body": "FNaF 1's runner has no campaign executor, so Plan 12's promotion had refused its packs outright. Its checks are now read from the runner's own pack, and the terminal is the save's own mark: across the 4/20 night 420-a the title went from two stars to three, read by a core-box rule that splits all 291 slot reads of the 97 retained title frames into exactly 0.0 and 1.0. The run's dial readback names the claim (20/20/20/20), the committed winner names the run with the options and model hashes it bound, and an agent attestation through evidence attest let promote record the edge. FNaF 1 now has a committed winner, a census naming its family and held-out block, a run pack and a promotion; FNaF 3 and 4 do not.",
+   "measured": "title stars 2 -> 3; 291 of 291 slot reads at 0.0 or 1.0",
+   "label": "DEVICE_MEASURED",
+   "rung": null,
+   "plan": 26,
+   "night": 7,
+   "route": null,
+   "tags": [
+    "device",
+    "promotion",
+    "fnaf1",
+    "s6"
+   ],
+   "sources": [
+    "docs/evidence/runs/fnaf1-custom-grid420-420-a-20260925T024452598Z/plan12-attestation.json",
+    "docs/evidence/fnaf1-title-stars-calibration-20261001.json",
+    "docs/evidence/graph.json"
+   ],
+   "status": "standing",
+   "supersededBy": null,
+   "supersedes": null
   }
  ]
 }

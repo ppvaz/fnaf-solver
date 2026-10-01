@@ -332,9 +332,10 @@ function incompleteCampaign(dir) {
 /**
  * A FNaF 1 runner's night (tools/device/fnaf1-*-run.mjs): its `probe.json` or `run.json` record
  * and its `events.jsonl`, whose captures already live outside the repository and are cited
- * there by sha256, and the `replay.json` fnaf1-winner.mjs leaves beside a winner's replay.
+ * there by sha256, the `replay.json` fnaf1-winner.mjs leaves beside a winner's replay, and the
+ * `title-stars.json` Play's fnaf1-title-stars.py reads off the run's retained title frames.
  * There is no campaign result, so the outcome is the runner's own `night-ended` event and
- * record status; the Plan 12 gate does not read these packs.
+ * record status; fnaf1-promotion.ts reads these packs for the promotion gate.
  */
 export function buildFnaf1Pack({ root, home = '', fnaf1RunDir, packId }: {root: string, home?: string, fnaf1RunDir: string, packId: string}) {
   const files = [];
@@ -343,7 +344,7 @@ export function buildFnaf1Pack({ root, home = '', fnaf1RunDir, packId }: {root: 
   for (const name of readdirSync(fnaf1RunDir).sort()) {
     const file = join(fnaf1RunDir, name);
     if (!statSync(file).isFile()) continue;
-    if (['probe.json', 'run.json', 'events.jsonl', 'replay.json'].includes(name) || /\.(txt|err)$/.test(name)) {
+    if (['probe.json', 'run.json', 'events.jsonl', 'replay.json', 'title-stars.json'].includes(name) || /\.(txt|err)$/.test(name)) {
       const { entry, text } = packText(name, readFileSync(file), { root, home });
       files.push(entry);
       texts.set(name, text);
@@ -502,8 +503,11 @@ export function readPack(dir: string) {
     if (sha256(data) !== file.sha256 || data.length !== file.bytes) throw new Error(`pack integrity mismatch: ${file.name}`);
     refuseFrames(file.name, data.toString('utf8'));
   }
-  if (pack.kind === 'fnaf1-run')
-    return { pack, digest: packDigest(pack), wrapper: null, files: pack.files.map(file => file.name), attestation: null };
+  if (pack.kind === 'fnaf1-run') {
+    const attested = join(dir, ATTESTATION_FILE);
+    return { pack, digest: packDigest(pack), wrapper: null, files: pack.files.map(file => file.name),
+      attestation: existsSync(attested) ? readJson(attested) : null };
+  }
   const lost = pack.custody?.lost?.includes('result.json');
   if (!lost && !pack.files.some(file => file.name === 'result.json')) throw new Error('pack has no result.json');
   const wrapper = lost ? null : readJson(join(dir, 'result.json'));

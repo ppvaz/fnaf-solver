@@ -1,0 +1,1144 @@
+{
+ "schema": "evidence-record-v1",
+ "id": "fnaf1-title-stars-calibration-60a3f53641c2d004",
+ "date": "2026-10-01",
+ "step": "ROADMAP S6 (FNaF 1 promotion: the terminal reader)",
+ "claimLevel": "DEVICE_MEASURED retained helper native frames; the rule is a per-pixel brightness threshold",
+ "question": "Does a fixed 16x16 core box at each of the three star positions under FNaF 1's title logo read a star as near-white and an empty slot as not, on every retained title frame?",
+ "model": {
+  "path": "packages/play/profiles/fnaf1/moto-g56/title-stars-fnaf1-moto-g56-v207.json",
+  "sha256": "0c2baaf86bbc68678d890fa569eefb8f3a9e373cb1fe6f4d14b73cedd7dae9a7"
+ },
+ "reader": {
+  "path": "packages/play/games/fnaf1/fnaf1-title-stars.py",
+  "sha256": "2531b0f187d4dc19a7aab41b9085d8c6e31ce421c519602d70eef411b57499da"
+ },
+ "frames": [
+  {
+   "capture": "fnaf1-custom-calibrate-empty-cal0-20260925T022808813Z",
+   "name": "0001-title-before-1-1.png",
+   "sha256": "5e5c61801cd611ed1f3b520d1e447defea0033b8a2fea8afaf554c9c97ee3889",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-calibrate-empty-cal0-20260925T022808813Z",
+   "name": "0002-title-before-1-2.png",
+   "sha256": "795b26dc23bb4fac3ccc5ba87fbb1d51d1be19cb87e0e906dc91cdc8d9c0c7b3",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-calibrate-empty-cal0-20260925T022808813Z",
+   "name": "0003-title-before-1-3.png",
+   "sha256": "fdaf5c4d4287ec69a7f801d75f4ae6710335ad1aa5be2c1f695b67c83cfebde4",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-calibrate-empty-cal0-20260925T022808813Z",
+   "name": "0031-title-after-restart-1-1.png",
+   "sha256": "64dfee124c5ea34da24bd2f66ddd636a986334382a76f2522736304574ce38a2",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-calibrate-empty-cal0-20260925T022808813Z",
+   "name": "0032-title-after-restart-1-2.png",
+   "sha256": "0aa88d2a706f32bb56da15e6c5e4dab14f37cd2e925181ac885c8f4a3d533c09",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-calibrate-empty-cal0-20260925T022808813Z",
+   "name": "0033-title-after-restart-1-3.png",
+   "sha256": "818a8051686ea8039f978847d9602b04815b1213f08ff5f5203ea16b31e8e96f",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-a-20260925T024452598Z",
+   "name": "0001-title-before-1-1.png",
+   "sha256": "8f4a539a589dca1ce2792fd7b1a1df2764f5ceb3d0a4573a97033c856d31039d",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-a-20260925T024452598Z",
+   "name": "0002-title-before-1-2.png",
+   "sha256": "a2aacad4fbe91d1bb5098213e287ccc0a226605c3c0b4008a7262c43348ad9f3",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-a-20260925T024452598Z",
+   "name": "0003-title-before-1-3.png",
+   "sha256": "6437da6972fdf553ab1c2e848e2d06eab2e7a1e8fc2394b827b0c122d738b94c",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-a-20260925T024452598Z",
+   "name": "0029-title-after-restart-1-1.png",
+   "sha256": "8af363a85525b9061d370168e91a4705be828a68454ea5f57f43f7223d959f25",
+   "stars": 3,
+   "fractions": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-a-20260925T024452598Z",
+   "name": "0030-title-after-restart-1-2.png",
+   "sha256": "d271a46a276882e128e7d5d8ba3bf6638ab62e735b7c002fa81dd401d24c1d2a",
+   "stars": 3,
+   "fractions": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-a-20260925T024452598Z",
+   "name": "0031-title-after-restart-1-3.png",
+   "sha256": "eab413ef56ba96dd7e2c7fbb6c1a06d377e5269c05566805d57639136569866d",
+   "stars": 3,
+   "fractions": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-b-teach-20260925T031606369Z",
+   "name": "0001-title-before-1-1.png",
+   "sha256": "9959566fdb6bf91e20361d42e50a92e3e43463e3e1e224f0d3e8f79c46e2da5e",
+   "stars": 3,
+   "fractions": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-b-teach-20260925T031606369Z",
+   "name": "0002-title-before-1-2.png",
+   "sha256": "9319e333b0f67758d152b84500bddb1b62353e096eadcdceb8ff12cc55ba50c3",
+   "stars": 3,
+   "fractions": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-b-teach-20260925T031606369Z",
+   "name": "0003-title-before-1-3.png",
+   "sha256": "bec2a73415cb2594f7039fffe5197fc857940aca077977ab4726feb10d994cd4",
+   "stars": 3,
+   "fractions": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-b-teach-20260925T031606369Z",
+   "name": "0028-title-after-restart-1-1.png",
+   "sha256": "3bd7e3ada90bb5e2de53a4db03f8354dd602f485327353295714cf7deea17677",
+   "stars": 3,
+   "fractions": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-b-teach-20260925T031606369Z",
+   "name": "0029-title-after-restart-1-2.png",
+   "sha256": "264207baf23af584d7aa70c2f5200ba429fa95df834e990551246dfde50af21f",
+   "stars": 0,
+   "fractions": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-b-teach-20260925T031606369Z",
+   "name": "0030-title-after-restart-1-3.png",
+   "sha256": "69dca957f349765cba10598d43ed46c0ac2463acabcdd602575a1c71708c3ed7",
+   "stars": 3,
+   "fractions": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-b-teach-20260925T031606369Z",
+   "name": "0031-title-after-restart-2-1.png",
+   "sha256": "dfca475957f5515a3629014e28e2e914fee6bd44a5ca44f400572a3350118ddf",
+   "stars": 0,
+   "fractions": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-b-teach-20260925T031606369Z",
+   "name": "0032-title-after-restart-2-2.png",
+   "sha256": "3e04fbbc383f16bfb4208ae80a1735ac00c795f47dcbb8bde85903417d5b6a64",
+   "stars": 0,
+   "fractions": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-b-teach-20260925T031606369Z",
+   "name": "0033-title-after-restart-2-3.png",
+   "sha256": "38476fb571e0d6dd826ce2a81535c1fd0b4989fcbe28efeaaf86d7c464b3d0d5",
+   "stars": 3,
+   "fractions": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-b-teach-20260925T031606369Z",
+   "name": "0034-title-after-restart-3-1.png",
+   "sha256": "09f5c8585edc2b30bff0aa317058fddfa59e8f8788559a11c2847f5fc59db16a",
+   "stars": 3,
+   "fractions": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-b-teach-20260925T031606369Z",
+   "name": "0035-title-after-restart-3-2.png",
+   "sha256": "9b90c1a2e3bbfccbba2ab8614c4f4d9a4185cfd397e06b12c161983d3248608d",
+   "stars": 3,
+   "fractions": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-b-teach-20260925T031606369Z",
+   "name": "0036-title-after-restart-3-3.png",
+   "sha256": "2eea18832a48c1a3ccd28b8694c08818b56c4906c0f382a6ba7d179f51fc7844",
+   "stars": 3,
+   "fractions": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-c-video-20260925T032833258Z",
+   "name": "0001-title-before-1-1.png",
+   "sha256": "b79fbd07f6b71052e363aea23edb7c131a1dd8003322d27c72cf149a64fbacd4",
+   "stars": 3,
+   "fractions": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-c-video-20260925T032833258Z",
+   "name": "0002-title-before-1-2.png",
+   "sha256": "ebc97870b2c0449d7c73367c4f3f30dc8d270b071e558d0366b7ecf673094976",
+   "stars": 3,
+   "fractions": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-c-video-20260925T032833258Z",
+   "name": "0003-title-before-1-3.png",
+   "sha256": "143c054a1a2bd6758aaf5979448a3aa89e1e23eaa3af40a6865403d076436b92",
+   "stars": 3,
+   "fractions": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-c-video-20260925T032833258Z",
+   "name": "0028-title-after-restart-1-1.png",
+   "sha256": "34a8e39a13a9b53b903dbed6f37b67f375a32a7cdf781f5e82720e1482e72680",
+   "stars": 3,
+   "fractions": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-c-video-20260925T032833258Z",
+   "name": "0029-title-after-restart-1-2.png",
+   "sha256": "d9cd82d4d69baadb6b645e2dab05b785f1eb7822a5d75793cf7de47f9102e6ba",
+   "stars": 3,
+   "fractions": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-c-video-20260925T032833258Z",
+   "name": "0030-title-after-restart-1-3.png",
+   "sha256": "a59ad3515a0c15198d635d5f0c12a0b84f29a6159223925fd9c2cecd89199dde",
+   "stars": 3,
+   "fractions": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-d-video-20260925T033659207Z",
+   "name": "0001-title-before-1-1.png",
+   "sha256": "3a9e807ec30fc3042bb0dfbb1715aaab492df574d81d50c7bc3b2b402b18ca1a",
+   "stars": 3,
+   "fractions": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-d-video-20260925T033659207Z",
+   "name": "0002-title-before-1-2.png",
+   "sha256": "2a18b5931086e0f85586a17b7bb7d05e3f2a3da9ce745d18c9c2d83f5b2f73fc",
+   "stars": 3,
+   "fractions": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-d-video-20260925T033659207Z",
+   "name": "0003-title-before-1-3.png",
+   "sha256": "e8491fad9c2d6fdc7a0759eaa04493c2d617331ae276cb9226070502c924b7a9",
+   "stars": 3,
+   "fractions": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-d-video-20260925T033659207Z",
+   "name": "0004-title-before-2-1.png",
+   "sha256": "c8009b59174aa3ba2caa7d9ac0d3ad575ce5b069cc650178a726206d019c75a5",
+   "stars": 3,
+   "fractions": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-d-video-20260925T033659207Z",
+   "name": "0005-title-before-2-2.png",
+   "sha256": "40f8df01de790a291efa264d96f73780f66d8aa67ae8099f86cf5847985055e9",
+   "stars": 3,
+   "fractions": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-d-video-20260925T033659207Z",
+   "name": "0006-title-before-2-3.png",
+   "sha256": "61ea97b22349a1505120eab08693ef72717df9931f1cb590240217dd7c12b52d",
+   "stars": 3,
+   "fractions": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-d-video-20260925T033659207Z",
+   "name": "0031-title-after-restart-1-1.png",
+   "sha256": "8975e732f3d2143c54c9e1f4fa2e4d1291ba7f7f9cfbe9fc020a19efe51b2f6d",
+   "stars": 0,
+   "fractions": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-d-video-20260925T033659207Z",
+   "name": "0032-title-after-restart-1-2.png",
+   "sha256": "976476b83ec89fad165d45caf38842877b69cd732b2a00a7d00842548bbb6d11",
+   "stars": 0,
+   "fractions": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-d-video-20260925T033659207Z",
+   "name": "0033-title-after-restart-1-3.png",
+   "sha256": "97b36fcf8020b07304fe7407fa008878d3c62621f90dc4d6e50c2b4f66d46e18",
+   "stars": 0,
+   "fractions": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-d-video-20260925T033659207Z",
+   "name": "0034-title-after-restart-2-1.png",
+   "sha256": "938b5b21848838b12b749db214340f2b356fe63648c0fab6aa00df971f1848a8",
+   "stars": 0,
+   "fractions": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-d-video-20260925T033659207Z",
+   "name": "0035-title-after-restart-2-2.png",
+   "sha256": "86c48b41cac4e004aecd770694b573a65a97db117ad0fc1ab65bf1938023c583",
+   "stars": 3,
+   "fractions": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-d-video-20260925T033659207Z",
+   "name": "0036-title-after-restart-2-3.png",
+   "sha256": "8eb8b03747b37a6e6aa8f06d290f7a069ae60bc5910e24d0044873bfb2e23642",
+   "stars": 3,
+   "fractions": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-d-video-20260925T033659207Z",
+   "name": "0037-title-after-restart-3-1.png",
+   "sha256": "ae5017283eaf7e5416bc0be9c2be1edce4b183432ac362b9f7261d25290be515",
+   "stars": 3,
+   "fractions": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-d-video-20260925T033659207Z",
+   "name": "0038-title-after-restart-3-2.png",
+   "sha256": "506f97f274791fd06fd8e127547a62756092febd4102953936e0db594a3846cb",
+   "stars": 3,
+   "fractions": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-420-d-video-20260925T033659207Z",
+   "name": "0039-title-after-restart-3-3.png",
+   "sha256": "59734a880d7c158a618ad3197eebccb6b6f114058de3d68a66b0b602ffb0995f",
+   "stars": 3,
+   "fractions": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-posctl1-20260925T024010402Z",
+   "name": "0001-title-before-1-1.png",
+   "sha256": "20c69c3977d556902a9b041863e019f6c606b88257e9724bfed08d5990d18f28",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-posctl1-20260925T024010402Z",
+   "name": "0002-title-before-1-2.png",
+   "sha256": "3e21b3d17668bdb7078d377329e7fd72509e8e10af7e283fa35bf09218b16806",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-posctl1-20260925T024010402Z",
+   "name": "0003-title-before-1-3.png",
+   "sha256": "7c268fac23ea2dc109a1daa1ccc2de0d971497902174780693f7b7e59229580f",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-posctl1-20260925T024010402Z",
+   "name": "0026-title-after-restart-1-1.png",
+   "sha256": "92bb2eb10005d4466f1e83cb3659ffee09d77f913d97a165726617200c222745",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-posctl1-20260925T024010402Z",
+   "name": "0027-title-after-restart-1-2.png",
+   "sha256": "18afa36b374733650c78d469604712a3bf18ce38c085e6d218af1f087b4852a2",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-custom-grid420-posctl1-20260925T024010402Z",
+   "name": "0028-title-after-restart-1-3.png",
+   "sha256": "4be0958ea43f1ead9b251e961ddf5b02ebc36e5e9b9195f4409b9b66518a6d1a",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-custom-night-discover-20260924T040032835Z",
+   "name": "0001-title-before-custom-night-1-1.png",
+   "sha256": "159ba460b782ddf26d6e0cb82fb8fa9a2816c644a6189991e3d3ec0b09af0261",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-custom-night-discover-20260924T040032835Z",
+   "name": "0002-title-before-custom-night-1-2.png",
+   "sha256": "cd9262b7039596320b267a5123d2d3512b9539a23dad7af2693bcf2f93912339",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-custom-night-discover-20260924T040032835Z",
+   "name": "0003-title-before-custom-night-1-3.png",
+   "sha256": "17cffce9bfa01dec06319a0891e4da1b4700a38c8c29fce86c5bb7c6849c7683",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-custom-night-discover-20260924T040032835Z",
+   "name": "0022-title-after-restart-1-1.png",
+   "sha256": "cc5d197b2c8b537c7736dd8be7d8e16165385020211b1fa28ff5b80facdbdf62",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-custom-night-discover-20260924T040032835Z",
+   "name": "0023-title-after-restart-1-2.png",
+   "sha256": "69e93ba52cb704eb1f6afc2779c7d888c58dff06f5f4605d81d80a58caf5536b",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-custom-night-discover-20260924T040032835Z",
+   "name": "0024-title-after-restart-1-3.png",
+   "sha256": "34a44ee30ad2a3a94cdf3f2f23a20286df5be533af3de5748dc414975b9355c3",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-custom-night-set-heldout-20260924T041207675Z",
+   "name": "0001-title-before-custom-night-1-1.png",
+   "sha256": "9f232fdab2dc959bba6a0c2775fc05f943f59ccd8f715340a11c8d07bfad62f2",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-custom-night-set-heldout-20260924T041207675Z",
+   "name": "0002-title-before-custom-night-1-2.png",
+   "sha256": "87e26cf65b2d088a0dea6752602c21760439a32fa27179686eb2f21cfc9f721b",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-custom-night-set-heldout-20260924T041207675Z",
+   "name": "0003-title-before-custom-night-1-3.png",
+   "sha256": "a2c56707eb2d0ffd95791b4e157d991682080dfc417b6db5805558e5f4c639ce",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-custom-night-set-heldout-20260924T041207675Z",
+   "name": "0036-title-after-back-1-1.png",
+   "sha256": "0618e420307a7cc2b2eef9f8ae769b13f46583849775dc0d7d48bbff88249127",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-custom-night-set-heldout-20260924T041207675Z",
+   "name": "0037-title-after-back-1-2.png",
+   "sha256": "d029c6e5a2cb71a075bde63c44bff45fe5f7681067021b440f5ddab59e7c7d0e",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-custom-night-set-heldout-20260924T041207675Z",
+   "name": "0038-title-after-back-1-3.png",
+   "sha256": "0754808b9102472b2a909c0d9fe33346c9b68fb0387c697f5b689a94c1349f04",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-custom-night-sweep-glyphs-20260924T040557989Z",
+   "name": "0001-title-before-custom-night-1-1.png",
+   "sha256": "8bb423f6fccec3f7ffa4bf5ef694127e8553dac24c351dbd6eb74eb0cbae2521",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-custom-night-sweep-glyphs-20260924T040557989Z",
+   "name": "0002-title-before-custom-night-1-2.png",
+   "sha256": "d26eb3eec473a2362e51038f4b9240fac9bebe453aa35f008107026d1479d608",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-custom-night-sweep-glyphs-20260924T040557989Z",
+   "name": "0003-title-before-custom-night-1-3.png",
+   "sha256": "644051e77abc9c8101e7bd70539f7852b87034e303974915618deb16ad8dc7ca",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-custom-night-sweep-glyphs-20260924T040557989Z",
+   "name": "0178-title-after-back-1-1.png",
+   "sha256": "100b1c38ba7dc6fdcd64dcb76ca9e4fb6650a24cebedd63e54f336a7632ff15e",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-custom-night-sweep-glyphs-20260924T040557989Z",
+   "name": "0179-title-after-back-1-2.png",
+   "sha256": "353b00abc41cee0a27ee12304a3f32953e090b1ca14550b8e66f8453bdf9d0c6",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-custom-night-sweep-glyphs-20260924T040557989Z",
+   "name": "0180-title-after-back-1-3.png",
+   "sha256": "3cb51a5bc87752dd606e2f9b257e529536fbee9e7b161e2b0cad3e6059e0240f",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-title-unlocked-20260924T035214954Z",
+   "name": "0004-title-01.png",
+   "sha256": "eddfacddef13add42667ee4bb24b6f1a9ab45c2cfeed26c2e30a0d35b168dde8",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-title-unlocked-20260924T035214954Z",
+   "name": "0005-title-02.png",
+   "sha256": "cf8a9b47df03a8e1c58a3929514cad058a9b913bbf8473098f56fd40c059ed3d",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-title-unlocked-20260924T035214954Z",
+   "name": "0006-title-03.png",
+   "sha256": "0dfdb475bd4baef495eea185a264f453c878560d9562b492755ccc9be71f1858",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-title-unlocked-20260924T035214954Z",
+   "name": "0007-title-04.png",
+   "sha256": "cf2210438661e319271b12ce5c1fcd886a4b9a63a7023318bc0b0e27d89e323c",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-title-unlocked-20260924T035214954Z",
+   "name": "0008-title-05.png",
+   "sha256": "0e9029288d51566a65dc8f36055abf2191932cde6c11377e7939214355357526",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-title-unlocked-20260924T035214954Z",
+   "name": "0009-title-06.png",
+   "sha256": "9b6c44eb3368c35fdde4df0f4f8e162e097ee8b125dfe237ac61bebd0c04f2d2",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-title-unlocked-20260924T035214954Z",
+   "name": "0010-title-07.png",
+   "sha256": "6844774ef05f6937ddeda9fc939cc3fdf2404f6288edd93cde4d5f0854b97679",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-title-unlocked-20260924T035214954Z",
+   "name": "0011-title-08.png",
+   "sha256": "1697a613ee5cb2af6f6c86daf9a54bb19c6ce2821ec8aa99ac388590f2ff1ae0",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-title-unlocked-20260924T035214954Z",
+   "name": "0012-title-09.png",
+   "sha256": "bd00785800a84eea37d484b3335fc96c6929ca472bf50c8bc7d4d6732fa845bb",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-title-unlocked-20260924T035214954Z",
+   "name": "0013-title-10.png",
+   "sha256": "97e4627b9e70a50675084e05a488a60d28331ca3d1d9cceb530b7c78680ddb4e",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-title-unlocked-20260924T035214954Z",
+   "name": "0014-title-11.png",
+   "sha256": "f52d05da946ad84c253f93829bc63a2b1647b317deffc77a9d23466a1c709399",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-title-unlocked-20260924T035214954Z",
+   "name": "0015-title-12.png",
+   "sha256": "220090eeea6490b0d93871a359cec2f7866f0ee7198fbb638b6e21dfb80c97ba",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-title-unlocked-20260924T035214954Z",
+   "name": "0016-title-13.png",
+   "sha256": "2474dd301e01854f93cf14a3a08459ac6c9263ecd443f816d8214849c22ad4cb",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-title-unlocked-20260924T035214954Z",
+   "name": "0017-title-14.png",
+   "sha256": "a0c70144d682a1bf3964f5f14c40528b52bf433c2380f58258620d71b18d0f2b",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-title-unlocked-20260924T035214954Z",
+   "name": "0018-title-15.png",
+   "sha256": "c9aa7dfcd6172e4ccee7d722d8072a4fb0a551906c51dc64cd5715ffa18b3b3d",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-menu-title-unlocked-20260924T035214954Z",
+   "name": "0019-title-16.png",
+   "sha256": "50c072533229c1281c8822b6e215e102b9fb8c3ebf0d50b3cc223aceabf7521a",
+   "stars": 2,
+   "fractions": [
+    1.0,
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-night1-audio-probe-20260922T051641286Z",
+   "name": "0000-title-before-continue-1.png",
+   "sha256": "2996fd83f1d5ca881f3402a21207d1fff6397d2ddaee212696d7bad23e9c3bea",
+   "stars": 0,
+   "fractions": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-night1-audio-probe-20260922T051641286Z",
+   "name": "0001-title-before-continue-2.png",
+   "sha256": "89117d533bfcb83461cc1372b38f2b17b1c5bdecdfab3367b59f88b0db17ece4",
+   "stars": 0,
+   "fractions": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-night1-audio-probe-20260922T051641286Z",
+   "name": "0002-title-before-continue-3.png",
+   "sha256": "90cbbc11df8f0623c86e31410ee8baa96cae8410e85ff671e62ac40d65e6e930",
+   "stars": 0,
+   "fractions": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-night1-audio-probe-20260922T051641286Z",
+   "name": "0003-title-immediate-before-continue-1.png",
+   "sha256": "3a2fef898238b3caa1d10830d586a1b52f29d4297e34df4fba89fa79f4498830",
+   "stars": 0,
+   "fractions": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-night1-audio-probe-20260922T051641286Z",
+   "name": "0004-title-immediate-before-continue-2.png",
+   "sha256": "a6dee298bd5da90df86ddc36958eee62d9029cfc8cf2ee3779205467d1a266ea",
+   "stars": 0,
+   "fractions": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-night1-audio-probe-20260922T051641286Z",
+   "name": "0005-title-immediate-before-continue-3.png",
+   "sha256": "5ad0b3604d2678a7c4e7ea7a6b2d034d48c57ff2eff0c4bfe20bd6cfa8133525",
+   "stars": 0,
+   "fractions": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-night1-community-loop-a-20260922T043341216Z",
+   "name": "0000-title-before-continue-1.png",
+   "sha256": "5066354b2ef0a8b4642ac559c448f2d755f2e4729a775e4a36432632f0b83045",
+   "stars": 0,
+   "fractions": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-night1-community-loop-a-20260922T043341216Z",
+   "name": "0001-title-before-continue-2.png",
+   "sha256": "25fd13a3bba6720cc8e163bded6bc540dcb3380a2fc60e8641086dafddb7cf8c",
+   "stars": 0,
+   "fractions": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-night1-community-loop-a-20260922T043341216Z",
+   "name": "0002-title-before-continue-3.png",
+   "sha256": "adb25e65ae12d07d36107e2be1a87508560169ad670b8b3af808d760f52de898",
+   "stars": 0,
+   "fractions": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-night1-community-loop-a-20260922T043341216Z",
+   "name": "0003-title-immediate-before-continue-1.png",
+   "sha256": "157c072124746c2f7f98402ebe953ed748111055c5cebd1e738c653ebf96dc17",
+   "stars": 0,
+   "fractions": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-night1-community-loop-a-20260922T043341216Z",
+   "name": "0004-title-immediate-before-continue-2.png",
+   "sha256": "0b6c0829e50e1815f31d814085cf2dc0ee1466161601cb5a8e7693210afb2835",
+   "stars": 0,
+   "fractions": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "capture": "fnaf1-night1-community-loop-a-20260922T043341216Z",
+   "name": "0005-title-immediate-before-continue-3.png",
+   "sha256": "3ff77f6c268a5279f1af6acf4e02e7b0e2cac395dec1e6f75540b6b709c461a6",
+   "stars": 0,
+   "fractions": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  }
+ ],
+ "summary": {
+  "frames": 97,
+  "slotReads": 291,
+  "values": [
+   0.0,
+   1.0
+  ],
+  "byCapture": {
+   "fnaf1-custom-calibrate-empty-cal0-20260925T022808813Z": {
+    "2": 6
+   },
+   "fnaf1-custom-grid420-420-a-20260925T024452598Z": {
+    "2": 3,
+    "3": 3
+   },
+   "fnaf1-custom-grid420-420-b-teach-20260925T031606369Z": {
+    "3": 9,
+    "0": 3
+   },
+   "fnaf1-custom-grid420-420-c-video-20260925T032833258Z": {
+    "3": 6
+   },
+   "fnaf1-custom-grid420-420-d-video-20260925T033659207Z": {
+    "3": 11,
+    "0": 4
+   },
+   "fnaf1-custom-grid420-posctl1-20260925T024010402Z": {
+    "2": 6
+   },
+   "fnaf1-menu-custom-night-discover-20260924T040032835Z": {
+    "2": 6
+   },
+   "fnaf1-menu-custom-night-set-heldout-20260924T041207675Z": {
+    "2": 6
+   },
+   "fnaf1-menu-custom-night-sweep-glyphs-20260924T040557989Z": {
+    "2": 6
+   },
+   "fnaf1-menu-title-unlocked-20260924T035214954Z": {
+    "2": 16
+   },
+   "fnaf1-night1-audio-probe-20260922T051641286Z": {
+    "0": 6
+   },
+   "fnaf1-night1-community-loop-a-20260922T043341216Z": {
+    "0": 6
+   }
+  }
+ },
+ "findings": [
+  "All 291 slot reads over the 97 retained FNaF 1 title frames are exactly 0.0 or 1.0, and every frame fills its slots left to right: the core box separates a star from the static behind the title with no intermediate value.",
+  "The save reads 0 stars on 2026-09-22, 2 from 2026-09-24 through the 4/20 night 420-a's title before it, and 3 on 420-a's title after it and on every later run (b, c, d).",
+  "Frames named title-* that read 0 stars in runs b and d are not title reads: the runner's own title model did not read them confidently, and fnaf1-title-stars.py run counts only confident title frames."
+ ],
+ "limitations": [
+  "One handset and one build (2.0.7+40), helper native frames at 2400x1080; another device needs its own slot geometry.",
+  "The frames themselves are withheld under the publishing boundary; this record carries their sha256 and the reads only."
+ ],
+ "reproducer": "python3 packages/play/games/fnaf1/fnaf1-title-stars.py calibrate ~/fnaf-apks/fnaf1-device-runs/*/ --json <out>"
+}

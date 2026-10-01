@@ -1474,6 +1474,24 @@
       }
     },
     {
+      "id": "packages/play/games/fnaf1/test-fnaf1-title-stars.py",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.mjs per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "packages/play/games/fnaf3/test-fnaf3-run.mjs",
       "lane": "test:unit",
       "owner": "@sixam/play",

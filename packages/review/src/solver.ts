@@ -19,7 +19,7 @@ import { canonicalJson } from '@sixam/kernel/contracts';
 import { REPOSITORY_TARGET, claimEnvelope, isRefusal, isUnknown, refusalEnvelope, unknown, validateClaimEnvelope } from '@sixam/kernel';
 import { videoTerminal } from './evidence-cohort.ts';
 import { ATTESTATION_FILE, PACKS_DIR, packPromotionChecks, readPack, trackedWinners, winnerFiles } from './evidence-pack.ts';
-import { GRAPH_FILE, PROMOTION_EDGE, derivePromotion, readGraph, recordPromotion } from './evidence-promotion.ts';
+import { GRAPH_FILE, PROMOTION_EDGE, derivePromotion, fnaf1PromotionChecks, readGraph, recordPromotion } from './evidence-promotion.ts';
 import { FNAF2, ONE_CLEAR, PLAN12, levelLabel, promotionsQueryEnvelope } from './envelopes.ts';
 import { liftPack } from './pack-lift.ts';
 import { queryPromotions } from './promotions-query.ts';
@@ -216,12 +216,18 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
     } else {
       let gate;
       try { derivePromotion(root, gamePacks[0].id, new Map()); gate = null; } catch (error) { gate = error.message; }
+      const promotedHere = gamePacks.filter(pack => pack.promoted);
       phone = {
         packs: gamePacks.length, reportedOutcomes: sorted(outcomes),
         claimLevels: sorted(tally(gamePacks, pack => pack.claimLevel ?? 'UNKNOWN')),
-        promotion: unknown(gate ? `the promotion gate refuses this game's packs: ${gate}` : 'no pack of this game is promoted'),
+        promotion: promotedHere.length
+          ? { rule: `a ${PROMOTION_EDGE} edge in ${GRAPH_FILE} whose pack re-derives (Plan 12's checks, read from this game's runner packs)`,
+            label: 'DEVICE_MEASURED', promotedRuns: promotedHere.map(pack => pack.id), promotedClaims: [...new Set(promotedHere.map(pack => pack.promoted))],
+            attestedBy: sorted(tally(promotedHere, pack => pack.attestedBy ?? 'UNKNOWN')) }
+          : unknown(gate ? `the promotion gate refuses this game's packs: ${gate}` : 'no pack of this game is promoted'),
       };
-      notMeasured.push(`a promotion for ${named.title}: ${gate ?? 'none recorded'}`);
+      if (!promotedHere.length) notMeasured.push(`a promotion for ${named.title}: ${gate ?? 'none recorded'}`);
+      else notMeasured.push(ONE_CLEAR);
     }
     if ((outcomes.UNKNOWN ?? 0) > 0) notMeasured.push(`the reported outcome of ${outcomes.UNKNOWN} of this game's lifted runs`);
 
@@ -376,7 +382,7 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
           [`the Plan 12 checks: ${error.message}`], [`${where}/pack.json`, PLAN12]);
       }
       const packed = readPack(dir);
-      const checks = packPromotionChecks(packed, winners());
+      const checks = promotionChecks(packed, row.id);
       return envelope({
         checks, derived: derived.verified.map(item => ({ check: item.check, pass: item.pass, ...(item.pass ? {} : { failed: item.detail.failed }) })),
         claim: derived.claim, custody: derived.custody, promoted: row.promoted,
@@ -405,6 +411,9 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
     return envelope({ deaths: deaths.map(run => ({ id: run.id, at: run.reportedOutcome.at, unit: 'ms from the night origin' })) }, lostNotes);
   }
 
+  // Plan 12's checks for a pack: the campaign's for FNaF 2, fnaf1-promotion.ts's reading of a FNaF 1 runner pack.
+  const promotionChecks = (packed, id) => (packed.pack.kind === 'fnaf1-run' ? fnaf1PromotionChecks(root, id, packed) : packPromotionChecks(packed, winners()));
+
   // --- promote: a proposal or a refusal, never a write -----------------------------------------
 
   function promote({ pack }: {pack?: string} = {}) {
@@ -419,7 +428,7 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
         remedy: 'no promotion gate reads this kind of run; a gate for it is new work, not a promotion' });
     }
     const packed = readPack(dir);
-    const checks = { ...packPromotionChecks(packed, winners()),
+    const checks = { ...promotionChecks(packed, row.id),
       claimIdentity: derived.verified.find(item => item.check === 'claimIdentity')?.pass ?? false };
     const failing = Object.entries(checks).filter(([, pass]) => !pass).map(([check]) => check);
     if (failing.length) {

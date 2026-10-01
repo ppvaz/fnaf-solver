@@ -100,14 +100,18 @@ for (const game of GAMES) {
     assert.ok(isUnknown((described as any).claim.refuted));
   }
   if (game.alias === 'fnaf2') {
-    assert.equal(phone.promotedRuns, graphEdges.length, 'every PROMOTED_BY edge in the graph is a FNaF 2 promotion that re-derives');
+    assert.equal(phone.promotedRuns, graphEdges.length, 'every PROMOTED_BY edge in the graph re-derives (the promotions query spans every game)');
     assert.equal(phone.label, 'DEVICE_MEASURED');
-    assert.equal(gaps[3].promotionEdges, graphEdges.length);
+    assert.equal(gaps[3].promotionEdges, graphEdges.filter(edge => edge.from.startsWith('claim.fnaf2.')).length, 'gap 4 counts this game\'s own edges');
     assert.equal(gaps[3].holds, 'partly', 'promotion is no longer empty, and custody is not complete for every pack');
     assert.ok((described as any).notMeasured.some(item => item.startsWith('reliability')), 'a promotion is one clear, and that is said');
   }
   if (game.alias === 'fnaf3' || game.alias === 'fnaf4') assert.ok(isUnknown(phone), `no pack is attributed to ${game.alias}`);
-  if (game.alias === 'fnaf1') assert.ok(isUnknown(phone.promotion), 'no Plan 12 gate reads a FNaF 1 run');
+  if (game.alias === 'fnaf1') {
+    assert.ok(!isUnknown(phone.promotion) && phone.promotion.promotedRuns.includes('fnaf1-custom-grid420-420-a-20260925T024452598Z'),
+      'the FNaF 1 4/20 run is promoted through Plan 12\'s checks read from its runner pack (fnaf1-promotion.ts)');
+    assert.deepEqual(phone.promotion.promotedClaims, ['claim.fnaf1.custom-night.20-20-20-20.device-6am']);
+  }
 }
 refusal(solver.describe({ game: 'fnaf5' }), 'invalid-argument', 'an unregistered game');
 

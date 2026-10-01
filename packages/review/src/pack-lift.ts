@@ -141,7 +141,11 @@ function liftFnaf1(dir, loaded) {
   const events = packed('events.jsonl') ? rows(readFileSync(join(dir, 'events.jsonl'), 'utf8')) : null;
   const options = record?.options;
   const ended = pack.outcome?.ended;
-  const reportedOutcome = ended === 'STOP_AFTER' ? timeout()
+  // The save's own mark, read off the run's title frames (fnaf1-title-stars.py): a star earned across the night is
+  // the game recording a completed night, whatever bound stopped the route (fnaf1-promotion.ts reads the same file).
+  const stars = packed('title-stars.json') ? JSON.parse(readFileSync(join(dir, 'title-stars.json'), 'utf8')) : null;
+  const earned = Number.isInteger(stars?.before) && Number.isInteger(stars?.after) && stars.after > stars.before;
+  const reportedOutcome = earned ? sixAm() : ended === 'STOP_AFTER' ? timeout()
     : ended === 'LEFT_OFFICE' ? unknown('the runner saw the office leave the screen (a jumpscare, a blackout or 6 AM) and does not say which')
       : ended ? unknown(`the runner ended the night as ${ended}, which the kernel does not name`)
         : unknown('the runner logged no night-ended event');
