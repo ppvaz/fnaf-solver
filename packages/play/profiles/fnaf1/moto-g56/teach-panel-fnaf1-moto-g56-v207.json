@@ -1,15 +1,16 @@
 {
-  "schema": "fnaf1-teach-overlay-v1",
+  "schema": "fnaf1-teach-overlay-v2",
   "target": {
     "package": "com.scottgames.fivenightsatfreddys",
     "build": "2.0.7+40",
     "device": "ZF525F5BH5"
   },
   "presenter": {
-    "package": "com.ppvaz.fnaf1teach",
-    "service": "com.ppvaz.fnaf1teach/.Fnaf1TeachOverlayService",
-    "receiver": "com.ppvaz.fnaf1teach/.Fnaf1TeachCommandReceiver",
-    "contract": "android/fnaf1-teach/src/com/ppvaz/fnaf1teach/Fnaf1TeachContract.java"
+    "package": "com.ppvaz.fnafcompanion",
+    "lesson": "f1strip",
+    "command": "LESSON <token> f1strip show NIGHT STAGE RUN | clear | status, over the Companion's authenticated control socket while it captures",
+    "contract": "android/companion/src/com/ppvaz/fnafcompanion/Fnaf1Strip.java",
+    "history": "a separate APK, android/fnaf1-teach (package com.ppvaz.fnaf1teach), from 2026-09-25 until 2026-10-01"
   },
   "geometry": { "width": 2400, "height": 1080 },
   "rect": { "left": 20, "top": 0, "right": 1020, "bottom": 50 },
@@ -29,7 +30,7 @@
     "full-loop",
     "night2-calibration"
   ],
-  "claimLevel": "DEVICE_MEASURED geometry/control map; presenter visual attachment remains to be verified before a teaching run",
+  "claimLevel": "DEVICE_MEASURED geometry/control map; the Companion's strip window measured at frame [20,0][1020,50] on 2026-10-01 (show, update and clear confirmed through fnaf1-teach-overlay.ts); no teaching run yet",
   "sources": [
     "packages/play/profiles/fnaf1/moto-g56/controls-fnaf1-moto-g56-v207.json",
     "packages/play/games/fnaf1/fnaf1-door-light.py",

@@ -14,6 +14,10 @@
  *   packages/play/games/fnaf1/fnaf1-night-run.sh --live --confirm-live --bt-audio --teach-overlay [--abort-restart] \
  *       --night 1 --cursor-observed 1 --label community-loop-a
  *
+ * `--teach-overlay` shows the Companion's FNaF 1 teaching strip, so the
+ * Companion must be capturing first: packages/play/bin/companion/companion-setup.sh
+ * --target fnaf1, which also brings FNaF 1 to its title.
+ *
  * `--cursor-observed` is an operator/visual attestation written into the run
  * record, not OCR.  The actual title gate is three fresh native FNaF 1 title
  * reads containing Continue.  The saved title frames remain with the run so a
@@ -42,7 +46,7 @@ const TITLE_MODEL_PATH = join(HERE, '../../profiles/fnaf1/moto-g56/title-fnaf1-m
 const TITLE_OBSERVER = join(HERE, 'fnaf1-title-observe.sh');
 const DOOR_SENSOR = join(HERE, 'fnaf1-door-light.py');
 const TEACH_MODEL_PATH = join(HERE, '../../profiles/fnaf1/moto-g56/teach-panel-fnaf1-moto-g56-v207.json');
-const TEACH_OVERLAY = join(HERE, 'fnaf1-teach-overlay.sh');
+const TEACH_OVERLAY = join(HERE, 'fnaf1-teach-overlay.ts');
 const AUDIO_LINK = join(ROOT, 'packages/play/bin/audio/bt-audio-link.sh');
 const AUDIO_CAPTURE = join(ROOT, 'packages/play/bin/audio/capture-bt-audio.sh');
 const TEARDOWN = join(HERE, '../../bin/phone/game-teardown.sh');
@@ -126,13 +130,14 @@ export function validateRoute(route, controls, titleModel, teachModel) {
   if (route?.audio?.required !== true || !/Passive/.test(route?.audio?.purpose ?? ''))
     fail('route does not require passive retained audio');
   if (route?.teachingOverlay?.required !== true ||
-      route.teachingOverlay.tool !== 'packages/play/games/fnaf1/fnaf1-teach-overlay.sh' ||
+      route.teachingOverlay.tool !== 'packages/play/games/fnaf1/fnaf1-teach-overlay.ts' ||
       route.teachingOverlay.model !== 'packages/play/profiles/fnaf1/moto-g56/teach-panel-fnaf1-moto-g56-v207.json' ||
-      route.teachingOverlay.schema !== 'fnaf1-teach-overlay-v1')
+      route.teachingOverlay.schema !== 'fnaf1-teach-overlay-v2')
     fail('route does not require the isolated FNaF 1 teaching overlay');
-  if (teachModel?.schema !== 'fnaf1-teach-overlay-v1' ||
+  if (teachModel?.schema !== 'fnaf1-teach-overlay-v2' ||
       teachModel?.target?.package !== PACKAGE || teachModel?.target?.build !== BUILD ||
-      teachModel?.presenter?.package !== 'com.ppvaz.fnaf1teach' ||
+      teachModel?.presenter?.package !== 'com.ppvaz.fnafcompanion' ||
+      teachModel?.presenter?.lesson !== 'f1strip' ||
       !Array.isArray(teachModel?.stages) || !teachModel.stages.includes('full-loop'))
     fail('teaching overlay model is not the FNaF 1 passive presenter binding');
   if (route?.controls?.contactMs !== 160 || route?.controls?.startsAtPan !== 0)
@@ -550,16 +555,17 @@ async function stopAudio(serial, base, record) {
 }
 
 /**
- * The presenter is deliberately a separate FNaF 1 app with a bounded stage
- * vocabulary. Its own dumpsys proof confirms an attached non-touchable window;
- * it is never asked to identify game pixels or authorize an input.
+ * The Companion's FNaF 1 teaching strip (Fnaf1Strip.java), with a bounded stage
+ * vocabulary. The Companion's own status reply confirms an attached
+ * non-touchable window; it is never asked to identify game pixels or authorize
+ * an input.
  */
 async function teachOverlay(serial, record, mode, { night = null, stage = null, runId = null } = {}) {
   const args = [TEACH_OVERLAY, mode];
   if (mode === '--show' || mode === '--update') {
     args.push('--night', String(night), '--stage', String(stage), '--run', String(runId));
   }
-  const result = await run('bash', args, { timeoutMs: 15000, env: { ANDROID_SERIAL: serial } });
+  const result = await run(process.execPath, args, { timeoutMs: 15000, env: { ANDROID_SERIAL: serial } });
   const output = `${result.stdout}${result.stderr}`.trim();
   await record.event('teach-overlay', { mode, night, stage, code: result.code, output });
   if (result.code !== 0) fail(`teaching overlay ${mode} refused: ${output || 'no status'}`);

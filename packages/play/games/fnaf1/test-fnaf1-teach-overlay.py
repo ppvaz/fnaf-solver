@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -10,10 +11,10 @@ MODEL = ROOT / "packages/play/profiles/fnaf1/moto-g56/teach-panel-fnaf1-moto-g56
 CONTROLS = ROOT / "packages/play/profiles/fnaf1/moto-g56/controls-fnaf1-moto-g56-v207.json"
 TITLE = ROOT / "packages/play/profiles/fnaf1/moto-g56/title-fnaf1-moto-g56-v207.json"
 SENSOR = ROOT / "packages/play/games/fnaf1/fnaf1-door-light.py"
-CONTRACT = ROOT / "android/fnaf1-teach/src/com/ppvaz/fnaf1teach/Fnaf1TeachContract.java"
-MANIFEST = ROOT / "android/fnaf1-teach/AndroidManifest.xml"
-SERVICE = ROOT / "android/fnaf1-teach/src/com/ppvaz/fnaf1teach/Fnaf1TeachOverlayService.java"
-TOOL = ROOT / "packages/play/games/fnaf1/fnaf1-teach-overlay.sh"
+COMPANION = ROOT / "android/companion/src/com/ppvaz/fnafcompanion"
+CONTRACT = COMPANION / "Fnaf1Strip.java"
+OVERLAY = COMPANION / "OverlayController.java"
+TOOL = ROOT / "packages/play/games/fnaf1/fnaf1-teach-overlay.ts"
 
 
 def gap(rect, point):
@@ -29,7 +30,7 @@ controls = json.loads(CONTROLS.read_text())
 title = json.loads(TITLE.read_text())
 rect_row = model["rect"]
 rect = tuple(rect_row[key] for key in ("left", "top", "right", "bottom"))
-assert model["schema"] == "fnaf1-teach-overlay-v1"
+assert model["schema"] == "fnaf1-teach-overlay-v2"
 assert model["target"]["package"] == "com.scottgames.fivenightsatfreddys"
 assert model["geometry"] == {"width": 2400, "height": 1080}
 assert 0 <= rect[0] < rect[2] <= 2400 and 0 <= rect[1] < rect[3] <= 1080
@@ -43,16 +44,23 @@ for name, point in controls["controlMap"].items():
 assert set(model["stages"]) == {
     "hands-off", "left-calibration", "left-watch", "right-monitor-calibration", "full-loop", "night2-calibration"
 }
+# The Companion draws what this model describes: the same rectangle, guard and
+# stages, in the shared non-touchable panel window, on debug builds only.
 contract = CONTRACT.read_text()
-assert 'TARGET_PACKAGE = "com.scottgames.fivenightsatfreddys"' in contract
+assert model["presenter"]["package"] == "com.ppvaz.fnafcompanion" and model["presenter"]["lesson"] == "f1strip"
+assert model["presenter"]["contract"] == str(CONTRACT.relative_to(ROOT))
+constants = {name: int(value) for name, value in re.findall(r"public static final int (\w+) = (\d+);", contract)}
+assert (constants["LEFT"], constants["TOP"], constants["RIGHT"], constants["BOTTOM"]) == rect, (constants, rect)
+assert constants["GUARD_PX"] == model["guardPx"]
+assert re.findall(r'"([a-z0-9-]+)"', contract.split("STAGES = {")[1].split("}")[0]) == model["stages"]
+assert f'SCHEMA = "{model["schema"]}"' in contract
 assert "FNAF2" not in contract and "fnaf2" not in contract
-manifest = MANIFEST.read_text()
-assert 'android:permission="android.permission.DUMP"' in manifest
-assert 'FLAG_NOT_TOUCHABLE' in SERVICE.read_text()
-assert 'TYPE_APPLICATION_OVERLAY' in SERVICE.read_text()
-assert 'FNAF2' not in SERVICE.read_text() and 'fnaf2' not in SERVICE.read_text()
+overlay = OVERLAY.read_text()
+assert "FLAG_NOT_TOUCHABLE" in overlay and "FLAG_NOT_FOCUSABLE" in overlay and "TYPE_APPLICATION_OVERLAY" in overlay
+strip_command = overlay.split("public String f1StripCommand")[1].split("\n    }\n")[0]
+assert 'if (!debuggable()) return "ERROR teach-release-build";' in strip_command
 tool = TOOL.read_text()
-assert 'PACKAGE="com.ppvaz.fnaf1teach"' in tool
-assert 'com.scottgames.fnaf2' not in tool
-assert 'fnaf1-teach-overlay.sh --status|--preflight|--clear' in tool
-print("fnaf1 teach overlay: FNaF 1-only passive strip clears reader/title/control contracts")
+assert "f1strip" in tool and f"SCHEMA = '{model['schema']}'" in tool
+assert "com.scottgames.fnaf2" not in tool
+assert "fnaf1-teach-overlay.ts --status|--preflight|--clear" in tool
+print("fnaf1 teach overlay: the Companion's FNaF 1-only passive strip clears reader/title/control contracts")

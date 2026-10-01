@@ -1325,8 +1325,8 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/play/games/fnaf1/fnaf1-teach-overlay.sh",
-      "invocation": "packages/play/games/fnaf1/fnaf1-teach-overlay.sh --preflight\\|--show\\|--update\\|--clear ...",
+      "id": "packages/play/games/fnaf1/fnaf1-teach-overlay.ts",
+      "invocation": "packages/play/games/fnaf1/fnaf1-teach-overlay.ts --status\\|--preflight\\|--show\\|--update\\|--clear ...",
       "kind": "**device action**",
       "lifecycle": "supported"
     },

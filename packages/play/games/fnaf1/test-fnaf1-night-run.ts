@@ -47,9 +47,11 @@ assert.ok(!source.includes('title-moto-g56-v207.json'), 'FNaF 2 title model must
 assert.ok(!source.includes("'menu.sh'"), 'FNaF 1 runner must not route title input through menu.sh');
 assert.ok(source.includes("'--game-package', PACKAGE"), 'Bluetooth settings fallback must restore the FNaF 1 package');
 assert.ok(source.includes('requires --bt-audio'), 'live runs must retain passive audio');
-assert.ok(source.includes('requires --teach-overlay') && source.includes("'fnaf1-teach-overlay.sh'"),
-  'live runs must require and verify the isolated FNaF 1 teaching overlay');
-assert.ok(!source.includes('com.ppvaz.fnafcompanion'), 'the FNaF 2 helper cannot be the FNaF 1 teaching presenter');
+assert.ok(source.includes('requires --teach-overlay') && source.includes("'fnaf1-teach-overlay.ts'"),
+  'live runs must require and verify the FNaF 1 teaching overlay');
+// Since 2026-10-01 the presenter is the Companion's FNaF 1 strip, not a second APK.
+assert.ok(source.includes("presenter?.lesson !== 'f1strip'") && !source.includes('com.ppvaz.fnaf1teach'),
+  'the FNaF 1 teaching presenter is the Companion\'s f1strip lesson');
 assert.ok(source.includes('stageNight1') && source.includes('Night 1 hands-off gate'),
   'Night 1 must have a runtime control gate and staged source-derived opening');
 

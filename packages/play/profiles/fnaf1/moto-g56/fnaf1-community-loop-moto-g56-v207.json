@@ -71,10 +71,10 @@
   },
   "teachingOverlay": {
     "required": true,
-    "tool": "packages/play/games/fnaf1/fnaf1-teach-overlay.sh",
+    "tool": "packages/play/games/fnaf1/fnaf1-teach-overlay.ts",
     "model": "packages/play/profiles/fnaf1/moto-g56/teach-panel-fnaf1-moto-g56-v207.json",
-    "schema": "fnaf1-teach-overlay-v1",
-    "purpose": "A FNaF 1-only, noninteractive teaching narration. It starts only after this route's FNaF 1 title gate has allowed Continue, is verified through its own dumpsys contract, and never supplies a visual, title, audio, or control fact.",
+    "schema": "fnaf1-teach-overlay-v2",
+    "purpose": "A FNaF 1-only, noninteractive teaching narration, the Companion's f1strip lesson. It starts only after this route's FNaF 1 title gate has allowed Continue, is confirmed by the Companion's own status reply, and never supplies a visual, title, audio, or control fact.",
     "stages": ["hands-off", "left-calibration", "left-watch", "right-monitor-calibration", "full-loop", "night2-calibration"]
   },
   "sources": [

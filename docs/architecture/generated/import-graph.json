@@ -1037,6 +1037,14 @@
       ]
     },
     {
+      "file": "packages/play/games/fnaf1/fnaf1-teach-overlay.ts",
+      "imports": [
+        "../../bin/phone/local-profile.ts",
+        "../../src/campaign/physical-ports.ts",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/play/games/fnaf1/fnaf1-winner.ts",
       "imports": [
         "../../bin/phone/local-profile.ts",
