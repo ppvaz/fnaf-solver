@@ -154,6 +154,7 @@ const SIBLING_EXCLUDED = new Map([
   ['gate-worker.ts', 'pure worker for test-night-matrix.ts; it simulates gate chunks and has no run artifacts to grade'],
   ['minus-toys-margin.ts', 'per-instruction timing margin map for the Minus Toys plan -- a model analysis, no run artifact to read; gated by test-minus-toys-margin.ts'],
   ['minus-toys-jitter.ts', 'robustness evaluator for the Minus Toys plan -- replays the model under a calibrated clock-error ensemble, no run artifact to read; gated by test-minus-toys-jitter.ts'],
+  ['basin-edge.ts', 'module: the edge of a timing basin that keeps scanning past its first failure, for minus-toys-margin.ts and minus-toys-jitter.ts -- a model analysis helper, no run artifact to read; gated by tools/test-mistake-register.ts (item 11)'],
   ['human-gate.ts', 'pre-flight gate on plan files, gated by test-human-gate.ts'],
   ['minus3-frame-light.ts', 'the device-proven Minus 3 frame-light recipe and its edge-hash checks, gated by test-minus3-frame-light.ts'],
   ['recipe.mjs', 'library, gated by test-recipe.ts'],
