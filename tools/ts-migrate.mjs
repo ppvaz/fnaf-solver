@@ -39,21 +39,23 @@
 //   node tools/ts-migrate.mjs DIR        migrate every tracked .js under DIR
 //   node tools/ts-migrate.mjs DIR --dry  print what would move and change nothing
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 
-// TS_MIGRATE_ROOT points the tool at another repository (tools/test-ts-migrate.mjs's fixture).
-const ROOT = process.env.TS_MIGRATE_ROOT ? resolve(process.env.TS_MIGRATE_ROOT)
-  : resolve(fileURLToPath(new URL('.', import.meta.url)), '..');
+// TS_MIGRATE_ROOT points the tool at another repository (tools/test-ts-migrate.mjs's fixture). Both the
+// root and DIR are real paths: the working directory comes back resolved, and on macOS the temporary
+// directory is a symlink (/var -> /private/var), so a resolved-only root put DIR outside the repository.
+const ROOT = realpathSync(process.env.TS_MIGRATE_ROOT ? resolve(process.env.TS_MIGRATE_ROOT)
+  : resolve(fileURLToPath(new URL('.', import.meta.url)), '..'));
 const git = (...args) => execFileSync('git', args, { cwd: ROOT, encoding: 'utf8', maxBuffer: 1 << 26 });
 const ARITY_ONLY = process.argv.includes('--arity');
 const RELAX_ONLY = process.argv.includes('--relax');
 const [dirArg, ...flags] = process.argv.slice(2).filter(arg => arg !== '--arity' && arg !== '--relax');
 if (!dirArg) { console.error('usage: node tools/ts-migrate.mjs DIR [--dry | --arity | --relax]'); process.exit(2); }
 const DRY = flags.includes('--dry');
-const DIR = relative(ROOT, resolve(dirArg));
+const DIR = relative(ROOT, realpathSync(resolve(dirArg)));
 
 /**
  * In a .js file every parameter is optional to a caller; in a .ts file one
