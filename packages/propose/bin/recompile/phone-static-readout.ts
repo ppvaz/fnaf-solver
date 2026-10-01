@@ -76,38 +76,49 @@ export function lumaByImage(text, region) {
  * the g58 period, for the measured seed with the generator set to `state` after update `injectAt` (null: no injection).
  * Also the generator state after update `injectAt` and the number of draws spent by then, without injection.
  */
+/**
+ * Wire a Sim so its static draws keep their values in `st` (v0..v3, the coefficient, the g58 period count) and every
+ * draw is counted through `count`: g58/g59/g192 as plant-sheet.ts spends them, g498 as drawViewed's last draw.
+ * Wrappers are own properties, so a Sim restored from a snapshot needs wiring again.
+ */
+export function wireStatic(sim, st, count = () => {}) {
+  const next = sim.rng.next.bind(sim.rng);
+  sim.rng.next = () => { count(); return next(); };
+  sim.drawUnconditional = function drawUnconditional() {
+    for (const t of this.unconditionalTimers) {
+      if (this.opts.sourcedEveryOrigin && this.frame === 1) continue;
+      t.counter -= this.frameUnits;
+      if (t.counter > 0) continue;
+      t.counter += t.delayUnits; this.rng.next(); this.unconditionalDraws += 1;
+      if (t.group === 58) { st.v0 = draw(this.rng.state, 50) + 125; st.alpha = st.v0 + st.v1 - st.v2 - st.v3; st.block += 1; }
+      else if (t.group === 59) st.v1 = draw(this.rng.state, 5) * 10;
+      else if (t.group === 192) st.v2 = Math.floor(draw(this.rng.state, 31) / 30) * 50;
+    }
+  };
+  const viewed = sim.drawViewed.bind(sim);
+  sim.drawViewed = (f, part) => {
+    const timer = sim.puppetStaticTimer; const before = sim.rng.state;
+    viewed(f, part);
+    const p = sim.puppet; const at = !p.out ? 11 : (typeof p.loc === 'number' ? p.loc : null);
+    if ((part === undefined || part === 'g498') && sim.puppetStaticTimer > timer && at === sim.cam && sim.rng.state !== before) st.v3 = 100 + draw(sim.rng.state, 100);
+    if (at !== sim.cam) st.v3 = 0;   // g499
+  };
+}
+
+/** One update's static: its coefficient (0 where Custom Night's CAM 08/09 make it opaque), view and g58 period. */
+export function staticRow(sim, st) {
+  const opaque = sim.opts.night === 7 && (sim.viewing === 8 || sim.viewing === 9);
+  return { alpha: opaque ? 0 : Math.max(0, Math.min(255, st.alpha)), shown: sim.viewing > 0, cam: sim.cam, viewing: sim.viewing, block: st.block };
+}
+
 export function predict(inp, { state = null, injectAt = 0, frames: total }) {
   const per = [];
   const st = { v0: 125, v1: 0, v2: 0, v3: 0, alpha: 255, block: 0 };
   let draws = 0; let atInject = null;
   const observe = (sim) => {
-    if (!sim.__wired) {
-      sim.__wired = true;
-      const next = sim.rng.next.bind(sim.rng);
-      sim.rng.next = () => { draws += 1; return next(); };
-      sim.drawUnconditional = function drawUnconditional() {   // g58/g59/g192 as plant-sheet.ts spends them, values kept
-        for (const t of this.unconditionalTimers) {
-          if (this.opts.sourcedEveryOrigin && this.frame === 1) continue;
-          t.counter -= this.frameUnits;
-          if (t.counter > 0) continue;
-          t.counter += t.delayUnits; this.rng.next(); this.unconditionalDraws += 1;
-          if (t.group === 58) { st.v0 = draw(this.rng.state, 50) + 125; st.alpha = st.v0 + st.v1 - st.v2 - st.v3; st.block += 1; }
-          else if (t.group === 59) st.v1 = draw(this.rng.state, 5) * 10;
-          else if (t.group === 192) st.v2 = Math.floor(draw(this.rng.state, 31) / 30) * 50;
-        }
-      };
-      const viewed = sim.drawViewed.bind(sim);
-      sim.drawViewed = (f, part) => {   // g498 is drawViewed's last draw when it fires
-        const timer = sim.puppetStaticTimer; const before = sim.rng.state;
-        viewed(f, part);
-        const p = sim.puppet; const at = !p.out ? 11 : (typeof p.loc === 'number' ? p.loc : null);
-        if ((part === undefined || part === 'g498') && sim.puppetStaticTimer > timer && at === sim.cam && sim.rng.state !== before) st.v3 = 100 + draw(sim.rng.state, 100);
-        if (at !== sim.cam) st.v3 = 0;   // g499
-      };
-    }
+    if (!sim.__wired) { sim.__wired = true; wireStatic(sim, st, () => { draws += 1; }); }
     if (sim.frame === injectAt) { atInject = { state: sim.rng.state, draws }; if (state !== null) sim.rng.state = state; }
-    const opaque = sim.opts.night === 7 && (sim.viewing === 8 || sim.viewing === 9);
-    per.push({ alpha: opaque ? 0 : Math.max(0, Math.min(255, st.alpha)), shown: sim.viewing > 0, cam: sim.cam, viewing: sim.viewing, block: st.block });
+    per.push(staticRow(sim, st));
     return null;
   };
   drawTrace({ night: inp.night, seed: inp.measuredSeed, frames: total, modelOptions: inp.modelOptions,

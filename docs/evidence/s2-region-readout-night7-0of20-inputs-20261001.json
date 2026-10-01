@@ -1,0 +1,11 @@
+{
+ "schema": "phone-region-readout-v1-inputs",
+ "run": "night7-k3-0of20-sr01-20261001T221003Z",
+ "predeclarationSha256": "507da9f4676720a889b9d27f44454f2d2f9cffc6abd42a03b9869c7c3cda1ad5",
+ "onsetDeviceMs": 334593148.801592,
+ "releasedAimMs": 2433.5989345216367,
+ "readout": {
+  "path": "captures/static-readouts/night7-k3-0of20-sr01-20261001T221003Z.jsonl",
+  "sha256": "7d489d319abcbbb3810982df4edab5779940db04e8acd85e2bed0716964d85a3"
+ }
+}
