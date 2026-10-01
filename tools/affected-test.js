@@ -67,7 +67,7 @@ if (changed.some(path => path.startsWith('packages/play/') || path.startsWith('p
   add('adapter-contracts', 'node', ['packages/play/test/conformance.test.ts']);
   add('device-executor', 'node', ['packages/play/test/adb-device-local-executor.test.ts']);
   add('device-campaign', 'node', ['packages/play/test/campaign.test.ts']);
-  add('device-cli', 'node', ['apps/desktop/test/device-cli.test.js']);
+  add('device-cli', 'node', ['apps/desktop/test/device-cli.test.ts']);
   add('winners-rebuild', 'node', ['packages/propose/test/test-winners-rebuild.mjs']);
 }
 if (changed.some(path => path.startsWith('packages/propose/src/policy/') || path.startsWith('packages/core/src/control/') ||
@@ -101,11 +101,11 @@ if (changed.some(path => path.startsWith('packages/review/') || path.startsWith(
     add(`test:packages/review/test/${test}.test.mjs`, 'node', [`packages/review/test/${test}.test.mjs`]);
   for (const test of ['pack-lift', 'promotions-query'])
     add(`test:packages/review/test/${test}.test.js`, 'node', [`packages/review/test/${test}.test.js`]);
-  add('evidence-cli', 'node', ['apps/desktop/test/test-evidence-cli.mjs']);
+  add('evidence-cli', 'node', ['apps/desktop/test/test-evidence-cli.ts']);
 }
 // The composition root: the MCP server and the lab.
 if (changed.some(path => path.startsWith('apps/desktop/')))
-  for (const test of ['apps/desktop/test/companion-mcp.test.mjs', 'apps/desktop/test/lab.test.mjs'])
+  for (const test of ['apps/desktop/test/companion-mcp.test.ts', 'apps/desktop/test/lab.test.ts'])
     add(`test:${test}`, 'node', [test]);
 if (changed.some(path => path.startsWith('apps/trainer/')))
   add('trainer-build', 'python3', ['apps/trainer/test/build.py']);

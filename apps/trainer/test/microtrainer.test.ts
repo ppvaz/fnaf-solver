@@ -16,7 +16,7 @@ import {
 } from '../src/microtrainer.ts';
 
 const expectThrow = (fn, pattern) => {
-  assert.throws(fn, error => {
+  assert.throws(fn, (error: any) => {
     if (pattern && !pattern.test(error.message)) return false;
     return true;
   });

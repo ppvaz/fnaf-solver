@@ -349,7 +349,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateTrainerTrace",
       "conformanceFixtures": [
-        "apps/trainer/test/tracereport.mjs"
+        "apps/trainer/test/tracereport.ts"
       ]
     },
     {
@@ -777,7 +777,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateExercise",
       "conformanceFixtures": [
-        "apps/trainer/test/exercise.test.mjs"
+        "apps/trainer/test/exercise.test.ts"
       ]
     },
     {
@@ -797,7 +797,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateCommitment",
       "conformanceFixtures": [
-        "apps/trainer/test/exercise.test.mjs"
+        "apps/trainer/test/exercise.test.ts"
       ]
     },
     {
@@ -817,7 +817,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateResolution",
       "conformanceFixtures": [
-        "apps/trainer/test/exercise.test.mjs"
+        "apps/trainer/test/exercise.test.ts"
       ]
     },
     {
@@ -837,7 +837,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateCancellation",
       "conformanceFixtures": [
-        "apps/trainer/test/exercise.test.mjs"
+        "apps/trainer/test/exercise.test.ts"
       ]
     },
     {
@@ -857,7 +857,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateExerciseEvent",
       "conformanceFixtures": [
-        "apps/trainer/test/exercise.test.mjs"
+        "apps/trainer/test/exercise.test.ts"
       ]
     },
     {
@@ -877,7 +877,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateExerciseAttempt",
       "conformanceFixtures": [
-        "apps/trainer/test/exercise.test.mjs"
+        "apps/trainer/test/exercise.test.ts"
       ]
     },
     {
@@ -897,7 +897,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "evaluateActivityGate",
       "conformanceFixtures": [
-        "apps/trainer/test/activity-gate.test.mjs"
+        "apps/trainer/test/activity-gate.test.ts"
       ]
     },
     {
@@ -917,7 +917,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateActivityGateProfile",
       "conformanceFixtures": [
-        "apps/trainer/test/activity-gate.test.mjs"
+        "apps/trainer/test/activity-gate.test.ts"
       ]
     },
     {
@@ -937,7 +937,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "evaluateActivityGate",
       "conformanceFixtures": [
-        "apps/trainer/test/activity-gate.test.mjs"
+        "apps/trainer/test/activity-gate.test.ts"
       ]
     },
     {
@@ -957,7 +957,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "apps/trainer/src/microtrainer.ts validateMicrotrainerSession",
       "conformanceFixtures": [
-        "apps/trainer/test/microtrainer.test.mjs"
+        "apps/trainer/test/microtrainer.test.ts"
       ]
     },
     {
@@ -977,7 +977,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "apps/trainer/src/renderers.ts validateRenderer",
       "conformanceFixtures": [
-        "apps/trainer/test/renderer.test.mjs"
+        "apps/trainer/test/renderer.test.ts"
       ]
     },
     {
@@ -997,7 +997,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "apps/trainer/src/arcade-lab.ts validateArcadeProgress",
       "conformanceFixtures": [
-        "apps/trainer/test/arcade-lab.test.mjs"
+        "apps/trainer/test/arcade-lab.test.ts"
       ]
     },
     {
@@ -1102,7 +1102,7 @@
       "runtimeValidation": "packages/kernel/src/claim-envelope.ts validateClaimEnvelope",
       "conformanceFixtures": [
         "packages/kernel/test/claim-envelope.test.ts",
-        "apps/desktop/test/companion-mcp.test.mjs"
+        "apps/desktop/test/companion-mcp.test.ts"
       ]
     }
   ]

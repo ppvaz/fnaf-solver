@@ -12,7 +12,7 @@
 // console error, uncaught exception, failed or 4xx request, or page wider than
 // a phone's screen, sideways or upright.
 //
-//   node apps/trainer/test/pages.test.mjs [url]   # default: its own static server
+//   node apps/trainer/test/pages.test.ts [url]   # default: its own static server
 import { spawn, spawnSync } from 'node:child_process';
 import { mkdtempSync } from 'node:fs';
 import { readFile, stat } from 'node:fs/promises';
@@ -30,7 +30,7 @@ const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/ja
 // path a file under the repository; 404 otherwise, 405 for any other method.
 const ENTRY = new Set(['/', '/index.html']);
 function staticServer() {
-  return new Promise(resolve => {
+  return new Promise<any>(resolve => {
     const server = createServer(async (req, res) => {
       if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405); res.end(); return; }
       const path = normalize(decodeURIComponent(new URL(req.url, 'http://x').pathname));
@@ -51,9 +51,9 @@ const PORT = 9346;
 // Phone viewports in CSS pixels: an iPhone upright, then a common Android and
 // an iPhone held sideways, the way the trainer is played.
 const VIEWPORTS = [[390, 844], [640, 360], [844, 390]];
-const sleep = ms => new Promise(r => setTimeout(r, ms));
+const sleep = ms => new Promise<any>(r => setTimeout(r, ms));
 let id = 0;
-const rpc = (ws, method, params = {}) => new Promise((res, rej) => {
+const rpc = (ws, method, params = {}) => new Promise<any>((res, rej) => {
   const mid = ++id;
   const on = e => { const m = JSON.parse(e.data); if (m.id !== mid) return;
     ws.removeEventListener('message', on); m.error ? rej(new Error(`${method}: ${m.error.message}`)) : res(m.result); };
@@ -68,7 +68,7 @@ async function main(url, chrome) {
     catch { await sleep(200); }
   }
   const ws = new WebSocket(target.webSocketDebuggerUrl);
-  await new Promise(r => ws.addEventListener('open', r));
+  await new Promise<any>(r => ws.addEventListener('open', r));
   ws.addEventListener('message', e => {
     const m = JSON.parse(e.data);
     if (m.method === 'Runtime.consoleAPICalled' && m.params.type === 'error')

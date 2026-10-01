@@ -7,8 +7,8 @@ name: Pages
 # types, so this builds the site the branch build did -- the same Jekyll over
 # the same tree, so the portal pages and every linked file stay where they were
 # -- and replaces index.html with build.py's single-file trainer, whose modules
-# have their types erased by Node's own stripper (strip-types.mjs).
-# apps/trainer/test/pages.test.mjs loads that same entry in a phone-sized
+# have their types erased by Node's own stripper (strip-types.ts).
+# apps/trainer/test/pages.test.ts loads that same entry in a phone-sized
 # browser.
 
 on:

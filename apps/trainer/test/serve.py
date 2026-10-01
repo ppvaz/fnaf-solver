@@ -48,8 +48,8 @@ DEV_META = b'<meta name="trainer-dev-server" content="save-layout save-trace">'
 # The sources run under Node's type stripping (Pedro, 2026-09-30: "runtime
 # .ts"). A browser cannot strip types, so every .ts module the import map
 # reaches is served as JavaScript with its types erased by the same stripper
-# the Pages build uses (strip-types.mjs), cached until the file changes.
-STRIP_TYPES = HERE / 'strip-types.mjs'
+# the Pages build uses (strip-types.ts), cached until the file changes.
+STRIP_TYPES = HERE / 'strip-types.ts'
 _STRIPPED = {}
 
 

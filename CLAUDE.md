@@ -310,7 +310,7 @@ Each entry below broke a gate, a test or a replay during the ADR 0002 moves.
     checkout.** A winner's `sources` keys, `fnaf1-winner.ts`'s `RUNNER` and the
     lane a pinned tree imports are where each file stood at the pinned commit;
     rewriting them to the new location made every FNaF 1 replay refuse
-    (`test-fnaf1-winner.mjs`). A record pinned by sha256 keeps its bytes too,
+    (`test-fnaf1-winner.ts`). A record pinned by sha256 keeps its bytes too,
     and its readers follow the file instead.
 
 Canonical routes: [charter](PROJECT-CHARTER.md),

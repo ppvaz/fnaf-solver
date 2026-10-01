@@ -4,7 +4,7 @@
 // nobody has measured is UNKNOWN with its reason, never a guess.
 //
 // `values` are the numbers a fact's text shows and `from` names where each one
-// sits in its record. apps/trainer/test/route-facts.test.mjs reads every record
+// sits in its record. apps/trainer/test/route-facts.test.ts reads every record
 // and fails on a fact whose label differs from the record's own claimLevel or
 // whose value differs from the record's field, so a record that moves takes
 // the page with it instead of leaving it quoting a stale number.

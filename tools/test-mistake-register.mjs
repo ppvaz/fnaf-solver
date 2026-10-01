@@ -65,12 +65,12 @@ const EXEMPT = new Map([
   // tools/test.mjs's BROWSER group. ci.yml's header gives the reason: a
   // trainer graded in real-time milliseconds on a shared runner says nothing
   // about the code when it fails.
-  ['apps/trainer/test/browser.test.mjs', 'browser group: real-time graded in Chrome; ci.yml excludes it on purpose (npm run test:browser:realtime)'],
-  ['apps/trainer/test/calibration.test.mjs', 'browser group: real-time graded in Chrome; ci.yml excludes it on purpose (npm run test:browser:realtime)'],
-  ['apps/trainer/test/phase.test.mjs', 'browser group: real-time graded in Chrome; ci.yml excludes it on purpose (npm run test:browser:realtime)'],
-  ['apps/trainer/test/lesson.test.mjs', 'browser group: real-time graded in Chrome; ci.yml excludes it on purpose (npm run test:browser:realtime)'],
-  ['apps/trainer/test/light.test.mjs', 'browser group: real-time graded in Chrome; ci.yml excludes it on purpose (npm run test:browser:realtime)'],
-  ['apps/trainer/test/pages.test.mjs', 'browser group: needs Chrome, like its siblings, and runs with them (npm run test:browser:realtime); not timing-sensitive, so a CI step could run it'],
+  ['apps/trainer/test/browser.test.ts', 'browser group: real-time graded in Chrome; ci.yml excludes it on purpose (npm run test:browser:realtime)'],
+  ['apps/trainer/test/calibration.test.ts', 'browser group: real-time graded in Chrome; ci.yml excludes it on purpose (npm run test:browser:realtime)'],
+  ['apps/trainer/test/phase.test.ts', 'browser group: real-time graded in Chrome; ci.yml excludes it on purpose (npm run test:browser:realtime)'],
+  ['apps/trainer/test/lesson.test.ts', 'browser group: real-time graded in Chrome; ci.yml excludes it on purpose (npm run test:browser:realtime)'],
+  ['apps/trainer/test/light.test.ts', 'browser group: real-time graded in Chrome; ci.yml excludes it on purpose (npm run test:browser:realtime)'],
+  ['apps/trainer/test/pages.test.ts', 'browser group: needs Chrome, like its siblings, and runs with them (npm run test:browser:realtime); not timing-sensitive, so a CI step could run it'],
   // tools/test.mjs's REPORTS group: named like tests, but they print numbers
   // and always exit 0, so a lane would count a verdict that does not exist.
   ['packages/propose/bin/minus2test.mjs', 'report, not a check: tools/test.mjs --reports prints it and never judges it'],
@@ -103,7 +103,7 @@ const REGISTER_GATES = [
   [13, SELF],
   [13, 'packages/review/bin/grade/test-grade-run-coverage.ts'],
   [14, 'tools/test-sibling-paths.js'],
-  [15, 'apps/desktop/test/test-fnaf1-winner.mjs'],
+  [15, 'apps/desktop/test/test-fnaf1-winner.ts'],
   [6, 'apps/lab/test/test-night-job.py'],   // after an abort or a killed runner the game is driven back to an observed title
 ];
 

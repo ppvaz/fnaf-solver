@@ -76,8 +76,8 @@ one field named `timestamp` would incorrectly imply interchangeability.
 | Primary content | Coach step rows, holds, raw press/release events, simulation time, `performance.now()`, settings, browser environment, outcome |
 | Provenance | Server stamps UTC `savedAt` and short commit plus `+` for dirty; client records lesson, speed, viewport, user agent, webdriver, touch |
 | Labels | Simulator/coach truth, not stock-game observation labels |
-| Split discipline | `tracereport.mjs` excludes webdriver and off-speed runs; no participant/session identifier beyond each file |
-| Consumers | `apps/trainer/test/tracereport.mjs`, `apps/trainer/test/trace.test.mjs`, Plan 04 human-profile work |
+| Split discipline | `tracereport.ts` excludes webdriver and off-speed runs; no participant/session identifier beyond each file |
+| Consumers | `apps/trainer/test/tracereport.ts`, `apps/trainer/test/trace.test.ts`, Plan 04 human-profile work |
 | Gaps | No schema file outside validator code; queued traces can be saved in a later browser/server session; no stable human/session/device identity; no link to a stock run |
 | Retention | Ignored local JSON; contains user agent and timing behavior, so treat as personal telemetry |
 

@@ -59,7 +59,7 @@ const MODES = Object.freeze(['calibrate-empty', 'grid420']);
 const NIGHT_MS = 535000;                 // 90 s + 5 x 89 s (fnaf1.js CLOCK)
 const STALE_FRAME_MS = 400;              // frame age p95 82 ms, max 111 ms measured; 400 is a stall
 
-const sleep = ms => new Promise(r => setTimeout(r, ms));
+const sleep = ms => new Promise<any>(r => setTimeout(r, ms));
 const stamp = () => new Date().toISOString().replace(/[-:.]/g, '');
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 function fail(message) { throw new Error(`fnaf1-custom-run: ${message}`); }
@@ -107,7 +107,7 @@ export function parseArgs(argv) {
 }
 
 /** What a grid420 night executes from this tree when no committed winner names its night. */
-const ROUTE_FILES = Object.freeze(['packages/propose/bin/census/fnaf1-device-lane.mjs', 'apps/desktop/bin/fnaf1-custom-run.mjs',
+const ROUTE_FILES = Object.freeze(['packages/propose/bin/census/fnaf1-device-lane.mjs', 'apps/desktop/bin/fnaf1-custom-run.ts',
   'packages/play/games/fnaf1/fnaf1-detectors.ts', 'packages/play/profiles/fnaf1/moto-g56/fnaf1-device-timing-moto-g56-v207.json',
   'packages/play/profiles/fnaf1/moto-g56/regions-fnaf1-moto-g56-v207.json', 'packages/play/profiles/fnaf1/moto-g56/controls-fnaf1-moto-g56-v207.json',
   'packages/play/profiles/fnaf1/moto-g56/custom-night-fnaf1-moto-g56-v207.json']);
@@ -155,6 +155,11 @@ export function routeStatus(options, { root = ROOT, winners = listWinners(root) 
 
 /** The probe's bridge shape, backed by the helper's projection instead of screencap. */
 class HelperFrameBridge {
+  declare serial: any;
+  declare port: any;
+  declare adbBridge: any;
+  declare n: number;
+  declare dir: string;
   constructor(serial, port, adbBridge) {
     this.serial = serial; this.port = port; this.adbBridge = adbBridge; this.n = 0;
     this.dir = join(tmpdir(), `fnaf1-snap-${process.pid}`);
@@ -231,7 +236,7 @@ async function calibrateEmpty({ hid, record, bridge, controls, snapTo }) {
 }
 
 /** A live REGION read as the classifier takes it: region name -> raw samples. */
-const samples = (r) => ({ ...r, regions: Object.fromEntries(Object.entries(r.regions).map(([k, v]) => [k, v.pixels])) });
+const samples = (r) => ({ ...r, regions: Object.fromEntries(Object.entries(r.regions).map(([k, v]) => [k, (v as any).pixels])) });
 
 /** The office's first frame: the left panel reads a known empty state at pan 0. */
 async function waitForOffice(recorder, classify, boundMs) {
@@ -277,7 +282,7 @@ function teachFeed(port, record) {
     [/run reopen-left/, 'REOPEN_LEFT'], [/run reopen-right/, 'REOPEN_RIGHT'], [/run task$/, 'WAIT']];
   return {
     origin: (ns) => say(`origin ${ns}`),
-    policyLog: (m) => { for (const [re, step] of STEP) if (re.test(m)) { say(`step ${step}`, 'step'); return; } },
+    policyLog: (m) => { for (const [re, step] of STEP) if ((re as any).test(m)) { say(`step ${step}`, 'step'); return; } },
     frame: (f, pan) => {
       const side = pan === 0 ? 'L' : 'R';
       const seen = pan === 0 ? f.left : f.right;
@@ -376,7 +381,7 @@ async function main(argv) {
   const record = new ProbeRecord({ id, outdir, captureDir, options, bindings });
   record.document.schema = 'fnaf1-custom-run-v1';
   record.document.claimLevel = 'DEVICE_MEASURED helper native frames and regions; no detector or route is promoted by this record';
-  record.document.route = route;
+  (record.document as any).route = route;
   record.document.capture.sensor = 'cue-helper-mediaprojection-2400x1080';
   await record.save('PREFLIGHT');
 
@@ -394,7 +399,7 @@ async function main(argv) {
     hidProcess = new AdbHidProcess({ serial });
     hid = new HidWireTransport({ write: l => hidProcess.write(l), ready: () => hidProcess.ready(), contactMs: CONTACT_MS });
     await hid.start();
-    record.document.titleBefore = await titleConsensus(bridge, record, 'title-before', ['customNight']);
+    (record.document as any).titleBefore = await titleConsensus(bridge, record, 'title-before', ['customNight']);
     const row = titleModel.items.customNight;
     entered = true;
     await press(hid, record, 'customNight', { x: row[0], y: row[1] });
@@ -407,8 +412,8 @@ async function main(argv) {
     }
     const start = await settleCustomNight(bridge, record, customNight.settle.boundMs);
     if (start.status !== 'PASS') fail(`dials unreadable at entry: ${start.reason}`);
-    record.document.dialsAtEntry = start.dials;
-    record.document.dialsSet = await setDials(bridge, record, hid, customNight, CONTACT_MS, options.dials, 'set');
+    (record.document as any).dialsAtEntry = start.dials;
+    (record.document as any).dialsSet = await setDials(bridge, record, hid, customNight, CONTACT_MS, options.dials, 'set');
 
     channel = port.openRegions({ timeoutMs: 1500 });
     await registerSet(channel, regionModel.set);
@@ -417,13 +422,13 @@ async function main(argv) {
     await sleep(500);
     if (options.video) video = startVideo(serial, id);
     await press(hid, record, 'ready', { x: ready[0], y: ready[1] });
-    record.document.readyHostMs = performance.now();
+    (record.document as any).readyHostMs = performance.now();
     await record.save('NIGHT');
     if (options.mode === 'calibrate-empty') {
       await sleep(12000);
       await calibrateEmpty({ hid, record, bridge, controls, snapTo });
       // Hold through 1 AM (90 s after the office) so the hour change is recorded.
-      const until = record.document.readyHostMs + 110000;
+      const until = (record.document as any).readyHostMs + 110000;
       while (performance.now() < until) await sleep(500);
       await snapTo('end-of-calibration');
     } else if (options.mode === 'grid420') {
@@ -431,9 +436,9 @@ async function main(argv) {
       const office = await waitForOffice(recorder, classify, 20000);
       if (!office) fail('no office frame within 20 s of Ready');
       const epochHostMs = office.imageHostMs + options.originOffsetMs;
-      record.document.night = { officeImageHostMs: office.imageHostMs, officeAfterReadyMs: office.imageHostMs - record.document.readyHostMs,
+      (record.document as any).night = { officeImageHostMs: office.imageHostMs, officeAfterReadyMs: office.imageHostMs - (record.document as any).readyHostMs,
         epochHostMs, originOffsetMs: options.originOffsetMs };
-      await record.event('night-origin', record.document.night);
+      await record.event('night-origin', (record.document as any).night);
       await record.save('NIGHT_RUNNING');
       let teach = null;
       if (options.teach) {
@@ -445,13 +450,13 @@ async function main(argv) {
           teach.policyLog('run task');
         } catch (e) { await record.event('teach-error', { message: e.message }); teach = null; }
       }
-      record.document.teach = options.teach;
+      (record.document as any).teach = options.teach;
       const ended = await runPolicy({ policy: grid420, options: { ...PHONE_OPTIONS, chicaByCamera: options.chicaByCamera }, hid, record,
         controls, recorder, classify, epochHostMs, stopAfterMs: options.stopAfterMs, teach });
       if (teach) await teach.clear();
-      record.document.night.ended = ended;
-      record.document.night.endedAtNightMs = performance.now() - epochHostMs;
-      await record.event('night-ended', { ended, atNightMs: record.document.night.endedAtNightMs });
+      (record.document as any).night.ended = ended;
+      (record.document as any).night.endedAtNightMs = performance.now() - epochHostMs;
+      await record.event('night-ended', { ended, atNightMs: (record.document as any).night.endedAtNightMs });
       try { await hid.abort(); } catch { /* release any held contact before looking */ }
       for (let i = 0; i < 3; i += 1) { await snapTo(`after-night-${i}`); await sleep(2500); }
     }
@@ -462,7 +467,7 @@ async function main(argv) {
     try { await hidProcess?.close(); } catch { /* the lease bounds cleanup */ }
     if (recorder) {
       await recorder.stop();
-      record.document.regions = { frames: recorder.frames, errors: recorder.errors, path: join(captureDir, 'regions.ndjson.gz') };
+      (record.document as any).regions = { frames: recorder.frames, errors: recorder.errors, path: join(captureDir, 'regions.ndjson.gz') };
     }
     try { await channel?.clear(); } catch { /* the helper drops regions with its session */ }
     channel?.close();
@@ -470,21 +475,21 @@ async function main(argv) {
       try {
         const dir = join(homedir(), 'fnaf-apks', 'fnaf1-videos');
         await mkdir(dir, { recursive: true });
-        record.document.video = await video.stop(dir);
-      } catch (e) { record.document.video = `FAILED: ${e.message}`; }
+        (record.document as any).video = await video.stop(dir);
+      } catch (e) { (record.document as any).video = `FAILED: ${e.message}`; }
     }
     if (entered) {
-      try { await restartToTitle(bridge, record); record.document.recovery = 'TITLE_CONFIRMED'; }
-      catch (e) { record.document.recovery = `FAILED: ${e.message}`; error ??= e; }
+      try { await restartToTitle(bridge, record); (record.document as any).recovery = 'TITLE_CONFIRMED'; }
+      catch (e) { (record.document as any).recovery = `FAILED: ${e.message}`; error ??= e; }
     }
   }
   if (error) {
-    record.document.error = error.message;
+    (record.document as any).error = error.message;
     await record.event('error', { message: error.message });
     await record.save('FAILED_OR_REFUSED');
   } else await record.save('COMPLETE');
   console.log(`fnaf1 custom run ${id}: ${record.document.status}; inputs=${record.document.inputsSent}; ` +
-    `regionFrames=${record.document.regions?.frames}; out=${outdir}; frames=${captureDir}`);
+    `regionFrames=${(record.document as any).regions?.frames}; out=${outdir}; frames=${captureDir}`);
   if (record.document.status !== 'COMPLETE') process.exitCode = 3;
 }
 

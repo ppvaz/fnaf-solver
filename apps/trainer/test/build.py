@@ -23,13 +23,13 @@ EXPORT_DECL = re.compile(r"^export\s+(async\s+function|function|class|const|let)
 EXPORT_LIST = re.compile(r"^export \{([^}]*)\};\s*$", re.M)
 
 
-STRIP_TYPES = pathlib.Path(__file__).resolve().parent / 'strip-types.mjs'
+STRIP_TYPES = pathlib.Path(__file__).resolve().parent / 'strip-types.ts'
 _STRIPPED = {}
 
 
 def source_of(path):
     """A module's code as the browser runs it. A .ts module has its types
-    erased by Node's own stripper (strip-types.mjs) and is otherwise the same
+    erased by Node's own stripper (strip-types.ts) and is otherwise the same
     text, so every regex below reads plain JavaScript either way."""
     path = pathlib.Path(path)
     if path.suffix != '.ts':

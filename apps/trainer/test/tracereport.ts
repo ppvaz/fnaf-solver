@@ -5,7 +5,7 @@
 // under a webdriver or off-speed are counted and excluded -- a bot's perfect
 // presses and a slowed clock are exactly the runs the census must not contain.
 //
-//   node apps/trainer/test/tracereport.mjs [dir]      # default captures/traces
+//   node apps/trainer/test/tracereport.ts [dir]      # default captures/traces
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';

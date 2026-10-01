@@ -27,9 +27,9 @@ const PORT = 9334;
 const chrome = spawn(chromeBinary(),
   chromeArgs(PORT, mkdtempSync(join(tmpdir(), 'm7c-'))), { stdio: 'ignore' });
 
-const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const sleep = (ms) => new Promise<any>(r => setTimeout(r, ms));
 let id = 0;
-const rpc = (ws, method, params = {}) => new Promise((res, rej) => {
+const rpc = (ws, method, params = {}) => new Promise<any>((res, rej) => {
   const mid = ++id;
   const on = (e) => { const m = JSON.parse(e.data); if (m.id !== mid) return;
     ws.removeEventListener('message', on); m.error ? rej(new Error(m.error.message)) : res(m.result); };
@@ -42,7 +42,7 @@ async function main() {
   for (let i = 0; i < 60; i++) { try { await fetch(`http://127.0.0.1:${PORT}/json`); break; } catch { await sleep(250); } }
   const t = (await (await fetch(`http://127.0.0.1:${PORT}/json`)).json()).find(x => x.type === 'page');
   const ws = new WebSocket(t.webSocketDebuggerUrl);
-  await new Promise(r => ws.addEventListener('open', r));
+  await new Promise<any>(r => ws.addEventListener('open', r));
   ws.addEventListener('message', (e) => {
     const m = JSON.parse(e.data);
     if (m.method === 'Runtime.exceptionThrown') errs.push(m.params.exceptionDetails.exception?.description || m.params.exceptionDetails.text);

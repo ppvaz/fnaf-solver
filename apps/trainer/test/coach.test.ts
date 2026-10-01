@@ -101,7 +101,7 @@ const QUIET = { bbEnabled: false, foxyEnabled: false, gfEnabled: false, boxEnabl
 {
   const stub = { t: 0, isWinding: false, camsUp: false };
   const coach = new Coach(stub, { script: C.CYCLE_SCRIPT });
-  const maskOff = C.CYCLE_SCRIPT.find(st => st.id === 'mask-off');
+  const maskOff: any = C.CYCLE_SCRIPT.find(st => st.id === 'mask-off');
   const beat = { id: 'beat', at: 0, label: 'Tap', action: 'light' };
 
   if (!maskOff.win) throw new Error('mask-off lost its measured window');

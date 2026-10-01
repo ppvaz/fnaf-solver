@@ -85,10 +85,10 @@ try {
   assert.deepEqual(parseWorktrees('worktree /a\nHEAD 1\nbranch refs/heads/m\n\nworktree /b\nHEAD 2\ndetached\nlocked\n'), [
     { path: '/a', head: '1', branch: 'm', locked: false, prunable: false, detached: false },
     { path: '/b', head: '2', branch: null, locked: true, prunable: false, detached: true }]);
-  assert.equal(parse(['status', '--json']).json, true);
-  assert.match(parse(['status', '--step', 'S1']).error, /takes no --step/);
-  assert.match(parse(['start', '--step']).error, /needs a value/);
-  assert.match(parse(['deploy']).error, /unknown verb/);
+  assert.equal((parse(['status', '--json']) as any).json, true);
+  assert.match((parse(['status', '--step', 'S1']) as any).error, /takes no --step/);
+  assert.match((parse(['start', '--step']) as any).error, /needs a value/);
+  assert.match((parse(['deploy']) as any).error, /unknown verb/);
   checks += 1;
 
   // --- status: push-gate, steps and decisions, all derived ----------------------------------------
@@ -119,7 +119,7 @@ try {
   checks += 1;
 
   // --- commit --dry: the hook's own verdict, and the class ----------------------------------------
-  const dry = (message) => claim(lab.commit(message === undefined ? {} : { message }));
+  const dry = (message?) => claim(lab.commit(message === undefined ? {} : { message }));
   write(root, 'docs/notes/LAB-NOTE.md', 'A note.\n');
   git(root, 'add', 'docs/notes/LAB-NOTE.md');
   let verdict = dry();

@@ -12,7 +12,7 @@ import {
   makeReplaySnapshot,
 } from '../src/microtrainer.ts';
 
-const expectThrow = (fn, pattern) => assert.throws(fn, error => !pattern || pattern.test(error.message));
+const expectThrow = (fn, pattern) => assert.throws(fn, (error: any) => !pattern || pattern.test(error.message));
 const scheduler = { policyId: 'arcade-test', policyVersion: '1', selectionProbability: 1 };
 function exercise(id, atMs) {
   const snapshot = makeReplaySnapshot({

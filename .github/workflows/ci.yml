@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           # Full history: a committed FNaF 1 route winner pins its route at a
-          # past commit, and test-fnaf1-winner.mjs materializes that commit.
+          # past commit, and test-fnaf1-winner.ts materializes that commit.
           fetch-depth: 0
       # The sources are TypeScript run by Node's type stripping, on by default
       # from 22.18 (Pedro, 2026-09-30: "runtime .ts"); pinned to the version

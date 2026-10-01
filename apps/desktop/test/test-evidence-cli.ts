@@ -43,7 +43,7 @@ const rows = id => readFileSync(join(packDir(id), 'events.jsonl'), 'utf8').split
 
 // promotions runs beside everything else: it compiles every committed winner (~7 s), and the
 // in-process summary it must equal byte for byte compiles them again. So does its --envelope.
-const background = (...args) => new Promise((done, fail) => {
+const background = (...args) => new Promise<any>((done, fail) => {
   const child = spawn(process.execPath, [CLI, ...args], { cwd: ROOT });
   let stdout = '';
   let stderr = '';
@@ -82,7 +82,7 @@ assert.equal(json(cli('show', FNAF1), 'show').kind, 'fnaf1-run');
 // --- show --envelope: the same object as a claim-envelope-v1 at the record's own claim level -----
 for (const id of [FNAF1, ORIGINAL, RESULT_LOST, RECOVERED]) {
   const plain = json(cli('show', id), `show ${id}`);
-  const wrapped = validateClaimEnvelope(json(cli('show', id, '--envelope'), `show ${id} --envelope`));
+  const wrapped: any = validateClaimEnvelope(json(cli('show', id, '--envelope'), `show ${id} --envelope`));
   assert.deepEqual(wrapped.claim, plain, `show ${id} --envelope wraps exactly what show prints`);
   const level = packJson(id).claimLevel;
   if (level === 'UNKNOWN') assert.equal(wrapped.label.kind, 'UNKNOWN', `${id}'s UNKNOWN claim level stays UNKNOWN, with its reason`);
@@ -124,7 +124,7 @@ for (const id of [FNAF1, ORIGINAL]) {
 
 // --- an unknown id: the nearest ids, then where the whole list is ------------------------------
 const packs = new Set(readdirSync(join(ROOT, PACKS_DIR)));
-const refused = (result, typo, nearest, noun = 'run or pack') => {
+const refused = (result, typo, nearest?, noun = 'run or pack') => {
   assert.notEqual(result.status, 0, `an unknown id exits non-zero: ${typo}`);
   assert.equal(result.stdout, '', 'and prints nothing on stdout');
   const lines = result.stderr.trimEnd().split('\n');
@@ -158,7 +158,7 @@ assert.equal(promotions.status, 0, promotions.stderr);
 assert.equal(promotions.stdout, expected, 'promotions prints exactly promotionSummary, nothing added or reordered');
 const wrappedPromotions = await promotionsEnvelopeRun;
 assert.equal(wrappedPromotions.status, 0, wrappedPromotions.stderr);
-const promotionsEnvelope = validateClaimEnvelope(JSON.parse(wrappedPromotions.stdout));
+const promotionsEnvelope: any = validateClaimEnvelope(JSON.parse(wrappedPromotions.stdout));
 assert.deepEqual(promotionsEnvelope.claim, summary, 'promotions --envelope wraps exactly the summary');
 assert.equal(promotionsEnvelope.label, 'DEVICE_MEASURED');
 assert.ok(summary.refusedWins.every(win => promotionsEnvelope.notMeasured.some(item => item.startsWith(`${win.id}:`))),

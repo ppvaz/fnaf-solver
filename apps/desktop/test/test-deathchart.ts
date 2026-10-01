@@ -15,7 +15,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
-import { census, chart, clock, median, renderPng, REASON_ORDER } from '../bin/deathchart.mjs';
+import { census, chart, clock, median, renderPng, REASON_ORDER } from '../bin/deathchart.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 let failed = 0;

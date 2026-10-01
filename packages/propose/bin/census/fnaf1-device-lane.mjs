@@ -675,7 +675,7 @@ export const POPULATION_KIND = 'fnaf1-device-lane-population-v1';
 export const POPULATION_LANES = Object.freeze(['typical', 'worst', 'starved']);
 export const WINNER_PATH = `${HERE}../../../../packages/propose/bindings/fnaf1/fnaf1-custom-night7-420-grid420-winner.json`;
 /**
- * The options fnaf1-custom-run.mjs hands grid420 on the phone. The runner
+ * The options fnaf1-custom-run.ts hands grid420 on the phone. The runner
  * reads them from here, so the tree's census and the tree's night cannot
  * disagree about them.
  */
@@ -815,7 +815,7 @@ export function populationRecord({ rows, start, count, design, git, date, comman
     whyItIsModelOnly,
     method: {
       tool: 'packages/propose/bin/census/fnaf1-device-lane.mjs --population', command, git, ...common,
-      policy: `grid420 with ${JSON.stringify(options)}, the options fnaf1-custom-run.mjs hands it (PHONE_OPTIONS); ` +
+      policy: `grid420 with ${JSON.stringify(options)}, the options fnaf1-custom-run.ts hands it (PHONE_OPTIONS); ` +
         'night 7 at 20/20/20/20',
       laneSha256,
       winner: { path: 'packages/propose/bindings/fnaf1/fnaf1-custom-night7-420-grid420-winner.json', pinnedLaneSha256: pinned,

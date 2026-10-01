@@ -43,7 +43,7 @@
       }
     },
     {
-      "id": "apps/desktop/test/companion-mcp.test.mjs",
+      "id": "apps/desktop/test/companion-mcp.test.ts",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,
@@ -63,7 +63,7 @@
       }
     },
     {
-      "id": "apps/desktop/test/device-cli.test.js",
+      "id": "apps/desktop/test/device-cli.test.ts",
       "lane": "test:contracts",
       "owner": "legacy migration",
       "timeoutMs": 180000,
@@ -83,7 +83,7 @@
       }
     },
     {
-      "id": "apps/desktop/test/lab.test.mjs",
+      "id": "apps/desktop/test/lab.test.ts",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,
@@ -110,7 +110,7 @@
       }
     },
     {
-      "id": "apps/desktop/test/night.test.js",
+      "id": "apps/desktop/test/night.test.ts",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,
@@ -128,7 +128,7 @@
       }
     },
     {
-      "id": "apps/desktop/test/probe.test.js",
+      "id": "apps/desktop/test/probe.test.ts",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,
@@ -146,7 +146,7 @@
       }
     },
     {
-      "id": "apps/desktop/test/test-deathchart.mjs",
+      "id": "apps/desktop/test/test-deathchart.ts",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,
@@ -167,7 +167,7 @@
       }
     },
     {
-      "id": "apps/desktop/test/test-evidence-cli.mjs",
+      "id": "apps/desktop/test/test-evidence-cli.ts",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,
@@ -185,7 +185,7 @@
       }
     },
     {
-      "id": "apps/desktop/test/test-fnaf1-winner.mjs",
+      "id": "apps/desktop/test/test-fnaf1-winner.ts",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,
@@ -203,7 +203,7 @@
       }
     },
     {
-      "id": "apps/desktop/test/test-native-regions.mjs",
+      "id": "apps/desktop/test/test-native-regions.ts",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,
@@ -293,7 +293,7 @@
       }
     },
     {
-      "id": "apps/trainer/test/activity-gate.test.mjs",
+      "id": "apps/trainer/test/activity-gate.test.ts",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,
@@ -311,7 +311,7 @@
       }
     },
     {
-      "id": "apps/trainer/test/arcade-lab.test.mjs",
+      "id": "apps/trainer/test/arcade-lab.test.ts",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,
@@ -329,7 +329,7 @@
       }
     },
     {
-      "id": "apps/trainer/test/browser.test.mjs",
+      "id": "apps/trainer/test/browser.test.ts",
       "lane": "test:browser:realtime",
       "owner": "legacy migration",
       "timeoutMs": 360000,
@@ -364,7 +364,7 @@
       }
     },
     {
-      "id": "apps/trainer/test/calibration.test.mjs",
+      "id": "apps/trainer/test/calibration.test.ts",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,
@@ -398,7 +398,7 @@
       }
     },
     {
-      "id": "apps/trainer/test/coach.test.mjs",
+      "id": "apps/trainer/test/coach.test.ts",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,
@@ -416,7 +416,7 @@
       }
     },
     {
-      "id": "apps/trainer/test/exercise.test.mjs",
+      "id": "apps/trainer/test/exercise.test.ts",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,
@@ -434,7 +434,7 @@
       }
     },
     {
-      "id": "apps/trainer/test/lesson.test.mjs",
+      "id": "apps/trainer/test/lesson.test.ts",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,
@@ -472,7 +472,7 @@
       }
     },
     {
-      "id": "apps/trainer/test/lessons.test.mjs",
+      "id": "apps/trainer/test/lessons.test.ts",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,
@@ -481,7 +481,7 @@
       "determinismSignals": [],
       "fixedSleeps": [],
       "sharedResources": [],
-      "subprocesses": true,
+      "subprocesses": false,
       "measurement": {
         "status": "NOT_MEASURED",
         "runs": 0,
@@ -490,7 +490,7 @@
       }
     },
     {
-      "id": "apps/trainer/test/light.test.mjs",
+      "id": "apps/trainer/test/light.test.ts",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,
@@ -525,7 +525,7 @@
       }
     },
     {
-      "id": "apps/trainer/test/microtrainer.test.mjs",
+      "id": "apps/trainer/test/microtrainer.test.ts",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,
@@ -543,7 +543,7 @@
       }
     },
     {
-      "id": "apps/trainer/test/pages.test.mjs",
+      "id": "apps/trainer/test/pages.test.ts",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,
@@ -571,7 +571,7 @@
       }
     },
     {
-      "id": "apps/trainer/test/phase.test.mjs",
+      "id": "apps/trainer/test/phase.test.ts",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,
@@ -605,7 +605,7 @@
       }
     },
     {
-      "id": "apps/trainer/test/renderer.test.mjs",
+      "id": "apps/trainer/test/renderer.test.ts",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,
@@ -623,7 +623,7 @@
       }
     },
     {
-      "id": "apps/trainer/test/route-facts.test.mjs",
+      "id": "apps/trainer/test/route-facts.test.ts",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,
@@ -661,7 +661,7 @@
       }
     },
     {
-      "id": "apps/trainer/test/trace.test.mjs",
+      "id": "apps/trainer/test/trace.test.ts",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,

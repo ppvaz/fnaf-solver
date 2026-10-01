@@ -576,7 +576,7 @@ for (const path of operational) {
 // new composer is a new way onto the phone and has to be named here in the
 // diff that adds it.
 const physicalActuatorOwners = new Set(['packages/play/src/campaign/modern-campaign-ports.ts',
-  'packages/play/games/fnaf1/fnaf1-night-run.ts', 'apps/desktop/bin/fnaf1-custom-run.mjs', 'packages/play/games/fnaf1/fnaf1-menu-probe.ts',
+  'packages/play/games/fnaf1/fnaf1-night-run.ts', 'apps/desktop/bin/fnaf1-custom-run.ts', 'packages/play/games/fnaf1/fnaf1-menu-probe.ts',
   'packages/play/games/fnaf3/fnaf3-run.ts', 'packages/play/games/fnaf4/fnaf4-run.ts', 'packages/play/bin/phone/explore-step.ts']
   .map(path => join(ROOT, path)));
 // The transport's own module defines the class; every other module in apps,

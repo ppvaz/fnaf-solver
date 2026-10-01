@@ -15,25 +15,25 @@
     {
       "id": "contract.activity-gate-decision-v1",
       "kind": "CONTRACT",
-      "path": "apps/trainer/test/activity-gate.test.mjs",
+      "path": "apps/trainer/test/activity-gate.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.activity-gate-profile-v1",
       "kind": "CONTRACT",
-      "path": "apps/trainer/test/activity-gate.test.mjs",
+      "path": "apps/trainer/test/activity-gate.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.activity-gate-v1",
       "kind": "CONTRACT",
-      "path": "apps/trainer/test/activity-gate.test.mjs",
+      "path": "apps/trainer/test/activity-gate.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.arcade-lab-progress-v1",
       "kind": "CONTRACT",
-      "path": "apps/trainer/test/arcade-lab.test.mjs",
+      "path": "apps/trainer/test/arcade-lab.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -110,7 +110,7 @@
     {
       "id": "contract.claim-envelope-v1",
       "kind": "CONTRACT",
-      "path": "apps/desktop/test/companion-mcp.test.mjs",
+      "path": "apps/desktop/test/companion-mcp.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -148,7 +148,7 @@
     {
       "id": "contract.commitment-v1",
       "kind": "CONTRACT",
-      "path": "apps/trainer/test/exercise.test.mjs",
+      "path": "apps/trainer/test/exercise.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -476,31 +476,31 @@
     {
       "id": "contract.exercise-attempt-v1",
       "kind": "CONTRACT",
-      "path": "apps/trainer/test/exercise.test.mjs",
+      "path": "apps/trainer/test/exercise.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.exercise-cancellation-v1",
       "kind": "CONTRACT",
-      "path": "apps/trainer/test/exercise.test.mjs",
+      "path": "apps/trainer/test/exercise.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.exercise-event-v1",
       "kind": "CONTRACT",
-      "path": "apps/trainer/test/exercise.test.mjs",
+      "path": "apps/trainer/test/exercise.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.exercise-renderer-v1",
       "kind": "CONTRACT",
-      "path": "apps/trainer/test/renderer.test.mjs",
+      "path": "apps/trainer/test/renderer.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.exercise-v1",
       "kind": "CONTRACT",
-      "path": "apps/trainer/test/exercise.test.mjs",
+      "path": "apps/trainer/test/exercise.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -602,7 +602,7 @@
     {
       "id": "contract.microtrainer-session-v1",
       "kind": "CONTRACT",
-      "path": "apps/trainer/test/microtrainer.test.mjs",
+      "path": "apps/trainer/test/microtrainer.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -730,7 +730,7 @@
     {
       "id": "contract.resolution-v1",
       "kind": "CONTRACT",
-      "path": "apps/trainer/test/exercise.test.mjs",
+      "path": "apps/trainer/test/exercise.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -870,7 +870,7 @@
     {
       "id": "contract.trainer-trace-v1",
       "kind": "CONTRACT",
-      "path": "apps/trainer/test/tracereport.mjs",
+      "path": "apps/trainer/test/tracereport.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {

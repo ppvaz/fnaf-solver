@@ -281,7 +281,7 @@ competing outcomes against the question choices, and keeps independently
 evidenced resolution separate from player commitment. Late commitments,
 duplicate/reordered events, missing evidence, and clock mismatches are
 refused; cancellation and expiry produce `CENSORED` outcomes. The deterministic
-`apps/trainer/test/exercise.test.mjs` lane covers completed, cancelled, expired, unresolved,
+`apps/trainer/test/exercise.test.ts` lane covers completed, cancelled, expired, unresolved,
 and ambiguous-cancellation cases. Activity gating, scoring, and live rendering
 remain later packages.
 
@@ -302,7 +302,7 @@ overlay/capture/response capabilities. Unknown, stale, conflicting, cooling,
 over-limit, short-horizon, profile-mismatch, and unqualified inputs retain
 stable refusal reasons. The profile carries versioned risk and prompt/reveal,
 cancellation, and human-recovery budgets; the gate sums those budgets rather
-than importing a fixed latency guess. `apps/trainer/test/activity-gate.test.mjs` proves
+than importing a fixed latency guess. `apps/trainer/test/activity-gate.test.ts` proves
 critical-cue priority and that increasing risk or measured cancellation latency
 cannot turn a refusal into an admission. This is an offline evaluator only;
 the retained false-quiet corpus and live prompt gate remain open.
@@ -327,7 +327,7 @@ artifact hash and label provenance, and always adds `UNKNOWN`; strategy cases
 require an exact-simulator result with visible `MODEL_ONLY` provenance. The
 immutable `microtrainer-session-v1` artifact retains prompt, commitment,
 resolution, latency, scheduler, source-fact, artifact, and split metadata, and
-replays to the same semantic grade. `apps/trainer/test/microtrainer.test.mjs` covers scored,
+replays to the same semantic grade. `apps/trainer/test/microtrainer.test.ts` covers scored,
 censored, abstention, timing-budget, provenance, and session-replay paths.
 This is the offline factory/session foundation; trainer UI integration,
 retained corpus loaders, and Plan 09 real-session joins remain open.
@@ -350,7 +350,7 @@ muted-audio, haptics-off, non-color, scalable-text, and optional-pointer
 capabilities, and retain only recognition artifact references rather than raw
 media. `apps/trainer/src/arcade-lab.js` provides deterministic seeded sets and
 local per-player progress with reset/export; censored outcomes do not score or
-break combo. `apps/trainer/test/renderer.test.mjs` and `apps/trainer/test/arcade-lab.test.mjs` prove
+break combo. `apps/trainer/test/renderer.test.ts` and `apps/trainer/test/arcade-lab.test.ts` prove
 semantic invariance and progression neutrality. The shipped trainer now has a
 discoverable, explicitly `FIXTURE / PRACTICE` Arcade Lab drawer with local
 answer flow, progress export/reset, and a built-page smoke check. The drawer

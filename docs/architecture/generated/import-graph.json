@@ -2,7 +2,7 @@
   "schema": "import-graph-v1",
   "files": [
     {
-      "file": "apps/desktop/bin/deathchart.mjs",
+      "file": "apps/desktop/bin/deathchart.ts",
       "imports": [
         "../../../packages/propose/bin/plans/human-gate.mjs",
         "../../../packages/review/src/stat.ts",
@@ -14,7 +14,7 @@
       ]
     },
     {
-      "file": "apps/desktop/bin/fnaf1-custom-run.mjs",
+      "file": "apps/desktop/bin/fnaf1-custom-run.ts",
       "imports": [
         "../../../packages/play/bin/phone/local-profile.ts",
         "../../../packages/play/bin/phone/native-regions.ts",
@@ -144,7 +144,7 @@
       ]
     },
     {
-      "file": "apps/desktop/test/companion-mcp.test.mjs",
+      "file": "apps/desktop/test/companion-mcp.test.ts",
       "imports": [
         "../../../packages/source/test/fixtures/truth-dump.mjs",
         "@sixam/kernel",
@@ -161,7 +161,7 @@
       ]
     },
     {
-      "file": "apps/desktop/test/device-cli.test.js",
+      "file": "apps/desktop/test/device-cli.test.ts",
       "imports": [
         "@sixam/kernel/contracts",
         "node:assert/strict",
@@ -173,7 +173,7 @@
       ]
     },
     {
-      "file": "apps/desktop/test/lab.test.mjs",
+      "file": "apps/desktop/test/lab.test.ts",
       "imports": [
         "../../../tools/push-gate.mjs",
         "../src/cli.ts",
@@ -187,7 +187,7 @@
       ]
     },
     {
-      "file": "apps/desktop/test/night.test.js",
+      "file": "apps/desktop/test/night.test.ts",
       "imports": [
         "../src/night.ts",
         "node:assert/strict",
@@ -197,7 +197,7 @@
       ]
     },
     {
-      "file": "apps/desktop/test/probe.test.js",
+      "file": "apps/desktop/test/probe.test.ts",
       "imports": [
         "node:assert/strict",
         "node:child_process",
@@ -208,9 +208,9 @@
       ]
     },
     {
-      "file": "apps/desktop/test/test-deathchart.mjs",
+      "file": "apps/desktop/test/test-deathchart.ts",
       "imports": [
-        "../bin/deathchart.mjs",
+        "../bin/deathchart.ts",
         "\\.\\/(plant-[\\w-]+\\.ts)",
         "node:fs",
         "node:os",
@@ -219,7 +219,7 @@
       ]
     },
     {
-      "file": "apps/desktop/test/test-evidence-cli.mjs",
+      "file": "apps/desktop/test/test-evidence-cli.ts",
       "imports": [
         "@sixam/kernel",
         "@sixam/review/evidence-pack",
@@ -232,12 +232,12 @@
       ]
     },
     {
-      "file": "apps/desktop/test/test-fnaf1-winner.mjs",
+      "file": "apps/desktop/test/test-fnaf1-winner.ts",
       "imports": [
         "../../../packages/play/games/fnaf1/fnaf1-winner.ts",
         "../../../packages/propose/bin/census/fnaf1-device-lane.mjs",
         "../../../packages/propose/bin/census/winner-census.mjs",
-        "../bin/fnaf1-custom-run.mjs",
+        "../bin/fnaf1-custom-run.ts",
         "../src/night.ts",
         "@sixam/review/renamed-path",
         "node:child_process",
@@ -249,12 +249,12 @@
       ]
     },
     {
-      "file": "apps/desktop/test/test-native-regions.mjs",
+      "file": "apps/desktop/test/test-native-regions.ts",
       "imports": [
         "../../../packages/play/bin/phone/native-regions.ts",
         "../../../packages/play/games/fnaf1/fnaf1-detectors.ts",
         "../../../packages/play/src/venues/phone/companion.ts",
-        "../bin/fnaf1-custom-run.mjs",
+        "../bin/fnaf1-custom-run.ts",
         "node:fs"
       ]
     },
@@ -356,14 +356,14 @@
       ]
     },
     {
-      "file": "apps/trainer/test/activity-gate.test.mjs",
+      "file": "apps/trainer/test/activity-gate.test.ts",
       "imports": [
         "@sixam/trainer/training",
         "node:assert/strict"
       ]
     },
     {
-      "file": "apps/trainer/test/arcade-lab.test.mjs",
+      "file": "apps/trainer/test/arcade-lab.test.ts",
       "imports": [
         "../src/arcade-lab.ts",
         "../src/microtrainer.ts",
@@ -371,7 +371,7 @@
       ]
     },
     {
-      "file": "apps/trainer/test/browser.test.mjs",
+      "file": "apps/trainer/test/browser.test.ts",
       "imports": [
         "../../../tools/chrome.mjs",
         "node:child_process",
@@ -381,7 +381,7 @@
       ]
     },
     {
-      "file": "apps/trainer/test/calibration.test.mjs",
+      "file": "apps/trainer/test/calibration.test.ts",
       "imports": [
         "../../../tools/chrome.mjs",
         "node:child_process",
@@ -391,7 +391,7 @@
       ]
     },
     {
-      "file": "apps/trainer/test/coach.test.mjs",
+      "file": "apps/trainer/test/coach.test.ts",
       "imports": [
         "../src/coach.ts",
         "@sixam/source/fnaf2",
@@ -399,14 +399,14 @@
       ]
     },
     {
-      "file": "apps/trainer/test/exercise.test.mjs",
+      "file": "apps/trainer/test/exercise.test.ts",
       "imports": [
         "@sixam/trainer/training",
         "node:assert/strict"
       ]
     },
     {
-      "file": "apps/trainer/test/lesson.test.mjs",
+      "file": "apps/trainer/test/lesson.test.ts",
       "imports": [
         "../../../tools/chrome.mjs",
         "node:child_process",
@@ -416,7 +416,7 @@
       ]
     },
     {
-      "file": "apps/trainer/test/lessons.test.mjs",
+      "file": "apps/trainer/test/lessons.test.ts",
       "imports": [
         "../src/coach.ts",
         "../src/curriculum.ts",
@@ -425,7 +425,7 @@
       ]
     },
     {
-      "file": "apps/trainer/test/light.test.mjs",
+      "file": "apps/trainer/test/light.test.ts",
       "imports": [
         "../../../tools/chrome.mjs",
         "node:child_process",
@@ -435,14 +435,14 @@
       ]
     },
     {
-      "file": "apps/trainer/test/microtrainer.test.mjs",
+      "file": "apps/trainer/test/microtrainer.test.ts",
       "imports": [
         "../src/microtrainer.ts",
         "node:assert/strict"
       ]
     },
     {
-      "file": "apps/trainer/test/pages.test.mjs",
+      "file": "apps/trainer/test/pages.test.ts",
       "imports": [
         "../../../tools/chrome.mjs",
         "node:child_process",
@@ -455,7 +455,7 @@
       ]
     },
     {
-      "file": "apps/trainer/test/phase.test.mjs",
+      "file": "apps/trainer/test/phase.test.ts",
       "imports": [
         "../../../tools/chrome.mjs",
         "node:child_process",
@@ -465,7 +465,7 @@
       ]
     },
     {
-      "file": "apps/trainer/test/renderer.test.mjs",
+      "file": "apps/trainer/test/renderer.test.ts",
       "imports": [
         "../src/microtrainer.ts",
         "../src/renderers.ts",
@@ -473,7 +473,7 @@
       ]
     },
     {
-      "file": "apps/trainer/test/route-facts.test.mjs",
+      "file": "apps/trainer/test/route-facts.test.ts",
       "imports": [
         "../src/route-facts.ts",
         "@sixam/kernel",
@@ -483,16 +483,16 @@
       ]
     },
     {
-      "file": "apps/trainer/test/strip-types.mjs",
+      "file": "apps/trainer/test/strip-types.ts",
       "imports": [
         "node:fs",
         "node:module"
       ]
     },
     {
-      "file": "apps/trainer/test/trace.test.mjs",
+      "file": "apps/trainer/test/trace.test.ts",
       "imports": [
-        "./tracereport.mjs",
+        "./tracereport.ts",
         "@sixam/source/fnaf2",
         "@sixam/trainer",
         "node:child_process",
@@ -503,7 +503,7 @@
       ]
     },
     {
-      "file": "apps/trainer/test/tracereport.mjs",
+      "file": "apps/trainer/test/tracereport.ts",
       "imports": [
         "node:fs",
         "node:path",

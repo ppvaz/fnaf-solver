@@ -5,7 +5,7 @@
 // neighbours through its own location: `new URL('recipe.mjs', import.meta.url)`,
 // `join(HERE, 'x')`, `HERE / "x"`, `"$HERE/x"`. None of those fail until the line runs. On
 // 2026-09-30 d2585a30 had moved recipe.mjs to packages/propose/bin/plans and left windtrace.mjs
-// and deathchart.mjs asking for it beside themselves; the ADR 0002 moves are not finished, so
+// and deathchart.ts asking for it beside themselves; the ADR 0002 moves are not finished, so
 // this is checked, not remembered.
 //
 // Scanned: every tracked file and every untracked file git does not ignore, with a .js, .mjs,
@@ -28,7 +28,7 @@ const SELF = 'tools/test-sibling-paths.js';
 const FROZEN = /^(docs\/evidence\/|docs\/chronicle\/|plans\/archive\/|tools\/recompile\/results\/)/;
 const CODE = /\.(m?js|cjs|ts|py|sh)$/;
 const INTENTIONAL = new Map([
-  ['apps/desktop/test/test-deathchart.mjs -> apps/desktop/test/no-such-chrome-binary',
+  ['apps/desktop/test/test-deathchart.ts -> apps/desktop/test/no-such-chrome-binary',
     'the planted missing browser the chart must refuse'],
 ]);
 

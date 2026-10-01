@@ -13,8 +13,8 @@
 // separate times (elegance.py's SERVES table); this instrument does not add a
 // fifth by deciding that, say, `golden-freddy-hall` is "really" Foxy.
 //
-//   deathchart.mjs --night=2 [--runs=1200] [--out=FILE.png]
-//   deathchart.mjs --night=2,3,4,5,6,7 [--cols=2]     # one panel per night
+//   deathchart.ts --night=2 [--runs=1200] [--out=FILE.png]
+//   deathchart.ts --night=2,3,4,5,6,7 [--cols=2]     # one panel per night
 //
 // Writes a PNG by default and keeps the SVG beside it as the source. Pass
 // --out=FILE.svg for the vector alone. The PNG is rendered by the same

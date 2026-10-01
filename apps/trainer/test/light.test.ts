@@ -7,16 +7,16 @@ import { mkdtempSync } from 'node:fs'; import { tmpdir } from 'node:os'; import 
 const PORT = 9339;
 const chrome = spawn(chromeBinary(),
   chromeArgs(PORT, mkdtempSync(join(tmpdir(), 'm7g-'))), { stdio: 'ignore' });
-const sleep = ms => new Promise(r => setTimeout(r, ms));
+const sleep = ms => new Promise<any>(r => setTimeout(r, ms));
 let id = 0;
-const rpc = (ws, m, p = {}) => new Promise((res, rej) => { const mid = ++id;
+const rpc = (ws, m, p = {}) => new Promise<any>((res, rej) => { const mid = ++id;
   const on = e => { const x = JSON.parse(e.data); if (x.id !== mid) return;
     ws.removeEventListener('message', on); x.error ? rej(new Error(x.error.message)) : res(x.result); };
   ws.addEventListener('message', on); ws.send(JSON.stringify({ id: mid, method: m, params: p })); });
 const fails = [], errs = [];
 for (let i = 0; i < 60; i++) { try { await fetch(`http://127.0.0.1:${PORT}/json`); break; } catch { await sleep(200); } }
 const t = (await (await fetch(`http://127.0.0.1:${PORT}/json`)).json()).find(x => x.type === 'page');
-const ws = new WebSocket(t.webSocketDebuggerUrl); await new Promise(r => ws.addEventListener('open', r));
+const ws = new WebSocket(t.webSocketDebuggerUrl); await new Promise<any>(r => ws.addEventListener('open', r));
 ws.addEventListener('message', e => { const m = JSON.parse(e.data);
   if (m.method === 'Runtime.exceptionThrown') errs.push(m.params.exceptionDetails.exception?.description); });
 await rpc(ws, 'Runtime.enable'); await rpc(ws, 'Page.enable');

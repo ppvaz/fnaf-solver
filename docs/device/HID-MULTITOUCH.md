@@ -1139,7 +1139,7 @@ non-extractable, and one frequently-cited one is **retracted** (Tsaur et al.
 
 The one public route to first-hand numbers is
 **[HuMIdb](https://arxiv.org/abs/2005.13655)** — 600 users, 179 device models,
-freely available. That is the dataset `apps/trainer/test/tracereport.mjs`'s correlated-band
+freely available. That is the dataset `apps/trainer/test/tracereport.ts`'s correlated-band
 census could be fitted against if the trainer traces prove too thin.
 
 ### What is genuinely absent

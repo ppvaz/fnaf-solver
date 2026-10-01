@@ -9,7 +9,7 @@
 // erasure (an enum, a namespace, a parameter property) is refused here, as
 // tsconfig's `erasableSyntaxOnly` refuses it at typecheck.
 //
-//   node apps/trainer/test/strip-types.mjs FILE...   prints {"FILE": "code", ...} as JSON
+//   node apps/trainer/test/strip-types.ts FILE...   prints {"FILE": "code", ...} as JSON
 import { readFileSync } from 'node:fs';
 import { stripTypeScriptTypes } from 'node:module';
 

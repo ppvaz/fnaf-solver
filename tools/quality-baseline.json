@@ -151,8 +151,8 @@
     "recorded": "2026-09-30",
     "why": "Pairs of files sharing a run of 6 or more normalised lines when tools/test-duplication.mjs landed; an entry only shrinks.",
     "entries": {
-      "clone:apps/desktop/bin/fnaf1-custom-run.mjs <> packages/play/games/fnaf3/fnaf3-run.ts": 14,
-      "clone:apps/desktop/bin/fnaf1-custom-run.mjs <> packages/play/games/fnaf4/fnaf4-run.ts": 18,
+      "clone:apps/desktop/bin/fnaf1-custom-run.ts <> packages/play/games/fnaf3/fnaf3-run.ts": 6,
+      "clone:apps/desktop/bin/fnaf1-custom-run.ts <> packages/play/games/fnaf4/fnaf4-run.ts": 12,
       "clone:packages/kernel/src/contracts/index.ts <> packages/source/src/clockwork/control-contracts.ts": 7,
       "clone:packages/play/bin/grade/tap-stall-audit.ts <> packages/propose/bin/report/phase-reconstruct.mjs": 6,
       "clone:packages/play/bin/phone/night-kit.ts <> packages/play/games/fnaf1/fnaf1-menu-probe.ts": 12,

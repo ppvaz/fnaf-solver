@@ -122,17 +122,17 @@ const SIBLING_EXCLUDED = new Map([
   ['fnaf1-custom-night-read.py', 'reads the four FNaF 1 Custom Night dials off one native frame for the menu probe; a menu reader, not a run grader, gated by test-fnaf1-menus.py'],
   ['fnaf1-title-stars.py', 'reads the FNaF 1 save\'s title stars off a run\'s retained title frames into title-stars.json, the terminal Review\'s FNaF 1 promotion reads; a FNaF 1 promotion instrument, not a FNaF 2 run grader, gated by test-fnaf1-title-stars.py'],
   ['fnaf1-door-light.py', 'per-run native FNaF 1 door-light calibration and occupancy reader; it derives the current run\'s ROI/bands rather than grading a completed run, and test-fnaf1-door-light.py gates its native-only and UNKNOWN behavior'],
-  ['fnaf1-winner.ts', 'the replay of a committed FNaF 1 route winner: it materializes the pinned commit and runs that commit\'s fnaf1-custom-run.sh under the lease; an executor that produces a run, not a grader of one, gated by test-fnaf1-winner.mjs'],
-  ['fnaf1-detectors.ts', 'builds FNaF 1 empty-scene templates from a calibration run and classifies REGION reads for the runner; gated by test-native-regions.mjs'],
+  ['fnaf1-winner.ts', 'the replay of a committed FNaF 1 route winner: it materializes the pinned commit and runs that commit\'s fnaf1-custom-run.sh under the lease; an executor that produces a run, not a grader of one, gated by test-fnaf1-winner.ts'],
+  ['fnaf1-detectors.ts', 'builds FNaF 1 empty-scene templates from a calibration run and classifies REGION reads for the runner; gated by test-native-regions.ts'],
   ['fnaf1-calibration-analyze.ts', 'offline reader of a FNaF 1 calibration record (press-to-frame latency, office onset, hour change); a calibration tool, not a night grader'],
   ['fnaf1-title-observe.sh', 'FNaF 1-only title-observer wrapper: it removes the FNaF 2 default model and passes FNaF 1\'s model explicitly; test-sensor.py proves an inherited FNaF 2 model cannot be used'],
   // packages/play/games/fnaf3
   ['fnaf3-run.sh', 'lease wrapper for the FNaF 3 night runner; a live route/calibration executor, not a post-run grader'],
-  ['fnaf3-run.ts', 'FNaF 3 night runner (calibrate, loop) behind fnaf3-run.sh; an executor, gated by test-fnaf3-run.ts and its teach panel clearance by test-native-regions.mjs'],
+  ['fnaf3-run.ts', 'FNaF 3 night runner (calibrate, loop) behind fnaf3-run.sh; an executor, gated by test-fnaf3-run.ts and its teach panel clearance by test-native-regions.ts'],
   ['fnaf3-detectors.ts', 'FNaF 3 frame readers and per-camera empty templates built from a calibration run; a model builder and in-night reader, gated by test-fnaf3-run.ts'],
   // packages/play/games/fnaf4
   ['fnaf4-run.sh', 'lease wrapper for the FNaF 4 night runner; a live route/calibration executor, not a post-run grader'],
-  ['fnaf4-run.ts', 'FNaF 4 night runner (calibrate, loop) behind fnaf4-run.sh; an executor, its teach panel clearance gated by test-native-regions.mjs'],
+  ['fnaf4-run.ts', 'FNaF 4 night runner (calibrate, loop) behind fnaf4-run.sh; an executor, its teach panel clearance gated by test-native-regions.ts'],
   ['fnaf4-fredbear.ts', 'the FNaF 4 runner\'s Fredbear hearing on the level grid and its walk/release slots, used in-night; a library, not a post-run grader, gated by test-fnaf4-fredbear.ts'],
   ['fnaf4-hearing-evidence.ts', 'writes a FNaF 4 run\'s derived rows (grid hearing, holds, backs, run onsets) into an evidence record; grade-run.sh grades FNaF 2 runs, and test-fnaf4-fredbear.ts is the gate over the rows it wrote'],
   ['fnaf4-detectors.py', 'builds FNaF 4 view templates from a calibration run (held-out accuracy refusal); a model builder, not a post-run grader'],
@@ -184,9 +184,9 @@ const SIBLING_EXCLUDED = new Map([
   ['label-misses.py', 'labelling aid for building the reference set'],
   ['reference-report.py', 'inventory of the reference samples, which live outside the repository'],
   // apps/desktop/bin
-  ['fnaf1-custom-run.mjs', 'FNaF 1 Custom Night runner (calibrate-empty, grid420) behind fnaf1-custom-run.sh; an executor, gated by test-native-regions.mjs'],
+  ['fnaf1-custom-run.ts', 'FNaF 1 Custom Night runner (calibrate-empty, grid420) behind fnaf1-custom-run.sh; an executor, gated by test-native-regions.ts'],
   ['fnaf1-custom-run.sh', 'lease wrapper for the FNaF 1 Custom Night runner; a live route/calibration executor, not a post-run grader'],
-  ['deathchart.mjs', 'charts the model gate\'s death census for a PLAN under modeled human slack -- a simulator result with no run artifact to read; gated by test-deathchart.mjs'],
+  ['deathchart.ts', 'charts the model gate\'s death census for a PLAN under modeled human slack -- a simulator result with no run artifact to read; gated by test-deathchart.ts'],
   // apps/wiki
   ['fnaf1-teach-media.py', 'cuts a FNaF 1 run video into a README GIF and phone videos; a presentation tool, not a grader'],
   // tools/device

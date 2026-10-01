@@ -3,7 +3,7 @@
 //
 // Until 2026-09-30 the trainer taught Source's CYCLE_SCRIPT, whose mask-off the
 // Sim has refused since 3d5c5f7 (2026-09-27); every lesson with the office half
-// was unpassable played perfectly, and lesson.test.mjs's "cycle passed" was the
+// was unpassable played perfectly, and lesson.test.ts's "cycle passed" was the
 // only thing that said so, in a browser lane CI does not run. This replays the
 // same lessons headless through playPress, the app's press path, in
 // test:contracts.
@@ -12,7 +12,7 @@ import * as C from '@sixam/source/fnaf2';
 import { Coach, playPress } from '../src/coach.ts';
 import { LESSONS, MINUS7_CYCLE, lessonSim } from '../src/curriculum.ts';
 
-const TAP_FRAMES = 6;   // a light held 100 ms, as lesson.test.mjs's player holds it
+const TAP_FRAMES = 6;   // a light held 100 ms, as lesson.test.ts's player holds it
 
 /** A metronomic player: every cue pressed on the first frame it is due. */
 function play(lesson, { seed, script = lesson.script, seconds }) {

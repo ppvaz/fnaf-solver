@@ -27,7 +27,7 @@
 // Needs the pinned commits in the clone: CI checks out with fetch-depth: 0,
 // and a shallow clone fails here by name rather than skipping.
 //
-//   node apps/desktop/test/test-fnaf1-winner.mjs
+//   node apps/desktop/test/test-fnaf1-winner.ts
 import { execFileSync } from 'node:child_process';
 import { appendFileSync, chmodSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -75,7 +75,7 @@ function treeRunExecutes(entry, guard) {
 }
 const differsFromPins = (winner, executes) => Object.keys(winner.sources).filter((path) => executes[path] !== winner.sources[path]);
 
-const runnerModule = await import('../bin/fnaf1-custom-run.mjs');
+const runnerModule = await import('../bin/fnaf1-custom-run.ts');
 const guard = runnerModule.routeStatus ?? null;
 ok('the tree\'s FNaF 1 Custom Night runner exports routeStatus, its guard against running a drifted winner\'s night', Boolean(guard));
 

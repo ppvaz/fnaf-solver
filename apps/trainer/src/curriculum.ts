@@ -34,7 +34,7 @@ const sweep = (t0) => [
 // plus two frames (33 ms), the least margin test-seam-slack.mjs lets a device
 // plan clear a floor by: a cue on the floor itself is refused one frame early.
 // The ungated gaps keep CYCLE_SCRIPT's spacing. apps/trainer/test/
-// lessons.test.mjs plays every lesson through the Sim and fails on a refusal.
+// lessons.test.ts plays every lesson through the Sim and fails on a refusal.
 //
 // CYCLE_SCRIPT's per-step windows (C.STEP_WINDOWS) were measured on the old
 // geometry, so no step here carries one: how late each step can be before the

@@ -9,12 +9,12 @@
 //      else lit is `occupied`;
 //   3. the runner refuses the unsafe invocations it exists to refuse.
 //
-//   node apps/desktop/test/test-native-regions.mjs
+//   node apps/desktop/test/test-native-regions.ts
 
 import { parseRegionRead, regionSetLine } from '../../../packages/play/src/venues/phone/companion.ts';
 import { pngFromRegion } from '../../../packages/play/bin/phone/native-regions.ts';
 import { makeClassifier } from '../../../packages/play/games/fnaf1/fnaf1-detectors.ts';
-import { parseArgs } from '../bin/fnaf1-custom-run.mjs';
+import { parseArgs } from '../bin/fnaf1-custom-run.ts';
 
 const failures = [];
 let checks = 0;
@@ -31,7 +31,7 @@ throws('bad token refused', () => regionSetLine('xyz', 'a', { x: 0, y: 0, width:
 {
   const r = parseRegionRead('OK seq=9 imageNs=100 copiedNs=120 captured=9 regions=1 a=10,20,3,2,2:ff0000000000 snapshotNs=200');
   ok('seq', r.seq === 9 && r.imageNs === 100n && r.snapshotNs === 200n);
-  const a = r.regions.a;
+  const a = (r.regions as any).a;
   ok('strided geometry', a.cols === 2 && a.rows === 1 && a.pixels.length === 2);
   ok('raw pixels in order', a.pixels[0] === 0xff0000 && a.pixels[1] === 0x000000);
   throws('sample count must match geometry', () => parseRegionRead('OK seq=1 regions=1 a=0,0,2,2,1:ff0000 snapshotNs=1'));
@@ -45,7 +45,7 @@ const fill = (n, rgb) => new Uint32Array(n).fill(rgb);
 const b64 = (px) => Buffer.from(new Uint8Array(px.buffer)).toString('base64');
 const N = 16;
 const panels = { 'open/off': 0x800000, 'open/on': 0x80ffff, 'shut/off': 0x008000, 'shut/on': 0x00ffff };
-const templates = {};
+const templates: any = {};
 for (const [state, rgb] of Object.entries(panels)) {
   const lit = state.endsWith('on');
   templates[`pan0|L:${state}`] = { left_panel: b64(fill(N, rgb)), left_doorway: b64(fill(N, lit ? 0x606060 : 0x101010)) };
@@ -88,8 +88,8 @@ const read = (regions) => ({ regions: { cam_label: fill(N, 0), ...regions } });
     ok(`${game} panel constants read`, Object.values(panel).every(Number.isFinite));
     const model = JSON.parse(readFileSync(new URL(`../../../packages/play/profiles/${regions}`, import.meta.url), 'utf8'));
     for (const [name, r] of Object.entries(model.sets.night)) {
-      const apart = r.x >= panel.right + panel.guard || r.x + r.width <= panel.left - panel.guard
-        || r.y >= panel.bottom + panel.guard || r.y + r.height <= panel.top - panel.guard;
+      const apart = (r as any).x >= panel.right + panel.guard || (r as any).x + (r as any).width <= panel.left - panel.guard
+        || (r as any).y >= panel.bottom + panel.guard || (r as any).y + (r as any).height <= panel.top - panel.guard;
       ok(`${game} teach panel clears ${name} by ${panel.guard} px`, apart);
     }
   }

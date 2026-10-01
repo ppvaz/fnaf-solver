@@ -15,7 +15,7 @@ package com.ppvaz.fnafcompanion;
  * <p>The panel paints only inside {@link #LEFT}..{@link #RIGHT} x
  * {@link #TOP}..{@link #BOTTOM}, which every FNaF 1 native region the route
  * reads clears by {@link #GUARD_PX} (packages/play/profiles/fnaf1/moto-g56/regions-fnaf1-*.json;
- * apps/desktop/test/test-native-regions.mjs checks it).</p>
+ * apps/desktop/test/test-native-regions.ts checks it).</p>
  *
  * <p>Pure Java: no Android types, so android/companion/test.sh runs it on the
  * host.</p>

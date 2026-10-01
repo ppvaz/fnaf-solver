@@ -230,12 +230,12 @@ const ENGINE = [
   // the sourced Fusion LCG and measured-safe maskraise compound).
   ['human gate', ['../packages/propose/bin/plans/test-human-gate.mjs']],
   // The gate counts the deaths and prints its top four; on Night 2 that cut
-  // says "Foxy, mostly" when Foxy is 58% and the office is 42%. deathchart.mjs
+  // says "Foxy, mostly" when Foxy is 58% and the office is 42%. deathchart.ts
   // charts the whole census by the engine's own kill() reasons. This pins the
   // part that can go wrong silently: a new engine death cause with no slice,
   // and slices ordered by count rather than by character (which would repaint
   // Foxy between two panels meant to be compared).
-  ['deathchart', ['../apps/desktop/test/test-deathchart.mjs']],
+  ['deathchart', ['../apps/desktop/test/test-deathchart.ts']],
   // Plan 13 package 3 foundation: a labelled, nearest-centroid visual Foxy
   // cause envelope can add attribution after the last office segment, but it
   // is hard-bound to shadow mode and cannot replace lifecycle authority.
@@ -298,7 +298,7 @@ const ENGINE = [
   // HumanActuator's measured bands (plans/04). Checks the Coach's trace rows
   // against known lateness and the /save-trace endpoint against a temp dir,
   // no browser involved.
-  ['trainer trace', ['../apps/trainer/test/trace.test.mjs']],
+  ['trainer trace', ['../apps/trainer/test/trace.test.ts']],
   // Plan 11's exact-engine policy adapter and the independently reimplemented
   // Jason/Shooter25/Couraeel baselines, with their controls: a null policy, a
   // wind-only policy, an inverted ladder and a flash-deleted Minus 7 must all
@@ -425,14 +425,14 @@ const BACKLOG = new Map([
   ['docs', 'run by the CI documentation step'],
 ]);
 const BROWSER = [
-  ['browsertest', ['../apps/trainer/test/browser.test.mjs']],
-  ['caltest', ['../apps/trainer/test/calibration.test.mjs']],
-  ['lightcheck', ['../apps/trainer/test/light.test.mjs']],
-  ['phasetest', ['../apps/trainer/test/phase.test.mjs']],
-  ['lessontest', ['../apps/trainer/test/lesson.test.mjs']],
+  ['browsertest', ['../apps/trainer/test/browser.test.ts']],
+  ['caltest', ['../apps/trainer/test/calibration.test.ts']],
+  ['lightcheck', ['../apps/trainer/test/light.test.ts']],
+  ['phasetest', ['../apps/trainer/test/phase.test.ts']],
+  ['lessontest', ['../apps/trainer/test/lesson.test.ts']],
   // The Pages entry: build.py's bundle at /, over the repository's other
   // files, from its own GET-only server, the way pages.yml publishes it.
-  ['pages entry', ['../apps/trainer/test/pages.test.mjs']],
+  ['pages entry', ['../apps/trainer/test/pages.test.ts']],
 ];
 const REPORTS = [
   ['minus2test', ['../packages/propose/bin/minus2test.mjs']],
@@ -478,7 +478,7 @@ const REPORTS = [
   ['lateness sweep', ['../packages/propose/parked/minus7/latenesssweep.mjs', '--runs=200', '--assert']],
   // The measured human bands, from whatever trainer runs have been recorded.
   // Empty until practice sessions accumulate under /save-trace.
-  ['tracereport', ['../apps/trainer/test/tracereport.mjs']],
+  ['tracereport', ['../apps/trainer/test/tracereport.ts']],
 ];
 
 const secs = (ms) => `${(ms / 1000).toFixed(1)}s`;

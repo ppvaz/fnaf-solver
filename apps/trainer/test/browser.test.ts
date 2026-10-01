@@ -12,7 +12,7 @@ const profile = mkdtempSync(join(tmpdir(), 'm7-chrome-'));
 
 const chrome = spawn(chromeBinary(), chromeArgs(PORT, profile), { stdio: 'ignore' });
 
-const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const sleep = (ms) => new Promise<any>(r => setTimeout(r, ms));
 
 async function targets() {
   for (let i = 0; i < 60; i++) {
@@ -25,7 +25,7 @@ async function targets() {
 let id = 0;
 function rpc(ws, method, params = {}) {
   const mid = ++id;
-  return new Promise((res, rej) => {
+  return new Promise<any>((res, rej) => {
     const on = (e) => {
       const m = JSON.parse(e.data);
       if (m.id !== mid) return;
@@ -42,7 +42,7 @@ const logs = [], errors = [];
 async function main() {
   const t = (await targets()).find(x => x.type === 'page');
   const ws = new WebSocket(t.webSocketDebuggerUrl);
-  await new Promise(r => ws.addEventListener('open', r));
+  await new Promise<any>(r => ws.addEventListener('open', r));
 
   ws.addEventListener('message', (e) => {
     const m = JSON.parse(e.data);

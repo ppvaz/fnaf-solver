@@ -11,7 +11,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Coach } from '@sixam/trainer';
 import * as C from '@sixam/source/fnaf2';
-import { summarize } from './tracereport.mjs';
+import { summarize } from './tracereport.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '..', '..', '..');
@@ -111,7 +111,7 @@ try {
   let up = false;
   for (let i = 0; i < 40 && !up; i++) {
     try { up = (await fetch(`http://127.0.0.1:${PORT}/index.html`)).ok; }
-    catch { await new Promise(r => setTimeout(r, 25)); }
+    catch { await new Promise<any>(r => setTimeout(r, 25)); }
   }
   check('serve.py answered', up);
   if (up) {
