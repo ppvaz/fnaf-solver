@@ -24,9 +24,11 @@
 //      that coin still.
 // ---------------------------------------------------------------------------
 
+import type { Fnaf3Sim } from '@sixam/source/games/fnaf3/sim-fnaf3.ts';
+
 // Which vent he can enter from each camera [SOURCED: the branch-4 entrances].
 // Sealing is one vent at a time, so this is a priority function, not a set.
-export const VENT_FROM = { 10: 14, 2: 15, 9: 11, 7: 12, 5: 13 };
+export const VENT_FROM: Readonly<Record<number, number>> = { 10: 14, 2: 15, 9: 11, 7: 12, 5: 13 };
 
 // The danger order the vent topology implies: 14 and 15 bypass the attack
 // chain and kill outright, 11 and 12 enter it two steps from the end, 13 with
@@ -47,12 +49,12 @@ export function communityLine({ rebootAt = -4, dwellFrames = 12,
   // stale reading. That is the difference this repository insists on between
   // a belief policy and a truth policy, and a truth policy here would clear
   // nights it has not earned.
-  let believed = null;          // last camera he was actually seen on
+  let believed: number | null = null;          // last camera he was actually seen on
   let seenAgo = Infinity;
   let index = 0;
   let dwell = 0;
 
-  return (sim) => {
+  return (sim: Fnaf3Sim) => {
     if (sim.over) return;
     seenAgo += 1;
 
@@ -98,21 +100,21 @@ export function communityLine({ rebootAt = -4, dwellFrames = 12,
 // games/fnaf3/graph.json in @sixam/source, g227-g251, g604-g613]; vents resolve back to their camera
 // when sealed. The device loop (packages/play/games/fnaf3/fnaf3-run.ts NEXT) carries the
 // same table.
-const NEXT = {
+const NEXT: Readonly<Record<number, readonly number[]>> = {
   10: [9, 14], 9: [10, 8, 11], 8: [9, 7, 5], 7: [8, 6, 12], 6: [7, 5],
   5: [6, 2, 4, 13], 2: [5, 4, 15], 4: [2, 3], 3: [4], 1: [],
   11: [9], 12: [7], 13: [5], 14: [10], 15: [2],
 };
-const DANGER = { 14: 0, 15: 0, 11: 1, 12: 1, 13: 2 };
+const DANGER: Readonly<Record<number, number>> = { 14: 0, 15: 0, 11: 1, 12: 1, 13: 2 };
 
 /** Cameras nearest-ring first from where he was seen (fnaf3-run.ts searchOrder). */
-export function searchOrder(from) {
+export function searchOrder(from: number | null) {
   if (!from) return [10, 9, 8, 7, 6, 5, 2, 4, 3];
   const seen = new Set([from]);
   const order = [from];
   let ring = [from];
   while (ring.length) {
-    const next = [];
+    const next: number[] = [];
     for (const n of ring) for (const m of NEXT[n] ?? []) {
       if (seen.has(m)) continue;
       seen.add(m); next.push(m);
@@ -125,7 +127,7 @@ export function searchOrder(from) {
   return order;
 }
 
-const placeOf = (where) => {
+const placeOf = (where: unknown) => {
   const m = /^(cam|vent)(\d+)$/.exec(String(where));
   return m ? Number(m[2]) : null;
 };
@@ -134,7 +136,7 @@ const placeOf = (where) => {
  * fnaf3-run.ts chooseReboot over the simulator's own counters: two broken
  * systems, or a camera counter already 7 s along, take reboot all.
  */
-function chooseSimReboot(broken, sim) {
+function chooseSimReboot(broken: ReadonlySet<string>, sim: Fnaf3Sim) {
   if (broken.size >= 2) return 'ALL';
   if (broken.has('VIDEO')) return sim.cameraAv5 >= 7 ? 'ALL' : 'VIDEO';
   const other = broken.has('VENT') ? 'VENT' : broken.has('AUDIO') ? 'AUDIO' : null;
@@ -163,26 +165,28 @@ export function trackingLoop({ lookFrames = 45, selectFrames = 18, sealWaitFrame
                                economy = false, lures = false, herd = true, lostLure = true } = {}) {
   // fnaf3-run.ts HERD: from each office-side camera, the camera one step out
   // whose lure pulls him there (g319-g341); cam 02 also pulls from stage 1.
-  const HERD = { 2: 5, 3: 2, 4: 2, 5: 6 };
+  const HERD: Readonly<Record<number, number>> = { 2: 5, 3: 2, 4: 2, 5: 6 };
   const NEAR_OFFICE = new Set([1, 2, 3, 4, 13, 15]);
-  let seen = null;           // the place he was last seen
+  let seen: number | null = null;           // the place he was last seen
   let sealed = 0;            // the vent whose seal committed
-  let task = null;           // { kind, n, until }
-  let search = [];
+  let task: { kind: string, n: number, until: number, armed: boolean } | null = null;
+  let search: number[] = [];
   let rebootFrame = -Infinity;
 
-  const start = (sim, kind, n, frames) => { task = { kind, n, until: sim.frame + frames, armed: false }; };
-  const lookAt = (sim, n) => { sim.viewing = 2; sim.ventMap = n >= 11; sim.cameraId = n; start(sim, 'look', n, lookFrames); };
-  const sealVent = (sim, v) => { sim.viewing = 2; sim.ventMap = true; sim.cameraId = v; start(sim, 'seal', v, selectFrames + sealWaitFrames); };
-  const next = (sim) => {
+  const start = (sim: Fnaf3Sim, kind: string, n: number, frames: number) => { task = { kind, n, until: sim.frame + frames, armed: false }; };
+  const lookAt = (sim: Fnaf3Sim, n: number) => { sim.viewing = 2; sim.ventMap = n >= 11; sim.cameraId = n; start(sim, 'look', n, lookFrames); };
+  const sealVent = (sim: Fnaf3Sim, v: number) => { sim.viewing = 2; sim.ventMap = true; sim.cameraId = v; start(sim, 'seal', v, selectFrames + sealWaitFrames); };
+  // `search` is refilled before it is read, so a shift always has a camera.
+  const take = () => search.shift() as number;
+  const next = (sim: Fnaf3Sim) => {
     if (seen !== null && search.length === 0) return lookAt(sim, seen);
     if (search.length === 0) search = searchOrder(null);
-    let n = search.shift();
-    while (n >= 11 && n === sealed && search.length) n = search.shift();
+    let n = take();
+    while (n >= 11 && n === sealed && search.length) n = take();
     return lookAt(sim, n);
   };
 
-  return (sim) => {
+  return (sim: Fnaf3Sim) => {
     if (sim.over) return;
     if (economy) {
       // The device's trip, as fnaf3-run.ts serviceSystems makes it: ~3.5 s
@@ -192,12 +196,12 @@ export function trackingLoop({ lookFrames = 45, selectFrames = 18, sealWaitFrame
         sim.viewing = 0; sim.ventMap = false;
         if (sim.frame < task.until) return;
         if (!task.armed) {
-          const broken = new Set();
+          const broken = new Set<string>();
           if (sim.videoError) broken.add('VIDEO');
           if (sim.vent <= -10) broken.add('VENT');
           if (lures && sim.audio <= -10) broken.add('AUDIO');
           const which = chooseSimReboot(broken, sim);
-          sim.rebooting = { AUDIO: 1, VIDEO: 2, VENT: 3, ALL: 4 }[which] ?? 0; sim.rebootCursor = 0;
+          sim.rebooting = which === null ? 0 : { AUDIO: 1, VIDEO: 2, VENT: 3, ALL: 4 }[which]; sim.rebootCursor = 0;
           task.armed = true;
           return;
         }
@@ -239,7 +243,7 @@ export function trackingLoop({ lookFrames = 45, selectFrames = 18, sealWaitFrame
         if (lures && herd && HERD[n] && sim.audio - sim.ai > -10 && !sim.ventMap && sim.lure(HERD[n])) {
           return lookAt(sim, HERD[n]);
         }
-        const v = { 10: 14, 9: 11, 7: 12, 5: 13, 2: 15 }[n];
+        const v = VENT_FROM[n];
         if (n >= 11 && sealed !== n) return sealVent(sim, n);
         if (v && sealed !== v) return sealVent(sim, v);
         return lookAt(sim, n);
@@ -248,7 +252,7 @@ export function trackingLoop({ lookFrames = 45, selectFrames = 18, sealWaitFrame
         // He left: the vent beside the camera he left first, then the rings.
         search = searchOrder(seen);
         if (lures && lostLure && NEAR_OFFICE.has(seen) && !sim.ventMap) sim.lure(2);
-        const v = { 10: 14, 9: 11, 7: 12, 5: 13, 2: 15 }[seen];
+        const v = VENT_FROM[n];
         if (v && sealed !== v) return sealVent(sim, v);
       }
       if (search.length === 0 && seen !== null && n !== seen) seen = null;
@@ -262,7 +266,7 @@ export const doNothing = () => {};
 
 /** Stand in the office all night: must lose to ventilation on nights 2+. */
 export function officeCamp() {
-  return (sim) => { sim.viewing = 0; sim.ventMap = false; };
+  return (sim: Fnaf3Sim) => { sim.viewing = 0; sim.ventMap = false; };
 }
 
 export const POLICIES = {

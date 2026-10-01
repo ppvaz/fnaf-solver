@@ -2,6 +2,10 @@
 import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
 import { stableHash } from '@sixam/kernel/contracts';
+import type { SimOptions } from '@sixam/source/games/fnaf2/plant-options.ts';
+
+/** The Sim's own options, plus the family's box floor and stall-flash cameras. */
+type MinusTwoOptions = Partial<SimOptions> & { readonly boxFloor?: number, readonly flashCams?: readonly number[] };
 
 const PH = {
   maskOff: 1, raise: 17, camBox: 31, windOn: 33, windOff: 174,
@@ -9,7 +13,7 @@ const PH = {
   holdUnmask: 274, holdLight: 290, holdLightOff: 298, holdRemask: 299,
 };
 
-export function runMinusTwo(opts: any = {}) {
+export function runMinusTwo(opts: MinusTwoOptions = {}) {
   const boxFloor = opts.boxFloor ?? 0.35;
   const cams = opts.flashCams ?? [3];
   const sim = new Sim(Object.assign({ seed: 1 }, opts));
@@ -63,7 +67,7 @@ export function runMinusTwo(opts: any = {}) {
   return { sim, minBox, holds, maxConsecutiveHolds, maxD };
 }
 
-export function summarizeMinusTwo(opts: any = {}) {
+export function summarizeMinusTwo(opts: MinusTwoOptions = {}) {
   const result = runMinusTwo(opts);
   return {
     family: 'minus-two', seed: opts.seed ?? 1, won: result.sim.won,

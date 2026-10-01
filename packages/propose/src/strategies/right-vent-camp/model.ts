@@ -2,32 +2,37 @@ import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
 import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '../../experiment/seeds.ts';
 import { CYCLE, routeFor } from './route.ts';
+import type { SimOptions } from '@sixam/source/games/fnaf2/plant-options.ts';
 
-const at = seconds => Math.round(seconds * C.FPS);
+/** Scheduled sim operations, by the frame they run before. */
+type Queue = Map<number, ((sim: Sim) => void)[]>;
+type Cycle = typeof CYCLE;
 
-function add(queue, frame, fn) {
+const at = (seconds: number) => Math.round(seconds * C.FPS);
+
+function add(queue: Queue, frame: number, fn: (sim: Sim) => void) {
   const rows = queue.get(frame) ?? [];
   rows.push(fn);
   queue.set(frame, rows);
 }
 
-function press(queue, frame, action, guard: (sim: any) => boolean = () => true) {
+function press(queue: Queue, frame: number, action: string, guard: (sim: Sim) => boolean = () => true) {
   add(queue, frame, sim => { if (guard(sim)) sim.press(action); });
 }
 
-function release(queue, frame, action) {
+function release(queue: Queue, frame: number, action: string) {
   add(queue, frame, sim => sim.release(action));
 }
 
-function monitorDown(sim) { return sim.monitor === 'up' || sim.monitor === 'raising'; }
-function monitorUp(sim) { return sim.monitor === 'down' || sim.monitor === 'lowering'; }
+function monitorDown(sim: Sim) { return sim.monitor === 'up' || sim.monitor === 'raising'; }
+function monitorUp(sim: Sim) { return sim.monitor === 'down' || sim.monitor === 'lowering'; }
 
-function flash(queue, frame) {
+function flash(queue: Queue, frame: number) {
   press(queue, frame, 'light', sim => monitorUp(sim) && sim.maskFullyOff);
   release(queue, frame + 3, 'light');
 }
 
-function opening(queue) {
+function opening(queue: Queue) {
   press(queue, 1, 'monitor');
   press(queue, CYCLE.openingFirstCameraFrames, 'cam:11', sim => sim.camsUp);
   press(queue, CYCLE.openingFirstWindFrames, 'wind', sim => sim.camsUp);
@@ -47,7 +52,7 @@ function opening(queue) {
   press(queue, at(25.4), 'wind', sim => sim.camsUp);
 }
 
-function mainCycle(queue, base, cycle = CYCLE) {
+function mainCycle(queue: Queue, base: number, cycle: Cycle = CYCLE) {
   const lower = base + cycle.maskDownFrames;
   press(queue, lower, 'monitor', monitorDown);
   // The mask press follows monitor lowering, not the same frame as the tap.
@@ -63,11 +68,11 @@ function mainCycle(queue, base, cycle = CYCLE) {
 }
 
 /** Faithful published timer skeleton, evaluated only on the Android plant model. */
-export function run(seed, opts = {}) {
-  const { night = 7, ventStall = true, simOpts = {}, cycle = CYCLE } = (opts as any);
+export function run(seed: number, opts: { night?: number, ventStall?: boolean, simOpts?: Partial<SimOptions>, cycle?: Cycle } = {}) {
+  const { night = 7, ventStall = true, simOpts = {}, cycle = CYCLE } = opts;
   routeFor(night, cycle);
   const sim = new Sim({ seed, night, ...simOpts });
-  const queue = new Map();
+  const queue: Queue = new Map();
   opening(queue);
   for (let base = cycle.mainStartFrames;
        base < C.NIGHT_FRAMES;
@@ -98,7 +103,7 @@ export function cohort({ night = 7, from, to, seeds, count = 3000,
     ? Array.from({ length: Math.max(0, to - from + 1) }, (_, i) => (from + i) >>> 0)
     : randomSeedCohort({ count }));
   if (!population.length) throw new Error('Right Vent Camp cohort cannot be empty');
-  const deaths = {}, lost = [];
+  const deaths: Record<string, number> = {}, lost: number[] = [];
   let won = 0, minBox = Infinity, minPower = Infinity, firstPowerOut = Infinity;
   for (const seed of population) {
     const result = run(seed, { night, ventStall,

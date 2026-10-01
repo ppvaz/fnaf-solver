@@ -3149,7 +3149,8 @@
       "file": "packages/propose/src/experiment/families/minus-two.ts",
       "imports": [
         "@sixam/kernel/contracts",
-        "@sixam/source/fnaf2"
+        "@sixam/source/fnaf2",
+        "@sixam/source/games/fnaf2/plant-options.ts"
       ]
     },
     {
@@ -3172,6 +3173,7 @@
       "imports": [
         "./cycle-library.ts",
         "./cycle-planner.ts",
+        "@sixam/kernel",
         "@sixam/play/player",
         "@sixam/source/games/fnaf2/config.ts",
         "@sixam/source/games/fnaf2/reduced-model.ts"
@@ -3180,6 +3182,7 @@
     {
       "file": "packages/propose/src/games/fnaf2/cycle-library.ts",
       "imports": [
+        "@sixam/kernel",
         "@sixam/source/games/fnaf2/config.ts",
         "@sixam/source/games/fnaf2/reduced-model.ts"
       ]
@@ -3187,7 +3190,8 @@
     {
       "file": "packages/propose/src/games/fnaf2/cycle-planner.ts",
       "imports": [
-        "./cycle-library.ts"
+        "./cycle-library.ts",
+        "@sixam/source/games/fnaf2/reduced-model.ts"
       ]
     },
     {
@@ -3203,7 +3207,11 @@
     {
       "file": "packages/propose/src/games/fnaf2/night-policy.ts",
       "imports": [
-        "@sixam/source/games/fnaf2/config.ts"
+        "./cycle-controller.ts",
+        "./cycle-library.ts",
+        "@sixam/kernel",
+        "@sixam/source/games/fnaf2/config.ts",
+        "@sixam/source/games/fnaf2/reduced-model.ts"
       ]
     },
     {
@@ -3213,9 +3221,16 @@
       ]
     },
     {
+      "file": "packages/propose/src/games/policy-fnaf3.ts",
+      "imports": [
+        "@sixam/source/games/fnaf3/sim-fnaf3.ts"
+      ]
+    },
+    {
       "file": "packages/propose/src/games/policy-fnaf4.ts",
       "imports": [
-        "@sixam/source/games/fnaf4/fnaf4.ts"
+        "@sixam/source/games/fnaf4/fnaf4.ts",
+        "@sixam/source/games/fnaf4/sim-fnaf4.ts"
       ]
     },
     {
@@ -3236,6 +3251,7 @@
     {
       "file": "packages/propose/src/policy/observation-language.ts",
       "imports": [
+        "@sixam/kernel",
         "@sixam/play/sim",
         "@sixam/source/games/fnaf2/config.ts"
       ]
@@ -3244,6 +3260,7 @@
       "file": "packages/propose/src/policy/policy-ir.ts",
       "imports": [
         "./observation-language.ts",
+        "@sixam/kernel",
         "@sixam/source"
       ]
     },
@@ -3295,7 +3312,8 @@
         "../../experiment/seeds.ts",
         "./route.ts",
         "@sixam/kernel/contracts",
-        "@sixam/source/fnaf2"
+        "@sixam/source/fnaf2",
+        "@sixam/source/games/fnaf2/plant-options.ts"
       ]
     },
     {
@@ -3317,7 +3335,8 @@
       "imports": [
         "../../experiment/seeds.ts",
         "./route.ts",
-        "@sixam/source/fnaf2"
+        "@sixam/source/fnaf2",
+        "@sixam/source/games/fnaf2/plant-options.ts"
       ]
     },
     {

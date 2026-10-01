@@ -56,6 +56,10 @@
 // claim, and a survival number produced with it is a statement about the
 // model.
 import * as C from '@sixam/source/games/fnaf2/config.ts';
+import type { ReducedState } from '@sixam/source/games/fnaf2/reduced-model.ts';
+import type { Cycle } from './cycle-library.ts';
+import type { CycleController } from './cycle-controller.ts';
+import { isRecord } from '@sixam/kernel';
 
 export const NIGHT_POLICY_SCHEMA = 'night-policy-v1';
 
@@ -85,11 +89,11 @@ export const NIGHT_POLICY_CYCLES = Object.freeze(
 // boundary is still met at the next one.
 const BOUNDARY = 4;
 
-const fail = (message) => { throw new TypeError(`night policy: ${message}`); };
+function fail(message: string): never { throw new TypeError(`night policy: ${message}`); }
 
-const observedValue = (facts, name) => {
-  const fact = facts?.[name];
-  return fact && fact.state === 'OBSERVED' ? fact.value : null;
+const observedValue = (facts: Readonly<Record<string, unknown>>, name: string) => {
+  const fact = facts[name];
+  return isRecord(fact) && fact.state === 'OBSERVED' ? fact.value : null;
 };
 
 /**
@@ -101,35 +105,58 @@ const observedValue = (facts, name) => {
  * disagree with the controller about what it did -- the belief inversion this
  * repository keeps finding on the phone -- and this one structurally cannot.
  */
+/** Names the primitive a decision wants and records why. */
+type Reason = (cycle: string, why: string) => string;
+/** The policy's knobs; each default is argued beside it in the constructor. */
+interface NightPolicyOptions {
+  readonly night?: number;
+  readonly customNight?: Readonly<Record<string, number>> | null;
+  readonly campFrames?: number;
+  readonly minMaskFrames?: number;
+  readonly windMarginFrames?: number;
+  readonly flashMarginFrames?: number;
+  readonly actWithinFrames?: number;
+  readonly powerFloorFrames?: number;
+  readonly sweepOnTrip?: boolean;
+  readonly topUpBelow?: number;
+  readonly sweepPeriodFrames?: number;
+  readonly sweepRideFrames?: number;
+  readonly idleStall?: boolean;
+  readonly campMinTicks?: number;
+  readonly useThud?: boolean;
+  readonly rollGrid?: boolean;
+  readonly rollGuardTicks?: number;
+}
+
 export class NightPolicy {
   declare schema: string;
-  declare night: any;
-  declare customNight: any;
-  declare campFrames: any;
+  declare night: number;
+  declare customNight: Readonly<Record<string, number>> | null;
+  declare campFrames: number;
   declare repelFrames: number;
-  declare minMaskFrames: any;
-  declare windMarginFrames: any;
-  declare flashMarginFrames: any;
-  declare actWithinFrames: any;
-  declare powerFloorFrames: any;
-  declare sweepOnTrip: any;
-  declare topUpBelow: any;
-  declare sweepPeriodFrames: any;
-  declare sweepRideFrames: any;
-  declare idleStall: any;
-  declare campMinTicks: any;
-  declare useThud: any;
-  declare rollGrid: any;
-  declare rollGuardTicks: any;
+  declare minMaskFrames: number;
+  declare windMarginFrames: number;
+  declare flashMarginFrames: number;
+  declare actWithinFrames: number;
+  declare powerFloorFrames: number;
+  declare sweepOnTrip: boolean;
+  declare topUpBelow: number;
+  declare sweepPeriodFrames: number;
+  declare sweepRideFrames: number;
+  declare idleStall: boolean;
+  declare campMinTicks: number;
+  declare useThud: boolean;
+  declare rollGrid: boolean;
+  declare rollGuardTicks: number;
   declare sweepFrames: number;
   declare foxyAi: number;
   declare safeD: number;
   declare goldenAi: number;
   declare boxDrainFrames: number;
-  declare lastDecision: any;
+  declare lastDecision: { frame: number, cycle: string, why: string } | null;
   declare _cacheFrame: number;
-  declare _cacheWant: any;
-  constructor(options: any = {}) {
+  declare _cacheWant: string | null;
+  constructor(options: NightPolicyOptions = {}) {
     const {
       night = 1, customNight = null,
       // How long the mask must stay on to be worth wearing: the sourced
@@ -276,7 +303,7 @@ export class NightPolicy {
   static get requiredCycles() { return NIGHT_POLICY_CYCLES; }
 
   /** True while the source holds Foxy's D at zero (groups 872-874). */
-  foxyDormant(frame) {
+  foxyDormant(frame: number) {
     return this.foxyAi === 0 || this.night === 1 ||
       (this.night === 2 && frame < 2 * C.HOUR_FRAMES);
   }
@@ -297,7 +324,7 @@ export class NightPolicy {
    * the defuse only once the fully-on frame has actually passed and only when
    * it landed strictly inside the fuse.
    */
-  defused(state) {
+  defused(state: ReducedState) {
     const hazard = state.hazards.blackout;
     if (hazard.state !== 'active' || hazard.deadlineFrame < 0) return false;
     if (!state.maskOn || state.maskSinceFrame < 0) return false;
@@ -320,10 +347,10 @@ export class NightPolicy {
    * policy still keeps no private bookkeeping: `maskSinceFrame` is the camp in
    * flight, `lastMaskOffFrame`/`lastMaskRunFrames` the last completed one.
    */
-  repelPaid(state, age) {
-    if (!Number.isFinite(age)) return false;
+  repelPaid(state: ReducedState, age: unknown) {
+    if (typeof age !== 'number' || !Number.isFinite(age)) return false;
     const heardAt = state.frame - age;
-    const answered = (start, end) => {
+    const answered = (start: number, end: number) => {
       if (start < 0 || end < start) return false;
       const fullyOn = start + C.MASK_ANIM_ON;
       // Five continuous ticks that fall AFTER the cue repel whoever raised it.
@@ -342,14 +369,14 @@ export class NightPolicy {
   }
 
   /** Frames of monitor/mask work between here and the first winding frame. */
-  leadToWind(state) {
+  leadToWind(state: ReducedState) {
     const up = state.monitor === 'up' || state.monitor === 'raising';
     return (state.maskOn ? C.MASK_ANIM_OFF + BOUNDARY : 0) +
       (up ? 0 : C.MONITOR_ANIM_UP + BOUNDARY) + BOUNDARY;
   }
 
   /** Frames of monitor/mask work between here and a hall flash landing. */
-  leadToFlash(state) {
+  leadToFlash(state: ReducedState) {
     const up = state.monitor === 'up' || state.monitor === 'raising';
     return (state.maskOn ? C.MASK_ANIM_OFF + BOUNDARY : 0) +
       (up ? C.MONITOR_ANIM_DOWN + BOUNDARY : 0);
@@ -360,7 +387,7 @@ export class NightPolicy {
    * `Infinity` while this night's box does not drain in this hour (g653's
    * Night 1 gate), which is a source fact and not an optimism.
    */
-  boxSlack(state, { lead = true } = {}) {
+  boxSlack(state: ReducedState, { lead = true } = {}) {
     const hour = Math.floor(state.frame / C.HOUR_FRAMES);
     if (!C.boxDrainsAtHour(state.night, hour)) return Infinity;
     const framesLeft = state.box * this.boxDrainFrames;
@@ -391,7 +418,7 @@ export class NightPolicy {
    *     same cohort is unaffected on Night 1 (Foxy is pinned at zero there)
    *     and the deaths stop.
    */
-  foxySlack(state, { masked = state.maskOn, lead = true } = {}) {
+  foxySlack(state: ReducedState, { masked = state.maskOn, lead = true } = {}) {
     if (this.foxyDormant(state.frame)) return Infinity;
     if (state.power <= this.powerFloorFrames) return Infinity;  // nothing to spend
     const perSecond = masked ? 2 : 1;
@@ -460,7 +487,7 @@ export class NightPolicy {
    * unflashed -- is retained under BOTH rules precisely so that a lost phase
    * degrades to the old cadence instead of to no cadence.
    */
-  rollDeadline(state, perSecond) {
+  rollDeadline(state: ReducedState, perSecond: number) {
     const phase = state.frame % C.MO_FRAMES;
     // D climbs at least one per second, so at least MO_FRAMES/FPS = 5 per
     // period; `safeD` never exceeds 20, so the answer is always within four
@@ -479,7 +506,7 @@ export class NightPolicy {
    * the stun has expired somewhere on a route and whoever was held there is
    * rolling again.
    */
-  sweepSlack(state) {
+  sweepSlack(state: ReducedState) {
     if (!this.sweepOnTrip) return Infinity;
     const since = state.lastCameraFlashFrame < 0
       ? Infinity : state.frame - state.lastCameraFlashFrame;
@@ -496,7 +523,7 @@ export class NightPolicy {
    * raise of the night). `windTrip` branches on exactly this, so `tripFrames`
    * has to predict it or it prices a trip nobody will take.
    */
-  cameraOnRaise(state) {
+  cameraOnRaise(state: ReducedState) {
     if (state.monitor === 'up' || state.monitor === 'raising') return state.viewedCamera;
     if (!state.hasViewedCamera) return C.initialCamera(state.night);
     return state.lastViewedCamera;
@@ -513,7 +540,7 @@ export class NightPolicy {
    * whole decision is `due > tripFrames`, and 42 frames is the difference
    * between a wind that fits after a flash and one that does not.
    */
-  tripFrames(state, windFrames) {
+  tripFrames(state: ReducedState, windFrames: number) {
     const up = state.monitor === 'up' || state.monitor === 'raising';
     const camera = this.cameraOnRaise(state);
     const sweep = this.sweepOnTrip && camera !== 7 && this.stunStale(state);
@@ -538,13 +565,13 @@ export class NightPolicy {
    * `viewedCamera !== 7` is kept as the in-trip progress guard, because a
    * landed sweep parks on CAM 07.
    */
-  stunStale(state) {
+  stunStale(state: ReducedState) {
     if (state.lastCameraFlashFrame < 0) return true;
     return state.frame - state.lastCameraFlashFrame >= this.sweepRideFrames;
   }
 
   /** Walk the prerequisites of a wind trip, ending in the named wind. */
-  windTrip(state, wind, why, reason, { forceSweep = false } = {}) {
+  windTrip(state: ReducedState, wind: string, why: string, reason: Reason, { forceSweep = false } = {}) {
     if (state.maskOn) return reason(UNMASK, `${why}: winding needs the mask off`);
     const up = state.monitor === 'up' || state.monitor === 'raising';
     if (!up) return reason(RAISE, `${why}: winding needs the monitor up`);
@@ -562,7 +589,7 @@ export class NightPolicy {
   }
 
   /** Walk only the prerequisites of a route sweep; do not invent a box wind. */
-  sweepTrip(state, reason) {
+  sweepTrip(state: ReducedState, reason: Reason) {
     if (state.maskOn) return reason(UNMASK, 'sweep: the camera needs the mask off');
     const up = state.monitor === 'up' || state.monitor === 'raising';
     if (!up) return reason(RAISE, 'sweep: the camera needs the monitor up');
@@ -573,12 +600,12 @@ export class NightPolicy {
    * The primitive this policy wants at this boundary, walking its own
    * prerequisites so the answer is always reachable from the current state.
    */
-  want(controller) {
+  want(controller: CycleController) {
     const state = controller.reduced;
     const facts = controller.facts;
     const up = state.monitor === 'up' || state.monitor === 'raising';
     const masked = state.maskOn;
-    const reason = (cycle, why) => {
+    const reason = (cycle: string, why: string) => {
       this.lastDecision = { frame: state.frame, cycle, why };
       return cycle;
     };
@@ -876,7 +903,7 @@ export class NightPolicy {
    * reorders equal-risk candidates every few frames (the livelock the baseline
    * control's own comment records).
    */
-  score(cycle, _hypothesis, _gate, controller) {
+  score(cycle: Cycle, _hypothesis: unknown, _gate: unknown, controller: CycleController) {
     const frame = controller.reduced.frame;
     if (frame !== this._cacheFrame) {
       this._cacheFrame = frame;
@@ -895,4 +922,4 @@ export class NightPolicy {
   get scorer() { return this.score.bind(this); }
 }
 
-export const nightPolicy = (options) => new NightPolicy(options);
+export const nightPolicy = (options?: NightPolicyOptions) => new NightPolicy(options);

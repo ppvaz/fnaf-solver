@@ -9,20 +9,42 @@ import * as C from '@sixam/source/games/fnaf2/config.ts';
 import { initialEstimator, update, reconcile, send, needsVerification } from '@sixam/play/player';
 import { initialReducedState, observeReduced, applyReduced, advanceReduced, REDUCED_SCHEMA } from '@sixam/source/games/fnaf2/reduced-model.ts';
 import { getCycle } from './cycle-library.ts';
+import type { Cycle, CycleAction } from './cycle-library.ts';
 import { selectCycle } from './cycle-planner.ts';
+import type { ReducedState } from '@sixam/source/games/fnaf2/reduced-model.ts';
+import { isRecord } from '@sixam/kernel';
 
 export const CYCLE_CONTROLLER_SCHEMA = 'cycle-controller-v1';
 
-const clone = value => structuredClone(value);
-const finite = value => Number.isFinite(value);
-const CONTROL_FACTS = Object.freeze({ monitorUp: 'monitor', maskOn: 'mask' });
-const CONTROL_ACTIONS = Object.freeze({ monitor: 'monitorUp', mask: 'maskOn' });
+type Estimator = ReturnType<typeof initialEstimator>;
+type FactBatch = Readonly<Record<string, unknown>>;
+/** A plausible world the planner gates a cycle against. */
+type Hypothesis = { readonly id: string, readonly state: ReducedState, readonly hazard: string, readonly plausible: boolean };
+/** A cycle action committed for later: its owning invocation, its absolute frame, whether it opens a contact. */
+interface DeferredAction extends CycleAction {
+  readonly cycleId: string;
+  readonly cycleRunId: string;
+  readonly opensContact: boolean;
+  readonly dueFrame: number;
+}
 
-function fail(message) { throw new TypeError(`cycle controller: ${message}`); }
+const clone = <T>(value: T): T => structuredClone(value);
+const finite = (value: unknown): value is number => Number.isFinite(value);
+const CONTROL_FACTS = Object.freeze({ monitorUp: 'monitor', maskOn: 'mask' } as const);
+const CONTROL_ACTIONS = Object.freeze({ monitor: 'monitorUp', mask: 'maskOn' } as const);
+const controlAction = (action: string) =>
+  Object.hasOwn(CONTROL_ACTIONS, action) ? CONTROL_ACTIONS[action as keyof typeof CONTROL_ACTIONS] : undefined;
 
-function stripFrame(facts) {
-  const result = {};
-  for (const [name, fact] of Object.entries(facts ?? {})) {
+function fail(message: string): never { throw new TypeError(`cycle controller: ${message}`); }
+
+function factBatch(facts: unknown): FactBatch {
+  if (!isRecord(facts)) fail('facts must be an object');
+  return facts;
+}
+
+function stripFrame(facts: FactBatch) {
+  const result: Record<string, unknown> = {};
+  for (const [name, fact] of Object.entries(facts)) {
     if (name !== 'frame') result[name] = fact;
   }
   return result;
@@ -32,29 +54,27 @@ function stripFrame(facts) {
 // its sampled frame as observedAtMs, while receipt is the current decision
 // frame. A pre-read UNKNOWN has no meaningful sample time, so it is timestamped
 // at receipt rather than manufacturing a negative event time.
-function timedFacts(facts, frame, receivedAtMs) {
-  if (!facts || typeof facts !== 'object' || Array.isArray(facts))
-    fail('facts must be an object');
+function timedFacts(facts: FactBatch, frame: number, receivedAtMs: number) {
   if (!Number.isInteger(frame) || frame < 0 || !finite(receivedAtMs))
     fail('frame and receipt time must be valid');
-  const sampleFrame = Number.isInteger(facts.frame) && facts.frame >= 0
+  const sampleFrame = typeof facts.frame === 'number' && Number.isInteger(facts.frame) && facts.frame >= 0
     ? facts.frame : frame;
   const observedAtMs = sampleFrame * 1000 / C.FPS;
-  const result = {};
-  for (const [name, fact] of Object.entries(stripFrame(facts) as Record<string, any>)) {
-    if (!fact || typeof fact !== 'object' || Array.isArray(fact))
+  const result: Record<string, Readonly<Record<string, unknown>>> = {};
+  for (const [name, fact] of Object.entries(stripFrame(facts))) {
+    if (!isRecord(fact))
       fail(`fact ${name} is not an envelope`);
     result[name] = {
       ...fact,
-      source: (fact as any).source ?? 'observer',
-      observedAtMs: (fact as any).observedAtMs ?? observedAtMs,
-      receivedAtMs: (fact as any).receivedAtMs ?? receivedAtMs,
+      source: fact.source ?? 'observer',
+      observedAtMs: fact.observedAtMs ?? observedAtMs,
+      receivedAtMs: fact.receivedAtMs ?? receivedAtMs,
     };
   }
   return result;
 }
 
-function noDecision(controller, reason, extra = {}) {
+function noDecision(controller: CycleController, reason: string, extra: Readonly<Record<string, unknown>> = {}) {
   const decision = {
     schema: 'cycle-plan-decision-v1', selected: null,
     decisions: [], record: { selected: null, reason }, reason,
@@ -64,9 +84,9 @@ function noDecision(controller, reason, extra = {}) {
   return decision;
 }
 
-function observedBoolean(facts, name) {
-  const fact = facts?.[name];
-  return fact?.state === 'OBSERVED' && typeof fact.value === 'boolean'
+function observedBoolean(facts: FactBatch, name: string) {
+  const fact = facts[name];
+  return isRecord(fact) && fact.state === 'OBSERVED' && typeof fact.value === 'boolean'
     ? fact.value : null;
 }
 
@@ -75,25 +95,27 @@ function observedBoolean(facts, name) {
  * private state; snapshots are plain JSON-compatible values for replay.
  */
 export class CycleController {
-  declare reduced: any;
-  declare estimator: any;
-  declare cycles: any;
-  declare facts: {};
-  declare activeCycleId: any;
-  declare activeCycleRunId: string;
+  declare reduced: ReducedState;
+  declare estimator: Estimator;
+  declare cycles: Cycle[];
+  declare facts: FactBatch;
+  declare activeCycleId: string | null;
+  declare activeCycleRunId: string | null;
   declare activeUntilFrame: number;
-  declare decisions: any[];
+  declare decisions: Readonly<Record<string, unknown>>[];
   declare nextToken: number;
   declare nextCycleRun: number;
-  declare heldContacts: {};
-  constructor({ reduced = null, estimator = null, cycles = null } = {}) {
+  declare heldContacts: Record<string, string[]>;
+  constructor({ reduced = null, estimator = null, cycles = null }:
+    { reduced?: ReducedState | null, estimator?: Estimator | null, cycles?: readonly Cycle[] | null } = {}) {
     this.reduced = clone(reduced ?? initialReducedState({ night: 1 }));
     if (!this.reduced || this.reduced.schema !== REDUCED_SCHEMA)
       fail('initial reduced state schema mismatch');
     this.estimator = estimator ?? initialEstimator({
       nowMs: this.reduced.frame * 1000 / C.FPS,
     });
-    this.cycles = (cycles ?? [getCycle('observe-and-hold'), getCycle('defensive-mask')])
+    const library = (id: string) => getCycle(id) ?? fail(`library has no cycle ${id}`);
+    this.cycles = (cycles ?? [library('observe-and-hold'), library('defensive-mask')])
       .map(clone);
     if (!this.cycles.length) fail('at least one cycle is required');
     this.facts = {};
@@ -125,23 +147,25 @@ export class CycleController {
   }
 
   /** Apply one fact batch and reconcile only matching pending control actions. */
-  observe(facts, { frame = this.reduced.frame,
-    receivedAtMs = frame * 1000 / C.FPS } = {}) {
+  observe(input: unknown, { frame = this.reduced.frame,
+    receivedAtMs = frame * 1000 / C.FPS }: { frame?: number, receivedAtMs?: number } = {}) {
+    const facts = factBatch(input);
     const timed = timedFacts(facts, frame, receivedAtMs);
     this.estimator = update(this.estimator, { facts: timed, nowMs: receivedAtMs });
     const physicalFacts = stripFrame(facts);
     this.reduced = observeReduced(this.reduced, physicalFacts, { frame });
     this.facts = clone(facts);
 
-    const pending = (this.estimator.belief.pendingAction as any);
+    const pending = this.estimator.belief.pendingAction;
     if (pending) {
       for (const [factName, control] of Object.entries(CONTROL_FACTS)) {
         if (pending.action !== control) continue;
         const fact = timed[factName];
         if (!fact || fact.state !== 'OBSERVED' || typeof fact.value !== 'boolean') continue;
+        // timedFacts stamped every envelope with the receipt time.
         this.estimator = reconcile(this.estimator, {
           action: CONTROL_ACTIONS[control], value: fact.value,
-          verifiedAtMs: fact.receivedAtMs, token: pending.token,
+          verifiedAtMs: fact.receivedAtMs as number, token: pending.token,
         });
         break;
       }
@@ -161,7 +185,9 @@ export class CycleController {
    * UNKNOWN hazard is not silently promoted to clear or threat; the caller can
    * continue observing and replan at the next boundary.
    */
-  plan(options: any = {}) {
+  plan(options: {
+    exactGate?: (cycle: Cycle, hypothesis: Hypothesis, controller: CycleController) => unknown,
+    score?: (cycle: Cycle, hypothesis: Hypothesis, gate: unknown, controller: CycleController) => unknown } = {}) {
     const { exactGate, score } = options;
     if (typeof exactGate !== 'function' || typeof score !== 'function')
       fail('exactGate and score callbacks are required');
@@ -197,8 +223,8 @@ export class CycleController {
         needsVerification(this.estimator, 'mask'))
       return noDecision(this, 'control-verification-required');
 
-    const blackout = (this.facts as any).blackout;
-    if (!blackout || blackout.state !== 'OBSERVED' ||
+    const blackout = this.facts.blackout;
+    if (!isRecord(blackout) || blackout.state !== 'OBSERVED' ||
         typeof blackout.value !== 'boolean')
       return noDecision(this, 'blackout-unknown');
 
@@ -208,18 +234,17 @@ export class CycleController {
       deadlineFrame: blackout.value
         ? this.reduced.frame + C.maskGraceFrames(this.reduced.night) : -1,
     };
-    const hypothesis = {
+    const hypothesis: Hypothesis = {
       id: blackout.value ? 'blackout-active' : 'blackout-clear',
       state: hypothesisState,
       hazard: blackout.value ? 'active' : 'clear',
       plausible: true,
     };
-    const decision: any = selectCycle(this.cycles, [hypothesis], {
-      exactGate: (cycle, h) => exactGate(cycle, h, this),
-      score: (cycle, h, gate) => score(cycle, h, gate, this),
-    });
-    decision.frame = this.reduced.frame;
-    decision.hazard = hypothesis.hazard;
+    // The planner hands back the hypotheses it was given.
+    const decision = Object.assign(selectCycle(this.cycles, [hypothesis], {
+      exactGate: (cycle, h) => exactGate(cycle, h as Hypothesis, this),
+      score: (cycle, h, gate) => score(cycle, h as Hypothesis, gate, this),
+    }), { frame: this.reduced.frame, hazard: hypothesis.hazard });
     this.decisions.push(clone(decision));
     return decision;
   }
@@ -229,7 +254,7 @@ export class CycleController {
    * returned as deferred data and must be revalidated at their own boundary;
    * this prevents a stale plan from becoming an unbounded macro.
    */
-  commit(decision, { frame = this.reduced.frame } = {}) {
+  commit(decision: { readonly selected: string | null } | null | undefined, { frame = this.reduced.frame } = {}) {
     if (!decision || decision.selected === null) return { cycleId: null, actions: [], deferred: [] };
     const cycle = this.cycles.find(candidate => candidate.id === decision.selected);
     if (!cycle) fail(`selected cycle ${decision.selected} is not in the library`);
@@ -237,19 +262,19 @@ export class CycleController {
     const immediate = cycle.actions.filter(action => action.atFrame === 0);
     const deferred = cycle.actions.filter(action => action.atFrame > 0).map(clone);
     const cycleRunId = `cycle-run-${this.nextCycleRun++}`;
-    const opensContact = action => action.kind === 'press' && cycle.actions.some(
+    const opensContact = (action: CycleAction) => action.kind === 'press' && cycle.actions.some(
       later => later.kind === 'release' && later.action === action.action &&
         later.atFrame > action.atFrame);
-    const hold = action => {
+    const hold = (action: string) => {
       const held = this.heldContacts[cycleRunId] ?? [];
       if (!held.includes(action)) held.push(action);
       this.heldContacts[cycleRunId] = held;
     };
-    const actions = [];
+    const actions: (CycleAction & { token?: string, expected?: boolean })[] = [];
     for (const action of immediate) {
       let target = null;
-      if (action.kind === 'press' && CONTROL_ACTIONS[action.action]) {
-        target = CONTROL_ACTIONS[action.action];
+      if (action.kind === 'press' && controlAction(action.action)) {
+        target = controlAction(action.action) as string;
         const expected = action.action === 'mask'
           ? !this.reduced.maskOn
           : !(this.reduced.monitor === 'up' || this.reduced.monitor === 'raising');
@@ -274,7 +299,7 @@ export class CycleController {
     // frame the cycle was committed at.
     return {
       cycleId: cycle.id, cycleRunId, actions,
-      deferred: deferred.map(action => ({ ...action, cycleId: cycle.id,
+      deferred: deferred.map((action): DeferredAction => ({ ...action, cycleId: cycle.id,
         cycleRunId, opensContact: opensContact(action),
         dueFrame: frame + action.atFrame })),
     };
@@ -292,10 +317,10 @@ export class CycleController {
    * engine rejects it. A refused release is returned with its reason so the
    * caller can log a stuck control instead of assuming the input was lifted.
    */
-  releaseDeferred(action, { frame = this.reduced.frame, emergency = false } = {}) {
+  releaseDeferred(action: DeferredAction, { frame = this.reduced.frame, emergency = false } = {}) {
     if (!action || typeof action !== 'object') fail('deferred action is required');
     if (!Number.isInteger(frame) || frame < 0) fail('release frame must be a frame');
-    const refuse = reason => ({ schema: 'deferred-release-v1', accepted: false,
+    const refuse = (reason: string) => ({ schema: 'deferred-release-v1', accepted: false,
       reason, action: clone(action), frame, emergency });
     const runId = action.cycleRunId;
     const held = this.heldContacts[runId] ?? [];
@@ -337,7 +362,7 @@ export class CycleController {
   /** Plain-data census used by callers to prove shutdown released every touch. */
   outstandingHolds() {
     return Object.entries(this.heldContacts).flatMap(([cycleRunId, actions]) =>
-      (actions as any).map(action => ({ cycleRunId, action })));
+      actions.map(action => ({ cycleRunId, action })));
   }
 
   snapshot() {
@@ -353,7 +378,7 @@ export class CycleController {
   }
 }
 
-export const makeUnknownFacts = (facts = {}) => Object.fromEntries(
+export const makeUnknownFacts = (facts: FactBatch = {}) => Object.fromEntries(
   Object.keys(facts).filter(name => name !== 'frame')
     .map(name => [name, { state: 'UNKNOWN', reason: 'observations-disabled' }])
 );

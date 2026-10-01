@@ -36,6 +36,7 @@
 // ---------------------------------------------------------------------------
 
 import { DOOR_OPEN, DOOR_SHUT } from '@sixam/source/games/fnaf1/sim-fnaf1.ts';
+import type { Fnaf1Sim } from '@sixam/source/games/fnaf1/sim-fnaf1.ts';
 
 // View ids [SOURCED: g556/g557 gate Freddy on `viewing <> 42` and `<> 4`;
 // g60 fires Foxy's run at `viewing = 3`; g90-g94 render Pirate Cove at 99].
@@ -64,7 +65,7 @@ export const CAM = { showStage: 1, dining: 2, westHall: 3, eastHall: 4,
  * `slack` is how far ahead of the line the loop insists on being before it
  * spends on a camera.
  */
-function onBudget(sim, slack) {
+function onBudget(sim: Fnaf1Sim, slack: number) {
   const elapsed = sim.frame / 60;
   const remaining = Math.max(0, 535 - elapsed) / 535;
   // `>=`, not `>`: at frame 0 the reserve is exactly on the line, and a
@@ -97,7 +98,7 @@ export function communityLoop({
   let leftShutFor = 0;
   let rightShutFor = 0;
 
-  return (sim) => {
+  return (sim: Fnaf1Sim) => {
     if (sim.blackout) return;
     frame += 1;
 
@@ -164,7 +165,7 @@ export function noLights({ camFrames = 20, doorFrames = 360, idleFrames = 40 } =
   let leftShut = 0;
   let rightShut = 0;
 
-  return (sim) => {
+  return (sim: Fnaf1Sim) => {
     if (sim.blackout) return;
     if (leftShut > 0) { leftShut -= 1; sim.leftDoor = DOOR_SHUT; } else sim.leftDoor = DOOR_OPEN;
     if (rightShut > 0) { rightShut -= 1; sim.rightDoor = DOOR_SHUT; } else sim.rightDoor = DOOR_OPEN;
@@ -191,7 +192,7 @@ export const doNothing = () => {};
 
 /** Doors shut forever -- must die of power loss, never of a character. */
 export function sealed() {
-  return (sim) => {
+  return (sim: Fnaf1Sim) => {
     sim.leftDoor = DOOR_SHUT; sim.rightDoor = DOOR_SHUT;
     sim.viewing = 0; sim.leftLight = 0; sim.rightLight = 0;
   };
@@ -260,14 +261,14 @@ export function rollGrid({ windowFrames = 20, camFrames = 7, idleFrames = 45,
   const PHASES = ['cam', 'idle'];
 
   // Frames since night start, in ms, and how far into the current period.
-  const nearRoll = (frame, periodMs) => {
+  const nearRoll = (frame: number, periodMs: number) => {
     const ms = frame * (1000 / 60);
     const into = ms % periodMs;
     return into >= periodMs - (windowFrames / 2) * (1000 / 60)
       || into <= (windowFrames / 2) * (1000 / 60);
   };
 
-  return (sim) => {
+  return (sim: Fnaf1Sim) => {
     if (sim.blackout) return;
     sim.leftLight = 0; sim.rightLight = 0; sim.viewing = 0;
     sim.leftDoor = nearRoll(sim.frame, BONNIE_MS) ? DOOR_SHUT : DOOR_OPEN;

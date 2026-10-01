@@ -51,14 +51,23 @@ export const KNOBS0 = Object.freeze({
   ventless: false,
 });
 
-const clone = overrides => ({ ...KNOBS0, ...(overrides ?? {}) });
-const frame = ms => Math.round(ms * C.FPS / 1000);
-const actionFor = action => action.startsWith('cam') ? `cam:${action.slice(3)}` : action;
+type Knobs = typeof KNOBS0;
+/** One authored row of the route, in ms: a tap or hold of a control, a hall flash, or a camdrop. */
+type RouteRow =
+  | readonly [at: number, kind: 'tap' | 'hold', action: string, ms: number]
+  | readonly [at: number, kind: 'hall' | 'hallvent', holdMs: number]
+  | readonly [at: number, kind: 'camdrop', leadMs: number, monitorMs: number, tailMs: number];
+/** A frame-locked edge the plant replays: its frame, its row's index, press or release, the control. */
+type ScheduleRow = [frame: number, index: number, kind: 'press' | 'release', action: string];
 
-export function build(overrides = {}) {
+const clone = (overrides?: Partial<Knobs> | null) => ({ ...KNOBS0, ...(overrides ?? {}) });
+const frame = (ms: number) => Math.round(ms * C.FPS / 1000);
+const actionFor = (action: string) => action.startsWith('cam') ? `cam:${action.slice(3)}` : action;
+
+export function build(overrides: Partial<Knobs> = {}) {
   const k = clone(overrides);
   const c = k.contactMs;
-  const opening = [
+  const opening: RouteRow[] = [
     [k.openViewMs, 'tap', 'monitor', c],
     [k.openLastViewedMs, 'tap', 'cam11', c],
     [k.openArmMs, 'tap', 'cam8', c],
@@ -69,7 +78,7 @@ export function build(overrides = {}) {
       k.openCamdropMonitorMs, k.openCamdropTailMs],
     [k.openMaskAtMs, 'tap', 'mask', c],
   ];
-  const clear = [
+  const clear: RouteRow[] = [
     [k.maskOffMs, 'tap', 'mask', c],
     [k.secondHallMs, k.secondHallVent ? 'hallvent' : 'hall', k.secondHallHoldMs],
     [k.raiseMs, 'tap', 'monitor', c],
@@ -81,31 +90,30 @@ export function build(overrides = {}) {
   return { opening, clear, knobs: k };
 }
 
-export function schedule({ opening, clear, knobs, untilMs }: {opening?: any[], clear?: any[], knobs?: Record<string, any>, untilMs?: number} = {}) {
+export function schedule({ opening, clear, knobs, untilMs }: {opening?: readonly RouteRow[], clear?: readonly RouteRow[], knobs?: Partial<Knobs>, untilMs?: number} = {}) {
   const k = clone(knobs);
   const built = opening && clear ? { opening, clear } : build(k);
-  const queue = [];
-  const add = (base, row, index) => {
-    const [at, kind, a, b, tail] = row;
-    const when = base + at;
-    if (kind === 'tap') queue.push([frame(when), index, 'press', actionFor(a)]);
-    else if (kind === 'hold') {
-      const action = actionFor(a);
+  const queue: ScheduleRow[] = [];
+  const add = (base: number, row: RouteRow, index: number) => {
+    const when = base + row[0];
+    if (row[1] === 'tap') queue.push([frame(when), index, 'press', actionFor(row[2])]);
+    else if (row[1] === 'hold') {
+      const action = actionFor(row[2]);
       queue.push([frame(when), index, 'press', action],
-        [frame(when + b), index, 'release', action]);
-    } else if (kind === 'hall') {
+        [frame(when + row[3]), index, 'release', action]);
+    } else if (row[1] === 'hall') {
       queue.push([frame(when), index, 'press', 'light'],
-        [frame(when + a), index, 'release', 'light']);
-    } else if (kind === 'hallvent') {
+        [frame(when + row[2]), index, 'release', 'light']);
+    } else if (row[1] === 'hallvent') {
       queue.push([frame(when), index, 'press', 'light'],
         [frame(when), index, 'press', 'ventR'],
-        [frame(when + a), index, 'release', 'light'],
-        [frame(when + a), index, 'release', 'ventR']);
-    } else if (kind === 'camdrop') {
+        [frame(when + row[2]), index, 'release', 'light'],
+        [frame(when + row[2]), index, 'release', 'ventR']);
+    } else if (row[1] === 'camdrop') {
       queue.push([frame(when), index, 'press', 'light'],
-        [frame(when + a), index, 'press', 'monitor'],
-        [frame(when + a + b + tail), index, 'release', 'light']);
-    } else throw new Error(`unknown Minus 3 row ${kind}`);
+        [frame(when + row[2]), index, 'press', 'monitor'],
+        [frame(when + row[2] + row[3] + row[4]), index, 'release', 'light']);
+    } else throw new Error(`unknown Minus 3 row ${(row as readonly unknown[])[1]}`);
   };
   built.opening.forEach((row, index) => add(0, row, index));
   const end = untilMs ?? k.stopAtMs;
@@ -133,9 +141,9 @@ export const REACTIVE_KNOBS = Object.freeze({
   toyBonnieSafetyFrames: 230,
 });
 
-export const MINUS3_STORY_NIGHTS = Object.freeze([3, 4, 5]);
+export const MINUS3_STORY_NIGHTS: readonly number[] = Object.freeze([3, 4, 5]);
 
-export function reactiveRoute(night, overrides = {}) {
+export function reactiveRoute(night: number, overrides: Partial<typeof REACTIVE_KNOBS> = {}) {
   if (!Number.isInteger(night) || !MINUS3_STORY_NIGHTS.includes(night))
     throw new Error('Minus 3 reactive route requires story night 3..5');
   const k = { ...REACTIVE_KNOBS, ...overrides };
@@ -165,9 +173,9 @@ export function reactiveRoute(night, overrides = {}) {
   };
 }
 
-export function emitReactivePlan(night, overrides = {}) {
+export function emitReactivePlan(night: number, overrides: Partial<typeof REACTIVE_KNOBS> = {}) {
   const route = reactiveRoute(night, overrides);
-  const ms = frames => Math.round(frames * 1000 / C.FPS);
+  const ms = (frames: number) => Math.round(frames * 1000 / C.FPS);
   return [
     '#format model-route-v1',
     `#policy ${route.policy}`,

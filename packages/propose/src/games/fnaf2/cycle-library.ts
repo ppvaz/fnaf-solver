@@ -7,6 +7,8 @@
 // being mistaken for a survival proof.
 import * as C from '@sixam/source/games/fnaf2/config.ts';
 import { REDUCED_SCHEMA, advanceReduced, applyReduced } from '@sixam/source/games/fnaf2/reduced-model.ts';
+import type { ReducedState } from '@sixam/source/games/fnaf2/reduced-model.ts';
+import { isList, isRecord } from '@sixam/kernel';
 
 export const CYCLE_SCHEMA = 'cycle-v1';
 export const DEVICE_CONSTRAINTS = Object.freeze({
@@ -16,7 +18,32 @@ export const DEVICE_CONSTRAINTS = Object.freeze({
   minReleasedMs: 33,
 });
 
-const clone = value => structuredClone(value);
+/** One timed contact edge of a primitive, in frames from its start. */
+export interface CycleAction {
+  readonly atFrame: number;
+  readonly kind: 'press' | 'release';
+  readonly action: string;
+  readonly contactMs?: number;
+}
+/** cycle-v1: a reviewed primitive -- what must hold before it, what it presses, what holds after. */
+export interface Cycle {
+  readonly schema: 'cycle-v1';
+  readonly id: string;
+  readonly durationFrames: number;
+  readonly prerequisites: readonly { readonly field: string, readonly equals: unknown }[];
+  readonly actions: readonly CycleAction[];
+  readonly verifications: readonly { readonly atFrame: number, readonly fields: Readonly<Record<string, unknown>> }[];
+  readonly cost: { readonly presses: number, readonly heldFrames: number, readonly maskFrames: number, readonly powerFrames: number };
+  readonly hazardCoverage: readonly string[];
+  readonly proof: { readonly exactEngineRequired: true };
+}
+/** The device's contact floors a gate holds a primitive to. */
+export interface ContactConstraints {
+  readonly minContactMs?: number;
+  readonly minReleasedMs?: number;
+}
+
+const clone = <T>(value: T): T => structuredClone(value);
 // The sweep cameras are the ones the sourced routine touches (`CYCLE_SCRIPT`:
 // CAM 10, CAM 04, CAM 07, then CAM 11 to wind), which are also the rooms four
 // of the seven routes pass through.
@@ -24,23 +51,26 @@ const ACTIONS = new Set(['monitor', 'mask', 'cam:4', 'cam:7', 'cam:9', 'cam:10',
   'cam:11', 'ventL', 'ventR', 'light', 'wind']);
 const CONTROL_FIELDS = new Set(['monitor', 'maskOn', 'viewedCamera', 'winding',
   'lightHeld', 'ventLightL', 'ventLightR']);
-const finiteInt = value => Number.isInteger(value) && value >= 0;
+const finiteInt = (value: unknown): value is number => Number.isInteger(value) && (value as number) >= 0;
 
-function fail(message) { throw new TypeError(`cycle: ${message}`); }
+function fail(message: string): never { throw new TypeError(`cycle: ${message}`); }
 
-function stateField(state, field) {
+function stateField(state: ReducedState, field: string): unknown {
   if (field.startsWith('controlUnknown.'))
     return state.controlUnknown[field.slice('controlUnknown.'.length)];
-  if (field.startsWith('hazards.'))
-    return state.hazards[field.slice('hazards.'.length)]?.state;
+  if (field.startsWith('hazards.')) {
+    const hazards: Readonly<Record<string, { readonly state: unknown } | undefined>> = state.hazards;
+    return hazards[field.slice('hazards.'.length)]?.state;
+  }
   if (CONTROL_FIELDS.has(field)) {
     if (field === 'monitor') return state.monitor === 'up' ? 'up' : state.monitor;
-    return state[field];
+    // CONTROL_FIELDS names only fields of the reduced state.
+    return (state as unknown as Readonly<Record<string, unknown>>)[field];
   }
   return undefined;
 }
 
-function checkExpected(state, expected, label) {
+function checkExpected(state: ReducedState, expected: Readonly<Record<string, unknown>> | undefined, label: string) {
   for (const [field, value] of Object.entries(expected ?? {})) {
     if (stateField(state, field) !== value)
       return `${label}:${field} expected ${JSON.stringify(value)}, got ${JSON.stringify(stateField(state, field))}`;
@@ -48,48 +78,51 @@ function checkExpected(state, expected, label) {
   return null;
 }
 
-function validateAction(action, index) {
-  if (!action || typeof action !== 'object' || Array.isArray(action))
+function validateAction(action: unknown, index: number): CycleAction {
+  if (!isRecord(action))
     fail(`action ${index} is not an object`);
   if (!finiteInt(action.atFrame)) fail(`action ${index} needs a non-negative atFrame`);
   if (action.kind !== 'press' && action.kind !== 'release')
     fail(`action ${index} has invalid kind`);
-  if (!ACTIONS.has(action.action)) fail(`action ${index} is unsupported`);
+  if (typeof action.action !== 'string' || !ACTIONS.has(action.action)) fail(`action ${index} is unsupported`);
   if (action.contactMs !== undefined &&
-      (!Number.isFinite(action.contactMs) || action.contactMs <= 0))
+      (typeof action.contactMs !== 'number' || !Number.isFinite(action.contactMs) || action.contactMs <= 0))
     fail(`action ${index} has invalid contactMs`);
+  return action as unknown as CycleAction;
 }
 
-export function validateCycle(cycle) {
-  if (!cycle || cycle.schema !== CYCLE_SCHEMA || typeof cycle.id !== 'string')
+export function validateCycle(cycle: unknown): Cycle {
+  if (!isRecord(cycle) || cycle.schema !== CYCLE_SCHEMA || typeof cycle.id !== 'string')
     fail('schema or id is invalid');
   if (!finiteInt(cycle.durationFrames) || cycle.durationFrames <= 0)
     fail('durationFrames must be positive');
-  if (!Array.isArray(cycle.prerequisites) || !Array.isArray(cycle.actions) ||
-      !Array.isArray(cycle.verifications)) fail('cycle arrays are incomplete');
-  if (!cycle.proof || cycle.proof.exactEngineRequired !== true)
+  const durationFrames = cycle.durationFrames;
+  if (!isList(cycle.prerequisites) || !isList(cycle.actions) ||
+      !isList(cycle.verifications)) fail('cycle arrays are incomplete');
+  if (!isRecord(cycle.proof) || cycle.proof.exactEngineRequired !== true)
     fail('proof.exactEngineRequired must be true');
-  for (const [index, action] of cycle.actions.entries()) {
-    validateAction(action, index);
-    if (action.atFrame > cycle.durationFrames)
+  const actions = cycle.actions.map((action, index) => {
+    const checked = validateAction(action, index);
+    if (checked.atFrame > durationFrames)
       fail(`action ${index} escapes durationFrames`);
-  }
-  for (let i = 1; i < cycle.actions.length; i++) {
-    if (cycle.actions[i].atFrame < cycle.actions[i - 1].atFrame)
+    return checked;
+  });
+  for (let i = 1; i < actions.length; i++) {
+    if (actions[i].atFrame < actions[i - 1].atFrame)
       fail('actions are not ordered by frame');
   }
   for (const [index, verification] of cycle.verifications.entries()) {
-    if (!finiteInt(verification.atFrame) || verification.atFrame > cycle.durationFrames ||
+    if (!isRecord(verification) || !finiteInt(verification.atFrame) || verification.atFrame > durationFrames ||
         !verification.fields || typeof verification.fields !== 'object')
       fail(`verification ${index} is invalid`);
   }
   if (!cycle.cost || typeof cycle.cost !== 'object' ||
-      !Array.isArray(cycle.hazardCoverage)) fail('cost/hazard coverage is incomplete');
-  return cycle;
+      !isList(cycle.hazardCoverage)) fail('cost/hazard coverage is incomplete');
+  return cycle as unknown as Cycle;
 }
 
 function primitive({ id, durationFrames, prerequisites, actions, verifications,
-  cost, hazardCoverage }) {
+  cost, hazardCoverage }: Omit<Cycle, 'schema' | 'proof'>): Cycle {
   return Object.freeze({
     schema: CYCLE_SCHEMA, id, durationFrames,
     prerequisites: Object.freeze(prerequisites.map(clone)),
@@ -354,16 +387,16 @@ export const CYCLE_LIBRARY = Object.freeze([
 
 for (const cycle of CYCLE_LIBRARY) validateCycle(cycle);
 
-export function getCycle(id) {
+export function getCycle(id: string): Cycle | null {
   const found = CYCLE_LIBRARY.find(cycle => cycle.id === id);
   return found ? clone(found) : null;
 }
 
-function gateContact(actions, constraints, reasons) {
+function gateContact(actions: readonly CycleAction[], constraints: ContactConstraints, reasons: string[]) {
   const minContact = constraints.minContactMs;
   const minReleased = constraints.minReleasedMs;
-  let lastPress = null;
-  let lastRelease = null;
+  let lastPress: CycleAction | null = null;
+  let lastRelease: number | null = null;
   for (const action of actions) {
     if (action.kind === 'press') {
       if (minContact !== undefined && (action.contactMs ?? 0) < minContact)
@@ -386,13 +419,14 @@ function gateContact(actions, constraints, reasons) {
  * readable record even on rejection, so the planner can retain why a move was
  * not legal instead of retrying it blindly.
  */
-export function gateCycle(cycle, input, {
+export function gateCycle(cycle: Cycle | null, input: ReducedState, {
   constraints = DEVICE_CONSTRAINTS, exactGate = null,
-} = {}) {
-  const reasons = [];
+}: { constraints?: ContactConstraints | null, exactGate?: ((cycle: Cycle) => unknown) | null } = {}) {
+  const reasons: string[] = [];
   let state = clone(input);
   try {
-    validateCycle(cycle);
+    // Validated here, inside the try, so a malformed primitive is a refusal reason and not a throw.
+    cycle = validateCycle(cycle);
     if (!state || state.schema !== REDUCED_SCHEMA) fail('initial state schema mismatch');
     for (const prerequisite of cycle.prerequisites) {
       if (stateField(state, prerequisite.field) !== prerequisite.equals)
@@ -424,12 +458,12 @@ export function gateCycle(cycle, input, {
     }
     if (exactGate === null) reasons.push('exact-model-gate-missing');
     else {
-      const proof = exactGate(cycle);
+      const proof = exactGate(cycle) as { accepted?: unknown, reason?: unknown } | true | null | undefined;
       if (proof !== true && proof?.accepted !== true)
         reasons.push(`exact-model-gate:${proof?.reason ?? 'rejected'}`);
     }
   } catch (error) {
-    reasons.push(error.message);
+    reasons.push((error as Error).message);
   }
   return {
     schema: 'cycle-decision-v1', cycleId: cycle?.id ?? null,

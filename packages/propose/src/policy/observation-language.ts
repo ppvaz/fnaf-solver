@@ -23,6 +23,7 @@
 // is empty and stays empty until Plan 15 lands a calibrated pairing.
 import * as C from '@sixam/source/games/fnaf2/config.ts';
 import { FACTS, OBSERVE_INTERVAL } from '@sixam/play/sim';
+import { isList, isOneOf, isRecord } from '@sixam/kernel';
 
 export const OBSERVATION_LANGUAGE_SCHEMA = 'observation-language-v1';
 export const BRANCH_SCHEMA = 'observation-branch-v1';
@@ -81,9 +82,9 @@ const UNCALIBRATED = 'UNCALIBRATED';
 // read PRECONDITION, not a cost: a branch on `boxPie` is only answerable while
 // the monitor is up on the box camera, so a planner that ignores it is
 // planning on UNKNOWN.
-const visual = (id, precondition, refusals) => ({
+const visual = (id: string, precondition: string, refusals: readonly string[]) => ({
   fact: id,
-  channel: 'visual',
+  channel: 'visual' as const,
   readCostMs: VISUAL_READ_COST_MS,
   readCostSource: VISUAL_READ_COST_SOURCE,
   cadenceMs: VISUAL_CADENCE_MS,
@@ -91,13 +92,13 @@ const visual = (id, precondition, refusals) => ({
   precondition,
   refusals: Object.freeze([...refusals]),
   classifier: UNCALIBRATED,
-  admissible: true,
+  admissible: true as const,
   exclusion: null,
 });
 
-const audio = (id) => ({
+const audio = (id: string) => ({
   fact: id,
-  channel: 'audio',
+  channel: 'audio' as const,
   readCostMs: UNKNOWN,
   readCostSource: AUDIO_READ_COST_SOURCE,
   cadenceMs: UNKNOWN,
@@ -105,9 +106,11 @@ const audio = (id) => ({
   precondition: UNKNOWN,
   refusals: Object.freeze(['audio-dropped']),
   classifier: UNCALIBRATED,
-  admissible: false,
+  admissible: false as const,
   exclusion: 'read-cost-unmeasured',
 });
+/** A fact's priced read: measured costs when admissible, UNKNOWN (and excluded) when not. */
+type BudgetEntry = Readonly<ReturnType<typeof visual> | ReturnType<typeof audio>>;
 
 const ENTRIES = [
   visual('blackout', 'none', ['read-dropped']),
@@ -137,10 +140,10 @@ const ENTRIES = [
   audio('mangleStaticCam'),
 ];
 
-const freezeEntry = entry => Object.freeze({ ...entry });
+const freezeEntry = (entry: BudgetEntry): BudgetEntry => Object.freeze({ ...entry });
 
 /** Per-fact observation budget, keyed by fact name. */
-export const OBSERVATION_BUDGET = Object.freeze(Object.fromEntries(
+export const OBSERVATION_BUDGET: Readonly<Record<string, BudgetEntry>> = Object.freeze(Object.fromEntries(
   ENTRIES.map(entry => [entry.fact, freezeEntry(entry)])));
 
 // The budget must cover the sensor exactly: a fact the Observer can return but
@@ -158,13 +161,13 @@ export const OBSERVATION_BUDGET = Object.freeze(Object.fromEntries(
 /** Facts a branch may condition on: read cost measured, so the cost is known. */
 export function admissibleFacts() {
   return Object.values(OBSERVATION_BUDGET)
-    .filter((entry: any) => entry.admissible).map((entry: any) => entry.fact).sort();
+    .filter(entry => entry.admissible).map(entry => entry.fact).sort();
 }
 
 /** Facts excluded from the language, with the reason each is excluded. */
 export function excludedFacts() {
-  return Object.values(OBSERVATION_BUDGET).filter((entry: any) => !entry.admissible)
-    .map((entry: any) => ({ fact: entry.fact, exclusion: entry.exclusion }))
+  return Object.values(OBSERVATION_BUDGET).filter(entry => !entry.admissible)
+    .map(entry => ({ fact: entry.fact, exclusion: entry.exclusion }))
     .sort((a, b) => a.fact.localeCompare(b.fact));
 }
 
@@ -175,22 +178,22 @@ export function excludedFacts() {
  */
 export function deviceAdmissibleFacts() {
   return Object.values(OBSERVATION_BUDGET)
-    .filter((entry: any) => entry.admissible && entry.classifier !== UNCALIBRATED)
-    .map((entry: any) => entry.fact).sort();
+    .filter(entry => entry.admissible && entry.classifier !== UNCALIBRATED)
+    .map(entry => entry.fact).sort();
 }
 
 /**
  * Worst-case age of an admissible fact at a decision point: a full sample
  * interval may have just elapsed, and the read itself takes its own cost.
  */
-export function worstCaseFactAgeMs(fact) {
+export function worstCaseFactAgeMs(fact: string): number | typeof UNKNOWN {
   const entry = OBSERVATION_BUDGET[fact];
   if (!entry || !entry.admissible) return UNKNOWN;
   return entry.cadenceMs + entry.readCostMs;
 }
 
 /** Earliest an action may follow the observation it was decided on. */
-export function earliestReactionMs(fact) {
+export function earliestReactionMs(fact: string): number | typeof UNKNOWN {
   const entry = OBSERVATION_BUDGET[fact];
   if (!entry || !entry.admissible) return UNKNOWN;
   return entry.readCostMs;
@@ -201,16 +204,42 @@ export function earliestReactionMs(fact) {
 // A fact is `{ state: 'OBSERVED', value }` or `{ state: 'UNKNOWN', reason }`.
 // Every predicate here is total over that pair, so a branch can never take an
 // arm because a refusal was silently read as a value.
-export const PREDICATE_OPS = Object.freeze(['observed-equals', 'observed-in', 'unknown']);
+export const PREDICATE_OPS = Object.freeze(['observed-equals', 'observed-in', 'unknown'] as const);
 
-const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+/** A total test over one fact reading: OBSERVED with a value, OBSERVED among values, or UNKNOWN. */
+interface Predicate {
+  readonly op: (typeof PREDICATE_OPS)[number];
+  readonly fact: string;
+  readonly value?: unknown;
+  readonly values?: readonly unknown[];
+}
+/** An arm's action, timed from the decision point. */
+interface BranchAction {
+  readonly offsetMs: number;
+  readonly [field: string]: unknown;
+}
+/** observation-branch-v1: read one admissible fact, then act on one of two arms. */
+export interface Branch {
+  readonly schema: 'observation-branch-v1';
+  readonly id: string;
+  readonly atMs: number;
+  readonly observe: { readonly fact: string, readonly maxAgeMs: number, readonly confidenceFloor: number };
+  readonly predicate: Predicate;
+  readonly then: readonly BranchAction[];
+  readonly otherwise: readonly BranchAction[];
+  readonly [field: string]: unknown;
+}
 
-function fail(message) { throw new TypeError(`observation language: ${message}`); }
+const finite = (value: unknown): value is number => Number.isFinite(value);
 
-export function validatePredicate(predicate) {
-  if (!isObject(predicate)) fail('predicate must be an object');
-  if (!PREDICATE_OPS.includes(predicate.op))
+function fail(message: string): never { throw new TypeError(`observation language: ${message}`); }
+
+export function validatePredicate(predicate: unknown): Predicate {
+  if (!isRecord(predicate)) fail('predicate must be an object');
+  if (!isOneOf(PREDICATE_OPS, predicate.op))
     fail(`predicate op must be one of ${PREDICATE_OPS.join(', ')}`);
+  if (typeof predicate.fact !== 'string' || !Object.hasOwn(OBSERVATION_BUDGET, predicate.fact))
+    fail(`predicate reads an unknown fact ${predicate.fact}`);
   const entry = OBSERVATION_BUDGET[predicate.fact];
   if (!entry) fail(`predicate reads an unknown fact ${predicate.fact}`);
   if (!entry.admissible)
@@ -218,38 +247,39 @@ export function validatePredicate(predicate) {
   if (predicate.op === 'observed-equals') {
     if (!Object.hasOwn(predicate, 'value')) fail('observed-equals needs a value');
   } else if (predicate.op === 'observed-in') {
-    if (!Array.isArray(predicate.values) || !predicate.values.length)
+    if (!isList(predicate.values) || !predicate.values.length)
       fail('observed-in needs a non-empty values array');
   } else if (Object.hasOwn(predicate, 'value') || Object.hasOwn(predicate, 'values')) {
     fail('unknown takes no value');
   }
-  return predicate;
+  return predicate as unknown as Predicate;
 }
 
 /** Evaluate a validated predicate against a `{ state, value }` fact reading. */
-export function evaluatePredicate(predicate, reading) {
-  validatePredicate(predicate);
-  const observed = isObject(reading) && reading.state === 'OBSERVED';
+export function evaluatePredicate(input: unknown, reading: unknown) {
+  const predicate = validatePredicate(input);
+  const observed = isRecord(reading) && reading.state === 'OBSERVED';
   if (predicate.op === 'unknown') return !observed;
   if (!observed) return false;
+  // observed-in was checked to carry a non-empty values list.
   return predicate.op === 'observed-equals'
     ? reading.value === predicate.value
-    : predicate.values.includes(reading.value);
+    : (predicate.values ?? []).includes(reading.value);
 }
 
 // --- Branches -------------------------------------------------------------
 
-function branchArm(actions, label) {
-  if (!Array.isArray(actions) || !actions.length) fail(`${label} needs at least one action`);
+function branchArm(actions: unknown, label: string) {
+  if (!isList(actions) || !actions.length) fail(`${label} needs at least one action`);
   let previous = -Infinity;
   for (const [index, action] of actions.entries()) {
-    if (!isObject(action)) fail(`${label} action ${index} is not an object`);
-    if (!Number.isFinite(action.offsetMs) || action.offsetMs < 0)
+    if (!isRecord(action)) fail(`${label} action ${index} is not an object`);
+    if (!finite(action.offsetMs) || action.offsetMs < 0)
       fail(`${label} action ${index} needs a non-negative offsetMs from the decision point`);
     if (action.offsetMs < previous) fail(`${label} actions are not ordered by time`);
     previous = action.offsetMs;
   }
-  return actions[0].offsetMs;
+  return (actions[0] as BranchAction).offsetMs;
 }
 
 /**
@@ -258,43 +288,48 @@ function branchArm(actions, label) {
  * `atMs` is the decision point relative to the enclosing repeat period; arm
  * action `offsetMs` values are relative to that decision point.
  */
-export function validateBranch(branch) {
-  if (!isObject(branch) || branch.schema !== BRANCH_SCHEMA)
+export function validateBranch(branch: unknown): Branch {
+  if (!isRecord(branch) || branch.schema !== BRANCH_SCHEMA)
     fail(`branch schema must be ${BRANCH_SCHEMA}`);
   if (typeof branch.id !== 'string' || !branch.id)
     fail('branch needs a string id');
-  if (!Number.isFinite(branch.atMs) || branch.atMs < 0)
+  if (!finite(branch.atMs) || branch.atMs < 0)
     fail('branch needs a non-negative decision time');
   const observe = branch.observe;
-  if (!isObject(observe)) fail('branch needs an observe clause');
-  const entry = OBSERVATION_BUDGET[observe.fact];
+  if (!isRecord(observe)) fail('branch needs an observe clause');
+  if (typeof observe.fact !== 'string' || !Object.hasOwn(OBSERVATION_BUDGET, observe.fact))
+    fail(`branch observes an unknown fact ${observe.fact}`);
+  const fact = observe.fact;
+  const entry = OBSERVATION_BUDGET[fact];
   if (!entry) fail(`branch observes an unknown fact ${observe.fact}`);
   if (!entry.admissible)
     fail(`branch observes excluded fact ${observe.fact} (${entry.exclusion}); its read cost is ${UNKNOWN}`);
-  if (!Number.isFinite(observe.maxAgeMs) || observe.maxAgeMs < 0)
+  if (!finite(observe.maxAgeMs) || observe.maxAgeMs < 0)
     fail('branch observe.maxAgeMs must be finite and non-negative');
-  if (!Number.isFinite(observe.confidenceFloor) ||
+  const maxAgeMs = observe.maxAgeMs;
+  if (!finite(observe.confidenceFloor) ||
       observe.confidenceFloor < 0 || observe.confidenceFloor > 1)
     fail('branch observe.confidenceFloor must be in [0,1]');
-  if (branch.predicate?.fact !== observe.fact)
+  if (!isRecord(branch.predicate) || branch.predicate.fact !== observe.fact)
     fail('branch predicate must read the fact the branch observes');
   validatePredicate(branch.predicate);
 
   // Rule 1: the freshness the branch demands must be reachable. A branch that
   // wants a fact younger than one sample interval plus one read is asking the
   // measured sensor for something it cannot deliver.
-  const worstAge = worstCaseFactAgeMs(observe.fact);
-  if (observe.maxAgeMs < worstAge)
-    fail(`branch ${branch.id} demands ${observe.fact} within ${observe.maxAgeMs}ms; the measured budget delivers ${worstAge}ms worst case`);
+  // Both costs are numbers here: an inadmissible fact was refused above.
+  const worstAge = worstCaseFactAgeMs(fact);
+  if (typeof worstAge === 'number' && maxAgeMs < worstAge)
+    fail(`branch ${branch.id} demands ${fact} within ${maxAgeMs}ms; the measured budget delivers ${worstAge}ms worst case`);
 
   // Rule 2: the reaction must be schedulable. Nothing can act on a read before
   // the read has finished.
   const thenAt = branchArm(branch.then, `branch ${branch.id} then`);
   const otherwiseAt = branchArm(branch.otherwise, `branch ${branch.id} otherwise`);
-  const reaction = earliestReactionMs(observe.fact);
-  if (Math.min(thenAt, otherwiseAt) < reaction)
+  const reaction = earliestReactionMs(fact);
+  if (typeof reaction === 'number' && Math.min(thenAt, otherwiseAt) < reaction)
     fail(`branch ${branch.id} acts ${Math.min(thenAt, otherwiseAt)}ms after its observation; the measured read costs ${reaction}ms`);
-  return branch;
+  return branch as unknown as Branch;
 }
 
 /** The whole language definition as plain data, for a search report header. */

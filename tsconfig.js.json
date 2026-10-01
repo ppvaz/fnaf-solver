@@ -10,7 +10,6 @@
   },
   "include": [
     "packages/*/src/**/*.js",
-    "packages/propose/src/**/*.ts",
     "packages/review/src/**/*.ts",
     "packages/propose/parked/minus7/index.ts",
     "packages/propose/parked/minus7/manifest.ts",

@@ -8,6 +8,45 @@
 import * as C from '@sixam/source/games/fnaf2/config.ts';
 import { val } from '@sixam/play/sim';
 
+/** One fact as the Observer reports it. */
+type Fact = { readonly state: 'OBSERVED', readonly value: unknown } | { readonly state: 'UNKNOWN', readonly reason: string };
+/** The Observer's fact set, read here by fact name only (its `frame` entry is never read). */
+type Observation = Readonly<Record<string, Fact>>;
+/** A press the controller asks for, at a frame. */
+type Intent = { readonly action: string, readonly at: number };
+/** The phase clock's view a controller reads: the next one-second boundary and how sure it is. */
+interface PhaseClockView {
+  nextBoundaryFrame(frame: number): number;
+  readonly periodFrames?: number;
+  readonly uncertaintyFrames?: number;
+}
+/** The scheduled mask interval the replay passes in, from independently shifted rows. */
+type MaskWindow = { readonly startFrame?: number, readonly endFrame?: number };
+/** What the replay hands each decision. */
+interface DecisionContext {
+  readonly frame: number;
+  readonly scheduled?: unknown;
+  readonly phaseClock?: PhaseClockView | null;
+  readonly maskWindow?: MaskWindow | null;
+}
+/** Every knob a reactive controller reads; each controller reads its own. */
+interface ControllerOptions {
+  readonly maxMaskFrames?: number;
+  readonly openingFact?: string;
+  readonly threatValue?: unknown;
+  readonly clearValue?: unknown;
+  readonly hardCapFrames?: number;
+  readonly maskWindowFrames?: number;
+  readonly phaseUncertaintyFrames?: number;
+  readonly maskEndUncertaintyFrames?: number;
+  readonly phaseClock?: PhaseClockView | null;
+  readonly maxFailedHolds?: number;
+  readonly banking?: boolean;
+  readonly bankCapFrames?: number;
+  readonly bankTarget?: number;
+  readonly threatPred?: (obs: Observation) => boolean;
+}
+
 // Only monitor/mask presses animate; light/wind presses are instantaneous and
 // never conflict. GUARD_FRAMES is the longest of the two animations.
 export const GUARD_FRAMES = Math.max(C.MONITOR_ANIM_DOWN, C.MONITOR_ANIM_UP,
@@ -17,7 +56,7 @@ const ANIMATED = new Set(['monitor', 'mask']);
 // Drop an intent whose action animates and lands within GUARD_FRAMES of a
 // scheduled press that also animates. `scheduled` is `[{ at, action }]` (or a
 // bare frame list, treated as monitor presses -- the conservative reading).
-export function guardIntents(intents, scheduled) {
+export function guardIntents(intents: readonly Intent[], scheduled: readonly (number | Intent)[]) {
   const anim = scheduled.map(s => (typeof s === 'number' ? { at: s, action: 'monitor' } : s))
                         .filter(s => ANIMATED.has(s.action));
   return intents.filter(i =>
@@ -32,12 +71,12 @@ export function guardIntents(intents, scheduled) {
 export const PRESS_COOLDOWN = GUARD_FRAMES + C.s(0.15);
 
 export class ReactiveController {
-  declare opts: {};
-  declare log: any[];
-  declare lastAnimPress: { action: any; at: number; };
-  declare _decisionSnapshot: { state: {}; logLength: number; };
-  declare _pendingIntents: any;
-  constructor(opts = {}) {
+  declare opts: ControllerOptions;
+  declare log: { frame: number, what: string }[];
+  declare lastAnimPress: { action: string | null; at: number; };
+  declare _decisionSnapshot: { state: Record<string, unknown>; logLength: number; } | null;
+  declare _pendingIntents: readonly Intent[] | null;
+  constructor(opts: ControllerOptions = {}) {
     this.opts = opts;
     this.log = [];
     this.lastAnimPress = { action: null, at: -Infinity };
@@ -45,11 +84,11 @@ export class ReactiveController {
     this._pendingIntents = null;
   }
   // obs: the current fact set. ctx: { frame, scheduled: [{at,action}] }.
-  decide(_obs, _ctx) { return []; }
-  note(frame, what) { this.log.push({ frame, what }); }
+  decide(_obs: Observation, _ctx: DecisionContext): readonly Intent[] { return []; }
+  note(frame: number, what: string) { this.log.push({ frame, what }); }
 
   // Are we still waiting for the last monitor/mask press to land and be seen?
-  cooling(frame) {
+  cooling(frame: number) {
     return frame - this.lastAnimPress.at < PRESS_COOLDOWN;
   }
 
@@ -58,12 +97,16 @@ export class ReactiveController {
   // and then let the harness discard the intent, leaving the FSM convinced a
   // press had happened.  Snapshot the small controller state at the start of
   // each decision so a rejected intent can be rolled back atomically.
+  // The snapshot reads and restores this controller's own fields by name.
+  #fields() { return this as unknown as Record<string, unknown>; }
+
   beginDecision() {
-    const state = {};
+    const state: Record<string, unknown> = {};
+    const fields = this.#fields();
     for (const key of Object.keys(this)) {
       if (key === 'opts' || key === 'log' || key.startsWith('_') ||
           key === 'threat' || key === 'phaseClock') continue;
-      state[key] = structuredClone(this[key]);
+      state[key] = structuredClone(fields[key]);
     }
     this._decisionSnapshot = { state, logLength: this.log.length };
     this._pendingIntents = null;
@@ -75,7 +118,7 @@ export class ReactiveController {
     for (const key of Object.keys(this)) {
       if (key === 'opts' || key === 'log' || key.startsWith('_') ||
           key === 'threat' || key === 'phaseClock') continue;
-      if (!(key in snap.state)) delete this[key];
+      if (!(key in snap.state)) delete this.#fields()[key];
     }
     Object.assign(this, snap.state);
     this.log.length = snap.logLength;
@@ -83,7 +126,7 @@ export class ReactiveController {
 
   // Record + return the intents, stamping the cooldown on animated ones. The
   // state remains speculative until settle() is called by the caller.
-  emit(frame, intents) {
+  emit(frame: number, intents: readonly Intent[]) {
     if (!this._decisionSnapshot) this.beginDecision();
     this._pendingIntents = intents;
     for (const i of intents)
@@ -93,7 +136,7 @@ export class ReactiveController {
 
   // Accept exactly the intents returned by emit(), or roll the whole decision
   // back if the caller filtered even one of them.
-  settle(accepted) {
+  settle(accepted: readonly Intent[]) {
     if (!this._pendingIntents) {
       this._decisionSnapshot = null;
       return true;
@@ -122,11 +165,11 @@ export class ReactiveController {
 // published Minus Toys blackout branch need, and nothing more -- blackout is a
 // whole-screen luma read the coarse sensor never misses.
 export class BlackoutReactive extends ReactiveController {
-  declare maxMaskFrames: any;
+  declare maxMaskFrames: number;
   declare state: string;
   declare since: number;
   declare loweredMonitor: boolean;
-  constructor(opts: any = {}) {
+  constructor(opts: ControllerOptions = {}) {
     super(opts);
     // Never stay masked longer than this waiting for a clear opening: Withered
     // Foxy accelerates while the mask is up with nobody at the vent (g825).
@@ -136,7 +179,7 @@ export class BlackoutReactive extends ReactiveController {
     this.loweredMonitor = false;
   }
 
-  decide(obs, ctx) {
+  decide(obs: Observation, ctx: DecisionContext): readonly Intent[] {
     this.beginDecision();
     const f = ctx.frame;
     const blackoutNow = obs.blackout.state === 'OBSERVED' && obs.blackout.value;
@@ -144,7 +187,7 @@ export class BlackoutReactive extends ReactiveController {
     const maskValue = val(obs.maskOn, null);
     const masked = maskValue === true;
     const monUp = val(obs.monitorUp, null);  // true | false | null (UNKNOWN)
-    const out = [];
+    const out: Intent[] = [];
 
     // A fresh blackout while we are past the mask (verifying/restoring) and no
     // longer protected must restart -- blackouts land in quick succession and
@@ -223,9 +266,11 @@ export class BlackoutReactive extends ReactiveController {
   }
 }
 
-export const CONTROLLERS = { blackoutReactive: BlackoutReactive,
-                              ventThreatReactive: undefined,
-                              mangleThreatReactive: undefined }; // replaced below
+export const CONTROLLERS: { blackoutReactive: typeof BlackoutReactive,
+  ventThreatReactive?: typeof VentThreatReactive, mangleThreatReactive?: typeof MangleThreatReactive } = {
+  blackoutReactive: BlackoutReactive,
+  ventThreatReactive: undefined,
+  mangleThreatReactive: undefined }; // replaced below
 
 // Vent-threat reaction: the BB eviction the scheduled mask cannot deliver.
 // Android's mask counter is a CONTINUOUS hold -- five consecutive
@@ -243,33 +288,34 @@ export const CONTROLLERS = { blackoutReactive: BlackoutReactive,
 // opening read is UNKNOWN while the mask animates), then verified after the
 // drop.
 export class VentThreatReactive extends ReactiveController {
-  declare openingFact: any;
-  declare threatValue: any;
-  declare clearValue: any;
-  declare hardCapFrames: any;
-  declare maskWindowFrames: any;
+  declare openingFact: string;
+  declare threatValue: unknown;
+  declare clearValue: unknown;
+  declare hardCapFrames: number;
+  declare maskWindowFrames: number;
   declare maskOnAt: number;
   declare firstTick: number;
-  declare phaseUncertaintyFrames: any;
-  declare maskEndUncertaintyFrames: any;
-  declare maskWindow: any;
-  declare phaseClock: any;
-  declare maxFailedHolds: any;
+  declare phaseUncertaintyFrames: number;
+  declare maskEndUncertaintyFrames: number;
+  declare maskWindow: MaskWindow | null;
+  declare phaseClock: PhaseClockView | null;
+  declare maxFailedHolds: number;
   declare failedHolds: number;
   declare dead: boolean;
-  declare bankingEnabled: any;
-  declare bankCapFrames: any;
-  declare bankTarget: any;
+  declare bankingEnabled: boolean;
+  declare bankCapFrames: number;
+  declare bankTarget: number;
   declare bankStart: number;
-  declare prevVentCue: boolean;
-  declare consumedAudioCueId: any;
+  /** The last BB vent cue value read ('pending', 'opening', ...), for edge detection. */
+  declare prevVentCue: unknown;
+  declare consumedAudioCueId: unknown;
   declare usesDefaultThreat: boolean;
   declare state: string;
   declare since: number;
   declare loweredMonitor: boolean;
   declare flashed: boolean;
-  declare threat: any;
-  constructor(opts: any = {}) {
+  declare threat: (obs: Observation) => boolean;
+  constructor(opts: ControllerOptions = {}) {
     super(opts);
     this.openingFact = opts.openingFact ?? 'leftOpening';
     this.threatValue = opts.threatValue ?? 'threat';
@@ -352,7 +398,7 @@ export class VentThreatReactive extends ReactiveController {
 
   // Tick boundaries (f % FPS === 0, the sourced one-second event grid) in
   // [from, from + windowFrames].
-  _boundariesIn(from, windowFrames) {
+  _boundariesIn(from: number, windowFrames: number) {
     const clock = this.phaseClock;
     if (!clock || typeof clock.nextBoundaryFrame !== 'function') return 0;
     const period = clock.periodFrames ?? C.FPS;
@@ -391,7 +437,7 @@ export class VentThreatReactive extends ReactiveController {
   // The frame by which holding is GUARANTEED to have crossed five boundaries
   // under the latest-phase interpretation. This is already the final
   // fifth-tick deadline; callers must not add another four tick periods.
-  guaranteedFifthTick(anchorOverride = null) {
+  guaranteedFifthTick(anchorOverride: number | null = null) {
     const u = this.phaseClock?.uncertaintyFrames ?? this.phaseUncertaintyFrames;
     const observedStart = this.maskOnAt >= 0 ? this.maskOnAt : -1;
     const plannedStart = this.maskWindow?.startFrame ?? -1;
@@ -408,7 +454,7 @@ export class VentThreatReactive extends ReactiveController {
     return first + (C.VENT_MASK_TICKS - 1) * period + 2;
   }
 
-  decide(obs, ctx) {
+  decide(obs: Observation, ctx: DecisionContext): readonly Intent[] {
     this.beginDecision();
     if (this.dead) return [];
     const f = ctx.frame;
@@ -417,7 +463,7 @@ export class VentThreatReactive extends ReactiveController {
     const maskValue = val(obs.maskOn, null);
     const masked = maskValue === true;
     const monUp = val(obs.monitorUp, null);
-    const opening = obs[this.openingFact] ??
+    const opening: Fact = obs[this.openingFact] ??
       { state: 'UNKNOWN', reason: `${this.openingFact}-unavailable` };
     const cooling = this.cooling(f);
     const factThreat = opening.state === 'OBSERVED' && opening.value === this.threatValue;
@@ -436,11 +482,11 @@ export class VentThreatReactive extends ReactiveController {
     // Restarts trust the selected fact only: the BB audio opening-cue window
     // (12 s) outlives the eviction itself, and restarting on its afterglow
     // would re-mask a cleared opening.
-    const out = [];
+    const out: Intent[] = [];
     // Edge bookkeeping for the audio 'pending' cue (first thud): the fact is
     // level for ~20 s, banking must fire once per cue.
-    const ventVal = ((this.openingFact === 'leftOpening' ? val(obs.bbVent, false) : false) as any);
-    const pendingEdge = (ventVal as any) === 'pending' && (this.prevVentCue as any) !== 'pending';
+    const ventVal = this.openingFact === 'leftOpening' ? val(obs.bbVent, false) : false;
+    const pendingEdge = ventVal === 'pending' && this.prevVentCue !== 'pending';
     this.prevVentCue = ventVal;
     // Coverage bookkeeping: the first frame the mask was observed fully on.
     // (Observation quantization is +-4 frames against a ~48-frame coverage
@@ -486,7 +532,7 @@ export class VentThreatReactive extends ReactiveController {
       // mask is off. Wait for a known polarity before choosing a toggle.
       if (maskValue === null) return out;
       // Three-way coverage decision over the tick-count RANGE (lo/hi).
-      if (masked && (this.maskWindow?.endFrame > 0 || this.maskWindowFrames > 0) &&
+      if (masked && ((this.maskWindow?.endFrame ?? 0) > 0 || this.maskWindowFrames > 0) &&
           this.maskOnAt >= 0) {
         const [lo, hi] = this.coverageRange();
         if (lo >= C.VENT_MASK_TICKS) {
@@ -533,7 +579,7 @@ export class VentThreatReactive extends ReactiveController {
         return this.emit(f, [{ action: 'windRelease', at: f }]);
       }
       const pie = val(obs.boxPie, null);
-      if ((pie !== null && pie >= this.bankTarget) || f - this.bankStart >= this.bankCapFrames) {
+      if ((pie !== null && Number(pie) >= this.bankTarget) || f - this.bankStart >= this.bankCapFrames) {
         this.state = 'idle';
         this.note(f, 'banked -> release and resume');
         return this.emit(f, [{ action: 'windRelease', at: f }]);
@@ -654,8 +700,8 @@ CONTROLLERS.ventThreatReactive = VentThreatReactive;
 // cleared before any raise. The named class prevents CAM 11 static, a BB audio
 // cue, or a left-opening fact from silently becoming a Mangle decision.
 export class MangleThreatReactive extends VentThreatReactive {
-  constructor(opts: any = {}) {
-    const predicate = opts.threatPred ?? (obs => {
+  constructor(opts: ControllerOptions = {}) {
+    const predicate = opts.threatPred ?? ((obs: Observation) => {
       const o = obs.mangleStatic;
       return !!o && o.state === 'OBSERVED' && o.value === true;
     });

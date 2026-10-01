@@ -1,10 +1,19 @@
 import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
 import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '../../experiment/seeds.ts';
-import { build, schedule, REACTIVE_KNOBS, MINUS3_STORY_NIGHTS } from './route.ts';
+import { build, schedule, KNOBS0, REACTIVE_KNOBS, MINUS3_STORY_NIGHTS } from './route.ts';
 
-export function replay({ night, seed = 1, worst = false, splitCamera = true, knobs, customNight }: {night?: number, seed?: number, worst?: boolean, splitCamera?: boolean, knobs?: Record<string, any>, customNight?: Record<string, number>} = {}) {
-  const storyNight = Number.isInteger(night) && night >= 3 && night <= 6;
+type ReactiveKnobs = typeof REACTIVE_KNOBS;
+/** What the event stream has told the reactive replay so far, and where the cycle stands. */
+type CueState = { eventCursor: number, toyBonnieCueAt: number, bbOpening: boolean, mangleOpening: boolean,
+  phase: string, anchor: number, cycles: number, deferrals: number };
+/** A scheduled edge of the reactive cycle, tagged with the leg it belongs to. */
+type ReactiveRow = { kind: 'press' | 'release', action: string, tag: string };
+
+const isNight = (night: unknown): night is number => typeof night === 'number' && Number.isInteger(night);
+
+export function replay({ night, seed = 1, worst = false, splitCamera = true, knobs, customNight }: {night?: number, seed?: number, worst?: boolean, splitCamera?: boolean, knobs?: Partial<typeof KNOBS0>, customNight?: Record<string, number>} = {}) {
+  const storyNight = isNight(night) && night >= 3 && night <= 6;
   const customNightOk = night === 7 && customNight !== null && typeof customNight === 'object';
   if (!storyNight && !customNightOk)
     throw new Error('Minus 3 replay requires story night 3..6, or night 7 with a customNight dial vector');
@@ -33,7 +42,7 @@ export function replay({ night, seed = 1, worst = false, splitCamera = true, kno
   return { sim, splitAt, minBox, minPower };
 }
 
-function readCues(sim, state) {
+function readCues(sim: Sim, state: CueState) {
   for (; state.eventCursor < sim.events.length; state.eventCursor++) {
     const event = sim.events[state.eventCursor];
     if (event.type === 'vent-bang') {
@@ -51,24 +60,24 @@ function readCues(sim, state) {
   }
 }
 
-function toyBonnieNearExpiry(sim, night, state, knobs) {
+function toyBonnieNearExpiry(sim: Sim, night: number, state: CueState, knobs: ReactiveKnobs) {
   if (state.toyBonnieCueAt < 0) return false;
   const remaining = C.toyBonnieOpeningFrames(night) - (sim.frame - state.toyBonnieCueAt);
   return remaining <= knobs.toyBonnieSafetyFrames;
 }
 
-function routeThreat(sim, night, state, knobs) {
+function routeThreat(sim: Sim, night: number, state: CueState, knobs: ReactiveKnobs) {
   return sim.blackout.active || state.bbOpening || state.mangleOpening ||
     toyBonnieNearExpiry(sim, night, state, knobs);
 }
 
-function add(queue, at, kind, action, tag) {
+function add(queue: Map<number, ReactiveRow[]>, at: number, kind: 'press' | 'release', action: string, tag: string) {
   const rows = queue.get(at) ?? [];
   rows.push({ kind, action, tag });
   queue.set(at, rows);
 }
 
-function scheduleReactiveCycle(queue, anchor, knobs) {
+function scheduleReactiveCycle(queue: Map<number, ReactiveRow[]>, anchor: number, knobs: ReactiveKnobs) {
   add(queue, anchor - knobs.maskOffLeadFrames, 'press', 'mask', 'mask-off');
   add(queue, anchor + knobs.hallOffsetFrames, 'press', 'light', 'hall');
   add(queue, anchor + knobs.hallOffsetFrames + knobs.hallHoldFrames,
@@ -91,18 +100,18 @@ function scheduleReactiveCycle(queue, anchor, knobs) {
  * static/right opening, and elapsed time since Toy Bonnie's right-vent cue.
  */
 export function reactiveReplay({ night, seed = 1, worst = false,
-                                  splitCamera = true, knobs }: {night?: number, seed?: number, worst?: boolean, splitCamera?: boolean, knobs?: Record<string, any>} = {}) {
-  if (!Number.isInteger(night) || !MINUS3_STORY_NIGHTS.includes(night))
+                                  splitCamera = true, knobs }: {night?: number, seed?: number, worst?: boolean, splitCamera?: boolean, knobs?: Partial<ReactiveKnobs>} = {}) {
+  if (!isNight(night) || !MINUS3_STORY_NIGHTS.includes(night))
     throw new Error('Minus 3 reactive replay requires story night 3..5');
   const k = { ...REACTIVE_KNOBS, ...(knobs ?? {}) };
   const sim = new Sim({ night, seed, worst });
-  const queue = new Map();
+  const queue = new Map<number, ReactiveRow[]>();
   const opening = schedule({ ...build(), untilMs: 0 });
   for (const [at, , kind, action] of opening) {
     if (!splitCamera && action === 'cam:8') continue;
     add(queue, at, kind, action, 'opening');
   }
-  const state: {eventCursor: number, toyBonnieCueAt: number, bbOpening: boolean, mangleOpening: boolean, phase: string, anchor: number, cycles: number, deferrals: number} = {
+  const state: CueState = {
     eventCursor: 0, toyBonnieCueAt: -1, bbOpening: false, mangleOpening: false,
     phase: 'normal', anchor: k.firstAnchorFrames, cycles: 0, deferrals: 0,
   };
@@ -146,10 +155,10 @@ export function reactiveReplay({ night, seed = 1, worst = false,
   return { sim, splitAt, minBox, minPower, state };
 }
 
-function count(night: number, { worst = false, splitCamera = true, runs = 3000, seeds, knobs }: {worst?: boolean, splitCamera?: boolean, runs?: number, seeds?: number[], knobs?: Record<string, any>} = {}) {
+function count(night: number, { worst = false, splitCamera = true, runs = 3000, seeds, knobs }: {worst?: boolean, splitCamera?: boolean, runs?: number, seeds?: number[], knobs?: Partial<ReactiveKnobs>} = {}) {
   const population = seeds ?? randomSeedCohort({ count: runs });
   let wins = 0, split = 0, minBox = 1, minPower = Infinity;
-  const losses = new Map();
+  const losses = new Map<string, number>();
   for (const seed of population) {
     const result = reactiveReplay({ night, seed, worst, splitCamera, knobs });
     minBox = Math.min(minBox, result.minBox); minPower = Math.min(minPower, result.minPower);

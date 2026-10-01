@@ -11,6 +11,7 @@
  */
 import { interval } from '@sixam/kernel';
 import { validateExperimentResultV2, validateExperimentSpecV2, validateRate } from '@sixam/kernel/contracts';
+import type { ExperimentPredicate, ExperimentRate } from '@sixam/kernel/contracts';
 import { SEED_FLOOR, checkSeedFloor } from '@sixam/review/refusals';
 import { expandSeedSet } from './seeds.ts';
 
@@ -29,7 +30,7 @@ const D = [7.784695709041462e-03, 3.224671290700398e-01, 2.445134137142996e+00, 
 /** The standard normal quantile. @param p in (0, 1) */
 export function probit(p: number) {
   if (!(p > 0 && p < 1)) throw new RangeError(`probit needs 0 < p < 1, not ${p}`);
-  const tail = q => (((((C[0] * q + C[1]) * q + C[2]) * q + C[3]) * q + C[4]) * q + C[5]) /
+  const tail = (q: number) => (((((C[0] * q + C[1]) * q + C[2]) * q + C[3]) * q + C[4]) * q + C[5]) /
     ((((D[0] * q + D[1]) * q + D[2]) * q + D[3]) * q + 1);
   if (p < 0.02425) return tail(Math.sqrt(-2 * Math.log(p)));
   if (p > 1 - 0.02425) return -tail(Math.sqrt(-2 * Math.log(1 - p)));
@@ -40,7 +41,7 @@ export function probit(p: number) {
 }
 
 /** The Wilson score interval for successes of n at quantile z, clamped to hold the point. */
-function wilsonInterval(successes, n, z) {
+function wilsonInterval(successes: number, n: number, z: number) {
   const p = successes / n;
   const z2 = z * z;
   const denominator = 1 + z2 / n;
@@ -85,15 +86,15 @@ export function rateOf(name: string, successes: number, n: number, { method = 'w
  * the seed floor, by Review's own `seed-floor` rule.
  * @param spec an experiment-spec-v2
  */
-export function resolveCensusCohort(spec: any): {development: number[], heldOut: number[]} {
-  validateExperimentSpecV2(spec);
+export function resolveCensusCohort(input: unknown): {development: number[], heldOut: number[]} {
+  const spec = validateExperimentSpecV2(input);
   const development = expandSeedSet(spec.cohort.development);
   const heldOut = expandSeedSet(spec.cohort.heldOut);
   const seen = new Set(development);
   const shared = heldOut.filter(seed => seen.has(seed));
   if (shared.length) throw new RangeError(`${spec.id}: the held-out block shares ${shared.length} seed(s) with the development block (first ${shared[0]})`);
   const size = spec.cohort.population.size;
-  for (const [name, seeds] of [[spec.cohort.development.name, development], [spec.cohort.heldOut.name, heldOut]]) {
+  for (const [name, seeds] of [[spec.cohort.development.name, development], [spec.cohort.heldOut.name, heldOut]] as const) {
     const outside = seeds.find(seed => seed >= size);
     if (outside !== undefined) throw new RangeError(`${spec.id}: ${name} seed ${outside} lies outside the population 0..${size - 1}`);
     if (spec.purpose !== 'census') continue;
@@ -104,7 +105,7 @@ export function resolveCensusCohort(spec: any): {development: number[], heldOut:
 }
 
 /** The measures a predicate reads. */
-function predicateMeasures(predicate: any): string[] {
+function predicateMeasures(predicate: ExperimentPredicate): string[] {
   if ('all' in predicate) return [...new Set<string>(predicate.all.flatMap(predicateMeasures))];
   if ('any' in predicate) return [...new Set<string>(predicate.any.flatMap(predicateMeasures))];
   if ('not' in predicate) return predicateMeasures(predicate.not);
@@ -115,7 +116,7 @@ function predicateMeasures(predicate: any): string[] {
  * Whether a predicate holds of the observed measures. A measure the census
  * did not observe as a number is refused, never read as zero.
  */
-export function evaluatePredicate(predicate: any, values: Record<string, number>): boolean {
+export function evaluatePredicate(predicate: ExperimentPredicate, values: Readonly<Record<string, number>>): boolean {
   if ('all' in predicate) return predicate.all.every(item => evaluatePredicate(item, values));
   if ('any' in predicate) return predicate.any.some(item => evaluatePredicate(item, values));
   if ('not' in predicate) return !evaluatePredicate(predicate.not, values);
@@ -138,8 +139,8 @@ export function evaluatePredicate(predicate: any, values: Record<string, number>
  * block, with the values that decided it.
  * @param spec an experiment-spec-v2
  */
-export function decideExperiment(spec: any, { specSha256, observations, rates = [], stopped, evidence = {} }: {specSha256: string, observations: Record<string, number>, rates?: any[], stopped: {rule: string, reached: string}, evidence?: Record<string, Record<string, unknown>>}) {
-  validateExperimentSpecV2(spec);
+export function decideExperiment(input: unknown, { specSha256, observations, rates = [], stopped, evidence = {} }: {specSha256: string, observations: Record<string, number>, rates?: readonly ExperimentRate[], stopped: {rule: string, reached: string}, evidence?: Record<string, Record<string, unknown>>}) {
+  const spec = validateExperimentSpecV2(input);
   const explanations = spec.explanations.map(item => {
     const holds = evaluatePredicate(item.predicts.when, observations);
     const values = Object.fromEntries(predicateMeasures(item.predicts.when).map(measure => [measure, observations[measure]]));

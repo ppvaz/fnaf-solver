@@ -31,7 +31,10 @@ export const ROUTE = Object.freeze({
 
 // Frozen compatibility schedule for the package's original family API. It is
 // intentionally kept beside the route data, not in a second family model.
-export const LEGACY_SETUP = new Map([
+/** One edge the plant replays: press or release, and the control. */
+export type SimEdge = readonly ['press' | 'release', string];
+
+export const LEGACY_SETUP = new Map<number, readonly SimEdge[]>([
   [0, [['press', 'monitor']]],
   [13, [['press', 'cam:11']]],
   [25, [['press', 'cam:9'], ['press', 'monitor']]],
@@ -45,7 +48,7 @@ export const LEGACY_SETUP = new Map([
   [244, [['release', 'light']]],
 ]);
 
-export const LEGACY_LOOP = new Map([
+export const LEGACY_LOOP = new Map<number, readonly SimEdge[]>([
   [540, [['press', 'mask']]],
   [556, [['press', 'light']]],
   [560, [['release', 'light']]],
@@ -59,10 +62,10 @@ export const LEGACY_LOOP = new Map([
   [844, [['release', 'light']]],
 ]);
 
-export const fifthBoundary = frame =>
+export const fifthBoundary = (frame: number) =>
   frame + ((C.FPS - (frame % C.FPS)) % C.FPS) + 4 * C.FPS + 1;
 
-export function routeFor(night = 7, overrides = {}) {
+export function routeFor(night = 7, overrides: Partial<typeof CYCLE> = {}) {
   if (!Number.isInteger(night) || night < 1 || night > 7)
     throw new Error('Minus Toys route requires night 1..7');
   return Object.freeze({ ...ROUTE, night, cycle: Object.freeze({ ...CYCLE, ...overrides }) });

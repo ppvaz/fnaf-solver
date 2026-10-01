@@ -35,6 +35,7 @@
 // ---------------------------------------------------------------------------
 
 import { FOLLOW } from '@sixam/source/games/fnaf4/fnaf4.ts';
+import type { Fnaf4Sim } from '@sixam/source/games/fnaf4/sim-fnaf4.ts';
 
 const S = FOLLOW.stations;
 const FRAME_MS = 1000 / 60;
@@ -74,7 +75,7 @@ export function communityLoop({ listenMs = 600, holdMs = 3400, rearmMs = 200,
   // sit immediately before the turn. The bed view then clears any Fredbear
   // that dropped onto the bed meanwhile (g526/g527) and drains the Freddle
   // meter (g401).
-  const TOUR = [];
+  const TOUR: number[] = [];
   for (let i = 0; i < doorCycles; i += 1) TOUR.push(S.leftDoor, S.rightDoor);
   TOUR.push(S.closet, S.bed);
   let leg = 0;
@@ -83,14 +84,14 @@ export function communityLoop({ listenMs = 600, holdMs = 3400, rearmMs = 200,
   let heard = false;
   let rounds = 0;
 
-  const clearActions = (sim) => {
+  const clearActions = (sim: Fnaf4Sim) => {
     sim.listening = 0; sim.flashing = 0; sim.peek = 0;
     sim.leftDoorShut = 0; sim.rightDoorShut = 0;
     sim.closetShut = 0; sim.viewingBed = 0;
   };
   const nextLeg = () => { leg = (leg + 1) % TOUR.length; dwell = 0; phase = 'approach'; heard = false; rounds = 0; };
 
-  return (sim) => {
+  return (sim: Fnaf4Sim) => {
     if (sim.over) return;
     if (sim.walking) { clearActions(sim); return; }
 
@@ -192,7 +193,7 @@ export function noAudioRotation({ holdMs = 3200, rearmMs = 200, bedMs = 700,
   let leg = 0;
   let dwell = 0;
 
-  return (sim) => {
+  return (sim: Fnaf4Sim) => {
     if (sim.over) return;
     sim.flashing = 0;              // never flash: g345/g346 make it lethal
     sim.listening = 0;             // the no-audio line uses no cue at all
@@ -245,7 +246,7 @@ export const doNothing = () => () => {};
 export function flashBlind({ holdMs = 600 }: { holdMs?: number } = {}) {
   const TOUR = [S.leftDoor, S.rightDoor];
   let leg = 0; let dwell = 0;
-  return (sim) => {
+  return (sim: Fnaf4Sim) => {
     if (sim.over || sim.walking) return;
     const want = TOUR[leg];
     if (sim.follow !== want) { sim.goTo(want); dwell = 0; return; }
@@ -260,7 +261,7 @@ export function flashBlind({ holdMs = 600 }: { holdMs?: number } = {}) {
  * to the 15 s bed-watch (g594/g595) or to the Freddle fill's 80 cap
  * (g464/g468) -- never to a door or a flash.
  */
-export const bedStare = () => (sim) => {
+export const bedStare = () => (sim: Fnaf4Sim) => {
   if (sim.over || sim.walking) return;
   if (sim.follow !== S.bed) { sim.goTo(S.bed); return; }
   sim.viewingBed = 1;

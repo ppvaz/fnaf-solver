@@ -2,6 +2,8 @@
 import { PlantModel } from '@sixam/source/fnaf2';
 import { interval, unknown } from '@sixam/kernel';
 import { stableHash, validateExperiment, validateExperimentResult } from '@sixam/kernel/contracts';
+import type { ExperimentSpecV1 } from '@sixam/kernel/contracts';
+import { isList } from '@sixam/kernel';
 import { validateControlCommand } from '@sixam/source';
 import { summarizeMinusToys } from './families/minus-toys.ts';
 import { summarizeMinusTwo } from './families/minus-two.ts';
@@ -13,22 +15,60 @@ const FAMILY_EVALUATORS = Object.freeze({
   'minus-toys-v1': summarizeMinusToys,
   'minus-two-v1': summarizeMinusTwo,
 });
+const familyEvaluator = (name: string) => Object.hasOwn(FAMILY_EVALUATORS, name)
+  ? FAMILY_EVALUATORS[name as keyof typeof FAMILY_EVALUATORS] : undefined;
 
-function expandCandidateParameters(spec) {
+/** One candidate's knobs: a family's options, or a camera order and its timing for the plant. */
+type CandidateParameters = Readonly<Record<string, unknown>> & {
+  readonly label?: string;
+  readonly cameraOrder?: readonly number[];
+  readonly cameraFrames?: readonly number[];
+  readonly commandAtFrames?: readonly number[];
+  readonly offsetFrames?: number;
+};
+type Candidate = { readonly id: string, readonly seed: number, readonly parameters: CandidateParameters };
+/** A scheduled semantic action, at a game frame. */
+type CommandRow = { readonly at: number, readonly action: Readonly<Record<string, unknown>> };
+/** The experiment-spec-v1 fields this runner reads, past the kernel's required core. */
+export interface ModelExperimentSpec extends ExperimentSpecV1 {
+  readonly seeds: readonly number[];
+  readonly evaluator?: string;
+  readonly candidateSpace?: { readonly kind?: string, readonly dimensions?: Readonly<Record<string, unknown>> };
+  readonly candidateParameters?: readonly CandidateParameters[];
+  readonly night?: number;
+  readonly durationFrames?: number;
+  readonly lethal?: boolean;
+  readonly commands?: readonly CommandRow[];
+  readonly search?: { readonly method?: string, readonly candidateSpace?: string };
+  readonly profile?: string;
+  readonly family?: string;
+}
+/** What one candidate's run reports: survival, its terminal, its trace. */
+type Evaluation = {
+  readonly candidateId: string;
+  readonly seed: number;
+  readonly parameters: CandidateParameters;
+  readonly won?: boolean;
+  readonly terminal?: { readonly won?: boolean, readonly frame?: number } | null;
+  readonly eventCount?: number;
+  readonly [field: string]: unknown;
+};
+
+function expandCandidateParameters(spec: ModelExperimentSpec): readonly CandidateParameters[] {
   if (spec.candidateSpace?.kind !== 'cartesian')
     return Array.isArray(spec.candidateParameters) && spec.candidateParameters.length
       ? spec.candidateParameters : [{}];
   const dimensions = Object.entries(spec.candidateSpace.dimensions ?? {})
-    .filter(([, values]) => Array.isArray(values) && values.length);
+    .flatMap(([key, values]) => isList(values) && values.length ? [[key, values] as const] : []);
   if (!dimensions.length) throw new TypeError(`${spec.id}: cartesian candidate space has no dimensions`);
-  return dimensions.reduce((combinations, [key, values]) =>
-    combinations.flatMap(partial => (values as any).map(value => ({ ...partial, [key]: value }))), [{}]);
+  return dimensions.reduce<CandidateParameters[]>((combinations, [key, values]) =>
+    combinations.flatMap(partial => values.map(value => ({ ...partial, [key]: value }))), [{}]);
 }
 
-export function generateCandidates(spec) {
+export function generateCandidates(spec: ModelExperimentSpec): readonly Candidate[] {
   validateExperiment(spec);
   const parameters = expandCandidateParameters(spec);
-  if (spec.evaluator && !FAMILY_EVALUATORS[spec.evaluator])
+  if (spec.evaluator && !familyEvaluator(spec.evaluator))
     throw new TypeError(`unknown research evaluator: ${spec.evaluator}`);
   if (spec.evaluator || spec.candidateSpace) {
     return Object.freeze(spec.seeds.flatMap(seed => parameters.map((parameter, index) =>
@@ -44,13 +84,14 @@ export function generateCandidates(spec) {
   })));
 }
 
-function evaluateModelCandidate(spec, candidate) {
-  if (spec.evaluator) {
-    const summary = FAMILY_EVALUATORS[spec.evaluator]({
-      seed: candidate.seed, ...candidate.parameters,
-    });
-    return { candidateId: candidate.id, seed: candidate.seed,
-      parameters: candidate.parameters, ...summary };
+function evaluateModelCandidate(spec: ModelExperimentSpec, candidate: Candidate): Evaluation {
+  const evaluator = spec.evaluator ? familyEvaluator(spec.evaluator) : undefined;
+  if (evaluator) {
+    // The candidate's parameters may override the seed, as a spread after it would.
+    const summary = evaluator(Object.assign({ seed: candidate.seed }, candidate.parameters));
+    // The family's summary names its own seed, and it wins, as a spread after these would.
+    return Object.assign({ candidateId: candidate.id, seed: candidate.seed,
+      parameters: candidate.parameters }, summary);
   }
   const model = new PlantModel({ seed: candidate.seed, night: spec.night ?? 7,
     durationFrames: spec.durationFrames ?? 60, lethal: spec.lethal ?? false });
@@ -58,23 +99,25 @@ function evaluateModelCandidate(spec, candidate) {
     { at: 0, action: { kind: 'press', control: 'monitor' } },
     { at: 12, action: { kind: 'select', control: 'cam:10' } },
   ];
-  const generatedRows = Array.isArray(candidate.parameters.cameraOrder)
+  const { cameraOrder, cameraFrames } = candidate.parameters;
+  const generatedRows: CommandRow[] | null = Array.isArray(cameraOrder)
     ? [
       { at: 0, action: { kind: 'press', control: 'monitor' } },
-      ...candidate.parameters.cameraOrder.map((camera, index) => ({
-        at: candidate.parameters.cameraFrames?.[index] ?? 12 + index * 20,
+      ...cameraOrder.map((camera, index) => ({
+        at: cameraFrames?.[index] ?? 12 + index * 20,
         action: { kind: 'select', control: `cam:${camera}` },
       })),
-      { at: candidate.parameters.cameraFrames?.length
-          ? candidate.parameters.cameraFrames.at(-1) + 12 : 72,
+      { at: cameraFrames?.length
+          ? cameraFrames[cameraFrames.length - 1] + 12 : 72,
         action: { kind: 'release', control: 'monitor' } },
     ] : null;
   const rows = generatedRows ?? spec.commands ?? defaults;
   const explicit = candidate.parameters.commandAtFrames;
-  const offset = Number.isInteger(candidate.parameters.offsetFrames) ? candidate.parameters.offsetFrames : 0;
+  const offsetFrames = candidate.parameters.offsetFrames;
+  const offset = typeof offsetFrames === 'number' && Number.isInteger(offsetFrames) ? offsetFrames : 0;
   let at = model.frame;
   for (const [index, row] of rows.entries()) {
-    const requestedAt = Number.isInteger(explicit?.[index]) ? explicit[index] : row.at;
+    const requestedAt = explicit && Number.isInteger(explicit[index]) ? explicit[index] : row.at;
     const frame = Math.max(at, requestedAt + offset);
     if (frame > model.frame) model.advance(frame);
     if (!model.alive) break;
@@ -97,10 +140,10 @@ function evaluateModelCandidate(spec, candidate) {
   };
 }
 
-const survived = evaluation => evaluation.won === true || evaluation.terminal?.won === true;
-const frameOf = evaluation => evaluation.terminal?.frame ?? null;
+const survived = (evaluation: Evaluation) => evaluation.won === true || evaluation.terminal?.won === true;
+const frameOf = (evaluation: Evaluation) => evaluation.terminal?.frame ?? null;
 
-function wilson(successes, count, z = 1.96) {
+function wilson(successes: number, count: number, z = 1.96) {
   if (!count) return { low: 0, high: 0 };
   const p = successes / count;
   const denominator = 1 + z * z / count;
@@ -109,8 +152,8 @@ function wilson(successes, count, z = 1.96) {
   return { low: Math.max(0, (centre - spread) / denominator), high: Math.min(1, (centre + spread) / denominator) };
 }
 
-function campaignSummary(spec, evaluations) {
-  const groups = new Map();
+function campaignSummary(spec: ModelExperimentSpec, evaluations: readonly Evaluation[]) {
+  const groups = new Map<string, { candidate: string, successes: number, frames: number[], evaluations: number }>();
   for (const evaluation of evaluations) {
     const label = evaluation.parameters?.label ??
       (Array.isArray(evaluation.parameters?.cameraOrder)
@@ -141,7 +184,7 @@ function campaignSummary(spec, evaluations) {
   };
 }
 
-function aggregateExperiment(spec, evaluations) {
+function aggregateExperiment(spec: ModelExperimentSpec, evaluations: readonly Evaluation[]) {
   const result = {
     schema: 'experiment-result-v1', operation: spec.operation, verdict: 'MODEL_ONLY',
     outcome: 'COMPLETED', modelHash: spec.modelHash, specHash: stableHash(spec),
@@ -152,10 +195,11 @@ function aggregateExperiment(spec, evaluations) {
     campaign: campaignSummary(spec, evaluations),
     reproducer: { case: spec.id, command: `npm run research -- ${spec.id}`, seeds: [...spec.seeds] },
   };
-  return validateExperimentResult(result);
+  validateExperimentResult(result);
+  return result;
 }
 
-export function runModelExperiment(spec) {
+export function runModelExperiment(spec: ModelExperimentSpec) {
   const candidates = generateCandidates(spec);
   return aggregateExperiment(spec, candidates.map(candidate => evaluateModelCandidate(spec, candidate)));
 }
@@ -167,8 +211,9 @@ export function runModelExperiment(spec) {
  * spans. Each evaluation keeps its own terminal state. When no evaluation
  * reports a terminal frame the aggregate is UNKNOWN with its reason, never 0.
  */
-export function aggregateTerminal(evaluations: {terminal?: {frame?: number}}[]) {
-  const frames = evaluations.map(item => item.terminal?.frame).filter(Number.isFinite);
+export function aggregateTerminal(evaluations: readonly {terminal?: {frame?: number} | null}[]) {
+  const frames = evaluations.map(item => item.terminal?.frame)
+    .filter((frame): frame is number => Number.isFinite(frame));
   if (!frames.length) return unknown('no evaluation reported a terminal frame');
   return {
     clock: 'simulator-frame',
@@ -178,17 +223,19 @@ export function aggregateTerminal(evaluations: {terminal?: {frame?: number}}[]) 
   };
 }
 
-export function makeResultPayload(evaluation, evidenceId) {
+export function makeResultPayload<Result extends { readonly evaluations: readonly Evaluation[] }>(evaluation: Result,
+  evidenceId: string) {
   return {
     ...evaluation,
     evidenceId,
     terminalAggregate: aggregateTerminal(evaluation.evaluations),
-    eventCount: evaluation.evaluations.reduce((sum, item) => sum + item.eventCount, 0),
+    // A plant or family evaluation always counts its events.
+    eventCount: evaluation.evaluations.reduce((sum, item) => sum + (item.eventCount as number), 0),
   };
 }
 
 /** Rebuild the exact result payload used by the CLI without mutating artifacts. */
-export function replayModelResult(spec, result) {
+export function replayModelResult(spec: ModelExperimentSpec, result: { readonly evidenceId?: unknown } | null | undefined) {
   if (!result || typeof result.evidenceId !== 'string') throw new TypeError('replay needs an evidence id');
   const evaluation = runModelExperiment(spec);
   const payload = makeResultPayload(evaluation, result.evidenceId);

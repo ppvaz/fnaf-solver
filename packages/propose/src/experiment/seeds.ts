@@ -15,13 +15,11 @@
  * `expandSeedSet`) carries both, with the list's count and sha256.
  */
 import { createHash } from 'node:crypto';
-import { validateSeedProvenance } from '@sixam/kernel';
+import { isList, validateSeedProvenance } from '@sixam/kernel';
 import { validateSeedDerivation, validateSeedSet } from '@sixam/kernel/contracts';
+import type { SeedDerivation, SeedSet } from '@sixam/kernel/contracts';
 
-/**
- * A kernel seed set (experiment-spec-v2; shape in packages/kernel/src/contracts/types.ts).
- */
-export type SeedSet = {name: string, derivation: any, provenance: 'natural' | 'pinned' | 'identified', bracket?: {lo: number, hi: number}, count: number, sha256?: string, definition?: string};
+export type { SeedSet };
 
 export const MODEL_SEED_COHORT_SCHEMA = 'model-seed-cohort-v1';
 export const GOLDEN_MODEL_SEEDS = 3000;
@@ -29,7 +27,7 @@ export const GOLDEN_MODEL_SEED_SALT = 0x9e3779b9;
 
 const UINT32 = 0x100000000;
 
-function nextSplitMix32(state) {
+function nextSplitMix32(state: number) {
   state = (state + 0x9e3779b9) >>> 0;
   let z = state;
   z = Math.imul(z ^ (z >>> 16), 0x85ebca6b) >>> 0;
@@ -45,8 +43,8 @@ export function randomSeedCohort({ count = GOLDEN_MODEL_SEEDS,
   if (!Number.isInteger(salt) || salt < 0 || salt > 0xffffffff)
     throw new RangeError('seed cohort salt must be an unsigned 32-bit integer');
 
-  const seeds = [];
-  const seen = new Set();
+  const seeds: number[] = [];
+  const seen = new Set<number>();
   let state = salt >>> 0;
   while (seeds.length < count) {
     const next = nextSplitMix32(state);
@@ -58,18 +56,19 @@ export function randomSeedCohort({ count = GOLDEN_MODEL_SEEDS,
   return seeds;
 }
 
-const isUint32 = seed => Number.isInteger(seed) && seed >= 0 && seed <= 0xffffffff;
-const sha256Of = seeds => createHash('sha256').update(Buffer.from(JSON.stringify(seeds))).digest('hex');
+const isUint32 = (seed: unknown): seed is number => Number.isInteger(seed) && (seed as number) >= 0 && (seed as number) <= 0xffffffff;
+const sha256Of = (seeds: readonly number[]) => createHash('sha256').update(Buffer.from(JSON.stringify(seeds))).digest('hex');
 
 /**
  * Refuse a seed list that is not a non-empty list of distinct uint32 seeds:
  * the canonical generator never repeats a seed, so an explicit cohort may not.
  */
 export function validateSeedList(seeds: unknown, label: string = 'seed cohort'): number[] {
-  if (!Array.isArray(seeds) || seeds.length < 1 || !seeds.every(isUint32))
+  if (!isList(seeds) || seeds.length < 1 || !seeds.every(isUint32))
     throw new TypeError(`${label} must be a non-empty array of uint32 seeds`);
   if (new Set(seeds).size !== seeds.length) throw new TypeError(`${label} repeats a seed`);
-  return seeds;
+  // Returned as given, so a caller's array keeps its identity.
+  return seeds as number[];
 }
 
 /**
@@ -134,18 +133,19 @@ export function expandSeedSet(set: SeedSet): number[] {
   return seeds;
 }
 
-function seedsOf(derivation: any): number[] {
+function seedsOf(derivation: SeedDerivation): number[] {
   if (derivation.kind === 'explicit') return [...derivation.seeds];
   if (derivation.kind === 'explicit-range')
     return Array.from({ length: derivation.to - derivation.from + 1 }, (_, index) => derivation.from + index);
   const seeds = randomSeedCohort({ count: derivation.count, salt: derivation.salt });
-  return derivation.modulus === undefined ? seeds : [...new Set(seeds.map(seed => seed % derivation.modulus))];
+  const modulus = derivation.modulus;
+  return modulus === undefined ? seeds : [...new Set(seeds.map(seed => seed % modulus))];
 }
 
 /**
  * A complete seed set for a spec: the count and sha256 computed from its derivation.
  */
-export function describeSeedSet({ name, derivation, provenance = 'natural', bracket, definition }: {name: string, derivation: any, provenance?: 'natural' | 'pinned' | 'identified', bracket?: {lo: number, hi: number}, definition?: string}): SeedSet {
+export function describeSeedSet({ name, derivation, provenance = 'natural', bracket, definition }: {name: string, derivation: SeedDerivation, provenance?: 'natural' | 'pinned' | 'identified', bracket?: {lo: number, hi: number}, definition?: string}): SeedSet {
   validateSeedDerivation(derivation, `seed set ${name}`);
   const seeds = seedsOf(derivation);
   return validateSeedSet({ name, derivation, provenance, ...(bracket ? { bracket } : {}), count: seeds.length,

@@ -16,7 +16,7 @@
 //
 // A checker returns a refusal envelope, or {refused: false, notMeasured} naming what passing the
 // rule does not establish. Passing a rule is never evidence for the statement it guarded.
-import { isUnknown, refusalEnvelope } from '@sixam/kernel';
+import { isRecord, isUnknown, refusalEnvelope } from '@sixam/kernel';
 
 /** The census floor: no win rate below this many seeds is quoted. */
 export const SEED_FLOOR = 3000;
@@ -58,16 +58,16 @@ export const RULE_SOURCES = Object.freeze({
   'not-a-number': Object.freeze([['docs/decisions/0002-kernel-contexts-vocabulary.md', '`Interval{lo, hi}`']]),
 });
 
-const refuse = (rule, because, remedy) => refusalEnvelope({ rule, because, cite: [...RULE_CITES[rule]], remedy });
-const passed = notMeasured => Object.freeze({ refused: false, notMeasured: Object.freeze([...notMeasured]) });
+const refuse = (rule: keyof typeof RULE_CITES, because: string, remedy: string) =>
+  refusalEnvelope({ rule, because, cite: [...RULE_CITES[rule]], remedy });
+const passed = (notMeasured: readonly string[]) => Object.freeze({ refused: false as const, notMeasured: Object.freeze([...notMeasured]) });
 const UNKNOWN_TEXT = /^UNKNOWN(?:\((.*)\))?$/s;
-const isRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 
 /**
  * What a value is, when it is not a finite number: UNKNOWN (with its reason, if it has one),
  * missing, an interval, or something else.
  */
-export function numberKind(value: any): {kind: 'number'} | {kind: 'unknown', reason: string | null} | {kind: 'missing'} | {kind: 'interval'} | {kind: 'other', type: string} {
+export function numberKind(value: unknown): {kind: 'number'} | {kind: 'unknown', reason: string | null} | {kind: 'missing'} | {kind: 'interval'} | {kind: 'other', type: string} {
   if (typeof value === 'number' && Number.isFinite(value)) return { kind: 'number' };
   if (isUnknown(value)) return { kind: 'unknown', reason: value.reason };
   if (isRecord(value) && value.kind === 'UNKNOWN') return { kind: 'unknown', reason: null };
@@ -88,7 +88,7 @@ export function numberKind(value: any): {kind: 'number'} | {kind: 'unknown', rea
  * @param operands name -> value
  * @param context what the numbers were going to be used for
  */
-export function checkUnknownAsNumber(operands: Record<string, any>, { operation = 'this arithmetic' }: {operation?: string} = {}) {
+export function checkUnknownAsNumber(operands: unknown, { operation = 'this arithmetic' }: {operation?: string} = {}) {
   if (!isRecord(operands) || !Object.keys(operands).length)
     return refuse('not-a-number', `${operation} names no operands`, 'name each operand and its value');
   const kinds = Object.entries(operands).map(([name, value]) => ({ name, ...numberKind(value) }));
@@ -111,15 +111,16 @@ export function checkUnknownAsNumber(operands: Record<string, any>, { operation 
 /**
  * seed-floor: a win rate may be quoted only over at least SEED_FLOOR seeds.
  */
-export function checkSeedFloor(quote: {seeds: any, wins?: any, heldOut?: any}) {
-  const operands = { seeds: quote?.seeds, ...(quote && 'wins' in quote ? { wins: quote.wins } : {}) };
+export function checkSeedFloor(quote: {seeds?: unknown, wins?: unknown, heldOut?: unknown} | null | undefined) {
+  const operands: { seeds: unknown, wins?: unknown } = { seeds: quote?.seeds, ...(quote && 'wins' in quote ? { wins: quote.wins } : {}) };
   const numbers = checkUnknownAsNumber(operands, { operation: 'a quoted win rate' });
   if (numbers.refused) return numbers;
-  const { seeds } = operands;
-  if (!Number.isInteger(seeds) || seeds < 1)
+  const { seeds, wins } = operands;
+  const whole = (value: unknown): value is number => typeof value === 'number' && Number.isInteger(value);
+  if (!whole(seeds) || seeds < 1)
     return refuse('not-a-number', `a win rate over ${seeds} seeds names no whole seed count`, 'quote the census seed count');
-  if ('wins' in operands && (!Number.isInteger(operands.wins) || operands.wins < 0 || operands.wins > seeds))
-    return refuse('not-a-number', `${operands.wins} wins is not a count of seeds in 0..${seeds}`, 'quote the census win count');
+  if ('wins' in operands && (!whole(wins) || wins < 0 || wins > seeds))
+    return refuse('not-a-number', `${wins} wins is not a count of seeds in 0..${seeds}`, 'quote the census win count');
   if (seeds < SEED_FLOOR)
     return refuse('seed-floor', `a win rate is quoted over ${seeds} seeds; no win rate below ${SEED_FLOOR} seeds is quoted`,
       `run the census over at least ${SEED_FLOOR} seeds (packages/propose/bin/census/census.ts --seeds ${SEED_FLOOR} for FNaF 1, 3 and 4; ` +
@@ -152,23 +153,24 @@ export const DIRECTIONAL_CONSTANTS = Object.freeze({
     marker: 'monitorReadyWindMs: MONITOR_READY_WIND_MS', measures: 'the floor on a wind hold after the monitor raise' }),
 });
 
-const direction = value => isRecord(value) && typeof value.first === 'string' && value.first && typeof value.then === 'string' && value.then
+const direction = (value: unknown) => isRecord(value) && typeof value.first === 'string' && value.first && typeof value.then === 'string' && value.then
   ? { first: value.first, then: value.then } : null;
-const arrow = ({ first, then }) => `${first} -> ${then}`;
+const arrow = ({ first, then }: { first: string, then: string }) => `${first} -> ${then}`;
 
 /**
  * directional-reuse: a constant measured as `first` then `then` is used only in that order. The
  * direction comes from DIRECTIONAL_CONSTANTS for a registered constant (a caller's `measured`
  * that disagrees is refused), or from the caller's `measured` for any other.
  */
-export function checkDirectionalReuse(reuse: {constant: string, use: {first: string, then: string}, measured?: {first: string, then: string}}) {
+export function checkDirectionalReuse(reuse: {constant?: unknown, use?: unknown, measured?: unknown} | null | undefined) {
   const constant = typeof reuse?.constant === 'string' && reuse.constant ? reuse.constant : null;
   const use = direction(reuse?.use);
   if (!constant || !use)
     return refuse('directional-reuse', 'a reuse names no constant, or no direction {first, then} it is used in',
       'name the constant and the order of the two presses it is about to govern');
-  const registered = Object.hasOwn(DIRECTIONAL_CONSTANTS, constant) ? DIRECTIONAL_CONSTANTS[constant] : null;
-  const claimed = direction(reuse.measured);
+  const registered = Object.hasOwn(DIRECTIONAL_CONSTANTS, constant)
+    ? DIRECTIONAL_CONSTANTS[constant as keyof typeof DIRECTIONAL_CONSTANTS] : null;
+  const claimed = direction(reuse?.measured);
   if (registered && claimed && arrow(claimed) !== arrow(registered))
     return refuse('directional-reuse', `${constant} was measured ${arrow(registered)} (${registered.source}), not ${arrow(claimed)}`,
       `read ${registered.source} before reusing it`);
@@ -195,17 +197,18 @@ const CAPABILITIES_REMEDY = 'with the phone attached, run `npm run device:capabi
  * capabilities-first: an instrument is proposed only against a device-capabilities-v1 report,
  * and never when the report says the phone cannot feed it.
  */
-export function checkCapabilitiesFirst(proposal: {instrument: string, capabilities?: any}) {
+export function checkCapabilitiesFirst(proposal: {instrument?: unknown, capabilities?: unknown} | null | undefined) {
   const instrument = typeof proposal?.instrument === 'string' && proposal.instrument.trim() ? proposal.instrument.trim() : null;
   if (!instrument)
     return refuse('capabilities-first', 'a proposal names no instrument', 'name the instrument (its tool path) and pass the capabilities report');
-  const report = proposal.capabilities;
+  const report = proposal?.capabilities;
   if (report === undefined || report === null || numberKind(report).kind === 'unknown')
     return refuse('capabilities-first', `${instrument} is proposed before the phone's capabilities were read`, CAPABILITIES_REMEDY);
   if (!isRecord(report) || report.schema !== CAPABILITIES_SCHEMA || !Array.isArray(report.instruments))
     return refuse('capabilities-first', `the report passed with ${instrument} is not a ${CAPABILITIES_SCHEMA} report`, CAPABILITIES_REMEDY);
   const base = instrument.split('/').pop();
-  const entry = report.instruments.find(item => typeof item?.tool === 'string' &&
+  const instruments: readonly unknown[] = report.instruments;
+  const entry = instruments.find((item): item is Record<string, unknown> & { tool: string } => isRecord(item) && typeof item.tool === 'string' &&
     item.tool.split(/,\s*/).some(tool => tool === instrument || tool.split('/').pop() === base));
   const recorded = typeof report.recordedAt === 'string' ? report.recordedAt : 'an unrecorded date';
   if (!entry)
@@ -213,7 +216,7 @@ export function checkCapabilitiesFirst(proposal: {instrument: string, capabiliti
       `the handset as it is now: the report was recorded ${recorded}`]);
   if (entry.available === false)
     return refuse('capabilities-first', `the capabilities report (${recorded}) says this phone cannot feed ${instrument}: it needs ${entry.needs}`,
-      entry.ifMissing ?? CAPABILITIES_REMEDY);
+      typeof entry.ifMissing === 'string' ? entry.ifMissing : CAPABILITIES_REMEDY);
   if (entry.available !== true)
     return refuse('capabilities-first', `the capabilities report (${recorded}) could not read whether the phone offers ${entry.needs}, which ${instrument} needs`,
       CAPABILITIES_REMEDY);
@@ -226,5 +229,6 @@ export const CHECKS = Object.freeze({
   'seed-floor': checkSeedFloor,
   'directional-reuse': checkDirectionalReuse,
   'capabilities-first': checkCapabilitiesFirst,
-  'unknown-as-number': input => checkUnknownAsNumber(input?.operands, { operation: input?.operation }),
+  'unknown-as-number': (input: { operands?: unknown, operation?: string } | null | undefined) =>
+    checkUnknownAsNumber(input?.operands, { operation: input?.operation }),
 });

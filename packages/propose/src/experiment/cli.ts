@@ -3,6 +3,7 @@
 import { isUnknown } from '@sixam/kernel';
 import { stableHash, validateArtifactRef } from '@sixam/kernel/contracts';
 import { makeResultPayload, runModelExperiment } from './experiment.ts';
+import type { ModelExperimentSpec } from './experiment.ts';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -17,16 +18,17 @@ const CASES = Object.freeze([
 
 const help = () => console.log(`fnaf2-research — explicit experiment operations\n\nUsage:\n  npm run research -- --help\n  npm run research -- <case>\n\nCases:\n  ${CASES.join(', ')}\n\nEvery case retains its spec, structured result, and session manifest. Results\nare claim-capped until the Plan 12 promotion ladder supplies external evidence.`);
 
-async function runCase(id) {
+async function runCase(id: string) {
   if (!CASES.includes(id)) throw new Error(`unknown experiment case: ${id}`);
-  const spec = JSON.parse(await readFile(join(ROOT, 'packages/propose/experiments', `${id}.json`), 'utf8'));
+  // A reviewed research case; runModelExperiment validates it before anything runs.
+  const spec: ModelExperimentSpec = JSON.parse(await readFile(join(ROOT, 'packages/propose/experiments', `${id}.json`), 'utf8'));
   const evaluation = runModelExperiment(spec);
   const evidenceId = `research-${id}-${stableHash({ specHash: evaluation.specHash, evaluations: evaluation.evaluations }).slice(-10)}`;
   const resultPayload = makeResultPayload(evaluation, evidenceId);
   const result = { ...resultPayload, resultHash: stableHash(resultPayload) };
   const specText = JSON.stringify(spec, null, 2) + '\n';
   const resultText = JSON.stringify(result, null, 2) + '\n';
-  const artifact = (locator, text, mediaType, producer) => {
+  const artifact = (locator: string, text: string, mediaType: string, producer: string) => {
     const ref = { schema: 'artifact-ref-v1', hash: stableHash(text), mediaType,
       producer, size: Buffer.byteLength(text), locator };
     return validateArtifactRef(ref);
