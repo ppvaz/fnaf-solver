@@ -8,9 +8,16 @@
       "compiledWinnerHash": "fnv1a-537a1bbf"
     },
     {
-      "file": "packages/propose/bindings/fnaf2/campaign-night1-minus7-n1-first-winner.json",
+      "file": "packages/propose/bindings/fnaf2/retired/campaign-night1-minus7-n1-first-winner.json",
       "sha256": "ac4cbbb25f73bae0e5a09772b5ccb226e01a8a46a831b9ed9b5c37849dd2a11a",
-      "compiledWinnerHash": "fnv1a-2e6a42e3"
+      "compiledWinnerHash": "fnv1a-2e6a42e3",
+      "retired": true
+    },
+    {
+      "file": "packages/propose/bindings/fnaf2/retired/campaign-night1-minus7-winner.json",
+      "sha256": "23d017e9241dddd5fb50564d7a4718484bc7ede410eb7dd2e9bbbb8802dafa8d",
+      "compiledWinnerHash": "fnv1a-58e73bd5",
+      "retired": true
     },
     {
       "file": "packages/propose/bindings/fnaf2/campaign-night5-contact-final-20260912-winner.json",

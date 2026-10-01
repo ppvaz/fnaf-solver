@@ -25,7 +25,7 @@ import { canonicalJson, stableHash, validateSaveProof } from '@sixam/kernel/cont
 import { AI_DIALS, PUPPET_AI } from '@sixam/source/fnaf2';
 import { campaignEntry } from './evidence-campaign.ts';
 import { AGENT_DELEGATION, ATTESTATION_FILE, ATTESTATION_SCHEMA, PACKS_DIR, RECOVERY_RECORD, attestationStatus,
-  packCustody, packManifestComplete, packPromotionChecks, readPack, winnerFiles } from './evidence-pack.ts';
+  custodyWinnerFiles, packCustody, packManifestComplete, packPromotionChecks, readPack } from './evidence-pack.ts';
 
 export const GRAPH_FILE = 'docs/evidence/graph.json';
 export const PROMOTION_EDGE = 'PROMOTED_BY';
@@ -152,7 +152,7 @@ export function derivePromotion(root: string, id: string, winners: Map<string, s
   const winner = pack.bundle?.winnerHash ? winners.get(pack.bundle.winnerHash) : undefined;
   // The check names the winner `tools/device/<name>`, the words the attestations record; the file
   // itself sits in the bindings since 2026-09-30.
-  const winnerFile = winner ? winnerFiles(root).map(file => join(root, file)).find(file => basename(file) === winner) ?? null : null;
+  const winnerFile = winner ? custodyWinnerFiles(root).map(file => join(root, file)).find(file => basename(file) === winner) ?? null : null;
   add('winnerCommitted', winnerFile && existsSync(winnerFile) ? [] : [`winner ${pack.bundle?.winnerHash ?? 'none recorded'} is not committed`],
     { winnerHash: pack.bundle?.winnerHash ?? null, bundle: pack.bundle?.path ?? null, winner: winner ? `tools/device/${winner}` : null },
     winnerFile && existsSync(winnerFile) ? [{ name: `tools/device/${winner}`, sha256: sha256(readFileSync(winnerFile)) }] : []);

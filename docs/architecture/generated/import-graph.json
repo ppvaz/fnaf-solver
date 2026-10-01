@@ -2341,6 +2341,22 @@
       ]
     },
     {
+      "file": "packages/propose/bin/recompile/phone-stream-census.mjs",
+      "imports": [
+        "../../../source/recompile/model-draw-trace.mjs",
+        "./compare-schedule-replay.mjs",
+        "./phone-encounter-replay.mjs",
+        "./schedule-to-input.mjs",
+        "@sixam/review/renamed-path",
+        "node:crypto",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url",
+        "node:worker_threads"
+      ]
+    },
+    {
       "file": "packages/propose/bin/recompile/pilot/batch.mjs",
       "imports": [
         "node:child_process",

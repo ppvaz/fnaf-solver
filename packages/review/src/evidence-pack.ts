@@ -538,6 +538,24 @@ export function winnerFiles(root: string): string[] {
 }
 
 /**
+ * Every retired winner: `<BINDINGS_DIR>/<game>/retired/*-winner.json`. Nothing runs, censuses
+ * or offers one, so `winnerFiles` leaves them out; they stay committed, so a pack that ran one
+ * keeps its custody (Pedro, 2026-09-30, retiring the Minus 7 Night 1 bindings).
+ */
+export function retiredWinnerFiles(root: string): string[] {
+  const games = existsSync(join(root, BINDINGS_DIR)) ? readdirSync(join(root, BINDINGS_DIR), { withFileTypes: true })
+    .filter(entry => entry.isDirectory()).map(entry => entry.name) : [];
+  return games.filter(game => existsSync(join(root, BINDINGS_DIR, game, 'retired')))
+    .flatMap(game => readdirSync(join(root, BINDINGS_DIR, game, 'retired')).filter(file => file.endsWith('-winner.json'))
+      .map(file => `${BINDINGS_DIR}/${game}/retired/${file}`)).sort((a, b) => basename(a).localeCompare(basename(b)));
+}
+
+/** What custody reads: every committed winner file, active and retired, sorted by file name. */
+export function custodyWinnerFiles(root: string): string[] {
+  return [...winnerFiles(root), ...retiredWinnerFiles(root)].sort((a, b) => basename(a).localeCompare(basename(b)));
+}
+
+/**
  * Committed winners by the hash a bundle compiled from them records as `winnerHash`. That is
  * not always the file's own stableHash: compileBundle normalises a winner (it stamps the gate
  * with the replay hash), so night1-minimal, night1-minus7 and night6 compile to a different
@@ -549,7 +567,7 @@ export function winnerFiles(root: string): string[] {
 export function trackedWinners(root: string): Map<string, string> {
   const register = new Map(readJson(join(root, WINNER_HASHES)).winners.map(row => [basename(row.file), row]));
   const winners = new Map();
-  for (const file of winnerFiles(root)) {
+  for (const file of custodyWinnerFiles(root)) {
     const name = basename(file);
     const bytes = readFileSync(join(root, file));
     const row: any = register.get(name);

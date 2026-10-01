@@ -375,11 +375,13 @@ const legacyPaths = [
 // that is not the file's own stableHash; only Propose can compile, and Review
 // never imports Propose (ADR 0002). So the catalog records the answer, CI's
 // catalog diff keeps it current, and Review's trackedWinners() reads it, refusing
-// when a winner file's bytes differ from the sha256 recorded here.
+// when a winner file's bytes differ from the sha256 recorded here. Retired winners
+// (bindings/<game>/retired/) are listed too, marked retired: a pack that ran one
+// keeps its custody.
 const { compileBundle } = await import(pathToFileURL(join(ROOT, 'packages/propose/bin/plans/bundle.mjs')).href);
-const { winnerFiles } = await import(pathToFileURL(join(ROOT, 'packages/review/src/evidence-pack.ts')).href);
+const { custodyWinnerFiles } = await import(pathToFileURL(join(ROOT, 'packages/review/src/evidence-pack.ts')).href);
 const winnerHashes = [];
-for (const file of winnerFiles(ROOT)) {
+for (const file of custodyWinnerFiles(ROOT)) {
   const bytes = await readFile(join(ROOT, file));
   const scratch = mkdtempSync(join(tmpdir(), 'winner-hashes-'));
   let compiledWinnerHash = null;
@@ -388,7 +390,7 @@ for (const file of winnerFiles(ROOT)) {
   catch (error) { notCompiled = error.message; }
   finally { rmSync(scratch, { recursive: true, force: true }); }
   winnerHashes.push({ file, sha256: createHash('sha256').update(bytes).digest('hex'),
-    compiledWinnerHash, ...(notCompiled ? { notCompiled } : {}) });
+    compiledWinnerHash, ...(notCompiled ? { notCompiled } : {}), ...(file.includes('/retired/') ? { retired: true } : {}) });
 }
 
 // The fact register's binding tables, for Review: the anchor aims registered

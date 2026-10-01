@@ -140,9 +140,11 @@ the phone that day (`d659cd62`, a death). The MODEL_ONLY
 `packages/propose/bindings/fnaf2/retired/` (Pedro: "minus 7 at night 1?
 that dumb, remove it immediately. night 1 has a specifically baked minimal
 input schedule that should be the canonical one"): Night 1's canonical binding
-is `campaign-night1-minimal-winner.json`. `campaign-night1-minus7-n1-first-winner.json`
-stays as the binding the phone ran on 2026-09-19. Still open beside S1: no k2
-or k3 video exists on this machine by name or by content hash.
+is `campaign-night1-minimal-winner.json`. The Minus 7 binding the phone ran on
+2026-09-19 (`campaign-night1-minus7-n1-first-winner.json`) is retired beside it
+("yes retire"); its promotion stands on custody, which reads retired bindings
+too. Still open beside S1: no k2 or k3 video exists on this machine by name or
+by content hash.
 `UNTRACKED_WINNER_DEBT` is 1 of 1: Night 6 `a`, whose winner was found but no
 longer rebuilds.
 
