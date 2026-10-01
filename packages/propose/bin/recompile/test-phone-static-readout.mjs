@@ -7,7 +7,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { cycleIndex, identify, pearson } from './phone-static-readout.mjs';
+import { cycleIndex, detrend, identify, lumaByImage, pearson, regionMeanLuma } from './phone-static-readout.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
 const read = (path) => readFileSync(join(ROOT, path));
@@ -29,6 +29,18 @@ const rule = { minR: 0.85, minMargin: 0.1 };
 assert.equal(identify(rule, [{ state: 1, r: 0.9 }, { state: 2, r: 0.7 }]).verdict, 'IDENTIFIED');
 assert.equal(identify(rule, [{ state: 1, r: 0.9 }, { state: 2, r: 0.85 }]).verdict, 'UNIDENTIFIED', 'a lead under 0.1');
 assert.equal(identify(rule, [{ state: 1, r: 0.8 }]).verdict, 'UNIDENTIFIED', 'r under 0.85');
+
+// --- the native recording a measurement night writes (night-run.sh --static-readout)
+const words = (list) => Buffer.from(new Uint8Array(new Uint32Array(list).buffer)).toString('base64');
+assert.equal(regionMeanLuma({ cols: 2, rows: 1, hex: words([0xffffff, 0x000000]) }), 127.5, 'white and black average to the middle');
+assert.ok(Math.abs(regionMeanLuma({ cols: 1, rows: 1, hex: words([0xff0000]) }) - 0.299 * 255) < 1e-9, 'Rec. 601 weights');
+assert.throws(() => regionMeanLuma({ cols: 3, rows: 1, hex: words([0, 0]) }), /geometry/);
+const rows = [{ seq: 1, imageNs: '875229956574475', regions: { static_view: { cols: 1, rows: 1, hex: words([0x808080]) } } },
+  { seq: 2, imageNs: null, regions: {} }].map((r) => JSON.stringify(r)).join('\n');
+const recorded = [...lumaByImage(rows, 'static_view')];
+assert.ok(recorded.length === 1 && recorded[0][0] === 875229956574475 && Math.abs(recorded[0][1] - 128) < 1e-9, 'rows keyed by their image time; an unread frame is skipped');
+assert.deepEqual(detrend([1, 2, 3, 4, 5], 3), [-0.5, 0, 0, 0, 0.5]);
+assert.throws(() => detrend([1, 2, 3], 4), /odd/);
 
 // --- the records
 const recs = ['docs/evidence/full06-static-readout-20261001.json', 'docs/evidence/full06-static-readout-confirm-20261001.json'].filter((p) => existsSync(join(ROOT, p)));

@@ -37,7 +37,38 @@ export function frames(nightName, inputsRoot = ROOT) {
   const clock = officeClock(cols.image_ns, night.trace.first, { catchUp: true });
   // image j (from the first office frame) shows the state after its pass's last update: model frame passStart[j + 1]
   const shows = clock.imageMs.map((_, j) => (j + 1 < clock.passStart.length ? clock.passStart[j + 1] : clock.deltas.length));
-  return { imageMs: clock.imageMs, shows, luma: clock.imageMs.map((_, j) => cols.grid_mean_luma[night.trace.first + j]) };
+  // A night recorded with night-run.sh --static-readout reads the camera picture's native pixels, matched to the
+  // trace's frames by the image clock both share; a frame the recorder did not catch reads null. Otherwise the grid.
+  let byImage = null;
+  if (night.staticReadout) {
+    const rows = readFileSync(resolve(inputsRoot, night.staticReadout.path));
+    if (sha256(rows) !== night.staticReadout.sha256) throw new Error(`${night.staticReadout.path}: not the recorded static readout`);
+    byImage = lumaByImage(rows.toString('utf8'), night.staticReadout.region ?? 'static_view');
+  }
+  return { imageMs: clock.imageMs, shows, source: byImage ? 'native static_view' : 'grid_mean_luma',
+    luma: clock.imageMs.map((_, j) => (byImage ? byImage.get(cols.image_ns[night.trace.first + j]) ?? null : cols.grid_mean_luma[night.trace.first + j])) };
+}
+
+/** Rec. 601 mean luma of one recorded region: native-regions.ts record's base64 of 0xRRGGBB words. */
+export function regionMeanLuma(region) {
+  const bytes = Buffer.from(region.hex, 'base64');
+  if (bytes.length !== region.cols * region.rows * 4) throw new Error('a recorded region\'s pixels do not match its geometry');
+  const words = new Uint32Array(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.length));
+  let sum = 0;
+  for (const rgb of words) sum += 0.299 * ((rgb >> 16) & 0xff) + 0.587 * ((rgb >> 8) & 0xff) + 0.114 * (rgb & 0xff);
+  return sum / words.length;
+}
+
+/** image_ns -> mean luma of one region, over native-regions.ts record rows (one JSON object per copied frame). */
+export function lumaByImage(text, region) {
+  const out = new Map();
+  for (const line of text.split('\n')) {
+    if (!line.trim()) continue;
+    const row = JSON.parse(line);
+    if (row.imageNs === null || row.imageNs === undefined || !row.regions?.[region]) continue;
+    out.set(Number(row.imageNs), regionMeanLuma(row.regions[region]));
+  }
+  return out;
 }
 
 /**
@@ -90,7 +121,7 @@ export function blocks(per, fr, { fromMs, toMs, cam, viewing }) {
   fr.imageMs.forEach((ms, j) => {
     if (ms < fromMs || ms > toMs) return;
     const p = per[fr.shows[j]];
-    if (!p || !p.shown || p.cam !== cam || p.viewing !== viewing) return;
+    if (!p || !p.shown || p.cam !== cam || p.viewing !== viewing || fr.luma[j] === null) return;
     if (!groups.has(p.block)) groups.set(p.block, { alpha: p.alpha, ys: [] });
     groups.get(p.block).ys.push(fr.luma[j]);
   });
