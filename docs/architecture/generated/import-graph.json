@@ -511,7 +511,7 @@
       ]
     },
     {
-      "file": "apps/wiki/chronicle-harvest.js",
+      "file": "apps/wiki/chronicle-harvest.ts",
       "imports": [
         "node:child_process",
         "node:fs",
@@ -520,7 +520,7 @@
       ]
     },
     {
-      "file": "apps/wiki/chronicle-story.js",
+      "file": "apps/wiki/chronicle-story.ts",
       "imports": [
         "@sixam/review/chronicle-schema",
         "@sixam/review/renamed-path",
@@ -530,9 +530,9 @@
       ]
     },
     {
-      "file": "apps/wiki/chronicle.js",
+      "file": "apps/wiki/chronicle.ts",
       "imports": [
-        "./chronicle-story.js",
+        "./chronicle-story.ts",
         "@sixam/review/chronicle-schema",
         "@sixam/review/renamed-path",
         "node:fs/promises",
@@ -541,10 +541,10 @@
       ]
     },
     {
-      "file": "apps/wiki/test/chronicle.test.js",
+      "file": "apps/wiki/test/chronicle.test.ts",
       "imports": [
-        "../chronicle-story.js",
-        "../chronicle.js",
+        "../chronicle-story.ts",
+        "../chronicle.ts",
         "@sixam/review/chronicle-schema",
         "@sixam/review/renamed-path",
         "node:assert/strict",

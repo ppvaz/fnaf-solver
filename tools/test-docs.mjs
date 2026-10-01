@@ -99,7 +99,7 @@ for (const file of pages) {
     }
     if (!existsSync(resolve(here, decodeURI(target))))
       complain(`${file} links to ${raw}, which does not exist. If a generator writes this page ` +
-        '(apps/wiki/chronicle.js writes docs/portal/chronicle.html), fix the generator and regenerate; otherwise fix the page');
+        '(apps/wiki/chronicle.ts writes docs/portal/chronicle.html), fix the generator and regenerate; otherwise fix the page');
   }
   // An import map address the browser can use: it must start with ./ or ../
   // (a bare "packages/..." is ignored, and the specifier then resolves to

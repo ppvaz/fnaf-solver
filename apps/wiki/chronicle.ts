@@ -4,7 +4,7 @@ import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { GAMES, KINDS, LABELS_V2, NIGHTS, ROUTES, RUNGS, SCHEMAS, STATUSES, checkCorpus, gameTitle, readEntries } from '@sixam/review/chronicle-schema';
-import { STORY_OUTPUT, loadStory, renderStory } from './chronicle-story.js';
+import { STORY_OUTPUT, loadStory, renderStory } from './chronicle-story.ts';
 import { currentPath } from '@sixam/review/renamed-path';
 
 export const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '../..'));
@@ -51,7 +51,7 @@ function pulseMarkup(pulse, entries) {
   if (!dates.length) return '';
   const first = new Date(`${dates[0]}T00:00:00Z`);
   const last = new Date(`${dates.at(-1)}T00:00:00Z`);
-  const max = Math.max(...Object.values(pulse), 1);
+  const max = Math.max(...(Object.values(pulse) as number[]), 1);
   const cells = [];
   for (const cursor = first; cursor <= last; cursor.setUTCDate(cursor.getUTCDate() + 1)) {
     const date = `${cursor.getUTCFullYear()}-${pad(cursor.getUTCMonth() + 1)}-${pad(cursor.getUTCDate())}`;
@@ -99,7 +99,7 @@ export function renderChronicle(corpus) {
     return `<section class="checkpoint" data-checkpoint="${html(checkpoint.checkpoint)}"><header><span class="eyebrow">CHECKPOINT ${html(checkpoint.checkpoint)}</span><h2>${html(checkpoint.label)}</h2><span class="count">${members.length} findings</span></header><div class="spine">${members.map((entry) => entryMarkup(entry, entries.indexOf(entry))).join('')}</div></section>`;
   }).join('');
   const rail = RUNGS.map((rung, index) => `<button class="rung-step ${activeRungs.has(index) ? 'used' : ''}" data-rung="${index}"><b>${index}</b><span>${html(rung)}</span></button>`).join('');
-  const planValues = [...new Set(entries.map((entry) => entry.plan).filter((value) => value !== null))].sort((a, b) => a - b);
+  const planValues = [...new Set(entries.map((entry) => entry.plan).filter((value) => value !== null))].sort((a: number, b: number) => a - b);
   const nights = Array.from({ length: Math.max(...Object.values(NIGHTS)) }, (_, index) => String(index + 1));
   const games = GAMES.filter((game) => entries.some((entry) => entry.game === game));
   const data = { entries, checkpoints, rungs: RUNGS, kinds: KINDS, labels: LABELS_V2, routes: ROUTES, statuses: STATUSES, games: GAMES, nights: NIGHTS, tags };

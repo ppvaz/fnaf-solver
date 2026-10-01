@@ -8,8 +8,8 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { ENTRIES_SCHEMA, ENTRIES_SCHEMA_V2, NIGHTS, checkCorpus, readEntries } from '@sixam/review/chronicle-schema';
-import { STORY_OUTPUT, chapterView, checkStory } from '../chronicle-story.js';
-import { generate, loadCorpus, OUTPUT, ROOT } from '../chronicle.js';
+import { STORY_OUTPUT, chapterView, checkStory } from '../chronicle-story.ts';
+import { generate, loadCorpus, OUTPUT, ROOT } from '../chronicle.ts';
 import { currentPath } from '@sixam/review/renamed-path';
 
 // The v1 checkpoints are frozen byte for byte: a correction is a v2 entry that
@@ -118,7 +118,7 @@ assert.equal(readFileSync(STORY_OUTPUT, 'utf8'), first.storyOutput, 'generated s
 
 // The story: every chapter's dates come from its standing entries, and every
 // entry it draws on is rendered with its title and a link to its card.
-const byId = new Map(first.entries.map((entry) => [entry.id, entry]));
+const byId = new Map<string, any>(first.entries.map((entry) => [entry.id, entry]));
 assert.deepEqual(checkStory(first.story, byId), []);
 refuses(checkStory({ ...first.story, chapters: [{ number: 1, title: 'x', entries: ['no-such-entry'] }] }, byId), 'is not a chronicle entry', 'a chapter of nothing');
 for (const chapter of first.story.chapters) {
@@ -137,7 +137,7 @@ for (const item of [...(corpus.outlook?.next ?? []), ...(corpus.outlook?.missing
 
 const since = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: ROOT, encoding: 'utf8' }).trim();
 checkSource(`commit:${since}`);
-const harvested = JSON.parse(execFileSync(process.execPath, ['apps/wiki/chronicle-harvest.js', '--since', since, '--until', 'HEAD', '--json'], { cwd: ROOT, encoding: 'utf8' }));
+const harvested = JSON.parse(execFileSync(process.execPath, ['apps/wiki/chronicle-harvest.ts', '--since', since, '--until', 'HEAD', '--json'], { cwd: ROOT, encoding: 'utf8' }));
 assert(Array.isArray(harvested), 'harvester did not emit a JSON array');
 for (const candidate of harvested) {
   assert(candidate.id && candidate.date && candidate.sources?.length, 'harvester emitted an incomplete candidate');

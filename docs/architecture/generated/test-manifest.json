@@ -684,7 +684,7 @@
       }
     },
     {
-      "id": "apps/wiki/test/chronicle.test.js",
+      "id": "apps/wiki/test/chronicle.test.ts",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,

@@ -144,17 +144,17 @@
     },
     {
       "id": "chronicle",
-      "command": "node apps/wiki/chronicle.js",
+      "command": "node apps/wiki/chronicle.ts",
       "lifecycle": "supported"
     },
     {
       "id": "chronicle:harvest",
-      "command": "node apps/wiki/chronicle-harvest.js",
+      "command": "node apps/wiki/chronicle-harvest.ts",
       "lifecycle": "supported"
     },
     {
       "id": "test:chronicle",
-      "command": "node apps/wiki/test/chronicle.test.js",
+      "command": "node apps/wiki/test/chronicle.test.ts",
       "lifecycle": "supported"
     },
     {
@@ -761,26 +761,26 @@
       "lifecycle": "supported"
     },
     {
-      "id": "apps/wiki/chronicle.js",
-      "invocation": "apps/wiki/chronicle.js",
+      "id": "apps/wiki/chronicle.ts",
+      "invocation": "apps/wiki/chronicle.ts",
       "kind": "generator",
       "lifecycle": "supported"
     },
     {
-      "id": "apps/wiki/chronicle-story.js",
-      "invocation": "apps/wiki/chronicle-story.js",
+      "id": "apps/wiki/chronicle-story.ts",
+      "invocation": "apps/wiki/chronicle-story.ts",
       "kind": "module",
       "lifecycle": "supported"
     },
     {
-      "id": "apps/wiki/chronicle-harvest.js",
-      "invocation": "apps/wiki/chronicle-harvest.js --since COMMIT [--until COMMIT] [--json]",
+      "id": "apps/wiki/chronicle-harvest.ts",
+      "invocation": "apps/wiki/chronicle-harvest.ts --since COMMIT [--until COMMIT] [--json]",
       "kind": "report",
       "lifecycle": "supported"
     },
     {
-      "id": "apps/wiki/test/chronicle.test.js",
-      "invocation": "apps/wiki/test/chronicle.test.js",
+      "id": "apps/wiki/test/chronicle.test.ts",
+      "invocation": "apps/wiki/test/chronicle.test.ts",
       "kind": "check",
       "lifecycle": "supported"
     },

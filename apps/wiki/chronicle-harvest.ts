@@ -15,7 +15,7 @@ function arg(name) {
 }
 
 function usage() {
-  console.error('Usage: node apps/wiki/chronicle-harvest.js --since COMMIT [--until COMMIT] [--json]');
+  console.error('Usage: node apps/wiki/chronicle-harvest.ts --since COMMIT [--until COMMIT] [--json]');
 }
 
 function countWords(text) {
@@ -45,7 +45,7 @@ function label(text) {
 
 function tags(text) {
   const rules = [['source', /source|decomp|event sheet/i], ['device', /device|phone|hid|android/i], ['strategy', /strategy|route|minus|vent camp|cam/i], ['timing', /timing|latency|delay|clock|phase/i], ['evidence', /evidence|grade|gate|proof|clear|victory/i], ['model', /model|simulat|seed/i], ['tooling', /tool|catalog|index|generator/i], ['retraction', /retract|wrong|correction|refut/i]];
-  return rules.filter(([, pattern]) => pattern.test(text)).map(([tag]) => tag);
+  return rules.filter(([, pattern]) => (pattern as any).test(text)).map(([tag]) => tag);
 }
 
 function measured(text) {
