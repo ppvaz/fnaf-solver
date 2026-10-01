@@ -5,7 +5,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { AdbDeviceBridge } from '@sixam/play/campaign/adb-bridge';
 import { CampaignStateMachine, DEFAULT_CAMPAIGN_NIGHTS, makeCampaignSpec } from '@sixam/play/campaign/campaign';
-import { DeviceCampaignRunner } from '@sixam/play/campaign/campaign-runner';
+import { type CampaignPorts, DeviceCampaignRunner } from '@sixam/play/campaign/campaign-runner';
 import { guidedCalibrationSteps, validateCustomNightCalibration } from '@sixam/play/campaign/custom-night';
 import { evaluateCampaignPreflight } from '@sixam/play/campaign/campaign-preflight';
 import { validateCampaignBundle } from '@sixam/play/campaign/campaign-bundle';
@@ -14,6 +14,7 @@ import { installCampaignSignalHandlers } from '@sixam/play/campaign/campaign-sig
 import { bindVenueFromPreflight, dryRunVenue, loadVenueBindings, renderVenueCheck } from '@sixam/play/campaign/venue';
 import { fitClockMap, CompanionControlTransport } from '@sixam/play';
 import { resolveDeviceProfile } from '@sixam/source';
+import { isRecord } from '@sixam/kernel';
 import { stableHash } from '@sixam/kernel/contracts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
@@ -75,7 +76,19 @@ Options:
   --out FILE    retain the clock-map-v1 artifact at this path`);
 }
 
-function parse(argv) {
+/** The command line, as parse() reads it. */
+interface Options {
+  command: 'help' | 'grade' | 'preflight' | 'campaign' | 'clockmap', profile: string, live: boolean, confirmLive: boolean, json: boolean, serial: string | undefined, nights: number[],
+  maxAttempts: number, storyStart: string | undefined, saveCursor: number | undefined, requireHelper: boolean, requireHid: boolean,
+  guided: boolean, machineOnly: boolean, armMode: 'blocking' | 'observe-once' | 'none', allowSaveReset: boolean,
+  nightAnchorAimMs: number | null, nightAnchorMaxK: number | null, nightAnchorPeriodMs: number, nightAnchorStrict: boolean,
+  nightAnchorAuthorizeOnLatch: boolean, teachOverlay: boolean, calibration: string | undefined, bundle: string | undefined,
+  qualification: string | undefined, venueBindings: string[], bindVenue: string | undefined, by: string | undefined,
+  ports: string | undefined, forbidMechanics: string[], count: number, spanMs: number, out: string | undefined, source: string,
+  night7Dials?: unknown,
+}
+
+function parse(argv: string[]): Options | { command: 'help', help: true } {
   const [first = 'help', ...tail] = argv;
   const knownCommands = new Set(['help', 'grade', 'preflight', 'campaign', 'clockmap']);
   if (first === '--help' || first === '-h') return { command: 'help', help: true };
@@ -85,7 +98,8 @@ function parse(argv) {
   const command = first;
   const rest = tail;
   if (!knownCommands.has(command)) throw new Error(`unknown command: ${first}`);
-  const options: any = { command, profile: 'hid-mediaprojection', live: false, confirmLive: false,
+  // knownCommands holds command, or parse threw above.
+  const options: Options = { command: command as Options['command'], profile: 'hid-mediaprojection', live: false, confirmLive: false,
     json: false, serial: undefined, nights: [...DEFAULT_CAMPAIGN_NIGHTS], maxAttempts: 3, storyStart: undefined, saveCursor: undefined,
     requireHelper: true, requireHid: true,
     guided: false, machineOnly: false, armMode: 'blocking', allowSaveReset: false, nightAnchorAimMs: null, nightAnchorMaxK: null, nightAnchorPeriodMs: 1000, nightAnchorStrict: false, nightAnchorAuthorizeOnLatch: false, teachOverlay: false, calibration: undefined, bundle: undefined,
@@ -188,20 +202,25 @@ function parse(argv) {
 // game is the package half of targetBuild, and the control map may name only
 // that game's controls, cameras and points. The object is returned unchanged,
 // because its bytes are hashed into every bundle bound to it.
-async function profile(id) {
+async function profile(id: string) {
   try { return resolveDeviceProfile(JSON.parse(await readFile(join(PROFILES, `${id}.json`), 'utf8'))); }
-  catch (error) { throw new Error(`profile ${id} is not available: ${error.message}`); }
+  catch (error) { throw new Error(`profile ${id} is not available: ${(error as Error).message}`); }
 }
 
-async function jsonFile(path, label) {
+async function jsonFile(path: string | undefined, label: string): Promise<unknown> {
   if (!path) return null;
   try { return JSON.parse(await readFile(resolve(path), 'utf8')); }
-  catch (error) { throw new Error(`${label} is not readable: ${error.message}`); }
+  catch (error) { throw new Error(`${label} is not readable: ${(error as Error).message}`); }
 }
 
-async function campaignBundle(path, spec, profileId) {
+type Bundle = typeof import('../../../packages/propose/bin/plans/bundle.ts');
+type Ports = Partial<CampaignPorts> & { readonly deviceLocal?: boolean };
+/** What a ports module's factory returns: a composition holding its ports (createCampaignPorts), or the ports themselves. */
+type Composition = Ports & { readonly ports?: Ports, readonly evidenceDirectory?: string };
+
+async function campaignBundle(path: string | undefined, spec: ReturnType<typeof makeCampaignSpec>, profileId: string) {
   if (!path) return null;
-  const { validateBundle } = await import(pathToFileURL(join(ROOT, 'packages/propose/bin/plans/bundle.ts')).href);
+  const { validateBundle }: Bundle = await import(pathToFileURL(join(ROOT, 'packages/propose/bin/plans/bundle.ts')).href);
   const validated = validateBundle(resolve(path));
   if (!validated.compiled) throw new Error('campaign bundle has no compiled artifact');
   if (validated.profile.id !== profileId) throw new Error(`campaign bundle profile ${validated.profile.id} does not match ${profileId}`);
@@ -210,6 +229,7 @@ async function campaignBundle(path, spec, profileId) {
   const campaign = validateCampaignBundle({ spec, plans });
   const selectedPlans = validated.plans.filter(plan => requested.has(plan.night));
   const selectedWinner = validated.winner;
+  const planOptions = isRecord(selectedWinner.planOptions) ? selectedWinner.planOptions : undefined;
   return { ...campaign, artifact: { winnerHash: validated.manifest.winnerHash,
     engineHash: validated.manifest.engineHash, profileHash: validated.manifest.profile.sha256 },
     // Host-only handoff metadata for the explicit machine experiment. The
@@ -219,9 +239,9 @@ async function campaignBundle(path, spec, profileId) {
     planHashes: Object.fromEntries(selectedPlans.map(plan => [plan.night, plan.sha256])),
     machine: { claimLevel: selectedWinner.gate.claimLevel,
       pilotOffsetMs: selectedWinner.knobs?.pilotOffset ?? 10,
-      deviceSpacingMs: selectedWinner.planOptions?.deviceSpacingMs ?? null,
-      contactMs: selectedWinner.planOptions?.sweepContactMs ?? null,
-      tapContactMs: selectedWinner.planOptions?.tapContactMs ?? null },
+      deviceSpacingMs: planOptions?.deviceSpacingMs ?? null,
+      contactMs: planOptions?.sweepContactMs ?? null,
+      tapContactMs: planOptions?.tapContactMs ?? null },
     bundleDirectory: resolve(path) };
 }
 
@@ -235,7 +255,7 @@ async function campaignTiming(path: string | undefined, nights: number[], forbid
     if (forbid.length) throw new Error('--forbid-mechanic needs the --bundle it constrains');
     return { timingByNight: {}, mechanics: undefined };
   }
-  const { runMechanics, validateBundle } = await import(pathToFileURL(join(ROOT, 'packages/propose/bin/plans/bundle.ts')).href);
+  const { runMechanics, validateBundle }: Bundle = await import(pathToFileURL(join(ROOT, 'packages/propose/bin/plans/bundle.ts')).href);
   const validated = validateBundle(resolve(path));
   if (!validated.compiled) throw new Error('campaign bundle has no compiled artifact');
   const requested = new Set(nights);
@@ -246,7 +266,7 @@ async function campaignTiming(path: string | undefined, nights: number[], forbid
 }
 
 async function main(argv = process.argv.slice(2)) {
-  const options: any = parse(argv);
+  const options = parse(argv);
   if (options.command === 'help') return help();
   if (options.command === 'grade') {
     const run = argv[1]; if (!run) throw new Error('grade requires RUN_ID');
@@ -263,30 +283,31 @@ async function main(argv = process.argv.slice(2)) {
     if (!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/.test(hostBoot))
       throw new Error('host boot identity is unavailable; refusing to fabricate a clock session');
     const bridge = new AdbDeviceBridge({ serial: options.serial });
-    let helperTransport = null;
+    let helperTransport = null as CompanionControlTransport | null;
     if (options.source === 'helper') {
-      const selected = ((await bridge.selectDevice()) as any);
+      const selected = await bridge.selectDevice();
       if (selected.status !== 'READY') throw new Error(`clockmap needs one ready device: ${selected.reason ?? 'unavailable'}`);
       const port = new AdbCompanionPort({ serial: selected.serial });
       const endpoint = port.discover();
       helperTransport = new CompanionControlTransport({ request: line => port.request(line), token: endpoint.token });
     }
-    const sleep = ms => new Promise<any>(done => setTimeout(done, ms));
+    const sleep = (ms: number) => new Promise(done => setTimeout(done, ms));
     const samples: {bootId: string, quantizationMs: number, sourceMs: number, targetBeforeMs: number, targetAfterMs: number}[] = [];
     for (let index = 0; index < options.count; index += 1) {
       if (index) await sleep(Math.floor(options.spanMs / (options.count - 1)));
       if (options.source === 'helper') {
         const targetBeforeMs = Number(process.hrtime.bigint()) / 1e6;
-        const fields = (helperTransport.snapshot() as any);
+        // Built above whenever the source is the helper.
+        const fields = (helperTransport as CompanionControlTransport).snapshot();
         const targetAfterMs = Number(process.hrtime.bigint()) / 1e6;
         if (!/^\d+$/.test(fields.snapshotNs ?? '')) throw new Error('helper snapshot has no monotonic timestamp');
-        const identity = ((await bridge.uptimeSample()) as any);
+        const identity = await bridge.uptimeSample();
         if (identity.status !== 'READY') throw new Error(`boot identity is unavailable: ${identity.reason ?? 'unavailable'}`);
         samples.push({ bootId: identity.bootId, quantizationMs: 1,
           sourceMs: Number(BigInt(fields.snapshotNs) / 1000000n), targetBeforeMs, targetAfterMs });
         continue;
       }
-      const sample = ((await bridge.uptimeSample()) as any);
+      const sample = await bridge.uptimeSample();
       if (sample.status !== 'READY') throw new Error(`clockmap anchor ${index} is ${sample.status}: ${sample.reason ?? 'unavailable'}`);
       samples.push({ bootId: sample.bootId, quantizationMs: sample.quantizationMs,
         sourceMs: sample.sourceMs, targetBeforeMs: sample.targetBeforeMs, targetAfterMs: sample.targetAfterMs });
@@ -340,7 +361,8 @@ async function main(argv = process.argv.slice(2)) {
       result.checks.map(item => `  ${item.status.padEnd(7)} ${item.id}: ${typeof item.detail === 'string' ? item.detail : JSON.stringify(item.detail)}`).join('\n') +
       `\n${renderVenueCheck(result.venue)}`);
     if (options.bindVenue) {
-      const binding = bindVenueFromPreflight({ preflight: result, profileId: selected.id, boundBy: options.by,
+      // parse() refuses --bind-venue without --by.
+      const binding = bindVenueFromPreflight({ preflight: result, profileId: selected.id, boundBy: options.by as string,
         boundAt: new Date().toISOString().slice(0, 10) });
       const path = resolve(options.bindVenue);
       await writeFile(path, JSON.stringify(binding, null, 2) + '\n');
@@ -395,16 +417,16 @@ async function main(argv = process.argv.slice(2)) {
       requireHelper: options.requireHelper, requireHid: options.requireHid,
       restartCapture: true, venueBindings, requireVenueBinding: true, profileId: selected.id });
     machine.acceptPreflight(device);
-    let composition = null;
+    let composition = null as Composition | null;
     const useDefaultModernPorts = bundle && selected.actuator === 'hid-multi' && selected.visualSensor === 'mediaprojection';
     if (options.ports || useDefaultModernPorts) {
       const modulePath = options.ports
         ? resolve(options.ports)
         : join(ROOT, 'packages/play/src/campaign/modern-campaign-ports.ts');
-      const module = await import(pathToFileURL(modulePath).href);
+      const module: { createCampaignPorts?: unknown, default?: unknown } = await import(pathToFileURL(modulePath).href);
       const factory = module.createCampaignPorts ?? module.default;
       if (typeof factory !== 'function') throw new Error('ports module must export createCampaignPorts()');
-      composition = await factory({ spec, bundle, profile: selected, calibration, calibrationPath: options.calibration ?? null, qualification,
+      composition = await (factory as (options: object) => Promise<Composition> | Composition)({ spec, bundle, profile: selected, calibration, calibrationPath: options.calibration ?? null, qualification,
         serial: device.serial, machineOnly: options.machineOnly,
         armMode: options.armMode === 'none' ? undefined : options.armMode,
         allowSaveReset: options.allowSaveReset, captureRestarted: true,
@@ -421,7 +443,7 @@ async function main(argv = process.argv.slice(2)) {
       cleanup: reason => typeof ports?.cleanup === 'function'
         ? ports.cleanup(reason) : ports?.releaseAll?.(),
     });
-    const requiredPorts = ['preflight', 'menu', 'intro', 'executeAttempt', 'terminal',
+    const requiredPorts: (keyof CampaignPorts)[] = ['preflight', 'menu', 'intro', 'executeAttempt', 'terminal',
       'terminalVerification', 'save', 'retryReady', 'releaseAll'];
     if (spec.nights.some(target => target.mode === 'custom')) requiredPorts.push('customNight');
     const capabilities = {
@@ -442,7 +464,8 @@ async function main(argv = process.argv.slice(2)) {
       if (campaignPreflight.status === 'FAIL') process.exitCode = 1;
       if (campaignPreflight.status === 'READY') {
         try {
-          const result = await new DeviceCampaignRunner({ spec, ports }).run();
+          // READY needs every required port (executor.portsReady), so there are ports.
+          const result = await new DeviceCampaignRunner({ spec, ports: ports as Ports }).run();
           const retained = { status: result.state, mode: 'live', result };
           if (composition?.evidenceDirectory)
             await writeFile(join(composition.evidenceDirectory, 'result.json'), JSON.stringify(retained, null, 2));
@@ -451,7 +474,7 @@ async function main(argv = process.argv.slice(2)) {
         } catch (error) {
           if (composition?.evidenceDirectory)
             await writeFile(join(composition.evidenceDirectory, 'result.json'), JSON.stringify({
-              status: 'ERROR', mode: 'live', error: error.message,
+              status: 'ERROR', mode: 'live', error: (error as Error).message,
             }, null, 2));
           throw error;
         }
@@ -464,4 +487,4 @@ async function main(argv = process.argv.slice(2)) {
   }
 }
 
-main().catch(error => { console.error(`device: ${error.message}`); process.exitCode = 2; });
+main().catch((error: Error) => { console.error(`device: ${error.message}`); process.exitCode = 2; });

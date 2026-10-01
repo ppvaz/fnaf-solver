@@ -74,7 +74,7 @@ export const ORDER = Object.freeze([
 ]);
 
 /** The order line each step is ranked by. */
-export const ORDER_OF = Object.freeze({ S1: 0, S2: 1, S3: 2, S4: 2, S5: 3, S6: 4, S7: 5 });
+export const ORDER_OF: Readonly<Record<string, number>> = Object.freeze({ S1: 0, S2: 1, S3: 2, S4: 2, S5: 3, S6: 4, S7: 5 });
 
 /**
  * Each step's "Closes when" text as the ROADMAP writes it, markdown emphasis removed.

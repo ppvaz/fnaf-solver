@@ -27,7 +27,7 @@ import { currentPath } from '@sixam/review/renamed-path';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 
-export const GAMES = Object.freeze({
+export const GAMES: Readonly<Record<string, { readonly runner: string, readonly packs: RegExp | null }>> = Object.freeze({
   fnaf2: { runner: 'packages/play/bin/phone/night-run.sh', packs: null },
   fnaf1: { runner: 'packages/play/games/fnaf1/fnaf1-night-run.sh', packs: /^fnaf1-night\d+-/ },
   'fnaf1-custom': { runner: 'apps/desktop/bin/fnaf1-custom-run.sh', packs: /^fnaf1-custom-/ },
@@ -35,7 +35,7 @@ export const GAMES = Object.freeze({
   'fnaf1-winner': { runner: 'packages/play/games/fnaf1/fnaf1-winner.ts', packs: /^fnaf1-custom-/ },
 });
 
-const runDirs = root => {
+const runDirs = (root: string) => {
   const dir = join(root, 'artifacts', 'runs');
   return new Set(existsSync(dir) ? readdirSync(dir) : []);
 };
@@ -56,13 +56,14 @@ export async function runNight(game: string, args: string[], { root = ROOT, pack
   // for it to finish its own abort and reset, then packs what it left.
   const ignore = () => {};
   process.on('SIGINT', ignore);
-  const status = await new Promise<any>((done, failed) => {
+  const status = await new Promise<number>((done, failed) => {
     child.on('error', failed);
     child.on('close', (code, signal) => done(code ?? (signal ? 128 : 1)));
   }).finally(() => process.off('SIGINT', ignore));
-  const packed = [];
-  if (entry.packs) {
-    for (const id of [...runDirs(root)].filter(id => !before.has(id) && entry.packs.test(id)).sort()) {
+  const packed: string[] = [];
+  const { packs } = entry;
+  if (packs) {
+    for (const id of [...runDirs(root)].filter(id => !before.has(id) && packs.test(id)).sort()) {
       const rc = await pack(root, id);
       if (rc !== 0) console.error(`night: packing ${id} failed (${rc}); pack it with npm run evidence -- pack ${id}`);
       else packed.push(id);
@@ -71,8 +72,8 @@ export async function runNight(game: string, args: string[], { root = ROOT, pack
   return { status, packed };
 }
 
-function packRun(root, id) {
-  return new Promise<any>((done, failed) => {
+function packRun(root: string, id: string) {
+  return new Promise<number>((done, failed) => {
     const child = spawn(process.execPath, [join(root, 'apps/desktop/src/evidence.ts'), 'pack', id], { cwd: root, stdio: 'inherit' });
     child.on('error', failed);
     child.on('close', code => done(code ?? 1));
@@ -91,7 +92,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     const { status } = await runNight(game, args);
     process.exit(status);
   } catch (error) {
-    console.error(`night: ${error.message}`);
+    console.error(`night: ${(error as Error).message}`);
     process.exit(2);
   }
 }

@@ -18,7 +18,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, readlink
   writeFileSync } from 'node:fs';
 import { homedir, hostname, tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { BINDINGS_DIR, REPOSITORY_TARGET, claimEnvelope, isUnknown, refusalEnvelope, unknown } from '@sixam/kernel';
+import { BINDINGS_DIR, REPOSITORY_TARGET, type Unknown, claimEnvelope, isUnknown, refusalEnvelope, unknown } from '@sixam/kernel';
 import { CONSEQUENCE_CITES, classifyChange, consequenceKey } from '@sixam/review/consequence';
 import { trackedWinners, winnerFiles } from '@sixam/review/evidence-pack';
 import { matchMistakes, readMistakes, stepFamily } from '@sixam/review/mistakes';
@@ -63,15 +63,50 @@ export const LAB_VERBS = Object.freeze([
   { verb: 'doctor', mcp: 'lab.doctor', writes: null, answers: 'what is broken on this host and checkout, each with the command that fixes it' },
 ].map(row => Object.freeze(row)));
 
+/** A Companion queue job, as companion-queue.py lists it. */
+interface QueueJob {
+  readonly id: string, readonly kind: string, readonly state: string, readonly night?: number | null, readonly winner?: string | null,
+  readonly createdAt?: string | null, readonly startedAt?: string | null, readonly finishedAt?: string | null,
+  readonly cancelledAt?: string | null, readonly result?: unknown,
+}
+/** A lab session, as start() writes it. */
+interface Session {
+  readonly schema: string, readonly id: string, readonly step: string, readonly stepFamily: string, readonly artifact: string,
+  readonly base: string, readonly branch: string, readonly startedAt: string, readonly host: string,
+}
+/** A push-gate run, as tools/push-gate.ts records it. */
+interface RunRecord { readonly sha: string, readonly full: boolean, readonly failed: string[], readonly skipped: string[], readonly at: string, readonly host: string }
+/** An overnight window, as overnight-window.py records it. */
+interface WindowRecord {
+  readonly window?: { readonly openedAt?: string, readonly closedAt?: string }, readonly outcome?: string, readonly reason?: string,
+  readonly morning?: { readonly summary?: string, readonly nights?: unknown[] },
+}
+/** A device lock's owner record. */
+interface LockOwner { readonly pid?: number, readonly host?: string, readonly acquiredAt?: number }
+/** The queue as status and doctor read it; status drops the raw jobs. */
+interface QueueView {
+  jobs: number, byState: Record<string, number>,
+  pending: { id: string, kind: string, night: number | null, winner: string | null, createdAt: string | null | undefined, ageHours: number | null, stale: boolean }[],
+  running: { id: string, kind: string, startedAt: string | null }[], staleAfterHours: number, jobsRaw?: QueueJob[],
+}
+/** One doctor check: what it asked, and yes, no or UNKNOWN. */
+interface Check { id: string, what: string, ok: boolean | Unknown, detail?: unknown }
+/** One ranked action of next. */
+interface NextAction {
+  kind: string, step: string | null, where: string, action: string, command: string | null, because: string,
+  state?: string, items?: readonly string[],
+}
+type StepRow = ReturnType<typeof stepStatus>[number];
+
 const HOUR = 3600 * 1000;
-const lines = text => (text ?? '').split('\n').map(line => line.trimEnd()).filter(Boolean);
-const plain = text => text.replace(/\*\*/g, '');
-const shellQuote = text => (/^[\w@%+=:,./-]+$/.test(text) ? text : `'${String(text).replaceAll("'", "'\\''")}'`);
+const lines = (text: string | null | undefined) => (text ?? '').split('\n').map(line => line.trimEnd()).filter(Boolean);
+const plain = (text: string) => text.replace(/\*\*/g, '');
+const shellQuote = (text: string) => (/^[\w@%+=:,./-]+$/.test(text) ? text : `'${String(text).replaceAll("'", "'\\''")}'`);
 const withoutGit = (env: NodeJS.ProcessEnv): NodeJS.ProcessEnv => Object.fromEntries(Object.entries(env).filter(([name]) => !name.startsWith('GIT_')));
-const readJson = path => JSON.parse(readFileSync(path, 'utf8'));
-const iso = date => date.toISOString();
-const hoursBetween = (from, to) => Math.round(((to.getTime() - from.getTime()) / HOUR) * 10) / 10;
-const mtime = path => { try { return statSync(path).mtime; } catch { return null; } };
+const readJson = (path: string): unknown => JSON.parse(readFileSync(path, 'utf8'));
+const iso = (date: Date) => date.toISOString();
+const hoursBetween = (from: Date, to: Date) => Math.round(((to.getTime() - from.getTime()) / HOUR) * 10) / 10;
+const mtime = (path: string) => { try { return statSync(path).mtime; } catch { return null; } };
 
 /** The last evening before `now`: 18:00 local, today if that has passed, else yesterday. */
 export function lastEvening(now: Date) {
@@ -90,7 +125,7 @@ export function runStamp(id: string) {
 /** `git worktree list --porcelain`, one row per worktree. */
 export function parseWorktrees(text: string) {
   return text.split('\n\n').map(block => block.split('\n').filter(Boolean)).filter(rows => rows.length).map(rows => {
-    const row = { path: null, head: null, branch: null, locked: false, prunable: false, detached: false };
+    const row = { path: null as string | null, head: null as string | null, branch: null as string | null, locked: false, prunable: false, detached: false };
     for (const line of rows) {
       const [key, ...rest] = line.split(' ');
       const value = rest.join(' ');
@@ -104,6 +139,9 @@ export function parseWorktrees(text: string) {
     return row;
   });
 }
+type Worktree = ReturnType<typeof parseWorktrees>[number];
+/** A worktree whose block named its path, as git's always does. */
+type Placed = Worktree & { path: string };
 
 /** This host, read from /proc: available memory, resident processes, and each process's working directory. */
 export const PROC_HOST = Object.freeze({
@@ -132,7 +170,7 @@ export const PROC_HOST = Object.freeze({
 });
 
 /** Stat fingerprint of the committed winners, to know when a cached compile is stale (as solver.mjs keeps it). */
-function winnersKey(root) {
+function winnersKey(root: string) {
   return winnerFiles(root)
     .map(file => { const stat = statSync(join(root, file)); return `${file}:${stat.size}:${stat.mtimeMs}`; }).join('|');
 }
@@ -143,18 +181,20 @@ function winnersKey(root) {
  * Tests replace the promotions query, the pack rows, the queue and the host; everything else is read.
  */
 export function createLab({ root: rootIn, env = process.env, now = () => new Date(), winners: winnersOverride, promotions: promotionsOverride,
-  packs: packsOverride, queue: queueOverride, host = PROC_HOST, catalogCommands = CATALOG_COMMANDS }: {root: string, env?: NodeJS.ProcessEnv, now?: () => Date, winners?: () => Map<string, string>, promotions?: () => any, packs?: () => any[], queue?: () => {jobs: any[]}, host?: typeof PROC_HOST, catalogCommands?: readonly string[]}) {
+  packs: packsOverride, queue: queueOverride, host = PROC_HOST, catalogCommands = CATALOG_COMMANDS }: {root: string, env?: NodeJS.ProcessEnv, now?: () => Date, winners?: () => Map<string, string>, promotions?: () => ReturnType<typeof queryPromotions>, packs?: () => ReturnType<typeof readPacks>, queue?: () => {jobs: QueueJob[]}, host?: typeof PROC_HOST, catalogCommands?: readonly string[]}) {
   const root = resolve(rootIn);
   const cleanEnv = withoutGit(env);
 
   // --- reading git and the host ------------------------------------------------------------------
 
-  const git = (args: string[], { cwd = root, allowFail = false }: {cwd?: string, allowFail?: boolean} = {}) => {
+  function git(args: string[], options?: { cwd?: string, allowFail?: false }): string;
+  function git(args: string[], options: { cwd?: string, allowFail: boolean }): string | null;
+  function git(args: string[], { cwd = root, allowFail = false }: { cwd?: string, allowFail?: boolean } = {}) {
     const result = spawnSync('git', args, { cwd, encoding: 'utf8', env: cleanEnv, maxBuffer: 256 * 1024 * 1024 });
     if (result.status === 0) return result.stdout;
     if (allowFail) return null;
     throw new Error(`git ${args.join(' ')}: ${(result.stderr || result.error?.message || '').trim()}`);
-  };
+  }
   const mainRoot = () => mainCheckout(root);
   const stateDir = () => (env.CUE_HELPER_STATE_DIR ? resolve(env.CUE_HELPER_STATE_DIR) : join(mainRoot(), 'captures/cue-helper'));
   const lockDir = () => (env.CUE_HELPER_LOCK_DIR ? resolve(env.CUE_HELPER_LOCK_DIR) : join(stateDir(), 'locks'));
@@ -173,18 +213,19 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
   /** The push-gate record for a commit: the last run of tools/push-gate.ts on it, or not run. */
   function pushGate(sha: string) {
     const path = runRecordPath(env, root);
-    const runs = existsSync(path) ? lines(readFileSync(path, 'utf8')).flatMap(line => {
+    // Each line as tools/push-gate.ts appended it; one that does not parse is skipped.
+    const runs: RunRecord[] = existsSync(path) ? lines(readFileSync(path, 'utf8')).flatMap(line => {
       try { return [JSON.parse(line)]; } catch { return []; }
     }).filter(run => run.sha === sha && Array.isArray(run.failed) && Array.isArray(run.skipped)) : [];
     const last = runs.at(-1);
-    if (!last) return { ran: false, record: path, command: 'npm run push-gate' };
+    if (!last) return { ran: false as const, record: path, command: 'npm run push-gate' };
     const verdict = last.failed.length ? 'FAILED' : 'PASSED';
-    return { ran: true, record: path, at: last.at, host: last.host, full: last.full, verdict, failed: last.failed, skipped: last.skipped,
+    return { ran: true as const, record: path, at: last.at, host: last.host, full: last.full, verdict, failed: last.failed, skipped: last.skipped,
       runs: runs.length, command: last.failed.length ? `npm run push-gate -- ${sha.slice(0, 7)}` : null, unverified: last.skipped };
   }
 
   function sync() {
-    const counts = ref => {
+    const counts = (ref: string) => {
       const out = git(['rev-list', '--left-right', '--count', `HEAD...${ref}`], { allowFail: true });
       if (!out) return null;
       const [ahead, behind] = out.trim().split(/\s+/).map(Number);
@@ -198,13 +239,14 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
       lastFetch: fetched ? iso(fetched) : null };
   }
 
+  // What start() wrote.
   function readSession() {
-    try { return readJson(sessionPath()); } catch { return null; }
+    try { return readJson(sessionPath()) as Session | null; } catch { return null; }
   }
 
   // --- the evidence ------------------------------------------------------------------------------
 
-  let winnersCache = null;
+  let winnersCache = null as { key: string, winners: Map<string, string> } | null;
   const winnersFn = () => {
     if (winnersOverride) return winnersOverride();
     const key = winnersKey(root);
@@ -213,19 +255,19 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
   };
   const promotionsResult = () => {
     try { return promotionsOverride ? promotionsOverride() : queryPromotions(root, { winners: winnersFn() }); } catch (error) {
-      return unknown(`the promotions query failed: ${error.message}`);
+      return unknown(`the promotions query failed: ${(error as Error).message}`);
     }
   };
   const packRows = () => {
     try { return packsOverride ? packsOverride() : readPacks(root); } catch { return []; }
   };
-  const steps = promotions => {
+  const steps = (promotions: ReturnType<typeof promotionsResult>): StepRow[] => {
     try { return stepStatus(root, { promotions, packs: packRows() }); } catch (error) {
       return STEPS.map(step => ({ id: step.id, title: step.title, closesWhen: null, needs: [...step.needs], where: step.where,
-        records: { count: 0, newest: null }, met: [], unmet: [], state: unknown(`the step query failed: ${error.message}`) }));
+        records: { count: 0, newest: null }, met: [], unmet: [], state: unknown(`the step query failed: ${(error as Error).message}`) }));
     }
   };
-  const promotionsSummary = promotions => (isUnknown(promotions) ? promotions : {
+  const promotionsSummary = (promotions: ReturnType<typeof promotionsResult>) => (isUnknown(promotions) ? promotions : {
     consistent: promotions.consistent, packs: promotions.lift.packs, gameRuns: promotions.lift.gameRuns, edges: promotions.edges.matched,
     graphEdges: promotions.edges.graph, byAttester: promotions.edges.byAttester, byCustody: promotions.edges.byCustody,
     modelOnlyWinners: promotions.open.modelOnlyWinners.winners.map(item => item.file),
@@ -235,7 +277,7 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
   /** ADRs whose status is proposed, and whether a commit carrying the owner's override has touched them since. */
   function decisions() {
     const dir = join(root, 'docs/decisions');
-    const rows = [];
+    const rows: { file: string, status: string, accepted: boolean, by: string | null }[] = [];
     for (const name of existsSync(dir) ? readdirSync(dir).filter(item => item.endsWith('.md')).sort() : []) {
       const file = `docs/decisions/${name}`;
       const status = /\*\*Status:\*\*\s*([^\n]+)/.exec(readFileSync(join(dir, name), 'utf8'))?.[1]?.trim() ?? null;
@@ -257,16 +299,17 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
     const result = spawnSync('python3', [join(root, 'apps/lab/companion-queue.py'), 'list', '--json'],
       { cwd: root, encoding: 'utf8', env: cleanEnv, timeout: 30000 });
     if (result.status !== 0) throw new Error((result.stderr || result.error?.message || 'no output').trim().split('\n').at(-1));
-    return JSON.parse(result.stdout);
+    // What companion-queue.py list --json prints.
+    return JSON.parse(result.stdout) as { jobs: QueueJob[] };
   }
 
-  function queue() {
-    let jobs;
-    try { jobs = queueJobs().jobs; } catch (error) { return unknown(`the queue could not be listed: ${error.message}`); }
+  function queue(): QueueView | Unknown {
+    let jobs: QueueJob[];
+    try { jobs = queueJobs().jobs; } catch (error) { return unknown(`the queue could not be listed: ${(error as Error).message}`); }
     const at = now();
-    const byState = {};
+    const byState: Record<string, number> = {};
     for (const job of jobs) byState[job.state] = (byState[job.state] ?? 0) + 1;
-    const age = job => (job.createdAt ? hoursBetween(new Date(job.createdAt), at) : null);
+    const age = (job: QueueJob) => (job.createdAt ? hoursBetween(new Date(job.createdAt), at) : null);
     const pending = jobs.filter(job => job.state === 'PENDING').map(job => ({ id: job.id, kind: job.kind, night: job.night ?? null,
       winner: job.winner ?? null, createdAt: job.createdAt, ageHours: age(job), stale: (age(job) ?? 0) > STALE_PENDING_HOURS }));
     const running = jobs.filter(job => job.state === 'RUNNING').map(job => ({ id: job.id, kind: job.kind, startedAt: job.startedAt ?? null }));
@@ -276,11 +319,13 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
   function leases() {
     const dir = lockDir();
     const rows = existsSync(dir) ? readdirSync(dir).filter(name => /^device-.*\.lock$/.test(name)).sort().map(name => {
-      let owner = null;
+      let owner: LockOwner | null = null;
       try { const text = readFileSync(join(dir, name), 'utf8').trim(); owner = text ? JSON.parse(text) : null; } catch { owner = null; }
-      const alive = Boolean(owner?.pid) && existsSync(`/proc/${owner.pid}`);
-      return { file: name, held: alive, pid: alive ? owner.pid : null, host: alive ? owner.host ?? null : null,
-        acquiredAt: alive && owner.acquiredAt ? iso(new Date(owner.acquiredAt * 1000)) : null };
+      const alive = Boolean(owner?.pid) && existsSync(`/proc/${owner?.pid}`);
+      // A live lease has an owner record.
+      const held = owner as LockOwner;
+      return { file: name, held: alive, pid: alive ? held.pid : null, host: alive ? held.host ?? null : null,
+        acquiredAt: alive && held.acquiredAt ? iso(new Date(held.acquiredAt * 1000)) : null };
     }) : [];
     return { dir, leases: rows, held: rows.filter(row => row.held).length,
       rule: 'a lease is held while the pid its owner record names is alive; the record is read, the lock is never taken' };
@@ -289,7 +334,8 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
   function windows() {
     const dir = windowDir();
     const records = existsSync(dir) ? readdirSync(dir).flatMap(name => {
-      try { return [{ id: name, ...readJson(join(dir, name, 'window.json')) }]; } catch { return []; }
+      // What overnight-window.py wrote.
+      try { return [{ id: name, ...(readJson(join(dir, name, 'window.json')) as WindowRecord) }]; } catch { return []; }
     }) : [];
     const rows = records.map(record => ({ id: record.id, openedAt: record.window?.openedAt ?? null, closedAt: record.window?.closedAt ?? null,
       outcome: record.outcome ?? null, reason: record.reason ?? null, summary: record.morning?.summary ?? null,
@@ -301,14 +347,14 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
 
   // --- doctor ------------------------------------------------------------------------------------
 
-  const inUse = (cwds, path) => cwds.some(cwd => cwd === path || cwd.startsWith(`${path}/`));
+  const inUse = (cwds: readonly string[], path: string) => cwds.some(cwd => cwd === path || cwd.startsWith(`${path}/`));
 
-  function catalogDrift(sha) {
+  function catalogDrift(sha: string): { ok: boolean | Unknown, files?: string[] } {
     const dir = mkdtempSync(join(tmpdir(), 'fnaf-lab-catalog-'));
     rmSync(dir, { recursive: true, force: true });
     try {
       git(['worktree', 'add', '--detach', dir, sha]);
-    } catch (error) { return { ok: unknown(`a worktree at ${sha.slice(0, 7)} could not be built: ${error.message}`) }; }
+    } catch (error) { return { ok: unknown(`a worktree at ${sha.slice(0, 7)} could not be built: ${(error as Error).message}`) }; }
     try {
       if (existsSync(join(root, 'node_modules')) && existsSync(join(root, 'package-lock.json')) && existsSync(join(dir, 'package-lock.json')))
         linkDependencies(dir, root);
@@ -326,15 +372,15 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
   }
 
   function runDoctor({ catalog = true }: {catalog?: boolean} = {}) {
-    const checks = [];
-    const findings = [];
-    const check = (id, what, ok, detail = null) => { checks.push({ id, what, ok, ...(detail ? { detail } : {}) }); };
-    const find = (id, finding, remedy) => findings.push({ id, finding, remedy });
+    const checks: Check[] = [];
+    const findings: { id: string, finding: string, remedy: string }[] = [];
+    const check = (id: string, what: string, ok: boolean | Unknown, detail: unknown = null) => { checks.push({ id, what, ok, ...(detail ? { detail } : {}) }); };
+    const find = (id: string, finding: string, remedy: string) => findings.push({ id, finding, remedy });
     const at = now();
 
     // Hooks.
     const hooksPath = git(['config', '--get', 'core.hooksPath'], { allowFail: true })?.trim() || null;
-    const hooksOk = Boolean(hooksPath) && existsSync(join(resolve(root, hooksPath), 'commit-msg'));
+    const hooksOk = !!hooksPath && existsSync(join(resolve(root, hooksPath), 'commit-msg'));
     check('hooks-path', 'core.hooksPath names the repository hooks', hooksOk, hooksPath);
     if (!hooksPath) find('hooks-path', 'core.hooksPath is unset: git runs neither the commit-msg hook nor the pre-push gate',
       'git config core.hooksPath .githooks');
@@ -351,12 +397,12 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
     }
 
     // Worktrees: push-gate's orphans, and idle agent worktrees.
-    let cwds = [];
+    let cwds: string[] = [];
     try { cwds = host.cwds(); } catch { cwds = []; }
     const worktrees = parseWorktrees(git(['worktree', 'list', '--porcelain']) ?? '');
     const base = pushGateBase();
     const gateDirs = existsSync(base) ? readdirSync(base).filter(name => name.startsWith('fnaf2-push-gate-')).map(name => join(base, name)) : [];
-    const gateRegistered = worktrees.filter(row => row.path?.startsWith(`${base}/`));
+    const gateRegistered = worktrees.filter((row): row is Placed => Boolean(row.path?.startsWith(`${base}/`)));
     const gatePaths = [...new Set([...gateDirs, ...gateRegistered.map(row => row.path)])].sort();
     const gateOrphans = gatePaths.filter(path => !inUse(cwds, path));
     check('push-gate-worktrees', `no orphaned push-gate worktree under ${base}`, gateOrphans.length === 0);
@@ -365,14 +411,16 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
       find('push-gate-worktrees', `${path} is a push-gate worktree no running process is inside`,
         registered ? (existsSync(path) ? `git worktree remove --force ${path}` : 'git worktree prune') : `rm -r ${path}`);
     }
-    const agents = worktrees.filter(row => row.path && /\/\.claude\/worktrees\/agent-[^/]+$/.test(row.path) && resolve(row.path) !== root);
-    const idle = [];
+    const agents = worktrees.filter((row): row is Placed => Boolean(row.path && /\/\.claude\/worktrees\/agent-[^/]+$/.test(row.path) && resolve(row.path) !== root));
+    const idle: { row: (typeof agents)[number], hours: number | null }[] = [];
     for (const row of agents) {
       if (row.locked) continue;
       if (row.prunable || !existsSync(row.path)) { idle.push({ row, hours: null }); continue; }
-      let admin = null;
+      let admin: string | null = null;
       try { admin = resolve(row.path, readFileSync(join(row.path, '.git'), 'utf8').trim().replace(/^gitdir:\s*/, '')); } catch { admin = null; }
-      const times = [row.path, ...(admin ? ['HEAD', 'index', 'logs/HEAD'].map(name => join(admin, name)) : [])].map(mtime).filter(Boolean);
+      const dirOf = admin;
+      const times = [row.path, ...(dirOf ? ['HEAD', 'index', 'logs/HEAD'].map(name => join(dirOf, name)) : [])].map(mtime)
+        .filter((time): time is Date => Boolean(time));
       const last = new Date(Math.max(...times.map(time => time.getTime())));
       const hours = hoursBetween(last, at);
       if (hours > AGENT_WORKTREE_IDLE_HOURS && !inUse(cwds, row.path)) idle.push({ row, hours });
@@ -407,13 +455,14 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
       const drift = catalogDrift(sha);
       check('catalog-drift', 'the generated catalogs at HEAD match what the catalog and chronicle regenerate', drift.ok,
         drift.files?.length ? drift.files : null);
-      if (drift.ok === false) find('catalog-drift', `HEAD ${sha.slice(0, 7)}'s generated catalogs are stale: ${drift.files.join(', ')}`,
+      // A drift verdict carries the files it found.
+      if (drift.ok === false) find('catalog-drift', `HEAD ${sha.slice(0, 7)}'s generated catalogs are stale: ${(drift.files as string[]).join(', ')}`,
         `${CATALOG_COMMANDS.join(' && ')}, then commit ${GENERATED_DIRS.join(' and ')}`);
     }
 
     // Memory.
-    let available = null;
-    let heavy = [];
+    let available: number | null = null;
+    let heavy: ReturnType<typeof host.processes> = [];
     try {
       available = host.availableMb();
       heavy = host.processes().filter(item => item.rssMb >= HEAVY_RSS_MB).sort((a, b) => b.rssMb - a.rssMb);
@@ -442,12 +491,12 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
 
   // --- the verbs ---------------------------------------------------------------------------------
 
-  const label = what => unknown(`${what}: the lab reads git, the committed evidence and this host, and measures nothing about a game`);
-  const badArgument = (because, remedy) => refusalEnvelope({ rule: 'invalid-argument', because, cite: [LAB_DOC], remedy });
+  const label = (what: string) => unknown(`${what}: the lab reads git, the committed evidence and this host, and measures nothing about a game`);
+  const badArgument = (because: string, remedy: string) => refusalEnvelope({ rule: 'invalid-argument', because, cite: [LAB_DOC], remedy });
 
-  function doctor({ catalog = true } = {}) {
+  function doctor({ catalog = true }: { catalog?: boolean } = {}) {
     const { checks, findings } = runDoctor({ catalog });
-    const notChecked = checks.filter(item => isUnknown(item.ok));
+    const notChecked = checks.filter((item): item is Check & { ok: Unknown } => isUnknown(item.ok));
     return claimEnvelope({
       claim: { verb: 'doctor', host: hostname(), at: iso(now()), findings, checks,
         rule: 'doctor prints each remedy and runs none; the only thing it removes is the worktree it built for the catalog check' },
@@ -469,7 +518,7 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
     if (!isUnknown(phone.queue)) delete phone.queue.jobsRaw;
     const repoSync = at ? sync() : null;
     const notMeasured = [
-      ...rows.filter(row => isUnknown(row.state)).map(row => `${row.id}: ${(row.state as any).reason}`),
+      ...rows.flatMap(row => (isUnknown(row.state) ? [`${row.id}: ${row.state.reason}`] : [])),
       'the remote since the last fetch: the lab never fetches',
       'catalog drift: status builds no worktree (npm run lab -- doctor computes it)',
       ...(isUnknown(promotions) ? [promotions.reason] : ['reliability: a promotion is one clear on the phone, not a rate']),
@@ -490,11 +539,12 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
   }
 
   /** The action a step's open conditions call for, derived from its row; never invented. */
-  function stepAction(step, row) {
+  function stepAction(step: (typeof STEPS)[number], row: StepRow) {
     if (step.id === 'S1' && row.promotions) {
-      const items = row.promotions.modelOnlyWinners.map(file => {
-        let nights = null;
-        try { nights = readJson(join(root, file)).nights; } catch { nights = null; }
+      const items: { action: string, command: string | null, items: readonly string[], because: string }[] = row.promotions.modelOnlyWinners.map(file => {
+        let nights: unknown = null;
+        // A winner file names its nights.
+        try { nights = (readJson(join(root, file)) as { nights?: unknown }).nights; } catch { nights = null; }
         const night = Array.isArray(nights) && nights.length === 1 ? nights[0] : null;
         return { action: `a packed phone run of ${file}${night ? ` (Night ${night})` : ''}`,
           command: `${QUEUE_TOOL} enqueue night --game fnaf2 --winner ${file}${night ? ` --night ${night}` : ''}`, items: [],
@@ -514,13 +564,13 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
 
   function next() {
     const { head: at, session, steps: rows, decisions: pending, doctor: health } = gather();
-    const byId = Object.fromEntries(rows.map(row => [row.id, row]));
-    const actions = [];
+    const byId: Record<string, StepRow> = Object.fromEntries(rows.map(row => [row.id, row]));
+    const actions: NextAction[] = [];
     if (session) actions.push({ kind: 'session', step: session.step, where: 'this checkout', action: `continue the open session: ${session.artifact}`,
       command: 'npm run lab -- end', because: `opened ${session.startedAt} at ${String(session.base).slice(0, 7)}` });
     for (const finding of health.findings.filter(item => ['hooks-path', 'node-modules'].includes(item.id)))
       actions.push({ kind: 'fix', step: null, where: 'this checkout', action: finding.finding, command: finding.remedy, because: 'doctor' });
-    const blocked = [];
+    const blocked: { step: string, state: string, needs: string[], because: string }[] = [];
     for (const step of [...STEPS].sort((a, b) => ORDER_OF[a.id] - ORDER_OF[b.id] || a.id.localeCompare(b.id))) {
       const row = byId[step.id];
       if (stateKey(row) === 'closed') continue;
@@ -535,7 +585,7 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
       actions.push({ kind: 'decide', step: null, where: 'Pedro', action: `${row.file} is proposed (${row.status})`, command: null,
         because: pending.rule });
     const gate = at ? pushGate(at.sha) : null;
-    if (gate && (!gate.ran || gate.verdict === 'FAILED'))
+    if (at && gate && (!gate.ran || gate.verdict === 'FAILED'))
       actions.push({ kind: 'gate', step: null, where: 'this checkout', action: gate.ran ? `push-gate failed on ${at.short}: ${gate.failed.join(', ')}`
         : `push-gate has not run on ${at.short}`, command: gate.command, because: 'CLAUDE.md: run the push gate before pushing' });
     const ranked = actions.map((item, index) => ({ rank: index + 1, ...item }));
@@ -545,7 +595,7 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
           'whose needs are closed, then pending decisions and the push gate' },
       label: label('a ranking of open work'), target: REPOSITORY_TARGET, cite: [ROADMAP, 'docs/evidence/graph.json', LAB_DOC],
       status: 'standing', supersededBy: null,
-      notMeasured: [...rows.filter(row => isUnknown(row.state)).map(row => `${row.id}: ${(row.state as any).reason}`),
+      notMeasured: [...rows.flatMap(row => (isUnknown(row.state) ? [`${row.id}: ${row.state.reason}`] : [])),
         'whether the phone is present: an enqueued night waits for the overnight window'],
       reproducer: 'npm run lab -- next',
     });
@@ -568,7 +618,8 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
     writeFileSync(sessionPath(), `${JSON.stringify(session, null, 2)}\n`);
     const register = readMistakes(root);
     const read = matchMistakes(register.entries, { step, text: artifact });
-    const stepRow = STEPS.find(item => item.id === family);
+    // family is a ROADMAP step, so STEPS holds it.
+    const stepRow = STEPS.find(item => item.id === family) as (typeof STEPS)[number];
     return claimEnvelope({
       claim: { verb: 'start', session, file: SESSION_FILE, step: { id: family, title: stepRow.title },
         mistakes: { source: register.source, read, of: register.entries.length },
@@ -585,13 +636,13 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
     if (message !== undefined && messageFile !== undefined) return badArgument('a message is given once', 'pass -m MESSAGE or -F FILE, not both');
     let text = message;
     if (messageFile !== undefined) {
-      try { text = readFileSync(resolve(messageFile), 'utf8'); } catch (error) { return badArgument(`the message file cannot be read: ${error.message}`, 'pass a readable -F FILE'); }
+      try { text = readFileSync(resolve(messageFile), 'utf8'); } catch (error) { return badArgument(`the message file cannot be read: ${(error as Error).message}`, 'pass a readable -F FILE'); }
     }
     const staged = (git(['diff', '--cached', '--name-only', '-z']) ?? '').split('\0').filter(Boolean);
     const consequence = classifyChange(staged);
     const hookPath = join(root, HOOK);
     const hooksPath = git(['config', '--get', 'core.hooksPath'], { allowFail: true })?.trim() || null;
-    let hook;
+    let hook: Unknown | { verdict: string, exitCode: number | null, output: string[], message: string, runsOnCommit: boolean, note?: string };
     if (!existsSync(hookPath)) hook = unknown(`this checkout has no ${HOOK}`);
     else {
       const dir = mkdtempSync(join(tmpdir(), 'fnaf-lab-commit-'));
@@ -632,16 +683,20 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
       return { sha: sha.slice(0, 7), subject: git(['log', '-1', '--format=%s', sha]).trim(), class: consequenceKey(result),
         because: isUnknown(result.consequence) ? result.consequence.reason : result.because, records: result.records.map(item => item.path) };
     });
-    const count = key => commits.filter(item => item.class === key).length;
+    const count = (key: string) => commits.filter(item => item.class === key).length;
     const ratio = { consequential: count('consequential'), bookkeeping: count('bookkeeping'), unknown: count('UNKNOWN') };
     const promotions = promotionsResult();
     const rows = steps(promotions);
     const family = session?.stepFamily ?? null;
     const open = rows.filter(row => stateKey(row) !== 'closed' && (!family || row.id === family))
-      .map((row: any) => ({ step: row.id, state: stateKey(row), unmet: row.unmet, alsoOpen: row.alsoOpen ?? [],
+      .map(row => ({ step: row.id, state: stateKey(row), unmet: row.unmet, alsoOpen: row.alsoOpen ?? [],
         ...(isUnknown(row.state) ? { reason: row.state.reason } : {}) }));
     const gate = at ? pushGate(at.sha) : null;
-    const claim: any = {
+    const claim: {
+      verb: 'end', session: { id: string, step: string, artifact: string } | null, base: string, head: string | null,
+      commits: typeof commits, ratio: typeof ratio, ratioText: string, records: string[], open: typeof open, uncommitted: number,
+      pushGate: typeof gate, rule: string, closed?: string,
+    } = {
       verb: 'end', session: session && !since ? { id: session.id, step: session.step, artifact: session.artifact } : null,
       base: baseSha.slice(0, 7), head: at?.short ?? null, commits, ratio, ratioText: `${ratio.consequential}:${ratio.bookkeeping}`,
       records: [...new Set(commits.flatMap(item => item.records))], open,
@@ -669,16 +724,18 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
     const at = now();
     const from = since ? new Date(since) : lastEvening(at);
     if (Number.isNaN(from.getTime())) return badArgument(`${since} is not a date`, 'pass --since as an ISO date or time');
-    const after = value => value && new Date(value).getTime() >= from.getTime();
+    const after = (value: string | null | undefined) => value && new Date(value).getTime() >= from.getTime();
     const win = windows();
     const windowRows = win.all.filter(row => after(row.openedAt));
     const jobs = queue();
-    const activity = isUnknown(jobs) ? jobs : jobs.jobsRaw.filter(job => ['createdAt', 'startedAt', 'finishedAt', 'cancelledAt'].some(key => after(job[key])))
+    // queue() returns the raw jobs; only status drops them.
+    const activity = isUnknown(jobs) ? jobs : (jobs.jobsRaw as QueueJob[])
+      .filter(job => (['createdAt', 'startedAt', 'finishedAt', 'cancelledAt'] as const).some(key => after(job[key])))
       .map(job => ({ id: job.id, kind: job.kind, state: job.state, night: job.night ?? null, winner: job.winner ?? null,
         finishedAt: job.finishedAt ?? null, result: typeof job.result === 'string' ? job.result.split('\n').filter(Boolean).at(-1) ?? null : null }));
     const tracked = new Set(lines(git(['ls-files', '--', 'docs/evidence/runs'], { allowFail: true }))
       .map(path => path.split('/')[3]).filter(Boolean));
-    const packs = new Map();
+    const packs = new Map<string, { id: string, where: string, stamp: string, outcome: unknown, nights: unknown, attested: boolean, tracked: boolean }>();
     for (const [where, dir] of [['this checkout', root], ['main checkout', mainRoot()]]) {
       const runs = join(dir, 'docs/evidence/runs');
       if (!existsSync(runs)) continue;
@@ -687,8 +744,9 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
         const packFile = join(runs, id, 'pack.json');
         const stamp = runStamp(id) ?? mtime(packFile);
         if (!stamp || stamp.getTime() < from.getTime()) continue;
-        let pack = null;
-        try { pack = readJson(packFile); } catch { pack = null; }
+        let pack: { outcome?: unknown, nights?: unknown } | null = null;
+        // A pack's own JSON.
+        try { pack = readJson(packFile) as { outcome?: unknown, nights?: unknown } | null; } catch { pack = null; }
         packs.set(id, { id, where, stamp: iso(stamp), outcome: pack?.outcome ?? null, nights: pack?.nights ?? null,
           attested: existsSync(join(runs, id, 'plan12-attestation.json')), tracked: tracked.has(id) });
       }

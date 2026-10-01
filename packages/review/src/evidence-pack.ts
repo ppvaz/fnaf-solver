@@ -339,7 +339,13 @@ export function findRunDir(root: string, campaign: string): {runDir: string, att
  * Every campaign directory a pack request names: a campaign directory itself, or a night-run
  * label whose verdict lists one campaign per attempt.
  */
-export function resolvePackTargets(root: string, id: string): {campaignDir?: string, runDir?: string | null, packId: string, fnaf1RunDir?: string, recoverFromLog?: boolean}[] {
+/** What one pack is built from: a FNaF 1 runner's night, or a campaign directory (or the night-run log it survives in). */
+type PackTarget =
+  | { readonly fnaf1RunDir: string, readonly packId: string, readonly campaignDir?: undefined }
+  | { readonly campaignDir: string, readonly runDir: string | null, readonly packId: string, readonly recoverFromLog?: boolean,
+    readonly fnaf1RunDir?: undefined };
+
+export function resolvePackTargets(root: string, id: string): PackTarget[] {
   if (!/^[\w.-]+$/.test(id)) throw new Error('a safe RUN_ID is required');
   const direct = join(root, 'artifacts', id);
   if (existsSync(join(direct, 'result.json')) || incompleteCampaign(direct)) {

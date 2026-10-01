@@ -123,7 +123,9 @@ export function validateClaimEnvelope(value: unknown): ClaimEnvelope | RefusalEn
 /**
  * A claim envelope from its eight fields, every one given; nothing is defaulted.
  */
-export const claimEnvelope = (fields: Omit<ClaimEnvelope, 'schema'>): ClaimEnvelope => (validateClaimEnvelope({ schema: CLAIM_ENVELOPE_SCHEMA, ...fields }) as ClaimEnvelope);
+// The envelope holds the claim object it was given, so its claim keeps that object's type.
+export const claimEnvelope = <C = unknown>(fields: Omit<ClaimEnvelope, 'schema' | 'claim'> & { readonly claim: C }): ClaimEnvelope & { readonly claim: C } =>
+  (validateClaimEnvelope({ schema: CLAIM_ENVELOPE_SCHEMA, ...fields }) as ClaimEnvelope & { readonly claim: C });
 
 /**
  * A refusal: the rule, because what, where the rule is written, and the remedy.

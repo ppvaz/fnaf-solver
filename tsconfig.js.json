@@ -13,8 +13,7 @@
     "packages/propose/parked/minus7/index.ts",
     "packages/propose/parked/minus7/manifest.ts",
     "packages/propose/parked/minus7/model.ts",
-    "packages/propose/parked/minus7/route.ts",
-    "apps/desktop/src/**/*.ts"
+    "packages/propose/parked/minus7/route.ts"
   ],
-  "exclude": ["node_modules", "dist", "artifacts", "apps/desktop/src/evidence.ts"]
+  "exclude": ["node_modules", "dist", "artifacts"]
 }

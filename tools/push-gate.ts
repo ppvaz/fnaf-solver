@@ -43,7 +43,12 @@ const ZERO = /^0+$/;
 // ruled that iteration time outranks re-running censuses that no ordinary
 // commit changes. CI still runs every lane; `npm run push-gate -- --full`
 // runs them all here.
-export const LANES = [
+/** A CI lane the gate mirrors: a command, or the ShellCheck lane whose script is ci.yml's own `run: |` block. */
+type Lane =
+  | { readonly name: string, readonly run: string, readonly heavy?: boolean, readonly needs?: string, readonly multiline?: false }
+  | { readonly name: string, readonly multiline: true, readonly heavy?: boolean, readonly needs?: string };
+
+export const LANES: readonly Lane[] = [
   { name: 'Type and architecture contracts', run: 'npm run typecheck && npm run test:unit && npm run test:contracts' },
   { name: 'Slow census gates', run: 'npm run test:unit:slow', heavy: true },
   { name: 'Clean-checkout model lane', run: 'npm run test:core' },
@@ -59,13 +64,13 @@ export const LANES = [
 // --- The gate must stay the job it claims to mirror ------------------------
 
 /** Read `- name:` / `run:` pairs out of the CI job, without a YAML parser. */
-function ciSteps(dir) {
+function ciSteps(dir: string) {
   const lines = readFileSync(join(dir, '.github/workflows/ci.yml'), 'utf8').split('\n');
-  const steps = [];
+  const steps: { name: string, run: string | null }[] = [];
   for (let i = 0; i < lines.length; i += 1) {
     const named = lines[i].match(/^\s*- name:\s*(.+?)\s*$/);
     if (!named) continue;
-    let run = null;
+    let run: string | null = null;
     for (let j = i + 1; j < lines.length && !/^\s*- /.test(lines[j]); j += 1) {
       const single = lines[j].match(/^\s*run:\s*(.+?)\s*$/);
       if (single) { run = single[1] === '|' ? null : single[1]; break; }
@@ -75,9 +80,9 @@ function ciSteps(dir) {
   return steps;
 }
 
-function laneDrift(dir) {
+function laneDrift(dir: string) {
   const steps = ciSteps(dir).filter(step => !/^(Fixture rendering (dependency|and video dependencies)|Install the pinned workspace toolchain)$/.test(step.name));
-  const drift = [];
+  const drift: string[] = [];
   const ciNames = steps.map(step => step.name);
   const laneNames = LANES.map(lane => lane.name);
   if (ciNames.join('\n') !== laneNames.join('\n'))
@@ -92,12 +97,13 @@ function laneDrift(dir) {
 }
 
 /** The ShellCheck lane's script, taken verbatim from the `run: |` block. */
-function shellcheckScript(dir) {
+function shellcheckScript(dir: string) {
   const lines = readFileSync(join(dir, '.github/workflows/ci.yml'), 'utf8').split('\n');
   const at = lines.findIndex(line => /- name:\s*ShellCheck critical diagnostics\s*$/.test(line));
   const start = lines.findIndex((line, index) => index > at && /^\s*run:\s*\|\s*$/.test(line));
-  const body = [];
-  const indent = lines[start + 1].match(/^\s*/)[0];
+  const body: string[] = [];
+  // /^\s*/ matches every line, if only the empty string.
+  const indent = (lines[start + 1].match(/^\s*/) as RegExpMatchArray)[0];
   for (let i = start + 1; i < lines.length && (lines[i].startsWith(indent) || !lines[i].trim()); i += 1)
     body.push(lines[i].slice(indent.length));
   return body.join('\n').trim();
@@ -111,7 +117,7 @@ function shellcheckScript(dir) {
  * wholesale makes `@sixam/core` resolve back to the working tree, so the
  * gate would type-check and test the code it was built to ignore.
  */
-export function linkDependencies(worktree, root = ROOT) {
+export function linkDependencies(worktree: string, root = ROOT) {
   // The lockfile is what `npm ci` installs from, so an identical lockfile means
   // an identical tree and the existing one can be linked. `package.json` is not
   // the test: it changes whenever a script is added, and reinstalling for that
@@ -152,17 +158,17 @@ export function linkDependencies(worktree, root = ROOT) {
 const CI_PYTHON = process.env.FNAF2_CI_PYTHON ?? join(homedir(), '.cache/fnaf2-ci-py312/bin/python3');
 
 /** The Python version and exact pip pins ci.yml gives the runner. */
-function ciPythonSpec(dir) {
+function ciPythonSpec(dir: string) {
   const text = readFileSync(join(dir, '.github/workflows/ci.yml'), 'utf8');
   const version = text.match(/python-version:\s*'([\d.]+)'/)?.[1] ?? null;
-  const pins = {};
+  const pins: Record<string, string> = {};
   for (const line of text.split('\n').filter(l => /pip install/.test(l)))
     for (const m of line.matchAll(/'([A-Za-z0-9_.-]+)==([^']+)'/g)) pins[m[1].toLowerCase()] = m[2];
   return { version, pins };
 }
 
 /** { env } running the lanes on the CI-like interpreter, or { why } it cannot be trusted. */
-function ciPythonEnv(dir) {
+function ciPythonEnv(dir: string) {
   const { version, pins } = ciPythonSpec(dir);
   const build = `build it: micromamba create -p ~/.cache/fnaf2-ci-py312 -c conda-forge python=${version} pip, then pip install ${Object.entries(pins).map(([n, v]) => `'${n}==${v}'`).join(' ')} (or set FNAF2_CI_PYTHON)`;
   if (!existsSync(CI_PYTHON)) return { why: `no CI-like Python at ${CI_PYTHON}; ${build}` };
@@ -212,7 +218,7 @@ export function laneCommand(command: string, { memoryMax = MEMORY_MAX, scoped = 
   return `systemd-run --user --scope -q -p MemoryMax=${memoryMax} -p MemorySwapMax=4G -- sh -c ${shellQuote(command)}`;
 }
 
-function run(command, cwd, { live = false } = {}) {
+function run(command: string, cwd: string, { live = false } = {}) {
   // A live lane streams its stdout (ShellCheck's findings appear as they are
   // produced) but its stderr is CAPTURED, because that is where a runner's own
   // refusal lands -- docker's `mounts denied`, a missing binary -- and a lane
@@ -230,7 +236,7 @@ function run(command, cwd, { live = false } = {}) {
 
 // The scripts of the CHECKOUT being validated, not of the working tree: a
 // pushed commit may have redefined the very chain the lane runs.
-let SCRIPTS = {};
+let SCRIPTS: Record<string, string> = {};
 
 /**
  * The commands a failing command is made of, or null when it is a leaf. An
@@ -238,7 +244,7 @@ let SCRIPTS = {};
  * test file: `test:contracts` is a forty-command `&&` chain, and naming it as
  * one failure is the reporting CI already gives.
  */
-function expand(command, depth) {
+function expand(command: string, depth: number) {
   if (depth <= 0) return null;
   const parts = command.split(' && ').filter(Boolean);
   if (parts.length > 1) return parts;
@@ -251,7 +257,7 @@ function expand(command, depth) {
  * Long chains print their failures only: forty passing lines bury the two that
  * matter, and the count line still says nothing was skipped.
  */
-function diagnose(command, worktree, indent, depth) {
+function diagnose(command: string, worktree: string, indent: string, depth: number) {
   const result = run(command, worktree);
   if (result.status === 0) return true;
   const children = expand(command, depth);
@@ -262,7 +268,7 @@ function diagnose(command, worktree, indent, depth) {
   return false;
 }
 
-function walk(children, worktree, indent, depth) {
+function walk(children: readonly string[], worktree: string, indent: string, depth: number) {
   let passed = 0;
   for (const child of children) {
     if (diagnose(child, worktree, indent, depth)) {
@@ -274,7 +280,7 @@ function walk(children, worktree, indent, depth) {
 }
 
 /** A lane already ran, so open it up rather than paying for it a second time. */
-function reportLane(command, worktree, result, depth) {
+function reportLane(command: string, worktree: string, result: { status: number | null, output: string }, depth: number) {
   const children = expand(command, depth);
   if (!children) {
     for (const line of result.output.trimEnd().split('\n').slice(-25))
@@ -309,7 +315,7 @@ function worktreeBase() {
   catch { return tmpdir(); }
 }
 
-function validate(sha, subject) {
+function validate(sha: string, subject: string) {
   const worktree = mkdtempSync(join(worktreeBase(), 'fnaf2-push-gate-'));
   rmSync(worktree, { recursive: true, force: true });
   execFileSync('git', ['worktree', 'add', '--detach', worktree, sha], { cwd: ROOT, stdio: ['ignore', 'ignore', 'pipe'] });
@@ -438,7 +444,7 @@ export function recordRun({ sha, full, failed, skipped, at = new Date() }: {sha:
 function commitsFromStdin() {
   let input = '';
   try { input = readFileSync(0, 'utf8'); } catch { input = ''; }
-  const shas = [];
+  const shas: string[] = [];
   for (const line of input.split('\n')) {
     const [, localSha] = line.split(/\s+/);
     if (localSha && !ZERO.test(localSha) && !shas.includes(localSha)) shas.push(localSha);
@@ -469,7 +475,7 @@ if (invoked) {
     const subject = execFileSync('git', ['log', '-1', '--format=%s', sha], { cwd: ROOT, encoding: 'utf8' }).trim();
     const { failed, skipped } = validate(sha, subject);
     try { recordRun({ sha, full: FULL, failed, skipped }); } catch (error) {
-      console.log(`push-gate: the run record was not written (${error.message}); the verdict below stands`);
+      console.log(`push-gate: the run record was not written (${(error as Error).message}); the verdict below stands`);
     }
     broken.push(...failed.map(name => ({ sha, name })));
     notRun.push(...skipped);

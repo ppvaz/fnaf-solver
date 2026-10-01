@@ -186,7 +186,7 @@ function validateMechanics(mechanics: unknown) {
 /** Construct a reviewed campaign over any consecutive story-night chain. */
 export function makeCampaignSpec({ profile, targetBuild, maxAttempts = 3,
   night6MenuTarget = 'sixthNight', timingByNight = {}, nights = [...DEFAULT_CAMPAIGN_NIGHTS],
-  storyStart = undefined, storySaveCursor = undefined, night7Dials = undefined, mechanics = undefined }: {profile?: string, targetBuild?: string, maxAttempts?: number, night6MenuTarget?: string, timingByNight?: Readonly<Record<string, NightTiming>>, nights?: readonly number[], storyStart?: string, storySaveCursor?: number, night7Dials?: Dials, mechanics?: {readonly requires: readonly string[], readonly forbidden: readonly string[]}} = {}) {
+  storyStart = undefined, storySaveCursor = undefined, night7Dials = undefined, mechanics = undefined }: {profile?: string, targetBuild?: string, maxAttempts?: number, night6MenuTarget?: string, timingByNight?: Readonly<Record<string, NightTiming>>, nights?: readonly number[], storyStart?: string, storySaveCursor?: number, night7Dials?: unknown, mechanics?: {readonly requires: readonly string[], readonly forbidden: readonly string[]}} = {}) {
   text(profile, 'profile');
   text(targetBuild, 'targetBuild');
   if (!['continue', 'sixthNight'].includes(night6MenuTarget))
@@ -213,7 +213,8 @@ export function makeCampaignSpec({ profile, targetBuild, maxAttempts = 3,
       storySaveCursor !== storyNights[0]))
     fail('storySaveCursor must equal the first story night of the chain');
   if (!isRecord(timingByNight)) fail('timingByNight must be an object');
-  const dials = night7Dials ? { ...night7Dials }
+  // An object of the AI dials, checked above.
+  const dials = night7Dials ? { ...(night7Dials as Dials) }
     : Object.fromEntries(AI_DIALS.map(dial => [dial, AI_10_20]));
   const timing = (night: number) => timingByNight[String(night)] ??
     { periodMs: 10000, loopStartMs: 0, stopAtMs: 420000, observeUntilMs: 420000, idleUntilMs: 0 };

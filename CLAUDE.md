@@ -155,8 +155,8 @@ longer rebuilds.
   area: an area without a `typeDebt` entry in `tools/quality-baseline.json`
   carries none (`packages/kernel/src`, `packages/source/src`,
   `packages/play/src`, `packages/propose/src`, `packages/review/src`,
-  `apps/wiki` with its test, `apps/trainer/src` and `packages/kernel/test`
-  so far), and the others only shrink.
+  `apps/wiki` with its test, `apps/trainer/src`, `apps/desktop/src` and
+  `packages/kernel/test` so far), and the others only shrink.
   The pass that wrote `any` to get there (`tools/ts-strict.ts`, 7a8393f0) is retired.
 - A validator takes `unknown`, narrows it with the kernel's guards (`isRecord`,
   `isList`, `isOneOf`, `isText`, `fail(): never`, `@sixam/kernel` labels) and
@@ -167,6 +167,9 @@ longer rebuilds.
   counted per area by `tools/test-python-types.ts` against `pythonTypes`. Host
   shell scripts are ported to TypeScript one at a time (their dry runs
   characterized and compared); seedpin moves into the Companion.
+- A union narrows on `kind` only where every member's `kind` is a literal: an
+  inferred return widens `kind: 'x'` to `string` (write `'x' as const`), and
+  one member typed `string` absorbs the others' literals.
 - A `let` that only a callback assigns is narrowed to its initializer: declare
   it `let x = null as T | null`, or every later read is `null` (or `never`) to
   the checker.

@@ -398,14 +398,14 @@ export class AdbDeviceBridge {
       { timeoutMs: Math.min(this.timeoutMs, 5000) });
     const afterMonoMs = Number(process.hrtime.bigint()) / 1e6;
     if (!result.ok) return {
-      schema: UPTIME_SAMPLE_SCHEMA, status: 'HOLD', serial: selectedSerial,
+      schema: UPTIME_SAMPLE_SCHEMA, status: 'HOLD' as const, serial: selectedSerial,
       reason: 'device-uptime-unavailable', detail: result.stderr,
     };
     const [uptimeText, bootText] = String(result.stdout).trim().split(/\r?\n/);
     const uptimeMatch = uptimeText?.match(/^(\d+)\.(\d{2})\s/);
     const bootId = bootText?.match(/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/)?.[0];
     if (!uptimeMatch || !bootId) return {
-      schema: UPTIME_SAMPLE_SCHEMA, status: 'HOLD', serial: selectedSerial,
+      schema: UPTIME_SAMPLE_SCHEMA, status: 'HOLD' as const, serial: selectedSerial,
       reason: 'device-uptime-unparseable', detail: String(result.stdout).trim().slice(0, 200),
     };
     const sourceMs = Number(uptimeMatch[1]) * 1000 + Number(uptimeMatch[2]) * 10;

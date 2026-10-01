@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 /** Inspect retained session/result bundles without re-entering measurements. */
 import { createHash } from 'node:crypto';
-import { existsSync } from 'node:fs';
+import { type Dirent, existsSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { canonicalJson, stableHash, validateArtifactRef } from '@sixam/kernel/contracts';
+import { isRecord } from '@sixam/kernel';
+import { type SessionManifest, canonicalJson, stableHash, validateArtifactRef } from '@sixam/kernel/contracts';
 import { validateManifest } from '@sixam/kernel/contracts';
-import { replayModelResult } from '@sixam/propose/experiment';
+import { type ModelExperimentSpec, replayModelResult } from '@sixam/propose/experiment';
 import { BUNDLE_SCHEMA, validateBundle } from '../../../packages/propose/bin/plans/bundle.ts';
 import { isCampaignResult, campaignEntry, campaignPromotionChecks } from '@sixam/review/evidence-campaign';
 import { PACKS_DIR, resolvePackTargets, buildPack, buildFnaf1Pack, writePack, readPack, packPromotionChecks,
@@ -36,8 +37,26 @@ const help = () => console.log('Usage: npm run evidence -- <list|show|replay|why
   + '       npm run evidence -- recovery-check    (does run/campaign.log reproduce the campaigns still on disk?)\n'
   + '       npm run evidence -- cohort <PREDECLARATION.json> [--prefix LABEL_PREFIX]');
 
+/** A session's result.json, as load() checks it. */
+interface SessionResult {
+  readonly schema: string, readonly evidenceId: string, readonly claimLevel: string, readonly outcome: string,
+  readonly resultHash?: unknown, readonly specHash?: unknown, readonly profile?: unknown,
+}
+/** What loadAny read: a session, a compiled device bundle, a campaign directory, or a committed pack. */
+type Loaded =
+  | (Awaited<ReturnType<typeof load>> & { readonly kind: 'session', readonly packed?: undefined })
+  | (Awaited<ReturnType<typeof loadDeviceBundle>> & { readonly packed?: undefined })
+  | (Awaited<ReturnType<typeof loadCampaign>> & { readonly packed?: undefined })
+  | ReturnType<typeof loadPack>;
+/** A campaign directory or a pack: the records diff and why compare file by file. */
+type Held = Extract<Loaded, { readonly kind: 'device-campaign' | 'fnaf1-run' }>;
+type Place = ReturnType<typeof holder>;
+
+/** A field of a JSON value: `value?.[key]`, read only off an object. */
+const field = (value: unknown, key: string) => (isRecord(value) ? value[key] : undefined);
+
 /** The value after a flag, or null. */
-const flag = name => {
+const flag = (name: string) => {
   const at = process.argv.indexOf(name);
   if (at < 0) return null;
   const value = process.argv[at + 1];
@@ -49,33 +68,33 @@ const flag = name => {
 const envelope = process.argv.includes('--envelope');
 
 /** What a shown record is about, where it was read, and its own claim level. */
-function showTarget(id, loaded) {
+function showTarget(id: string, loaded: Loaded) {
   if (loaded.packed) {
     const where = `${PACKS_DIR}/${id}/pack.json`;
     if (loaded.kind === 'fnaf1-run') {
-      const pkg = loaded.packed.pack.target?.package;
+      const pkg = field(loaded.packed.pack.target, 'package');
       return { target: typeof pkg === 'string' && /^com\.scottgames\.[a-z0-9]+$/.test(pkg) ? pkg
-        : { kind: 'UNKNOWN', reason: `${where} names no target package` }, source: where, claimLevel: loaded.entry.claimLevel };
+        : { kind: 'UNKNOWN' as const, reason: `${where} names no target package` }, source: where, claimLevel: loaded.entry.claimLevel };
     }
     return { target: FNAF2, source: where, claimLevel: loaded.entry.claimLevel };
   }
   const source = `artifacts/${id}`;
   if (loaded.kind === 'device-campaign') return { target: FNAF2, source, claimLevel: loaded.entry.claimLevel };
-  if (loaded.kind === 'session') return { target: { kind: 'UNKNOWN', reason: 'a session result names no game package' }, source,
+  if (loaded.kind === 'session') return { target: { kind: 'UNKNOWN' as const, reason: 'a session result names no game package' }, source,
     claimLevel: loaded.result.claimLevel };
-  return { target: FNAF2, source, claimLevel: loaded.bundle?.manifest?.gate?.claimLevel ?? 'MODEL_ONLY' };
+  return { target: FNAF2, source, claimLevel: field(loaded.bundle.manifest.gate, 'claimLevel') ?? 'MODEL_ONLY' };
 }
 
 /** Who attested a pack and whether the attestation binds it: printed by list, show and promote. */
-const attestationView = packed => {
+const attestationView = (packed: ReturnType<typeof readPack>) => {
   if (!packed.attestation) return { attestedBy: null, valid: false, reason: 'no attestation' };
   const status = attestationStatus(packed.attestation, packed.digest);
-  return { attestedBy: status.by, author: packed.attestation.attestedBy ?? null,
-    date: packed.attestation.date ?? packed.attestation.at ?? null, schema: packed.attestation.schema,
+  return { attestedBy: status.by, author: field(packed.attestation, 'attestedBy') ?? null,
+    date: field(packed.attestation, 'date') ?? field(packed.attestation, 'at') ?? null, schema: field(packed.attestation, 'schema'),
     valid: status.valid, reason: status.reason };
 };
 
-async function readVerifiedArtifact(base, ref) {
+async function readVerifiedArtifact(base: string, ref: unknown) {
   const artifact = validateArtifactRef(ref);
   if (typeof artifact.locator !== 'string' || artifact.locator.startsWith('/') ||
       artifact.locator.split('/').some(part => part === '..'))
@@ -86,7 +105,7 @@ async function readVerifiedArtifact(base, ref) {
   return text;
 }
 
-async function load(run) {
+async function load(run: string): Promise<{ result: SessionResult, manifest: SessionManifest, spec: unknown }> {
   if (!run || !/^[\w-]+$/.test(run)) throw new Error('a safe RUN_ID is required');
   const base = join(ARTIFACTS, run);
   const result = JSON.parse(await readFile(join(base, 'result.json'), 'utf8'));
@@ -126,42 +145,43 @@ async function load(run) {
   return { result, manifest, spec };
 }
 
-async function loadDeviceBundle(run) {
+async function loadDeviceBundle(run: string) {
   if (!run || !/^[\w-]+$/.test(run)) throw new Error('a safe RUN_ID is required');
   const base = join(ARTIFACTS, run);
   const manifest = JSON.parse(await readFile(join(base, 'manifest.json'), 'utf8'));
   if (manifest.schema !== BUNDLE_SCHEMA) throw new Error('not a device bundle');
-  return { bundle: validateBundle(base), kind: 'device-bundle' };
+  return { bundle: validateBundle(base), kind: 'device-bundle' as const };
 }
 
-async function loadCampaign(run) {
+async function loadCampaign(run: string) {
   const base = join(ARTIFACTS, run);
   const wrapper = JSON.parse(await readFile(join(base, 'result.json'), 'utf8'));
   if (!isCampaignResult(wrapper)) throw new Error('not a device campaign result');
-  return { kind: 'device-campaign', entry: campaignEntry(run, wrapper), wrapper, files: await readdir(base) };
+  return { kind: 'device-campaign' as const, entry: campaignEntry(run, wrapper), wrapper, files: await readdir(base) };
 }
 
 // A committed run pack (packages/review/src/evidence-pack.ts): the same campaign facts, verified against
 // the pack's own hashes, readable on any checkout.
-function loadPack(run) {
+function loadPack(run: string) {
   if (!run || !/^[\w.-]+$/.test(run)) throw new Error('a safe RUN_ID is required');
   if (!existsSync(join(PACKS, run, 'pack.json'))) throw new Error(`${PACKS_DIR}/${run} holds no pack.json`);
   const packed = readPack(join(PACKS, run));
   if (packed.pack.kind === 'fnaf1-run')
-    return { kind: 'fnaf1-run', entry: { id: run, kind: 'fnaf1-run', outcome: packed.pack.outcome?.ended ?? null,
-      claimLevel: packed.pack.claimLevel, status: packed.pack.status }, files: packed.files, packed };
-  return { kind: 'device-campaign', entry: packEntry(run, packed), wrapper: packed.wrapper,
+    return { kind: 'fnaf1-run' as const, entry: { id: run, kind: 'fnaf1-run', outcome: field(packed.pack.outcome, 'ended') ?? null,
+      claimLevel: packed.pack.claimLevel, status: packed.pack.status } as { id: string, kind: 'fnaf1-run', outcome: unknown,
+      claimLevel: unknown, status: unknown, nights?: undefined }, files: packed.files, packed };
+  return { kind: 'device-campaign' as const, entry: packEntry(run, packed), wrapper: packed.wrapper,
     files: packed.files, packed };
 }
 
 /** The directories under `base`, or none when it does not exist. */
-const directories = async base => {
+const directories = async (base: string) => {
   try { return (await readdir(base, { withFileTypes: true })).filter(item => item.isDirectory()).map(item => item.name); }
   catch { return []; }
 };
 
 /** Levenshtein distance: the typo a suggestion is ranked by. */
-function editDistance(a, b) {
+function editDistance(a: string, b: string) {
   let previous = Array.from({ length: b.length + 1 }, (_, j) => j);
   for (let i = 1; i <= a.length; i += 1) {
     const current = [i];
@@ -192,13 +212,13 @@ async function unknownRun(run: string, { packsOnly = false }: {packsOnly?: boole
  * committed pack docs/evidence/runs/<run>, so every reading works on a clean checkout. An id
  * that names neither is refused with the nearest ids, never with a raw ENOENT.
  */
-async function loadAny(run) {
+async function loadAny(run: string): Promise<Loaded> {
   if (!run || !/^[\w.-]+$/.test(run) || run.startsWith('.')) throw new Error('a safe RUN_ID is required');
   const local = existsSync(join(ARTIFACTS, run));
   const packed = existsSync(join(PACKS, run));
   if (!local && !packed) throw await unknownRun(run);
   if (local) {
-    try { return { ...(await load(run)), kind: 'session' }; }
+    try { return { ...(await load(run)), kind: 'session' as const }; }
     catch (sessionError) {
       try { return await loadDeviceBundle(run); } catch { /* not a bundle: a campaign? */ }
       try { return await loadCampaign(run); } catch { /* not a campaign: the pack, if one exists */ }
@@ -208,34 +228,34 @@ async function loadAny(run) {
   return loadPack(run);
 }
 
-const sha256 = data => createHash('sha256').update(data).digest('hex');
+const sha256 = (data: string | Buffer) => createHash('sha256').update(data).digest('hex');
 // What a campaign directory writes (packages/review/src/evidence-pack.ts packs the same four).
 const CAMPAIGN_FILES = ['result.json', 'events.jsonl', 'request.json', 'observations.jsonl'];
 
 /** Where a loaded campaign or pack keeps its text, and what its custody lost. */
-const holder = (run, loaded) => loaded.packed
+const holder = (run: string, loaded: Held) => loaded.packed
   ? { source: 'pack', dir: join(PACKS, run), where: `${PACKS_DIR}/${run}`, custody: packCustody(loaded.packed.pack) }
   : { source: 'artifacts', dir: join(ARTIFACTS, run), where: `artifacts/${run}`, custody: null };
 
 /** Why a campaign or pack lacks `name`, in words: lost with its custody, or never there. */
-function lacking(place, name) {
-  const lost = place.custody?.lost ?? [];
+function lacking(place: Place, name: string) {
+  const lost: readonly string[] = place.custody?.lost ?? [];
   return lost.includes(name)
-    ? `${place.where} holds no ${name}: its custody (${place.custody.kind}) lists it as lost (lost: ${lost.join(', ')})`
+    ? `${place.where} holds no ${name}: its custody (${place.custody?.kind}) lists it as lost (lost: ${lost.join(', ')})`
     : `${place.where} holds no ${name}`;
 }
 
 /** A campaign's or pack's text files by the sha256 of the bytes it holds. */
-async function heldFiles(place, loaded) {
+async function heldFiles(place: Place, loaded: Held) {
   if (loaded.packed) return new Map(loaded.packed.pack.files.map(file => [file.name, file.sha256]));
-  const held = new Map();
+  const held = new Map<string, string>();
   for (const name of loaded.files.filter(item => CAMPAIGN_FILES.includes(item)).sort())
     held.set(name, sha256(await readFile(join(place.dir, name))));
   return held;
 }
 
 /** The facts two campaigns or packs are compared on, beside their files. */
-function sideView(run, loaded, place) {
+function sideView(run: string, loaded: Held, place: Place) {
   return { source: place.source, kind: loaded.kind, outcome: loaded.entry.outcome ?? null,
     claimLevel: loaded.entry.claimLevel ?? null, nights: loaded.entry.nights ?? null,
     ...(loaded.packed ? { packSha256: loaded.packed.digest, winnerHash: loaded.packed.pack.bundle?.winnerHash ?? null,
@@ -243,15 +263,15 @@ function sideView(run, loaded, place) {
 }
 
 /** Everything one side cannot be compared on: what its pack lost, or a campaign file never written. */
-function unavailable(place, loaded, held) {
+function unavailable(place: Place, loaded: Held, held: Map<string, string>) {
   const { lost } = place.custody ?? { lost: CAMPAIGN_FILES.filter(name => !held.has(name)) };
   if (!lost.length) return [];
-  return [loaded.packed ? `${place.where} lost ${lost.join(', ')} (custody ${place.custody.kind}); not compared`
+  return [loaded.packed ? `${place.where} lost ${lost.join(', ')} (custody ${place.custody?.kind}); not compared`
     : `${place.where} holds no ${lost.join(', ')}; not compared`];
 }
 
 async function list() {
-  let entries = [];
+  let entries: Dirent[] = [];
   try { entries = await readdir(ARTIFACTS, { withFileTypes: true }); } catch { /* no runs is a valid clean checkout */ }
   const runs = [];
   for (const entry of entries.filter(item => item.isDirectory()).sort((a, b) => a.name.localeCompare(b.name))) {
@@ -272,7 +292,7 @@ async function list() {
       if (isCampaignResult(result)) {
         try { runs.push(campaignEntry(entry.name, result)); }
         catch (error) {
-          runs.push({ id: entry.name, kind: 'device-campaign', outcome: 'INVALID_CAMPAIGN', reason: error.message });
+          runs.push({ id: entry.name, kind: 'device-campaign', outcome: 'INVALID_CAMPAIGN', reason: (error as Error).message });
         }
         continue;
       }
@@ -283,11 +303,11 @@ async function list() {
         try {
           const bundle = validateBundle(base);
           runs.push({ id: entry.name, kind: 'device-bundle', outcome: 'READY',
-            claimLevel: bundle.manifest.gate?.claimLevel ?? 'MODEL_ONLY',
+            claimLevel: field(bundle.manifest.gate, 'claimLevel') ?? 'MODEL_ONLY',
             profile: bundle.profile.id });
         } catch (error) {
           runs.push({ id: entry.name, kind: 'device-bundle', outcome: 'INVALID_BUNDLE',
-            reason: error.message });
+            reason: (error as Error).message });
         }
       } else {
         // Historical manifests are retained for diagnosis, but are not runtime
@@ -304,7 +324,7 @@ async function list() {
       runs.push({ id: entry.name, kind: 'unindexed', outcome: 'UNRECOGNIZED_ARTIFACT' });
     }
   }
-  let packs = [];
+  let packs: Dirent[] = [];
   try { packs = await readdir(PACKS, { withFileTypes: true }); } catch { /* no packs committed yet */ }
   const graph = readGraph(ROOT);
   for (const pack of packs.filter(item => item.isDirectory()).sort((a, b) => a.name.localeCompare(b.name))) {
@@ -314,38 +334,46 @@ async function list() {
       const edge = promotionEdgeFor(graph, pack.name);
       runs.push({ ...entry, source: 'pack', campaign: packed.pack.campaign, packSha256: packed.digest,
         custody: packCustody(packed.pack), attestedBy: view.attestedBy, attestation: packed.attestation ? (view.valid ? 'VALID' : `INVALID: ${view.reason}`) : null,
-        promoted: Boolean(edge && edge.packSha256 === packed.digest) ? edge.from : null });
+        promoted: edge && edge.packSha256 === packed.digest ? edge.from : null });
     } catch (error) {
-      runs.push({ id: pack.name, kind: 'run-pack', outcome: 'INVALID_PACK', reason: error.message });
+      runs.push({ id: pack.name, kind: 'run-pack', outcome: 'INVALID_PACK', reason: (error as Error).message });
     }
   }
   console.log(JSON.stringify({ schema: 'evidence-index-v1', runs }, null, 2));
 }
 
 // Build a frame-free run pack for every campaign the id names and write it under PACKS_DIR.
-function pack(id, { replace = false, timeline = null } = {}) {
+function pack(id: string, { replace = false, timeline = null }: { replace?: boolean, timeline?: string | null } = {}) {
   const targets = resolvePackTargets(ROOT, id);
   if (timeline && targets.length !== 1) throw new Error('--timeline names one run; this id packs several campaigns');
   const results = targets.map(target => {
-    const built = target.fnaf1RunDir ? buildFnaf1Pack({ root: ROOT, home: homedir(), ...target })
+    const built = target.fnaf1RunDir !== undefined ? buildFnaf1Pack({ root: ROOT, home: homedir(), ...target })
       : buildPack({ root: ROOT, home: homedir(), ...target, timeline });
     const status = writePack(join(PACKS, target.packId), built, { replace });
-    const { pack: made } = built;
+    // A FNaF 1 pack names no nights, bundle or custody: each reads as undefined.
+    const made: typeof built.pack & { readonly nights?: unknown, readonly bundle?: { readonly winnerHash: string | null } | null,
+      readonly custody?: unknown } = built.pack;
     const redactions = made.files.reduce((sum, file) => ({
       paths: sum.paths + file.redactions.paths, pixelArrays: sum.pixelArrays + file.redactions.pixelArrays,
       frameRefs: sum.frameRefs + file.redactions.frameRefs }), { paths: 0, pixelArrays: 0, frameRefs: 0 });
     return { id: made.id, status, dir: `${PACKS_DIR}/${made.id}`, outcome: made.outcome, claimLevel: made.claimLevel,
-      nights: (made as any).nights, files: made.files.length, bytes: made.files.reduce((sum, file) => sum + file.bytes, 0),
+      nights: made.nights, files: made.files.length, bytes: made.files.reduce((sum, file) => sum + file.bytes, 0),
       withheld: made.withheld.length, withheldBytes: made.withheld.reduce((sum, item) => sum + (item.bytes ?? 0), 0),
-      redactions, winnerHash: (made as any).bundle?.winnerHash ?? null, ...((made as any).custody ? { custody: (made as any).custody } : {}),
-      winnerCommitted: Boolean((made as any).bundle?.winnerHash && trackedWinners(ROOT).has((made as any).bundle.winnerHash)) };
+      redactions, winnerHash: made.bundle?.winnerHash ?? null, ...(made.custody ? { custody: made.custody } : {}),
+      winnerCommitted: Boolean(made.bundle?.winnerHash && trackedWinners(ROOT).has(made.bundle.winnerHash)) };
   });
   console.log(JSON.stringify({ schema: 'run-pack-result-v1', packs: results }, null, 2));
 }
 
-const stable = value => canonicalJson(value);
+const stable = (value: unknown) => canonicalJson(value);
 
-async function main([operation = 'help', first, second]) {
+/** Each side of a diff is a campaign directory or a pack, or the diff is refused. */
+function assertHeld(id: string, loaded: Loaded): asserts loaded is Held {
+  if (!['device-campaign', 'fnaf1-run'].includes(loaded.kind))
+    throw new Error(`diff compares two sessions, or two campaigns or packs; ${id} is a ${loaded.kind}`);
+}
+
+async function main([operation = 'help', first, second]: string[]) {
   if (operation === 'help' || operation === '--help') return help();
   if (operation === 'list') return list();
   if (operation === 'pack') {
@@ -368,12 +396,13 @@ async function main([operation = 'help', first, second]) {
       throw await unknownRun(first, { packsOnly: true });
     const by = flag('--by');
     const derivedFor = trackedWinners(ROOT);
-    const outcome = attestPack(ROOT, first, derivedFor, { by, note: flag('--note') ?? undefined, name: flag('--name') ?? undefined,
+    // makeAttestation refuses any author but agent or human.
+    const outcome = attestPack(ROOT, first, derivedFor, { by: by as 'agent' | 'human', note: flag('--note') ?? undefined, name: flag('--name') ?? undefined,
       date: new Date().toISOString().slice(0, 10) }, { replace: process.argv.includes('--replace') });
     const { derived } = outcome;
     console.log(JSON.stringify({ schema: 'plan12-attest-result-v1', evidenceId: first, status: outcome.status,
       packSha256: derived.digest, custody: derived.custody, claim: derived.claim,
-      attestedBy: outcome.attestation?.attestedBy ?? null,
+      attestedBy: field(outcome.attestation, 'attestedBy') ?? null,
       file: outcome.attestation ? `${PACKS_DIR}/${first}/plan12-attestation.json` : null,
       verified: derived.verified.map(item => ({ check: item.check, pass: item.pass, ...(item.pass ? {} : { failed: item.detail.failed }) })),
       ...(outcome.failed.length ? { refused: outcome.failed } : {}) }, null, 2));
@@ -385,9 +414,9 @@ async function main([operation = 'help', first, second]) {
     return console.log(JSON.stringify(envelope ? promotionSummaryEnvelope(summary) : summary, null, 2));
   }
   if (operation === 'show') {
-    const loaded: any = await loadAny(first);
+    const loaded = await loadAny(first);
     // --envelope: the same object, as the claim of a claim-envelope-v1 at the record's own claim level.
-    const print = shown => console.log(JSON.stringify(envelope ? showEnvelope(first, shown, showTarget(first, loaded)) : shown, null, 2));
+    const print = (shown: Readonly<Record<string, unknown>>) => console.log(JSON.stringify(envelope ? showEnvelope(first, shown, showTarget(first, loaded)) : shown, null, 2));
     if (loaded.kind === 'device-campaign') {
       const packView = loaded.packed ? (() => {
         const edge = promotionEdgeFor(readGraph(ROOT), first);
@@ -395,30 +424,30 @@ async function main([operation = 'help', first, second]) {
           attestation: attestationView(loaded.packed),
           promotion: edge && edge.packSha256 === loaded.packed.digest ? edge : edge ? { stale: true, edge } : null };
       })() : {};
-      return print({ kind: loaded.kind, ...loaded.entry, mode: loaded.wrapper?.mode ?? null,
+      // The entry names its kind too; kind stays the first key.
+      return print({ kind: loaded.kind, ...(loaded.entry as Readonly<Record<string, unknown>>), mode: loaded.wrapper?.mode ?? null,
         status: loaded.wrapper?.status ?? null, files: loaded.files, ...packView });
     }
     return print(loaded);
   }
   if (operation === 'diff') {
     if (!first || !second) throw new Error('diff needs two ids: npm run evidence -- diff LEFT RIGHT');
-    const left: any = await loadAny(first);
-    const right: any = await loadAny(second);
+    const left = await loadAny(first);
+    const right = await loadAny(second);
     if (left.kind === 'session' && right.kind === 'session') {
-      const changes = [];
+      const changes: string[] = [];
       if (stable(left.result) !== stable(right.result)) changes.push('result');
       if (stable(left.manifest) !== stable(right.manifest)) changes.push('manifest');
       return console.log(JSON.stringify({ schema: 'evidence-diff-v1', left: first, right: second, changed: changes }, null, 2));
     }
     // A campaign directory or a committed pack: the text each holds, file by file, beside the
     // facts its index entry reads. What a pack lost is named, never compared as if empty.
-    const sides = [[first, left], [second, right]];
-    for (const [id, loaded] of sides)
-      if (!['device-campaign', 'fnaf1-run'].includes(loaded.kind))
-        throw new Error(`diff compares two sessions, or two campaigns or packs; ${id} is a ${loaded.kind}`);
+    assertHeld(first, left);
+    assertHeld(second, right);
+    const sides = [[first, left], [second, right]] as const;
     const [[leftPlace, leftHeld], [rightPlace, rightHeld]] = await Promise.all(sides.map(async ([id, loaded]) => {
       const place = holder(id, loaded);
-      return [place, await heldFiles(place, loaded)];
+      return [place, await heldFiles(place, loaded)] as const;
     }));
     const names = [...new Set([...leftHeld.keys(), ...rightHeld.keys()])].sort();
     const both = names.filter(name => leftHeld.has(name) && rightHeld.has(name));
@@ -436,21 +465,22 @@ async function main([operation = 'help', first, second]) {
     if (loaded.kind === 'fnaf1-run')
       return console.log(`replay=${first} status=NOT_REPLAYABLE reason="a FNaF 1 night on the phone is not a deterministic replay; its pack holds the runner's record and events only"`);
     if (loaded.kind === 'device-bundle') {
-      const { bundle } = (loaded as any);
+      const { bundle } = loaded;
       return console.log(`replay=${first} evaluations=${bundle.replay.results.length} resultHash=${bundle.manifest.replay.hash} status=REPLAYED`);
     }
-    const { result, manifest, spec } = (loaded as any);
+    const { result, manifest, spec } = loaded;
     if (!manifest.events?.length || !manifest.profileHash || !result.evidenceId) throw new Error('bundle lacks replay inputs');
-    if (!manifest.reproducer?.case || !spec) throw new Error('bundle does not contain a deterministic experiment spec');
-    if (spec.id !== manifest.reproducer.case) throw new Error('reproducer case does not match experiment spec');
-    const { evaluation, resultHash: replayHash } = replayModelResult(spec, result);
+    if (!field(manifest.reproducer, 'case') || !spec) throw new Error('bundle does not contain a deterministic experiment spec');
+    if (field(spec, 'id') !== field(manifest.reproducer, 'case')) throw new Error('reproducer case does not match experiment spec');
+    // The spec the result's specHash names, which load() checked.
+    const { evaluation, resultHash: replayHash } = replayModelResult(spec as ModelExperimentSpec, result);
     if (replayHash !== result.resultHash) throw new Error(`replay result hash mismatch: ${replayHash} != ${result.resultHash}`);
     return console.log(`replay=${result.evidenceId} evaluations=${evaluation.evaluations.length} resultHash=${replayHash} status=REPLAYED`);
   }
   if (operation === 'why') {
-    const loaded: any = await loadAny(first);
+    const loaded = await loadAny(first);
     if (loaded.kind === 'session') {
-      const { manifest } = (loaded as any);
+      const { manifest } = loaded;
       return console.log(JSON.stringify({ schema: 'causal-trace-v1', run: first, events: manifest.events.map(event => ({ type: event.type, component: event.component, at: event.at, data: event.data })) }, null, 2));
     }
     if (loaded.kind === 'device-bundle')
@@ -462,24 +492,26 @@ async function main([operation = 'help', first, second]) {
       throw new Error(`why reads a run's event rows, and ${lacking(place, 'events.jsonl')}`);
     const text = await readFile(join(place.dir, 'events.jsonl'), 'utf8');
     const events = text.split('\n').filter(line => line.trim()).map((line, index) => {
-      try { return JSON.parse(line); } catch (error) { throw new Error(`${place.where}/events.jsonl line ${index + 1}: ${error.message}`); }
+      try { return JSON.parse(line); } catch (error) { throw new Error(`${place.where}/events.jsonl line ${index + 1}: ${(error as Error).message}`); }
     });
     return console.log(JSON.stringify({ schema: 'causal-trace-v1', run: first, source: place.source, kind: loaded.kind,
       ...(place.custody ? { custody: place.custody } : {}), events }, null, 2));
   }
   if (operation === 'promote') {
-    const loaded: any = await loadAny(first);
+    const loaded = await loadAny(first);
     if (loaded.kind === 'fnaf1-run') {
       // A FNaF 1 runner's pack: Plan 12's checks read from the runner's record, its events and the
       // title-star read (fnaf1-promotion.ts), then the attestation; recorded as the FNaF 2 path records.
       const checks = fnaf1PromotionChecks(ROOT, first, loaded.packed);
       const derived = derivePromotion(ROOT, first, new Map());
-      const identity = derived.verified.find(item => item.check === 'claimIdentity');
+      // Every pack's derivation verifies claimIdentity.
+      const identity = derived.verified.find(item => item.check === 'claimIdentity') as (typeof derived.verified)[number];
       const allChecks = { ...checks, claimIdentity: identity.pass };
       const accepted = Object.values(allChecks).every(Boolean);
       let recorded = null;
       if (accepted) {
-        const result = recordPromotion(readGraph(ROOT), { id: first, claim: derived.claim, digest: loaded.packed.digest,
+        // claimIdentity passes only on a named claim.
+        const result = recordPromotion(readGraph(ROOT), { id: first, claim: derived.claim as NonNullable<typeof derived.claim>, digest: loaded.packed.digest,
           attestation: loaded.packed.attestation, custody: derived.custody, nights: loaded.packed.pack.nights ?? [],
           runLabel: `FNaF 1 Custom Night 6 AM on the phone, run pack ${first}` });
         if (result.status !== 'ALREADY_RECORDED') writeFileSync(join(ROOT, GRAPH_FILE), formatGraph(result.graph));
@@ -498,13 +530,16 @@ async function main([operation = 'help', first, second]) {
       const winners = trackedWinners(ROOT);
       const checks = packPromotionChecks(loaded.packed, winners);
       const derived = derivePromotion(ROOT, first, winners);
-      const identity = derived.verified.find(item => item.check === 'claimIdentity');
+      // Every pack's derivation verifies claimIdentity.
+      const identity = derived.verified.find(item => item.check === 'claimIdentity') as (typeof derived.verified)[number];
       const allChecks = { ...checks, claimIdentity: identity.pass };
       const accepted = Object.values(allChecks).every(Boolean);
       let recorded = null;
       if (accepted) {
-        const result = recordPromotion(readGraph(ROOT), { id: first, claim: derived.claim, digest: loaded.packed.digest,
-          attestation: loaded.packed.attestation, custody: derived.custody, nights: loaded.entry.nights });
+        // claimIdentity passes only on a named claim.
+        const result = recordPromotion(readGraph(ROOT), { id: first, claim: derived.claim as NonNullable<typeof derived.claim>, digest: loaded.packed.digest,
+          // recordPromotion joins them: a pack naming no nights throws there, as it did untyped.
+          attestation: loaded.packed.attestation, custody: derived.custody, nights: loaded.entry.nights as readonly number[] });
         if (result.status !== 'ALREADY_RECORDED') writeFileSync(join(ROOT, GRAPH_FILE), formatGraph(result.graph));
         recorded = { graph: GRAPH_FILE, status: result.status, edge: result.edge };
       }
@@ -534,13 +569,13 @@ async function main([operation = 'help', first, second]) {
       }, null, 2));
     }
     if (loaded.kind === 'device-bundle') {
-      const { bundle } = (loaded as any);
-      const gate = bundle.manifest.gate ?? {};
+      const { bundle } = loaded;
+      const gate: Readonly<Record<string, unknown>> = isRecord(bundle.manifest.gate) ? bundle.manifest.gate : {};
       const checks = {
         offlineEvidence: gate.claimLevel === 'DEVICE_MEASURED',
         terminalPass: gate.status === 'PASS' && bundle.replay.results.every(item => item.won === true),
         manifestComplete: true,
-        plan12Attestation: bundle.manifest.plan12Gate?.status === 'PASS',
+        plan12Attestation: field(bundle.manifest.plan12Gate, 'status') === 'PASS',
       };
       const accepted = Object.values(checks).every(Boolean);
       return console.log(JSON.stringify({
@@ -550,12 +585,12 @@ async function main([operation = 'help', first, second]) {
         reason: accepted ? null : 'Plan 12 requires external evidence, a passing terminal result, and an explicit gate attestation',
       }, null, 2));
     }
-    const { result, manifest } = (loaded as any);
+    const { result, manifest } = loaded;
     const checks = {
       offlineEvidence: result.claimLevel === 'DEVICE_MEASURED',
       terminalPass: result.outcome === 'PASS',
       manifestComplete: manifest.outcome === 'COMPLETED' && Boolean(manifest.artifacts?.result),
-      plan12Attestation: manifest.plan12Gate?.status === 'PASS',
+      plan12Attestation: field(manifest.plan12Gate, 'status') === 'PASS',
     };
     const accepted = Object.values(checks).every(Boolean);
     return console.log(JSON.stringify({
@@ -568,4 +603,4 @@ async function main([operation = 'help', first, second]) {
   throw new Error(`unknown evidence operation: ${operation}`);
 }
 
-main(process.argv.slice(2)).catch(error => { console.error(`evidence: ${error.message}`); process.exitCode = 2; });
+main(process.argv.slice(2)).catch((error: Error) => { console.error(`evidence: ${error.message}`); process.exitCode = 2; });

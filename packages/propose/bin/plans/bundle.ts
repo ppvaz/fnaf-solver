@@ -86,6 +86,11 @@ interface Manifest {
     readonly [field: string]: unknown };
   readonly [field: string]: unknown;
 }
+/** A manifest validateBundle has matched to its winner, its profile and its hashes. */
+type VerifiedManifest = Manifest & {
+  readonly strategy: Strategy, readonly winnerHash: string, readonly engineHash: string,
+  readonly profile: Manifest['profile'] & { readonly sha256: string },
+};
 
 const isRecord = (value: unknown): value is Fields => value !== null && typeof value === 'object' && !Array.isArray(value);
 const isList = (value: unknown): value is readonly unknown[] => Array.isArray(value);
@@ -936,5 +941,6 @@ export function validateBundle(directory: string, { night }: { night?: number } 
     if (entries.some(entry => !byNight.has(entry.night))) fail('compiled artifact plan nights do not match manifest');
     compiled = selectedPlans.map(entry => byNight.get(entry.night));
   }
-  return { manifest, winner, profile, plans: selectedPlans, compiled, replay: actualReplay, status: 'READY' };
+  // Each field VerifiedManifest names was compared above with the string or strategy it now holds.
+  return { manifest: manifest as VerifiedManifest, winner, profile, plans: selectedPlans, compiled, replay: actualReplay, status: 'READY' };
 }

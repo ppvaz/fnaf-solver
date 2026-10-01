@@ -58,7 +58,7 @@ export function evaluateCampaignPreflight({ spec, device, profile, calibration,
   device?: { readonly status?: string, readonly reason?: unknown, readonly serial?: string | null, readonly checks?: readonly CampaignCheck[] },
   profile?: { readonly limits?: { readonly dryRunOnly?: boolean } }, calibration?: unknown,
   bundle?: { readonly plans?: readonly { readonly night: number, readonly timing?: unknown, readonly sha256?: string }[],
-    readonly machine?: { readonly claimLevel?: string }, readonly artifact?: { readonly winnerHash?: string, readonly engineHash?: string } },
+    readonly machine?: { readonly claimLevel?: string }, readonly artifact?: { readonly winnerHash?: string, readonly engineHash?: string } } | null,
   qualification?: unknown, allowSaveReset?: boolean, machineOnly?: boolean,
   executor?: { readonly terminal?: boolean, readonly save?: boolean, readonly portsReady?: boolean, readonly deviceLocal?: boolean }} = {}) {
   const campaign = validateCampaignSpec(spec);

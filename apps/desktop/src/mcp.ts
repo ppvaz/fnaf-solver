@@ -7,7 +7,7 @@
 import { execFile as execFileCallback } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
-import { BINDINGS_DIR, WINNER_FILE } from '@sixam/kernel';
+import { BINDINGS_DIR, WINNER_FILE, isOneOf } from '@sixam/kernel';
 
 const CUE_TOOLS = Object.freeze(['cue.setup', 'cue.queue.enqueue', 'cue.queue.list', 'cue.queue.run']);
 
@@ -16,37 +16,51 @@ const CUE_SETUP = fileURLToPath(new URL('../../../packages/play/bin/companion/co
 const CUE_QUEUE = fileURLToPath(new URL('../../../apps/lab/companion-queue.sh', import.meta.url));
 const execFile = promisify(execFileCallback);
 
-function error(code, message) { return { ok: false, error: { code, message } }; }
+/** A tool's arguments, as the MCP client sent them. */
+type Args = Readonly<Record<string, unknown>>;
+interface Failure { readonly ok: false, readonly error: { readonly code: string, readonly message: string } }
+interface SetupOptions { screen: 'menu' | 'night', waitSeconds: number, install: boolean, probe: boolean, stop: boolean }
+type EnqueueOptions =
+  | { kind: 'night', game: string, winner: string, night: number, label: string | undefined, audio: boolean, idempotencyKey: string | undefined }
+  | { kind: 'setup' | 'menu-check' | 'night-check', screen: 'menu' | 'night', install: boolean, probe: boolean, idempotencyKey: string | undefined };
+/** What a queue or setup script left: its exit code and output. */
+interface CueRun { readonly exitCode: number, readonly stdout: string, readonly stderr: string }
 
-function booleanArg(args, name) {
+const isInteger = (value: unknown): value is number => Number.isInteger(value);
+const isKey = (value: unknown): value is string | undefined => value === undefined
+  || (typeof value === 'string' && value.length >= 1 && value.length <= 128);
+
+function error(code: string, message: string): Failure { return { ok: false, error: { code, message } }; }
+
+function booleanArg(args: Args, name: string) {
   if (args[name] !== undefined && typeof args[name] !== 'boolean')
     return error('INVALID_ARGUMENT', `${name} must be boolean`);
   return null;
 }
 
-function numberArg(args, name, { defaultValue, min, max }) {
+function numberArg(args: Args, name: string, { defaultValue, min, max }: { defaultValue: number, min: number, max: number }) {
   const value = args[name] ?? defaultValue;
-  if (!Number.isFinite(value) || value < min || value > max)
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < min || value > max)
     return error('INVALID_ARGUMENT', `${name} must be between ${min} and ${max}`);
   return value;
 }
 
-function cueSetupArgs(args) {
+function cueSetupArgs(args: Args): SetupOptions | Failure {
   for (const name of ['install', 'probe', 'stop']) {
     const invalid = booleanArg(args, name); if (invalid) return invalid;
   }
   if (args.screen !== undefined && args.screen !== 'menu' && args.screen !== 'night')
     return error('INVALID_ARGUMENT', 'screen must be menu or night');
   const wait = numberArg(args, 'waitSeconds', { defaultValue: 20, min: 1, max: 300 });
-  if (wait?.ok === false) return wait;
+  if (typeof wait !== 'number') return wait;
   if (args.stop && (args.install || args.probe))
     return error('INVALID_ARGUMENT', 'stop cannot be combined with install or probe');
   return { screen: args.screen ?? 'menu', waitSeconds: wait,
     install: args.install === true, probe: args.probe === true, stop: args.stop === true };
 }
 
-function cueSetupCommand(options) {
-  const command = [];
+function cueSetupCommand(options: SetupOptions) {
+  const command: string[] = [];
   if (options.install) command.push('--install');
   if (options.probe) command.push('--probe');
   if (options.stop) command.push('--stop');
@@ -63,28 +77,26 @@ const NIGHT_LABEL = /^[a-z0-9][a-z0-9-]{0,24}$/;
  * winner's own night, a fresh emit) and claims it only inside an overnight
  * window; cue.queue.run never plays one.
  */
-function cueNightArgs(args) {
+function cueNightArgs(args: Args): EnqueueOptions | Failure {
   for (const name of ['screen', 'install', 'probe'])
     if (args[name] !== undefined) return error('INVALID_ARGUMENT', `a night job takes no ${name}`);
-  if (!NIGHT_GAMES.includes(args.game)) return error('INVALID_ARGUMENT', `game must be one of ${NIGHT_GAMES.join(', ')}`);
+  if (!isOneOf(NIGHT_GAMES, args.game)) return error('INVALID_ARGUMENT', `game must be one of ${NIGHT_GAMES.join(', ')}`);
   if (typeof args.winner !== 'string' || !WINNER_FILE.test(args.winner))
     return error('INVALID_ARGUMENT', `winner must name a ${BINDINGS_DIR}/<game>/*-winner.json file`);
-  if (!Number.isInteger(args.night) || args.night < 1 || args.night > 8)
+  if (!isInteger(args.night) || args.night < 1 || args.night > 8)
     return error('INVALID_ARGUMENT', 'night must be an integer 1..8');
   if (args.label !== undefined && (typeof args.label !== 'string' || !NIGHT_LABEL.test(args.label)))
     return error('INVALID_ARGUMENT', 'label is 1-25 lowercase letters, digits and hyphens');
   const invalid = booleanArg(args, 'audio'); if (invalid) return invalid;
-  if (args.idempotencyKey !== undefined
-      && (typeof args.idempotencyKey !== 'string' || args.idempotencyKey.length < 1
-        || args.idempotencyKey.length > 128))
+  if (!isKey(args.idempotencyKey))
     return error('INVALID_ARGUMENT', 'idempotencyKey must be 1..128 characters');
   return { kind: 'night', game: args.game, winner: args.winner, night: args.night, label: args.label,
     audio: args.audio === true, idempotencyKey: args.idempotencyKey };
 }
 
-function cueQueueEnqueueArgs(args) {
+function cueQueueEnqueueArgs(args: Args): EnqueueOptions | Failure {
   if (args.kind === 'night') return cueNightArgs(args);
-  if (!['setup', 'menu-check', 'night-check'].includes(args.kind))
+  if (!isOneOf(['setup', 'menu-check', 'night-check'] as const, args.kind))
     return error('INVALID_ARGUMENT', 'kind must be setup, menu-check, night-check, or night');
   for (const name of ['game', 'winner', 'night', 'label', 'audio'])
     if (args[name] !== undefined) return error('INVALID_ARGUMENT', `${name} belongs to a night job`);
@@ -98,15 +110,13 @@ function cueQueueEnqueueArgs(args) {
   if (args.kind === 'night-check' && screen !== 'night') return error('INVALID_ARGUMENT', 'night-check must target night');
   if (args.kind !== 'setup' && (args.install || args.probe))
     return error('INVALID_ARGUMENT', 'install/probe options are available only for setup jobs');
-  if (args.idempotencyKey !== undefined
-      && (typeof args.idempotencyKey !== 'string' || args.idempotencyKey.length < 1
-        || args.idempotencyKey.length > 128))
+  if (!isKey(args.idempotencyKey))
     return error('INVALID_ARGUMENT', 'idempotencyKey must be 1..128 characters');
   return { kind: args.kind, screen, install: args.install === true, probe: args.probe === true,
     idempotencyKey: args.idempotencyKey };
 }
 
-function cueQueueCommand(options) {
+function cueQueueCommand(options: EnqueueOptions) {
   const command = ['enqueue', options.kind];
   if (options.kind === 'night') {
     command.push('--game', options.game, '--winner', options.winner, '--night', String(options.night));
@@ -124,15 +134,15 @@ function cueQueueCommand(options) {
   return command;
 }
 
-function cueRunOptions(args) {
+function cueRunOptions(args: Args) {
   const wait = numberArg(args, 'waitSeconds', { defaultValue: 0, min: 0, max: 86400 });
-  if (wait?.ok === false) return wait;
+  if (typeof wait !== 'number') return wait;
   const interval = numberArg(args, 'intervalSeconds', { defaultValue: 5, min: 0.1, max: 300 });
-  if (interval?.ok === false) return interval;
+  if (typeof interval !== 'number') return interval;
   return { waitSeconds: wait, intervalSeconds: interval };
 }
 
-async function runCueCommand(script, args, options: any = {}) {
+async function runCueCommand(script: string, args: string[], options: { timeoutMs?: number } = {}): Promise<CueRun> {
   try {
     const result = await execFile(script, args, {
       cwd: ROOT, shell: false, env: process.env,
@@ -141,20 +151,22 @@ async function runCueCommand(script, args, options: any = {}) {
     });
     return { exitCode: 0, stdout: result.stdout ?? '', stderr: result.stderr ?? '' };
   } catch (cause) {
+    // execFile rejects with an Error carrying the child's exit code (or a spawn error's code) and output.
+    const failure = cause as Error & { code?: number | string, stdout?: string, stderr?: string };
     return {
-      exitCode: Number.isInteger(cause.code) ? cause.code : 1,
-      stdout: cause.stdout ?? '', stderr: cause.stderr ?? cause.message ?? '',
+      exitCode: isInteger(failure.code) ? failure.code : 1,
+      stdout: failure.stdout ?? '', stderr: failure.stderr ?? failure.message ?? '',
     };
   }
 }
 
-function cueResult(operation, result) {
+function cueResult(operation: string, result: CueRun) {
   const output = `${result.stdout ?? ''}${result.stderr ?? ''}`.trim();
   if (result.exitCode === 75 || output.includes('QUEUE HOLD'))
-    return { ok: true, operation, status: 'HOLD', exitCode: result.exitCode, output };
+    return { ok: true as const, operation, status: 'HOLD', exitCode: result.exitCode, output };
   if (result.exitCode !== 0)
     return error(`${operation.toUpperCase().replaceAll('.', '_')}_FAILED`, `${operation} failed (exit ${result.exitCode}): ${output}`);
-  return { ok: true, operation, status: 'DONE', exitCode: 0, output };
+  return { ok: true as const, operation, status: 'DONE', exitCode: 0, output };
 }
 
 /**
@@ -163,45 +175,46 @@ function cueResult(operation, result) {
  * queue scripts are fixed, and no caller-provided shell, coordinates, or HID
  * input can cross this boundary.
  */
-export function createCompanionMcp({ run = runCueCommand } = {}) {
+export function createCompanionMcp({ run = runCueCommand }: { run?: typeof runCueCommand } = {}) {
   return {
     tools: () => [...CUE_TOOLS],
-    async call(name, args = {}) {
+    async call(name: string, args: Args = {}) {
       if (!CUE_TOOLS.includes(name)) return error('NOT_FOUND', `tool is not exposed: ${name}`);
       try {
         if (name === 'cue.setup') {
           const options = cueSetupArgs(args);
-          if (options.ok === false) return options;
+          if ('ok' in options) return options;
           const result = await run(CUE_SETUP, cueSetupCommand(options), {
             timeoutMs: Math.max(120000, (options.waitSeconds + 120) * 1000),
           });
           return cueResult('cue.setup', result);
         }
         if (name === 'cue.queue.enqueue') {
-          const options: any = cueQueueEnqueueArgs(args);
-          if (options.ok === false) return options;
+          const options = cueQueueEnqueueArgs(args);
+          if ('ok' in options) return options;
           const result = await run(CUE_QUEUE, cueQueueCommand(options));
           if (result.exitCode !== 0) return cueResult('cue.queue.enqueue', result);
-          let payload;
+          // What companion-queue.py enqueue --json prints.
+          let payload: { job?: unknown, created?: unknown };
           try { payload = JSON.parse(result.stdout); }
           catch { return error('QUEUE_PROTOCOL', 'queue enqueue returned invalid JSON'); }
           const job = payload.job;
-          return { ok: true, operation: 'cue.queue.enqueue',
+          return { ok: true as const, operation: 'cue.queue.enqueue',
             status: payload.created === false ? 'EXISTING' : 'QUEUED', job };
         }
         if (name === 'cue.queue.list') {
           const result = await run(CUE_QUEUE, ['list', '--json']);
           if (result.exitCode !== 0) return cueResult('cue.queue.list', result);
-          try { return { ok: true, operation: 'cue.queue.list', jobs: JSON.parse(result.stdout).jobs }; }
+          try { return { ok: true as const, operation: 'cue.queue.list', jobs: (JSON.parse(result.stdout) as { jobs: unknown }).jobs }; }
           catch { return error('QUEUE_PROTOCOL', 'queue list returned invalid JSON'); }
         }
         const options = cueRunOptions(args);
-        if (options.ok === false) return options;
+        if ('ok' in options) return options;
         const result = await run(CUE_QUEUE, ['run', '--wait', String(options.waitSeconds), '--interval', String(options.intervalSeconds)], {
           timeoutMs: Math.max(120000, (options.waitSeconds + 120) * 1000),
         });
         return cueResult('cue.queue.run', result);
-      } catch (cause) { return error('REJECTED', cause.message); }
+      } catch (cause) { return error('REJECTED', (cause as Error).message); }
     },
   };
 }

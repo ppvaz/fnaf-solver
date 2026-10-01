@@ -20,11 +20,15 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '../../..'));
 
+/** One line of the probe; `fix` is what the Next line suggests when this check blocks a route. */
+interface Check { name: string, status: 'ok' | 'warn' | 'missing', detail: string, fix: string | null }
+type Checks = Record<string, Check>;
+
 /** The versions and pins ci.yml gives its runner, or the README's when ci.yml is unreadable. */
 function ciVersions() {
   let text = '';
   try { text = readFileSync(join(ROOT, '.github/workflows/ci.yml'), 'utf8'); } catch { /* the README's numbers below */ }
-  const pins = {};
+  const pins: Record<string, string> = {};
   for (const line of text.split('\n').filter(item => /pip install/.test(item)))
     for (const match of line.matchAll(/'([A-Za-z0-9_.-]+)==([^']+)'/g)) pins[match[1].toLowerCase()] = match[2];
   return {
@@ -36,7 +40,7 @@ function ciVersions() {
 }
 
 /** Run a local program for its version output; null when it is not on PATH or does not answer. */
-function ask(command, args, timeout = 5000) {
+function ask(command: string, args: string[], timeout = 5000) {
   const result = spawnSync(command, args, { encoding: 'utf8', timeout, stdio: ['ignore', 'pipe', 'pipe'] });
   if (result.error || result.status === null) return null;
   return { status: result.status, stdout: result.stdout ?? '', stderr: result.stderr ?? '' };
@@ -47,9 +51,9 @@ const CI = ciVersions();
 const MODULES = [['PIL', 'Pillow'], ['numpy', 'NumPy'], ['scipy', 'SciPy']];
 
 function probe() {
-  const checks = {};
+  const checks: Checks = {};
   // `fix` is what the Next line suggests when this check blocks a route.
-  const set = (key, name, status, detail, fix = null) => { checks[key] = { name, status, detail, fix }; };
+  const set = (key: string, name: string, status: Check['status'], detail: string, fix: string | null = null) => { checks[key] = { name, status, detail, fix }; };
 
   const nodeMajor = Number(process.versions.node.split('.')[0]);
   set('node', 'Node', nodeMajor >= MIN_NODE ? 'ok' : 'missing', `${process.versions.node} (${MIN_NODE}+ needed; CI uses ${CI.node})`,
@@ -75,8 +79,9 @@ function probe() {
     + '    except Exception: found[name] = None\n'
     + 'print(json.dumps({"version": "%d.%d.%d" % sys.version_info[:3], "modules": found}))';
   const python = ask('python3', ['-c', script], 15000);
-  let parsed = null;
-  try { parsed = python?.status === 0 ? JSON.parse(python.stdout.trim().split('\n').pop()) : null; } catch { parsed = null; }
+  // The script's one JSON line; split returns at least one line.
+  let parsed = null as { version: string, modules?: Record<string, unknown> } | null;
+  try { parsed = python?.status === 0 ? JSON.parse(python.stdout.trim().split('\n').pop() as string) : null; } catch { parsed = null; }
   const installPython = `install Python ${CI.python} with Pillow, NumPy and SciPy`;
   if (!python) set('python', 'Python', 'missing', `python3 not on PATH (${CI.python} with Pillow, NumPy and SciPy needed)`, installPython);
   else if (!parsed) set('python', 'Python', 'missing', 'python3 did not report its version and modules', installPython);
@@ -123,13 +128,13 @@ function probe() {
 }
 
 /** One route: ready when none of what it needs is missing; what differs from CI is said. */
-function route(checks, keys) {
+function route(checks: Checks, keys: string[]) {
   const blocking = keys.filter(key => checks[key].status === 'missing');
   const differs = keys.filter(key => checks[key].status === 'warn').map(key => checks[key].name);
   return { ready: !blocking.length, blocking, differs };
 }
 
-function report(checks) {
+function report(checks: Checks) {
   const lines = ['probe: what this machine has for the routes in README.md (reads only this machine: no phone, no network)'];
   for (const key of ['node', 'deps', 'java', 'python', 'ffmpeg', 'clone', 'docker'])
     lines.push(`  ${checks[key].status.padEnd(9)}${checks[key].name}: ${checks[key].detail}`);
@@ -150,7 +155,7 @@ function report(checks) {
     else lines.push(`Ready: ${name} -- yes: ${how}${state.differs.length ? `; ${state.differs.join(', ')} differ from CI` : ''}`);
   }
   lines.push('Ready: Phone -- not checked here, no phone access (needs a Moto g56 and the game)');
-  const fixes = keys => keys.map(key => checks[key].fix).join('; ');
+  const fixes = (keys: string[]) => keys.map(key => checks[key].fix).join('; ');
   const [claims] = routes.Claims;
   const [tests] = routes['Full tests'];
   lines.push(`Next: ${!claims.ready ? `${fixes(claims.blocking)}; then \`npm run evidence -- promotions\``
@@ -162,6 +167,6 @@ function report(checks) {
 try {
   for (const line of report(probe())) console.log(line);
 } catch (error) {
-  console.log(`probe: could not finish (${error.message}); it is informational, so nothing is blocked`);
+  console.log(`probe: could not finish (${(error as Error).message}); it is informational, so nothing is blocked`);
 }
 process.exitCode = 0;

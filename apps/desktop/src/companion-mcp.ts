@@ -21,13 +21,18 @@
  * newline-delimited JSON-RPC transport.
  */
 import { fileURLToPath } from 'node:url';
-import { BINDINGS_DIR, REPOSITORY_TARGET, WINNER_FILE, claimEnvelope, refusalEnvelope, unknown } from '@sixam/kernel';
+import { BINDINGS_DIR, REPOSITORY_TARGET, WINNER_FILE, claimEnvelope, isRecord, isRefusal, refusalEnvelope, unknown } from '@sixam/kernel';
 import { CHECKS } from '@sixam/review/refusals';
 import { GAMES, resolveGame } from '@sixam/review/registers';
 import { INSTRUMENTS, QUERIES, SURFACE_DOC, createSolver } from '@sixam/review/solver';
 import { KINDS } from '@sixam/review/chronicle-schema';
 import { createCompanionMcp } from './mcp.ts';
 import { createLab } from './lab.ts';
+
+/** A tool's arguments, as the MCP client sent them. */
+type Args = Readonly<Record<string, unknown>>;
+/** A parsed request line: each field is unchecked until handle() reads it. */
+interface RpcRequest { readonly jsonrpc?: unknown, readonly id?: unknown, readonly method?: unknown, readonly params?: Args }
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const cue = createCompanionMcp();
@@ -235,11 +240,11 @@ const VERB_TOOLS = Object.freeze({ describe: solver.describe, query: solver.quer
   promote: solver.promote, check: solver.check, truth: solver.truth,
   'lab.status': () => lab.status(), 'lab.next': () => lab.next(), 'lab.doctor': () => lab.doctor({ catalog: false }) });
 /** Tools whose op picks the arguments they take. */
-const OP_ARGUMENTS = Object.freeze({ jobs: JOB_ARGUMENTS, truth: TRUTH_ARGUMENTS });
+const OP_ARGUMENTS: Readonly<Record<string, Readonly<Record<string, readonly string[]>>>> = Object.freeze({ jobs: JOB_ARGUMENTS, truth: TRUTH_ARGUMENTS });
 const QUEUE_CITE = Object.freeze(['apps/lab/companion-queue.sh', SURFACE_DOC]);
 
 /** A queue answer as a claim envelope: a queued, listed or held job measures nothing about the game. */
-function jobsEnvelope(op, args, result) {
+function jobsEnvelope(op: string, args: Args, result: Awaited<ReturnType<typeof cue.call>>) {
   if (result.ok === false)
     return refusalEnvelope({ rule: 'queue', because: `${result.error.code}: ${result.error.message}`, cite: [...QUEUE_CITE],
       remedy: 'correct the arguments against the tool\'s input schema; a HOLD is not a refusal' });
@@ -257,40 +262,43 @@ function jobsEnvelope(op, args, result) {
 }
 
 /** Arguments the tool's schema does not name -- or, for an op tool, its op does not take -- are refused before anything runs. */
-function unknownArguments(name, args) {
+function unknownArguments(name: string, args: Args) {
   const perOp = OP_ARGUMENTS[name];
-  const allowed = perOp ? ['op', ...(perOp[args.op] ?? [])] : Object.keys(SCHEMAS.get(name)?.properties ?? {});
+  // An index reads any value as a property key.
+  const allowed = perOp ? ['op', ...(perOp[args.op as string] ?? [])] : Object.keys(SCHEMAS.get(name)?.properties ?? {});
   return Object.keys(args).filter(key => !allowed.includes(key));
 }
 
-async function callTool(name, args) {
-  if (args === null || typeof args !== 'object' || Array.isArray(args))
+async function callTool(name: string, args: unknown) {
+  if (!isRecord(args))
     return refusalEnvelope({ rule: 'invalid-argument', because: 'tool arguments are an object', cite: [SURFACE_DOC], remedy: 'pass an object' });
   const perOp = OP_ARGUMENTS[name];
-  if (perOp && !Object.hasOwn(perOp, args.op))
+  // hasOwn reads any value as a property key; past it, op names one of perOp's.
+  if (perOp && !Object.hasOwn(perOp, args.op as string))
     return refusalEnvelope({ rule: 'invalid-argument', because: `${name} takes op ${Object.keys(perOp).join(' | ')}, not ${JSON.stringify(args.op ?? null)}`,
       cite: [SURFACE_DOC], remedy: `pass op: one of ${Object.keys(perOp).join(', ')}` });
   const extra = unknownArguments(name, args);
   if (extra.length && (Object.hasOwn(VERB_TOOLS, name) || perOp))
     return refusalEnvelope({ rule: 'invalid-argument', because: `${name}${perOp ? ` op ${args.op}` : ''} takes no ${extra.join(', ')}`,
-      cite: [SURFACE_DOC], remedy: `pass only ${perOp ? ['op', ...perOp[args.op]].join(', ') : Object.keys(SCHEMAS.get(name).properties).join(', ')}` });
-  if (Object.hasOwn(VERB_TOOLS, name)) return VERB_TOOLS[name](args);
+      cite: [SURFACE_DOC], remedy: `pass only ${perOp ? ['op', ...perOp[args.op as string]].join(', ') : Object.keys((SCHEMAS.get(name) as { properties: object }).properties).join(', ')}` });
+  // Every tool but jobs and the cue.* tools is a verb, and each verb refuses an argument it cannot read.
+  if (Object.hasOwn(VERB_TOOLS, name)) return (VERB_TOOLS[name as keyof typeof VERB_TOOLS] as (args: Args) => ReturnType<typeof refusalEnvelope>)(args);
   if (name === 'jobs') {
-    const { op, ...rest } = args;
+    const { op, ...rest } = args as Args & { op: keyof typeof JOB_OPS };
     return jobsEnvelope(op, rest, await cue.call(JOB_OPS[op], rest));
   }
   return cue.call(name, args);
 }
 
-function write(message) {
+function write(message: unknown) {
   process.stdout.write(`${JSON.stringify(message)}\n`);
 }
 
-function rpcError(id, code, message) {
+function rpcError(id: unknown, code: number, message: string) {
   return { jsonrpc: '2.0', id: id ?? null, error: { code, message } };
 }
 
-async function handle(request) {
+async function handle(request: RpcRequest | null) {
   if (!request || request.jsonrpc !== '2.0' || typeof request.method !== 'string')
     return rpcError(request?.id, -32600, 'invalid JSON-RPC request');
   if (request.method === 'notifications/initialized' || request.method.startsWith('notifications/')) return null;
@@ -314,7 +322,7 @@ async function handle(request) {
     const name = request.params?.name;
     if (typeof name !== 'string') return rpcError(request.id, -32602, 'tools/call requires a tool name');
     const result = await callTool(name, request.params?.arguments ?? {});
-    const failed = result.ok === false || result.refused === true;
+    const failed = (result as { ok?: unknown }).ok === false || isRefusal(result);
     return { jsonrpc: '2.0', id: request.id, result: {
       isError: failed,
       content: [{ type: 'text', text: JSON.stringify(result) }],
@@ -343,20 +351,22 @@ let serial = Promise.resolve();
 process.stdin.setEncoding('utf8');
 process.stdin.on('data', chunk => {
   buffer += chunk;
-  let newline;
+  let newline: number;
   while ((newline = buffer.indexOf('\n')) >= 0) {
     const line = buffer.slice(0, newline).trim();
     buffer = buffer.slice(newline + 1);
     if (!line) continue;
     serial = serial.then(async () => {
-      let request;
+      let request: RpcRequest | null;
       try { request = JSON.parse(line); }
       catch { write(rpcError(null, -32700, 'parse error')); return; }
       try {
         const response = await handle(request);
         if (response) write(response);
       } catch (cause) {
-        if (request.id !== undefined) write(rpcError(request.id, -32603, cause.message));
+        // handle() threw, so the request was an object it read.
+        const { id } = request as RpcRequest;
+        if (id !== undefined) write(rpcError(id, -32603, (cause as Error).message));
       }
     });
   }

@@ -15,7 +15,7 @@
 import { realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { isUnknown } from '@sixam/kernel';
+import { type Unknown, isRefusal, isUnknown } from '@sixam/kernel';
 import { LAB_VERBS, createLab } from './lab.ts';
 
 const ROOT = resolve(fileURLToPath(new URL('../../../', import.meta.url)));
@@ -28,23 +28,30 @@ const USAGE = `usage: npm run lab -- <verb> [--json]
   morning [--since ISO]                   the overnight window's results since the last evening
   doctor [--no-catalog]                   what is broken here, each with the command that fixes it`;
 
-const said = value => (isUnknown(value) ? `UNKNOWN (${value.reason})` : value);
-const yes = ok => (isUnknown(ok) ? 'UNKNOWN' : ok ? 'ok  ' : 'FAIL');
+type Lab = ReturnType<typeof createLab>;
+type Verb = Exclude<keyof Lab, 'verbs'>;
+type Envelope<V extends Verb> = Extract<ReturnType<Lab[V]>, { readonly claim: unknown }>;
+/** What parse() collects for the verbs; each verb reads its own. */
+interface Args { step?: string, artifact?: string, message?: string, messageFile?: string, since?: string, catalog?: boolean }
+
+const said = <T>(value: T) => (isUnknown(value) ? `UNKNOWN (${value.reason})` : value);
+const yes = (ok: boolean | Unknown) => (isUnknown(ok) ? 'UNKNOWN' : ok ? 'ok  ' : 'FAIL');
 
 /** Text for each verb's claim. */
-const RENDER: Record<string, (claim: any) => string[]> = {
+const RENDER: { [V in Verb]: (claim: Envelope<V>['claim']) => string[] } = {
   status(claim) {
-    const out = [];
+    const out: string[] = [];
     const { head, pushGate, sync, session, steps, promotions, phone, decisions, doctor } = claim;
     out.push(`lab status · ${head ? `${head.branch} ${head.short} ${head.subject}` : 'no HEAD'} · host ${claim.host} · ${claim.at}`);
-    if (head) {
+    // status names a push gate exactly when it names a HEAD.
+    if (head && pushGate) {
       out.push(`HEAD      ${head.uncommitted} uncommitted paths`);
       out.push(`push-gate ${pushGate.ran ? `${pushGate.verdict} on ${head.short} at ${pushGate.at}${pushGate.full ? ' (--full)' : ''}` +
         `${pushGate.failed.length ? `: ${pushGate.failed.join(', ')}` : ''}${pushGate.unverified.length ? ` · unverified: ${pushGate.unverified.join(', ')}` : ''}`
         : `not run on ${head.short} -> ${pushGate.command}`}`);
     }
     if (sync) {
-      const count = row => (row ? `${row.ahead} ahead, ${row.behind} behind ${row.ref}` : null);
+      const count = (row: (typeof sync)['vsOrigin']) => (row ? `${row.ahead} ahead, ${row.behind} behind ${row.ref}` : null);
       out.push(`sync      ${[sync.upstream ? count(sync.vsUpstream) : 'no upstream', count(sync.vsOrigin) ?? 'no origin remote-tracking branch']
         .filter(Boolean).join(' · ')}${sync.lastFetch ? ` (as of the fetch at ${sync.lastFetch})` : ''}`);
     }
@@ -142,38 +149,42 @@ const RENDER: Record<string, (claim: any) => string[]> = {
 export function parse(argv: string[]) {
   const [verb, ...rest] = argv;
   if (!LAB_VERBS.some(row => row.verb === verb)) return { error: verb ? `unknown verb ${verb}` : 'no verb' };
-  const options = { verb, json: false, args: {} };
-  const value = (index, flag) => {
+  // LAB_VERBS names exactly the verbs.
+  const options = { verb: verb as Verb, json: false, args: {} as Args };
+  const value = (index: number, flag: string) => {
     if (index + 1 >= rest.length) throw new Error(`${flag} needs a value`);
     return rest[index + 1];
   };
-  const allowed = { status: [], next: [], start: ['--step', '--artifact'], commit: ['--dry', '-m', '--message', '-F', '--file'],
-    end: ['--since'], morning: ['--since'], doctor: ['--no-catalog'] }[verb];
+  const allowed: readonly string[] = { status: [], next: [], start: ['--step', '--artifact'], commit: ['--dry', '-m', '--message', '-F', '--file'],
+    end: ['--since'], morning: ['--since'], doctor: ['--no-catalog'] }[options.verb];
   try {
     for (let index = 0; index < rest.length; index += 1) {
       const flag = rest[index];
       if (flag === '--json') { options.json = true; continue; }
       if (!allowed.includes(flag)) return { error: `${verb} takes no ${flag}` };
       if (flag === '--dry') continue;
-      if (flag === '--no-catalog') { (options.args as any).catalog = false; continue; }
-      const key = { '--step': 'step', '--artifact': 'artifact', '-m': 'message', '--message': 'message', '-F': 'messageFile', '--file': 'messageFile',
-        '--since': 'since' }[flag];
+      if (flag === '--no-catalog') { options.args.catalog = false; continue; }
+      // Every other flag the verb allows takes a value and names one of these keys.
+      const key = ({ '--step': 'step', '--artifact': 'artifact', '-m': 'message', '--message': 'message', '-F': 'messageFile', '--file': 'messageFile',
+        '--since': 'since' } as Record<string, 'step' | 'artifact' | 'message' | 'messageFile' | 'since'>)[flag];
       options.args[key] = value(index, flag);
       index += 1;
     }
-  } catch (error) { return { error: error.message }; }
+  } catch (error) { return { error: (error as Error).message }; }
   return options;
 }
 
 export function main(argv: string[], { root = ROOT, lab = createLab({ root }), write = text => process.stdout.write(text) }: {root?: string, lab?: ReturnType<typeof createLab>, write?: (text: string) => void} = {}) {
-  const options: any = parse(argv);
-  if (options.error) { process.stderr.write(`lab: ${options.error}\n${USAGE}\n`); return 2; }
-  const envelope = lab[options.verb](options.args);
+  const options = parse(argv);
+  if ('error' in options) { process.stderr.write(`lab: ${options.error}\n${USAGE}\n`); return 2; }
+  // Each verb reads the options parse() allowed it, and RENDER's entry for a verb takes that verb's claim.
+  const envelope = (lab[options.verb] as (args: Args) => ReturnType<Lab[Verb]>)(options.args);
   if (options.json) write(`${JSON.stringify(envelope, null, 2)}\n`);
-  else if (envelope.refused) write(`REFUSED ${envelope.rule}: ${envelope.because}\n  -> ${envelope.remedy}\n`);
-  else write(`${RENDER[options.verb](envelope.claim).join('\n')}\n`);
-  if (envelope.refused) return 1;
-  if (options.verb === 'commit' && !isUnknown(envelope.claim.hook) && envelope.claim.hook.verdict === 'REFUSE') return 1;
+  else if (isRefusal(envelope)) write(`REFUSED ${envelope.rule}: ${envelope.because}\n  -> ${envelope.remedy}\n`);
+  else write(`${(RENDER[options.verb] as (claim: unknown) => string[])(envelope.claim).join('\n')}\n`);
+  if (isRefusal(envelope)) return 1;
+  const { hook } = (envelope as Envelope<'commit'>).claim;
+  if (options.verb === 'commit' && !isUnknown(hook) && hook.verdict === 'REFUSE') return 1;
   return 0;
 }
 

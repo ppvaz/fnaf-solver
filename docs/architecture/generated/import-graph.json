@@ -61,6 +61,8 @@
     {
       "file": "apps/desktop/src/device-cli.ts",
       "imports": [
+        "../../../packages/propose/bin/plans/bundle.ts",
+        "@sixam/kernel",
         "@sixam/kernel/contracts",
         "@sixam/play",
         "@sixam/play/campaign/adb-bridge",
@@ -82,6 +84,7 @@
       "file": "apps/desktop/src/evidence.ts",
       "imports": [
         "../../../packages/propose/bin/plans/bundle.ts",
+        "@sixam/kernel",
         "@sixam/kernel/contracts",
         "@sixam/propose/experiment",
         "@sixam/review/envelopes",
