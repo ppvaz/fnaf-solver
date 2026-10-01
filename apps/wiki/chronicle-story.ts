@@ -11,8 +11,18 @@
 import { readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isList, isRecord as isObject } from '@sixam/kernel';
 import { gameTitle } from '@sixam/review/chronicle-schema';
+import type { readEntries } from '@sixam/review/chronicle-schema';
 import { currentPath } from '@sixam/review/renamed-path';
+
+type Entry = ReturnType<typeof readEntries>[number];
+/** What the story reads of the chronicle corpus. */
+interface Corpus { readonly entries: readonly Entry[] }
+/** A chapter as docs/chronicle/story.json holds it, once checkStory has read it. */
+interface StoryChapter { readonly number: number, readonly title: string, readonly entries: readonly string[] }
+interface Story { readonly schema: string, readonly title: string, readonly chapters: readonly StoryChapter[] }
+type ChapterView = ReturnType<typeof chapterView>;
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '../..'));
 export const STORY_SCHEMA = 'chronicle-story-v1';
@@ -23,60 +33,70 @@ const NEGATIVE_KINDS = ['refutation', 'retraction', 'negative'];
 /** Where the evidence records live, so a chapter can name the records it rests on. */
 const RECORD_DIRS = ['docs/evidence/', 'tools/recompile/results/'];
 
-const html = (value) => String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+const html = (value: unknown) => String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
 
 /**
  * Every fault of a story against the corpus it tells, at once.
  * 
  * @param byId the corpus entries by id
  */
-export function checkStory(story: any, byId: Map<string, any>) {
-  const problems = [];
-  if (story?.schema !== STORY_SCHEMA) problems.push(`${STORY_FILE}: schema must be ${STORY_SCHEMA}`);
-  if (typeof story?.title !== 'string' || !story.title) problems.push(`${STORY_FILE}: title is required`);
-  if (!Array.isArray(story?.chapters) || !story.chapters.length) return [...problems, `${STORY_FILE}: chapters must be a non-empty array`];
-  const placed = new Map();
-  story.chapters.forEach((chapter, index) => {
+export function checkStory(story: unknown, byId: ReadonlyMap<string, { readonly status: string }>) {
+  const problems: string[] = [];
+  const fields: Readonly<Record<string, unknown>> = isObject(story) ? story : {};
+  if (fields.schema !== STORY_SCHEMA) problems.push(`${STORY_FILE}: schema must be ${STORY_SCHEMA}`);
+  if (typeof fields.title !== 'string' || !fields.title) problems.push(`${STORY_FILE}: title is required`);
+  const chapters = fields.chapters;
+  if (!isList(chapters) || !chapters.length) return [...problems, `${STORY_FILE}: chapters must be a non-empty array`];
+  // Corpus ids are strings, so an id of any other type is no entry.
+  const has = (id: unknown) => typeof id === 'string' && byId.has(id);
+  const entryOf = (id: unknown) => (typeof id === 'string' ? byId.get(id) : undefined);
+  const placed = new Map<unknown, number>();
+  chapters.forEach((value, index) => {
+    // Each field is checked below; a chapter that is not an object reads as JavaScript reads it.
+    const chapter = value as { readonly number?: unknown, readonly title?: unknown, readonly entries?: unknown };
     const where = `${STORY_FILE} chapter ${index + 1}`;
     if (chapter.number !== index + 1) problems.push(`${where}: number must be ${index + 1}, got ${JSON.stringify(chapter.number)}`);
     if (typeof chapter.title !== 'string' || !chapter.title) problems.push(`${where}: title is required`);
-    if (!Array.isArray(chapter.entries) || !chapter.entries.length) {
+    const entries = chapter.entries;
+    if (!isList(entries) || !entries.length) {
       problems.push(`${where}: entries must name at least one chronicle entry`);
       return;
     }
-    for (const id of chapter.entries) {
-      if (!byId.has(id)) problems.push(`${where}: ${JSON.stringify(id)} is not a chronicle entry`);
+    for (const id of entries) {
+      if (!has(id)) problems.push(`${where}: ${JSON.stringify(id)} is not a chronicle entry`);
       else if (placed.has(id)) problems.push(`${where}: ${id} is already in chapter ${placed.get(id)}`);
       else placed.set(id, index + 1);
     }
-    if (!chapter.entries.some((id) => byId.get(id)?.status === 'standing'))
+    if (!entries.some((id) => entryOf(id)?.status === 'standing'))
       problems.push(`${where}: no standing entry, so the chapter has no dates`);
   });
   return problems;
 }
 
 /** The story, checked against the corpus; a story that fails is refused, not rendered. */
-export async function loadStory(corpus) {
-  const story = JSON.parse(await readFile(join(ROOT, STORY_FILE), 'utf8'));
+export async function loadStory(corpus: Corpus) {
+  const story: unknown = JSON.parse(await readFile(join(ROOT, STORY_FILE), 'utf8'));
   const problems = checkStory(story, new Map(corpus.entries.map((entry) => [entry.id, entry])));
   if (problems.length) throw new Error(`story: invalid\n${problems.map((problem) => `  ${problem}`).join('\n')}`);
-  return story;
+  return story as Story;
 }
 
 /** An evidence record, as against the policy page that sits beside them. */
-const isRecord = (source) => RECORD_DIRS.some((dir) => source.startsWith(dir)) && !source.endsWith('README.md');
+const isRecord = (source: string) => RECORD_DIRS.some((dir) => source.startsWith(dir)) && !source.endsWith('README.md');
 /** A record's name: a run pack by its run, any other record by its file name. */
-const recordName = (source) => source.match(/\/runs\/([^/]+)\//)?.[1] ?? source.split('/').pop().replace(/\.(?:json|md|log)$/, '');
+const recordName = (source: string) => source.match(/\/runs\/([^/]+)\//)?.[1] ?? (source.split('/').pop() as string).replace(/\.(?:json|md|log)$/, '');
 
 /** One chapter as the entries give it. */
-export function chapterView(chapter, byId) {
-  const members = chapter.entries.map((id) => byId.get(id));
+export function chapterView(chapter: StoryChapter, byId: ReadonlyMap<string, Entry>) {
+  // checkStory placed every id in the corpus.
+  const members = chapter.entries.map((id) => byId.get(id) as Entry);
   const standing = members.filter((entry) => entry.status === 'standing');
   const dates = standing.map((entry) => entry.date).sort();
   const sources = [...new Set(members.flatMap((entry) => entry.sources))];
   const records = [...new Set(sources.filter(isRecord).map(recordName))];
   return {
-    number: chapter.number, title: chapter.title, from: dates[0], to: dates.at(-1), members, sources, records,
+    // checkStory found a standing entry in every chapter, so there is a date.
+    number: chapter.number, title: chapter.title, from: dates[0], to: dates.at(-1) as string, members, sources, records,
     games: [...new Set(members.map((entry) => entry.game))],
     proved: standing.filter((entry) => !NEGATIVE_KINDS.includes(entry.kind)),
     notProved: standing.filter((entry) => NEGATIVE_KINDS.includes(entry.kind)),
@@ -84,16 +104,16 @@ export function chapterView(chapter, byId) {
   };
 }
 
-const when = (view) => (view.from === view.to ? view.from.slice(5) : `${view.from.slice(5)}→${view.to.slice(5)}`);
+const when = (view: ChapterView) => (view.from === view.to ? view.from.slice(5) : `${view.from.slice(5)}→${view.to.slice(5)}`);
 
-function sourceLink(source) {
+function sourceLink(source: string) {
   if (source.startsWith('commit:')) return `<span class="src commit">${html(source.slice(0, 14))}</span>`;
   const path = source.replace(/:\d+$/, '');
   // Linked where the file lives now; the recorded words stay (ADR 0002 principle 9).
   return `<a class="src" href="../../${html(currentPath(ROOT, path) ?? path)}">${html(source)}</a>`;
 }
 
-function itemMarkup(entry) {
+function itemMarkup(entry: Entry) {
   const measured = entry.measured ? `<span class="measured">${html(entry.measured)}</span>` : '';
   const history = entry.status === 'standing' ? ''
     : `<span class="note ${html(entry.status)}">${html(entry.status)} by <a href="chronicle.html#${html(entry.supersededBy)}">${html(entry.supersededBy)}</a></span>`;
@@ -102,9 +122,9 @@ function itemMarkup(entry) {
     `<a class="title" href="chronicle.html#${html(entry.id)}">${html(entry.title)}</a><p>${html(entry.body)}</p></li>`;
 }
 
-const list = (items, empty) => (items.length ? `<ul class="items">${items.map(itemMarkup).join('')}</ul>` : `<p class="empty">${empty}</p>`);
+const list = (items: readonly Entry[], empty: string) => (items.length ? `<ul class="items">${items.map(itemMarkup).join('')}</ul>` : `<p class="empty">${empty}</p>`);
 
-function chapterMarkup(view) {
+function chapterMarkup(view: ChapterView) {
   return `<section class="chapter" id="chapter-${view.number}"><header><span class="num">${view.number}</span><div><div class="when"><time datetime="${html(view.from)}">${html(view.from)}</time>${view.from === view.to ? '' : ` → <time datetime="${html(view.to)}">${html(view.to)}</time>`} · ${html(view.games.map(gameTitle).join(', '))}</div><h2>${html(view.title)}</h2></div></header>` +
     `<div class="cols"><div class="col proved"><h3>What it proved</h3>${list(view.proved, 'No standing positive entry in this chapter.')}</div>` +
     `<div class="col not-proved"><h3>What it did not prove</h3>${list(view.notProved, 'No refutation, retraction or negative entry is filed in this chapter.')}` +
@@ -113,10 +133,12 @@ function chapterMarkup(view) {
 }
 
 /** The whole page: a summary table in the architecture page's shape, then one section per chapter. */
-export function renderStory(corpus, story) {
+export function renderStory(corpus: Corpus, story: Story) {
   const byId = new Map(corpus.entries.map((entry) => [entry.id, entry]));
   const views = story.chapters.map((chapter) => chapterView(chapter, byId));
   const drawn = new Set(views.flatMap((view) => view.members.map((entry) => entry.id)));
+  // checkStory refused a story without chapters.
+  const last = views.at(-1) as ChapterView;
   const negatives = views.reduce((sum, view) => sum + view.notProved.length + view.superseded.length, 0);
   const rows = views.map((view) => `<tr><td class="num">${view.number}</td><td class="when">${html(when(view))}</td><td><a href="#chapter-${view.number}">${html(view.title)}</a></td>` +
     `<td class="from">${html(view.records.length ? view.records.join(', ') : view.members.map((entry) => entry.id).join(', '))}</td></tr>`).join('');
@@ -138,7 +160,7 @@ export function renderStory(corpus, story) {
 @media(max-width:760px){.wrap{padding:0 16px 60px}.cols{grid-template-columns:1fr}.chapter>header{gap:12px}.chapter .num{font-size:30px;min-width:38px}}
 </style></head><body><div class="wrap">
 <header class="mast"><span class="eyebrow">fnaf-solver / generated from the chronicle</span><h1>The <em>Story</em></h1><p class="lede">${html(story.title)}. Each chapter names the chronicle entries it draws on; its dates run from the earliest to the latest of those entries that still stand, and what it proved, what it did not, and its sources are those entries' own fields. The chapter titles and the entries each draws on are curated in ${html(STORY_FILE)}; no chapter text is written by hand.</p>
-<div class="stats"><span><b>${views.length}</b>chapters</span><span><b>${drawn.size}</b>of ${corpus.entries.length} chronicle entries</span><span><b>${negatives}</b>of them negative or superseded</span><span><b>${html(views[0].from)}</b>to ${html(views.at(-1).to)}</span></div></header>
+<div class="stats"><span><b>${views.length}</b>chapters</span><span><b>${drawn.size}</b>of ${corpus.entries.length} chronicle entries</span><span><b>${negatives}</b>of them negative or superseded</span><span><b>${html(views[0].from)}</b>to ${html(last.to)}</span></div></header>
 <div class="tablewrap"><table><thead><tr><th>#</th><th>When</th><th>Chapter</th><th>From</th></tr></thead><tbody>${rows}</tbody></table></div>
 <main>${views.map(chapterMarkup).join('')}</main>
 <footer class="foot"><span>Generated by apps/wiki/chronicle.ts from <a href="../chronicle/README.md">docs/chronicle/</a> · ${STORY_SCHEMA}</span><span><a href="chronicle.html">the chronicle</a> · <a href="index.html">portal</a></span></footer></div></body></html>

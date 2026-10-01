@@ -522,6 +522,7 @@
     {
       "file": "apps/wiki/chronicle-story.ts",
       "imports": [
+        "@sixam/kernel",
         "@sixam/review/chronicle-schema",
         "@sixam/review/renamed-path",
         "node:fs/promises",

@@ -61,10 +61,8 @@ assert(corpus.checkpoints.length > 0, 'chronicle has no checkpoints');
 corpus.entries.forEach((entry) => entry.sources.forEach(checkSource));
 checkOutlook(corpus.outlook);
 
-const invalid = structuredClone(corpus.checkpoints[0]);
-invalid.file = 'fixture.json';
-invalid.entries = [structuredClone(invalid.entries[0])];
-invalid.entries[0].kind = 'commit-explorer';
+const cloned = structuredClone(corpus.checkpoints[0]);
+const invalid = { ...cloned, file: 'fixture.json', entries: [{ ...cloned.entries[0], kind: 'commit-explorer' }] };
 assert(checkCorpus([invalid]).some((problem) => problem.includes('kind must be one of')),
   'schema accepted an unknown finding kind');
 

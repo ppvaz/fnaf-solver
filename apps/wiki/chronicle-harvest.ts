@@ -9,7 +9,7 @@ const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '../..')
 const WORDS = ['refut', 'retract', 'wrong', 'fail', 'measur', 'calibrat', 'source', 'decomp', 'device', 'clear', 'victory', 'prove', 'evidence', 'gate', 'stale', 'correct', 'drift', 'desync', 'latency', 'timing', 'night', 'strategy', 'route', 'model', 'record', 'truth', 'negative', 'blocker', 'accept', 'reject', 'unsafe', 'unverified'];
 const DATE = /\b20\d{2}-\d{2}-\d{2}\b/;
 
-function arg(name) {
+function arg(name: string) {
   const index = process.argv.indexOf(name);
   return index < 0 ? null : process.argv[index + 1];
 }
@@ -18,15 +18,15 @@ function usage() {
   console.error('Usage: node apps/wiki/chronicle-harvest.ts --since COMMIT [--until COMMIT] [--json]');
 }
 
-function countWords(text) {
+function countWords(text: string) {
   return WORDS.reduce((count, word) => count + (text.match(new RegExp(word, 'ig'))?.length ?? 0), 0);
 }
 
-function titleCaseGuess(subject) {
+function titleCaseGuess(subject: string) {
   return subject.replace(/^\s+/, '').replace(/\s+/g, ' ').trim().replace(/[.!?]+$/, '');
 }
 
-function classify(text) {
+function classify(text: string) {
   if (/retract|withdraw|wrong|correction/i.test(text)) return 'retraction';
   if (/refut|rule out|reject|blocker|unsafe|unverified|negative|fail/i.test(text)) return 'refutation';
   if (/clear|victory|prove|milestone|ship|first/i.test(text)) return 'milestone';
@@ -35,7 +35,7 @@ function classify(text) {
   return 'lesson';
 }
 
-function label(text) {
+function label(text: string) {
   if (/decomp|source|sourced|event sheet/i.test(text)) return 'SOURCED';
   if (/calibrat|measure|timing|latency|gate/i.test(text)) return 'CALIBRATED';
   if (/device|phone|victory|clear|hid|six.?am/i.test(text)) return 'DEVICE_MEASURED';
@@ -43,18 +43,18 @@ function label(text) {
   return 'INFERRED';
 }
 
-function tags(text) {
-  const rules = [['source', /source|decomp|event sheet/i], ['device', /device|phone|hid|android/i], ['strategy', /strategy|route|minus|vent camp|cam/i], ['timing', /timing|latency|delay|clock|phase/i], ['evidence', /evidence|grade|gate|proof|clear|victory/i], ['model', /model|simulat|seed/i], ['tooling', /tool|catalog|index|generator/i], ['retraction', /retract|wrong|correction|refut/i]];
-  return rules.filter(([, pattern]) => (pattern as any).test(text)).map(([tag]) => tag);
+function tags(text: string) {
+  const rules: readonly (readonly [string, RegExp])[] = [['source', /source|decomp|event sheet/i], ['device', /device|phone|hid|android/i], ['strategy', /strategy|route|minus|vent camp|cam/i], ['timing', /timing|latency|delay|clock|phase/i], ['evidence', /evidence|grade|gate|proof|clear|victory/i], ['model', /model|simulat|seed/i], ['tooling', /tool|catalog|index|generator/i], ['retraction', /retract|wrong|correction|refut/i]];
+  return rules.filter(([, pattern]) => pattern.test(text)).map(([tag]) => tag);
 }
 
-function measured(text) {
+function measured(text: string) {
   if (!/[0-9]/.test(text) || !/(measure|calibrat|clear|victory|refut|prove|surviv|latency|delay|timing|gate|count|price)/i.test(text)) return null;
   const values = [...text.matchAll(/\b\d+(?:\.\d+)?(?:\s*(?:ms|s|fps|Hz|frames?|%|\/\d+|MB|GB))?\b/gi)].map((match) => match[0]).slice(0, 4);
   return values.length ? values.join(' · ') : null;
 }
 
-function makeEntry({ sha, date, subject, body, source }) {
+function makeEntry({ sha, date, subject, body, source }: { sha: string, date: string, subject: string, body: string, source: string }) {
   const text = `${subject}\n${body}`;
   const suffix = sha.startsWith('comment-') ? sha : sha.slice(0, 7);
   return {
@@ -76,7 +76,7 @@ function makeEntry({ sha, date, subject, body, source }) {
   };
 }
 
-function gitRows(since, until) {
+function gitRows(since: string, until: string | null) {
   const range = `${since}..${until || 'HEAD'}`;
   const raw = execFileSync('git', ['log', '--reverse', '--format=%H%x00%ad%x00%s%x00%b%x01', '--date=short', range], { cwd: ROOT, encoding: 'utf8' });
   return raw.split('\x01').filter(Boolean).map((row) => {
@@ -90,11 +90,11 @@ function trackedFiles() {
 }
 
 function datedComments() {
-  const candidates = [];
+  const candidates: ReturnType<typeof makeEntry>[] = [];
   let commentIndex = 0;
   for (const file of trackedFiles()) {
     if (!/\.(?:md|txt|js|mjs|ts|py|sh|c|S|json)$/.test(file)) continue;
-    let lines;
+    let lines: string[];
     try { lines = readFileSync(join(ROOT, file), 'utf8').split('\n'); } catch { continue; }
     lines.forEach((line, index) => {
       const match = line.match(DATE);
@@ -124,7 +124,7 @@ if (process.argv.includes('--help') || process.argv.includes('-h') || !since) {
       console.error(`chronicle-harvest: ${candidates.length} candidates from ${commits.length} commits and dated comments`);
     }
   } catch (error) {
-    console.error(`chronicle-harvest: ${error.message}`);
+    console.error(`chronicle-harvest: ${(error as Error).message}`);
     process.exitCode = 1;
   }
 }

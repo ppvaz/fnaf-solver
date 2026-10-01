@@ -17,7 +17,7 @@
     "apps/desktop/src/**/*.ts",
     "apps/trainer/src/**/*.ts",
     "apps/trainer/src/**/*.d.ts",
-    "apps/wiki/**/*.ts"
+    "apps/wiki/test/**/*.ts"
   ],
   "exclude": ["node_modules", "dist", "artifacts", "apps/desktop/src/evidence.ts"]
 }

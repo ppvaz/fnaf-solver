@@ -4,18 +4,25 @@ import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { GAMES, KINDS, LABELS_V2, NIGHTS, ROUTES, RUNGS, SCHEMAS, STATUSES, checkCorpus, gameTitle, readEntries } from '@sixam/review/chronicle-schema';
+import type { ChronicleCheckpoint } from '@sixam/review/chronicle-schema';
 import { STORY_OUTPUT, loadStory, renderStory } from './chronicle-story.ts';
 import { currentPath } from '@sixam/review/renamed-path';
+
+/** The next work a checkpoint names; checkCorpus refuses an outlook without these fields. */
+interface OutlookItem { readonly title: string, readonly body: string, readonly sources: readonly string[] }
+interface Outlook { readonly next?: readonly OutlookItem[], readonly missing?: readonly OutlookItem[] }
+type Entry = ReturnType<typeof readEntries>[number];
+type Corpus = Awaited<ReturnType<typeof loadCorpus>>;
 
 export const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '../..'));
 export const ENTRY_DIR = join(ROOT, 'docs/chronicle/entries');
 export const OUTPUT = join(ROOT, 'docs/portal/chronicle.html');
 
-const pad = (value) => String(value).padStart(2, '0');
-const html = (value) => String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
-const jsonScript = (value) => JSON.stringify(value).replaceAll('<', '\\u003c').replaceAll('>', '\\u003e').replaceAll('&', '\\u0026');
+const pad = (value: number) => String(value).padStart(2, '0');
+const html = (value: unknown) => String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+const jsonScript = (value: unknown) => JSON.stringify(value).replaceAll('<', '\\u003c').replaceAll('>', '\\u003e').replaceAll('&', '\\u0026');
 
-function sourceMarkup(source) {
+function sourceMarkup(source: string) {
   if (source.startsWith('commit:')) return `<span class="source commit">commit:${html(source.slice(7, 14))}</span>`;
   const match = source.match(/^(.*?)(?::(\d+))?$/);
   // The entry's words stay as written; the link follows a file that moved since
@@ -24,7 +31,7 @@ function sourceMarkup(source) {
   return href ? `<a class="source" href="${html(href)}">${html(source)}</a>` : `<span class="source">${html(source)}</span>`;
 }
 
-function entryMarkup(entry, index) {
+function entryMarkup(entry: Entry, index: number) {
   const game = `<span class="pill game">${html(gameTitle(entry.game))}</span>`;
   const route = entry.route ? `<span class="pill route">${html(entry.route)}</span>` : '';
   const rung = entry.rung === null ? '' : `<span class="pill rung">R${entry.rung} · ${html(RUNGS[entry.rung])}</span>`;
@@ -40,19 +47,19 @@ function entryMarkup(entry, index) {
     <div class="bottom"><div class="tags">${entry.tags.map((tag) => `<span>#${html(tag)}</span>`).join('')}</div><div class="sources"><span class="eyebrow">TRACE</span>${entry.sources.map(sourceMarkup).join('')}</div></div></div></article>`;
 }
 
-function dayPulse(entries) {
-  const result = {};
+function dayPulse(entries: readonly Entry[]) {
+  const result: Record<string, number> = {};
   for (const entry of entries) result[entry.date] = (result[entry.date] ?? 0) + 1;
   return result;
 }
 
-function pulseMarkup(pulse, entries) {
+function pulseMarkup(pulse: Readonly<Record<string, number>>, entries: readonly Entry[]) {
   const dates = Object.keys(pulse).sort();
   if (!dates.length) return '';
   const first = new Date(`${dates[0]}T00:00:00Z`);
   const last = new Date(`${dates.at(-1)}T00:00:00Z`);
-  const max = Math.max(...(Object.values(pulse) as number[]), 1);
-  const cells = [];
+  const max = Math.max(...Object.values(pulse), 1);
+  const cells: string[] = [];
   for (const cursor = first; cursor <= last; cursor.setUTCDate(cursor.getUTCDate() + 1)) {
     const date = `${cursor.getUTCFullYear()}-${pad(cursor.getUTCMonth() + 1)}-${pad(cursor.getUTCDate())}`;
     const count = pulse[date] ?? 0;
@@ -64,18 +71,18 @@ function pulseMarkup(pulse, entries) {
   return cells.join('');
 }
 
-function outlookMarkup(outlook) {
+function outlookMarkup(outlook: Outlook) {
   if (!outlook || (!outlook.next?.length && !outlook.missing?.length)) return '';
   const styles = `<style>.outlook{margin:10px 0 80px;padding:40px 0 0;border-top:1px solid var(--amber);position:relative}.outlook:before{content:'NEXT';position:absolute;top:-10px;left:0;background:var(--bg);padding-right:10px;color:var(--amber);font:10px var(--mono);letter-spacing:.2em}.outlook-heading{max-width:700px;margin-bottom:24px}.outlook-heading h2{font-size:clamp(30px,5vw,56px);line-height:.95;letter-spacing:-.04em;margin:8px 0 12px}.outlook-heading p{color:#c9d2c3;max-width:540px}.outlook-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.outlook-column{padding:22px;border:1px solid var(--line);background:linear-gradient(135deg,#151c14,#10150f)}.outlook-column.next{border-color:#554414}.outlook-column.missing{border-color:#5e1e24}.outlook-column>h3{font-size:24px;margin:8px 0 18px;color:var(--amber)}.outlook-column.missing>h3{color:var(--red)}.outlook-items{display:grid;gap:1px}.outlook-items article{padding:15px 0;border-top:1px solid var(--line)}.outlook-items article:first-child{border-top:0;padding-top:0}.outlook-items h4{font-size:18px;line-height:1.1;margin:0 0 6px}.outlook-items p{color:#c9d2c3;font-size:14px;line-height:1.45}.outlook-source{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}@media(max-width:560px){.outlook-grid{grid-template-columns:1fr}}</style>`;
-  const column = (title, kicker, items, className) => `<section class="outlook-column ${className}"><span class="eyebrow">${kicker}</span><h3>${title}</h3><div class="outlook-items">${items.map((item) => `<article><h4>${html(item.title)}</h4><p>${html(item.body)}</p><div class="outlook-source">${item.sources.map(sourceMarkup).join('')}</div></article>`).join('')}</div></section>`;
+  const column = (title: string, kicker: string, items: readonly OutlookItem[], className: string) => `<section class="outlook-column ${className}"><span class="eyebrow">${kicker}</span><h3>${title}</h3><div class="outlook-items">${items.map((item) => `<article><h4>${html(item.title)}</h4><p>${html(item.body)}</p><div class="outlook-source">${item.sources.map(sourceMarkup).join('')}</div></article>`).join('')}</div></section>`;
   return `${styles}<section class="outlook"><div class="outlook-heading"><span class="eyebrow">THE WORK CONTINUES</span><h2>The next page is not written yet.</h2><p>The last finding is a boundary, not a conclusion. Here is the honest shape of the work still ahead.</p></div><div class="outlook-grid">${column("WHAT'S NEXT", 'NEXT CHECKPOINT', outlook.next ?? [], 'next')}${column("WHAT'S LEFT / MISSING", 'OPEN GAPS', outlook.missing ?? [], 'missing')}</div></section>`;
 }
 
-const options = (values, labels = values) => values.map((value, index) => `<option value="${html(value)}">${html(labels[index] ?? value)}</option>`).join('');
+const options = (values: readonly (string | number)[], labels: readonly (string | number)[] = values) => values.map((value, index) => `<option value="${html(value)}">${html(labels[index] ?? value)}</option>`).join('');
 
 export async function loadCorpus() {
   const names = (await readdir(ENTRY_DIR)).filter((name) => name.endsWith('.json')).sort();
-  const checkpoints = [];
+  const checkpoints: Readonly<Record<string, unknown>>[] = [];
   for (const name of names) {
     const file = `docs/chronicle/entries/${name}`;
     checkpoints.push({ ...JSON.parse(await readFile(join(ENTRY_DIR, name), 'utf8')), file });
@@ -84,13 +91,15 @@ export async function loadCorpus() {
   if (problems.length) throw new Error(`chronicle: invalid corpus\n${problems.map((problem) => `  ${problem}`).join('\n')}`);
   // v1 entries read as fnaf2, and an entry a v2 correction supersedes reads as
   // superseded although its frozen file still says standing (chronicle-schema.mjs).
-  const entries = readEntries(checkpoints);
+  // checkCorpus passed, so each file is a checkpoint.
+  const corpus = checkpoints as unknown as ChronicleCheckpoint[];
+  const entries = readEntries(corpus);
   entries.sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
-  const outlook = checkpoints.at(-1)?.outlook ?? { next: [], missing: [] };
-  return { checkpoints, entries, pulseByDay: dayPulse(entries), outlook };
+  const outlook = (corpus.at(-1)?.outlook ?? { next: [], missing: [] }) as Outlook;
+  return { checkpoints: corpus, entries, pulseByDay: dayPulse(entries), outlook };
 }
 
-export function renderChronicle(corpus) {
+export function renderChronicle(corpus: Corpus) {
   const { checkpoints, entries, pulseByDay, outlook } = corpus;
   const tags = [...new Set(entries.flatMap((entry) => entry.tags))].sort();
   const activeRungs = new Set(entries.filter((entry) => entry.rung !== null).map((entry) => entry.rung));
@@ -99,7 +108,7 @@ export function renderChronicle(corpus) {
     return `<section class="checkpoint" data-checkpoint="${html(checkpoint.checkpoint)}"><header><span class="eyebrow">CHECKPOINT ${html(checkpoint.checkpoint)}</span><h2>${html(checkpoint.label)}</h2><span class="count">${members.length} findings</span></header><div class="spine">${members.map((entry) => entryMarkup(entry, entries.indexOf(entry))).join('')}</div></section>`;
   }).join('');
   const rail = RUNGS.map((rung, index) => `<button class="rung-step ${activeRungs.has(index) ? 'used' : ''}" data-rung="${index}"><b>${index}</b><span>${html(rung)}</span></button>`).join('');
-  const planValues = [...new Set(entries.map((entry) => entry.plan).filter((value) => value !== null))].sort((a: number, b: number) => a - b);
+  const planValues = [...new Set(entries.flatMap((entry) => (entry.plan === null ? [] : [entry.plan])))].sort((a, b) => a - b);
   const nights = Array.from({ length: Math.max(...Object.values(NIGHTS)) }, (_, index) => String(index + 1));
   const games = GAMES.filter((game) => entries.some((entry) => entry.game === game));
   const data = { entries, checkpoints, rungs: RUNGS, kinds: KINDS, labels: LABELS_V2, routes: ROUTES, statuses: STATUSES, games: GAMES, nights: NIGHTS, tags };
@@ -148,5 +157,5 @@ export async function generate({ write = true } = {}) {
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try { const result = await generate(); console.log(`chronicle: ${result.entries.length} findings, ${Object.keys(result.pulseByDay).length} days, ${result.checkpoints.length} checkpoints; story: ${result.story.chapters.length} chapters`); }
-  catch (error) { console.error(error.message); process.exitCode = 1; }
+  catch (error) { console.error((error as Error).message); process.exitCode = 1; }
 }
