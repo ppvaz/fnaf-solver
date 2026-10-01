@@ -114,7 +114,7 @@ coarse end description. It is not yet a positive 6 AM/win classifier.
 
 | Property | Inventory |
 |---|---|
-| Producers | `HID_TRACE_RUN=1 trial.sh`; `hid-sweep-probe.mjs`/`.sh` |
+| Producers | `HID_TRACE_RUN=1 trial.sh`; `hid-sweep-probe.ts`/`.sh` |
 | Paths/formats | `captures/RUN-hid.jsonl` for emitted marks/delays/reports; `captures/OUT.hid` for a generated probe stream |
 | Content | Exact HID reports and delay commands; runner marks at action boundaries |
 | Clock | Mixed/rebased scheduled milliseconds described in the clock table |

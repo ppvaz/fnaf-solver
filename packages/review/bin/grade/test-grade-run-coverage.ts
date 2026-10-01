@@ -70,32 +70,32 @@ const SIBLING_EXCLUDED = new Map([
   // packages/play/bin/phone
   ['game-screen.py', 'native title identity reader used before setup, not a completed-night grader; calibration retained in companion-game-screen-20260927.json'],
   ['game-teardown.sh', 'a lifecycle action that runs AFTER a night and before there is anything to grade: it stops a target game only once title-observe.py has confirmed the title, so the post-night sequence finishes and the save is banked. It sends one force-stop and reads no run artifact; gated by test-game-teardown.sh'],
-  ['capabilities.mjs', 'a read-only capability query about the PHONE, not a grader of a run: it sends no input and reads no pixels, and it answers which instruments this handset can feed before one is proposed'],
+  ['capabilities.ts', 'a read-only capability query about the PHONE, not a grader of a run: it sends no input and reads no pixels, and it answers which instruments this handset can feed before one is proposed'],
   ['night-run.sh', 'the attempt driver that CALLS grade-run.sh from its exit trap -- wiring it in would recurse; it produces the run this pipeline grades'],
   ['actuator.mjs', 'simulator layer, gated by test-actuator.mjs'],
-  ['native-regions.mjs', 'Companion native-region reader: registers rectangles, measures read latency and records calibration corpora; a live observation path and corpus tool, not a post-run grader'],
-  ['native-frame.mjs', 'Companion SNAP puller: one native frame as a PNG for title/menu readers and calibration; an observation path, not a post-run grader'],
-  ['night-kit.mjs', 'the region recorder, run record, actor and video every night runner shares; a library of executors, not a post-run grader'],
-  ['explore-step.mjs', 'one bounded exploration step (a contact and a native SNAP) for learning a game\'s controls; an operator tool, not a post-run grader'],
-  ['hid-sweep-probe.mjs', 'device probe'],
+  ['native-regions.ts', 'Companion native-region reader: registers rectangles, measures read latency and records calibration corpora; a live observation path and corpus tool, not a post-run grader'],
+  ['native-frame.ts', 'Companion SNAP puller: one native frame as a PNG for title/menu readers and calibration; an observation path, not a post-run grader'],
+  ['night-kit.ts', 'the region recorder, run record, actor and video every night runner shares; a library of executors, not a post-run grader'],
+  ['explore-step.ts', 'one bounded exploration step (a contact and a native SNAP) for learning a game\'s controls; an operator tool, not a post-run grader'],
+  ['hid-sweep-probe.ts', 'device probe'],
   ['session.sh', 'sourced helper that threads one session id through the producers, gated by test-session-manifest.sh'],
   ['coords.sh', 'coordinate helper'],
   ['menu.sh', 'the title/menu selector runners source, mock-gated by test-menu.sh'],
   ['select-adb.sh', 'transport helper, gated by test-select-adb.sh'],
-  ['local-profile.mjs', 'resolves the handset serial a live runner addresses (FNAF_SERIAL, then the untracked local profile) before any adb call; it reads no run, gated by test-night-run-dry.mjs'],
+  ['local-profile.ts', 'resolves the handset serial a live runner addresses (FNAF_SERIAL, then the untracked local profile) before any adb call; it reads no run, gated by test-night-run-dry.ts'],
   // packages/play/bin/companion
-  ['audio-probe.mjs', 'bounded live playback-capture qualification probe, not a grader of a completed night; test-audio-probe.mjs gates arguments and derived-only replies'],
-  ['audio-players.mjs', 'a pre-night refusal: reads which apps hold a started player before any press (fnaf4-run.mjs, night-run.sh); it grades no run, gated by test-audio-players.mjs'],
+  ['audio-probe.ts', 'bounded live playback-capture qualification probe, not a grader of a completed night; test-audio-probe.ts gates arguments and derived-only replies'],
+  ['audio-players.ts', 'a pre-night refusal: reads which apps hold a started player before any press (fnaf4-run.ts, night-run.sh); it grades no run, gated by test-audio-players.ts'],
   ['collect-cue-audio.sh', 'capture helper'],
   ['query-companion.sh', 'live helper, mock-gated by test-query-companion.sh'],
   ['soak-companion.sh', 'live helper, mock-gated by test-soak-companion.sh'],
   ['companion-setup.py', 'helper setup and target-menu check, gated by test-companion-setup.py; it prepares a session rather than grading one'],
   ['companion-setup.sh', 'thin one-serial wrapper; all UI work and every gate belong to companion-setup.py'],
-  ['hid-controls.mjs', 'build helper: writes a route bundle\'s hid-controls.txt from the profile.json beside it through the HID transport; it reads no run, and test-screen-map.mjs holds its output to the transport'],
+  ['hid-controls.ts', 'build helper: writes a route bundle\'s hid-controls.txt from the profile.json beside it through the HID transport; it reads no run, and test-screen-map.ts holds its output to the transport'],
   // packages/play/bin/probe
-  ['hid-intersection-probe.mjs', 'device probe generator -- emits an intersection stream to a phone rather than grading a night run'],
-  ['hid-intersection-probe.sh', 'device probe runner for hid-intersection-probe.mjs; it acts on a phone rather than grading a run'],
-  ['intersection-state-gate.mjs', 'pure control-intersection state gate consumed by the executor, gated by test-intersection-state-gate.mjs; it decides a press rather than grading a run'],
+  ['hid-intersection-probe.ts', 'device probe generator -- emits an intersection stream to a phone rather than grading a night run'],
+  ['hid-intersection-probe.sh', 'device probe runner for hid-intersection-probe.ts; it acts on a phone rather than grading a run'],
+  ['intersection-state-gate.ts', 'pure control-intersection state gate consumed by the executor, gated by test-intersection-state-gate.ts; it decides a press rather than grading a run'],
   ['custom-night-readback.py', 'a Custom Night observer the campaign composes before a Night 7 run (dial readback); not a grader'],
   ['arm-verification.mjs', 'shared camera-pair constants for strategy arming headers and host verification; not a run grader, covered by test-minus-toys-plan.mjs'],
   ['pan-shift.py', 'measuring stick for pan-probe.sh; the scroll is better read from the dump'],
@@ -114,27 +114,27 @@ const SIBLING_EXCLUDED = new Map([
   ['fnaf4-cues.py', 'FNaF 4 live A2DP cue detector the FNaF 4 runner spawns during a night (matched filters, breathing level); an in-night sensor, not a post-run grader'],
   ['bt-audio-link.sh', 'brings the phone A2DP link up before a capture (night-run.sh --bt-audio); a link action on the phone and BlueALSA, grades no run'],
   // packages/play/games/fnaf1
-  ['fnaf1-night-run.mjs', 'FNaF 1-specific attempt driver: it retains native screenshots and passive Bluetooth audio while running a title-gated Continue-only loop; it is separate from FNaF 2 night-run.sh so the default title model cannot reach it, and test-fnaf1-night-run.mjs gates its binding/lease/audio contract'],
-  ['fnaf1-night-run.sh', 'thin exclusive-lease wrapper around fnaf1-night-run.mjs, covered structurally by test-fnaf1-night-run.mjs; it sends no controls of its own'],
+  ['fnaf1-night-run.ts', 'FNaF 1-specific attempt driver: it retains native screenshots and passive Bluetooth audio while running a title-gated Continue-only loop; it is separate from FNaF 2 night-run.sh so the default title model cannot reach it, and test-fnaf1-night-run.ts gates its binding/lease/audio contract'],
+  ['fnaf1-night-run.sh', 'thin exclusive-lease wrapper around fnaf1-night-run.ts, covered structurally by test-fnaf1-night-run.ts; it sends no controls of its own'],
   ['fnaf1-teach-overlay.sh', 'FNaF 1-only passive teaching-presenter control: it only verifies/updates a user-started non-touchable overlay through its own DUMP contract, never reads a game screen or grades a run; test-fnaf1-teach-overlay.py gates its FNaF 1-only geometry and control clearance'],
-  ['fnaf1-menu-probe.mjs', 'FNaF 1 menu calibration probe: it captures the title and Custom Night screens and walks the dials under checked single presses to learn their geometry and glyphs; it produces model inputs, never grades a night; test-fnaf1-menu-probe.mjs gates its argument, target and step contract'],
-  ['fnaf1-menu-probe.sh', 'thin exclusive-lease wrapper around fnaf1-menu-probe.mjs; it sends no input of its own'],
+  ['fnaf1-menu-probe.ts', 'FNaF 1 menu calibration probe: it captures the title and Custom Night screens and walks the dials under checked single presses to learn their geometry and glyphs; it produces model inputs, never grades a night; test-fnaf1-menu-probe.ts gates its argument, target and step contract'],
+  ['fnaf1-menu-probe.sh', 'thin exclusive-lease wrapper around fnaf1-menu-probe.ts; it sends no input of its own'],
   ['fnaf1-custom-night-read.py', 'reads the four FNaF 1 Custom Night dials off one native frame for the menu probe; a menu reader, not a run grader, gated by test-fnaf1-menus.py'],
   ['fnaf1-title-stars.py', 'reads the FNaF 1 save\'s title stars off a run\'s retained title frames into title-stars.json, the terminal Review\'s FNaF 1 promotion reads; a FNaF 1 promotion instrument, not a FNaF 2 run grader, gated by test-fnaf1-title-stars.py'],
   ['fnaf1-door-light.py', 'per-run native FNaF 1 door-light calibration and occupancy reader; it derives the current run\'s ROI/bands rather than grading a completed run, and test-fnaf1-door-light.py gates its native-only and UNKNOWN behavior'],
-  ['fnaf1-winner.mjs', 'the replay of a committed FNaF 1 route winner: it materializes the pinned commit and runs that commit\'s fnaf1-custom-run.sh under the lease; an executor that produces a run, not a grader of one, gated by test-fnaf1-winner.mjs'],
-  ['fnaf1-detectors.mjs', 'builds FNaF 1 empty-scene templates from a calibration run and classifies REGION reads for the runner; gated by test-native-regions.mjs'],
-  ['fnaf1-calibration-analyze.mjs', 'offline reader of a FNaF 1 calibration record (press-to-frame latency, office onset, hour change); a calibration tool, not a night grader'],
+  ['fnaf1-winner.ts', 'the replay of a committed FNaF 1 route winner: it materializes the pinned commit and runs that commit\'s fnaf1-custom-run.sh under the lease; an executor that produces a run, not a grader of one, gated by test-fnaf1-winner.mjs'],
+  ['fnaf1-detectors.ts', 'builds FNaF 1 empty-scene templates from a calibration run and classifies REGION reads for the runner; gated by test-native-regions.mjs'],
+  ['fnaf1-calibration-analyze.ts', 'offline reader of a FNaF 1 calibration record (press-to-frame latency, office onset, hour change); a calibration tool, not a night grader'],
   ['fnaf1-title-observe.sh', 'FNaF 1-only title-observer wrapper: it removes the FNaF 2 default model and passes FNaF 1\'s model explicitly; test-sensor.py proves an inherited FNaF 2 model cannot be used'],
   // packages/play/games/fnaf3
   ['fnaf3-run.sh', 'lease wrapper for the FNaF 3 night runner; a live route/calibration executor, not a post-run grader'],
-  ['fnaf3-run.mjs', 'FNaF 3 night runner (calibrate, loop) behind fnaf3-run.sh; an executor, gated by test-fnaf3-run.mjs and its teach panel clearance by test-native-regions.mjs'],
-  ['fnaf3-detectors.mjs', 'FNaF 3 frame readers and per-camera empty templates built from a calibration run; a model builder and in-night reader, gated by test-fnaf3-run.mjs'],
+  ['fnaf3-run.ts', 'FNaF 3 night runner (calibrate, loop) behind fnaf3-run.sh; an executor, gated by test-fnaf3-run.ts and its teach panel clearance by test-native-regions.mjs'],
+  ['fnaf3-detectors.ts', 'FNaF 3 frame readers and per-camera empty templates built from a calibration run; a model builder and in-night reader, gated by test-fnaf3-run.ts'],
   // packages/play/games/fnaf4
   ['fnaf4-run.sh', 'lease wrapper for the FNaF 4 night runner; a live route/calibration executor, not a post-run grader'],
-  ['fnaf4-run.mjs', 'FNaF 4 night runner (calibrate, loop) behind fnaf4-run.sh; an executor, its teach panel clearance gated by test-native-regions.mjs'],
-  ['fnaf4-fredbear.mjs', 'the FNaF 4 runner\'s Fredbear hearing on the level grid and its walk/release slots, used in-night; a library, not a post-run grader, gated by test-fnaf4-fredbear.mjs'],
-  ['fnaf4-hearing-evidence.mjs', 'writes a FNaF 4 run\'s derived rows (grid hearing, holds, backs, run onsets) into an evidence record; grade-run.sh grades FNaF 2 runs, and test-fnaf4-fredbear.mjs is the gate over the rows it wrote'],
+  ['fnaf4-run.ts', 'FNaF 4 night runner (calibrate, loop) behind fnaf4-run.sh; an executor, its teach panel clearance gated by test-native-regions.mjs'],
+  ['fnaf4-fredbear.ts', 'the FNaF 4 runner\'s Fredbear hearing on the level grid and its walk/release slots, used in-night; a library, not a post-run grader, gated by test-fnaf4-fredbear.ts'],
+  ['fnaf4-hearing-evidence.ts', 'writes a FNaF 4 run\'s derived rows (grid hearing, holds, backs, run onsets) into an evidence record; grade-run.sh grades FNaF 2 runs, and test-fnaf4-fredbear.ts is the gate over the rows it wrote'],
   ['fnaf4-detectors.py', 'builds FNaF 4 view templates from a calibration run (held-out accuracy refusal); a model builder, not a post-run grader'],
   // packages/play/src/sensors/screencap
   ['screenstate.py', 'the live alive/dead authority; grade-night.py applies its predicate to recordings'],
@@ -144,13 +144,13 @@ const SIBLING_EXCLUDED = new Map([
   ['intro_card.py', 'fractional generic intro-card predicate used by lifecycle-observe.py/run-timeline.py; gated by test-intro-card.py'],
   ['title-observe.py', 'live title observer, mock-gated by test-menu.sh -- it classifies a menu, not a run'],
   // packages/propose/bin/plans
-  ['strategy-night-matrix.mjs', 'a coverage report over the emitters, not a grader of a run: it asks which (strategy, night) cells the registered emitters can compile against the resolved profile and what the emitted plan scores in its own replay. It reads source and the model, never a recording, and it sends no input -- the nearest analogue here is capabilities.mjs, which asks the same shape of question about the phone'],
+  ['strategy-night-matrix.mjs', 'a coverage report over the emitters, not a grader of a run: it asks which (strategy, night) cells the registered emitters can compile against the resolved profile and what the emitted plan scores in its own replay. It reads source and the model, never a recording, and it sends no input -- the nearest analogue here is capabilities.ts, which asks the same shape of question about the phone'],
   ['death-prediction.mjs', 'runs BEFORE a run, not after it: writes the model\'s death prediction (killer shares, time quantiles over phases) that night-run.sh retains as prediction.json; grading reads that file, it does not regenerate it -- gated by test-bundle.mjs through the DEATH_TARGETED gate it produces'],
   ['epoch-scan.mjs', 'runs BEFORE a run: a model census over release epochs (the bands an anchor aim is priced on); never reads a recording'],
   ['night7-presets.mjs', 'a model scorer that runs BEFORE any run and never reads a recording: it replays the Minus Toys schedule against the ten Custom Night presets over a fixed seed cohort, in an exact lane and an actuator lane, to price the route and its timing floors. It sends no input to a phone. The gate over it is test-night7-presets.mjs, registered in npm run test:unit'],
   ['night7-robustness.mjs', 'a model scorer that runs BEFORE any run and never reads a recording: it ranks the preset schedule and the committed Night 7 bindings by phase band, per-press lateness and +-60 ms jitter over held-out seeds. It sends no input to a phone. The gate over its record is test-night7-presets.mjs, registered in npm run test:unit'],
   ['night7-robustness-field.mjs', 'MODEL_ONLY per-event robustness field and jitter/lateness census over held-out seeds with the measured mask floor; it never reads a recording, and test-night7-presets.mjs check 7 replays its retained record'],
-  ['device-lane.mjs', 'MODEL_ONLY scorer of the compiled HID schedule through the simulator and measured actuator constraints, with an explicit merged-press hypothesis; it never reads a recording or grades a completed run, and its HID constraints are exercised by hid-read-gap.test.js and hid-second-contact.test.js'],
+  ['device-lane.mjs', 'MODEL_ONLY scorer of the compiled HID schedule through the simulator and measured actuator constraints, with an explicit merged-press hypothesis; it never reads a recording or grades a completed run, and its HID constraints are exercised by hid-read-gap.test.ts and hid-second-contact.test.ts'],
   ['gate-worker.mjs', 'pure worker for test-night-matrix.mjs; it simulates gate chunks and has no run artifacts to grade'],
   ['minus-toys-margin.mjs', 'per-instruction timing margin map for the Minus Toys plan -- a model analysis, no run artifact to read; gated by test-minus-toys-margin.mjs'],
   ['minus-toys-jitter.mjs', 'robustness evaluator for the Minus Toys plan -- replays the model under a calibrated clock-error ensemble, no run artifact to read; gated by test-minus-toys-jitter.mjs'],
@@ -293,7 +293,7 @@ const runs = (gate) => {
 
 for (const name of readdirSync(HERE).sort()) {
   if (!/\.(py|mjs|ts|sh)$/.test(name)) continue;
-  if (name.startsWith('test-')) {
+  if (name.startsWith('test-') || /\.test\.m?[jt]s$/.test(name)) {
     // This used to be `continue`, under the comment "suite gates, run by
     // tools/test.mjs". That comment was an assumption, and it was false for
     // five files -- including two that four exclusions below named as their
@@ -362,7 +362,7 @@ for (const dir of SIBLINGS) {
   for (const name of readdirSync(path).sort()) {
     if (!/\.(py|mjs|ts|sh)$/.test(name)) continue;
     const rel = `${dir}/${name}`;
-    if (name.startsWith('test-')) {
+    if (name.startsWith('test-') || /\.test\.m?[jt]s$/.test(name)) {
       if (!runs(name))
         complain(`${rel} is a gate that nothing runs -- register it in ` +
           'tools/test.mjs or .github/workflows/ci.yml, or delete it.');
@@ -378,7 +378,7 @@ for (const dir of TEST_DIRS) {
   const path = join(HERE, dir);
   if (!existsSync(path)) { complain(`${dir} is gone: the test scan has nothing to read`); continue; }
   for (const name of readdirSync(path).sort())
-    if (/\.(py|mjs|sh)$/.test(name) && (name.startsWith('test-') || dir.endsWith('/test')) && !runs(name))
+    if (/\.(py|mjs|ts|sh)$/.test(name) && (name.startsWith('test-') || dir.endsWith('/test')) && !runs(name))
       complain(`${dir}/${name} is a gate that nothing runs -- register it in tools/test.mjs or ci.yml, or delete it.`);
 }
 

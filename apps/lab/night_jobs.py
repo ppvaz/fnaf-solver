@@ -7,7 +7,7 @@ it, and nothing else: no shell text, no coordinates, no timing. The runner is
 fixed by the winner's schema, and every runner is an existing, gated one:
 
     winner-v1              FNaF 2  packages/play/bin/phone/night-run.sh (bundle emitted fresh)
-    fnaf1-route-winner-v1  FNaF 1  packages/play/games/fnaf1/fnaf1-winner.mjs (the pinned tree)
+    fnaf1-route-winner-v1  FNaF 1  packages/play/games/fnaf1/fnaf1-winner.ts (the pinned tree)
     fnaf4-route-winner-v1  FNaF 4  packages/play/games/fnaf4/fnaf4-run.sh --mode loop
 
 Every runner is dry unless told otherwise (ADR 0002, 2026-09-29), so each
@@ -67,14 +67,14 @@ GAMES = {
         # so a FNaF 4 job refuses TITLE_UNREADABLE until a model is measured.
         "titleModel": None,
         "setupTarget": "fnaf4",
-        # fnaf4-run.mjs reads the A2DP mix live (packages/play/bin/audio/fnaf4-cues.py).
+        # fnaf4-run.ts reads the A2DP mix live (packages/play/bin/audio/fnaf4-cues.py).
         "audio": "required",
     },
 }
 
 # --- the budget: bounds each step enforces, in seconds ------------------------
 EMIT_TIMEOUT_S = 120.0          # device:emit's bounded replay
-AUDIO_LINK_TIMEOUT_S = 120.0    # bt-audio-link.sh --ensure (fnaf4-run.mjs allows it 90 s)
+AUDIO_LINK_TIMEOUT_S = 120.0    # bt-audio-link.sh --ensure (fnaf4-run.ts allows it 90 s)
 SETUP_WAIT_S = 60               # companion-setup.sh --wait: the helper's FNAF2_MENU identity
 SETUP_TIMEOUT_S = 180.0         # the setup process: install/consent/launch plus that wait
 TITLE_READ_TIMEOUT_S = 90.0     # SNAP + title-observe retries until a confident read
@@ -315,7 +315,7 @@ def runner_command(game: str, binding: dict, winner: dict, night: int, label: st
         if options.get("video"):
             argv.append("--video")
         return argv, {"FNAF4_LEASE_HELD": "1", "FNAF_SERIAL": serial}
-    argv = ["node", str(HERE / "../../packages/play/games/fnaf1/fnaf1-winner.mjs"), "--winner", binding["winner"], "--live", "--confirm-live",
+    argv = ["node", str(HERE / "../../packages/play/games/fnaf1/fnaf1-winner.ts"), "--winner", binding["winner"], "--live", "--confirm-live",
             "--label", label]
     return argv, {"FNAF_SERIAL": serial}
 

@@ -52,7 +52,7 @@ HOP_S = 0.1
 # (n4e, 80.3-81.7 s); she arrived before she breathed and the flash met her.
 # Fredbear's families (fb-left, fb-right, laugh) take their window and their
 # publishing floor from the hearing model (--hearing): they are published low
-# and accepted by the runner only on the level's own grid (fnaf4-fredbear.mjs).
+# and accepted by the runner only on the level's own grid (fnaf4-fredbear.ts).
 FAMILY_THRESHOLD = {"step": 0.33}
 FAMILY_WIN_S: dict = {}
 FAMILY_MAX_HOPS: dict = {}

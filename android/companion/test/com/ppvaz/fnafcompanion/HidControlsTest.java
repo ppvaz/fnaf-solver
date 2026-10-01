@@ -10,7 +10,7 @@ import java.util.Arrays;
  * Holds HidControls to a committed route bundle: it reads the controls the host
  * derived from the profile beside them, refuses a file bound to another profile
  * and a plan control the file does not name, and encodes a contact's bytes.
- * packages/play/bin/phone/test-screen-map.mjs holds the file itself to the
+ * packages/play/bin/phone/test-screen-map.ts holds the file itself to the
  * host transport's transform.
  */
 public final class HidControlsTest {

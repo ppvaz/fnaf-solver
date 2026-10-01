@@ -15,7 +15,7 @@
  * the night runs the tree's route as a new one. The winner itself is re-run
  * from its pinned commit by fnaf1-winner.mjs.
  *
- * The menu path is the probe's measured one (fnaf1-menu-probe.mjs): three
+ * The menu path is the probe's measured one (fnaf1-menu-probe.ts): three
  * identical confident title reads, the Custom Night row, the settled screen,
  * every dial walked to its target with a read after each press. Then Ready --
  * the one control on that screen the probe never pressed.
@@ -40,13 +40,13 @@ import { AdbDeviceBridge } from '../../../packages/play/src/campaign/adb-bridge.
 import { AdbCompanionPort, AdbHidProcess } from '../../../packages/play/src/campaign/physical-ports.ts';
 import { HidWireTransport } from '../../../packages/play/src/venues/phone/hid.ts';
 import { ProbeRecord, ensureTitle, titleRead, titleConsensus, settleCustomNight, setDials, restartToTitle,
-  DIALS, PACKAGE, BUILD, LEAVE_WAIT_MS } from '../../../packages/play/games/fnaf1/fnaf1-menu-probe.mjs';
-import { loadRegionSet, registerSet } from '../../../packages/play/bin/phone/native-regions.mjs';
-import { RegionRecorder, startVideo } from '../../../packages/play/bin/phone/night-kit.mjs';
-import { loadDetectors, makeClassifier } from '../../../packages/play/games/fnaf1/fnaf1-detectors.mjs';
-import { listWinners, routeDrift } from '../../../packages/play/games/fnaf1/fnaf1-winner.mjs';
+  DIALS, PACKAGE, BUILD, LEAVE_WAIT_MS } from '../../../packages/play/games/fnaf1/fnaf1-menu-probe.ts';
+import { loadRegionSet, registerSet } from '../../../packages/play/bin/phone/native-regions.ts';
+import { RegionRecorder, startVideo } from '../../../packages/play/bin/phone/night-kit.ts';
+import { loadDetectors, makeClassifier } from '../../../packages/play/games/fnaf1/fnaf1-detectors.ts';
+import { listWinners, routeDrift } from '../../../packages/play/games/fnaf1/fnaf1-winner.ts';
 import { grid420, PHONE_OPTIONS } from '../../../packages/propose/bin/census/fnaf1-device-lane.mjs';
-import { resolveSerial } from '../../../packages/play/bin/phone/local-profile.mjs';
+import { resolveSerial } from '../../../packages/play/bin/phone/local-profile.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../../..');
@@ -108,7 +108,7 @@ export function parseArgs(argv) {
 
 /** What a grid420 night executes from this tree when no committed winner names its night. */
 const ROUTE_FILES = Object.freeze(['packages/propose/bin/census/fnaf1-device-lane.mjs', 'apps/desktop/bin/fnaf1-custom-run.mjs',
-  'packages/play/games/fnaf1/fnaf1-detectors.mjs', 'packages/play/profiles/fnaf1/moto-g56/fnaf1-device-timing-moto-g56-v207.json',
+  'packages/play/games/fnaf1/fnaf1-detectors.ts', 'packages/play/profiles/fnaf1/moto-g56/fnaf1-device-timing-moto-g56-v207.json',
   'packages/play/profiles/fnaf1/moto-g56/regions-fnaf1-moto-g56-v207.json', 'packages/play/profiles/fnaf1/moto-g56/controls-fnaf1-moto-g56-v207.json',
   'packages/play/profiles/fnaf1/moto-g56/custom-night-fnaf1-moto-g56-v207.json']);
 
@@ -117,7 +117,7 @@ const ROUTE_FILES = Object.freeze(['packages/propose/bin/census/fnaf1-device-lan
  * committed winner's. A night whose mode and dials a committed FNaF 1 winner
  * names runs from the tree only while the tree holds that winner's pinned
  * files byte for byte. Otherwise it is refused, and the refusal names both
- * ways on: the replay that runs the pinned route (fnaf1-winner.mjs), and
+ * ways on: the replay that runs the pinned route (fnaf1-winner.ts), and
  * `--route tree`, which runs the tree's route as the new route it is.
  * `--winner FILE` asks for one winner by name and is refused the same way,
  * without the second way. The files are hashed as they stand; the result goes

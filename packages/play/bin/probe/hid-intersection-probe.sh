@@ -59,7 +59,7 @@ SPLIT_OUT="$CAPTURE_DIR/$OUT" CONTACT_MS="$CONTACT_MS" \
   CAMDROP_LEAD_MS="$CAMDROP_LEAD_MS" CAMDROP_MONITOR_MS="$CAMDROP_MONITOR_MS" \
   CAMDROP_TAIL_MS="$CAMDROP_TAIL_MS" HALL_MS="$HALL_MS" \
   PRE_RAISE_MS="$PRE_RAISE_MS" POST_HALL_MS="$POST_HALL_MS" \
-  node "$HERE/hid-intersection-probe.mjs" > "$CAPTURE_DIR/$OUT.hid"
+  node "$HERE/hid-intersection-probe.ts" > "$CAPTURE_DIR/$OUT.hid"
 
 # shellcheck source=select-adb.sh
 . "$HERE/../phone/select-adb.sh"
@@ -180,7 +180,7 @@ game_focused() {
 gate() {
   local target=$1 log=$2
   game_focused || { echo "state gate $target refused: game lost focus" >&2; return 1; }
-  node "$HERE/intersection-state-gate.mjs" --target "$target" \
+  node "$HERE/intersection-state-gate.ts" --target "$target" \
     --timeout-ms "$GATE_TIMEOUT_MS" --poll-ms "$GATE_POLL_MS" --log "$log"
 }
 

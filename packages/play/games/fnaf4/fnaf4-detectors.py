@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build FNaF 4 view templates from a `fnaf4-run.mjs --mode calibrate` run.
+"""Build FNaF 4 view templates from a `fnaf4-run.ts --mode calibrate` run.
 
   fnaf4-detectors.py build --run RUN_ID --out ~/fnaf-apks/fnaf4-detectors/cal0.json
 
@@ -25,7 +25,7 @@ import sys
 import numpy as np
 
 KEYS = ["left_edge", "right_edge", "center"]
-# view after an input, and the settle time (ms) measured on cal0 (fnaf4-run.mjs
+# view after an input, and the settle time (ms) measured on cal0 (fnaf4-run.ts
 # calibrate, 2026-09-25): door runs settle 2360-2610 ms, backs 955-1767 ms.
 AFTER = {"bed": "bed", "leftDoor": "doorL", "rightDoor": "doorR", "closet": "closet",
          "panRight": "roomR", "panLeft": "roomL", "continue": "roomL"}

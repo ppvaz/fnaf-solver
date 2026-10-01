@@ -137,7 +137,7 @@ beside the validators that check them (`kernel.test.js`), and `packages/review` 
 `RawDeviceProfile` is the stored `device-profile-v1`, `ResolvedDeviceProfile<G>` carries the game
 dimension in `targetBuild`, and `resolveDeviceProfile` checks the control map and limits against that
 game's control catalog; the game is derived, so no profile file changed and every bundle hashes as
-before. `profile-game.test.js` and `control-catalog.test.js` print it in `npm run test:contracts`.
+before. `profile-game.test.ts` and `control-catalog.test.js` print it in `npm run test:contracts`.
 Open: one canonical schema source for the register's other contracts, deep experiment validation
 (seeds, claim levels, nested samples), capability relationships, and the lax JS check.
 **Owner:** `packages/kernel` (the contracts), `packages/source` (the catalog-generated validators), `packages/play`

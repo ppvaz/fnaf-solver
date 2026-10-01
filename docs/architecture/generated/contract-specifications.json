@@ -126,7 +126,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateStateEstimate",
       "conformanceFixtures": [
-        "packages/play/test/estimator.test.js"
+        "packages/play/test/estimator.test.ts"
       ]
     },
     {
@@ -146,7 +146,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateClockRef",
       "conformanceFixtures": [
-        "packages/play/test/phase-clock.test.js"
+        "packages/play/test/phase-clock.test.ts"
       ]
     },
     {
@@ -167,7 +167,7 @@
       "runtimeValidation": "validateProfile",
       "conformanceFixtures": [
         "packages/propose/test/test-bundle.mjs",
-        "packages/play/test/profile-game.test.js"
+        "packages/play/test/profile-game.test.ts"
       ]
     },
     {
@@ -409,7 +409,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "parseCompanionStatus",
       "conformanceFixtures": [
-        "packages/play/test/companion-status.test.js",
+        "packages/play/test/companion-status.test.ts",
         "android/companion/test/com/ppvaz/fnafcompanion/CompanionStatusTest.java"
       ]
     },
@@ -470,8 +470,8 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "trajectory JSONL",
       "conformanceFixtures": [
-        "packages/play/test/conformance.test.js",
-        "packages/play/test/adb-device-local-executor.test.js"
+        "packages/play/test/conformance.test.ts",
+        "packages/play/test/adb-device-local-executor.test.ts"
       ]
     },
     {
@@ -511,8 +511,8 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "packages/play/src/campaign/artifact-executor.ts validateExecutorRequest",
       "conformanceFixtures": [
-        "packages/play/test/adb-device-local-executor.test.js",
-        "packages/play/test/profile-game.test.js"
+        "packages/play/test/adb-device-local-executor.test.ts",
+        "packages/play/test/profile-game.test.ts"
       ]
     },
     {
@@ -532,7 +532,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "packages/play/src/sensors/fnaf2/monitor-rule.ts parseMonitorRule",
       "conformanceFixtures": [
-        "packages/play/test/monitor-rule.test.js",
+        "packages/play/test/monitor-rule.test.ts",
         "packages/play/bin/calibrate/test-monitor-calibrate.py"
       ]
     },
@@ -553,7 +553,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "packages/play/src/sensors/fnaf2/camera-rule.ts parseCameraRule",
       "conformanceFixtures": [
-        "packages/play/test/camera-rule.test.js",
+        "packages/play/test/camera-rule.test.ts",
         "packages/play/bin/calibrate/test-camera-calibrate.py"
       ]
     },
@@ -574,7 +574,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "packages/play/src/sensors/fnaf2/calibration-state-rule.ts parseCalibrationStateRule",
       "conformanceFixtures": [
-        "packages/play/test/calibration-state-rule.test.js"
+        "packages/play/test/calibration-state-rule.test.ts"
       ]
     },
     {
@@ -594,7 +594,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "packages/play/src/phone/control-exclusion.ts reconcileExclusiveControls",
       "conformanceFixtures": [
-        "packages/play/test/control-exclusion.test.js"
+        "packages/play/test/control-exclusion.test.ts"
       ]
     },
     {
@@ -614,8 +614,8 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "packages/play/src/campaign/campaign.ts CampaignStateMachine",
       "conformanceFixtures": [
-        "packages/play/test/campaign.test.js",
-        "packages/play/test/campaign-runner.test.js"
+        "packages/play/test/campaign.test.ts",
+        "packages/play/test/campaign-runner.test.ts"
       ]
     },
     {
@@ -635,7 +635,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "packages/play/src/campaign/adb-bridge.ts AdbDeviceBridge",
       "conformanceFixtures": [
-        "packages/play/test/adb-bridge.test.js"
+        "packages/play/test/adb-bridge.test.ts"
       ]
     },
     {
@@ -655,8 +655,8 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "packages/play/src/campaign/campaign.ts CampaignStateMachine.result",
       "conformanceFixtures": [
-        "packages/play/test/campaign.test.js",
-        "packages/play/test/campaign-runner.test.js"
+        "packages/play/test/campaign.test.ts",
+        "packages/play/test/campaign-runner.test.ts"
       ]
     },
     {
@@ -676,7 +676,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "packages/play/src/campaign/campaign-proof.ts makeAttemptProof",
       "conformanceFixtures": [
-        "packages/play/test/campaign-runner.test.js"
+        "packages/play/test/campaign-runner.test.ts"
       ]
     },
     {
@@ -696,8 +696,8 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "packages/play/src/campaign/custom-night.ts validateCustomNightConfig",
       "conformanceFixtures": [
-        "packages/play/test/campaign.test.js",
-        "packages/play/test/campaign-infrastructure.test.js"
+        "packages/play/test/campaign.test.ts",
+        "packages/play/test/campaign-infrastructure.test.ts"
       ]
     },
     {
@@ -717,7 +717,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "packages/play/src/campaign/custom-night.ts validateCustomNightCalibration",
       "conformanceFixtures": [
-        "packages/play/test/campaign-infrastructure.test.js"
+        "packages/play/test/campaign-infrastructure.test.ts"
       ]
     },
     {
@@ -737,7 +737,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "packages/play/src/campaign/campaign-preflight.ts evaluateCampaignPreflight",
       "conformanceFixtures": [
-        "packages/play/test/campaign-infrastructure.test.js"
+        "packages/play/test/campaign-infrastructure.test.ts"
       ]
     },
     {
@@ -1018,7 +1018,7 @@
       "runtimeValidation": "validateVenueIdentity",
       "conformanceFixtures": [
         "packages/kernel/test/venue-identity.test.ts",
-        "packages/play/test/android-venue.test.js"
+        "packages/play/test/android-venue.test.ts"
       ]
     },
     {
@@ -1039,7 +1039,7 @@
       "runtimeValidation": "validateVenueCheck",
       "conformanceFixtures": [
         "packages/kernel/test/venue-identity.test.ts",
-        "packages/play/test/venue-preflight.test.js"
+        "packages/play/test/venue-preflight.test.ts"
       ]
     },
     {
@@ -1060,7 +1060,7 @@
       "runtimeValidation": "validateVenueBinding",
       "conformanceFixtures": [
         "packages/kernel/test/venue-identity.test.ts",
-        "packages/play/test/venue-preflight.test.js"
+        "packages/play/test/venue-preflight.test.ts"
       ]
     },
     {
@@ -1081,7 +1081,7 @@
       "runtimeValidation": "validateQualification",
       "conformanceFixtures": [
         "packages/kernel/test/venue-identity.test.ts",
-        "packages/play/test/venue-preflight.test.js"
+        "packages/play/test/venue-preflight.test.ts"
       ]
     },
     {

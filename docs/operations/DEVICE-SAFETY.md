@@ -51,7 +51,7 @@ night and were retired on 2026-09-25 (`6d78c7e`, `903ffab`;
 
 **Every night runner is dry unless told otherwise (Pedro, 2026-09-29; ADR
 0002).** `night-run.sh`, `fnaf1-night-run.sh`, `fnaf1-custom-run.sh`,
-`fnaf1-menu-probe.sh`, `fnaf3-run.sh`, `fnaf4-run.sh` and `fnaf1-winner.mjs`
+`fnaf1-menu-probe.sh`, `fnaf3-run.sh`, `fnaf4-run.sh` and `fnaf1-winner.ts`
 (and `npm run night`, which passes its arguments through) run live only with
 `--live --confirm-live`. Without the pair they print what they would run and
 make no adb call, take no lease and need no serial. Until that day
@@ -69,7 +69,7 @@ and a live run with none of them refuses before it touches anything. Set it once
 per host:
 
 ```sh
-node packages/play/bin/phone/local-profile.mjs set <serial>    # adb devices -l lists it
+node packages/play/bin/phone/local-profile.ts set <serial>    # adb devices -l lists it
 ```
 
 No tracked script carries a default, and `tools/test-no-serial.mjs` (in `npm
@@ -238,7 +238,7 @@ restored at the end, however the window ends.
 - **Installing it is Pedro's step.** Nothing here installs a timer:
 
   ```sh
-  node packages/play/bin/phone/local-profile.mjs set <serial>                       # once per host (untracked)
+  node packages/play/bin/phone/local-profile.ts set <serial>                       # once per host (untracked)
   python3 apps/lab/overnight-window.py preflight                     # read-only: FIT, or why not
   python3 apps/lab/overnight-window.py units --out ~/.config/systemd/user
   systemctl --user daemon-reload
@@ -267,7 +267,7 @@ apps/lab/companion-queue.sh enqueue night --game fnaf2 \
   nothing else. The runner is fixed by the winner's schema, and the job passes
   it `--live --confirm-live` itself, since every runner is dry without them:
   - `night-run.sh` for FNaF 2, with the bundle emitted fresh;
-  - `fnaf1-winner.mjs` for a FNaF 1 route winner;
+  - `fnaf1-winner.ts` for a FNaF 1 route winner;
   - `fnaf4-run.sh --mode loop` for FNaF 4.
 
   The job is checked when it is queued and again when it starts, and it

@@ -61,7 +61,7 @@ const EXIT_CONFIRM_SAMPLES = 3;
 // its exit vote until the measured maximum plus one observer interval has
 // passed since the first static of its run. Game Over or 6 AM inside the window
 // ends the night as usual. These numbers decide behaviour, so
-// packages/play/test/static-terminal-window.test.js reads the record and fails if
+// packages/play/test/static-terminal-window.test.ts reads the record and fails if
 // either drifts from it (CLAUDE.md register items 7 and 9).
 export const STATIC_TERMINAL_MAX_MS = 6306;
 export const OBSERVER_INTERVAL_BOUND_MS = 2418;
@@ -101,7 +101,7 @@ export const STATIC_TERMINAL_WAIT_MS = STATIC_TERMINAL_MAX_MS + OBSERVER_INTERVA
 // them anyway. A confirmation read could not have protected r02: its next read
 // came 8393 ms after its static, and its frames show the presses had passed
 // Game Over into the Custom Night dial screen within about 6 s of the static's
-// onset. packages/play/test/post-night-halt.test.js holds these numbers to the
+// onset. packages/play/test/post-night-halt.test.ts holds these numbers to the
 // record.
 //
 // The window assumes one observer interval of at most OBSERVER_INTERVAL_BOUND_MS
@@ -875,7 +875,7 @@ export class AdbDeviceLocalArtifactExecutor {
             // (71% across all runs, against 30% of gates that agreed). A
             // correction ACTS -- it presses the mask -- so a wrong one does not
             // report an inversion, it creates one.
-            // `packages/play/bin/probe/intersection-state-gate.mjs` has stated this rule
+            // `packages/play/bin/probe/intersection-state-gate.ts` has stated this rule
             // all along: a missing stroke score is a refusal, never a luma
             // fallback.
             const strokes = buttonStrokeState(sample);

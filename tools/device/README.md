@@ -5,7 +5,7 @@ both stay because something outside the tree names it:
 
 - `tools/device/local-profile.json`, the untracked, gitignored local profile
   that holds this host's handset serial (ADR 0002, decision 8;
-  `packages/play/bin/phone/local-profile.mjs`). A worktree without its own
+  `packages/play/bin/phone/local-profile.ts`). A worktree without its own
   reads the main checkout's.
 - the overnight window's forwarder below, because a host's installed systemd
   units name this path in `ExecStart`.

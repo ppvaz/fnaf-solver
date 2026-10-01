@@ -28,7 +28,7 @@
 # flag meant live and --dry-run was the opt-out; --dry-run is still accepted.
 #
 # The serial is --serial, else FNAF_SERIAL, else the untracked local profile
-# (packages/play/bin/phone/local-profile.mjs, ADR 0002 decision 8). No default: a live run
+# (packages/play/bin/phone/local-profile.ts, ADR 0002 decision 8). No default: a live run
 # with none of the three refuses before it touches anything.
 set -Eeuo pipefail
 
@@ -116,7 +116,7 @@ fi
 # ---- the serial: --serial, FNAF_SERIAL, the local profile, or a refusal ------
 # A dry run proceeds without one: it never addresses the phone.
 if [ -z "$SERIAL" ]; then
-  if serial_out="$(node "$HERE/local-profile.mjs" serial 2>&1)"; then
+  if serial_out="$(node "$HERE/local-profile.ts" serial 2>&1)"; then
     SERIAL="$serial_out"
   elif [ "$DRY" = 0 ]; then
     die "live night refused: ${serial_out#local-profile: }"
@@ -162,12 +162,12 @@ fi
 # question this phone cannot answer. `plans/PROGRESS.md` recorded that negative
 # on 2026-08-30 and a full night was spent rediscovering it on 2026-09-11.
 #
-# capabilities.mjs is the one place that knows, so this asks it rather than
+# capabilities.ts is the one place that knows, so this asks it rather than
 # re-deriving the answer here. `--force-trace` keeps the trace anyway (a
 # different handset, or a deliberate SurfaceFlinger-only capture).
 if [ "$DRY" = 0 ] && [ "$TRACE" = 1 ] && [ "$FORCE_TRACE" = 0 ]; then
   if FNAF_SERIAL="$SERIAL" node -e '
-      import("./packages/play/bin/phone/capabilities.mjs").then(m => {
+      import("./packages/play/bin/phone/capabilities.ts").then(m => {
         const d = m.probe(process.env.FNAF_SERIAL);
         if (d.perfettoDataSources === null) process.exit(2);
         process.exit(d.perfettoDataSources.includes("android.input.inputevent") ? 0 : 1);
@@ -723,7 +723,7 @@ if [ "$DRY" = 1 ]; then
   # Nothing was started on the phone, so nothing is stopped or reset either.
   # The EXIT trap force-stops the game, relaunches it and screencaps its title;
   # until 2026-09-27 a dry run still ran it and put FNaF 2 in front of an app
-  # the phone's owner was using (test-night-run-dry.mjs).
+  # the phone's owner was using (test-night-run-dry.ts).
   trap - EXIT
   exit 0
 fi
@@ -757,7 +757,7 @@ if [ "$BT_AUDIO" = 1 ]; then
   printf 'bt-audio link %s\n' "$(tail -1 "$OUTDIR/bt-audio-link.txt")"
   # The mix is the whole phone's: another app's started player masks the game
   # (FNaF 4 n5c, 2026-09-27: a background app's title music, a deaf night).
-  if ! node "$HERE/../companion/audio-players.mjs" --serial "$SERIAL" --target com.scottgames.fnaf2 >"$OUTDIR/audio-players.json" 2>&1; then
+  if ! node "$HERE/../companion/audio-players.ts" --serial "$SERIAL" --target com.scottgames.fnaf2 >"$OUTDIR/audio-players.json" 2>&1; then
     die "audio preflight refused: $(cat "$OUTDIR/audio-players.json")"
   fi
   if bt_pid="$("$HERE/../audio/capture-bt-audio.sh" --start "$BT_AUDIO_BASE" 2>"$OUTDIR/bt-audio.err")"; then

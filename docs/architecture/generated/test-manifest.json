@@ -927,7 +927,7 @@
       }
     },
     {
-      "id": "packages/play/bin/companion/test-audio-players.mjs",
+      "id": "packages/play/bin/companion/test-audio-players.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -947,7 +947,7 @@
       }
     },
     {
-      "id": "packages/play/bin/companion/test-audio-probe.mjs",
+      "id": "packages/play/bin/companion/test-audio-probe.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1045,7 +1045,7 @@
       }
     },
     {
-      "id": "packages/play/bin/grade/test-tap-stall-audit.mjs",
+      "id": "packages/play/bin/grade/test-tap-stall-audit.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1065,7 +1065,7 @@
       }
     },
     {
-      "id": "packages/play/bin/phone/test-control-anchor.mjs",
+      "id": "packages/play/bin/phone/test-control-anchor.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1085,7 +1085,7 @@
       }
     },
     {
-      "id": "packages/play/bin/phone/test-event-clocks.mjs",
+      "id": "packages/play/bin/phone/test-event-clocks.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1125,7 +1125,7 @@
       }
     },
     {
-      "id": "packages/play/bin/phone/test-hid-sweep-probe.mjs",
+      "id": "packages/play/bin/phone/test-hid-sweep-probe.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1165,7 +1165,7 @@
       }
     },
     {
-      "id": "packages/play/bin/phone/test-night-run-dry.mjs",
+      "id": "packages/play/bin/phone/test-night-run-dry.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1187,7 +1187,7 @@
       }
     },
     {
-      "id": "packages/play/bin/phone/test-screen-map.mjs",
+      "id": "packages/play/bin/phone/test-screen-map.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1267,7 +1267,7 @@
       }
     },
     {
-      "id": "packages/play/bin/probe/seedpin/test-seedpin.mjs",
+      "id": "packages/play/bin/probe/seedpin/test-seedpin.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1285,7 +1285,7 @@
       }
     },
     {
-      "id": "packages/play/bin/probe/test-hid-intersection-probe.mjs",
+      "id": "packages/play/bin/probe/test-hid-intersection-probe.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1323,7 +1323,7 @@
       }
     },
     {
-      "id": "packages/play/bin/probe/test-intersection-state-gate.mjs",
+      "id": "packages/play/bin/probe/test-intersection-state-gate.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1343,7 +1343,7 @@
       }
     },
     {
-      "id": "packages/play/bin/recompile/test-practice-audit.mjs",
+      "id": "packages/play/bin/recompile/test-practice-audit.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1361,7 +1361,7 @@
       }
     },
     {
-      "id": "packages/play/bin/recompile/test-rebuild-night.mjs",
+      "id": "packages/play/bin/recompile/test-rebuild-night.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1399,7 +1399,7 @@
       }
     },
     {
-      "id": "packages/play/games/fnaf1/test-fnaf1-menu-probe.mjs",
+      "id": "packages/play/games/fnaf1/test-fnaf1-menu-probe.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1435,7 +1435,7 @@
       }
     },
     {
-      "id": "packages/play/games/fnaf1/test-fnaf1-night-run.mjs",
+      "id": "packages/play/games/fnaf1/test-fnaf1-night-run.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1489,7 +1489,7 @@
       }
     },
     {
-      "id": "packages/play/games/fnaf3/test-fnaf3-run.mjs",
+      "id": "packages/play/games/fnaf3/test-fnaf3-run.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1507,7 +1507,7 @@
       }
     },
     {
-      "id": "packages/play/games/fnaf4/test-fnaf4-fredbear.mjs",
+      "id": "packages/play/games/fnaf4/test-fnaf4-fredbear.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1569,7 +1569,7 @@
       }
     },
     {
-      "id": "packages/play/test/adb-bridge.test.js",
+      "id": "packages/play/test/adb-bridge.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1589,7 +1589,7 @@
       }
     },
     {
-      "id": "packages/play/test/adb-device-local-executor.test.js",
+      "id": "packages/play/test/adb-device-local-executor.test.ts",
       "lane": "test:contracts",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1617,7 +1617,7 @@
       }
     },
     {
-      "id": "packages/play/test/android-venue.test.js",
+      "id": "packages/play/test/android-venue.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1637,7 +1637,7 @@
       }
     },
     {
-      "id": "packages/play/test/belief.test.js",
+      "id": "packages/play/test/belief.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1655,7 +1655,7 @@
       }
     },
     {
-      "id": "packages/play/test/calibration-state-rule.test.js",
+      "id": "packages/play/test/calibration-state-rule.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1673,7 +1673,7 @@
       }
     },
     {
-      "id": "packages/play/test/camera-rule.test.js",
+      "id": "packages/play/test/camera-rule.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1691,7 +1691,7 @@
       }
     },
     {
-      "id": "packages/play/test/campaign-composition.test.js",
+      "id": "packages/play/test/campaign-composition.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1711,7 +1711,7 @@
       }
     },
     {
-      "id": "packages/play/test/campaign-infrastructure.test.js",
+      "id": "packages/play/test/campaign-infrastructure.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1731,7 +1731,7 @@
       }
     },
     {
-      "id": "packages/play/test/campaign-runner.test.js",
+      "id": "packages/play/test/campaign-runner.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1751,7 +1751,7 @@
       }
     },
     {
-      "id": "packages/play/test/campaign-signal.test.js",
+      "id": "packages/play/test/campaign-signal.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1769,7 +1769,7 @@
       }
     },
     {
-      "id": "packages/play/test/campaign.test.js",
+      "id": "packages/play/test/campaign.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1789,7 +1789,7 @@
       }
     },
     {
-      "id": "packages/play/test/clock-map.test.js",
+      "id": "packages/play/test/clock-map.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1807,7 +1807,7 @@
       }
     },
     {
-      "id": "packages/play/test/companion-status.test.js",
+      "id": "packages/play/test/companion-status.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1825,7 +1825,7 @@
       }
     },
     {
-      "id": "packages/play/test/conformance.test.js",
+      "id": "packages/play/test/conformance.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1845,7 +1845,7 @@
       }
     },
     {
-      "id": "packages/play/test/control-exclusion.test.js",
+      "id": "packages/play/test/control-exclusion.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1863,7 +1863,7 @@
       }
     },
     {
-      "id": "packages/play/test/cycle-lesson.test.js",
+      "id": "packages/play/test/cycle-lesson.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1881,7 +1881,7 @@
       }
     },
     {
-      "id": "packages/play/test/estimator.test.js",
+      "id": "packages/play/test/estimator.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1899,7 +1899,7 @@
       }
     },
     {
-      "id": "packages/play/test/hid-read-gap.test.js",
+      "id": "packages/play/test/hid-read-gap.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1919,7 +1919,7 @@
       }
     },
     {
-      "id": "packages/play/test/hid-report.test.js",
+      "id": "packages/play/test/hid-report.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1939,7 +1939,7 @@
       }
     },
     {
-      "id": "packages/play/test/hid-second-contact.test.js",
+      "id": "packages/play/test/hid-second-contact.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1959,7 +1959,7 @@
       }
     },
     {
-      "id": "packages/play/test/modern-campaign-terminal.test.js",
+      "id": "packages/play/test/modern-campaign-terminal.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1977,7 +1977,7 @@
       }
     },
     {
-      "id": "packages/play/test/monitor-rule.test.js",
+      "id": "packages/play/test/monitor-rule.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -1995,7 +1995,7 @@
       }
     },
     {
-      "id": "packages/play/test/night-anchor.test.js",
+      "id": "packages/play/test/night-anchor.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -2013,7 +2013,7 @@
       }
     },
     {
-      "id": "packages/play/test/night-onset.test.js",
+      "id": "packages/play/test/night-onset.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -2031,7 +2031,7 @@
       }
     },
     {
-      "id": "packages/play/test/observer-entropy.test.js",
+      "id": "packages/play/test/observer-entropy.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -2056,7 +2056,7 @@
       }
     },
     {
-      "id": "packages/play/test/phase-clock.test.js",
+      "id": "packages/play/test/phase-clock.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -2074,7 +2074,7 @@
       }
     },
     {
-      "id": "packages/play/test/post-night-halt.test.js",
+      "id": "packages/play/test/post-night-halt.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -2111,7 +2111,7 @@
       }
     },
     {
-      "id": "packages/play/test/profile-game.test.js",
+      "id": "packages/play/test/profile-game.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -2131,7 +2131,7 @@
       }
     },
     {
-      "id": "packages/play/test/static-terminal-window.test.js",
+      "id": "packages/play/test/static-terminal-window.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -2192,7 +2192,7 @@
       }
     },
     {
-      "id": "packages/play/test/timed-start.test.js",
+      "id": "packages/play/test/timed-start.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
@@ -2212,7 +2212,7 @@
       }
     },
     {
-      "id": "packages/play/test/venue-preflight.test.js",
+      "id": "packages/play/test/venue-preflight.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,

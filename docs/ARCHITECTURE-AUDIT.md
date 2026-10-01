@@ -303,7 +303,7 @@ stop agreeing"* — sixteen lines above one of the four copies of `33`.
 
 All of these currently agree. **One does not.** The HID axis transform
 `rawX = (1080 − y) * 20 / 9` has three implementations with three rounding
-rules: `hid-sweep-probe.mjs:17` uses `Math.round`, `desync-scan.py:58` uses `//`
+rules: `hid-sweep-probe.ts:17` uses `Math.round`, `desync-scan.py:58` uses `//`
 (floor), and `trial.sh` uses shell truncation. Computed over the real tap
 table, they differ by one unit wherever the product is non-integral:
 
@@ -315,7 +315,7 @@ y=640 (sixthNight) exact 977.78  JS  978  Python/shell  977   MISMATCH
 
 So the probe that measures what the phone accepts and the auditor that decides
 what the game did are keyed to different coordinates for three of the taps.
-Nothing compares them; `test-hid-sweep-probe.mjs` tests only the JS copy.
+Nothing compares them; `test-hid-sweep-probe.ts` tests only the JS copy.
 
 Two adjacent traps worth naming in the same breath:
 
@@ -337,15 +337,15 @@ above.** The table in this finding checks only `rawX` and only three taps. Run
 over the whole coordinate set — `coords.sh`'s taps plus `desync-scan.py`'s
 camera table, 39 points — and including the `rawY = x * 9 / 20` axis this
 finding never checked, **24 of 39 coordinates disagreed**, not three. Among
-them `cam11`, which `hid-sweep-probe.mjs` actually sweeps: the probe that
+them `cam11`, which `hid-sweep-probe.ts` actually sweeps: the probe that
 measures what the phone accepts was sending a coordinate the runner never
 sends, while the auditor that decides what the game did was keyed to a third.
 
-`hid-sweep-probe.mjs` now floors. The runner wins the tie because it is what
+`hid-sweep-probe.ts` now floors. The runner wins the tie because it is what
 presses the phone, and the auditor must match the runner or it attributes
 presses to the wrong control.
 
-`packages/play/bin/phone/test-screen-map.mjs` holds all three implementations to one
+`packages/play/bin/phone/test-screen-map.ts` holds all three implementations to one
 answer, evaluating the shell and Python forms in their own interpreters over
 the real tables rather than restating them. It also pins the *truncation*, so
 the check cannot be satisfied by changing all three copies to round together —
@@ -752,7 +752,7 @@ Appended rather than edited in place, because other pages cite this one by line.
   `control-effect.js`), and what remains open of that split is
   [`LEG-004`](architecture/LEGIBILITY-FOLLOWUPS.md).
 - **Finding 6's remainder, timing constants across three languages** — the
-  shell copy left with the runner; `test-screen-map.mjs` holds the coordinate
+  shell copy left with the runner; `test-screen-map.ts` holds the coordinate
   transform to one answer in the transport and the Companion.
 - **Finding 5, the screen-model builder** — moot: the screencheck classifier
   and its builder were retired with the fixture service path.

@@ -125,7 +125,7 @@ data only; nothing leaves this machine, per Plan 17's boundary.
 
 ### Capability preflight
 
-`node packages/play/bin/phone/capabilities.mjs` ran green on 2026-09-19 and is entirely
+`node packages/play/bin/phone/capabilities.ts` ran green on 2026-09-19 and is entirely
 handset-level — geometry, HID, screenrecord, and 26 Perfetto data sources.
 **Exactly one field is game-bound** (`targetInstalled`, `capabilities.mjs:56`).
 Horizon 5's first milestone item is therefore already satisfied for every game

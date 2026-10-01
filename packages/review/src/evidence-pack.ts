@@ -332,7 +332,7 @@ function incompleteCampaign(dir) {
 /**
  * A FNaF 1 runner's night (tools/device/fnaf1-*-run.mjs): its `probe.json` or `run.json` record
  * and its `events.jsonl`, whose captures already live outside the repository and are cited
- * there by sha256, the `replay.json` fnaf1-winner.mjs leaves beside a winner's replay, and the
+ * there by sha256, the `replay.json` fnaf1-winner.ts leaves beside a winner's replay, and the
  * `title-stars.json` Play's fnaf1-title-stars.py reads off the run's retained title frames.
  * There is no campaign result, so the outcome is the runner's own `night-ended` event and
  * record status; fnaf1-promotion.ts reads these packs for the promotion gate.

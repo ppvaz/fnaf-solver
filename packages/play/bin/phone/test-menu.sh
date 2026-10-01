@@ -237,7 +237,7 @@ done
 # selection for three independent reasons: they grep `--include='*.sh'` and it
 # was JavaScript; they iterate a hardcoded runner list and it was not on it;
 # and they match the *name* TAP_NEWGAME while it held the raw literal
-# `sixth: [400, 880]`. hid-sweep-probe.mjs tapped that blind as the first
+# `sixth: [400, 880]`. hid-sweep-probe.ts tapped that blind as the first
 # report of an HID stream, and hid-raise-probe.mjs imported it.
 #
 # So match the coordinates themselves, read out of coords.sh rather than
@@ -248,7 +248,7 @@ done
 # *synthesizes* one. Neither presses anything. The hazard this closes is
 # pressing a title item without looking at it first, so an observer is not an
 # offender -- but it is excluded by name rather than by pattern, so a new one
-# has to be a decision in the diff. test-screen-map.mjs is excluded on the same
+# has to be a decision in the diff. test-screen-map.ts is excluded on the same
 # ground: it holds the screen->raw transform to one answer in three languages
 # and must name coordinates to compare them.
 # sed -E, not -n with BRE: BSD sed on macOS has no \| alternation, so the BRE

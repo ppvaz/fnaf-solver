@@ -12,7 +12,7 @@ call to `<state>.log`, so a test can say exactly what was asked of the phone.
 
     fake_phone.py adb ...      stands in for `adb` (a known, closed vocabulary)
     fake_phone.py setup ...    for companion-setup.sh (capture, launch, FNAF2_MENU)
-    fake_phone.py snap ...     for native-frame.mjs (a synthetic native title frame)
+    fake_phone.py snap ...     for native-frame.ts (a synthetic native title frame)
     fake_phone.py runner ...   for a night runner, given the real argv (FAKE_RUNNER_MODE)
     fake_phone.py audio ...    for bt-audio-link.sh --ensure
 
@@ -260,7 +260,7 @@ def title_png(model_path: Path, items: list[str], out: Path) -> None:
 
 
 def snap(argv: list[str]) -> int:
-    """native-frame.mjs: needs the lease marker and a running projection."""
+    """native-frame.ts: needs the lease marker and a running projection."""
     log("snap", argv)
     out = Path(argv[argv.index("--out") + 1])
     if os.environ.get("FNAF_LEASE_HELD") != "1":

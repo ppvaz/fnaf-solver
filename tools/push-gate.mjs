@@ -29,7 +29,7 @@ import { appendFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirS
 import { homedir, hostname, tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { mainCheckout } from '../packages/play/bin/phone/local-profile.mjs';
+import { mainCheckout } from '../packages/play/bin/phone/local-profile.ts';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));
 const ZERO = /^0+$/;

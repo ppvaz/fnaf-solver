@@ -20,13 +20,13 @@ nights"). It is never an agent-facing command.
     static halt (669447b);
  4. the audio link, where the runner reads audio (FNaF 4), or where a FNaF 2
     job asked to retain it (`bt-audio-link.sh --ensure`);
- 5. the title, OBSERVED (Companion SNAP, native-frame.mjs, read by
+ 5. the title, OBSERVED (Companion SNAP, native-frame.ts, read by
     title-observe.py with the game's model), never assumed: the job refuses
     unless it offers the declared night -- Custom Night for 7, 6th Night for 6,
     and for 1-5 the digit under Continue. A game or night whose title cannot be
     read (no FNaF 4 model; no FNaF 2 Continue digit reader yet) is refused;
  6. the runner, in this process group so an abort reaches it directly:
-    night-run.sh (FNaF 2), fnaf1-winner.mjs (FNaF 1), fnaf4-run.sh (FNaF 4),
+    night-run.sh (FNaF 2), fnaf1-winner.ts (FNaF 1), fnaf4-run.sh (FNaF 4),
     with the lease-held marker each takes;
  7. after any end or abort: the title again, observed; if it is not, the game
     is force-stopped, relaunched and observed (mistake register 6).
@@ -59,7 +59,7 @@ import night_jobs  # noqa: E402
 from companion_device_lock import DeviceBusy, DeviceLock, lock_dir  # noqa: E402
 
 SETUP_COMMAND = [str(HERE / "../../packages/play/bin/companion/companion-setup.sh")]
-SNAP_COMMAND = ["node", str(HERE / "../../packages/play/bin/phone/native-frame.mjs")]
+SNAP_COMMAND = ["node", str(HERE / "../../packages/play/bin/phone/native-frame.ts")]
 TITLE_COMMAND = [sys.executable, str(HERE / "../../packages/play/src/sensors/screencap/title-observe.py")]
 AUDIO_COMMAND = [str(ROOT / "packages/play/bin/audio/bt-audio-link.sh")]
 # A test replaces the runner with a stand-in that receives the real argv.

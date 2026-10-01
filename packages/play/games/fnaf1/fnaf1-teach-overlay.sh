@@ -14,10 +14,10 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# FNAF_SERIAL, then ANDROID_SERIAL (fnaf1-night-run.mjs passes it), then the
+# FNAF_SERIAL, then ANDROID_SERIAL (fnaf1-night-run.ts passes it), then the
 # untracked local profile; no default (ADR 0002 decision 8).
 SERIAL="${FNAF_SERIAL:-${ANDROID_SERIAL:-}}"
-[ -n "$SERIAL" ] || SERIAL="$(node "$HERE/../../bin/phone/local-profile.mjs" serial)" || exit 2
+[ -n "$SERIAL" ] || SERIAL="$(node "$HERE/../../bin/phone/local-profile.ts" serial)" || exit 2
 PACKAGE="com.ppvaz.fnaf1teach"
 SERVICE="$PACKAGE/.Fnaf1TeachOverlayService"
 RECEIVER="$PACKAGE/.Fnaf1TeachCommandReceiver"

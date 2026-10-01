@@ -53,7 +53,7 @@ const ENGINE = [
   ['minus toys worst', ['../packages/propose/bin/minustoystest.mjs', '100', '--worst', '--assert']],
   ['minus toys no-split', ['../packages/propose/bin/minustoystest.mjs', '200', '--no-split', '--assert']],
   ['simtest', ['../packages/source/test/simtest.mjs', '--sweep']],
-  ['hidreporttest', ['../packages/play/test/hid-report.test.js']],
+  ['hidreporttest', ['../packages/play/test/hid-report.test.ts']],
   // Plan 19 pkg 1: the stock-device observation model (OBSERVED/UNKNOWN facts,
   // sensor cadence + latency + drops) and the blackout-reactive controller
   // (animation-window guard, lower-mask-verify-raise, graceful under a noisy
@@ -69,20 +69,20 @@ const ENGINE = [
   // Plan 21 phase-clock foundation: paired A2DP latency calibration, 2 Hz
   // period/phase lock, explicit 500 ms parity, and stale/low-confidence
   // recovery. No privileged engine phase is used here.
-  ['phase clock', ['../packages/play/test/phase-clock.test.js']],
+  ['phase clock', ['../packages/play/test/phase-clock.test.ts']],
   // Plan 20 package 6 foundation: bounded fact messages, ordered receipt and
   // gap/stale reporting, plus a local drain that can finish an already-
   // approved cycle without inventing actions after the host link drops.
   ['fact link', ['../packages/kernel/test/factlinktest.ts']],
   // Plan 20 package 1: unknown-safe, calibration-bound facts and explicit
   // action verification in a deterministic replayable belief contract.
-  ['belief state', ['../packages/play/test/belief.test.js']],
+  ['belief state', ['../packages/play/test/belief.test.ts']],
   // Plan 20 package 2: controller-visible reduced transition model agrees with
   // seeded Sim control/resource traces; hidden routes remain risk buckets.
   ['reduced model', ['../packages/propose/test/reducedmodeltest.mjs']],
   // Plan 20 package 3: delayed facts retain event time, UNKNOWN never clears
   // risk, stale controls require verification, and contradictions fail safe.
-  ['estimator', ['../packages/play/test/estimator.test.js']],
+  ['estimator', ['../packages/play/test/estimator.test.ts']],
   // Plan 20 package 4: reviewed cycle data, reduced-model locks, device
   // contact floors, and mandatory exact-engine proof callback.
   // Plan 20 package 5 foundation: worst-case (not average) selection across
@@ -185,7 +185,7 @@ const ENGINE = [
   // samples are game content and live outside the repository.
   // The sweep probe is a device action, but its report stream is not: the
   // trap-2 contact discipline and the pulsed light are checked without a phone.
-  ['hid sweep probe', ['../packages/play/bin/phone/test-hid-sweep-probe.mjs']],
+  ['hid sweep probe', ['../packages/play/bin/phone/test-hid-sweep-probe.ts']],
   // The device pilot's cycle recipes and their budgets: contact lengths above
   // the phone's floor, camera spacing it has actually landed, a hall flash per
   // cycle, wind above break-even, the flashlight inside night 6's 3000 frames,
@@ -279,7 +279,7 @@ const ENGINE = [
   ['fnaf1 door light', ['../packages/play/games/fnaf1/test-fnaf1-door-light.py']],
   // This pins the FNaF 1-only Continue title binding, audio requirement, and
   // serial-lease wrapper without touching a phone.
-  ['fnaf1 night runner', ['../packages/play/games/fnaf1/test-fnaf1-night-run.mjs']],
+  ['fnaf1 night runner', ['../packages/play/games/fnaf1/test-fnaf1-night-run.ts']],
   // First/final PCM receipt bounds must survive an interactive stop; otherwise
   // a recorder's startup and teardown become fabricated Bluetooth loss.
   ['BT audio collector', ['../packages/play/bin/audio/test-bt-audio-collector.py']],
@@ -349,7 +349,7 @@ const ENGINE = [
   // left on 2026-09-30, and its route bundles' hid-controls.txt are held to
   // what the transport derives from their profiles. Its shell and Python copies
   // once disagreed on 24 of 39 coordinates; they left with the legacy lane.
-  ['screen map', ['../packages/play/bin/phone/test-screen-map.mjs']],
+  ['screen map', ['../packages/play/bin/phone/test-screen-map.ts']],
   // Plan 18 Package 5: parse source-side InputDispatcher evidence without a
   // phone or a trace-processor dependency in the normal checkout.
   ['input trace', ['../packages/play/bin/probe/test-inputtrace.py']],

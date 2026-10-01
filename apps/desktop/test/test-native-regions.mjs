@@ -12,8 +12,8 @@
 //   node apps/desktop/test/test-native-regions.mjs
 
 import { parseRegionRead, regionSetLine } from '../../../packages/play/src/venues/phone/companion.ts';
-import { pngFromRegion } from '../../../packages/play/bin/phone/native-regions.mjs';
-import { makeClassifier } from '../../../packages/play/games/fnaf1/fnaf1-detectors.mjs';
+import { pngFromRegion } from '../../../packages/play/bin/phone/native-regions.ts';
+import { makeClassifier } from '../../../packages/play/games/fnaf1/fnaf1-detectors.ts';
 import { parseArgs } from '../bin/fnaf1-custom-run.mjs';
 
 const failures = [];

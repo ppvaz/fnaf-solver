@@ -2,7 +2,7 @@
 """Rebuild frames at the phone's native frame size, and their distance to phone frames.
 
 The Cue Helper's MediaProjection frame is 2400x1080 landscape
-(tools/device/native-frame.mjs), and the build-296 games run Display Mode FULL:
+(tools/device/native-frame.ts), and the build-296 games run Display Mode FULL:
 the 1024x768 frame is stretched to fill it, x2.34375 across and x1.40625 down
 (tools/device/models/controls-fnaf4-moto-g56-v204.json states the rule; FNaF 2's
 phone frames show the same fill). The phone magnifies game-resolution content

@@ -13,7 +13,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { mainCheckout } from '../packages/play/bin/phone/local-profile.mjs';
+import { mainCheckout } from '../packages/play/bin/phone/local-profile.ts';
 import { DEFAULT_MEMORY_MAX, LANES, RUN_RECORD_SCHEMA, failureReport, laneCommand, recordRun, reproduceCommand, runRecordPath } from './push-gate.mjs';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));

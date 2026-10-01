@@ -210,7 +210,7 @@ enter safe recovery; they never produce an unlogged confidence jump.
 `src/estimator.js` wraps the versioned belief reducer with monotonic prediction,
 observation/receipt timestamps, stale-control verification lockouts,
 calibration refusal, contradiction incidents, and transactional action
-reconciliation. `packages/play/test/estimator.test.js` covers delayed A2DP-style facts,
+reconciliation. `packages/play/test/estimator.test.ts` covers delayed A2DP-style facts,
 UNKNOWN preservation, stale controls, missing profiles, contradictory sensors,
 and failed/successful verification.
 

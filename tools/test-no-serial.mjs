@@ -7,7 +7,7 @@
 // frozen evidence keeps it; no history rewrite." Until that day 18 scripts
 // defaulted to one handset's serial, so a run on any host addressed that phone
 // by name and every checkout published it. The runners now read FNAF_SERIAL or
-// tools/device/local-profile.json (gitignored; packages/play/bin/phone/local-profile.mjs).
+// tools/device/local-profile.json (gitignored; packages/play/bin/phone/local-profile.ts).
 //
 // Scanned: every tracked file, plus untracked files git does not ignore, so a
 // new file is refused before it is committed (tools/test-docs.mjs does the
@@ -94,7 +94,7 @@ if (refused.length || problems.length) {
   console.error(`no-serial: FAILED -- the handset serial must come from FNAF_SERIAL or ${PROFILE}, never a tracked file.`);
   if (refused.length) {
     console.error('Files that name it (use <serial> in docs, a fake such as FAKE0001 in fixtures, and '
-      + 'packages/play/bin/phone/local-profile.mjs in code):');
+      + 'packages/play/bin/phone/local-profile.ts in code):');
     for (const line of refused) console.error(`  ${line}`);
   }
   for (const line of problems) console.error(`  ${line}`);

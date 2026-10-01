@@ -134,7 +134,7 @@ models, aligned by comment only.
   coordinates, and `test-camera-calibrate.py` holds it to the camera rule.
 - **Phase clock.** Resolved 2026-09-27: the APK's `PhaseClock.java` left with
   the Companion's audio path, so `packages/play/src/clocks/phase-clock.ts`
-  (tested by `packages/play/test/phase-clock.test.js`) is the only implementation.
+  (tested by `packages/play/test/phase-clock.test.ts`) is the only implementation.
 
 Cleanup decision: these are the two strongest candidates for the shared-JSONL
 vector pattern already used by `packages/kernel/test/contract-vectors.py` (§20).
@@ -442,7 +442,7 @@ green.
   `pan-path-capture.sh` (17) are thin serial-selecting wrappers that delegate
   to the same-named `.py`. `companion-queue.sh:1` states why it must *not*
   source `select-adb.sh`: enqueue and list have to work with no phone present.
-- `packages/play/bin/phone/hid-sweep-probe.mjs` / `.sh` are complementary: the `.mjs`
+- `packages/play/bin/phone/hid-sweep-probe.ts` / `.sh` are complementary: the `.mjs`
   emits the report stream, the `.sh` drives and measures the phone.
 - The four `packages/core/src/*/ports.js` files are one port interface per
   concern (actuation, control, sensing, timing), not four copies.

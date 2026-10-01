@@ -64,9 +64,9 @@ if (sourceChanged || coreChanged || proposeChanged || playModelChanged) {
 }
 if (changed.some(path => path.startsWith('packages/play/') || path.startsWith('packages/adapters/') ||
     path === 'apps/desktop/src/device-cli.ts')) {
-  add('adapter-contracts', 'node', ['packages/play/test/conformance.test.js']);
-  add('device-executor', 'node', ['packages/play/test/adb-device-local-executor.test.js']);
-  add('device-campaign', 'node', ['packages/play/test/campaign.test.js']);
+  add('adapter-contracts', 'node', ['packages/play/test/conformance.test.ts']);
+  add('device-executor', 'node', ['packages/play/test/adb-device-local-executor.test.ts']);
+  add('device-campaign', 'node', ['packages/play/test/campaign.test.ts']);
   add('device-cli', 'node', ['apps/desktop/test/device-cli.test.js']);
   add('winners-rebuild', 'node', ['packages/propose/test/test-winners-rebuild.mjs']);
 }

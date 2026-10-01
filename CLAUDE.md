@@ -152,8 +152,8 @@ longer rebuilds.
 
 - **A detector reads small regions of native frames.** The Companion copies
   registered rectangles' raw pixels out of every MediaProjection frame
-  (`REGION`, `NativeRegions.java`; host `openRegions()`, `native-regions.mjs`)
-  and whole native frames on request (`SNAP`, `native-frame.mjs`) for title and
+  (`REGION`, `NativeRegions.java`; host `openRegions()`, `native-regions.ts`)
+  and whole native frames on request (`SNAP`, `native-frame.ts`) for title and
   menu screens. The rule that decides lives on the host, over those pixels.
 - **Discontinued, never a starting point:** luma/mean-luma reducers, the 20x9
   point-sampled grid (`GRID`, `ScreenStats`, grid-fitted rules), and full-display
@@ -307,7 +307,7 @@ Each entry below broke a gate, a test or a replay during the ADR 0002 moves.
     read, and a test that finds nothing to check must fail.
 
 15. **A path inside a pinned record names that record's tree, not this
-    checkout.** A winner's `sources` keys, `fnaf1-winner.mjs`'s `RUNNER` and the
+    checkout.** A winner's `sources` keys, `fnaf1-winner.ts`'s `RUNNER` and the
     lane a pinned tree imports are where each file stood at the pinned commit;
     rewriting them to the new location made every FNaF 1 replay refuse
     (`test-fnaf1-winner.mjs`). A record pinned by sha256 keeps its bytes too,
@@ -319,7 +319,7 @@ Canonical routes: [charter](PROJECT-CHARTER.md),
 [commands](docs/architecture/generated/command-registry.json),
 [evidence policy](docs/evidence/README.md),
 [device safety](docs/operations/DEVICE-SAFETY.md),
-[device capabilities](packages/play/bin/phone/capabilities.mjs),
+[device capabilities](packages/play/bin/phone/capabilities.ts),
 [progress](plans/PROGRESS.md). The full legacy campaign is explicit as
 `npm run test:legacy:engine`; intentionally red scientific controls are not
 part of the green edit lane. Historical incident notes remain in

@@ -66,8 +66,8 @@ tag carries them unchanged (`git checkout archive/2026-09-24 -- <path>`).
 | `touch-contamination-guard.sh` | Physical touches during a run | Never wired into `night-run.sh`; a guard nothing calls guards nothing |
 | `seed-clock.mjs` | Host/phone wall-clock samples for seed recovery | Superseded by `seedpin/` and `office-seed-bracket.py`; [`device/RNG-SEED-RECOVERY.md`](device/RNG-SEED-RECOVERY.md) |
 
-`hid-sweep-probe.mjs` stays: despite its name it is the `COORDS`/`toRaw`
-library the live intersection gate and `test-screen-map.mjs` import.
+`hid-sweep-probe.ts` stays: despite its name it is the `COORDS`/`toRaw`
+library the live intersection gate and `test-screen-map.ts` import.
 `gate-worker.mjs` and `minus-toys-jitter.mjs` stay too — the `night matrix`
 and `vent reactive` checks load them.
 

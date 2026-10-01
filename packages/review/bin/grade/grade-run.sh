@@ -391,7 +391,7 @@ if [ -n "$FRAME_TRACE" ]; then
     INPUT_EVENTS_ARG=()
     [ -f "$RUNS_DIR/$RUN/input-events.txt" ] && INPUT_EVENTS_ARG=(--input-events "$RUNS_DIR/$RUN/input-events.txt")
     step "scheduled contacts against frame stalls" \
-      node "$HERE/../../../play/bin/grade/tap-stall-audit.mjs" --run "$CAMPAIGN_DIR" --frame-trace "$FRAME_TRACE" --transitions "${INPUT_EVENTS_ARG[@]}"
+      node "$HERE/../../../play/bin/grade/tap-stall-audit.ts" --run "$CAMPAIGN_DIR" --frame-trace "$FRAME_TRACE" --transitions "${INPUT_EVENTS_ARG[@]}"
   else
     echo
     echo "--- scheduled contacts against frame stalls ---"
@@ -400,7 +400,7 @@ if [ -n "$FRAME_TRACE" ]; then
   fi
   # Foxy is repelled by the hallway light, and grade-run's own video counter is
   # a rendering lower bound that read 4% where the plan records a 1-in-3 drop.
-  # This reads the hall rectangle tap-stall-audit.mjs keeps (the phone's
+  # This reads the hall rectangle tap-stall-audit.ts keeps (the phone's
   # watchlist carried it until 2026-09-27) and exits 3 on a dark hall.
   if [ -f "$INPUT_TRACE" ]; then
     step "input dispatch aligned to presented frames" \

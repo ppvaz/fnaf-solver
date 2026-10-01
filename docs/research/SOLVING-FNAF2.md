@@ -238,7 +238,7 @@ that still landed on the right update costs nothing and is the most informative 
 Four channels exist or nearly exist:
 
 - **Kernel input edges.** `night-run.sh` already streams `getevent -lt` beside the frame trace, and
-  `tap-stall-audit.mjs` reads the virtual touch device's press and release edges in that clock
+  `tap-stall-audit.ts` reads the virtual touch device's press and release edges in that clock
   without assuming it. The k3 cohort packs carry no copy.
 - **Response frames.** The Companion's `REGION` reads see a contact's effect — a button stroke, the
   flashlight, the mask's first frame. The limit is yield: about 75 distinct frames per 150 reads,

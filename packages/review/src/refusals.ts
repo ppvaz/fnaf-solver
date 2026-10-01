@@ -37,7 +37,7 @@ export const MISTAKE_ENTRIES = Object.freeze({
 export const RULE_CITES = Object.freeze({
   'seed-floor': Object.freeze(['plans/ROADMAP.md', 'packages/propose/bin/census/census.mjs']),
   'directional-reuse': Object.freeze(['CLAUDE.md#mistake-10']),
-  'capabilities-first': Object.freeze(['CLAUDE.md#mistake-8', 'packages/play/bin/phone/capabilities.mjs']),
+  'capabilities-first': Object.freeze(['CLAUDE.md#mistake-8', 'packages/play/bin/phone/capabilities.ts']),
   'unknown-as-number': Object.freeze(['docs/decisions/0002-kernel-contexts-vocabulary.md#principles',
     'CLAUDE.md#repository-operating-contract']),
   'not-a-number': Object.freeze(['docs/decisions/0002-kernel-contexts-vocabulary.md#the-kernel']),
@@ -52,7 +52,7 @@ export const RULE_SOURCES = Object.freeze({
     ['packages/propose/bin/census/census.mjs', 'no win rate below 3000 seeds may be']]),
   'directional-reuse': Object.freeze([['CLAUDE.md', `10. **${MISTAKE_ENTRIES[10]}**`]]),
   'capabilities-first': Object.freeze([['CLAUDE.md', `8. **${MISTAKE_ENTRIES[8]}**`],
-    ['packages/play/bin/phone/capabilities.mjs', "export const SCHEMA = 'device-capabilities-v1'"]]),
+    ['packages/play/bin/phone/capabilities.ts', "export const SCHEMA = 'device-capabilities-v1'"]]),
   'unknown-as-number': Object.freeze([['docs/decisions/0002-kernel-contexts-vocabulary.md', 'UNKNOWN is a value with a reason, never a default.'],
     ['CLAUDE.md', '`UNKNOWN` for missing or ambiguous measurements']]),
   'not-a-number': Object.freeze([['docs/decisions/0002-kernel-contexts-vocabulary.md', '`Interval{lo, hi}`']]),
@@ -186,7 +186,7 @@ export function checkDirectionalReuse(reuse: {constant: string, use: {first: str
     `measure ${arrow(use)} on its own (a gap census in that order), or keep ${constant} to ${arrow(measured)}`);
 }
 
-/** The schema packages/play/bin/phone/capabilities.mjs writes. */
+/** The schema packages/play/bin/phone/capabilities.ts writes. */
 export const CAPABILITIES_SCHEMA = 'device-capabilities-v1';
 const CAPABILITIES_REMEDY = 'with the phone attached, run `npm run device:capabilities -- --json --out FILE` and propose the ' +
   'instrument with that report';

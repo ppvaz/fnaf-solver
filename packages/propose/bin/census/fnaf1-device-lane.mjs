@@ -669,7 +669,7 @@ export const DEVICE_POLICIES = { flick4b, grid420 };
 // two differ in chicaByCamera, and the worst lane tells them apart; the
 // 2026-09-25 record ran the defaults. With `--route winner` the policy is the
 // committed winner's own -- grid420 imported from the tree of its pinned
-// commit, which fnaf1-winner.mjs materializes and checks file by file -- with
+// commit, which fnaf1-winner.ts materializes and checks file by file -- with
 // the options its runner passed, under this file's harness.
 export const POPULATION_KIND = 'fnaf1-device-lane-population-v1';
 export const POPULATION_LANES = Object.freeze(['typical', 'worst', 'starved']);
@@ -717,7 +717,7 @@ export function winnerPolicyOptions(winner) {
   return Object.fromEntries(POLICY_OPTION_KEYS.map((key) => [key, winner.resolvedOptions?.[key]]));
 }
 
-/** grid420 as the winner's pinned commit holds it, from a tree fnaf1-winner.mjs materialized. */
+/** grid420 as the winner's pinned commit holds it, from a tree fnaf1-winner.ts materialized. */
 export async function pinnedGrid420(tree) {
   const lane = LANE_FILES.find((path) => existsSync(join(tree, path)));
   return (await import(pathToFileURL(join(tree, lane)).href)).grid420;
@@ -811,7 +811,7 @@ export function populationRecord({ rows, start, count, design, git, date, comman
       (pinned === laneSha256 ? '' : ` ${winner.id} pins ${pinnedPath} as it stood at ${history.matchedAt ?? 'no commit'};` +
         ` ${history.changedSince.length} commit(s) changed it since (${history.changedSince.join(', ')})` +
         `${dirty ? ', and it is modified in the working tree' : ''}, so this is the census of the file a re-run ` +
-        'from the tree executes today, not of the file that won (fnaf1-winner.mjs re-runs that one).'),
+        'from the tree executes today, not of the file that won (fnaf1-winner.ts re-runs that one).'),
     whyItIsModelOnly,
     method: {
       tool: 'packages/propose/bin/census/fnaf1-device-lane.mjs --population', command, git, ...common,
@@ -847,7 +847,7 @@ async function population(argv) {
   let scratch = null;
   let source = 'tree';
   let options = { ...PHONE_OPTIONS };
-  const { loadWinner, materialize, removeTree } = await import('../../../play/games/fnaf1/fnaf1-winner.mjs');
+  const { loadWinner, materialize, removeTree } = await import('../../../play/games/fnaf1/fnaf1-winner.ts');
   try {
     if (kind === 'winner') {
       const path = 'packages/propose/bindings/fnaf1/fnaf1-custom-night7-420-grid420-winner.json';

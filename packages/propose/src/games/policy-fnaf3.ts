@@ -96,7 +96,7 @@ export function communityLine({ rebootAt = -4, dwellFrames = 12,
 
 // Where one move can take him from each place the monitor shows [SOURCED:
 // games/fnaf3/graph.json in @sixam/source, g227-g251, g604-g613]; vents resolve back to their camera
-// when sealed. The device loop (packages/play/games/fnaf3/fnaf3-run.mjs NEXT) carries the
+// when sealed. The device loop (packages/play/games/fnaf3/fnaf3-run.ts NEXT) carries the
 // same table.
 const NEXT = {
   10: [9, 14], 9: [10, 8, 11], 8: [9, 7, 5], 7: [8, 6, 12], 6: [7, 5],
@@ -105,7 +105,7 @@ const NEXT = {
 };
 const DANGER = { 14: 0, 15: 0, 11: 1, 12: 1, 13: 2 };
 
-/** Cameras nearest-ring first from where he was seen (fnaf3-run.mjs searchOrder). */
+/** Cameras nearest-ring first from where he was seen (fnaf3-run.ts searchOrder). */
 export function searchOrder(from) {
   if (!from) return [10, 9, 8, 7, 6, 5, 2, 4, 3];
   const seen = new Set([from]);
@@ -131,7 +131,7 @@ const placeOf = (where) => {
 };
 
 /**
- * fnaf3-run.mjs chooseReboot over the simulator's own counters: two broken
+ * fnaf3-run.ts chooseReboot over the simulator's own counters: two broken
  * systems, or a camera counter already 7 s along, take reboot all.
  */
 function chooseSimReboot(broken, sim) {
@@ -161,7 +161,7 @@ function chooseSimReboot(broken, sim) {
 export function trackingLoop({ lookFrames = 45, selectFrames = 18, sealWaitFrames = 150,
                                rebootAwayFrames = 280, toMenuFrames = 210, fromMenuFrames = 145,
                                economy = false, lures = false, herd = true, lostLure = true } = {}) {
-  // fnaf3-run.mjs HERD: from each office-side camera, the camera one step out
+  // fnaf3-run.ts HERD: from each office-side camera, the camera one step out
   // whose lure pulls him there (g319-g341); cam 02 also pulls from stage 1.
   const HERD = { 2: 5, 3: 2, 4: 2, 5: 6 };
   const NEAR_OFFICE = new Set([1, 2, 3, 4, 13, 15]);
@@ -185,7 +185,7 @@ export function trackingLoop({ lookFrames = 45, selectFrames = 18, sealWaitFrame
   return (sim) => {
     if (sim.over) return;
     if (economy) {
-      // The device's trip, as fnaf3-run.mjs serviceSystems makes it: ~3.5 s
+      // The device's trip, as fnaf3-run.ts serviceSystems makes it: ~3.5 s
       // to the menu, the reboot chooseReboot picks, held until it ends (exit
       // is refused while one runs), ~2.4 s back to the monitor.
       if (task?.kind === 'menu') {

@@ -124,7 +124,7 @@ with tempfile.TemporaryDirectory(prefix="companion-worktree-") as directory:
     assert MODULE.main_checkout(plain) == plain
     mirror = subprocess.run(
         ["node", "--input-type=module", "-e",
-         f"import {{ mainCheckout }} from {json.dumps((HERE / '../../../packages/play/games/fnaf1/fnaf1-winner.mjs').as_uri())};"
+         f"import {{ mainCheckout }} from {json.dumps((HERE / '../../../packages/play/games/fnaf1/fnaf1-winner.ts').as_uri())};"
          "process.stdout.write(mainCheckout(process.argv[1]));", str(worktree)],
         check=True, text=True, stdout=subprocess.PIPE)
     # The same directory, however spelled: on macOS the temporary directory

@@ -48,7 +48,7 @@ export const HID_CONTROLS_SCHEMA = 'hid-controls-v1';
  * coordinates this transport would press, in the line file a bundle carries
  * (HID_CONTROLS_FILE). The Companion's runner reads them from there and holds
  * no geometry of its own: until 2026-09-30 NightRunner.java kept a copy of the
- * control map and of toRaw, and test-screen-map.mjs held the two copies to one
+ * control map and of toRaw, and test-screen-map.ts held the two copies to one
  * answer. The file names the profile and its sha256, so a runner can refuse
  * controls that were not derived from the profile beside them.
  * 

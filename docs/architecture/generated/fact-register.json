@@ -17,23 +17,9 @@
         "grid-anchor",
         "grid-luma-fallback"
       ],
-      "strongestAvailable": "native-stroke",
-      "weakestInUse": "grid-anchor",
-      "producers": [
-        {
-          "file": "packages/play/bin/grade/tap-stall-audit.mjs",
-          "evidence": [
-            "native-stroke"
-          ]
-        },
-        {
-          "file": "packages/play/bin/probe/intersection-state-gate.mjs",
-          "evidence": [
-            "native-stroke",
-            "grid-anchor"
-          ]
-        }
-      ]
+      "strongestAvailable": null,
+      "weakestInUse": null,
+      "producers": []
     },
     "monitorUp": {
       "question": "is the monitor raised?",
@@ -43,18 +29,9 @@
         "native-stroke",
         "grid-anchor"
       ],
-      "strongestAvailable": "native-explicit",
-      "weakestInUse": "grid-anchor",
-      "producers": [
-        {
-          "file": "packages/play/bin/probe/intersection-state-gate.mjs",
-          "evidence": [
-            "native-stroke",
-            "native-explicit",
-            "grid-anchor"
-          ]
-        }
-      ]
+      "strongestAvailable": null,
+      "weakestInUse": null,
+      "producers": []
     },
     "screenIdentity": {
       "question": "which screen is on the display?",
@@ -63,16 +40,9 @@
         "native-screen",
         "python-classifier"
       ],
-      "strongestAvailable": "native-screen",
-      "weakestInUse": "native-screen",
-      "producers": [
-        {
-          "file": "packages/play/bin/probe/intersection-state-gate.mjs",
-          "evidence": [
-            "native-screen"
-          ]
-        }
-      ]
+      "strongestAvailable": null,
+      "weakestInUse": null,
+      "producers": []
     },
     "nightOrigin": {
       "question": "when did the night actually start?",

@@ -49,7 +49,7 @@ case "${1:-}" in
   latency) VERB=latency; shift ;;
   log) VERB=log; shift ;;
   grid|watch)
-    echo "$1 is retired: the 20x9 grid and the luma watch are discontinued sensors (Companion 0.2.0); read native regions with packages/play/bin/phone/native-regions.mjs" >&2
+    echo "$1 is retired: the 20x9 grid and the luma watch are discontinued sensors (Companion 0.2.0); read native regions with packages/play/bin/phone/native-regions.ts" >&2
     exit 2
     ;;
   watchlist) VERB=watchlist; shift ;;

@@ -236,7 +236,7 @@ const PROPOSE_READS = ['packages/propose', 'packages/kernel', 'packages/source',
 // Propose command lines that import a module whose path is computed, each with why it cannot be written down.
 const COMPUTED_IMPORTS = new Map([
   ['packages/propose/bin/census/fnaf1-device-lane.mjs', 'grid420 as a winner\'s pinned commit holds it, from the ' +
-    'temporary tree fnaf1-winner.mjs materializes and checks file by file'],
+    'temporary tree fnaf1-winner.ts materializes and checks file by file'],
   ['packages/propose/bin/census/pool-worker.mjs', 'the task module a pool.mjs batch names, held for the life of the worker'],
   ['packages/propose/bin/census/pool.mjs', 'the same task module, imported in-process when the pool runs serially'],
   ['packages/propose/bin/recompile/pilot/batch.mjs', 'the game\'s pilot module (./fnaf3.mjs or ./fnaf4.mjs) that --game names'],
@@ -576,8 +576,8 @@ for (const path of operational) {
 // new composer is a new way onto the phone and has to be named here in the
 // diff that adds it.
 const physicalActuatorOwners = new Set(['packages/play/src/campaign/modern-campaign-ports.ts',
-  'packages/play/games/fnaf1/fnaf1-night-run.mjs', 'apps/desktop/bin/fnaf1-custom-run.mjs', 'packages/play/games/fnaf1/fnaf1-menu-probe.mjs',
-  'packages/play/games/fnaf3/fnaf3-run.mjs', 'packages/play/games/fnaf4/fnaf4-run.mjs', 'packages/play/bin/phone/explore-step.mjs']
+  'packages/play/games/fnaf1/fnaf1-night-run.ts', 'apps/desktop/bin/fnaf1-custom-run.mjs', 'packages/play/games/fnaf1/fnaf1-menu-probe.ts',
+  'packages/play/games/fnaf3/fnaf3-run.ts', 'packages/play/games/fnaf4/fnaf4-run.ts', 'packages/play/bin/phone/explore-step.ts']
   .map(path => join(ROOT, path)));
 // The transport's own module defines the class; every other module in apps,
 // tools and every package (the runners live in packages/play/games and bin/

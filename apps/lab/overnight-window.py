@@ -23,7 +23,7 @@ when the window ends, however it ends.
 A live window, in order: take the serial lease (another owner: LEASE_BUSY);
 restore anything an earlier window left unrestored; check the time is inside
 the window, or within the arming lead before it; check the queue holds work;
-check the device, its capabilities (capabilities.mjs), that it is awake and
+check the device, its capabilities (capabilities.ts), that it is awake and
 unlocked (waiting a bounded time, then LOCKED), that no call is active and the
 foreground is the launcher, the Companion or a target game (else IN_USE), and
 that the battery is plugged, at or above its floor and below its temperature
@@ -186,8 +186,8 @@ FOCUS_RETRIES = 3
 
 QUEUE_COMMAND = [str(HERE / "companion-queue.sh")]
 HELPER_STOP_COMMAND = [str(HERE / "../../packages/play/bin/companion/companion-setup.sh"), "--stop"]
-CAPABILITIES_COMMAND = ["node", str(HERE / "../../packages/play/bin/phone/capabilities.mjs")]
-LOCAL_PROFILE_COMMAND = ["node", str(HERE / "../../packages/play/bin/phone/local-profile.mjs"), "serial"]
+CAPABILITIES_COMMAND = ["node", str(HERE / "../../packages/play/bin/phone/capabilities.ts")]
+LOCAL_PROFILE_COMMAND = ["node", str(HERE / "../../packages/play/bin/phone/local-profile.ts"), "serial"]
 NIGHT_JOB_COMMAND = [sys.executable, str(HERE / "night-job.py")]
 PACK_COMMAND = ["node", str(ROOT / "apps/desktop/src/evidence.ts"), "pack"]
 PACKS_ROOT = ROOT                 # docs/evidence/runs/<run> lives here
@@ -295,7 +295,7 @@ def window_length_s(start: clock_time, end: clock_time) -> float:
 
 
 def local_profile_serial() -> str:
-    """The untracked local profile's serial (local-profile.mjs, ADR 0002
+    """The untracked local profile's serial (local-profile.ts, ADR 0002
     decision 8), or '' when the host has none. No tracked default exists."""
     try:
         result = subprocess.run(LOCAL_PROFILE_COMMAND, cwd=ROOT, check=False, text=True,
@@ -306,7 +306,7 @@ def local_profile_serial() -> str:
 
 
 SERIAL_HOW_TO = ("--serial, FNAF_SERIAL, or the untracked local profile "
-                 "(node packages/play/bin/phone/local-profile.mjs set <serial>)")
+                 "(node packages/play/bin/phone/local-profile.ts set <serial>)")
 
 
 def resolve_config(args: argparse.Namespace) -> dict:

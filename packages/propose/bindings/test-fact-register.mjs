@@ -3,7 +3,7 @@
 // repository already has a producer for.
 //
 // This is the gate for the class of miss that cost 2026-09-11 a night and a
-// hypothesis. `intersection-state-gate.mjs` consumes the helper's native button
+// hypothesis. `intersection-state-gate.ts` consumes the helper's native button
 // downstroke scores for maskOn and says "a missing stroke score is a refusal,
 // never a luma fallback". The executor answers the same question from the 20x9
 // grid and falls back to exactly that luma refutation -- and every CORRECTED

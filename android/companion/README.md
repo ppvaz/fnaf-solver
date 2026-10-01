@@ -111,8 +111,8 @@ the host's transport derives it from the bundle's `profile.json`
 profile's sha256; `HidControls` reads it, refuses one bound to another profile,
 and `NightRunner` refuses a plan that uses a control the file does not name.
 Until 2026-09-30 `NightRunner` kept its own control map and 2400x1080 transform.
-Regenerate the files with `node packages/play/bin/companion/hid-controls.mjs
-DIR...`; `test-screen-map.mjs` holds them to the transport.
+Regenerate the files with `node packages/play/bin/companion/hid-controls.ts
+DIR...`; `test-screen-map.ts` holds them to the transport.
 
 On the phone, tap **Start video capture** and grant screen-capture consent, then
 open the game. No other permission is needed for capture.

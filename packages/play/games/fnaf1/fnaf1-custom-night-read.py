@@ -20,7 +20,7 @@ model's glyph table maps each hash seen during a device sweep to the value the
 sweep put there. A hash the table does not hold is UNKNOWN, never the nearest
 value: this reader only reads states it has seen exactly, on the geometry it
 was calibrated on. The masks are reported even without a glyph table, which is
-how `fnaf1-menu-probe.mjs` proves each press moved exactly one dial.
+how `fnaf1-menu-probe.ts` proves each press moved exactly one dial.
 """
 import argparse
 import hashlib

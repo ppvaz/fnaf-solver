@@ -7,7 +7,7 @@
     game-screen.py --calibrate CORPUS.tsv [--out EVIDENCE.json]
 
 The frame is a native 2400x1080 PNG, as the Companion's SNAP writes it
-(`native-frame.mjs`); nothing is resized to fit. Every target in
+(`native-frame.ts`); nothing is resized to fit. Every target in
 `packages/play/profiles/fnaf2/moto-g56/companion-targets-v1.json` that names a `titleModel` is asked the same
 question with its own gates (title-observe.py's title-model-v1: a title gate
 the logo lights, a foreign gate the title never lights, a menu gate the menu

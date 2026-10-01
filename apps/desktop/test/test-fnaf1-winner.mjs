@@ -10,7 +10,7 @@
 //   whatever way a re-run of the winner takes, the route it executes is the
 //   pinned one byte for byte, or it executes nothing.
 //
-// There are two ways: the replay (fnaf1-winner.mjs), which materializes the
+// There are two ways: the replay (fnaf1-winner.ts), which materializes the
 // pinned commit's tree and runs that tree's runner, and the tree's own runner
 // given the winner's night, whose routeStatus must refuse while the tree
 // differs from the pins. Each is checked, and so is the old behaviour -- a
@@ -39,7 +39,7 @@ import { designBlock } from '../../../packages/propose/bin/census/winner-census.
 import { FOUR_TWENTY, LANE_FILE, LANE_FILES, POPULATION_KIND, POPULATION_LANES, TIMING_PATH, loadTiming, newestTreeRecord,
   pinnedGrid420, runDeviceNight, winnerPolicyOptions } from '../../../packages/propose/bin/census/fnaf1-device-lane.mjs';
 import { ROOT, RUNNER, listWinners, shapeProblems, pinsAtCommit, pinnedCommit, routeDrift, materialize, removeTree,
-  treeProblems, replayArguments, replayInvocation, sha256, sharedLockDir, winnerCustody } from '../../../packages/play/games/fnaf1/fnaf1-winner.mjs';
+  treeProblems, replayArguments, replayInvocation, sha256, sharedLockDir, winnerCustody } from '../../../packages/play/games/fnaf1/fnaf1-winner.ts';
 import { currentPath } from '@sixam/review/renamed-path';
 
 const failures = [];
@@ -142,7 +142,7 @@ try {
     // @fnaf2-1020 workspace names; these strings name that tree's packages, not this checkout's.
     const cueHelper = createRequire(join(tree, 'apps/device/src/physical-ports.js')).resolve('@fnaf2-1020/adapters/transports/cue-helper');
     ok(`${path}: @fnaf2-1020/adapters resolves inside the pinned tree, not this checkout (${cueHelper})`,
-      // Against the tree's real path, as fnaf1-winner.mjs checks its links: macOS's temporary
+      // Against the tree's real path, as fnaf1-winner.ts checks its links: macOS's temporary
       // directory sits under /var -> /private/var, and resolve() answers with the real one.
       !relative(realpathSync(tree), cueHelper).startsWith('..'));
     // The pinned runner's own parser turns the replay's arguments into the options that won.
@@ -159,7 +159,7 @@ try {
         const named = words[words.indexOf('--winner') + 1];
         return words.slice(0, 5).join(' ') === 'npm run night -- fnaf1-winner' && (currentPath(ROOT, named) ?? named) === path;
       })());
-    eq('npm run night -- fnaf1-winner runs the replay', GAMES['fnaf1-winner']?.runner, 'packages/play/games/fnaf1/fnaf1-winner.mjs');
+    eq('npm run night -- fnaf1-winner runs the replay', GAMES['fnaf1-winner']?.runner, 'packages/play/games/fnaf1/fnaf1-winner.ts');
 
     // 4. The winner names a census of its own route -- its pinned grid420 with the
     //    options its runner passed -- and that census still replays as recorded.
