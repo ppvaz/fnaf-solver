@@ -1,0 +1,34 @@
+{
+ "schema": "experiment-spec-v2",
+ "id": "full06-early-perturbation",
+ "purpose": "diagnostic sweep",
+ "claimLevel": "MODEL_ONLY",
+ "date": "2026-10-01",
+ "step": "S2 (plans/ROADMAP.md): fidelity at the level of encounters, full-06",
+ "night": "full-06",
+ "seed": 47593,
+ "question": "Keeping the measured seed, does one change before Balloon Boy's first roll (5 s) -- one early contact landing on another update or not at all, or one or two random draws more or fewer at one update -- reproduce both the phone's Balloon Boy audio and its mask windows?",
+ "premise": "docs/evidence/full06-audio-realignment-20261001.json: on the phone Balloon Boy's first roll (5 s) passed and his hop vocals at 10, 15 and 20 s were echo4b, echo3b, echo3b; the measured seed's model fails that roll. docs/evidence/full06-stream-census-20261001.json: no start state explains the night (INCONCLUSIVE), the measured seed agrees on 14 of 38 windows, and 56 of 65,536 start states reach 30.",
+ "explanations": [
+  {"id": "E-early", "statement": "The measured seed is right, and the phone spent its random draws differently before the first Balloon Boy roll: a contact among the nine before 5.43 s landed on another update or did not register, or the clock fired a timer more or fewer (one or two draws).", "predicts": "SUPPORTED: some member fits."},
+  {"id": "E-not-early", "statement": "No single change of this family accounts for both the audio and the windows: the seed, the mechanics, or a later difference does.", "predicts": "NOT_SUPPORTED: no member fits."}
+ ],
+ "family": {
+  "contacts": "each of the landed contacts whose press lands before update 325 (the 5.43 s mask press), shifted press and release together by -3, -2, -1, +1, +2, +3 updates (a release kept after its press, nothing before update 1), or removed",
+  "draws": "at each update u in 0..300 (the update after which it applies), the generator's state advanced by 1 or 2 draws, or stepped back by 1 or 2 (the LCG is invertible), once",
+  "otherwise": "the census's model, options, Custom Night, measured clock and landed contacts (phone-stream-census.mjs inputs())"
+ },
+ "fingerprint": {
+  "audio": "Balloon Boy hops at the 5 s roll (his stage is past CAM 10 by update 312), and the model's hop vocal at the 10, 15 and 20 s rolls is, at each, the phone's (echo4b 24, echo3b 23, echo3b 23) or a value-4 redraw (whose vocal the model does not log)",
+  "windows": "agreement on at least 30 of the compared mask windows (scoreWindows over the phone's 42 eyehole reads)"
+ },
+ "decisionRule": {
+  "minAgree": 30,
+  "text": "A member fits when it meets both fingerprints. SUPPORTED when at least one member fits; every fitting member is reported with its perturbation. NOT_SUPPORTED otherwise. Chance: the audio fingerprint holds for about 1 in 25 random states (four 0.75 rolls, three vocals at 1 in 2 with redraws allowed) and agreement 30 for 56 in 65,536, so about 0.04 fitting members are expected by chance over the family's ~1,270 members."
+ },
+ "stoppingRule": {"kind": "fixed-sample", "text": "Every member once. No member, threshold or fingerprint changes after the run."},
+ "costProbe": "None beyond the census's: a full-night replay costs about 240 ms.",
+ "tool": "node packages/propose/bin/recompile/phone-early-perturbation.mjs --predeclaration docs/evidence/full06-early-perturbation-predeclaration-20261001.json --workers 6 --out <result>",
+ "resultRecord": "docs/evidence/full06-early-perturbation-20261001.json",
+ "rung": "None. MODEL_ONLY."
+}
