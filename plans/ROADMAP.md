@@ -69,10 +69,15 @@ fifteen days because it was written down instead of read.
     slots ([k3](../docs/evidence/night7-cohort-k3-computed-20260925.json),
     [k2](../docs/evidence/night7-cohort-k2-computed-20260925.json)). A
     promotion is one clear, not a reliability claim.
-  - **Open:** two committed MODEL_ONLY winners
-    (`campaign-night1-minus7-winner.json`, `campaign-toys-night5-winner.json`)
-    have no pack naming their hash. `UNTRACKED_WINNER_DEBT` is 1 of 1 (Night 6
-    `a` no longer rebuilds).
+  - **Closed 2026-09-30:** every one of the 25 committed `winner-v1` bindings
+    is named by a run pack. `campaign-toys-night5-winner.json` was packed on
+    the phone (`d659cd62`, a death). The MODEL_ONLY
+    `campaign-night1-minus7-winner.json` was retired to `bindings/fnaf2/retired/`
+    on Pedro's word (Night 1's
+    canonical schedule is the baked minimal one,
+    `campaign-night1-minimal-winner.json`). Still open beside the closing
+    condition: `UNTRACKED_WINNER_DEBT` is 1 of 1 (Night 6 `a` no longer
+    rebuilds).
   - **Superseded the same day:** at 16:30 on 2026-09-27 Pedro had chosen
     "originals only" (a recovered pack cannot carry an attestation; `97b8fd2`).
     Later that day he chose "Accept fully" and delegated attestation to agents

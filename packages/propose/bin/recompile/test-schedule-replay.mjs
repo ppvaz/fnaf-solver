@@ -59,7 +59,7 @@ const sched = winnerSchedule(minimal, 1);
 assert.equal(sched.contacts.length, 96);
 assert.deepEqual([sched.contacts[0].control, sched.contacts[0].downFrame], ['monitor', 6900], 'the arm opens at 115 s');
 assert.throws(() => winnerSchedule(minimal, 2), /does not name night 2/);
-assert.throws(() => winnerSchedule(json('packages/propose/bindings/fnaf2/campaign-night1-minus7-winner.json'), 1), /only minus-toys/);
+assert.throws(() => winnerSchedule(json('packages/propose/bindings/fnaf2/campaign-night1-minus7-n1-first-winner.json'), 1), /only minus-toys/);
 const navigation = read('packages/source/recompile/fixtures/night1-newgame.input');
 const input = harnessInput({ navigation, schedule: sched, points: controlPoints(devProfile) });
 assert.ok(input.text.startsWith(navigation));

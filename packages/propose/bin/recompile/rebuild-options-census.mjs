@@ -148,30 +148,35 @@ export function seedBlocks(count) {
 
 // --- subjects ------------------------------------------------------------
 /**
+ * The subjects one binding file offers, one per night it names. `path` is
+ * repository-relative; a record's reader passes a retired binding's path here
+ * to replay the bytes it scored.
+ */
+export function bindingSubjects(path) {
+  const text = readFileSync(join(ROOT, path));
+  const winner = validateWinner(JSON.parse(text.toString('utf8')));
+  return winner.nights.filter((night) => night <= 6 || path === K3_BINDING).map((night) => {
+    const emitted = STRATEGY_REGISTRY[winner.strategy].emit(winner, night);
+    const epochMs = (winner.anchorEpochMs ?? 0) + (winner.phaseOffsetMs ?? 0);
+    return {
+      id: `${winnerTag(path)}@${night}`, binding: path, night,
+      strategy: winner.strategy, epochMs, winnerSha256: sha256(text), planSha256: sha256(emitted.text),
+      replayKey: sha256(JSON.stringify({ strategy: winner.strategy, night, epochMs, knobs: emitted.knobs, plan: emitted.text })),
+      play: (seed) => {
+        const { sim } = emitted.replay(seed);
+        return { sim, won: !!sim.won, reason: sim.won ? null : (sim.death?.reason ?? 'alive') };
+      },
+    };
+  });
+}
+
+/**
  * Every subject in a fixed order: { id, binding, night, replayKey, planSha256,
  * winnerSha256, play(seed) -> {sim, won, reason} }. `replayKey` is equal for
  * two bindings whose replays are identical by construction.
  */
 export function subjects() {
-  const out = [];
-  for (const path of committedWinners()) {
-    const text = readFileSync(join(ROOT, path));
-    const winner = validateWinner(JSON.parse(text.toString('utf8')));
-    for (const night of winner.nights) {
-      if (!(night <= 6 || path === K3_BINDING)) continue;
-      const emitted = STRATEGY_REGISTRY[winner.strategy].emit(winner, night);
-      const epochMs = (winner.anchorEpochMs ?? 0) + (winner.phaseOffsetMs ?? 0);
-      out.push({
-        id: `${winnerTag(path)}@${night}`, binding: path, night,
-        strategy: winner.strategy, epochMs, winnerSha256: sha256(text), planSha256: sha256(emitted.text),
-        replayKey: sha256(JSON.stringify({ strategy: winner.strategy, night, epochMs, knobs: emitted.knobs, plan: emitted.text })),
-        play: (seed) => {
-          const { sim } = emitted.replay(seed);
-          return { sim, won: !!sim.won, reason: sim.won ? null : (sim.death?.reason ?? 'alive') };
-        },
-      });
-    }
-  }
+  const out = committedWinners().flatMap((path) => bindingSubjects(path));
   const preset = loadPresets().find((p) => p.id === PRESET_ID);
   if (!preset) throw new Error(`no ${PRESET_ID} preset in the menu model`);
   out.push({

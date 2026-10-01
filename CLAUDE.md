@@ -131,11 +131,18 @@ readback. Every death, lost result and FNaF 1 run is refused too, and the
 video-only 6 AMs `night5-anchor4` and `night5-perfetto1` fail `terminalPass`.
 A promotion is one clear, not a reliability claim. `npm run review -- query
 promotions` re-derives every edge and S1's open items below from the packs, the
-attestations and the winners, and checks them against `graph.json`. Open for
-S1: two committed MODEL_ONLY winners (`campaign-night1-minus7-winner.json`,
-`campaign-toys-night5-winner.json`) have no pack naming their hash. No k2 or k3
-video exists on this machine by name or by content hash. The 26 committed
-`winner-v1` bindings rebuild (`test-winners-rebuild.mjs`).
+attestations and the winners, and checks them against `graph.json`. **S1's
+closing condition holds since 2026-09-30:** every one of the 25 committed
+`winner-v1` bindings is named by a run pack, and they rebuild
+(`test-winners-rebuild.mjs`). `campaign-toys-night5-winner.json` was packed on
+the phone that day (`d659cd62`, a death). The MODEL_ONLY
+`campaign-night1-minus7-winner.json` was retired to
+`packages/propose/bindings/fnaf2/retired/` (Pedro: "minus 7 at night 1?
+that dumb, remove it immediately. night 1 has a specifically baked minimal
+input schedule that should be the canonical one"): Night 1's canonical binding
+is `campaign-night1-minimal-winner.json`. `campaign-night1-minus7-n1-first-winner.json`
+stays as the binding the phone ran on 2026-09-19. Still open beside S1: no k2
+or k3 video exists on this machine by name or by content hash.
 `UNTRACKED_WINNER_DEBT` is 1 of 1: Night 6 `a`, whose winner was found but no
 longer rebuilds.
 

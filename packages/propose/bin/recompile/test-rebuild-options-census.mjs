@@ -31,7 +31,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Sim } from '@sixam/source/fnaf2';
 import { simOptionsFrom } from '../../../source/recompile/model-draw-trace.mjs';
-import { KIND, OPTIONS_FILE, mcnemarExact, optionSets, seedBlocks, subjects, verdict, wilson95, withModelOptions }
+import { KIND, OPTIONS_FILE, bindingSubjects, mcnemarExact, optionSets, seedBlocks, subjects, verdict, wilson95, withModelOptions }
   from './rebuild-options-census.mjs';
 import { committedWinners } from '../census/winner-census.mjs';
 import { currentPath } from '@sixam/review/renamed-path';
@@ -95,9 +95,17 @@ function checkRecord(name) {
     assert.ok(Object.values(inside.ai).every((level) => level === 0), 'sourcedHourTable did not reach the constructor');
   }
 
+  // A binding retired since the record was written (bindings/<game>/retired/)
+  // is replayed from the bytes it scored, which its rename keeps reachable.
+  const retired = (b) => {
+    const path = b.binding && currentPath(ROOT, b.binding);
+    return path?.includes('/retired/') ? bindingSubjects(path).find((s) => s.id === b.subject) : undefined;
+  };
+  const offered = new Map();
   for (const b of record.bindings) {
-    const s = current.get(b.subject);
+    const s = current.get(b.subject) ?? retired(b);
     assert.ok(s, `${name} scored ${b.subject}, which the tree no longer offers`);
+    offered.set(b.subject, s);
     if (b.binding) {
       assert.equal(s.winnerSha256, b.winnerSha256, `${b.binding} changed since ${name}; re-run the census`);
       assert.equal(s.planSha256, b.planSha256, `${b.subject} emits a different plan than ${name} scored`);
@@ -141,7 +149,7 @@ function checkRecord(name) {
       assert.equal(row[pairKey].verdict, verdict(row[pairKey].design, row[pairKey].heldOut), `${tag} ${pairKey}: verdict`);
     }
     if (row.sharesReplayWith) continue;
-    const subject = current.get(row.subject);
+    const subject = offered.get(row.subject);
     // One fixed held-out seed per distinct replay and set, spread by the row's position; when the
     // row lists every loss, its outcome is known and must replay.
     if (!row.heldOut.losses.truncated) {

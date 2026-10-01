@@ -13,11 +13,6 @@
       "compiledWinnerHash": "fnv1a-2e6a42e3"
     },
     {
-      "file": "packages/propose/bindings/fnaf2/campaign-night1-minus7-winner.json",
-      "sha256": "23d017e9241dddd5fb50564d7a4718484bc7ede410eb7dd2e9bbbb8802dafa8d",
-      "compiledWinnerHash": "fnv1a-58e73bd5"
-    },
-    {
       "file": "packages/propose/bindings/fnaf2/campaign-night5-contact-final-20260912-winner.json",
       "sha256": "9441622efda32b0834d1221628415d3ef933e0126830bfcb198d71ac29937d7c",
       "compiledWinnerHash": "fnv1a-f430f190"

@@ -18,7 +18,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '../../..');
 const EMIT = join(HERE, '../bin/plans/emit.mjs');
 const K3 = join(HERE, '../bindings/fnaf2/campaign-night7-k3-winner.json');
-const MINUS7_WINNER = join(HERE, '../bindings/fnaf2/campaign-night1-minus7-winner.json');
+const MINUS7_WINNER = join(HERE, '../bindings/fnaf2/campaign-night1-minus7-n1-first-winner.json');
 const FORBID_SPLIT = { constraints: { forbidMechanics: [CAMERA_SPLIT] } };
 const fixture = (strategy, nights) => ({
   schema: 'winner-v1', strategy, knobs: 'KNOBS0', nights, engineHash: 'mechanic-constraints-fixture',
