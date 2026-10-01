@@ -75,6 +75,8 @@ export function pngFromRegion(region, scale = region.step) {
 }
 
 const quantile = (sorted, q) => sorted[Math.min(sorted.length - 1, Math.floor(q * sorted.length))];
+// How long `record` waits without a new frame before reopening its channel.
+const RECORD_STALL_MS = 3000;
 
 async function main(argv) {
   const verb = argv[0];
@@ -96,13 +98,18 @@ async function main(argv) {
   const { set } = loadRegionSet(opt.model, opt.set);
   let serial;
   try { ({ serial } = resolveSerial()); } catch (error) { fail(error.message); }
-  const port = new AdbCompanionPort({ serial });
-  const channel = port.openRegions({ timeoutMs: 1500 });
-  try {
-    await registerSet(channel, set);
+  // A fresh port rediscovers the helper's endpoint, so a channel opened after a
+  // capture restart reaches the new session rather than the stopped one.
+  const open = async () => {
+    const opened = new AdbCompanionPort({ serial }).openRegions({ timeoutMs: 1500 });
+    await registerSet(opened, set);
     // The first read after registration is seq -1 until a frame is copied.
-    let first = await channel.read();
-    for (let i = 0; i < 50 && first.seq < 0; i += 1) first = await channel.read();
+    let read = await opened.read();
+    for (let i = 0; i < 50 && read.seq < 0; i += 1) read = await opened.read();
+    return { opened, read };
+  };
+  let { opened: channel, read: first } = await open();
+  try {
     if (first.seq < 0) fail('no frame was copied after registration: is capture running and the display awake?');
     if (verb === 'set') { console.log(`registered ${Object.keys(set).length} regions; seq ${first.seq}`); return; }
     if (verb === 'png') {
@@ -131,17 +138,32 @@ async function main(argv) {
     if (verb === 'record') {
       if (!opt.out) fail('--out FILE.jsonl is required');
       const until = performance.now() + opt.seconds * 1000;
-      let last = -1; let rows = 0;
+      let last = -1; let rows = 0; let reopened = 0;
+      let advancedAt = performance.now();
       while (performance.now() < until) {
+        // A capture restart (the campaign preflight's, an abort's) leaves this
+        // channel on a stopped session whose last frame never changes: on
+        // 2026-10-01 (night7-k3-sr01) the recorder kept two frames of a whole
+        // night that way. After RECORD_STALL_MS without a new frame it opens a
+        // fresh channel; a screen that is merely still costs a re-registration.
+        if (performance.now() - advancedAt > RECORD_STALL_MS) {
+          try { channel.close(); } catch { /* the stopped session may already be gone */ }
+          let next;
+          try { next = await open(); }
+          catch (error) { fail(`frames stopped at seq ${last} and the channel could not be reopened: ${error.message}`); }
+          channel = next.opened; reopened += 1; advancedAt = performance.now();
+          appendFileSync(opt.out, `${JSON.stringify({ reopened, afterSeq: last, atHostMs: performance.now() })}\n`);
+          continue;
+        }
         const r = await channel.read();
         if (r.seq === last) continue;
-        last = r.seq;
+        last = r.seq; advancedAt = performance.now();
         const regions = Object.fromEntries(Object.entries(r.regions).map(([k, v]) =>
           [k, { cols: (v as any).cols, rows: (v as any).rows, step: (v as any).step, hex: Buffer.from(new Uint8Array((v as any).pixels.buffer)).toString('base64') }]));
         appendFileSync(opt.out, `${JSON.stringify({ seq: r.seq, imageNs: r.imageNs === null ? null : String(r.imageNs), imageHostMs: r.imageHostMs, rttMs: r.rttMs, regions })}\n`);
         rows += 1;
       }
-      console.log(`recorded ${rows} frames to ${opt.out}`);
+      console.log(`recorded ${rows} frames to ${opt.out} (${reopened} reopen(s) after ${RECORD_STALL_MS} ms without a frame)`);
     }
   } finally {
     try { await channel.clear(); } catch { /* the helper drops regions with its session */ }

@@ -1,0 +1,171 @@
+{
+  "status": "COMPLETE",
+  "mode": "live",
+  "result": {
+    "schema": "device-campaign-result-v1",
+    "version": 1,
+    "specHash": "fnv1a-c0e9add7",
+    "state": "COMPLETE",
+    "targetIndex": 0,
+    "completedNights": [
+      7
+    ],
+    "attempts": [
+      {
+        "night": 7,
+        "mode": "custom",
+        "attempt": 1,
+        "status": "WIN",
+        "terminal": {
+          "night": 7,
+          "outcome": "sixam",
+          "sixAm": true
+        },
+        "terminalVerification": {
+          "sixAm": true,
+          "positive": true
+        },
+        "save": {
+          "customNightVisible": false,
+          "continueVisible": false,
+          "sixthNightVisible": false,
+          "menuReturned": true,
+          "customCompleted": true,
+          "nextNightStarted": false,
+          "observed": true
+        },
+        "customReadback": {},
+        "proofHash": "fnv1a-a0d52e72",
+        "proof": true
+      }
+    ],
+    "events": [
+      {
+        "schema": "campaign-event-v1",
+        "type": "campaign.state",
+        "state": "PREFLIGHT",
+        "at": 10988.61246,
+        "data": {
+          "previous": "IDLE",
+          "mechanics": {
+            "requires": [
+              "fnaf2.camera-split"
+            ],
+            "forbidden": []
+          }
+        }
+      },
+      {
+        "schema": "campaign-event-v1",
+        "type": "campaign.state",
+        "state": "MENU",
+        "at": 11628.704327,
+        "data": {
+          "previous": "PREFLIGHT",
+          "device": "ZF525F5BH5",
+          "venue": {
+            "schema": "venue-check-v1",
+            "status": "MATCH",
+            "refuses": false,
+            "observed": {
+              "schema": "venue-identity-v1",
+              "package": "com.scottgames.fnaf2",
+              "versionName": "2.0.7",
+              "versionCode": "26",
+              "firstInstallTime": "2026-09-27 01:34:27",
+              "lastUpdateTime": "2026-09-27 01:34:27",
+              "buildFingerprint": "motorola/bogota_gn/bogota:16/W1VOS36.88-71-6-2-1-4/f2d68-fde443b:user/release-keys",
+              "securityPatch": "2026-09-01",
+              "handsetHash": "sha256-f88a35e75d347b6b",
+              "companionVersion": "0.1.14+15",
+              "timeZone": "America/Sao_Paulo"
+            },
+            "bindings": [
+              {
+                "source": "profile",
+                "id": "hid-mediaprojection"
+              }
+            ],
+            "drift": [],
+            "unknown": [],
+            "notes": [],
+            "message": "venue matches profile hid-mediaprojection",
+            "remedy": null
+          }
+        }
+      },
+      {
+        "schema": "campaign-event-v1",
+        "type": "campaign.state",
+        "state": "CUSTOM_VERIFY",
+        "at": 22075.86549,
+        "data": {
+          "previous": "MENU",
+          "target": "customNight"
+        }
+      },
+      {
+        "schema": "campaign-event-v1",
+        "type": "campaign.state",
+        "state": "INTRO_VERIFY",
+        "at": 26158.830163,
+        "data": {
+          "previous": "CUSTOM_VERIFY",
+          "target": "customNight",
+          "readback": true
+        }
+      },
+      {
+        "schema": "campaign-event-v1",
+        "type": "campaign.state",
+        "state": "ACTIVE",
+        "at": 33485.291299,
+        "data": {
+          "previous": "INTRO_VERIFY",
+          "night": 7
+        }
+      },
+      {
+        "schema": "campaign-event-v1",
+        "type": "campaign.attempt",
+        "state": "ACTIVE",
+        "at": 33485.458109,
+        "data": {
+          "night": 7,
+          "attempt": 1
+        }
+      },
+      {
+        "schema": "campaign-event-v1",
+        "type": "campaign.state",
+        "state": "TERMINAL_VERIFY",
+        "at": 453274.046809,
+        "data": {
+          "previous": "ACTIVE",
+          "night": 7,
+          "outcome": "sixam"
+        }
+      },
+      {
+        "schema": "campaign-event-v1",
+        "type": "campaign.state",
+        "state": "SAVE_VERIFY",
+        "at": 453888.025151,
+        "data": {
+          "previous": "TERMINAL_VERIFY",
+          "sixAm": true
+        }
+      },
+      {
+        "schema": "campaign-event-v1",
+        "type": "campaign.state",
+        "state": "COMPLETE",
+        "at": 481529.070129,
+        "data": {
+          "previous": "SAVE_VERIFY",
+          "completedNight": 7
+        }
+      }
+    ]
+  }
+}

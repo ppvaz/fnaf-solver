@@ -32,10 +32,23 @@
 # with none of the three refuses before it touches anything.
 set -Eeuo pipefail
 
-HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+HERE="${NIGHT_RUN_HERE:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 ROOT="$(cd "$HERE/../../../.." && pwd)"
 cd "$ROOT"
 ORIGINAL_ARGS=("$@")
+
+# Bash reads a script while it runs it, so an edit, a checkout or a rebase under
+# a running night garbles whatever it has not read yet: on 2026-10-01
+# (night7-k3-sr01) an edit made during the night broke the post-night tail with a
+# syntax error at line 841, and the run lost its campaign's exit status. Every
+# run executes a private snapshot taken here; HERE stays the checkout's, and the
+# snapshot is unlinked once past the lease (bash keeps its open descriptor).
+if [ -z "${NIGHT_RUN_SNAPSHOT:-}" ]; then
+  NIGHT_RUN_SNAPSHOT="$(mktemp "${TMPDIR:-/tmp}/night-run.XXXXXX")"
+  cp "$HERE/night-run.sh" "$NIGHT_RUN_SNAPSHOT"
+  export NIGHT_RUN_SNAPSHOT NIGHT_RUN_HERE="$HERE"
+  exec bash "$NIGHT_RUN_SNAPSHOT" "$@"
+fi
 
 LABEL=""
 BUNDLE="artifacts/night5-moved"
@@ -138,8 +151,9 @@ fi
 [ "$DRY" = 1 ] || case "$SERIAL" in ''|*[!A-Za-z0-9._:-]*) die "--serial is invalid: $SERIAL" ;; esac
 if [ "$DRY" = 0 ] && [ "${FNAF_LEASE_HELD:-}" != 1 ]; then
   exec python3 "$HERE/../../src/safety/device-lock-exec.py" "$SERIAL" -- \
-    env FNAF_LEASE_HELD=1 FNAF_SERIAL="$SERIAL" bash "$HERE/night-run.sh" "${ORIGINAL_ARGS[@]}"
+    env FNAF_LEASE_HELD=1 FNAF_SERIAL="$SERIAL" bash "$NIGHT_RUN_SNAPSHOT" "${ORIGINAL_ARGS[@]}"
 fi
+rm -f "$NIGHT_RUN_SNAPSHOT"
 
 # ---- fail-fast: inputs and tools exist before the phone is touched ----------
 TITLE_MODEL_PATH="packages/play/profiles/fnaf2/moto-g56/title-moto-g56-v207.json"
@@ -349,9 +363,11 @@ stop_frame_trace() {
 # The camera static re-rolls its blend coefficient from the game's Random(50) every 100 ms (Office g58), so the
 # static's opacity over the camera picture reads the random stream out (docs/evidence/full06-static-readout-*).
 # OPT-IN with --frame-trace: a measurement run. native-regions.ts records the model's static_view rectangle on every
-# copied frame, starting where the frame trace starts (evidence.started), into captures/static-readouts/, which is
-# never packed: the rows carry raw native pixels (publishing boundary). It never touches the executor's reads (the
-# FNaF 2 executor reads no REGION).
+# copied frame into captures/static-readouts/, which is never packed: the rows carry raw native pixels (publishing
+# boundary). It never touches the executor's reads (the FNaF 2 executor reads no REGION). It starts at
+# hid.schedule-start, seconds before the release: evidence.started comes BEFORE the preflight restarts the helper's
+# capture, and a recorder started there on 2026-10-01 (night7-k3-sr01) kept two frames of the stopped session for a
+# whole night. The frame trace survives the same trigger only because its start returns after the restart.
 STATIC_READOUT_PID=""
 start_static_readout() {
   [ "$STATIC_READOUT" = 1 ] || return 0
@@ -359,7 +375,7 @@ start_static_readout() {
   printf 'PENDING\n' > "$OUTDIR/static-readout.state"
   ( waited_ms=0
     while [ "$waited_ms" -lt 240000 ]; do
-      if grep -q '"type":"evidence.started"' "$OUTDIR/campaign.log" 2>/dev/null; then
+      if grep -q '"type":"hid.schedule-start"' "$OUTDIR/campaign.log" 2>/dev/null; then
         printf 'RECORDING\n' > "$OUTDIR/static-readout.state"
         if FNAF_LEASE_HELD=1 FNAF_SERIAL="$SERIAL" node packages/play/bin/phone/native-regions.ts record --model "$STATIC_MODEL" --set static \
              --seconds 520 --out "captures/static-readouts/$RUNID.jsonl" >/dev/null 2>"$OUTDIR/static-readout.err"; then
@@ -762,7 +778,7 @@ fi
 [ "$TEACH" = 1 ] && CAMPAIGN+=(--teach-overlay)
 if [ "$DRY" = 1 ]; then
   printf 'DRY RUN, the phone is not actuated (add --live --confirm-live for a live night):\n  %s\n' "${CAMPAIGN[*]} ${EXTRA[*]:-}"
-  [ "$STATIC_READOUT" = 1 ] && printf 'static readout (from evidence.started): FNAF_LEASE_HELD=1 node packages/play/bin/phone/native-regions.ts record --model %s --set static --seconds 520 --out captures/static-readouts/%s.jsonl\n' "$STATIC_MODEL" "$RUNID"
+  [ "$STATIC_READOUT" = 1 ] && printf 'static readout (from hid.schedule-start): FNAF_LEASE_HELD=1 node packages/play/bin/phone/native-regions.ts record --model %s --set static --seconds 520 --out captures/static-readouts/%s.jsonl\n' "$STATIC_MODEL" "$RUNID"
   # Nothing was started on the phone, so nothing is stopped or reset either.
   # The EXIT trap force-stops the game, relaunches it and screencaps its title;
   # until 2026-09-27 a dry run still ran it and put FNaF 2 in front of an app

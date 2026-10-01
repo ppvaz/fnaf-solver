@@ -118,13 +118,25 @@ try {
   }
   console.log('night-run: no flag is a dry run -- no adb call, no lease, no serial needed');
 
+  // A run executes a private snapshot of night-run.sh (an edit under a running night garbled night7-k3-sr01's
+  // tail on 2026-10-01): the snapshot is what runs, and it is gone once the run is past the lease.
+  const snapDir = join(tmp, 'snapshots');
+  mkdirSync(snapDir);
+  const snapped = run(nightRun(), bare({ TMPDIR: snapDir }));
+  ok(snapped.status === 0 && /DRY RUN/.test(snapped.stdout), `a dry run from a snapshot failed:\n${snapped.stdout}\n${snapped.stderr}`);
+  ok(readdirSync(snapDir).length === 0, `a dry run left its snapshot behind: ${readdirSync(snapDir).join(', ')}`);
+  const snapshotText = readFileSync(join(ROOT, 'packages/play/bin/phone/night-run.sh'), 'utf8');
+  ok(/exec bash "\$NIGHT_RUN_SNAPSHOT"/.test(snapshotText) && /bash "\$NIGHT_RUN_SNAPSHOT" "\$\{ORIGINAL_ARGS\[@\]\}"/.test(snapshotText),
+    'night-run.sh must run, and re-run under the lease, from its snapshot rather than from the checkout');
+  console.log('night-run: every run executes a private snapshot, removed once past the lease');
+
   // --static-readout: native camera-view pixels into captures/ (never the packed run directory), only beside the
   // frame trace whose image clock reads them, and nothing on the phone in a dry run.
   const lone = run(nightRun('--static-readout'), bare());
   ok(lone.status !== 0 && /add --frame-trace/.test(lone.stderr) && adbCalls().length === 0,
     `--static-readout without --frame-trace must refuse before adb:\n${lone.stdout}\n${lone.stderr}`);
   const readout = run(nightRun('--frame-trace', '--static-readout'), bare());
-  const recorder = readout.stdout.split('\n').find((line) => line.startsWith('static readout (from evidence.started):')) ?? '';
+  const recorder = readout.stdout.split('\n').find((line) => line.startsWith('static readout (from hid.schedule-start):')) ?? '';
   ok(readout.status === 0 && /native-regions\.ts record --model packages\/play\/profiles\/fnaf2\/moto-g56\/static-view-moto-g56-v207\.json --set static /.test(recorder)
     && /--out captures\/static-readouts\//.test(recorder) && adbCalls().length === 0,
     `a dry --frame-trace --static-readout run names its recorder, writing under captures/:\n${readout.stdout}\n${readout.stderr}`);
