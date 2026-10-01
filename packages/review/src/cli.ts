@@ -22,6 +22,7 @@ import { execFileSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import type { ClaimEnvelope, RefusalEnvelope } from '@sixam/kernel';
 import { promotionsQueryEnvelope } from './envelopes.ts';
 import { QUERY_COMMAND, QUERY_INPUTS, promotionsRecord, queryPromotions } from './promotions-query.ts';
 import { auditRuns, runAuditRecord } from './run-audit.ts';
@@ -63,11 +64,11 @@ const USAGE = `Usage: npm run review -- query promotions [--envelope] [--write F
   and truth decode makes one from an APK or CCN on this host with the local CTFAK dumper. The
   repository ships the decoder, never the decoded data.`;
 
-const usage = message => {
+function usage(message?: string): never {
   if (message) console.error(`review: ${message}`);
   console.error(USAGE);
   process.exit(2);
-};
+}
 
 const args = process.argv.slice(2);
 if (args.includes('--help') || args.includes('-h')) {
@@ -77,8 +78,11 @@ if (args.includes('--help') || args.includes('-h')) {
 const [verb, what, ...rest] = args;
 // Resolves once the write is handed to the OS: stdout to a pipe is asynchronous on macOS, so a
 // process.exit() straight after a large write cut the promotions query off mid-string there.
-const print = value => new Promise<any>(done => process.stdout.write(`${JSON.stringify(value, null, 2)}\n`, done));
-const answer = async envelope => { await print(envelope); process.exit(envelope.refused ? 1 : 0); };
+const print = (value: unknown) => new Promise<void>(done => process.stdout.write(`${JSON.stringify(value, null, 2)}\n`, () => done()));
+const answer = async (envelope: ClaimEnvelope | RefusalEnvelope) => {
+  await print(envelope);
+  process.exit('refused' in envelope && envelope.refused ? 1 : 0);
+};
 
 if (verb === 'query' && (what === 'promotions' || what === 'audit')) {
   let write = null;
@@ -91,21 +95,23 @@ if (verb === 'query' && (what === 'promotions' || what === 'audit')) {
     else usage(`unknown or incomplete option ${rest[index]}`);
   }
   const audit = what === 'audit';
-  const result: any = audit ? auditRuns(ROOT) : queryPromotions(ROOT);
-  await print(envelope ? promotionsQueryEnvelope(result) : result);
+  const report = audit ? { audit: true as const, result: auditRuns(ROOT) } : { audit: false as const, result: queryPromotions(ROOT) };
+  // --envelope is accepted only for promotions.
+  await print(!report.audit && envelope ? promotionsQueryEnvelope(report.result) : report.result);
   if (write) {
     const file = resolve(write);
     const rel = relative(ROOT, file);
-    const git = argv => execFileSync('git', argv, { cwd: ROOT, encoding: 'utf8' });
+    const git = (argv: string[]) => execFileSync('git', argv, { cwd: ROOT, encoding: 'utf8' });
     const commit = git(['rev-parse', 'HEAD']).trim();
     const inputs = audit ? ['docs/evidence/runs', 'packages/review/src/run-audit.ts'] : QUERY_INPUTS;
     const dirtyInputs = git(['status', '--porcelain=v1', '--', ...inputs]).split('\n').filter(Boolean).sort();
     const command = `${audit ? 'npm run review -- query audit' : QUERY_COMMAND} --write ${rel} --date ${date}`;
-    const record = (audit ? runAuditRecord : promotionsRecord)(result, { date, commit, dirtyInputs, command });
+    const meta = { date, commit, dirtyInputs, command };
+    const record = report.audit ? runAuditRecord(report.result, meta) : promotionsRecord(report.result, meta);
     writeFileSync(file, `${JSON.stringify(record, null, 2)}\n`);
     console.error(`review: wrote ${rel} (${record.evidenceId})`);
   }
-  process.exit(audit || result.consistent ? 0 : 1);
+  process.exit(report.audit || report.result.consistent ? 0 : 1);
 }
 
 const VERBS = ['query', 'describe', 'review', 'promote', 'check', 'resource', 'truth'];
@@ -116,13 +122,14 @@ const solver = createSolver({ root: ROOT });
 
 if (verb === 'query') {
   if (!what) usage('query needs a name');
-  const options: any = { what };
+  const options: NonNullable<Parameters<typeof solver.query>[0]> = { what };
   for (let index = 0; index < rest.length; index += 1) {
     const flag = rest[index];
     if (flag === '--negative') options.negative = true;
     else if (['--game', '--text', '--kind', '--limit'].includes(flag) && rest[index + 1] !== undefined) {
       const value = rest[++index];
-      options[flag.slice(2)] = flag === '--limit' ? Number(value) : value;
+      if (flag === '--limit') options.limit = Number(value);
+      else options[flag.slice(2) as 'game' | 'text' | 'kind'] = value;
     } else usage(`unknown or incomplete option ${flag}`);
   }
   await answer(solver.query(options));
@@ -142,7 +149,7 @@ if (verb === 'promote') {
 if (verb === 'check') {
   if (!what || rest.length > 1) usage('check takes a rule and one JSON object');
   let input = {};
-  try { input = rest.length ? JSON.parse(rest[0]) : {}; } catch (error) { usage(`the check input is not JSON: ${error.message}`); }
+  try { input = rest.length ? JSON.parse(rest[0]) : {}; } catch (error) { usage(`the check input is not JSON: ${(error as Error).message}`); }
   if (input === null || typeof input !== 'object' || Array.isArray(input)) usage('the check input is a JSON object');
   await answer(solver.check({ ...input, rule: what }));
 }
@@ -151,7 +158,7 @@ if (verb === 'truth') {
   if (what === 'events') {
     if (!first || second === undefined || more.length) usage('truth events takes a game and one JSON query');
     let query;
-    try { query = JSON.parse(second); } catch (error) { usage(`the truth query is not JSON: ${error.message}`); }
+    try { query = JSON.parse(second); } catch (error) { usage(`the truth query is not JSON: ${(error as Error).message}`); }
     await answer(solver.truth({ op: 'events', game: first, query }));
   }
   if (what === 'object') {

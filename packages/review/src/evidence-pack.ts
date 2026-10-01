@@ -37,8 +37,9 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { canonicalJson, stableHash } from '@sixam/kernel/contracts';
-import { BINDINGS_DIR } from '@sixam/kernel';
+import { BINDINGS_DIR, isList, isRecord } from '@sixam/kernel';
 import { isCampaignResult, campaignEntry, campaignPromotionChecks } from './evidence-campaign.ts';
+import type { CampaignWrapper } from './evidence-campaign.ts';
 
 export const RUN_PACK_SCHEMA = 'run-pack-v1';
 /**
@@ -78,7 +79,55 @@ const NUMERIC_ARRAY = /\[\s*(?:-?\d+(?:\.\d+)?(?:e[+-]?\d+)?\s*,\s*){63,}-?\d/i;
 const HEX_RUN = /[0-9a-f]{128,}/i;
 const BASE64_RUN = /[A-Za-z0-9+/]{200,}={0,2}/;
 
-const sha256 = data => createHash('sha256').update(data).digest('hex');
+/** One packed text file: the bytes the pack holds, the source bytes they came from, and what was redacted. */
+interface PackedFile {
+  readonly name: string;
+  readonly sha256: string;
+  readonly bytes: number;
+  readonly source: { readonly sha256: string, readonly bytes: number };
+  readonly redactions: Redactions;
+}
+/** A file the pack names by sha256 only: a frame, a recording, a trace, a log. */
+interface WithheldFile {
+  readonly name: string;
+  readonly sha256: string;
+  readonly bytes: number | null;
+  readonly kind: string;
+}
+/** How a pack's text reached the repository when it was not the campaign's own directory, and what is lost. */
+interface PackCustody {
+  readonly kind: string;
+  readonly source?: string;
+  readonly sourceSha256?: string;
+  readonly recovered?: readonly string[];
+  readonly retained?: readonly string[];
+  readonly lost: readonly string[];
+  readonly validation?: string;
+  readonly reason?: string;
+}
+/** run-pack-v1: a live night's text evidence, every frame and recording named by sha256 only. */
+export interface RunPack {
+  readonly schema: 'run-pack-v1';
+  readonly version: 1;
+  readonly kind?: 'fnaf1-run';
+  readonly id: string;
+  readonly campaign: string | null;
+  readonly run: string | null;
+  readonly outcome: unknown;
+  readonly claimLevel: unknown;
+  readonly nights?: readonly number[] | null;
+  readonly bundle?: { readonly path: string, readonly winnerHash: string | null } | null;
+  readonly files: readonly PackedFile[];
+  readonly withheld: readonly WithheldFile[];
+  readonly packer: string;
+  readonly custody?: PackCustody;
+  readonly graded?: Readonly<Record<string, string>>;
+  readonly [field: string]: unknown;
+}
+type Redactions = { paths: number, pixelArrays: number, frameRefs: number };
+type Recovery = { result: string | null, events: string };
+
+const sha256 = (data: string | Buffer) => createHash('sha256').update(data).digest('hex');
 
 /**
  * Throw unless `text` is free of pixel-shaped payloads.
@@ -93,9 +142,9 @@ export function refuseFrames(name: string, text: string) {
 }
 
 /** Replace this machine's repository root and home directory with portable prefixes. */
-function scrubPaths(text, { root, home }: { root: string, home?: string }) {
+function scrubPaths(text: string, { root, home }: { root: string, home?: string }) {
   let paths = 0;
-  const swap = (from, to) => {
+  const swap = (from: string, to: string) => {
     if (!from) return;
     const parts = text.split(from);
     paths += parts.length - 1;
@@ -108,8 +157,8 @@ function scrubPaths(text, { root, home }: { root: string, home?: string }) {
   return { text, paths };
 }
 
-function redact(value, counts) {
-  if (Array.isArray(value)) return value.map(item => redact(item, counts));
+function redact(value: unknown, counts: Redactions): unknown {
+  if (isList(value)) return value.map(item => redact(item, counts));
   if (value === null || typeof value !== 'object') return value;
   return Object.fromEntries(Object.entries(value).map(([key, item]) => {
     if (PIXEL_KEYS.has(key) && Array.isArray(item)) {
@@ -129,13 +178,13 @@ function packText(name: string, source: Buffer, context: {root: string, home?: s
   const scrubbed = scrubPaths(source.toString('utf8'), context);
   const counts = { paths: scrubbed.paths, pixelArrays: 0, frameRefs: 0 };
   let text = scrubbed.text;
-  const parse = (json, where) => {
-    try { return JSON.parse(json); } catch (error) { throw new Error(`${name}${where}: ${error.message}`); }
+  const parse = (json: string, where: string): unknown => {
+    try { return JSON.parse(json); } catch (error) { throw new Error(`${name}${where}: ${(error as Error).message}`); }
   };
-  const rewrite = value => {
+  const rewrite = (value: unknown) => {
     const before = counts.pixelArrays + counts.frameRefs;
     const next = redact(value, counts);
-    if (context.frames && typeof next?.frame === 'string' && context.frames.has(next.frame)) {
+    if (context.frames && isRecord(next) && typeof next.frame === 'string' && context.frames.has(next.frame)) {
       next.frame = { file: next.frame, ...context.frames.get(next.frame) };
       counts.frameRefs += 1;
     }
@@ -159,10 +208,10 @@ function packText(name: string, source: Buffer, context: {root: string, home?: s
   };
 }
 
-const withheldKind = name => IMAGE.test(name) ? 'frame' : /\.(mp4|mkv)$/i.test(name) ? 'video'
+const withheldKind = (name: string) => IMAGE.test(name) ? 'frame' : /\.(mp4|mkv)$/i.test(name) ? 'video'
   : /\.(raw|wav|pcm)$/i.test(name) ? 'audio' : /\.(pftrace|perfetto-trace)$/i.test(name) ? 'trace'
   : /\.logcat$/i.test(name) ? 'log' : 'other';
-const withheldEntry = (name, file) => {
+const withheldEntry = (name: string, file: string): WithheldFile & { bytes: number } => {
   const data = readFileSync(file);
   return { name, sha256: sha256(data), bytes: data.length, kind: withheldKind(name) };
 };
@@ -179,12 +228,12 @@ const readJson = (file: string) => JSON.parse(readFileSync(file, 'utf8'));
  * @param log run/campaign.log
  * @param campaignDir the evidence directory as the campaign recorded it
  */
-export function recoverFromRunLog(log: string, campaignDir: string): {result: string | null, events: string} | null {
+export function recoverFromRunLog(log: string, campaignDir: string): Recovery | null {
   const lines = log.split('\n');
-  const events = [];
+  const events: string[] = [];
   let inside = false;
   let found = false;
-  let result = null;
+  let result: string | null = null;
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index];
     if (line.startsWith('{"at":')) {
@@ -228,7 +277,7 @@ export function recoveryCheck(root: string) {
     if (!existsSync(join(runDir, 'campaign.log')) || !existsSync(join(runDir, 'verdict.txt'))) continue;
     const verdict = readFileSync(join(runDir, 'verdict.txt'), 'utf8');
     const named = [...verdict.matchAll(/^--- attempt \d+ of \d+: (\S+) ---$/gm)].map(match => match[1]);
-    const paths = named.length ? named : [verdict.match(/^campaign dir (\S+)$/m)?.[1]].filter(Boolean);
+    const paths = named.length ? named : [verdict.match(/^campaign dir (\S+)$/m)?.[1]].filter((path): path is string => Boolean(path));
     const log = readFileSync(join(runDir, 'campaign.log'), 'utf8');
     for (const path of paths) {
       const dir = join(root, 'artifacts', basename(path));
@@ -297,7 +346,7 @@ export function resolvePackTargets(root: string, id: string): {campaignDir?: str
     const run = findRunDir(root, id);
     const label = run ? basename(run.runDir) : null;
     return [{ campaignDir: direct, runDir: run?.runDir ?? null,
-      packId: !label ? id : run.attempt > 1 ? `${label}-attempt${run.attempt}` : label }];
+      packId: !run || !label ? id : run.attempt > 1 ? `${label}-attempt${run.attempt}` : label }];
   }
   const runDir = join(root, 'artifacts', 'runs', id);
   if (!existsSync(join(runDir, 'verdict.txt')) && existsSync(join(runDir, 'events.jsonl')) &&
@@ -324,7 +373,7 @@ export function resolvePackTargets(root: string, id: string): {campaignDir?: str
 // A signal can end the CLI before it writes result.json. Keep its native
 // request/events/observations rather than pretending they were lost with a
 // deleted campaign, or inventing a terminal. Both identity files are required.
-function incompleteCampaign(dir) {
+function incompleteCampaign(dir: string) {
   return !existsSync(join(dir, 'result.json'))
     && existsSync(join(dir, 'events.jsonl')) && existsSync(join(dir, 'request.json'));
 }
@@ -338,9 +387,9 @@ function incompleteCampaign(dir) {
  * record status; fnaf1-promotion.ts reads these packs for the promotion gate.
  */
 export function buildFnaf1Pack({ root, home = '', fnaf1RunDir, packId }: {root: string, home?: string, fnaf1RunDir: string, packId: string}) {
-  const files = [];
-  const texts = new Map();
-  const withheld = [];
+  const files: PackedFile[] = [];
+  const texts = new Map<string, string>();
+  const withheld: WithheldFile[] = [];
   for (const name of readdirSync(fnaf1RunDir).sort()) {
     const file = join(fnaf1RunDir, name);
     if (!statSync(file).isFile()) continue;
@@ -350,10 +399,11 @@ export function buildFnaf1Pack({ root, home = '', fnaf1RunDir, packId }: {root: 
       texts.set(name, text);
     } else withheld.push(withheldEntry(name, file));
   }
-  const record = texts.has('probe.json') ? JSON.parse(texts.get('probe.json'))
-    : texts.has('run.json') ? JSON.parse(texts.get('run.json')) : {};
-  const ended = (texts.get('events.jsonl') ?? '').split('\n').filter(Boolean).map(line => JSON.parse(line))
-    .find(event => event.type === 'night-ended') ?? null;
+  const recordText = texts.get('probe.json') ?? texts.get('run.json');
+  const record: Readonly<Record<string, unknown>> = recordText === undefined ? {} : JSON.parse(recordText);
+  const events: Readonly<Record<string, unknown>>[] = (texts.get('events.jsonl') ?? '').split('\n').filter(Boolean)
+    .map(line => JSON.parse(line));
+  const ended = events.find(event => event.type === 'night-ended') ?? null;
   const pack = {
     schema: RUN_PACK_SCHEMA, version: 1, kind: 'fnaf1-run', id: packId, campaign: null, run: basename(fnaf1RunDir),
     outcome: ended ? { ended: ended.ended, atNightMs: ended.atNightMs } : null,
@@ -368,25 +418,25 @@ export function buildFnaf1Pack({ root, home = '', fnaf1RunDir, packId }: {root: 
 /**
  * Build a pack in memory. Nothing is written.
  */
-export function buildPack({ root, home = '', campaignDir, runDir = null, packId, recoverFromLog = false, timeline = null }: {root: string, home?: string, campaignDir: string, runDir?: string | null, packId: string, recoverFromLog?: boolean, timeline?: any}) {
-  let recovered = null;
+export function buildPack({ root, home = '', campaignDir, runDir = null, packId, recoverFromLog = false, timeline = null }: {root: string, home?: string, campaignDir: string, runDir?: string | null, packId: string, recoverFromLog?: boolean, timeline?: string | null}) {
+  let recovered: (Recovery & { logSha256: string }) | null = null;
   if (recoverFromLog) {
     if (!runDir) throw new Error('recovering a campaign needs the night-run directory whose log captured it');
     const log = readFileSync(join(runDir, 'campaign.log'));
-    recovered = recoverFromRunLog(log.toString('utf8'), campaignDir);
-    if (!recovered) throw new Error(`${basename(runDir)}/campaign.log never started ${basename(campaignDir)}`);
-    recovered.logSha256 = sha256(log);
+    const found = recoverFromRunLog(log.toString('utf8'), campaignDir);
+    if (!found) throw new Error(`${basename(runDir)}/campaign.log never started ${basename(campaignDir)}`);
+    recovered = { ...found, logSha256: sha256(log) };
   }
   const incomplete = !recovered && incompleteCampaign(campaignDir);
-  const wrapper = !recovered ? (incomplete ? null : readJson(join(campaignDir, 'result.json')))
+  const wrapper: CampaignWrapper | null = !recovered ? (incomplete ? null : readJson(join(campaignDir, 'result.json')))
     : recovered.result === null ? null : JSON.parse(recovered.result);
   if (wrapper !== null && !isCampaignResult(wrapper)) throw new Error(`${basename(campaignDir)} is not a device campaign`);
   // A result the CLI never printed is not reconstructed: the pack says it is lost.
   const entry = wrapper ? campaignEntry(packId, wrapper) : { outcome: 'RESULT_LOST', claimLevel: 'UNKNOWN', nights: null };
-  const files = [];
-  const texts = new Map();
-  const withheld = [];
-  const frames = new Map();
+  const files: PackedFile[] = [];
+  const texts = new Map<string, string>();
+  const withheld: WithheldFile[] = [];
+  const frames = new Map<string, { sha256: string, bytes: number }>();
   const campaignNames = recovered ? [] : readdirSync(campaignDir).sort();
   for (const name of campaignNames) {
     const file = join(campaignDir, name);
@@ -396,18 +446,19 @@ export function buildPack({ root, home = '', campaignDir, runDir = null, packId,
     if (item.kind === 'frame') frames.set(name, { sha256: item.sha256, bytes: item.bytes });
   }
   const context = { root, home, frames };
-  const sources = recovered
-    ? [['events.jsonl', recovered.events], ['result.json', recovered.result]]
-      .filter(([, text]) => text !== null).map(([name, text]) => [name, Buffer.from(text)])
-    : CAMPAIGN_TEXT.filter(item => campaignNames.includes(item)).map(name => [name, readFileSync(join(campaignDir, name))]);
+  const recoveredTexts: readonly [string, string | null][] = recovered
+    ? [['events.jsonl', recovered.events], ['result.json', recovered.result]] : [];
+  const sources: [string, Buffer][] = recovered
+    ? recoveredTexts.flatMap(([name, text]): [string, Buffer][] => text === null ? [] : [[name, Buffer.from(text)]])
+    : CAMPAIGN_TEXT.filter(item => campaignNames.includes(item)).map((name): [string, Buffer] => [name, readFileSync(join(campaignDir, name))]);
   for (const [name, source] of sources) {
     const { entry: fileEntry, text } = packText(name, source, context);
     files.push(fileEntry);
     texts.set(name, text);
   }
-  let bundle = null;
+  let bundle: { path: string, winnerHash: string | null } | null = null;
   if (runDir) {
-    const walk = (dir, prefix) => {
+    const walk = (dir: string, prefix: string) => {
       for (const name of readdirSync(dir).sort()) {
         const file = join(dir, name);
         const inner = `${prefix}${name}`;
@@ -468,13 +519,13 @@ export function buildPack({ root, home = '', campaignDir, runDir = null, packId,
 }
 
 /** The sha256 a Plan 12 attestation binds to. */
-export const packDigest = (pack: any) => sha256(canonicalJson(pack));
+export const packDigest = (pack: unknown) => sha256(canonicalJson(pack));
 
 /**
  * Write a built pack. An identical pack already on disk is left alone; a different one is
  * refused unless `replace`, because evidence is not edited in place.
  */
-export function writePack(dir, { pack, texts }, { replace = false } = {}): 'WRITTEN' | 'UNCHANGED' | 'REPLACED' {
+export function writePack(dir: string, { pack, texts }: { pack: unknown, texts: ReadonlyMap<string, string> }, { replace = false } = {}): 'WRITTEN' | 'UNCHANGED' | 'REPLACED' {
   const existing = join(dir, 'pack.json');
   let status: 'WRITTEN' | 'UNCHANGED' | 'REPLACED' = 'WRITTEN';
   if (existsSync(existing)) {
@@ -495,7 +546,8 @@ export function writePack(dir, { pack, texts }, { replace = false } = {}): 'WRIT
  * frame-free. The attestation, if one has been written, is returned alongside, unjudged.
  */
 export function readPack(dir: string) {
-  const pack = readJson(join(dir, 'pack.json'));
+  // Checked below: the schema, then every file it lists against its own sha256.
+  const pack: RunPack = readJson(join(dir, 'pack.json'));
   if (pack.schema !== RUN_PACK_SCHEMA || pack.version !== 1) throw new Error('not a run-pack-v1');
   for (const file of pack.files) {
     if (file.name.startsWith('/') || file.name.split('/').includes('..')) throw new Error(`unsafe pack path ${file.name}`);
@@ -506,15 +558,15 @@ export function readPack(dir: string) {
   if (pack.kind === 'fnaf1-run') {
     const attested = join(dir, ATTESTATION_FILE);
     return { pack, digest: packDigest(pack), wrapper: null, files: pack.files.map(file => file.name),
-      attestation: existsSync(attested) ? readJson(attested) : null };
+      attestation: (existsSync(attested) ? readJson(attested) : null) as unknown };
   }
   const lost = pack.custody?.lost?.includes('result.json');
   if (!lost && !pack.files.some(file => file.name === 'result.json')) throw new Error('pack has no result.json');
-  const wrapper = lost ? null : readJson(join(dir, 'result.json'));
+  const wrapper: CampaignWrapper | null = lost ? null : readJson(join(dir, 'result.json'));
   if (wrapper !== null && !isCampaignResult(wrapper)) throw new Error('pack result.json is not a device campaign');
   const attestationFile = join(dir, ATTESTATION_FILE);
   return { pack, digest: packDigest(pack), wrapper, files: pack.files.map(file => file.name),
-    attestation: existsSync(attestationFile) ? readJson(attestationFile) : null };
+    attestation: (existsSync(attestationFile) ? readJson(attestationFile) : null) as unknown };
 }
 
 /**
@@ -523,7 +575,7 @@ export function readPack(dir: string) {
  * 
  * @param packed readPack's result
  */
-export function packEntry(id: string, { pack, wrapper }: {pack: any, wrapper: any}) {
+export function packEntry(id: string, { pack, wrapper }: {pack: RunPack, wrapper: CampaignWrapper | null}) {
   return wrapper ? campaignEntry(id, wrapper)
     : { id, kind: 'device-campaign', outcome: pack.outcome, claimLevel: pack.claimLevel, nights: pack.nights, attempts: [] };
 }
@@ -569,12 +621,13 @@ export function custodyWinnerFiles(root: string): string[] {
  * register's sha256, or that the register does not list, is refused as a stale register.
  */
 export function trackedWinners(root: string): Map<string, string> {
-  const register = new Map(readJson(join(root, WINNER_HASHES)).winners.map(row => [basename(row.file), row]));
-  const winners = new Map();
+  const rows: readonly { file: string, sha256: string, compiledWinnerHash?: string | null }[] = readJson(join(root, WINNER_HASHES)).winners;
+  const register = new Map(rows.map(row => [basename(row.file), row] as const));
+  const winners = new Map<string, string>();
   for (const file of custodyWinnerFiles(root)) {
     const name = basename(file);
     const bytes = readFileSync(join(root, file));
-    const row: any = register.get(name);
+    const row = register.get(name);
     if (!row || row.sha256 !== sha256(bytes))
       throw new Error(`${WINNER_HASHES} is stale for ${file}: run \`npm run catalog\``);
     winners.set(stableHash(JSON.parse(bytes.toString('utf8'))), name);
@@ -593,8 +646,8 @@ export function trackedWinners(root: string): Map<string, string> {
  * @param pack pack.json
  * @param files packed file names
  */
-export function packManifestComplete(pack: any, files: string[]) {
-  const has = name => files.includes(name);
+export function packManifestComplete(pack: RunPack, files: readonly string[]) {
+  const has = (name: string) => files.includes(name);
   const custody = pack.custody;
   if (!custody) return CAMPAIGN_MANIFEST.every(has);
   if (custody.kind !== 'recovered-from-run-log') return false;
@@ -607,16 +660,18 @@ export function packManifestComplete(pack: any, files: string[]) {
 }
 
 /** The custody a reading must show: how the pack's text reached the repository, and what is lost. */
-export const packCustody = pack => ({ kind: pack.custody?.kind ?? 'original', lost: pack.custody?.lost ?? [] });
+export const packCustody = (pack: RunPack) => ({ kind: pack.custody?.kind ?? 'original', lost: pack.custody?.lost ?? [] });
 
-const named = value => typeof value === 'string' && value.trim().length > 0;
+const named = (value: unknown): value is string => typeof value === 'string' && value.trim().length > 0;
 
 /** Who attested, in one line, whatever the attestation's validity. */
-export function attestedBy(attestation: any) {
-  const by = attestation?.attestedBy;
-  if (attestation?.schema === ATTESTATION_SCHEMA_V1) return named(by) ? `human:${by}` : null;
-  if (by?.kind === 'agent') return `agent:${by.delegation ?? 'no-delegation'}`;
-  if (by?.kind === 'human') return `human:${by.name ?? 'unnamed'}`;
+export function attestedBy(attestation: unknown) {
+  const record = isRecord(attestation) ? attestation : undefined;
+  const by = record?.attestedBy;
+  if (record?.schema === ATTESTATION_SCHEMA_V1) return named(by) ? `human:${by}` : null;
+  const author = isRecord(by) ? by : undefined;
+  if (author?.kind === 'agent') return `agent:${author.delegation ?? 'no-delegation'}`;
+  if (author?.kind === 'human') return `human:${author.name ?? 'unnamed'}`;
   return null;
 }
 
@@ -628,24 +683,27 @@ export function attestedBy(attestation: any) {
  * @param attestation parsed plan12-attestation.json, or null
  * @param digest packDigest of the pack it sits beside
  */
-export function attestationStatus(attestation: any, digest: string): {valid: boolean, reason: string | null, by: string | null} {
-  const by = attestedBy(attestation);
-  const refuse = reason => ({ valid: false, reason, by });
-  if (!attestation) return refuse('no attestation');
-  if (![ATTESTATION_SCHEMA, ATTESTATION_SCHEMA_V1].includes(attestation.schema)) return refuse(`unknown schema ${attestation.schema}`);
+export function attestationStatus(input: unknown, digest: string): {valid: boolean, reason: string | null, by: string | null} {
+  const by = attestedBy(input);
+  const refuse = (reason: string) => ({ valid: false, reason, by });
+  if (!input) return refuse('no attestation');
+  // Any other value reads as a record with none of the fields, which is how property reads on it behaved.
+  const attestation: Readonly<Record<string, unknown>> = isRecord(input) ? input : {};
+  if (attestation.schema !== ATTESTATION_SCHEMA && attestation.schema !== ATTESTATION_SCHEMA_V1) return refuse(`unknown schema ${attestation.schema}`);
   if (attestation.status !== 'PASS') return refuse(`status ${attestation.status}, not PASS`);
   if (attestation.packSha256 !== digest) return refuse(`binds pack sha256 ${attestation.packSha256}, not this pack's ${digest}`);
   if (attestation.schema === ATTESTATION_SCHEMA_V1)
     return named(attestation.attestedBy) ? { valid: true, reason: null, by } : refuse('a v1 attestation names no person');
-  const author = attestation.attestedBy;
+  const author = isRecord(attestation.attestedBy) ? attestation.attestedBy : undefined;
   if (author?.kind === 'agent') {
     if (author.delegation !== AGENT_DELEGATION) return refuse(`an agent attests only under delegation ${AGENT_DELEGATION}`);
     if (!named(author.note)) return refuse('an agent attestation must name its session or agent in a note');
   } else if (author?.kind === 'human') {
     if (!named(author.name)) return refuse('a human attestation must name the person');
   } else return refuse('attestedBy names neither a person nor an agent under delegation');
-  if (!Array.isArray(attestation.verified)) return refuse('lists nothing as verified');
-  const missing = ATTESTED_CHECKS.filter(check => !attestation.verified.some(item => item?.check === check && item.pass === true));
+  const verified = attestation.verified;
+  if (!isList(verified)) return refuse('lists nothing as verified');
+  const missing = ATTESTED_CHECKS.filter(check => !verified.some(item => isRecord(item) && item.check === check && item.pass === true));
   if (missing.length) return refuse(`does not list ${missing.join(', ')} as verified`);
   return { valid: true, reason: null, by };
 }

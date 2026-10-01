@@ -4,24 +4,24 @@
 
 const DEFAULT_Z = 1.959963984540054;
 
-function finiteNumber(name, value) {
+function finiteNumber(name: string, value: number) {
   if (!Number.isFinite(value)) throw new TypeError(`${name} must be finite`);
   return value;
 }
 
-function countInputs(successes, trials) {
+function countInputs(successes: number, trials: number) {
   if (!Number.isInteger(successes) || !Number.isInteger(trials) ||
       trials <= 0 || successes < 0 || successes > trials)
     throw new RangeError('successes/trials must be integers with 0 <= successes <= trials and trials > 0');
 }
 
-function zInput(z) {
+function zInput(z: number) {
   finiteNumber('z', z);
   if (z <= 0) throw new RangeError('z must be greater than zero');
   return z;
 }
 
-function halfWidthForRate(rate, trials, z) {
+function halfWidthForRate(rate: number, trials: number, z: number) {
   const zz = z * z;
   const d = 1 + zz / trials;
   return z * Math.sqrt(rate * (1 - rate) / trials + zz / (4 * trials * trials)) / d;
@@ -29,7 +29,7 @@ function halfWidthForRate(rate, trials, z) {
 
 // Wilson score interval for a binomial proportion. It behaves sensibly at
 // both 0/n and n/n, unlike the symmetric normal interval.
-export function wilsonInterval(successes, trials, z = DEFAULT_Z) {
+export function wilsonInterval(successes: number, trials: number, z = DEFAULT_Z) {
   countInputs(successes, trials);
   z = zInput(z);
   const rate = successes / trials;
@@ -51,7 +51,7 @@ export function wilsonInterval(successes, trials, z = DEFAULT_Z) {
 // estimate: a later observed integer count still gets its own exact interval.
 // Binary search makes the boundary explicit and avoids the normal-interval
 // shortcut becoming over-optimistic near rates 0 and 1.
-export function requiredN(rate, halfWidth, z = DEFAULT_Z) {
+export function requiredN(rate: number, halfWidth: number, z = DEFAULT_Z) {
   finiteNumber('rate', rate);
   finiteNumber('halfWidth', halfWidth);
   if (rate < 0 || rate > 1) throw new RangeError('rate must be in [0, 1]');
@@ -75,7 +75,7 @@ export function requiredN(rate, halfWidth, z = DEFAULT_Z) {
 // Two-sided large-sample z test for two independent proportions. This is an
 // inferential report, not a gate: callers must choose the practical contract
 // and the acceptable error rate separately.
-export function twoProportionTest(successesA, trialsA, successesB, trialsB,
+export function twoProportionTest(successesA: number, trialsA: number, successesB: number, trialsB: number,
                                   z = DEFAULT_Z) {
   countInputs(successesA, trialsA);
   countInputs(successesB, trialsB);
@@ -94,7 +94,7 @@ export function twoProportionTest(successesA, trialsA, successesB, trialsB,
 
 // Abramowitz-Stegun 7.1.26. The error is below 1.5e-7, plenty for a report
 // and keeps the helper usable on Node versions without Math.erf.
-function erf(x) {
+function erf(x: number) {
   const sign = x < 0 ? -1 : 1;
   x = Math.abs(x);
   const t = 1 / (1 + 0.3275911 * x);
@@ -103,7 +103,7 @@ function erf(x) {
   return sign * y;
 }
 
-function normalTwoSidedP(z) {
+function normalTwoSidedP(z: number) {
   if (z === Infinity || z === -Infinity) return 0;
   return 1 - erf(Math.abs(z) / Math.SQRT2);
 }
@@ -111,7 +111,7 @@ function normalTwoSidedP(z) {
 // A contract is accepted only when the entire interval clears the bar, and
 // rejected only when the entire interval is below it. A straddling interval
 // is explicitly inconclusive, never a hidden pass or fail.
-export function contractVerdict(successes, trials, bar, z = DEFAULT_Z) {
+export function contractVerdict(successes: number, trials: number, bar: number, z = DEFAULT_Z) {
   finiteNumber('bar', bar);
   if (bar < 0 || bar > 1) throw new RangeError('bar must be in [0, 1]');
   const interval = wilsonInterval(successes, trials, z);
@@ -120,9 +120,9 @@ export function contractVerdict(successes, trials, bar, z = DEFAULT_Z) {
   return { ...interval, bar, status, ok: status === 'PASS' };
 }
 
-export function formatRate(successes, trials, { digits = 1, label = 'rate', z = DEFAULT_Z } = {}) {
+export function formatRate(successes: number, trials: number, { digits = 1, label = 'rate', z = DEFAULT_Z } = {}) {
   const r = wilsonInterval(successes, trials, z);
-  const pct = n => (100 * n).toFixed(digits);
+  const pct = (n: number) => (100 * n).toFixed(digits);
   return `${label} ${pct(r.rate)}% [${pct(r.low)}%, ${pct(r.high)}%] n=${trials}`;
 }
 

@@ -11,12 +11,13 @@ import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-const maps = new Map();
+const maps = new Map<string, Map<string, string>>();
 
-function renames(root) {
-  if (maps.has(root)) return maps.get(root);
-  const map = new Map();
-  const git = (args) => execFileSync('git', args, { cwd: root, encoding: 'utf8', maxBuffer: 1 << 28 });
+function renames(root: string) {
+  const known = maps.get(root);
+  if (known) return known;
+  const map = new Map<string, string>();
+  const git = (args: string[]) => execFileSync('git', args, { cwd: root, encoding: 'utf8', maxBuffer: 1 << 28 });
   const lines = [
     ...git(['log', '--reverse', '-M', '--diff-filter=R', '--name-status', '--format=']).split('\n'),
     ...git(['diff', '--cached', '-M', '--diff-filter=R', '--name-status']).split('\n'),
@@ -31,13 +32,13 @@ function renames(root) {
 
 /** `path` (repository-relative) as the tree names it now: itself while it
  *  exists, else the end of its rename chain, else null. */
-export function currentPath(root, path) {
+export function currentPath(root: string, path: string) {
   if (existsSync(join(root, path))) return path;
   const map = renames(root);
-  const seen = new Set();
+  const seen = new Set<string>();
   for (let at = path; map.has(at) && !seen.has(at);) {
     seen.add(at);
-    at = map.get(at);
+    at = map.get(at) as string;
     if (existsSync(join(root, at))) return at;
   }
   return null;

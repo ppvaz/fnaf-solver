@@ -13,10 +13,11 @@
 // the decoded data, and refuses, naming the decode, where no dump is configured.
 import { statSync } from 'node:fs';
 import { join } from 'node:path';
-import { CONTROL_CATALOGS } from '@sixam/source';
+import { controlCatalogFor } from '@sixam/source';
 import { NO_LOCAL_DUMP, VAULT_ENV, VAULT_FILE, createTruth } from '@sixam/source/truth';
 import { canonicalJson } from '@sixam/kernel/contracts';
-import { REPOSITORY_TARGET, claimEnvelope, isRefusal, isUnknown, refusalEnvelope, unknown, validateClaimEnvelope } from '@sixam/kernel';
+import { REPOSITORY_TARGET, claimEnvelope, isRecord, isRefusal, isUnknown, refusalEnvelope, unknown, validateClaimEnvelope } from '@sixam/kernel';
+import type { EnvelopeLabel } from '@sixam/kernel';
 import { videoTerminal } from './evidence-cohort.ts';
 import { ATTESTATION_FILE, PACKS_DIR, packPromotionChecks, readPack, trackedWinners, winnerFiles } from './evidence-pack.ts';
 import { GRAPH_FILE, PROMOTION_EDGE, derivePromotion, fnaf1PromotionChecks, readGraph, recordPromotion } from './evidence-promotion.ts';
@@ -53,21 +54,25 @@ export const RESOURCE_TEMPLATES = Object.freeze([
 ]);
 
 const PACK_ID = /^[\w.-]+$/;
-const shellQuote = text => `'${String(text).replaceAll("'", "'\\''")}'`;
-const tally = (items, key) => items.reduce((counts, item) => {
-  const value = key(item);
+type PackRow = ReturnType<typeof readPackRow>;
+type ValidPackRow = Extract<PackRow, { valid: true }>;
+
+const shellQuote = (text: unknown) => `'${String(text).replaceAll("'", "'\\''")}'`;
+// A key is a property name, as indexing with it would make it.
+const tally = <T>(items: readonly T[], key: (item: T) => unknown) => items.reduce((counts, item) => {
+  const value = String(key(item));
   counts[value] = (counts[value] ?? 0) + 1;
   return counts;
 }, ({} as Record<string, number>));
-const sorted = counts => Object.fromEntries(Object.entries(counts).sort(([a], [b]) => a.localeCompare(b)));
+const sorted = (counts: Readonly<Record<string, number>>) => Object.fromEntries(Object.entries(counts).sort(([a], [b]) => a.localeCompare(b)));
 
 /** A caller's argument refused: the rule, what was wrong, and what is accepted. */
-const badArgument = (because, remedy) => refusalEnvelope({ rule: 'invalid-argument', because, cite: [SURFACE_DOC], remedy });
-const gameRefusal = game => badArgument(`${JSON.stringify(game ?? null)} is not a registered game`,
+const badArgument = (because: string, remedy: string) => refusalEnvelope({ rule: 'invalid-argument', because, cite: [SURFACE_DOC], remedy });
+const gameRefusal = (game: unknown) => badArgument(`${JSON.stringify(game ?? null)} is not a registered game`,
   `name one of ${GAMES.map(item => `${item.alias} (${item.package})`).join(', ')}`);
 
 /** One label for a list: the label every row shares, or UNKNOWN naming the mix. */
-function sharedLabel(labels, what) {
+function sharedLabel(labels: readonly EnvelopeLabel[], what: string): EnvelopeLabel {
   const keys = [...new Set(labels.map(label => (isUnknown(label) ? 'UNKNOWN' : label)))];
   if (keys.length === 1 && keys[0] !== 'UNKNOWN') return labels[0];
   if (!labels.length) return unknown(`no ${what} match, so there is no label to carry`);
@@ -75,7 +80,7 @@ function sharedLabel(labels, what) {
 }
 
 /** Stat fingerprint of the committed winners, to know when a cached compile is stale. */
-function winnersKey(root) {
+function winnersKey(root: string) {
   return winnerFiles(root)
     .map(file => { const stat = statSync(join(root, file)); return `${file}:${stat.size}:${stat.mtimeMs}`; }).join('|');
 }
@@ -87,7 +92,7 @@ function winnersKey(root) {
  */
 export function createSolver({ root, winners: winnersOverride, truth: truthOverride }: {root: string, winners?: () => Map<string, string>, truth?: ReturnType<typeof createTruth>}) {
   const truth = truthOverride ?? createTruth({ root });
-  let cache = null;
+  let cache: { key: string, winners: Map<string, string> } | null = null;
   /** trackedWinners compiles every committed winner (~7 s); it is kept until a winner file changes. */
   const winners = () => {
     if (winnersOverride) return winnersOverride();
@@ -99,12 +104,12 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
   // --- describe ------------------------------------------------------------------------------
 
   /** Plan 28's four gaps, each as a query over the registers and this surface's own verb table. */
-  function gaps(pkg, gamePacks, graphEdges) {
+  function gaps(pkg: string, gamePacks: readonly ValidPackRow[], graphEdges: number) {
     const contracts = readContracts(root).contracts.map(item => item.id);
     const registered = contracts.includes('claim-envelope-v1');
     const registry = readCommandRegistry(root);
     const emitterIds = new Set(ENVELOPE_EMITTERS.map(command => command.split(' ')[2]));
-    const custody = tally(gamePacks, pack => (pack.valid ? pack.custody.kind : 'invalid'));
+    const custody = tally(gamePacks, pack => pack.custody.kind);
     const complete = custody.original ?? 0;
     const local = truth.status(pkg);
     return [
@@ -129,8 +134,8 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
     const named = resolveGame(game);
     if (!named) return gameRefusal(game);
     const pkg = named.package;
-    const catalog = CONTROL_CATALOGS[pkg];
-    const notMeasured = [];
+    const catalog = controlCatalogFor(pkg);
+    const notMeasured: string[] = [];
 
     // The control catalog (D5).
     const catalogUnknownFacts = catalogUnknowns(catalog);
@@ -180,8 +185,9 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
 
     // Packs, promotions, and what the phone has confirmed.
     const packs = readPacks(root);
-    const gamePacks = packs.filter(pack => gameKey(pack.game) === pkg);
-    const invalid = packs.filter(pack => !pack.valid);
+    // An invalid pack's game is UNKNOWN, so no game's packs include one.
+    const gamePacks = packs.flatMap(pack => pack.valid && gameKey(pack.game) === pkg ? [pack] : []);
+    const invalid = packs.flatMap(pack => pack.valid ? [] : [pack]);
     if (invalid.length) notMeasured.push(...invalid.map(pack => `${pack.id}: ${pack.error}`));
     const graph = readGraph(root);
     const graphEdges = graph.edges.filter(edge => edge.type === PROMOTION_EDGE);
@@ -215,7 +221,7 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
           .map(item => `a committed winner for the Night ${item.night ?? 'UNKNOWN'} anchor binding ${item.hash}`));
     } else {
       let gate;
-      try { derivePromotion(root, gamePacks[0].id, new Map()); gate = null; } catch (error) { gate = error.message; }
+      try { derivePromotion(root, gamePacks[0].id, new Map()); gate = null; } catch (error) { gate = (error as Error).message; }
       const promotedHere = gamePacks.filter(pack => pack.promoted);
       phone = {
         packs: gamePacks.length, reportedOutcomes: sorted(outcomes),
@@ -233,7 +239,7 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
 
     const gapRows = gaps(pkg, gamePacks, gameEdges.length);
     notMeasured.push(...gapRows.filter(row => row.holds !== false).map(row => `Plan 28 gap ${row.gap} (${row.name}) holds${row.holds === true ? '' : ' partly'}`),
-      ...gapRows.flatMap((row: any) => row.notMeasured ?? []));
+      ...gapRows.flatMap(row => ('notMeasured' in row ? row.notMeasured : undefined) ?? []));
 
     return claimEnvelope({
       claim: {
@@ -251,9 +257,10 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
 
   // --- query ---------------------------------------------------------------------------------
 
-  const limitOf = limit => (Number.isInteger(limit) && limit > 0 ? limit : null);
-  const matches = (text, fields) => !text || fields.some(field => String(field ?? '').toLowerCase().includes(text.toLowerCase()));
-  const reproduce = (what, args) => ['npm run review -- query', what,
+  const limitOf = (limit: unknown) => (typeof limit === 'number' && Number.isInteger(limit) && limit > 0 ? limit : null);
+  const matches = (text: string | undefined, fields: readonly unknown[]) =>
+    !text || fields.some(field => String(field ?? '').toLowerCase().includes(text.toLowerCase()));
+  const reproduce = (what: string, args: Readonly<Record<string, unknown>>) => ['npm run review -- query', what,
     ...Object.entries(args).filter(([, value]) => value !== undefined && value !== null && value !== false)
       .map(([key, value]) => (value === true ? `--${key}` : `--${key} ${shellQuote(value)}`))].join(' ');
 
@@ -284,21 +291,24 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
   function queryPacks({ game, text, limit }: { game?: string, text?: string, limit?: number }) {
     const named = game === undefined ? null : resolveGame(game);
     if (game !== undefined && !named) return gameRefusal(game);
+    // A row without its file list: a valid row drops it, an invalid one never had one.
+    const withoutFiles = (row: PackRow) => (row.valid ? (({ files: _files, ...pack }) => pack)(row) : row);
     const rows = readPacks(root).filter(pack => (!named || gameKey(pack.game) === named.package) && matches(text, [pack.id]))
-      .map(({ files, ...pack }) => ({ ...pack, label: pack.valid ? levelLabel(pack.claimLevel, `${pack.id}'s pack`) : unknown(`${pack.id} fails its integrity check`) }));
+      .map(withoutFiles)
+      .map(pack => ({ ...pack, label: pack.valid ? levelLabel(pack.claimLevel, `${pack.id}'s pack`) : unknown(`${pack.id} fails its integrity check`) }));
     const shown = rows.slice(0, limitOf(limit) ?? rows.length);
     return claimEnvelope({
       claim: { query: 'packs', filters: { game: named?.package ?? null, text: text ?? null }, matched: rows.length,
         byGame: sorted(tally(rows, pack => gameKey(pack.game))), byOutcome: sorted(tally(rows, pack => String(pack.outcome))),
-        byCustody: sorted(tally(rows, pack => pack.custody?.kind ?? 'invalid')), promoted: rows.filter(pack => pack.promoted).length,
+        byCustody: sorted(tally(rows, pack => (pack.valid ? pack.custody.kind : 'invalid'))), promoted: rows.filter(pack => pack.valid && pack.promoted).length,
         packs: shown },
       label: sharedLabel(shown.map(pack => pack.label), 'packs'),
       target: named?.package ?? REPOSITORY_TARGET, cite: [PACKS_DIR, GRAPH_FILE],
       status: 'standing', supersededBy: null,
       notMeasured: [
         ...(shown.length < rows.length ? [`${rows.length - shown.length} more matching packs beyond the limit`] : []),
-        ...shown.filter(pack => pack.custody?.lost?.length).map(pack => `${pack.id}: lost ${pack.custody.lost.join(', ')}`),
-        ...shown.filter(pack => !pack.valid || isUnknown(pack.game)).map(pack => `${pack.id}: ${pack.error ?? 'its game'}`),
+        ...shown.flatMap(pack => (pack.valid && pack.custody.lost.length ? [`${pack.id}: lost ${pack.custody.lost.join(', ')}`] : [])),
+        ...shown.filter(pack => !pack.valid || isUnknown(pack.game)).map(pack => `${pack.id}: ${(pack.valid ? undefined : pack.error) ?? 'its game'}`),
       ],
       reproducer: reproduce('packs', { game, text, limit }),
     });
@@ -331,7 +341,8 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
 
   // --- review: read-only instruments over one pack --------------------------------------------
 
-  function loadPack(id: string) {
+  function loadPack(id: string): { refusal: ReturnType<typeof refusalEnvelope> }
+    | { row: ValidPackRow, lifted: ReturnType<typeof liftPack>, dir: string } {
     if (typeof id !== 'string' || !PACK_ID.test(id) || id.startsWith('.')) return { refusal: badArgument('a pack id is letters, digits, dots, dashes and underscores', 'name a directory under docs/evidence/runs') };
     if (!packDirectories(root).includes(id)) return { refusal: badArgument(`no committed pack is named ${id}`, 'query packs lists them') };
     const row = readPackRow(root, id);
@@ -344,13 +355,13 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
     if (!INSTRUMENTS.includes((instrument as string)))
       return badArgument(`${JSON.stringify(instrument ?? null)} is not an instrument`, `name one of ${INSTRUMENTS.join(', ')}`);
     const loaded = loadPack((pack as string));
-    if (loaded.refusal) return loaded.refusal;
+    if ('refusal' in loaded) return loaded.refusal;
     const { row, lifted, dir } = loaded;
     const where = `${PACKS_DIR}/${row.id}`;
     const label = levelLabel(row.claimLevel, `${row.id}'s pack`);
     const target = row.game;
     const base = { instrument, pack: row.id, game: row.game, gameBasis: row.gameBasis };
-    const envelope = (claim, notMeasured, cite = [`${where}/pack.json`]) => claimEnvelope({
+    const envelope = (claim: Readonly<Record<string, unknown>>, notMeasured: string[], cite = [`${where}/pack.json`]) => claimEnvelope({
       claim: { ...base, ...claim }, label, target, cite, status: 'standing', supersededBy: null, notMeasured,
       reproducer: `npm run review -- review ${row.id} ${instrument}`,
     });
@@ -371,15 +382,16 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
         reported: lifted.runs.map(run => ({ id: run.id, reportedOutcome: run.reportedOutcome, runMode: run.runMode })),
         videoGrade: video ?? unknown('the pack carries no video grade (run/grade.log TERMINAL line or run/timeline.json)'),
       }, [...lostNotes, ...(video ? [] : ['the decided outcome: no video grade in the pack, so only the venue\'s report is read']),
-        ...lifted.runs.filter(run => isUnknown(run.reportedOutcome)).map(run => `${run.id}: its reported outcome (${run.reportedOutcome.reason})`)],
+        ...lifted.runs.flatMap(run => (isUnknown(run.reportedOutcome) ? [`${run.id}: its reported outcome (${run.reportedOutcome.reason})`] : []))],
       [`${where}/pack.json`, ...(video ? [`${where}/${video.source}`] : [])]);
     }
 
     if (instrument === 'promotion-checks') {
       let derived;
       try { derived = derivePromotion(root, row.id, winners()); } catch (error) {
-        return envelope({ checks: unknown(`derivePromotion refuses this pack: ${error.message}`) },
-          [`the Plan 12 checks: ${error.message}`], [`${where}/pack.json`, PLAN12]);
+        const message = (error as Error).message;
+        return envelope({ checks: unknown(`derivePromotion refuses this pack: ${message}`) },
+          [`the Plan 12 checks: ${message}`], [`${where}/pack.json`, PLAN12]);
       }
       const packed = readPack(dir);
       const checks = promotionChecks(packed, row.id);
@@ -392,12 +404,15 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
     }
 
     // death-time: a number, so every operand must be one.
-    const deaths = lifted.runs.filter(run => run.reportedOutcome.kind === 'Death');
+    const deaths = lifted.runs.flatMap(run => {
+      const outcome = run.reportedOutcome;
+      return outcome.kind === 'Death' ? [{ id: run.id, at: outcome.at }] : [];
+    });
     if (!deaths.length)
       return envelope({ deaths: [], reported: lifted.runs.map(run => ({ id: run.id, reportedOutcome: run.reportedOutcome.kind })) },
         ['a death time: no run in this pack reports a death']);
     for (const run of deaths) {
-      const { at } = run.reportedOutcome;
+      const { at } = run;
       const numbers = checkUnknownAsNumber(isUnknown(at) ? { 'Death.at': at } : { 'Death.at.lo': at.lo, 'Death.at.hi': at.hi },
         { operation: `the death time of ${run.id}` });
       if (numbers.refused) {
@@ -408,23 +423,23 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
             : ' (a graded video: packages/review/bin/grade/grade-run.sh)'}` });
       }
     }
-    return envelope({ deaths: deaths.map(run => ({ id: run.id, at: run.reportedOutcome.at, unit: 'ms from the night origin' })) }, lostNotes);
+    return envelope({ deaths: deaths.map(run => ({ id: run.id, at: run.at, unit: 'ms from the night origin' })) }, lostNotes);
   }
 
   // Plan 12's checks for a pack: the campaign's for FNaF 2, fnaf1-promotion.ts's reading of a FNaF 1 runner pack.
-  const promotionChecks = (packed, id) => (packed.pack.kind === 'fnaf1-run' ? fnaf1PromotionChecks(root, id, packed) : packPromotionChecks(packed, winners()));
+  const promotionChecks = (packed: ReturnType<typeof readPack>, id: string) => (packed.pack.kind === 'fnaf1-run' ? fnaf1PromotionChecks(root, id, packed) : packPromotionChecks(packed, winners()));
 
   // --- promote: a proposal or a refusal, never a write -----------------------------------------
 
   function promote({ pack }: {pack?: string} = {}) {
     const loaded = loadPack((pack as string));
-    if (loaded.refusal) return loaded.refusal;
+    if ('refusal' in loaded) return loaded.refusal;
     const { row, dir } = loaded;
     const where = `${PACKS_DIR}/${row.id}`;
     const cite = [`${where}/pack.json`, PLAN12, GRAPH_FILE];
     let derived;
     try { derived = derivePromotion(root, row.id, winners()); } catch (error) {
-      return refusalEnvelope({ rule: 'plan12-promotion', because: `${row.id} cannot be promoted: ${error.message}`, cite,
+      return refusalEnvelope({ rule: 'plan12-promotion', because: `${row.id} cannot be promoted: ${(error as Error).message}`, cite,
         remedy: 'no promotion gate reads this kind of run; a gate for it is new work, not a promotion' });
     }
     const packed = readPack(dir);
@@ -433,7 +448,8 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
     const failing = Object.entries(checks).filter(([, pass]) => !pass).map(([check]) => check);
     if (failing.length) {
       const onlyAttestation = failing.length === 1 && failing[0] === 'plan12Attestation';
-      const details = derived.verified.filter(item => !item.pass).flatMap(item => (item.detail.failed ?? []).map(reason => `${item.check}: ${reason}`));
+      const details = derived.verified.filter(item => !item.pass)
+        .flatMap(item => ((item.detail.failed ?? []) as readonly string[]).map(reason => `${item.check}: ${reason}`));
       return refusalEnvelope({ rule: 'plan12-promotion',
         because: `Plan 12 refuses ${row.id}: ${failing.join(', ')} ${failing.length === 1 ? 'fails' : 'fail'}${details.length ? ` (${details.slice(0, 4).join('; ')})` : ''}`,
         cite: [...cite, ...(packed.attestation ? [`${where}/${ATTESTATION_FILE}`] : [])],
@@ -444,7 +460,8 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
     }
     const graph = readGraph(root);
     const { edge } = recordPromotion({ schema: 'claim-evidence-v1', version: 1, nodes: [], edges: [] },
-      { id: row.id, claim: derived.claim, digest: packed.digest, attestation: packed.attestation, custody: derived.custody,
+      // claimIdentity passed, so a claim was derived.
+      { id: row.id, claim: derived.claim as NonNullable<typeof derived.claim>, digest: packed.digest, attestation: packed.attestation, custody: derived.custody,
         nights: packed.pack.nights ?? [] });
     const recorded = graph.edges.find(item => item.type === PROMOTION_EDGE && item.to === edge.to) ?? null;
     return claimEnvelope({
@@ -461,7 +478,7 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
 
   // --- check: the refusals, on a statement a caller is about to make ---------------------------
 
-  function check(args: {rule?: string, [key: string]: any} = {}) {
+  function check(args: {rule?: string, [key: string]: unknown} = {}) {
     const { rule, ...input } = args;
     if (!Object.hasOwn(CHECKS, (rule as string)))
       return badArgument(`${JSON.stringify(rule ?? null)} is not a refusal rule`, `name one of ${Object.keys(CHECKS).join(', ')}`);
@@ -469,8 +486,10 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
     if (isRefusal(result)) return result;
     const subject = rule === 'seed-floor' ? { seeds: input.seeds, wins: input.wins ?? null, heldOut: input.heldOut ?? null }
       : rule === 'directional-reuse' ? { constant: input.constant, use: input.use }
-        : rule === 'capabilities-first' ? { instrument: input.instrument, capabilitiesRecordedAt: input.capabilities?.recordedAt ?? null }
-          : { operation: input.operation ?? null, operands: Object.keys(input.operands ?? {}) };
+        : rule === 'capabilities-first' ? { instrument: input.instrument,
+          capabilitiesRecordedAt: (isRecord(input.capabilities) ? input.capabilities.recordedAt : undefined) ?? null }
+          // The check refused any operands that are not a non-empty record.
+          : { operation: input.operation ?? null, operands: Object.keys(input.operands as object) };
     const target = resolveGame(input.game)?.package ?? REPOSITORY_TARGET;
     return claimEnvelope({
       claim: { rule, passed: true, subject },
@@ -484,7 +503,7 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
   // --- truth: the game's own event sheet, from the caller's local dump -------------------------
 
   /** @param args decode {path, game} | events {game, query} | object {game, name | handle} */
-  const truthVerb = (args: {op?: string, [key: string]: any} = {}) => truth.call(args);
+  const truthVerb = (args: {op?: string, [key: string]: unknown} = {}) => truth.call(args);
 
   // --- resources -----------------------------------------------------------------------------
 
@@ -506,7 +525,7 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
     if (uri === 'fnaf://evidence/graph') {
       const graph = readGraph(root);
       return claimEnvelope({
-        claim: graph, label: sharedLabel(graph.nodes.filter(node => node.kind === 'Claim').map(node => levelLabel(node.claimLevel, node.id)), 'claim nodes'),
+        claim: graph, label: sharedLabel(graph.nodes.filter(node => node.kind === 'Claim').map(node => levelLabel(node.claimLevel, String(node.id))), 'claim nodes'),
         target: REPOSITORY_TARGET, cite: [GRAPH_FILE], status: 'standing', supersededBy: null,
         notMeasured: [ONE_CLEAR, 'whether each edge still re-derives from its pack: npm run review -- query promotions checks that'],
         reproducer: 'npm run review -- resource fnaf://evidence/graph',
@@ -534,7 +553,7 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
     if (controls) {
       const game = resolveGame(controls[1]);
       if (!game) return gameRefusal(controls[1]);
-      const catalog = CONTROL_CATALOGS[game.package];
+      const catalog = controlCatalogFor(game.package);
       const unknowns = catalogUnknowns(catalog);
       return claimEnvelope({
         claim: catalog, label: unknown('control-catalog-v1 carries no evidence label per fact; each catalog names where its facts were read in sources'),
@@ -552,7 +571,7 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
     name: `${game.title} controls`, description: `${game.title}'s control-catalog-v1.` }))];
 
   /** Every answer is checked against claim-envelope-v1 on its way out. */
-  const checked = fn => (...args) => validateClaimEnvelope(fn(...args));
+  const checked = <A extends unknown[]>(fn: (...args: A) => unknown) => (...args: A) => validateClaimEnvelope(fn(...args));
   return {
     describe: checked(describe), query: checked(query), review: checked(review), promote: checked(promote), check: checked(check),
     truth: checked(truthVerb),

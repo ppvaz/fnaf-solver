@@ -7,18 +7,32 @@
 // zero DEVICE_MEASURED runs -- every Night 1-7 win on the phone was invisible to the index and to
 // the Plan 12 gate. These functions are pure so the CLI and its test share them.
 import { validateCampaignResult } from '@sixam/kernel/contracts';
+import { isRecord } from '@sixam/kernel';
 
 export const CAMPAIGN_RESULT_SCHEMA = 'device-campaign-result-v1';
+
+/** A retained result.json: the CLI's mode and status around the campaign's result, or the error it threw. */
+export interface CampaignWrapper {
+  readonly status?: unknown;
+  readonly mode?: unknown;
+  readonly result?: unknown;
+  readonly error?: unknown;
+  readonly plan12Gate?: { readonly status?: unknown } | null;
+  readonly [field: string]: unknown;
+}
 
 // cli.js retains this envelope when a campaign throws before returning its
 // validated result. Preserve the negative and its original error; it supplies
 // no measured terminal and can never satisfy promotion.
-const isCampaignError = wrapper => wrapper?.status === 'ERROR'
-  && ['live', 'dry-run'].includes(wrapper.mode) && wrapper.result === undefined
+const isCampaignError = (wrapper: { status?: unknown, mode?: unknown, result?: unknown, error?: unknown } | null | undefined) => wrapper?.status === 'ERROR'
+  && (wrapper.mode === 'live' || wrapper.mode === 'dry-run') && wrapper.result === undefined
   && typeof wrapper.error === 'string' && wrapper.error.trim().length > 0;
 
 /** @param wrapper parsed result.json */
-export const isCampaignResult = (wrapper: any) => wrapper?.result?.schema === CAMPAIGN_RESULT_SCHEMA || isCampaignError(wrapper);
+export const isCampaignResult = (wrapper: unknown) => {
+  const fields = isRecord(wrapper) ? wrapper : undefined;
+  return (isRecord(fields?.result) && fields.result.schema === CAMPAIGN_RESULT_SCHEMA) || isCampaignError(fields);
+};
 
 /**
  * One index row for a campaign directory. A live campaign is DEVICE_MEASURED: its attempts are
@@ -26,7 +40,7 @@ export const isCampaignResult = (wrapper: any) => wrapper?.result?.schema === CA
  * @param id directory name
  * @param wrapper parsed result.json
  */
-export function campaignEntry(id: string, wrapper: any) {
+export function campaignEntry(id: string, wrapper: CampaignWrapper) {
   if (isCampaignError(wrapper)) return {
     id, kind: 'device-campaign', outcome: 'ERROR', claimLevel: 'UNKNOWN',
     nights: [], attempts: [], error: wrapper.error,
@@ -56,7 +70,7 @@ export function campaignEntry(id: string, wrapper: any) {
  * @param wrapper parsed result.json
  * @param files names present in the campaign directory
  */
-export function campaignPromotionChecks(wrapper: any, files: string[]) {
+export function campaignPromotionChecks(wrapper: CampaignWrapper, files: readonly string[]) {
   const entry = campaignEntry('check', wrapper);
   return {
     offlineEvidence: entry.claimLevel === 'DEVICE_MEASURED',

@@ -30,18 +30,23 @@ export const QUERY_COMMAND = 'npm run review -- query promotions';
 /** The instrument whose classification each promotion annotation records. */
 export const PROMOTION_INSTRUMENT = 'plan12-promotion@plan12-attestation-v2';
 
-const sha256 = data => createHash('sha256').update(data).digest('hex');
-const tally = (counts, key) => { counts[key] = (counts[key] ?? 0) + 1; return counts; };
-const sorted = counts => Object.fromEntries(Object.entries(counts).sort(([a], [b]) => a.localeCompare(b)));
-const classOf = custody => (isUnknown(custody.class) ? 'UNKNOWN' : custody.class);
+type Counts = Record<string, number>;
+/** A claim-evidence edge, by the two ends a comparison keys on. */
+type EdgeEnds = { readonly from: string, readonly to: string };
+
+const sha256 = (data: string | Buffer) => createHash('sha256').update(data).digest('hex');
+// A key is a property name, as indexing with it would make it.
+const tally = (counts: Counts, key: unknown) => { counts[String(key)] = (counts[String(key)] ?? 0) + 1; return counts; };
+const sorted = (counts: Counts) => Object.fromEntries(Object.entries(counts).sort(([a], [b]) => a.localeCompare(b)));
+const classOf = (custody: { readonly class: unknown }) => (isUnknown(custody.class) ? 'UNKNOWN' : custody.class);
 const EMPTY_GRAPH = { schema: 'claim-evidence-v1', version: 1, nodes: [], edges: [] };
 
 /** Committed winner files, each with every hash it is known by (its stableHash, and the compiled winnerHash). */
-function committedWinners(root, winners) {
-  const byName = new Map();
+function committedWinners(root: string, winners: Map<string, string>) {
+  const byName = new Map<string, string[]>();
   for (const [hash, name] of winners) byName.set(name, [...(byName.get(name) ?? []), hash]);
   return winnerFiles(root).map(path => {
-    const file = JSON.parse(readFileSync(join(root, path), 'utf8'));
+    const file: { schema?: unknown } = JSON.parse(readFileSync(join(root, path), 'utf8'));
     return { file: path, schema: file.schema ?? null, fileHash: stableHash(file),
       hashes: [...new Set(byName.get(basename(path)) ?? [stableHash(file)])].sort() };
   });
@@ -52,14 +57,14 @@ function committedWinners(root, winners) {
  * the graph holds the same edge (canonical JSON), DIFFERS when it holds another for that run,
  * NOT_IN_GRAPH when it holds none; and every graph edge nothing re-derives.
  */
-export function compareEdges(derivedEdges: any[], graphEdges: any[]) {
+export function compareEdges(derivedEdges: readonly EdgeEnds[], graphEdges: readonly EdgeEnds[]) {
   const graphByRun = new Map(graphEdges.map(edge => [edge.to, edge]));
   const derivedRuns = new Set(derivedEdges.map(edge => edge.to));
   const status = new Map(derivedEdges.map(edge => {
     const recorded = graphByRun.get(edge.to);
     return [edge.to, !recorded ? 'NOT_IN_GRAPH' : canonicalJson(recorded) === canonicalJson(edge) ? 'MATCHED' : 'DIFFERS'];
   }));
-  const runsWith = value => [...status].filter(([, item]) => item === value).map(([run]) => run).sort();
+  const runsWith = (value: string) => [...status].filter(([, item]) => item === value).map(([run]) => run).sort();
   const onlyInGraph = graphEdges.filter(edge => !derivedRuns.has(edge.to)).map(edge => ({ run: edge.to, claim: edge.from }));
   const differing = runsWith('DIFFERS');
   const notInGraph = runsWith('NOT_IN_GRAPH');
@@ -77,13 +82,15 @@ export function queryPromotions(root: string, { winners = trackedWinners(root) }
   const graph = readGraph(root);
   const graphEdges = graph.edges.filter(edge => edge.type === PROMOTION_EDGE);
   const ids = packIds(root);
-  const lift = { packs: ids.length, gameRuns: 0, failures: [], reportedOutcomes: {}, custody: {} };
-  const packsByWinnerHash = new Map();
-  const derived = [];
-  const refused = [];
+  const lift = { packs: ids.length, gameRuns: 0, failures: [] as { id: string, error: string }[],
+    reportedOutcomes: {} as Counts, custody: {} as Counts };
+  const packsByWinnerHash = new Map<string, string[]>();
+  const derived: { id: string, edge: ReturnType<typeof recordPromotion>['edge'], run: ReturnType<typeof liftPack>['runs'][number],
+    attestationSha256: string, winnerInput: string | undefined }[] = [];
+  const refused: { id: string, why: string[] }[] = [];
   for (const id of ids) {
     let lifted;
-    try { lifted = liftPack(root, id); } catch (error) { lift.failures.push({ id, error: error.message }); continue; }
+    try { lifted = liftPack(root, id); } catch (error) { lift.failures.push({ id, error: (error as Error).message }); continue; }
     lift.gameRuns += lifted.runs.length;
     for (const run of lifted.runs) { tally(lift.reportedOutcomes, run.reportedOutcome.kind); tally(lift.custody, classOf(run.custody)); }
     const { loaded } = lifted;
@@ -92,7 +99,8 @@ export function queryPromotions(root: string, { winners = trackedWinners(root) }
     const checks = loaded.pack.kind === 'fnaf1-run' ? fnaf1PromotionChecks(root, id, loaded) : packPromotionChecks(loaded, winners);
     if (!Object.values(checks).every(Boolean)) continue;
     const derivation = derivePromotion(root, id, winners);
-    const attestation = loaded.attestation;
+    // Every check passed, plan12Attestation among them, so the attestation is a valid record.
+    const attestation = loaded.attestation as Readonly<Record<string, unknown>>;
     const drift = [
       ...(derivation.pass ? [] : [`derivePromotion fails ${derivation.verified.filter(item => !item.pass).map(item => item.check).join(', ')}`]),
       ...(canonicalJson(attestation.verified) === canonicalJson(derivation.verified) ? [] : ['the attestation lists other checks or inputs than those derived now']),
@@ -115,7 +123,8 @@ export function queryPromotions(root: string, { winners = trackedWinners(root) }
       inputs: [edge.packSha256, attestationSha256, ...(winnerInput ? [winnerInput] : [])], by: edge.attestedBy, status: 'standing',
     });
     return {
-      run: id, night: run.spec?.night ?? null, claim: edge.from, claimLevel: validateClaimLevel('DEVICE_MEASURED'),
+      // An UNKNOWN spec names no night, as reading `night` off it would show.
+      run: id, night: (run.spec as Readonly<Record<string, unknown>>).night ?? null, claim: edge.from, claimLevel: validateClaimLevel('DEVICE_MEASURED'),
       reportedOutcome: run.reportedOutcome.kind, attestedBy: edge.attestedBy,
       custody: { class: run.custody.class, lost: run.custody.lost }, graph: compared.status.get(edge.to), edge, annotation,
     };
@@ -126,7 +135,9 @@ export function queryPromotions(root: string, { winners = trackedWinners(root) }
   const committed = committedWinners(root, winners);
   const unnamed = committed.filter(item => item.schema === 'winner-v1' && !item.hashes.some(hash => packsByWinnerHash.has(hash)));
   const trackedFileHashes = new Set(committed.map(item => item.fileHash));
-  const { anchorAims: ANCHOR_AIMS, untrackedWinnerDebt: UNTRACKED_WINNER_DEBT } = JSON.parse(readFileSync(join(root, ANCHOR_AIMS_FILE), 'utf8'));
+  const tables: { anchorAims: Readonly<Record<string, { night?: unknown }>>, untrackedWinnerDebt: Readonly<Record<string, unknown>> } =
+    JSON.parse(readFileSync(join(root, ANCHOR_AIMS_FILE), 'utf8'));
+  const { anchorAims: ANCHOR_AIMS, untrackedWinnerDebt: UNTRACKED_WINNER_DEBT } = tables;
   const declared = Object.keys(UNTRACKED_WINNER_DEBT).sort();
   const derivedDebt = Object.keys(ANCHOR_AIMS).filter(hash => !trackedFileHashes.has(hash)).sort();
   const stillUntracked = declared.filter(hash => !trackedFileHashes.has(hash));
@@ -145,9 +156,9 @@ export function queryPromotions(root: string, { winners = trackedWinners(root) }
       graph: graphEdges.length, derived: derived.length, matched: compared.matched,
       differing: compared.differing, notInGraph: compared.notInGraph, onlyInGraph: compared.onlyInGraph,
       duplicatedInGraph: compared.duplicated, refused, notSixAm,
-      byAttester: sorted(rows.reduce((counts, row) => tally(counts, row.attestedBy), {})),
-      byCustody: sorted(rows.reduce((counts, row) => tally(counts, classOf(row.custody)), {})),
-      byClaim: sorted(rows.reduce((counts, row) => tally(counts, row.claim), {})),
+      byAttester: sorted(rows.reduce<Counts>((counts, row) => tally(counts, row.attestedBy), {})),
+      byCustody: sorted(rows.reduce<Counts>((counts, row) => tally(counts, classOf(row.custody)), {})),
+      byClaim: sorted(rows.reduce<Counts>((counts, row) => tally(counts, row.claim), {})),
     },
     promoted: rows,
     open: {

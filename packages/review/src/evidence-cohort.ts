@@ -23,21 +23,34 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { stableHash } from '@sixam/kernel/contracts';
 import { packEntry, readPack } from './evidence-pack.ts';
+import { isRecord } from '@sixam/kernel';
+
+/** One corner of a corner cohort: its own labels and the dial vector it plays. */
+type Corner = { readonly id?: string, readonly labels?: unknown, readonly dials?: unknown };
+/** cohort-predeclaration-v1, by the fields a cohort reads. */
+type Predeclaration = { readonly schema?: unknown, readonly labels?: unknown, readonly size?: unknown, readonly night?: unknown,
+  readonly binding?: { readonly winnerHash?: string | null } | null, readonly corners?: readonly Corner[], readonly [field: string]: unknown };
+/** One run of a slot, as its pack reads. */
+type SlotRun = { run: string, packSha256: string, reached: boolean, executor: unknown, video: string | null,
+  videoDetail: unknown, abort: string | null, bindingMatches: boolean, status: string, role?: string,
+  dialVerification?: { requested: unknown, observed: unknown, matches: boolean } };
 
 export const COHORT_RESULT_SCHEMA = 'cohort-result-v2';
 export const CORNER_COHORT_RESULT_SCHEMA = 'corner-cohort-result-v1';
 
 /** The label prefix a predeclaration's runs carry: `night7-k3-cohort` from `night7-k3-cohort-r01 .. r10`. */
-export function labelPrefix(predeclaration) {
+export function labelPrefix(predeclaration: Predeclaration | null | undefined) {
   const match = String(predeclaration?.labels ?? '').match(/(\S+?)-r\d{2}\b/);
   if (!match) throw new Error('the predeclaration names no rNN labels; pass the label prefix explicitly');
   return match[1];
 }
 
 /** The video's terminal from a pack's own files, or null when the pack carries no grade. */
-export function videoTerminal(dir, files) {
+export function videoTerminal(dir: string, files: readonly string[]) {
   if (files.includes('run/timeline.json')) {
-    const terminal = JSON.parse(readFileSync(join(dir, 'run/timeline.json'), 'utf8')).terminal;
+    const timeline: { terminal?: { outcome?: unknown, evidence?: unknown, at_s?: unknown, note?: unknown } } =
+      JSON.parse(readFileSync(join(dir, 'run/timeline.json'), 'utf8'));
+    const terminal = timeline.terminal;
     if (typeof terminal?.outcome === 'string') {
       const detail = terminal.evidence ? `${terminal.evidence}${terminal.at_s === null || terminal.at_s === undefined ? '' : ` at ${terminal.at_s} s`}`
         : terminal.note ?? null;
@@ -52,18 +65,18 @@ export function videoTerminal(dir, files) {
 }
 
 /** The executor's last abort reason, from the pack's events, or null. */
-function lastAbort(dir, files) {
+function lastAbort(dir: string, files: readonly string[]) {
   if (!files.includes('events.jsonl')) return null;
-  let reason = null;
+  let reason: string | null = null;
   for (const line of readFileSync(join(dir, 'events.jsonl'), 'utf8').split('\n')) {
     if (!line.includes('"type":"campaign.abort')) continue;
-    const row = JSON.parse(line);
+    const row: { reason?: unknown } = JSON.parse(line);
     if (typeof row.reason === 'string') reason = row.reason;
   }
   return reason;
 }
 
-function slotStatus(entry, video) {
+function slotStatus(entry: { readonly outcome: unknown }, video: { readonly outcome: unknown } | null) {
   const executorWin = entry.outcome === 'WIN';
   if (executorWin && video?.outcome === 'clear') return 'WIN';
   if (video?.outcome === 'death' || entry.outcome === 'DEATH') return 'DEATH';
@@ -77,34 +90,39 @@ function slotStatus(entry, video) {
  * @param predeclaration parsed cohort-predeclaration-v1
  * @param packsDir directory holding docs/evidence/runs/<run>/
  */
-export function computeCohort(predeclaration: any, packsDir: string, { prefix, source = null }: {prefix?: string, source?: string} = {}) {
+export function computeCohort(predeclaration: Predeclaration, packsDir: string, { prefix, source = null }: {prefix?: string, source?: string | null} = {}) {
   if (predeclaration?.schema !== 'cohort-predeclaration-v1') throw new Error('not a cohort-predeclaration-v1');
   if (Array.isArray(predeclaration.corners)) {
     if (prefix !== undefined) throw new Error('a corner cohort uses each corner\'s declared labels, not a prefix override');
     return computeCorners(predeclaration, packsDir, source);
   }
-  prefix ??= labelPrefix(predeclaration);
+  return cohortSlots(predeclaration, packsDir, prefix ?? labelPrefix(predeclaration), source);
+}
+
+/** One labelled cohort's slots, from its packs: the whole of a plain cohort, and each corner of a corner cohort. */
+function cohortSlots(predeclaration: Predeclaration, packsDir: string, prefix: string, source: string | null) {
   const size = predeclaration.size;
-  if (!Number.isInteger(size) || size < 1) throw new Error('the predeclaration has no cohort size');
+  if (typeof size !== 'number' || !Number.isInteger(size) || size < 1) throw new Error('the predeclaration has no cohort size');
   const night = predeclaration.night;
   const pattern = new RegExp(`^night${night}-${prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-r(\\d{2})([b-z]?)-\\d{8}T\\d{6}Z$`);
-  const bySlot = new Map();
+  const bySlot = new Map<number, { id: string, retry: string }[]>();
   for (const id of existsSync(packsDir) ? readdirSync(packsDir).sort() : []) {
     const match = id.match(pattern);
     if (!match) continue;
     const slot = Number(match[1]);
-    if (!bySlot.has(slot)) bySlot.set(slot, []);
-    bySlot.get(slot).push({ id, retry: match[2] });
+    let found = bySlot.get(slot);
+    if (!found) { found = []; bySlot.set(slot, found); }
+    found.push({ id, retry: match[2] });
   }
   const binding = predeclaration.binding?.winnerHash ?? null;
-  const slots = [];
+  const slots: { slot: string, status: string, runs: SlotRun[] }[] = [];
   for (let slot = 1; slot <= size; slot += 1) {
     const label = `r${String(slot).padStart(2, '0')}`;
-    const runs = (bySlot.get(slot) ?? []).sort((a, b) => a.retry.localeCompare(b.retry)).map(({ id }) => {
+    const runs = (bySlot.get(slot) ?? []).sort((a, b) => a.retry.localeCompare(b.retry)).map(({ id }): SlotRun => {
       const dir = join(packsDir, id);
       const loaded = readPack(dir);
       const entry = packEntry(id, loaded);
-      const report = loaded.files.includes('run/run-report.json')
+      const report: { night?: { reached?: unknown } } | null = loaded.files.includes('run/run-report.json')
         ? JSON.parse(readFileSync(join(dir, 'run/run-report.json'), 'utf8')) : null;
       const reached = report?.night?.reached === true;
       const video = videoTerminal(dir, loaded.files);
@@ -116,7 +134,7 @@ export function computeCohort(predeclaration: any, packsDir: string, { prefix, s
     for (const run of runs) run.role = run === counted ? 'counted' : run.reached ? 'superseded' : 'excluded';
     slots.push({ slot: label, status: counted ? counted.status : 'MISSING', runs });
   }
-  const tally = status => slots.filter(slot => slot.status === status).length;
+  const tally = (status: string) => slots.filter(slot => slot.status === status).length;
   const counted = slots.filter(slot => !['MISSING'].includes(slot.status)).length;
   return {
     schema: COHORT_RESULT_SCHEMA, predeclaration: source, night, binding, size, prefix,
@@ -131,49 +149,55 @@ export function computeCohort(predeclaration: any, packsDir: string, { prefix, s
 }
 
 /** Read each explicitly labelled corner as its own cohort; never infer extra slots from the total size. */
-function computeCorners(predeclaration, packsDir, source) {
-  const ids = new Set();
-  const prefixes = new Set();
-  const { corners: declared, ...shared } = predeclaration;
+function computeCorners(predeclaration: Predeclaration, packsDir: string, source: string | null) {
+  const ids = new Set<string>();
+  const prefixes = new Set<string>();
+  // computeCohort checked corners is a list before it came here.
+  const { corners: declared = [], ...shared } = predeclaration;
   if (!declared.length) throw new Error('the predeclaration names no corners');
   const corners = declared.map(corner => {
-    if (!corner.id || ids.has(corner.id)) throw new Error('corner ids must be present and unique');
-    ids.add(corner.id);
+    const cornerId = corner.id;
+    if (!cornerId || ids.has(cornerId)) throw new Error('corner ids must be present and unique');
+    ids.add(cornerId);
     const labels = [...String(corner.labels ?? '').matchAll(/([A-Za-z0-9_-]+)-r(\d{2})\b/g)];
     const prefix = labels[0]?.[1];
     if (!prefix || labels.some((label, i) => label[1] !== prefix || Number(label[2]) !== i + 1))
       throw new Error(`corner ${corner.id} must explicitly name consecutive rNN labels starting at r01`);
     if (prefixes.has(prefix)) throw new Error('corners must use distinct label prefixes');
     prefixes.add(prefix);
-    const result: any = computeCohort({ ...shared, size: labels.length }, packsDir, { prefix, source });
+    // What computeCohort did for a corner: shared fields carry the schema it checked, and no corners.
+    const result = cohortSlots({ ...shared, size: labels.length }, packsDir, prefix, source);
     for (const slot of result.slots) for (const run of slot.runs) {
       if (run.role !== 'counted') continue;
       const dir = join(packsDir, run.run);
       const requestPath = join(dir, 'request.json');
-      const request = existsSync(requestPath) ? JSON.parse(readFileSync(requestPath, 'utf8')) : null;
+      const request: { spec?: { nights?: readonly { night?: unknown, dials?: unknown }[] } } | null =
+        existsSync(requestPath) ? JSON.parse(readFileSync(requestPath, 'utf8')) : null;
       const requested = request?.spec?.nights?.find(n => n.night === predeclaration.night)?.dials ?? null;
-      let observed = null;
+      let observed: unknown = null;
       const eventsPath = join(dir, 'events.jsonl');
       for (const line of existsSync(eventsPath) ? readFileSync(eventsPath, 'utf8').trim().split('\n') : []) {
         if (!line) continue;
-        const event = JSON.parse(line);
+        const event: { type?: unknown, label?: unknown } = JSON.parse(line);
         if (event.type !== 'observation') continue;
         if (event.label === 'state=night') break;
         try {
-          const readback = JSON.parse(event.label);
-          if (readback?.status === 'PASS' && readback.dials) observed = readback.dials;
+          // JSON.parse reads its argument as text, as String() does.
+          const readback: unknown = JSON.parse(String(event.label));
+          if (isRecord(readback) && readback.status === 'PASS' && readback.dials) observed = readback.dials;
         } catch { /* Non-JSON lifecycle labels carry no dial readback. */ }
       }
       run.dialVerification = { requested, observed,
         matches: requested !== null && observed !== null
           && stableHash(requested) === stableHash(corner.dials) && stableHash(observed) === stableHash(corner.dials) };
     }
-    return { id: corner.id, dials: corner.dials, result };
+    return { id: cornerId, dials: corner.dials, result };
   });
-  const sum = key => corners.reduce((total, corner) => total + corner.result[key], 0);
+  const sum = (key: 'size' | 'counted' | 'wins' | 'deaths' | 'ungraded' | 'disputed' | 'unknown' | 'missing') =>
+    corners.reduce((total, corner) => total + corner.result[key], 0);
   if (sum('size') !== predeclaration.size) throw new Error('corner labels do not add up to the declared cohort size');
   const unverifiedDials = corners.flatMap(corner => corner.result.slots.flatMap(slot => slot.runs
-    .filter(run => run.role === 'counted' && !run.dialVerification.matches).map(run => run.run)));
+    .filter(run => run.role === 'counted' && !run.dialVerification?.matches).map(run => run.run)));
   const result = {
     schema: CORNER_COHORT_RESULT_SCHEMA, claimLevel: 'DEVICE_MEASURED', predeclaration: source,
     night: predeclaration.night, binding: predeclaration.binding?.winnerHash ?? null,

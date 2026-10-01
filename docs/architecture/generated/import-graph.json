@@ -3731,6 +3731,7 @@
     {
       "file": "packages/review/src/chronicle-schema.ts",
       "imports": [
+        "@sixam/kernel",
         "@sixam/source"
       ]
     },
@@ -3741,6 +3742,7 @@
         "./promotions-query.ts",
         "./run-audit.ts",
         "./solver.ts",
+        "@sixam/kernel",
         "node:child_process",
         "node:fs",
         "node:path",
@@ -3765,6 +3767,7 @@
     {
       "file": "packages/review/src/evidence-campaign.ts",
       "imports": [
+        "@sixam/kernel",
         "@sixam/kernel/contracts"
       ]
     },
@@ -3772,6 +3775,7 @@
       "file": "packages/review/src/evidence-cohort.ts",
       "imports": [
         "./evidence-pack.ts",
+        "@sixam/kernel",
         "@sixam/kernel/contracts",
         "node:fs",
         "node:path"
@@ -3794,6 +3798,7 @@
         "./evidence-campaign.ts",
         "./evidence-pack.ts",
         "./fnaf1-promotion.ts",
+        "@sixam/kernel",
         "@sixam/kernel/contracts",
         "@sixam/source/fnaf2",
         "node:crypto",
@@ -3808,6 +3813,13 @@
         "node:crypto",
         "node:fs",
         "node:path"
+      ]
+    },
+    {
+      "file": "packages/review/src/measure/bench-trace.ts",
+      "imports": [
+        "@sixam/kernel",
+        "@sixam/kernel/contracts"
       ]
     },
     {
@@ -3858,6 +3870,7 @@
         "./evidence-pack.ts",
         "./evidence-promotion.ts",
         "@sixam/kernel",
+        "@sixam/kernel/contracts",
         "@sixam/source",
         "node:fs",
         "node:path"
@@ -4111,6 +4124,7 @@
       "file": "packages/source/decompile/truth.ts",
       "imports": [
         "../src/index.ts",
+        "../src/truth/dump.ts",
         "../src/truth/index.ts",
         "@sixam/kernel",
         "node:child_process",

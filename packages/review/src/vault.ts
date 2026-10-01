@@ -40,20 +40,26 @@ const usage = 'usage: npm run vault -- <export|import|verify|refs|list> ' +
   '[--label NAME] [--paths PATH...] [PACK_ID] [--force]';
 
 class Refused extends Error {}
-const refuse = message => { throw new Refused(message); };
+function refuse(message: string): never { throw new Refused(message); }
+
+/** One retained file of a vault pack: its repository path, its bytes, its sha256, its corpus class. */
+type VaultFile = { readonly path: string, readonly bytes: number, readonly sha256: string, readonly class: unknown };
+/** A vault pack manifest (docs/evidence/packs/<id>.json). */
+type VaultPack = { readonly schema: string, readonly id?: string, readonly label?: string, readonly createdAt?: unknown,
+  readonly source?: unknown, readonly objects: readonly string[], readonly files: readonly VaultFile[] };
 
 const vaultRoot = () => process.env.FNAF2_VAULT_DIR || join(homedir(), 'fnaf2-vault');
-const objectPath = hash => join(vaultRoot(), 'objects', hash.slice(0, 2), hash);
+const objectPath = (hash: string) => join(vaultRoot(), 'objects', hash.slice(0, 2), hash);
 
-function arg(name) {
+function arg(name: string) {
   const index = process.argv.indexOf(`--${name}`);
   return index < 0 ? undefined : process.argv[index + 1];
 }
 
-function listValues(name) {
+function listValues(name: string) {
   const index = process.argv.indexOf(`--${name}`);
   if (index < 0) return [];
-  const values = [];
+  const values: string[] = [];
   for (let cursor = index + 1; cursor < process.argv.length; cursor += 1) {
     if (process.argv[cursor].startsWith('--')) break;
     values.push(process.argv[cursor]);
@@ -61,7 +67,7 @@ function listValues(name) {
   return values;
 }
 
-function sha256File(path) {
+function sha256File(path: string) {
   const hash = createHash('sha256');
   const buffer = Buffer.allocUnsafe(1024 * 1024);
   const handle = openSync(path, 'r');
@@ -78,7 +84,7 @@ function sha256File(path) {
 }
 
 /** Repository-relative POSIX path, refused unless it sits in an exportable tree. */
-function repoRelative(input) {
+function repoRelative(input: string) {
   const absolute = resolve(ROOT, input);
   const rel = relative(ROOT, absolute);
   if (!rel || rel.startsWith('..') || isAbsolute(rel))
@@ -89,7 +95,7 @@ function repoRelative(input) {
   return parts.join('/');
 }
 
-function expand(relPath, into) {
+function expand(relPath: string, into: Set<string>): Set<string> {
   const absolute = join(ROOT, relPath);
   if (!existsSync(absolute)) refuse(`${relPath} does not exist`);
   if (statSync(absolute).isDirectory()) {
@@ -101,27 +107,28 @@ function expand(relPath, into) {
 }
 
 /** Reuse the existing corpus classifier rather than restating its table here. */
-function captureClasses(wanted) {
-  if (!wanted) return new Map();
+function captureClasses(wanted: boolean) {
+  const classes = new Map<string, { kind: unknown, authority: unknown }>();
+  if (!wanted) return classes;
   const tool = join(HERE, '../bin/legacy', 'index-observations.py');
   const output = execFileSync('python3', [tool, 'captures', '--json'],
     { cwd: ROOT, encoding: 'utf8', maxBuffer: 128 * 1024 * 1024 });
-  const classes = new Map();
-  for (const row of JSON.parse(output).artifacts)
+  const rows: readonly { path: string, kind: unknown, authority: unknown }[] = JSON.parse(output).artifacts;
+  for (const row of rows)
     classes.set(`captures/${row.path}`, { kind: row.kind, authority: row.authority });
   return classes;
 }
 
 function sourceCommit() {
-  const git = args => execFileSync('git', args, { cwd: ROOT, encoding: 'utf8' }).trim();
+  const git = (args: string[]) => execFileSync('git', args, { cwd: ROOT, encoding: 'utf8' }).trim();
   return { commit: git(['rev-parse', 'HEAD']), dirty: git(['status', '--porcelain']).length > 0 };
 }
 
-function readPack(id) {
+function readPack(id: string): VaultPack {
   if (!/^[\w-]+$/.test(id)) refuse('a safe PACK_ID is required');
   const path = join(PACKS, `${id}.json`);
   if (!existsSync(path)) refuse(`no pack manifest ${id}`);
-  const pack = JSON.parse(readFileSync(path, 'utf8'));
+  const pack: VaultPack = JSON.parse(readFileSync(path, 'utf8'));
   if (pack.schema !== PACK_SCHEMA) refuse(`${id} is not a ${PACK_SCHEMA} manifest`);
   return pack;
 }
@@ -129,7 +136,7 @@ function readPack(id) {
 const packIds = () => (existsSync(PACKS) ? readdirSync(PACKS) : [])
   .filter(name => name.endsWith('.json')).map(name => name.slice(0, -5)).sort();
 
-const bytesOf = pack => pack.files.reduce((total, file) => total + file.bytes, 0);
+const bytesOf = (pack: VaultPack) => pack.files.reduce((total, file) => total + file.bytes, 0);
 
 /** Copy-on-write where the filesystem offers it, a plain copy where it does not.
  *
@@ -138,7 +145,7 @@ const bytesOf = pack => pack.files.reduce((total, file) => total + file.bytes, 0
  * pftrace, while `cp -c` cost zero blocks. A vault on another disk -- an
  * external drive, the usual case -- cannot clone at all and falls back.
  */
-function cloneOrCopy(source, destination) {
+function cloneOrCopy(source: string, destination: string) {
   try {
     execFileSync('cp', ['-c', source, destination], { stdio: 'ignore' });
   } catch {
@@ -146,7 +153,7 @@ function cloneOrCopy(source, destination) {
   }
 }
 
-function storeObject(absolute, hash) {
+function storeObject(absolute: string, hash: string) {
   const target = objectPath(hash);
   if (existsSync(target)) return false;
   mkdirSync(dirname(target), { recursive: true });
@@ -156,7 +163,7 @@ function storeObject(absolute, hash) {
   return true;
 }
 
-function materialize(hash, absolute) {
+function materialize(hash: string, absolute: string) {
   mkdirSync(dirname(absolute), { recursive: true });
   const temporary = `${absolute}.vault-incoming-${process.pid}`;
   cloneOrCopy(objectPath(hash), temporary);
@@ -173,7 +180,7 @@ function exportPack() {
   const paths = new Set<string>();
   for (const input of requested) expand(repoRelative(input), paths);
   const ordered = [...paths].sort();
-  const classes = captureClasses(ordered.some((path: any) => path.startsWith('captures/')));
+  const classes = captureClasses(ordered.some(path => path.startsWith('captures/')));
 
   const files = ordered.map(path => ({
     path,
@@ -268,7 +275,7 @@ function verifyPack() {
   if (mismatched > 0) refuse('retained content does not match its manifest');
 }
 
-function evidenceFiles(directory, into) {
+function evidenceFiles(directory: string, into: string[]): string[] {
   for (const entry of readdirSync(directory, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
     const path = join(directory, entry.name);
     if (entry.isDirectory()) evidenceFiles(path, into);
@@ -278,11 +285,11 @@ function evidenceFiles(directory, into) {
 }
 
 function checkRefs() {
-  const packed = new Map();
+  const packed = new Map<string, string>();
   for (const id of packIds()) for (const file of readPack(id).files)
     if (!packed.has(file.path)) packed.set(file.path, id);
 
-  const referenced = new Map();
+  const referenced = new Map<string, string>();
   for (const path of evidenceFiles(EVIDENCE, [])) {
     if (path.startsWith(`${PACKS}${sep}`)) continue;
     const text = readFileSync(path, 'utf8');
@@ -321,7 +328,7 @@ function listPacks() {
   }
 }
 
-const COMMANDS = {
+const COMMANDS: Readonly<Record<string, () => void>> = {
   export: exportPack, import: importPack, verify: verifyPack, refs: checkRefs, list: listPacks,
 };
 
@@ -343,6 +350,6 @@ if (unknown.length > 0) {
 try {
   COMMANDS[command]();
 } catch (error) {
-  console.error(`vault: ${error.message}`);
+  console.error(`vault: ${(error as Error).message}`);
   process.exit(error instanceof Refused ? 1 : 2);
 }

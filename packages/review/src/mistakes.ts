@@ -102,18 +102,19 @@ export function stepFamily(step: unknown) {
   return `S${match[1]}`;
 }
 
-const escape = text => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-const mentions = (text, word) => new RegExp(`(?:^|[^a-z0-9])${escape(word.toLowerCase())}`, 'i').test(text);
+const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const mentions = (text: string, word: string) => new RegExp(`(?:^|[^a-z0-9])${escape(word.toLowerCase())}`, 'i').test(text);
 
 /**
  * The entries a task should read before it acts, each with why it matched.
  */
 export function matchMistakes(entries: {n: number, lead: string, text: string}[], { step, text = '' }: {step?: string, text?: string} = {}) {
   const family = stepFamily(step);
-  const stepAreas = family ? STEP_AREAS[family] : [];
+  const stepAreas: readonly string[] = family ? STEP_AREAS[family as keyof typeof STEP_AREAS] : [];
   const matched = [];
   for (const entry of entries) {
-    const tags = MISTAKE_TAGS[entry.n];
+    const tags: { areas: readonly string[], words: readonly string[] } | undefined =
+      (MISTAKE_TAGS as Readonly<Record<number, { areas: readonly string[], words: readonly string[] }>>)[entry.n];
     if (!tags) { matched.push({ ...entry, because: { untagged: true, areas: [], words: [] } }); continue; }
     const areas = tags.areas.filter(area => stepAreas.includes(area));
     const words = tags.words.filter(word => mentions(text, word));

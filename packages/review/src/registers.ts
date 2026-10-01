@@ -7,10 +7,14 @@
 // guessing, and the rule that attributes a record to a game is named beside the attribution.
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { CONTROL_CATALOGS, GAME_PACKAGES } from '@sixam/source';
-import { isUnknown, unknown } from '@sixam/kernel';
+import { GAME_PACKAGES, controlCatalogFor } from '@sixam/source';
+import { isRecord, isUnknown, unknown } from '@sixam/kernel';
+import type { EnvelopeLabel } from '@sixam/kernel';
+import type { ControlDescriptor } from '@sixam/kernel/contracts';
 import { KINDS, ROUTES, RUNGS, SCHEMAS, V1_GAME, checkCorpus, readEntries } from './chronicle-schema.ts';
+import type { ChronicleCheckpoint } from './chronicle-schema.ts';
 import { PACKS_DIR, attestationStatus, packCustody, packEntry, readPack } from './evidence-pack.ts';
+import type { RunPack } from './evidence-pack.ts';
 import { GRAPH_FILE, PROMOTION_EDGE, readGraph } from './evidence-promotion.ts';
 
 export const CHRONICLE_DIR = 'docs/chronicle/entries';
@@ -21,22 +25,22 @@ export const COMMAND_REGISTRY = 'docs/architecture/generated/command-registry.js
 export const ARCHIVED_ROUTES = 'docs/ARCHIVED-ROUTES.md';
 export const CONTROL_CATALOG_DIR = 'packages/source/src/games';
 /** A registered game's control catalog, `packages/source/src/games/<alias>/controls.js`. */
-export const controlCatalogFile = alias => `${CONTROL_CATALOG_DIR}/${alias}/controls.js`;
+export const controlCatalogFile = (alias: string) => `${CONTROL_CATALOG_DIR}/${alias}/controls.js`;
 
-const readJson = (root, path) => JSON.parse(readFileSync(join(root, path), 'utf8'));
+const readJson = (root: string, path: string) => JSON.parse(readFileSync(join(root, path), 'utf8'));
 
 // --- games ---------------------------------------------------------------------------------
 
 /** A registered game by its package, with the short name its catalog title gives it ("FNaF 2" -> fnaf2). */
 export const GAMES = Object.freeze(GAME_PACKAGES.map(pkg => Object.freeze({
-  package: pkg, title: CONTROL_CATALOGS[pkg].title, alias: CONTROL_CATALOGS[pkg].title.toLowerCase().replace(/\s+/g, ''),
+  package: pkg, title: controlCatalogFor(pkg).title, alias: controlCatalogFor(pkg).title.toLowerCase().replace(/\s+/g, ''),
 })));
 
 /** The game a caller names by package or short name, or null. */
 export const resolveGame = (game: unknown) => GAMES.find(item => item.package === game || item.alias === game) ?? null;
 
 /** Games whose nights run through the campaign executor: those whose catalog has an artifact action table. */
-export const executorGames = () => GAMES.filter(game => CONTROL_CATALOGS[game.package].artifactActions);
+export const executorGames = () => GAMES.filter(game => controlCatalogFor(game.package).artifactActions);
 
 // --- the chronicle -------------------------------------------------------------------------
 
@@ -60,7 +64,8 @@ export const NEGATIVE_KINDS = Object.freeze(['refutation', 'retraction', 'negati
  */
 export function readChronicle(root: string) {
   const names = readdirSync(join(root, CHRONICLE_DIR)).filter(name => name.endsWith('.json')).sort();
-  const checkpoints = names.map(name => ({ file: `${CHRONICLE_DIR}/${name}`, ...readJson(root, `${CHRONICLE_DIR}/${name}`) }));
+  // Checked by checkCorpus below before any entry is read.
+  const checkpoints: ChronicleCheckpoint[] = names.map(name => ({ file: `${CHRONICLE_DIR}/${name}`, ...readJson(root, `${CHRONICLE_DIR}/${name}`) }));
   const problems = checkCorpus(checkpoints);
   if (problems.length) throw new Error(`the chronicle fails its own checks: ${problems.slice(0, 3).join('; ')}`);
   const entries = readEntries(checkpoints).map(entry => ({ ...entry, target: resolveGame(entry.game)?.package ?? CHRONICLE_GAME }));
@@ -71,11 +76,12 @@ export function readChronicle(root: string) {
  * A chronicle label in kernel words: DEVICE_MEASURED, MODEL_ONLY and FIXTURE are ClaimLevels, the
  * other four named labels are SourceLabels, and the chronicle's bare UNKNOWN becomes UNKNOWN(reason).
  */
-export const chronicleLabel = (entry: {id: string, label: string, title: string}) => entry.label === 'UNKNOWN'
-  ? unknown(`chronicle entry ${entry.id} is labelled UNKNOWN: ${entry.title}`) : entry.label;
+// checkCorpus admits only LABELS_V2, each a ClaimLevel or a named SourceLabel besides UNKNOWN.
+export const chronicleLabel = (entry: {id: string, label: string, title: string}): EnvelopeLabel => entry.label === 'UNKNOWN'
+  ? unknown(`chronicle entry ${entry.id} is labelled UNKNOWN: ${entry.title}`) : entry.label as EnvelopeLabel;
 
 /** Is the entry a negative result: a refutation, retraction or negative, or no longer standing? */
-export const isNegative = entry => NEGATIVE_KINDS.includes(entry.kind) || entry.status !== 'standing';
+export const isNegative = (entry: { readonly kind: string, readonly status: string }) => NEGATIVE_KINDS.includes(entry.kind) || entry.status !== 'standing';
 
 // --- archived routes -------------------------------------------------------------------------
 
@@ -102,19 +108,21 @@ export function readArchivedRoutes(root: string) {
 
 /** The contract register, each contract with its conformance fixtures from the generated specifications. */
 export function readContracts(root: string) {
-  const register = readJson(root, CONTRACT_REGISTER);
-  const specifications = existsSync(join(root, CONTRACT_SPECIFICATIONS)) ? readJson(root, CONTRACT_SPECIFICATIONS).specifications : [];
+  const register: { schema: unknown, owner: unknown, contracts: readonly { readonly id: string, readonly [field: string]: unknown }[] } =
+    readJson(root, CONTRACT_REGISTER);
+  const specifications: readonly { readonly contractId: string, readonly conformanceFixtures?: unknown }[] =
+    existsSync(join(root, CONTRACT_SPECIFICATIONS)) ? readJson(root, CONTRACT_SPECIFICATIONS).specifications : [];
   const fixtures = new Map(specifications.map(spec => [spec.contractId, spec.conformanceFixtures ?? []]));
   return {
     schema: register.schema, owner: register.owner,
-    contracts: register.contracts.map(item => ({ ...item,
+    contracts: register.contracts.map((item): Readonly<Record<string, unknown>> & { id: string, conformanceFixtures: unknown } => ({ ...item,
       conformanceFixtures: fixtures.get(item.id) ?? unknown(`${CONTRACT_SPECIFICATIONS} lists no fixture for ${item.id}; run npm run catalog`) })),
   };
 }
 
 /** The command ids and tool ids of the generated command registry. */
 export function readCommandRegistry(root: string) {
-  const registry = readJson(root, COMMAND_REGISTRY);
+  const registry: { commands: readonly { readonly id: string }[], tools: readonly { readonly id: string }[] } = readJson(root, COMMAND_REGISTRY);
   return { commands: registry.commands.map(item => item.id), tools: registry.tools.map(item => item.id) };
 }
 
@@ -125,9 +133,9 @@ const CATALOG_UNKNOWN = /^UNKNOWN\(/;
 /**
  * Every fact a control catalog writes as UNKNOWN(reason), as {control, field, value}.
  */
-export function catalogUnknowns(catalog: any) {
-  const found = [];
-  const visit = (control, path, value) => {
+export function catalogUnknowns(catalog: { readonly controls: readonly ControlDescriptor[], readonly cameras?: unknown }) {
+  const found: { control: unknown, field: string, value: string }[] = [];
+  const visit = (control: unknown, path: string, value: unknown) => {
     if (typeof value === 'string' && CATALOG_UNKNOWN.test(value)) found.push({ control, field: path, value });
     else if (value && typeof value === 'object' && !Array.isArray(value))
       for (const [key, item] of Object.entries(value)) visit(control, path ? `${path}.${key}` : key, item);
@@ -149,15 +157,17 @@ export function catalogUnknowns(catalog: any) {
  * pack was played by the campaign executor, which runs only the games whose catalog has an
  * artifact action table -- attributed when exactly one does.
  */
-export function packGame(dir: string, loaded: {pack: any, files: string[]}) {
+export function packGame(dir: string, loaded: {pack: RunPack, files: readonly string[]}) {
   const { pack, files } = loaded;
   if (pack.kind === 'fnaf1-run') {
-    const game = resolveGame(pack.target?.package);
+    const target = isRecord(pack.target) ? pack.target.package : undefined;
+    const game = resolveGame(target);
     return game ? { game: game.package, basis: 'pack.json target.package' }
-      : { game: unknown(`the FNaF 1 runner's pack names target ${JSON.stringify(pack.target?.package ?? null)}, not a registered game`), basis: null };
+      : { game: unknown(`the FNaF 1 runner's pack names target ${JSON.stringify(target ?? null)}, not a registered game`), basis: null };
   }
   if (files.includes('request.json')) {
-    const request = JSON.parse(readFileSync(join(dir, 'request.json'), 'utf8'));
+    const request: { spec?: { target?: { package?: unknown } }, profile?: { targetBuild?: unknown } } | null =
+      JSON.parse(readFileSync(join(dir, 'request.json'), 'utf8'));
     const named = request?.spec?.target?.package ?? String(request?.profile?.targetBuild ?? '').split(':')[0];
     const game = resolveGame(named);
     if (game) return { game: game.package, basis: 'request.json spec.target.package' };
@@ -170,7 +180,7 @@ export function packGame(dir: string, loaded: {pack: any, files: string[]}) {
 }
 
 /** The graph's PROMOTED_BY edges by the run node they bind. */
-export const promotionEdges = (root: string) => new Map<string, any>(readGraph(root).edges.filter(edge => edge.type === PROMOTION_EDGE).map(edge => [edge.to, edge]));
+export const promotionEdges = (root: string) => new Map(readGraph(root).edges.filter(edge => edge.type === PROMOTION_EDGE).map(edge => [edge.to, edge] as const));
 
 /** The committed pack ids, in directory order. */
 export const packDirectories = (root: string) => readdirSync(join(root, PACKS_DIR)).sort();
@@ -181,11 +191,12 @@ export const packDirectories = (root: string) => readdirSync(join(root, PACKS_DI
  * returned with the failure, never dropped.
  * @param edges promotionEdges(root)
  */
-export function readPackRow(root: string, id: string, edges: Map<string, any> = promotionEdges(root)) {
+export function readPackRow(root: string, id: string, edges: ReturnType<typeof promotionEdges> = promotionEdges(root)) {
   const dir = join(root, PACKS_DIR, id);
   let loaded;
   try { loaded = readPack(dir); } catch (error) {
-    return { id, game: unknown(`the pack fails its integrity check: ${error.message}`), valid: false, error: error.message };
+    const message = (error as Error).message;
+    return { id, game: unknown(`the pack fails its integrity check: ${message}`), valid: false as const, error: message };
   }
   const { game, basis } = packGame(dir, loaded);
   const fnaf1 = loaded.pack.kind === 'fnaf1-run';
@@ -193,10 +204,11 @@ export function readPackRow(root: string, id: string, edges: Map<string, any> = 
   const edge = edges.get(`run.${id}`) ?? null;
   const attestation = attestationStatus(loaded.attestation, loaded.digest);
   return {
-    id, valid: true, game, gameBasis: basis, kind: fnaf1 ? 'fnaf1-run' : 'device-campaign',
-    outcome: fnaf1 ? loaded.pack.outcome?.ended ?? null : entry.outcome,
-    claimLevel: fnaf1 ? loaded.pack.claimLevel ?? null : entry.claimLevel ?? null,
-    nights: fnaf1 ? null : entry.nights ?? loaded.pack.nights ?? null,
+    id, valid: true as const, game, gameBasis: basis, kind: fnaf1 ? 'fnaf1-run' : 'device-campaign',
+    // A campaign pack has an index entry; a FNaF 1 runner's pack has none.
+    outcome: entry ? entry.outcome : (isRecord(loaded.pack.outcome) ? loaded.pack.outcome.ended ?? null : null),
+    claimLevel: entry ? entry.claimLevel ?? null : loaded.pack.claimLevel ?? null,
+    nights: entry ? entry.nights ?? loaded.pack.nights ?? null : null,
     custody: packCustody(loaded.pack), packSha256: loaded.digest,
     attestedBy: attestation?.valid ? attestation.by : null,
     promoted: edge && edge.packSha256 === loaded.digest ? edge.from : null,
@@ -210,6 +222,6 @@ export function readPacks(root: string) {
   return packDirectories(root).map(id => readPackRow(root, id, edges));
 }
 
-export const gameKey = (value: any) => (isUnknown(value) ? 'UNKNOWN' : value);
+export const gameKey = (value: unknown) => (isUnknown(value) ? 'UNKNOWN' : value);
 
 export { GRAPH_FILE, PACKS_DIR };

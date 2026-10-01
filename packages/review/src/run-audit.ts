@@ -39,48 +39,62 @@ export const ATTRIBUTIONS = Object.freeze(['OBSERVATION', 'ACTUATION', 'SCHEDULI
 /** The outcomes a loss audit explains. A WIN needs no attribution; a lost result is a custody gap, not an outcome. */
 export const AUDITED_OUTCOMES = Object.freeze(['DEATH', 'ERROR']);
 
-const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
-const epoch = (at) => (typeof at === 'number' ? at : Date.parse(at));
+/** One row of a pack's events.jsonl. */
+type RunEvent = Readonly<Record<string, unknown>>;
+/** run/phase.json, by the fields the audit reads. */
+type PhaseRecord = { readonly terminal?: { readonly lastNightAt?: unknown, readonly terminalAt?: unknown, readonly terminalLabel?: unknown },
+  readonly deliveredBand?: { readonly epochMs?: unknown, readonly uncertaintyMs?: unknown, readonly verdict?: unknown,
+    readonly band?: unknown, readonly conclusive?: unknown } };
+/** run/run-report.json, by the fields the audit reads. */
+type RunReport = { readonly effects?: { readonly systematicMisses?: readonly { readonly verdict?: unknown, readonly key?: unknown }[],
+  readonly tally?: Readonly<Record<string, unknown>> }, readonly arm?: { readonly status?: unknown } };
+
+const sha256 = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
+// Date.parse reads its argument as text, as String() does.
+const epoch = (at: unknown) => (typeof at === 'number' ? at : Date.parse(String(at)));
 
 /**
  * The pack's own files, parsed, with the sha256 of each one read.
  */
 function readInputs(dir: string) {
   const inputs: string[] = [];
-  const read = (rel) => {
+  const read = (rel: string) => {
     const file = join(dir, rel);
     if (!existsSync(file)) return null;
     const bytes = readFileSync(file);
     inputs.push(sha256(bytes));
     return bytes.toString('utf8');
   };
-  const json = (rel) => { const text = read(rel); return text === null ? null : JSON.parse(text); };
-  const pack = json('pack.json');
+  const json = (rel: string) => { const text = read(rel); return text === null ? null : JSON.parse(text); };
+  const pack: { readonly outcome?: unknown, readonly id?: unknown } | null = json('pack.json');
   const eventsText = read('events.jsonl');
-  const events = (eventsText ?? '').split('\n').filter(Boolean).flatMap((line) => {
+  const events = (eventsText ?? '').split('\n').filter(Boolean).flatMap((line): RunEvent[] => {
     try { return [JSON.parse(line)]; } catch { return []; }
   });
-  return { pack, events, report: json('run/run-report.json'), phase: json('run/phase.json'), inputs };
+  const report: RunReport | null = json('run/run-report.json');
+  const phase: PhaseRecord | null = json('run/phase.json');
+  return { pack, events, report, phase, inputs };
 }
 
 /**
  * The last moment the night was still observed, in epoch ms, or null.
  */
-function deathOnset(phase: any, events: any[]) {
+function deathOnset(phase: PhaseRecord | null, events: readonly RunEvent[]) {
   const terminal = phase?.terminal;
-  if (Number.isFinite(terminal?.lastNightAt))
-    return { at: terminal.lastNightAt, from: 'phase.json terminal.lastNightAt', terminalAt: terminal.terminalAt ?? null,
+  const lastNightAt = terminal?.lastNightAt;
+  if (terminal && typeof lastNightAt === 'number' && Number.isFinite(lastNightAt))
+    return { at: lastNightAt, from: 'phase.json terminal.lastNightAt', terminalAt: terminal.terminalAt ?? null,
       terminalLabel: terminal.terminalLabel ?? null };
   const nights = events.filter((event) => event.type === 'observation' && /(^|\b)state=night\b/.test(String(event.label)));
   if (!nights.length) return null;
-  return { at: epoch(nights.at(-1).at), from: 'last observation labelled state=night', terminalAt: null, terminalLabel: null };
+  return { at: epoch(nights[nights.length - 1].at), from: 'last observation labelled state=night', terminalAt: null, terminalLabel: null };
 }
 
 /**
  * Execution faults, each with its time and its stage, split by the onset.
  */
-function executionFaults(events: any[], report: any, onset: number) {
-  const systematic = new Set((report?.effects?.systematicMisses ?? [])
+function executionFaults(events: readonly RunEvent[], report: RunReport | null, onset: number) {
+  const systematic = new Set<unknown>((report?.effects?.systematicMisses ?? [])
     .filter((miss) => miss.verdict === 'ACTUATOR-GAP').map((miss) => miss.key));
   const faults: {at: number, stage: string, kind: string, detail: string, decisive: boolean}[] = [];
   for (const event of events) {
@@ -90,7 +104,8 @@ function executionFaults(events: any[], report: any, onset: number) {
       faults.push({ at: epoch(event.at), stage: 'SCHEDULING', kind: 'campaign-abort', detail: String(event.reason ?? event.detail ?? ''), decisive: true });
     else if (event.type === 'control.effect.result' && event.status === 'MISSING') {
       const key = `${event.actionId} ${event.signal}->${event.target}`;
-      faults.push({ at: Number.isFinite(event.contactAt) ? event.contactAt : epoch(event.at), stage: 'ACTUATION', kind: 'effect-missing',
+      const contactAt = event.contactAt;
+      faults.push({ at: typeof contactAt === 'number' && Number.isFinite(contactAt) ? contactAt : epoch(event.at), stage: 'ACTUATION', kind: 'effect-missing',
         detail: key, decisive: systematic.has(key) });
     }
   }
@@ -108,15 +123,16 @@ export function auditRun(dir: string) {
   const undecided: string[] = [];
   const onset = deathOnset(phase, events);
   let attribution = 'UNKNOWN';
-  let firstDivergence = null;
+  let firstDivergence: { kind: string, detail: string, beforeOnsetMs: number } | null = null;
   let because = '';
   const faults = onset ? executionFaults(events, report, onset.at) : { before: [], after: [] };
   const tally = report?.effects?.tally ?? {};
   const armStatus = String(report?.arm?.status ?? 'UNKNOWN');
   const execution = { arm: armStatus, effects: tally,
     unconfirmedMissesBeforeOnset: faults.before.filter((fault) => !fault.decisive).map((fault) => fault.detail),
-    faultsAfterOnset: faults.after.map((fault) => ({ kind: fault.kind, detail: fault.detail, afterOnsetMs: Math.round(fault.at - onset.at) })) };
-  let delivered = null;
+    // Faults are split only around a known onset; without one there are none after it.
+    faultsAfterOnset: onset ? faults.after.map((fault) => ({ kind: fault.kind, detail: fault.detail, afterOnsetMs: Math.round(fault.at - onset.at) })) : [] };
+  let delivered: { epochMs: unknown, uncertaintyMs: unknown, verdict: unknown, band: unknown, conclusive: boolean } | null = null;
   if (!onset) {
     undecided.push('death-onset-unknown');
     because = 'no observation dates the end of the night, so no fault can be ordered before it';
@@ -165,17 +181,18 @@ export function auditRun(dir: string) {
 export function auditRuns(root: string) {
   const dir = join(root, PACKS_DIR);
   const ids = existsSync(dir) ? readdirSync(dir).filter((id) => existsSync(join(dir, id, 'pack.json'))).sort() : [];
-  const outcomes = {};
-  const annotations = [];
+  const outcomes: Record<string, number> = {};
+  const annotations: ReturnType<typeof auditRun>[] = [];
   for (const id of ids) {
-    const outcome = JSON.parse(readFileSync(join(dir, id, 'pack.json'), 'utf8')).outcome;
+    const outcome: unknown = JSON.parse(readFileSync(join(dir, id, 'pack.json'), 'utf8')).outcome;
     const key = typeof outcome === 'string' ? outcome : 'OTHER';
     outcomes[key] = (outcomes[key] ?? 0) + 1;
-    if (AUDITED_OUTCOMES.includes(outcome)) annotations.push(auditRun(join(dir, id)));
+    if (typeof outcome === 'string' && AUDITED_OUTCOMES.includes(outcome)) annotations.push(auditRun(join(dir, id)));
   }
-  const byAttribution = Object.fromEntries(ATTRIBUTIONS.map((name) => [name, annotations.filter((a) => a.class === name).length]));
-  const undecided = {};
-  for (const annotation of annotations) for (const reason of annotation.value.undecided)
+  const byAttribution = Object.fromEntries(ATTRIBUTIONS.map((name) => [name, annotations.filter((a) => 'class' in a && a.class === name).length]));
+  const undecided: Record<string, number> = {};
+  // auditRun writes each annotation's value with its undecided list.
+  for (const annotation of annotations) for (const reason of (annotation.value as { undecided: readonly string[] }).undecided)
     undecided[reason.replace(/ \(.*\)$/, '')] = (undecided[reason.replace(/ \(.*\)$/, '')] ?? 0) + 1;
   return { packs: ids.length, outcomes, audited: annotations.length, byAttribution, undecided, annotations };
 }

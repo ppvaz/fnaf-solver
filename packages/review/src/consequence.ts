@@ -31,14 +31,15 @@ export const CONSEQUENCE_CITES = Object.freeze(['CLAUDE.md#consequence-lock-acti
 const README = /(?:^|\/)README\.md$/;
 
 /** A path that retains a record. The first rule that matches names it. */
-export const RECORD_RULES = Object.freeze([
+type PathTest = (path: string) => boolean;
+export const RECORD_RULES = Object.freeze(([
   { id: 'run-pack', what: 'a run pack', test: path => path.startsWith('docs/evidence/runs/') },
   { id: 'promotion', what: 'the evidence graph (promotion edges)', test: path => path === 'docs/evidence/graph.json' },
   { id: 'evidence-record', what: 'an evidence record', test: path => path.startsWith('docs/evidence/') && !README.test(path) },
   { id: 'host-record', what: 'a host-side record', test: path => path.startsWith('tools/recompile/results/') && !README.test(path) },
   { id: 'winner', what: 'a committed winner', test: path => WINNER_FILE.test(path) },
   { id: 'staged-artifact', what: 'evidence staged under artifacts/', test: path => path.startsWith('artifacts/') },
-].map(rule => Object.freeze(rule)));
+] satisfies { id: string, what: string, test: PathTest }[]).map(rule => Object.freeze(rule)));
 
 /** A gate: a test, a structural check, a hook or a CI workflow. */
 const GATE = [
@@ -67,7 +68,7 @@ const BOOKKEEPING = [
 ];
 
 /** The four areas whose code counts when a gate exercises it. The first that matches names it. */
-export const CODE_AREAS = Object.freeze([
+export const CODE_AREAS = Object.freeze(([
   { area: 'solver-interface', test: path => /^packages\/(?:review|kernel)\/src\//.test(path) || path.startsWith('apps/desktop/src/')
     || path === 'tools/evidence.js' },
   { area: 'companion', test: path => path.startsWith('android/companion/') },
@@ -76,7 +77,7 @@ export const CODE_AREAS = Object.freeze([
   // tools (src/ and bin/), and the plans a phone executes (packages/propose/bin/plans/).
   { area: 'controller', test: path => path.startsWith('packages/play/') || path.startsWith('packages/propose/bin/plans/')
     || path.startsWith('tools/device/') },
-].map(rule => Object.freeze(rule)));
+] satisfies { area: string, test: PathTest }[]).map(rule => Object.freeze(rule)));
 
 /**
  * What one path is: a record, a gate, bookkeeping, or code in an area (or in none of the four).
@@ -90,7 +91,7 @@ export function pathKind(path: string): {kind: 'record', rule: string, what: str
   return { kind: 'code', area: CODE_AREAS.find(rule => rule.test(path))?.area ?? null };
 }
 
-const list = items => (items.length <= 3 ? items.join(', ') : `${items.slice(0, 3).join(', ')} and ${items.length - 3} more`);
+const list = (items: readonly string[]) => (items.length <= 3 ? items.join(', ') : `${items.slice(0, 3).join(', ')} and ${items.length - 3} more`);
 
 /**
  * The consequence class of one change: `consequence` is `consequential`, `bookkeeping` or

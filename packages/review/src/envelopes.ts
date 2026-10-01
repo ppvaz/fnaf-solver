@@ -5,7 +5,8 @@
 // unchanged, as `claim`; the envelope adds what it is worth (`label`), what it is about, where it
 // was read, and what it does not measure. The MCP server's `query promotions` uses the same
 // wrapper, so a caller gets one answer however it asks.
-import { claimEnvelope, isClaimLevel, refusalEnvelope, unknown, unknownsIn } from '@sixam/kernel';
+import { claimEnvelope, isClaimLevel, isList, isRecord, refusalEnvelope, unknown, unknownsIn } from '@sixam/kernel';
+import type { Unknown } from '@sixam/kernel';
 import { PACKS_DIR } from './evidence-pack.ts';
 import { GRAPH_FILE } from './evidence-promotion.ts';
 
@@ -75,7 +76,7 @@ export function promotionSummaryEnvelope(summary: ReturnType<typeof import('./ev
       ...summary.refusedWins.map(item => `${item.id}: an executor 6 AM that is not promoted (${item.failing.join(', ')} fail)`),
       ...summary.staleEdges.map(item => `${item.id}: a recorded edge that no longer holds (${item.reason})`),
       ...Object.entries(summary.nights).filter(([night]) => night === 'fnaf1')
-        .map(([, row]) => `${(row as any).packs} FNaF 1 packs: no Plan 12 gate reads a FNaF 1 run`),
+        .map(([, row]) => `${row.packs} FNaF 1 packs: no Plan 12 gate reads a FNaF 1 run`),
     ],
     reproducer: 'npm run evidence -- promotions',
   });
@@ -86,15 +87,16 @@ export function promotionSummaryEnvelope(summary: ReturnType<typeof import('./ev
  * the run's own record carries.
  * @param shown the object show prints
  */
-export function showEnvelope(id: string, shown: any, { target, source, claimLevel }: {target: any, source: string, claimLevel: unknown}) {
-  const custody = shown.custody && typeof shown.custody === 'object' ? shown.custody : null;
-  const lost = Array.isArray(custody?.lost) ? custody.lost : [];
+export function showEnvelope(id: string, shown: Readonly<Record<string, unknown>>,
+  { target, source, claimLevel }: {target: string | Unknown, source: string, claimLevel: unknown}) {
+  const custody = isRecord(shown.custody) ? shown.custody : null;
+  const lost = isList(custody?.lost) ? custody.lost : [];
   return claimEnvelope({
     claim: shown, label: levelLabel(claimLevel, `${id}'s record`), target,
     cite: [source, ...(shown.promotion ? [GRAPH_FILE] : [])],
     status: 'standing', supersededBy: null,
     notMeasured: [
-      ...lost.map(name => `${name}: lost with this run's custody (${custody.kind})`),
+      ...lost.map(name => `${name}: lost with this run's custody (${custody?.kind})`),
       ...(shown.outcome === 'WIN' && !shown.promotion ? ['promotion: this run holds no PROMOTED_BY edge'] : []),
       ...(shown.kind === 'fnaf1-run' && !shown.promotion ? ['promotion: this FNaF 1 run holds no PROMOTED_BY edge'] : []),
       ...(claimLevel === 'DEVICE_MEASURED' ? [] : ['the phone: this record is not a live device measurement']),

@@ -40,6 +40,38 @@
 // route and rung stay FNaF 2's vocabularies, so a v2 entry of another game
 // carries neither.
 import { nightsOf } from '@sixam/source';
+import { isList, isOneOf } from '@sixam/kernel';
+
+type Fields = Readonly<Record<string, unknown>>;
+/** A chronicle entry as a checked corpus holds it. */
+export interface ChronicleEntry {
+  readonly id: string;
+  readonly date: string;
+  readonly kind: string;
+  readonly label: string;
+  readonly status: string;
+  readonly title: string;
+  readonly body: string;
+  readonly game?: string;
+  readonly rung: number | null;
+  readonly plan: number | null;
+  readonly night: number | null;
+  readonly route: string | null;
+  readonly measured: string | null;
+  readonly tags: readonly string[];
+  readonly sources: readonly string[];
+  readonly supersedes?: string | null;
+  readonly supersededBy: string | null;
+  readonly [field: string]: unknown;
+}
+/** One checkpoint file of a checked corpus. */
+export interface ChronicleCheckpoint {
+  readonly file: string;
+  readonly schema: string;
+  readonly checkpoint: string;
+  readonly entries: readonly ChronicleEntry[];
+  readonly [field: string]: unknown;
+}
 
 export const ENTRIES_SCHEMA = 'chronicle-entries-v1';
 /** The v2 checkpoint file, whose entries are chronicle-entry-v2. */
@@ -75,7 +107,7 @@ export const STATUSES = ['standing', 'superseded', 'retracted'];
 export const GAMES = ['fnaf1', 'fnaf2', 'fnaf3', 'fnaf4'];
 /** How a page names each game. */
 export const GAME_TITLES = Object.freeze({ fnaf1: 'FNaF 1', fnaf2: 'FNaF 2', fnaf3: 'FNaF 3', fnaf4: 'FNaF 4' });
-export const gameTitle = (game) => GAME_TITLES[game] ?? game;
+export const gameTitle = (game: string) => (GAME_TITLES as Readonly<Record<string, string>>)[game] ?? game;
 /** The game every v1 entry is read as. */
 export const V1_GAME = 'fnaf2';
 /** The last night each game's Rulebook names. */
@@ -85,13 +117,15 @@ const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const SOURCE = /^(?:commit:[0-9a-f]{7,40}|[\w./+-]+(?::\d+)?)$/;
 // A second checkpoint in one month takes a letter: 2026-09, then 2026-09b.
-const CHECKPOINT = { [ENTRIES_SCHEMA]: /^\d{4}-\d{2}$/, [ENTRIES_SCHEMA_V2]: /^\d{4}-\d{2}[b-z]?$/ };
+const CHECKPOINT: Readonly<Record<string, RegExp>> = { [ENTRIES_SCHEMA]: /^\d{4}-\d{2}$/, [ENTRIES_SCHEMA_V2]: /^\d{4}-\d{2}[b-z]?$/ };
 
-const isString = (value) => typeof value === 'string' && value.length > 0;
-const isV2 = (schema) => schema === ENTRIES_SCHEMA_V2;
+const isString = (value: unknown): value is string => typeof value === 'string' && value.length > 0;
+const isInt = (value: unknown): value is number => Number.isInteger(value);
+const isV2 = (schema: unknown) => schema === ENTRIES_SCHEMA_V2;
 
 /** The game an entry is about: its own field in v2, FNaF 2 for every v1 entry. */
-export const gameOf = (entry) => entry.game ?? V1_GAME;
+// checkEntry refuses a v2 game outside GAMES; a v1 entry has none.
+export const gameOf = (entry: { readonly game?: unknown }) => (entry.game ?? V1_GAME) as string;
 
 /**
  * Field-level validation of one entry. Returns a list of complaints, so a bad
@@ -100,56 +134,56 @@ export const gameOf = (entry) => entry.game ?? V1_GAME;
  *
  * @param schema the checkpoint's schema; v1 when omitted
  */
-export function checkEntry(entry: any, where: string, schema: string = ENTRIES_SCHEMA) {
-  const at = (message) => `${where}: ${message}`;
-  const problems = [];
+export function checkEntry(entry: Fields, where: string, schema: unknown = ENTRIES_SCHEMA) {
+  const at = (message: string) => `${where}: ${message}`;
+  const problems: string[] = [];
   const v2 = isV2(schema);
   const labels = v2 ? LABELS_V2 : LABELS;
   if (!isString(entry.id) || !ID.test(entry.id))
     problems.push(at(`id must be kebab-case, got ${JSON.stringify(entry.id)}`));
   if (!isString(entry.date) || !DATE.test(entry.date) || Number.isNaN(Date.parse(entry.date)))
     problems.push(at(`date must be YYYY-MM-DD, got ${JSON.stringify(entry.date)}`));
-  if (!KINDS.includes(entry.kind))
+  if (!isOneOf(KINDS, entry.kind))
     problems.push(at(`kind must be one of ${KINDS.join('|')}, got ${JSON.stringify(entry.kind)}`));
-  if (!labels.includes(entry.label))
+  if (!isOneOf(labels, entry.label))
     problems.push(at(`label must be one of ${labels.join('|')}, got ${JSON.stringify(entry.label)}`));
-  if (!STATUSES.includes(entry.status))
+  if (!isOneOf(STATUSES, entry.status))
     problems.push(at(`status must be one of ${STATUSES.join('|')}, got ${JSON.stringify(entry.status)}`));
   if (!isString(entry.title)) problems.push(at('title is required'));
   if (!isString(entry.body)) problems.push(at('body is required'));
 
-  if (v2 && !GAMES.includes(entry.game))
+  if (v2 && !isOneOf(GAMES, entry.game))
     problems.push(at(`game must be one of ${GAMES.join('|')}, got ${JSON.stringify(entry.game)}`));
   if (!v2 && entry.game !== undefined)
     problems.push(at('a chronicle-entries-v1 entry has no game field'));
   const game = gameOf(entry);
   const lastNight = v2 ? NIGHTS[game] ?? 0 : 7;
 
-  if (entry.rung !== null && !(Number.isInteger(entry.rung) && entry.rung >= 0 && entry.rung < RUNGS.length))
+  if (entry.rung !== null && !(isInt(entry.rung) && entry.rung >= 0 && entry.rung < RUNGS.length))
     problems.push(at(`rung must be null or 0..${RUNGS.length - 1}, got ${JSON.stringify(entry.rung)}`));
   if (v2) {
-    if (entry.plan !== null && !(Number.isInteger(entry.plan) && entry.plan >= 1))
+    if (entry.plan !== null && !(isInt(entry.plan) && entry.plan >= 1))
       problems.push(at(`plan must be null or a positive integer, got ${JSON.stringify(entry.plan)}`));
-  } else if (entry.plan !== null && !(Number.isInteger(entry.plan) && entry.plan >= 1 && entry.plan <= 24)) {
+  } else if (entry.plan !== null && !(isInt(entry.plan) && entry.plan >= 1 && entry.plan <= 24)) {
     problems.push(at(`plan must be null or 1..24, got ${JSON.stringify(entry.plan)}`));
   }
-  if (entry.night !== null && !(Number.isInteger(entry.night) && entry.night >= 1 && entry.night <= lastNight))
+  if (entry.night !== null && !(isInt(entry.night) && entry.night >= 1 && entry.night <= lastNight))
     problems.push(at(`night must be null or 1..${lastNight}${v2 ? ` (${game}'s Rulebook)` : ''}, got ${JSON.stringify(entry.night)}`));
-  if (entry.route !== null && !ROUTES.includes(entry.route))
+  if (entry.route !== null && !isOneOf(ROUTES, entry.route))
     problems.push(at(`route must be null or one of ${ROUTES.join('|')}, got ${JSON.stringify(entry.route)}`));
   if (v2 && game !== V1_GAME && (entry.route !== null || entry.rung !== null))
     problems.push(at(`route and rung are FNaF 2's vocabularies; a ${game} entry carries neither`));
   if (entry.measured !== null && !isString(entry.measured))
     problems.push(at('measured must be null or a non-empty string'));
 
-  if (!Array.isArray(entry.tags) || entry.tags.some((tag) => !isString(tag)))
+  if (!isList(entry.tags) || entry.tags.some((tag) => !isString(tag)))
     problems.push(at('tags must be an array of strings'));
 
   // A citation nobody can follow is the failure this repository already names:
   // "a finding nobody can reach is close enough to a finding that does not
   // exist" (tools/test-docs.ts). Shape is checked here; resolution is checked
   // by test-chronicle.mjs, which is where the filesystem and git live.
-  if (!Array.isArray(entry.sources) || entry.sources.length === 0)
+  if (!isList(entry.sources) || entry.sources.length === 0)
     problems.push(at('sources must name at least one path, path:line, or commit:<sha>'));
   else
     for (const source of entry.sources)
@@ -178,24 +212,29 @@ export function checkEntry(entry: any, where: string, schema: string = ENTRIES_S
  * Whole-corpus validation. Cross-entry rules only make sense once every
  * checkpoint is loaded, so this runs after the last file is read.
  */
-export function checkCorpus(checkpoints) {
-  const problems = [];
-  const seen = new Map();
-  const checkpointIds = new Map();
+export function checkCorpus(checkpoints: readonly Fields[]) {
+  const problems: string[] = [];
+  const seen = new Map<unknown, { file: unknown, entry: Fields, schema: unknown }>();
+  const checkpointIds = new Map<unknown, unknown>();
+  // An entry or an item is read field by field whatever it is, as property reads on it always did.
+  const fieldsOf = (value: unknown) => value as Fields;
+  const listed = (value: unknown) => (value ?? []) as Iterable<unknown>;
   for (const checkpoint of checkpoints) {
-    if (!SCHEMAS.includes(checkpoint.schema))
+    if (!isOneOf(SCHEMAS, checkpoint.schema))
       problems.push(`${checkpoint.file}: schema must be ${SCHEMAS.join(' or ')}, got ${JSON.stringify(checkpoint.schema)}`);
     if (!isString(checkpoint.label)) problems.push(`${checkpoint.file}: label is required`);
     if (checkpoint.outlook) {
       if (typeof checkpoint.outlook !== 'object' || Array.isArray(checkpoint.outlook))
         problems.push(`${checkpoint.file}: outlook must be an object`);
+      const outlook = fieldsOf(checkpoint.outlook);
       for (const section of ['next', 'missing']) {
-        if (!Array.isArray(checkpoint.outlook[section]))
+        if (!Array.isArray(outlook[section]))
           problems.push(`${checkpoint.file}: outlook.${section} must be an array`);
-        for (const item of checkpoint.outlook[section] ?? []) {
+        for (const value of listed(outlook[section])) {
+          const item = fieldsOf(value);
           if (!isString(item.title) || !isString(item.body))
             problems.push(`${checkpoint.file}: outlook.${section} items need title and body`);
-          if (!Array.isArray(item.sources) || item.sources.length === 0)
+          if (!isList(item.sources) || item.sources.length === 0)
             problems.push(`${checkpoint.file}: outlook.${section} items need sources`);
           else for (const source of item.sources)
             if (!isString(source) || !SOURCE.test(source))
@@ -204,8 +243,9 @@ export function checkCorpus(checkpoints) {
       }
     }
 
-    const pattern = CHECKPOINT[checkpoint.schema] ?? CHECKPOINT[ENTRIES_SCHEMA];
-    if (!pattern.test(checkpoint.checkpoint ?? ''))
+    // A key and a tested value are read as text, as indexing and RegExp.test make them.
+    const pattern = CHECKPOINT[String(checkpoint.schema)] ?? CHECKPOINT[ENTRIES_SCHEMA];
+    if (!pattern.test(String(checkpoint.checkpoint ?? '')))
       problems.push(`${checkpoint.file}: checkpoint must be YYYY-MM${isV2(checkpoint.schema) ? ', or YYYY-MM and a letter for a second checkpoint in one month' : ''}`);
     else if (checkpointIds.has(checkpoint.checkpoint))
       problems.push(`${checkpoint.file}: checkpoint ${checkpoint.checkpoint} is already ${checkpointIds.get(checkpoint.checkpoint)}`);
@@ -222,10 +262,12 @@ export function checkCorpus(checkpoints) {
         problems.push(`${checkpoint.file}: pulseByDay[${day}] is outside checkpoint ${checkpoint.checkpoint}`);
     }
 
-    for (const entry of checkpoint.entries ?? []) {
+    for (const value of listed(checkpoint.entries)) {
+      const entry = fieldsOf(value);
       problems.push(...checkEntry(entry, `${checkpoint.file} ${entry.id ?? '(no id)'}`, checkpoint.schema));
-      if (seen.has(entry.id))
-        problems.push(`${checkpoint.file}: duplicate id ${entry.id}, already in ${seen.get(entry.id).file}`);
+      const prior = seen.get(entry.id);
+      if (prior)
+        problems.push(`${checkpoint.file}: duplicate id ${entry.id}, already in ${prior.file}`);
       else seen.set(entry.id, { file: checkpoint.file, entry, schema: checkpoint.schema });
       // The checkpoint window is what makes "add next month's file" a safe
       // operation: an entry filed in the wrong month would silently reorder the
@@ -234,9 +276,10 @@ export function checkCorpus(checkpoints) {
         problems.push(`${checkpoint.file}: ${entry.id} is dated ${entry.date}, outside checkpoint ${checkpoint.checkpoint}`);
     }
   }
-  const supersededBy = new Map();
+  const supersededBy = new Map<unknown, unknown>();
   for (const checkpoint of checkpoints)
-    for (const entry of checkpoint.entries ?? []) {
+    for (const value of listed(checkpoint.entries)) {
+      const entry = fieldsOf(value);
       if (entry.supersededBy && !seen.has(entry.supersededBy))
         problems.push(`${checkpoint.file}: ${entry.id} is ${entry.status} by ${entry.supersededBy}, which is not an entry`);
       if (!entry.supersedes) continue;
@@ -258,7 +301,7 @@ export function checkCorpus(checkpoints) {
     }
   for (const { entry, schema, file } of seen.values())
     if (isV2(schema) && entry.status !== 'standing' && seen.get(entry.supersededBy)?.schema === ENTRIES_SCHEMA_V2 &&
-      seen.get(entry.supersededBy).entry.supersedes !== entry.id)
+      seen.get(entry.supersededBy)?.entry.supersedes !== entry.id)
       problems.push(`${file}: ${entry.id} names ${entry.supersededBy}, whose supersedes does not name it back`);
   return problems;
 }
@@ -271,8 +314,8 @@ export function checkCorpus(checkpoints) {
  * `storedStatus` keeps what the file holds. Call only on a corpus that passes
  * checkCorpus.
  */
-export function readEntries(checkpoints) {
-  const corrections = new Map();
+export function readEntries(checkpoints: readonly ChronicleCheckpoint[]) {
+  const corrections = new Map<string, string>();
   for (const checkpoint of checkpoints)
     for (const entry of checkpoint.entries)
       if (entry.supersedes) corrections.set(entry.supersedes, entry.id);

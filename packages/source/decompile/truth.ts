@@ -22,11 +22,12 @@ import { closeSync, existsSync, fstatSync, mkdirSync, openSync, readFileSync, re
 import { homedir } from 'node:os';
 import { delimiter, dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { inflateRawSync } from 'node:zlib';
-import { claimEnvelope, refusalEnvelope } from '@sixam/kernel';
-import { CONTROL_CATALOGS, GAME_PACKAGES } from '../src/index.ts';
+import { claimEnvelope, isRecord, refusalEnvelope } from '@sixam/kernel';
+import { GAME_PACKAGES, controlCatalogFor } from '../src/index.ts';
 import { ACCESS, DEFAULT_LIMIT, DUMPER, HANDLE_SCRAMBLE_LIMIT, QUERY_FIELDS, TRUTH_URI, describeObject, dumpShape,
   estimateHandleScramble, findEvents, handlesNamed, isTabularDump, namesContaining, objectAt, parseDump, qualifierRows,
   unparsedLoaders } from '../src/truth/index.ts';
+import type { Dump } from '../src/truth/dump.ts';
 
 export const VAULT_FILE = 'packages/source/decompile/local-vault.json';
 export const VAULT_ENV = 'SIXAM_TRUTH_VAULT';
@@ -46,19 +47,44 @@ const CCN_ENTRIES = Object.freeze(['res/raw/application.ccn', 'assets/applicatio
 
 /** The registered games, by package and by the short name the catalog title gives (FNaF 2 -> fnaf2). */
 export const TRUTH_GAMES = Object.freeze(GAME_PACKAGES.map(pkg => Object.freeze({
-  package: pkg, alias: CONTROL_CATALOGS[pkg].title.toLowerCase().replace(/\s+/g, ''), title: CONTROL_CATALOGS[pkg].title })));
-const gameOf = name => TRUTH_GAMES.find(game => game.package === name || game.alias === name) ?? null;
+  package: pkg, alias: controlCatalogFor(pkg).title.toLowerCase().replace(/\s+/g, ''), title: controlCatalogFor(pkg).title })));
+type TruthGame = (typeof TRUTH_GAMES)[number];
+const gameOf = (name: unknown) => TRUTH_GAMES.find(game => game.package === name || game.alias === name) ?? null;
 
-const shellQuote = text => `'${String(text).replaceAll("'", "'\\''")}'`;
-const sha256 = data => createHash('sha256').update(data).digest('hex');
-const expand = path => (typeof path === 'string' && path ? (path.startsWith('~/') ? join(homedir(), path.slice(2)) : path) : null);
-const isInt = (value, min, max) => Number.isInteger(value) && value >= min && value <= max;
-const tally = (items, key) => items.reduce((counts, item) => { for (const value of key(item)) counts[value] = (counts[value] ?? 0) + 1; return counts; },
-  ({} as Record<string, number>));
+/** A parsed dump, keyed by its file's path, size, mtime and pinned K. */
+interface Loaded {
+  readonly key: string;
+  readonly dump: Dump;
+  readonly k: number;
+  readonly handleScramble: { readonly pinned: number | null } & ReturnType<typeof estimateHandleScramble>;
+  readonly source: ReturnType<typeof dumpShape> & { readonly sha256: string };
+}
+
+/** What an events query may name; events refuses each field outside its type before any is used. */
+interface EventsQuery {
+  object?: string, handle?: number, value?: number, flag?: number, global?: number, frame?: number, group?: number,
+  access?: string, limit?: number,
+}
+
+const shellQuote = (text: unknown) => `'${String(text).replaceAll("'", "'\\''")}'`;
+const sha256 = (data: string | Buffer) => createHash('sha256').update(data).digest('hex');
+const home = (path: string) => (path.startsWith('~/') ? join(homedir(), path.slice(2)) : path);
+const expand = (path: unknown) => (typeof path === 'string' && path ? home(path) : null);
+const isInt = (value: unknown, min: number, max: number): value is number =>
+  typeof value === 'number' && Number.isInteger(value) && value >= min && value <= max;
+const tally = <T>(items: readonly T[], key: (item: T) => Iterable<string>) => items.reduce((counts, item) => {
+  for (const value of key(item)) counts[value] = (counts[value] ?? 0) + 1;
+  return counts;
+}, ({} as Record<string, number>));
+/**
+ * A field of something the local vault holds. readVault checks only that the file is an object,
+ * so a field may be absent or of any type; reading one off a non-object is undefined, as `?.` was.
+ */
+const field = (value: unknown, key: string) => (isRecord(value) ? value[key] : undefined);
 
 /** Is `path` the directory `root` or inside it, after resolving links? */
-function inside(root, path) {
-  const real = p => { try { return realpathSync(p); } catch { return resolve(p); } };
+function inside(root: string, path: string) {
+  const real = (p: string) => { try { return realpathSync(p); } catch { return resolve(p); } };
   let probe = resolve(path);
   while (!existsSync(probe) && dirname(probe) !== probe) probe = dirname(probe);
   const rel = relative(real(root), join(real(probe), relative(probe, resolve(path))));
@@ -66,7 +92,7 @@ function inside(root, path) {
 }
 
 /** The file's sha256, read in chunks so a 100 MB CCN is never held whole. */
-function fileSha256(path) {
+function fileSha256(path: string) {
   const hash = createHash('sha256');
   const fd = openSync(path, 'r');
   try {
@@ -77,7 +103,7 @@ function fileSha256(path) {
   return hash.digest('hex');
 }
 
-function readAt(fd, position, length) {
+function readAt(fd: number, position: number, length: number) {
   const buffer = Buffer.alloc(length);
   let offset = 0;
   while (offset < length) {
@@ -105,7 +131,7 @@ export function extractCcn(apk: string, out: string) {
     const directoryOffset = tail.readUInt32LE(end + 16);
     if (directoryOffset === 0xffffffff || count === 0xffff) throw new Error('a ZIP64 archive; extract the CCN yourself and pass it');
     const directory = readAt(fd, directoryOffset, directorySize);
-    const entries = [];
+    const entries: { method: number, compressed: number, size: number, local: number, name: string }[] = [];
     for (let at = 0, index = 0; index < count && at + 46 <= directory.length; index += 1) {
       if (directory.readUInt32LE(at) !== 0x02014b50) throw new Error('a malformed zip central directory');
       const nameLength = directory.readUInt16LE(at + 28);
@@ -136,7 +162,7 @@ export function extractCcn(apk: string, out: string) {
 }
 
 /** What the first bytes say a file is. */
-function fileKind(path) {
+function fileKind(path: string) {
   const fd = openSync(path, 'r');
   try {
     const head = readAt(fd, 0, 4);
@@ -150,32 +176,34 @@ function fileKind(path) {
  * The truth surface over the caller's own local dumps.
  */
 export function createTruth({ root, env = process.env }: {root: string, env?: Record<string, string | undefined>}) {
-  const vaultPath = env[VAULT_ENV] ? resolve(expand(env[VAULT_ENV])) : join(root, VAULT_FILE);
-  const loaded = new Map();
+  const vaultFile = env[VAULT_ENV];
+  const vaultPath = vaultFile ? resolve(home(vaultFile)) : join(root, VAULT_FILE);
+  const loaded = new Map<string, Loaded>();
 
-  const refusal = (rule, because, remedy, cite = [PLAN28, README]) => refusalEnvelope({ rule, because, cite, remedy });
-  const badArgument = (because, remedy) => refusal('invalid-argument', because, remedy);
-  const gameRefusal = game => badArgument(`${JSON.stringify(game ?? null)} is not a registered game`,
+  const refusal = (rule: string, because: string, remedy: string, cite = [PLAN28, README]) => refusalEnvelope({ rule, because, cite, remedy });
+  const badArgument = (because: string, remedy: string) => refusal('invalid-argument', because, remedy);
+  const gameRefusal = (game: unknown) => badArgument(`${JSON.stringify(game ?? null)} is not a registered game`,
     `name one of ${TRUTH_GAMES.map(item => `${item.alias} (${item.package})`).join(', ')}`);
-  const decodeRemedy = game => `decode your own copy: npm run review -- truth decode /path/to/base.apk --game ${game?.alias ?? '<game>'} ` +
+  const decodeRemedy = (game: TruthGame | null) => `decode your own copy: npm run review -- truth decode /path/to/base.apk --game ${game?.alias ?? '<game>'} ` +
     `(or packages/source/decompile/regen-dump.sh APPLICATION.CCN, then name its dump under games in ${VAULT_FILE} or the file $${VAULT_ENV} names)`;
 
   /** The local vault: {games: {<package or alias>: {dump, k?}}, cache?, decoder?}, or null when there is none. */
-  function readVault() {
+  function readVault(): { config: Record<string, unknown> | null, error?: undefined } | { config?: undefined, error: ReturnType<typeof refusal> } {
     if (!existsSync(vaultPath)) return { config: null };
     try {
-      const config = JSON.parse(readFileSync(vaultPath, 'utf8'));
-      if (config === null || typeof config !== 'object' || Array.isArray(config)) throw new Error('not a JSON object');
+      const config: unknown = JSON.parse(readFileSync(vaultPath, 'utf8'));
+      if (!isRecord(config)) throw new Error('not a JSON object');
       return { config };
     } catch (error) {
-      return { error: refusal('truth-vault', `the local vault ${vaultPath} does not read: ${error.message}`,
+      return { error: refusal('truth-vault', `the local vault ${vaultPath} does not read: ${(error as Error).message}`,
         `fix it or remove it; its shape is {"schema": "${VAULT_SCHEMA}", "games": {"<game>": {"dump": "/abs/events.txt"}}}`) };
     }
   }
 
-  const entryFor = (config, game) => config?.games?.[game.package] ?? config?.games?.[game.alias] ?? null;
-  const dumpPath = entry => {
-    const path = expand(entry?.dump);
+  const entryFor = (config: unknown, game: TruthGame) =>
+    field(field(config, 'games'), game.package) ?? field(field(config, 'games'), game.alias) ?? null;
+  const dumpPath = (entry: unknown) => {
+    const path = expand(field(entry, 'dump'));
     return path ? resolve(dirname(vaultPath), path) : null;
   };
 
@@ -192,7 +220,7 @@ export function createTruth({ root, env = process.env }: {root: string, env?: Re
   }
 
   /** The caller's dump for a game, parsed, with its K; or a refusal. */
-  function load(game) {
+  function load(game: TruthGame): { refusal: ReturnType<typeof refusal> } | Loaded {
     const { config, error } = readVault();
     if (error) return { refusal: error };
     const entry = entryFor(config, game);
@@ -201,14 +229,16 @@ export function createTruth({ root, env = process.env }: {root: string, env?: Re
       'not the decoded data (Plan 28), so truth reads only a dump you made from your own copy of the game', decodeRemedy(game)) };
     if (!existsSync(path)) return { refusal: refusal('no-local-dump', `the dump the local vault names for ${game.alias} is not on this host`, decodeRemedy(game)) };
     const stat = statSync(path);
-    const key = `${path}:${stat.size}:${stat.mtimeMs}:${entry.k ?? ''}`;
-    if (loaded.get(game.package)?.key === key) return loaded.get(game.package);
+    const vaultK = field(entry, 'k');
+    const key = `${path}:${stat.size}:${stat.mtimeMs}:${vaultK ?? ''}`;
+    const hit = loaded.get(game.package);
+    if (hit?.key === key) return hit;
     const text = readFileSync(path, 'utf8');
     if (!isTabularDump(text)) return { refusal: refusal('not-a-tabular-dump', `the file the local vault names for ${game.alias} is not the tabular ` +
       `event-text dump ${DUMPER} writes (a GAME header, then OBJECT, FRAME, GROUP and condition/action records)`, decodeRemedy(game), [DUMPER, README]) };
     const dump = parseDump(text);
     const estimate = estimateHandleScramble(dump);
-    const pinned = Number.isInteger(entry.k) ? entry.k : null;
+    const pinned = typeof vaultK === 'number' && Number.isInteger(vaultK) ? vaultK : null;
     if (pinned !== null && !estimate.ambiguous && estimate.k !== pinned)
       return { refusal: refusal('handle-scramble', `the local vault pins K=${pinned} for ${game.alias}, but object-type agreement picks ` +
         `K=${estimate.k} (${estimate.agreement} of ${estimate.rows} rows; K=${pinned} is not the best): a wrong K names every object after an unrelated one`,
@@ -217,14 +247,17 @@ export function createTruth({ root, env = process.env }: {root: string, env?: Re
       return { refusal: refusal('handle-scramble', `object-type agreement does not single out one K for ${game.alias} ` +
         `(${estimate.rows} rows; best K=${estimate.k} at ${estimate.agreement}, runner-up ${JSON.stringify(estimate.runnerUp)})`,
       `pin k for ${game.alias} in the local vault after reading COI.loadHeader`, [PLAN28, 'packages/source/src/truth/handles.ts']) };
-    const result = { key, dump, k: pinned ?? estimate.k, handleScramble: { k: pinned ?? estimate.k, pinned, ...estimate },
+    // Past both refusals K is pinned, or an unambiguous estimate (which always has a K).
+    const k = (pinned ?? estimate.k) as number;
+    // The estimate's own k replaces the one written first, as the spread this was did; `pinned` names the pin.
+    const result = { key, dump, k, handleScramble: Object.assign({ k, pinned }, estimate),
       source: { ...dumpShape(dump), sha256: sha256(text) } };
     loaded.set(game.package, result);
     return result;
   }
 
   /** What every answer over a dump leaves unmeasured. */
-  const baseNotes = (dump, handleScramble) => [
+  const baseNotes = (dump: Dump, handleScramble: { readonly k: number | null }) => [
     `the handle scramble K=${handleScramble.k}: ${HANDLE_SCRAMBLE_LIMIT}`,
     ...(dump.audit.unclassified.length ? [`${dump.audit.unclassified.length} dump lines no record shape matched (line numbers in the local audit)`] : []),
     ...(dump.audit.countMismatches.length ? [`${dump.audit.countMismatches.length} groups whose rows differ from the counts their GROUP record declares`] : []),
@@ -234,14 +267,14 @@ export function createTruth({ root, env = process.env }: {root: string, env?: Re
 
   // --- events ------------------------------------------------------------------------------------
 
-  function events({ game: name, query }: {game?: string, query?: Record<string, any>} = {}) {
+  function events({ game: name, query }: {game?: unknown, query?: unknown} = {}) {
     const game = gameOf(name);
     if (!game) return gameRefusal(name);
     if (query === null || typeof query !== 'object' || Array.isArray(query))
       return badArgument('events takes a query object', `name fields among ${QUERY_FIELDS.join(', ')}, e.g. {"object": "<name>", "value": 2, "access": "write"}`);
     const extra = Object.keys(query).filter(key => !QUERY_FIELDS.includes(key));
     if (extra.length) return badArgument(`an events query takes no ${extra.join(', ')}`, `name fields among ${QUERY_FIELDS.join(', ')}`);
-    const { object, handle, value, flag, global, frame, group, access = 'any', limit = DEFAULT_LIMIT } = query;
+    const { object, handle, value, flag, global, frame, group, access = 'any', limit = DEFAULT_LIMIT } = query as EventsQuery;
     const checks = [
       [object !== undefined && !(typeof object === 'string' && object.length >= 1 && object.length <= 200), 'object is a name of 1 to 200 characters'],
       [handle !== undefined && !isInt(handle, 0, 0xffff), 'handle is an event-space object handle, 0 to 65535'],
@@ -264,9 +297,9 @@ export function createTruth({ root, env = process.env }: {root: string, env?: Re
     if (group !== undefined && frame === undefined) return badArgument('a group id is per frame', 'name the frame beside the group');
 
     const read = load(game);
-    if (read.refusal) return read.refusal;
+    if ('refusal' in read) return read.refusal;
     const { dump, k, handleScramble, source } = read;
-    let handles = null;
+    let handles: number[] | null = null;
     if (object !== undefined) {
       handles = handlesNamed(dump, k, object);
       if (!handles.length) {
@@ -315,7 +348,7 @@ export function createTruth({ root, env = process.env }: {root: string, env?: Re
 
   // --- object ------------------------------------------------------------------------------------
 
-  function object({ game: name, name: objectName, handle }: {game?: string, name?: string, handle?: number} = {}) {
+  function object({ game: name, name: objectName, handle }: {game?: unknown, name?: unknown, handle?: unknown} = {}) {
     const game = gameOf(name);
     if (!game) return gameRefusal(name);
     if ((objectName === undefined) === (handle === undefined))
@@ -323,20 +356,24 @@ export function createTruth({ root, env = process.env }: {root: string, env?: Re
     if (objectName !== undefined && !(typeof objectName === 'string' && objectName.length >= 1 && objectName.length <= 200))
       return badArgument('name is 1 to 200 characters', 'pass the object\'s name');
     if (handle !== undefined && !isInt(handle, 0, 0x7fff)) return badArgument('handle is an event-space object handle, 0 to 32767', 'pass the handle an event row uses');
+    // What the checks above let through: a valid name or handle, or undefined.
+    const named = typeof objectName === 'string' ? objectName : undefined;
+    const numbered = isInt(handle, 0, 0x7fff) ? handle : undefined;
     const read = load(game);
-    if (read.refusal) return read.refusal;
+    if ('refusal' in read) return read.refusal;
     const { dump, k, handleScramble, source } = read;
-    const handles = objectName !== undefined ? handlesNamed(dump, k, objectName) : [handle];
-    if (objectName !== undefined && !handles.length) {
-      const near = namesContaining(dump, objectName);
-      return badArgument(`no object in the ${game.alias} dump is named ${JSON.stringify(objectName)} (exact, case-insensitive)` +
+    // Exactly one of name and handle was given.
+    const handles = named !== undefined ? handlesNamed(dump, k, named) : [numbered as number];
+    if (named !== undefined && !handles.length) {
+      const near = namesContaining(dump, named);
+      return badArgument(`no object in the ${game.alias} dump is named ${JSON.stringify(named)} (exact, case-insensitive)` +
         (near.length ? `; names containing it: ${near.join(', ')}` : ''), 'use the exact name');
     }
-    if (handle !== undefined && dump.objects.get(handle ^ k) === undefined)
-      return badArgument(`no item-table row answers event handle ${handle} under K=${k}`, 'check the handle');
+    if (numbered !== undefined && dump.objects.get(numbered ^ k) === undefined)
+      return badArgument(`no item-table row answers event handle ${numbered} under K=${k}`, 'check the handle');
     const objects = handles.map(item => describeObject(dump, k, item, game.alias));
     const byName = objects.reduce((sum, item) => sum + item.createdByNameRows, 0);
-    const query = objectName !== undefined ? { name: objectName } : { handle };
+    const query = named !== undefined ? { name: named } : { handle: numbered };
     return claimEnvelope({
       claim: { game: game.package, alias: game.alias, op: 'object', query, matched: objects.length, objects, dump: source, handleScramble },
       label: 'SOURCED', target: game.package,
@@ -349,28 +386,29 @@ export function createTruth({ root, env = process.env }: {root: string, env?: Re
         ...(byName ? [`${byName} create-by-name actions in the dump name their object by text; they are not matched to an object`] : []),
         'created-by and destroyed-by count create and destroy actions naming the object itself; one addressed through a qualifier is not expanded',
       ],
-      reproducer: `npm run review -- truth object ${game.alias} ${objectName !== undefined ? shellQuote(objectName) : `--handle ${handle}`}`,
+      reproducer: `npm run review -- truth object ${game.alias} ${named !== undefined ? shellQuote(named) : `--handle ${numbered}`}`,
     });
   }
 
   // --- decode ------------------------------------------------------------------------------------
 
   /** The local decoder: dotnet and the CTFAK CLI, from the vault's decoder field or $CTFAK_SRC and $DOTNET_ROOT. */
-  function decoder(config) {
-    const named = config?.decoder ?? {};
-    const ctfakSrc = expand(named.ctfakSrc ?? env.CTFAK_SRC ?? null);
-    const cli = expand(named.ctfakCli ?? null) ?? (ctfakSrc ? join(ctfakSrc, CLI_IN_CHECKOUT) : null);
-    const onPath = (env.PATH ?? '').split(delimiter).filter(Boolean).map(dir => join(dir, 'dotnet')).find(existsSync) ?? null;
-    const dotnet = expand(named.dotnet ?? env.DOTNET ?? null) ?? (env.DOTNET_ROOT ? join(expand(env.DOTNET_ROOT), 'dotnet') : onPath);
+  function decoder(config: unknown) {
+    const named = field(config, 'decoder');
+    const ctfakSrc = expand(field(named, 'ctfakSrc') ?? env.CTFAK_SRC ?? null);
+    const cli = expand(field(named, 'ctfakCli') ?? null) ?? (ctfakSrc ? join(ctfakSrc, CLI_IN_CHECKOUT) : null);
+    const onPath = (env.PATH ?? '').split(delimiter).filter(Boolean).map(dir => join(dir, 'dotnet')).find(path => existsSync(path)) ?? null;
+    const dotnetRoot = env.DOTNET_ROOT;
+    const dotnet = expand(field(named, 'dotnet') ?? env.DOTNET ?? null) ?? (dotnetRoot ? join(home(dotnetRoot), 'dotnet') : onPath);
     const missing = [...(!cli || !existsSync(cli) ? [`the CTFAK CLI${cli ? ` (${cli})` : ''}`] : []),
       ...(!dotnet || !existsSync(dotnet) ? [`dotnet${dotnet ? ` (${dotnet})` : ''}`] : [])];
-    let dumperMatches = null;
+    let dumperMatches: boolean | null = null;
     if (ctfakSrc && existsSync(join(ctfakSrc, DUMPER_IN_CHECKOUT)) && existsSync(join(root, DUMPER)))
       dumperMatches = sha256(readFileSync(join(ctfakSrc, DUMPER_IN_CHECKOUT))) === sha256(readFileSync(join(root, DUMPER)));
     return { cli, dotnet, missing, dumperMatches };
   }
 
-  function decode({ path, game: name }: {path?: string, game?: string} = {}) {
+  function decode({ path, game: name }: {path?: unknown, game?: unknown} = {}) {
     const game = gameOf(name);
     if (!game) return badArgument(`decode binds the dump to the game you name, and ${JSON.stringify(name ?? null)} is not one: it never infers the game from the file`,
       `name one of ${TRUTH_GAMES.map(item => item.alias).join(', ')}`);
@@ -391,19 +429,22 @@ export function createTruth({ root, env = process.env }: {root: string, env?: Re
         `install the .NET 6 SDK and build a CTFAK checkout with ${DUMPER} (${GUIDE}), then set CTFAK_SRC and DOTNET_ROOT, ` +
         `or name decoder.ctfakCli and decoder.dotnet in ${VAULT_FILE}; or run packages/source/decompile/regen-dump.sh yourself and name its dump there`,
         [GUIDE, 'packages/source/decompile/regen-dump.sh', DUMPER]);
-    const cache = resolve(expand(config?.cache ?? env[CACHE_ENV] ?? join(homedir(), '.cache', 'sixam-truth')));
+    // An empty missing list means both were found.
+    const cli = tool.cli as string, dotnet = tool.dotnet as string;
+    // A cache field that names no path makes resolve throw, as it always has.
+    const cache = resolve(expand(field(config, 'cache') ?? env[CACHE_ENV] ?? join(homedir(), '.cache', 'sixam-truth')) as string);
     if (inside(root, cache))
       return refusal('game-content-in-repository', `the decode cache ${cache} is inside the repository`, `point cache in ${VAULT_FILE} or $${CACHE_ENV} outside it`,
         [PLAN28, 'docs/decisions/0002-kernel-contexts-vocabulary.md']);
 
     let ccn = path;
-    let extracted = null;
+    let extracted: ReturnType<typeof extractCcn> = null;
     mkdirSync(cache, { recursive: true });
     if (kind === 'apk') {
       const incoming = join(cache, `.incoming-${process.pid}.ccn`);
       try { extracted = extractCcn(path, incoming); } catch (cause) {
         rmSync(incoming, { force: true });
-        return badArgument(`${path} does not read as an APK: ${cause.message}`, 'pass the game\'s base.apk, or its CCN');
+        return badArgument(`${path} does not read as an APK: ${(cause as Error).message}`, 'pass the game\'s base.apk, or its CCN');
       }
       if (!extracted) return badArgument(`${path} holds no ${CCN_ENTRIES.join(' or ')}`, 'pass the APK of a Clickteam game, or its CCN');
       if (fileKind(incoming) !== 'ccn') { rmSync(incoming, { force: true }); return badArgument(`the CCN inside ${path} has no PAME/PAMU header`, 'pass the game\'s own APK'); }
@@ -418,13 +459,13 @@ export function createTruth({ root, env = process.env }: {root: string, env?: Re
     const cached = existsSync(out) && existsSync(recordFile);
     if (!cached) {
       try {
-        execFileSync(tool.dotnet, [tool.cli, '-path', ccn, '-parameters', '', '-forcetype', 'ccn', '-tool', 'Event Text Dumper', '-closeonfinish'], {
+        execFileSync(dotnet, [cli, '-path', ccn, '-parameters', '', '-forcetype', 'ccn', '-tool', 'Event Text Dumper', '-closeonfinish'], {
           cwd: dir, timeout: DECODE_TIMEOUT_MS, maxBuffer: 64 << 20, stdio: ['ignore', 'pipe', 'pipe'],
-          env: { ...env, CTFAK_EVENT_DUMP: out, DOTNET_ROOT: dirname(tool.dotnet), DOTNET_CLI_TELEMETRY_OPTOUT: '1' },
+          env: { ...env, CTFAK_EVENT_DUMP: out, DOTNET_ROOT: dirname(dotnet), DOTNET_CLI_TELEMETRY_OPTOUT: '1' },
         });
       } catch (cause) {
-        return refusal('decode-failed', `the local decoder did not finish: ${String(cause.message).split('\n')[0].slice(0, 200)}`,
-          `run it by hand to see why: ${tool.dotnet} ${tool.cli} -path ${ccn} -tool 'Event Text Dumper' (with CTFAK_EVENT_DUMP=${out})`, [GUIDE, DUMPER]);
+        return refusal('decode-failed', `the local decoder did not finish: ${String((cause as Error).message).split('\n')[0].slice(0, 200)}`,
+          `run it by hand to see why: ${dotnet} ${cli} -path ${ccn} -tool 'Event Text Dumper' (with CTFAK_EVENT_DUMP=${out})`, [GUIDE, DUMPER]);
       }
       if (!existsSync(out)) return refusal('decode-failed', 'the local decoder exited without writing the event-text dump',
         `check that the CTFAK build includes ${DUMPER} (${GUIDE})`, [GUIDE, DUMPER]);
@@ -440,11 +481,13 @@ export function createTruth({ root, env = process.env }: {root: string, env?: Re
       decodedAt: cached ? JSON.parse(readFileSync(recordFile, 'utf8')).decodedAt : new Date().toISOString(),
     };
     writeFileSync(recordFile, `${JSON.stringify(record, null, 2)}\n`);
-    const vault = config ?? { schema: VAULT_SCHEMA, games: {} };
+    const vault: Record<string, unknown> = config ?? { schema: VAULT_SCHEMA, games: {} };
     vault.schema ??= VAULT_SCHEMA;
-    vault.games = { ...(vault.games ?? {}) };
-    delete vault.games[game.alias];
-    vault.games[game.package] = { dump: out, ccnSha256, estimatedK: handleScramble.k, decodedAt: record.decodedAt };
+    // Whatever the file held under games, copied as a spread copies it.
+    const games: Record<string, unknown> = { ...((vault.games ?? {}) as object) };
+    delete games[game.alias];
+    games[game.package] = { dump: out, ccnSha256, estimatedK: handleScramble.k, decodedAt: record.decodedAt };
+    vault.games = games;
     mkdirSync(dirname(vaultPath), { recursive: true });
     writeFileSync(vaultPath, `${JSON.stringify(vault, null, 2)}\n`);
     loaded.delete(game.package);
@@ -469,7 +512,7 @@ export function createTruth({ root, env = process.env }: {root: string, env?: Re
     return events({ game: match[1], query: { frame: Number(match[2]), group: Number(match[3]) } });
   }
 
-  function call({ op, ...args }: {op?: string, [key: string]: any} = {}) {
+  function call({ op, ...args }: {op?: unknown, [key: string]: unknown} = {}) {
     if (op === 'events') return events(args);
     if (op === 'object') return object(args);
     if (op === 'decode') return decode(args);

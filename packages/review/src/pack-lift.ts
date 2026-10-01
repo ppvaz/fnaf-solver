@@ -13,16 +13,24 @@
 // list; a custody the kernel has no class for (`incomplete-campaign`) is UNKNOWN with its reason.
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { aborted, death, invalid, sixAm, timeout, unknown, validateGameRun } from '@sixam/kernel';
+import { aborted, death, invalid, isRecord, sixAm, timeout, unknown, validateGameRun } from '@sixam/kernel';
+import type { CampaignResult, Unknown } from '@sixam/kernel';
 import { PACKS_DIR, readPack } from './evidence-pack.ts';
+import type { RunPack } from './evidence-pack.ts';
+
+/** One row of a pack's events.jsonl. */
+type EventRow = Readonly<Record<string, unknown>>;
+/** The venue's own reads of where a night starts and ends. */
+type NightCut = { isStart: (row: EventRow) => boolean, isEnd: (row: EventRow) => boolean, startName: string, endName: string };
+type Loaded = ReturnType<typeof readPack>;
 
 export const LIFT_SOURCE = 'run-pack-v1';
 
 /** @param text a .jsonl file */
-const rows = (text: string) => text.split('\n').filter(line => line.trim()).map(line => JSON.parse(line));
+const rows = (text: string): EventRow[] => text.split('\n').filter(line => line.trim()).map(line => JSON.parse(line));
 
 /** The events a phase of the run holds, cut at the venue's own reads of the night's start and end. */
-function phases(events, { isStart, isEnd, startName, endName }) {
+function phases(events: readonly EventRow[], { isStart, isEnd, startName, endName }: NightCut) {
   const start = events.findIndex(isStart);
   if (start < 0) return null;
   const end = events.findIndex((row, index) => index >= start && isEnd(row));
@@ -34,21 +42,22 @@ function phases(events, { isStart, isEnd, startName, endName }) {
   };
 }
 
-const allUnknown = reason => ({ before: unknown(reason), night: unknown(reason), after: unknown(reason) });
+const allUnknown = (reason: string) => ({ before: unknown(reason), night: unknown(reason), after: unknown(reason) });
 
 /** What the pack names by hash: every packed text file and every withheld recording or frame. */
-const witnessesOf = pack => [
+const witnessesOf = (pack: RunPack) => [
   ...pack.files.map(file => ({ name: file.name, sha256: file.sha256, kind: 'text' })),
   ...(pack.withheld ?? []).filter(item => /^[0-9a-f]{64}$/.test(item.sha256 ?? ''))
     .map(item => ({ name: item.name, sha256: item.sha256, kind: item.kind ?? 'other' })),
 ];
 
-function custodyOf(pack) {
-  const kind = pack.custody?.kind;
-  if (!kind) return { class: 'complete', lost: [] };
-  if (kind === 'recovered-from-run-log') return { class: 'recovered', lost: [...pack.custody.lost] };
-  return { class: unknown(`run-pack-v1 custody ${kind}${pack.custody.reason ? `: ${pack.custody.reason}` : ''}; ` +
-    'the kernel classes are complete and recovered'), lost: [...(pack.custody.lost ?? [])] };
+function custodyOf(pack: RunPack): { class: string | Unknown, lost: string[] } {
+  const custody = pack.custody;
+  if (!custody?.kind) return { class: 'complete', lost: [] };
+  const kind = custody.kind;
+  if (kind === 'recovered-from-run-log') return { class: 'recovered', lost: [...custody.lost] };
+  return { class: unknown(`run-pack-v1 custody ${kind}${custody.reason ? `: ${custody.reason}` : ''}; ` +
+    'the kernel classes are complete and recovered'), lost: [...(custody.lost ?? [])] };
 }
 
 const CLOCKS = unknown('run-pack-v1 retains no clock trace: its event rows carry host wall-clock stamps and ' +
@@ -58,7 +67,8 @@ const CLOCKS = unknown('run-pack-v1 retains no clock trace: its event rows carry
  * The executor's terminal for one attempt, as the kernel's reported outcome. An `invalid`
  * terminal (ADR 0002, decision 3: it spent no campaign attempt) is Invalid with its own why.
  */
-export function reportedFromTerminal(terminal: any) {
+export function reportedFromTerminal(input: unknown) {
+  const terminal = isRecord(input) ? input : undefined;
   if (terminal?.outcome === 'sixam') return sixAm();
   if (terminal?.outcome === 'invalid') return typeof terminal.why === 'string' && terminal.why
     ? invalid(terminal.why) : unknown('the executor terminal reads invalid and names no reason');
@@ -71,18 +81,21 @@ export function reportedFromTerminal(terminal: any) {
   return unknown(`the executor terminal reads ${JSON.stringify(terminal?.outcome ?? null)}, which the kernel does not name`);
 }
 
-const RUN_MODE = { live: 'live', 'dry-run': 'dry' };
+const RUN_MODE = { live: 'live', 'dry-run': 'dry' } as const;
+const runModeOf = (mode: unknown) =>
+  typeof mode === 'string' && Object.hasOwn(RUN_MODE, mode) ? RUN_MODE[mode as keyof typeof RUN_MODE] : undefined;
 
 /** One campaign pack: one GameRun per attempt, or one for a campaign that never reported one. */
-function liftCampaign(dir, loaded) {
+function liftCampaign(dir: string, loaded: Loaded) {
   const { pack, wrapper } = loaded;
-  const packed = name => pack.files.some(file => file.name === name);
+  const packed = (name: string) => pack.files.some(file => file.name === name);
   const events = packed('events.jsonl') ? rows(readFileSync(join(dir, 'events.jsonl'), 'utf8')) : null;
-  const request = packed('request.json') ? JSON.parse(readFileSync(join(dir, 'request.json'), 'utf8')) : null;
+  const request: { spec?: unknown } | null = packed('request.json') ? JSON.parse(readFileSync(join(dir, 'request.json'), 'utf8')) : null;
   const custody = custodyOf(pack);
-  const lostWhy = name => `${name} is not in the pack (custody ${pack.custody?.kind ?? 'original'}` +
+  const lostWhy = (name: string) => `${name} is not in the pack (custody ${pack.custody?.kind ?? 'original'}` +
     `${pack.custody?.lost?.includes(name) ? `, which lists it as lost` : ''})`;
-  const result = wrapper?.result ?? null;
+  // readPack accepted the wrapper as a device campaign: a result is its retained campaign-result-v1, or absent.
+  const result = (wrapper?.result ?? null) as CampaignResult | null;
   const preflight = result?.events?.find(item => item?.type === 'campaign.state' && item.data?.previous === 'PREFLIGHT');
   const base = {
     spec: {
@@ -93,13 +106,13 @@ function liftCampaign(dir, loaded) {
     },
     venue: preflight?.data?.venue ?? unknown(!wrapper ? lostWhy('result.json')
       : 'the campaign preflight recorded no venue: venue identity (venue-check-v1) begins on 2026-09-29, after this run'),
-    runMode: RUN_MODE[wrapper?.mode] ?? unknown(wrapper ? `the campaign mode ${JSON.stringify(wrapper.mode)} is not a kernel runMode`
+    runMode: runModeOf(wrapper?.mode) ?? unknown(wrapper ? `the campaign mode ${JSON.stringify(wrapper.mode)} is not a kernel runMode`
       : lostWhy('result.json')),
     clocks: CLOCKS,
     witnesses: witnessesOf(pack),
     custody,
   };
-  const night = { isStart: row => row.type === 'observation' && row.label === 'state=night',
+  const night: NightCut = { isStart: row => row.type === 'observation' && row.label === 'state=night',
     isEnd: row => row.type === 'campaign.terminal.from-executor' || row.type === 'campaign.terminal.actuator-stopped',
     startName: 'state=night', endName: 'campaign.terminal' };
   const cut = () => (events ? phases(events, night) : null)
@@ -133,18 +146,21 @@ function liftCampaign(dir, loaded) {
 }
 
 /** A FNaF 1 runner's pack: its probe.json or run.json record and its own events. */
-function liftFnaf1(dir, loaded) {
+function liftFnaf1(dir: string, loaded: Loaded) {
   const { pack } = loaded;
-  const packed = name => pack.files.some(file => file.name === name);
+  const packed = (name: string) => pack.files.some(file => file.name === name);
   const recordName = ['probe.json', 'run.json'].find(packed);
-  const record = recordName ? JSON.parse(readFileSync(join(dir, recordName), 'utf8')) : null;
+  const record: { schema?: unknown, target?: unknown, options?: Readonly<Record<string, unknown>> } | null =
+    recordName ? JSON.parse(readFileSync(join(dir, recordName), 'utf8')) : null;
   const events = packed('events.jsonl') ? rows(readFileSync(join(dir, 'events.jsonl'), 'utf8')) : null;
   const options = record?.options;
-  const ended = pack.outcome?.ended;
+  const ended = isRecord(pack.outcome) ? pack.outcome.ended : undefined;
   // The save's own mark, read off the run's title frames (fnaf1-title-stars.py): a star earned across the night is
   // the game recording a completed night, whatever bound stopped the route (fnaf1-promotion.ts reads the same file).
-  const stars = packed('title-stars.json') ? JSON.parse(readFileSync(join(dir, 'title-stars.json'), 'utf8')) : null;
-  const earned = Number.isInteger(stars?.before) && Number.isInteger(stars?.after) && stars.after > stars.before;
+  const stars: { before?: unknown, after?: unknown } | null =
+    packed('title-stars.json') ? JSON.parse(readFileSync(join(dir, 'title-stars.json'), 'utf8')) : null;
+  const integer = (value: unknown): value is number => Number.isInteger(value);
+  const earned = Boolean(stars && integer(stars.before) && integer(stars.after) && stars.after > stars.before);
   const reportedOutcome = earned ? sixAm() : ended === 'STOP_AFTER' ? timeout()
     : ended === 'LEFT_OFFICE' ? unknown('the runner saw the office leave the screen (a jumpscare, a blackout or 6 AM) and does not say which')
       : ended ? unknown(`the runner ended the night as ${ended}, which the kernel does not name`)
@@ -174,11 +190,12 @@ function liftFnaf1(dir, loaded) {
  * @returns runs are kernel GameRuns
  *   (packages/kernel/src/types.ts), each checked by validateGameRun
  */
-export function liftPack(root: string, id: string): { id: string; loaded: { pack: any; digest: string; wrapper: any; files: any; attestation: any; }; runs: any[]; } {
+export function liftPack(root: string, id: string) {
   const dir = join(root, PACKS_DIR, id);
   const loaded = readPack(dir);
-  const runs = loaded.pack.kind === 'fnaf1-run' ? liftFnaf1(dir, loaded) : liftCampaign(dir, loaded);
-  runs.forEach(validateGameRun);
+  const built: readonly unknown[] = loaded.pack.kind === 'fnaf1-run' ? liftFnaf1(dir, loaded) : liftCampaign(dir, loaded);
+  // validateGameRun returns the run it checked, so these are the same objects, now typed.
+  const runs = built.map(run => validateGameRun(run));
   return { id, loaded, runs };
 }
 

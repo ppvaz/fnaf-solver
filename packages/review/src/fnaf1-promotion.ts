@@ -18,12 +18,30 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { custodyWinnerFiles, packCustody } from './evidence-pack.ts';
+import type { readPack } from './evidence-pack.ts';
+
+type Dials = Readonly<Record<string, number>>;
+/** One row of a FNaF 1 runner's events.jsonl, by the fields these checks read. */
+type RunnerEvent = { readonly type?: string, readonly atWallMs: number, readonly atMonotonicMs: number,
+  readonly dials?: Dials, readonly status?: unknown, readonly ended?: unknown, readonly [field: string]: unknown };
+/** The runner's probe.json or run.json record. */
+type RunnerRecord = { readonly options?: Readonly<Record<string, unknown>>, readonly claimLevel?: unknown, readonly status?: unknown,
+  readonly capture?: { readonly frames?: readonly { readonly name: string, readonly sha256?: string, readonly atWallMs: number }[] },
+  readonly dialsSet?: Dials, readonly bindings?: Readonly<Record<string, { readonly sha256?: string }>> };
+/** fnaf1-title-stars-v1: the stars a title frame shows, before and after the night. */
+type TitleStars = { readonly schema?: unknown, readonly run?: unknown, readonly before: number, readonly after: number,
+  readonly earned?: unknown, readonly reader?: unknown, readonly model?: unknown,
+  readonly frames: readonly { readonly name: string, readonly sha256?: string, readonly phase: string, readonly confident?: boolean, readonly stars?: unknown }[],
+  readonly [phase: string]: unknown };
+/** fnaf1-route-winner-v1, by the fields that bind it to a run. */
+type RouteWinner = { readonly won?: { readonly run?: unknown }, readonly resolvedOptions?: Readonly<Record<string, unknown>>,
+  readonly night?: { readonly dials?: Dials }, readonly sources?: Readonly<Record<string, unknown>> };
 
 const FNAF1_STARS_FILE = 'title-stars.json';
 const FNAF1_STARS_SCHEMA = 'fnaf1-title-stars-v1';
 const FNAF1_WINNER_SCHEMA = 'fnaf1-route-winner-v1';
 const DIALS = ['freddy', 'bonnie', 'chica', 'foxy'];
-const sha256 = (data) => createHash('sha256').update(data).digest('hex');
+const sha256 = (data: string | Buffer) => createHash('sha256').update(data).digest('hex');
 
 /** Committed FNaF 1 route winners (active and retired), repository-relative. */
 function fnaf1WinnerFiles(root: string): string[] {
@@ -32,10 +50,10 @@ function fnaf1WinnerFiles(root: string): string[] {
   });
 }
 
-const sameDials = (a, b) => Boolean(a && b) && DIALS.every((dial) => a[dial] === b[dial]);
+const sameDials = (a: Dials | null | undefined, b: Dials | null | undefined) => Boolean(a && b && DIALS.every((dial) => a[dial] === b[dial]));
 
 /** The claim a FNaF 1 Custom Night supports: named by the dial vector its readback observed. */
-function fnaf1Claim(dials) {
+function fnaf1Claim(dials: Dials) {
   const vector = DIALS.map((dial) => dials[dial]).join('-');
   const four20 = DIALS.every((dial) => dials[dial] === 20);
   return { id: `claim.fnaf1.custom-night.${vector}.device-6am`, night: 7, mode: 'custom', dials,
@@ -47,16 +65,19 @@ function fnaf1Claim(dials) {
  * Every check but the attestation, from a FNaF 1 pack alone (and the committed winners). Same shape as
  * derivePromotion's FNaF 2 result. Nothing is written.
  */
-export function deriveFnaf1Promotion(root: string, id: string, dir: string, loaded: any) {
+export function deriveFnaf1Promotion(root: string, id: string, dir: string, loaded: ReturnType<typeof readPack>) {
   const { pack, digest } = loaded;
-  const packed = (name) => pack.files.find((file) => file.name === name);
-  const inputs = (...names) => names.map(packed).filter(Boolean).map((file) => ({ name: file.name, sha256: file.sha256 }));
-  const json = (name) => (packed(name) ? JSON.parse(readFileSync(join(dir, name), 'utf8')) : null);
-  const probe = json('probe.json');
-  const events = packed('events.jsonl') ? readFileSync(join(dir, 'events.jsonl'), 'utf8').split('\n').filter((l) => l.trim()).map((l) => JSON.parse(l)) : [];
-  const stars = json(FNAF1_STARS_FILE);
-  const verified = [];
-  const add = (check, failed, detail, from) => verified.push({ check, pass: failed.length === 0, inputs: from, detail: failed.length ? { ...detail, failed } : detail });
+  const packed = (name: string) => pack.files.find((file) => file.name === name);
+  const inputs = (...names: string[]) => names.map(packed)
+    .filter((file): file is NonNullable<ReturnType<typeof packed>> => Boolean(file))
+    .map((file) => ({ name: file.name, sha256: file.sha256 }));
+  const json = (name: string) => (packed(name) ? JSON.parse(readFileSync(join(dir, name), 'utf8')) : null);
+  const probe: RunnerRecord | null = json('probe.json');
+  const events: RunnerEvent[] = packed('events.jsonl')
+    ? readFileSync(join(dir, 'events.jsonl'), 'utf8').split('\n').filter((l) => l.trim()).map((l) => JSON.parse(l)) : [];
+  const stars: TitleStars | null = json(FNAF1_STARS_FILE);
+  const verified: { check: string, pass: boolean, inputs: readonly { name: string, sha256: string }[], detail: Readonly<Record<string, unknown>> }[] = [];
+  const add = (check: string, failed: readonly string[], detail: Readonly<Record<string, unknown>>, from: readonly { name: string, sha256: string }[]) => verified.push({ check, pass: failed.length === 0, inputs: from, detail: failed.length ? { ...detail, failed } : detail });
 
   add('offlineEvidence', [
     ...(probe?.options?.live === true && probe?.options?.dryRun === false ? [] : ['the runner record is not a live night']),
@@ -66,8 +87,8 @@ export function deriveFnaf1Promotion(root: string, id: string, dir: string, load
 
   const origin = events.find((e) => e.type === 'night-origin');
   const ended = events.find((e) => e.type === 'night-ended');
-  const captured = new Map<string, any>((probe?.capture?.frames ?? []).map((f) => [f.name, f]));
-  const terminalFailed = [];
+  const captured = new Map((probe?.capture?.frames ?? []).map((f) => [f.name, f] as const));
+  const terminalFailed: string[] = [];
   if (!stars) terminalFailed.push(`${FNAF1_STARS_FILE} is not packed`);
   else {
     if (stars.schema !== FNAF1_STARS_SCHEMA) terminalFailed.push(`${FNAF1_STARS_FILE} is not ${FNAF1_STARS_SCHEMA}`);
@@ -97,18 +118,18 @@ export function deriveFnaf1Promotion(root: string, id: string, dir: string, load
     ...(custody.lost.length ? [`custody lost ${custody.lost.join(', ')}`] : [])], { custody: custody.kind, lost: custody.lost }, inputs('probe.json', 'events.jsonl', FNAF1_STARS_FILE));
 
   const candidates = fnaf1WinnerFiles(root).map((file) => ({ file, bytes: readFileSync(join(root, file)) }))
-    .map((item) => ({ ...item, winner: JSON.parse(item.bytes.toString('utf8')) })).filter((item) => item.winner.won?.run === pack.run);
-  const winnerFailed = [];
+    .map((item) => ({ ...item, winner: JSON.parse(item.bytes.toString('utf8')) as RouteWinner })).filter((item) => item.winner.won?.run === pack.run);
+  const winnerFailed: string[] = [];
   const winner = candidates[0] ?? null;
   if (!winner) winnerFailed.push(`no committed ${FNAF1_WINNER_SCHEMA} names run ${pack.run}`);
   else {
-    const w = winner.winner; const o = probe?.options ?? {};
+    const w = winner.winner; const o: Readonly<Record<string, unknown>> = probe?.options ?? {};
     if (w.resolvedOptions?.policy !== o.mode) winnerFailed.push(`the winner's policy ${w.resolvedOptions?.policy} is not the run's mode ${o.mode}`);
     for (const key of ['chicaByCamera', 'originOffsetMs', 'stopAfterMs'])
       if (w.resolvedOptions?.[key] !== o[key]) winnerFailed.push(`the winner's ${key} ${w.resolvedOptions?.[key]} is not the run's ${o[key]}`);
     if (!sameDials(w.night?.dials, probe?.dialsSet)) winnerFailed.push('the winner\'s dials are not the dials the run set');
     const pinned = new Set(Object.values(w.sources ?? {}));
-    for (const [name, binding] of Object.entries(probe?.bindings ?? {}) as [string, any][])
+    for (const [name, binding] of Object.entries(probe?.bindings ?? {}))
       if (name !== 'title' && !pinned.has(binding.sha256)) winnerFailed.push(`the run's ${name} model ${binding.sha256} is not among the winner's pinned sources`);
   }
   add('winnerCommitted', winnerFailed, { winner: winner?.file ?? null, run: pack.run },
@@ -116,13 +137,14 @@ export function deriveFnaf1Promotion(root: string, id: string, dir: string, load
 
   const set = events.find((e) => e.type === 'dials-set');
   const readback = set ? events.filter((e) => e.type === 'dial-read' && e.status === 'PASS' && e.atMonotonicMs <= set.atMonotonicMs).at(-1) : null;
-  const claimFailed = [];
+  const claimFailed: string[] = [];
   if (!set) claimFailed.push('no dials-set event');
   if (!readback) claimFailed.push('no PASS Custom Night readback before the night began');
   else if (!sameDials(readback.dials, set?.dials)) claimFailed.push('the last readback differs from the dials set');
   if (set && !sameDials(set.dials, probe?.dialsSet)) claimFailed.push('the events and the record disagree on the dials set');
   if (origin && set && !(set.atMonotonicMs < origin.atMonotonicMs)) claimFailed.push('the dials were set after the night began');
-  const claim = claimFailed.length ? null : fnaf1Claim(readback.dials);
+  // A missing readback is already a failure; the second test only says so to the checker.
+  const claim = claimFailed.length || !readback?.dials ? null : fnaf1Claim(readback.dials);
   add('claimIdentity', claimFailed, { observedDials: readback?.dials ?? null, setDials: set?.dials ?? null }, inputs('events.jsonl', 'probe.json'));
 
   return { id, dir, loaded, digest, custody, claim, verified, pass: verified.every((item) => item.pass) };
