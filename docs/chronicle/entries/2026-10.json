@@ -6,9 +6,10 @@
   "next": [
    {
     "title": "S2: Balloon Boy's first roll and Withered Freddy's two windows on full-06",
-    "body": "As of s2-stream-census-45ad1201c90a4531, no office start state reproduces full-06: the strong fits all miss the two windows the phone reads as Withered Freddy (22 and 26) and a B/C slip at 31-32; and as of s2-audio-realignment-f61f47d56098beb2 the phone's Balloon Boy passes his first, 5 s roll where the host programs' does not. The records leave S2 open.",
+    "body": "As of s2-stream-census-45ad1201c90a4531 and s2-early-perturbation-1c931f96a31dcb24, neither another office start state nor one change before Balloon Boy's first roll at the measured seed reproduces full-06; the strong fits all miss the two windows the phone reads as Withered Freddy (22 and 26), and as of s2-audio-realignment-f61f47d56098beb2 the phone's draw stream parts from the host's by 15 s. The records leave S2 open; the separator is a phone night that watches Balloon Boy's camera through the first rolls.",
     "sources": [
      "docs/evidence/full06-stream-census-20261001.json",
+     "docs/evidence/full06-early-perturbation-20261001.json",
      "docs/evidence/full06-audio-realignment-20261001.json",
      "plans/ROADMAP.md"
     ]
@@ -68,8 +69,8 @@
    "date": "2026-10-01",
    "game": "fnaf2",
    "kind": "retraction",
-   "title": "full-06's phone audio was read 30 s late: Balloon Boy parts from the host at the first roll, not at 40 s",
-   "body": "The audio reader paired each mask-sound onset with the nearest rebuild play within 1 s, which assumes the capture starts at game 0; it starts before the night, and the mask sound repeats every 10 s window, so the 2026-09-28 read fit three windows late. Solved over the rebuild's monitor and mask plays, the opening's five sounds (2.53 to 5.43 s) land within 0.04 s of their plays, and the capture's own start and stop stamps admit only that offset. On the corrected clock the phone's Balloon Boy hop vocals are at 10.04, 15.08 and 20.04 s, every one just after a 5 s roll; the rebuild agrees at 20 s but moves him from CAM 10 silently at 10.0 s, so on the phone his first roll, at 5 s, already succeeded. The frame-trace input registration of the corrected entry stands: the phone's hall flash ends 3 to 5 updates before the replayed hall release, monitor raises land within -2..+1 updates and mask presses within 0..-1. The reader now refuses an offset that another offset fits nearly as well.",
+   "title": "full-06's phone audio was read 30 s late: Balloon Boy parts from the host by 15 s, not at 40 s",
+   "body": "The audio reader paired each mask-sound onset with the nearest rebuild play within 1 s, which assumes the capture starts at game 0; it starts before the night, and the mask sound repeats every 10 s window, so the 2026-09-28 read fit three windows late. Solved over the rebuild's monitor and mask plays, the opening's five sounds (2.53 to 5.43 s) land within 0.04 s of their plays, and the capture's own start and stop stamps admit only that offset. On the corrected clock the phone's Balloon Boy hop vocals are at 10.04, 15.08 and 20.04 s, every one just after a 5 s roll; at 15.03 s the rebuild plays echo1 where the phone plays echo3b, so the two draw streams differ at or before 15 s, and the weaker 10.04 s read, where the rebuild moves him from CAM 10 silently, puts the difference at his first roll, at 5 s. The frame-trace input registration of the corrected entry stands: the phone's hall flash ends 3 to 5 updates before the replayed hall release, monitor raises land within -2..+1 updates and mask presses within 0..-1. The reader now refuses an offset that another offset fits nearly as well.",
    "measured": "29.754 s (18 anchor onsets; runner-up 12)",
    "label": "DEVICE_MEASURED",
    "rung": null,
@@ -116,6 +117,34 @@
    "sources": [
     "docs/evidence/full06-stream-census-20261001.json",
     "docs/evidence/full06-stream-census-predeclaration-20261001.json"
+   ],
+   "status": "standing",
+   "supersededBy": null,
+   "supersedes": null
+  },
+  {
+   "id": "full06-no-early-change-explains-the-opening",
+   "date": "2026-10-01",
+   "game": "fnaf2",
+   "kind": "negative",
+   "title": "At its measured seed, no single change before Balloon Boy's first roll reproduces full-06's opening",
+   "body": "Pre-registered: each of the nine contacts before the first mask press shifted -3..+3 updates or removed, and one or two draws added or removed after any of the first 301 updates, 1,267 members that play 16 distinct nights. None hops Balloon Boy at 5 s with the phone's vocals at 10, 15 and 20 s, and none agrees on 30 mask windows; the closest, one draw fewer at the start, agrees on 29 of 41 and plays echo1 at 15 s where the phone plays echo3b. None of the 14 seeds of the logcat bracket matches the opening audio either.",
+   "measured": "0 of 1,267 members fit; best 29/41 windows",
+   "label": "MODEL_ONLY",
+   "rung": null,
+   "plan": 25,
+   "night": 7,
+   "route": "Minus Toys",
+   "tags": [
+    "model",
+    "encounter",
+    "fidelity",
+    "seed",
+    "s2"
+   ],
+   "sources": [
+    "docs/evidence/full06-early-perturbation-20261001.json",
+    "docs/evidence/full06-early-perturbation-predeclaration-20261001.json"
    ],
    "status": "standing",
    "supersededBy": null,

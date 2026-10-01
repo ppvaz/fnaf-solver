@@ -71,7 +71,7 @@ export function playState(inp, state, windows = null) {
 function pool(nightName, states, windows, workers) {
   const chunks = Array.from({ length: workers }, (_, w) => states.filter((_, k) => k % workers === w));
   return Promise.all(chunks.filter((c) => c.length).map((chunk) => new Promise((done, fail) => {
-    const worker = new Worker(fileURLToPath(import.meta.url), { workerData: { nightName, states: chunk, windows } });
+    const worker = new Worker(fileURLToPath(import.meta.url), { workerData: { tool: SCHEMA, nightName, states: chunk, windows } });
     worker.on('message', done); worker.on('error', fail);
     worker.on('exit', (code) => { if (code) fail(new Error(`census worker exited ${code}`)); });
   }))).then((parts) => parts.flat().sort((a, b) => a.state - b.state));
@@ -137,7 +137,8 @@ async function main(argv) {
   console.log(`  ${decision.verdict}: ${decision.reason}`);
 }
 
-if (!isMainThread) {
+// Only this tool's own workers replay states here; another tool's worker may import this module for inputs().
+if (!isMainThread && workerData?.tool === SCHEMA) {
   const { nightName, states, windows } = workerData;
   const inp = inputs(nightName);
   parentPort.postMessage(states.map((s) => playState(inp, s, windows)));

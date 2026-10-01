@@ -204,9 +204,10 @@ Details:
     onset with the nearest play within 1 s, and the mask sound repeats every
     window. Solved over the rebuild's monitor and mask plays, and bounded by
     the capture's own stamps, the phone's Balloon Boy hop vocals are at
-    10.04, 15.08 and 20.04 s; the rebuild and the model move him silently out
-    of CAM 10 at 10.0 s, so on the phone his first roll, at 5 s, already
-    succeeded. The first state difference is at or before that roll
+    10.04, 15.08 and 20.04 s. At 15.03 s the rebuild plays echo1 where the
+    phone plays echo3b, so the two draw streams differ at or before 15 s;
+    the weaker 10.04 s read (the rebuild moves him silently out of CAM 10
+    there) puts the difference at his first roll, at 5 s
     ([realignment](../docs/evidence/full06-audio-realignment-20261001.json),
     `s2-audio-realignment-f61f47d56098beb2`). DEVICE_MEASURED audio against
     MODEL_ONLY replays.
@@ -216,8 +217,16 @@ Details:
     window 6, no better than 26,557 others; no state agrees past window 23 of
     42, and start states up to 12 draws from the seed never reach window 10.
     The strong states share their misses: Withered Freddy's two windows (22
-    and 26) and a one-window slip of the B/C rhythm at 31-32. Those, and
-    what passes Balloon Boy's first roll on the phone, are S2's next targets
+    and 26) and a one-window slip of the B/C rhythm at 31-32. Keeping the
+    measured seed, no single change before the first roll (an early contact
+    shifted -3..+3 updates or removed, one or two draws more or fewer) fits
+    both the audio and the windows, and none of the 14 seeds of the logcat
+    bracket fits the audio
+    ([sweep](../docs/evidence/full06-early-perturbation-20261001.json),
+    `s2-early-perturbation-1c931f96a31dcb24`, pre-registered,
+    NOT_SUPPORTED). The physical separator is a phone night that watches
+    Balloon Boy's camera through the first rolls, so his early moves are
+    read directly; Withered Freddy's two windows are the other target
     ([census](../docs/evidence/full06-stream-census-20261001.json),
     `s2-stream-census-45ad1201c90a4531`;
     [pre-registration](../docs/evidence/full06-stream-census-predeclaration-20261001.json)).

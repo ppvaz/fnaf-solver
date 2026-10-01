@@ -2307,6 +2307,21 @@
       ]
     },
     {
+      "file": "packages/propose/bin/recompile/phone-early-perturbation.mjs",
+      "imports": [
+        "../../../source/recompile/model-draw-trace.mjs",
+        "../../../source/src/games/fnaf2/rng.ts",
+        "./compare-schedule-replay.mjs",
+        "./phone-encounter-replay.mjs",
+        "./phone-stream-census.mjs",
+        "node:crypto",
+        "node:fs",
+        "node:os",
+        "node:url",
+        "node:worker_threads"
+      ]
+    },
+    {
       "file": "packages/propose/bin/recompile/phone-encounter-replay.mjs",
       "imports": [
         "../../../play/src/sensors/fnaf2/button-strokes.ts",
@@ -2490,6 +2505,17 @@
         "node:assert/strict",
         "node:crypto",
         "node:fs"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/recompile/test-phone-early-perturbation.mjs",
+      "imports": [
+        "./phone-early-perturbation.mjs",
+        "node:assert/strict",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
       ]
     },
     {

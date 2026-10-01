@@ -1,0 +1,380 @@
+{
+ "schema": "evidence-record-v1",
+ "date": "2026-10-01",
+ "step": "ROADMAP S2",
+ "claimLevel": "MODEL_ONLY",
+ "question": "Keeping the measured seed, does one change before Balloon Boy's first roll (5 s) -- one early contact landing on another update or not at all, or one or two random draws more or fewer at one update -- reproduce both the phone's Balloon Boy audio and its mask windows?",
+ "predeclaration": {
+  "path": "docs/evidence/full06-early-perturbation-predeclaration-20261001.json",
+  "sha256": "b8c75d3a823f70be73c8ee9add9773277551d2827081c86ef6b4ef21f74c0766",
+  "id": "full06-early-perturbation"
+ },
+ "tool": {
+  "path": "packages/propose/bin/recompile/phone-early-perturbation.mjs",
+  "sha256": "f285a98bf60e4766ee69228aefc4d0fba6d4eea2e37cb01203b37fa2b39d81a1"
+ },
+ "inputs": {
+  "config": "26b89b453e2b483610c118c264d1eb0dbb5d06758ab53db283807ffc25d666d0",
+  "modelOptions": "d1ba74693da29dac953058c1ea5d41b553ac6d7494ce911f6e8c742ef487db4a",
+  "contacts": "c4ca5d3320b8a65c3522d3a3a072a79c7a10251447f5112a61a903d45da6c67f",
+  "frameTimes": "383d25c80bb3648e9199589ebce7b6782a510eacee4409df3c90e940869541cf"
+ },
+ "night": "full-06",
+ "seed": 47593,
+ "phoneWindows": "...BC..BC.BC.BC..BC.BCF.BCFBC.B.CBC.BC.CBC",
+ "members": 1267,
+ "elapsedMs": 31115,
+ "control": {
+  "codes": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.B????",
+  "agree": 14,
+  "compared": 38,
+  "prefix": 6,
+  "firstHopUpdate": 601,
+  "audio": [
+   {
+    "sec": 10,
+    "phone": 24,
+    "model": null
+   },
+   {
+    "sec": 15,
+    "phone": 23,
+    "model": "redraw"
+   },
+   {
+    "sec": 20,
+    "phone": 23,
+    "model": 23
+   }
+  ],
+  "audioFits": false,
+  "outcome": "death:inside-office@378.3"
+ },
+ "counts": {
+  "audioFits": 0,
+  "agreeAtLeastMin": 0,
+  "hopsAtFirstRoll": 913,
+  "maxAgree": 29
+ },
+ "distinctOutcomes": [
+  {
+   "codes": "...CB..BC.BC.BC.BCF.B.C.BC.BC.B.CFCBC..CB?",
+   "firstHopUpdate": 301,
+   "vocals": [
+    null,
+    21,
+    23
+   ],
+   "outcome": "death:foxy@420.5833333333333",
+   "members": 301,
+   "agree": 29,
+   "compared": 41,
+   "example": {
+    "kind": "draws",
+    "update": 0,
+    "k": -1
+   }
+  },
+  {
+   "codes": "...BC.C.BC.BC.BC.BC.BCFBC.B.C.BC.BC.BC????",
+   "firstHopUpdate": 601,
+   "vocals": [
+    null,
+    "redraw",
+    23
+   ],
+   "outcome": "death:inside-office@380.7",
+   "members": 1,
+   "agree": 21,
+   "compared": 38,
+   "example": {
+    "kind": "shift",
+    "index": 8,
+    "control": "monitor",
+    "d": -2
+   }
+  },
+  {
+   "codes": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.B????",
+   "firstHopUpdate": 601,
+   "vocals": [
+    null,
+    "redraw",
+    23
+   ],
+   "outcome": "death:inside-office@378.3",
+   "members": 42,
+   "agree": 14,
+   "compared": 38,
+   "example": {
+    "kind": "shift",
+    "index": 0,
+    "control": "monitor",
+    "d": -3
+   }
+  },
+  {
+   "codes": "...BC.BC.BC.BC.C..BC.BC.BC.BC..BCFBC.B????",
+   "firstHopUpdate": 601,
+   "vocals": [
+    null,
+    "redraw",
+    23
+   ],
+   "outcome": "death:inside-office@377.3",
+   "members": 1,
+   "agree": 14,
+   "compared": 38,
+   "example": {
+    "kind": "shift",
+    "index": 8,
+    "control": "monitor",
+    "d": -1
+   }
+  },
+  {
+   "codes": "...BC.B.CB.CB.CBC.B.CB.C.BC.CBC.BCFBC.????",
+   "firstHopUpdate": 301,
+   "vocals": [
+    null,
+    24,
+    23
+   ],
+   "outcome": "death:foxy@380.48333333333335",
+   "members": 301,
+   "agree": 12,
+   "compared": 38,
+   "example": {
+    "kind": "draws",
+    "update": 0,
+    "k": -2
+   }
+  },
+  {
+   "codes": "...C.BC.C.BCFBC.B.CBC.BC.BC.BC.BC.BC.B????",
+   "firstHopUpdate": 301,
+   "vocals": [
+    "redraw",
+    23,
+    21
+   ],
+   "outcome": "death:inside-office@379.31666666666666",
+   "members": 301,
+   "agree": 12,
+   "compared": 38,
+   "example": {
+    "kind": "draws",
+    "update": 0,
+    "k": 2
+   }
+  },
+  {
+   "codes": "...CBC.CB.CB.CBC..BC.BC.BC..BC.BC.BC..CB.C",
+   "firstHopUpdate": 905,
+   "vocals": [
+    null,
+    null,
+    23
+   ],
+   "outcome": "death:inside-office@417.6",
+   "members": 1,
+   "agree": 12,
+   "compared": 42,
+   "example": {
+    "kind": "drop",
+    "index": 7,
+    "control": "light"
+   }
+  },
+  {
+   "codes": "...BC.C.BC.BC.BC.B.CBC.BC.BC.BC.BC.B.C????",
+   "firstHopUpdate": 601,
+   "vocals": [
+    null,
+    "redraw",
+    23
+   ],
+   "outcome": "death:inside-office@378.43333333333334",
+   "members": 1,
+   "agree": 12,
+   "compared": 38,
+   "example": {
+    "kind": "shift",
+    "index": 8,
+    "control": "monitor",
+    "d": -3
+   }
+  },
+  {
+   "codes": "...BC.BC.BC.BC..BC.BCFBCF.BC.BC.CB.C.B????",
+   "firstHopUpdate": 905,
+   "vocals": [
+    null,
+    null,
+    23
+   ],
+   "outcome": "death:inside-office@377.3",
+   "members": 302,
+   "agree": 10,
+   "compared": 38,
+   "example": {
+    "kind": "shift",
+    "index": 1,
+    "control": "cam:11",
+    "d": -3
+   }
+  },
+  {
+   "codes": "...BC.BC.BC.BF.BC..BC.BC.B.CBC.BCFBC...BC?",
+   "firstHopUpdate": 601,
+   "vocals": [
+    null,
+    "redraw",
+    23
+   ],
+   "outcome": "6am",
+   "members": 3,
+   "agree": 8,
+   "compared": 41,
+   "example": {
+    "kind": "shift",
+    "index": 8,
+    "control": "monitor",
+    "d": 1
+   }
+  },
+  {
+   "codes": "..fCB..???????????????????????????????????",
+   "firstHopUpdate": 301,
+   "vocals": [
+    24,
+    null,
+    21
+   ],
+   "outcome": "death:foxy@70.11666666666666",
+   "members": 5,
+   "agree": 4,
+   "compared": 7,
+   "example": {
+    "kind": "shift",
+    "index": 2,
+    "control": "cam:9",
+    "d": 2
+   }
+  },
+  {
+   "codes": "...B??????????????????????????????????????",
+   "firstHopUpdate": 301,
+   "vocals": [
+    null,
+    24,
+    null
+   ],
+   "outcome": "death:puppet@39.56666666666667",
+   "members": 1,
+   "agree": 4,
+   "compared": 4,
+   "example": {
+    "kind": "drop",
+    "index": 1,
+    "control": "cam:11"
+   }
+  },
+  {
+   "codes": "..fB??????????????????????????????????????",
+   "firstHopUpdate": 601,
+   "vocals": [
+    null,
+    21,
+    "redraw"
+   ],
+   "outcome": "death:puppet@52.666666666666664",
+   "members": 3,
+   "agree": 3,
+   "compared": 4,
+   "example": {
+    "kind": "shift",
+    "index": 0,
+    "control": "monitor",
+    "d": 2
+   }
+  },
+  {
+   "codes": "??.???????????????????????????????????????",
+   "firstHopUpdate": 301,
+   "vocals": [
+    null,
+    "redraw",
+    23
+   ],
+   "outcome": "death:puppet@27.633333333333333",
+   "members": 2,
+   "agree": 1,
+   "compared": 1,
+   "example": {
+    "kind": "drop",
+    "index": 3,
+    "control": "monitor"
+   }
+  },
+  {
+   "codes": "??b???????????????????????????????????????",
+   "firstHopUpdate": 301,
+   "vocals": [
+    null,
+    21,
+    24
+   ],
+   "outcome": "death:puppet@35.56666666666667",
+   "members": 1,
+   "agree": 0,
+   "compared": 1,
+   "example": {
+    "kind": "drop",
+    "index": 0,
+    "control": "monitor"
+   }
+  },
+  {
+   "codes": "??????????????????????????????????????????",
+   "firstHopUpdate": 301,
+   "vocals": [
+    23,
+    null,
+    null
+   ],
+   "outcome": "death:foxy@10.016666666666667",
+   "members": 1,
+   "agree": 0,
+   "compared": 0,
+   "example": {
+    "kind": "drop",
+    "index": 8,
+    "control": "monitor"
+   }
+  }
+ ],
+ "decision": {
+  "verdict": "NOT_SUPPORTED",
+  "fits": []
+ },
+ "verdict": "NOT_SUPPORTED",
+ "reading": {
+  "explanations": "E-early predicted SUPPORTED and is not supported; NOT_SUPPORTED is what E-not-early predicts.",
+  "effectiveSize": "The 1267 members play 16 distinct nights: a draw added or removed anywhere among the first updates leaves the same stream, so the predeclared chance figure, which counted members as independent, overstates the family's reach.",
+  "closest": "One draw fewer before any of the first updates passes Balloon Boy's 5 s roll and agrees on 29 of 41 windows, but makes no vocal at 10 s and echo1 at 15 s where the phone has echo4b and echo3b.",
+  "bracket": "Exploratory, outside the rule: none of the 14 seeds of the logcat bracket (47592-47605) meets the audio fingerprint either.",
+  "audioWeight": "Of the phone's opening vocals, 15.08 s (echo3b, NCC 0.408) is the firm one: the rebuild plays echo1 at that hop, and echo1's cleanest cross-match on the echo3b template is 0.22, so the phone's draw stream differs from the host's at or before 15.03 s. The 10.04 s read (echo4b, NCC 0.332) is the weakest, and it alone places the difference at the 5 s roll."
+ },
+ "open": [
+  "A same-phase phone night that watches Balloon Boy's camera through the first rolls, so his early moves are read directly and the seed bracket can be checked move by move.",
+  "Withered Freddy at windows 22 and 26 (docs/evidence/full06-stream-census-20261001.json)."
+ ],
+ "reproducer": {
+  "sweep": "node packages/propose/bin/recompile/phone-early-perturbation.mjs --predeclaration docs/evidence/full06-early-perturbation-predeclaration-20261001.json --workers 6 --out <result>",
+  "record": "python3 artifacts/s2-bb-audio-20261001/perturb-record.py",
+  "bracket": "node artifacts/s2-bb-audio-20261001/bracket-candidates.mjs (diagnostic)",
+  "gate": "node packages/propose/bin/recompile/test-phone-early-perturbation.mjs"
+ },
+ "id": "s2-early-perturbation-1c931f96a31dcb24"
+}

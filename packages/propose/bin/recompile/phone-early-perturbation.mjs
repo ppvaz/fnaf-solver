@@ -90,7 +90,7 @@ export function playMember(inp, member) {
 function pool(night, members, workers) {
   const chunks = Array.from({ length: workers }, (_, w) => members.map((m, i) => [i, m]).filter(([i]) => i % workers === w));
   return Promise.all(chunks.filter((c) => c.length).map((chunk) => new Promise((done, fail) => {
-    const worker = new Worker(fileURLToPath(import.meta.url), { workerData: { night, chunk } });
+    const worker = new Worker(fileURLToPath(import.meta.url), { workerData: { tool: SCHEMA, night, chunk } });
     worker.on('message', done); worker.on('error', fail);
     worker.on('exit', (code) => { if (code) fail(new Error(`worker exited ${code}`)); });
   }))).then((parts) => parts.flat().sort((a, b) => a.i - b.i).map(({ row }) => row));
@@ -130,7 +130,7 @@ async function main(argv) {
   console.log(`  ${decision.verdict}${decision.fits.length ? `: ${JSON.stringify(decision.fits)}` : ''}`);
 }
 
-if (!isMainThread) {
+if (!isMainThread && workerData?.tool === SCHEMA) {
   const inp = inputs(workerData.night);
   parentPort.postMessage(workerData.chunk.map(([i, member]) => ({ i, row: playMember(inp, member) })));
 } else if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
