@@ -62,6 +62,21 @@ assert.throws(() => new Sim({ night: 7, frameMs: () => 17 }), /requires sourcedS
   assert.equal(frame, C.NIGHT_FRAMES);
 }
 
+// full-06 update 2030 starts an encounter on value 5 = 4, followed by 0.06.
+// g514 counts the entry loop. Replacing both deltas with the later one loses 3.94 clock units.
+{
+  const s = new Sim({ ...QUIET, ...SOURCED, frameValue5: f => f === 10 ? 4 : f === 11 ? 0.06 : f === 12 ? 0.5 : 0.75 });
+  s.frame = 10;
+  s.startBlackout('entry-clock');
+  assert.equal(s.blackoutClock, 4, 'entry loop already contributes its own delta');
+  s.blackoutFlicker(10);
+  assert.equal(s.blackoutClock, 4, 'a same-loop flicker pass cannot count it twice');
+  s.blackoutFlicker(11);
+  assert.equal(s.blackoutClock, 4.06, 'next loop contributes only its own delta');
+  s.blackoutFlicker(13);
+  assert.equal(s.blackoutClock, 5.31, 'each skipped loop contributes its own delta');
+}
+
 // 20 ms loops (60 units): a second is 50 frames, an hour 3500, the night 21000.
 {
   const s = new Sim({ ...QUIET, ...SOURCED, frameMs: () => 20 });

@@ -12,7 +12,7 @@ import {
 } from './phone-encounter-replay.mjs';
 import { drawTrace, MODEL_SOURCES } from '../../../source/recompile/model-draw-trace.mjs';
 import { LEDGERS } from './compare-schedule-replay.mjs';
-import { controlPoints, formatRows, harnessRows } from './schedule-to-input.mjs';
+import { controlPoints, formatRows, harnessRows, modelContacts } from './schedule-to-input.mjs';
 import { currentPath } from '@sixam/review/renamed-path';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..');
@@ -143,7 +143,7 @@ function simulateFamily() {
     };
     const mapped = mapSchedule(schedule, tickOf);
     const model = drawTrace({ night: night.night, seed: night.seed, frames: 40000, modelOptions, customNight,
-      rows: mapped.queue, observe, frameTimes: deltas });
+      contacts: modelContacts(mapped.contacts), observe, frameTimes: deltas });
     const analysis = modelWindowRows(mapped.queue, model, deltas);
     const windows = analysis.rows.map((row) => row.code).join('');
     const targetWindow = analysis.rows.find((row) => row.index === config.responseExperiment.window);
@@ -260,12 +260,15 @@ export function committedVersion(path, expected) {
   return null;
 }
 
-/** True when a record's model-source paths name the same model files, in order, as the current sources
- *  do: by file name without its extension, because a record keeps the paths it was computed at, a move
- *  changes the directory, and the move to runtime TypeScript (2026-09-30) changed .js to .ts. */
-export function sameModelFiles(recordedPaths, sourcePaths) {
+/** True when a record's model-source paths name, in order, the model files the current sources begin
+ *  with: by file name without its extension, because a record keeps the paths it was computed at, a move
+ *  changes the directory, and the move to runtime TypeScript (2026-09-30) changed .js to .ts. The list
+ *  begins with plant-model, config and rng and then grows by every module plant-model reaches (the splits
+ *  of 2026-09-30), and the tool writes the whole list at run time, so an older record names a prefix. */
+export function recordedModelFiles(recordedPaths, sourcePaths) {
   const stem = (path) => basename(path).replace(/\.(?:js|ts)$/, '');
-  return JSON.stringify(recordedPaths.map(stem)) === JSON.stringify(sourcePaths.map(stem));
+  const recorded = recordedPaths.map(stem), current = sourcePaths.map(stem);
+  return recorded.length > 0 && recorded.length <= current.length && recorded.every((name, i) => name === current[i]);
 }
 
 export function check(result) {
@@ -337,7 +340,7 @@ export function check(result) {
   if (JSON.stringify(dimensions) !== JSON.stringify(expectedDimensions)) throw new Error('ambiguous response brackets were omitted or changed');
   // The model's files by name, at the record's own paths; each path's bytes were checked above to be a
   // committed version of that path.
-  if (!sameModelFiles(Object.keys(result.source.modelSources), MODEL_SOURCES) || result.source.winner.path !== night.winner)
+  if (!recordedModelFiles(Object.keys(result.source.modelSources), MODEL_SOURCES) || result.source.winner.path !== night.winner)
     throw new Error('model or winner provenance differs');
   let combinations = 1;
   for (const dimension of dimensions) combinations *= dimension.possibleTicks.length;

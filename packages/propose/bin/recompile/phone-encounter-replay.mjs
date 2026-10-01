@@ -52,7 +52,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { compareTrace } from '../../../review/bin/recompile/compare-draw-trace.mjs';
 import { MODEL_SOURCES } from '../../../source/recompile/model-draw-trace.mjs';
 import { LEDGERS, compareLedger, counterSeries, mismatchRuns, outcomes, watchSeries } from './compare-schedule-replay.mjs';
-import { controlPoints, expandRows, frameOf, formatRows, harnessRows } from './schedule-to-input.mjs';
+import { controlPoints, expandRows, frameOf, formatRows, harnessRows, modelContacts } from './schedule-to-input.mjs';
 import { STRATEGY_REGISTRY, validateWinner } from '../plans/bundle.mjs';
 import { KNOBS0, build } from '../plans/minus-toys-plan.mjs';
 import { windowCode } from '../../../review/venue-grid/encounter-replay.mjs';
@@ -527,7 +527,7 @@ export function prepare(cfg, nightCfg, variant, inputsRoot) {
     mapped = mapResponses(sched, tickOf, rows, clock, shift, { early: spec.early === true });
     responses = { rule: RESPONSE_RULE, ruleSourceSha256: sha256(readFileSync(resolve(ROOT, RESPONSE_RULE.source))),
       coverage: responseCoverage(rows), rows,
-      interpretation: 'Visible response proxies, not dispatch or measured release acceptance; UNKNOWN contacts retain the nightly median. The model tap queue still omits tap releases.' };
+      interpretation: 'Visible response proxies, not dispatch or measured release acceptance; UNKNOWN contacts retain the nightly median. Both host programs receive each mapped contact duration.' };
   }
   const profile = JSON.parse(readFileSync(resolve(ROOT, current(cfg.profile)), 'utf8'));
   const office = harnessRows(mapped.contacts, controlPoints(profile), { frame: OFFICE_FRAME });
@@ -569,7 +569,7 @@ export function compareOne(cfg, nightCfg, variant, runDir, inputsRoot, modelOpti
   const customNight = nightCfg.customNight ? JSON.parse(readFileSync(resolve(ROOT, current(nightCfg.customNight)), 'utf8')) : null;
   const observe = (sim) => ({ mask: LEDGERS.mask.model(sim), unit: sim.blackout.active ? sim.blackout.unitId : null });
   const result = compareTrace(text, { night: nightCfg.night, seed: nightCfg.seed, frame: OFFICE_FRAME, frames: 40000, modelOptions,
-    customNight, schedule: p.mapped.queue, observe, ...(p.clock ? { frameTimes: p.deltas } : {}) });
+    customNight, schedule: p.mapped.queue, contacts: modelContacts(p.mapped.contacts), observe, ...(p.clock ? { frameTimes: p.deltas } : {}) });
   const counters = counterSeries(text, OFFICE_FRAME);
   const overlaps = overlapSeries(text, OFFICE_FRAME);
   const maskWatch = watchSeries(text, OFFICE_FRAME);
@@ -611,8 +611,7 @@ export function compareOne(cfg, nightCfg, variant, runDir, inputsRoot, modelOpti
   const at = (tick) => (tick === null || tick === undefined ? null : Number(cum[tick].toFixed(1)));
   // A monitor contact sent from the office view whose finger is still down when the cameras come up, and the
   // cameras go down again before its release: g618 reads the held touch over the drop button once the flip is
-  // fully up (v0 == 2), so a hold one update longer than the raise drops the monitor it raised. The model's
-  // queue has no release for a tap and cannot show it.
+  // fully up (v0 == 2), so a hold one update longer than the raise drops the monitor it raised.
   const viewing = counters.names.indexOf('viewing');
   const heldTapDrops = [];
   for (const x of p.mapped.contacts) {
@@ -638,7 +637,8 @@ export function compareOne(cfg, nightCfg, variant, runDir, inputsRoot, modelOpti
     ...(p.responses ? { responses: p.responses } : {}),
     input: { officeRows: p.office.rows.length, officeRowsSha256: p.officeRowsSha256, stretchedContacts: p.mapped.stretched,
       sameTickEdgeSets: p.office.sameTickEdges.length, firstPressTick: p.mapped.queue[0][0], measuredUpdates: p.clock ? p.deltas.length : 0,
-      frameTimesSha256: p.frameTimesText ? sha256(p.frameTimesText) : null, inputSha256: sha256(p.inputText) },
+      frameTimesSha256: p.frameTimesText ? sha256(p.frameTimesText) : null, inputSha256: sha256(p.inputText),
+      modelInputMode: 'explicit-contact-duration', modelContactsSha256: sha256(JSON.stringify(modelContacts(p.mapped.contacts))) },
     runtime: { traceSha256: result.runtime.traceSha256, drawTraceSha256: result.runtime.drawTraceSha256, officeUpdates },
     windows: {
       rebuilt: rebuiltWindows.map((w) => w.code).join(''),
@@ -741,7 +741,7 @@ export function responseEvidence(result, resultPath, resultBytes) {
 
 function responseExperiment(result) {
   const ref = result.method.responseExperiment.reference;
-  const bytes = readFileSync(resolve(ROOT, ref.path));
+  const bytes = readFileSync(resolve(ROOT, current(ref.path)));
   if (sha256(bytes) !== ref.sha256) throw new Error('response experiment control reference hash differs');
   return deriveResponseExperiment(result, JSON.parse(bytes.toString('utf8')));
 }

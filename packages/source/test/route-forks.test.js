@@ -15,7 +15,10 @@ const unit = (s, id) => s.units.find(u => u.id === id);
 // g376/g377: W. Freddy's CAM 03 fork.
 {
   const s = sim(7); const u = unit(s, 'withfreddy'); u.idx = u.path.indexOf(3);
+  u.promoted = true; u.value2 = 7;
   s.decidePath = 2; s.advance(u); assert.equal(u.path[u.idx], 7, 'decide path 2 -> CAM 07');
+  assert.equal(u.promoted, false, 'g377 consumes the promoted movement marker');
+  assert.equal(u.value2, 7, 'the promotion already wrote the footstep value');
   u.idx = u.path.indexOf(3); s.decidePath = 1; s.advance(u); assert.equal(u.path[u.idx], 'blindB', 'decide path 1 -> hall stage 2');
   u.idx = u.path.indexOf(3); s.decidePath = 0; assert.equal(s.sourcedRouteStep(u, 100), 'hold', 'no hop before decide path is rolled');
 }

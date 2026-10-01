@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { schedule } from '../plans/minus-toys-plan.mjs';
 import { ATTACKERS, LEDGERS, compareScheduleReplay, counterSeries, mismatchRuns, rebuiltAttacker, transitions, watchSeries } from './compare-schedule-replay.mjs';
 import { drawTrace } from '../../../source/recompile/model-draw-trace.mjs';
-import { controlPoints, expandRows, frameOf, harnessInput, harnessRows, winnerSchedule } from './schedule-to-input.mjs';
+import { controlPoints, expandRows, frameOf, harnessInput, harnessRows, winnerSchedule, modelContacts } from './schedule-to-input.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
 const read = (path) => readFileSync(join(ROOT, path), 'utf8');
@@ -67,7 +67,7 @@ assert.equal(input.office.rows.length, 192);
 
 // --- the comparison, on the model's own trace ---
 const modelOptions = json('packages/source/recompile/sourced-rebuild-model-options.json');
-const model = drawTrace({ night: 1, seed: 24850, frames: 30000, rows: sched.queue, modelOptions, observe: LEDGERS.monitor.model });
+const model = drawTrace({ night: 1, seed: 24850, frames: 30000, contacts: modelContacts(sched.contacts), modelOptions, observe: LEDGERS.monitor.model });
 assert.ok(model.won);
 const traceOf = (out, { from = 0, to = out.length - 1, draws = (r) => r.draws, next = 5, watch = model.observed, counters = null } = {}) => {
   let text = `# frame tick draws graine values...\n${counters ? `# counters ${counters.names.join(',')}\n` : ''}# frame 3 seeded 24850\n`;
@@ -87,7 +87,7 @@ assert.equal(same.gateReplay.agrees, true, 'the comparison model is the gate rep
 assert.equal(same.drawRuns.total, 0);
 assert.deepEqual(same.ledgers[0].changes.offsets, { '0>1 +0': 2, '1>2 +0': 2, '2>3 +0': 2, '3>0 +0': 2 });
 // A second ledger reads its own run of the same replay; a run with another draw stream is refused.
-const maskSeries = drawTrace({ night: 1, seed: 24850, frames: 30000, rows: sched.queue, modelOptions, observe: LEDGERS.mask.model }).observed;
+const maskSeries = drawTrace({ night: 1, seed: 24850, frames: 30000, contacts: modelContacts(sched.contacts), modelOptions, observe: LEDGERS.mask.model }).observed;
 const withMask = compareScheduleReplay({ ...args, text: traceOf(model.out),
   ledgers: [{ name: 'monitor' }, { name: 'mask', text: traceOf(model.out, { watch: maskSeries }) }] });
 assert.deepEqual(withMask.ledgers.map((l) => [l.name, l.mismatches, l.changes.rebuilt]), [['monitor', 0, 8], ['mask', 0, 0]], 'minimal never masks');
@@ -96,6 +96,8 @@ assert.ok(compareScheduleReplay({ ...args, text: traceOf(model.out), ledgers: [{
 assert.throws(() => compareScheduleReplay({ ...args, text: traceOf(model.out),
   ledgers: [{ name: 'mask', text: traceOf(model.out, { draws: (r, t) => (t === 5 ? r.draws + 1 : r.draws) }) }] }), /not a run of the same replay/);
 assert.equal(same.scope.input, 'navigation plus a replayed gameplay schedule');
+assert.equal(same.scope.inputMode, 'explicit-contact-duration');
+assert.ok(same.schedule.modelContactsSha256);
 assert.equal(same.schedule.officeRows, 192);
 assert.ok(!Object.keys(same).includes('traces') && !('traces' in JSON.parse(JSON.stringify(same))), 'the traces are not part of the record');
 

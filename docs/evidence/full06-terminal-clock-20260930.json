@@ -1,0 +1,1495 @@
+{
+  "schema": "evidence-record-v1",
+  "date": "2026-09-30",
+  "step": "ROADMAP S2",
+  "claimLevel": "MODEL_ONLY",
+  "fidelity": "rebuilt-runtime",
+  "status": "NAMED_HOST_REPLAY_PROJECTIONS_AND_TERMINAL_MATCH_RETAIL_GAP_OPEN",
+  "question": "Do the terminal panel latches and the separate sprite/counter attack clocks explain full-06's remaining host terminal difference?",
+  "scope": {
+    "night": 7,
+    "customDials": 20,
+    "seed": 47593,
+    "replay": "full-06 landed",
+    "role": "One retained night with two post-commit clock interventions; not a population or retail-equivalence claim."
+  },
+  "hypotheses": {
+    "terminalMask": "SUPPORTED: g10 ends the visual mask-off animation; g11 does not reset marker 3 during a committed attack.",
+    "weightedCounterAloneExplainsOriginalExit": "REFUTED: the original exits at counter 30.9707, before the g588 threshold of 40.",
+    "competingSpriteAndCounterExits": "SUPPORTED: a speed-50, 16-frame Bonnie sprite terminates both original and half-clock runs at update 22697; the double-clock run reaches 42.0502 at update 22687 and exits first."
+  },
+  "implementation": {
+    "panels": "maskState retains the blocked terminal marker independently of maskAnim; the monitor lowering marker uses the same sourced attack gate.",
+    "attack": "sourcedAttackAnimation applies the rebuilt fixed sprite clock and g587/g588 weighted counter to existing committed-attack paths. Animation-finished dispatch skips the ordinary loop. The counter-threshold exit completes it.",
+    "legacy": "Off by default; the sourced rebuild comparison option set enables it. Immediate-kill paths, including Foxy, still need the shared attack lifecycle.",
+    "clockScope": "The fixed sprite clock is measured for this host runtime; retail clock equivalence remains unproven."
+  },
+  "measurements": {
+    "nativeRepeatProjectionEqual": true,
+    "comparisons": {
+      "attack": {
+        "officeUpdates": 22698,
+        "rngComparison": {
+          "modelFrameOffset": 1,
+          "compared": 22698,
+          "firstMismatch": null
+        },
+        "modelTerminal": {
+          "traceSha256": "84c994b82f11bbd3132c4e02632487dcf21d7c00a15c978f501255bf76c05d5e",
+          "terminal": {
+            "frame": 22698,
+            "draws": 15033,
+            "state": 7344
+          },
+          "death": {
+            "reason": "inside-office",
+            "detail": "withbonnie completed the rebuilt attack animation",
+            "frame": 22698,
+            "t": 378.3
+          },
+          "won": false
+        },
+        "nativeLastOfficeRow": [
+          "3",
+          "22697",
+          "15033",
+          "7344"
+        ],
+        "attackStartUpdate": 22666,
+        "nativeLastAttackCounter": 30.9707,
+        "counterComparedUpdates": 22698,
+        "counterMismatchesAtNativeSixSignificantDigits": 0,
+        "counterMaxAbsoluteDifference": 4.765979441856416e-05,
+        "terminalCounterRows": [
+          {
+            "tick": 22666,
+            "nativeAttackCounter": 1.07042,
+            "modelAttackCounter": 1.070423100009969
+          },
+          {
+            "tick": 22667,
+            "nativeAttackCounter": 2.09814,
+            "modelAttackCounter": 2.0981353800195404
+          },
+          {
+            "tick": 22668,
+            "nativeAttackCounter": 3.05274,
+            "modelAttackCounter": 3.052744620028431
+          },
+          {
+            "tick": 22669,
+            "nativeAttackCounter": 4.0812,
+            "modelAttackCounter": 4.081204620038009
+          },
+          {
+            "tick": 22670,
+            "nativeAttackCounter": 4.99444,
+            "modelAttackCounter": 4.994441520046514
+          },
+          {
+            "tick": 22671,
+            "nativeAttackCounter": 6.27043,
+            "modelAttackCounter": 6.270429240058398
+          },
+          {
+            "tick": 22672,
+            "nativeAttackCounter": 7.20332,
+            "modelAttackCounter": 7.203323100067086
+          },
+          {
+            "tick": 22673,
+            "nativeAttackCounter": 8.08583,
+            "modelAttackCounter": 8.085826140075305
+          },
+          {
+            "tick": 22674,
+            "nativeAttackCounter": 9.00911,
+            "modelAttackCounter": 9.009106140083905
+          },
+          {
+            "tick": 22675,
+            "nativeAttackCounter": 10.1036,
+            "modelAttackCounter": 10.103598480094098
+          },
+          {
+            "tick": 22676,
+            "nativeAttackCounter": 11.0367,
+            "modelAttackCounter": 11.036663100102787
+          },
+          {
+            "tick": 22677,
+            "nativeAttackCounter": 12.0447,
+            "modelAttackCounter": 12.044658480112176
+          },
+          {
+            "tick": 22678,
+            "nativeAttackCounter": 13.0173,
+            "modelAttackCounter": 13.017286140121234
+          },
+          {
+            "tick": 22679,
+            "nativeAttackCounter": 13.9948,
+            "modelAttackCounter": 13.994843100130339
+          },
+          {
+            "tick": 22680,
+            "nativeAttackCounter": 14.9878,
+            "modelAttackCounter": 14.987815380139587
+          },
+          {
+            "tick": 22681,
+            "nativeAttackCounter": 15.986,
+            "modelAttackCounter": 15.986012340148884
+          },
+          {
+            "tick": 22682,
+            "nativeAttackCounter": 16.9578,
+            "modelAttackCounter": 16.957758480157935
+          },
+          {
+            "tick": 22683,
+            "nativeAttackCounter": 17.9993,
+            "modelAttackCounter": 17.999261520167636
+          },
+          {
+            "tick": 22684,
+            "nativeAttackCounter": 19.0953,
+            "modelAttackCounter": 19.095304620177842
+          },
+          {
+            "tick": 22685,
+            "nativeAttackCounter": 20.0565,
+            "modelAttackCounter": 20.056504620186793
+          },
+          {
+            "tick": 22686,
+            "nativeAttackCounter": 20.9333,
+            "modelAttackCounter": 20.93332152019496
+          },
+          {
+            "tick": 22687,
+            "nativeAttackCounter": 22.0742,
+            "modelAttackCounter": 22.074152340205583
+          },
+          {
+            "tick": 22688,
+            "nativeAttackCounter": 24.8984,
+            "modelAttackCounter": 24.898435380231888
+          },
+          {
+            "tick": 22689,
+            "nativeAttackCounter": 24.9584,
+            "modelAttackCounter": 24.958435380232448
+          },
+          {
+            "tick": 22690,
+            "nativeAttackCounter": 25.0184,
+            "modelAttackCounter": 25.018435380233008
+          },
+          {
+            "tick": 22691,
+            "nativeAttackCounter": 26.0251,
+            "modelAttackCounter": 26.025069240242384
+          },
+          {
+            "tick": 22692,
+            "nativeAttackCounter": 27.0403,
+            "modelAttackCounter": 27.04026924025184
+          },
+          {
+            "tick": 22693,
+            "nativeAttackCounter": 28.0276,
+            "modelAttackCounter": 28.027555380261035
+          },
+          {
+            "tick": 22694,
+            "nativeAttackCounter": 28.9524,
+            "modelAttackCounter": 28.952423100269648
+          },
+          {
+            "tick": 22695,
+            "nativeAttackCounter": 29.9983,
+            "modelAttackCounter": 29.99833848027939
+          },
+          {
+            "tick": 22696,
+            "nativeAttackCounter": 30.9707,
+            "modelAttackCounter": 30.970689240288447
+          },
+          {
+            "tick": 22697,
+            "nativeAttackCounter": 30.9707,
+            "modelAttackCounter": 30.970689240288447
+          }
+        ]
+      },
+      "attack-half-after": {
+        "officeUpdates": 22698,
+        "rngComparison": {
+          "modelFrameOffset": 1,
+          "compared": 22698,
+          "firstMismatch": null
+        },
+        "modelTerminal": {
+          "traceSha256": "1083efa7d5cb0056b1c8f4a7c9915e767d59d8e16735b1da5bec245825ab5da6",
+          "terminal": {
+            "frame": 22698,
+            "draws": 15025,
+            "state": 11472
+          },
+          "death": {
+            "reason": "inside-office",
+            "detail": "withbonnie completed the rebuilt attack animation",
+            "frame": 22698,
+            "t": 378.3
+          },
+          "won": false
+        },
+        "nativeLastOfficeRow": [
+          "3",
+          "22697",
+          "15025",
+          "11472"
+        ],
+        "attackStartUpdate": 22666,
+        "nativeLastAttackCounter": 16.5344,
+        "counterComparedUpdates": 22698,
+        "counterMismatchesAtNativeSixSignificantDigits": 0,
+        "counterMaxAbsoluteDifference": 4.538014028554471e-05,
+        "terminalCounterRows": [
+          {
+            "tick": 22666,
+            "nativeAttackCounter": 1.07042,
+            "modelAttackCounter": 1.070423100009969
+          },
+          {
+            "tick": 22667,
+            "nativeAttackCounter": 2.09814,
+            "modelAttackCounter": 2.0981353800195404
+          },
+          {
+            "tick": 22668,
+            "nativeAttackCounter": 2.57544,
+            "modelAttackCounter": 2.5754400000239857
+          },
+          {
+            "tick": 22669,
+            "nativeAttackCounter": 3.08967,
+            "modelAttackCounter": 3.0896700000287747
+          },
+          {
+            "tick": 22670,
+            "nativeAttackCounter": 3.54629,
+            "modelAttackCounter": 3.5462884500330274
+          },
+          {
+            "tick": 22671,
+            "nativeAttackCounter": 4.18428,
+            "modelAttackCounter": 4.184282310038969
+          },
+          {
+            "tick": 22672,
+            "nativeAttackCounter": 4.65073,
+            "modelAttackCounter": 4.650729240043313
+          },
+          {
+            "tick": 22673,
+            "nativeAttackCounter": 5.09198,
+            "modelAttackCounter": 5.091980760047423
+          },
+          {
+            "tick": 22674,
+            "nativeAttackCounter": 5.55362,
+            "modelAttackCounter": 5.5536207600517224
+          },
+          {
+            "tick": 22675,
+            "nativeAttackCounter": 6.10087,
+            "modelAttackCounter": 6.100866930056819
+          },
+          {
+            "tick": 22676,
+            "nativeAttackCounter": 6.5674,
+            "modelAttackCounter": 6.567399240061164
+          },
+          {
+            "tick": 22677,
+            "nativeAttackCounter": 7.0714,
+            "modelAttackCounter": 7.071396930065857
+          },
+          {
+            "tick": 22678,
+            "nativeAttackCounter": 7.55771,
+            "modelAttackCounter": 7.557710760070386
+          },
+          {
+            "tick": 22679,
+            "nativeAttackCounter": 8.04649,
+            "modelAttackCounter": 8.046489240074939
+          },
+          {
+            "tick": 22680,
+            "nativeAttackCounter": 8.54298,
+            "modelAttackCounter": 8.542975380079563
+          },
+          {
+            "tick": 22681,
+            "nativeAttackCounter": 9.04207,
+            "modelAttackCounter": 9.04207386008421
+          },
+          {
+            "tick": 22682,
+            "nativeAttackCounter": 9.52795,
+            "modelAttackCounter": 9.527946930088735
+          },
+          {
+            "tick": 22683,
+            "nativeAttackCounter": 10.0487,
+            "modelAttackCounter": 10.048698450093585
+          },
+          {
+            "tick": 22684,
+            "nativeAttackCounter": 10.5967,
+            "modelAttackCounter": 10.596720000098689
+          },
+          {
+            "tick": 22685,
+            "nativeAttackCounter": 11.0773,
+            "modelAttackCounter": 11.077320000103164
+          },
+          {
+            "tick": 22686,
+            "nativeAttackCounter": 11.5157,
+            "modelAttackCounter": 11.515728450107247
+          },
+          {
+            "tick": 22687,
+            "nativeAttackCounter": 12.0861,
+            "modelAttackCounter": 12.086143860112559
+          },
+          {
+            "tick": 22688,
+            "nativeAttackCounter": 13.4983,
+            "modelAttackCounter": 13.498285380125711
+          },
+          {
+            "tick": 22689,
+            "nativeAttackCounter": 13.5283,
+            "modelAttackCounter": 13.528285380125991
+          },
+          {
+            "tick": 22690,
+            "nativeAttackCounter": 13.5583,
+            "modelAttackCounter": 13.558285380126271
+          },
+          {
+            "tick": 22691,
+            "nativeAttackCounter": 14.0616,
+            "modelAttackCounter": 14.06160231013096
+          },
+          {
+            "tick": 22692,
+            "nativeAttackCounter": 14.5692,
+            "modelAttackCounter": 14.569202310135687
+          },
+          {
+            "tick": 22693,
+            "nativeAttackCounter": 15.0628,
+            "modelAttackCounter": 15.062845380140285
+          },
+          {
+            "tick": 22694,
+            "nativeAttackCounter": 15.5253,
+            "modelAttackCounter": 15.525279240144592
+          },
+          {
+            "tick": 22695,
+            "nativeAttackCounter": 16.0482,
+            "modelAttackCounter": 16.04823693014946
+          },
+          {
+            "tick": 22696,
+            "nativeAttackCounter": 16.5344,
+            "modelAttackCounter": 16.53441231015399
+          },
+          {
+            "tick": 22697,
+            "nativeAttackCounter": 16.5344,
+            "modelAttackCounter": 16.53441231015399
+          }
+        ]
+      },
+      "attack-double-after": {
+        "officeUpdates": 22688,
+        "rngComparison": {
+          "modelFrameOffset": 1,
+          "compared": 22688,
+          "firstMismatch": null
+        },
+        "modelTerminal": {
+          "traceSha256": "0e42966ea8c3aae3931b54a66f730f202ea90c2d8b9231dd3305789a49d778a3",
+          "terminal": {
+            "frame": 22688,
+            "draws": 15040,
+            "state": 27881
+          },
+          "death": {
+            "reason": "inside-office",
+            "detail": "withbonnie reached the shared attack counter limit",
+            "frame": 22688,
+            "t": 378.1333333333333
+          },
+          "won": false
+        },
+        "nativeLastOfficeRow": [
+          "3",
+          "22687",
+          "15040",
+          "27881"
+        ],
+        "attackStartUpdate": 22666,
+        "nativeLastAttackCounter": 42.0502,
+        "counterComparedUpdates": 22688,
+        "counterMismatchesAtNativeSixSignificantDigits": 0,
+        "counterMaxAbsoluteDifference": 4.917975886442605e-05,
+        "terminalCounterRows": [
+          {
+            "tick": 22666,
+            "nativeAttackCounter": 1.07042,
+            "modelAttackCounter": 1.070423100009969
+          },
+          {
+            "tick": 22667,
+            "nativeAttackCounter": 2.09814,
+            "modelAttackCounter": 2.0981353800195404
+          },
+          {
+            "tick": 22668,
+            "nativeAttackCounter": 4.00735,
+            "modelAttackCounter": 4.0073538600373215
+          },
+          {
+            "tick": 22669,
+            "nativeAttackCounter": 6.06427,
+            "modelAttackCounter": 6.064273860056478
+          },
+          {
+            "tick": 22670,
+            "nativeAttackCounter": 7.89075,
+            "modelAttackCounter": 7.8907476600734885
+          },
+          {
+            "tick": 22671,
+            "nativeAttackCounter": 10.4427,
+            "modelAttackCounter": 10.442723100097256
+          },
+          {
+            "tick": 22672,
+            "nativeAttackCounter": 12.3085,
+            "modelAttackCounter": 12.308510820114632
+          },
+          {
+            "tick": 22673,
+            "nativeAttackCounter": 14.0735,
+            "modelAttackCounter": 14.07351690013107
+          },
+          {
+            "tick": 22674,
+            "nativeAttackCounter": 15.9201,
+            "modelAttackCounter": 15.920076900148267
+          },
+          {
+            "tick": 22675,
+            "nativeAttackCounter": 18.1091,
+            "modelAttackCounter": 18.109061580168653
+          },
+          {
+            "tick": 22676,
+            "nativeAttackCounter": 19.9752,
+            "modelAttackCounter": 19.975190820186032
+          },
+          {
+            "tick": 22677,
+            "nativeAttackCounter": 21.9912,
+            "modelAttackCounter": 21.99118158020481
+          },
+          {
+            "tick": 22678,
+            "nativeAttackCounter": 23.9364,
+            "modelAttackCounter": 23.936436900222926
+          },
+          {
+            "tick": 22679,
+            "nativeAttackCounter": 25.8916,
+            "modelAttackCounter": 25.891550820241136
+          },
+          {
+            "tick": 22680,
+            "nativeAttackCounter": 27.8775,
+            "modelAttackCounter": 27.87749538025963
+          },
+          {
+            "tick": 22681,
+            "nativeAttackCounter": 29.8739,
+            "modelAttackCounter": 29.873889300278226
+          },
+          {
+            "tick": 22682,
+            "nativeAttackCounter": 31.8174,
+            "modelAttackCounter": 31.817381580296324
+          },
+          {
+            "tick": 22683,
+            "nativeAttackCounter": 33.9004,
+            "modelAttackCounter": 33.90038766031572
+          },
+          {
+            "tick": 22684,
+            "nativeAttackCounter": 36.0925,
+            "modelAttackCounter": 36.092473860336135
+          },
+          {
+            "tick": 22685,
+            "nativeAttackCounter": 38.0149,
+            "modelAttackCounter": 38.01487386035404
+          },
+          {
+            "tick": 22686,
+            "nativeAttackCounter": 39.7685,
+            "modelAttackCounter": 39.76850766037037
+          },
+          {
+            "tick": 22687,
+            "nativeAttackCounter": 42.0502,
+            "modelAttackCounter": 42.050169300391616
+          }
+        ]
+      }
+    },
+    "originalStateChecks": [
+      {
+        "field": "monitor",
+        "compared": 22698,
+        "mismatches": []
+      },
+      {
+        "field": "flipLock",
+        "compared": 22698,
+        "mismatches": []
+      },
+      {
+        "field": "viewing",
+        "compared": 22698,
+        "mismatches": []
+      },
+      {
+        "field": "blackout",
+        "compared": 22698,
+        "mismatches": []
+      },
+      {
+        "field": "dropEverything",
+        "compared": 22698,
+        "mismatches": []
+      },
+      {
+        "field": "mask",
+        "compared": 22698,
+        "mismatches": []
+      }
+    ],
+    "terminalMask": [
+      {
+        "tick": 22682,
+        "nativeAnimationClock": 14.9156,
+        "modelAnimationClock": 14.915589240138912,
+        "nativeMaskMarker": 3.0,
+        "modelMaskMarker": 3,
+        "modelAnimationRemaining": 0
+      },
+      {
+        "tick": 22683,
+        "nativeAnimationClock": 14.9156,
+        "modelAnimationClock": 14.915589240138912,
+        "nativeMaskMarker": 3.0,
+        "modelMaskMarker": 3,
+        "modelAnimationRemaining": 0
+      },
+      {
+        "tick": 22684,
+        "nativeAnimationClock": 14.9156,
+        "modelAnimationClock": 14.915589240138912,
+        "nativeMaskMarker": 3.0,
+        "modelMaskMarker": 3,
+        "modelAnimationRemaining": 0
+      },
+      {
+        "tick": 22685,
+        "nativeAnimationClock": 14.9156,
+        "modelAnimationClock": 14.915589240138912,
+        "nativeMaskMarker": 3.0,
+        "modelMaskMarker": 3,
+        "modelAnimationRemaining": 0
+      },
+      {
+        "tick": 22686,
+        "nativeAnimationClock": 14.9156,
+        "modelAnimationClock": 14.915589240138912,
+        "nativeMaskMarker": 3.0,
+        "modelMaskMarker": 3,
+        "modelAnimationRemaining": 0
+      },
+      {
+        "tick": 22687,
+        "nativeAnimationClock": 14.9156,
+        "modelAnimationClock": 14.915589240138912,
+        "nativeMaskMarker": 3.0,
+        "modelMaskMarker": 3,
+        "modelAnimationRemaining": 0
+      },
+      {
+        "tick": 22688,
+        "nativeAnimationClock": 14.9156,
+        "modelAnimationClock": 14.915589240138912,
+        "nativeMaskMarker": 3.0,
+        "modelMaskMarker": 3,
+        "modelAnimationRemaining": 0
+      },
+      {
+        "tick": 22689,
+        "nativeAnimationClock": 14.9156,
+        "modelAnimationClock": 14.915589240138912,
+        "nativeMaskMarker": 3.0,
+        "modelMaskMarker": 3,
+        "modelAnimationRemaining": 0
+      },
+      {
+        "tick": 22690,
+        "nativeAnimationClock": 14.9156,
+        "modelAnimationClock": 14.915589240138912,
+        "nativeMaskMarker": 3.0,
+        "modelMaskMarker": 3,
+        "modelAnimationRemaining": 0
+      },
+      {
+        "tick": 22691,
+        "nativeAnimationClock": 14.9156,
+        "modelAnimationClock": 14.915589240138912,
+        "nativeMaskMarker": 3.0,
+        "modelMaskMarker": 3,
+        "modelAnimationRemaining": 0
+      },
+      {
+        "tick": 22692,
+        "nativeAnimationClock": 14.9156,
+        "modelAnimationClock": 14.915589240138912,
+        "nativeMaskMarker": 3.0,
+        "modelMaskMarker": 3,
+        "modelAnimationRemaining": 0
+      },
+      {
+        "tick": 22693,
+        "nativeAnimationClock": 14.9156,
+        "modelAnimationClock": 14.915589240138912,
+        "nativeMaskMarker": 3.0,
+        "modelMaskMarker": 3,
+        "modelAnimationRemaining": 0
+      },
+      {
+        "tick": 22694,
+        "nativeAnimationClock": 14.9156,
+        "modelAnimationClock": 14.915589240138912,
+        "nativeMaskMarker": 3.0,
+        "modelMaskMarker": 3,
+        "modelAnimationRemaining": 0
+      },
+      {
+        "tick": 22695,
+        "nativeAnimationClock": 14.9156,
+        "modelAnimationClock": 14.915589240138912,
+        "nativeMaskMarker": 3.0,
+        "modelMaskMarker": 3,
+        "modelAnimationRemaining": 0
+      },
+      {
+        "tick": 22696,
+        "nativeAnimationClock": 14.9156,
+        "modelAnimationClock": 14.915589240138912,
+        "nativeMaskMarker": 3.0,
+        "modelMaskMarker": 3,
+        "modelAnimationRemaining": 0
+      },
+      {
+        "tick": 22697,
+        "nativeAnimationClock": 14.9156,
+        "modelAnimationClock": 14.915589240138912,
+        "nativeMaskMarker": 3.0,
+        "modelMaskMarker": 3,
+        "modelAnimationRemaining": 0
+      }
+    ],
+    "maskLedger": {
+      "compared": 22698,
+      "mismatches": 0,
+      "paired": 151,
+      "rebuiltChanges": 151,
+      "modelChanges": 151,
+      "offsets": {
+        "0>1 +0": 38,
+        "1>2 +0": 38,
+        "2>3 +0": 38,
+        "3>0 +0": 37
+      }
+    },
+    "occupiedWindows": {
+      "compared": 38,
+      "agree": 38,
+      "unplayed": 5,
+      "rebuilt": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.B?????",
+      "model": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.B?????"
+    },
+    "outcome": {
+      "rebuilt": {
+        "result": "death",
+        "reason": "Withered Bonnie",
+        "officeUpdates": 22698,
+        "endMs": 377842.7,
+        "attackSetTick": 22666,
+        "attackSetMs": 377310.3
+      },
+      "model": {
+        "result": "death",
+        "reason": "inside-office",
+        "frame": 22698,
+        "endMs": 377842.7
+      }
+    },
+    "terminalDelayUpdatesBefore": 9,
+    "terminalDelayUpdatesAfter": 0,
+    "earlyReleaseFirstDrawMismatch": {
+      "tick": 23770,
+      "modelFrame": 23771,
+      "rebuilt": {
+        "draws": 15734,
+        "state": 23361
+      },
+      "model": {
+        "draws": 15733,
+        "state": 16064
+      }
+    }
+  },
+  "characterization": {
+    "claimLevel": "MODEL_ONLY",
+    "kind": "diagnostic characterization before production design",
+    "metadata": {
+      "0": {
+        "speed": 50,
+        "frames": 1,
+        "loops": 1,
+        "back": 0
+      },
+      "12": {
+        "speed": 50,
+        "frames": 13,
+        "loops": -1,
+        "back": 7
+      },
+      "13": {
+        "speed": 50,
+        "frames": 16,
+        "loops": 1,
+        "back": 0
+      },
+      "14": {
+        "speed": 40,
+        "frames": 12,
+        "loops": -1,
+        "back": 7
+      },
+      "15": {
+        "speed": 60,
+        "frames": 14,
+        "loops": 1,
+        "back": 0
+      },
+      "16": {
+        "speed": 50,
+        "frames": 13,
+        "loops": 1,
+        "back": 0
+      },
+      "17": {
+        "speed": 40,
+        "frames": 13,
+        "loops": 1,
+        "back": 0
+      },
+      "18": {
+        "speed": 40,
+        "frames": 12,
+        "loops": -1,
+        "back": 7
+      },
+      "19": {
+        "speed": 50,
+        "frames": 16,
+        "loops": 1,
+        "back": 0
+      },
+      "20": {
+        "speed": 50,
+        "frames": 15,
+        "loops": 1,
+        "back": 0
+      },
+      "21": {
+        "speed": 40,
+        "frames": 13,
+        "loops": 1,
+        "back": 0
+      }
+    },
+    "metadataSource": {
+      "path": "/home/pedro/fnaf-apks/fnaf2-recompile-20260927/agent-audio/gamesrc-before/objects2.cpp",
+      "sha256": "3ff8245c5cff315725eb941920acde5568c95e7f852b4aa46049483f5f518574",
+      "limitation": "readable historical generated source; binary measured separately"
+    },
+    "results": {
+      "attack": {
+        "attackStart": 22666,
+        "officeUpdates": 22698,
+        "lastAttackCounter": 30.9707,
+        "animationExitPrediction": 22697,
+        "exitUpdate": 22697,
+        "drawsAtLast": 15033,
+        "stateAtLast": 7344
+      },
+      "attack-half-after": {
+        "attackStart": 22666,
+        "officeUpdates": 22698,
+        "lastAttackCounter": 16.5344,
+        "animationExitPrediction": 22697,
+        "exitUpdate": 22697,
+        "drawsAtLast": 15025,
+        "stateAtLast": 11472
+      },
+      "attack-double-after": {
+        "attackStart": 22666,
+        "officeUpdates": 22688,
+        "lastAttackCounter": 42.0502,
+        "animationExitPrediction": 22697,
+        "exitUpdate": 22687,
+        "drawsAtLast": 15040,
+        "stateAtLast": 27881
+      }
+    },
+    "conclusion": "The ordinary and half-clock runs leave through the 16-frame speed-50 animation, using the runtime counter carry of 100; the doubled clock reaches the sheet counter of 40 first. The animation exit dispatches before regular events, leaving the final attack counter unchanged."
+  },
+  "validation": {
+    "directCommands": [
+      {
+        "command": [
+          "node",
+          "packages/source/test/b-drain-order.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/route-pass.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/footstep-value2.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/animation-count.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/frame-time-hook.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/drop-flag-order.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/value5.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/blackout-clock-end.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/contracts.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/control-catalog.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/sourcetest.mjs"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/simtest.mjs"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/review/bin/recompile/test-compare-draw-trace.mjs"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/test/cycle-library.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/test/cycle-planner.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/test/cycle-controller.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/test/night-policy.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/test/test-winners-rebuild.mjs"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "apps/trainer/test/renderer.test.mjs"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "tools/validate-references.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/parked/minus7/policytest.mjs",
+          "--assert"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "npm",
+          "run",
+          "typecheck:js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/bin/factreplay.mjs",
+          "--assert"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/bin/recompile/test-schedule-replay.mjs"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/bin/recompile/test-phone-encounter-replay.mjs"
+        ],
+        "exitCode": 1
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/bin/recompile/test-phone-clock-sweep.mjs"
+        ],
+        "exitCode": 1
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/bin/recompile/test-phone-input-bracket-sweep.mjs"
+        ],
+        "exitCode": 1
+      }
+    ],
+    "passedCommands": 24,
+    "gitBlockedCommands": 3,
+    "campaignDryRun": "READY",
+    "affectedGate": "ENVIRONMENT_ERROR: spawnSync git EPERM",
+    "fileSizeGate": "ENVIRONMENT_ERROR: spawnSync git EPERM",
+    "sourceLines": 2714,
+    "sourceLineRatchet": 2719,
+    "pushGate": "ENVIRONMENT_ERROR: spawnSync git EPERM before lanes"
+  },
+  "supports": [
+    "s2-contact-duration-dc5afa6f11dbbaa7"
+  ],
+  "limitations": [
+    "Matching the named state projections and RNG trace of this replay does not prove equivalence of all internal state or all nights.",
+    "Native counter output has six significant digits; the numeric agreement is checked at that precision, not bit for bit.",
+    "The readable generated source is historical; native controls independently constrain the pinned binary behavior.",
+    "Immediate model deaths such as Foxy still lack the shared animation lifecycle. Other committed attackers have sourced metadata and fixture coverage but no new native qualification here.",
+    "The initial attack sprite counter carry is derived after its idle animation has settled; an artificial attack at startup is outside this evidence.",
+    "The first clock interventions started one update earlier than intended because their file has a header; retained as exploratory runs. The named -after controls alter only updates 22667 onward.",
+    "Five mask windows are unplayed after death. No new retail phone run or promoted win. The retail BB and encounter mismatch remains open."
+  ],
+  "open": [
+    "Explain the early-release RNG split at update 23770.",
+    "Compare the aligned host encounters against the retail phone, beginning with the BB difference at 40/45 seconds.",
+    "Extend and qualify the shared attack lifecycle for immediate-kill paths and the retail animation clock.",
+    "Complete Git-dependent aggregate checks in an environment where subprocess Git is allowed."
+  ],
+  "provenance": {
+    "files": [
+      {
+        "path": "packages/source/src/games/fnaf2/plant-model.js",
+        "sha256": "5aee279b9590ad7939ab0a2e9778b55ce64f11f7fc78bb990768a1bdf34939f8",
+        "bytes": 164324
+      },
+      {
+        "path": "packages/source/src/games/fnaf2/config.js",
+        "sha256": "3da601d1233454b7386ebab415c827fe87117ed2b9b031e51168c338f89f6f70",
+        "bytes": 44879
+      },
+      {
+        "path": "packages/source/src/games/fnaf2/rng.js",
+        "sha256": "1a2b615eda3a152aea548054c873c8da83a96b06b6ac65fc0a74e4997a3e651e",
+        "bytes": 1857
+      },
+      {
+        "path": "packages/source/src/games/fnaf2/movement-clock.js",
+        "sha256": "7b761e7530ae0f88b383dc58199768d0f284842b995a02956d1432efd9faeae5",
+        "bytes": 1513
+      },
+      {
+        "path": "packages/source/src/games/fnaf2/contact-input.js",
+        "sha256": "13594834e219630281d7203b6deca447a7d7aa11fb95c1234b7c2b8af25775b8",
+        "bytes": 2900
+      },
+      {
+        "path": "packages/source/src/games/fnaf2/attack-animation.js",
+        "sha256": "7224962960146bac72320b8fdfa4525947df39ae3c96edd09bd012e9cd42da76",
+        "bytes": 2472
+      },
+      {
+        "path": "packages/source/recompile/model-draw-trace.mjs",
+        "sha256": "42fa59993ceae3fb8cabff0e3750e76883838a36f3f2e73eee13a7f2763947d0",
+        "bytes": 8212
+      },
+      {
+        "path": "packages/source/recompile/sourced-rebuild-model-options.json",
+        "sha256": "cd70e32798006c48b4ecbc5a13e0fc5b82b9bedb211a0b984b4c58767ab64834",
+        "bytes": 1514
+      },
+      {
+        "path": "packages/source/test/animation-count.test.js",
+        "sha256": "956c53318b4ef76279f1c8d67e22f844ec07fd1193113142871766b903265a54",
+        "bytes": 7132
+      },
+      {
+        "path": "packages/propose/bin/recompile/phone-encounter-replay.mjs",
+        "sha256": "50c4db6bd965ef43a37e1e5c56402ed9c07975ab8e0edf43a954db55466bf52c",
+        "bytes": 57064
+      },
+      {
+        "path": "packages/propose/bin/recompile/compare-schedule-replay.mjs",
+        "sha256": "7a618b6fb9799eef94ea030da5e857712911b4ac715bf44c78ad93c5e3bf6795",
+        "bytes": 26308
+      },
+      {
+        "path": "packages/review/bin/recompile/compare-draw-trace.mjs",
+        "sha256": "fcf33d67f841df698bff656f629e540f5cce7da6ffc6de8a0b5762c3c9885b74",
+        "bytes": 10045
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/record.py",
+        "sha256": "06e2a5cec69f393fc78e4a0a199e0ce0a159269975bc5723a11ba21743de9844",
+        "bytes": 12037
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/probe.py",
+        "sha256": "9c8acbd845ede09e471e7ff3b363fa3115ffac1fc894a4ea1ec38a7b67d4cf46",
+        "bytes": 2227
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/replay.mjs",
+        "sha256": "70bf1ee7a031d8b2e9788b8ac8d164cdde62fd9878d1d20032fe67a3e92dff68",
+        "bytes": 2711
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/validate.py",
+        "sha256": "88062e39457aafff00a05654b5b5b6a538958cce57f3b90925809c9f4662914c",
+        "bytes": 1522
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/characterization.json",
+        "sha256": "6ac5c034ec827fc42fd8177acf04ec42628f85272dc230e60b3f0d442990a69b",
+        "bytes": 2480
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/phone-comparison.json",
+        "sha256": "43073995ea7b96520ad82e3c359f0ac49bf4ece6c4b152ce2b8bcd1e55bd1c54",
+        "bytes": 9685
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/gates.json",
+        "sha256": "b14688fd78a06907e910e4c92f0a5d452a8813c67078a5669f5ab90505b0e0bd",
+        "bytes": 86099
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/aggregate-gates.json",
+        "sha256": "203f53235f76177e4188ceca49f17b3111598e54ada99226ceb76d79ab3df209",
+        "bytes": 1375
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack.json",
+        "sha256": "1afacfcf872bd19a2f6f117f2cec592c55a3ebb4161feb743225acf4a4ab29ba",
+        "bytes": 6009951
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack-half-after.json",
+        "sha256": "4cf636389baab6ec13671bfafa1852847aa2f843acbf576ae9627a287724bbb5",
+        "bytes": 6010164
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack-double-after.json",
+        "sha256": "3d0d6174ab499df51786c0b960c6a2cc23d3ff79496f90c4ef7a9dd3239ad227",
+        "bytes": 6004921
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/released-early.json",
+        "sha256": "43597dc35e0655d5416fc601a5b421c985ad05bf1cdf2840e99d1d7b96dd0b43",
+        "bytes": 6674461
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack/trace",
+        "sha256": "d1e192d24e144114c62ce1da48ee4a2ce5d88ed47d0788beb670424e5cf86fca",
+        "bytes": 6949156
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack/run.input",
+        "sha256": "90fc29d4fd3917fe949fb9735e4b89a8776c77888d2a9d071b97abaacde4a1e1",
+        "bytes": 13180
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack/frametimes.txt",
+        "sha256": "383d25c80bb3648e9199589ebce7b6782a510eacee4409df3c90e940869541cf",
+        "bytes": 253940
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack/save-before.ini",
+        "sha256": "c0f497ff64b6f757f943965a48d2795419fb934ddf54eb5f3dee000439484844",
+        "bytes": 72
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack/env",
+        "sha256": "5515a6094bdafd603cfaa4b6e6863a2befedcb541e9bc44711e84c2a0b57d241",
+        "bytes": 659
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack/summary.json",
+        "sha256": "dd3175cf0e1cf8004421dece4a2898350dc5fd0e70d664fe0b0f7ef028c2b1ec",
+        "bytes": 2038
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/maskoff/trace",
+        "sha256": "693400ac000620f0ed11a03728e7e595f56438561af9e8db4a8f894f66682678",
+        "bytes": 7079333
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/maskoff/run.input",
+        "sha256": "90fc29d4fd3917fe949fb9735e4b89a8776c77888d2a9d071b97abaacde4a1e1",
+        "bytes": 13180
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/maskoff/frametimes.txt",
+        "sha256": "383d25c80bb3648e9199589ebce7b6782a510eacee4409df3c90e940869541cf",
+        "bytes": 253940
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/maskoff/save-before.ini",
+        "sha256": "c0f497ff64b6f757f943965a48d2795419fb934ddf54eb5f3dee000439484844",
+        "bytes": 72
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/maskoff/env",
+        "sha256": "eda63c34f9291f5d7b5f9726c7568addbe3cb72fd673e853475f94fb0a2bed98",
+        "bytes": 659
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/maskoff/summary.json",
+        "sha256": "539c1a9897e18583422d7a7461e0cde7efe85f827e4294643501f47eab6c0209",
+        "bytes": 2074
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack-half/trace",
+        "sha256": "829a50153c181b826159b4af430c3004207dfe070bfb1883db0c325ed7bae697",
+        "bytes": 6949057
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack-half/run.input",
+        "sha256": "90fc29d4fd3917fe949fb9735e4b89a8776c77888d2a9d071b97abaacde4a1e1",
+        "bytes": 13180
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack-half/frametimes.txt",
+        "sha256": "033ac2b0bb79f31c881b892feedfe76c45c2ab3b008277a3bc8fc84b48c3d6e4",
+        "bytes": 251843
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack-half/save-before.ini",
+        "sha256": "c0f497ff64b6f757f943965a48d2795419fb934ddf54eb5f3dee000439484844",
+        "bytes": 72
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack-half/env",
+        "sha256": "9d7dcc29b03b77f4494863386f22967f13bb73d12fdd38aecbf3e5ceedf14d51",
+        "bytes": 664
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack-half/summary.json",
+        "sha256": "d8d767b88f6b791b9581d3933405b057f2d92003992179252e42d744fa5cf8d9",
+        "bytes": 2078
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack-double/trace",
+        "sha256": "fbcab8d4e590f4a9bcb36fec20828c86b59afc2fd0ea6a80e4cb85c65b6bb691",
+        "bytes": 6948585
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack-double/run.input",
+        "sha256": "90fc29d4fd3917fe949fb9735e4b89a8776c77888d2a9d071b97abaacde4a1e1",
+        "bytes": 13180
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack-double/frametimes.txt",
+        "sha256": "96dbf49f0a881a85fa67bbd4a19e0767e6a5db84eb51c8978fdb7b9728c5cdbe",
+        "bytes": 252549
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack-double/save-before.ini",
+        "sha256": "c0f497ff64b6f757f943965a48d2795419fb934ddf54eb5f3dee000439484844",
+        "bytes": 72
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack-double/env",
+        "sha256": "eea86e8e657c704281e3c623226f68ff690ccb8ae231274246d7712d04f6a793",
+        "bytes": 666
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack-double/summary.json",
+        "sha256": "1124f661f157e7ec053124338b3c5b37334cab7102b1dcb48dbaf44cabc334e8",
+        "bytes": 1469
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack-half-after/trace",
+        "sha256": "645f37546fca962d4cb2a9fbd7d50206a808a1d133b245e26bf258708417d1ad",
+        "bytes": 6949015
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack-half-after/run.input",
+        "sha256": "90fc29d4fd3917fe949fb9735e4b89a8776c77888d2a9d071b97abaacde4a1e1",
+        "bytes": 13180
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack-half-after/frametimes.txt",
+        "sha256": "06911fab215126e44f1e17b114cd64a1ca7180709e1d73432bc849d1536e57be",
+        "bytes": 251844
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack-half-after/save-before.ini",
+        "sha256": "c0f497ff64b6f757f943965a48d2795419fb934ddf54eb5f3dee000439484844",
+        "bytes": 72
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack-half-after/env",
+        "sha256": "ee077218086017b33297ac189d130ac6f655bea0d098abb4ea632b39f779a9f6",
+        "bytes": 670
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack-half-after/summary.json",
+        "sha256": "db6d1f841eae6f16a56d9f4529c44fcf2267df5c9055b5235cd4beb9551211ed",
+        "bytes": 2039
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack-double-after/trace",
+        "sha256": "aa8b210c13a39912572aecd473f11d5d91086400094d5698abd4df014d00209c",
+        "bytes": 6948631
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack-double-after/run.input",
+        "sha256": "90fc29d4fd3917fe949fb9735e4b89a8776c77888d2a9d071b97abaacde4a1e1",
+        "bytes": 13180
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack-double-after/frametimes.txt",
+        "sha256": "af1ab1537d31963c4b412731ffe1819916ba3e18e489e8148ef875a6571ec8ec",
+        "bytes": 252549
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack-double-after/save-before.ini",
+        "sha256": "c0f497ff64b6f757f943965a48d2795419fb934ddf54eb5f3dee000439484844",
+        "bytes": 72
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack-double-after/env",
+        "sha256": "80eb7146e0111e839432a8e507db8d94fd0f8eaf73339ddb4d1154218049ee57",
+        "bytes": 672
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/attack-double-after/summary.json",
+        "sha256": "9ae9bdb583d07cb597c5f11991368b283198bf67a0310926750fa026d3b5f0d1",
+        "bytes": 1521
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/affected.log",
+        "sha256": "07909892f4034e358d9ce7df7dafa916a45f14501790d685054dda117b864384",
+        "bytes": 27009
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/file-size.log",
+        "sha256": "aad7bccfd535b36f8047a23779b04b158750f4a1af9be46383a5258b95290033",
+        "bytes": 22354
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/emit.log",
+        "sha256": "3f2e2c185a6f50650aa1ffc99859a8a84d4d87098c758dd47295ce5aaab73f05",
+        "bytes": 126
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/campaign-dry.log",
+        "sha256": "20c518637588505132f356d01d68c4d0ff22e16d6fc7bd9fb4c321a0f31dd729",
+        "bytes": 567
+      },
+      {
+        "path": "artifacts/s2-terminal-clock-20260930/push-gate.log",
+        "sha256": "f9e8e2bc47126903f6316b4fff2a87dbabb836a48826f325826a497832241a49",
+        "bytes": 1126
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/phone/trace",
+        "sha256": "b1ddda10644ab57cdaf6fc302f4169815fa2738b38507e50db69e2d5392465b3",
+        "bytes": 6989159
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/control/trace",
+        "sha256": "b74a1a67100252aeab214a3c28ac62527198753846bb76b3f46d17d46777e2d3",
+        "bytes": 7282588
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/released-early/trace",
+        "sha256": "a2a7000f3d17389374cc77d433009bcb3db598c0bfb944b765ac49a2734ef96d",
+        "bytes": 5337079
+      },
+      {
+        "path": "/home/pedro/fnaf-apks/fnaf2/events/03-04-Office.txt",
+        "sha256": "026ee3861642abb24a0961d590d8e3d708c9417ec143b92aacb73d6c0415b23b",
+        "bytes": 455276
+      },
+      {
+        "path": "/home/pedro/fnaf-apks/fnaf2-recompile-20260927/pinned/66d6e2f6-d9cc45ff/Chowdren",
+        "sha256": "66d6e2f6b23f9af9c967f06337b55dd6afec9b2c27e686cebd304ea03eafec95",
+        "bytes": 49200040
+      },
+      {
+        "path": "/home/pedro/fnaf-apks/fnaf2-recompile-20260927/agent-audio/gamesrc-before/objects2.cpp",
+        "sha256": "3ff8245c5cff315725eb941920acde5568c95e7f852b4aa46049483f5f518574",
+        "bytes": 259471
+      },
+      {
+        "path": "/home/pedro/fnaf-apks/fnaf2-recompile-20260927/agent-audio/gamesrc-before/events_14.cpp",
+        "sha256": "1d656ba4e8424a5c8ec2e5d70a80d39a3d6b51c7ca0ee5eea4ef7fbf91bf35d3",
+        "bytes": 98763
+      },
+      {
+        "path": "/home/pedro/fnaf-apks/fnaf2-recompile-20260927/anaconda-gles2/Chowdren/base/objects/active.cpp",
+        "sha256": "373019194910cc87c89c2173ac49bcaef72106b9fef6679462038e462c74aa4d",
+        "bytes": 14961
+      },
+      {
+        "path": "/home/pedro/fnaf-apks/fnaf2-recompile-20260927/anaconda-gles2/Chowdren/base/common.cpp",
+        "sha256": "36c41171ec324ce5cb2757ca63b7169ebc55480792733903f89eb6cc3ee4a4d2",
+        "bytes": 66541
+      }
+    ]
+  },
+  "commits": {
+    "consequential": 0,
+    "bookkeeping": 0
+  },
+  "reproducer": {
+    "probe": "python3 artifacts/s2-terminal-clock-20260930/probe.py KIND (fresh output directory required)",
+    "replay": "node artifacts/s2-terminal-clock-20260930/replay.mjs VARIANT",
+    "record": "python3 artifacts/s2-terminal-clock-20260930/record.py"
+  },
+  "id": "s2-terminal-clock-847cd9b54242689e"
+}

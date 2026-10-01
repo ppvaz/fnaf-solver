@@ -1,0 +1,490 @@
+{
+  "schema": "evidence-record-v1",
+  "date": "2026-09-30",
+  "step": "ROADMAP S2",
+  "claimLevel": "MODEL_ONLY",
+  "fidelity": "rebuilt-runtime",
+  "status": "HELD_MONITOR_CAUSE_CONFIRMED_STATE_EQUIVALENCE_OPEN",
+  "question": "Does the omitted duration of a monitor tap explain the full-06 draw split at update 22244?",
+  "scope": {
+    "night": 7,
+    "customDials": 20,
+    "seed": 47593,
+    "replay": "full-06 landed",
+    "role": "A retained-night mechanism experiment with an unchanged native control and a single release-edge intervention."
+  },
+  "measurements": {
+    "controlRepeat": {
+      "drawRows": 40000,
+      "identicalToRetainedReference": true,
+      "officeUpdates": 22698
+    },
+    "contact": {
+      "pressTick": 22231,
+      "releaseTick": 22244,
+      "fullyUpTick": 22243,
+      "dropFlagTick": 22243,
+      "forcedDownTick": 22244
+    },
+    "modelControlFirstMismatch": {
+      "tick": 22244,
+      "modelFrame": 22245,
+      "rebuilt": {
+        "draws": 14632,
+        "state": 18825
+      },
+      "model": {
+        "draws": 14630,
+        "state": 57345
+      }
+    },
+    "heldMonitorModel": {
+      "firstMismatch": null,
+      "drawUpdatesCompared": 22698,
+      "controlStateChecks": [
+        {
+          "field": "monitor",
+          "compared": 22698,
+          "mismatchCount": 0,
+          "mismatches": []
+        },
+        {
+          "field": "viewing",
+          "compared": 22698,
+          "mismatchCount": 4,
+          "mismatches": [
+            {
+              "tick": 170,
+              "runtime": 7.0,
+              "model": 11
+            },
+            {
+              "tick": 171,
+              "runtime": 7.0,
+              "model": 11
+            },
+            {
+              "tick": 202,
+              "runtime": 11.0,
+              "model": 9
+            },
+            {
+              "tick": 203,
+              "runtime": 11.0,
+              "model": 9
+            }
+          ]
+        },
+        {
+          "field": "blackout",
+          "compared": 22698,
+          "mismatchCount": 0,
+          "mismatches": []
+        },
+        {
+          "field": "dropEverything",
+          "compared": 22698,
+          "mismatchCount": 0,
+          "mismatches": []
+        }
+      ],
+      "terminal": {
+        "traceSha256": "01d51ec4c595db6c21ec0b1e97b2c9c274e7916728533b2c51492cb2f4c3bebc",
+        "terminal": {
+          "frame": 22707,
+          "draws": 15040,
+          "state": 27881
+        },
+        "death": {
+          "reason": "inside-office",
+          "detail": "Withered Bonnie completed the sourced 40-frame marker-123 attack",
+          "frame": 22707,
+          "t": 378.45
+        },
+        "won": false
+      },
+      "terminalTimingDifferenceUpdates": 9
+    },
+    "drawAttribution": {
+      "tick": 22244,
+      "modelCalls": [
+        "monitorDownLate",
+        "randomImageDraw"
+      ],
+      "rngStates": [
+        57345,
+        39608,
+        18825
+      ],
+      "interpretation": "Model call attribution after the diagnostic restores per-update RNG agreement; runtime call return sites were not instrumented."
+    },
+    "releaseOneUpdateEarlier": {
+      "onlyInputChange": {
+        "from": "3 22244 up 0",
+        "to": "3 22243 up 0"
+      },
+      "dropFlagAt22243": 0,
+      "viewingAt22244": 11,
+      "inDangerAt22244": 0,
+      "outcome": "SIX_AM",
+      "officeUpdates": 25235,
+      "firstModelDrawMismatch": {
+        "tick": 23770,
+        "modelFrame": 23771,
+        "rebuilt": {
+          "draws": 15734,
+          "state": 23361
+        },
+        "model": {
+          "draws": 15733,
+          "state": 16064
+        }
+      }
+    },
+    "maskHoldControl": {
+      "pressTick": 325,
+      "originalReleaseTick": 327,
+      "extendedReleaseTick": 350,
+      "fullyOnTick": 337,
+      "maskStaysOnThroughRelease": true,
+      "dropFlagDuringFullyOnHold": 0,
+      "naiveHeldMaskDiagnostic": {
+        "incorrectDropFlagTick": 337,
+        "incorrectMaskLoweringTick": 338,
+        "firstDrawMismatch": {
+          "tick": 600,
+          "modelFrame": 601,
+          "rebuilt": {
+            "draws": 290,
+            "state": 6257
+          },
+          "model": {
+            "draws": 291,
+            "state": 21192
+          }
+        }
+      },
+      "interpretation": "Holding a mask raise does not reproduce the monitor behavior. A generic held-button correction needs the flip lock, not repeated toggle presses."
+    }
+  },
+  "conclusion": "The monitor remains touched on its completion update; the late drop-button read sets a flag consumed on the following update. The model queue omitted this held contact, missing both drop draws and the encounter triggered by the drop.",
+  "implementationStatus": "Diagnostic only. Production contact-duration handling is not changed by this record.",
+  "validation": {
+    "commands": [
+      {
+        "name": "references",
+        "command": [
+          "node",
+          "tools/validate-references.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "name": "diff-check",
+        "command": [
+          "git",
+          "diff",
+          "--check"
+        ],
+        "exitCode": 0
+      },
+      {
+        "name": "affected",
+        "command": [
+          "npm",
+          "run",
+          "test:affected",
+          "--",
+          "--files",
+          "docs/evidence/full06-held-tap-20260930.json"
+        ],
+        "exitCode": 1
+      },
+      {
+        "name": "emit",
+        "command": [
+          "npm",
+          "run",
+          "--silent",
+          "device:emit",
+          "--",
+          "--winner",
+          "packages/propose/bindings/fnaf2/campaign-night7-k3-winner.json",
+          "--out",
+          "artifacts/s2-held-tap-20260930/dry-k3"
+        ],
+        "exitCode": 0
+      },
+      {
+        "name": "campaign-dry",
+        "command": [
+          "npm",
+          "run",
+          "--silent",
+          "device:campaign",
+          "--",
+          "--bundle",
+          "artifacts/s2-held-tap-20260930/dry-k3",
+          "--nights",
+          "7",
+          "--profile",
+          "hid-mediaprojection"
+        ],
+        "exitCode": 0
+      },
+      {
+        "name": "push-gate",
+        "command": [
+          "npm",
+          "run",
+          "push-gate"
+        ],
+        "exitCode": 1
+      }
+    ],
+    "campaignDryRun": "READY",
+    "affectedGate": "ENVIRONMENT_ERROR: spawnSync git EPERM before later gates",
+    "pushGate": "ENVIRONMENT_ERROR: spawnSync git EPERM before lanes"
+  },
+  "supports": [
+    "s2-movement-clock-6b9464c4e5c96647"
+  ],
+  "limitations": [
+    "Per-update RNG agreement is not complete state equivalence: viewing differs on updates 170, 171, 202 and 203.",
+    "The diagnostic model dies nine updates after the rebuilt runtime; death-transition timing remains open.",
+    "The early-release branch reaches 6 AM in both programs but has an RNG mismatch at update 23770.",
+    "Mask-held behavior differs from monitor-held behavior; the production design must preserve that distinction.",
+    "No new retail phone run, device win, promotion or reliability claim. The retained retail full-06 win remains distinct from these host experiments.",
+    "Local full traces and diagnostic scripts remain in artifacts/; the record binds their hashes."
+  ],
+  "open": [
+    "Implement explicit contact duration and the sourced flip lock in the replay/model interface.",
+    "Explain the four initial viewing mismatches and the nine-update terminal delay.",
+    "Explain the next early-release branch RNG split at update 23770.",
+    "Compare the corrected host encounters with the retail phone observations."
+  ],
+  "provenance": {
+    "files": [
+      {
+        "path": "packages/source/src/games/fnaf2/plant-model.js",
+        "sha256": "683f8e38d1815679ab47941fa516873358f265d27d9db94c955fb751f5d73921",
+        "bytes": 164279
+      },
+      {
+        "path": "packages/source/src/games/fnaf2/movement-clock.js",
+        "sha256": "7b761e7530ae0f88b383dc58199768d0f284842b995a02956d1432efd9faeae5",
+        "bytes": 1513
+      },
+      {
+        "path": "packages/source/recompile/model-draw-trace.mjs",
+        "sha256": "0b61980db83f740d0f1187306c28726294b6728ba16aee9b8e48b16ab3d4b5dd",
+        "bytes": 6863
+      },
+      {
+        "path": "packages/source/recompile/sourced-rebuild-model-options.json",
+        "sha256": "9410759aeb2a0aec12a01aff239719d685ee680d612194fa20f98ef6fd8205d3",
+        "bytes": 1480
+      },
+      {
+        "path": "packages/review/bin/recompile/compare-draw-trace.mjs",
+        "sha256": "bb8933429a8e8c43d81dbf9d204d0d6e1403f25a8ed11780ec3eefd3d029dd44",
+        "bytes": 9857
+      },
+      {
+        "path": "packages/propose/bin/recompile/phone-encounter-replay.mjs",
+        "sha256": "04c6256ef464eb8c4ac6adf6139fe2a52f8eaa6be007993e66277cecd19b602f",
+        "bytes": 56932
+      },
+      {
+        "path": "tools/recompile/results/phone-encounters-20260930.json",
+        "sha256": "c9eb1089fb1cbc2879b8d945c4713b42ce472909a2ee7e04eec9ef1cc53dd43f",
+        "bytes": 193882
+      },
+      {
+        "path": "/home/pedro/fnaf-apks/fnaf2-recompile-20260927/agent-s2fix/full-06-landed-w-balloon-boy/trace",
+        "sha256": "2372caa9f293fcf1a5aa2af169ac665dfb5b5efe3b4ba503e8c0e3aef7a9b857",
+        "bytes": 7215829
+      },
+      {
+        "path": "/home/pedro/fnaf-apks/fnaf2-recompile-20260927/pinned/66d6e2f6-d9cc45ff/Chowdren",
+        "sha256": "66d6e2f6b23f9af9c967f06337b55dd6afec9b2c27e686cebd304ea03eafec95",
+        "bytes": 49200040
+      },
+      {
+        "path": "/home/pedro/fnaf-apks/fnaf2/events/03-04-Office.txt",
+        "sha256": "026ee3861642abb24a0961d590d8e3d708c9417ec143b92aacb73d6c0415b23b",
+        "bytes": 455276
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/experiment.mjs",
+        "sha256": "f3ba7b155ffe3c0e0866fb4f024e7e5e7b9a001e46b1e7c2d9f7826623d390bf",
+        "bytes": 3076
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/runtime.py",
+        "sha256": "e403410322b542d5f0708ce993d40072c75a8c0c3dc444dc3a8c0215afd6ec06",
+        "bytes": 2465
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/record.py",
+        "sha256": "76ea4d31f44c715b700643b8c5c85cd00dc62b3c8b51323b7fe4a4d0bbf9662e",
+        "bytes": 9710
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/control.json",
+        "sha256": "8aba46190139f3b50c583e3293491a83de72c8dbe1b9c6ab879e38758b72ca5f",
+        "bytes": 10174271
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/held-monitor.json",
+        "sha256": "8b3f2b957d6be0d4419acb38cabb6651998a9b262d65234ef0f3f3c3088f648e",
+        "bytes": 9753098
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/released-early.json",
+        "sha256": "bd178afb4c92b824a963a8ee9a79a52f14a10753d1076c0f18ccf4f48946c5f0",
+        "bytes": 10174088
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/held-all-mask.json",
+        "sha256": "c478b05dfddab0051ccd3771156252139f5bc1e70a982493dd8b2945df0e42bd",
+        "bytes": 955742
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/validation.json",
+        "sha256": "68b55be0113091e263eab3a3053ea63b70c8a8a975ff70de25c81e0eb3e8eec9",
+        "bytes": 1176
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/references.log",
+        "sha256": "33b4e937f544f4aba2671b0f0d7fad22d97af21140395d4f20c4f0e12e8b9ace",
+        "bytes": 34
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/diff-check.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/affected.log",
+        "sha256": "02e9ee06ac511edfcbfeac1066db43b593f2429b3326ba74a474c6998ca1515e",
+        "bytes": 26463
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/emit.log",
+        "sha256": "5d03a81926ccaa5866044dea41f4a6b414736d5740d5d13bfd58a2e570ca9726",
+        "bytes": 120
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/campaign-dry.log",
+        "sha256": "20c518637588505132f356d01d68c4d0ff22e16d6fc7bd9fb4c321a0f31dd729",
+        "bytes": 567
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/push-gate.log",
+        "sha256": "eecfb950fc9741898f0d2b834d78dc8d569ba477a340bd045b94fa4a16460515",
+        "bytes": 1126
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/control/run.input",
+        "sha256": "cac3d1e7055825725e5a0859532d48e9945ef9d7bd6cf90ce957bf2acc010cc9",
+        "bytes": 13161
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/control/frametimes.txt",
+        "sha256": "383d25c80bb3648e9199589ebce7b6782a510eacee4409df3c90e940869541cf",
+        "bytes": 253940
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/control/save-before.ini",
+        "sha256": "c0f497ff64b6f757f943965a48d2795419fb934ddf54eb5f3dee000439484844",
+        "bytes": 72
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/control/env",
+        "sha256": "9a22510b1687d079f8526a28e76d521f5ddabf95c20448aac8f3a35dad4ca8eb",
+        "bytes": 672
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/control/trace",
+        "sha256": "b74a1a67100252aeab214a3c28ac62527198753846bb76b3f46d17d46777e2d3",
+        "bytes": 7282588
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/control/summary.json",
+        "sha256": "349a45c6643461ffb726f2d68fbe29f63e80abf90a7fab6a63e887c13c792a2c",
+        "bytes": 103
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/released-early/run.input",
+        "sha256": "3a8f8b030161bb5cdbb10d447b76ffae9a440d2684adb56785ea50a31fb8e00f",
+        "bytes": 13161
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/released-early/frametimes.txt",
+        "sha256": "383d25c80bb3648e9199589ebce7b6782a510eacee4409df3c90e940869541cf",
+        "bytes": 253940
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/released-early/save-before.ini",
+        "sha256": "c0f497ff64b6f757f943965a48d2795419fb934ddf54eb5f3dee000439484844",
+        "bytes": 72
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/released-early/env",
+        "sha256": "933ac8db21243fb3105510c467507f1697d521445adb64669170c0e6020464d1",
+        "bytes": 679
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/released-early/trace",
+        "sha256": "a2a7000f3d17389374cc77d433009bcb3db598c0bfb944b765ac49a2734ef96d",
+        "bytes": 5337079
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/released-early/summary.json",
+        "sha256": "9a0c69592e6219183f23243c9f6b736f4f6f95f14bcbba38601c26036b8bd75a",
+        "bytes": 104
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/mask-held/run.input",
+        "sha256": "aa10f94fdd25836c5ca9f38e30d7b36e677ce8b93b969563e6691076914588fe",
+        "bytes": 13161
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/mask-held/frametimes.txt",
+        "sha256": "383d25c80bb3648e9199589ebce7b6782a510eacee4409df3c90e940869541cf",
+        "bytes": 253940
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/mask-held/save-before.ini",
+        "sha256": "c0f497ff64b6f757f943965a48d2795419fb934ddf54eb5f3dee000439484844",
+        "bytes": 72
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/mask-held/env",
+        "sha256": "44036f72c3e80e748acbb30eaf9a65337cfc189c0ac097f2796ee37d2df67795",
+        "bytes": 658
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/mask-held/trace",
+        "sha256": "8ba11d986ae0ad75d85d24dd96951efb5cfc799a29885a8c3bfb38590d8e0e57",
+        "bytes": 1031952
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/mask-held/summary.json",
+        "sha256": "eddaec6c0897bc4ebb3cae64aae781e452c23524c5cf9984ad2b0021d4462b82",
+        "bytes": 102
+      }
+    ]
+  },
+  "reproducer": {
+    "model": "node artifacts/s2-held-tap-20260930/experiment.mjs VARIANT (control, held-monitor, released-early, held-all-mask)",
+    "runtime": "python3 artifacts/s2-held-tap-20260930/runtime.py VARIANT (control, released-early, mask-held; requires fresh output directory)",
+    "record": "python3 artifacts/s2-held-tap-20260930/record.py"
+  },
+  "commits": {
+    "consequential": 0,
+    "bookkeeping": 0
+  },
+  "id": "s2-held-monitor-7793a6f003917c64"
+}

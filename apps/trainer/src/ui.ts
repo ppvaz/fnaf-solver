@@ -220,7 +220,7 @@ export class UI {
     for (let k = 0; k < 3; k++) {
       const camId = C.TARGET_CAMS[k];
       let best = 0;
-      for (const u of sim.units) if (!u.done && u.path[u.idx] === camId) best = Math.max(best, u.stunUntil - sim.frame);
+      for (const u of sim.units) if (!u.done && u.path[u.idx] === camId) best = Math.max(best, sim.unitStunLeft(u));
       const occupied = sim.units.some(u => !u.done && u.path[u.idx] === camId);
       const v = Math.max(0, best) / C.STUN_FRAMES;
       this.el.stuns[k].style.width = `${v * 100}%`;
@@ -312,10 +312,10 @@ export class UI {
       if (viewing === 5 && sim.bb.stage === C.BB_STAGES - 1) extra.push('BB');
       if (viewing === 11) extra.push(`PUPPET ${sim.puppet.stage}/${C.PUPPET_ESCAPE_STAGES}`);
       this.el.feedBody.innerHTML = here.map(u => {
-        const st = Math.max(0, u.stunUntil - sim.frame) / C.STUN_FRAMES;
+        const st = sim.unitStunLeft(u) / C.STUN_FRAMES;
         return `<span class="chip ${st > 0 ? 'stunned' : 'free'}">${u.short}</span>`;
       }).join('') + extra.map(e => `<span class="chip immune">${e}</span>`).join('');
-      const maxStun = Math.max(0, ...here.map(u => u.stunUntil - sim.frame));
+      const maxStun = Math.max(0, ...here.map(u => sim.unitStunLeft(u)));
       this.el.feedStun.style.width = `${(maxStun / C.STUN_FRAMES) * 100}%`;
       this.el.wind.classList.toggle('shown', viewing === C.BOX_CAM);
       for (const b of this.el.map.children) {
@@ -324,7 +324,7 @@ export class UI {
         // `viewing` camera; two active buttons are the glitch's visible tell.
         b.classList.toggle('active', id === viewing || id === sim.cam);
         let best = -1;
-        for (const u of sim.units) if (!u.done && u.path[u.idx] === id) best = Math.max(best, u.stunUntil - sim.frame);
+        for (const u of sim.units) if (!u.done && u.path[u.idx] === id) best = Math.max(best, sim.unitStunLeft(u));
         b.classList.toggle('has', best > -1);
         b.classList.toggle('loose', best === 0);
       }

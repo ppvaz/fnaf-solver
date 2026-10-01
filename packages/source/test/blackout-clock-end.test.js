@@ -28,10 +28,47 @@ for (const v5 of [{ frameValue5: () => 1 }, { sourcedValue5: true }]) {
   assert.equal(length({ ...v5, sourcedBlackoutClockEnd: true }), 299, 'on: the loop the clock reaches 300');
 }
 
+// full-06's winning branch: g845 requests fade completion, but a new danger
+// edge at g534 resets the fade before g536 can clear the old clock.
+{
+  const s = new Sim({ ...QUIET, ...SOURCED, sourcedBlackoutClockEnd: true, frameValue5: () => 1 });
+  for (const id of Object.keys(s.ai)) s.ai[id] = 0;
+  s.frame = 100; s.maskOn = true; s.maskAnim = 0; s.startBlackout('prior');
+  for (let i = 0; i < 299; i++) s.tick();
+  assert.equal(s.blackout.active, false);
+  assert.equal(s.blackoutClock, 300);
+  s.maskOn = false; s.monitor = 'up'; s.viewing = 11; s.tick();
+  s.monitor = 'down'; s.viewing = 0;
+  s.opts.stalledEnabled = true;
+  const u = s.units.find(x => x.id === 'withchica');
+  u.atOpening = true; u.officeCue = false;
+  s.tick();
+  assert.equal(s.blackoutClock, 301, 'entry retains the previous clock');
+  assert.equal(s.blackout.active, true, 'g537 cannot fire again while its condition stays true');
+  assert.equal(s.blackoutPhase.fade, 2, 'g534 resets 250 to 1 before g535 adds the delta');
+  for (let i = 0; i < 248; i++) s.tick();
+  assert.equal(s.blackoutClock, 0, 'g536 clears the clock only when the new fade reaches 250');
+  assert.equal(s.blackout.active, true, 'the encounter survives that reset');
+  for (let i = 0; i < 299; i++) s.tick();
+  assert.equal(s.blackout.active, true);
+  s.tick();
+  assert.equal(s.blackout.active, false, 'a fresh crossing of 300 resolves the encounter');
+}
+
+// Without a new danger edge, g845's fade request clears on the next g536 pass.
+{
+  const s = new Sim({ ...QUIET, ...SOURCED, sourcedBlackoutClockEnd: true, frameValue5: () => 1 });
+  s.frame = 100; s.maskOn = true; s.maskAnim = 0; s.startBlackout('prior');
+  for (let i = 0; i < 299; i++) s.tick();
+  s.maskOn = false; s.monitor = 'up'; s.viewing = 11; s.tick();
+  s.tick();
+  assert.equal(s.blackoutClock, 0, 'camera viewing completes the old fade');
+}
+
 // Off leaves the default unchanged.
 {
   const run = opts => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   assert.equal(run({}), run({ sourcedBlackoutClockEnd: false }), 'off equals the default');
 }
 
-console.log('blackout clock end: g537 resolves the encounter on the loop g514\'s clock reaches 300; off unchanged');
+console.log('blackout clock end: g534-g537 preserve and reset the clock through overlapping fades; g845 camera completion; off unchanged');

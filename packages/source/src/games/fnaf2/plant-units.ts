@@ -3,6 +3,7 @@
 // method; plant-model.js installs it on Sim.prototype.
 import * as C from './config.ts';
 import { ROUTE_MOVE_ORDER, MON_UP } from './plant-constants.ts';
+import { unitStunReady, setUnitStun, drainUnitStuns } from './movement-clock.ts';
 import type { Sim } from './plant-model.ts';
 
 /** g785/g786: the cams-up streak counts gated one-second fires while viewing > 0 (sourcedGatedEvery). */
@@ -17,7 +18,7 @@ export function tickStreak(this: Sim) {
  * before Night 7 the CAM 08/09 conditions sourcedRouteStep holds or discards on.
  */
 export function footstepPromotable(this: Sim, u: any, f: number) {
-  if (this.opts.sourcedBDrainOrder ? f <= u.stunUntil : f < u.stunUntil) return false;   // g344-g360 read B before g361-g371
+  if (!unitStunReady(this, u, f, true)) return false;   // g344-g360 read B before g361-g371
   if (this.opts.selectedCameraGate && C.SELECTED_CAMERA_GATED.has(u.id) && u.path[u.idx] === this.cam &&
       (C.WITHEREDS.has(u.id) || this.camsUp)) return false;
   if (u.id === 'mangle' && !this.camsUp && this.lightStallOn) return false;
@@ -86,7 +87,7 @@ export function unitLeave(this: Sim, u, opts: { idx?: number, cooldown?: number 
   // Repels write the unit's B: the movement pipeline requires B = 0, so the
   // cooldown is the same counter as the flash stun (and Toy Bonnie's
   // opening timer).
-  if (opts.cooldown) u.stunUntil = this.frame + opts.cooldown;
+  if (opts.cooldown) setUnitStun(this, u, opts.cooldown);
   u.openingSince = -1; u.openingReadyAt = -1; u.openingTicks = 0;
   u.officeCue = false; u.maskExposureTicks = 0; u.raiseSeen = false;
   u.insideArmed = false;
@@ -246,6 +247,7 @@ export function routePass(this: Sim, f: number) {
     this.footstepPromote(u, false);
     if (this.sourcedRouteStep(u, f, 'promote') === 'discard') { u.pending = false; u.promoted = false; }
   }
+  drainUnitStuns(this, f);                                                        // g361-g372
   const views = this.opts.sourcedRouteViewDraws && this.opts.sourcedViewDraws;
   if (views) { this.drawViewed(f, 'g366'); this.drawViewed(f, 'g368'); }             // among g361-g371, before the moves
   const order = views ? ROUTE_MOVE_ORDER : [...this.units.map(u => u.id), 'bb'];
@@ -290,8 +292,7 @@ export function rollDecidePath(this: Sim) {
 }
 
 /**
- * The dump's look-hold and route rules the base gates do not express, for a
- * unit whose movement roll has passed (A = 1 or 2). Returns 'hold' (keep it
+ * Look-hold and route rules for a unit whose roll has passed (A = 1 or 2). Returns 'hold' (keep it
  * pending), 'discard' (A = 0, roll spent), 'returned' (g378 moved it), or
  * null (fall through to canAdvance). Null whenever sourcedRouteForks is off.
  */
@@ -301,7 +302,7 @@ export function sourcedRouteStep(this: Sim, u: any, f: number, phase = null) {
   if (this.opts.night !== 7 && phase !== 'move') {                                                   // promotion rules
     if (u.id === 'withfreddy' && (onCam('withchica', 8) || onCam('withbonnie', 8))) return 'hold';   // g344
     if (u.id === 'withchica' && onCam('withbonnie', 8)) return 'hold';                               // g347
-    const flagOn = this.opts.sourcedBDrainOrder ? f > u.stunUntil : f >= u.stunUntil;               // value 1 == 0
+    const flagOn = unitStunReady(this, u, f, true);                                               // value 1 == 0
     if (u.id === 'toyfreddy' && flagOn && onCam('toychica', 9)) return 'discard';                    // g352
     if (u.id === 'toychica' && flagOn && onCam('toybonnie', 9)) return 'discard';                    // g356
   }
@@ -309,10 +310,10 @@ export function sourcedRouteStep(this: Sim, u: any, f: number, phase = null) {
   if (u.id === 'withfreddy' && u.path[u.idx] === 3 && this.decidePath !== 1 && this.decidePath !== 2)
     return 'hold';
   if (u.id === 'withfreddy' && u.path[u.idx] === 'blindB' &&
-      (this.opts.sourcedPromotedMoves ? u.promoted : f >= u.stunUntil) &&
+      (this.opts.sourcedPromotedMoves ? u.promoted : unitStunReady(this, u, f)) &&
       this.maskFullyOn && !this.lightStallOn) {                                                       // g378
     u.idx = u.path.indexOf(3);
-    u.stunUntil = f + (5000 - this.opts.night * 500);
+    setUnitStun(this, u, 5000 - this.opts.night * 500, f);
     this.emit('route-return', { who: u.id, from: 'blindB', to: 3 });
     this.flag('broke-loose', `${u.name} returned from hall stage 2 to CAM 03 under a fully-on mask`);
     return 'returned';
@@ -323,7 +324,7 @@ export function sourcedRouteStep(this: Sim, u: any, f: number, phase = null) {
 export function canAdvance(this: Sim, u, f) {
   // sourcedPromotedMoves: the move groups test value 0 == 2; the stun and the marker were the promotion's.
   if (this.opts.sourcedPromotedMoves) { if (!u.promoted) return false; }
-  else if (this.opts.sourcedBDrainOrder ? f <= u.stunUntil : f < u.stunUntil) return false;
+  else if (!unitStunReady(this, u, f, true)) return false;
   // Android Office groups 344-348 and 357 (post-XOR decode): the
   // selected-camera marker holds a Withered's pending roll while it
   // overlaps their room, with NO monitor condition — and lowering the
@@ -363,7 +364,7 @@ export function tickUnits(this: Sim, f) {
     if (u.done) continue;
     // Stage 2 first: a committed attack runs out its animation and kills.
     if (u.committedAt >= 0) {
-      if (f >= u.committedAt) {
+      if (!this.opts.sourcedAttackAnimation && f >= u.committedAt) {
         this.kill('inside-office',
           `${u.name} completed the sourced ${C.INSIDE_ATTACK_FRAMES}-frame ` +
           'marker-123 attack');
@@ -430,7 +431,8 @@ export function tickUnits(this: Sim, f) {
     // with the cameras down (groups 445-447 and 490). "Toys and W. Freddy"
     // was the pre-XOR attribution; config.js's entryStreakFrames note
     // records the 2026-08-20 re-binding.
-    if (u.atOpening && u.openingRule === 'streak' && !this.camsUp && !u.officeCue)
+    if (!(this.opts.sourcedBlackoutClockEnd && this.opts.sourcedSheetOrder) &&
+        u.atOpening && u.openingRule === 'streak' && !this.camsUp && !u.officeCue)
       this.startOfficeEncounter(u);
 
     // Toy Bonnie creates his separate visible overlay on a 500 ms / 50% roll
@@ -470,7 +472,7 @@ export function tickUnits(this: Sim, f) {
       : this.camsUpSince >= 0 && f - this.camsUpSince >= C.entryStreakFrames(this.opts.night));
     const armedKill = u.atOpening && u.openingRule === 'mask' && this.camsUp &&
       (u.id === 'toybonnie'
-        ? f >= u.stunUntil
+        ? unitStunReady(this, u, f)
         : u.openingTicks >= C.TOY_CHICA_OPENING_TICKS);
     if (streakKill || armedKill) {
       const why = streakKill
@@ -488,6 +490,7 @@ export function advance(this: Sim, u) {
     const here = u.path[u.idx];
     if (u.id === 'withfreddy' && here === 3 && this.decidePath === 2) {                              // g377
       u.idx = u.path.indexOf(7);
+      u.promoted = false; // g377 consumes value 0, preserving the already-written value 2
       this.emit('route-fork', { who: u.id, at: 3, to: 7 });
       this.flag('broke-loose', `${u.name} moved to CAM 07 (decide path 2)`);
       return;
@@ -528,7 +531,7 @@ export function advance(this: Sim, u) {
     // B = 1000-100*night on arrival; g546 needs B = 0 plus a monitor
     // raise), so it shares the flash-stun/repel-cooldown field.
     if (u.id === 'toybonnie')
-      u.stunUntil = this.frame + C.toyBonnieOpeningFrames(this.opts.night);
+      setUnitStun(this, u, C.toyBonnieOpeningFrames(this.opts.night));
     if (u.mutex) this.engagedToy = u.id;
     this.emit('vent-bang', { who: u.id, leaving: false, sample: C.THUD_SAMPLE });
     this.flag('broke-loose', `${u.name} reached office threshold marker 122`);

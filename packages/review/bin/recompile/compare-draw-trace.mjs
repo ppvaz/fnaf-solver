@@ -28,7 +28,7 @@ export function checkCustomNight(night, customNight) {
 // `schedule` (a Sim queue, `[frame, press|release, action]`) drives the model with a replayed schedule;
 // the harness trace must then come from the same schedule (compare-schedule-replay.mjs binds the two).
 export function compareTrace(text, { night, seed, frame, frames, modelOptions = {}, customNight = null, schedule = [], observe = null,
-  frameTimes = null }) {
+  frameTimes = null, contacts = null }) {
   checkCustomNight(night, customNight);
   if (!text.endsWith('\n')) throw new Error('trace is truncated: missing final newline');
   const visits = [];
@@ -55,7 +55,8 @@ export function compareTrace(text, { night, seed, frame, frames, modelOptions = 
     }
   }
   const model = drawTrace({ night, seed, frames, modelOptions, ...(customNight ? { customNight } : {}),
-    ...(schedule.length ? { rows: schedule } : {}), ...(observe ? { observe } : {}), ...(frameTimes ? { frameTimes } : {}) });
+    ...(contacts !== null ? { contacts } : schedule.length ? { rows: schedule } : {}),
+    ...(observe ? { observe } : {}), ...(frameTimes ? { frameTimes } : {}) });
   const targetVisits = visits.filter((v) => v.frame === frame);
   const alignments = [0, 1].map((offset) => {
     let compared = 0;
@@ -89,11 +90,12 @@ export function compareTrace(text, { night, seed, frame, frames, modelOptions = 
         : alignment.compared < Math.min(frames, model.out.length - 1) ? 'INCOMPLETE' : 'MATCHED_PREFIX';
   const result = {
     schema: 'recompile-draw-comparison-v1', claimLevel: 'MODEL_ONLY', fidelity: 'rebuilt-runtime', status,
-    question: schedule.length
+    question: schedule.length || contacts?.length
       ? 'Driven by one replayed schedule, does the rebuilt night consume the same Random stream per event update as the simulator?'
       : 'Does the rebuilt no-input night consume the same Random stream per event update as the simulator?',
     scope: { night, seed, targetFrame: frame, requestedModelFrames: frames, modelOptions, ...(customNight ? { customNight } : {}),
-      input: schedule.length ? 'navigation plus a replayed gameplay schedule' : 'navigation only; no gameplay actions' },
+      input: schedule.length || contacts?.length ? 'navigation plus a replayed gameplay schedule' : 'navigation only; no gameplay actions',
+      inputMode: contacts !== null ? 'explicit-contact-duration' : 'legacy-semantic-edges' },
     runtime: { visits, targetUpdates: rows.length, namedTouches: touches, stop, traceSha256: hash(text), drawTraceSha256: hash(`${projection.join('\n')}\n`) },
     model: { traceSha256: hash(JSON.stringify({ out: model.out, death: model.death, won: model.won })),
       terminal: model.out.at(-1), death: model.death, won: model.won },

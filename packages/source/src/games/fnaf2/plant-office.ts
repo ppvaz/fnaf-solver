@@ -3,25 +3,17 @@
 // (g443-g447, g530-g562). Each function is a Sim method; plant-model.js installs it on Sim.prototype.
 import * as C from './config.ts';
 import { MON_DOWN, MON_RAISING, MON_UP, MON_LOWERING } from './plant-constants.ts';
+import * as contacts from './contact-input.ts';
 import type { Sim } from './plant-model.ts';
 
 
+export function enableContactInput(this: Sim) { contacts.enableContacts(this); }
+export function contactDown(this: Sim, action) { contacts.contactDown(this, action); }
+export function contactUp(this: Sim, action) { contacts.contactUp(this, action); }
+
 export function press(this: Sim, action) {
   if (!this.alive) return;
-  // Two input gates the engine had never enforced, both about reachability
-  // rather than effect:
-  //
-  // 1. The mask cannot go on with the monitor up. There is no state in which
-  //    both are raised, so a mask press while the cams are up is not a
-  //    toggle -- it is an input the player cannot make.
-  // 2. While the mask is on, the only control that answers is the mask
-  //    itself. This is the input-side half of the g75/g84 lockout the light
-  //    getters already model: a masked player can only take the mask off.
-  //
-  // Both matter for an open-loop pilot, whose table presses buttons without
-  // checking what state the game is actually in: presses that the device
-  // silently drops must be dropped here too, or the simulation flatters a
-  // schedule that the phone would not execute.
+  // Legacy semantic taps enforce surface reachability; contactDown/contactUp preserve physical duration.
   // `maskOn` is the steady endpoint, while `maskAnim` also covers the
   // lowering interval after the off press. During that interval the mask is
   // still the visible/input-owning surface; clearing maskOn early must not
@@ -102,15 +94,13 @@ export function release(this: Sim, action) {
 
 export function setMask(this: Sim, on) {
   if (this.maskOn === on) return;
+  if (this.contactInput) this.contactInput.flipLock = true; // g270/g274
   this.maskOn = on;
+  this.maskOffBlocked = false;
   this.maskAnim = on ? C.MASK_ANIM_ON + (this.opts.sourcedAnimationCount ? 1 : 0) : C.MASK_ANIM_OFF;   // g9 >= 12, g10 >= 14
-  if (on) {
-    // g776 dismisses him only once `mask` = 2 -- after the put-on animation
-    // (see the maskAnim completion in tick()), not at the press.
-  } else {
-    // For the four shared office attackers, taking the mask back off after
-    // they have reached marker 123 immediately raises `danger 2`
-    // (Android groups 560-563).
+  this.animationClocks.maskAnim = 0;
+  if (!on) {
+    // g560-563: removing the mask raises danger 2 for the four streak attackers already at marker 123.
     for (const u of this.units) {
       if (u.inside && u.openingRule === 'streak')
         this.commitAttack(u, 'mask was removed with an attacker inside the office');
@@ -121,6 +111,7 @@ export function setMask(this: Sim, on) {
 export function setMonitor(this: Sim, up) {
   if (up && (this.monitor === MON_UP || this.monitor === MON_RAISING)) return;
   if (!up && (this.monitor === MON_DOWN || this.monitor === MON_LOWERING)) return;
+  this.animationClocks.monAnim = 0;
   if (up) {
     if (this.gf.present) { this.kill('golden-freddy', 'Raised the monitor with Golden Freddy in the office'); return; }
     this.monitor = MON_RAISING; this.monAnim = C.MONITOR_ANIM_UP + (this.opts.sourcedAnimationCount ? 1 : 0);   // g1 >= 12
@@ -131,6 +122,7 @@ export function setMonitor(this: Sim, up) {
     }
     this.camsUpSince = this.frame; // the source counter runs from the tap
   } else {
+    if (this.contactInput) this.contactInput.flipLock = true; // g262
     this.monitor = MON_LOWERING; this.monAnim = C.MONITOR_ANIM_DOWN + (this.opts.sourcedAnimationCount ? 1 : 0);   // g6 >= 22
     if (this.opts.sourcedMonitorDownDraw) this.monDown.pendingDrop = true;   // e211 shows the sprite
     // g262 clears the displayed feed immediately but leaves the marker and
@@ -154,8 +146,11 @@ export function setMonitor(this: Sim, up) {
 
 export function startBlackout(this: Sim, by, unitId = null) {
   this.blackoutStartFrame = this.frame;
-  this.blackoutClock = 0;
-  this.blackoutClockFrame = this.frame - 1;
+  // g514 counts the entry loop too, even when the model starts the encounter after its flicker pass.
+  // A later loop's delta cannot stand in for that first delta on a measured clock.
+  this.blackoutClock = (this.opts.sourcedBlackoutClockEnd ? this.blackoutClock : 0) +
+    (this.hooked && this.opts.sourcedBlackoutDraws ? this.value5(this.frame) : 0);
+  this.blackoutClockFrame = this.frame - (this.hooked && this.opts.sourcedBlackoutDraws ? 0 : 1);
   this.blackout = { active: true, until: this.frame + C.BLACKOUT_FRAMES, by,
                     unitId, masked: this.maskFullyOn,
                     deadline: this.frame + C.maskGraceFrames(this.opts.night) };
@@ -185,7 +180,8 @@ export function unitEnterInside(this: Sim, u, why) {
 
 // Worst luck for the player is the shortest immunity, so the roll pins to 0.
 export function repelCooldown(this: Sim) {
-  return Math.floor(this.rng.int(0, C.REPEL_COOLDOWN_ROLL - 1, 0) / this.opts.night);
+  const value = this.rng.int(0, C.REPEL_COOLDOWN_ROLL - 1, 0) / this.opts.night;
+  return this.opts.sourcedMovementClock ? value : Math.floor(value);
 }
 
 // g532 / g556-559 -> `being attacked by` = N. Past this point the mask is
@@ -225,11 +221,10 @@ export function tickForcedown(this: Sim) {
 }
 
 // sourcedDropFlagOrder: g618/g619 read this update's drop-button touch after g262/g274 and g612,
-// so the flag they raise is performed by the next tick's tickForcedown. A touch from an update
-// whose tick returned early (a non-lethal kill) is dropped. (v1, the flip lock g262, g270 and
-// g274 set, is not modelled: it is 0 here for a tap that is not still held from them.)
+// so the flag they raise is performed by the next tick's tickForcedown. Explicit contacts carry
+// the flip lock; legacy taps last one update. A tap from a tick that returned early is dropped.
 export function readDropTouch(this: Sim) {
-  const touched = this.dropTouch === this.frame - 1;
+  const touched = contacts.heldDropTouch(this) || this.dropTouch === this.frame - 1;
   this.dropTouch = -1;
   if (!touched) return;
   if (this.monitor === MON_UP && this.maskFullyOff) this.dropEverything = true;                         // g618

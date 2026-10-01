@@ -1,0 +1,857 @@
+{
+  "schema": "evidence-record-v1",
+  "date": "2026-09-30",
+  "step": "ROADMAP S2",
+  "claimLevel": "MODEL_ONLY",
+  "fidelity": "rebuilt-runtime",
+  "status": "CONTACT_DURATION_IMPLEMENTED_TERMINAL_STATE_GAP_REMAINS",
+  "question": "Does production replay with explicit contacts reproduce the held-monitor drop, mask lock and camera-release selection measured in the rebuilt runtime?",
+  "scope": {
+    "night": 7,
+    "customDials": 20,
+    "seed": 47593,
+    "replay": "full-06 landed",
+    "role": "One retained-night mechanism comparison plus bounded controls, not a population or retail-equivalence claim."
+  },
+  "implementation": {
+    "sourceAPI": [
+      "enableContactInput",
+      "contactDown",
+      "contactUp"
+    ],
+    "inputContract": "Explicit stationary semantic contacts: action, downFrame, upFrame. Releases precede presses on the same update; zero-length and overlapping same-action contacts are refused.",
+    "panelRule": "Late held-touch reads respect the flip lock. A monitor raise may be dropped by its still-held contact; a mask raise holds the lock until release.",
+    "cameraRule": "Latch the selected camera on contact down while cameras are up; apply selection on the matching release.",
+    "replayUsers": [
+      "phone-encounter-replay",
+      "compare-schedule-replay (sourced input ordering)",
+      "phone-clock-sweep",
+      "phone-input-bracket-sweep"
+    ],
+    "legacyAPI": "The existing press/release queue keeps its tap behavior; new comparisons label their input representation.",
+    "provenance": "MODEL_SOURCES includes contact-input.js and movement-clock.js."
+  },
+  "measurements": {
+    "nativeRepeat": {
+      "drawRows": 40000,
+      "retainedDrawProjectionEqual": true
+    },
+    "fullReplay": {
+      "drawUpdatesCompared": 22698,
+      "firstDrawMismatch": null,
+      "comparisonStatus": "INCOMPLETE",
+      "stateChecks": [
+        {
+          "field": "monitor",
+          "compared": 22698,
+          "mismatches": []
+        },
+        {
+          "field": "flipLock",
+          "compared": 22698,
+          "mismatches": []
+        },
+        {
+          "field": "viewing",
+          "compared": 22698,
+          "mismatches": []
+        },
+        {
+          "field": "blackout",
+          "compared": 22698,
+          "mismatches": []
+        },
+        {
+          "field": "dropEverything",
+          "compared": 22698,
+          "mismatches": []
+        }
+      ],
+      "maskStateCheck": {
+        "field": "mask",
+        "compared": 22698,
+        "mismatches": [
+          {
+            "tick": 22682,
+            "runtime": 3.0,
+            "model": 0
+          },
+          {
+            "tick": 22683,
+            "runtime": 3.0,
+            "model": 0
+          },
+          {
+            "tick": 22684,
+            "runtime": 3.0,
+            "model": 0
+          },
+          {
+            "tick": 22685,
+            "runtime": 3.0,
+            "model": 0
+          },
+          {
+            "tick": 22686,
+            "runtime": 3.0,
+            "model": 0
+          },
+          {
+            "tick": 22687,
+            "runtime": 3.0,
+            "model": 0
+          },
+          {
+            "tick": 22688,
+            "runtime": 3.0,
+            "model": 0
+          },
+          {
+            "tick": 22689,
+            "runtime": 3.0,
+            "model": 0
+          },
+          {
+            "tick": 22690,
+            "runtime": 3.0,
+            "model": 0
+          },
+          {
+            "tick": 22691,
+            "runtime": 3.0,
+            "model": 0
+          },
+          {
+            "tick": 22692,
+            "runtime": 3.0,
+            "model": 0
+          },
+          {
+            "tick": 22693,
+            "runtime": 3.0,
+            "model": 0
+          },
+          {
+            "tick": 22694,
+            "runtime": 3.0,
+            "model": 0
+          },
+          {
+            "tick": 22695,
+            "runtime": 3.0,
+            "model": 0
+          },
+          {
+            "tick": 22696,
+            "runtime": 3.0,
+            "model": 0
+          },
+          {
+            "tick": 22697,
+            "runtime": 3.0,
+            "model": 0
+          }
+        ]
+      },
+      "occupiedWindows": {
+        "compared": 38,
+        "agree": 38,
+        "unplayed": 5,
+        "rebuilt": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.B?????",
+        "model": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.B?????"
+      },
+      "maskLedger": {
+        "compared": 22698,
+        "mismatches": 16,
+        "paired": 151,
+        "rebuiltChanges": 151,
+        "modelChanges": 152,
+        "offsets": {
+          "0>1 +0": 38,
+          "1>2 +0": 38,
+          "2>3 +0": 38,
+          "3>0 +0": 37
+        }
+      },
+      "outcome": {
+        "rebuilt": {
+          "result": "death",
+          "reason": "Withered Bonnie",
+          "officeUpdates": 22698,
+          "endMs": 377842.7,
+          "attackSetTick": 22666,
+          "attackSetMs": 377310.3
+        },
+        "model": {
+          "result": "death",
+          "reason": "inside-office",
+          "frame": 22707,
+          "endMs": 378011
+        }
+      },
+      "terminalDelayUpdates": 9
+    },
+    "longContactProbe": {
+      "officeUpdates": 693,
+      "monitorContact": [
+        152,
+        210
+      ],
+      "maskContact": [
+        325,
+        380
+      ],
+      "drawFirstMismatch": null,
+      "nativeFlipEdges": [
+        {
+          "tick": 0,
+          "v0": 0.0,
+          "v1": 0.0
+        },
+        {
+          "tick": 152,
+          "v0": 1.0,
+          "v1": 0.0
+        },
+        {
+          "tick": 165,
+          "v0": 2.0,
+          "v1": 0.0
+        },
+        {
+          "tick": 166,
+          "v0": 3.0,
+          "v1": 1.0
+        },
+        {
+          "tick": 188,
+          "v0": 0.0,
+          "v1": 1.0
+        },
+        {
+          "tick": 210,
+          "v0": 0.0,
+          "v1": 0.0
+        },
+        {
+          "tick": 325,
+          "v0": 0.0,
+          "v1": 1.0
+        },
+        {
+          "tick": 380,
+          "v0": 0.0,
+          "v1": 0.0
+        }
+      ],
+      "nativeMaskEdges": [
+        {
+          "tick": 0,
+          "v0": 0.0
+        },
+        {
+          "tick": 325,
+          "v0": 1.0
+        },
+        {
+          "tick": 337,
+          "v0": 2.0
+        }
+      ],
+      "stateChecks": [
+        {
+          "field": "monitor",
+          "compared": 693,
+          "mismatches": []
+        },
+        {
+          "field": "flipLock",
+          "compared": 693,
+          "mismatches": []
+        },
+        {
+          "field": "viewing",
+          "compared": 693,
+          "mismatches": []
+        },
+        {
+          "field": "blackout",
+          "compared": 693,
+          "mismatches": []
+        },
+        {
+          "field": "dropEverything",
+          "compared": 693,
+          "mismatches": []
+        },
+        {
+          "field": "mask",
+          "compared": 693,
+          "mismatches": []
+        }
+      ]
+    },
+    "extendedMaskInFullReplay": {
+      "contact": [
+        325,
+        350
+      ],
+      "officeUpdates": 4593,
+      "drawFirstMismatch": null,
+      "stateChecks": [
+        {
+          "field": "mask",
+          "compared": 4593,
+          "mismatches": []
+        },
+        {
+          "field": "viewing",
+          "compared": 4593,
+          "mismatches": []
+        },
+        {
+          "field": "blackout",
+          "compared": 4593,
+          "mismatches": []
+        },
+        {
+          "field": "dropEverything",
+          "compared": 4593,
+          "mismatches": []
+        }
+      ]
+    },
+    "earlyMonitorRelease": {
+      "contact": [
+        22231,
+        22243
+      ],
+      "firstDrawMismatch": {
+        "tick": 23770,
+        "modelFrame": 23771,
+        "rebuilt": {
+          "draws": 15734,
+          "state": 23361
+        },
+        "model": {
+          "draws": 15733,
+          "state": 16064
+        }
+      },
+      "modelTerminal": {
+        "traceSha256": "741a9d634672953f424a27010d56f3ed8bcb2174b0e0fec888b5ddca4c2c7eb1",
+        "terminal": {
+          "frame": 25235,
+          "draws": 16825,
+          "state": 32944
+        },
+        "death": null,
+        "won": true
+      }
+    }
+  },
+  "validation": {
+    "directCommands": [
+      {
+        "command": [
+          "node",
+          "packages/source/test/b-drain-order.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/route-pass.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/footstep-value2.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/animation-count.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/frame-time-hook.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/drop-flag-order.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/value5.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/blackout-clock-end.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/contracts.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/control-catalog.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/sourcetest.mjs"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/simtest.mjs"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/review/bin/recompile/test-compare-draw-trace.mjs"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/test/cycle-library.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/test/cycle-planner.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/test/cycle-controller.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/test/night-policy.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/test/test-winners-rebuild.mjs"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "apps/trainer/test/renderer.test.mjs"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "tools/validate-references.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/parked/minus7/policytest.mjs",
+          "--assert"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "npm",
+          "run",
+          "typecheck:js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/bin/factreplay.mjs",
+          "--assert"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/bin/recompile/test-schedule-replay.mjs"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/bin/recompile/test-phone-encounter-replay.mjs"
+        ],
+        "exitCode": 1
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/bin/recompile/test-phone-clock-sweep.mjs"
+        ],
+        "exitCode": 1
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/bin/recompile/test-phone-input-bracket-sweep.mjs"
+        ],
+        "exitCode": 1
+      }
+    ],
+    "passedCommands": 24,
+    "gitBlockedCommands": 3,
+    "campaignDryRun": "READY",
+    "affectedGate": "ENVIRONMENT_ERROR: spawnSync git EPERM",
+    "fileSizeGate": "ENVIRONMENT_ERROR: spawnSync git EPERM; source length remains below the 2719-line ratchet",
+    "pushGate": "ENVIRONMENT_ERROR: spawnSync git EPERM before lanes"
+  },
+  "supports": [
+    "s2-held-monitor-7793a6f003917c64"
+  ],
+  "limitations": [
+    "Agreement is established only for the named projections, replay and controls. Unobserved internal state equivalence is not claimed.",
+    "The final mask marker remains 3 in the runtime while the model reports 0 for updates 22682..22697; the model terminal is nine updates late.",
+    "Five queued mask windows are unplayed after the death and are not counted as matches.",
+    "The early-release winning branch still splits in RNG at update 23770.",
+    "Semantic stationary contacts do not model drag cancellation, arbitrary screen geometry or multiple overlapping contacts on the same action.",
+    "Legacy queue-only consumers do not acquire contact durations. No original winner census or device claim is promoted by this correction.",
+    "No new retail phone run. The phone encounter mismatch and S2 remain open."
+  ],
+  "open": [
+    "Model the terminal animation-state latch and measured attack countdown.",
+    "Explain update 23770 on the early-release branch.",
+    "Compare the now-aligned host encounters against the retail phone, beginning with the earlier BB difference.",
+    "Run Git-dependent aggregate and replay gates in an environment where those subprocesses can finish."
+  ],
+  "provenance": {
+    "files": [
+      {
+        "path": "packages/source/src/games/fnaf2/plant-model.js",
+        "sha256": "73d7d01f84f9bdd3b51584d2707552e976c1ce66406a2de4a0398072bd09b0fe",
+        "bytes": 164055
+      },
+      {
+        "path": "packages/source/src/games/fnaf2/config.js",
+        "sha256": "3da601d1233454b7386ebab415c827fe87117ed2b9b031e51168c338f89f6f70",
+        "bytes": 44879
+      },
+      {
+        "path": "packages/source/src/games/fnaf2/rng.js",
+        "sha256": "1a2b615eda3a152aea548054c873c8da83a96b06b6ac65fc0a74e4997a3e651e",
+        "bytes": 1857
+      },
+      {
+        "path": "packages/source/src/games/fnaf2/movement-clock.js",
+        "sha256": "7b761e7530ae0f88b383dc58199768d0f284842b995a02956d1432efd9faeae5",
+        "bytes": 1513
+      },
+      {
+        "path": "packages/source/src/games/fnaf2/contact-input.js",
+        "sha256": "13594834e219630281d7203b6deca447a7d7aa11fb95c1234b7c2b8af25775b8",
+        "bytes": 2900
+      },
+      {
+        "path": "packages/source/recompile/model-draw-trace.mjs",
+        "sha256": "4fe61a62758423589dd0168d07c8ae92098030678f2df6eb9cb27d81dd513ac6",
+        "bytes": 8189
+      },
+      {
+        "path": "packages/source/recompile/sourced-rebuild-model-options.json",
+        "sha256": "9410759aeb2a0aec12a01aff239719d685ee680d612194fa20f98ef6fd8205d3",
+        "bytes": 1480
+      },
+      {
+        "path": "packages/source/test/drop-flag-order.test.js",
+        "sha256": "980ceff2a9c4e9d509989d14cc636da0806ffc096a0aa929d3ffe12ff0098720",
+        "bytes": 9839
+      },
+      {
+        "path": "packages/review/bin/recompile/compare-draw-trace.mjs",
+        "sha256": "fcf33d67f841df698bff656f629e540f5cce7da6ffc6de8a0b5762c3c9885b74",
+        "bytes": 10045
+      },
+      {
+        "path": "packages/propose/bin/recompile/phone-encounter-replay.mjs",
+        "sha256": "50c4db6bd965ef43a37e1e5c56402ed9c07975ab8e0edf43a954db55466bf52c",
+        "bytes": 57064
+      },
+      {
+        "path": "packages/propose/bin/recompile/compare-schedule-replay.mjs",
+        "sha256": "4214634430fb6291ddeb71d70279683c3cbf22746ac37c3a8ad0419307837a4d",
+        "bytes": 26365
+      },
+      {
+        "path": "packages/propose/bin/recompile/phone-clock-sweep.mjs",
+        "sha256": "75e38272f31c01bfdf2546b7003f5b18e8f8d22a4c51c6bb7bc4aec91e5c3b61",
+        "bytes": 24999
+      },
+      {
+        "path": "packages/propose/bin/recompile/phone-input-bracket-sweep.mjs",
+        "sha256": "89212d796c5f7defebc139b96d3dc36052d1172b5c82c8875c7e5b3dac90f74f",
+        "bytes": 28861
+      },
+      {
+        "path": "packages/propose/bin/recompile/schedule-to-input.mjs",
+        "sha256": "e986d0eafea48374673ecc46492d5a9e34aa309bc696f86ffb8d652096d22a76",
+        "bytes": 11992
+      },
+      {
+        "path": "packages/propose/bin/recompile/test-schedule-replay.mjs",
+        "sha256": "bfbf3716c64f17aa3d5d99db28fd23bd42885f9e8848ff7dd2bed8d1aeecf539",
+        "bytes": 14750
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/record.py",
+        "sha256": "2e9b182f41b65883f2d282aa36ae148fbbfb66941f98bf44f66677336bc8d6dc",
+        "bytes": 10707
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/probe.py",
+        "sha256": "635f0d66aa3beff7efe70ef8bec49dfb57c6d9624d5001509fc789efe20ddea7",
+        "bytes": 1958
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/replay.mjs",
+        "sha256": "9e24dd5682b24f9e7b5aba581ffba95b46d822734091096f1bcc9311776166cf",
+        "bytes": 2564
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/phone.mjs",
+        "sha256": "90f23f652bf6130002965e1783d7d2cddb2fde8827aa8c94c765857b39f05f8a",
+        "bytes": 1219
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/control.json",
+        "sha256": "651a39d418ada3a87809fd0f0cfe35b50ee05237f7d48bc4ef7f4064e97d4223",
+        "bytes": 3643009
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/released-early.json",
+        "sha256": "5952b81f257aa891030d32ca14af523f9e963fce258eff3b913c6168ff0d053a",
+        "bytes": 4045692
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/mask-held.json",
+        "sha256": "9ebcb8805d748774d1df5bcbcb218d70dec6a80e89263cd4d93829cff5a9bc47",
+        "bytes": 761732
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/probe.json",
+        "sha256": "3ef5445eb8a89af62bea8f7da53ed992ae2f9a45846079fefcc58df8d872fb68",
+        "bytes": 114618
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/phone-comparison.json",
+        "sha256": "327469cdcfa9d14131e7ac003e5dce400732a4efd1ad0c3640662c55dee7c610",
+        "bytes": 9680
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/gates.json",
+        "sha256": "64d5997ad4f67c68f3e9cadbe3c9bd4f957910fdd1223e0325f58ceb875923e4",
+        "bytes": 86122
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/aggregate-gates.json",
+        "sha256": "ac74542808104da2e8e5af49ba20a4ce95c50451a49dfb61abbe1c9304c3b7a5",
+        "bytes": 1694
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/flip/trace",
+        "sha256": "57e99bc3b320249c90f8b1734bc9d951674c7e032c7ba4a1e67529627ba9deeb",
+        "bytes": 258074
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/flip/run.input",
+        "sha256": "7c801fd5e80a4026edc57dba21c9292ea312f123b81b85862f1602aaef186e69",
+        "bytes": 347
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/flip/frametimes.txt",
+        "sha256": "383d25c80bb3648e9199589ebce7b6782a510eacee4409df3c90e940869541cf",
+        "bytes": 253940
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/flip/save-before.ini",
+        "sha256": "c0f497ff64b6f757f943965a48d2795419fb934ddf54eb5f3dee000439484844",
+        "bytes": 72
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/flip/env",
+        "sha256": "c42eaac8a99a17197d3429e59cf456cade125f5bcdb648b243e612bf070bb456",
+        "bytes": 676
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/flip/summary.json",
+        "sha256": "6e1161fb28505088814fdfa0947772783af1956d45341bd47458d847c1cd2bac",
+        "bytes": 575
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/mask/trace",
+        "sha256": "510965a2833997bb29cace0a283bc0177e2ac88a9779e3c934a089bc635b40d8",
+        "bytes": 254987
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/mask/run.input",
+        "sha256": "7c801fd5e80a4026edc57dba21c9292ea312f123b81b85862f1602aaef186e69",
+        "bytes": 347
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/mask/frametimes.txt",
+        "sha256": "383d25c80bb3648e9199589ebce7b6782a510eacee4409df3c90e940869541cf",
+        "bytes": 253940
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/mask/save-before.ini",
+        "sha256": "c0f497ff64b6f757f943965a48d2795419fb934ddf54eb5f3dee000439484844",
+        "bytes": 72
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/mask/env",
+        "sha256": "0f0db04f5485fee7c99542fb2af88cebdd06d6af37c81b6468266b8ea86794e2",
+        "bytes": 661
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/mask/summary.json",
+        "sha256": "bb9b5cb749697f21f166da9a1fd447ae7cbf365d7b48b0d8d1838d47e8a54477",
+        "bytes": 199
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/phone/trace",
+        "sha256": "b1ddda10644ab57cdaf6fc302f4169815fa2738b38507e50db69e2d5392465b3",
+        "bytes": 6989159
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/phone/run.input",
+        "sha256": "90fc29d4fd3917fe949fb9735e4b89a8776c77888d2a9d071b97abaacde4a1e1",
+        "bytes": 13180
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/phone/frametimes.txt",
+        "sha256": "383d25c80bb3648e9199589ebce7b6782a510eacee4409df3c90e940869541cf",
+        "bytes": 253940
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/phone/save-before.ini",
+        "sha256": "c0f497ff64b6f757f943965a48d2795419fb934ddf54eb5f3dee000439484844",
+        "bytes": 72
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/phone/env",
+        "sha256": "220d65a1608132dc31411c4100b2d7cd738d8223546434d188c02a119cc7d479",
+        "bytes": 648
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/phone/summary.json",
+        "sha256": "fdbac1c03d5ebcbe6e4a622b75c3aeb89560072a08596d5dc693be9500c87036",
+        "bytes": 74
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/affected.log",
+        "sha256": "580a5d92ac7a685238e440f74768b2d99958de6a3dcc9a6455ae3ebc485a9506",
+        "bytes": 27622
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/file-size.log",
+        "sha256": "0b50c88e6bfbcb4ab54e744cd357cc71ddbad21b5b8c4baed68a29a0fd774915",
+        "bytes": 22359
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/emit.log",
+        "sha256": "fc1a4f03788c23c4876b6ae1814bbd588875171457ff68902f7c6592b65f1ba5",
+        "bytes": 128
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/campaign-dry.log",
+        "sha256": "20c518637588505132f356d01d68c4d0ff22e16d6fc7bd9fb4c321a0f31dd729",
+        "bytes": 567
+      },
+      {
+        "path": "artifacts/s2-contact-duration-20260930/push-gate.log",
+        "sha256": "113f2a95e47d1ca723e38547f297896fe6caf59bca8757e120f42077c42f529b",
+        "bytes": 1126
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/control/trace",
+        "sha256": "b74a1a67100252aeab214a3c28ac62527198753846bb76b3f46d17d46777e2d3",
+        "bytes": 7282588
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/mask-held/trace",
+        "sha256": "8ba11d986ae0ad75d85d24dd96951efb5cfc799a29885a8c3bfb38590d8e0e57",
+        "bytes": 1031952
+      },
+      {
+        "path": "artifacts/s2-held-tap-20260930/released-early/trace",
+        "sha256": "a2a7000f3d17389374cc77d433009bcb3db598c0bfb944b765ac49a2734ef96d",
+        "bytes": 5337079
+      },
+      {
+        "path": "/home/pedro/fnaf-apks/fnaf2/events/03-04-Office.txt",
+        "sha256": "026ee3861642abb24a0961d590d8e3d708c9417ec143b92aacb73d6c0415b23b",
+        "bytes": 455276
+      },
+      {
+        "path": "/home/pedro/fnaf-apks/fnaf2-recompile-20260927/pinned/66d6e2f6-d9cc45ff/Chowdren",
+        "sha256": "66d6e2f6b23f9af9c967f06337b55dd6afec9b2c27e686cebd304ea03eafec95",
+        "bytes": 49200040
+      }
+    ]
+  },
+  "commits": {
+    "consequential": 0,
+    "bookkeeping": 0
+  },
+  "reproducer": {
+    "replay": "node artifacts/s2-contact-duration-20260930/replay.mjs VARIANT",
+    "phoneComparison": "node artifacts/s2-contact-duration-20260930/phone.mjs compare",
+    "record": "python3 artifacts/s2-contact-duration-20260930/record.py"
+  },
+  "id": "s2-contact-duration-dc5afa6f11dbbaa7"
+}

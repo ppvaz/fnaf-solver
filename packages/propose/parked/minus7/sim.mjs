@@ -55,7 +55,7 @@ export function view(sim) {
       for (const x of sim.units) {
         if (x.done || x.path[x.idx] !== camId) continue;
         here = true;
-        if (x.stunUntil > sim.frame) best = Math.max(best, x.stunUntil - sim.frame);
+        best = Math.max(best, sim.unitStunLeft(x));
       }
       return { camId, stun: best, occupied: here };
     }),

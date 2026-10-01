@@ -4,8 +4,65 @@
 // (g848-g854) is written after g488/g489, so under sourcedHallLatchOrder it follows the deferred latch reset.
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import { drainUnitStuns, setUnitStun, unitStunReady } from '../src/games/fnaf2/movement-clock.ts';
 
 const QUIET = { night: 7, seed: 5, lethal: false, bbEnabled: false, gfEnabled: false, boxEnabled: false, foxyEnabled: false };
+
+const WEIGHTED = { sourcedBDrainOrder: true, sourcedMovementClock: true, sourcedRoutePass: true,
+  sourcedPromotedMoves: true, sourcedRollsBeforeMoves: true, sourcedRollDraws: true,
+  sourcedRouteForks: true, sourcedSecondPass: true, sourcedSheetOrder: true, frameValue5: () => 1.5 };
+assert.throws(() => new Sim({ ...QUIET, sourcedMovementClock: true }), /requires sourcedBDrainOrder and sourcedRoutePass/);
+
+// A fractional B is still a closed promotion gate. Draining it to zero permits the next pass.
+{
+  const s = new Sim({ ...QUIET, ...WEIGHTED });
+  s.decidePath = 1;
+  const u = s.units.find(x => x.id === 'withfreddy');
+  u.idx = u.path.indexOf(3); u.pending = true;
+  setUnitStun(s, u, 2.5);
+  s.routePass(1);
+  assert.equal(s.unitStunLeft(u), 1);
+  assert.equal(u.promoted, false);
+  s.routePass(2);
+  assert.equal(s.unitStunLeft(u), 0);
+  assert.equal(u.path[u.idx], 3, 'B became zero only after the promotion tests');
+  s.routePass(3);
+  assert.equal(u.path[u.idx], 'blindB', 'promotion and movement happen on the next update');
+}
+
+// Every B writer uses the same counter: camera flash, route return, repel, and Toy Bonnie's arrival.
+{
+  const s = new Sim({ ...QUIET, ...WEIGHTED });
+  const u = s.units.find(x => x.id === 'withfreddy');
+  u.idx = u.path.indexOf(3);
+  s.stunCam(3, 7.25);
+  assert.equal(s.unitStunLeft(u), 7.25);
+  s.unitLeave(u, { cooldown: 3.25 });
+  assert.equal(s.unitStunLeft(u), 3.25);
+  u.idx = u.path.indexOf('blindB'); u.promoted = true; s.maskOn = true; s.maskAnim = 0;
+  assert.equal(s.sourcedRouteStep(u, s.frame, 'move'), 'returned');
+  assert.equal(s.unitStunLeft(u), 1500);
+  const toy = s.units.find(x => x.id === 'toybonnie');
+  toy.idx = toy.path.length - 2;
+  s.advance(toy);
+  assert.equal(s.unitStunLeft(toy), 300);
+  setUnitStun(s, s.puppet, 0.75);
+  drainUnitStuns(s, s.frame);
+  assert.equal(unitStunReady(s, s.puppet, s.frame), true, 'Puppet reads B after g372 clamps it to zero');
+  assert.equal(s.unitStunLeft(u), 1498.5);
+  const copy = Sim.fromSnapshot(s.opts, s.snapshot());
+  drainUnitStuns(copy, copy.frame); drainUnitStuns(s, s.frame);
+  assert.deepEqual(copy.snapshot(), s.snapshot(), 'remaining B survives a branch');
+}
+
+// Runtime repels retain the fractional quotient: Random(500) / night, e.g. 310 / 7 at full-06 update 2328.
+{
+  const s = new Sim({ ...QUIET, ...WEIGHTED });
+  s.rng.int = () => 310;
+  assert.equal(s.repelCooldown(), 310 / 7);
+  const old = new Sim(QUIET); old.rng.int = () => 310;
+  assert.equal(old.repelCooldown(), 44, 'the legacy lane retains its integer deadline');
+}
 
 // The promotion read: a flash on loop L = 1000 writes stunUntil 1400.
 {

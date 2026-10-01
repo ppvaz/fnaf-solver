@@ -1,0 +1,507 @@
+{
+  "schema": "evidence-record-v1",
+  "date": "2026-09-30",
+  "step": "ROADMAP S2",
+  "claimLevel": "MODEL_ONLY",
+  "fidelity": "rebuilt-runtime",
+  "status": "PREFIX_ADVANCED_STILL_DIVERGENT",
+  "question": "Do measured animation clocks and the blackout entry delta explain the first two full-06 model/rebuild draw splits?",
+  "scope": {
+    "night": 7,
+    "customDials": 20,
+    "seed": 47593,
+    "replay": "full-06 landed",
+    "officeUpdates": 4593,
+    "role": "Mechanism diagnosis on one retained replay, not a cohort, census or retail fidelity claim."
+  },
+  "implementation": {
+    "source": {
+      "path": "packages/source/src/games/fnaf2/plant-model.js",
+      "sha256": "3043f34df3e6cf1fadca420642d07d5d47fe8a06a2844ea0a5f414413435e0ae",
+      "bytes": 164536
+    },
+    "animationOption": "sourcedAnimationCount",
+    "animation": "Reset elapsed counters on show, add value 5 in the late animation pass, and read the prior counter at the top completion latch.",
+    "blackout": "Initialize the clock with the entry update delta; sum each missed update's own delta instead of multiplying the latest delta by the update count.",
+    "effectiveAICaps": "Unchanged; BB remains capped at 15."
+  },
+  "measurements": {
+    "repeatability": {
+      "newHostRuns": 5,
+      "rowsComparedPerRun": 5400,
+      "allDrawProjectionsIdentical": true,
+      "sameInputSaveAndClock": true
+    },
+    "firstDrawMismatch": {
+      "before": {
+        "tick": 1823,
+        "modelFrame": 1824,
+        "rebuilt": {
+          "draws": 881,
+          "state": 27088
+        },
+        "model": {
+          "draws": 882,
+          "state": 50097
+        }
+      },
+      "animationsOnly": {
+        "tick": 2048,
+        "modelFrame": 2049,
+        "rebuilt": {
+          "draws": 986,
+          "state": 6737
+        },
+        "model": {
+          "draws": 985,
+          "state": 43056
+        }
+      },
+      "after": {
+        "tick": 3045,
+        "modelFrame": 3046,
+        "rebuilt": {
+          "draws": 1833,
+          "state": 41712
+        },
+        "model": {
+          "draws": 1834,
+          "state": 55697
+        }
+      }
+    },
+    "controlStateComparisons": {
+      "monitor": {
+        "compared": 4593,
+        "mismatches": 0
+      },
+      "mask": {
+        "compared": 4593,
+        "mismatches": 0
+      }
+    },
+    "animationClockComparisons": [
+      {
+        "direction": "monitor-up",
+        "activeUpdatesCompared": 113,
+        "maximumAbsoluteError": 4.923988448446437e-05,
+        "tolerance": 5.1e-05
+      },
+      {
+        "direction": "monitor-down",
+        "activeUpdatesCompared": 202,
+        "maximumAbsoluteError": 4.924014793239451e-05,
+        "tolerance": 5.1e-05
+      },
+      {
+        "direction": "mask-on",
+        "activeUpdatesCompared": 100,
+        "maximumAbsoluteError": 4.923990514527077e-05,
+        "tolerance": 5.1e-05
+      },
+      {
+        "direction": "mask-off",
+        "activeUpdatesCompared": 100,
+        "maximumAbsoluteError": 4.923989732752432e-05,
+        "tolerance": 5.1e-05
+      }
+    ],
+    "counterPrecision": "Harness uses %g (six significant digits); comparisons allow its last printed digit to round.",
+    "blackoutClockBeforeFirstDrawSplit": {
+      "activeUpdatesCompared": 600,
+      "maximumAbsoluteError": 0.0005000016184055767,
+      "tolerance": 0.00051,
+      "samples": [
+        {
+          "update": 2030,
+          "model": 4,
+          "runtime": 4.0
+        },
+        {
+          "update": 2031,
+          "model": 4.060000000000559,
+          "runtime": 4.06
+        },
+        {
+          "update": 2047,
+          "model": 19.635598420145616,
+          "runtime": 19.6356
+        },
+        {
+          "update": 2048,
+          "model": 20.59716766015457,
+          "runtime": 20.5972
+        }
+      ]
+    },
+    "bbModelRollsWithinMatchedDrawPrefix": [
+      {
+        "tick": 2401,
+        "ai": 15,
+        "random20": 18,
+        "hit": false,
+        "stateBefore": 57185,
+        "stateAfter": 59480
+      },
+      {
+        "tick": 2705,
+        "ai": 15,
+        "random20": 16,
+        "hit": false,
+        "stateBefore": 4585,
+        "stateAfter": 55184
+      }
+    ],
+    "bbRollInterpretation": "Model draws, assigned by sourced g333-g342 call order, inside a prefix with identical per-update draw counts and RNG states. Exact runtime g342 return values were not directly instrumented."
+  },
+  "sourceInterpretation": {
+    "animationGroups": [
+      1,
+      6,
+      9,
+      10,
+      1015,
+      1016,
+      1017,
+      1018,
+      1019,
+      1020,
+      1021,
+      1022
+    ],
+    "blackoutClockGroup": 514,
+    "value5Group": 1236,
+    "bbRollGroup": 342,
+    "bbCapGroup": 863,
+    "blackoutDefect": "At update 2030 the runtime adds 4. The previous model deferred the entry clock and used 2 * 0.06 at 2031, losing 3.94 units and delaying the first flicker draw."
+  },
+  "validation": {
+    "gates": [
+      {
+        "command": [
+          "node",
+          "packages/source/test/animation-count.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/drop-flag-order.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/value5.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/blackout-clock-end.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/contracts.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/control-catalog.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/sourcetest.mjs"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/simtest.mjs"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/review/bin/recompile/test-compare-draw-trace.mjs"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/frame-time-hook.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/test/cycle-library.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/test/cycle-planner.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/test/cycle-controller.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/test/night-policy.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/test/test-winners-rebuild.mjs"
+        ],
+        "exitCode": 0
+      }
+    ],
+    "typecheckJS": "exit 0",
+    "references": "exit 0",
+    "factReplay": "exit 0",
+    "campaignDryRun": "READY",
+    "affectedGate": "ENVIRONMENT_ERROR: spawnSync git EPERM in architecture before later gates",
+    "fileSizeGate": "ENVIRONMENT_ERROR: spawnSync git EPERM; source length remains 2719 lines",
+    "pushGate": "ENVIRONMENT_ERROR: spawnSync git EPERM before lanes",
+    "commits": {
+      "consequential": 0,
+      "bookkeeping": 0
+    }
+  },
+  "supports": [
+    "s2-animation-clock-b00ad28afa68e1d5",
+    "s2-bb-cap-2539a97cbeeafac2"
+  ],
+  "limitations": [
+    "Controls agreeing is insufficient to prove all game states or all event orderings equivalent.",
+    "The first remaining RNG split is update 3045. Draw attribution beyond that update is not established by this record.",
+    "BB rolls of 18 and 16 explain non-movement in this model/rebuild comparison; the retail phone's earlier observed BB movement remains unexplained.",
+    "No new phone run, promotion or reliability claim. Full local traces and one-off diagnostic scripts remain under artifacts/."
+  ],
+  "provenance": {
+    "files": [
+      {
+        "path": "artifacts/s2-bb-roll-20260930/runtime/trace",
+        "sha256": "18abf8050529bc7dc3afc8e2b4bf70f2dc2302ad108e77b81796fdb9bec0c93c",
+        "bytes": 1037830
+      },
+      {
+        "path": "artifacts/s2-bb-roll-20260930/runtime/frametimes.txt",
+        "sha256": "383d25c80bb3648e9199589ebce7b6782a510eacee4409df3c90e940869541cf",
+        "bytes": 253940
+      },
+      {
+        "path": "artifacts/s2-bb-roll-20260930/runtime/run.input",
+        "sha256": "cac3d1e7055825725e5a0859532d48e9945ef9d7bd6cf90ce957bf2acc010cc9",
+        "bytes": 13161
+      },
+      {
+        "path": "artifacts/s2-bb-roll-20260930/runtime/save-before.ini",
+        "sha256": "c0f497ff64b6f757f943965a48d2795419fb934ddf54eb5f3dee000439484844",
+        "bytes": 72
+      },
+      {
+        "path": "artifacts/s2-bb-roll-20260930/monitor/trace",
+        "sha256": "bc5e56973563de45563936231596d03895d0fcc52c37bffb5400ea8bc49242e9",
+        "bytes": 1018860
+      },
+      {
+        "path": "artifacts/s2-bb-roll-20260930/animation/trace",
+        "sha256": "1e4fd0aef37a1f7ae6628d2210c9613874959f1b31f607d5bb82b0c59507f131",
+        "bytes": 1036154
+      },
+      {
+        "path": "artifacts/s2-animation-implementation-20260930/applied-replay.json",
+        "sha256": "25c3363ee036df00b6d0aa53dc68af5c7bc830dbcba1e0090264319432ceec87",
+        "bytes": 3433280
+      },
+      {
+        "path": "artifacts/s2-animation-implementation-20260930/animation-only.json",
+        "sha256": "8d051308fa8c4ed24419ff45fc90eb98d5c89978bb7acc5d5b0b2f8ded745e56",
+        "bytes": 3429511
+      },
+      {
+        "path": "artifacts/s2-animation-implementation-20260930/blackout-clock.json",
+        "sha256": "d3d68fd74454f4ce2e4bd7d613fe352f0916086aa9a892dcc7dfd6078217d24e",
+        "bytes": 3431111
+      },
+      {
+        "path": "artifacts/s2-animation-implementation-20260930/blackout-diagnosis.json",
+        "sha256": "99e8cd2f0c6e3103a43b95b4aaec3dddeac5f3a7252ce4696da7b7b28d37a5d0",
+        "bytes": 2436
+      },
+      {
+        "path": "artifacts/s2-animation-implementation-20260930/applied-replay.mjs",
+        "sha256": "0f66e158633fe1f55c3f059f272a480b3d71560b027be9919bf23e4be4354714",
+        "bytes": 2956
+      },
+      {
+        "path": "artifacts/s2-animation-implementation-20260930/watch-controls.py",
+        "sha256": "e4f8c7f2b029882086da2725abb1f6fcc1855e5054fb9d062ba2314be3bc4ac0",
+        "bytes": 1689
+      },
+      {
+        "path": "artifacts/s2-animation-implementation-20260930/record.py",
+        "sha256": "0af616d121550727631af33451fd8232b539c9393740deeb1691613e2d135d89",
+        "bytes": 9118
+      },
+      {
+        "path": "packages/source/test/animation-count.test.js",
+        "sha256": "fdf831aaa4b444782b4b9b6cd9c9e99acb0418ae42539eda24e2eef80b8a1898",
+        "bytes": 4060
+      },
+      {
+        "path": "packages/source/test/frame-time-hook.test.js",
+        "sha256": "a928474b9a3c71ab38a05bd6b71bc8c1a5362710b8d54693dfdad8df6aa9cadf",
+        "bytes": 5385
+      },
+      {
+        "path": "packages/source/recompile/sourced-rebuild-model-options.json",
+        "sha256": "02172a8a2810fdfac38bcdb886b29bb65012895a527e2a1b633718cae9a57aef",
+        "bytes": 1448
+      },
+      {
+        "path": "/home/pedro/fnaf-apks/fnaf2-recompile-20260927/pinned/66d6e2f6-d9cc45ff/Chowdren",
+        "sha256": "66d6e2f6b23f9af9c967f06337b55dd6afec9b2c27e686cebd304ea03eafec95",
+        "bytes": 49200040
+      },
+      {
+        "path": "/home/pedro/fnaf-apks/fnaf2/events/03-04-Office.txt",
+        "sha256": "026ee3861642abb24a0961d590d8e3d708c9417ec143b92aacb73d6c0415b23b",
+        "bytes": 455276
+      },
+      {
+        "path": "artifacts/s2-animation-implementation-20260930/mask/trace",
+        "sha256": "aa2001b6636b7962cf8e6d411377295306a70e3a44e21d49cfffbb31c99f16db",
+        "bytes": 1010322
+      },
+      {
+        "path": "artifacts/s2-animation-implementation-20260930/mask/env",
+        "sha256": "43bbaf85e153612123f782a35ad4459c7f9d51823bf8b20a44ab54b4c6e9c840",
+        "bytes": 639
+      },
+      {
+        "path": "artifacts/s2-animation-implementation-20260930/monitor-down/trace",
+        "sha256": "73ebb90e638599228463a879d0daaded50b3e33d97213df92e55bae55c15ad7e",
+        "bytes": 1027617
+      },
+      {
+        "path": "artifacts/s2-animation-implementation-20260930/monitor-down/env",
+        "sha256": "57d0fc18fe70e204b1533385f785ce46197aee51fa4851c8c4510db398a4b775",
+        "bytes": 662
+      },
+      {
+        "path": "artifacts/s2-animation-implementation-20260930/mask-on/trace",
+        "sha256": "5688f1b681c4f1b94dbe8b4b418c84ce23e0da6f49743fdac572686e3f79f8ad",
+        "bytes": 1026858
+      },
+      {
+        "path": "artifacts/s2-animation-implementation-20260930/mask-on/env",
+        "sha256": "0787335cd492d1dcbac31ae7cd87733a460e31834a9c6bdc7af6b1bdce6c6117",
+        "bytes": 652
+      },
+      {
+        "path": "artifacts/s2-animation-implementation-20260930/mask-off/trace",
+        "sha256": "465d33ad24f85c9406e0b3e74ccd76865cda7a2ac45f62df7271b175a2f92c79",
+        "bytes": 1025369
+      },
+      {
+        "path": "artifacts/s2-animation-implementation-20260930/mask-off/env",
+        "sha256": "381d2dafbb737b7bc340ae695795c59a257593c790ac7156faecf4648253618f",
+        "bytes": 654
+      },
+      {
+        "path": "artifacts/s2-animation-implementation-20260930/blackout/trace",
+        "sha256": "f5c1dbf9572bc75756b6545207567f0f163c6e80e1389e55466b7c5ec5550ed6",
+        "bytes": 1034383
+      },
+      {
+        "path": "artifacts/s2-animation-implementation-20260930/blackout/env",
+        "sha256": "9208fd0c35d60082994f0ff29a99b48e1b0d0216405671256f487d9e016e92ca",
+        "bytes": 649
+      },
+      {
+        "path": "artifacts/s2-animation-implementation-20260930/gates.json",
+        "sha256": "7a0bd587ee6610f49adef0fabefee141046277c3831d421afd22f5e2e0a23acf",
+        "bytes": 8015
+      },
+      {
+        "path": "artifacts/s2-animation-implementation-20260930/typecheck.log",
+        "sha256": "f8551f0396ef3e8f451be3c02790c2bc951a06f0211c0363f292d657d1b71428",
+        "bytes": 70
+      },
+      {
+        "path": "artifacts/s2-animation-implementation-20260930/references.log",
+        "sha256": "33b4e937f544f4aba2671b0f0d7fad22d97af21140395d4f20c4f0e12e8b9ace",
+        "bytes": 34
+      },
+      {
+        "path": "artifacts/s2-animation-implementation-20260930/fact-replay.log",
+        "sha256": "0e3c8f44524e8ccd40ab5bf45d72597b128e8efdee5fd18c298311752777cc23",
+        "bytes": 311
+      },
+      {
+        "path": "artifacts/s2-animation-implementation-20260930/affected.log",
+        "sha256": "b703542ee7eceb76f4e0a3dcd0f272f0facc1dfdc985adcf50d75e4dbd93ae60",
+        "bytes": 27074
+      },
+      {
+        "path": "artifacts/s2-animation-implementation-20260930/file-size.log",
+        "sha256": "ac3ae0f160751be6984e35c349b47de5951e66e11e7c8a00061c35afe2105707",
+        "bytes": 22389
+      },
+      {
+        "path": "artifacts/s2-animation-implementation-20260930/campaign-dry.log",
+        "sha256": "20c518637588505132f356d01d68c4d0ff22e16d6fc7bd9fb4c321a0f31dd729",
+        "bytes": 567
+      },
+      {
+        "path": "artifacts/s2-animation-implementation-20260930/push-gate.log",
+        "sha256": "d6826fd13a2d210469d3fdf12cd4701a0f9ffda36defa45ac2a0ceac6e8f8b6b",
+        "bytes": 1125
+      }
+    ]
+  },
+  "reproducer": {
+    "model": "node artifacts/s2-animation-implementation-20260930/applied-replay.mjs",
+    "runtime": "python3 artifacts/s2-animation-implementation-20260930/watch-controls.py KIND (fresh output directories; mask, monitor-down, mask-on, mask-off, blackout)",
+    "record": "python3 artifacts/s2-animation-implementation-20260930/record.py",
+    "regression": [
+      "node packages/source/test/animation-count.test.js",
+      "node packages/source/test/frame-time-hook.test.js"
+    ]
+  },
+  "open": [
+    "Explain the next model/rebuild draw split at update 3045.",
+    "Compare encounter occupants and input acceptance against the retail recording after model/rebuild fidelity is established.",
+    "Run the aggregate gates in an environment where their Git subprocesses can complete."
+  ],
+  "id": "s2-measured-clock-7137834deb214634"
+}

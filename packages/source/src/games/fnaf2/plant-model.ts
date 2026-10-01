@@ -7,6 +7,12 @@ import * as office from './plant-office.ts';
 import * as puppet from './plant-puppet.ts';
 import * as sheet from './plant-sheet.ts';
 import * as units from './plant-units.ts';
+import { unitStunLeft } from './movement-clock.ts';
+import { releaseFlipLock, readContactInput } from './contact-input.ts';
+import type { ContactInput } from './contact-input.ts';
+import { attackAnimationEarly } from './attack-animation.ts';
+import type { AttackAnimation } from './attack-animation.ts';
+import { blackoutResolveReady, blackoutLate } from './blackout-clock.ts';
 
 export class Sim {
   declare press: typeof office.press;
@@ -21,6 +27,9 @@ export class Sim {
   declare armInsideAttack: typeof office.armInsideAttack;
   declare tickForcedown: typeof office.tickForcedown;
   declare readDropTouch: typeof office.readDropTouch;
+  declare enableContactInput: typeof office.enableContactInput;
+  declare contactDown: typeof office.contactDown;
+  declare contactUp: typeof office.contactUp;
   declare updateHallLatch: typeof hall.updateHallLatch;
   declare updateLitCounter: typeof hall.updateLitCounter;
   declare hallLitNow: typeof hall.hallLitNow;
@@ -55,6 +64,7 @@ export class Sim {
   declare monitorDownEarly: typeof sheet.monitorDownEarly;
   declare monitorDownLate: typeof sheet.monitorDownLate;
   declare secondPass: typeof sheet.secondPass;
+  declare secondPassFront: typeof sheet.secondPassFront;
   declare passTools: typeof sheet.passTools;
   declare secondPassEarly: typeof sheet.secondPassEarly;
   declare secondPassLate: typeof sheet.secondPassLate;
@@ -73,7 +83,7 @@ export class Sim {
   declare tickBox: typeof puppet.tickBox;
   declare tickPuppet: typeof puppet.tickPuppet;
   declare advancePuppet: typeof puppet.advancePuppet;
-  declare opts: { seed: number; worst: boolean; night: number; customNight: any; android: boolean; speed: number; record: boolean; bbEnabled: boolean; foxyEnabled: boolean; gfEnabled: boolean; boxEnabled: boolean; powerEnabled: boolean; stalledEnabled: boolean; lethal: boolean; durationFrames: number; cameraLightStunFrames: number; passiveWitheredLookStunFrames: number; selectedCameraGate: boolean; sourcedRouteForks: boolean; sourcedHallEntry: boolean; sourcedDropLightOrder: boolean; sourcedDropFlagOrder: boolean; sourcedAnimationCount: boolean; sourcedFoxyChain: boolean; sourcedUnconditionalDraws: boolean; sourcedEventDraws: boolean; sourcedBlackoutDraws: boolean; sourcedBlackoutClockEnd: boolean; sourcedViewDraws: boolean; sourcedRollDraws: boolean; sourcedMonitorDownDraw: boolean; sourcedSecondPass: boolean; sourcedPuppetGlitchDraws: boolean; sourcedFootstepDraws: boolean; footstepFoxy: boolean; sourcedFoxyMoveValue2: boolean; footstepCamMarkers: boolean; sourcedFootstepValue2: boolean; sourcedOfficeFootsteps: boolean; sourcedOfficeRolls: boolean; sourcedPromotedViewDraws: boolean; sourcedHallLatchOrder: boolean; sourcedBDrainOrder: boolean; sourcedRollsBeforeMoves: boolean; sourcedPromotedMoves: boolean; sourcedRoutePass: boolean; sourcedBBMoves: boolean; sourcedRouteViewDraws: boolean; sourcedMangleReturn: boolean; sourcedBoxCountdown: boolean; sourcedPuppetMoveOrder: boolean; sourcedHourTable: boolean; sourcedParkedMarker: boolean; sourcedCustomDialOrder: boolean; sourcedCam8Cancel: boolean; sourcedVentCamDraws: boolean; sourcedRandomImageDraw: boolean; sourcedMonitorRaiseGate: boolean; sourcedSheetOrder: boolean; sourcedLastViewPause: boolean; sourcedGatedEvery: boolean; sourcedEveryOrigin: boolean; sourcedValue5: boolean; sourcedExposureValue5: boolean; frameMs: (frame: number) => number; frameValue5: (frame: number) => number; };
+  declare opts: { seed: number; worst: boolean; night: number; customNight: any; android: boolean; speed: number; record: boolean; bbEnabled: boolean; foxyEnabled: boolean; gfEnabled: boolean; boxEnabled: boolean; powerEnabled: boolean; stalledEnabled: boolean; lethal: boolean; durationFrames: number; cameraLightStunFrames: number; passiveWitheredLookStunFrames: number; selectedCameraGate: boolean; sourcedRouteForks: boolean; sourcedHallEntry: boolean; sourcedDropLightOrder: boolean; sourcedDropFlagOrder: boolean; sourcedAnimationCount: boolean; sourcedFoxyChain: boolean; sourcedUnconditionalDraws: boolean; sourcedEventDraws: boolean; sourcedBlackoutDraws: boolean; sourcedBlackoutClockEnd: boolean; sourcedViewDraws: boolean; sourcedRollDraws: boolean; sourcedMonitorDownDraw: boolean; sourcedSecondPass: boolean; sourcedPuppetGlitchDraws: boolean; sourcedFootstepDraws: boolean; footstepFoxy: boolean; sourcedFoxyMoveValue2: boolean; footstepCamMarkers: boolean; sourcedFootstepValue2: boolean; sourcedOfficeFootsteps: boolean; sourcedOfficeRolls: boolean; sourcedPromotedViewDraws: boolean; sourcedHallLatchOrder: boolean; sourcedBDrainOrder: boolean; sourcedMovementClock: boolean; sourcedAttackAnimation: boolean; sourcedRollsBeforeMoves: boolean; sourcedPromotedMoves: boolean; sourcedRoutePass: boolean; sourcedBBMoves: boolean; sourcedRouteViewDraws: boolean; sourcedMangleReturn: boolean; sourcedBoxCountdown: boolean; sourcedPuppetMoveOrder: boolean; sourcedHourTable: boolean; sourcedParkedMarker: boolean; sourcedCustomDialOrder: boolean; sourcedCam8Cancel: boolean; sourcedVentCamDraws: boolean; sourcedRandomImageDraw: boolean; sourcedMonitorRaiseGate: boolean; sourcedSheetOrder: boolean; sourcedLastViewPause: boolean; sourcedGatedEvery: boolean; sourcedEveryOrigin: boolean; sourcedValue5: boolean; sourcedExposureValue5: boolean; frameMs: (frame: number) => number; frameValue5: (frame: number) => number; };
   declare rng: Rng;
   declare frame: number;
   declare events: any[];
@@ -82,6 +92,8 @@ export class Sim {
   declare death: { reason: any; detail: any; frame: number; t: number; };
   declare monitor: string;
   declare monAnim: number;
+  declare animationClocks: { monAnim: number; maskAnim: number };
+  declare contactInput: ContactInput | null;
   declare camsUpCount: number;
   declare camsUpSince: number;
   declare cam: number;
@@ -93,6 +105,8 @@ export class Sim {
   declare hasViewedCamera: boolean;
   declare maskOn: boolean;
   declare maskAnim: number;
+  declare maskOffBlocked: boolean;
+  declare attackAnimation: AttackAnimation | null;
   declare lightHeld: boolean;
   declare lightLogicalUntil: number;
   declare hallLatchResetDue: boolean;
@@ -133,16 +147,17 @@ export class Sim {
   declare hour: number;
   declare blackoutClock: number;
   declare blackoutClockFrame: number;
+  declare blackoutPhase: { fade: number; danger: boolean; threshold: boolean; viewing: boolean };
   declare dropEverything: boolean;
   declare dropTouch: number;
-  declare units: { idx: number; stunUntil: number; pending: boolean; atOpening: boolean; openingSince: number; openingReadyAt: number; officeCue: boolean; openingTicks: number; maskExposureTicks: number; raiseSeen: boolean; inside: boolean; insideArmed: boolean; insideDangerAt: number; committedAt: number; done: boolean; hallColumn: boolean; footstep: boolean; value2: number; promoted: boolean; footstepOn: boolean; officeRoll: boolean; id: string; name: string; short: string; path: (string | number)[]; choke: number; entryGate: string; openingRule: string; lightStallAt: number[]; mutex: boolean; repelIdx: number; }[];
+  declare units: { idx: number; stunUntil: number; stunRemaining: number; pending: boolean; atOpening: boolean; openingSince: number; openingReadyAt: number; officeCue: boolean; openingTicks: number; maskExposureTicks: number; raiseSeen: boolean; inside: boolean; insideArmed: boolean; insideDangerAt: number; committedAt: number; done: boolean; hallColumn: boolean; footstep: boolean; value2: number; promoted: boolean; footstepOn: boolean; officeRoll: boolean; id: string; name: string; short: string; path: (string | number)[]; choke: number; entryGate: string; openingRule: string; lightStallAt: number[]; mutex: boolean; repelIdx: number; }[];
   declare engagedToy: any;
   declare decidePath: number;
   declare hallLatch: boolean;
   declare hallLit: boolean;
   declare unconditionalTimers: { group: number; delayUnits: number; counter: number; }[];
   declare unconditionalDraws: number;
-  declare puppet: { stage: number; out: boolean; route: any; idx: number; loc: number; pending: boolean; pathChoice: string; stunUntil: number; atOpening: boolean; inside: boolean; attackAt: number; };
+  declare puppet: { stage: number; out: boolean; route: any; idx: number; loc: number; pending: boolean; pathChoice: string; stunUntil: number; stunRemaining: number; atOpening: boolean; inside: boolean; attackAt: number; };
   declare rec: { n: number; stun: Uint16Array<ArrayBuffer>[]; occ: Uint8Array<ArrayBuffer>; d: Uint8Array<ArrayBuffer>; power: Uint16Array<ArrayBuffer>; box: Uint8Array<ArrayBuffer>; flags: Uint8Array<ArrayBuffer>; };
   declare mistakes: any[];
   constructor(opts = {}) {
@@ -161,6 +176,8 @@ export class Sim {
       throw new Error('sourcedBBMoves hops Balloon Boy in the route pass: it requires sourcedRoutePass');
     if (this.opts.sourcedDropFlagOrder && !this.opts.sourcedDropLightOrder)
       throw new Error('sourcedDropFlagOrder moves the drop flag: it requires sourcedDropLightOrder');
+    if (this.opts.sourcedMovementClock && !(this.opts.sourcedBDrainOrder && this.opts.sourcedRoutePass))
+      throw new Error('sourcedMovementClock requires sourcedBDrainOrder and sourcedRoutePass');
 
     this.rng = new Rng(this.opts.seed, this.opts.worst);
     this.frame = 0;
@@ -172,6 +189,8 @@ export class Sim {
     // --- player-controlled state
     this.monitor = MON_DOWN;
     this.monAnim = 0;
+    this.animationClocks = { monAnim: 0, maskAnim: 0 };
+    this.contactInput = null;
     this.camsUpCount = 0;
     // frame the current cams-up session started (-1 = monitor down); the
     // sourced entry timer counts against this streak, not time-in-opening
@@ -194,6 +213,8 @@ export class Sim {
     this.hasViewedCamera = false;
     this.maskOn = false;
     this.maskAnim = 0;
+    this.maskOffBlocked = false; // g10 hides the animation; g11 keeps state 3 during a committed attack
+    this.attackAnimation = null;
     this.lightHeld = false;
     this.lightLogicalUntil = -1;
     this.hallLatchResetDue = false;   // g488's one-second reset, deferred past the moves (sourcedHallLatchOrder)
@@ -274,6 +295,7 @@ export class Sim {
     this.hour = 0;
     this.blackoutClock = 0;
     this.blackoutClockFrame = -1;
+    this.blackoutPhase = { fade: 0, danger: false, threshold: false, viewing: false };
     // `drop everything` (g141): the forcedown flag. Set by g718-721, g624 and
     // g574; executed on the monitor by g262 and on the mask by g274, then
     // cleared by g612.
@@ -283,7 +305,7 @@ export class Sim {
 
     // --- the seven
     this.units = C.STALLED.map(u => ({
-      ...u, idx: 0, stunUntil: -1, pending: false, atOpening: false,
+      ...u, idx: 0, stunUntil: -1, stunRemaining: 0, pending: false, atOpening: false,
       openingSince: -1, openingReadyAt: -1, officeCue: false,
       openingTicks: 0, maskExposureTicks: 0, raiseSeen: false, inside: false,
       insideArmed: false, insideDangerAt: -1, committedAt: -1, done: false,
@@ -342,6 +364,8 @@ export class Sim {
       throw new Error('sourcedPromotedViewDraws changes which view draws fire: it requires sourcedViewDraws');
     if (this.opts.sourcedSheetOrder && !this.opts.sourcedSecondPass)
       throw new Error('sourcedSheetOrder orders the per-second pass: it requires sourcedSecondPass');
+    if (this.opts.sourcedAttackAnimation && !this.opts.sourcedSheetOrder)
+      throw new Error('sourcedAttackAnimation requires sourcedSheetOrder');
     if (this.opts.sourcedUnconditionalDraws && C.FPS !== 60)
       throw new Error('sourcedUnconditionalDraws assumes a 60 fps frame (50 timer units)');
     this.unconditionalTimers = [{ group: 58, delayUnits: 300, counter: 300 },
@@ -352,7 +376,7 @@ export class Sim {
     // --- puppet
     this.puppet = {
       stage: 0, out: false, route: null, idx: -1, loc: 11,
-      pending: false, pathChoice: 'left', stunUntil: -1,
+      pending: false, pathChoice: 'left', stunUntil: -1, stunRemaining: 0,
       atOpening: false, inside: false, attackAt: -1,
     };
 
@@ -373,6 +397,7 @@ export class Sim {
   }
 
   // ---------------------------------------------------------------- helpers
+  unitStunLeft(unit) { return unitStunLeft(this, unit); }
   // The rows that fire as `hour` begins, capped as g829/g830/g856-863 cap them.
   applyAiHour(hour) {
     for (const row of C.aiUpdates(this.opts.night, hour, this.opts.customNight)) {
@@ -423,7 +448,6 @@ export class Sim {
   get t() { return this.frame / C.FPS; }
   get camsUp() { return this.monitor === MON_UP; }
   get maskFullyOn() { return this.maskOn && this.maskAnim === 0; }
-  // `being attacked by` (g560-562 set it per unit at marker 123).
   // `being attacked by` (object 136): the COMMITTED attack, which g267/g270
   // read to refuse the mask and g624 reads to force everything down. It is
   // NOT `got you stage` == 1 (the reaction countdown) -- conflating the two
@@ -459,7 +483,8 @@ export class Sim {
   // `in danger` is the office-encounter latch, raised by g443-447/g490 and
   // cleared by the endpoint resolutions g538-555, so no light answers at all
   // while an encounter is running (g83/g88 do not even register the touch).
-  get maskFullyOff() { return !this.maskOn && this.maskAnim === 0; }
+  get maskState() { return this.maskOn ? (this.maskAnim > 0 ? 1 : 2) : (this.maskAnim > 0 || this.maskOffBlocked ? 3 : 0); }
+  get maskFullyOff() { return this.maskState === 0; }
   get hallLightOn() {
     return this.lightHeld && this.hallView && this.maskFullyOff &&
       !this.bb.inside && !this.blackout.active;
@@ -550,6 +575,7 @@ export class Sim {
   tick() {
     if (!this.alive || this.won) return;
     const f = ++this.frame;
+    if (attackAnimationEarly(this)) return; // triggered exits skip ordinary events and draws
     // g822 is an application StartOfFrame event, dispatched before ordinary
     // loop events, including g811's first viewing=0 draw. Its condition's
     // object type matters: NUM=-1 alone also names the system Always event.
@@ -570,14 +596,13 @@ export class Sim {
     if (this.opts.sourcedFoxyChain) this.updateLitCounter();   // events 74-83 (g84-g94) before the drop; g488/g489 run in tickFoxyChain
     else if (this.opts.sourcedDropLightOrder) this.updateHallLatch(f);
 
-    // g262/g274 execute the forcedown near the top of the sheet, while
-    // g612 clears it and g624/g718-721 set it near the bottom -- so a flag
-    // raised this frame is spent on the next one. Running it first keeps that
-    // one-frame latency and the ordering against the player's own presses.
+    // g262/g274 consume the previous loop's flag before player presses;
+    // g612 clears it and g624/g718-721 raise it for the next loop.
+    releaseFlipLock(this);
     this.tickForcedown();
     if (this.opts.sourcedMonitorDownDraw) this.monitorDownEarly();   // e7 hide, then e211 show
 
-    if (this.monAnim > 0 && --this.monAnim === 0) {
+    if (this.finishAnimation('monAnim', this.monitor === MON_RAISING ? C.MONITOR_ANIM_UP : C.MONITOR_ANIM_DOWN)) {
       if (this.monitor === MON_RAISING) {
         this.monitor = MON_UP;
         if (!this.hasViewedCamera) {
@@ -589,29 +614,28 @@ export class Sim {
           this.viewing = this.lastViewed;
         }
         this.onCamsUp();
-        // Active 18 has just become invisible: a Mangle that saw this raise
-        // crosses 122 -> 123 now (groups 402-403).
+        // g402-403: hiding mmonitorUp lets a Mangle that saw the raise cross 122 -> 123.
         for (const u of this.units) {
           if (u.id === 'mangle' && u.atOpening && u.raiseSeen)
             this.unitEnterInside(u, 'completed a monitor raise after Mangle reached marker 122');
         }
       }
-      else if (this.monitor === MON_LOWERING) this.monitor = MON_DOWN;
+      else if (this.monitor === MON_LOWERING && !(this.opts.sourcedAnimationCount &&
+        (this.attackExecuting || this.puppetAttackExecuting || this.goldenHallAttackExecuting))) this.monitor = MON_DOWN;
     }
-    if (this.maskAnim > 0 && --this.maskAnim === 0 && this.maskOn) {
+    if (this.finishAnimation('maskAnim', this.maskOn ? C.MASK_ANIM_ON : C.MASK_ANIM_OFF - 1) && this.maskOn) {
       // g911 mirrors monitor-down's counter clear without moving the marker.
       this.viewing = 0;
-      // g776: `yellowbear` present AND `mask` = 2 -> alt0 = 1, fade (g1040)
-      // and destroy. A fully-on mask is his only dismissal.
+      // g776/g1040: a fully-on mask dismisses yellowbear (alt0 = 1, fade, destroy).
       if (this.gf.present) { this.gf.present = false; this.emit('gf-cleared'); }
-      // Group 293 resets the local mask-duration counters on each transition
-      // into the fully-on mask state. They are continuous holds, not storage.
+      // g293 resets the continuous mask-hold counters each time the mask becomes fully on.
       for (const u of this.units) {
         if (u.id === 'toychica' || u.id === 'mangle') u.maskExposureTicks = 0;
       }
       this.bb.maskTicks = 0;   // g293 names Balloon Boy alongside the two toys
     }
 
+    readContactInput(this);
     if (this.opts.sourcedGatedEvery) this.maskTick = this.maskFullyOn && this.gatedPass('g907', 1000);   // g907
     // g263 is the only writer of `last viewed`: a global 200 ms sample of the
     // live feed. It runs only while a camera is displayed.
@@ -620,6 +644,7 @@ export class Sim {
       this.lastViewed = this.viewing;
 
     if (this.opts.sourcedUnconditionalDraws) this.drawUnconditional();   // g58/g59/g192
+    if (this.opts.sourcedSheetOrder) this.secondPassFront(f);             // g213/g292/g294 before g333
     // --- 5-second interval: Foxy's kill check runs before anything else
     if (this.hooked ? this.passEvery(this.hookTimers.five, 5000) : f % C.MO_FRAMES === 0) this.onFiveSecond();
     if (this.opts.sourcedRoutePass) this.routePass(f);             // g344-g360, then g374-g435
@@ -638,13 +663,13 @@ export class Sim {
       return;
     }
 
-    if (this.opts.sourcedSheetOrder) this.secondPassEarly(f);   // g213..g518 in sheet order
+    if (this.opts.sourcedSheetOrder) this.secondPassEarly(f);   // g366..g518 in sheet order
     else {
       if (this.opts.sourcedViewDraws) this.drawViewed(f);   // g366/g368/g419, g468-g476, g498
       if (this.opts.sourcedPuppetGlitchDraws) this.puppetGlitchEarly();   // g500-g506
       this.blackoutFlicker(f);                              // g514 clock, g517/g518
     }
-    // --- blackout resolution
+    const resolveBlackout = blackoutResolveReady(this, f); // g534-g537, also during the fade after danger
     if (this.blackout.active) {
       // Android group 533 only defuses while the 45-frame fuse is still in
       // state 1, and only once the mask animation has reached state 2.
@@ -652,7 +677,7 @@ export class Sim {
         this.blackout.masked = true;
       // Fuse expiry arms the attack, but groups 538-555 do not resolve it
       // until the 300-frame office sequence ends.
-      if (this.opts.sourcedBlackoutClockEnd ? this.blackoutClock >= C.BLACKOUT_FRAMES : f >= this.blackout.until) {   // g537
+      if (resolveBlackout) {   // g537
         const ended = this.blackout;
         this.blackout = { active: false, until: 0, by: null, unitId: null, masked: false, deadline: 0 };
         if (ended.unitId) {
@@ -708,9 +733,25 @@ export class Sim {
     if (this.opts.sourcedPuppetGlitchDraws && !this.opts.sourcedSheetOrder) this.puppetGlitchLate();   // g774
     if (this.opts.sourcedMonitorDownDraw) this.monitorDownLate();                // e720-e722, e871-e872
     if (this.opts.sourcedRandomImageDraw) this.randomImageDraw();                 // g811
+    blackoutLate(this);                                                         // g845
     if (this.opts.sourcedGatedEvery) this.tickStreak();                            // g785/g786
+    if (this.opts.sourcedAnimationCount) {                                      // g1015-g1022, before g1236
+      const delta = this.value5(f);
+      if (this.monAnim > 0) this.animationClocks.monAnim += delta;
+      if (this.maskAnim > 0) this.animationClocks.maskAnim += delta;
+    }
 
     if (this.hooked ? this.hour >= 6 : f >= this.opts.durationFrames) { this.won = true; this.emit('win'); }
+  }
+
+  /** g1/g6/g9/g10 read the prior loop's accumulated counter. */
+  finishAnimation(field: 'monAnim' | 'maskAnim', threshold: number) {
+    if (this[field] <= 0) return false;
+    if (!this.opts.sourcedAnimationCount) return --this[field] === 0;
+    this[field] = Math.max(0, threshold - this.animationClocks[field]);
+    if (field === 'maskAnim' && this[field] === 0 && !this.maskOn)
+      this.maskOffBlocked = this.attackExecuting || this.puppetAttackExecuting || this.goldenHallAttackExecuting;
+    return this[field] === 0;
   }
 
   // `hall movement` (object 180): the hitbox at (669, 503) that only the two
@@ -737,7 +778,7 @@ export class Sim {
       for (const u of this.units) {
         if (u.done || u.path[u.idx] !== camId) continue;
         here = true;
-        if (u.stunUntil > this.frame) best = Math.max(best, u.stunUntil - this.frame);
+        best = Math.max(best, unitStunLeft(this, u));
       }
       r.stun[k][i] = best;
       if (here) occ |= (1 << k);
@@ -773,6 +814,9 @@ Object.defineProperty(Sim.prototype, 'commitAttack', { value: office.commitAttac
 Object.defineProperty(Sim.prototype, 'armInsideAttack', { value: office.armInsideAttack, writable: true, configurable: true });
 Object.defineProperty(Sim.prototype, 'tickForcedown', { value: office.tickForcedown, writable: true, configurable: true });
 Object.defineProperty(Sim.prototype, 'readDropTouch', { value: office.readDropTouch, writable: true, configurable: true });
+Object.defineProperty(Sim.prototype, 'enableContactInput', { value: office.enableContactInput, writable: true, configurable: true });
+Object.defineProperty(Sim.prototype, 'contactDown', { value: office.contactDown, writable: true, configurable: true });
+Object.defineProperty(Sim.prototype, 'contactUp', { value: office.contactUp, writable: true, configurable: true });
 Object.defineProperty(Sim.prototype, 'updateHallLatch', { value: hall.updateHallLatch, writable: true, configurable: true });
 Object.defineProperty(Sim.prototype, 'updateLitCounter', { value: hall.updateLitCounter, writable: true, configurable: true });
 Object.defineProperty(Sim.prototype, 'hallLitNow', { value: hall.hallLitNow, writable: true, configurable: true });
@@ -807,6 +851,7 @@ Object.defineProperty(Sim.prototype, 'drawViewed', { value: sheet.drawViewed, wr
 Object.defineProperty(Sim.prototype, 'monitorDownEarly', { value: sheet.monitorDownEarly, writable: true, configurable: true });
 Object.defineProperty(Sim.prototype, 'monitorDownLate', { value: sheet.monitorDownLate, writable: true, configurable: true });
 Object.defineProperty(Sim.prototype, 'secondPass', { value: sheet.secondPass, writable: true, configurable: true });
+Object.defineProperty(Sim.prototype, 'secondPassFront', { value: sheet.secondPassFront, writable: true, configurable: true });
 Object.defineProperty(Sim.prototype, 'passTools', { value: sheet.passTools, writable: true, configurable: true });
 Object.defineProperty(Sim.prototype, 'secondPassEarly', { value: sheet.secondPassEarly, writable: true, configurable: true });
 Object.defineProperty(Sim.prototype, 'secondPassLate', { value: sheet.secondPassLate, writable: true, configurable: true });

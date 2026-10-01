@@ -179,7 +179,7 @@ export class Lane {
       for (const u of sim.units) {
         if (u.done || u.path[u.idx] !== cam) continue;
         occupied = true;
-        least = Math.min(least, Math.max(0, u.stunUntil - sim.frame));
+        least = Math.min(least, sim.unitStunLeft(u));
       }
     }
     const frac = occupied ? least / C.STUN_FRAMES : 1;

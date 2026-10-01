@@ -1,0 +1,463 @@
+{
+  "schema": "evidence-record-v1",
+  "date": "2026-09-30",
+  "step": "ROADMAP S2",
+  "claimLevel": "MODEL_ONLY",
+  "fidelity": "rebuilt-runtime",
+  "status": "FIRST_DRAW_SPLIT_EXPLAINED",
+  "question": "Does a fixed update count for the monitor raise explain full-06's first model/rebuild draw split?",
+  "scope": {
+    "night": 7,
+    "customDials": 20,
+    "seed": 47593,
+    "replay": "full-06 landed",
+    "officeUpdates": 4593,
+    "totalUpdates": 5400,
+    "sourceRecord": "s2-bb-cap-2539a97cbeeafac2",
+    "experiment": "One retained night and clock; a mechanism diagnosis, not a cohort or reliability estimate."
+  },
+  "measurements": {
+    "repeatability": {
+      "runs": [
+        "monitor",
+        "animation"
+      ],
+      "eachComparedUpdates": 5400,
+      "eachProjectionEqual": true,
+      "sameInputSaveAndClock": true
+    },
+    "raiseCompletions": [
+      {
+        "startUpdate": 152,
+        "actualCompletionUpdate": 165,
+        "fixedCompletionUpdate": 164,
+        "weightedCompletionUpdate": 165,
+        "counterAtPriorUpdate": 12.4036,
+        "accumulatedClock": 12.403550760115516,
+        "deltasMsUsed": [
+          18.637539,
+          24.394692,
+          1.0,
+          15.718231,
+          16.252,
+          23.235615,
+          13.811769,
+          27.620231,
+          1.0,
+          27.648308,
+          1.0,
+          14.989923,
+          21.417538
+        ]
+      },
+      {
+        "startUpdate": 248,
+        "actualCompletionUpdate": 260,
+        "fixedCompletionUpdate": 260,
+        "weightedCompletionUpdate": 260,
+        "counterAtPriorUpdate": 12.225,
+        "accumulatedClock": 12.224976900113854,
+        "deltasMsUsed": [
+          13.867385,
+          17.780307,
+          16.956385,
+          18.252615,
+          15.779923,
+          17.282154,
+          15.200923,
+          17.918231,
+          14.941846,
+          17.231,
+          19.381846,
+          19.157
+        ]
+      },
+      {
+        "startUpdate": 608,
+        "actualCompletionUpdate": 621,
+        "fixedCompletionUpdate": 620,
+        "weightedCompletionUpdate": 621,
+        "counterAtPriorUpdate": 12.403,
+        "accumulatedClock": 12.402996960115512,
+        "deltasMsUsed": [
+          17.651385,
+          27.736077,
+          1.0,
+          15.330769,
+          16.894154,
+          13.920538,
+          11.375385,
+          21.004923,
+          13.437616,
+          18.323,
+          18.431692,
+          17.518154,
+          14.092923
+        ]
+      },
+      {
+        "startUpdate": 1211,
+        "actualCompletionUpdate": 1224,
+        "fixedCompletionUpdate": 1223,
+        "weightedCompletionUpdate": 1224,
+        "counterAtPriorUpdate": 12.8638,
+        "accumulatedClock": 12.863792340119803,
+        "deltasMsUsed": [
+          13.535616,
+          16.925308,
+          12.621846,
+          17.105538,
+          19.913539,
+          14.124538,
+          16.537923,
+          18.976308,
+          13.585231,
+          17.912615,
+          19.841154,
+          18.083692,
+          15.233231
+        ]
+      },
+      {
+        "startUpdate": 1811,
+        "actualCompletionUpdate": 1824,
+        "fixedCompletionUpdate": 1823,
+        "weightedCompletionUpdate": 1824,
+        "counterAtPriorUpdate": 12.374,
+        "accumulatedClock": 12.373993860115243,
+        "deltasMsUsed": [
+          13.474231,
+          12.986384,
+          14.694231,
+          16.762154,
+          11.293231,
+          15.804923,
+          17.422384,
+          19.837539,
+          13.594538,
+          16.82,
+          18.488539,
+          17.464615,
+          17.590462
+        ]
+      },
+      {
+        "startUpdate": 2408,
+        "actualCompletionUpdate": 2421,
+        "fixedCompletionUpdate": 2420,
+        "weightedCompletionUpdate": 2421,
+        "counterAtPriorUpdate": 12.2842,
+        "accumulatedClock": 12.284247660114408,
+        "deltasMsUsed": [
+          14.834769,
+          14.585231,
+          13.908615,
+          17.419,
+          15.337,
+          13.373462,
+          13.926154,
+          14.78223,
+          18.490385,
+          17.646538,
+          13.843385,
+          20.175077,
+          16.415615
+        ]
+      },
+      {
+        "startUpdate": 3013,
+        "actualCompletionUpdate": 3025,
+        "fixedCompletionUpdate": 3025,
+        "weightedCompletionUpdate": 3025,
+        "counterAtPriorUpdate": 12.4978,
+        "accumulatedClock": 12.497755380116397,
+        "deltasMsUsed": [
+          16.199385,
+          17.109154,
+          15.736615,
+          16.92,
+          21.199692,
+          13.368385,
+          15.329846,
+          16.342692,
+          16.361,
+          19.983308,
+          20.684,
+          19.061846
+        ]
+      },
+      {
+        "startUpdate": 3617,
+        "actualCompletionUpdate": 3629,
+        "fixedCompletionUpdate": 3629,
+        "weightedCompletionUpdate": 3629,
+        "counterAtPriorUpdate": 12.1679,
+        "accumulatedClock": 12.167856900113321,
+        "deltasMsUsed": [
+          15.619385,
+          17.510769,
+          15.795461,
+          16.655308,
+          22.136923,
+          14.859692,
+          16.672923,
+          16.802847,
+          13.778461,
+          17.223077,
+          19.176615,
+          16.566154
+        ]
+      },
+      {
+        "startUpdate": 4217,
+        "actualCompletionUpdate": 4229,
+        "fixedCompletionUpdate": 4229,
+        "weightedCompletionUpdate": 4229,
+        "counterAtPriorUpdate": 12.1972,
+        "accumulatedClock": 12.197210760113595,
+        "deltasMsUsed": [
+          16.993538,
+          17.846154,
+          14.123462,
+          15.982692,
+          17.237923,
+          16.692,
+          16.495616,
+          16.638846,
+          16.890769,
+          16.560231,
+          18.775461,
+          19.050154
+        ]
+      }
+    ],
+    "interruptedRaises": [],
+    "weightedMatches": 9,
+    "fixedMatches": 4,
+    "firstRaiseStateDifferenceUpdate": 164,
+    "firstDrawMismatchBefore": {
+      "tick": 1823,
+      "modelFrame": 1824,
+      "rebuilt": {
+        "draws": 881,
+        "state": 27088
+      },
+      "model": {
+        "draws": 882,
+        "state": 50097
+      }
+    },
+    "variants": {
+      "raise-clock": {
+        "firstDrawMismatch": {
+          "tick": 2048,
+          "modelFrame": 2049,
+          "rebuilt": {
+            "draws": 986,
+            "state": 6737
+          },
+          "model": {
+            "draws": 985,
+            "state": 43056
+          }
+        },
+        "firstBBOpeningUpdate": 1824,
+        "modelTraceSha256": "012f0e06d5731b10db66a75e55b0eda2e9bcca61f2b8c96ec0edd9934a44d279"
+      },
+      "all-animation-clocks": {
+        "firstDrawMismatch": {
+          "tick": 2048,
+          "modelFrame": 2049,
+          "rebuilt": {
+            "draws": 986,
+            "state": 6737
+          },
+          "model": {
+            "draws": 985,
+            "state": 43056
+          }
+        },
+        "firstBBOpeningUpdate": 1824,
+        "modelTraceSha256": "1b0dc877e77de5b41cce99fbb65bf4dec197dc629d3833d5088e817b2f398519"
+      }
+    }
+  },
+  "sourceInterpretation": {
+    "completionGroup": 1,
+    "resetGroup": 1015,
+    "accumulationGroup": 1016,
+    "deltaGroup": 1236,
+    "bbEntryGroup": 417,
+    "rule": "At update start, finish if the previous accumulated counter is >=12. While visible, reset on show and add min(4, previous update delta / divisor) at the late animation groups.",
+    "divisor": 16.666666666511446,
+    "divisorExact": "71582788266 / 2**32",
+    "finding": "The source model's sourcedAnimationCount counts fixed updates even when sourcedValue5 supplies a measured clock. The host counter accumulates the scaled timer delta."
+  },
+  "findings": [
+    "The original draw trace hides earlier state differences: the first monitor raise finishes one update early in the model at 164, while the rebuild finishes at 165.",
+    "At the first draw split, the rebuild animation counter is 11.3186 after update 1822 and reaches 12.374 only after update 1823. Its completion latch and BB entry therefore fire at 1824.",
+    "Both experimental variants move BB entry to 1824 and match every draw count and RNG state through update 2047. A new draw discrepancy remains at 2048.",
+    "This is independent of the effective BB AI cap, already observed as 15. It does not establish retail equivalence or identify the later disputed BB rolls."
+  ],
+  "limitations": [
+    "The interventions replace model methods only for the diagnostic process; no production mechanics were changed.",
+    "The all-animation-clocks variant applies the analogous sourced counters to both mask directions and monitor lowering, but this record measures only monitor-raise counters directly.",
+    "The corrected draw prefix is necessary but insufficient for full state equivalence; model/rebuild still differ after update 2047.",
+    "No phone interaction or new retail evidence."
+  ],
+  "validation": {
+    "diagnostic": "Two runtime repeats preserve all 5400 draw rows; the generated record asserts all nine arithmetic predictions and both experimental prefix comparisons.",
+    "campaignDryRun": {
+      "status": "READY",
+      "log": {
+        "path": "artifacts/s2-bb-roll-20260930/campaign-dry.log",
+        "sha256": "20c518637588505132f356d01d68c4d0ff22e16d6fc7bd9fb4c321a0f31dd729",
+        "bytes": 567
+      }
+    },
+    "replayGate": {
+      "status": "ENVIRONMENT_ERROR",
+      "error": "spawnSync git EPERM",
+      "log": {
+        "path": "/tmp/fnaf-animation-replay-gate.log",
+        "sha256": "c4caa854219901c93e91570003399be2df4a97009bd2786d3de0a5991048b444",
+        "bytes": 24206
+      }
+    },
+    "pushGate": {
+      "status": "ENVIRONMENT_ERROR",
+      "error": "spawnSync git EPERM before lanes run",
+      "log": {
+        "path": "/tmp/fnaf-animation-push-gate.log",
+        "sha256": "d6826fd13a2d210469d3fdf12cd4701a0f9ffda36defa45ac2a0ceac6e8f8b6b",
+        "bytes": 1125
+      }
+    },
+    "commits": {
+      "consequential": 0,
+      "bookkeeping": 0
+    }
+  },
+  "provenance": {
+    "files": [
+      {
+        "path": "artifacts/s2-bb-roll-20260930/runtime/trace",
+        "sha256": "18abf8050529bc7dc3afc8e2b4bf70f2dc2302ad108e77b81796fdb9bec0c93c",
+        "bytes": 1037830
+      },
+      {
+        "path": "artifacts/s2-bb-roll-20260930/runtime/run.input",
+        "sha256": "cac3d1e7055825725e5a0859532d48e9945ef9d7bd6cf90ce957bf2acc010cc9",
+        "bytes": 13161
+      },
+      {
+        "path": "artifacts/s2-bb-roll-20260930/runtime/frametimes.txt",
+        "sha256": "383d25c80bb3648e9199589ebce7b6782a510eacee4409df3c90e940869541cf",
+        "bytes": 253940
+      },
+      {
+        "path": "artifacts/s2-bb-roll-20260930/runtime/save-before.ini",
+        "sha256": "c0f497ff64b6f757f943965a48d2795419fb934ddf54eb5f3dee000439484844",
+        "bytes": 72
+      },
+      {
+        "path": "packages/source/src/games/fnaf2/plant-model.js",
+        "sha256": "6f7710e392edf26f94ef60221006f2903d9f165fd0afb79bcac661e9a9ec38ee",
+        "bytes": 164589
+      },
+      {
+        "path": "packages/source/recompile/sourced-rebuild-model-options.json",
+        "sha256": "02172a8a2810fdfac38bcdb886b29bb65012895a527e2a1b633718cae9a57aef",
+        "bytes": 1448
+      },
+      {
+        "path": "packages/propose/bin/recompile/phone-encounter-replay.mjs",
+        "sha256": "04c6256ef464eb8c4ac6adf6139fe2a52f8eaa6be007993e66277cecd19b602f",
+        "bytes": 56932
+      },
+      {
+        "path": "/home/pedro/fnaf-apks/fnaf2/events/03-04-Office.txt",
+        "sha256": "026ee3861642abb24a0961d590d8e3d708c9417ec143b92aacb73d6c0415b23b",
+        "bytes": 455276
+      },
+      {
+        "path": "/home/pedro/fnaf-apks/fnaf2-recompile-20260927/pinned/66d6e2f6-d9cc45ff/Chowdren",
+        "sha256": "66d6e2f6b23f9af9c967f06337b55dd6afec9b2c27e686cebd304ea03eafec95",
+        "bytes": 49200040
+      },
+      {
+        "path": "artifacts/s2-bb-roll-20260930/diagnose.mjs",
+        "sha256": "f273df6d8a7d3232e923ffd0a115eb94b28be111b972d5ac9f7d8ff955cae6ca",
+        "bytes": 3983
+      },
+      {
+        "path": "artifacts/s2-bb-roll-20260930/watch.py",
+        "sha256": "7d13fee2d67494528e8c55de0d1f0a6bcad3b7a8c5308462cf0d0d68bd1fb7ad",
+        "bytes": 1712
+      },
+      {
+        "path": "artifacts/s2-bb-roll-20260930/animation-record.py",
+        "sha256": "9d83078377fda16cc93ead11182626c9604a95147a8059b875828c0c7e30c479",
+        "bytes": 9031
+      },
+      {
+        "path": "artifacts/s2-bb-roll-20260930/monitor/trace",
+        "sha256": "bc5e56973563de45563936231596d03895d0fcc52c37bffb5400ea8bc49242e9",
+        "bytes": 1018860
+      },
+      {
+        "path": "artifacts/s2-bb-roll-20260930/monitor/env",
+        "sha256": "1f6a0a00ee40f92de92fb5d84a2a2895d562e8961e49182320c71342ce2e989a",
+        "bytes": 636
+      },
+      {
+        "path": "artifacts/s2-bb-roll-20260930/monitor/summary.json",
+        "sha256": "dbb6e5d5d0819d645274242c59e508852e827b469e4698d9524aad78d6128e9a",
+        "bytes": 105
+      },
+      {
+        "path": "artifacts/s2-bb-roll-20260930/animation/trace",
+        "sha256": "1e4fd0aef37a1f7ae6628d2210c9613874959f1b31f607d5bb82b0c59507f131",
+        "bytes": 1036154
+      },
+      {
+        "path": "artifacts/s2-bb-roll-20260930/animation/env",
+        "sha256": "4df12720bf31b92f925b3c54291c754d9b04e91f2ad873a67fd68d3698756e48",
+        "bytes": 638
+      },
+      {
+        "path": "artifacts/s2-bb-roll-20260930/animation/summary.json",
+        "sha256": "b9114610012b51d287bdd04a12192ec61581c961fb051cc8a522f6f6f311efe1",
+        "bytes": 105
+      },
+      {
+        "path": "artifacts/s2-bb-roll-20260930/diagnosis-control.json",
+        "sha256": "f20b521b68960bb2d978c03418c3acd837c936d84ec1fd214eb99bc645faffce",
+        "bytes": 22921
+      },
+      {
+        "path": "artifacts/s2-bb-roll-20260930/diagnosis-raise-clock.json",
+        "sha256": "6f7de9ace700e19b261ff8baecf6a6d35e2e1cf0a81e7a61eeb4164348e21d1f",
+        "bytes": 22922
+      },
+      {
+        "path": "artifacts/s2-bb-roll-20260930/diagnosis-all-animation-clocks.json",
+        "sha256": "5689ea0f4455513bb097fab09d8331be9f72a65ba5fe3a0e6701aa5504652ec4",
+        "bytes": 22922
+      }
+    ]
+  },
+  "reproducer": {
+    "runtime": "python3 artifacts/s2-bb-roll-20260930/watch.py monitor; python3 artifacts/s2-bb-roll-20260930/watch.py animation (fresh output directories)",
+    "model": "node artifacts/s2-bb-roll-20260930/diagnose.mjs VARIANT (control, raise-clock, all-animation-clocks)",
+    "record": "python3 artifacts/s2-bb-roll-20260930/animation-record.py",
+    "arithmetic": "For each retained raise, start at zero, add min(4, deltaMs/divisor) in deltasMsUsed order until >=12; completion is startUpdate plus the number of deltas consumed.",
+    "custody": "Full traces and one-off experiment scripts remain local under artifacts/. The retained per-raise deltas reproduce every arithmetic prediction without the runtime or those scripts."
+  },
+  "open": [
+    "Implement the weighted animation clocks in the sourced model and check other animation directions.",
+    "Explain the remaining model/rebuild draw split at update 2048 before attributing the disputed 40/45-second rolls.",
+    "Establish encounter equivalence to the retail game."
+  ],
+  "id": "s2-animation-clock-b00ad28afa68e1d5"
+}

@@ -3,6 +3,7 @@
 // (g337-g390, g573, g745-g874). Each function is a Sim method; plant-model.js installs it on Sim.prototype.
 import * as C from './config.ts';
 import { MON_UP } from './plant-constants.ts';
+import { unitStunLeft, setUnitStun } from './movement-clock.ts';
 import type { Sim } from './plant-model.ts';
 
 /** g75/g84 -> g94 -> (g262, g445-447 later) -> g488 -> g489, from frame-start state. */
@@ -101,7 +102,7 @@ export function tickLight(this: Sim) {
   if (this.monitor === MON_UP && this.opts.passiveWitheredLookStunFrames > 0) {
     for (const u of this.units) {
       if (C.WITHEREDS.has(u.id) && u.path[u.idx] === this.cam)
-        u.stunUntil = this.frame + this.opts.passiveWitheredLookStunFrames;
+        setUnitStun(this, u, this.opts.passiveWitheredLookStunFrames);
     }
   }
 }
@@ -112,7 +113,7 @@ export function hallLightPin(this: Sim) {
   for (const u of this.units) {
     if (!u.done && C.HALL_LIGHT_PIN_IDS.has(u.id) &&
         (u.path[u.idx] === 'blindA' || u.path[u.idx] === 'blindB'))
-      u.stunUntil = Math.max(u.stunUntil, this.frame + C.HALL_LIGHT_PIN_FRAMES);
+      setUnitStun(this, u, Math.max(unitStunLeft(this, u), C.HALL_LIGHT_PIN_FRAMES));
   }
 }
 
@@ -122,7 +123,7 @@ export function stunCam(this: Sim, n, frames = C.STUN_FRAMES, viewing = n) {
     if ((C.WITHEREDS.has(u.id) && viewing === 8) ||
         (C.TOYS.has(u.id) && viewing === 9) ||
         (u.id === 'mangle' && viewing === 11)) continue;
-    u.stunUntil = this.frame + frames;
+    setUnitStun(this, u, frames);
   }
 }
 
@@ -161,12 +162,10 @@ export function tickHallMovement(this: Sim, f) {
 export function tickGoldenHall(this: Sim, f) {
   if (!this.opts.gfEnabled) return;
   // g780 only moves the hallway figure to marker 123. g570 waits for a
-  // one-second event there before writing attack code 12; g587-588 then run
-  // the shared 40-frame transition. Crossing 100 exposure is not itself the
-  // jumpscare.
+  // one-second event there before writing attack code 12; g587-g595 end its attack.
   if (this.gf.hallInside) {
     if (this.gf.attackAt >= 0) {
-      if (f >= this.gf.attackAt)
+      if (!this.opts.sourcedAttackAnimation && f >= this.gf.attackAt)
         this.kill('golden-freddy-hall', 'Hall Golden Freddy completed the marker-123 attack');
     } else if (this.opts.sourcedGatedEvery ? !this.attackExecuting && this.gatedPass('g570', 1000)
                : this.hooked ? this.secTick : f % C.FPS === 0) {           // g570

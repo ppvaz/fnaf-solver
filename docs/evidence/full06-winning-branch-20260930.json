@@ -1,0 +1,1076 @@
+{
+  "schema": "s2-winning-branch-v1",
+  "date": "2026-09-30",
+  "step": "S2",
+  "claimLevel": "MODEL_ONLY",
+  "fidelity": "rebuilt-runtime",
+  "status": "FOUR_HOST_REPLAY_RNG_TRACES_MATCH_RETAIL_GAP_OPEN",
+  "question": "Can the full-06 early-release winning branch consume the same random stream as the pinned rebuild through 6 AM, without breaking the original death and clock interventions?",
+  "scope": {
+    "night": 7,
+    "seed": 47593,
+    "customDials": "all 20",
+    "contacts": "full-06 measured landings; winning branch releases monitor 22231 at tick 22243 instead of 22244",
+    "binary": "/home/pedro/fnaf-apks/fnaf2-recompile-20260927/pinned/66d6e2f6-d9cc45ff/Chowdren"
+  },
+  "findings": [
+    "At tick 23727, g292 must draw before g333. Equal draw counts concealed a different roll allocation to Withered Freddy; its later return exposed the mismatch at 23770.",
+    "Native counters independently read effective AI 15 for both BB and Withered Freddy with custom dials 20.",
+    "The CAM03-to-CAM07 Freddy fork consumes the promoted marker without overwriting the existing footstep value.",
+    "At 24653 a new danger edge restarts the previous blackout fade before its requested completion can clear the clock. g534 precedes g536; g537 is edge-triggered.",
+    "At 24672 native clock 320.45 suppresses flicker while the previous model clock 20.2145169 drew. Modeling the persistent clock, fade and early encounter entry removes this difference.",
+    "The fresh blackout watch reproduces all 26072 retained draw-projection rows. Production now matches all 25235 office updates of the winning branch, ending at RNG draws 16815/state 10904.",
+    "All three original death/clock controls still match through their respective terminal updates."
+  ],
+  "characterization": {
+    "rollOrder": {
+      "kind": "diagnostic before production design",
+      "claimLevel": "MODEL_ONLY",
+      "hypothesis": "g292 must spend its draw before g333, as in the decoded sheet; the current pass places it after movement.",
+      "simultaneousUpdate": 23727,
+      "beforeSeed": 12880,
+      "drawCountThisUpdate": 21,
+      "drawAllocation": {
+        "thirdDraw": {
+          "state": 63417,
+          "modelFreddyRoll": 20,
+          "sheetBBRoll": 9
+        },
+        "fourthDraw": {
+          "state": 16192,
+          "sheetFreddyRoll": 5
+        }
+      },
+      "modelBefore": {
+        "freddyPending": false,
+        "rngFirstMismatch": 23770
+      },
+      "native": {
+        "freddyPendingAt23727": true,
+        "freddyReturnAt23770": true,
+        "returnB": 1500,
+        "footstepC": 9.94,
+        "effectiveFreddyAI": 15,
+        "effectiveBBAI": 15
+      },
+      "experiment": {
+        "modelFrameOffset": 1,
+        "compared": 25235,
+        "firstMismatch": {
+          "tick": 24672,
+          "modelFrame": 24673,
+          "rebuilt": {
+            "draws": 16357,
+            "state": 1280
+          },
+          "model": {
+            "draws": 16358,
+            "state": 37633
+          }
+        }
+      },
+      "conclusion": "Reordering g292 removes the 23770 divergence and advances the matching draw prefix to 24672. Another mechanism remains open.",
+      "sourceBeforeSha256": "5aee279b9590ad7939ab0a2e9778b55ce64f11f7fc78bb990768a1bdf34939f8"
+    },
+    "blackoutLifecycle": {
+      "kind": "s2-blackout-lifecycle-characterization-v1",
+      "claimLevel": "MODEL_ONLY",
+      "fidelity": "rebuilt-runtime",
+      "hypothesis": "The blackout clock persists after encounter resolution and is reset only by g536; a new danger edge at g534 can cancel g845 fade completion.",
+      "beforeSplit": 24672,
+      "nativeAtSplit": {
+        "clock": 320.45,
+        "fade": 21.2145
+      },
+      "beforeModelAtSplit": {
+        "clock": 20.214516900188265
+      },
+      "sourceGroups": [
+        445,
+        446,
+        447,
+        490,
+        514,
+        517,
+        518,
+        534,
+        535,
+        536,
+        537,
+        845
+      ],
+      "lateEntryExperiment": {
+        "modelFrameOffset": 1,
+        "compared": 25235,
+        "firstMismatch": {
+          "tick": 24672,
+          "modelFrame": 24673,
+          "rebuilt": {
+            "draws": 16357,
+            "state": 1280
+          },
+          "model": {
+            "draws": 16358,
+            "state": 37633
+          }
+        }
+      },
+      "earlyEntryExperiment": {
+        "modelFrameOffset": 1,
+        "compared": 25235,
+        "firstMismatch": null
+      },
+      "stateComparisons": {
+        "blackoutClock": {
+          "mismatches": 3,
+          "first": [
+            {
+              "tick": 2809,
+              "native": 173.782,
+              "model": 173.783
+            },
+            {
+              "tick": 14820,
+              "native": 163.582,
+              "model": 163.583
+            },
+            {
+              "tick": 14956,
+              "native": 299.518,
+              "model": 299.519
+            }
+          ]
+        },
+        "fade": {
+          "mismatches": 0,
+          "first": []
+        },
+        "viewing": {
+          "mismatches": 0,
+          "first": []
+        },
+        "blackout": {
+          "mismatches": 0,
+          "first": []
+        },
+        "dropEverything": {
+          "mismatches": 0,
+          "first": []
+        }
+      },
+      "numericMaxAbsoluteError": {
+        "blackoutClock": 0.0005000027895221137,
+        "fade": 0.0004969016929408099
+      },
+      "limits": [
+        "Native counters print six significant digits.",
+        "The intervention changes a diagnostic model instance; production still needs implementation and gates.",
+        "The retail BB gap is not measured by this replay."
+      ],
+      "inputHashes": {
+        "artifacts/s2-winning-branch-20260930/blackout/trace": "b2668e08eac32b44e95985ecfcaac79102fd5d960ba7e95ea41e9eb4cd16b7bc",
+        "artifacts/s2-winning-branch-20260930/experiment-lifecycle-early.mjs": "293b83e7c7748589c7a772dda5f196831ac7e138d7b83bfd4de1b02a434c3e07",
+        "packages/source/src/games/fnaf2/plant-model.js": "21f0b56867fcd344d5848ca55dd678e06245f68bac3cb82afe818b858c7f5ec6"
+      }
+    }
+  },
+  "measurements": {
+    "replays": {
+      "released-early": {
+        "status": "MATCHED_PREFIX",
+        "comparison": {
+          "modelFrameOffset": 1,
+          "compared": 25235,
+          "firstMismatch": null
+        },
+        "terminal": {
+          "traceSha256": "ab6f19841cb14e494134dea0b545c2b257b3e394a965d5a65a1d3ae043ec22fa",
+          "terminal": {
+            "frame": 25235,
+            "draws": 16815,
+            "state": 10904
+          },
+          "death": null,
+          "won": true
+        },
+        "runtime": {
+          "visits": [
+            {
+              "frame": 0,
+              "seed": 47593,
+              "updates": 180
+            },
+            {
+              "frame": 1,
+              "seed": 47593,
+              "updates": 216
+            },
+            {
+              "frame": 12,
+              "seed": 47593,
+              "updates": 216
+            },
+            {
+              "frame": 2,
+              "seed": 47593,
+              "updates": 189
+            },
+            {
+              "frame": 7,
+              "seed": 47593,
+              "updates": 6
+            },
+            {
+              "frame": 3,
+              "seed": 47593,
+              "updates": 25235
+            },
+            {
+              "frame": 5,
+              "seed": 47593,
+              "updates": 30
+            }
+          ],
+          "targetUpdates": 25235,
+          "namedTouches": 1,
+          "stop": "target frame 5 ticks 30 total 26072",
+          "traceSha256": "a2a7000f3d17389374cc77d433009bcb3db598c0bfb944b765ac49a2734ef96d",
+          "drawTraceSha256": "403cd9bb28ff5e43cc2776fa3db96fdae5c8d4f3dfe165398b4c7e3772977d78"
+        }
+      },
+      "attack": {
+        "status": "MATCHED_PREFIX",
+        "comparison": {
+          "modelFrameOffset": 1,
+          "compared": 22698,
+          "firstMismatch": null
+        },
+        "terminal": {
+          "traceSha256": "84c994b82f11bbd3132c4e02632487dcf21d7c00a15c978f501255bf76c05d5e",
+          "terminal": {
+            "frame": 22698,
+            "draws": 15033,
+            "state": 7344
+          },
+          "death": {
+            "reason": "inside-office",
+            "detail": "withbonnie completed the rebuilt attack animation",
+            "frame": 22698,
+            "t": 378.3
+          },
+          "won": false
+        },
+        "runtime": {
+          "visits": [
+            {
+              "frame": 0,
+              "seed": 47593,
+              "updates": 180
+            },
+            {
+              "frame": 1,
+              "seed": 47593,
+              "updates": 216
+            },
+            {
+              "frame": 12,
+              "seed": 47593,
+              "updates": 216
+            },
+            {
+              "frame": 2,
+              "seed": 47593,
+              "updates": 189
+            },
+            {
+              "frame": 7,
+              "seed": 47593,
+              "updates": 6
+            },
+            {
+              "frame": 3,
+              "seed": 47593,
+              "updates": 22698
+            },
+            {
+              "frame": 4,
+              "seed": 47593,
+              "updates": 300
+            },
+            {
+              "frame": 6,
+              "seed": 47593,
+              "updates": 600
+            },
+            {
+              "frame": 1,
+              "seed": 47593,
+              "updates": 15595
+            }
+          ],
+          "targetUpdates": 22698,
+          "namedTouches": 1,
+          "stop": "total ticks 40000 frame 1 tick 15595",
+          "traceSha256": "d1e192d24e144114c62ce1da48ee4a2ce5d88ed47d0788beb670424e5cf86fca",
+          "drawTraceSha256": "3c38fd087850b62099c1e5275abb6979b0429714049d8f48f6e034d548c68a74"
+        }
+      },
+      "attack-half-after": {
+        "status": "MATCHED_PREFIX",
+        "comparison": {
+          "modelFrameOffset": 1,
+          "compared": 22698,
+          "firstMismatch": null
+        },
+        "terminal": {
+          "traceSha256": "1083efa7d5cb0056b1c8f4a7c9915e767d59d8e16735b1da5bec245825ab5da6",
+          "terminal": {
+            "frame": 22698,
+            "draws": 15025,
+            "state": 11472
+          },
+          "death": {
+            "reason": "inside-office",
+            "detail": "withbonnie completed the rebuilt attack animation",
+            "frame": 22698,
+            "t": 378.3
+          },
+          "won": false
+        },
+        "runtime": {
+          "visits": [
+            {
+              "frame": 0,
+              "seed": 47593,
+              "updates": 180
+            },
+            {
+              "frame": 1,
+              "seed": 47593,
+              "updates": 216
+            },
+            {
+              "frame": 12,
+              "seed": 47593,
+              "updates": 216
+            },
+            {
+              "frame": 2,
+              "seed": 47593,
+              "updates": 189
+            },
+            {
+              "frame": 7,
+              "seed": 47593,
+              "updates": 6
+            },
+            {
+              "frame": 3,
+              "seed": 47593,
+              "updates": 22698
+            },
+            {
+              "frame": 4,
+              "seed": 47593,
+              "updates": 300
+            },
+            {
+              "frame": 6,
+              "seed": 47593,
+              "updates": 600
+            },
+            {
+              "frame": 1,
+              "seed": 47593,
+              "updates": 15595
+            }
+          ],
+          "targetUpdates": 22698,
+          "namedTouches": 1,
+          "stop": "total ticks 40000 frame 1 tick 15595",
+          "traceSha256": "645f37546fca962d4cb2a9fbd7d50206a808a1d133b245e26bf258708417d1ad",
+          "drawTraceSha256": "7c556741dbdbb8c7cfa734a6e33c8210f573a17403e590ebb2695c3f4c6b840f"
+        }
+      },
+      "attack-double-after": {
+        "status": "MATCHED_PREFIX",
+        "comparison": {
+          "modelFrameOffset": 1,
+          "compared": 22688,
+          "firstMismatch": null
+        },
+        "terminal": {
+          "traceSha256": "0e42966ea8c3aae3931b54a66f730f202ea90c2d8b9231dd3305789a49d778a3",
+          "terminal": {
+            "frame": 22688,
+            "draws": 15040,
+            "state": 27881
+          },
+          "death": {
+            "reason": "inside-office",
+            "detail": "withbonnie reached the shared attack counter limit",
+            "frame": 22688,
+            "t": 378.1333333333333
+          },
+          "won": false
+        },
+        "runtime": {
+          "visits": [
+            {
+              "frame": 0,
+              "seed": 47593,
+              "updates": 180
+            },
+            {
+              "frame": 1,
+              "seed": 47593,
+              "updates": 216
+            },
+            {
+              "frame": 12,
+              "seed": 47593,
+              "updates": 216
+            },
+            {
+              "frame": 2,
+              "seed": 47593,
+              "updates": 189
+            },
+            {
+              "frame": 7,
+              "seed": 47593,
+              "updates": 6
+            },
+            {
+              "frame": 3,
+              "seed": 47593,
+              "updates": 22688
+            },
+            {
+              "frame": 4,
+              "seed": 47593,
+              "updates": 300
+            },
+            {
+              "frame": 6,
+              "seed": 47593,
+              "updates": 600
+            },
+            {
+              "frame": 1,
+              "seed": 47593,
+              "updates": 15605
+            }
+          ],
+          "targetUpdates": 22688,
+          "namedTouches": 1,
+          "stop": "total ticks 40000 frame 1 tick 15605",
+          "traceSha256": "aa8b210c13a39912572aecd473f11d5d91086400094d5698abd4df014d00209c",
+          "drawTraceSha256": "2f470bc8c4aaf3e53fa504eeb99041d6198d7df5b6f38193d4a7ee6f786358f6"
+        }
+      }
+    },
+    "winningStateComparisons": {
+      "blackoutClock": {
+        "compared": 25235,
+        "mismatches": 3,
+        "first": [
+          {
+            "tick": 2809,
+            "native": 173.782,
+            "model": 173.783
+          },
+          {
+            "tick": 14820,
+            "native": 163.582,
+            "model": 163.583
+          },
+          {
+            "tick": 14956,
+            "native": 299.518,
+            "model": 299.519
+          }
+        ]
+      },
+      "fade": {
+        "compared": 25235,
+        "mismatches": 0,
+        "first": []
+      },
+      "viewing": {
+        "compared": 25235,
+        "mismatches": 0,
+        "first": []
+      },
+      "blackout": {
+        "compared": 25235,
+        "mismatches": 0,
+        "first": []
+      },
+      "dropEverything": {
+        "compared": 25235,
+        "mismatches": 0,
+        "first": []
+      }
+    },
+    "numericMaxAbsoluteDifference": {
+      "blackoutClock": 0.0005000027895221137,
+      "fade": 0.0004969016929408099
+    }
+  },
+  "validation": {
+    "direct": [
+      {
+        "command": [
+          "node",
+          "packages/source/test/b-drain-order.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/route-pass.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/footstep-value2.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/animation-count.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/frame-time-hook.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/drop-flag-order.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/value5.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/blackout-clock-end.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/contracts.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/control-catalog.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/sourcetest.mjs"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/simtest.mjs"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/review/bin/recompile/test-compare-draw-trace.mjs"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/test/cycle-library.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/test/cycle-planner.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/test/cycle-controller.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/test/night-policy.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/test/test-winners-rebuild.mjs"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "apps/trainer/test/renderer.test.mjs"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "tools/validate-references.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/parked/minus7/policytest.mjs",
+          "--assert"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "npm",
+          "run",
+          "typecheck:js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/bin/factreplay.mjs",
+          "--assert"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/bin/recompile/test-schedule-replay.mjs"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/bin/recompile/test-phone-encounter-replay.mjs"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/bin/recompile/test-phone-clock-sweep.mjs"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/bin/recompile/test-phone-input-bracket-sweep.mjs"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/blackout-draws.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/second-pass.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/route-forks.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/rolls-before-moves.test.js"
+        ],
+        "exitCode": 0
+      }
+    ],
+    "passed": 31,
+    "failedOrBlocked": 0,
+    "aggregate": [
+      {
+        "name": "typecheck",
+        "command": [
+          "npm",
+          "run",
+          "typecheck"
+        ],
+        "exitCode": 0
+      },
+      {
+        "name": "unit",
+        "command": [
+          "npm",
+          "run",
+          "test:unit"
+        ],
+        "exitCode": 0
+      },
+      {
+        "name": "contracts",
+        "command": [
+          "npm",
+          "run",
+          "test:contracts"
+        ],
+        "exitCode": 0
+      },
+      {
+        "name": "affected",
+        "command": [
+          "npm",
+          "run",
+          "test:affected",
+          "--",
+          "--files",
+          "apps/trainer/src/lane.ts",
+          "apps/trainer/src/ui.ts",
+          "docs/architecture/generated/import-graph.json",
+          "docs/architecture/generated/test-manifest.json",
+          "docs/evidence/full06-animation-clock-20260930.json",
+          "docs/evidence/full06-bb-cap-20260930.json",
+          "docs/evidence/full06-contact-duration-20260930.json",
+          "docs/evidence/full06-held-tap-20260930.json",
+          "docs/evidence/full06-measured-clock-correction-20260930.json",
+          "docs/evidence/full06-movement-clock-20260930.json",
+          "docs/evidence/full06-terminal-clock-20260930.json",
+          "docs/evidence/full06-winning-branch-20260930.json",
+          "packages/propose/bin/recompile/compare-schedule-replay.mjs",
+          "packages/propose/bin/recompile/phone-clock-sweep.mjs",
+          "packages/propose/bin/recompile/phone-encounter-replay.mjs",
+          "packages/propose/bin/recompile/phone-input-bracket-sweep.mjs",
+          "packages/propose/bin/recompile/schedule-to-input.mjs",
+          "packages/propose/bin/recompile/test-phone-encounter-replay.mjs",
+          "packages/propose/bin/recompile/test-phone-input-bracket-sweep.mjs",
+          "packages/propose/bin/recompile/test-schedule-replay.mjs",
+          "packages/propose/parked/minus7/hid-device-pilot.mjs",
+          "packages/propose/parked/minus7/sim.mjs",
+          "packages/review/bin/recompile/compare-draw-trace.mjs",
+          "packages/source/README.md",
+          "packages/source/recompile/model-draw-trace.mjs",
+          "packages/source/recompile/sourced-rebuild-model-options.json",
+          "packages/source/src/games/fnaf2/attack-animation.ts",
+          "packages/source/src/games/fnaf2/blackout-clock.ts",
+          "packages/source/src/games/fnaf2/contact-input.ts",
+          "packages/source/src/games/fnaf2/movement-clock.ts",
+          "packages/source/src/games/fnaf2/plant-hall.ts",
+          "packages/source/src/games/fnaf2/plant-model.ts",
+          "packages/source/src/games/fnaf2/plant-office.ts",
+          "packages/source/src/games/fnaf2/plant-options.ts",
+          "packages/source/src/games/fnaf2/plant-puppet.ts",
+          "packages/source/src/games/fnaf2/plant-sheet.ts",
+          "packages/source/src/games/fnaf2/plant-units.ts",
+          "packages/source/test/animation-count.test.js",
+          "packages/source/test/b-drain-order.test.js",
+          "packages/source/test/blackout-clock-end.test.js",
+          "packages/source/test/drop-flag-order.test.js",
+          "packages/source/test/frame-time-hook.test.js",
+          "packages/source/test/route-forks.test.js",
+          "packages/source/test/second-pass.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "name": "file-size",
+        "command": [
+          "node",
+          "tools/test-file-size.mjs"
+        ],
+        "exitCode": 0
+      },
+      {
+        "name": "emit",
+        "command": [
+          "npm",
+          "run",
+          "--silent",
+          "device:emit",
+          "--",
+          "--winner",
+          "packages/propose/bindings/fnaf2/campaign-night7-k3-winner.json",
+          "--out",
+          "artifacts/s2-winning-branch-20260930/dry-k3-rerun"
+        ],
+        "exitCode": 0
+      },
+      {
+        "name": "campaign-dry",
+        "command": [
+          "npm",
+          "run",
+          "--silent",
+          "device:campaign",
+          "--",
+          "--bundle",
+          "artifacts/s2-winning-branch-20260930/dry-k3-rerun",
+          "--nights",
+          "7",
+          "--profile",
+          "hid-mediaprojection"
+        ],
+        "exitCode": 0
+      }
+    ],
+    "sandboxRun": {
+      "passed": 28,
+      "failedOrBlocked": 3,
+      "aggregate": [
+        {
+          "name": "affected",
+          "command": [
+            "npm",
+            "run",
+            "test:affected",
+            "--",
+            "--files",
+            "packages/source/src/games/fnaf2/blackout-clock.js",
+            "packages/source/test/blackout-clock-end.test.js",
+            "packages/source/test/second-pass.test.js",
+            "packages/source/test/route-forks.test.js",
+            "packages/source/src/games/fnaf2/attack-animation.js",
+            "packages/source/src/games/fnaf2/plant-model.js",
+            "packages/source/recompile/model-draw-trace.mjs",
+            "packages/source/recompile/sourced-rebuild-model-options.json",
+            "packages/source/test/animation-count.test.js",
+            "packages/propose/bin/recompile/compare-schedule-replay.mjs"
+          ],
+          "exitCode": 1
+        },
+        {
+          "name": "file-size",
+          "command": [
+            "node",
+            "tools/test-file-size.mjs"
+          ],
+          "exitCode": 1
+        },
+        {
+          "name": "emit",
+          "command": [
+            "npm",
+            "run",
+            "--silent",
+            "device:emit",
+            "--",
+            "--winner",
+            "packages/propose/bindings/fnaf2/campaign-night7-k3-winner.json",
+            "--out",
+            "artifacts/s2-winning-branch-20260930/dry-k3"
+          ],
+          "exitCode": 0
+        },
+        {
+          "name": "campaign-dry",
+          "command": [
+            "npm",
+            "run",
+            "--silent",
+            "device:campaign",
+            "--",
+            "--bundle",
+            "artifacts/s2-winning-branch-20260930/dry-k3",
+            "--nights",
+            "7",
+            "--profile",
+            "hid-mediaprojection"
+          ],
+          "exitCode": 0
+        },
+        {
+          "name": "push-gate",
+          "command": [
+            "npm",
+            "run",
+            "push-gate"
+          ],
+          "exitCode": 1
+        }
+      ],
+      "cause": "spawnSync git EPERM and a read-only .git in the first session"
+    },
+    "readerFix": "test-phone-input-bracket-sweep failed behind the EPERM: its check required a pinned 2026-09-28 record to list exactly the current MODEL_SOURCES, which the model-module splits extend. The check now accepts the record naming, by file stem and in order, the files the current sources begin with.",
+    "modelSourceLines": {
+      "plant-model.ts": 872,
+      "config.ts": 753,
+      "rng.ts": 45,
+      "attack-animation.ts": 48,
+      "blackout-clock.ts": 52,
+      "contact-input.ts": 61,
+      "movement-clock.ts": 27,
+      "plant-constants.ts": 23,
+      "plant-hall.ts": 308,
+      "plant-office.ts": 235,
+      "plant-options.ts": 495,
+      "plant-puppet.ts": 155,
+      "plant-sheet.ts": 274,
+      "plant-units.ts": 619
+    },
+    "fileLineCeiling": 2000
+  },
+  "limitations": [
+    "No new retail phone run or promotion; matching RNG and named projections is not all-state or all-night equivalence.",
+    "Blackout clock has three differing six-significant-digit rounded prints, at native rounding boundaries; maximum absolute error is retained, not described as bit equality. Fade prints and named discrete states match.",
+    "The original terminal evidence covers other state projections before this correction; this record does not remeasure every actor.",
+    "The first session could not run Git subprocesses; every gate was rerun with Git available (revalidate.py) and its sandboxed run is retained beside it. No gate was bypassed."
+  ],
+  "open": [
+    "Explain retail BB moves at 40/45 seconds, beginning from aligned host mechanics.",
+    "Qualify broader nights and seeds, remaining attack lifecycle paths, and the retail clock."
+  ],
+  "commits": {
+    "consequential": 1,
+    "bookkeeping": 0,
+    "scope": "the commit that carries this record"
+  },
+  "publication": {
+    "status": "COMMITTED_WITH_THIS_RECORD",
+    "blockedAttempt": {
+      "attempted": [
+        "git",
+        "add",
+        "--",
+        "packages/source/src/games/fnaf2/blackout-clock.js"
+      ],
+      "exitCode": 128,
+      "error": "Unable to create .git/index.lock: Read-only file system"
+    }
+  },
+  "port": {
+    "from": "a local commit prepared on 63b24100 and never pushed",
+    "onto": "fb28793e",
+    "why": "origin/master split plant-model.js by mechanism (76190731) and moved Source to runtime TypeScript (9e7ebde1) while this chain was prepared; its model edits were re-applied to plant-*.ts and its four modules became .ts",
+    "check": "the four replays rerun on the ported model against the same retained rebuild traces; model trace sha256, both alignments and every control row compared with pre-port/ (the outputs retained before the port)",
+    "replays": {
+      "released-early": {
+        "modelTraceSha256": "ab6f19841cb14e494134dea0b545c2b257b3e394a965d5a65a1d3ae043ec22fa",
+        "controlRows": 25236,
+        "identicalToPrePort": true
+      },
+      "attack": {
+        "modelTraceSha256": "84c994b82f11bbd3132c4e02632487dcf21d7c00a15c978f501255bf76c05d5e",
+        "controlRows": 22699,
+        "identicalToPrePort": true
+      },
+      "attack-half-after": {
+        "modelTraceSha256": "1083efa7d5cb0056b1c8f4a7c9915e767d59d8e16735b1da5bec245825ab5da6",
+        "controlRows": 22699,
+        "identicalToPrePort": true
+      },
+      "attack-double-after": {
+        "modelTraceSha256": "0e42966ea8c3aae3931b54a66f730f202ea90c2d8b9231dd3305789a49d778a3",
+        "controlRows": 22689,
+        "identicalToPrePort": true
+      }
+    }
+  },
+  "supports": [
+    "s2-bb-cap-2539a97cbeeafac2",
+    "s2-animation-clock-b00ad28afa68e1d5",
+    "s2-measured-clock-7137834deb214634",
+    "s2-movement-clock-6b9464c4e5c96647",
+    "s2-held-monitor-7793a6f003917c64",
+    "s2-contact-duration-dc5afa6f11dbbaa7",
+    "s2-terminal-clock-847cd9b54242689e"
+  ],
+  "provenance": {
+    "files": {
+      "/home/pedro/Projects/fnaf2-1020/packages/source/src/games/fnaf2/plant-model.ts": "ea387323f511fc920f30902c7bf780958ae3559ce6b128720d6b5c8ac1e23718",
+      "/home/pedro/Projects/fnaf2-1020/packages/source/src/games/fnaf2/config.ts": "9cca624ec427246601e181e7af887bb545a0325dac0fc4fd0268cf967591b15e",
+      "/home/pedro/Projects/fnaf2-1020/packages/source/src/games/fnaf2/rng.ts": "03a7da1c57cf6eb3e345df6290e30c8e7ad3f7fefd1964472806c31cb47e4a37",
+      "/home/pedro/Projects/fnaf2-1020/packages/source/src/games/fnaf2/attack-animation.ts": "24395e91ca3591dfe6411e0f3ae7175d7129c17229b3f5f7ab2f91dd40d217e1",
+      "/home/pedro/Projects/fnaf2-1020/packages/source/src/games/fnaf2/blackout-clock.ts": "cc0afa0ebe8720a7e8295ded2c0aa28746a38e431c90771eb6d6b8ff94414c43",
+      "/home/pedro/Projects/fnaf2-1020/packages/source/src/games/fnaf2/contact-input.ts": "81c854835a1b1a4b30e0193fde37e7b135b29bdc8b9ad07853251c964305b4cc",
+      "/home/pedro/Projects/fnaf2-1020/packages/source/src/games/fnaf2/movement-clock.ts": "1fe53bd164464e7f9776a460b917c588a306f8afb3d20b75a92c53835c3cdaf0",
+      "/home/pedro/Projects/fnaf2-1020/packages/source/src/games/fnaf2/plant-constants.ts": "9d4b593b6b55665c1311950e12b52357724b8206744df1e9ccb7d3d393423160",
+      "/home/pedro/Projects/fnaf2-1020/packages/source/src/games/fnaf2/plant-hall.ts": "442006d88dbdac004a49049f581bfab603977650b98b035f88cfae5fc5c1a297",
+      "/home/pedro/Projects/fnaf2-1020/packages/source/src/games/fnaf2/plant-office.ts": "207abd8744d93974a18e9433992aa94713d1bb986c823218ea5a714ab2e707b9",
+      "/home/pedro/Projects/fnaf2-1020/packages/source/src/games/fnaf2/plant-options.ts": "fb001e9e0bba816f8f56c94e5b634ff4c1e1ef9016e4f2e98c35451a6ee64d9d",
+      "/home/pedro/Projects/fnaf2-1020/packages/source/src/games/fnaf2/plant-puppet.ts": "b115cf2c70462624bcad66a0de51797fed405f7bb12283397bb43fe76a8be692",
+      "/home/pedro/Projects/fnaf2-1020/packages/source/src/games/fnaf2/plant-sheet.ts": "d6dd683002c28fa98270a0c28cc92ae1c6f40c74cc3ca53e14a9ad1e4fd552d6",
+      "/home/pedro/Projects/fnaf2-1020/packages/source/src/games/fnaf2/plant-units.ts": "d8146200b0db0dca887d6abe68d91205b16234f38a91ad8bd5534ec7179649c3",
+      "/home/pedro/Projects/fnaf2-1020/artifacts/s2-winning-branch-20260930/characterization.json": "90f6abf232b2c1faf2d9757caa9d649e3bbd21f4e95c324a79a11e87f6c891f5",
+      "/home/pedro/Projects/fnaf2-1020/artifacts/s2-winning-branch-20260930/characterization-lifecycle.json": "afa285a90818fd50cb48e5b4582e5cca237da649f1e6ab92eaf0231d06a5481f",
+      "/home/pedro/Projects/fnaf2-1020/artifacts/s2-winning-branch-20260930/replay.mjs": "04ffaa7a5ddaf55d49257da1565770b6a0ff04968fb7fcc09ed36c7e3825430d",
+      "/home/pedro/Projects/fnaf2-1020/artifacts/s2-winning-branch-20260930/probe.py": "d59b573d3ce99d9f9ec4a6e73483b7fb09bbbc26ff70e5753c873603f17b6d71",
+      "/home/pedro/Projects/fnaf2-1020/artifacts/s2-winning-branch-20260930/probe-late.py": "9ba54921e633cc7d550627dedac7fa06ef6b3c3475c3c753d90bcb972d3c0266",
+      "/home/pedro/Projects/fnaf2-1020/artifacts/s2-winning-branch-20260930/validate.py": "d77a7a3884f6216871268733a1ab8b5e44835c3d6774db643066e5d100811d9a",
+      "/home/pedro/Projects/fnaf2-1020/artifacts/s2-winning-branch-20260930/revalidate.py": "0762190204a15075b57c353256fc989fdec1e7f0853d4cae8344461b6fd0d61e",
+      "/home/pedro/Projects/fnaf2-1020/artifacts/s2-winning-branch-20260930/gates.json": "9a7ef3b8c560869598d34eeac844bae1536116bea11af729a236b07809a7f607",
+      "/home/pedro/Projects/fnaf2-1020/artifacts/s2-winning-branch-20260930/aggregate-gates.json": "0155ce477a41793a76b5adb32a3f9fab77b2970f444a8e68ace6483913b80fe7",
+      "/home/pedro/Projects/fnaf2-1020/artifacts/s2-winning-branch-20260930/gates-sandbox.json": "7ed518dfb57f61074930e94d4cf2f3790085d54bd75b7d9288aef27f214b4079",
+      "/home/pedro/Projects/fnaf2-1020/artifacts/s2-winning-branch-20260930/aggregate-gates-sandbox.json": "cbe47f934b7edf6c26e65025d5d3b1d2929667d1e0f781778655cee2bcc81efc",
+      "/home/pedro/Projects/fnaf2-1020/artifacts/s2-winning-branch-20260930/blackout/trace": "b2668e08eac32b44e95985ecfcaac79102fd5d960ba7e95ea41e9eb4cd16b7bc",
+      "/home/pedro/Projects/fnaf2-1020/artifacts/s2-winning-branch-20260930/blackout/run.input": "3a8f8b030161bb5cdbb10d447b76ffae9a440d2684adb56785ea50a31fb8e00f",
+      "/home/pedro/Projects/fnaf2-1020/artifacts/s2-winning-branch-20260930/blackout/frametimes.txt": "383d25c80bb3648e9199589ebce7b6782a510eacee4409df3c90e940869541cf",
+      "/home/pedro/Projects/fnaf2-1020/artifacts/s2-winning-branch-20260930/blackout/save-before.ini": "c0f497ff64b6f757f943965a48d2795419fb934ddf54eb5f3dee000439484844",
+      "/home/pedro/Projects/fnaf2-1020/artifacts/s2-winning-branch-20260930/pre-port/released-early.json": "5c1ba639bcb77623cb47e900e66cb09e4ec7f750f9109b382e7d214d4b578cfe",
+      "/home/pedro/Projects/fnaf2-1020/artifacts/s2-winning-branch-20260930/pre-port/attack.json": "0aeef74a3d2b957067efd13077f47ff447d782749c892a1086731215273b5c69",
+      "/home/pedro/Projects/fnaf2-1020/artifacts/s2-winning-branch-20260930/pre-port/attack-half-after.json": "aab2800f468235cfea951e95ec16d42aebe5ef8840054a0db0ed562ff703a095",
+      "/home/pedro/Projects/fnaf2-1020/artifacts/s2-winning-branch-20260930/pre-port/attack-double-after.json": "f9542e55180bd151738a1997f2b4600716c5e6d6dc0eaa83f63303df26116f1b"
+    },
+    "binarySha256": "66d6e2f6b23f9af9c967f06337b55dd6afec9b2c27e686cebd304ea03eafec95"
+  },
+  "reproducer": [
+    "node artifacts/s2-winning-branch-20260930/replay.mjs released-early",
+    "python3 artifacts/s2-winning-branch-20260930/validate.py",
+    "python3 artifacts/s2-winning-branch-20260930/revalidate.py <lane-log-dir>",
+    "python3 artifacts/s2-winning-branch-20260930/record.py"
+  ],
+  "id": "s2-winning-branch-b9a19d043964e586"
+}

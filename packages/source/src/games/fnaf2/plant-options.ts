@@ -86,15 +86,9 @@ export function defaultSimOptions() {
     // g619 refuses a mask-off while in danger. A tap carries no release in the Sim queue, so the
     // touch is read on its press update only, where the sheet re-reads a finger still down.
     sourcedDropFlagOrder: false,
-    // The monitor and mask animations counted as the sheet counts them. A latch at the top of the sheet (g1 fully up,
-    // g6 fully down, g9 mask fully on, g10 fully off) reads its Active's counter (g1015-g1022, at the bottom), which is
-    // 1 at the end of the loop the Active is shown and grows by 1 per loop, so a latch at >= N fires at the top of the
-    // Nth loop after the show loop. The model decrements its animation counter in the tick that starts it, so a
-    // constant spends constant - 1 updates moving: MASK_ANIM_OFF (15) gives g10's 14, but MONITOR_ANIM_UP (12),
-    // MONITOR_ANIM_DOWN (22) and MASK_ANIM_ON (12) finish one update before g1's 12, g6's 22 and g9's 12 (the replay
-    // ledgers' `1>2 +1` and `3>0 +1` on every cycle). A rule reading `mask` == 2 then fires a loop early: g378 returned
-    // W. Freddy a loop early on Night 7 k3 (tick 2063 in the rebuilt runtime), and his value 1 = 1500 expired a loop
-    // early at 3563. On: the three take one update more.
+    // g1/g6/g9/g10 read animation counters at the top; g1015-g1022 reset on show and add value 5 late.
+    // At 60 Hz they take 12/22/12/14 updates. A measured clock needs accumulated value 5, not a fixed count:
+    // docs/evidence/full06-animation-clock-20260930.json explains the BB entry/draw split at update 1823.
     sourcedAnimationCount: false,
     // Foxy as the dump's literal A/B chain (requires sourcedDropLightOrder):
     //   g337  every 5 s, no location/pin/state condition: the Random(5) draw
@@ -151,12 +145,9 @@ export function defaultSimOptions() {
     // start; a dropped frame on the phone advances the clock by 2 and removes
     // a draw.
     sourcedBlackoutDraws: false,
-    // The office encounter ends on g514's clock (requires sourcedBlackoutDraws and frameMs). g537 (blackout value 0
-    // >= 300, NotAlways) sets `check and move`, and g538-g555 resolve the encounter on that loop. g514 adds global
-    // value 5 to the clock from the loop `in danger` rises, that loop included, so the clock reaches 300 on the
-    // encounter's 300th loop: 299 frames after the model's start frame, not 300 (C.BLACKOUT_FRAMES). The rebuilt
-    // runtime resolves one update before the model on every encounter (Night 5 contact-final tick 7740: the
-    // g539 Random(500) repel draw; Night 7 k3 tick 2324). Off: the encounter resolves 300 frames after its start.
+    // g537 resolves on the rising edge of clock >= 300. g534-g536 retain that clock through the fade;
+    // a new encounter can restart the fade before its reset. See blackout-clock.js and full06-winning-branch.
+    // Requires sourcedBlackoutDraws and frameMs; off resolves 300 frames after encounter start.
     sourcedBlackoutClockEnd: false,
     // Camera-view draws (dump g344-g360, g458-g477, g366/g368/g419, g498):
     //   an accepted move writes the unit's fade counter C = 10 (g344-g360,
@@ -294,16 +285,11 @@ export function defaultSimOptions() {
     // hooked clock clears the model's latch (lightLogicalUntil) at the top of the tick, before the 5 s rolls
     // and moves, which moves such a unit one loop early (Night 7 k3's first replay mismatch, tick 600).
     sourcedHallLatchOrder: false,
-    // Value 1 (B, the stun and pin countdown) as the sheet orders it. g344-g360 read it for a promotion (the packed
-    // FlagOn needs value 1 == 0) BEFORE g361-g371 drain it by global value 5, and every writer sits after the drain
-    // (g378, g427/g428, the flashes g450-g457, the repels g538-g555 and g747-g750, the hall pins g848-g854). So B = N
-    // written on loop L reaches 0 at the end of L+N, and the promotion first passes on L+N+1: the model's stunUntil
-    // (L+N) blocks through f == stunUntil, not only f < stunUntil (Night 1 minimal tick 21714: Toy Bonnie promoted
-    // and drew his CAM 03 footstep a loop early after the camera flash). Readers after the drain (g546, Toy Bonnie's
-    // opening timer) keep f >= stunUntil. And the hall pin (g848-g854) is written after g488 clears the latch and
-    // g489 re-sets it, so under sourcedHallLatchOrder it runs after that deferred reset, where tickLight wrote it
-    // before (one loop more of pin on the reset loop, which the old read had cancelled).
+    // Promotions read B before its drain, g546 afterwards; hall pins g848-g854 follow the g488/g489 reset.
     sourcedBDrainOrder: false,
+    // Actual B countdowns for route units and the Puppet: drain by value 5 between promotions and moves.
+    // Update deadlines lose measured-clock time (full-06 Freddy step: model 3045, rebuild 3047).
+    sourcedMovementClock: false,
     // g333-g343 roll every character before any promotion (g344-g358) or move (g380 on) runs, so a move's
     // own draw (e324: W. Chica CAM 02 -> 06, Random(4)) lands after the Paper Pals roll. Off: each passed roll
     // is promoted and moved at once, and that draw shifts every later roll of the same loop onto another
@@ -430,37 +416,22 @@ export function defaultSimOptions() {
     // goes up inside a Toy Bonnie overlay encounter and g546 walks him to
     // marker 123 (observed-press probe, full-06, 2026-09-15).
     sourcedMonitorRaiseGate: false,
-    // Sheet order for the draws the model otherwise places by hand (requires
-    // sourcedSecondPass). g213-g497 run where the view draws ran, with g366/g368
-    // after g294, g419 after g401 and g468-g476 after g440, then g498, g500-g506
-    // and g517/g518 -- all before the blackout resolution (g537-g555) and before
-    // tickBox: every music box write (g638-g823) sits below g494/g495, so those
-    // rolls read the previous frame's box. g556-g781 run after tickBox, with the
-    // hour table (g673-g684) between g623 and g730 and g774 between g750 and g781.
+    // Sheet order requires sourcedSecondPass: g213/g292/g294 precede the five-second
+    // rolls and route moves. g366-g518 precede blackout resolution and the music box;
+    // g556-g781 follow, including the hour table before g730 and g774 after g750.
     sourcedSheetOrder: false,
-    // Frame-time hook (requires sourcedSheetOrder). frameMs(frame) is the loop's
-    // rhTimerDelta in whole ms and frameValue5(frame) its global value 5; both
-    // are measured inputs, UNKNOWN until the phone supplies them. Null keeps 50
-    // timer units (1/3 ms) and 1 per frame, which is trace-identical to no hook.
-    // With a hook, the CND_EVERY2 countdowns spend round(ms * 3) units: the
-    // per-second pass, g58/g59/g192, g498, g500-g506, and -- as countdowns in
-    // place of f % N -- g497, g744, the 5 s rolls (g333-g343, timer first) and
-    // the hour clock (g627 adds 1 to AM value 0 each second, g629/g630 advance
-    // the hour at 70, the table g673-g684 follows, six hours win). The g514
-    // blackout clock adds global value 5 per frame. The model's shared state
-    // cadences run on four more countdowns, each a CND_EVERY2 timer in the dump
-    // at that period: 1000 ms (g488 latch reset, g570, g824/g825 Foxy D, g904,
-    // g907 mask ticks), 500 ms (g864, the g637/g644 wind ticks), 200 ms (g263)
-    // and 10000 ms (g571/g572, g718-g721, g722). Foxy's cadences need
-    // sourcedFoxyChain. Still frame-counted: the monitor and mask animations,
-    // the encounter and attack fuses, pins and stuns, and the entry streak
-    // window. Under lethal: false a model kill returns early and
-    // skips that frame's countdown reaches, so hooked cadences slip a frame per
-    // non-lethal kill (frames the phone never plays).
+    // The frame-time hook requires sourcedSheetOrder. frameMs supplies rhTimerDelta;
+    // frameValue5 supplies global 5 unless sourcedValue5 derives its prior-loop value.
+    // CND_EVERY2 timers spend round(ms * 3) units; frame-only mode retains the 60 Hz grid.
+    // sourcedAnimationCount weights panel counters, sourcedMovementClock weights stuns,
+    // and sourcedAttackAnimation separates the shared attack counter from sprite exits.
+    // The entry streak window remains frame-counted. A non-lethal kill can skip a loop's
+    // countdown reaches, so hooked cadences may slip under lethal:false.
     // g263 places its 200 ms countdown after `viewing > 0`, so the countdown only runs on
     // frames a camera is displayed and its phase follows the accumulated camera-up time,
     // not frame 0. Off keeps the model's global f % 12 sample (dump g263).
     sourcedLastViewPause: false,
+    sourcedAttackAnimation: false, // g587/g588 plus rebuilt sprite exits; existing committed-attack paths only
     // The gated one-second countdowns (dump g907, g904, g786/g785, g824,
     // g825, g722, g570). Each is an `Every` placed AFTER other conditions,
     // and CND_EVERY2 only loads and counts down on frames it is reached

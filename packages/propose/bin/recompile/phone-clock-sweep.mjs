@@ -30,6 +30,7 @@ import {
 } from './phone-encounter-replay.mjs';
 import { drawTrace, MODEL_SOURCES } from '../../../source/recompile/model-draw-trace.mjs';
 import { LEDGERS } from './compare-schedule-replay.mjs';
+import { modelContacts } from './schedule-to-input.mjs';
 import { currentPath } from '@sixam/review/renamed-path';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
@@ -87,7 +88,7 @@ export function modelCell({ nightCfg, sched, clock, deltas, modelOptions, custom
     : (ms) => cumTick(ms - deltaMs, keptDeltas);
   const mapped = mapSchedule(sched, tickOf);
   const observe = (sim) => ({ mask: LEDGERS.mask.model(sim), unit: sim.blackout.active ? sim.blackout.unitId : null });
-  const model = drawTrace({ night: nightCfg.night, seed: nightCfg.seed, frames: MODEL_FRAMES, rows: mapped.queue,
+  const model = drawTrace({ night: nightCfg.night, seed: nightCfg.seed, frames: MODEL_FRAMES, contacts: modelContacts(mapped.contacts),
     modelOptions, customNight, observe, ...(nightCfg.trace ? { frameTimes: scaled } : {}) });
   const presses = maskPresses(mapped.queue);
   const cum = cumulative(scaled, model.out.length + 2);

@@ -18,8 +18,19 @@ import { Rng, Sim } from '@sixam/source/fnaf2';
 // @sixam/source up the tree to the parent checkout's package, and a record would then describe a model
 // other than the one beside the tool (2026-09-27: a drop-flag replay ran the parent's model, unchanged).
 const MECHANICS = fileURLToPath(import.meta.resolve('@sixam/source/fnaf2'));
-/** The files that define the Sim this tool loaded, for a record's provenance. */
-export const MODEL_SOURCES = Object.freeze(['plant-model.ts', 'config.ts', 'rng.ts'].map((name) => join(dirname(MECHANICS), name)));
+/** The files that define the Sim this tool loaded, for a record's provenance: plant-model.ts, config.ts and
+ *  rng.ts first, the list records written before the 2026-09-30 splits name, then every other module
+ *  plant-model.ts reaches by a relative import, so a later split cannot leave a defining file unhashed. */
+export const MODEL_SOURCES = Object.freeze(modelSources(dirname(MECHANICS)));
+function modelSources(dir) {
+  const first = ['plant-model.ts', 'config.ts', 'rng.ts'];
+  const seen = new Set(['plant-model.ts']);
+  for (const queue = ['plant-model.ts']; queue.length;) {
+    for (const [, name] of readFileSync(join(dir, queue.shift()), 'utf8').matchAll(/from '\.\/([\w-]+\.ts)'/g))
+      if (!seen.has(name)) { seen.add(name); queue.push(name); }
+  }
+  return [...first, ...[...seen].filter((name) => !first.includes(name)).sort()].map((name) => join(dir, name));
+}
 if (relative(join(dirname(fileURLToPath(import.meta.url)), '../../..'), MECHANICS).startsWith('..'))
   throw new Error(`@sixam/source resolves outside this checkout (${MECHANICS}): run npm ci here`);
 
@@ -64,9 +75,14 @@ export function measuredClock(frameTimes) {
  * `rows` are `[frame, press|release, action]` applied before the tick from `frame` (as a gate replay
  * applies its queue); `observe(sim)`, if given, is read at frame 0 and after every tick into `observed`.
  * `frameTimes` (optional) replaces the hook constants with a measured per-frame clock (measuredClock).
+ * `contacts` replaces rows with explicit semantic contacts { action, downFrame, upFrame }.
  */
-export function drawTrace({ night, seed, frames, rows = [], customNight = undefined, modelOptions = {}, observe = null,
+export function drawTrace({ night, seed, frames, rows = [], contacts = null, customNight = undefined, modelOptions = {}, observe = null,
   frameTimes = null }) {
+  if (contacts !== null) {
+    if (rows.length) throw new Error('choose contacts or legacy rows, not both');
+    rows = contactEdges(contacts);
+  }
   const simOptions = simOptionsFrom(modelOptions);
   if (frameTimes) {
     if (!modelOptions.frameMs) throw new Error('a measured clock replaces the frame-time hook: the options must carry frameMs');
@@ -87,6 +103,7 @@ export function drawTrace({ night, seed, frames, rows = [], customNight = undefi
   } finally {
     Rng.prototype.next = originalNext;
   }
+  if (contacts !== null) sim.enableContactInput();
   const next = sim.rng.next.bind(sim.rng);
   sim.rng.next = () => { draws += 1; return next(); };
   const out = [{ frame: 0, draws, state: sim.rng.state }];
@@ -99,6 +116,25 @@ export function drawTrace({ night, seed, frames, rows = [], customNight = undefi
     if (observed) observed.push(observe(sim));
   }
   return { out, death: sim.death ?? null, won: !!sim.won, ...(observed ? { observed } : {}) };
+}
+
+/** Explicit semantic contacts, with releases before presses on the same update. */
+export function contactEdges(contacts) {
+  if (!Array.isArray(contacts)) throw new Error('contacts must be an array');
+  const rows = contacts.flatMap(({ action, downFrame, upFrame }) => {
+    if (typeof action !== 'string' || !action || !Number.isInteger(downFrame) || downFrame < 0 ||
+        !Number.isInteger(upFrame) || upFrame <= downFrame)
+      throw new Error('a contact needs an action and integer update bounds with upFrame > downFrame >= 0');
+    return [[downFrame, 'contactDown', action], [upFrame, 'contactUp', action]];
+  }).sort((a, b) => a[0] - b[0] || (a[1] === b[1] ? 0 : a[1] === 'contactUp' ? -1 : 1));
+  const held = new Set();
+  for (const [, edge, action] of rows) {
+    if (edge === 'contactDown') {
+      if (held.has(action)) throw new Error(`overlapping semantic contacts for ${action} are not supported`);
+      held.add(action);
+    } else held.delete(action);
+  }
+  return rows;
 }
 
 if (process.argv[1] && process.argv[1].endsWith('model-draw-trace.mjs')) {

@@ -1,0 +1,202 @@
+{
+  "schema": "evidence-record-v1",
+  "date": "2026-09-30",
+  "step": "ROADMAP S2",
+  "claimLevel": "MODEL_ONLY",
+  "fidelity": "rebuilt-runtime",
+  "question": "Does the full-06 host replay actually retain Balloon Boy AI 20, and can the current model diagnose its 40 s roll?",
+  "status": "CAP_OBSERVED_MODEL_DIVERGENT",
+  "seed": 47593,
+  "night": 7,
+  "variant": "landed",
+  "measurements": {
+    "counterNames": [
+      "Balloon Boy AI",
+      "cust_BB AI",
+      "night"
+    ],
+    "officeUpdates": 4593,
+    "distinctCounterTuples": [
+      [
+        15,
+        20,
+        7
+      ]
+    ],
+    "samples": [
+      [
+        0,
+        15,
+        20,
+        7
+      ],
+      [
+        1822,
+        15,
+        20,
+        7
+      ],
+      [
+        1823,
+        15,
+        20,
+        7
+      ],
+      [
+        2400,
+        15,
+        20,
+        7
+      ],
+      [
+        2401,
+        15,
+        20,
+        7
+      ],
+      [
+        2402,
+        15,
+        20,
+        7
+      ],
+      [
+        2704,
+        15,
+        20,
+        7
+      ],
+      [
+        2705,
+        15,
+        20,
+        7
+      ],
+      [
+        2706,
+        15,
+        20,
+        7
+      ]
+    ],
+    "referenceDrawPrefix": {
+      "compared": 5400,
+      "equal": true,
+      "sameInputRows": true,
+      "sameFrameTimes": true
+    },
+    "modelComparison": {
+      "modelFrameOffset": 1,
+      "compared": 4593,
+      "firstMismatch": {
+        "tick": 1823,
+        "modelFrame": 1824,
+        "rebuilt": {
+          "draws": 881,
+          "state": 27088
+        },
+        "model": {
+          "draws": 882,
+          "state": 50097
+        }
+      }
+    }
+  },
+  "findings": [
+    "The rebuilt runtime reads custom dial 20 and effective Balloon Boy AI 15 on every one of the 4593 observed office updates, including both disputed rolls. This excludes an inactive cap in this replay.",
+    "The fresh run matches all 5400 frame/tick/draw/state rows of the retained reference prefix, under identical input rows and timer deltas.",
+    "The current model first differs at update 1823: one extra draw. Its later Balloon Boy rolls cannot be substituted for the rebuilt runtime rolls.",
+    "The earlier statement that dial 20 makes every Balloon Boy roll succeed is inapplicable to the observed effective AI 15. The exact rejected draws and the retail mismatch remain unresolved."
+  ],
+  "sourceInterpretation": {
+    "rollGroup": 342,
+    "capGroup": 863,
+    "parentSection": null,
+    "code": "packages/source/src/games/fnaf2/config.js: aiCap; packages/source/src/games/fnaf2/plant-model.js: applyAiHour",
+    "scope": "The decoded Office sheet places both groups at top level; runtime counter observations independently establish the cap in this rebuild."
+  },
+  "correctsPremiseOf": "docs/evidence/full06-input-registration-20260928.json",
+  "provenance": {
+    "binary": {
+      "path": "/home/pedro/fnaf-apks/fnaf2-recompile-20260927/pinned/66d6e2f6-d9cc45ff/Chowdren"
+    },
+    "files": [
+      {
+        "path": "artifacts/s2-bb-roll-20260930/runtime/trace",
+        "sha256": "18abf8050529bc7dc3afc8e2b4bf70f2dc2302ad108e77b81796fdb9bec0c93c",
+        "bytes": 1037830
+      },
+      {
+        "path": "artifacts/s2-bb-roll-20260930/runtime/env",
+        "sha256": "03e66bd5f93fd14d98f9df6d65c20e5572bbf9401f8996908090102cf5bf3c99",
+        "bytes": 575
+      },
+      {
+        "path": "artifacts/s2-bb-roll-20260930/runtime/run.input",
+        "sha256": "cac3d1e7055825725e5a0859532d48e9945ef9d7bd6cf90ce957bf2acc010cc9",
+        "bytes": 13161
+      },
+      {
+        "path": "artifacts/s2-bb-roll-20260930/runtime/frametimes.txt",
+        "sha256": "383d25c80bb3648e9199589ebce7b6782a510eacee4409df3c90e940869541cf",
+        "bytes": 253940
+      },
+      {
+        "path": "/home/pedro/fnaf-apks/fnaf2-recompile-20260927/agent-s2fix/full-06-landed-w-balloon-boy/trace",
+        "sha256": "2372caa9f293fcf1a5aa2af169ac665dfb5b5efe3b4ba503e8c0e3aef7a9b857",
+        "bytes": 7215829
+      },
+      {
+        "path": "artifacts/s2-bb-roll-20260930/model-comparison.json",
+        "sha256": "f2c2b8bb1472761100945299747126f2e20610e2ed9b041670f37c21b3df4fc1",
+        "bytes": 4563
+      },
+      {
+        "path": "/home/pedro/fnaf-apks/fnaf2-recompile-20260927/pinned/66d6e2f6-d9cc45ff/Chowdren",
+        "sha256": "66d6e2f6b23f9af9c967f06337b55dd6afec9b2c27e686cebd304ea03eafec95",
+        "bytes": 49200040
+      },
+      {
+        "path": "/home/pedro/fnaf-apks/fnaf2/events/03-04-Office.txt",
+        "sha256": "026ee3861642abb24a0961d590d8e3d708c9417ec143b92aacb73d6c0415b23b",
+        "bytes": 455276
+      },
+      {
+        "path": "packages/source/recompile/sourced-rebuild-model-options.json",
+        "sha256": "02172a8a2810fdfac38bcdb886b29bb65012895a527e2a1b633718cae9a57aef",
+        "bytes": 1448
+      },
+      {
+        "path": "packages/source/src/games/fnaf2/plant-model.js",
+        "sha256": "6f7710e392edf26f94ef60221006f2903d9f165fd0afb79bcac661e9a9ec38ee",
+        "bytes": 164589
+      },
+      {
+        "path": "packages/source/src/games/fnaf2/config.js",
+        "sha256": "3da601d1233454b7386ebab415c827fe87117ed2b9b031e51168c338f89f6f70",
+        "bytes": 44879
+      },
+      {
+        "path": "packages/propose/bin/recompile/phone-encounter-replay.mjs",
+        "sha256": "04c6256ef464eb8c4ac6adf6139fe2a52f8eaa6be007993e66277cecd19b602f",
+        "bytes": 56932
+      },
+      {
+        "path": "artifacts/s2-bb-roll-20260930/record.py",
+        "sha256": "2e310aa3275b213a15383036ed28d4679b1eb45fb98c185af19d24d6765d44a1",
+        "bytes": 4827
+      }
+    ]
+  },
+  "reproducer": {
+    "record": "python3 artifacts/s2-bb-roll-20260930/record.py",
+    "emitter": "node packages/propose/bin/recompile/phone-encounter-replay.mjs emit --night full-06 --variant landed --out-dir artifacts/s2-bb-roll-20260930/control",
+    "runtime": "Pinned 66d6e2f6 host binary, SDL offscreen; retained /tmp run env and input; bounded to 5400 total updates and 60 wall seconds."
+  },
+  "open": [
+    "Exact rebuilt g342 draw at each disputed roll; ptrace is unavailable in this session.",
+    "Model/rebuild difference at update 1823 under the measured clock.",
+    "Encounter equivalence to retail; no new retail night was run."
+  ],
+  "id": "s2-bb-cap-2539a97cbeeafac2"
+}

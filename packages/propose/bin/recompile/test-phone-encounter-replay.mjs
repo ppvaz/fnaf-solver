@@ -3,8 +3,9 @@
 // then the committed rebuild-vs-phone record's own arithmetic, re-derived from its rows without the binary
 // or any private input. In `npm run test:unit`.
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -23,6 +24,29 @@ const ROOT = fileURLToPath(new URL('../../../../', import.meta.url));
 // A repository path, or one a committed record names where the file stood when it was written.
 const read = (rel) => readFileSync(new URL(`../../../../${currentPath(ROOT, rel) ?? rel}`, import.meta.url), 'utf8');
 const sha256 = (value) => createHash('sha256').update(value).digest('hex');
+
+// Exercise the CLI with the frozen config's pre-move winner, navigation and save paths.
+// No phone/private capture: the fixture supplies the binding's own press list at constant 60 Hz.
+{
+  const dir = mkdtempSync(join(tmpdir(), 'phone-replay-renames-'));
+  try {
+    const cfg = JSON.parse(read('packages/propose/bin/recompile/phone-encounter-nights.json'));
+    const night = cfg.nights.find((row) => row.name === 'full-06');
+    const winner = JSON.parse(read(night.winner));
+    const pressText = JSON.stringify({ actions: phoneSchedule(winner, night.night, night.originMs).queueMs });
+    writeFileSync(join(dir, 'presses.json'), pressText);
+    night.presses = { path: 'presses.json', sha256: sha256(pressText) };
+    cfg.nights = [night];
+    writeFileSync(join(dir, 'config.json'), JSON.stringify(cfg));
+    const output = execFileSync(process.execPath, [join(ROOT, 'packages/propose/bin/recompile/phone-encounter-replay.mjs'),
+      'emit', '--config', join(dir, 'config.json'), '--night', night.name, '--variant', 'const60',
+      '--inputs-root', dir, '--out-dir', join(dir, 'run')], { encoding: 'utf8' });
+    assert.match(output, /press file 517\/517/);
+    assert.match(output, /346 contacts/);
+    assert.equal(readFileSync(join(dir, 'run/save-before.ini'), 'utf8'), read(night.save));
+    assert.ok(readFileSync(join(dir, 'run/run.input'), 'utf8').startsWith(read(night.navigation)));
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+}
 
 // --- the clock: update 0 is one 60 Hz frame; a captured interval becomes 1-3 updates (catch-up)
 {

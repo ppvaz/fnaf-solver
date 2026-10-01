@@ -746,7 +746,7 @@ class HidPilot {
           inside: this.sim.bb.inside, maskTicks: this.sim.bb.maskTicks },
         units: this.sim.units.map(u => ({ id: u.id, idx: u.idx,
           atOpening: u.atOpening, done: u.done, pending: u.pending,
-          stunUntil: u.stunUntil })),
+          stunUntil: u.stunUntil, stunRemaining: this.sim.unitStunLeft(u) })),
       } : null;
       if (kind === 'left-snapshot') this.onLeftSnapshot(act);
       else if (kind === 'left-result') this.onLeftResult(act);
@@ -765,7 +765,7 @@ class HidPilot {
             inside: this.sim.bb.inside, maskTicks: this.sim.bb.maskTicks },
           units: this.sim.units.map(u => ({ id: u.id, idx: u.idx,
             atOpening: u.atOpening, done: u.done, pending: u.pending,
-            stunUntil: u.stunUntil })) } });
+            stunUntil: u.stunUntil, stunRemaining: this.sim.unitStunLeft(u) })) } });
     }
     if (this.act) this.act.deliver();
     this.minBox = Math.min(this.minBox, this.sim.box);

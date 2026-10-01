@@ -1,0 +1,763 @@
+{
+  "schema": "evidence-record-v1",
+  "date": "2026-09-30",
+  "step": "ROADMAP S2",
+  "claimLevel": "MODEL_ONLY",
+  "fidelity": "rebuilt-runtime",
+  "status": "PREFIX_ADVANCED_STILL_DIVERGENT",
+  "question": "Does draining movement counter B on the measured value-5 clock explain the model/rebuild draw split at full-06 update 3045?",
+  "scope": {
+    "night": 7,
+    "customDials": 20,
+    "seed": 47593,
+    "replay": "full-06 landed",
+    "role": "One retained replay and eight repeatability watches; no census or retail equivalence claim."
+  },
+  "implementation": {
+    "option": "sourcedMovementClock",
+    "default": false,
+    "requires": [
+      "sourcedBDrainOrder",
+      "sourcedRoutePass"
+    ],
+    "state": "Plain remaining-B counters, drained by value 5 after promotion eligibility and before movement.",
+    "repelCooldown": "Preserve the fractional Random(500)/night value in the sourced clock lane.",
+    "consumers": "Trainer and pilot observers read remaining B through unitStunLeft.",
+    "legacyLane": "Absolute-frame deadline and integer repel behavior retained with the option off.",
+    "sourceLines": 2719
+  },
+  "measurements": {
+    "firstDrawMismatch": {
+      "before": {
+        "tick": 3045,
+        "modelFrame": 3046,
+        "rebuilt": {
+          "draws": 1833,
+          "state": 41712
+        },
+        "model": {
+          "draws": 1834,
+          "state": 55697
+        }
+      },
+      "after": {
+        "tick": 22244,
+        "modelFrame": 22245,
+        "rebuilt": {
+          "draws": 14632,
+          "state": 18825
+        },
+        "model": {
+          "draws": 14630,
+          "state": 57345
+        }
+      }
+    },
+    "matchedDrawUpdates": 22244,
+    "runtimeOfficeUpdates": 22698,
+    "freddyMovementBoundary": [
+      {
+        "tick": 3044,
+        "runtime": {
+          "v0": 1.0,
+          "v1": 1.86841,
+          "v2": 0.0
+        },
+        "modelRemainingB": 1.868406066086922
+      },
+      {
+        "tick": 3045,
+        "runtime": {
+          "v0": 1.0,
+          "v1": 0.853114,
+          "v2": 0.0
+        },
+        "modelRemainingB": 0.8531137860774662
+      },
+      {
+        "tick": 3046,
+        "runtime": {
+          "v0": 1.0,
+          "v1": 0.0,
+          "v2": 0.0
+        },
+        "modelRemainingB": 0
+      },
+      {
+        "tick": 3047,
+        "runtime": {
+          "v0": 0.0,
+          "v1": 0.0,
+          "v2": 9.03623
+        },
+        "modelRemainingB": 0
+      }
+    ],
+    "fractionalRepelSamples": [
+      {
+        "unit": "withbonnie",
+        "tick": 2328,
+        "runtimeB": 44.2857,
+        "modelB": 44.285714285714285,
+        "quotient": "310/7"
+      },
+      {
+        "unit": "withchica",
+        "tick": 2936,
+        "runtimeB": 48.7143,
+        "modelB": 48.714285714285715,
+        "quotient": "341/7"
+      }
+    ],
+    "movementCounters": [
+      {
+        "unit": "withfreddy",
+        "updatesCompared": 4593,
+        "positiveRuntimeValues": 2968,
+        "zeroGateMismatches": 0,
+        "maximumAbsoluteError": 0.004998415587579075,
+        "maximumErrorBeyondPrintedRounding": 8.333257442927764e-07
+      },
+      {
+        "unit": "withbonnie",
+        "updatesCompared": 4593,
+        "positiveRuntimeValues": 258,
+        "zeroGateMismatches": 0,
+        "maximumAbsoluteError": 4.9240254190507926e-05,
+        "maximumErrorBeyondPrintedRounding": 8.036526162652538e-08
+      },
+      {
+        "unit": "withchica",
+        "updatesCompared": 4593,
+        "positiveRuntimeValues": 49,
+        "zeroGateMismatches": 0,
+        "maximumAbsoluteError": 4.814590060320256e-05,
+        "maximumErrorBeyondPrintedRounding": 0
+      },
+      {
+        "unit": "toyfreddy",
+        "updatesCompared": 4593,
+        "positiveRuntimeValues": 4327,
+        "zeroGateMismatches": 0,
+        "maximumAbsoluteError": 0.0005000017502823084,
+        "maximumErrorBeyondPrintedRounding": 7.632421289372336e-07
+      },
+      {
+        "unit": "toybonnie",
+        "updatesCompared": 4593,
+        "positiveRuntimeValues": 4327,
+        "zeroGateMismatches": 0,
+        "maximumAbsoluteError": 0.0005000017502823084,
+        "maximumErrorBeyondPrintedRounding": 7.632421289372336e-07
+      },
+      {
+        "unit": "toychica",
+        "updatesCompared": 4593,
+        "positiveRuntimeValues": 4327,
+        "zeroGateMismatches": 0,
+        "maximumAbsoluteError": 0.0005000017502823084,
+        "maximumErrorBeyondPrintedRounding": 7.632421289372336e-07
+      },
+      {
+        "unit": "mangle",
+        "updatesCompared": 4593,
+        "positiveRuntimeValues": 96,
+        "zeroGateMismatches": 0,
+        "maximumAbsoluteError": 4.924022365848657e-05,
+        "maximumErrorBeyondPrintedRounding": 2.596356466077481e-07
+      },
+      {
+        "unit": "puppet",
+        "updatesCompared": 4593,
+        "positiveRuntimeValues": 0,
+        "zeroGateMismatches": 0,
+        "maximumAbsoluteError": 0.0,
+        "maximumErrorBeyondPrintedRounding": 0
+      }
+    ],
+    "repeatability": {
+      "runs": 8,
+      "drawRowsComparedPerRun": 5400,
+      "allDrawProjectionsIdentical": true,
+      "sameInputSaveAndClockBytes": true
+    },
+    "inputProvenance": {
+      "inputRowsEqual": true,
+      "frameTimesBytesEqual": true,
+      "saveBytesEqual": true,
+      "generatedInputSha256": "90fc29d4fd3917fe949fb9735e4b89a8776c77888d2a9d071b97abaacde4a1e1",
+      "retainedInputSha256": "cac3d1e7055825725e5a0859532d48e9945ef9d7bd6cf90ce957bf2acc010cc9",
+      "note": "Input comments name the winner at its current or historical path; all executable rows agree.",
+      "inputRows": 708,
+      "frameTimesSha256": "383d25c80bb3648e9199589ebce7b6782a510eacee4409df3c90e940869541cf",
+      "saveSha256": "c0f497ff64b6f757f943965a48d2795419fb934ddf54eb5f3dee000439484844",
+      "presses": 517,
+      "contacts": 346,
+      "nearNextSplit": [
+        {
+          "control": "hallLight",
+          "downMs": 369916.8,
+          "upMs": 369949.8,
+          "downFrame": 22221,
+          "upFrame": 22223,
+          "cycle": "loop",
+          "index": 1
+        },
+        {
+          "control": "monitor",
+          "downMs": 370116.8,
+          "upMs": 370316.8,
+          "downFrame": 22231,
+          "upFrame": 22244,
+          "cycle": "loop",
+          "index": 2
+        },
+        {
+          "control": "cameraFeedLight",
+          "downMs": 370416.8,
+          "upMs": 370516.8,
+          "downFrame": 22250,
+          "upFrame": 22257,
+          "cycle": "loop",
+          "index": 3
+        }
+      ]
+    },
+    "terminal": {
+      "model": {
+        "won": true,
+        "death": null
+      },
+      "runtimeFrameVisits": [
+        {
+          "frame": 0,
+          "seed": 47593,
+          "updates": 180
+        },
+        {
+          "frame": 1,
+          "seed": 47593,
+          "updates": 216
+        },
+        {
+          "frame": 12,
+          "seed": 47593,
+          "updates": 216
+        },
+        {
+          "frame": 2,
+          "seed": 47593,
+          "updates": 189
+        },
+        {
+          "frame": 7,
+          "seed": 47593,
+          "updates": 6
+        },
+        {
+          "frame": 3,
+          "seed": 47593,
+          "updates": 22698
+        },
+        {
+          "frame": 4,
+          "seed": 47593,
+          "updates": 300
+        },
+        {
+          "frame": 6,
+          "seed": 47593,
+          "updates": 600
+        },
+        {
+          "frame": 1,
+          "seed": 47593,
+          "updates": 15595
+        }
+      ],
+      "status": "DIVERGENT"
+    }
+  },
+  "validation": {
+    "directCommands": [
+      {
+        "command": [
+          "node",
+          "packages/source/test/b-drain-order.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/route-pass.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/footstep-value2.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/animation-count.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/frame-time-hook.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/drop-flag-order.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/value5.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/blackout-clock-end.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/contracts.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/control-catalog.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/sourcetest.mjs"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/source/test/simtest.mjs"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/review/bin/recompile/test-compare-draw-trace.mjs"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/test/cycle-library.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/test/cycle-planner.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/test/cycle-controller.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/test/night-policy.test.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/test/test-winners-rebuild.mjs"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "apps/trainer/test/renderer.test.mjs"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "apps/trainer/test/phase.test.mjs"
+        ],
+        "exitCode": 2
+      },
+      {
+        "command": [
+          "node",
+          "tools/validate-references.js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/parked/minus7/policytest.mjs",
+          "--assert"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "npm",
+          "run",
+          "typecheck:js"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "packages/propose/bin/factreplay.mjs",
+          "--assert"
+        ],
+        "exitCode": 0
+      }
+    ],
+    "passedCommands": 23,
+    "trainerPhase": "ENVIRONMENT_ERROR: local browser endpoint connect EPERM",
+    "campaignDryRun": "READY",
+    "affectedGate": "ENVIRONMENT_ERROR: spawnSync git EPERM",
+    "fileSizeGate": "ENVIRONMENT_ERROR: spawnSync git EPERM; source length checked directly",
+    "pushGate": "ENVIRONMENT_ERROR: spawnSync git EPERM before lanes",
+    "earlierUnqualifiedPolicyInvocation": "Stopped at its 60-second deadline; the bounded --assert regression was then run explicitly.",
+    "commits": {
+      "consequential": 0,
+      "bookkeeping": 0
+    }
+  },
+  "supports": [
+    "s2-measured-clock-7137834deb214634"
+  ],
+  "limitations": [
+    "Equal per-update draw counts and RNG states are necessary but insufficient for complete state or event equivalence.",
+    "Harness %g counters have six significant digits. Small residuals exceed printed rounding; bit-exact numeric equivalence is not claimed.",
+    "Puppet B never becomes positive in the watched prefix, so this run does not cover its active cooldown.",
+    "The mapped model queue omits tap releases. The next mismatch coincides with the mapped monitor release at update 22244; causation is unverified.",
+    "Model and rebuilt terminal outcomes still differ. No new retail phone run, promotion, or reliability claim.",
+    "Full traces and local diagnostic reproducers remain outside git under artifacts/ or the private content vault."
+  ],
+  "open": [
+    "Explain the two missing model draws and the control-state difference at update 22244.",
+    "Establish encounter and input-acceptance equivalence against the retail phone.",
+    "Run aggregate and browser gates in an environment with their required Git and local endpoint access."
+  ],
+  "provenance": {
+    "files": [
+      {
+        "path": "packages/source/src/games/fnaf2/plant-model.js",
+        "sha256": "683f8e38d1815679ab47941fa516873358f265d27d9db94c955fb751f5d73921",
+        "bytes": 164279
+      },
+      {
+        "path": "packages/source/src/games/fnaf2/movement-clock.js",
+        "sha256": "7b761e7530ae0f88b383dc58199768d0f284842b995a02956d1432efd9faeae5",
+        "bytes": 1513
+      },
+      {
+        "path": "packages/source/src/games/fnaf2/config.js",
+        "sha256": "3da601d1233454b7386ebab415c827fe87117ed2b9b031e51168c338f89f6f70",
+        "bytes": 44879
+      },
+      {
+        "path": "packages/source/src/games/fnaf2/rng.js",
+        "sha256": "1a2b615eda3a152aea548054c873c8da83a96b06b6ac65fc0a74e4997a3e651e",
+        "bytes": 1857
+      },
+      {
+        "path": "packages/source/recompile/model-draw-trace.mjs",
+        "sha256": "0b61980db83f740d0f1187306c28726294b6728ba16aee9b8e48b16ab3d4b5dd",
+        "bytes": 6863
+      },
+      {
+        "path": "packages/source/recompile/sourced-rebuild-model-options.json",
+        "sha256": "9410759aeb2a0aec12a01aff239719d685ee680d612194fa20f98ef6fd8205d3",
+        "bytes": 1480
+      },
+      {
+        "path": "packages/review/bin/recompile/compare-draw-trace.mjs",
+        "sha256": "bb8933429a8e8c43d81dbf9d204d0d6e1403f25a8ed11780ec3eefd3d029dd44",
+        "bytes": 9857
+      },
+      {
+        "path": "packages/propose/bin/recompile/phone-encounter-replay.mjs",
+        "sha256": "04c6256ef464eb8c4ac6adf6139fe2a52f8eaa6be007993e66277cecd19b602f",
+        "bytes": 56932
+      },
+      {
+        "path": "packages/source/test/b-drain-order.test.js",
+        "sha256": "f892740aa5c31aa4ac6b7d83b7dffd156a9a92ae0fed062a033d8832601adbec",
+        "bytes": 6171
+      },
+      {
+        "path": "/home/pedro/fnaf-apks/fnaf2-recompile-20260927/agent-s2fix/full-06-landed-w-balloon-boy/trace",
+        "sha256": "2372caa9f293fcf1a5aa2af169ac665dfb5b5efe3b4ba503e8c0e3aef7a9b857",
+        "bytes": 7215829
+      },
+      {
+        "path": "/home/pedro/fnaf-apks/fnaf2-recompile-20260927/agent-s2fix/full-06-landed-w-balloon-boy/run.input",
+        "sha256": "cac3d1e7055825725e5a0859532d48e9945ef9d7bd6cf90ce957bf2acc010cc9",
+        "bytes": 13161
+      },
+      {
+        "path": "/home/pedro/fnaf-apks/fnaf2-recompile-20260927/agent-s2fix/full-06-landed-w-balloon-boy/frametimes.txt",
+        "sha256": "383d25c80bb3648e9199589ebce7b6782a510eacee4409df3c90e940869541cf",
+        "bytes": 253940
+      },
+      {
+        "path": "/home/pedro/fnaf-apks/fnaf2-recompile-20260927/agent-s2fix/full-06-landed-w-balloon-boy/save-before.ini",
+        "sha256": "c0f497ff64b6f757f943965a48d2795419fb934ddf54eb5f3dee000439484844",
+        "bytes": 72
+      },
+      {
+        "path": "/home/pedro/fnaf-apks/fnaf2-recompile-20260927/pinned/66d6e2f6-d9cc45ff/Chowdren",
+        "sha256": "66d6e2f6b23f9af9c967f06337b55dd6afec9b2c27e686cebd304ea03eafec95",
+        "bytes": 49200040
+      },
+      {
+        "path": "/home/pedro/fnaf-apks/fnaf2/events/03-04-Office.txt",
+        "sha256": "026ee3861642abb24a0961d590d8e3d708c9417ec143b92aacb73d6c0415b23b",
+        "bytes": 455276
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/diagnosis-applied-full.json",
+        "sha256": "ba56d965e3b3f52f1dcc5a8f65d5893521fe440330f0a5b08171580d4fb02815",
+        "bytes": 5371457
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/finding.json",
+        "sha256": "e1d8c82b41c82e2c1af2c403bec30b611baac07900073909d4aa8d3f733faab8",
+        "bytes": 1125
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/input-provenance.json",
+        "sha256": "32169c7859bf343d8d47b5889b0c30c40175e9afb986775c70a4bfef7a8e6aff",
+        "bytes": 1189
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/diagnose.mjs",
+        "sha256": "7d8482dc5ee4473272adf7ae3bd2914e31f8808808e03b30e382e86b279532f6",
+        "bytes": 3319
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/inputs.mjs",
+        "sha256": "a964c5b155cf8e35e4f8cbbcf39f044eafbfacc674ffc3a28cb27c3de621be9e",
+        "bytes": 1802
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/watch.py",
+        "sha256": "177f3032933ab9373e3a97867beab4fd7c118f2e230cbfa865d4357d5b30ef4f",
+        "bytes": 1887
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/record.py",
+        "sha256": "46ecaf895304a192f6018851f33115daaa76b0a3901674ad6d55a0c202be69ed",
+        "bytes": 8978
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/validate.py",
+        "sha256": "591ba7aeeda20a498d69e134803e313c01db3f36701b268e6acba774136118a2",
+        "bytes": 1821
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/gates.json",
+        "sha256": "821783d94133b3945841a782fb23456f06c2c704b3c16f17e9b7c274e8e627bb",
+        "bytes": 10661
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/aggregate-gates.json",
+        "sha256": "d47280345ace38782e04cd8ee5eabcc2e175f6911d3bbd7758b46ee706692130",
+        "bytes": 1466
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/freddy/trace",
+        "sha256": "1f102efdca5ffff5c7984af72d34f5b9083b9f3a3cd5b996ad85071022d903d1",
+        "bytes": 1072572
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/freddy/env",
+        "sha256": "e1399aa1acd14b4349e1f16b2f77ac91b8f28ed21d8504d2beafb6acd073ce00",
+        "bytes": 635
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/freddy/summary.json",
+        "sha256": "a4fdb6decabb71b3748ebc72b00a500b70e510d339db29d8013245c2676cde76",
+        "bytes": 102
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/bonnie/trace",
+        "sha256": "8275b6036f4040013e03d64db26ff30ed860017dccf31e177795afd88feb99e0",
+        "bytes": 1057328
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/bonnie/env",
+        "sha256": "1040009aaec227269b4a7c21c97c32f25fd459b5e58f7015f29875a918a8cf2f",
+        "bytes": 635
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/bonnie/summary.json",
+        "sha256": "c869a82359866c82770b3b261878d81d9574eec59e265011b4251886f83c691f",
+        "bytes": 102
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/chica/trace",
+        "sha256": "18dead7a0309d2a1aae38caada928d450c2483e9e37d51cd940ba64130800261",
+        "bytes": 1056516
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/chica/env",
+        "sha256": "2b7c6295a088c55e7243ffcb31dd8c0c94980a4c3c89497efdc1e3609174ba32",
+        "bytes": 633
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/chica/summary.json",
+        "sha256": "8689f3c7b0f4b74fd21c87ef6d9728640150b34c0b4549b1afe127f76bcd3efe",
+        "bytes": 101
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/toyfreddy/trace",
+        "sha256": "6cf297d047c2153cb2437972a08c9ede46b73116a1b5d6b455e3785ca9f8dedc",
+        "bytes": 1080784
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/toyfreddy/env",
+        "sha256": "deaada21ca174b2f6b90aec5a22f38b494785debd12980c0db991443e287dc4c",
+        "bytes": 638
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/toyfreddy/summary.json",
+        "sha256": "cf3755b3a62ddc15b8012cfbbc30020cd36186a51e2d1527c2dba4dcbb7b284d",
+        "bytes": 102
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/toybonnie/trace",
+        "sha256": "26bf3d05f539c4c62c82a77a9c3e20003dc83165b744389b2799a0dd791e3342",
+        "bytes": 1080784
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/toybonnie/env",
+        "sha256": "b9b916acac6c8b66d4dc17665acbe4bf8d168be2a3a299a008504a25c131a182",
+        "bytes": 638
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/toybonnie/summary.json",
+        "sha256": "9ed15a5d1644bf3e1e613d50b52ddef776ec3055e2617f7f97df4d83c2c8089c",
+        "bytes": 102
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/toychica/trace",
+        "sha256": "9279598d3c07eb1aa24c73ac15e1a833ae1af506c2b81fd2c8638b8216d1453e",
+        "bytes": 1080784
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/toychica/env",
+        "sha256": "43bce79ba62256bfffc27c776536181c4c3fee7523f2f0b31c03041e65541188",
+        "bytes": 636
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/toychica/summary.json",
+        "sha256": "ede4b2fd735b2d2608fc30024ac5e1a40cf17eab6365052845c6ba0a958c7767",
+        "bytes": 101
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/mangle/trace",
+        "sha256": "9c1a250b6832e0b50cd521480cfb13b407a9e6476dc68e220be28a435b3b5a40",
+        "bytes": 1056496
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/mangle/env",
+        "sha256": "f1667af75c66d79550924455f10cdbb3dfb9fb8e9e60cf98a991cc652cf68e34",
+        "bytes": 633
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/mangle/summary.json",
+        "sha256": "2139a3bc18322370356fef6694999b37c2170dcaaecf3cd6ec0af5e41abfedd5",
+        "bytes": 100
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/puppet/trace",
+        "sha256": "5fe334a1937fa65a9b3bc8e51c336d014b08451b1c2a82775ffe5de8cc3b58ac",
+        "bytes": 1055851
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/puppet/env",
+        "sha256": "36f4ece7b33854c68d4164cc13fb5a1ada627dba8b11669e524ccf15fd34c388",
+        "bytes": 635
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/puppet/summary.json",
+        "sha256": "1759629fe5b6f795aabecc3757f52f13d3c9146124f6f5cc3fadd70844b698a2",
+        "bytes": 102
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/affected.log",
+        "sha256": "1155b6f67e6b8ca4cc5a30cdfd7d5964c6bfc7757e68b115bab9d2cace7fe1cb",
+        "bytes": 27214
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/file-size.log",
+        "sha256": "115f84d1e4dd67b75aa693728d6b3adc3030f2d48f6218fb77bb2ef199c73083",
+        "bytes": 22371
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/emit.log",
+        "sha256": "74ea35f5c8f489159386595f925300b013ed8075b2c2d1602d33e8011d0bbbb0",
+        "bytes": 120
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/campaign-dry.log",
+        "sha256": "20c518637588505132f356d01d68c4d0ff22e16d6fc7bd9fb4c321a0f31dd729",
+        "bytes": 567
+      },
+      {
+        "path": "artifacts/s2-draw3045-20260930/push-gate.log",
+        "sha256": "113f2a95e47d1ca723e38547f297896fe6caf59bca8757e120f42077c42f529b",
+        "bytes": 1126
+      }
+    ]
+  },
+  "reproducer": {
+    "model": "node artifacts/s2-draw3045-20260930/diagnose.mjs applied-full",
+    "inputs": "node artifacts/s2-draw3045-20260930/inputs.mjs",
+    "record": "python3 artifacts/s2-draw3045-20260930/record.py"
+  },
+  "id": "s2-movement-clock-6b9464c4e5c96647"
+}

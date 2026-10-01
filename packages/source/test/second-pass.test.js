@@ -66,6 +66,21 @@ const at = (log, f) => log.filter(([fr]) => fr === f).map(([, k]) => k);
   assert.equal(tb.path[tb.idx], 3, 'back to CAM 03');
 }
 
+// g292 reads before g333 on a loop shared with the five-second rolls. Equal
+// draw counts do not guarantee that the same character received each value.
+{
+  const s = new Sim({ ...QUIET, bbEnabled: true, sourcedSecondPass: true,
+    sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedSheetOrder: true,
+    sourcedRollDraws: true, sourcedRollsBeforeMoves: true });
+  s.frame = 299; s.maskOn = true; s.maskAnim = 0; s.bb.inOpening = true;
+  s.passTimers['292'] = { v: 0, init: true };
+  const log = script(s, {});
+  s.tick();
+  const calls = at(log, 300);
+  assert.equal(calls.filter(k => k === '0,9').length, 1, 'one g292 pass');
+  assert.ok(calls.indexOf('0,9') < calls.indexOf('chance'), 'BB leave draw precedes the AI rolls');
+}
+
 // Off: the default is unchanged.
 {
   const run = opts => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };

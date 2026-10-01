@@ -4,6 +4,9 @@
 // it on Sim.prototype.
 import * as C from './config.ts';
 import { FOOTSTEP_NODES, FOOTSTEP_CAM_NODES, OFFICE_FOOTSTEP_IDS } from './plant-constants.ts';
+import * as blackoutClock from './blackout-clock.ts';
+import { unitStunReady } from './movement-clock.ts';
+import { attackAnimationLate } from './attack-animation.ts';
 import type { Sim } from './plant-model.ts';
 
 /**
@@ -65,7 +68,10 @@ export function monitorDownLate(this: Sim) {
  * countdown loads on the first frame its earlier conditions hold (returning
  * false) and then counts down only on frames it is reached.
  */
-export function secondPass(this: Sim, f: number) { this.secondPassEarly(f); this.secondPassLate(f); }
+export function secondPass(this: Sim, f: number) {
+  if (this.opts.sourcedSheetOrder) this.secondPassFront(f);
+  this.secondPassEarly(f); this.secondPassLate(f);
+}
 
 /** The per-second pass helpers; mask2 is read when each part starts. */
 export function passTools(this: Sim, f: number) {
@@ -80,11 +86,9 @@ export function passTools(this: Sim, f: number) {
   return { every, one, unit, at122, mask2, p, danger2 };
 }
 
-/** g213-g497; under sourcedSheetOrder also g366/g368, g419, g468-g476, g498, g500-g506 and g517/g518 in sheet order. */
-export function secondPassEarly(this: Sim, f) {
-  const { every, one, unit, at122, mask2, p } = this.passTools(f);
-  const sheet = this.opts.sourcedSheetOrder, views = sheet && this.opts.sourcedViewDraws;
-
+/** g213/g292/g294 precede rolls, promotions and route moves. */
+export function secondPassFront(this: Sim, f: number) {
+  const { every, one, unit, mask2 } = this.passTools(f);
   { const u = unit('toyfreddy');                                                    // g213
     if (this.viewing === 0 && !this.lightHeld && u && !u.atOpening && !u.inside &&
         u.path[u.idx] === 'blindB' && mask2 && every('213', 1000) && one(10)) {
@@ -93,6 +97,13 @@ export function secondPassEarly(this: Sim, f) {
     } }
   if (this.bb.inOpening && mask2 && every('292', 1000) && one(10)) { this.rng.int(0, 3, 0); this.bbLeave(); }   // g292
   if (this.bb.inOpening && this.bb.maskTicks >= C.VENT_MASK_TICKS && mask2) { this.rng.int(0, 3, 0); this.bbLeave(); }   // g294
+}
+
+/** g366-g518; the front groups run before the movement pass under sourcedSheetOrder. */
+export function secondPassEarly(this: Sim, f) {
+  const { every, one, unit, at122, mask2, p } = this.passTools(f);
+  const sheet = this.opts.sourcedSheetOrder, views = sheet && this.opts.sourcedViewDraws;
+  if (!sheet) this.secondPassFront(f);
   if (views && !this.opts.sourcedRouteViewDraws) { this.drawViewed(f, 'g366'); this.drawViewed(f, 'g368'); }
   { const u = unit('mangle');
     if (at122(u) && mask2 && every('400', 1000) && one(10)) { this.rng.int(0, 3, 0); this.unitLeave(u); }       // g400
@@ -125,7 +136,7 @@ export function secondPassEarly(this: Sim, f) {
     if (this.box <= 0 && every('495', 1000) && p.stage < C.PUPPET_ESCAPE_STAGES &&
         this.rng.int(0, 19, 0) <= this.ai.puppet && this.viewing !== C.BOX_CAM) stage();                      // g495
     if (every('496', 1000) && this.rng.int(0, 19, 0) <= this.ai.puppet &&
-        p.out && !p.atOpening && !p.inside && f >= p.stunUntil) p.pending = true;                             // g496
+        p.out && !p.atOpening && !p.inside && unitStunReady(this, p, f)) p.pending = true;                   // g496
     if (this.hooked ? this.passEvery(this.hookTimers.g497, 1000) : f % C.FPS === 0)                          // g497
       p.pathChoice = this.rng.int(1, 2, 1) === 1 ? 'left' : 'right';
   }
@@ -143,6 +154,7 @@ export function secondPassLate(this: Sim, f) {
     if (u && u.inside && !danger2() && mask2 && every('556' + id, 1000) && one(2))
       this.commitAttack(u, 'inside-office mask attack roll');
   }
+  attackAnimationLate(this);                                                        // g575-g595, before g611/g623
   if (this.bb.cueRedraw) { this.bb.cueRedraw = false; this.rng.int(0, 2, 0); }        // g611: a cue of 4 redrawn (sourcedBBMoves)
   if (p.atOpening && every('623', 1000) && one(10)) {                                  // g623
     p.atOpening = false; p.inside = true; p.loc = 'inside';
@@ -244,15 +256,8 @@ export function footstepDraws(this: Sim) {
 
 /** Blackout flicker: the g514 clock and the g517/g518 draw (sourcedBlackoutDraws). */
 export function blackoutFlicker(this: Sim, f: number) {
-  if (!this.opts.sourcedBlackoutDraws || !this.blackout.active) return;
-  let clock = f - this.blackoutStartFrame + 1;
-  if (this.hooked) {                                                                   // g514: += global value 5
-    const v5 = this.value5(f);
-    this.blackoutClock += v5 * (f - this.blackoutClockFrame);
-    this.blackoutClockFrame = f;
-    clock = this.blackoutClock;
-  }
-  if (clock > 20 && clock < 200) this.rng.int(0, 49, 0);
+  blackoutClock.startStreakEncounters(this);
+  blackoutClock.blackoutFlicker(this, f);
 }
 
 /**

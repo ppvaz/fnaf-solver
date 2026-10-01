@@ -2,6 +2,7 @@
 // g494-g497, g623), and his static glitch draws (g500-g506, g774). Each function is a Sim method;
 // plant-model.js installs it on Sim.prototype.
 import * as C from './config.ts';
+import { unitStunReady, setUnitStun } from './movement-clock.ts';
 import type { Sim } from './plant-model.ts';
 
 /** g653-g661: the music box drain as a gated Every 50 ms, then the wind hold's drain (sourcedBoxCountdown). */
@@ -83,7 +84,7 @@ export function tickPuppet(this: Sim) {
   const f = this.frame;
 
   if (p.attackAt >= 0) {
-    if (f >= p.attackAt)
+    if (!this.opts.sourcedAttackAnimation && f >= p.attackAt)
       this.kill('puppet', 'The Puppet completed the sourced 40-frame marker-123 attack');
     return;
   }
@@ -110,7 +111,7 @@ export function tickPuppet(this: Sim) {
 
     // g496: after escape, each one-second AI success arms one route hop,
     // provided B has drained to zero.
-    if (p.out && !p.atOpening && !p.inside && f >= p.stunUntil &&
+    if (p.out && !p.atOpening && !p.inside && unitStunReady(this, p, f) &&
         this.rng.chance(C.PUPPET_MO_CHANCE(this.ai.puppet), true))
       p.pending = true;
 
@@ -133,7 +134,7 @@ export function tickPuppet(this: Sim) {
   // Puppet's current camera rewrites B to 10 every frame; g372 drains it.
   if (this.camLightOn && p.out && !p.atOpening && !p.inside &&
       p.loc !== C.BOX_CAM && p.loc === this.cam)
-    p.stunUntil = f + C.PUPPET_CAMERA_PIN_FRAMES;
+    setUnitStun(this, p, C.PUPPET_CAMERA_PIN_FRAMES, f);
 }
 
 export function advancePuppet(this: Sim) {

@@ -2298,6 +2298,7 @@
         "../../../source/recompile/model-draw-trace.mjs",
         "./compare-schedule-replay.mjs",
         "./phone-encounter-replay.mjs",
+        "./schedule-to-input.mjs",
         "@sixam/review/renamed-path",
         "node:crypto",
         "node:fs",
@@ -2483,6 +2484,7 @@
         "./phone-input-bracket-sweep.mjs",
         "@sixam/review/renamed-path",
         "node:assert/strict",
+        "node:child_process",
         "node:crypto",
         "node:fs",
         "node:os",
@@ -2493,6 +2495,7 @@
     {
       "file": "packages/propose/bin/recompile/test-phone-input-bracket-sweep.mjs",
       "imports": [
+        "../../../source/recompile/model-draw-trace.mjs",
         "./phone-input-bracket-sweep.mjs",
         "node:assert/strict",
         "node:crypto",
@@ -3846,6 +3849,7 @@
       "file": "packages/source/recompile/model-draw-trace.mjs",
       "imports": [
         "@sixam/source/fnaf2",
+        "\\.\\/([\\w-]+\\.ts)",
         "node:fs",
         "node:path",
         "node:url"
@@ -3925,6 +3929,26 @@
       ]
     },
     {
+      "file": "packages/source/src/games/fnaf2/attack-animation.ts",
+      "imports": [
+        "./config.ts",
+        "./plant-model.ts"
+      ]
+    },
+    {
+      "file": "packages/source/src/games/fnaf2/blackout-clock.ts",
+      "imports": [
+        "./plant-model.ts"
+      ]
+    },
+    {
+      "file": "packages/source/src/games/fnaf2/contact-input.ts",
+      "imports": [
+        "./config.ts",
+        "./plant-model.ts"
+      ]
+    },
+    {
       "file": "packages/source/src/games/fnaf2/controls.ts",
       "imports": [
         "../../clockwork/control-catalog.ts"
@@ -3948,9 +3972,16 @@
       ]
     },
     {
+      "file": "packages/source/src/games/fnaf2/movement-clock.ts",
+      "imports": [
+        "./plant-model.ts"
+      ]
+    },
+    {
       "file": "packages/source/src/games/fnaf2/plant-hall.ts",
       "imports": [
         "./config.ts",
+        "./movement-clock.ts",
         "./plant-constants.ts",
         "./plant-model.ts"
       ]
@@ -3958,7 +3989,11 @@
     {
       "file": "packages/source/src/games/fnaf2/plant-model.ts",
       "imports": [
+        "./attack-animation.ts",
+        "./blackout-clock.ts",
         "./config.ts",
+        "./contact-input.ts",
+        "./movement-clock.ts",
         "./plant-constants.ts",
         "./plant-hall.ts",
         "./plant-office.ts",
@@ -3973,6 +4008,7 @@
       "file": "packages/source/src/games/fnaf2/plant-office.ts",
       "imports": [
         "./config.ts",
+        "./contact-input.ts",
         "./plant-constants.ts",
         "./plant-model.ts"
       ]
@@ -3987,13 +4023,17 @@
       "file": "packages/source/src/games/fnaf2/plant-puppet.ts",
       "imports": [
         "./config.ts",
+        "./movement-clock.ts",
         "./plant-model.ts"
       ]
     },
     {
       "file": "packages/source/src/games/fnaf2/plant-sheet.ts",
       "imports": [
+        "./attack-animation.ts",
+        "./blackout-clock.ts",
         "./config.ts",
+        "./movement-clock.ts",
         "./plant-constants.ts",
         "./plant-model.ts"
       ]
@@ -4002,6 +4042,7 @@
       "file": "packages/source/src/games/fnaf2/plant-units.ts",
       "imports": [
         "./config.ts",
+        "./movement-clock.ts",
         "./plant-constants.ts",
         "./plant-model.ts"
       ]
@@ -4113,12 +4154,14 @@
       "file": "packages/source/test/animation-count.test.js",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
-        "node:assert/strict"
+        "node:assert/strict",
+        "node:fs"
       ]
     },
     {
       "file": "packages/source/test/b-drain-order.test.js",
       "imports": [
+        "../src/games/fnaf2/movement-clock.ts",
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
@@ -4171,6 +4214,7 @@
     {
       "file": "packages/source/test/drop-flag-order.test.js",
       "imports": [
+        "../recompile/model-draw-trace.mjs",
         "../src/games/fnaf2/config.ts",
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"

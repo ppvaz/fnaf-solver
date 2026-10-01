@@ -5,6 +5,7 @@
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
 import * as C from '../src/games/fnaf2/config.ts';
+import { contactEdges, drawTrace } from '../recompile/model-draw-trace.mjs';
 
 const QUIET = { night: 7, seed: 3, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false, boxEnabled: false, foxyEnabled: false,
                 sourcedDropLightOrder: true };
@@ -105,4 +106,36 @@ assert.throws(() => new Sim({ night: 7, sourcedDropFlagOrder: true }), /requires
     assert.notEqual(run({ sourcedDropLightOrder: true }), run({ sourcedDropLightOrder: true, sourcedDropFlagOrder: true }), 'on moves the script');
   }
 }
-console.log('drop flag order: g618/g619 after g262/g274/g612, so a drop or mask-off touched on F lands on F+1; g619 refuses in danger; read at sheet position; off unchanged');
+// Explicit contacts retain duration, the mask's lock, and camera selection on release.
+{
+  const opts = { ...QUIET, sourcedDropFlagOrder: true, sourcedSheetOrder: true, sourcedSecondPass: true, sourcedAnimationCount: true };
+  const s = new Sim(opts);
+  s.contactDown('monitor'); settle(s, 13);
+  assert.equal(s.monitor, 'up'); assert.equal(s.dropEverything, true);
+  s.contactUp('monitor'); s.tick();
+  assert.equal(s.monitor, 'lowering'); assert.equal(s.contactInput.flipLock, true, 'forcedown writes after release clears the lock');
+  s.tick(); assert.equal(s.contactInput.flipLock, false);
+  const short = new Sim(opts);
+  short.contactDown('monitor'); settle(short, 12); short.contactUp('monitor'); settle(short, 30);
+  assert.equal(short.monitor, 'up', 'release on the completion update prevents the held-touch drop');
+  const held = new Sim(opts);
+  held.contactDown('monitor'); settle(held, 70);
+  assert.equal(held.monitor, 'down'); assert.equal(held.contactInput.flipLock, true, 'one long contact cannot reopen the monitor');
+  const mask = new Sim(opts);
+  mask.contactDown('mask'); settle(mask, 50);
+  assert.equal(maskState(mask), 2); assert.equal(mask.dropEverything, false);
+  const copy = Sim.fromSnapshot(mask.opts, mask.snapshot());
+  for (const x of [mask, copy]) { x.contactUp('mask'); x.tick(); x.contactDown('mask'); settle(x, 2); }
+  assert.equal(maskState(mask), 3); assert.deepEqual(copy.snapshot(), mask.snapshot());
+  const previous = short.viewing;
+  short.contactDown('cam:11'); settle(short, 2); assert.equal(short.viewing, previous);
+  short.contactUp('cam:11'); short.tick(); assert.equal(short.viewing, 11);
+  assert.throws(() => new Sim(QUIET).enableContactInput(), /requires sourcedDropFlagOrder and sourcedSheetOrder/);
+  assert.throws(() => contactEdges([{ action: 'mask', downFrame: 2, upFrame: 2 }]), /upFrame > downFrame/);
+  assert.throws(() => contactEdges([{ action: 'monitor', downFrame: 0, upFrame: 2 },
+    { action: 'monitor', downFrame: 1, upFrame: 3 }]), /overlapping/);
+  assert.deepEqual(contactEdges([{ action: 'monitor', downFrame: 0, upFrame: 2 },
+    { action: 'mask', downFrame: 2, upFrame: 3 }]).slice(1, 3), [[2, 'contactUp', 'monitor'], [2, 'contactDown', 'mask']]);
+  assert.throws(() => drawTrace({ night: 7, seed: 1, frames: 2, rows: [[0, 'press', 'mask']], contacts: [] }), /choose contacts or legacy rows/);
+}
+console.log('drop flag order: late touch read, forcedown, held monitor, mask lock, release-selected camera, and contact snapshot pass; legacy taps unchanged');

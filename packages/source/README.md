@@ -10,7 +10,7 @@ and it imports only [`@sixam/kernel`](../kernel/README.md)
 | Path | What it is |
 |---|---|
 | `src/games/fnaf1/`, `fnaf3/`, `fnaf4/` | the game's Rulebook data (`fnafN.ts`), its Sim (`sim-fnafN.ts`), its source movement graph (`graph.json`) and its control catalog (`controls.ts`); `index.ts` is the game's barrel, `@sixam/source/fnafN` |
-| `src/games/fnaf2/` | FNaF 2's plant model (`plant-model.ts`, `config.ts`, `rng.ts`; the Sim's options, constants and mechanisms in `plant-options.ts`, `plant-constants.ts`, `plant-office.ts`, `plant-hall.ts`, `plant-units.ts`, `plant-sheet.ts` and `plant-puppet.ts`, installed on `Sim.prototype` by `plant-model.ts`), the `PlantModel` facade (`plant.ts`), the reduced model, seed recovery, its night in the shared shape (`fnaf2.ts`) and its control catalog with the artifact action table (`controls.ts`); `index.ts`, `@sixam/source/fnaf2`, exports exactly what `@sixam/core/mechanics` did |
+| `src/games/fnaf2/` | FNaF 2's plant model (`plant-model.ts`, `config.ts`, `rng.ts`; the Sim's options, constants and mechanisms in `plant-options.ts`, `plant-constants.ts`, `plant-office.ts`, `plant-hall.ts`, `plant-units.ts`, `plant-sheet.ts` and `plant-puppet.ts`, installed on `Sim.prototype` by `plant-model.ts`; the clocks and contact state the full-06 replays measured in `movement-clock.ts`, `contact-input.ts`, `attack-animation.ts` and `blackout-clock.ts`), the `PlantModel` facade (`plant.ts`), the reduced model, seed recovery, its night in the shared shape (`fnaf2.ts`) and its control catalog with the artifact action table (`controls.ts`); `index.ts`, `@sixam/source/fnaf2`, exports exactly what `@sixam/core/mechanics` did |
 | `src/clockwork/` | the package root, `@sixam/source`: the nights registry (`games.ts`) and night model, the Fusion RNG (`rng.ts`), the control catalogs' registry and shape, the vocabularies generated from them, and the contract validators generated from them (`validateControlCommand`, `deviceProfileGame`, `resolveDeviceProfile`) |
 | `src/truth/` | Truth's reading of a game's own event sheet (Plan 28 step 5), pure: the tabular event-text dump parsed into fields (`dump.ts`), the handful of engine ACE numbers it names (`engine.ts`), the per-build handle scramble K by object-type agreement (`handles.ts`), and the events and object queries (`query.ts`); `@sixam/source/truth/read` |
 | `decompile/truth.mjs` | the host side, `@sixam/source/truth`: finds the caller's own dump through the untracked `decompile/local-vault.json` or `$SIXAM_TRUTH_VAULT`, refuses naming the decode when there is none, and decodes a local APK or CCN with the local CTFAK dumper; the MCP `truth` tool and `npm run review -- truth` call it. No dump, decoded text or game asset is tracked: the tests build a synthetic dump from the dumper's grammar at run time |
@@ -26,14 +26,18 @@ by type stripping (Pedro: "runtime .ts"; `tools/ts-migrate.mjs`), checked at the
 strictness they had as JavaScript (`typecheck:js`), to be tightened later. The
 browser gets them with their types erased (`apps/trainer/test/strip-types.mjs`).
 
-**The three model sources.** `src/games/fnaf2/plant-model.ts`, `config.ts`
+**The model sources.** `src/games/fnaf2/plant-model.ts`, `config.ts`
 and `rng.ts` moved byte for byte and stay together, because `plant-model.ts`
-imports the other two by `./`. A retained bracket-sweep result names them by
-their old paths and sha256; its check
-(`packages/propose/bin/recompile/test-phone-input-bracket-sweep.mjs`) finds each old path's
-bytes in that path's git history and matches the files by name, so it no
-longer depends on where they live; `packages/source/recompile/model-draw-trace.mjs`
-hashes the model beside the `@sixam/source/fnaf2` barrel into new records.
+imports the other two by `./`. `MODEL_SOURCES` in
+`packages/source/recompile/model-draw-trace.mjs` lists those three first and
+then every module `plant-model.ts` reaches by a relative import (the 2026-09-30
+splits), and hashes the whole list into new records. A retained bracket-sweep
+result names the first three by their old paths and sha256; its check
+(`packages/propose/bin/recompile/test-phone-input-bracket-sweep.mjs`) finds each
+old path's bytes in that path's git history and requires the record to name, by
+file stem and in order, the files the current list begins with, so it depends
+neither on where they live, nor on `.js` becoming `.ts`, nor on modules split
+out after it was computed.
 `src/clockwork/rng.js` is the cross-game name for the RNG and
 re-exports FNaF 2's file until migration step D2 splits the plant model.
 

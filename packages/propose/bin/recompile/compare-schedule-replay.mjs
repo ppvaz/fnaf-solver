@@ -40,7 +40,7 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { compareTrace } from '../../../review/bin/recompile/compare-draw-trace.mjs';
 import { MODEL_SOURCES, simOptionsFrom } from '../../../source/recompile/model-draw-trace.mjs';
-import { DEFAULT_PROFILE, controlPoints, harnessInput, winnerSchedule } from './schedule-to-input.mjs';
+import { DEFAULT_PROFILE, controlPoints, harnessInput, winnerSchedule, modelContacts } from './schedule-to-input.mjs';
 import { withModelOptions } from './rebuild-options-census.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
@@ -55,7 +55,7 @@ export const LEDGERS = Object.freeze({
   monitor: { watch: 'flip panel button:0', states: '0 down, 1 raising, 2 up, 3 lowering',
     model: (sim) => ({ down: 0, raising: 1, up: 2, lowering: 3 })[sim.monitor] },
   mask: { watch: 'mask:0', states: '0 off, 1 putting on, 2 on, 3 taking off',
-    model: (sim) => (sim.maskOn ? (sim.maskAnim > 0 ? 1 : 2) : (sim.maskAnim > 0 ? 3 : 0)) },
+    model: (sim) => sim.maskState },
 });
 
 // `being attacked by` (object 136), the committed attack: its value names the attacker, as the office
@@ -252,7 +252,9 @@ export function compareScheduleReplay({ text, inputText, navigationText, winner,
   if (JSON.stringify(actionLines(inputText)) !== JSON.stringify(actionLines(expected.text)))
     throw new Error('the input is not the navigation plus this winner\'s schedule rows (schedule-to-input.mjs)');
   const observe = ledgers.length ? (sim) => ledgers.map(({ name }) => LEDGERS[name].model(sim)) : null;
+  const contacts = modelOptions.sourcedDropFlagOrder && modelOptions.sourcedSheetOrder ? modelContacts(sched.contacts) : null;
   const result = compareTrace(text, { night, seed, frame, frames, modelOptions, customNight, schedule: sched.queue,
+    contacts,
     ...(observe ? { observe } : {}) });
   result.schema = 'recompile-schedule-replay-v1';
   result.question = 'Replaying one winner schedule into the rebuilt runtime and into the model: do the outcome and the per-update Random stream agree, and where do they first differ?';
@@ -264,6 +266,8 @@ export function compareScheduleReplay({ text, inputText, navigationText, winner,
     lastOfficeRowTick: expected.office.rows.at(-1)?.tick ?? null,
     windowPoints: Object.fromEntries(used.map((c) => [c, points[/^cam\d+$/.test(c) ? `cam:${c.slice(3)}` : c]])),
     sameTickEdges: expected.office.sameTickEdges,
+    modelInputMode: contacts ? 'explicit-contact-duration' : 'legacy-semantic-edges',
+    ...(contacts ? { modelContactsSha256: hash(JSON.stringify(contacts)) } : {}),
     quantization: 'ms -> Math.round(ms * 60 / 1000) model frames; office tick = queue frame; down at press, up at release',
   };
   const main = officeProjection(text, frame);
@@ -288,6 +292,7 @@ export function compareScheduleReplay({ text, inputText, navigationText, winner,
       scope: 'values at the end of each office update (harness_after_events); a change inside an update is not seen' };
   }
   result.gateReplay = gateReplayCheck(sched, seed, modelOptions, result);
+  if (contacts) result.gateReplay.inputNote = 'The binding gate uses legacy semantic taps; this comparison preserves contact durations and camera selection on release.';
   if (customNight) result.gateReplay.note = 'the gate replay carries no dial vector; the comparison model does';
   const { rows, model } = result.traces;
   const runs = mismatchRuns(rows, model.out);

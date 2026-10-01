@@ -3,7 +3,8 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { check, committedVersion, sameModelFiles } from './phone-input-bracket-sweep.mjs';
+import { check, committedVersion, recordedModelFiles } from './phone-input-bracket-sweep.mjs';
+import { MODEL_SOURCES } from '../../../source/recompile/model-draw-trace.mjs';
 
 const root = new URL('../../../../', import.meta.url);
 const read = (path) => readFileSync(new URL(path, root), 'utf8');
@@ -56,7 +57,14 @@ assert.equal(committedVersion(movedPath, '0'.repeat(64)), null, 'a moved path wi
 // The record's old paths name the same model files as the moved sources.
 const recorded = Object.keys(result.source.modelSources);
 assert.ok(recorded.every((path) => path.startsWith('packages/core/src/mechanics/')));
-assert.ok(sameModelFiles(recorded, ['plant-model.js', 'config.js', 'rng.js'].map((name) => `packages/source/src/games/fnaf2/${name}`)));
-assert.ok(!sameModelFiles(recorded, ['plant-model.js', 'rng.js', 'config.js'].map((name) => `packages/source/src/games/fnaf2/${name}`)));
+const moved = (names) => names.map((name) => `packages/source/src/games/fnaf2/${name}`);
+assert.ok(recordedModelFiles(recorded, moved(['plant-model.js', 'config.js', 'rng.js'])));
+assert.ok(!recordedModelFiles(recorded, moved(['plant-model.js', 'rng.js', 'config.js'])));
+assert.ok(recordedModelFiles(recorded, moved(['plant-model.ts', 'config.ts', 'rng.ts'])));
+// Modules split out of plant-model.js later extend the list; the older record still names its own model.
+assert.ok(recordedModelFiles(recorded, MODEL_SOURCES));
+assert.ok(MODEL_SOURCES.length > recorded.length);
+assert.ok(!recordedModelFiles(recorded.slice(0, 2), moved(['plant-model.js', 'rng.js'])));
+assert.ok(!recordedModelFiles([], MODEL_SOURCES));
 
 console.log('phone-input-bracket-sweep: all measured prefix brackets, model snapshots and evidence hash rechecked; a moved model path resolves through its history');

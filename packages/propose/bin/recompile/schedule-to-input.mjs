@@ -62,6 +62,10 @@ const profileKey = (control) => (/^cam\d+$/.test(control) ? `cam:${control.slice
 export const simAction = (control) => (/^cam\d+$/.test(control) ? `cam:${control.slice(3)}`
   : control === 'cameraFeedLight' || control === 'hallLight' ? MODEL_CONTEXT_LIGHT : control);
 
+/** The same measured intervals used by the harness, expressed in the source model's actions. */
+export const modelContacts = (contacts) => contacts.map(({ control, downFrame, upFrame }) =>
+  ({ action: simAction(control), downFrame, upFrame }));
+
 /**
  * Contacts and the Sim queue from one expansion of opening/loop/finish rows (schedule()'s loop bounds
  * and arithmetic, shift 0). A contact is { control, downMs, upMs, downFrame, upFrame, cycle, index }.
