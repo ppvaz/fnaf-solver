@@ -100,8 +100,12 @@ def launcher(package: str) -> str:
     raise SetupError(f"no launcher activity resolved for {package}")
 
 
-def start(component: str) -> None:
-    adb("shell", "am", "start", "-n", component)
+def start(component: str, target: str | None = None) -> None:
+    # The Companion runs its FNaF 2 readers only for a named target, and a fresh
+    # install names none: the launch intent's `target` extra names it
+    # (MainActivity.applyTargetExtra), and the Companion persists it.
+    extra = ("--es", "target", target) if target else ()
+    adb("shell", "am", "start", "-n", component, *extra)
 
 
 def projection_active() -> bool:
@@ -176,8 +180,8 @@ def has_named(label: str, audience: str) -> bool:
         return False
 
 
-def start_capture() -> None:
-    start(f"{HELPER_PACKAGE}/com.ppvaz.fnafcompanion.MainActivity")
+def start_capture(target: str) -> None:
+    start(f"{HELPER_PACKAGE}/com.ppvaz.fnafcompanion.MainActivity", target)
     if projection_active() or has_named("Stop video capture", "helper"):
         print("CAPTURE already-running")
         return
@@ -197,11 +201,11 @@ def start_capture() -> None:
     raise SetupError("capture did not reach the helper running state")
 
 
-def restart_capture() -> None:
+def restart_capture(target: str) -> None:
     """Replace an existing projection with a fresh user-approved session."""
     print("CAPTURE restarting")
     stop_capture()
-    start_capture()
+    start_capture(target)
 
 
 def start_probe() -> None:
@@ -361,9 +365,9 @@ def main() -> int:
                   f"permission={OVERLAY_SUPPRESSION_PERMISSION}")
 
             if args.restart_capture:
-                restart_capture()
+                restart_capture(target_package)
             else:
-                start_capture()
+                start_capture(target_package)
             ensure_overlay_mode(args.overlay_mode)
             if args.probe:
                 start_probe()

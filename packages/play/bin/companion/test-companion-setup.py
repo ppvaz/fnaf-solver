@@ -62,12 +62,34 @@ original_stop_capture = MODULE.stop_capture
 try:
     calls = []
     MODULE.stop_capture = lambda: calls.append("stop")
-    MODULE.start_capture = lambda: calls.append("start")
-    MODULE.restart_capture()
-    assert calls == ["stop", "start"]
+    MODULE.start_capture = lambda target: calls.append(f"start {target}")
+    MODULE.restart_capture("com.scottgames.fnaf2")
+    assert calls == ["stop", "start com.scottgames.fnaf2"]
 finally:
     MODULE.start_capture = original_start_capture
     MODULE.stop_capture = original_stop_capture
+
+# A fresh Companion 0.2.0 names no target and runs no FNaF 2 reader until one is
+# named, so the setup's own launch of the helper must carry it.
+original_projection_active = MODULE.projection_active
+launches: list[tuple[str, ...]] = []
+
+
+def record_adb(*args: str, check: bool = True, timeout: float = 30.0) -> str:
+    launches.append(args)
+    return ""
+
+
+try:
+    setattr(MODULE, "adb", record_adb)
+    setattr(MODULE, "projection_active", lambda: True)
+    MODULE.start_capture("com.scottgames.fnaf2")
+    assert launches[0] == ("shell", "am", "start", "-n",
+                           "com.ppvaz.fnafcompanion/com.ppvaz.fnafcompanion.MainActivity",
+                           "--es", "target", "com.scottgames.fnaf2"), launches
+finally:
+    setattr(MODULE, "adb", original_adb)
+    setattr(MODULE, "projection_active", original_projection_active)
 
 original_query_snapshot = MODULE.query_snapshot
 try:
